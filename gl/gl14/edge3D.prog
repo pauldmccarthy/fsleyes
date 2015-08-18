@@ -1,0 +1,103 @@
+# Inputs:
+#   coord
+#   val
+#   tol
+#   offsets
+#
+# Outputs:
+#   isEdge
+
+# Something like this would be nice:
+#     #pragma INPUTS  (coord, val, tol, offsets)
+#     #pragma OUTPUTS (isEdge)
+
+# This only works for single-channel textures
+
+TEMP off;
+TEMP back;
+TEMP front;
+TEMP tempCoord;
+TEMP isEdgeBack;
+TEMP isEdgeFront;
+TEMP isEdge;
+
+
+# Test along the x axis
+MOV off, offsets;
+MUL off, off, {1, 0, 0, 0};
+
+# Sample a value behind the coordinate
+MOV tempCoord, coord;
+ADD tempCoord, tempCoord, off;
+TEX back, tempCoord, texture[0], 3D;
+
+# Sample a value in front of the coordinatea
+MOV tempCoord, coord;
+SUB tempCoord, tempCoord, off;
+TEX front, tempCoord, texture[0], 3D;
+
+SUB back,  back,  val;
+SUB front, front, val;
+ABS back,  back;
+ABS front, front;
+
+# Unsafe operation - will only work
+# for single channel textures
+SLT isEdgeBack.x,  tol, back;
+SLT isEdgeFront.x, tol, front; 
+
+
+
+# Test along the y axis
+MOV off, offsets;
+MUL off, off, {0, 1, 0, 0};
+
+# Sample a value behind the coordinate
+MOV tempCoord, coord;
+ADD tempCoord, tempCoord, off;
+TEX back, tempCoord, texture[0], 3D;
+
+# Sample a value in front of the coordinatea
+MOV tempCoord, coord;
+SUB tempCoord, tempCoord, off;
+TEX front, tempCoord, texture[0], 3D;
+
+SUB back,  back,  val;
+SUB front, front, val;
+ABS back,  back;
+ABS front, front;
+
+SLT isEdgeBack.y,  tol, back;
+SLT isEdgeFront.y, tol, front;  
+
+
+
+# Test along the z axis
+MOV off, offsets;
+MUL off, off, {0, 0, 1, 0};
+
+# Sample a value behind the coordinate
+MOV tempCoord, coord;
+ADD tempCoord, tempCoord, off;
+TEX back, tempCoord, texture[0], 3D;
+
+# Sample a value in front of the coordinatea
+MOV tempCoord, coord;
+SUB tempCoord, tempCoord, off;
+TEX front, tempCoord, texture[0], 3D;
+
+SUB back,  back,  val;
+SUB front, front, val;
+ABS back,  back;
+ABS front, front;
+
+SLT isEdgeBack.z,  tol, back;
+SLT isEdgeFront.z, tol, front;
+
+
+# Set isEdge to 1 whereever either
+# isEdgeBack or isEdgeFront are 1
+MAX isEdge, isEdgeBack, isEdgeFront;
+
+# Clear if offsets[i] < 0
+CMP isEdge, offsets, 0, isEdge;

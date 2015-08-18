@@ -1,0 +1,21 @@
+1  0.80392 0.24314 0.30588 Left Cerebral White Matter
+2  0.96078 0.96078 0.96078 Left Cerebral Cortex
+3  0.80392 0.24314 0.30588 Left Lateral Ventricle
+4  0.47059 0.07059 0.52549 Left Thalamus
+5  0.76863 0.22745 0.98039 Left Caudate
+6  0.00000 0.58039 0.00000 Left Putamen
+7  0.86275 0.97255 0.64314 Left Pallidum
+8  0.90196 0.58039 0.13333 Brainstem
+9  0.00000 0.46275 0.05490 Left Hippocampus
+10 0.00000 0.46275 0.05490 Left Amygdala
+11 0.47843 0.72941 0.86275 Left Accumbens
+12 0.92549 0.05098 0.69020 Right Cerebral White Matter
+13 0.04706 0.18824 1.00000 Right Cerebral Cortex
+14 0.80000 0.71373 0.55686 Right Lateral Ventricle
+15 0.16471 0.80000 0.64314 Right Thalamus
+16 0.46667 0.62353 0.69020 Right Caudate
+17 0.86275 0.84706 0.07843 Right Putamen
+18 0.40392 1.00000 1.00000 Right Pallidum
+19 0.31373 0.76863 0.38431 Right Hippocampus
+20 0.23529 0.22745 0.82353 Right Amygdala
+21 0.23529 0.22745 0.82353 Right Accumbens

@@ -1,0 +1,36 @@
+!!ARBfp1.0
+#
+# Fragment program used for rendering GLModel instances.
+#
+# Inputs:
+#   fragment.texcoord[0]
+#
+#   program.local[0] - Offsets
+#
+
+TEMP val;
+TEMP coord;
+TEMP output;
+
+# edge detection tolerance is
+# 1 / 255 - a colour change of 1 bit
+PARAM tol     = 0.00392156862745098;
+PARAM offsets = program.local[0];
+
+MOV coord, fragment.texcoord[0];
+
+TEX val, coord, texture[0], 2D;
+
+#pragma include edge2D.prog
+
+# Kill the fragment if
+# it is not on an edge
+TEMP fill;
+MAX fill, isEdge.x, isEdge.y;
+SUB fill, fill, 0.1;
+
+KIL fill;
+
+MOV result.color, val;
+
+END
