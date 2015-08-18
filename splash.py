@@ -29,8 +29,9 @@ class FSLEyesSplash(wx.Frame):
         self.statusBar = wx.StaticText(self, style=wx.ELLIPSIZE_MIDDLE)
         self.statusBar.SetLabel(strings.messages[self, 'default'])
 
-        self.statusBar.SetBackgroundColour('white')
-        self          .SetBackgroundColour('white')
+        self.statusBar.SetBackgroundColour('#636a70')
+        self.statusBar.SetForegroundColour('#ffffff')
+        self          .SetBackgroundColour('#636a70')
         
         sizer = wx.BoxSizer(wx.VERTICAL)
 
