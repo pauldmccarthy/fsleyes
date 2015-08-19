@@ -880,10 +880,13 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
     _applyArgs(args, sceneOpts)
 
 
-def generateSceneArgs(overlayList, displayCtx, sceneOpts):
+def generateSceneArgs(overlayList, displayCtx, sceneOpts, exclude=None):
     """Generates command line arguments which describe the current state of
     the provided ``displayCtx`` and ``sceneOpts`` instances.
     """
+
+    if exclude is None:
+        exclude = []
 
     args = []
 
@@ -903,6 +906,8 @@ def generateSceneArgs(overlayList, displayCtx, sceneOpts):
         args += ['{}'.format(displayCtx.selectedOverlay)]
 
     props = OPTIONS.get(sceneOpts, allhits=True)
+
+    props = [p for p in props if p not in exclude]
     args += _generateArgs(sceneOpts, concat(props))
 
     return args

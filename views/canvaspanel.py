@@ -316,7 +316,10 @@ def _genCommandLineArgs(overlayList, displayCtx, canvas):
     # Add scene options
     sceneOpts = canvas.getSceneOptions()
     argv += fsleyes_parseargs.generateSceneArgs(
-        overlayList, displayCtx, sceneOpts)
+        overlayList,
+        displayCtx,
+        sceneOpts,
+        exclude=['performance'])
 
     # Add ortho specific options, if it's 
     # an orthopanel we're dealing with
