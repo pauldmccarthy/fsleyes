@@ -330,24 +330,21 @@ class OSMesaCanvasTarget(object):
     OSMesa.
     """
     
-    def __init__(self, width, height, bgColour=(0, 0, 0, 255)):
+    def __init__(self, width, height):
         """Creates an off-screen buffer to be used as the render target.
 
         :arg width:    Width in pixels
         :arg height:   Height in pixels
-        :arg bgColour: Background colour as an RGBA tuple
-                       (e.g. (255, 255, 255, 255))
         """
         import OpenGL.arrays as glarrays 
-        self._width    = width
-        self._height   = height 
-        self._bgColour = bgColour 
-        self._buffer   = glarrays.GLubyteArray.zeros((height, width, 4))
+        self.__width  = width
+        self.__height = height 
+        self.__buffer = glarrays.GLubyteArray.zeros((height, width, 4))
 
         
     def _getSize(self):
         """Returns a tuple containing the canvas width and height."""
-        return self._width, self._height
+        return self.__width, self.__height
 
         
     def _setGLContext(self):
@@ -355,10 +352,10 @@ class OSMesaCanvasTarget(object):
         import OpenGL.raw.osmesa.mesa as osmesa
         """Configures the GL context to render to this canvas. """
         osmesa.OSMesaMakeCurrent(getOSMesaContext(),
-                                 self._buffer,
+                                 self.__buffer,
                                  gl.GL_UNSIGNED_BYTE,
-                                 self._width,
-                                 self._height)
+                                 self.__width,
+                                 self.__height)
         return True
 
         
@@ -383,11 +380,8 @@ class OSMesaCanvasTarget(object):
         subclasses.
         """
 
-        import OpenGL.GL as gl
-        
         self._initGL()
         self._setGLContext()
-        gl.glClearColor(*self._bgColour)
         self._draw()
 
         
@@ -404,12 +398,12 @@ class OSMesaCanvasTarget(object):
         
         bmp = gl.glReadPixels(
             0, 0,
-            self._width, self._height,
+            self.__width, self.__height,
             gl.GL_RGBA,
             gl.GL_UNSIGNED_BYTE)
         
         bmp = np.fromstring(bmp, dtype=np.uint8)
-        bmp = bmp.reshape((self._height, self._width, 4))
+        bmp = bmp.reshape((self.__height, self.__width, 4))
         bmp = np.flipud(bmp)
 
         return bmp
