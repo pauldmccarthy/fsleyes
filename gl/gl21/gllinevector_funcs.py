@@ -114,7 +114,9 @@ def compileShaders(self):
     self.voxToDisplayMatPos = gl.glGetUniformLocation(self.shaders,
                                                       'voxToDisplayMat') 
     self.displayToVoxMatPos = gl.glGetUniformLocation(self.shaders,
-                                                      'displayToVoxMat') 
+                                                      'displayToVoxMat')
+    self.voxelOffsetPos     = gl.glGetUniformLocation(self.shaders,
+                                                      'voxelOffset') 
     self.cmapXformPos       = gl.glGetUniformLocation(self.shaders,
                                                       'cmapXform')
     
@@ -160,13 +162,18 @@ def updateShaderState(self):
         d2vMat    = opts.getTransform('display', 'voxel')
         v2dMat    = opts.getTransform('voxel',   'display')
 
+        if opts.transform in ('id', 'pixdim'): offset = [0,   0,   0]
+        else:                                  offset = [0.5, 0.5, 0.5]
+
+        offset    = np.array(offset,    dtype=np.float32)
         imageDims = np.array(imageDims, dtype=np.float32)
         d2vMat    = np.array(d2vMat,    dtype=np.float32).ravel('C')
         v2dMat    = np.array(v2dMat,    dtype=np.float32).ravel('C')
 
-        gl.glUniform1f( self.directedPos,     directed)
-        gl.glUniform3fv(self.imageDimsPos, 1, imageDims)
-
+        gl.glUniform1f( self.directedPos,       directed)
+        gl.glUniform3fv(self.imageDimsPos,   1, imageDims)
+        gl.glUniform3fv(self.voxelOffsetPos, 1, offset)
+        
         gl.glUniformMatrix4fv(self.displayToVoxMatPos, 1, False, d2vMat)
         gl.glUniformMatrix4fv(self.voxToDisplayMatPos, 1, False, v2dMat) 
 
@@ -277,12 +284,16 @@ def hardwareDraw(self, zpos, xform=None):
     elif opts.transform == 'pixdim':
         resolution = map(lambda r, p: max(r, p), resolution, image.pixdim[:3])
 
+    if opts.transform == 'affine': origin = 'centre'
+    else:                          origin = 'corner'
+
     vertices = glroutines.calculateSamplePoints(
         image.shape,
         resolution,
         v2dMat,
         self.xax,
-        self.yax)[0]
+        self.yax,
+        origin)[0]
     
     vertices[:, self.zax] = zpos
 

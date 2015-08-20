@@ -17,6 +17,8 @@ uniform sampler3D imageTexture;
 uniform mat4 displayToVoxMat;
 uniform mat4 voxToDisplayMat;
 
+uniform vec3 voxelOffset;
+
 
 /*
  * Transformation matrix which transforms the
@@ -74,7 +76,7 @@ void main(void) {
    * There is no round function in GLSL 1.2, so we use
    * floor(x + 0.5).
    */  
-  voxCoord = floor(vertVoxCoord + 0.5);
+  voxCoord = floor(vertVoxCoord + voxelOffset);
   
   /*
    * Normalise the voxel coordinates to [0.0, 1.0],

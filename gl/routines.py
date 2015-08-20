@@ -53,7 +53,7 @@ def show2D(xax, yax, width, height, lo, hi):
         gl.glRotatef(270, 1, 0, 0)
 
 
-def calculateSamplePoints(shape, resolution, xform, xax, yax):
+def calculateSamplePoints(shape, resolution, xform, xax, yax, origin='centre'):
     """Calculates a uniform grid of points, in the display coordinate system
     (as specified by the given :class:`.Display` object properties) along the
     x-y plane (as specified by the xax/yax indices), at which the given image
@@ -93,8 +93,8 @@ def calculateSamplePoints(shape, resolution, xform, xax, yax):
     # values of a bounding box which
     # encapsulates the entire image,
     # in the display coordinate system
-    xmin, xmax = transform.axisBounds(shape, xform, xax)
-    ymin, ymax = transform.axisBounds(shape, xform, yax)
+    xmin, xmax = transform.axisBounds(shape, xform, xax, origin)
+    ymin, ymax = transform.axisBounds(shape, xform, yax, origin)
 
     # Number of samples along each display
     # axis, given the requested resolution

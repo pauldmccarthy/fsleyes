@@ -7,6 +7,10 @@
 #    vertex.position  - Vertex position in the voxel coordinate system.
 # 
 #    program.local[0] - (first three components) inverse of image shape
+#    program.local[1] - (first three components) Offset to apply to transformed
+#                       voxel coordinates before flooring to integers (this
+#                       should be 0 in id/pixdim display mode, and 0.5 in
+#                       affine display mode).
 #
 # Outputs:
 #    result.position    - the vertex position
@@ -17,6 +21,7 @@
 TEMP texCoord;
 
 PARAM invImageShape = program.local[0];
+PARAM voxelOffsets  = program.local[1];
 
 # Transform the vertex position (which is in voxel
 # coordinates) into display coordinates.  It is
@@ -30,7 +35,7 @@ DP4 result.position.w, state.matrix.mvp.row[3], vertex.position;
 # Transform the vertex coordinates
 # into integer voxel coordinates
 MOV texCoord, vertex.position;
-ADD texCoord, texCoord, { 0.5, 0.5, 0.5, 0.0 };
+ADD texCoord, texCoord, voxelOffsets;
 FLR texCoord, texCoord;
 
 MOV result.texcoord[1], texCoord;

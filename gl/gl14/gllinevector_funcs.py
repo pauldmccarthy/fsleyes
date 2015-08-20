@@ -40,6 +40,7 @@ def init(self):
 
     def vertexUpdate(*a):
         updateVertices(self)
+        updateShaderState(self)
         self.onUpdate()
 
     name = '{}_vertices'.format(self.name)
@@ -122,8 +123,12 @@ def updateShaderState(self):
     invShape     = 1.0 / shape
     modThreshold = [opts.modThreshold / 100.0, 0.0, 0.0, 0.0]
 
+    if opts.transform in ('id', 'pixdim'): offset = [0.0, 0.0, 0.0, 0.0]
+    else:                                  offset = [0.5, 0.5, 0.5, 0.0]
+
     # Vertex program inputs
     shaders.setVertexProgramVector(  0, invShape)
+    shaders.setVertexProgramVector(  1, offset)
 
     # Fragment program inputs
     shaders.setFragmentProgramMatrix(0, voxValXform)
