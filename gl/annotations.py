@@ -2,7 +2,7 @@
 #
 # annotations.py - 2D annotations on a SliceCanvas.
 #
-# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+# Author: Paul McCarthy <pauldmccarthy@gmail.com> 
 #
 """This module provides the :class:`Annotations` class, which implements
 functionality to draw 2D OpenGL annotations on a canvas
