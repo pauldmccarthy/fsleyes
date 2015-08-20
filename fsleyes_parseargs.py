@@ -376,7 +376,12 @@ EXTRA = td.TypeDict({
 def _imageTrans(i):
     if i == 'none': return None
     else:           return i.dataSource
-    
+
+
+def _lutTrans(l):
+    if isinstance(l, colourmaps.LookupTable): return l.key
+    else:                                     return l
+
     
 TRANSFORMS = td.TypeDict({
     'SceneOpts.showCursor'  : lambda b: not b,
@@ -391,6 +396,8 @@ TRANSFORMS = td.TypeDict({
     # is only used when generating arguments
     'VectorOpts.modulate'   : _imageTrans,
     'ModelOpts.refImage'    : _imageTrans,
+
+    'LabelOpts.lut'         : _lutTrans,
 })
 
 
