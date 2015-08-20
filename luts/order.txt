@@ -1,4 +1,3 @@
 random                     Random
 harvard-oxford-cortical    MGH Cortical
 harvard-oxford-subcortical MGH Sub-cortical
-random_big                 Random (large)
