@@ -113,8 +113,10 @@ class FSLEyesFrame(wx.Frame):
         # for the first view panel is synced to
         # the master DC, but by default the
         # overlay display settings for subsequent
-        # view panels are unsynced.
-        if panelId > 1:
+        # CanvasPanels are unsynced; other
+        # ViewPanels (e.g. TimeSeriesPanel) remain
+        # synced by default.
+        if panelId > 1 and issubclass(panelCls, views.CanvasPanel):
             childDC.syncOverlayDisplay = False
         
         panel = panelCls(
