@@ -431,20 +431,11 @@ class FSLEyesFrame(wx.Frame):
             # Set up a default for ortho views
             # layout (this will hopefully eventually
             # be restored from a saved state)
-            import fsl.fsleyes.controls.overlaylistpanel      as olp
-            import fsl.fsleyes.controls.locationpanel         as lop
-            import fsl.fsleyes.controls.overlaydisplaytoolbar as odt
-            import fsl.fsleyes.controls.orthotoolbar          as ot
-            import fsl.fsleyes.controls.orthoprofiletoolbar   as opt
+            import fsl.fsleyes.controls.overlaylistpanel as olp
+            import fsl.fsleyes.controls.locationpanel    as lop
 
             viewPanel.togglePanel(olp.OverlayListPanel)
             viewPanel.togglePanel(lop.LocationPanel)
-            viewPanel.togglePanel(odt.OverlayDisplayToolBar,
-                                  viewPanel=viewPanel)
-            viewPanel.togglePanel(ot .OrthoToolBar,
-                                  ortho=viewPanel)
-            viewPanel.togglePanel(opt.OrthoProfileToolBar,
-                                  ortho=viewPanel) 
 
             
     def __makeMenuBar(self):

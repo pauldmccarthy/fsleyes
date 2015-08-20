@@ -17,10 +17,11 @@ import wx
 
 import numpy as np
 
-import fsl.utils.layout                        as fsllayout
-import fsl.fsleyes.gl.wxgllightboxcanvas       as lightboxcanvas
-import fsl.fsleyes.controls.lightboxtoolbar    as lightboxtoolbar
-import fsl.fsleyes.displaycontext.lightboxopts as lightboxopts
+import fsl.utils.layout                           as fsllayout
+import fsl.fsleyes.gl.wxgllightboxcanvas          as lightboxcanvas
+import fsl.fsleyes.controls.lightboxtoolbar       as lightboxtoolbar
+import fsl.fsleyes.controls.overlaydisplaytoolbar as overlaydisplaytoolbar
+import fsl.fsleyes.displaycontext.lightboxopts    as lightboxopts
 import canvaspanel
 
 
@@ -130,6 +131,18 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         self._selectedOverlayChanged()
         self.initProfile()
+
+        # The FSLEyesFrame AuiManager seems to
+        # struggle if we add these toolbars
+        # immediately, so we'll do it asynchronously
+        def addToolbars():
+            
+            self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar,
+                             viewPanel=self)
+            self.togglePanel(lightboxtoolbar.LightBoxToolBar, lb=self)
+
+        wx.CallAfter(addToolbars)
+            
 
 
     def destroy(self):

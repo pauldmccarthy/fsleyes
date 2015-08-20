@@ -17,16 +17,17 @@ import logging
 
 import wx
 
-import fsl.data.strings                         as strings
-import fsl.data.constants                       as constants
-import fsl.utils.layout                         as fsllayout
-import fsl.fsleyes.gl                           as fslgl
-import fsl.fsleyes.colourmaps                   as colourmaps
-import fsl.fsleyes.gl.wxglslicecanvas           as slicecanvas
-import fsl.fsleyes.controls.orthotoolbar        as orthotoolbar
-import fsl.fsleyes.controls.orthoprofiletoolbar as orthoprofiletoolbar
-import fsl.fsleyes.displaycontext.orthoopts     as orthoopts
-import                                             canvaspanel
+import fsl.data.strings                           as strings
+import fsl.data.constants                         as constants
+import fsl.utils.layout                           as fsllayout
+import fsl.fsleyes.gl                             as fslgl
+import fsl.fsleyes.colourmaps                     as colourmaps
+import fsl.fsleyes.gl.wxglslicecanvas             as slicecanvas
+import fsl.fsleyes.controls.overlaydisplaytoolbar as overlaydisplaytoolbar
+import fsl.fsleyes.controls.orthotoolbar          as orthotoolbar
+import fsl.fsleyes.controls.orthoprofiletoolbar   as orthoprofiletoolbar
+import fsl.fsleyes.displaycontext.orthoopts       as orthoopts
+import                                               canvaspanel
 
 
 log = logging.getLogger(__name__)
@@ -171,9 +172,21 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # Initialise the panel
         self._refreshLayout()
         self._overlayListChanged()
-        self._refreshLabels()
         self._locationChanged()
         self.initProfile()
+
+        # The FSLEyesFrame AuiManager seems to
+        # struggle if we add these toolbars
+        # immediately, so we'll do it asynchronously 
+        def addToolbars():
+            self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar,
+                             viewPanel=self)
+            self.togglePanel(orthotoolbar.OrthoToolBar,
+                             ortho=self) 
+            self.togglePanel(orthoprofiletoolbar.OrthoProfileToolBar,
+                             ortho=self) 
+
+        wx.CallAfter(addToolbars)
 
 
     def destroy(self):
