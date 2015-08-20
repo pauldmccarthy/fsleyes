@@ -22,3 +22,7 @@ class LightBoxOpts(sceneopts.SceneOpts):
     zrange         = copy.copy(canvasopts.LightBoxCanvasOpts.zrange)
     showGridLines  = copy.copy(canvasopts.LightBoxCanvasOpts.showGridLines)
     highlightSlice = copy.copy(canvasopts.LightBoxCanvasOpts.highlightSlice)
+
+    def __init__(self, *args, **kwargs):
+        sceneopts.SceneOpts.__init__(self, *args, **kwargs)
+        self.setConstraint('zoom', 'minval', 10)
