@@ -167,8 +167,8 @@ properties = TypeDict({
                                      'some older systems.',
 
     'OrthoOpts.showXCanvas' : 'Show / hide the X canvas.',
-    'OrthoOpts.showYCanvas' : 'Show / hide the X canvas.',
-    'OrthoOpts.showZCanvas' : 'Show / hide the X canvas.',
+    'OrthoOpts.showYCanvas' : 'Show / hide the Y canvas.',
+    'OrthoOpts.showZCanvas' : 'Show / hide the Z canvas.',
     'OrthoOpts.showLabels'  : 'If the currently selected overlay is a NIFTI1 '
                               'image, show / hide anatomical orientation '
                               'labels.',
@@ -341,8 +341,13 @@ properties = TypeDict({
 
 
 actions = TypeDict({
+    'CanvasPanel.screenshot'        : 'Take a screenshot of the current scene',
+    
+    'OrthoToolBar.more'             : 'Show more view control settings',
+    'LightBoxToolBar.more'          : 'Show more view control settings',
 
-
+    'OrthoViewProfile.resetZoom'    : 'Reset zoom level to 100%',
+    'OrthoViewProfile.centreCursor' : 'Reset location to centre of scene',
 })
 
 
