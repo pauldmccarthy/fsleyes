@@ -194,8 +194,6 @@ properties = TypeDict({
 
     # ViewPanels
 
-    'ViewPanel.profile' : '',
-
     'CanvasPanel.syncLocation'       : 'If checked, the location shown on '
                                        'this panel will be linked to the '
                                        'location shown on other panels (as '
@@ -309,13 +307,14 @@ properties = TypeDict({
 
     # Profiles
 
+    'OrthoPanel.profile'                      : 'Switch between view mode '
+                                                'and edit mode',
     'OrthoEditProfile.selectionSize'          : 'Size (in voxels) of the '
                                                 'selection region.',
-    'OrthoEditProfile.selectionIs3D'          : 'If checked, the selection '
-                                                'region will be a 3D cube; '
-                                                'otherwise, it will be a' 
-                                                'square in the plane of the '
-                                                'active canvas.' ,
+    'OrthoEditProfile.selectionIs3D'          : 'Choose between a 2D square '
+                                                'selection in the plane of '
+                                                'the active canvas, or a 3D '
+                                                'cube.',
     'OrthoEditProfile.selectionCursorColour'  : 'Colour to use for the '
                                                 'selection cursor.', 
     'OrthoEditProfile.selectionOverlayColour' : 'Colour to use to highlight '
@@ -329,14 +328,16 @@ properties = TypeDict({
                                                 'values for the purpose of '
                                                 'the search.',
     'OrthoEditProfile.localFill'              : 'If selecting by intensity, '
-                                                'voxels must be adjacent to '
-                                                'an already selected voxel '
-                                                'to be conxidered in the '
-                                                'search. Otherwise, all '
-                                                'voxels in the search radius '
-                                                'are considered.',
+                                                'only select voxels which are '
+                                                'adjacent to an already  '
+                                                'selected voxel',
+    'OrthoEditProfile.limitToRadius'          : 'If selecting by intensity, '
+                                                'limit the search to a sphere '
+                                                'of the specified radius.',
     'OrthoEditProfile.searchRadius'           : 'Limit the search to the '
-                                                'specified radius.', 
+                                                'specified radius.',
+
+    'OrthoEditToolBar.selint' : 'Select voxels based on similar intensities',
 })
 
 
@@ -348,6 +349,17 @@ actions = TypeDict({
 
     'OrthoViewProfile.resetZoom'    : 'Reset zoom level to 100%',
     'OrthoViewProfile.centreCursor' : 'Reset location to centre of scene',
+
+    'OrthoEditProfile.undo'                    : 'Undo the most recent action',
+    'OrthoEditProfile.redo'                    : 'Redo the most recent '
+                                                 'undone action',
+    'OrthoEditProfile.fillSelection'           : 'Fill the selection with '
+                                                 'the current fill value',
+    'OrthoEditProfile.clearSelection'          : 'Clear the current selection',
+    'OrthoEditProfile.createMaskFromSelection' : 'Create a new mask overlay '
+                                                 'from the current selection',
+    'OrthoEditProfile.createROIFromSelection'  : 'Create a new ROI overlay '
+                                                 'from the current selection',
 })
 
 

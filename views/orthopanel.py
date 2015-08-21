@@ -25,7 +25,7 @@ import fsl.fsleyes.colourmaps                     as colourmaps
 import fsl.fsleyes.gl.wxglslicecanvas             as slicecanvas
 import fsl.fsleyes.controls.overlaydisplaytoolbar as overlaydisplaytoolbar
 import fsl.fsleyes.controls.orthotoolbar          as orthotoolbar
-import fsl.fsleyes.controls.orthoprofiletoolbar   as orthoprofiletoolbar
+import fsl.fsleyes.controls.orthoedittoolbar      as orthoedittoolbar
 import fsl.fsleyes.displaycontext.orthoopts       as orthoopts
 import                                               canvaspanel
 
@@ -48,8 +48,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         actionz = {
             'toggleOrthoToolBar' : lambda *a: self.togglePanel(
                 orthotoolbar.OrthoToolBar, ortho=self),
-            'toggleProfileToolBar' : lambda *a: self.togglePanel(
-                orthoprofiletoolbar.OrthoProfileToolBar, ortho=self), 
+            'toggleEditToolBar' : lambda *a: self.togglePanel(
+                orthoedittoolbar.OrthoEditToolBar, ortho=self), 
         }
 
         canvaspanel.CanvasPanel.__init__(self,
@@ -183,7 +183,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                              viewPanel=self)
             self.togglePanel(orthotoolbar.OrthoToolBar,
                              ortho=self) 
-            self.togglePanel(orthoprofiletoolbar.OrthoProfileToolBar,
+            self.togglePanel(orthoedittoolbar.OrthoEditToolBar,
                              ortho=self) 
 
         wx.CallAfter(addToolbars)

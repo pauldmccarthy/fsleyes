@@ -20,6 +20,6 @@ from overlayinfopanel       import OverlayInfoPanel
 from shellpanel             import ShellPanel
 
 from orthotoolbar           import OrthoToolBar
-from orthoprofiletoolbar    import OrthoProfileToolBar
+from orthoedittoolbar       import OrthoEditToolBar
 from lightboxtoolbar        import LightBoxToolBar
 from overlaydisplaytoolbar  import OverlayDisplayToolBar
