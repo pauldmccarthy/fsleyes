@@ -360,6 +360,11 @@ actions = TypeDict({
                                                  'from the current selection',
     'OrthoEditProfile.createROIFromSelection'  : 'Create a new ROI overlay '
                                                  'from the current selection',
+
+    'VolumeOpts.resetDisplayRange' : 'Reset the display range '
+                                     'to the data range.',
+    
+    'OverlayDisplayToolBar.more' : 'Show more overlay display settings.',
 })
 
 

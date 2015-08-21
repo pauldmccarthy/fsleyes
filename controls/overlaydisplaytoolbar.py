@@ -15,51 +15,115 @@ import wx
 
 import props
 
-import fsl.fsleyes.toolbar as fsltoolbar
-import fsl.fsleyes.icons   as icons
-import fsl.fsleyes.actions as actions
-import fsl.utils.typedict  as td
-import fsl.data.strings    as strings
-import overlaydisplaypanel as overlaydisplay
+import fsl.fsleyes.toolbar  as fsltoolbar
+import fsl.fsleyes.icons    as icons
+import fsl.fsleyes.tooltips as fsltooltips
+import fsl.fsleyes.actions  as actions
+import fsl.utils.typedict   as td
+import fsl.data.strings     as strings
+import overlaydisplaypanel  as overlaydisplay
 
 
 log = logging.getLogger(__name__)
 
+_TOOLTIPS = td.TypeDict({
+
+    'Display.name'        : fsltooltips.properties['Display.name'],
+    'Display.overlayType' : fsltooltips.properties['Display.overlayType'],
+    'Display.alpha'       : fsltooltips.properties['Display.alpha'],
+    'Display.brightness'  : fsltooltips.properties['Display.brightness'],
+    'Display.contrast'    : fsltooltips.properties['Display.contrast'],
+
+    'VolumeOpts.displayRange'      : fsltooltips.properties['VolumeOpts.'
+                                                            'displayRange'],
+    'VolumeOpts.resetDisplayRange' : fsltooltips.actions[   'VolumeOpts.reset'
+                                                            'DisplayRange'],
+    'VolumeOpts.cmap'              : fsltooltips.properties['VolumeOpts.cmap'],
+
+    'MaskOpts.threshold' : fsltooltips.properties['MaskOpts.threshold'],
+    'MaskOpts.colour'    : fsltooltips.properties['MaskOpts.colour'],
+
+    'LabelOpts.lut'          : fsltooltips.properties['LabelOpts.lut'],
+    'LabelOpts.outline'      : fsltooltips.properties['LabelOpts.outline'],
+    'LabelOpts.outlineWidth' : fsltooltips.properties['LabelOpts.'
+                                                      'outlineWidth'],
+
+    'RGBVectorOpts.modulate'     : fsltooltips.properties['VectorOpts.'
+                                                          'modulate'],
+    'RGBVectorOpts.modThreshold' : fsltooltips.properties['VectorOpts.'
+                                                          'modThreshold'],
+
+    'LineVectorOpts.modulate'     : fsltooltips.properties['VectorOpts.'
+                                                           'modulate'],
+    'LineVectorOpts.modThreshold' : fsltooltips.properties['VectorOpts.'
+                                                           'modThreshold'],
+    'LineVectorOpts.lineWidth'    : fsltooltips.properties['LineVectorOpts.'
+                                                           'lineWidth'],
+
+    'ModelOpts.colour'       : fsltooltips.properties['ModelOpts.colour'],
+    'ModelOpts.outline'      : fsltooltips.properties['ModelOpts.outline'],
+    'ModelOpts.outlineWidth' : fsltooltips.properties['ModelOpts.'
+                                                      'outlineWidth'],
+})
 
 
 _TOOLBAR_PROPS = td.TypeDict({
 
     'Display' : {
-        'name'         : props.Widget('name'),
-        'overlayType'  : props.Widget('overlayType'),
-        'alpha'        : props.Widget('alpha',
-                                      spin=False,
-                                      showLimits=False),
-        'brightness'   : props.Widget('brightness',
-                                      spin=False,
-                                      showLimits=False),
-        'contrast'     : props.Widget('contrast',
-                                      spin=False,
-                                      showLimits=False)},
+        'name'         : props.Widget(
+            'name',
+            tooltip=_TOOLTIPS['Display.name']),
+        'overlayType'  : props.Widget(
+            'overlayType',
+            tooltip=_TOOLTIPS['Display.overlayType']),
+        'alpha'        : props.Widget(
+            'alpha',
+            spin=False,
+            showLimits=False,
+            tooltip=_TOOLTIPS['Display.alpha']),
+        'brightness'   : props.Widget(
+            'brightness',
+            spin=False,
+            showLimits=False,
+            tooltip=_TOOLTIPS['Display.brightness']),
+        'contrast'     : props.Widget(
+            'contrast',
+            spin=False,
+            showLimits=False,
+            tooltip=_TOOLTIPS['Display.contrast'])},
 
     'VolumeOpts' : {
-        'displayRange' : props.Widget('displayRange',
-                                      slider=False,
-                                      showLimits=False),
+        'displayRange' : props.Widget(
+            'displayRange',
+            slider=False,
+            showLimits=False,
+            tooltip=_TOOLTIPS['VolumeOpts.displayRange']),
         'resetDisplayRange' : actions.ActionButton(
             'resetDisplayRange',
-            icon=icons.findImageFile('verticalReset24')), 
-        'cmap' : props.Widget('cmap')},
+            icon=icons.findImageFile('verticalReset24'),
+            tooltip=_TOOLTIPS['VolumeOpts.resetDisplayRange']), 
+        'cmap' : props.Widget(
+            'cmap',
+            tooltip=_TOOLTIPS['VolumeOpts.cmap'])},
 
-    
     'MaskOpts' : {
-        'threshold' : props.Widget('threshold', showLimits=False, spin=False),
-        'colour'    : props.Widget('colour', size=(24, 24))},
+        'threshold' : props.Widget(
+            'threshold',
+            showLimits=False,
+            spin=False,
+            tooltip=_TOOLTIPS['MaskOpts.threshold']),
+        'colour'    : props.Widget(
+            'colour',
+            size=(24, 24),
+            tooltip=_TOOLTIPS['MaskOpts.colour'])},
 
     'LabelOpts' : {
-        'lut'     : props.Widget('lut'),
+        'lut'     : props.Widget(
+            'lut',
+            tooltip=_TOOLTIPS['LabelOpts.lut']),
         'outline' : props.Widget(
             'outline',
+            tooltip=_TOOLTIPS['LabelOpts.outline'],
             icon=[icons.findImageFile('outline24'),
                   icons.findImageFile('filled24')],
             toggle=True,
@@ -68,29 +132,46 @@ _TOOLBAR_PROPS = td.TypeDict({
         
         'outlineWidth' : props.Widget(
             'outlineWidth',
+            tooltip=_TOOLTIPS['LabelOpts.outlineWidth'],
             enabledWhen=lambda i, sw: not sw,
             dependencies=[(lambda o: o.display, 'softwareMode')],
             showLimits=False,
             spin=False)},
 
     'RGBVectorOpts' : {
-        'modulate'     : props.Widget('modulate'),
-        'modThreshold' : props.Widget('modThreshold',
-                                      showLimits=False,
-                                      spin=False)},
+        'modulate'     : props.Widget(
+            'modulate',
+            tooltip=_TOOLTIPS['RGBVectorOpts.modulate']),
+        'modThreshold' : props.Widget(
+            'modThreshold',
+            showLimits=False,
+            spin=False,
+            tooltip=_TOOLTIPS['RGBVectorOpts.modThreshold'])},
 
     'LineVectorOpts' : {
-        'modulate'     : props.Widget('modulate'),
-        'modThreshold' : props.Widget('modThreshold',
-                                      showLimits=False,
-                                      spin=False), 
-        'lineWidth' : props.Widget('lineWidth', showLimits=False, spin=False),
+        'modulate'     : props.Widget(
+            'modulate',
+            tooltip=_TOOLTIPS['LineVectorOpts.modulate']),
+        'modThreshold' : props.Widget(
+            'modThreshold',
+            showLimits=False,
+            spin=False,
+            tooltip=_TOOLTIPS['LineVectorOpts.modThreshold']), 
+        'lineWidth' : props.Widget(
+            'lineWidth',
+            showLimits=False,
+            spin=False,
+            tooltip=_TOOLTIPS['LineVectorOpts.lineWidth']),
     },
 
     'ModelOpts' : {
-        'colour'       : props.Widget('colour', size=(24, 24)),
+        'colour'       : props.Widget(
+            'colour',
+            size=(24, 24),
+            tooltip=_TOOLTIPS['ModelOpts.colour']),
         'outline'      : props.Widget(
             'outline',
+            tooltip=_TOOLTIPS['ModelOpts.outline'],
             icon=[icons.findImageFile('outline24'),
                   icons.findImageFile('filled24')],
             toggle=True),
@@ -98,6 +179,7 @@ _TOOLBAR_PROPS = td.TypeDict({
             'outlineWidth',
             showLimits=False,
             spin=False,
+            tooltip=_TOOLTIPS['ModelOpts.outlineWidth'],
             enabledWhen=lambda i: i.outline)}
 })
 
@@ -392,7 +474,9 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
             self,
             self,
             view=actions.ActionButton(
-                'more', icon=icons.findImageFile('gear24')))
+                'more',
+                icon=icons.findImageFile('gear24'),
+                tooltip=fsltooltips.actions[self, 'more']))
 
         tools.insert(0, more)
 
