@@ -24,6 +24,8 @@ import numpy as np
 
 import props
 
+import pwidgets.floatspin  as floatspin
+
 import fsl.utils.transform as transform
 import fsl.data.image      as fslimage
 import fsl.data.constants  as constants
@@ -117,8 +119,9 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         self.voxelX = voxelX
         self.voxelY = voxelY
         self.voxelZ = voxelZ
-        self.volume = wx.SpinCtrl(self.column2)
-        self.volume.SetValue(0)
+        self.volume = floatspin.FloatSpinCtrl(
+            self.column2,
+            style=floatspin.FSC_MOUSEWHEEL | floatspin.FSC_INTEGER)
 
         self.column1Sizer = wx.BoxSizer(wx.VERTICAL)
         self.column2Sizer = wx.BoxSizer(wx.VERTICAL)
@@ -364,11 +367,11 @@ class LocationPanel(fslpanel.FSLEyesPanel):
             props.unbindWidget(self.volume,
                                self.volumeTarget,
                                'volume',
-                               (wx.EVT_SPIN, wx.EVT_SPINCTRL))
+                               floatspin.EVT_FLOATSPIN)
             
-            self.volume.Unbind(wx.EVT_MOUSEWHEEL)
             self.volumeTarget = None
             self.volume.SetValue(0)
+            self.volume.SetRange(0, 0)
 
         # Enable/disable the volume widget if the
         # overlay is a 4D image, and bind/unbind
@@ -378,19 +381,11 @@ class LocationPanel(fslpanel.FSLEyesPanel):
             opts = self._displayCtx.getOpts(refImage)
             self.volumeTarget = opts
 
-            def onMouse(ev):
-                if not self.volume.IsEnabled():
-                    return
-
-                wheelDir = ev.GetWheelRotation()
-
-                if   wheelDir < 0: opts.volume -= 1
-                elif wheelDir > 0: opts.volume += 1
-
             props.bindWidget(
-                self.volume, opts, 'volume', (wx.EVT_SPIN, wx.EVT_SPINCTRL))
+                self.volume, opts, 'volume', floatspin.EVT_FLOATSPIN)
 
-            self.volume.Bind(wx.EVT_MOUSEWHEEL, onMouse)
+            self.volume.SetRange(0, refImage.shape[3] - 1)
+            self.volume.SetValue(opts.volume)
 
             self.volume     .Enable()
             self.volumeLabel.Enable()
