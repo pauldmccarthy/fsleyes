@@ -44,9 +44,13 @@ class CanvasPanel(viewpanel.ViewPanel):
     syncOverlayOrder   = props.Boolean(default=True)
     syncOverlayDisplay = props.Boolean(default=True)
     movieMode          = props.Boolean(default=False)
+
+    # Movie update rate in milliseconds - this is
+    # inverted so that a high value corresponds to
+    # a fast rate.
     movieRate          = props.Int(minval=100,
                                    maxval=1000,
-                                   default=250,
+                                   default=750,
                                    clamped=True)
     
 
@@ -271,10 +275,16 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         if not self.movieMode:
             return
+
+        rate    = self.movieRate
+        rateMin = self.getConstraint('movieRate', 'minval')
+        rateMax = self.getConstraint('movieRate', 'maxval')
+
+        rate = rateMin + (rateMax - rate) 
         
         self.__movieTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.__movieUpdate)
-        self.__movieTimer.Start(self.movieRate)
+        self.__movieTimer.Start(rate)
         
 
     def __movieRateChanged(self, *a):

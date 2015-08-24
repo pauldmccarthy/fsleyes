@@ -46,6 +46,7 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
 
         icons = {
             'screenshot'  : fslicons.findImageFile('camera24'),
+            'movieMode'   : fslicons.findImageFile('movie24'),
             'showXCanvas' : fslicons.findImageFile('sagittalSlice24'),
             'showYCanvas' : fslicons.findImageFile('coronalSlice24'),
             'showZCanvas' : fslicons.findImageFile('axialSlice24'),
@@ -63,6 +64,7 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
 
         tooltips = {
             'screenshot'   : fsltooltips.actions[   ortho,     'screenshot'],
+            'movieMode'    : fsltooltips.properties[ortho,     'movieMode'],
             'zoom'         : fsltooltips.properties[orthoOpts, 'zoom'],
             'layout'       : fsltooltips.properties[orthoOpts, 'layout'],
             'showXCanvas'  : fsltooltips.properties[orthoOpts, 'showXCanvas'],
@@ -74,6 +76,7 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
         }
         
         targets    = {'screenshot'   : ortho,
+                      'movieMode'    : ortho,
                       'zoom'         : orthoOpts,
                       'layout'       : orthoOpts,
                       'showXCanvas'  : orthoOpts,
@@ -104,6 +107,9 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
             props  .Widget(      'layout',
                                  icons=icons['layout'],
                                  tooltip=tooltips['layout']),
+            props  .Widget(      'movieMode', 
+                                 icon=icons['movieMode'],
+                                 tooltip=tooltips['movieMode']), 
             actions.ActionButton('resetZoom',
                                  icon=icons['resetZoom'],
                                  tooltip=tooltips['resetZoom']),

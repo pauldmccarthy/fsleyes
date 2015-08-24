@@ -31,6 +31,7 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
         
         icons = {
             'screenshot'  : fslicons.findImageFile('camera24'),
+            'movieMode'   : fslicons.findImageFile('movie24'),
             'more'        : fslicons.findImageFile('gear24'),
 
             'zax' : {
@@ -44,6 +45,7 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
 
             'more'         : fsltooltips.actions[   self,    'more'],
             'screenshot'   : fsltooltips.actions[   lb,      'screenshot'],
+            'movieMode'    : fsltooltips.properties[lb,      'movieMode'],
             'zax'          : fsltooltips.properties[lbOpts,  'zax'],
             'sliceSpacing' : fsltooltips.properties[lbOpts,  'sliceSpacing'],
             'zrange'       : fsltooltips.properties[lbOpts,  'zrange'],
@@ -60,6 +62,11 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
                 'screenshot',
                 icon=icons['screenshot'],
                 tooltip=tooltips['screenshot']),
+
+            'movieMode'    : props.Widget(
+                'movieMode',
+                icon=icons['movieMode'],
+                tooltip=tooltips['movieMode']), 
             
             'zax'          : props.Widget(
                 'zax',
@@ -94,6 +101,7 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
 
         more         = props.buildGUI(self,  self,   specs['more'])
         screenshot   = props.buildGUI(self,  lb,     specs['screenshot'])
+        movieMode    = props.buildGUI(self,  lb,     specs['movieMode'])
         zax          = props.buildGUI(self,  lbOpts, specs['zax'])
         zrange       = props.buildGUI(self,  lbOpts, specs['zrange'])
         zoom         = props.buildGUI(panel, lbOpts, specs['zoom'])
@@ -109,7 +117,7 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
         sizer.Add(spacingLabel)
         sizer.Add(spacing, flag=wx.EXPAND)
 
-        tools = [more, screenshot, zax, zrange, panel]
+        tools = [more, screenshot, zax, movieMode, zrange, panel]
         
         self.SetTools(tools) 
 
