@@ -7,11 +7,12 @@
 
 import wx
 
-import                        props
-import pwidgets.widgetlist as widgetlist
+import                         props
+import pwidgets.widgetlist  as widgetlist
 
-import fsl.fsleyes.panel   as fslpanel
-import fsl.data.strings    as strings
+import fsl.fsleyes.panel    as fslpanel
+import fsl.fsleyes.tooltips as fsltooltips
+import fsl.data.strings     as strings
 
 
 class HistogramControlPanel(fslpanel.FSLEyesPanel):
@@ -45,6 +46,7 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
             self.__widgets.AddWidget(
                 props.makeWidget(self.__widgets, hsPanel, prop),
                 displayName=strings.properties[hsPanel, prop],
+                tooltip=fsltooltips.properties[hsPanel, prop],
                 groupName='histSettings')
 
         self.__widgets.AddGroup(
@@ -54,6 +56,7 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
         for prop in plotProps:
             self.__widgets.AddWidget(
                 props.makeWidget(self.__widgets, hsPanel, prop),
+                tooltip=fsltooltips.properties[hsPanel, prop],
                 displayName=strings.properties[hsPanel, prop],
                 groupName='plotSettings')
 
@@ -80,15 +83,18 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
 
         self.__widgets.AddWidget(
             labels,
-            strings.labels[hsPanel, 'labels'],
+            displayName=strings.labels[hsPanel, 'labels'],
+            tooltip=fsltooltips.misc[  hsPanel, 'labels'],
             groupName='plotSettings')
         self.__widgets.AddWidget(
             xlims,
-            strings.labels[hsPanel, 'xlim'],
+            displayName=strings.labels[hsPanel, 'xlim'],
+            tooltip=fsltooltips.misc[  hsPanel, 'xlim'],
             groupName='plotSettings')
         self.__widgets.AddWidget(
             ylims,
-            strings.labels[hsPanel, 'ylim'],
+            displayName=strings.labels[hsPanel, 'ylim'],
+            tooltip=fsltooltips.misc[  hsPanel, 'ylim'],
             groupName='plotSettings')
 
         # We store a ref to the currently selected
@@ -180,22 +186,28 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
 
         wlist.AddWidget(ignoreZeros,
                         groupName='currentSettings',
-                        displayName=strings.properties[hs, 'ignoreZeros'])
+                        displayName=strings.properties[hs, 'ignoreZeros'],
+                        tooltip=fsltooltips.properties[hs, 'ignoreZeros'])
         wlist.AddWidget(showOverlay,
                         groupName='currentSettings',
-                        displayName=strings.properties[hs, 'showOverlay'])
+                        displayName=strings.properties[hs, 'showOverlay'],
+                        tooltip=fsltooltips.properties[hs, 'showOverlay'])
         wlist.AddWidget(includeOutliers,
                         groupName='currentSettings',
-                        displayName=strings.properties[hs, 'includeOutliers']) 
+                        displayName=strings.properties[hs, 'includeOutliers'],
+                        tooltip=fsltooltips.properties[hs, 'includeOutliers']) 
         wlist.AddWidget(self.__nbins,
                         groupName='currentSettings',
-                        displayName=strings.properties[hs, 'nbins'])
+                        displayName=strings.properties[hs, 'nbins'],
+                        tooltip=fsltooltips.properties[hs, 'nbins'])
         wlist.AddWidget(volume,
                         groupName='currentSettings',
-                        displayName=strings.properties[hs, 'volume'])
+                        displayName=strings.properties[hs, 'volume'],
+                        tooltip=fsltooltips.properties[hs, 'volume'])
         wlist.AddWidget(dataRange,
                         groupName='currentSettings',
-                        displayName=strings.properties[hs, 'dataRange'])
+                        displayName=strings.properties[hs, 'dataRange'],
+                        tooltip=fsltooltips.properties[hs, 'dataRange'])
 
         if expanded:
             wlist.Expand('currentSettings')

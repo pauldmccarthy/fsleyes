@@ -13,7 +13,7 @@ import numpy as np
 import                           props
 import pwidgets.elistbox      as elistbox
 import fsl.fsleyes.panel      as fslpanel
-import fsl.utils.transform    as transform
+import fsl.fsleyes.tooltips   as fsltooltips
 import fsl.data.strings       as strings
 import fsl.fsleyes.colourmaps as fslcm
 
@@ -38,7 +38,16 @@ class TimeSeriesWidget(wx.Panel):
                                           'lineWidth')
         self.lineStyle = props.makeWidget(self,
                                           timeSeries,
-                                          'lineStyle') 
+                                          'lineStyle')
+
+        self.colour.SetToolTipString(
+            fsltooltips.properties[timeSeries, 'colour'])
+        self.alpha.SetToolTipString(
+            fsltooltips.properties[timeSeries, 'alpha'])
+        self.lineWidth.SetToolTipString(
+            fsltooltips.properties[timeSeries, 'lineWidth'])
+        self.lineStyle.SetToolTipString(
+            fsltooltips.properties[timeSeries, 'lineStyle'])
 
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.SetSizer(self.sizer)
@@ -151,7 +160,11 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
 
         for ts in self.__tsPanel.dataSeries:
             widg = TimeSeriesWidget(self, ts)
-            self.__tsList.Append(ts.label, clientData=ts, extraWidget=widg)
+            self.__tsList.Append(
+                ts.label,
+                clientData=ts,
+                tooltip=fsltooltips.properties[ts, 'label'],
+                extraWidget=widg)
 
 
     def __locationChanged(self, *a):

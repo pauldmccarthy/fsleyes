@@ -372,6 +372,7 @@ actions = TypeDict({
 
 
 misc = TypeDict({
-
-
+    'HistogramPanel.labels' : 'X/Y axis labels.',
+    'HistogramPanel.xlim'   : 'X axis data limits.',
+    'HistogramPanel.ylim'   : 'Y axis data limits.'
 })
