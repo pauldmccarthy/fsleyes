@@ -285,7 +285,7 @@ properties = TypeDict({
                                         'time courses.',
     'FEATTimeSeries.plotPEFits'       : 'Plot the model fit to each PE '
                                         '(parameter estimate).',
-    'FEATTimeSeries.plotCOPEFits'     : 'Plot the model fit to each COPE'
+    'FEATTimeSeries.plotCOPEFits'     : 'Plot the model fit to each COPE '
                                         '(Contrast of Parameter Estimates).',
     'FEATTimeSeries.plotReduced'      : 'Plot the raw data, after regression '
                                         'against the selected PE/COPE.',
@@ -372,7 +372,7 @@ actions = TypeDict({
 
 
 misc = TypeDict({
-    'HistogramPanel.labels' : 'X/Y axis labels.',
-    'HistogramPanel.xlim'   : 'X axis data limits.',
-    'HistogramPanel.ylim'   : 'Y axis data limits.'
+    'PlotPanel.labels' : 'X/Y axis labels.',
+    'PlotPanel.xlim'   : 'X axis data limits.',
+    'PlotPanel.ylim'   : 'Y axis data limits.'
 })

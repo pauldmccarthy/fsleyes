@@ -7,11 +7,12 @@
 
 import wx
 
-import                        props
-import pwidgets.widgetlist as widgetlist
+import                         props
+import pwidgets.widgetlist  as widgetlist
 
-import fsl.fsleyes.panel as fslpanel
-import fsl.data.strings  as strings
+import fsl.fsleyes.panel    as fslpanel
+import fsl.fsleyes.tooltips as fsltooltips
+import fsl.data.strings     as strings
 
 
 class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
@@ -47,6 +48,7 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
             self.__widgets.AddWidget(
                 props.makeWidget(self.__widgets, tsPanel, prop),
                 displayName=strings.properties[tsPanel, prop],
+                tooltip=fsltooltips.properties[tsPanel, prop],
                 groupName='tsSettings')
 
         self.__widgets.AddGroup(
@@ -57,6 +59,7 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
             self.__widgets.AddWidget(
                 props.makeWidget(self.__widgets, tsPanel, prop),
                 displayName=strings.properties[tsPanel, prop],
+                tooltip=fsltooltips.properties[tsPanel, prop],
                 groupName='plotSettings')
 
         xlabel = props.makeWidget(self.__widgets, tsPanel, 'xlabel')
@@ -82,15 +85,18 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
 
         self.__widgets.AddWidget(
             labels,
-            strings.labels[tsPanel, 'labels'],
+            displayName=strings.labels[tsPanel, 'labels'],
+            tooltip=fsltooltips.misc[  tsPanel, 'labels'],
             groupName='plotSettings')
         self.__widgets.AddWidget(
             xlims,
-            strings.labels[tsPanel, 'xlim'],
+            displayName=strings.labels[tsPanel, 'xlim'],
+            tooltip=fsltooltips.misc[  tsPanel, 'xlim'],
             groupName='plotSettings')
         self.__widgets.AddWidget(
             ylims,
-            strings.labels[tsPanel, 'ylim'],
+            displayName=strings.labels[tsPanel, 'ylim'],
+            tooltip=fsltooltips.misc[  tsPanel, 'ylim'],
             groupName='plotSettings')
 
         displayCtx .addListener('selectedOverlay',
@@ -147,18 +153,22 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
             self.__widgets.AddWidget(
                 colour,
                 displayName=strings.properties[tsPanel, 'currentColour'],
+                tooltip=fsltooltips.properties[tsPanel, 'currentColour'],
                 groupName='currentSettings')
             self.__widgets.AddWidget(
                 alpha,
                 displayName=strings.properties[tsPanel, 'currentAlpha'],
+                tooltip=fsltooltips.properties[tsPanel, 'currentAlpha'],
                 groupName='currentSettings')
             self.__widgets.AddWidget(
                 lineWidth,
                 displayName=strings.properties[tsPanel, 'currentLineWidth'],
+                tooltip=fsltooltips.properties[tsPanel, 'currentLineWidth'],
                 groupName='currentSettings') 
             self.__widgets.AddWidget(
                 lineStyle,
                 displayName=strings.properties[tsPanel, 'currentLineStyle'],
+                tooltip=fsltooltips.properties[tsPanel, 'currentLineStyle'],
                 groupName='currentSettings')
             
 
@@ -216,20 +226,24 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
         self.__widgets.AddWidget(
             data,
             displayName=strings.properties[ts, 'plotData'],
+            tooltip=fsltooltips.properties[ts, 'plotData'],
             groupName='currentFEATSettings') 
         self.__widgets.AddWidget(
             full,
             displayName=strings.properties[ts, 'plotFullModelFit'],
+            tooltip=fsltooltips.properties[ts, 'plotFullModelFit'],
             groupName='currentFEATSettings')
         
         self.__widgets.AddWidget(
             res,
             displayName=strings.properties[ts, 'plotResiduals'],
+            tooltip=fsltooltips.properties[ts, 'plotResiduals'],
             groupName='currentFEATSettings')
         
         self.__widgets.AddWidget(
             reduced,
             displayName=strings.properties[ts, 'plotReduced'],
+            tooltip=fsltooltips.properties[ts, 'plotReduced'],
             groupName='currentFEATSettings')
 
         self.__widgets.AddSpace(groupName='currentFEATSettings')
@@ -241,6 +255,7 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
                 ev,
                 displayName=strings.properties[ts, 'plotEVs'].format(
                     i + 1, evName),
+                tooltip=fsltooltips.properties[ts, 'plotEVs'],
                 groupName='currentFEATSettings')
 
         self.__widgets.AddSpace(groupName='currentFEATSettings')
@@ -251,6 +266,7 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
                 pe,
                 displayName=strings.properties[ts, 'plotPEFits'].format(
                     i + 1, evName),
+                tooltip=fsltooltips.properties[ts, 'plotPEFits'],
                 groupName='currentFEATSettings')
 
         self.__widgets.AddSpace(groupName='currentFEATSettings')
@@ -261,4 +277,5 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
                 cope,
                 displayName=strings.properties[ts, 'plotCOPEFits'].format(
                     i + 1, name),
+                tooltip=fsltooltips.properties[ts, 'plotCOPEFits'],
                 groupName='currentFEATSettings') 
