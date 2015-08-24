@@ -9,10 +9,11 @@ import wx
 
 import props
 
-import pwidgets.widgetlist as widgetlist
+import pwidgets.widgetlist  as widgetlist
 
-import fsl.data.strings    as strings
-import fsl.fsleyes.panel   as fslpanel
+import fsl.data.strings     as strings
+import fsl.fsleyes.panel    as fslpanel
+import fsl.fsleyes.tooltips as fsltooltips
 
 
 _CANVASPANEL_PROPS = [
@@ -89,7 +90,8 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
             
             self.__widgets.AddWidget(
                 widget,
-                strings.properties[canvasPanel, dispProp.key],
+                displayName=strings.properties[canvasPanel, dispProp.key],
+                tooltip=fsltooltips.properties[canvasPanel, dispProp.key],
                 groupName='scene')
 
         opts = canvasPanel.getSceneOptions()
@@ -103,7 +105,8 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
             
             self.__widgets.AddWidget(
                 widget,
-                strings.properties[opts, dispProp.key],
+                displayName=strings.properties[opts, dispProp.key],
+                tooltip=fsltooltips.properties[opts, dispProp.key],
                 groupName='scene') 
 
         for dispProp in panelProps:
@@ -115,7 +118,8 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
             
             self.__widgets.AddWidget(
                 widget,
-                strings.properties[opts, dispProp.key],
+                displayName=strings.properties[opts, dispProp.key],
+                tooltip=fsltooltips.properties[opts, dispProp.key],
                 groupName=panelGroup)
 
         self.__widgets.Expand('scene')

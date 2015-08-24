@@ -18,6 +18,7 @@ import pwidgets.widgetlist               as widgetlist
 
 import fsl.utils.typedict                as td
 import fsl.data.strings                  as strings
+import fsl.fsleyes.tooltips              as fsltooltips
 import fsl.fsleyes.panel                 as fslpanel
 import fsl.fsleyes.actions.loadcolourmap as loadcmap
 import fsl.fsleyes.displaycontext        as displayctx
@@ -221,7 +222,6 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
         self.__updateWidgets(display, 'display')
         self.__updateWidgets(opts,    'opts')
 
-
         self.__widgets.Expand('display', displayExpanded)
         self.__widgets.Expand('opts',    optsExpanded)
         
@@ -248,6 +248,8 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
 
         dispProps = _DISPLAY_PROPS[target]
         labels    = [strings.properties[target, p.key] for p in dispProps]
+        tooltips  = [fsltooltips.properties.get((target, p.key), None)
+                     for p in dispProps]
 
         widgets = []
 
@@ -266,10 +268,11 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
                 
             widgets.append(widget)
 
-        for label, widget in zip(labels, widgets):
+        for label, tooltip, widget in zip(labels, tooltips, widgets):
             self.__widgets.AddWidget(
                 widget,
                 label,
+                tooltip=tooltip, 
                 groupName=groupName)
 
         self.Layout()
