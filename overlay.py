@@ -71,12 +71,20 @@ class OverlayList(props.HasProperties):
     def addOverlays(self, fromDir=None, addToEnd=True):
         """Convenience method for interactively adding overlays to this
         :class:`OverlayList`.
+
+        Returns: ``True`` if some overlays were added to the list, ``False``
+                 otherwise.
         """
 
         overlays = interactiveLoadOverlays(fromDir)
+
+        if len(overlays) == 0:
+            return False
         
         if addToEnd: self.extend(      overlays)
         else:        self.insertAll(0, overlays)
+
+        return True
 
 
     def find(self, name):

@@ -306,7 +306,7 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
         Calls the :meth:`.OverlayList.addOverlays` method.
         """
         if self._overlayList.addOverlays():
-            self._displayCtx.selectedOverlay = len(self._OverlayList) - 1
+            self._displayCtx.selectedOverlay = len(self._overlayList) - 1
 
 
     def _lbRemove(self, ev):
