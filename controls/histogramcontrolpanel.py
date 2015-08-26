@@ -178,7 +178,13 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
         self.__nbins = props.makeWidget(wlist, hs, 'nbins', showLimits=False)
         
         volume    = props.makeWidget(wlist, hs, 'volume',    showLimits=False)
-        dataRange = props.makeWidget(wlist, hs, 'dataRange', showLimits=False)
+        dataRange = props.makeWidget(
+            wlist,
+            hs,
+            'dataRange',
+            showLimits=False,
+            labels=[strings.choices['HistogramPanel.dataRange.min'],
+                    strings.choices['HistogramPanel.dataRange.max']])
         
         ignoreZeros     = props.makeWidget(wlist, hs, 'ignoreZeros')
         showOverlay     = props.makeWidget(wlist, hs, 'showOverlay')

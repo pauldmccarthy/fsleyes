@@ -61,10 +61,7 @@ class HistogramSeries(plotpanel.DataSeries):
     showOverlay     = props.Boolean(default=False)
     includeOutliers = props.Boolean(default=False)
     volume          = props.Int(minval=0, maxval=0, clamped=True)
-    dataRange       = props.Bounds(
-        ndims=1,
-        labels=[strings.choices['HistogramPanel.dataRange.min'],
-                strings.choices['HistogramPanel.dataRange.max']])
+    dataRange       = props.Bounds(ndims=1)
 
 
     def __init__(self,

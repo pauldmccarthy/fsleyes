@@ -97,7 +97,9 @@ _TOOLBAR_PROPS = td.TypeDict({
             'displayRange',
             slider=False,
             showLimits=False,
-            tooltip=_TOOLTIPS['VolumeOpts.displayRange']),
+            tooltip=_TOOLTIPS['VolumeOpts.displayRange'],
+            labels=[strings.choices['VolumeOpts.displayRange.min'],
+                    strings.choices['VolumeOpts.displayRange.max']]),
         'resetDisplayRange' : actions.ActionButton(
             'resetDisplayRange',
             icon=icons.findImageFile('verticalReset24'),

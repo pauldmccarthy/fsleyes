@@ -322,17 +322,11 @@ class VolumeOpts(ImageOpts):
     """
 
     
-    displayRange = props.Bounds(
-        ndims=1,
-        labels=[strings.choices['VolumeOpts.displayRange.min'],
-                strings.choices['VolumeOpts.displayRange.max']])
+    displayRange = props.Bounds(ndims=1)
     """Image values which map to the minimum and maximum colour map colours."""
 
     
-    clippingRange = props.Bounds(
-        ndims=1,
-        labels=[strings.choices['VolumeOpts.displayRange.min'],
-                strings.choices['VolumeOpts.displayRange.max']])
+    clippingRange = props.Bounds(ndims=1)
     """Values outside of this range are not shown."""
 
     

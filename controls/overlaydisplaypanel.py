@@ -49,8 +49,16 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('invertClipping',
                      enabledWhen=lambda o, sw: not sw,
                      dependencies=[(lambda o: o.display, 'softwareMode')]),
-        props.Widget('displayRange',  showLimits=False, slider=True),
-        props.Widget('clippingRange', showLimits=False, slider=True)],
+        props.Widget('displayRange',
+                     showLimits=False,
+                     slider=True,
+                     labels=[strings.choices['VolumeOpts.displayRange.min'],
+                             strings.choices['VolumeOpts.displayRange.max']]),
+        props.Widget('clippingRange',
+                     showLimits=False,
+                     slider=True,
+                     labels=[strings.choices['VolumeOpts.displayRange.min'],
+                             strings.choices['VolumeOpts.displayRange.max']])],
 
     'MaskOpts' : [
         props.Widget('resolution', showLimits=False),
