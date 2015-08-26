@@ -15,7 +15,6 @@ import display                as fsldisplay
 
 import fsl.fsleyes.colourmaps as colourmaps
 import fsl.data.image         as fslimage
-import fsl.data.strings       as strings
 import fsl.utils.transform    as transform
 
 import volumeopts
@@ -50,7 +49,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
         # one we generated above.
         fsldisplay.DisplayOpts.__init__(self, *args, **kwargs)
 
-        self.__oldRefImage = 'none'
+        self.__oldRefImage = None
 
         self.overlayList.addListener('overlays',
                                      self.name,
@@ -89,14 +88,12 @@ class ModelOpts(fsldisplay.DisplayOpts):
         If a :attr:`refImage` is selected, it is returned. Otherwise,``None``
         is returned.
         """
-        if self.refImage == 'none':
-            return None
         return self.refImage
 
     
     def getCoordSpaceTransform(self):
 
-        if self.refImage == 'none' or \
+        if self.refImage is None or \
            self.coordSpace == self.transform:
             return None
 
@@ -115,16 +112,16 @@ class ModelOpts(fsldisplay.DisplayOpts):
             refImage    = self.refImage
             oldRefImage = self.getLastValue('refImage')
 
-            if refImage == 'none' and oldRefImage == 'none':
+            if refImage is None and oldRefImage is None:
                 pass
 
-            elif oldRefImage == 'none':
+            elif oldRefImage is None:
                 refOpts = self.displayCtx.getOpts(refImage)
                 newLoc  = transform.transform(
                     [oldLoc],
                     refOpts.getTransform(self.coordSpace, 'display'))[0] 
 
-            elif refImage == 'none':
+            elif refImage is None:
                 if oldRefImage is not None:
                     oldRefOpts = self.displayCtx.getOpts(oldRefImage)
                     newLoc = transform.transform(
@@ -132,7 +129,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
                         oldRefOpts.getTransform('display', self.coordSpace))[0]
 
         elif propName == 'coordSpace':
-            if self.refImage != 'none':
+            if self.refImage is not None:
                 refOpts  = self.displayCtx.getOpts(self.refImage)
                 worldLoc = transform.transform(
                     [oldLoc],
@@ -147,7 +144,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
         elif propName == 'transform':
 
-            if self.refImage != 'none':
+            if self.refImage is not None:
                 refOpts = self.displayCtx.getOpts(self.refImage)
                 newLoc  = refOpts.transformDisplayLocation(oldLoc)
 
@@ -168,7 +165,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
         self.__lastPropChanged = 'refImage'
 
-        if self.__oldRefImage != 'none' and \
+        if self.__oldRefImage is not None and \
            self.__oldRefImage in self.overlayList:
             
             opts = self.displayCtx.getOpts(self.__oldRefImage)
@@ -176,7 +173,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
         self.__oldRefImage = self.refImage
 
-        if self.refImage != 'none':
+        if self.refImage is not None:
             opts = self.displayCtx.getOpts(self.refImage)
             self.bindProps('transform', opts)
 
@@ -218,8 +215,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
             self.overlayList.removeListener('overlays', self.name)
             return
 
-        imgOptions = ['none']
-        imgLabels  = [strings.choices['ModelOpts.refImage.none']]
+        imgOptions = [None]
 
         for overlay in overlays:
             
@@ -228,14 +224,13 @@ class ModelOpts(fsldisplay.DisplayOpts):
                 continue
 
             imgOptions.append(overlay)
-            imgLabels .append(overlay.name)
                 
             overlay.addListener('name',
                                 self.name,
                                 self.__overlayListChanged,
                                 overwrite=True)
             
-        imgProp.setChoices(imgOptions, labels=imgLabels, instance=self)
+        imgProp.setChoices(imgOptions, instance=self)
 
         if imgVal in overlays: self.refImage = imgVal
-        else:                  self.refImage = 'none'
+        else:                  self.refImage = None

@@ -24,8 +24,7 @@ class LabelOpts(volumeopts.ImageOpts):
         volumeopts.ImageOpts.__init__(self, overlay, *args, **kwargs)
 
         luts  = fslcm.getLookupTables()
-        names = [l.name  for l in luts]
-        alts  = [[l.key] for l in luts]
+        alts  = [[l.name, l.key] for l in luts]
 
         lutChoice = self.getProp('lut')
-        lutChoice.setChoices(luts, labels=names, alternates=alts)
+        lutChoice.setChoices(luts, alternates=alts)

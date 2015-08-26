@@ -344,10 +344,7 @@ class HistogramPanel(plotpanel.PlotPanel):
 
     autoBin     = props.Boolean(default=True)
     showCurrent = props.Boolean(default=True)
-    histType    = props.Choice(
-        ('probability', 'count'),
-        labels=[strings.choices['HistogramPanel.histType.probability'],
-                strings.choices['HistogramPanel.histType.count']])
+    histType    = props.Choice(('probability', 'count'))
 
     selectedSeries = props.Int(minval=0, clamped=True)
     

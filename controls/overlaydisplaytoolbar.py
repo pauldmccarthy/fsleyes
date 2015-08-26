@@ -26,6 +26,12 @@ import overlaydisplaypanel  as overlaydisplay
 
 log = logging.getLogger(__name__)
 
+
+def _modImageLabel(img):
+    if img is None: return strings.choices['VectorOpts.modulate.none']
+    else:           return img.name
+
+    
 _TOOLTIPS = td.TypeDict({
 
     'Display.name'        : fsltooltips.properties['Display.name'],
@@ -75,7 +81,8 @@ _TOOLBAR_PROPS = td.TypeDict({
             tooltip=_TOOLTIPS['Display.name']),
         'overlayType'  : props.Widget(
             'overlayType',
-            tooltip=_TOOLTIPS['Display.overlayType']),
+            tooltip=_TOOLTIPS['Display.overlayType'],
+            labels=strings.choices['Display.overlayType']),
         'alpha'        : props.Widget(
             'alpha',
             spin=False,
@@ -122,7 +129,8 @@ _TOOLBAR_PROPS = td.TypeDict({
     'LabelOpts' : {
         'lut'     : props.Widget(
             'lut',
-            tooltip=_TOOLTIPS['LabelOpts.lut']),
+            tooltip=_TOOLTIPS['LabelOpts.lut'],
+            labels=lambda l: l.name),
         'outline' : props.Widget(
             'outline',
             tooltip=_TOOLTIPS['LabelOpts.outline'],
@@ -143,6 +151,7 @@ _TOOLBAR_PROPS = td.TypeDict({
     'RGBVectorOpts' : {
         'modulate'     : props.Widget(
             'modulate',
+            labels=_modImageLabel,
             tooltip=_TOOLTIPS['RGBVectorOpts.modulate']),
         'modThreshold' : props.Widget(
             'modThreshold',
@@ -153,6 +162,7 @@ _TOOLBAR_PROPS = td.TypeDict({
     'LineVectorOpts' : {
         'modulate'     : props.Widget(
             'modulate',
+            labels=_modImageLabel,
             tooltip=_TOOLTIPS['LineVectorOpts.modulate']),
         'modThreshold' : props.Widget(
             'modThreshold',

@@ -37,11 +37,7 @@ class DataSeries(props.HasProperties):
     alpha     = props.Real(minval=0.0, maxval=1.0, default=1.0, clamped=True)
     label     = props.String()
     lineWidth = props.Choice((0.5, 1, 2, 3, 4, 5))
-    lineStyle = props.Choice(
-        *zip(*[('-',  'Solid line'),
-               ('--', 'Dashed line'),
-               ('-.', 'Dash-dot line'),
-               (':',  'Dotted line')]))
+    lineStyle = props.Choice(('-', '--', '-.', ':'))
 
     
     def __init__(self, overlay):

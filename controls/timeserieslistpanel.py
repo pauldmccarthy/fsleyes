@@ -36,9 +36,11 @@ class TimeSeriesWidget(wx.Panel):
         self.lineWidth = props.makeWidget(self,
                                           timeSeries,
                                           'lineWidth')
-        self.lineStyle = props.makeWidget(self,
-                                          timeSeries,
-                                          'lineStyle')
+        self.lineStyle = props.makeWidget(
+            self,
+            timeSeries,
+            'lineStyle',
+            labels=strings.choices['DataSeries.lineStyle'])
 
         self.colour.SetToolTipString(
             fsltooltips.properties[timeSeries, 'colour'])

@@ -43,8 +43,16 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
             'histSettings', strings.labels[self, 'histSettings'])
 
         for prop in histProps:
+            if prop == 'histType':
+                widget = props.makeWidget(
+                    self.__widgets,
+                    hsPanel,
+                    prop,
+                    labels=strings.choices['HistogramPanel.histType'])
+            else:
+                widget = props.makeWidget(self.__widgets, hsPanel, prop)
             self.__widgets.AddWidget(
-                props.makeWidget(self.__widgets, hsPanel, prop),
+                widget,
                 displayName=strings.properties[hsPanel, prop],
                 tooltip=fsltooltips.properties[hsPanel, prop],
                 groupName='histSettings')

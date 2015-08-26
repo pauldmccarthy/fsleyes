@@ -28,14 +28,21 @@ _SCENEOPTS_PROPS = [
     props.Widget('showCursor'),
     props.Widget('bgColour'),
     props.Widget('cursorColour'),
-    props.Widget('performance', spin=False, showLimits=False),
+    props.Widget('performance',
+                 spin=False,
+                 showLimits=False,
+                 labels=strings.choices['SceneOpts.performance']),
     props.Widget('showColourBar'),
-    props.Widget('colourBarLabelSide', enabledWhen=lambda o: o.showColourBar),
-    props.Widget('colourBarLocation',  enabledWhen=lambda o: o.showColourBar)
+    props.Widget('colourBarLabelSide',
+                 labels=strings.choices['SceneOpts.colourBarLabelSide'],
+                 enabledWhen=lambda o: o.showColourBar),
+    props.Widget('colourBarLocation',
+                 labels=strings.choices['SceneOpts.colourBarLocation'],
+                 enabledWhen=lambda o: o.showColourBar)
 ]
 
 _ORTHOOPTS_PROPS = [
-    props.Widget('layout'), 
+    props.Widget('layout', labels=strings.choices['OrthoOpts.layout']), 
     props.Widget('zoom', spin=False, showLimits=False),
     props.Widget('showLabels'),
     props.Widget('showXCanvas'),
@@ -44,7 +51,7 @@ _ORTHOOPTS_PROPS = [
 ]
 
 _LIGHTBOXOPTS_PROPS = [
-    props.Widget('zax'),
+    props.Widget('zax', labels=strings.choices['CanvasOpts.zax']),
     props.Widget('zoom',         showLimits=False, spin=False),
     props.Widget('sliceSpacing', showLimits=False),
     props.Widget('zrange',       showLimits=False),

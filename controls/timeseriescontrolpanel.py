@@ -45,8 +45,16 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
             strings.labels[self, 'tsSettings'])
 
         for prop in tsProps:
+            if prop == 'plotMode': 
+                widget = props.makeWidget(
+                    self.__widgets,
+                    tsPanel,
+                    prop,
+                    labels=strings.choices['TimeSeriesPanel.plotMode'])
+            else:
+                widget = props.makeWidget(self.__widgets, tsPanel, prop)
             self.__widgets.AddWidget(
-                props.makeWidget(self.__widgets, tsPanel, prop),
+                widget,
                 displayName=strings.properties[tsPanel, prop],
                 tooltip=fsltooltips.properties[tsPanel, prop],
                 groupName='tsSettings')
@@ -148,7 +156,11 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
             alpha     = props.makeWidget(widgets, tsPanel, 'currentAlpha',
                                          showLimits=False, spin=False)
             lineWidth = props.makeWidget(widgets, tsPanel, 'currentLineWidth')
-            lineStyle = props.makeWidget(widgets, tsPanel, 'currentLineStyle')
+            lineStyle = props.makeWidget(
+                widgets,
+                tsPanel,
+                'currentLineStyle',
+                labels=strings.choices['DataSeries.lineStyle'])
 
             self.__widgets.AddWidget(
                 colour,

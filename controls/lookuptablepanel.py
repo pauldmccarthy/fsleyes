@@ -181,7 +181,11 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
             lut = copy.copy(displayctx.LabelOpts.lut)
 
         dl             = DummyLut()
-        dummyLutWidget = props.makeWidget(self, dl, 'lut')
+        dummyLutWidget = props.makeWidget(
+            self,
+            dl,
+            'lut',
+            labels=lambda l: l.name)
         width, height  = dummyLutWidget.GetBestSize().Get()
         
         for btn in [self.__newLutButton,
@@ -304,7 +308,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         
         self.__selectedOpts = opts
         self.__lutWidget    = props.makeWidget(
-            self.__controlRow, opts, 'lut')
+            self.__controlRow, opts, 'lut', labels=lambda l: l.name)
 
         self.__controlRowSizer.Insert(
             0, self.__lutWidget, flag=wx.EXPAND, proportion=1)

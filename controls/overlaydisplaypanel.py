@@ -28,10 +28,16 @@ import fsl.fsleyes.displaycontext        as displayctx
 log = logging.getLogger(__name__)
 
 
+def _imageName(img):
+    if img is None: return 'None'
+    else:           return img.name
+
+
 _DISPLAY_PROPS = td.TypeDict({
     'Display' : [
         props.Widget('name'),
-        props.Widget('overlayType'),
+        props.Widget('overlayType',
+                     labels=strings.choices['Display.overlayType']),
         props.Widget('enabled'),
         props.Widget('alpha',      showLimits=False),
         props.Widget('brightness', showLimits=False),
@@ -39,11 +45,13 @@ _DISPLAY_PROPS = td.TypeDict({
 
     'VolumeOpts' : [
         props.Widget('resolution',    showLimits=False),
-        props.Widget('transform'),
+        props.Widget('transform',
+                     labels=strings.choices['ImageOpts.transform']),
         props.Widget('volume',
                      showLimits=False,
                      enabledWhen=lambda o: o.overlay.is4DImage()),
-        props.Widget('interpolation'),
+        props.Widget('interpolation',
+                     labels=strings.choices['VolumeOpts.interpolation']),
         props.Widget('cmap'),
         props.Widget('invert'),
         props.Widget('invertClipping',
@@ -62,7 +70,8 @@ _DISPLAY_PROPS = td.TypeDict({
 
     'MaskOpts' : [
         props.Widget('resolution', showLimits=False),
-        props.Widget('transform'),
+        props.Widget('transform',
+                     labels=strings.choices['ImageOpts.transform']),
         props.Widget('volume',
                      showLimits=False,
                      enabledWhen=lambda o: o.overlay.is4DImage()),
@@ -72,7 +81,8 @@ _DISPLAY_PROPS = td.TypeDict({
 
     'RGBVectorOpts' : [
         props.Widget('resolution', showLimits=False),
-        props.Widget('transform'),
+        props.Widget('transform',
+                     labels=strings.choices['ImageOpts.transform']),
         props.Widget('interpolation'),
         props.Widget('xColour'),
         props.Widget('yColour'),
@@ -80,12 +90,13 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('suppressX'),
         props.Widget('suppressY'),
         props.Widget('suppressZ'),
-        props.Widget('modulate'),
+        props.Widget('modulate', labels=_imageName),
         props.Widget('modThreshold', showLimits=False, spin=False)],
 
     'LineVectorOpts' : [
         props.Widget('resolution',    showLimits=False),
-        props.Widget('transform'),
+        props.Widget('transform',
+                     labels=strings.choices['ImageOpts.transform']),
         props.Widget('xColour'),
         props.Widget('yColour'),
         props.Widget('zColour'),
@@ -94,21 +105,21 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('suppressZ'),
         props.Widget('directed'),
         props.Widget('lineWidth', showLimits=False),
-        props.Widget('modulate'),
+        props.Widget('modulate', labels=_imageName),
         props.Widget('modThreshold', showLimits=False, spin=False)],
 
     'ModelOpts' : [
         props.Widget('colour'),
         props.Widget('outline'),
         props.Widget('outlineWidth', showLimits=False),
-        props.Widget('refImage'),
+        props.Widget('refImage', labels=_imageName),
         # props.Widget('showName'),
         props.Widget('coordSpace',
                      enabledWhen=lambda o, ri: ri != 'none',
                      dependencies=['refImage'])],
 
     'LabelOpts' : [
-        props.Widget('lut'),
+        props.Widget('lut', labels=lambda l: l.name),
         props.Widget('outline',
                      enabledWhen=lambda o, sw: not sw,
                      dependencies=[(lambda o: o.display, 'softwareMode')]),
@@ -118,7 +129,8 @@ _DISPLAY_PROPS = td.TypeDict({
                      dependencies=[(lambda o: o.display, 'softwareMode')]),
         # props.Widget('showNames'),
         props.Widget('resolution',   showLimits=False),
-        props.Widget('transform'),
+        props.Widget('transform',
+                     labels=strings.choices['ImageOpts.transform']),
         props.Widget('volume',
                      showLimits=False,
                      enabledWhen=lambda o: o.overlay.is4DImage())]

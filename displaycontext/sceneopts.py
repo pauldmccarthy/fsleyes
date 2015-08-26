@@ -10,8 +10,6 @@ import logging
 
 import props
 
-import fsl.data.strings as strings
-
 import canvasopts
 
 
@@ -35,28 +33,13 @@ class SceneOpts(props.HasProperties):
     showColourBar = props.Boolean(default=False)
 
     
-    colourBarLocation  = props.Choice(
-        ('top', 'bottom', 'left', 'right'),
-        labels=[strings.choices['SceneOpts.colourBarLocation.top'],
-                strings.choices['SceneOpts.colourBarLocation.bottom'],
-                strings.choices['SceneOpts.colourBarLocation.left'],
-                strings.choices['SceneOpts.colourBarLocation.right']])
+    colourBarLocation  = props.Choice(('top', 'bottom', 'left', 'right'))
 
     
-    colourBarLabelSide = props.Choice(
-        ('top-left', 'bottom-right'),
-        labels=[strings.choices['ColourBarCanvas.labelSide.top-left'],
-                strings.choices['ColourBarCanvas.labelSide.bottom-right']])
+    colourBarLabelSide = props.Choice(('top-left', 'bottom-right'))
 
     
-    performance = props.Choice(
-        (1, 2, 3, 4, 5),
-        default=5,
-        labels=[strings.choices['SceneOpts.performance.1'],
-                strings.choices['SceneOpts.performance.2'],
-                strings.choices['SceneOpts.performance.3'],
-                strings.choices['SceneOpts.performance.4'],
-                strings.choices['SceneOpts.performance.5']])
+    performance = props.Choice((1, 2, 3, 4, 5), default=5)
     """User controllable performacne setting.
 
     This property is linked to the :attr:`renderMode`,

@@ -24,7 +24,6 @@ import                               props
 import                               plotpanel
 import fsl.data.featimage         as fslfeatimage
 import fsl.data.image             as fslimage
-import fsl.data.strings           as strings
 import fsl.fsleyes.displaycontext as fsldisplay
 import fsl.fsleyes.colourmaps     as fslcmaps
 import fsl.fsleyes.controls       as fslcontrols
@@ -407,11 +406,7 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
     showCurrent    = props.Boolean(default=True)
     showAllCurrent = props.Boolean(default=False)
     plotMode       = props.Choice(
-        ('normal', 'demean', 'normalise', 'percentChange'),
-        labels=[strings.choices['TimeSeriesPanel.plotMode.normal'],
-                strings.choices['TimeSeriesPanel.plotMode.demean'],
-                strings.choices['TimeSeriesPanel.plotMode.normalise'],
-                strings.choices['TimeSeriesPanel.plotMode.percentChange']])
+        ('normal', 'demean', 'normalise', 'percentChange'))
 
     currentColour    = copy.copy(TimeSeries.colour)
     currentAlpha     = copy.copy(TimeSeries.alpha)

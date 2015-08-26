@@ -38,12 +38,7 @@ class ImageOpts(fsldisplay.DisplayOpts):
     """ 
 
 
-    transform = props.Choice(
-        ('affine', 'pixdim', 'id'),
-        labels=[strings.choices['ImageOpts.transform.affine'],
-                strings.choices['ImageOpts.transform.pixdim'],
-                strings.choices['ImageOpts.transform.id']],
-        default='pixdim')
+    transform = props.Choice(('affine', 'pixdim', 'id'), default='pixdim')
     """This property defines how the overlay should be transformd into the
     display coordinate system.
 
@@ -341,11 +336,7 @@ class VolumeOpts(ImageOpts):
     """The colour map, a :class:`matplotlib.colors.Colourmap` instance."""
 
     
-    interpolation = props.Choice(
-        ('none', 'linear', 'spline'),
-        labels=[strings.choices['VolumeOpts.interpolation.none'],
-                strings.choices['VolumeOpts.interpolation.linear'],
-                strings.choices['VolumeOpts.interpolation.spline']])
+    interpolation = props.Choice(('none', 'linear', 'spline'))
     """How the value shown at a real world location is derived from the
     corresponding data value(s). 'No interpolation' is equivalent to nearest
     neighbour interpolation.

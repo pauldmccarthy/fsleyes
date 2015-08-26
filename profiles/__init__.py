@@ -22,14 +22,16 @@ This logic is encapsulated in two classes:
 """
 
 import logging
-log = logging.getLogger(__name__)
-
 import inspect
+
 import wx
+
 import props
 
-import fsl.data.strings    as strings
 import fsl.fsleyes.actions as actions
+
+
+log = logging.getLogger(__name__)
 
 
 class Profile(actions.ActionProvider):
@@ -161,9 +163,7 @@ class Profile(actions.ActionProvider):
         modeProp = self.getProp('mode')
         
         for mode in modes:
-            modeProp.addChoice(mode,
-                               label=strings.modes[self, mode],
-                               instance=self)
+            modeProp.addChoice(mode, instance=self)
 
         if len(modes) > 0:
             self.mode = modes[0]
@@ -609,10 +609,7 @@ class ProfileManager(object):
         profilez    = profilemap.profiles.get(viewPanel.__class__, [])
 
         for profile in profilez:
-            profileProp.addChoice(
-                profile,
-                label=strings.profiles[viewPanel, profile],
-                instance=viewPanel)
+            profileProp.addChoice(profile, instance=viewPanel)
 
         if len(profilez) > 0:
             viewPanel.profile = profilez[0]

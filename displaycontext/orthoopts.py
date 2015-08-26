@@ -34,9 +34,7 @@ class OrthoOpts(sceneopts.SceneOpts):
     """
     
 
-    layout = props.Choice(
-        ['horizontal', 'vertical', 'grid'],
-        ['Horizontal', 'Vertical', 'Grid'])
+    layout = props.Choice(('horizontal', 'vertical', 'grid'))
     """How should we lay out each of the three canvases?"""
 
 

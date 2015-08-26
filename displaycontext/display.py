@@ -20,7 +20,6 @@ import props
 
 import fsl.utils.typedict  as td
 import fsl.data.image      as fslimage
-import fsl.data.strings    as strings
 import fsl.fsleyes.actions as actions
 
 
@@ -199,8 +198,7 @@ class Display(props.SyncableHasProperties):
             
         for pt in possibleTypes:
             log.debug('Enabling overlay type {} for {}'.format(pt, overlay))
-            label = strings.choices[self, 'overlayType', pt]
-            overlayTypeProp.addChoice(pt, label=label, instance=self)
+            overlayTypeProp.addChoice(pt, instance=self)
 
         if overlayType is not None:
             self.overlayType = overlayType

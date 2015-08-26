@@ -12,9 +12,8 @@ import copy
 
 import props
 
-import fsl.data.image   as fslimage
-import fsl.data.strings as strings
-import                     volumeopts
+import fsl.data.image as fslimage
+import                   volumeopts
 
 
 class VectorOpts(volumeopts.ImageOpts):
@@ -96,8 +95,7 @@ class VectorOpts(volumeopts.ImageOpts):
             self.overlayList.removeListener('overlays', self.name)
             return
 
-        modOptions = ['none']
-        modLabels  = [strings.choices['VectorOpts.modulate.none']]
+        modOptions = [None]
 
         for overlay in overlays:
             
@@ -118,17 +116,16 @@ class VectorOpts(volumeopts.ImageOpts):
                 continue
 
             modOptions.append(overlay)
-            modLabels .append(overlay.name)
                 
             overlay.addListener('name',
                                 self.name,
                                 self.__overlayListChanged,
                                 overwrite=True)
             
-        modProp.setChoices(modOptions, labels=modLabels, instance=self)
+        modProp.setChoices(modOptions, instance=self)
 
         if modVal in overlays: self.modulate = modVal
-        else:                  self.modulate = 'none'
+        else:                  self.modulate = None
 
 
 class LineVectorOpts(VectorOpts):
