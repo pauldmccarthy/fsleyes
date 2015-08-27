@@ -43,12 +43,12 @@ class LocationPanel(fslpanel.FSLEyesPanel):
     """
 
     
-    voxelLocation = props.Point(ndims=3, real=False, labels=('X', 'Y', 'Z'))
+    voxelLocation = props.Point(ndims=3, real=False)
     """If the currently selected overlay is a :class:`.Image`, this property
     tracks the current display location in voxel coordinates.
     """
     
-    worldLocation = props.Point(ndims=3, real=True,  labels=('X', 'Y', 'Z'))
+    worldLocation = props.Point(ndims=3, real=True)
 
         
     def __init__(self, parent, overlayList, displayCtx):
