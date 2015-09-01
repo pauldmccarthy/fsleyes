@@ -47,7 +47,7 @@ class FSLEyesFrame(wx.Frame):
                          be displayed.
         """
         
-        wx.Frame.__init__(self, parent, title='FSLEyes')
+        wx.Frame.__init__(self, parent, title='FSLeyes')
 
         # Default application font - this is
         # inherited by all child controls.
