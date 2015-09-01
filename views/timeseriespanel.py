@@ -343,7 +343,7 @@ class FEATReducedTimeSeries(TimeSeries):
 
     def getData(self):
         
-        data = self.overlay.reducedData(self.coords, self.contrast, False)
+        data = self.overlay.partialFit(self.contrast, self.coords, False)
         return TimeSeries.getData(self, ydata=data)
 
     
