@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# toolbar.py -
+# toolbar.py - FSLeyes toolbars
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`FSLEyesToolBar` class, the base class
+for all toolbars in *FSLeyes*.
+"""
 
 import logging
 
@@ -19,21 +22,40 @@ import fsl.fsleyes.icons   as icons
 log = logging.getLogger(__name__)
 
 
-_ToolBarEvent, _EVT_TOOLBAR_EVENT = wxevent.NewEvent()
-
-
-EVT_TOOLBAR_EVENT = _EVT_TOOLBAR_EVENT
-"""Identifier for the :data:`ToolBarEvent` event. """
-
-
-ToolBarEvent = _ToolBarEvent
-"""Event emitted when one or more tools is/are added/removed to/from the
-toolbar.
-"""
-
-
 class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
-    """
+    """Base class for all *FSLeyes* toolbars.
+
+    The ``FSLEyesToolBar`` is a regular :class:`wx.PyPanel` which to which a
+    group of *tools* can be added, where a tool may be any ``wx`` control.
+
+    Tools can be added to a ``FSLEyesToolBar`` with the following methods:
+
+      .. autosummary::
+         :nosignatures:
+         AddTool
+         InsertTool
+         InsertTools
+         SetTools
+
+    
+    The :meth:`MakeLabelledTool` is a convenience method which, given a tool
+    control, will add a label to it. This method does not add the tool to the
+    toolbar - you have to do this yourself::
+
+        name = wx.TextCtrl(parent)
+        nameTool = toolbar.MakeLabelledTool(name, 'Overlay name')
+        toolbar.AddTool(nameTool)
+         
+    When the horizontal size of a ``FSLEyesToolBar`` becomes too small to
+    display all of its tools, a button is displayed on each end of the
+    toolbar, allowing the user to access the hidden tools. The user may
+    also use the mouse wheel to scroll through the toolbar.
+
+    A collapsed ``FSLEyesToolBar`` looks something like this:
+
+    .. image:: images/fsleyestoolbar.png
+       :scale: 50%
+       :align: center
     """
 
 
@@ -72,103 +94,6 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
         self.__rightButton.Bind(wx.EVT_BUTTON,     self.__onRightButton)
         self              .Bind(wx.EVT_MOUSEWHEEL, self.__onMouseWheel)
         self              .Bind(wx.EVT_SIZE,       self.__drawToolBar)
-        
-
-    def __onMouseWheel(self, ev):
-
-        wheelDir = ev.GetWheelRotation()
-        if   wheelDir < 0: self.__onRightButton()
-        elif wheelDir > 0: self.__onLeftButton()
-
-
-    def __onLeftButton(self, ev=None):
-
-        self.__index -= 1
-
-        if self.__index <= 0:
-            self.__index = 0
-
-        log.debug('Left button pushed - setting start '
-                  'tool index to {}'.format(self.__index)) 
-
-        self.__drawToolBar()
-
-        
-    def __onRightButton(self, ev=None):
-        
-        self.__index += 1
-
-        if self.__index + self.__numVisible >= len(self.__tools):
-            self.__index = len(self.__tools) - self.__numVisible
-
-        log.debug('Right button pushed - setting start '
-                  'tool index to {}'.format(self.__index))
-
-        self.__drawToolBar()
-
-
-    def __drawToolBar(self, *a):
-
-        sizer = self.__sizer
-        tools = self.__tools
-
-        sizer.Clear()
-        
-        availWidth = self.GetSize().GetWidth()
-        reqdWidths = [tool.GetBestSize().GetWidth() for tool in tools]
-        leftWidth  = self.__leftButton .GetBestSize().GetWidth()
-        rightWidth = self.__rightButton.GetBestSize().GetWidth()
-
-        if availWidth >= sum(reqdWidths):
-
-            log.debug('{}: All tools fit ({} >= {})'.format(
-                type(self).__name__, availWidth, sum(reqdWidths)))
-            
-            self.__index      = 0
-            self.__numVisible = len(tools)
-            
-            self.__leftButton .Enable(False)
-            self.__rightButton.Enable(False)
-            self.__leftButton .Show(  False)
-            self.__rightButton.Show(  False) 
-
-            for tool in tools:
-                tool.Show(True)
-                sizer.Add(tool, flag=wx.ALIGN_CENTRE)
-
-        else:
-            reqdWidths = reqdWidths[self.__index:]
-            cumWidths  = np.cumsum(reqdWidths) + leftWidth + rightWidth
-            biggerIdxs = np.where(cumWidths > availWidth)[0]
-
-            if len(biggerIdxs) == 0:
-                lastIdx = len(tools)
-            else:
-                lastIdx = biggerIdxs[0] + self.__index
-            
-            self.__numVisible = lastIdx - self.__index
-
-            log.debug('{}: {} tools fit ({} - {})'.format(
-                type(self).__name__, self.__numVisible, self.__index, lastIdx))
-
-            self.__leftButton .Show(True)
-            self.__rightButton.Show(True)
-            self.__leftButton .Enable(self.__index > 0)
-            self.__rightButton.Enable(lastIdx < len(tools))
-
-            for i in range(len(tools)):
-                if i >= self.__index and i < lastIdx:
-                    tools[i].Show(True)
-                    sizer.Add(tools[i], flag=wx.ALIGN_CENTRE)
-                else:
-                    tools[i].Show(False)
-
-        sizer.Insert(self.__numVisible, (0, 0), flag=wx.EXPAND, proportion=1)
-        sizer.Insert(self.__numVisible + 1, self.__rightButton, flag=wx.EXPAND)
-        sizer.Insert(0,                     self.__leftButton,  flag=wx.EXPAND)
-
-        self.Layout()
-
 
 
     def MakeLabelledTool(self, tool, labelText, labelSide=wx.TOP):
@@ -311,3 +236,112 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
 
         if postevent:
             wx.PostEvent(self, ToolBarEvent())
+        
+
+    def __onMouseWheel(self, ev):
+
+        wheelDir = ev.GetWheelRotation()
+        if   wheelDir < 0: self.__onRightButton()
+        elif wheelDir > 0: self.__onLeftButton()
+
+
+    def __onLeftButton(self, ev=None):
+
+        self.__index -= 1
+
+        if self.__index <= 0:
+            self.__index = 0
+
+        log.debug('Left button pushed - setting start '
+                  'tool index to {}'.format(self.__index)) 
+
+        self.__drawToolBar()
+
+        
+    def __onRightButton(self, ev=None):
+        
+        self.__index += 1
+
+        if self.__index + self.__numVisible >= len(self.__tools):
+            self.__index = len(self.__tools) - self.__numVisible
+
+        log.debug('Right button pushed - setting start '
+                  'tool index to {}'.format(self.__index))
+
+        self.__drawToolBar()
+
+
+    def __drawToolBar(self, *a):
+
+        sizer = self.__sizer
+        tools = self.__tools
+
+        sizer.Clear()
+        
+        availWidth = self.GetSize().GetWidth()
+        reqdWidths = [tool.GetBestSize().GetWidth() for tool in tools]
+        leftWidth  = self.__leftButton .GetBestSize().GetWidth()
+        rightWidth = self.__rightButton.GetBestSize().GetWidth()
+
+        if availWidth >= sum(reqdWidths):
+
+            log.debug('{}: All tools fit ({} >= {})'.format(
+                type(self).__name__, availWidth, sum(reqdWidths)))
+            
+            self.__index      = 0
+            self.__numVisible = len(tools)
+            
+            self.__leftButton .Enable(False)
+            self.__rightButton.Enable(False)
+            self.__leftButton .Show(  False)
+            self.__rightButton.Show(  False) 
+
+            for tool in tools:
+                tool.Show(True)
+                sizer.Add(tool, flag=wx.ALIGN_CENTRE)
+
+        else:
+            reqdWidths = reqdWidths[self.__index:]
+            cumWidths  = np.cumsum(reqdWidths) + leftWidth + rightWidth
+            biggerIdxs = np.where(cumWidths > availWidth)[0]
+
+            if len(biggerIdxs) == 0:
+                lastIdx = len(tools)
+            else:
+                lastIdx = biggerIdxs[0] + self.__index
+            
+            self.__numVisible = lastIdx - self.__index
+
+            log.debug('{}: {} tools fit ({} - {})'.format(
+                type(self).__name__, self.__numVisible, self.__index, lastIdx))
+
+            self.__leftButton .Show(True)
+            self.__rightButton.Show(True)
+            self.__leftButton .Enable(self.__index > 0)
+            self.__rightButton.Enable(lastIdx < len(tools))
+
+            for i in range(len(tools)):
+                if i >= self.__index and i < lastIdx:
+                    tools[i].Show(True)
+                    sizer.Add(tools[i], flag=wx.ALIGN_CENTRE)
+                else:
+                    tools[i].Show(False)
+
+        sizer.Insert(self.__numVisible, (0, 0), flag=wx.EXPAND, proportion=1)
+        sizer.Insert(self.__numVisible + 1, self.__rightButton, flag=wx.EXPAND)
+        sizer.Insert(0,                     self.__leftButton,  flag=wx.EXPAND)
+
+        self.Layout()
+
+
+_ToolBarEvent, _EVT_TOOLBAR_EVENT = wxevent.NewEvent()
+
+
+EVT_TOOLBAR_EVENT = _EVT_TOOLBAR_EVENT
+"""Identifier for the :data:`ToolBarEvent` event. """
+
+
+ToolBarEvent = _ToolBarEvent
+"""Event emitted when one or more tools is/are added/removed to/from a
+:class:`FSLEyesToolBar`.
+"""

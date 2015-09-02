@@ -176,4 +176,7 @@ Some other miscellaneous modules are contained in the ``fsleyes`` package:
    ~fsl.fsleyes.icons
    ~fsl.fsleyes.colourmaps
    ~fsl.fsleyes.splash
+   ~fsl.fsleyes.frame
+   ~fsl.fsleyes.panel
+   ~fsl.fsleyes.toolbar
 """

@@ -4,26 +4,37 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides an important class - the :class:`FSLEyesPanel`.
+"""This module provides the :class:`FSLEyesPanel` class.
 
-A :class:`FSLEyesPanel` object is a :class:`wx.Panel` which provides some sort
-of view of a collection of overlay objects, contained within an
+
+A :class:`FSLEyesPanel` object is a :class:`wx.PyPanel` which provides some
+sort of view of a collection of overlay objects, contained within an
 :class:`.OverlayList`. 
+
 
 ``FSLEyesPanel`` instances are also :class:`.ActionProvider` instances - any
 actions which are specified during construction may (or may not ) be exposed
 to the user. Furthermore, any display configuration options which should be
-made available available to the user should be added as :class:`.PropertyBase`
+made available available to the user can be added as :class:`.PropertyBase`
 attributes of the :class:`FSLEyesPanel` subclass.
 
-See the following for examples of :class:`FSLEyesPanel` subclasses:
 
-  - :class:`.OrthoPanel`
-  - :class:`.LightBoxPanel`
-  - :class:`.TimeSeriesPanel`
-  - :class:`.OverlayListPanel`
-  - :class:`.OverlayDisplayPanel`
-  - :class:`.LocationPanel`
+.. note:: ``FSLEyesPanel`` instances are usually displayed within a
+          :class:`.FSLEyesFrame`, but they can  be used on their own
+          as well. You will need to create, or need references to,
+          an :class:`.OverlayList` and a :class:`.DisplayContext`.
+          For example::
+
+              import fsl.fsleyes.overlay          as ovl
+              import fsl.fsleyes.displaycontext   as dc
+              import fsl.fsleyes.views.orthopanel as op
+
+              overlayList = ovl.OverlayList()
+              displayCtx  = dc.DisplayContext(overlayList)
+
+              # the parent argument is some wx parent
+              # object such as a wx.Frame or wx.Panel
+              orthoPanel  = op.OrthoPanel(parent, overlayList, displayCtx)
 """
 
 
@@ -39,10 +50,12 @@ log = logging.getLogger(__name__)
 
 
 class _FSLEyesPanel(actions.ActionProvider):
-    """Superclass for FSLEyes view panels.
+    """The ``_FSLEyesPanel`` is the base class for the :class:`.FSLEyesPanel`
+    and the :class:`.FSLEyesToolBar`.
 
-    A ``_FSLEyesPanel`` has the following attributes, intended to be
-    used by subclasses:
+    
+    A ``_FSLEyesPanel`` has the following attributes, intended to be used by
+    subclasses:
     
       - :attr:`_overlayList`: A reference to the :class:`.OverlayList`
         instance which contains the images to be displayed.
@@ -51,14 +64,11 @@ class _FSLEyesPanel(actions.ActionProvider):
         instance, which contains display related properties about the
         :attr:`_overlayList`.
     
-      - :attr:`_name`: A unique name for this :class:`ViewPanel`.
+      - :attr:`_name`: A unique name for this :class:`_FSLEyesPanel`.
 
 
-    TODO Important notes about:
-
-      - :meth:`destroy`
-
-      - :meth:`__del__`
+    .. note:: When a ``_FSLEyesPanel`` is no longer required, the
+              :meth:`destroy` method **must** be called!
     """ 
 
     
@@ -87,25 +97,26 @@ class _FSLEyesPanel(actions.ActionProvider):
         self._overlayList = overlayList
         self._displayCtx  = displayCtx
         self._name        = '{}_{}'.format(self.__class__.__name__, id(self))
+        
         self.__destroyed  = False
 
         
     def destroy(self):
-        """This method must be called by whatever is managing this
-        :class:`FSLEyesPanel` when it is to be closed/destroyed. It seems to
-        be impossible to define a single handler (on either the
+        """This method must be called by whatever is managing this 
+        ``_FSLEyesPanel`` when it is to be closed/destroyed.
+
+        It seems to be impossible to define a single handler (on either the
         :attr:`wx.EVT_CLOSE` and/or :attr:`wx.EVT_WINDOW_DESTROY` events)
-        which handles both cases where the window is destroyed (in the
-        process of destroying a parent window), and where the window is
-        explicitly closed by the user (e.g. when embedded as a page in
-        a Notebook). 
+        which handles both cases where the window is destroyed (in the process
+        of destroying a parent window), and where the window is explicitly
+        closed by the user (e.g. when embedded as a page in a Notebook).
 
         This issue is probably caused by my use of the AUI framework for
         layout management, as the AUI manager/notebook classes do not seem to
         call close/destroy in all cases. Everything that I've tried, which
-        relies upon EVT_CLOSE/EVT_WINDOW_DESTROY events, inevitably results in
-        the event handlers not being called, or in segmentation faults
-        (presumably due to double-frees at the C++ level).
+        relies upon ``EVT_CLOSE``/``EVT_WINDOW_DESTROY`` events, inevitably
+        results in the event handlers not being called, or in segmentation
+        faults (presumably due to double-frees at the C++ level).
 
         Subclasses which need to perform any cleaning up when they are closed
         may override this method, and should be able to assume that it will be
@@ -115,9 +126,9 @@ class _FSLEyesPanel(actions.ActionProvider):
         Overriding subclass implementations must call this base class
         method, otherwise memory leaks will probably occur, and warnings will
         probably be output to the log (see :meth:`__del__`). This
-        implememtation should be called after the subclass has performed its
-        own clean-up, as this method expliciltly clears the ``_overlayList``
-        and ``_displayCtx`` references.
+        implememtation should be called **after** the subclass has performed
+        its own clean-up, as this method expliciltly clears the
+        ``_overlayList`` and ``_displayCtx`` references.
         """
         actions.ActionProvider.destroy(self)
         self._displayCtx  = None
@@ -126,6 +137,9 @@ class _FSLEyesPanel(actions.ActionProvider):
 
     
     def __del__(self):
+        """If the :meth:`destroy` method has not been called, a warning message
+        logged.
+        """
         if not self.__destroyed:
             log.warning('The {}.destroy() method has not been called '
                         '- unless the application is shutting down, '
@@ -133,9 +147,9 @@ class _FSLEyesPanel(actions.ActionProvider):
 
 
 class FSLEyesPanel(_FSLEyesPanel, wx.PyPanel):
+    """The ``FSLEyesPanel`` is the base class for all view and control panels in
+    *FSLeyes*. See the :mod:`~fsl.fsleyes` documentation for more details.
     """
-    """
-
     
     def __init__(self, parent, overlayList, displayCtx, actionz=None):
         wx.PyPanel.__init__(self, parent)
