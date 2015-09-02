@@ -167,4 +167,13 @@ The rest of *FSLeyes* is organised into the following sub-packages:
    ~fsl.fsleyes.editor
    ~fsl.fsleyes.actions
    ~fsl.fsleyes.widgets
+
+
+Some other miscellaneous modules are contained in the ``fsleyes`` package:
+
+.. autosummary::
+   ~fsl.fsleyes.tooltips
+   ~fsl.fsleyes.icons
+   ~fsl.fsleyes.colourmaps
+   ~fsl.fsleyes.splash
 """
