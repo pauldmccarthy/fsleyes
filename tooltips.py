@@ -1,10 +1,20 @@
 #!/usr/bin/env python
 #
-# tooltips.py - Tooltips for FSLEyes.
+# tooltips.py - Tooltips for FSLeyes.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module contains tooltips  used throughout FSLEyes. """
+"""This module contains tooltips used throughout *FSLeyes*.
+
+Tooltips are stored in :class:`.TypeDict` dictionariesa, broadly organised
+into the following categories:
+
+ ================== ================================================
+ :data:`properties` Tooltips for ``props.HasProperties`` properties.
+ :data:`actions`    Tooltips for :class:`.ActionProvider` actions.
+ :data:`misc`       Tooltips for everything else.
+ ================== ================================================
+"""
 
 
 from fsl.utils.typedict import TypeDict
