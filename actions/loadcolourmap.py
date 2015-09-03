@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# loadcolourmap.py -
+# loadcolourmap.py - Load a colour map file.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`LoadColourMapAction`, which allows the
+user to load a new colour map.
+"""
 
 import logging
 import os.path as op
@@ -13,7 +16,6 @@ import fsl.fsleyes.actions    as actions
 import fsl.fsleyes.colourmaps as fslcmap
 
 
-
 log = logging.getLogger(__name__)
 
 
@@ -21,8 +23,26 @@ _stringID = 'actions.loadcolourmap.'
 
 
 class LoadColourMapAction(actions.Action):
+    """The ``LoadColourMapAction`` allows the yser to select a colour
+    map file and give it a name.
+
+    The loaded colour map is then registered with the :mod:`.colourmaps`
+    module. The user is also given the option to permanently save the
+    loaded colour map in *FSLeyes*.
+    """
     
     def doAction(self):
+        """This method does the following:
+
+        1. Prompts the user to select a colour map file
+
+        2. Prompts the user to name the new colour map.
+
+        3. Registers the colour map with the :mod:`.colourmaps` module.
+
+        4. Asks the user if they want the colour map installed, and installs
+           it if they do.
+        """
 
         import wx
 

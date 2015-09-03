@@ -5,17 +5,27 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This package provides a collection of actions, and two package-level
-classes - the :class:`Action` class, and the :class:`ActionProvider` class.
+classes - the :class:`Action` class and the :class:`ActionProvider` class.
+
 
 The :class:`Action` class represents some sort of action which may be
 performed, enabled and disabled, and may be bound to a GUI menu item or
 button.
 
-Some 'global' actions are provided in this package, for example the
-:class:`.OpenFileAction`, and the :class:`.OpenStandardAction`.
 
-The :class:`ActionProvider` class represents some entity which can perform one
-or more actions.  As the :class:`.FSLEyesPanel` class derives from
+Some 'global' actions are also provided in this package:
+
+ .. autosummary::
+
+    ~fsl.fsleyes.actions.copyoverlay
+    ~fsl.fsleyes.actions.loadcolourmap
+    ~fsl.fsleyes.actions.openfile
+    ~fsl.fsleyes.actions.openstandard
+    ~fsl.fsleyes.actions.saveoverlay
+
+
+The :class:`ActionProvider` class represents some entity which can perform
+one or more actions.  As the :class:`.FSLEyesPanel` class derives from
 :class:`ActionProvider` pretty much everything in FSLEyes is an
 :class:`ActionProvider`.
 """
@@ -53,6 +63,14 @@ class ActionButton(props.Button):
     :class:`Action` instance.
     """
     def __init__(self, actionName, classType=None, **kwargs):
+        """Create an ``ActionButton``.
+
+        :arg actionName: Name of the action
+
+        :arg classType:  The type which defines the action.
+
+        :arg kwargs:     Passed to the :class:`props.Button` constructor.
+        """
 
         self.name = actionName
 
@@ -102,12 +120,16 @@ class Action(props.HasProperties):
 
     
     def __init__(self, overlayList, displayCtx, action=None):
-        """
+        """Create an ``Action``.
+        
         :arg overlayList: An :class:`.OverlayList` instance
                           containing the list of overlays being displayed.
 
         :arg displayCtx:  A :class:`.DisplayContext` instance defining how
                           the overlays are to be displayed.
+
+        :arg action:      The action function. If not provided, assumes that
+                          the :meth:`doAction` method has been overridden.
         """
         self._overlayList  = overlayList
         self._displayCtx   = displayCtx
@@ -125,7 +147,14 @@ class Action(props.HasProperties):
 
         
     def bindToWidget(self, parent, evType, widget):
-        """Binds this action to the given :class:`wx.Button`. """
+        """Binds this action to the given :mod:`wx` widget.
+
+        :arg parent: The :mod:`wx` object on which the event should be bound.
+
+        :arg evType: The :mod:`wx` event type.
+
+        :arg widget: The :mod:`wx` widget.
+        """
 
         def wrappedAction(ev):
             self.doAction()
@@ -249,8 +278,7 @@ class ActionProvider(props.SyncableHasProperties):
 
 
     def getAction(self, name):
-        """Return the :class:`Action` object of the given name.
-        """
+        """Return the :class:`Action` object of the given name. """
         return self.__actions[name]
 
         
