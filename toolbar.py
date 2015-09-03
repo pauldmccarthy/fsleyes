@@ -32,24 +32,19 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
 
       .. autosummary::
          :nosignatures:
+    
          AddTool
          InsertTool
          InsertTools
          SetTools
-
+         MakeLabelledTool
     
-    The :meth:`MakeLabelledTool` is a convenience method which, given a tool
-    control, will add a label to it. This method does not add the tool to the
-    toolbar - you have to do this yourself::
-
-        name = wx.TextCtrl(parent)
-        nameTool = toolbar.MakeLabelledTool(name, 'Overlay name')
-        toolbar.AddTool(nameTool)
-         
+    
     When the horizontal size of a ``FSLEyesToolBar`` becomes too small to
-    display all of its tools, a button is displayed on each end of the
-    toolbar, allowing the user to access the hidden tools. The user may
-    also use the mouse wheel to scroll through the toolbar.
+    display all of its tools, the toolbar is compressed: some tools are
+    hidden, and buttons are displayed on each end of the toolbar, allowing the
+    user to scroll through the toolbar, to access the hidden tools. The user
+    may also use the mouse wheel to scroll through the toolbar.
 
     A collapsed ``FSLEyesToolBar`` looks something like this:
 
@@ -65,6 +60,24 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
                  displayCtx,
                  height=32,
                  actionz=None):
+        """Create a ``FSLEyesToolBar``.
+
+        :arg parent:      The :mod:`wx` parent object.
+        
+        :arg overlayList: The :class:`.OverlayList`, containing all overlays
+                          being displayed.
+        
+        :arg displayCtx:  A :class:`.DisplayContext`, which defines how the
+                          overlays are to be displayed.
+        
+        :arg height:      Desired toolbar height in pixels. This value is used
+                          to look up appropriately sized left/right arrow
+                          icons.
+                          
+        :arg actionz:     A dictionary of actions passed through to the
+                          :meth:`.ActionProvider.__init__`.
+        """
+        
         wx.PyPanel.__init__(self, parent)
         fslpanel._FSLEyesPanel.__init__(self, overlayList, displayCtx, actionz)
 
@@ -97,6 +110,20 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
 
 
     def MakeLabelledTool(self, tool, labelText, labelSide=wx.TOP):
+        """Creates a panel containing the given tool, and a label for the
+        tool. The panel is returned, but is not added to this
+        ``FSLEyesToolBar`` - you will have to do that yourself, e.g.::
+
+            labelledTool = toolbar.MakeLabelledTool(tool, 'Label', wx.BOTTOM)
+            toolbar.AddTool(labelledTool)
+
+        :arg tool:      A :mod:`wx` control.
+        
+        :arg labelText: A label for the tool.
+        
+        :arg labelSide: Which side of the tool to put the label - ``wx.TOP``,
+                        ``wx.BOTTOM``, ``wx.LEFT``, or ``wx.RIGHT``.
+        """
 
         if   labelSide in (wx.TOP,  wx.BOTTOM): orient = wx.VERTICAL
         elif labelSide in (wx.LEFT, wx.RIGHT):  orient = wx.HORIZONTAL
@@ -121,22 +148,39 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
 
 
     def Enable(self, *args, **kwargs):
+        """Enables/disables all tools in this ``FSLEyesToolBar``.
+
+        :arg args:   Passed to the ``Enable`` method of each tool.
+        :arg kwargs: Passed to the ``Enable`` method of each tool.
+        """
         wx.PyPanel.Enable(self, *args, **kwargs)
         for t in self.__tools:
             t.Enable(*args, **kwargs)
 
             
     def GetTools(self):
-        """
-        """
+        """Returns a list containing all tools in this ``FSLEyesToolBar``. """
         return self.__tools[:]
 
 
+    def GetToolCount(self):
+        """Returns the number of tools in this ``FSLEyesToolBar``. """
+        return len(self.__tools)
+
+
     def AddTool(self, tool):
+        """Adds the given tool to this ``FSLEyesToolBar``. """
         self.InsertTool(tool)
 
         
     def InsertTools(self, tools, index=None):
+        """Inserts the given sequence of tools into this ``FSLEyesToolBar``,
+        at the specified index.
+
+        :arg tools: A sequence of tools to add.
+
+        :arg index: Insert the tools before this index.
+        """
 
         for i, tool in enumerate(tools, index):
             self.InsertTool(tool, i, postevent=False)
@@ -145,6 +189,13 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
 
 
     def SetTools(self, tools, destroy=False):
+        """Replaces all of the existing tools in this ``FSLEyesToolBar``
+        with the given sequence of tools.
+
+        :arg tools:   Sequence of new tools to add.
+
+        :arg destroy: If ``True`` all of the old tools are destroyed.
+        """
 
         self.ClearTools(destroy, postevent=False)
 
@@ -155,6 +206,16 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
         
 
     def InsertTool(self, tool, index=None, postevent=True):
+        """Inserts the given tool into this ``FSLEyesToolBar``, at the
+        specified index.
+
+        :arg tool:      The tool to insert.
+
+        :arg index:     Index to insert the tool.
+
+        :arg postevent: If ``True``, a :data:`ToolBarEvent` will be generated.
+                        Pass ``False`` to suppress this event.
+        """
 
         if index is None:
             index = len(self.__tools)
@@ -174,6 +235,12 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
             
 
     def DoGetBestSize(self):
+        """Calculates and returns the best size for this toolbar, simply the
+        minimum size that will fit all tools.
+
+        This method is called by :mod:`wx` when this toolbar is laid out.
+        """
+
         # Calculate the minimum/maximum size
         # for this toolbar, given the addition
         # of the new tool
@@ -206,7 +273,6 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
         
         return (ttlWidth, minHeight)
         
-
     
     def ClearTools(
             self,
@@ -214,6 +280,20 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
             startIdx=None,
             endIdx=None,
             postevent=True):
+        """Removes all tools, or a range of tools, from this
+        ``FSLEyesToolBar``.
+
+        :arg destroy:   If ``True``, the removed tools are destroyed.
+        
+        :arg startIdx:  Start index of tools to remove. If not provided,
+                        defaults to 0.
+        
+        :arg endIdx:    End index of tools to remove (exclusive). If not
+                        provided, defaults to :meth:`GetToolCount()`.
+        
+        :arg postevent: If ``True``, a :data:`ToolBarEvent` will be
+                        generated. Set to ``False`` to suppress the event.
+        """
  
         if len(self.__tools) == 0:
             return
@@ -239,6 +319,11 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
         
 
     def __onMouseWheel(self, ev):
+        """Called when the mouse wheel is rotated on this ``FSLEyesToolBar``.
+
+        Calls :meth:`__onLeftButton` or :meth:`__onRightButton`, depending
+        on the rotation direction.
+        """
 
         wheelDir = ev.GetWheelRotation()
         if   wheelDir < 0: self.__onRightButton()
@@ -246,6 +331,10 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
 
 
     def __onLeftButton(self, ev=None):
+        """Called when the left toolbar button is pressed.
+
+        If the toolbar is compressed, it is scrolled to the left.
+        """
 
         self.__index -= 1
 
@@ -259,6 +348,10 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
 
         
     def __onRightButton(self, ev=None):
+        """Called when the right toolbar button is pressed.
+
+        If the toolbar is compressed, it is scrolled to the right.
+        """
         
         self.__index += 1
 
@@ -272,6 +365,12 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
 
 
     def __drawToolBar(self, *a):
+        """Draws this ``FSLEyesToolBar``.
+
+        If the toolbar is big enough, all tools are drawn. Otherwise, the
+        method figures out out how many tools can be drawn, and which tools to
+        draw, given the current size.
+        """
 
         sizer = self.__sizer
         tools = self.__tools
