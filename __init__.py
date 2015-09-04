@@ -151,6 +151,10 @@ overlay in the ``OverlayList``) are linked to the master ``DisplayContext``
 the ``props`` package.
 
 
+See the :mod:`~fsl.fsleyes.displaycontext` package documentation for more
+details.
+
+
 --------------------
 Package organisation
 --------------------
@@ -179,4 +183,5 @@ Some other miscellaneous modules are contained in the ``fsleyes`` package:
    ~fsl.fsleyes.frame
    ~fsl.fsleyes.panel
    ~fsl.fsleyes.toolbar
+
 """
