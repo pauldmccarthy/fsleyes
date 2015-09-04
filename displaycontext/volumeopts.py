@@ -4,9 +4,91 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module defines the :class:`VolumeOpts` class, which contains
-display options for rendering :class:`.GLVolume` instances.
+"""This module defines the :class:`ImageOpts` and :class:`VolumeOpts` classes.
+
+
+---------------------------------------
+An important note on coordinate systems
+---------------------------------------
+
+
+*FSLeyes* displays all overlays in a single coordinate system, referred
+throughout as the *display coordinate system*. However, :class:`.Image`
+overlays can potentially be displayed in one of three coordinate systems:
+
+
+ ====================== ====================================================
+ **voxel** space        (a.k.a. ``id``) The image data voxel coordinates
+                        map to the display coordinates.
+
+ **scaled voxel** space (a.k.a. ``pixdim``) The image data voxel coordinates
+                        are scaled by the ``pixdim`` values stored in the
+                        NIFTI1 header.
+
+ **world** space        (a.k.a. ``affine``) The image data voxel coordinates
+                        are transformed by the ``qform``/``sform``
+                        transformation matrix stored in the NIFTI1 header.
+ ==================== ====================================================
+
+
+The :attr:`Image.transform` property controls how the image data is
+transformed into the display coordinate system.
+
+
+.. note:: Currently, the ``transform`` property for every image overlay must
+          be independently set for each image. However, in the next version of
+          *FSLeyes* this will change, with the introduction of **GedMode**.
+
+
+As of ``fslpy`` version |version|, when the ``transform`` property for an
+image is ``id`` or ``pixdim``, the data to display space transformation assumes
+that integer voxel coordinates correspond to the bottom-left of the voxel
+in the display coordinate system. In other words, a voxel at location::
+
+    [x, y, z]
+
+
+will be transformed such that, in the display coordinate system, it occupies
+the space::
+
+    [x - x + 1, y - y + 1, z - z + 1]
+
+
+For example, the voxel::
+
+    [2, 3, 4]
+
+is drawn such that it occupies the space::
+
+    [2 - 3, 3 - 4, 4 - 5]
+
+
+A similar transformation is applied to image data which is displayed in
+``pixdim`` space, scaled appropriately.
+
+
+This convention was adopted so that multiple images would be aligned at the
+bottom left corner when displayed in ``id`` or ``pixzim`` space. But this
+convention is in contrast to the convention taken when images are displayed in
+world, or ``affine`` space. The ``qform`` and ``sform`` transformation
+matrices in the ``NIFTI1`` specification assume that the voxel coordinates
+``[x, y, z]`` correspond to the centre of a voxel. As an example, assuming
+that our affine transformation is an identity matrix, the voxel::
+
+    [2, 3, 4]
+
+
+for an image displayed in ``affine`` space would occupy the space::
+
+    [1.5 - 2.5, 2.5 - 3.5, 3.5 - 4.5]
+
+
+.. note:: With the introduction of **GedMode** I am also going to change this
+          convention - integer voxel coordinates will map to the voxel centre
+          (as for the ``affine`` convention described above) regardless of the
+          coordinate system the image is displayed in.
 """
+
 
 import logging
 
@@ -14,27 +96,30 @@ import numpy as np
 
 import props
 
-import fsl.data.strings       as strings
 import fsl.utils.transform    as transform
 import fsl.fsleyes.colourmaps as fslcm
-
-import display as fsldisplay
+import display                as fsldisplay
 
 
 log = logging.getLogger(__name__)
 
 
 class ImageOpts(fsldisplay.DisplayOpts):
-    """A class which describes how an :class:`.Image` should be displayed. 
+    """The ``ImageOpts`` class describes how an :class:`.Image` overlay
+    should be displayed.
+
+    ``ImageOpts`` is the base class for a number of :class:`.DisplayOpts`
+    sub-classes - it contains display options which are common to all.
     """
 
     
     volume = props.Int(minval=0, maxval=0, default=0, clamped=True)
-    """If the data is 4D , the current volume to display."""    
+    """If the ``Image`` is 4D, the current volume to display."""    
 
     
     resolution = props.Real(maxval=10, default=1, clamped=True)
-    """Data resolution in world space. The minimum value is set in __init__.
+    """Data resolution in the image world coordinate system. The minimum
+    value is set in :meth:`__init__`.
     """ 
 
 
@@ -42,10 +127,6 @@ class ImageOpts(fsldisplay.DisplayOpts):
     """This property defines how the overlay should be transformd into the
     display coordinate system.
 
-    note:: Write a note here about voxels in ``affine`` mapping to space
-           ``[x - 0.5, x + 0.5]``, whereas the other two mapping to
-           ``[x, x + 1]``.
-    
       - ``affine``: Use the affine transformation matrix stored in the image
         (the ``qform``/``sform`` fields in NIFTI1 headers).
                     
