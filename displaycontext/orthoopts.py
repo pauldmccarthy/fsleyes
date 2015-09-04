@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# orthoopts.py - Options controlling an ortho view layout.
+# orthoopts.py - The OrthoOpts class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`OrthoOpts` class, which contains display
+settings used by the :class:`.OrthoPanel` class.
+"""
 
 
 import copy
@@ -14,6 +17,17 @@ import sceneopts
 
 
 class OrthoOpts(sceneopts.SceneOpts):
+    """The ``OrthoOpts`` class is used by :class:`.OrthoPanel` instances to
+    manage their display settings.
+
+    
+    .. note:: While the ``OrthoOpts`` class has :attr:`xzoom`, :attr:`yzoom`,
+              and :attr:`zzoom`, properties which control the zoom levels on
+              each canvas independently, ``OrthoOpts`` class also inherits a
+              ``zoom`` property from the :class:`.SceneOpts` class. This
+              *global* zoom property can be used to adjust all canvas zoom
+              levels simultaneously.
+    """
 
     
     showXCanvas = props.Boolean(default=True)
@@ -47,9 +61,30 @@ class OrthoOpts(sceneopts.SceneOpts):
 
     
     zzoom = copy.copy(sceneopts.SceneOpts.zoom)
-    """Controls zoom on the Z canvas.
+    """Controls zoom on the Z canvas. """
 
-    Note that the :class:`OrthoOpts` class also inherits a ``zoom`` property
-    from the :class:`.CanvasOpts` class - this 'global' property can be used
-    to adjust all canvas zoom levels simultaneously.
-    """
+    
+    def __init__(self, *args, **kwargs):
+        """Create an ``OrthoOpts`` instance. All arguments are passed
+        through to the :meth:`.SceneOpts.__init__` constructor.
+
+        This method sets up a binding from the :attr:`.SceneOpts.zoom`
+        property to the :attr:`xzoom`, :attr:`yzoom`, and :attr:`zzoom`
+        properties - see :meth:`__onZoom`.
+        """
+        sceneopts.SceneOpts.__init__(self, *args, **kwargs)
+
+        name = '{}_{}'.format(type(self).__name__, id(self))
+
+        self.addListener('zoom', name, self.__onZoom)
+
+        
+    def __onZoom(self, *a):
+        """Called when the :attr:`.SceneOpts.zoom` property changes.
+
+        Propagates the change to the :attr:`xzoom`, :attr:`yzoom`, and
+        :attr:`zzoom` properties.
+        """
+        self.xzoom = self.zoom
+        self.yzoom = self.zoom
+        self.zzoom = self.zoom

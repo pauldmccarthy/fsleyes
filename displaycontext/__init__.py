@@ -103,7 +103,7 @@ Scene options
 
 Independent of the ``DisplayContext``, ``Display`` and ``DisplayOpts``
 classes, the ``displaycontext`` package is also home to a few classes which
-define *scene* options::
+define *scene* options:
 
 
 .. autosummary::

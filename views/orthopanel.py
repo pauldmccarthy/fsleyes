@@ -122,16 +122,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self._ycanvas.bindProps('resolutionLimit', sceneOpts)
         self._zcanvas.bindProps('resolutionLimit', sceneOpts) 
 
-        # And a global zoom which controls all canvases at once
-
-        minZoom = sceneOpts.getConstraint('xzoom', 'minval')
-        maxZoom = sceneOpts.getConstraint('xzoom', 'maxval')
-
-        sceneOpts.setConstraint('zoom', 'minval', minZoom)
-        sceneOpts.setConstraint('zoom', 'maxval', maxZoom)
-
-        sceneOpts.addListener('zoom', self._name, self.__onZoom)
-
         # Callbacks for overlay list/selected overlay changes
         self._overlayList.addListener('overlays',
                                       self._name,
@@ -241,17 +231,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         self.Refresh()
         
-            
-    def __onZoom(self, *a):
-        """Called when the :attr:`.SceneOpts.zoom` property changes.
-        Propagates the change to the :attr:`.OrthoOpts.xzoom`, ``yzoom``,
-        and ``zzoom`` properties.
-        """
-        opts       = self.getSceneOptions()
-        opts.xzoom = opts.zoom
-        opts.yzoom = opts.zoom
-        opts.zzoom = opts.zoom
-
             
     def getGLCanvases(self):
         """Returns all of the :class:`.SliceCanvas` instances contained
