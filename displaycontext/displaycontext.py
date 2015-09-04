@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 #
-# displaycontext.py -
+# displaycontext.py - The DisplayContext class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`DisplayContext` class, which defines
+general display settings for displaying the overlays in a
+:class:`.OverlayList`.
+"""
 
 import sys
 import logging
@@ -25,36 +29,59 @@ class InvalidOverlayError(Exception):
 
 
 class DisplayContext(props.SyncableHasProperties):
-    """Contains a number of properties defining how an :class:`.OverlayList`
-    is to be displayed.
+    """A ``DisplayContext`` instance contains a number of properties defining
+    how the overlays in an :class:`.OverlayList` are to be displayed, and
+    related contextual information.
+
+    
+    A ``DisplayContext`` instance is responsible for creating and destroying
+    :class:`.Display` instances for every overlay in the ``OverlayList``. These
+    ``Display`` instances, and the corresponding ``DisplayOpts`` instances
+    (which, in turn, are created/destroyed by ``Display`` instances) can be
+    accessed with the :meth:`getDisplay` and :meth:`getOpts` method
+    respectively.
+
+
+    A number of other useful methods are provided by a ``DisplayContext``
+    instance:
+
+    .. autosummary::
+       :nosignatures:
+
+        getReferenceImage
+        selectOverlay
+        getSelectedOverlay
+        getOverlayOrder
+        getOrderedOverlays
     """
 
     
     selectedOverlay = props.Int(minval=0, default=0, clamped=True)
     """Index of the currently 'selected' overlay.
 
-    Note that this index is in relation to the
-    :class:`.OverlayList`, rather than to the :attr:`overlayOrder`
-    list.
+    .. note:: The value of this index is in relation to the
+              :class:`.OverlayList`, rather than to the :attr:`overlayOrder`
+              list.
 
-    If you're interested in the currently selected overlay, you must also
-    listen for changes to the :attr:`.OverlayList.images` list as, if the list
-    changes, the :attr:`selectedOverlay` index may not change, but the overlay
-    to which it points may be different.
+              If you're interested in the currently selected overlay, you must
+              also listen for changes to the :attr:`.OverlayList.images` list
+              as, if the list changes, the :attr:`selectedOverlay` index may
+              not change, but the overlay to which it points may be different.
     """
 
 
     location = props.Point(ndims=3)
-    """The location property contains the currently selected
-    3D location (xyz) in the current display coordinate system.
+    """The location property contains the currently selected 3D location (xyz)
+    in the display coordinate system.
     """
 
     
     bounds = props.Bounds(ndims=3)
     """This property contains the min/max values of a bounding box (in display
     coordinates) which is big enough to contain all of the overlays in the
-    :attr:`overlays` list. This property shouid be read-only, but I don't have
-    a way to enforce it (yet).
+    :attr:`overlays` list.
+
+    .. warning:: This property shouid be treated as read-only.
     """
 
 
@@ -74,25 +101,26 @@ class DisplayContext(props.SyncableHasProperties):
 
     syncOverlayDisplay = props.Boolean(default=True)
     """If this ``DisplayContext`` instance has a parent (see
-    :mod:`props.syncable`), and this is ``True``, the properties of the
-    :class:`.Display` and :class:`.DisplayOpts`  for every overlay managed
-     by this ``DisplayContext`` instance will be synchronised to those of
-    the parent instance. Otherwise, the display properties for every overlay
-    will be unsynchronised from the parent.
+    :mod:`props.syncable`), and this property is ``True``, the properties of
+    the :class:`.Display` and :class:`.DisplayOpts` instances for every
+    overlay managed by this ``DisplayContext`` instance will be synchronised
+    to those of the parent instance. Otherwise, the display properties for
+    every overlay will be unsynchronised from the parent.
 
-    This property is accessed by the :class:`.Display` class, in its
-    :meth:`.Display.__init__` method, and when it creates new
-    :class:`.DisplayOpts` instances, to set initial sync states.
+    .. note:: This property is accessed by the :class:`.Display` class, in its
+             :meth:`.Display.__init__` method, and when it creates new
+             :class:`.DisplayOpts` instances, to set initial sync states.
     """
 
 
     def __init__(self, overlayList, parent=None):
-        """Create a :class:`DisplayContext` object.
+        """Create a ``DisplayContext``.
 
-        :arg overlayList: A :class:`.OverlayList` instance.
+        :arg overlayList: An :class:`.OverlayList` instance.
 
-        :arg parent: Another :class`DisplayContext` instance to be used
-        as the parent of this instance.
+        :arg parent:      Another ``DisplayContext`` instance to be used
+                          as the parent of this instance, passed to the
+                          :meth:`.SyncableHasProperties.__init__` constructor.
         """
 
         props.SyncableHasProperties.__init__(
@@ -104,9 +132,9 @@ class DisplayContext(props.SyncableHasProperties):
         self.__overlayList = overlayList
         self.__name         = '{}_{}'.format(self.__class__.__name__, id(self))
 
-        # Keep track of the overlay list
-        # length so we can do some things in the
-        # _overlayListChanged method. This if/else
+        # Keep track of the overlay list length so
+        # we can do some things in the
+        # __overlayListChanged method. This if/else
         # is a bit hacky ....
         #
         # If the __overlayListChanged method detects
@@ -145,10 +173,17 @@ class DisplayContext(props.SyncableHasProperties):
 
         
     def __del__(self):
+        """Prints a log message."""
         log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
 
         
     def destroy(self):
+        """This method must be called when this ``DisplayContext`` is no
+        longer needed.
+
+        When a ``DisplayContext`` is destroyed, all of the :class:`.Display`
+        instances managed by it are destroyed as well.
+        """
 
         self.__overlayList.removeListener('overlays', self.__name)
 
@@ -159,19 +194,21 @@ class DisplayContext(props.SyncableHasProperties):
 
         
     def getDisplay(self, overlay, overlayType=None):
-        """Returns the display property object (e.g. a :class:`.Display`
-        object) for the specified overlay (or overlay index).
+        """Returns the :class:`.Display` instance for the specified overlay
+        (or overlay index).
 
-        If a :class:`Display` object does not exist for the given overlay,
-        one is created.
+        If the overlay is not in the ``OverlayList``, an
+        :exc:`InvalidOverlayError` is raised.  Otheriwse, if a
+        :class:`Display` object does not exist for the given overlay, one is
+        created.
 
-        :arg overlay:     The overlay to retrieve a ``Display``
-                          instance for.
+        :arg overlay:     The overlay to retrieve a ``Display`` instance for, 
+                          or an index into the ``OverlayList``.
 
         :arg overlayType: If a ``Display`` instance for the specified
-                          ``overlay`` does not exist, one is created - the
-                          specified ``overlayType`` is passed to the
-                          :meth:`.Display.__init__` method.
+                          ``overlay`` does not exist, one is created - in
+                          this case, the specified ``overlayType`` is passed
+                          to the :meth:`.Display.__init__` method.
         """
 
         if overlay is None:
@@ -208,9 +245,8 @@ class DisplayContext(props.SyncableHasProperties):
 
     def getOpts(self, overlay, overlayType=None):
         """Returns the :class:`.DisplayOpts` instance associated with the
-        specified overlay.
-
-        See :meth:`.Display.getDisplayOpts` and :meth:`getDisplay`. 
+        specified overlay.  See :meth:`getDisplay` and
+        :meth:`.Display.getDisplayOpts` for more details,
         """
 
         if overlay is None:
@@ -236,8 +272,11 @@ class DisplayContext(props.SyncableHasProperties):
 
         
     def selectOverlay(self, overlay):
-        """Selects the specified ``overlay``. Raises an ``IndexError`` if
+        """Selects the specified ``overlay``. Raises an :exc:`IndexError` if
         the overlay is not in the list.
+
+        If you want to select an overlay by its index in the ``OverlayList``,
+        you can just assign to the :attr:`selectedOverlay` property directly.
         """
         self.selectedOverlay = self.__overlayList.index(overlay)
 
@@ -247,15 +286,16 @@ class DisplayContext(props.SyncableHasProperties):
         or ``None`` if there are no overlays.
         """
         if len(self.__overlayList) == 0: return None
+        
         return self.__overlayList[self.selectedOverlay]
 
     
     def getOverlayOrder(self, overlay):
         """Returns the order in which the given overlay (or an index into
         the :class:`.OverlayList` list) should be displayed
-        (see the :attr:`overlayOrder property).
+        (see the :attr:`overlayOrder` property).
 
-        Raises an ``IndexError`` if the overlay is not in the list.
+        Raises an :exc:`IndexError` if the overlay is not in the list.
         """
         self.__syncOverlayOrder()
         
@@ -266,11 +306,12 @@ class DisplayContext(props.SyncableHasProperties):
 
     
     def getOrderedOverlays(self):
-        """Returns a list of overlay objects from
-        the :class:`.OverlayList` list, sorted into the order
-        that they are to be displayed.
+        """Returns a list of overlay objects from the :class:`.OverlayList`
+        list, sorted into the order that they should be displayed, as defined
+        by the :attr:`overlayOrder` property.
         """
         self.__syncOverlayOrder()
+        
         return [self.__overlayList[idx] for idx in self.overlayOrder]
 
 
@@ -300,9 +341,8 @@ class DisplayContext(props.SyncableHasProperties):
                 # opts instance, so we don't do it here
                 display.destroy()
  
-        # Ensure that a Display object
-        # exists for every overlay in
-        # the list
+        # Ensure that a Display object exists
+        # for every overlay in the list
         for overlay in self.__overlayList:
 
             # The getDisplay method
@@ -313,18 +353,18 @@ class DisplayContext(props.SyncableHasProperties):
 
             # Register a listener on the overlay type,
             # because when it changes, the DisplayOpts
-            # instance will change, and we will need to
-            # re-register the next listener
+            # instance will change, and we will need
+            # to re-register the DisplayOpts.bounds
+            # listener (see the next statement)
             display.addListener('overlayType',
                                 self.__name,
                                 self.__overlayListChanged,
                                 overwrite=True)
 
-            # Register a listener on the DisplayOpts
-            # object for every overlay - if any
-            # DisplayOpts properties change, the
-            # overlay display bounds may have changed,
-            # so we need to know when this happens.
+            # Register a listener on the DisplayOpts.bounds
+            # property for every overlay - if the display
+            # bounds for any overlay changes, we need to
+            # update our own bounds property.
             opts.addListener('bounds',
                              self.__name,
                              self.__overlayBoundsChanged,
@@ -337,9 +377,10 @@ class DisplayContext(props.SyncableHasProperties):
         # Ensure that the bounds property is accurate
         self.__updateBounds()
 
-        # If the overlay list was empty,
-        # and is now non-empty, centre
-        # the currently selected location
+        # If the overlay list was empty, and is
+        # now non-empty, centre the currently
+        # selected location (but see the comments
+        # in __init__ about this).
         if (self.__prevOverlayListLen == 0) and (len(self.__overlayList) > 0):
             
             # initialise the location to be
@@ -430,7 +471,7 @@ class DisplayContext(props.SyncableHasProperties):
     def __overlayBoundsChanged(self, value, valid, opts, name):
         """Called when the :attr:`.DisplayOpts.bounds` property of any
         overlay changes. Updates the :attr:`bounds` property and preserves
-        the display :attr:`location` in terms of hte currently selected
+        the display :attr:`location` in terms of the currently selected
         overlay.
         """
 
@@ -465,9 +506,9 @@ class DisplayContext(props.SyncableHasProperties):
         #
         # So this test is in place to prevent this horrible
         # circular loop behaviour from occurring. If the
-        # location properties are synced, and contain the
-        # same value, we assume that they don't need to be
-        # updated again, and escape from ths system.
+        # location properties are synced, we assume that
+        # they don't need to be updated again, and escape
+        # from ths system.
         if self.getParent() is not None and self.isSyncedToParent('location'):
             return
 
@@ -491,7 +532,7 @@ class DisplayContext(props.SyncableHasProperties):
         # currently selected overlay, when the overlay
         # bounds have changed. We don't care about changes
         # to the options for other overlays.
-        if (overlay != self.getSelectedOverlay()):
+        if overlay != self.getSelectedOverlay():
             self.notify('location')
             return
 
@@ -542,7 +583,9 @@ class DisplayContext(props.SyncableHasProperties):
                 
     def __updateBounds(self, *a):
         """Called when the overlay list changes, or when any overlay display
-        transform is changed. Updates the :attr:`bounds` property.
+        transform is changed. Updates the :attr:`bounds` property so that it
+        is big enough to contain all of the overlays (as defined by their
+        :attr:`.DisplayOpts.bounds` properties).
         """
 
         if len(self.__overlayList) == 0:

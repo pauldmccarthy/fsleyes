@@ -4,14 +4,8 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides definitions of an important class - the
-:class:`Display` class.
-
-A ``Display`` contains a specification for the way in which any overlays is to
-be displayed.
-
-..note:: Put a description of the three coordinate systems which
-         exist in the system.
+"""This module provides the :class:`Display` and :class:`DisplayOpts` classes,
+which encapsulate overlay display settings.
 """
 
 import logging
@@ -26,96 +20,15 @@ import fsl.fsleyes.actions as actions
 log = logging.getLogger(__name__)
 
 
-class DisplayOpts(actions.ActionProvider):
-
-
-    bounds = props.Bounds(ndims=3)
-    """Specifies a bounding box (in display coordinates) which is big enough
-    to contain the overlay described by this ``DisplayOpts`` instance. The
-    values in this ``bounds`` property  must be maintained by subclass
-    implementations.
-
-    Whenever the spatial representation of this overlay changes, but the
-    bounds do not change, subclass implementations should force notification
-    on this property (via the :meth:`.HasProperties.notify` method). 
-    """
-
-    def __init__(
-            self,
-            overlay,
-            display,
-            overlayList,
-            displayCtx,
-            **kwargs):
-
-        actions.ActionProvider.__init__(
-            self,
-            overlayList,
-            displayCtx,
-            **kwargs)
-        
-        self.overlay     = overlay
-        self.display     = display
-        self.overlayList = overlayList
-        self.displayCtx  = displayCtx
-        self.overlayType = display.overlayType
-        self.name        = '{}_{}'.format(type(self).__name__, id(self))
-
-        log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
-
-        
-    def __del__(self):
-        log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
-
-        
-    def destroy(self):
-        """If overridden, this method should be called by the subclass
-        implementation.
-        """
-        actions.ActionProvider.destroy(self)
-
-        self.overlay     = None
-        self.display     = None
-        self.overlayList = None
-        self.displayCtx  = None
-
-
-    def getReferenceImage(self):
-        """Some non-volumetric overlay types (e.g. the :class:`.Model` - see
-        :class:`.ModelOpts`) may have a 'reference' :class:`.Image` instance
-        associated with them, allowing the overlay to be localised in the
-        coordinate space defined by the :class:`.Image`. The
-        :class:`.DisplayOpts` class which corresponds to such non-volumetric
-        overlays should override this method to return the reference image.
-
-        :class:`.DisplayOpts` subclasses which are associated with volumetric
-        overlays (i.e. :class:`.Image` instances) do not need to override
-        this method.
-        """
-
-        if isinstance(self.overlay, fslimage.Image):
-            return self.overlay
-        return None
-
-    
-    def transformDisplayLocation(self, coords):
-        """This method may be called after the overlay :attr:`bounds` have
-        changed.
-
-        If the bounds were changed as a result of a change to the spatial
-        representation of the overlay (e.g. the :attr:`.ImageOpts.transform`
-        property for :class:`.Image` overlays), this method should return
-        a copy of the given coordinates which has been transformed into the
-        new space.
-
-        If the bounds were changed for some other reason, this method can
-        just return the ``coords`` unchanged.
-        """
-        return coords
-
-
 class Display(props.SyncableHasProperties):
-    """
+    """The ``Display`` class contains display settings which are common to
+    all overlay types.
+
+    A ``Display`` instance is also responsible for managing a single
+    :class:`DisplayOpts` instance, which contains overlay type specific
+    display options. Whenever the :attr:`overlayType` property of a
+    ``Display`` instance changes, the old ``DisplayOpts`` instance (if any)
+    is destroyed, and a new one, of the correct type, created.
     """
 
     
@@ -128,11 +41,12 @@ class Display(props.SyncableHasProperties):
     displayed.
 
     The options for this property are populated in the :meth:`__init__`
-    method. See the :attr:`OVERLAY_TYPES` dictionary.
+    method, from the :attr:`OVERLAY_TYPES` dictionary. A :class:`DisplayOpts`
+    sub-class exists for every possible value that this property may take.
     """
     
     enabled = props.Boolean(default=True)
-    """Should this overlay be displayed at all?"""
+    """Should this overlay be displayed at all? """
 
     
     alpha = props.Percentage(default=100.0)
@@ -140,19 +54,19 @@ class Display(props.SyncableHasProperties):
 
     
     brightness = props.Percentage()
+    """Brightness - 50% is normal brightness."""
 
     
     contrast   = props.Percentage()
+    """Contrast - 50% is normal contrast."""
 
 
     softwareMode = props.Boolean(default=False)
-    """If possible, optimise for software-based rendering."""
+    """If possible, optimise for a low-performance rendering environment
+    (e.g. a software-based OpenGL renderer).
+    """
 
     
-    def getOverlay(self):
-        return self.__overlay
-
-
     def __init__(self,
                  overlay,
                  overlayList,
@@ -172,7 +86,8 @@ class Display(props.SyncableHasProperties):
         :arg parent:      A parent ``Display`` instance - see
                           :mod:`props.syncable`.
 
-        :arg overlayType: Initial overlay type.
+        :arg overlayType: Initial overlay type - see the :attr:`overlayType`
+                          property.
         """
         
         self.__overlay     = overlay
@@ -227,7 +142,7 @@ class Display(props.SyncableHasProperties):
         #
         # The structure of the dictionary is:
         #
-        #   { type(DIsplayOpts), propName : propValue }
+        #   { (type(DisplayOpts), propName) : propValue }
         #
         # This also applies to the case where the
         # overlay type is changed from one type to
@@ -251,8 +166,7 @@ class Display(props.SyncableHasProperties):
         # Display instance's parent (so it can
         # subsequently access a parent for the
         # new DisplayOpts instance). Therefore,
-        # we do this after calling
-        # Syncable.__init__.
+        # we do this after calling Syncable.__init__.
         self.__displayOpts = None
         self.__overlayTypeChanged()
 
@@ -260,12 +174,21 @@ class Display(props.SyncableHasProperties):
 
         
     def __del__(self):
+        """Prints a log message."""
         log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
-        
+
+    
+    def getOverlay(self):
+        """Returns the overlay associated with this ``Display`` instance."""
+        return self.__overlay
+
 
     def destroy(self):
-        """This method should be called when this ``Display`` instance
+        """This method must be called when this ``Display`` instance
         is no longer needed.
+
+        When a ``Display`` instance is destroyed, the corresponding
+        :class:`DisplayOpts` instance is also destroyed.
         """
         
         if self.__displayOpts is not None:
@@ -276,11 +199,21 @@ class Display(props.SyncableHasProperties):
         self.detachFromParent()
         
         self.__displayOpts = None
+        self.__overlayList = None
+        self.__displayCtx  = None
         self.__overlay     = None
         
         
     def getDisplayOpts(self):
-        """
+        """Return the :class:`.DisplayOpts` instance associated with this
+        ``Display``, which contains overlay type specific display settings.
+
+        If a ``DisplayOpts`` instance has not yet been created, or the
+        :attr:`overlayType` property no longer matches the type of the
+        existing ``DisplayOpts`` instance, a new ``DisplayOpts`` instance
+        is created (and the old one destroyed if necessary).
+
+        See the :meth:`__makeDisplayOpts` method.
         """
 
         if (self.__displayOpts             is None) or \
@@ -295,7 +228,12 @@ class Display(props.SyncableHasProperties):
 
 
     def __makeDisplayOpts(self):
-        """
+        """Creates a new :class:`DisplayOpts` instance. The specific
+        ``DisplayOpts`` sub-class that is created is dictated by the current
+        value of the :attr:`overlayType` property.
+
+        The :data:`DISPLAY_OPTS_MAP` dictionary defines the mapping between
+        :attr:`overlayType` values, and ``DisplayOpts`` sub-class types.
         """
 
         if self.getParent() is None:
@@ -351,8 +289,8 @@ class Display(props.SyncableHasProperties):
     
     def __saveOldDisplayOpts(self):
         """Saves the value of every property on the current
-        :class:`DisplayOpts` instance, so they can be restored
-        later if needed.
+        :class:`DisplayOpts` instance, so they can be restored later if
+        needed.
         """
 
         opts = self.__displayOpts
@@ -367,8 +305,8 @@ class Display(props.SyncableHasProperties):
 
     
     def __restoreOldDisplayOpts(self):
-        """Restores any cached values for all of the properties  on the
-        current ``DisplayOpts`` instance.
+        """Restores any cached values for all of the properties on the
+        current :class:`DisplayOpts` instance.
         """
         opts = self.__displayOpts
 
@@ -386,14 +324,156 @@ class Display(props.SyncableHasProperties):
                 
     
     def __overlayTypeChanged(self, *a):
+        """Called when the :attr:`overlayType` property changes. Makes sure
+        that the :class:`DisplayOpts` instance is of the correct type.
         """
-        """
-
-        # make sure that the display
-        # options instance is up to date
         self.__saveOldDisplayOpts()
         self.getDisplayOpts()
         self.__restoreOldDisplayOpts()
+
+
+class DisplayOpts(actions.ActionProvider):
+    """The ``DisplayOpts`` class contains overlay type specific display
+    settings. ``DisplayOpts`` instances are managed by :class:`Display`
+    instances.
+
+    
+    The ``DisplayOpts`` class is not meant to be created directly - it is a
+    base class for type specific implementations (e.g. the :class:`.ImageOpts`
+    class).
+
+    
+    The following attributes are available on all ``DisplayOpts`` instances:
+
+    
+    =============== ======================================================
+    ``overlay``     The overlay object
+    ``display``     The :class:`Display` instance that created this
+                    ``DisplayOpts`` instance.
+    ``overlayType`` The value of the :attr:`Display.overlayType` property
+                    corresponding to the type of this ``DisplayOpts``
+                    instance.
+    ``overlayList`` The :class:`.OverlayList` instance, which contains all
+                    overlays.
+    ``displayCtx``  The :class:`.DisplayContext` instance which is
+                    responsible for all ``Display`` and ``DisplayOpts``
+                    instances.
+    ``name``        A unique name for this ``DIsplayOpts`` instance.
+    =============== ======================================================
+    """
+
+
+    bounds = props.Bounds(ndims=3)
+    """Specifies a bounding box in the display coordinate system which is big
+    enough to contain the overlay described by this ``DisplayOpts``
+    instance. The values in this ``bounds`` property must be updated by
+    ``DisplayOpts`` subclasses.
+
+    Whenever the spatial representation of this overlay changes, but the
+    bounds do not change, subclass implementations should force notification
+    on this property (via the :meth:`.HasProperties.notify` method).
+    """
+
+    
+    def __init__(
+            self,
+            overlay,
+            display,
+            overlayList,
+            displayCtx,
+            **kwargs):
+        """Create a ``DisplayOpts`` object.
+
+        :arg overlay:     The overlay associated with this ``DisplayOpts``
+                          instance.
+        
+        :arg display:     The :class:`Display` instance which owns this
+                          ``DisplayOpts`` instance.
+        
+        :arg overlayList: The :class:`.OverlayList` which contains all
+                          overlays.
+        
+        :arg displayCtx:  A :class:`.DisplayContext` instance describing
+                          how the overlays are to be displayed.
+        
+        :arg kwargs:      Passed through to the
+                          :meth:`.ActionProvider.__init__` constructor.
+        """
+
+        actions.ActionProvider.__init__(
+            self,
+            overlayList,
+            displayCtx,
+            **kwargs)
+        
+        self.overlay     = overlay
+        self.display     = display
+        self.overlayList = overlayList
+        self.displayCtx  = displayCtx
+        self.overlayType = display.overlayType
+        self.name        = '{}_{}'.format(type(self).__name__, id(self))
+
+        log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
+
+        
+    def __del__(self):
+        """Prints a log message."""
+        log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
+
+        
+    def destroy(self):
+        """This method must be called when this ``DisplayOpts`` instance
+        is no longer needed.
+
+        If a subclass overrides this method, the subclass implementation
+        must call this method, **after** performing its own clean up.
+        """
+        actions.ActionProvider.destroy(self)
+
+        self.overlay     = None
+        self.display     = None
+        self.overlayList = None
+        self.displayCtx  = None
+
+
+    def getReferenceImage(self):
+        """Return the reference image associated with this ``DisplayOpts``
+        instance.
+
+        Some non-volumetric overlay types (e.g. the :class:`.Model` - see
+        :class:`.ModelOpts`) may have a *reference* :class:`.Image` instance
+        associated with them, allowing the overlay to be localised in the
+        coordinate space defined by the :class:`.Image`. The
+        :class:`.DisplayOpts` sub-class which corresponds to
+        such non-volumetric overlays should override this method to return
+        that reference image.
+
+        :class:`.DisplayOpts` sub-classes which are associated with volumetric
+        overlays (i.e. :class:`.Image` instances) do not need to override
+        this method - in this case, the overlay itself is considered to be
+        its own reference image, and is returned by the base-class
+        implementation of this this method.
+        """
+
+        if isinstance(self.overlay, fslimage.Image):
+            return self.overlay
+        return None
+
+    
+    def transformDisplayLocation(self, coords):
+        """This method may be called after the overlay :attr:`bounds` have
+        changed.
+
+        If the bounds were changed as a result of a change to the spatial
+        representation of the overlay (e.g. the :attr:`.ImageOpts.transform`
+        property for :class:`.Image` overlays), this method should return
+        a copy of the given coordinates which has been transformed into the
+        new space.
+
+        If the bounds were changed for some other reason, this method can
+        just return the ``coords`` unchanged.
+        """
+        return coords
 
 
 import volumeopts
@@ -408,8 +488,9 @@ OVERLAY_TYPES = td.TypeDict({
     'Image' : ['volume', 'mask', 'rgbvector', 'linevector', 'label'],
     'Model' : ['model']
 })
-"""This dictionary provides a mapping between the overlay classes, and
-the way in which they may be represented.
+"""This dictionary provides a mapping between all overlay classes,
+and the possible values that the :attr:`Display.overlayType` property
+may take for each of them. 
 
 For each overlay class, the first entry in the corresponding overlay type
 list is used as the default overlay type.

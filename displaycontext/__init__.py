@@ -103,18 +103,33 @@ Scene options
 
 Independent of the ``DisplayContext``, ``Display`` and ``DisplayOpts``
 classes, the ``displaycontext`` package is also home to a few classes which
-define *scene* options.  Every :class:`.CanvasPanel` instance uses a
-:class:`.SceneOpts` sub-class to control the scene configuration. For example,
-the :attr:`.LightBoxOpts.ncols` property controls how many columns of slices
-the :class:`.LightBoxPanel` should display.  The following scene option
-classes exist:
+define *scene* options::
+
 
 .. autosummary::
    :nosignatures:
 
+   ~fsl.fsleyes.displaycontext.canvasopts.SliceCanvasOpts
+   ~fsl.fsleyes.displaycontext.canvasopts.LightBoxCanvasOpts
    ~fsl.fsleyes.displaycontext.sceneopts.SceneOpts
    ~fsl.fsleyes.displaycontext.orthoopts.OrthoOpts
    ~fsl.fsleyes.displaycontext.lightboxopts.LightBoxOpts
+
+
+.. note:: Aside from an increase in code modularity and cleanliness, another
+          reason that all of these scene display settings are separated from
+          the things that use them is so they can be imported, queried, and
+          set without having to import the modules that use them.
+
+          For example, the :mod:`.fsleyes_parseargs` module needs to be able
+          to access all of the display settings in order to print out the
+          corresponding help documentation. This process would take much
+          longer if ``fsleyes_parseargs`` had to import, e.g.
+          :class:`.OrthoPanel`, which would result in importing both :mod:`wx`
+          and :mod:`.OpenGL`.
+
+          Keeping these display settings separate allows us to avoid these
+          time-consuming imports in situations where they are not needed.
 """
 
 
