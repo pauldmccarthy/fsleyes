@@ -6,7 +6,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`TogglePanel` class, which is a
-:class:`wx.Panel` that contains a button and some content. Pushing
+:class:`wx.PyPanel` that contains a button and some content. Pushing
 the button toggles the visibility of the content.
 """
 
@@ -15,32 +15,17 @@ import wx
 import wx.lib.newevent as wxevent
 
 
-_TogglePanelEvent, _EVT_TOGGLEPANEL_EVENT = wxevent.NewEvent()
-
-
-EVT_TOGGLEPANEL_EVENT = _EVT_TOGGLEPANEL_EVENT
-"""Identifier for the :data:`TogglePanelEvent` event."""
-
-
-TogglePanelEvent = _TogglePanelEvent
-"""Event emitted when the toggle button is pushed. Contains the
-following attributes:
-
-  - ``newState``: The new visibility state of the toggle panel - ``True``
-                  corresponds to visible, ``False`` to invisible.
-"""
-
-
-class TogglePanel(wx.Panel):
-    """A  :class:`TogglePanel` is a :class:`wx.Panel` that contains
+class TogglePanel(wx.PyPanel):
+    """A  :class:`TogglePanel` is a :class:`wx.PyPanel` that contains
     a button and some content.
 
     Pushing the button toggles the visibility of the content.
     
-    All of the content should be added to the :class:`wx.Panel` which
-    is returned by the :meth:`getContentPanel` method.
+    All of the content should be added to the :class:`wx.PyPanel` which
+    is returned by the :meth:`GetContentPanel` method.
     """
 
+    
     def __init__(self,
                  parent,
                  toggleSide=wx.TOP,
@@ -60,7 +45,7 @@ class TogglePanel(wx.Panel):
         :arg label:        A label to be displayed on the toggle button.
         """
 
-        wx.Panel.__init__(self, parent)
+        wx.PyPanel.__init__(self, parent)
 
         self.__contentPanel = wx.Panel(self)
 
@@ -86,7 +71,7 @@ class TogglePanel(wx.Panel):
         elif toggleSide == wx.BOTTOM: showLabel = u'\u25B2' 
         elif toggleSide == wx.LEFT:   showLabel = u'\u25B6' 
         elif toggleSide == wx.RIGHT:  showLabel = u'\u25C0' 
-
+ 
         self.__showLabel = showLabel
         self.__hideLabel = hideLabel
 
@@ -108,7 +93,7 @@ class TogglePanel(wx.Panel):
             self.toggle()
 
 
-    def toggle(self, ev=None):
+    def Toggle(self, ev=None):
         """Toggles visibility of the panel content."""
         
         isShown = self.__sizer.IsShown(self.__contentPanel)
@@ -124,8 +109,24 @@ class TogglePanel(wx.Panel):
         self.__contentPanel.Layout()
 
     
-    def getContentPanel(self):
+    def GetContentPanel(self):
         """Returns the :class:`wx.Panel` to which all content should be
         added.
         """
         return self.__contentPanel
+
+
+_TogglePanelEvent, _EVT_TOGGLEPANEL_EVENT = wxevent.NewEvent()
+
+
+EVT_TOGGLEPANEL_EVENT = _EVT_TOGGLEPANEL_EVENT
+"""Identifier for the :data:`TogglePanelEvent` event."""
+
+
+TogglePanelEvent = _TogglePanelEvent
+"""Event emitted when the toggle button is pushed. Contains the
+following attributes:
+
+  - ``newState``: The new visibility state of the toggle panel - ``True``
+                  corresponds to visible, ``False`` to invisible.
+"""

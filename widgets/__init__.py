@@ -4,12 +4,13 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This package contains a collection of generic custom WX widgets. No more,
-no less.
+"""This package contains a collection of generic custom :mod:`wx` widgets. No
+more, no less.
+
+.. autosummary::
+
+   ~fsl.fsleyes.widgets.imagepanel
+   ~fsl.fsleyes.widgets.swappanel
+   ~fsl.fsleyes.widgets.togglepanel
+   ~fsl.fsleyes.widgets.textpanel
 """
-
-import logging
-log = logging.getLogger(__name__)
-
-from textpanel  import TextPanel
-from imagepanel import ImagePanel

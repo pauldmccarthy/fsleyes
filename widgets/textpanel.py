@@ -8,44 +8,59 @@
 some text, oriented either horizontally or vertically.
 """
 
-import logging
-log = logging.getLogger(__name__)
 
 import wx
 
-class TextPanel(wx.Panel):
-    """A :class:`wx.Panel` which may be used to display a string of
+
+class TextPanel(wx.PyPanel):
+    """A :class:`wx.PyPanel` which may be used to display a string of
     text, oriented either horizotnally or vertically.
     """
 
-    def __init__(self, parent, text=None, orient='horizontal'):
-        wx.Panel.__init__(self, parent)
+    def __init__(self, parent, text=None, orient=wx.HORIZONTAL):
+        """Create a ``TextPanel``.
+
+        :arg parent: The :mod:`wx` parent object.
+
+        :arg text:   The text to display. This can be changed via
+                     :meth:`SetText`.
+
+        :arg orient: Text orientation - either ``wx.HORIZONTAL`` (the
+                     default) or ``wx.VERTICAL``. This can be changed
+                     later via :meth:`SetOrient`.
+        """
+        wx.PyPanel.__init__(self, parent)
 
         self.Bind(wx.EVT_PAINT, self.Draw)
-        self.Bind(wx.EVT_SIZE,  self._onSize)
+        self.Bind(wx.EVT_SIZE,  self.__onSize)
 
-        self._text = text
+        self.__text = text
         self.SetOrient(orient)
 
 
     def SetOrient(self, orient):
+        """Sets the orientatino of the text on this ``TextPanel``.
 
-        if orient not in ('horizontal', 'vertical'):
-            raise RuntimeError('TextPanel orient must be '
-                               'horizontal or vertical')
+        :arg orient: Either ``wx.HORIZONTAL`` or ``wx.VERTICAL``.
+        """
+
+        if orient not in (wx.HORIZONTAL, wx.VERTICAL):
+            raise ValueError('TextPanel orient must be '
+                             'wx.HORIZONTAL or wx.VERTICAL')
         
-        self._orient = orient
+        self.__orient = orient
 
         # trigger re-calculation of
         # text extents and a refresh
-        self.SetText(self._text)
+        self.SetText(self.__text)
 
         
     def SetText(self, text):
+        """Sets the text shown on this ``TextPanel``."""
         
         dc = wx.ClientDC(self)
 
-        self._text = text
+        self.__text = text
 
         if text is None:
             self.SetMinSize((0, 0))
@@ -56,23 +71,25 @@ class TextPanel(wx.Panel):
         if self._orient == 'vertical':
             width, height = height, width
 
-        self._textExtent = (width, height)
+        self.__textExtent = (width, height)
 
         self.SetMinSize((width, height))
 
         self.Refresh()
 
 
-    def _onSize(self, ev):
+    def __onSize(self, ev):
+        """Called when this ``TextPanel`` is resized. Triggers a refresh. """
         self.Refresh()
         ev.Skip()
 
         
     def Draw(self, ev=None):
+        """Draws this ``TextPanel``. """
 
         self.ClearBackground()
 
-        if self._text is None or self._text == '':
+        if self.__text is None or self.__text == '':
             return
 
         if ev is None: dc = wx.ClientDC(self)
@@ -82,12 +99,12 @@ class TextPanel(wx.Panel):
             return
 
         paneW, paneH = dc.GetSize().Get()
-        textW, textH = self._textExtent
+        textW, textH = self.__textExtent
 
         x = (paneW - textW) / 2.0
         y = (paneH - textH) / 2.0
 
         if self._orient == 'vertical':
-            dc.DrawRotatedText(self._text, x, paneH - y, 90)
+            dc.DrawRotatedText(self.__text, x, paneH - y, 90)
         else:
-            dc.DrawText(self._text, x, y)
+            dc.DrawText(self.__text, x, y)
