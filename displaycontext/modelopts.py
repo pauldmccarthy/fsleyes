@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 #
-# modelopts.py -
+# modelopts.py - The ModelOpts class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`ModelOpts` class, which defines settings
+for displaying :class:`.Model` overlays.
+"""
+
 
 import copy
 
@@ -21,17 +25,61 @@ import volumeopts
 
 
 class ModelOpts(fsldisplay.DisplayOpts):
+    """The ``ModelOpts`` class defines settings for displaying :class:`.Model`
+    overlays.
+    """
 
-    colour       = props.Colour()
-    outline      = props.Boolean(default=False)
+    colour = props.Colour()
+    """The model colour. """
+
+    
+    outline = props.Boolean(default=False)
+    """If ``True``, an outline of the model is shown. Otherwise the model is
+    filled.
+    """
+
+    
     outlineWidth = props.Real(minval=0, maxval=1, default=0.25, clamped=True)
-    showName     = props.Boolean(default=False)
-    refImage     = props.Choice()
-    coordSpace   = copy.copy(volumeopts.ImageOpts.transform)
-    transform    = copy.copy(volumeopts.ImageOpts.transform)
+    """If :attr:`outline` is ``True``, this property defines the width of the
+    outline.
+    """
+    
+
+    showName = props.Boolean(default=False)
+    """If ``True``, the model name is shown alongside the model. """
+
+    
+    refImage = props.Choice()
+    """A reference :class:`.Image` instance which the model coordinates are
+    in terms of.
+
+    For example, if this :class:`.Model` represents the segmentation of a
+    sub-cortical region from a T1 image, you would set the ``refImage`` to that
+    T1 image.
+
+    Any :class:`.Image` instance in the :class:`.OverlayList` may be chosen
+    as the reference image.
+    """
+
+    
+    coordSpace = copy.copy(volumeopts.ImageOpts.transform)
+    """If :attr:`refImage` is not ``None``, this property defines the
+    reference image coordinate space in whihc the model coordinates are
+    defined (i.e. voxels, scaled voxels, or world coordinates).
+    """
+
+    
+    transform = copy.copy(volumeopts.ImageOpts.transform)
+    """If :attr:`refImage` is not ``None``, this property is bound to 
+    the :attr:`~.ImageOpts.transform` property of the reference image
+    :class:`.ImageOpts` instance.
+    """
 
 
     def __init__(self, *args, **kwargs):
+        """Create a ``ModelOpts`` instance. All arguments are passed through
+        to the :class:`.DisplayOpts` constructor.
+        """
 
         # Create a random, highly
         # saturated colour
@@ -73,6 +121,9 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
 
     def destroy(self):
+        """Removes some property listeners, and calls the
+        :meth:`.DisplayOpts.destroy` method.
+        """
         self.overlayList.removeListener('overlays', self.name)
 
         for overlay in self.overlayList:
@@ -92,9 +143,14 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
     
     def getCoordSpaceTransform(self):
+        """Returns a transformation matrix which can be used to transform
+        the :class:`.Model` vertex coordinates into the display coordinate
+        system.
 
-        if self.refImage is None or \
-           self.coordSpace == self.transform:
+        If no :attr:`refImage` is selected, this method returns ``None``.
+        """
+
+        if self.refImage is None or self.coordSpace == self.transform:
             return None
 
         opts = self.displayCtx.getOpts(self.refImage)
@@ -103,6 +159,11 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
 
     def transformDisplayLocation(self, oldLoc):
+        """If the :attr:`refImage`, :attr:`coordSpace` or :attr:`transform`
+        properties have changed, this method will transform the specified
+        location from the old :class:`.Model` display coordinate system to
+        the new model display coordinate system.
+        """
 
         newLoc   = oldLoc
         propName = self.__lastPropChanged
@@ -152,16 +213,32 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
 
     def __transformChanged(self, *a):
+        """Called when the :attr:`transfrom` property changes.
+        Calls :meth:`__updateBounds`.
+        """
         self.__lastPropChanged = 'transform'
         self.__updateBounds()
 
 
     def __coordSpaceChanged(self, *a):
+        """Called when the :attr:`coordSpace` property changes.
+        Calls :meth:`__updateBounds`.
+        """ 
         self.__lastPropChanged = 'coordSpace'
         self.__updateBounds()
 
 
     def __refImageChanged(self, *a):
+        """Called when the :attr:`refImage` property changes.  Configures the
+        :attr:`transform` property to track the :attr:`~.ImageOpts.transform`
+        property of the :class:`.ImageOpts` instance associated with the new
+        reference image, and calls :meth:`__updateBounds`.
+        """
+
+        # TODO You are not tracking changes to the
+        # refImage overlay type -  if this changes,
+        # you will need to re-bind to the transform
+        # property of the new DisplayOpts instance
 
         self.__lastPropChanged = 'refImage'
 
@@ -200,7 +277,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
             
     
     def __overlayListChanged(self, *a):
-        """Called when the overlay list changes. Updates the ``refImage``
+        """Called when the overlay list changes. Updates the :attr:`refImage`
         property so that it contains a list of overlays which can be
         associated with the model.
         """
@@ -219,7 +296,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
         for overlay in overlays:
             
-            # The image must be an Image instance.
+            # The overlay must be an Image instance.
             if not isinstance(overlay, fslimage.Image):
                 continue
 

@@ -35,7 +35,7 @@ class LightBoxOpts(sceneopts.SceneOpts):
     
     def __init__(self, *args, **kwargs):
         """Create a ``LightBoxOpts`` instance. All arguments are passed
-        through to the :meth:`.SceneOpts.__init__` method.
+        through to the :class:`.SceneOpts` constructor.
 
         The :attr:`.SceneOpts.zoom` attribute is modified, as
         :class:`LightBoxPanel` uses it slightly differently to the

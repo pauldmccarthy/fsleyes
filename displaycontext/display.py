@@ -397,7 +397,7 @@ class DisplayOpts(actions.ActionProvider):
                           how the overlays are to be displayed.
         
         :arg kwargs:      Passed through to the
-                          :meth:`.ActionProvider.__init__` constructor.
+                          :class:`.ActionProvider` constructor.
         """
 
         actions.ActionProvider.__init__(

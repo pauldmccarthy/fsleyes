@@ -66,7 +66,7 @@ class OrthoOpts(sceneopts.SceneOpts):
     
     def __init__(self, *args, **kwargs):
         """Create an ``OrthoOpts`` instance. All arguments are passed
-        through to the :meth:`.SceneOpts.__init__` constructor.
+        through to the :class:`.SceneOpts` constructor.
 
         This method sets up a binding from the :attr:`.SceneOpts.zoom`
         property to the :attr:`xzoom`, :attr:`yzoom`, and :attr:`zzoom`

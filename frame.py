@@ -405,7 +405,7 @@ class FSLEyesFrame(wx.Frame):
 
     
     def __restoreState(self, restore=True):
-        """Called on :meth:`__init__`.
+        """Called by :meth:`__init__`.
 
         If any frame size/layout properties have previously been saved via the
         :mod:`~fsl.utils.settings` module, they are read in, and applied to

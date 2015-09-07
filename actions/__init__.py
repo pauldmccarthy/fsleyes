@@ -241,7 +241,8 @@ class ActionProvider(props.SyncableHasProperties):
                           mappings, where each function is an action that
                           should be made available to the user.
 
-        :arg kwargs:      Passed to :meth:`.SyncableHasProperties.__init__`.
+        :arg kwargs:      Passed to the :class:`.SyncableHasProperties`
+                          constructor.
         """
 
         actions = kwargs.pop('actions', None)

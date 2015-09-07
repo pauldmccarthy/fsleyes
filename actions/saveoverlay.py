@@ -26,7 +26,7 @@ class SaveOverlayAction(actions.Action):
     
     def __init__(self, *args, **kwargs):
         """Create a ``SaveOverlayAction``. All arguments are passed through
-        to the :meth:`.Action.__init__` constructor.
+        to the :class:`.Action` constructor.
         """
         actions.Action.__init__(self, *args, **kwargs)        
 

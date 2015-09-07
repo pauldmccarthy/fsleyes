@@ -7,6 +7,8 @@
 """This module defines the :class:`ImageOpts` and :class:`VolumeOpts` classes.
 
 
+.. _volumeopts-coordinate-systems:
+
 ---------------------------------------
 An important note on coordinate systems
 ---------------------------------------
@@ -28,7 +30,7 @@ overlays can potentially be displayed in one of three coordinate systems:
  **world** space        (a.k.a. ``affine``) The image data voxel coordinates
                         are transformed by the ``qform``/``sform``
                         transformation matrix stored in the NIFTI1 header.
- ==================== ====================================================
+ ====================== ====================================================
 
 
 The :attr:`Image.transform` property controls how the image data is
@@ -108,38 +110,37 @@ class ImageOpts(fsldisplay.DisplayOpts):
     """The ``ImageOpts`` class describes how an :class:`.Image` overlay
     should be displayed.
 
+    
     ``ImageOpts`` is the base class for a number of :class:`.DisplayOpts`
-    sub-classes - it contains display options which are common to all.
+    sub-classes - it contains display options which are common to all overlay
+    types that represent a NIFTI1 image.
     """
 
     
     volume = props.Int(minval=0, maxval=0, default=0, clamped=True)
-    """If the ``Image`` is 4D, the current volume to display."""    
+    """If the ``Image`` is 4D, the current volume to display.""" 
 
     
     resolution = props.Real(maxval=10, default=1, clamped=True)
     """Data resolution in the image world coordinate system. The minimum
-    value is set in :meth:`__init__`.
+    value is configured in :meth:`__init__`.
     """ 
 
 
     transform = props.Choice(('affine', 'pixdim', 'id'), default='pixdim')
-    """This property defines how the overlay should be transformd into the
-    display coordinate system.
-
-      - ``affine``: Use the affine transformation matrix stored in the image
-        (the ``qform``/``sform`` fields in NIFTI1 headers).
-                    
-      - ``pixdim``: Scale voxel sizes by the ``pixdim`` fields in the image
-        header.
-    
-      - ``id``: Perform no scaling or transformation - voxels will be
-        interpreted as :math:`1mm^3` isotropic, with the origin at voxel
-        (0,0,0).
+    """This property defines how the overlay should be transformd into
+    the display coordinate system. See the
+    :ref:`note on coordinate systems <volumeopts-coordinate-systems>`
+    for important information regarding this property.
     """
 
  
     def __init__(self, *args, **kwargs):
+        """Create an ``ImageOpts`` instance.
+
+        All arguments are passed through to the :class:`.DisplayOpts`
+        constructor.
+        """
 
         # The transform property cannot be unsynced
         # across different displays, as it affects
@@ -172,11 +173,14 @@ class ImageOpts(fsldisplay.DisplayOpts):
 
 
     def destroy(self):
+        """Calls the :meth:`.DisplayOpts.destroy` method. """
         fsldisplay.DisplayOpts.destroy(self)
 
         
     def __transformChanged(self, *a):
-        """Calculates the min/max values of a 3D bounding box, in the display
+        """Called when the :attr:`transform` property changes.
+        
+        Calculates the min/max values of a 3D bounding box, in the display
         coordinate system, which is big enough to contain the image. Sets the
         :attr:`.DisplayOpts.bounds` property accordingly.
         """
@@ -234,20 +238,24 @@ class ImageOpts(fsldisplay.DisplayOpts):
         """Return a matrix which may be used to transform coordinates
         from ``from_`` to ``to``. Valid values for ``from_`` and ``to``
         are:
-          - ``id``:      Voxel coordinates
-        
-          - ``pixdim``:  Voxel coordinates, scaled by voxel dimensions
-        
-          - ``affine``:  World coordinates, as defined by the NIFTI1
-                         ``qform``/``sform``. See
-                         :attr:`~fsl.data.image.Image.voxToWorldMat`.
-        
-          - ``voxel``:   Equivalent to ``id``.
-        
-          - ``display``: Equivalent to the current value of :attr:`transform`.
-        
-          - ``world``;   Equivalent to ``affine``.
 
+        
+        =========== ======================================================
+        ``id``      Voxel coordinates
+        
+        ``pixdim``  Voxel coordinates, scaled by voxel dimensions
+        
+        ``affine``  World coordinates, as defined by the NIFTI1
+                    ``qform``/``sform``. See :attr:`.Image.voxToWorldMat`.
+        
+        ``voxel``   Equivalent to ``id``.
+        
+        ``display`` Equivalent to the current value of :attr:`transform`.
+        
+        ``world``   Equivalent to ``affine``.
+        =========== ======================================================
+
+        
         If the ``xform`` parameter is provided, and one of ``from_`` or ``to``
         is ``display``, the value of ``xform`` is used instead of the current
         value of :attr:`transform`.
@@ -268,9 +276,9 @@ class ImageOpts(fsldisplay.DisplayOpts):
 
 
     def getTransformOffsets(self, from_, to_):
-        """When an image is displayed in id/pixdim space, voxel coordinates
-        map to the voxel corner; i.e.  a voxel at ``(0, 1, 2)`` occupies the
-        space ``(0 - 1, 1 - 2, 2 - 3)``.
+        """When an image is displayed in ``id``/``pixdim`` space, voxel
+        coordinates map to the voxel corner; i.e.  a voxel at ``(0, 1, 2)``
+        occupies the space ``(0 - 1, 1 - 2, 2 - 3)``.
         
         In contrast, when an image is displayed in affine space, voxel
         coordinates map to the voxel centre, so our voxel from above will
@@ -289,6 +297,12 @@ class ImageOpts(fsldisplay.DisplayOpts):
         See also the :meth:`transformCoords` method, which will perform the
         transformation correctly for you, without you having to worry about
         these offsets.
+
+
+        .. note:: These offsets, and this method, will soon become obsolete -
+                  see the note about **GedMode** in the
+                  :ref:`note on coordinate systems
+                  <volumeopts-coordinate-systems>`.
         """ 
         displaySpace = self.transform
         pixdim       = np.array(self.overlay.pixdim[:3])
@@ -354,9 +368,10 @@ class ImageOpts(fsldisplay.DisplayOpts):
         correcting for display space offsets (see :meth:`getTransformOffsets`).
 
         The ``from_`` and ``to_`` parameters must both be one of:
-           - ``display``
-           - ``voxel``
-           - ``world``
+        
+           - ``display``: The display coordinate system
+           - ``voxel``:   The image voxel coordinate system
+           - ``world``:   The image world coordinate system
         """
 
         xform     = self.getTransform(       from_, to_)
@@ -369,6 +384,12 @@ class ImageOpts(fsldisplay.DisplayOpts):
 
 
     def transformDisplayLocation(self, oldLoc):
+        """Overrides :meth:`.DisplayOpts.transformDisplayLocation`.
+
+        If the :attr:`transform` property has changed, returns the given
+        location, assumed to be in the old display coordinate system,
+        transformed into the new display coordinate system.
+        """
 
         lastVal = self.getLastValue('transform')
 
@@ -390,11 +411,31 @@ class ImageOpts(fsldisplay.DisplayOpts):
 
 
 class VolumeOpts(ImageOpts):
-    """A class which describes how an :class:`.Image` should be displayed.
+    """The ``VolumeOpts`` class defines options for displaying :class:`.Image`
+    instances as regular 3D volumes.
 
-    This class doesn't have much functionality - it is up to things which
-    actually display an :class:`.Image` to adhere to the properties stored in
-    the associated :class:`.Display` and :class:`VolumeOpts` object.
+    The ``VolumeOpts`` class links the :attr:`.Display.brightness` and
+    :attr:`.Display.contrast` properties to its own :attr:`displayRange`
+    property, so changes in either of the former will result in a change to
+    the latter, and vice versa. This relationship is defined by the
+    :func:`~.colourmaps.displayRangeToBricon` and
+    :func:`~.colourmaps.briconToDisplayRange` functions, in the
+    :mod:`.colourmaps` module.
+
+    In addition to all of the display properties, ``VolumeOpts`` instances
+    have the following attributes:
+
+    =========== ===============================
+    ``dataMin`` The minimum value in the image.
+    ``dataMax`` The maximum value in the image.
+    =========== ===============================
+
+    For large images (where *large* is arbitrarily defined in
+    :meth:`__init__`), the ``dataMin`` and ``dataMax`` attributes will contain
+    range of a sample of the image data, rather their actual values. This is
+    purely to eliminate the need to calculate minimum/maximum values over very
+    large (and potentially memory-mapped) images, which can be a time
+    consuming operation.
     """
 
     
@@ -407,7 +448,7 @@ class VolumeOpts(ImageOpts):
 
     
     invertClipping = props.Boolean(default=False)
-    """If ``True``, the behaviour of ``clippingRange`` is inverted, i.e.
+    """If ``True``, the behaviour of :attr:`clippingRange` is inverted, i.e.
     values inside the clipping range are clipped, instead of those outside
     the clipping range.
     """
@@ -419,13 +460,15 @@ class VolumeOpts(ImageOpts):
     
     interpolation = props.Choice(('none', 'linear', 'spline'))
     """How the value shown at a real world location is derived from the
-    corresponding data value(s). 'No interpolation' is equivalent to nearest
-    neighbour interpolation.
+    corresponding data value(s). ``none`` is equivalent to nearest neighbour
+    interpolation.
     """
 
 
     invert = props.Boolean(default=False)
-    """Invert the colour map."""
+    """Use an inverted version of the current colour map (see the :attr:`cmap`
+    property).
+    """
 
 
     def __init__(self,
@@ -434,7 +477,12 @@ class VolumeOpts(ImageOpts):
                  overlayList,
                  displayCtx,
                  **kwargs):
-        """Create a :class:`VolumeOpts` instance for the specified image."""
+        """Create a :class:`VolumeOpts` instance for the specified ``overlay``,
+        assumed to be an :class:`.Image` instance.
+
+        All arguments are passed through to the :class:`.DisplayOpts`
+        constructor.
+        """
 
         # Attributes controlling image display. Only
         # determine the real min/max for small images -
@@ -516,6 +564,9 @@ class VolumeOpts(ImageOpts):
 
 
     def destroy(self):
+        """Removes property listeners, and calls the :meth:`ImageOpts.destroy`
+        method.
+        """
 
         if self.getParent() is not None:
             display = self.display
@@ -535,7 +586,7 @@ class VolumeOpts(ImageOpts):
     def __toggleListeners(self, enable=True):
         """This method enables/disables the property listeners which
         are registered on the :attr:`displayRange` and
-        :attr:`.Display.brightness`/:attr:`.Display.contrast`/ properties.
+        :attr:`.Display.brightness`/:attr:`.Display.contrast`/properties.
         
         Because these properties are linked via the
         :meth:`__displayRangeChanged` and :meth:`__briconChanged` methods,
@@ -596,7 +647,7 @@ class VolumeOpts(ImageOpts):
 
         
     def __displayRangeChanged(self, *a):
-        """Called when the `attr`:displayRange: property changes.
+        """Called when the `attr:`displayRange` property changes.
 
         Updates the :attr:`.Display.brightness` and :attr:`.Display.contrast`
         properties accordingly.
