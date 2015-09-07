@@ -5,9 +5,9 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`CanvasPanel` class, which is the base
-class for all panels which display image data (e.g. the :class:`.OrthoPanel`
-and the :class:`.LightBoxPanel`).
+class for all panels which display overlays using ``OpenGL``.
 """
+
 
 import os
 import os.path as op
@@ -35,23 +35,149 @@ import                                  viewpanel
 log = logging.getLogger(__name__)
 
 
-
 class CanvasPanel(viewpanel.ViewPanel):
-    """
+    """The ``CanvasPanel`` class is a :class:`.ViewPanel` which is the base
+    class for all panels which display overlays using ``OpenGL``
+    (e.g. the :class:`.OrthoPanel` and the :class:`.LightBoxPanel`). A
+    ``CanvasPanel`` instance uses a :class:`.SceneOpts` instance to control
+    much of its functionality. The ``SceneOpts`` instance used by a
+    ``CanvasPanel`` can be accessed via the :meth:`getSceneOptions` method.
+
+    
+    The ``CanvasPanel`` class contains settings and functionality common to
+    all sub-classes, including *movie mode* (see :attr:`movieMode`), the
+    ability to show a colour bar (a :class:`.ColourBarPanel`; see
+    :attr:`.SceneOpts.showColourBar`), and a number of actions.
+
+    
+    **Sub-class implementations**
+
+    
+    Sub-classes of the ``CanvasPanel`` must do the following:
+    
+      1. Add their content to the panel that is accessible via the
+         :meth:`getCanvasPanel` method (see the note on
+         :ref:`adding content <canvaspanel-adding-content>`).
+    
+      2. Override the :meth:`getGLCanvases` method.
+    
+    
+    **Actions**
+
+
+    The following actions are available through a ``CanvasPanel`` (see
+    :class:`.ActionProvider`). They toggle a range of
+    :mod:`control <.controls>` panels:
+    
+    
+    =========================== ===========================================
+    ``toggleOverlayList``       Toggles an :class:`.OverlayListPanel`.
+    ``toggleOverlayInfo``       Toggles an :class:`.OverlayInfoPanel`.
+    ``toggleAtlasPanel``        Toggles an :class:`.AtlasPanel`.
+    ``toggleDisplayProperties`` Toggles an :class:`.OverlayDisplayToolBar`.
+    ``toggleLocationPanel``     Toggles a :class:`.LocationPanel`.
+    ``toggleClusterPanel``      Toggles a :class:`.ClusterPanel`.
+    ``toggleLookupTablePanel``  Toggles a :class:`.LookupTablePanel`.
+    ``toggleShell``             Toggles a :class:`.ShellPanel`.
+    =========================== ===========================================
+
+    
+    A couple of other actions are also provided, with the same names as their
+    corresponding methods:
+
+    .. autosummary::
+       :nosignatures:
+    
+       screenshot
+       showCommandLineArgs
+
+    Sub-classes can add their own actions via the ``extraActions`` constructor
+    argument.
+
+
+    .. _canvaspanel-adding-content:
+    
+    **Adding content**
+
+    
+    To support colour bar functionality, the ``CanvasPanel`` uses a hierarchy
+    of ``wx.Panel`` instances, depicted in the following containment
+    hierarchy diagram:
+
+    
+    .. graphviz::
+
+       digraph canvasPanel {
+
+         graph [size=""];
+
+         node [style="filled",
+               shape="box",
+               fillcolor="#ddffdd",
+               fontname="sans"];
+     
+         rankdir="BT";
+    
+         1 [label="CanvasPanel"];
+         2 [label="Canvas container"];
+         3 [label="ColourBarPanel"];
+         4 [label="Centre panel"];
+         5 [label="Content added by sub-classes"];
+
+         2 -> 1;
+         3 -> 2;
+         4 -> 2;
+         5 -> 4;
+       }
+
+    
+    As depicted in the diagram, sub-classes need to add their content to the
+    *centre panel*. This panel is accessible via the :meth:`getCanvasPanel`
+    method. The *container panel* is what gets passed to the
+    :meth:`.ViewPanel.setCentrePanel` method, and is accessible via the
+    :meth:`getCanvasContainer` method, if necessary.
     """
 
-    syncLocation       = props.Boolean(default=True)
-    syncOverlayOrder   = props.Boolean(default=True)
+    
+    syncLocation = props.Boolean(default=True)
+    """If ``True`` (the default), the :attr:`.DisplayContext.location` for 
+    this ``CanvasPanel`` is linked to the master ``DisplayContext`` location.
+    """
+
+    
+    syncOverlayOrder = props.Boolean(default=True)
+    """If ``True`` (the default), the :attr:`.DisplayContext.overlayOrder`
+    for this ``CanvasPanel`` is linked to the master ``DisplayContext``
+    overlay order.
+    """    
+
+    
     syncOverlayDisplay = props.Boolean(default=True)
-    movieMode          = props.Boolean(default=False)
+    """If ``True`` (the default), the properties of the :class:`.Display` 
+    and :class:`.DisplayOpts` instances for every overlay, as managed
+    by the :attr:`.DisplayContext` for this ``CanvasPanel``, are linked to
+    the properties of all ``Display`` and ``DisplayOpts`` instances managed
+    by the master ``DisplayContext`` instance.
+    """
 
-    # Movie update rate in milliseconds - this is
-    # inverted so that a high value corresponds to
-    # a fast rate.
-    movieRate          = props.Int(minval=100,
-                                   maxval=1000,
-                                   default=750,
-                                   clamped=True)
+    
+    movieMode = props.Boolean(default=False)
+    """If ``True``, and the currently selected overlay (see
+    :attr:`.DisplayContext.selectedOverlay`) is a :class:`.Image` instance
+    with its display managed by a :class:`.VolumeOpts` instance, the displayed
+    volume is changed periodically, according to the :attr:`movieRate`
+    property.
+
+    The update is performed on the main application thread with a
+    ``wx.Timer``.
+    """
+
+    
+    movieRate = props.Int(minval=100, maxval=1000, default=750, clamped=True)
+    """The movie update rate in milliseconds. The value of this property is
+    inverted so that a high value corresponds to a fast rate, which makes
+    more sense when displayed as an option to the user.
+    """
     
 
     def __init__(self,
@@ -60,6 +186,21 @@ class CanvasPanel(viewpanel.ViewPanel):
                  displayCtx,
                  sceneOpts,
                  extraActions=None):
+        """Create a ``CanvasPanel``.
+
+        :arg parent:       The :mod:`wx` parent object.
+        
+        :arg overlayList:  The :class:`.OverlayList` instance.
+        
+        :arg displayCtx:   The :class:`.DisplayContext` instance.
+        
+        :arg sceneOpts:    A :class:`.SceneOpts` instance for this
+                           ``CanvasPanel`` - must be created by
+                           sub-classes.
+        
+        :arg extraActions: A dictionary of ``{name : function}`` mappings,
+                           containing extra actions defined by sub-classes.
+        """
 
         if extraActions is None:
             extraActions = {}
@@ -123,6 +264,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         else:
             self.disableProperty('syncLocation')
             self.disableProperty('syncOverlayOrder')
+            self.disableProperty('syncOverlayDisplay')
 
         self.__canvasContainer = wx.Panel(self)
         self.__canvasPanel     = wx.Panel(self.__canvasContainer)
@@ -131,7 +273,7 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         # Stores a reference to a wx.Timer
         # when movie mode is enabled
-        self.__movieTimer    = None
+        self.__movieTimer = None
 
         self.addListener('movieMode',
                          self._name,
@@ -156,7 +298,7 @@ class CanvasPanel(viewpanel.ViewPanel):
 
     def destroy(self):
         """Makes sure that any remaining control panels are destroyed
-        cleanly.
+        cleanly, and calls :meth:`.ViewPanel.destroy`.
         """
 
         if self.__colourBar is not None:
@@ -166,35 +308,46 @@ class CanvasPanel(viewpanel.ViewPanel):
 
     
     def screenshot(self, *a):
+        """Takes a screenshot of the currently displayed scene on this
+        ``CanvasPanel``. See the :func:`_screenshot` function.
+        """
         _screenshot(self._overlayList, self._displayCtx, self)
 
 
     def showCommandLineArgs(self, *a):
+        """Shows the command line arguments which can be used to re-create
+        the currently displayed scene. See the :func:`_showCommandLineArgs`
+        function.
+        """
         _showCommandLineArgs(self._overlayList, self._displayCtx, self)
 
 
     def getSceneOptions(self):
+        """Returns the :class:`.SceneOpts` instance used by this
+        ``CanvasPanel``.
+        """
         return self.__opts
                 
         
     def getCanvasPanel(self):
-        """Returns the ``wx.Panel`` which is the parent of all
-        :class:`.SliceCanvas` instances displayed in this ``CanvasPanel``.
+        """Returns the ``wx.Panel`` to which sub-classes must add their content.
+        See the note on :ref:`adding content <canvaspanel-adding-content>`.
         """
         return self.__canvasPanel
 
 
     def getCanvasContainer(self):
-        """Returns the ``wx.Panel`` which is the parent of the canvas
-        panel (see :meth:`getCanvasPanel`), and of the :class:`.ColourBarPanel`
-        if one is being displayed.
+        """Returns the ``wx.Panel`` which contains the
+        :class:`.ColourBarPanel` if it is being displayed, and the canvas
+        panel. See the note on
+        :ref:`adding content <canvaspanel-adding-content>`.
         """
         return self.__canvasContainer
 
 
     def getGLCanvases(self):
-        """This must be implemented by subclasses, and must return a list
-        containing all :class:`.SliceCanvas` instances which are being
+        """This method must be overridden by subclasses, and must return a
+        list containing all :class:`.SliceCanvas` instances which are being
         displayed.
         """
         raise NotImplementedError(
@@ -204,7 +357,8 @@ class CanvasPanel(viewpanel.ViewPanel):
 
     def getColourBarCanvas(self):
         """If a colour bar is being displayed, this method returns
-        the :class:`.ColourBarCanvas` instance which renders the colour bar.
+        the :class:`.ColourBarCanvas` instance which is used by the
+        :class:`.ColourBarPanel` to render the colour bar.
         
         Otherwise, ``None`` is returned.
         """
@@ -214,6 +368,11 @@ class CanvasPanel(viewpanel.ViewPanel):
 
 
     def __layout(self, *a):
+        """Called when any colour bar display properties are changed (see
+        :class:`.SceneOpts`). Lays out the container panel, which contains
+        the :class:`.ColourBarPanel` and all content added by the
+        ``CanvasPanel`` sub-class implementation.
+        """
 
         if not self.__opts.showColourBar:
 
@@ -268,6 +427,9 @@ class CanvasPanel(viewpanel.ViewPanel):
 
 
     def __movieModeChanged(self, *a):
+        """Called when the :attr:`movieMode` property changes. Starts or
+        stops the ``wx.Timer`` used for movie mode.
+        """
 
         if self.__movieTimer is not None:
             self.__movieTimer.Stop()
@@ -288,6 +450,9 @@ class CanvasPanel(viewpanel.ViewPanel):
         
 
     def __movieRateChanged(self, *a):
+        """Called when the :attr:`movieRate` property changes. Updates
+        the movie rate.
+        """
         if not self.movieMode:
             return
 
@@ -295,6 +460,13 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         
     def __movieUpdate(self, ev):
+        """Called by the ``wx.Timer`` used to implement :attr:`movieMode`.
+
+        If the currently selected overlay (see
+        :attr:`.DisplayContext.selectedOverlay`) is a 4D :class:`.Image`
+        being displayed as a ``volume`` (see the :class:`.VolumeOpts` class),
+        the :attr:`.ImageOpts.volume` property is incremented.
+        """
 
         overlay = self._displayCtx.getSelectedOverlay()
 
@@ -318,8 +490,46 @@ class CanvasPanel(viewpanel.ViewPanel):
         else:                        opts.volume += 1
 
 
+def _showCommandLineArgs(overlayList, displayCtx, canvas):
+    """Called by the :meth:`CanvasPanel.showCommandLineArgs` method.
+
+    Generates command line arguments which can be used to re-create the
+    scene shown on the given :class:`CanvasPanel`, and displays them
+    to the user with a :class:`.TextEditDialog`.
+
+    :arg overlayList: A :class:`.OverlayList` .
+    :arg displayCtx:  A :class:`.DisplayContext` instance.
+    :arg canvas:      A :class:`CanvasPanel` instance.
+    """
+
+    args = _genCommandLineArgs(overlayList, displayCtx, canvas)
+    dlg  = fsldlg.TextEditDialog(
+        canvas,
+        title=strings.messages[  canvas, 'showCommandLineArgs', 'title'],
+        message=strings.messages[canvas, 'showCommandLineArgs', 'message'],
+        text=' '.join(args),
+        icon=wx.ICON_INFORMATION,
+        style=(fsldlg.TED_OK        |
+               fsldlg.TED_READONLY  |
+               fsldlg.TED_MULTILINE |
+               fsldlg.TED_COPY))
+
+    dlg.CentreOnParent()
+
+    dlg.ShowModal()
+
 
 def _genCommandLineArgs(overlayList, displayCtx, canvas):
+    """Called by the :func:`_showCommandLineArgs` function. Generates
+    command line arguments which can be used to re-create the scene
+    currently shown on the given :class:`CanvasPanel`.
+
+    :arg overlayList: A :class:`.OverlayList` .
+    :arg displayCtx:  A :class:`.DisplayContext` instance.
+    :arg canvas:      A :class:`CanvasPanel` instance.
+
+    :returns:         A list of command line arguments.
+    """
 
     argv = []
 
@@ -359,26 +569,15 @@ def _genCommandLineArgs(overlayList, displayCtx, canvas):
     return argv
 
 
-def _showCommandLineArgs(overlayList, displayCtx, canvas):
-
-    args = _genCommandLineArgs(overlayList, displayCtx, canvas)
-    dlg  = fsldlg.TextEditDialog(
-        canvas,
-        title=strings.messages[  canvas, 'showCommandLineArgs', 'title'],
-        message=strings.messages[canvas, 'showCommandLineArgs', 'message'],
-        text=' '.join(args),
-        icon=wx.ICON_INFORMATION,
-        style=(fsldlg.TED_OK        |
-               fsldlg.TED_READONLY  |
-               fsldlg.TED_MULTILINE |
-               fsldlg.TED_COPY))
-
-    dlg.CentreOnParent()
-
-    dlg.ShowModal()
-
-
 def _screenshot(overlayList, displayCtx, canvasPanel):
+    """Called by the :meth:`CanvasPanel.screenshot` method. Grabs a
+    screenshot of the current scene on the given :class:`.CanvasPanel`,
+    and saves it to a file specified by the user.
+
+    :arg overlayList: A :class:`.OverlayList` .
+    :arg displayCtx:  A :class:`.DisplayContext` instance.
+    :arg canvas:      A :class:`CanvasPanel` instance. 
+    """
 
     def relativePosition(child, ancestor):
         """Calculates the position of the given ``child``, relative

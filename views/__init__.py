@@ -5,15 +5,28 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This package contains a collection of :class:`wx.Panel` subclasses
-which provide a view of an image collection (see
-:class:`~fsl.data.image.ImageList`).
+"""The ``views`` package contains a collection of :class:`FSLEyesPanel`
+sub-classes which provide a view of the overlays in an :class:`.OverlayList`.
 
-The :class:`.FSLEyesPanel` class is the superclass for every view panel.
+This package is the home of all *FSLeyes views*, as described in the
+:mod:`~fsl.fsleyes` package documentation. The :class:`.ViewPanel` is the
+base-class for all views.
 
-A convenience function, :func:`listViewPanels`, is provided to allow dynamic
-lookup of all :class:`.FSLEyesPanel` types.
+A package-level convenience function, :func:`listViewPanels`, is provided to
+allow dynamic lookup of all :class:`.ViewPanel` sub-classes. The following
+:class:`.ViewPanel` sub-classes currently exist:
+
+.. autosummary::
+   :nosignatures:
+
+   ~fsl.fsleyes.views.canvaspanel.CanvasPanel
+   ~fsl.fsleyes.views.orthopanel.OrthoPanel
+   ~fsl.fsleyes.views.lightboxpanel.LightBoxPanel
+   ~fsl.fsleyes.views.plotpanel.PlotPanel
+   ~fsl.fsleyes.views.timeseriespanel.TimeSeriesPanel
+   ~fsl.fsleyes.views.histogrampanel.HistogramPanel
 """
+
 
 import fsl.fsleyes.panel as fslpanel
 
@@ -24,6 +37,7 @@ import orthopanel
 import lightboxpanel
 import timeseriespanel
 import histogrampanel
+
 
 FSLEyesPanel    = fslpanel       .FSLEyesPanel
 ViewPanel       = viewpanel      .ViewPanel
@@ -37,7 +51,7 @@ HistogramPanel  = histogrampanel .HistogramPanel
 
 def listViewPanels():
     """Convenience function which returns a list containing all
-    :class:`.FSLEyesPanel` classes in the :mod:`views` package.
+    :class:`.ViewPanel` sub-classes in the ``views`` package.
     """
 
     atts = globals()

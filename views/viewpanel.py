@@ -4,8 +4,9 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`ViewPanel` class, which is the superclass
-of all of the 'view' panels available in FSLEyes - see :class:`.FSLEyesFrame`.
+"""This module provides the :class:`ViewPanel` class, which is the base-class
+for all of the *FSLeyes view* panels. See the :mod:`~fsl.fsleyes` package
+documentation for more details..
 """
 
 import logging
@@ -26,63 +27,54 @@ import fsl.data.strings           as strings
 log = logging.getLogger(__name__)
 
 
-#
-# Here I am monkey patching the wx.agw.aui.framemanager.AuiFloatingFrame
-# __init__ method.
-#
-# I am doing this because I have observed some strange behaviour when running
-# a remote instance of this application over an SSH/X11 session, with the X11
-# server (i.e. the local machine) running in OS X. When a combobox is embedded
-# in a floating frame (either a pane or a toolbar), its dropdown list appears
-# underneath the frame, meaning that the user is unable to actually select any
-# items from the list!
-#
-# I have only seen this behaviour when using XQuartz 2.7.6, running under OSX
-# 10.9 Mavericks.
-#
-# Ultimately, this appears to be caused by the wx.FRAME_TOOL_WINDOW style, as
-# passed to the wx.MiniFrame constructor (from which the AuiFloatingFrame
-# class derives). Removing this style flag fixes the problem, so this is
-# exactly what I'm doing. I haven't looked any deeper into the situation.
-#
-
-
-# Store a reference to the real constructor.
-AuiFloatingFrame__real__init__ = aui.AuiFloatingFrame.__init__
-
-
-# My new constructor, which makes sure that
-# the FRAME_TOOL_WINDOW style is not passed
-# through to the AuiFloatingFrame constructor
-def AuiFloatingFrame__init__(*args, **kwargs):
-
-    if 'style' in kwargs:
-        style = kwargs['style']
-
-    # This is the default style, as defined 
-    # in the AuiFloatingFrame constructor
-    else:
-        style = (wx.FRAME_TOOL_WINDOW     |
-                 wx.FRAME_FLOAT_ON_PARENT |
-                 wx.FRAME_NO_TASKBAR      |
-                 wx.CLIP_CHILDREN)
-
-    style &= ~wx.FRAME_TOOL_WINDOW
-
-    kwargs['style'] = style
-    
-    return AuiFloatingFrame__real__init__(*args, **kwargs)
-
-# Patch my constructor in
-# to the class definition
-aui.AuiFloatingFrame.__init__ = AuiFloatingFrame__init__
-
-
 class ViewPanel(fslpanel.FSLEyesPanel):
+    """The ``ViewPanel`` class is the base-class for all *FSLeyes views*.
+
+    A ``ViewPanel`` displays some sort of view of the overlays in an
+    :class:`.OverlayList`. The settings for a ``ViewPanel`` are defined by a
+    :class:`.DisplayContext` instance.
+
+    
+    **Panels and controls**
+
+    
+    A ``ViewPanel`` class uses a ``wx.lib.agw.aui.AuiManager`` to lay out its
+    children. A ``ViewPanel`` has one central panel, which contains the
+    primary view; and may have one or more secondary panels, which contain
+    *controls* - see the :mod:`.controls` package. The centre panel can be set
+    via the :meth:`setCentrePanel` method, and secondary panels can be
+    added/removed to/from with the :meth:`togglePanel` method. The current
+    state of a secondary panel (i.e. whether one is open or not) can be
+    queried with the :meth:`isPanelOpen` method, and existing secondary panels
+    can be accessed via the :meth:`getPanel` method.  Secondary panels must be
+    derived from either the :class:`.FSLEyesPanel` or :class:`.FSLEyesToolBar`
+    base-classes.
+
+
+    **Profiles**
+
+    
+    Some ``ViewPanel`` classes have relatively complex mouse and keyboard
+    interaction behaviour (e.g. the :class:`.OrthoPanel` and
+    :class:`.LightBoxPanel`). The logic defines this interaction is provided
+    by a :class:`.Profile` instance, and is managed by a
+    :class:`.ProfileManager`.  Some ``ViewPanel`` classes have multiple
+    interaction profiles - for example, the :class:`.OrthoPanel` has a
+    ``view`` profile, and an ``edit`` profile. The current interaction
+    profile can be changed with the :attr:`profile` property, and can be
+    accessed with the :meth:`getCurrentProfile` method. See the
+    :mod:`.profiles` package for more information on interaction profiles.
+    """
+    
 
     profile = props.Choice()
+    """The current interaction profile for this ``ViewPanel``. """
+
     
     def __init__(self, parent, overlayList, displayCtx, actionz=None):
+        """Create a ``ViewPanel``. All arguments are passed through to the
+        :class:`.FSLEyesPanel` constructor.
+        """
 
         fslpanel.FSLEyesPanel.__init__(
             self, parent, overlayList, displayCtx, actionz)
@@ -126,21 +118,19 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         # of its trimmings for later use in the togglePanel
         # method.
         ff         = wx.MiniFrame(self)
-
-        # total size of frame
         size       = ff.GetSize().Get()
-
-        # size of frame, sans trimmings
         clientSize = ff.GetClientSize().Get()
-        
-        ff.Destroy()
 
         self.__floatOffset = (size[0] - clientSize[0],
                               size[1] - clientSize[1])
 
+        ff.Destroy()
+
         
     def destroy(self):
-        """
+        """Removes some property listeners, destroys all child panels,
+        destroys the :class:`.ProfileManager`, and ``AuiManager``, and
+        calls :meth:`.FSLEyesPanel.destroy`.
         """
         
         # Make sure that any control panels are correctly destroyed
@@ -172,25 +162,49 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         fslpanel.FSLEyesPanel.destroy(self)
         
 
-
     def setCentrePanel(self, panel):
+        """Set the primary centre panel for this ``ViewPanel``. """
+        
         panel.Reparent(self)
         self.__auiMgr.AddPane(panel, wx.CENTRE)
         self.__auiMgrUpdate()
 
 
     def togglePanel(self, panelType, *args, **kwargs):
-        """
-        :arg floatPane: defaults to ``False``
-        
-        :arg location:  defaults to ``wx.BOTTOM``
+        """Add/remove the secondary panel of the specified type to/from this
+        ``ViewPanel``.
 
-        :arg args:      All positional arguments are passed to the
-                        ``panelType.__init__`` method.
+        :arg panelType: Type of the secondary panel.
         
-        :arg kwargs:    After ``floatPane`` and `location`` have been
-                        removed, all other keyword arguments are passed
-                        to the ``panelType.__init__`` method.
+        :arg args:      All positional arguments are passed to the
+                        ``panelType`` constructor.
+
+        :arg floatPane: If ``True``, the secondary panel is initially floated.
+                        Defaults to ``False``.
+        
+        :arg location:  If ``floatPane=False``, the initial dock position of
+                        the panel - either ``wx.TOP``, ``wx.BOTTOM``,
+                        ``wx.LEFT``, or ``wx.RIGHT. Defaults to ``wx.BOTTOM``.
+        
+        :arg kwargs:    All keyword arguments, apart from ``floatPane`` and
+                        ``location``, are passed to the ``panelType``
+                        constructor.
+
+        .. note::       The ``panelType`` type must be a sub-class of
+                        :class:`.FSLEyesPanel` or :class:`.FSLEyesToolBar`,
+                        which can be created like so::
+        
+                            panel = panelType(parent,
+                                              overlayList,
+                                              displayCtx,
+                                              *args,
+                                              **kwargs)
+
+        .. warning::    Do not define a control (a.k.a. secondary) panel
+                        constructor to accept arguments with the names
+                        ``floatPane`` or ``location``, as arguments with
+                        those names will get eaten by this method before
+                        they can be passed to the constructor.
         """
 
         location  = kwargs.pop('location',  wx.BOTTOM)
@@ -201,9 +215,11 @@ class ViewPanel(fslpanel.FSLEyesPanel):
 
         window = self.__panels.get(panelType, None)
 
+        # The panel is already open - close it
         if window is not None:
             self.__onPaneClose(None, window)
-            
+
+        # Create a new panel of the specified type
         else:
             
             paneInfo = aui.AuiPaneInfo()
@@ -280,6 +296,13 @@ class ViewPanel(fslpanel.FSLEyesPanel):
             self.__panels[panelType] = window
             self.__auiMgrUpdate()
 
+            
+    def isPanelOpen(self, panelType):
+        """Returns ``True`` if a panel of type ``panelType`` is open,
+        ``False`` otherwise.
+        """
+        return self.getPanel(panelType) is not None
+
 
     def getPanel(self, panelType):
         """If an instance of ``panelType`` exists, it is returned.
@@ -290,14 +313,15 @@ class ViewPanel(fslpanel.FSLEyesPanel):
  
 
     def __selectedOverlayChanged(self, *a):
-        """Called when the overlay list or selected overlay changed.
+        """Called when the :class:`.OverlayList` or
+        :attr:`.DisplayContext.selectedOverlay` changes.
 
-        This method is slightly hard-coded and hacky. For the time being, edit
-        profiles are only going to be supported for ``volume`` image
-        types, which are being displayed in ``id`` or ``pixdim`` space..
-        This method checks the type of the selected overlay, and disables
-        the ``edit`` profile option (if it is an option), so the user can
-        only choose an ``edit`` profile on ``volume`` image types.
+        This method is slightly hard-coded and hacky. For the time being,
+        profiles called ``edit`` profiles are only supported for ``volume``
+        overlay types, which are being displayed in ``id`` or ``pixdim``
+        space. This method checks the type of the selected overlay, and
+        disables the ``edit`` profile option (if it is an option), so the user
+        can only choose an ``edit`` profile on ``volume`` overlay types.
         """
 
         lName   = 'ViewPanel_{}'.format(self._name)
@@ -344,6 +368,9 @@ class ViewPanel(fslpanel.FSLEyesPanel):
 
         
     def __configureProfile(self, *a):
+        """Called by the :meth:`__selectedOverlayChanged` method. Implements
+        the hacky logic described in the documentation for that method.
+        """
         
         overlay     = self.__selectedOverlay
         display     = self._displayCtx.getDisplay(overlay)
@@ -381,13 +408,14 @@ class ViewPanel(fslpanel.FSLEyesPanel):
 
     def initProfile(self):
         """Must be called by subclasses, after they have initialised all
-        of the attributes which may be needed by their corresponding
-        Profile instances. 
+        of the attributes which may be needed by their associated
+        :class:`.Profile` instances. 
         """
         self.__profileChanged()
 
 
     def getCurrentProfile(self):
+        """Returns the :class:`.Profile` instance currently in use. """
         return self.__profileManager.getCurrentProfile()
 
         
@@ -395,20 +423,18 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         """Called when the current :attr:`profile` property changes. Tells the
         :class:`.ProfileManager` about the change.
 
-        The ``ProfileManager`` will then update mouse/keyboard listeners
-        according to the new profile.
+        The ``ProfileManager`` will create a new :class:`.Profile` instance of
+        the appropriate type.
         """
 
         self.__profileManager.changeProfile(self.profile)
 
     
     def __auiMgrUpdate(self, *a):
-        """Calls the :meth:`~wx.lib.agw.aui.AuiManager.Update` method
-        on the ``AuiManager`` instance that is managing this panel.
+        """Called whenever a panel is added/removed to/from this ``ViewPanel``.
 
-        Ensures that the position of any floating panels is preserved,
-        as the ``AuiManager`` tends to move them about in some
-        circumstances.
+        Calls the ``Update`` method on the ``AuiManager`` instance that is
+        managing this panel.
         """
 
         # When a panel is added/removed from the AuiManager,
@@ -447,7 +473,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
                 bestSize = panel.GetBestSize().Get()
 
             # See comments in __init__ about
-            # this 'float offset' thing 
+            # this silly 'float offset' thing 
             floatSize = (bestSize[0] + self.__floatOffset[0],
                          bestSize[1] + self.__floatOffset[1])
 
@@ -469,6 +495,11 @@ class ViewPanel(fslpanel.FSLEyesPanel):
 
         
     def __onPaneClose(self, ev=None, panel=None):
+        """Called when the user closes a control (a.k.a. secondary) panel.
+        Calls the
+        :class:`.FSLEyesPanel.destroy`/:class:`.FSLEyesToolBar.destroy`
+        method on the panel.
+        """
 
         if ev is not None:
             ev.Skip()
@@ -499,3 +530,52 @@ class ViewPanel(fslpanel.FSLEyesPanel):
             return
         
         panel.Destroy()
+
+
+#
+# Here I am monkey patching the wx.agw.aui.framemanager.AuiFloatingFrame
+# __init__ method.
+#
+# I am doing this because I have observed some strange behaviour when running
+# a remote instance of this application over an SSH/X11 session, with the X11
+# server (i.e. the local machine) running in OS X. When a combobox is embedded
+# in a floating frame (either a pane or a toolbar), its dropdown list appears
+# underneath the frame, meaning that the user is unable to actually select any
+# items from the list!
+#
+# I have only seen this behaviour when using XQuartz 2.7.6, running under OSX
+# 10.9 Mavericks.
+#
+# Ultimately, this appears to be caused by the wx.FRAME_TOOL_WINDOW style, as
+# passed to the wx.MiniFrame constructor (from which the AuiFloatingFrame
+# class derives). Removing this style flag fixes the problem, so this is
+# exactly what I'm doing. I haven't looked any deeper into the situation.
+#
+
+
+# My new constructor, which makes sure that
+# the FRAME_TOOL_WINDOW style is not passed
+# through to the AuiFloatingFrame constructor
+def AuiFloatingFrame__init__(*args, **kwargs):
+
+    if 'style' in kwargs:
+        style = kwargs['style']
+
+    # This is the default style, as defined 
+    # in the AuiFloatingFrame constructor
+    else:
+        style = (wx.FRAME_TOOL_WINDOW     |
+                 wx.FRAME_FLOAT_ON_PARENT |
+                 wx.FRAME_NO_TASKBAR      |
+                 wx.CLIP_CHILDREN)
+
+    style &= ~wx.FRAME_TOOL_WINDOW
+
+    kwargs['style'] = style
+    
+    return AuiFloatingFrame__real__init__(*args, **kwargs)
+
+# Store a reference to the real constructor, and 
+# Patch my constructor in to the class definition.
+AuiFloatingFrame__real__init__ = aui.AuiFloatingFrame.__init__
+aui.AuiFloatingFrame.__init__  = AuiFloatingFrame__init__
