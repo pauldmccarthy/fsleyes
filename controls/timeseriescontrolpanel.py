@@ -232,7 +232,7 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
         evs     = props.makeListWidgets(self.__widgets, ts, 'plotEVs')
         pes     = props.makeListWidgets(self.__widgets, ts, 'plotPEFits')
         copes   = props.makeListWidgets(self.__widgets, ts, 'plotCOPEFits')
-        reduced = props.makeWidget(     self.__widgets, ts, 'plotReduced')
+        partial = props.makeWidget(     self.__widgets, ts, 'plotPartial')
         data    = props.makeWidget(     self.__widgets, ts, 'plotData') 
 
         self.__widgets.AddWidget(
@@ -253,9 +253,9 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
             groupName='currentFEATSettings')
         
         self.__widgets.AddWidget(
-            reduced,
-            displayName=strings.properties[ts, 'plotReduced'],
-            tooltip=fsltooltips.properties[ts, 'plotReduced'],
+            partial,
+            displayName=strings.properties[ts, 'plotPartial'],
+            tooltip=fsltooltips.properties[ts, 'plotPartial'],
             groupName='currentFEATSettings')
 
         self.__widgets.AddSpace(groupName='currentFEATSettings')

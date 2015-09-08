@@ -297,7 +297,7 @@ properties = TypeDict({
                                         '(parameter estimate).',
     'FEATTimeSeries.plotCOPEFits'     : 'Plot the model fit to each COPE '
                                         '(Contrast of Parameter Estimates).',
-    'FEATTimeSeries.plotReduced'      : 'Plot the raw data, after regression '
+    'FEATTimeSeries.plotPartial'      : 'Plot the raw data, after regression '
                                         'against the selected PE/COPE.',
 
     'HistogramSeries.nbins'           : 'Number of bins to use in the '

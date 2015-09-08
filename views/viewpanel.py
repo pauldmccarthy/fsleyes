@@ -6,7 +6,7 @@
 #
 """This module provides the :class:`ViewPanel` class, which is the base-class
 for all of the *FSLeyes view* panels. See the :mod:`~fsl.fsleyes` package
-documentation for more details..
+documentation for more details.
 """
 
 import logging
