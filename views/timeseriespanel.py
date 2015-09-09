@@ -154,7 +154,7 @@ class FEATTimeSeries(TimeSeries):
 
     .. note:: The ``getData`` method of a ``FEATTimeSeries`` instance will
               return the FEAT input data; therefore, when :attr:`plotData` is
-              ``True``, the ``FEATTimeSeries` instance will itself be included
+              ``True``, the ``FEATTimeSeries`` instance will itself be included
               in the list returned by :meth:`getModelTimeSeries`.
 
     

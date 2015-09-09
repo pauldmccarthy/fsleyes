@@ -162,6 +162,19 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         fslpanel.FSLEyesPanel.destroy(self)
         
 
+    def initProfile(self):
+        """Must be called by subclasses, after they have initialised all
+        of the attributes which may be needed by their associated
+        :class:`.Profile` instances. 
+        """
+        self.__profileChanged()
+
+
+    def getCurrentProfile(self):
+        """Returns the :class:`.Profile` instance currently in use. """
+        return self.__profileManager.getCurrentProfile()
+
+
     def setCentrePanel(self, panel):
         """Set the primary centre panel for this ``ViewPanel``. """
         
@@ -404,20 +417,6 @@ class ViewPanel(fslpanel.FSLEyesPanel):
                           type(self).__name__, overlay))
             profileProp.enableChoice('edit', self)
         
-
-
-    def initProfile(self):
-        """Must be called by subclasses, after they have initialised all
-        of the attributes which may be needed by their associated
-        :class:`.Profile` instances. 
-        """
-        self.__profileChanged()
-
-
-    def getCurrentProfile(self):
-        """Returns the :class:`.Profile` instance currently in use. """
-        return self.__profileManager.getCurrentProfile()
-
         
     def __profileChanged(self, *a):
         """Called when the current :attr:`profile` property changes. Tells the

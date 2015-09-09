@@ -625,7 +625,16 @@ def randomBrightColour():
 def complementaryColour(rgb):
     """Generate a colour which can be used as a complement/opposite
     to the given colour.
+
+    If the given ``rgb`` sequence contains four values, the fourth
+    value (e.g. alpha) is returned unchanged.
     """
+
+    if len(rgb) >= 4:
+        a   = rgb[3:]
+        rgb = rgb[:3]
+    else:
+        a   = []
 
     h, l, s = colorsys.rgb_to_hls(*rgb)
 
@@ -646,7 +655,7 @@ def complementaryColour(rgb):
 
     nr, ng, nb = colorsys.hls_to_rgb(nh, nl, ns)
 
-    return nr, ng, nb
+    return [nr, ng, nb] + a
 
 
 _cmapDir = op.join(op.dirname(__file__), 'colourmaps')
