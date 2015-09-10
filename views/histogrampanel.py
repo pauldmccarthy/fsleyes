@@ -43,15 +43,15 @@ class HistogramPanel(plotpanel.PlotPanel):
     A ``HistogramPanel`` plots one or more :class:`HistogramSeries` instances,
     each of which encapsulate histogram data from an :class:`.Image` overlay.
 
-    By default, a ``HistogramPanel`` plots a histogram from the currently
-    selected overlay (dictated by the :attr:`.DisplayContext.selectedOverlay`
-    property), if it is an :class:`.Image` instance.  In a similar manner to
-    the :class:`.TimeSeriesPanel`, this histogram is referred to as the
-    *current* histogram, and it can be enabled/disabled with the
+    In a similar manner to the :class:`.TimeSeriesPanel` a ``HistogramPanel``
+    will, by default, plot a histogram from the currently selected overlay
+    (dictated by the :attr:`.DisplayContext.selectedOverlay` property), if it
+    is an :class:`.Image` instance.  This histogram series is referred to as
+    the *current* histogram, and it can be enabled/disabled with the
     :attr:`showCurrent` setting.
 
 
-    A couple of control panels may be shown on a ``HistogramPanel``::
+    A couple of control panels may be shown on a ``HistogramPanel``:
 
     .. autosummary::
        :nosignatures:
@@ -60,12 +60,15 @@ class HistogramPanel(plotpanel.PlotPanel):
        ~fsl.fsleyes.controls.histogramcontrolpanel.HistogramControlPanel
 
     The following actions are provided, in addition to those already provided
-    by the :class:`.PlotPanel:
+    by the :class:`.PlotPanel`:
 
-    ========================== ===========================================
-    ``toggleHistogramList``    Show/hide a :cass:`.HistogramListPanel`.
-    ``toggleHistogramControl`` Show/hide a :cass:`.HistogramControlPanel`.
-    ========================== ===========================================
+    ========================== ============================================
+    ``toggleHistogramList``    Show/hide a :class:`.HistogramListPanel`.
+    ``toggleHistogramControl`` Show/hide a :class:`.HistogramControlPanel`.
+    ========================== ============================================
+
+    The ``HistogramListPanel`` and ``HistogramControlPanel`` are both shown
+    by default when a new ``HistogramPanel`` is created.
     """
 
 
@@ -88,7 +91,7 @@ class HistogramPanel(plotpanel.PlotPanel):
     =============== ==========================================================
     ``count``       The y axis represents the absolute number of values within
                     each bin 
-    ``probability`` The y axis represents the nuymber of values within each
+    ``probability`` The y axis represents the number of values within each
                     bin, divided by the total number of values.
     =============== ==========================================================
     """
@@ -130,7 +133,7 @@ class HistogramPanel(plotpanel.PlotPanel):
 
         self._overlayList.addListener('overlays',
                                       self._name,
-                                      self.__overlaysChanged)
+                                      self.__overlayListChanged)
         self._displayCtx .addListener('selectedOverlay',
                                       self._name,
                                       self.__selectedOverlayChanged)
@@ -154,7 +157,11 @@ class HistogramPanel(plotpanel.PlotPanel):
         self.__current   = None
         self.__updateCurrent()
 
-        self.Layout()
+        def addPanels():
+            self.run('toggleHistogramControl') 
+            self.run('toggleHistogramList')
+
+        wx.CallAfter(addPanels) 
 
 
     def destroy(self):
@@ -179,7 +186,7 @@ class HistogramPanel(plotpanel.PlotPanel):
 
     def getCurrent(self):
         """Return the :class:`HistogramSeries` instance for the currently
-        selected overlay. Returns ``None`` if :attr:``showCurrent` is
+        selected overlay. Returns ``None`` if :attr:`showCurrent` is
         ``False``, or the current overlay is not an :class:`.Image`.
         """
         if self.__current is None:
@@ -221,6 +228,8 @@ class HistogramPanel(plotpanel.PlotPanel):
 
     def __dataSeriesChanged(self, *a):
         """Called when the :attr:`.PlotPanel.dataSeries` property changes.
+
+        Updates the :attr:`selectedSeries` property accordingly.
         """
         self.setConstraint('selectedSeries',
                            'maxval',
@@ -234,7 +243,13 @@ class HistogramPanel(plotpanel.PlotPanel):
             self.selectedSeries = listPanel.getListBox().GetSelection()
 
             
-    def __overlaysChanged(self, *a):
+    def __overlayListChanged(self, *a):
+        """Called when the :class:`.OverlayList` changes.
+
+        Removes any :class:`HistogramSeries` from the
+        :attr:`.PlotPanel.dataSeries` list which correspond to overlays that
+        no longer exist.
+        """
         
         self.disableListener('dataSeries', self._name)
         
@@ -257,6 +272,10 @@ class HistogramPanel(plotpanel.PlotPanel):
 
         
     def __selectedOverlayChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
+
+        Updates the current :class:`HistogramSeries`.
+        """
 
         self.__updateCurrent()
         self.draw()
@@ -269,15 +288,18 @@ class HistogramPanel(plotpanel.PlotPanel):
         """
 
         for ds in self.dataSeries:
-            ds.histPropsChanged()
+            ds.update()
 
         if self.__current is not None:
-            self.__current.histPropsChanged()
+            self.__current.update()
 
         self.draw()
         
 
     def __updateCurrent(self):
+        """Creates/updates the current :class:`HistogramSeries` instance,
+        if necessary.
+        """
 
         # Make sure that the previous HistogramSeries
         # cleans up after itself, unless it has been
@@ -344,16 +366,51 @@ class HistogramPanel(plotpanel.PlotPanel):
 
 
 class HistogramSeries(plotpanel.DataSeries):
+    """A ``HistogramSeries`` generates histogram data from an :class:`.Image`
+    instance.
+    """
 
-    nbins           = props.Int(minval=10,
-                                maxval=500,
-                                default=100,
-                                clamped=True)
-    ignoreZeros     = props.Boolean(default=True)
-    showOverlay     = props.Boolean(default=False)
+    nbins = props.Int(minval=10, maxval=500, default=100, clamped=True)
+    """Number of bins to use in the histogram. This value is overridden
+    by the :attr:`HistogramPanel.autoBin` setting.
+
+    .. note:: I'm not sure why ``autoBin`` is a :class:`HistogramPanel`
+              setting, rather than a ``HistogramSeries`` setting. I might 
+              change this some time.
+    """
+
+    
+    ignoreZeros = props.Boolean(default=True)
+    """If ``True``, zeros are excluded from the calculated histogram. """
+
+    
+    showOverlay = props.Boolean(default=False)
+    """If ``True``, a 3D mask :class:`.Image` overlay is added to the
+    :class:`.OverlayList`, which highlights the voxels that have been included
+    in the histogram.
+    """
+
+
     includeOutliers = props.Boolean(default=False)
-    volume          = props.Int(minval=0, maxval=0, clamped=True)
-    dataRange       = props.Bounds(ndims=1)
+    """If ``True``, values which are outside of the :attr:`dataRange` are
+    included in the histogram end bins.
+    """
+
+    
+    volume = props.Int(minval=0, maxval=0, clamped=True)
+    """If the :class:`.Image` overlay associated with this ``HistogramSeries`` 
+    is 4D, this settings specifies the index of the volume that the histogram
+    is calculated upon.
+
+    .. note:: Calculating the histogram over an entire 4D :class:`.Image` is
+              not yet supported.
+    """
+
+    
+    dataRange = props.Bounds(ndims=1)
+    """Specifies the range of data which should be included in the histogram.
+    See the :attr:`includeOutliers` property.
+    """
 
 
     def __init__(self,
@@ -363,23 +420,46 @@ class HistogramSeries(plotpanel.DataSeries):
                  overlayList,
                  volume=0,
                  baseHs=None):
+        """Create a ``HistogramSeries``.
+
+        :arg overlay:     The :class:`.Image` overlay to calculate a histogram
+                          for.
+        
+        :arg hsPanel:     The :class:`HistogramPanel` that is displaying this
+                          ``HistogramSeries``.
+        
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        
+        :arg overlayList: The :class:`.OverlayList` instance.
+        
+        :arg volume:      If the ``overlay`` is 4D, the initial value for the
+                          :attr:`volume` property.
+        
+        :arg baseHs:      If a ``HistogramSeries`` has already been created
+                          for the ``overlay``, it may be passed in here, so
+                          that the histogram data can be copied instead of
+                          having to be re-calculated.
+        """
 
         log.debug('New HistogramSeries instance for {} '
                   '(based on existing instance: {})'.format(
                       overlay.name, baseHs is not None)) 
 
         plotpanel.DataSeries.__init__(self, overlay)
-        self.hsPanel     = hsPanel
-        self.name        = '{}_{}'.format(type(self).__name__, id(self))
-        self.volume      = volume
 
-        self.displayCtx  = displayCtx
-        self.overlayList = overlayList
-        self.overlay3D   = None
+        self.volume        = volume
+        self.__hsPanel     = hsPanel
+        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+
+        self.__displayCtx  = displayCtx
+        self.__overlayList = overlayList
+        self.__overlay3D   = None
 
         if overlay.is4DImage():
             self.setConstraint('volume', 'maxval', overlay.shape[3] - 1)
 
+        # If we have a baseHS, we 
+        # can copy all its data
         if baseHs is not None:
             self.dataRange.xmin     = baseHs.dataRange.xmin
             self.dataRange.xmax     = baseHs.dataRange.xmax
@@ -388,28 +468,78 @@ class HistogramSeries(plotpanel.DataSeries):
             self.volume             = baseHs.volume
             self.ignoreZeros        = baseHs.ignoreZeros
             self.includeOutliers    = baseHs.includeOutliers
-            self.nvals              = baseHs.nvals
-            self.xdata              = np.array(baseHs.xdata)
-            self.ydata              = np.array(baseHs.ydata)
-            self.finiteData         = np.array(baseHs.finiteData)
-            self.nonZeroData        = np.array(baseHs.nonZeroData)
-            self.clippedFiniteData  = np.array(baseHs.finiteData)
-            self.clippedNonZeroData = np.array(baseHs.nonZeroData) 
- 
+            
+            self.__nvals              =          baseHs.__nvals
+            self.__xdata              = np.array(baseHs.__xdata)
+            self.__ydata              = np.array(baseHs.__ydata)
+            self.__finiteData         = np.array(baseHs.__finiteData)
+            self.__nonZeroData        = np.array(baseHs.__nonZeroData)
+            self.__clippedFiniteData  = np.array(baseHs.__finiteData)
+            self.__clippedNonZeroData = np.array(baseHs.__nonZeroData) 
+
+        # Otherwise we need to calculate
+        # it all for ourselves
         else:
-            self.initProperties()
+            self.__initProperties()
         
-        overlayList.addListener('overlays', self.name, self.overlaysChanged)
-
-        self.addListener('volume',          self.name, self.volumeChanged)
-        self.addListener('dataRange',       self.name, self.dataRangeChanged)
-        self.addListener('nbins',           self.name, self.histPropsChanged)
-        self.addListener('ignoreZeros',     self.name, self.histPropsChanged)
-        self.addListener('includeOutliers', self.name, self.histPropsChanged)
-        self.addListener('showOverlay',     self.name, self.showOverlayChanged)
+        overlayList.addListener('overlays',
+                                self.__name,
+                                self.__overlayListChanged)
+        self       .addListener('volume',
+                                self.__name,
+                                self.__volumeChanged)
+        self       .addListener('dataRange',
+                                self.__name,
+                                self.__dataRangeChanged)
+        self       .addListener('nbins',
+                                self.__name,
+                                self.__histPropsChanged)
+        self       .addListener('ignoreZeros',
+                                self.__name,
+                                self.__histPropsChanged)
+        self       .addListener('includeOutliers',
+                                self.__name,
+                                self.__histPropsChanged)
+        self       .addListener('showOverlay',
+                                self.__name,
+                                self.__showOverlayChanged)
 
         
-    def initProperties(self):
+    def update(self):
+        """This method may be called to force re-calculation of the
+        histogram data.
+        """
+        self.__histPropsChanged()
+
+        
+    def destroy(self):
+        """This needs to be called when this ``HistogramSeries`` instance
+        is no longer being used.
+
+        It removes several property listeners and, if the :attr:`overlay3D`
+        property is ``True``, removes the mask overlay from the
+        :class:`.OverlayList`.
+        """
+        self              .removeListener('nbins',           self.__name)
+        self              .removeListener('ignoreZeros',     self.__name)
+        self              .removeListener('includeOutliers', self.__name)
+        self              .removeListener('volume',          self.__name)
+        self              .removeListener('dataRange',       self.__name)
+        self              .removeListener('nbins',           self.__name)
+        self.__overlayList.removeListener('overlays',        self.__name)
+        
+        if self.__overlay3D is not None:
+            self.__overlayList.remove(self.__overlay3D)
+            self.__overlay3D = None
+
+        
+    def __initProperties(self):
+        """Called by :meth:`__init__`. Calculates and caches some things which
+        are needed for the histogram calculation.
+
+        .. note:: This method is never called if a ``baseHs`` is provided to
+                 :meth:`__init__`.
+        """
 
         log.debug('Performining initial histogram '
                   'calculations for overlay {}'.format(
@@ -431,100 +561,112 @@ class HistogramSeries(plotpanel.DataSeries):
         self.dataRange.xlo  = nzmin
         self.dataRange.xhi  = nzmax + dist
 
-        self.nbins = self.autoBin(nzData, self.dataRange.x)
+        self.nbins = self.__autoBin(nzData, self.dataRange.x)
 
         if not self.overlay.is4DImage():
-            self.finiteData  = finData
-            self.nonZeroData = nzData
-            self.dataRangeChanged(callHistPropsChanged=False)
+            
+            self.__finiteData  = finData
+            self.__nonZeroData = nzData
+            self.__dataRangeChanged(callHistPropsChanged=False)
+            
         else:
-            self.volumeChanged(callHistPropsChanged=False)
+            self.__volumeChanged(callHistPropsChanged=False)
 
-        self.histPropsChanged()
+        self.__histPropsChanged()
 
         
-    def volumeChanged(
+    def __volumeChanged(
             self,
             ctx=None,
             value=None,
             valid=None,
             name=None,
             callHistPropsChanged=True):
+        """Called when the :attr:`volume` property changes, and also by the
+        :meth:`__initProperties` method.
+
+        Re-calculates some things for the new overlay volume.
+
+        :arg callHistPropsChanged: If ``True`` (the default), the
+                                   :meth:`__histPropsChanged` method will be
+                                   called.
+
+        All other arguments are ignored, but are passed in when this method is
+        called due to a property change (see the
+        :meth:`.HasProperties.addListener` method).        
+        """
 
         if self.overlay.is4DImage(): data = self.overlay.data[..., self.volume]
         else:                        data = self.overlay.data[:]
 
         data = data[np.isfinite(data)]
 
-        self.finiteData  = data
-        self.nonZeroData = data[data != 0]
+        self.__finiteData  = data
+        self.__nonZeroData = data[data != 0]
 
-        self.dataRangeChanged(callHistPropsChanged=False)
+        self.__dataRangeChanged(callHistPropsChanged=False)
 
         if callHistPropsChanged:
-            self.histPropsChanged()
+            self.__histPropsChanged()
 
 
-    def dataRangeChanged(
+    def __dataRangeChanged(
             self,
             ctx=None,
             value=None,
             valid=None,
             name=None,
             callHistPropsChanged=True):
-        finData = self.finiteData
-        nzData  = self.nonZeroData
+        """Called when the :attr:`dataRange` property changes, and also by the
+        :meth:`__initProperties` and :meth:`__volumeChanged` methods.
+
+        :arg callHistPropsChanged: If ``True`` (the default), the
+                                   :meth:`__histPropsChanged` method will be
+                                   called.
+
+        All other arguments are ignored, but are passed in when this method is
+        called due to a property change (see the
+        :meth:`.HasProperties.addListener` method).
+        """
+        finData = self.__finiteData
+        nzData  = self.__nonZeroData
         
-        self.clippedFiniteData  = finData[(finData >= self.dataRange.xlo) &
-                                          (finData <  self.dataRange.xhi)]
-        self.clippedNonZeroData = nzData[ (nzData  >= self.dataRange.xlo) &
-                                          (nzData  <  self.dataRange.xhi)]
+        self.__clippedFiniteData  = finData[(finData >= self.dataRange.xlo) &
+                                            (finData <  self.dataRange.xhi)]
+        self.__clippedNonZeroData = nzData[ (nzData  >= self.dataRange.xlo) &
+                                            (nzData  <  self.dataRange.xhi)]
 
         if callHistPropsChanged:
-            self.histPropsChanged()
+            self.__histPropsChanged()
 
-        
-    def destroy(self):
-        """This needs to be called when this ``HistogramSeries`` instance
-        is no longer being used.
+            
+    def __histPropsChanged(self, *a):
+        """Called internally, and when any histogram settings change.
+        Re-calculates the histogram data.
         """
-        self            .removeListener('nbins',           self.name)
-        self            .removeListener('ignoreZeros',     self.name)
-        self            .removeListener('includeOutliers', self.name)
-        self            .removeListener('volume',          self.name)
-        self            .removeListener('dataRange',       self.name)
-        self            .removeListener('nbins',           self.name)
-        self.overlayList.removeListener('overlays',        self.name)
-        
-        if self.overlay3D is not None:
-            self.overlayList.remove(self.overlay3D)
-            self.overlay3D = None
-
-    
-    def histPropsChanged(self, *a):
 
         log.debug('Calculating histogram for '
                   'overlay {}'.format(self.overlay.name))
 
         if self.dataRange.xhi - self.dataRange.xlo < 0.00000001:
-            self.xdata = np.array([])
-            self.ydata = np.array([])
-            self.nvals = 0
+            self.__xdata = np.array([])
+            self.__ydata = np.array([])
+            self.__nvals = 0
             return
 
         if self.ignoreZeros:
-            if self.includeOutliers: data = self.nonZeroData
-            else:                    data = self.clippedNonZeroData
+            if self.includeOutliers: data = self.__nonZeroData
+            else:                    data = self.__clippedNonZeroData
         else:
-            if self.includeOutliers: data = self.finiteData
-            else:                    data = self.clippedFiniteData 
+            if self.includeOutliers: data = self.__finiteData
+            else:                    data = self.__clippedFiniteData 
         
-        if self.hsPanel.autoBin:
-            nbins = self.autoBin(data, self.dataRange.x)
+        if self.__hsPanel.autoBin:
+            nbins = self.__autoBin(data, self.dataRange.x)
 
-            self.disableListener('nbins', self.name)
+            self.disableListener('nbins', self.__name)
             self.nbins = nbins
-            self.enableListener('nbins', self.name)
+            self.enableListener('nbins', self.__name)
 
         # Calculate bin edges
         bins = np.linspace(self.dataRange.xlo,
@@ -539,68 +681,88 @@ class HistogramSeries(plotpanel.DataSeries):
         histX    = bins
         histY, _ = np.histogram(data.flat, bins=bins)
             
-        self.xdata = histX
-        self.ydata = histY
-        self.nvals = histY.sum()
+        self.__xdata = histX
+        self.__ydata = histY
+        self.__nvals = histY.sum()
 
         log.debug('Calculated histogram for overlay '
                   '{} (number of values: {}, number '
                   'of bins: {})'.format(
                       self.overlay.name,
-                      self.nvals,
+                      self.__nvals,
                       self.nbins))
 
 
-    def showOverlayChanged(self, *a):
+    def __showOverlayChanged(self, *a):
+        """Called when the :attr:`showOverlay` property changes.
+
+        Adds/removes a 3D mask :class:`.Image` to the :class:`.OverlayList`,
+        which highlights the voxels that have been included in the histogram.
+        The :class:`.MaskOpts.threshold` property is bound to the
+        :attr:`dataRange` property, so the masked voxels are updated whenever
+        the histogram data range changes, and vice versa.
+        """
 
         if not self.showOverlay:
-            if self.overlay3D is not None:
+            if self.__overlay3D is not None:
 
                 log.debug('Removing 3D histogram overlay mask for {}'.format(
                     self.overlay.name))
-                self.overlayList.remove(self.overlay3D)
-                self.overlay3D = None
+                self.__overlayList.remove(self.__overlay3D)
+                self.__overlay3D = None
 
         else:
 
             log.debug('Creating 3D histogram overlay mask for {}'.format(
                 self.overlay.name))
             
-            self.overlay3D = fslimage.Image(
+            self.__overlay3D = fslimage.Image(
                 self.overlay.data,
                 name='{}/histogram/mask'.format(self.overlay.name),
                 header=self.overlay.nibImage.get_header())
 
-            self.overlayList.append(self.overlay3D)
+            self.__overlayList.append(self.__overlay3D)
 
-            opts = self.displayCtx.getOpts(self.overlay3D, overlayType='mask')
+            opts = self.__displayCtx.getOpts(self.__overlay3D,
+                                             overlayType='mask')
 
             opts.bindProps('volume',    self)
             opts.bindProps('colour',    self)
             opts.bindProps('threshold', self, 'dataRange')
 
 
-    def overlaysChanged(self, *a):
+    def __overlayListChanged(self, *a):
+        """Called when the :class:`.OverlayList` changes.
+
+        If a 3D mask overlay was being shown, and it has been removed from the
+        ``OverlayList``, the :attr:`showOverlay` property is updated
+        accordingly.
+        """
         
-        if self.overlay3D is None:
+        if self.__overlay3D is None:
             return
 
         # If a 3D overlay was being shown, and it
         # has been removed from the overlay list
         # by the user, turn the showOverlay property
         # off
-        if self.overlay3D not in self.overlayList:
+        if self.__overlay3D not in self.__overlayList:
             
-            self.disableListener('showOverlay', self.name)
+            self.disableListener('showOverlay', self.__name)
             self.showOverlay = False
-            self.showOverlayChanged()
-            self.enableListener('showOverlay', self.name)
+            self.__showOverlayChanged()
+            self.enableListener('showOverlay', self.__name)
 
         
-    def autoBin(self, data, dataRange):
+    def __autoBin(self, data, dataRange):
+        """Calculates the number of bins which should be used for a histogram
+        of the given data. The calculation is identical to that implemented
+        in the original FSLView.
 
-        # Automatic histogram bin calculation
-        # as implemented in the original FSLView
+        :arg data:      The data that the histogram is to be calculated on.
+
+        :arg dataRange: A tuple containing the ``(min, max)`` histogram range.
+        """
 
         dMin, dMax = dataRange
         dRange     = dMax - dMin
@@ -625,34 +787,39 @@ class HistogramSeries(plotpanel.DataSeries):
             
 
     def getData(self):
+        """Overrides :meth:`.DataSeries.getData`.
 
-        if len(self.xdata) == 0 or \
-           len(self.ydata) == 0:
-            return self.xdata, self.ydata
+        Returns  a tuple containing the ``(x, y)`` histogram data.
+        """
+
+        if len(self.__xdata) == 0 or \
+           len(self.__ydata) == 0:
+            return self.__xdata, self.__ydata
 
         # If smoothing is not enabled, we'll
         # munge the histogram data a bit so
         # that plt.plot(drawstyle='steps-pre')
         # plots it nicely.
-        if not self.hsPanel.smooth:
+        if not self.__hsPanel.smooth:
 
-            xdata = np.zeros(len(self.xdata) + 1, dtype=np.float32)
-            ydata = np.zeros(len(self.ydata) + 2, dtype=np.float32)
+            xdata = np.zeros(len(self.__xdata) + 1, dtype=np.float32)
+            ydata = np.zeros(len(self.__ydata) + 2, dtype=np.float32)
 
-            xdata[ :-1] = self.xdata
-            xdata[  -1] = self.xdata[-1]
-            ydata[1:-1] = self.ydata
+            xdata[ :-1] = self.__xdata
+            xdata[  -1] = self.__xdata[-1]
+            ydata[1:-1] = self.__ydata
 
 
         # If smoothing is enabled, the above munge
         # is not necessary, and will probably cause
-        # the spline interpolation to fail
+        # the spline interpolation (performed by 
+        # the PlotPanel) to fail.
         else:
-            xdata = np.array(self.xdata[:-1], dtype=np.float32)
-            ydata = np.array(self.ydata,      dtype=np.float32)
+            xdata = np.array(self.__xdata[:-1], dtype=np.float32)
+            ydata = np.array(self.__ydata,      dtype=np.float32)
 
-        nvals    = self.nvals
-        histType = self.hsPanel.histType
+        nvals    = self.__nvals
+        histType = self.__hsPanel.histType
             
         if   histType == 'count':       return xdata, ydata
         elif histType == 'probability': return xdata, ydata / nvals

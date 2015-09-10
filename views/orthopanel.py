@@ -381,7 +381,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             lbl.SetBackgroundColour(bgColour)
 
         
-    def __toggleCanvas(self, canvas):
+    def __toggleCanvas(self, *a):
         """Called when any of the :attr:`.OrthoOpts.showXCanvas`,
         :attr:`.OrthoOpts.showYCanvas`, or :attr:`.OrthoOpts.showZCanvas`
         properties are changed.

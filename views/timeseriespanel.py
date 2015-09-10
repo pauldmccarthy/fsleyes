@@ -698,6 +698,9 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
     ``toggleTimeSeriesControl`` Shows/hides a :class:`.TimeSeriesControlPanel`.
     =========================== ===============================================
 
+    New ``TimeSeriesPanel`` instances will display a ``TimeSeriesListPanel``
+    and a ``TimeSeriesControlPanel`` by default.
+
 
     **FEATures**
 
@@ -809,7 +812,13 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
         self.__currentOverlay = None
         self.__currentTs      = None
         self.__overlayColours = {}
-        self.Layout()
+
+        def addPanels():
+            self.run('toggleTimeSeriesControl') 
+            self.run('toggleTimeSeriesList') 
+
+        wx.CallAfter(addPanels)
+
         self.draw()
 
 
