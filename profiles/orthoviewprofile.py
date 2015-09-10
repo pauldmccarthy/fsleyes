@@ -1,27 +1,11 @@
 #!/usr/bin/env python
 #
-# orthoviewprofile.py - Mouse/keyboard user interaction for the OrthoPanel.
+# orthoviewprofile.py - The OrthoViewProfile class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module defines a mouse/keyboard interaction 'view' profile for the
-:class:`.OrthoPanel'` class.
-
-There are three view 'modes' available in this profile:
-
- - Navigate mode:  The user can change the currently displayed location.
-
- - Zoom mode:      The user can zoom in/out of a canvas with the mouse 
-                   wheel, and draw a rectangle on a canvas in which to
-                   zoom.
-
- - Pan mode:       The user can pan around a canvas (if the canvas is
-                   zoomed in).
-
-The :attr:`OrthoViewProfile.mode` property controls the current mode.
-Alternately, keyboard modifier keys (e.g. shift) may be used to temporarily
-switch into one mode from another; these temporary modes are defined in the
-:attr:`OrthoViewProfile._tempModeMap` class attribute.
+"""This module provides the :class:`OrthoViewProfile` class, an interaction
+:class:`.Profile` for :class:`.OrthoPanel` views.
 """
 
 import logging
@@ -35,7 +19,40 @@ log = logging.getLogger(__name__)
 
 
 class OrthoViewProfile(profiles.Profile):
+    """The ``OrthoViewProfile`` class is a :class:`.Profile` for the
+    :class:`.OrthoPanel` class.  It defines mouse/keyboard handlers which
+    allow the user to navigate through the ``OrthoPanel`` display of the
+    overlays in the :class:`.OverlayList`.
+    
+    ``OrthoViewProfile`` defines three *modes* (see the :class:`.Profile`
+    class documentation):
 
+    ======== ==============================================================
+    ``nav``  The user can change the currently displayed location. This is
+             accomplished by updating the :attr:`.DisplayContext.location`
+             property on left mouse drags.
+    
+    ``zoom`` The user can zoom in/out of a canvas with the mouse wheel, and
+             draw a rectangle on a canvas in which to zoom. This is
+             accomplished by updating the :attr:`.SliceCanvasOpts.zoom`
+             property on mouse wheel changes, and displaying a
+             :class:`~.annotations.Rect` annotation on left mouse drags.
+    
+    ``pan``  The user can pan around a canvas (if the canvas is zoomed in).
+             This is accomplished by calling the
+             :meth:`.SliceCanvas.panDisplayBy` on left mouse drags.
+    ======== ==============================================================
+
+
+    The ``OrthoViewProfile`` class also defines a few actions:
+
+
+    ================ ========================================================
+    ``resetZoom``    Resets the zoom on every :class:`.SliceCanvas` to 100%.
+    ``centreCursor`` Moves the :attr:`.DisplayContext.location` to the centre
+                     of the display coordinate system.
+    ================ ========================================================
+    """
 
     def __init__(self,
                  viewPanel,
@@ -44,8 +61,25 @@ class OrthoViewProfile(profiles.Profile):
                  extraModes=None,
                  extraActions=None):
         """Creates an :class:`OrthoViewProfile`, which can be registered
-        with the given ``viewPanel`` which is assumed to be an
-        :class:`.OrthoPanel` instance.
+        with the given ``viewPanel``.
+
+
+        .. note:: The :class:`.OrthoEditProfile` is a sub-class of the 
+                  ``OrthoViewProfile``. It uses the ``extraModes`` and
+                  ``extraActions`` arguments to set up its edit-related
+                  modes/actions.
+
+        :arg viewPanel:    An :class:`.OrthoPanel` instance.
+        
+        :arg overlayList:  The :class:`.OverlayList` instance.
+        
+        :arg displayCtx:   The :class:`.DisplayContext` instance.
+        
+        :arg extraModes:   Extra modes to pass through to the
+                           :class:`.Profile` constructor.
+        
+        :arg extraActions: Extra actions to pass through to the
+                           :class:`.Profile` constructor.
         """
 
         if extraModes   is None: extraModes   = []
@@ -67,23 +101,30 @@ class OrthoViewProfile(profiles.Profile):
                                   modes,
                                   actionz)
 
-        self._xcanvas = viewPanel.getXCanvas()
-        self._ycanvas = viewPanel.getYCanvas()
-        self._zcanvas = viewPanel.getZCanvas()
+        self.__xcanvas = viewPanel.getXCanvas()
+        self.__ycanvas = viewPanel.getYCanvas()
+        self.__zcanvas = viewPanel.getZCanvas()
 
         # This attribute will occasionally store a
-        # reference to a gl.annotations.Rectangle -
+        # reference to a gl.annotations.Rect -
         # see the _zoomModeLeftMouse* handlers
-        self._lastRect = None
+        self.__lastRect = None
 
 
     def getEventTargets(self):
+        """Overrides :meth:`.Profile.getEventTargets`.
+
+        Returns the three :class:`.SliceCanvas` instances displayed in the
+        :class:`.OrthoPanel` instance that is using this ``OrthoViewProfile``.
         """
-        """
-        return [self._xcanvas, self._ycanvas, self._zcanvas]
+        return [self.__xcanvas, self.__ycanvas, self.__zcanvas]
 
 
     def resetZoom(self, *a):
+        """Sets the :class:`.SceneOpts.zoom`, :class:`.OrthoOpts.xzoom`,
+        :class:`.OrthoOpts.yzoom`,  and :class:`.OrthoOpts.zzoom` properties
+        to 100%.
+        """
 
         opts = self._viewPanel.getSceneOptions()
 
@@ -94,6 +135,9 @@ class OrthoViewProfile(profiles.Profile):
 
 
     def centreCursor(self, *a):
+        """Sets the :attr:`.DisplayContext.location` to the centre of the
+        :attr:`.DisplayContext.bounds`.
+        """
 
         bounds = self._displayCtx.bounds
 
@@ -108,7 +152,20 @@ class OrthoViewProfile(profiles.Profile):
     # Navigate mode handlers
     ########################
 
+    
     def __getNavOffsets(self):
+        """Used by some ``nav`` mode handlers. Returns a sequence of three
+        values, one per display space axis, which specify the distance that
+        a navigation operation should move the display.
+
+        If the currently selected overlay is an :class:`.Image` instance, the
+        distance that a navigation operation should shift the display will
+        differ depending on the value of the :attr:`.ImageOpts.transform`
+        property. For example, if ``transform`` is ``id``, the display should
+        be moved by one unit (which corresponds to one voxel). But if the
+        ``transform`` is ``pixdim``, the display should be moved by one pixdim
+        (e.g. 2, for a "math:`2mm^3` image).
+        """
         
         overlay = self._displayCtx.getReferenceImage(
             self._displayCtx.getSelectedOverlay())
@@ -137,7 +194,9 @@ class OrthoViewProfile(profiles.Profile):
 
 
     def _navModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
-        """Left mouse drags in location mode update the
+        """Handles left mouse drags in ``nav`` mode.
+        
+        Left mouse drags in ``nav`` mode update the
         :attr:`.DisplayContext.location` to follow the mouse location.
         """
 
@@ -148,15 +207,15 @@ class OrthoViewProfile(profiles.Profile):
 
         
     def _navModeChar(self, ev, canvas, key):
-        """Left mouse drags in location mode update the
-        :attr:`.DisplayContext.location`.
+        """Handles key presses in ``nav`` mode.
 
-        Arrow keys map to the horizontal/vertical axes, and -/+ keys map
-        to the depth axis of the canvas which was the target of the event.
+        Arrow key presses in ``nav`` mode update the
+        :attr:`.DisplayContext.location`.  Arrow keys map to the
+        horizontal/vertical axes, and -/+ keys map to the depth axis of the
+        canvas which was the target of the event.
 
-        Page up/page down changes the currently selected overlay.
+        Page up/page down changes the :attr:`.DisplayContext.selectedOverlay`.
         """
-
 
         if len(self._overlayList) == 0:
             return
@@ -190,6 +249,11 @@ class OrthoViewProfile(profiles.Profile):
 
 
     def _navModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
+        """Handles mouse wheel movement in ``nav`` mode.
+
+        Mouse wheel movement on a canvas changes the depth location displayed
+        on that canvas.
+        """
 
         if len(self._overlayList) == 0:
             return
@@ -214,7 +278,9 @@ class OrthoViewProfile(profiles.Profile):
                             wheel,
                             mousePos=None,
                             canvasPos=None):
-        """Mouse wheel motion in zoom mode increases/decreases the zoom level
+        """Handles mouse wheel events in ``zoom`` mode.
+
+        Mouse wheel motion in zoom mode increases/decreases the zoom level
         of the target canvas.
         """
         if   wheel > 0: wheel =  50
@@ -223,7 +289,9 @@ class OrthoViewProfile(profiles.Profile):
 
         
     def _zoomModeChar(self, ev, canvas, key):
-        """The +/- keys in zoom mode increase/decrease the zoom level
+        """Handles key presses in ``zoom`` mode.
+
+        The +/- keys in zoom mode increase/decrease the zoom level
         of the target canvas.
         """
 
@@ -244,7 +312,9 @@ class OrthoViewProfile(profiles.Profile):
 
         
     def _zoomModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
-        """Left mouse drags in zoom mode draw a rectangle on the target
+        """Handles left mouse drags in ``zoom`` mode.
+
+        Left mouse drags in zoom mode draw a rectangle on the target
         canvas.
 
         When the user releases the mouse (see :meth:`_zoomModeLeftMouseUp`),
@@ -260,15 +330,17 @@ class OrthoViewProfile(profiles.Profile):
         width  = canvasPos[canvas.xax] - corner[0]
         height = canvasPos[canvas.yax] - corner[1]
 
-        self._lastRect = canvas.getAnnotations().rect(corner,
-                                                      width,
-                                                      height,
-                                                      colour=(1, 1, 0))
+        self.__lastRect = canvas.getAnnotations().rect(corner,
+                                                       width,
+                                                       height,
+                                                       colour=(1, 1, 0))
         canvas.Refresh()
 
         
     def _zoomModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
-        """When the left mouse is released in zoom mode, the target
+        """Handles left mouse up events in ``zoom`` mode.
+
+        When the left mouse is released in zoom mode, the target
         canvas is zoomed in to the rectangle region that was drawn by the
         user.
         """
@@ -278,9 +350,9 @@ class OrthoViewProfile(profiles.Profile):
 
         mouseDownPos, canvasDownPos = self.getMouseDownLocation()
 
-        if self._lastRect is not None:
-            canvas.getAnnotations().dequeue(self._lastRect)
-            self._lastRect = None
+        if self.__lastRect is not None:
+            canvas.getAnnotations().dequeue(self.__lastRect)
+            self.__lastRect = None
 
         rectXlen = abs(canvasPos[canvas.xax] - canvasDownPos[canvas.xax])
         rectYlen = abs(canvasPos[canvas.yax] - canvasDownPos[canvas.yax])
@@ -315,7 +387,9 @@ class OrthoViewProfile(profiles.Profile):
     
         
     def _panModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
-        """Left mouse drags in pan mode move the target canvas display about
+        """Handles left mouse drags in ``pan`` mode.
+
+        Left mouse drags in pan mode move the target canvas display about
         to follow the mouse.
 
         If the target canvas is not zoomed in, this has no effect.
@@ -333,7 +407,9 @@ class OrthoViewProfile(profiles.Profile):
 
     
     def _panModeChar(self, ev, canvas, key):
-        """The arrow keys in pan mode move the target canvas display around
+        """Handles key presses in ``pan`` mode.
+
+        The arrow keys in pan mode move the target canvas display around
         (unless the canvas is not zoomed in).
         """
 

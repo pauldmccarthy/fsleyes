@@ -8,8 +8,14 @@
 classes.
 
 It defines a few dictionaries which define the profile type to use for each
-:class:`.CanvasPanel` type, temporary mouse/keyboard interaction modes, and
+:class:`.ViewPanel` type, temporary mouse/keyboard interaction modes, and
 alternate mode handlers for the profiles contained in the profiles package.
+
+.. autosummary::
+   profiles
+   profileHandlers
+   tempModeMap
+   altHandlerMap
 """
 
 import logging
@@ -34,7 +40,8 @@ profiles  = {
     LightBoxPanel : ['view']
 }
 """This dictionary is used by the :class:`.ProfileManager` to figure out which
-profiles are available for each :class:`.CanvasPanel`.
+profiles are available for each :class:`.ViewPanel`. They are added as options
+to the :attr:`.ViewPanel.profile` property.
 """
 
 
@@ -44,7 +51,7 @@ profileHandlers = {
     (LightBoxPanel, 'view') : LightBoxViewProfile
 }
 """This dictionary is used by the :class:`.ProfileManager` class to figure out
-which :class:`.Profile` instance to create for a given :class:`.CanvasPanel`
+which :class:`.Profile` sub-class to create for a given :class:`.ViewPanel`
 instance and profile identifier.
 """
 
@@ -94,6 +101,16 @@ tempModeMap = {
     LightBoxViewProfile : OrderedDict((
         (('view', wx.WXK_CONTROL), 'zoom'), ))
 }
+"""The ``tempModeMap`` dictionary defines temporary modes, for each
+:class:`Profile` sub-class which, when in a given mode, can be accessed with a
+keyboard modifer (e.g. Control, Shift, etc). For example, a temporary mode map
+of::
+
+    ('view', wx.WXK_SHIFT) : 'zoom'
+
+states that when the ``Profile`` is in ``'view'`` mode, and the shift key is
+held down, the ``Profile`` should temporarily switch to ``'zoom'`` mode.
+"""
 
 
 altHandlerMap = {
@@ -159,7 +176,18 @@ altHandlerMap = {
         (('selint', 'Char'), ('nav', 'Char')),
     )),
 
-
     LightBoxViewProfile : OrderedDict((
         (('view', 'LeftMouseDown'), ('view', 'LeftMouseDrag')), ))
 }
+"""The ``altHandlerMap`` dictionary defines alternate handlers for a given
+mode and event type. Entries in this dictionary allow a :class:`.Profile`
+sub-class to define a handler for a single mode and event type, but to re-use
+that handler for other modes and event types. For example, the following
+alternate handler mapping::
+
+    ('zoom', 'MiddleMouseDrag'), ('pan',  'LeftMouseDrag'))
+
+states that when the ``Profile`` is in ``'zoom'`` mode, and a
+``MiddleMouseDrag`` event occurs, the ``LeftMouseDrag`` handler for the
+``'pan'`` mode should be called.
+"""

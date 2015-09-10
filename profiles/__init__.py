@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""The :mod:`profiles` module contains logic for mouse/keyboard interaction
+"""The :mod:`profiles` package contains logic for mouse/keyboard interaction
 with :class:`.ViewPanel` panels.
 
 This logic is encapsulated in two classes:
@@ -14,11 +14,15 @@ This logic is encapsulated in two classes:
    of ``ViewPanel`` to allow the user to interact with the view in a
    particular way. For example, the :class:`.OrthoViewProfile` class allows
    the user to navigate through the display space in an :class:`.OrthoPanel`
-   canvas, wherease the :class:`.OrthoEditProfile` class contains interaction
-   logic for selecting and editing image voxels in an ``OrthoPanel``.
+   canvas, whereas the :class:`.OrthoEditProfile` class contains interaction
+   logic for selecting and editing :class:`.Image` voxels in an ``OrthoPanel``.
 
  - The :class:`ProfileManager` class is used by ``ViewPanel`` instances to
    create and change the ``Profile`` instance currently in use.
+
+
+The :mod:`.profilemap` module contains mappings between ``ViewPanel`` types,
+and their corresponding ``Profile`` types.
 """
 
 import logging
@@ -34,24 +38,134 @@ import fsl.fsleyes.actions as actions
 log = logging.getLogger(__name__)
 
 
+class ProfileManager(object):
+    """Manages creation/registration/de-registration of :class:`Profile`
+    instances for a :class:`.ViewPanel` instance.
+
+    A :class:`ProfileManager` instance is created and used by every
+    :class:`.ViewPanel` instance. The :mod:`.profilemap` module defines the
+    :class:`Profile` types which should used for specific :class:`.ViewPanel`
+    types.
+    """
+
+
+    def __init__(self, viewPanel, overlayList, displayCtx):
+        """Create a :class:`ProfileManager`.
+
+        :arg viewPanel:   The :class:`.ViewPanel` instance which this
+                          :class:`ProfileManager` is to manage.
+        
+        :arg overlayList: The :class:`.OverlayList` instance containing the
+                          overlays that are being displayed.
+        
+        :arg displayCtx:  The :class:`.DisplayContext` instance which defines
+                          how overlays are being displayed.
+        """
+        import profilemap
+        
+        self.__viewPanel      = viewPanel
+        self.__viewCls        = viewPanel.__class__
+        self.__overlayList    = overlayList
+        self.__displayCtx     = displayCtx
+        self.__currentProfile = None
+
+        profileProp = viewPanel.getProp('profile')
+        profilez    = profilemap.profiles.get(viewPanel.__class__, [])
+
+        for profile in profilez:
+            profileProp.addChoice(profile, instance=viewPanel)
+
+        if len(profilez) > 0:
+            viewPanel.profile = profilez[0]
+
+
+    def destroy(self):
+        """This method must be called by the owning :class:`.ViewPanel` when
+        it is about to be destroyed (or when it no longer needs a
+        ``ProfileManager``).
+
+        This method destroys the current :class:`Profile` (if any), and
+        clears some internal object references to avoid memory leaks.
+        """
+        if self.__currentProfile is not None:
+            self.__currentProfile.deregister()
+            self.__currentProfile.destroy()
+            
+        self.__currentProfile    = None
+        self.__viewPanel         = None
+        self.__overlayList       = None
+        self.__overlaydisplayCtx = None
+
+
+    def getCurrentProfile(self):
+        """Returns the :class:`Profile` instance currently in use."""
+        return self.__currentProfile
+
+        
+    def changeProfile(self, profile):
+        """Deregisters the current :class:`Profile` instance (if necessary),
+        and creates a new one corresponding to the named profile.
+        """
+
+        import profilemap
+
+        profileCls = profilemap.profileHandlers[self.__viewCls, profile]
+
+        # the current profile is the requested profile
+        if (self.__currentProfile is not None) and \
+           (self.__currentProfile.__class__ is profileCls):
+            return
+
+        if self.__currentProfile is not None:
+            log.debug('Deregistering {} profile from {}'.format(
+                self.__currentProfile.__class__.__name__,
+                self.__viewCls.__name__))
+            self.__currentProfile.deregister()
+            self.__currentProfile.destroy()
+            self.__currentProfile = None
+               
+        self.__currentProfile = profileCls(self.__viewPanel,
+                                           self.__overlayList,
+                                           self.__displayCtx)
+        
+        log.debug('Registering {} profile with {}'.format(
+            self.__currentProfile.__class__.__name__,
+            self.__viewCls.__name__))
+        
+        self.__currentProfile.register()
+
+
 class Profile(actions.ActionProvider):
     """A :class:`Profile` class implements keyboard/mouse interaction behaviour
     for a :class:`.ViewPanel` instance.
 
     
-    Subclasses should specify at least one 'mode' of operation, which defines
-    a sort of sub-profile. The user is able to change the mode via the
-    :attr:`mode` property. Subclasses must also override the
-    :meth:`getEventTargets` method, to return the :mod:`wx` objects that
-    are to be the targets for mouse/keyboard interaction.
+    Subclasses should specify at least one *mode* of operation, which defines
+    a sort of sub-profile. The current mode can be changed with the
+    :attr:`mode` property.
+
+
+    Subclasses must also override the :meth:`getEventTargets` method, to
+    return the :mod:`wx` objects that are to be the targets for mouse/keyboard
+    interaction.
+
+    
+    .. note:: The ``Profile`` class currently assumes that all objects returned
+              by the :meth:`getEventTargets` method are :class:`.SliceCanvas`
+              instances.
 
     
     In order to receive mouse or keyboard events, subclasses simply need to
     implement methods which handle the events of interest for the relevant
     mode, and name them appropriately. The name of a method handler must be 
-    of the form ``_[modeName]Mode[eventName]``, where ``modeName`` is an
-    identifier for the profile mode (see the :meth:`__init__` method), and
-    ``eventName`` is one of the following:
+    of the form::
+
+    
+        _[modeName]Mode[eventName]
+
+    
+    where ``modeName`` is an identifier for the profile mode (see the
+    :meth:`__init__` method), and ``eventName`` is one of the following:
     
       - ``LeftMouseMove``
       - ``LeftMouseDown``
@@ -73,7 +187,7 @@ class Profile(actions.ActionProvider):
     
     For example, if a particular profile has defined a mode called ``nav``,
     and is interested in left clicks, the profile class must provide a method
-    called `_navModeLeftMouseDown`. Then, whenever the profile is in the
+    called ``_navModeLeftMouseDown``. Then, whenever the profile is in the
     ``nav`` mode, this method will be called on left mouse clicks.
 
     
@@ -93,10 +207,20 @@ class Profile(actions.ActionProvider):
     ``altHandlerMap`` dictionary.
 
     
-    As the :class:`Profile` class derives from the :class:`.ActionProvider`
-    class, :class:`Profile` subclasses may define properties and actions for
+    As the ``Profile`` class derives from the :class:`.ActionProvider`
+    class, ``Profile`` subclasses may define properties and actions for
     the user to configure the profile behaviour, and/or to perform any
     relevant actions.
+
+    The following instance attributes are present on a ``Profile`` instance,
+    intended to be accessed by sub-classes:
+
+    ================ =======================================================
+    ``_viewPanel``   The :class:`ViewPanel` which is using this ``Profile``.
+    ``_overlayList`` A :class:`.OverlayList` instance.
+    ``_displayCtx``  A :class:`.DisplayContext` instance.
+    ``_name``        A unique name for this ``Profile`` instance.
+    ================ =======================================================
     """
 
 
@@ -112,20 +236,21 @@ class Profile(actions.ActionProvider):
                  displayCtx,
                  modes=None,
                  actionz=None):
-        """Create a :class:`Profile` instance.
+        """Create a ``Profile`` instance.
 
         :arg viewPanel:   The :class:`.ViewPanel` instance for which this
-                          :class:`Profile` instance defines mouse/keyboard
+                          ``Profile`` instance defines mouse/keyboard
                           interaction behaviour.
 
         :arg overlayList: The :class:`.OverlayList` instance which contains
                           the list of overlays being displayed.
 
-        :arg displayCtx: The :class:`.DisplayContext` instance which defines
+        :arg displayCtx:  The :class:`.DisplayContext` instance which defines
                           how the overlays are to be displayed.
 
         :arg modes:       A sequence of strings, containing the mode
-                          identifiers for this profile.
+                          identifiers for this profile. These are added as
+                          options on the :attr:`mode` property.
 
         :arg actionz:     A dictionary of ``{name : function}`` mappings 
                           defining any actions provided by this instance; 
@@ -188,14 +313,16 @@ class Profile(actions.ActionProvider):
 
         
     def __del__(self):
+        """Prints a log message. """
         log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
 
                 
     def destroy(self):
-        """Calls the :meth:`deregister` method, and clears references to
-        the display context,  view panel, and overlay list. This method
-        is called by the :class:`ProfileManager` when  this ``Profile``
-        instance is no longer needed.  
+        """This method must be called when this ``Profile`` is no longer
+        needed - it is typically called by a :class:`ProfileManager`.
+
+        Clears references to the display context, view panel, and overlay
+        list, and calls :meth:`.ActionProvider.destroy`.
         """
         actions.ActionProvider.destroy(self)
         self._viewPanel   = None
@@ -207,8 +334,8 @@ class Profile(actions.ActionProvider):
         """Must be overridden by subclasses, to return a sequence of
         :mod:`wx` objects that are the targets of mouse/keyboard interaction.
 
-        It is assumed that all of the objects in the sequence derive from the
-        :class:`.SliceCanvas` class.
+        .. note:: It is currently assumed that all of the objects in the
+                  sequence derive from the :class:`.SliceCanvas` class.
         """
         raise NotImplementedError('Profile subclasses must implement '
                                   'the getEventTargets method')
@@ -231,26 +358,43 @@ class Profile(actions.ActionProvider):
 
 
     def addTempMode(self, mode, modifier, tempMode):
-        """This map is used by the :meth:`_getTempMode` method to determine
-        whether a temporary mode should be enabled, based on any keyboard
-        modifier keys that are held down.
+        """Add a temporary mode to this ``Profile``, in addition to those
+        defined in the :attr:`.profilemap.tempModeMap` dictionary.
+
+        :arg mode:     The mode to change from.
+        
+        :arg modifier: A keyboard modifier which will temporarily
+                       change the mode from ``mode`` to ``tempMode``.
+        
+        :arg tempMode: The temporary mode which the ``modifier`` key will
+                       change into.
         """ 
         self.__tempModeMap[mode, modifier] = tempMode
 
         
     def addAltHandler(self, mode, event, altMode, altEvent):
-        """If a handler is not present for a particular mouse event type, this
-        map is checked to see an alternate handler has been defined.
+        """Add an alternate handler to this ``Profile``, in addition to
+        those already defined in the :attr:`.profilemap.altHandleMap`
+        dictionary.
+
+        :arg mode:     The source mode.
+        
+        :arg event:    Name of the event to handle (e.g. ``LeftMouseDown``).
+        
+        :arg altMode:  The mode for which the handler is defined.
+        
+        :arg altEvent: The event name for which the handler is defined.
         """
         self.__altHandlerMap[mode, event] = (altMode, altEvent)
 
     
     def register(self):
-        """This method must be called to register this :class:`Profile`
-        instance as the target for mouse/keyboard events.
+        """This method must be called to register this ``Profile``
+        instance as the target for mouse/keyboard events. This method
+        is called by the :class:`ProfileManager`.
 
         Subclasses may override this method to performa any initialisation,
-        but must make sure to call this implementation.
+        but must make sure to call this implementation. 
         """
         for t in self.getEventTargets():
             t.Bind(wx.EVT_LEFT_DOWN,    self.__onMouseDown)
@@ -268,10 +412,11 @@ class Profile(actions.ActionProvider):
     
     def deregister(self):
         """This method de-registers this :class:`Profile` instance from
-        receiving mouse/keybouard events.
+        receiving mouse/keybouard events. This method is called by the
+        :class:`ProfileManager`.
         
         Subclasses may override this method to performa any initialisation,
-        but must make sure to call this implementation.        
+        but must make sure to call this implementation.
         """
         for t in self.getEventTargets():
             t.Unbind(wx.EVT_LEFT_DOWN)
@@ -346,15 +491,15 @@ class Profile(actions.ActionProvider):
 
 
     def __getHandler(self, ev, evType, mode=None):
-        """Returns a reference to a method of this :class:`Profile`
-        instance which can handle the given :class:`wx.MouseEvent` or
-        :class:`wx.KeyEvent` (the ``ev`` argument).
+        """Returns a reference to a method of this ``Profile`` instance
+        (defined on the sub-class) which can handle the given
+        :class:`wx.MouseEvent` or :class:`wx.KeyEvent` (the ``ev`` argument).
 
         The ``mode`` and ``evType`` arguments may be used to force the lookup
         of a handler for the specified mode (see the :attr:`mode` property)
-        or event type (see the :meth:`_getEventType` method).
+        or event type.
 
-        If a handler is not found, the :attr:`_altHandlerMap` map is checked
+        If a handler is not found, the :attr:`__altHandlerMap` map is checked
         to see if an alternate handler for the mode/event type has been
         specified.
         """
@@ -556,7 +701,7 @@ class Profile(actions.ActionProvider):
 
         
     def __onChar(self, ev):
-        """Called on keyboard key presses .
+        """Called on keyboard key presses.
 
         Delegates to a mode specific handler if one is present.
         """
@@ -571,101 +716,3 @@ class Profile(actions.ActionProvider):
         log.debug('Keyboard event ({}) on canvas {}'.format(key, canvas.name))
 
         handler(ev, canvas, key)
-
-
-class ProfileManager(object):
-    """Manages creation/registration/de-regsistration of :class:`Profile`
-    instances for a :class:`.ViewPanel` instance.
-
-    A :class:`ProfileManager` instance is created and used by every
-    :class:`.ViewPanel` instance. The :mod:`.profilemap` defines the
-    :class:`Profile` types which should be used for specific
-    :class:`.ViewPanel` types.
-    """
-
-
-    def __init__(self, viewPanel, overlayList, displayCtx):
-        """Create a :class:`ProfileManager`.
-
-        :arg viewPanel:   The :class:`.ViewPanel` instance which this
-                          :class:`ProfileManager` is to manage.
-        
-        :arg overlayList: The :class:`.OverlayList` instance containing the
-                          overlays that are being displayed.
-        
-        :arg displayCtx:  The :class:`.DisplayContext` instance which defines
-                          how overlays are being displayed.
-
-        """
-        import profilemap
-        
-        self._viewPanel      = viewPanel
-        self._viewCls        = viewPanel.__class__
-        self._overlayList    = overlayList
-        self._displayCtx     = displayCtx
-        self._currentProfile = None
-
-        profileProp = viewPanel.getProp('profile')
-        profilez    = profilemap.profiles.get(viewPanel.__class__, [])
-
-        for profile in profilez:
-            profileProp.addChoice(profile, instance=viewPanel)
-
-        if len(profilez) > 0:
-            viewPanel.profile = profilez[0]
-
-
-    def destroy(self):
-        """This method should be called by the owning :class:`.ViewPanel` when
-        it is about to be destroyed (or when it no longer needs a
-        ``ProfileManager``).
-
-        This method destros the current profile (if any), and clears some
-        important object references to avoid memory leaks.
-        """
-        if self._currentProfile is not None:
-            self._currentProfile.deregister()
-            self._currentProfile.destroy()
-            
-        self._currentProfile    = None
-        self._viewPanel         = None
-        self._overlayList       = None
-        self._overlaydisplayCtx = None
-
-
-    def getCurrentProfile(self):
-        """Returns the :class:`Profile` instance currently in use."""
-        return self._currentProfile
-
-        
-    def changeProfile(self, profile):
-        """Deregisters the current :class:`Profile` instance (if necessary),
-        and creates a new one corresponding to the named profile.
-        """
-
-        import profilemap
-
-        profileCls = profilemap.profileHandlers[self._viewCls, profile]
-
-        # the current profile is the requested profile
-        if (self._currentProfile is not None) and \
-           (self._currentProfile.__class__ is profileCls):
-            return
-
-        if self._currentProfile is not None:
-            log.debug('Deregistering {} profile from {}'.format(
-                self._currentProfile.__class__.__name__,
-                self._viewCls.__name__))
-            self._currentProfile.deregister()
-            self._currentProfile.destroy()
-            self._currentProfile = None
-               
-        self._currentProfile = profileCls(self._viewPanel,
-                                          self._overlayList,
-                                          self._displayCtx)
-        
-        log.debug('Registering {} profile with {}'.format(
-            self._currentProfile.__class__.__name__,
-            self._viewCls.__name__))
-        
-        self._currentProfile.register()
