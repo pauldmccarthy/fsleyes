@@ -73,8 +73,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     The ``OrthoEditProfile`` class uses :mod:`.annotations` on the
-    :class:`.SliceCanvas` panels displayed in the :class:`.OrthoPanel`, to
-    display information to the user. Two annotations are used:
+    :class:`.SliceCanvas` panels, displayed in the :class:`.OrthoPanel`,
+    to display information to the user. Two annotations are used:
 
      - The *cursor* annotation. This is a :class:`.Rect` annotation
        representing a cursor at the voxel, or voxels, underneath the
@@ -86,12 +86,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     selectionCursorColour = props.Colour(default=(1, 1, 0, 0.7))
-    """Colour used for the selection cursor. """
+    """Colour used for the cursor annotation. """
 
     
     selectionOverlayColour = props.Colour(default=(1, 0, 1, 0.7))
-    """Colour used for the selection overlay, which displays the voxels that
-    are currently selected.
+    """Colour used for the selection annotation, which displays the voxels
+    that are currently selected.
     """
     
     
@@ -318,8 +318,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """Called when either of the :attr:`selectionOverlayColour` or
         :attr:`selectionCursorColour` properties change.
         
-        Updates the :class:`.SliceCanvas` :mod:`.annotations` colours
-        accordingly.
+        Updates the  :mod:`.annotations` colours accordingly.
         """
         if self.__selAnnotation is not None:
             self.__selAnnotation.colour = self.selectionOverlayColour
@@ -336,9 +335,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """Called when either the :class:`.OverlayList` or
         :attr:`.DisplayContext.selectedOverlay` change.
 
-        Destroys all old :class:`.SliceCanvas` :mod:`.annotations`. If the
-        newly selected overlay is an :class:`Image`, new annotations are 
-        created.
+        Destroys all old :mod:`.annotations`. If the newly selected overlay is
+        an :class:`Image`, new annotations are created.
         """
 
         overlay   = self._displayCtx.getSelectedOverlay()
@@ -459,8 +457,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         return np.int32(np.floor(voxel))
 
 
-    def __makeSelectionAnnotation(self, canvas, voxel, blockSize=None):
-        """Highlights the specified voxel with a
+    def __drawCursorAnnotation(self, canvas, voxel, blockSize=None):
+        """Draws the cursor annotation. Highlights the specified voxel with a
         :class:`~fsl.fsleyes.gl.annotations.Rect` annotation.
         
         This is used by mouse motion event handlers, so the user can
@@ -469,8 +467,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         :arg canvas:    The :class:`.SliceCanvas` on which to make the
                         annotation.
-        :arg voxel:     Voxel which is at the centre of the annotation.
-        :arg blockSize: Size of the annotation square/cube.
+        :arg voxel:     Voxel which is at the centre of the cursor.
+        :arg blockSize: Size of the cursor square/cube.
         """
 
         opts  = self._displayCtx.getOpts(self.__currentOverlay)
@@ -598,19 +596,19 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         elif wheelDir < 0: self.selectionSize -= 1
 
         voxel = self.__getVoxelLocation(canvasPos)
-        self.__makeSelectionAnnotation(canvas, voxel)
+        self.__drawCursorAnnotation(canvas, voxel)
         self.__refreshCanvases(ev, canvas)
 
 
     def _selModeMouseMove(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse motion events in ``sel`` mode.
 
-        Draws a selection annotation at the current mouse location
-        (see :meth:`__makeSelectionAnnotation`).
+        Draws a cursor annotation at the current mouse location
+        (see :meth:`__draweCursorAnnotation`).
         """
         voxel = self.__getVoxelLocation(canvasPos)
-        self.__makeSelectionAnnotation(canvas, voxel)
-        self.__refreshCanvases(ev, canvas)
+        self.__drawCursorAnnotation(canvas, voxel)
+        self.__refreshCanvases(ev,  canvas)
 
 
     def _selModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
@@ -622,9 +620,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__editor.startChangeGroup()
 
         voxel = self.__getVoxelLocation(canvasPos)
-        self.__applySelection(         canvas, voxel)
-        self.__makeSelectionAnnotation(canvas, voxel)
-        self.__refreshCanvases(ev, canvas, mousePos, canvasPos)
+        self.__applySelection(      canvas, voxel)
+        self.__drawCursorAnnotation(canvas, voxel)
+        self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
 
 
     def _selModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -633,9 +631,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         Adds to the current :class:`Selection`.
         """        
         voxel = self.__getVoxelLocation(canvasPos)
-        self.__applySelection(         canvas, voxel)
-        self.__makeSelectionAnnotation(canvas, voxel)
-        self.__refreshCanvases(ev, canvas, mousePos, canvasPos)
+        self.__applySelection(      canvas, voxel)
+        self.__drawCursorAnnotation(canvas, voxel)
+        self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
 
 
     def _selModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
@@ -675,9 +673,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__editor.startChangeGroup()
 
         voxel = self.__getVoxelLocation(canvasPos)
-        self.__applySelection(         canvas, voxel, False)
-        self.__makeSelectionAnnotation(canvas, voxel)
-        self.__refreshCanvases(ev, canvas, mousePos, canvasPos)
+        self.__applySelection(      canvas, voxel, False)
+        self.__drawCursorAnnotation(canvas, voxel)
+        self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
 
 
     def _deselModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -686,9 +684,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         Removes from the current :class:`Selection`.        
         """ 
         voxel = self.__getVoxelLocation(canvasPos)
-        self.__applySelection(         canvas, voxel, False)
-        self.__makeSelectionAnnotation(canvas, voxel)
-        self.__refreshCanvases(ev, canvas, mousePos, canvasPos)
+        self.__applySelection(      canvas, voxel, False)
+        self.__drawCursorAnnotation(canvas, voxel)
+        self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
 
         
     def _deselModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
@@ -738,11 +736,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     def _selintModeMouseMove(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse motion events in ``selint`` mode. Draws a selection
         annotation at the current location (see
-        :meth:`__makeSelectionAnnotation`).
+        :meth:`__drawCursorAnnotation`).
         """
         voxel = self.__getVoxelLocation(canvasPos)
-        self.__makeSelectionAnnotation(canvas, voxel, 1)
-        self.__refreshCanvases(ev, canvas)
+        self.__drawCursorAnnotation(canvas, voxel, 1)
+        self.__refreshCanvases(ev,  canvas)
 
         
     def _selintModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
@@ -777,7 +775,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         if not self.limitToRadius:
             voxel = self.__getVoxelLocation(canvasPos)
-            self.__makeSelectionAnnotation(canvas, voxel, 1)
+            self.__drawCursorAnnotation(canvas, voxel, 1)
 
             refreshArgs = (ev, canvas, mousePos, canvasPos)
             
