@@ -703,9 +703,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """Selects voxels by intensity, using the specified ``voxel`` as
         the seed location.
 
-        Called by the :meth:`_selIntModeLeftMouseDown`,
-        :meth:`_selIntModeLeftMouseDrag`, and and
-        :meth:`_selIntModeLeftMouseWheel` methods.  See
+        Called by the :meth:`_selintModeLeftMouseDown`,
+        :meth:`_selintModeLeftMouseDrag`, and and
+        :meth:`_selintModeLeftMouseWheel` methods.  See
         :meth:`.Selection.selectByValue`.
         """
         
