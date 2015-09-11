@@ -92,10 +92,12 @@ class ListItemWidget(wx.Panel):
 
         
     def __onSaveButton(self, ev):
+        self.displayCtx.selectOverlay(self.overlay)
         self.overlay.save()
 
 
     def __onLockButton(self, ev):
+        self.displayCtx.selectOverlay(self.overlay)
         group = self.displayCtx.overlayGroups[0]
         
         if self.lockButton.GetValue(): group.addOverlay(   self.overlay)
@@ -132,6 +134,7 @@ class ListItemWidget(wx.Panel):
 
             
     def __vizChanged(self, *a):
+        self.displayCtx.selectOverlay(self.overlay)
 
         idx = self.listBox.IndexOf(self.overlay)
 
