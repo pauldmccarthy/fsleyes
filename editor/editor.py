@@ -49,17 +49,20 @@ class Editor(props.HasProperties):
     to perform the second step.
 
     
-    .. note:: An important point to keep in mind is that whenever the
-              :attr:`.DisplayContext.selectedOverlay` property changes, the
-              ``Editor`` will discard the current :class:`.Selection`
-              instance, and create a new one, which matches the resolution of
-              the newly selected overlay (if the new overlay is not an
-              :class:`.Image`, a ``Selection`` object is not created).
+    .. warning:: An important point to keep in mind is that whenever the
+                 :attr:`.DisplayContext.selectedOverlay` property changes, the
+                 ``Editor`` will discard the current :class:`.Selection`
+                 instance, and create a new one, which matches the resolution
+                 of the newly selected overlay (if the new overlay is not an
+                 :class:`.Image`, a ``Selection`` object is not created).
+                 Therefore, it is probably a bad idea to store your own
+                 reference to the current ``Selection`` object - just use the
+                 :meth:`getSelection` method.
 
-              I may change this behaviour in the future, as it is a potential
-              bug source. I will possibly change the structure so that
-              ``Editor`` instances are created/destroyed for individual
-              overlays.
+                 I may change this behaviour in the future, as it is a
+                 potential bug source. I will possibly change the structure so
+                 that ``Editor`` instances are created/destroyed for
+                 individual overlays.
 
     
     Some convenience methods are also provided for working with selections:

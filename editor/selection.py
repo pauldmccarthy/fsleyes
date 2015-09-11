@@ -304,11 +304,12 @@ class Selection(props.HasProperties):
                            be selected.
 
         :arg searchRadius: May be either a single value, or a sequence of
-                           three values - one for each axis. If provided,
-                           the search is limited to an ellipse, centred on
-                           the seed location, with the specified
-                           ``searchRadius`` (in voxels). If not provided,
-                           the search will cover the entire image space.
+                           three values - one for each axis. If provided, the
+                           search is limited to a sphere (in the voxel
+                           coordinate system), centred on the seed location,
+                           with the specified ``searchRadius`` (in voxels). If
+                           not provided, the search will cover the entire
+                           image space.
 
         :arg local:        If ``True``, a voxel will only be selected if it
                            is adjacent to an already selected voxel (using

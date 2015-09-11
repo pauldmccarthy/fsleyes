@@ -54,6 +54,7 @@ class OrthoViewProfile(profiles.Profile):
     ================ ========================================================
     """
 
+    
     def __init__(self,
                  viewPanel,
                  overlayList,
