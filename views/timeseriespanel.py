@@ -267,7 +267,7 @@ class FEATTimeSeries(TimeSeries):
 
 
     def __copy__(self):
-        """Copy operator for a ``FEATTimeSeries` instance."""
+        """Copy operator for a ``FEATTimeSeries`` instance."""
         
         copy = type(self)(self.tsPanel, self.overlay, self.coords)
 

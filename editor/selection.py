@@ -74,7 +74,6 @@ class Selection(props.HasProperties):
        getBoundedSelection
        getIndices
        generateBlock
-
     """
     
 

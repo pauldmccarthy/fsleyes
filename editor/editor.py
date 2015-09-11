@@ -29,40 +29,94 @@ class Editor(props.HasProperties):
     :class:`.Image` overlay.
 
     An ``Editor`` instance uses a :class:`.Selection` object which allows
-    voxel selections to be made, and keeps track of all changes to the
-    selection and image.
+    voxel selections to be made, and keeps track of all changes to both the
+    selection and image data.
 
+    
+    **The editing process**
+
+    
+    Making changes to the data in an :class:`.Image` involves two steps:
+
+     1. Create a selection
+
+     2. Change the value of voxels in that selection
+
+    
+    The first step can be peformed by working directly with the
+    :class:`.Selection` object - this is accessible via the
+    :meth:`getSelection` method. The :meth:`fillSelection` method can be used
+    to perform the second step.
+
+    
+    .. note:: An important point to keep in mind is that whenever the
+              :attr:`.DisplayContext.selectedOverlay` property changes, the
+              ``Editor`` will discard the current :class:`.Selection`
+              instance, and create a new one, which matches the resolution of
+              the newly selected overlay (if the new overlay is not an
+              :class:`.Image`, a ``Selection`` object is not created).
+
+              I may change this behaviour in the future, as it is a potential
+              bug source. I will possibly change the structure so that
+              ``Editor`` instances are created/destroyed for individual
+              overlays.
+
+    
+    Some convenience methods are also provided for working with selections:
 
     .. autosummary::
        :nosignatures:
     
-       getSelection
-       fillSelection
        createMaskFromSelection
        createROIFromSelection
 
-    Undo/redo and change groups.
 
-    .. autosummary::
-       :nosignatures:
+    **Change tracking**
 
-       undo
-       redo
-       startChangeGroup
-       endChangeGroup
+
+    An ``Editor`` instance keeps track of all changes made to both the
+    :class:`Selection` object, and to the :class:`Image` data. Every
+    selection/data change made is recorded with the :class:`SelectionChange`
+    and :class:`.ValueChange` classes, and stored in a list. This allows these
+    changes to be undone (and redone), through the :meth:`undo` and
+    :meth:`redo` methods. The ``Editor`` class also has two properties,
+    :attr:`canUndo` and :attr:`canRedo`, which reflect the current state of
+    the ``Editor`` with respect to its ability to undo/redo operations.
+
+    
+    Sometimes it is useful to treat may small changes as a single large
+    change.  For example, if a selection is being updated by dragging the
+    mouse across a canvas, storing a separate change for every change in mouse
+    position would result in many small changes which, if the user then wishes
+    to undo, would have to be undone one by one. This problem can be overcome
+    by the use of *change groups*. Whenever an operation similar to the above
+    begins, you can call the :meth:`startChangeGroup` method - from now on,
+    all changes will be aggregated into one group. When the operation
+    completes, call the :meth:`endChangeGroup` to stop group changes.  When
+    undoing/redoing changes, all of the changes in a change group will be
+    undone/redone together.
     """
 
+    
     canUndo = props.Boolean(default=False)
-    """
+    """This property will be ``True`` when the ``Editor`` has changes which
+    can be undone, and ``False`` otherwise.
     """
 
     
     canRedo = props.Boolean(default=False)
-    """
-    """
+    """This property will be ``True`` when the ``Editor`` has changes which
+    can be redone, and ``False`` otherwise.
+    """    
 
     
     def __init__(self, overlayList, displayCtx):
+        """Create an ``Editor``.
+
+        :arg overlayList: The :class:`.OverlayList` instance.
+
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        """
 
         self.__name           = '{}_{}'.format(self.__class__.__name__,
                                                id(self))
@@ -96,10 +150,15 @@ class Editor(props.HasProperties):
 
 
     def __del__(self):
+        """Prints a log message."""
         log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
 
         
     def destroy(self):
+        """Removes some property listeners, and clears references to objects
+        to prevent memory leaks.
+        """
+        
         self.__displayCtx .removeListener('selectedOverlay', self.__name)
         self.__overlayList.removeListener('overlays',        self.__name)
         
@@ -114,10 +173,16 @@ class Editor(props.HasProperties):
 
 
     def getSelection(self):
+        """Returns the :class:`.Selection` instance currently in use. """
         return self.__selection
 
 
     def fillSelection(self, newVals):
+        """Fills the currnent selection with the specified value or values.
+
+        :arg newVals: A scalar value, or a sequence containing the same
+                      number of values as the current selection size.
+        """
 
         overlay = self.__currentOverlay
 
@@ -158,6 +223,10 @@ class Editor(props.HasProperties):
 
             
     def createMaskFromSelection(self):
+        """Creates a new :class:`.Image` overlay, which represents a mask
+        of the current selection. The new ``Image`` is inserted into the
+        :class:`.OverlayList`.
+        """
 
         overlay = self.__currentOverlay
         if overlay is None:
@@ -173,6 +242,12 @@ class Editor(props.HasProperties):
 
 
     def createROIFromSelection(self):
+        """Creates a new :class:`.Image` overlay, which contains the values
+        from the current ``Image``, where the current selection is non-zero,
+        and zeroes everywhere else.
+        
+        The new ``Image`` is inserted into the :class:`.OverlayList`.
+        """ 
 
         overlay = self.__currentOverlay
         if overlay is None:
@@ -199,6 +274,10 @@ class Editor(props.HasProperties):
 
         
     def startChangeGroup(self):
+        """Starts a change group. All subsequent changes will be grouped
+        together, for :meth:`undo`/:meth:`redo` purposes, until a call to
+        :meth:`endChangeGroup`.
+        """
         del self.__doneList[self.__doneIndex + 1:]
         
         self.__inGroup    = True
@@ -211,12 +290,16 @@ class Editor(props.HasProperties):
 
         
     def endChangeGroup(self):
+        """Ends a change group previously started by a call to
+        :meth:`startChangeGroup`.
+        """
         self.__inGroup = False
         log.debug('Ending change group at {} of {}'.format(
             self.__doneIndex, len(self.__doneList))) 
 
 
     def undo(self):
+        """Un-does the most recent change. """
         if self.__doneIndex == -1:
             return
 
@@ -240,6 +323,7 @@ class Editor(props.HasProperties):
         
 
     def redo(self):
+        """Re-does the most recent undone change. """
         if self.__doneIndex == len(self.__doneList) - 1:
             return
 
@@ -263,7 +347,17 @@ class Editor(props.HasProperties):
 
 
     def __selectedOverlayChanged(self, *a):
+        """Called when the :class:`.OverlayList` or
+        :attr:`.DisplayContext.selectedOverlay` changes.
+
+        Discards the current :class:`Selection` instance, if there is one.
+        If the newly selected overlay is an :class:`.Image` instance, a
+        new ``Selection`` instance is created.
+        """
         overlay = self.__displayCtx.getSelectedOverlay()
+
+        # TODO You should cull any *Change instances that
+        # refer to overlays which no longer exist
 
         if self.__currentOverlay == overlay:
             return
@@ -298,6 +392,10 @@ class Editor(props.HasProperties):
 
 
     def __selectionChanged(self, *a):
+        """Called when the current :attr:`.Selection.selection` changes.
+
+        Saves a record of the change with a :class:`SelectionChange` object.
+        """
 
         old, new, offset = self.__selection.getLastChange()
         
@@ -306,6 +404,12 @@ class Editor(props.HasProperties):
 
         
     def __changeMade(self, change):
+        """Called by the :meth:`fillSelection` and :meth:`__selectionChanged`
+        methods, whenever a data/selection change is made.
+
+        Saves the change, and updates the :attr:`canUndo`/:attr:`canRedo`
+        properties.
+        """
 
         if self.__inGroup:
             self.__doneList[self.__doneIndex].append(change)
@@ -322,6 +426,11 @@ class Editor(props.HasProperties):
 
 
     def __applyChange(self, change):
+        """Called by the :meth:`fillSelection`  and :meth:`redo` methods.
+
+        Applies the given ``change`` (either a :class:`ValueChange` or a
+        :class:`SelectionChange`).
+        """
 
         overlay = change.overlay
         opts    = self.__displayCtx.getOpts(overlay)
@@ -344,6 +453,10 @@ class Editor(props.HasProperties):
 
         
     def __revertChange(self, change):
+        """Called by the :meth:`undo` method. Reverses the change made by the
+        given ``change`` object, (either a :class:`ValueChange` or a
+        :class:`SelectionChange`)
+        """
 
         overlay = change.overlay
         opts    = self.__displayCtx.getOpts(overlay)
