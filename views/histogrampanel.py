@@ -26,11 +26,12 @@ import numpy as np
 
 import props
 
-import fsl.data.image         as fslimage
-import fsl.data.strings       as strings
-import fsl.utils.dialog       as fsldlg
-import fsl.fsleyes.controls   as fslcontrols
-import                           plotpanel
+import fsl.data.image                             as fslimage
+import fsl.data.strings                           as strings
+import fsl.utils.dialog                           as fsldlg
+import fsl.fsleyes.controls.histogramcontrolpanel as histogramcontrolpanel
+import fsl.fsleyes.controls.histogramlistpanel    as histogramlistpanel
+import                                               plotpanel
 
 
 log = logging.getLogger(__name__)
@@ -118,7 +119,9 @@ class HistogramPanel(plotpanel.PlotPanel):
         actionz = {
             'toggleHistogramList'    : self.toggleHistogramList,
             'toggleHistogramControl' : lambda *a: self.togglePanel(
-                fslcontrols.HistogramControlPanel, self, location=wx.TOP) 
+                histogramcontrolpanel.HistogramControlPanel,
+                self,
+                location=wx.TOP) 
         }
 
         plotpanel.PlotPanel.__init__(
@@ -223,7 +226,9 @@ class HistogramPanel(plotpanel.PlotPanel):
         """Shows/hides a :class:`.HistogramListPanel`. See the
         :meth:`.ViewPanel.togglePanel` method.
         """
-        self.togglePanel(fslcontrols.HistogramListPanel, self, location=wx.TOP)
+        self.togglePanel(histogramlistpanel.HistogramListPanel,
+                         self,
+                         location=wx.TOP)
 
 
     def __dataSeriesChanged(self, *a):
@@ -235,7 +240,7 @@ class HistogramPanel(plotpanel.PlotPanel):
                            'maxval',
                            len(self.dataSeries) - 1)
 
-        listPanel = self.getPanel(fslcontrols.HistogramListPanel)
+        listPanel = self.getPanel(histogramlistpanel.HistogramListPanel)
 
         if listPanel is None:
             self.selectedSeries = 0

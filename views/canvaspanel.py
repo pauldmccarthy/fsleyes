@@ -21,13 +21,21 @@ import matplotlib.image as mplimg
 
 import props
 
-import fsl.fsleyes.fsleyes_parseargs as fsleyes_parseargs
-import fsl.utils.dialog              as fsldlg
-import fsl.utils.settings            as fslsettings
-import fsl.data.image                as fslimage
-import fsl.data.strings              as strings
-import fsl.fsleyes.displaycontext    as displayctx
-import fsl.fsleyes.controls          as fslcontrols
+import fsl.fsleyes.fsleyes_parseargs              as fsleyes_parseargs
+import fsl.utils.dialog                           as fsldlg
+import fsl.utils.settings                         as fslsettings
+import fsl.data.image                             as fslimage
+import fsl.data.strings                           as strings
+import fsl.fsleyes.displaycontext                 as displayctx
+import fsl.fsleyes.controls.overlaylistpanel      as overlaylistpanel
+import fsl.fsleyes.controls.overlayinfopanel      as overlayinfopanel
+import fsl.fsleyes.controls.atlaspanel            as atlaspanel
+import fsl.fsleyes.controls.overlaydisplaytoolbar as overlaydisplaytoolbar
+import fsl.fsleyes.controls.locationpanel         as locationpanel
+import fsl.fsleyes.controls.clusterpanel          as clusterpanel
+import fsl.fsleyes.controls.lookuptablepanel      as lookuptablepanel
+import fsl.fsleyes.controls.shellpanel            as shellpanel
+
 import                                  colourbarpanel
 import                                  viewpanel
 
@@ -209,32 +217,32 @@ class CanvasPanel(viewpanel.ViewPanel):
             ('screenshot',              self.screenshot),
             ('showCommandLineArgs',     self.showCommandLineArgs),
             ('toggleOverlayList',       lambda *a: self.togglePanel(
-                fslcontrols.OverlayListPanel,
+                overlaylistpanel.OverlayListPanel,
                 location=wx.BOTTOM)),
             ('toggleOverlayInfo',       lambda *a: self.togglePanel(
-                fslcontrols.OverlayInfoPanel,
+                overlayinfopanel.OverlayInfoPanel,
                 location=wx.RIGHT)), 
             ('toggleAtlasPanel',        lambda *a: self.togglePanel(
-                fslcontrols.AtlasPanel,
+                atlaspanel.AtlasPanel,
                 location=wx.BOTTOM)),
             ('toggleDisplayProperties', lambda *a: self.togglePanel(
-                fslcontrols.OverlayDisplayToolBar,
+                overlaydisplaytoolbar.OverlayDisplayToolBar,
                 viewPanel=self)),
             ('toggleLocationPanel',     lambda *a: self.togglePanel(
-                fslcontrols.LocationPanel,
+                locationpanel.LocationPanel,
                 location=wx.BOTTOM)),
             ('toggleClusterPanel',      lambda *a: self.togglePanel(
-                fslcontrols.ClusterPanel,
+                clusterpanel.ClusterPanel,
                 location=wx.TOP)), 
             ('toggleLookupTablePanel',  lambda *a: self.togglePanel(
-                fslcontrols.LookupTablePanel,
+                lookuptablepanel.LookupTablePanel,
                 location=wx.TOP))]
 
         actionz += extraActions.items()
 
         actionz += [
             ('toggleShell', lambda *a: self.togglePanel(
-                fslcontrols.ShellPanel,
+                shellpanel.ShellPanel,
                 self.getSceneOptions(),
                 location=wx.BOTTOM))]
         

@@ -5,12 +5,12 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""The ``views`` package contains a collection of :class:`FSLEyesPanel`
-sub-classes which provide a view of the overlays in an :class:`.OverlayList`.
+"""The ``views`` package is the home of all *FSLeyes views*, as described in
+the :mod:`~fsl.fsleyes` package documentation.  It contains a collection of
+:class:`FSLEyesPanel` sub-classes which provide a view of the overlays in an
+:class:`.OverlayList`.  The :class:`.ViewPanel` is the base-class for all
+views.
 
-This package is the home of all *FSLeyes views*, as described in the
-:mod:`~fsl.fsleyes` package documentation. The :class:`.ViewPanel` is the
-base-class for all views.
 
 A package-level convenience function, :func:`listViewPanels`, is provided to
 allow dynamic lookup of all :class:`.ViewPanel` sub-classes. The following

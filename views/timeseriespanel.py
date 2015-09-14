@@ -33,14 +33,15 @@ import wx
 
 import numpy as np
 
-import                               props
+import                                                props
 
-import                               plotpanel
-import fsl.data.featimage         as fslfeatimage
-import fsl.data.image             as fslimage
-import fsl.fsleyes.displaycontext as fsldisplay
-import fsl.fsleyes.colourmaps     as fslcmaps
-import fsl.fsleyes.controls       as fslcontrols
+import                                                plotpanel
+import fsl.data.featimage                          as fslfeatimage
+import fsl.data.image                              as fslimage
+import fsl.fsleyes.displaycontext                  as fsldisplay
+import fsl.fsleyes.colourmaps                      as fslcmaps
+import fsl.fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
+import fsl.fsleyes.controls.timeserieslistpanel    as timeserieslistpanel
 
 
 log = logging.getLogger(__name__)
@@ -777,9 +778,13 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
 
         actionz = {
             'toggleTimeSeriesList'    : lambda *a: self.togglePanel(
-                fslcontrols.TimeSeriesListPanel,    self, location=wx.TOP),
+                timeserieslistpanel.TimeSeriesListPanel,
+                self,
+                location=wx.TOP),
             'toggleTimeSeriesControl' : lambda *a: self.togglePanel(
-                fslcontrols.TimeSeriesControlPanel, self, location=wx.TOP) 
+                timeseriescontrolpanel.TimeSeriesControlPanel,
+                self,
+                location=wx.TOP) 
         }
 
         plotpanel.PlotPanel.__init__(
