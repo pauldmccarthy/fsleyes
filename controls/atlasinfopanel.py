@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# atlasinfopanel.py -
+# atlasinfopanel.py - The AtlasInfoPanel class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`AtlasInfoPanel`, which is a sub-panel
+that is used by the :class:`.AtlasPanel`.
+"""
 
 import logging
 
@@ -21,34 +24,42 @@ import fsl.data.constants  as constants
 log = logging.getLogger(__name__)
 
 
-class AtlasListWidget(wx.CheckBox):
-
-    def __init__(self, parent, atlasInfoPanel, atlasID):
-
-        wx.CheckBox.__init__(self, parent)
-
-        self.atlasID        = atlasID
-        self.atlasInfoPanel = atlasInfoPanel
-
-        self.Bind(wx.EVT_CHECKBOX, self.onEnable)
-
-        
-    def onEnable(self, ev):
-
-        if self.GetValue():
-            self.atlasInfoPanel.enableAtlasInfo(self.atlasID)
-        else:
-            self.atlasInfoPanel.disableAtlasInfo(self.atlasID)
-
-
-# Info panel, containing atlas-based regional
-# proportions/labels for the current location
-
-# Atlas list, containing a list of atlases
-# that the user can choose from
 class AtlasInfoPanel(fslpanel.FSLEyesPanel):
+    """The ``AtlasInfoPanel`` displays region information about the current
+    :attr:`.DisplayContext.location` from a set of :mod:`.atlases` chosen
+    by the user.
+    
+    An ``AtlasInfoPanel`` looks something like this:
+    
+    .. image:: images/atlasinfopanel.png
+       :scale: 50%
+       :align: center
+    
+    The ``AtlasInfoPanel`` contains two main sections:
 
+      - A :class:`pwidgets.elistbox.EditableListBox` filled with
+        :class:`AtlasListWidget` controls, one for each available atlas.
+        The user is able to choose which atlases to show information for. 
+
+      - A ``wx.html.HtmlWindow`` which contains information for each
+        selected atlas. The information contains hyperlinks for each atlas,
+        and each region which, when clicked, toggles on/off relevant
+        atlas overlays (see the :meth:`.AtlasPanel.toggleOverlay` method).
+    """
+
+    
     def __init__(self, parent, overlayList, displayCtx, atlasPanel):
+        """Create an ``AtlasInfoPanel``.
+
+        :arg parent:      the :mod:`wx` parent object.
+        
+        :arg overlayList: The :class:`.OverlayList` instance.
+        
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        
+        :arg atlasPanel:  The :class:`.AtlasPanel` instance that has created
+                          this ``AtlasInfoPanel``.
+        """
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__enabledAtlases = {}
@@ -108,7 +119,8 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
         
     def destroy(self):
         """Must be called when this :class:`AtlasInfoPanel` is to be
-        destroyed. De-registers various property listeners.
+        destroyed. De-registers various property listeners and calls
+        :meth:`FSLEyesPanel.destroy`.
         """
 
         self._overlayList.removeListener('overlays',        self._name)
@@ -119,59 +131,25 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
 
 
     def enableAtlasInfo(self, atlasID):
+        """Enables information display for the atlas with the specified ID
+        (see the :mod:`.atlases` module for details on atlas IDs).
+        """
         self.__enabledAtlases[atlasID] = self.__atlasPanel.loadAtlas(atlasID,
                                                                      False)
         self.__locationChanged()
 
         
     def disableAtlasInfo(self, atlasID):
+        """Disables information display for the atlas with the specified ID.
+        """
         self.__enabledAtlases.pop(atlasID)
-        self.__atlasPanel.clearAtlas(atlasID, False)
-        self.__locationChanged()
-
-
-    def __infoPanelLinkClicked(self, ev):
-
-        showType, atlasID, labelIndex = ev.GetLinkInfo().GetHref().split()
-        
-        try:    labelIndex = int(labelIndex)
-        except: labelIndex = None
-
-        # showType is one of 'prob', 'label', or
-        # 'summary'; the summary parameter controls
-        # whether a probabilstic or label image
-        # is loaded
-        summary = showType != 'prob'
-
-        self.__atlasPanel.toggleOverlay(atlasID, labelIndex, summary)
-
-
-    def __selectedOverlayChanged(self, *a):
-        """
-        """
-
-        if len(self._overlayList) == 0:
-            self.__locationChanged()
-            return
-
-        selOverlay = self._displayCtx.getSelectedOverlay()
-
-        for ovl in self._overlayList:
-
-            opts = self._displayCtx.getOpts(ovl)
-
-            if ovl == selOverlay:
-                opts.addListener('bounds',
-                                 self._name,
-                                 self.__locationChanged,
-                                 overwrite=True)
-            else:
-                opts.removeListener('bounds', self._name)
-
         self.__locationChanged()
 
 
     def __locationChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.location` property changes.
+        Updates the information shown in the HTML window.
+        """
         
         text    = self.__infoPanel
         overlay = self._displayCtx.getReferenceImage(
@@ -198,6 +176,18 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
         loc  = opts.transformCoords([loc], 'display', 'world')[0]
 
         lines         = []
+        
+        # Three types of hyperlink:
+        #   - one for complete (summary) label atlases,
+        #   - one for a region label mask image
+        #   - one for a region probability image
+        #
+        # The hrefs are formatted as:
+        #
+        #     imageType atlasID labelIdx
+        #
+        # where "imageType" is one of "summary", "label", or "prob",
+        # and "labelIdx" is "None" for complete/summary atlases.
         titleTemplate = '<b>{}</b> (<a href="summary {} {}">Show/Hide</a>)'
         labelTemplate = '{} (<a href="label {} {}">Show/Hide</a>)'
         probTemplate  = '{:0.1f}% {} (<a href="prob {} {}">Show/Hide</a>)'
@@ -234,3 +224,96 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
         text.SetPage('<br>'.join(lines))
 
         text.Refresh()
+
+
+    def __infoPanelLinkClicked(self, ev):
+        """Called when a hyperlink is clicked in the HTML window. Toggles
+        the respective atlas overlay - see the
+        :meth:`.AtlasPanel.toggleOverlay` method.
+        """
+
+        # Decode the href - see comments
+        # inside __locationChanged method
+        showType, atlasID, labelIndex = ev.GetLinkInfo().GetHref().split()
+        
+        try:    labelIndex = int(labelIndex)
+        except: labelIndex = None
+
+        # showType is one of 'prob', 'label', or
+        # 'summary'; the summary parameter controls
+        # whether a probabilstic or label image
+        # is loaded
+        summary = showType != 'prob'
+
+        self.__atlasPanel.toggleOverlay(atlasID, labelIndex, summary)
+
+
+    def __selectedOverlayChanged(self, *a):
+        """Called when the :class:`.OverlayList` or the
+        :attr:`.DisplayContext.location` changes. Refreshes the displayed
+        atlas information (see :meth:`__locationChanged`), and adds a listener
+        to the :attr:`.DisplayOpts.bounds` property so that, when it changes,
+        the atlas information is refreshed.
+        """
+
+        if len(self._overlayList) == 0:
+            self.__locationChanged()
+            return
+
+        selOverlay = self._displayCtx.getSelectedOverlay()
+
+        for ovl in self._overlayList:
+
+            opts = self._displayCtx.getOpts(ovl)
+
+            if ovl == selOverlay:
+                opts.addListener('bounds',
+                                 self._name,
+                                 self.__locationChanged,
+                                 overwrite=True)
+            else:
+                opts.removeListener('bounds', self._name)
+
+        self.__locationChanged()
+
+
+class AtlasListWidget(wx.CheckBox):
+    """An ``AtlasListWidget`` is a ``wx.CheckBox`` which is used
+    by the :class:`AtlasInfoPanel`. An ``AtlasListWidget`` is shown
+    alongside each atlas in the atlas list.
+
+    Toggling the checkbox will add/remove information for the respective atlas
+    (see :meth:`AtlasInfoPanel.enableAtlasInfo` and
+    :meth:`AtlasInfoPanel.disableAtlasInfo`).
+    """
+
+    
+    def __init__(self, parent, atlasInfoPanel, atlasID):
+        """Create an ``AtlasListWidget``.
+
+        :arg parent:         The :mod:`wx` parent object.
+        
+        :arg atlasInfoPanel: the :class:`AtlasInfoPanel` instance that owns
+                             this ``AtlasListWidget``.
+        
+        :arg atlasID:        The atlas identifier associated with this
+                             ``AtlasListWidget``.
+        """
+
+        wx.CheckBox.__init__(self, parent)
+
+        self.__atlasID        = atlasID
+        self.__atlasInfoPanel = atlasInfoPanel
+
+        self.Bind(wx.EVT_CHECKBOX, self.__onEnable)
+
+        
+    def __onEnable(self, ev):
+        """Called when this ``AtlasListWidget`` is clicked. Toggles
+        information display for the atlas associated with this widget.
+        """
+
+        if self.GetValue():
+            self.__atlasInfoPanel.enableAtlasInfo( self.__atlasID)
+        else:
+            self.__atlasInfoPanel.disableAtlasInfo(self.__atlasID)
