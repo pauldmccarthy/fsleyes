@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# clusterpanel.py -
+# clusterpanel.py - The ClusterPanel class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`ClusterPanel` class, a *FSLeyes control*
+panel for viewing cluster results from a FEAT analysis.
+"""
 
 import                        logging
 import                        wx
@@ -11,7 +14,6 @@ import                        wx
 import pwidgets.widgetgrid as widgetgrid
 
 import fsl.fsleyes.panel   as fslpanel
-import fsl.utils.transform as transform
 import fsl.utils.dialog    as fsldlg
 import fsl.data.strings    as strings
 import fsl.data.featimage  as featimage
@@ -21,8 +23,35 @@ log = logging.getLogger(__name__)
 
 
 class ClusterPanel(fslpanel.FSLEyesPanel):
+    """The ``ClusterPanel`` shows a table of cluster results from the analysis
+    associated with a :class:`.FEATImage` overlay. A ``ClusterPanel`` looks
+    something like the following:
+
+    .. image:: images/clusterpanel.png
+       :scale: 50%
+       :align: center
+
+    The ``ClusterPanel`` contains controls which allow the user to:
+
+      - Select the COPE for which cluster results are displayed
+    
+      - Add a Z statistic overlay for the currently displayed COPE
+    
+      - Add a cluster mask overlay for the currently displayed COPE
+    
+      - Navigate to the Z maximum location, Z centre-of-gravity location,
+        or COPE maximum location, for a specific cluster.
+    """
 
     def __init__(self, parent, overlayList, displayCtx):
+        """Create a ``ClusterPanel``.
+
+        :arg parent:      The :mod:`wx` parent object.
+
+        :arg overlayList: The :class:`.OverlayList` instance.
+
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        """
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__disabledText = wx.StaticText(
@@ -80,9 +109,19 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         self.__selectedOverlayChanged()
 
 
+    def destroy(self):
+        """Must be called when this ``ClusterPanel`` is no longer needed.
+        Removes some property listeners, and calls
+        :meth:`.FSLEyesPanel.destroy`.
+        """
+        self._overlayList.removeListener('overlays',        self._name)
+        self._displayCtx .removeListener('selectedOverlay', self._name)
+        fslpanel.FSLEyesPanel.destroy(self)
+
+
     def __calcMinSize(self):
         """Figures out the minimum size that this ``ClusterPanel`` should
-        have.
+        have. Called by :meth:`__init__`.
 
         When the ``ClusterPanel`` is created, the COPE combo box is not
         populated, so has no minimum size. Here, we figure out a good minimum
@@ -101,22 +140,36 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         
         return self.__sizer.GetMinSize()
 
-
-    def destroy(self):
-        self._overlayList.removeListener('overlays',        self._name)
-        self._displayCtx .removeListener('selectedOverlay', self ._name)
-        fslpanel.FSLEyesPanel.destroy(self)
-
         
     def __disable(self, message):
+        """Disables the ``ClusterPanel``, and displays the given message.
+        Called when the selected overlay  is not a :class:`.FEATImage`, or
+        when cluster results cannot be displayed for some reason.
+        """
 
         self.__disabledText.SetLabel(message)
         self.__sizer.Show(self.__disabledText, True)
         self.__sizer.Show(self.__mainSizer,    False)
         self.Layout()
 
+    
+    def __statSelected(self, ev):
+        """Called when a COPE is selected. Clears the cluster table, and
+        displays clusters for the newly selected COPE (see the
+        :meth:`__displayClusterData` method)
+        """
+        idx  = self.__statSelect.GetSelection()
+        data = self.__statSelect.GetClientData(idx)
+        self.__displayClusterData(data)
+        self.__enableOverlayButtons()
+
 
     def __addZStatsClick(self, ev):
+        """Called when the *Add Z statistics* button is pushed. Retrieves
+        the Z statistic image for the current COPE (see the
+        :meth:`.FEATImage.getZStats` method), and adds it as an overlay
+        to the :class:`.OverlayList`.
+        """
 
         overlay  = self.__selectedOverlay
         contrast = self.__statSelect.GetSelection()
@@ -147,6 +200,11 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
 
     
     def __addClustMaskClick(self, ev):
+        """Called when the *Add cluster mask* button is pushed. Retrieves the
+        cluster mask image for the currewnt contrast (see the
+        :meth:`.FEATImage.getClusterMask` method)
+
+        """
         overlay  = self.__selectedOverlay
         contrast = self.__statSelect.GetSelection()
         mask     = overlay.getClusterMask(contrast)
@@ -161,110 +219,14 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         self._overlayList.append(mask)
         self._displayCtx.getDisplay(mask).overlayType = 'label'
 
-
-    def __overlayListChanged(self, *a):
-        self.__selectedOverlayChanged()
-        self.__enableOverlayButtons()
-
-
-    def __enableOverlayButtons(self):
-        
-        if self.__selectedOverlay is None:
-            return
-
-        overlay  = self.__selectedOverlay
-        contrast = self.__statSelect.GetSelection()
-
-        zstat     = overlay.getZStats(     contrast)
-        clustMask = overlay.getClusterMask(contrast)
-
-        dss = [ovl.dataSource for ovl in self._overlayList]
-
-        self.__addZStats   .Enable(zstat    .dataSource not in dss)
-        self.__addClustMask.Enable(clustMask.dataSource not in dss)
-        
-    
-    def __selectedOverlayChanged(self, *a):
-
-        prevOverlay            = self.__selectedOverlay
-        self.__selectedOverlay = None
-        
-        # No overlays are loaded
-        if len(self._overlayList) == 0:
-            self.__disable(strings.messages[self, 'noOverlays'])
-            return
-
-        overlay = self._displayCtx.getSelectedOverlay()
-        
-        # Not a FEAT image, can't 
-        # do anything with that
-        if not isinstance(overlay, featimage.FEATImage):
-            self.__disable(strings.messages[self, 'notFEAT'])
-            return
-
-        # Selected overlay is either the
-        # same one (maybe the overlay list,
-        # rather than the selected overlay,
-        # changed) or the newly selected
-        # overlay is from the same FEAT
-        # analysis. No need to do anything.
-        if prevOverlay is not None and (prevOverlay is overlay or 
-           prevOverlay.getFEATDir() == overlay.getFEATDir()):
-            self.__selectedOverlay = overlay
-            return
-            
-        self.__statSelect .Clear()
-        self.__clusterList.ClearGrid()
-
-        self.__selectedOverlay = overlay
-
-        self.__sizer.Show(self.__disabledText, False)
-        self.__sizer.Show(self.__mainSizer,    True)
-
-        numCons  = overlay.numContrasts()
-        conNames = overlay.contrastNames()
-
-        try:
-            # clusts is a list of (contrast, clusterList) tuples 
-            clusts = [(c, overlay.clusterResults(c)) for c in range(numCons)]
-            clusts = filter(lambda (con, clust): clust is not None, clusts)
-
-        # Error parsing the cluster data
-        except Exception as e:
-            log.warning('Error parsing cluster data for '
-                        '{}: {}'.format(overlay.name, str(e)), exc_info=True)
-            self.__disable(strings.messages[self, 'badData'])
-            return
-
-        # No cluster results exist
-        # for any contrast
-        if len(clusts) == 0:
-            self.__disable(strings.messages[self, 'noClusters'])
-            return
-
-        for contrast, clusterList in clusts:
-            name = conNames[contrast]
-            name = strings.labels[self, 'clustName'].format(contrast + 1, name)
-
-            self.__statSelect.Append(name, clusterList)
-            
-        self.__overlayName.SetLabel(overlay.getAnalysisName())
-
-        self.__statSelect.SetSelection(0)
-        self.__displayClusterData(clusts[0][1])
-
-        self.Layout()
-        return
-
-    
-    def __statSelected(self, ev):
-        idx  = self.__statSelect.GetSelection()
-        data = self.__statSelect.GetClientData(idx)
-        self.__displayClusterData(data)
-        self.__enableOverlayButtons()
-
         
     def __displayClusterData(self, clusters):
+        """Updates the cluster table so that it is displaying the given list
+        of clusters.
+
+        :arg clusters: A sequence of objects, each representing one cluster.
+                       See the :meth:`.FEATImage.clusterResults` method.
+        """
 
         cols = {'index'         : 0,
                 'nvoxels'       : 1,
@@ -337,3 +299,113 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
 
         dlg.Close()
         dlg.Destroy()
+        
+
+    def __overlayListChanged(self, *a):
+        """Called when the :class:`.OverlayList` changes. Updates the *Add Z
+        statistic* and *Add cluster mask* buttons, in case the user removed
+        them. Also calls :meth:`__selectedOverlayChanged`.
+        """
+        self.__selectedOverlayChanged()
+        self.__enableOverlayButtons()
+
+
+    def __enableOverlayButtons(self):
+        """Enables/disables the *Add Z statistic* and *Add cluster mask*
+        buttons depending on whether the corresponding overlays are in the
+        :class:`.OverlayList`.
+        """
+        
+        if self.__selectedOverlay is None:
+            return
+
+        overlay  = self.__selectedOverlay
+        contrast = self.__statSelect.GetSelection()
+
+        zstat     = overlay.getZStats(     contrast)
+        clustMask = overlay.getClusterMask(contrast)
+
+        dss = [ovl.dataSource for ovl in self._overlayList]
+
+        self.__addZStats   .Enable(zstat    .dataSource not in dss)
+        self.__addClustMask.Enable(clustMask.dataSource not in dss)
+        
+    
+    def __selectedOverlayChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.selectedOverlay` changes,
+        and by the :meth:`__overlayListChanged` method.
+
+        If the newly selected overlay is a :class:`.FEATImage` which has
+        cluster results, they are loaded in, and displayed on the cluster
+        table.
+        """
+
+        prevOverlay            = self.__selectedOverlay
+        self.__selectedOverlay = None
+        
+        # No overlays are loaded
+        if len(self._overlayList) == 0:
+            self.__disable(strings.messages[self, 'noOverlays'])
+            return
+
+        overlay = self._displayCtx.getSelectedOverlay()
+        
+        # Not a FEAT image, can't 
+        # do anything with that
+        if not isinstance(overlay, featimage.FEATImage):
+            self.__disable(strings.messages[self, 'notFEAT'])
+            return
+
+        # Selected overlay is either the
+        # same one (maybe the overlay list,
+        # rather than the selected overlay,
+        # changed) or the newly selected
+        # overlay is from the same FEAT
+        # analysis. No need to do anything.
+        if prevOverlay is not None and (prevOverlay is overlay or 
+           prevOverlay.getFEATDir() == overlay.getFEATDir()):
+            self.__selectedOverlay = overlay
+            return
+            
+        self.__statSelect .Clear()
+        self.__clusterList.ClearGrid()
+
+        self.__selectedOverlay = overlay
+
+        self.__sizer.Show(self.__disabledText, False)
+        self.__sizer.Show(self.__mainSizer,    True)
+
+        numCons  = overlay.numContrasts()
+        conNames = overlay.contrastNames()
+
+        try:
+            # clusts is a list of (contrast, clusterList) tuples 
+            clusts = [(c, overlay.clusterResults(c)) for c in range(numCons)]
+            clusts = filter(lambda (con, clust): clust is not None, clusts)
+
+        # Error parsing the cluster data
+        except Exception as e:
+            log.warning('Error parsing cluster data for '
+                        '{}: {}'.format(overlay.name, str(e)), exc_info=True)
+            self.__disable(strings.messages[self, 'badData'])
+            return
+
+        # No cluster results exist
+        # for any contrast
+        if len(clusts) == 0:
+            self.__disable(strings.messages[self, 'noClusters'])
+            return
+
+        for contrast, clusterList in clusts:
+            name = conNames[contrast]
+            name = strings.labels[self, 'clustName'].format(contrast + 1, name)
+
+            self.__statSelect.Append(name, clusterList)
+            
+        self.__overlayName.SetLabel(overlay.getAnalysisName())
+
+        self.__statSelect.SetSelection(0)
+        self.__displayClusterData(clusts[0][1])
+
+        self.Layout()
+        return
