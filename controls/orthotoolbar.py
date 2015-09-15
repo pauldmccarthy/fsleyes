@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# orthotoolbar.py -
+# orthotoolbar.py - The OrthoToolBar class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`OrthoToolBar` class, which is a
+:class:`.FSLEyesToolBar` for use with the :class:`.OrthoPanel`.
+"""
 
 
 import props
@@ -16,9 +19,40 @@ import fsl.data.strings     as strings
 
 
 class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
+    """The ``OrthoToolBar`` is a :class:`.FSLEyesToolBar` for use with the
+    :class:`.OrthoPanel`. An ``OrthoToolBar`` looks something like this:
+
+    
+    .. image:: images/orthotoolbar.png
+       :scale: 50%
+       :align: center
+
+    
+    The ``OrthoToolBar`` allows the user to control important parts of the
+    :class:`.OrthoPanel` display, and also to display a
+    :class:`.CanvasSettingsPanel`, which allows control over all aspects of
+    an ``OrthoPanel``.
+
+    The ``OrthoToolBar`` contains controls which modify properties, or run
+    actions, defined on the following classes:
+
+    .. autosummary::
+       :nosignatures:
+
+       ~fsl.fsleyes.views.orthopanel.OrthoPanel
+       ~fsl.fsleyes.displaycontext.orthoopts.OrthoOpts
+       ~fsl.fsleyes.profiles.orthoviewprofile.OrthoViewProfile
+    """
 
     
     def __init__(self, parent, overlayList, displayCtx, ortho):
+        """Create an ``OrthoToolBar``.
+
+        :arg parent:      The :mod:`wx` parent object.
+        :arg overlayList: The :class:`.OverlayList` instance.
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg ortho:       The :class:`.OrthoPanel` instance.
+        """ 
 
         actionz = {'more' : self.showMoreSettings}
         
@@ -39,6 +73,11 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
 
 
     def __makeTools(self, *a):
+        """Called by :meth:`__init__`, and whenever the
+        :attr:`.ViewPanel.profile` property changes.
+
+        Re-creates all tools shown on this ``OrthoToolBar``.
+        """
         
         ortho     = self.orthoPanel
         orthoOpts = ortho.getSceneOptions()
@@ -139,6 +178,13 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
 
     
     def showMoreSettings(self, *a):
+        """Opens a :class:`.CanvasSettingsPanel` for the
+        :class:`.OrthoPanel` that owns this ``OrthoToolBar``.
+
+        The ``CanvasSettingsPanel`` is opened as a floating pane - see the
+        :meth:`.ViewPanel.togglePanel` method.
+        """
+        
         import canvassettingspanel
         self.orthoPanel.togglePanel(canvassettingspanel.CanvasSettingsPanel,
                                     self.orthoPanel,

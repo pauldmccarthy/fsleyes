@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# lightboxtoolbar.py -
+# lightboxtoolbar.py - The LightBoxToolBar class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`LightBoxToolBar` class, which is a
+:class:`.FSLEyesToolBar` for use with the :class:`.LightBoxPanel`.
+"""
 
 
 import wx
@@ -18,8 +21,30 @@ import fsl.data.strings     as strings
 
 
 class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
+    """The ``LightBoxToolBar`` is a :class:`.FSLEyesToolBar` for use with the
+    :class:`.LightBoxPanel`. A ``LightBoxToolBar`` looks something like this:
 
+    
+    .. image:: images/lightboxtoolbar.png
+       :scale: 50%
+       :align: center
+
+    
+    The ``LightBoxToolBar`` allows the user to control important parts of the
+    :class:`.LightBoxPanel` display, and also to display a
+    :class:`.CanvasSettingsPanel`, which allows control over all aspects of a
+    ``LightBoxPanel``.
+    """
+
+    
     def __init__(self, parent, overlayList, displayCtx, lb):
+        """Create a ``LightBoxToolBar``.
+
+        :arg parent:      The :mod:`wx` parent object.
+        :arg overlayList: The :class:`.OverlayList` instance.
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg lb:          The :class:`.LightBoxPanel` instance.
+        """
 
         actionz = {'more' : self.showMoreSettings}
         
@@ -123,6 +148,12 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
 
         
     def showMoreSettings(self, *a):
+        """Opens a :class:`.CanvasSettingsPanel` for the
+        :class:`.LightBoxPanel` that owns this ``LightBoxToolBar``.
+
+        The ``CanvasSettingsPanel`` is opened as a floating pane - see the
+        :meth:`.ViewPanel.togglePanel` method.
+        """
         import canvassettingspanel
         self.lightBoxPanel.togglePanel(
             canvassettingspanel.CanvasSettingsPanel,
