@@ -47,6 +47,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
        :scale: 50%
        :align: center
 
+    
     A ``LookupTablePanel`` allows the user to do the following:
     
       - Add/remove labels to/from a :class:`LookupTable`.
@@ -57,6 +58,14 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
       - Create a new ``LookupTable``, or copy an existing one.
 
       - Save/load a ``LookupTable`` to/from a file.
+
+    
+    The ``LookupTablePanel`` keeps track of the currently selected overlay
+    (see the :attr:`.DisplayContext.selectedOverlay` property). If the overlay
+    is associated with a :class:`.LabelOpts` instance, its
+    :attr:`.Labelopts.lut` property will be updated when the
+    :class:`LookupTable` is changed through the ``LookupTablePanel``, and vice
+    versa.
     """ 
     
 
@@ -102,7 +111,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         self.__sizer.Add(self.__controlRow, flag=wx.EXPAND)
         self.__sizer.Add(self.__labelList,  flag=wx.EXPAND, proportion=1)
 
-        # Label the labels and buttons
+        # Label the buttons
         self.__newLutButton .SetLabel(strings.labels[  self, 'newLut'])
         self.__copyLutButton.SetLabel(strings.labels[  self, 'copyLut'])
         self.__loadLutButton.SetLabel(strings.labels[  self, 'loadLut'])
@@ -138,7 +147,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
 
         # If the selected lut was not set
         # via the selectedOverlayChanged
-        # call, we'll manually set it
+        # call, we'll manually set it here
         if self.__selectedLut is None:
             self.__setLut(fslcmaps.getLookupTables()[0])
             
@@ -179,8 +188,9 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
 
         
     def __updateLutChoices(self):
-        """Refreshes the contents of the lookup table drop down box.
-        See the :func:`.colourmaps.getLookupTables` function.
+        """Refreshes the contents of the lookup table drop down box,
+        using the :class:`.LookupTable` instances returned by the
+        :func:`.colourmaps.getLookupTables` function.
         """
 
         log.debug('Updating lookup table choices')        
@@ -202,7 +212,10 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
 
         
     def __createLabelList(self):
-        """Refreshes the contents of the list ``LookupTable` label list."""
+        """Refreshes the contents of the class:`.LookupTable` label list, from
+        the :attr:`.LookupTable.labels` property of the currently selected
+        ``LookupTable``.
+        """
 
         log.debug('Creating lookup table label list')
 
@@ -223,8 +236,8 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         given ``lut`` (assumed to be a :class:`.LookupTable` instance).
  
         If the currently selected overlay is associated with a
-        :class:`.LabelOpts` instance, its :attr:`.LabelOpts.lut` property
-        is set to the new ``LookupTable``.
+        :class:`.LabelOpts` instance, its :attr:`.LabelOpts.lut` property is
+        set to the new ``LookupTable``.
         """
 
         log.debug('Selecting lut: {}'.format(lut))
@@ -261,16 +274,16 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
 
 
     def __lutLabelsChanged(self, *a):
-        """Called when the :attr:`.LookupTable.labels` property of
-        the current :class:`LookupTable` instance changes. Updates
-        the list of labels.
+        """Called when the :attr:`.LookupTable.labels` property of the current
+        :class:`LookupTable` instance changes. Updates the list of displayed
+        labels (see the :meth:`__createLabelList` method).
         """
         self.__createLabelList()
 
 
     def __onLutChoice(self, ev):
         """Called when the user changes the selected :class:`.LookupTable`
-        via the lookup table drop down box. If a .
+        via the lookup table drop down box. See the :meth:`__setLut` method..
         """
 
         selection = self.__lutChoice.GetSelection()
@@ -284,17 +297,21 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
     def __onNewLut(self, ev):
         """Called when the user presses the *New LUT* button. Displays a
         :class:`NewLutDialog`, prompting the user to enter a name, and then
-        creates and registers a new :class:`.LookupTable` instance.
+        creates and registers a new :class:`.LookupTable` instance. Updates
+        this ``LookupTablePanel`` via the :meth:`__updateLutChoices` and
+        :meth:`__setLut` methods.
         """
 
         dlg = NewLutDialog(self.GetTopLevelParent())
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        log.debug('Creating and registering new '
-                  'LookupTable: {}'.format(dlg.name))
+        name = dlg.GetName()
 
-        lut = fslcmaps.LookupTable(dlg.name)
+        log.debug('Creating and registering new '
+                  'LookupTable: {}'.format(name))
+
+        lut = fslcmaps.LookupTable(name)
         fslcmaps.registerLookupTable(lut, self._overlayList, self._displayCtx)
 
         self.__updateLutChoices()
@@ -306,20 +323,22 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         :class:`NewLutDialog`, prompting the user to enter a name, and then
         creates and registers a new :class:`.LookupTable` instance which is
         initialised with the same label as the previously selected
-        ``LookupTable``.
+        ``LookupTable``. Updates this ``LookupTablePanel`` via the
+        :meth:`__updateLutChoices` and :meth:`__setLut` methods.
         """
 
-        name = self.__selectedLut.name
-
-        dlg = NewLutDialog(self.GetTopLevelParent(), name)
+        oldName = self.__selectedLut.name
+        dlg     = NewLutDialog(self.GetTopLevelParent(), oldName)
         
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        log.debug('Creating and registering new '
-                  'LookupTable {} (copied from {})'.format(dlg.name, name))
+        newName = dlg.GetName()
 
-        lut = fslcmaps.LookupTable(dlg.name)
+        log.debug('Creating and registering new '
+                  'LookupTable {} (copied from {})'.format(newName, oldName))
+
+        lut = fslcmaps.LookupTable(newName)
 
         for label in self.__selectedLut.labels:
             lut.set(label.value(),
@@ -335,13 +354,14 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         
     def __onLoadLut(self, ev):
         """Called when the user presses the *Load LUT* button.  Displays a
-        :class:`NewLutDialog`, prompting the user to enter a name, and
-        then a ``wx.FileDialog`, prompting the user to select a file
-        containing lookup table information (See the :mod:`.colourmaps`
-        module for more details on the file format).
-        
-        Then creates and registers a new :class:`.LookupTable` instance,
-        initialising it with the selected file.
+        :class:`NewLutDialog`, prompting the user to enter a name, and then a
+        ``wx.FileDialog`, prompting the user to select a file containing
+        lookup table information.  Then creates and registers a new
+        :class:`.LookupTable` instance, initialising it with the selected
+        file. Updates this ``LookupTablePanel`` via the
+        :meth:`__updateLutChoices` and :meth:`__setLut` methods.
+
+        See the :mod:`.colourmaps` module for more details on the file format.
         """ 
 
         nameDlg = NewLutDialog(self.GetTopLevelParent())
@@ -357,7 +377,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         if fileDlg.ShowModal() != wx.ID_OK:
             return
 
-        name = nameDlg.name
+        name = nameDlg.GetName()
         path = fileDlg.GetPath()
 
         lut = fslcmaps.registerLookupTable(path,
@@ -389,9 +409,9 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
             return
 
         lut    = self.__selectedLut
-        value  = dlg.value
-        name   = dlg.name
-        colour = dlg.colour[:3]
+        value  = dlg.GetValue()
+        name   = dlg.GetName()
+        colour = dlg.GetColour()[:3]
         colour = [c / 255.0 for c in colour]
 
         if lut.get(value) is not None:
@@ -426,7 +446,8 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
 
     def __onLabelEdit(self, ev):
         """Called when the user edits the name of a label in the lookup
-        table label list.
+        table label list. Updates the corresponding lookup table label via
+        the :meth:`.LookupTable.set` method.
         """
 
         lut = self.__selectedLut
@@ -439,8 +460,8 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
     
     def __selectedOverlayChanged(self, *a):
         """Called when the :class:`OverlayList` or
-        :attr:`.DisplayContext.selectedOverlay` changes.
-        Refreshes the ``LookupTablePanel`` accordingly.
+        :attr:`.DisplayContext.selectedOverlay` changes.  Refreshes the
+        ``LookupTablePanel`` accordingly.
         """
 
         newOverlay = self._displayCtx.getSelectedOverlay()
@@ -466,8 +487,8 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
     def __overlayTypeChanged(self, *a):
         """Called when the :attr:`.Display.overlayType` property of the
         currently selected overlay changes. If the :class:`.DisplayOpts`
-        instance associated with the new overlay type is a :class:`.LabelOpts`,
-        a listener is addd to its ``lut`` property.
+        instance associated with the new overlay type is a
+        :class:`.LabelOpts`, a listener is addd to its ``lut`` property.
         """
 
         if self.__selectedOpts is not None:
@@ -492,186 +513,285 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
 
     def __lutChanged(self, *a):
         """Called when the :attr:`.LabelOpts.lut` property associated
-        with the currently selected overlay changes.
+        with the currently selected overlay changes. Changes the
+        :class:~.LookupTable` displayed  on this ``LookupTablePanel`` (see
+        the  :meth:`__setLut` method).
         """
         self.__setLut(self.__selectedOpts.lut)
             
 
 class LabelWidget(wx.Panel):
+    """A ``LabelWidget`` is shown for each label of the :class:`.LookupTable`
+    which is currently displayed on a :class:`LookupTablePanel`. A
+    ``LabelWidget`` allows the user to change the colour and visibility of the
+    label value.
+    """
+
     
     def __init__(self, lutPanel, lut, value):
+        """Create a ``LabelWidget``.
+
+        :arg lutPanel: The :class:`LookupTablePanel` that is displaying this
+                       ``LabelWidget``.
+        
+        :arg lut:      The :class:`.LookupTable` currently being displayed.
+        
+        :arg value:    The label value that this ``LabelWidget`` is associated
+                       with.
+        """
         wx.Panel.__init__(self, lutPanel)
 
-        self.lutPanel = lutPanel
-        self.lut      = lut
-        self.value    = value
+        self.__lutPanel = lutPanel
+        self.__lut      = lut
+        self.__value    = value
 
         # TODO Change the enable box to a toggle
         #      button with an eye icon
         
-        self.valueLabel   = wx.StaticText(self,
-                                          style=wx.ALIGN_CENTRE_VERTICAL |
-                                                wx.ALIGN_RIGHT)
-        self.enableBox    = wx.CheckBox(self)
-        self.colourButton = wx.ColourPickerCtrl(self)
+        self.__valueLabel   = wx.StaticText(self,
+                                            style=wx.ALIGN_CENTRE_VERTICAL |
+                                            wx.ALIGN_RIGHT)
+        self.__enableBox    = wx.CheckBox(self)
+        self.__colourButton = wx.ColourPickerCtrl(self)
 
-        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.SetSizer(self.sizer)
-        self.sizer.Add(self.valueLabel,   flag=wx.ALIGN_CENTRE, proportion=1)
-        self.sizer.Add(self.enableBox,    flag=wx.ALIGN_CENTRE, proportion=1)
-        self.sizer.Add(self.colourButton, flag=wx.ALIGN_CENTRE, proportion=1)
+        self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.SetSizer(self.__sizer)
+        self.__sizer.Add(self.__valueLabel,
+                         flag=wx.ALIGN_CENTRE,
+                         proportion=1)
+        self.__sizer.Add(self.__enableBox,
+                         flag=wx.ALIGN_CENTRE,
+                         proportion=1)
+        self.__sizer.Add(self.__colourButton,
+                         flag=wx.ALIGN_CENTRE,
+                         proportion=1)
 
         label  = lut.get(value)
         colour = [np.floor(c * 255.0) for c in label.colour()]
 
-        self.valueLabel  .SetLabel(str(value))
-        self.colourButton.SetColour(colour)
-        self.enableBox   .SetValue(label.enabled())
+        self.__valueLabel  .SetLabel(str(value))
+        self.__colourButton.SetColour(colour)
+        self.__enableBox   .SetValue(label.enabled())
 
-        self.enableBox   .Bind(wx.EVT_CHECKBOX,             self.__onEnable)
-        self.colourButton.Bind(wx.EVT_COLOURPICKER_CHANGED, self.__onColour)
+        self.__enableBox   .Bind(wx.EVT_CHECKBOX,             self.__onEnable)
+        self.__colourButton.Bind(wx.EVT_COLOURPICKER_CHANGED, self.__onColour)
 
         
     def __onEnable(self, ev):
+        """Called when the user toggles the checkbox controlling label
+        visibility. Updates the label visibility via the
+        :meth:`.LookupTable.set` method.
+        """
 
         # Disable the LutPanel listener, otherwise
         # it will recreate the label list (see
         # LookupTablePanel._createLabelList)
-        self.lut.disableListener('labels', self.lutPanel._name)
-        self.lut.set(self.value, enabled=self.enableBox.GetValue())
-        self.lut.enableListener('labels', self.lutPanel._name)
+        self.__lut.disableListener('labels', self.__lutPanel._name)
+        self.__lut.set(self.__value, enabled=self.__enableBox.GetValue())
+        self.__lut.enableListener('labels', self.__lutPanel._name)
 
         
     def __onColour(self, ev):
+        """Called when the user changes the colour via the colour button.
+        Updates the label colour via the :meth:`.LookupTable.set` method.
+        """ 
 
-        newColour = self.colourButton.GetColour()
+        newColour = self.__colourButton.GetColour()
         newColour = [c / 255.0 for c in newColour]
 
-        self.lut.disableListener('labels', self.lutPanel._name)
-        self.lut.set(self.value, colour=newColour)
-        self.lut.enableListener('labels', self.lutPanel._name)
+        # See comment in __onEnable 
+        self.__lut.disableListener('labels', self.__lutPanel._name)
+        self.__lut.set(self.__value, colour=newColour)
+        self.__lut.enableListener('labels', self.__lutPanel._name)
 
         
 class NewLutDialog(wx.Dialog):
-    """A dialog which is displayed when the user chooses to create a new LUT.
+    """A dialog which is displayed when the user chooses to create a new
+    :class:`.LookupTable`.
 
-    Prompts the user to enter a name.
+    Prompts the user to enter a name for the new ``LookupTable``. The entered
+    name will be accessible via the :meth:`GetName` method after the user
+    dismisses the dialog.
     """
     
     def __init__(self, parent, name=None):
+        """Create a ``NewLutDialog``.
+
+        :arg parent: The :mod:`wx` parent object.
+
+        :arg name:   Initial name to display.
+        """
 
         if name is None:
             name = strings.labels[self, 'newLut']
 
         wx.Dialog.__init__(self, parent, title=strings.titles[self])
 
-        self._message = wx.StaticText(self)
-        self._name    = wx.TextCtrl(  self)
-        self._ok      = wx.Button(    self, id=wx.ID_OK)
-        self._cancel  = wx.Button(    self, id=wx.ID_CANCEL)
+        self.__message = wx.StaticText(self)
+        self.__name    = wx.TextCtrl(  self)
+        self.__ok      = wx.Button(    self, id=wx.ID_OK)
+        self.__cancel  = wx.Button(    self, id=wx.ID_CANCEL)
 
-        self._message.SetLabel(strings.messages[self, 'newLut'])
-        self._ok     .SetLabel(strings.labels[  self, 'ok'])
-        self._cancel .SetLabel(strings.labels[  self, 'cancel'])
-        self._name   .SetValue(name)
+        self.__message.SetLabel(strings.messages[self, 'newLut'])
+        self.__ok     .SetLabel(strings.labels[  self, 'ok'])
+        self.__cancel .SetLabel(strings.labels[  self, 'cancel'])
+        self.__name   .SetValue(name)
 
-        self._sizer    = wx.BoxSizer(wx.VERTICAL)
-        self._btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.__sizer    = wx.BoxSizer(wx.VERTICAL)
+        self.__btnSizer = wx.BoxSizer(wx.HORIZONTAL)
         
-        self.SetSizer(self._sizer)
+        self.SetSizer(self.__sizer)
 
-        self._sizer   .Add(self._message,  flag=wx.EXPAND | wx.ALL, border=10)
-        self._sizer   .Add(self._name,     flag=wx.EXPAND | wx.ALL, border=10)
-        self._sizer   .Add(self._btnSizer, flag=wx.EXPAND)
-        self._btnSizer.Add(self._ok,       flag=wx.EXPAND, proportion=1)
-        self._btnSizer.Add(self._cancel,   flag=wx.EXPAND, proportion=1)
+        self.__sizer.Add(self.__message,  flag=wx.EXPAND | wx.ALL, border=10)
+        self.__sizer.Add(self.__name,     flag=wx.EXPAND | wx.ALL, border=10)
+        self.__sizer.Add(self.__btnSizer, flag=wx.EXPAND)
+        
+        self.__btnSizer.Add(self.__ok,       flag=wx.EXPAND, proportion=1)
+        self.__btnSizer.Add(self.__cancel,   flag=wx.EXPAND, proportion=1)
 
-        self._ok    .Bind(wx.EVT_BUTTON, self.onOk)
-        self._cancel.Bind(wx.EVT_BUTTON, self.onCancel)
+        self.__ok    .Bind(wx.EVT_BUTTON, self.__onOk)
+        self.__cancel.Bind(wx.EVT_BUTTON, self.__onCancel)
 
-        self._ok.SetDefault()
+        self.__ok.SetDefault()
         
         self.Fit()
         self.Layout()
 
         self.CentreOnParent()
 
-        self.name = None
+        self.__enteredName = None
 
 
-    def onOk(self, ev):
-        self.name = self._name.GetValue()
+    def GetName(self):
+        """Returns the name that the user entered. Returns ``None`` if the
+        user dismissed this ``NewLutDialog``, or this method has been called
+        before the dialog is dismissed.
+        """
+        return self.__enteredName
+
+    
+    def __onOk(self, ev):
+        """Called when the user confirms the dialog. Saves the name that the 
+        user entered, and closes the dialog.
+        """
+        self.__enteredName = self._name.GetValue()
         self.EndModal(wx.ID_OK)
 
 
-    def onCancel(self, ev):
+    def __onCancel(self, ev):
+        """Called when the user cancels the dialog. Closes the dialog.
+        """ 
         self.EndModal(wx.ID_CANCEL)
  
 
 class LutLabelDialog(wx.Dialog):
     """A dialog which is displayed when the user adds a new label to the
-    current :class:`.LookupTable`.
+    :class:`.LookupTable` currently displayed in the
+    :class:`LookupTablePanel`.
 
-    Prompts the user to enter a label value, name, and colour.
+    Prompts the user to enter a label value, name, and colour. After the
+    dialog is dismissed, the entered information is available via the
+    following methods:
+
+    .. autosummary::
+       :nosignatures:
+    
+       GetValue    
+       GetName
+       GetColour
     """
 
+    
     def __init__(self, parent):
+        """Create a ``LutLabelDialog``.
+
+        :arg parent: The :mod:`wx` paren object.
+        """
 
         wx.Dialog.__init__(self, parent, title=strings.titles[self])
 
-        self._value  = wx.SpinCtrl(        self)
-        self._name   = wx.TextCtrl(        self)
-        self._colour = wx.ColourPickerCtrl(self)
+        self.__value  = wx.SpinCtrl(        self)
+        self.__name   = wx.TextCtrl(        self)
+        self.__colour = wx.ColourPickerCtrl(self)
 
-        self._valueLabel  = wx.StaticText(self)
-        self._nameLabel   = wx.StaticText(self)
-        self._colourLabel = wx.StaticText(self)
+        self.__valueLabel  = wx.StaticText(self)
+        self.__nameLabel   = wx.StaticText(self)
+        self.__colourLabel = wx.StaticText(self)
 
-        self._ok     = wx.Button(self, id=wx.ID_OK)
-        self._cancel = wx.Button(self, id=wx.ID_CANCEL)
+        self.__ok     = wx.Button(self, id=wx.ID_OK)
+        self.__cancel = wx.Button(self, id=wx.ID_CANCEL)
 
-        self._valueLabel .SetLabel(strings.labels[self, 'value'])
-        self._nameLabel  .SetLabel(strings.labels[self, 'name'])
-        self._colourLabel.SetLabel(strings.labels[self, 'colour'])
-        self._ok         .SetLabel(strings.labels[self, 'ok'])
-        self._cancel     .SetLabel(strings.labels[self, 'cancel'])
-        self._name       .SetValue(strings.labels[self, 'newLabel'])
-        self._value      .SetValue(0)
+        self.__valueLabel .SetLabel(strings.labels[self, 'value'])
+        self.__nameLabel  .SetLabel(strings.labels[self, 'name'])
+        self.__colourLabel.SetLabel(strings.labels[self, 'colour'])
+        self.__ok         .SetLabel(strings.labels[self, 'ok'])
+        self.__cancel     .SetLabel(strings.labels[self, 'cancel'])
+        self.__name       .SetValue(strings.labels[self, 'newLabel'])
+        self.__value      .SetValue(0)
 
-        self._sizer = wx.GridSizer(4, 2)
-        self.SetSizer(self._sizer)
+        self.__sizer = wx.GridSizer(4, 2)
+        self.SetSizer(self.__sizer)
 
-        self._sizer.Add(self._valueLabel,  flag=wx.EXPAND)
-        self._sizer.Add(self._value,       flag=wx.EXPAND)
-        self._sizer.Add(self._nameLabel,   flag=wx.EXPAND)
-        self._sizer.Add(self._name,        flag=wx.EXPAND)
-        self._sizer.Add(self._colourLabel, flag=wx.EXPAND)
-        self._sizer.Add(self._colour,      flag=wx.EXPAND)
-        self._sizer.Add(self._ok,          flag=wx.EXPAND)
-        self._sizer.Add(self._cancel,      flag=wx.EXPAND)
+        self.__sizer.Add(self.__valueLabel,  flag=wx.EXPAND)
+        self.__sizer.Add(self.__value,       flag=wx.EXPAND)
+        self.__sizer.Add(self.__nameLabel,   flag=wx.EXPAND)
+        self.__sizer.Add(self.__name,        flag=wx.EXPAND)
+        self.__sizer.Add(self.__colourLabel, flag=wx.EXPAND)
+        self.__sizer.Add(self.__colour,      flag=wx.EXPAND)
+        self.__sizer.Add(self.__ok,          flag=wx.EXPAND)
+        self.__sizer.Add(self.__cancel,      flag=wx.EXPAND)
 
-        self._ok    .Bind(wx.EVT_BUTTON, self.onOk)
-        self._cancel.Bind(wx.EVT_BUTTON, self.onCancel)
+        self.__ok    .Bind(wx.EVT_BUTTON, self.__onOk)
+        self.__cancel.Bind(wx.EVT_BUTTON, self.__onCancel)
 
-        self._ok.SetDefault()
+        self.__ok.SetDefault()
 
         self.Layout()
         self.Fit()
         
         self.CentreOnParent()
 
-        self.value  = None
-        self.name   = None
-        self.colour = None
+        self.__enteredValue  = None
+        self.__enteredName   = None
+        self.__enteredColour = None
 
+        
+    def GetValue(self):
+        """Returns the value that was entered by the user. Or, returns
+        ``None`` if  the user cancelled the dialog, or the dialog has not
+        yet been closed.
+        """
+        return self.__enteredValue
 
-    def onOk(self, ev):
-        self.value  = self._value .GetValue()
-        self.name   = self._name  .GetValue()
-        self.colour = self._colour.GetColour()
+    
+    def GetName(self):
+        """Returns the name that was entered by the user. Or, returns
+        ``None`` if  the user cancelled the dialog, or the dialog has not
+        yet been closed.
+        """ 
+        return self.__enteredName
+
+    
+    def GetColour(self):
+        """Returns the colour that was entered by the user. Or, returns
+        ``None`` if  the user cancelled the dialog, or the dialog has not
+        yet been closed.
+        """ 
+        return self.__enteredColour  
+
+    
+    def ___onOk(self, ev):
+        """Called when the user confirms the dialog. Saves the name, colour,
+        and value that were entered, and closes the dialog.
+        """
+        self.__enteredValue  = self.__value .GetValue()
+        self.__enteredName   = self.__name  .GetValue()
+        self.__enteredColour = self.__colour.GetColour()
 
         self.EndModal(wx.ID_OK)
 
 
     def onCancel(self, ev):
+        """Called when the user cancells the dialog. Closes the dialog."""
+        
         self.EndModal(wx.ID_CANCEL)
