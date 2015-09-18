@@ -914,6 +914,16 @@ class LookupTable(props.HasProperties):
 
         if lutFile is not None:
             self._load(lutFile)
+
+
+    def __str__(self):
+        """Returns the name of this ``LookupTable``. """
+        return self.name
+
+    
+    def __repr__(self):
+        """Returns the name of this ``LookupTable``. """
+        return self.name 
         
 
     def __len__(self):
