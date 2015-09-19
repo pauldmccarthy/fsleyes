@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 #
-# orthoedittoolbar.py -
+# orthoedittoolbar.py - The OrthoEditToolBar
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`OrthoEditToolBar`, a
+:class:`.FSLEyesToolBar` which displays controls for editing :class:`.Image`
+instances in an :class:`.OrthoPanel`.
+"""
+
 
 import logging
 
@@ -20,7 +25,144 @@ from fsl.fsleyes.profiles.orthoeditprofile import OrthoEditProfile
 
 log = logging.getLogger(__name__)
 
-# Some of the toolbar widgets are labelled 
+
+class OrthoEditToolBar(fsltoolbar.FSLEyesToolBar):
+    """The ``OrthoEditToolBar`` is a :class:`.FSLEyesToolBar` which displays
+    controls for editing :class:`.Image` instances in an :class:`.OrthoPanel`.
+
+    An ``OrthoEditToolBar`` looks something like this:
+
+    
+    .. image:: images/orthoedittoolbar.png
+       :scale: 50%
+       :align: center
+
+    
+    The ``OrthoEditToolBar`` exposes properties and actions which are defined
+    on the :class:`.OrthoEditProfile` class, and allows the user to:
+
+     - Change the :class:`.OrthoPanel` profile  between ``view`` and ``edit``
+       mode (see the :attr:`.ViewPanel.profile` property). When in ``view``
+       mode, all of the other controls are hidden.
+
+     - Undo/redo changes to the selection and to :class:`.Image` instances.
+
+     - Clear and fill the current selection.
+
+     - Switch between a 2D and 3D selection cursor.
+
+     - Change the selection cursor size.
+
+     - Create a new mask/ROI :class:`.Image` from the current selection.
+
+     - Switch between regular *select* mode, and *select by intensity* mode,
+       and adjust the select by intensity mode settings.
+
+    
+    All of the controls shown on an ``OrthoEditToolBar`` instance are defined
+    in the :attr:`_TOOLBAR_SPECS` dictionary.
+    """
+
+    
+    selint = props.Boolean(default=False)
+    """This property allows the user to change the :class:`.OrthoEditProfile`
+    between ``sel`` mode, and ``selint`` mode.
+    """
+
+
+    def __init__(self, parent, overlayList, displayCtx, ortho):
+        """Create an ``OrthoEditToolBar``.
+
+        :arg parent:      The :mod:`wx` parent object.
+        :arg overlayList: The :class:`.OverlayList` instance.
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg ortho:       The :class:`.OrthoPanel` instance.
+        """
+        fsltoolbar.FSLEyesToolBar.__init__(self,
+                                           parent,
+                                           overlayList,
+                                           displayCtx,
+                                           24)
+
+        self.__orthoPanel = ortho
+
+        self .addListener('selint',  self._name, self.__selintChanged)
+        ortho.addListener('profile', self._name, self.__profileChanged)
+
+        self.__profileTool = props.buildGUI(
+            self,
+            ortho,
+            _TOOLBAR_SPECS['profile'])
+
+        self.AddTool(self.__profileTool)
+
+        self.__profileChanged()
+
+
+    def destroy(self):
+        """Must be called when this ``OrthoEditToolBar`` is no longer
+        needed. Removes property listeners, and calls the
+        :meth:`.FSLEyesToolBar.destroy` method.
+        """
+        self.__orthoPanel.removeListener('profile', self._name)
+        fsltoolbar.FSLEyesToolBar.destroy(self)
+
+
+    def __selintChanged(self, *a):
+        """Called when the :attr:`selint` property changes. If the
+        :class:`OrthoPanel` is currently in ``edit`` mode, toggles the
+        associated :class:`.OrthoEditProfile` instance between ``sel``
+        and ``selint`` modes.
+        """
+
+        ortho = self.__orthoPanel
+
+        if ortho.profile != 'edit':
+            return
+        
+        profile = ortho.getCurrentProfile()
+        
+        if self.selint: profile.mode = 'selint'
+        else:           profile.mode = 'sel'
+
+
+    def __profileChanged(self, *a):
+        """Called when the :attr:`.ViewPanel.profile` property of the
+        :class:`.OrthoPanel` changes. Shows/hides edit controls accordingly.
+        """
+
+        # We don't want to remove the profile tool
+        # created in __init__, so we skip the first
+        # tool
+        self.ClearTools(startIdx=1, destroy=True, postevent=False)
+                
+        ortho      = self.__orthoPanel
+        profile    = ortho.profile
+        profileObj = ortho.getCurrentProfile()
+
+        if profile == 'edit':
+            self.disableNotification('selint')
+            self.selint = profileObj.mode == 'selint'
+            self.enableNotification('selint')
+
+        specs = _TOOLBAR_SPECS[profile]
+
+        tools = []
+
+        for spec in specs:
+
+            if spec.key == 'selint': target = self
+            else:                    target = profileObj
+            
+            widget = props.buildGUI(self, target, spec)
+            if spec.label is not None:
+                widget = self.MakeLabelledTool(widget, spec.label)
+                
+            tools.append(widget)
+
+        self.InsertTools(tools, 1)
+
+
 _LABELS = {
 
     'selectionCursorColour'  : strings.properties[OrthoEditProfile,
@@ -36,22 +178,30 @@ _LABELS = {
     'fillValue'              : strings.properties[OrthoEditProfile,
                                                   'fillValue'], 
 }
+"""This dictionary contains labels for some :class:`OrthoEditToolBar`
+controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
+"""
+
 
 _ICONS = {
-    'view'                    : fslicons.findImageFile('eye24'),
-    'edit'                    : fslicons.findImageFile('pencil24'),
+    'view'                    :  fslicons.findImageFile('eye24'),
+    'edit'                    :  fslicons.findImageFile('pencil24'),
     'selectionIs3D'           : [fslicons.findImageFile('selection3D24'),
                                  fslicons.findImageFile('selection2D24')],
-    'clearSelection'          : fslicons.findImageFile('clear24'),
-    'undo'                    : fslicons.findImageFile('undo24'),
-    'redo'                    : fslicons.findImageFile('redo24'),
-    'fillSelection'           : fslicons.findImageFile('fill24'),
-    'createMaskFromSelection' : fslicons.findImageFile('createMask24'),
-    'createROIFromSelection'  : fslicons.findImageFile('createROI24'),
-    'limitToRadius'           : fslicons.findImageFile('radius24'),
-    'localFill'               : fslicons.findImageFile('localsearch24'),
-    'selint'                  : fslicons.findImageFile('selectByIntensity24'),
+    'clearSelection'          :  fslicons.findImageFile('clear24'),
+    'undo'                    :  fslicons.findImageFile('undo24'),
+    'redo'                    :  fslicons.findImageFile('redo24'),
+    'fillSelection'           :  fslicons.findImageFile('fill24'),
+    'createMaskFromSelection' :  fslicons.findImageFile('createMask24'),
+    'createROIFromSelection'  :  fslicons.findImageFile('createROI24'),
+    'limitToRadius'           :  fslicons.findImageFile('radius24'),
+    'localFill'               :  fslicons.findImageFile('localsearch24'),
+    'selint'                  :  fslicons.findImageFile('selectByIntensity24'),
 }
+"""This dictionary contains icons for some :class:`OrthoEditToolBar`
+controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
+"""
+
 
 _TOOLTIPS = {
     'profile'                 : fsltooltips.properties['OrthoPanel.profile'],
@@ -90,6 +240,10 @@ _TOOLTIPS = {
     'intensityThres'          : fsltooltips.properties['OrthoEditProfile.'
                                                        'intensityThres'],
 }
+"""This dictionary contains tooltips for some :class:`OrthoEditToolBar`
+controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
+"""
+
 
 _TOOLBAR_SPECS  = {
 
@@ -177,84 +331,16 @@ _TOOLBAR_SPECS  = {
             enabledWhen=lambda p: p.mode == 'selint' and p.limitToRadius)
     ]
 }
+"""This dictionary contains specifications for all of the tools shown in an
+:class:`OrthoEditToolBar`. The following keys are defined:
 
-
-
-class OrthoEditToolBar(fsltoolbar.FSLEyesToolBar):
-
-    
-    selint = props.Boolean(default=False)
-
-
-    def __init__(self, parent, overlayList, displayCtx, ortho):
-        fsltoolbar.FSLEyesToolBar.__init__(self,
-                                           parent,
-                                           overlayList,
-                                           displayCtx,
-                                           24)
-
-        self.orthoPanel = ortho
-
-        self .addListener('selint',  self._name, self.__selintChanged)
-        ortho.addListener('profile', self._name, self.__profileChanged)
-
-        self.__profileTool = props.buildGUI(
-            self,
-            ortho,
-            _TOOLBAR_SPECS['profile'])
-
-        self.AddTool(self.__profileTool)
-
-        self.__profileChanged()
-
-
-    def destroy(self):
-        self.orthoPanel.removeListener('profile', self._name)
-        fsltoolbar.FSLEyesToolBar.destroy(self)
-
-
-    def __selintChanged(self, *a):
-
-        ortho = self.orthoPanel
-
-        if ortho.profile != 'edit':
-            return
-        
-        profile = ortho.getCurrentProfile()
-        
-        if self.selint: profile.mode = 'selint'
-        else:           profile.mode = 'sel'
-
-
-    def __profileChanged(self, *a):
-
-        # We don't want to remove the profile tool
-        # created in __init__, so we skip the first
-        # tool
-        self.ClearTools(startIdx=1, destroy=True, postevent=False)
-                
-        ortho      = self.orthoPanel
-        profile    = ortho.profile
-        profileObj = ortho.getCurrentProfile()
-
-        if profile == 'edit':
-            self.disableNotification('selint')
-            self.selint = profileObj.mode == 'selint'
-            self.enableNotification('selint')
-
-        specs = _TOOLBAR_SPECS[profile]
-
-        tools = []
-
-        for spec in specs:
-
-            if spec.key == 'selint': target = self
-            else:                    target = profileObj
-            
-            widget = props.buildGUI(self, target, spec)
-            if spec.label is not None:
-                widget = self.MakeLabelledTool(widget, spec.label)
-                
-            tools.append(widget)
-
-        self.InsertTools(tools, 1)
+  =========== ===========================================================
+  ``profile`` Contains a single specification defining the control for
+              switching the :class:`.OrthoPanel` between ``view`` and
+              ``edit`` profiles.
+  ``view``    A list of specifications defining controls to be shown when
+              the ``view`` profile is active.
+  ``edit``    A list of specifications defining controls to be shown when
+              the ``view`` profile is active.
+  =========== ===========================================================
+"""

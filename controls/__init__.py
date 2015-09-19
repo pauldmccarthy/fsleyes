@@ -30,6 +30,7 @@ The following control panels currently exist:
    ~fsl.fsleyes.controls.orthoedittoolbar.OrthoEditToolBar
    ~fsl.fsleyes.controls.orthotoolbar.OrthoToolBar
    ~fsl.fsleyes.controls.overlaydisplaypanel.OverlayDisplayPanel
+   ~fsl.fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar
    ~fsl.fsleyes.controls.overlayinfopanel.OverlayInfoPanel
    ~fsl.fsleyes.controls.overlaylistpanel.OverlayListPanel
    ~fsl.fsleyes.controls.shellpanel.ShellPanel
