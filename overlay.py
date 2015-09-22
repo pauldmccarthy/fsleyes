@@ -40,6 +40,7 @@ Currently (``fslpy`` version |version|) the only overlay types in existence
    :nosignatures:
 
    ~fsl.data.image.Image
+   ~fsl.data.featimage.FEATImage
    ~fsl.data.model.Model
 
 
@@ -53,7 +54,6 @@ A few other utility functions are provided by this module:
    loadOverlays
    interactiveLoadOverlays
    saveOverlay
-
 """
 
 import logging

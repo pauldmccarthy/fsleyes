@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 #
-# shellpanel.py -
+# shellpanel.py - The ShellPanel class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`ShellPanel` class, a *FSLeyes control*
+which contains an interactive Python shell.
+"""
+
 
 import wx
 
@@ -13,8 +17,29 @@ import fsl.fsleyes.panel as fslpanel
 
 
 class ShellPanel(fslpanel.FSLEyesPanel):
+    """A ``ShellPanel`` is a :class:`.FSLEyesPanel` which contains an
+    interactive Python shell.
+
+    A ``ShellPanel`` allows the user to programmatically interact with the
+    :class:`.OverlayList`, and with the :class:`.DisplayContext` and
+    :class:`.SceneOpts` instances associated with the :class:`.CanvasPanel`
+    that owns this ``ShellPanel``.
+    """
 
     def __init__(self, parent, overlayList, displayCtx, sceneOpts):
+        """Create a ``ShellPanel``.
+
+        :arg parent:      The :mod:`wx` parent object, assumed to be the
+                          :class:`.CanvasPanel` that owns this ``ShellPanel``.
+        
+        :arg overlayList: The :class:`.OverlayList`.
+        
+        :arg displayCtx:  The :class:`.DisplayContext` of the
+                          :class:`.CanvasPanel` that owns this ``ShellPanel``.
+        
+        :arg sceneOpts:   The :class:`.SceneOpts` of the
+                          :class:`.CanvasPanel` that owns this ``ShellPanel``.
+        """
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         lcls = {
@@ -30,7 +55,8 @@ class ShellPanel(fslpanel.FSLEyesPanel):
                       'Available variables are:\n'
                       '  - overlayList\n' 
                       '  - displayCtx\n'
-                      '  - sceneOpts\n\n',
+                      '  - sceneOpts\n\n'
+                      '  - viewPanel\n\n', 
             locals=lcls,
             showInterpIntro=False)
 
@@ -62,4 +88,7 @@ class ShellPanel(fslpanel.FSLEyesPanel):
 
 
     def destroy(self):
+        """Must be called when this ``ShellPanel`` is no longer needed.
+        Calls the :meth:`.FSLEyesPanel.destroy` method.
+        """
         fslpanel.FSLEyesPanel.destroy(self)

@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 #
-# timeseriescontrolpanel.py -
+# timeseriescontrolpanel.py - The TimeSeriesControlPanel class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`TimeSeriesControlPanel` a *FSLeyes
+control* which allows the user to configure a :class:`.TimeSeriesPanel`.
+"""
+
 
 import wx
 
@@ -16,8 +20,52 @@ import fsl.data.strings     as strings
 
 
 class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
+    """The ``TimeSeriesControlPanel`` is a :class:`.FSLEyesPanel` which allows
+    the user to configure a :class:`.TimeSeriesPanel`. It contains controls
+    which are linked to the properties of the :class:`.TImeSeriesPanel`,
+    (which include properties defined on the :class:`.PlotPanel` base class),
+    and the :class:`.TimeSeries` class.
 
+    
+    A ``TimeSeriesControlPanel`` looks something like this:
+
+    .. image:: images/timeseriescontrolpanel.png
+       :scale: 50%
+       :align: center
+
+
+    The settings shown on a ``TimeSeriesControlPanel`` are organised into three
+    or four sections:
+
+     - The *Time series plot settings* section has controls which are linked to
+       properties of the :class:`.TimeSeriesPanel` class.
+    
+     - The *General plot settings* section has controls which are linked to
+       properties of the :class:`.PlotPanel` base class.
+    
+     - The *Settings for the current time course* section has controls which
+       are linked to properties of the :class:`.TimeSeries` class. These
+       properties define how the *current* time course is displayed (see the
+       :class:`.TimeSeriesPanel` class documentation).
+    
+     - The *FEAT plot settings* is only shown if the currently selected overlay
+       is a :class:`.FEATImage`. It has controls which are linked to properties
+       of the :class:`.FEATTimeSeries` class.
+    """
+
+    
     def __init__(self, parent, overlayList, displayCtx, tsPanel):
+        """Create a ``TimeSeriesControlPanel``.
+
+        :arg parent:      The :mod:`wx` parent object.
+        
+        :arg overlayList: The :class:`.OverlayList`.
+        
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        
+        :arg tsPanel:     The :class:`.TimeSeriesPanel` associated with this
+                          ``TimeSeriesControlPanel``.
+        """
 
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
@@ -128,6 +176,10 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
 
 
     def destroy(self):
+        """Must be called when this ``TimeSeriesControlPanel`` is no longer
+        needed. Removes some property listeners, and calls the
+        :meth:`.FSLEyesPanel.destroy` method.
+        """
         self._displayCtx .removeListener('selectedOverlay', self._name)
         self._overlayList.removeListener('overlays',        self._name)
 
@@ -139,6 +191,10 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
 
 
     def __showCurrentChanged(self, *a):
+        """Called when the :attr:`.TimeSeriesPanel.showCurrent` property
+        changes. Shows hides the  *Settings for the current time course*
+        section.
+        """
         widgets     = self.__widgets
         tsPanel     = self.__tsPanel
         showCurrent = tsPanel.showCurrent
@@ -185,6 +241,11 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
             
 
     def __selectedOverlayNameChanged(self, *a):
+        """Called when the :attr:`.Display.name` property for the currently
+        selected overlay changes. Only called if the current overlay is a
+        :class:`.FEATImage`. Updates the display name of the *FEAT plot
+        settings* section.
+        """
         display = self._displayCtx.getDisplay(self.__selectedOverlay)
         self.__widgets.RenameGroup(
             'currentFEATSettings',
@@ -193,6 +254,10 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
 
     
     def __selectedOverlayChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.selectedOverlay` or
+        :class:`.OverlayList` changes. If the newly selected overlay is a
+        :class:`.FEATImage`, the *FEAT plot settings* section is updated.
+        """
 
         # We're assuminbg that the TimeSeriesPanel has
         # already updated its current TimeSeries for
