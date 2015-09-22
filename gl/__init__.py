@@ -175,11 +175,15 @@ Other things in the ``gl`` package
 ----------------------------------
 
 
-:mod:`.textures`
-:mod:`.routines`
-:mod:`.resources`
-:mod:`.shaders`
+In addition to the *canvases* and *objects* described above, the ``gl``
+package also contains the following:
 
+.. autosummary::
+
+   ~fsl.fsleyes.gl.textures
+   ~fsl.fsleyes.gl.routines
+   ~fsl.fsleyes.gl.resources
+   ~fsl.fsleyes.gl.shaders
 """
 
 import logging 
@@ -239,7 +243,7 @@ def bootstrap(glVersion=None):
 
 
     After the :func:`boostrap` function has been called, the following
-    package-level attributes will be available:
+    package-level attributes will be available on the ``gl`` package:
 
 
     ====================== ====================================================
@@ -257,6 +261,9 @@ def bootstrap(glVersion=None):
 
     ``glmodel_funcs``      The version-specific module containing functions for
                            rendering :class:`.GLModel` instances.
+    
+    ``gllabel_funcs``      The version-specific module containing functions for
+                           rendering :class:`.GLLabel` instances. 
     ====================== ====================================================
     
 
@@ -383,15 +390,15 @@ def getWXGLContext(parent=None):
     
       - A :class:`wx.glcanvas.GLContext` instance
     
-      - If a context instance has previously been created, the second
-        return value is ``None``. Other a dummy
-        :class:`wx.glcanvas.GLCanvas` instance is returned. This canvas
-        should be destroyed by the caller when it is safe to do so. This
-        seems to primarily be a problem under Linux/GTK - it does not
-        seem to be possible to destroy the dummy canvas immediately after
-        creating the context. So the calling code needs to destroy it
-        at some point in the future (possibly after another, real
-        GLCanvas has been created, and set as the context target).
+      - If a context instance has previously been created, the second return
+        value is ``None``. Otherwise, a dummy :class:`wx.glcanvas.GLCanvas`
+        instance is returned. This canvas should be destroyed by the caller
+        when it is safe to do so. This seems to primarily be a problem under
+        Linux/GTK - it does not seem to be possible to destroy the dummy
+        canvas immediately after creating the context. So the calling code
+        needs to destroy it at some point in the future (possibly after
+        another, real ``GLCanvas`` has been created, and set as the context
+        target).
     """
 
     import sys
@@ -476,15 +483,17 @@ def getOSMesaContext():
 
 
 class OSMesaCanvasTarget(object):
-    """Superclass for canvas objects which support off-screen rendering using
+    """Base class for canvas objects which support off-screen rendering using
     OSMesa.
     """
     
     def __init__(self, width, height):
-        """Creates an off-screen buffer to be used as the render target.
+        """Create an ``OSMesaCanvasTarget``. An off-screen buffer, to be used
+        as the render target, is created.
 
         :arg width:    Width in pixels
         :arg height:   Height in pixels
+
         """
         import OpenGL.arrays as glarrays 
         self.__width  = width
@@ -568,15 +577,24 @@ class OSMesaCanvasTarget(object):
 
 
 class WXGLCanvasTarget(object):
-    """Superclass for :class:`wx.glcanvas.GLCanvas` objects objects.
+    """Base class for :class:`wx.glcanvas.GLCanvas` objects.
 
-    It is assumed that subclasses of this superclass are also subclasses of
-    :class:`wx.glcanvas.GLCanvas`
+    It is assumed that subclasses of this base class are also subclasses of
+    :class:`wx.glcanvas.GLCanvas`. Sub-classes must override the following
+    methods:
+
+    .. autosummary::
+       :nosignatures:
+
+       _initGL
+       _draw
     """
 
 
     def __init__(self):
-        """Binds :attr:`wx.EVT_PAINT` events to the :meth:`_mainDraw` method.
+        """Create a ``WXGLCanasTarget``.
+
+        Binds :attr:`wx.EVT_PAINT` events to the :meth:`_mainDraw` method.
         """
 
         import wx
@@ -586,18 +604,15 @@ class WXGLCanvasTarget(object):
     
 
     def _initGL(self):
-        """Must be implemented by subclasses.
-
-        This method should perform any OpenGL data initialisation required for
-        rendering.
+        """This method should perform any OpenGL data initialisation required
+        for rendering. Must be implemented by subclasses.
         """
         raise NotImplementedError()
 
 
     def _draw(self, *a):
-        """Must be implemented by subclasses.
-
-        This method should implement the OpenGL drawing logic.
+        """This method should implement the OpenGL drawing logic. Must be
+        implemented by subclasses.
         """
         raise NotImplementedError()
  

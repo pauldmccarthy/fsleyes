@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 #
-# globject.py - Mapping between overlay types and OpenGL representations.
+# globject.py - The GLObject class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module defines the :class:`GLObject` class, which is a superclass for
+"""This module provides the :class:`GLObject` class, which is a superclass for
 all 2D representations of objects in OpenGL.
 
-This module also provides the :func:`createGLObject` function, which provides
-mappings between overlay objects and their corresponding OpenGL
-representation.
+This module also provides the :func:`getGLObjectType` and
+:func:`createGLObject` functions, which provide mappings between overlay
+types and their corresponding OpenGL representations.
 """
 
 import logging
@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 
 def getGLObjectType(overlayType):
     """This function returns an appropriate :class:`GLObject` type for the
-    given :attr:`.Display.overlayType`.
+    given :attr:`.Display.overlayType` value.
     """
 
     import glvolume
@@ -63,9 +63,13 @@ def createGLObject(overlay, display):
 
 
 class GLObject(object):
-    """The :class:`GLObject` class is a superclass for all 2D OpenGL
-    objects.
+    """The :class:`GLObject` class is a base class for all 2D OpenGL
+    objects displayed in *FSLeyes*.
 
+    
+    **Instance attributes**
+
+    
     The following attributes will always be available on ``GLObject``
     instances:
 
@@ -78,7 +82,48 @@ class GLObject(object):
                   corresponds to the vertical screen axis.
     
       - ``zax``:  Index of the display coordinate system axis that 
-                  corresponds to the depth screen axis. 
+                  corresponds to the depth screen axis.
+
+
+    **Update listeners**
+    
+
+    Entities which are interested in changes to a ``GLObject`` representation
+    may register as *update listeners*, via the :meth:`addUpdateListener`
+    method. Whenever the state of a ``GLObject`` changes, all update listeners
+    will be called. It is the resposibility of sub-class implementations to
+    call the :meth:`onUpdate` method to facilitate this notification process.
+
+
+    **Sub-class resposibilities***
+
+    
+    Sub-class implementations must do the following:
+    
+     - Call :meth:`__init__`.
+
+     - Call :meth:`onUpdate` whenever its OpenGL representation changes.
+
+     - Override the following methods:
+    
+       .. autosummary::
+          :nosignatures:
+
+          getDisplayBounds
+          getDataResolution
+          destroy
+          preDraw
+          draw
+          postDraw
+
+    Alternately, a sub-class could derive from one of the following classes,
+    instead of deriving directly from the ``GLObject` class:
+
+    .. autosummary::
+       :nosignatures:
+
+       GLSimpleObject
+       GLImageObject
     """
 
     
@@ -130,11 +175,30 @@ class GLObject(object):
 
 
     def getDisplayBounds(self):
+        """This method must calculate and return a bounding box, in the
+        display coordinate system, which contains the entire ``GLObject``.
+        The bounds must be returned as a tuple with the following structure::
+
+            ((xlo, ylo, zlo), (xhi, yhi, zhi))
+        
+        This method must be implemented by sub-classes. 
+        """
+
         raise NotImplementedError('The getDisplayBounds method must be '
                                   'implemented by GLObject subclasses')
 
 
     def getDataResolution(self, xax, yax):
+        """This method must calculate and return a sequence of three values,
+        which defines a suitable pixel resolution, along the display coordinate
+        system ``(x, y, z)`` axes, for rendering this ``GLObject`` to screen.
+
+        This method should be implemented by sub-classes. If not implemented, a
+        default resolution is used.
+
+        :arg xax: Axis to be used as the horizontal screen axis.
+        :arg yax: Axis to be used as the vertical screen axis.
+        """
         return None
 
     
@@ -143,8 +207,9 @@ class GLObject(object):
         :class:`GLObject` changes. It sets :attr:`xax`, :attr:`yax`,
         and :attr:`zax` attributes on this ``GLObject`` instance.
 
-        Subclass implementations should call this method, or should set
-        the ``xax``, ``yax``, and ``zax`` attributes themselves.
+        Sub-classes may override this method, but should still call this
+        implementation, or should set the ``xax``, ``yax``, and ``zax``
+        attributes themselves.
         """
         self.xax = xax
         self.yax = yax
@@ -156,7 +221,7 @@ class GLObject(object):
         needed.
         
         It should perform any necessary cleaning up, such as deleting texture
-        handles.
+        objects.
         """
         raise NotImplementedError()
 
@@ -172,8 +237,8 @@ class GLObject(object):
 
     
     def draw(self, zpos, xform=None):
-        """This method should draw a view of this :class:`GLObject` at the
-        given Z position, which specifies the position along the screen
+        """This method should draw a view of this ``GLObject`` at the
+        given Z location, which specifies the position along the screen
         depth axis.
 
         If the ``xform`` parameter is provided, it should be applied to the
@@ -214,7 +279,8 @@ class GLSimpleObject(GLObject):
     """The ``GLSimpleObject`` class is a convenience superclass for simple
     rendering tasks (probably fixed-function) which require no setup or
     initialisation/management of GL memory or state. All subclasses need to
-    do is implement the :meth:`GLObject.draw` method.
+    do is implement the :meth:`GLObject.draw` method. The :mod:`.annotations`
+    module uses the ``GLSimpleObject`` class.
 
     Subclasses should not assume that any of the other methods will ever
     be called.
@@ -237,11 +303,12 @@ class GLImageObject(GLObject):
         """Create a ``GLImageObject``.
 
         This constructor adds the following attributes to this instance:
-        
-          - ``image``:       A reference to the image.
-          - ``display``:     A reference to the display.
-          - ``displayOpts``: A reference to the image type-specific display
-                             options.
+
+        =============== =======================================================
+        ``image``       A reference to the image.
+        ``display``     A reference to the display.
+        ``displayOpts`` A reference to the image type-specific display options.
+        =============== =======================================================
 
         :arg image:   The :class:`.Image` instance
         
@@ -259,10 +326,14 @@ class GLImageObject(GLObject):
 
         
     def __imageDataChanged(self, *a):
+        """Called when the :attr:`.Image.data` changes. Calls
+        :meth:`GLObject.onUpdate`. 
+        """
         self.onUpdate()
 
         
     def __del__(self):
+        """Prints a log message."""
         log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
         
 
@@ -278,11 +349,17 @@ class GLImageObject(GLObject):
 
 
     def getDisplayBounds(self):
+        """Returns the bounds of the :class:`.Image` (see the
+        :meth:`.DisplayOpts.bounds` property).
+        """
         return (self.displayOpts.bounds.getLo(),
                 self.displayOpts.bounds.getHi())
 
 
     def getDataResolution(self, xax, yax):
+        """Returns a suitable screen resolution for rendering this
+        ``GLImageObject``.
+        """
 
         image   = self.image
         opts    = self.displayOpts
@@ -303,8 +380,9 @@ class GLImageObject(GLObject):
 
         
     def generateVertices(self, zpos, xform):
-        """Generates vertex coordinates for a 2D slice through the given
-        ``zpos``, with the optional ``xform`` applied to the coordinates.
+        """Generates vertex coordinates for a 2D slice of the :class:`.Image`,
+        through the given ``zpos``, with the optional ``xform`` applied to the
+        coordinates.
         
         This method is called by the :mod:`.gl14.glvolume_funcs` and
         :mod:`.gl21.glvolume_funcs` modules.
