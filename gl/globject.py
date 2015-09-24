@@ -237,8 +237,8 @@ class GLObject(object):
 
     
     def draw(self, zpos, xform=None):
-        """This method should draw a view of this ``GLObject`` at the
-        given Z location, which specifies the position along the screen
+        """This method should draw a view of this ``GLObject`` - a 2D slice
+        at the given Z location, which specifies the position along the screen
         depth axis.
 
         If the ``xform`` parameter is provided, it should be applied to the
@@ -287,15 +287,26 @@ class GLSimpleObject(GLObject):
     """
 
     def __init__(self):
+        """Create a ``GLSimpleObject``. """
         GLObject.__init__(self)
 
-    def destroy( self): pass
-    def preDraw( self): pass
-    def postDraw(self): pass
+    def destroy( self):
+        """Overrides :meth:`GLObject.destroy`. Does nothing. """
+        pass
+
+    
+    def preDraw(self):
+        """Overrides :meth:`GLObject.preDraw`. Does nothing. """
+        pass
+
+    
+    def postDraw(self):
+        """Overrides :meth:`GLObject.postDraw`. Does nothing. """
+        pass
 
 
 class GLImageObject(GLObject):
-    """The ``GLImageObject` class is the superclass for all GL representations
+    """The ``GLImageObject` class is the base class for all GL representations
     of :class:`.Image` instances.
     """
     
@@ -305,9 +316,12 @@ class GLImageObject(GLObject):
         This constructor adds the following attributes to this instance:
 
         =============== =======================================================
-        ``image``       A reference to the image.
-        ``display``     A reference to the display.
-        ``displayOpts`` A reference to the image type-specific display options.
+        ``image``       A reference to the :class:`.Image` being displayed.
+        ``display``     A reference to the :class:`.Display` instance
+                        associated with the ``image``.
+        ``displayOpts`` A reference to the :class:`.DisplayOpts` instance,
+                        containing overlay type-specific display options. This
+                        is assumed to be a sub-class of :class:`.ImageOpts`.
         =============== =======================================================
 
         :arg image:   The :class:`.Image` instance
@@ -384,8 +398,10 @@ class GLImageObject(GLObject):
         through the given ``zpos``, with the optional ``xform`` applied to the
         coordinates.
         
-        This method is called by the :mod:`.gl14.glvolume_funcs` and
-        :mod:`.gl21.glvolume_funcs` modules.
+        This is a convenience method for generating vertices which can be used
+        to render a slice through a 3D texture. It is used by the
+        :mod:`.gl14.glvolume_funcs` and :mod:`.gl21.glvolume_funcs` (and other)
+        modules.
 
         A tuple of three values is returned, containing:
         

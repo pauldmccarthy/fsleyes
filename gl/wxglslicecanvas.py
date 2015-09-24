@@ -1,16 +1,11 @@
 #!/usr/bin/env python
 #
-# wxglslicecanvas.py - A SliceCanvas which is rendered using a
-# wx.glcanvas.GLCanvas panel.
+# wxglslicecanvas.py - The WXGLSliceCanvas class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""The :class:`WXGLSliceCanvas` class is both a :class:`.SliceCanvas` and a
-:class:`wx.glcanvas.GLCanvas` panel.
-
-It is the main class used for on-screen orthographic rendering of 3D image
-data (although most of the functionality is provided by the
-:class:`.SliceCanvas` class).
+"""This module provides the :class:`WXGLSliceCanvas` class, which is a
+:class:`.SliceCanvas` for use in a :mod:`wx` application.
 """
 
 
@@ -24,15 +19,18 @@ import fsl.fsleyes.gl as fslgl
 class WXGLSliceCanvas(slicecanvas.SliceCanvas,
                       wxgl.GLCanvas,
                       fslgl.WXGLCanvasTarget):
-    """A :class:`wx.glcanvas.GLCanvas` and a :class:`.SliceCanvas`, for 
-    on-screen interactive 2D slice rendering from a collection of 3D
-    overlays.
+    """The ``WXGLSliceCanvas`` is a :class:`.SliceCanvas`, a
+    :class:`wx.glcanvas.GLCanvas` and a :class:`.WXGLCanvasTarget`. If you
+    want to use a :class:`.SliceCanvas` in your :mod:`wx` application, then
+    you should use a ``WXGLSliceCanvas``.
+
+    .. note:: The ``WXGLSliceCanvas`` assumes the existence of the
+              :meth:`.SliceCanvas._updateDisplayBounds` method.
     """
 
     def __init__(self, parent, overlayList, displayCtx, zax=0):
-        """Configures a few event handlers for cleaning up property
-        listeners when the canvas is destroyed, and for redrawing on
-        paint/resize events.
+        """Create a ``WXGLSliceCanvas``. See :meth:`.SliceCanvas.__init__` for
+        details on the arguments.
         """
 
         wxgl.GLCanvas          .__init__(self, parent)

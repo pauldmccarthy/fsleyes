@@ -1,26 +1,22 @@
 #!/usr/bin/env python
 #
-# osmesalightboxcanvas.py - A LightBoxCanvas which uses OSMesa for off-screen
-# OpenGL rendering.
+# osmesalightboxcanvas.py - The OSMesaLightBoxCanvas.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""Provides the :class:`OSMesaLightBoxCanvas` which supports off-screen
-rendering.
+"""This module provides the :class:`OSMesaLightBoxCanvas`, which is a
+:class:`.LightBoxCanvas` for use with OSMesa (off-screen OpenGL rendering).
 """
-
-import logging
-log = logging.getLogger(__name__)
 
 
 import fsl.fsleyes.gl as fslgl
 import lightboxcanvas
-       
+
 
 class OSMesaLightBoxCanvas(lightboxcanvas.LightBoxCanvas,
                            fslgl.OSMesaCanvasTarget):
-    """A :class:`.LightBoxCanvas` which uses OSMesa for static off-screen Open
-    GL rendering.
+    """The ``OSMesaLightBoxCanvas`` is a :class:`.LightBoxCanvas` which uses
+    OSMesa for static off-screen Open GL rendering.
     """
     
     def __init__(self,
@@ -29,12 +25,14 @@ class OSMesaLightBoxCanvas(lightboxcanvas.LightBoxCanvas,
                  zax=0,
                  width=0,
                  height=0):
-        """See the :class:`.LightBoxCanvas` constructor for details on the other
-        parameters.
-
+        """Create an ``OSMesaLightBoxCanvas``.
+        
         :arg width:    Canvas width in pixels
         
         :arg height:   Canvas height in pixels
+
+        See :meth:`.LightBoxCanvas.__init__` for details on the other
+        arguments.
         """
 
         fslgl.OSMesaCanvasTarget     .__init__(self, width, height)

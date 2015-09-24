@@ -89,7 +89,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
             self.getCanvasPanel(),
             style=wx.SB_VERTICAL)
         
-        self.__lbCanvas  = lightboxcanvas.LightBoxCanvas(
+        self.__lbCanvas  = lightboxcanvas.WXGLLightBoxCanvas(
             self.getCanvasPanel(),
             overlayList,
             displayCtx)

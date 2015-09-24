@@ -696,6 +696,9 @@ class SliceCanvas(props.HasProperties):
         any of the parameters are not provided, the
         :attr:`.DisplayContext.bounds` are used.
 
+        .. note:: This method is used internally, and also by the
+                  :class:`.WXGLSliceCanvas` class.
+
         :arg xmin: Minimum x (horizontal) value to be in the display bounds.
         :arg xmax: Maximum x value to be in the display bounds.
         :arg ymin: Minimum y (vertical) value to be in the display bounds.

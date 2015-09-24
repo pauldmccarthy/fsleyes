@@ -28,11 +28,11 @@ class ColourBarPanel(fslpanel.FSLEyesPanel):
     """
 
     
-    orientation = cbarcanvas.ColourBarCanvas.orientation
+    orientation = cbarcanvas.WXGLColourBarCanvas.orientation
     """Draw the colour bar horizontally or vertically. """
 
     
-    labelSide   = cbarcanvas.ColourBarCanvas.labelSide
+    labelSide   = cbarcanvas.WXGLColourBarCanvas.labelSide
     """Draw colour bar labels on the top/left/right/bottom."""
                   
 
@@ -44,7 +44,7 @@ class ColourBarPanel(fslpanel.FSLEyesPanel):
 
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
-        self._cbPanel = cbarcanvas.ColourBarCanvas(self)
+        self._cbPanel = cbarcanvas.WXGLColourBarCanvas(self)
 
         self._sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.SetSizer(self._sizer)
