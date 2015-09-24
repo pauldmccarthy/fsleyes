@@ -117,7 +117,7 @@ class GLObject(object):
           postDraw
 
     Alternately, a sub-class could derive from one of the following classes,
-    instead of deriving directly from the ``GLObject` class:
+    instead of deriving directly from the ``GLObject`` class:
 
     .. autosummary::
        :nosignatures:
@@ -306,7 +306,7 @@ class GLSimpleObject(GLObject):
 
 
 class GLImageObject(GLObject):
-    """The ``GLImageObject` class is the base class for all GL representations
+    """The ``GLImageObject`` class is the base class for all GL representations
     of :class:`.Image` instances.
     """
     

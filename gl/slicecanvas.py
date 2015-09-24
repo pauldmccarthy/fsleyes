@@ -1,23 +1,13 @@
 #!/usr/bin/env python
 #
-# slicecanvas.py - Provides the SliceCanvas class, which contains the
-# functionality to display a single slice from a collection of 3D overlays.
+# slicecanvas.py - The SliceCanvas class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""Provides the :class:`SliceCanvas` class, which contains the functionality
-to display a single slice from a collection of 3D overlays.
-
-The :class:`SliceCanvas` class is not intended to be instantiated - use one
-of the subclasses:
-
-  - :class:`.OSMesaSliceCanvas` for static off-screen rendering of a scene.
-    
-  - :class:`.WXGLSliceCanvas` for interactive rendering on a
-    :class:`wx.glcanvas.GLCanvas` canvas.
-
-See also the :class:`.LightBoxCanvas` class.
+"""This module provides the :class:`SliceCanvas` class, which contains the
+functionality to display a 2D slice from a collection of 3D overlays.
 """
+
 
 import copy
 import logging
@@ -40,10 +30,122 @@ log = logging.getLogger(__name__)
 
 
 class SliceCanvas(props.HasProperties):
-    """Represens a canvas which may be used to display a single 2D slice from a
-    collection of 3D overlays.
+    """The ``SliceCanvas`` represens a canvas which may be used to display a
+    single 2D slice from a collection of 3D overlays.  See also the
+    :class:`.LightBoxCanvas`, a sub-class of ``SliceCanvas``.
+
+
+    .. note:: The :class:`SliceCanvas` class is not intended to be instantiated
+              directly - use one of these subclasses, depending on your
+              use-case:
+
+               - :class:`.OSMesaSliceCanvas` for static off-screen rendering of
+                 a scene using OSMesa.
+    
+               - :class:`.WXGLSliceCanvas` for interactive rendering on a
+                 :class:`wx.glcanvas.GLCanvas` canvas.
+
+
+    The ``SliceCanvas`` derives from the :class:`.props.HasProperties` class.
+    The settings, and current scene displayed on a ``SliceCanvas`` instance,
+    can be changed through the properties of the ``SliceCanvas``. All of these
+    properties are defined in the :class:`.SliceCanvasOpts` class.
+
+
+    **GL objects**
+
+
+    The ``SliceCanvas`` draws :class:`.GLObject` instances. When created, a
+    ``SliceCanvas`` creates a :class:`.GLObject` instance for every overlay in
+    the :class:`.OverlayList`. When an overlay is added or removed, it
+    creates/destroys ``GLObject`` instances accordingly.  Furthermore,
+    whenever the :class:`.Display.overlayType` for an existing overlay
+    changes, the ``SliceCanvas`` destroys the old ``GLObject`` associated with
+    the overlay, and creates a new one.
+
+
+    The ``SliceCanvas`` also uses an :class:`.Annotations` instance, for
+    drawing simple annotations on top of the overlays.  This ``Annotations``
+    instance can be accessed with the :meth:`getAnnotations` method.
+
+
+    **Performance optimisations**
+
+    
+    The :attr:`renderMode`, :attr:`softwareMode`, and :attr:`resolutionLimit`
+    properties control various ``SliceCanvas`` performance settings, which can
+    be useful when running in a low performance environment (e.g. when only a
+    software based GL driver is available). See also the
+    :attr:`.SceneOpts.performance` setting.
+
+    
+    The :attr:`resolutionLimit` property controls the highest resolution at
+    which :class:`.Image` overlays are displayed on the ``SliceCanvas``. A
+    higher value will result in faster rendering performance. When this
+    property is changed, the :attr:`.ImageOpts.resolution` property for every
+    :class:`.Image` overlay is updated.
+
+
+    The :attr:`softwareMode` property controls the OpenGL shader program that
+    is used to render overlays - several :class:`.GLObject` types have shader
+    programs which are optimised for low-performance environments (at the cost
+    of a reduced feature set). This property is linked to the
+    :attr:`.Display.softwareMode` property.
+
+
+    The :attr:`renderMode` property controls the way in which the
+    ``SliceCanas`` renders :class:`.GLObject` instances. It has three
+    settings:
+
+
+    ============= ============================================================
+    ``onscreen``  ``GLObject`` instances are rendered directly to the canvas.
+    
+    ``offscreen`` ``GLObject`` instances are rendered off-screen to a fixed
+                  size 2D texture (a :class:`.RenderTexture`). This texture
+                  is then rendered to the canvas. One :class:`.RenderTexture`
+                  is used for every overlay  in the :class:`.OverlayList`.
+    
+    ``prerender`` A stack of 2D slices for every ``GLObject`` instance is
+                  pre-generated off-screen, and cached, using a
+                  :class:`.RenderTextureStack`. When the ``SliceCanvas`` needs
+                  to display a particular Z location, it retrieves the
+                  appropriate slice from the stack, and renders it to the
+                  canvas. One :class:`.RenderTextureStack` is used for every
+                  overlay in the :class:`.OverlayList`.
+    ============= ============================================================
+                  
+
+    **Attributes and methods**
+
+    
+    The following attributes are available on a ``SliceCanvas``:
+
+
+    =============== ==========================================
+    ``xax``         Index of the horizontal screen axis
+    ``yax``         Index of the horizontal screen axis
+    ``zax``         Index of the horizontal screen axis
+    ``name``        A unique name for this ``SliceCanvas``
+    ``overlayList`` Reference to the :class:`.OverlayList`.
+    ``displayCtx``  Reference to the :class:`.DisplayContext`.
+    =============== ==========================================
+
+    
+    The following convenience methods are available on a ``SliceCanvas``:
+
+    .. autosummary::
+       :nosignatures:
+    
+       calcPixelDims
+       canvasToWorld
+       panDisplayBy
+       centreDisplayAt
+       panDisplayToShow
+       getAnnotations
     """
 
+    
     pos             = copy.copy(canvasopts.SliceCanvasOpts.pos)
     zoom            = copy.copy(canvasopts.SliceCanvasOpts.zoom)
     displayBounds   = copy.copy(canvasopts.SliceCanvasOpts.displayBounds)
@@ -57,6 +159,120 @@ class SliceCanvas(props.HasProperties):
     softwareMode    = copy.copy(canvasopts.SliceCanvasOpts.softwareMode)
     resolutionLimit = copy.copy(canvasopts.SliceCanvasOpts.resolutionLimit)
     
+        
+    def __init__(self, overlayList, displayCtx, zax=0):
+        """Create a ``SliceCanvas``. 
+
+        :arg overlayList: An :class:`.OverlayList` object containing a
+                          collection of overlays to be displayed.
+        
+        :arg displayCtx:  A :class:`.DisplayContext` object which describes
+                          how the overlays should be displayed.
+        
+        :arg zax:         Display coordinate system axis perpendicular to the
+                          plane to be displayed (the *depth* axis), default 0.
+        """
+
+        props.HasProperties.__init__(self)
+
+        self.overlayList = overlayList
+        self.displayCtx  = displayCtx
+        self.name        = '{}_{}'.format(self.__class__.__name__, id(self))
+
+        # A GLObject instance is created for
+        # every overlay in the overlay list,
+        # and stored in this dictionary
+        self._glObjects = {}
+
+        # If render mode is offscren or prerender, these
+        # dictionaries will contain a RenderTexture or
+        # RenderTextureStack instance for each overlay in
+        # the overlay list
+        self._offscreenTextures = {}
+        self._prerenderTextures = {}
+
+        # The zax property is the image axis which maps to the
+        # 'depth' axis of this canvas. The _zAxisChanged method
+        # also fixes the values of 'xax' and 'yax'.
+        self.zax = zax
+        self.xax = (zax + 1) % 3
+        self.yax = (zax + 2) % 3
+
+        self._annotations = annotations.Annotations(self.xax, self.yax)
+        self._zAxisChanged() 
+
+        # when any of the properties of this
+        # canvas change, we need to redraw
+        self.addListener('zax',           self.name, self._zAxisChanged)
+        self.addListener('pos',           self.name, self._draw)
+        self.addListener('displayBounds', self.name, self._draw)
+        self.addListener('bgColour',      self.name, self._draw)
+        self.addListener('cursorColour',  self.name, self._draw)
+        self.addListener('showCursor',    self.name, self._draw)
+        self.addListener('invertX',       self.name, self._draw)
+        self.addListener('invertY',       self.name, self._draw)
+        self.addListener('zoom',          self.name, self._zoomChanged)
+        self.addListener('renderMode',    self.name, self._renderModeChange)
+        self.addListener('resolutionLimit',
+                         self.name,
+                         self._resolutionLimitChange) 
+        
+        # When the overlay list changes, refresh the
+        # display, and update the display bounds
+        self.overlayList.addListener('overlays',
+                                     self.name,
+                                     self._overlayListChanged)
+        self.displayCtx .addListener('overlayOrder',
+                                     self.name,
+                                     self._refresh) 
+        self.displayCtx .addListener('bounds',
+                                     self.name,
+                                     self._overlayBoundsChanged)
+
+
+    def destroy(self):
+        """This method must be called when this ``SliceCanvas`` is no longer
+        being used.
+
+        It removes listeners from all :class:`.OverlayList`,
+        :class:`.DisplayContext`, and :class:`.Display` instances, and
+        destroys OpenGL representations of all overlays.
+        """
+        self.removeListener('zax',           self.name)
+        self.removeListener('pos',           self.name)
+        self.removeListener('displayBounds', self.name)
+        self.removeListener('showCursor',    self.name)
+        self.removeListener('invertX',       self.name)
+        self.removeListener('invertY',       self.name)
+        self.removeListener('zoom',          self.name)
+        self.removeListener('renderMode',    self.name)
+
+        self.overlayList.removeListener('overlays',     self.name)
+        self.displayCtx .removeListener('bounds',       self.name)
+        self.displayCtx .removeListener('overlayOrder', self.name)
+
+        for overlay in self.overlayList:
+            disp  = self.displayCtx.getDisplay(overlay)
+            globj = self._glObjects[overlay]
+
+            disp.removeListener('overlayType',  self.name)
+            disp.removeListener('enabled',      self.name)
+            disp.unbindProps(   'softwareMode', self)
+
+            globj.destroy()
+
+            rt, rtName = self._prerenderTextures.get(overlay, (None, None))
+            ot         = self._offscreenTextures.get(overlay, None)
+
+            if rt is not None: glresources.delete(rtName)
+            if ot is not None: ot         .destroy()
+
+        self.overlayList        = None
+        self.displayCtx         = None
+        self._glObjects         = None
+        self._prerenderTextures = None
+        self._offscreenTextures = None
+
 
     def calcPixelDims(self):
         """Calculate and return the approximate size (width, height) of one
@@ -187,117 +403,6 @@ class SliceCanvas(props.HasProperties):
         annotate the canvas.
         """
         return self._annotations
-
-        
-    def __init__(self, overlayList, displayCtx, zax=0):
-        """Creates a canvas object. 
-
-        :arg overlayList: An :class:`.OverlayList` object containing a
-                          collection of overlays to be displayed.
-        
-        :arg displayCtx:  A :class:`.DisplayContext` object which describes
-                          how the overlays should be displayed.
-        
-        :arg zax:        Display coordinate system axis perpendicular to the
-                         plane to be displayed (the 'depth' axis), default 0.
-        """
-
-        props.HasProperties.__init__(self)
-
-        self.overlayList = overlayList
-        self.displayCtx  = displayCtx
-        self.name        = '{}_{}'.format(self.__class__.__name__, id(self))
-
-        # A GLObject instance is created for
-        # every overlay in the overlay list,
-        # and stored in this dictionary
-        self._glObjects = {}
-
-        # If render mode is offscren or prerender, these
-        # dictionaries will contain a RenderTexture or
-        # RenderTextureStack instance for each overlay in
-        # the overlay list
-        self._offscreenTextures = {}
-        self._prerenderTextures = {}
-
-        # The zax property is the image axis which maps to the
-        # 'depth' axis of this canvas. The _zAxisChanged method
-        # also fixes the values of 'xax' and 'yax'.
-        self.zax = zax
-        self.xax = (zax + 1) % 3
-        self.yax = (zax + 2) % 3
-
-        self._annotations = annotations.Annotations(self.xax, self.yax)
-        self._zAxisChanged() 
-
-        # when any of the properties of this
-        # canvas change, we need to redraw
-        self.addListener('zax',           self.name, self._zAxisChanged)
-        self.addListener('pos',           self.name, self._draw)
-        self.addListener('displayBounds', self.name, self._draw)
-        self.addListener('bgColour',      self.name, self._draw)
-        self.addListener('cursorColour',  self.name, self._draw)
-        self.addListener('showCursor',    self.name, self._draw)
-        self.addListener('invertX',       self.name, self._draw)
-        self.addListener('invertY',       self.name, self._draw)
-        self.addListener('zoom',          self.name, self._zoomChanged)
-        self.addListener('renderMode',    self.name, self._renderModeChange)
-        self.addListener('resolutionLimit',
-                         self.name,
-                         self._resolutionLimitChange) 
-        
-        # When the overlay list changes, refresh the
-        # display, and update the display bounds
-        self.overlayList.addListener('overlays',
-                                     self.name,
-                                     self._overlayListChanged)
-        self.displayCtx .addListener('overlayOrder',
-                                     self.name,
-                                     self._refresh) 
-        self.displayCtx .addListener('bounds',
-                                     self.name,
-                                     self._overlayBoundsChanged)
-
-
-    def destroy(self):
-        """This method must be called when this ``SliceCanvas`` is no longer
-        being used.
-
-        It removes listeners from all :class:`.OverlayList`,
-        :class:`.DisplayContext`, and :class:`.Display` instances, and
-        destroys OpenGL representations of all overlays.
-        """
-        self.removeListener('zax',           self.name)
-        self.removeListener('pos',           self.name)
-        self.removeListener('displayBounds', self.name)
-        self.removeListener('showCursor',    self.name)
-        self.removeListener('invertX',       self.name)
-        self.removeListener('invertY',       self.name)
-        self.removeListener('zoom',          self.name)
-        self.removeListener('renderMode',    self.name)
-
-        self.overlayList.removeListener('overlays',     self.name)
-        self.displayCtx .removeListener('bounds',       self.name)
-        self.displayCtx .removeListener('overlayOrder', self.name)
-
-        for overlay in self.overlayList:
-            disp  = self.displayCtx.getDisplay(overlay)
-            globj = self._glObjects[overlay]
-
-            disp.removeListener('overlayType',  self.name)
-            disp.removeListener('enabled',      self.name)
-            disp.unbindProps(   'softwareMode', self)
-
-            globj.destroy()
-
-            rt, rtName = self._prerenderTextures.get(overlay, (None, None))
-            ot         = self._offscreenTextures.get(overlay, None)
-
-            if rt is not None: glresources.delete(rtName)
-            if ot is not None: ot         .destroy()
-
-        self.overlayList = None
-        self.displayCxt  = None
             
 
     def _initGL(self):

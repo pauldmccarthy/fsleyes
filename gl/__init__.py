@@ -124,7 +124,7 @@ as:
    ~fsl.fsleyes.gl.glrgbvector.GLRGBVector
    ~fsl.fsleyes.gl.glmodel.GLModel
 
-These objects are created and destroyed automatically by :class:`.SliceCanvas
+These objects are created and destroyed automatically by :class:`.SliceCanvas`
 instances, so application code does not need to worry about them too much.
 
 
@@ -525,7 +525,7 @@ class OSMesaCanvasTarget(object):
 
         
     def _postDraw(self):
-        """Does nothing, see :method:`_refresh`."""
+        """Does nothing, see :meth:`_refresh`."""
         pass
 
 
