@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 
 
 class SliceCanvas(props.HasProperties):
-    """The ``SliceCanvas`` represens a canvas which may be used to display a
+    """The ``SliceCanvas`` represents a canvas which may be used to display a
     single 2D slice from a collection of 3D overlays.  See also the
     :class:`.LightBoxCanvas`, a sub-class of ``SliceCanvas``.
 
@@ -59,7 +59,7 @@ class SliceCanvas(props.HasProperties):
     ``SliceCanvas`` creates a :class:`.GLObject` instance for every overlay in
     the :class:`.OverlayList`. When an overlay is added or removed, it
     creates/destroys ``GLObject`` instances accordingly.  Furthermore,
-    whenever the :class:`.Display.overlayType` for an existing overlay
+    whenever the :attr:`.Display.overlayType` for an existing overlay
     changes, the ``SliceCanvas`` destroys the old ``GLObject`` associated with
     the overlay, and creates a new one.
 
@@ -94,7 +94,7 @@ class SliceCanvas(props.HasProperties):
 
 
     The :attr:`renderMode` property controls the way in which the
-    ``SliceCanas`` renders :class:`.GLObject` instances. It has three
+    ``SliceCanvas`` renders :class:`.GLObject` instances. It has three
     settings:
 
 
@@ -363,8 +363,7 @@ class SliceCanvas(props.HasProperties):
 
 
     def centreDisplayAt(self, xpos, ypos):
-        """Pans the display so the given x/y position is in the centre.
-        """
+        """Pans the display so the given x/y position is in the centre. """
 
         # work out current display centre
         bounds  = self.displayBounds
@@ -406,8 +405,8 @@ class SliceCanvas(props.HasProperties):
             
 
     def _initGL(self):
-        """Call the _overlayListChanged method - it will generate
-        any necessary GL data for each of the overlays
+        """Call the :meth:`_overlayListChanged` method - it will generate
+        any necessary GL data for each of the overlays.
         """
         self._overlayListChanged()
 
@@ -733,14 +732,14 @@ class SliceCanvas(props.HasProperties):
 
 
     def _zoomChanged(self, *a):
-        """Called when the :attr:`.zoom` property changes. Updates the
+        """Called when the :attr:`zoom` property changes. Updates the
         display bounds.
         """
         self._updateDisplayBounds()
         
 
     def _applyZoom(self, xmin, xmax, ymin, ymax):
-        """'Zooms' in to the given rectangle according to the
+        """*Zooms* in to the given rectangle according to the
         current value of the zoom property, keeping the view
         centre consistent with respect to the current value
         of the :attr:`displayBounds` property. Returns a
@@ -801,9 +800,11 @@ class SliceCanvas(props.HasProperties):
         any of the parameters are not provided, the
         :attr:`.DisplayContext.bounds` are used.
 
+        
         .. note:: This method is used internally, and also by the
                   :class:`.WXGLSliceCanvas` class.
 
+        
         :arg xmin: Minimum x (horizontal) value to be in the display bounds.
         :arg xmax: Maximum x value to be in the display bounds.
         :arg ymin: Minimum y (vertical) value to be in the display bounds.
@@ -872,10 +873,12 @@ class SliceCanvas(props.HasProperties):
                      size=None):
         """Sets up the GL canvas size, viewport, and projection.
 
+        
         If any of the min/max parameters are not provided, they are
         taken from the :attr:`displayBounds` (x/y), and the 
         :attr:`DisplayContext.bounds` (z).
 
+        
         :arg xmin: Minimum x (horizontal) location
         :arg xmax: Maximum x location
         :arg ymin: Minimum y (vertical) location
