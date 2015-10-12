@@ -4,21 +4,54 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""Convenience for managing vertex and fragment shader source code.
+"""This module defines convenience functions for managing vertex and fragment
+shader source code.
 
-The :mod:`shaders` module provides convenience functions for accessing the
-vertex and fragment shader source files used to render different types of GL
-objects.
+
+The rendering code for some :class:`.GLObject` types use vertex and fragment
+shader programs. These programs can be accessed and compiled with the 
+following functions:
+
+
+.. autosummary::
+   :nosignatures:
+
+   getVertexShader
+   getFragmentShader
+   compilePrograms
+   compileShaders
+
+
+Some functions are also provided for use with OpenGL 1.4, which make setting
+program variables a bit less painful:
+
+
+.. autosummary::
+   :nosignatures:
+
+   setVertexProgramVector
+   setVertexProgramMatrix
+   setFragmentProgramVector
+   setFragmentProgramMatrix
+
+
+**Shader program file locations**
+
 
 All shader programs and associated files are assumed to be located in one of
 the OpenGL version specific packages, i.e. :mod:`.gl14`
-(ARB_vertex_program/ARB_fragment_program shaders) or :mod:`.gl21` (GLSL
-shaders).
+(``ARB_vertex_program``/``ARB_fragment_program`` shaders) or :mod:`.gl21`
+(GLSL shaders).
+
+
+**Preprocessing**
+
 
 When a shader file is loaded, a simple preprocessor is applied to the source -
 any lines of the form '#pragma include filename', will be replaced with the
 contents of the specified file.
 """
+
 
 import logging
 
@@ -29,60 +62,6 @@ import fsl.utils.typedict as td
 
 
 log = logging.getLogger(__name__)
-
-
-_shaderTypePrefixMap = td.TypeDict({
-    
-    ('GLVolume',     'vert', False) : 'glvolume',
-    ('GLVolume',     'vert', True)  : 'glvolume_sw',
-    ('GLVolume',     'frag', False) : 'glvolume',
-    ('GLVolume',     'frag', True)  : 'glvolume_sw',
-
-    ('GLLabel',      'vert', False) : 'glvolume',
-    ('GLLabel',      'vert', True)  : 'glvolume_sw', 
-    ('GLLabel',      'frag', False) : 'gllabel',
-    ('GLLabel',      'frag', True)  : 'gllabel_sw', 
-    
-    ('GLRGBVector',  'vert', False) : 'glvolume',
-    ('GLRGBVector',  'vert', True)  : 'glvolume_sw',
-    
-    ('GLRGBVector',  'frag', False) : 'glvector',
-    ('GLRGBVector',  'frag', True)  : 'glvector_sw',
-
-    ('GLLineVector', 'vert', False) : 'gllinevector',
-    ('GLLineVector', 'vert', True)  : 'gllinevector_sw',
-    
-    ('GLLineVector', 'frag', False) : 'glvector',
-    ('GLLineVector', 'frag', True)  : 'glvector_sw',
-
-    ('GLModel',      'vert', False) : 'glmodel',
-    ('GLModel',      'vert', True)  : 'glmodel',
-    ('GLModel',      'frag', False) : 'glmodel',
-    ('GLModel',      'frag', True)  : 'glmodel',
-})
-"""This dictionary provides a mapping between :class:`.GLObject` types,
-and file name prefixes, identifying the shader programs to use.
-"""
-
-
-def getShaderPrefix(globj, shaderType, sw):
-    """Returns the prefix identifying the vertex/fragment shader programs to use
-    for the given :class:`.GLObject` instance. If ``globj`` is a string, it is
-    returned unchanged.
-    """
-    
-    if isinstance(globj, str):
-        return globj
-    
-    return _shaderTypePrefixMap[globj, shaderType, sw]
-
-
-def setShaderPrefix(globj, shaderType, sw, prefix):
-    """Updates the prefix identifying the vertex/fragment shader programs to use
-    for the given :class:`.GLObject` type or instance.
-    """
-    
-    _shaderTypePrefixMap[globj, shaderType, sw] = prefix
 
 
 def setVertexProgramVector(index, vector):
@@ -134,8 +113,8 @@ def setFragmentProgramMatrix(index, matrix):
 
 def compilePrograms(vertexProgramSrc, fragmentProgramSrc):
     """Compiles the given vertex and fragment programs (written according
-    to the ARB_vertex_program and ARB_fragment_program extensions), and
-    returns references to the compiled programs.
+    to the ``ARB_vertex_program`` and ``ARB_fragment_program`` extensions),
+    and returns references to the compiled programs.
     """
     
     import OpenGL.GL                      as gl
@@ -193,10 +172,10 @@ def compileShaders(vertShaderSrc, fragShaderSrc):
     programs, and returns a reference to the resulting program. Raises
     an error if compilation/linking fails.
 
-    I'm explicitly not using the PyOpenGL
-    :func:`OpenGL.GL.shaders.compileProgram` function, because it attempts
-    to validate the program after compilation, which fails due to texture
-    data not being bound at the time of validation.
+    .. note:: I'm explicitly not using the PyOpenGL
+              :func:`OpenGL.GL.shaders.compileProgram` function, because it
+              attempts to validate the program after compilation, which fails
+              due to texture data not being bound at the time of validation.
     """
     import OpenGL.GL as gl
     
@@ -246,6 +225,61 @@ def getFragmentShader(globj, sw=False):
     return _getShader(globj, 'frag', sw)
 
 
+
+_shaderTypePrefixMap = td.TypeDict({
+    
+    ('GLVolume',     'vert', False) : 'glvolume',
+    ('GLVolume',     'vert', True)  : 'glvolume_sw',
+    ('GLVolume',     'frag', False) : 'glvolume',
+    ('GLVolume',     'frag', True)  : 'glvolume_sw',
+
+    ('GLLabel',      'vert', False) : 'glvolume',
+    ('GLLabel',      'vert', True)  : 'glvolume_sw', 
+    ('GLLabel',      'frag', False) : 'gllabel',
+    ('GLLabel',      'frag', True)  : 'gllabel_sw', 
+    
+    ('GLRGBVector',  'vert', False) : 'glvolume',
+    ('GLRGBVector',  'vert', True)  : 'glvolume_sw',
+    
+    ('GLRGBVector',  'frag', False) : 'glvector',
+    ('GLRGBVector',  'frag', True)  : 'glvector_sw',
+
+    ('GLLineVector', 'vert', False) : 'gllinevector',
+    ('GLLineVector', 'vert', True)  : 'gllinevector_sw',
+    
+    ('GLLineVector', 'frag', False) : 'glvector',
+    ('GLLineVector', 'frag', True)  : 'glvector_sw',
+
+    ('GLModel',      'vert', False) : 'glmodel',
+    ('GLModel',      'vert', True)  : 'glmodel',
+    ('GLModel',      'frag', False) : 'glmodel',
+    ('GLModel',      'frag', True)  : 'glmodel',
+})
+"""This dictionary provides a mapping between :class:`.GLObject` types,
+and file name prefixes, identifying the shader programs to use.
+"""
+
+
+def _getShaderPrefix(globj, shaderType, sw):
+    """Returns the prefix identifying the vertex/fragment shader programs to use
+    for the given :class:`.GLObject` instance. If ``globj`` is a string, it is
+    returned unchanged.
+    """
+    
+    if isinstance(globj, str):
+        return globj
+    
+    return _shaderTypePrefixMap[globj, shaderType, sw]
+
+
+def _setShaderPrefix(globj, shaderType, sw, prefix):
+    """Updates the prefix identifying the vertex/fragment shader programs to use
+    for the given :class:`.GLObject` type or instance.
+    """
+    
+    _shaderTypePrefixMap[globj, shaderType, sw] = prefix
+
+
 def _getShader(globj, shaderType, sw):
     """Returns the shader source for the given GL object and the given
     shader type ('vert' or 'frag').
@@ -271,7 +305,7 @@ def _getFileName(globj, shaderType, sw):
     if shaderType not in ('vert', 'frag'):
         raise RuntimeError('Invalid shader type: {}'.format(shaderType))
 
-    prefix = getShaderPrefix(globj, shaderType, sw)
+    prefix = _getShaderPrefix(globj, shaderType, sw)
 
     return op.join(op.dirname(__file__), subdir, '{}_{}.{}'.format(
         prefix, shaderType, suffix))
