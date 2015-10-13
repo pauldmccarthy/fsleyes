@@ -145,14 +145,16 @@ class ColourMapTexture(texture.Texture):
     def set(self, **kwargs):
         """Set any parameters on this ``ColourMapTexture``. Valid keyword
         arguments are:
-        
-          - ``cmap``
-          - ``invert``
-          - ``interp``
-          - ``alpha``
-          - ``resolution``
-          - ``displayRange``
-          - ``border``
+
+        ================ ============================
+        ``cmap``         See :meth:`setColourMap`.
+        ``invert``       See :meth:`setInvert`.
+        ``interp``       See :meth:`setInterp`.
+        ``alpha``        See :meth:`setAlpha`.
+        ``resolution``   See :meth:`setResolution`.
+        ``displayRange`` See :meth:`setDisplayRange`.
+        ``border``       See :meth:`setBorder`.
+        ================ ============================
         """
 
         # None is a valid value for any attributes,
