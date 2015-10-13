@@ -1,19 +1,11 @@
 #!/usr/bin/env python
 #
-# glmask.py - OpenGL rendering of a binary mask image.
+# glmask.py - The GLMask class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module defines the :class:`GLMask` class, which provides functionality
-for OpenGL rendering of a 3D volume as a binary mask.
-
-When created, a :class:`GLMask` instance assumes that the provided
-:class:`.Image` instance has an ``overlayType`` of ``mask``, and that its
-associated :class:`.Display` instance contains a :class:`.MaskOpts` instance,
-containing mask-specific display properties.
-
-The :class:`GLMask` class uses the functionality of the :class:`.GLVolume`
-class through inheritance.
+"""This module provides the :class:`GLMask` class, which implements
+functionality for rendering an :class:`.Image` overlay as a binary mask.
 """
 
 import logging
@@ -29,12 +21,17 @@ log = logging.getLogger(__name__)
 
 
 class GLMask(glvolume.GLVolume):
-    """The :class:`GLMask` class encapsulates logic to render 2D slices of a
+    """The ``GLMask`` class encapsulates logic to render 2D slices of a
     :class:`.Image` instance as a binary mask in OpenGL.
 
-    ``GLMask`` is a subclass of the :class:`.GLVolume class. It overrides a
-    few key methods of ``GLVolume``, but most of the logic is provided by
-    ``GLVolume``.
+    When created, a ``GLMask`` instance assumes that the provided
+    :class:`.Image` instance has a :attr:`.Display.overlayType` of ``mask``,
+    and that its associated :class:`.Display` instance contains a
+    :class:`.MaskOpts` instance, containing mask-specific display properties.
+
+    The ``GLMask`` class derives from the :class:`.GLVolume` class.  It
+    overrides a few key methods of ``GLVolume``, but most of the logic is
+    provided by ``GLVolume``.
     """
 
 

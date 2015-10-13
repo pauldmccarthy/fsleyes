@@ -1,18 +1,19 @@
 !!ARBvp1.0
 #
-# Vertex program for rendering GLVolume instances.
+# Vertex program for rendering GLVolume instances. 
+#
+# Performs a standard transformation of the vertex coordinates, and
+# passes the corresponding voxel and texture coordinates through to the
+# fragment program.
 #
 # Inputs:
-#    state.matrix.mvp
-#    vertex.position
-#    vertex.texcoord[0]
-#    program.local[0] - image shape
+#    vertex.texcoord[0] - Texture coordinates
+#    program.local[0]   - image shape
 #
 #
 # Outputs:
-#    result.position
-#    result.texcoord[0]
-#    result.texcoord[1]
+#    result.texcoord[0] - Texture coordinates
+#    result.texcoord[1] - Voxel coordinates
 #
 
 PARAM imageShape = program.local[0];

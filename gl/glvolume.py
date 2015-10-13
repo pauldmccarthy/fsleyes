@@ -1,57 +1,16 @@
 #!/usr/bin/env python
 #
-# glvolume.py - OpenGL vertex/texture creation for 2D slice rendering of a 3D
-#               image.
+# glvolume.py - The GLVolume class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""Defines the :class:`GLVolume` class, which creates and encapsulates the
-data and logic required to render 2D slice of a 3D image. The
-:class:`GLVolume` class provides the interface defined in the
-:class:`.GLObject` class.
-
-A :class:`GLVolume` instance may be used to render an :class:`.Image` instance
-which has an ``overlayType`` of ``volume``. It is assumed that this ``Image``
-instance is associated with a :class:`.Display` instance which, in turn,
-contains a :class:`.VolumeOpts` instance, containing display options specific
-to volume rendering.
-
-The :class:`GLVolume` class makes use of the functions defined in the
-:mod:`.gl14.glvolume_funcs` or the :mod:`.gl21.glvolume_funcs` modules, which
-provide OpenGL version specific details for creation/storage of vertex data,
-and for rendering.
-
-These version dependent modules must provide the following functions:
-
-  - ``init(GLVolume)``: Perform any necessary initialisation.
-
-  - ``destroy(GLVolume)``: Perform any necessary clean up.
-
-  - ``compileShaders(GLVolume)``: (Re-)Compile the shader programs.
-
-  - ``updateShaderState(GLVolume)``: Updates the shader program states
-    when display parameters are changed.
-
-  - ``preDraw(GLVolume)``: Initialise the GL state, ready for drawing.
-
-  - ``draw(GLVolume, zpos, xform=None)``: Draw a slice of the image at the
-    given Z position. If xform is not None, it must be applied as a 
-    transformation on the vertex coordinates.
-
-  - ``drawAll(Glvolume, zposes, xforms)`` - Draws slices at each of the
-    specified ``zposes``, applying the corresponding ``xforms`` to each.
-
-  - ``postDraw(GLVolume)``: Clear the GL state after drawing.
-
-Images are rendered in essentially the same way, regardless of which OpenGL
-version-specific module is used.  The image data itself is stored on the GPU
-as a 3D texture, and the current colour map as a 1D texture. A slice through
-the texture is rendered using six vertices, located at the respective corners
-of the image bounds.
+"""This module provides the :class:`GLVolume` class, which creates and
+encapsulates the data and logic required to render 2D slice of an
+:class:`.Image` instance.
 """
 
+
 import logging
-log = logging.getLogger(__name__)
 
 import OpenGL.GL      as gl
 
@@ -61,16 +20,90 @@ import                   globject
 import resources      as glresources
 
 
-class GLVolume(globject.GLImageObject):
-    """The :class:`GLVolume` class encapsulates the data and logic required to
-    render 2D slices of a 3D image.
-    """
- 
-    def __init__(self, image, display):
-        """Creates a GLVolume object bound to the given image, and associated
-        image display.
+log = logging.getLogger(__name__)
 
-        Initialises the OpenGL data required to render the given image.
+
+class GLVolume(globject.GLImageObject):
+    """The ``GLVolume`` class is a :class:`.GLImageObject` which encapsulates
+    the data and logic required to render 2D slices of an :class:`.Image`
+    overlay.
+
+    
+    A ``GLVolume`` instance may be used to render an :class:`.Image` instance
+    which has a :attr:`.Display.overlayType` equal to ``volume``. It is
+    assumed that this ``Image`` instance is associated with a
+    :class:`.Display` instance which, in turn, contains a :class:`.VolumeOpts`
+    instance, containing display options specific to volume rendering.
+
+
+    **Version dependent modules**
+
+    
+    The ``GLVolume`` class makes use of the functions defined in the
+    :mod:`.gl14.glvolume_funcs` or the :mod:`.gl21.glvolume_funcs` modules,
+    which provide OpenGL version specific details for creation/storage of
+    vertex data, and for rendering.
+
+
+    These version dependent modules must provide the following functions:
+
+    ===================================== =====================================
+    ``init(GLVolume)``                    Perform any necessary initialisation.
+
+    ``destroy(GLVolume)``                 Perform any necessary clean up.
+
+    ``compileShaders(GLVolume)``          (Re-)Compile the shader programs.
+
+    ``updateShaderState(GLVolume)``       Updates the shader program states
+                                          when display parameters are changed.
+
+    ``preDraw(GLVolume)``                 Initialise the GL state, ready for
+                                          drawing.
+
+    ``draw(GLVolume, zpos, xform=None)``  Draw a slice of the image at the
+                                          given ``zpos``. If ``xform`` is not
+                                          ``None``, it must be applied as a
+                                          transformation on the vertex
+                                          coordinates.
+ 
+    ``drawAll(Glvolume, zposes, xforms)`` Draws slices at each of the
+                                          specified ``zposes``, applying the
+                                          corresponding ``xforms`` to each.
+
+    ``postDraw(GLVolume)``                Clear the GL state after drawing.
+    ===================================== =====================================
+
+
+    **Rendering**
+
+    
+    Images are rendered in essentially the same way, regardless of which
+    OpenGL version-specific module is used.  The image data itself is stored
+    as an :class:`.ImageTexture`. This ``ImageTexture`` is managed by the
+    :mod:`.resources` module, so may be shared by many ``GLVolume`` instances.
+    The current colour map (defined by the :class:`.VolumeOpts.cmap` property)
+    is stored as a :class:`.ColourMapTexture`.  A slice through the texture is
+    rendered using six vertices, located at the respective corners of the
+    image bounds. 
+
+
+    **Attributes**
+
+
+    The following attributes are available on a ``GLVolume`` instance:
+
+    ================= =======================================================
+    ``imageTexture``  The :class:`.ImageTexture` which stores the image data.
+    ``colourTexture`` The :class:`.ColourMapTexture` used to store the
+                      colour map.
+    ``texName``       A name used for the ``imageTexture`` and
+                      ``colourTexture``.
+    ================= =======================================================
+    """
+
+    
+    def __init__(self, image, display):
+        """Create a ``GLVolume`` object.
 
         :arg image:   An :class:`.Image` object.
         
@@ -87,8 +120,8 @@ class GLVolume(globject.GLImageObject):
         # Create an image texture and a colour map texture
         self.texName = '{}_{}'.format(type(self).__name__, id(self.image))
 
-        self.imageTexture  = None
         self.colourTexture = textures.ColourMapTexture(self.texName)
+        self.imageTexture  = None
  
         self.refreshImageTexture()
         self.refreshColourTexture()
@@ -97,9 +130,10 @@ class GLVolume(globject.GLImageObject):
 
 
     def destroy(self):
-        """This should be called when this :class:`GLVolume` object is no
+        """This must be called when this :class:`GLVolume` object is no
         longer needed. It performs any needed clean up of OpenGL data (e.g.
-        deleting texture handles).
+        deleting texture handles), calls :meth:`removeDisplayListeners`,
+        and calls :meth:`.GLImageObject.destroy`.
         """
 
         glresources.delete(self.imageTexture.getTextureName())
@@ -115,66 +149,8 @@ class GLVolume(globject.GLImageObject):
         globject.GLImageObject.destroy(self)
 
         
-    def testUnsynced(self):
-        """Used by the :meth:`refreshImageTexture` method.
-        
-        Returns ``True`` if certain critical :class:`VolumeOpts` properties
-        have been unsynced from the parent instance, meaning that this
-        :class:`GLVolume` instance needs to create its own image texture;
-        returns ``False`` otherwise.
-        """
-        return (self.displayOpts.getParent() is None                or
-                not self.displayOpts.isSyncedToParent('volume')     or
-                not self.displayOpts.isSyncedToParent('resolution') or
-                not self.displayOpts.isSyncedToParent('interpolation'))
-        
-
-    def refreshImageTexture(self):
-
-        opts     = self.displayOpts
-        texName  = self.texName
-        unsynced = self.testUnsynced()
-
-        if unsynced:
-            texName = '{}_unsync_{}'.format(texName, id(opts))
-
-        if self.imageTexture is not None:
-            glresources.delete(self.imageTexture.getTextureName())
-
-        if opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                            interp = gl.GL_LINEAR
-
-        # The image texture may be used elsewhere,
-        # so we'll use the resource management
-        # module rather than creating one directly
-        self.imageTexture = glresources.get(
-            texName, 
-            textures.ImageTexture,
-            texName,
-            self.image,
-            interp=interp) 
-
-    
-    def refreshColourTexture(self):
-        """Configures the colour texture used to colour image voxels."""
-
-        display = self.display
-        opts    = self.displayOpts
-
-        alpha  = display.alpha / 100.0
-        cmap   = opts.cmap
-        invert = opts.invert
-        dmin   = opts.displayRange[0]
-        dmax   = opts.displayRange[1]
-
-        self.colourTexture.set(cmap=cmap,
-                               invert=invert,
-                               alpha=alpha,
-                               displayRange=(dmin, dmax))
-
-        
     def addDisplayListeners(self):
-        """Called by :meth:`init`.
+        """Called by :meth:`__init__`.
 
         Adds a bunch of listeners to the :class:`.Display` object, and the
         associated :class:`.VolumeOpts` instance, which define how the image
@@ -267,9 +243,71 @@ class GLVolume(globject.GLImageObject):
             opts.removeSyncChangeListener('interpolation', lName)
 
         
+    def testUnsynced(self):
+        """Used by the :meth:`refreshImageTexture` method.
+        
+        Returns ``True`` if certain critical :class:`VolumeOpts` properties
+        have been unsynced from the parent instance, meaning that this
+        ``GLVolume`` instance needs to create its own image texture;
+        returns ``False`` otherwise.
+        """
+        return (self.displayOpts.getParent() is None                or
+                not self.displayOpts.isSyncedToParent('volume')     or
+                not self.displayOpts.isSyncedToParent('resolution') or
+                not self.displayOpts.isSyncedToParent('interpolation'))
+        
+
+    def refreshImageTexture(self):
+        """Refreshes the :class:`.ImageTexture` used to store the
+        :class:`.Image` data. This is performed through the :mod:`.resources`
+        module, so the image texture can be shared between multiple
+        ``GLVolume`` instances.
+        """
+
+        opts     = self.displayOpts
+        texName  = self.texName
+        unsynced = self.testUnsynced()
+
+        if unsynced:
+            texName = '{}_unsync_{}'.format(texName, id(opts))
+
+        if self.imageTexture is not None:
+            glresources.delete(self.imageTexture.getTextureName())
+
+        if opts.interpolation == 'none': interp = gl.GL_NEAREST
+        else:                            interp = gl.GL_LINEAR
+
+        self.imageTexture = glresources.get(
+            texName, 
+            textures.ImageTexture,
+            texName,
+            self.image,
+            interp=interp) 
+
+    
+    def refreshColourTexture(self):
+        """Refreshes the :class:`.ColourMapTexture` used to colour image
+        voxels.
+        """
+
+        display = self.display
+        opts    = self.displayOpts
+        alpha   = display.alpha / 100.0
+        cmap    = opts.cmap
+        invert  = opts.invert
+        dmin    = opts.displayRange[0]
+        dmax    = opts.displayRange[1]
+
+        self.colourTexture.set(cmap=cmap,
+                               invert=invert,
+                               alpha=alpha,
+                               displayRange=(dmin, dmax))
+
+        
     def preDraw(self):
-        """Sets up the GL state to draw a slice from this :class:`GLVolume`
-        instance.
+        """Binds the :class:`.ImageTexture` to ``GL_TEXTURE0`` and the
+        :class:`.ColourMapTexture` to ``GL_TEXTURE1, and calls the
+        version-dependent ``preDraw`` function.
         """
         
         # Set up the image and colour textures
@@ -280,30 +318,32 @@ class GLVolume(globject.GLImageObject):
 
         
     def draw(self, zpos, xform=None):
-        """Draws a 2D slice of the image at the given real world Z location.
-        This is performed via a call to the OpenGL version-dependent `draw`
-        function, contained in one of the :mod:`.gl14` or :mod:`.gl21`
-        packages.
+        """Draws a 2D slice of the image at the given Z location in the
+        display coordinate system.
+        
+     .  This is performed via a call to the OpenGL version-dependent ``draw``
+        function, contained in one of the :mod:`.gl14.glvolume_funcs` or
+        :mod:`.gl21.glvolume_funcs` modules.
 
-        If `xform` is not None, it is applied as an affine transformation to
-        the vertex coordinates of the rendered image data.
+        If ``xform`` is not ``None``, it is applied as an affine
+        transformation to the vertex coordinates of the rendered image data.
 
-        Note: Calls to this method must be preceded by a call to
-        :meth:`preDraw`, and followed by a call to :meth:`postDraw`.
+        .. note:: Calls to this method must be preceded by a call to
+                  :meth:`preDraw`, and followed by a call to :meth:`postDraw`.
         """
         
         fslgl.glvolume_funcs.draw(self, zpos, xform)
 
         
     def drawAll(self, zposes, xforms):
-        """Calls the module-specific ``drawAll`` function. """
+        """Calls the version dependent ``drawAll`` function. """
         
         fslgl.glvolume_funcs.drawAll(self, zposes, xforms)
 
         
     def postDraw(self):
-        """Clears the GL state after drawing from this :class:`GLVolume`
-        instance.
+        """Unbinds the ``ImageTexture`` and ``ColourMapTexture``, and calls the
+        version-dependent ``postDraw`` function.
         """
 
         self.imageTexture .unbindTexture()

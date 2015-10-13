@@ -38,7 +38,6 @@
 #                          the range). Clipping values are assumed to be
 #                          normalised to the image texture value range.
 #
-#
 # Outputs:
 #
 #   result.color         - The fragment colour

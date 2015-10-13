@@ -1,5 +1,5 @@
 /*
- * OpenGL fragment shader used by fsl/fslview/gl/gl21/glvolume_funcs.py.
+ * OpenGL fragment shader used for rendering GLVolume instances.
  *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
@@ -57,9 +57,8 @@ uniform bool invertClip;
  */
 varying vec3 fragVoxCoord;
 
-
 /*
- * Corresponding texture coordinates.
+ * Corresponding image texture coordinates.
  */
 varying vec3 fragTexCoord;
 

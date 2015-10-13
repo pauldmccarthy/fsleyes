@@ -6,7 +6,7 @@
 #   voxCoord   - 3D voxel coordinates
 #   imageShape - Shape of the image
 #
-# Author: Paul McCarthy<pauldmccarthy@gmail.com>
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
 TEMP workspace;

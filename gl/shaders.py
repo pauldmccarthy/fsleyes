@@ -50,6 +50,15 @@ the OpenGL version specific packages, i.e. :mod:`.gl14`
 When a shader file is loaded, a simple preprocessor is applied to the source -
 any lines of the form '#pragma include filename', will be replaced with the
 contents of the specified file.
+
+
+**Resources**
+
+
+ - http://oss.sgi.com/projects/ogl-sample/registry/ARB/vertex_program.txt
+ - http://oss.sgi.com/projects/ogl-sample/registry/ARB/fragment_program.txt
+ - http://www.renderguild.com/gpuguide.pdf
+ - https://www.opengl.org/registry/doc/GLSLangSpec.Full.1.20.8.pdf
 """
 
 
