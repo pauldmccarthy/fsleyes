@@ -1,6 +1,28 @@
 !!ARBfp1.0
 #
 # Fragment program used for rendering GLLabel instances.
+# This is to be used with the glvolume_vert.prog vertex shader.
+#
+# Inputs:
+#   fragment.texcoord[0] - Fragment texture coordinates
+#   fragment.texcoord[1] - Fragment voxel coordinates
+#
+#   program.local[0]
+#   program.local[1]
+#   program.local[2]
+#   program.local[3]     - Matrix which transforms image texture
+#                          data into the original data range
+#   program.local[4]     - Image shape
+#   program.local[5]     - 1.0 / (number of labels in the lookup table)
+#   program.local[6]     - If the x component is non-zero, show region
+#                          outlines. The yzw components specify the
+#                          border/outline widths along each axis.
+#
+# Outputs:
+#   result.color         - Fragment colour.
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
 
 TEMP  voxCoord;
 TEMP  lutCoord;

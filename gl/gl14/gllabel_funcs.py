@@ -1,9 +1,17 @@
 #!/usr/bin/env python
 #
-# gllabel_funcs.py -
+# gllabel_funcs.py - OpenGL 1.4 functions used by the GLLabel class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides functions which are used by the :class:`.GLLabel`
+class to render :class:`.Image` overlays in an OpenGL 1.4 compatible manner.
+
+Rendering of a ``GLLabel`` is very similar to that of a ``GLVolume`` - the
+``preDraw``, ``draw``, ``drawAll`` and ``postDraw`` functions defined in the
+:mod:`.gl14.glvolume_funcs` are re-used by this module.
+"""
+
 
 import numpy                          as np
 
@@ -16,7 +24,28 @@ import fsl.fsleyes.gl.shaders as shaders
 
 import glvolume_funcs
 
+
+def init(self):
+    """Calls the :func:`compileShaders` and :func:`updateShaderState`
+    functions.
+    """
+    self.vertexProgram   = None
+    self.fragmentProgram = None
+    
+    compileShaders(   self)
+    updateShaderState(self) 
+
+
+def destroy(self):
+    """Deletes handles to the vertex/fragment shader programs. """
+    arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
+    arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram)) 
+
+
 def compileShaders(self):
+    """Compiles the vertex and fragment shader programs used to render
+    :class:`.GLLabel` instances.
+    """
     if self.vertexProgram is not None:
         arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
         
@@ -35,20 +64,9 @@ def compileShaders(self):
     self.fragmentProgram = fragmentProgram 
 
 
-def init(self):
-    self.vertexProgram   = None
-    self.fragmentProgram = None
-    
-    compileShaders(   self)
-    updateShaderState(self) 
-
-
-def destroy(self):
-    arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
-    arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram)) 
-
-
 def updateShaderState(self):
+    """Updates all shader program variables. """
+    
     opts = self.displayOpts
 
     # enable the vertex and fragment programs

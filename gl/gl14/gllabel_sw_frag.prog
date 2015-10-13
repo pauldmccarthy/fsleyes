@@ -1,20 +1,30 @@
 !!ARBfp1.0
 #
-# Fragment program used for rendering GLLabel instances.
+# Restricted fragment program used for rendering GLLabel instances.
+# This is to be used with the glvolume_sw_vert.prog vertex shader.
+#
+# This version does not perform image bounds checking, and does not
+# provide outline/border functionality.
+#
+# Inputs:
+#   fragment.texcoord[0] - Fragment texture coordinates
+#
+#   program.local[0]
+#   program.local[1]
+#   program.local[2]
+#   program.local[3]     - Matrix which transforms image texture
+#                          data into the original data range
+#   program.local[5]     - 1.0 / (number of labels in the lookup table)
+#
+# Outputs:
+#   result.color         - Fragment colour.
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
 
 TEMP  lutCoord;
 TEMP  invNumLabels;
 TEMP  voxValue;
-
-MOV   invNumLabels, program.local[5];
-
-# This matrix scales the voxel value to
-# lie in a range which is appropriate to
-# the current display range 
-PARAM voxValXform[4] = { program.local[0],
-                         program.local[1],
-                         program.local[2],
-                         program.local[3] };
 
 # look up image voxel value
 # from 3D image texture
@@ -23,12 +33,12 @@ TEX voxValue, fragment.texcoord[0], texture[0], 3D;
 # Scale the texture value
 # to its original voxel value
 MOV lutCoord, voxValue;
-MAD lutCoord, lutCoord, voxValXform[0].x, voxValXform[3].x;
+MAD lutCoord, lutCoord, program.local[0].x, program.local[3].x;
 
 # Scale the voxel value to
 # a lut texture coordinate
 ADD lutCoord, lutCoord, { 0.5, 0, 0, 0 };
-MUL lutCoord, lutCoord, invNumLabels;
+MUL lutCoord, lutCoord, program.local[5];
 
 # look up the appropriate colour
 # in the 1D colour map texture

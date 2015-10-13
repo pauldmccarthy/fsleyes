@@ -1,9 +1,17 @@
 #!/usr/bin/env python
 #
-# gllabel_funcs.py -
+# gllabel_funcs.py - OpenGL 2.1 functions used by the GLLabel class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides functions which are used by the :class:`.GLLabel`
+class to render :class:`.Image` overlays in an OpenGL 2.1 compatible manner.
+
+Rendering of a ``GLLabel`` is very similar to that of a ``GLVolume`` - the
+``preDraw``, ``draw``, ``drawAll`` and ``postDraw`` functions defined in the
+:mod:`.gl21.glvolume_funcs` are re-used by this module.
+"""
+
 
 import numpy                  as np
 import OpenGL.GL              as gl
@@ -12,7 +20,30 @@ import OpenGL.raw.GL._types   as gltypes
 import fsl.fsleyes.gl.shaders as shaders
 import                           glvolume_funcs
 
+
+def init(self):
+    """Calls the :func:`compileShaders` and :func:`updateShaderState`
+    functions, and creates a GL buffer for storing vertex attributes.
+    """    
+    self.shaders = None
+
+    compileShaders(   self)
+    updateShaderState(self)
+
+    self.vertexAttrBuffer = gl.glGenBuffers(1)
+    
+
+def destroy(self):
+    """Destroys the shader programs, and the vertex buffer. """
+    gl.glDeleteBuffers(1, gltypes.GLuint(self.vertexAttrBuffer))
+    gl.glDeleteProgram(self.shaders) 
+
+
 def compileShaders(self):
+    """Compiles vertex/fragment shader programs used to render
+    :class:`.GLLabel` instances, and stores the positions of all
+    shader variables as attributes on the :class:`.GLLabel` instance.
+    """
 
     if self.shaders is not None:
         gl.glDeleteProgram(self.shaders)
@@ -47,21 +78,8 @@ def compileShaders(self):
                                                      'outlineOffsets')
 
 
-def init(self):
-    self.shaders = None
-
-    compileShaders(   self)
-    updateShaderState(self)
-
-    self.vertexAttrBuffer = gl.glGenBuffers(1)
-    
-
-def destroy(self):
-    gl.glDeleteBuffers(1, gltypes.GLuint(self.vertexAttrBuffer))
-    gl.glDeleteProgram(self.shaders) 
-
-
 def updateShaderState(self):
+    """Updates all shader program variables. """
 
     opts = self.displayOpts
 

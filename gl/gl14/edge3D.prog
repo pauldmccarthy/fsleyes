@@ -1,17 +1,29 @@
+#
+# Fragment program routine which implements a simple edge detection algorithm
+# on texture unit 0. This only works for single-channel textures.
+# 
 # Inputs:
-#   coord
-#   val
-#   tol
-#   offsets
+#   coord   - Texture coordinate to test
+#   val     - Value at texture coordinate
+#   tol     - Value tolerance
+#   offsets - Edge width along each axis
 #
 # Outputs:
-#   isEdge
-
-# Something like this would be nice:
+#   isEdge  - Non-zero if the voxel lies on an edge.
+#
+# 
+# This code is horrible. Something like this would be nice:
+#
 #     #pragma INPUTS  (coord, val, tol, offsets)
 #     #pragma OUTPUTS (isEdge)
+# 
+# And some way to dynamically set the texture unit, e.g.:
+#
+#     TEX result, coord, texture[#pragma texUnit#], 3D;
+# 
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
 
-# This only works for single-channel textures
 
 TEMP off;
 TEMP back;

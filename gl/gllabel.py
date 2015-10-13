@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 #
-# gllabel.py - OpenGL representation for label/atlas images.
+# gllabel.py - The GLLabel class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`GLLabel` class, which implements
+functionality to render an :class:`.Image` overlay as a label/atlas image.
+"""
+
 
 import OpenGL.GL      as gl
 
@@ -14,9 +18,36 @@ import                   textures
 
 
 class GLLabel(globject.GLImageObject):
+    """The ``GLLabel`` class is a :class:`.GLImageObject` which encapsulates
+    the logic required to render an :class:`.Image` overlay as a label image.
+    Within the image, each contiguous region with the same label value is
+    rendered in the same colour. Regions may be shown either with a filled
+    colour, or with a border around them.
+
+    When created, a ``GLLabel`` instance assumes that the provided
+    :class:`.Image` instance has a :attr:`.Display.overlayType` of ``label``,
+    and that its associated :class:`.Display` instance contains a
+    :class:`.LabelOpts` instance, containing label-specific display
+    properties.
+
+    An :class:`.ImageTexture` is used to store the :class:`.Image` data, and
+    a :class:`.LookupTableTexture` used to store the :class:`.LookupTable`
+    (defined by the :attr:`.LabelOpts.lut` property). OpenGL version-specific
+    modules (:mod:`.gl14.gllabel_funcs` and :mod:`.gl21.gllabel_funcs`) are
+    used to configure the vertex/fragment shader programs used for rendering.
+
+    The ``GLLabel`` class is modelled upon the :class:`.GLVolume` class, and
+    the version specific modules for the ``GLLabel`` class must provide the
+    same set of functions that are required by the ``GLVolume`` class.
+    """
 
     
     def __init__(self, image, display):
+        """Create a ``GLLabel``.
+
+        :arg image:   The :class:`.Image` instance.
+        :arg display: The associated :class:`.Display` instance.
+        """
 
         globject.GLImageObject.__init__(self, image, display)
 
@@ -33,6 +64,9 @@ class GLLabel(globject.GLImageObject):
 
         
     def destroy(self):
+        """Must be called when this ``GLLabel`` is no longer needed. Destroys
+        the :class:`.ImageTexture` and :class:`.LookupTableTexture`.
+        """
 
         glresources.delete(self.imageTexture.getTextureName())
         self.lutTexture.destroy()
@@ -43,6 +77,10 @@ class GLLabel(globject.GLImageObject):
 
 
     def addListeners(self):
+        """Called by :meth:`__init__`. Adds listeners to several properties of
+        the :class:`.Display` and :class:`.LabelOpts` instances, so the OpenGL
+        representation can be updated when they change.
+        """
 
         display = self.display
         opts    = self.displayOpts
@@ -87,10 +125,6 @@ class GLLabel(globject.GLImageObject):
 
         self.__lut = opts.lut
 
-        # TODO If you add a software shader, you will
-        #      need to call gllabel_funcs.compileShaders
-        #      when display.softwareMode changes
-
         display .addListener('alpha',        name, lutUpdate,     weak=False)
         display .addListener('brightness',   name, lutUpdate,     weak=False)
         display .addListener('contrast',     name, lutUpdate,     weak=False)
@@ -110,6 +144,9 @@ class GLLabel(globject.GLImageObject):
 
 
     def removeListeners(self):
+        """Called by :meth:`destroy`. Removes all of the listeners that were
+        added by :meth:`addListeners`.
+        """
         display = self.display
         opts    = self.displayOpts
         name    = self.name
@@ -132,13 +169,17 @@ class GLLabel(globject.GLImageObject):
 
         
     def setAxes(self, xax, yax):
-        """Overrides :meth:`.GLImageObject.setAxes`.
+        """Overrides :meth:`.GLImageObject.setAxes`. Updates the shader
+        program state,
         """
         globject.GLImageObject.setAxes(self, xax, yax)
         fslgl.gllabel_funcs.updateShaderState(self)
 
 
     def refreshImageTexture(self):
+        """Makes sure that the :class:`.ImageTexture`, used to store the
+        :class:`.Image` data, is up to date.
+        """
         
         opts     = self.displayOpts
         texName  = '{}_{}' .format(type(self).__name__, id(self.image))
@@ -161,6 +202,9 @@ class GLLabel(globject.GLImageObject):
 
 
     def refreshLutTexture(self, *a):
+        """Refreshes the :class:`.LookupTableTexture` which stores the
+        :class:`.LookupTable` used to colour the overlay.
+        """
 
         display = self.display
         opts    = self.displayOpts
@@ -171,6 +215,9 @@ class GLLabel(globject.GLImageObject):
                             lut=opts.lut)
         
     def preDraw(self):
+        """Binds the :class:`.ImageTexture` and :class:`.LookupTableTexture`,
+        and calls the version-dependent ``preDraw`` function.
+        """
 
         self.imageTexture.bindTexture(gl.GL_TEXTURE0)
         self.lutTexture  .bindTexture(gl.GL_TEXTURE1)
@@ -178,10 +225,14 @@ class GLLabel(globject.GLImageObject):
 
     
     def draw(self, zpos, xform=None):
+        """Calls the version-dependent ``draw`` function. """
         fslgl.gllabel_funcs.draw(self, zpos, xform)
 
 
     def postDraw(self):
+        """Unbinds the ``ImageTexture`` and ``LookupTableTexture``, and calls
+        the version-dependent ``postDraw`` function.
+        """
         self.imageTexture.unbindTexture()
         self.lutTexture  .unbindTexture()
         fslgl.gllabel_funcs.postDraw(self)

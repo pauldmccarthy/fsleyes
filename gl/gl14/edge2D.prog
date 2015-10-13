@@ -1,11 +1,7 @@
-# Inputs:
-#   coord
-#   val
-#   tol
-#   offsets
+# EDge detection routine for 2D textures - see edge3D.prog.
 #
-# Outputs:
-#   isEdge
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
 
 
 TEMP off;
