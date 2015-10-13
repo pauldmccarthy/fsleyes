@@ -29,7 +29,7 @@ class ImageTexture(texture.Texture):
     manage a 3D texture which represents a :class:`.Image` instance.
 
     Once created, the :class:`.Image` instance is available as an attribute
-    of an :class:`ImageTexture` object, called `image``. Additionally, a
+    of an ``ImageTexture`` object, called ``image``. Additionally, a
     number of other attributes are added by the :meth:`__determineTextureType`
     method - see its documentation for more details.
 
@@ -54,8 +54,8 @@ class ImageTexture(texture.Texture):
                  normalise=False,
                  prefilter=None,
                  interp=gl.GL_NEAREST):
-        """Create an :class:`ImageTexture`. A listener is added to the
-        :attr:`.Image.data`  property, so that the texture data can be
+        """Create an ``ImageTexture``. A listener is added to the
+        :attr:`.Image.data` property, so that the texture data can be
         refreshed whenever the image data changes - see the
         :meth:`__imageDataChanged` method.
         
@@ -73,6 +73,7 @@ class ImageTexture(texture.Texture):
         :arg prefilter: An optional function which may perform any 
                         pre-processing on the data before it is copied to the 
                         GPU - see the :meth:`__prepareTextureData` method.
+
         """
 
         texture.Texture.__init__(self, name, 3)
@@ -313,13 +314,13 @@ class ImageTexture(texture.Texture):
 
 
         .. note:: OpenGL does different things to 3D texture data depending on
-                  its type: unsigned integer types are normalised from ``[0,
-                  INT_MAX]`` to ``[0, 1]``.
+                  its type: unsigned integer types are normalised from
+                  ``[0, INT_MAX]`` to ``[0, 1]``.
 
                   Floating point texture data types are, by default, *clamped*
                   (not normalised), to the range ``[0, 1]``! This could be
                   overcome by using a more recent versions of OpenGL, or by
-                  using the ``ARB.texture_rg.GL_R32``F data format. Here, we
+                  using the ``ARB.texture_rg.GL_R32F`` data format. Here, we
                   simply cast floating point data to an unsigned integer type,
                   normalise it to the appropriate range, and calculate a
                   transformation matrix to transform back to the data range.

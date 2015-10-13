@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 
 
 def init(self):
-    """Calls :func:`compleShaders` and :func:`updateShaderState`."""
+    """Calls :func:`compileShaders` and :func:`updateShaderState`."""
 
     self.vertexProgram   = None
     self.fragmentProgram = None

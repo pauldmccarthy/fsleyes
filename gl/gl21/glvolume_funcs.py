@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 
 def init(self):
-    """Calls :func:`compleShaders` and :func:`updateShaderState`,
+    """Calls :func:`compileShaders` and :func:`updateShaderState`,
     and creates a GL buffer which will be used to store vertex data.
     """
 

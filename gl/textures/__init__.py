@@ -18,15 +18,15 @@ The following texture types are defined in this package:
 .. autosummary::
    :nosignatures:
 
-   Texture
-   Texture2D
-   ImageTexture
-   ColourMapTexture
-   LookupTableTexture
-   SelectionTexture
-   RenderTexture
-   GLObjectRenderTexture
-   RenderTextureStack
+   ~fsl.fsleyes.gl.textures.texture.Texture
+   ~fsl.fsleyes.gl.textures.texture.Texture2D
+   ~fsl.fsleyes.gl.textures.imagetexture.ImageTexture
+   ~fsl.fsleyes.gl.textures.colourmaptexture.ColourMapTexture
+   ~fsl.fsleyes.gl.textures.lookuptabletexture.LookupTableTexture
+   ~fsl.fsleyes.gl.textures.selectiontexture.SelectionTexture
+   ~fsl.fsleyes.gl.textures.rendertexture.RenderTexture
+   ~fsl.fsleyes.gl.textures.rendertexture.GLObjectRenderTexture
+   ~fsl.fsleyes.gl.textures.rendertexturestack.RenderTextureStack
 """
 
 

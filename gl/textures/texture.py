@@ -4,8 +4,8 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`Texture` and :class:`Texture2D classes,
-which are the base classes for all other texture types.
+"""This module provides the :class:`Texture` and :class:`Texture2D`
+classes, which are the base classes for all other texture types.
 """
 
 import logging
@@ -44,10 +44,10 @@ class Texture(object):
         tex.bindTexture()
 
         # Use nearest neighbour interpolation
-        gl.glTexParameteri(gl.GL_TEXTURE_2D
+        gl.glTexParameteri(gl.GL_TEXTURE_2D,
                            gl.GL_TEXTURE_MIN_FILTER,
                            gl.GL_NEAREST)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D
+        gl.glTexParameteri(gl.GL_TEXTURE_2D,
                            gl.GL_TEXTURE_MAG_FILTER,
                            gl.GL_NEAREST) 
 
@@ -163,7 +163,7 @@ class Texture(object):
 
 
 class Texture2D(Texture):
-    """The ``Texture2D` class represents a two-dimensional RGBA texture. A
+    """The ``Texture2D`` class represents a two-dimensional RGBA texture. A
     ``Texture2D`` instance can be used in one of two ways:
 
       - Setting the texture data via the :meth:`setData` method, and then
@@ -175,7 +175,7 @@ class Texture2D(Texture):
     """
 
     def __init__(self, name, interp=gl.GL_NEAREST):
-        """Create a ``Texture2D` instance.
+        """Create a ``Texture2D`` instance.
 
         :arg name:   Unique name for this ``Texture2D``.
         
