@@ -290,6 +290,7 @@ class GLSimpleObject(GLObject):
         """Create a ``GLSimpleObject``. """
         GLObject.__init__(self)
 
+        
     def destroy( self):
         """Overrides :meth:`GLObject.destroy`. Does nothing. """
         pass
