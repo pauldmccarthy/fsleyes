@@ -965,7 +965,7 @@ class LookupTable(props.HasProperties):
         """Create a new label with the given value, or updates the
         colour/name/enabled states associated with the given value.
 
-        :arg value:   The label value to add/update.
+        :arg value:   The label value to add/update. Must be an integer.
         :arg name:    Label name
         :arg colour:  Label colour
         :arg enabled: Label enabled state
