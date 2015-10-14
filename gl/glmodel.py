@@ -22,7 +22,10 @@ import fsl.fsleyes.colourmaps  as fslcmaps
 
 class GLModel(globject.GLObject):
     """The ``GLModel`` class is a :class:`.GLObject` which encapsulates the
-    logic required to render 2D slices of a :class:`.Model` overlay.
+    logic required to render 2D slices of a :class:`.Model` overlay. The
+    ``GLModel`` class assumes that the :class:`.Display` instance associated
+    with the ``Model`` overlay holds a reference to a :class:`.ModelOpts`
+    instance, which contains ``GLModel`` specific display settings.
 
     
     The ``GLModel`` renders cross-sections of a ``Model`` overlay using a

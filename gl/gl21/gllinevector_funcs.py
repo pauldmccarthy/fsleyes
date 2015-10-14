@@ -1,9 +1,32 @@
 #!/usr/bin/env python
 #
-# gllinevector_funcs.py -
+# gllinevector_funcs.py - OpenGL 2.1 functions used by the GLLineVector class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides functions which are used by the :class:`.GLLineVector`
+class to render :class:`.Image` overlays as line vector images in an OpenGL 2.1
+compatible manner.
+
+
+This module uses two different techniques to render a ``GLLineVector``. If
+the :attr:`.Display.softwareMode` (a.k.a. low performance) mode is enabled,
+a :class:`.GLLineVertices` instance is used to generate line vertices and
+texture coordinates for each voxel in the image. This is the same approach
+used by the :mod:`.gl14.gllinevector_funcs` module.
+
+
+If :attr:`.Display.softwareMode` is disabled, a ``GLLineVertices`` instance is
+not used. Instead, the voxel coordinates for every vector are passed directly
+to a vertex shader program which calculates the position of the corresponding
+line vertices.
+
+
+For both of the above techniques, a fragment shader (the same as that used by
+the :class:`.GLRGBVector` class) is used to colour each line according to the
+orientation of the underlying vector.
+"""
+
 
 import logging
 
@@ -22,6 +45,13 @@ log = logging.getLogger(__name__)
 
 
 def init(self):
+    """Compiles and configures the vertex/fragment shaders used to render the
+    ``GLLineVector`` (via calls to :func:`compileShaders` and
+    :func:`updateShaderState`), creates GL buffers for storing vertices,
+    texture coordinates, and vertex IDs, and adds listeners to some properties
+    of the :class:`.LineVectorOpts` instance associated with the vector
+    :class:`.Image`  overlay.
+    """
     
     self.shaders            = None
     self.vertexBuffer       = gl.glGenBuffers(1)
@@ -55,6 +85,10 @@ def init(self):
 
     
 def destroy(self):
+    """Deletes the vertex/fragment shaders and the GL buffers, and
+    removes property listeners from the :class:`.LineVectorOpts`
+    instance.
+    """
     gl.glDeleteBuffers(1, gltypes.GLuint(self.vertexBuffer))
     gl.glDeleteBuffers(1, gltypes.GLuint(self.vertexIDBuffer))
     gl.glDeleteBuffers(1, gltypes.GLuint(self.texCoordBuffer))
@@ -70,6 +104,10 @@ def destroy(self):
 
 
 def compileShaders(self):
+    """Compiles the vertex/fragment shaders, and stores references to all
+    shader variables as attributes of the :class:`.GLLineVector`. This
+    also results in a call to :func:`updateVertices`.
+    """
     
     if self.shaders is not None:
         gl.glDeleteProgram(self.shaders)
@@ -124,6 +162,7 @@ def compileShaders(self):
 
     
 def updateShaderState(self):
+    """Updates all variables used by the vertex/fragment shaders. """
     
     display = self.display
     opts    = self.displayOpts
@@ -181,10 +220,12 @@ def updateShaderState(self):
 
 
 def updateVertices(self):
+    """If :attr:`.Display.softwareMode` is enabled, a :class:`.GLLineVertices`
+    instance is created/refreshed. Otherwise, this function does nothing.
+    """
 
     image   = self.image
     display = self.display
-    opts    = self.displayOpts
 
     if not display.softwareMode:
 
@@ -198,12 +239,8 @@ def updateVertices(self):
     if self.lineVertices is None:
         self.lineVertices = glresources.get(
             self._vertexResourceName, gllinevector.GLLineVertices, self)
-    
-    newHash = (hash(opts.transform)  ^
-               hash(opts.resolution) ^
-               hash(opts.directed))
 
-    if hash(self.lineVertices) != newHash:
+    if hash(self.lineVertices) != self.lineVertices.calculateHash(self):
 
         log.debug('Re-generating line vertices for {}'.format(image))
         self.lineVertices.refresh(self)
@@ -213,15 +250,26 @@ def updateVertices(self):
 
 
 def preDraw(self):
+    """Prepares the GL state for drawing. This amounts to loading the
+    vertex/fragment shader programs.
+    """
     gl.glUseProgram(self.shaders)
 
 
 def draw(self, zpos, xform=None):
+    """Draws the line vectors at a plane at the specified Z location.
+    This is performed using either :func:`softwareDraw` or
+    :func:`hardwareDraw`, depending upon the value of
+    :attr:`.Display.softwareMode`.
+    """
     if self.display.softwareMode: softwareDraw(self, zpos, xform)
     else:                         hardwareDraw(self, zpos, xform)
 
 
 def softwareDraw(self, zpos, xform=None):
+    """Draws the line vectors at a plane at the specified Z location, using
+    a :class:`.GLLineVertices` instance.
+    """
 
     # Software shaders have not yet been compiled - 
     # we can't draw until they're updated
@@ -229,7 +277,7 @@ def softwareDraw(self, zpos, xform=None):
         return
 
     opts                = self.displayOpts
-    vertices, texCoords = self.lineVertices.getVertices(self, zpos)
+    vertices, texCoords = self.lineVertices.getVertices(zpos, self)
 
     if vertices.size == 0:
         return
@@ -270,6 +318,10 @@ def softwareDraw(self, zpos, xform=None):
 
 
 def hardwareDraw(self, zpos, xform=None):
+    """Draws the line vectors at a plane at the specified Z location.
+    Voxel coordinates are passed to the vertex shader, which calculates
+    the corresponding line vertex locations.
+    """ 
 
     if self.swShadersInUse:
         return
@@ -334,10 +386,12 @@ def hardwareDraw(self, zpos, xform=None):
 
 
 def drawAll(self, zposes, xforms):
+    """Draws the line vectors at every slice specified by the Z locations. """
 
     for zpos, xform in zip(zposes, xforms):
         self.draw(zpos, xform)
 
 
 def postDraw(self):
+    """Clears the GL state after drawing. """
     gl.glUseProgram(0)

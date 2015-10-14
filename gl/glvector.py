@@ -1,37 +1,14 @@
 #!/usr/bin/env python
 #
-# glvector.py - OpenGL vertex creation and rendering code for drawing a
-# X*Y*Z*3 image as a vector.
+# glvector.py - The GLVector class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""Defines the :class:`GLVector` class, which encapsulates the logic for
-rendering 2D slices of a ``X*Y*Z*3`` :class:`.Image` as a vector. The
-``GLVector`` class provides the interface defined by the :class:`.GLObject`
-class.
-
-
-The ``GLVector`` class is a base class whcih is not intended to be
-instantiated directly. The :class:`.GLRGBVector` and :class:`.GLLineVector`
-subclasses should be used instead.  These two subclasses share the
-functionality provided by this class.
-
-
-The vector image is stored on the GPU as a 3D RGB texture, where the ``R``
-channel contains the ``x`` vector values, the ``G`` channel the ``y`` values,
-and the ``B`` channel the ``z`` values. 
-
-
-Three 1D textures are used to store a colour table for each of the ``x``,
-``y`` and ``z`` components. A custom fragment shader program looks up the
-``xyz`` vector values, looks up colours for each of them, and combines the
-three colours to form the final fragment colour.
-
-
-The colour of each vector may be modulated by another image, specified by the
-:attr:`.VectorOpts.modulate` property.  This modulation image is stored as a
-3D single-channel texture.
+"""This module provides the :class:`GLVector` class, which encapsulates the
+logic for rendering 2D slices of a ``X*Y*Z*3`` :class:`.Image` as a vector
+image.
 """
+
 
 import numpy                    as np
 import OpenGL.GL                as gl
@@ -43,15 +20,39 @@ import                             textures
 import                             globject
 
 
-
 class GLVector(globject.GLImageObject):
-    """The :class:`GLVector` class encapsulates the data and logic required
-    to render 2D slices of a ``X*Y*Z*3`` image as vectors.
+    """The :class:`GLVector` class, which encapsulates the logic for
+    rendering 2D slices of a ``X*Y*Z*3`` :class:`.Image` as a vector image.
+    The ``GLVector`` class is a sub-class of :class:`.GLImageObject`.
+
+
+    The ``GLVector`` class is a base class which is not intended to be
+    instantiated directly. The :class:`.GLRGBVector` and
+    :class:`.GLLineVector` subclasses should be used instead.  These two
+    subclasses share the functionality provided by this class.
+
+
+    The :class:`.Image` is stored on the GPU as a 3D RGB
+    :class:`.ImageTexture`, where the ``R`` channel contains the ``x`` vector
+    values, the ``G`` channel the ``y`` values, and the ``B`` channel the
+    ``z`` values.
+
+
+    Three 1D :class:`.ColourMapTexture` instances are used to store a colour
+    table for each of the ``x``, ``y`` and ``z`` components. A custom fragment
+    shader program looks up the ``xyz`` vector values, looks up colours for
+    each of them, and combines the three colours to form the final fragment
+    colour.
+
+
+    The colour of each vector may be modulated by another image, specified by
+    the :attr:`.VectorOpts.modulate` property.  This modulation image is
+    stored as a 3D single-channel :class:`.ImageTexture`.
     """
 
+    
     def __init__(self, image, display, prefilter=None):
-        """Create a :class:`GLVector` object bound to the given image and
-        display.
+        """Create a ``GLVector`` object bound to the given image and display.
 
         Initialises the OpenGL data required to render the given image.
         This method does the following:
@@ -97,10 +98,9 @@ class GLVector(globject.GLImageObject):
 
         
     def destroy(self):
-        """Deletes the GL textures, and deregisters the listeners configured in
+        """Must be called when this ``GLVector`` is no longer needed. Deletes
+        the GL textures, and deregisters the listeners configured in
         :meth:`__init__`.
-
-        This method must be called by subclass implementations.
         """
 
         self.xColourTexture.destroy()
@@ -119,6 +119,10 @@ class GLVector(globject.GLImageObject):
 
 
     def addListeners(self):
+        """Called by :meth:`__init__`. Adds listeners to properties of the
+        :class:`.Display` and :class:`.VectorOpts` instances, so that the GL
+        representation can be updated when the display properties change.
+        """
 
         display = self.display
         opts    = self.displayOpts
@@ -174,31 +178,39 @@ class GLVector(globject.GLImageObject):
 
 
     def removeListeners(self):
+        """Called by :meth:`destroy`. Removes all property listeners added
+        by  the :meth:`addListeners` method.
+        """
 
         display = self.display
         opts    = self.displayOpts
         name    = self.name
 
-        display.removeListener(          'softwareMode', name)
-        display.removeListener(          'alpha',        name)
-        display.removeListener(          'brightness',   name)
-        display.removeListener(          'contrast',     name)
-        opts   .removeListener(          'xColour',      name)
-        opts   .removeListener(          'yColour',      name)
-        opts   .removeListener(          'zColour',      name)
-        opts   .removeListener(          'suppressX',    name)
-        opts   .removeListener(          'suppressY',    name)
-        opts   .removeListener(          'suppressZ',    name)
-        opts   .removeListener(          'modulate',     name)
-        opts   .removeListener(          'modThreshold', name)
-        opts   .removeListener(          'volume',       name)
-        opts   .removeListener(          'resolution',   name)
+        display.removeListener('softwareMode', name)
+        display.removeListener('alpha',        name)
+        display.removeListener('brightness',   name)
+        display.removeListener('contrast',     name)
+        opts   .removeListener('xColour',      name)
+        opts   .removeListener('yColour',      name)
+        opts   .removeListener('zColour',      name)
+        opts   .removeListener('suppressX',    name)
+        opts   .removeListener('suppressY',    name)
+        opts   .removeListener('suppressZ',    name)
+        opts   .removeListener('modulate',     name)
+        opts   .removeListener('modThreshold', name)
+        opts   .removeListener('volume',       name)
+        opts   .removeListener('resolution',   name)
 
         if opts.getParent() is not None:
             opts.removeSyncChangeListener('resolution', name)
 
 
     def refreshImageTexture(self):
+        """Called by :meth:`__init__`, and when the :class:`.ImageTexture`
+        needs to be updated. (Re-)creates the ``ImageTexture``, using the
+        :mod:`.resources` module so that the texture can be shared by other
+        users.
+        """
 
         opts      = self.displayOpts
         prefilter = self.prefilter
@@ -230,25 +242,32 @@ class GLVector(globject.GLImageObject):
             normalise=True,
             prefilter=realPrefilter) 
 
-
-    def updateShaderState(self):
-        """This method must be provided by subclasses."""
-        raise NotImplementedError('updateShaderState must be implemented by '
-                                  '{} subclasses'.format(type(self).__name__))
-
     
     def compileShaders(self):
-        """This method must be provided by subclasses."""
+        """This method must be provided by subclasses (the
+        :class:`.GLRGBVector` and :class:`.GLLineVector` classes), and must
+        compile the vertex/fragment shaders used to render this ``GLVector``.
+        .""" 
         raise NotImplementedError('compileShaders must be implemented by '
                                   '{} subclasses'.format(type(self).__name__)) 
 
 
+    def updateShaderState(self):
+        """This method must be provided by subclasses (the
+        :class:`.GLRGBVector` and :class:`.GLLineVector` classes), and must
+        update the state of the vertex/fragment shader programs.
+        """
+        raise NotImplementedError('updateShaderState must be implemented by '
+                                  '{} subclasses'.format(type(self).__name__))
+
+    
     def refreshModulateTexture(self):
         """Called when the :attr`.VectorOpts.modulate` property changes.
 
-        Reconfigures the modulation texture. If no modulation image is
-        selected, a 'dummy' texture is creatad, which contains all white
-        values (and which result in the modulation texture having no effect).
+        Reconfigures the modulation :class:`.ImageTexture`. If no modulation
+        image is selected, a 'dummy' texture is creatad, which contains all
+        white values (and which result in the modulation texture having no
+        effect).
         """
 
         if self.modTexture is not None:

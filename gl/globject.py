@@ -193,9 +193,13 @@ class GLObject(object):
         which defines a suitable pixel resolution, along the display coordinate
         system ``(x, y, z)`` axes, for rendering this ``GLObject`` to screen.
 
-        This method should be implemented by sub-classes. If not implemented, a
-        default resolution is used.
-
+        This method should be implemented by sub-classes. If not implemented,
+        a default resolution is used. The returned resolution *might* be used
+        to render this ``GLObject``, but typically only in a low performance
+        environment where off-screen rendering to a
+        :class:`.GLObjectRenderTexture` is used - see the
+        :class:`.SliceCanvas` documentation for more details.
+        
         :arg xax: Axis to be used as the horizontal screen axis.
         :arg yax: Axis to be used as the vertical screen axis.
         """

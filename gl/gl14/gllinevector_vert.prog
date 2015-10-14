@@ -17,6 +17,8 @@
 #    result.texcoord[0] - the texture coordinates
 #    result.texcoord[1] - the voxel coordinates
 #
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
 
 TEMP texCoord;
 

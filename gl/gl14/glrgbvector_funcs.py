@@ -1,9 +1,20 @@
 #!/usr/bin/env python
 #
-# glrgbvector_funcs.py -
+# glrgbvector_funcs.py - OpenGL 1.4 functions used by the GLRGBVector class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides functions which are used by the :class:`.GLRGBVector`
+class to render :class:`.Image` overlays as RGB vector images in an OpenGL 1.4
+compatible manner.
+
+
+Rendering of a ``GLRGBVector`` is very similar to that of a
+:class:`.GLVolume`; therefore, the ``preDraw``, ``draw``, ``drawAll`` and
+``postDraw`` functions defined in the :mod:`.gl14.glvolume_funcs` are re-used
+by this module.
+"""
+
 
 import OpenGL.GL                      as gl
 import OpenGL.GL.ARB.fragment_program as arbfp
@@ -15,6 +26,9 @@ import fsl.fsleyes.gl.shaders as shaders
 
 
 def init(self):
+    """Calls the :func:`compileShaders` and :func:`updateShaderState`
+    functions.
+    """
     
     self.vertexProgram   = None
     self.fragmentProgram = None
@@ -24,11 +38,17 @@ def init(self):
 
 
 def destroy(self):
+    """Destroys the vertex/fragment shader programs created in :func:`init`.
+    """ 
     arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
     arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram)) 
 
     
 def compileShaders(self):
+    """Compiles the vertex/fragment shader programs used for drawing
+    :class:`.GLRGBVector` instances. Stores references to the shader
+    programs on the ``GLRGBVector`` instance. 
+    """
     if self.vertexProgram is not None:
         arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
         
@@ -48,6 +68,7 @@ def compileShaders(self):
 
 
 def updateShaderState(self):
+    """Updates all variables used by the vertex/fragment shader programs. """
 
     opts = self.displayOpts
     

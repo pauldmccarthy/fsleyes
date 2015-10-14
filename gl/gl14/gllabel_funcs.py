@@ -7,9 +7,10 @@
 """This module provides functions which are used by the :class:`.GLLabel`
 class to render :class:`.Image` overlays in an OpenGL 1.4 compatible manner.
 
-Rendering of a ``GLLabel`` is very similar to that of a ``GLVolume`` - the
-``preDraw``, ``draw``, ``drawAll`` and ``postDraw`` functions defined in the
-:mod:`.gl14.glvolume_funcs` are re-used by this module.
+
+Rendering of a ``GLLabel`` is very similar to that of a :class:`.GLVolume`;
+therefore, the ``preDraw``, ``draw``, ``drawAll`` and ``postDraw`` functions
+defined in the :mod:`.gl14.glvolume_funcs` are re-used by this module.
 """
 
 

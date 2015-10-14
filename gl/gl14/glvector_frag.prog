@@ -32,8 +32,9 @@
 #   program.local[5]
 #   program.local[6]
 #   program.local[7] - Transformation matrix which transforms the vector
-#                      image voxel values from their texture value
-#                      to the original data range. 
+#                      image voxel values from their data values
+#                      to a value which can be used as texture coordinates
+#                      for the colour map textures.
 #
 #   program.local[8] - Image shape - number of voxels along the xyz
 #                      dimensions in the image
@@ -44,7 +45,7 @@
 #
 # Outputs:
 #
-#   result.color     - The fragment colour (written by briconalpha.prog)
+#   result.color     - The fragment colour.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #

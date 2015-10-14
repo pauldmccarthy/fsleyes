@@ -1,9 +1,20 @@
 #!/usr/bin/env python
 #
-# gllinevector_funcs.py -
+# gllinevector_funcs.py - OpenGL 1.4 functions used by the GLLineVector class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
-#
+
+"""This module provides functions which are used by the :class:`.GLLineVector`
+class to render :class:`.Image` overlays as line vector images in an OpenGL 1.4
+compatible manner.
+
+
+A :class:`.GLLineVertices` instance is used to generate line vertices and
+texture coordinates for each voxel in the image. A fragment shader (the same
+as that used by the :class:`.GLRGBVector` class) is used to colour each line
+according to the orientation of the underlying vector.
+"""
+
 
 import logging
 
@@ -24,6 +35,12 @@ log = logging.getLogger(__name__)
 
 
 def init(self):
+    """Compiles and configures the vertex/fragment shader programs, generates
+    line vertices, and adds some listeners to properties of the
+    :class:`.LineVectorOpts` instance associated with the vector
+    :class:`.Image` overlay. This involves calls to the :func:`compileShaders`,
+    :func:`updateShaderState`, and :func:`updateVertices` functions.
+    """
 
     self.vertexProgram   = None
     self.fragmentProgram = None
@@ -51,6 +68,10 @@ def init(self):
 
 
 def destroy(self):
+    """Destroys the vertex/fragment shader programs and the
+    ``GLLineVertices`` instance, and removes property listeners from the
+    :class:`.LineVectorOpts` instance.
+    """
     arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
     arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram))
 
@@ -64,6 +85,10 @@ def destroy(self):
 
 
 def compileShaders(self):
+    """Compiles the vertex/fragment shader programs used to draw the
+    :class:`.GLLineVector` instance. This also results in a call to
+    :func:`updateVertices`.
+    """
     if self.vertexProgram is not None:
         arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
         
@@ -85,19 +110,19 @@ def compileShaders(self):
 
 
 def updateVertices(self):
+    """Creates/refreshes the :class:`.GLLineVertices` instance which is used to
+    generate line vertices and texture coordinates. If the ``GLLineVertices``
+    instance exists and is up to date (see the
+    :meth:`.GLLineVertices.calculateHash` method), this function does nothing.
+    """
     
     image = self.image
-    opts  = self.displayOpts
 
     if self.lineVertices is None:
         self.lineVertices = glresources.get(
             self._vertexResourceName, gllinevector.GLLineVertices, self) 
 
-    newHash = (hash(opts.transform)  ^
-               hash(opts.resolution) ^
-               hash(opts.directed))
-
-    if hash(self.lineVertices) != newHash:
+    if hash(self.lineVertices) != self.lineVertices.calculateHash(self):
 
         log.debug('Re-generating line vertices for {}'.format(image))
         self.lineVertices.refresh(self)
@@ -107,6 +132,8 @@ def updateVertices(self):
 
 
 def updateShaderState(self):
+    """Updates all fragment/vertex shader program variables. """
+    
     opts = self.displayOpts
 
     gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
@@ -141,6 +168,8 @@ def updateShaderState(self):
     
 
 def preDraw(self):
+    """Initialises the GL state ready for drawing the :class:`.GLLineVector`.
+    """
     gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
     gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
 
@@ -156,10 +185,13 @@ def preDraw(self):
 
 
 def draw(self, zpos, xform=None):
+    """Draws the line vertices corresponding to a 2D plane located
+    at the specified Z location.
+    """
 
     display             = self.display
     opts                = self.displayOpts
-    vertices, texCoords = self.lineVertices.getVertices(self, zpos)
+    vertices, texCoords = self.lineVertices.getVertices(zpos, self)
 
     if vertices.size == 0:
         return
@@ -187,12 +219,13 @@ def draw(self, zpos, xform=None):
 
 
 def drawAll(self, zposes, xforms):
+    """Draws line vertices corresponding to each Z location. """
     for zpos, xform in zip(zposes, xforms):
         draw(self, zpos, xform)
 
 
 def postDraw(self):
-    
+    """Clears the GL state after drawing the :class:`.GLLineVector`. """    
     gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB) 
     gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
     
