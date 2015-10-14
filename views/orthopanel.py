@@ -122,12 +122,14 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx):
+    def __init__(self, parent, overlayList, displayCtx, addToolbars=True):
         """Create an ``OrthoPanel``.
 
         :arg parent:      The :mod:`wx` parent.
         :arg overlayList: An :class:`.OverlayList` instance.
         :arg displayCtx:  A :class:`.DisplayContext` instance.
+        :arg addToolbars: If ``False``, the toolbars (listed above) are not
+                          added. Defaults to ``True``.
         """
 
         sceneOpts = orthoopts.OrthoOpts()
@@ -246,7 +248,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # The ViewPanel AuiManager seems to
         # struggle if we add these toolbars
         # immediately, so we'll do it asynchronously 
-        def addToolbars():
+        def _addToolbars():
             self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar,
                              viewPanel=self)
             self.togglePanel(orthotoolbar.OrthoToolBar,
@@ -254,7 +256,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             self.togglePanel(orthoedittoolbar.OrthoEditToolBar,
                              ortho=self) 
 
-        wx.CallAfter(addToolbars)
+        if addToolbars:
+            wx.CallAfter(_addToolbars)
 
 
     def destroy(self):
@@ -812,7 +815,10 @@ class OrthoFrame(wx.Frame):
         ctx, dummyCanvas = fslgl.getWXGLContext() 
         fslgl.bootstrap()
         
-        self.panel = OrthoPanel(self, overlayList, displayCtx)
+        self.panel = OrthoPanel(self,
+                                overlayList,
+                                displayCtx,
+                                addToolbars=False)
         self.Layout()
 
         if dummyCanvas is not None:
@@ -852,7 +858,10 @@ class OrthoDialog(wx.Dialog):
         ctx, dummyCanvas = fslgl.getWXGLContext()
         fslgl.bootstrap()
         
-        self.panel = OrthoPanel(self, overlayList, displayCtx)
+        self.panel = OrthoPanel(self,
+                                overlayList,
+                                displayCtx,
+                                addToolbars=False)
         self.Layout()
 
         if dummyCanvas is not None:
