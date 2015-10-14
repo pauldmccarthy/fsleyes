@@ -1,4 +1,4 @@
-# EDge detection routine for 2D textures - see edge3D.prog.
+# Edge detection routine for 2D textures - see also edge3D.prog.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #

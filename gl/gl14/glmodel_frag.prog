@@ -3,9 +3,13 @@
 # Fragment program used for rendering GLModel instances.
 #
 # Inputs:
-#   fragment.texcoord[0]
+#   fragment.texcoord[0] - Texture coordinates
+#   program.local[0]     - Offsets (used as edge widths - see edge2D.prog)
 #
-#   program.local[0] - Offsets
+# Outputs:
+#   result.color         - Fragment colour.
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com> 
 #
 
 TEMP val;

@@ -3,13 +3,14 @@
 # Vertex program for rendering GLModel instances.
 #
 # Inputs:
-#    state.matrix.mvp
-#    vertex.position
-#    vertex.texcoord[0]
+#    vertex.texcoord[0] - Texture coordinates
 #
 # Outputs:
 #    result.position
-#    result.texcoord[0]
+#    result.texcoord[0] - Texture coordinates (passed through to fragment
+#                         shader).
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com> 
 #
 
 # Transform the vertex position into display coordinates
