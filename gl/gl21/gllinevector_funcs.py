@@ -201,9 +201,12 @@ def updateShaderState(self):
         d2vMat    = opts.getTransform('display', 'voxel')
         v2dMat    = opts.getTransform('voxel',   'display')
 
-        if opts.transform in ('id', 'pixdim'): offset = [0,   0,   0]
-        else:                                  offset = [0.5, 0.5, 0.5]
-
+        # The shader adds these offsets to
+        # transformed voxel coordinates, so
+        # it can floor them to get integer
+        # voxel coordinates
+        offset    = [0.5, 0.5, 0.5]
+        
         offset    = np.array(offset,    dtype=np.float32)
         imageDims = np.array(imageDims, dtype=np.float32)
         d2vMat    = np.array(d2vMat,    dtype=np.float32).ravel('C')
@@ -336,16 +339,12 @@ def hardwareDraw(self, zpos, xform=None):
     elif opts.transform == 'pixdim':
         resolution = map(lambda r, p: max(r, p), resolution, image.pixdim[:3])
 
-    if opts.transform == 'affine': origin = 'centre'
-    else:                          origin = 'corner'
-
     vertices = glroutines.calculateSamplePoints(
         image.shape,
         resolution,
         v2dMat,
         self.xax,
-        self.yax,
-        origin)[0]
+        self.yax)[0]
     
     vertices[:, self.zax] = zpos
 

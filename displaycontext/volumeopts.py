@@ -53,7 +53,7 @@ in the display coordinate system. In other words, a voxel at location::
 will be transformed such that, in the display coordinate system, it occupies
 the space::
 
-    [x - x + 1, y - y + 1, z - z + 1]
+    [x-0.5 - x+0.5, y-0.5 - y+0.5, z-0.5 - z+0.5]
 
 
 For example, the voxel::
@@ -62,17 +62,11 @@ For example, the voxel::
 
 is drawn such that it occupies the space::
 
-    [2 - 3, 3 - 4, 4 - 5]
+    [1.5 - 2.5, 2.5 - 3.5, 3.5 - 4.5]
 
 
-A similar transformation is applied to image data which is displayed in
-``pixdim`` space, scaled appropriately.
-
-
-This convention was adopted so that multiple images would be aligned at the
-bottom left corner when displayed in ``id`` or ``pixzim`` space. But this
-convention is in contrast to the convention taken when images are displayed in
-world, or ``affine`` space. The ``qform`` and ``sform`` transformation
+This convention is the same as the convention taken when images are displayed
+in world, or ``affine`` space. The ``qform`` and ``sform`` transformation
 matrices in the ``NIFTI1`` specification assume that the voxel coordinates
 ``[x, y, z]`` correspond to the centre of a voxel. As an example, assuming
 that our affine transformation is an identity matrix, the voxel::
@@ -83,12 +77,6 @@ that our affine transformation is an identity matrix, the voxel::
 for an image displayed in ``affine`` space would occupy the space::
 
     [1.5 - 2.5, 2.5 - 3.5, 3.5 - 4.5]
-
-
-.. note:: With the introduction of **GedMode** I am also going to change this
-          convention - integer voxel coordinates will map to the voxel centre
-          (as for the ``affine`` convention described above) regardless of the
-          coordinate system the image is displayed in.
 """
 
 
@@ -185,13 +173,9 @@ class ImageOpts(fsldisplay.DisplayOpts):
         :attr:`.DisplayOpts.bounds` property accordingly.
         """
 
-        if self.transform == 'affine': origin = 'centre'
-        else:                          origin = 'corner'
-
         lo, hi = transform.axisBounds(
             self.overlay.shape[:3],
-            self.getTransform('voxel', 'display'),
-            origin=origin)
+            self.getTransform('voxel', 'display'))
         
         self.bounds[:] = [lo[0], hi[0], lo[1], hi[1], lo[2], hi[2]]
 
@@ -276,96 +260,47 @@ class ImageOpts(fsldisplay.DisplayOpts):
 
 
     def getTransformOffsets(self, from_, to_):
-        """When an image is displayed in ``id``/``pixdim`` space, voxel
-        coordinates map to the voxel corner; i.e.  a voxel at ``(0, 1, 2)``
-        occupies the space ``(0 - 1, 1 - 2, 2 - 3)``.
+        """Returns a set of offsets which should be applied to coordinates
+        before/after applying a transfromation.  
         
-        In contrast, when an image is displayed in affine space, voxel
-        coordinates map to the voxel centre, so our voxel from above will
+        When an image is displayed in ``id``, ``pixdim`` and ``affine`` space,
+        voxel coordinates map to the voxel centre, so our voxel from above will
         occupy the space ``(-0.5 - 0.5, 0.5 - 1.5, 1.5 - 2.5)``. This is
-        dictated by the NIFTI specification.
+        dictated by the NIFTI specification. See the
+        :ref:`note on coordinate systems <volumeopts-coordinate-systems>`.
+
         
         This function returns some offsets to ensure that the coordinate
         transformation from the source space to the target space is valid,
         given the above requirements.
 
-        A tuple containing two sets of offsets (each of which is a tuple of
-        three values). The first set is to be applied to the source coordinates
-        before transformation, and the second set to the target coordinates
-        after the transformation.
 
+        A tuple containing two sets of offsets (each of which is a tuple of
+        three values). The first set is to be applied to the source
+        coordinates (in the ``from_`` space) before transformation, and the
+        second set to the target coordinates (in the ``to_`` space) after the
+        transformation.
+
+        
         See also the :meth:`transformCoords` method, which will perform the
         transformation correctly for you, without you having to worry about
-        these offsets.
+        these silly offsets.
 
-
-        .. note:: These offsets, and this method, will soon become obsolete -
-                  see the note about **GedMode** in the
-                  :ref:`note on coordinate systems
-                  <volumeopts-coordinate-systems>`.
-        """ 
-        displaySpace = self.transform
-        pixdim       = np.array(self.overlay.pixdim[:3])
-        offsets      = {
-            
-            # world to voxel transformation 
-            # (regardless of the display space):
-            # 
-            # add 0.5 to the resulting voxel
-            # coords, so the _propagate method
-            # can just floor them to get the
-            # integer voxel coordinates
-            ('world', 'voxel', displaySpace) : ((0, 0, 0), (0.5, 0.5, 0.5)),
-
-            # World to display transformation:
-            # 
-            # if displaying in id/pixdim space,
-            # we add half a voxel so that the
-            # resulting coords are centered
-            # within a voxel, instead of being
-            # in the voxel corner
-            ('world', 'display', 'id')       : ((0, 0, 0), (0.5, 0.5, 0.5)),
-            ('world', 'display', 'pixdim')   : ((0, 0, 0), pixdim / 2.0),
-
-            # Display to voxel space:
-            
-            # If we're displaying in affine space,
-            # we have the same situation as the
-            # world -> voxel transform above
-            ('display', 'voxel', 'affine')   : ((0, 0, 0), (0.5, 0.5, 0.5)),
-
-            # Display to world space:
-            # 
-            # If we're displaying in id/pixdim
-            # space, voxel coordinates map to
-            # the voxel corner, so we need to
-            # subtract half the voxel width to
-            # the coordinates before transforming
-            # to world space.
-            ('display', 'world', 'id')       : ((-0.5, -0.5, -0.5), (0, 0, 0)),
-            ('display', 'world', 'pixdim')   : (-pixdim / 2.0,      (0, 0, 0)),
-
-            # Voxel to display space:
-            # 
-            # If the voxel location was changed,
-            # we want the display to be moved to
-            # the centre of the voxel If displaying
-            # in affine space, voxel coordinates
-            # map to the voxel centre, so we don't
-            # need to offset. But if in id/pixdim,
-            # we need to add 0.5 to the voxel coords,
-            # as otherwise the transformation will
-            # put us in the voxel corner.
-            ('voxel',   'display', 'id')     : ((0.5, 0.5, 0.5), (0, 0, 0)),
-            ('voxel',   'display', 'pixdim') : ((0.5, 0.5, 0.5), (0, 0, 0)),
-        }
-
-        return offsets.get((from_, to_, displaySpace), ((0, 0, 0), (0, 0, 0)))
+        
+        .. note:: This method was written during a crazy time when, in ``id``
+                  or ``pixdim`` space, voxels ``(0, 0, 0)`` of images overlaid
+                  on each other were aligned at the voxel corner, whereas in
+                  ``affine`` space, they were aligned at the voxel
+                  centre. This is no longer the case, so this method is not
+                  actually necessary. But it is still here, and still being
+                  used, just in case we need to change these conventions again
+                  in the future.
+        """
+        return (0, 0, 0), (0, 0, 0)
 
 
     def transformCoords(self, coords, from_, to_):
-        """Transforms the given coordinates from ``from_`` to ``to_``, including
-        correcting for display space offsets (see :meth:`getTransformOffsets`).
+        """Transforms the given coordinates from ``from_`` to ``to_``.
 
         The ``from_`` and ``to_`` parameters must both be one of:
         

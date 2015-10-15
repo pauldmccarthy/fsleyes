@@ -99,6 +99,9 @@ def calculateSamplePoints(shape, resolution, xform, xax, yax, origin='centre'):
                      2).
 
     :arg yax:        The vertical display coordinate system axis (0, 1, or 2).
+
+    :arg origin:     ``centre`` or ``corner``. See the
+                     :func:`.transform.axisBounds` function.
     """
 
     xres = resolution[xax]

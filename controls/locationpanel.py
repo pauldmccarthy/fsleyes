@@ -544,7 +544,7 @@ class LocationPanel(fslpanel.FSLEyesPanel):
             source, coords, target, xformed))
 
         if   target == 'display': self._displayCtx.location.xyz = xformed
-        elif target == 'voxel':   self.voxelLocation.xyz = np.floor(xformed)
+        elif target == 'voxel':   self.voxelLocation.xyz = np.round(xformed)
         elif target == 'world':   self.worldLocation.xyz = xformed
         
     
@@ -599,7 +599,7 @@ class LocationPanel(fslpanel.FSLEyesPanel):
                 vloc = opts.transformCoords(
                     [self._displayCtx.location.xyz], 'display', 'voxel')[0]
 
-                vloc = tuple(map(int, np.floor(vloc)))
+                vloc = tuple(map(int, np.round(vloc)))
 
                 if overlay.is4DImage():
                     vloc = vloc + (opts.volume,)

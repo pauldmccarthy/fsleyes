@@ -518,8 +518,7 @@ class VoxelSelection(AnnotationObject):
                                             yax,
                                             zpos,
                                             self.voxToDisplayMat,
-                                            self.displayToVoxMat,
-                                            origin='corner')
+                                            self.displayToVoxMat)
 
         verts = np.array(verts, dtype=np.float32).ravel('C')
         texs  = np.array(texs,  dtype=np.float32).ravel('C')

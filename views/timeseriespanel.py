@@ -993,7 +993,7 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
             return None
 
         vox = opts.transformCoords([[x, y, z]], 'display', 'voxel')[0]
-        vox = np.floor(vox)
+        vox = np.round(vox)
 
         if vox[0] < 0                 or \
            vox[1] < 0                 or \

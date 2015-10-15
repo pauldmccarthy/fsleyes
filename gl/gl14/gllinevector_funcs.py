@@ -149,9 +149,7 @@ def updateShaderState(self):
     shape        = np.array(list(self.image.shape[:3]) + [0], dtype=np.float32)
     invShape     = 1.0 / shape
     modThreshold = [opts.modThreshold / 100.0, 0.0, 0.0, 0.0]
-
-    if opts.transform in ('id', 'pixdim'): offset = [0.0, 0.0, 0.0, 0.0]
-    else:                                  offset = [0.5, 0.5, 0.5, 0.0]
+    offset       = [0.5, 0.5, 0.5, 0.0]
 
     # Vertex program inputs
     shaders.setVertexProgramVector(  0, invShape)

@@ -454,7 +454,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         opts  = self._displayCtx.getOpts(self.__currentOverlay)
         voxel = opts.transformCoords([canvasPos], 'display', 'voxel')[0]
 
-        return np.int32(np.floor(voxel))
+        return np.int32(np.round(voxel))
 
 
     def __drawCursorAnnotation(self, canvas, voxel, blockSize=None):

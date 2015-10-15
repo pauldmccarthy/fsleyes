@@ -419,17 +419,13 @@ class GLImageObject(GLObject):
             corresponding to each vertex
         """
 
-        if self.displayOpts.transform == 'affine': origin = 'centre'
-        else:                                      origin = 'corner'
-
         vertices, voxCoords, texCoords = glroutines.slice2D(
             self.image.shape[:3],
             self.xax,
             self.yax,
             zpos, 
             self.displayOpts.getTransform('voxel',   'display'),
-            self.displayOpts.getTransform('display', 'voxel'),
-            origin=origin)
+            self.displayOpts.getTransform('display', 'voxel'))
 
         if xform is not None: 
             vertices = transform.transform(vertices, xform)
