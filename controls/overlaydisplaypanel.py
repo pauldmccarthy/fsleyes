@@ -102,13 +102,9 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
            self.__currentOverlay in self._overlayList:
             
             display = self._displayCtx.getDisplay(self.__currentOverlay)
-            opts    = display.getDisplayOpts()
             
             display.removeListener('overlayType', self._name)
             display.removeListener('name',        self._name)
-
-            if isinstance(opts, displayctx.VolumeOpts):
-                opts.removeListener('transform', self._name)
 
         self.__currentOverlay = None
         fslpanel.FSLEyesPanel.destroy(self)
@@ -140,13 +136,9 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
            lastOverlay in self._overlayList:
             
             lastDisplay = self._displayCtx.getDisplay(lastOverlay)
-            lastOpts    = lastDisplay.getDisplayOpts()
             
             lastDisplay.removeListener('overlayType', self._name)
             lastDisplay.removeListener('name',        self._name)
-
-            if isinstance(lastOpts, displayctx.VolumeOpts):
-                lastOpts.removeListener('transform', self._name)
 
         if lastOverlay is not None:
             displayExpanded = self.__widgets.IsExpanded('display')
@@ -160,9 +152,6 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
             
         display.addListener('overlayType', self._name, self.__ovlTypeChanged)
         display.addListener('name',        self._name, self.__ovlNameChanged) 
-
-        if isinstance(opts, displayctx.VolumeOpts):
-            opts.addListener('transform', self._name, self.__transformChanged)
         
         self.__widgets.Clear()
         self.__widgets.AddGroup('display', strings.labels[self, display])
@@ -249,32 +238,6 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
         self.Layout()
 
 
-    def __transformChanged(self, *a):
-        """Called when the transform setting of the currently selected overlay
-        changes.
-
-        If the current overlay has an :attr:`.Display.overlayType` of
-        ``volume``, and the :attr:`.ImageOpts.transform` property has been set
-        to ``affine``, the :attr:`.VolumeOpts.interpolation` property is set to
-        ``spline``.  Otherwise interpolation is disabled.
-        """
-        overlay = self._displayCtx.getSelectedOverlay()
-        display = self._displayCtx.getDisplay(overlay)
-        opts    = display.getDisplayOpts()
-
-        if not isinstance(opts, displayctx.VolumeOpts):
-            return
-
-        choices = opts.getProp('interpolation').getChoices(display)
-
-        if  opts.transform in ('none', 'pixdim'):
-            opts.interpolation = 'none'
-            
-        elif opts.transform == 'affine':
-            if 'spline' in choices: opts.interpolation = 'spline'
-            else:                   opts.interpolation = 'linear'
-
-
     def __buildColourMapWidget(self, cmapWidget):
         """Creates a control which allows the user to load a custom colour
         map. This control is added to the settings for :class:`.Image`
@@ -317,8 +280,6 @@ _DISPLAY_PROPS = td.TypeDict({
 
     'VolumeOpts' : [
         props.Widget('resolution',    showLimits=False),
-        props.Widget('transform',
-                     labels=strings.choices['ImageOpts.transform']),
         props.Widget('volume',
                      showLimits=False,
                      enabledWhen=lambda o: o.overlay.is4DImage()),
@@ -342,8 +303,6 @@ _DISPLAY_PROPS = td.TypeDict({
 
     'MaskOpts' : [
         props.Widget('resolution', showLimits=False),
-        props.Widget('transform',
-                     labels=strings.choices['ImageOpts.transform']),
         props.Widget('volume',
                      showLimits=False,
                      enabledWhen=lambda o: o.overlay.is4DImage()),
@@ -353,8 +312,6 @@ _DISPLAY_PROPS = td.TypeDict({
 
     'RGBVectorOpts' : [
         props.Widget('resolution', showLimits=False),
-        props.Widget('transform',
-                     labels=strings.choices['ImageOpts.transform']),
         props.Widget('interpolation'),
         props.Widget('xColour'),
         props.Widget('yColour'),
@@ -367,8 +324,6 @@ _DISPLAY_PROPS = td.TypeDict({
 
     'LineVectorOpts' : [
         props.Widget('resolution',    showLimits=False),
-        props.Widget('transform',
-                     labels=strings.choices['ImageOpts.transform']),
         props.Widget('xColour'),
         props.Widget('yColour'),
         props.Widget('zColour'),
@@ -401,8 +356,6 @@ _DISPLAY_PROPS = td.TypeDict({
                      dependencies=[(lambda o: o.display, 'softwareMode')]),
         # props.Widget('showNames'),
         props.Widget('resolution',   showLimits=False),
-        props.Widget('transform',
-                     labels=strings.choices['ImageOpts.transform']),
         props.Widget('volume',
                      showLimits=False,
                      enabledWhen=lambda o: o.overlay.is4DImage())]
