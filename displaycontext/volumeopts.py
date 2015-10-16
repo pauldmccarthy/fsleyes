@@ -33,19 +33,17 @@ overlays can potentially be displayed in one of three coordinate systems:
  ====================== ====================================================
 
 
-The :attr:`Image.transform` property controls how the image data is
-transformed into the display coordinate system.
+The :attr:`ImageOpts.transform` property controls how the image data is
+transformed into the display coordinate system. It allows any of the above
+spaces to be specified (as ``id``, ``pixdim`` or ``affine``` respectively),
+and also allows a ``custom`` transformation to be specified (see the
+:attr:`customXform` property).
 
 
-.. note:: Currently, the ``transform`` property for every image overlay must
-          be independently set for each image. However, in the next version of
-          *FSLeyes* this will change, with the introduction of **GedMode**.
-
-
-As of ``fslpy`` version |version|, when the ``transform`` property for an
-image is ``id`` or ``pixdim``, the data to display space transformation assumes
-that integer voxel coordinates correspond to the bottom-left of the voxel
-in the display coordinate system. In other words, a voxel at location::
+Regardless of the space in which the ``Image`` is displayed , the
+voxel-to-display space transformation assumes that integer voxel coordinates
+correspond to the centre of the voxel in the display coordinate system. In
+other words, a voxel at location::
 
     [x, y, z]
 
@@ -56,7 +54,8 @@ the space::
     [x-0.5 - x+0.5, y-0.5 - y+0.5, z-0.5 - z+0.5]
 
 
-For example, the voxel::
+For example, if the :attr:`ImageOpts.transform` property is set to ``id``, the
+voxel::
 
     [2, 3, 4]
 
@@ -65,18 +64,9 @@ is drawn such that it occupies the space::
     [1.5 - 2.5, 2.5 - 3.5, 3.5 - 4.5]
 
 
-This convention is the same as the convention taken when images are displayed
-in world, or ``affine`` space. The ``qform`` and ``sform`` transformation
-matrices in the ``NIFTI1`` specification assume that the voxel coordinates
-``[x, y, z]`` correspond to the centre of a voxel. As an example, assuming
-that our affine transformation is an identity matrix, the voxel::
-
-    [2, 3, 4]
-
-
-for an image displayed in ``affine`` space would occupy the space::
-
-    [1.5 - 2.5, 2.5 - 3.5, 3.5 - 4.5]
+This convention is in line with the convention defined by the ``NIFTI1``
+specification: it assumes that the voxel coordinates ``[x, y, z]`` correspond
+to the centre of a voxel.
 """
 
 
@@ -115,11 +105,23 @@ class ImageOpts(fsldisplay.DisplayOpts):
     """ 
 
 
-    transform = props.Choice(('affine', 'pixdim', 'id'), default='pixdim')
+    transform = props.Choice(
+        ('affine', 'pixdim', 'id', 'custom'),
+        default='pixdim')
     """This property defines how the overlay should be transformd into
     the display coordinate system. See the
     :ref:`note on coordinate systems <volumeopts-coordinate-systems>`
     for important information regarding this property.
+    """
+
+    
+    customXform = props.Array(
+        dtype=np.float64,
+        shape=(4, 4),
+        resizable=False,
+        default=[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+    """A custom transformation matrix which is used when the :attr:`transform`
+    property is set to ``custom``.
     """
 
  
@@ -132,10 +134,11 @@ class ImageOpts(fsldisplay.DisplayOpts):
 
         # The transform property cannot be unsynced
         # across different displays, as it affects
-        # the display context bounds, wich also
+        # the display context bounds, which also
         # cannot be unsynced
         nounbind = kwargs.get('nounbind', [])
         nounbind.append('transform')
+        nounbind.append('customXform')
 
         kwargs['nounbind'] = nounbind
 
@@ -143,7 +146,8 @@ class ImageOpts(fsldisplay.DisplayOpts):
 
         overlay = self.overlay
 
-        self.addListener('transform', self.name, self.__transformChanged)
+        self.addListener('transform',   self.name, self.__transformChanged)
+        self.addListener('customXform', self.name, self.__customXformChanged)
 
         # The display<->* transformation matrices
         # are created in the _setupTransforms method
@@ -179,6 +183,17 @@ class ImageOpts(fsldisplay.DisplayOpts):
         
         self.bounds[:] = [lo[0], hi[0], lo[1], hi[1], lo[2], hi[2]]
 
+
+    def __customXformChanged(self, *a):
+        """Called when the :attr:`customXform` property changes.  Re-generates
+        transformation matrices, and re-calculates the display :attr:`bounds`
+        (via calls to :meth:`__setupTransforms` and
+        :meth:`__transformChanged`).
+        """
+
+        self.__setupTransforms()
+        self.__transformChanged()
+        
                             
     def __setupTransforms(self):
         """Calculates transformation matrices between all of the possible
@@ -187,35 +202,52 @@ class ImageOpts(fsldisplay.DisplayOpts):
         These matrices are accessible via the :meth:`getTransform` method.
         """
 
-        image          = self.overlay
+        image = self.overlay
 
-        voxToIdMat     = np.eye(4)
-        voxToPixdimMat = np.diag(list(image.pixdim[:3]) + [1.0])
-        voxToAffineMat = image.voxToWorldMat.T
+        voxToIdMat        = np.eye(4)
+        voxToPixdimMat    = np.diag(list(image.pixdim[:3]) + [1.0])
+        voxToAffineMat    = image.voxToWorldMat.T
+        voxToCustomMat    = self.customXform
         
         idToVoxMat        = transform.invert(voxToIdMat)
         idToPixdimMat     = transform.concat(idToVoxMat, voxToPixdimMat)
         idToAffineMat     = transform.concat(idToVoxMat, voxToAffineMat)
+        idToCustomMat     = transform.concat(idToVoxMat, voxToCustomMat)
 
         pixdimToVoxMat    = transform.invert(voxToPixdimMat)
         pixdimToIdMat     = transform.concat(pixdimToVoxMat, voxToIdMat)
         pixdimToAffineMat = transform.concat(pixdimToVoxMat, voxToAffineMat)
+        pixdimToCustomMat = transform.concat(pixdimToVoxMat, voxToCustomMat)
 
         affineToVoxMat    = image.worldToVoxMat.T
         affineToIdMat     = transform.concat(affineToVoxMat, voxToIdMat)
         affineToPixdimMat = transform.concat(affineToVoxMat, voxToPixdimMat)
-        
+        affineToCustomMat = transform.concat(affineToVoxMat, voxToCustomMat)
+
+        customToVoxMat    = transform.invert(voxToCustomMat)
+        customToIdMat     = transform.concat(customToVoxMat, voxToIdMat)
+        customToPixdimMat = transform.concat(customToVoxMat, voxToPixdimMat)
+        customToAffineMat = transform.concat(customToVoxMat, voxToAffineMat)
+
         self.__xforms['id',  'id']     = np.eye(4)
         self.__xforms['id',  'pixdim'] = idToPixdimMat 
         self.__xforms['id',  'affine'] = idToAffineMat
+        self.__xforms['id',  'custom'] = idToCustomMat
 
         self.__xforms['pixdim', 'pixdim'] = np.eye(4)
         self.__xforms['pixdim', 'id']     = pixdimToIdMat
         self.__xforms['pixdim', 'affine'] = pixdimToAffineMat
+        self.__xforms['pixdim', 'custom'] = pixdimToCustomMat
  
         self.__xforms['affine', 'affine'] = np.eye(4)
         self.__xforms['affine', 'id']     = affineToIdMat
-        self.__xforms['affine', 'pixdim'] = affineToPixdimMat 
+        self.__xforms['affine', 'pixdim'] = affineToPixdimMat
+        self.__xforms['affine', 'custom'] = affineToCustomMat
+
+        self.__xforms['custom', 'custom'] = np.eye(4)
+        self.__xforms['custom', 'id']     = customToIdMat
+        self.__xforms['custom', 'pixdim'] = customToPixdimMat
+        self.__xforms['custom', 'affine'] = customToAffineMat
 
 
     def getTransform(self, from_, to, xform=None):
@@ -227,16 +259,20 @@ class ImageOpts(fsldisplay.DisplayOpts):
         =========== ======================================================
         ``id``      Voxel coordinates
         
+        ``voxel``   Equivalent to ``id``.
+        
         ``pixdim``  Voxel coordinates, scaled by voxel dimensions
         
         ``affine``  World coordinates, as defined by the NIFTI1
                     ``qform``/``sform``. See :attr:`.Image.voxToWorldMat`.
-        
-        ``voxel``   Equivalent to ``id``.
+
+        ``world``   Equivalent to ``affine``.
+
+        ``custom``  Coordinates in the space defined by the custom
+                    transformation matrix, as specified via the
+                    :attr:`customXform` property.
         
         ``display`` Equivalent to the current value of :attr:`transform`.
-        
-        ``world``   Equivalent to ``affine``.
         =========== ======================================================
 
         
@@ -292,9 +328,9 @@ class ImageOpts(fsldisplay.DisplayOpts):
                   on each other were aligned at the voxel corner, whereas in
                   ``affine`` space, they were aligned at the voxel
                   centre. This is no longer the case, so this method is not
-                  actually necessary. But it is still here, and still being
-                  used, just in case we need to change these conventions again
-                  in the future.
+                  actually necessary, and just returns all zeros. But it is
+                  still here, and still being used, just in case we need to
+                  change these conventions again in the future.
         """
         return (0, 0, 0), (0, 0, 0)
 
@@ -307,6 +343,10 @@ class ImageOpts(fsldisplay.DisplayOpts):
            - ``display``: The display coordinate system
            - ``voxel``:   The image voxel coordinate system
            - ``world``:   The image world coordinate system
+           - ``custom``:  The coordinate system defined by the custom
+                          transformation matrix (see :attr:`customXform`)
+
+        See also the :meth:`transformToVoxels` method.
         """
 
         xform     = self.getTransform(       from_, to_)
@@ -324,6 +364,11 @@ class ImageOpts(fsldisplay.DisplayOpts):
         If the :attr:`transform` property has changed, returns the given
         location, assumed to be in the old display coordinate system,
         transformed into the new display coordinate system.
+
+        .. note:: This method will probably break if the ``custom``
+                  transformation matrix changes between the time that
+                  the ``transform`` property changes, and the time that
+                  this method is called.
         """
 
         lastVal = self.getLastValue('transform')
