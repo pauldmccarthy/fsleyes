@@ -154,18 +154,17 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
         text    = self.__infoPanel
         overlay = self._displayCtx.getReferenceImage(
             self._displayCtx.getSelectedOverlay())
+
+        topText = None
         
         if len(atlases.listAtlases()) == 0:
             text.SetPage(strings.messages['AtlasInfoPanel.atlasDisabled'])
             return
 
-        if overlay is None:
-            text.SetPage(strings.messages['AtlasInfoPanel.noReference'])
-            return 
-
-        if overlay.getXFormCode() != constants.NIFTI_XFORM_MNI_152:
-            text.SetPage(strings.messages['AtlasInfoPanel.notMNISpace'])
-            return
+        if overlay is None or \
+           overlay.getXFormCode() != constants.NIFTI_XFORM_MNI_152:
+            topText = strings.messages['AtlasInfoPanel.notMNISpace']
+            topText = '<font color="red">{}</font>'.format(topText)
 
         if len(self.__enabledAtlases) == 0:
             text.SetPage(strings.messages['AtlasInfoPanel.chooseAnAtlas'])
@@ -175,7 +174,10 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
         loc  = self._displayCtx.location
         loc  = opts.transformCoords([loc], 'display', 'world')[0]
 
-        lines         = []
+        lines = []
+
+        if topText is not None:
+            lines.append(topText)
         
         # Three types of hyperlink:
         #   - one for complete (summary) label atlases,
