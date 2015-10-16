@@ -166,6 +166,8 @@ class ImageOpts(fsldisplay.DisplayOpts):
 
     def destroy(self):
         """Calls the :meth:`.DisplayOpts.destroy` method. """
+        self.removeListener('transform',   self.name)
+        self.removeListener('customXform', self.name)
         fsldisplay.DisplayOpts.destroy(self)
 
         

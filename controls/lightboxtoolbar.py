@@ -18,6 +18,7 @@ import fsl.fsleyes.actions  as actions
 import fsl.fsleyes.icons    as fslicons
 import fsl.fsleyes.tooltips as fsltooltips
 import fsl.data.strings     as strings
+import fsl.data.image       as fslimage
 
 
 class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
@@ -75,7 +76,16 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
             'sliceSpacing' : fsltooltips.properties[lbOpts,  'sliceSpacing'],
             'zrange'       : fsltooltips.properties[lbOpts,  'zrange'],
             'zoom'         : fsltooltips.properties[lbOpts,  'zoom'],
+            'displaySpace' : fsltooltips.properties[displayCtx,
+                                                    'displaySpace']
         }
+
+        def displaySpaceOptionName(opt):
+
+            if isinstance(opt, fslimage.Image):
+                return opt.name
+            else:
+                return strings.choices['DisplayContext.displaySpace'][opt] 
         
         specs = {
             
@@ -117,6 +127,11 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
                 spin=False,
                 showLimits=False,
                 tooltip=tooltips['zoom']),
+ 
+            'displaySpace' : props.Widget(
+                'displaySpace',
+                labels=displaySpaceOptionName,
+                tooltip=tooltips['displaySpace'])
         }
 
         # Slice spacing and zoom go on a single panel
@@ -124,25 +139,30 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
         sizer = wx.FlexGridSizer(2, 2)
         panel.SetSizer(sizer)
 
-        more         = props.buildGUI(self,  self,   specs['more'])
-        screenshot   = props.buildGUI(self,  lb,     specs['screenshot'])
-        movieMode    = props.buildGUI(self,  lb,     specs['movieMode'])
-        zax          = props.buildGUI(self,  lbOpts, specs['zax'])
-        zrange       = props.buildGUI(self,  lbOpts, specs['zrange'])
-        zoom         = props.buildGUI(panel, lbOpts, specs['zoom'])
-        spacing      = props.buildGUI(panel, lbOpts, specs['sliceSpacing'])
+        more         = props.buildGUI(self,  self,       specs['more'])
+        screenshot   = props.buildGUI(self,  lb,         specs['screenshot'])
+        movieMode    = props.buildGUI(self,  lb,         specs['movieMode'])
+        zax          = props.buildGUI(self,  lbOpts,     specs['zax'])
+        zrange       = props.buildGUI(self,  lbOpts,     specs['zrange'])
+        zoom         = props.buildGUI(panel, lbOpts,     specs['zoom'])
+        spacing      = props.buildGUI(panel, lbOpts,     specs['sliceSpacing'])
+        displaySpace = props.buildGUI(panel, displayCtx, specs['displaySpace'])
         zoomLabel    = wx.StaticText(panel)
         spacingLabel = wx.StaticText(panel)
 
         zoomLabel   .SetLabel(strings.properties[lbOpts, 'zoom'])
         spacingLabel.SetLabel(strings.properties[lbOpts, 'sliceSpacing'])
 
+        displaySpace = self.MakeLabelledTool(
+            displaySpace,
+            strings.properties[displayCtx, 'displaySpace'])
+
         sizer.Add(zoomLabel)
         sizer.Add(zoom,    flag=wx.EXPAND)
         sizer.Add(spacingLabel)
         sizer.Add(spacing, flag=wx.EXPAND)
 
-        tools = [more, screenshot, zax, movieMode, zrange, panel]
+        tools = [more, screenshot, zax, movieMode, displaySpace, zrange, panel]
         
         self.SetTools(tools) 
 

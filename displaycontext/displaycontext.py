@@ -14,7 +14,9 @@ import logging
 
 import props
 
-import display as fsldisplay
+import display             as fsldisplay
+import fsl.data.image      as fslimage
+import fsl.utils.transform as transform
 
 
 log = logging.getLogger(__name__)
@@ -35,11 +37,11 @@ class DisplayContext(props.SyncableHasProperties):
 
     
     A ``DisplayContext`` instance is responsible for creating and destroying
-    :class:`.Display` instances for every overlay in the ``OverlayList``. These
-    ``Display`` instances, and the corresponding ``DisplayOpts`` instances
-    (which, in turn, are created/destroyed by ``Display`` instances) can be
-    accessed with the :meth:`getDisplay` and :meth:`getOpts` method
-    respectively.
+    :class:`.Display` instances for every overlay in the
+    ``OverlayList``. These ``Display`` instances, and the corresponding
+    :class:`.DisplayOpts` instances (which, in turn, are created/destroyed by
+    ``Display`` instances) can be accessed with the :meth:`getDisplay` and
+    :meth:`getOpts` method respectively.
 
 
     A number of other useful methods are provided by a ``DisplayContext``
@@ -79,7 +81,7 @@ class DisplayContext(props.SyncableHasProperties):
     bounds = props.Bounds(ndims=3)
     """This property contains the min/max values of a bounding box (in display
     coordinates) which is big enough to contain all of the overlays in the
-    :attr:`overlays` list.
+    :class:`.OverlayList`.
 
     .. warning:: This property shouid be treated as read-only.
     """
@@ -113,6 +115,41 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
+    displaySpace = props.Choice(('pixdim', 'world'), default='pixdim')
+    """The *space* in which overlays are displayed. This property globally
+    controls the :attr:`.ImageOpts.transform` property of all :class:`.Image`
+    overlays. It has three settings, described below.
+
+    
+    1. **Scaled voxel** space (a.k.a. ``pixdim``)
+
+       All :class:`.Image` overlays are displayed with scaled voxels - the
+       :attr:`.ImageOpts.transform` property for every ``Image`` overlay is
+       set to ``pixdim``.
+    
+    2. **World** space (a.k.a. ``world``)
+
+       All :class:`.Image` overlays are displayed in the space defined by
+       their affine transformation matrix - the :attr:`.ImageOpts.transform`
+       property for every ``Image`` overlay is set to ``affine``.
+
+    3. **Reference image** space
+
+       A single :class:`.Image` overlay is selected as a *reference* image,
+       and is displayed in scaled voxel space (:attr:`.ImageOpts.transform` is
+       set to ``pixdim``). All other ``Image`` overlays are transformed into
+       this reference space - their :attr:`.ImageOpts.transform` property is
+       set to ``custom``, and their :attr:`.ImageOpts.customXform` matrix is
+       set such that it transforms from the image voxel space to the scaled
+       voxel space of the reference image.
+
+    .. note:: The :attr:`.ImageOpts.transform` property of any :class:`.Image`
+              overlay can be set independently of this property. However,
+              whenever this property changes, it will change the ``transform``
+              property for every ``Image``, in the manner described above.
+    """
+
+
     def __init__(self, overlayList, parent=None):
         """Create a ``DisplayContext``.
 
@@ -126,7 +163,7 @@ class DisplayContext(props.SyncableHasProperties):
         props.SyncableHasProperties.__init__(
             self,
             parent=parent,
-            nounbind=['overlayGroups'],
+            nounbind=['overlayGroups', 'displaySpace'],
             nobind=[  'syncOverlayDisplay'])
 
         self.__overlayList = overlayList
@@ -154,12 +191,11 @@ class DisplayContext(props.SyncableHasProperties):
         if parent is None: self.__prevOverlayListLen = 0
         else:              self.__prevOverlayListLen = len(overlayList)
             
-
-        # Ensure that a Display object exists
-        # for every overlay, and that the display
-        # bounds property is initialised
+        # The overlayListChanged and displaySpaceChanged
+        # methods do important things - check them out
         self.__displays = {}
         self.__overlayListChanged()
+        self.__displaySpaceChanged()
         
         overlayList.addListener('overlays',
                                 self.__name,
@@ -168,6 +204,9 @@ class DisplayContext(props.SyncableHasProperties):
         self.addListener('syncOverlayDisplay',
                          self.__name,
                          self.__syncOverlayDisplayChanged)
+        self.addListener('displaySpace',
+                         self.__name,
+                         self.__displaySpaceChanged)
 
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
@@ -374,17 +413,38 @@ class DisplayContext(props.SyncableHasProperties):
         # property is valid
         self.__syncOverlayOrder()
 
-        # Ensure that the bounds property is accurate
+        # Ensure that the bounds
+        # property is accurate
         self.__updateBounds()
 
-        # If the overlay list was empty, and is
-        # now non-empty, centre the currently
-        # selected location (but see the comments
-        # in __init__ about this).
+        # Ensure that the displaySpace
+        # property options are in sync
+        # with the overlay list
+        self.__updateDisplaySpaceOptions()
+
+        # Initliase the transform property 
+        # of any Image overlays which have 
+        # just been added to the list,
+        oldList  = self.__overlayList.getLastValue('overlays')[:]
+        for overlay in self.__overlayList:
+            if isinstance(overlay, fslimage.Image) and \
+               (overlay not in oldList):
+                self.__setTransform(overlay)
+
+        # If the overlay list was empty, 
+        # and is now non-empty ...
         if (self.__prevOverlayListLen == 0) and (len(self.__overlayList) > 0):
+
+            # Set the displaySpace to
+            # the first new image
+            for overlay in self.__overlayList:
+                if isinstance(overlay, fslimage.Image):
+                    self.displaySpace = overlay
+                    break
             
-            # initialise the location to be
-            # the centre of the world
+            # Centre the currently selected
+            # location (but see the comments
+            # in __init__ about this).
             b = self.bounds
             self.location.xyz = [
                 b.xlo + b.xlen / 2.0,
@@ -403,6 +463,65 @@ class DisplayContext(props.SyncableHasProperties):
             self.setConstraint('selectedOverlay', 'maxval', 0)
 
 
+    def __updateDisplaySpaceOptions(self):
+        """Updates the :attr:`displaySpace` property so it is synchronised with
+        the current contents of the :class:`.OverlayList`
+        
+        This method is called by the :meth:`__overlayListChanged` method.
+        """
+
+        choiceProp = self.getProp('displaySpace')
+        choices    = ['pixdim', 'world']
+        
+        for overlay in self.__overlayList:
+            if isinstance(overlay, fslimage.Image):
+                choices.append(overlay)
+
+        choiceProp.setChoices(choices, instance=self)
+
+
+    def __setTransform(self, image):
+        """Sets the :attr:`.ImageOpts.transform` property associated with
+        the given :class:`.Image` overlay to a sensible value, given the
+        current value of the :attr:`.displaySpace` property.
+
+        Called by the :meth:`__displaySpaceChanged` method, and by
+        :meth:`__overlayListChanged` for any :class:`.Image` overlays which
+        have been newly added to the :class:`.OverlayList`.
+
+        :arg image: An :class:`.Image` overlay.
+        """
+
+        space = self.displaySpace
+        opts  = self.getOpts(image)
+            
+        if   space == 'pixdim': opts.transform = 'pixdim'
+        elif space == 'world':  opts.transform = 'affine'
+        elif image is space:    opts.transform = 'pixdim'
+        else:
+            refOpts = self.getOpts(space)
+            xform   = transform.concat(
+                opts   .getTransform('voxel', 'world'),
+                refOpts.getTransform('world', 'pixdim'))
+
+            opts.customXform = xform
+            opts.transform   = 'custom'
+
+        
+    def __displaySpaceChanged(self, *a):
+        """Called when the :attr:`displaySpace` property changes. Updates the
+        :attr:`.ImageOpts.transform` property for all :class:`.Image` overlays
+        in the :class:`.OverlayList`.
+        """
+
+        for overlay in self.__overlayList:
+            
+            if not isinstance(overlay, fslimage.Image):
+                continue
+
+            self.__setTransform(overlay)
+
+            
     def __syncOverlayOrder(self):
         """Ensures that the :attr:`overlayOrder` property is up to date
         with respect to the :class:`.OverlayList`.

@@ -16,6 +16,7 @@ import props
 import pwidgets.widgetlist  as widgetlist
 
 import fsl.data.strings     as strings
+import fsl.data.image       as fslimage
 import fsl.fsleyes.panel    as fslpanel
 import fsl.fsleyes.tooltips as fsltooltips
 
@@ -51,6 +52,7 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
 
        _CANVASPANEL_PROPS
        _SCENEOPTS_PROPS
+       _DISPLAYCTX_PROPS
        _ORTHOOPTS_PROPS
        _LIGHTBOXOPTS_PROPS
     """
@@ -114,7 +116,19 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
                 widget,
                 displayName=strings.properties[opts, dispProp.key],
                 tooltip=fsltooltips.properties[opts, dispProp.key],
-                groupName='scene') 
+                groupName='scene')
+
+        for dispProp in _DISPLAYCTX_PROPS:
+            widget = props.buildGUI(self.__widgets,
+                                    displayCtx,
+                                    dispProp,
+                                    showUnlink=False)
+            
+            self.__widgets.AddWidget(
+                widget,
+                displayName=strings.properties[displayCtx, dispProp.key],
+                tooltip=fsltooltips.properties[displayCtx, dispProp.key],
+                groupName='scene')                
 
         for dispProp in panelProps:
 
@@ -165,6 +179,22 @@ _SCENEOPTS_PROPS = [
 ]
 """A list of :class:`props.Widget` items defining controls to
 display for :class:`.SceneOpts` properties.
+"""
+
+
+def _displaySpaceOptionName(opt):
+
+    if isinstance(opt, fslimage.Image):
+        return opt.name
+    else:
+        return strings.choices['DisplayContext.displaySpace'][opt]
+
+
+_DISPLAYCTX_PROPS = [
+    props.Widget('displaySpace', labels=_displaySpaceOptionName)
+]
+"""A list of :class:`props.Widget` items defining controls to
+display for :class:`.DisplayContext` properties.
 """
 
 

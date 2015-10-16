@@ -22,6 +22,11 @@ from fsl.utils.typedict import TypeDict
 
 properties = TypeDict({
 
+    # DisplayContext
+
+    'DisplayContext.displaySpace' : 'The space in which overlays are '
+                                    'displayed.',
+
     # Overlay Display
     
     'Display.name'        : 'The name of this overlay.',
