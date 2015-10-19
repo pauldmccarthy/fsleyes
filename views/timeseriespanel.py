@@ -634,7 +634,7 @@ class FEATModelFitTimeSeries(TimeSeries):
         """
         if not TimeSeries.update(self, coords):
             return
-        self.updateModelFit()
+        self.__updateModelFit()
         
 
     def __updateModelFit(self):
