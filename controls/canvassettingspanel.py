@@ -45,16 +45,7 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
     The ``CanvasSettingsPanel`` divides the displayed settings into those
     which are common to all :class:`.CanvasPanel` instances, and those which
     are specific to the :class:`.CanvasPanel` sub-class (i.e.
-    :class:`.OrthoPanel` or :class:`.LightBoxPanel`).  The specific settings
-    that are displayed are defined in the following lists:
-
-    .. autosummary::
-
-       _CANVASPANEL_PROPS
-       _SCENEOPTS_PROPS
-       _DISPLAYCTX_PROPS
-       _ORTHOOPTS_PROPS
-       _LIGHTBOXOPTS_PROPS
+    :class:`.OrthoPanel` or :class:`.LightBoxPanel`).  
     """
 
     
@@ -69,28 +60,92 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
         
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
-        self.__widgets = widgetlist.WidgetList(self)
-        self.__sizer   = wx.BoxSizer(wx.VERTICAL)
+        self.__canvasPanel = canvasPanel
+        self.__widgets     = widgetlist.WidgetList(self)
+        self.__sizer       = wx.BoxSizer(wx.VERTICAL)
 
         self.SetSizer(self.__sizer)
 
         self.__sizer.Add(self.__widgets, flag=wx.EXPAND, proportion=1)
+
+        self.__makeTools()
+
+        self.SetMinSize((21, 21))
+
+
+    def __makeTools(self):
+
+        displayCtx  = self._displayCtx
+        canvasPanel = self.__canvasPanel
+
+        canvasPanelProps = [
+            props.Widget('syncOverlayOrder'),
+            props.Widget('syncLocation'),
+            props.Widget('syncOverlayDisplay'),
+            props.Widget('movieMode'),
+            props.Widget('movieRate', spin=False, showLimits=False)]
+
+        sceneOptsProps = [
+            props.Widget('showCursor'),
+            props.Widget('bgColour'),
+            props.Widget('cursorColour'),
+            props.Widget('performance',
+                         spin=False,
+                         showLimits=False,
+                         labels=strings.choices['SceneOpts.performance']),
+            props.Widget('showColourBar'),
+            props.Widget('colourBarLabelSide',
+                         labels=strings.choices[
+                             'SceneOpts.colourBarLabelSide'],
+                         enabledWhen=lambda o: o.showColourBar),
+            props.Widget('colourBarLocation',
+                         labels=strings.choices['SceneOpts.colourBarLocation'],
+                         enabledWhen=lambda o: o.showColourBar)]
+
+        def _displaySpaceOptionName(opt):
+
+            if isinstance(opt, fslimage.Image):
+                return opt.name
+            else:
+                return strings.choices['DisplayContext.displaySpace'][opt]
+
+        displayCtxProps = [
+            props.Widget('displaySpace',
+                         labels=_displaySpaceOptionName,
+                         dependencies=[(canvasPanel, 'profile')],
+                         enabledWhen=lambda i, p: p == 'view')]
+
+        orthoOptsProps = [
+            props.Widget('layout', labels=strings.choices['OrthoOpts.layout']), 
+            props.Widget('zoom', spin=False, showLimits=False),
+            props.Widget('showLabels'),
+            props.Widget('showXCanvas'),
+            props.Widget('showYCanvas'),
+            props.Widget('showZCanvas')]
+
+        lightBoxOptsProps = [
+            props.Widget('zax', labels=strings.choices['CanvasOpts.zax']),
+            props.Widget('zoom',         showLimits=False, spin=False),
+            props.Widget('sliceSpacing', showLimits=False),
+            props.Widget('zrange',       showLimits=False),
+            props.Widget('highlightSlice'),
+            props.Widget('showGridLines')]
 
         import fsl.fsleyes.views.orthopanel    as orthopanel
         import fsl.fsleyes.views.lightboxpanel as lightboxpanel
 
         if isinstance(canvasPanel, orthopanel.OrthoPanel):
             panelGroup = 'ortho'
-            panelProps = _ORTHOOPTS_PROPS
+            panelProps = orthoOptsProps
             
         elif isinstance(canvasPanel, lightboxpanel.LightBoxPanel):
             panelGroup = 'lightbox'
-            panelProps = _LIGHTBOXOPTS_PROPS
+            panelProps = lightBoxOptsProps
 
         self.__widgets.AddGroup('scene' ,    strings.labels[self, 'scene'])
         self.__widgets.AddGroup( panelGroup, strings.labels[self,  panelGroup])
 
-        for dispProp in _CANVASPANEL_PROPS:
+        for dispProp in canvasPanelProps:
 
             widget = props.buildGUI(self.__widgets,
                                     canvasPanel,
@@ -105,7 +160,7 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
 
         opts = canvasPanel.getSceneOptions()
 
-        for dispProp in _SCENEOPTS_PROPS:
+        for dispProp in sceneOptsProps:
 
             widget = props.buildGUI(self.__widgets,
                                     opts,
@@ -118,7 +173,7 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
                 tooltip=fsltooltips.properties[opts, dispProp.key],
                 groupName='scene')
 
-        for dispProp in _DISPLAYCTX_PROPS:
+        for dispProp in displayCtxProps:
             widget = props.buildGUI(self.__widgets,
                                     displayCtx,
                                     dispProp,
@@ -145,80 +200,3 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
 
         self.__widgets.Expand('scene')
         self.__widgets.Expand(panelGroup)
-
-        self.SetMinSize((21, 21))
-
-
-_CANVASPANEL_PROPS = [
-    props.Widget('syncOverlayOrder'),
-    props.Widget('syncLocation'),
-    props.Widget('syncOverlayDisplay'),
-    props.Widget('movieMode'),
-    props.Widget('movieRate', spin=False, showLimits=False),
-]
-"""A list of :class:`props.Widget` items defining controls to
-display for :class:`.CanvasPanel` properties.
-"""
-
-
-_SCENEOPTS_PROPS = [
-    props.Widget('showCursor'),
-    props.Widget('bgColour'),
-    props.Widget('cursorColour'),
-    props.Widget('performance',
-                 spin=False,
-                 showLimits=False,
-                 labels=strings.choices['SceneOpts.performance']),
-    props.Widget('showColourBar'),
-    props.Widget('colourBarLabelSide',
-                 labels=strings.choices['SceneOpts.colourBarLabelSide'],
-                 enabledWhen=lambda o: o.showColourBar),
-    props.Widget('colourBarLocation',
-                 labels=strings.choices['SceneOpts.colourBarLocation'],
-                 enabledWhen=lambda o: o.showColourBar)
-]
-"""A list of :class:`props.Widget` items defining controls to
-display for :class:`.SceneOpts` properties.
-"""
-
-
-def _displaySpaceOptionName(opt):
-
-    if isinstance(opt, fslimage.Image):
-        return opt.name
-    else:
-        return strings.choices['DisplayContext.displaySpace'][opt]
-
-
-_DISPLAYCTX_PROPS = [
-    props.Widget('displaySpace', labels=_displaySpaceOptionName)
-]
-"""A list of :class:`props.Widget` items defining controls to
-display for :class:`.DisplayContext` properties.
-"""
-
-
-_ORTHOOPTS_PROPS = [
-    props.Widget('layout', labels=strings.choices['OrthoOpts.layout']), 
-    props.Widget('zoom', spin=False, showLimits=False),
-    props.Widget('showLabels'),
-    props.Widget('showXCanvas'),
-    props.Widget('showYCanvas'),
-    props.Widget('showZCanvas')
-]
-"""A list of :class:`props.Widget` items defining controls to
-display for :class:`.OrthoOpts` properties.
-"""
-
-
-_LIGHTBOXOPTS_PROPS = [
-    props.Widget('zax', labels=strings.choices['CanvasOpts.zax']),
-    props.Widget('zoom',         showLimits=False, spin=False),
-    props.Widget('sliceSpacing', showLimits=False),
-    props.Widget('zrange',       showLimits=False),
-    props.Widget('highlightSlice'),
-    props.Widget('showGridLines') 
-]
-"""A list of :class:`props.Widget` items defining controls to
-display for :class:`.LightBoxOpts` properties.
-"""

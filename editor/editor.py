@@ -26,8 +26,10 @@ log = logging.getLogger(__name__)
 
 class Editor(props.HasProperties):
     """The ``Editor`` class provides functionality to edit the data of an
-    :class:`.Image` overlay.
+    :class:`.Image` overlay. An ``Editor`` instance is associated with a
+    specific ``Image`` overlay, passed to :meth:`__init__`.
 
+    
     An ``Editor`` instance uses a :class:`.Selection` object which allows
     voxel selections to be made, and keeps track of all changes to both the
     selection and image data.
@@ -49,22 +51,6 @@ class Editor(props.HasProperties):
     to perform the second step.
 
     
-    .. warning:: An important point to keep in mind is that whenever the
-                 :attr:`.DisplayContext.selectedOverlay` property changes, the
-                 ``Editor`` will discard the current :class:`.Selection`
-                 instance, and create a new one, which matches the resolution
-                 of the newly selected overlay (if the new overlay is not an
-                 :class:`.Image`, a ``Selection`` object is not created).
-                 Therefore, it is probably a bad idea to store your own
-                 reference to the current ``Selection`` object - just use the
-                 :meth:`getSelection` method.
-
-                 I may change this behaviour in the future, as it is a
-                 potential bug source. I will possibly change the structure so
-                 that ``Editor`` instances are created/destroyed for
-                 individual overlays.
-
-    
     Some convenience methods are also provided for working with selections:
 
     .. autosummary::
@@ -79,15 +65,15 @@ class Editor(props.HasProperties):
 
     An ``Editor`` instance keeps track of all changes made to both the
     :class:`Selection` object, and to the :class:`Image` data. Every
-    selection/data change made is recorded with the :class:`SelectionChange`
-    and :class:`.ValueChange` classes, and stored in a list. This allows these
-    changes to be undone (and redone), through the :meth:`undo` and
-    :meth:`redo` methods. The ``Editor`` class also has two properties,
-    :attr:`canUndo` and :attr:`canRedo`, which reflect the current state of
-    the ``Editor`` with respect to its ability to undo/redo operations.
+    selection/data change made is recorded using :class:`SelectionChange` and
+    :class:`.ValueChange` instances, which are stored in a list. These changes
+    can be undone (and redone), through the :meth:`undo` and :meth:`redo`
+    methods. The ``Editor`` class also has two properties, :attr:`canUndo` and
+    :attr:`canRedo`, which reflect the current state of the ``Editor`` with
+    respect to its ability to undo/redo operations.
 
     
-    Sometimes it is useful to treat may small changes as a single large
+    Sometimes it is useful to treat many small changes as a single large
     change.  For example, if a selection is being updated by dragging the
     mouse across a canvas, storing a separate change for every change in mouse
     position would result in many small changes which, if the user then wishes
@@ -113,8 +99,10 @@ class Editor(props.HasProperties):
     """    
 
     
-    def __init__(self, overlayList, displayCtx):
+    def __init__(self, image, overlayList, displayCtx):
         """Create an ``Editor``.
+
+        :arg image:       The :class:`.Image` instance being edited.
 
         :arg overlayList: The :class:`.OverlayList` instance.
 
@@ -123,10 +111,15 @@ class Editor(props.HasProperties):
 
         self.__name           = '{}_{}'.format(self.__class__.__name__,
                                                id(self))
+        self.__image          = image
         self.__overlayList    = overlayList
         self.__displayCtx     = displayCtx
-        self.__selection      = None
-        self.__currentOverlay = None
+        self.__selection      = selection.Selection(
+            image, displayCtx.getDisplay(image))
+
+        self.__selection.addListener('selection',
+                                     self.__name,
+                                     self.__selectionChanged)
  
         # A list of state objects, providing
         # records of what has been done. The
@@ -139,16 +132,7 @@ class Editor(props.HasProperties):
         self.__doneList  = []
         self.__doneIndex = -1
         self.__inGroup   = False
-
-        self.__displayCtx .addListener('selectedOverlay',
-                                       self.__name,
-                                       self.__selectedOverlayChanged)
-        self.__overlayList.addListener('overlays',
-                                       self.__name,
-                                       self.__selectedOverlayChanged) 
-
-        self.__selectedOverlayChanged()
-
+        
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
 
@@ -162,12 +146,9 @@ class Editor(props.HasProperties):
         to prevent memory leaks.
         """
         
-        self.__displayCtx .removeListener('selectedOverlay', self.__name)
-        self.__overlayList.removeListener('overlays',        self.__name)
-        
-        if self.__selection is not None:
-            self.__selection.removeListener('selection', self.__name)
+        self.__selection.removeListener('selection', self.__name)
 
+        self.__image          = None
         self.__overlayList    = None
         self.__displayCtx     = None
         self.__selection      = None
@@ -181,19 +162,14 @@ class Editor(props.HasProperties):
 
 
     def fillSelection(self, newVals):
-        """Fills the currnent selection with the specified value or values.
+        """Fills the current selection with the specified value or values.
 
         :arg newVals: A scalar value, or a sequence containing the same
                       number of values as the current selection size.
         """
 
-        overlay = self.__currentOverlay
-
-        if overlay is None:
-            return
-        
-        opts = self.__displayCtx.getOpts(overlay)
-
+        image               = self.__image
+        opts                = self.__displayCtx.getOpts(image)
         selectBlock, offset = self.__selection.getBoundedSelection()
 
         if not isinstance(newVals, collections.Sequence):
@@ -208,10 +184,10 @@ class Editor(props.HasProperties):
         yhi = ylo + selectBlock.shape[1]
         zhi = zlo + selectBlock.shape[2]
 
-        if   len(overlay.shape) == 3:
-            oldVals = overlay.data[xlo:xhi, ylo:yhi, zlo:zhi]
-        elif len(overlay.shape) == 4:
-            oldVals = overlay.data[xlo:xhi, ylo:yhi, zlo:zhi, opts.volume]
+        if   len(image.shape) == 3:
+            oldVals = image.data[xlo:xhi, ylo:yhi, zlo:zhi]
+        elif len(image.shape) == 4:
+            oldVals = image.data[xlo:xhi, ylo:yhi, zlo:zhi, opts.volume]
         else:
             raise RuntimeError('Only 3D and 4D images are currently supported')
 
@@ -219,8 +195,8 @@ class Editor(props.HasProperties):
         newVals[selectBlock] = oldVals[selectBlock]
 
         oldVals = np.array(oldVals)
+        change  = ValueChange(image, opts.volume, offset, oldVals, newVals)
         
-        change = ValueChange(overlay, opts.volume, offset, oldVals, newVals)
         self.__applyChange(change)
         self.__changeMade( change)
 
@@ -231,14 +207,17 @@ class Editor(props.HasProperties):
         :class:`.OverlayList`.
         """
 
-        overlay = self.__currentOverlay
-        if overlay is None:
-            return
-
-        overlayIdx = self.__overlayList.index(overlay)
+        # This will raise a ValueError if the image
+        # associated with this Editor has been removed
+        # from the list. This shouldn't happen, and
+        # means that there is a bug in the
+        # OrthoEditProfile (which manages Editor
+        # instances).
+        overlayIdx = self.__overlayList.index(self.__image)
+        
         mask       = np.array(self.__selection.selection, dtype=np.uint8)
-        header     = overlay.nibImage.get_header()
-        name       = '{}_mask'.format(overlay.name)
+        header     = self.__image.nibImage.get_header()
+        name       = '{}_mask'.format(self.__image.name)
 
         roiImage = fslimage.Image(mask, name=name, header=header)
         self.__overlayList.insert(overlayIdx + 1, roiImage) 
@@ -246,31 +225,31 @@ class Editor(props.HasProperties):
 
     def createROIFromSelection(self):
         """Creates a new :class:`.Image` overlay, which contains the values
-        from the current ``Image``, where the current selection is non-zero,
-        and zeroes everywhere else.
+        from the ``Image`` associated with this ``Editor``, where the current
+        selection is non-zero, and zeroes everywhere else.
         
         The new ``Image`` is inserted into the :class:`.OverlayList`.
         """ 
 
-        overlay = self.__currentOverlay
-        if overlay is None:
-            return
+        image = self.__image
 
-        overlayIdx = self.__overlayList.index(overlay) 
-        opts       = self.__displayCtx.getDisplay(overlay)
+        # ValueError if the image has been 
+        # removed from the overlay list
+        overlayIdx = self.__overlayList.index(image) 
+        opts       = self.__displayCtx.getDisplay(image)
         
-        roi       = np.zeros(overlay.shape[:3], dtype=overlay.data.dtype)
+        roi       = np.zeros(image.shape[:3], dtype=image.data.dtype)
         selection = self.__selection.selection > 0
 
-        if   len(overlay.shape) == 3:
-            roi[selection] = overlay.data[selection]
-        elif len(overlay.shape) == 4:
-            roi[selection] = overlay.data[:, :, :, opts.volume][selection]
+        if   len(image.shape) == 3:
+            roi[selection] = image.data[selection]
+        elif len(image.shape) == 4:
+            roi[selection] = image.data[:, :, :, opts.volume][selection]
         else:
             raise RuntimeError('Only 3D and 4D images are currently supported')
 
-        header = overlay.nibImage.get_header()
-        name   = '{}_roi'.format(overlay.name)
+        header = image.nibImage.get_header()
+        name   = '{}_roi'.format(image.name)
 
         roiImage = fslimage.Image(roi, name=name, header=header)
         self.__overlayList.insert(overlayIdx + 1, roiImage)
@@ -349,51 +328,6 @@ class Editor(props.HasProperties):
             self.canRedo = False
 
 
-    def __selectedOverlayChanged(self, *a):
-        """Called when the :class:`.OverlayList` or
-        :attr:`.DisplayContext.selectedOverlay` changes.
-
-        Discards the current :class:`Selection` instance, if there is one.
-        If the newly selected overlay is an :class:`.Image` instance, a
-        new ``Selection`` instance is created.
-        """
-        overlay = self.__displayCtx.getSelectedOverlay()
-
-        # TODO You should cull any *Change instances that
-        # refer to overlays which no longer exist
-
-        if self.__currentOverlay == overlay:
-            return
-
-        if overlay is None:
-            self.__currentOverlay = None
-            self.__selection      = None
-            return
-
-        display = self.__displayCtx.getDisplay(overlay)
-
-        if not isinstance(overlay, fslimage.Image) or \
-           display.overlayType != 'volume':
-            self.__currentOverlay = None
-            self.__selection      = None
-            return
-
-        if self.__selection is not None:
-            oldSel = self.__selection.transferSelection(
-                overlay, display)
-        else:
-            oldSel = None
-                        
-        self.__currentOverlay = overlay
-        self.__selection      = selection.Selection(overlay,
-                                                    display,
-                                                    oldSel)
-
-        self.__selection.addListener('selection',
-                                     self.__name,
-                                     self.__selectionChanged)
-
-
     def __selectionChanged(self, *a):
         """Called when the current :attr:`.Selection.selection` changes.
 
@@ -402,7 +336,7 @@ class Editor(props.HasProperties):
 
         old, new, offset = self.__selection.getLastChange()
         
-        change = SelectionChange(self.__currentOverlay, offset, old, new)
+        change = SelectionChange(self.__image, offset, old, new)
         self.__changeMade(change)
 
         
@@ -435,19 +369,17 @@ class Editor(props.HasProperties):
         :class:`SelectionChange`).
         """
 
-        overlay = change.overlay
-        opts    = self.__displayCtx.getOpts(overlay)
+        image = self.__image
+        opts  = self.__displayCtx.getOpts(image)
 
-        if overlay.is4DImage(): volume = opts.volume
-        else:                   volume = None
+        if image.is4DImage(): volume = opts.volume
+        else:                 volume = None
         
-        self.__displayCtx.selectOverlay(overlay)
-
         if isinstance(change, ValueChange):
             log.debug('Changing image data - offset '
                       '{}, volume {}, size {}'.format(
                           change.offset, change.volume, change.oldVals.shape))
-            change.overlay.applyChange(change.offset, change.newVals, volume)
+            image.applyChange(change.offset, change.newVals, volume)
             
         elif isinstance(change, SelectionChange):
             self.__selection.disableListener('selection', self.__name)
@@ -461,19 +393,17 @@ class Editor(props.HasProperties):
         :class:`SelectionChange`)
         """
 
-        overlay = change.overlay
-        opts    = self.__displayCtx.getOpts(overlay)
+        image = self.__image
+        opts  = self.__displayCtx.getOpts(image)
         
-        self.__displayCtx.selectOverlay(overlay)
-
-        if overlay.is4DImage(): volume = opts.volume
-        else:                   volume = None 
+        if image.is4DImage(): volume = opts.volume
+        else:                 volume = None 
 
         if isinstance(change, ValueChange):
             log.debug('Reverting image data change - offset '
                       '{}, volume {}, size {}'.format(
                           change.offset, change.volume, change.oldVals.shape))
-            change.overlay.applyChange(change.offset, change.oldVals, volume)
+            image.applyChange(change.offset, change.oldVals, volume)
             
         elif isinstance(change, SelectionChange):
             self.__selection.disableListener('selection', self.__name)

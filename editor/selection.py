@@ -421,9 +421,6 @@ class Selection(props.HasProperties):
         a ``Selection`` which is in terms of one ``Image``, the selection
         array needs to be re-sampled.
         
-        .. todo:: This method will need to be re-written with the introduction
-                  of **GedMode**.
-
         :arg destImg:     The :class:`.Image` that the selection is to be
                           transferred to.
 
@@ -433,56 +430,7 @@ class Selection(props.HasProperties):
         :returns: a new ``numpy.uint8`` array, suitable for creating a new
                  ``Selection`` object for use with the given ``destImg``.
         """
-
-        srcImg   = self.__image
-        srcOpts  = self.__opts
-        destOpts = destDisplay.getDisplayOpts()
-
-        if srcOpts.transform not in ('id', 'pixdim'):
-            raise RuntimeError('Unsupported transform for {}: {}'.format(
-                srcImg, srcOpts.transform))
-        if destOpts.transform not in ('id', 'pixdim'):
-            raise RuntimeError('Unsupported transform for {}: {}'.format(
-                destImg, destOpts.transform))
-
-        srcShape  = srcImg .shape[:3]
-        destShape = destImg.shape[:3]
-        
-        if   srcOpts .transform == 'id':     srcDims  = (1.0, 1.0, 1.0)
-        elif srcOpts .transform == 'pixdim': srcDims  = srcImg.pixdim[:3]
-        if   destOpts.transform == 'id':     destDims = (1.0, 1.0, 1.0)
-        elif destOpts.transform == 'pixdim': destDims = destImg.pixdim[:3]
-
-        srcXferShape  = np.zeros(3, dtype=np.float32)
-        destXferShape = np.zeros(3, dtype=np.float32)
-
-        # Figure out the shape, of the area
-        # to be copied, in source image voxels,
-        # and in destination image voxels
-        for i in range(3):
-
-            srcSize   = float(srcShape[ i] * srcDims[ i])
-            destSize  = float(destShape[i] * destDims[i])
-            xferSize  = min(srcSize, destSize)
-
-            srcXferShape[ i] = int(round(xferSize / srcDims[ i]))
-            destXferShape[i] = int(round(xferSize / destDims[i]))
-
-        xferred = np.zeros(destShape, dtype=np.uint8)
-
-        srcx,  srcy,  srcz  = map(int, srcXferShape)
-        destx, desty, destz = map(int, destXferShape)
-
-        zoomFactor = destXferShape / srcXferShape
-        zoomed = ndiint.zoom(
-            self.selection[:srcx, :srcy, :srcz],
-            zoomFactor,
-            order=0)
-
-        if zoomed.shape == (destx, desty, destz):
-            xferred[:destx, :desty, :destz] = zoomed
-
-        return xferred
+        raise NotImplementedError('todo')
         
 
     def __updateSelectionBlock(self, block, offset):

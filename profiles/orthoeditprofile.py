@@ -10,11 +10,14 @@
 
 import logging
 
+import wx
+
 import numpy                        as np
 
 import                                 props
 import fsl.data.image               as fslimage
-import fsl.fsleyes.editor.editor    as editor
+import fsl.data.strings             as strings
+import fsl.fsleyes.editor.editor    as fsleditor
 import fsl.fsleyes.gl.annotations   as annotations
 
 import orthoviewprofile
@@ -82,6 +85,16 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     
      - The *selection* annotation. This is a :class:`.VoxelSelection`
        annotation which displays the :class:`.Selection`.
+
+
+    **The display space**
+
+    
+    The ``OrthoEditProfile`` class has been written in a way which requires
+    the :class:`.Image` instance that is being edited to be displayed in
+    *scaled voxel* (a.k.a. ``pixdim``) space.  Therefore, when an ``Image``
+    overlay is selected, the ``OrthoEditProfile`` instance sets that ``Image``
+    as the current :attr:`.DisplayContext.displaySpace` reference image.
     """
 
 
@@ -150,7 +163,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """
 
-        self.__editor            = editor.Editor(overlayList, displayCtx) 
+        # An Editor instance is created for each
+        # Image overlay (on demand, as they are
+        # selected), and kept in this dictionary
+        # (which contains {Image : Editor} mappings).
+        self.__editors           = {}
         self.__xcanvas           = viewPanel.getXCanvas()
         self.__ycanvas           = viewPanel.getYCanvas()
         self.__zcanvas           = viewPanel.getZCanvas() 
@@ -167,8 +184,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             'redo'                    : self.redo,
             'fillSelection'           : self.fillSelection,
             'clearSelection'          : self.clearSelection,
-            'createMaskFromSelection' : self.__editor.createMaskFromSelection,
-            'createROIFromSelection'  : self.__editor.createROIFromSelection}
+            'createMaskFromSelection' : self.createMaskFromSelection,
+            'createROIFromSelection'  : self.createROIFromSelection}
 
         orthoviewprofile.OrthoViewProfile.__init__(
             self,
@@ -186,14 +203,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         overlayList.addListener('overlays',
                                 self._name,
                                 self.__selectedOverlayChanged)
-
-        self.__editor.addListener('canUndo',
-                                  self._name,
-                                  self.__undoStateChanged)
-        self.__editor.addListener('canRedo',
-                                  self._name,
-                                  self.__undoStateChanged)
-
+        
         self.addListener('selectionOverlayColour',
                          self._name,
                          self.__selectionColoursChanged)
@@ -208,17 +218,38 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
     def destroy(self):
         """Removes some property listeners, destroys the :class:`.Editor`
-        instance, and calls :meth:`.OrthoViewProfile.destroy`.
+        instances, and calls :meth:`.OrthoViewProfile.destroy`.
         """
 
         self._displayCtx .removeListener('selectedOverlay', self._name)
         self._overlayList.removeListener('overlays',        self._name)
-        self.__editor    .removeListener('canUndo',         self._name)
-        self.__editor    .removeListener('canRedo',         self._name)
 
-        self.__editor.destroy()
+        for editor in self.__editors.values():
+            editor.removeListener('canUndo', self._name)
+            editor.removeListener('canRedo', self._name)
+            editor.destroy()
 
-        self.__editor = None
+        if self.__selAnnotation is not None:
+            self.__selAnnotaiton.destroy()
+            
+        if self.__xCursorAnnotation is not None:
+            self.__xCursorAnnotaiton.destroy()
+            
+        if self.__yCursorAnnotation is not None:
+            self.__yCursorAnnotaiton.destroy()
+            
+        if self.__zCursorAnnotation is not None:
+            self.__zCursorAnnotaiton.destroy() 
+ 
+        self.__editors           = None
+        self.__xcanvas           = None
+        self.__ycanvas           = None
+        self.__zcanvas           = None
+        self.__selAnnotation     = None
+        self.__xCursorAnnotation = None
+        self.__yCursorAnnotation = None
+        self.__zCursorAnnotation = None
+        self.__currentOverlay    = None
 
         orthoviewprofile.OrthoViewProfile.destroy(self)
 
@@ -256,7 +287,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     def clearSelection(self, *a):
         """Clears the current selection. See :meth:`.Editor.clearSelection`.
         """
-        self.__editor.getSelection().clearSelection()
+        
+        if self.__currentOverlay is None:
+            return
+
+        editor = self.__editors[self.__currentOverlay]
+
+        editor.getSelection().clearSelection()
+        
         self._viewPanel.Refresh()
 
 
@@ -264,14 +302,44 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """Fills the current selection with the :attr:`fillValue`. See
         :meth:`.Editor.fillSelection`.
         """
-        self.__editor.fillSelection(self.fillValue)
-        self.__editor.getSelection().clearSelection()
+        if self.__currentOverlay is None:
+            return
+
+        editor = self.__editors[self.__currentOverlay]
+                
+        editor.fillSelection(self.fillValue)
+        editor.getSelection().clearSelection()
+
+        
+    def createMaskFromSelection(self, *a):
+        """Creates a new mask :class:`.Image` from the current selection.
+        See :meth:`.Editor.createMaskFromSelection`.
+        """
+        if self.__currentOverlay is None:
+            return
+
+        self.__editors[self.__currentOverlay].createMaskFromSelection()
+
+    
+    def createROIFromSelection(self, *a):
+        """Creates a new ROI :class:`.Image` from the current selection.
+        See :meth:`.Editor.createROIFromSelection`.
+        """ 
+        if self.__currentOverlay is None:
+            return
+
+        self.__editors[self.__currentOverlay].createROIFromSelection() 
 
 
     def undo(self, *a):
         """Un-does the most recent change to the selection or to the
         :class:`.Image` data. See :meth:`.Editor.undo`.
         """
+
+        if self.__currentOverlay is None:
+            return
+        
+        editor = self.__editors[self.__currentOverlay]
 
         # We're disabling notification of changes to the selection
         # during undo/redo. This is because a single undo
@@ -283,9 +351,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # due to updates to the GL texture buffer. So we disable
         # notification, and then manually refresh the texture
         # afterwards
-        self.__editor.getSelection().disableNotification('selection')
-        self.__editor.undo()
-        self.__editor.getSelection().enableNotification('selection')
+        editor.getSelection().disableNotification('selection')
+        editor.undo()
+        editor.getSelection().enableNotification('selection')
         
         self.__selectionChanged()
         self.__selAnnotation.texture.refresh()
@@ -295,11 +363,17 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     def redo(self, *a):
         """Re-does the most recent undone change to the selection or to the
         :class:`.Image` data. See :meth:`.Editor.redo`.
-        """ 
+        """
 
-        self.__editor.getSelection().disableNotification('selection')
-        self.__editor.redo()
-        self.__editor.getSelection().enableNotification('selection')
+        if self.__currentOverlay is None:
+            return
+
+        editor = self.__editors[self.__currentOverlay]
+
+        editor.getSelection().disableNotification('selection')
+        editor.redo()
+        editor.getSelection().enableNotification('selection')
+        
         self.__selectionChanged()
         self.__selAnnotation.texture.refresh()
         self._viewPanel.Refresh()
@@ -310,8 +384,19 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :attr:`.Editor.canRedo` states change. Updates the state of the
         ``undo``/``redo`` actions accordingly.
         """
-        self.enable('undo', self.__editor.canUndo)
-        self.enable('redo', self.__editor.canRedo)
+        if self.__currentOverlay is None:
+            return
+
+        editor = self.__editors[self.__currentOverlay]
+
+        log.debug('Editor ({}) undo/redo state '
+                  'changed: undo={}, redo={}'.format(
+                      self.__currentOverlay.name,
+                      editor.canUndo,
+                      editor.canRedo))
+        
+        self.enable('undo', editor.canUndo)
+        self.enable('redo', editor.canRedo)
 
 
     def __selectionColoursChanged(self, *a):
@@ -338,20 +423,48 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         Destroys all old :mod:`.annotations`. If the newly selected overlay is
         an :class:`Image`, new annotations are created.
         """
+        # Overview:
+        #  1. Destroy Editor instances associated with
+        #     overlays that no longer exist
+        #
+        #  2. Destroy old canvas annotations
+        #
+        #  3. Remove property listeners on editor/selection
+        #     objects associated with the previous overlay
+        #
+        #  4. Load/create a new Editor for the new overlay
+        #
+        #  5. Add property listeners to the editor/selection
+        #
+        #  6. Create canvas annotations
+        #
+        # Here we go....
 
-        overlay   = self._displayCtx.getSelectedOverlay()
-        selection = self.__editor.getSelection() 
-        xannot    = self.__xcanvas.getAnnotations()
-        yannot    = self.__ycanvas.getAnnotations()
-        zannot    = self.__zcanvas.getAnnotations()        
+        # Destroy any Editor instances which are associated
+        # with overlays that are no longer in the overlay list
+        #
+        # TODO - If the current overlay has been removed,
+        #        this will cause an error later on. You
+        #        need to handle this scenario here.
+        # 
+        # for overlay, editor in self.__editors:
+        #     if overlay not in self._overlayList:
+        #         self.__editors.pop(overlay)
+        #         editor.destroy()
 
+        overlay = self._displayCtx.getSelectedOverlay()
+        
         # If the selected overlay hasn't changed,
         # we don't need to do anything
         if overlay == self.__currentOverlay:
             return
 
-        # If there's already an existing
-        # selection object, clear it 
+        # Destroy all existing canvas annotations
+        xannot = self.__xcanvas.getAnnotations()
+        yannot = self.__ycanvas.getAnnotations()
+        zannot = self.__zcanvas.getAnnotations()        
+
+        # Clear the selection annotation
         if self.__selAnnotation is not None:
             xannot.dequeue(self.__selAnnotation, hold=True)
             yannot.dequeue(self.__selAnnotation, hold=True)
@@ -363,6 +476,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         yca = self.__yCursorAnnotation
         zca = self.__zCursorAnnotation
 
+        # And the cursor annotations
         if xca is not None: xannot.dequeue(xca, hold=True)
         if yca is not None: yannot.dequeue(yca, hold=True)
         if zca is not None: yannot.dequeue(xca, hold=True)
@@ -371,6 +485,19 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__yCursorAnnotation = None
         self.__zCursorAnnotation = None
         self.__selAnnotation     = None
+
+        # Remove property listeners from the
+        # editor/selection instances associated
+        # with the previously selected overlay
+        if self.__currentOverlay is not None:
+            editor = self.__editors[self.__currentOverlay]
+
+            log.debug('De-registering listeners from Editor {} ({})'.format(
+                id(editor),
+                self.__currentOverlay.name))
+            editor.getSelection().removeListener('selection', self._name)
+            editor               .removeListener('canUndo',   self._name)
+            editor               .removeListener('canRedo',   self._name)
 
         self.__currentOverlay = overlay
 
@@ -382,29 +509,62 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         display = self._displayCtx.getDisplay(overlay)
         opts    = display.getDisplayOpts()
 
-        # Edit mode is only supported on images with
-        # the 'volume' type, in 'id' or 'pixdim'
-        # transformation for the time being
+        # Edit mode is only supported on
+        # images with the 'volume' type
         if not isinstance(overlay, fslimage.Image) or \
-           display.overlayType != 'volume'         or \
-           opts.transform not in ('id', 'pixdim'):
+           display.overlayType != 'volume':
             
             self.__currentOverlay = None
-            log.warn('Editing is only possible on volume '
-                     'images, in ID or pixdim space.')
             return
 
-        # Otherwise, create a selection annotation
-        # and queue it on the canvases for drawing
+        # Change the display space so that the newly
+        # selected image is the reference image -
+        # display a message to the user, as this may
+        # otherwise be confusing
+        if self._displayCtx.displaySpace != overlay:
+            
+            msg = strings.messages[self, 'displaySpaceChange']
+            msg = msg.format(overlay.name)
 
-        selection.addListener('selection', self._name, self.__selectionChanged)
+            wx.MessageDialog(self._viewPanel,
+                             message=msg,
+                             style=wx.OK).ShowModal()
+            self._displayCtx.displaySpace = overlay
 
+        # Load the editor for the overlay (create
+        # one if necessary), and add listeners to
+        # some editor/selection properties
+        editor = self.__editors.get(overlay, None)
+        
+        if editor is None:
+            editor = fsleditor.Editor(overlay,
+                                      self._overlayList,
+                                      self._displayCtx)
+            self.__editors[overlay] = editor
+
+        log.debug('Registering listeners with Editor {} ({})'.format(
+            id(editor),
+            self.__currentOverlay.name)) 
+        editor.getSelection().addListener('selection',
+                                          self._name,
+                                          self.__selectionChanged)
+        editor.addListener('canUndo', self._name, self.__undoStateChanged)
+        editor.addListener('canRedo', self._name, self.__undoStateChanged)
+
+        # Update undo/redo button states, and
+        # selection action button states
+        self.__undoStateChanged()
+        self.__selectionChanged()
+    
+        # Create a selection annotation and
+        # queue it on the canvases for drawing
         self.__selAnnotation = annotations.VoxelSelection( 
-            selection,
-            opts.getTransform('display', 'voxel'),
-            opts.getTransform('voxel',   'display'),
+            editor.getSelection(),
+            opts.getTransform('pixdim', 'voxel'),
+            opts.getTransform('voxel',  'pixdim'),
             colour=self.selectionOverlayColour)
 
+        # Create cursor annotatinos on each canvas
         kwargs = {'colour' : self.selectionCursorColour,
                   'width'  : 2}
 
@@ -430,7 +590,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         Toggles action enabled states depending on the size of the selection.
         """
 
-        selection = self.__editor.getSelection()
+        if self.__currentOverlay is None:
+            return
+
+        editor    = self.__editors[self.__currentOverlay]
+        selection = editor.getSelection()
 
         # TODO This is a big performance bottleneck, as
         #      it gets called on every mouse position
@@ -488,7 +652,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         if blockSize is None:
             blockSize = self.selectionSize
-
 
         # Figure out the selection
         # boundary coordinates
@@ -549,9 +712,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
 
         if self.selectionIs3D: axes = (0, 1, 2)
-        else:                  axes = (canvas.xax, canvas.yax)        
+        else:                  axes = (canvas.xax, canvas.yax)
 
-        selection     = self.__editor.getSelection()
+        editor        = self.__editors[self.__currentOverlay]
+        selection     = editor.getSelection()
         block, offset = selection.generateBlock(voxel,
                                                 self.selectionSize,
                                                 selection.selection.shape,
@@ -617,7 +781,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         Starts an :class:`.Editor` change group, and adds to the current
         :class:`Selection`.
         """
-        self.__editor.startChangeGroup()
+        if self.__currentOverlay is None:
+            return
+        
+        editor = self.__editors[self.__currentOverlay]
+        
+        editor.startChangeGroup()
 
         voxel = self.__getVoxelLocation(canvasPos)
         self.__applySelection(      canvas, voxel)
@@ -641,8 +810,13 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         Ends the :class:`.Editor` change group that was started in the
         :meth:`_selModeLeftMouseDown` method.
-        """ 
-        self.__editor.endChangeGroup()
+        """
+        if self.__currentOverlay is None:
+            return
+        
+        editor = self.__editors[self.__currentOverlay] 
+        editor.endChangeGroup()
+        
         self._viewPanel.Refresh()
 
 
@@ -669,8 +843,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         Starts an :class:`.Editor` change group, and removes from the current
         :class:`Selection`.        
         """
+        if self.__currentOverlay is None:
+            return
+        
+        editor = self.__editors[self.__currentOverlay]
 
-        self.__editor.startChangeGroup()
+        editor.startChangeGroup()
 
         voxel = self.__getVoxelLocation(canvasPos)
         self.__applySelection(      canvas, voxel, False)
@@ -694,8 +872,13 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         Ends the :class:`.Editor` change group that was started in the
         :meth:`_deselModeLeftMouseDown` method.
-        """        
-        self.__editor.endChangeGroup()
+        """
+        if self.__currentOverlay is None:
+            return
+        
+        editor = self.__editors[self.__currentOverlay]
+        
+        editor.endChangeGroup()
         self._viewPanel.Refresh()
 
             
@@ -709,7 +892,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :meth:`.Selection.selectByValue`.
         """
         
-        overlay = self._displayCtx.getSelectedOverlay()
+        overlay = self.__currentOverlay
+
+        if overlay is None:
+            return
+
+        editor = self.__editors[self.__currentOverlay]
         
         if not self.limitToRadius or self.searchRadius == 0:
             searchRadius = None
@@ -722,9 +910,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # than this selection, clear the whole selection 
         if self.__lastDist is None or \
            np.any(np.array(searchRadius) < self.__lastDist):
-            self.__editor.getSelection().clearSelection()
+            editor.getSelection().clearSelection()
 
-        self.__editor.getSelection().selectByValue(
+        editor.getSelection().selectByValue(
             voxel,
             precision=self.intensityThres,
             searchRadius=searchRadius,
@@ -751,8 +939,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :meth:`__selintSelect`).
         """
 
-        self.__editor.startChangeGroup()
-        self.__editor.getSelection().clearSelection() 
+        if self.__currentOverlay is None:
+            return
+        
+        editor = self.__editors[self.__currentOverlay] 
+
+        editor.startChangeGroup()
+        editor.getSelection().clearSelection()
+        
         self.__selecting = True
         self.__lastDist  = 0
         self.__selintSelect(self.__getVoxelLocation(canvasPos))
@@ -829,6 +1023,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         change group that was started in the :meth:`_selintModeLeftMouseDown`
         method.
         """
-        self.__editor.endChangeGroup()
+        if self.__currentOverlay is None:
+            return
+        
+        editor = self.__editors[self.__currentOverlay] 
+        
+        editor.endChangeGroup()
+        
         self.__selecting = False
         self._viewPanel.Refresh()

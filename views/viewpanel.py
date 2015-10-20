@@ -331,10 +331,9 @@ class ViewPanel(fslpanel.FSLEyesPanel):
 
         This method is slightly hard-coded and hacky. For the time being,
         profiles called ``edit`` profiles are only supported for ``volume``
-        overlay types, which are being displayed in ``id`` or ``pixdim``
-        space. This method checks the type of the selected overlay, and
-        disables the ``edit`` profile option (if it is an option), so the user
-        can only choose an ``edit`` profile on ``volume`` overlay types.
+        overlay types. This method checks the type of the selected overlay,
+        and disables the ``edit`` profile option (if it is an option), so the
+        user can only choose an ``edit`` profile on ``volume`` overlay types.
         """
 
         lName   = 'ViewPanel_{}'.format(self._name)
@@ -343,10 +342,8 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         if self.__selectedOverlay not in (None, overlay):
             try: 
                 d = self._displayCtx.getDisplay(self.__selectedOverlay)
-                o = d.getDisplayOpts()
 
                 d.removeListener('overlayType', lName)
-                o.removeListener('transform',   lName)
                 
             # The overlay has been removed
             except fsldisplay.InvalidOverlayError:
@@ -358,21 +355,11 @@ class ViewPanel(fslpanel.FSLEyesPanel):
             return
 
         # If the overlay is of a compatible type,
-        # register for overlay type changes and
-        # transfomr changes, as these will affect
-        # the profile property
+        # register for overlay type changes, as
+        # these will affect the profile property
         if isinstance(overlay, fslimage.Image):
             display = self._displayCtx.getDisplay(overlay)
-            opts    = display.getDisplayOpts()
-
-            # If the overlay type changes, the  DIsplayOpts
-            # instance will change, so we need to re-register
-            # on its transform property
             display.addListener('overlayType',
-                                lName,
-                                self.__selectedOverlayChanged,
-                                overwrite=True)
-            opts   .addListener('transform',
                                 lName,
                                 self.__configureProfile,
                                 overwrite=True)
@@ -387,7 +374,6 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         
         overlay     = self.__selectedOverlay
         display     = self._displayCtx.getDisplay(overlay)
-        opts        = display.getDisplayOpts() 
         profileProp = self.getProp('profile')
 
         # edit profile is not an option -
@@ -396,8 +382,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
             return
 
         if not isinstance(overlay, fslimage.Image) or \
-           display.overlayType != 'volume'         or \
-           opts.transform not in ('id', 'pixdim'):
+           display.overlayType != 'volume':
             
             # change profile if needed,
             if self.profile == 'edit':
