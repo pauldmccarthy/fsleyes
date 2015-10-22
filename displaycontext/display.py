@@ -366,12 +366,14 @@ class DisplayOpts(actions.ActionProvider):
     bounds = props.Bounds(ndims=3)
     """Specifies a bounding box in the display coordinate system which is big
     enough to contain the overlay described by this ``DisplayOpts``
-    instance. The values in this ``bounds`` property must be updated by
-    ``DisplayOpts`` subclasses.
+    instance.
 
-    Whenever the spatial representation of this overlay changes, but the
-    bounds do not change, subclass implementations should force notification
-    on this property (via the :meth:`.HasProperties.notify` method).
+    The values in this ``bounds`` property must be updated by ``DisplayOpts``
+    subclasses whenever the spatial representation of their overlay changes.
+    Additionally, whenever the spatial representation changes, sub-classes
+    must call the :meth:`.DisplayContext.cacheStandardCoordinates` method,
+    with a 'standard' space version of the current
+    :attr:`.DisplayContext.location`.
     """
 
     
@@ -399,6 +401,10 @@ class DisplayOpts(actions.ActionProvider):
         :arg kwargs:      Passed through to the
                           :class:`.ActionProvider` constructor.
         """
+
+        nounbind = kwargs.get('nounbind', [])
+        nounbind.append('bounds')
+        kwargs['nounbind'] = nounbind
 
         actions.ActionProvider.__init__(
             self,
@@ -459,19 +465,28 @@ class DisplayOpts(actions.ActionProvider):
             return self.overlay
         return None
 
+
+    def displayToStandardCoordinates(self, coords):
+        """This method transforms the given display system coordinates into a
+        standard coordinate system which will remain constant for the given
+        overlay.
+
+        This method must be overridden by any sub-classes for which 
+        the display space representation may change - for example, the
+        :class:`.Image` overlays can be transformed into the display
+        coordinate system in different ways, as defined by the
+        :attr:`.ImageOpts.transform`  property.
+        """
+        return coords
+
     
-    def transformDisplayLocation(self, coords):
-        """This method may be called after the overlay :attr:`bounds` have
-        changed.
+    def standardToDisplayCoordinates(self, coords):
+        """This method transforms the given coordinates, assumed to be in
+        the standard coordinate system of the overlay, into the display
+        coordinate system.
 
-        If the bounds were changed as a result of a change to the spatial
-        representation of the overlay (e.g. the :attr:`.ImageOpts.transform`
-        property for :class:`.Image` overlays), this method should return
-        a copy of the given coordinates which has been transformed into the
-        new space.
-
-        If the bounds were changed for some other reason, this method can
-        just return the ``coords`` unchanged.
+        This method must be overridden by sub-classes for which their standard
+        coordinate system is not the same as the display coordinate system.
         """
         return coords
 

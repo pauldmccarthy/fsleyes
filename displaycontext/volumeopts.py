@@ -146,8 +146,14 @@ class ImageOpts(fsldisplay.DisplayOpts):
 
         overlay = self.overlay
 
-        self.addListener('transform',   self.name, self.__transformChanged)
-        self.addListener('customXform', self.name, self.__customXformChanged)
+        self.addListener('transform',
+                         self.name,
+                         self.__transformChanged,
+                         immediate=True)
+        self.addListener('customXform',
+                         self.name,
+                         self.__customXformChanged,
+                         immediate=True)
 
         # The display<->* transformation matrices
         # are created in the _setupTransforms method
@@ -179,6 +185,17 @@ class ImageOpts(fsldisplay.DisplayOpts):
         :attr:`.DisplayOpts.bounds` property accordingly.
         """
 
+        oldValue = self.getLastValue('transform')
+
+        if oldValue is None:
+            oldValue = self.transform
+
+        self.displayCtx.cacheStandardCoordinates(
+            self.overlay,
+            self.transformCoords(self.displayCtx.location.xyz,
+                                 oldValue,
+                                 'world'))
+
         lo, hi = transform.axisBounds(
             self.overlay.shape[:3],
             self.getTransform('voxel', 'display'))
@@ -193,10 +210,23 @@ class ImageOpts(fsldisplay.DisplayOpts):
         :meth:`__transformChanged`).
         """
 
-        self.__setupTransforms()
-        self.__transformChanged()
+        stdLoc = self.displayToStandardCoordinates(
+            self.displayCtx.location.xyz)
         
-                            
+        self.__setupTransforms()
+        if self.transform == 'custom':
+            self.__transformChanged()
+
+            # if transform == custom, the cached value
+            # calculated in __transformChanged will be
+            # wrong, so we have to overwrite it here.
+            # The stdLoc value calculated above is valid,
+            # because it was calculated before the
+            # transformation matrices were recalculated
+            # in __setupTransforms
+            self.displayCtx.cacheStandardCoordinates(self.overlay, stdLoc)
+ 
+        
     def __setupTransforms(self):
         """Calculates transformation matrices between all of the possible
         spaces in which the overlay may be displayed.
@@ -347,8 +377,6 @@ class ImageOpts(fsldisplay.DisplayOpts):
            - ``world``:   The image world coordinate system
            - ``custom``:  The coordinate system defined by the custom
                           transformation matrix (see :attr:`customXform`)
-
-        See also the :meth:`transformToVoxels` method.
         """
 
         xform     = self.getTransform(       from_, to_)
@@ -360,36 +388,22 @@ class ImageOpts(fsldisplay.DisplayOpts):
         return coords + post
 
 
-    def transformDisplayLocation(self, oldLoc):
-        """Overrides :meth:`.DisplayOpts.transformDisplayLocation`.
-
-        If the :attr:`transform` property has changed, returns the given
-        location, assumed to be in the old display coordinate system,
-        transformed into the new display coordinate system.
-
-        .. note:: This method will probably break if the ``custom``
-                  transformation matrix changes between the time that
-                  the ``transform`` property changes, and the time that
-                  this method is called.
+    def displayToStandardCoordinates(self, coords):
+        """Overrides :meth:`.DisplayOpts.displayToStandardCoordinates`.
+        Transforms the given display system coordinates into the world
+        coordinates of the :class:`.Image` associated with this
+        ``ImageOpts`` instance.
         """
+        return self.transformCoords(coords, 'display', 'world')
 
-        lastVal = self.getLastValue('transform')
-
-        if lastVal is None:
-            lastVal = self.transform
-        
-        # Calculate the image world location using the
-        # old display<-> world transform, then transform
-        # it back to the new world->display transform. 
-        worldLoc = transform.transform(
-            [oldLoc],
-            self.getTransform(lastVal, 'world'))[0]
-        
-        newLoc  = transform.transform(
-            [worldLoc],
-            self.getTransform('world', 'display'))[0]
-        
-        return newLoc
+    
+    def standardToDisplayCoordinates(self, coords):
+        """Overrides :meth:`.DisplayOpts.standardToDisplayCoordinates`.
+        Transforms the given coordinates (assumed to be in the world
+        coordinate system of the ``Image`` associated with this ``ImageOpts``
+        instance) into the display coordinate system.
+        """ 
+        return self.transformCoords(coords, 'world', 'display')
 
 
 class VolumeOpts(ImageOpts):
@@ -592,10 +606,9 @@ class VolumeOpts(ImageOpts):
         # The parent.getChildren() method will
         # contain this VolumeOpts instance,
         # so the below loop toggles listeners
-        # for this instance, the parent instance,
-        # and all of the other children of the
-        # parent
-        peers  = [parent] + parent.getChildren()
+        # for this instance and all of the other
+        # children of the parent
+        peers  = parent.getChildren()
 
         for peer in peers:
 

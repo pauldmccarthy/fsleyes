@@ -63,8 +63,7 @@ class OverlayGroup(props.HasProperties):
     
     _groupBindings = td.TypeDict({
         'Display'        : ['enabled'],
-        'ImageOpts'      : ['volume',
-                            'transform'],
+        'ImageOpts'      : ['volume'],
         'VolumeOpts'     : ['interpolation'],
         'LabelOpts'      : ['outline',
                             'outlineWidth'],
