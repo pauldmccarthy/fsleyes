@@ -122,9 +122,7 @@ class GLModel(globject.GLObject):
             fslgl.glmodel_funcs.updateShaders(self)
             self.onUpdate()
         
-        opts   .addListener('refImage',     name, self._updateVertices)
-        opts   .addListener('coordSpace',   name, self._updateVertices)
-        opts   .addListener('transform',    name, self._updateVertices)
+        opts   .addListener('bounds',       name, self._updateVertices)
         opts   .addListener('colour',       name, refresh,      weak=False)
         opts   .addListener('outline',      name, refresh,      weak=False)
         opts   .addListener('showName',     name, refresh,      weak=False)
@@ -138,9 +136,7 @@ class GLModel(globject.GLObject):
         """Called by :meth:`destroy`. Removes all of the listeners added by
         the :meth:`addListeners` method.
         """
-        self.opts   .removeListener('refImage',     self.name)
-        self.opts   .removeListener('coordSpace',   self.name)
-        self.opts   .removeListener('transform',    self.name)
+        self.opts   .removeListener('bounds',       self.name)
         self.opts   .removeListener('colour',       self.name)
         self.opts   .removeListener('outline',      self.name)
         self.opts   .removeListener('outlineWidth', self.name)

@@ -68,13 +68,6 @@ class ModelOpts(fsldisplay.DisplayOpts):
     defined (i.e. voxels, scaled voxels, or world coordinates).
     """
 
-    
-    transform = copy.copy(volumeopts.ImageOpts.transform)
-    """If :attr:`refImage` is not ``None``, this property is bound to 
-    the :attr:`~.ImageOpts.transform` property of the reference image
-    :class:`.ImageOpts` instance.
-    """
-
 
     def __init__(self, *args, **kwargs):
         """Create a ``ModelOpts`` instance. All arguments are passed through
@@ -103,18 +96,14 @@ class ModelOpts(fsldisplay.DisplayOpts):
                                      self.name,
                                      self.__overlayListChanged)
 
-        # This attribute tracks the name of the
-        # space-related property (refImage,
-        # coordSpace, or transform) which most
-        # recently changed. It is updated by
-        # the corresponding listener callbacks,
-        # and used by the transformDisplayLocation
-        # method.
-        self.__lastPropChanged = None
-        
-        self.addListener('refImage',   self.name, self.__refImageChanged)
-        self.addListener('transform',  self.name, self.__transformChanged)
-        self.addListener('coordSpace', self.name, self.__coordSpaceChanged)
+        self.addListener('refImage',
+                         self.name,
+                         self.__refImageChanged,
+                         immediate=True)
+        self.addListener('coordSpace',
+                         self.name,
+                         self.__coordSpaceChanged,
+                         immediate=True)
         
         self.__overlayListChanged()
         self.__updateBounds()
@@ -130,6 +119,12 @@ class ModelOpts(fsldisplay.DisplayOpts):
             display = self.displayCtx.getDisplay(overlay)
             display.removeListener('name', self.name)
 
+        if self.refImage is not None and \
+           self.refImage in self.overlayList:
+            opts = self.displayCtx.getOpts(self.refImage)
+            opts.removeListener('transform',   self.name)
+            opts.removeListener('customXform', self.name)
+                
         fsldisplay.DisplayOpts.destroy(self)
 
 
@@ -150,107 +145,168 @@ class ModelOpts(fsldisplay.DisplayOpts):
         If no :attr:`refImage` is selected, this method returns ``None``.
         """
 
-        if self.refImage is None or self.coordSpace == self.transform:
+        if self.refImage is None:
             return None
 
         opts = self.displayCtx.getOpts(self.refImage)
 
-        return opts.getTransform(self.coordSpace, self.transform)
+        return opts.getTransform(self.coordSpace, opts.transform)
+    
 
+    def displayToStandardCoordinates(self, coords):
+        """Transforms the given coordinates into a standardised coordinate
+        system specific to the overlay associated with this ``ModelOpts``
+        instance.
 
-    def transformDisplayLocation(self, oldLoc):
-        """If the :attr:`refImage`, :attr:`coordSpace` or :attr:`transform`
-        properties have changed, this method will transform the specified
-        location from the old :class:`.Model` display coordinate system to
-        the new model display coordinate system.
+        The coordinate system used is the coordinate system in which the
+        :class:`.Model` vertices are defined.
         """
+        if self.refImage is None:
+            return coords
 
-        newLoc   = oldLoc
-        propName = self.__lastPropChanged
+        opts = self.displayCtx.getOpts(self.refImage)
         
-        if propName == 'refImage':
+        return opts.transformCoords(coords, opts.transform, self.coordSpace)
 
-            refImage    = self.refImage
-            oldRefImage = self.getLastValue('refImage')
-
-            if refImage is None and oldRefImage is None:
-                pass
-
-            elif oldRefImage is None:
-                refOpts = self.displayCtx.getOpts(refImage)
-                newLoc  = refOpts.transformCoords([oldLoc],
-                                                  self.coordSpace,
-                                                  'display')[0]
-
-            elif refImage is None:
-                if oldRefImage is not None:
-                    oldRefOpts = self.displayCtx.getOpts(oldRefImage)
-                    newLoc     = oldRefOpts.transformCoords([oldLoc],
-                                                            'display',
-                                                            self.coordSpace)[0]
-
-        elif propName == 'coordSpace':
-            if self.refImage is not None:
-                refOpts  = self.displayCtx.getOpts(self.refImage)
-                worldLoc = refOpts.transformCoords(
-                    [oldLoc],
-                    self.getLastValue('coordSpace'),
-                    'world')[0]
-                newLoc   = refOpts.transformCoords(
-                    [worldLoc],
-                    'world',
-                    self.coordSpace)[0]
-
-        elif propName == 'transform':
-
-            if self.refImage is not None:
-                refOpts = self.displayCtx.getOpts(self.refImage)
-                newLoc  = refOpts.transformDisplayLocation(oldLoc)
-
-        return newLoc
-
-
-    def __transformChanged(self, *a):
-        """Called when the :attr:`transfrom` property changes.
-        Calls :meth:`__updateBounds`.
+    
+    def standardToDisplayCoordinates(self, coords):
+        """Transforms the given coordinates from standardised coordinates
+        into the display coordinate system - see
+        :meth:`displayToStandardCoordinates`.
         """
-        self.__lastPropChanged = 'transform'
+        if self.refImage is None:
+            return coords
+
+        opts = self.displayCtx.getOpts(self.refImage)
+        
+        return opts.transformCoords(coords, self.coordSpace, opts.transform)
+
+    
+    def __cacheCoords(self,
+                      refImage=-1,
+                      coordSpace=None,
+                      transform=None,
+                      customXform=None):
+        """Caches the current :attr:`.DisplayContext.location` in standardised
+        coordinates see the :meth:`.DisplayContext.cacheStandardCoordinates`
+        method).
+
+        This method is called whenever the :attr:`refImage` or
+        :attr:`coordSpace` properties change and, if a ``refImage`` is
+        specified, whenever the :attr:`.ImageOpts.transform` or
+        :attr:`.ImageOpts.customXform` properties change.
+
+        :arg refImage:    Reference image to use to calculate the coordinates.
+                          If ``-1`` the :attr:`refImage` is used (``-1`` is
+                          used as the default value instead of ``None`` because
+                          the latter is a valid value for ``refImage``).
+        
+        :arg coordSpace:  Coordinate space value to use - if ``None``, the
+                          :attr:`coordSpace` is used.
+        
+        :arg transform:   Transform to use - if ``None``, and a ``refImage`` is
+                          defined, the :attr:`.ImageOpts.transform` value is
+                          used.
+        
+        :arg customXform: Custom transform to use (if
+                          ``transform=custom``). If ``None``, and a
+                          ``refImage`` is defined, the
+                          :attr:`.ImageOpts.customXform` value is used.
+        """
+
+        if refImage   is -1:   refImage   = self.refImage
+        if coordSpace is None: coordSpace = self.coordSpace
+
+        if refImage is None:
+            coords = self.displayCtx.location.xyz
+            
+        else:
+            refOpts = self.displayCtx.getOpts(refImage)
+
+            if transform   is None: transform   = refOpts.transform
+            if customXform is None: customXform = refOpts.customXform
+
+            # TODO if transform == custom, we 
+            # have to use the old custom xform
+            
+            coords  = refOpts.transformCoords(self.displayCtx.location.xyz,
+                                              transform,
+                                              coordSpace)
+        
+        self.displayCtx.cacheStandardCoordinates(self.overlay, coords)
+
+
+    def __transformChanged(self, value, valid, ctx, name):
+        """Called when the :attr:`.ImageOpts.transfrom` or
+        :attr:`.ImageOpts.customXform` properties of the current
+        :attr:`refImage` change. Calls :meth:`__updateBounds`.
+        """
+
+        refOpts = ctx
+
+        if   name == 'transform':
+            transform   = refOpts.getLastValue('transform')
+            customXform = refOpts.customXform
+        elif name == 'customXForm': 
+            transform   = refOpts.transform
+            customXform = refOpts.getLastValue('customXform')
+
+        self.__cacheCoords(transform=transform, customXform=customXform)
         self.__updateBounds()
 
 
     def __coordSpaceChanged(self, *a):
         """Called when the :attr:`coordSpace` property changes.
         Calls :meth:`__updateBounds`.
-        """ 
-        self.__lastPropChanged = 'coordSpace'
+        """
+
+        oldValue = self.getLastValue('coordSpace')
+
+        if oldValue is None:
+            oldValue = self.coordSpace
+
+        self.__cacheCoords(coordSpace=oldValue)
         self.__updateBounds()
 
 
     def __refImageChanged(self, *a):
-        """Called when the :attr:`refImage` property changes.  Configures the
-        :attr:`transform` property to track the :attr:`~.ImageOpts.transform`
-        property of the :class:`.ImageOpts` instance associated with the new
-        reference image, and calls :meth:`__updateBounds`.
+        """Called when the :attr:`refImage` property changes.
+
+        If a new reference image has been specified, removes listeners from
+        the old one (if necessary), and adds listeners to the
+        :attr:`.ImageOptstransform` and :attr:`.ImageOpts.customXform`
+        properties associated with the new image. Calls
+        :meth:`__updateBounds`.
         """
+        
+        oldValue = self.getLastValue('refImage')
+
+        self.__cacheCoords(refImage=oldValue) 
 
         # TODO You are not tracking changes to the
         # refImage overlay type -  if this changes,
         # you will need to re-bind to the transform
         # property of the new DisplayOpts instance
 
-        self.__lastPropChanged = 'refImage'
-
         if self.__oldRefImage is not None and \
            self.__oldRefImage in self.overlayList:
             
             opts = self.displayCtx.getOpts(self.__oldRefImage)
-            self.unbindProps('transform', opts)
+            opts.removeListener('transform',   self.name)
+            opts.removeListener('customXform', self.name)
 
         self.__oldRefImage = self.refImage
 
         if self.refImage is not None:
             opts = self.displayCtx.getOpts(self.refImage)
-            self.bindProps('transform', opts)
+            opts.addListener('transform',
+                             self.name,
+                             self.__transformChanged,
+                             immediate=True)
+            opts.addListener('customXform',
+                             self.name,
+                             self.__transformChanged,
+                             immediate=True)
 
         self.__updateBounds()
 

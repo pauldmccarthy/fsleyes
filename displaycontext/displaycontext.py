@@ -380,8 +380,12 @@ class DisplayContext(props.SyncableHasProperties):
         """Stores the given 'standard' coordinates for the given overlay.
 
         This method must be called by :class:`.DisplayOpts` sub-classes
-        whenever the spatial representation of their overlay changes. This is
-        necessary in order for the ``DisplayContext`` to update the
+        whenever the spatial representation of their overlay changes - 
+        ``DisplayOpts`` instances need to transform the current display
+        :attr:`location` into a consistent coordinate system, relative to
+        their overlay.
+
+        This is necessary in order for the ``DisplayContext`` to update the
         :attr:`location` with respect to the currently selected overlay - if
         the current overlay has shifted in the display coordinate system, we
         want the :attr:`location` to shift with it.
@@ -406,7 +410,7 @@ class DisplayContext(props.SyncableHasProperties):
                   'for overlay {}: {} <-> {}'.format(
                       overlay.name,
                       self.location.xyz,
-                      standardCoords))
+                      coords))
 
 
     def __overlayListChanged(self, *a):
@@ -589,20 +593,30 @@ class DisplayContext(props.SyncableHasProperties):
         # location to be preserved with respect to it.
         stdLoc = selectedOpts.displayToStandardCoordinates(self.location.xyz)
 
+        # Disable notification of the bounds property
+        # on all DisplayOpts instances, so the
+        # __overlayBoundsChanged method does not
+        # get called. 
+        for overlay in self.__overlayList:
+            opts = self.getOpts(overlay)
+            opts.disableListener('bounds', self.__name)
+
+        # Update the transform property of all
+        # Image overlays to put them into the
+        # new display space
         for overlay in self.__overlayList:
             
             if not isinstance(overlay, fslimage.Image):
                 continue
 
             opts = self.getOpts(overlay)
-
-            # Disable the bounds listener, so the
-            # __overlayBoundsChanged method does
-            # not get called when the image
-            # transform changes.
-            opts.disableListener('bounds', self.__name)
             self.__setTransform(overlay)
-            opts.enableListener( 'bounds', self.__name)
+
+        # Re-enable bounds notification 
+        # on the DisplayOpts instances
+        for overlay in self.__overlayList:
+            opts = self.getOpts(overlay)
+            opts.enableListener('bounds', self.__name)
 
         # Update the display world bounds,
         # and then update the location
