@@ -8,7 +8,7 @@
 the display properties of one or more overlays to be linked.
 """
 
-
+import sys
 import logging
 import copy
 
@@ -130,6 +130,10 @@ class OverlayGroup(props.HasProperties):
                 
                 self.__hasBeenSet[clsName, propName] = False
 
+        # Special case - make sure that the ImageOpts
+        # volume property is not constrained
+        self.setConstraint('ImageOpts_volume', 'maxval', sys.maxint)
+
 
     def __copy__(self):
         """Create a copy of this ``OverlayGroup``.
@@ -222,9 +226,10 @@ class OverlayGroup(props.HasProperties):
                 # We do this to avoid clobbering
                 # property values with un-initialised
                 # group property values.
-                #
                 if not self.__hasBeenSet[clsName, propName]:
+
                     setattr(self, groupName, getattr(target, propName))
+                    self.__hasBeenSet[clsName, propName] = True
 
                 if slave is self:
                     otherName = propName
