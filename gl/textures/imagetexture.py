@@ -288,8 +288,8 @@ class ImageTexture(texture.Texture):
         if self.__prefilter is not None:
             data = self.__prefilter(data)
         
-        self.__dataMin  = float(data.min())
-        self.__dataMax  = float(data.max())         
+        self.__dataMin  = float(np.nanmin(data))
+        self.__dataMax  = float(np.nanmax(data))
 
         if refresh:
             self.refresh()
