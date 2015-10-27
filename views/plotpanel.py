@@ -488,7 +488,8 @@ class PlotPanel(viewpanel.ViewPanel):
         if ds.alpha == 0:
             return (0, 0), (0, 0)
 
-        log.debug('Drawing plot for {}'.format(ds.overlay))
+        log.debug('Drawing {} for {}'.format(type(ds).__name__,
+                                             ds.overlay))
 
         xdata, ydata = ds.getData()
 

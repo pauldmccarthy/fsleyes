@@ -23,6 +23,7 @@ details):
 
    TimeSeries
    FEATTimeSeries
+   MelodicTimeSeries
 """
 
 
@@ -37,6 +38,7 @@ import                                                props
 
 import                                                plotpanel
 import fsl.data.featimage                          as fslfeatimage
+import fsl.data.melodicimage                       as fslmelimage
 import fsl.data.image                              as fslimage
 import fsl.fsleyes.displaycontext                  as fsldisplay
 import fsl.fsleyes.colourmaps                      as fslcmaps
@@ -66,8 +68,9 @@ class TimeSeries(plotpanel.DataSeries):
         plotpanel.DataSeries.__init__(self, overlay)
 
         self.tsPanel = tsPanel
-        self.coords  = map(int, coords)
-        self.data    = overlay.data[coords[0], coords[1], coords[2], :]
+        self.coords  = None
+        self.data    = None
+        self.update(coords)
 
 
     def __copy__(self):
@@ -91,15 +94,15 @@ class TimeSeries(plotpanel.DataSeries):
                      destroyed/recreated whenever the
                      :attr:`.DisplayContext.location` changes.
         """
-        
-        coords = map(int, coords)
-        if coords == self.coords:
-            return False
-        
+
         self.coords = coords
-        self.data   = self.overlay.data[coords[0], coords[1], coords[2], :]
+        self.data = self._getData(coords)
         return True
 
+
+    def _getData(self, coords):
+        return self.overlay.data[coords[0], coords[1], coords[2], :]
+    
         
     def getData(self, xdata=None, ydata=None):
         """Overrides :meth:`.DataSeries.getData` Returns the data associated
@@ -648,6 +651,17 @@ class FEATModelFitTimeSeries(TimeSeries):
         self.data = self.overlay.fit(contrast, xyz, fitType == 'full')
 
 
+
+class MelodicTimeSeries(TimeSeries):
+
+    def __init__(self, tsPanel, overlay, component):
+        TimeSeries.__init__(self, tsPanel, overlay, component)
+
+
+    def _getData(self, component):
+        return self.overlay.getComponentTimeSeries(component)
+
+
 class TimeSeriesPanel(plotpanel.PlotPanel):
     """A :class:`.PlotPanel` which plots time series data from
     :class:`.Image` overlays.
@@ -707,12 +721,12 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
 
 
     The ``TimeSeriesPanel`` has some extra functionality for
-    :class:`.FEATImage` overlays. For these overlays, a :class:`FEATTimeSeries`
-    instance is plotted, instead of a regular :class:`TimeSeries` instance. The
-    ``FEATTimeSeries`` class, in turn, has the ability to generate more
-    ``TimeSeries`` instances which represent various aspects of the FEAT model
-    fit. See the :class:`FEATTimeSeries` and the
-    :class:`.TimeSeriesControlPanel` classes for more details.
+    :class:`.FEATImage` overlays. For these overlays, a
+    :class:`.FEATTimeSeries` instance is plotted, instead of a regular
+    :class:`.TimeSeries` instance. The ``FEATTimeSeries`` class, in turn, has
+    the ability to generate more ``TimeSeries`` instances which represent
+    various aspects of the FEAT model fit. See the :class:`.FEATTimeSeries`
+    and the :class:`.TimeSeriesControlPanel` classes for more details.
     """
 
     
@@ -844,7 +858,7 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
 
         
     def getCurrent(self):
-        """Returns the :class:`TimeSeries` instance for the current time
+        """Returns the :class:`.TimeSeries` instance for the current time
         course. If :attr:`showCurrent` is ``False``, or the currently
         selected overlay is not a :class:`.Image` (see
         :attr:`.DisplayContext.selectedOverlay`) this method will return
@@ -881,34 +895,25 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
                 overlays = [o for o in self._overlayList
                             if o is not currOverlay]
 
-                # Remove overlays for which the
-                # current location is out of bounds
-                locs   = map(self.__getTimeSeriesLocation, overlays)
-                locovl = filter(lambda (l, o): l is not None,
-                                zip(locs, overlays))
-                
-                if len(locovl) > 0:
-                    locs, overlays = zip(*locovl)
+                tss = map(self.__genTimeSeries, overlays)
 
-                    tss = map(self.__genTimeSeries, overlays, locs)
-
-                    extras.extend([ts for ts in tss if ts is not None])
+                extras.extend([ts for ts in tss if ts is not None])
                     
-                    for ts in tss:
-                        ts.alpha     = 1
-                        ts.lineWidth = 0.5
+                for ts in tss:
+                    ts.alpha     = 1
+                    ts.lineWidth = 0.5
 
-                        # Use a random colour for each overlay,
-                        # but use the same random colour each time
-                        colour = self.__overlayColours.get(
-                            ts.overlay,
-                            fslcmaps.randomBrightColour())
+                    # Use a random colour for each overlay,
+                    # but use the same random colour each time
+                    colour = self.__overlayColours.get(
+                        ts.overlay,
+                        fslcmaps.randomBrightColour())
                         
-                        ts.colour = colour
-                        self.__overlayColours[ts.overlay] = colour
+                    ts.colour = colour
+                    self.__overlayColours[ts.overlay] = colour
                         
-                        if isinstance(ts, FEATTimeSeries):
-                            extras.extend(ts.getModelTimeSeries())
+                    if isinstance(ts, FEATTimeSeries):
+                        extras.extend(ts.getModelTimeSeries())
                 
             self.drawDataSeries(extras)
         else:
@@ -918,9 +923,9 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
     def __currentSettingsChanged(self, *a):
         """Called when the settings controlling the display of the current time
         course(s) changes.  If the current time course is a
-        :class:`FEATTimeSeries`, the display settings are propagated to all of
+        :class:`.FEATTimeSeries`, the display settings are propagated to all of
         its associated time courses (see the
-        :meth:`FEATTimeSeries.getModelTimeSeries` method).
+        :meth:`.FEATTimeSeries.getModelTimeSeries` method).
         """
         if self.__currentTs is None:
             return
@@ -948,7 +953,7 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
 
     def __overlaysChanged(self, *a):
         """Called when the :class:`.OverlayList` changes. Makes sure
-        that there are no :class:`TimeSeries` instances in the
+        that there are no :class:`.TimeSeries` instances in the
         :attr:`.PlotPanel.dataSeries` list which refer to overlays that
         no longer exist.
         """
@@ -962,7 +967,7 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
 
 
     def __bindCurrentProps(self, ts, bind=True):
-        """Binds or unbinds the properties of the given :class:`TimeSeries`
+        """Binds or unbinds the properties of the given :class:`.TimeSeries`
         instance with the current display settings (e.g.
         :attr:`currentColour`, :attr:`currentAlpha`, etc).
         """
@@ -992,6 +997,9 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
            not overlay.is4DImage():
             return None
 
+        if isinstance(overlay, fslmelimage.MelodicImage):
+            return opts.volume
+
         vox = opts.transformCoords([[x, y, z]], 'display', 'voxel')[0]
         vox = np.round(vox)
 
@@ -1006,15 +1014,25 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
         return vox
 
     
-    def __genTimeSeries(self, overlay, vox):
-        """Creates and returns a :class:`TimeSeries` or :class:`FEATTimeSeries`
-        instance for the specified voxel of the specified overlay.
+    def __genTimeSeries(self, overlay):
+        """Creates and returns a :class:`.TimeSeries` or
+        :class:`.FEATTimeSeries` instance for the specified voxel of the
+        specified overlay.
         """
 
+        loc = self.__getTimeSeriesLocation(overlay)
+
+        if loc is None:
+            return None
+
         if isinstance(overlay, fslfeatimage.FEATImage):
-            ts = FEATTimeSeries(self, overlay, vox)
+            ts = FEATTimeSeries(self, overlay, loc)
+            
+        elif isinstance(overlay, fslmelimage.MelodicImage):
+            ts = MelodicTimeSeries(self, overlay, loc)
+            
         else:
-            ts = TimeSeries(self, overlay, vox)
+            ts = TimeSeries(self, overlay, loc)
 
         ts.colour    = self.currentColour
         ts.alpha     = self.currentAlpha
@@ -1043,18 +1061,14 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
             return
 
         overlay = self._displayCtx.getSelectedOverlay()
-        vox     = self.__getTimeSeriesLocation(overlay)
-
-        if vox is None:
-            return
 
         if overlay is prevOverlay:
             self.__currentOverlay = prevOverlay
             self.__currentTs      = prevTs
-            prevTs.update(vox)
+            prevTs.update(self.__getTimeSeriesLocation(overlay))
 
         else:
-            ts                    = self.__genTimeSeries(overlay, vox)
+            ts                    = self.__genTimeSeries(overlay)
             self.__currentTs      = ts
             self.__currentOverlay = overlay
 

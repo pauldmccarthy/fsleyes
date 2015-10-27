@@ -191,19 +191,24 @@ def guessDataSourceType(filename):
     is unrecognised, the first tuple value will be ``None``.
     """
 
-    import fsl.data.image       as fslimage
-    import fsl.data.model       as fslmodel
-    import fsl.data.featimage   as fslfeatimage
-    import fsl.data.featresults as featresults
+    import fsl.data.image          as fslimage
+    import fsl.data.model          as fslmodel
+    import fsl.data.featimage      as fslfeatimage
+    import fsl.data.melodicimage   as fslmelimage
+    import fsl.data.melodicresults as melresults
+    import fsl.data.featresults    as featresults
+
+    filename = op.abspath(filename)
 
     if filename.endswith('.vtk'):
         return fslmodel.Model, filename
 
     else:
-
         if op.isdir(filename):
             if featresults.isFEATDir(filename):
                 return fslfeatimage.FEATImage, filename
+            elif melresults.isMelodicDir(filename):
+                return fslmelimage.MelodicImage, filename 
         else:
         
             filename = fslimage.addExt(filename, False)
@@ -212,6 +217,8 @@ def guessDataSourceType(filename):
 
                 if featresults.isFEATDir(filename):
                     return fslfeatimage.FEATImage, filename
+                elif melresults.isMelodicDir(filename):
+                    return fslmelimage.MelodicImage, filename
                 else:
                     return fslimage.Image, filename
 
@@ -288,7 +295,8 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
         e     = str(e)
         msg   = strings.messages['overlay.loadOverlays.error'].format(s, e)
         title = strings.titles[  'overlay.loadOverlays.error']
-        log.debug('Error loading overlay ({}), ({})'.format(s, e))
+        log.debug('Error loading overlay ({}), ({})'.format(s, e),
+                  exc_info=True)
         wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK) 
 
     # If loadFunc or errorFunc are explicitly set to
