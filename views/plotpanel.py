@@ -4,10 +4,9 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`PlotPanel` and :class:`DataSeries`
-classes. The ``PlotPanel`` class is the base class for all *FSLeyes views*
-which display some sort of data plot.  See the :mod:`~fsl.fsleyes` package
-documentation for more details..
+"""This module provides the :class:`PlotPanel` class. The ``PlotPanel`` class
+is the base class for all *FSLeyes views* which display some sort of data
+plot.  See the :mod:`~fsl.fsleyes` package documentation for more details..
 """
 
 
@@ -54,7 +53,7 @@ class PlotPanel(viewpanel.ViewPanel):
 
       1. Call the ``PlotPanel`` constructor.
 
-      2. Define a :class:`DataSeries` sub-class.
+      2. Define a :class:`.DataSeries` sub-class.
 
       3. Override the :meth:`draw` method, so it calls the
          :meth:`drawDataSeries` method.
@@ -66,8 +65,9 @@ class PlotPanel(viewpanel.ViewPanel):
     **Data series**
 
     A ``PlotPanel`` instance plots data contained in one or more
-    :class:`DataSeries` instances.  Therefore, ``PlotPanel`` sub-classes also
-    need to define a sub-class of the :class:`DataSeries` base class.
+    :class:`.DataSeries` instances; all ``DataSeries`` classes are defined in
+    the :mod:`.plotting` sub-package.  Therefore, ``PlotPanel`` sub-classes
+    also need to define a sub-class of the :class:`.DataSeries` base class.
 
     ``DataSeries`` objects can be plotted by passing them to the
     :meth:`drawDataSeries` method.
@@ -105,7 +105,7 @@ class PlotPanel(viewpanel.ViewPanel):
 
 
     dataSeries = props.List()
-    """This list contains :class:`DataSeries` instances which are plotted
+    """This list contains :class:`.DataSeries` instances which are plotted
     on every call to :meth:`drawDataSeries`. ``DataSeries`` instances can
     be added/removed directly to/from this list.
     """
@@ -266,7 +266,7 @@ class PlotPanel(viewpanel.ViewPanel):
     def draw(self, *a):
         """This method must be overridden by ``PlotPanel`` sub-classes.
 
-        It is called whenever a :class:`DataSeries` is added to the
+        It is called whenever a :class:`.DataSeries` is added to the
         :attr:`dataSeries` list, or when any plot display properties change.
 
         Sub-class implementations should call the :meth:`drawDataSeries`
@@ -356,7 +356,7 @@ class PlotPanel(viewpanel.ViewPanel):
 
 
     def drawDataSeries(self, extraSeries=None, **plotArgs):
-        """Plots all of the :class:`DataSeries` instances in the
+        """Plots all of the :class:`.DataSeries` instances in the
         :attr:`dataSeries` list
 
         :arg extraSeries: A sequence of additional ``DataSeries`` to be
@@ -475,7 +475,7 @@ class PlotPanel(viewpanel.ViewPanel):
 
         
     def __drawOneDataSeries(self, ds, **plotArgs):
-        """Plots a single :class:`DataSeries` instance. This method is called
+        """Plots a single :class:`.DataSeries` instance. This method is called
         by the :meth:`drawDataSeries` method.
 
         :arg ds:       The ``DataSeries`` instance.
@@ -586,7 +586,7 @@ class PlotPanel(viewpanel.ViewPanel):
 
     def __dataSeriesChanged(self, *a):
         """Called when the :attr:`dataSeries` list changes. Adds listeners
-        to any new :class:`DataSeries` instances, and then calls :meth:`draw`.
+        to any new :class:`.DataSeries` instances, and then calls :meth:`draw`.
         """
         
         for ds in self.dataSeries:
@@ -666,69 +666,3 @@ class PlotPanel(viewpanel.ViewPanel):
         self.enableListener('limits', self.__name)            
  
         return (xmin, xmax), (ymin, ymax)
-
-
-class DataSeries(props.HasProperties):
-    """A ``DataSeries`` instance encapsulates some data to be plotted by
-    a :class:`PlotPanel`, with the data extracted from an overlay in the
-    :class:`.OverlayList`. 
-
-    Sub-class implementations must accept an overlay object, pass this
-    overlay to the ``DataSeries`` constructor, and override the
-    :meth:`getData` method. The overlay is accessible as an instance
-    attribute, confusingly called ``overlay``.
-
-    Each``DataSeries`` instance is plotted as a line, with the line
-    style defined by properties on the ``DataSeries`` instance,
-    such as :attr:`colour`, :attr:`lineWidth` etc.
-    """
-
-    colour = props.Colour()
-    """Line colour. """
-
-    
-    alpha = props.Real(minval=0.0, maxval=1.0, default=1.0, clamped=True)
-    """Line transparency."""
-
-    
-    label = props.String()
-    """Line label (used in the plot legend)."""
-
-    
-    lineWidth = props.Choice((0.5, 1, 2, 3, 4, 5))
-    """Line width. """
-
-    
-    lineStyle = props.Choice(('-', '--', '-.', ':'))
-    """Line style. """
-
-    
-    def __init__(self, overlay):
-        """Create a ``DataSeries``.
-
-        :arg overlay: The overlay from which the data to be plotted is
-                      derived. 
-        """
-        
-        self.overlay = overlay
-
-
-    def __copy__(self):
-        """``DataSeries`` copy operator. Sub-classes with constructors
-        that require more than just the overlay object will need to
-        implement their own copy operator.
-        """
-        return type(self)(self.overlay)
-
-
-    def getData(self):
-        """This method must be implemented by sub-classes. It must return
-        the data to be plotted, as a tuple of the form:
-        
-            ``(xdata, ydata)``
-
-        where ``xdata`` and ``ydata`` are sequences containing the x/y data
-        to be plotted.
-        """
-        raise NotImplementedError('The getData method must be '
-                                  'implemented by subclasses')

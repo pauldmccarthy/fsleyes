@@ -11,12 +11,13 @@ control* which allows the user to configure a :class:`.TimeSeriesPanel`.
 
 import wx
 
-import                         props
-import pwidgets.widgetlist  as widgetlist
+import                                    props
+import pwidgets.widgetlist             as widgetlist
 
-import fsl.fsleyes.panel    as fslpanel
-import fsl.fsleyes.tooltips as fsltooltips
-import fsl.data.strings     as strings
+import fsl.fsleyes.panel               as fslpanel
+import fsl.fsleyes.plotting.timeseries as timeseries
+import fsl.fsleyes.tooltips            as fsltooltips
+import fsl.data.strings                as strings
 
 
 class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
@@ -262,8 +263,6 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
         # We're assuminbg that the TimeSeriesPanel has
         # already updated its current TimeSeries for
         # the newly selected overlay.
-        
-        import fsl.fsleyes.views.timeseriespanel as tsp
 
         if self.__selectedOverlay is not None:
             display = self._displayCtx.getDisplay(self.__selectedOverlay)
@@ -275,7 +274,7 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
 
         ts = self.__tsPanel.getCurrent()
 
-        if ts is None or not isinstance(ts, tsp.FEATTimeSeries):
+        if ts is None or not isinstance(ts, timeseries.FEATTimeSeries):
             return
 
         overlay = ts.overlay

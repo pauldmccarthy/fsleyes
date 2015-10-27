@@ -15,12 +15,13 @@ import          copy
 import          wx
 import numpy as np
 
-import                                      props
-import pwidgets.elistbox                 as elistbox
-import fsl.fsleyes.panel                 as fslpanel
-import fsl.fsleyes.tooltips              as fsltooltips
-import fsl.data.strings                  as strings
-import fsl.fsleyes.colourmaps            as fslcm
+import                                    props
+import fsl.fsleyes.plotting.timeseries as timeseries
+import pwidgets.elistbox               as elistbox
+import fsl.fsleyes.panel               as fslpanel
+import fsl.fsleyes.tooltips            as fsltooltips
+import fsl.data.strings                as strings
+import fsl.fsleyes.colourmaps          as fslcm
 
 
 class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
@@ -114,11 +115,9 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
         """Creates a label to use for the given :class:`.TimeSeries` instance.
         """
 
-        import fsl.fsleyes.views.timeseriespanel as tsp
-
         display = self._displayCtx.getDisplay(ts.overlay)
 
-        if isinstance(ts, tsp.MelodicTimeSeries):
+        if isinstance(ts, timeseries.MelodicTimeSeries):
             return '{} [component {}]'.format(display.name, ts.coords)
         else:
             return '{} [{} {} {}]'.format(display.name,
