@@ -255,11 +255,14 @@ properties = TypeDict({
     'TimeSeriesPanel.usePixdim'        : 'If checked, the x axis data is '
                                          'scaled by the time dimension pixdim '
                                          'value specified in the NIFTI1 '
-                                         'header.', 
-    'TimeSeriesPanel.showCurrent'      : 'Show / hide the time series for the '
-                                         'currently selected overlay.',
-    'TimeSeriesPanel.showAllCurrent'   : 'Show the time series for all '
-                                         'compatible overlays.',
+                                         'header.',
+    'TimeSeriesPanel.showMode'         : 'Choose which time series to plot - '
+                                         'you can choose to plot the time '
+                                         'series for the currently selected '
+                                         'overlay, the time series for all '
+                                         'compatible overlays, or just those '
+                                         'that have been added to the time '
+                                         'series list.',
     'TimeSeriesPanel.plotMode'         : 'Plotting mode. You can choose to: '
                                          '\n  - Display the data as-is.'
                                          '\n  - Remove the temporal mean from '

@@ -77,10 +77,9 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
         self.SetSizer(self.__sizer)
         self.__sizer.Add(self.__widgets, flag=wx.EXPAND, proportion=1)
 
-        tsProps   = ['plotMode',
-                     'usePixdim',
-                     'showCurrent',
-                     'showAllCurrent']
+        tsProps   = ['showMode',
+                     'plotMode',
+                     'usePixdim']
         plotProps = ['xLogScale',
                      'yLogScale',
                      'smooth',
@@ -94,14 +93,13 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
             strings.labels[self, 'tsSettings'])
 
         for prop in tsProps:
-            if prop == 'plotMode': 
-                widget = props.makeWidget(
-                    self.__widgets,
-                    tsPanel,
-                    prop,
-                    labels=strings.choices['TimeSeriesPanel.plotMode'])
-            else:
-                widget = props.makeWidget(self.__widgets, tsPanel, prop)
+            kwargs = {}
+            if prop == 'plotMode':
+                kwargs['labels'] = strings.choices['TimeSeriesPanel.plotMode']
+            elif prop == 'showMode':
+                kwargs['labels'] = strings.choices['TimeSeriesPanel.showMode']
+                
+            widget = props.makeWidget(self.__widgets, tsPanel, prop, **kwargs)
             self.__widgets.AddWidget(
                 widget,
                 displayName=strings.properties[tsPanel, prop],
@@ -163,12 +161,6 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
                                 self._name,
                                 self.__selectedOverlayChanged)
 
-        tsPanel.addListener('showCurrent',
-                            self._name,
-                            self.__showCurrentChanged)
-
-        self.__showCurrentChanged()
-
         # This attribute keeps track of the currently
         # selected overlay, but only if said overlay
         # is a FEATImage.
@@ -190,56 +182,6 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
             
         fslpanel.FSLEyesPanel.destroy(self)
 
-
-    def __showCurrentChanged(self, *a):
-        """Called when the :attr:`.TimeSeriesPanel.showCurrent` property
-        changes. Shows hides the  *Settings for the current time course*
-        section.
-        """
-        widgets     = self.__widgets
-        tsPanel     = self.__tsPanel
-        showCurrent = tsPanel.showCurrent
-        areShown    = widgets.HasGroup('currentSettings')
-
-        if (not showCurrent) and areShown:
-            widgets.RemoveGroup('currentSettings')
-
-        elif showCurrent and (not areShown):
-
-            self.__widgets.AddGroup('currentSettings',
-                                    strings.labels[self, 'currentSettings'])
-
-            colour    = props.makeWidget(widgets, tsPanel, 'currentColour')
-            alpha     = props.makeWidget(widgets, tsPanel, 'currentAlpha',
-                                         showLimits=False, spin=False)
-            lineWidth = props.makeWidget(widgets, tsPanel, 'currentLineWidth')
-            lineStyle = props.makeWidget(
-                widgets,
-                tsPanel,
-                'currentLineStyle',
-                labels=strings.choices['DataSeries.lineStyle'])
-
-            self.__widgets.AddWidget(
-                colour,
-                displayName=strings.properties[tsPanel, 'currentColour'],
-                tooltip=fsltooltips.properties[tsPanel, 'currentColour'],
-                groupName='currentSettings')
-            self.__widgets.AddWidget(
-                alpha,
-                displayName=strings.properties[tsPanel, 'currentAlpha'],
-                tooltip=fsltooltips.properties[tsPanel, 'currentAlpha'],
-                groupName='currentSettings')
-            self.__widgets.AddWidget(
-                lineWidth,
-                displayName=strings.properties[tsPanel, 'currentLineWidth'],
-                tooltip=fsltooltips.properties[tsPanel, 'currentLineWidth'],
-                groupName='currentSettings') 
-            self.__widgets.AddWidget(
-                lineStyle,
-                displayName=strings.properties[tsPanel, 'currentLineStyle'],
-                tooltip=fsltooltips.properties[tsPanel, 'currentLineStyle'],
-                groupName='currentSettings')
-            
 
     def __selectedOverlayNameChanged(self, *a):
         """Called when the :attr:`.Display.name` property for the currently
@@ -272,12 +214,14 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
         if self.__widgets.HasGroup('currentFEATSettings'):
             self.__widgets.RemoveGroup('currentFEATSettings')
 
-        ts = self.__tsPanel.getCurrent()
+        overlay = self._displayCtx.getSelectedOverlay()
+        ts      = self.__tsPanel.getTimeSeries(overlay)
+
+        self.__showSettingsForCurrentTimeSeries()
 
         if ts is None or not isinstance(ts, timeseries.FEATTimeSeries):
             return
 
-        overlay = ts.overlay
         display = self._displayCtx.getDisplay(overlay)
 
         self.__selectedOverlay = overlay
@@ -355,3 +299,56 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
                     i + 1, name),
                 tooltip=fsltooltips.properties[ts, 'plotCOPEFits'],
                 groupName='currentFEATSettings') 
+
+
+    def __showSettingsForCurrentTimeSeries(self):
+        """Called by the :meth:`__selectedOverlayChanged` method. Refreshes
+        the *Settings for the current time course* section.
+        """
+        widgets = self.__widgets
+        tsPanel = self.__tsPanel
+        overlay = self._displayCtx.getSelectedOverlay()
+        ts      = tsPanel.getTimeSeries(overlay)
+
+        if widgets.HasGroup('currentSettings'):
+            widgets.RemoveGroup('currentSettings')
+
+        if ts is None:
+            return
+
+        display = self._displayCtx.getDisplay(overlay)
+
+        self.__widgets.AddGroup(
+            'currentSettings',
+            strings.labels[self, 'currentSettings'].format(display.name))
+
+        colour    = props.makeWidget(widgets, ts, 'colour')
+        alpha     = props.makeWidget(widgets, ts, 'alpha',
+                                     showLimits=False, spin=False)
+        lineWidth = props.makeWidget(widgets, ts, 'lineWidth')
+        lineStyle = props.makeWidget(
+            widgets,
+            ts,
+            'lineStyle',
+            labels=strings.choices['DataSeries.lineStyle'])
+
+        self.__widgets.AddWidget(
+            colour,
+            displayName=strings.properties[ts, 'colour'],
+            tooltip=fsltooltips.properties[ts, 'colour'],
+            groupName='currentSettings')
+        self.__widgets.AddWidget(
+            alpha,
+            displayName=strings.properties[ts, 'alpha'],
+            tooltip=fsltooltips.properties[ts, 'alpha'],
+            groupName='currentSettings')
+        self.__widgets.AddWidget(
+            lineWidth,
+            displayName=strings.properties[ts, 'lineWidth'],
+            tooltip=fsltooltips.properties[ts, 'lineWidth'],
+            groupName='currentSettings') 
+        self.__widgets.AddWidget(
+            lineStyle,
+            displayName=strings.properties[ts, 'lineStyle'],
+            tooltip=fsltooltips.properties[ts, 'lineStyle'],
+            groupName='currentSettings')

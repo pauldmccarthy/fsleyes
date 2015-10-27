@@ -25,54 +25,46 @@ class TimeSeries(dataseries.DataSeries):
     """
 
     
-    def __init__(self, tsPanel, overlay, coords):
+    def __init__(self, tsPanel, overlay, displayCtx):
         """Create a ``TimeSeries`` instane.
 
         :arg tsPanel: The :class:`TimeSeriesPanel` which owns this
                       ``TimeSeries``.
 
         :arg overlay: The :class:`.Image` instance to extract the data from.
-
-        :arg coords:  The voxel coordinates of the time series.
         """
         dataseries.DataSeries.__init__(self, overlay)
 
-        self.tsPanel = tsPanel
-        self.coords  = None
-        self.data    = None
-        self.update(coords)
+        self.tsPanel    = tsPanel
+        self.displayCtx = displayCtx
 
-
-    def __copy__(self):
-        """Copy operator, creates and returns a copy of this ``TimeSeries``
-        instance.
-        """
-        return type(self)(self.tsPanel, self.overlay, self.coords)
-
-        
-    def update(self, coords):
-        """Updates the voxel coordinates and time series data encapsulated
-        by this ``TimeSeries``.
-
-        .. warning:: This method is only intended for use on the *current*
-                     ``TimeSeriesPanel`` series, not for time series instances
-                     which have been added to the :attr:`.PlotPanel.dataSeries`
-                     list.
-        
-                     It is used by the :class:`TimeSeriesPanel` so that
-                     ``TimeSeries`` instances do not have to constantly be
-                     destroyed/recreated whenever the
-                     :attr:`.DisplayContext.location` changes.
-        """
-
-        self.coords = coords
-        self.data = self._getData(coords)
-        return True
-
-
-    def _getData(self, coords):
-        return self.overlay.data[coords[0], coords[1], coords[2], :]
     
+    def getVoxel(self):
+        """Calculates and returns the voxel coordinates corresponding to the
+        current :attr:`.DisplayContext.location` for the specified ``overlay``.
+
+        Returns ``None`` if the given overlay is not a 4D :class:`.Image`
+        which is being displayed with a :class:`.VolumeOpts` instance, or if
+        the current location is outside of the image bounds.
+        """
+
+        overlay = self.overlay
+        opts    = self.displayCtx.getOpts(overlay)
+        x, y, z = self.displayCtx.location.xyz
+
+        vox     = opts.transformCoords([[x, y, z]], 'display', 'voxel')[0]
+        vox     = np.round(vox)
+
+        if vox[0] < 0                 or \
+           vox[1] < 0                 or \
+           vox[2] < 0                 or \
+           vox[0] >= overlay.shape[0] or \
+           vox[1] >= overlay.shape[1] or \
+           vox[2] >= overlay.shape[2]:
+            return None
+
+        return vox 
+
         
     def getData(self, xdata=None, ydata=None):
         """Overrides :meth:`.DataSeries.getData` Returns the data associated
@@ -83,8 +75,17 @@ class TimeSeries(dataseries.DataSeries):
         some processing on the data.
         """
 
-        if xdata is None: xdata = np.arange(len(self.data), dtype=np.float32)
-        if ydata is None: ydata = np.array(     self.data,  dtype=np.float32)
+        if ydata is None:
+            xyz = self.getVoxel()
+
+            if xyz is None:
+                return [], []
+
+            x, y, z = xyz
+            ydata   = np.array(self.overlay.data[x, y, z, :], dtype=np.float32)
+
+        if xdata is None:
+            xdata = np.arange(len(ydata), dtype=np.float32)
 
         if self.tsPanel.usePixdim:
             xdata *= self.overlay.pixdim[3]

@@ -51,6 +51,7 @@ class DataSeries(props.HasProperties):
         """
         
         self.overlay = overlay
+        self.setData([], [])
 
 
     def __copy__(self):
@@ -59,6 +60,11 @@ class DataSeries(props.HasProperties):
         implement their own copy operator.
         """
         return type(self)(self.overlay)
+
+
+    def setData(self, xdata, ydata):
+        self.__xdata = xdata
+        self.__ydata = ydata 
 
 
     def getData(self):
@@ -70,5 +76,4 @@ class DataSeries(props.HasProperties):
         where ``xdata`` and ``ydata`` are sequences containing the x/y data
         to be plotted.
         """
-        raise NotImplementedError('The getData method must be '
-                                  'implemented by subclasses')
+        return self.__xdata, self.__ydata

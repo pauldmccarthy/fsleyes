@@ -115,6 +115,8 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
         """Creates a label to use for the given :class:`.TimeSeries` instance.
         """
 
+        return 'TODO'
+
         display = self._displayCtx.getDisplay(ts.overlay)
 
         if isinstance(ts, timeseries.MelodicTimeSeries):
@@ -129,7 +131,9 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
     def __makeFEATModelTSLabel(self, parentTs, modelTs):
         """Creates a label to use for the given :class:`.FEATTimeSeries`
         instance.
-        """ 
+        """
+        
+        return 'TODO'
 
         import fsl.fsleyes.views.timeseriespanel as tsp
 
@@ -187,7 +191,9 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
         the currently selected overlay, and the current voxel location.
         """
 
-        ts = self.__tsPanel.getCurrent()
+        overlay = self._displayCtx.getSelectedOverlay()
+
+        ts = self.__tsPanel.getTimeSeries(overlay)
 
         if ts is None:
             self.__currentLabel.SetLabel('')
