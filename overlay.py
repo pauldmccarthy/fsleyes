@@ -210,17 +210,16 @@ def guessDataSourceType(filename):
             elif melresults.isMelodicDir(filename):
                 return fslmelimage.MelodicImage, filename 
         else:
-        
-            filename = fslimage.addExt(filename, False)
-            if any([filename.endswith(e)
-                    for e in fslimage.ALLOWED_EXTENSIONS]):
+            
+            try:               filename = fslimage.addExt(filename, True)
+            except ValueError: return None, filename
 
-                if featresults.isFEATDir(filename):
-                    return fslfeatimage.FEATImage, filename
-                elif melresults.isMelodicDir(filename):
-                    return fslmelimage.MelodicImage, filename
-                else:
-                    return fslimage.Image, filename
+            if featresults.isFEATDir(filename):
+                return fslfeatimage.FEATImage, filename
+            elif melresults.isMelodicDir(filename):
+                return fslmelimage.MelodicImage, filename
+            else:
+                return fslimage.Image, filename
 
     return None, filename
 

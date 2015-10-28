@@ -39,7 +39,7 @@ Adding new command line options
 -------------------------------
 
 
-Most classes in *FSleyes* derive from the :class:`.HasProperties` class of the
+Most classes in *FSLeyes* derive from the :class:`.HasProperties` class of the
 :mod:`props` package. Therefore, with only a couple of excpetions, the
 processing of nearly all *FSLeyes* command line arguments is completely
 automatic.
@@ -819,19 +819,20 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
     # by which the vector image colours are
     # to be modulated. The same goes for the
     # ModelOpts.refImage option
-    fileOpts.append(ARGUMENTS[fsldisplay.VectorOpts, 'modulate'])
-    fileOpts.append(ARGUMENTS[fsldisplay.ModelOpts,  'refImage']) 
+    fileOpts.extend(ARGUMENTS[fsldisplay.VectorOpts, 'modulate'])
+    fileOpts.extend(ARGUMENTS[fsldisplay.ModelOpts,  'refImage']) 
 
     # There is a possibility that the user
     # may specify an overlay name which is the
     # same as the overlay file - so we make
     # sure that such situations don't result
     # in an overlay file match.
-    fileOpts.append(ARGUMENTS[fsldisplay.Display, 'name'])
+    fileOpts.extend(ARGUMENTS[fsldisplay.Display, 'name'])
 
-    fileOpts = reduce(lambda a, b: list(a) + list(b), fileOpts, [])
-
+    # Compile a list of arguments which
+    # look like overlay file names
     ovlIdxs = []
+    
     for i in range(len(argv)):
 
         # See if the current argument looks like a data source
