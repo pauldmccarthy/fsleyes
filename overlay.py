@@ -182,12 +182,12 @@ class OverlayList(props.HasProperties):
         return self.overlays.insertAll(index, items) 
 
 
-def guessDataSourceType(filename):
+def guessDataSourceType(path):
     """A convenience function which, given the name of a file or directory,
     figures out a suitable overlay type.
 
     Returns a tuple containing two values - a type which should be able to
-    load the filename, and the filename, possibly adjusted. If the file type
+    load the path, and the path itself, possibly adjusted. If the type
     is unrecognised, the first tuple value will be ``None``.
     """
 
@@ -198,30 +198,53 @@ def guessDataSourceType(filename):
     import fsl.data.melodicresults as melresults
     import fsl.data.featresults    as featresults
 
-    filename = op.abspath(filename)
+    path = op.abspath(path)
 
-    if filename.endswith('.vtk'):
-        return fslmodel.Model, filename
+    # VTK files are easy
+    if path.endswith('.vtk'):
+        return fslmodel.Model, path
 
-    else:
-        if op.isdir(filename):
-            if featresults.isFEATDir(filename):
-                return fslfeatimage.FEATImage, filename
-            elif melresults.isMelodicDir(filename):
-                return fslmelimage.MelodicImage, filename 
-        else:
-            
-            try:               filename = fslimage.addExt(filename, True)
-            except ValueError: return None, filename
+    # Now, we check to see if the given
+    # path is part of a FEAT or MELODIC
+    # analysis. The way we go about this is
+    # a bit silly, but is necessary due to
+    # the fact thet a melodic analysis can
+    # be contained  within a feat analysis
+    # (or another melodic analysis). So we
+    # check for all analysis types and, if
+    # more than one analysis type matches,
+    # we return the one with the longest
+    # path name.
+    analyses = [
+        (fslfeatimage.FEATImage,    featresults.getFEATDir(   path)),
+        (fslmelimage .MelodicImage, melresults .getMelodicDir(path))]
 
-            if featresults.isFEATDir(filename):
-                return fslfeatimage.FEATImage, filename
-            elif melresults.isMelodicDir(filename):
-                return fslmelimage.MelodicImage, filename
-            else:
-                return fslimage.Image, filename
+    # Remove the analysis types that didn't match
+    # (the get*Dir function returned None)
+    analyses = [(t, d) for (t, d) in analyses if d is not None]
 
-    return None, filename
+    # If we have one or more matches for
+    # an analysis directory, we return
+    # the one with the longest path
+    if len(analyses) > 0:
+
+        dirlens = map(len, [d for (t, d) in analyses])
+        maxidx  = dirlens.index(max(dirlens))
+        
+        return analyses[maxidx]
+
+    # If the path is not an analysis directory,
+    # see if it is a regular nifti image
+    try:
+        path = fslimage.addExt(path, mustExist=True)
+        return fslimage.Image, path
+    
+    except ValueError:
+        pass
+
+    # Otherwise, I don't
+    # know what to do
+    return None, path
 
 
 def makeWildcard():

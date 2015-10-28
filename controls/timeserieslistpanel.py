@@ -183,7 +183,7 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
             copy.setData(*ts.getData())
 
             # This is hacky, and is here in order to
-            # make the __onLIstSelect method work.
+            # make the __onListSelect method work.
             if isinstance(ts, timeseries.MelodicTimeSeries):
                 copy.tsLoc = 'volume'
                 copy.coord = ts.getComponent()

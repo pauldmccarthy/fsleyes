@@ -626,7 +626,7 @@ def randomBrightColour():
 def randomDarkColour():
     """Generates a random saturated and darkened RGB colour."""
 
-    return applyBricon(randomBrightColour(), 0.25, 0.5)
+    return applyBricon(randomBrightColour(), 0.35, 0.5)
 
 
 def complementaryColour(rgb):
