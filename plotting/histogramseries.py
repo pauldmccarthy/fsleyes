@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# histogramseries.py -
+# histogramseries.py - The HistogramSeries class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`HistogramSeries` class, used by the
+:class:`.HistogramPanel` for plotting histogram data.
+"""
 
 import logging
 
@@ -23,6 +26,7 @@ class HistogramSeries(dataseries.DataSeries):
     instance.
     """
 
+    
     nbins = props.Int(minval=10, maxval=500, default=100, clamped=True)
     """Number of bins to use in the histogram. This value is overridden
     by the :attr:`HistogramPanel.autoBin` setting.
@@ -110,7 +114,7 @@ class HistogramSeries(dataseries.DataSeries):
 
         if overlay.is4DImage():
             self.setConstraint('volume', 'maxval', overlay.shape[3] - 1)
-
+        
         # If we have a baseHS, we 
         # can copy all its data
         if baseHs is not None:
@@ -134,7 +138,7 @@ class HistogramSeries(dataseries.DataSeries):
         # it all for ourselves
         else:
             self.__initProperties()
-        
+            
         overlayList.addListener('overlays',
                                 self.__name,
                                 self.__overlayListChanged)
@@ -317,9 +321,11 @@ class HistogramSeries(dataseries.DataSeries):
         if self.__hsPanel.autoBin:
             nbins = self.__autoBin(data, self.dataRange.x)
 
-            self.disableListener('nbins', self.__name)
+            if self.hasListener('nbins', self.__name):
+                self.disableListener('nbins', self.__name)
             self.nbins = nbins
-            self.enableListener('nbins', self.__name)
+            if self.hasListener('nbins', self.__name):
+                self.enableListener('nbins', self.__name)
 
         # Calculate bin edges
         bins = np.linspace(self.dataRange.xlo,
