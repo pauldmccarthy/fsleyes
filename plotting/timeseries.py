@@ -11,6 +11,7 @@ are use by the :class:`.TimeSeriesPanel`. The following classes are provided:
    :nosignatures:
 
    TimeSeries
+   VoxelTimeSeries
    FEATTimeSeries
    FEATModelTimeSeries
    FEATPartialFitTimeSeries
@@ -20,7 +21,6 @@ are use by the :class:`.TimeSeriesPanel`. The following classes are provided:
    MelodicTimeSeries
 """
 
-import logging
 
 import numpy as np
 
@@ -30,26 +30,19 @@ import                     dataseries
 import fsl.data.strings as strings
 
 
-log = logging.getLogger(__name__)
-
-
 class TimeSeries(dataseries.DataSeries):
-    """Encapsulates time series data from a specific voxel in an
-    :class:`.Image` overlay. The voxel data may be accessed through
-    the :meth:`getData` method, where the voxel is defined by the
-    :attr:`.DisplayContext.location` property (transformed into the
-    image voxel coordinate system).
+    """Encapsulates time series data from an overlay.  :class:`.Image`
+    overlay. The ``TimeSeries`` class is the base-class for all other classes
+    in this module - its :meth:`getData` method implements some pre-processing
+    routines which are required by the :class:`.TimeSeriesPanel`.
 
-    The ``TimeSeries`` class is the base-class for all other classes
-    in this module.
-
-    A ``TimeSeries`` instance provides the following methods:
-
+    The following methods are intended to be overridden and/or called by
+    sub-class implementations:
+    
     .. autosummary::
        :nosignatures:
 
        makeLabel
-       getVoxel
        getData
     """
 
@@ -69,9 +62,78 @@ class TimeSeries(dataseries.DataSeries):
         self.tsPanel     = tsPanel
         self.displayCtx  = displayCtx
 
-
+        
     def makeLabel(self):
-        """Returns a string representation of this ``TimeSeries`` instance. """
+        """Return a label for this ``TimeSeries``. """
+        display = self.displayCtx.getDisplay(self.overlay)
+        return display.name
+    
+        
+    def getData(self, xdata=None, ydata=None):
+        """Overrides :meth:`.DataSeries.getData`. Returns the data associated
+        with this ``TimeSeries`` instance, pre-processed according to the
+        current :class:`.TimeSeriesPanel` settings.
+
+        The ``xdata`` and ``ydata`` arguments may be used by sub-classes to
+        override the x/y data in the event that they have already performed
+        some processing on the data. The default implementation returns
+        whatever has been set through :meth:`.DataSeries.setData`.
+        """
+
+        dsXData, dsYData = dataseries.DataSeries.getData(self)
+
+        if xdata is None:                    xdata = dsXData
+        if ydata is None:                    ydata = dsYData
+        if xdata is None or len(xdata) == 0: xdata = np.arange(len(ydata))
+
+        xdata = np.array(xdata, dtype=np.float32)
+        ydata = np.array(ydata, dtype=np.float32)
+
+        if self.tsPanel.usePixdim:
+            xdata *= self.overlay.pixdim[3]
+        
+        if self.tsPanel.plotMode == 'demean':
+            ydata = ydata - ydata.mean()
+
+        elif self.tsPanel.plotMode == 'normalise':
+            ymin  = ydata.min()
+            ymax  = ydata.max()
+            ydata = 2 * (ydata - ymin) / (ymax - ymin) - 1
+            
+        elif self.tsPanel.plotMode == 'percentChange':
+            mean  = ydata.mean()
+            ydata =  100 * (ydata / mean) - 100
+            
+        return xdata, ydata
+
+
+class VoxelTimeSeries(TimeSeries):
+    """A :class:`TimeSeries` sub-class which encapsulates data from a
+    specific voxel of a :class:`.Image` overlay.
+
+    The voxel data may be accessed through the :meth:`getData` method, where
+    the voxel is defined by current value of the
+    :attr:`.DisplayContext.location` property (transformed into the image
+    voxel coordinate system).
+    """
+    
+    def __init__(self, tsPanel, overlay, displayCtx):
+        """Create a ``VoxelTimeSeries`` instance.
+
+        :arg tsPanel:    The :class:`TimeSeriesPanel` which owns this
+                         ``VoxelTimeSeries``.
+
+        :arg overlay:    The :class:`.Image` instance to extract the data from.
+
+        :arg displayCtx: The :class:`.DisplayContext`. 
+        """
+        TimeSeries.__init__(self, tsPanel, overlay, displayCtx)
+
+        
+    def makeLabel(self):
+        """Returns a string representation of this ``VoxelTimeSeries``
+        instance.
+        """
 
         display = self.displayCtx.getDisplay(self.overlay)
         coords  = self.getVoxel()
@@ -88,7 +150,7 @@ class TimeSeries(dataseries.DataSeries):
     def getVoxel(self):
         """Calculates and returns the voxel coordinates corresponding to the
         current :attr:`.DisplayContext.location` for the overlay associated
-        with this ``TimeSeries``.
+        with this ``VoxelTimeSeries``.
 
         Returns ``None`` if the current location is outside of the image
         bounds.
@@ -111,14 +173,11 @@ class TimeSeries(dataseries.DataSeries):
 
         return vox
 
-        
-    def getData(self, xdata=None, ydata=None):
-        """Overrides :meth:`.DataSeries.getData`. Returns the data associated
-        with this ``TimeSeries`` instance.
 
-        The ``xdata`` and ``ydata`` arguments may be used by subclasses to
-        override the x/y data in the event that they have already performed
-        some processing on the data.
+    def getData(self, xdata=None, ydata=None):
+        """Returns the data at the current voxel location. The ``xdata`` and
+        ``ydata`` parameters may be used by sub-classes to override this
+        default behaviour.
         """
 
         if ydata is None:
@@ -128,32 +187,18 @@ class TimeSeries(dataseries.DataSeries):
                 return [], []
 
             x, y, z = xyz
-            ydata   = np.array(self.overlay.data[x, y, z, :], dtype=np.float32)
+
+            ydata = self.overlay.data[x, y, z, :]
 
         if xdata is None:
-            xdata = np.arange(len(ydata), dtype=np.float32)
-
-        if self.tsPanel.usePixdim:
-            xdata *= self.overlay.pixdim[3]
+            xdata = np.arange(len(ydata))
         
-        if self.tsPanel.plotMode == 'demean':
-            ydata = ydata - ydata.mean()
-
-        elif self.tsPanel.plotMode == 'normalise':
-            ymin  = ydata.min()
-            ymax  = ydata.max()
-            ydata = 2 * (ydata - ymin) / (ymax - ymin) - 1
-            
-        elif self.tsPanel.plotMode == 'percentChange':
-            mean  = ydata.mean()
-            ydata =  100 * (ydata / mean) - 100
-            
-        return xdata, ydata
+        return TimeSeries.getData(self, xdata=xdata, ydata=ydata)
 
  
-class FEATTimeSeries(TimeSeries):
-    """A :class:`TimeSeries` class for use with :class:`FEATImage` instances,
-    containing some extra FEAT specific options.
+class FEATTimeSeries(VoxelTimeSeries):
+    """A :class:`VoxelTimeSeries` class for use with :class:`FEATImage`
+    instances, containing some extra FEAT specific options.
 
     
     The ``FEATTimeSeries`` class acts as a container for several
@@ -237,11 +282,11 @@ class FEATTimeSeries(TimeSeries):
     def __init__(self, *args, **kwargs):
         """Create a ``FEATTimeSeries``.
 
-        All arguments are passed through to the :class:`TimeSeries`
+        All arguments are passed through to the :class:`VoxelTimeSeries`
         constructor.
         """
         
-        TimeSeries.__init__(self, *args, **kwargs)
+        VoxelTimeSeries.__init__(self, *args, **kwargs)
         self.name = '{}_{}'.format(type(self).__name__, id(self))
 
         numEVs    = self.overlay.numEVs()
@@ -489,10 +534,10 @@ class FEATTimeSeries(TimeSeries):
             FEATModelFitTimeSeries, self.__getContrast('full', -1), 'full', -1)
 
         
-class FEATPartialFitTimeSeries(TimeSeries):
-    """A :class:`TimeSeries` class which represents the partial model fit
-    of an EV or contrast from a FEAT analysis. Instances of this class
-    are created by the :class:`FEATTimeSeries` class.
+class FEATPartialFitTimeSeries(VoxelTimeSeries):
+    """A :class:`VoxelTimeSeries` class which represents the partial model
+    fit of an EV or contrast from a FEAT analysis at a specific voxel.
+    Instances of this class are created by the :class:`FEATTimeSeries` class.
     """
     def __init__(self,
                  tsPanel,
@@ -523,7 +568,7 @@ class FEATPartialFitTimeSeries(TimeSeries):
         :arg idx:        If the model fit type is ``'pe'`` or ``'cope'``,
                          the EV/contrast index.
         """
-        TimeSeries.__init__(self, tsPanel, overlay, displayCtx)
+        VoxelTimeSeries.__init__(self, tsPanel, overlay, displayCtx)
 
         self.parentTs = parentTs
         self.contrast = contrast
@@ -543,7 +588,7 @@ class FEATPartialFitTimeSeries(TimeSeries):
             return [], []
         
         data = self.overlay.partialFit(self.contrast, coords, False)
-        return TimeSeries.getData(self, ydata=data)
+        return VoxelTimeSeries.getData(self, ydata=data)
 
     
 class FEATEVTimeSeries(TimeSeries):
@@ -577,23 +622,25 @@ class FEATEVTimeSeries(TimeSeries):
         """Returns a string representation of this ``FEATEVTimeSeries``
         instance.
         """
+
+        display = self.displayCtx.getDisplay(self.overlay)
         
-        return '{} (EV{} - {})'.format(
-            self.parentTs.makeLabel(), 
+        return '{} EV{} ({})'.format(
+            display.name, 
             self.idx + 1,
             self.overlay.evNames()[self.idx]) 
 
         
     def getData(self):
         """Returns the time course of the EV specified in the constructor. """
-        data = np.array(self.overlay.getDesign()[:, self.idx])
+        data = self.overlay.getDesign()[:, self.idx]
         return TimeSeries.getData(self, ydata=data)
     
 
-class FEATResidualTimeSeries(TimeSeries):
-    """A :class:`TimeSeries` class which represents the time course of the
-    residuals from a FEAT analysis. Instances of this class are created by
-    the :class:`FEATTimeSeries` class.
+class FEATResidualTimeSeries(VoxelTimeSeries):
+    """A :class:`VoxelTimeSeries` class which represents the time course of
+    the residuals from a FEAT analysis at a specific voxel. Instances of this
+    class are created by the :class:`FEATTimeSeries` class.
     """
 
     def __init__(self, tsPanel, overlay, displayCtx, parentTs):
@@ -609,7 +656,7 @@ class FEATResidualTimeSeries(TimeSeries):
         :arg parentTs:   The :class:`.FEATTimeSeries` instance that has
                          created this ``FEATResidualTimeSeries``. 
         """
-        TimeSeries.__init__(self, tsPanel, overlay, displayCtx)
+        VoxelTimeSeries.__init__(self, tsPanel, overlay, displayCtx)
         self.parentTs = parentTs
 
 
@@ -629,15 +676,15 @@ class FEATResidualTimeSeries(TimeSeries):
             return [], []
 
         x, y, z = voxel
-        data    = np.array(self.overlay.getResiduals().data[x, y, z, :])
+        data    = self.overlay.getResiduals().data[x, y, z, :]
         
-        return TimeSeries.getData(self, ydata=data)
+        return VoxelTimeSeries.getData(self, ydata=data)
             
 
-class FEATModelFitTimeSeries(TimeSeries):
+class FEATModelFitTimeSeries(VoxelTimeSeries):
     """A :class:`TimeSeries` class which represents the time course for 
-    a model fit from a FEAT analysis. Instances of this class are created by
-    the :class:`FEATTimeSeries` class.
+    a model fit from a FEAT analysis at a specific voxel. Instances of this
+    class are created by the :class:`FEATTimeSeries` class.
     """ 
 
     def __init__(self,
@@ -673,7 +720,7 @@ class FEATModelFitTimeSeries(TimeSeries):
         if fitType not in ('full', 'cope', 'pe'):
             raise ValueError('Unknown model fit type {}'.format(fitType))
         
-        TimeSeries.__init__(self, tsPanel, overlay, displayCtx)
+        VoxelTimeSeries.__init__(self, tsPanel, overlay, displayCtx)
         self.parentTs = parentTs
         self.fitType  = fitType
         self.idx      = idx
@@ -712,16 +759,13 @@ class FEATModelFitTimeSeries(TimeSeries):
         
         data = self.overlay.fit(contrast, voxel, fitType == 'full')
 
-        return TimeSeries.getData(self, ydata=data)
-
+        return VoxelTimeSeries.getData(self, ydata=data)
 
 
 class MelodicTimeSeries(TimeSeries):
     """A :class:`.TimeSeries` class which encapsulates the time course for
-    one component of a :class:`.MelodicImage`. Where the :class:`.TimeSeries`
-    class returns the time course of the voxel at the current
-    :class:`.DisplayContext.location`, the :class:`.MelodicTimeSeries` returns
-    the time course of the component specified by the current
+    one component of a :class:`.MelodicImage`. The :meth:`getData` method
+    returns the time course of the component specified by the current
     :class:`.ImageOpts.volume`.
     """
 
@@ -747,6 +791,7 @@ class MelodicTimeSeries(TimeSeries):
 
     def makeLabel(self):
         """Returns a string representation of this ``MelodicTimeSeries``. """
+        
         display = self.displayCtx.getDisplay(self.overlay)
         return '{} [component {}]'.format(display.name, self.getComponent())
 
@@ -755,5 +800,5 @@ class MelodicTimeSeries(TimeSeries):
         """Returns the time course of the current Melodic component. """
         
         component = self.getComponent()
-        ydata     = np.array(self.overlay.getComponentTimeSeries(component))
+        ydata     = self.overlay.getComponentTimeSeries(component)
         return TimeSeries.getData(self, ydata=ydata)

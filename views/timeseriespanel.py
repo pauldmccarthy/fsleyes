@@ -413,7 +413,7 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
             propNames = ['volume'] 
             
         else:
-            ts        = timeseries.TimeSeries(self, overlay, self._displayCtx)
+            ts = timeseries.VoxelTimeSeries(self, overlay, self._displayCtx)
             targets   = [self._displayCtx]
             propNames = ['location'] 
 

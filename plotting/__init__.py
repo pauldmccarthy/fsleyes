@@ -9,7 +9,8 @@ import dataseries
 import timeseries
 
 DataSeries               = dataseries.DataSeries
-TimeSeries               = timeseries.TimeSeries 
+TimeSeries               = timeseries.TimeSeries
+VoxelTimeSeries          = timeseries.VoxelTimeSeries 
 FEATTimeSeries           = timeseries.FEATTimeSeries
 FEATPartialFitTimeSeries = timeseries.FEATPartialFitTimeSeries
 FEATEVTimeSeries         = timeseries.FEATEVTimeSeries

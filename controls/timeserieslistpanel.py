@@ -13,12 +13,12 @@
 import          wx
 import numpy as np
 
-import                           props
-import pwidgets.elistbox      as elistbox
-import fsl.fsleyes.panel      as fslpanel
-import fsl.fsleyes.tooltips   as fsltooltips
-import fsl.fsleyes.plotting   as plotting
-import fsl.data.strings       as strings
+import                                    props
+import pwidgets.elistbox               as elistbox
+import fsl.fsleyes.panel               as fslpanel
+import fsl.fsleyes.tooltips            as fsltooltips
+import fsl.fsleyes.plotting.timeseries as timeseries
+import fsl.data.strings                as strings
 
 
 class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
@@ -161,7 +161,7 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
         if ts is None:
             return
 
-        if isinstance(ts, plotting.FEATTimeSeries):
+        if isinstance(ts, timeseries.FEATTimeSeries):
             toAdd = list(ts.getModelTimeSeries())
         else:
             toAdd = [ts]
@@ -170,7 +170,9 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
 
         for ts in toAdd:
 
-            copy = plotting.DataSeries(ts.overlay)
+            copy = timeseries.TimeSeries(self.__tsPanel,
+                                         overlay,
+                                         self._displayCtx)
 
             copy.alpha     = ts.alpha
             copy.lineWidth = ts.lineWidth
@@ -182,7 +184,7 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
 
             # This is hacky, and is here in order to
             # make the __onLIstSelect method work.
-            if isinstance(ts, plotting.MelodicTimeSeries):
+            if isinstance(ts, timeseries.MelodicTimeSeries):
                 copy.tsLoc = 'volume'
                 copy.coord = ts.getComponent()
             else:
