@@ -10,17 +10,15 @@
 """
 
 
-import          copy
-
 import          wx
 import numpy as np
 
-import                                    props
-import pwidgets.elistbox               as elistbox
-import fsl.fsleyes.panel               as fslpanel
-import fsl.fsleyes.tooltips            as fsltooltips
-import fsl.data.strings                as strings
-import fsl.fsleyes.colourmaps          as fslcm
+import                           props
+import pwidgets.elistbox      as elistbox
+import fsl.fsleyes.panel      as fslpanel
+import fsl.fsleyes.tooltips   as fsltooltips
+import fsl.fsleyes.plotting   as plotting
+import fsl.data.strings       as strings
 
 
 class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
@@ -152,37 +150,48 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
         :class:`.TimeSeriesPanel` (see the :class:`.TimeSeriesPanel` class
         documentation).
         """
+
+        overlay = self._displayCtx.getSelectedOverlay()
         
-        import fsl.fsleyes.views.timeseriespanel as tsp
+        if overlay is None:
+            return
         
-        ts = self.__tsPanel.getCurrent()
+        ts = self.__tsPanel.getTimeSeries(overlay)
 
         if ts is None:
             return
 
-        ts           = copy.copy(ts)
+        if isinstance(ts, plotting.FEATTimeSeries):
+            toAdd = list(ts.getModelTimeSeries())
+        else:
+            toAdd = [ts]
 
-        ts.alpha     = 1
-        ts.lineWidth = 2
-        ts.lineStyle = '-'
-        ts.colour    = fslcm.randomColour()
-        ts.label     = self.__makeLabel(ts)
+        copies = []
 
-        self.__tsPanel.dataSeries.append(ts)
+        for ts in toAdd:
 
-        if isinstance(ts, tsp.FEATTimeSeries):
-            
-            modelTs = ts.getModelTimeSeries()
-            modelTs.remove(ts)
+            copy = plotting.DataSeries(ts.overlay)
 
-            for mts in modelTs:
+            copy.alpha     = ts.alpha
+            copy.lineWidth = ts.lineWidth
+            copy.lineStyle = ts.lineStyle
+            copy.colour    = ts.colour
+            copy.label     = ts.label
 
-                mts.alpha     = 1
-                mts.lineWidth = 2
-                mts.lineStyle = '-'
-                mts.label     = mts.makeLabel()
+            copy.setData(*ts.getData())
 
-            self.__tsPanel.dataSeries.extend(modelTs)
+            # This is hacky, and is here in order to
+            # make the __onLIstSelect method work.
+            if isinstance(ts, plotting.MelodicTimeSeries):
+                copy.tsLoc = 'volume'
+                copy.coord = ts.getComponent()
+            else:
+                copy.tsLoc = 'location'
+                copy.coord = ts.getVoxel()
+
+            copies.append(copy)
+
+        self.__tsPanel.dataSeries.extend(copies)
 
         
     def __onListEdit(self, ev):
@@ -201,14 +210,21 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
         the corresponding :class:`.TimeSeries` instance.
         """
 
-        overlay = ev.data.overlay
-        coords  = ev.data.coords
+        ts      = ev.data
+        overlay = ts.overlay 
         opts    = self._displayCtx.getOpts(overlay)
-        vox     = np.array(coords)
-        disp    = opts.transformCoords([vox], 'voxel', 'display')[0]
+
+        # See hacky things in __onListAdd
+        if ts.tsLoc == 'volume':
+            opts.volume = ts.coord
+            
+        elif ts.tsLoc == 'location':
+            voxLoc = np.array(ts.coord)
+            disLoc = opts.transformCoords([voxLoc], 'voxel', 'display')[0]
+
+            self._displayCtx.location = disLoc
 
         self._displayCtx.selectedOverlay = self._overlayList.index(overlay)
-        self._displayCtx.location        = disp
 
         
     def __onListRemove(self, ev):
