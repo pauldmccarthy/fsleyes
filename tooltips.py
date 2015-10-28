@@ -256,6 +256,11 @@ properties = TypeDict({
                                          'scaled by the time dimension pixdim '
                                          'value specified in the NIFTI1 '
                                          'header.',
+    'TimeSeriesPanel.plotMelodicICs'   : 'If checked, the component time '
+                                         'courses are plotted for Melodic '
+                                         'images. If not checked, Melodic '
+                                         'images are treated as regular 4D '
+                                         'images.',
     'TimeSeriesPanel.showMode'         : 'Choose which time series to plot - '
                                          'you can choose to plot the time '
                                          'series for the currently selected '

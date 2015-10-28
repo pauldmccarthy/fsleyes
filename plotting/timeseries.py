@@ -586,7 +586,7 @@ class FEATEVTimeSeries(TimeSeries):
         
     def getData(self):
         """Returns the time course of the EV specified in the constructor. """
-        data = self.overlay.getDesign()[:, self.idx]
+        data = np.array(self.overlay.getDesign()[:, self.idx])
         return TimeSeries.getData(self, ydata=data)
     
 
@@ -629,7 +629,7 @@ class FEATResidualTimeSeries(TimeSeries):
             return [], []
 
         x, y, z = voxel
-        data    = self.overlay.getResiduals().data[x, y, z, :]
+        data    = np.array(self.overlay.getResiduals().data[x, y, z, :])
         
         return TimeSeries.getData(self, ydata=data)
             
@@ -755,5 +755,5 @@ class MelodicTimeSeries(TimeSeries):
         """Returns the time course of the current Melodic component. """
         
         component = self.getComponent()
-        ydata     = self.overlay.getComponentTimeSeries(component)
+        ydata     = np.array(self.overlay.getComponentTimeSeries(component))
         return TimeSeries.getData(self, ydata=ydata)
