@@ -16,7 +16,6 @@ import          wx
 import numpy as np
 
 import                                    props
-import fsl.fsleyes.plotting.timeseries as timeseries
 import pwidgets.elistbox               as elistbox
 import fsl.fsleyes.panel               as fslpanel
 import fsl.fsleyes.tooltips            as fsltooltips
@@ -111,62 +110,6 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
         fslpanel.FSLEyesPanel.destroy(self)
 
 
-    def __makeLabel(self, ts):
-        """Creates a label to use for the given :class:`.TimeSeries` instance.
-        """
-
-        return 'TODO'
-
-        display = self._displayCtx.getDisplay(ts.overlay)
-
-        if isinstance(ts, timeseries.MelodicTimeSeries):
-            return '{} [component {}]'.format(display.name, ts.coords)
-        else:
-            return '{} [{} {} {}]'.format(display.name,
-                                          ts.coords[0],
-                                          ts.coords[1],
-                                          ts.coords[2])
-
-
-    def __makeFEATModelTSLabel(self, parentTs, modelTs):
-        """Creates a label to use for the given :class:`.FEATTimeSeries`
-        instance.
-        """
-        
-        return 'TODO'
-
-        import fsl.fsleyes.views.timeseriespanel as tsp
-
-        overlay = modelTs.overlay
-        display = self._displayCtx.getDisplay(overlay)
-
-        if isinstance(modelTs, tsp.FEATResidualTimeSeries):
-            return '{} ({})'.format(
-                parentTs.label,
-                strings.labels[modelTs])
-        
-        elif isinstance(modelTs, tsp.FEATEVTimeSeries):
-            return '{} EV{} ({})'.format(
-                display.name, 
-                modelTs.idx + 1,
-                overlay.evNames()[modelTs.idx])
-
-        label = '{} ({})'.format(
-            parentTs.label,
-            strings.labels[modelTs, modelTs.fitType])
-
-        if modelTs.fitType == 'full':
-            return label
-        
-        elif modelTs.fitType == 'cope':
-            return label.format(
-                modelTs.idx + 1,
-                overlay.contrastNames()[modelTs.idx])
-        
-        elif modelTs.fitType == 'pe':
-            return label.format(modelTs.idx + 1) 
-
-
     def __timeSeriesChanged(self, *a):
         """Called when the :attr:`.PlotPanel.dataSeries` list of the
         :class:`.TimeSeriesPanel` changes. Updates the list of
@@ -199,7 +142,7 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
             self.__currentLabel.SetLabel('')
             return
 
-        self.__currentLabel.SetLabel(self.__makeLabel(ts))
+        self.__currentLabel.SetLabel(ts.makeLabel())
 
     
     def __onListAdd(self, ev):
@@ -237,7 +180,7 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
                 mts.alpha     = 1
                 mts.lineWidth = 2
                 mts.lineStyle = '-'
-                mts.label     = self.__makeFEATModelTSLabel(ts, mts)
+                mts.label     = mts.makeLabel()
 
             self.__tsPanel.dataSeries.extend(modelTs)
 

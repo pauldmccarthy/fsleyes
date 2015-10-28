@@ -29,19 +29,20 @@ log = logging.getLogger(__name__)
 
 
 class TimeSeriesPanel(plotpanel.PlotPanel):
-    """A :class:`.PlotPanel` which plots time series data from :class:`.Image`
-    overlays. A ``TimeSeriesPanel`` looks something like the following:
+    """The ``TimeSeriesPanel`` is a :class:`.PlotPanel` which plots time series
+    data from :class:`.Image` overlays. A ``TimeSeriesPanel`` looks something
+    like the following:
 
     .. image:: images/timeseriespanel.png
        :scale: 50%
        :align: center
 
-
+    
     A ``TimeSeriesPanel`` plots one or more :class:`.TimeSeries` instances,
-    which encapsulate time series data from an overlay. :class:`.DataSeries`
-    sub-classes, defined in the :mod:`.plotting.timeseries` module, are used
-    by the ``TimeSeriesPanel`` (see the :class:`.PlotPanel` documentation
-    for more details):
+    which encapsulate time series data from an overlay. All ``TimeSeries``
+    classes are defined in the :mod:`.plotting.timeseries` module; these are
+    all sub-classes of the :class:`.DataSeries` class - see the
+    :class:`.PlotPanel` documentation for more details:
 
     .. autosummary::
        :nosignatures:
@@ -109,11 +110,15 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
     
     **Melodic features**
 
-    TODO
+    
+    The ``TimeSeriesPanel`` also has some functionality for
+    :class:`.MelodicImage` overlays - a :class:`.MelodicTimeSeries` instance
+    is used to plot the component time courses for the current component (as
+    defined by the :attr:`.ImageOpts.volume` property). 
     """
 
     
-    usePixdim = props.Boolean(default=False)
+    usePixdim = props.Boolean(default=True)
     """If ``True``, the X axis data is scaled by the pixdim value of the
     selected overlay (which, for FMRI time series data is typically set
     to the TR time).
@@ -123,15 +128,15 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
     showMode = props.Choice(('current', 'all', 'none'))
     """Defines which time series to plot.
 
-    If ``current``, the time course for the current voxel of the currently
-    selected overlay is plotted.
 
-    If ``all``, the time courses from the current
-    :attr:`.DisplayContext.location` for all compatible overlays in the
-    :class:`.OverlayList` are plotted.
-
-    If ``none``, only the ``TimeSeries`` that are in the
-    :attr:`.PlotPanel.dataSeries` list will be plotted.
+    =========== ======================================================
+    ``current`` The time course for  the currently selected overlay is
+                plotted.
+    ``all``     The time courses for all compatible overlays in the
+                :class:`.OverlayList` are plotted.
+    ``none``    Only the ``TimeSeries`` that are in the
+                :attr:`.PlotPanel.dataSeries` list will be plotted.
+    =========== ======================================================
     """
 
     
@@ -264,12 +269,20 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
         tss = [self.__currentTss.get(o) for o in overlays]
         tss = [ts for ts in tss if ts is not None]
 
+        for i, ts in enumerate(list(tss)):
+            if isinstance(ts, timeseries.FEATTimeSeries):
+                tss.pop(i)
+                tss = tss[:i] + ts.getModelTimeSeries() + tss[i:]
+
+        for ts in tss:
+            ts.label = ts.makeLabel()
+
         self.drawDataSeries(extraSeries=tss)
 
 
     def getTimeSeries(self, overlay):
-        """Returns the :class:`.TimeSeries` instance for the currently
-        selected overlay, or ``None`` if there is none.
+        """Returns the :class:`.TimeSeries` instance for the specified
+        overlay, or ``None`` if there is none.
         """
         return self.__currentTss.get(overlay)
 
@@ -370,10 +383,10 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
             targets   = [self._displayCtx]
             propNames = ['location'] 
 
-        ts.colour    = fslcmaps.randomBrightColour()
+        ts.colour    = fslcmaps.randomDarkColour()
         ts.alpha     = 1
         ts.lineWidth = 1
         ts.lineStyle = '-'
-        ts.label     = None            
+        ts.label     = ts.makeLabel()
                 
         return ts, targets, propNames

@@ -5,7 +5,12 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
+import logging
+
 import props
+
+
+log = logging.getLogger(__name__)
 
 
 class DataSeries(props.HasProperties):
@@ -47,33 +52,47 @@ class DataSeries(props.HasProperties):
         """Create a ``DataSeries``.
 
         :arg overlay: The overlay from which the data to be plotted is
-                      derived. 
+                      retrieved. 
         """
         
         self.overlay = overlay
         self.setData([], [])
 
+        log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
-    def __copy__(self):
-        """``DataSeries`` copy operator. Sub-classes with constructors
-        that require more than just the overlay object will need to
-        implement their own copy operator.
+                   
+    def __del__(self):
+        """Prints a log message. """
+        log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
+
+
+    def destroy(self):
+        """This method must be called when this ``DataSeries`` instance is no
+        longer needed. This implementation does nothing, but it should be
+        overridden by sub-classes which need to perform any clean-up
+        operations.
         """
-        return type(self)(self.overlay)
+        pass
 
 
     def setData(self, xdata, ydata):
+        """Set the data to be plotted. This method is irrelevant if a
+        ``DataSeries`` sub-class has overridden :meth:`getData`.
+        """
         self.__xdata = xdata
         self.__ydata = ydata 
 
 
     def getData(self):
-        """This method must be implemented by sub-classes. It must return
+        """This method should be overridden by sub-classes. It must return
         the data to be plotted, as a tuple of the form:
         
             ``(xdata, ydata)``
 
         where ``xdata`` and ``ydata`` are sequences containing the x/y data
         to be plotted.
+
+        The default implementation returns the data that has been set via the
+        :meth:`setData` method.
         """
         return self.__xdata, self.__ydata

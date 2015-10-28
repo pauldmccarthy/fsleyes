@@ -118,6 +118,7 @@ and generating/manipulating colours.:
    applyBricon
    randomColour
    randomBrightColour
+   randomDarkColour
 """
 
 
@@ -620,6 +621,12 @@ def randomBrightColour():
     np.random.shuffle(colour)
 
     return colour
+
+
+def randomDarkColour():
+    """Generates a random saturated and darkened RGB colour."""
+
+    return applyBricon(randomBrightColour(), 0.25, 0.5)
 
 
 def complementaryColour(rgb):

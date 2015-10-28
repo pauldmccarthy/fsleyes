@@ -1,9 +1,24 @@
 #!/usr/bin/env python
 #
-# timeseries.py -
+# timeseries.py - DataSeries classes used by the TimeSeriesPanel.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides a number of :class:`.DataSeries` sub-classes which
+are use by the :class:`.TimeSeriesPanel`. The following classes are provided:
+
+.. autosummary::
+   :nosignatures:
+
+   TimeSeries
+   FEATTimeSeries
+   FEATModelTimeSeries
+   FEATPartialFitTimeSeries
+   FEATEVTimeSeries
+   FEATResidualTimeSeries
+   FEATModelFitTimeSeries
+   MelodicTimeSeries
+"""
 
 import logging
 
@@ -11,41 +26,72 @@ import numpy as np
 
 import props
 
-import dataseries
-
+import                     dataseries
+import fsl.data.strings as strings
 
 
 log = logging.getLogger(__name__)
 
 
-
 class TimeSeries(dataseries.DataSeries):
     """Encapsulates time series data from a specific voxel in an
-    :class:`.Image` overlay.
+    :class:`.Image` overlay. The voxel data may be accessed through
+    the :meth:`getData` method, where the voxel is defined by the
+    :attr:`.DisplayContext.location` property (transformed into the
+    image voxel coordinate system).
+
+    The ``TimeSeries`` class is the base-class for all other classes
+    in this module.
+
+    A ``TimeSeries`` instance provides the following methods:
+
+    .. autosummary::
+       :nosignatures:
+
+       makeLabel
+       getVoxel
+       getData
     """
 
     
     def __init__(self, tsPanel, overlay, displayCtx):
-        """Create a ``TimeSeries`` instane.
+        """Create a ``TimeSeries`` instance.
 
-        :arg tsPanel: The :class:`TimeSeriesPanel` which owns this
-                      ``TimeSeries``.
+        :arg tsPanel:    The :class:`TimeSeriesPanel` which owns this
+                         ``TimeSeries``.
 
-        :arg overlay: The :class:`.Image` instance to extract the data from.
+        :arg overlay:    The :class:`.Image` instance to extract the data from.
+
+        :arg displayCtx: The :class:`.DisplayContext`.
         """
         dataseries.DataSeries.__init__(self, overlay)
 
-        self.tsPanel    = tsPanel
-        self.displayCtx = displayCtx
+        self.tsPanel     = tsPanel
+        self.displayCtx  = displayCtx
+
+
+    def makeLabel(self):
+        """Returns a string representation of this ``TimeSeries`` instance. """
+
+        display = self.displayCtx.getDisplay(self.overlay)
+        coords  = self.getVoxel()
+
+        if coords is not None:
+            return '{} [{} {} {}]'.format(display.name,
+                                          coords[0],
+                                          coords[1],
+                                          coords[2])
+        else:
+            return '{} [out of bounds]'.format(display.name) 
 
     
     def getVoxel(self):
         """Calculates and returns the voxel coordinates corresponding to the
-        current :attr:`.DisplayContext.location` for the specified ``overlay``.
+        current :attr:`.DisplayContext.location` for the overlay associated
+        with this ``TimeSeries``.
 
-        Returns ``None`` if the given overlay is not a 4D :class:`.Image`
-        which is being displayed with a :class:`.VolumeOpts` instance, or if
-        the current location is outside of the image bounds.
+        Returns ``None`` if the current location is outside of the image
+        bounds.
         """
 
         overlay = self.overlay
@@ -53,7 +99,7 @@ class TimeSeries(dataseries.DataSeries):
         x, y, z = self.displayCtx.location.xyz
 
         vox     = opts.transformCoords([[x, y, z]], 'display', 'voxel')[0]
-        vox     = np.round(vox)
+        vox     = map(int, np.round(vox))
 
         if vox[0] < 0                 or \
            vox[1] < 0                 or \
@@ -63,11 +109,11 @@ class TimeSeries(dataseries.DataSeries):
            vox[2] >= overlay.shape[2]:
             return None
 
-        return vox 
+        return vox
 
         
     def getData(self, xdata=None, ydata=None):
-        """Overrides :meth:`.DataSeries.getData` Returns the data associated
+        """Overrides :meth:`.DataSeries.getData`. Returns the data associated
         with this ``TimeSeries`` instance.
 
         The ``xdata`` and ``ydata`` arguments may be used by subclasses to
@@ -109,17 +155,20 @@ class FEATTimeSeries(TimeSeries):
     """A :class:`TimeSeries` class for use with :class:`FEATImage` instances,
     containing some extra FEAT specific options.
 
+    
     The ``FEATTimeSeries`` class acts as a container for several
     ``TimeSeries`` instances, each of which represent some part of a FEAT
     analysis. Therefore, the data returned by a call to
     :meth:`.TimeSeries.getData` on a ``FEATTimeSeries`` instance should not
     be plotted.
 
+    
     Instead, the :meth:`getModelTimeSeries` method should be used to retrieve
     a list of all the ``TimeSeries`` instances which are associated with the
     ``FEATTimeSeries`` instance - all of these ``TimeSeries`` instances should
     be plotted instead.
 
+    
     For example, if the :attr:`plotData` and :attr:`plotFullModelFit` settings
     are ``True``, the :meth:`getModelTimeSeries` method will return a list
     containing two ``TimeSeries`` instances - one which will return the FEAT
@@ -128,7 +177,7 @@ class FEATTimeSeries(TimeSeries):
 
 
     .. note:: The ``getData`` method of a ``FEATTimeSeries`` instance will
-              return the FEAT input data; therefore, when :attr:`plotData` is
+              return the FEAT input data. Therefore, when :attr:`plotData` is
               ``True``, the ``FEATTimeSeries`` instance will itself be included
               in the list returned by :meth:`getModelTimeSeries`.
 
@@ -241,36 +290,10 @@ class FEATTimeSeries(TimeSeries):
         self.__plotFullModelFitChanged()
 
 
-    def __copy__(self):
-        """Copy operator for a ``FEATTimeSeries`` instance."""
-        
-        copy = type(self)(self.tsPanel, self.overlay, self.coords)
-
-        copy.colour           = self.colour
-        copy.alpha            = self.alpha 
-        copy.label            = self.label 
-        copy.lineWidth        = self.lineWidth
-        copy.lineStyle        = self.lineStyle
-
-        # When these properties are changed 
-        # on the copy instance, it will create 
-        # its own FEATModelFitTimeSeries 
-        # instances accordingly
-        copy.plotFullModelFit = self.plotFullModelFit
-        copy.plotEVs[     :]  = self.plotEVs[     :]
-        copy.plotPEFits[  :]  = self.plotPEFits[  :]
-        copy.plotCOPEFits[:]  = self.plotCOPEFits[:]
-        copy.plotPartial      = self.plotPartial
-        copy.plotResiduals    = self.plotResiduals
-
-        return copy
- 
-
     def getModelTimeSeries(self):
         """Returns a list containing all of the ``TimeSeries`` instances
         which should be plotted in place of this ``FEATTimeSeries``.
         """
-        
         
         modelts = []
 
@@ -292,24 +315,6 @@ class FEATTimeSeries(TimeSeries):
                 modelts.append(self.__copeTs[i])
 
         return modelts
-
-
-    def update(self, coords):
-        """Overrides :meth:`TimeSeries.update`.
-
-        Updates the coordinates and data associated wsith this
-        ``FEATTimeSeries`` instance.
-        """
-        
-        if not TimeSeries.update(self, coords):
-            return False
-            
-        for modelTs in self.getModelTimeSeries():
-            if modelTs is self:
-                continue
-            modelTs.update(coords)
-
-        return True
 
 
     def __getContrast(self, fitType, idx):
@@ -345,12 +350,18 @@ class FEATTimeSeries(TimeSeries):
         :arg kwargs: Passed to the ``tsType`` constructor.
         """
 
-        ts = tsType(self.tsPanel, self.overlay, self.coords, *args, **kwargs)
+        ts = tsType(self.tsPanel,
+                    self.overlay,
+                    self.displayCtx,
+                    self,
+                    *args,
+                    **kwargs)
 
         ts.alpha     = self.alpha
         ts.label     = self.label
         ts.lineWidth = self.lineWidth
         ts.lineStyle = self.lineStyle
+        ts.label     = ts.makeLabel()
 
         if   isinstance(ts, FEATPartialFitTimeSeries):
             ts.colour = (0, 0.6, 0.6)
@@ -477,33 +488,44 @@ class FEATTimeSeries(TimeSeries):
         self.__fullModelTs = self.__createModelTs(
             FEATModelFitTimeSeries, self.__getContrast('full', -1), 'full', -1)
 
-
+        
 class FEATPartialFitTimeSeries(TimeSeries):
     """A :class:`TimeSeries` class which represents the partial model fit
     of an EV or contrast from a FEAT analysis. Instances of this class
     are created by the :class:`FEATTimeSeries` class.
     """
-    def __init__(self, tsPanel, overlay, coords, contrast, fitType, idx):
+    def __init__(self,
+                 tsPanel,
+                 overlay,
+                 displayCtx,
+                 parentTs,
+                 contrast,
+                 fitType,
+                 idx):
         """Create a ``FEATPartialFitTimeSeries``.
 
-        :arg tsPanel:  The :class:`TimeSeriesPanel` that owns this
-                       ``FEATPartialFitTimeSeries`` instance.
+        :arg tsPanel:    The :class:`TimeSeriesPanel` that owns this
+                         ``FEATPartialFitTimeSeries`` instance.
         
-        :arg overlay:  A :class:`.FEATImage` overlay.
+        :arg overlay:    A :class:`.FEATImage` overlay.
         
-        :arg coords:   Voxel coordinates.
-        
-        :arg contrast: The contrast vector to calculate the partial model
-                       fit for.
-        
-        :arg fitType:  The model fit type, either ``'full'``, ``'pe'`` or
-                       ``'cope'``.
-        
-        :arg idx:      If the model fit type is ``'pe'`` or ``'cope'``,
-                       the EV/contrast index.
-        """
-        TimeSeries.__init__(self, tsPanel, overlay, coords)
+        :arg displayCtx: The :class:`.DisplayContext`.
 
+        :arg parentTs:   The :class:`.FEATTimeSeries` instance that has
+                         created this ``FEATPartialFitTimeSeries``.
+        
+        :arg contrast:   The contrast vector to calculate the partial model
+                         fit for.
+        
+        :arg fitType:    The model fit type, either ``'full'``, ``'pe'`` or
+                         ``'cope'``.
+        
+        :arg idx:        If the model fit type is ``'pe'`` or ``'cope'``,
+                         the EV/contrast index.
+        """
+        TimeSeries.__init__(self, tsPanel, overlay, displayCtx)
+
+        self.parentTs = parentTs
         self.contrast = contrast
         self.fitType  = fitType
         self.idx      = idx
@@ -515,8 +537,12 @@ class FEATPartialFitTimeSeries(TimeSeries):
 
         See the :meth:`.FEATImage.partialFit` method.
         """
+
+        coords = self.getVoxel()
+        if coords is None:
+            return [], []
         
-        data = self.overlay.partialFit(self.contrast, self.coords, False)
+        data = self.overlay.partialFit(self.contrast, coords, False)
         return TimeSeries.getData(self, ydata=data)
 
     
@@ -526,20 +552,36 @@ class FEATEVTimeSeries(TimeSeries):
     :class:`FEATTimeSeries` class.
     """
     
-    def __init__(self, tsPanel, overlay, coords, idx):
+    def __init__(self, tsPanel, overlay, displayCtx, parentTs, idx):
         """Create a ``FEATEVTimeSeries``.
 
-        :arg tsPanel:  The :class:`TimeSeriesPanel` that owns this
-                       ``FEATEVTimeSeries`` instance.
+        :arg tsPanel:    The :class:`TimeSeriesPanel` that owns this
+                         ``FEATEVTimeSeries`` instance.
         
-        :arg overlay:  A :class:`.FEATImage` overlay.
-        
-        :arg coords:   Voxel coordinates.
+        :arg overlay:    A :class:`.FEATImage` overlay.
 
-        :arg idx:      The EV index.
+        :arg displayCtx: The :class:`.DisplayContext`.
+
+        :arg parentTs:   The :class:`.FEATTimeSeries` instance that has
+                         created this ``FEATEVTimeSeries``. 
+        
+        :arg idx:        The EV index.
         """
-        TimeSeries.__init__(self, tsPanel, overlay, coords)
-        self.idx = idx
+        TimeSeries.__init__(self, tsPanel, overlay, displayCtx)
+        
+        self.parentTs = parentTs
+        self.idx      = idx
+
+        
+    def makeLabel(self):
+        """Returns a string representation of this ``FEATEVTimeSeries``
+        instance.
+        """
+        
+        return '{} (EV{} - {})'.format(
+            self.parentTs.makeLabel(), 
+            self.idx + 1,
+            self.overlay.evNames()[self.idx]) 
 
         
     def getData(self):
@@ -554,14 +596,42 @@ class FEATResidualTimeSeries(TimeSeries):
     the :class:`FEATTimeSeries` class.
     """
 
+    def __init__(self, tsPanel, overlay, displayCtx, parentTs):
+        """Create a ``FEATResidualTimeSeries``.
+
+        :arg tsPanel:    The :class:`TimeSeriesPanel` that owns this
+                         ``FEATResidualTimeSeries`` instance.
+        
+        :arg overlay:    A :class:`.FEATImage` overlay.
+
+        :arg displayCtx: The :class:`.DisplayContext`.
+
+        :arg parentTs:   The :class:`.FEATTimeSeries` instance that has
+                         created this ``FEATResidualTimeSeries``. 
+        """
+        TimeSeries.__init__(self, tsPanel, overlay, displayCtx)
+        self.parentTs = parentTs
+
+
+    def makeLabel(self):
+        """Returns a string representation of this ``FEATResidualTimeSeries``
+        instance.
+        """
+        return '{} ({})'.format(self.parentTs.makeLabel(),
+                                strings.labels[self]) 
+
     
     def getData(self):
-        """Returns the residuals for the voxel specified in the constructor.
-        """
-        x, y, z = self.coords
+        """Returns the residuals for the current voxel. """
+        voxel = self.getVoxel()
+        
+        if voxel is None:
+            return [], []
+
+        x, y, z = voxel
         data    = self.overlay.getResiduals().data[x, y, z, :]
         
-        return TimeSeries.getData(self, ydata=np.array(data))
+        return TimeSeries.getData(self, ydata=data)
             
 
 class FEATModelFitTimeSeries(TimeSeries):
@@ -570,64 +640,120 @@ class FEATModelFitTimeSeries(TimeSeries):
     the :class:`FEATTimeSeries` class.
     """ 
 
-    def __init__(self, tsPanel, overlay, coords, contrast, fitType, idx):
+    def __init__(self,
+                 tsPanel,
+                 overlay,
+                 displayCtx,
+                 parentTs,
+                 contrast,
+                 fitType,
+                 idx):
         """Create a ``FEATModelFitTimeSeries``.
         
-        :arg tsPanel:  The :class:`TimeSeriesPanel` that owns this
-                       ``FEATModelFitTimeSeries`` instance.
+        :arg tsPanel:    The :class:`TimeSeriesPanel` that owns this
+                         ``FEATModelFitTimeSeries`` instance.
         
-        :arg overlay:  A :class:`.FEATImage` overlay.
+        :arg overlay:    A :class:`.FEATImage` overlay.
         
-        :arg coords:   Voxel coordinates.
+        :arg displayCtx: The :class:`.DisplayContext`.
+
+        :arg parentTs:   The :class:`.FEATTimeSeries` instance that has
+                         created this ``FEATModelFitTimeSeries``. 
         
-        :arg contrast: The contrast vector to calculate the partial model
-                       fit for.
+        :arg contrast:   The contrast vector to calculate the partial model
+                         fit for.
         
-        :arg fitType:  The model fit type, either ``'full'``, ``'pe'`` or
-                       ``'cope'``.
+        :arg fitType:    The model fit type, either ``'full'``, ``'pe'`` or
+                         ``'cope'``.
         
-        :arg idx:      If the model fit type is ``'pe'`` or ``'cope'``,
-                       the EV/contrast index.
+        :arg idx:        If the model fit type is ``'pe'`` or ``'cope'``,
+                         the EV/contrast index.
         """
         
         if fitType not in ('full', 'cope', 'pe'):
             raise ValueError('Unknown model fit type {}'.format(fitType))
         
-        TimeSeries.__init__(self, tsPanel, overlay, coords)
+        TimeSeries.__init__(self, tsPanel, overlay, displayCtx)
+        self.parentTs = parentTs
         self.fitType  = fitType
         self.idx      = idx
         self.contrast = contrast
-        self.__updateModelFit()
 
+
+    def makeLabel(self):
+        """Returns a string representation of this ``FEATModelFitTimeSeries``
+        instance.
+        """ 
         
-    def update(self, coords):
-        """Overrides :meth:`TimeSeries.update`.
+        label = '{} ({})'.format(
+            self.parentTs.makeLabel(),
+            strings.labels[self, self.fitType])
 
-        Updates the coordinates and the data encapsulated by this
-        ``FEATModelFitTimeSeries``.
-        """
-        if not TimeSeries.update(self, coords):
-            return
-        self.__updateModelFit()
+        if self.fitType == 'full':
+            return label
         
+        elif self.fitType == 'cope':
+            return label.format(
+                self.idx + 1,
+                self.overlay.contrastNames()[self.idx])
+        
+        elif self.fitType == 'pe':
+            return label.format(self.idx + 1)
 
-    def __updateModelFit(self):
-        """Called by :meth:`update`, and in the constructor.  Updates the model
-        fit. See the :meth:`.FEATImage.fit` method.
-        """
+    def getData(self):
+        """Returns the FEAT model fit at the current voxel. """
 
-        fitType   = self.fitType
-        contrast  = self.contrast
-        xyz       = self.coords
-        self.data = self.overlay.fit(contrast, xyz, fitType == 'full')
+        voxel    = self.getVoxel()
+        fitType  = self.fitType
+        contrast = self.contrast 
+
+        if voxel is None:
+            return [], []
+        
+        data = self.overlay.fit(contrast, voxel, fitType == 'full')
+
+        return TimeSeries.getData(self, ydata=data)
 
 
 
 class MelodicTimeSeries(TimeSeries):
+    """A :class:`.TimeSeries` class which encapsulates the time course for
+    one component of a :class:`.MelodicImage`. Where the :class:`.TimeSeries`
+    class returns the time course of the voxel at the current
+    :class:`.DisplayContext.location`, the :class:`.MelodicTimeSeries` returns
+    the time course of the component specified by the current
+    :class:`.ImageOpts.volume`.
+    """
 
-    def __init__(self, tsPanel, overlay, component):
-        TimeSeries.__init__(self, tsPanel, overlay, component)
+    def __init__(self, tsPanel, overlay, displayCtx):
+        """Create a ``MelodicTimeSeries``.
+
+        :arg tsPanel:    The :class:`.TimeSeriesPanel`.
+
+        :arg overlay:    A :class:`.MelodicImage` overlay.
+
+        :arg displayCtx: The :class:`.DisplayContext`.
+        """
+        TimeSeries.__init__(self, tsPanel, overlay, displayCtx)
 
 
-    def _getData(self, component):
-        return self.overlay.getComponentTimeSeries(component)
+    def getComponent(self):
+        """Returns the index (starting from 0) of the current Melodic
+        component, as dictated by the :class:`.ImageOpts.volume` property.
+        """
+        opts = self.displayCtx.getOpts(self.overlay)
+        return opts.volume 
+
+
+    def makeLabel(self):
+        """Returns a string representation of this ``MelodicTimeSeries``. """
+        display = self.displayCtx.getDisplay(self.overlay)
+        return '{} [component {}]'.format(display.name, self.getComponent())
+
+
+    def getData(self):
+        """Returns the time course of the current Melodic component. """
+        
+        component = self.getComponent()
+        ydata     = self.overlay.getComponentTimeSeries(component)
+        return TimeSeries.getData(self, ydata=ydata)
