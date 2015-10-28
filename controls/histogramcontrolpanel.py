@@ -1,22 +1,59 @@
 #!/usr/bin/env python
 #
-# histogramcontrolpanel.py -
+# histogramcontrolpanel.py - The HistogramControlPanel class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`HistogramControlPanel` class, a *FSLeyes
+control* panel which allows a :class:`.HistogramPanel` to be configured.
+"""
+
 
 import wx
 
-import                        props
-import pwidgets.widgetlist as widgetlist
+import                         props
+import pwidgets.widgetlist  as widgetlist
 
-import fsl.fsleyes.panel   as fslpanel
-import fsl.data.strings    as strings
+import fsl.fsleyes.panel    as fslpanel
+import fsl.fsleyes.tooltips as fsltooltips
+import fsl.data.strings     as strings
 
 
 class HistogramControlPanel(fslpanel.FSLEyesPanel):
+    """The ``HistogramControlPanel`` is a *FSLeyes control* panel which
+    allows the user to configure a :class:`.HistogramPanel`. A
+    ``HistogramControlPanel`` looks something like the following:
 
+    .. image:: images/histogramcontrolpanel.png
+       :scale: 50%
+       :align: center
+
+
+    The ``HistogramControlPanel`` divides its settings into three main
+    sections:
+
+      - The *Histogram settings* section contains controls which modify
+        properties defined in the :class:`.HistogramPanel`.
+    
+      - *General plot settings* section contains controls which modify
+        properties defined in the :class:`.PlotPanel`.
+    
+      - The *Settings for the current histogram plot* section contains
+        controls which modify properties defined in the
+        :class:`.HistogramSeries` class, and affect the currently
+        selected plot in the :class:`.HistogramListPanel`. If no plots
+        have been added to the histogram list, this section is hidden.
+    """
+
+    
     def __init__(self, parent, overlayList, displayCtx, hsPanel):
+        """Create a ``HistogramControlPanel``.
+
+        :arg parent:      The :mod:`wx` parent object.
+        :arg overlayList: The :class:`.OverlayList` instance.
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg hsPanel:     The :class:`.HistogramPanel` instance.
+        """
 
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
@@ -42,9 +79,18 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
             'histSettings', strings.labels[self, 'histSettings'])
 
         for prop in histProps:
+            if prop == 'histType':
+                widget = props.makeWidget(
+                    self.__widgets,
+                    hsPanel,
+                    prop,
+                    labels=strings.choices['HistogramPanel.histType'])
+            else:
+                widget = props.makeWidget(self.__widgets, hsPanel, prop)
             self.__widgets.AddWidget(
-                props.makeWidget(self.__widgets, hsPanel, prop),
+                widget,
                 displayName=strings.properties[hsPanel, prop],
+                tooltip=fsltooltips.properties[hsPanel, prop],
                 groupName='histSettings')
 
         self.__widgets.AddGroup(
@@ -54,6 +100,7 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
         for prop in plotProps:
             self.__widgets.AddWidget(
                 props.makeWidget(self.__widgets, hsPanel, prop),
+                tooltip=fsltooltips.properties[hsPanel, prop],
                 displayName=strings.properties[hsPanel, prop],
                 groupName='plotSettings')
 
@@ -80,15 +127,18 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
 
         self.__widgets.AddWidget(
             labels,
-            strings.labels[hsPanel, 'labels'],
+            displayName=strings.labels[hsPanel, 'labels'],
+            tooltip=fsltooltips.misc[  hsPanel, 'labels'],
             groupName='plotSettings')
         self.__widgets.AddWidget(
             xlims,
-            strings.labels[hsPanel, 'xlim'],
+            displayName=strings.labels[hsPanel, 'xlim'],
+            tooltip=fsltooltips.misc[  hsPanel, 'xlim'],
             groupName='plotSettings')
         self.__widgets.AddWidget(
             ylims,
-            strings.labels[hsPanel, 'ylim'],
+            displayName=strings.labels[hsPanel, 'ylim'],
+            tooltip=fsltooltips.misc[  hsPanel, 'ylim'],
             groupName='plotSettings')
 
         # We store a ref to the currently selected
@@ -113,6 +163,11 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
 
 
     def destroy(self):
+        """Must be called when this ``HistogramControlPanel`` is no longer
+        needed. Removes some property listeners, and calls the
+        :meth:`.FSLEyesPanel.destroy` method.
+        """
+        
         self.__hsPanel.removeListener('selectedSeries', self._name)
         self.__hsPanel.removeListener('dataSeries',     self._name)
         if self.__currentHs is not None:
@@ -122,6 +177,10 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
 
         
     def __selectedSeriesChanged(self, *a):
+        """Called when the :attr:`.HistogramPanel.selectedSeries` property
+        changes. Updates the section containing settings for the current
+        histogram plot (see the :meth:`__updateCurrentProperties` method).
+        """
 
         panel = self.__hsPanel 
         
@@ -135,6 +194,10 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
 
 
     def __hsLabelChanged(self, *a):
+        """Called when the :attr:`.DataSeries.label` property, on the currently
+        selected :class:`.HistogramSeries`, changes. Updates the label for the
+        relevant settings section.
+        """
         if self.__currentHs is None:
             return
         
@@ -145,6 +208,9 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
 
 
     def __updateCurrentProperties(self):
+        """Updates the settings shown in the section for the current histogram
+        plot.
+        """
 
         expanded  = False
         scrollPos = self.__widgets.GetViewStart()
@@ -171,8 +237,14 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
 
         self.__nbins = props.makeWidget(wlist, hs, 'nbins', showLimits=False)
         
-        volume    = props.makeWidget(wlist, hs, 'volume',    showLimits=False)
-        dataRange = props.makeWidget(wlist, hs, 'dataRange', showLimits=False)
+        volume    = props.makeWidget(wlist, hs, 'volume', showLimits=False)
+        dataRange = props.makeWidget(
+            wlist,
+            hs,
+            'dataRange',
+            showLimits=False,
+            labels=[strings.choices['HistogramPanel.dataRange.min'],
+                    strings.choices['HistogramPanel.dataRange.max']])
         
         ignoreZeros     = props.makeWidget(wlist, hs, 'ignoreZeros')
         showOverlay     = props.makeWidget(wlist, hs, 'showOverlay')
@@ -180,22 +252,28 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
 
         wlist.AddWidget(ignoreZeros,
                         groupName='currentSettings',
-                        displayName=strings.properties[hs, 'ignoreZeros'])
+                        displayName=strings.properties[hs, 'ignoreZeros'],
+                        tooltip=fsltooltips.properties[hs, 'ignoreZeros'])
         wlist.AddWidget(showOverlay,
                         groupName='currentSettings',
-                        displayName=strings.properties[hs, 'showOverlay'])
+                        displayName=strings.properties[hs, 'showOverlay'],
+                        tooltip=fsltooltips.properties[hs, 'showOverlay'])
         wlist.AddWidget(includeOutliers,
                         groupName='currentSettings',
-                        displayName=strings.properties[hs, 'includeOutliers']) 
+                        displayName=strings.properties[hs, 'includeOutliers'],
+                        tooltip=fsltooltips.properties[hs, 'includeOutliers']) 
         wlist.AddWidget(self.__nbins,
                         groupName='currentSettings',
-                        displayName=strings.properties[hs, 'nbins'])
+                        displayName=strings.properties[hs, 'nbins'],
+                        tooltip=fsltooltips.properties[hs, 'nbins'])
         wlist.AddWidget(volume,
                         groupName='currentSettings',
-                        displayName=strings.properties[hs, 'volume'])
+                        displayName=strings.properties[hs, 'volume'],
+                        tooltip=fsltooltips.properties[hs, 'volume'])
         wlist.AddWidget(dataRange,
                         groupName='currentSettings',
-                        displayName=strings.properties[hs, 'dataRange'])
+                        displayName=strings.properties[hs, 'dataRange'],
+                        tooltip=fsltooltips.properties[hs, 'dataRange'])
 
         if expanded:
             wlist.Expand('currentSettings')
@@ -207,6 +285,10 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
         
 
     def __autoBinChanged(self, *a):
+        """Called when the :attr:`.HistogramPanel.autoBin` setting changes.  If
+        necessary, enables/disables the control which is bound to the
+        :attr:`.HistogramSeries.nbins` property for the current histogram plot.
+        """
 
         if self.__currentHs is None or self.__nbins is None:
             return

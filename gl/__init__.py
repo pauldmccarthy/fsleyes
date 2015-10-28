@@ -1,58 +1,189 @@
 #!/usr/bin/env python
 #
-# __init__.py - The fsl.fsleyes.gl package contains OpenGL data and
-# rendering stuff for fsleyes.
+# __init__.py - OpenGL data and rendering for FSLeyes.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""OpenGL data and rendering stuff for fsleyes.
+"""This package contains the OpenGL data and rendering stuff for *FSLeyes*.
+On-screen and off-screen rendering is supported, and two OpenGL versions (1.4
+and 2.1) are supported.  The contents of this package can be broadly
+categorised into the following:
 
-This package contains the OpenGL rendering code used by FSLEyes. It contains a
-number of modules which contain logic that is independent of the available
-OpenGL version (e.g. the :class:`.SliceCanvas` class), and also contains a
-number of sub-packages (currently two) which contain OpenGL-version-dependent
-modules that are used by the version independent ones.
+ - *Canvases*: A canvas is a thing that can be drawn on.
+
+ - *Objects*:  An object is a thing which can be drawn on a canvas.
+
+
+-----------
+Quick start
+-----------
+
+::
+
+    import fsl.fsleyes.gl as fslgl
+    import fsl.fsleyes.gl.wxglslicecanvas as slicecanvas
+
+    # Make sure that an OpenGL context
+    # has been created. This procedure
+    # requires a dummy canvas to be
+    # created.
+    ctx, dummyFrame = fslgl.getWXGLContext()
+
+    # Call gl.bootstrap, to initialise
+    # some package-level stuff
+    fslgl.bootstrap()
+
+    # Now you can do stuff! The
+    # SliceCanvas will take care
+    # of creating and managing
+    # GLObjects for each overlay
+    # in the overlay list.
+    canvas = slicecanvas.WXGLSliceCanvas(parent, overlayList, displayCtx)
+
+    # But make sure to delete the
+    # dummy canvas after you have
+    # created a real canvas.
+    if dummyFrame is not None:
+        dummyFrame.Destroy()
+
+
+--------
+Canvases
+--------
+
+
+A *canvas* is the destination for an OpenGL scene render. The following
+canvases are defined in the ``gl`` package:
+
+.. autosummary::
+   :nosignatures:
+
+   ~fsl.fsleyes.gl.slicecanvas.SliceCanvas
+   ~fsl.fsleyes.gl.lightboxcanvas.LightBoxCanvas
+   ~fsl.fsleyes.gl.colourbarcanvas.ColourBarCanvas
+
+
+These classes are not intended to be used directly. This is because the ``gl``
+package has been written to support two primary use-cases:
+
+  - *On-screen* display of a scene using a :class:`wx.glcanvas.GLCanvas`
+    canvas.
+
+  - *Off-screen* renering of a scene using OSMesa.
+
+
+Because of this, the canvas classes listed above are not dependent upon the
+OpenGL environment in which they are used (i.e. on-screen or off-screen).
+Instead, two base classes are provided for each of the use-cases:
+
+
+.. autosummary::
+   :nosignatures:
+
+   WXGLCanvasTarget
+   OSMesaCanvasTarget
+
+
+And the following sub-classes are defined, providing use-case specific
+implementations for each of the available canvases:
+
+.. autosummary::
+   :nosignatures:
+
+   ~fsl.fsleyes.gl.wxglslicecanvas.WXGLSliceCanvas
+   ~fsl.fsleyes.gl.wxgllightboxcanvas.WXGLLightBoxCanvas
+   ~fsl.fsleyes.gl.wxglcolourbarcanvas.WXGLColourBarCanvas
+   ~fsl.fsleyes.gl.osmesaslicecanvas.OSMesaSliceCanvas
+   ~fsl.fsleyes.gl.osmesalightboxcanvas.OSMesaLightBoxCanvas
+   ~fsl.fsleyes.gl.osmesacolourbarcanvas.OSMesaColourBarCanvas
+
+
+The classes listed above are the ones which are intended to be instantiated
+and used by application code.
+
+
+--------------
+``gl`` objects
+--------------
+
+
+With the exception of the :class:`.ColourBarCanvas`, everything that is drawn
+on a canvas derives from the :class:`.GLObject` base class. A ``GLObject``
+manages the underlying data structures, GL resources (e.g. shaders and
+textures), and rendering routines required to draw an object to a canvas.  The
+following ``GLObject`` sub-classes correspond to each of the possible types
+(the :attr:`.Display.overlayType` property) that an overlay can be displayed
+as:
+
+.. autosummary::
+
+   ~fsl.fsleyes.gl.glvolume.GLVolume
+   ~fsl.fsleyes.gl.glmask.GLMask
+   ~fsl.fsleyes.gl.gllabel.GLLabel
+   ~fsl.fsleyes.gl.gllinevector.GLLineVector
+   ~fsl.fsleyes.gl.glrgbvector.GLRGBVector
+   ~fsl.fsleyes.gl.glmodel.GLModel
+
+These objects are created and destroyed automatically by :class:`.SliceCanvas`
+instances, so application code does not need to worry about them too much.
+
+
+===========
+Annotations
+===========
+
+
+:class:`.SliceCanvas` canvases can be *annotated* in a few ways, by use of the
+:class:`.Annotations` class. An ``Annotations`` object allows lines,
+rectangles, and other simple shapes to be rendered on top of the ``GLObject``
+renderings which represent the overlays in the :class:`.OverlayList`.  The
+``Annotations`` object for a ``SliceCanvas`` instance can be accessed through
+its :meth:`.SliceCanvas.getAnnotations` method.
+
+
+---------------------------------
+OpenGL versions and bootstrapping
+---------------------------------
+
+
+*FSLeyes* needs to be able to run in restricted environments, such as within a
+VNC session, and over SSH. In such environments the available OpenGL version
+could be quite old, so the ``gl`` package has been written to support an
+environment as old as OpenGL 1.4.
+
 
 The available OpenGL API version can only be determined once an OpenGL context
-has been created, and a display is available for rendering. Therefore, the
-package-level :func:`bootstrap` function is called by the version-independent
-module classes as needed, to dynamically determine which version-dependent
-modules should be loaded.  Users of this package should not need to worry
-about any of this - just instantiate the GUI classes provided by the
-version-independent modules (e.g. the :class:`.LightBoxCanvas` class) as you
-would any other :mod:`wx` widget.
+has been created, and a display is available for rendering. The package-level
+:func:`getWXGLContext` and :func:`getOSMesaContext` functions allow a context
+to be created.
 
-Two methods of OpenGL usage are supported:
 
-  - On-screen display of a scene using a :class:`wx.glcanvas.GLCanvas` canvas.
+The data structures and rendering logic for some ``GLObject`` classes differs
+depending on the OpenGL version that is available. Therefore, the code for
+these ``GLObject`` classes may be duplicated, with one version for OpenGL 1.4,
+and another version for OpenGL 2.1.  The ``GLObject`` code which targets a
+specific OpenGL version lives within either the :mod:`.gl14` or :mod:`.gl21`
+sub-packages.
 
-  - Off-screen renering of a scene using OSMesa.
 
-Two super classes are provided for each of these cases:
+Because of this, the package-level :func:`bootstrap` function must be called
+before any ``GLObject`` instances are created. 
 
- - The :class:`WXGLCanvasTarget` class for on-screen rendering using
-   :mod:`wx`.
 
- - The :class:`OSMesaCanvasTarget` class for off-screen rendering using
-   OSMesa.
+----------------------------------
+Other things in the ``gl`` package
+----------------------------------
 
-After the :func:`boostrap` function has been called, the following
-package-level attributes will be available:
 
- - ``GL_VERSION``:         A string containing the target OpenGL version, in 
-                           the format ``major.minor``, e.g. ``2.1``.
+In addition to the *canvases* and *objects* described above, the ``gl``
+package also contains the following:
 
- - ``glvolume_funcs``:     The version-specific module containing functions for
-                           rendering :class:`.GLVolume` instances.
+.. autosummary::
 
- - ``glrgbvector_funcs``:  The version-specific module containing functions for
-                           rendering :class:`.GLRGBVector` instances.
-
- - ``gllinevector_funcs``: The version-specific module containing functions for
-                           rendering :class:`.GLLineVector` instances.
-
- - ``glmodel_funcs``:      The version-specific module containing functions for
-                           rendering :class:`.GLModel` instances. 
+   ~fsl.fsleyes.gl.textures
+   ~fsl.fsleyes.gl.routines
+   ~fsl.fsleyes.gl.resources
+   ~fsl.fsleyes.gl.shaders
 """
 
 import logging 
@@ -109,6 +240,32 @@ def bootstrap(glVersion=None):
     loaded, and will attach all of the modules contained in said package to
     the :mod:`~fsl.fsleyes.gl` package.  The version-independent modules may
     then simply access these version-dependent modules through this module.
+
+
+    After the :func:`boostrap` function has been called, the following
+    package-level attributes will be available on the ``gl`` package:
+
+
+    ====================== ====================================================
+    ``GL_VERSION``         A string containing the target OpenGL version, in 
+                           the format ``major.minor``, e.g. ``2.1``.
+
+    ``glvolume_funcs``     The version-specific module containing functions for
+                           rendering :class:`.GLVolume` instances.
+
+    ``glrgbvector_funcs``  The version-specific module containing functions for
+                           rendering :class:`.GLRGBVector` instances.
+
+    ``gllinevector_funcs`` The version-specific module containing functions for
+                           rendering :class:`.GLLineVector` instances.
+
+    ``glmodel_funcs``      The version-specific module containing functions for
+                           rendering :class:`.GLModel` instances.
+    
+    ``gllabel_funcs``      The version-specific module containing functions for
+                           rendering :class:`.GLLabel` instances. 
+    ====================== ====================================================
+    
 
     :arg glVersion: A tuple containing the desired (major, minor) OpenGL API
                     version to use. If ``None``, the best possible API version
@@ -233,15 +390,15 @@ def getWXGLContext(parent=None):
     
       - A :class:`wx.glcanvas.GLContext` instance
     
-      - If a context instance has previously been created, the second
-        return value is ``None``. Other a dummy
-        :class:`wx.glcanvas.GLCanvas` instance is returned. This canvas
-        should be destroyed by the caller when it is safe to do so. This
-        seems to primarily be a problem under Linux/GTK - it does not
-        seem to be possible to destroy the dummy canvas immediately after
-        creating the context. So the calling code needs to destroy it
-        at some point in the future (possibly after another, real
-        GLCanvas has been created, and set as the context target).
+      - If a context instance has previously been created, the second return
+        value is ``None``. Otherwise, a dummy :class:`wx.glcanvas.GLCanvas`
+        instance is returned. This canvas should be destroyed by the caller
+        when it is safe to do so. This seems to primarily be a problem under
+        Linux/GTK - it does not seem to be possible to destroy the dummy
+        canvas immediately after creating the context. So the calling code
+        needs to destroy it at some point in the future (possibly after
+        another, real ``GLCanvas`` has been created, and set as the context
+        target).
     """
 
     import sys
@@ -326,15 +483,17 @@ def getOSMesaContext():
 
 
 class OSMesaCanvasTarget(object):
-    """Superclass for canvas objects which support off-screen rendering using
+    """Base class for canvas objects which support off-screen rendering using
     OSMesa.
     """
     
     def __init__(self, width, height):
-        """Creates an off-screen buffer to be used as the render target.
+        """Create an ``OSMesaCanvasTarget``. An off-screen buffer, to be used
+        as the render target, is created.
 
         :arg width:    Width in pixels
         :arg height:   Height in pixels
+
         """
         import OpenGL.arrays as glarrays 
         self.__width  = width
@@ -366,7 +525,7 @@ class OSMesaCanvasTarget(object):
 
         
     def _postDraw(self):
-        """Does nothing, see :method:`_refresh`."""
+        """Does nothing, see :meth:`_refresh`."""
         pass
 
 
@@ -418,15 +577,24 @@ class OSMesaCanvasTarget(object):
 
 
 class WXGLCanvasTarget(object):
-    """Superclass for :class:`wx.glcanvas.GLCanvas` objects objects.
+    """Base class for :class:`wx.glcanvas.GLCanvas` objects.
 
-    It is assumed that subclasses of this superclass are also subclasses of
-    :class:`wx.glcanvas.GLCanvas`
+    It is assumed that subclasses of this base class are also subclasses of
+    :class:`wx.glcanvas.GLCanvas`. Sub-classes must override the following
+    methods:
+
+    .. autosummary::
+       :nosignatures:
+
+       _initGL
+       _draw
     """
 
 
     def __init__(self):
-        """Binds :attr:`wx.EVT_PAINT` events to the :meth:`_mainDraw` method.
+        """Create a ``WXGLCanasTarget``.
+
+        Binds :attr:`wx.EVT_PAINT` events to the :meth:`_mainDraw` method.
         """
 
         import wx
@@ -436,18 +604,15 @@ class WXGLCanvasTarget(object):
     
 
     def _initGL(self):
-        """Must be implemented by subclasses.
-
-        This method should perform any OpenGL data initialisation required for
-        rendering.
+        """This method should perform any OpenGL data initialisation required
+        for rendering. Must be implemented by subclasses.
         """
         raise NotImplementedError()
 
 
     def _draw(self, *a):
-        """Must be implemented by subclasses.
-
-        This method should implement the OpenGL drawing logic.
+        """This method should implement the OpenGL drawing logic. Must be
+        implemented by subclasses.
         """
         raise NotImplementedError()
  

@@ -1,13 +1,10 @@
 /*
- * Fast but limited OpenGL fragment shader used by
- * fsl/fslview/gl/gl21/glvolume_funcs.py.
+ * Fast but limited OpenGL fragment shader used for rendering GLVolume
+ * instances.
  *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
 #version 120
-
-#pragma include spline_interp.glsl
-#pragma include test_in_bounds.glsl
 
 /*
  * image data texture.
@@ -18,7 +15,6 @@ uniform sampler3D imageTexture;
  * Texture containing the colour map.
  */
 uniform sampler1D colourTexture;
-
 
 /*
  * Shape of the imageTexture.
@@ -42,9 +38,8 @@ uniform float clipLow;
  */
 uniform float clipHigh;
 
-
 /*
- * Corresponding texture coordinates.
+ * Image texture coordinates.
  */
 varying vec3 fragTexCoord;
 

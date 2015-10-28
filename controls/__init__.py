@@ -1,25 +1,39 @@
 #!/usr/bin/env python
 #
-# __init__.py -
+# __init__.py - FSLeyes control panels.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""The ``controls`` package is the home of all *FSLeyes controls*, as
+described in the :mod:`~fsl.fsleyes` package documentation.
 
-from atlaspanel             import AtlasPanel
-from overlaydisplaypanel    import OverlayDisplayPanel
-from overlaylistpanel       import OverlayListPanel
-from locationpanel          import LocationPanel
-from lookuptablepanel       import LookupTablePanel
-from timeserieslistpanel    import TimeSeriesListPanel
-from timeseriescontrolpanel import TimeSeriesControlPanel
-from histogramlistpanel     import HistogramListPanel
-from histogramcontrolpanel  import HistogramControlPanel
-from clusterpanel           import ClusterPanel
-from canvassettingspanel    import CanvasSettingsPanel
-from overlayinfopanel       import OverlayInfoPanel
-from shellpanel             import ShellPanel
 
-from orthotoolbar           import OrthoToolBar
-from orthoprofiletoolbar    import OrthoProfileToolBar
-from lightboxtoolbar        import LightBoxToolBar
-from overlaydisplaytoolbar  import OverlayDisplayToolBar
+Every control panel is a sub-class of either the :class:`.FSLEyesPanel` or
+:class:`.FSLEyesToolBar`, and each panel allows the user to control some
+aspect of either the specific :class:`.ViewPanel` that the control panel is
+embedded within, or some general aspect of *FSLeyes*.
+
+
+The following control panels currently exist:
+
+.. autosummary::
+   :nosignatures:
+
+   ~fsl.fsleyes.controls.atlaspanel.AtlasPanel
+   ~fsl.fsleyes.controls.canvassettingspanel.CanvasSettingsPanel
+   ~fsl.fsleyes.controls.clusterpanel.ClusterPanel
+   ~fsl.fsleyes.controls.histogramcontrolpanel.HistogramControlPanel
+   ~fsl.fsleyes.controls.histogramlistpanel.HistogramListPanel
+   ~fsl.fsleyes.controls.lightboxtoolbar.LightBoxToolBar
+   ~fsl.fsleyes.controls.locationpanel.LocationPanel
+   ~fsl.fsleyes.controls.lookuptablepanel.LookupTablePanel
+   ~fsl.fsleyes.controls.orthoedittoolbar.OrthoEditToolBar
+   ~fsl.fsleyes.controls.orthotoolbar.OrthoToolBar
+   ~fsl.fsleyes.controls.overlaydisplaypanel.OverlayDisplayPanel
+   ~fsl.fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar
+   ~fsl.fsleyes.controls.overlayinfopanel.OverlayInfoPanel
+   ~fsl.fsleyes.controls.overlaylistpanel.OverlayListPanel
+   ~fsl.fsleyes.controls.shellpanel.ShellPanel
+   ~fsl.fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
+   ~fsl.fsleyes.controls.timeserieslistpanel.TimeSeriesListPanel
+"""

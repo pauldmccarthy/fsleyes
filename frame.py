@@ -5,8 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`FSLEyesFrame` which is the top level frame
-for the FSLEyes application, providing functionality to view 3D/4D images,
-and other types of data.
+for FSLeyes.
 """
 
 
@@ -28,26 +27,77 @@ log = logging.getLogger(__name__)
 
 
 class FSLEyesFrame(wx.Frame):
-    """A frame which implements a 3D image viewer."""
+    """A ``FSLEyesFrame`` is a simple :class:`wx.Frame` which acts as a
+    container for :class:`.ViewPanel` instances.
 
+    
+    A :class:`wx.lib.agw.aui.AuiManager` is used so that ``ViewPanel`` panels
+    can be dynamically laid out and reconfigured by the user.
+
+    
+    **Menus**
+
+    
+    The ``FSLEyesFrame`` has three menus:
+
+    ========== ==============================================================
+    *File*     Global actions, such as adding a new overlay
+    *View*     Options to open a new :class:`.ViewPanel`.
+    *Settings* Options which are specific to the currently visible
+               :class:`.ViewPanel` instances. A separate sub-menu is added
+               for each visible ``ViewPanel``. All ``ViewPanel`` classes
+               inherit from the :class:`.ActionProvider` class - any actions
+               that have been defined are added as menu items here.
+    ========== ==============================================================
+
+    
+    **Saving/restoring state**
+
+
+    When a ``FSLEyesFrame`` is closed, it saves some display settings so that
+    they can be restored  the next time a ``FSLEyesFrame`` is opened. The
+    settings are saved using the :class:`~fsl.utils.settings` module.
+
+    Currently, only the frame position and size are saved - in the future, I
+    plan to save and restore the ``ViewPanel`` layout as well.
+
+
+    **Programming interface**
+
+    
+    At this stage, ``FSLEyesFrame`` only provides a couple of methods for
+    programmatically configuring the display:
+
+    .. autosummary::
+       :nosignatures:
+
+       getViewPanels
+       addViewPanel
+    """
+
+    
     def __init__(self,
                  parent,
                  overlayList,
                  displayCtx,
                  restore=True):
+        """Create a ``FSLEyesFrame``.
+
+        .. note:: The ``restore`` functionality is not currently implemented.
+                  If ``restore=True``, an :class:`.OrthoPanel` is added to
+                  the frame.
+        
+        :arg parent:      The :mod:`wx` parent object.
+        
+        :arg overlayList: The :class:`.OverlayList`.
+        
+        :arg displayCtx:  The master :class:`.DisplayContext`.
+        
+        :arg restore:     Restores previous saved layout. If ``False``, no 
+                          view panels will be displayed.
         """
-        :arg parent:
         
-        :arg overlayList:
-        
-        :arg displayCtx:
-        
-        :arg restore:    Restores previous saved layout (not currently
-                         implemented). If ``False``, no view panels will
-                         be displayed.
-        """
-        
-        wx.Frame.__init__(self, parent, title='FSLEyes')
+        wx.Frame.__init__(self, parent, title='FSLeyes')
 
         # Default application font - this is
         # inherited by all child controls.
@@ -87,13 +137,17 @@ class FSLEyesFrame(wx.Frame):
 
         
     def getViewPanels(self):
-        """Returns a list of all view panels that currently exist. """
+        """Returns a list of all :class:`.ViewPanel` instances that are
+        currenlty displayed in this ``FSLEyesFrame``.
+        """
         return self.__viewPanels.values()
 
 
     def addViewPanel(self, panelCls):
-        """Adds a view panel to the centre of the frame, and a menu item
-        allowing the user to configure the view.
+        """Adds a new :class:`.ViewPanel` to the centre of the frame, and a
+        menu item allowing the user to configure the view.
+
+        :arg panelCls: The :class:`.ViewPanel` type to be added.
         """
 
         self.Freeze()
@@ -183,6 +237,12 @@ class FSLEyesFrame(wx.Frame):
 
 
     def __addViewPanelMenu(self, panel, title):
+        """Called by :meth:`addViewPanel`. Adds a menu item for the newly
+        created :class:`.ViewPanel` instance.
+
+        :arg panel: The newly created ``ViewPanel`` instance.
+        :arg title: The name given to the ``panel``.
+        """
 
         actionz = panel.getActions()
 
@@ -217,6 +277,18 @@ class FSLEyesFrame(wx.Frame):
     
 
     def __onViewPanelClose(self, ev=None, paneInfo=None):
+        """Called when the user closes a :class:`.ViewPanel`.
+
+        The :meth:`__addViewPanelMenu` method adds a *Close* menu item
+        for every view panel, and binds it to this method.
+
+        This method does the following:
+
+         1. Makes sure that the ``ViewPanel``: is destroyed correctly
+         2. Removes the *Settings* sub-menu corresponding to the ``ViewPanel``.
+         3. Makes sure that any remaining ``ViewPanel`` panels are arranged
+            nicely.
+        """
 
         if ev is not None:
             ev.Skip()
@@ -264,7 +336,7 @@ class FSLEyesFrame(wx.Frame):
 
         
     def __onClose(self, ev):
-        """Called on requests to close this :class:`FSLEyesFrame`.
+        """Called when the user closes this ``FSLEyesFrame``.
 
         Saves the frame position, size, and layout, so it may be preserved the
         next time it is opened. See the :meth:`_restoreState` method.
@@ -293,9 +365,9 @@ class FSLEyesFrame(wx.Frame):
         except: return None
 
         
-    __parseSavedPoint = __parseSavedSize
-    """A proxy for the :meth:`__parseSavedSize` method.
-    """ 
+    def __parseSavedPoint(self, size):
+        """A proxy for the :meth:`__parseSavedSize` method.""" 
+        return self.__parseSavedSize(size)
 
             
     def __parseSavedLayout(self, layout):
@@ -304,8 +376,12 @@ class FSLEyesFrame(wx.Frame):
         :meth:`.AuiManager.SavePerspective`).
 
         Returns a list of class names, specifying the control panels
-        (e.g. :class:`.ImageListPanel`) which were previously open, and need
+        (e.g. :class:`.OverlayListPanel`) which were previously open, and need
         to be created.
+
+        .. warning:: This method is not currently being used - it is from a
+                     previous version. I may use it in the future to restore
+                     ``ViewPanel`` layouts, or I may re-write it.
         """
 
         try:
@@ -329,8 +405,11 @@ class FSLEyesFrame(wx.Frame):
 
     
     def __restoreState(self, restore=True):
-        """Called on :meth:`__init__`. If any frame size/layout properties
-        have previously been saved, they are applied to this frame.
+        """Called by :meth:`__init__`.
+
+        If any frame size/layout properties have previously been saved via the
+        :mod:`~fsl.utils.settings` module, they are read in, and applied to
+        this frame.
 
         :arg bool default: If ``True``, any saved state is ignored.
         """
@@ -421,7 +500,8 @@ class FSLEyesFrame(wx.Frame):
         else:
             self.Centre()
 
-        # TODO Restore the previous view panel layout
+        # TODO Restore the previous view panel layout.
+        #      Currently, we just display an OrthoPanel.
         if restore:
 
             self.addViewPanel(views.OrthoPanel)

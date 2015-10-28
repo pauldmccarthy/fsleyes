@@ -1,9 +1,16 @@
 #!/usr/bin/env python
 #
-# selectiontexture.py - see fsl.fsleyes.editor.selection.Selection
+# selectiontexture.py - The SelectionTexture class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`SelectionTexture` class, a
+:class:`.Texture` type which can be used to store :class:`.Selection`
+instances.
+
+The :class:`SelectionTexture` class is used by the :class:`.VoxelSelection`
+annotation.
+"""
 
 import logging
 
@@ -17,20 +24,34 @@ log = logging.getLogger(__name__)
 
 
 class SelectionTexture(texture.Texture):
+    """The ``SelectionTexture`` class is a :class:`.Texture` which can be used
+    to represent a :class:`.Selection` instance.  The ``Selection`` image array
+    is stored as a single channel 3D texture, which is updated whenever the
+    :attr:`.Selection.selection` property changes, and whenever the
+    :meth:`refresh` method is called.
+    """
 
+    
     def __init__(self, name, selection):
+        """Create a ``SelectionTexture``.
+
+        :arg name:      A unique name for this ``SelectionTexture``.
+
+        :arg selection: The :class:`.Selection` instance.
+        """
 
         texture.Texture.__init__(self, name, 3)
 
-        self.selection = selection
+        self.__selection = selection
 
-        selection.addListener('selection', name, self._selectionChanged)
+        selection.addListener('selection', name, self.__selectionChanged)
 
-        self._init()
+        self.__init()
         self.refresh()
 
 
-    def _init(self):
+    def __init(self):
+        """Called by :meth:`__init__`. Configures the GL texture. """
 
         self.bindTexture()
         
@@ -55,7 +76,7 @@ class SelectionTexture(texture.Texture):
                            gl.GL_TEXTURE_WRAP_R,
                            gl.GL_CLAMP_TO_BORDER)
 
-        shape = self.selection.selection.shape
+        shape = self.__selection.selection.shape
         gl.glTexImage3D(gl.GL_TEXTURE_3D,
                         0,
                         gl.GL_ALPHA8,
@@ -69,11 +90,35 @@ class SelectionTexture(texture.Texture):
         
         self.unbindTexture()
 
+
+    def destroy(self):
+        """Must be called when this ``SelectionTexture`` is no longer needed.
+        Calls the :meth:`.Texture.destroy` method, and removes the listener
+        on the :attr:`.Selection.selection` property.
+        """
+        texture.Texture.destroy(self)
+        self.__selection.removeListener('selection', self.getTextureName())
+        self.__selection = None
+
         
     def refresh(self, block=None, offset=None):
+        """Refreshes the texture data from the :class:`.Selection` image
+        data.
+
+        If ``block`` and ``offset`` are not provided, the entire texture is
+        refreshed from the :class:`.Selection` instance. If you know that only
+        part of the selection data has changed, you can use the ``block`` and
+        ``offset`` arguments to refresh a specific region of the texture
+        (which will be faster than a full : refresh).
+
+        :arg block:  A 3D ``numpy`` array containing the new selection data.
+        
+        :arg offset: A tuple specifying the ``(x, y, z)`` offset of the
+                     ``block`` into the selection array.
+        """
         
         if block is None or offset is None:
-            data   = self.selection.selection
+            data   = self.__selection.selection
             offset = [0, 0, 0]
         else:
             data = block
@@ -98,12 +143,15 @@ class SelectionTexture(texture.Texture):
         self.unbindTexture()
  
     
-    def _selectionChanged(self, *a):
+    def __selectionChanged(self, *a):
+        """Called when the :attr:`.Selection.selection` changes. Updates
+        the texture data via the :meth:`refresh` method.
+        """
         
-        old, new, offset = self.selection.getLastChange()
+        old, new, offset = self.__selection.getLastChange()
 
         if old is None or new is None:
-            data   = self.selection.selection
+            data   = self.__selection.selection
             offset = [0, 0, 0]
         else:
             data = new

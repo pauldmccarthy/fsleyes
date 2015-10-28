@@ -1,23 +1,13 @@
 #!/usr/bin/env python
 #
-# slicecanvas.py - Provides the SliceCanvas class, which contains the
-# functionality to display a single slice from a collection of 3D overlays.
+# slicecanvas.py - The SliceCanvas class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""Provides the :class:`SliceCanvas` class, which contains the functionality
-to display a single slice from a collection of 3D overlays.
-
-The :class:`SliceCanvas` class is not intended to be instantiated - use one
-of the subclasses:
-
-  - :class:`.OSMesaSliceCanvas` for static off-screen rendering of a scene.
-    
-  - :class:`.WXGLSliceCanvas` for interactive rendering on a
-    :class:`wx.glcanvas.GLCanvas` canvas.
-
-See also the :class:`.LightBoxCanvas` class.
+"""This module provides the :class:`SliceCanvas` class, which contains the
+functionality to display a 2D slice from a collection of 3D overlays.
 """
+
 
 import copy
 import logging
@@ -40,10 +30,122 @@ log = logging.getLogger(__name__)
 
 
 class SliceCanvas(props.HasProperties):
-    """Represens a canvas which may be used to display a single 2D slice from a
-    collection of 3D overlays.
+    """The ``SliceCanvas`` represents a canvas which may be used to display a
+    single 2D slice from a collection of 3D overlays.  See also the
+    :class:`.LightBoxCanvas`, a sub-class of ``SliceCanvas``.
+
+
+    .. note:: The :class:`SliceCanvas` class is not intended to be instantiated
+              directly - use one of these subclasses, depending on your
+              use-case:
+
+               - :class:`.OSMesaSliceCanvas` for static off-screen rendering of
+                 a scene using OSMesa.
+    
+               - :class:`.WXGLSliceCanvas` for interactive rendering on a
+                 :class:`wx.glcanvas.GLCanvas` canvas.
+
+
+    The ``SliceCanvas`` derives from the :class:`.props.HasProperties` class.
+    The settings, and current scene displayed on a ``SliceCanvas`` instance,
+    can be changed through the properties of the ``SliceCanvas``. All of these
+    properties are defined in the :class:`.SliceCanvasOpts` class.
+
+
+    **GL objects**
+
+
+    The ``SliceCanvas`` draws :class:`.GLObject` instances. When created, a
+    ``SliceCanvas`` creates a :class:`.GLObject` instance for every overlay in
+    the :class:`.OverlayList`. When an overlay is added or removed, it
+    creates/destroys ``GLObject`` instances accordingly.  Furthermore,
+    whenever the :attr:`.Display.overlayType` for an existing overlay
+    changes, the ``SliceCanvas`` destroys the old ``GLObject`` associated with
+    the overlay, and creates a new one.
+
+
+    The ``SliceCanvas`` also uses an :class:`.Annotations` instance, for
+    drawing simple annotations on top of the overlays.  This ``Annotations``
+    instance can be accessed with the :meth:`getAnnotations` method.
+
+
+    **Performance optimisations**
+
+    
+    The :attr:`renderMode`, :attr:`softwareMode`, and :attr:`resolutionLimit`
+    properties control various ``SliceCanvas`` performance settings, which can
+    be useful when running in a low performance environment (e.g. when only a
+    software based GL driver is available). See also the
+    :attr:`.SceneOpts.performance` setting.
+
+    
+    The :attr:`resolutionLimit` property controls the highest resolution at
+    which :class:`.Image` overlays are displayed on the ``SliceCanvas``. A
+    higher value will result in faster rendering performance. When this
+    property is changed, the :attr:`.ImageOpts.resolution` property for every
+    :class:`.Image` overlay is updated.
+
+
+    The :attr:`softwareMode` property controls the OpenGL shader program that
+    is used to render overlays - several :class:`.GLObject` types have shader
+    programs which are optimised for low-performance environments (at the cost
+    of a reduced feature set). This property is linked to the
+    :attr:`.Display.softwareMode` property.
+
+
+    The :attr:`renderMode` property controls the way in which the
+    ``SliceCanvas`` renders :class:`.GLObject` instances. It has three
+    settings:
+
+
+    ============= ============================================================
+    ``onscreen``  ``GLObject`` instances are rendered directly to the canvas.
+    
+    ``offscreen`` ``GLObject`` instances are rendered off-screen to a fixed
+                  size 2D texture (a :class:`.RenderTexture`). This texture
+                  is then rendered to the canvas. One :class:`.RenderTexture`
+                  is used for every overlay  in the :class:`.OverlayList`.
+    
+    ``prerender`` A stack of 2D slices for every ``GLObject`` instance is
+                  pre-generated off-screen, and cached, using a
+                  :class:`.RenderTextureStack`. When the ``SliceCanvas`` needs
+                  to display a particular Z location, it retrieves the
+                  appropriate slice from the stack, and renders it to the
+                  canvas. One :class:`.RenderTextureStack` is used for every
+                  overlay in the :class:`.OverlayList`.
+    ============= ============================================================
+                  
+
+    **Attributes and methods**
+
+    
+    The following attributes are available on a ``SliceCanvas``:
+
+
+    =============== ==========================================
+    ``xax``         Index of the horizontal screen axis
+    ``yax``         Index of the horizontal screen axis
+    ``zax``         Index of the horizontal screen axis
+    ``name``        A unique name for this ``SliceCanvas``
+    ``overlayList`` Reference to the :class:`.OverlayList`.
+    ``displayCtx``  Reference to the :class:`.DisplayContext`.
+    =============== ==========================================
+
+    
+    The following convenience methods are available on a ``SliceCanvas``:
+
+    .. autosummary::
+       :nosignatures:
+    
+       calcPixelDims
+       canvasToWorld
+       panDisplayBy
+       centreDisplayAt
+       panDisplayToShow
+       getAnnotations
     """
 
+    
     pos             = copy.copy(canvasopts.SliceCanvasOpts.pos)
     zoom            = copy.copy(canvasopts.SliceCanvasOpts.zoom)
     displayBounds   = copy.copy(canvasopts.SliceCanvasOpts.displayBounds)
@@ -57,140 +159,9 @@ class SliceCanvas(props.HasProperties):
     softwareMode    = copy.copy(canvasopts.SliceCanvasOpts.softwareMode)
     resolutionLimit = copy.copy(canvasopts.SliceCanvasOpts.resolutionLimit)
     
-
-    def calcPixelDims(self):
-        """Calculate and return the approximate size (width, height) of one
-        pixel in display space.
-        """
-        
-        xmin, xmax = self.displayCtx.bounds.getRange(self.xax)
-        ymin, ymax = self.displayCtx.bounds.getRange(self.yax)
-        
-        w, h = self._getSize()
-        pixx = (xmax - xmin) / float(w)
-        pixy = (ymax - ymin) / float(h) 
-
-        return pixx, pixy
-
-    
-    def canvasToWorld(self, xpos, ypos):
-        """Given pixel x/y coordinates on this canvas, translates them
-        into xyz display coordinates.
-        """
-
-        realWidth                 = self.displayBounds.xlen
-        realHeight                = self.displayBounds.ylen
-        canvasWidth, canvasHeight = map(float, self._getSize())
-            
-        if self.invertX: xpos = canvasWidth  - xpos
-        if self.invertY: ypos = canvasHeight - ypos
-
-        if realWidth    == 0 or \
-           canvasWidth  == 0 or \
-           realHeight   == 0 or \
-           canvasHeight == 0:
-            return None
-        
-        xpos = self.displayBounds.xlo + (xpos / canvasWidth)  * realWidth
-        ypos = self.displayBounds.ylo + (ypos / canvasHeight) * realHeight
-
-        pos = [None] * 3
-        pos[self.xax] = xpos
-        pos[self.yax] = ypos
-        pos[self.zax] = self.pos.z
-
-        return pos
-
-
-    def panDisplayBy(self, xoff, yoff):
-        """Pans the canvas display by the given x/y offsets (specified in
-        display coordinates).
-        """
-
-        if len(self.overlayList) == 0: return
-        
-        dispBounds = self.displayBounds
-        ovlBounds  = self.displayCtx.bounds
-
-        xmin, xmax, ymin, ymax = self.displayBounds[:]
-
-        xmin = xmin + xoff
-        xmax = xmax + xoff
-        ymin = ymin + yoff
-        ymax = ymax + yoff
-
-        if dispBounds.xlen > ovlBounds.getLen(self.xax):
-            xmin = dispBounds.xlo
-            xmax = dispBounds.xhi
-            
-        elif xmin < ovlBounds.getLo(self.xax):
-            xmin = ovlBounds.getLo(self.xax)
-            xmax = xmin + self.displayBounds.getLen(0)
-            
-        elif xmax > ovlBounds.getHi(self.xax):
-            xmax = ovlBounds.getHi(self.xax)
-            xmin = xmax - self.displayBounds.getLen(0)
-            
-        if dispBounds.ylen > ovlBounds.getLen(self.yax):
-            ymin = dispBounds.ylo
-            ymax = dispBounds.yhi
-            
-        elif ymin < ovlBounds.getLo(self.yax):
-            ymin = ovlBounds.getLo(self.yax)
-            ymax = ymin + self.displayBounds.getLen(1)
-
-        elif ymax > ovlBounds.getHi(self.yax):
-            ymax = ovlBounds.getHi(self.yax)
-            ymin = ymax - self.displayBounds.getLen(1)
-
-        self.displayBounds[:] = [xmin, xmax, ymin, ymax]
-
-
-    def centreDisplayAt(self, xpos, ypos):
-        """Pans the display so the given x/y position is in the centre.
-        """
-
-        # work out current display centre
-        bounds  = self.displayBounds
-        xcentre = bounds.xlo + (bounds.xhi - bounds.xlo) * 0.5
-        ycentre = bounds.ylo + (bounds.yhi - bounds.ylo) * 0.5
-
-        # move to the new centre
-        self.panDisplayBy(xpos - xcentre, ypos - ycentre)
-
-
-    def panDisplayToShow(self, xpos, ypos):
-        """Pans the display so that the given x/y position (in display
-        coordinates) is visible.
-        """
-
-        bounds = self.displayBounds
-
-        if xpos >= bounds.xlo and xpos <= bounds.xhi and \
-           ypos >= bounds.ylo and ypos <= bounds.yhi: return
-
-        xoff = 0
-        yoff = 0
-
-        if   xpos <= bounds.xlo: xoff = xpos - bounds.xlo
-        elif xpos >= bounds.xhi: xoff = xpos - bounds.xhi
-        
-        if   ypos <= bounds.ylo: yoff = ypos - bounds.ylo
-        elif ypos >= bounds.yhi: yoff = ypos - bounds.yhi
-        
-        if xoff != 0 or yoff != 0:
-            self.panDisplayBy(xoff, yoff)
-
-
-    def getAnnotations(self):
-        """Returns an :class:`.Annotations` instance, which can be used to
-        annotate the canvas.
-        """
-        return self._annotations
-
         
     def __init__(self, overlayList, displayCtx, zax=0):
-        """Creates a canvas object. 
+        """Create a ``SliceCanvas``. 
 
         :arg overlayList: An :class:`.OverlayList` object containing a
                           collection of overlays to be displayed.
@@ -198,8 +169,8 @@ class SliceCanvas(props.HasProperties):
         :arg displayCtx:  A :class:`.DisplayContext` object which describes
                           how the overlays should be displayed.
         
-        :arg zax:        Display coordinate system axis perpendicular to the
-                         plane to be displayed (the 'depth' axis), default 0.
+        :arg zax:         Display coordinate system axis perpendicular to the
+                          plane to be displayed (the *depth* axis), default 0.
         """
 
         props.HasProperties.__init__(self)
@@ -296,13 +267,146 @@ class SliceCanvas(props.HasProperties):
             if rt is not None: glresources.delete(rtName)
             if ot is not None: ot         .destroy()
 
-        self.overlayList = None
-        self.displayCxt  = None
+        self.overlayList        = None
+        self.displayCtx         = None
+        self._glObjects         = None
+        self._prerenderTextures = None
+        self._offscreenTextures = None
+
+
+    def calcPixelDims(self):
+        """Calculate and return the approximate size (width, height) of one
+        pixel in display space.
+        """
+        
+        xmin, xmax = self.displayCtx.bounds.getRange(self.xax)
+        ymin, ymax = self.displayCtx.bounds.getRange(self.yax)
+        
+        w, h = self._getSize()
+        pixx = (xmax - xmin) / float(w)
+        pixy = (ymax - ymin) / float(h) 
+
+        return pixx, pixy
+
+    
+    def canvasToWorld(self, xpos, ypos):
+        """Given pixel x/y coordinates on this canvas, translates them
+        into xyz display coordinates.
+        """
+
+        realWidth                 = self.displayBounds.xlen
+        realHeight                = self.displayBounds.ylen
+        canvasWidth, canvasHeight = map(float, self._getSize())
+            
+        if self.invertX: xpos = canvasWidth  - xpos
+        if self.invertY: ypos = canvasHeight - ypos
+
+        if realWidth    == 0 or \
+           canvasWidth  == 0 or \
+           realHeight   == 0 or \
+           canvasHeight == 0:
+            return None
+        
+        xpos = self.displayBounds.xlo + (xpos / canvasWidth)  * realWidth
+        ypos = self.displayBounds.ylo + (ypos / canvasHeight) * realHeight
+
+        pos = [None] * 3
+        pos[self.xax] = xpos
+        pos[self.yax] = ypos
+        pos[self.zax] = self.pos.z
+
+        return pos
+
+
+    def panDisplayBy(self, xoff, yoff):
+        """Pans the canvas display by the given x/y offsets (specified in
+        display coordinates).
+        """
+
+        if len(self.overlayList) == 0: return
+        
+        dispBounds = self.displayBounds
+        ovlBounds  = self.displayCtx.bounds
+
+        xmin, xmax, ymin, ymax = self.displayBounds[:]
+
+        xmin = xmin + xoff
+        xmax = xmax + xoff
+        ymin = ymin + yoff
+        ymax = ymax + yoff
+
+        if dispBounds.xlen > ovlBounds.getLen(self.xax):
+            xmin = dispBounds.xlo
+            xmax = dispBounds.xhi
+            
+        elif xmin < ovlBounds.getLo(self.xax):
+            xmin = ovlBounds.getLo(self.xax)
+            xmax = xmin + self.displayBounds.getLen(0)
+            
+        elif xmax > ovlBounds.getHi(self.xax):
+            xmax = ovlBounds.getHi(self.xax)
+            xmin = xmax - self.displayBounds.getLen(0)
+            
+        if dispBounds.ylen > ovlBounds.getLen(self.yax):
+            ymin = dispBounds.ylo
+            ymax = dispBounds.yhi
+            
+        elif ymin < ovlBounds.getLo(self.yax):
+            ymin = ovlBounds.getLo(self.yax)
+            ymax = ymin + self.displayBounds.getLen(1)
+
+        elif ymax > ovlBounds.getHi(self.yax):
+            ymax = ovlBounds.getHi(self.yax)
+            ymin = ymax - self.displayBounds.getLen(1)
+
+        self.displayBounds[:] = [xmin, xmax, ymin, ymax]
+
+
+    def centreDisplayAt(self, xpos, ypos):
+        """Pans the display so the given x/y position is in the centre. """
+
+        # work out current display centre
+        bounds  = self.displayBounds
+        xcentre = bounds.xlo + (bounds.xhi - bounds.xlo) * 0.5
+        ycentre = bounds.ylo + (bounds.yhi - bounds.ylo) * 0.5
+
+        # move to the new centre
+        self.panDisplayBy(xpos - xcentre, ypos - ycentre)
+
+
+    def panDisplayToShow(self, xpos, ypos):
+        """Pans the display so that the given x/y position (in display
+        coordinates) is visible.
+        """
+
+        bounds = self.displayBounds
+
+        if xpos >= bounds.xlo and xpos <= bounds.xhi and \
+           ypos >= bounds.ylo and ypos <= bounds.yhi: return
+
+        xoff = 0
+        yoff = 0
+
+        if   xpos <= bounds.xlo: xoff = xpos - bounds.xlo
+        elif xpos >= bounds.xhi: xoff = xpos - bounds.xhi
+        
+        if   ypos <= bounds.ylo: yoff = ypos - bounds.ylo
+        elif ypos >= bounds.yhi: yoff = ypos - bounds.yhi
+        
+        if xoff != 0 or yoff != 0:
+            self.panDisplayBy(xoff, yoff)
+
+
+    def getAnnotations(self):
+        """Returns an :class:`.Annotations` instance, which can be used to
+        annotate the canvas.
+        """
+        return self._annotations
             
 
     def _initGL(self):
-        """Call the _overlayListChanged method - it will generate
-        any necessary GL data for each of the overlays
+        """Call the :meth:`_overlayListChanged` method - it will generate
+        any necessary GL data for each of the overlays.
         """
         self._overlayListChanged()
 
@@ -628,14 +732,14 @@ class SliceCanvas(props.HasProperties):
 
 
     def _zoomChanged(self, *a):
-        """Called when the :attr:`.zoom` property changes. Updates the
+        """Called when the :attr:`zoom` property changes. Updates the
         display bounds.
         """
         self._updateDisplayBounds()
         
 
     def _applyZoom(self, xmin, xmax, ymin, ymax):
-        """'Zooms' in to the given rectangle according to the
+        """*Zooms* in to the given rectangle according to the
         current value of the zoom property, keeping the view
         centre consistent with respect to the current value
         of the :attr:`displayBounds` property. Returns a
@@ -696,6 +800,11 @@ class SliceCanvas(props.HasProperties):
         any of the parameters are not provided, the
         :attr:`.DisplayContext.bounds` are used.
 
+        
+        .. note:: This method is used internally, and also by the
+                  :class:`.WXGLSliceCanvas` class.
+
+        
         :arg xmin: Minimum x (horizontal) value to be in the display bounds.
         :arg xmax: Maximum x value to be in the display bounds.
         :arg ymin: Minimum y (vertical) value to be in the display bounds.
@@ -764,10 +873,12 @@ class SliceCanvas(props.HasProperties):
                      size=None):
         """Sets up the GL canvas size, viewport, and projection.
 
+        
         If any of the min/max parameters are not provided, they are
         taken from the :attr:`displayBounds` (x/y), and the 
         :attr:`DisplayContext.bounds` (z).
 
+        
         :arg xmin: Minimum x (horizontal) location
         :arg xmax: Maximum x location
         :arg ymin: Minimum y (vertical) location

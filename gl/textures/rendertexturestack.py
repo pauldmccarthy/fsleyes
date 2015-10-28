@@ -1,17 +1,20 @@
 #!/usr/bin/env python
 #
-# rendertexturelist.py -
+# rendertexturestack.py - The RenderTextureStack class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`RenderTextureStack` class, which is used
+by the :class:`.SliceCanvas` class to store a collection of off-screen
+:class:`.RenderTexture` instances containing rendered slices of
+:class:`.GLObject` instances.
+"""
 
 import logging
 
-import numpy     as np
 import OpenGL.GL as gl
 
 import fsl.fsleyes.gl.routines as glroutines
-import fsl.utils.transform     as transform
 import                            rendertexture
 
 
@@ -19,8 +22,30 @@ log = logging.getLogger(__name__)
 
 
 class RenderTextureStack(object):
+    """The ``RenderTextureStack`` class creates and maintains a collection of
+    :class:`.RenderTexture` instances, each of which is used to display a
+    single slice of a :class:`.GLObject` along a specific display axis.
 
+    The purpose of the ``RenderTextureStack`` is to pre-generate 2D slices of
+    a :class:`.GLObject` so that they do not have to be rendered on-demand.
+    Rendering a ``GLObject`` slices from a pre-generated off-screen texture
+    provides better performance than rendering the ``GLObject`` slice
+    in real time.
+
+    The :class:`.RenderTexture` textures are updated in an idle loop, which is
+    triggered by the ``wx.EVT_IDLE`` event.
+    """
+
+    
     def __init__(self, globj):
+        """Create a ``RenderTextureStack``. A listener is registered on the
+        ``wx.EVT_IDLE`` event, so that the :meth:`__textureUpdateLoop` method
+        is called periodically.  An update listener is registered on the
+        ``GLObject``, so that the textures can be refreshed whenever it
+        changes.
+
+        :arg globj: The :class:`.GLObject` instance.
+        """
 
 
         self.name = '{}_{}_{}'.format(
@@ -48,80 +73,54 @@ class RenderTextureStack(object):
         import wx
         wx.GetApp().Bind(wx.EVT_IDLE, self.__textureUpdateLoop)
 
-            
-    def __refreshAllTextures(self, *a):
-
-        if self.__lastDrawnTexture is not None:
-            lastIdx = self.__lastDrawnTexture
-        else:
-            lastIdx = len(self.__textures) / 2
-            
-        aboveIdxs = range(lastIdx, len(self.__textures))
-        belowIdxs = range(lastIdx, 0, -1)
-
-        idxs = [0] * len(self.__textures)
-
-        for i in range(len(self.__textures)):
-            
-            if len(aboveIdxs) > 0 and len(belowIdxs) > 0:
-                if i % 2: idxs[i] = aboveIdxs.pop(0)
-                else:     idxs[i] = belowIdxs.pop(0)
-                
-            elif len(aboveIdxs) > 0: idxs[i] = aboveIdxs.pop(0)
-            else:                    idxs[i] = belowIdxs.pop(0) 
-
-        self.__textureDirty = [True] * len(self.__textures)
-        self.__updateQueue  = idxs
-
-
-    def __zposToIndex(self, zpos):
-        zmin  = self.__zmin
-        zmax  = self.__zmax
-        ntexs = len(self.__textures)
-        index = ntexs * (zpos - zmin) / (zmax - zmin)
-
-        limit = len(self.__textures) - 1
-
-        if index > limit and index <= limit + 1:
-            index = limit
-
-        return int(index)
-
-    
-    def __indexToZpos(self, index):
-        zmin  = self.__zmin
-        zmax  = self.__zmax
-        ntexs = len(self.__textures)
-        return index * (zmax - zmin) / ntexs + zmin
-
-
-    def __textureUpdateLoop(self, ev):
-        ev.Skip()
-
-        if len(self.__updateQueue) == 0 or len(self.__textures) == 0:
-            return
-
-        idx = self.__updateQueue.pop(0)
-
-        if not self.__textureDirty[idx]:
-            return
-
-        tex = self.__textures[idx]
         
-        log.debug('Refreshing texture slice {} (zax {})'.format(
-            idx, self.__zax))
-        
-        self.__refreshTexture(tex, idx)
+    def destroy(self):
+        """Must be called when this ``RenderTextureStack`` is no longer needed.
+        Calls the :meth:`__destroyTextures` method.
+        """
+        self.__destroyTextures()
 
-        if len(self.__updateQueue) > 0:
-            ev.RequestMore()
 
-            
     def getGLObject(self):
+        """Returns the :class:`.GLObject` associated with this
+        ``RenderTextureStack``.
+        """
         return self.__globj
 
     
+    def draw(self, zpos, xform=None):
+        """Draws the pre-generated :class:`.RenderTexture` which corresponds
+        to the  specified Z position.
+
+        :arg zpos:  Position of slice to render.
+
+        :arg xform: Transformation matrix to apply to rendered slice vertices.
+        """
+
+        xax = self.__xax
+        yax = self.__yax
+
+        texIdx                  = self.__zposToIndex(zpos)
+        self.__lastDrawnTexture = texIdx
+
+        if texIdx < 0 or texIdx >= len(self.__textures):
+            return
+
+        lo, hi  = self.__globj.getDisplayBounds()
+        texture = self.__textures[texIdx]
+
+        if self.__textureDirty[texIdx]:
+            self.__refreshTexture(texture, texIdx)
+
+        texture.drawOnBounds(
+            zpos, lo[xax], hi[xax], lo[yax], hi[yax], xax, yax, xform)
+
+    
     def setAxes(self, xax, yax):
+        """This method must be called when the display orientation of the
+        :class:`.GLObject` changes. It destroys and re-creates all
+        :class:`.RenderTexture` instances.
+        """
 
         zax        = 3 - xax - yax
         self.__xax = xax
@@ -151,19 +150,77 @@ class RenderTextureStack(object):
 
         
     def __destroyTextures(self):
+        """Destroys all :class:`.RenderTexture` instances. This is performed
+        asynchronously, via the ``.wx.CallLater`` function.
+        """
 
         import wx
         texes = self.__textures
         self.__textures = []
         for tex in texes:
             wx.CallLater(50, tex.destroy)
+
+            
+    def __refreshAllTextures(self, *a):
+        """Marks all :class:`.RenderTexture`  instances as *dirty*, so that
+        they will be refreshed by the :meth:`.__textureUpdateLoop`.
+        """
+
+        if self.__lastDrawnTexture is not None:
+            lastIdx = self.__lastDrawnTexture
+        else:
+            lastIdx = len(self.__textures) / 2
+            
+        aboveIdxs = range(lastIdx, len(self.__textures))
+        belowIdxs = range(lastIdx, 0, -1)
+
+        idxs = [0] * len(self.__textures)
+
+        for i in range(len(self.__textures)):
+            
+            if len(aboveIdxs) > 0 and len(belowIdxs) > 0:
+                if i % 2: idxs[i] = aboveIdxs.pop(0)
+                else:     idxs[i] = belowIdxs.pop(0)
+                
+            elif len(aboveIdxs) > 0: idxs[i] = aboveIdxs.pop(0)
+            else:                    idxs[i] = belowIdxs.pop(0) 
+
+        self.__textureDirty = [True] * len(self.__textures)
+        self.__updateQueue  = idxs
+
+
+    def __textureUpdateLoop(self, ev):
+        """This method is called periodically through the ``wx.EVT_IDLE``
+        event. It loops through all :class:`.RenderTexture` instances, and
+        refreshes any that have been marked as *dirty*.
+        """
+        ev.Skip()
+
+        if len(self.__updateQueue) == 0 or len(self.__textures) == 0:
+            return
+
+        idx = self.__updateQueue.pop(0)
+
+        if not self.__textureDirty[idx]:
+            return
+
+        tex = self.__textures[idx]
         
-    
-    def destroy(self):
-        self.__destroyTextures()
+        log.debug('Refreshing texture slice {} (zax {})'.format(
+            idx, self.__zax))
+        
+        self.__refreshTexture(tex, idx)
 
+        if len(self.__updateQueue) > 0:
+            ev.RequestMore()
 
+        
     def __refreshTexture(self, tex, idx):
+        """Refreshes the given :class:`.RenderTexture`.
+
+        :arg tex: The ``RenderTexture`` to refresh.
+        :arg idx: Index of the ``RenderTexture``.
+        """
 
         zpos = self.__indexToZpos(idx)
         xax  = self.__xax
@@ -209,35 +266,28 @@ class RenderTextureStack(object):
 
         self.__textureDirty[idx] = False
 
+
+    def __zposToIndex(self, zpos):
+        """Converts a Z location in the display coordinate system into a
+        ``RenderTexture`` index.
+        """        
+        zmin  = self.__zmin
+        zmax  = self.__zmax
+        ntexs = len(self.__textures)
+        limit = len(self.__textures) - 1
+        index = ntexs * (zpos - zmin) / (zmax - zmin)
+
+        if index > limit and index <= limit + 1:
+            index = limit
+
+        return int(index)
+
     
-    def draw(self, zpos, xform=None):
-
-        xax     = self.__xax
-        yax     = self.__yax
-        zax     = self.__zax
-
-        texIdx                  = self.__zposToIndex(zpos)
-        self.__lastDrawnTexture = texIdx
-
-        if texIdx < 0 or texIdx >= len(self.__textures):
-            return
-
-        lo, hi  = self.__globj.getDisplayBounds()
-        texture = self.__textures[texIdx]
-
-        if self.__textureDirty[texIdx]:
-            self.__refreshTexture(texture, texIdx)
-
-        vertices = np.zeros((6, 3), dtype=np.float32)
-        vertices[:, zax] = zpos
-        vertices[0, [xax, yax]] = lo[xax], lo[yax]
-        vertices[1, [xax, yax]] = lo[xax], hi[yax]
-        vertices[2, [xax, yax]] = hi[xax], lo[yax]
-        vertices[3, [xax, yax]] = hi[xax], lo[yax]
-        vertices[4, [xax, yax]] = lo[xax], hi[yax]
-        vertices[5, [xax, yax]] = hi[xax], hi[yax]
-
-        if xform is not None:
-            vertices = transform.transform(vertices, xform=xform)
-
-        texture.draw(vertices)
+    def __indexToZpos(self, index):
+        """Converts a ``RenderTexture`` index into a Z location in the display
+        coordinate system.
+        """
+        zmin  = self.__zmin
+        zmax  = self.__zmax
+        ntexs = len(self.__textures)
+        return index * (zmax - zmin) / ntexs + zmin

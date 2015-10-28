@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 #
-# wxglcolourbarcanvas.py - Provides the WXGLColourBarCanvas, for displaying
-# a colour bar on a wx.glcanvas.GLCanvas canvas.
+# wxglcolourbarcanvas.py - The WXGLColourBarCanvas class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`WXGLColourBarCanvas`, for displaying a
-:class:`.ColourBarCanvas` on a :class:`wx.glcanvas.GLCanvas`.
+"""This module provides the :class:`WXGLColourBarCanvas` class, which is a
+:class:`.ColourBarCanvas` for use in a :mod:`wx` application.
 """
-
-import logging
-log = logging.getLogger(__name__)
 
 
 import wx
@@ -23,9 +19,14 @@ import fsl.fsleyes.gl.colourbarcanvas as cbarcanvas
 class WXGLColourBarCanvas(cbarcanvas.ColourBarCanvas,
                           fslgl.WXGLCanvasTarget,
                           wxgl.GLCanvas):
-    """A :class:`.ColourBarCanvas` which is also a
-    :class:`wx.glcanvas.GLCanvas`, for on screen rendering of colour bars.
-    """
+    """The ``WXGLColourBarCanvas`` is a :class:`.ColourBarCanvas`, a
+    :class:`wx.glcanvas.GLCanvas` and a :class:`.WXGLCanvasTarget`. If you
+    want to use a :class:`.ColourBarCanvas` in your :mod:`wx` application, then
+    you should use a ``WXGLColourBarCanvas``.
+
+    .. note:: The ``WXGLColourBarCanvas`` assumes the existence of the
+              :meth:`.ColourBarCanvas._genColourBarTexture` method.
+    """ 
     def __init__(self, parent):
         
         wxgl.GLCanvas             .__init__(self, parent)
@@ -38,5 +39,3 @@ class WXGLColourBarCanvas(cbarcanvas.ColourBarCanvas,
             ev.Skip()
 
         self.Bind(wx.EVT_SIZE, onsize)
-
-ColourBarCanvas = WXGLColourBarCanvas

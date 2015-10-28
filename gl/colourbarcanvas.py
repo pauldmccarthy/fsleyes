@@ -14,17 +14,17 @@ the colour bar is created.
 """
 
 import logging
-log = logging.getLogger(__name__)
 
-import OpenGL.GL         as gl
-import numpy             as np
-
+import OpenGL.GL as gl
+import numpy     as np
 
 import props
 
 import fsl.utils.colourbarbitmap as cbarbmp
-import fsl.data.strings          as strings
 import fsl.fsleyes.gl.textures   as textures
+
+
+log = logging.getLogger(__name__)
 
 
 class ColourBarCanvas(props.HasProperties):
@@ -43,17 +43,11 @@ class ColourBarCanvas(props.HasProperties):
     """A label to display under the centre of the colour bar."""
 
     
-    orientation = props.Choice(
-        ('horizontal', 'vertical'),
-        labels=[strings.choices['ColourBarCanvas.orientation.horizontal'],
-                strings.choices['ColourBarCanvas.orientation.vertical']])
+    orientation = props.Choice(('horizontal', 'vertical'))
     """Whether the colour bar should be vertical or horizontal. """
 
     
-    labelSide = props.Choice(
-        ('top-left', 'bottom-right'),
-        labels=[strings.choices['ColourBarCanvas.labelSide.top-left'],
-                strings.choices['ColourBarCanvas.labelSide.bottom-right']])
+    labelSide = props.Choice(('top-left', 'bottom-right'))
     """Whether the colour bar labels should be on the top/left, or bottom/right
     of the colour bar (depending upon whether the colour bar orientation is
     horizontal/vertical).

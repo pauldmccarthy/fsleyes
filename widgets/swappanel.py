@@ -1,27 +1,37 @@
 #!/usr/bin/env python
 #
 # swappanel.py - A wx.Panel which can contain many panels, but only displays
-# one at a time. Pushing a button toggles the panel that is displayed.
+# one at a time.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`SwapPanel` class, which is a
+:class:`wx.PyPanel` that can contain many child panels, but only displays one
+at a time.
+"""
 
 
 import wx
-import wx.lib.newevent as wxevent
-
-_SwapPanelEvent, _EVT_SWAPPANEL_EVENT = wxevent.NewEvent()
-
-EVT_SWAPPANEL_EVENT = _EVT_SWAPPANEL_EVENT
-
-SwapPanelEvent = _SwapPanelEvent
 
 
-class SwapPanel(wx.Panel):
+class SwapPanel(wx.PyPanel):
+    """The ``SwapPanel`` is a panel which can contain many cvhild panels, but
+    only displays one of them at a time. A button push allows the user to
+    change the currently displayed child panel.
+    """
+    
 
     def __init__(self, parent, buttonSide=wx.TOP):
+        """Create a ``SwapPanel``.
 
-        wx.Panel.__init__(self, parent)
+        :arg parent:     The :mod:`wx` parent object.
+
+        :arg buttonSide: Which side to put the toggle button - one of
+                         ``wx.TOP``, ``wx.BOTTOM``, ``wx.LEFT``, or
+                         ``wx.RIGHT``.
+        """
+
+        wx.PyPanel.__init__(self, parent)
         
         self.__panels     = []
         self.__labels     = []
@@ -46,14 +56,25 @@ class SwapPanel(wx.Panel):
 
 
     def Add(self, panel, label):
+        """Add a new panel to this ``SwapPanel``.
+
+        :arg panel: The panel.
+
+        :arg label: An identifier label for the panel - this may be passed to
+                    the :meth:`Remove` and :meth:`Show` methods to refer to 
+                    this panel.
+        """
         self.__panels.append(panel)
         self.__labels.append(label)
+
+        panel.Reparent(self)
 
         if len(self.__panels) == 1:
             self.__Show(0)
 
         
     def Remove(self, label):
+        """Remove the panel with the specified ``label``. """
         idx = self.__labels.index(label)
 
         self.__panels.pop(idx)
@@ -61,11 +82,13 @@ class SwapPanel(wx.Panel):
 
 
     def Show(self, label):
+        """Show the panel with the specified ``label``. """
         idx = self.__labels.index(label)
         self.__Show(idx)
 
 
     def __Show(self, index):
+        """Show the panel at the specified ``index``. """
 
         panel = self.__panels[index]
 
@@ -83,4 +106,5 @@ class SwapPanel(wx.Panel):
 
 
     def __onSwap(self, ev):
+        """Called when the toggle button is pushed. Shows the next panel."""
         self.__Show((self.__showing + 1) % len(self.__labels))

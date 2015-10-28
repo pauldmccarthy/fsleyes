@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 #
-# overlaydisplaypanel.py - A panel which shows display control options for the
-#                          currently selected overlay.
+# overlaydisplaypanel.py - The OverlayDisplayPanel.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 
-"""A :class:`wx.panel` which shows display control optionns for the currently
-selected overlay.
+"""This module provides the :class:`OverlayDisplayPanel` class, a *FSLeyes
+control* panel which allows the user to change overlay display settings.
 """
+
 
 import logging
 
@@ -18,108 +18,50 @@ import pwidgets.widgetlist               as widgetlist
 
 import fsl.utils.typedict                as td
 import fsl.data.strings                  as strings
+import fsl.fsleyes.tooltips              as fsltooltips
 import fsl.fsleyes.panel                 as fslpanel
 import fsl.fsleyes.actions.loadcolourmap as loadcmap
 import fsl.fsleyes.displaycontext        as displayctx
 
 
-
 log = logging.getLogger(__name__)
-
-
-_DISPLAY_PROPS = td.TypeDict({
-    'Display' : [
-        props.Widget('name'),
-        props.Widget('overlayType'),
-        props.Widget('enabled'),
-        props.Widget('alpha',      showLimits=False),
-        props.Widget('brightness', showLimits=False),
-        props.Widget('contrast',   showLimits=False)],
-
-    'VolumeOpts' : [
-        props.Widget('resolution',    showLimits=False),
-        props.Widget('transform'),
-        props.Widget('volume',
-                     showLimits=False,
-                     enabledWhen=lambda o: o.overlay.is4DImage()),
-        props.Widget('interpolation'),
-        props.Widget('cmap'),
-        props.Widget('invert'),
-        props.Widget('invertClipping',
-                     enabledWhen=lambda o, sw: not sw,
-                     dependencies=[(lambda o: o.display, 'softwareMode')]),
-        props.Widget('displayRange',  showLimits=False, slider=True),
-        props.Widget('clippingRange', showLimits=False, slider=True)],
-
-    'MaskOpts' : [
-        props.Widget('resolution', showLimits=False),
-        props.Widget('transform'),
-        props.Widget('volume',
-                     showLimits=False,
-                     enabledWhen=lambda o: o.overlay.is4DImage()),
-        props.Widget('colour'),
-        props.Widget('invert'),
-        props.Widget('threshold',  showLimits=False)],
-
-    'RGBVectorOpts' : [
-        props.Widget('resolution', showLimits=False),
-        props.Widget('transform'),
-        props.Widget('interpolation'),
-        props.Widget('xColour'),
-        props.Widget('yColour'),
-        props.Widget('zColour'),
-        props.Widget('suppressX'),
-        props.Widget('suppressY'),
-        props.Widget('suppressZ'),
-        props.Widget('modulate'),
-        props.Widget('modThreshold', showLimits=False, spin=False)],
-
-    'LineVectorOpts' : [
-        props.Widget('resolution',    showLimits=False),
-        props.Widget('transform'),
-        props.Widget('xColour'),
-        props.Widget('yColour'),
-        props.Widget('zColour'),
-        props.Widget('suppressX'),
-        props.Widget('suppressY'),
-        props.Widget('suppressZ'),
-        props.Widget('directed'),
-        props.Widget('lineWidth', showLimits=False),
-        props.Widget('modulate'),
-        props.Widget('modThreshold', showLimits=False, spin=False)],
-
-    'ModelOpts' : [
-        props.Widget('colour'),
-        props.Widget('outline'),
-        props.Widget('outlineWidth', showLimits=False),
-        props.Widget('refImage'),
-        # props.Widget('showName'),
-        props.Widget('coordSpace',
-                     enabledWhen=lambda o, ri: ri != 'none',
-                     dependencies=['refImage'])],
-
-    'LabelOpts' : [
-        props.Widget('lut'),
-        props.Widget('outline',
-                     enabledWhen=lambda o, sw: not sw,
-                     dependencies=[(lambda o: o.display, 'softwareMode')]),
-        props.Widget('outlineWidth',
-                     showLimits=False,
-                     enabledWhen=lambda o, sw: not sw,
-                     dependencies=[(lambda o: o.display, 'softwareMode')]),
-        # props.Widget('showNames'),
-        props.Widget('resolution',   showLimits=False),
-        props.Widget('transform'),
-        props.Widget('volume',
-                     showLimits=False,
-                     enabledWhen=lambda o: o.overlay.is4DImage())]
-})
 
     
 class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
+    """The ``OverlayDisplayPanel`` is a :Class:`.FSLEyesPanel` which allows
+    the user to change the display settings of the currently selected
+    overlay (which is defined by the :attr:`.DisplayContext.selectedOverlay`
+    property). The display settings for an overlay are contained in the
+    :class:`.Display` and :class:`.DisplayOpts` instances associated with
+    that overlay. An ``OverlayDisplayPanel`` looks something like the
+    following:
 
+    .. image:: images/overlaydisplaypanel.png
+       :scale: 50%
+       :align: center
+
+    An ``OverlayDisplayPanel`` uses a :class:`.WidgetGrid` to organise the
+    settings into two main sections:
+
+      - Settings which are common across all overlays - these are defined
+        in the :class:`.Display` class.
+    
+      - Settings which are specific to the current
+        :attr:`.Display.overlayType` - these are defined in the
+        :class:`.DisplayOpts` sub-classes.
+
+    
+    The settings that are displayed on an ``OverlayDisplayPanel`` are
+    defined in the :attr:`_DISPLAY_PROPS` dictionary.
+    """
+
+    
     def __init__(self, parent, overlayList, displayCtx):
-        """
+        """Create an ``OverlayDisplayPanel``.
+
+        :arg parent:      The :mod:`wx` parent object.
+        :arg overlayList: The :class:`.OverlayList` instance.
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
         """
 
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
@@ -148,6 +90,10 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
 
         
     def destroy(self):
+        """Must be called when this ``OverlayDisplayPanel`` is no longer
+        needed. Removes property listeners, and calls the
+        :meth:`.FSLEyesPanel.destroy` method.
+        """
 
         self._displayCtx .removeListener('selectedOverlay', self._name)
         self._overlayList.removeListener('overlays',        self._name)
@@ -156,19 +102,20 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
            self.__currentOverlay in self._overlayList:
             
             display = self._displayCtx.getDisplay(self.__currentOverlay)
-            opts    = display.getDisplayOpts()
             
             display.removeListener('overlayType', self._name)
             display.removeListener('name',        self._name)
-
-            if isinstance(opts, displayctx.VolumeOpts):
-                opts.removeListener('transform', self._name)
 
         self.__currentOverlay = None
         fslpanel.FSLEyesPanel.destroy(self)
 
 
     def __selectedOverlayChanged(self, *a):
+        """Called when the :class:`.OverlayList` or
+        :attr:`.DisplayContext.selectedOverlay` changes. Refreshes this
+        ``OverlayDisplayPanel`` so that the display settings for the newly
+        selected overlay are shown.
+        """
 
         overlay     = self._displayCtx.getSelectedOverlay()
         lastOverlay = self.__currentOverlay
@@ -189,13 +136,9 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
            lastOverlay in self._overlayList:
             
             lastDisplay = self._displayCtx.getDisplay(lastOverlay)
-            lastOpts    = lastDisplay.getDisplayOpts()
             
             lastDisplay.removeListener('overlayType', self._name)
             lastDisplay.removeListener('name',        self._name)
-
-            if isinstance(lastOpts, displayctx.VolumeOpts):
-                lastOpts.removeListener('transform', self._name)
 
         if lastOverlay is not None:
             displayExpanded = self.__widgets.IsExpanded('display')
@@ -209,9 +152,6 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
             
         display.addListener('overlayType', self._name, self.__ovlTypeChanged)
         display.addListener('name',        self._name, self.__ovlNameChanged) 
-
-        if isinstance(opts, displayctx.VolumeOpts):
-            opts.addListener('transform', self._name, self.__transformChanged)
         
         self.__widgets.Clear()
         self.__widgets.AddGroup('display', strings.labels[self, display])
@@ -221,7 +161,6 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
         self.__updateWidgets(display, 'display')
         self.__updateWidgets(opts,    'opts')
 
-
         self.__widgets.Expand('display', displayExpanded)
         self.__widgets.Expand('opts',    optsExpanded)
         
@@ -229,6 +168,10 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
 
         
     def __ovlNameChanged(self, *a):
+        """Called when the :attr:`.Display.name` of the current overlay
+        changes. Updates the text label at the top of this
+        ``OverlayDisplayPanel``.
+        """
         
         display = self._displayCtx.getDisplay(self.__currentOverlay)
         self.__overlayName.SetLabel(display.name)
@@ -236,6 +179,11 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
         
 
     def __ovlTypeChanged(self, *a):
+        """Called when the :attr:`.Display.overlayType` of the current overlay
+        changes. Refreshes the :class:`.DisplayOpts` settings which are shown,
+        as a new :class:`.DisplayOpts` instance will have been created for the
+        overlay.
+        """
 
         opts = self._displayCtx.getOpts(self.__currentOverlay)
         self.__updateWidgets(opts, 'opts')
@@ -243,11 +191,25 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
         
 
     def __updateWidgets(self, target, groupName):
+        """Called by the :meth:`__selectedOverlayChanged` and
+        :meth:`__ovlTypeChanged` methods. Re-creates the controls on this
+        ``OverlayDisplayPanel`` for the specified group.
+
+        :arg target:    A :class:`.Display` or :class:`.DisplayOpts` instance,
+                        which contains the properties that controls are to be
+                        created for.
+
+        :arg groupName: Either ``'display'`` or ``'opts'``, corresponding
+                        to :class:`.Display` or :class:`.DisplayOpts`
+                        properties.
+        """
 
         self.__widgets.ClearGroup(groupName)
 
         dispProps = _DISPLAY_PROPS[target]
         labels    = [strings.properties[target, p.key] for p in dispProps]
+        tooltips  = [fsltooltips.properties.get((target, p.key), None)
+                     for p in dispProps]
 
         widgets = []
 
@@ -266,42 +228,21 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
                 
             widgets.append(widget)
 
-        for label, widget in zip(labels, widgets):
+        for label, tooltip, widget in zip(labels, tooltips, widgets):
             self.__widgets.AddWidget(
                 widget,
                 label,
+                tooltip=tooltip, 
                 groupName=groupName)
 
         self.Layout()
 
 
-    def __transformChanged(self, *a):
-        """Called when the transform setting of the currently selected overlay
-        changes.
-
-        If the current overlay has an :attr:`.Display.overlayType` of
-        ``volume``, and the :attr:`.ImageOpts.transform` property has been set
-        to ``affine``, the :attr:`.VolumeOpts.interpolation` property is set to
-        ``spline``.  Otherwise interpolation is disabled.
-        """
-        overlay = self._displayCtx.getSelectedOverlay()
-        display = self._displayCtx.getDisplay(overlay)
-        opts    = display.getDisplayOpts()
-
-        if not isinstance(opts, displayctx.VolumeOpts):
-            return
-
-        choices = opts.getProp('interpolation').getChoices(display)
-
-        if  opts.transform in ('none', 'pixdim'):
-            opts.interpolation = 'none'
-            
-        elif opts.transform == 'affine':
-            if 'spline' in choices: opts.interpolation = 'spline'
-            else:                   opts.interpolation = 'linear'
-
-
     def __buildColourMapWidget(self, cmapWidget):
+        """Creates a control which allows the user to load a custom colour
+        map. This control is added to the settings for :class:`.Image`
+        overlays with a :attr:`.Display.overlayType`  of ``'volume'``.
+        """
 
         action = loadcmap.LoadColourMapAction(self._overlayList,
                                               self._displayCtx)
@@ -317,3 +258,108 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
         sizer.Add(button,     flag=wx.EXPAND)
         
         return sizer
+
+
+def _imageName(img):
+    """Used to generate choice labels for the :attr`.VectorOpts.modulate` and
+    :attr:`.ModelOpts.refImage` properties.
+    """
+    if img is None: return 'None'
+    else:           return img.name
+
+
+_DISPLAY_PROPS = td.TypeDict({
+    'Display' : [
+        props.Widget('name'),
+        props.Widget('overlayType',
+                     labels=strings.choices['Display.overlayType']),
+        props.Widget('enabled'),
+        props.Widget('alpha',      showLimits=False),
+        props.Widget('brightness', showLimits=False),
+        props.Widget('contrast',   showLimits=False)],
+
+    'VolumeOpts' : [
+        props.Widget('resolution',    showLimits=False),
+        props.Widget('volume',
+                     showLimits=False,
+                     enabledWhen=lambda o: o.overlay.is4DImage()),
+        props.Widget('interpolation',
+                     labels=strings.choices['VolumeOpts.interpolation']),
+        props.Widget('cmap'),
+        props.Widget('invert'),
+        props.Widget('invertClipping',
+                     enabledWhen=lambda o, sw: not sw,
+                     dependencies=[(lambda o: o.display, 'softwareMode')]),
+        props.Widget('displayRange',
+                     showLimits=False,
+                     slider=True,
+                     labels=[strings.choices['VolumeOpts.displayRange.min'],
+                             strings.choices['VolumeOpts.displayRange.max']]),
+        props.Widget('clippingRange',
+                     showLimits=False,
+                     slider=True,
+                     labels=[strings.choices['VolumeOpts.displayRange.min'],
+                             strings.choices['VolumeOpts.displayRange.max']])],
+
+    'MaskOpts' : [
+        props.Widget('resolution', showLimits=False),
+        props.Widget('volume',
+                     showLimits=False,
+                     enabledWhen=lambda o: o.overlay.is4DImage()),
+        props.Widget('colour'),
+        props.Widget('invert'),
+        props.Widget('threshold',  showLimits=False)],
+
+    'RGBVectorOpts' : [
+        props.Widget('resolution', showLimits=False),
+        props.Widget('interpolation'),
+        props.Widget('xColour'),
+        props.Widget('yColour'),
+        props.Widget('zColour'),
+        props.Widget('suppressX'),
+        props.Widget('suppressY'),
+        props.Widget('suppressZ'),
+        props.Widget('modulate', labels=_imageName),
+        props.Widget('modThreshold', showLimits=False, spin=False)],
+
+    'LineVectorOpts' : [
+        props.Widget('resolution',    showLimits=False),
+        props.Widget('xColour'),
+        props.Widget('yColour'),
+        props.Widget('zColour'),
+        props.Widget('suppressX'),
+        props.Widget('suppressY'),
+        props.Widget('suppressZ'),
+        props.Widget('directed'),
+        props.Widget('lineWidth', showLimits=False),
+        props.Widget('modulate', labels=_imageName),
+        props.Widget('modThreshold', showLimits=False, spin=False)],
+
+    'ModelOpts' : [
+        props.Widget('colour'),
+        props.Widget('outline'),
+        props.Widget('outlineWidth', showLimits=False),
+        props.Widget('refImage', labels=_imageName),
+        # props.Widget('showName'),
+        props.Widget('coordSpace',
+                     enabledWhen=lambda o, ri: ri != 'none',
+                     dependencies=['refImage'])],
+
+    'LabelOpts' : [
+        props.Widget('lut', labels=lambda l: l.name),
+        props.Widget('outline',
+                     enabledWhen=lambda o, sw: not sw,
+                     dependencies=[(lambda o: o.display, 'softwareMode')]),
+        props.Widget('outlineWidth',
+                     showLimits=False,
+                     enabledWhen=lambda o, sw: not sw,
+                     dependencies=[(lambda o: o.display, 'softwareMode')]),
+        # props.Widget('showNames'),
+        props.Widget('resolution',   showLimits=False),
+        props.Widget('volume',
+                     showLimits=False,
+                     enabledWhen=lambda o: o.overlay.is4DImage())]
+})
+"""This dictionary contains specifications for all controls that are shown on
+an ``OverlayDisplayPanel``.
+"""

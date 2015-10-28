@@ -1,35 +1,13 @@
 #!/usr/bin/env python
 #
-# glvolume_funcs.py - Functions used by the GLVolume class to render 3D images
-#                     in an OpenGL 2.1 compatible manner.
+# glvolume_funcs.py - OpenGL 2.1 functions used by the GLVolume class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""A GLVolume object encapsulates the OpenGL information necessary
-to render 2D slices of a 3D image, in an OpenGL 2.1 compatible manner.
-
-This module is extremely tightly coupled to the fragment shader
-program ``glvolume_frag.glsl``.
-
-This module provides the following functions:
-
- - :func:`init`:              Initialises GL objects and memory buffers.
-
- - :func:`compileShaders`:    Compiles vertex/fragment shaders.
-
- - :func:`updateShaderState`: Refreshes the parameters used by the shader
-                              programs, controlling clipping and interpolation.
-
- - :func:`preDraw`:           Prepares the GL state for drawing.
-
- - :func:`draw`:              Draws the scene.
-
- - :func:`drawAll`:           Draws multiple scenes.
-
- - :func:`postDraw`:          Resets the GL state after drawing.
-
- - :func:`destroy`:           Deletes the vertex and texture coordinate VBOs.
+"""This module provides functions which are used by the :class:`.GLVolume`
+class to render :class:`.Image` overlays in an OpenGL 2.1 compatible manner.
 """
+
 
 import logging
 import ctypes
@@ -45,10 +23,31 @@ import fsl.utils.transform     as transform
 log = logging.getLogger(__name__)
 
 
+def init(self):
+    """Calls :func:`compileShaders` and :func:`updateShaderState`,
+    and creates a GL buffer which will be used to store vertex data.
+    """
+
+    self.shaders = None
+    
+    compileShaders(   self)
+    updateShaderState(self)
+    
+    self.vertexAttrBuffer = gl.glGenBuffers(1)
+                    
+
+def destroy(self):
+    """Cleans up the vertex buffer handle and shader programs."""
+
+    gl.glDeleteBuffers(1, gltypes.GLuint(self.vertexAttrBuffer))
+    gl.glDeleteProgram(self.shaders)
+
+
 def compileShaders(self):
     """Compiles and links the OpenGL GLSL vertex and fragment shader
     programs, and attaches a reference to the resulting program, and
-    all GLSL variables, to the given :class:`.GLVolume` object. 
+    all GLSL variables, as attributes on the given :class:`.GLVolume`
+    object. 
     """
 
     if self.shaders is not None:
@@ -83,25 +82,6 @@ def compileShaders(self):
                                                       'clipHigh')
     self.invertClipPos      = gl.glGetUniformLocation(self.shaders,
                                                       'invertClip')
-
-
-def init(self):
-    """Compiles the vertex and fragment shaders used to render image slices.
-    """
-
-    self.shaders = None
-    
-    compileShaders(   self)
-    updateShaderState(self)
-    
-    self.vertexAttrBuffer = gl.glGenBuffers(1)
-                    
-
-def destroy(self):
-    """Cleans up the vertex buffer handle and shader programs."""
-
-    gl.glDeleteBuffers(1, gltypes.GLuint(self.vertexAttrBuffer))
-    gl.glDeleteProgram(self.shaders)
 
 
 def updateShaderState(self):
@@ -218,8 +198,7 @@ def draw(self, zpos, xform=None):
 
 
 def drawAll(self, zposes, xforms):
-    """Delegates to the default implementation in :meth:`.GLObject.drawAll`.
-    """
+    """Draws all of the specified slices. """
 
     nslices   = len(zposes)
     vertices  = np.zeros((nslices * 6, 3), dtype=np.float32)

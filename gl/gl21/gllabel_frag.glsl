@@ -1,28 +1,59 @@
+/*
+ * OpenGL fragment shader used for rendering GLLabel instances. This
+ * is to be used with the glvolume_vert.glsl vertex shader.
+ *
+ * Author: Paul McCarthy <pauldmccarthy@gmail.com>
+ */
 #version 120
 
 #pragma include edge.glsl
-#pragma include spline_interp.glsl
 #pragma include test_in_bounds.glsl
 
+/*
+ * Texture containing image data.
+ */
 uniform sampler3D imageTexture;
 
+/*
+ * Texture containing lookup table colours.
+ */
 uniform sampler1D lutTexture;
 
-uniform mat4      voxValXform;
+/*
+ * Transformation matrix which transforms image texture data into
+ * its actual data range.
+ */
+uniform mat4 voxValXform;
 
-uniform vec3      imageShape;
+/*
+ * Shape of the image texture.
+ */
+uniform vec3 imageShape;
 
-uniform float     numLabels;
+/*
+ * Total number of colours in the lookup table texture.
+ */
+uniform float numLabels;
 
-uniform bool      useSpline;
+/*
+ * Show outline of labelled regions?
+ */
+uniform bool outline;
 
-uniform bool      outline;
+/*
+ * Width of edges along each axis.
+ */
+uniform vec3 outlineOffsets;
 
-uniform vec3      outlineOffsets;
+/*
+ * Voxel coordinates.
+ */
+varying vec3 fragVoxCoord;
 
-varying vec3      fragVoxCoord;
-
-varying vec3      fragTexCoord;
+/*
+ * Image texture coordinates.
+ */
+varying vec3 fragTexCoord;
 
 
 void main(void) {

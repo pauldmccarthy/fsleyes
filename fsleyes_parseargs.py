@@ -4,41 +4,101 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module encapsulates the logic for parsing command line arguments
-which specify a scene to be displayed in FSLEyes.  This logic is shared
-between fsleyes.py and render.py.
+"""This module encapsulates the logic for parsing command line arguments which
+specify a scene to be displayed in *FSLeyes*.  This logic is shared between
+the :mod:`~fsl.tools.fsleyes` and :mod:`~fsl.tools.render` tools.  This module
+make use of the command line generation features of the :mod:`props` package.
 
-The functions in this module make use of the command line generation
-features of the :mod:`props` package.
 
 There are a lot of command line arguments made available to the user,
 broadly split into the following groups:
 
  - *Main* arguments control the overall scene display, such as the
-   display type (orthographic or lightbox), the displayed location,
+   display type (e.g. orthographic or lightbox), the displayed location,
    and whether to show a colour bar.
 
+
  - *Display* arguments control the display for a single overlay file (e.g.
-   an image), such as interpolation, colour map, etc.
+   a NIFTI1 image), such as interpolation, colour map, etc.
 
-The main entry points of this module are:
 
-  - :func:`parseArgs`:
+This module provides the following functions: 
 
-    Parses command line arguments, and returns an :class:`argparse.Namespace`
-    object.
+.. autosummary::
+   :nosignatures:
 
-  - :func:`handleSceneArgs`:
+   parseArgs
+   applySceneArgs
+   generateSceneArgs
+   generateOverlayArgs
+   applyOverlayArgs
 
-    Configures :class:`.FSLEyesFrame` and :class:`.DisplayContext` instances
-    according to the arguments contained in a given
-    :class:`~argparse.Namespace` object.
 
-  - :func:`handleOverlayArgs`:
+-------------------------------
+Adding new command line options
+-------------------------------
 
-    Loads and configures the display of any overlay files specified by a given
-    :class:`~argparse.Namespace` object.
 
+Most classes in *FSLeyes* derive from the :class:`.HasProperties` class of the
+:mod:`props` package. Therefore, with only a couple of excpetions, the
+processing of nearly all *FSLeyes* command line arguments is completely
+automatic.
+
+Therefore, adding a new command line option is fairly easy.  For example,
+let's say you have added a new property on the :class:`.ModelOpts` class,
+called ``rotation``::
+
+    class ModelOpts(fsldisplay.DisplayOpts):
+        # .
+        # .
+        # .
+        rotation = props.Int(minval=0, maxval=360, clamped=True)
+        # .
+        # .
+        # .
+
+To make this new propery settable via the command line, you need to:
+
+  1. Add an entry to the :data:`OPTIONS` dictionary::
+
+         OPTIONS = td.TypeDict({
+             # .
+             # .
+             # .
+             'ModelOpts'      : ['colour',
+                                 'outline',
+                                 'outlineWidth',
+                                 'refImage',
+                                 'rotation'],
+             # .
+             # .
+             # .
+         })
+
+  2. Specify the command line flags to use, in the :data:`ARGUMENTS`
+     dictionary::
+
+         ARGUMENTS = td.TypeDict({
+             # .
+             # .
+             # .
+             'ModelOpts.rotation' : ('mr', 'modelRotation'),
+             # .
+             # .
+             # .
+         })
+
+  3. Add a description in the :data:`HELP` dictionary::
+
+         HELP = td.TypeDict({
+             # .
+             # .
+             # .
+             'ModelOpts.rotation' : 'Rotate the model by this much',
+             # .
+             # .
+             # .
+         })
 """
 
 import sys
@@ -66,8 +126,10 @@ log = logging.getLogger(__name__)
 
 
 def concat(lists):
-    """Concatenates a list of lists. Used a few times, and writing
-    concat(lists) is nicer-looking than writing lambda blah blah each time.
+    """Concatenates a list of lists.
+
+    This function is used a few times, and writing concat(lists) is
+    nicer-looking than writing lambda blah blah each time.
     """
     return reduce(lambda a, b: a + b, lists)
 
@@ -147,6 +209,14 @@ OPTIONS = td.TypeDict({
                         'outline',
                         'outlineWidth'],
 })
+"""This dictionary defines all of the options which are exposed on the command
+line.
+
+With the exception of ``Main``, every key is the name of a
+:class:`.HasProperties` class, and the list of values are the names of
+properties on that class.
+"""
+
 
 # Headings for each of the option groups
 GROUPNAMES = td.TypeDict({
@@ -164,6 +234,10 @@ GROUPNAMES = td.TypeDict({
     'ModelOpts'      : 'Model options',
     'LabelOpts'      : 'Label options',
 })
+"""Command line arguments are grouped according to the class to which
+they are applied (see the :data:`ARGUMENTS` dictionary). This dictionary
+defines descriptions for ecah command line group.
+"""
 
 # Short/long arguments for all of those options
 # 
@@ -252,6 +326,18 @@ ARGUMENTS = td.TypeDict({
     'LabelOpts.outline'      : ('lo',  'labelOutline'),
     'LabelOpts.outlineWidth' : ('lw',  'labelOutlineWidth'),
 })
+"""This dictionary defines the short and long command line flags to be used
+for every option.
+
+.. note:: 1. There cannot be any collisions between the main options, the 
+             :class:`.SceneOpts` options, the :class:`.OrthOpts` options,
+             and the :class:`.LightBoxOpts` options.
+
+          2. There cannot be any collisions between the :class:`.Display`
+             options and any of the :class:`.DisplayOpts` options.
+
+          3. There *can* be collisions between these two groups though.
+"""
 
 # Help text for all of the options
 HELP = td.TypeDict({
@@ -342,6 +428,7 @@ HELP = td.TypeDict({
     'LabelOpts.outline'      : 'Show label outlines',
     'LabelOpts.outlineWidth' : 'Label outline width', 
 })
+"""This dictionary defines the help text for all command line options."""
 
 
 # Extra settings for some properties, passed through 
@@ -362,7 +449,10 @@ EXTRA = td.TypeDict({
         'choices'       : [],
         'useAlts'       : True
     }
-}) 
+})
+"""This dictionary defines any extra settings to be passed through
+to the :func:`.props.addParserArguments` function.
+"""
 
 # Transform functions for properties where the
 # value passed in on the command line needs to
@@ -399,6 +489,10 @@ TRANSFORMS = td.TypeDict({
 
     'LabelOpts.lut'         : _lutTrans,
 })
+"""This dictionary defines any transformations for command line options
+where the value passed on the command line cannot be directly converted
+into the corresponding property value.
+"""
 
 
 def _configMainParser(mainParser):
@@ -406,10 +500,10 @@ def _configMainParser(mainParser):
     to the scene. This function configures the following argument
     groups:
     
-      - *Main*:          Top level optoins
-      - *ColourBar*:     Colour bar related options
-      - *OrthoPanel*:    Options related to setting up a orthographic display
-      - *LightBoxPanel*: Options related to setting up a lightbox display
+      - *Main*:         Top level optoins
+      - *SceneOpts*:    Common scene options
+      - *OrthoOpts*:    Options related to setting up a orthographic display
+      - *LightBoxOpts*: Options related to setting up a lightbox display
     """
 
     mainParser.add_argument('-h',  '--help',
@@ -453,6 +547,9 @@ def _configMainParser(mainParser):
 
 
 def _configParser(target, parser, propNames=None):
+    """Configures the given parser so it will parse arguments for the
+    given target.
+    """
 
     if propNames is None:
         propNames = OPTIONS[target]
@@ -485,14 +582,14 @@ def _configParser(target, parser, propNames=None):
 
 def _configSceneParser(sceneParser):
     """Adds options to the given argument parser which allow
-    the user to specify colour bar properties.
+    the user to specify :class:`.SceneOpts` properties.
     """
     _configParser(fsldisplay.SceneOpts, sceneParser)
    
 
 def _configOrthoParser(orthoParser):
     """Adds options to the given parser allowing the user to
-    configure an orthographic display.
+    configure :class:`.OrthoOpts` properties.
     """
 
     OrthoOpts = fsldisplay.OrthoOpts
@@ -520,7 +617,7 @@ def _configOrthoParser(orthoParser):
 
 def _configLightBoxParser(lbParser):
     """Adds options to the given parser allowing the user to
-    configure a lightbox display.
+    configure :class:`.LightBoxOpts` properties.
     """    
     _configParser(fsldisplay.LightBoxOpts, lbParser)
 
@@ -616,7 +713,8 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
       - argv:         The arguments as passed in on the command line.
     
       - name:         The name of the tool - this function might be called by
-                      either the ``fsleyes`` tool or the ``render`` tool.
+                      either the :mod:`~fsl.tools.fsleyes` tool or the
+                      :mod:`~fsl.tools.render` tool.
     
       - desc:         A description of the tool.
     
@@ -696,7 +794,10 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
     # the program to exit
     def ovlArgError(message):
         raise RuntimeError(message)
-    
+
+    # The argparse internals are completely inconfigurable,
+    # and completely undocumented. Here, I'm monkey-patching
+    # the overlay parser error handler 
     ovlParser.error = ovlArgError
 
     _configOverlayParser(ovlParser)
@@ -709,7 +810,7 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
     # Make a list of all the options which
     # accept filenames, and which we need
     # to account for when we're searching
-    # for overaly files, flattening the
+    # for overlay files, flattening the
     # short/long arguments into a 1D list.
     fileOpts = []
 
@@ -718,19 +819,20 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
     # by which the vector image colours are
     # to be modulated. The same goes for the
     # ModelOpts.refImage option
-    fileOpts.append(ARGUMENTS[fsldisplay.VectorOpts, 'modulate'])
-    fileOpts.append(ARGUMENTS[fsldisplay.ModelOpts,  'refImage']) 
+    fileOpts.extend(ARGUMENTS[fsldisplay.VectorOpts, 'modulate'])
+    fileOpts.extend(ARGUMENTS[fsldisplay.ModelOpts,  'refImage']) 
 
     # There is a possibility that the user
     # may specify an overlay name which is the
     # same as the overlay file - so we make
     # sure that such situations don't result
     # in an overlay file match.
-    fileOpts.append(ARGUMENTS[fsldisplay.Display, 'name'])
+    fileOpts.extend(ARGUMENTS[fsldisplay.Display, 'name'])
 
-    fileOpts = reduce(lambda a, b: list(a) + list(b), fileOpts, [])
-
+    # Compile a list of arguments which
+    # look like overlay file names
     ovlIdxs = []
+    
     for i in range(len(argv)):
 
         # See if the current argument looks like a data source
@@ -855,8 +957,7 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
 
     :arg displayCtx:  A :class:`.DisplayContext` instance.
 
-    :arg sceneOpts:
-
+    :arg sceneOpts:   A :class:`.SceneOpts` instance.
     """
     
     # First apply all command line options
@@ -890,6 +991,14 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
 def generateSceneArgs(overlayList, displayCtx, sceneOpts, exclude=None):
     """Generates command line arguments which describe the current state of
     the provided ``displayCtx`` and ``sceneOpts`` instances.
+
+    :arg overlayList: A :class:`.OverlayList` instance.
+
+    :arg displayCtx:  A :class:`.DisplayContext` instance.
+
+    :arg sceneOpts:   A :class:`.SceneOpts` instance.
+    
+    :arg exclude:     A list of property names to exclude.
     """
 
     if exclude is None:
@@ -923,6 +1032,11 @@ def generateSceneArgs(overlayList, displayCtx, sceneOpts, exclude=None):
 def generateOverlayArgs(overlay, displayCtx):
     """Generates command line arguments which describe the display
     of the current overlay.
+
+
+    :arg overlay:    An overlay object.
+
+    :arg displayCtx: A :class:`.DisplayContext` instance.
     """
     display = displayCtx.getDisplay(overlay)
     opts    = display   .getDisplayOpts()

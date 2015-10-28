@@ -4,20 +4,25 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module defines the :class:`VectorOpts` class, which contains display
-options for rendering :class:`.GLVector` instances.
+"""This module provides the :class:`VectorOpts`, :class:`LineVectorOpts`, and
+:class:`RGBVectorOpts` classes, which contain options for displaying NIFTI1
+vector images.
 """
+
 
 import copy
 
 import props
 
-import fsl.data.image   as fslimage
-import fsl.data.strings as strings
-import                     volumeopts
+import fsl.data.image as fslimage
+import                   volumeopts
 
 
 class VectorOpts(volumeopts.ImageOpts):
+    """The ``VectorOpts`` class is the base class for :class:`LineVectorOpts` and
+    :class:`RGBVectorOpts`. It contains display settings which are common to
+    both.
+    """
 
 
     xColour = props.Colour(default=(1.0, 0.0, 0.0))
@@ -45,20 +50,25 @@ class VectorOpts(volumeopts.ImageOpts):
 
 
     modulate  = props.Choice()
-    """Modulate the vector colours by another image."""
+    """Modulate the vector colours by another image. Any image which is in the
+     :class:`.OverlayList`, and which has the same voxel dimensions as the
+     vector image can be selected for modulation.
+    """
 
     
     # TODO This is currently a percentage
     # of the modulation image data range.
     # It should be an absolute value
     modThreshold = props.Percentage(default=0.0)
-    """Hide voxels for which the modulation value is below this threshold."""
+    """Hide voxels for which the modulation value is below this threshold,
+    as a percentage of the :attr:`modulate` image data range.
+    """
 
     
     def __init__(self, *args, **kwargs):
-        """Create a ``VectorOpts`` instance for the given image.
-
-        See the :class:`.ImageOpts` documentation for more details.
+        """Create a ``VectorOpts`` instance for the given image.  All
+        arguments are passed through to the :class:`.ImageOpts`
+        constructor.
         """
         
         volumeopts.ImageOpts.__init__(self, *args, **kwargs)
@@ -71,6 +81,9 @@ class VectorOpts(volumeopts.ImageOpts):
 
 
     def destroy(self):
+        """Removes some property listeners, and calls the
+        :meth:`.ImageOpts.destroy` method.
+        """
         self.overlayList.removeListener('overlays', self.name)
 
         for overlay in self.overlayList:
@@ -81,7 +94,7 @@ class VectorOpts(volumeopts.ImageOpts):
 
         
     def __overlayListChanged(self, *a):
-        """Called when the overlay list changes. Updates the ``modulate``
+        """Called when the overlay list changes. Updates the :attr:`modulate`
         property so that it contains a list of overlays which could be used
         to modulate the vector image.
         """
@@ -96,8 +109,7 @@ class VectorOpts(volumeopts.ImageOpts):
             self.overlayList.removeListener('overlays', self.name)
             return
 
-        modOptions = ['none']
-        modLabels  = [strings.choices['VectorOpts.modulate.none']]
+        modOptions = [None]
 
         for overlay in overlays:
             
@@ -118,31 +130,38 @@ class VectorOpts(volumeopts.ImageOpts):
                 continue
 
             modOptions.append(overlay)
-            modLabels .append(overlay.name)
                 
             overlay.addListener('name',
                                 self.name,
                                 self.__overlayListChanged,
                                 overwrite=True)
             
-        modProp.setChoices(modOptions, labels=modLabels, instance=self)
+        modProp.setChoices(modOptions, instance=self)
 
         if modVal in overlays: self.modulate = modVal
-        else:                  self.modulate = 'none'
+        else:                  self.modulate = None
 
 
 class LineVectorOpts(VectorOpts):
+    """The ``LineVectorOpts`` class contains settings for displaying vector
+    images, using a line to represent the vector value at each voxel.
+    """
 
+    
     lineWidth = props.Int(minval=1, maxval=10, default=1)
-
-    directed  = props.Boolean(default=False)
+    """Width of the line in pixels.
     """
 
-    The directed property cannot be unbound across multiple LineVectorOpts
-    instances, as it affects the OpenGL representation
+    directed = props.Boolean(default=False)
+    """If ``True``, the vector data is interpreted as directed. Otherwise,
+    the vector data is assumed to be undirected.
     """
 
+    
     def __init__(self, *args, **kwargs):
+        """Create a ``LineVectorOpts`` instance. All arguments are passed
+        through  to the :class:`VectorOpts` constructor.
+        """
 
         kwargs['nounbind'] = ['directed']
 
@@ -151,5 +170,9 @@ class LineVectorOpts(VectorOpts):
 
 
 class RGBVectorOpts(VectorOpts):
+    """The ``RGBVectorOpts`` class contains settings for displaying vector
+    images, using a combination of three colours to represent the vector value
+    at each voxel.
+    """
 
     interpolation = copy.copy(volumeopts.VolumeOpts.interpolation)

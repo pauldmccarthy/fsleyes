@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# histogramlistpanel.py -
+# histogramlistpanel.py - The HistogramListPanel class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`HistogramListPanel` class, which
+is a *FSLeyes control* panel for use with :class:`.HistogramPanel` views.
+"""
 
 
 import wx
@@ -16,8 +19,34 @@ import                           timeserieslistpanel
     
 
 class HistogramListPanel(fslpanel.FSLEyesPanel):
+    """The ``HistogramListPanel`` is a control panel for use with the
+    :class:`.HistogramPanel` view. It allows the user to add/remove
+    :class:`.HistogramSeries` plots to/from the :class:`.HistogramPanel`,
+    and to configure the display settings for each. A ``HistogramListPanel``
+    looks something like this:
 
+    .. image:: images/histogramlistpanel.png
+       :scale: 50%
+       :align: center
+
+    
+    The ``HistogramListPanel`` performs the same task for the
+    :class:`.HistogramPanel` that the :class:`.TimeSeriesListPanel` does for
+    the :class:`.TimeSeriesPanel`. For each :class:`.HistogramSeries` that is
+    in the :attr:`.PlotPanel.dataSeries` list of the :class:`.HistogramPanel`,
+    a :class:`.TimeSeriesWidget` control is added to a
+    :class:`pwidgets.EditableListBox`.
+    """
+
+    
     def __init__(self, parent, overlayList, displayCtx, histPanel):
+        """Create a ``HistogramListPanel``.
+
+        :arg parent:      The :mod:`wx` parent object.
+        :arg overlayList: The :class:`.OverlayList` instance.
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg histPanel:   The :class:`.HistogramPanel` instance. 
+        """
 
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
@@ -45,15 +74,26 @@ class HistogramListPanel(fslpanel.FSLEyesPanel):
 
         
     def destroy(self):
+        """Must be called when this ``HistogramListPanel`` is no longer needed.
+        Removes some property listeners, and calls the
+        :meth:`.FSLEyesPanel.destroy` method.
+        """
         self.__hsPanel.removeListener('dataSeries', self._name)
         fslpanel.FSLEyesPanel.destroy(self)
 
 
     def getListBox(self):
+        """Returns the :class:`pwidgets.EditableListBox` instance contained
+        within this ``HistogramListPanel``.
+        """
         return self.__hsList
 
 
     def __histSeriesChanged(self, *a):
+        """Called when the :attr:`.PlotPanel.dataSeries` list of the
+        :class:`.HistogramPanel` changes. Refreshes the contents of the
+        :class:`pwidgets.EditableListBox`.
+        """
 
         self.__hsList.Clear()
 
@@ -69,6 +109,10 @@ class HistogramListPanel(fslpanel.FSLEyesPanel):
         
     
     def __onListAdd(self, ev):
+        """Called when the user pushes the *add* button on the
+        :class:`pwidgets.EditableListBox`. Adds the *current* histogram plot
+        to the list (see the :class:`.HistogramPanel` class documentation).
+        """
         hs = self.__hsPanel.getCurrent()
 
         if hs is None:
@@ -85,16 +129,31 @@ class HistogramListPanel(fslpanel.FSLEyesPanel):
 
         
     def __onListEdit(self, ev):
+        """Called when the user edits a label on the
+        :class:`pwidgets.EditableListBox`. Updates the
+        :attr:`.DataSeries.label` property of the corresponding
+        :class:`.HistogramSeries` instance.
+        """ 
         ev.data.label = ev.label
 
         
     def __onListSelect(self, ev):
+        """Called when the user selects an item in the
+        :class:`pwidgets.EditableListBox`. Sets the
+        :attr:`.DisplayContext.selectedOverlay` to the overlay associated with
+        the corresponding :class:`.HistogramSeries` instance.
+        """ 
         overlay = ev.data.overlay
         self._displayCtx.selectedOverlay = self._overlayList.index(overlay)
         self.__hsPanel.selectedSeries = ev.idx
 
         
     def __onListRemove(self, ev):
+        """Called when the user removes an item from the
+        :class:`pwidgets.EditableListBox`. Removes the corresponding
+        :class:`.HistogramSeries` instance from the
+        :attr:`.PlotPanel.dataSeries` list of the :class:`.HistogramPanel`.
+        """ 
         self.__hsPanel.dataSeries.remove(ev.data)
         self.__hsPanel.selectedSeries = self.__hsList.GetSelection()
         ev.data.destroy()

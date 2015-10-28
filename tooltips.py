@@ -1,16 +1,31 @@
 #!/usr/bin/env python
 #
-# tooltips.py - Tooltips for FSLEyes.
+# tooltips.py - Tooltips for FSLeyes.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module contains tooltips  used throughout FSLEyes. """
+"""This module contains tooltips used throughout *FSLeyes*.
+
+Tooltips are stored in :class:`.TypeDict` dictionariesa, broadly organised
+into the following categories:
+
+ ================== ================================================
+ :data:`properties` Tooltips for ``props.HasProperties`` properties.
+ :data:`actions`    Tooltips for :class:`.ActionProvider` actions.
+ :data:`misc`       Tooltips for everything else.
+ ================== ================================================
+"""
 
 
 from fsl.utils.typedict import TypeDict
 
 
 properties = TypeDict({
+
+    # DisplayContext
+
+    'DisplayContext.displaySpace' : 'The space in which overlays are '
+                                    'displayed.',
 
     # Overlay Display
     
@@ -152,6 +167,8 @@ properties = TypeDict({
 
     'SceneOpts.showCursor'         : 'Show/hide the cursor which highlights '
                                      'the current location.',
+    'SceneOpts.cursorColour'       : 'Colour of the location cursor.',
+    'SceneOpts.bgColour'           : 'Canvas background colour.',
     'SceneOpts.showColourBar'      : 'If the currently selected overlay is a '
                                      'volumetric image, show a colour bar '
                                      'depicting the colour/data display '
@@ -167,8 +184,8 @@ properties = TypeDict({
                                      'some older systems.',
 
     'OrthoOpts.showXCanvas' : 'Show / hide the X canvas.',
-    'OrthoOpts.showYCanvas' : 'Show / hide the X canvas.',
-    'OrthoOpts.showZCanvas' : 'Show / hide the X canvas.',
+    'OrthoOpts.showYCanvas' : 'Show / hide the Y canvas.',
+    'OrthoOpts.showZCanvas' : 'Show / hide the Z canvas.',
     'OrthoOpts.showLabels'  : 'If the currently selected overlay is a NIFTI1 '
                               'image, show / hide anatomical orientation '
                               'labels.',
@@ -193,8 +210,6 @@ properties = TypeDict({
                                     'the currently selected slice.',
 
     # ViewPanels
-
-    'ViewPanel.profile' : '',
 
     'CanvasPanel.syncLocation'       : 'If checked, the location shown on '
                                        'this panel will be linked to the '
@@ -240,11 +255,19 @@ properties = TypeDict({
     'TimeSeriesPanel.usePixdim'        : 'If checked, the x axis data is '
                                          'scaled by the time dimension pixdim '
                                          'value specified in the NIFTI1 '
-                                         'header.', 
-    'TimeSeriesPanel.showCurrent'      : 'Show / hide the time series for the '
-                                         'currently selected overlay.',
-    'TimeSeriesPanel.showAllCurrent'   : 'Show the time series for all '
-                                         'compatible overlays.',
+                                         'header.',
+    'TimeSeriesPanel.plotMelodicICs'   : 'If checked, the component time '
+                                         'courses are plotted for Melodic '
+                                         'images. If not checked, Melodic '
+                                         'images are treated as regular 4D '
+                                         'images.',
+    'TimeSeriesPanel.showMode'         : 'Choose which time series to plot - '
+                                         'you can choose to plot the time '
+                                         'series for the currently selected '
+                                         'overlay, the time series for all '
+                                         'compatible overlays, or just those '
+                                         'that have been added to the time '
+                                         'series list.',
     'TimeSeriesPanel.plotMode'         : 'Plotting mode. You can choose to: '
                                          '\n  - Display the data as-is.'
                                          '\n  - Remove the temporal mean from '
@@ -285,9 +308,9 @@ properties = TypeDict({
                                         'time courses.',
     'FEATTimeSeries.plotPEFits'       : 'Plot the model fit to each PE '
                                         '(parameter estimate).',
-    'FEATTimeSeries.plotCOPEFits'     : 'Plot the model fit to each COPE'
+    'FEATTimeSeries.plotCOPEFits'     : 'Plot the model fit to each COPE '
                                         '(Contrast of Parameter Estimates).',
-    'FEATTimeSeries.plotReduced'      : 'Plot the raw data, after regression '
+    'FEATTimeSeries.plotPartial'      : 'Plot the raw data, after regression '
                                         'against the selected PE/COPE.',
 
     'HistogramSeries.nbins'           : 'Number of bins to use in the '
@@ -309,13 +332,14 @@ properties = TypeDict({
 
     # Profiles
 
+    'OrthoPanel.profile'                      : 'Switch between view mode '
+                                                'and edit mode',
     'OrthoEditProfile.selectionSize'          : 'Size (in voxels) of the '
                                                 'selection region.',
-    'OrthoEditProfile.selectionIs3D'          : 'If checked, the selection '
-                                                'region will be a 3D cube; '
-                                                'otherwise, it will be a' 
-                                                'square in the plane of the '
-                                                'active canvas.' ,
+    'OrthoEditProfile.selectionIs3D'          : 'Choose between a 2D square '
+                                                'selection in the plane of '
+                                                'the active canvas, or a 3D '
+                                                'cube.',
     'OrthoEditProfile.selectionCursorColour'  : 'Colour to use for the '
                                                 'selection cursor.', 
     'OrthoEditProfile.selectionOverlayColour' : 'Colour to use to highlight '
@@ -329,25 +353,49 @@ properties = TypeDict({
                                                 'values for the purpose of '
                                                 'the search.',
     'OrthoEditProfile.localFill'              : 'If selecting by intensity, '
-                                                'voxels must be adjacent to '
-                                                'an already selected voxel '
-                                                'to be conxidered in the '
-                                                'search. Otherwise, all '
-                                                'voxels in the search radius '
-                                                'are considered.',
+                                                'only select voxels which are '
+                                                'adjacent to an already  '
+                                                'selected voxel',
+    'OrthoEditProfile.limitToRadius'          : 'If selecting by intensity, '
+                                                'limit the search to a sphere '
+                                                'of the specified radius.',
     'OrthoEditProfile.searchRadius'           : 'Limit the search to the '
-                                                'specified radius.', 
+                                                'specified radius.',
+
+    'OrthoEditToolBar.selint' : 'Select voxels based on similar intensities',
 })
 
 
 actions = TypeDict({
+    'CanvasPanel.screenshot'        : 'Take a screenshot of the current scene',
+    
+    'OrthoToolBar.more'             : 'Show more view control settings',
+    'LightBoxToolBar.more'          : 'Show more view control settings',
 
+    'OrthoViewProfile.resetZoom'    : 'Reset zoom level to 100%',
+    'OrthoViewProfile.centreCursor' : 'Reset location to centre of scene',
 
+    'OrthoEditProfile.undo'                    : 'Undo the most recent action',
+    'OrthoEditProfile.redo'                    : 'Redo the most recent '
+                                                 'undone action',
+    'OrthoEditProfile.fillSelection'           : 'Fill the selection with '
+                                                 'the current fill value',
+    'OrthoEditProfile.clearSelection'          : 'Clear the current selection',
+    'OrthoEditProfile.createMaskFromSelection' : 'Create a new mask overlay '
+                                                 'from the current selection',
+    'OrthoEditProfile.createROIFromSelection'  : 'Create a new ROI overlay '
+                                                 'from the current selection',
+
+    'VolumeOpts.resetDisplayRange' : 'Reset the display range '
+                                     'to the data range.',
+    
+    'OverlayDisplayToolBar.more' : 'Show more overlay display settings.',
 })
 
 
 
 misc = TypeDict({
-
-
+    'PlotPanel.labels' : 'X/Y axis labels.',
+    'PlotPanel.xlim'   : 'X axis data limits.',
+    'PlotPanel.ylim'   : 'Y axis data limits.'
 })

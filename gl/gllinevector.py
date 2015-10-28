@@ -1,9 +1,19 @@
 #!/usr/bin/env python
 #
-# gllinevector.py - Displays vector data as lines.
+# gllinevector.py - The GLLineVector class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`GLLineVector` class, for displaying 3D
+vector :class:`.Image` overlays in line mode.
+
+
+The :class:`.GLLineVertices` class is also defined in this module, and is
+used in certain rendering situations - when running in OpenGL 1.4, and
+when running in *software* (a.k.a. low performance) mode, in OpenGL 2.1. See
+the :mod:`.gl14.gllinevector_funcs` and :mod:`.gl21.gllinevector_funcs`
+modules for more details.
+"""
 
 import logging
 
@@ -17,15 +27,162 @@ import fsl.fsleyes.gl.routines as glroutines
 
 log = logging.getLogger(__name__)
 
+
+class GLLineVector(glvector.GLVector):
+    """The ``GLLineVector`` class encapsulates the logic required to render a
+    ``x*y*z*3`` :class:`.Image` instance as a vector image, where the vector
+    at each voxel is drawn as a line, and coloured in the same way that voxels
+    in the :class:`.GLRGBVector` are coloured.  The ``GLLineVector`` class
+    assumes that the :class:`.Display` instance associated with the ``Image``
+    overlay holds a reference to a :class:`.LineVectorOpts` instance, which
+    contains ``GLLineVector``-specific display settings.  The ``GLLineVector``
+    class is a sub-class of the :class:`.GLVector` class, and uses the
+    functionality provided by ``GLVector``.
+
+
+    In a similar manner to the :class:`.GLRGBVector`, the ``GLLineVector`` uses
+    two OpenGL version-specific modules, the :mod:`.gl14.gllinevector_funcs`
+    and :mod:`.gl21.gllinevector_funcs` modules. It is assumed that these
+    modules define the same functions that are defined by the
+    :class:`.GLRGBVector` version specific modules.
+
+    
+    A ``GLLineVector`` instance is rendered in different ways depending upon
+    the rendering environment, so most of the rendering functionality is
+    implemented in the version-specific modules mentioned above.
+    """
+
+
+    def __init__(self, image, display):
+        """Create a ``GLLineVector`` instance.
+
+        :arg image:   The :class:`.Image` instance.
+
+        :arg display: The associated :class:`.Display` instance.
+        """
+        
+        glvector.GLVector.__init__(self, image, display)
+        
+        fslgl.gllinevector_funcs.init(self)
+
+        def update(*a):
+            self.onUpdate()
+
+        self.displayOpts.addListener(
+            'lineWidth', self.name, update, weak=False)
+
+        
+    def destroy(self):
+        """Must be called when this ``GLLineVector`` is no longer needed.
+        Removes some property listeners from the :class:`.LineVectorOpts`
+        instance, calls the OpenGL version-specific ``destroy``
+        function, and calls the :meth:`.GLVector.destroy` method.
+        """ 
+        self.displayOpts.removeListener('lineWidth', self.name)
+        fslgl.gllinevector_funcs.destroy(self)
+        glvector.GLVector.destroy(self)
+
+
+    def getDataResolution(self, xax, yax):
+        """Overrides :meth:`.GLImageObject.getDataResolution`. Returns a pixel
+        resolution suitable for rendering this ``GLLineVector``.
+        """
+
+        res       = list(glvector.GLVector.getDataResolution(self, xax, yax))
+        res[xax] *= 16
+        res[yax] *= 16
+        
+        return res
+
+
+    def compileShaders(self):
+        """Overrides :meth:`.GLVector.compileShaders`. Calls the OpenGL
+        version-specific ``compileShaders`` function.
+        """
+        fslgl.gllinevector_funcs.compileShaders(self)
+        
+
+    def updateShaderState(self):
+        """Overrides :meth:`.GLVector.updateShaderState`. Calls the OpenGL
+        version-specific ``updateShaderState`` function.
+        """ 
+        fslgl.gllinevector_funcs.updateShaderState(self)
+ 
+
+    def preDraw(self):
+        """Overrides :meth:`.GLVector.preDraw`. Calls the base class
+        implementation, and then calls the OpenGL version-specific ``preDraw``
+        function. 
+        """ 
+        glvector.GLVector.preDraw(self)
+        fslgl.gllinevector_funcs.preDraw(self)
+
+
+    def draw(self, zpos, xform=None):
+        """Overrides :meth:`.GLObject.draw`. Calls the OpenGL version-specific
+        ``draw`` function.
+        """         
+        fslgl.gllinevector_funcs.draw(self, zpos, xform)
+
+    
+    def drawAll(self, zposes, xforms):
+        """Overrides :meth:`.GLObject.drawAll`. Calls the OpenGL
+        version-specific ``drawAll`` function.
+        """         
+        fslgl.gllinevector_funcs.drawAll(self, zposes, xforms) 
+
+    
+    def postDraw(self):
+        """Overrides :meth:`.GLVector.postDraw`. Calls the base class
+        implementation, and then calls the OpenGL version-specific ``postDraw``
+        function. 
+        """         
+        glvector.GLVector.postDraw(self)
+        fslgl.gllinevector_funcs.postDraw(self) 
+
+
 class GLLineVertices(object):
+    """The ``GLLineVertices`` class is used in some cases when rendering a
+    :class:`GLLineVector`. It contains logic to generate vertices for every
+    vector in the vector :class:`.Image` that is being displayed by a
+    ``GLLineVector`` instance.
+
+    
+    After a ``GLLineVertices`` instance has been created, the :meth:`refresh`
+    method can be used to generate line vector vertices and texture
+    coordinates for every voxel in the :class:`Image`. These vertices and
+    coordinates are stored as attributes of the ``GLLineVertices`` instance.
+
+
+    Later, when the line vectors from a 2D slice  of the image need to be
+    displayed, the :meth:`getVertices` method can be used to extract the
+    vertices and coordinates from the slice.
+
+
+    A ``GLLineVertices`` instance is not associated with a specific
+    ``GLLineVector`` instance. This is so that a single  ``GLLineVertices``
+    instance can be shared between more than one ``GLLineVector``, avoiding
+    the need to store multiple copies of the vertices and texture
+    coordinates. This means that a ``GLLineVector`` instance needs to be
+    passed to most of the methods of a ``GLLineVertices`` instance.
+    """
     
     def __init__(self, glvec):
-        
+        """Create a ``GLLineVertices``. Vertices are calculated for the
+        given :class:`.GLLineVector` instance.
+
+        :arg glvec: A :class:`GLLineVector` which is using this
+                    ``GLLineVertices`` instance.
+        """
+
         self.__hash = None
         self.refresh(glvec)
 
 
     def destroy(self):
+        """Should be called when this ``GLLineVertices`` instance is no
+        longer needed. Clears references to cached vertices/coordinates.
+        """
         self.vertices  = None
         self.texCoords = None
         self.starts    = None
@@ -33,10 +190,62 @@ class GLLineVertices(object):
 
         
     def __hash__(self):
+        """Returns a hash of this ``GLLineVertices`` instance. The hash value
+        is calculated and cached on every call to :meth:`refresh`, using the
+        :meth:`calculateHash` method.  This method returns that cached value.
+        """
         return self.__hash
+
+
+    def calculateHash(self, glvec):
+        """Calculates and returns a hash value that can be used to determine
+        whether the vertices of this this ``GLLineVertices`` instance need to
+        be recalculated. The hash value is based on some properties of the
+        :class:`.LineVectorOpts` instance, associated with the given
+        :class:`.GLLineVector`.
+
+        For a ``GLLineVertices`` instance called ``verts``, if the following
+        test::
+
+            hash(verts) != verts.calculateHash(glvec)
+
+        evaluates to ``False``, the vertices need to be refreshed (via a
+        call to :meth:`refresh`).
+        """
+        opts = glvec.displayOpts
+        return (hash(opts.transform)  ^
+                hash(opts.resolution) ^
+                hash(opts.directed)) 
 
         
     def refresh(self, glvec):
+        """(Re-)calculates the vertices and texture coordinates of this
+        ``GLLineVertices`` instance.
+
+        For each voxel, in the :class:`.Image` overlay being displayed by the
+        :class:`GLLineVector` associated with this ``GLLineVertices``
+        instance, two vertices are generated, which define a line that
+        represents the vector at the voxel.
+
+        Texture coordinates are also generated for every vertex, corresponding
+        to the centre of the associated voxel.
+
+        The vertices are stored as a :math:`X\\times Y\\times Z\\times
+        2\\times 3` ``numpy`` array, as an attribute of this instance,
+        called ``vertices``. The texture coordinates are stored as a
+        ``numpy`` array of the same shape, as an attribute called
+        ``texCoords``.
+
+        .. note:: The vertex/texture coordinate generation takes into
+                  account the current value of the
+                  :attr:`.ImageOpts.resolution` property of the
+                  :class:`.LineVectorOpts` instance; if this is set to
+                  something other than the image resolution, the
+                  sub-sampled starting indices and steps are stored
+                  as attributes ``starts`` and ``steps`` respectively.
+                  See the :func:`.routines.subsample` function for more
+                  details.
+        """
 
         opts  = glvec.displayOpts
         image = glvec.image
@@ -107,12 +316,17 @@ class GLLineVertices(object):
         self.texCoords = texCoords
         self.starts    = starts
         self.steps     = steps
-        self.__hash    = (hash(opts.transform)  ^
-                          hash(opts.resolution) ^
-                          hash(opts.directed))
+        self.__hash    = self.calculateHash(glvec)
  
 
-    def getVertices(self, glvec, zpos):
+    def getVertices(self, zpos, glvec):
+        """Extracts and returns a slice of line vertices, and the associated
+        texture coordinates, which are in a plane located at the given
+        Z position (in display coordinates).
+
+        This method assumes that the :meth:`refresh` method has already been
+        called.
+        """
 
         opts  = glvec.displayOpts
         image = glvec.image
@@ -127,7 +341,7 @@ class GLLineVertices(object):
         
         # If in id/pixdim space, the display
         # coordinate system axes are parallel
-        # to the voxeld coordinate system axes
+        # to the voxel coordinate system axes
         if opts.transform in ('id', 'pixdim'):
 
             # Turn the z position into a voxel index
@@ -171,10 +385,10 @@ class GLLineVertices(object):
 
             # The voxel vertex matrix may have
             # been sub-sampled (see the
-            # generateLineVertices method),
-            # so we need to transform the image
-            # data voxel coordinates to the
-            # sub-sampled data voxel coordinates.
+            # refresh method), so we need to
+            # transform the image data voxel
+            # coordinates to the sub-sampled
+            # data voxel coordinates.
             coords = (coords - starts) / steps
             
             # remove any out-of-bounds voxel coordinates
@@ -189,61 +403,3 @@ class GLLineVertices(object):
         texCoords = texCoords[coords[0], coords[1], coords[2], :, :]
         
         return vertices, texCoords
-
-
-class GLLineVector(glvector.GLVector):
-
-
-    def __init__(self, image, display):
-        
-        glvector.GLVector.__init__(self, image, display)
-        
-        fslgl.gllinevector_funcs.init(self)
-
-        def update(*a):
-            self.onUpdate()
-
-        self.displayOpts.addListener(
-            'lineWidth', self.name, update, weak=False)
-
-        
-    def destroy(self):
-        
-        self.displayOpts.removeListener('lineWidth', self.name)
-        fslgl.gllinevector_funcs.destroy(self)
-        glvector.GLVector.destroy(self)
-
-
-    def getDataResolution(self, xax, yax):
-
-        res       = list(glvector.GLVector.getDataResolution(self, xax, yax))
-        res[xax] *= 16
-        res[yax] *= 16
-        
-        return res
-
-
-    def compileShaders(self):
-        fslgl.gllinevector_funcs.compileShaders(self)
-        
-
-    def updateShaderState(self):
-        fslgl.gllinevector_funcs.updateShaderState(self)
- 
-
-    def preDraw(self):
-        glvector.GLVector.preDraw(self)
-        fslgl.gllinevector_funcs.preDraw(self)
-
-
-    def draw(self, zpos, xform=None):
-        fslgl.gllinevector_funcs.draw(self, zpos, xform)
-
-    
-    def drawAll(self, zposes, xforms):
-        fslgl.gllinevector_funcs.drawAll(self, zposes, xforms) 
-
-    
-    def postDraw(self):
-        glvector.GLVector.postDraw(self)
-        fslgl.gllinevector_funcs.postDraw(self) 

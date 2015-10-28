@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 #
-# saveoverlay.py -
+# saveoverlay.py - Save the currently selected overlay.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`SaveOverlayAction`, which allows the user
+to save the currently selected overlay.
+"""
+
 
 import logging
 
@@ -15,8 +19,15 @@ log = logging.getLogger(__name__)
 
 
 class SaveOverlayAction(actions.Action):
+    """The ``SaveOverlayAction`` allows the user to save the currently
+    selected overlay, if it has been edited, or only exists in memory.
+    """
 
+    
     def __init__(self, *args, **kwargs):
+        """Create a ``SaveOverlayAction``. All arguments are passed through
+        to the :class:`.Action` constructor.
+        """
         actions.Action.__init__(self, *args, **kwargs)        
 
         self._displayCtx .addListener('selectedOverlay',
@@ -28,8 +39,23 @@ class SaveOverlayAction(actions.Action):
 
         self.__selectedOverlayChanged()
 
+
+    def destroy(self):
+        """Removes listeners from the :class:`.DisplayContext` and
+        :class:`.OverlayList`, and calls :meth:`.Action.destroy`.
+        """
+
+        self._displayCtx .removeListener('selectedOverlay', self._name)
+        self._overlayList.removeListener('overlays',        self._name)
+        actions.Action.destroy(self)
+
         
     def __selectedOverlayChanged(self, *a):
+        """Called when the selected overlay, or overlay list changes.
+
+        If the overlay is a :class:`.Image`, and it has unsaved changes,
+        this action is enabled; otherwise it is disabled.
+        """
         
         overlay = self._displayCtx.getSelectedOverlay()
 
@@ -44,7 +70,11 @@ class SaveOverlayAction(actions.Action):
                 continue
             
             ovl.removeListener('saved', self._name)
-            
+
+            # Register a listener on the saved property
+            # of the currently selected image, so we can
+            # enable the save action when the image
+            # becomes 'unsaved', and vice versa.
             if ovl is overlay:
                 ovl.addListener('saved',
                                 self._name,
@@ -52,6 +82,13 @@ class SaveOverlayAction(actions.Action):
  
 
     def __overlaySaveStateChanged(self, *a):
+        """Called when the :attr:`.Image.saved` property of the currently
+        selected overlay changes. Enables/disables this ``SaveOverlayAction``
+        accordingly.
+
+        This is only applicable if the current overlay is a :class:`.Image` -
+        see the :meth:`__selectedOverlayChanged` method.
+        """
         
         overlay = self._displayCtx.getSelectedOverlay()
         
@@ -65,6 +102,9 @@ class SaveOverlayAction(actions.Action):
 
         
     def doAction(self):
+        """Saves the currently selected overlay (only if it is a
+        :class:`.Image`), by a call to :meth:`.Image.save`.
+        """
         
         overlay = self._displayCtx.getSelectedOverlay()
         

@@ -1,436 +1,182 @@
 #!/usr/bin/env python
 #
-# timeseriespanel.py - A panel which plots time series/volume data from a
-# collection of overlays.
+# timeseriespanel.py - The TimeSeriesPanel class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""A :class:`wx.Panel` which plots time series/volume data from a collection
-of overlay objects stored in an :class:`.OverlayList`.
-
-:mod:`matplotlib` is used for plotting.
-
+"""This module provides the :class:`TimeSeriesPanel`, which is a *FSLeyes
+view* for displaying time series data from :class:`.Image` overlays.
 """
 
-import copy
+
 import logging
 
 import wx
 
-import numpy as np
+import                                                props
 
-import                               props
-
-import                               plotpanel
-import fsl.data.featimage         as fslfeatimage
-import fsl.data.image             as fslimage
-import fsl.data.strings           as strings
-import fsl.fsleyes.displaycontext as fsldisplay
-import fsl.fsleyes.colourmaps     as fslcmaps
-import fsl.fsleyes.controls       as fslcontrols
+import                                                plotpanel
+import fsl.data.featimage                          as fslfeatimage
+import fsl.data.melodicimage                       as fslmelimage
+import fsl.data.image                              as fslimage
+import fsl.fsleyes.colourmaps                      as fslcmaps
+import fsl.fsleyes.plotting.timeseries             as timeseries
+import fsl.fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
+import fsl.fsleyes.controls.timeserieslistpanel    as timeserieslistpanel
 
 
 log = logging.getLogger(__name__)
 
 
-class TimeSeries(plotpanel.DataSeries):
-
-    
-    def __init__(self, tsPanel, overlay, coords):
-        plotpanel.DataSeries.__init__(self, overlay)
-
-        self.tsPanel = tsPanel
-        self.coords  = map(int, coords)
-        self.data    = overlay.data[coords[0], coords[1], coords[2], :]
-
-
-    def __copy__(self):
-
-        return type(self)(self.tsPanel, self.overlay, self.coords)
-
-        
-    def update(self, coords):
-        """This method is only intended for use on the 'current' time series,
-        not for time series instances which have been added to the
-        TimeSeries.dataSeries list
-        """
-        
-        coords = map(int, coords)
-        if coords == self.coords:
-            return False
-        
-        self.coords = coords
-        self.data   = self.overlay.data[coords[0], coords[1], coords[2], :]
-        return True
-
-        
-    def getData(self, xdata=None, ydata=None):
-        """
-        
-        :arg xdata:
-        :arg ydata: Used by subclasses in case they have already done some
-                    processing on the data.
-        """
-
-        if xdata is None: xdata = np.arange(len(self.data), dtype=np.float32)
-        if ydata is None: ydata = np.array(     self.data,  dtype=np.float32)
-
-        if self.tsPanel.usePixdim:
-            xdata *= self.overlay.pixdim[3]
-        
-        if self.tsPanel.plotMode == 'demean':
-            ydata = ydata - ydata.mean()
-
-        elif self.tsPanel.plotMode == 'normalise':
-            ymin  = ydata.min()
-            ymax  = ydata.max()
-            ydata = 2 * (ydata - ymin) / (ymax - ymin) - 1
-            
-        elif self.tsPanel.plotMode == 'percentChange':
-            mean  = ydata.mean()
-            ydata =  100 * (ydata / mean) - 100
-            
-        return xdata, ydata
-    
-
- 
-class FEATTimeSeries(TimeSeries):
-    """A :Class:`TimeSeries` class for use with :class:`FEATImage` instances,
-    containing some extra FEAT specific options.
-    """
-
-
-    plotData         = props.Boolean(default=True)
-    plotFullModelFit = props.Boolean(default=True)
-    plotResiduals    = props.Boolean(default=False)
-    plotEVs          = props.List(props.Boolean(default=False))
-    plotPEFits       = props.List(props.Boolean(default=False))
-    plotCOPEFits     = props.List(props.Boolean(default=False))
-    plotReduced      = props.Choice()
-    
-
-    def __init__(self, *args, **kwargs):
-        TimeSeries.__init__(self, *args, **kwargs)
-        self.name = '{}_{}'.format(type(self).__name__, id(self))
-
-        numEVs    = self.overlay.numEVs()
-        numCOPEs  = self.overlay.numContrasts()
-        copeNames = self.overlay.contrastNames()
-        
-        reduceOpts = ['none'] + \
-                     ['PE{}'.format(i + 1) for i in range(numEVs)]
-
-        for i in range(numCOPEs):
-            name = 'COPE{} ({})'.format(i + 1, copeNames[i])
-            reduceOpts.append(name)
-
-        self.getProp('plotReduced').setChoices(reduceOpts, instance=self)
-
-        for i in range(numEVs):
-            self.plotPEFits.append(False)
-            self.plotEVs   .append(False)
-
-        for i in range(numCOPEs):
-            self.plotCOPEFits.append(False) 
-
-        self.__fullModelTs =  None
-        self.__reducedTs   =  None
-        self.__resTs       =  None
-        self.__evTs        = [None] * numEVs
-        self.__peTs        = [None] * numEVs
-        self.__copeTs      = [None] * numCOPEs
-        
-        self.addListener('plotFullModelFit',
-                         self.name,
-                         self.__plotFullModelFitChanged)
-        self.addListener('plotResiduals',
-                         self.name,
-                         self.__plotResidualsChanged)
-        self.addListener('plotReduced',
-                         self.name,
-                         self.__plotReducedChanged)
-
-        self.addListener('plotEVs',      self.name, self.__plotEVChanged)
-        self.addListener('plotPEFits',   self.name, self.__plotPEFitChanged)
-        self.addListener('plotCOPEFits', self.name, self.__plotCOPEFitChanged)
-
-        # plotFullModelFit defaults to True, so
-        # force the model fit ts creation here
-        self.__plotFullModelFitChanged()
-
-
-    def __copy__(self):
-        
-        copy = type(self)(self.tsPanel, self.overlay, self.coords)
-
-        copy.colour           = self.colour
-        copy.alpha            = self.alpha 
-        copy.label            = self.label 
-        copy.lineWidth        = self.lineWidth
-        copy.lineStyle        = self.lineStyle
-
-        # When these properties are changed 
-        # on the copy instance, it will create 
-        # its own FEATModelFitTimeSeries 
-        # instances accordingly
-        copy.plotFullModelFit = self.plotFullModelFit
-        copy.plotEVs[     :]  = self.plotEVs[     :]
-        copy.plotPEFits[  :]  = self.plotPEFits[  :]
-        copy.plotCOPEFits[:]  = self.plotCOPEFits[:]
-        copy.plotReduced      = self.plotReduced
-        copy.plotResiduals    = self.plotResiduals
-
-        return copy
- 
-
-    def getModelTimeSeries(self):
-        
-        modelts = []
-
-        if self.plotData:              modelts.append(self)
-        if self.plotFullModelFit:      modelts.append(self.__fullModelTs)
-        if self.plotResiduals:         modelts.append(self.__resTs)
-        if self.plotReduced != 'none': modelts.append(self.__reducedTs)
-        
-        for i in range(self.overlay.numEVs()):
-            if self.plotPEFits[i]:
-                modelts.append(self.__peTs[i])
-
-        for i in range(self.overlay.numEVs()):
-            if self.plotEVs[i]:
-                modelts.append(self.__evTs[i]) 
-
-        for i in range(self.overlay.numContrasts()):
-            if self.plotCOPEFits[i]:
-                modelts.append(self.__copeTs[i])
-
-        return modelts
-
-
-    def __getContrast(self, fitType, idx):
-
-        if fitType == 'full':
-            return [1] * self.overlay.numEVs()
-        elif fitType == 'pe':
-            con      = [0] * self.overlay.numEVs()
-            con[idx] = 1
-            return con
-        elif fitType == 'cope':
-            return self.overlay.contrasts()[idx]
-
-        
-    def __createModelTs(self, tsType, *args, **kwargs):
-
-        ts = tsType(self.tsPanel, self.overlay, self.coords, *args, **kwargs)
-
-        ts.alpha     = self.alpha
-        ts.label     = self.label
-        ts.lineWidth = self.lineWidth
-        ts.lineStyle = self.lineStyle
-
-        if   isinstance(ts, FEATReducedTimeSeries):  ts.colour = (0, 0.6, 0.6)
-        elif isinstance(ts, FEATResidualTimeSeries): ts.colour = (0.8, 0.4, 0)
-        elif isinstance(ts, FEATEVTimeSeries):       ts.colour = (0, 0.7, 0.35)
-        elif isinstance(ts, FEATModelFitTimeSeries):
-            if   ts.fitType == 'full': ts.colour = (0,   0, 1)
-            elif ts.fitType == 'cope': ts.colour = (0,   1, 0)
-            elif ts.fitType == 'pe':   ts.colour = (0.7, 0, 0)
-
-        return ts
-
-
-    def __plotReducedChanged(self, *a):
-            
-        reduced = self.plotReduced
-
-        if reduced == 'none' and self.__reducedTs is not None:
-            self.__reducedTs = None
-            return
-
-        reduced = reduced.split()[0]
-
-        # fitType is either 'cope' or 'pe'
-        fitType = reduced[:-1].lower()
-        idx     = int(reduced[-1]) - 1
-
-        self.__reducedTs = self.__createModelTs(
-            FEATReducedTimeSeries,
-            self.__getContrast(fitType, idx),
-            fitType,
-            idx) 
-
-
-    def __plotResidualsChanged(self, *a):
-        
-        if not self.plotResiduals:
-            self.__resTs = None
-            return
-
-        self.__resTs = self.__createModelTs(FEATResidualTimeSeries)
-
-
-    def __plotEVChanged(self, *a):
-
-        for evnum, plotEV in enumerate(self.plotEVs):
-
-            if not self.plotEVs[evnum]:
-                self.__evTs[evnum] = None
-                
-            elif self.__evTs[evnum] is None:
-                self.__evTs[evnum] = self.__createModelTs(
-                    FEATEVTimeSeries, evnum)
-            
-    
-    def __plotCOPEFitChanged(self, *a):
-
-        for copenum, plotCOPE in enumerate(self.plotCOPEFits):
-
-            if not self.plotCOPEFits[copenum]:
-                self.__copeTs[copenum] = None
-            
-            elif self.__copeTs[copenum] is None:
-                self.__copeTs[copenum] = self.__createModelTs(
-                    FEATModelFitTimeSeries,
-                    self.__getContrast('cope', copenum),
-                    'cope',
-                    copenum)
-
-
-    def __plotPEFitChanged(self, evnum):
-
-        for evnum, plotPE in enumerate(self.plotPEFits):
-
-            if not self.plotPEFits[evnum]:
-                self.__peTs[evnum] = None
-
-            elif self.__peTs[evnum] is None:
-                self.__peTs[evnum] = self.__createModelTs(
-                    FEATModelFitTimeSeries,
-                    self.__getContrast('pe', evnum),
-                    'pe',
-                    evnum)
-
-
-    def __plotFullModelFitChanged(self, *a):
-        
-        if not self.plotFullModelFit:
-            self.__fullModelTs = None
-            return
-
-        self.__fullModelTs = self.__createModelTs(
-            FEATModelFitTimeSeries, self.__getContrast('full', -1), 'full', -1)
-
-        
-    def update(self, coords):
-        
-        if not TimeSeries.update(self, coords):
-            return False
-            
-        for modelTs in self.getModelTimeSeries():
-            if modelTs is self:
-                continue
-            modelTs.update(coords)
-
-        return True
-
-
-class FEATReducedTimeSeries(TimeSeries):
-    def __init__(self, tsPanel, overlay, coords, contrast, fitType, idx):
-        TimeSeries.__init__(self, tsPanel, overlay, coords)
-
-        self.contrast = contrast
-        self.fitType  = fitType
-        self.idx      = idx
-
-    def getData(self):
-        
-        data = self.overlay.reducedData(self.coords, self.contrast, False)
-        return TimeSeries.getData(self, ydata=data)
-
-    
-class FEATEVTimeSeries(TimeSeries):
-    def __init__(self, tsPanel, overlay, coords, idx):
-        TimeSeries.__init__(self, tsPanel, overlay, coords)
-        self.idx = idx
-        
-    def getData(self):
-        data = self.overlay.getDesign()[:, self.idx]
-        return TimeSeries.getData(self, ydata=data)
-    
-
-class FEATResidualTimeSeries(TimeSeries):
-    def getData(self):
-        x, y, z = self.coords
-        data    = self.overlay.getResiduals().data[x, y, z, :]
-        
-        return TimeSeries.getData(self, ydata=np.array(data))
-            
-
-class FEATModelFitTimeSeries(TimeSeries):
-
-    def __init__(self, tsPanel, overlay, coords, contrast, fitType, idx):
-        
-        if fitType not in ('full', 'cope', 'pe'):
-            raise ValueError('Unknown model fit type {}'.format(fitType))
-        
-        TimeSeries.__init__(self, tsPanel, overlay, coords)
-        self.fitType  = fitType
-        self.idx      = idx
-        self.contrast = contrast
-        self.updateModelFit()
-
-        
-    def update(self, coords):
-        if not TimeSeries.update(self, coords):
-            return
-        self.updateModelFit()
-        
-
-    def updateModelFit(self):
-
-        fitType   = self.fitType
-        contrast  = self.contrast
-        xyz       = self.coords
-        self.data = self.overlay.fit(contrast, xyz, fitType == 'full')
-
-
 class TimeSeriesPanel(plotpanel.PlotPanel):
-    """A panel with a :mod:`matplotlib` canvas embedded within.
+    """The ``TimeSeriesPanel`` is a :class:`.PlotPanel` which plots time series
+    data from :class:`.Image` overlays. A ``TimeSeriesPanel`` looks something
+    like the following:
 
-    The volume data for each of the overlay objects in the
-    :class:`.OverlayList`, at the current :attr:`.DisplayContext.location`
-    is plotted on the canvas.
+    .. image:: images/timeseriespanel.png
+       :scale: 50%
+       :align: center
+
+    
+    A ``TimeSeriesPanel`` plots one or more :class:`.TimeSeries` instances,
+    which encapsulate time series data from an overlay. All ``TimeSeries``
+    classes are defined in the :mod:`.plotting.timeseries` module; these are
+    all sub-classes of the :class:`.DataSeries` class - see the
+    :class:`.PlotPanel` documentation for more details:
+
+    .. autosummary::
+       :nosignatures:
+
+       ~fsl.fsleyes.plotting.timeseries.TimeSeries
+       ~fsl.fsleyes.plotting.timeseries.FEATTimeSeries
+       ~fsl.fsleyes.plotting.timeseries.MelodicTimeSeries
+
+    
+    **The current time course**
+
+    
+    By default, the ``TimeSeriesPanel`` plots the time series of the current
+    voxel from the currently selected overlay, which is determined from the
+    :attr:`.DisplayContext.selectedOverlay`. This time series is referred to
+    as the *current* time course. The :attr:`showMode` property allows the
+    user to choose between showing only the current time course, showing the
+    time course for all (compatible) overlays, or only showing the time
+    courses that have been added to the :attr:`.PlotPanel.dataSeries` list.
+    
+
+    Other time courses can be *held* by adding them to the
+    :attr:`.PlotPanel.dataSeries` list - the :class:`.TimeSeriesListPanel`
+    provides the user with the ability to add/remove time courses from the
+    ``dataSeries`` list.
+
+
+    **Control panels**
+
+    
+    Some *FSLeyes control* panels are associated with the
+    :class:`.TimeSeriesPanel`:
+
+    .. autosummary::
+       :nosignatures:
+
+       ~fsl.fsleyes.controls.timeserieslistpanel.TimeSeriesListPanel
+       ~fsl.fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
+
+    
+    The ``TimeSeriesPanel`` defines some :mod:`.actions`, allowing the user
+    to show/hide these control panels (see the :meth:`.ViewPanel.togglePanel`
+    method):
+
+    =========================== ===============================================
+    ``toggleTimeSeriesList``    Shows/hides a :class:`.TimeSeriesListPanel`.
+    ``toggleTimeSeriesControl`` Shows/hides a :class:`.TimeSeriesControlPanel`.
+    =========================== ===============================================
+
+    New ``TimeSeriesPanel`` instances will display a ``TimeSeriesListPanel``
+    and a ``TimeSeriesControlPanel`` by default.
+
+
+    **FEATures**
+
+
+    The ``TimeSeriesPanel`` has some extra functionality for
+    :class:`.FEATImage` overlays. For these overlays, a
+    :class:`.FEATTimeSeries` instance is plotted, instead of a regular
+    :class:`.TimeSeries` instance. The ``FEATTimeSeries`` class, in turn, has
+    the ability to generate more ``TimeSeries`` instances which represent
+    various aspects of the FEAT model fit. See the :class:`.FEATTimeSeries`
+    and the :class:`.TimeSeriesControlPanel` classes for more details.
+
+    
+    **Melodic features**
+
+    
+    The ``TimeSeriesPanel`` also has some functionality for
+    :class:`.MelodicImage` overlays - a :class:`.MelodicTimeSeries` instance
+    is used to plot the component time courses for the current component (as
+    defined by the :attr:`.ImageOpts.volume` property). 
     """
 
     
-    usePixdim      = props.Boolean(default=False)
-    showCurrent    = props.Boolean(default=True)
-    showAllCurrent = props.Boolean(default=False)
-    plotMode       = props.Choice(
-        ('normal', 'demean', 'normalise', 'percentChange'),
-        labels=[strings.choices['TimeSeriesPanel.plotMode.normal'],
-                strings.choices['TimeSeriesPanel.plotMode.demean'],
-                strings.choices['TimeSeriesPanel.plotMode.normalise'],
-                strings.choices['TimeSeriesPanel.plotMode.percentChange']])
+    usePixdim = props.Boolean(default=True)
+    """If ``True``, the X axis data is scaled by the pixdim value of the
+    selected overlay (which, for FMRI time series data is typically set
+    to the TR time).
+    """
 
-    currentColour    = copy.copy(TimeSeries.colour)
-    currentAlpha     = copy.copy(TimeSeries.alpha)
-    currentLineWidth = copy.copy(TimeSeries.lineWidth)
-    currentLineStyle = copy.copy(TimeSeries.lineStyle)
+
+    showMode = props.Choice(('current', 'all', 'none'))
+    """Defines which time series to plot.
+
+
+    =========== ======================================================
+    ``current`` The time course for  the currently selected overlay is
+                plotted.
+    ``all``     The time courses for all compatible overlays in the
+                :class:`.OverlayList` are plotted.
+    ``none``    Only the ``TimeSeries`` that are in the
+                :attr:`.PlotPanel.dataSeries` list will be plotted.
+    =========== ======================================================
+    """
+
+    
+    plotMode = props.Choice(('normal', 'demean', 'normalise', 'percentChange'))
+    """Options to scale/offset the plotted time courses.
+
+    ================= =======================================================
+    ``normal``        The data is plotted with no modifications
+    ``demean``        The data is demeaned (i.e. plotted with a mean of 0)
+    ``normalise``     The data is normalised to lie in the range ``[-1, 1]``.
+    ``percentChange`` The data is scaled to percent changed
+    ================= =======================================================
+    """
+
+
+    plotMelodicICs = props.Boolean(default=True)
+    """If ``True``, the component time courses are plotted for
+    :class:`.MelodicImage` overlays (using a :class:`.MelodicTimeSeries`
+    instance). Otherwise, ``MelodicImage`` overlays are treated as regular
+    4D :class:`.Image` overlays (a :class:`.TimeSeries` instance is used).
+    """
 
 
     def __init__(self, parent, overlayList, displayCtx):
+        """Create a ``TimeSeriesPanel``.
 
-        self.currentColour    = (0, 0, 0)
-        self.currentAlpha     = 1
-        self.currentLineWidth = 1
-        self.currentLineStyle = '-'
+        :arg parent:      A :mod:`wx` parent object.
+        :arg overlayList: An :class:`.OverlayList` instance.
+        :arg displayCtx:  A :class:`.DisplayContext` instance.
+        """
 
         actionz = {
             'toggleTimeSeriesList'    : lambda *a: self.togglePanel(
-                fslcontrols.TimeSeriesListPanel,    self, location=wx.TOP),
+                timeserieslistpanel.TimeSeriesListPanel,
+                self,
+                location=wx.TOP),
             'toggleTimeSeriesControl' : lambda *a: self.togglePanel(
-                fslcontrols.TimeSeriesControlPanel, self, location=wx.TOP) 
+                timeseriescontrolpanel.TimeSeriesControlPanel,
+                self,
+                location=wx.TOP) 
         }
 
         plotpanel.PlotPanel.__init__(
@@ -443,216 +189,238 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
 
         figure.patch.set_visible(False)
 
+        self       .addListener('plotMode',        self._name, self.draw)
+        self       .addListener('usePixdim',       self._name, self.draw)
+        self       .addListener('showMode',        self._name, self.draw)
+        displayCtx .addListener('selectedOverlay', self._name, self.draw)
+        self       .addListener('plotMelodicICs',
+                                self._name,
+                                self.__plotMelodicICsChanged)
         overlayList.addListener('overlays',
                                 self._name,
-                                self.__overlaysChanged)        
- 
-        displayCtx .addListener('selectedOverlay', self._name, self.draw) 
-        displayCtx .addListener('location',        self._name, self.draw)
+                                self.__overlayListChanged) 
 
-        self.addListener('plotMode',    self._name, self.draw)
-        self.addListener('usePixdim',   self._name, self.draw)
-        self.addListener('showCurrent', self._name, self.draw)
-
-        csc = self.__currentSettingsChanged
-        self.addListener('showAllCurrent',   self._name, csc)
-        self.addListener('currentColour',    self._name, csc)
-        self.addListener('currentAlpha',     self._name, csc)
-        self.addListener('currentLineWidth', self._name, csc)
-        self.addListener('currentLineStyle', self._name, csc)
-
-        self.__currentOverlay = None
-        self.__currentTs      = None
+        # The currentTss attribute is a dictionary of
+        #
+        #   {overlay : TimeSeries}
+        #
+        # mappings, containing a TimeSeries instance for
+        # each compatible overlay in the overlay list.
+        # 
+        # Different TimeSeries types need to be re-drawn
+        # when different properties change. For example,
+        # a TimeSeries instance needs to be redrawn when
+        # the DisplayContext.location property changes,
+        # whereas a MelodicTimeSeries instance needs to
+        # be redrawn when the VolumeOpts.volume property
+        # changes.
+        #
+        # Therefore, the refreshProps dictionary contains
+        # a set of
+        #
+        #   {overlay : ([targets], [propNames])}
+        #
+        # mappings - for each overlay, a list of
+        # target objects (e.g. DisplayContext, VolumeOpts,
+        # etc), and a list of property names on each,
+        # defining the properties that need to trigger a
+        # redraw.
+        self.__currentTss     = {}
+        self.__refreshProps   = {} 
         self.__overlayColours = {}
-        self.Layout()
-        self.draw()
 
-        
-    def __currentSettingsChanged(self, *a):
-        if self.__currentTs is None:
-            return
+        def addPanels():
+            self.run('toggleTimeSeriesControl') 
+            self.run('toggleTimeSeriesList') 
 
-        tss = [self.__currentTs]
-        
-        if isinstance(self.__currentTs, FEATTimeSeries):
-            tss = self.__currentTs.getModelTimeSeries()
+        wx.CallAfter(addPanels)
 
-            for ts in tss:
-
-                if ts is self.__currentTs:
-                    continue
-
-                # Don't change the colour for associated
-                # time courses (e.g. model fits)
-                if ts is self.__currentTs:
-                    ts.colour = self.currentColour
-                    
-                ts.alpha     = self.currentAlpha
-                ts.lineWidth = self.currentLineWidth
-                ts.lineStyle = self.currentLineStyle
+        self.__overlayListChanged()
 
 
     def destroy(self):
+        """Removes some listeners, and calls the :meth:`.PlotPanel.destroy`
+        method.
+        """
         
-        self.removeListener('plotMode',    self._name)
-        self.removeListener('usePixdim',   self._name)
-        self.removeListener('showCurrent', self._name)
+        self.removeListener('plotMode',  self._name)
+        self.removeListener('usePixdim', self._name)
+        self.removeListener('showMode',  self._name)
         
         self._overlayList.removeListener('overlays',        self._name)
         self._displayCtx .removeListener('selectedOverlay', self._name)
-        self._displayCtx .removeListener('location',        self._name)
 
-        plotpanel.PlotPanel.destroy(self)
+        for (targets, propNames) in self.__refreshProps.values():
+            for target, propName in zip(targets, propNames):
+                target.removeListener(propName, self._name)
 
+        for ts in self.__currentTss.values():
+            ts.removeGlobalListener(self)
 
-    def __overlaysChanged(self, *a):
+        self.__currentTss   = None
+        self.__refreshProps = None
 
-        self.disableListener('dataSeries', self._name)
-        for ds in self.dataSeries:
-            if ds.overlay not in self._overlayList:
-                self.dataSeries.remove(ds)
-        self.enableListener('dataSeries', self._name)
-        self.draw()
-
-
-    def __bindCurrentProps(self, ts, bind=True):
-        ts.bindProps('colour'   , self, 'currentColour',    unbind=not bind)
-        ts.bindProps('alpha'    , self, 'currentAlpha',     unbind=not bind)
-        ts.bindProps('lineWidth', self, 'currentLineWidth', unbind=not bind)
-        ts.bindProps('lineStyle', self, 'currentLineStyle', unbind=not bind)
-
-        if bind: self.__currentTs.addGlobalListener(   self._name, self.draw)
-        else:    self.__currentTs.removeGlobalListener(self._name)
-
-
-    def __getTimeSeriesLocation(self, overlay):
-
-        x, y, z = self._displayCtx.location.xyz
-        opts    = self._displayCtx.getOpts(overlay)
-
-        if not isinstance(overlay, fslimage.Image)        or \
-           not isinstance(opts,    fsldisplay.VolumeOpts) or \
-           not overlay.is4DImage():
-            return None
-
-        vox = opts.transformCoords([[x, y, z]], 'display', 'voxel')[0]
-        vox = np.floor(vox)
-
-        if vox[0] < 0                 or \
-           vox[1] < 0                 or \
-           vox[2] < 0                 or \
-           vox[0] >= overlay.shape[0] or \
-           vox[1] >= overlay.shape[1] or \
-           vox[2] >= overlay.shape[2]:
-            return None
-
-        return vox
-
-    def __genTimeSeries(self, overlay, vox):
-
-        if isinstance(overlay, fslfeatimage.FEATImage):
-            ts = FEATTimeSeries(self, overlay, vox)
-        else:
-            ts = TimeSeries(self, overlay, vox)
-
-        ts.colour    = self.currentColour
-        ts.alpha     = self.currentAlpha
-        ts.lineWidth = self.currentLineWidth
-        ts.lineStyle = self.currentLineStyle
-        ts.label     = None            
-                
-        return ts
-            
-        
-    def __calcCurrent(self):
-
-        prevTs      = self.__currentTs
-        prevOverlay = self.__currentOverlay
-
-        if prevTs is not None:
-            self.__bindCurrentProps(prevTs, False)
-
-        self.__currentTs      = None
-        self.__currentOverlay = None
-
-        if len(self._overlayList) == 0:
-            return
-
-        overlay = self._displayCtx.getSelectedOverlay()
-        vox     = self.__getTimeSeriesLocation(overlay)
-
-        if vox is None:
-            return
-
-        if overlay is prevOverlay:
-            self.__currentOverlay = prevOverlay
-            self.__currentTs      = prevTs
-            prevTs.update(vox)
-
-        else:
-            ts                    = self.__genTimeSeries(overlay, vox)
-            self.__currentTs      = ts
-            self.__currentOverlay = overlay
-
-        self.__bindCurrentProps(self.__currentTs)
-
-        
-    def getCurrent(self):
-        return self.__currentTs
+        plotpanel.PlotPanel.destroy(self) 
 
 
     def draw(self, *a):
+        """Overrides :meth:`.PlotPanel.draw`. Passes some :class:`.TimeSeries`
+        instances to the :meth:`.PlotPanel.drawDataSeries` method.
+        """
 
-        self.__calcCurrent()
-        current = self.__currentTs
-
-        if self.showCurrent:
-
-            extras      = []
-            currOverlay = None
-
-            if current is not None:
-                if isinstance(current, FEATTimeSeries):
-                    extras = current.getModelTimeSeries()
-                else:
-                    extras = [current]
-
-                currOverlay = current.overlay
-
-            if self.showAllCurrent:
-                
-                overlays = [o for o in self._overlayList
-                            if o is not currOverlay]
-
-                # Remove overlays for which the
-                # current location is out of bounds
-                locs   = map(self.__getTimeSeriesLocation, overlays)
-                locovl = filter(lambda (l, o): l is not None,
-                                zip(locs, overlays))
-                
-                if len(locovl) > 0:
-                    locs, overlays = zip(*locovl)
-
-                    tss = map(self.__genTimeSeries, overlays, locs)
-
-                    extras.extend([ts for ts in tss if ts is not None])
-                    
-                    for ts in tss:
-                        ts.alpha     = 1
-                        ts.lineWidth = 0.5
-
-                        # Use a random colour for each overlay,
-                        # but use the same random colour each time
-                        colour = self.__overlayColours.get(
-                            ts.overlay,
-                            fslcmaps.randomBrightColour())
-                        
-                        ts.colour = colour
-                        self.__overlayColours[ts.overlay] = colour
-                        
-                        if isinstance(ts, FEATTimeSeries):
-                            extras.extend(ts.getModelTimeSeries())
-                
-            self.drawDataSeries(extras)
+        if self.showMode == 'all':
+            overlays = self._overlayList[:]
+            
+        elif self.showMode == 'current':
+            overlays = [self._displayCtx.getSelectedOverlay()]
+            
         else:
-            self.drawDataSeries()
+            overlays = []
+
+        tss = [self.__currentTss.get(o) for o in overlays]
+        tss = [ts for ts in tss if ts is not None]
+
+        for i, ts in enumerate(list(tss)):
+            if isinstance(ts, timeseries.FEATTimeSeries):
+                tss.pop(i)
+                tss = tss[:i] + ts.getModelTimeSeries() + tss[i:]
+
+        for ts in tss:
+            ts.label = ts.makeLabel()
+
+        self.drawDataSeries(extraSeries=tss)
+
+
+    def getTimeSeries(self, overlay):
+        """Returns the :class:`.TimeSeries` instance for the specified
+        overlay, or ``None`` if there is none.
+        """
+        return self.__currentTss.get(overlay)
+
+
+    def __overlayListChanged(self, *a):
+        """Called when the :class:`.OverlayList` changes. Makes sure that
+        there are no :class:`.TimeSeries` instances in the
+        :attr:`.PlotPanel.dataSeries` list, or in the internal cache, which
+        refer to overlays that no longer exist.
+
+        Also calls :meth:`__updateCurrentTimeSeries`, whic ensures that a
+        :class:`.TimeSeries` instance for every compatiblew overlay is
+        cached internally.
+        """
+
+        for ds in self.dataSeries:
+            if ds.overlay not in self._overlayList:
+                self.dataSeries.remove(ds)
+                ds.destroy()
+        
+        for overlay in list(self.__currentTss.keys()):
+            if overlay not in self._overlayList:
+                self.__clearCacheForOverlay(overlay)
+
+        self.__updateCurrentTimeSeries()
+        self.draw()
+
+
+    def __clearCacheForOverlay(self, overlay):
+        """Destroys the internally cached :class:`.TimeSeries` for the given
+        overlay.
+        """
+        
+        ts                 = self.__currentTss  .pop(overlay, None)
+        targets, propNames = self.__refreshProps.pop(overlay, ([], []))
+
+        if ts is not None:
+            ts.destroy()
+
+        for t, p in zip(targets, propNames):
+            t.removeListener(p, self._name)
+
+        
+    def __plotMelodicICsChanged(self, *a):
+        """Called when the :attr:`plotMelodicICs` property changes. Re-creates
+        the internally cached :class:`.TimeSeries` instances for all
+        :class:`.MelodicImage` overlays in the :class:`.OverlayList`.
+        """
+
+        for overlay in self._overlayList:
+            if isinstance(overlay, fslmelimage.MelodicImage):
+                self.__clearCacheForOverlay(overlay)
+
+        self.__updateCurrentTimeSeries()
+        self.draw()
+
+        
+    def __updateCurrentTimeSeries(self, *a):
+        """Makes sure that a :class:`.TimeSeries` instance exists for every
+        compatible overlay in the :class:`.OverlayList`, and that
+        relevant property listeners are registered so they are redrawn as
+        needed.
+        """
+
+        for ovl in self._overlayList:
+            if ovl not in self.__currentTss:
+                
+                ts, refreshTargets, refreshProps = self.__genOneTimeSeries(ovl)
+
+                if ts is None:
+                    continue
+
+                self.__currentTss[  ovl] = ts
+                self.__refreshProps[ovl] = (refreshTargets, refreshProps)
+                
+                ts.addGlobalListener(self._name, self.draw, overwrite=True)
+        
+        for targets, propNames in self.__refreshProps.values():
+            for target, propName in zip(targets, propNames):
+                target.addListener(propName,
+                                   self._name,
+                                   self.draw,
+                                   overwrite=True)
+
+
+    
+    def __genOneTimeSeries(self, overlay):
+        """Creates and returns a :class:`.TimeSeries` instance (or an
+        instance of one of the :class:`.TimeSeries` sub-classes) for the
+        specified overlay.
+
+        Returns a tuple containing the following:
+        
+          - A :class:`.TimeSeries` instance for the given overlay
+        
+          - A list of *targets* - objects which have properties that
+            influence the state of the ``TimeSeries`` instance.
+        
+          - A list of *property names*, one for each target.
+
+        If the given overlay is not compatible (i.e. it has no time series
+        data to be plotted), a tuple of ``None`` values is returned.
+        """
+
+        if not (isinstance(overlay, fslimage.Image) and overlay.is4DImage()):
+            return None, None, None
+
+        if isinstance(overlay, fslfeatimage.FEATImage):
+            ts = timeseries.FEATTimeSeries(self, overlay, self._displayCtx)
+            targets   = [self._displayCtx]
+            propNames = ['location']
+            
+        elif isinstance(overlay, fslmelimage.MelodicImage) and \
+             self.plotMelodicICs:
+            ts = timeseries.MelodicTimeSeries(self, overlay, self._displayCtx)
+            targets   = [self._displayCtx.getOpts(overlay)]
+            propNames = ['volume'] 
+            
+        else:
+            ts = timeseries.VoxelTimeSeries(self, overlay, self._displayCtx)
+            targets   = [self._displayCtx]
+            propNames = ['location'] 
+
+        ts.colour    = fslcmaps.randomDarkColour()
+        ts.alpha     = 1
+        ts.lineWidth = 1
+        ts.lineStyle = '-'
+        ts.label     = ts.makeLabel()
+                
+        return ts, targets, propNames

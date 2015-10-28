@@ -1,17 +1,23 @@
 #!/usr/bin/env python
 #
-# orthoeditprofile.py -
+# orthoeditprofile.py - The OrthoEditProfile class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`OrthoEditProfile` class, an interaction
+:class:`.Profile` for :class:`.OrthoPanel` views.
+"""
 
 import logging
+
+import wx
 
 import numpy                        as np
 
 import                                 props
 import fsl.data.image               as fslimage
-import fsl.fsleyes.editor.editor    as editor
+import fsl.data.strings             as strings
+import fsl.fsleyes.editor.editor    as fsleditor
 import fsl.fsleyes.gl.annotations   as annotations
 
 import orthoviewprofile
@@ -21,83 +27,165 @@ log = logging.getLogger(__name__)
 
 
 class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
+    """The ``OrthoEditProfile`` class is an interaction profile for use with
+    the :class:`.OrthoPanel` class. It gives the user the ability to make
+    changes to :class:`.Image` overlays, by using the functionality of the
+    :mod:`~fsl.fsleyes.editor` package.
 
-    selectionSize  = props.Int(minval=1, default=3, clamped=True)
-    selectionIs3D  = props.Boolean(default=False)
-    fillValue      = props.Real(default=0)
 
-    intensityThres = props.Real(minval=0.0, default=10, clamped=True)
-    localFill      = props.Boolean(default=False)
+    **Modes**
+    
 
-    selectionCursorColour  = props.Colour(default=(1, 1, 0, 0.7))
-    selectionOverlayColour = props.Colour(default=(1, 0, 1, 0.7))
+    The ``OrthoEditProfile`` has the following modes, in addition to those
+    already defined by the :class:`.OrthoViewProfile`:
 
-    limitToRadius  = props.Boolean(default=False)
-    searchRadius   = props.Real(minval=0.0, default=0.0, clamped=True)
+    ========== ===============================================================
+    ``sel``    Select mode. The user is able to manually add voxels to the
+               selection using a *cursor*. The cursor size can be changed
+               with the :attr:`selectionSize` property, and the cursor can be
+               toggled between a 2D square and a 3D cube via the
+               :attr:`selectionIs3D` property.
+    
+    ``desel``  Deselect mode. Identical to ``sel`` mode, except that the
+               cursor is used to remove voxels from the selection.
+    
+    ``selint`` Select by intensity mode.
+    ========== ===============================================================
+
+
+    **Actions**
+    
+
+    The ``OrthoEditProfile`` defines the following actions, on top of those
+    already defined by the :class:`.OrthoViewProfile`:
+
+    =========================== ============================================
+    ``undo``                    Un-does the most recent action.
+    ``redo``                    Re-does the most recent undone action.
+    ``fillSelection``           Fills the current selection with the current
+                                :attr:`fillValue`.
+    ``clearSelection``          Clears the current selection.
+    ``createMaskFromSelection`` Creates a mask :class:`.Image` from the
+                                current selection.
+    ``createROIFromSelection``  Creates a ROI :class:`.Image` from the
+                                current selection.
+    =========================== ============================================
 
     
-    def clearSelection(self, *a):
-        self._editor.getSelection().clearSelection()
-        self._viewPanel.Refresh()
+    **Annotations**
 
 
-    def fillSelection(self, *a):
-        self._editor.fillSelection(self.fillValue)
-        self._editor.getSelection().clearSelection()
+    The ``OrthoEditProfile`` class uses :mod:`.annotations` on the
+    :class:`.SliceCanvas` panels, displayed in the :class:`.OrthoPanel`,
+    to display information to the user. Two annotations are used:
+
+     - The *cursor* annotation. This is a :class:`.Rect` annotation
+       representing a cursor at the voxel, or voxels, underneath the
+       current mouse location.
+    
+     - The *selection* annotation. This is a :class:`.VoxelSelection`
+       annotation which displays the :class:`.Selection`.
 
 
-    def undo(self, *a):
+    **The display space**
 
-        # We're disabling notification of changes to the selection
-        # during undo/redo. This is because a single undo
-        # will probably involve multiple modifications to the
-        # selection (as changes are grouped by the editor),
-        # with each of those changes causing the selection object
-        # to notify its listeners. As one of these listeners is a
-        # SelectionTexture, these notifications can get expensive,
-        # due to updates to the GL texture buffer. So we disable
-        # notification, and then manually refresh the texture
-        # afterwards
-        self._editor.getSelection().disableNotification('selection')
-        self._editor.undo()
-        self._editor.getSelection().enableNotification('selection')
-        
-        self._selectionChanged()
-        self._selAnnotation.texture.refresh()
-        self._viewPanel.Refresh()
+    
+    The ``OrthoEditProfile`` class has been written in a way which requires
+    the :class:`.Image` instance that is being edited to be displayed in
+    *scaled voxel* (a.k.a. ``pixdim``) space.  Therefore, when an ``Image``
+    overlay is selected, the ``OrthoEditProfile`` instance sets that ``Image``
+    as the current :attr:`.DisplayContext.displaySpace` reference image.
+    """
 
 
-    def redo(self, *a):
+    selectionCursorColour = props.Colour(default=(1, 1, 0, 0.7))
+    """Colour used for the cursor annotation. """
 
-        self._editor.getSelection().disableNotification('selection')
-        self._editor.redo()
-        self._editor.getSelection().enableNotification('selection')
-        self._selectionChanged()
-        self._selAnnotation.texture.refresh()
-        self._viewPanel.Refresh()
- 
+    
+    selectionOverlayColour = props.Colour(default=(1, 0, 1, 0.7))
+    """Colour used for the selection annotation, which displays the voxels
+    that are currently selected.
+    """
+    
+    
+    selectionSize = props.Int(minval=1, default=3, clamped=True)
+    """In ``sel`` and ``desel`` modes, defines the size of the selection
+    cursor.
+    """
 
+    
+    selectionIs3D = props.Boolean(default=False)
+    """In ``sel`` and ``desel`` mode, toggles the cursor between a 2D square
+    and a 3D cube.
+    """
+
+    
+    fillValue = props.Real(default=0)
+    """The value used by the ``fillSelection`` action - all voxels in the
+    selection will be filled with this value.
+    """
+    
+
+    intensityThres = props.Real(minval=0.0, default=10, clamped=True)
+    """In ``selint`` mode, the maximum distance, in intensity, that a voxel
+    can be from the seed location, in order for it to be selected.
+    Passed as the ``precision`` argument to the
+    :meth:`.Selection.selectByValue` method.
+    """
+
+    
+    localFill = props.Boolean(default=False)
+    """In ``selint`` mode, if this property is ``True``, voxels can only be
+    selected if they are adjacent to an already selected voxel. Passed as the
+    ``local`` argument to the :meth:`.Selection.selectByValue` method.
+    """
+    
+
+    limitToRadius = props.Boolean(default=False)
+    """In ``selint`` mode, if this property is ``True``, the search region
+    will be limited to a sphere (in the voxel coordinate system) with its
+    radius specified by the :attr:`searchRadius` property.
+    """
+
+    
+    searchRadius = props.Real(minval=0.0, default=0.0, clamped=True)
+    """In ``selint`` mode, if :attr:`limitToRadius` is true, this property
+    specifies the search sphere radius. Passed as the ``searchRadius``
+    argument to the :meth:`.Selection.selectByValue` method.
+    """
+
+    
     def __init__(self, viewPanel, overlayList, displayCtx):
+        """Create an ``OrthoEditProfile``.
 
-        self._editor            = editor.Editor(overlayList, displayCtx) 
-        self._xcanvas           = viewPanel.getXCanvas()
-        self._ycanvas           = viewPanel.getYCanvas()
-        self._zcanvas           = viewPanel.getZCanvas() 
-        self._selAnnotation     = None
-        self._xCursorAnnotation = None
-        self._yCursorAnnotation = None
-        self._zCursorAnnotation = None
-        self._selecting         = False
-        self._lastDist          = None
-        self._currentOverlay    = None
+        :arg viewPanel:   The :class:`.OrthoPanel` instance.
+        :arg overlayList: The :class:`.OverlayList` instance.
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        """
+
+        # An Editor instance is created for each
+        # Image overlay (on demand, as they are
+        # selected), and kept in this dictionary
+        # (which contains {Image : Editor} mappings).
+        self.__editors           = {}
+        self.__xcanvas           = viewPanel.getXCanvas()
+        self.__ycanvas           = viewPanel.getYCanvas()
+        self.__zcanvas           = viewPanel.getZCanvas() 
+        self.__selAnnotation     = None
+        self.__xCursorAnnotation = None
+        self.__yCursorAnnotation = None
+        self.__zCursorAnnotation = None
+        self.__selecting         = False
+        self.__lastDist          = None
+        self.__currentOverlay    = None
         
         actions = {
             'undo'                    : self.undo,
             'redo'                    : self.redo,
             'fillSelection'           : self.fillSelection,
             'clearSelection'          : self.clearSelection,
-            'createMaskFromSelection' : self._editor.createMaskFromSelection,
-            'createROIFromSelection'  : self._editor.createROIFromSelection}
+            'createMaskFromSelection' : self.createMaskFromSelection,
+            'createROIFromSelection'  : self.createROIFromSelection}
 
         orthoviewprofile.OrthoViewProfile.__init__(
             self,
@@ -111,97 +199,307 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         displayCtx .addListener('selectedOverlay',
                                 self._name,
-                                self._selectedOverlayChanged)
+                                self.__selectedOverlayChanged)
         overlayList.addListener('overlays',
                                 self._name,
-                                self._selectedOverlayChanged)
-
-        self._editor.addListener('canUndo',
-                                 self._name,
-                                 self._undoStateChanged)
-        self._editor.addListener('canRedo',
-                                 self._name,
-                                 self._undoStateChanged)
-
+                                self.__selectedOverlayChanged)
+        
         self.addListener('selectionOverlayColour',
                          self._name,
-                         self._selectionColoursChanged)
+                         self.__selectionColoursChanged)
         self.addListener('selectionCursorColour',
                          self._name,
-                         self._selectionColoursChanged) 
+                         self.__selectionColoursChanged) 
 
-        self._selectedOverlayChanged()
-        self._selectionChanged()
-        self._undoStateChanged()
+        self.__selectedOverlayChanged()
+        self.__selectionChanged()
+        self.__undoStateChanged()
 
 
     def destroy(self):
+        """Removes some property listeners, destroys the :class:`.Editor`
+        instances, and calls :meth:`.OrthoViewProfile.destroy`.
+        """
 
         self._displayCtx .removeListener('selectedOverlay', self._name)
         self._overlayList.removeListener('overlays',        self._name)
-        self._editor     .removeListener('canUndo',         self._name)
-        self._editor     .removeListener('canRedo',         self._name)
 
-        self._editor.destroy()
+        for editor in self.__editors.values():
+            editor.removeListener('canUndo', self._name)
+            editor.removeListener('canRedo', self._name)
+            editor.destroy()
 
-        self._editor = None
+        if self.__selAnnotation is not None:
+            self.__selAnnotaiton.destroy()
+            
+        if self.__xCursorAnnotation is not None:
+            self.__xCursorAnnotaiton.destroy()
+            
+        if self.__yCursorAnnotation is not None:
+            self.__yCursorAnnotaiton.destroy()
+            
+        if self.__zCursorAnnotation is not None:
+            self.__zCursorAnnotaiton.destroy() 
+ 
+        self.__editors           = None
+        self.__xcanvas           = None
+        self.__ycanvas           = None
+        self.__zcanvas           = None
+        self.__selAnnotation     = None
+        self.__xCursorAnnotation = None
+        self.__yCursorAnnotation = None
+        self.__zCursorAnnotation = None
+        self.__currentOverlay    = None
 
         orthoviewprofile.OrthoViewProfile.destroy(self)
 
+        
+    def deregister(self):
+        """Destroys all :mod:`.annotations`, and calls
+        :meth:`.OrthoViewProfile.deregister`.
+        """
+        if self.__selAnnotation is not None:
+            sa = self.__selAnnotation
+            self.__xcanvas.getAnnotations().dequeue(sa, hold=True)
+            self.__ycanvas.getAnnotations().dequeue(sa, hold=True)
+            self.__zcanvas.getAnnotations().dequeue(sa, hold=True)
+            sa.destroy()
 
-    def _undoStateChanged(self, *a):
-        self.enable('undo', self._editor.canUndo)
-        self.enable('redo', self._editor.canRedo)
+        xca = self.__xCursorAnnotation
+        yca = self.__yCursorAnnotation
+        zca = self.__zCursorAnnotation
 
+        if xca is not None:
+            self.__xcanvas.getAnnotations().dequeue(xca, hold=True)
+        if yca is not None:
+            self.__ycanvas.getAnnotations().dequeue(yca, hold=True)
+        if zca is not None:
+            self.__zcanvas.getAnnotations().dequeue(zca, hold=True)
 
-    def _selectionColoursChanged(self, *a):
-        if self._selAnnotation is not None:
-            self._selAnnotation.colour = self.selectionOverlayColour
+        self.__selAnnotation     = None
+        self.__xCursorAnnotation = None
+        self.__yCursorAnnotation = None
+        self.__zCursorAnnotation = None
+            
+        orthoviewprofile.OrthoViewProfile.deregister(self)
 
-        if self._xCursorAnnotation is not None:
-            self._xCursorAnnotation.colour = self.selectionCursorColour
-        if self._yCursorAnnotation is not None:
-            self._yCursorAnnotation.colour = self.selectionCursorColour
-        if self._zCursorAnnotation is not None:
-            self._zCursorAnnotation.colour = self.selectionCursorColour 
-
-
-    def _selectedOverlayChanged(self, *a):
-
-        overlay   = self._displayCtx.getSelectedOverlay()
-        selection = self._editor.getSelection() 
-        xannot    = self._xcanvas.getAnnotations()
-        yannot    = self._ycanvas.getAnnotations()
-        zannot    = self._zcanvas.getAnnotations()        
-
-        # If the selected overlay hasn't changed,
-        # we don't need to do anything
-        if overlay == self._currentOverlay:
+    
+    def clearSelection(self, *a):
+        """Clears the current selection. See :meth:`.Editor.clearSelection`.
+        """
+        
+        if self.__currentOverlay is None:
             return
 
-        # If there's already an existing
-        # selection object, clear it 
-        if self._selAnnotation is not None:
-            xannot.dequeue(self._selAnnotation, hold=True)
-            yannot.dequeue(self._selAnnotation, hold=True)
-            zannot.dequeue(self._selAnnotation, hold=True)
+        editor = self.__editors[self.__currentOverlay]
+
+        editor.getSelection().clearSelection()
+        
+        self._viewPanel.Refresh()
+
+
+    def fillSelection(self, *a):
+        """Fills the current selection with the :attr:`fillValue`. See
+        :meth:`.Editor.fillSelection`.
+        """
+        if self.__currentOverlay is None:
+            return
+
+        editor = self.__editors[self.__currentOverlay]
+                
+        editor.fillSelection(self.fillValue)
+        editor.getSelection().clearSelection()
+
+        
+    def createMaskFromSelection(self, *a):
+        """Creates a new mask :class:`.Image` from the current selection.
+        See :meth:`.Editor.createMaskFromSelection`.
+        """
+        if self.__currentOverlay is None:
+            return
+
+        self.__editors[self.__currentOverlay].createMaskFromSelection()
+
+    
+    def createROIFromSelection(self, *a):
+        """Creates a new ROI :class:`.Image` from the current selection.
+        See :meth:`.Editor.createROIFromSelection`.
+        """ 
+        if self.__currentOverlay is None:
+            return
+
+        self.__editors[self.__currentOverlay].createROIFromSelection() 
+
+
+    def undo(self, *a):
+        """Un-does the most recent change to the selection or to the
+        :class:`.Image` data. See :meth:`.Editor.undo`.
+        """
+
+        if self.__currentOverlay is None:
+            return
+        
+        editor = self.__editors[self.__currentOverlay]
+
+        # We're disabling notification of changes to the selection
+        # during undo/redo. This is because a single undo
+        # will probably involve multiple modifications to the
+        # selection (as changes are grouped by the editor),
+        # with each of those changes causing the selection object
+        # to notify its listeners. As one of these listeners is a
+        # SelectionTexture, these notifications can get expensive,
+        # due to updates to the GL texture buffer. So we disable
+        # notification, and then manually refresh the texture
+        # afterwards
+        editor.getSelection().disableNotification('selection')
+        editor.undo()
+        editor.getSelection().enableNotification('selection')
+        
+        self.__selectionChanged()
+        self.__selAnnotation.texture.refresh()
+        self._viewPanel.Refresh()
+
+
+    def redo(self, *a):
+        """Re-does the most recent undone change to the selection or to the
+        :class:`.Image` data. See :meth:`.Editor.redo`.
+        """
+
+        if self.__currentOverlay is None:
+            return
+
+        editor = self.__editors[self.__currentOverlay]
+
+        editor.getSelection().disableNotification('selection')
+        editor.redo()
+        editor.getSelection().enableNotification('selection')
+        
+        self.__selectionChanged()
+        self.__selAnnotation.texture.refresh()
+        self._viewPanel.Refresh()
+ 
+
+    def __undoStateChanged(self, *a):
+        """Called when either of the :attr:`.Editor.canUndo` or
+        :attr:`.Editor.canRedo` states change. Updates the state of the
+        ``undo``/``redo`` actions accordingly.
+        """
+        if self.__currentOverlay is None:
+            return
+
+        editor = self.__editors[self.__currentOverlay]
+
+        log.debug('Editor ({}) undo/redo state '
+                  'changed: undo={}, redo={}'.format(
+                      self.__currentOverlay.name,
+                      editor.canUndo,
+                      editor.canRedo))
+        
+        self.enable('undo', editor.canUndo)
+        self.enable('redo', editor.canRedo)
+
+
+    def __selectionColoursChanged(self, *a):
+        """Called when either of the :attr:`selectionOverlayColour` or
+        :attr:`selectionCursorColour` properties change.
+        
+        Updates the  :mod:`.annotations` colours accordingly.
+        """
+        if self.__selAnnotation is not None:
+            self.__selAnnotation.colour = self.selectionOverlayColour
+
+        if self.__xCursorAnnotation is not None:
+            self.__xCursorAnnotation.colour = self.selectionCursorColour
+        if self.__yCursorAnnotation is not None:
+            self.__yCursorAnnotation.colour = self.selectionCursorColour
+        if self.__zCursorAnnotation is not None:
+            self.__zCursorAnnotation.colour = self.selectionCursorColour 
+
+
+    def __selectedOverlayChanged(self, *a):
+        """Called when either the :class:`.OverlayList` or
+        :attr:`.DisplayContext.selectedOverlay` change.
+
+        Destroys all old :mod:`.annotations`. If the newly selected overlay is
+        an :class:`Image`, new annotations are created.
+        """
+        # Overview:
+        #  1. Destroy Editor instances associated with
+        #     overlays that no longer exist
+        #
+        #  2. Destroy old canvas annotations
+        #
+        #  3. Remove property listeners on editor/selection
+        #     objects associated with the previous overlay
+        #
+        #  4. Load/create a new Editor for the new overlay
+        #
+        #  5. Add property listeners to the editor/selection
+        #
+        #  6. Create canvas annotations
+        #
+        # Here we go....
+
+        # Destroy any Editor instances which are associated
+        # with overlays that are no longer in the overlay list
+        #
+        # TODO - If the current overlay has been removed,
+        #        this will cause an error later on. You
+        #        need to handle this scenario here.
+        # 
+        # for overlay, editor in self.__editors:
+        #     if overlay not in self._overlayList:
+        #         self.__editors.pop(overlay)
+        #         editor.destroy()
+
+        overlay = self._displayCtx.getSelectedOverlay()
+        
+        # If the selected overlay hasn't changed,
+        # we don't need to do anything
+        if overlay == self.__currentOverlay:
+            return
+
+        # Destroy all existing canvas annotations
+        xannot = self.__xcanvas.getAnnotations()
+        yannot = self.__ycanvas.getAnnotations()
+        zannot = self.__zcanvas.getAnnotations()        
+
+        # Clear the selection annotation
+        if self.__selAnnotation is not None:
+            xannot.dequeue(self.__selAnnotation, hold=True)
+            yannot.dequeue(self.__selAnnotation, hold=True)
+            zannot.dequeue(self.__selAnnotation, hold=True)
             
-            self._selAnnotation.destroy()
+            self.__selAnnotation.destroy()
 
-        xca = self._xCursorAnnotation
-        yca = self._yCursorAnnotation
-        zca = self._zCursorAnnotation
+        xca = self.__xCursorAnnotation
+        yca = self.__yCursorAnnotation
+        zca = self.__zCursorAnnotation
 
+        # And the cursor annotations
         if xca is not None: xannot.dequeue(xca, hold=True)
         if yca is not None: yannot.dequeue(yca, hold=True)
         if zca is not None: yannot.dequeue(xca, hold=True)
             
-        self._xCursorAnnotation = None
-        self._yCursorAnnotation = None
-        self._zCursorAnnotation = None
-        self._selAnnotation     = None
+        self.__xCursorAnnotation = None
+        self.__yCursorAnnotation = None
+        self.__zCursorAnnotation = None
+        self.__selAnnotation     = None
 
-        self._currentOverlay = overlay
+        # Remove property listeners from the
+        # editor/selection instances associated
+        # with the previously selected overlay
+        if self.__currentOverlay is not None:
+            editor = self.__editors[self.__currentOverlay]
+
+            log.debug('De-registering listeners from Editor {} ({})'.format(
+                id(editor),
+                self.__currentOverlay.name))
+            editor.getSelection().removeListener('selection', self._name)
+            editor               .removeListener('canUndo',   self._name)
+            editor               .removeListener('canRedo',   self._name)
+
+        self.__currentOverlay = overlay
 
         # If there is no selected overlay (the overlay
         # list is empty), don't do anything.
@@ -211,51 +509,99 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         display = self._displayCtx.getDisplay(overlay)
         opts    = display.getDisplayOpts()
 
-        # Edit mode is only supported on images with
-        # the 'volume' type, in 'id' or 'pixdim'
-        # transformation for the time being
+        # Edit mode is only supported on
+        # images with the 'volume' type
         if not isinstance(overlay, fslimage.Image) or \
-           display.overlayType != 'volume'         or \
-           opts.transform not in ('id', 'pixdim'):
+           display.overlayType != 'volume':
             
-            self._currentOverlay = None
-            log.warn('Editing is only possible on volume '
-                     'images, in ID or pixdim space.')
+            self.__currentOverlay = None
             return
 
-        # Otherwise, create a selection annotation
-        # and queue it on the canvases for drawing
+        # Change the display space so that the newly
+        # selected image is the reference image -
+        # display a message to the user, as this may
+        # otherwise be confusing
+        if self._displayCtx.displaySpace != overlay:
+            
+            msg = strings.messages[self, 'displaySpaceChange']
+            msg = msg.format(overlay.name)
 
-        selection.addListener('selection', self._name, self._selectionChanged)
+            wx.MessageDialog(self._viewPanel,
+                             message=msg,
+                             style=wx.OK).ShowModal()
+            self._displayCtx.displaySpace = overlay
 
-        self._selAnnotation = annotations.VoxelSelection( 
-            selection,
-            opts.getTransform('display', 'voxel'),
-            opts.getTransform('voxel',   'display'),
+        # Load the editor for the overlay (create
+        # one if necessary), and add listeners to
+        # some editor/selection properties
+        editor = self.__editors.get(overlay, None)
+        
+        if editor is None:
+            editor = fsleditor.Editor(overlay,
+                                      self._overlayList,
+                                      self._displayCtx)
+            self.__editors[overlay] = editor
+
+        log.debug('Registering listeners with Editor {} ({})'.format(
+            id(editor),
+            self.__currentOverlay.name)) 
+        editor.getSelection().addListener('selection',
+                                          self._name,
+                                          self.__selectionChanged)
+        editor.addListener('canUndo', self._name, self.__undoStateChanged)
+        editor.addListener('canRedo', self._name, self.__undoStateChanged)
+
+        # Update undo/redo button states, and
+        # selection action button states
+        self.__undoStateChanged()
+        self.__selectionChanged()
+    
+        # Create a selection annotation and
+        # queue it on the canvases for drawing
+        self.__selAnnotation = annotations.VoxelSelection( 
+            editor.getSelection(),
+            opts.getTransform('pixdim', 'voxel'),
+            opts.getTransform('voxel',  'pixdim'),
             colour=self.selectionOverlayColour)
 
+        # Create cursor annotatinos on each canvas
         kwargs = {'colour' : self.selectionCursorColour,
                   'width'  : 2}
 
         xca = annotations.Rect((0, 0), 0, 0, **kwargs)
         yca = annotations.Rect((0, 0), 0, 0, **kwargs)
         zca = annotations.Rect((0, 0), 0, 0, **kwargs)
-        self._xCursorAnnotation = xca
-        self._yCursorAnnotation = yca
-        self._zCursorAnnotation = zca
+        self.__xCursorAnnotation = xca
+        self.__yCursorAnnotation = yca
+        self.__zCursorAnnotation = zca
         
-        xannot.obj(self._selAnnotation,     hold=True)
-        yannot.obj(self._selAnnotation,     hold=True)
-        zannot.obj(self._selAnnotation,     hold=True)
-        xannot.obj(self._xCursorAnnotation, hold=True)
-        yannot.obj(self._yCursorAnnotation, hold=True)
-        zannot.obj(self._zCursorAnnotation, hold=True)
+        xannot.obj(self.__selAnnotation,     hold=True)
+        yannot.obj(self.__selAnnotation,     hold=True)
+        zannot.obj(self.__selAnnotation,     hold=True)
+        xannot.obj(self.__xCursorAnnotation, hold=True)
+        yannot.obj(self.__yCursorAnnotation, hold=True)
+        zannot.obj(self.__zCursorAnnotation, hold=True)
 
         self._viewPanel.Refresh()
 
 
-    def _selectionChanged(self, *a):
-        selection = self._editor.getSelection()
+    def __selectionChanged(self, *a):
+        """Called when the :attr:`.Selection.selection` is changed.
+        Toggles action enabled states depending on the size of the selection.
+        """
+
+        if self.__currentOverlay is None:
+            return
+
+        editor    = self.__editors[self.__currentOverlay]
+        selection = editor.getSelection()
+
+        # TODO This is a big performance bottleneck, as
+        #      it gets called on every mouse position
+        #      change when mouse-dragging. The Selection
+        #      object could cache its size? Or perhaps
+        #      these actions could be toggled at the
+        #      start/end of a mouse drag?
         selSize   = selection.getSelectionSize()
 
         self.enable('createMaskFromSelection', selSize > 0)
@@ -264,58 +610,37 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.enable('fillSelection',           selSize > 0)
 
     
-    def deregister(self):
-        if self._selAnnotation is not None:
-            sa = self._selAnnotation
-            self._xcanvas.getAnnotations().dequeue(sa, hold=True)
-            self._ycanvas.getAnnotations().dequeue(sa, hold=True)
-            self._zcanvas.getAnnotations().dequeue(sa, hold=True)
-            sa.destroy()
-
-        xca = self._xCursorAnnotation
-        yca = self._yCursorAnnotation
-        zca = self._zCursorAnnotation
-
-        if xca is not None:
-            self._xcanvas.getAnnotations().dequeue(xca, hold=True)
-        if yca is not None:
-            self._ycanvas.getAnnotations().dequeue(yca, hold=True)
-        if zca is not None:
-            self._zcanvas.getAnnotations().dequeue(zca, hold=True)
-
-        self._selAnnotation     = None
-        self._xCursorAnnotation = None
-        self._yCursorAnnotation = None
-        self._zCursorAnnotation = None
-            
-        orthoviewprofile.OrthoViewProfile.deregister(self)
-
-        
-    def _getVoxelLocation(self, canvasPos):
+    def __getVoxelLocation(self, canvasPos):
         """Returns the voxel location, for the currently selected overlay,
         which corresponds to the specified canvas position.
         """
         
-        opts  = self._displayCtx.getOpts(self._currentOverlay)
+        opts  = self._displayCtx.getOpts(self.__currentOverlay)
         voxel = opts.transformCoords([canvasPos], 'display', 'voxel')[0]
 
-        return np.int32(np.floor(voxel))
+        return np.int32(np.round(voxel))
 
 
-    def _makeSelectionAnnotation(
-            self, canvas, voxel, canvasPos, blockSize=None):
-        """Highlights the specified voxel with a selection annotation.
+    def __drawCursorAnnotation(self, canvas, voxel, blockSize=None):
+        """Draws the cursor annotation. Highlights the specified voxel with a
+        :class:`~fsl.fsleyes.gl.annotations.Rect` annotation.
+        
         This is used by mouse motion event handlers, so the user can
         see the possible selection, and thus what would happen if they
         were to click.
+
+        :arg canvas:    The :class:`.SliceCanvas` on which to make the
+                        annotation.
+        :arg voxel:     Voxel which is at the centre of the cursor.
+        :arg blockSize: Size of the cursor square/cube.
         """
 
-        opts  = self._displayCtx.getOpts(self._currentOverlay)
+        opts  = self._displayCtx.getOpts(self.__currentOverlay)
 
-        canvases = [self._xcanvas, self._ycanvas, self._zcanvas]
-        cursors  = [self._xCursorAnnotation,
-                    self._yCursorAnnotation,
-                    self._zCursorAnnotation]
+        canvases = [self.__xcanvas, self.__ycanvas, self.__zcanvas]
+        cursors  = [self.__xCursorAnnotation,
+                    self.__yCursorAnnotation,
+                    self.__zCursorAnnotation]
 
         # If we are running in a low
         # performance mode, the cursor
@@ -328,7 +653,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if blockSize is None:
             blockSize = self.selectionSize
 
-        # TODO Double check this, as it seems to be wrong
+        # Figure out the selection
+        # boundary coordinates
         lo = [(v)     - int(np.floor((blockSize - 1) / 2.0)) for v in voxel]
         hi = [(v + 1) + int(np.ceil(( blockSize - 1) / 2.0)) for v in voxel]
 
@@ -350,7 +676,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # edges, but the transformCoords method
         # will map voxel coordinates to the
         # displayed voxel centre. So we offset
-        # by -0.5 to get the corners
+        # by -0.5 to get the corners.
+        # 
+        # (Assuming here that the image is
+        # displayed in id/pixdim space)
         corners = opts.transformCoords(corners - 0.5, 'voxel', 'display')
 
         cmin = corners.min(axis=0)
@@ -371,12 +700,22 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             cursor.h  = cmax[yax] - cmin[yax]
             
 
-    def _applySelection(self, canvas, voxel, add=True):
+    def __applySelection(self, canvas, voxel, add=True):
+        """Called by ``sel`` mode mouse handlers. Adds/removes a block
+        of voxels, centred at the specified voxel, to/from the current
+        :class:`.Selection`.
+
+        :arg canvas: The source :class:`.SliceCanvas`.
+        :arg voxel:  Coordinates of centre voxel.
+        :arg add:    If ``True`` a block is added to the selection,
+                     otherwise it is removed.
+        """
 
         if self.selectionIs3D: axes = (0, 1, 2)
-        else:                  axes = (canvas.xax, canvas.yax)        
+        else:                  axes = (canvas.xax, canvas.yax)
 
-        selection     = self._editor.getSelection()
+        editor        = self.__editors[self.__currentOverlay]
+        selection     = editor.getSelection()
         block, offset = selection.generateBlock(voxel,
                                                 self.selectionSize,
                                                 selection.selection.shape,
@@ -386,8 +725,15 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         else:   selection.removeFromSelection(block, offset)
 
 
-    def _refreshCanvases(self, ev, canvas, mousePos=None, canvasPos=None):
-        """
+    def __refreshCanvases(self, ev, canvas, mousePos=None, canvasPos=None):
+        """Called by mouse event handlers.
+
+        If the current :class:`.ViewPanel` performance setting (see
+        :attr:`.SceneOpts.performance`) is at its maximum, all three
+        :class:`.OrthoPanel` :class:`.SliceCanvas` canvases are refreshed
+        on selection updates.
+
+        On all lower performance settings, only the source canvas is updated.
         """
         perf = self._viewPanel.getSceneOptions().performance
         if perf == 5:
@@ -405,106 +751,232 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
             
     def _selModeMouseWheel(self, ev, canvas, wheelDir, mousePos, canvasPos):
+        """Handles mouse wheel events in ``sel`` mode.
+
+        Increases/decreases the current :attr:`selectionSize`.
+        """
 
         if   wheelDir > 0: self.selectionSize += 1
         elif wheelDir < 0: self.selectionSize -= 1
 
-        voxel = self._getVoxelLocation(canvasPos)
-        self._makeSelectionAnnotation(canvas, voxel, canvasPos)
-        
-        self._refreshCanvases(ev, canvas)
+        voxel = self.__getVoxelLocation(canvasPos)
+        self.__drawCursorAnnotation(canvas, voxel)
+        self.__refreshCanvases(ev, canvas)
 
 
     def _selModeMouseMove(self, ev, canvas, mousePos, canvasPos):
-        voxel = self._getVoxelLocation(canvasPos)
-        self._makeSelectionAnnotation(canvas, voxel, canvasPos)
-        self._refreshCanvases(ev, canvas)
+        """Handles mouse motion events in ``sel`` mode.
+
+        Draws a cursor annotation at the current mouse location
+        (see :meth:`__draweCursorAnnotation`).
+        """
+        voxel = self.__getVoxelLocation(canvasPos)
+        self.__drawCursorAnnotation(canvas, voxel)
+        self.__refreshCanvases(ev,  canvas)
 
 
     def _selModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
-        self._editor.startChangeGroup()
+        """Handles mouse down events in ``sel`` mode.
 
-        voxel = self._getVoxelLocation(canvasPos)
-        self._applySelection(         canvas, voxel)
-        self._makeSelectionAnnotation(canvas, voxel, canvasPos)
-        self._refreshCanvases(ev, canvas, mousePos, canvasPos)
+        Starts an :class:`.Editor` change group, and adds to the current
+        :class:`Selection`.
+        """
+        if self.__currentOverlay is None:
+            return
+        
+        editor = self.__editors[self.__currentOverlay]
+        
+        editor.startChangeGroup()
+
+        voxel = self.__getVoxelLocation(canvasPos)
+        self.__applySelection(      canvas, voxel)
+        self.__drawCursorAnnotation(canvas, voxel)
+        self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
 
 
     def _selModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
-        voxel = self._getVoxelLocation(canvasPos)
-        self._applySelection(         canvas, voxel)
-        self._makeSelectionAnnotation(canvas, voxel, canvasPos)
-        self._refreshCanvases(ev, canvas, mousePos, canvasPos)
+        """Handles mouse drag events in ``sel`` mode.
+
+        Adds to the current :class:`Selection`.
+        """        
+        voxel = self.__getVoxelLocation(canvasPos)
+        self.__applySelection(      canvas, voxel)
+        self.__drawCursorAnnotation(canvas, voxel)
+        self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
 
 
     def _selModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
-        self._editor.endChangeGroup()
+        """Handles mouse up events in ``sel`` mode.
+
+        Ends the :class:`.Editor` change group that was started in the
+        :meth:`_selModeLeftMouseDown` method.
+        """
+        if self.__currentOverlay is None:
+            return
+        
+        editor = self.__editors[self.__currentOverlay] 
+        editor.endChangeGroup()
+        
         self._viewPanel.Refresh()
 
 
     def _selModeMouseLeave(self, ev, canvas, mousePos, canvasPos):
+        """Handles mouse leave events in ``sel`` mode. Makes sure that the
+        selection cursor annotation is not shown on any canvas.
+        """
         
-        cursors = [self._xCursorAnnotation,
-                   self._yCursorAnnotation,
-                   self._zCursorAnnotation]
+        cursors = [self.__xCursorAnnotation,
+                   self.__yCursorAnnotation,
+                   self.__zCursorAnnotation]
 
         for cursor in cursors:
             if cursor is not None:
                 cursor.w = 0
                 cursor.h = 0
 
-        self._refreshCanvases(ev, canvas)
+        self.__refreshCanvases(ev, canvas)
 
         
     def _deselModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
+        """Handles mouse down events in ``desel`` mode.
 
-        self._editor.startChangeGroup()
+        Starts an :class:`.Editor` change group, and removes from the current
+        :class:`Selection`.        
+        """
+        if self.__currentOverlay is None:
+            return
+        
+        editor = self.__editors[self.__currentOverlay]
 
-        voxel = self._getVoxelLocation(canvasPos)
-        self._applySelection(         canvas, voxel, False)
-        self._makeSelectionAnnotation(canvas, voxel, canvasPos)
-        self._refreshCanvases(ev, canvas, mousePos, canvasPos)
+        editor.startChangeGroup()
+
+        voxel = self.__getVoxelLocation(canvasPos)
+        self.__applySelection(      canvas, voxel, False)
+        self.__drawCursorAnnotation(canvas, voxel)
+        self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
 
 
     def _deselModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
-        voxel = self._getVoxelLocation(canvasPos)
-        self._applySelection(         canvas, voxel, False)
-        self._makeSelectionAnnotation(canvas, voxel, canvasPos)
-        self._refreshCanvases(ev, canvas, mousePos, canvasPos)
+        """Handles mouse drag events in ``desel`` mode.
+
+        Removes from the current :class:`Selection`.        
+        """ 
+        voxel = self.__getVoxelLocation(canvasPos)
+        self.__applySelection(      canvas, voxel, False)
+        self.__drawCursorAnnotation(canvas, voxel)
+        self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
 
         
     def _deselModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
-        self._editor.endChangeGroup()
+        """Handles mouse up events in ``desel`` mode.
+
+        Ends the :class:`.Editor` change group that was started in the
+        :meth:`_deselModeLeftMouseDown` method.
+        """
+        if self.__currentOverlay is None:
+            return
+        
+        editor = self.__editors[self.__currentOverlay]
+        
+        editor.endChangeGroup()
         self._viewPanel.Refresh()
+
+            
+    def __selintSelect(self, voxel):
+        """Selects voxels by intensity, using the specified ``voxel`` as
+        the seed location.
+
+        Called by the :meth:`_selintModeLeftMouseDown`,
+        :meth:`_selintModeLeftMouseDrag`, and and
+        :meth:`_selintModeLeftMouseWheel` methods.  See
+        :meth:`.Selection.selectByValue`.
+        """
+        
+        overlay = self.__currentOverlay
+
+        if overlay is None:
+            return
+
+        editor = self.__editors[self.__currentOverlay]
+        
+        if not self.limitToRadius or self.searchRadius == 0:
+            searchRadius = None
+        else:
+            searchRadius = (self.searchRadius / overlay.pixdim[0],
+                            self.searchRadius / overlay.pixdim[1],
+                            self.searchRadius / overlay.pixdim[2])
+
+        # If the last selection covered a bigger radius
+        # than this selection, clear the whole selection 
+        if self.__lastDist is None or \
+           np.any(np.array(searchRadius) < self.__lastDist):
+            editor.getSelection().clearSelection()
+
+        editor.getSelection().selectByValue(
+            voxel,
+            precision=self.intensityThres,
+            searchRadius=searchRadius,
+            local=self.localFill)
+
+        self.__lastDist = searchRadius
 
         
     def _selintModeMouseMove(self, ev, canvas, mousePos, canvasPos):
-        voxel = self._getVoxelLocation(canvasPos)
-        self._makeSelectionAnnotation(canvas, voxel, canvasPos, 1)
-        self._refreshCanvases(ev, canvas)
+        """Handles mouse motion events in ``selint`` mode. Draws a selection
+        annotation at the current location (see
+        :meth:`__drawCursorAnnotation`).
+        """
+        voxel = self.__getVoxelLocation(canvasPos)
+        self.__drawCursorAnnotation(canvas, voxel, 1)
+        self.__refreshCanvases(ev,  canvas)
 
         
     def _selintModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
+        """Handles mouse down events in ``selint`` mode.
 
-        self._editor.startChangeGroup()
-        self._editor.getSelection().clearSelection() 
-        self._selecting = True
-        self._lastDist  = 0
-        self._selintSelect(self._getVoxelLocation(canvasPos))
-        self._refreshCanvases(ev, canvas, mousePos, canvasPos)
+        Starts an :class:`.Editor` change group, then clears the current
+        selection, and selects voxels by intensity (see
+        :meth:`__selintSelect`).
+        """
+
+        if self.__currentOverlay is None:
+            return
+        
+        editor = self.__editors[self.__currentOverlay] 
+
+        editor.startChangeGroup()
+        editor.getSelection().clearSelection()
+        
+        self.__selecting = True
+        self.__lastDist  = 0
+        self.__selintSelect(self.__getVoxelLocation(canvasPos))
+        self.__refreshCanvases(ev, canvas, mousePos, canvasPos)
 
         
     def _selintModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
+        """Handles mouse drag events in ``selint`` mode.
+
+        If :attr:`limitToRadius` is ``True``, the :attr:`searchRadius` is
+        increased to the distance between the current mouse location, and
+        the mouse down location, and a select-by-intensity is re-run with
+        the same seed location (the mouse down location), and the new
+        search radius.
+
+        If ``limitToRadius`` is ``False``, a select-by-intensity is re-run
+        with the current mouse location.  See the :meth:`__selintSelect`
+        method.
+        """ 
 
         if not self.limitToRadius:
-            voxel = self._getVoxelLocation(canvasPos)
-            self._makeSelectionAnnotation(canvas, voxel, canvasPos, 1)
+            voxel = self.__getVoxelLocation(canvasPos)
+            self.__drawCursorAnnotation(canvas, voxel, 1)
 
             refreshArgs = (ev, canvas, mousePos, canvasPos)
             
         else:
             mouseDownPos, canvasDownPos = self.getMouseDownLocation()
-            voxel                       = self._getVoxelLocation(canvasDownPos)
+            voxel = self.__getVoxelLocation(
+                canvasDownPos)
 
             cx,  cy,  cz  = canvasPos
             cdx, cdy, cdz = canvasDownPos
@@ -514,13 +986,20 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
             refreshArgs = (ev, canvas)
 
-        self._selintSelect(voxel)
-        self._refreshCanvases(*refreshArgs)
+        self.__selintSelect(voxel)
+        self.__refreshCanvases(*refreshArgs)
 
         
     def _selintModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
+        """Handles mouse wheel events in ``selint`` mode.
 
-        if not self._selecting:
+        If the mouse button is down, the :attr:`intensityThres` value is
+        decreased/increased according to the mouse wheel direction, and
+        select-by-intensity is re-run with the mouse-down location as
+        the seed location.
+        """
+
+        if not self.__selecting:
             return
 
         overlay = self._displayCtx.getSelectedOverlay()
@@ -533,39 +1012,23 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         elif wheel < 0: self.intensityThres -= step
 
         mouseDownPos, canvasDownPos = self.getMouseDownLocation()
-        voxel                       = self._getVoxelLocation(canvasDownPos) 
+        voxel                       = self.__getVoxelLocation(canvasDownPos) 
 
-        self._selintSelect(voxel)
-        self._refreshCanvases(ev, canvas)
-        
-            
-    def _selintSelect(self, voxel):
-        
-        overlay = self._displayCtx.getSelectedOverlay()
-        
-        if not self.limitToRadius or self.searchRadius == 0:
-            searchRadius = None
-        else:
-            searchRadius = (self.searchRadius / overlay.pixdim[0],
-                            self.searchRadius / overlay.pixdim[1],
-                            self.searchRadius / overlay.pixdim[2])
-
-        # If the last selection covered a bigger radius
-        # than this selection, clear the whole selection 
-        if self._lastDist is None or \
-           np.any(np.array(searchRadius) < self._lastDist):
-            self._editor.getSelection().clearSelection()
-
-        self._editor.getSelection().selectByValue(
-            voxel,
-            precision=self.intensityThres,
-            searchRadius=searchRadius,
-            local=self.localFill)
-
-        self._lastDist = searchRadius
+        self.__selintSelect(voxel)
+        self.__refreshCanvases(ev, canvas)
 
         
     def _selintModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
-        self._editor.endChangeGroup()
-        self._selecting = False
+        """Handles mouse up events in ``selint`` mode. Ends the :class:`.Editor`
+        change group that was started in the :meth:`_selintModeLeftMouseDown`
+        method.
+        """
+        if self.__currentOverlay is None:
+            return
+        
+        editor = self.__editors[self.__currentOverlay] 
+        
+        editor.endChangeGroup()
+        
+        self.__selecting = False
         self._viewPanel.Refresh()

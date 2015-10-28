@@ -45,7 +45,10 @@ uniform sampler1D zColourTexture;
  */
 uniform mat4 voxValXform;
 
-
+/*
+ * Matrix which transforms from vector image data
+ * values to colour map texture coordinates.
+ */
 uniform mat4 cmapXform;
 
 /*

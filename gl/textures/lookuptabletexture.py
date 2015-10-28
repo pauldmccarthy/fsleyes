@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 #
-# lookuptabletexture.py -
+# lookuptabletexture.py - The LookupTableTexture class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`LookupTableTexture` class, a 1D
+:class:`.Texture` which stores the colours of a :class:`.LookupTable`
+as an OpenGL texture.
+"""
 
 import logging
 
@@ -19,8 +23,29 @@ log = logging.getLogger(__name__)
 
 
 class LookupTableTexture(texture.Texture):
+    """The ``LookupTableTexture`` class is a 1D :class:`.Texture` which stores
+    the colours of a :class:`.LookupTable` as an OpenGL texture.
+
+    
+    A :class:`.LookupTable` stores a collection of label values (assumed to be
+    unsigned 16 bit integers), and colours associated with each label. This
+    mapping of ``{label : colour}`` is converted into a ``numpy`` array
+    of size :math:`max(labels)\\times 3` containing the lookup table, where
+    a label value can be used as an array index to retrieve the corresponding
+    colour. All aspects of a ``LookupTableTexture`` can be configured via the
+    :meth:`set` method.
+
+    
+    As OpenGL textures are indexed by coordinates in the range ``[0.0, 1.0]``,
+    you will need to divide label values by :math:`max(labels)` to convert
+    them into texture coordinates.
+    """
 
     def __init__(self, name):
+        """Create a ``LookupTableTexture``.
+
+        :arg name: A uniqe name for this ``LookupTableTexture``.
+        """
         
         texture.Texture.__init__(self, name, 1)
         
@@ -31,6 +56,19 @@ class LookupTableTexture(texture.Texture):
 
 
     def set(self, **kwargs):
+        """Set any parameters on this ``ColourMapTexture``. Valid
+        keyword arguments are:
+
+        ============== ======================================================
+        ``lut``        The :class:`.LookupTable` instance.
+        ``alpha``      Transparency, a value between 0.0 and 1.0. Defaults to
+                       1.0
+        ``brightness`` Brightness, a value between 0.0 and 1.0. Defaults to
+                       0.5.
+        ``contrast``   Contrast, a value between 0.0 and 1.0. Defaults to
+                       0.5.
+        ============== ======================================================
+        """
 
         lut        = kwargs.get('lut',        self)
         alpha      = kwargs.get('alpha',      self)
@@ -46,10 +84,15 @@ class LookupTableTexture(texture.Texture):
 
 
     def refresh(self):
+        """Forces a refresh of this ``LookupTableTexture``. This method should
+        be called when the :class:`.LookupTable` has changed, so that the
+        underlying texture is kept consistent with it.
+        """
         self.__refresh()
 
         
     def __refresh(self, *a):
+        """Configures the underlying OpenGL texture. """
 
         lut        = self.__lut
         alpha      = self.__alpha

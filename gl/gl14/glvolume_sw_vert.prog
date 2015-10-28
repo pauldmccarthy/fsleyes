@@ -2,14 +2,16 @@
 #
 # Vertex program for rendering GLVolume instances.
 #
+# This version is slightly faster than the standard glvolume_vert.prog shader
+# The only difference is that this version only copies texture coordinates
+# through to the fragment program, not voxel coordinates,
+#
 # Inputs:
-#    state.matrix.mvp
-#    vertex.position
-#    vertex.texcoord[0]
+#    vertex.texcoord[0] - Texture coordinates.
 #
 #
 # Outputs:
-#    result.position
+#    result.texcoord[0] - Texture coordinates.
 #
 
 # Transform the vertex position into display coordinates

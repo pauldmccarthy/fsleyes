@@ -1,7 +1,7 @@
 /*
  * Simple edge-detection functions.
  *
- *
+ * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
 
 /* for single-channel 3D textures */ 

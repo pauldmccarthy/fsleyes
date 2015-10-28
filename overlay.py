@@ -1,14 +1,59 @@
 #!/usr/bin/env python
 #
-# overlay.py -
+# overlay.py - Defines the OverlayList class, and a few utility functions
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module defines the :class:`OverlayList` class, which is a simple but
-fundamental class in FSLEyes - it is a container for all displayed overlays.
-
+fundamental class in *FSLeyes* - it is a container for all loaded overlays.
 Only one ``OverlayList`` ever exists, and it is shared throughout the entire
-application.
+application. 
+
+
+**What is an overlay?**
+
+
+The definition of an *overlay* is fairly broad; any object can be a added to
+the ``OverlayList``  - there is no ``Overlay`` base class, nor any interface
+which must be provided by an overlay object. The only requirements imposed on
+an overlay type are:
+
+  - Must be able to be created with a single ``__init__`` parameter, which
+    is a string specifying the data source location (e.g. a file name).
+
+  - Must have an attribute called ``name``, which is used as the display name
+    for the overlay.
+
+  - Must have an attribute called ``dataSource``, which is used to identify
+    the source of the overlay data.
+
+  - Must be supported by the :mod:`~fsl.fsleyes.gl` package .. ok, this is a
+    pretty big requirement .. See the :mod:`.globject` and the
+    :data:`.display.OVERLAY_TYPES` documentation for details on how to get
+    started with this one.
+
+
+Currently (``fslpy`` version |version|) the only overlay types in existence
+(and able to be rendered) are:
+
+.. autosummary::
+   :nosignatures:
+
+   ~fsl.data.image.Image
+   ~fsl.data.featimage.FEATImage
+   ~fsl.data.model.Model
+
+
+A few other utility functions are provided by this module:
+
+.. autosummary::
+   :nosignatures:
+
+   guessDataSourceType
+   makeWildcard
+   loadOverlays
+   interactiveLoadOverlays
+   saveOverlay
 """
 
 import logging
@@ -28,28 +73,20 @@ class OverlayList(props.HasProperties):
     """Class representing a collection of overlays to be displayed together.
 
     Contains a :class:`props.properties_types.List` property called
-    ``overlays``, containing overlay objects (e.g. :class:`.Image` or
-    :class:`VTKModel`objects).
+    :attr:`overlays`, containing overlay objects (e.g. :class:`.Image`
+    or :class:`.Model`objects). Listeners can be registered on the
+    ``overlays`` property, so they are notified when the overlay list changes.
 
     An :class:`OverlayList` object has a few wrapper methods around the
-    :attr:`overlays` property, allowing the :class:`OverlayList` to be used
-    as if it were a list itself.
-
-    There are no restrictions on the type of objects which may be contained
-    in the ``OverlayList``, but all objects must have a few attributes:
-
-      - ``name`` ...
-    
-      - ``dataSource`` ..
-
-
-    Furthermore, all overlay types must be able to be created with a single
-    __init__ parameter, which is a string specifying the data source location
-    (e.g. a file).
+    :attr:`overlays` property, allowing the :class:`OverlayList` to be used as
+    if it were a list itself. The :meth:`addOverlays` method is also a
+    convenient way to allow the user (i.e. via a GUI) to add overlays to the
+    list.
     """
 
 
     def __validateOverlay(self, atts, overlay):
+        """Makes sure that the given overlay object is valid."""
         return (hasattr(overlay, 'name')      and 
                 hasattr(overlay, 'dataSource'))
 
@@ -57,7 +94,7 @@ class OverlayList(props.HasProperties):
     overlays = props.List(
         listType=props.Object(allowInvalid=False,
                               validateFunc=__validateOverlay))
-    """A list of overlay objects to be displayed"""
+    """A list of overlay objects to be displayed."""
 
     
     def __init__(self, overlays=None):
@@ -71,12 +108,20 @@ class OverlayList(props.HasProperties):
     def addOverlays(self, fromDir=None, addToEnd=True):
         """Convenience method for interactively adding overlays to this
         :class:`OverlayList`.
+
+        Returns: ``True`` if some overlays were added to the list, ``False``
+                 otherwise.
         """
 
         overlays = interactiveLoadOverlays(fromDir)
+
+        if len(overlays) == 0:
+            return False
         
         if addToEnd: self.extend(      overlays)
         else:        self.insertAll(0, overlays)
+
+        return True
 
 
     def find(self, name):
@@ -139,46 +184,49 @@ class OverlayList(props.HasProperties):
 
 def guessDataSourceType(filename):
     """A convenience function which, given the name of a file or directory,
-    figures out a suitable data source type.
+    figures out a suitable overlay type.
 
     Returns a tuple containing two values - a type which should be able to
     load the filename, and the filename, possibly adjusted. If the file type
     is unrecognised, the first tuple value will be ``None``.
     """
 
-    import fsl.data.image       as fslimage
-    import fsl.data.model       as fslmodel
-    import fsl.data.featimage   as fslfeatimage
-    import fsl.data.featresults as featresults
+    import fsl.data.image          as fslimage
+    import fsl.data.model          as fslmodel
+    import fsl.data.featimage      as fslfeatimage
+    import fsl.data.melodicimage   as fslmelimage
+    import fsl.data.melodicresults as melresults
+    import fsl.data.featresults    as featresults
+
+    filename = op.abspath(filename)
 
     if filename.endswith('.vtk'):
         return fslmodel.Model, filename
 
     else:
-
         if op.isdir(filename):
             if featresults.isFEATDir(filename):
                 return fslfeatimage.FEATImage, filename
+            elif melresults.isMelodicDir(filename):
+                return fslmelimage.MelodicImage, filename 
         else:
-        
-            filename = fslimage.addExt(filename, False)
-            if any([filename.endswith(e)
-                    for e in fslimage.ALLOWED_EXTENSIONS]):
+            
+            try:               filename = fslimage.addExt(filename, True)
+            except ValueError: return None, filename
 
-                if featresults.isFEATDir(filename):
-                    return fslfeatimage.FEATImage, filename
-                else:
-                    return fslimage.Image, filename
+            if featresults.isFEATDir(filename):
+                return fslfeatimage.FEATImage, filename
+            elif melresults.isMelodicDir(filename):
+                return fslmelimage.MelodicImage, filename
+            else:
+                return fslimage.Image, filename
 
     return None, filename
 
 
 def makeWildcard():
     """Returns a wildcard string for use in a file dialog, to limit
-    the acceptable file types.
-    
-    :arg allowedExts: A list of strings containing the allowed file
-                      extensions.
+    the the displayed file types to supported overlay file types.
     """
 
     import fsl.data.image as fslimage
@@ -202,25 +250,26 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
     """Loads all of the overlays specified in the sequence of files
     contained in ``paths``.
 
-    :param loadFunc:  A function which is called just before each overlay
-                      is loaded, and is passed the overlay path. The default
-                      load function uses a :mod:`wx` popup frame to display
-                      the name of the overlay currently being loaded. Pass in
-                      ``None`` to disable this default behaviour.
+    :arg loadFunc:  A function which is called just before each overlay
+                    is loaded, and is passed the overlay path. The default
+                    load function uses a :mod:`wx` popup frame to display
+                    the name of the overlay currently being loaded. Pass in
+                    ``None`` to disable this default behaviour.
 
-    :param errorFunc: A function which is called if an error occurs while
-                      loading an overlay, being passed the name of the
-                      overlay, and either the :class:`Exception` which 
-                      occurred, or a string containing an error message.  The
-                      default function pops up a :class:`wx.MessageBox` with
-                      an error message. Pass in ``None`` to disable this
-                      default behaviour.
+    :arg errorFunc: A function which is called if an error occurs while
+                    loading an overlay, being passed the name of the
+                    overlay, and either the :class:`Exception` which 
+                    occurred, or a string containing an error message.  The
+                    default function pops up a :class:`wx.MessageBox` with
+                    an error message. Pass in ``None`` to disable this
+                    default behaviour.
 
-    :param saveDir:   If ``True`` (the default), the directory of the last
-                      overlay in the list of ``paths`` is saved, and used
-                      later on as the default load directory.
+    :arg saveDir:   If ``True`` (the default), the directory of the last
+                    overlay in the list of ``paths`` is saved, and used
+                    later on as the default load directory.
 
-    :Returns a list of overlay objects
+    :returns:       A list of overlay objects - just a regular ``list``, 
+                    not an :class:`OverlayList`.
     """
 
     defaultLoad = loadFunc == 'default'
@@ -245,7 +294,8 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
         e     = str(e)
         msg   = strings.messages['overlay.loadOverlays.error'].format(s, e)
         title = strings.titles[  'overlay.loadOverlays.error']
-        log.debug('Error loading overlay ({}), ({})'.format(s, e))
+        log.debug('Error loading overlay ({}), ({})'.format(s, e),
+                  exc_info=True)
         wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK) 
 
     # If loadFunc or errorFunc are explicitly set to
@@ -294,18 +344,19 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
 
 
 def interactiveLoadOverlays(fromDir=None, **kwargs):
-    """Convenience method for interactively loading one or more overlays.
+    """Convenience function for interactively loading one or more overlays.
     
-    If the :mod:`wx` package is available, pops up a file dialog
-    prompting the user to select one or more overlays to load.
+    Pops up a file dialog prompting the user to select one or more overlays
+    to load.
 
-    :param str fromDir:   Directory in which the file dialog should start.
-                          If ``None``, the most recently visited directory
-                          (via this method) is used, or a directory from
-                          an already loaded overlay, or the current working
-                          directory.
+    :arg fromDir: Directory in which the file dialog should start.  If
+                  ``None``, the most recently visited directory (via this
+                  function) is used, or a directory from An already loaded
+                  overlay, or the current working directory.
 
-    Returns: A list containing the overlays that were loaded.
+    :arg kwargs:  Passed  through to the :func:`loadOverlays` function.
+
+    :returns:     A list containing the overlays that were loaded.
     
     :raise ImportError:  if :mod:`wx` is not present.
     :raise RuntimeError: if a :class:`wx.App` has not been created.
@@ -354,11 +405,12 @@ def saveOverlay(overlay, fromDir=None):
 
     :param fromDir: Directory in which the file dialog should start.
                     If ``None``, the most recently visited directory
-                    (via this method) is used, or the directory from
+                    (via this function) is used, or the directory from
                     the given image, or the current working directory.
 
     :raise ImportError:  if :mod:`wx` is not present.
     :raise RuntimeError: if a :class:`wx.App` has not been created.
+    :raise ValueError:   if ``overlay`` is not an :class:`.Image` instance.
     """
 
     import fsl.data.image as fslimage

@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# maskopts.py -
+# maskopts.py - The MaskOpts class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`MaskOpts` class, which defines settings
+for displaying an :class:`.Image` overlay as a binary mask.
+"""
 
 
 import numpy as np
@@ -15,15 +18,32 @@ import                     volumeopts
 
 
 class MaskOpts(volumeopts.ImageOpts):
+    """The ``MaskOpts`` class defines settings for displaying an
+    :class:`.Image` overlay as a binary mask.
+    """
 
-    colour     = props.Colour()
-    invert     = props.Boolean(default=False)
-    threshold  = props.Bounds(
+    threshold = props.Bounds(
         ndims=1,
         labels=[strings.choices['VolumeOpts.displayRange.min'],
-                strings.choices['VolumeOpts.displayRange.max']])
+                strings.choices['VolumeOpts.displayRange.max']]) 
+    """The mask threshold range - values outside of this range are not
+    displayed.
+    """
+    
+    invert = props.Boolean(default=False)
+    """If ``True``, the :attr:`threshold` range is inverted - values
+    inside the range are not shown, and values outside of the range are shown.
+    """
+
+    
+    colour = props.Colour()
+    """The mask colour."""
+
 
     def __init__(self, overlay, *args, **kwargs):
+        """Create a ``MaskOpts`` instance for the given overlay. All arguments
+        are passed through to the :class:`.ImageOpts` constructor.
+        """
 
         if np.prod(overlay.shape) > 2 ** 30:
             sample = overlay.data[..., overlay.shape[-1] / 2]

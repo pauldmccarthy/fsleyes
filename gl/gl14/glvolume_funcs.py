@@ -1,23 +1,13 @@
 #!/usr/bin/env python
 #
-# glvolume_funcs.py - Functions used by the GLVolume class to render 3D
-#                     images in an OpenGL 1.4 compatible manner.
+# glvolume_funcs.py - OpenGL 1.4 functions used by the GLVolume class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""Provides functions which are used by the :class:`.GLVolume` class to render
-3D images in an OpenGL 1.4 compatible manner.
-
-This module depends upon two OpenGL ARB extensions, ARB_vertex_program and
-ARB_fragment_program which, being ancient (2002) technology, should be
-available on pretty much any graphics card in the wild today.
-
-See the :mod:`.gl21.glvolume_funcs` module for more details.
-
-This PDF is quite useful:
- - http://www.renderguild.com/gpuguide.pdf
-
+"""This module provides functions which are used by the :class:`.GLVolume`
+class to render :class:`.Image` overlays in an OpenGL 1.4 compatible manner.
 """
+
 
 import logging
 
@@ -34,7 +24,30 @@ import fsl.fsleyes.gl.shaders as shaders
 log = logging.getLogger(__name__)
 
 
+def init(self):
+    """Calls :func:`compileShaders` and :func:`updateShaderState`."""
+
+    self.vertexProgram   = None
+    self.fragmentProgram = None
+    
+    compileShaders(   self)
+    updateShaderState(self)
+
+    
+def destroy(self):
+    """Deletes handles to the vertex/fragment programs."""
+
+    arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
+    arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram))
+
+
 def compileShaders(self):
+    """Compiles the vertex and fragment programs used for rendering
+    :class:`.GLVolume` instances. This is performed using the :mod:`.shaders`
+    module. The compiled vertex and shader programs are stored as attributes
+    on the ``GLVolume`` instance, called ``vertexProgram`` and
+    ``framgentProgram`` respectively.
+    """
 
     if self.vertexProgram is not None:
         arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
@@ -53,25 +66,9 @@ def compileShaders(self):
     self.vertexProgram   = vertexProgram
     self.fragmentProgram = fragmentProgram    
 
-
-def init(self):
-    """Compiles the vertex and fragment programs used for rendering."""
-
-    self.vertexProgram   = None
-    self.fragmentProgram = None
     
-    compileShaders(   self)
-    updateShaderState(self)
-
-    
-def destroy(self):
-    """Deletes handles to the vertex/fragment programs."""
-
-    arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
-    arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram))
-
-
 def updateShaderState(self):
+    """Sets all variables required by the vertex and fragment programs. """
     opts = self.displayOpts
 
     # enable the vertex and fragment programs
@@ -117,8 +114,7 @@ def updateShaderState(self):
 
 
 def preDraw(self):
-    """Prepares to draw a slice from the given :class:`.GLVolume` instance.
-    """
+    """Prepares to draw a slice from the given :class:`.GLVolume` instance. """
 
     # enable drawing from a vertex array
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
@@ -138,7 +134,6 @@ def preDraw(self):
 
 def draw(self, zpos, xform=None):
     """Draws a slice of the image at the given Z location. """
-
     
     vertices, voxCoords, texCoords = self.generateVertices(zpos, xform)
     

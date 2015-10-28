@@ -5,11 +5,28 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This package is a container for a collection of classes which use OpenGL
-textures for various purposes. 
+textures for various purposes.
 
 
-The :mod:`.texture` sub-module contains the definition of the :class:`Texture`
-class, the base class for all texture types.
+.. todo:: There is a lot of duplicate code in the various texture sub-classes.
+          This will hopefully be rectified at some stage in the future -
+          shared code will be moved into the :class:`.Texture` class.
+
+
+The following texture types are defined in this package:
+
+.. autosummary::
+   :nosignatures:
+
+   ~fsl.fsleyes.gl.textures.texture.Texture
+   ~fsl.fsleyes.gl.textures.texture.Texture2D
+   ~fsl.fsleyes.gl.textures.imagetexture.ImageTexture
+   ~fsl.fsleyes.gl.textures.colourmaptexture.ColourMapTexture
+   ~fsl.fsleyes.gl.textures.lookuptabletexture.LookupTableTexture
+   ~fsl.fsleyes.gl.textures.selectiontexture.SelectionTexture
+   ~fsl.fsleyes.gl.textures.rendertexture.RenderTexture
+   ~fsl.fsleyes.gl.textures.rendertexture.GLObjectRenderTexture
+   ~fsl.fsleyes.gl.textures.rendertexturestack.RenderTextureStack
 """
 
 

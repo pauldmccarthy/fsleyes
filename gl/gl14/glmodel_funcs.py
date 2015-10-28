@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# glmodel_funcs.py -
+# glmodel_funcs.py - OpenGL 1.4 functions used by the GLModel class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides functions which are used by the :class:`.GLModel`
+class to render :class:`.Model` overlays in an OpenGL 1.4 compatible manner.
+"""
 
 
 import OpenGL.GL                      as gl
@@ -15,6 +18,10 @@ import fsl.fsleyes.gl.shaders         as shaders
 
 
 def compileShaders(self):
+    """Compiles vertex and fragment shader programs for the given
+    :class:`.GLModel` instance. The shaders are added as attributes of the
+    instance.
+    """
     
     vertShaderSrc = shaders.getVertexShader(  self)
     fragShaderSrc = shaders.getFragmentShader(self)
@@ -27,12 +34,17 @@ def compileShaders(self):
 
 
 def destroy(self):
+    """Deletes the vertex/fragment shader programs that were compiled by
+    :func:`compileShaders`.
+    """    
     arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
     arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram)) 
 
 
 def updateShaders(self):
-
+    """Updates the state of the vertex/fragment shaders. This involves
+    setting the parameter values used by the shaders.
+    """ 
     offsets = self.getOutlineOffsets()
     
     loadShaders(self)
@@ -41,6 +53,7 @@ def updateShaders(self):
 
 
 def loadShaders(self):
+    """Loads the :class:`.GLModel` vertex/fragment shader programs. """
     gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
     gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
 
@@ -51,5 +64,6 @@ def loadShaders(self):
 
 
 def unloadShaders(self):
+    """Un-loads the :class:`.GLModel` vertex/fragment shader programs. """
     gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB) 
     gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)     

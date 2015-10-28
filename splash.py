@@ -1,23 +1,47 @@
 #!/usr/bin/env python
 #
-# splash.py -
+# splash.py - FSLeyes splash screen.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`FSLEyesSplash` class, a splash screen for
+*FSLeyes*.
+"""
+
 
 import os.path as op
 
-
 import wx
-
 
 import fsl.fsleyes.widgets.imagepanel as imagepanel
 import fsl.data.strings               as strings
 
 
 class FSLEyesSplash(wx.Frame):
+    """A simple splash screen for *FSLeyes*. An image and a status bar are
+    displayed; the status bar can be updated via the :meth:`SetStatus` method.
+
+    
+    The :class:`.ImagePanel` class is used to display the image.
+
+    
+    Typical usage would be something like the following::
+
+        splash = FSLEyesSplash(None)
+        splash.Show()
+
+        # Do something, e.g. loading overlays
+        splash.SetStatus('Loading blah.nii.gz ...')
+
+        # Finished initialising, the application is ready
+        splash.Close()
+    """
     
     def __init__(self, parent):
+        """Create a ``FSLEyesSplash`` frame.
+
+        :arg parent: The :mod:`wx` parent object.
+        """
         
         wx.Frame.__init__(self, parent, style=0)
         
@@ -25,23 +49,26 @@ class FSLEyesSplash(wx.Frame):
         splashbmp  = wx.Bitmap(splashfile, wx.BITMAP_TYPE_PNG)
         splashimg  = splashbmp.ConvertToImage()
     
-        splashPanel    = imagepanel.ImagePanel(self, splashimg)
-        self.statusBar = wx.StaticText(self, style=wx.ELLIPSIZE_MIDDLE)
-        self.statusBar.SetLabel(strings.messages[self, 'default'])
-
-        self.statusBar.SetBackgroundColour('#636a70')
-        self.statusBar.SetForegroundColour('#ffffff')
-        self          .SetBackgroundColour('#636a70')
+        self.__splashPanel = imagepanel.ImagePanel(self, splashimg)
+        self.__statusBar   = wx.StaticText(self, style=wx.ELLIPSIZE_MIDDLE)
         
-        sizer = wx.BoxSizer(wx.VERTICAL)
+        self.__statusBar.SetLabel(strings.messages[self, 'default'])
 
-        sizer.Add(splashPanel,    flag=wx.EXPAND, proportion=1)
-        sizer.Add(self.statusBar, flag=wx.EXPAND)
+        self.__statusBar.SetBackgroundColour('#636a70')
+        self.__statusBar.SetForegroundColour('#ffffff')
+        self            .SetBackgroundColour('#636a70')
+        
+        self.__sizer = wx.BoxSizer(wx.VERTICAL)
 
-        self.SetSizer(sizer)
+        self.__sizer.Add(self.__splashPanel, flag=wx.EXPAND, proportion=1)
+        self.__sizer.Add(self.__statusBar,   flag=wx.EXPAND)
+
+        self.SetSizer(self.__sizer)
 
         self.Layout()
         self.Fit()
 
+        
     def SetStatus(self, text):
-        self.statusBar.SetLabel(text)
+        """Sets the text shown on the status bar to the specified ``text``. """
+        self.__statusBar.SetLabel(text)

@@ -1,17 +1,21 @@
 #!/usr/bin/env python
 #
-# orthopanel.py - A wx/OpenGL widget for displaying and interacting with a
-# collection of 3D overlays. 
+# orthopanel.py - The OrthoPanel class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""A :mod:`wx`/:mod:`OpenGL` widget for displaying and interacting with a
-collection of 3D overlays.
+"""This module provides the :class:`OrthoPanel` class, which displays a 2D
+view of 3D overlays.
 
-Displays three canvases, each of which shows the same overlay(s) on a
-different orthogonal plane. The displayed location is driven by the
-:attr:`.DisplayContext.location` property.
+A couple of other classes are provided for convenience:
+
+.. autosummary::
+   :nosignatures:
+
+   OrthoFrame
+   OrthoDialog
 """
+
 
 import logging
 
@@ -25,7 +29,7 @@ import fsl.fsleyes.colourmaps                     as colourmaps
 import fsl.fsleyes.gl.wxglslicecanvas             as slicecanvas
 import fsl.fsleyes.controls.overlaydisplaytoolbar as overlaydisplaytoolbar
 import fsl.fsleyes.controls.orthotoolbar          as orthotoolbar
-import fsl.fsleyes.controls.orthoprofiletoolbar   as orthoprofiletoolbar
+import fsl.fsleyes.controls.orthoedittoolbar      as orthoedittoolbar
 import fsl.fsleyes.displaycontext.orthoopts       as orthoopts
 import                                               canvaspanel
 
@@ -34,22 +38,107 @@ log = logging.getLogger(__name__)
 
 
 class OrthoPanel(canvaspanel.CanvasPanel):
+    """The ``OrthoPanel`` class is a *FSLeyes view* which displays a 2D view
+    of 3D overlays.  The ``OrthoPanel`` is the primary point of user
+    interaction in *FSLeyes*.
 
 
-    def __init__(self, parent, overlayList, displayCtx):
+    **Overview**
+
+    
+    An ``OrthoPanel`` contains three :class:`.SliceCanvas` panels, each of
+    which provide a 2D view of the overlays in the :class:`.OverlayList` along
+    one axis. These ``SliceCanvas`` instances can be accessed through the
+    :meth:`getXCanvas`, :meth:`getYCanvas`, :meth:`getZCanvas`, and
+    :meth:`getGLCanvases` methods.
+
+
+    An ``OrthoPanel`` looks something like this:
+
+
+    .. image:: images/orthopanel.png
+       :scale: 50%
+       :align: center
+
+
+    **Anatomical labels**
+    
+
+    In addition to the three ``SliceCanvas`` panels, the ``OrthoPanel`` is
+    capable of displaying labels around each panel, showing the user the
+    anatomical orientation of the display on each panel. These labels are only
+    shown if the currently selected overlay (as dicated by the
+    :attr:`.DisplayContext.selectedOverlay` property) is a :class:`.Image`
+    instance, **or** the :meth:`.DisplayOpts.getReferenceImage` method for the
+    currently selected overlay returns an :class:`.Image` instance.
+
+
+    **Display**
+
+
+    The display of an ``OrthoPanel`` can be configured through all of the
+    settings provided by the :class:`.OrthoOpts` class. The ``OrthoOpts``
+    instance for a given ``OrthoPanel`` can be accessed via the
+    :meth:`.CanvasPanel.getSceneOptions` method.
+
+
+    **Interaction**
+
+
+    Two interaction profiles are defined for use with the ``OrthoPanel`` (see
+    the :class:`.ViewPanel` for an overview of *profiles*):
+
+    ======== =========================================================
+    ``view`` Viewing/navigation, using the :class:`.OrthoViewProfile`.
+    
+    ``edit`` Simple editing of :class:`.Image` overlays, using the
+             :class:`.OrthoEditProfile` (see also the
+             :mod:`~fsl.fsleyes.editor` package).
+    ======== =========================================================
+    
+
+    **Actions and control panels**
+
+
+    The ``OrthoPanel`` adds a few extra actions to those provided by the 
+    :class:`.CanvasPanel` class:
+
+
+    ====================== ==========================================
+    ``toggleOrthoToolBar`` Shows/hides an :class:`.OrthoToolBar`.
+    ``toggleEditToolBar``  Shows/hides an :class:`.OrthoEditToolBar`.
+    ====================== ==========================================
+
+
+    When an ``OrthoPanel`` is created, it will automatically add the
+    following control panels:
+
+    .. autosummary::
+       :nosignatures:
+    
+       ~fsl.fsleyes.controls.orthotoolbar.OrthoToolBar
+       ~fsl.fsleyes.controls.orthoedittoolbar.OrthoEditToolBar
+       ~fsl.fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar
+    """
+
+
+    def __init__(self, parent, overlayList, displayCtx, addToolbars=True):
+        """Create an ``OrthoPanel``.
+
+        :arg parent:      The :mod:`wx` parent.
+        :arg overlayList: An :class:`.OverlayList` instance.
+        :arg displayCtx:  A :class:`.DisplayContext` instance.
+        :arg addToolbars: If ``False``, the toolbars (listed above) are not
+                          added. Defaults to ``True``.
         """
-        Creates three SliceCanvas objects, each displaying the images
-        in the given image list along a different axis. 
-        """
-
 
         sceneOpts = orthoopts.OrthoOpts()
 
         actionz = {
             'toggleOrthoToolBar' : lambda *a: self.togglePanel(
                 orthotoolbar.OrthoToolBar, ortho=self),
-            'toggleProfileToolBar' : lambda *a: self.togglePanel(
-                orthoprofiletoolbar.OrthoProfileToolBar, ortho=self), 
+            'toggleEditToolBar' : lambda *a: self.togglePanel(
+                orthoedittoolbar.OrthoEditToolBar, ortho=self), 
         }
 
         canvaspanel.CanvasPanel.__init__(self,
@@ -63,138 +152,120 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         # The canvases themselves - each one displays a
         # slice along each of the three world axes
-        self._xcanvas = slicecanvas.WXGLSliceCanvas(canvasPanel,
-                                                    overlayList,
-                                                    displayCtx,
-                                                    zax=0)
-        self._ycanvas = slicecanvas.WXGLSliceCanvas(canvasPanel,
-                                                    overlayList,
-                                                    displayCtx,
-                                                    zax=1)
-        self._zcanvas = slicecanvas.WXGLSliceCanvas(canvasPanel,
-                                                    overlayList,
-                                                    displayCtx,
-                                                    zax=2)
+        self.__xcanvas = slicecanvas.WXGLSliceCanvas(canvasPanel,
+                                                     overlayList,
+                                                     displayCtx,
+                                                     zax=0)
+        self.__ycanvas = slicecanvas.WXGLSliceCanvas(canvasPanel,
+                                                     overlayList,
+                                                     displayCtx,
+                                                     zax=1)
+        self.__zcanvas = slicecanvas.WXGLSliceCanvas(canvasPanel,
+                                                     overlayList,
+                                                     displayCtx,
+                                                     zax=2)
 
         # Labels to show anatomical orientation,
         # stored in a dict for each canvas
-        self._xLabels = {}
-        self._yLabels = {}
-        self._zLabels = {}
+        self.__xLabels = {}
+        self.__yLabels = {}
+        self.__zLabels = {}
+        
         for side in ('left', 'right', 'top', 'bottom'):
-            self._xLabels[side] = wx.StaticText(canvasPanel)
-            self._yLabels[side] = wx.StaticText(canvasPanel)
-            self._zLabels[side] = wx.StaticText(canvasPanel)
+            self.__xLabels[side] = wx.StaticText(canvasPanel)
+            self.__yLabels[side] = wx.StaticText(canvasPanel)
+            self.__zLabels[side] = wx.StaticText(canvasPanel)
 
-        self._xcanvas.bindProps('showCursor',   sceneOpts)
-        self._ycanvas.bindProps('showCursor',   sceneOpts)
-        self._zcanvas.bindProps('showCursor',   sceneOpts)
+        self.__xcanvas.bindProps('showCursor',   sceneOpts)
+        self.__ycanvas.bindProps('showCursor',   sceneOpts)
+        self.__zcanvas.bindProps('showCursor',   sceneOpts)
 
-        self._xcanvas.bindProps('bgColour',     sceneOpts)
-        self._ycanvas.bindProps('bgColour',     sceneOpts)
-        self._zcanvas.bindProps('bgColour',     sceneOpts)
+        self.__xcanvas.bindProps('bgColour',     sceneOpts)
+        self.__ycanvas.bindProps('bgColour',     sceneOpts)
+        self.__zcanvas.bindProps('bgColour',     sceneOpts)
 
-        self._xcanvas.bindProps('cursorColour', sceneOpts)
-        self._ycanvas.bindProps('cursorColour', sceneOpts)
-        self._zcanvas.bindProps('cursorColour', sceneOpts)
+        self.__xcanvas.bindProps('cursorColour', sceneOpts)
+        self.__ycanvas.bindProps('cursorColour', sceneOpts)
+        self.__zcanvas.bindProps('cursorColour', sceneOpts)
 
         # Callbacks for ortho panel layout options
-        sceneOpts.addListener('layout',     self._name, self._refreshLayout)
-        sceneOpts.addListener('showLabels', self._name, self._refreshLabels)
+        sceneOpts.addListener('layout',     self._name, self.__refreshLayout)
+        sceneOpts.addListener('showLabels', self._name, self.__refreshLabels)
         sceneOpts.addListener('bgColour'  , self._name, self.__bgColourChanged)
 
-        self.__bgColourChanged()
-
         # Individual zoom control for each canvas
-        self._xcanvas.bindProps('zoom', sceneOpts, 'xzoom')
-        self._ycanvas.bindProps('zoom', sceneOpts, 'yzoom')
-        self._zcanvas.bindProps('zoom', sceneOpts, 'zzoom')
+        self.__xcanvas.bindProps('zoom', sceneOpts, 'xzoom')
+        self.__ycanvas.bindProps('zoom', sceneOpts, 'yzoom')
+        self.__zcanvas.bindProps('zoom', sceneOpts, 'zzoom')
 
-        self._xcanvas.bindProps('renderMode',      sceneOpts)
-        self._ycanvas.bindProps('renderMode',      sceneOpts)
-        self._zcanvas.bindProps('renderMode',      sceneOpts)
+        self.__xcanvas.bindProps('renderMode',      sceneOpts)
+        self.__ycanvas.bindProps('renderMode',      sceneOpts)
+        self.__zcanvas.bindProps('renderMode',      sceneOpts)
 
-        self._xcanvas.bindProps('softwareMode',    sceneOpts)
-        self._ycanvas.bindProps('softwareMode',    sceneOpts)
-        self._zcanvas.bindProps('softwareMode',    sceneOpts)
+        self.__xcanvas.bindProps('softwareMode',    sceneOpts)
+        self.__ycanvas.bindProps('softwareMode',    sceneOpts)
+        self.__zcanvas.bindProps('softwareMode',    sceneOpts)
 
-        self._xcanvas.bindProps('resolutionLimit', sceneOpts)
-        self._ycanvas.bindProps('resolutionLimit', sceneOpts)
-        self._zcanvas.bindProps('resolutionLimit', sceneOpts) 
-
-        # And a global zoom which controls all canvases at once
-
-        minZoom = sceneOpts.getConstraint('xzoom', 'minval')
-        maxZoom = sceneOpts.getConstraint('xzoom', 'maxval')
-
-        sceneOpts.setConstraint('zoom', 'minval', minZoom)
-        sceneOpts.setConstraint('zoom', 'maxval', maxZoom)
-
-        sceneOpts.addListener('zoom', self._name, self.__onZoom)
+        self.__xcanvas.bindProps('resolutionLimit', sceneOpts)
+        self.__ycanvas.bindProps('resolutionLimit', sceneOpts)
+        self.__zcanvas.bindProps('resolutionLimit', sceneOpts) 
 
         # Callbacks for overlay list/selected overlay changes
         self._overlayList.addListener('overlays',
                                       self._name,
-                                      self._overlayListChanged)
+                                      self.__overlayListChanged)
         self._displayCtx .addListener('bounds',
                                       self._name,
-                                      self._refreshLayout) 
+                                      self.__refreshLayout) 
         self._displayCtx .addListener('selectedOverlay',
                                       self._name,
-                                      self._overlayListChanged)
+                                      self.__overlayListChanged)
 
         # Callback for the display context location - when it
         # changes, update the displayed canvas locations
         self._displayCtx.addListener('location',
                                      self._name,
-                                     self._locationChanged) 
+                                     self.__locationChanged) 
 
         # Callbacks for toggling x/y/z canvas display
-        sceneOpts.addListener('showXCanvas',
-                              self._name,
-                              lambda *a: self._toggleCanvas('x'),
-                              weak=False)
-        sceneOpts.addListener('showYCanvas',
-                              self._name,
-                              lambda *a: self._toggleCanvas('y'),
-                              weak=False)
-        sceneOpts.addListener('showZCanvas',
-                              self._name,
-                              lambda *a: self._toggleCanvas('z'),
-                              weak=False)
+        sceneOpts.addListener('showXCanvas', self._name, self.__toggleCanvas)
+        sceneOpts.addListener('showYCanvas', self._name, self.__toggleCanvas)
+        sceneOpts.addListener('showZCanvas', self._name, self.__toggleCanvas)
 
-        # Call the _resize method to refresh
+        # Call the __onResize method to refresh
         # the slice canvases when the canvas
         # panel is resized, so aspect ratio
         # is maintained
-        canvasPanel.Bind(wx.EVT_SIZE, self._onResize)
+        canvasPanel.Bind(wx.EVT_SIZE, self.__onResize)
 
         # Initialise the panel
-        self._refreshLayout()
-        self._overlayListChanged()
-        self._locationChanged()
+        self.__refreshLayout()
+        self.__bgColourChanged()
+        self.__overlayListChanged()
+        self.__locationChanged()
         self.initProfile()
 
-        # The FSLEyesFrame AuiManager seems to
+        # The ViewPanel AuiManager seems to
         # struggle if we add these toolbars
         # immediately, so we'll do it asynchronously 
-        def addToolbars():
+        def _addToolbars():
             self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar,
                              viewPanel=self)
             self.togglePanel(orthotoolbar.OrthoToolBar,
                              ortho=self) 
-            self.togglePanel(orthoprofiletoolbar.OrthoProfileToolBar,
+            self.togglePanel(orthoedittoolbar.OrthoEditToolBar,
                              ortho=self) 
 
-        wx.CallAfter(addToolbars)
+        if addToolbars:
+            wx.CallAfter(_addToolbars)
 
 
     def destroy(self):
-        """Called when this panel is closed. 
-        
-        The display context and image list will probably live longer than
-        this OrthoPanel. So when this panel is destroyed, all those
-        registered listeners are removed.
+        """Must be called when this ``OrthoPanel`` is closed.
+
+        Removes listeners from the :class:`.DisplayContext` and
+        :class:`.OverlayList` instances, destroys each of the three
+        :class:`.SliceCanvas` panels, and calls :meth:`.CanvasPanel.destroy`.
         """
 
         self._displayCtx .removeListener('location',        self._name)
@@ -202,9 +273,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self._displayCtx .removeListener('selectedOverlay', self._name)
         self._overlayList.removeListener('overlays',        self._name)
 
-        self._xcanvas.destroy()
-        self._ycanvas.destroy()
-        self._zcanvas.destroy()
+        self.__xcanvas.destroy()
+        self.__ycanvas.destroy()
+        self.__zcanvas.destroy()
 
         # The _overlayListChanged method adds
         # listeners to individual overlays,
@@ -215,110 +286,140 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         canvaspanel.CanvasPanel.destroy(self)
 
-
-    def __bgColourChanged(self, *a):
-        
-        bg = self.getSceneOptions().bgColour[:3]
-        fg = colourmaps.complementaryColour(bg[:3])
-
-        bg = [int(round(c * 255)) for c in bg] + [255]
-        fg = [int(round(c * 255)) for c in fg] + [255]
-
-        self.getCanvasPanel().SetBackgroundColour(bg)
-        self.getCanvasPanel().SetForegroundColour(fg)
-
-        self._xcanvas.SetBackgroundColour(bg)
-        self._ycanvas.SetBackgroundColour(bg)
-        self._zcanvas.SetBackgroundColour(bg)
-
-        for side in ('left', 'right', 'top', 'bottom'):
-            self._xLabels[side].SetBackgroundColour(bg)
-            self._yLabels[side].SetBackgroundColour(bg)
-            self._zLabels[side].SetBackgroundColour(bg)
-            self._xLabels[side].SetForegroundColour(fg)
-            self._yLabels[side].SetForegroundColour(fg)
-            self._zLabels[side].SetForegroundColour(fg) 
-
-        self.Refresh()
-        
-            
-    def __onZoom(self, *a):
-        """Called when the :attr:`.SceneOpts.zoom` property changes.
-        Propagates the change to the :attr:`.OrthoOpts.xzoom`, ``yzoom``,
-        and ``zzoom`` properties.
-        """
-        opts       = self.getSceneOptions()
-        opts.xzoom = opts.zoom
-        opts.yzoom = opts.zoom
-        opts.zzoom = opts.zoom
-
             
     def getGLCanvases(self):
         """Returns all of the :class:`.SliceCanvas` instances contained
         within this ``OrthoPanel``.
         """
-        return [self._xcanvas, self._ycanvas, self._zcanvas]
+        return [self.__xcanvas, self.__ycanvas, self.__zcanvas]
     
 
     def getXCanvas(self):
-        """Returns a reference to the :class:`.SliceCanvas` instance
-        displaying the X axis.
+        """Returns the :class:`.SliceCanvas` instance displaying the X axis.
         """
-        return self._xcanvas
+        return self.__xcanvas
 
     
     def getYCanvas(self):
-        """Returns a reference to the :class:`.SliceCanvas` instance
-        displaying the Y axis.
+        """Returns the :class:`.SliceCanvas` instance displaying the Y axis.
         """ 
-        return self._ycanvas
+        return self.__ycanvas
 
     
     def getZCanvas(self):
-        """Returns a reference to the :class:`.SliceCanvas` instance
-        displaying the Z axis.
+        """Returns the :class:`.SliceCanvas` instance displaying the Z axis.
         """ 
-        return self._zcanvas 
+        return self.__zcanvas 
         
 
-    def _toggleCanvas(self, canvas):
-        """Called when any of  show*Canvas properties are changed.
+    def __bgColourChanged(self, *a):
+        """Called when the :class:`.SceneOpts.bgColour` property changes.
+        Updates the panel and anatomical label background/foreground
+        colours.
         
-        Shows/hides the specified canvas ('x', 'y', or 'z') - this callback
-        is configured in __init__ above.
+        The :attr:`.SliceCanvasOpts.bgColour` properties are bound to
+        ``SceneOpts.bgColour``,(see :meth:`.HasProperties.bindProps`), so we
+        don't need to manually update them.
+        """
+        
+        bg = self.getSceneOptions().bgColour
+        fg = colourmaps.complementaryColour(bg)
+
+        bg = [int(round(c * 255)) for c in bg]
+        fg = [int(round(c * 255)) for c in fg]
+
+        self.getCanvasPanel().SetBackgroundColour(bg)
+        self.getCanvasPanel().SetForegroundColour(fg)
+
+        self.__xcanvas.SetBackgroundColour(bg)
+        self.__ycanvas.SetBackgroundColour(bg)
+        self.__zcanvas.SetBackgroundColour(bg)
+
+        self.__setLabelColours(bg, fg)
+
+
+    def __setLabelColours(self, bgColour, fgColour):
+        """Used by the :meth:`__bgColourChanged` and :meth:`__refreshLabels`
+        methods.
+
+        Sets the background and foreground label colours to the given
+        ``bgColour`` and ``fgColour``, which should be ``(r, g, b, a)``
+        tuples with each value in the range  ``[0, 255]``.
         """
 
-        opts = self.getSceneOptions()
+        bgColour = tuple(bgColour)
+        fgColour = tuple(fgColour)
+        
+        overlay = self._displayCtx.getReferenceImage(
+            self._displayCtx.getSelectedOverlay())
 
-        if canvas == 'x':
-            canvas = self._xcanvas
-            show   = opts.showXCanvas
-            labels = self._xLabels
-        elif canvas == 'y':
-            canvas = self._ycanvas
-            show   = opts.showYCanvas
-            labels = self._yLabels
-        elif canvas == 'z':
-            canvas = self._zcanvas
-            show   = opts.showZCanvas
-            labels = self._zLabels
+        allLabels = self.__xLabels.values() + \
+                    self.__yLabels.values() + \
+                    self.__zLabels.values() 
 
-        self._canvasSizer.Show(canvas, show)
-        for label in labels.values():
-            if (not show) or (show and opts.showLabels):
-                self._canvasSizer.Show(label, show)
+        if overlay is not None:
+            opts = self._displayCtx.getOpts(overlay)
+            
+            if opts.transform in ('pixdim', 'id'):
+                xorient = overlay.getVoxelOrientation(0)
+                yorient = overlay.getVoxelOrientation(1)
+                zorient = overlay.getVoxelOrientation(2)
+            else:
+                xorient = overlay.getWorldOrientation(0)
+                yorient = overlay.getWorldOrientation(1)
+                zorient = overlay.getWorldOrientation(2)
+
+            if constants.ORIENT_UNKNOWN in (xorient, yorient, zorient):
+
+                # If the background colour is black or white,
+                # make the foreground colour red, to highlight
+                # the unknown orientation. It's too difficult
+                # to do this for any background colour.
+                if bgColour == (  0,   0,   0, 255) or \
+                   bgColour == (255, 255, 255, 255):
+                    fgColour = (255,   0,   0, 255)
+        
+        for lbl in allLabels:
+            lbl.SetForegroundColour(fgColour)
+            lbl.SetBackgroundColour(bgColour)
+
+        
+    def __toggleCanvas(self, *a):
+        """Called when any of the :attr:`.OrthoOpts.showXCanvas`,
+        :attr:`.OrthoOpts.showYCanvas`, or :attr:`.OrthoOpts.showZCanvas`
+        properties are changed.
+
+        Shows/hides each of the :class:`.SliceCanvas` panels and anatomical
+        label panels accordingly.
+        """
+
+        opts      = self.getSceneOptions()
+        canvases  = [self.__xcanvas,   self.__ycanvas,   self.__zcanvas]
+        allLabels = [self.__xLabels,   self.__yLabels,   self.__zLabels]
+        shows     = [opts.showXCanvas, opts.showYCanvas, opts.showZCanvas]
+
+        for canvas, labels, show in zip(canvases, allLabels, shows):
+
+            canvas.Show(show)
+            self.__canvasSizer.Show(canvas, show)
+
+            for label in labels.values():
+                self.__canvasSizer.Show(label, show and opts.showLabels)
 
         if opts.layout == 'grid':
-            self._refreshLayout()
+            self.__refreshLayout()
 
         self.PostSizeEvent()
 
 
-    def _overlayListChanged(self, *a):
-        """Called when the overlay list or selected overlay is changed.
+    def __overlayListChanged(self, *a):
+        """Called when the :class:`.OverlayList` or
+        :attr:`.DisplayContext.selectedOverlay` is changed.
 
-        Adds a listener to the currently selected overlay, to listen
-        for changes on its transformation matrix.
+        Adds a listener to the :attr:`.DisplayOpts.bounds` property for the
+        currently selected overlay, to listen for changes to its bounds, which
+        will trigger an update to the anatomical labels (see
+        :meth:`__refreshLabels`).
         """
         
         for i, ovl in enumerate(self._overlayList):
@@ -330,56 +431,53 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             if i == self._displayCtx.selectedOverlay:
                 opts.addListener('bounds',
                                  self._name,
-                                 self._refreshLabels,
+                                 self.__refreshLabels,
                                  overwrite=True)
             else:
                 opts.removeListener('bounds', self._name)
                 
         # anatomical orientation may have changed with an image change
-        self._refreshLabels()
+        self.__refreshLabels()
 
             
-    def _onResize(self, ev):
-        """
-        Called whenever the panel is resized. Makes sure that the canvases
-        are laid out nicely.
+    def __onResize(self, ev):
+        """Called whenever the panel is resized. Makes sure that the
+        :class:`.SliceCanvas` panels are laid out nicely.
         """
         ev.Skip()
-        self._calcCanvasSizes()
+        self.__calcCanvasSizes()
 
 
-    def _refreshLabels(self, *a):
-        """Shows/hides labels depicting anatomical orientation on each canvas.
+    def __refreshLabels(self, *a):
+        """Shows/hides labels depicting anatomical orientation on each
+        :class:`.SliceCanvas`.
         """
 
-        allLabels = self._xLabels.values() + \
-                    self._yLabels.values() + \
-                    self._zLabels.values()
+        sceneOpts = self.getSceneOptions()
+        allLabels = self.__xLabels.values() + \
+                    self.__yLabels.values() + \
+                    self.__zLabels.values()
 
         # Are we showing or hiding the labels?
-        if   len(self._overlayList) == 0:       show = False
+        if len(self._overlayList) == 0:
+            show = False
 
         overlay = self._displayCtx.getReferenceImage(
             self._displayCtx.getSelectedOverlay())
 
         # Labels are only supported if we
         # have a volumetric reference image 
-        if   overlay is None:                   show = False
-        elif self.getSceneOptions().showLabels: show = True
-        else:                                   show = False
+        if   overlay is None:      show = False
+        elif sceneOpts.showLabels: show = True
+        else:                      show = False
 
         for lbl in allLabels:
-            self._canvasSizer.Show(lbl, show)
+            self.__canvasSizer.Show(lbl, show)
 
         # If we're hiding the labels, do no more
         if not show:
             self.PostSizeEvent()
             return
-
-        # Default colour is white - if the orientation labels
-        # cannot be determined, the foreground colour will be
-        # changed to red
-        colour  = 'white'
 
         opts = self._displayCtx.getOpts(overlay)
 
@@ -398,9 +496,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             xorient = overlay.getWorldOrientation(0)
             yorient = overlay.getWorldOrientation(1)
             zorient = overlay.getWorldOrientation(2)
-                
-        if constants.ORIENT_UNKNOWN in (xorient, yorient, zorient):
-            colour = 'red'
 
         xlo = strings.anatomy['Image', 'lowshort',  xorient]
         ylo = strings.anatomy['Image', 'lowshort',  yorient]
@@ -409,29 +504,36 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         yhi = strings.anatomy['Image', 'highshort', yorient]
         zhi = strings.anatomy['Image', 'highshort', zorient]
 
-        for lbl in allLabels:
-            lbl.SetForegroundColour(colour)
+        bg = sceneOpts.bgColour
+        fg = colourmaps.complementaryColour(bg)
+        bg = [int(round(c * 255)) for c in bg]
+        fg = [int(round(c * 255)) for c in fg]        
 
-        self._xLabels['left']  .SetLabel(ylo)
-        self._xLabels['right'] .SetLabel(yhi)
-        self._xLabels['top']   .SetLabel(zlo)
-        self._xLabels['bottom'].SetLabel(zhi)
-        self._yLabels['left']  .SetLabel(xlo)
-        self._yLabels['right'] .SetLabel(xhi)
-        self._yLabels['top']   .SetLabel(zlo)
-        self._yLabels['bottom'].SetLabel(zhi)
-        self._zLabels['left']  .SetLabel(xlo)
-        self._zLabels['right'] .SetLabel(xhi)
-        self._zLabels['top']   .SetLabel(ylo)
-        self._zLabels['bottom'].SetLabel(yhi)
+        self.__setLabelColours(bg, fg)
+
+        self.__xLabels['left']  .SetLabel(ylo)
+        self.__xLabels['right'] .SetLabel(yhi)
+        self.__xLabels['top']   .SetLabel(zlo)
+        self.__xLabels['bottom'].SetLabel(zhi)
+        self.__yLabels['left']  .SetLabel(xlo)
+        self.__yLabels['right'] .SetLabel(xhi)
+        self.__yLabels['top']   .SetLabel(zlo)
+        self.__yLabels['bottom'].SetLabel(zhi)
+        self.__zLabels['left']  .SetLabel(xlo)
+        self.__zLabels['right'] .SetLabel(xhi)
+        self.__zLabels['top']   .SetLabel(ylo)
+        self.__zLabels['bottom'].SetLabel(yhi)
 
         self.PostSizeEvent()
 
 
-    def _calcCanvasSizes(self, *a):
-        """Fixes the size for each displayed canvas (by setting their minimum
-        and maximum sizes), so that they are scaled proportionally to each
-        other.
+    def __calcCanvasSizes(self, *a):
+        """Sets the size for each displayed :class:`.SliceCanvas`.
+
+        The minimum/maximum size of each canvas is fixed so that they are
+        scaled proportionally to each other, thus preserving the aspect ratio.
+        The :mod:~fsl.utils.layout` module is used to perform the canvas size
+        calculation.
         """
         
         opts   = self.getSceneOptions()
@@ -439,9 +541,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         width, height = self.getCanvasPanel().GetClientSize().Get()
 
-        show     = [opts.showXCanvas, opts.showYCanvas, opts.showZCanvas]
-        canvases = [self._xcanvas,    self._ycanvas,    self._zcanvas]
-        labels   = [self._xLabels,    self._yLabels,    self._zLabels]
+        show     = [opts.showXCanvas,  opts.showYCanvas,  opts.showZCanvas]
+        canvases = [self.__xcanvas,    self.__ycanvas,    self.__zcanvas]
+        labels   = [self.__xLabels,    self.__yLabels,    self.__zLabels]
 
         if width == 0 or height == 0:   return
         if len(self._overlayList) == 0: return
@@ -501,21 +603,21 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             height = height -     sumh
             
         else:
-            canvases = [self._ycanvas, self._xcanvas, self._zcanvas]
+            canvases = [self.__ycanvas, self.__xcanvas, self.__zcanvas]
 
             if opts.showLabels:
-                xlw = self._xLabels['left']  .GetClientSize().GetWidth()
-                xrw = self._xLabels['right'] .GetClientSize().GetWidth()
-                ylw = self._yLabels['left']  .GetClientSize().GetWidth()
-                yrw = self._yLabels['right'] .GetClientSize().GetWidth()
-                zlw = self._zLabels['left']  .GetClientSize().GetWidth()
-                zrw = self._zLabels['right'] .GetClientSize().GetWidth()             
-                xth = self._xLabels['top']   .GetClientSize().GetHeight()
-                xbh = self._xLabels['bottom'].GetClientSize().GetHeight()
-                yth = self._yLabels['top']   .GetClientSize().GetHeight()
-                ybh = self._yLabels['bottom'].GetClientSize().GetHeight()
-                zth = self._zLabels['top']   .GetClientSize().GetHeight()
-                zbh = self._zLabels['bottom'].GetClientSize().GetHeight()
+                xlw = self.__xLabels['left']  .GetClientSize().GetWidth()
+                xrw = self.__xLabels['right'] .GetClientSize().GetWidth()
+                ylw = self.__yLabels['left']  .GetClientSize().GetWidth()
+                yrw = self.__yLabels['right'] .GetClientSize().GetWidth()
+                zlw = self.__zLabels['left']  .GetClientSize().GetWidth()
+                zrw = self.__zLabels['right'] .GetClientSize().GetWidth()             
+                xth = self.__xLabels['top']   .GetClientSize().GetHeight()
+                xbh = self.__xLabels['bottom'].GetClientSize().GetHeight()
+                yth = self.__yLabels['top']   .GetClientSize().GetHeight()
+                ybh = self.__yLabels['bottom'].GetClientSize().GetHeight()
+                zth = self.__zLabels['top']   .GetClientSize().GetHeight()
+                zbh = self.__zLabels['bottom'].GetClientSize().GetHeight()
             else:
                 xlw = xrw = xth = xbh = 0
                 ylw = yrw = yth = ybh = 0
@@ -544,9 +646,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             canvas.SetMaxSize(size)
 
         
-    def _refreshLayout(self, *a):
-        """Called when the layout property changes, or the canvas layout needs
-        to be refreshed. Updates the orthopanel layout accordingly.
+    def __refreshLayout(self, *a):
+        """Called when the :attr:`.OrthoOpts.layout` property changes, or the
+        canvas layout needs to be refreshed. Updates the layout accordingly.
         """
 
         opts   = self.getSceneOptions()
@@ -579,55 +681,55 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # if layout is something other than the above three,
         # then something's gone wrong and I'm going to crash
 
-        self._canvasSizer = wx.FlexGridSizer(nrows, ncols)
+        self.__canvasSizer = wx.FlexGridSizer(nrows, ncols)
 
         # The rows/columns that contain
         # canvases must also be growable
         if layout == 'horizontal':
-            self._canvasSizer.AddGrowableRow(1)
+            self.__canvasSizer.AddGrowableRow(1)
             for i in range(nCanvases):
-                self._canvasSizer.AddGrowableCol(i * 3 + 1)
+                self.__canvasSizer.AddGrowableCol(i * 3 + 1)
                 
         elif layout == 'vertical':
-            self._canvasSizer.AddGrowableCol(1)
+            self.__canvasSizer.AddGrowableCol(1)
             for i in range(nCanvases):
-                self._canvasSizer.AddGrowableRow(i * 3 + 1)
+                self.__canvasSizer.AddGrowableRow(i * 3 + 1)
                 
         elif layout == 'grid':
-            self._canvasSizer.AddGrowableRow(1)
-            self._canvasSizer.AddGrowableRow(4)
-            self._canvasSizer.AddGrowableCol(1)
-            self._canvasSizer.AddGrowableCol(4) 
+            self.__canvasSizer.AddGrowableRow(1)
+            self.__canvasSizer.AddGrowableRow(4)
+            self.__canvasSizer.AddGrowableCol(1)
+            self.__canvasSizer.AddGrowableCol(4) 
 
         # Make a list of widgets - the canvases,
         # anatomical labels (if displayed), and
         # spacers for the empty cells
         space = (1, 1)
-        xlbls = self._xLabels
-        ylbls = self._yLabels
-        zlbls = self._zLabels
+        xlbls = self.__xLabels
+        ylbls = self.__yLabels
+        zlbls = self.__zLabels
         
         if layout == 'horizontal':
-            widgets = [space,         xlbls['top'],    space,
-                       space,         ylbls['top'],    space,
-                       space,         zlbls['top'],    space,
-                       xlbls['left'], self._xcanvas,   xlbls['right'],
-                       ylbls['left'], self._ycanvas,   ylbls['right'],
-                       zlbls['left'], self._zcanvas,   zlbls['right'],
-                       space,         xlbls['bottom'], space,
-                       space,         ylbls['bottom'], space,
-                       space,         zlbls['bottom'], space] 
+            widgets = [space,         xlbls['top'],     space,
+                       space,         ylbls['top'],     space,
+                       space,         zlbls['top'],     space,
+                       xlbls['left'], self.__xcanvas,   xlbls['right'],
+                       ylbls['left'], self.__ycanvas,   ylbls['right'],
+                       zlbls['left'], self.__zcanvas,   zlbls['right'],
+                       space,         xlbls['bottom'],  space,
+                       space,         ylbls['bottom'],  space,
+                       space,         zlbls['bottom'],  space] 
                 
         elif layout == 'vertical':
-            widgets = [space,         xlbls['top'],    space,
-                       xlbls['left'], self._xcanvas,   xlbls['right'],
-                       space,         xlbls['bottom'], space,
-                       space,         ylbls['top'],    space,
-                       ylbls['left'], self._ycanvas,   ylbls['right'],
-                       space,         ylbls['bottom'], space,
-                       space,         zlbls['top'],    space,
-                       zlbls['left'], self._zcanvas,   zlbls['right'],
-                       space,         zlbls['bottom'], space]
+            widgets = [space,         xlbls['top'],     space,
+                       xlbls['left'], self.__xcanvas,   xlbls['right'],
+                       space,         xlbls['bottom'],  space,
+                       space,         ylbls['top'],     space,
+                       ylbls['left'], self.__ycanvas,   ylbls['right'],
+                       space,         ylbls['bottom'],  space,
+                       space,         zlbls['top'],     space,
+                       zlbls['left'], self.__zcanvas,   zlbls['right'],
+                       space,         zlbls['bottom'],  space]
 
         # The canvases are laid out in a different order
         # for orthographic, or 'grid' layout.  Assuming
@@ -638,68 +740,85 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # following manner (the letter denotes the depth
         # axis for the respective canvas):
         #
+        # TODO You need to horizonatlly flip the x canvas
+        #      to achieve true orthographic display.
+        #
         #    Y  X
         #    Z  - 
         elif layout == 'grid':
-            widgets = [space,         ylbls['top'],    space,
-                       space,         xlbls['top'],    space,
-                       ylbls['left'], self._ycanvas,   ylbls['right'],
-                       xlbls['left'], self._xcanvas,   xlbls['right'],
-                       space,         ylbls['bottom'], space,
-                       space,         xlbls['bottom'], space,
-                       space,         zlbls['top'],    space,
-                       space,         space,           space,
-                       zlbls['left'], self._zcanvas,   zlbls['right'],
-                       space,         space,           space,
-                       space,         zlbls['bottom'], space,
-                       space,         space,           space]
+            widgets = [space,         ylbls['top'],     space,
+                       space,         xlbls['top'],     space,
+                       ylbls['left'], self.__ycanvas,   ylbls['right'],
+                       xlbls['left'], self.__xcanvas,   xlbls['right'],
+                       space,         ylbls['bottom'],  space,
+                       space,         xlbls['bottom'],  space,
+                       space,         zlbls['top'],     space,
+                       space,         space,            space,
+                       zlbls['left'], self.__zcanvas,   zlbls['right'],
+                       space,         space,            space,
+                       space,         zlbls['bottom'],  space,
+                       space,         space,            space]
 
         # Add all those widgets to the grid sizer
         flag = wx.ALIGN_CENTRE_HORIZONTAL | wx.ALIGN_CENTRE_VERTICAL
         
         for w in widgets:
-            self._canvasSizer.Add(w, flag=flag)
+            self.__canvasSizer.Add(w, flag=flag)
                                           
-        self.getCanvasPanel().SetSizer(self._canvasSizer)
+        self.getCanvasPanel().SetSizer(self.__canvasSizer)
 
         # Calculate/ adjust the appropriate sizes
         # for each canvas, such that they are scaled
         # appropriately relative to each other, and
         # the displayed world space aspect ratio is
         # maintained
-        self._calcCanvasSizes()
+        self.__calcCanvasSizes()
 
         self.Layout()
         self.getCanvasPanel().Layout()
         self.Refresh()
 
 
-    def _locationChanged(self, *a):
-        """
+    def __locationChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.locavtion` property changes.
+
         Sets the currently displayed x/y/z position (in display
-        coordinates).
+        coordinates) on each of the :class:`.SliceCanvas` panels.
         """
 
         xpos, ypos, zpos = self._displayCtx.location.xyz
 
-        self._xcanvas.pos.xyz = [ypos, zpos, xpos]
-        self._ycanvas.pos.xyz = [xpos, zpos, ypos]
-        self._zcanvas.pos.xyz = [xpos, ypos, zpos]
+        self.__xcanvas.pos.xyz = [ypos, zpos, xpos]
+        self.__ycanvas.pos.xyz = [xpos, zpos, ypos]
+        self.__zcanvas.pos.xyz = [xpos, ypos, zpos]
 
 
 class OrthoFrame(wx.Frame):
-    """
-    Convenience class for displaying an OrthoPanel in a standalone window.
+    """Convenience class for displaying an :class:`OrthoPanel` in a
+    standalone frame.
     """
 
     def __init__(self, parent, overlayList, displayCtx, title=None):
+        """Create an ``OrthoFrame``.
+
+        :arg parent:      A :mod:`wx` parent object.
+        
+        :arg overlayList: An :class:`.OverlayList` instance.
+        
+        :arg displayCtx:  A :class:`.DisplayContext` instance.
+        
+        :arg title:       Dialog title.
+        """
         
         wx.Frame.__init__(self, parent, title=title)
 
         ctx, dummyCanvas = fslgl.getWXGLContext() 
         fslgl.bootstrap()
         
-        self.panel = OrthoPanel(self, overlayList, displayCtx)
+        self.panel = OrthoPanel(self,
+                                overlayList,
+                                displayCtx,
+                                addToolbars=False)
         self.Layout()
 
         if dummyCanvas is not None:
@@ -707,9 +826,8 @@ class OrthoFrame(wx.Frame):
 
 
 class OrthoDialog(wx.Dialog):
-    """
-    Convenience class for displaying an OrthoPanel in a (possibly modal)
-    dialog window.
+    """Convenience class for displaying an :class:`OrthoPanel` in a (possibly
+    modal) dialog window.
     """
 
     def __init__(self,
@@ -718,16 +836,32 @@ class OrthoDialog(wx.Dialog):
                  displayCtx,
                  title=None,
                  style=None):
+        """Create an ``OrthoDialog``.
 
-        if style is None: style =  wx.DEFAULT_DIALOG_STYLE
-        else:             style |= wx.DEFAULT_DIALOG_STYLE
+        :arg parent:      A :mod:`wx` parent object.
+        
+        :arg overlayList: An :class:`.OverlayList` instance.
+        
+        :arg displayCtx:  A :class:`.DisplayContext` instance.
+        
+        :arg title:       Dialog title.
+        
+        :arg style:       Dialog style - defaults to
+                          ``wx.DEFAULT_DIALOG_STYLE``.
+        """
+
+        if style is None:
+            style = wx.DEFAULT_DIALOG_STYLE
 
         wx.Dialog.__init__(self, parent, title=title, style=style)
 
         ctx, dummyCanvas = fslgl.getWXGLContext()
         fslgl.bootstrap()
         
-        self.panel = OrthoPanel(self, overlayList, displayCtx)
+        self.panel = OrthoPanel(self,
+                                overlayList,
+                                displayCtx,
+                                addToolbars=False)
         self.Layout()
 
         if dummyCanvas is not None:
