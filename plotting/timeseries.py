@@ -26,8 +26,9 @@ import numpy as np
 
 import props
 
-import                     dataseries
-import fsl.data.strings as strings
+import                          dataseries
+import fsl.data.strings      as strings
+import fsl.data.melodicimage as fslmelimage
 
 
 class TimeSeries(dataseries.DataSeries):
@@ -90,7 +91,10 @@ class TimeSeries(dataseries.DataSeries):
         ydata = np.array(ydata, dtype=np.float32)
 
         if self.tsPanel.usePixdim:
-            xdata *= self.overlay.pixdim[3]
+            if isinstance(self.overlay, fslmelimage.MelodicImage):
+                xdata *= self.overlay.tr
+            else:
+                xdata *= self.overlay.pixdim[3]
         
         if self.tsPanel.plotMode == 'demean':
             ydata = ydata - ydata.mean()
