@@ -24,24 +24,27 @@ class OrthoViewProfile(profiles.Profile):
     allow the user to navigate through the ``OrthoPanel`` display of the
     overlays in the :class:`.OverlayList`.
     
-    ``OrthoViewProfile`` defines three *modes* (see the :class:`.Profile`
-    class documentation):
+    ``OrthoViewProfile`` defines the following *modes* (see the
+    :class:`.Profile` class documentation):
 
-    ======== ==============================================================
-    ``nav``  The user can change the currently displayed location. This is
-             accomplished by updating the :attr:`.DisplayContext.location`
-             property on left mouse drags.
+    ========== ==============================================================
+    ``nav``    The user can change the currently displayed location. This is
+               accomplished by updating the :attr:`.DisplayContext.location`
+               property on left mouse drags.
     
-    ``zoom`` The user can zoom in/out of a canvas with the mouse wheel, and
-             draw a rectangle on a canvas in which to zoom. This is
-             accomplished by updating the :attr:`.SliceCanvasOpts.zoom`
-             property on mouse wheel changes, and displaying a
-             :class:`~.annotations.Rect` annotation on left mouse drags.
+    ``zoom``   The user can zoom in/out of a canvas with the mouse wheel, and
+               draw a rectangle on a canvas in which to zoom. This is
+               accomplished by updating the :attr:`.SliceCanvasOpts.zoom`
+               property on mouse wheel changes, and displaying a
+               :class:`~.annotations.Rect` annotation on left mouse drags.
     
-    ``pan``  The user can pan around a canvas (if the canvas is zoomed in).
-             This is accomplished by calling the
-             :meth:`.SliceCanvas.panDisplayBy` on left mouse drags.
-    ======== ==============================================================
+    ``pan``    The user can pan around a canvas (if the canvas is zoomed in).
+               This is accomplished by calling the
+               :meth:`.SliceCanvas.panDisplayBy` on left mouse drags.
+
+    ``bricon`` The user can drag the mouse along a canvas to change the
+               brightness/contrast of the currently selected overlay.
+    ========== ==============================================================
 
 
     The ``OrthoViewProfile`` class also defines a few actions:
@@ -86,7 +89,7 @@ class OrthoViewProfile(profiles.Profile):
         if extraModes   is None: extraModes   = []
         if extraActions is None: extraActions = {}
 
-        modes   = ['nav', 'pan', 'zoom']
+        modes   = ['nav', 'pan', 'zoom', 'bricon']
         actionz = {
             'resetZoom'    : self.resetZoom,
             'centreCursor' : self.centreCursor,
@@ -424,3 +427,33 @@ class OrthoViewProfile(profiles.Profile):
         else:                     return
 
         canvas.panDisplayBy(xoff, yoff)
+
+
+    def _briconModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
+        """Handles left mouse drags in ``bricon`` mode.
+
+        The brightness and contrast of the currently selected overlay are
+        adjusted according to the location of the mouse, relative to the
+        canvas.
+        """
+
+        overlay = self._displayCtx.getSelectedOverlay()
+
+        if overlay is None:
+            return 
+
+        display = self._displayCtx.getDisplay(overlay)
+        w, h    = canvas.GetSize().Get()
+        x, y    = mousePos
+
+        brightness = float(x) / w
+        contrast   = float(y) / h
+
+        log.debug('Adjusting bricon for {} '
+                  '(brightness: {}, contrast: {})'.format(
+                      overlay.name,
+                      brightness,
+                      contrast))
+
+        display.brightness = 100 * brightness
+        display.contrast   = 100 * contrast
