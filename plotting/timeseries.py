@@ -71,8 +71,7 @@ class TimeSeries(dataseries.DataSeries):
         
     def getData(self, xdata=None, ydata=None):
         """Overrides :meth:`.DataSeries.getData`. Returns the data associated
-        with this ``TimeSeries`` instance, pre-processed according to the
-        current :class:`.TimeSeriesPanel` settings.
+        with this ``TimeSeries`` instance.
 
         The ``xdata`` and ``ydata`` arguments may be used by sub-classes to
         override the x/y data in the event that they have already performed
@@ -88,22 +87,7 @@ class TimeSeries(dataseries.DataSeries):
 
         xdata = np.array(xdata, dtype=np.float32)
         ydata = np.array(ydata, dtype=np.float32)
-
-        if self.tsPanel.usePixdim:
-            xdata *= self.overlay.pixdim[3]
         
-        if self.tsPanel.plotMode == 'demean':
-            ydata = ydata - ydata.mean()
-
-        elif self.tsPanel.plotMode == 'normalise':
-            ymin  = ydata.min()
-            ymax  = ydata.max()
-            ydata = 2 * (ydata - ymin) / (ymax - ymin) - 1
-            
-        elif self.tsPanel.plotMode == 'percentChange':
-            mean  = ydata.mean()
-            ydata =  100 * (ydata / mean) - 100
-            
         return xdata, ydata
 
 
@@ -499,7 +483,7 @@ class FEATTimeSeries(VoxelTimeSeries):
                     copenum)
 
 
-    def __plotPEFitChanged(self, evnum):
+    def __plotPEFitChanged(self, *a):
         """Called when the :attr:`plotPEFits` setting changes.
 
         If necessary, creates and caches one or more

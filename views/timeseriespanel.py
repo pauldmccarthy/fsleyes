@@ -20,7 +20,7 @@ import fsl.data.featimage                          as fslfeatimage
 import fsl.data.melodicimage                       as fslmelimage
 import fsl.data.image                              as fslimage
 import fsl.fsleyes.colourmaps                      as fslcmaps
-import fsl.fsleyes.plotting.timeseries             as timeseries
+import fsl.fsleyes.plotting                        as plotting
 import fsl.fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
 import fsl.fsleyes.controls.timeserieslistpanel    as timeserieslistpanel
 
@@ -281,14 +281,15 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
         tss = [ts for ts in tss if ts is not None]
 
         for i, ts in enumerate(list(tss)):
-            if isinstance(ts, timeseries.FEATTimeSeries):
+            if isinstance(ts, plotting.FEATTimeSeries):
                 tss.pop(i)
                 tss = tss[:i] + ts.getModelTimeSeries() + tss[i:]
 
         for ts in tss:
             ts.label = ts.makeLabel()
 
-        self.drawDataSeries(extraSeries=tss)
+        self.drawDataSeries(extraSeries=tss,
+                            preproc=self.__prepareTimeSeriesData)
 
 
     def getTimeSeries(self, overlay):
@@ -296,6 +297,39 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
         overlay, or ``None`` if there is none.
         """
         return self.__currentTss.get(overlay)
+
+
+    def __prepareTimeSeriesData(self, ts):
+        """Given a :class:`.TimeSeries` instance, scales and normalises
+        the x and y data according to the current values of the
+        :attr:`usePixdim` and :attr:`plotMode` properties.
+
+        This method is used as a preprocessing function for all
+        :class:`.TimeSeries` instances that are plotted - see the
+        :meth:`.PlotPanel.drawDataSeries` method.
+        """
+
+        xdata, ydata = ts.getData()
+
+        if self.usePixdim:
+            if isinstance(ts.overlay, fslmelimage.MelodicImage):
+                xdata *= ts.overlay.tr
+            else:
+                xdata *= ts.overlay.pixdim[3]
+        
+        if self.plotMode == 'demean':
+            ydata = ydata - ydata.mean()
+
+        elif self.plotMode == 'normalise':
+            ymin  = ydata.min()
+            ymax  = ydata.max()
+            ydata = 2 * (ydata - ymin) / (ymax - ymin) - 1
+            
+        elif self.plotMode == 'percentChange':
+            mean  = ydata.mean()
+            ydata =  100 * (ydata / mean) - 100
+            
+        return xdata, ydata 
 
 
     def __overlayListChanged(self, *a):
@@ -402,18 +436,18 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
             return None, None, None
 
         if isinstance(overlay, fslfeatimage.FEATImage):
-            ts = timeseries.FEATTimeSeries(self, overlay, self._displayCtx)
+            ts = plotting.FEATTimeSeries(self, overlay, self._displayCtx)
             targets   = [self._displayCtx]
             propNames = ['location']
             
         elif isinstance(overlay, fslmelimage.MelodicImage) and \
              self.plotMelodicICs:
-            ts = timeseries.MelodicTimeSeries(self, overlay, self._displayCtx)
+            ts = plotting.MelodicTimeSeries(self, overlay, self._displayCtx)
             targets   = [self._displayCtx.getOpts(overlay)]
             propNames = ['volume'] 
             
         else:
-            ts = timeseries.VoxelTimeSeries(self, overlay, self._displayCtx)
+            ts = plotting.VoxelTimeSeries(self, overlay, self._displayCtx)
             targets   = [self._displayCtx]
             propNames = ['location'] 
 

@@ -86,11 +86,11 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                                          actionz)
 
         self.__scrollbar = wx.ScrollBar(
-            self.getCanvasPanel(),
+            self.getCentrePanel(),
             style=wx.SB_VERTICAL)
         
         self.__lbCanvas  = lightboxcanvas.WXGLLightBoxCanvas(
-            self.getCanvasPanel(),
+            self.getContentPanel(),
             overlayList,
             displayCtx)
 
@@ -117,10 +117,9 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         sceneOpts.bindProps('zrange',       self.__lbCanvas)
 
         self.__canvasSizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.getCanvasPanel().SetSizer(self.__canvasSizer)
+        self.getContentPanel().SetSizer(self.__canvasSizer)
 
-        self.__canvasSizer.Add(self.__lbCanvas,  flag=wx.EXPAND, proportion=1)
-        self.__canvasSizer.Add(self.__scrollbar, flag=wx.EXPAND)
+        self.__canvasSizer.Add(self.__lbCanvas, flag=wx.EXPAND, proportion=1)
 
         # When the display context location changes,
         # make sure the location is shown on the canvas
@@ -162,8 +161,9 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         self.__onLightBoxChange()
         self.__onZoom()
+        
         self.__selectedOverlayChanged()
-        self.Layout()
+        self.centrePanelLayout()
         self.initProfile()
 
         # The ViewPanel AuiManager seems to
@@ -203,6 +203,25 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
     def getCanvas(self):
         """Returns a reference to the :class:`.LightBoxCanvas` instance. """
         return self.__lbCanvas
+
+    
+    def centrePanelLayout(self):
+        """Overrides :meth:`.CanvasPanel.centrePanelLayout`. Adds the
+        scrollbar to the centre panel.
+        """
+
+        self.layoutContainerPanel()
+        
+        centrePanel    = self.getCentrePanel()
+        containerPanel = self.getContainerPanel()
+        sizer          = wx.BoxSizer(wx.HORIZONTAL)
+
+        centrePanel.SetSizer(sizer)
+
+        sizer.Add(containerPanel,   flag=wx.EXPAND, proportion=1)
+        sizer.Add(self.__scrollbar, flag=wx.EXPAND)
+
+        self.PostSizeEvent()
 
         
     def __selectedOverlayChanged(self, *a):

@@ -36,8 +36,8 @@ import fsl.fsleyes.controls.clusterpanel          as clusterpanel
 import fsl.fsleyes.controls.lookuptablepanel      as lookuptablepanel
 import fsl.fsleyes.controls.shellpanel            as shellpanel
 
-import                                  colourbarpanel
-import                                  viewpanel
+import                                               colourbarpanel
+import                                               viewpanel
 
 
 log = logging.getLogger(__name__)
@@ -64,10 +64,16 @@ class CanvasPanel(viewpanel.ViewPanel):
     Sub-classes of the ``CanvasPanel`` must do the following:
     
       1. Add their content to the panel that is accessible via the
-         :meth:`getCanvasPanel` method (see the note on
+         :meth:`getContentPanel` method (see the note on
          :ref:`adding content <canvaspanel-adding-content>`).
     
       2. Override the :meth:`getGLCanvases` method.
+
+      3. Call the :meth:`centrePanelLayout` method in their ``__init__``
+         method.
+
+      4. Override the :meth:`centrePanelLayout` method if any custom layout is
+         necessary.
     
     
     **Actions**
@@ -104,14 +110,14 @@ class CanvasPanel(viewpanel.ViewPanel):
 
 
     .. _canvaspanel-adding-content:
+
     
     **Adding content**
 
     
-    To support colour bar functionality, the ``CanvasPanel`` uses a hierarchy
-    of ``wx.Panel`` instances, depicted in the following containment
-    hierarchy diagram:
-
+    To support colour bar and screenshot functionality, the ``CanvasPanel``
+    uses a hierarchy of ``wx.Panel`` instances, depicted in the following
+    containment hierarchy diagram:
     
     .. graphviz::
 
@@ -127,23 +133,49 @@ class CanvasPanel(viewpanel.ViewPanel):
          rankdir="BT";
     
          1 [label="CanvasPanel"];
-         2 [label="Canvas container"];
-         3 [label="ColourBarPanel"];
-         4 [label="Centre panel"];
-         5 [label="Content added by sub-classes"];
+         2 [label="Centre panel"];
+         3 [label="Custom content (for complex layouts)"];
+         4 [label="Container panel"];
+         5 [label="ColourBarPanel"];
+         6 [label="Content panel"];
+         7 [label="Content added by sub-classes"];
 
          2 -> 1;
          3 -> 2;
          4 -> 2;
          5 -> 4;
+         6 -> 4;
+         7 -> 6;
        }
 
     
     As depicted in the diagram, sub-classes need to add their content to the
-    *centre panel*. This panel is accessible via the :meth:`getCanvasPanel`
-    method. The *container panel* is what gets passed to the
+    *content panel*. This panel is accessible via the :meth:`getContentPanel`
+    method. 
+
+    
+    The *centre panel* is what gets passed to the
     :meth:`.ViewPanel.setCentrePanel` method, and is accessible via the
-    :meth:`getCanvasContainer` method, if necessary.
+    :meth:`getCentrePanel` method, if necessary. The *container panel* is
+    also available, via the :meth:`getContainerPanel`. Everything in the
+    container panel will appear in screenshots (see the :meth:`screenshot`
+    method).
+
+    
+    The :meth:`centrePanelLayout` method lays out the centre panel, using the
+    :meth:`layoutContainerPanel` method to lay out the colour bar and the
+    content panel. The ``centrePanelLayout`` method simply adds the canvas
+    container directly to the centre panel. Sub-classes which have more
+    advanced layout requirements (e.g.  the :class:`.LightBoxPanel` needs a
+    scrollbar) may override the :meth:`centrePanelLayout` method to implement
+    their own layout.  These sub-class implementations must:
+
+      1. Call the :meth:`layoutContainerPanel` method.
+
+      2. Add the container panel (accessed via :meth:`getContainerPanel`)
+         to the centre panel (accessed via :meth:`getCentrePanel`).
+
+      3. Add any other custom content to the centre panel.
     """
 
     
@@ -274,10 +306,11 @@ class CanvasPanel(viewpanel.ViewPanel):
             self.disableProperty('syncOverlayOrder')
             self.disableProperty('syncOverlayDisplay')
 
-        self.__canvasContainer = wx.Panel(self)
-        self.__canvasPanel     = wx.Panel(self.__canvasContainer)
+        self.__centrePanel    = wx.Panel(self)
+        self.__containerPanel = wx.Panel(self.__centrePanel)
+        self.__contentPanel   = wx.Panel(self.__containerPanel)
 
-        self.setCentrePanel(self.__canvasContainer)
+        self.setCentrePanel(self.__centrePanel)
 
         # Stores a reference to a wx.Timer
         # when movie mode is enabled
@@ -291,17 +324,18 @@ class CanvasPanel(viewpanel.ViewPanel):
                          self.__movieRateChanged)
 
         # Canvas/colour bar layout is managed in
-        # the _layout/_toggleColourBar methods
-        self.__canvasSizer   = None
-        self.__colourBar     = None
+        # the layoutColourBarAndCanvas method
+        self.__colourBar = None
 
         # Use a different listener name so that subclasses
         # can register on the same properties with self._name
         lName = 'CanvasPanel_{}'.format(self._name)
-        self.__opts.addListener('colourBarLocation', lName, self.__layout)
-        self.__opts.addListener('showColourBar',     lName, self.__layout)
-        
-        self.__layout()
+        self.__opts.addListener('colourBarLocation',
+                                lName,
+                                self.__colourBarPropsChanged)
+        self.__opts.addListener('showColourBar',
+                                lName,
+                                self.__colourBarPropsChanged)
 
 
     def destroy(self):
@@ -337,20 +371,28 @@ class CanvasPanel(viewpanel.ViewPanel):
         return self.__opts
                 
         
-    def getCanvasPanel(self):
+    def getCentrePanel(self):
+        """Returns the ``wx.Panel`` which is passed to
+        :meth:`.ViewPanel.setCentrePanel`. See the note on
+        :ref:`adding content <canvaspanel-adding-content>`.
+        """
+        return self.__centrePanel
+
+    
+    def getContentPanel(self):
         """Returns the ``wx.Panel`` to which sub-classes must add their content.
         See the note on :ref:`adding content <canvaspanel-adding-content>`.
         """
-        return self.__canvasPanel
+        return self.__contentPanel 
 
 
-    def getCanvasContainer(self):
+    def getContainerPanel(self):
         """Returns the ``wx.Panel`` which contains the
-        :class:`.ColourBarPanel` if it is being displayed, and the canvas
+        :class:`.ColourBarPanel` if it is being displayed, and the content
         panel. See the note on
         :ref:`adding content <canvaspanel-adding-content>`.
         """
-        return self.__canvasContainer
+        return self.__containerPanel
 
 
     def getGLCanvases(self):
@@ -375,11 +417,27 @@ class CanvasPanel(viewpanel.ViewPanel):
         return None
 
 
-    def __layout(self, *a):
-        """Called when any colour bar display properties are changed (see
-        :class:`.SceneOpts`). Lays out the container panel, which contains
-        the :class:`.ColourBarPanel` and all content added by the
-        ``CanvasPanel`` sub-class implementation.
+    def centrePanelLayout(self):
+        """Lays out the centre panel. This method may be overridden by
+        sub-classes which need more advanced layout logic. See the note on
+        :ref:`adding content <canvaspanel-adding-content>`
+        """
+
+        self.layoutContainerPanel()
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(self.__containerPanel, flag=wx.EXPAND, proportion=1)
+        self.__centrePanel.SetSizer(sizer)
+        
+        self.PostSizeEvent()
+        
+    
+    def layoutContainerPanel(self):
+        """Creates a ``wx.Sizer``, and uses it to lay out the colour bar panel
+        and canvas panel. The sizer object is returned.
+
+        This method is used by the default :meth:`centrePanelLayout` method,
+        and is available for custom sub-class implementations to use.
         """
 
         if not self.__opts.showColourBar:
@@ -391,19 +449,15 @@ class CanvasPanel(viewpanel.ViewPanel):
                 self.__colourBar.destroy()
                 self.__colourBar.Destroy()
                 self.__colourBar = None
-                
-            self.__canvasSizer = wx.BoxSizer(wx.HORIZONTAL)
-            self.__canvasSizer.Add(self.__canvasPanel,
-                                   flag=wx.EXPAND,
-                                   proportion=1)
 
-            self.__canvasContainer.SetSizer(self.__canvasSizer)
-            self.PostSizeEvent()
+            sizer = wx.BoxSizer(wx.HORIZONTAL)
+            sizer.Add(self.__contentPanel, flag=wx.EXPAND, proportion=1)
+            self.__containerPanel.SetSizer(sizer)
             return
 
         if self.__colourBar is None:
             self.__colourBar = colourbarpanel.ColourBarPanel(
-                self.__canvasContainer, self._overlayList, self._displayCtx)
+                self.__containerPanel, self._overlayList, self._displayCtx)
 
         self.__opts.bindProps('colourBarLabelSide',
                               self.__colourBar,
@@ -415,23 +469,18 @@ class CanvasPanel(viewpanel.ViewPanel):
             self.__colourBar.orientation = 'vertical'
         
         if self.__opts.colourBarLocation in ('top', 'bottom'):
-            self.__canvasSizer = wx.BoxSizer(wx.VERTICAL)
+            sizer = wx.BoxSizer(wx.VERTICAL)
         else:
-            self.__canvasSizer = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.__canvasContainer.SetSizer(self.__canvasSizer)
+            sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         if self.__opts.colourBarLocation in ('top', 'left'):
-            self.__canvasSizer.Add(self.__colourBar,   flag=wx.EXPAND)
-            self.__canvasSizer.Add(self.__canvasPanel, flag=wx.EXPAND,
-                                   proportion=1)
+            sizer.Add(self.__colourBar,    flag=wx.EXPAND)
+            sizer.Add(self.__contentPanel, flag=wx.EXPAND, proportion=1)
         else:
-            self.__canvasSizer.Add(self.__canvasPanel, flag=wx.EXPAND,
-                                   proportion=1)
-            self.__canvasSizer.Add(self.__colourBar,   flag=wx.EXPAND)
+            sizer.Add(self.__contentPanel, flag=wx.EXPAND, proportion=1)
+            sizer.Add(self.__colourBar,    flag=wx.EXPAND)
 
-        # Force the canvas panel to resize itself
-        self.PostSizeEvent()
+        self.__containerPanel.SetSizer(sizer)
 
 
     def __movieModeChanged(self, *a):
@@ -455,6 +504,13 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.__movieTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.__movieUpdate)
         self.__movieTimer.Start(rate)
+
+
+    def __colourBarPropsChanged(self, *a):
+        """Called when any colour bar display properties are changed (see
+        :class:`.SceneOpts`). Calls :meth:`canvasPanelLayout`.
+        """
+        self.centrePanelLayout()
         
 
     def __movieRateChanged(self, *a):
@@ -653,7 +709,7 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
         # direct parent of the colour bar
         # canvas, and an ancestor of the
         # other GL canvases
-        parent        = canvasPanel.getCanvasContainer()
+        parent        = canvasPanel.getContainerPanel()
         width, height = parent.GetClientSize().Get()
         windowDC      = wx.WindowDC(parent)
         memoryDC      = wx.MemoryDC()
@@ -679,6 +735,9 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
         rgb  = bmp.ConvertToImage().GetData()
         rgb  = np.fromstring(rgb, dtype=np.uint8)
 
+        log.debug('Creating bitmap {} * {} for {} screenshot'.format(
+            width, height, type(canvasPanel).__name__))
+
         data[:, :, :3] = rgb.reshape(height, width, 3)
 
         # Patch in bitmaps for every GL canvas
@@ -687,6 +746,11 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
             # If the colour bar is not displayed,
             # the colour bar canvas will be None
             if glCanvas is None:
+                continue
+
+            # Hidden wx objects will
+            # still return a size
+            if not glCanvas.IsShown():
                 continue
 
             pos   = relativePosition(glCanvas, parent)
@@ -710,6 +774,9 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
                 w    = xend - xstart
                 h    = yend - ystart
                 bmp  = bmp[:h, :w, :]
+
+            log.debug('Patching {} in at [{} - {}], [{} - {}]'.format(
+                type(glCanvas).__name__, xstart, xend, ystart, yend))
             
             data[ystart:yend, xstart:xend] = bmp
 

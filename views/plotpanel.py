@@ -355,12 +355,15 @@ class PlotPanel(viewpanel.ViewPanel):
         self.Refresh()
 
 
-    def drawDataSeries(self, extraSeries=None, **plotArgs):
+    def drawDataSeries(self, extraSeries=None, preproc=None, **plotArgs):
         """Plots all of the :class:`.DataSeries` instances in the
         :attr:`dataSeries` list
 
         :arg extraSeries: A sequence of additional ``DataSeries`` to be
                           plotted.
+
+        :arg preproc:     An optional preprocessing function - passed to the
+                          :meth:`__drawOneDataSeries` method.
 
         :arg plotArgs:    Passed through to the :meth:`__drawOneDataSeries`
                           method.
@@ -397,7 +400,7 @@ class PlotPanel(viewpanel.ViewPanel):
         ylims = []
 
         for ds in toPlot:
-            xlim, ylim = self.__drawOneDataSeries(ds, **plotArgs)
+            xlim, ylim = self.__drawOneDataSeries(ds, preproc, **plotArgs)
             xlims.append(xlim)
             ylims.append(ylim)
 
@@ -474,16 +477,26 @@ class PlotPanel(viewpanel.ViewPanel):
         self.Refresh()
 
         
-    def __drawOneDataSeries(self, ds, **plotArgs):
+    def __drawOneDataSeries(self, ds, preproc=None, **plotArgs):
         """Plots a single :class:`.DataSeries` instance. This method is called
         by the :meth:`drawDataSeries` method.
 
         :arg ds:       The ``DataSeries`` instance.
 
+        :arg preproc:  An optional preprocessing function which must accept
+                       the ``DataSeries`` instance as its sole argument, and
+                       must return the ``(xdata, ydata)`` with any required
+                       processing applied.  The default preprocessing function
+                       returns the result of a call to
+                       :meth:`.DataSeries.getData`.
+
         :arg plotArgs: May be used to customise the plot - these
                        arguments are all passed through to the
                        ``Axis.plot`` function.
         """
+        
+        if preproc is None:
+            preproc = lambda s: s.getData()
 
         if ds.alpha == 0:
             return (0, 0), (0, 0)
@@ -491,7 +504,7 @@ class PlotPanel(viewpanel.ViewPanel):
         log.debug('Drawing {} for {}'.format(type(ds).__name__,
                                              ds.overlay))
 
-        xdata, ydata = ds.getData()
+        xdata, ydata = preproc(ds)
 
         if len(xdata) != len(ydata) or len(xdata) == 0:
             return (0, 0), (0, 0)

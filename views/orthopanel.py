@@ -148,19 +148,19 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                          sceneOpts,
                                          actionz)
 
-        canvasPanel = self.getCanvasPanel()
+        contentPanel = self.getContentPanel()
 
         # The canvases themselves - each one displays a
         # slice along each of the three world axes
-        self.__xcanvas = slicecanvas.WXGLSliceCanvas(canvasPanel,
+        self.__xcanvas = slicecanvas.WXGLSliceCanvas(contentPanel,
                                                      overlayList,
                                                      displayCtx,
                                                      zax=0)
-        self.__ycanvas = slicecanvas.WXGLSliceCanvas(canvasPanel,
+        self.__ycanvas = slicecanvas.WXGLSliceCanvas(contentPanel,
                                                      overlayList,
                                                      displayCtx,
                                                      zax=1)
-        self.__zcanvas = slicecanvas.WXGLSliceCanvas(canvasPanel,
+        self.__zcanvas = slicecanvas.WXGLSliceCanvas(contentPanel,
                                                      overlayList,
                                                      displayCtx,
                                                      zax=2)
@@ -172,9 +172,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__zLabels = {}
         
         for side in ('left', 'right', 'top', 'bottom'):
-            self.__xLabels[side] = wx.StaticText(canvasPanel)
-            self.__yLabels[side] = wx.StaticText(canvasPanel)
-            self.__zLabels[side] = wx.StaticText(canvasPanel)
+            self.__xLabels[side] = wx.StaticText(contentPanel)
+            self.__yLabels[side] = wx.StaticText(contentPanel)
+            self.__zLabels[side] = wx.StaticText(contentPanel)
 
         self.__xcanvas.bindProps('showCursor',   sceneOpts)
         self.__ycanvas.bindProps('showCursor',   sceneOpts)
@@ -236,13 +236,14 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # the slice canvases when the canvas
         # panel is resized, so aspect ratio
         # is maintained
-        canvasPanel.Bind(wx.EVT_SIZE, self.__onResize)
+        contentPanel.Bind(wx.EVT_SIZE, self.__onResize)
 
         # Initialise the panel
         self.__refreshLayout()
         self.__bgColourChanged()
         self.__overlayListChanged()
         self.__locationChanged()
+        self.centrePanelLayout()
         self.initProfile()
 
         # The ViewPanel AuiManager seems to
@@ -328,8 +329,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         bg = [int(round(c * 255)) for c in bg]
         fg = [int(round(c * 255)) for c in fg]
 
-        self.getCanvasPanel().SetBackgroundColour(bg)
-        self.getCanvasPanel().SetForegroundColour(fg)
+        self.getContentPanel().SetBackgroundColour(bg)
+        self.getContentPanel().SetForegroundColour(fg)
 
         self.__xcanvas.SetBackgroundColour(bg)
         self.__ycanvas.SetBackgroundColour(bg)
@@ -358,16 +359,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                     self.__zLabels.values() 
 
         if overlay is not None:
-            opts = self._displayCtx.getOpts(overlay)
+            opts  = self._displayCtx.getOpts(overlay)
+            xform = opts.getTransform('world', 'display')
             
-            if opts.transform in ('pixdim', 'id'):
-                xorient = overlay.getVoxelOrientation(0)
-                yorient = overlay.getVoxelOrientation(1)
-                zorient = overlay.getVoxelOrientation(2)
-            else:
-                xorient = overlay.getWorldOrientation(0)
-                yorient = overlay.getWorldOrientation(1)
-                zorient = overlay.getWorldOrientation(2)
+            xorient = overlay.getOrientation(0, xform)
+            yorient = overlay.getOrientation(1, xform)
+            zorient = overlay.getOrientation(2, xform)
 
             if constants.ORIENT_UNKNOWN in (xorient, yorient, zorient):
 
@@ -428,13 +425,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
             # Update anatomy labels when 
             # overlay bounds change
-            if i == self._displayCtx.selectedOverlay:
-                opts.addListener('bounds',
-                                 self._name,
-                                 self.__refreshLabels,
-                                 overwrite=True)
-            else:
-                opts.removeListener('bounds', self._name)
+            opts.addListener('bounds',
+                             self._name,
+                             self.__refreshLabels,
+                             overwrite=True)
                 
         # anatomical orientation may have changed with an image change
         self.__refreshLabels()
@@ -479,23 +473,17 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             self.PostSizeEvent()
             return
 
-        opts = self._displayCtx.getOpts(overlay)
 
-        # The image is being displayed as it is stored on
-        # disk - the image.getOrientation method calculates
-        # and returns labels for each voxelwise axis.
-        if opts.transform in ('pixdim', 'id'):
-            xorient = overlay.getVoxelOrientation(0)
-            yorient = overlay.getVoxelOrientation(1)
-            zorient = overlay.getVoxelOrientation(2)
+        log.debug('Refreshing orientation labels '
+                  'according to {}'.format(overlay.name))
 
-        # The overlay is being displayed in 'real world' space -
-        # the definition of this space may be present in the
-        # overlay meta data
-        else:
-            xorient = overlay.getWorldOrientation(0)
-            yorient = overlay.getWorldOrientation(1)
-            zorient = overlay.getWorldOrientation(2)
+        # Figure out the orientation of the
+        # image in the display coordinate system
+        opts    = self._displayCtx.getOpts(overlay)
+        xform   = opts.getTransform('world', 'display')
+        xorient = overlay.getOrientation(0, xform)
+        yorient = overlay.getOrientation(1, xform)
+        zorient = overlay.getOrientation(2, xform)
 
         xlo = strings.anatomy['Image', 'lowshort',  xorient]
         ylo = strings.anatomy['Image', 'lowshort',  yorient]
@@ -503,6 +491,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         xhi = strings.anatomy['Image', 'highshort', xorient]
         yhi = strings.anatomy['Image', 'highshort', yorient]
         zhi = strings.anatomy['Image', 'highshort', zorient]
+
+        log.debug('X orientation: {} - {}'.format(xlo, xhi))
+        log.debug('Y orientation: {} - {}'.format(ylo, yhi))
+        log.debug('Z orientation: {} - {}'.format(zlo, zhi))
 
         bg = sceneOpts.bgColour
         fg = colourmaps.complementaryColour(bg)
@@ -513,16 +505,16 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         self.__xLabels['left']  .SetLabel(ylo)
         self.__xLabels['right'] .SetLabel(yhi)
-        self.__xLabels['top']   .SetLabel(zlo)
-        self.__xLabels['bottom'].SetLabel(zhi)
+        self.__xLabels['bottom'].SetLabel(zlo)
+        self.__xLabels['top']   .SetLabel(zhi)
         self.__yLabels['left']  .SetLabel(xlo)
         self.__yLabels['right'] .SetLabel(xhi)
-        self.__yLabels['top']   .SetLabel(zlo)
-        self.__yLabels['bottom'].SetLabel(zhi)
+        self.__yLabels['bottom'].SetLabel(zlo)
+        self.__yLabels['top']   .SetLabel(zhi)
         self.__zLabels['left']  .SetLabel(xlo)
         self.__zLabels['right'] .SetLabel(xhi)
-        self.__zLabels['top']   .SetLabel(ylo)
-        self.__zLabels['bottom'].SetLabel(yhi)
+        self.__zLabels['bottom'].SetLabel(ylo)
+        self.__zLabels['top']   .SetLabel(yhi)
 
         self.PostSizeEvent()
 
@@ -539,7 +531,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         opts   = self.getSceneOptions()
         layout = opts.layout
 
-        width, height = self.getCanvasPanel().GetClientSize().Get()
+        width, height = self.getContentPanel().GetClientSize().Get()
 
         show     = [opts.showXCanvas,  opts.showYCanvas,  opts.showZCanvas]
         canvases = [self.__xcanvas,    self.__ycanvas,    self.__zcanvas]
@@ -765,7 +757,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         for w in widgets:
             self.__canvasSizer.Add(w, flag=flag)
                                           
-        self.getCanvasPanel().SetSizer(self.__canvasSizer)
+        self.getContentPanel().SetSizer(self.__canvasSizer)
 
         # Calculate/ adjust the appropriate sizes
         # for each canvas, such that they are scaled
@@ -775,7 +767,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__calcCanvasSizes()
 
         self.Layout()
-        self.getCanvasPanel().Layout()
+        self.getContentPanel().Layout()
         self.Refresh()
 
 

@@ -68,7 +68,8 @@ tempModeMap = {
         (('nav',  wx.WXK_CONTROL), 'zoom'),
         (('pan',  wx.WXK_CONTROL), 'zoom'),
         (('nav',  wx.WXK_ALT),     'pan'),
-        (('zoom', wx.WXK_ALT),     'pan'))),
+        (('zoom', wx.WXK_ALT),     'pan'),
+        (('nav',  wx.WXK_SHIFT),   'bricon'))),
 
     # OrthoEditProfile inherits all of the
     # settings for OrthoViewProfile above,

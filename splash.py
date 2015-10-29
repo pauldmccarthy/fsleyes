@@ -50,7 +50,7 @@ class FSLEyesSplash(wx.Frame):
         splashimg  = splashbmp.ConvertToImage()
     
         self.__splashPanel = imagepanel.ImagePanel(self, splashimg)
-        self.__statusBar   = wx.StaticText(self, style=wx.ELLIPSIZE_MIDDLE)
+        self.__statusBar   = wx.StaticText(self, style=wx.ST_ELLIPSIZE_MIDDLE)
         
         self.__statusBar.SetLabel(strings.messages[self, 'default'])
 
