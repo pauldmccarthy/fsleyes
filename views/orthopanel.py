@@ -148,19 +148,19 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                          sceneOpts,
                                          actionz)
 
-        canvasPanel = self.getCanvasPanel()
+        contentPanel = self.getContentPanel()
 
         # The canvases themselves - each one displays a
         # slice along each of the three world axes
-        self.__xcanvas = slicecanvas.WXGLSliceCanvas(canvasPanel,
+        self.__xcanvas = slicecanvas.WXGLSliceCanvas(contentPanel,
                                                      overlayList,
                                                      displayCtx,
                                                      zax=0)
-        self.__ycanvas = slicecanvas.WXGLSliceCanvas(canvasPanel,
+        self.__ycanvas = slicecanvas.WXGLSliceCanvas(contentPanel,
                                                      overlayList,
                                                      displayCtx,
                                                      zax=1)
-        self.__zcanvas = slicecanvas.WXGLSliceCanvas(canvasPanel,
+        self.__zcanvas = slicecanvas.WXGLSliceCanvas(contentPanel,
                                                      overlayList,
                                                      displayCtx,
                                                      zax=2)
@@ -172,9 +172,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__zLabels = {}
         
         for side in ('left', 'right', 'top', 'bottom'):
-            self.__xLabels[side] = wx.StaticText(canvasPanel)
-            self.__yLabels[side] = wx.StaticText(canvasPanel)
-            self.__zLabels[side] = wx.StaticText(canvasPanel)
+            self.__xLabels[side] = wx.StaticText(contentPanel)
+            self.__yLabels[side] = wx.StaticText(contentPanel)
+            self.__zLabels[side] = wx.StaticText(contentPanel)
 
         self.__xcanvas.bindProps('showCursor',   sceneOpts)
         self.__ycanvas.bindProps('showCursor',   sceneOpts)
@@ -236,13 +236,14 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # the slice canvases when the canvas
         # panel is resized, so aspect ratio
         # is maintained
-        canvasPanel.Bind(wx.EVT_SIZE, self.__onResize)
+        contentPanel.Bind(wx.EVT_SIZE, self.__onResize)
 
         # Initialise the panel
         self.__refreshLayout()
         self.__bgColourChanged()
         self.__overlayListChanged()
         self.__locationChanged()
+        self.centrePanelLayout()
         self.initProfile()
 
         # The ViewPanel AuiManager seems to
@@ -328,8 +329,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         bg = [int(round(c * 255)) for c in bg]
         fg = [int(round(c * 255)) for c in fg]
 
-        self.getCanvasPanel().SetBackgroundColour(bg)
-        self.getCanvasPanel().SetForegroundColour(fg)
+        self.getContentPanel().SetBackgroundColour(bg)
+        self.getContentPanel().SetForegroundColour(fg)
 
         self.__xcanvas.SetBackgroundColour(bg)
         self.__ycanvas.SetBackgroundColour(bg)
@@ -539,7 +540,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         opts   = self.getSceneOptions()
         layout = opts.layout
 
-        width, height = self.getCanvasPanel().GetClientSize().Get()
+        width, height = self.getContentPanel().GetClientSize().Get()
 
         show     = [opts.showXCanvas,  opts.showYCanvas,  opts.showZCanvas]
         canvases = [self.__xcanvas,    self.__ycanvas,    self.__zcanvas]
@@ -765,7 +766,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         for w in widgets:
             self.__canvasSizer.Add(w, flag=flag)
                                           
-        self.getCanvasPanel().SetSizer(self.__canvasSizer)
+        self.getContentPanel().SetSizer(self.__canvasSizer)
 
         # Calculate/ adjust the appropriate sizes
         # for each canvas, such that they are scaled
@@ -775,7 +776,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__calcCanvasSizes()
 
         self.Layout()
-        self.getCanvasPanel().Layout()
+        self.getContentPanel().Layout()
         self.Refresh()
 
 
