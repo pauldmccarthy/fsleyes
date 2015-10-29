@@ -14,9 +14,11 @@ import collections
 import wx
 import wx.html as wxhtml
 
-import fsl.data.strings   as strings
-import fsl.data.constants as constants
-import fsl.fsleyes.panel  as fslpanel
+import numpy as np
+
+import fsl.data.strings    as strings
+import fsl.data.constants  as constants
+import fsl.fsleyes.panel   as fslpanel
 
 
 class OverlayInfoPanel(fslpanel.FSLEyesPanel):
@@ -178,8 +180,10 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
         
         info = OverlayInfo('{} - {}'.format(
             display.name, strings.labels[self, overlay]))
+        
         img  = overlay.nibImage
         hdr  = img.get_header()
+        opts = display.getDisplayOpts()
 
         voxUnits, timeUnits = hdr.get_xyzt_units()
         qformCode           = int(hdr['qform_code'])
@@ -240,7 +244,8 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
                          section=xformSect) 
 
         for i in range(3):
-            orient = overlay.getVoxelOrientation(i)
+            xform  = opts.getTransform('world', 'id')
+            orient = overlay.getOrientation(i, xform)
             orient = '{} - {}'.format(
                 strings.anatomy['Image', 'lowlong',  orient],
                 strings.anatomy['Image', 'highlong', orient])
@@ -249,22 +254,14 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
                          section=orientSect)
 
         for i in range(3):
-            orient = overlay.getWorldOrientation(i, code='sform')
+            xform  = np.eye(4)
+            orient = overlay.getOrientation(i, xform)
             orient = '{} - {}'.format(
                 strings.anatomy['Image', 'lowlong',  orient],
                 strings.anatomy['Image', 'highlong', orient])
-            info.addInfo(strings.nifti['sformOrient.{}'.format(i)],
+            info.addInfo(strings.nifti['worldOrient.{}'.format(i)],
                          orient,
                          section=orientSect)
-
-        for i in range(3):
-            orient = overlay.getWorldOrientation(i, code='qform')
-            orient = '{} - {}'.format(
-                strings.anatomy['Image', 'lowlong',  orient],
-                strings.anatomy['Image', 'highlong', orient])
-            info.addInfo(strings.nifti['qformOrient.{}'.format(i)],
-                         orient,
-                         section=orientSect) 
 
         return info
 

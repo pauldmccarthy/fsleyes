@@ -309,7 +309,7 @@ class OrthoViewProfile(profiles.Profile):
         if zoom == 0:
             return
 
-        self._zoomModeMouseWheel(canvas, zoom)
+        self._zoomModeMouseWheel(None, canvas, zoom)
 
         
     def _zoomModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
