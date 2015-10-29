@@ -134,7 +134,7 @@ class CanvasPanel(viewpanel.ViewPanel):
     
          1 [label="CanvasPanel"];
          2 [label="Centre panel"];
-         3 [label="Advanced layout"];
+         3 [label="Custom content (for complex layouts)"];
          4 [label="Container panel"];
          5 [label="ColourBarPanel"];
          6 [label="Content panel"];
@@ -170,10 +170,10 @@ class CanvasPanel(viewpanel.ViewPanel):
     scrollbar) may override the :meth:`centrePanelLayout` method to implement
     their own layout.  These sub-class implementations must:
 
-      1. Call the :meth:`layoutCanvasContainer` method.
+      1. Call the :meth:`layoutContainerPanel` method.
 
       2. Add the container panel (accessed via :meth:`getContainerPanel`)
-         to the centre panel (:meth:`getCentrePanel`)
+         to the centre panel (accessed via :meth:`getCentrePanel`).
 
       3. Add any other custom content to the centre panel.
     """
@@ -735,6 +735,9 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
         rgb  = bmp.ConvertToImage().GetData()
         rgb  = np.fromstring(rgb, dtype=np.uint8)
 
+        log.debug('Creating bitmap {} * {} for {} screenshot'.format(
+            width, height, type(canvasPanel).__name__))
+
         data[:, :, :3] = rgb.reshape(height, width, 3)
 
         # Patch in bitmaps for every GL canvas
@@ -743,6 +746,11 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
             # If the colour bar is not displayed,
             # the colour bar canvas will be None
             if glCanvas is None:
+                continue
+
+            # Hidden wx objects will
+            # still return a size
+            if not glCanvas.IsShown():
                 continue
 
             pos   = relativePosition(glCanvas, parent)
@@ -766,6 +774,9 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
                 w    = xend - xstart
                 h    = yend - ystart
                 bmp  = bmp[:h, :w, :]
+
+            log.debug('Patching {} in at [{} - {}], [{} - {}]'.format(
+                type(glCanvas).__name__, xstart, xend, ystart, yend))
             
             data[ystart:yend, xstart:xend] = bmp
 
