@@ -12,14 +12,16 @@ for plotting data.
 import dataseries
 import timeseries
 import histogramseries
+import powerspectrumseries
 
-DataSeries               = dataseries.DataSeries
-TimeSeries               = timeseries.TimeSeries
-VoxelTimeSeries          = timeseries.VoxelTimeSeries 
-FEATTimeSeries           = timeseries.FEATTimeSeries
-FEATPartialFitTimeSeries = timeseries.FEATPartialFitTimeSeries
-FEATEVTimeSeries         = timeseries.FEATEVTimeSeries
-FEATResidualTimeSeries   = timeseries.FEATResidualTimeSeries
-FEATModelFitTimeSeries   = timeseries.FEATModelFitTimeSeries
-MelodicTimeSeries        = timeseries.MelodicTimeSeries
-HistogramSeries          = histogramseries.HistogramSeries
+DataSeries               = dataseries         .DataSeries
+TimeSeries               = timeseries         .TimeSeries
+VoxelTimeSeries          = timeseries         .VoxelTimeSeries 
+FEATTimeSeries           = timeseries         .FEATTimeSeries
+FEATPartialFitTimeSeries = timeseries         .FEATPartialFitTimeSeries
+FEATEVTimeSeries         = timeseries         .FEATEVTimeSeries
+FEATResidualTimeSeries   = timeseries         .FEATResidualTimeSeries
+FEATModelFitTimeSeries   = timeseries         .FEATModelFitTimeSeries
+MelodicTimeSeries        = timeseries         .MelodicTimeSeries
+HistogramSeries          = histogramseries    .HistogramSeries
+PowerSpectrumSeries      = powerspectrumseries.PowerSpectrumSeries

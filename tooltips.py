@@ -292,6 +292,23 @@ properties = TypeDict({
     'HistogramPanel.histType'    : 'Show histogram data as raw counts, or '
                                    'as probabilities.',
 
+    'PowerSpectrumPanel.plotFrequencies'  : 'If checked, the x values '
+                                            'are transformed into frequency '
+                                            'values.',
+    'PowerSpectrumPanel.plotMelodicICs'   : 'If checked, the component power '
+                                            'spectra are plotted for Melodic '
+                                            'images. If not checked, Melodic '
+                                            'images are treated as regular 4D '
+                                            'images.',
+    'PowerSpectrumPanel.showMode'         : 'Choose which power spectra to '
+                                            'plot -  you can choose to plot '
+                                            'the power spectrum for the '
+                                            'currently selected overlay, the '
+                                            'power spectra for all compatible '
+                                            'overlays, or just those that '
+                                            'have been added to the power '
+                                            'spectra list.', 
+
     # DataSeries
 
     'DataSeries.colour'    : 'Line colour.',

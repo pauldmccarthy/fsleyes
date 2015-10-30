@@ -24,6 +24,7 @@ allow dynamic lookup of all :class:`.ViewPanel` sub-classes. The following
    ~fsl.fsleyes.views.lightboxpanel.LightBoxPanel
    ~fsl.fsleyes.views.plotpanel.PlotPanel
    ~fsl.fsleyes.views.timeseriespanel.TimeSeriesPanel
+   ~fsl.fsleyes.views.timeseriespanel.PowerSpectrumPanel
    ~fsl.fsleyes.views.histogrampanel.HistogramPanel
 """
 
@@ -36,17 +37,19 @@ import canvaspanel
 import orthopanel
 import lightboxpanel
 import timeseriespanel
+import powerspectrumpanel
 import histogrampanel
 
 
-FSLEyesPanel    = fslpanel       .FSLEyesPanel
-ViewPanel       = viewpanel      .ViewPanel
-PlotPanel       = plotpanel      .PlotPanel
-CanvasPanel     = canvaspanel    .CanvasPanel
-OrthoPanel      = orthopanel     .OrthoPanel
-LightBoxPanel   = lightboxpanel  .LightBoxPanel
-TimeSeriesPanel = timeseriespanel.TimeSeriesPanel
-HistogramPanel  = histogrampanel .HistogramPanel
+FSLEyesPanel       = fslpanel          .FSLEyesPanel
+ViewPanel          = viewpanel         .ViewPanel
+PlotPanel          = plotpanel         .PlotPanel
+CanvasPanel        = canvaspanel       .CanvasPanel
+OrthoPanel         = orthopanel        .OrthoPanel
+LightBoxPanel      = lightboxpanel     .LightBoxPanel
+TimeSeriesPanel    = timeseriespanel   .TimeSeriesPanel
+PowerSpectrumPanel = powerspectrumpanel.PowerSpectrumPanel
+HistogramPanel     = histogrampanel    .HistogramPanel
 
 
 def listViewPanels():
