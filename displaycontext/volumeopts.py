@@ -387,6 +387,32 @@ class ImageOpts(fsldisplay.DisplayOpts):
 
         return coords + post
 
+    
+    def getVoxel(self):
+        """Calculates and returns the voxel coordinates corresponding to the
+        current :attr:`.DisplayContext.location` for the :class:`.Image`
+        associated with this ``ImageOpts`` instance.
+
+        Returns ``None`` if the current location is outside of the image
+        bounds.
+        """
+
+        overlay = self.overlay
+        x, y, z = self.displayCtx.location.xyz
+
+        vox     = self.transformCoords([[x, y, z]], 'display', 'voxel')[0]
+        vox     = map(int, np.round(vox))
+
+        if vox[0] < 0                 or \
+           vox[1] < 0                 or \
+           vox[2] < 0                 or \
+           vox[0] >= overlay.shape[0] or \
+           vox[1] >= overlay.shape[1] or \
+           vox[2] >= overlay.shape[2]:
+            return None
+
+        return vox 
+
 
     def displayToStandardCoordinates(self, coords):
         """Overrides :meth:`.DisplayOpts.displayToStandardCoordinates`.

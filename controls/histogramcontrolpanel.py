@@ -11,12 +11,13 @@ control* panel which allows a :class:`.HistogramPanel` to be configured.
 
 import wx
 
-import                         props
-import pwidgets.widgetlist  as widgetlist
+import                           props
+import pwidgets.widgetlist    as widgetlist
 
-import fsl.fsleyes.panel    as fslpanel
-import fsl.fsleyes.tooltips as fsltooltips
-import fsl.data.strings     as strings
+import fsl.fsleyes.panel      as fslpanel
+import fsl.fsleyes.tooltips   as fsltooltips
+import fsl.data.strings       as strings
+import timeseriescontrolpanel as tscontrol
 
 
 class HistogramControlPanel(fslpanel.FSLEyesPanel):
@@ -67,13 +68,6 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
         histProps = ['histType',
                      'autoBin',
                      'showCurrent']
-        plotProps = ['xLogScale',
-                     'yLogScale',
-                     'smooth',
-                     'legend',
-                     'ticks',
-                     'grid',
-                     'autoScale']
 
         self.__widgets.AddGroup(
             'histSettings', strings.labels[self, 'histSettings'])
@@ -96,51 +90,11 @@ class HistogramControlPanel(fslpanel.FSLEyesPanel):
         self.__widgets.AddGroup(
             'plotSettings',
             strings.labels[hsPanel, 'plotSettings'])
+
+        tscontrol.generatePlotPanelWidgets(hsPanel,
+                                           self.__widgets,
+                                           'plotSettings')
         
-        for prop in plotProps:
-            self.__widgets.AddWidget(
-                props.makeWidget(self.__widgets, hsPanel, prop),
-                tooltip=fsltooltips.properties[hsPanel, prop],
-                displayName=strings.properties[hsPanel, prop],
-                groupName='plotSettings')
-
-        xlabel = props.makeWidget(self.__widgets, hsPanel, 'xlabel')
-        ylabel = props.makeWidget(self.__widgets, hsPanel, 'ylabel')
-
-        labels = wx.BoxSizer(wx.HORIZONTAL)
-
-        labels.Add(wx.StaticText(self.__widgets,
-                                 label=strings.labels[hsPanel, 'xlabel']))
-        labels.Add(xlabel, flag=wx.EXPAND, proportion=1)
-        labels.Add(wx.StaticText(self.__widgets,
-                                 label=strings.labels[hsPanel, 'ylabel']))
-        labels.Add(ylabel, flag=wx.EXPAND, proportion=1) 
-
-        limits = props.makeListWidgets(self.__widgets, hsPanel, 'limits')
-        xlims  = wx.BoxSizer(wx.HORIZONTAL)
-        ylims  = wx.BoxSizer(wx.HORIZONTAL)
-        
-        xlims.Add(limits[0], flag=wx.EXPAND, proportion=1)
-        xlims.Add(limits[1], flag=wx.EXPAND, proportion=1)
-        ylims.Add(limits[2], flag=wx.EXPAND, proportion=1)
-        ylims.Add(limits[3], flag=wx.EXPAND, proportion=1) 
-
-        self.__widgets.AddWidget(
-            labels,
-            displayName=strings.labels[hsPanel, 'labels'],
-            tooltip=fsltooltips.misc[  hsPanel, 'labels'],
-            groupName='plotSettings')
-        self.__widgets.AddWidget(
-            xlims,
-            displayName=strings.labels[hsPanel, 'xlim'],
-            tooltip=fsltooltips.misc[  hsPanel, 'xlim'],
-            groupName='plotSettings')
-        self.__widgets.AddWidget(
-            ylims,
-            displayName=strings.labels[hsPanel, 'ylim'],
-            tooltip=fsltooltips.misc[  hsPanel, 'ylim'],
-            groupName='plotSettings')
-
         # We store a ref to the currently selected
         # HistogramSeries instance, and to the
         # HistogramSeries.nbins widget, so we can

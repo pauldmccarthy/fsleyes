@@ -152,6 +152,7 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
         """
 
         overlay = self._displayCtx.getSelectedOverlay()
+        opts    = self._displayCtx.getOpts(overlay)
         
         if overlay is None:
             return
@@ -189,7 +190,7 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
                 copy.coord = ts.getComponent()
             else:
                 copy.tsLoc = 'location'
-                copy.coord = ts.getVoxel()
+                copy.coord = opts.getVoxel()
 
             copies.append(copy)
 

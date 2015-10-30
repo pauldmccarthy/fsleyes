@@ -6,6 +6,16 @@
 #
 """This module provides the :class:`TimeSeriesControlPanel` a *FSLeyes
 control* which allows the user to configure a :class:`.TimeSeriesPanel`.
+
+
+This module also provides a couple of general functions which generate widgets
+for :class:`.PlotPanel` and :class:`.DataSeries` instances:
+
+.. autosummary::
+   :nosignatures:
+
+   generatePlotPanelWidgets
+   generateDataSeriesWidgets
 """
 
 
@@ -19,6 +29,7 @@ import fsl.fsleyes.displaycontext      as fsldisplay
 import fsl.fsleyes.plotting.timeseries as timeseries
 import fsl.fsleyes.tooltips            as fsltooltips
 import fsl.data.strings                as strings
+import fsl.data.melodicimage           as fslmelimage
 
 
 class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
@@ -82,13 +93,6 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
                      'plotMode',
                      'usePixdim',
                      'plotMelodicICs']
-        plotProps = ['xLogScale',
-                     'yLogScale',
-                     'smooth',
-                     'legend',
-                     'ticks',
-                     'grid',
-                     'autoScale']
 
         self.__widgets.AddGroup(
             'tsSettings',
@@ -108,54 +112,16 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
                 tooltip=fsltooltips.properties[tsPanel, prop],
                 groupName='tsSettings')
 
+            
         self.__widgets.AddGroup(
             'plotSettings',
             strings.labels[tsPanel, 'plotSettings'])
-        
-        for prop in plotProps:
-            self.__widgets.AddWidget(
-                props.makeWidget(self.__widgets, tsPanel, prop),
-                displayName=strings.properties[tsPanel, prop],
-                tooltip=fsltooltips.properties[tsPanel, prop],
-                groupName='plotSettings')
+            
+        generatePlotPanelWidgets(tsPanel, self.__widgets, 'plotSettings')
 
-        xlabel = props.makeWidget(self.__widgets, tsPanel, 'xlabel')
-        ylabel = props.makeWidget(self.__widgets, tsPanel, 'ylabel')
-
-        labels = wx.BoxSizer(wx.HORIZONTAL)
-
-        labels.Add(wx.StaticText(self.__widgets,
-                                 label=strings.labels[tsPanel, 'xlabel']))
-        labels.Add(xlabel, flag=wx.EXPAND, proportion=1)
-        labels.Add(wx.StaticText(self.__widgets,
-                                 label=strings.labels[tsPanel, 'ylabel']))
-        labels.Add(ylabel, flag=wx.EXPAND, proportion=1) 
-
-        limits = props.makeListWidgets(self.__widgets, tsPanel, 'limits')
-        xlims  = wx.BoxSizer(wx.HORIZONTAL)
-        ylims  = wx.BoxSizer(wx.HORIZONTAL)
-        
-        xlims.Add(limits[0], flag=wx.EXPAND, proportion=1)
-        xlims.Add(limits[1], flag=wx.EXPAND, proportion=1)
-        ylims.Add(limits[2], flag=wx.EXPAND, proportion=1)
-        ylims.Add(limits[3], flag=wx.EXPAND, proportion=1) 
-
-        self.__widgets.AddWidget(
-            labels,
-            displayName=strings.labels[tsPanel, 'labels'],
-            tooltip=fsltooltips.misc[  tsPanel, 'labels'],
-            groupName='plotSettings')
-        self.__widgets.AddWidget(
-            xlims,
-            displayName=strings.labels[tsPanel, 'xlim'],
-            tooltip=fsltooltips.misc[  tsPanel, 'xlim'],
-            groupName='plotSettings')
-        self.__widgets.AddWidget(
-            ylims,
-            displayName=strings.labels[tsPanel, 'ylim'],
-            tooltip=fsltooltips.misc[  tsPanel, 'ylim'],
-            groupName='plotSettings')
-
+        tsPanel    .addListener('plotMelodicICs',
+                                self._name,
+                                self.__plotMelodicICsChanged)
         displayCtx .addListener('selectedOverlay',
                                 self._name,
                                 self.__selectedOverlayChanged)
@@ -256,6 +222,33 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
             self.__showFEATSettingsForTimeSeries(ts)
 
 
+    def __plotMelodicICsChanged(self, *a):
+        """Called when the :attr:`.TimeSeriesPanel.plotMelodicICs` property
+        changes. If the current overlay is a :class:`.MelodicImage`,
+        re-generates the widgets in the *current time course* section, as
+        the :class:`.TimeSeries` instance associated with the overlay may
+        have been re-created.
+        """
+
+        overlay = self._displayCtx.getSelectedOverlay()
+
+        if overlay is None:
+            return
+
+        if not isinstance(overlay, fslmelimage.MelodicImage):
+            return
+
+        ts = self.__tsPanel.getTimeSeries(overlay)
+
+        if ts is None:
+            return
+
+        if self.__widgets.HasGroup('currentSettings'):
+            self.__widgets.RemoveGroup('currentSettings')
+
+        self.__showSettingsForTimeSeries(ts)
+
+
     def __showFEATSettingsForTimeSeries(self, ts):
         """(Re-)crates the *FEAT settings* section for the given
         :class:`.FEATTimeSeries` instance.
@@ -349,33 +342,108 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
             'currentSettings',
             strings.labels[self, 'currentSettings'].format(display.name))
 
-        colour    = props.makeWidget(widgets, ts, 'colour')
-        alpha     = props.makeWidget(widgets, ts, 'alpha',
-                                     showLimits=False, spin=False)
-        lineWidth = props.makeWidget(widgets, ts, 'lineWidth')
-        lineStyle = props.makeWidget(
-            widgets,
-            ts,
-            'lineStyle',
-            labels=strings.choices['DataSeries.lineStyle'])
+        generateDataSeriesWidgets(ts, widgets, 'currentSettings')
 
-        widgets.AddWidget(
-            colour,
-            displayName=strings.properties[ts, 'colour'],
-            tooltip=fsltooltips.properties[ts, 'colour'],
-            groupName='currentSettings')
-        widgets.AddWidget(
-            alpha,
-            displayName=strings.properties[ts, 'alpha'],
-            tooltip=fsltooltips.properties[ts, 'alpha'],
-            groupName='currentSettings')
-        widgets.AddWidget(
-            lineWidth,
-            displayName=strings.properties[ts, 'lineWidth'],
-            tooltip=fsltooltips.properties[ts, 'lineWidth'],
-            groupName='currentSettings') 
-        widgets.AddWidget(
-            lineStyle,
-            displayName=strings.properties[ts, 'lineStyle'],
-            tooltip=fsltooltips.properties[ts, 'lineStyle'],
-            groupName='currentSettings')
+
+def generatePlotPanelWidgets(plotPanel, widgetList, groupName):
+    """Adds a collection of widgets to the given :class:`.WidgetList`,
+    allowing the properties of the given :class:`.PlotPanel` instance
+    to be changed.
+
+    :arg plotPanel:  The :class:`.PlotPanel` instance. 
+    :arg widgetList: The :class:`.WidgetList` instance.
+    :arg groupName:  The ``WidgetList`` group name to use.
+    """ 
+    
+    plotProps = ['xLogScale',
+                 'yLogScale',
+                 'smooth',
+                 'legend',
+                 'ticks',
+                 'grid',
+                 'autoScale']
+
+    for prop in plotProps:
+        widgetList.AddWidget(
+            props.makeWidget(widgetList, plotPanel, prop),
+            displayName=strings.properties[plotPanel, prop],
+            tooltip=fsltooltips.properties[plotPanel, prop],
+            groupName=groupName)
+
+    xlabel = props.makeWidget(widgetList, plotPanel, 'xlabel')
+    ylabel = props.makeWidget(widgetList, plotPanel, 'ylabel')
+
+    labels = wx.BoxSizer(wx.HORIZONTAL)
+
+    labels.Add(wx.StaticText(widgetList,
+                             label=strings.labels[plotPanel, 'xlabel']))
+    labels.Add(xlabel, flag=wx.EXPAND, proportion=1)
+    labels.Add(wx.StaticText(widgetList,
+                             label=strings.labels[plotPanel, 'ylabel']))
+    labels.Add(ylabel, flag=wx.EXPAND, proportion=1) 
+
+    limits = props.makeListWidgets(widgetList, plotPanel, 'limits')
+    xlims  = wx.BoxSizer(wx.HORIZONTAL)
+    ylims  = wx.BoxSizer(wx.HORIZONTAL)
+
+    xlims.Add(limits[0], flag=wx.EXPAND, proportion=1)
+    xlims.Add(limits[1], flag=wx.EXPAND, proportion=1)
+    ylims.Add(limits[2], flag=wx.EXPAND, proportion=1)
+    ylims.Add(limits[3], flag=wx.EXPAND, proportion=1) 
+
+    widgetList.AddWidget(
+        labels,
+        displayName=strings.labels[plotPanel, 'labels'],
+        tooltip=fsltooltips.misc[  plotPanel, 'labels'],
+        groupName=groupName)
+    widgetList.AddWidget(
+        xlims,
+        displayName=strings.labels[plotPanel, 'xlim'],
+        tooltip=fsltooltips.misc[  plotPanel, 'xlim'],
+        groupName=groupName)
+    widgetList.AddWidget(
+        ylims,
+        displayName=strings.labels[plotPanel, 'ylim'],
+        tooltip=fsltooltips.misc[  plotPanel, 'ylim'],
+        groupName=groupName)
+
+    
+def generateDataSeriesWidgets(ds, widgetList, groupName):
+    """Adds a collection of widgets to the given :class:`.WidgetList`,
+    allowing the properties of the given :class:`.DataSeries` instance
+    to be changed.
+
+    :arg ds:         The :class:`.DataSeries` instance. 
+    :arg widgetList: The :class:`.WidgetList` instance.
+    :arg groupName:  The ``WidgetList`` group name to use.
+    """
+    colour    = props.makeWidget(widgetList, ds, 'colour')
+    alpha     = props.makeWidget(widgetList, ds, 'alpha',
+                                 showLimits=False, spin=False)
+    lineWidth = props.makeWidget(widgetList, ds, 'lineWidth')
+    lineStyle = props.makeWidget(
+        widgetList,
+        ds,
+        'lineStyle',
+        labels=strings.choices[ds, 'lineStyle'])
+
+    widgetList.AddWidget(
+        colour,
+        displayName=strings.properties[ds, 'colour'],
+        tooltip=fsltooltips.properties[ds, 'colour'],
+        groupName=groupName)
+    widgetList.AddWidget(
+        alpha,
+        displayName=strings.properties[ds, 'alpha'],
+        tooltip=fsltooltips.properties[ds, 'alpha'],
+        groupName=groupName)
+    widgetList.AddWidget(
+        lineWidth,
+        displayName=strings.properties[ds, 'lineWidth'],
+        tooltip=fsltooltips.properties[ds, 'lineWidth'],
+        groupName=groupName) 
+    widgetList.AddWidget(
+        lineStyle,
+        displayName=strings.properties[ds, 'lineStyle'],
+        tooltip=fsltooltips.properties[ds, 'lineStyle'],
+        groupName=groupName)

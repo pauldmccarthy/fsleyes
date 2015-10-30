@@ -225,9 +225,8 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
         # etc), and a list of property names on each,
         # defining the properties that need to trigger a
         # redraw.
-        self.__currentTss     = {}
-        self.__refreshProps   = {} 
-        self.__overlayColours = {}
+        self.__currentTss   = {}
+        self.__refreshProps = {} 
 
         def addPanels():
             self.run('toggleTimeSeriesControl') 
@@ -327,7 +326,7 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
             
         elif self.plotMode == 'percentChange':
             mean  = ydata.mean()
-            ydata =  100 * (ydata / mean) - 100
+            ydata = 100 * (ydata / mean) - 100
             
         return xdata, ydata 
 
@@ -343,7 +342,7 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
         cached internally.
         """
 
-        for ds in self.dataSeries:
+        for ds in list(self.dataSeries):
             if ds.overlay not in self._overlayList:
                 self.dataSeries.remove(ds)
                 ds.destroy()
