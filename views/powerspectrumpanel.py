@@ -28,10 +28,10 @@ import fsl.data.melodicimage                          as fslmelimage
 log = logging.getLogger(__name__)
 
 
-class PowerSpectrumPanel(plotpanel.PlotPanel):
-    """The ``PowerSpectrumPanel`` class is a :class:`.PlotPanel` which plots
-    power spectra of overlay data. The ``PowerSpectrumPanel`` shares much of
-    its design with the :class:`.TimeSeriesPanel`.
+class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
+    """The ``PowerSpectrumPanel`` class is an :class:`.OverlayPlotPanel` which
+    plots power spectra of overlay data. The ``PowerSpectrumPanel`` shares
+    much of its design with the :class:`.TimeSeriesPanel`.
 
 
     The ``PowerSpectrumPanel`` uses :class:`.PowerSpectrumSeries` to plot
@@ -51,20 +51,6 @@ class PowerSpectrumPanel(plotpanel.PlotPanel):
     """If ``True``, the x axis is scaled so that it represents frequency.
     """
 
-
-    showMode = props.Choice(('current', 'all', 'none'))
-    """Defines which power spectra to plot.
-
-    =========== ========================================================
-    ``current`` The power spectrum for the currently selected overlay is
-                plotted.
-    ``all``     The power spectra for all compatible overlays in the
-                :class:`.OverlayList` are plotted.
-    ``none``    Only the ``PowerSpectrumSeries`` that are in the
-                :attr:`.PlotPanel.dataSeries` list will be plotted.
-    =========== ========================================================
-    """
-
     
     def __init__(self, parent, overlayList, displayCtx):
         """
@@ -77,53 +63,27 @@ class PowerSpectrumPanel(plotpanel.PlotPanel):
                 location=wx.TOP)
         }
         
-        plotpanel.PlotPanel.__init__(self,
-                                     parent,
-                                     overlayList,
-                                     displayCtx,
-                                     actionz=actionz)
+        plotpanel.OverlayPlotPanel.__init__(self,
+                                            parent,
+                                            overlayList,
+                                            displayCtx,
+                                            actionz=actionz)
 
-        figure = self.getFigure()
 
-        figure.subplots_adjust(
-            top=1.0, bottom=0.0, left=0.0, right=1.0)
-
-        figure.patch.set_visible(False) 
-
-        # A dictionary of
-        # 
-        #   {overlay : PowerSpectrumSeries}
-        #
-        # instances, one for each (compatible)
-        # overlay in the overlay list
-        self.__spectra      = {}
-        self.__refreshProps = {}
-
-        self       .addListener('plotFrequencies', self._name, self.draw)
-        self       .addListener('showMode',        self._name, self.draw)
-        self       .addListener('plotMelodicICs',
+        self.addListener('plotFrequencies', self._name, self.draw)
+        self.addListener('plotMelodicICs',
                                 self._name,
                                 self.__plotMelodicICsChanged)
-        overlayList.addListener('overlays',
-                                self._name,
-                                self.__overlayListChanged)
-        
-        displayCtx .addListener('selectedOverlay',
-                                self._name,
-                                self.__selectedOverlayChanged)
 
-        self.__overlayListChanged()
+        self.draw()
 
 
     def destroy(self):
-        self._overlayList.removeListener('overlays',        self._name)
-        self._displayCtx .removeListener('selectedOverlay', self._name)
+        
+        self.removeListener('plotFrequencies', self._name)
+        self.removeListener('plotMelodicICs',  self._name)
+        plotpanel.OverlayPlotPanel.destroy(self)
 
-        plotpanel.PlotPanel.destroy(self)
-
-
-    def getDataSeries(self, overlay):
-        return self.__spectra.get(overlay)
         
 
     def draw(self, *a):
@@ -135,32 +95,12 @@ class PowerSpectrumPanel(plotpanel.PlotPanel):
         else:
             overlays = []
 
-        pss = [self.__spectra.get(o) for o in overlays]
+        pss = [self.getDataSeries(o) for o in overlays]
         pss = [ps for ps in pss if ps is not None]
 
         self.drawDataSeries(extraSeries=pss,
                             preproc=self.__prepareSpectrumData)
 
-        
-    def __overlayListChanged(self, *a):
-
-        # Destroy any spectrum series for overlays
-        # that have been removed from the list
-        for ds in list(self.dataSeries):
-            if ds.overlay not in self._overlayList:
-                self.dataSeries.remove(ds)
-                ds.destroy()
-
-        for overlay, ds in list(self.__spectra.items()):
-            if overlay not in self._overlayList:
-                self.__clearCacheForOverlay(overlay)
-
-        self.__updateCachedSpectra()
-        self.draw()
-
-        
-    def __selectedOverlayChanged(self, *a):
-        self.draw()
 
         
     def __plotMelodicICsChanged(self, *a):
@@ -168,55 +108,16 @@ class PowerSpectrumPanel(plotpanel.PlotPanel):
         the internally cached :class:`.TimeSeries` instances for all
         :class:`.MelodicImage` overlays in the :class:`.OverlayList`.
         """
-
+        
         for overlay in self._overlayList:
             if isinstance(overlay, fslmelimage.MelodicImage):
-                self.__clearCacheForOverlay(overlay)
+                self.clearDataSeries(overlay)
 
-        self.__updateCachedSpectra()
+        self.updateDataSeries()
         self.draw()
 
 
-    def __clearCacheForOverlay(self, overlay):
-        """Destroys the internally cached :class:`.TimeSeries` for the given
-        overlay.
-        """
-        
-        ts                 = self.__spectra     .pop(overlay, None)
-        targets, propNames = self.__refreshProps.pop(overlay, ([], []))
-
-        if ts is not None:
-            ts.destroy()
-
-        for t, p in zip(targets, propNames):
-            t.removeListener(p, self._name)
-
-
-    def __updateCachedSpectra(self):
-        # Create a new spectrum series for overlays
-        # which have been added to the list
-        for overlay in self._overlayList:
-            
-            ss = self.__spectra.get(overlay)
-            
-            if ss is None:
-
-                ss, targets, propNames = self.__createSpectrumSeries(overlay)
-
-                if ss is None:
-                    continue
-
-                self.__spectra[     overlay] = ss
-                self.__refreshProps[overlay] = targets, propNames
-
-            ss.addGlobalListener(self._name, self.draw, overwrite=True)
-
-        for targets, propNames in self.__refreshProps.values():
-            for t, p in zip(targets, propNames):
-                t.addListener(p, self._name, self.draw, overwrite=True)
-                
-
-    def __createSpectrumSeries(self, overlay):
+    def createDataSeries(self, overlay):
 
         if self.plotMelodicICs and \
            isinstance(overlay, fslmelimage.MelodicImage):

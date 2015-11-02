@@ -58,10 +58,7 @@ class PlotPanel(viewpanel.ViewPanel):
       3. Override the :meth:`draw` method, so it calls the
          :meth:`drawDataSeries` method.
 
-      4. Override the :meth:`getDataSeries` method, so it returns a
-         :class:`.DataSeries` instance associated with a given overlay.
-
-      5. If necessary, override the :meth:`destroy` method, but make
+      4. If necessary, override the :meth:`destroy` method, but make
          sure that the base-class implementation is called.
 
     
@@ -202,13 +199,17 @@ class PlotPanel(viewpanel.ViewPanel):
 
         figure = plt.Figure()
         axis   = figure.add_subplot(111)
-        canvas = Canvas(self, -1, figure) 
+        canvas = Canvas(self, -1, figure)
 
+        figure.subplots_adjust(top=1.0, bottom=0.0, left=0.0, right=1.0)
+        figure.patch.set_visible(False)
+        
         self.setCentrePanel(canvas)
 
         self.__figure = figure
         self.__axis   = axis
         self.__canvas = canvas
+        self.__name   = 'OverlayPlotPanel_{}'.format(self._name)
 
         if interactive:
             
@@ -237,10 +238,9 @@ class PlotPanel(viewpanel.ViewPanel):
                          'smooth',
                          'xlabel',
                          'ylabel']:
-            self.addListener(propName, self._name, self.draw)
+            self.addListener(propName, self.__name, self.draw)
             
         # custom listeners for a couple of properties
-        self.__name = '{}_{}'.format(self._name, id(self))        
         self.addListener('dataSeries',
                          self.__name,
                          self.__dataSeriesChanged)
@@ -248,7 +248,7 @@ class PlotPanel(viewpanel.ViewPanel):
                          self.__name,
                          self.__limitsChanged)
 
-        self.Bind(wx.EVT_SIZE, lambda *a: self.draw())
+        self.Bind(wx.EVT_SIZE, self.draw)
 
 
     def getFigure(self):
@@ -278,20 +278,6 @@ class PlotPanel(viewpanel.ViewPanel):
         raise NotImplementedError('The draw method must be '
                                   'implemented by PlotPanel subclasses')
 
-
-    def getDataSeries(self, overlay):
-        """This method must be overridden by ``PlotPanel`` sub-classes.
-
-        It may be called by the :class:`.PlotControlPanel` and
-        :class:`.PlotListPanel` to display controls allowing the user
-        to change :class:`.DataSeries` display properties.
-
-        It should return the :class:`.DataSeries` instance associated with
-        the given overlay, or ``None`` if there is no ``DataSeries`` instance.
-        """
-        raise NotImplementedError('The getDataSeries method must be '
-                                  'implemented by PlotPanel subclasses')
-
         
     def destroy(self):
         """Removes some property listeners, and then calls
@@ -310,7 +296,7 @@ class PlotPanel(viewpanel.ViewPanel):
                          'smooth',
                          'xlabel',
                          'ylabel']:
-            self.removeListener(propName, self._name)
+            self.removeListener(propName, self.__name)
         viewpanel.ViewPanel.destroy(self)
 
     
@@ -696,3 +682,154 @@ class PlotPanel(viewpanel.ViewPanel):
         self.enableListener('limits', self.__name)            
  
         return (xmin, xmax), (ymin, ymax)
+
+
+class OverlayPlotPanel(PlotPanel):
+
+    
+    showMode = props.Choice(('current', 'all', 'none'))
+    """Defines which data series to plot.
+
+    =========== =====================================================
+    ``current`` The time course for the currently selected overlay is
+                plotted.
+    ``all``     The time courses for all compatible overlays in the
+                :class:`.OverlayList` are plotted.
+    ``none``    Only the ``TimeSeries`` that are in the
+                :attr:`.PlotPanel.dataSeries` list will be plotted.
+    =========== =====================================================
+    """ 
+
+    def __init__(self, *args, **kwargs):
+
+        PlotPanel.__init__(self, *args, **kwargs)
+        
+        self.__name = 'OverlayPlotPanel_{}'.format(self._name)
+
+        # The dataSeries attribute is a dictionary of
+        #
+        #   {overlay : DataSeries}
+        #
+        # mappings, containing a DataSeries instance for
+        # each compatible overlay in the overlay list.
+        # 
+        # Different DataSeries types need to be re-drawn
+        # when different properties change. For example,
+        # a TimeSeries instance needs to be redrawn when
+        # the DisplayContext.location property changes,
+        # whereas a MelodicTimeSeries instance needs to
+        # be redrawn when the VolumeOpts.volume property
+        # changes.
+        #
+        # Therefore, the refreshProps dictionary contains
+        # a set of
+        #
+        #   {overlay : ([targets], [propNames])}
+        #
+        # mappings - for each overlay, a list of
+        # target objects (e.g. DisplayContext, VolumeOpts,
+        # etc), and a list of property names on each,
+        # defining the properties that need to trigger a
+        # redraw.
+        self.__dataSeries   = {}
+        self.__refreshProps = {}
+
+        self             .addListener('showMode',
+                                      self.__name,
+                                      self.draw)
+        self._displayCtx .addListener('selectedOverlay',
+                                      self.__name,
+                                      self.draw)
+        self._overlayList.addListener('overlays',
+                                      self.__name,
+                                      self.__overlayListChanged)
+        
+        self.updateDataSeries()
+
+
+    def destroy(self):
+        self             .removeListener('showMode',        self.__name)
+        self._overlayList.removeListener('overlays',        self.__name)
+        self._displayCtx .removeListener('selectedOverlay', self.__name)
+        
+
+    def getDataSeries(self, overlay):
+        """
+
+        It may be called by the :class:`.PlotControlPanel` and
+        :class:`.PlotListPanel` to display controls allowing the user
+        to change :class:`.DataSeries` display properties.
+
+        It should return the :class:`.DataSeries` instance associated with
+        the given overlay, or ``None`` if there is no ``DataSeries`` instance.
+        """
+        return self.__dataSeries.get(overlay)
+ 
+
+    def createDataSeries(self, overlay):
+        """
+        """
+        raise NotImplementedError('createDataSeries must be '
+                                  'implemented by sub-classes')
+
+    
+    def clearDataSeries(self, overlay):
+        """Destroys the internally cached :class:`.DataSeries` for the given
+        overlay.
+        """
+        
+        ts                 = self.__dataSeries  .pop(overlay, None)
+        targets, propNames = self.__refreshProps.pop(overlay, ([], []))
+
+        if ts is not None:
+            ts.destroy()
+
+        for t, p in zip(targets, propNames):
+            t.removeListener(p, self.__name)
+
+        
+    def updateDataSeries(self):
+        
+        for ovl in self._overlayList:
+            if ovl not in self.__dataSeries:
+                
+                ds, refreshTargets, refreshProps = self.createDataSeries(ovl)
+
+                if ds is None:
+                    continue
+
+                self.__dataSeries[  ovl] = ds
+                self.__refreshProps[ovl] = (refreshTargets, refreshProps)
+                
+                ds.addGlobalListener(self.__name, self.draw, overwrite=True)
+        
+        for targets, propNames in self.__refreshProps.values():
+            for target, propName in zip(targets, propNames):
+                target.addListener(propName,
+                                   self.__name,
+                                   self.draw,
+                                   overwrite=True) 
+
+
+    def __overlayListChanged(self, *a):
+        """Called when the :class:`.OverlayList` changes. Makes sure that
+        there are no :class:`.TimeSeries` instances in the
+        :attr:`.PlotPanel.dataSeries` list, or in the internal cache, which
+        refer to overlays that no longer exist.
+
+        Also calls :meth:`__updateCurrentTimeSeries`, whic ensures that a
+        :class:`.TimeSeries` instance for every compatiblew overlay is
+        cached internally.
+        """
+
+        for ds in list(self.dataSeries):
+            if ds.overlay not in self._overlayList:
+                self.dataSeries.remove(ds)
+                ds.destroy()
+        
+        for overlay in list(self.__dataSeries.keys()):
+            if overlay not in self._overlayList:
+                self.clearDataSeries(overlay)
+
+        self.updateDataSeries()
+        self.draw()
