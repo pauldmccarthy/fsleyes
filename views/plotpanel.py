@@ -295,6 +295,7 @@ class PlotPanel(viewpanel.ViewPanel):
             
         for ds in self.dataSeries:
             ds.removeGlobalListener(self.__name, self.draw)
+            ds.destroy()
 
         self.dataSeries = []
             
@@ -826,6 +827,13 @@ class OverlayPlotPanel(PlotPanel):
         self             .removeListener('showMode',        self.__name)
         self._overlayList.removeListener('overlays',        self.__name)
         self._displayCtx .removeListener('selectedOverlay', self.__name)
+
+        for ds in self.__dataSeries.values():
+            ds.destroy()
+
+        self.__dataSeries   = None
+        self.__refreshProps = None
+
         PlotPanel.destroy(self)
         
 

@@ -284,11 +284,13 @@ properties = TypeDict({
     'TimeSeriesPanel.currentLineStyle' : 'Line style of the current time '
                                          'series.', 
 
-    'HistogramPanel.autoBin'     : 'If checked, automatically calculate the '
-                                   'number of bins to use in the histogram '
-                                   'calculation.', 
-    'HistogramPanel.showCurrent' : 'Show the histogram for the currently '
-                                   'selected overlay.', 
+    'HistogramPanel.showMode'    : 'Choose which histograms to plot - '
+                                   'you can choose to plot the histogram '
+                                   'for the currently selected '
+                                   'overlay, the histograms for all '
+                                   'compatible overlays, or just those '
+                                   'that have been added to the histogram '
+                                   'list.',
     'HistogramPanel.histType'    : 'Show histogram data as raw counts, or '
                                    'as probabilities.',
 
@@ -330,6 +332,9 @@ properties = TypeDict({
     'FEATTimeSeries.plotPartial'      : 'Plot the raw data, after regression '
                                         'against the selected PE/COPE.',
 
+    'HistogramSeries.autoBin'         : 'If checked, automatically calculate '
+                                        'the number of bins to use in the '
+                                        'histogram calculation.', 
     'HistogramSeries.nbins'           : 'Number of bins to use in the '
                                         'histogram calculation (not '
                                         'applicable  if auto-binning is '

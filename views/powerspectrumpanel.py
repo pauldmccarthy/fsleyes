@@ -118,6 +118,9 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         pss = [self.getDataSeries(o) for o in overlays]
         pss = [ps for ps in pss if ps is not None]
 
+        for ps in pss:
+            ps.label = ps.makeLabel() 
+
         self.drawDataSeries(extraSeries=pss,
                             preproc=self.__prepareSpectrumData)
 
