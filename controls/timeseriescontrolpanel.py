@@ -203,7 +203,7 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
         if overlay is None:
             return
 
-        ts = self.__tsPanel.getTimeSeries(overlay)
+        ts = self.__tsPanel.getDataSeries(overlay)
 
         if ts is None:
             return

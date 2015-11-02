@@ -291,9 +291,10 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
                             preproc=self.__prepareTimeSeriesData)
 
 
-    def getTimeSeries(self, overlay):
-        """Returns the :class:`.TimeSeries` instance for the specified
-        overlay, or ``None`` if there is none.
+    def getDataSeries(self, overlay):
+        """Overrides :meth:`.PlotPanel.getDataSeries`. Returns the
+        :class:`.TimeSeries` instance for the specified overlay, or ``None``
+        if there is none.
         """
         return self.__currentTss.get(overlay)
 

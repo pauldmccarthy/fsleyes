@@ -134,7 +134,7 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
 
         overlay = self._displayCtx.getSelectedOverlay()
 
-        ts = self.__tsPanel.getTimeSeries(overlay)
+        ts = self.__tsPanel.getDataSeries(overlay)
 
         if ts is None:
             self.__currentLabel.SetLabel('')
@@ -157,7 +157,7 @@ class TimeSeriesListPanel(fslpanel.FSLEyesPanel):
         if overlay is None:
             return
         
-        ts = self.__tsPanel.getTimeSeries(overlay)
+        ts = self.__tsPanel.getDataSeries(overlay)
 
         if ts is None:
             return

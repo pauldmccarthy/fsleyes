@@ -58,7 +58,10 @@ class PlotPanel(viewpanel.ViewPanel):
       3. Override the :meth:`draw` method, so it calls the
          :meth:`drawDataSeries` method.
 
-      4. If necessary, override the :meth:`destroy` method, but make
+      4. Override the :meth:`getDataSeries` method, so it returns a
+         :class:`.DataSeries` instance associated with a given overlay.
+
+      5. If necessary, override the :meth:`destroy` method, but make
          sure that the base-class implementation is called.
 
     
@@ -273,6 +276,20 @@ class PlotPanel(viewpanel.ViewPanel):
         method.
         """
         raise NotImplementedError('The draw method must be '
+                                  'implemented by PlotPanel subclasses')
+
+
+    def getDataSeries(self, overlay):
+        """This method must be overridden by ``PlotPanel`` sub-classes.
+
+        It may be called by the :class:`.PlotControlPanel` and
+        :class:`.PlotListPanel` to display controls allowing the user
+        to change :class:`.DataSeries` display properties.
+
+        It should return the :class:`.DataSeries` instance associated with
+        the given overlay, or ``None`` if there is no ``DataSeries`` instance.
+        """
+        raise NotImplementedError('The getDataSeries method must be '
                                   'implemented by PlotPanel subclasses')
 
         
