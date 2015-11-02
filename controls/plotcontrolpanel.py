@@ -4,7 +4,9 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""
+"""This module provides the :class:`PlotControlPanel` class, which is a
+*FSLeyes control* panel base-class for use with :class:`.OverlayPlotPanel`
+views.
 """
 
 
@@ -21,6 +23,35 @@ import fsl.data.strings           as strings
 
 
 class PlotControlPanel(fslpanel.FSLEyesPanel):
+    """The ``PlotControlPanel`` is a *FSLeyes control* panel which allows
+    the user to control a :class:`.OverlayPlotPanel`. The ``PlotControlPanel``
+    may be used as is, or may be sub-classed for more customisation.
+
+    
+    Sub-class implementations may:
+
+      - Override :meth:`generatePlotPanelWidgets` to add to the default group
+        of widgets controlling :class:`.PlotPanel` properties.
+
+      - Override :meth:`generateCustomPlotPanelWidgets` to create a new group
+        of widgets controlling :class:`.PlotPanel` properties.
+
+      - Override :meth:`generateDataSeriesWidgets` to add to the default group
+        of widgets controlling :class:`.DataSeries` properties.
+
+      - Override :meth:`generateDataSeriesWidgets` to create a new group
+        of widgets controlling :class:`.DataSeries` properties.
+
+
+    The following methods are available on a :class:`.PlotControlPanel`:
+
+    .. autosummary::
+       :nosignatures:
+
+       getPlotPanel
+       getWidgetList
+       refreshDataSeriesWidgets
+    """
 
 
     def __init__(self, parent, overlayList, displayCtx, plotPanel):
@@ -92,14 +123,26 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
 
 
     def getPlotPanel(self):
+        """Returns the :class:`.OverlayPlotPanel` associated with this
+        ``PlotControlPanel``.
+        """
         return self.__plotPanel
 
     
     def getWidgetList(self):
+        """Returns the :class:`WidgetList` used by this ``PlotControlPanel``
+        to display the control widgets.
+        """
         return self.__widgets
 
     
     def generateCustomPlotPanelWidgets(self, groupName):
+        """May be overridden by sub-classes to add a group of widgets
+        controlling :class:`.OverlayPlotPanel` properties.
+        The default implementation does nothing.
+
+        :arg groupName: The :class:`.WidgetList` group name.
+        """
         pass
 
 
@@ -107,6 +150,11 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
         """Adds a collection of widgets to the given :class:`.WidgetList`,
         allowing the properties of the given :class:`.PlotPanel` instance
         to be changed.
+
+        This method may be overridden by sub-classes to change/add to the
+        list of properties that are added by default.
+
+        :arg groupName: The :class:`.WidgetList` group name.
         """
 
         widgetList = self.__widgets
@@ -167,6 +215,9 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
 
 
     def refreshDataSeriesWidgets(self):
+        """Re-creates all of the widgets controlling properties of the
+        current :class:`.DataSeries` instance.
+        """
         if self.__selectedOverlay is not None:
             try:
                 display = self._displayCtx.getDisplay(self.__selectedOverlay)
@@ -221,9 +272,11 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
     def generateDataSeriesWidgets(self, ds, groupName):
         """Adds a collection of widgets to the given :class:`.WidgetList`,
         allowing the properties of the given :class:`.DataSeries` instance
-        to be changed.
+        to be changed. This method may be overridden by sub-classes which
+        need to customise the list of widgets.
 
-        :arg ds:         The :class:`.DataSeries` instance. 
+        :arg ds: The :class:`.DataSeries` instance.
+        :arg groupName: The :class:`.WidgetList` group name.
         """
         
         widgetList = self.__widgets
@@ -261,15 +314,20 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
 
 
     def generateCustomDataSeriesWidgets(self, ds, groupName):
-        """
+        """May be overridden by sub-classes to create a group of widgets for
+        controlling :class:`.DataSeries` properties. The default
+        implementation does nothing.
+        
+        :arg ds:        The :class:`.DataSeries` instance.
+        :arg groupName: The :class:`.WidgetList` group name.
         """
         pass
             
 
     def __selectedOverlayNameChanged(self, *a):
         """Called when the :attr:`.Display.name` property for the currently
-        selected overlay changes. Updates the display name of the *FEAT plot
-        settings* and *current time course* sections if necessary.
+        selected overlay changes. Updates the display name of the
+        :class:`.DataSeries` settings sections if necessary.
         """
         display = self._displayCtx.getDisplay(self.__selectedOverlay)
         

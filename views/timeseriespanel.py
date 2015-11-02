@@ -29,10 +29,11 @@ log = logging.getLogger(__name__)
 
 
 class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
-    """The ``TimeSeriesPanel`` is a :class:`.PlotPanel` which plots time series
-    data from :class:`.Image` overlays. A ``TimeSeriesPanel`` looks something
-    like the following:
+    """The ``TimeSeriesPanel`` is an :class:`.OverlayPlotPanel` which plots
+    time series data from overlays. A ``TimeSeriesPanel`` looks something like
+    the following:
 
+    
     .. image:: images/timeseriespanel.png
        :scale: 50%
        :align: center
@@ -42,7 +43,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     which encapsulate time series data from an overlay. All ``TimeSeries``
     classes are defined in the :mod:`.plotting.timeseries` module; these are
     all sub-classes of the :class:`.DataSeries` class - see the
-    :class:`.PlotPanel` documentation for more details:
+    :class:`.PlotPanel` and :class:`.OverlayPlotPanel` documentation for more
+    details:
 
     .. autosummary::
        :nosignatures:
@@ -50,24 +52,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
        ~fsl.fsleyes.plotting.timeseries.TimeSeries
        ~fsl.fsleyes.plotting.timeseries.FEATTimeSeries
        ~fsl.fsleyes.plotting.timeseries.MelodicTimeSeries
-
-    
-    **The current time course**
-
-    
-    By default, the ``TimeSeriesPanel`` plots the time series of the current
-    voxel from the currently selected overlay, which is determined from the
-    :attr:`.DisplayContext.selectedOverlay`. This time series is referred to
-    as the *current* time course. The :attr:`showMode` property allows the
-    user to choose between showing only the current time course, showing the
-    time course for all (compatible) overlays, or only showing the time
-    courses that have been added to the :attr:`.PlotPanel.dataSeries` list.
-    
-
-    Other time courses can be *held* by adding them to the
-    :attr:`.PlotPanel.dataSeries` list - the :class:`.TimeSeriesListPanel`
-    provides the user with the ability to add/remove time courses from the
-    ``dataSeries`` list.
 
 
     **Control panels**
@@ -114,7 +98,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     The ``TimeSeriesPanel`` also has some functionality for
     :class:`.MelodicImage` overlays - a :class:`.MelodicTimeSeries` instance
     is used to plot the component time courses for the current component (as
-    defined by the :attr:`.ImageOpts.volume` property). 
+    defined by the :attr:`.ImageOpts.volume` property).
     """
 
     
@@ -223,9 +207,9 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
 
     def createDataSeries(self, overlay):
-        """Creates and returns a :class:`.TimeSeries` instance (or an
-        instance of one of the :class:`.TimeSeries` sub-classes) for the
-        specified overlay.
+        """Overrides :meth:`.OverlayPlotPanel.createDataSeries`. Creates and
+        returns a :class:`.TimeSeries` instance (or an instance of one of the
+        :class:`.TimeSeries` sub-classes) for the specified overlay.
 
         Returns a tuple containing the following:
         

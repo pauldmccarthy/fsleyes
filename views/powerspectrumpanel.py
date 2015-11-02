@@ -36,6 +36,16 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
 
     The ``PowerSpectrumPanel`` uses :class:`.PowerSpectrumSeries` to plot
     power spectra of :class:`.Image` overlays,
+
+    
+    **Melodic images**
+
+    
+    The :class:`.PowerSpectrumSeries` class uses a fourier transform to
+    calculate the power spectrum of a time course.  However,
+    :class:`.MelodicImage` overlays already have an associated power spectrum,
+    meaning that there is no need to calculate one for them..  So for these
+    overlays, a :class:`.MelodicPowerSpectrumSeries` instance is used.
     """
 
     
@@ -48,12 +58,15 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
 
 
     plotFrequencies = props.Boolean(default=True)
-    """If ``True``, the x axis is scaled so that it represents frequency.
-    """
+    """If ``True``, the x axis is scaled so that it represents frequency. """
 
     
     def __init__(self, parent, overlayList, displayCtx):
-        """
+        """Create a ``PowerSpectrumPanel``.
+
+        :arg parent:      The :mod:`wx` parent object.
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`.
         """
 
         actionz = {
@@ -79,14 +92,21 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
 
 
     def destroy(self):
+        """Must be called when this ``PowerSpectrumPanel` is no longer
+        needed. Removes some property listeners, and calls
+        :meth:`.OverlayPlotPanel.destroy`.
+        """
         
         self.removeListener('plotFrequencies', self._name)
         self.removeListener('plotMelodicICs',  self._name)
         plotpanel.OverlayPlotPanel.destroy(self)
 
-        
 
     def draw(self, *a):
+        """Overrides :meth:`.PlotPanel.draw`. Draws some
+        :class:`.PowerSpectrumSeries` using the
+        :meth:`.PlotPanel.drawDataSeries` method.
+        """
 
         if self.showMode == 'all':
             overlays = self._overlayList[:]
@@ -102,22 +122,10 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
                             preproc=self.__prepareSpectrumData)
 
 
-        
-    def __plotMelodicICsChanged(self, *a):
-        """Called when the :attr:`plotMelodicICs` property changes. Re-creates
-        the internally cached :class:`.TimeSeries` instances for all
-        :class:`.MelodicImage` overlays in the :class:`.OverlayList`.
-        """
-        
-        for overlay in self._overlayList:
-            if isinstance(overlay, fslmelimage.MelodicImage):
-                self.clearDataSeries(overlay)
-
-        self.updateDataSeries()
-        self.draw()
-
-
     def createDataSeries(self, overlay):
+        """Overrides :meth:`.OverlayPlotPanel.createDataSeries`. Creates a
+        :class:`.PowerSpectrumSeries` instance for the given overlay.
+        """
 
         if self.plotMelodicICs and \
            isinstance(overlay, fslmelimage.MelodicImage):
@@ -135,7 +143,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
             propNames = ['location']
             
         else:
-            return None, [], []
+            return None, None, None
 
         ps.colour    = fslcm.randomDarkColour()
         ps.alpha     = 1.0
@@ -146,6 +154,11 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
 
 
     def __prepareSpectrumData(self, ps):
+        """Performs some pre-processing on the data of the given
+        :class:`.PowerSpectrumSeries` instance. This method is used as the
+        ``preproc`` argument to the :meth:`.PlotPanel.drawDataSeries` method,
+        in :meth:`draw`.
+        """
 
         xdata, ydata = ps.getData()
 
@@ -163,3 +176,17 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
             xdata    = np.arange(0.0, nsamples * freqStep, freqStep)
 
         return xdata, ydata
+
+        
+    def __plotMelodicICsChanged(self, *a):
+        """Called when the :attr:`plotMelodicICs` property changes. Re-creates
+        the internally cached :class:`.PowerSpectrmSeries` instances for all
+        :class:`.MelodicImage` overlays in the :class:`.OverlayList`.
+        """
+        
+        for overlay in self._overlayList:
+            if isinstance(overlay, fslmelimage.MelodicImage):
+                self.clearDataSeries(overlay)
+
+        self.updateDataSeries()
+        self.draw()

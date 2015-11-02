@@ -19,9 +19,9 @@ import fsl.data.strings                as strings
 
 
 class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
-    """The ``TimeSeriesControlPanel`` is a :class:`.FSLEyesPanel` which allows
-    the user to configure a :class:`.TimeSeriesPanel`. It contains controls
-    which are linked to the properties of the ``TimeSeriesPanel``,
+    """The ``TimeSeriesControlPanel`` is a :class:`.PlotContrlPanel` which
+    allows the user to configure a :class:`.TimeSeriesPanel`. It contains
+    controls which are linked to the properties of the ``TimeSeriesPanel``,
     (which include properties defined on the :class:`.PlotPanel` base class),
     and the :class:`.TimeSeries` class.
 
@@ -54,8 +54,8 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
 
     
     def __init__(self, *args, **kwargs):
-        """Create a ``TimeSeriesControlPanel``.
-        
+        """Create a ``TimeSeriesControlPanel``. All arguments are passed
+        through to the :meth:`.PlotControlPanel.__init__` method.
         """
 
         plotcontrolpanel.PlotControlPanel.__init__(self, *args, **kwargs)
@@ -67,13 +67,20 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
 
         
     def destroy(self):
+        """Must be called when this ``TimeSeriesControlPanel`` is no longer
+        needed. Removes some property listeners, and calls
+        :meth:`.PlotControlPanel.destroy`.
+        """
         psPanel = self.getPlotPanel()
         psPanel.removeListener('plotMelodicICs', self._name)
         plotcontrolpanel.PlotControlPanel.destroy(self) 
 
 
     def generateCustomPlotPanelWidgets(self, groupName):
-        """Overrides :meth:`.PlotPanel.generateCustomPlotPanelWidgets`.
+        """Overrides :meth:`.PlotControlPanel.generateCustomPlotPanelWidgets`.
+
+        Adds some widgets for controlling some properties of the
+        :class:`.TimeSeriesPanel`.
         """
 
         widgets = self.getWidgetList()
@@ -99,8 +106,11 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
 
 
     def generateCustomDataSeriesWidgets(self, ts, groupName):
-        """(Re-)crates the *FEAT settings* section for the given
-        :class:`.FEATTimeSeries` instance.
+        """Overrides :meth:`.PlotControlPanel.generateCustomDataSeriesWidgets`.
+
+        If the given :class:`.TimeSeries` is a :class:`.FEATTimeSeries`
+        instance, this method adds some widgets for controlling the
+        FEAT-related settings of the instance.
         """
 
         overlay = ts.overlay

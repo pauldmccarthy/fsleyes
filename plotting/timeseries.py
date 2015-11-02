@@ -31,10 +31,10 @@ import fsl.data.strings as strings
 
 
 class TimeSeries(dataseries.DataSeries):
-    """Encapsulates time series data from an overlay.  :class:`.Image`
-    overlay. The ``TimeSeries`` class is the base-class for all other classes
-    in this module - its :meth:`getData` method implements some pre-processing
-    routines which are required by the :class:`.TimeSeriesPanel`.
+    """Encapsulates time series data from an overlay.  The ``TimeSeries`` class
+    is the base-class for all other classes in this module - its
+    :meth:`getData` method implements some pre-processing routines which are
+    required by the :class:`.TimeSeriesPanel`.
 
     The following methods are intended to be overridden and/or called by
     sub-class implementations:

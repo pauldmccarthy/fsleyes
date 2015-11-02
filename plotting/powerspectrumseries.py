@@ -17,6 +17,7 @@ The following classes are provided:
    MelodicPowerSpectrumSeries
 """
 
+
 import logging
 
 import numpy     as np
@@ -31,36 +32,51 @@ log = logging.getLogger(__name__)
 
 
 class PowerSpectrumSeries(dataseries.DataSeries):
-    """
+    """The ``PowerSpectrumSeries`` encapsulates a power spectrum data series
+    from an overlay. The ``PowerSpectrumSeries`` class is the base class for
+    all other classes in this module. It provides the :meth:`calcPowerSpectrum`
+    method which (surprisingly) calculates the power spectrum of a data
+    series.
     """
 
     
     varNorm  = props.Boolean(default=True)
-    """Normalise data to unit variance before fourier transformation. """
+    """If ``True``, the data is normalised to unit variance before the fourier
+    transformation.
+    """
 
 
     def __init__(self, overlay, displayCtx):
-        """
+        """Create a ``PowerSpectrumSeries``.
+
+        :arg overlay:    The overlay.
+        :arg displayCtx: The :class:`.DisplayContext` instance.
         """
         dataseries.DataSeries.__init__(self, overlay)
         self.displayCtx = displayCtx
 
         
     def destroy(self):
-        """
+        """Must be called when this ``PowerSpectrumSeries`` is no longer
+        needed.
         """
         self.displayCtx = None
         dataseries.DataSeries.destroy(self)
 
 
     def makeLabel(self):
-        """
+        """Returns a label that can be used for this ``PowerSpectrumSeries``.
         """
         display = self.displayCtx.getDisplay(self.overlay)
         return display.name
 
 
     def calcPowerSpectrum(self, data):
+        """Calculates a power spectrum for the given one-dimensional data
+        array. If the :attr:`varNorm` property is ``True``, the data is
+        de-meaned and normalised by its standard deviation before the fourier
+        transformation.
+        """
         if self.varNorm:
             data = data - data.mean()
             data = data / data.std()
@@ -72,9 +88,15 @@ class PowerSpectrumSeries(dataseries.DataSeries):
 
 
 class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
+    """The ``VoxelPowerSpectrumSeries`` class encapsulates the power spectrum
+    of a single voxel from a 4D :class:`.Image` overlay. The voxel is dictated
+    by the :attr:`.DisplayContext.location` property.
+    """
 
+    
     def makeLabel(self):
-        """
+        """Creates and returns a label for use with this
+        ``VoxelPowerSpectrumSeries``.
         """
         
         display = self.displayCtx.getDisplay(self.overlay)
@@ -91,7 +113,8 @@ class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
 
 
     def getData(self):
-        """
+        """Returns the data for the current voxel of the overlay. The current
+        voxel is dictated by the :attr:`.DisplayContext.location` property.
         """
         
         opts  = self.displayCtx.getOpts(self.overlay)
@@ -110,12 +133,15 @@ class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
 
 
 class MelodicPowerSpectrumSeries(PowerSpectrumSeries):
-    """
+    """The ``MelodicPowerSpectrumSeries`` class encapsulates the power spectrum
+    of the time course for a single component of a :class:`.MelodicImage`. The
+    component is dictated by the :attr:`.ImageOpts.volume` property.
     """
 
     
     def __init__(self, *args, **kwargs):
-        """
+        """Create a ``MelodicPowerSpectrumSeries``. All arguments are passed
+        through to the :meth:`PowerSpectrumSeries.__init__` method.
         """
         PowerSpectrumSeries.__init__(self, *args, **kwargs)
         self.varNorm = False
@@ -123,7 +149,8 @@ class MelodicPowerSpectrumSeries(PowerSpectrumSeries):
 
     
     def makeLabel(self):
-        """
+        """Returns a label that can be used for this
+        ``MelodicPowerSpectrumSeries``.
         """
         display   = self.displayCtx.getDisplay(self.overlay)
         opts      = display.getDisplayOpts()
@@ -133,7 +160,9 @@ class MelodicPowerSpectrumSeries(PowerSpectrumSeries):
 
 
     def getData(self):
-        """
+        """Returns the power spectrum for the current component of the
+        :class:`.MelodicImage`, as defined by the :attr:`.ImageOpts.volume`
+        property.
         """
 
         opts      = self.displayCtx.getOpts(self.overlay)

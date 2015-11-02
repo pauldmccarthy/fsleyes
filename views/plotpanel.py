@@ -4,9 +4,11 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`PlotPanel` class. The ``PlotPanel`` class
-is the base class for all *FSLeyes views* which display some sort of data
-plot.  See the :mod:`~fsl.fsleyes` package documentation for more details..
+"""This module provides the :class:`PlotPanel` and :class:`.OverlayPlotPanel`
+classes.  The ``PlotPanel`` class is the base class for all *FSLeyes views*
+which display some sort of data plot. The ``OverlayPlotPanel`` is a
+``PlotPanel`` which contains some extra logic for displaying plots related to
+the currently selected overlay.
 """
 
 
@@ -38,8 +40,11 @@ log = logging.getLogger(__name__)
 class PlotPanel(viewpanel.ViewPanel):
     """The ``PlotPanel`` class is the base class for all *FSLeyes views*
     which display some sort of 2D data plot, such as the
-    :class:`.TimeSeriesPanel`, and the :class:`.HistogramPanel`.
+    :class:`.TimeSeriesPanel`, and the :class:`.HistogramPanel`. 
+    See also the :class:`OverlayPlotPanel`, which contains extra logic for
+    displaying plots related to the currently selected overlay.
 
+    
     ``PlotPanel`` uses :mod:`matplotlib` for its plotting. The ``matplotlib``
     ``Figure``, ``Axis``, and ``Canvas`` instances can be accessed via the
     :meth:`getFigure`, :meth:`getAxis`, and :meth:`getCanvas` methods, if they
@@ -90,17 +95,6 @@ class PlotPanel(viewpanel.ViewPanel):
        screenshot
        importDataSeries
        exportDataSeries
-
-    
-    .. note:: A ``PlotPanel`` instance adds a listener to every one of its
-              properties, using :class:`FSLEyesPanel._name <.FSLEyesPanel>`
-              as the listener name.
-
-              Therefore, If ``PlotPanel`` subclasses add a listener to any of
-              their properties, they should either use a different name, or
-              use ``overwrite=True`` (see :meth:`.HasProperties.addListener`),
-              and should ensure that their listener function calls the
-              :meth:`draw` method.
     """
 
 
@@ -285,6 +279,7 @@ class PlotPanel(viewpanel.ViewPanel):
         """
         self.removeListener('dataSeries', self.__name)
         self.removeListener('limits',     self.__name)
+        
         for propName in ['legend',
                          'autoScale',
                          'xLogScale',
@@ -297,6 +292,12 @@ class PlotPanel(viewpanel.ViewPanel):
                          'xlabel',
                          'ylabel']:
             self.removeListener(propName, self.__name)
+            
+        for ds in self.dataSeries:
+            ds.removeGlobalListener(self.__name, self.draw)
+
+        self.dataSeries = []
+            
         viewpanel.ViewPanel.destroy(self)
 
     
@@ -606,7 +607,7 @@ class PlotPanel(viewpanel.ViewPanel):
         """
         
         for ds in self.dataSeries:
-            ds.addGlobalListener(self._name, self.draw, overwrite=True)
+            ds.addGlobalListener(self.__name, self.draw, overwrite=True)
         self.draw()
 
 
@@ -618,7 +619,6 @@ class PlotPanel(viewpanel.ViewPanel):
         axis = self.getAxis()
         axis.set_xlim(self.limits.x)
         axis.set_ylim(self.limits.y)
-
         self.draw()
 
         
@@ -685,22 +685,91 @@ class PlotPanel(viewpanel.ViewPanel):
 
 
 class OverlayPlotPanel(PlotPanel):
+    """The ``OverlayPlotPanel`` is a :class:`.PlotPanel` which contains
+    some extra logic for creating and storing :class:`.DataSeries`
+    instances for each overlay in the :class:`.OverlayList`.
+
+
+    **Subclass requirements**
+
+    Sub-classes must:
+
+     1. Implement the :meth:`createDataSeries` method, so it creates a
+        :class:`.DataSeries` instance for a specified overlay.
+
+     2. Implement the :meth:`PlotPanel.draw` method so it honours the
+        current value of the :attr:`showMode` property.
+
+    
+    **The internal data series store**
+
+
+    The ``OverlayPlotPanel`` maintains a store of :class:`.DataSeries`
+    instances, one for each compatible overlay. The ``OverlayPlotPanel``
+    manages the property listeners that must be registered with each of these
+    ``DataSeries`` to refresh the plot.  These instances are created by the
+    :meth:`createDataSeries` method, which is implemented by sub-classes. The
+    following methods are available to sub-classes, for managing the internal
+    store of :class:`.DataSeries` instances:
+
+    .. autosummary::
+       :nosignatures:
+
+       getDataSeries
+       clearDataSeries
+       updateDataSeries
+
+    
+    **The current data series**
+
+    
+    By default, the ``OverlayPlotPanel`` plots the data series associated with
+    the currently selected overlay, which is determined from the
+    :attr:`.DisplayContext.selectedOverlay`. This data series is referred to
+    as the *current* data series. The :attr:`showMode` property allows the
+    user to choose between showing only the current data series, showing the
+    data series for all (compatible) overlays, or only showing the data series
+    that have been added to the :attr:`.PlotPanel.dataSeries` list.  Other
+    data series can be *held* by adding them to the
+    :attr:`.PlotPanel.dataSeries` list.
+
+
+    **Control panels**
+
+
+    The :class:`.PlotControlPanel` and :class:`.PlotListPanel` are *FSLeyes
+    control* panels which work with the :class:`.OverlayPlotPanel`.
+
+    
+    The ``OverlayPlotPanel`` is the base class for:
+
+    .. autosummary::
+       :nosignatures:
+
+       ~fsl.fsleyes.views.timeseriespanel.TimeSeriesPanel
+       ~fsl.fsleyes.views.histogrampanel.HistogramPanel
+       ~fsl.fsleyes.views.powerspectrumpanel.PowerSpectrumPanel
+    """
 
     
     showMode = props.Choice(('current', 'all', 'none'))
     """Defines which data series to plot.
 
     =========== =====================================================
-    ``current`` The time course for the currently selected overlay is
+    ``current`` The data series for the currently selected overlay is
                 plotted.
-    ``all``     The time courses for all compatible overlays in the
+    ``all``     The data series for all compatible overlays in the
                 :class:`.OverlayList` are plotted.
-    ``none``    Only the ``TimeSeries`` that are in the
+    ``none``    Only the ``DataSeries`` that are in the
                 :attr:`.PlotPanel.dataSeries` list will be plotted.
     =========== =====================================================
     """ 
 
+
     def __init__(self, *args, **kwargs):
+        """Create an ``OverlayPlotPanel``. All argumenst are passed through to 
+        :meth:`PlotPanel.__init__`.
+        """
 
         PlotPanel.__init__(self, *args, **kwargs)
         
@@ -731,6 +800,9 @@ class OverlayPlotPanel(PlotPanel):
         # etc), and a list of property names on each,
         # defining the properties that need to trigger a
         # redraw.
+        #
+        # See the createDataSeries method for more
+        # information.
         self.__dataSeries   = {}
         self.__refreshProps = {}
 
@@ -748,26 +820,51 @@ class OverlayPlotPanel(PlotPanel):
 
 
     def destroy(self):
+        """Must be called when this ``OverlayPlotPanel`` is no longer needed.
+        Removes some property listeners, and calls :meth:`PlotPanel.destroy`.
+        """
         self             .removeListener('showMode',        self.__name)
         self._overlayList.removeListener('overlays',        self.__name)
         self._displayCtx .removeListener('selectedOverlay', self.__name)
+        PlotPanel.destroy(self)
         
 
     def getDataSeries(self, overlay):
-        """
-
-        It may be called by the :class:`.PlotControlPanel` and
-        :class:`.PlotListPanel` to display controls allowing the user
-        to change :class:`.DataSeries` display properties.
-
-        It should return the :class:`.DataSeries` instance associated with
-        the given overlay, or ``None`` if there is no ``DataSeries`` instance.
+        """Returns the :class:`.DataSeries` instance associated with the
+        specified overlay, or ``None`` if there is no ``DataSeries`` instance.
         """
         return self.__dataSeries.get(overlay)
  
 
     def createDataSeries(self, overlay):
-        """
+        """This method must be implemented by sub-classes. It must create and
+        return a :class:`.DataSeries` instance for the specified overlay.
+
+        Different ``DataSeries`` types need to be re-drawn when different
+        properties change. For example, a :class:`.TimeSeries`` instance needs
+        to be redrawn when the :attr:`.DisplayContext.location` property
+        changes, whereas a :class:`.MelodicTimeSeries` instance needs to be
+        redrawn when the :attr:`.VolumeOpts.volume` property changes.
+
+        Therefore, in addition to creating and returning a ``DataSeries``
+        instance for the given overlay, sub-class implementations must also
+        specify the properties which affect the state of the ``DataSeries``
+        instance. These must be specified as two lists:
+
+         - the *targets* list, a list of objects which own the dependant
+           properties (e.g. the :class:`.DisplayContext` or
+           :class:`.VolumeOpts` instance).
+
+         - The *properties* list, a list of names, each specifying the
+           property on the corresponding target.
+
+        This method must therefore return a tuple containing:
+         - A :class:`.DataSeries` instance, or ``None`` if the overlay
+           is incompatible.
+         - A list of *target* instances.
+         * A list of *property names*.
+        
+        The target and property name lists must have the same length.
         """
         raise NotImplementedError('createDataSeries must be '
                                   'implemented by sub-classes')
@@ -789,6 +886,10 @@ class OverlayPlotPanel(PlotPanel):
 
         
     def updateDataSeries(self):
+        """Makes sure that a :class:`.DataSeries` instance has been created
+        for every compatible overlay, and that property listeners are
+        correctly registered, so the plot can be refreshed when needed.
+        """
         
         for ovl in self._overlayList:
             if ovl not in self.__dataSeries:
@@ -813,13 +914,13 @@ class OverlayPlotPanel(PlotPanel):
 
     def __overlayListChanged(self, *a):
         """Called when the :class:`.OverlayList` changes. Makes sure that
-        there are no :class:`.TimeSeries` instances in the
+        there are no :class:`.DataSeries` instances in the
         :attr:`.PlotPanel.dataSeries` list, or in the internal cache, which
         refer to overlays that no longer exist.
 
-        Also calls :meth:`__updateCurrentTimeSeries`, whic ensures that a
-        :class:`.TimeSeries` instance for every compatiblew overlay is
-        cached internally.
+        Also calls :meth:`updateDataSeries`, whic ensures that a
+        :class:`.DataSeries` instance for every compatible overlay is cached
+        internally.
         """
 
         for ds in list(self.dataSeries):
