@@ -8,37 +8,39 @@
 """
 
 
-import wx
+import                                             props
 
-import                           props
-import pwidgets.widgetlist    as widgetlist
-
-import fsl.fsleyes.panel      as fslpanel
-import fsl.fsleyes.tooltips   as fsltooltips
-import fsl.data.strings       as strings
-import timeseriescontrolpanel as tscontrol
+import fsl.fsleyes.controls.plotcontrolpanel    as plotcontrolpanel
+import fsl.fsleyes.tooltips                     as fsltooltips
+import fsl.fsleyes.plotting.powerspectrumseries as powerspectrumseries
+import fsl.data.strings                         as strings
 
 
-class PowerSpectrumControlPanel(fslpanel.FSLEyesPanel):
+class PowerSpectrumControlPanel(plotcontrolpanel.PlotControlPanel):
     
-    def __init__(self, parent, overlayList, displayCtx, psPanel):
+    def __init__(self, *args, **kwargs):
         
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
-        
-        self.__psPanel = psPanel
-        self.__widgets = widgetlist.WidgetList(self)
-        self.__sizer   = wx.BoxSizer(wx.VERTICAL)
-        
-        self.SetSizer(self.__sizer)
-        self.__sizer.Add(self.__widgets, flag=wx.EXPAND, proportion=1)
+        plotcontrolpanel.PlotControlPanel.__init__(self, *args, **kwargs)
 
+        psPanel = self.getPlotPanel()
+        psPanel.addListener('plotMelodicICs',
+                            self._name,
+                            self.__plotMelodicICsChanged)
+
+    def destroy(self):
+        psPanel = self.getPlotPanel()
+        psPanel.removeListener('plotMelodicICs', self._name)
+        plotcontrolpanel.PlotControlPanel.destroy(self)
+
+
+    def generateCustomPlotPanelWidgets(self, groupName):
+
+        psPanel = self.getPlotPanel()
+        widgets = self.getWidgetList()
         psProps = ['showMode',
                    'plotFrequencies',
                    'plotMelodicICs']
         
-        self.__widgets.AddGroup(
-            'psSettings', strings.labels[self, 'psSettings'])
-
         for prop in psProps:
             
             kwargs = {}
@@ -46,18 +48,40 @@ class PowerSpectrumControlPanel(fslpanel.FSLEyesPanel):
             if prop == 'showMode':
                 kwargs['labels'] = strings.choices[psPanel, 'showMode']
                 
-            widget = props.makeWidget(self.__widgets, psPanel, prop, **kwargs)
+            widget = props.makeWidget(widgets, psPanel, prop, **kwargs)
             
-            self.__widgets.AddWidget(
+            widgets.AddWidget(
                 widget,
                 displayName=strings.properties[psPanel, prop],
                 tooltip=fsltooltips.properties[psPanel, prop],
-                groupName='psSettings')
+                groupName=groupName)
 
-        self.__widgets.AddGroup(
-            'plotSettings',
-            strings.labels[psPanel, 'plotSettings'])
-            
-        tscontrol.generatePlotPanelWidgets(psPanel,
-                                           self.__widgets,
-                                           'plotSettings') 
+
+    def generateDataSeriesWidgets(self, ps, groupName):
+        """Called by the :meth:`__selectedOverlayChanged` method. Refreshes
+        the *Settings for the current power spectrum* section, for the given
+        :class:`.PowerSpectrumSeries` instance.
+        """
+        plotcontrolpanel.PlotControlPanel.generateDataSeriesWidgets(
+            self, ps, groupName)
+
+        if not isinstance(ps, powerspectrumseries.PowerSpectrumSeries):
+            return
+        
+        widgets = self.getWidgetList()
+        varNorm = props.makeWidget(widgets, ps, 'varNorm')
+
+        widgets.AddWidget(varNorm,
+                          displayName=strings.properties[ps, 'varNorm'],
+                          tooltip=strings.properties[ps, 'varNorm'],
+                          groupName=groupName)
+
+        
+    def __plotMelodicICsChanged(self, *a):
+        """Called when the :attr:`.TimeSeriesPanel.plotMelodicICs` property
+        changes. If the current overlay is a :class:`.MelodicImage`,
+        re-generates the widgets in the *current time course* section, as
+        the :class:`.TimeSeries` instance associated with the overlay may
+        have been re-created.
+        """
+        self.refreshDataSeriesWidgets()

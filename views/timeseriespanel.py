@@ -128,15 +128,14 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
     showMode = props.Choice(('current', 'all', 'none'))
     """Defines which time series to plot.
 
-
-    =========== ======================================================
-    ``current`` The time course for  the currently selected overlay is
+    =========== =====================================================
+    ``current`` The time course for the currently selected overlay is
                 plotted.
     ``all``     The time courses for all compatible overlays in the
                 :class:`.OverlayList` are plotted.
     ``none``    Only the ``TimeSeries`` that are in the
                 :attr:`.PlotPanel.dataSeries` list will be plotted.
-    =========== ======================================================
+    =========== =====================================================
     """
 
     

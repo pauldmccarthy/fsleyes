@@ -347,6 +347,12 @@ properties = TypeDict({
     'HistogramSeries.dataRange'       : 'Data range to include in the '
                                         'histogram.',
 
+
+    'PowerSpectrumSeries.varNorm'     : 'If checked, the data is demeaned and '
+                                        'normalised by its standard deviation '
+                                        'before its power spectrum is '
+                                        'calculated via a fourier transform.', 
+
     # Profiles
 
     'OrthoPanel.profile'                      : 'Switch between view mode '
@@ -412,7 +418,7 @@ actions = TypeDict({
 
 
 misc = TypeDict({
-    'PlotPanel.labels' : 'X/Y axis labels.',
-    'PlotPanel.xlim'   : 'X axis data limits.',
-    'PlotPanel.ylim'   : 'Y axis data limits.'
+    'PlotControlPanel.labels' : 'X/Y axis labels.',
+    'PlotControlPanel.xlim'   : 'X axis data limits.',
+    'PlotControlPanel.ylim'   : 'Y axis data limits.'
 })

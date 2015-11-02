@@ -113,13 +113,22 @@ class MelodicPowerSpectrumSeries(PowerSpectrumSeries):
     """
     """
 
+    
+    def __init__(self, *args, **kwargs):
+        """
+        """
+        PowerSpectrumSeries.__init__(self, *args, **kwargs)
+        self.varNorm = False
+        self.disableProperty('varNorm')
+
+    
     def makeLabel(self):
         """
         """
         display   = self.displayCtx.getDisplay(self.overlay)
         opts      = display.getDisplayOpts()
         component = opts.volume
-        
+
         return '{} [component {}]'.format(display.name, component) 
 
 
