@@ -63,7 +63,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     .. autosummary::
        :nosignatures:
 
-       ~fsl.fsleyes.controls.timeserieslistpanel.TimeSeriesListPanel
+       ~fsl.fsleyes.controls.plotlistpanel.PlotListPanel
        ~fsl.fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
 
     
@@ -72,11 +72,11 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     method):
 
     =========================== ===============================================
-    ``toggleTimeSeriesList``    Shows/hides a :class:`.TimeSeriesListPanel`.
+    ``toggleTimeSeriesList``    Shows/hides a :class:`.PlotListPanel`.
     ``toggleTimeSeriesControl`` Shows/hides a :class:`.TimeSeriesControlPanel`.
     =========================== ===============================================
 
-    New ``TimeSeriesPanel`` instances will display a ``TimeSeriesListPanel``
+    New ``TimeSeriesPanel`` instances will display a ``PlotListPanel``
     and a ``TimeSeriesControlPanel`` by default.
 
 

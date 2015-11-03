@@ -23,7 +23,6 @@ The following control panels currently exist:
    ~fsl.fsleyes.controls.canvassettingspanel.CanvasSettingsPanel
    ~fsl.fsleyes.controls.clusterpanel.ClusterPanel
    ~fsl.fsleyes.controls.histogramcontrolpanel.HistogramControlPanel
-   ~fsl.fsleyes.controls.histogramlistpanel.HistogramListPanel
    ~fsl.fsleyes.controls.lightboxtoolbar.LightBoxToolBar
    ~fsl.fsleyes.controls.locationpanel.LocationPanel
    ~fsl.fsleyes.controls.lookuptablepanel.LookupTablePanel
@@ -33,7 +32,9 @@ The following control panels currently exist:
    ~fsl.fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar
    ~fsl.fsleyes.controls.overlayinfopanel.OverlayInfoPanel
    ~fsl.fsleyes.controls.overlaylistpanel.OverlayListPanel
+   ~fsl.fsleyes.controls.plotcontrolpanel.PlotControlPanel
+   ~fsl.fsleyes.controls.plotlistpanel.PlotListPanel
+   ~fsl.fsleyes.controls.powerspectrumcontrolpanel.PowerSpectrumControlPanel
    ~fsl.fsleyes.controls.shellpanel.ShellPanel
    ~fsl.fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
-   ~fsl.fsleyes.controls.timeserieslistpanel.TimeSeriesListPanel
 """

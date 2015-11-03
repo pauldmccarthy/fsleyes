@@ -31,12 +31,32 @@ log = logging.getLogger(__name__)
 
 class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
     """The ``PowerSpectrumPanel`` class is an :class:`.OverlayPlotPanel` which
-    plots power spectra of overlay data. The ``PowerSpectrumPanel`` shares
-    much of its design with the :class:`.TimeSeriesPanel`.
+    plots power spectra of overlay data.  ``PowerSpectrumPanel`` uses
+    :class:`.PowerSpectrumSeries` to plot power spectra of :class:`.Image`
+    overlays,
 
+    
+    A couple of control panels may be shown on a ``PowerSpectrumPanel``:
 
-    The ``PowerSpectrumPanel`` uses :class:`.PowerSpectrumSeries` to plot
-    power spectra of :class:`.Image` overlays,
+    .. autosummary::
+       :nosignatures:
+
+       ~fsl.fsleyes.controls.plotlistpanel.PlotListPanel
+       ~fsl.fsleyes.controls.powerspectrumcontrolpanel.PowerSpectrumControlPanel
+
+    
+    The following actions are provided, in addition to those already provided
+    by the :class:`.PlotPanel`:
+
+    ============================== ====================================
+    ``togglePowerSpectrumList``    Show/hide a :class:`.PlotListPanel`.
+    ``togglePowerSpectrumControl`` Show/hide a
+                                   :class:`.PowerSpectrumControlPanel`.
+    ============================== ====================================
+
+    
+    The ``PlotListPanel`` and ``PowerSpectrumControlPanel`` are both shown
+    by default when a new ``PowerSpectrumPanel`` is created.    
 
     
     **Melodic images**

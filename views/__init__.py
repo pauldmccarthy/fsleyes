@@ -23,8 +23,9 @@ allow dynamic lookup of all :class:`.ViewPanel` sub-classes. The following
    ~fsl.fsleyes.views.orthopanel.OrthoPanel
    ~fsl.fsleyes.views.lightboxpanel.LightBoxPanel
    ~fsl.fsleyes.views.plotpanel.PlotPanel
+   ~fsl.fsleyes.views.plotpanel.OverlayPlotPanel
    ~fsl.fsleyes.views.timeseriespanel.TimeSeriesPanel
-   ~fsl.fsleyes.views.timeseriespanel.PowerSpectrumPanel
+   ~fsl.fsleyes.views.powerspectrumpanel.PowerSpectrumPanel
    ~fsl.fsleyes.views.histogrampanel.HistogramPanel
 """
 

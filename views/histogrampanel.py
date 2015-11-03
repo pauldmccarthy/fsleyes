@@ -49,7 +49,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
     .. autosummary::
        :nosignatures:
 
-       ~fsl.fsleyes.controls.histogramlistpanel.HistogramListPanel
+       ~fsl.fsleyes.controls.plotlistpanel.PlotListPanel
        ~fsl.fsleyes.controls.histogramcontrolpanel.HistogramControlPanel
 
     
@@ -57,11 +57,11 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
     by the :class:`.PlotPanel`:
 
     ========================== ============================================
-    ``toggleHistogramList``    Show/hide a :class:`.HistogramListPanel`.
+    ``toggleHistogramList``    Show/hide a :class:`.PlotListPanel`.
     ``toggleHistogramControl`` Show/hide a :class:`.HistogramControlPanel`.
     ========================== ============================================
 
-    The ``HistogramListPanel`` and ``HistogramControlPanel`` are both shown
+    The ``PlotListPanel`` and ``HistogramControlPanel`` are both shown
     by default when a new ``HistogramPanel`` is created.
     """
 
