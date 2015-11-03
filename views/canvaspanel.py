@@ -21,23 +21,23 @@ import matplotlib.image as mplimg
 
 import props
 
-import fsl.fsleyes.fsleyes_parseargs              as fsleyes_parseargs
-import fsl.utils.dialog                           as fsldlg
-import fsl.utils.settings                         as fslsettings
-import fsl.data.image                             as fslimage
-import fsl.data.strings                           as strings
-import fsl.fsleyes.displaycontext                 as displayctx
-import fsl.fsleyes.controls.overlaylistpanel      as overlaylistpanel
-import fsl.fsleyes.controls.overlayinfopanel      as overlayinfopanel
-import fsl.fsleyes.controls.atlaspanel            as atlaspanel
-import fsl.fsleyes.controls.overlaydisplaytoolbar as overlaydisplaytoolbar
-import fsl.fsleyes.controls.locationpanel         as locationpanel
-import fsl.fsleyes.controls.clusterpanel          as clusterpanel
-import fsl.fsleyes.controls.lookuptablepanel      as lookuptablepanel
-import fsl.fsleyes.controls.shellpanel            as shellpanel
-
-import                                               colourbarpanel
-import                                               viewpanel
+import fsl.fsleyes.fsleyes_parseargs                   as fsleyes_parseargs
+import fsl.utils.dialog                                as fsldlg
+import fsl.utils.settings                              as fslsettings
+import fsl.data.image                                  as fslimage
+import fsl.data.strings                                as strings
+import fsl.fsleyes.displaycontext                      as displayctx
+import fsl.fsleyes.controls.overlaylistpanel           as overlaylistpanel
+import fsl.fsleyes.controls.overlayinfopanel           as overlayinfopanel
+import fsl.fsleyes.controls.atlaspanel                 as atlaspanel
+import fsl.fsleyes.controls.overlaydisplaytoolbar      as overlaydisplaytoolbar
+import fsl.fsleyes.controls.locationpanel              as locationpanel
+import fsl.fsleyes.controls.clusterpanel               as clusterpanel
+import fsl.fsleyes.controls.lookuptablepanel           as lookuptablepanel
+import fsl.fsleyes.controls.melodicclassificationpanel as melclasspanel
+import fsl.fsleyes.controls.shellpanel                 as shellpanel
+import                                                    colourbarpanel
+import                                                    viewpanel
 
 
 log = logging.getLogger(__name__)
@@ -84,16 +84,18 @@ class CanvasPanel(viewpanel.ViewPanel):
     :mod:`control <.controls>` panels:
     
     
-    =========================== ===========================================
-    ``toggleOverlayList``       Toggles an :class:`.OverlayListPanel`.
-    ``toggleOverlayInfo``       Toggles an :class:`.OverlayInfoPanel`.
-    ``toggleAtlasPanel``        Toggles an :class:`.AtlasPanel`.
-    ``toggleDisplayProperties`` Toggles an :class:`.OverlayDisplayToolBar`.
-    ``toggleLocationPanel``     Toggles a :class:`.LocationPanel`.
-    ``toggleClusterPanel``      Toggles a :class:`.ClusterPanel`.
-    ``toggleLookupTablePanel``  Toggles a :class:`.LookupTablePanel`.
-    ``toggleShell``             Toggles a :class:`.ShellPanel`.
-    =========================== ===========================================
+    ============================== ===========================================
+    ``toggleOverlayList``          Toggles an :class:`.OverlayListPanel`.
+    ``toggleOverlayInfo``          Toggles an :class:`.OverlayInfoPanel`.
+    ``toggleAtlasPanel``           Toggles an :class:`.AtlasPanel`.
+    ``toggleDisplayProperties``    Toggles an :class:`.OverlayDisplayToolBar`.
+    ``toggleLocationPanel``        Toggles a :class:`.LocationPanel`.
+    ``toggleClusterPanel``         Toggles a :class:`.ClusterPanel`.
+    ``toggleLookupTablePanel``     Toggles a :class:`.LookupTablePanel`.
+    ``toggleClassificationPanel``  Toggles a
+                                   :class:`.MelodicClassificationPanel`.
+    ``toggleShell``                Toggles a :class:`.ShellPanel`.
+    ============================== ===========================================
 
     
     A couple of other actions are also provided, with the same names as their
@@ -246,29 +248,32 @@ class CanvasPanel(viewpanel.ViewPanel):
             extraActions = {}
 
         actionz = [
-            ('screenshot',              self.screenshot),
-            ('showCommandLineArgs',     self.showCommandLineArgs),
-            ('toggleOverlayList',       lambda *a: self.togglePanel(
+            ('screenshot',                self.screenshot),
+            ('showCommandLineArgs',       self.showCommandLineArgs),
+            ('toggleOverlayList',         lambda *a: self.togglePanel(
                 overlaylistpanel.OverlayListPanel,
                 location=wx.BOTTOM)),
-            ('toggleOverlayInfo',       lambda *a: self.togglePanel(
+            ('toggleOverlayInfo',         lambda *a: self.togglePanel(
                 overlayinfopanel.OverlayInfoPanel,
-                location=wx.RIGHT)), 
-            ('toggleAtlasPanel',        lambda *a: self.togglePanel(
+                location=wx.LEFT)), 
+            ('toggleAtlasPanel',          lambda *a: self.togglePanel(
                 atlaspanel.AtlasPanel,
                 location=wx.BOTTOM)),
-            ('toggleDisplayProperties', lambda *a: self.togglePanel(
+            ('toggleDisplayProperties',   lambda *a: self.togglePanel(
                 overlaydisplaytoolbar.OverlayDisplayToolBar,
                 viewPanel=self)),
-            ('toggleLocationPanel',     lambda *a: self.togglePanel(
+            ('toggleLocationPanel',       lambda *a: self.togglePanel(
                 locationpanel.LocationPanel,
                 location=wx.BOTTOM)),
-            ('toggleClusterPanel',      lambda *a: self.togglePanel(
+            ('toggleClusterPanel',        lambda *a: self.togglePanel(
                 clusterpanel.ClusterPanel,
                 location=wx.TOP)), 
-            ('toggleLookupTablePanel',  lambda *a: self.togglePanel(
+            ('toggleLookupTablePanel',    lambda *a: self.togglePanel(
                 lookuptablepanel.LookupTablePanel,
-                location=wx.TOP))]
+                location=wx.TOP)),
+            ('toggleClassificationPanel', lambda *a: self.togglePanel(
+                melclasspanel.MelodicClassificationPanel,
+                location=wx.RIGHT))]
 
         actionz += extraActions.items()
 
