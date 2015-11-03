@@ -14,14 +14,16 @@ import timeseries
 import histogramseries
 import powerspectrumseries
 
-DataSeries               = dataseries         .DataSeries
-TimeSeries               = timeseries         .TimeSeries
-VoxelTimeSeries          = timeseries         .VoxelTimeSeries 
-FEATTimeSeries           = timeseries         .FEATTimeSeries
-FEATPartialFitTimeSeries = timeseries         .FEATPartialFitTimeSeries
-FEATEVTimeSeries         = timeseries         .FEATEVTimeSeries
-FEATResidualTimeSeries   = timeseries         .FEATResidualTimeSeries
-FEATModelFitTimeSeries   = timeseries         .FEATModelFitTimeSeries
-MelodicTimeSeries        = timeseries         .MelodicTimeSeries
-HistogramSeries          = histogramseries    .HistogramSeries
-PowerSpectrumSeries      = powerspectrumseries.PowerSpectrumSeries
+DataSeries                 = dataseries         .DataSeries
+TimeSeries                 = timeseries         .TimeSeries
+VoxelTimeSeries            = timeseries         .VoxelTimeSeries 
+FEATTimeSeries             = timeseries         .FEATTimeSeries
+FEATPartialFitTimeSeries   = timeseries         .FEATPartialFitTimeSeries
+FEATEVTimeSeries           = timeseries         .FEATEVTimeSeries
+FEATResidualTimeSeries     = timeseries         .FEATResidualTimeSeries
+FEATModelFitTimeSeries     = timeseries         .FEATModelFitTimeSeries
+MelodicTimeSeries          = timeseries         .MelodicTimeSeries
+HistogramSeries            = histogramseries    .HistogramSeries
+PowerSpectrumSeries        = powerspectrumseries.PowerSpectrumSeries
+VoxelPowerSpectrumSeries   = powerspectrumseries.VoxelPowerSpectrumSeries
+MelodicPowerSpectrumSeries = powerspectrumseries.MelodicPowerSpectrumSeries

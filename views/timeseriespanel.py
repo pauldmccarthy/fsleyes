@@ -22,7 +22,7 @@ import fsl.data.image                              as fslimage
 import fsl.fsleyes.colourmaps                      as fslcmaps
 import fsl.fsleyes.plotting                        as plotting
 import fsl.fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
-import fsl.fsleyes.controls.timeserieslistpanel    as timeserieslistpanel
+import fsl.fsleyes.controls.plotlistpanel          as plotlistpanel
 
 
 log = logging.getLogger(__name__)
@@ -139,7 +139,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         actionz = {
             'toggleTimeSeriesList'    : lambda *a: self.togglePanel(
-                timeserieslistpanel.TimeSeriesListPanel,
+                plotlistpanel.PlotListPanel,
                 self,
                 location=wx.TOP),
             'toggleTimeSeriesControl' : lambda *a: self.togglePanel(
@@ -266,9 +266,9 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         if self.usePixdim:
             if isinstance(ts.overlay, fslmelimage.MelodicImage):
-                xdata *= ts.overlay.tr
+                xdata = xdata * ts.overlay.tr
             else:
-                xdata *= ts.overlay.pixdim[3]
+                xdata = xdata * ts.overlay.pixdim[3]
         
         if self.plotMode == 'demean':
             ydata = ydata - ydata.mean()

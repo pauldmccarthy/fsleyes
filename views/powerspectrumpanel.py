@@ -20,6 +20,7 @@ import props
 import                                                   plotpanel
 import fsl.fsleyes.plotting.powerspectrumseries       as psseries
 import fsl.fsleyes.controls.powerspectrumcontrolpanel as pscontrol
+import fsl.fsleyes.controls.plotlistpanel             as plotlistpanel
 import fsl.fsleyes.colourmaps                         as fslcm
 import fsl.data.image                                 as fslimage
 import fsl.data.melodicimage                          as fslmelimage
@@ -73,7 +74,11 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
             'togglePowerSpectrumControl' : lambda *a: self.togglePanel(
                 pscontrol.PowerSpectrumControlPanel,
                 self,
-                location=wx.TOP)
+                location=wx.TOP),
+            'togglePowerSpectrumList' : lambda *a: self.togglePanel(
+                plotlistpanel.PlotListPanel,
+                self,
+                location=wx.TOP) 
         }
         
         plotpanel.OverlayPlotPanel.__init__(self,
@@ -88,6 +93,11 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
                                 self._name,
                                 self.__plotMelodicICsChanged)
 
+        def addPanels():
+            self.run('togglePowerSpectrumControl') 
+            self.run('togglePowerSpectrumList') 
+
+        wx.CallAfter(addPanels)
         self.draw()
 
 

@@ -294,7 +294,7 @@ class PlotPanel(viewpanel.ViewPanel):
             self.removeListener(propName, self.__name)
             
         for ds in self.dataSeries:
-            ds.removeGlobalListener(self.__name, self.draw)
+            ds.removeGlobalListener(self.__name)
             ds.destroy()
 
         self.dataSeries = []
@@ -486,11 +486,22 @@ class PlotPanel(viewpanel.ViewPanel):
         """Plots a single :class:`.DataSeries` instance. This method is called
         by the :meth:`drawDataSeries` method.
 
+        .. note:: While a :class:`.PlotPanel` sub-class will typically plot
+                  :class:`.Dataseries` sub-classses (e.g. the
+                  :class:`.TimeSeriesPanel` plots :class:`.TimeSeries`
+                  instances), the ``preproc`` function will potentially be
+                  passed :class:`.DataSeries` instances. This is because the
+                  :class:`.PlotListPanel` converts ``DataSeries``
+                  sub-class instances to ``DataSeries`` instances.
+
+                  Therefore, the ``preproc`` function must be able to handle
+                  ``DataSeries`` instances.
+
         :arg ds:       The ``DataSeries`` instance.
 
-        :arg preproc:  An optional preprocessing function which must accept
-                       the ``DataSeries`` instance as its sole argument, and
-                       must return the ``(xdata, ydata)`` with any required
+        :arg preproc:  An optional preprocessing function which must accept the
+                       ``DataSeries`` instance as its sole argument, and must
+                       return the ``(xdata, ydata)`` with any required
                        processing applied.  The default preprocessing function
                        returns the result of a call to
                        :meth:`.DataSeries.getData`.

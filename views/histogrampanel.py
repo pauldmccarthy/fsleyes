@@ -22,7 +22,7 @@ import fsl.data.strings                           as strings
 import fsl.utils.dialog                           as fsldlg
 import fsl.fsleyes.plotting.histogramseries       as histogramseries
 import fsl.fsleyes.controls.histogramcontrolpanel as histogramcontrolpanel
-import fsl.fsleyes.controls.histogramlistpanel    as histogramlistpanel
+import fsl.fsleyes.controls.plotlistpanel         as plotlistpanel
 import fsl.fsleyes.colourmaps                     as fslcm
 import                                               plotpanel
 
@@ -88,7 +88,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
         actionz = {
             'toggleHistogramList'    : lambda *a: self.togglePanel(
-                histogramlistpanel.HistogramListPanel,
+                plotlistpanel.PlotListPanel,
                 self,
                 location=wx.TOP),
             'toggleHistogramControl' : lambda *a: self.togglePanel(
@@ -213,7 +213,12 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
             xdata = np.array(xdata[:-1], dtype=np.float32)
             ydata = np.array(ydata,      dtype=np.float32)
 
+        # The passed-in series may just
+        # be a DataSeries instance.
+        if not isinstance(hs, histogramseries.HistogramSeries):
+            return xdata, ydata
+
+        # Or a HistogramSeries instance
         nvals = hs.getNumHistogramValues()
-            
         if   self.histType == 'count':       return xdata, ydata
         elif self.histType == 'probability': return xdata, ydata / nvals
