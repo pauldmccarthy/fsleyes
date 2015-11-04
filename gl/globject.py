@@ -388,14 +388,15 @@ class GLImageObject(GLObject):
 
             pixdim = np.array(image.pixdim[:3])
             steps  = [res, res, res] / pixdim
+            steps  = np.maximum(steps, [1, 1, 1])
             res    = image.shape[:3] / steps
             
             return np.array(res.round(), dtype=np.uint32)
         
         else:
             lo, hi = map(np.array, self.getDisplayBounds())
-            minres = int(round(((hi - lo) / res).min()))
-            return [minres] * 3
+            maxres = int(round(((hi - lo) / res).max()))
+            return [maxres] * 3
 
         
     def generateVertices(self, zpos, xform):

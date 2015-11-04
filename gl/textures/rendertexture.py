@@ -382,7 +382,6 @@ class GLObjectRenderTexture(RenderTexture):
                 (width, height)))
 
         if width > maxRes or height > maxRes:
-            oldWidth, oldHeight = width, height
             ratio = min(width, height) / float(max(width, height))
 
             if width > height:
@@ -395,12 +394,7 @@ class GLObjectRenderTexture(RenderTexture):
             width  = int(round(width))
             height = int(round(height))
 
-            log.debug('Limiting texture resolution to {}x{} '
-                      '(for {} resolution {}x{})'.format(
-                          width,
-                          height,
-                          type(globj).__name__,
-                          oldWidth,
-                          oldHeight))
+        log.debug('Setting {} texture resolution to {}x{}'.format(
+            type(globj).__name__, width, height))
 
         RenderTexture.setSize(self, width, height) 
