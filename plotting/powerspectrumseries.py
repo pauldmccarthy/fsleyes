@@ -27,6 +27,8 @@ import props
 
 import dataseries
 
+import fsl.data.melodicimage as fslmelimage
+
 
 log = logging.getLogger(__name__)
 
@@ -93,6 +95,18 @@ class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
     by the :attr:`.DisplayContext.location` property.
     """
 
+
+    def __init__(self, *args, **kwargs):
+        """Create a ``VoxelPowerSpectrumSeries``.  All arguments are passed
+        to the :meth:`PowerSpectrumSeries.__init__` method. A :exc:`ValueError`
+        is raised if the overlay is not a 4D :class:`.Image`.
+        """
+
+        PowerSpectrumSeries.__init__(self, *args, **kwargs)
+
+        if not self.overlay.is4DImage():
+            raise ValueError('Overlay is not a 4D image')
+
     
     def makeLabel(self):
         """Creates and returns a label for use with this
@@ -144,6 +158,10 @@ class MelodicPowerSpectrumSeries(PowerSpectrumSeries):
         through to the :meth:`PowerSpectrumSeries.__init__` method.
         """
         PowerSpectrumSeries.__init__(self, *args, **kwargs)
+
+        if not isinstance(self.overlay, fslmelimage.MelodicImage):
+            raise ValueError('Overlay is not a MelodicImage')
+        
         self.varNorm = False
         self.disableProperty('varNorm')
 
