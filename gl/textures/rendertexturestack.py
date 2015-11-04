@@ -249,10 +249,10 @@ class RenderTextureStack(object):
         oldProjMat    = gl.glGetFloatv(  gl.GL_PROJECTION_MATRIX)
         oldMVMat      = gl.glGetFloatv(  gl.GL_MODELVIEW_MATRIX)
 
-        glroutines.show2D(xax, yax, width, height, lo, hi)
-
         tex.bindAsRenderTarget()
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+        glroutines.show2D(xax, yax, width, height, lo, hi)
+        glroutines.clear((0, 0, 0, 0))
+
         self.__globj.preDraw()
         self.__globj.draw(zpos)
         self.__globj.postDraw()

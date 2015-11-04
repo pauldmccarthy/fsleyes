@@ -12,8 +12,7 @@ functionality to display a 2D slice from a collection of 3D overlays.
 import copy
 import logging
 
-import numpy     as np 
-import OpenGL.GL as gl
+import numpy as np 
 
 import props
 
@@ -904,13 +903,6 @@ class SliceCanvas(props.HasProperties):
             size = self._getSize()
             
         width, height = size
-
-        # clear the canvas
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
-
-        # enable transparency
-        gl.glEnable(gl.GL_BLEND)
-        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)        
         
         if (len(self.overlayList) == 0) or \
            (width  == 0)                or \
@@ -1017,8 +1009,6 @@ class SliceCanvas(props.HasProperties):
         if width == 0 or height == 0:
             return
 
-        gl.glClearColor(*self.bgColour)
-
         if not self._setGLContext():
             return
 
@@ -1026,7 +1016,8 @@ class SliceCanvas(props.HasProperties):
         # display bounds and canvas size
         if self.renderMode is not 'offscreen':
             self._setViewport()
-
+            glroutines.clear(self.bgColour)
+            
         for overlay in self.displayCtx.getOrderedOverlays():
 
             display = self.displayCtx.getDisplay(overlay)
@@ -1075,7 +1066,7 @@ class SliceCanvas(props.HasProperties):
                 rt.bindAsRenderTarget()
                 rt.setRenderViewport(self.xax, self.yax, lo, hi)
                 
-                gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+                glroutines.clear((0, 0, 0, 0))
 
                 globj.preDraw()
                 globj.draw(self.pos.z)
@@ -1106,6 +1097,7 @@ class SliceCanvas(props.HasProperties):
         # to the screen canvas.
         if self.renderMode == 'offscreen':
             self._setViewport()
+            glroutines.clear(self.bgColour)
             self._drawOffscreenTextures() 
 
         if self.showCursor:

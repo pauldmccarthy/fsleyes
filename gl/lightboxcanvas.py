@@ -19,6 +19,7 @@ import OpenGL.GL as gl
 import fsl.fsleyes.displaycontext.canvasopts as canvasopts
 import fsl.fsleyes.gl.slicecanvas            as slicecanvas
 import fsl.fsleyes.gl.resources              as glresources
+import fsl.fsleyes.gl.routines               as glroutines
 import fsl.fsleyes.gl.textures               as textures
 
 
@@ -723,8 +724,6 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if not self._setGLContext():
             return
 
-        gl.glClearColor(*self.bgColour)
-
         if self.renderMode == 'offscreen':
             
             log.debug('Rendering to off-screen texture')
@@ -740,10 +739,12 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             
             rt.bindAsRenderTarget()
             rt.setRenderViewport(self.xax, self.yax, lo, hi)
-            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+            glroutines.clear((0, 0, 0, 0)) 
             
         else:
             self._setViewport()
+            glroutines.clear(self.bgColour) 
+
 
         startSlice = self.ncols * self.topRow
         endSlice   = startSlice + self.nrows * self.ncols
@@ -795,6 +796,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             rt.unbindAsRenderTarget()
             rt.restoreViewport()
             self._setViewport()
+            glroutines.clear(self.bgColour)
             rt.drawOnBounds(
                 0,
                 self.displayBounds.xlo,

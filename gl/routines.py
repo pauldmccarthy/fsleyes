@@ -20,6 +20,22 @@ import fsl.utils.transform as transform
 log = logging.getLogger(__name__)
 
 
+def clear(bgColour):
+    """Clears the current frame buffer, and does some standard setup
+    operations.
+    """
+
+    # set the background colour
+    gl.glClearColor(*bgColour)
+
+    # clear the buffer
+    gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
+
+    # enable transparency
+    gl.glEnable(gl.GL_BLEND) 
+    gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+
+
 def show2D(xax, yax, width, height, lo, hi):
     """Configures the OpenGL viewport for 2D othorgraphic display.
 
