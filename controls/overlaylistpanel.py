@@ -270,14 +270,14 @@ class ListItemWidget(wx.Panel):
     """ 
 
     
-    unsavedDefaultBG = '#ffaaaa'
+    unsavedDefaultBG = '#ffeeee'
     """This colour is used as the default background colour for
     :class:`.Image` overlays with an :attr:`.Image.saved` property
     of ``False``.
     """
 
     
-    unsavedSelectedBG = '#aa4444'
+    unsavedSelectedBG = '#ffcdcd'
     """This colour is used as the background colour for :class:`.Image`
     overlays with an :attr:`.Image.saved` property of ``False``, when
     they are selected in the :class:`OverlayListPanel`.

@@ -12,13 +12,13 @@ of a :class:`.MelodicImage`.
 import wx
 
 
-import pwidgets.widgetgrid as widgetgrid
-import pwidgets.texttag    as texttag
-import pwidgets.notebook   as notebook
+import pwidgets.notebook         as notebook
 
-import fsl.data.strings      as strings
-import fsl.data.melodicimage as fslmelimage
-import fsl.fsleyes.panel     as fslpanel
+import fsl.data.strings          as strings
+import fsl.data.melodicimage     as fslmelimage
+import fsl.fsleyes.colourmaps    as fslcm
+import fsl.fsleyes.panel         as fslpanel
+import melodicclassificationgrid as melodicgrid
 
 
 class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
@@ -45,12 +45,26 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
             style=(wx.ALIGN_CENTRE_HORIZONTAL |
                    wx.ALIGN_CENTRE_VERTICAL))
 
-        self.__notebook      = notebook.Notebook(self)
-        self.__componentGrid = ComponentGrid(    self.__notebook)
-        self.__labelGrid     = LabelGrid(        self.__notebook)
 
-        self.__notebook.AddPage(self.__componentGrid, 'Components')
-        self.__notebook.AddPage(self.__labelGrid,     'Labels')
+        lut = fslcm.getLookupTable('melodic-classes')
+
+        self.__notebook      = notebook.Notebook(self)
+        self.__componentGrid = melodicgrid.ComponentGrid(
+            self.__notebook,
+            self._overlayList,
+            self._displayCtx,
+            lut)
+
+        self.__labelGrid     = melodicgrid.LabelGrid(
+            self.__notebook,
+            self._overlayList,
+            self._displayCtx,
+            lut) 
+
+        self.__notebook.AddPage(self.__componentGrid,
+                                strings.labels[self, 'componentTab'])
+        self.__notebook.AddPage(self.__labelGrid,
+                                strings.labels[self, 'labelTab'])
 
         self.__mainSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.__mainSizer.Add(self.__notebook, flag=wx.EXPAND, proportion=1)
@@ -75,8 +89,9 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
                                 self._name,
                                 self.__selectedOverlayChanged)
 
-        self.__overlay = None
         self.__selectedOverlayChanged()
+
+        self.SetMinSize((400, 100))
 
 
     def destroy(self):
@@ -84,6 +99,9 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
         """
         self._displayCtx .removeListener('selectedOverlay', self._name)
         self._overlayList.removeListener('overlays',        self._name)
+        self.__componentGrid.destroy()
+        self.__labelGrid    .destroy()
+        
         fslpanel.FSLEyesPanel.destroy(self)
 
 
@@ -108,67 +126,4 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
             self.__enable(False, strings.messages[self, 'disabled'])
             return
 
-        self.__overlay = overlay
-
-        self.__componentGrid.setOverlay(overlay)
-        self.__labelGrid    .setOverlay(overlay)
-
         self.__enable(True)
-
-
-class ComponentGrid(wx.Panel):
-
-    def __init__(self, parent):
-        wx.Panel.__init__(self, parent)
-
-        self.__grid  = widgetgrid.WidgetGrid(self)
-        self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.__grid.ShowRowLabels(False)
-        self.__grid.ShowColLabels(True)
-        
-        self.__sizer.Add(self.__grid, flag=wx.EXPAND, proportion=1)
-
-        self.SetSizer(self.__sizer)
-
-        
-    def setOverlay(self, overlay):
-
-        numComps = overlay.numComponents()
-
-        self.__grid.ClearGrid()
-        self.__grid.SetGridSize(numComps, 2, growCols=[1])
-
-        self.__grid.SetColLabel(0, 'Component #')
-        self.__grid.SetColLabel(1, 'Labels')
-
-        for i in range(numComps):
-
-            tags = texttag.TextTagPanel(self.__grid,
-                                        style=(texttag.TTP_ALLOW_NEW_TAGS |
-                                               texttag.TTP_ADD_NEW_TAGS   |
-                                               texttag.TTP_NO_DUPLICATES))
-            
-            self.__grid.SetText(  i, 0, str(i))
-            self.__grid.SetWidget(i, 1, tags)
-
-        self.Layout()
-        
-        
-
-class LabelGrid(wx.Panel):
-
-    def __init__(self, parent):
-        
-        wx.Panel.__init__(self, parent)
-
-        self.__grid  = widgetgrid.WidgetGrid(self)
-        self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
-        
-        self.__sizer.Add(self.__grid, flag=wx.EXPAND, proportion=1)
-
-        self.SetSizer(self.__sizer) 
-
-        
-    def setOverlay(self, overlay):
-        pass

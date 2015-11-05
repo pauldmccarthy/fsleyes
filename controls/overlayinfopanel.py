@@ -386,7 +386,7 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
             for i, (infName, infData) in enumerate(secInf):
 
                 if i % 2: bgColour = '#ffffff'
-                else:     bgColour = '#ffeeee'
+                else:     bgColour = '#cdcdff'
 
                 lines.append('<tr bgcolor="{}">'
                              '<td><b>{}</b></td>'

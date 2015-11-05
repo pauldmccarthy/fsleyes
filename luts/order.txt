@@ -1,3 +1,4 @@
 random                     Random
 harvard-oxford-cortical    MGH Cortical
 harvard-oxford-subcortical MGH Sub-cortical
+melodic-classes            Melodic IC classification

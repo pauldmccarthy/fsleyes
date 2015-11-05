@@ -968,6 +968,18 @@ class LookupTable(props.HasProperties):
         return self.__find(value)[1]
 
 
+    def getByName(self, name):
+        """Returns the :class:`LutLabel` instance associated with the given
+        ``name``, or ``None`` if there is no ``LutLabel`.
+        """
+        
+        for i, ll in enumerate(self.labels):
+            if ll.name() == name:
+                return ll
+            
+        return None
+
+
     def set(self, value, **kwargs):
         """Create a new label with the given value, or updates the
         colour/name/enabled states associated with the given value.
