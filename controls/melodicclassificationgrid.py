@@ -40,7 +40,6 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
         self.SetSizer(self.__sizer)
         
         self.__grid.Bind(widgetgrid.EVT_WG_SELECT, self.__onGridSelect)
-        self.__grid.Bind(wx.EVT_CHAR_HOOK,         self.__onGridKeyboard)
 
         lut        .addListener('labels', self._name, self.__lutChanged)
         displayCtx .addListener('selectedOverlay',
@@ -157,7 +156,8 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
             tags = texttag.TextTagPanel(self.__grid,
                                         style=(texttag.TTP_ALLOW_NEW_TAGS |
                                                texttag.TTP_ADD_NEW_TAGS   |
-                                               texttag.TTP_NO_DUPLICATES))
+                                               texttag.TTP_NO_DUPLICATES  |
+                                               texttag.TTP_KEYBOARD_NAV))
 
             tags.SetOptions(labels, colours)
 
@@ -245,35 +245,18 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
         opts.volume = component
         opts.enableListener('volume', self._name)
 
+        tags = self.__grid.GetWidget(ev.row, 1)
 
-    def __onGridKeyboard(self, ev):
-
-        key = ev.GetKeyCode()
-
-        print 'MC Grid keyboard event ({})'.format(key)
-        
-        if key != wx.WXK_RETURN:
-            ev.Skip()
-            return
-
-        row  = self.__grid.GetSelection()[0]
-        tags = self.__grid.GetWidget(row, 1)
-
-
-        if tags.HasFocus():
-            ev.Skip()
-            return
-
-        print ' -> Focusing row {}'.format(row)
-
-        tags.FocusComboBox()
-
+        tags.FocusNewTagCtrl()
 
 
     def __volumeChanged(self, *a):
         
         opts = self._displayCtx.getOpts(self.__overlay)
         self.__grid.SetSelection(opts.volume, -1)
+
+        tags = self.__grid.GetWidget(opts.volume, 1)
+        tags.FocusNewTagCtrl()
 
 
     def __labelsChanged(self, *a):
