@@ -525,7 +525,6 @@ class LabelGrid(fslpanel.FSLEyesPanel):
 
                 colour = label.colour()
                 colour = [int(round(c  * 255.0)) for c in colour]
-                
                 tags.AddTag(str(comp), colour)
 
         self.__grid.Layout()
@@ -606,6 +605,7 @@ class LabelGrid(fslpanel.FSLEyesPanel):
         """Called when the :attr:`LookupTable.labels` change. Re-creates and
         re-populates the :class:`.WidgetGrid`.
         """
+        log.debug('Lookup table changed - re-creating label grid')
         self.__recreateGrid()
         self.__refreshTags()
 
@@ -613,5 +613,6 @@ class LabelGrid(fslpanel.FSLEyesPanel):
     def __labelsChanged(self, *a):
         """Called when the :attr:`.MelodicClassification.labels` change.
         Re-populates the :class:`.WidgetGrid`.
-        """ 
+        """
+        log.debug('Melodic classification changed - refreshing tags')
         self.__refreshTags()
