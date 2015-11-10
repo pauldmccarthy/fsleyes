@@ -780,7 +780,7 @@ class LutLabelDialog(wx.Dialog):
         return self.__enteredColour  
 
     
-    def ___onOk(self, ev):
+    def __onOk(self, ev):
         """Called when the user confirms the dialog. Saves the name, colour,
         and value that were entered, and closes the dialog.
         """
@@ -791,7 +791,7 @@ class LutLabelDialog(wx.Dialog):
         self.EndModal(wx.ID_OK)
 
 
-    def onCancel(self, ev):
+    def __onCancel(self, ev):
         """Called when the user cancells the dialog. Closes the dialog."""
         
         self.EndModal(wx.ID_CANCEL)
