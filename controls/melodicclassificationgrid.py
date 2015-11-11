@@ -209,11 +209,9 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
             for label in melclass.getLabels(i):
                 if label in labels:
                     continue
-                
-                colour = self.__addNewLutLabel(label).colour()
-                
+
                 labels .append(label)
-                colours.append(colour)
+                colours.append(fslcm.randomBrightColour())
         
         for i in range(len(colours)):
             colours[i] = [int(round(c * 255)) for c in colours[i]] 
@@ -227,26 +225,6 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
             for label in melclass.getLabels(row):
                 tags.AddTag(label)
 
-
-    def __addNewLutLabel(self, label, colour=None):
-        """Called when a new tag is added to a :class:`.TextTagPanel`. Adds a
-        corresponding label to the :class:`.LookupTable`.
-        """
-        
-        lut   = self.__lut
-        value = lut.max() + 1
-
-        if colour is None:
-            colour = fslcm.randomBrightColour()
-
-        lut.disableListener('labels', self._name)
-        lut.set(value, name=label, colour=colour)
-        lut.enableListener('labels', self._name)
-
-        self.__refreshTags()
-
-        return lut.get(value)
-                
 
     def __onTagAdded(self, ev):
         """Called when a tag is added to a :class:`.TextTagPanel`. Adds the
@@ -267,9 +245,9 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
 
         # If the tag panel previously just contained
         # the 'Unknown' tag, remove that tag
-        if tags.TagCount() == 2 and tags.HasTag('Unknown'):
-            melclass.removeLabel(component, 'Unknown')
-            tags.RemoveTag('Unknown')
+        if tags.TagCount() == 2 and tags.HasTag('unknown'):
+            melclass.removeLabel(component, 'unknown')
+            tags.RemoveTag('unknown')
 
         melclass.enableListener('labels', self._name)
 
@@ -278,7 +256,10 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
         if lut.getByName(label) is None:
             colour = tags.GetTagColour(label)
             colour = [c / 255.0 for c in colour]
-            self.__addNewLutLabel(label, colour)
+
+            lut.disableListener('labels', self._name)
+            lut.new(name=label, colour=colour)
+            lut.enableListener('labels', self._name)
 
         self.__grid.FitInside()
 

@@ -404,7 +404,13 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         current :class:`.LookupTable` instance.
         """
 
-        dlg = LutLabelDialog(self.GetTopLevelParent())
+        lut    = self.__selectedLut
+        value  = lut.max() + 1
+        name   = strings.labels['LutLabelDialog.newLabel']
+        colour = fslcmaps.randomBrightColour()
+        colour = [int(round(c * 255.0)) for c in colour]
+
+        dlg = LutLabelDialog(self.GetTopLevelParent(), value, name, colour)
         if dlg.ShowModal() != wx.ID_OK:
             return
 
@@ -702,7 +708,7 @@ class LutLabelDialog(wx.Dialog):
     """
 
     
-    def __init__(self, parent):
+    def __init__(self, parent, value, name, colour):
         """Create a ``LutLabelDialog``.
 
         :arg parent: The :mod:`wx` paren object.
@@ -726,8 +732,10 @@ class LutLabelDialog(wx.Dialog):
         self.__colourLabel.SetLabel(strings.labels[self, 'colour'])
         self.__ok         .SetLabel(strings.labels[self, 'ok'])
         self.__cancel     .SetLabel(strings.labels[self, 'cancel'])
-        self.__name       .SetValue(strings.labels[self, 'newLabel'])
-        self.__value      .SetValue(0)
+
+        self.__value      .SetValue( value)
+        self.__name       .SetValue( name)
+        self.__colour     .SetColour(colour)
 
         self.__sizer = wx.GridSizer(4, 2)
         self.SetSizer(self.__sizer)

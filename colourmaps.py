@@ -785,7 +785,7 @@ class LutLabel(object):
         """
 
         if value   is None: raise ValueError('LutLabel value cannot be None')
-        if name    is None: name    = 'Label'
+        if name    is None: name    = 'label'
         if colour  is None: colour  = (0, 0, 0)
         if enabled is None: enabled = True
         
@@ -871,6 +871,9 @@ class LookupTable(props.HasProperties):
     :meth:`get` method. New label values can be added, and existing label
     names/colours modified, via the :meth:`set` method. Label values can be
     removed via the meth:`delete` method.
+
+
+    .. note:: All label names are converted to lower case.
 
     .. warning:: Do not directly modify the :attr:`labels` list. If you do,
                  it will be your fault when things break. Use the :meth:`set`
@@ -970,14 +973,32 @@ class LookupTable(props.HasProperties):
 
     def getByName(self, name):
         """Returns the :class:`LutLabel` instance associated with the given
-        ``name``, or ``None`` if there is no ``LutLabel`.
+        ``name``, or ``None`` if there is no ``LutLabel`. The name comparison
+        is case-insensitive.
         """
+        name = name.lower()
         
         for i, ll in enumerate(self.labels):
             if ll.name() == name:
                 return ll
             
         return None
+
+
+    def new(self, name, colour=None, enabled=True):
+        """Create a new label. The new label is given the value ``max() + 1``.
+
+        :arg name:    Label name
+        :arg colour:  Label colour. If not previded, a random colour is used.
+        :arg enabled: Label enabled state .
+        """
+        if colour is None:
+            colour = randomBrightColour()
+            
+        return self.set(self.max() + 1,
+                        name=name,
+                        colour=colour,
+                        enabled=enabled)
 
 
     def set(self, value, **kwargs):
@@ -1008,7 +1029,7 @@ class LookupTable(props.HasProperties):
 
         # Create a new LutLabel instance with the
         # new, existing, or default label settings
-        name    = kwargs.get('name',    label.name())
+        name    = kwargs.get('name',    label.name()).lower()
         colour  = kwargs.get('colour',  label.colour())
         enabled = kwargs.get('enabled', label.enabled())
         label   = LutLabel(value, name, colour, enabled)
@@ -1036,6 +1057,8 @@ class LookupTable(props.HasProperties):
         # or an existing label name/colour has been changed
         if lutChanged:
             self.saved = False
+
+        return label
 
 
     def delete(self, value):
