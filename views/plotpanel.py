@@ -820,10 +820,10 @@ class OverlayPlotPanel(PlotPanel):
 
         self             .addListener('showMode',
                                       self.__name,
-                                      self.draw)
+                                      self.__showModeChanged)
         self._displayCtx .addListener('selectedOverlay',
                                       self.__name,
-                                      self.draw)
+                                      self.__selectedOverlayChanged)
         self._overlayList.addListener('overlays',
                                       self.__name,
                                       self.__overlayListChanged)
@@ -894,14 +894,15 @@ class OverlayPlotPanel(PlotPanel):
         overlay.
         """
         
-        ts                 = self.__dataSeries  .pop(overlay, None)
+        ds                 = self.__dataSeries  .pop(overlay, None)
         targets, propNames = self.__refreshProps.pop(overlay, ([], []))
 
-        if ts is not None:
-            ts.destroy()
+        if ds is not None:
+            ds.destroy()
 
         for t, p in zip(targets, propNames):
-            t.removeListener(p, self.__name)
+            try:    t.removeListener(p, self.__name)
+            except: pass
 
         
     def updateDataSeries(self):
@@ -909,28 +910,73 @@ class OverlayPlotPanel(PlotPanel):
         for every compatible overlay, and that property listeners are
         correctly registered, so the plot can be refreshed when needed.
         """
-        
+
+        # Make sure that a DataSeries
+        # exists for every compatible overlay
         for ovl in self._overlayList:
-            if ovl not in self.__dataSeries:
+            if ovl in self.__dataSeries:
+                continue
                 
-                ds, refreshTargets, refreshProps = self.createDataSeries(ovl)
+            ds, refreshTargets, refreshProps = self.createDataSeries(ovl)
 
-                if ds is None:
-                    continue
+            if ds is None:
+                continue
 
-                self.__dataSeries[  ovl] = ds
-                self.__refreshProps[ovl] = (refreshTargets, refreshProps)
-                
+            self.__dataSeries[  ovl] = ds
+            self.__refreshProps[ovl] = (refreshTargets, refreshProps)
+
+        # Make sure that property listeners are
+        # registered for every relevant overlay.
+        # We only want to listen for properties
+        # related to the overlays that are defined
+        # by the current value of the showMode
+        # property.
+        selectedOverlay = self._displayCtx.getSelectedOverlay()
+        if   self.showMode == 'all':     targetOverlays = self._overlayList[:]
+        elif self.showMode == 'current': targetOverlays = [selectedOverlay]
+        else:                            targetOverlays = []
+
+        for overlay, (targets, propNames) in self.__refreshProps.items():
+
+            ds          = self.__dataSeries[overlay]
+            addListener = overlay in targetOverlays
+
+            if addListener:
                 ds.addGlobalListener(self.__name, self.draw, overwrite=True)
+            else:
+                try:    ds.removeGlobalListener(self.__name)
+                except: pass
         
-        for targets, propNames in self.__refreshProps.values():
             for target, propName in zip(targets, propNames):
-                target.addListener(propName,
-                                   self.__name,
-                                   self.draw,
-                                   overwrite=True) 
+                if addListener:
+                    target.addListener(propName,
+                                       self.__name,
+                                       self.draw,
+                                       overwrite=True)
+                else:
+                    try:    target.removeListener(propName, self.__name)
+                    except: pass
 
 
+    def __showModeChanged(self, *a):
+        """Called when the :attr:`showMode` changes.  Makes sure that relevant
+        property listeners are registered so the plot can be updated at the
+        appropriate time (see the :meth:`updateDataSeries` method).
+        """ 
+        self.updateDataSeries()
+        self.draw()
+
+
+    def __selectedOverlayChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
+        Makes sure that relevant property listeners are registered so the
+        plot can be updated at the appropriate time (see the
+        :meth:`updateDataSeries` method).
+        """
+        self.updateDataSeries()
+        self.draw()
+
+    
     def __overlayListChanged(self, *a):
         """Called when the :class:`.OverlayList` changes. Makes sure that
         there are no :class:`.DataSeries` instances in the
@@ -946,10 +992,9 @@ class OverlayPlotPanel(PlotPanel):
             if ds.overlay not in self._overlayList:
                 self.dataSeries.remove(ds)
                 ds.destroy()
-        
+
         for overlay in list(self.__dataSeries.keys()):
             if overlay not in self._overlayList:
                 self.clearDataSeries(overlay)
 
-        self.updateDataSeries()
-        self.draw()
+        self.__selectedOverlayChanged()
