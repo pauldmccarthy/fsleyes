@@ -17,7 +17,6 @@ import pwidgets.widgetgrid        as widgetgrid
 import pwidgets.texttag           as texttag
 
 import fsl.fsleyes.panel          as fslpanel
-import fsl.fsleyes.colourmaps     as fslcm
 import fsl.fsleyes.displaycontext as fsldisplay
 import fsl.data.melodicimage      as fslmelimage
 import fsl.data.strings           as strings
@@ -169,7 +168,6 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
 
             tags = texttag.TextTagPanel(self.__grid,
                                         style=(texttag.TTP_ALLOW_NEW_TAGS |
-                                               texttag.TTP_ADD_NEW_TAGS   |
                                                texttag.TTP_NO_DUPLICATES  |
                                                texttag.TTP_KEYBOARD_NAV))
 
@@ -185,11 +183,32 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
             tags.Bind(texttag.EVT_TTP_TAG_ADDED,   self.__onTagAdded)
             tags.Bind(texttag.EVT_TTP_TAG_REMOVED, self.__onTagRemoved)
 
+        self.__refreshTagOptions()
         self.__refreshTags()
 
         self.Layout()
 
+
+    def __refreshTagOptions(self):
+        """Updates the options available on each :class:`.TextTagPanel`, from
+        the entries in the melodic classification :class:`.LookupTable`.
+        """
+
+        overlay  = self.__overlay
+        numComps = overlay.numComponents() 
         
+        lut           = self.__lut
+        displayLabels = [l.displayName() for l in lut.labels]
+        colours       = [l.colour()      for l in lut.labels]
+
+        for i in range(len(colours)):
+            colours[i] = [int(round(c * 255)) for c in colours[i]] 
+        
+        for comp in range(numComps):
+            tags = self.__grid.GetWidget(comp, 1)
+            tags.SetOptions(displayLabels, colours) 
+
+
     def __refreshTags(self):
         """Re-generates the tags on every :class:`.TextTagPanel` in the grid.
         """ 
@@ -197,33 +216,17 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
         overlay  = self.__overlay
         melclass = overlay.getICClassification()
         numComps = overlay.numComponents() 
-        lut      = self.__lut
-
-        labels  = [l.name()   for l in lut.labels]
-        colours = [l.colour() for l in lut.labels]
-
-        # Compile lists of all the existing
-        # labels, and the colours for each one
-        for i in range(numComps):
-
-            for label in melclass.getLabels(i):
-                if label in labels:
-                    continue
-
-                labels .append(label)
-                colours.append(fslcm.randomBrightColour())
-        
-        for i in range(len(colours)):
-            colours[i] = [int(round(c * 255)) for c in colours[i]] 
 
         for row in range(numComps):
+            
             tags = self.__grid.GetWidget(row, 1)
 
             tags.ClearTags()
-            tags.SetOptions(labels, colours)
 
             for label in melclass.getLabels(row):
-                tags.AddTag(label)
+                tags.AddTag(melclass.getDisplayLabel(label))
+
+        self.__grid.FitInside()
 
 
     def __onTagAdded(self, ev):
@@ -232,22 +235,26 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
         :class:`.MelodicClassification` instance.
         """
 
-        tags      = ev.GetEventObject()
-        label     = ev.tag
-        component = tags._melodicComponent
-        overlay   = self.__overlay
-        lut       = self.__lut 
-        melclass  = overlay.getICClassification()
+        tags     = ev.GetEventObject()
+        label    = ev.tag
+        comp     = tags._melodicComponent
+        overlay  = self.__overlay
+        lut      = self.__lut 
+        melclass = overlay.getICClassification()
+
+        log.debug('Label added to component {} ("{}")'.format(comp, label))
 
         # Add the new label to the melodic component
         melclass.disableListener('labels', self._name)
-        melclass.addLabel(component, label)
+        melclass.addLabel(comp, label)
 
         # If the tag panel previously just contained
         # the 'Unknown' tag, remove that tag
-        if tags.TagCount() == 2 and tags.HasTag('unknown'):
-            melclass.removeLabel(component, 'unknown')
-            tags.RemoveTag('unknown')
+        if tags.TagCount() == 2   and \
+           tags.HasTag('Unknown') and \
+           label.lower() != 'unknown':
+            melclass.removeLabel(comp, 'Unknown')
+            tags.RemoveTag('Unknown')
 
         melclass.enableListener('labels', self._name)
 
@@ -257,10 +264,14 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
             colour = tags.GetTagColour(label)
             colour = [c / 255.0 for c in colour]
 
+            log.debug('Adding new lookup table '
+                      'entry for label {}'.format(label))
+
             lut.disableListener('labels', self._name)
             lut.new(name=label, colour=colour)
             lut.enableListener('labels', self._name)
 
+        self.__refreshTagOptions()
         self.__grid.FitInside()
 
         
@@ -270,16 +281,18 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
         :class:`.MelodicClassification` instance.
         """ 
         
-        tags      = ev.GetEventObject()
-        label     = ev.tag
-        component = tags._melodicComponent
-        overlay   = self.__overlay
-        melclass  = overlay.getICClassification()
+        tags     = ev.GetEventObject()
+        label    = ev.tag
+        comp     = tags._melodicComponent
+        overlay  = self.__overlay
+        melclass = overlay.getICClassification()
+
+        log.debug('Label removed from component {} ("{}")'.format(comp, label))
 
         # Remove the label from
         # the melodic component
         melclass.disableListener('labels', self._name)
-        melclass.removeLabel(component, label)
+        melclass.removeLabel(comp, label)
         melclass.enableListener('labels', self._name)
  
         # If the tag panel now has no tags,
@@ -298,6 +311,8 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
 
         component = ev.row
         opts      = self._displayCtx.getOpts(self.__overlay)
+
+        log.debug('Grid row selected (component {})'.format(component))
 
         opts.disableListener('volume', self._name)
         opts.volume = component
@@ -321,6 +336,8 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
         grid = self.__grid
         opts = self._displayCtx.getOpts(self.__overlay)
         tags = grid.GetWidget(opts.volume, 1)
+
+        log.debug('Overlay volume changed ({})'.format(opts.volume))
  
         grid.SetSelection(opts.volume, -1)
         tags.FocusNewTagCtrl()
@@ -330,14 +347,18 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
         """Called when the :attr:`.MelodicClassification.labels` change.
         Re-generates the tags shown on every :class:`.TextTagPanel`.
         """
+        log.debug('Melodic classification changed - '
+                  'refreshing component grid tags')
         self.__refreshTags()
 
 
     def __lutChanged(self, *a):
         """Called when the :attr:`.LookupTable.labels` change.
-        Re-generates the tags shown on every :class:`.TextTagPanel`.
-        """ 
-        self.__refreshTags()
+        Updates the options on every :class:`.TextTagPanel`.
+        """
+        log.debug('Lookup table changed - refreshing '
+                  'component grid tag options')
+        self.__refreshTagOptions()
 
 
 class LabelGrid(fslpanel.FSLEyesPanel):
@@ -391,7 +412,7 @@ class LabelGrid(fslpanel.FSLEyesPanel):
                                 self._name,
                                 self.__selectedOverlayChanged)
 
-        self.__overlay     = None
+        self.__overlay = None
         self.__recreateGrid()
         self.__selectedOverlayChanged()
 
@@ -474,7 +495,7 @@ class LabelGrid(fslpanel.FSLEyesPanel):
 
             tags._label = label.name()
 
-            self.__grid.SetText(  i, 0, label.name())
+            self.__grid.SetText(  i, 0, label.displayName())
             self.__grid.SetWidget(i, 1, tags)
             
             tags.Bind(texttag.EVT_TTP_TAG_ADDED,   self.__onTagAdded)
@@ -521,6 +542,9 @@ class LabelGrid(fslpanel.FSLEyesPanel):
         overlay  = self.__overlay
         melclass = overlay.getICClassification()
         comp     = int(ev.tag)
+        label    = tags._label
+
+        log.debug('Component added to label {} ({})'.format(label, comp)) 
 
         melclass.disableListener('labels', self._name)
 
@@ -528,10 +552,11 @@ class LabelGrid(fslpanel.FSLEyesPanel):
         # the other label is 'Unknown', remove the
         # 'Unknown' label.
         if len(melclass.getLabels(comp)) == 1 and \
-           melclass.hasLabel(comp, 'Unknown'):
-            melclass.removeLabel(comp, 'Unknown')
+           label != 'unknown'                 and \
+           melclass.hasLabel(comp, 'unknown'):
+            melclass.removeLabel(comp, 'unknown')
         
-        melclass.addComponent(tags._label, comp)
+        melclass.addComponent(label, comp)
 
         melclass.enableListener('labels', self._name)
         self.__refreshTags()
@@ -547,10 +572,13 @@ class LabelGrid(fslpanel.FSLEyesPanel):
         overlay  = self.__overlay
         melclass = overlay.getICClassification()
         comp     = int(ev.tag)
+        label    = tags._label
+
+        log.debug('Component removed from label {} ({})'.format(label, comp))
 
         melclass.disableListener('labels', self._name)
         
-        melclass.removeComponent(tags._label, comp)
+        melclass.removeComponent(label, comp)
 
         # If the component has no more labels,
         # give it an 'Unknown' label
@@ -567,6 +595,9 @@ class LabelGrid(fslpanel.FSLEyesPanel):
         """
 
         tags = self.__grid.GetWidget(ev.row, 1)
+
+        log.debug('Grid row selected (label "{}")'.format(tags._label))
+        
         tags.FocusNewTagCtrl()
 
 
@@ -575,10 +606,13 @@ class LabelGrid(fslpanel.FSLEyesPanel):
         Changes the current :attr:`.ImageOpts.volume` to the component
         corresponding to the selected tag.
         """
-        
+
         tag         = int(ev.tag)
         overlay     = self.__overlay
         opts        = self._displayCtx.getOpts(overlay)
+
+        log.debug('Tag selected on label grid: component {}'.format(tag))
+        
         opts.volume = tag
        
 
@@ -595,5 +629,6 @@ class LabelGrid(fslpanel.FSLEyesPanel):
         """Called when the :attr:`.MelodicClassification.labels` change.
         Re-populates the :class:`.WidgetGrid`.
         """
-        log.debug('Melodic classification changed - refreshing tags')
+        log.debug('Melodic classification changed - '
+                  'refreshing label grid tags')
         self.__refreshTags()

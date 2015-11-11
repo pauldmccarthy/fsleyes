@@ -74,12 +74,11 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
             self._displayCtx,
             self.__lut)
 
-        # self.__labelGrid     = melodicgrid.LabelGrid(
-        #     self.__notebook,
-        #     self._overlayList,
-        #     self._displayCtx,
-        #     self.__lut)
-        self.__labelGrid = wx.Panel(self.__notebook)
+        self.__labelGrid     = melodicgrid.LabelGrid(
+            self.__notebook,
+            self._overlayList,
+            self._displayCtx,
+            self.__lut)
 
         self.__loadButton  = wx.Button(self)
         self.__saveButton  = wx.Button(self)
@@ -211,15 +210,14 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
         # lookup table exists for all labels
         for comp, labels in enumerate(melclass.labels):
             for label in labels:
-                
-                lutLabel = lut.getByName(label)
-                if lutLabel is not None:
-                    print 'Label {} is already in lookup table'.format(label)
-                    continue
 
-                print     'New melodic classification label: {}'.format(label)
-                log.debug('New melodic classification label: {}'.format(label))
-                lut.new(label)
+                label    = melclass.getDisplayLabel(label)
+                lutLabel = lut.getByName(label)
+                
+                if lutLabel is None:
+                    log.debug('New melodic classification '
+                              'label: {}'.format(label))
+                    lut.new(label)
 
         melclass.enableNotification('labels') 
         lut     .enableNotification('labels')
@@ -264,3 +262,11 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
         melclass = overlay.getICClassification()
 
         melclass.clear()
+
+        melclass.disableNotification('labels')
+        
+        for c in range(overlay.numComponents()):
+            melclass.addLabel(c, 'Unknown')
+            
+        melclass.enableNotification('labels')
+        melclass.notify('labels')
