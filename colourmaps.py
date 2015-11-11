@@ -763,6 +763,12 @@ class LutLabel(object):
     instances.
 
 
+    .. note:: When a ``LutLabel`` is created, the specified name is converted
+              to lower case. This is done to make comparisons easier. The
+              original name is still accessible through the :meth:`displayName`
+              method.
+
+
     .. note:: ``LutLabel`` instances are only intended to be created by
               :class:`LookupTable` instances. They are intended to be used
               externally, however.
@@ -785,14 +791,15 @@ class LutLabel(object):
         """
 
         if value   is None: raise ValueError('LutLabel value cannot be None')
-        if name    is None: name    = 'label'
+        if name    is None: name    = 'Label'
         if colour  is None: colour  = (0, 0, 0)
         if enabled is None: enabled = True
         
-        self.__value   = value
-        self.__name    = name
-        self.__colour  = colour
-        self.__enabled = enabled
+        self.__value       = value
+        self.__displayName = name
+        self.__name        = name.lower()
+        self.__colour      = colour
+        self.__enabled     = enabled
 
 
     def value(self):
@@ -803,6 +810,11 @@ class LutLabel(object):
     def name(self):
         """Returns the name of this ``LutLabel``. """ 
         return self.__name
+
+
+    def displayName(self):
+        """Returns the display name of this ``LutLabel``. """
+        return self.__displayName
 
     
     def colour(self):
@@ -873,7 +885,9 @@ class LookupTable(props.HasProperties):
     removed via the meth:`delete` method.
 
 
-    .. note:: All label names are converted to lower case.
+    .. note:: All label names are converted to lower case internally, but the
+              name that is initially specified is still available - see the
+              :class:`LutLabel` class documentation.
 
     .. warning:: Do not directly modify the :attr:`labels` list. If you do,
                  it will be your fault when things break. Use the :meth:`set`
@@ -1029,7 +1043,7 @@ class LookupTable(props.HasProperties):
 
         # Create a new LutLabel instance with the
         # new, existing, or default label settings
-        name    = kwargs.get('name',    label.name()).lower()
+        name    = kwargs.get('name',    label.displayName())
         colour  = kwargs.get('colour',  label.colour())
         enabled = kwargs.get('enabled', label.enabled())
         label   = LutLabel(value, name, colour, enabled)
@@ -1099,7 +1113,7 @@ class LookupTable(props.HasProperties):
             for label in self.labels:
                 value  = label.value()
                 colour = label.colour()
-                name   = label.name()
+                name   = label.displayName()
 
                 tkns   = [value, colour[0], colour[1], colour[2], name]
                 line   = ' '.join(map(str, tkns))

@@ -225,7 +225,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
 
         for i, label in enumerate(lut.labels):
 
-            self.__labelList.Append(label.name())
+            self.__labelList.Append(label.displayName())
 
             widget = LabelWidget(self, lut, label.value())
             self.__labelList.SetItemWidget(i, widget)
@@ -342,7 +342,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
 
         for label in self.__selectedLut.labels:
             lut.set(label.value(),
-                    name=label.name(),
+                    name=label.displayName(),
                     colour=label.colour(),
                     enabled=label.enabled())
         
