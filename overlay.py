@@ -204,37 +204,21 @@ def guessDataSourceType(path):
     if path.endswith('.vtk'):
         return fslmodel.Model, path
 
-    # Now, we check to see if the given
-    # path is part of a FEAT or MELODIC
-    # analysis. The way we go about this is
-    # a bit silly, but is necessary due to
-    # the fact thet a melodic analysis can
-    # be contained  within a feat analysis
-    # (or another melodic analysis). So we
-    # check for all analysis types and, if
-    # more than one analysis type matches,
-    # we return the one with the longest
-    # path name.
-    analyses = [
-        (fslfeatimage.FEATImage,    featresults.getFEATDir(   path)),
-        (fslmelimage .MelodicImage, melresults .getMelodicDir(path))]
 
-    # Remove the analysis types that didn't match
-    # (the get*Dir function returned None)
-    analyses = [(t, d) for (t, d) in analyses if d is not None]
+    if op.isdir(path):
+        if melresults.isMelodicDir(path):
+            return fslmelimage.MelodicImage, path
 
-    # If we have one or more matches for
-    # an analysis directory, we return
-    # the one with the longest path
-    if len(analyses) > 0:
+        if featresults.isFEATDir(path):
+            return fslfeatimage.FEATImage, path
 
-        dirlens = map(len, [d for (t, d) in analyses])
-        maxidx  = dirlens.index(max(dirlens))
-        
-        return analyses[maxidx]
+    elif melresults.isMelodicImage(path):
+        return fslmelimage.MelodicImage, path
+    
+    elif featresults.isFEATImage(path):
+        return fslfeatimage.FEATImage, path
 
-    # If the path is not an analysis directory,
-    # see if it is a regular nifti image
+    # A regular NIFTI image?
     try:
         path = fslimage.addExt(path, mustExist=True)
         return fslimage.Image, path
