@@ -245,7 +245,9 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
         log.debug('Label added to component {} ("{}")'.format(comp, label))
 
         # Add the new label to the melodic component
-        melclass.disableListener('labels', self._name)
+        melclass.disableListener(    'labels', self._name)
+        melclass.disableNotification('labels')
+        
         melclass.addLabel(comp, label)
 
         # If the tag panel previously just contained
@@ -256,7 +258,9 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
             melclass.removeLabel(comp, 'Unknown')
             tags.RemoveTag('Unknown')
 
-        melclass.enableListener('labels', self._name)
+        melclass.enableNotification('labels')
+        melclass.notify(            'labels')
+        melclass.enableListener(    'labels', self._name)
 
         # If the newly added tag is not in
         # the lookup table, add it in
@@ -291,14 +295,20 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
 
         # Remove the label from
         # the melodic component
-        melclass.disableListener('labels', self._name)
+        melclass.disableListener(    'labels', self._name)
+        melclass.disableNotification('labels')
+        
         melclass.removeLabel(comp, label)
-        melclass.enableListener('labels', self._name)
- 
+
         # If the tag panel now has no tags,
         # add the 'Unknown' tag back in.
-        if tags.TagCount() == 0:
-            tags.AddTag('Unknown') 
+        if len(melclass.getLabels(comp)) == 0:
+            melclass.addLabel(comp, 'Unknown')
+            tags.AddTag('Unknown')
+
+        melclass.enableNotification('labels')
+        melclass.notify(            'labels')
+        melclass.enableListener(    'labels', self._name)
 
         self.__grid.FitInside()
 
@@ -546,7 +556,8 @@ class LabelGrid(fslpanel.FSLEyesPanel):
 
         log.debug('Component added to label {} ({})'.format(label, comp)) 
 
-        melclass.disableListener('labels', self._name)
+        melclass.disableListener(    'labels', self._name)
+        melclass.disableNotification('labels')
 
         # If this component now has two labels, and
         # the other label is 'Unknown', remove the
@@ -558,7 +569,10 @@ class LabelGrid(fslpanel.FSLEyesPanel):
         
         melclass.addComponent(label, comp)
 
-        melclass.enableListener('labels', self._name)
+        melclass.enableNotification('labels')
+        melclass.notify(            'labels')
+        melclass.enableListener(    'labels', self._name)
+        
         self.__refreshTags()
 
     
@@ -576,7 +590,8 @@ class LabelGrid(fslpanel.FSLEyesPanel):
 
         log.debug('Component removed from label {} ({})'.format(label, comp))
 
-        melclass.disableListener('labels', self._name)
+        melclass.disableListener(    'labels', self._name)
+        melclass.disableNotification('labels')
         
         melclass.removeComponent(label, comp)
 
@@ -584,8 +599,10 @@ class LabelGrid(fslpanel.FSLEyesPanel):
         # give it an 'Unknown' label
         if len(melclass.getLabels(comp)) == 0:
             melclass.addLabel(comp, 'Unknown')
-            
-        melclass.enableListener('labels', self._name)
+
+        melclass.enableNotification('labels')
+        melclass.notify(            'labels')
+        melclass.enableListener(    'labels', self._name) 
         self.__refreshTags()
 
 
