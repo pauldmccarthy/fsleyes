@@ -82,8 +82,14 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
 
         self.__widgets.AddGroup(
             'plotSettings',
-            strings.labels[self, 'plotSettings']) 
+            strings.labels[self, 'plotSettings'])
 
+        # A reference to the x/y plot limit widgets
+        # is stored here by the generatePlotPanelWidgets
+        # method, so they can be enabled/disabled when
+        # autoScale changes
+        self.__limitWidgets = None
+        
         self.generateCustomPlotPanelWidgets('customPlotSettings')
         self.generatePlotPanelWidgets(      'plotSettings')
 
@@ -99,12 +105,17 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
                                 self._name,
                                 self.__selectedOverlayChanged)
 
+        plotPanel.addListener('autoScale',
+                              self._name,
+                              self.__autoScaleChanged)
+
         # This attribute keeps track of the currently
         # selected overlay, so the widget list group
         # names can be updated if the overlay name
         # changes.
         self.__selectedOverlay = None
         self.__selectedOverlayChanged()
+        self.__autoScaleChanged()
 
         
     def destroy(self):
@@ -114,11 +125,12 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
         """
         self._displayCtx .removeListener('selectedOverlay', self._name)
         self._overlayList.removeListener('overlays',        self._name)
+        self.__plotPanel .removeListener('limits',          self._name)
 
         if self.__selectedOverlay is not None:
             display = self._displayCtx.getDisplay(self.__selectedOverlay)
             display.removeListener('name', self._name)
-            
+
         fslpanel.FSLEyesPanel.destroy(self)
 
 
@@ -175,9 +187,22 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
                 tooltip=fsltooltips.properties[plotPanel, prop],
                 groupName=groupName)
 
+        limits = props.makeListWidgets(widgetList, plotPanel, 'limits')
+        xlims  = wx.BoxSizer(wx.HORIZONTAL)
+        ylims  = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Store a ref to the limit widgets
+        # so they can be enabled/disabled
+        # when autoScale changes.
+        self.__limitWidgets = limits
+
+        xlims.Add(limits[0], flag=wx.EXPAND, proportion=1)
+        xlims.Add(limits[1], flag=wx.EXPAND, proportion=1)
+        ylims.Add(limits[2], flag=wx.EXPAND, proportion=1)
+        ylims.Add(limits[3], flag=wx.EXPAND, proportion=1)
+
         xlabel = props.makeWidget(widgetList, plotPanel, 'xlabel')
         ylabel = props.makeWidget(widgetList, plotPanel, 'ylabel')
-
         labels = wx.BoxSizer(wx.HORIZONTAL)
 
         labels.Add(wx.StaticText(widgetList,
@@ -187,20 +212,6 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
                                  label=strings.labels[self, 'ylabel']))
         labels.Add(ylabel, flag=wx.EXPAND, proportion=1) 
 
-        limits = props.makeListWidgets(widgetList, plotPanel, 'limits')
-        xlims  = wx.BoxSizer(wx.HORIZONTAL)
-        ylims  = wx.BoxSizer(wx.HORIZONTAL)
-
-        xlims.Add(limits[0], flag=wx.EXPAND, proportion=1)
-        xlims.Add(limits[1], flag=wx.EXPAND, proportion=1)
-        ylims.Add(limits[2], flag=wx.EXPAND, proportion=1)
-        ylims.Add(limits[3], flag=wx.EXPAND, proportion=1) 
-
-        widgetList.AddWidget(
-            labels,
-            displayName=strings.labels[self, 'labels'],
-            tooltip=fsltooltips.misc[  self, 'labels'],
-            groupName=groupName)
         widgetList.AddWidget(
             xlims,
             displayName=strings.labels[self, 'xlim'],
@@ -211,7 +222,11 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
             displayName=strings.labels[self, 'ylim'],
             tooltip=fsltooltips.misc[  self, 'ylim'],
             groupName=groupName)
-
+        widgetList.AddWidget(
+            labels,
+            displayName=strings.labels[self, 'labels'],
+            tooltip=fsltooltips.misc[  self, 'labels'],
+            groupName=groupName) 
 
 
     def refreshDataSeriesWidgets(self):
@@ -347,3 +362,16 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
         :class:`.OverlayList` changes. 
         """
         self.refreshDataSeriesWidgets()
+
+
+    def __autoScaleChanged(self, *a):
+        """Called when the :atrr:`.PlotPanel.autoScale` property changes. If
+        widgets have been created for the :atrr:`.PlotPanel.limits`, they
+        are enabled/disabled according to the new ``autoScale`` value.
+        """
+
+        if self.__limitWidgets is None:
+            return
+        
+        for l in self.__limitWidgets:
+            l.Enable(not self.__plotPanel.autoScale)
