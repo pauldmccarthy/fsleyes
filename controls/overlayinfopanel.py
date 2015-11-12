@@ -218,8 +218,8 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
             
             pixdim = hdr['pixdim'][i + 1]
 
-            if   i  < 3: pixdim = '{} {}'.format(pixdim, voxUnits)
-            elif i == 3: pixdim = '{} {}'.format(pixdim, timeUnits)
+            if   i  < 3: pixdim = '{:0.4g} {}'.format(pixdim, voxUnits)
+            elif i == 3: pixdim = '{:0.4g} {}'.format(pixdim, timeUnits)
                 
             info.addInfo(
                 strings.nifti['pixdim{}'.format(i + 1)],
@@ -356,7 +356,7 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
             lines.append('<tr>')
 
             for coli in range(array.shape[1]):
-                lines.append('<td>{}</td>'.format(array[rowi, coli]))
+                lines.append('<td>{:0.4g}</td>'.format(array[rowi, coli]))
             lines.append('</tr>')
             
         return ''.join(lines)
