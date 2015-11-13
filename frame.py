@@ -186,8 +186,8 @@ class FSLEyesFrame(wx.Frame):
         paneInfo = (aui.AuiPaneInfo()
                     .Name(title)
                     .Caption(title)
-                    .Dockable()
                     .CloseButton()
+                    .Dockable()
                     .Resizable()
                     .DestroyOnClose())
 
@@ -199,7 +199,7 @@ class FSLEyesFrame(wx.Frame):
         # So if we only have one panel, we
         # hide the caption bar
         if panelId == 1:
-            paneInfo.Centre().CaptionVisible(False)
+            paneInfo.Centre().Dockable(False).CaptionVisible(False)
             
         # But then re-show it when another
         # panel is added. The __viewPanels
@@ -330,9 +330,9 @@ class FSLEyesFrame(wx.Frame):
         numPanels = len(self.__viewPanels)
         wasCentre = paneInfo.dock_direction_get() == aui.AUI_DOCK_CENTRE
         
-        if numPanels == 1 or (numPanels > 0 and wasCentre):
+        if numPanels >= 1 and wasCentre:
             paneInfo = self.__viewPanels.keys()[0]
-            paneInfo.Centre().CaptionVisible(False)
+            paneInfo.Centre().Dockable(False).CaptionVisible(numPanels > 1)
 
         
     def __onClose(self, ev):

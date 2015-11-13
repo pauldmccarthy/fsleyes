@@ -246,6 +246,8 @@ class DisplayContext(props.SyncableHasProperties):
         instances managed by it are destroyed as well.
         """
 
+        self.detachFromParent()
+
         self.__overlayList.removeListener('overlays', self.__name)
 
         for overlay, display in self.__displays.items():

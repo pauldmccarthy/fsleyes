@@ -436,6 +436,8 @@ class DisplayOpts(actions.ActionProvider):
         """
         actions.ActionProvider.destroy(self)
 
+        self.detachFromParent()
+
         self.overlay     = None
         self.display     = None
         self.overlayList = None
