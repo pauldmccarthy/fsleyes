@@ -210,7 +210,8 @@ def init():
                 if   suffix == 'cmap': registerColourMap(  mapFile, **kwargs)
                 elif suffix == 'lut':  registerLookupTable(mapFile, **kwargs)
                 
-                register[key].installed = True
+                register[key].installed    = True
+                register[key].mapObj.saved = True
 
             except Exception as e:
                 log.warn('Error processing custom {} '

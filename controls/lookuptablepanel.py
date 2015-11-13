@@ -33,6 +33,7 @@ import fsl.fsleyes.panel          as fslpanel
 import fsl.fsleyes.displaycontext as displayctx
 import fsl.fsleyes.colourmaps     as fslcmaps
 import fsl.data.strings           as strings
+import fsl.data.melodicimage      as fslmelimage
 
 
 log = logging.getLogger(__name__)
@@ -80,56 +81,55 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
-        self.__controlRow    = wx.Panel(self)
-        self.__labelList     = elistbox.EditableListBox(
-            self,
-            style=elistbox.ELB_NO_MOVE | elistbox.ELB_EDITABLE)
+        self.__controlCol = wx.Panel(self)
+        self.__labelList  = elistbox.EditableListBox(
+            self, style=(elistbox.ELB_NO_MOVE   |
+                         elistbox.ELB_NO_ADD    |
+                         elistbox.ELB_NO_REMOVE |
+                         elistbox.ELB_EDITABLE))
 
-        self.__lutChoice        = wx.Choice(self.__controlRow)
-        self.__newLutButton     = wx.Button(self.__controlRow)
-        self.__copyLutButton    = wx.Button(self.__controlRow)
-        self.__saveLutButton    = wx.Button(self.__controlRow)
-        self.__loadLutButton    = wx.Button(self.__controlRow)
+        self.__lutChoice       = wx.Choice(self.__controlCol)
+        self.__addLabelButton  = wx.Button(self.__controlCol)
+        self.__rmLabelButton   = wx.Button(self.__controlCol)
+        self.__newLutButton    = wx.Button(self.__controlCol)
+        self.__copyLutButton   = wx.Button(self.__controlCol)
+        self.__saveLutButton   = wx.Button(self.__controlCol)
+        self.__loadLutButton   = wx.Button(self.__controlCol)
 
-        self.__controlRowSizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.__sizer           = wx.BoxSizer(wx.VERTICAL)
+        self.__controlColSizer = wx.BoxSizer(wx.VERTICAL)
+        self.__sizer           = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.__controlRow.SetSizer(self.__controlRowSizer)
+        self.__controlCol.SetSizer(self.__controlColSizer)
         self             .SetSizer(self.__sizer)
 
-        self.__controlRowSizer.Add(self.__lutChoice,
-                                   flag=wx.EXPAND, proportion=1)
-        self.__controlRowSizer.Add(self.__newLutButton,
-                                   flag=wx.EXPAND, proportion=1)
-        self.__controlRowSizer.Add(self.__copyLutButton,
-                                   flag=wx.EXPAND, proportion=1) 
-        self.__controlRowSizer.Add(self.__loadLutButton,
-                                   flag=wx.EXPAND, proportion=1)
-        self.__controlRowSizer.Add(self.__saveLutButton,
-                                   flag=wx.EXPAND, proportion=1)
+        self.__controlColSizer.Add(self.__lutChoice,      flag=wx.EXPAND)
+        self.__controlColSizer.Add(self.__addLabelButton, flag=wx.EXPAND) 
+        self.__controlColSizer.Add(self.__rmLabelButton,  flag=wx.EXPAND) 
+        self.__controlColSizer.Add(self.__newLutButton,   flag=wx.EXPAND)
+        self.__controlColSizer.Add(self.__copyLutButton,  flag=wx.EXPAND) 
+        self.__controlColSizer.Add(self.__loadLutButton,  flag=wx.EXPAND)
+        self.__controlColSizer.Add(self.__saveLutButton,  flag=wx.EXPAND)
 
-        self.__sizer.Add(self.__controlRow, flag=wx.EXPAND)
+        self.__sizer.Add(self.__controlCol, flag=wx.EXPAND)
         self.__sizer.Add(self.__labelList,  flag=wx.EXPAND, proportion=1)
 
         # Label the buttons
-        self.__newLutButton .SetLabel(strings.labels[  self, 'newLut'])
-        self.__copyLutButton.SetLabel(strings.labels[  self, 'copyLut'])
-        self.__loadLutButton.SetLabel(strings.labels[  self, 'loadLut'])
-        self.__saveLutButton.SetLabel(strings.labels[  self, 'saveLut'])
+        self.__addLabelButton.SetLabel(strings.labels[  self, 'addLabel'])
+        self.__rmLabelButton .SetLabel(strings.labels[  self, 'removeLabel'])
+        self.__newLutButton  .SetLabel(strings.labels[  self, 'newLut'])
+        self.__copyLutButton .SetLabel(strings.labels[  self, 'copyLut'])
+        self.__loadLutButton .SetLabel(strings.labels[  self, 'loadLut'])
+        self.__saveLutButton .SetLabel(strings.labels[  self, 'saveLut'])
 
-        # Listen for listbox events
-        self.__labelList.Bind(elistbox.EVT_ELB_ADD_EVENT,
-                              self.__onLabelAdd)
-        self.__labelList.Bind(elistbox.EVT_ELB_REMOVE_EVENT,
-                              self.__onLabelRemove)
-        self.__labelList.Bind(elistbox.EVT_ELB_EDIT_EVENT,
-                              self.__onLabelEdit)
+        self.__labelList.Bind(elistbox.EVT_ELB_EDIT_EVENT, self.__onLabelEdit)
 
-        self.__lutChoice    .Bind(wx.EVT_CHOICE, self.__onLutChoice)
-        self.__newLutButton .Bind(wx.EVT_BUTTON, self.__onNewLut)
-        self.__copyLutButton.Bind(wx.EVT_BUTTON, self.__onCopyLut)
-        self.__loadLutButton.Bind(wx.EVT_BUTTON, self.__onLoadLut)
-        self.__saveLutButton.Bind(wx.EVT_BUTTON, self.__onSaveLut)
+        self.__lutChoice     .Bind(wx.EVT_CHOICE, self.__onLutChoice)
+        self.__addLabelButton.Bind(wx.EVT_BUTTON, self.__onLabelAdd)
+        self.__rmLabelButton .Bind(wx.EVT_BUTTON, self.__onLabelRemove) 
+        self.__newLutButton  .Bind(wx.EVT_BUTTON, self.__onNewLut)
+        self.__copyLutButton .Bind(wx.EVT_BUTTON, self.__onCopyLut)
+        self.__loadLutButton .Bind(wx.EVT_BUTTON, self.__onLoadLut)
+        self.__saveLutButton .Bind(wx.EVT_BUTTON, self.__onSaveLut)
 
         self.__selectedOverlay = None
         self.__selectedOpts    = None
@@ -270,6 +270,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         current :class:`LookupTable` instance changes. Sets the state
         of the *save* button accordingly.
         """
+        print 'Updating save state ({})'.format(self.__selectedLut.saved)
         self.__saveLutButton.Enable(not self.__selectedLut.saved)
 
 
@@ -394,7 +395,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         that the current :class:`LookupTable` is saved (see the
         :func:`.colourmaps.installLookupTable` function).
         """
-        fslcmaps.installLookupTable(self.__selectedLut.name)
+        fslcmaps.installLookupTable(self.__selectedLut.key)
 
     
     def __onLabelAdd(self, ev):
@@ -442,11 +443,13 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         :class:`.LookupTable`.
         """
 
+        idx   = self.__labelList.GetSelection()
         lut   = self.__selectedLut
-        value = lut.labels[ev.idx].value()
+        value = lut.labels[idx].value()
 
         lut.disableListener('labels', self._name)
         lut.delete(value)
+        self.__labelList.Delete(idx)
         lut.enableListener('labels', self._name)
 
 
@@ -504,10 +507,18 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         overlay = self.__selectedOverlay
         opts    = None
 
-        if overlay is not None:
-            opts = self._displayCtx.getOpts(overlay)
-            
+        if overlay is None:
+            return
+
+        opts = self._displayCtx.getOpts(overlay)
+
         if not isinstance(opts, displayctx.LabelOpts):
+
+            # If the image is a Melodic image, show
+            # the melodic classification lut
+            if isinstance(overlay, fslmelimage.MelodicImage):
+                self.__setLut(fslcmaps.getLookupTable('melodic-classes'))
+                
             return
 
         opts.addListener('lut', self._name, self.__lutChanged)
