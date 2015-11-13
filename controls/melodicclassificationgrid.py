@@ -177,7 +177,7 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
             # and __onTagRemoved methods.
             tags._melodicComponent = i
 
-            self.__grid.SetText(  i, 0, str(i))
+            self.__grid.SetText(  i, 0, str(i + 1))
             self.__grid.SetWidget(i, 1, tags)
 
             tags.Bind(texttag.EVT_TTP_TAG_ADDED,   self.__onTagAdded)
@@ -531,13 +531,13 @@ class LabelGrid(fslpanel.FSLEyesPanel):
             
             tags.ClearTags()
 
-            tags.SetOptions(map(str, range(numComps)))
+            tags.SetOptions(map(str, range(1, numComps + 1)))
 
             for comp in comps:
 
                 colour = label.colour()
                 colour = [int(round(c  * 255.0)) for c in colour]
-                tags.AddTag(str(comp), colour)
+                tags.AddTag(str(comp + 1), colour)
 
         self.__grid.Layout()
 
@@ -551,7 +551,7 @@ class LabelGrid(fslpanel.FSLEyesPanel):
         tags     = ev.GetEventObject()
         overlay  = self.__overlay
         melclass = overlay.getICClassification()
-        comp     = int(ev.tag)
+        comp     = int(ev.tag) - 1
         label    = tags._label
 
         log.debug('Component added to label {} ({})'.format(label, comp)) 
@@ -585,7 +585,7 @@ class LabelGrid(fslpanel.FSLEyesPanel):
         tags     = ev.GetEventObject()
         overlay  = self.__overlay
         melclass = overlay.getICClassification()
-        comp     = int(ev.tag)
+        comp     = int(ev.tag) - 1
         label    = tags._label
 
         log.debug('Component removed from label {} ({})'.format(label, comp))
@@ -624,13 +624,13 @@ class LabelGrid(fslpanel.FSLEyesPanel):
         corresponding to the selected tag.
         """
 
-        tag         = int(ev.tag)
+        comp        = int(ev.tag) - 1
         overlay     = self.__overlay
         opts        = self._displayCtx.getOpts(overlay)
 
-        log.debug('Tag selected on label grid: component {}'.format(tag))
+        log.debug('Tag selected on label grid: component {}'.format(comp))
         
-        opts.volume = tag
+        opts.volume = comp
        
 
     def __lutChanged(self, *a):
