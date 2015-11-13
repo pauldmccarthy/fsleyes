@@ -380,23 +380,36 @@ class GLImageObject(GLObject):
         ``GLImageObject``.
         """
 
-        image   = self.image
-        opts    = self.displayOpts
-        res     = opts.resolution 
-        
-        if opts.transform in ('id', 'pixdim'):
+        import nibabel as nib
 
-            pixdim = np.array(image.pixdim[:3])
-            steps  = [res, res, res] / pixdim
-            steps  = np.maximum(steps, [1, 1, 1])
-            res    = image.shape[:3] / steps
-            
-            return np.array(res.round(), dtype=np.uint32)
-        
-        else:
-            lo, hi = map(np.array, self.getDisplayBounds())
-            maxres = int(round(((hi - lo) / res).max()))
-            return [maxres] * 3
+        image = self.image
+        opts  = self.displayOpts
+        res   = opts.resolution
+
+        # Figure out a good display resolution
+        # along each voxel dimension
+        pixdim = np.array(image.pixdim[:3])
+        steps  = [res, res, res] / pixdim
+        steps  = np.maximum(steps, [1, 1, 1])
+        res    = image.shape[:3] / steps
+
+        # Make sure the pixel
+        # resolutions are integers
+        res = np.array(res.round(), dtype=np.uint32)
+
+        # Figure out an approximate 
+        # correspondence between the
+        # voxel axes and the display
+        # coordinate system axes. 
+        xform = opts.getTransform('id', 'display')
+        axes  = nib.orientations.aff2axcodes(
+            xform, ((0, 0), (1, 1), (2, 2)))
+
+        # Re-order the voxel resolutions
+        # in the display space
+        res = [res[axes[0]], res[axes[1]], res[axes[2]]]
+
+        return res
 
         
     def generateVertices(self, zpos, xform):

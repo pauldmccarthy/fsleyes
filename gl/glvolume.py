@@ -183,6 +183,9 @@ class GLVolume(globject.GLImageObject):
             fslgl.glvolume_funcs.updateShaderState(self)
             self.onUpdate()
 
+        def update(*a):
+            self.onUpdate()
+
         def imageUpdate(*a):
             volume     = opts.volume
             resolution = opts.resolution
@@ -207,6 +210,7 @@ class GLVolume(globject.GLImageObject):
         opts   .addListener('volume',         lName, imageUpdate,   weak=False)
         opts   .addListener('resolution',     lName, imageUpdate,   weak=False)
         opts   .addListener('interpolation',  lName, imageUpdate,   weak=False)
+        opts   .addListener('transform',      lName, update,        weak=False)
 
         if opts.getParent() is not None:
             opts.addSyncChangeListener(
@@ -237,6 +241,7 @@ class GLVolume(globject.GLImageObject):
         opts   .removeListener(          'volume',         lName)
         opts   .removeListener(          'resolution',     lName)
         opts   .removeListener(          'interpolation',  lName)
+        opts   .removeListener(          'transform',      lName)
         if opts.getParent() is not None:
             opts.removeSyncChangeListener('volume',        lName)
             opts.removeSyncChangeListener('resolution',    lName)
