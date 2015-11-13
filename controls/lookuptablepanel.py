@@ -270,7 +270,6 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         current :class:`LookupTable` instance changes. Sets the state
         of the *save* button accordingly.
         """
-        print 'Updating save state ({})'.format(self.__selectedLut.saved)
         self.__saveLutButton.Enable(not self.__selectedLut.saved)
 
 
