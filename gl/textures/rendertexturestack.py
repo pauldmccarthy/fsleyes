@@ -73,6 +73,13 @@ class RenderTextureStack(object):
         import wx
         wx.GetApp().Bind(wx.EVT_IDLE, self.__textureUpdateLoop)
 
+        log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
+
+        
+    def __del__(self):
+        """Prints a log message."""
+        log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
+
         
     def destroy(self):
         """Must be called when this ``RenderTextureStack`` is no longer needed.

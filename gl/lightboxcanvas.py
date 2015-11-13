@@ -317,23 +317,11 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
                     continue
 
                 globj = self._glObjects.get(overlay, None)
-                
+
                 if globj is None:
                     continue
                 
-                name = '{}_{}_zax{}'.format(
-                    id(overlay),
-                    textures.RenderTextureStack.__name__,
-                    self.zax)
-
-                if glresources.exists(name):
-                    rt = glresources.get(name)
-                else:
-
-                    rt = textures.RenderTextureStack(globj)
-                    rt.setAxes(self.xax, self.yax)
-                    glresources.set(name, rt)
-
+                rt, name = self._getPreRenderTexture(globj, overlay)
                 self._prerenderTextures[overlay] = rt, name
 
         self._refresh()

@@ -227,6 +227,9 @@ class SliceCanvas(props.HasProperties):
         self.displayCtx .addListener('bounds',
                                      self.name,
                                      self._overlayBoundsChanged)
+        self.displayCtx .addListener('syncOverlayDisplay',
+                                     self.name,
+                                     self._syncOverlayDisplayChanged) 
 
 
     def destroy(self):
@@ -480,22 +483,52 @@ class SliceCanvas(props.HasProperties):
             # is managed by a RenderTextureStack
             # object.
             elif self.renderMode == 'prerender':
-                name = '{}_{}_zax{}'.format(
-                    id(overlay),
-                    textures.RenderTextureStack.__name__,
-                    self.zax)
-
-                if glresources.exists(name):
-                    rt = glresources.get(name)
-                    
-                else:
-                    rt = textures.RenderTextureStack(globj)
-                    rt.setAxes(self.xax, self.yax)
-                    glresources.set(name, rt)
-
+                rt, name = self._getPreRenderTexture(globj, overlay)
                 self._prerenderTextures[overlay] = rt, name
 
         self._refresh()
+
+        
+    def _getPreRenderTexture(self, globj, overlay):
+        """Creates/retrieves a :class:`.RenderTextureStack` for the given
+        :class:`.GLObject`. A tuple containing the ``RenderTextureStack``,
+        and its name, as passed to the :mod:`.resources` module, is returned.
+
+        :arg globj:   The :class:`.GLObject` instance.
+        :arg overlay: The overlay object.
+        """
+
+        display = self.displayCtx.getDisplay(overlay)
+        opts    = display.getDisplayOpts()
+
+        name = '{}_{}_zax{}'.format(
+            id(overlay),
+            textures.RenderTextureStack.__name__,
+            self.zax) 
+
+        # If all display/opts properties
+        # are synchronised to the parent,
+        # then we use a texture stack that
+        # might be shared across multiple
+        # views.
+        # 
+        # But if any display/opts properties
+        # are not synchronised, we'll use our
+        # own texture stack. 
+        if not (display.allSyncedToParent() and 
+                opts   .allSyncedToParent()):
+
+            name = '{}_{}'.format(id(self.displayCtx), name)
+
+        if glresources.exists(name):
+            rt = glresources.get(name)
+
+        else:
+            rt = textures.RenderTextureStack(globj)
+            rt.setAxes(self.xax, self.yax)
+            glresources.set(name, rt)
+
+        return rt, name
 
                 
     def _renderModeChange(self, *a):
@@ -524,6 +557,22 @@ class SliceCanvas(props.HasProperties):
         # the render textures for every GLObject
         self._updateRenderTextures()
 
+
+    def _syncOverlayDisplayChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.syncOverlayDisplay`
+        property changes. If the current :attr:`renderMode` is ``prerender``,
+        the :class:`.RenderTextureStack` instances for each overlay are 
+        re-created.
+        
+        This is done because, if all display properties for an overlay are
+        synchronised, then a single ``RenderTextureStack`` can be shared
+        across multiple displays. However, if any display properties are not
+        synchronised, then a separate ``RenderTextureStack`` is needed for
+        the :class:`.DisplayContext` used by this ``SliceCanvas``.
+        """
+        if self.renderMode == 'prerender':
+            self._renderModeChange(self)
+    
 
     def _resolutionLimitChange(self, *a):
         """Called when the :attr:`resolutionLimit` property changes.
