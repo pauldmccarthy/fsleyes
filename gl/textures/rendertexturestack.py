@@ -68,7 +68,7 @@ class RenderTextureStack(object):
 
         self.__globj.addUpdateListener(
             '{}_{}'.format(type(self).__name__, id(self)),
-            self.__refreshAllTextures)
+            self.__onGLObjectUpdate)
 
         import wx
         wx.GetApp().Bind(wx.EVT_IDLE, self.__textureUpdateLoop)
@@ -134,17 +134,13 @@ class RenderTextureStack(object):
         self.__yax = yax
         self.__zax = zax
 
-        lo, hi = self.__globj.getDisplayBounds()
-        res    = self.__globj.getDataResolution(xax, yax)
+        res = self.__globj.getDataResolution(xax, yax)
 
         if res is not None: numTextures = res[zax]
         else:               numTextures = self.__defaultNumTextures
 
         if numTextures > self.__maxNumTextures:
             numTextures = self.__maxNumTextures
-
-        self.__zmin = lo[zax]
-        self.__zmax = hi[zax]
 
         self.__destroyTextures()
         
@@ -153,7 +149,7 @@ class RenderTextureStack(object):
                 rendertexture.RenderTexture('{}_{}'.format(self.name, i)))
 
         self.__textureDirty = [True] * numTextures
-        self.__refreshAllTextures()
+        self.__onGLObjectUpdate()
 
         
     def __destroyTextures(self):
@@ -166,6 +162,18 @@ class RenderTextureStack(object):
         self.__textures = []
         for tex in texes:
             wx.CallLater(50, tex.destroy)
+
+
+    def __onGLObjectUpdate(self, *a):
+        """Called when the :class:`.GLObject` display is updated. Re-calculates
+        the display space Z-axis range, and marks all render textures as dirty.
+        """
+        
+        lo, hi      = self.__globj.getDisplayBounds()
+        self.__zmin = lo[self.__zax]
+        self.__zmax = hi[self.__zax]
+
+        self.__refreshAllTextures()
 
             
     def __refreshAllTextures(self, *a):
