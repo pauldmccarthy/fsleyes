@@ -158,7 +158,6 @@ class GLVector(globject.GLImageObject):
             self.updateShaderState()
             self.onUpdate()
 
-        display.addListener('softwareMode',  name, shaderCompile, weak=False)
         display.addListener('alpha',         name, cmapUpdate,    weak=False)
         display.addListener('brightness',    name, cmapUpdate,    weak=False)
         display.addListener('contrast',      name, cmapUpdate,    weak=False)
@@ -186,7 +185,6 @@ class GLVector(globject.GLImageObject):
         opts    = self.displayOpts
         name    = self.name
 
-        display.removeListener('softwareMode', name)
         display.removeListener('alpha',        name)
         display.removeListener('brightness',   name)
         display.removeListener('contrast',     name)

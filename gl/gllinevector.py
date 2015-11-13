@@ -8,11 +8,10 @@
 vector :class:`.Image` overlays in line mode.
 
 
-The :class:`.GLLineVertices` class is also defined in this module, and is
-used in certain rendering situations - when running in OpenGL 1.4, and
-when running in *software* (a.k.a. low performance) mode, in OpenGL 2.1. See
-the :mod:`.gl14.gllinevector_funcs` and :mod:`.gl21.gllinevector_funcs`
-modules for more details.
+The :class:`.GLLineVertices` class is also defined in this module, and is used
+in certain rendering situations - specifically, when running in OpenGL
+1.4. See the :mod:`.gl14.gllinevector_funcs` and
+:mod:`.gl21.gllinevector_funcs` modules for more details.
 """
 
 import logging

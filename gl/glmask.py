@@ -75,7 +75,6 @@ class GLMask(glvolume.GLVolume):
             fslgl.glvolume_funcs.updateShaderState(self) 
             self.onUpdate()
 
-        display.addListener('softwareMode',  name, shaderCompile, weak=False)
         display.addListener('alpha',         name, colourUpdate,  weak=False)
         display.addListener('brightness',    name, colourUpdate,  weak=False)
         display.addListener('contrast',      name, colourUpdate,  weak=False)
@@ -102,7 +101,6 @@ class GLMask(glvolume.GLVolume):
         opts    = self.displayOpts
         name    = self.name
         
-        display.removeListener(          'softwareMode',  name)
         display.removeListener(          'alpha',         name)
         display.removeListener(          'brightness',    name)
         display.removeListener(          'contrast',      name)

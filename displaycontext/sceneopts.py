@@ -36,7 +36,6 @@ class SceneOpts(props.HasProperties):
     cursorColour    = copy.copy(canvasopts.SliceCanvasOpts.cursorColour)
     resolutionLimit = copy.copy(canvasopts.SliceCanvasOpts.resolutionLimit)
     renderMode      = copy.copy(canvasopts.SliceCanvasOpts.renderMode)
-    softwareMode    = copy.copy(canvasopts.SliceCanvasOpts.softwareMode)
 
     
     showColourBar = props.Boolean(default=False)
@@ -57,13 +56,13 @@ class SceneOpts(props.HasProperties):
     """ 
 
     
-    performance = props.Choice((1, 2, 3, 4, 5), default=5)
+    performance = props.Choice((1, 2, 3, 4), default=4)
     """User controllable performance setting.
 
-    This property is linked to the :attr:`renderMode`,
-    :attr:`resolutionLimit`, and :attr:`softwareMode` properties. Setting this
-    property to a low value will result in faster rendering time, at the cost
-    of reduced features, and poorer rendering quality.
+    This property is linked to the :attr:`renderMode` and
+    :attr:`resolutionLimit` properties. Setting this property to a low value
+    will result in faster rendering time, at the cost of increased memory
+    usage and poorer rendering quality.
 
     See the :meth:`__onPerformanceChange` method.
     """
@@ -73,8 +72,7 @@ class SceneOpts(props.HasProperties):
         """Create a ``SceneOpts`` instance.
 
         This method simply links the :attr:`performance` property to the
-        :attr:`renderMode`, :attr:`softwareMode`,  and :attr:`resolutionLimit`
-        properties.
+        :attr:`renderMode` and :attr:`resolutionLimit` properties.
         """
         
         name = '{}_{}'.format(type(self).__name__, id(self))
@@ -86,40 +84,29 @@ class SceneOpts(props.HasProperties):
     def __onPerformanceChange(self, *a):
         """Called when the :attr:`performance` property changes.
 
-        Changes the values of the :attr:`renderMode`, :attr:`softwareMode`
-        and :attr:`resolutionLimit` properties accoridng to the performance
+        Changes the values of the :attr:`renderMode` and and
+        :attr:`resolutionLimit` properties accoridng to the performance
         setting.
         """
 
-        if   self.performance == 5:
+        if   self.performance == 4:
             self.renderMode      = 'onscreen'
-            self.softwareMode    = False
-            self.resolutionLimit = 0
-            
-        elif self.performance == 4:
-            self.renderMode      = 'onscreen'
-            self.softwareMode    = True
             self.resolutionLimit = 0
 
         elif self.performance == 3:
             self.renderMode      = 'offscreen'
-            self.softwareMode    = True
             self.resolutionLimit = 0 
             
         elif self.performance == 2:
             self.renderMode      = 'prerender'
-            self.softwareMode    = True
             self.resolutionLimit = 0
 
         elif self.performance == 1:
             self.renderMode      = 'prerender'
-            self.softwareMode    = True
             self.resolutionLimit = 1
 
         log.debug('Performance settings changed: '
                   'renderMode={}, '
-                  'softwareMode={}, '
                   'resolutionLimit={}'.format(
                       self.renderMode,
-                      self.softwareMode,
                       self.resolutionLimit))

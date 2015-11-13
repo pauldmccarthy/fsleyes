@@ -91,13 +91,6 @@ class SliceCanvasOpts(props.HasProperties):
     """
     
     
-    softwareMode = props.Boolean(default=False)
-    """If ``True``, the :attr:`.Display.softwareMode` property for every
-    displayed overlay is set to ``True``. This will result in better
-    performance for slow systems (e.g. software based OpenGL renderers).
-    """
-
-    
     resolutionLimit = props.Real(default=0, minval=0, maxval=5, clamped=True)
     """The minimum resolution at which overlays should be drawn. A higher
     value will result in better performance.

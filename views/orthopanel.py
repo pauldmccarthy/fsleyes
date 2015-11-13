@@ -202,10 +202,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__ycanvas.bindProps('renderMode',      sceneOpts)
         self.__zcanvas.bindProps('renderMode',      sceneOpts)
 
-        self.__xcanvas.bindProps('softwareMode',    sceneOpts)
-        self.__ycanvas.bindProps('softwareMode',    sceneOpts)
-        self.__zcanvas.bindProps('softwareMode',    sceneOpts)
-
         self.__xcanvas.bindProps('resolutionLimit', sceneOpts)
         self.__ycanvas.bindProps('resolutionLimit', sceneOpts)
         self.__zcanvas.bindProps('resolutionLimit', sceneOpts) 

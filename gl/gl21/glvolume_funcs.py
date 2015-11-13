@@ -53,10 +53,8 @@ def compileShaders(self):
     if self.shaders is not None:
         gl.glDeleteProgram(self.shaders)
 
-    vertShaderSrc = shaders.getVertexShader(  self,
-                                              sw=self.display.softwareMode)
-    fragShaderSrc = shaders.getFragmentShader(self,
-                                              sw=self.display.softwareMode)
+    vertShaderSrc = shaders.getVertexShader(  self)
+    fragShaderSrc = shaders.getFragmentShader(self)
     self.shaders = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
 
     # indices of all vertex/fragment shader parameters
@@ -164,16 +162,9 @@ def _prepareVertexAttributes(self, vertices, voxCoords, texCoords):
         verPos, 3, gl.GL_FLOAT, gl.GL_FALSE, 36, None)
     gl.glVertexAttribPointer(
         texPos, 3, gl.GL_FLOAT, gl.GL_FALSE, 36, ctypes.c_void_p(24))
-
-    # The sw shader does not use voxel coordinates
-    # so attempting to binding would raise an error.
-    # So we only attempt to bind if softwareMode is
-    # false, and there is a shader uniform position
-    # for the voxel coordinates available.
-    if not self.display.softwareMode and voxPos != -1:
-        gl.glVertexAttribPointer(
-            voxPos, 3, gl.GL_FLOAT, gl.GL_FALSE, 36, ctypes.c_void_p(12))
-        gl.glEnableVertexAttribArray(self.voxCoordPos)
+    gl.glVertexAttribPointer(
+        voxPos, 3, gl.GL_FLOAT, gl.GL_FALSE, 36, ctypes.c_void_p(12))
+    gl.glEnableVertexAttribArray(self.voxCoordPos)
 
     gl.glEnableVertexAttribArray(self.vertexPos)
     gl.glEnableVertexAttribArray(self.texCoordPos) 
@@ -223,11 +214,7 @@ def postDraw(self):
 
     gl.glDisableVertexAttribArray(self.vertexPos)
     gl.glDisableVertexAttribArray(self.texCoordPos)
-
-    # See comments in _prepareVertexAttributes
-    # about softwareMode/voxel coordinates
-    if not self.display.softwareMode and self.voxCoordPos != -1:
-        gl.glDisableVertexAttribArray(self.voxCoordPos)
+    gl.glDisableVertexAttribArray(self.voxCoordPos)
     
     gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
     gl.glUseProgram(0)

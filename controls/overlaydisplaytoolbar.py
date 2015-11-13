@@ -530,15 +530,11 @@ _TOOLBAR_PROPS = td.TypeDict({
             tooltip=_TOOLTIPS['LabelOpts.outline'],
             icon=[icons.findImageFile('outline24'),
                   icons.findImageFile('filled24')],
-            toggle=True,
-            enabledWhen=lambda i, sw: not sw,
-            dependencies=[(lambda o: o.display, 'softwareMode')]),
+            toggle=True),
         
         'outlineWidth' : props.Widget(
             'outlineWidth',
             tooltip=_TOOLTIPS['LabelOpts.outlineWidth'],
-            enabledWhen=lambda i, sw: not sw,
-            dependencies=[(lambda o: o.display, 'softwareMode')],
             showLimits=False,
             spin=False)},
 

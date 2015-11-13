@@ -48,10 +48,8 @@ def compileShaders(self):
     if self.shaders is not None:
         gl.glDeleteProgram(self.shaders)
 
-    vertShaderSrc = shaders.getVertexShader(  self,
-                                              sw=self.display.softwareMode)
-    fragShaderSrc = shaders.getFragmentShader(self,
-                                              sw=self.display.softwareMode)
+    vertShaderSrc = shaders.getVertexShader(  self)
+    fragShaderSrc = shaders.getFragmentShader(self)
     self.shaders = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
 
     self.vertexPos         = gl.glGetAttribLocation( self.shaders,

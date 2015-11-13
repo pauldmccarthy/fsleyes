@@ -55,10 +55,8 @@ def compileShaders(self):
     if self.fragmentProgram is not None:
         arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram)) 
 
-    vertShaderSrc = shaders.getVertexShader(  self,
-                                              sw=self.display.softwareMode)
-    fragShaderSrc = shaders.getFragmentShader(self,
-                                              sw=self.display.softwareMode)
+    vertShaderSrc = shaders.getVertexShader(  self)
+    fragShaderSrc = shaders.getFragmentShader(self)
 
     vertexProgram, fragmentProgram = shaders.compilePrograms(
         vertShaderSrc, fragShaderSrc)

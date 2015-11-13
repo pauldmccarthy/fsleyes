@@ -95,10 +95,8 @@ def compileShaders(self):
     if self.fragmentProgram is not None:
         arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram)) 
 
-    vertShaderSrc = shaders.getVertexShader(  self,
-                                              sw=self.display.softwareMode)
-    fragShaderSrc = shaders.getFragmentShader(self,
-                                              sw=self.display.softwareMode)
+    vertShaderSrc = shaders.getVertexShader(  self)
+    fragShaderSrc = shaders.getFragmentShader(self)
 
     vertexProgram, fragmentProgram = shaders.compilePrograms(
         vertShaderSrc, fragShaderSrc)
@@ -173,9 +171,6 @@ def preDraw(self):
 
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
 
-    if self.display.softwareMode:
-        gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-
     arbvp.glBindProgramARB(arbvp.GL_VERTEX_PROGRAM_ARB,
                            self.vertexProgram)
     arbfp.glBindProgramARB(arbfp.GL_FRAGMENT_PROGRAM_ARB,
@@ -187,17 +182,11 @@ def draw(self, zpos, xform=None):
     at the specified Z location.
     """
 
-    display             = self.display
     opts                = self.displayOpts
     vertices, texCoords = self.lineVertices.getVertices(zpos, self)
 
     if vertices.size == 0:
         return
-
-    if display.softwareMode:
-        texCoords = texCoords.ravel('C')
-        gl.glClientActiveTexture(gl.GL_TEXTURE0)
-        gl.glTexCoordPointer(3, gl.GL_FLOAT, 0, texCoords)
 
     vertices = vertices.ravel('C')
     v2d      = opts.getTransform('voxel', 'display')
@@ -228,6 +217,3 @@ def postDraw(self):
     gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
     
     gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-
-    if self.display.softwareMode:
-        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)

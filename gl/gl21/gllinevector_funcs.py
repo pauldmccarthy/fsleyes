@@ -9,22 +9,14 @@ class to render :class:`.Image` overlays as line vector images in an OpenGL 2.1
 compatible manner.
 
 
-This module uses two different techniques to render a ``GLLineVector``. If
-the :attr:`.Display.softwareMode` (a.k.a. low performance) mode is enabled,
-a :class:`.GLLineVertices` instance is used to generate line vertices and
-texture coordinates for each voxel in the image. This is the same approach
-used by the :mod:`.gl14.gllinevector_funcs` module.
+This module uses two different techniques to render a ``GLLineVector``. The
+voxel coordinates for every vector are passed directly to a vertex shader
+program which calculates the position of the corresponding line vertices.
 
 
-If :attr:`.Display.softwareMode` is disabled, a ``GLLineVertices`` instance is
-not used. Instead, the voxel coordinates for every vector are passed directly
-to a vertex shader program which calculates the position of the corresponding
-line vertices.
-
-
-For both of the above techniques, a fragment shader (the same as that used by
-the :class:`.GLRGBVector` class) is used to colour each line according to the
-orientation of the underlying vector.
+A fragment shader (the same as that used by the :class:`.GLRGBVector` class)
+is used to colour each line according to the orientation of the underlying
+vector.
 """
 
 
@@ -35,9 +27,7 @@ import OpenGL.GL                   as gl
 import OpenGL.raw.GL._types        as gltypes
 
 import fsl.utils.transform         as transform
-import fsl.fsleyes.gl.resources    as glresources
 import fsl.fsleyes.gl.routines     as glroutines
-import fsl.fsleyes.gl.gllinevector as gllinevector
 import fsl.fsleyes.gl.shaders      as shaders
 
 
@@ -59,10 +49,6 @@ def init(self):
     self.vertexIDBuffer     = gl.glGenBuffers(1)
     self.lineVertices       = None
 
-    # False -> hardware shaders are in use
-    # True  -> software shaders are in use
-    self.swShadersInUse = False
-
     self._vertexResourceName = '{}_{}_vertices'.format(
         type(self).__name__, id(self.image))
 
@@ -70,7 +56,6 @@ def init(self):
 
     def vertexUpdate(*a):
         
-        updateVertices(self)
         self.updateShaderState()
         self.onUpdate()
 
@@ -99,27 +84,19 @@ def destroy(self):
     self.displayOpts.removeListener('resolution', name)
     self.displayOpts.removeListener('directed',   name)
 
-    if self.display.softwareMode:
-        glresources.delete(self._vertexResourceName)
-
 
 def compileShaders(self):
     """Compiles the vertex/fragment shaders, and stores references to all
-    shader variables as attributes of the :class:`.GLLineVector`. This
-    also results in a call to :func:`updateVertices`.
+    shader variables as attributes of the :class:`.GLLineVector`.
     """
     
     if self.shaders is not None:
         gl.glDeleteProgram(self.shaders)
     
-    vertShaderSrc = shaders.getVertexShader(  self,
-                                              sw=self.display.softwareMode)
-    fragShaderSrc = shaders.getFragmentShader(self,
-                                              sw=self.display.softwareMode)
+    vertShaderSrc = shaders.getVertexShader(  self)
+    fragShaderSrc = shaders.getFragmentShader(self)
     
     self.shaders = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
-
-    self.swShadersInUse     = self.display.softwareMode
 
     self.vertexPos          = gl.glGetAttribLocation( self.shaders,
                                                       'vertex')
@@ -157,15 +134,12 @@ def compileShaders(self):
                                                       'voxelOffset') 
     self.cmapXformPos       = gl.glGetUniformLocation(self.shaders,
                                                       'cmapXform')
-    
-    updateVertices(self)
 
     
 def updateShaderState(self):
     """Updates all variables used by the vertex/fragment shaders. """
     
-    display = self.display
-    opts    = self.displayOpts
+    opts = self.displayOpts
 
     # The coordinate transformation matrices for 
     # each of the three colour textures are identical,
@@ -194,62 +168,30 @@ def updateShaderState(self):
     gl.glUniform1i(self.yColourTexturePos, 3)
     gl.glUniform1i(self.zColourTexturePos, 4)
 
-    if not display.softwareMode:
-        
-        directed  = opts.directed
-        imageDims = self.image.pixdim[:3]
-        d2vMat    = opts.getTransform('display', 'voxel')
-        v2dMat    = opts.getTransform('voxel',   'display')
+    directed  = opts.directed
+    imageDims = self.image.pixdim[:3]
+    d2vMat    = opts.getTransform('display', 'voxel')
+    v2dMat    = opts.getTransform('voxel',   'display')
 
-        # The shader adds these offsets to
-        # transformed voxel coordinates, so
-        # it can floor them to get integer
-        # voxel coordinates
-        offset    = [0.5, 0.5, 0.5]
-        
-        offset    = np.array(offset,    dtype=np.float32)
-        imageDims = np.array(imageDims, dtype=np.float32)
-        d2vMat    = np.array(d2vMat,    dtype=np.float32).ravel('C')
-        v2dMat    = np.array(v2dMat,    dtype=np.float32).ravel('C')
+    # The shader adds these offsets to
+    # transformed voxel coordinates, so
+    # it can floor them to get integer
+    # voxel coordinates
+    offset    = [0.5, 0.5, 0.5]
 
-        gl.glUniform1f( self.directedPos,       directed)
-        gl.glUniform3fv(self.imageDimsPos,   1, imageDims)
-        gl.glUniform3fv(self.voxelOffsetPos, 1, offset)
-        
-        gl.glUniformMatrix4fv(self.displayToVoxMatPos, 1, False, d2vMat)
-        gl.glUniformMatrix4fv(self.voxToDisplayMatPos, 1, False, v2dMat) 
+    offset    = np.array(offset,    dtype=np.float32)
+    imageDims = np.array(imageDims, dtype=np.float32)
+    d2vMat    = np.array(d2vMat,    dtype=np.float32).ravel('C')
+    v2dMat    = np.array(v2dMat,    dtype=np.float32).ravel('C')
+
+    gl.glUniform1f( self.directedPos,       directed)
+    gl.glUniform3fv(self.imageDimsPos,   1, imageDims)
+    gl.glUniform3fv(self.voxelOffsetPos, 1, offset)
+
+    gl.glUniformMatrix4fv(self.displayToVoxMatPos, 1, False, d2vMat)
+    gl.glUniformMatrix4fv(self.voxToDisplayMatPos, 1, False, v2dMat) 
 
     gl.glUseProgram(0) 
-
-
-def updateVertices(self):
-    """If :attr:`.Display.softwareMode` is enabled, a :class:`.GLLineVertices`
-    instance is created/refreshed. Otherwise, this function does nothing.
-    """
-
-    image   = self.image
-    display = self.display
-
-    if not display.softwareMode:
-
-        self.lineVertices = None
-        
-        if glresources.exists(self._vertexResourceName):
-            log.debug('Clearing any cached line vertices for {}'.format(image))
-            glresources.delete(self._vertexResourceName)
-        return
-
-    if self.lineVertices is None:
-        self.lineVertices = glresources.get(
-            self._vertexResourceName, gllinevector.GLLineVertices, self)
-
-    if hash(self.lineVertices) != self.lineVertices.calculateHash(self):
-
-        log.debug('Re-generating line vertices for {}'.format(image))
-        self.lineVertices.refresh(self)
-        glresources.set(self._vertexResourceName,
-                        self.lineVertices,
-                        overwrite=True)
 
 
 def preDraw(self):
@@ -261,73 +203,10 @@ def preDraw(self):
 
 def draw(self, zpos, xform=None):
     """Draws the line vectors at a plane at the specified Z location.
-    This is performed using either :func:`softwareDraw` or
-    :func:`hardwareDraw`, depending upon the value of
-    :attr:`.Display.softwareMode`.
-    """
-    if self.display.softwareMode: softwareDraw(self, zpos, xform)
-    else:                         hardwareDraw(self, zpos, xform)
-
-
-def softwareDraw(self, zpos, xform=None):
-    """Draws the line vectors at a plane at the specified Z location, using
-    a :class:`.GLLineVertices` instance.
-    """
-
-    # Software shaders have not yet been compiled - 
-    # we can't draw until they're updated
-    if not self.swShadersInUse:
-        return
-
-    opts                = self.displayOpts
-    vertices, texCoords = self.lineVertices.getVertices(zpos, self)
-
-    if vertices.size == 0:
-        return
-    
-    vertices  = vertices .ravel('C')
-    texCoords = texCoords.ravel('C')
-
-    v2d = opts.getTransform('voxel', 'display')
-
-    if xform is None: xform = v2d
-    else:             xform = transform.concat(v2d, xform)
- 
-    gl.glPushMatrix()
-    gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('C'))
-
-    # upload the vertices
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertexBuffer)
-    gl.glBufferData(
-        gl.GL_ARRAY_BUFFER, vertices.nbytes, vertices, gl.GL_STATIC_DRAW)
-    gl.glVertexAttribPointer(
-        self.vertexPos, 3, gl.GL_FLOAT, gl.GL_FALSE, 0, None)
-    gl.glEnableVertexAttribArray(self.vertexPos)
-
-    # and the texture coordinates
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.texCoordBuffer)
-    gl.glBufferData(
-        gl.GL_ARRAY_BUFFER, texCoords.nbytes, texCoords, gl.GL_STATIC_DRAW)
-    gl.glVertexAttribPointer(
-        self.texCoordPos, 3, gl.GL_FLOAT, gl.GL_FALSE, 0, None)
-    gl.glEnableVertexAttribArray(self.texCoordPos) 
-        
-    gl.glLineWidth(opts.lineWidth)
-    gl.glDrawArrays(gl.GL_LINES, 0, vertices.size / 3)
-
-    gl.glPopMatrix()
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
-    gl.glDisableVertexAttribArray(self.vertexPos)
-
-
-def hardwareDraw(self, zpos, xform=None):
-    """Draws the line vectors at a plane at the specified Z location.
     Voxel coordinates are passed to the vertex shader, which calculates
     the corresponding line vertex locations.
     """ 
 
-    if self.swShadersInUse:
-        return
 
     image      = self.image
     opts       = self.displayOpts

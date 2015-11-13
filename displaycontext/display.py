@@ -61,12 +61,6 @@ class Display(props.SyncableHasProperties):
     """Contrast - 50% is normal contrast."""
 
 
-    softwareMode = props.Boolean(default=False)
-    """If possible, optimise for a low-performance rendering environment
-    (e.g. a software-based OpenGL renderer).
-    """
-
-    
     def __init__(self,
                  overlay,
                  overlayList,
@@ -127,7 +121,7 @@ class Display(props.SyncableHasProperties):
 
             # These properties cannot be unbound, as
             # they affect the OpenGL representation 
-            nounbind=['softwareMode', 'overlayType'],
+            nounbind=['overlayType'],
 
             # Initial sync state between this
             # Display and the parent Display

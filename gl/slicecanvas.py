@@ -71,11 +71,11 @@ class SliceCanvas(props.HasProperties):
     **Performance optimisations**
 
     
-    The :attr:`renderMode`, :attr:`softwareMode`, and :attr:`resolutionLimit`
-    properties control various ``SliceCanvas`` performance settings, which can
-    be useful when running in a low performance environment (e.g. when only a
-    software based GL driver is available). See also the
-    :attr:`.SceneOpts.performance` setting.
+    The :attr:`renderMode` and :attr:`resolutionLimit` properties control
+    various ``SliceCanvas`` performance settings, which can be useful when
+    running in a low performance environment (e.g. when only a software based
+    GL driver is available). See also the :attr:`.SceneOpts.performance`
+    setting.
 
     
     The :attr:`resolutionLimit` property controls the highest resolution at
@@ -83,13 +83,6 @@ class SliceCanvas(props.HasProperties):
     higher value will result in faster rendering performance. When this
     property is changed, the :attr:`.ImageOpts.resolution` property for every
     :class:`.Image` overlay is updated.
-
-
-    The :attr:`softwareMode` property controls the OpenGL shader program that
-    is used to render overlays - several :class:`.GLObject` types have shader
-    programs which are optimised for low-performance environments (at the cost
-    of a reduced feature set). This property is linked to the
-    :attr:`.Display.softwareMode` property.
 
 
     The :attr:`renderMode` property controls the way in which the
@@ -155,7 +148,6 @@ class SliceCanvas(props.HasProperties):
     cursorColour    = copy.copy(canvasopts.SliceCanvasOpts.cursorColour)
     bgColour        = copy.copy(canvasopts.SliceCanvasOpts.bgColour)
     renderMode      = copy.copy(canvasopts.SliceCanvasOpts.renderMode)
-    softwareMode    = copy.copy(canvasopts.SliceCanvasOpts.softwareMode)
     resolutionLimit = copy.copy(canvasopts.SliceCanvasOpts.resolutionLimit)
     
         
@@ -259,7 +251,6 @@ class SliceCanvas(props.HasProperties):
 
             disp.removeListener('overlayType',  self.name)
             disp.removeListener('enabled',      self.name)
-            disp.unbindProps(   'softwareMode', self)
 
             globj.destroy()
 
@@ -707,9 +698,6 @@ class SliceCanvas(props.HasProperties):
 
         if updateRenderTextures:
             self._updateRenderTextures() 
-
-        if not display.isBound('softwareMode', self):
-            display.bindProps('softwareMode', self)
 
         display.addListener('overlayType',
                             self.name,

@@ -200,7 +200,6 @@ class GLVolume(globject.GLImageObject):
             fslgl.glvolume_funcs.updateShaderState(self)
             self.onUpdate()
 
-        display.addListener('softwareMode',   lName, shaderCompile, weak=False)
         display.addListener('alpha',          lName, colourUpdate,  weak=False)
         opts   .addListener('displayRange',   lName, colourUpdate,  weak=False)
         opts   .addListener('clippingRange',  lName, shaderUpdate,  weak=False)
@@ -231,7 +230,6 @@ class GLVolume(globject.GLImageObject):
 
         lName = self.name
         
-        display.removeListener(          'softwareMode',   lName)
         display.removeListener(          'alpha',          lName)
         opts   .removeListener(          'displayRange',   lName)
         opts   .removeListener(          'clippingRange',  lName)
