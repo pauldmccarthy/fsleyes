@@ -86,6 +86,9 @@ class GLLabel(globject.GLImageObject):
         opts    = self.displayOpts
         name    = self.name
 
+        def update(*a):
+            self.onUpdate()
+
         def shaderUpdate(*a):
             fslgl.gllabel_funcs.updateShaderState(self)
             self.onUpdate()
@@ -133,9 +136,13 @@ class GLLabel(globject.GLImageObject):
         opts    .addListener('lut',          name, lutChanged,    weak=False)
         opts    .addListener('volume',       name, imageUpdate,   weak=False)
         opts    .addListener('resolution',   name, imageUpdate,   weak=False)
+        opts    .addListener('transform',    name, update,        weak=False)
         opts.lut.addListener('labels',       name, lutUpdate,     weak=False)
 
-        if opts.getParent() is not None:
+        # See comment in GLVolume.addDisplayListeners about this
+        self.__syncListenersRegistered = opts.getParent() is not None
+
+        if self.__syncListenersRegistered: 
             opts.addSyncChangeListener(
                 'volume',     name, imageRefresh, weak=False)
             opts.addSyncChangeListener(
@@ -158,9 +165,10 @@ class GLLabel(globject.GLImageObject):
         opts    .removeListener(          'lut',          name)
         opts    .removeListener(          'volume',       name)
         opts    .removeListener(          'resolution',   name)
+        opts    .removeListener(          'transform',    name)
         opts.lut.removeListener(          'labels',       name)
 
-        if opts.getParent() is not None:
+        if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume',     name)
             opts.removeSyncChangeListener('resolution', name)
 

@@ -47,6 +47,9 @@ class GLMask(glvolume.GLVolume):
         opts    = self.displayOpts
         name    = self.name
 
+        def update(*a):
+            self.onUpdate()
+
         def shaderCompile(*a):
             fslgl.glvolume_funcs.compileShaders(   self)
             fslgl.glvolume_funcs.updateShaderState(self)
@@ -83,8 +86,12 @@ class GLMask(glvolume.GLVolume):
         opts   .addListener('invert',        name, colourUpdate,  weak=False)
         opts   .addListener('volume',        name, imageUpdate,   weak=False)
         opts   .addListener('resolution',    name, imageUpdate,   weak=False)
+        opts   .addListener('transform',     name, update,        weak=False)
 
-        if opts.getParent() is not None:
+        # See comment in GLVolume.addDisplayListeners about this
+        self.__syncListenersRegistered = opts.getParent() is not None
+
+        if self.__syncListenersRegistered:
             opts.addSyncChangeListener(
                 'volume',     name, imageRefresh, weak=False)
             opts.addSyncChangeListener(
@@ -109,8 +116,9 @@ class GLMask(glvolume.GLVolume):
         opts   .removeListener(          'invert',        name)
         opts   .removeListener(          'volume',        name)
         opts   .removeListener(          'resolution',    name)
+        opts   .removeListener(          'transform',     name)
 
-        if opts.getParent() is not None:
+        if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume',     name)
             opts.removeSyncChangeListener('resolution', name)
 

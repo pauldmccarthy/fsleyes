@@ -127,6 +127,9 @@ class GLVector(globject.GLImageObject):
         display = self.display
         opts    = self.displayOpts
         name    = self.name
+
+        def update(*a):
+            self.onUpdate()
         
         def modUpdate( *a):
             self.refreshModulateTexture()
@@ -170,8 +173,12 @@ class GLVector(globject.GLImageObject):
         opts   .addListener('modulate',      name, modUpdate,     weak=False)
         opts   .addListener('modThreshold',  name, shaderUpdate,  weak=False)
         opts   .addListener('resolution',    name, imageUpdate,   weak=False)
+        opts   .addListener('transform',     name, update,        weak=False)
 
-        if opts.getParent() is not None:
+        # See comment in GLVolume.addDisplayListeners about this
+        self.__syncListenersRegistered = opts.getParent() is not None 
+
+        if self.__syncListenersRegistered:
             opts.addSyncChangeListener(
                 'resolution', name, imageRefresh, weak=False)
 
@@ -198,8 +205,9 @@ class GLVector(globject.GLImageObject):
         opts   .removeListener('modThreshold', name)
         opts   .removeListener('volume',       name)
         opts   .removeListener('resolution',   name)
+        opts   .removeListener('transform' ,   name)
 
-        if opts.getParent() is not None:
+        if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('resolution', name)
 
 

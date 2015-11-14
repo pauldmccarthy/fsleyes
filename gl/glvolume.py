@@ -163,6 +163,9 @@ class GLVolume(globject.GLImageObject):
         display = self.display
         opts    = self.displayOpts
         lName   = self.name
+
+        def update(*a):
+            self.onUpdate()
         
         def colourUpdate(*a):
             self.refreshColourTexture()
@@ -181,9 +184,6 @@ class GLVolume(globject.GLImageObject):
         def imageRefresh(*a):
             self.refreshImageTexture()
             fslgl.glvolume_funcs.updateShaderState(self)
-            self.onUpdate()
-
-        def update(*a):
             self.onUpdate()
 
         def imageUpdate(*a):
@@ -211,7 +211,16 @@ class GLVolume(globject.GLImageObject):
         opts   .addListener('interpolation',  lName, imageUpdate,   weak=False)
         opts   .addListener('transform',      lName, update,        weak=False)
 
-        if opts.getParent() is not None:
+        # Save a flag so the removeDisplayListeners
+        # method knows whether it needs to de-register
+        # sync change listeners - using opts.getParent()
+        # as the test in that method is dangerous, as
+        # the DisplayOpts instance might have already
+        # had its destroy method called on it, and might
+        # have been detached from its parent.
+        self.__syncListenersRegistered = opts.getParent() is not None
+
+        if self.__syncListenersRegistered:
             opts.addSyncChangeListener(
                 'volume',        lName, imageRefresh, weak=False)
             opts.addSyncChangeListener(
@@ -240,7 +249,8 @@ class GLVolume(globject.GLImageObject):
         opts   .removeListener(          'resolution',     lName)
         opts   .removeListener(          'interpolation',  lName)
         opts   .removeListener(          'transform',      lName)
-        if opts.getParent() is not None:
+        
+        if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume',        lName)
             opts.removeSyncChangeListener('resolution',    lName)
             opts.removeSyncChangeListener('interpolation', lName)
