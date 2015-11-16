@@ -21,7 +21,6 @@ import                                                   plotpanel
 import fsl.fsleyes.plotting.powerspectrumseries       as psseries
 import fsl.fsleyes.controls.powerspectrumcontrolpanel as pscontrol
 import fsl.fsleyes.controls.plotlistpanel             as plotlistpanel
-import fsl.fsleyes.colourmaps                         as fslcm
 import fsl.data.image                                 as fslimage
 import fsl.data.melodicimage                          as fslmelimage
 
@@ -179,7 +178,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         else:
             return None, None, None
 
-        ps.colour    = fslcm.randomDarkColour()
+        ps.colour    = self.getOverlayPlotColour(overlay)
         ps.alpha     = 1.0
         ps.lineWidth = 1
         ps.lineStyle = '-'

@@ -19,7 +19,6 @@ import                                                plotpanel
 import fsl.data.featimage                          as fslfeatimage
 import fsl.data.melodicimage                       as fslmelimage
 import fsl.data.image                              as fslimage
-import fsl.fsleyes.colourmaps                      as fslcmaps
 import fsl.fsleyes.plotting                        as plotting
 import fsl.fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
 import fsl.fsleyes.controls.plotlistpanel          as plotlistpanel
@@ -243,7 +242,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             targets   = [self._displayCtx]
             propNames = ['location'] 
 
-        ts.colour    = fslcmaps.randomDarkColour()
+        ts.colour    = self.getOverlayPlotColour(overlay)
         ts.alpha     = 1
         ts.lineWidth = 1
         ts.lineStyle = '-'

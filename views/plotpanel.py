@@ -29,9 +29,10 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as Canvas
 from matplotlib.backends.backend_wx    import NavigationToolbar2Wx
 
-import                     props
-import                     viewpanel
-import fsl.data.strings as strings
+import                           props
+import                           viewpanel
+import fsl.data.strings       as strings
+import fsl.fsleyes.colourmaps as fslcm
 
 
 log = logging.getLogger(__name__)
@@ -775,7 +776,18 @@ class OverlayPlotPanel(PlotPanel):
     ``none``    Only the ``DataSeries`` that are in the
                 :attr:`.PlotPanel.dataSeries` list will be plotted.
     =========== =====================================================
-    """ 
+    """
+
+    
+    plotColours = {}
+    """This dictionary is used to store a collection of ``{overlay : colour}``
+    mappings. It is shared across all ``OverlayPlotPanel`` instances, so that
+    the same (initial) colour is used for the same overlay, across multiple
+    plots.
+    
+    Sub-classes should use the :meth:`getOverlayPlotColour` method to retrieve
+    the initial colour to use for a given overlay.
+    """
 
 
     def __init__(self, *args, **kwargs):
@@ -853,12 +865,34 @@ class OverlayPlotPanel(PlotPanel):
         specified overlay, or ``None`` if there is no ``DataSeries`` instance.
         """
         return self.__dataSeries.get(overlay)
+
+
+    def getOverlayPlotColour(self, overlay):
+        """Returns an initial colour to use for plots associated with the
+        given overlay. If a colour is present in the  :attr:`plotColours`
+        dictionary, it is returned. Otherwise a random colour is generated,
+        added to ``plotColours``, and returned.
+        """
+
+        colour = self.plotColours.get(overlay)
+
+        if colour is None:
+            colour = fslcm.randomDarkColour()
+            self.plotColours[overlay] = colour
+
+        return colour
  
 
     def createDataSeries(self, overlay):
         """This method must be implemented by sub-classes. It must create and
         return a :class:`.DataSeries` instance for the specified overlay.
 
+        
+        .. note:: Sub-class implementations should set the
+                  :attr:`.DataSeries.colour` property to that returned by
+                  the :meth:`getOverlayPlotColour` method.
+
+        
         Different ``DataSeries`` types need to be re-drawn when different
         properties change. For example, a :class:`.TimeSeries`` instance needs
         to be redrawn when the :attr:`.DisplayContext.location` property

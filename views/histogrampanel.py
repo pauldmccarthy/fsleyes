@@ -23,7 +23,6 @@ import fsl.utils.dialog                           as fsldlg
 import fsl.fsleyes.plotting.histogramseries       as histogramseries
 import fsl.fsleyes.controls.histogramcontrolpanel as histogramcontrolpanel
 import fsl.fsleyes.controls.plotlistpanel         as plotlistpanel
-import fsl.fsleyes.colourmaps                     as fslcm
 import                                               plotpanel
 
 
@@ -172,7 +171,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
             strings.messages[self, 'calcHist'].format(overlay.name),
             loadHs).Run()
         
-        hs.colour      = fslcm.randomDarkColour()
+        hs.colour      = self.getOverlayPlotColour(overlay)
         hs.alpha       = 1
         hs.lineWidth   = 1
         hs.lineStyle   = '-'
