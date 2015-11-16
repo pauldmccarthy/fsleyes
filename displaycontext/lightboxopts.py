@@ -8,10 +8,15 @@
 by :class:`.LightBoxPanel` instances for managing their display settings.
 """
 
+
+import logging
 import copy
 
 import sceneopts
 import canvasopts
+
+
+log = logging.getLogger(__name__)
 
 
 class LightBoxOpts(sceneopts.SceneOpts):
@@ -43,3 +48,32 @@ class LightBoxOpts(sceneopts.SceneOpts):
         """
         sceneopts.SceneOpts.__init__(self, *args, **kwargs)
         self.setConstraint('zoom', 'minval', 10)
+
+        
+    def _onPerformanceChange(self, *a):
+        """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the
+        values of the :attr:`renderMode` and :attr:`resolutionLimit`
+        properties according to the performance setting.
+        """        
+
+        if   self.performance == 4:
+            self.renderMode      = 'onscreen'
+            self.resolutionLimit = 0
+
+        elif self.performance == 3:
+            self.renderMode      = 'prerender'
+            self.resolutionLimit = 0
+
+        elif self.performance == 2:
+            self.renderMode      = 'prerender'
+            self.resolutionLimit = 1
+
+        elif self.performance == 1:
+            self.renderMode      = 'prerender'
+            self.resolutionLimit = 2
+
+        log.debug('Performance settings changed: '
+                  'renderMode={}, '
+                  'resolutionLimit={}'.format(
+                      self.renderMode,
+                      self.resolutionLimit))

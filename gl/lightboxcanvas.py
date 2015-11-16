@@ -298,7 +298,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
             self._offscreenRenderTexture.setSize(768, 768)
 
-        # The LightBoxCanvas handles re-render mode
+        # The LightBoxCanvas handles pre-render mode
         # the same way as the SliceCanvas - a separate
         # RenderTextureStack for eacn globject
         elif self.renderMode == 'prerender':
