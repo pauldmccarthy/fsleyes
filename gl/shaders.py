@@ -224,52 +224,42 @@ def compileShaders(vertShaderSrc, fragShaderSrc):
     return program
 
 
-def getVertexShader(globj, sw=False):
+def getVertexShader(globj):
     """Returns the vertex shader source for the given GL object."""
-    return _getShader(globj, 'vert', sw)
+    return _getShader(globj, 'vert')
 
 
-def getFragmentShader(globj, sw=False):
+def getFragmentShader(globj):
     """Returns the fragment shader source for the given GL object.""" 
-    return _getShader(globj, 'frag', sw)
+    return _getShader(globj, 'frag')
 
 
 
 _shaderTypePrefixMap = td.TypeDict({
     
-    ('GLVolume',     'vert', False) : 'glvolume',
-    ('GLVolume',     'vert', True)  : 'glvolume_sw',
-    ('GLVolume',     'frag', False) : 'glvolume',
-    ('GLVolume',     'frag', True)  : 'glvolume_sw',
+    ('GLVolume',     'vert') : 'glvolume',
+    ('GLVolume',     'frag') : 'glvolume',
 
-    ('GLLabel',      'vert', False) : 'glvolume',
-    ('GLLabel',      'vert', True)  : 'glvolume_sw', 
-    ('GLLabel',      'frag', False) : 'gllabel',
-    ('GLLabel',      'frag', True)  : 'gllabel_sw', 
+    ('GLLabel',      'vert') : 'glvolume',
+    ('GLLabel',      'frag') : 'gllabel',
     
-    ('GLRGBVector',  'vert', False) : 'glvolume',
-    ('GLRGBVector',  'vert', True)  : 'glvolume_sw',
+    ('GLRGBVector',  'vert') : 'glvolume',
     
-    ('GLRGBVector',  'frag', False) : 'glvector',
-    ('GLRGBVector',  'frag', True)  : 'glvector_sw',
+    ('GLRGBVector',  'frag') : 'glvector',
 
-    ('GLLineVector', 'vert', False) : 'gllinevector',
-    ('GLLineVector', 'vert', True)  : 'gllinevector_sw',
+    ('GLLineVector', 'vert') : 'gllinevector',
     
-    ('GLLineVector', 'frag', False) : 'glvector',
-    ('GLLineVector', 'frag', True)  : 'glvector_sw',
+    ('GLLineVector', 'frag') : 'glvector',
 
-    ('GLModel',      'vert', False) : 'glmodel',
-    ('GLModel',      'vert', True)  : 'glmodel',
-    ('GLModel',      'frag', False) : 'glmodel',
-    ('GLModel',      'frag', True)  : 'glmodel',
+    ('GLModel',      'vert') : 'glmodel',
+    ('GLModel',      'frag') : 'glmodel',
 })
 """This dictionary provides a mapping between :class:`.GLObject` types,
 and file name prefixes, identifying the shader programs to use.
 """
 
 
-def _getShaderPrefix(globj, shaderType, sw):
+def _getShaderPrefix(globj, shaderType):
     """Returns the prefix identifying the vertex/fragment shader programs to use
     for the given :class:`.GLObject` instance. If ``globj`` is a string, it is
     returned unchanged.
@@ -278,27 +268,27 @@ def _getShaderPrefix(globj, shaderType, sw):
     if isinstance(globj, str):
         return globj
     
-    return _shaderTypePrefixMap[globj, shaderType, sw]
+    return _shaderTypePrefixMap[globj, shaderType]
 
 
-def _setShaderPrefix(globj, shaderType, sw, prefix):
+def _setShaderPrefix(globj, shaderType, prefix):
     """Updates the prefix identifying the vertex/fragment shader programs to use
     for the given :class:`.GLObject` type or instance.
     """
     
-    _shaderTypePrefixMap[globj, shaderType, sw] = prefix
+    _shaderTypePrefixMap[globj, shaderType] = prefix
 
 
-def _getShader(globj, shaderType, sw):
+def _getShader(globj, shaderType):
     """Returns the shader source for the given GL object and the given
     shader type ('vert' or 'frag').
     """
-    fname = _getFileName(globj, shaderType, sw)
+    fname = _getFileName(globj, shaderType)
     with open(fname, 'rt') as f: src = f.read()
     return _preprocess(src)    
 
 
-def _getFileName(globj, shaderType, sw):
+def _getFileName(globj, shaderType):
     """Returns the file name of the shader program for the given GL object
     and shader type. The ``globj`` parameter may alternately be a string,
     in which case it is used as the prefix for the shader program file name.
@@ -314,7 +304,7 @@ def _getFileName(globj, shaderType, sw):
     if shaderType not in ('vert', 'frag'):
         raise RuntimeError('Invalid shader type: {}'.format(shaderType))
 
-    prefix = _getShaderPrefix(globj, shaderType, sw)
+    prefix = _getShaderPrefix(globj, shaderType)
 
     return op.join(op.dirname(__file__), subdir, '{}_{}.{}'.format(
         prefix, shaderType, suffix))
