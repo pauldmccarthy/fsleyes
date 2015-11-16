@@ -182,6 +182,16 @@ class SliceCanvas(props.HasProperties):
         self._offscreenTextures = {}
         self._prerenderTextures = {}
 
+        # When the render mode is changed,
+        # overlay resolutions are potentially
+        # modified. When this happends, this
+        # is used to store the old overlay
+        # resolution, so it can be restored
+        # if the render mode is changed back.
+        # See the __resolutionLimitChanged
+        # method.
+        self.__overlayResolutions = {}
+
         # The zax property is the image axis which maps to the
         # 'depth' axis of this canvas. The _zAxisChanged method
         # also fixes the values of 'xax' and 'yax'.
@@ -206,7 +216,7 @@ class SliceCanvas(props.HasProperties):
         self.addListener('renderMode',    self.name, self._renderModeChange)
         self.addListener('resolutionLimit',
                          self.name,
-                         self._resolutionLimitChange) 
+                         self.__resolutionLimitChange) 
         
         # When the overlay list changes, refresh the
         # display, and update the display bounds
@@ -565,11 +575,16 @@ class SliceCanvas(props.HasProperties):
             self._renderModeChange(self)
     
 
-    def _resolutionLimitChange(self, *a):
+    def __resolutionLimitChange(self, *a):
         """Called when the :attr:`resolutionLimit` property changes.
 
-        Updates the minimum resolution of all overlays in the overlay list.
+        Updates the :attr:`.ImageOpts.resolution` of all :class:`.Image`
+        overlays in the overlay list.  Whenever the resolution of an
+        overlay is changed, its old value is saved, so it can be restored
+        later on when possible.
         """
+
+        limit = self.resolutionLimit
 
         for ovl in self.overlayList:
 
@@ -578,14 +593,63 @@ class SliceCanvas(props.HasProperties):
             if not isinstance(ovl, fslimage.Image):
                 continue
 
-            opts   = self.displayCtx.getOpts(ovl)
-            minres = min(ovl.pixdim[:3])
+            opts    = self.displayCtx.getOpts(ovl)
+            currRes = opts.resolution
+            lastRes = self.__overlayResolutions.get(ovl)
 
-            if self.resolutionLimit > minres:
-                minres = self.resolutionLimit
+            listening = opts.hasListener('resolution', self.name)
 
-            if opts.resolution < minres:
-                opts.resolution = minres
+            if listening:
+                opts.disableListener('resolution', self.name)
+
+            # The overlay resolution is below
+            # the limit - set it to the limit
+            if currRes < limit:
+
+                log.debug('Limiting overlay {} resolution to {}'.format(
+                    ovl, limit))
+
+                opts.resolution = limit
+
+                # Save the old resolution so we
+                # can restore it later if needed
+                if ovl not in self.__overlayResolutions:
+                    log.debug('Caching overlay {} resolution: {}'.format(
+                        ovl, limit))
+                    
+                    self.__overlayResolutions[ovl] = currRes
+
+            # We have previously modified the
+            # resolution of this overlay - restore
+            # it
+            elif ovl in self.__overlayResolutions:
+
+                # but only if the old resolution
+                # is within the new limits. 
+                if lastRes >= limit:
+
+                    log.debug('Restoring overlay {} resolution to {}, '
+                              'and clearing cache'.format(ovl, lastRes))
+                    opts.resolution = lastRes
+
+                    # We've restored the modified overlay
+                    # resolution - clear it from the cache
+                    self.__overlayResolutions.pop(ovl)
+                else:
+                    log.debug('Limiting overlay {} resolution to {}'.format(
+                        ovl, limit))
+                    opts.resolution = limit
+
+            if listening:
+                opts.enableListener('resolution', self.name)
+                        
+
+    def __overlayResolutionChanged(self, value, valid, opts, name):
+        """Called when the :attr:`.ImageOpts.resolution` property for any
+        :class:`.Image` overlay changes. Clears the saved resolution for
+        the overlay if necessary (see :meth:`__resolutionLimitChange`).
+        """
+        self.__overlayResolutions.pop(opts.overlay, None)
 
 
     def _zAxisChanged(self, *a):
@@ -709,6 +773,16 @@ class SliceCanvas(props.HasProperties):
                             self._refresh,
                             overwrite=True)
 
+        # Listen for resolution changes on Image
+        # overlays - see __overlayResolutionChanged,
+        # and __resolutionLimitChanged
+        if isinstance(overlay, fslimage.Image): 
+            opts = display.getDisplayOpts()
+            opts.addListener('resolution',
+                             self.name,
+                             self.__overlayResolutionChanged,
+                             overwrite=True)
+
         return globj
  
             
@@ -743,7 +817,7 @@ class SliceCanvas(props.HasProperties):
             self.__genGLObject(overlay, updateRenderTextures=False)
 
         self._updateRenderTextures()
-        self._resolutionLimitChange()
+        self.__resolutionLimitChange()
         self._refresh()
 
 
