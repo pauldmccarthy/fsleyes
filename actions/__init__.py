@@ -18,7 +18,6 @@ Some 'global' actions are also provided in this package:
  .. autosummary::
 
     ~fsl.fsleyes.actions.copyoverlay
-    ~fsl.fsleyes.actions.loadcolourmap
     ~fsl.fsleyes.actions.openfile
     ~fsl.fsleyes.actions.openstandard
     ~fsl.fsleyes.actions.saveoverlay
@@ -32,7 +31,7 @@ one or more actions.  As the :class:`.FSLEyesPanel` class derives from
 
 
 import logging
-import collections
+import inspect
 
 import props
 
@@ -58,10 +57,12 @@ def listGlobalActions():
             saveoverlay .SaveOverlayAction]
 
 
+
 class ActionButton(props.Button):
     """Extends the :class:`props.Button` class to encapsulate an
     :class:`Action` instance.
     """
+    
     def __init__(self, actionName, classType=None, **kwargs):
         """Create an ``ActionButton``.
 
@@ -99,51 +100,70 @@ class ActionButton(props.Button):
         
     def __onButton(self, instance, *a):
         """Called when the button is pushed. Runs the action."""
-        instance.run(self.name)         
+        instance.getAction(self.name)()
+
+
+class ActionDisabledError(Exception):
+    pass
+
 
 
 class Action(props.HasProperties):
-    """Class which represents an action of some sort.
-
-    The actual action which is performed may be specified either by
-    specifying it it during initialisation (the ``action`` parameter to
-    :meth:`__init__`), or by subclasses overriding the :meth:`doAction`
-    method. The former method will take precedence over the latter.
     """
 
+
+    https://wiki.python.org/moin/PythonDecoratorLibrary#Class_method_decorator_using_instance
+    """
+    
     
     enabled = props.Boolean(default=True)
     """Controls whether the action is currently enabled or disabled.
-    When this property is ``False`` calls to :meth:`doAction` will
-    result in a ``RuntimeError``.
+    When this property is ``False`` calls to the action will
+    result in a :exc:`ActionDisabledError`.
     """
 
     
-    def __init__(self, overlayList, displayCtx, action=None):
+    def __init__(self, func):
         """Create an ``Action``.
         
-        :arg overlayList: An :class:`.OverlayList` instance
-                          containing the list of overlays being displayed.
-
-        :arg displayCtx:  A :class:`.DisplayContext` instance defining how
-                          the overlays are to be displayed.
-
-        :arg action:      The action function. If not provided, assumes that
-                          the :meth:`doAction` method has been overridden.
+        :arg func: The action function.
         """
-        self._overlayList  = overlayList
-        self._displayCtx   = displayCtx
-        self._boundWidgets = []
-        self._name         = '{}_{}'.format(self.__class__.__name__, id(self))
-        
-        if action is not None:
-            self.doAction = action
-            
-        self.__enabledDoAction = self.doAction
+        self.__instance     = None
+        self.__func         = func
+        self.__name         = func.__name__ 
+        self.__boundWidgets = []
 
         self.addListener('enabled',
                          'Action_{}_internal'.format(id(self)),
-                         self._enabledChanged)
+                         self.__enabledChanged)
+
+
+    def __get__(self, instance, cls):
+
+        if self.__instance is None and instance is not None:
+            self.__instance = instance
+
+        return self
+
+    
+    def __call__(self, *args, **kwargs):
+
+        if not self.enabled:
+            raise ActionDisabledError('Action {} is disabled'.format(
+                self.__name))
+
+        log.debug('Action {} called'.format(self.__name))
+
+        if self.__instance is not None:
+            args = [self.__instance] + list(args)
+            
+        return self.__func(*args, **kwargs)
+
+    
+    def destroy(self):
+        self.unbindAllWidgets()
+        self.__func     = None
+        self.__instance = None
 
         
     def bindToWidget(self, parent, evType, widget):
@@ -157,17 +177,11 @@ class Action(props.HasProperties):
         """
 
         def wrappedAction(ev):
-            self.doAction()
+            self()
             
         parent.Bind(evType, wrappedAction, widget)
         widget.Enable(self.enabled)
-        self._boundWidgets.append((parent, evType, widget))
-
-
-    def destroy(self):
-        self.unbindAllWidgets()
-        self.__enabledDoAction  = None
-        self.__disabledDoAction = None
+        self.__boundWidgets.append((parent, evType, widget))
 
 
     def unbindAllWidgets(self):
@@ -176,7 +190,7 @@ class Action(props.HasProperties):
 
         import wx
         
-        for parent, evType, widget in self._boundWidgets:
+        for parent, evType, widget in self.__boundWidgets:
 
             # Only attempt to unbind if the parent
             # and widget have not been destroyed
@@ -185,132 +199,103 @@ class Action(props.HasProperties):
             except wx.PyDeadObjectError:
                 pass
             
-        self._boundWidgets = []
+        self.__boundWidgets = []
 
-
-    def _enabledChanged(self, *args):
-        """Internal method which is called when the :attr:`enabled` property
-        changes. Enables/disables the action, and any bound widgets.
+        
+    def getBoundWidgets(self):
         """
-        if self.enabled: self.doAction = self.__enabledDoAction
-        else:            self.doAction = self.__disabledDoAction
+        """
+        return [w for _, _, w in self.__boundWidgets]
 
-        for _, _, widget in self._boundWidgets:
+
+    def __enabledChanged(self, *args):
+        """Internal method which is called when the :attr:`enabled` property
+        changes. Enables/disables any bound widgets.
+        """
+
+        for _, _, widget in self.__boundWidgets:
             widget.Enable(self.enabled)
 
-
-    def __disabledDoAction(self, *args):
-        """This method gets called when the action is disabled."""
-        raise RuntimeError('{} is disabled'.format(self.__class__.__name__))
     
+class ToggleAction(Action):
 
-    def __enabledDoAction(self, *args):
-        """This method is set in :meth:`__init__`; it gets called when the
-        action is enabled."""
-        pass
 
-    
-    def doAction(self, *args):
-        """This method must be overridden by subclasses.
+    toggled = props.Boolean(default=False)
 
-        It performs the action, or raises a ``RuntimeError`` if the action
-        is disabled.
+
+    def __init__(self, func, initState=False):
+        
+        Action.__init__(self, func)
+        
+        self.toggled = initState
+        
+        self.addListener('toggled',
+                         'ToggleAction_{}_internal'.format(id(self)),
+                         self.__toggledChanged)
+
+        
+    def __call__(self, *args, **kwargs):
         """
-        raise NotImplementedError('Action object must implement '
-                                  'the doAction method') 
-
-
-class ActionProvider(props.SyncableHasProperties):
-    """An :class:`ActionProvider` is some entity which can perform actions.
-
-    Said entity is also a :class:`~props.HasProperties` instance, so can
-    optionally define some properties which, along with any defined actions,
-    will ultimately be exposed to the user.
-    """
-
-    def __init__(self, overlayList, displayCtx, **kwargs):
-        """Create an :class:`ActionProvider` instance.
-
-        :arg overlayList: An :class:`.OverlayList` instance containing the
-                          list of overlays being displayed.
-
-        :arg displayCtx:  A :class:`.DisplayContext` instance defining how
-                          the overlays are to be displayed. 
-
-        :arg actions:     A dictionary containing ``{name -> function}``
-                          mappings, where each function is an action that
-                          should be made available to the user.
-
-        :arg kwargs:      Passed to the :class:`.SyncableHasProperties`
-                          constructor.
         """
 
-        actions = kwargs.pop('actions', None)
-
-        props.SyncableHasProperties.__init__(self, **kwargs)
-
-        if actions is None:
-            actions = {}
-
-        self.__actions = collections.OrderedDict()
-
-        for name, func in actions.items():
-            act = Action(overlayList, displayCtx, action=func)
-            self.__actions[name] = act
-
+        result = Action.__call__(self, *args, **kwargs)
             
+        self.toggled = not self.toggled
+            
+        return result
+
+
+    def bindToWidget(self, parent, evType, widget):
+
+        import wx
+        
+        Action.bindToWidget(self, parent, evType, widget)
+
+        if isinstance(widget, wx.MenuItem):
+            widget.Check(self.toggled)
+
+        
+    def __toggledChanged(self, *a):
+        
+        import wx
+        
+        for widget in self.getBoundWidgets():
+
+            if isinstance(widget, wx.MenuItem):
+                widget.Check(self.toggled)
+
+
+
+class ActionProvider(object):
+
+
     def destroy(self):
-        """This method should be called when this ``ActionProvider`` is
-        about to be destroyed. It ensures that all ``Action`` instances
-        are cleared.
-        """
-        for n, act in self.__actions.items():
-            act.destroy()
-            
-        self.__actions = None
-
-            
-    def addActionToggleListener(self, name, listenerName, func):
-        """Add a listener function which will be called when the named action
-        is enabled or disabled.
-        """
-
-        self.__actions[name].addListener('enabled', listenerName, func)
+        for name, action in self.getActions():
+            action.destroy()
 
 
     def getAction(self, name):
-        """Return the :class:`Action` object of the given name. """
-        return self.__actions[name]
+        return getattr(self, name)
+
+
+    def enableAction(self, name, enable=True):
+        self.getAction(name).enable = enable
 
         
-    def getActions(self):
-        """Return a dictionary containing ``{name -> Action}`` mappings for
-        all defined actions.
-        """
-        return collections.OrderedDict(self.__actions)
-
-
-    def isEnabled(self, name):
-        """Return ``True`` if the named action is enabled, ``False`` otherwise.
-        """
-        return self.__actions[name].enabled
+    def disableAction(self, name):
+        self.enableAction(name, False)
 
     
-    def enable(self, name, enable=True):
-        """Enables/disables the named action. """ 
-        self.__actions[name].enabled = enable
-
+    def getActions(self):
+        """
+        Sub-classes may override this method to enforce a specific ordering
+        of their actions.
+        """
+    
+        acts = []
         
-    def disable(self, name):
-        """Disables the named action. """ 
-        self.__actions[name].enabled = False
-
-
-    def toggle(self, name):
-        """Toggles the state of the named action. """ 
-        self.__actions[name].enabled = not self.__actions[name].enabled
-
-
-    def run(self, name, *args):
-        """Performs the named action."""
-        self.__actions[name].doAction(*args)
+        for name, attr in inspect.getmembers(self):
+            if isinstance(attr, Action):
+                acts.append((name, attr))
+                
+        return acts

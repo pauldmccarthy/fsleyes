@@ -23,12 +23,18 @@ class OpenFileAction(actions.Action):
     :meth:`.OverlayList.addOverlays` method.
     """
 
-    
-    def doAction(self):
+    def __init__(self, overlayList, displayCtx):
+        actions.Action.__init__(self, self.__openFile)
+
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
+        
+
+    def __openFile(self):
         """Calls :meth:`.OverlayList.addOverlays` method. If overlays were added,
         updates the :attr:`.DisplayContext.selectedOverlay` accordingly.
         """
         
-        if self._overlayList.addOverlays():
-            self._displayCtx.selectedOverlay = \
-                self._displayCtx.overlayOrder[-1]
+        if self.__overlayList.addOverlays():
+            self.__displayCtx.selectedOverlay = \
+                self.__displayCtx.overlayOrder[-1]

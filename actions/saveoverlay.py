@@ -24,18 +24,22 @@ class SaveOverlayAction(actions.Action):
     """
 
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, overlayList, displayCtx):
         """Create a ``SaveOverlayAction``. All arguments are passed through
         to the :class:`.Action` constructor.
         """
-        actions.Action.__init__(self, *args, **kwargs)        
+        actions.Action.__init__(self, self.__saveOverlay)
 
-        self._displayCtx .addListener('selectedOverlay',
-                                      self._name,
-                                      self.__selectedOverlayChanged)
-        self._overlayList.addListener('overlays',
-                                      self._name,
-                                      self.__selectedOverlayChanged)
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
+        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+
+        displayCtx .addListener('selectedOverlay',
+                                self.__name,
+                                self.__selectedOverlayChanged)
+        overlayList.addListener('overlays',
+                                self.__name,
+                                self.__selectedOverlayChanged)
 
         self.__selectedOverlayChanged()
 
@@ -45,8 +49,8 @@ class SaveOverlayAction(actions.Action):
         :class:`.OverlayList`, and calls :meth:`.Action.destroy`.
         """
 
-        self._displayCtx .removeListener('selectedOverlay', self._name)
-        self._overlayList.removeListener('overlays',        self._name)
+        self.__displayCtx .removeListener('selectedOverlay', self.__name)
+        self.__overlayList.removeListener('overlays',        self.__name)
         actions.Action.destroy(self)
 
         
@@ -57,7 +61,7 @@ class SaveOverlayAction(actions.Action):
         this action is enabled; otherwise it is disabled.
         """
         
-        overlay = self._displayCtx.getSelectedOverlay()
+        overlay = self.__displayCtx.getSelectedOverlay()
 
         # TODO  Support for other overlay types
 
@@ -65,11 +69,11 @@ class SaveOverlayAction(actions.Action):
                         isinstance(overlay, fslimage.Image) and 
                         (not overlay.saved))
 
-        for ovl in self._overlayList:
+        for ovl in self.__overlayList:
             if not isinstance(ovl, fslimage.Image):
                 continue
             
-            ovl.removeListener('saved', self._name)
+            ovl.removeListener('saved', self.__name)
 
             # Register a listener on the saved property
             # of the currently selected image, so we can
@@ -77,7 +81,7 @@ class SaveOverlayAction(actions.Action):
             # becomes 'unsaved', and vice versa.
             if ovl is overlay:
                 ovl.addListener('saved',
-                                self._name,
+                                self.__name,
                                 self.__overlaySaveStateChanged)
  
 
@@ -90,7 +94,7 @@ class SaveOverlayAction(actions.Action):
         see the :meth:`__selectedOverlayChanged` method.
         """
         
-        overlay = self._displayCtx.getSelectedOverlay()
+        overlay = self.__displayCtx.getSelectedOverlay()
         
         if overlay is None:
             self.enabled = False
@@ -101,12 +105,12 @@ class SaveOverlayAction(actions.Action):
             self.enabled = not overlay.saved
 
         
-    def doAction(self):
+    def __saveOverlay(self):
         """Saves the currently selected overlay (only if it is a
         :class:`.Image`), by a call to :meth:`.Image.save`.
         """
         
-        overlay = self._displayCtx.getSelectedOverlay()
+        overlay = self.__displayCtx.getSelectedOverlay()
         
         if overlay is None:
             return

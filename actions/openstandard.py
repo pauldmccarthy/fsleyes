@@ -26,7 +26,10 @@ class OpenStandardAction(actions.Action):
     overlays, using ``$FSLDIR/data/standard/`` as the default directory.
     """
     def __init__(self, overlayList, displayCtx):
-        actions.Action.__init__(self, overlayList, displayCtx)
+        actions.Action.__init__(self, self.__openStandard)
+
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
         
         # disable this action
         # if $FSLDIR is not set
@@ -39,10 +42,11 @@ class OpenStandardAction(actions.Action):
             self.enabled  = False
         
         
-    def doAction(self):
+    def __openStandard(self):
         """Calls the :meth:`.OverlayList.addOverlays` method. If the user
         added some overlays, updates the
         :attr:`.DisplayContext.selectedOverlay` accordingly.
         """
-        if self._overlayList.addOverlays(self.__stddir, addToEnd=False):
-            self._displayCtx.selectedOverlay = self._displayCtx.overlayOrder[0]
+        if self.__overlayList.addOverlays(self.__stddir, addToEnd=False):
+            self.__displayCtx.selectedOverlay = \
+                self.__displayCtx.overlayOrder[0]
