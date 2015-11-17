@@ -48,14 +48,13 @@ class OrthoViewProfile(profiles.Profile):
     ========== ==============================================================
 
 
-    The ``OrthoViewProfile`` class also defines a few actions:
+    The ``OrthoViewProfile`` class also defines a few :mod:`.actions`:
 
+    .. autosummary::
+       :nosignatures:
 
-    ================ ========================================================
-    ``resetZoom``    Resets the zoom on every :class:`.SliceCanvas` to 100%.
-    ``centreCursor`` Moves the :attr:`.DisplayContext.location` to the centre
-                     of the display coordinate system.
-    ================ ========================================================
+       resetZoom
+       centreCursor
     """
 
     

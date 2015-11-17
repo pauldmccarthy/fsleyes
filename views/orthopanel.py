@@ -103,11 +103,11 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     The ``OrthoPanel`` adds a few extra actions to those provided by the 
     :class:`.CanvasPanel` class:
 
-
-    ====================== ==========================================
-    ``toggleOrthoToolBar`` Shows/hides an :class:`.OrthoToolBar`.
-    ``toggleEditToolBar``  Shows/hides an :class:`.OrthoEditToolBar`.
-    ====================== ==========================================
+    .. autosummary::
+       :nosignatures:
+    
+       toggleOrthoToolBar
+       toggleEditToolBar
 
 
     When an ``OrthoPanel`` is created, it will automatically add the
@@ -275,11 +275,17 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
     @actions.toggleAction
     def toggleOrthoToolBar(self):
+        """Shows/hides an :class:`.OrthoToolBar`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
         self.togglePanel(orthotoolbar.OrthoToolBar, ortho=self)
 
 
     @actions.toggleAction
     def toggleEditToolBar(self):
+        """Shows/hides an :class:`.OrthoEditToolBar`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """ 
         self.togglePanel(orthoedittoolbar.OrthoEditToolBar, ortho=self) 
 
             

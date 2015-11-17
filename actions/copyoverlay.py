@@ -21,12 +21,15 @@ log = logging.getLogger(__name__)
 
 class CopyOverlayAction(actions.Action):
     """The ``CopyOverlayAction`` does as its name suggests - it creates a
-    copy  of the currently selected overlay.
+    copy of the currently selected overlay.
     """
 
     
     def __init__(self, overlayList, displayCtx):
-        """Create a ``CopyOverlayAction``. 
+        """Create a ``CopyOverlayAction``.
+
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`.
         """
         actions.Action.__init__(self, self.__copyOverlay)
 

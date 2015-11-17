@@ -80,35 +80,23 @@ class CanvasPanel(viewpanel.ViewPanel):
 
 
     The following actions are available through a ``CanvasPanel`` (see
-    :class:`.ActionProvider`). They toggle a range of
+    the :mod:`.actions` module). They toggle a range of
     :mod:`control <.controls>` panels:
-    
-    
-    ============================== ===========================================
-    ``toggleOverlayList``          Toggles an :class:`.OverlayListPanel`.
-    ``toggleOverlayInfo``          Toggles an :class:`.OverlayInfoPanel`.
-    ``toggleAtlasPanel``           Toggles an :class:`.AtlasPanel`.
-    ``toggleDisplayProperties``    Toggles an :class:`.OverlayDisplayToolBar`.
-    ``toggleLocationPanel``        Toggles a :class:`.LocationPanel`.
-    ``toggleClusterPanel``         Toggles a :class:`.ClusterPanel`.
-    ``toggleLookupTablePanel``     Toggles a :class:`.LookupTablePanel`.
-    ``toggleClassificationPanel``  Toggles a
-                                   :class:`.MelodicClassificationPanel`.
-    ``toggleShell``                Toggles a :class:`.ShellPanel`.
-    ============================== ===========================================
-
-    
-    A couple of other actions are also provided, with the same names as their
-    corresponding methods:
 
     .. autosummary::
        :nosignatures:
     
        screenshot
        showCommandLineArgs
-
-    Sub-classes can add their own actions via the ``extraActions`` constructor
-    argument.
+       toggleOverlayList
+       toggleOverlayInfo
+       toggleAtlasPanel
+       toggleDisplayProperties
+       toggleLocationPanel
+       toggleClusterPanel
+       toggleLookupTablePanel
+       toggleClassificationPanel
+       toggleShell
 
 
     .. _canvaspanel-adding-content:
@@ -323,47 +311,74 @@ class CanvasPanel(viewpanel.ViewPanel):
         
     @actions.toggleAction
     def toggleOverlayList(self):
+        """Toggles an :class:`.OverlayListPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
         self.togglePanel(overlaylistpanel.OverlayListPanel, location=wx.BOTTOM)
 
     
     @actions.toggleAction
     def toggleOverlayInfo(self):
+        """Toggles an :class:`.OverlayInfoPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """        
         self.togglePanel(overlayinfopanel.OverlayInfoPanel, location=wx.LEFT) 
     
 
     @actions.toggleAction
     def toggleAtlasPanel(self):
+        """Toggles an :class:`.AtlasPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
         self.togglePanel(atlaspanel.AtlasPanel, location=wx.BOTTOM) 
 
 
     @actions.toggleAction
     def toggleDisplayProperties(self):
+        """Toggles an :class:`.OverlayDisplayToolBar`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """ 
         self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar,
                          viewPanel=self)
         
 
     @actions.toggleAction
     def toggleLocationPanel(self):
+        """Toggles a :class:`.LocationPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
         self.togglePanel(locationpanel.LocationPanel, location=wx.BOTTOM) 
 
 
     @actions.toggleAction
     def toggleClusterPanel(self):
+        """Toggles a :class:`.ClusterPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """ 
         self.togglePanel(clusterpanel.ClusterPanel, location=wx.TOP) 
 
 
     @actions.toggleAction
     def toggleLookupTablePanel(self):
+        """Toggles a :class:`.LookupTablePanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """ 
         self.togglePanel(lookuptablepanel.LookupTablePanel, location=wx.TOP)
 
     @actions.toggleAction
     def toggleClassificationPanel(self):
+        """Toggles a :class:`.MelodicClassificationPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """ 
         self.togglePanel(melclasspanel.MelodicClassificationPanel,
                          location=wx.RIGHT)
 
 
     @actions.toggleAction
     def toggleShell(self):
+        """Toggles a :class:`.ShellPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
         self.togglePanel(shellpanel.ShellPanel,
                          self.getSceneOptions(),
                          location=wx.BOTTOM) 

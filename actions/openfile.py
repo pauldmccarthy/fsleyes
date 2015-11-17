@@ -24,6 +24,11 @@ class OpenFileAction(actions.Action):
     """
 
     def __init__(self, overlayList, displayCtx):
+        """Create an ``OpenFileAction``.
+
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`.
+        """
         actions.Action.__init__(self, self.__openFile)
 
         self.__overlayList = overlayList

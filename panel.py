@@ -13,10 +13,10 @@ sort of view of a collection of overlay objects, contained within an
 
 
 ``FSLEyesPanel`` instances are also :class:`.ActionProvider` instances - any
-actions which are specified during construction may (or may not ) be exposed
-to the user. Furthermore, any display configuration options which should be
-made available available to the user can be added as :class:`.PropertyBase`
-attributes of the :class:`FSLEyesPanel` subclass.
+actions which are specified in the class definitions may (or may not) be
+exposed to the user. Furthermore, any display configuration options which
+should be made available available to the user can be added as
+:class:`.PropertyBase` attributes of the :class:`FSLEyesPanel` subclass.
 
 
 .. note:: ``FSLEyesPanel`` instances are usually displayed within a

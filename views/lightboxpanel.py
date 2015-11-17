@@ -47,9 +47,10 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
     The ``LightBoxPanel`` adds the following actions to those already
     provided by the :class:`.CanvasPanel`:
 
-    ========================= ========================================
-    ``toggleLightBoxToolBar`` Shows/hides a :class:`.LightBoxToolBar`.
-    ========================= ========================================
+    .. autosummary::
+       :nosignatures:
+
+       toggleLightBoxToolBar
 
     
     When a ``LightBoxPanel`` is created, it will automatically add the
@@ -187,6 +188,9 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
     @actions.toggleAction
     def toggleLightBoxToolBar(self):
+        """Shows/hides a :class:`.LightBoxToolBar`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """        
         self.togglePanel(lightboxtoolbar.LightBoxToolBar, lb=self)
 
 

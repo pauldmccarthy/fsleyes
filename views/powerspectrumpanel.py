@@ -48,11 +48,11 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
     The following actions are provided, in addition to those already provided
     by the :class:`.PlotPanel`:
 
-    ============================== ====================================
-    ``togglePowerSpectrumList``    Show/hide a :class:`.PlotListPanel`.
-    ``togglePowerSpectrumControl`` Show/hide a
-                                   :class:`.PowerSpectrumControlPanel`.
-    ============================== ====================================
+    .. autosummary::
+       :nosignatures:
+
+       togglePowerSpectrumList
+       togglePowerSpectrumControl
 
     
     The ``PlotListPanel`` and ``PowerSpectrumControlPanel`` are both shown
@@ -122,6 +122,9 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
 
     @actions.toggleAction
     def togglePowerSpectrumControl(self):
+        """Shows/hides a :class:`.PowerSpectrumControlPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
         self.togglePanel(
             pscontrol.PowerSpectrumControlPanel,
             self,
@@ -130,6 +133,9 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         
     @actions.toggleAction
     def togglePowerSpectrumList(self):
+        """Shows/hides a :class:`.PlotListPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """ 
         self.togglePanel(plotlistpanel.PlotListPanel, self, location=wx.TOP) 
 
 

@@ -459,6 +459,14 @@ class VolumeOpts(ImageOpts):
     purely to eliminate the need to calculate minimum/maximum values over very
     large (and potentially memory-mapped) images, which can be a time
     consuming operation.
+
+
+    ``VolumeOpts`` instances provide the following  :mod:`.actions`:
+
+    .. autosummary::
+       :nosignatures:
+
+       resetDisplayRange
     """
 
     

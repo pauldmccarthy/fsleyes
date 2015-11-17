@@ -31,8 +31,17 @@ class LoadColourMapAction(actions.Action):
     loaded colour map in *FSLeyes*.
     """
 
-    def __init__(self):
+    
+    def __init__(self, overlayList, displayCtx):
+        """Create a ``LoadColourMapAction``.
+        
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`. 
+        """
         actions.Action.__init__(self, self.__loadColourMap)
+
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx 
 
         
     def __loadColourMap(self):
@@ -95,8 +104,8 @@ class LoadColourMapAction(actions.Action):
 
         # register the selected colour map file
         fslcmap.registerColourMap(cmapFile,
-                                  self._overlayList,
-                                  self._displayCtx,
+                                  self.__overlayList,
+                                  self.__displayCtx,
                                   cmapName)
 
         # ask the user if they want to install

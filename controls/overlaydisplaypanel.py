@@ -244,7 +244,8 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
         overlays with a :attr:`.Display.overlayType`  of ``'volume'``.
         """
 
-        action = loadcmap.LoadColourMapAction()
+        action = loadcmap.LoadColourMapAction(self._displayCtx,
+                                              self._overlayList)
 
         button = wx.Button(self.__widgets)
         button.SetLabel(strings.labels[self, 'loadCmap'])

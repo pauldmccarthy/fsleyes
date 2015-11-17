@@ -53,14 +53,16 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
        ~fsl.fsleyes.controls.histogramcontrolpanel.HistogramControlPanel
 
     
-    The following actions are provided, in addition to those already provided
-    by the :class:`.PlotPanel`:
+    The following :mod:`actions` are provided, in addition to those already
+    provided by the :class:`.PlotPanel`:
 
-    ========================== ============================================
-    ``toggleHistogramList``    Show/hide a :class:`.PlotListPanel`.
-    ``toggleHistogramControl`` Show/hide a :class:`.HistogramControlPanel`.
-    ========================== ============================================
+    .. autosummary::
+       :nosignatures:
+   
+       toggleHistogramList
+       toggleHistogramControl
 
+    
     The ``PlotListPanel`` and ``HistogramControlPanel`` are both shown
     by default when a new ``HistogramPanel`` is created.
     """
@@ -110,11 +112,17 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         
     @actions.toggleAction
     def toggleHistogramList(self):
+        """Shows/hides a :class:`.PlotListPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
         self.togglePanel(plotlistpanel.PlotListPanel, self, location=wx.TOP)
 
         
     @actions.toggleAction
     def toggleHistogramControl(self):
+        """Shows/hides a :class:`.HistogramControlPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
         self.togglePanel(
             histogramcontrolpanel.HistogramControlPanel,
             self,

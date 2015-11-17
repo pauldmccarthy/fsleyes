@@ -25,8 +25,10 @@ class SaveOverlayAction(actions.Action):
 
     
     def __init__(self, overlayList, displayCtx):
-        """Create a ``SaveOverlayAction``. All arguments are passed through
-        to the :class:`.Action` constructor.
+        """Create a ``SaveOverlayAction``. 
+        
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`. 
         """
         actions.Action.__init__(self, self.__saveOverlay)
 

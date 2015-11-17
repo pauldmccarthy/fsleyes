@@ -89,7 +89,7 @@ class PlotPanel(viewpanel.ViewPanel):
 
     **Plot panel actions**
 
-    A number of actions are also provided by the ``PlotPanel`` class:
+    A number of :mod:`actions` are also provided by the ``PlotPanel`` class:
 
     .. autosummary::
        :nosignatures:
@@ -296,7 +296,7 @@ class PlotPanel(viewpanel.ViewPanel):
 
     @actions.action
     def screenshot(self, *a):
-        """Prompts the user  to select a file name, then saves a screenshot
+        """Prompts the user to select a file name, then saves a screenshot
         of the current plot.
         """
 

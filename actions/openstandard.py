@@ -25,7 +25,14 @@ class OpenStandardAction(actions.Action):
     """The ``OpenStandardAction`` prompts the user to open one or more
     overlays, using ``$FSLDIR/data/standard/`` as the default directory.
     """
+
+    
     def __init__(self, overlayList, displayCtx):
+        """Create an ``OpenStandardAction``.
+
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`.
+        """ 
         actions.Action.__init__(self, self.__openStandard)
 
         self.__overlayList = overlayList

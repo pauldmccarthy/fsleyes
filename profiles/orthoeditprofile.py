@@ -60,17 +60,15 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     The ``OrthoEditProfile`` defines the following actions, on top of those
     already defined by the :class:`.OrthoViewProfile`:
 
-    =========================== ============================================
-    ``undo``                    Un-does the most recent action.
-    ``redo``                    Re-does the most recent undone action.
-    ``fillSelection``           Fills the current selection with the current
-                                :attr:`fillValue`.
-    ``clearSelection``          Clears the current selection.
-    ``createMaskFromSelection`` Creates a mask :class:`.Image` from the
-                                current selection.
-    ``createROIFromSelection``  Creates a ROI :class:`.Image` from the
-                                current selection.
-    =========================== ============================================
+    .. autosummary::
+       :nosignatures:
+
+       undo
+       redo
+       fillSelection
+       clearSelection
+       createMaskFromSelection
+       createROIFromSelection
 
     
     **Annotations**

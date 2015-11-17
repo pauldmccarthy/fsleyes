@@ -68,14 +68,14 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
     
     The ``TimeSeriesPanel`` defines some :mod:`.actions`, allowing the user
-    to show/hide these control panels (see the :meth:`.ViewPanel.togglePanel`
-    method):
+    to show/hide these control panels:
 
-    =========================== ===============================================
-    ``toggleTimeSeriesList``    Shows/hides a :class:`.PlotListPanel`.
-    ``toggleTimeSeriesControl`` Shows/hides a :class:`.TimeSeriesControlPanel`.
-    =========================== ===============================================
+    .. autosummary::
+       :nosignatures:
 
+       toggleTimeSeriesList
+       toggleTimeSeriesControl
+ 
     New ``TimeSeriesPanel`` instances will display a ``PlotListPanel``
     and a ``TimeSeriesControlPanel`` by default.
 
@@ -168,11 +168,17 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
     @actions.toggleAction
     def toggleTimeSeriesList(self):
+        """Shows/hides a :class:`.PlotListPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
         self.togglePanel(plotlistpanel.PlotListPanel, self, location=wx.TOP)
 
         
     @actions.toggleAction
     def toggleTimeSeriesControl(self):
+        """Shows/hides a :class:`.TimeSeriesControlPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
         self.togglePanel(
             timeseriescontrolpanel.TimeSeriesControlPanel,
             self,
