@@ -55,10 +55,8 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """ 
 
-        actionz = {'more' : self.showMoreSettings}
-        
         fsltoolbar.FSLEyesToolBar.__init__(
-            self, parent, overlayList, displayCtx, 24, actionz)
+            self, parent, overlayList, displayCtx, 24)
         
         self.orthoPanel = ortho
 
@@ -86,12 +84,12 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
         profile   = ortho.getCurrentProfile()
 
         icons = {
-            'screenshot'  : fslicons.findImageFile('camera24'),
-            'movieMode'   : fslicons.findImageFile('movie24'),
-            'showXCanvas' : fslicons.findImageFile('sagittalSlice24'),
-            'showYCanvas' : fslicons.findImageFile('coronalSlice24'),
-            'showZCanvas' : fslicons.findImageFile('axialSlice24'),
-            'more'        : fslicons.findImageFile('gear24'),
+            'screenshot'       : fslicons.findImageFile('camera24'),
+            'movieMode'        : fslicons.findImageFile('movie24'),
+            'showXCanvas'      : fslicons.findImageFile('sagittalSlice24'),
+            'showYCanvas'      : fslicons.findImageFile('coronalSlice24'),
+            'showZCanvas'      : fslicons.findImageFile('axialSlice24'),
+            'showMoreSettings' : fslicons.findImageFile('gear24'),
 
             'resetZoom'    : fslicons.findImageFile('resetZoom24'),
             'centreCursor' : fslicons.findImageFile('centre24'),
@@ -114,21 +112,21 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
             'displaySpace' : fsltooltips.properties[dctx,      'displaySpace'],
             'resetZoom'    : fsltooltips.actions[   profile,   'resetZoom'],
             'centreCursor' : fsltooltips.actions[   profile,   'centreCursor'],
-            'more'         : fsltooltips.actions[   self,      'more'],
+            'showMoreSettings' : fsltooltips.actions[self, 'showMoreSettings'],
             
         }
         
-        targets    = {'screenshot'   : ortho,
-                      'movieMode'    : ortho,
-                      'zoom'         : orthoOpts,
-                      'layout'       : orthoOpts,
-                      'showXCanvas'  : orthoOpts,
-                      'showYCanvas'  : orthoOpts,
-                      'showZCanvas'  : orthoOpts,
-                      'displaySpace' : dctx,
-                      'resetZoom'    : profile,
-                      'centreCursor' : profile,
-                      'more'         : self}
+        targets    = {'screenshot'       : ortho,
+                      'movieMode'        : ortho,
+                      'zoom'             : orthoOpts,
+                      'layout'           : orthoOpts,
+                      'showXCanvas'      : orthoOpts,
+                      'showYCanvas'      : orthoOpts,
+                      'showZCanvas'      : orthoOpts,
+                      'displaySpace'     : dctx,
+                      'resetZoom'        : profile,
+                      'centreCursor'     : profile,
+                      'showMoreSettings' : self}
 
         def displaySpaceOptionName(opt):
 
@@ -140,9 +138,9 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
 
         toolSpecs = [
 
-            actions.ActionButton('more',
-                                 icon=icons['more'],
-                                 tooltip=tooltips['more']),
+            actions.ActionButton('showMoreSettings',
+                                 icon=icons['showMoreSettings'],
+                                 tooltip=tooltips['showMoreSettings']),
             actions.ActionButton('screenshot',
                                  icon=icons['screenshot'],
                                  tooltip=tooltips['screenshot']),
@@ -192,7 +190,8 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
 
         self.SetTools(tools, destroy=True) 
 
-    
+
+    @actions.ToggleAction
     def showMoreSettings(self, *a):
         """Opens a :class:`.CanvasSettingsPanel` for the
         :class:`.OrthoPanel` that owns this ``OrthoToolBar``.

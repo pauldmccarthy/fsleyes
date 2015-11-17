@@ -397,8 +397,12 @@ properties = TypeDict({
 actions = TypeDict({
     'CanvasPanel.screenshot'        : 'Take a screenshot of the current scene',
     
-    'OrthoToolBar.more'             : 'Show more view control settings',
-    'LightBoxToolBar.more'          : 'Show more view control settings',
+    'OrthoToolBar.showMoreSettings'          : 'Show more view '
+                                               'control settings',
+    'LightBoxToolBar.showMoreSettings'       : 'Show more view '
+                                               'control settings',
+    'OverlayDisplayToolBar.showMoreSettings' : 'Show more overlay '
+                                               'display settings',
 
     'OrthoViewProfile.resetZoom'    : 'Reset zoom level to 100%',
     'OrthoViewProfile.centreCursor' : 'Reset location to centre of scene',
@@ -416,8 +420,6 @@ actions = TypeDict({
 
     'VolumeOpts.resetDisplayRange' : 'Reset the display range '
                                      'to the data range.',
-    
-    'OverlayDisplayToolBar.more' : 'Show more overlay display settings.',
 })
 
 

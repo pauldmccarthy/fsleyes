@@ -32,6 +32,7 @@ from matplotlib.backends.backend_wx    import NavigationToolbar2Wx
 import                           props
 import                           viewpanel
 import fsl.data.strings       as strings
+import fsl.fsleyes.actions    as actions
 import fsl.fsleyes.colourmaps as fslcm
 
 
@@ -166,7 +167,6 @@ class PlotPanel(viewpanel.ViewPanel):
                  parent,
                  overlayList,
                  displayCtx,
-                 actionz=None,
                  interactive=True):
         """Create a ``PlotPanel``.
 
@@ -176,21 +176,12 @@ class PlotPanel(viewpanel.ViewPanel):
         
         :arg displayCtx:  A :class:`.DisplayContext` instance.
         
-        :arg actionz:     A dictionary of ``{ name : function }``
-                          mappings, containing actions implemented by
-                          the sub-class.
-
         :arg interactive: If ``True`` (the default), the canvas is configured
                           so the user can pan/zoom the plot with the mouse.
         """
-        
-        if actionz is None:
-            actionz = {}
-
-        actionz = dict([('screenshot', self.screenshot)] + actionz.items())
-        
+         
         viewpanel.ViewPanel.__init__(
-            self, parent, overlayList, displayCtx, actionz)
+            self, parent, overlayList, displayCtx)
 
         figure = plt.Figure()
         axis   = figure.add_subplot(111)
@@ -302,7 +293,8 @@ class PlotPanel(viewpanel.ViewPanel):
             
         viewpanel.ViewPanel.destroy(self)
 
-    
+
+    @actions.Action
     def screenshot(self, *a):
         """Prompts the user  to select a file name, then saves a screenshot
         of the current plot.
@@ -333,11 +325,13 @@ class PlotPanel(viewpanel.ViewPanel):
                 wx.ICON_ERROR)
 
 
+    # @actions.Action
     def importDataSeries(self, *a):
         """Not implemented yet. Imports data series from a text file."""
         pass
 
 
+    # @actions.Action
     def exportDataSeries(self, *a):
         """Not implemented yet. Exports displayed data series to a text file.
         """

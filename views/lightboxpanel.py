@@ -15,12 +15,12 @@ import wx
 
 import numpy as np
 
-import fsl.utils.layout                           as fsllayout
-import fsl.fsleyes.gl.wxgllightboxcanvas          as lightboxcanvas
-import fsl.fsleyes.controls.lightboxtoolbar       as lightboxtoolbar
-import fsl.fsleyes.controls.overlaydisplaytoolbar as overlaydisplaytoolbar
-import fsl.fsleyes.displaycontext.lightboxopts    as lightboxopts
-import                                               canvaspanel
+import fsl.utils.layout                        as fsllayout
+import fsl.fsleyes.actions                     as actions
+import fsl.fsleyes.gl.wxgllightboxcanvas       as lightboxcanvas
+import fsl.fsleyes.controls.lightboxtoolbar    as lightboxtoolbar
+import fsl.fsleyes.displaycontext.lightboxopts as lightboxopts
+import                                            canvaspanel
 
 
 log = logging.getLogger(__name__)
@@ -73,17 +73,11 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         sceneOpts = lightboxopts.LightBoxOpts()
 
-        actionz = {
-            'toggleLightBoxToolBar' : lambda *a: self.togglePanel(
-                lightboxtoolbar.LightBoxToolBar, lb=self)
-        }
-
         canvaspanel.CanvasPanel.__init__(self,
                                          parent,
                                          overlayList,
                                          displayCtx,
-                                         sceneOpts,
-                                         actionz)
+                                         sceneOpts)
 
         self.__scrollbar = wx.ScrollBar(
             self.getCentrePanel(),
@@ -169,9 +163,8 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # struggle if we add these toolbars
         # immediately, so we'll do it asynchronously
         def addToolbars():
-            self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar,
-                             viewPanel=self)
-            self.togglePanel(lightboxtoolbar.LightBoxToolBar, lb=self)
+            self.toggleDisplayProperties()
+            self.toggleLightBoxToolBar()
 
         wx.CallAfter(addToolbars)
 
@@ -190,6 +183,11 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         self.__lbCanvas.destroy()
 
         canvaspanel.CanvasPanel.destroy(self)
+
+
+    @actions.ToggleAction
+    def toggleLightBoxToolBar(self):
+        self.togglePanel(lightboxtoolbar.LightBoxToolBar, lb=self)
 
 
     def getGLCanvases(self):

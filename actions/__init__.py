@@ -18,6 +18,7 @@ Some 'global' actions are also provided in this package:
  .. autosummary::
 
     ~fsl.fsleyes.actions.copyoverlay
+    ~fsl.fsleyes.actions.loadcolourmap
     ~fsl.fsleyes.actions.openfile
     ~fsl.fsleyes.actions.openstandard
     ~fsl.fsleyes.actions.saveoverlay
@@ -57,7 +58,6 @@ def listGlobalActions():
             saveoverlay .SaveOverlayAction]
 
 
-
 class ActionButton(props.Button):
     """Extends the :class:`props.Button` class to encapsulate an
     :class:`Action` instance.
@@ -73,7 +73,7 @@ class ActionButton(props.Button):
         :arg kwargs:     Passed to the :class:`props.Button` constructor.
         """
 
-        self.name = actionName
+        self.__name = actionName
 
         if classType is not None:
             text = strings.actions.get((classType, actionName), actionName)
@@ -94,13 +94,14 @@ class ActionButton(props.Button):
         ``Action`` instance.
         """
         import wx
-        instance.getAction(self.name).bindToWidget(
+        instance.getAction(self.__name).bindToWidget(
             parent, wx.EVT_BUTTON, widget)
 
         
     def __onButton(self, instance, *a):
         """Called when the button is pushed. Runs the action."""
-        instance.getAction(self.name)()
+        instance.getAction(self.__name)()
+
 
 
 class ActionDisabledError(Exception):
@@ -152,7 +153,9 @@ class Action(props.HasProperties):
             raise ActionDisabledError('Action {} is disabled'.format(
                 self.__name))
 
-        log.debug('Action {} called'.format(self.__name))
+        log.debug('Action {}.{} called'.format(
+            type(self.__instance).__name__,
+            self.__name))
 
         if self.__instance is not None:
             args = [self.__instance] + list(args)

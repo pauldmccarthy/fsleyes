@@ -254,11 +254,18 @@ class FSLEyesFrame(wx.Frame):
 
         self.__viewPanelMenus[panel] = submenu
 
-        for actionName, actionObj in actionz.items():
+        for actionName, actionObj in actionz:
+
+            if isinstance(actionObj, actions.ToggleAction):
+                kind = wx.ITEM_CHECK
+            else:
+                kind = wx.ITEM_NORMAL
             
             menuItem = menu.Append(
                 wx.ID_ANY,
-                strings.actions[panel, actionName])
+                strings.actions[panel, actionName],
+                kind=kind)
+            
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
         # Add a 'Close' action to
@@ -511,11 +518,8 @@ class FSLEyesFrame(wx.Frame):
             # Set up a default for ortho views
             # layout (this will hopefully eventually
             # be restored from a saved state)
-            import fsl.fsleyes.controls.overlaylistpanel as olp
-            import fsl.fsleyes.controls.locationpanel    as lop
-
-            viewPanel.togglePanel(olp.OverlayListPanel)
-            viewPanel.togglePanel(lop.LocationPanel)
+            viewPanel.toggleOverlayList()
+            viewPanel.toggleLocationPanel()
 
             
     def __makeMenuBar(self):

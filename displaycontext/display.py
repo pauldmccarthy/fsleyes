@@ -326,7 +326,7 @@ class Display(props.SyncableHasProperties):
         self.__restoreOldDisplayOpts()
 
 
-class DisplayOpts(actions.ActionProvider):
+class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
     """The ``DisplayOpts`` class contains overlay type specific display
     settings. ``DisplayOpts`` instances are managed by :class:`Display`
     instances.
@@ -391,20 +391,14 @@ class DisplayOpts(actions.ActionProvider):
         
         :arg displayCtx:  A :class:`.DisplayContext` instance describing
                           how the overlays are to be displayed.
-        
-        :arg kwargs:      Passed through to the
-                          :class:`.ActionProvider` constructor.
         """
 
         nounbind = kwargs.get('nounbind', [])
         nounbind.append('bounds')
         kwargs['nounbind'] = nounbind
 
-        actions.ActionProvider.__init__(
-            self,
-            overlayList,
-            displayCtx,
-            **kwargs)
+        props.SyncableHasProperties.__init__(self, **kwargs)
+        actions.ActionProvider     .__init__(self)
         
         self.overlay     = overlay
         self.display     = display

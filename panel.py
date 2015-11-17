@@ -42,6 +42,8 @@ import logging
 
 import wx
 
+import props
+
 import actions
 import displaycontext
 
@@ -49,7 +51,7 @@ import displaycontext
 log = logging.getLogger(__name__)
 
 
-class _FSLEyesPanel(actions.ActionProvider):
+class _FSLEyesPanel(actions.ActionProvider, props.SyncableHasProperties):
     """The ``_FSLEyesPanel`` is the base class for the :class:`.FSLEyesPanel`
     and the :class:`.FSLEyesToolBar`.
 
@@ -72,22 +74,16 @@ class _FSLEyesPanel(actions.ActionProvider):
     """ 
 
     
-    def __init__(self,
-                 overlayList,
-                 displayCtx,
-                 actionz=None):
+    def __init__(self, overlayList, displayCtx):
         """Create a :class:`ViewPanel`.
 
         :arg overlayList: A :class:`.OverlayList` instance.
         
         :arg displayCtx:  A :class:`.DisplayContext` instance.
-
-        :arg actionz:     A dictionary containing ``{name -> function}``
-                          actions (see :class:`.ActionProvider`).
         """
         
-        actions.ActionProvider.__init__(
-            self, overlayList, displayCtx, actions=actionz)
+        actions.ActionProvider     .__init__(self)
+        props.SyncableHasProperties.__init__(self)
 
         if not isinstance(displayCtx, displaycontext.DisplayContext):
             raise TypeError(
@@ -151,6 +147,6 @@ class FSLEyesPanel(_FSLEyesPanel, wx.PyPanel):
     *FSLeyes*. See the :mod:`~fsl.fsleyes` documentation for more details.
     """
     
-    def __init__(self, parent, overlayList, displayCtx, actionz=None):
+    def __init__(self, parent, overlayList, displayCtx):
         wx.PyPanel.__init__(self, parent)
-        _FSLEyesPanel.__init__(self, overlayList, displayCtx, actionz)
+        _FSLEyesPanel.__init__(self, overlayList, displayCtx)

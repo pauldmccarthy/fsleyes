@@ -18,6 +18,7 @@ import numpy as np
 import props
 
 import                                                   plotpanel
+import fsl.fsleyes.actions                            as actions
 import fsl.fsleyes.plotting.powerspectrumseries       as psseries
 import fsl.fsleyes.controls.powerspectrumcontrolpanel as pscontrol
 import fsl.fsleyes.controls.plotlistpanel             as plotlistpanel
@@ -88,23 +89,11 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
         """
-
-        actionz = {
-            'togglePowerSpectrumControl' : lambda *a: self.togglePanel(
-                pscontrol.PowerSpectrumControlPanel,
-                self,
-                location=wx.TOP),
-            'togglePowerSpectrumList' : lambda *a: self.togglePanel(
-                plotlistpanel.PlotListPanel,
-                self,
-                location=wx.TOP) 
-        }
         
         plotpanel.OverlayPlotPanel.__init__(self,
                                             parent,
                                             overlayList,
-                                            displayCtx,
-                                            actionz=actionz)
+                                            displayCtx)
 
 
         self.addListener('plotFrequencies', self._name, self.draw)
@@ -113,8 +102,8 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
                                 self.__plotMelodicICsChanged)
 
         def addPanels():
-            self.run('togglePowerSpectrumControl') 
-            self.run('togglePowerSpectrumList') 
+            self.togglePowerSpectrumControl()
+            self.togglePowerSpectrumList() 
 
         wx.CallAfter(addPanels)
         self.draw()
@@ -129,6 +118,19 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         self.removeListener('plotFrequencies', self._name)
         self.removeListener('plotMelodicICs',  self._name)
         plotpanel.OverlayPlotPanel.destroy(self)
+
+
+    @actions.ToggleAction
+    def togglePowerSpectrumControl(self):
+        self.togglePanel(
+            pscontrol.PowerSpectrumControlPanel,
+            self,
+            location=wx.TOP)
+
+        
+    @actions.ToggleAction
+    def togglePowerSpectrumList(self):
+        self.togglePanel(plotlistpanel.PlotListPanel, self, location=wx.TOP) 
 
 
     def draw(self, *a):

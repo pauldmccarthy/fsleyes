@@ -78,11 +78,9 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         :arg viewPanel:   The :class:`.ViewPanel` which this
                           ``OverlayDisplayToolBar`` is owned by.
         """
-
-        actionz = {'more' : self.showMoreSettings}
         
         fsltoolbar.FSLEyesToolBar.__init__(
-            self, parent, overlayList, displayCtx, 24, actionz)
+            self, parent, overlayList, displayCtx, 24)
 
         self.__viewPanel      = viewPanel
         self.__currentOverlay = None
@@ -121,6 +119,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         fsltoolbar.FSLEyesToolBar.destroy(self)
 
 
+    @actions.ToggleAction
     def showMoreSettings(self, *a):
         """Shows/hides a :class:`.OverlayDisplayPanel` dialog. """
         self.__viewPanel.togglePanel(overlaydisplay.OverlayDisplayPanel,
@@ -164,9 +163,9 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
             self,
             self,
             view=actions.ActionButton(
-                'more',
+                'showMoreSettings',
                 icon=icons.findImageFile('gear24'),
-                tooltip=fsltooltips.actions[self, 'more']))
+                tooltip=fsltooltips.actions[self, 'showMoreSettings']))
 
         tools.insert(0, more)
 

@@ -23,15 +23,19 @@ _stringID = 'actions.loadcolourmap.'
 
 
 class LoadColourMapAction(actions.Action):
-    """The ``LoadColourMapAction`` allows the yser to select a colour
+    """The ``LoadColourMapAction`` allows the user to select a colour
     map file and give it a name.
 
     The loaded colour map is then registered with the :mod:`.colourmaps`
     module. The user is also given the option to permanently save the
     loaded colour map in *FSLeyes*.
     """
-    
-    def doAction(self):
+
+    def __init__(self):
+        actions.Action.__init__(self, self.__loadColourMap)
+
+        
+    def __loadColourMap(self):
         """This method does the following:
 
         1. Prompts the user to select a colour map file

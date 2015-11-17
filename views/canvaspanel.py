@@ -12,7 +12,6 @@ class for all panels which display overlays using ``OpenGL``.
 import os
 import os.path as op
 import logging
-import collections
 
 import wx
 
@@ -26,6 +25,7 @@ import fsl.utils.dialog                                as fsldlg
 import fsl.utils.settings                              as fslsettings
 import fsl.data.image                                  as fslimage
 import fsl.data.strings                                as strings
+import fsl.fsleyes.actions                             as actions
 import fsl.fsleyes.displaycontext                      as displayctx
 import fsl.fsleyes.controls.overlaylistpanel           as overlaylistpanel
 import fsl.fsleyes.controls.overlayinfopanel           as overlayinfopanel
@@ -222,12 +222,7 @@ class CanvasPanel(viewpanel.ViewPanel):
     """
     
 
-    def __init__(self,
-                 parent,
-                 overlayList,
-                 displayCtx,
-                 sceneOpts,
-                 extraActions=None):
+    def __init__(self, parent, overlayList, displayCtx, sceneOpts):
         """Create a ``CanvasPanel``.
 
         :arg parent:       The :mod:`wx` parent object.
@@ -239,54 +234,9 @@ class CanvasPanel(viewpanel.ViewPanel):
         :arg sceneOpts:    A :class:`.SceneOpts` instance for this
                            ``CanvasPanel`` - must be created by
                            sub-classes.
-        
-        :arg extraActions: A dictionary of ``{name : function}`` mappings,
-                           containing extra actions defined by sub-classes.
         """
 
-        if extraActions is None:
-            extraActions = {}
-
-        actionz = [
-            ('screenshot',                self.screenshot),
-            ('showCommandLineArgs',       self.showCommandLineArgs),
-            ('toggleOverlayList',         lambda *a: self.togglePanel(
-                overlaylistpanel.OverlayListPanel,
-                location=wx.BOTTOM)),
-            ('toggleOverlayInfo',         lambda *a: self.togglePanel(
-                overlayinfopanel.OverlayInfoPanel,
-                location=wx.LEFT)), 
-            ('toggleAtlasPanel',          lambda *a: self.togglePanel(
-                atlaspanel.AtlasPanel,
-                location=wx.BOTTOM)),
-            ('toggleDisplayProperties',   lambda *a: self.togglePanel(
-                overlaydisplaytoolbar.OverlayDisplayToolBar,
-                viewPanel=self)),
-            ('toggleLocationPanel',       lambda *a: self.togglePanel(
-                locationpanel.LocationPanel,
-                location=wx.BOTTOM)),
-            ('toggleClusterPanel',        lambda *a: self.togglePanel(
-                clusterpanel.ClusterPanel,
-                location=wx.TOP)), 
-            ('toggleLookupTablePanel',    lambda *a: self.togglePanel(
-                lookuptablepanel.LookupTablePanel,
-                location=wx.TOP)),
-            ('toggleClassificationPanel', lambda *a: self.togglePanel(
-                melclasspanel.MelodicClassificationPanel,
-                location=wx.RIGHT))]
-
-        actionz += extraActions.items()
-
-        actionz += [
-            ('toggleShell', lambda *a: self.togglePanel(
-                shellpanel.ShellPanel,
-                self.getSceneOptions(),
-                location=wx.BOTTOM))]
-        
-        actionz = collections.OrderedDict(actionz)
-        
-        viewpanel.ViewPanel.__init__(
-            self, parent, overlayList, displayCtx, actionz)
+        viewpanel.ViewPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__opts = sceneOpts
         
@@ -353,20 +303,70 @@ class CanvasPanel(viewpanel.ViewPanel):
             
         viewpanel.ViewPanel.destroy(self)
 
-    
-    def screenshot(self, *a):
+
+    @actions.Action
+    def screenshot(self):
         """Takes a screenshot of the currently displayed scene on this
         ``CanvasPanel``. See the :func:`_screenshot` function.
         """
         _screenshot(self._overlayList, self._displayCtx, self)
 
 
-    def showCommandLineArgs(self, *a):
+    @actions.Action
+    def showCommandLineArgs(self):
         """Shows the command line arguments which can be used to re-create
         the currently displayed scene. See the :func:`_showCommandLineArgs`
         function.
         """
         _showCommandLineArgs(self._overlayList, self._displayCtx, self)
+
+        
+    @actions.ToggleAction
+    def toggleOverlayList(self):
+        self.togglePanel(overlaylistpanel.OverlayListPanel, location=wx.BOTTOM)
+
+    
+    @actions.ToggleAction
+    def toggleOverlayInfo(self):
+        self.togglePanel(overlayinfopanel.OverlayInfoPanel, location=wx.LEFT) 
+    
+
+    @actions.ToggleAction
+    def toggleAtlasPanel(self):
+        self.togglePanel(atlaspanel.AtlasPanel, location=wx.BOTTOM) 
+
+
+    @actions.ToggleAction
+    def toggleDisplayProperties(self):
+        self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar,
+                         viewPanel=self)
+        
+
+    @actions.ToggleAction
+    def toggleLocationPanel(self):
+        self.togglePanel(locationpanel.LocationPanel, location=wx.BOTTOM) 
+
+
+    @actions.ToggleAction
+    def toggleClusterPanel(self):
+        self.togglePanel(clusterpanel.ClusterPanel, location=wx.TOP) 
+
+
+    @actions.ToggleAction
+    def toggleLookupTablePanel(self):
+        self.togglePanel(lookuptablepanel.LookupTablePanel, location=wx.TOP)
+
+    @actions.ToggleAction
+    def toggleClassificationPanel(self):
+        self.togglePanel(melclasspanel.MelodicClassificationPanel,
+                         location=wx.RIGHT)
+
+
+    @actions.ToggleAction
+    def toggleShell(self):
+        self.togglePanel(shellpanel.ShellPanel,
+                         self.getSceneOptions(),
+                         location=wx.BOTTOM) 
 
 
     def getSceneOptions(self):

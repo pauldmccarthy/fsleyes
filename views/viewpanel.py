@@ -71,13 +71,12 @@ class ViewPanel(fslpanel.FSLEyesPanel):
     """The current interaction profile for this ``ViewPanel``. """
 
     
-    def __init__(self, parent, overlayList, displayCtx, actionz=None):
+    def __init__(self, parent, overlayList, displayCtx):
         """Create a ``ViewPanel``. All arguments are passed through to the
         :class:`.FSLEyesPanel` constructor.
         """
 
-        fslpanel.FSLEyesPanel.__init__(
-            self, parent, overlayList, displayCtx, actionz)
+        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__profileManager = profiles.ProfileManager(
             self, overlayList, displayCtx)

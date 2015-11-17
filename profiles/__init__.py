@@ -135,7 +135,7 @@ class ProfileManager(object):
         self.__currentProfile.register()
 
 
-class Profile(actions.ActionProvider):
+class Profile(props.SyncableHasProperties, actions.ActionProvider):
     """A :class:`Profile` class implements keyboard/mouse interaction behaviour
     for a :class:`.ViewPanel` instance.
 
@@ -234,8 +234,7 @@ class Profile(actions.ActionProvider):
                  viewPanel,
                  overlayList,
                  displayCtx,
-                 modes=None,
-                 actionz=None):
+                 modes=None):
         """Create a ``Profile`` instance.
 
         :arg viewPanel:   The :class:`.ViewPanel` instance for which this
@@ -251,14 +250,10 @@ class Profile(actions.ActionProvider):
         :arg modes:       A sequence of strings, containing the mode
                           identifiers for this profile. These are added as
                           options on the :attr:`mode` property.
-
-        :arg actionz:     A dictionary of ``{name : function}`` mappings 
-                          defining any actions provided by this instance; 
-                          see the :class:`.ActionProvider` class.
         """
 
-        actions.ActionProvider.__init__(
-            self, overlayList, displayCtx, actions=actionz)
+        actions.ActionProvider     .__init__(self)
+        props.SyncableHasProperties.__init__(self)
         
         self._viewPanel   = viewPanel
         self._overlayList = overlayList

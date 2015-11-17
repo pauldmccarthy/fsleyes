@@ -25,9 +25,9 @@ import fsl.data.strings                           as strings
 import fsl.data.constants                         as constants
 import fsl.utils.layout                           as fsllayout
 import fsl.fsleyes.gl                             as fslgl
+import fsl.fsleyes.actions                        as actions
 import fsl.fsleyes.colourmaps                     as colourmaps
 import fsl.fsleyes.gl.wxglslicecanvas             as slicecanvas
-import fsl.fsleyes.controls.overlaydisplaytoolbar as overlaydisplaytoolbar
 import fsl.fsleyes.controls.orthotoolbar          as orthotoolbar
 import fsl.fsleyes.controls.orthoedittoolbar      as orthoedittoolbar
 import fsl.fsleyes.displaycontext.orthoopts       as orthoopts
@@ -134,19 +134,11 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         sceneOpts = orthoopts.OrthoOpts()
 
-        actionz = {
-            'toggleOrthoToolBar' : lambda *a: self.togglePanel(
-                orthotoolbar.OrthoToolBar, ortho=self),
-            'toggleEditToolBar' : lambda *a: self.togglePanel(
-                orthoedittoolbar.OrthoEditToolBar, ortho=self), 
-        }
-
         canvaspanel.CanvasPanel.__init__(self,
                                          parent,
                                          overlayList,
                                          displayCtx,
-                                         sceneOpts,
-                                         actionz)
+                                         sceneOpts)
 
         contentPanel = self.getContentPanel()
 
@@ -246,12 +238,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # struggle if we add these toolbars
         # immediately, so we'll do it asynchronously 
         def _addToolbars():
-            self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar,
-                             viewPanel=self)
-            self.togglePanel(orthotoolbar.OrthoToolBar,
-                             ortho=self) 
-            self.togglePanel(orthoedittoolbar.OrthoEditToolBar,
-                             ortho=self) 
+            self.toggleDisplayProperties()
+            self.toggleOrthoToolBar()
+            self.toggleEditToolBar()
 
         if addToolbars:
             wx.CallAfter(_addToolbars)
@@ -282,6 +271,16 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             opts.removeListener('bounds', self._name)
 
         canvaspanel.CanvasPanel.destroy(self)
+
+
+    @actions.ToggleAction
+    def toggleOrthoToolBar(self):
+        self.togglePanel(orthotoolbar.OrthoToolBar, ortho=self)
+
+
+    @actions.ToggleAction
+    def toggleEditToolBar(self):
+        self.togglePanel(orthoedittoolbar.OrthoEditToolBar, ortho=self) 
 
             
     def getGLCanvases(self):

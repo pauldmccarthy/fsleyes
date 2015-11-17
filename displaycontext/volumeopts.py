@@ -78,6 +78,7 @@ import props
 
 import fsl.utils.transform    as transform
 import fsl.fsleyes.colourmaps as fslcm
+import fsl.fsleyes.actions    as actions
 import display                as fsldisplay
 
 
@@ -546,13 +547,11 @@ class VolumeOpts(ImageOpts):
         
         self.setConstraint('displayRange', 'minDistance', dMinDistance)
 
-        actionz = {'resetDisplayRange' : self.resetDisplayRange}
         ImageOpts.__init__(self,
                            overlay,
                            display,
                            overlayList,
                            displayCtx,
-                           actions=actionz,
                            **kwargs)
 
         # The displayRange property of every child VolumeOpts
@@ -580,6 +579,7 @@ class VolumeOpts(ImageOpts):
                            display.getSyncPropertyName('contrast'))
 
 
+    @actions.Action
     def resetDisplayRange(self):
         """Resets the display range to the data range."""
         self.displayRange.x = [self.dataMin, self.dataMax]

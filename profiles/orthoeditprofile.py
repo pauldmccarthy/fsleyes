@@ -17,6 +17,7 @@ import numpy                        as np
 import                                 props
 import fsl.data.image               as fslimage
 import fsl.data.strings             as strings
+import fsl.fsleyes.actions          as actions
 import fsl.fsleyes.editor.editor    as fsleditor
 import fsl.fsleyes.gl.annotations   as annotations
 
@@ -178,22 +179,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__selecting         = False
         self.__lastDist          = None
         self.__currentOverlay    = None
-        
-        actions = {
-            'undo'                    : self.undo,
-            'redo'                    : self.redo,
-            'fillSelection'           : self.fillSelection,
-            'clearSelection'          : self.clearSelection,
-            'createMaskFromSelection' : self.createMaskFromSelection,
-            'createROIFromSelection'  : self.createROIFromSelection}
+
 
         orthoviewprofile.OrthoViewProfile.__init__(
             self,
             viewPanel,
             overlayList,
             displayCtx,
-            ['sel', 'desel', 'selint'],
-            actions)
+            ['sel', 'desel', 'selint'])
 
         self.mode = 'sel'
 
@@ -283,8 +276,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             
         orthoviewprofile.OrthoViewProfile.deregister(self)
 
-    
-    def clearSelection(self, *a):
+
+    @actions.Action
+    def clearSelection(self):
         """Clears the current selection. See :meth:`.Editor.clearSelection`.
         """
         
@@ -298,7 +292,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self._viewPanel.Refresh()
 
 
-    def fillSelection(self, *a):
+    @actions.Action
+    def fillSelection(self):
         """Fills the current selection with the :attr:`fillValue`. See
         :meth:`.Editor.fillSelection`.
         """
@@ -310,8 +305,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         editor.fillSelection(self.fillValue)
         editor.getSelection().clearSelection()
 
-        
-    def createMaskFromSelection(self, *a):
+
+    @actions.Action
+    def createMaskFromSelection(self):
         """Creates a new mask :class:`.Image` from the current selection.
         See :meth:`.Editor.createMaskFromSelection`.
         """
@@ -320,8 +316,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         self.__editors[self.__currentOverlay].createMaskFromSelection()
 
-    
-    def createROIFromSelection(self, *a):
+
+    @actions.Action
+    def createROIFromSelection(self):
         """Creates a new ROI :class:`.Image` from the current selection.
         See :meth:`.Editor.createROIFromSelection`.
         """ 
@@ -331,7 +328,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__editors[self.__currentOverlay].createROIFromSelection() 
 
 
-    def undo(self, *a):
+    @actions.Action
+    def undo(self):
         """Un-does the most recent change to the selection or to the
         :class:`.Image` data. See :meth:`.Editor.undo`.
         """
@@ -360,7 +358,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self._viewPanel.Refresh()
 
 
-    def redo(self, *a):
+    @actions.Action
+    def redo(self):
         """Re-does the most recent undone change to the selection or to the
         :class:`.Image` data. See :meth:`.Editor.redo`.
         """
@@ -395,8 +394,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                       editor.canUndo,
                       editor.canRedo))
         
-        self.enable('undo', editor.canUndo)
-        self.enable('redo', editor.canRedo)
+        self.undo.enable = editor.canUndo
+        self.redo.enable = editor.canRedo
 
 
     def __selectionColoursChanged(self, *a):
@@ -604,10 +603,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         #      start/end of a mouse drag?
         selSize   = selection.getSelectionSize()
 
-        self.enable('createMaskFromSelection', selSize > 0)
-        self.enable('createROIFromSelection',  selSize > 0)
-        self.enable('clearSelection',          selSize > 0)
-        self.enable('fillSelection',           selSize > 0)
+        self.createMaskFromSelection.enable = selSize > 0
+        self.createROIFromSelection .enable = selSize > 0
+        self.clearSelection         .enable = selSize > 0
+        self.fillSelection          .enable = selSize > 0
 
     
     def __getVoxelLocation(self, canvasPos):

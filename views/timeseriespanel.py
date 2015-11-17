@@ -19,6 +19,7 @@ import                                                plotpanel
 import fsl.data.featimage                          as fslfeatimage
 import fsl.data.melodicimage                       as fslmelimage
 import fsl.data.image                              as fslimage
+import fsl.fsleyes.actions                         as actions
 import fsl.fsleyes.plotting                        as plotting
 import fsl.fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
 import fsl.fsleyes.controls.plotlistpanel          as plotlistpanel
@@ -136,19 +137,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         :arg displayCtx:  A :class:`.DisplayContext` instance.
         """
 
-        actionz = {
-            'toggleTimeSeriesList'    : lambda *a: self.togglePanel(
-                plotlistpanel.PlotListPanel,
-                self,
-                location=wx.TOP),
-            'toggleTimeSeriesControl' : lambda *a: self.togglePanel(
-                timeseriescontrolpanel.TimeSeriesControlPanel,
-                self,
-                location=wx.TOP) 
-        }
-
         plotpanel.OverlayPlotPanel.__init__(
-            self, parent, overlayList, displayCtx, actionz=actionz)
+            self, parent, overlayList, displayCtx)
 
         self.addListener('plotMode',  self._name, self.draw)
         self.addListener('usePixdim', self._name, self.draw)
@@ -157,8 +147,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
                          self.__plotMelodicICsChanged)
 
         def addPanels():
-            self.run('toggleTimeSeriesControl') 
-            self.run('toggleTimeSeriesList') 
+            self.toggleTimeSeriesControl()
+            self.toggleTimeSeriesList()
 
         wx.CallAfter(addPanels)
         self.draw()
@@ -173,7 +163,20 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         self.removeListener('usePixdim',      self._name)
         self.removeListener('plotMelodicICs', self._name)
         
-        plotpanel.OverlayPlotPanel.destroy(self) 
+        plotpanel.OverlayPlotPanel.destroy(self)
+
+
+    @actions.ToggleAction
+    def toggleTimeSeriesList(self):
+        self.togglePanel(plotlistpanel.PlotListPanel, self, location=wx.TOP)
+
+        
+    @actions.ToggleAction
+    def toggleTimeSeriesControl(self):
+        self.togglePanel(
+            timeseriescontrolpanel.TimeSeriesControlPanel,
+            self,
+            location=wx.TOP) 
 
 
     def draw(self, *a):

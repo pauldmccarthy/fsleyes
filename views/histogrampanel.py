@@ -20,6 +20,7 @@ import props
 import fsl.data.image                             as fslimage
 import fsl.data.strings                           as strings
 import fsl.utils.dialog                           as fsldlg
+import fsl.fsleyes.actions                        as actions
 import fsl.fsleyes.plotting.histogramseries       as histogramseries
 import fsl.fsleyes.controls.histogramcontrolpanel as histogramcontrolpanel
 import fsl.fsleyes.controls.plotlistpanel         as plotlistpanel
@@ -85,25 +86,14 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """
 
-        actionz = {
-            'toggleHistogramList'    : lambda *a: self.togglePanel(
-                plotlistpanel.PlotListPanel,
-                self,
-                location=wx.TOP),
-            'toggleHistogramControl' : lambda *a: self.togglePanel(
-                histogramcontrolpanel.HistogramControlPanel,
-                self,
-                location=wx.TOP) 
-        }
-
         plotpanel.OverlayPlotPanel.__init__(
-            self, parent, overlayList, displayCtx, actionz)
+            self, parent, overlayList, displayCtx)
 
         self.addListener('histType', self._name, self.draw)
 
         def addPanels():
-            self.run('toggleHistogramControl') 
-            self.run('toggleHistogramList')
+            self.toggleHistogramControl()
+            self.toggleHistogramList()
 
         wx.CallAfter(addPanels) 
 
@@ -117,7 +107,20 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         
         plotpanel.OverlayPlotPanel.destroy(self)
 
+        
+    @actions.ToggleAction
+    def toggleHistogramList(self):
+        self.togglePanel(plotlistpanel.PlotListPanel, self, location=wx.TOP)
 
+        
+    @actions.ToggleAction
+    def toggleHistogramControl(self):
+        self.togglePanel(
+            histogramcontrolpanel.HistogramControlPanel,
+            self,
+            location=wx.TOP) 
+
+        
     def draw(self, *a):
         """Overrides :meth:`.PlotPanel.draw`. Passes some
         :class:`.HistogramSeries` instances to the
