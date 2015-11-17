@@ -167,7 +167,7 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
         self.SetTools(tools) 
 
 
-    @actions.ToggleAction
+    @actions.toggleAction
     def showMoreSettings(self, *a):
         """Opens a :class:`.CanvasSettingsPanel` for the
         :class:`.LightBoxPanel` that owns this ``LightBoxToolBar``.

@@ -120,7 +120,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         plotpanel.OverlayPlotPanel.destroy(self)
 
 
-    @actions.ToggleAction
+    @actions.toggleAction
     def togglePowerSpectrumControl(self):
         self.togglePanel(
             pscontrol.PowerSpectrumControlPanel,
@@ -128,7 +128,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
             location=wx.TOP)
 
         
-    @actions.ToggleAction
+    @actions.toggleAction
     def togglePowerSpectrumList(self):
         self.togglePanel(plotlistpanel.PlotListPanel, self, location=wx.TOP) 
 

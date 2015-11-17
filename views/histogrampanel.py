@@ -108,12 +108,12 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         plotpanel.OverlayPlotPanel.destroy(self)
 
         
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleHistogramList(self):
         self.togglePanel(plotlistpanel.PlotListPanel, self, location=wx.TOP)
 
         
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleHistogramControl(self):
         self.togglePanel(
             histogramcontrolpanel.HistogramControlPanel,

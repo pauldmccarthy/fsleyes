@@ -294,7 +294,7 @@ class PlotPanel(viewpanel.ViewPanel):
         viewpanel.ViewPanel.destroy(self)
 
 
-    @actions.Action
+    @actions.action
     def screenshot(self, *a):
         """Prompts the user  to select a file name, then saves a screenshot
         of the current plot.
@@ -325,13 +325,13 @@ class PlotPanel(viewpanel.ViewPanel):
                 wx.ICON_ERROR)
 
 
-    # @actions.Action
+    # @actions.action
     def importDataSeries(self, *a):
         """Not implemented yet. Imports data series from a text file."""
         pass
 
 
-    # @actions.Action
+    # @actions.action
     def exportDataSeries(self, *a):
         """Not implemented yet. Exports displayed data series to a text file.
         """

@@ -579,7 +579,7 @@ class VolumeOpts(ImageOpts):
                            display.getSyncPropertyName('contrast'))
 
 
-    @actions.Action
+    @actions.action
     def resetDisplayRange(self):
         """Resets the display range to the data range."""
         self.displayRange.x = [self.dataMin, self.dataMax]

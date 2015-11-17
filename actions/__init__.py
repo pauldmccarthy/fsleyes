@@ -4,8 +4,9 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This package provides a collection of actions, and two package-level
-classes - the :class:`Action` class and the :class:`ActionProvider` class.
+"""This package provides a collection of actions, two package-level
+classes - the :class:`Action` class and the :class:`ActionProvider` class,
+and the :func:`action` and :func:`toggleAction` decorators.
 
 
 The :class:`Action` class represents some sort of action which may be
@@ -42,78 +43,18 @@ import fsl.data.strings as strings
 log = logging.getLogger(__name__)
 
 
-def listGlobalActions():
-    """Convenience function which returns a list containing all
-    :class:`.Action` classes in the :mod:`actions` package.
-    """
-
-    import openfile
-    import openstandard
-    import copyoverlay
-    import saveoverlay
-    
-    return [openfile    .OpenFileAction,
-            openstandard.OpenStandardAction,
-            copyoverlay .CopyOverlayAction,
-            saveoverlay .SaveOverlayAction]
+def action(func):
+    """A decorator which identifies a class method as an action. """
+    return ActionFactory(func, Action)
 
 
-class ActionButton(props.Button):
-    """Extends the :class:`props.Button` class to encapsulate an
-    :class:`Action` instance.
-    """
-    
-    def __init__(self, actionName, classType=None, **kwargs):
-        """Create an ``ActionButton``.
-
-        :arg actionName: Name of the action
-
-        :arg classType:  The type which defines the action.
-
-        :arg kwargs:     Passed to the :class:`props.Button` constructor.
-        """
-
-        self.__name = actionName
-
-        if classType is not None:
-            text = strings.actions.get((classType, actionName), actionName)
-        else:
-            text = actionName
-
-        props.Button.__init__(
-            self,
-            actionName,
-            text=text,
-            callback=self.__onButton,
-            setup=self.__setup,
-            **kwargs)
-
-
-    def __setup(self, instance, parent, widget, *a):
-        """Called when the button is created. Binds the button widget to the
-        ``Action`` instance.
-        """
-        import wx
-        instance.getAction(self.__name).bindToWidget(
-            parent, wx.EVT_BUTTON, widget)
-
-        
-    def __onButton(self, instance, *a):
-        """Called when the button is pushed. Runs the action."""
-        instance.getAction(self.__name)()
-
-
-
-class ActionDisabledError(Exception):
-    pass
-
+def toggleAction(func):
+    """A decorator which identifies a class method as a toggle action. """
+    return ActionFactory(func, ToggleAction) 
 
 
 class Action(props.HasProperties):
     """
-
-
-    https://wiki.python.org/moin/PythonDecoratorLibrary#Class_method_decorator_using_instance
     """
     
     
@@ -124,12 +65,12 @@ class Action(props.HasProperties):
     """
 
     
-    def __init__(self, func):
+    def __init__(self, func, instance=None):
         """Create an ``Action``.
         
         :arg func: The action function.
         """
-        self.__instance     = None
+        self.__instance     = instance
         self.__func         = func
         self.__name         = func.__name__ 
         self.__boundWidgets = []
@@ -138,13 +79,6 @@ class Action(props.HasProperties):
                          'Action_{}_internal'.format(id(self)),
                          self.__enabledChanged)
 
-
-    def __get__(self, instance, cls):
-
-        if self.__instance is None and instance is not None:
-            self.__instance = instance
-
-        return self
 
     
     def __call__(self, *args, **kwargs):
@@ -226,11 +160,9 @@ class ToggleAction(Action):
     toggled = props.Boolean(default=False)
 
 
-    def __init__(self, func, initState=False):
+    def __init__(self, func, instance=None):
         
-        Action.__init__(self, func)
-        
-        self.toggled = initState
+        Action.__init__(self, func, instance)
         
         self.addListener('toggled',
                          'ToggleAction_{}_internal'.format(id(self)),
@@ -268,7 +200,6 @@ class ToggleAction(Action):
                 widget.Check(self.toggled)
 
 
-
 class ActionProvider(object):
 
 
@@ -302,3 +233,77 @@ class ActionProvider(object):
                 acts.append((name, attr))
                 
         return acts
+
+
+class ActionButton(props.Button):
+    """Extends the :class:`props.Button` class to encapsulate an
+    :class:`Action` instance.
+    """
+    
+    def __init__(self, actionName, classType=None, **kwargs):
+        """Create an ``ActionButton``.
+
+        :arg actionName: Name of the action
+
+        :arg classType:  The type which defines the action.
+
+        :arg kwargs:     Passed to the :class:`props.Button` constructor.
+        """
+
+        self.__name = actionName
+
+        if classType is not None:
+            text = strings.actions.get((classType, actionName), actionName)
+        else:
+            text = actionName
+
+        props.Button.__init__(
+            self,
+            actionName,
+            text=text,
+            callback=self.__onButton,
+            setup=self.__setup,
+            **kwargs)
+
+
+    def __setup(self, instance, parent, widget, *a):
+        """Called when the button is created. Binds the button widget to the
+        ``Action`` instance.
+        """
+        import wx
+        instance.getAction(self.__name).bindToWidget(
+            parent, wx.EVT_BUTTON, widget)
+
+        
+    def __onButton(self, instance, *a):
+        """Called when the button is pushed. Runs the action."""
+        instance.getAction(self.__name)()
+
+
+class ActionDisabledError(Exception):
+    pass
+
+
+class ActionFactory(object):
+
+    
+    def __init__(self, func, actionType):
+        self.__func       = func
+        self.__actionType = actionType
+
+    
+    def __get__(self, instance, cls):
+
+        # Class-level access
+        if instance is None:
+            return self.__func
+        
+        else:
+            
+            # Create an Action for the instance,
+            # and replace replace this ActionFactory
+            # with the Action on the instance.
+            action = self.__actionType(self.__func, instance)
+            setattr(instance, self.__func.__name__, action)
+            
+            return action

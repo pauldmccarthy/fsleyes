@@ -113,7 +113,7 @@ class OrthoViewProfile(profiles.Profile):
         return [self.__xcanvas, self.__ycanvas, self.__zcanvas]
 
 
-    @actions.Action
+    @actions.action
     def resetZoom(self):
         """Sets the :class:`.SceneOpts.zoom`, :class:`.OrthoOpts.xzoom`,
         :class:`.OrthoOpts.yzoom`,  and :class:`.OrthoOpts.zzoom` properties
@@ -128,7 +128,7 @@ class OrthoViewProfile(profiles.Profile):
         opts.zzoom = 100
 
 
-    @actions.Action
+    @actions.action
     def centreCursor(self):
         """Sets the :attr:`.DisplayContext.location` to the centre of the
         :attr:`.DisplayContext.bounds`.

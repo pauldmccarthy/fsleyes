@@ -191,7 +191,7 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
         self.SetTools(tools, destroy=True) 
 
 
-    @actions.ToggleAction
+    @actions.toggleAction
     def showMoreSettings(self, *a):
         """Opens a :class:`.CanvasSettingsPanel` for the
         :class:`.OrthoPanel` that owns this ``OrthoToolBar``.

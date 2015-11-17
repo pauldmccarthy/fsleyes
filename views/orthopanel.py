@@ -273,12 +273,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         canvaspanel.CanvasPanel.destroy(self)
 
 
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleOrthoToolBar(self):
         self.togglePanel(orthotoolbar.OrthoToolBar, ortho=self)
 
 
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleEditToolBar(self):
         self.togglePanel(orthoedittoolbar.OrthoEditToolBar, ortho=self) 
 

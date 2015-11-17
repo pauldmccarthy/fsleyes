@@ -20,6 +20,10 @@ import fsl.utils.settings as fslsettings
 
 import views
 import actions
+import actions.copyoverlay  as copyoverlay
+import actions.openfile     as openfile
+import actions.openstandard as openstandard
+import actions.saveoverlay  as saveoverlay
 import displaycontext
 
 
@@ -541,7 +545,10 @@ class FSLEyesFrame(wx.Frame):
         self.__settingsMenu = settingsMenu
 
         viewPanels = views   .listViewPanels()
-        actionz    = actions .listGlobalActions()
+        actionz    = [openfile    .OpenFileAction,
+                      openstandard.OpenStandardAction,
+                      copyoverlay .CopyOverlayAction,
+                      saveoverlay .SaveOverlayAction]
 
         for action in actionz:
             menuItem = fileMenu.Append(wx.ID_ANY, strings.actions[action])

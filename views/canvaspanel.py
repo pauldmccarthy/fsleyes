@@ -304,7 +304,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         viewpanel.ViewPanel.destroy(self)
 
 
-    @actions.Action
+    @actions.action
     def screenshot(self):
         """Takes a screenshot of the currently displayed scene on this
         ``CanvasPanel``. See the :func:`_screenshot` function.
@@ -312,7 +312,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         _screenshot(self._overlayList, self._displayCtx, self)
 
 
-    @actions.Action
+    @actions.action
     def showCommandLineArgs(self):
         """Shows the command line arguments which can be used to re-create
         the currently displayed scene. See the :func:`_showCommandLineArgs`
@@ -321,48 +321,48 @@ class CanvasPanel(viewpanel.ViewPanel):
         _showCommandLineArgs(self._overlayList, self._displayCtx, self)
 
         
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleOverlayList(self):
         self.togglePanel(overlaylistpanel.OverlayListPanel, location=wx.BOTTOM)
 
     
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleOverlayInfo(self):
         self.togglePanel(overlayinfopanel.OverlayInfoPanel, location=wx.LEFT) 
     
 
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleAtlasPanel(self):
         self.togglePanel(atlaspanel.AtlasPanel, location=wx.BOTTOM) 
 
 
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleDisplayProperties(self):
         self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar,
                          viewPanel=self)
         
 
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleLocationPanel(self):
         self.togglePanel(locationpanel.LocationPanel, location=wx.BOTTOM) 
 
 
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleClusterPanel(self):
         self.togglePanel(clusterpanel.ClusterPanel, location=wx.TOP) 
 
 
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleLookupTablePanel(self):
         self.togglePanel(lookuptablepanel.LookupTablePanel, location=wx.TOP)
 
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleClassificationPanel(self):
         self.togglePanel(melclasspanel.MelodicClassificationPanel,
                          location=wx.RIGHT)
 
 
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleShell(self):
         self.togglePanel(shellpanel.ShellPanel,
                          self.getSceneOptions(),

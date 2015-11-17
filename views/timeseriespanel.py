@@ -166,12 +166,12 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         plotpanel.OverlayPlotPanel.destroy(self)
 
 
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleTimeSeriesList(self):
         self.togglePanel(plotlistpanel.PlotListPanel, self, location=wx.TOP)
 
         
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleTimeSeriesControl(self):
         self.togglePanel(
             timeseriescontrolpanel.TimeSeriesControlPanel,

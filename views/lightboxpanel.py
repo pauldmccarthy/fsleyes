@@ -185,7 +185,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         canvaspanel.CanvasPanel.destroy(self)
 
 
-    @actions.ToggleAction
+    @actions.toggleAction
     def toggleLightBoxToolBar(self):
         self.togglePanel(lightboxtoolbar.LightBoxToolBar, lb=self)
 

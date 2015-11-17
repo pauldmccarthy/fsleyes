@@ -119,7 +119,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         fsltoolbar.FSLEyesToolBar.destroy(self)
 
 
-    @actions.ToggleAction
+    @actions.toggleAction
     def showMoreSettings(self, *a):
         """Shows/hides a :class:`.OverlayDisplayPanel` dialog. """
         self.__viewPanel.togglePanel(overlaydisplay.OverlayDisplayPanel,

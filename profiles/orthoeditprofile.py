@@ -277,7 +277,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         orthoviewprofile.OrthoViewProfile.deregister(self)
 
 
-    @actions.Action
+    @actions.action
     def clearSelection(self):
         """Clears the current selection. See :meth:`.Editor.clearSelection`.
         """
@@ -292,7 +292,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self._viewPanel.Refresh()
 
 
-    @actions.Action
+    @actions.action
     def fillSelection(self):
         """Fills the current selection with the :attr:`fillValue`. See
         :meth:`.Editor.fillSelection`.
@@ -306,7 +306,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         editor.getSelection().clearSelection()
 
 
-    @actions.Action
+    @actions.action
     def createMaskFromSelection(self):
         """Creates a new mask :class:`.Image` from the current selection.
         See :meth:`.Editor.createMaskFromSelection`.
@@ -317,7 +317,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__editors[self.__currentOverlay].createMaskFromSelection()
 
 
-    @actions.Action
+    @actions.action
     def createROIFromSelection(self):
         """Creates a new ROI :class:`.Image` from the current selection.
         See :meth:`.Editor.createROIFromSelection`.
@@ -328,7 +328,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__editors[self.__currentOverlay].createROIFromSelection() 
 
 
-    @actions.Action
+    @actions.action
     def undo(self):
         """Un-does the most recent change to the selection or to the
         :class:`.Image` data. See :meth:`.Editor.undo`.
@@ -358,7 +358,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self._viewPanel.Refresh()
 
 
-    @actions.Action
+    @actions.action
     def redo(self):
         """Re-does the most recent undone change to the selection or to the
         :class:`.Image` data. See :meth:`.Editor.redo`.
