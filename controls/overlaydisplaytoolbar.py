@@ -163,7 +163,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         more = props.buildGUI(
             self,
             self,
-            view=actions.ActionButton(
+            view=actions.ToggleActionButton(
                 'showMoreSettings',
                 icon=icons.findImageFile('gear24'),
                 tooltip=fsltooltips.actions[self, 'showMoreSettings']))

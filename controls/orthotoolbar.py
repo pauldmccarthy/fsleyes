@@ -138,9 +138,9 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
 
         toolSpecs = [
 
-            actions.ActionButton('showMoreSettings',
-                                 icon=icons['showMoreSettings'],
-                                 tooltip=tooltips['showMoreSettings']),
+            actions.ToggleActionButton('showMoreSettings',
+                                       icon=icons['showMoreSettings'],
+                                       tooltip=tooltips['showMoreSettings']),
             actions.ActionButton('screenshot',
                                  icon=icons['screenshot'],
                                  tooltip=tooltips['screenshot']),

@@ -80,7 +80,18 @@ All bound widgets of an ``Action`` can be accessed through the
 :meth:`Action.unbindAllWidgets` method.
 
 
-Some 'global' actions are also provided in this package:
+This module also provides two classes which allow a widget to be automatically
+created for, and bound to an ``Action`` or ``ToggleAction`` (through the
+:mod:`props.build` package):
+
+ .. autosummary::
+    :nosignatures:
+
+    ActionButton
+    ToggleActionButton
+
+
+Finally, some 'global' actions are also provided in this package:
 
  .. autosummary::
 
@@ -89,7 +100,6 @@ Some 'global' actions are also provided in this package:
     ~fsl.fsleyes.actions.openfile
     ~fsl.fsleyes.actions.openstandard
     ~fsl.fsleyes.actions.saveoverlay
-
 """
 
 
@@ -290,11 +300,17 @@ class ToggleAction(Action):
         """
         
         import wx
+        import pwidgets.bitmaptoggle as bmptoggle
         
         for widget in self.getBoundWidgets():
 
             if isinstance(widget, wx.MenuItem):
                 widget.Check(self.toggled)
+                
+            elif isinstance(widget, (wx.CheckBox,
+                                     wx.ToggleButton,
+                                     bmptoggle.BitmapToggleButton)):
+                widget.SetValue(self.toggled)
 
 
 class ActionProvider(object):
@@ -342,51 +358,6 @@ class ActionProvider(object):
                 acts.append((name, attr))
                 
         return acts
-
-
-class ActionButton(props.Button):
-    """Extends the :class:`props.Button` class to encapsulate an
-    :class:`Action` instance.
-    """
-    
-    def __init__(self, actionName, classType=None, **kwargs):
-        """Create an ``ActionButton``.
-
-        :arg actionName: Name of the action
-
-        :arg classType:  The type which defines the action.
-
-        :arg kwargs:     Passed to the :class:`props.Button` constructor.
-        """
-
-        self.__name = actionName
-
-        if classType is not None:
-            text = strings.actions.get((classType, actionName), actionName)
-        else:
-            text = actionName
-
-        props.Button.__init__(
-            self,
-            actionName,
-            text=text,
-            callback=self.__onButton,
-            setup=self.__setup,
-            **kwargs)
-
-
-    def __setup(self, instance, parent, widget, *a):
-        """Called when the button is created. Binds the button widget to the
-        ``Action`` instance.
-        """
-        import wx
-        instance.getAction(self.__name).bindToWidget(
-            parent, wx.EVT_BUTTON, widget)
-
-        
-    def __onButton(self, instance, *a):
-        """Called when the button is pushed. Runs the action."""
-        instance.getAction(self.__name)()
 
 
 class ActionDisabledError(Exception):
@@ -472,3 +443,108 @@ class ActionFactory(object):
             action = self.__actionType(self.__func, instance)
             setattr(instance, self.__func.__name__, action)
             return functools.update_wrapper(action, self.__func)
+
+
+class ActionButton(props.Button):
+    """Extends the :class:`props.Button` class to encapsulate an
+    :class:`Action` instance.
+
+    Only actions which are defined using the :func:`action` or
+    :func:`toggleAction` decorator are supported.
+    """
+
+    
+    def __init__(self, actionName, classType=None, **kwargs):
+        """Create an ``ActionButton``.
+
+        :arg actionName: Name of the action
+
+        :arg classType:  The type which defines the action.
+
+        :arg kwargs:     Passed to the :class:`props.Button` constructor.
+        """
+
+        self.__name = actionName
+
+        if classType is not None:
+            text = strings.actions.get((classType, actionName), actionName)
+        else:
+            text = actionName
+
+        props.Button.__init__(
+            self,
+            actionName,
+            text=text,
+            callback=self.__onButton,
+            setup=self.__setup,
+            **kwargs)
+
+
+    def __setup(self, instance, parent, widget):
+        """Called when the button is created. Binds the button widget to the
+        ``Action`` instance.
+        """
+        import wx
+        instance.getAction(self.__name).bindToWidget(
+            parent, wx.EVT_BUTTON, widget)
+
+        
+    def __onButton(self, instance, widget):
+        """Called when the button is pushed. Runs the action."""
+        instance.getAction(self.__name)()
+
+
+class ToggleActionButton(props.Toggle):
+    """Extends the :class:`props.Toggle` class to encapsulate a
+    :class:`ToggleAction` instance.
+
+    Only actions which are defined using the :func:`action` or
+    :func:`toggleAction` decorator are supported.
+    """
+
+    
+    def __init__(self, actionName, icon, **kwargs):
+        """Create a ``ToggleActionButton``.
+
+        :arg actionName: Name of the action
+
+        :arg icon:       One or two icon file names to use on the button.
+
+        :arg kwargs:     Passed to the :class:`props.Toggle` constructor.
+        """ 
+
+        self.__name = actionName
+
+        props.Toggle.__init__(
+            self,
+            key=actionName,
+            icon=icon,
+            setup=self.__setup,
+            callback=self.__onToggle,
+            **kwargs)
+
+    
+    def __setup(self, instance, parent, widget):
+        """Called when the toggle widget is created. Binds the widget to the
+        ``ToggleAction`` instance.
+        """ 
+        import wx
+        import pwidgets.bitmaptoggle as bmptoggle
+        
+        if isinstance(widget, wx.CheckBox):
+            ev = wx.EVT_BUTTON
+        elif isinstance(widget, wx.ToggleButton):
+            ev = wx.EVT_TOGGLEBUTTON
+        elif isinstance(widget, bmptoggle.BitmapToggleButton):
+            ev = bmptoggle.EVT_BITMAP_TOGGLE_EVENT
+            
+        else:
+            raise RuntimeError(
+                'Unknown widget {}'.format(type(widget).__name__))
+
+        instance.getAction(self.__name).bindToWidget(parent, ev, widget)
+
+    
+    def __onToggle(self, instance, widget):
+        """Called when the widget is toggled. Runs the action."""
+        instance.getAction(self.__name)()

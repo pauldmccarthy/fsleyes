@@ -89,7 +89,7 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
         
         specs = {
             
-            'showMoreSettings' : actions.ActionButton(
+            'showMoreSettings' : actions.ToggleActionButton(
                 'showMoreSettings',
                 icon=icons['showMoreSettings'],
                 tooltip=tooltips['showMoreSettings']),
