@@ -9,11 +9,11 @@ control* panel which allows a :class:`.HistogramPanel` to be configured.
 """
 
 
-import                                          props
+import                         props
 
-import fsl.fsleyes.tooltips                  as fsltooltips
-import fsl.fsleyes.controls.plotcontrolpanel as plotcontrolpanel
-import fsl.data.strings                      as strings
+import fsl.fsleyes.tooltips as fsltooltips
+import                         plotcontrolpanel
+import fsl.data.strings     as strings
 
 
 class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):

@@ -65,6 +65,24 @@ class ViewPanel(fslpanel.FSLEyesPanel):
     profile can be changed with the :attr:`profile` property, and can be
     accessed with the :meth:`getCurrentProfile` method. See the
     :mod:`.profiles` package for more information on interaction profiles.
+
+
+    **Programming interface**
+
+
+    The following methods are available on a ``Viewpanel` for programmatically
+    controlling its display and layout:
+
+
+    .. autosummary::
+       :nosignatures:
+
+       togglePanel
+       isPanelOpen
+       getPanel
+       getPanels
+       getPanelInfo
+       getAuiManager
     """
     
 
@@ -188,7 +206,11 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         """Set the primary centre panel for this ``ViewPanel``. """
         
         panel.Reparent(self)
-        self.__auiMgr.AddPane(panel, wx.CENTRE)
+        paneInfo = (aui.AuiPaneInfo()
+                    .Name(type(panel).__name__)
+                    .CentrePane())
+                         
+        self.__auiMgr.AddPane(panel, paneInfo)
         self.__auiMgrUpdate()
 
 
@@ -251,8 +273,10 @@ class ViewPanel(fslpanel.FSLEyesPanel):
             self.__onPaneClose(None, window)
             return
 
-        # Otherwise, create a new panel of the specified type
-        paneInfo = aui.AuiPaneInfo()
+        # Otherwise, create a new panel of the specified type.
+        # The PaneInfo Name is the control panel class name -
+        # this is used for saving and restoring perspectives.
+        paneInfo = aui.AuiPaneInfo().Name(panelType.__name__)
         window   = panelType(
             self, self._overlayList, self._displayCtx, *args, **kwargs)
 
@@ -341,6 +365,27 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         """
         if panelType in self.__panels: return self.__panels[panelType]
         else:                          return None
+
+
+    def getPanels(self):
+        """Returns a list containing all control panels currently shown in this
+        ``ViewPanel``.
+        """
+        return list(self.__panels.values())
+
+
+    def getPanelInfo(self, panel):
+        """Returns the ``AuiPaneInfo`` object which contains information about
+        the given control panel.
+        """
+        return self.__auiMgr.GetPane(panel)
+
+
+    def getAuiManager(self):
+        """Returns the ``wx.lib.agw.aui.AuiManager`` object which manages the
+        layout of this ``ViewPanel``.
+        """
+        return self.__auiMgr
  
 
     def __selectedOverlayChanged(self, *a):

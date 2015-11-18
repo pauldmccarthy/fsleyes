@@ -80,7 +80,10 @@ class FSLEyesFrame(wx.Frame):
        :nosignatures:
 
        getViewPanels
+       getViewPanelInfo
        addViewPanel
+       removeViewPanel 
+       getAuiManager
     """
 
     
@@ -151,6 +154,29 @@ class FSLEyesFrame(wx.Frame):
         return self.__viewPanels.values()
 
 
+    def getViewPanelInfo(self, viewPanel):
+        """Returns the ``AuiPaneInfo`` class which contains layout information
+        about the given :class:`.ViewPanel`.
+        """
+        return self.__auiManager.GetPane(viewPanel)
+
+
+    def getAuiManager(self):
+        """Returns the ``wx.lib.agw.aui.AuiManager` object which is managing
+        the layout of this ``FSLEyesFrame``.
+        """
+        return self.__auiManager
+
+
+    def removeViewPanel(self, viewPanel):
+        """Removes the given :class:`.ViewPanel` from this ``FSLEyesFrame``.
+        """
+        paneInfo = self.__auiManager.GetPane(viewPanel)
+        self.__onViewPanelClose(    paneInfo=paneInfo)
+        self.__auiManager.ClosePane(paneInfo)
+        self.__auiManager.Update() 
+
+
     def addViewPanel(self, panelCls):
         """Adds a new :class:`.ViewPanel` to the centre of the frame, and a
         menu item allowing the user to configure the view.
@@ -191,8 +217,11 @@ class FSLEyesFrame(wx.Frame):
             id(panel),
             id(childDC)))
 
+        # The PaneInfo Name is the panel class
+        # name - this is used for saving and
+        # restoring perspectives
         paneInfo = (aui.AuiPaneInfo()
-                    .Name(title)
+                    .Name(panelCls.__name__)
                     .Caption(title)
                     .CloseButton()
                     .Dockable()
@@ -287,6 +316,7 @@ class FSLEyesFrame(wx.Frame):
         if len(regularActions) > 0 and len(toggleActions) > 0:
             menu.AppendSeparator()
 
+        # Toggle actions
         for actionName, actionObj in toggleActions:
 
             menuItem = menu.Append(
@@ -299,10 +329,7 @@ class FSLEyesFrame(wx.Frame):
         # Add a 'Close' action to
         # the menu for every panel 
         def closeViewPanel(ev):
-            paneInfo = self.__auiManager.GetPane(panel)
-            self.__onViewPanelClose(    paneInfo=paneInfo)
-            self.__auiManager.ClosePane(paneInfo)
-            self.__auiManager.Update()
+            self.removeViewPanel(panel)
 
         # But put another separator before it
         if len(regularActions) > 0 or len(toggleActions) > 0:

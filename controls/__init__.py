@@ -38,3 +38,40 @@ The following control panels currently exist:
    ~fsl.fsleyes.controls.shellpanel.ShellPanel
    ~fsl.fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
 """
+
+import atlaspanel
+import canvassettingspanel
+import clusterpanel
+import histogramcontrolpanel
+import lightboxtoolbar
+import locationpanel
+import lookuptablepanel
+import melodicclassificationpanel
+import orthoedittoolbar
+import orthotoolbar
+import overlaydisplaypanel
+import overlaydisplaytoolbar
+import overlayinfopanel
+import plotlistpanel
+import powerspectrumcontrolpanel
+import shellpanel
+import timeseriescontrolpanel
+
+
+AtlasPanel                 = atlaspanel.AtlasPanel
+CanvasSettingsPanel        = canvassettingspanel.CanvasSettingsPanel
+ClusterPanel               = clusterpanel.ClusterPanel
+HistogramControlPanel      = histogramcontrolpanel.HistogramControlPanel
+LightBoxToolBar            = lightboxtoolbar.LightBoxToolBar
+LocationPanel              = locationpanel.LocationPanel
+LookupTablePanel           = lookuptablepanel.LookupTablePanel
+MelodicClassificationPanel = melodicclassificationpanel.MelodicClassificationPanel
+OrthoEditToolBar           = orthoedittoolbar.OrthoEditToolBar
+OrthoToolBar               = orthotoolbar.OrthoToolBar
+OverlayDisplayPanel        = overlaydisplaypanel.OverlayDisplayPanel
+OverlayDisplayToolBar      = overlaydisplaytoolbar.OverlayDisplayToolBar
+OverlayInfoPanel           = overlayinfopanel.OverlayInfoPanel
+PlotListPanel              = plotlistpanel.PlotListPanel
+PowerSpectrumControlPanel  = powerspectrumcontrolpanel.PowerSpectrumControlPanel
+ShellPanel                 = shellpanel.ShellPanel
+TimeSeriesControlPanel     = timeseriescontrolpanel.TimeSeriesControlPanel
