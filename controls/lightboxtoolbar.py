@@ -179,4 +179,5 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
         self.lightBoxPanel.togglePanel(
             canvassettingspanel.CanvasSettingsPanel,
             self.lightBoxPanel,
-            floatPane=True) 
+            floatPane=True,
+            action=self.showMoreSettings) 

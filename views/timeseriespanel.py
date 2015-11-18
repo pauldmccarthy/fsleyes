@@ -171,7 +171,10 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         """Shows/hides a :class:`.PlotListPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(plotlistpanel.PlotListPanel, self, location=wx.TOP)
+        self.togglePanel(plotlistpanel.PlotListPanel,
+                         self,
+                         location=wx.TOP,
+                         action=self.toggleTimeSeriesList)
 
         
     @actions.toggleAction
@@ -179,10 +182,23 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         """Shows/hides a :class:`.TimeSeriesControlPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(
-            timeseriescontrolpanel.TimeSeriesControlPanel,
-            self,
-            location=wx.TOP) 
+        self.togglePanel(timeseriescontrolpanel.TimeSeriesControlPanel,
+                         self,
+                         location=wx.TOP,
+                         action=self.toggleTimeSeriesControl)
+
+        
+    def getActions(self):
+        """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
+        :mod:`.actions` that are defined on this ``TimeSeriesPanel``.
+        """
+        actions = [self.screenshot,
+                   self.toggleTimeSeriesList,
+                   self.toggleTimeSeriesControl]
+
+        names = [a.__name__ for a in actions]
+
+        return zip(names, actions)
 
 
     def draw(self, *a):

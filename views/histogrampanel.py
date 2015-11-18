@@ -115,7 +115,10 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         """Shows/hides a :class:`.PlotListPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(plotlistpanel.PlotListPanel, self, location=wx.TOP)
+        self.togglePanel(plotlistpanel.PlotListPanel,
+                         self,
+                         location=wx.TOP,
+                         action=self.toggleHistogramList)
 
         
     @actions.toggleAction
@@ -126,7 +129,21 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         self.togglePanel(
             histogramcontrolpanel.HistogramControlPanel,
             self,
-            location=wx.TOP) 
+            location=wx.TOP,
+            action=self.toggleHistogramControl)
+
+        
+    def getActions(self):
+        """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
+        :mod:`.actions` that are defined on this ``HistogramPanel``.
+        """
+        actions = [self.screenshot,
+                   self.toggleHistogramList,
+                   self.toggleHistogramControl]
+
+        names = [a.__name__ for a in actions]
+
+        return zip(names, actions)
 
         
     def draw(self, *a):

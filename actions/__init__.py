@@ -95,6 +95,7 @@ Some 'global' actions are also provided in this package:
 
 import logging
 import inspect
+import functools
 
 import props
 
@@ -259,9 +260,12 @@ class ToggleAction(Action):
         is flipped.
         """
 
-        result = Action.__call__(self, *args, **kwargs)
-            
-        self.toggled = not self.toggled
+        # Copy the toggled value before running
+        # the action, in case it gets inadvertently
+        # changed
+        toggled      = self.toggled
+        result       = Action.__call__(self, *args, **kwargs)
+        self.toggled = not toggled
             
         return result
 
@@ -467,4 +471,4 @@ class ActionFactory(object):
             # with the Action on the instance.
             action = self.__actionType(self.__func, instance)
             setattr(instance, self.__func.__name__, action)
-            return action
+            return functools.update_wrapper(action, self.__func)

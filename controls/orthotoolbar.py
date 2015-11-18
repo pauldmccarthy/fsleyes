@@ -203,4 +203,5 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
         import canvassettingspanel
         self.orthoPanel.togglePanel(canvassettingspanel.CanvasSettingsPanel,
                                     self.orthoPanel,
-                                    floatPane=True)
+                                    floatPane=True,
+                                    action=self.showMoreSettings)

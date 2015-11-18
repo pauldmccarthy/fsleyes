@@ -17,6 +17,7 @@ import wx.lib.agw.aui as aui
 import props
 
 import fsl.fsleyes.panel          as fslpanel
+import fsl.fsleyes.actions        as actions
 import fsl.fsleyes.toolbar        as fsltoolbar
 import fsl.fsleyes.profiles       as profiles
 import fsl.fsleyes.displaycontext as fsldisplay
@@ -81,7 +82,16 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         self.__profileManager = profiles.ProfileManager(
             self, overlayList, displayCtx)
 
-        self.__panels = {}
+        # The panels dictionary stores a collection
+        # of {type : instance} mappings of active
+        # FSLeyes control panels that are contained
+        # in this view panel. The panelActions dict
+        # contains a collection of {type : Action}
+        # mappings, but only if the control panel
+        # was opened as a result of an Action on
+        # this view panel. 
+        self.__panels       = {}
+        self.__panelActions = {}
 
         self.__auiMgr = aui.AuiManager(
             self,
@@ -197,6 +207,14 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         :arg location:  If ``floatPane=False``, the initial dock position of
                         the panel - either ``wx.TOP``, ``wx.BOTTOM``,
                         ``wx.LEFT``, or ``wx.RIGHT. Defaults to ``wx.BOTTOM``.
+
+        :arg action:    If this method has been called as the result of
+                        execution of a :class:`.ToggleAction`, the
+                        ``ToggleAction`` instance may be passed to this
+                        method. This is so that, if the control panel is
+                        closed directly by the user (as opposed to
+                        re-executing the ``ToggleAction`), the ``toggled``
+                        state of the action can be updated.
         
         :arg kwargs:    All keyword arguments, apart from ``floatPane`` and
                         ``location``, are passed to the ``panelType``
@@ -214,13 +232,14 @@ class ViewPanel(fslpanel.FSLEyesPanel):
 
         .. warning::    Do not define a control (a.k.a. secondary) panel
                         constructor to accept arguments with the names
-                        ``floatPane`` or ``location``, as arguments with
-                        those names will get eaten by this method before
-                        they can be passed to the constructor.
+                        ``floatPane``, ``action`` or ``location``, as
+                        arguments with those names will get eaten by this
+                        method before they can be passed to the constructor.
         """
 
         location  = kwargs.pop('location',  wx.BOTTOM)
         floatPane = kwargs.pop('floatPane', False)
+        action    = kwargs.pop('action',    None)
         
         if location not in (wx.TOP, wx.BOTTOM, wx.LEFT, wx.RIGHT):
             raise ValueError('Invalid value for location')
@@ -230,83 +249,83 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         # The panel is already open - close it
         if window is not None:
             self.__onPaneClose(None, window)
+            return
 
-        # Create a new panel of the specified type
-        else:
-            
-            paneInfo = aui.AuiPaneInfo()
-            window   = panelType(
-                self, self._overlayList, self._displayCtx, *args, **kwargs)
+        # Otherwise, create a new panel of the specified type
+        paneInfo = aui.AuiPaneInfo()
+        window   = panelType(
+            self, self._overlayList, self._displayCtx, *args, **kwargs)
+
+        if isinstance(window, fsltoolbar.FSLEyesToolBar):
+
+            # ToolbarPane sets the panel layer to 10
+            paneInfo.ToolbarPane()
+
+            # We are going to put any new toolbars on 
+            # the top of the panel, below any existing
+            # toolbars. This is annoyingly complicated,
+            # because the AUI designer(s) decided to
+            # give the innermost layer an index of 0.
+            # 
+            # So in order to put a new toolbar at the
+            # innermost layer, we need to adjust the
+            # layers of all other existing toolbars
+
+            for p in self.__panels.values():
+                if isinstance(p, fsltoolbar.FSLEyesToolBar):
+                    info = self.__auiMgr.GetPane(p)
+
+                    # This is nasty - the agw.aui.AuiPaneInfo
+                    # class doesn't have any publicly documented
+                    # methods of querying its current state.
+                    # So I'm accessing its undocumented instance
+                    # attributes (determined by browsing the
+                    # source code)
+                    if info.IsDocked() and \
+                       info.dock_direction == aui.AUI_DOCK_TOP:
+                        info.Layer(info.dock_layer + 1)
+
+            # When the toolbar contents change,
+            # update the layout, so that the
+            # toolbar's new size is accommodated
+            window.Bind(fsltoolbar.EVT_TOOLBAR_EVENT, self.__auiMgrUpdate)
+
+        paneInfo.Caption(strings.titles[window])                
+
+        # Dock the pane at the position specified
+        # by the location parameter
+        if floatPane is False:
 
             if isinstance(window, fsltoolbar.FSLEyesToolBar):
-
-                # ToolbarPane sets the panel layer to 10
-                paneInfo.ToolbarPane()
-
-                # We are going to put any new toolbars on 
-                # the top of the panel, below any existing
-                # toolbars. This is annoyingly complicated,
-                # because the AUI designer(s) decided to
-                # give the innermost layer an index of 0.
-                # 
-                # So in order to put a new toolbar at the
-                # innermost layer, we need to adjust the
-                # layers of all other existing toolbars
-                
-                for p in self.__panels.values():
-                    if isinstance(p, fsltoolbar.FSLEyesToolBar):
-                        info = self.__auiMgr.GetPane(p)
-
-                        # This is nasty - the agw.aui.AuiPaneInfo
-                        # class doesn't have any publicly documented
-                        # methods of querying its current state.
-                        # So I'm accessing its undocumented instance
-                        # attributes (determined by browsing the
-                        # source code)
-                        if info.IsDocked() and \
-                           info.dock_direction == aui.AUI_DOCK_TOP:
-                            info.Layer(info.dock_layer + 1)
-
-                # When the toolbar contents change,
-                # update the layout, so that the
-                # toolbar's new size is accommodated
-                window.Bind(fsltoolbar.EVT_TOOLBAR_EVENT, self.__auiMgrUpdate)
-
-            paneInfo.Caption(strings.titles[window])                
-
-            # Dock the pane at the position specified
-            # by the location parameter
-            if floatPane is False:
-
-                if isinstance(window, fsltoolbar.FSLEyesToolBar):
-                    location = aui.AUI_DOCK_TOP
-                else:
-                    if   location == wx.TOP:    location = aui.AUI_DOCK_TOP
-                    elif location == wx.BOTTOM: location = aui.AUI_DOCK_BOTTOM
-                    elif location == wx.LEFT:   location = aui.AUI_DOCK_LEFT
-                    elif location == wx.RIGHT:  location = aui.AUI_DOCK_RIGHT
-
-                paneInfo.Direction(location)
-
-            # Or, for floating panes, centre the
-            # floating pane on this ViewPanel 
+                location = aui.AUI_DOCK_TOP
             else:
+                if   location == wx.TOP:    location = aui.AUI_DOCK_TOP
+                elif location == wx.BOTTOM: location = aui.AUI_DOCK_BOTTOM
+                elif location == wx.LEFT:   location = aui.AUI_DOCK_LEFT
+                elif location == wx.RIGHT:  location = aui.AUI_DOCK_RIGHT
 
-                selfPos    = self.GetScreenPosition().Get()
-                selfSize   = self.GetSize().Get()
-                selfCentre = (selfPos[0] + selfSize[0] * 0.5,
-                              selfPos[1] + selfSize[1] * 0.5)
+            paneInfo.Direction(location)
 
-                paneSize = window.GetBestSize().Get()
-                panePos  = (selfCentre[0] - paneSize[0] * 0.5,
-                            selfCentre[1] - paneSize[1] * 0.5)
+        # Or, for floating panes, centre the
+        # floating pane on this ViewPanel 
+        else:
 
-                paneInfo.Float() \
-                        .FloatingPosition(panePos)
-                    
-            self.__auiMgr.AddPane(window, paneInfo)
-            self.__panels[panelType] = window
-            self.__auiMgrUpdate()
+            selfPos    = self.GetScreenPosition().Get()
+            selfSize   = self.GetSize().Get()
+            selfCentre = (selfPos[0] + selfSize[0] * 0.5,
+                          selfPos[1] + selfSize[1] * 0.5)
+
+            paneSize = window.GetBestSize().Get()
+            panePos  = (selfCentre[0] - paneSize[0] * 0.5,
+                        selfCentre[1] - paneSize[1] * 0.5)
+
+            paneInfo.Float() \
+                    .FloatingPosition(panePos)
+
+        self.__auiMgr.AddPane(window, paneInfo)
+        self.__panels[      panelType] = window
+        self.__panelActions[panelType] = action
+        self.__auiMgrUpdate()
 
             
     def isPanelOpen(self, panelType):
@@ -492,11 +511,19 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         
         if isinstance(panel, (fslpanel  .FSLEyesPanel,
                               fsltoolbar.FSLEyesToolBar)):
-            self.__panels.pop(type(panel))
+            
+            self         .__panels      .pop(type(panel))
+            action = self.__panelActions.pop(type(panel), None)
 
             # calling fslpanel.FSLEyesPanel.destroy()
             # here -  wx.Destroy is done below
             panel.destroy()
+
+            # If this panel was opened through
+            # a ToggleAction, make sure that
+            # its toggled state is correct
+            if action is not None and isinstance(action, actions.ToggleAction):
+                action.toggled = False
 
             # Even when the user closes a pane,
             # AUI does not detach said pane -

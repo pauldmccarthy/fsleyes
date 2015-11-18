@@ -258,17 +258,37 @@ class FSLEyesFrame(wx.Frame):
 
         self.__viewPanelMenus[panel] = submenu
 
-        for actionName, actionObj in actionz:
+        # Separate out the normal actions from
+        # the toggle actions, as we will put a
+        # separator between them.
+        regularActions = []
+        toggleActions  = []
 
+        for actionName, actionObj in actionz:
             if isinstance(actionObj, actions.ToggleAction):
-                kind = wx.ITEM_CHECK
+                toggleActions .append((actionName, actionObj))
             else:
-                kind = wx.ITEM_NORMAL
-            
+                regularActions.append((actionName, actionObj))
+
+        # Non-toggle actions
+        for actionName, actionObj in regularActions:
             menuItem = menu.Append(
                 wx.ID_ANY,
                 strings.actions[panel, actionName],
-                kind=kind)
+                kind=wx.ITEM_NORMAL)
+            
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
+
+        # Separator
+        if len(regularActions) > 0 and len(toggleActions) > 0:
+            menu.AppendSeparator()
+
+        for actionName, actionObj in toggleActions:
+
+            menuItem = menu.Append(
+                wx.ID_ANY,
+                strings.actions[panel, actionName],
+                kind=wx.ITEM_CHECK)
             
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
@@ -280,11 +300,14 @@ class FSLEyesFrame(wx.Frame):
             self.__auiManager.ClosePane(paneInfo)
             self.__auiManager.Update()
 
+        # But put another separator before it
+        if len(regularActions) > 0 or len(toggleActions) > 0:
+            menu.AppendSeparator()
+
         closeItem = menu.Append(
             wx.ID_ANY,
             strings.actions[self, 'closeViewPanel'])
         self.Bind(wx.EVT_MENU, closeViewPanel, closeItem)
-            
     
 
     def __onViewPanelClose(self, ev=None, paneInfo=None):
@@ -320,11 +343,7 @@ class FSLEyesFrame(wx.Frame):
                       id(panel),
                       id(dctx)))
 
-        # Unbind view panel menu
-        # items, and remove the menu
-        for actionName, actionObj in panel.getActions().items():
-            actionObj.unbindAllWidgets()
-
+        # Remove the view panel menu
         if menu is not None:
             self.__settingsMenu.Remove(menu.GetId())
 

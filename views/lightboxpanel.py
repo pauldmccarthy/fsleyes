@@ -191,7 +191,31 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         """Shows/hides a :class:`.LightBoxToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """        
-        self.togglePanel(lightboxtoolbar.LightBoxToolBar, lb=self)
+        self.togglePanel(lightboxtoolbar.LightBoxToolBar,
+                         lb=self,
+                         action=self.toggleLightBoxToolBar)
+
+        
+    def getActions(self):
+        """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
+        :mod:`.actions` that are defined on this ``LightBoxPanel``.
+        """
+        actions = [self.screenshot,
+                   self.showCommandLineArgs,
+                   self.toggleOverlayList,
+                   self.toggleLocationPanel,
+                   self.toggleDisplayProperties,
+                   self.toggleLightBoxToolBar,
+                   self.toggleOverlayInfo,
+                   self.toggleAtlasPanel,
+                   self.toggleLookupTablePanel,
+                   self.toggleClusterPanel,
+                   self.toggleClassificationPanel,
+                   self.toggleShell]
+
+        names = [a.__name__ for a in actions]
+
+        return zip(names, actions)
 
 
     def getGLCanvases(self):

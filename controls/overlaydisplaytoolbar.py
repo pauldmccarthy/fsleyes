@@ -123,7 +123,8 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
     def showMoreSettings(self, *a):
         """Shows/hides a :class:`.OverlayDisplayPanel` dialog. """
         self.__viewPanel.togglePanel(overlaydisplay.OverlayDisplayPanel,
-                                     floatPane=True)
+                                     floatPane=True,
+                                     action=self.showMoreSettings)
 
 
     def __showTools(self, overlay):

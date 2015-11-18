@@ -117,7 +117,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
        :nosignatures:
     
        ~fsl.fsleyes.controls.orthotoolbar.OrthoToolBar
-       ~fsl.fsleyes.controls.orthoedittoolbar.OrthoEditToolBar
        ~fsl.fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar
     """
 
@@ -240,7 +239,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         def _addToolbars():
             self.toggleDisplayProperties()
             self.toggleOrthoToolBar()
-            self.toggleEditToolBar()
 
         if addToolbars:
             wx.CallAfter(_addToolbars)
@@ -278,7 +276,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Shows/hides an :class:`.OrthoToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(orthotoolbar.OrthoToolBar, ortho=self)
+        self.togglePanel(orthotoolbar.OrthoToolBar,
+                         ortho=self,
+                         action=self.toggleOrthoToolBar)
 
 
     @actions.toggleAction
@@ -286,7 +286,32 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Shows/hides an :class:`.OrthoEditToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """ 
-        self.togglePanel(orthoedittoolbar.OrthoEditToolBar, ortho=self) 
+        self.togglePanel(orthoedittoolbar.OrthoEditToolBar,
+                         ortho=self,
+                         action=self.toggleEditToolBar)
+
+
+    def getActions(self):
+        """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
+        :mod:`.actions` that are defined on this ``OrthoPanel``.
+        """
+        actions = [self.screenshot,
+                   self.showCommandLineArgs,
+                   self.toggleOverlayList,
+                   self.toggleLocationPanel,
+                   self.toggleDisplayProperties,
+                   self.toggleOrthoToolBar,
+                   self.toggleEditToolBar,
+                   self.toggleOverlayInfo,
+                   self.toggleAtlasPanel,
+                   self.toggleLookupTablePanel,
+                   self.toggleClusterPanel,
+                   self.toggleClassificationPanel,
+                   self.toggleShell]
+
+        names = [a.__name__ for a in actions]
+
+        return zip(names, actions)
 
             
     def getGLCanvases(self):
