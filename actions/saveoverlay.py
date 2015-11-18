@@ -9,13 +9,8 @@ to save the currently selected overlay.
 """
 
 
-import logging
-
 import fsl.data.image      as fslimage
 import fsl.fsleyes.actions as actions
-
-
-log = logging.getLogger(__name__)
 
 
 class SaveOverlayAction(actions.Action):

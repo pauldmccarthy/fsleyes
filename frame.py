@@ -20,10 +20,14 @@ import fsl.utils.settings as fslsettings
 
 import views
 import actions
-import actions.copyoverlay  as copyoverlay
-import actions.openfile     as openfile
-import actions.openstandard as openstandard
-import actions.saveoverlay  as saveoverlay
+import actions.copyoverlay     as copyoverlay
+import actions.openfile        as openfile
+import actions.openstandard    as openstandard
+import actions.saveoverlay     as saveoverlay
+import actions.loadperspective as loadperspective
+import actions.saveperspective as saveperspective 
+import perspectives
+
 import displaycontext
 
 
@@ -551,10 +555,11 @@ class FSLEyesFrame(wx.Frame):
         menuBar = wx.MenuBar()
         self.SetMenuBar(menuBar)
 
-        fileMenu     = wx.Menu()
-        viewMenu     = wx.Menu()
-        settingsMenu = wx.Menu() 
- 
+        fileMenu        = wx.Menu()
+        viewMenu        = wx.Menu()
+        perspectiveMenu = wx.Menu() 
+        settingsMenu    = wx.Menu()
+        
         menuBar.Append(fileMenu,     'File')
         menuBar.Append(viewMenu,     'View')
         menuBar.Append(settingsMenu, 'Settings') 
@@ -563,21 +568,43 @@ class FSLEyesFrame(wx.Frame):
         self.__viewMenu     = viewMenu
         self.__settingsMenu = settingsMenu
 
-        viewPanels = views   .listViewPanels()
-        actionz    = [openfile    .OpenFileAction,
-                      openstandard.OpenStandardAction,
-                      copyoverlay .CopyOverlayAction,
-                      saveoverlay .SaveOverlayAction]
-
+        # Global actions
+        actionz = [openfile    .OpenFileAction,
+                   openstandard.OpenStandardAction,
+                   copyoverlay .CopyOverlayAction,
+                   saveoverlay .SaveOverlayAction]
+ 
         for action in actionz:
-            menuItem = fileMenu.Append(wx.ID_ANY, strings.actions[action])
-            
+            menuItem  = fileMenu.Append(wx.ID_ANY, strings.actions[action])
             actionObj = action(self.__overlayList, self.__displayCtx)
 
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
+        # Shortcuts to open a new view panel
+        viewPanels = [views.OrthoPanel,
+                      views.LightBoxPanel,
+                      views.TimeSeriesPanel,
+                      views.PowerSpectrumPanel,
+                      views.HistogramPanel]
+        
         for viewPanel in viewPanels:
             viewAction = viewMenu.Append(wx.ID_ANY, strings.titles[viewPanel]) 
             self.Bind(wx.EVT_MENU,
                       lambda ev, vp=viewPanel: self.addViewPanel(vp),
                       viewAction)
+
+        # Perspectives
+        viewMenu.AppendSubMenu(perspectiveMenu, 'Perspectives')
+        for persp in perspectives.getAllPerspectives():
+            
+            menuItem  = perspectiveMenu.Append(wx.ID_ANY,
+                                               strings.perspectives[persp])
+            actionObj = loadperspective.LoadPerspectiveAction(self, persp)
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
+
+        # Save perspective
+        savePerspAction   = saveperspective.SavePerspectiveAction(self)
+        savePerspMenuItem = perspectiveMenu.Append(
+            wx.ID_ANY, strings.actions[savePerspAction])
+
+        savePerspAction.bindToWidget(self, wx.EVT_MENU, savePerspMenuItem)

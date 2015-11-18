@@ -9,12 +9,7 @@ load overlay files into the :class:`.OverlayList`.
 """
 
 
-import logging
-
 import fsl.fsleyes.actions as actions
-
-
-log = logging.getLogger(__name__)
 
 
 class OpenFileAction(actions.Action):

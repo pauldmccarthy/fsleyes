@@ -8,15 +8,11 @@
 which creates a copy of the currently selected overlay.
 """
 
-import logging
 
 import numpy               as np
 
 import fsl.fsleyes.actions as actions
 import fsl.data.image      as fslimage
-
-
-log = logging.getLogger(__name__)
 
 
 class CopyOverlayAction(actions.Action):

@@ -12,9 +12,7 @@ the :mod:`~fsl.fsleyes` package documentation.  It contains a collection of
 views.
 
 
-A package-level convenience function, :func:`listViewPanels`, is provided to
-allow dynamic lookup of all :class:`.ViewPanel` sub-classes. The following
-:class:`.ViewPanel` sub-classes currently exist:
+The following :class:`.ViewPanel` sub-classes currently exist:
 
 .. autosummary::
    :nosignatures:
@@ -51,24 +49,3 @@ LightBoxPanel      = lightboxpanel     .LightBoxPanel
 TimeSeriesPanel    = timeseriespanel   .TimeSeriesPanel
 PowerSpectrumPanel = powerspectrumpanel.PowerSpectrumPanel
 HistogramPanel     = histogrampanel    .HistogramPanel
-
-
-def listViewPanels():
-    """Convenience function which returns a list containing all
-    :class:`.ViewPanel` sub-classes in the ``views`` package.
-    """
-
-    atts = globals()
-
-    viewPanels = []
-
-    for name, val in atts.items():
-        
-        if not isinstance(val, type): continue
-        if val == FSLEyesPanel:       continue
-            
-        if issubclass(val, FSLEyesPanel) and \
-           val not in (CanvasPanel, ViewPanel, PlotPanel):
-            viewPanels.append(val)
-            
-    return viewPanels

@@ -13,12 +13,7 @@ to load in standard space images from the ``$FSLDIR/data/standard/`` directory.
 import os
 import os.path as op
 
-import logging
-
 import fsl.fsleyes.actions as actions
-
-
-log = logging.getLogger(__name__)
 
 
 class OpenStandardAction(actions.Action):
