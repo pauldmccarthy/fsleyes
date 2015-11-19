@@ -38,22 +38,45 @@ class SavePerspectiveAction(action.Action):
         is saved via the :func:`.perspectives.savePerspective` function.
         """
 
-        dlg = wx.TextEntryDialog(
-            self.__frame,
-            message=strings.messages['perspectives.savePerspective'])
+        builtIns = perspectives.BUILT_IN_PERSPECTIVES.keys()
+        saved    = perspectives.getAllPerspectives()
+        
+        while True:
+            dlg = wx.TextEntryDialog(
+                self.__frame,
+                message=strings.messages[self, 'enterName'])
 
-        if dlg.ShowModal() != wx.ID_OK:
-            return
+            if dlg.ShowModal() != wx.ID_OK:
+                return
 
-        name = dlg.GetValue()
+            name = dlg.GetValue()
 
-        if name.strip() == '':
-            return
+            if name.strip() == '':
+                return
 
-        # TODO Prevent using built-in perspective names
+            # Not allowed to use built-in perspective names
+            if name in builtIns:
+                dlg = wx.MessageDialog(
+                    self.__frame,
+                    message=strings.messages[
+                        self, 'nameIsBuiltIn'].format(name),
+                    style=(wx.ICON_EXCLAMATION | wx.OK))
+                dlg.ShowModal()
+                continue
 
-        # TODO Name collision - confirm overwrite
+            # Name collision - confirm overwrite
+            if name in saved:
+                dlg = wx.MessageDialog(
+                    self.__frame,
+                    message=strings.messages[
+                        self, 'confirmOverwrite'].format(name),
+                    style=(wx.ICON_QUESTION | wx.YES_NO | wx.NO_DEFAULT))
 
+                if dlg.ShowModal() == wx.ID_NO:
+                    continue
+                
+            break
+                    
         perspectives.savePerspective(self.__frame, name)
 
         self.__frame.refreshPerspectiveMenu()

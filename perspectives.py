@@ -53,24 +53,34 @@ def getAllPerspectives():
 def loadPerspective(frame, name):
     """
     """
-    log.debug('Loading perspective {}'.format(name))
 
-    persp = fslsettings.read('fsleyes.perspectives.{}'.format(name), None)
+    if name in BUILT_IN_PERSPECTIVES.keys():
+        
+        log.debug('Loading built-in perspective {}'.format(name))
+        persp = BUILT_IN_PERSPECTIVES[name]
+        
+    else:
+        log.debug('Loading saved perspective {}'.format(name))
+        persp = fslsettings.read('fsleyes.perspectives.{}'.format(name), None)
+
+    if persp is None:
+        raise ValueError('No perspective named "{}" exists'.format(name))
+
     log.debug('Serialised perspective:\n{}'.format(persp))
               
     persp = deserialisePerspective(persp)
-
     frameChildren, frameLayout, vpChildrens, vpLayouts = persp
 
+    # Show a message while re-configuring the frame
     dlg = fsldlg.SimpleMessageDialog(
         frame,
-        strings.messages['perspectives.applyingPerspective'].format(name))
+        strings.messages['perspectives.applyingPerspective'].format(
+            strings.perspectives.get(name, name)))
     dlg.Show()
 
     # Clear all existing view
     # panels from the frame
     for vp in frame.getViewPanels():
-        print 'Removing view panel {}'.format(type(vp).__name__)
         frame.removeViewPanel(vp)
 
     # Add all of the view panels
@@ -87,9 +97,9 @@ def loadPerspective(frame, name):
     for vp, vpChildren, vpLayout in zip(viewPanels, vpChildrens, vpLayouts):
         
         for child in vpChildren:
-            
             _addControlPanel(vp, child)
-            vp.getAuiManager().LoadPerspective(vpLayout)
+            
+        vp.getAuiManager().LoadPerspective(vpLayout)
 
     dlg.Close()
     dlg.Destroy()
@@ -98,8 +108,13 @@ def loadPerspective(frame, name):
 def savePerspective(frame, name):
     """
     """
+
+    if name in BUILT_IN_PERSPECTIVES.keys():
+        raise ValueError('A built-in perspective named "{}" '
+                         'already exists'.format(name))
     
     log.debug('Saving current perspective with name {}'.format(name))
+    
     persp = serialisePerspective(frame)
     fslsettings.write('fsleyes.perspectives.{}'.format(name), persp)
 
@@ -390,8 +405,8 @@ BUILT_IN_PERSPECTIVES = collections.OrderedDict((
      textwrap.dedent("""
                      OrthoPanel,TimeSeriesPanel,
                      layout2|name=OrthoPanel;caption=Ortho View 1;state=67377088;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=853;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=TimeSeriesPanel;caption=Time series 2;state=67377148;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=472;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=261|
-                     LocationPanel,ClusterPanel,OverlayListPanel,AtlasPanel,
-                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=2;layer=1;row=0;pos=1;prop=98544;bestw=440;besth=109;minw=440;minh=109;maxw=-1;maxh=-1;floatx=1051;floaty=349;floatw=440;floath=125;notebookid=-1;transparent=255|name=ClusterPanel;caption=Cluster browser;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=390;besth=96;minw=390;minh=96;maxw=-1;maxh=-1;floatx=276;floaty=578;floatw=390;floath=112;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=2;layer=1;row=0;pos=2;prop=87792;bestw=197;besth=80;minw=197;minh=80;maxw=-1;maxh=-1;floatx=1047;floaty=492;floatw=197;floath=96;notebookid=-1;transparent=255|name=AtlasPanel;caption=Atlases;state=67373052;dir=2;layer=1;row=0;pos=0;prop=113664;bestw=318;besth=84;minw=318;minh=84;maxw=-1;maxh=-1;floatx=1091;floaty=143;floatw=318;floath=100;notebookid=-1;transparent=255|dock_size(5,0,0)=10|dock_size(3,0,0)=130|dock_size(2,1,0)=566|
+                     OverlayDisplayToolBar,LocationPanel,AtlasPanel,OverlayListPanel,OrthoToolBar,ClusterPanel,
+                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=860;besth=49;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=2;row=0;pos=1;prop=98544;bestw=440;besth=109;minw=440;minh=109;maxw=-1;maxh=-1;floatx=2730;floaty=1104;floatw=440;floath=125;notebookid=-1;transparent=255|name=AtlasPanel;caption=Atlases;state=67373052;dir=2;layer=1;row=0;pos=0;prop=98904;bestw=318;besth=84;minw=318;minh=84;maxw=-1;maxh=-1;floatx=1091;floaty=143;floatw=318;floath=100;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=2;row=0;pos=0;prop=87792;bestw=197;besth=80;minw=197;minh=80;maxw=-1;maxh=-1;floatx=2608;floaty=1116;floatw=197;floath=96;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=1;pos=0;prop=100000;bestw=815;besth=34;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=2072;floaty=80;floatw=824;floath=50;notebookid=-1;transparent=255|name=ClusterPanel;caption=Cluster browser;state=67373052;dir=2;layer=1;row=0;pos=1;prop=114760;bestw=390;besth=96;minw=390;minh=96;maxw=-1;maxh=-1;floatx=3516;floaty=636;floatw=390;floath=112;notebookid=-1;transparent=255|dock_size(5,0,0)=10|dock_size(2,1,0)=566|dock_size(1,10,0)=51|dock_size(1,10,1)=36|dock_size(3,2,0)=130|
                      ,
-                     layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=640;besth=480;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=10| 
+                     layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=640;besth=480;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=642|
                      """))))

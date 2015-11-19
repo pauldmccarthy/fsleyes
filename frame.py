@@ -376,7 +376,9 @@ class FSLEyesFrame(wx.Frame):
         elif panel is not None:
             paneInfo = self.__auiManager.GetPane(panel)
 
-        if panel is None:
+        # This method may get called when
+        # the user closes a control panel
+        if panel is None or panel not in self.__viewPanels:
             return
 
         self       .__viewPanels    .remove(panel)
