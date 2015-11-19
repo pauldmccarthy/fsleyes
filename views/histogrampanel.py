@@ -100,7 +100,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         plotpanel.OverlayPlotPanel.destroy(self)
 
         
-    @actions.toggleAction
+    @actions.toggleControlAction(plotlistpanel.PlotListPanel)
     def toggleHistogramList(self):
         """Shows/hides a :class:`.PlotListPanel`. See
         :meth:`.ViewPanel.togglePanel`.
@@ -111,7 +111,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
                          action=self.toggleHistogramList)
 
         
-    @actions.toggleAction
+    @actions.toggleControlAction(histogramcontrolpanel.HistogramControlPanel)
     def toggleHistogramControl(self):
         """Shows/hides a :class:`.HistogramControlPanel`. See
         :meth:`.ViewPanel.togglePanel`.

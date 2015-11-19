@@ -167,7 +167,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         canvaspanel.CanvasPanel.destroy(self)
 
 
-    @actions.toggleAction
+    @actions.toggleControlAction(lightboxtoolbar.LightBoxToolBar)
     def toggleLightBoxToolBar(self):
         """Shows/hides a :class:`.LightBoxToolBar`. See
         :meth:`.ViewPanel.togglePanel`.

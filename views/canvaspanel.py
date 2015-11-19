@@ -309,7 +309,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         _showCommandLineArgs(self._overlayList, self._displayCtx, self)
 
         
-    @actions.toggleAction
+    @actions.toggleControlAction(overlaylistpanel.OverlayListPanel)
     def toggleOverlayList(self):
         """Toggles an :class:`.OverlayListPanel`. See
         :meth:`.ViewPanel.togglePanel`.
@@ -319,7 +319,7 @@ class CanvasPanel(viewpanel.ViewPanel):
                          action=self.toggleOverlayList)
 
     
-    @actions.toggleAction
+    @actions.toggleControlAction(overlayinfopanel.OverlayInfoPanel)
     def toggleOverlayInfo(self):
         """Toggles an :class:`.OverlayInfoPanel`. See
         :meth:`.ViewPanel.togglePanel`.
@@ -329,7 +329,7 @@ class CanvasPanel(viewpanel.ViewPanel):
                          action=self.toggleOverlayInfo) 
     
 
-    @actions.toggleAction
+    @actions.toggleControlAction(atlaspanel.AtlasPanel)
     def toggleAtlasPanel(self):
         """Toggles an :class:`.AtlasPanel`. See
         :meth:`.ViewPanel.togglePanel`.
@@ -339,7 +339,7 @@ class CanvasPanel(viewpanel.ViewPanel):
                          action=self.toggleAtlasPanel) 
 
 
-    @actions.toggleAction
+    @actions.toggleControlAction(overlaydisplaytoolbar.OverlayDisplayToolBar)
     def toggleDisplayProperties(self):
         """Toggles an :class:`.OverlayDisplayToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
@@ -349,7 +349,7 @@ class CanvasPanel(viewpanel.ViewPanel):
                          action=self.toggleDisplayProperties)
         
 
-    @actions.toggleAction
+    @actions.toggleControlAction(locationpanel.LocationPanel)
     def toggleLocationPanel(self):
         """Toggles a :class:`.LocationPanel`. See
         :meth:`.ViewPanel.togglePanel`.
@@ -359,7 +359,7 @@ class CanvasPanel(viewpanel.ViewPanel):
                          action=self.toggleLocationPanel) 
 
 
-    @actions.toggleAction
+    @actions.toggleControlAction(clusterpanel.ClusterPanel)
     def toggleClusterPanel(self):
         """Toggles a :class:`.ClusterPanel`. See
         :meth:`.ViewPanel.togglePanel`.
@@ -369,7 +369,7 @@ class CanvasPanel(viewpanel.ViewPanel):
                          action=self.toggleClusterPanel) 
 
 
-    @actions.toggleAction
+    @actions.toggleControlAction(lookuptablepanel.LookupTablePanel)
     def toggleLookupTablePanel(self):
         """Toggles a :class:`.LookupTablePanel`. See
         :meth:`.ViewPanel.togglePanel`.
@@ -378,7 +378,7 @@ class CanvasPanel(viewpanel.ViewPanel):
                          location=wx.TOP,
                          action=self.toggleLookupTablePanel)
 
-    @actions.toggleAction
+    @actions.toggleControlAction(melclasspanel.MelodicClassificationPanel)
     def toggleClassificationPanel(self):
         """Toggles a :class:`.MelodicClassificationPanel`. See
         :meth:`.ViewPanel.togglePanel`.
@@ -388,7 +388,7 @@ class CanvasPanel(viewpanel.ViewPanel):
                          action=self.toggleClassificationPanel)
 
 
-    @actions.toggleAction
+    @actions.toggleControlAction(shellpanel.ShellPanel)
     def toggleShell(self):
         """Toggles a :class:`.ShellPanel`. See
         :meth:`.ViewPanel.togglePanel`.

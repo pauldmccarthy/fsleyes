@@ -156,7 +156,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         plotpanel.OverlayPlotPanel.destroy(self)
 
 
-    @actions.toggleAction
+    @actions.toggleControlAction(plotlistpanel.PlotListPanel)
     def toggleTimeSeriesList(self):
         """Shows/hides a :class:`.PlotListPanel`. See
         :meth:`.ViewPanel.togglePanel`.
@@ -167,7 +167,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
                          action=self.toggleTimeSeriesList)
 
         
-    @actions.toggleAction
+    @actions.toggleControlAction(timeseriescontrolpanel.TimeSeriesControlPanel)
     def toggleTimeSeriesControl(self):
         """Shows/hides a :class:`.TimeSeriesControlPanel`. See
         :meth:`.ViewPanel.togglePanel`.

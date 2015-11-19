@@ -109,7 +109,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         plotpanel.OverlayPlotPanel.destroy(self)
 
 
-    @actions.toggleAction
+    @actions.toggleControlAction(pscontrol.PowerSpectrumControlPanel)
     def togglePowerSpectrumControl(self):
         """Shows/hides a :class:`.PowerSpectrumControlPanel`. See
         :meth:`.ViewPanel.togglePanel`.
@@ -121,7 +121,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
             action=self.togglePowerSpectrumControl)
 
         
-    @actions.toggleAction
+    @actions.toggleControlAction(plotlistpanel.PlotListPanel)
     def togglePowerSpectrumList(self):
         """Shows/hides a :class:`.PlotListPanel`. See
         :meth:`.ViewPanel.togglePanel`.

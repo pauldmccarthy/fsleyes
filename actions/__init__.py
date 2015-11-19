@@ -103,10 +103,12 @@ Finally, some 'global' actions are also provided in this package:
     ~fsl.fsleyes.actions.saveperspective
     ~fsl.fsleyes.actions.loadperspective
     ~fsl.fsleyes.actions.clearperspective
+    ~fsl.fsleyes.actions.togglecontrolpanel
 """
 
 
 import logging
+import types
 import inspect
 import functools
 
@@ -123,18 +125,19 @@ import loadcolourmap
 import saveperspective
 import loadperspective
 import clearperspective
+import togglecontrolpanel
 
-
-Action                 = action          .Action
-ToggleAction           = action          .ToggleAction
-CopyOverlayAction      = copyoverlay     .CopyOverlayAction
-OpenFileAction         = openfile        .OpenFileAction
-OpenStandardAction     = openstandard    .OpenStandardAction
-SaveOverlayAction      = saveoverlay     .SaveOverlayAction
-LoadColourMapAction    = loadcolourmap   .LoadColourMapAction
-SavePerspectiveAction  = saveperspective .SavePerspectiveAction
-LoadPerspectiveAction  = loadperspective .LoadPerspectiveAction
-ClearPerspectiveAction = clearperspective.ClearPerspectiveAction
+Action                   = action            .Action
+ToggleAction             = action            .ToggleAction
+CopyOverlayAction        = copyoverlay       .CopyOverlayAction
+OpenFileAction           = openfile          .OpenFileAction
+OpenStandardAction       = openstandard      .OpenStandardAction
+SaveOverlayAction        = saveoverlay       .SaveOverlayAction
+LoadColourMapAction      = loadcolourmap     .LoadColourMapAction
+SavePerspectiveAction    = saveperspective   .SavePerspectiveAction
+LoadPerspectiveAction    = loadperspective   .LoadPerspectiveAction
+ClearPerspectiveAction   = clearperspective  .ClearPerspectiveAction
+ToggleControlPanelAction = togglecontrolpanel.ToggleControlPanelAction
 
 
 log = logging.getLogger(__name__)
@@ -148,6 +151,13 @@ def action(*args, **kwargs):
 def toggleAction(*args, **kwargs):
     """A decorator which identifies a class method as a toggle action. """
     return ActionFactory(ToggleAction, *args, **kwargs)
+
+
+def toggleControlAction(*args, **kwargs):
+    """A decorator which identifies a class method as a
+    :class:`.ToggleControlPanelAction`.
+    """
+    return ActionFactory(ToggleControlPanelAction, *args, **kwargs)
 
 
 class ActionProvider(object):
@@ -214,6 +224,8 @@ class ActionFactory(object):
               to return ``ActionFactory(CustomActionClass, *args, **kwargs)``,
               where the ``*args`` and ``**kwargs`` are the arguments passed to
               the :class:`Action` sub-class.
+    
+              See the :func:`toggleControlAction` decorator for an example.
 
     
     *Boring technical details*
@@ -294,7 +306,8 @@ class ActionFactory(object):
         # decorator was used
         if len(kwargs) == 0 and \
            len(args)   == 1 and \
-           callable(args[0]):
+           isinstance(args[0], (types.FunctionType,
+                                types.MethodType)):
             
             self.__func = args[0]
             self.__args = self.__args[1:]
