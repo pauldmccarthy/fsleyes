@@ -140,14 +140,14 @@ ClearPerspectiveAction = clearperspective.ClearPerspectiveAction
 log = logging.getLogger(__name__)
 
 
-def action(func):
+def action(*args, **kwargs):
     """A decorator which identifies a class method as an action. """
-    return ActionFactory(func, Action)
+    return ActionFactory(Action, *args, **kwargs)
 
 
-def toggleAction(func):
+def toggleAction(*args, **kwargs):
     """A decorator which identifies a class method as a toggle action. """
-    return ActionFactory(func, ToggleAction) 
+    return ActionFactory(ToggleAction, *args, **kwargs)
 
 
 class ActionProvider(object):
@@ -200,12 +200,24 @@ class ActionProvider(object):
 class ActionFactory(object):
     """The ``ActionFactory`` is used by the :func:`action` and
     :func:`toggleAction` decorators. Its job is to create :class:`Action`
-    instances for :class:`ActionProvider` instances. This class has no use
-    outside of this module. 
+    instances for :class:`ActionProvider` instances.
+
+    
+    .. warning:: This class contains difficult-to-understand code. Read up
+                 on decorators and descriptors before proceeding.
+
+
+    .. note:: This class has no use outside of this module, except for use
+              with custom :class:`.Action`/:class:`.ToggleAction` sub-classes
+              and corresponding decorators (along the lines of :func:`.action`
+              and :func:`.toggleAction`). A custom decorator simply needs
+              to return ``ActionFactory(CustomActionClass, *args, **kwargs)``,
+              where the ``*args`` and ``**kwargs`` are the arguments passed to
+              the :class:`Action` sub-class.
 
     
     *Boring technical details*
-
+    
     
     Consider the following class::
 
@@ -221,7 +233,7 @@ class ActionFactory(object):
     create an :class:`Action` instance at the point of class definition,
     because this would lead to a single ``Action`` instance being shared by
     multiple ``MyThing`` instances.  We need to be able to create an ``Action``
-    instance for every ``MyThing`` instance, will still allowing the action
+    instance for every ``MyThing`` instance, whilst still allowing the action
     decorator to be used on class methods.
 
 
@@ -238,43 +250,101 @@ class ActionFactory(object):
     ``ActionFactory`` is a descriptor - it uses the :meth:`__get__` method
     so it can differentiate between class-level and instance-level accesses
     of the decorated method.
+
+    
+    The ``ActionFactory`` supports class-method decorators both with and
+    without arguments. While neither the :class:`.Action`, nor the
+    :class:`.ToggleAction` classes accept any optional arguments, this may be
+    useful for custom sub-classes, i.e.::
+
+        class MyThing(ActionProvider):
+
+            @action
+            def myAction(self):
+                # do things here
+
+            @customAction()
+            def myAction2(self):
+                # do things here
+
+            @otherCustomAction(arg1=8)
+            def myAction3(self):
+                # do things here
     """
 
     
-    def __init__(self, func, actionType):
+    def __init__(self, actionType, *args, **kwargs):
         """Create an ``ActionFactory``.
 
-        :arg func:       The encapsulated method.
         :arg actionType: The action type (e.g. :class:`Action` or
                          :class:`ToggleAction`).
-        """
-        self.__func        = func
-        self.__actionType  = actionType
 
+        The remaining arguments may comprise a single callable object, (an
+        ``@action`` style decorator was used) or a collection of arguments
+        passed to the decorator (an ``@action(...)`` style decorator was
+        used).
+        """
+        
+        self.__actionType  = actionType
+        self.__args        = args
+        self.__kwargs      = kwargs
+        self.__func        = None
+
+        # A no-brackets style
+        # decorator was used
+        if len(kwargs) == 0 and \
+           len(args)   == 1 and \
+           callable(args[0]):
+            
+            self.__func = args[0]
+            self.__args = self.__args[1:]
+
+        
+    def __call__(self, func=None):
+        """If this ``ActionFactory`` was instantiated through a brackets-style
+        decorator (e.g. ``@action(arg1=1, arg2=2)``), this method is called
+        immediately after :meth:`__init__`, with a reference to the decorated
+        function. Otherwise, (an ``@action`` style decorator was used), this
+        method should never be called.
+        """
+
+        if self.__func is not None:
+            log.warn('ActionFactory.__call__ was called, but function is '
+                     'alreday set ({})! I\'m really confused.'.format(
+                         self.__func.__name__))
+        
+        self.__func = func
+        return self
+    
     
     def __get__(self, instance, cls):
         """When this ``ActionFactory`` is accessed through an instance,
-        a :class:`Action` instance is created. This ``ActionFactory`` is
+        an :class:`Action` instance is created. This ``ActionFactory`` is
         then replaced by the ``Action`` instance.
 
         If this ``ActionFactory`` is accessed through a class, the
         encapsulated function is returned.
         """
-
+        
         # Class-level access
         if instance is None:
             return self.__func
         
         else:
             
-            # Create an Action for the instance,
+            # Create an Action for the instance
+            action = self.__actionType(
+                self.__func,
+                instance,
+                *self.__args,
+                **self.__kwargs)
+
             # and replace this ActionFactory
             # with the Action on the instance.
-            action = self.__actionType(self.__func, instance)
             setattr(instance, self.__func.__name__, action)
             return functools.update_wrapper(action, self.__func)
 
-
+    
 class ActionButton(props.Button):
     """Extends the :class:`props.Button` class to encapsulate an
     :class:`Action` instance.
