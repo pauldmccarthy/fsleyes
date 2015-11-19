@@ -7,7 +7,9 @@
 """
 """
 
+import wx
 
+import fsl.data.strings         as strings
 import fsl.fsleyes.actions      as actions
 import fsl.fsleyes.perspectives as perspectives
 
@@ -29,7 +31,16 @@ class SavePerspectiveAction(actions.Action):
         """
         """
 
-        # TODO prompt for name
-        name = 'blah'
+        dlg = wx.TextEntryDialog(
+            self.__frame,
+            message=strings.messages['perspectives.savePerspective'])
+
+        if dlg.ShowModal() != wx.ID_OK:
+            return
+
+        name = dlg.GetValue()
+
+        if name.strip() == '':
+            return
 
         perspectives.savePerspective(self.__frame, name)

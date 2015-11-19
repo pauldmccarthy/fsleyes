@@ -61,10 +61,6 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
    
        toggleHistogramList
        toggleHistogramControl
-
-    
-    The ``PlotListPanel`` and ``HistogramControlPanel`` are both shown
-    by default when a new ``HistogramPanel`` is created.
     """
 
     
@@ -92,12 +88,6 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
             self, parent, overlayList, displayCtx)
 
         self.addListener('histType', self._name, self.draw)
-
-        def addPanels():
-            self.toggleHistogramControl()
-            self.toggleHistogramList()
-
-        wx.CallAfter(addPanels) 
 
 
     def destroy(self):

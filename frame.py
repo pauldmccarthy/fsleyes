@@ -151,7 +151,7 @@ class FSLEyesFrame(wx.Frame):
         """Returns a list of all :class:`.ViewPanel` instances that are
         currenlty displayed in this ``FSLEyesFrame``.
         """
-        return self.__viewPanels.values()
+        return list(self.__viewPanels.values())
 
 
     def getViewPanelInfo(self, viewPanel):
@@ -564,16 +564,8 @@ class FSLEyesFrame(wx.Frame):
         # TODO Restore the previous view panel layout.
         #      Currently, we just display an OrthoPanel.
         if restore:
-
             self.addViewPanel(views.OrthoPanel)
 
-            viewPanel = self.getViewPanels()[0]
-
-            # Set up a default for ortho views
-            # layout (this will hopefully eventually
-            # be restored from a saved state)
-            viewPanel.toggleOverlayList()
-            viewPanel.toggleLocationPanel()
 
             
     def __makeMenuBar(self):
@@ -624,12 +616,13 @@ class FSLEyesFrame(wx.Frame):
         viewMenu.AppendSubMenu(perspectiveMenu, 'Perspectives')
         for persp in perspectives.getAllPerspectives():
             
-            menuItem  = perspectiveMenu.Append(wx.ID_ANY,
-                                               strings.perspectives[persp])
+            menuItem  = perspectiveMenu.Append(
+                wx.ID_ANY, strings.perspectives.get(persp, persp))
             actionObj = loadperspective.LoadPerspectiveAction(self, persp)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
         # Save perspective
+        perspectiveMenu.AppendSeparator()
         savePerspAction   = saveperspective.SavePerspectiveAction(self)
         savePerspMenuItem = perspectiveMenu.Append(
             wx.ID_ANY, strings.actions[savePerspAction])

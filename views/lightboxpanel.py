@@ -51,16 +51,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
        :nosignatures:
 
        toggleLightBoxToolBar
-
-    
-    When a ``LightBoxPanel`` is created, it will automatically add the
-    following control panels:
-
-    .. autosummary::
-       :nosignatures:
-
-       ~fsl.fsleyes.controls.lightboxtoolbar.LightBoxToolBar
-       ~fsl.fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar
     """
 
 
@@ -159,15 +149,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         self.__selectedOverlayChanged()
         self.centrePanelLayout()
         self.initProfile()
-
-        # The ViewPanel AuiManager seems to
-        # struggle if we add these toolbars
-        # immediately, so we'll do it asynchronously
-        def addToolbars():
-            self.toggleDisplayProperties()
-            self.toggleLightBoxToolBar()
-
-        wx.CallAfter(addToolbars)
 
 
     def destroy(self):

@@ -55,10 +55,6 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
        togglePowerSpectrumControl
 
     
-    The ``PlotListPanel`` and ``PowerSpectrumControlPanel`` are both shown
-    by default when a new ``PowerSpectrumPanel`` is created.    
-
-    
     **Melodic images**
 
     
@@ -100,13 +96,6 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         self.addListener('plotMelodicICs',
                                 self._name,
                                 self.__plotMelodicICsChanged)
-
-        def addPanels():
-            self.togglePowerSpectrumControl()
-            self.togglePowerSpectrumList() 
-
-        wx.CallAfter(addPanels)
-        self.draw()
 
 
     def destroy(self):

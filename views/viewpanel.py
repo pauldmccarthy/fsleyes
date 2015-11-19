@@ -100,14 +100,21 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         self.__profileManager = profiles.ProfileManager(
             self, overlayList, displayCtx)
 
+        # The centrePanel attribute stores a reference
+        # to the main (centre) panel on this ViewPanel.
+        # It is set by sub-class implementations via
+        # the setCentrePanel method.
+        # 
         # The panels dictionary stores a collection
         # of {type : instance} mappings of active
         # FSLeyes control panels that are contained
-        # in this view panel. The panelActions dict
-        # contains a collection of {type : Action}
-        # mappings, but only if the control panel
-        # was opened as a result of an Action on
-        # this view panel. 
+        # in this view panel.
+        #
+        # The panelActions dict contains a collection
+        # of {type : Action} mappings, but only if the
+        # control panel was opened as a result of an
+        # Action on this view panel.
+        self.__centrePanel  = None
         self.__panels       = {}
         self.__panelActions = {}
 
@@ -185,6 +192,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         self.__profileManager = None
         self.__auiMgr         = None
         self.__panels         = None
+        self.__centrePanel    = None
 
         fslpanel.FSLEyesPanel.destroy(self)
         
@@ -203,15 +211,18 @@ class ViewPanel(fslpanel.FSLEyesPanel):
 
 
     def setCentrePanel(self, panel):
-        """Set the primary centre panel for this ``ViewPanel``. """
+        """Set the primary centre panel for this ``ViewPanel``. This method
+        is only intended to be called by sub-classes.
+        """
         
         panel.Reparent(self)
         paneInfo = (aui.AuiPaneInfo()
                     .Name(type(panel).__name__)
                     .CentrePane())
-                         
+
         self.__auiMgr.AddPane(panel, paneInfo)
         self.__auiMgrUpdate()
+        self.__centrePanel = panel
 
 
     def togglePanel(self, panelType, *args, **kwargs):
@@ -366,6 +377,12 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         if panelType in self.__panels: return self.__panels[panelType]
         else:                          return None
 
+
+    def getCentrePanel(self):
+        """Returns the primary (centre) panel on this ``ViewPanel``.
+        """
+        return self.__centrePanel
+        
 
     def getPanels(self):
         """Returns a list containing all control panels currently shown in this

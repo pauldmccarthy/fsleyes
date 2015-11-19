@@ -375,7 +375,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         :meth:`.ViewPanel.togglePanel`.
         """ 
         self.togglePanel(lookuptablepanel.LookupTablePanel,
-                         location=wx.TO,
+                         location=wx.TOP,
                          action=self.toggleLookupTablePanel)
 
     @actions.toggleAction
@@ -394,7 +394,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         :meth:`.ViewPanel.togglePanel`.
         """
         self.togglePanel(shellpanel.ShellPanel,
-                         self.getSceneOptions(),
+                         self,
                          location=wx.BOTTOM,
                          action=self.toggleShell) 
 

@@ -108,27 +108,15 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     
        toggleOrthoToolBar
        toggleEditToolBar
-
-
-    When an ``OrthoPanel`` is created, it will automatically add the
-    following control panels:
-
-    .. autosummary::
-       :nosignatures:
-    
-       ~fsl.fsleyes.controls.orthotoolbar.OrthoToolBar
-       ~fsl.fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, addToolbars=True):
+    def __init__(self, parent, overlayList, displayCtx):
         """Create an ``OrthoPanel``.
 
         :arg parent:      The :mod:`wx` parent.
         :arg overlayList: An :class:`.OverlayList` instance.
         :arg displayCtx:  A :class:`.DisplayContext` instance.
-        :arg addToolbars: If ``False``, the toolbars (listed above) are not
-                          added. Defaults to ``True``.
         """
 
         sceneOpts = orthoopts.OrthoOpts()
@@ -232,16 +220,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__locationChanged()
         self.centrePanelLayout()
         self.initProfile()
-
-        # The ViewPanel AuiManager seems to
-        # struggle if we add these toolbars
-        # immediately, so we'll do it asynchronously 
-        def _addToolbars():
-            self.toggleDisplayProperties()
-            self.toggleOrthoToolBar()
-
-        if addToolbars:
-            wx.CallAfter(_addToolbars)
 
 
     def destroy(self):
@@ -833,10 +811,7 @@ class OrthoFrame(wx.Frame):
         ctx, dummyCanvas = fslgl.getWXGLContext() 
         fslgl.bootstrap()
         
-        self.panel = OrthoPanel(self,
-                                overlayList,
-                                displayCtx,
-                                addToolbars=False)
+        self.panel = OrthoPanel(self, overlayList, displayCtx)
         self.Layout()
 
         if dummyCanvas is not None:
@@ -876,10 +851,7 @@ class OrthoDialog(wx.Dialog):
         ctx, dummyCanvas = fslgl.getWXGLContext()
         fslgl.bootstrap()
         
-        self.panel = OrthoPanel(self,
-                                overlayList,
-                                displayCtx,
-                                addToolbars=False)
+        self.panel = OrthoPanel(self, overlayList, displayCtx)
         self.Layout()
 
         if dummyCanvas is not None:

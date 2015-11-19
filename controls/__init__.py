@@ -52,6 +52,7 @@ import orthotoolbar
 import overlaydisplaypanel
 import overlaydisplaytoolbar
 import overlayinfopanel
+import overlaylistpanel
 import plotlistpanel
 import powerspectrumcontrolpanel
 import shellpanel
@@ -71,6 +72,7 @@ OrthoToolBar               = orthotoolbar.OrthoToolBar
 OverlayDisplayPanel        = overlaydisplaypanel.OverlayDisplayPanel
 OverlayDisplayToolBar      = overlaydisplaytoolbar.OverlayDisplayToolBar
 OverlayInfoPanel           = overlayinfopanel.OverlayInfoPanel
+OverlayListPanel           = overlaylistpanel.OverlayListPanel
 PlotListPanel              = plotlistpanel.PlotListPanel
 PowerSpectrumControlPanel  = powerspectrumcontrolpanel.PowerSpectrumControlPanel
 ShellPanel                 = shellpanel.ShellPanel

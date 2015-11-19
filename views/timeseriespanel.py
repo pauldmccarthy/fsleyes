@@ -75,9 +75,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
        toggleTimeSeriesList
        toggleTimeSeriesControl
- 
-    New ``TimeSeriesPanel`` instances will display a ``PlotListPanel``
-    and a ``TimeSeriesControlPanel`` by default.
 
 
     **FEATures**
@@ -146,13 +143,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
                          self._name,
                          self.__plotMelodicICsChanged)
 
-        def addPanels():
-            self.toggleTimeSeriesControl()
-            self.toggleTimeSeriesList()
-
-        wx.CallAfter(addPanels)
-        self.draw()
-        
 
     def destroy(self):
         """Removes some listeners, and calls the :meth:`.PlotPanel.destroy`
