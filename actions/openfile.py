@@ -9,10 +9,10 @@ load overlay files into the :class:`.OverlayList`.
 """
 
 
-import fsl.fsleyes.actions as actions
+import action
 
 
-class OpenFileAction(actions.Action):
+class OpenFileAction(action.Action):
     """The ``OpenFileAction`` allows the user to add files to the
     :class:`.OverlayList`. This functionality is provided by the
     :meth:`.OverlayList.addOverlays` method.
@@ -24,7 +24,7 @@ class OpenFileAction(actions.Action):
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
         """
-        actions.Action.__init__(self, self.__openFile)
+        action.Action.__init__(self, self.__openFile)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx

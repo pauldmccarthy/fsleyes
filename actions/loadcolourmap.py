@@ -12,7 +12,7 @@ import logging
 import os.path as op
 
 import fsl.data.strings       as strings
-import fsl.fsleyes.actions    as actions
+import                           action
 import fsl.fsleyes.colourmaps as fslcmap
 
 
@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 _stringID = 'actions.loadcolourmap.'
 
 
-class LoadColourMapAction(actions.Action):
+class LoadColourMapAction(action.Action):
     """The ``LoadColourMapAction`` allows the user to select a colour
     map file and give it a name.
 
@@ -38,7 +38,7 @@ class LoadColourMapAction(actions.Action):
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`. 
         """
-        actions.Action.__init__(self, self.__loadColourMap)
+        action.Action.__init__(self, self.__loadColourMap)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx 

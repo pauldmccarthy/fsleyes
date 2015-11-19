@@ -8,11 +8,11 @@
 """
 
 
-import fsl.fsleyes.actions      as actions
+import                             action
 import fsl.fsleyes.perspectives as perspectives
 
 
-class LoadPerspectiveAction(actions.Action):
+class LoadPerspectiveAction(action.Action):
     """
     """
 
@@ -23,7 +23,7 @@ class LoadPerspectiveAction(actions.Action):
         self.__frame       = frame
         self.__perspective = perspective
          
-        actions.Action.__init__(self, self.__loadPerspective)
+        action.Action.__init__(self, self.__loadPerspective)
 
         
     def __loadPerspective(self):

@@ -9,13 +9,13 @@ which creates a copy of the currently selected overlay.
 """
 
 
-import numpy               as np
+import numpy          as np
 
-import fsl.fsleyes.actions as actions
-import fsl.data.image      as fslimage
+import                   action
+import fsl.data.image as fslimage
 
 
-class CopyOverlayAction(actions.Action):
+class CopyOverlayAction(action.Action):
     """The ``CopyOverlayAction`` does as its name suggests - it creates a
     copy of the currently selected overlay.
     """
@@ -27,7 +27,7 @@ class CopyOverlayAction(actions.Action):
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
         """
-        actions.Action.__init__(self, self.__copyOverlay)
+        action.Action.__init__(self, self.__copyOverlay)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
@@ -50,7 +50,7 @@ class CopyOverlayAction(actions.Action):
 
         self.__displayCtx .removeListener('selectedOverlay', self.__name)
         self.__overlayList.removeListener('overlays',        self.__name)
-        actions.Action.destroy(self)
+        action.Action.destroy(self)
 
         
     def __selectedOverlayChanged(self, *a):

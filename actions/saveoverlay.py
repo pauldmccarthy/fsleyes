@@ -9,11 +9,11 @@ to save the currently selected overlay.
 """
 
 
-import fsl.data.image      as fslimage
-import fsl.fsleyes.actions as actions
+import fsl.data.image as fslimage
+import                   action
 
 
-class SaveOverlayAction(actions.Action):
+class SaveOverlayAction(action.Action):
     """The ``SaveOverlayAction`` allows the user to save the currently
     selected overlay, if it has been edited, or only exists in memory.
     """
@@ -25,7 +25,7 @@ class SaveOverlayAction(actions.Action):
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`. 
         """
-        actions.Action.__init__(self, self.__saveOverlay)
+        action.Action.__init__(self, self.__saveOverlay)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
@@ -48,7 +48,7 @@ class SaveOverlayAction(actions.Action):
 
         self.__displayCtx .removeListener('selectedOverlay', self.__name)
         self.__overlayList.removeListener('overlays',        self.__name)
-        actions.Action.destroy(self)
+        action.Action.destroy(self)
 
         
     def __selectedOverlayChanged(self, *a):

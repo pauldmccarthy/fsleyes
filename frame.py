@@ -10,7 +10,6 @@ for FSLeyes.
 
 
 import logging
-import collections
 
 import wx
 import wx.lib.agw.aui     as aui
@@ -20,12 +19,6 @@ import fsl.utils.settings as fslsettings
 
 import views
 import actions
-import actions.copyoverlay     as copyoverlay
-import actions.openfile        as openfile
-import actions.openstandard    as openstandard
-import actions.saveoverlay     as saveoverlay
-import actions.loadperspective as loadperspective
-import actions.saveperspective as saveperspective 
 import perspectives
 
 import displaycontext
@@ -84,6 +77,7 @@ class FSLEyesFrame(wx.Frame):
        addViewPanel
        removeViewPanel 
        getAuiManager
+       refreshPerspectiveMenu
     """
 
     
@@ -129,17 +123,20 @@ class FSLEyesFrame(wx.Frame):
 
         # Keeping track of all open view panels
         # 
-        # The __viewPanels dict contains
-        # {AuiPaneInfo : ViewPanel} mappings
+        # The __viewPanels list contains all
+        # [ViewPanel] instances
         #
         # The other dicts contain
         # {ViewPanel : something} mappings
         # 
-        self.__viewPanels     = collections.OrderedDict()
+        self.__viewPanels     = []
         self.__viewPanelDCs   = {}
         self.__viewPanelMenus = {}
         self.__viewPanelIDs   = {}
 
+        self.__menuBar   = None
+        self.__perspMenu = None
+        
         self.__makeMenuBar()
         self.__restoreState(restore)
 
@@ -151,7 +148,7 @@ class FSLEyesFrame(wx.Frame):
         """Returns a list of all :class:`.ViewPanel` instances that are
         currenlty displayed in this ``FSLEyesFrame``.
         """
-        return list(self.__viewPanels.values())
+        return list(self.__viewPanels)
 
 
     def getViewPanelInfo(self, viewPanel):
@@ -171,8 +168,11 @@ class FSLEyesFrame(wx.Frame):
     def removeViewPanel(self, viewPanel):
         """Removes the given :class:`.ViewPanel` from this ``FSLEyesFrame``.
         """
+
         paneInfo = self.__auiManager.GetPane(viewPanel)
-        self.__onViewPanelClose(    paneInfo=paneInfo)
+        
+        self.__onViewPanelClose(panel=viewPanel)
+        
         self.__auiManager.ClosePane(paneInfo)
         self.__auiManager.Update() 
 
@@ -244,7 +244,8 @@ class FSLEyesFrame(wx.Frame):
         # first key is the AuiPaneInfo of
         # the first panel that was added.
         else:
-            self.__viewPanels.keys()[0].CaptionVisible(True)
+            self.__auiManager.GetPane(self.__viewPanels[0])\
+                             .CaptionVisible(True)
 
         # If this is not the first view panel,
         # give it a sensible initial size.
@@ -261,9 +262,9 @@ class FSLEyesFrame(wx.Frame):
             else:
                 paneInfo.Right().BestSize(width / 3, -1)
 
-        self.__viewPanels[  paneInfo] = panel
-        self.__viewPanelDCs[panel]    = childDC
-        self.__viewPanelIDs[panel]    = panelId
+        self.__viewPanels.append(panel)
+        self.__viewPanelDCs[     panel] = childDC
+        self.__viewPanelIDs[     panel] = panelId
         
         self.__auiManager.AddPane(panel, paneInfo)
         self.__addViewPanelMenu(  panel, title)
@@ -271,6 +272,11 @@ class FSLEyesFrame(wx.Frame):
         self.__auiManager.Update()
 
         self.Thaw()
+
+
+    def refreshPerspectiveMenu(self):
+        """Re-creates the *View -> Perspectives* sub-menu. """
+        self.__makePerspectiveMenu()
 
 
     def __addViewPanelMenu(self, panel, title):
@@ -341,7 +347,7 @@ class FSLEyesFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, closeViewPanel, closeItem)
     
 
-    def __onViewPanelClose(self, ev=None, paneInfo=None):
+    def __onViewPanelClose(self, ev=None, panel=None):
         """Called when the user closes a :class:`.ViewPanel`.
 
         The :meth:`__addViewPanelMenu` method adds a *Close* menu item
@@ -357,16 +363,26 @@ class FSLEyesFrame(wx.Frame):
 
         if ev is not None:
             ev.Skip()
+            
+            # Undocumented - the window associated with an
+            # AuiPaneInfo is available as an attribute called
+            # 'window'. Honestly, I don't know why there is
+            # not a method available on the AuiPaneInfo or
+            # AuiManager to retrieve a managed Window given
+            # the associated AuiPaneInfo object.
             paneInfo = ev.GetPane()
-
-        panel = self .__viewPanels.pop(paneInfo, None)        
+            panel    = paneInfo.window
+            
+        elif panel is not None:
+            paneInfo = self.__auiManager.GetPane(panel)
 
         if panel is None:
             return
 
-        self       .__viewPanelIDs  .pop(panel)
-        dctx = self.__viewPanelDCs  .pop(panel)
-        menu = self.__viewPanelMenus.pop(panel, None)
+        self       .__viewPanels    .remove(panel)
+        self       .__viewPanelIDs  .pop(   panel)
+        dctx = self.__viewPanelDCs  .pop(   panel)
+        menu = self.__viewPanelMenus.pop(   panel, None)
 
         log.debug('Destroying {} ({}) and '
                   'associated DisplayContext ({})'.format(
@@ -392,7 +408,7 @@ class FSLEyesFrame(wx.Frame):
         wasCentre = paneInfo.dock_direction_get() == aui.AUI_DOCK_CENTRE
         
         if numPanels >= 1 and wasCentre:
-            paneInfo = self.__viewPanels.keys()[0]
+            paneInfo = self.__auiManager.GetPane(self.__viewPanels[0])
             paneInfo.Centre().Dockable(False).CaptionVisible(numPanels > 1)
 
         
@@ -414,7 +430,7 @@ class FSLEyesFrame(wx.Frame):
         # It's nice to explicitly clean
         # up our FSLEyesPanels, otherwise
         # they'll probably complain
-        for panel in self.__viewPanels.values():
+        for panel in self.__viewPanels:
             panel.destroy()
 
         
@@ -566,7 +582,6 @@ class FSLEyesFrame(wx.Frame):
         if restore:
             self.addViewPanel(views.OrthoPanel)
 
-
             
     def __makeMenuBar(self):
         """Constructs a bunch of menu items for this ``FSLEyesFrame``."""
@@ -578,6 +593,9 @@ class FSLEyesFrame(wx.Frame):
         viewMenu        = wx.Menu()
         perspectiveMenu = wx.Menu() 
         settingsMenu    = wx.Menu()
+
+        self.__menuBar   = menuBar
+        self.__perspMenu = perspectiveMenu
         
         menuBar.Append(fileMenu,     'File')
         menuBar.Append(viewMenu,     'View')
@@ -588,10 +606,10 @@ class FSLEyesFrame(wx.Frame):
         self.__settingsMenu = settingsMenu
 
         # Global actions
-        actionz = [openfile    .OpenFileAction,
-                   openstandard.OpenStandardAction,
-                   copyoverlay .CopyOverlayAction,
-                   saveoverlay .SaveOverlayAction]
+        actionz = [actions.OpenFileAction,
+                   actions.OpenStandardAction,
+                   actions.CopyOverlayAction,
+                   actions.SaveOverlayAction]
  
         for action in actionz:
             menuItem  = fileMenu.Append(wx.ID_ANY, strings.actions[action])
@@ -614,17 +632,54 @@ class FSLEyesFrame(wx.Frame):
 
         # Perspectives
         viewMenu.AppendSubMenu(perspectiveMenu, 'Perspectives')
-        for persp in perspectives.getAllPerspectives():
-            
-            menuItem  = perspectiveMenu.Append(
+        self.__makePerspectiveMenu()
+
+        
+    def __makePerspectiveMenu(self):
+        """Re-creates the *View->Perspectives* menu. """
+
+        perspMenu = self.__perspMenu
+
+        # Remove any existing menu items
+        for item in perspMenu.GetMenuItems():
+            perspMenu.DeleteItem(item)
+
+        builtIns = perspectives.BUILT_IN_PERSPECTIVES.keys()
+        saved    = perspectives.getAllPerspectives()
+
+        # Add a menu item to load each built-in perspectives
+        for persp in builtIns:
+            menuItem  = perspMenu.Append(
                 wx.ID_ANY, strings.perspectives.get(persp, persp))
-            actionObj = loadperspective.LoadPerspectiveAction(self, persp)
+            
+            actionObj = actions.LoadPerspectiveAction(self, persp)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
-        # Save perspective
-        perspectiveMenu.AppendSeparator()
-        savePerspAction   = saveperspective.SavePerspectiveAction(self)
-        savePerspMenuItem = perspectiveMenu.Append(
-            wx.ID_ANY, strings.actions[savePerspAction])
+        if len(builtIns) > 0:
+            perspMenu.AppendSeparator()
 
-        savePerspAction.bindToWidget(self, wx.EVT_MENU, savePerspMenuItem)
+        # Add a menu item to load each saved perspective
+        for persp in saved:
+            
+            menuItem  = perspMenu.Append(
+                wx.ID_ANY, strings.perspectives.get(persp, persp))
+            actionObj = actions.LoadPerspectiveAction(self, persp)
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
+
+        # Add menu items for other perspective
+        # operations, but separate them from the
+        # existing perspectives
+        if len(saved) > 0:
+            perspMenu.AppendSeparator()
+
+        # TODO: Delete a single perspective?
+        #       Save to/load from file? 
+        perspActions = [actions.SavePerspectiveAction,
+                        actions.ClearPerspectiveAction]
+
+        for pa in perspActions:
+
+            actionObj     = pa(self)
+            perspMenuItem = perspMenu.Append(wx.ID_ANY, strings.actions[pa])
+            
+            actionObj.bindToWidget(self, wx.EVT_MENU, perspMenuItem)

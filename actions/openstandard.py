@@ -13,10 +13,10 @@ to load in standard space images from the ``$FSLDIR/data/standard/`` directory.
 import os
 import os.path as op
 
-import fsl.fsleyes.actions as actions
+import action
 
 
-class OpenStandardAction(actions.Action):
+class OpenStandardAction(action.Action):
     """The ``OpenStandardAction`` prompts the user to open one or more
     overlays, using ``$FSLDIR/data/standard/`` as the default directory.
     """
@@ -28,7 +28,7 @@ class OpenStandardAction(actions.Action):
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
         """ 
-        actions.Action.__init__(self, self.__openStandard)
+        action.Action.__init__(self, self.__openStandard)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx

@@ -4,12 +4,12 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This package provides a collection of actions, two package-level
-classes - the :class:`Action` class and the :class:`ActionProvider` class,
-and the :func:`action` and :func:`toggleAction` decorators.
+"""This package provides a collection of actions, classes - the
+:class:`.Action` class and the :class:`.ActionProvider` class, and the
+:func:`action` and :func:`toggleAction` decorators.
 
 
-The :class:`Action` class represents some sort of action which may be
+The :class:`.Action` class represents some sort of action which may be
 performed, enabled and disabled, and may be bound to a GUI menu item or
 button. The :class:`ActionProvider` class represents some entity which can
 perform one or more actions.  As the :class:`.FSLEyesPanel` class derives from
@@ -58,16 +58,16 @@ and :meth:`ActionProvider.disableAction` methods::
 
 
 It is useful to know that each method on the ``t`` instance has actually been
-replaced with an :class:`Action` instance, which encapsulates the method. Using
-this knowledge, you can access the ``Action`` instances directly::
+replaced with an :class:`.Action` instance, which encapsulates the method.
+Using this knowledge, you can access the ``Action`` instances directly::
 
     >>> t.doFirstThing.enabled = True
     >>> t.doFirstThing()
     First thing done
 
 
-The :meth:`Action.bindToWidget` method allows a widget to be bound to an
-:class:`Action`. For example::
+The :meth:`.Action.bindToWidget` method allows a widget to be bound to an
+:class:`.Action`. For example::
 
     # We're assuming here that a wx.App, and
     # a parent window, has been created
@@ -76,8 +76,8 @@ The :meth:`Action.bindToWidget` method allows a widget to be bound to an
 
 
 All bound widgets of an ``Action`` can be accessed through the
-:meth:`Action.getBoundWidgets` method, and can be unbound via the
-:meth:`Action.unbindAllWidgets` method.
+:meth:`.Action.getBoundWidgets` method, and can be unbound via the
+:meth:`.Action.unbindAllWidgets` method.
 
 
 This module also provides two classes which allow a widget to be automatically
@@ -100,6 +100,9 @@ Finally, some 'global' actions are also provided in this package:
     ~fsl.fsleyes.actions.openfile
     ~fsl.fsleyes.actions.openstandard
     ~fsl.fsleyes.actions.saveoverlay
+    ~fsl.fsleyes.actions.saveperspective
+    ~fsl.fsleyes.actions.loadperspective
+    ~fsl.fsleyes.actions.clearperspective
 """
 
 
@@ -110,6 +113,28 @@ import functools
 import props
 
 import fsl.data.strings as strings
+
+import action
+import copyoverlay
+import openfile
+import openstandard
+import saveoverlay
+import loadcolourmap
+import saveperspective
+import loadperspective
+import clearperspective
+
+
+Action                 = action          .Action
+ToggleAction           = action          .ToggleAction
+CopyOverlayAction      = copyoverlay     .CopyOverlayAction
+OpenFileAction         = openfile        .OpenFileAction
+OpenStandardAction     = openstandard    .OpenStandardAction
+SaveOverlayAction      = saveoverlay     .SaveOverlayAction
+LoadColourMapAction    = loadcolourmap   .LoadColourMapAction
+SavePerspectiveAction  = saveperspective .SavePerspectiveAction
+LoadPerspectiveAction  = loadperspective .LoadPerspectiveAction
+ClearPerspectiveAction = clearperspective.ClearPerspectiveAction
 
 
 log = logging.getLogger(__name__)
@@ -123,194 +148,6 @@ def action(func):
 def toggleAction(func):
     """A decorator which identifies a class method as a toggle action. """
     return ActionFactory(func, ToggleAction) 
-
-
-class Action(props.HasProperties):
-    """Represents an action of some sort. 
-    """
-    
-    
-    enabled = props.Boolean(default=True)
-    """Controls whether the action is currently enabled or disabled.
-    When this property is ``False`` calls to the action will
-    result in a :exc:`ActionDisabledError`.
-    """
-
-    
-    def __init__(self, func, instance=None):
-        """Create an ``Action``.
-        
-        :arg func:     The action function.
-
-        :arg instance: Object associated with the function, if this ``Action``
-                       is encapsulating an instance method.
-        """
-        self.__instance     = instance
-        self.__func         = func
-        self.__name         = func.__name__ 
-        self.__boundWidgets = []
-
-        self.addListener('enabled',
-                         'Action_{}_internal'.format(id(self)),
-                         self.__enabledChanged)
-
-        
-    def __str__(self):
-        """Returns a string representation of this ``Action``. """
-        return '{}({})'.format(type(self).__name__, self.__name)
-
-    
-    def __repr__(self):
-        """Returns a string representation of this ``Action``. """
-        return self.__str__()
-
-    
-    def __call__(self, *args, **kwargs):
-        """Calls this action. An :exc:`ActionDisabledError` will be raised
-        if :attr:`enabled` is ``False``.
-        """
-
-        if not self.enabled:
-            raise ActionDisabledError('Action {} is disabled'.format(
-                self.__name))
-
-        log.debug('Action {}.{} called'.format(
-            type(self.__instance).__name__,
-            self.__name))
-
-        if self.__instance is not None:
-            args = [self.__instance] + list(args)
-            
-        return self.__func(*args, **kwargs)
-
-    
-    def destroy(self):
-        """Must be called when this ``Action`` is no longer needed. """
-        self.unbindAllWidgets()
-        self.__func     = None
-        self.__instance = None
-
-        
-    def bindToWidget(self, parent, evType, widget):
-        """Binds this action to the given :mod:`wx` widget.
-
-        :arg parent: The :mod:`wx` object on which the event should be bound.
-        :arg evType: The :mod:`wx` event type.
-        :arg widget: The :mod:`wx` widget.
-        """
-
-        def wrappedAction(ev):
-            self()
-            
-        parent.Bind(evType, wrappedAction, widget)
-        widget.Enable(self.enabled)
-        self.__boundWidgets.append((parent, evType, widget))
-
-
-    def unbindAllWidgets(self):
-        """Unbinds all widgets which have been bound via :meth:`bindToWidget`.
-        """
-
-        import wx
-        
-        for parent, evType, widget in self.__boundWidgets:
-
-            # Only attempt to unbind if the parent
-            # and widget have not been destroyed
-            try:
-                parent.Unbind(evType, source=widget)
-            except wx.PyDeadObjectError:
-                pass
-            
-        self.__boundWidgets = []
-
-        
-    def getBoundWidgets(self):
-        """Returns a list containing all widgets which have been bound to
-        this ``Action``.
-        """
-        return [w for _, _, w in self.__boundWidgets]
-
-
-    def __enabledChanged(self, *args):
-        """Internal method which is called when the :attr:`enabled` property
-        changes. Enables/disables any bound widgets.
-        """
-
-        for _, _, widget in self.__boundWidgets:
-            widget.Enable(self.enabled)
-
-    
-class ToggleAction(Action):
-    """A ``ToggleAction`` an ``Action`` which is intended to encapsulate
-    actions that toggle some sort of state. For example, a ``ToggleAction``
-    could be used to encapsulate an action which opens and/or closes a dialog
-    window.
-    """
-
-
-    toggled = props.Boolean(default=False)
-    """Boolean which tracks the current state of the ``ToggleAction``. """
-
-
-    def __init__(self, *args, **kwargs):
-        """Create a ``ToggleAction``. All arguments are passed to
-        :meth:`Action.__init__`.
-        """
-        
-        Action.__init__(self, *args, **kwargs)
-        
-        self.addListener('toggled',
-                         'ToggleAction_{}_internal'.format(id(self)),
-                         self.__toggledChanged)
-
-        
-    def __call__(self, *args, **kwargs):
-        """Call this ``ToggleAction`. The value of the :attr:`toggled` property
-        is flipped.
-        """
-
-        # Copy the toggled value before running
-        # the action, in case it gets inadvertently
-        # changed
-        toggled      = self.toggled
-        result       = Action.__call__(self, *args, **kwargs)
-        self.toggled = not toggled
-            
-        return result
-
-
-    def bindToWidget(self, parent, evType, widget):
-        """Bind this ``ToggleAction`` to a widget. If the widget is a
-        ``wx.MenuItem``, its ``Check`` is called whenever the :attr:`toggled`
-        state changes.
-        """
-
-        import wx
-        
-        Action.bindToWidget(self, parent, evType, widget)
-
-        if isinstance(widget, wx.MenuItem):
-            widget.Check(self.toggled)
-
-        
-    def __toggledChanged(self, *a):
-        """Internal method called when :attr:`toggled` changes. Updates the
-        state of any bound widgets.
-        """
-        
-        import wx
-        import pwidgets.bitmaptoggle as bmptoggle
-        
-        for widget in self.getBoundWidgets():
-
-            if isinstance(widget, wx.MenuItem):
-                widget.Check(self.toggled)
-                
-            elif isinstance(widget, (wx.CheckBox,
-                                     wx.ToggleButton,
-                                     bmptoggle.BitmapToggleButton)):
-                widget.SetValue(self.toggled)
 
 
 class ActionProvider(object):
@@ -358,13 +195,6 @@ class ActionProvider(object):
                 acts.append((name, attr))
                 
         return acts
-
-
-class ActionDisabledError(Exception):
-    """Exception raised when an attempt is made to call a disabled
-    :class:`Action`.
-    """
-    pass
 
 
 class ActionFactory(object):
