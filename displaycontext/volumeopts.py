@@ -502,6 +502,13 @@ class VolumeOpts(ImageOpts):
     """
 
 
+    centreRanges = props.Boolean(default=False)
+    """If ``True``, the :attr:`displayRange` and :attr:`clippingRange` ranges
+    will be kept centred at zero. A change to the negative end of either range
+    will result in the positive end being changed, and vice versa.
+    """
+
+
     def __init__(self,
                  overlay,
                  display,
@@ -572,6 +579,9 @@ class VolumeOpts(ImageOpts):
             self   .addListener('displayRange',
                                 self.name,
                                 self.__displayRangeChanged)
+            self   .addListener('centreRanges',
+                                self.name,
+                                self.__centreRangesChanged) 
 
             # Because displayRange and bri/con are intrinsically
             # linked, it makes no sense to let the user sync/unsync
@@ -646,6 +656,11 @@ class VolumeOpts(ImageOpts):
 
         for peer in peers:
 
+            if not any((peer.display.isSyncedToParent('brightness'),
+                        peer.display.isSyncedToParent('contrast'),
+                        peer.        isSyncedToParent('displayRange'))):
+                continue
+
             if enable:
                 peer.display.enableListener('brightness',   peer.name)
                 peer.display.enableListener('contrast',     peer.name)
@@ -684,6 +699,9 @@ class VolumeOpts(ImageOpts):
         See :func:`.colourmaps.displayRangeToBricon`.
         """
 
+        if self.centreRanges:
+            return
+
         brightness, contrast = fslcm.displayRangeToBricon(
             (self.dataMin, self.dataMax),
             self.displayRange.x)
@@ -695,3 +713,83 @@ class VolumeOpts(ImageOpts):
         self.display.contrast   = contrast   * 100
 
         self.__toggleListeners(True)
+
+
+    def __centreRangesChanged(self, *a):
+        """Called when the :attr:`centreRanges` property changes. Configures
+        property listeners on the :attr:`clippingRange` and
+        :attr:`displayRange` properties.
+        """
+
+        if self.centreRanges:
+            self.display.disableProperty('brightness')
+            self.display.disableProperty('contrast')
+        else:
+            self.display.enableProperty('brightness')
+            self.display.enableProperty('contrast')
+
+        clipPVs = self.clippingRange.getPropertyValueList()
+        dispPVs = self.displayRange .getPropertyValueList()
+
+        if not self.centreRanges:
+            clipPVs[0].removeListener(self.name)
+            clipPVs[1].removeListener(self.name)
+            dispPVs[0].removeListener(self.name)
+            dispPVs[1].removeListener(self.name)
+        else:
+            clipPVs[0].addListener(self.name, self.__lowClippingChanged)
+            clipPVs[1].addListener(self.name, self.__highClippingChanged)
+            dispPVs[0].addListener(self.name, self.__lowDisplayChanged)
+            dispPVs[1].addListener(self.name, self.__highDisplayChanged)
+
+            self.__lowClippingChanged()
+            self.__lowDisplayChanged()
+
+
+    def __lowDisplayChanged(self, *a):
+        """If :attr:`centreRanges` is ``True``, this method is called whenever
+        the low :attr:`displayRange` value changes. It synchronises the high
+        value.
+        """
+        rangePVs = self.displayRange.getPropertyValueList()
+        
+        rangePVs[1].disableListener(self.name)
+        rangePVs[1].set(-rangePVs[0].get())
+        rangePVs[1].enableListener(self.name)
+
+        
+    def __highDisplayChanged(self, *a):
+        """If :attr:`centreRanges` is ``True``, this method is called whenever
+        the high :attr:`displayRange` value changes. It synchronises the low
+        value.
+        """ 
+        rangePVs = self.displayRange.getPropertyValueList()
+        
+        rangePVs[0].disableListener(self.name)
+        rangePVs[0].set(-rangePVs[1].get())
+        rangePVs[0].enableListener(self.name) 
+    
+
+    def __lowClippingChanged(self, *a):
+        """If :attr:`centreRanges` is ``True``, this method is called whenever
+        the low :attr:`clippingRange` value changes. It synchronises the high
+        value.
+        """ 
+        
+        clipPVs = self.clippingRange.getPropertyValueList()
+        
+        clipPVs[1].disableListener(self.name)
+        clipPVs[1].set(-clipPVs[0].get())
+        clipPVs[1].enableListener(self.name)
+
+    
+    def __highClippingChanged(self, *a):
+        """If :attr:`centreRanges` is ``True``, this method is called whenever
+        the high :attr:`clippingRange` value changes. It synchronises the low
+        value.
+        """ 
+        clipPVs = self.clippingRange.getPropertyValueList()
+        
+        clipPVs[0].disableListener(self.name)
+        clipPVs[0].set(-clipPVs[1].get())
+        clipPVs[0].enableListener(self.name)

@@ -288,6 +288,7 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('cmap'),
         props.Widget('invert'),
         props.Widget('invertClipping'),
+        props.Widget('centreRanges'),
         props.Widget('displayRange',
                      showLimits=False,
                      slider=True,
