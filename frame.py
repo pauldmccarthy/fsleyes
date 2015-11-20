@@ -474,10 +474,6 @@ class FSLEyesFrame(wx.Frame):
         position = self.__parseSavedPoint(fslsettings.read('frameposition'))
         layout   =                        fslsettings.read('framelayout')
 
-        # We can only restore a saved layout
-        # if there is a saved layout to restore
-        restore = restore and (layout is not None)
-        
         if (size is not None) and (position is not None):
 
             # Turn the saved size/pos into
@@ -557,11 +553,14 @@ class FSLEyesFrame(wx.Frame):
             self.Centre()
 
         if restore:
-            perspectives.applyPerspective(
-                self,
-                'framelayout',
-                layout,
-                message=strings.messages[self, 'restoringLayout'],)
+            if layout is None:
+                perspectives.loadPerspective(self, 'default')
+            else:
+                perspectives.applyPerspective(
+                    self,
+                    'framelayout',
+                    layout,
+                    message=strings.messages[self, 'restoringLayout'])
 
             
     def __makeMenuBar(self):
