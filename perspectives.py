@@ -12,6 +12,7 @@ control panel layouts for *FSLeyes*.
 
    getAllPerspectives
    loadPerspective
+   applyPerspective
    savePerspective
    removePerspective
    serialisePerspective
@@ -50,7 +51,7 @@ def getAllPerspectives():
     return uniq
 
 
-def loadPerspective(frame, name):
+def loadPerspective(frame, name, **kwargs):
     """
     """
 
@@ -67,16 +68,24 @@ def loadPerspective(frame, name):
         raise ValueError('No perspective named "{}" exists'.format(name))
 
     log.debug('Serialised perspective:\n{}'.format(persp))
+    applyPerspective(frame, name, persp, **kwargs)
+
+
+def applyPerspective(frame, name, perspective, showMessage=True, message=None):
               
-    persp = deserialisePerspective(persp)
+    persp = deserialisePerspective(perspective)
     frameChildren, frameLayout, vpChildrens, vpLayouts = persp
 
     # Show a message while re-configuring the frame
-    dlg = fsldlg.SimpleMessageDialog(
-        frame,
-        strings.messages['perspectives.applyingPerspective'].format(
-            strings.perspectives.get(name, name)))
-    dlg.Show()
+
+    if showMessage:
+        if message is None:
+            message = strings.messages[
+                'perspectives.applyingPerspective'].format(
+                    strings.perspectives.get(name, name))
+            
+        dlg = fsldlg.SimpleMessageDialog(frame, message)
+        dlg.Show()
 
     # Clear all existing view
     # panels from the frame
@@ -101,8 +110,9 @@ def loadPerspective(frame, name):
             
         vp.getAuiManager().LoadPerspective(vpLayout)
 
-    dlg.Close()
-    dlg.Destroy()
+    if showMessage:
+        dlg.Close()
+        dlg.Destroy()
 
             
 def savePerspective(frame, name):

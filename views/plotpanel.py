@@ -845,8 +845,8 @@ class OverlayPlotPanel(PlotPanel):
         self._overlayList.removeListener('overlays',        self.__name)
         self._displayCtx .removeListener('selectedOverlay', self.__name)
 
-        for ds in self.__dataSeries.values():
-            ds.destroy()
+        for overlay in list(self.__dataSeries.keys()):
+            self.clearDataSeries(overlay)
 
         self.__dataSeries   = None
         self.__refreshProps = None

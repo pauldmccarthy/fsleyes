@@ -56,11 +56,10 @@ class FSLEyesFrame(wx.Frame):
 
 
     When a ``FSLEyesFrame`` is closed, it saves some display settings so that
-    they can be restored  the next time a ``FSLEyesFrame`` is opened. The
+    they can be restored the next time a ``FSLEyesFrame`` is opened. The
     settings are saved using the :class:`~fsl.utils.settings` module.
-
-    Currently, only the frame position and size are saved - in the future, I
-    plan to save and restore the ``ViewPanel`` layout as well.
+    Currently, the frame position, size, and layout (see the
+    :mod:`.perspectives` module) are saved.
 
 
     **Programming interface**
@@ -85,7 +84,7 @@ class FSLEyesFrame(wx.Frame):
                  parent,
                  overlayList,
                  displayCtx,
-                 restore=True):
+                 restore=False):
         """Create a ``FSLEyesFrame``.
 
         .. note:: The ``restore`` functionality is not currently implemented.
@@ -139,6 +138,11 @@ class FSLEyesFrame(wx.Frame):
         
         self.__makeMenuBar()
         self.__restoreState(restore)
+
+        # If we have not restored the previous
+        # layout, we are not going to save the
+        # layout on exit.
+        self.__saveLayout = restore
 
         self.__auiManager.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onViewPanelClose)
         self             .Bind(wx.EVT_CLOSE,           self.__onClose)
@@ -423,12 +427,16 @@ class FSLEyesFrame(wx.Frame):
 
         ev.Skip()
 
-        size     = self.GetSize().Get()
-        position = self.GetScreenPosition().Get()
-
-        fslsettings.write('framesize',     str(size))
-        fslsettings.write('frameposition', str(position))
-
+        if self.__saveLayout:
+            
+            size     = self.GetSize().Get()
+            position = self.GetScreenPosition().Get()
+            layout   = perspectives.serialisePerspective(self)
+            
+            fslsettings.write('framesize',     str(size))
+            fslsettings.write('frameposition', str(position))
+            fslsettings.write('framelayout',   layout)
+        
         # It's nice to explicitly clean
         # up our FSLEyesPanels, otherwise
         # they'll probably complain
@@ -448,59 +456,28 @@ class FSLEyesFrame(wx.Frame):
         """A proxy for the :meth:`__parseSavedSize` method.""" 
         return self.__parseSavedSize(size)
 
-            
-    def __parseSavedLayout(self, layout):
-        """Parses the given string, which is assumed to contain an encoded
-        :class:`.AuiManager` perspective (see
-        :meth:`.AuiManager.SavePerspective`).
-
-        Returns a list of class names, specifying the control panels
-        (e.g. :class:`.OverlayListPanel`) which were previously open, and need
-        to be created.
-
-        .. warning:: This method is not currently being used - it is from a
-                     previous version. I may use it in the future to restore
-                     ``ViewPanel`` layouts, or I may re-write it.
-        """
-
-        try:
-
-            names    = [] 
-            sections = layout.split('|')[1:]
-
-            for section in sections:
-                
-                if section.strip() == '': continue
-                
-                attrs = section.split(';')
-                attrs = dict([tuple(nvpair.split('=')) for nvpair in attrs])
-
-                if 'name' in attrs:
-                    names.append(attrs['name'])
-
-            return names
-        except:
-            return []
-
     
-    def __restoreState(self, restore=True):
+    def __restoreState(self, restore):
         """Called by :meth:`__init__`.
 
         If any frame size/layout properties have previously been saved via the
         :mod:`~fsl.utils.settings` module, they are read in, and applied to
         this frame.
 
-        :arg bool default: If ``True``, any saved state is ignored.
+        :arg restore: If ``False``, any saved layout state is ignored.
         """
 
         from operator import itemgetter as iget
 
         # Restore the saved frame size/position
-        size     = self.__parseSavedSize(
-            fslsettings.read('framesize'))
-        position = self.__parseSavedPoint(
-            fslsettings.read('frameposition'))        
+        size     = self.__parseSavedSize( fslsettings.read('framesize'))
+        position = self.__parseSavedPoint(fslsettings.read('frameposition'))
+        layout   =                        fslsettings.read('framelayout')
 
+        # We can only restore a saved layout
+        # if there is a saved layout to restore
+        restore = restore and (layout is not None)
+        
         if (size is not None) and (position is not None):
 
             # Turn the saved size/pos into
@@ -579,10 +556,12 @@ class FSLEyesFrame(wx.Frame):
         else:
             self.Centre()
 
-        # TODO Restore the previous view panel layout.
-        #      Currently, we just display an OrthoPanel.
         if restore:
-            self.addViewPanel(views.OrthoPanel)
+            perspectives.applyPerspective(
+                self,
+                'framelayout',
+                layout,
+                message=strings.messages[self, 'restoringLayout'],)
 
             
     def __makeMenuBar(self):
