@@ -55,7 +55,12 @@ class SceneOpts(props.HasProperties):
     to the colour bar, if it is being shown.
     """ 
 
-    
+
+    # NOTE: If you change the maximum performance value,
+    #       make sure you update all references to
+    #       performance because, for example, the
+    #       OrthoEditProfile does numerical comparisons
+    #       to it.
     performance = props.Choice((1, 2, 3, 4), default=4)
     """User controllable performance setting.
 
