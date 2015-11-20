@@ -55,9 +55,9 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
         lbOpts = lb.getSceneOptions()
         
         icons = {
-            'screenshot'       : fslicons.findImageFile('camera24'),
-            'movieMode'        : fslicons.findImageFile('movie24'),
-            'showMoreSettings' : fslicons.findImageFile('gear24'),
+            'screenshot'                : fslicons.findImageFile('camera24'),
+            'movieMode'                 : fslicons.findImageFile('movie24'),
+            'toggleCanvasSettingsPanel' : fslicons.findImageFile('gear24'),
 
             'zax' : {
                 0 : fslicons.findImageFile('sagittalSlice24'),
@@ -77,7 +77,8 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
             'displaySpace' : fsltooltips.properties[displayCtx,
                                                     'displaySpace'],
             
-            'showMoreSettings' : fsltooltips.actions[self, 'showMoreSettings'],
+            'toggleCanvasSettingsPanel' : fsltooltips.actions[
+                lb, 'toggleCanvasSettingsPanel'],
         }
 
         def displaySpaceOptionName(opt):
@@ -89,10 +90,12 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
         
         specs = {
             
-            'showMoreSettings' : actions.ToggleActionButton(
-                'showMoreSettings',
-                icon=icons['showMoreSettings'],
-                tooltip=tooltips['showMoreSettings']),
+            'toggleCanvasSettingsPanel' : actions.ToggleActionButton(
+                'toggleCanvasSettingsPanel',
+                actionKwargs={'floatPane' : True},
+                icon=icons['toggleCanvasSettingsPanel'],
+                tooltip=tooltips['toggleCanvasSettingsPanel']),
+            
             'screenshot' : actions.ActionButton(
                 'screenshot',
                 icon=icons['screenshot'],
@@ -139,7 +142,9 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
         sizer = wx.FlexGridSizer(2, 2)
         panel.SetSizer(sizer)
 
-        more         = props.buildGUI(self,  self, specs['showMoreSettings'])
+        more         = props.buildGUI(self,
+                                      lb,
+                                      specs['toggleCanvasSettingsPanel'])
         screenshot   = props.buildGUI(self,  lb,         specs['screenshot'])
         movieMode    = props.buildGUI(self,  lb,         specs['movieMode'])
         zax          = props.buildGUI(self,  lbOpts,     specs['zax'])
@@ -165,19 +170,3 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
         tools = [more, screenshot, zax, movieMode, displaySpace, zrange, panel]
         
         self.SetTools(tools) 
-
-
-    @actions.toggleAction
-    def showMoreSettings(self, *a):
-        """Opens a :class:`.CanvasSettingsPanel` for the
-        :class:`.LightBoxPanel` that owns this ``LightBoxToolBar``.
-
-        The ``CanvasSettingsPanel`` is opened as a floating pane - see the
-        :meth:`.ViewPanel.togglePanel` method.
-        """
-        import canvassettingspanel
-        self.lightBoxPanel.togglePanel(
-            canvassettingspanel.CanvasSettingsPanel,
-            self.lightBoxPanel,
-            floatPane=True,
-            action=self.showMoreSettings) 

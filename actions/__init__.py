@@ -367,7 +367,12 @@ class ActionButton(props.Button):
     """
 
     
-    def __init__(self, actionName, classType=None, **kwargs):
+    def __init__(self,
+                 actionName,
+                 classType=None,
+                 actionArgs=None,
+                 actionKwargs=None, 
+                 **kwargs):
         """Create an ``ActionButton``.
 
         :arg actionName: Name of the action
@@ -377,7 +382,12 @@ class ActionButton(props.Button):
         :arg kwargs:     Passed to the :class:`props.Button` constructor.
         """
 
-        self.__name = actionName
+        if actionArgs   is None: actionArgs   = []
+        if actionKwargs is None: actionKwargs = {} 
+
+        self.__name         = actionName
+        self.__actionArgs   = actionArgs
+        self.__actionKwargs = actionKwargs 
 
         if classType is not None:
             text = strings.actions.get((classType, actionName), actionName)
@@ -404,7 +414,8 @@ class ActionButton(props.Button):
         
     def __onButton(self, instance, widget):
         """Called when the button is pushed. Runs the action."""
-        instance.getAction(self.__name)()
+        instance.getAction(self.__name)(*self.__actionArgs,
+                                        **self.__actionKwargs)
 
 
 class ToggleActionButton(props.Toggle):
@@ -416,17 +427,33 @@ class ToggleActionButton(props.Toggle):
     """
 
     
-    def __init__(self, actionName, icon, **kwargs):
+    def __init__(self,
+                 actionName,
+                 icon,
+                 actionArgs=None,
+                 actionKwargs=None,
+                 **kwargs):
         """Create a ``ToggleActionButton``.
 
-        :arg actionName: Name of the action
+        :arg actionName:   Name of the action
 
-        :arg icon:       One or two icon file names to use on the button.
+        :arg icon:         One or two icon file names to use on the button.
 
-        :arg kwargs:     Passed to the :class:`props.Toggle` constructor.
-        """ 
+        :arg actionArgs:   Positional arguments to pass to the
+                           :class:`.ToggleAction` when it is invoked.
 
-        self.__name = actionName
+        :arg actionKwargs: Keyword arguments to pass to the
+                           :class:`.ToggleAction` when it is invoked.
+
+        :arg kwargs:       Passed to the :class:`props.Toggle` constructor.
+        """
+
+        if actionArgs   is None: actionArgs   = []
+        if actionKwargs is None: actionKwargs = {}
+
+        self.__name         = actionName
+        self.__actionArgs   = actionArgs
+        self.__actionKwargs = actionKwargs
 
         props.Toggle.__init__(
             self,
@@ -460,4 +487,5 @@ class ToggleActionButton(props.Toggle):
     
     def __onToggle(self, instance, widget):
         """Called when the widget is toggled. Runs the action."""
-        instance.getAction(self.__name)()
+        instance.getAction(self.__name)(*self.__actionArgs,
+                                        **self.__actionKwargs)

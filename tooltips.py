@@ -396,13 +396,9 @@ properties = TypeDict({
 
 actions = TypeDict({
     'CanvasPanel.screenshot'        : 'Take a screenshot of the current scene',
-    
-    'OrthoToolBar.showMoreSettings'          : 'Show more view '
-                                               'control settings',
-    'LightBoxToolBar.showMoreSettings'       : 'Show more view '
-                                               'control settings',
-    'OverlayDisplayToolBar.showMoreSettings' : 'Show more overlay '
-                                               'display settings',
+    'CanvasPanel.toggleDisplayPanel' : 'Show more overlay display settings',
+    'CanvasPanel.toggleCanvasSettingsPanel' : 'Show more view '
+                                              'control settings',
 
     'OrthoViewProfile.resetZoom'    : 'Reset zoom level to 100%',
     'OrthoViewProfile.centreCursor' : 'Reset location to centre of scene',

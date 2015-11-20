@@ -31,6 +31,8 @@ import fsl.fsleyes.controls.overlaylistpanel           as overlaylistpanel
 import fsl.fsleyes.controls.overlayinfopanel           as overlayinfopanel
 import fsl.fsleyes.controls.atlaspanel                 as atlaspanel
 import fsl.fsleyes.controls.overlaydisplaytoolbar      as overlaydisplaytoolbar
+import fsl.fsleyes.controls.overlaydisplaypanel        as overlaydisplaypanel
+import fsl.fsleyes.controls.canvassettingspanel        as canvassettingspanel
 import fsl.fsleyes.controls.locationpanel              as locationpanel
 import fsl.fsleyes.controls.clusterpanel               as clusterpanel
 import fsl.fsleyes.controls.lookuptablepanel           as lookuptablepanel
@@ -91,7 +93,8 @@ class CanvasPanel(viewpanel.ViewPanel):
        toggleOverlayList
        toggleOverlayInfo
        toggleAtlasPanel
-       toggleDisplayProperties
+       toggleDisplayToolBar
+       toggleCanvasSettingsPanel
        toggleLocationPanel
        toggleClusterPanel
        toggleLookupTablePanel
@@ -340,15 +343,38 @@ class CanvasPanel(viewpanel.ViewPanel):
 
 
     @actions.toggleControlAction(overlaydisplaytoolbar.OverlayDisplayToolBar)
-    def toggleDisplayProperties(self):
+    def toggleDisplayToolBar(self):
         """Toggles an :class:`.OverlayDisplayToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """ 
         self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar,
                          viewPanel=self,
-                         action=self.toggleDisplayProperties)
+                         action=self.toggleDisplayToolBar)
+
+        
+    @actions.toggleControlAction(overlaydisplaypanel.OverlayDisplayPanel)
+    def toggleDisplayPanel(self, floatPane=False):
+        """Toggles an :class:`.OverlayDisplayPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(overlaydisplaypanel.OverlayDisplayPanel,
+                         floatPane=floatPane,
+                         location=wx.LEFT,
+                         action=self.toggleDisplayToolBar) 
         
 
+    @actions.toggleControlAction(canvassettingspanel.CanvasSettingsPanel)
+    def toggleCanvasSettingsPanel(self, floatPane=False):
+        """Toggles a :class:`.CanvasSettingsPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(canvassettingspanel.CanvasSettingsPanel,
+                         canvasPanel=self, 
+                         floatPane=floatPane,
+                         location=wx.LEFT,
+                         action=self.toggleDisplayToolBar) 
+
+        
     @actions.toggleControlAction(locationpanel.LocationPanel)
     def toggleLocationPanel(self):
         """Toggles a :class:`.LocationPanel`. See

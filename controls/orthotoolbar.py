@@ -89,7 +89,7 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
             'showXCanvas'      : fslicons.findImageFile('sagittalSlice24'),
             'showYCanvas'      : fslicons.findImageFile('coronalSlice24'),
             'showZCanvas'      : fslicons.findImageFile('axialSlice24'),
-            'showMoreSettings' : fslicons.findImageFile('gear24'),
+            'toggleCanvasSettingsPanel' : fslicons.findImageFile('gear24'),
 
             'resetZoom'    : fslicons.findImageFile('resetZoom24'),
             'centreCursor' : fslicons.findImageFile('centre24'),
@@ -112,21 +112,22 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
             'displaySpace' : fsltooltips.properties[dctx,      'displaySpace'],
             'resetZoom'    : fsltooltips.actions[   profile,   'resetZoom'],
             'centreCursor' : fsltooltips.actions[   profile,   'centreCursor'],
-            'showMoreSettings' : fsltooltips.actions[self, 'showMoreSettings'],
+            'toggleCanvasSettingsPanel' : fsltooltips.actions[
+                ortho, 'toggleCanvasSettingsPanel'],
             
         }
         
-        targets    = {'screenshot'       : ortho,
-                      'movieMode'        : ortho,
-                      'zoom'             : orthoOpts,
-                      'layout'           : orthoOpts,
-                      'showXCanvas'      : orthoOpts,
-                      'showYCanvas'      : orthoOpts,
-                      'showZCanvas'      : orthoOpts,
-                      'displaySpace'     : dctx,
-                      'resetZoom'        : profile,
-                      'centreCursor'     : profile,
-                      'showMoreSettings' : self}
+        targets    = {'screenshot'                : ortho,
+                      'movieMode'                 : ortho,
+                      'zoom'                      : orthoOpts,
+                      'layout'                    : orthoOpts,
+                      'showXCanvas'               : orthoOpts,
+                      'showYCanvas'               : orthoOpts,
+                      'showZCanvas'               : orthoOpts,
+                      'displaySpace'              : dctx,
+                      'resetZoom'                 : profile,
+                      'centreCursor'              : profile,
+                      'toggleCanvasSettingsPanel' : ortho}
 
         def displaySpaceOptionName(opt):
 
@@ -138,9 +139,11 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
 
         toolSpecs = [
 
-            actions.ToggleActionButton('showMoreSettings',
-                                       icon=icons['showMoreSettings'],
-                                       tooltip=tooltips['showMoreSettings']),
+            actions.ToggleActionButton(
+                'toggleCanvasSettingsPanel',
+                actionKwargs={'floatPane' : True},
+                icon=icons['toggleCanvasSettingsPanel'],
+                tooltip=tooltips['toggleCanvasSettingsPanel']),
             actions.ActionButton('screenshot',
                                  icon=icons['screenshot'],
                                  tooltip=tooltips['screenshot']),
@@ -189,19 +192,3 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
             tools.append(widget)
 
         self.SetTools(tools, destroy=True) 
-
-
-    @actions.toggleAction
-    def showMoreSettings(self, *a):
-        """Opens a :class:`.CanvasSettingsPanel` for the
-        :class:`.OrthoPanel` that owns this ``OrthoToolBar``.
-
-        The ``CanvasSettingsPanel`` is opened as a floating pane - see the
-        :meth:`.ViewPanel.togglePanel` method.
-        """
-        
-        import canvassettingspanel
-        self.orthoPanel.togglePanel(canvassettingspanel.CanvasSettingsPanel,
-                                    self.orthoPanel,
-                                    floatPane=True,
-                                    action=self.showMoreSettings)

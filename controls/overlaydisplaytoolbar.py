@@ -22,7 +22,6 @@ import fsl.fsleyes.tooltips as fsltooltips
 import fsl.fsleyes.actions  as actions
 import fsl.utils.typedict   as td
 import fsl.data.strings     as strings
-import overlaydisplaypanel  as overlaydisplay
 
 
 log = logging.getLogger(__name__)
@@ -42,11 +41,6 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
     .. image:: images/overlaydisplaytoolbar.png
        :scale: 50%
        :align: center
-
-    
-    The ``OverlayDisplayToolBar`` also defines an action called ``more``
-    (which is linked to the :meth:`showMoreSettings` method), which opens an
-    :class:`.OverlayDisplayPanel`.
 
 
     The specific controls which are displayed are defined in the
@@ -119,14 +113,6 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         fsltoolbar.FSLEyesToolBar.destroy(self)
 
 
-    @actions.toggleAction
-    def showMoreSettings(self, *a):
-        """Shows/hides a :class:`.OverlayDisplayPanel` dialog. """
-        self.__viewPanel.togglePanel(overlaydisplay.OverlayDisplayPanel,
-                                     floatPane=True,
-                                     action=self.showMoreSettings)
-
-
     def __showTools(self, overlay):
         """Creates and shows a set of controls allowing the user to change
         the display settings of the specified ``overlay``.
@@ -158,17 +144,6 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
 
         if makeFunc is not None:
             tools.extend(makeFunc(opts))
-
-        # Button which opens the OverlayDisplayPanel
-        more = props.buildGUI(
-            self,
-            self,
-            view=actions.ToggleActionButton(
-                'showMoreSettings',
-                icon=icons.findImageFile('gear24'),
-                tooltip=fsltooltips.actions[self, 'showMoreSettings']))
-
-        tools.insert(0, more)
 
         self.SetTools(tools)
         
