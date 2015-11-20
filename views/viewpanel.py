@@ -17,7 +17,6 @@ import wx.lib.agw.aui as aui
 import props
 
 import fsl.fsleyes.panel          as fslpanel
-import fsl.fsleyes.actions        as actions
 import fsl.fsleyes.toolbar        as fsltoolbar
 import fsl.fsleyes.profiles       as profiles
 import fsl.fsleyes.displaycontext as fsldisplay
@@ -109,14 +108,8 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         # of {type : instance} mappings of active
         # FSLeyes control panels that are contained
         # in this view panel.
-        #
-        # The panelActions dict contains a collection
-        # of {type : Action} mappings, but only if the
-        # control panel was opened as a result of an
-        # Action on this view panel.
-        self.__centrePanel  = None
-        self.__panels       = {}
-        self.__panelActions = {}
+        self.__centrePanel = None
+        self.__panels      = {}
 
         self.__auiMgr = aui.AuiManager(
             self,
@@ -240,14 +233,6 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         :arg location:  If ``floatPane=False``, the initial dock position of
                         the panel - either ``wx.TOP``, ``wx.BOTTOM``,
                         ``wx.LEFT``, or ``wx.RIGHT. Defaults to ``wx.BOTTOM``.
-
-        :arg action:    If this method has been called as the result of
-                        execution of a :class:`.ToggleAction`, the
-                        ``ToggleAction`` instance may be passed to this
-                        method. This is so that, if the control panel is
-                        closed directly by the user (as opposed to
-                        re-executing the ``ToggleAction`), the ``toggled``
-                        state of the action can be updated.
         
         :arg kwargs:    All keyword arguments, apart from ``floatPane`` and
                         ``location``, are passed to the ``panelType``
@@ -265,14 +250,13 @@ class ViewPanel(fslpanel.FSLEyesPanel):
 
         .. warning::    Do not define a control (a.k.a. secondary) panel
                         constructor to accept arguments with the names
-                        ``floatPane``, ``action`` or ``location``, as
-                        arguments with those names will get eaten by this
-                        method before they can be passed to the constructor.
+                        ``floatPane`` or ``location``, as arguments with those
+                        names will get eaten by this method before they can be
+                        passed to the constructor.
         """
 
         location  = kwargs.pop('location',  wx.BOTTOM)
         floatPane = kwargs.pop('floatPane', False)
-        action    = kwargs.pop('action',    None)
         
         if location not in (wx.TOP, wx.BOTTOM, wx.LEFT, wx.RIGHT):
             raise ValueError('Invalid value for location')
@@ -358,8 +342,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
                     .FloatingPosition(panePos)
 
         self.__auiMgr.AddPane(window, paneInfo)
-        self.__panels[      panelType] = window
-        self.__panelActions[panelType] = action
+        self.__panels[panelType] = window
         self.__auiMgrUpdate()
 
             
@@ -574,18 +557,11 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         if isinstance(panel, (fslpanel  .FSLEyesPanel,
                               fsltoolbar.FSLEyesToolBar)):
             
-            self         .__panels      .pop(type(panel))
-            action = self.__panelActions.pop(type(panel), None)
+            self.__panels.pop(type(panel))
 
             # calling fslpanel.FSLEyesPanel.destroy()
             # here -  wx.Destroy is done below
             panel.destroy()
-
-            # If this panel was opened through
-            # a ToggleAction, make sure that
-            # its toggled state is correct
-            if action is not None and isinstance(action, actions.ToggleAction):
-                action.toggled = False
 
             # Even when the user closes a pane,
             # AUI does not detach said pane -

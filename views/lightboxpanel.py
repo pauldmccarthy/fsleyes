@@ -172,9 +172,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         """Shows/hides a :class:`.LightBoxToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """        
-        self.togglePanel(lightboxtoolbar.LightBoxToolBar,
-                         lb=self,
-                         action=self.toggleLightBoxToolBar)
+        self.togglePanel(lightboxtoolbar.LightBoxToolBar, lb=self)
 
         
     def getActions(self):

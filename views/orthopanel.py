@@ -254,9 +254,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Shows/hides an :class:`.OrthoToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(orthotoolbar.OrthoToolBar,
-                         ortho=self,
-                         action=self.toggleOrthoToolBar)
+        self.togglePanel(orthotoolbar.OrthoToolBar, ortho=self)
 
 
     @actions.toggleControlAction(orthoedittoolbar.OrthoEditToolBar)
@@ -264,9 +262,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Shows/hides an :class:`.OrthoEditToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """ 
-        self.togglePanel(orthoedittoolbar.OrthoEditToolBar,
-                         ortho=self,
-                         action=self.toggleEditToolBar)
+        self.togglePanel(orthoedittoolbar.OrthoEditToolBar, ortho=self)
 
 
     def getActions(self):
