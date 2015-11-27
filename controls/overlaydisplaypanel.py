@@ -207,7 +207,8 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
         self.__widgets.ClearGroup(groupName)
 
         dispProps = _DISPLAY_PROPS[target]
-        labels    = [strings.properties[target, p.key] for p in dispProps]
+        labels    = [strings.properties.get((target, p.key), p.key)
+                     for p in dispProps]
         tooltips  = [fsltooltips.properties.get((target, p.key), None)
                      for p in dispProps]
 
@@ -289,6 +290,8 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('invert'),
         props.Widget('invertClipping'),
         props.Widget('centreRanges'),
+        props.Widget('linkLowRanges'),
+        props.Widget('linkHighRanges'),
         props.Widget('displayRange',
                      showLimits=False,
                      slider=True,
