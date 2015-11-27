@@ -724,72 +724,11 @@ class VolumeOpts(ImageOpts):
         if self.centreRanges:
             self.display.disableProperty('brightness')
             self.display.disableProperty('contrast')
+            self.setConstraint('displayRange',  'dimCentres', [0.0])
+            self.setConstraint('clippingRange', 'dimCentres', [0.0])
+            
         else:
             self.display.enableProperty('brightness')
             self.display.enableProperty('contrast')
-
-        clipPVs = self.clippingRange.getPropertyValueList()
-        dispPVs = self.displayRange .getPropertyValueList()
-
-        if not self.centreRanges:
-            clipPVs[0].removeListener(self.name)
-            clipPVs[1].removeListener(self.name)
-            dispPVs[0].removeListener(self.name)
-            dispPVs[1].removeListener(self.name)
-        else:
-            clipPVs[0].addListener(self.name, self.__lowClippingChanged)
-            clipPVs[1].addListener(self.name, self.__highClippingChanged)
-            dispPVs[0].addListener(self.name, self.__lowDisplayChanged)
-            dispPVs[1].addListener(self.name, self.__highDisplayChanged)
-
-            self.__lowClippingChanged()
-            self.__lowDisplayChanged()
-
-
-    def __lowDisplayChanged(self, *a):
-        """If :attr:`centreRanges` is ``True``, this method is called whenever
-        the low :attr:`displayRange` value changes. It synchronises the high
-        value.
-        """
-        rangePVs = self.displayRange.getPropertyValueList()
-        
-        rangePVs[1].disableListener(self.name)
-        rangePVs[1].set(-rangePVs[0].get())
-        rangePVs[1].enableListener(self.name)
-
-        
-    def __highDisplayChanged(self, *a):
-        """If :attr:`centreRanges` is ``True``, this method is called whenever
-        the high :attr:`displayRange` value changes. It synchronises the low
-        value.
-        """ 
-        rangePVs = self.displayRange.getPropertyValueList()
-        
-        rangePVs[0].disableListener(self.name)
-        rangePVs[0].set(-rangePVs[1].get())
-        rangePVs[0].enableListener(self.name) 
-    
-
-    def __lowClippingChanged(self, *a):
-        """If :attr:`centreRanges` is ``True``, this method is called whenever
-        the low :attr:`clippingRange` value changes. It synchronises the high
-        value.
-        """ 
-        
-        clipPVs = self.clippingRange.getPropertyValueList()
-        
-        clipPVs[1].disableListener(self.name)
-        clipPVs[1].set(-clipPVs[0].get())
-        clipPVs[1].enableListener(self.name)
-
-    
-    def __highClippingChanged(self, *a):
-        """If :attr:`centreRanges` is ``True``, this method is called whenever
-        the high :attr:`clippingRange` value changes. It synchronises the low
-        value.
-        """ 
-        clipPVs = self.clippingRange.getPropertyValueList()
-        
-        clipPVs[0].disableListener(self.name)
-        clipPVs[0].set(-clipPVs[1].get())
-        clipPVs[0].enableListener(self.name)
+            self.setConstraint('displayRange',  'dimCentres', [None])
+            self.setConstraint('clippingRange', 'dimCentres', [None])
