@@ -103,6 +103,7 @@ To make this new propery settable via the command line, you need to:
 
 import sys
 import os.path as op
+import functools
 import argparse
 import logging
 
@@ -121,6 +122,8 @@ colourmaps.init()
 
 import displaycontext as fsldisplay
 
+import displaydefaults
+
 
 log = logging.getLogger(__name__)
 
@@ -131,17 +134,20 @@ def concat(lists):
     This function is used a few times, and writing concat(lists) is
     nicer-looking than writing lambda blah blah each time.
     """
-    return reduce(lambda a, b: a + b, lists)
+    return functools.reduce(lambda a, b: a + b, lists)
 
 
 # Names of all of the property which are 
 # customisable via command line arguments.
 OPTIONS = td.TypeDict({
 
-    'Main'          : ['scene',
+    'Main'          : ['help',
+                       'glversion',
+                       'scene',
                        'voxelLoc',
                        'worldLoc',
-                       'selectedOverlay'],
+                       'selectedOverlay',
+                       'defaultDisplay'],
 
     # From here on, all of the keys are
     # the names of HasProperties classes,
@@ -220,6 +226,7 @@ properties on that class.
 
 # Headings for each of the option groups
 GROUPNAMES = td.TypeDict({
+    'Main'           : 'Main options',
     'SceneOpts'      : 'Scene options',
     'OrthoOpts'      : 'Ortho display options',
     'LightBoxOpts'   : 'LightBox display options',
@@ -239,6 +246,23 @@ they are applied (see the :data:`ARGUMENTS` dictionary). This dictionary
 defines descriptions for ecah command line group.
 """
 
+# Descriptions for each group
+GROUPDESCS = td.TypeDict({
+
+    'SceneOpts'    : 'These settings are only applied if the \'--scene\' '
+                     'option is set to \'lightbox\' or \'ortho\'.',
+
+    'OrthoOpts'    : 'These settings are only applied if the \'--scene\' '
+                     'option is set to \'ortho\'.', 
+
+    'LightBoxOpts' : 'These settings are only applied if the \'--scene\' '
+                     'option is set to \'lightbox\'.',
+ 
+    'Display'      : 'Each display option will be applied to the '
+                     'overlay which is listed before that option.'
+})
+"""This dictionary contains descriptions for each argument group. """
+
 # Short/long arguments for all of those options
 # 
 # There cannot be any collisions between the main
@@ -249,10 +273,13 @@ defines descriptions for ecah command line group.
 # Display options and the *Opts options.
 ARGUMENTS = td.TypeDict({
 
+    'Main.help'            : ('h',  'help'),
+    'Main.glversion'       : ('gl', 'glversion'),
     'Main.scene'           : ('s',  'scene'),
     'Main.voxelLoc'        : ('v',  'voxelloc'),
     'Main.worldLoc'        : ('w',  'worldloc'),
     'Main.selectedOverlay' : ('o',  'selectedOverlay'),
+    'Main.defaultDisplay'  : ('d',  'defaultDisplay'),
     
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar'),
     'SceneOpts.bgColour'           : ('bg',  'bgColour'),
@@ -342,6 +369,8 @@ for every option.
 # Help text for all of the options
 HELP = td.TypeDict({
 
+    'Main.help'          : 'Display this help and exit',
+    'Main.glversion'     : 'Desired (major, minor) OpenGL version',
     'Main.scene'         : 'Scene to show. If not provided, the '
                            'previous scene layout is restored.',
 
@@ -351,6 +380,8 @@ HELP = td.TypeDict({
     'Main.worldLoc'        : 'Location to show (world coordinates, '
                              'takes precedence over --voxelloc)',
     'Main.selectedOverlay' : 'Selected overlay (default: last)',
+    'Main.defaultDisplay'  : 'Apply default display settings to overlays '
+                             '(unless any display setting specified)',
 
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
                                      'highlighting the current location',
@@ -495,7 +526,7 @@ into the corresponding property value.
 """
 
 
-def _configMainParser(mainParser):
+def _setupParsers(mainParser):
     """Sets up an argument parser which handles options related
     to the scene. This function configures the following argument
     groups:
@@ -506,44 +537,25 @@ def _configMainParser(mainParser):
       - *LightBoxOpts*: Options related to setting up a lightbox display
     """
 
-    mainParser.add_argument('-h',  '--help',
-                            action='store_true',
-                            help='Display this help and exit')
+    # FSLEyes application options
 
-    # Options defining the overall scene
-    sceneParser = mainParser.add_argument_group('Scene options')
+    # Options defining the overall scene,
+    # and separate parser groups for scene
+    # settings, ortho, and lightbox.
+ 
+    mainGroup  = mainParser.add_argument_group(GROUPNAMES[    'Main'],
+                                               GROUPDESCS.get('Main'))
+    sceneGroup = mainParser.add_argument_group(GROUPNAMES[    'SceneOpts'],
+                                               GROUPDESCS.get('SceneOpts'))
+    orthoGroup = mainParser.add_argument_group(GROUPNAMES[    'OrthoOpts'],
+                                               GROUPDESCS.get('OrthoOpts'))
+    lbGroup    = mainParser.add_argument_group(GROUPNAMES[    'LightBoxOpts'],
+                                               GROUPDESCS.get('LightBoxOpts'))
 
-    mainArgs = {name: ARGUMENTS['Main', name] for name in OPTIONS['Main']}
-    mainHelp = {name: HELP[     'Main', name] for name in OPTIONS['Main']}
-
-    for name, (shortArg, longArg) in mainArgs.items():
-        mainArgs[name] = ('-{}'.format(shortArg), '--{}'.format(longArg))
-
-    sceneParser.add_argument(*mainArgs['scene'],
-                             choices=('ortho', 'lightbox'),
-                             help=mainHelp['scene'])
-    sceneParser.add_argument(*mainArgs['voxelLoc'],
-                             metavar=('X', 'Y', 'Z'),
-                             type=int,
-                             nargs=3,
-                             help=mainHelp['voxelLoc'])
-    sceneParser.add_argument(*mainArgs['worldLoc'],
-                             metavar=('X', 'Y', 'Z'),
-                             type=float,
-                             nargs=3,
-                             help=mainHelp['worldLoc'])
-    sceneParser.add_argument(*mainArgs['selectedOverlay'],
-                             type=int,
-                             help=mainHelp['selectedOverlay'])
-
-    # Separate parser groups for ortho/lightbox, and for colour bar options
-    sceneParser =  mainParser.add_argument_group(GROUPNAMES['SceneOpts']) 
-    orthoParser =  mainParser.add_argument_group(GROUPNAMES['OrthoOpts'])
-    lbParser    =  mainParser.add_argument_group(GROUPNAMES['LightBoxOpts'])
-
-    _configSceneParser(    sceneParser)
-    _configOrthoParser(    orthoParser)
-    _configLightBoxParser( lbParser)
+    _configMainParser(     mainGroup)
+    _configSceneParser(    sceneGroup)
+    _configOrthoParser(    orthoGroup)
+    _configLightBoxParser( lbGroup)
 
 
 def _configParser(target, parser, propNames=None):
@@ -579,6 +591,45 @@ def _configParser(target, parser, propNames=None):
                              propHelp=helpTexts,
                              extra=extra)
 
+
+def _configMainParser(mainParser):
+    """Adds options to the given parser which allow the user to specify
+    *main* FSLeyes options.
+    """
+    mainArgs = {name: ARGUMENTS['Main', name] for name in OPTIONS['Main']}
+    mainHelp = {name: HELP[     'Main', name] for name in OPTIONS['Main']}
+
+    for name, (shortArg, longArg) in mainArgs.items():
+        mainArgs[name] = ('-{}'.format(shortArg), '--{}'.format(longArg))
+
+    mainParser.add_argument(*mainArgs['help'],
+                            action='store_true',
+                            help=mainHelp['help'])
+    mainParser.add_argument(*mainArgs['glversion'],
+                            metavar=('MAJOR', 'MINOR'),
+                            type=int,
+                            nargs=2,
+                            help=mainHelp['glversion'])
+    mainParser.add_argument(*mainArgs['scene'],
+                            choices=('ortho', 'lightbox'),
+                            help=mainHelp['scene'])
+    mainParser.add_argument(*mainArgs['voxelLoc'],
+                            metavar=('X', 'Y', 'Z'),
+                            type=int,
+                            nargs=3,
+                            help=mainHelp['voxelLoc'])
+    mainParser.add_argument(*mainArgs['worldLoc'],
+                            metavar=('X', 'Y', 'Z'),
+                            type=float,
+                            nargs=3,
+                            help=mainHelp['worldLoc'])
+    mainParser.add_argument(*mainArgs['selectedOverlay'],
+                            type=int,
+                            help=mainHelp['selectedOverlay'])
+    mainParser.add_argument(*mainArgs['defaultDisplay'],
+                            action='store_true',
+                            help=mainHelp['defaultDisplay']) 
+    
 
 def _configSceneParser(sceneParser):
     """Adds options to the given argument parser which allow
@@ -637,11 +688,8 @@ def _configOverlayParser(ovlParser):
     ModelOpts      = fsldisplay.ModelOpts
     LabelOpts      = fsldisplay.LabelOpts
     
-    dispDesc = 'Each display option will be applied to the '\
-               'overlay which is listed before that option.'
-
-    dispParser  = ovlParser.add_argument_group(GROUPNAMES[Display],
-                                               dispDesc)
+    dispParser  = ovlParser.add_argument_group(GROUPNAMES[    Display],
+                                               GROUPDESCS.get(Display))
     imgParser   = ovlParser.add_argument_group(GROUPNAMES[ImageOpts])
     volParser   = ovlParser.add_argument_group(GROUPNAMES[VolumeOpts])
     vecParser   = ovlParser.add_argument_group(GROUPNAMES[VectorOpts])
@@ -739,7 +787,7 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
     mainParser.prog        = name
     mainParser.description = desc
 
-    _configMainParser(mainParser)
+    _setupParsers(mainParser)
 
     # And the ovlParser parses overlay display options
     # for a single overlay - below we're going to
@@ -1033,7 +1081,6 @@ def generateOverlayArgs(overlay, displayCtx):
     """Generates command line arguments which describe the display
     of the current overlay.
 
-
     :arg overlay:    An overlay object.
 
     :arg displayCtx: A :class:`.DisplayContext` instance.
@@ -1065,7 +1112,7 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
     import fsl.data.image as fslimage
     import fsl.data.model as fslmodel
 
-    paths    = [o.overlay for o in args.overlays]
+    paths = [o.overlay for o in args.overlays]
 
     if len(paths) > 0:
         overlays = fsloverlay.loadOverlays(paths, **kwargs)
