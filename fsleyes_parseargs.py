@@ -1122,8 +1122,18 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
     for i, overlay in enumerate(overlayList):
 
         display = displayCtx.getDisplay(overlay)
-        
-        _applyArgs(args.overlays[i], display)
+
+        # Figure out how many arguments
+        # were passed in for this overlay
+        nArgs = len([v for k, v in vars(args.overlays[i]).items()
+                     if k != 'overlay' and v is not None])
+
+        # If no arguments were passed,
+        # apply default display settings 
+        if nArgs == 0 and args.defaultDisplay:
+            displaydefaults.displayDefaults(overlay, overlayList, displayCtx)
+        else:
+            _applyArgs(args.overlays[i], display)
 
         # Retrieve the DisplayOpts instance
         # after applying arguments to the

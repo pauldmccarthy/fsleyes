@@ -621,6 +621,15 @@ class VolumeOpts(ImageOpts):
                            display,
                            display.getSyncPropertyName('contrast'))
 
+            # If centreRanges, linkLowRanges or linkHighRanges
+            # have been set to True (this will happen if they
+            # are true on the parent VolumeOpts instance), make
+            # sure the property / listener states are up to date.
+            if self.centreRanges: self.__centreRangesChanged()
+            else:
+                if self.linkLowRanges:  self.__linkLowRangesChanged()
+                if self.linkHighRanges: self.__linkHighRangesChanged()
+
 
     @actions.action
     def resetDisplayRange(self):
