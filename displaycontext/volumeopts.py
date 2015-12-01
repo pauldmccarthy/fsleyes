@@ -756,15 +756,17 @@ class VolumeOpts(ImageOpts):
         """
 
         if self.centreRanges:
-            self.linkLowRanges  = False
-            self.linkHighRanges = False
- 
             self.display.disableProperty('brightness')
             self.display.disableProperty('contrast')
             self        .disableProperty('linkLowRanges')
             self        .disableProperty('linkHighRanges')
             self.setConstraint('displayRange',  'dimCentres', [0.0])
             self.setConstraint('clippingRange', 'dimCentres', [0.0])
+
+            # Make sure that lowLinkRanges and
+            # highLinkRanges are not active
+            self.__linkRangesChanged(False, 0)
+            self.__linkRangesChanged(False, 1)
             
         else:
             self.display.enableProperty('brightness')
@@ -801,11 +803,14 @@ class VolumeOpts(ImageOpts):
                   and 1 to the high range value.
         """
 
-        dRangePVs = self.displayRange .getPropertyValueList()
-        cRangePVs = self.clippingRange.getPropertyValueList()
+        dRangePV = self.displayRange .getPropertyValueList()[idx]
+        cRangePV = self.clippingRange.getPropertyValueList()[idx]
 
-        props.bindPropVals(dRangePVs[idx],
-                           cRangePVs[idx],
+        if props.propValsAreBound(dRangePV, cRangePV) == val:
+            return
+
+        props.bindPropVals(dRangePV,
+                           cRangePV,
                            bindval=True,
                            bindatt=False,
                            unbind=not val)

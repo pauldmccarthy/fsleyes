@@ -50,6 +50,8 @@ def _ImageDisplay(overlay, overlayList, displayCtx):
 
     if _isStatImage(overlay):
         _statImageDisplay(overlay, overlayList, displayCtx)
+    elif _isPEImage(overlay):
+        _peImageDisplay(  overlay, overlayList, displayCtx)
 
     # Automatically configure nice display range?
         
@@ -59,11 +61,24 @@ def _isStatImage(overlay):
     statistic image, ``False`` otherwise.
     """
     
-    basename = fslimage.removeExt(overlay.dataSource)
+    basename = op.basename(overlay.dataSource)
+    basename = fslimage.removeExt(basename)
     tokens   = ['zstat', 'tstat', 'fstat', 'zfstat']
     pattern  = '_({})\d+'.format('|'.join(tokens))
 
     return re.search(pattern, basename) is not None
+
+
+def _isPEImage(overlay):
+    """Returns ``True`` if the given :class:`.Image` overlay looks like a
+    statistic image, ``False`` otherwise.
+    """ 
+    basename = op.basename(overlay.dataSource)
+    basename = fslimage.removeExt(basename)
+    tokens   = ['cope', 'pe']
+    pattern  = '^({})\d+'.format('|'.join(tokens))
+
+    return re.search(pattern, basename) is not None 
 
 
 def _statImageDisplay(overlay, overlayList, displayCtx):
@@ -134,6 +149,19 @@ _statImageDisplay.cmaps = ['red-yellow',
 # Index into the cmaps list, pointing to the 
 # next colour map to use for statistic images.
 _statImageDisplay.currentCmap = 0
+
+
+def _peImageDisplay(overlay, overlayList, displayCtx):
+    """Automatically configure display settings for the given PE/COPE
+    :class:`.Image` overlay.
+    """ 
+    opts = displayCtx.getOpts(overlay)
+
+    opts.cmap           = 'Render3'
+    opts.clippingRange  = [-1,   1]
+    opts.displayRange   = [-100, 100]
+    opts.centreRanges   = True
+    opts.invertClipping = True
 
 
 def _FEATImageDisplay(overlay, overlayList, displayCtx):
