@@ -152,6 +152,15 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
+    autoDisplay = props.Boolean(default=False)
+    """If ``True``, whenever an overlay is added to the :class:`.OverlayList`,
+    the :mod:`autodisplay` module will be used to automatically configure
+    its display settings. Note that the ``DisplayContext`` does not perform
+    this configuration - this flag is used by other modules (e.g. the
+    :class:`.OverlayListPanel` and the :class:`.OpenFileAction`).
+    """
+
+
     def __init__(self, overlayList, parent=None):
         """Create a ``DisplayContext``.
 
@@ -165,7 +174,10 @@ class DisplayContext(props.SyncableHasProperties):
         props.SyncableHasProperties.__init__(
             self,
             parent=parent,
-            nounbind=['overlayGroups', 'displaySpace', 'bounds'],
+            nounbind=['overlayGroups',
+                      'displaySpace',
+                      'bounds',
+                      'autoDisplay'],
             nobind=[  'syncOverlayDisplay'])
 
         self.__overlayList = overlayList

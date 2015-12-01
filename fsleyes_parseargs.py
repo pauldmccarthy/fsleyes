@@ -122,7 +122,7 @@ colourmaps.init()
 
 import displaycontext as fsldisplay
 
-import displaydefaults
+import autodisplay
 
 
 log = logging.getLogger(__name__)
@@ -147,7 +147,7 @@ OPTIONS = td.TypeDict({
                        'voxelLoc',
                        'worldLoc',
                        'selectedOverlay',
-                       'defaultDisplay'],
+                       'autoDisplay'],
 
     # From here on, all of the keys are
     # the names of HasProperties classes,
@@ -259,7 +259,10 @@ GROUPDESCS = td.TypeDict({
                      'option is set to \'lightbox\'.',
  
     'Display'      : 'Each display option will be applied to the '
-                     'overlay which is listed before that option.'
+                     'overlay which is listed before that option. '
+                     'Passing any display option for an overlay will '
+                     'override the \'--autoDisplay\' setting for that '
+                     'overlay.'
 })
 """This dictionary contains descriptions for each argument group. """
 
@@ -279,7 +282,7 @@ ARGUMENTS = td.TypeDict({
     'Main.voxelLoc'        : ('v',  'voxelloc'),
     'Main.worldLoc'        : ('w',  'worldloc'),
     'Main.selectedOverlay' : ('o',  'selectedOverlay'),
-    'Main.defaultDisplay'  : ('d',  'defaultDisplay'),
+    'Main.autoDisplay'     : ('ad', 'autoDisplay'),
     
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar'),
     'SceneOpts.bgColour'           : ('bg',  'bgColour'),
@@ -380,8 +383,9 @@ HELP = td.TypeDict({
     'Main.worldLoc'        : 'Location to show (world coordinates, '
                              'takes precedence over --voxelloc)',
     'Main.selectedOverlay' : 'Selected overlay (default: last)',
-    'Main.defaultDisplay'  : 'Apply default display settings to overlays '
-                             '(unless any display setting specified)',
+    'Main.autoDisplay'     : 'Automatically configure display settings to '
+                             'overlays (unless any display settings are '
+                             'specified)',
 
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
                                      'highlighting the current location',
@@ -391,7 +395,7 @@ HELP = td.TypeDict({
     'SceneOpts.colourBarLocation'  : 'Colour bar location',
     'SceneOpts.colourBarLabelSide' : 'Colour bar label orientation',
     'SceneOpts.performance'        : 'Rendering performance '
-                                     '(1=fastest, 5=best looking)',
+                                     '(1=fastest, 4=best looking)',
     
     'OrthoOpts.xzoom'       : 'X canvas zoom',
     'OrthoOpts.yzoom'       : 'Y canvas zoom',
@@ -626,9 +630,9 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['selectedOverlay'],
                             type=int,
                             help=mainHelp['selectedOverlay'])
-    mainParser.add_argument(*mainArgs['defaultDisplay'],
+    mainParser.add_argument(*mainArgs['autoDisplay'],
                             action='store_true',
-                            help=mainHelp['defaultDisplay']) 
+                            help=mainHelp['autoDisplay']) 
     
 
 def _configSceneParser(sceneParser):
@@ -1009,13 +1013,18 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
     """
     
     # First apply all command line options
-    # related to the display context 
+    # related to the display context
+
+    # selectedOverlay
     if args.selectedOverlay is not None:
         if args.selectedOverlay < len(overlayList):
             displayCtx.selectedOverlay = args.selectedOverlay
     else:
         if len(overlayList) > 0:
             displayCtx.selectedOverlay = len(overlayList) - 1
+
+    # Auto display
+    displayCtx.autoDisplay = args.autoDisplay
 
     # voxel/world location
     if len(overlayList) > 0:
@@ -1033,6 +1042,7 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
 
         displayCtx.location.xyz = wloc
 
+    # Now, apply arguments to the SceneOpts instance
     _applyArgs(args, sceneOpts)
 
 
@@ -1130,8 +1140,8 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
 
         # If no arguments were passed,
         # apply default display settings 
-        if nArgs == 0 and args.defaultDisplay:
-            displaydefaults.displayDefaults(overlay, overlayList, displayCtx)
+        if nArgs == 0 and args.autoDisplay:
+            autodisplay.autoDisplay(overlay, overlayList, displayCtx)
         else:
             _applyArgs(args.overlays[i], display)
 

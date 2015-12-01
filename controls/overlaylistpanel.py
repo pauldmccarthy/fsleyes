@@ -15,12 +15,12 @@ import wx
 
 import props
 
-import pwidgets.elistbox           as elistbox
+import pwidgets.elistbox       as elistbox
 
-import fsl.fsleyes.panel           as fslpanel
-import fsl.fsleyes.icons           as icons
-import fsl.fsleyes.displaydefaults as displaydefaults
-import fsl.data.image              as fslimage
+import fsl.fsleyes.panel       as fslpanel
+import fsl.fsleyes.icons       as icons
+import fsl.fsleyes.autodisplay as autodisplay
+import fsl.data.image          as fslimage
 
 
 log = logging.getLogger(__name__)
@@ -215,10 +215,11 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
         
         self._displayCtx.selectedOverlay = len(self._overlayList) - 1
 
-        for overlay in overlays:
-            displaydefaults.displayDefaults(overlay,
-                                            self._overlayList,
-                                            self._displayCtx)
+        if self._displayCtx.autoDisplay:
+            for overlay in overlays:
+                autodisplay.autoDisplay(overlay,
+                                        self._overlayList,
+                                        self._displayCtx)
 
 
     def __lbRemove(self, ev):

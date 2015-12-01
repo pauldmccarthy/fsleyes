@@ -11,7 +11,7 @@ load overlay files into the :class:`.OverlayList`.
 
 import action
 
-import fsl.fsleyes.displaydefaults as displaydefaults
+import fsl.fsleyes.autodisplay as autodisplay
 
 
 class OpenFileAction(action.Action):
@@ -44,7 +44,8 @@ class OpenFileAction(action.Action):
         
         self.__displayCtx.selectedOverlay = self.__displayCtx.overlayOrder[-1]
 
-        for overlay in overlays:
-            displaydefaults.displayDefaults(overlay,
-                                            self.__overlayList,
-                                            self.__displayCtx)
+        if self.__displayCtx.autoDisplay:
+            for overlay in overlays:
+                autodisplay.autoDisplay(overlay,
+                                        self.__overlayList,
+                                        self.__displayCtx)
