@@ -40,7 +40,7 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
        :scale: 50%
        :align: center
 
-    An ``OverlayDisplayPanel`` uses a :class:`.WidgetGrid` to organise the
+    An ``OverlayDisplayPanel`` uses a :class:`.WidgetList` to organise the
     settings into two main sections:
 
       - Settings which are common across all overlays - these are defined

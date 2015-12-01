@@ -129,6 +129,7 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
 
         self.__deregisterCurrentOverlay()
         self.__grid.ClearGrid()
+        self.__grid.Refresh()
 
         overlay = self._displayCtx.getSelectedOverlay()
 
@@ -182,6 +183,8 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
 
             tags.Bind(texttag.EVT_TTP_TAG_ADDED,   self.__onTagAdded)
             tags.Bind(texttag.EVT_TTP_TAG_REMOVED, self.__onTagRemoved)
+
+        self.__grid.Refresh()
 
         self.__refreshTagOptions()
         self.__refreshTags()
@@ -511,6 +514,8 @@ class LabelGrid(fslpanel.FSLEyesPanel):
             tags.Bind(texttag.EVT_TTP_TAG_ADDED,   self.__onTagAdded)
             tags.Bind(texttag.EVT_TTP_TAG_REMOVED, self.__onTagRemoved)
             tags.Bind(texttag.EVT_TTP_TAG_SELECT,  self.__onTagSelect)
+
+        self.__grid.Refresh()
 
 
     def __refreshTags(self):
