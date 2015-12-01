@@ -43,6 +43,27 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
     
       - Navigate to the Z maximum location, Z centre-of-gravity location,
         or COPE maximum location, for a specific cluster.
+
+    
+    When an overlay is selected (detected via the
+    :attr:`.DisplayContext.selectedOverlay` property), a ``ClusterPanel``
+    tries to identify the FEAT analysis associated with the overlay. If
+    the overlay is a :class:`.FEATImage`, then no work needs to be done.
+    Otherwise, the ``ClusterPanel`` uses functions in the :mod:`.featresults`
+    module to identify the FEAT directory. Ultimately, a reference to a
+    :class:`.FEATImage` associated with the currently selected overlay is
+    obtained, so the ``ClusterPanel`` can retrieve contrast and cluster
+    information.
+
+    
+    A ``ClusterPanel`` uses a :class:`.WidgetGrid` to display information
+    about the clusters associated with a contrast. Because creating all of the
+    widgets contained in the ``WidgetGrid`` is expensive, a ``ClusterPanel``
+    creates (on demand) and caches ``WidgetGrid`` instances for all
+    :class:`.FEATImage` overlay and contrasts. This means that when the user
+    changes the currently selected overlay, or the current contrast, the
+    displayed cluster information is updated quickly.
+
     """
 
     def __init__(self, parent, overlayList, displayCtx):
@@ -170,8 +191,8 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         
     def __disable(self, message):
         """Disables the ``ClusterPanel``, and displays the given message.
-        Called when the selected overlay  is not a :class:`.FEATImage`, or
-        when cluster results cannot be displayed for some reason.
+        Called when the selected overlay is not associated with a FEAT
+        analysis, or when cluster results cannot be displayed for some reason.
         """
 
         self.__disabledText.SetLabel(message)
@@ -182,7 +203,10 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         
     def __enable(self):
         """Enables the ``ClusterPanel``. This amounts to hiding the
-        disabled message panel, and showing the :class:`.WidgetGrid`.
+        disabled message panel, and showing the appropriate
+        :class:`.WidgetGrid` for the currently selected overlay / contrast.
+        The appropriate ``WidgetGrid`` is assumed to have already been
+        created.
         """
         self.__sizer.Show(self.__disabledText, False)
         self.__sizer.Show(self.__mainSizer,    True)
@@ -201,9 +225,10 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
 
     
     def __statSelected(self, ev=None):
-        """Called when a COPE is selected. Clears the cluster table, and
-        displays clusters for the newly selected COPE (see the
-        :meth:`__displayClusterData` method)
+        """Called when a COPE is selected. Retrieves a cached
+        :class:`.WidgetGrid`, or creates a new one (via the
+        :meth:`__genClusterGrid` method) which displays information
+        about the clusters associated with the currently selected contrast.
         """
         overlay   = self.__selectedOverlay
         featImage = self.__featImages[overlay]
@@ -268,7 +293,6 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         """Called when the *Add cluster mask* button is pushed. Retrieves the
         cluster mask image for the currewnt contrast (see the
         :meth:`.FEATImage.getClusterMask` method)
-
         """
         overlay   = self.__selectedOverlay
         featImage = self.__featImages[overlay]
@@ -350,6 +374,9 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
 
             return sizer
 
+        # Creating all of the widgets could
+        # take a bit of time, so we'll 
+        # display a message while doing so.
         dlg = fsldlg.SimpleMessageDialog()
         dlg.SetMessage(strings.messages[self, 'loadingCluster'].format(
             contrast + 1, conName))
@@ -388,9 +415,10 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         
 
     def __overlayListChanged(self, *a):
-        """Called when the :class:`.OverlayList` changes. Updates the *Add Z
+        """Called when the :class:`.OverlayList` changes. Destroys any
+        cached :class:`.WidgetGrid` instances as needed, updates the *Add Z
         statistic* and *Add cluster mask* buttons, in case the user removed
-        them. Also calls :meth:`__selectedOverlayChanged`.
+        them, and calls :meth:`__selectedOverlayChanged`.
         """
 
         # Remove and destroy any cached
@@ -437,9 +465,9 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         """Called when the :attr:`.DisplayContext.selectedOverlay` changes,
         and by the :meth:`__overlayListChanged` method.
 
-        If the newly selected overlay is a :class:`.FEATImage` which has
-        cluster results, they are loaded in, and displayed on the cluster
-        table.
+        If the newly selected overlay is a :class:`.FEATImage` (or is otherwise
+        associated with a FEAT analysis) which has cluster results, they are
+        loaded in, and displayed on a :class:`.WidgetGrid`.
         """
 
         prevOverlay            = self.__selectedOverlay
@@ -453,7 +481,7 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         overlay = self._displayCtx.getSelectedOverlay()
         featDir = featresults.getAnalysisDir(overlay.dataSource)
 
-        # Not a FEAT analysis image,
+        # No FEAT analysis, or not an Image,
         # can't do anything with that 
         if featDir is None or not isinstance(overlay, fslimage.Image):
             log.debug('Overlay {} is not part of a feat '
@@ -497,7 +525,6 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         # this overlay, so we can get
         # information about the FEAT analysis
         featImage = self.__featImages.get(overlay)
-
         if featImage is None:
 
             # If the overlay itself is a FEATImage,
@@ -520,10 +547,11 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
                 
             self.__featImages[overlay] = featImage
 
-        log.debug('FEAT analysis associated with overlay {}: {}'.format(
-            overlay,
-            featImage.getFEATDir()))
+        log.debug('Identified FEAT analysis associated with overlay '
+                  '{}: {}'.format(overlay, featImage.getFEATDir()))
 
+        # Get the contrast and cluster
+        # information for the FEAT analysis.
         display  = self._displayCtx.getDisplay(overlay)
         numCons  = featImage.numContrasts()
         conNames = featImage.contrastNames()
