@@ -14,6 +14,7 @@ import                        wx
 import pwidgets.widgetgrid as widgetgrid
 
 import fsl.fsleyes.panel   as fslpanel
+import fsl.utils.dialog    as fsldlg
 import fsl.data.strings    as strings
 import fsl.data.featimage  as featimage
 
@@ -62,13 +63,18 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         self.__addZStats    = wx.Button(    self)
         self.__addClustMask = wx.Button(    self)
         self.__statSelect   = wx.Choice(    self)
-        self.__clusterList  = widgetgrid.WidgetGrid(self)
+
+        # A WidgetGrid is created for each
+        # contrast of a FEAT image, and cached
+        # in this dictionary. This is because
+        # it is quite expensive to create the
+        # grid widgets. This dictionary contains
+        # {overlay : [WidgetGrid]} mappings.
+        self.__clusterGrids = {}
 
         self.__addZStats   .SetLabel(strings.labels[self, 'addZStats'])
         self.__addClustMask.SetLabel(strings.labels[self, 'addClustMask'])
         
-        self.__clusterList.ShowRowLabels(False)
-        self.__clusterList.ShowColLabels(True)
         
         self.__sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.__sizer)
@@ -84,7 +90,6 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
 
         self.__mainSizer.Add(self.__overlayName, flag=wx.EXPAND)
         self.__mainSizer.Add(self.__topSizer,    flag=wx.EXPAND)
-        self.__mainSizer.Add(self.__clusterList, flag=wx.EXPAND, proportion=1)
 
         # Only one of the disabledText or
         # mainSizer are shown at any one time
@@ -113,8 +118,17 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         Removes some property listeners, and calls
         :meth:`.FSLEyesPanel.destroy`.
         """
+        
+        for grids in self.__clusterGrids.values():
+            for grid in grids:
+                if grid is not None:
+                    grid.Destroy()
+                    
+        self.__clusterGrids = None
+        
         self._overlayList.removeListener('overlays',        self._name)
         self._displayCtx .removeListener('selectedOverlay', self._name)
+
         fslpanel.FSLEyesPanel.destroy(self)
 
 
@@ -158,24 +172,41 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         """
         self.__sizer.Show(self.__disabledText, False)
         self.__sizer.Show(self.__mainSizer,    True)
+
+        overlay  = self.__selectedOverlay
+        contrast = self.__statSelect.GetSelection()
+
+        for ovl, grids in self.__clusterGrids.items():
+            for i, grid in enumerate(grids):
+                if grid is not None:
+                    show = ovl is overlay and i == contrast
+                    self.__mainSizer.Show(grid, show)
+            
         self.Layout() 
 
     
-    def __statSelected(self, ev):
+    def __statSelected(self, ev=None):
         """Called when a COPE is selected. Clears the cluster table, and
         displays clusters for the newly selected COPE (see the
         :meth:`__displayClusterData` method)
         """
-        idx  = self.__statSelect.GetSelection() 
-        data = self.__statSelect.GetClientData(idx)
-        con  = idx + 1
-        
-        self.__disable(strings.messages[self, 'loadingCluster'].format(con))
+        overlay = self.__selectedOverlay
+        idx     = self.__statSelect.GetSelection() 
+        data    = self.__statSelect.GetClientData(idx)
 
         self.Refresh()
         self.Update()
- 
-        self.__displayClusterData(con, data)
+
+        if overlay not in self.__clusterGrids:
+            self.__clusterGrids[overlay] = [None] * overlay.numContrasts()
+
+        grid = self.__clusterGrids[overlay][idx]
+
+        if grid is None:
+            grid = self.__genClusterGrid(overlay, idx, data)
+            self.__clusterGrids[overlay][idx] = grid
+            self.__mainSizer.Add(grid, flag=wx.EXPAND, proportion=1)
+
         self.__enable()
         self.__enableOverlayButtons()
 
@@ -236,12 +267,12 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         self._displayCtx.getDisplay(mask).overlayType = 'label'
 
 
-    def __displayClusterData(self, contrast, clusters):
-        """Updates the cluster table so that it is displaying the given list
-        of clusters.
+    def __genClusterGrid(self, overlay, contrast, clusters):
+        """Creates and returns a :class:`.WidgetGrid` which contains the given
+        list of clusters, which are related to the given contrast.
 
-        :arg contrast: The number of the contrast to which the clusters are
-                       related.
+        :arg contrast: The (0-indexed) number of the contrast to which the
+                       clusters are related.
 
         :arg clusters: A sequence of objects, each representing one cluster.
                        See the :meth:`.FEATImage.clusterResults` method.
@@ -258,11 +289,14 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
                 'copemaxcoords' : 8,
                 'copemean'      : 9}
 
-        grid    = self.__clusterList
-        overlay = self.__selectedOverlay
+        grid    = widgetgrid.WidgetGrid(self)
+        conName = overlay.contrastNames()[contrast]
         opts    = self._displayCtx.getOpts(overlay)
 
         grid.SetGridSize(len(clusters), 10)
+
+        grid.ShowRowLabels(False)
+        grid.ShowColLabels(True)
 
         for col, i in cols.items():
             grid.SetColLabel(i, strings.labels[self, col])
@@ -283,6 +317,11 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
             btn.Bind(wx.EVT_BUTTON, onClick)
 
             return sizer
+
+        dlg = fsldlg.SimpleMessageDialog()
+        dlg.SetMessage(strings.messages[self, 'loadingCluster'].format(
+            contrast + 1, conName))
+        dlg.Show()
 
         for i, clust in enumerate(clusters):
 
@@ -309,6 +348,11 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
             grid.SetText(  i, cols['copemean'],      fmt(clust.copemean))
 
         grid.Refresh()
+
+        dlg.Close()
+        dlg.Destroy()
+
+        return grid
         
 
     def __overlayListChanged(self, *a):
@@ -316,6 +360,18 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         statistic* and *Add cluster mask* buttons, in case the user removed
         them. Also calls :meth:`__selectedOverlayChanged`.
         """
+
+        # Remove and destroy any cached
+        # WidgetGrid panels for overlays
+        # that have been removed from the
+        # list.
+        for overlay in self.__clusterGrids.keys():
+            if overlay not in self._overlayList:
+                grids = self.__clusterGrids.pop(overlay)
+                for grid in grids:
+                    self.__mainSizer.Detach(grid)
+                    grid.Destroy()
+        
         self.__selectedOverlayChanged()
         self.__enableOverlayButtons()
 
@@ -372,17 +428,17 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         # changed) or the newly selected
         # overlay is from the same FEAT
         # analysis. No need to do anything.
-        if prevOverlay is not None and (prevOverlay is overlay or 
-           prevOverlay.getFEATDir() == overlay.getFEATDir()):
+        if prevOverlay is not None and \
+           (prevOverlay is overlay or
+                prevOverlay.getFEATDir() == overlay.getFEATDir()):
             self.__selectedOverlay = overlay
             return
-            
-        self.__statSelect .Clear()
-        self.__clusterList.ClearGrid()
-        self.__clusterList.Refresh()
+
+        self.__statSelect.Clear()
 
         self.__selectedOverlay = overlay
 
+        display  = self._displayCtx.getDisplay(overlay)
         numCons  = overlay.numContrasts()
         conNames = overlay.contrastNames()
 
@@ -410,11 +466,9 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
 
             self.__statSelect.Append(name, clusterList)
             
-        self.__overlayName.SetLabel(overlay.getAnalysisName())
+        self.__overlayName.SetLabel(display.name)
 
         self.__statSelect.SetSelection(0)
-        self.__displayClusterData(1, clusts[0][1])
-
-        self.__enable()
+        self.__statSelected()
 
         self.Layout()
