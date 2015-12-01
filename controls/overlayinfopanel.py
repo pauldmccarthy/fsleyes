@@ -276,17 +276,22 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
         """ 
         info = self.__getImageInfo(overlay, display)
 
-        featInfo = collections.OrderedDict([
+        featInfo = [
             ('analysisName', overlay.getAnalysisName()),
+            ('analysisDir',  overlay.getFEATDir()),
             ('numPoints',    overlay.numPoints()),
             ('numEVs',       overlay.numEVs()),
-            ('numContrasts', overlay.numContrasts()),
-        ])
+            ('numContrasts', overlay.numContrasts())]
+
+        topLevel = overlay.getTopLevelAnalysisDir()
+
+        if topLevel is not None:
+            featInfo.insert(2, ('partOfAnalysis', topLevel))
 
         secName = strings.labels[self, overlay, 'featInfo']
         info.addSection(secName)
 
-        for k, v in featInfo.items():
+        for k, v in featInfo:
             info.addInfo(strings.feat[k], v, section=secName)
 
         return info
@@ -303,17 +308,21 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
 
         info = self.__getImageInfo(overlay, display)
 
-        melInfo = collections.OrderedDict([
-            ('tr',             overlay.tr),
+        melInfo = [
             ('dataFile',       overlay.getDataFile()),
-            ('partOfAnalysis', overlay.getTopLevelAnalysisDir()),
-            ('numComponents',  overlay.numComponents()),
-        ])
+            ('analysisDir',    overlay.getMelodicDir()),
+            ('tr',             overlay.tr),
+            ('numComponents',  overlay.numComponents())]
+
+        topLevel = overlay.getTopLevelAnalysisDir()
+        
+        if topLevel is not None:
+            melInfo.insert(2, ('partOfAnalysis', topLevel))
 
         secName = strings.labels[self, overlay, 'melodicInfo']
         info.addSection(secName)
 
-        for k, v in melInfo.items():
+        for k, v in melInfo:
             info.addInfo(strings.melodic[k], v, section=secName)
 
         return info
