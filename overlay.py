@@ -202,28 +202,22 @@ def guessDataSourceType(path):
     if path.endswith('.vtk'):
         return fslmodel.Model, path
 
-
+    # Analysis directory?
     if op.isdir(path):
         if melresults.isMelodicDir(path):
             return fslmelimage.MelodicImage, path
 
-        if featresults.isFEATDir(path):
+        elif featresults.isFEATDir(path):
             return fslfeatimage.FEATImage, path
 
-    elif melresults.isMelodicImage(path):
-        return fslmelimage.MelodicImage, path
-    
-    elif featresults.isFEATImage(path):
-        return fslfeatimage.FEATImage, path
+    # Assume it's a NIFTI image
+    try:               path = fslimage.addExt(path, mustExist=True)
+    except ValueError: return None, path
 
-    # A regular NIFTI image?
-    try:
-        path = fslimage.addExt(path, mustExist=True)
-        return fslimage.Image, path
-    
-    except ValueError:
-        pass
-
+    if   melresults.isMelodicImage(path): return fslmelimage.MelodicImage, path
+    elif featresults.isFEATImage(  path): return fslfeatimage.FEATImage,   path
+    else:                                 return fslimage.Image,           path
+        
     # Otherwise, I don't
     # know what to do
     return None, path
