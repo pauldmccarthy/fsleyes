@@ -977,11 +977,21 @@ class OverlayPlotPanel(PlotPanel):
         
             for target, propName in zip(targets, propNames):
                 if addListener:
+                    
+                    log.debug('Adding listener on {}.{} for {} data '
+                              'series'.format(type(target).__name__,
+                                              propName,
+                                              overlay))
+                    
                     target.addListener(propName,
                                        self.__name,
                                        self.draw,
                                        overwrite=True)
                 else:
+                    log.debug('Removing listener on {}.{} for {} data '
+                              'series'.format(type(target).__name__,
+                                              propName,
+                                              overlay)) 
                     try:    target.removeListener(propName, self.__name)
                     except: pass
 

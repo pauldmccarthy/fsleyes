@@ -194,8 +194,12 @@ class FSLEyesFrame(wx.Frame):
             panelId = 1
         else:
             panelId = max(self.__viewPanelIDs.values()) + 1
-            
-        title   = '{} {}'.format(strings.titles[panelCls], panelId)
+
+        # The PaneInfo Name contains the panel
+        # class name - this is used for saving
+        # and restoring perspectives .
+        name  = '{} {}'.format(panelCls.__name__,        panelId)
+        title = '{} {}'.format(strings.titles[panelCls], panelId)
 
         childDC = displaycontext.DisplayContext(
             self.__overlayList,
@@ -221,11 +225,8 @@ class FSLEyesFrame(wx.Frame):
             id(panel),
             id(childDC)))
 
-        # The PaneInfo Name is the panel class
-        # name - this is used for saving and
-        # restoring perspectives
         paneInfo = (aui.AuiPaneInfo()
-                    .Name(panelCls.__name__)
+                    .Name(name)
                     .Caption(title)
                     .CloseButton()
                     .Dockable()
