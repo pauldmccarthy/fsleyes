@@ -234,8 +234,6 @@ class PlotPanel(viewpanel.ViewPanel):
                          self.__name,
                          self.__limitsChanged)
 
-        self.Bind(wx.EVT_SIZE, self.draw)
-
 
     def getFigure(self):
         """Returns the ``matplotlib`` ``Figure`` instance."""
@@ -512,13 +510,12 @@ class PlotPanel(viewpanel.ViewPanel):
         if ds.alpha == 0:
             return (0, 0), (0, 0)
 
-        log.debug('Drawing {} for {}'.format(type(ds).__name__,
-                                             ds.overlay))
-
         xdata, ydata = preproc(ds)
 
         if len(xdata) != len(ydata) or len(xdata) == 0:
             return (0, 0), (0, 0)
+
+        log.debug('Drawing {} for {}'.format(type(ds).__name__, ds.overlay))
 
         # Note to self: If the smoothed data is
         # filled with NaNs, it is possibly due
@@ -964,7 +961,23 @@ class OverlayPlotPanel(PlotPanel):
         elif self.showMode == 'current': targetOverlays = [selectedOverlay]
         else:                            targetOverlays = []
 
-        for overlay, (targets, propNames) in self.__refreshProps.items():
+        # Build a list of all overlays, ordered by
+        # those we are not interested in, followed
+        # by those that we are interested in. 
+        allOverlays = self.__refreshProps.keys()
+        allOverlays = set(allOverlays) - set(targetOverlays)
+        allOverlays = list(allOverlays) + targetOverlays
+
+        # Make sure that property listeners are not
+        # registered on overlays that we're not
+        # interested in, and are registered on those
+        # that we are interested in. The ordering
+        # above ensures that we inadvertently don't
+        # de-register a listener that we have just
+        # registered, from the same target.
+        for overlay in allOverlays + targetOverlays:
+
+            targets, propNames = self.__refreshProps[overlay]
 
             ds          = self.__dataSeries[overlay]
             addListener = overlay in targetOverlays
