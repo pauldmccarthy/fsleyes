@@ -611,6 +611,7 @@ class FSLEyesFrame(wx.Frame):
                       viewAction)
 
         # Perspectives
+        viewMenu.AppendSeparator()
         viewMenu.AppendSubMenu(perspectiveMenu, 'Perspectives')
         self.__makePerspectiveMenu()
 

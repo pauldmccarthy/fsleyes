@@ -101,6 +101,9 @@ To make this new propery settable via the command line, you need to:
          })
 """
 
+
+from __future__ import print_function
+
 import sys
 import os.path as op
 import functools
@@ -838,8 +841,8 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
             ovlHelp = ovlParser.format_help()
             ovlHelp = ovlHelp[ovlHelp.index(dispGroup):]
             
-        print 
-        print ovlHelp
+        print() 
+        print(ovlHelp)
 
     # And I want to handle overlay argument errors,
     # rather than having the overlay parser force
@@ -938,7 +941,7 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
             
         except Exception as e:
             printHelp(shortHelp=True)
-            print e.message
+            print(e.message)
             sys.exit(1)
 
         # We just add a list of argparse.Namespace
