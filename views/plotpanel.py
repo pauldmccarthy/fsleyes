@@ -977,7 +977,10 @@ class OverlayPlotPanel(PlotPanel):
         # registered, from the same target.
         for overlay in allOverlays + targetOverlays:
 
-            targets, propNames = self.__refreshProps[overlay]
+            targets, propNames = self.__refreshProps.get(overlay, (None, None))
+
+            if targets is None:
+                continue
 
             ds          = self.__dataSeries[overlay]
             addListener = overlay in targetOverlays
