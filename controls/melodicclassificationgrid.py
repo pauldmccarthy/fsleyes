@@ -348,12 +348,10 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
 
         grid = self.__grid
         opts = self._displayCtx.getOpts(self.__overlay)
-        tags = grid.GetWidget(opts.volume, 1)
 
         log.debug('Overlay volume changed ({})'.format(opts.volume))
  
         grid.SetSelection(opts.volume, -1)
-        tags.FocusNewTagCtrl()
 
 
     def __labelsChanged(self, *a):
