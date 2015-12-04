@@ -967,7 +967,7 @@ class OverlayPlotPanel(PlotPanel):
         allOverlays = self.__refreshProps.keys()
         allOverlays = set(allOverlays) - set(targetOverlays)
         allOverlays = list(allOverlays) + targetOverlays
-
+        
         # Make sure that property listeners are not
         # registered on overlays that we're not
         # interested in, and are registered on those
@@ -975,7 +975,7 @@ class OverlayPlotPanel(PlotPanel):
         # above ensures that we inadvertently don't
         # de-register a listener that we have just
         # registered, from the same target.
-        for overlay in allOverlays + targetOverlays:
+        for overlay in allOverlays:
 
             targets, propNames = self.__refreshProps.get(overlay, (None, None))
 

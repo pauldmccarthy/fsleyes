@@ -149,7 +149,9 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         hss = [hs for hs in hss if hs is not None]
 
         for hs in hss:
+            hs.disableNotification('label')
             hs.label = self._displayCtx.getDisplay(hs.overlay).name
+            hs.enableNotification('label')
 
         if self.smooth:
             self.drawDataSeries(hss,

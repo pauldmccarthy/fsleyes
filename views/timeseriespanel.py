@@ -210,7 +210,14 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
                 tss = tss[:i] + ts.getModelTimeSeries() + tss[i:]
 
         for ts in tss:
+
+            # Changing the label might trigger
+            # another call to this method, as
+            # the PlotPanel might have a listener
+            # registered on it.
+            ts.disableNotification('label')
             ts.label = ts.makeLabel()
+            ts.enableNotification('label')
 
         self.drawDataSeries(extraSeries=tss,
                             preproc=self.__prepareTimeSeriesData)
