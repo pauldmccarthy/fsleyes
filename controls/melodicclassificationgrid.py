@@ -29,8 +29,8 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
     """The ``ComponentGrid`` uses a :class:`.WidgetGrid`, and a set of
     :class:`.TextTagPanel` widgets, to display the component classifications
     stored in the :class:`.MelodicClassification` object that is associated
-    with the currently selected overlay (if this overlay is a
-    :class:`.MelodicImage`.
+    with a :class:`.MelodicImage`. The ``MelodicImage`` is specified via
+    the :meth:`setOverlay` method.
 
     The grid contains one row for each component, and a ``TextTagPanel`` is
     used to display the labels associated with each component. Each
@@ -68,16 +68,9 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
         
         self.__grid.Bind(widgetgrid.EVT_WG_SELECT, self.__onGridSelect)
 
-        lut        .addListener('labels', self._name, self.__lutChanged)
-        displayCtx .addListener('selectedOverlay',
-                                self._name,
-                                self.__selectedOverlayChanged)
-        overlayList.addListener('overlays',
-                                self._name,
-                                self.__selectedOverlayChanged)
+        lut.addListener('labels', self._name, self.__lutChanged)
 
         self.__overlay = None
-        self.__selectedOverlayChanged()
 
         
     def destroy(self):
@@ -86,14 +79,47 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
         :meth:`.FSLEyesPanel.destroy`.
         """
         
-        self._displayCtx .removeListener('selectedOverlay', self._name)
-        self._overlayList.removeListener('overlays',        self._name)
-        self.__lut       .removeListener('labels',          self._name)
+        self.__lut.removeListener('labels', self._name)
         self.__deregisterCurrentOverlay()
         
         self.__lut = None
 
         fslpanel.FSLEyesPanel.destroy(self)
+
+        
+    def setOverlay(self, overlay):
+        """Sets the :class:`.MelodicImage` to display component labels for.
+        The :class:`.WidgetGrid` is re-populated to display the
+        component-label mappings contained in the
+        :class:`.MelodicClassification` instance associated with the overlay..
+        """
+
+        self.__deregisterCurrentOverlay()
+        self.__grid.ClearGrid()
+        self.__grid.Refresh()
+
+        if not isinstance(overlay, fslmelimage.MelodicImage):
+            return
+
+        self.__overlay = overlay
+        display        = self._displayCtx.getDisplay(overlay)
+        opts           = display.getDisplayOpts()
+        melclass       = overlay.getICClassification()
+        ncomps         = overlay.numComponents()
+        
+        self.__grid.SetGridSize(ncomps, 2, growCols=[1])
+
+        self.__grid.SetColLabel(0, strings.labels[self, 'componentColumn'])
+        self.__grid.SetColLabel(1, strings.labels[self, 'labelColumn'])
+
+        opts    .addListener('volume', self._name, self.__volumeChanged)
+        melclass.addListener('labels', self._name, self.__labelsChanged)
+        display .addListener('overlayType',
+                             self._name,
+                             self.__overlayTypeChanged)
+        
+        self.__recreateTags()
+        self.__volumeChanged()
 
 
     def __deregisterCurrentOverlay(self):
@@ -120,41 +146,14 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
             pass
 
         
-    def __selectedOverlayChanged(self, *a):
-        """Called when the :attr:`.DisplayContext.selectedOverlay` changes. If
-        the overlay is a :class:`.MelodicImage`, the :class:`.WidgetGrid` is
-        re-populated to display the component-label mappings contained in the
-        associated :class:`.MelodicClassification` instance.
+    def __overlayTypeChanged(self, *a):
+        """Called when the :attr:`.Display.overlayType` of the currently
+        displayed overlay changes. When the type of an overlay changes,
+        a new :class:`.DisplayOpts` instance is created, so we need to
+        re-register various property listeners with this new
+        ``DisplayOpts`` instance.
         """
-
-        self.__deregisterCurrentOverlay()
-        self.__grid.ClearGrid()
-        self.__grid.Refresh()
-
-        overlay = self._displayCtx.getSelectedOverlay()
-
-        if not isinstance(overlay, fslmelimage.MelodicImage):
-            return
-
-        self.__overlay = overlay
-        display        = self._displayCtx.getDisplay(overlay)
-        opts           = display.getDisplayOpts()
-        melclass       = overlay.getICClassification()
-        ncomps         = overlay.numComponents()
-        
-        self.__grid.SetGridSize(ncomps, 2, growCols=[1])
-
-        self.__grid.SetColLabel(0, strings.labels[self, 'componentColumn'])
-        self.__grid.SetColLabel(1, strings.labels[self, 'labelColumn'])
-
-        opts    .addListener('volume', self._name, self.__volumeChanged)
-        melclass.addListener('labels', self._name, self.__labelsChanged)
-        display .addListener('overlayType',
-                             self._name,
-                             self.__selectedOverlayChanged)
-        
-        self.__recreateTags()
-        self.__volumeChanged()
+        self.setOverlay(self.__overlay)
 
         
     def __recreateTags(self):
@@ -376,8 +375,8 @@ class LabelGrid(fslpanel.FSLEyesPanel):
     """The ``LabelGrid`` class is the inverse of the :class:`ComponentGrid`.
     It uses a :class:`.WidgetGrid` to display the label-component mappings
     present on the :class:`.MelodicClassification` instance associated with
-    the currently selected overlay (if this overlay is a
-    :class:`.MelodicImage`.
+    a :class:`.MelodicImage`. The ``MelodicImage`` is specified via
+    the :meth:`setOverlay` method.
 
     The grid contains one row for each label, and a :class:`.TextTagPanel` is
     used to display the components associated with each label. Each
@@ -415,17 +414,10 @@ class LabelGrid(fslpanel.FSLEyesPanel):
 
         self.__grid.Bind(widgetgrid.EVT_WG_SELECT, self.__onGridSelect)
 
-        lut        .addListener('labels', self._name, self.__lutChanged)
-        displayCtx .addListener('selectedOverlay',
-                                self._name,
-                                self.__selectedOverlayChanged)
-        overlayList.addListener('overlays',
-                                self._name,
-                                self.__selectedOverlayChanged)
+        lut.addListener('labels', self._name, self.__lutChanged)
 
         self.__overlay = None
         self.__recreateGrid()
-        self.__selectedOverlayChanged()
 
         
     def destroy(self):
@@ -434,14 +426,34 @@ class LabelGrid(fslpanel.FSLEyesPanel):
         :meth:`.FSLEyesPanel.destroy`.
         """
         
-        self._displayCtx .removeListener('selectedOverlay', self._name)
-        self._overlayList.removeListener('overlays',        self._name)
-        self.__lut       .removeListener('labels',          self._name)
+        self.__lut.removeListener('labels', self._name)
         self.__deregisterCurrentOverlay()
         
         self.__lut = None
 
         fslpanel.FSLEyesPanel.destroy(self)
+
+
+    def setOverlay(self, overlay):
+        """Set the :class:`.MelodicImage` shown on this ``LabelGrid``. A
+        listener is registered with its :class:`.MelodicClassification`,
+        and its component-label mappings displayed on the
+        :class:`.WidgetGrid`.
+        """
+
+        self.__deregisterCurrentOverlay()
+
+        overlay = self._displayCtx.getSelectedOverlay()
+
+        if not isinstance(overlay, fslmelimage.MelodicImage):
+            return
+
+        self.__overlay = overlay
+        melclass       = overlay.getICClassification()
+
+        melclass.addListener('labels', self._name, self.__labelsChanged)
+
+        self.__refreshTags()
 
         
     def __deregisterCurrentOverlay(self):
@@ -458,28 +470,6 @@ class LabelGrid(fslpanel.FSLEyesPanel):
         
         melclass = overlay.getICClassification()
         melclass.removeListener('labels', self._name)
-
-
-    def __selectedOverlayChanged(self, *a):
-        """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
-        If the overlay is a :class:`.MelodicImage`, a listener is registered
-        with its :class:`.MelodicClassification`, and its component-label
-        mappings displayed on the :class:`.WidgetGrid`.
-        """
-
-        self.__deregisterCurrentOverlay()
-
-        overlay = self._displayCtx.getSelectedOverlay()
-
-        if not isinstance(overlay, fslmelimage.MelodicImage):
-            return
-
-        self.__overlay = overlay
-        melclass       = overlay.getICClassification()
-
-        melclass.addListener('labels', self._name, self.__labelsChanged)
-
-        self.__refreshTags()
 
 
     def __recreateGrid(self):

@@ -161,6 +161,9 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
 
         overlay = self._displayCtx.getSelectedOverlay()
 
+        self.__componentGrid.setOverlay(overlay)
+        self.__labelGrid    .setOverlay(overlay)
+
         if (overlay is None) or \
            not isinstance(overlay, fslmelimage.MelodicImage):
             self.__enable(False, strings.messages[self, 'disabled'])
