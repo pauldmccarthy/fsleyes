@@ -10,16 +10,22 @@ of a :class:`.MelodicImage`.
 """
 
 
+import os
+import os.path as op
 import logging
 
 import wx
 
 import pwidgets.notebook         as notebook
 
+import fsl.utils.settings        as fslsettings
 import fsl.data.strings          as strings
+import fsl.data.image            as fslimage
+import fsl.data.melodicresults   as fslmelresults
 import fsl.data.melodicimage     as fslmelimage
 import fsl.fsleyes.colourmaps    as fslcm
 import fsl.fsleyes.panel         as fslpanel
+import fsl.fsleyes.autodisplay   as autodisplay
 import melodicclassificationgrid as melodicgrid
 
 
@@ -30,25 +36,7 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
     """The ``MelodicClassificationPanel``
     """
 
-    #
-    # File format:
-    #   First line:    ica directory name
-    #   Lines 2-(N+1): One line for each component
-    #   Last line:     List of bad components
-    #
-    # A component line:
-    #   Component index, Label1, Label2, True|False
-    #
-    #
-    #
-    # Save to a FSLeyes label file:
-    #
-    # Save to a FIX/MELview file:
-    #   - Component has 'Signal' label
-    #   - Component has 'Unknown' label
-    #   - All other labels are output as 'Unclassified Noise'
-    #     (these are added  to the list on the last line of the file)
-    #
+    
     def __init__(self, parent, overlayList, displayCtx):
         """Create a ``MelodicClassificationPanel``.
 
@@ -109,10 +97,10 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
         self.__btnSizer .Add(self.__clearButton,  flag=wx.EXPAND, proportion=1)
         
         self.__mainSizer.Add(self.__notebook,     flag=wx.EXPAND, proportion=1)
-        self.__mainSizer.Add(self.__btnSizer,     flag=wx.EXPAND)
 
         self.__sizer    .Add(self.__disabledText, flag=wx.EXPAND, proportion=1)
         self.__sizer    .Add(self.__mainSizer,    flag=wx.EXPAND, proportion=1)
+        self.__sizer    .Add(self.__btnSizer,     flag=wx.EXPAND)
 
         self.SetSizer(self.__sizer)
 
@@ -152,6 +140,9 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
         self.__sizer.Show(self.__disabledText, not enable)
         self.__sizer.Show(self.__mainSizer,    enable)
 
+        self.__saveButton .Enable(enable)
+        self.__clearButton.Enable(enable)
+
         self.Layout()
 
 
@@ -173,35 +164,131 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
 
         
     def __onLoadButton(self, ev):
-        """
+        """Called when the *Load labels* button is pushed.  Prompts the user
+        to select a label file to load, then does the following:
+
+        1. If the selected label file refers to the currently selected
+           melodic_IC overlay, the labels are applied to the overlay.
+
+        2. If the selected label file refers to a different melodic_IC
+           overlay, the user is asked whether they want to load the
+           different melodic_IC file (the default), or whether they
+           want the labels applied to the existing overlay.
+
+        3. If the selected label file does not refer to any overlay
+           (it only contains the bad component list), the user is asked
+           whether they want the labels applied to the current melodic_IC
+           overlay.
+
+        If the number of labels in the file is less than the number of
+        melodic_IC components, thew remaining components are labelled
+        as unknown. If the number of labels in the file is greater than
+        the number of melodic_IC components, an error is shown, and
+        nothing is done.
         """
 
-        lut      = self.__lut
-        overlay  = self._displayCtx.getSelectedOverlay()
-        melclass = overlay.getICClassification()
-        dlg      = wx.FileDialog(
+        # The aim of the code beneath this function
+        # is to load a set of component labels, and
+        # to figure out which overlay they should
+        # be added to. When it has done this, it
+        # calls this function.
+        def applyLabels(labelFile, overlay, allLabels):
+
+            lut      = self.__lut
+            melclass = overlay.getICClassification()
+
+            ncomps  = overlay.numComponents()
+            nlabels = len(allLabels)
+
+            # Error: number of labels in the
+            # file is greater than the number
+            # of components in the overlay.
+            if ncomps < nlabels:
+                msg   = strings.messages[self, 'wrongNComps'].format(
+                    labelFile, overlay.dataSource)
+                title = strings.titles[  self, 'loadError']
+                wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK)                
+                return
+
+            # Number of labels in the file is
+            # less than number of components
+            # in the overlay - we pad the
+            # labels with 'Unknown'
+            elif ncomps > nlabels:
+                for i in range(nlabels, ncomps):
+                    allLabels.append(['Unknown'])
+
+            # Disable notification while applying
+            # labels so the component/label grids
+            # don't confuse themselves. We'll
+            # manually refresh them below.
+            melclass.disableNotification('labels')
+            lut     .disableNotification('labels')
+
+            melclass.clear()
+
+            for comp, lbls in enumerate(allLabels):
+                for lbl in lbls:
+                    melclass.addLabel(comp, lbl)
+
+            # Make sure a colour in the melodic
+            # lookup table exists for all labels
+            for comp, labels in enumerate(melclass.labels):
+                for label in labels:
+
+                    label    = melclass.getDisplayLabel(label)
+                    lutLabel = lut.getByName(label)
+
+                    if lutLabel is None:
+                        log.debug('New melodic classification '
+                                  'label: {}'.format(label))
+                        lut.new(label)
+
+            melclass.enableNotification('labels') 
+            lut     .enableNotification('labels')
+
+            # If we have just loaded a MelodicImage,
+            # make sure it is selected. If we loaded
+            # labels for an existing MelodicImage,
+            # this will have no effect.
+            self._displayCtx.disableListener('selectedOverlay', self._name)
+            self._displayCtx.selectOverlay(overlay)
+            self._displayCtx.enableListener('selectedOverlay', self._name)
+            self.__selectedOverlayChanged()
+
+        # If the current overlay is a MelodicImage,
+        # the open file dialog starting point will
+        # be the melodic directory.
+        overlay           = self._displayCtx.getSelectedOverlay()
+        selectedIsMelodic = isinstance(overlay, fslmelimage.MelodicImage)
+        
+        if selectedIsMelodic:
+            loadDir = overlay.getMelodicDir()
+
+        # Otherwise it will be the most
+        # recent overlay load directory.
+        else:
+            loadDir = fslsettings.read('loadOverlayLastDir', os.getcwd())
+
+        # Ask the user to select a label file
+        dlg = wx.FileDialog(
             self,
             message=strings.titles[self, 'loadDialog'],
-            defaultDir=overlay.getMelodicDir(),
+            defaultDir=loadDir,
             style=wx.FD_OPEN)
 
+        # User cancelled the dialog
         if dlg.ShowModal() != wx.ID_OK:
             return
 
+        # Load the specified label file
         filename = dlg.GetPath()
-
-        # Disable notification during the load,
-        # so the component/label grids don't
-        # confuse themselves. We'll manually
-        # refresh them below.
-        melclass.disableNotification('labels')
-        lut     .disableNotification('labels')
-
         try:
-            melclass.clear()
-            melclass.load(filename)
-            
+            melDir, allLabels = fslmelresults.loadMelodicLabelFile(filename)
+
+        # Problem loading the file
         except Exception as e:
+            
             e     = str(e)
             msg   = strings.messages[self, 'loadError'].format(filename, e)
             title = strings.titles[  self, 'loadError']
@@ -209,24 +296,123 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
                       '({}), ({})'.format(filename, e), exc_info=True)
             wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK)
 
-        # Make sure a colour in the melodic
-        # lookup table exists for all labels
-        for comp, labels in enumerate(melclass.labels):
-            for label in labels:
+            return
 
-                label    = melclass.getDisplayLabel(label)
-                lutLabel = lut.getByName(label)
-                
-                if lutLabel is None:
-                    log.debug('New melodic classification '
-                              'label: {}'.format(label))
-                    lut.new(label)
+        # Ok we've got the labels, now
+        # we need to figure out which
+        # overlay to add them to.
 
-        melclass.enableNotification('labels') 
-        lut     .enableNotification('labels')
+        # If the label file does not refer
+        # to a Melodic directory, and the
+        # current overlay is a melodic
+        # image, apply the labels to the image.
+        if selectedIsMelodic and (melDir is None):
+            applyLabels(filename, overlay, allLabels)
+            return
 
-        lut     .notify('labels')
-        melclass.notify('labels')
+        # If the label file refers to a
+        # Melodic directory, and the
+        # current overlay is a melodic
+        # image.
+        if selectedIsMelodic and (melDir is not None):
+
+            overlayDir = overlay.getMelodicDir()
+
+            # And both the current overlay and
+            # the label file refer to the same
+            # melodic directory, then we apply
+            # the labels to the curent overlay.
+            if op.abspath(melDir) == op.abspath(overlayDir):
+
+                applyLabels(filename, overlay, allLabels)
+                return
+            
+            # Otherwise, if the overlay and the
+            # label file refer to different
+            # melodic directories...
+
+            # Ask the user whether they want to
+            dlg = wx.MessageDialog(
+                self,
+                strings.messages[self, 'diffMelDir'].format(
+                    melDir, overlayDir),
+                style=wx.ICON_QUESTION | wx.YES_NO | wx.CANCEL)
+            dlg.SetYesNoLabels(
+                strings.messages[self, 'diffMelDir.labels'],
+                strings.messages[self, 'diffMelDir.overlay'])
+
+            response = dlg.ShowModal()
+
+            # User cancelled the dialog
+            if response == wx.ID_CANCEL:
+                return
+
+            # User chose to load the melodic
+            # image specified in the label
+            # file. We'll carry on with this
+            # processing below.
+            elif response == wx.ID_YES:
+                pass
+
+            # Apply the labels to the current
+            # overlay, even though they are
+            # from different analyses.
+            else:
+                applyLabels(filename, overlay, allLabels)
+                return
+
+        # If we've reached this far, we are
+        # going to attempt to identify the
+        # melodic image associated with the
+        # label file, load that image, and
+        # then apply the labels.
+        
+        # The label file does not
+        # specify a melodic directory
+        if melDir is None:
+
+            msg   = strings.messages[self, 'noMelDir'].format(filename)
+            title = strings.titles[  self, 'loadError']
+            wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK)
+            return
+
+        # Try loading the melodic_IC image
+        # specified in the label file. We'll
+        # load the mean image as well, as an
+        # underlay.
+        try:
+            overlay = fslmelimage.MelodicImage( melDir)
+            mean    = fslmelresults.getMeanFile(melDir)
+            mean    = fslimage.Image(           mean)
+
+            log.debug('Adding {} and {} to overlay list'.format(overlay, mean))
+
+            self._overlayList.disableListener('overlays', self._name)
+            self._displayCtx .disableListener('selectedOverlay', self._name)
+            self._overlayList.extend([mean, overlay])
+            self._overlayList.enableListener('overlays', self._name)
+            self._displayCtx .enableListener('selectedOverlay', self._name)
+
+            if self._displayCtx.autoDisplay:
+                for o in [overlay, mean]:
+                    autodisplay.autoDisplay(o,
+                                            self._overlayList,
+                                            self._displayCtx)
+
+            fslsettings.write('loadOverlayLastDir', op.abspath(melDir)) 
+
+        except Exception as e:
+
+            e     = str(e)
+            msg   = strings.messages[self, 'loadError'].format(filename, e)
+            title = strings.titles[  self, 'loadError']
+            log.debug('Error loading classification file '
+                      '({}), ({})'.format(filename, e), exc_info=True)
+            wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK)
+
+        # Apply the loaded labels
+        # to the loaded overlay.
+        applyLabels(filename, overlay, allLabels)
 
     
     def __onSaveButton(self, ev):
