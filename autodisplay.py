@@ -64,7 +64,7 @@ def _isStatImage(overlay):
     basename = op.basename(overlay.dataSource)
     basename = fslimage.removeExt(basename)
     tokens   = ['zstat', 'tstat', 'fstat', 'zfstat']
-    pattern  = '_({})\d+'.format('|'.join(tokens))
+    pattern  = '({})\d+'.format('|'.join(tokens))
 
     return re.search(pattern, basename) is not None
 
@@ -90,7 +90,6 @@ def _statImageDisplay(overlay, overlayList, displayCtx):
     basename    = op.basename(overlay.dataSource)
     basename    = fslimage.removeExt(basename)
     
-    nameTokens  = basename.split('_')
     pTokens     = ['p', 'corrp']
     statTokens  = ['zstat', 'tstat', 'zfstat']
     fStatTokens = ['fstat']
@@ -100,7 +99,7 @@ def _statImageDisplay(overlay, overlayList, displayCtx):
     # generated specifically for
     # use with the Render1 colour
     # map.
-    if 'rendered' in nameTokens:
+    if 'rendered' in basename:
         opts.cmap = 'Render1'
     
     # Give each normal stat image
@@ -111,25 +110,28 @@ def _statImageDisplay(overlay, overlayList, displayCtx):
         _statImageDisplay.currentCmap += 1
         _statImageDisplay.currentCmap %= len(_statImageDisplay.cmaps)
         opts.cmap                      = cmap
+        opts.negativeCmap              = cmap
         
     # The order of these tests is
     # important, due to name overlap
 
+    print 'which one', basename
+
     # P-value image ?
-    if any([token in nameTokens for token in pTokens]):
+    if any([token in basename for token in pTokens]):
         opts.displayRange  = [0.95, 1.0]
         opts.clippingRange = [0.95, 1.0]
 
     # T or Z stat image?
-    elif any([token in nameTokens for token in statTokens]):
-        
-        opts.clippingRange  = [-0.1, 0.1]
-        opts.displayRange   = [-7.5, 7.5]
-        opts.centreRanges   = True
-        opts.invertClipping = True
+    elif any([token in basename for token in statTokens]) and \
+       'rendered' not in basename:
+
+        opts.clippingRange   = [2.3, opts.dataMax]
+        opts.displayRange    = [2.3, 7.5]
+        opts.useNegativeCmap = True
 
     # F stat image?
-    elif any([token in nameTokens for token in fStatTokens]):
+    elif any([token in basename for token in fStatTokens]):
         opts.displayRange = [0, 10]
 
 
@@ -157,11 +159,11 @@ def _peImageDisplay(overlay, overlayList, displayCtx):
     """ 
     opts = displayCtx.getOpts(overlay)
 
-    opts.cmap           = 'Render3'
-    opts.clippingRange  = [-1,   1]
-    opts.displayRange   = [-100, 100]
-    opts.centreRanges   = True
-    opts.invertClipping = True
+    opts.cmap            = 'Red-Yellow'
+    opts.negativeCmap    = 'Blue-LightBlue'
+    opts.displayRange    = [1.0, 100.0]
+    opts.clippingRange   = [1.0, opts.dataMax]
+    opts.useNegativeCmap = True 
 
 
 def _FEATImageDisplay(overlay, overlayList, displayCtx):
@@ -178,12 +180,11 @@ def _MelodicImageDisplay(overlay, overlayList, displayCtx):
 
     opts = displayCtx.getOpts(overlay)
 
-    opts.cmap           = 'Render3'
-    opts.displayRange   = [-5.0, 5.0]
-    opts.clippingRange  = [-1.5, 1.5]
-
-    opts.centreRanges   = True
-    opts.invertClipping = True
+    opts.cmap            = 'Red-Yellow'
+    opts.negativeCmap    = 'Blue-LightBlue'
+    opts.displayRange    = [1.5, 5.0]
+    opts.clippingRange   = [1.5, opts.dataMax]
+    opts.useNegativeCmap = True 
 
 
 def _ModelDisplay(overlay, display, overlayList, displayCtx):

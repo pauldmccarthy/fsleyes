@@ -27,7 +27,7 @@ uniform sampler1D negColourTexture;
  * Flag which determines whether to 
  * use the negative colour map.
  */
-uniform bool enableNegCmap;
+uniform bool useNegCmap;
 
 /*
  * Shape of the imageTexture.
@@ -61,7 +61,7 @@ uniform float clipHigh;
 /*
  * Value in the image texture data range which corresponds
  * to zero - this is used to determine whether to use the 
- * regular, or the negative colour texture (if enableNegCmap
+ * regular, or the negative colour texture (if useNegCmap
  * is true).
  */
 uniform float texZero;
@@ -87,8 +87,8 @@ void main(void) {
 
     float voxValue;
     vec4  normVoxValue;
-    bool  useNegCmap = false;
-    vec3  voxCoord   = fragVoxCoord;
+    bool  negCmap  = false;
+    vec3  voxCoord = fragVoxCoord;
 
     /*
      * Skip voxels that are out of the image bounds
@@ -116,10 +116,10 @@ void main(void) {
      * value, and set a flag telling the code
      * below to use the neagtive colour map.
      */
-    if (enableNegCmap && voxValue <= texZero) {
+    if (useNegCmap && voxValue <= texZero) {
 
-        useNegCmap = true;
-        voxValue   = texZero + (texZero - voxValue);
+        negCmap  = true;
+        voxValue = texZero + (texZero - voxValue);
     }
 
     /*
@@ -138,6 +138,6 @@ void main(void) {
      */ 
     normVoxValue = voxValXform * vec4(voxValue, 0, 0, 1);
 
-    if (useNegCmap) gl_FragColor = texture1D(negColourTexture, normVoxValue.x);
-    else            gl_FragColor = texture1D(colourTexture,    normVoxValue.x);
+    if (negCmap) gl_FragColor = texture1D(negColourTexture, normVoxValue.x);
+    else         gl_FragColor = texture1D(colourTexture,    normVoxValue.x);
 }

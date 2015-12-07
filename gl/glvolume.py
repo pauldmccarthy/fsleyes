@@ -227,7 +227,7 @@ class GLVolume(globject.GLImageObject):
         opts   .addListener('invertClipping', lName, shaderUpdate,  weak=False)
         opts   .addListener('cmap',           lName, colourUpdate,  weak=False)
         opts   .addListener('negativeCmap',   lName, colourUpdate,  weak=False)
-        opts   .addListener('enableNegativeCmap',
+        opts   .addListener('useNegativeCmap',
                             lName, colourUpdate,  weak=False)
         opts   .addListener('invert',         lName, colourUpdate,  weak=False)
         opts   .addListener('volume',         lName, imageUpdate,   weak=False)
@@ -263,19 +263,19 @@ class GLVolume(globject.GLImageObject):
 
         lName = self.name
         
-        display.removeListener(          'alpha',              lName)
-        opts   .removeListener(          'displayRange',       lName)
-        opts   .removeListener(          'clippingRange',      lName)
-        opts   .removeListener(          'invertClipping',     lName)
-        opts   .removeListener(          'cmap',               lName)
-        opts   .removeListener(          'negativeCmap',       lName)
-        opts   .removeListener(          'enableNegativeCmap', lName)
-        opts   .removeListener(          'cmap',               lName)
-        opts   .removeListener(          'invert',             lName)
-        opts   .removeListener(          'volume',             lName)
-        opts   .removeListener(          'resolution',         lName)
-        opts   .removeListener(          'interpolation',      lName)
-        opts   .removeListener(          'transform',          lName)
+        display.removeListener(          'alpha',           lName)
+        opts   .removeListener(          'displayRange',    lName)
+        opts   .removeListener(          'clippingRange',   lName)
+        opts   .removeListener(          'invertClipping',  lName)
+        opts   .removeListener(          'cmap',            lName)
+        opts   .removeListener(          'negativeCmap',    lName)
+        opts   .removeListener(          'useNegativeCmap', lName)
+        opts   .removeListener(          'cmap',            lName)
+        opts   .removeListener(          'invert',          lName)
+        opts   .removeListener(          'volume',          lName)
+        opts   .removeListener(          'resolution',      lName)
+        opts   .removeListener(          'interpolation',   lName)
+        opts   .removeListener(          'transform',       lName)
         
         if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume',        lName)

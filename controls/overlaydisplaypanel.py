@@ -237,7 +237,7 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
     def __buildColourMapWidget(self, target, cmapWidget):
         """Builds a panel which contains widgets for controlling the
         :attr:`.VolumeOpts.cmap`, :attr:`.VolumeOpts.negativeCmap`, and
-        :attr:`.VolumeOpts.enableNegativeCmap`.
+        :attr:`.VolumeOpts.useNegativeCmap`.
         """
 
         widgets = self.__widgets
@@ -253,24 +253,23 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
         loadAction.bindToWidget(self, wx.EVT_BUTTON, loadButton)
 
         # Negative colour map widget
-        negCmap       = props.Widget('negativeCmap',
-                                     enabledWhen=lambda i, enc: enc,
-                                     dependencies=['enableNegativeCmap'])
-        enableNegCmap = props.Widget('enableNegativeCmap')
+        negCmap    = props.Widget('negativeCmap',
+                                  enabledWhen=lambda i, enc: enc,
+                                  dependencies=['useNegativeCmap'])
+        useNegCmap = props.Widget('useNegativeCmap')
         
-        negCmap       = props.buildGUI(widgets, target, negCmap)
-        enableNegCmap = props.buildGUI(widgets, target, enableNegCmap)
+        negCmap    = props.buildGUI(widgets, target, negCmap)
+        useNegCmap = props.buildGUI(widgets, target, useNegCmap)
 
-        enableNegCmap.SetLabel(
-            strings.properties[target, 'enableNegativeCmap'])
+        useNegCmap.SetLabel(strings.properties[target, 'useNegativeCmap'])
 
         sizer = wx.FlexGridSizer(2, 2)
         sizer.AddGrowableCol(0)
 
-        sizer.Add(cmapWidget,    flag=wx.EXPAND)
-        sizer.Add(loadButton,    flag=wx.EXPAND)
-        sizer.Add(negCmap,       flag=wx.EXPAND)
-        sizer.Add(enableNegCmap, flag=wx.EXPAND)
+        sizer.Add(cmapWidget, flag=wx.EXPAND)
+        sizer.Add(loadButton, flag=wx.EXPAND)
+        sizer.Add(negCmap,    flag=wx.EXPAND)
+        sizer.Add(useNegCmap, flag=wx.EXPAND)
         
         return sizer
 

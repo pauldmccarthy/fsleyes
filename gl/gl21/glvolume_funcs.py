@@ -70,8 +70,8 @@ def compileShaders(self):
                                                        'colourTexture')
     self.negColourTexturePos = gl.glGetUniformLocation(self.shaders,
                                                        'negColourTexture') 
-    self.enableNegCmapPos    = gl.glGetUniformLocation(self.shaders,
-                                                       'enableNegCmap')
+    self.useNegCmapPos       = gl.glGetUniformLocation(self.shaders,
+                                                       'useNegCmap')
     self.texZeroPos          = gl.glGetUniformLocation(self.shaders,
                                                        'texZero') 
     self.imageShapePos       = gl.glGetUniformLocation(self.shaders,
@@ -113,11 +113,11 @@ def updateShaderState(self):
     clipHigh = opts.clippingRange[1] * xform[0, 0] + xform[3, 0]
     texZero  = 0.0                   * xform[0, 0] + xform[3, 0]
 
-    gl.glUniform1f(self.clipLowPos,       clipLow)
-    gl.glUniform1f(self.clipHighPos,      clipHigh)
-    gl.glUniform1f(self.texZeroPos,       texZero)
-    gl.glUniform1f(self.invertClipPos,    opts.invertClipping)
-    gl.glUniform1f(self.enableNegCmapPos, opts.enableNegativeCmap)
+    gl.glUniform1f(self.clipLowPos,    clipLow)
+    gl.glUniform1f(self.clipHighPos,   clipHigh)
+    gl.glUniform1f(self.texZeroPos,    texZero)
+    gl.glUniform1f(self.invertClipPos, opts.invertClipping)
+    gl.glUniform1f(self.useNegCmapPos, opts.useNegativeCmap)
     
     # Bind transformation matrix to transform
     # from image texture values to voxel values,

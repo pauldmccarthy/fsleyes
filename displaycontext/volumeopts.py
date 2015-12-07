@@ -494,13 +494,13 @@ class VolumeOpts(ImageOpts):
 
 
     negativeCmap = props.ColourMap()
-    """A second colour map, used if :attr:`enableNegativeCmap` is ``True``.
+    """A second colour map, used if :attr:`useNegativeCmap` is ``True``.
     When active, the :attr:`cmap` is used to colour positive values, and
     the :attr:`negativeCmap` is used to colour negative values.
     """
 
     
-    enableNegativeCmap = props.Boolean(default=False)
+    useNegativeCmap = props.Boolean(default=False)
     """When ``True``, the :attr:`cmap` is used to colour positive values,
     and the :attr:`negativeCmap` is used to colour negative values.
     When this property is enabled, the minimum value for both the
@@ -607,9 +607,9 @@ class VolumeOpts(ImageOpts):
             self   .addListener('displayRange',
                                 self.name,
                                 self.__displayRangeChanged)
-            self   .addListener('enableNegativeCmap',
+            self   .addListener('useNegativeCmap',
                                 self.name,
-                                self.__enableNegativeCmapChanged)
+                                self.__useNegativeCmapChanged)
             self   .addListener('linkLowRanges',
                                 self.name,
                                 self.__linkLowRangesChanged)
@@ -630,13 +630,13 @@ class VolumeOpts(ImageOpts):
                            display,
                            display.getSyncPropertyName('contrast'))
 
-            # If enableNegativeCmap, linkLowRanges or linkHighRanges
+            # If useNegativeCmap, linkLowRanges or linkHighRanges
             # have been set to True (this will happen if they
             # are true on the parent VolumeOpts instance), make
             # sure the property / listener states are up to date.
-            if self.enableNegativeCmap: self.__enableNegativeCmapChanged()
-            if self.linkLowRanges:      self.__linkLowRangesChanged()
-            if self.linkHighRanges:     self.__linkHighRangesChanged()
+            if self.useNegativeCmap: self.__useNegativeCmapChanged()
+            if self.linkLowRanges:   self.__linkLowRangesChanged()
+            if self.linkHighRanges:  self.__linkHighRangesChanged()
 
 
     @actions.action
@@ -741,7 +741,7 @@ class VolumeOpts(ImageOpts):
         See :func:`.colourmaps.displayRangeToBricon`.
         """
 
-        if self.enableNegativeCmap:
+        if self.useNegativeCmap:
             return
 
         brightness, contrast = fslcm.displayRangeToBricon(
@@ -757,14 +757,14 @@ class VolumeOpts(ImageOpts):
         self.__toggleListeners(True)
 
 
-    def __enableNegativeCmapChanged(self, *a):
-        """Called when the :attr:`enableNegativeCmap` property changes.
+    def __useNegativeCmapChanged(self, *a):
+        """Called when the :attr:`useNegativeCmap` property changes.
         Enables/disables the :attr:`.Display.brightness` and
         :attr:`.Display.contrast` properties, and configures limits
         on the :attr:`clippingRange` and :attr:`displayRange` properties.
         """
 
-        if self.enableNegativeCmap:
+        if self.useNegativeCmap:
             self.display.disableProperty('brightness')
             self.display.disableProperty('contrast')
             self.displayRange .xmin = 0.0
