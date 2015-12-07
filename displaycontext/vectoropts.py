@@ -123,10 +123,12 @@ class VectorOpts(volumeopts.ImageOpts):
             if not isinstance(overlay, fslimage.Image):
                 continue
 
-            # an image can only be used to modulate
-            # the vector image if it shares the same
-            # dimensions as said vector image
-            if overlay.shape != self.overlay.shape[:3]:
+            # an image can only be used to
+            # modulate the vector image if
+            # it shares the same dimensions
+            # as said vector image. 4D
+            # images are ok though.
+            if overlay.shape[:3] != self.overlay.shape[:3]:
                 continue
 
             modOptions.append(overlay)
