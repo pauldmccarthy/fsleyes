@@ -59,6 +59,8 @@ TEMP  voxClipHi;
 TEMP  voxValue;
 TEMP  posColour;
 TEMP  negColour;
+TEMP  useNegCmap;
+TEMP  negVoxValue;
 
 PARAM imageShape = program.local[4];
 PARAM clipping   = program.local[5];
@@ -80,9 +82,36 @@ MOV voxCoord, fragment.texcoord[1];
 
 # look up image voxel value
 # from 3D image texture
-TEX voxValue, fragment.texcoord[0], texture[0], 3D;
+TEX voxValue.x, fragment.texcoord[0], texture[0], 3D;
 
+# Figure out which negative colour map
+# should be used for this fragment.
+# We use the negative colour map ...
+# 
+# if the voxel value is less than
+# texZero (the display range centre),
+SLT useNegCmap.x, voxValue.x, negCmap.y;
 
+# and the negative colour map is active.
+# The useNegCmap vector will be negative
+# if both of these conditions are true,
+# positive otherwise.
+MUL useNegCmap.x, useNegCmap.x, negCmap.x;
+SUB useNegCmap.x, useNegCmap.x, 0.5;
+MUL useNegCmap.x, useNegCmap.x, -1;
+
+# If using the negative colour map,
+# we need to flip the voxel value about
+# the display range centre.
+
+# Calculate the inverted voxel value
+ADD negVoxValue.x, negCmap.y,     negCmap.y;
+SUB negVoxValue.x, negVoxValue.x, voxValue.x;
+
+# If we're using the negative colour
+# map, replace the original voxel
+# value with the inverted one.
+CMP voxValue.x, useNegCmap.x, negVoxValue.x, voxValue.x;
 
 # Test the low clipping range
 SUB voxClipLo, voxValue.x, clipping.x;
@@ -117,6 +146,9 @@ MAD voxValue, voxValue, voxValXform[0].x, voxValXform[3].x;
 TEX posColour, voxValue.x, texture[1], 1D;
 TEX negColour, voxValue.x, texture[2], 1D;
 
-MOV result.color, posColour;
+# useNegCmap is negative if the
+# negative colour map should be
+# used, positive otherwise.
+CMP result.color, useNegCmap.x, negColour, posColour;
 
 END
