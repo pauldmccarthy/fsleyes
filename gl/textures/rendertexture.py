@@ -295,7 +295,7 @@ class GLObjectRenderTexture(RenderTexture):
     size can be re-calculated.
     """
     
-    def __init__(self, name, globj, xax, yax, maxResolution=1024):
+    def __init__(self, name, globj, xax, yax, maxResolution=2048):
         """Create a ``GLObjectRenderTexture``.
 
         :arg name:          A unique name for this ``GLObjectRenderTexture``.

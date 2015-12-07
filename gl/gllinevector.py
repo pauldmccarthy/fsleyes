@@ -88,8 +88,8 @@ class GLLineVector(glvector.GLVector):
         """
 
         res       = list(glvector.GLVector.getDataResolution(self, xax, yax))
-        res[xax] *= 16
-        res[yax] *= 16
+        res[xax] *= 20
+        res[yax] *= 20
         
         return res
 

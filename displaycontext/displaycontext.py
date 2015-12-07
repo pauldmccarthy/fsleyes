@@ -178,10 +178,11 @@ class DisplayContext(props.SyncableHasProperties):
                       'displaySpace',
                       'bounds',
                       'autoDisplay'],
-            nobind=[  'syncOverlayDisplay'])
+            nobind=[  'syncOverlayDisplay'],
+            state={'overlayOrder' : False})
 
         self.__overlayList = overlayList
-        self.__name         = '{}_{}'.format(self.__class__.__name__, id(self))
+        self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
 
         # Keep track of the overlay list length so
         # we can do some things in the
