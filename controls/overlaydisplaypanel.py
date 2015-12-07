@@ -216,15 +216,11 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
 
         for p in dispProps:
 
-            widget = props.buildGUI(self.__widgets,
-                                    target,
-                                    p,
-                                    showUnlink=False)            
+            widget = props.buildGUI(self.__widgets, target, p)
 
-            # Add a 'load colour map' button next 
-            # to the VolumeOpts.cmap control
+            # Build a panel for the VolumeOpts colour map controls.
             if isinstance(target, displayctx.VolumeOpts) and p.key == 'cmap':
-                widget = self.__buildColourMapWidget(widget)
+                widget = self.__buildColourMapWidget(target, widget)
                 
             widgets.append(widget)
 
@@ -238,24 +234,43 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
         self.Layout()
 
 
-    def __buildColourMapWidget(self, cmapWidget):
-        """Creates a control which allows the user to load a custom colour
-        map. This control is added to the settings for :class:`.Image`
-        overlays with a :attr:`.Display.overlayType`  of ``'volume'``.
+    def __buildColourMapWidget(self, target, cmapWidget):
+        """Builds a panel which contains widgets for controlling the
+        :attr:`.VolumeOpts.cmap`, :attr:`.VolumeOpts.negativeCmap`, and
+        :attr:`.VolumeOpts.enableNegativeCmap`.
         """
 
-        action = loadcmap.LoadColourMapAction(self._displayCtx,
-                                              self._overlayList)
+        widgets = self.__widgets
 
-        button = wx.Button(self.__widgets)
-        button.SetLabel(strings.labels[self, 'loadCmap'])
+        # Button to load a new
+        # colour map from file
+        loadAction = loadcmap.LoadColourMapAction(self._displayCtx,
+                                                  self._overlayList)
 
-        action.bindToWidget(self, wx.EVT_BUTTON, button)
+        loadButton = wx.Button(widgets)
+        loadButton.SetLabel(strings.labels[self, 'loadCmap'])
 
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        loadAction.bindToWidget(self, wx.EVT_BUTTON, loadButton)
 
-        sizer.Add(cmapWidget, flag=wx.EXPAND, proportion=1)
-        sizer.Add(button,     flag=wx.EXPAND)
+        # Negative colour map widget
+        negCmap       = props.Widget('negativeCmap',
+                                     enabledWhen=lambda i, enc: enc,
+                                     dependencies=['enableNegativeCmap'])
+        enableNegCmap = props.Widget('enableNegativeCmap')
+        
+        negCmap       = props.buildGUI(widgets, target, negCmap)
+        enableNegCmap = props.buildGUI(widgets, target, enableNegCmap)
+
+        enableNegCmap.SetLabel(
+            strings.properties[target, 'enableNegativeCmap'])
+
+        sizer = wx.FlexGridSizer(2, 2)
+        sizer.AddGrowableCol(0)
+
+        sizer.Add(cmapWidget,    flag=wx.EXPAND)
+        sizer.Add(loadButton,    flag=wx.EXPAND)
+        sizer.Add(negCmap,       flag=wx.EXPAND)
+        sizer.Add(enableNegCmap, flag=wx.EXPAND)
         
         return sizer
 
@@ -288,7 +303,6 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('cmap'),
         props.Widget('invert'),
         props.Widget('invertClipping'),
-        props.Widget('centreRanges'),
         props.Widget('linkLowRanges'),
         props.Widget('linkHighRanges'),
         props.Widget('displayRange',

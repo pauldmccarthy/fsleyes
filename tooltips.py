@@ -80,12 +80,12 @@ properties = TypeDict({
                                    'voxels outside of the range are displayed.'
                                    'This option is useful for displaying '
                                    'statistic images.',
-    'VolumeOpts.centreRanges'    : 'If checked, the low and high values '
-                                   'of both the clipping and display '
-                                   'ranges will be yoked together, so '
-                                   'that both ranges stay centered at '
-                                   'zero.' ,
-    'VolumeOpts.cmap'            : 'The colour map to use.',
+    'VolumeOpts.cmap'               : 'The colour map to use.',
+    'VolumeOpts.negativeCmap'       : 'The colour map to use for negative '
+                                      'values.',
+    'VolumeOpts.enableNegativeCmap' : 'Enable the negative colour map - '
+                                      'this allows positive and negative '
+                                      'values to be coloured independently.',
     'VolumeOpts.interpolation'   : 'Interpolate the image data for display '
                                    'purposes. You can choose no  '
                                    'interpolation (equivalent to nearest '

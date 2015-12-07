@@ -492,6 +492,28 @@ class VolumeOpts(ImageOpts):
     cmap = props.ColourMap()
     """The colour map, a :class:`matplotlib.colors.Colourmap` instance."""
 
+
+    negativeCmap = props.ColourMap()
+    """A second colour map, used if :attr:`enableNegativeCmap` is ``True``.
+    When active, the :attr:`cmap` is used to colour positive values, and
+    the :attr:`negativeCmap` is used to colour negative values.
+    """
+
+    
+    enableNegativeCmap = props.Boolean(default=False)
+    """When ``True``, the :attr:`cmap` is used to colour positive values,
+    and the :attr:`negativeCmap` is used to colour negative values.
+    When this property is enabled, the minimum value for both the
+    :attr:`displayRange` and :attr:`clippingRange` is set to zero. Both
+    ranges are applied to positive values, and negated/inverted for negative
+    values.
+
+    .. note:: When this property is set to ``True``, the
+              :attr:`.Display.brightness` and :attr:`.Display.contrast`
+              properties are disabled, as managing the interaction between
+              them would be far too complicated.
+    """
+
     
     interpolation = props.Choice(('none', 'linear', 'spline'))
     """How the value shown at a real world location is derived from the
@@ -503,19 +525,6 @@ class VolumeOpts(ImageOpts):
     invert = props.Boolean(default=False)
     """Use an inverted version of the current colour map (see the :attr:`cmap`
     property).
-    """
-
-
-    centreRanges = props.Boolean(default=False)
-    """If ``True``, the :attr:`displayRange` and :attr:`clippingRange` ranges
-    will be kept centred at zero. A change to the negative end of either range
-    will result in the positive end being changed, and vice versa.
-
-    .. note:: When this property is set to ``True``, the
-              :attr:`.Display.brightness`, :attr:`.Display.contrast`,
-              :attr:`.linkLowRanges` and :attr:`.linkHighRanges` properties
-              are all disabled, as managing the interaction between all of
-              them would be far too complicated.
     """
 
 
@@ -598,9 +607,9 @@ class VolumeOpts(ImageOpts):
             self   .addListener('displayRange',
                                 self.name,
                                 self.__displayRangeChanged)
-            self   .addListener('centreRanges',
+            self   .addListener('enableNegativeCmap',
                                 self.name,
-                                self.__centreRangesChanged)
+                                self.__enableNegativeCmapChanged)
             self   .addListener('linkLowRanges',
                                 self.name,
                                 self.__linkLowRangesChanged)
@@ -621,14 +630,13 @@ class VolumeOpts(ImageOpts):
                            display,
                            display.getSyncPropertyName('contrast'))
 
-            # If centreRanges, linkLowRanges or linkHighRanges
+            # If enableNegativeCmap, linkLowRanges or linkHighRanges
             # have been set to True (this will happen if they
             # are true on the parent VolumeOpts instance), make
             # sure the property / listener states are up to date.
-            if self.centreRanges: self.__centreRangesChanged()
-            else:
-                if self.linkLowRanges:  self.__linkLowRangesChanged()
-                if self.linkHighRanges: self.__linkHighRangesChanged()
+            if self.enableNegativeCmap: self.__enableNegativeCmapChanged()
+            if self.linkLowRanges:      self.__linkLowRangesChanged()
+            if self.linkHighRanges:     self.__linkHighRangesChanged()
 
 
     @actions.action
@@ -733,7 +741,7 @@ class VolumeOpts(ImageOpts):
         See :func:`.colourmaps.displayRangeToBricon`.
         """
 
-        if self.centreRanges:
+        if self.enableNegativeCmap:
             return
 
         brightness, contrast = fslcm.displayRangeToBricon(
@@ -749,32 +757,24 @@ class VolumeOpts(ImageOpts):
         self.__toggleListeners(True)
 
 
-    def __centreRangesChanged(self, *a):
-        """Called when the :attr:`centreRanges` property changes. Configures
-        property listeners on the :attr:`clippingRange` and
-        :attr:`displayRange` properties.
+    def __enableNegativeCmapChanged(self, *a):
+        """Called when the :attr:`enableNegativeCmap` property changes.
+        Enables/disables the :attr:`.Display.brightness` and
+        :attr:`.Display.contrast` properties, and configures limits
+        on the :attr:`clippingRange` and :attr:`displayRange` properties.
         """
 
-        if self.centreRanges:
+        if self.enableNegativeCmap:
             self.display.disableProperty('brightness')
             self.display.disableProperty('contrast')
-            self        .disableProperty('linkLowRanges')
-            self        .disableProperty('linkHighRanges')
-            self.setConstraint('displayRange',  'dimCentres', [0.0])
-            self.setConstraint('clippingRange', 'dimCentres', [0.0])
-
-            # Make sure that lowLinkRanges and
-            # highLinkRanges are not active
-            self.__linkRangesChanged(False, 0)
-            self.__linkRangesChanged(False, 1)
+            self.displayRange .xmin = 0.0
+            self.clippingRange.xmin = 0.0
             
         else:
             self.display.enableProperty('brightness')
             self.display.enableProperty('contrast')
-            self        .enableProperty('linkLowRanges')
-            self        .enableProperty('linkHighRanges') 
-            self.setConstraint('displayRange',  'dimCentres', [None])
-            self.setConstraint('clippingRange', 'dimCentres', [None])
+            self.displayRange .xmin = self.dataMin
+            self.clippingRange.xmin = self.dataMin
 
 
     def __linkLowRangesChanged(self, *a):

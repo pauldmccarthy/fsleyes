@@ -275,16 +275,19 @@ def registerColourMap(cmapFile,
     
     # update the VolumeOpts colour map property
     # for any existing VolumeOpts instances
-    cmapProp = fsldisplay.VolumeOpts.getProp('cmap')
+    cmapProp    = fsldisplay.VolumeOpts.getProp('cmap')
+    negCmapProp = fsldisplay.VolumeOpts.getProp('negativeCmap')
     
     for overlay in overlayList:
         opts = displayCtx.getOpts(overlay)
         
         if isinstance(opts, fsldisplay.VolumeOpts):
-            cmapProp.addColourMap(key, opts)
+            cmapProp   .addColourMap(key, opts)
+            negCmapProp.addColourMap(key, opts)
 
     # and for all future volume overlays
-    cmapProp.addColourMap(key)
+    cmapProp   .addColourMap(key)
+    negCmapProp.addColourMap(key)
                 
 
 def registerLookupTable(lut,
