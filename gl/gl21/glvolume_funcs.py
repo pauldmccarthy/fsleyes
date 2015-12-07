@@ -58,28 +58,34 @@ def compileShaders(self):
     self.shaders = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
 
     # indices of all vertex/fragment shader parameters
-    self.vertexPos          = gl.glGetAttribLocation( self.shaders,
-                                                      'vertex')
-    self.voxCoordPos        = gl.glGetAttribLocation( self.shaders,
-                                                      'voxCoord')
-    self.texCoordPos        = gl.glGetAttribLocation( self.shaders,
-                                                      'texCoord') 
-    self.imageTexturePos    = gl.glGetUniformLocation(self.shaders,
-                                                      'imageTexture')
-    self.colourTexturePos   = gl.glGetUniformLocation(self.shaders,
-                                                      'colourTexture') 
-    self.imageShapePos      = gl.glGetUniformLocation(self.shaders,
-                                                      'imageShape')
-    self.useSplinePos       = gl.glGetUniformLocation(self.shaders,
-                                                      'useSpline')
-    self.voxValXformPos     = gl.glGetUniformLocation(self.shaders,
-                                                      'voxValXform')
-    self.clipLowPos         = gl.glGetUniformLocation(self.shaders,
-                                                      'clipLow')
-    self.clipHighPos        = gl.glGetUniformLocation(self.shaders,
-                                                      'clipHigh')
-    self.invertClipPos      = gl.glGetUniformLocation(self.shaders,
-                                                      'invertClip')
+    self.vertexPos           = gl.glGetAttribLocation( self.shaders,
+                                                       'vertex')
+    self.voxCoordPos         = gl.glGetAttribLocation( self.shaders,
+                                                       'voxCoord')
+    self.texCoordPos         = gl.glGetAttribLocation( self.shaders,
+                                                       'texCoord') 
+    self.imageTexturePos     = gl.glGetUniformLocation(self.shaders,
+                                                       'imageTexture')
+    self.colourTexturePos    = gl.glGetUniformLocation(self.shaders,
+                                                       'colourTexture')
+    self.negColourTexturePos = gl.glGetUniformLocation(self.shaders,
+                                                       'negColourTexture') 
+    self.enableNegCmapPos    = gl.glGetUniformLocation(self.shaders,
+                                                       'enableNegCmap')
+    self.texZeroPos          = gl.glGetUniformLocation(self.shaders,
+                                                       'texZero') 
+    self.imageShapePos       = gl.glGetUniformLocation(self.shaders,
+                                                       'imageShape')
+    self.useSplinePos        = gl.glGetUniformLocation(self.shaders,
+                                                       'useSpline')
+    self.voxValXformPos      = gl.glGetUniformLocation(self.shaders,
+                                                       'voxValXform')
+    self.clipLowPos          = gl.glGetUniformLocation(self.shaders,
+                                                       'clipLow')
+    self.clipHighPos         = gl.glGetUniformLocation(self.shaders,
+                                                       'clipHigh')
+    self.invertClipPos       = gl.glGetUniformLocation(self.shaders,
+                                                       'invertClip')
 
 
 def updateShaderState(self):
@@ -105,10 +111,13 @@ def updateShaderState(self):
     xform    = self.imageTexture.invVoxValXform
     clipLow  = opts.clippingRange[0] * xform[0, 0] + xform[3, 0]
     clipHigh = opts.clippingRange[1] * xform[0, 0] + xform[3, 0]
+    texZero  = 0.0                   * xform[0, 0] + xform[3, 0]
 
-    gl.glUniform1f(self.clipLowPos,    clipLow)
-    gl.glUniform1f(self.clipHighPos,   clipHigh)
-    gl.glUniform1f(self.invertClipPos, opts.invertClipping)
+    gl.glUniform1f(self.clipLowPos,       clipLow)
+    gl.glUniform1f(self.clipHighPos,      clipHigh)
+    gl.glUniform1f(self.texZeroPos,       texZero)
+    gl.glUniform1f(self.invertClipPos,    opts.invertClipping)
+    gl.glUniform1f(self.enableNegCmapPos, opts.enableNegativeCmap)
     
     # Bind transformation matrix to transform
     # from image texture values to voxel values,
@@ -121,8 +130,9 @@ def updateShaderState(self):
     gl.glUniformMatrix4fv(self.voxValXformPos, 1, False, vvx)
 
     # Set up the colour and image textures
-    gl.glUniform1i(self.imageTexturePos,  0)
-    gl.glUniform1i(self.colourTexturePos, 1)
+    gl.glUniform1i(self.imageTexturePos,     0)
+    gl.glUniform1i(self.colourTexturePos,    1)
+    gl.glUniform1i(self.negColourTexturePos, 2)
 
     gl.glUseProgram(0)
 

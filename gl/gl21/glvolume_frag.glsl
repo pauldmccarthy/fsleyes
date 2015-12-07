@@ -18,6 +18,16 @@ uniform sampler3D imageTexture;
  */
 uniform sampler1D colourTexture;
 
+/*
+ * Texture containing the negative colour map.
+ */
+uniform sampler1D negColourTexture;
+
+/*
+ * Flag which determines whether to 
+ * use the negative colour map.
+ */
+uniform bool enableNegCmap;
 
 /*
  * Shape of the imageTexture.
@@ -37,14 +47,24 @@ uniform bool useSpline;
 uniform mat4 voxValXform;
 
 /*
- * Clip voxels below this value.
+ * Clip voxels below this value. This must be specified
+ * in the image texture data range.
  */
 uniform float clipLow;
 
 /*
- * Clip voxels above this value.
+ * Clip voxels above this value. This must be specified
+ * in the image texture data range.
  */
 uniform float clipHigh;
+
+/*
+ * Value in the image texture data range which corresponds
+ * to zero - this is used to determine whether to use the 
+ * regular, or the negative colour texture (if enableNegCmap
+ * is true).
+ */
+uniform float texZero;
 
 /*
  * Invert clipping behaviour - clip voxels
@@ -65,7 +85,10 @@ varying vec3 fragTexCoord;
 
 void main(void) {
 
-    vec3 voxCoord = fragVoxCoord;
+    float voxValue;
+    vec4  normVoxValue;
+    bool  useNegCmap = false;
+    vec3  voxCoord   = fragVoxCoord;
 
     /*
      * Skip voxels that are out of the image bounds
@@ -79,7 +102,6 @@ void main(void) {
     /*
      * Look up the voxel value 
      */
-    float voxValue;
     if (useSpline) voxValue = spline_interp(imageTexture,
                                             fragTexCoord,
                                             imageShape,
@@ -88,19 +110,34 @@ void main(void) {
                                             fragTexCoord).r;
 
     /*
+     * If we are using a negative colour map, 
+     * and the voxel value is below the negative 
+     * threshold (texZero) invert the voxel 
+     * value, and set a flag telling the code
+     * below to use the neagtive colour map.
+     */
+    if (enableNegCmap && voxValue <= texZero) {
+
+        useNegCmap = true;
+        voxValue   = texZero + (texZero - voxValue);
+    }
+
+    /*
      * Clip out of range voxel values
      */
-      
     if ((!invertClip && (voxValue <  clipLow || voxValue >  clipHigh)) ||
-        (invertClip  && (voxValue >= clipLow && voxValue <= clipHigh))) {
-      gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-      return;
+        ( invertClip && (voxValue >= clipLow && voxValue <= clipHigh))) {
+      
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+        return;
     }
 
     /*
      * Transform the voxel value to a colour map texture
      * coordinate, and look up the colour for the voxel value
-     */
-    vec4 normVoxValue = voxValXform * vec4(voxValue, 0, 0, 1);
-    gl_FragColor      = texture1D(colourTexture, normVoxValue.x);
+     */ 
+    normVoxValue = voxValXform * vec4(voxValue, 0, 0, 1);
+
+    if (useNegCmap) gl_FragColor = texture1D(negColourTexture, normVoxValue.x);
+    else            gl_FragColor = texture1D(colourTexture,    normVoxValue.x);
 }

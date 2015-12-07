@@ -81,10 +81,28 @@ class GLVolume(globject.GLImageObject):
     OpenGL version-specific module is used.  The image data itself is stored
     as an :class:`.ImageTexture`. This ``ImageTexture`` is managed by the
     :mod:`.resources` module, so may be shared by many ``GLVolume`` instances.
-    The current colour map (defined by the :class:`.VolumeOpts.cmap` property)
-    is stored as a :class:`.ColourMapTexture`.  A slice through the texture is
+    The current colour maps (defined by the :attr:`.VolumeOpts.cmap` and
+    :attr:`.VolumeOpts.negativeCmap` properties) are stored as
+    :class:`.ColourMapTexture` instances.  A slice through the texture is
     rendered using six vertices, located at the respective corners of the
-    image bounds. 
+    image bounds.
+
+    
+    **Textures**
+
+
+    The ``GLVolume`` class uses three textures:
+
+     - An :class:`.ImageTexture`, a 3D texture which contains image data.
+       This is bound to texture unit 0.
+    
+     - A :class:`.ColourMapTexture`, a 1D texture which contains the
+       colour map defined by the :attr:`.VolumeOpts.cmap` property.
+       This is bound to texture unit 1.
+    
+     - A :class:`.ColourMapTexture`, a 1D texture which contains the
+       colour map defined by the :attr:`.VolumeOpts.negativeCmap` property.
+       This is bound to texture unit 2. 
 
 
     **Attributes**
@@ -92,13 +110,17 @@ class GLVolume(globject.GLImageObject):
 
     The following attributes are available on a ``GLVolume`` instance:
 
-    ================= =======================================================
-    ``imageTexture``  The :class:`.ImageTexture` which stores the image data.
-    ``colourTexture`` The :class:`.ColourMapTexture` used to store the
-                      colour map.
-    ``texName``       A name used for the ``imageTexture`` and
-                      ``colourTexture``.
-    ================= =======================================================
+    ==================== =================================================
+    ``imageTexture``     The :class:`.ImageTexture` which stores the image
+                         data.
+    ``colourTexture``    The :class:`.ColourMapTexture` used to store the
+                         colour map.
+    ``negColourTexture`` The :class:`.ColourMapTexture` used to store the
+                         negative colour map. 
+    ``texName``          A name used for the ``imageTexture``,
+                         ``colourTexture``, and ``negColourTexture`. The
+                         name for the latter is suffixed with ``'_neg'``.
+    ==================== =================================================
     """
 
     
@@ -120,11 +142,13 @@ class GLVolume(globject.GLImageObject):
         # Create an image texture and a colour map texture
         self.texName = '{}_{}'.format(type(self).__name__, id(self.image))
 
-        self.colourTexture = textures.ColourMapTexture(self.texName)
-        self.imageTexture  = None
- 
+        self.imageTexture     = None 
+        self.colourTexture    = textures.ColourMapTexture(self.texName)
+        self.negColourTexture = textures.ColourMapTexture(
+            '{}_neg'.format(self.texName))
+
         self.refreshImageTexture()
-        self.refreshColourTexture()
+        self.refreshColourTextures()
         
         fslgl.glvolume_funcs.init(self)
 
@@ -138,14 +162,16 @@ class GLVolume(globject.GLImageObject):
 
         glresources.delete(self.imageTexture.getTextureName())
         
-        self.colourTexture.destroy()
+        self.colourTexture   .destroy()
+        self.negColourTexture.destroy()
         
-        self.imageTexture  = None
-        self.colourTexture = None
+        self.imageTexture     = None
+        self.colourTexture    = None
+        self.negColourTexture = None
         
         self.removeDisplayListeners()
-        fslgl.glvolume_funcs.destroy(self)
         
+        fslgl.glvolume_funcs  .destroy(self)
         globject.GLImageObject.destroy(self)
 
         
@@ -168,16 +194,11 @@ class GLVolume(globject.GLImageObject):
             self.onUpdate()
         
         def colourUpdate(*a):
-            self.refreshColourTexture()
+            self.refreshColourTextures()
             fslgl.glvolume_funcs.updateShaderState(self)
             self.onUpdate()
 
         def shaderUpdate(*a):
-            fslgl.glvolume_funcs.updateShaderState(self)
-            self.onUpdate()
-
-        def shaderCompile(*a):
-            fslgl.glvolume_funcs.compileShaders(   self)
             fslgl.glvolume_funcs.updateShaderState(self)
             self.onUpdate()
 
@@ -205,6 +226,9 @@ class GLVolume(globject.GLImageObject):
         opts   .addListener('clippingRange',  lName, shaderUpdate,  weak=False)
         opts   .addListener('invertClipping', lName, shaderUpdate,  weak=False)
         opts   .addListener('cmap',           lName, colourUpdate,  weak=False)
+        opts   .addListener('negativeCmap',   lName, colourUpdate,  weak=False)
+        opts   .addListener('enableNegativeCmap',
+                            lName, colourUpdate,  weak=False)
         opts   .addListener('invert',         lName, colourUpdate,  weak=False)
         opts   .addListener('volume',         lName, imageUpdate,   weak=False)
         opts   .addListener('resolution',     lName, imageUpdate,   weak=False)
@@ -239,16 +263,19 @@ class GLVolume(globject.GLImageObject):
 
         lName = self.name
         
-        display.removeListener(          'alpha',          lName)
-        opts   .removeListener(          'displayRange',   lName)
-        opts   .removeListener(          'clippingRange',  lName)
-        opts   .removeListener(          'invertClipping', lName)
-        opts   .removeListener(          'cmap',           lName)
-        opts   .removeListener(          'invert',         lName)
-        opts   .removeListener(          'volume',         lName)
-        opts   .removeListener(          'resolution',     lName)
-        opts   .removeListener(          'interpolation',  lName)
-        opts   .removeListener(          'transform',      lName)
+        display.removeListener(          'alpha',              lName)
+        opts   .removeListener(          'displayRange',       lName)
+        opts   .removeListener(          'clippingRange',      lName)
+        opts   .removeListener(          'invertClipping',     lName)
+        opts   .removeListener(          'cmap',               lName)
+        opts   .removeListener(          'negativeCmap',       lName)
+        opts   .removeListener(          'enableNegativeCmap', lName)
+        opts   .removeListener(          'cmap',               lName)
+        opts   .removeListener(          'invert',             lName)
+        opts   .removeListener(          'volume',             lName)
+        opts   .removeListener(          'resolution',         lName)
+        opts   .removeListener(          'interpolation',      lName)
+        opts   .removeListener(          'transform',          lName)
         
         if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume',        lName)
@@ -298,15 +325,16 @@ class GLVolume(globject.GLImageObject):
             interp=interp) 
 
     
-    def refreshColourTexture(self):
-        """Refreshes the :class:`.ColourMapTexture` used to colour image
-        voxels.
+    def refreshColourTextures(self):
+        """Refreshes the :class:`.ColourMapTexture` instances used to colour
+        image voxels.
         """
 
         display = self.display
         opts    = self.displayOpts
         alpha   = display.alpha / 100.0
         cmap    = opts.cmap
+        negCmap = opts.negativeCmap
         invert  = opts.invert
         dmin    = opts.displayRange[0]
         dmax    = opts.displayRange[1]
@@ -316,6 +344,11 @@ class GLVolume(globject.GLImageObject):
                                alpha=alpha,
                                displayRange=(dmin, dmax))
 
+        self.negColourTexture.set(cmap=negCmap,
+                                  invert=invert,
+                                  alpha=alpha,
+                                  displayRange=(dmin, dmax)) 
+
         
     def preDraw(self):
         """Binds the :class:`.ImageTexture` to ``GL_TEXTURE0`` and the
@@ -324,8 +357,9 @@ class GLVolume(globject.GLImageObject):
         """
         
         # Set up the image and colour textures
-        self.imageTexture .bindTexture(gl.GL_TEXTURE0)
-        self.colourTexture.bindTexture(gl.GL_TEXTURE1)
+        self.imageTexture    .bindTexture(gl.GL_TEXTURE0)
+        self.colourTexture   .bindTexture(gl.GL_TEXTURE1)
+        self.negColourTexture.bindTexture(gl.GL_TEXTURE2)
 
         fslgl.glvolume_funcs.preDraw(self)
 
@@ -359,7 +393,8 @@ class GLVolume(globject.GLImageObject):
         version-dependent ``postDraw`` function.
         """
 
-        self.imageTexture .unbindTexture()
-        self.colourTexture.unbindTexture()
+        self.imageTexture    .unbindTexture()
+        self.colourTexture   .unbindTexture()
+        self.negColourTexture.unbindTexture()
         
         fslgl.glvolume_funcs.postDraw(self) 
