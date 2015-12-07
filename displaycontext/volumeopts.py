@@ -470,8 +470,12 @@ class VolumeOpts(ImageOpts):
     """
 
     
-    displayRange = props.Bounds(ndims=1)
-    """Image values which map to the minimum and maximum colour map colours."""
+    displayRange = props.Bounds(ndims=1, clamped=False)
+    """Image values which map to the minimum and maximum colour map colours.
+    The values that this property can take are unbound because of the
+    interaction between it and the :attr:`.Display.brightness` and
+    :attr:`.Display.contrast` properties.
+    """
 
     
     clippingRange = props.Bounds(ndims=1)
@@ -515,7 +519,7 @@ class VolumeOpts(ImageOpts):
     """
 
 
-    linkLowRanges = props.Boolean(default=False)
+    linkLowRanges = props.Boolean(default=True)
     """If ``True``, the low bounds on both the :attr:`displayRange` and
     :attr:`clippingRange` ranges will be linked together.
     """
@@ -558,8 +562,8 @@ class VolumeOpts(ImageOpts):
             self.dataMin = 0
             self.dataMax = 0
 
-        dRangeLen    = abs(self.dataMax - self.dataMin)
-        dMinDistance = dRangeLen / 10000.0
+        # Keep range values 0.01% apart.
+        dMinDistance = abs(self.dataMax - self.dataMin) / 10000.0
 
         self.clippingRange.xmin = self.dataMin - dMinDistance
         self.clippingRange.xmax = self.dataMax + dMinDistance
@@ -571,12 +575,8 @@ class VolumeOpts(ImageOpts):
 
         self.displayRange.xlo  = self.dataMin
         self.displayRange.xhi  = self.dataMax
-
-        # The Display.contrast property expands/contracts
-        # the display range, by a scaling factor up to
-        # approximately 10.
-        self.displayRange.xmin = self.dataMin - 10 * dRangeLen
-        self.displayRange.xmax = self.dataMax + 10 * dRangeLen
+        self.displayRange.xmin = self.dataMin
+        self.displayRange.xmax = self.dataMax
         
         self.setConstraint('displayRange',  'minDistance', dMinDistance)
         self.setConstraint('clippingRange', 'minDistance', dMinDistance)
@@ -814,3 +814,5 @@ class VolumeOpts(ImageOpts):
                            bindval=True,
                            bindatt=False,
                            unbind=not val)
+
+        cRangePV.set(dRangePV.get())

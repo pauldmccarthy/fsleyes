@@ -223,26 +223,8 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
 
             # Add a 'load colour map' button next 
             # to the VolumeOpts.cmap control
-            if isinstance(target, displayctx.VolumeOpts) and \
-               p.key == 'cmap':
+            if isinstance(target, displayctx.VolumeOpts) and p.key == 'cmap':
                 widget = self.__buildColourMapWidget(widget)
-
-            if isinstance(target, displayctx.VolumeOpts) and \
-               p.key == 'displayRange':
-                
-                # This is a big hack. The VolumeOpts displayRange
-                # has limits which are much bigger than the data
-                # range, due to the relationship between display
-                # range and brightness/contrast. But we want the
-                # display range sliders to have the data range as
-                # their limits. You should think of a nicer way
-                # to do this.
-                log.debug('Forcing displayRange slider range to data '
-                          'range: [{:0.3f}, {:0.3f}]'.format(
-                              target.dataMin, target.dataMax))
-                
-                widget.GetChildren()[0].SetLimits(target.dataMin,
-                                                  target.dataMax)
                 
             widgets.append(widget)
 
