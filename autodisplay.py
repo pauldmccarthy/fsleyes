@@ -115,8 +115,6 @@ def _statImageDisplay(overlay, overlayList, displayCtx):
     # The order of these tests is
     # important, due to name overlap
 
-    print 'which one', basename
-
     # P-value image ?
     if any([token in basename for token in pTokens]):
         opts.displayRange  = [0.95, 1.0]
