@@ -19,6 +19,7 @@ import fsl.utils.settings as fslsettings
 
 import views
 import actions
+import tooltips
 import perspectives
 
 import displaycontext
@@ -102,6 +103,8 @@ class FSLEyesFrame(wx.Frame):
         """
         
         wx.Frame.__init__(self, parent, title='FSLeyes')
+
+        tooltips.initTooltips()
 
         # Default application font - this is
         # inherited by all child controls.

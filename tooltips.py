@@ -14,10 +14,23 @@ into the following categories:
  :data:`actions`    Tooltips for :class:`.ActionProvider` actions.
  :data:`misc`       Tooltips for everything else.
  ================== ================================================
+
+The :func:`initTooltips` function initialises some parameters controlling
+tooltip display. It is called by the :class:`.FSLEyesFrame` upon creation.
 """
 
 
 from fsl.utils.typedict import TypeDict
+
+
+def initTooltips():
+    """Sets some parameters controlling tooltip display. """
+    import wx
+    wx.ToolTip.Enable(     True)
+    wx.ToolTip.SetDelay(   1500)
+    wx.ToolTip.SetMaxWidth(300)
+    wx.ToolTip.SetReshow(  3000)
+    wx.ToolTip.SetAutoPop( 5000)
 
 
 properties = TypeDict({
