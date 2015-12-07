@@ -38,6 +38,14 @@
 #                          the range). Clipping values are assumed to be
 #                          normalised to the image texture value range.
 #
+#   program.local[6]     - Negative colour map control. The (x) component
+#                          is a boolean flag controlling whether the negative
+#                          colour map is used. The (y) component is the display
+#                          range centre (the value above which the regular 
+#                          colour map is used, and below which the negative
+#                          colour map is used), as a voxel value, normalised to
+#                          the image texture value range.
+#  
 # Outputs:
 #
 #   result.color         - The fragment colour
@@ -49,9 +57,12 @@ TEMP  voxCoord;
 TEMP  voxClipLo;
 TEMP  voxClipHi;
 TEMP  voxValue;
+TEMP  posColour;
+TEMP  negColour;
 
 PARAM imageShape = program.local[4];
 PARAM clipping   = program.local[5];
+PARAM negCmap    = program.local[6];
   
 # This matrix scales the voxel value to
 # lie in a range which is appropriate to
@@ -70,6 +81,8 @@ MOV voxCoord, fragment.texcoord[1];
 # look up image voxel value
 # from 3D image texture
 TEX voxValue, fragment.texcoord[0], texture[0], 3D;
+
+
 
 # Test the low clipping range
 SUB voxClipLo, voxValue.x, clipping.x;
@@ -101,6 +114,9 @@ MAD voxValue, voxValue, voxValXform[0].x, voxValXform[3].x;
 
 # look up the appropriate colour
 # in the 1D colour map texture
-TEX result.color, voxValue.x, texture[1], 1D;
+TEX posColour, voxValue.x, texture[1], 1D;
+TEX negColour, voxValue.x, texture[2], 1D;
+
+MOV result.color, posColour;
 
 END

@@ -93,19 +93,21 @@ def updateShaderState(self):
 
     # And the clipping range, normalised
     # to the image texture value range
-    invClip = 1 if opts.invertClipping else -1
-    clipLo  = opts.clippingRange[0]            * \
-        self.imageTexture.invVoxValXform[0, 0] + \
-        self.imageTexture.invVoxValXform[3, 0]
-    clipHi  = opts.clippingRange[1]            * \
-        self.imageTexture.invVoxValXform[0, 0] + \
-        self.imageTexture.invVoxValXform[3, 0]
+    xform = self.imageTexture.invVoxValXform
+    
+    invClip    = 1 if opts.invertClipping     else -1
+    useNegCmap = 1 if opts.enableNegativeCmap else  0
+    
+    clipLo  = opts.clippingRange[0] * xform[0, 0] + xform[3, 0]
+    clipHi  = opts.clippingRange[1] * xform[0, 0] + xform[3, 0]
+    texZero = 0.0                   * xform[0, 0] + xform[3, 0]
     
     shaders.setVertexProgramVector(  0, shape + [0])
     
     shaders.setFragmentProgramMatrix(0, voxValXform)
     shaders.setFragmentProgramVector(4, shape + [0])
     shaders.setFragmentProgramVector(5, [clipLo, clipHi, invClip, 0])
+    shaders.setFragmentProgramVector(6, [useNegCmap, texZero, 0, 0])
 
     gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB) 
     gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB) 
