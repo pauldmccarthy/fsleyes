@@ -184,6 +184,15 @@ class DisplayContext(props.SyncableHasProperties):
         self.__overlayList = overlayList
         self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
 
+        # The overlayOrder is unsynced by
+        # default, but we will inherit the
+        # current parent value. If this
+        # DC is a parent, the overlayOrder
+        # will be initialised in the call
+        # to __syncOverlayOrder, below.
+        if parent is not None:
+            self.overlayOrder[:] = parent.overlayOrder[:]
+
         # Keep track of the overlay list length so
         # we can do some things in the
         # __overlayListChanged method. This if/else
