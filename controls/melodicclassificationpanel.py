@@ -20,7 +20,6 @@ import pwidgets.notebook         as notebook
 
 import fsl.utils.settings        as fslsettings
 import fsl.data.strings          as strings
-import fsl.data.image            as fslimage
 import fsl.data.melodicresults   as fslmelresults
 import fsl.data.melodicimage     as fslmelimage
 import fsl.fsleyes.colourmaps    as fslcm
@@ -377,27 +376,22 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
             return
 
         # Try loading the melodic_IC image
-        # specified in the label file. We'll
-        # load the mean image as well, as an
-        # underlay.
+        # specified in the label file. 
         try:
             overlay = fslmelimage.MelodicImage( melDir)
-            mean    = fslmelresults.getMeanFile(melDir)
-            mean    = fslimage.Image(           mean)
 
-            log.debug('Adding {} and {} to overlay list'.format(overlay, mean))
+            log.debug('Adding {} to overlay list'.format(overlay))
 
             self._overlayList.disableListener('overlays', self._name)
             self._displayCtx .disableListener('selectedOverlay', self._name)
-            self._overlayList.extend([mean, overlay])
+            self._overlayList.append(overlay)
             self._overlayList.enableListener('overlays', self._name)
             self._displayCtx .enableListener('selectedOverlay', self._name)
 
             if self._displayCtx.autoDisplay:
-                for o in [overlay, mean]:
-                    autodisplay.autoDisplay(o,
-                                            self._overlayList,
-                                            self._displayCtx)
+                autodisplay.autoDisplay(overlay,
+                                        self._overlayList,
+                                        self._displayCtx)
 
             fslsettings.write('loadOverlayLastDir', op.abspath(melDir)) 
 

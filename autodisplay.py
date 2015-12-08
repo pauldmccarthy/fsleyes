@@ -182,7 +182,22 @@ def _MelodicImageDisplay(overlay, overlayList, displayCtx):
     opts.negativeCmap    = 'Blue-LightBlue'
     opts.displayRange    = [1.5, 5.0]
     opts.clippingRange   = [1.5, opts.dataMax]
-    opts.useNegativeCmap = True 
+    opts.useNegativeCmap = True
+
+    # Add the mean as an underlay
+    idx      = overlayList.index(overlay)
+    meanFile = overlay.getMeanFile()
+    existing = [op.abspath(o.dataSource) for o in overlayList]
+
+    # But only if it's not
+    # already in the list
+    if meanFile not in existing:
+        
+        log.debug('Inserting mean melodic image into '
+                  'overlay list: {}'.format(meanFile))
+
+        meanImg = fslimage.Image(meanFile)
+        overlayList.insert(idx, meanImg)
 
 
 def _ModelDisplay(overlay, display, overlayList, displayCtx):
