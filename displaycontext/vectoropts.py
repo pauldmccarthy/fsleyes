@@ -19,9 +19,9 @@ import                   volumeopts
 
 
 class VectorOpts(volumeopts.ImageOpts):
-    """The ``VectorOpts`` class is the base class for :class:`LineVectorOpts` and
-    :class:`RGBVectorOpts`. It contains display settings which are common to
-    both.
+    """The ``VectorOpts`` class is the base class for :class:`LineVectorOpts`,
+    :class:`RGBVectorOpts`, and :class:`.TensorOpts`. It contains display
+    settings which are common to each of them.
     """
 
 

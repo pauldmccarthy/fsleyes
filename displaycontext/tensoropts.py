@@ -7,15 +7,26 @@
 
 import logging
 
-import volumeopts
+import props
+
+import vectoropts
 
 
 log = logging.getLogger(__name__)
 
 
-class TensorOpts(volumeopts.ImageOpts):
+class TensorOpts(vectoropts.VectorOpts):
 
+
+    # Only show 2D ellipses around 
+    # the three primary tensor axes
+    outline  = props.Boolean(default=False)
+
+
+    # Enable/disable lighting effects
+    lighting = props.Boolean(default=False)
+    
     
     def __init__(self, *args, **kwargs):
         
-        volumeopts.ImageOpts.__init__(self, *args, **kwargs)
+        vectoropts.VectorOpts.__init__(self, *args, **kwargs)

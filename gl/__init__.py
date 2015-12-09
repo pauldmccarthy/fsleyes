@@ -263,7 +263,10 @@ def bootstrap(glVersion=None):
                            rendering :class:`.GLModel` instances.
     
     ``gllabel_funcs``      The version-specific module containing functions for
-                           rendering :class:`.GLLabel` instances. 
+                           rendering :class:`.GLLabel` instances.
+    
+    ``gltensor_funcs``     The version-specific module containing functions for
+                           rendering :class:`.GLTensor` instances. 
     ====================== ====================================================
     
 
@@ -375,6 +378,7 @@ def bootstrap(glVersion=None):
     thismod.gllinevector_funcs = glpkg.gllinevector_funcs
     thismod.glmodel_funcs      = glpkg.glmodel_funcs
     thismod.gllabel_funcs      = glpkg.gllabel_funcs
+    thismod.gltensor_funcs     = glpkg.gltensor_funcs
     thismod._bootstrapped      = True
 
 

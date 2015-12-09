@@ -253,6 +253,9 @@ _shaderTypePrefixMap = td.TypeDict({
 
     ('GLModel',      'vert') : 'glmodel',
     ('GLModel',      'frag') : 'glmodel',
+
+    ('GLTensor',     'vert') : 'gltensor',
+    ('GLTensor',     'frag') : 'glvector', 
 })
 """This dictionary provides a mapping between :class:`.GLObject` types,
 and file name prefixes, identifying the shader programs to use.
