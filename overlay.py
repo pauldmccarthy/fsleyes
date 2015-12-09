@@ -193,6 +193,7 @@ def guessDataSourceType(path):
     import fsl.data.model          as fslmodel
     import fsl.data.featimage      as fslfeatimage
     import fsl.data.melodicimage   as fslmelimage
+    import fsl.data.tensorimage    as tensorimage
     import fsl.data.melodicresults as melresults
     import fsl.data.featresults    as featresults
 
@@ -209,6 +210,9 @@ def guessDataSourceType(path):
 
         elif featresults.isFEATDir(path):
             return fslfeatimage.FEATImage, path
+
+        elif tensorimage.isPathToTensorData(path):
+            return tensorimage.TensorImage, path
 
     # Assume it's a NIFTI image
     try:               path = fslimage.addExt(path, mustExist=True)

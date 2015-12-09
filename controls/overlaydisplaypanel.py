@@ -206,7 +206,7 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
 
         self.__widgets.ClearGroup(groupName)
 
-        dispProps = _DISPLAY_PROPS[target]
+        dispProps = _DISPLAY_PROPS.get(target, [])
         labels    = [strings.properties.get((target, p.key), p.key)
                      for p in dispProps]
         tooltips  = [fsltooltips.properties.get((target, p.key), None)
@@ -358,6 +358,10 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('coordSpace',
                      enabledWhen=lambda o, ri: ri != 'none',
                      dependencies=['refImage'])],
+
+    'TensorOpts' : [
+
+    ],
 
     'LabelOpts' : [
         props.Widget('lut', labels=lambda l: l.name),

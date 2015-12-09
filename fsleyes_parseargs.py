@@ -214,6 +214,7 @@ OPTIONS = td.TypeDict({
                         'outline',
                         'outlineWidth',
                         'refImage'],
+    'TensorOpts'     : [],
     'LabelOpts'      : ['lut',
                         'outline',
                         'outlineWidth'],

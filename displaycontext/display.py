@@ -102,8 +102,12 @@ class Display(props.SyncableHasProperties):
         # a vector
         if isinstance(overlay, fslimage.Image) and \
            (len(overlay.shape) != 4 or overlay.shape[-1] != 3):
-            possibleTypes.remove('rgbvector')
-            possibleTypes.remove('linevector')
+            
+            try:               possibleTypes.remove('rgbvector')
+            except ValueError: pass
+            
+            try:               possibleTypes.remove('linevector')
+            except ValueError: pass
             
         for pt in possibleTypes:
             log.debug('Enabling overlay type {} for {}'.format(pt, overlay))
@@ -486,12 +490,14 @@ import vectoropts
 import maskopts
 import labelopts
 import modelopts
+import tensoropts
 
 
 OVERLAY_TYPES = td.TypeDict({
 
-    'Image' : ['volume', 'mask', 'rgbvector', 'linevector', 'label'],
-    'Model' : ['model']
+    'Image'       : ['volume', 'mask', 'rgbvector', 'linevector', 'label'],
+    'Model'       : ['model'],
+    'TensorImage' : ['tensor', 'volume', 'rgbvector', 'linevector'],
 })
 """This dictionary provides a mapping between all overlay classes,
 and the possible values that the :attr:`Display.overlayType` property
@@ -509,6 +515,7 @@ DISPLAY_OPTS_MAP = {
     'mask'       : maskopts.  MaskOpts,
     'model'      : modelopts. ModelOpts,
     'label'      : labelopts. LabelOpts,
+    'tensor'     : tensoropts.TensorOpts,
 }
 """This dictionary provides a mapping between each overlay type, and
 the :class:`DisplayOpts` subclass which contains overlay type-specific

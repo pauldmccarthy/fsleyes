@@ -17,6 +17,7 @@ import numpy as np
 import props
 
 import fsl.data.image                         as fslimage
+import fsl.fsleyes.displaycontext             as fsldisplay
 import fsl.fsleyes.displaycontext.canvasopts  as canvasopts
 import fsl.fsleyes.gl.routines                as glroutines
 import fsl.fsleyes.gl.resources               as glresources
@@ -257,12 +258,13 @@ class SliceCanvas(props.HasProperties):
 
         for overlay in self.overlayList:
             disp  = self.displayCtx.getDisplay(overlay)
-            globj = self._glObjects[overlay]
+            globj = self._glObjects.get(overlay)
 
             disp.removeListener('overlayType',  self.name)
             disp.removeListener('enabled',      self.name)
 
-            globj.destroy()
+            if globj is not None:
+                globj.destroy()
 
             rt, rtName = self._prerenderTextures.get(overlay, (None, None))
             ot         = self._offscreenTextures.get(overlay, None)
@@ -588,12 +590,13 @@ class SliceCanvas(props.HasProperties):
 
         for ovl in self.overlayList:
 
+            opts = self.displayCtx.getOpts(ovl)
+
             # No support for non-volumetric overlay 
             # types yet (or maybe ever?)
-            if not isinstance(ovl, fslimage.Image):
+            if not isinstance(opts, fsldisplay.ImageOpts):
                 continue
-
-            opts    = self.displayCtx.getOpts(ovl)
+            
             currRes = opts.resolution
             lastRes = self.__overlayResolutions.get(ovl)
 
@@ -1140,6 +1143,13 @@ class SliceCanvas(props.HasProperties):
             
             if globj is None:
                 globj = self.__genGLObject(overlay)
+
+                # We can't generate a GLObject for 
+                # this overlay, for some reason
+                if globj is None:
+                    log.warning('Cannot generate a GL representation '
+                                'for overlay {}!'.format(overlay))
+                    continue
 
             # On-screen rendering - the globject is
             # rendered directly to the screen canvas
