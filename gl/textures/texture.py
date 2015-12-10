@@ -143,7 +143,6 @@ class Texture(object):
 
         if textureUnit is not None:
             gl.glActiveTexture(textureUnit)
-            gl.glEnable(self.__ttype)
 
         gl.glBindTexture(self.__ttype, self.__texture)
 
@@ -155,7 +154,6 @@ class Texture(object):
 
         if self.__textureUnit is not None:
             gl.glActiveTexture(self.__textureUnit)
-            gl.glDisable(self.__ttype)
             
         gl.glBindTexture(self.__ttype, 0)
 

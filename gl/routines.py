@@ -83,6 +83,9 @@ def show2D(xax, yax, width, height, lo, hi):
     elif zax == 1:
         gl.glRotatef(270, 1, 0, 0)
 
+    gl.glDepthMask(gl.GL_FALSE)
+    gl.glDisable(gl.GL_DEPTH_TEST)
+
 
 def calculateSamplePoints(shape, resolution, xform, xax, yax, origin='centre'):
     """Calculates a uniform grid of points, in the display coordinate system
@@ -635,3 +638,52 @@ def planeEquation(xyz1, xyz2, xyz3):
               (x3 * ((y1 * z2) - (y2 * z1))))
 
     return eq
+
+
+def unitSphere(res):
+    """Generates a unit sphere, as described in the *Sphere Generation*
+    article, on Paul Bourke's excellent website:
+
+        http://paulbourke.net/geometry/circlesphere/
+
+    :arg res: Resolution - the number of angles to sample.
+
+    :returns: A ``numpy.float32`` array of size ``(4 * res**2, 3)`` containing
+              the ``(x, y, z)`` vertices which can be used to draw a unit
+              sphere (using the ``GL_QUAD`` primitive type).
+    """
+
+    # TODO Eliminate duplicate vertices,
+    #      and return an index array
+
+    ustep = np.pi       / res
+    vstep = np.pi * 2.0 / res
+
+    u = np.linspace(-np.pi / 2, np.pi / 2 + ustep, res + 1, dtype=np.float32)
+    v = np.linspace(-np.pi,     np.pi     + vstep, res + 1, dtype=np.float32)
+
+    cosu = np.cos(u)
+    cosv = np.cos(v)
+    sinu = np.sin(u)
+    sinv = np.sin(v) 
+
+    vertices = np.zeros((res * res * 4, 3), dtype=np.float32)
+
+    cucv   = np.outer(cosu[:-1], cosv[:-1]).flatten()
+    cusv   = np.outer(cosu[:-1], sinv[:-1]).flatten()
+    cu1cv  = np.outer(cosu[1:],  cosv[:-1]).flatten()
+    cu1sv  = np.outer(cosu[1:],  sinv[:-1]).flatten()
+    cu1cv1 = np.outer(cosu[1:],  cosv[1:]) .flatten()
+    cu1sv1 = np.outer(cosu[1:],  sinv[1:]) .flatten()
+    cucv1  = np.outer(cosu[:-1], cosv[1:]) .flatten()
+    cusv1  = np.outer(cosu[:-1], sinv[1:]) .flatten()
+    
+    su     = np.repeat(sinu[:-1], res)
+    s1u    = np.repeat(sinu[1:],  res)
+
+    vertices.T[:,  ::4] = [cucv,   cusv,   su]
+    vertices.T[:, 1::4] = [cu1cv,  cu1sv,  s1u]
+    vertices.T[:, 2::4] = [cu1cv1, cu1sv1, s1u]
+    vertices.T[:, 3::4] = [cucv1,  cusv1,  su]
+
+    return vertices

@@ -43,11 +43,10 @@ def init(self):
     :class:`.Image`  overlay.
     """
     
-    self.shaders            = None
-    self.vertexBuffer       = gl.glGenBuffers(1)
-    self.texCoordBuffer     = gl.glGenBuffers(1)
-    self.vertexIDBuffer     = gl.glGenBuffers(1)
-    self.lineVertices       = None
+    self.shaders        = None
+    self.vertexBuffer   = gl.glGenBuffers(1)
+    self.texCoordBuffer = gl.glGenBuffers(1)
+    self.vertexIDBuffer = gl.glGenBuffers(1)
 
     self._vertexResourceName = '{}_{}_vertices'.format(
         type(self).__name__, id(self.image))

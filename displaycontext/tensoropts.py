@@ -25,7 +25,10 @@ class TensorOpts(vectoropts.VectorOpts):
 
     # Enable/disable lighting effects
     lighting = props.Boolean(default=False)
-    
+
+
+    # Tensor ellipsoid resolution
+    tensorResolution = props.Int(default=10)
     
     def __init__(self, *args, **kwargs):
         

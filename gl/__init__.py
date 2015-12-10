@@ -123,6 +123,7 @@ as:
    ~fsl.fsleyes.gl.gllinevector.GLLineVector
    ~fsl.fsleyes.gl.glrgbvector.GLRGBVector
    ~fsl.fsleyes.gl.glmodel.GLModel
+   ~fsl.fsleyes.gl.gltensor.GLTensor
 
 These objects are created and destroyed automatically by :class:`.SliceCanvas`
 instances, so application code does not need to worry about them too much.
