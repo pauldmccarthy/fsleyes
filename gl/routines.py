@@ -648,13 +648,73 @@ def unitSphere(res):
 
     :arg res: Resolution - the number of angles to sample.
 
+    :returns: A tuple comprising:
+    
+              - a ``numpy.float32`` array of size ``((res + 1)**2, 3)``
+                containing a set of ``(x, y, z)`` vertices which define
+                the ellipsoid surface.
+     
+              - A ``numpy.uint32`` array of size ``(4 * res * res)``
+                containing a list of indices into the vertex array,
+                defining a vertex ordering that can be used to draw
+                the ellipsoid using the OpenGL ``GL_QUAD`` primitive type.
+    """
+
+    ustep = np.pi       / res
+    vstep = np.pi * 2.0 / res
+
+    # All angles to be sampled
+    u = np.linspace(-np.pi / 2, np.pi / 2 + ustep, res + 1, dtype=np.float32)
+    v = np.linspace(-np.pi,     np.pi     + vstep, res + 1, dtype=np.float32)
+
+    cosu = np.cos(u)
+    cosv = np.cos(v)
+    sinu = np.sin(u)
+    sinv = np.sin(v) 
+
+    cucv = np.outer(cosu, cosv)
+    cusv = np.outer(cosu, sinv)
+
+    vertices = np.zeros(((res + 1) ** 2, 3), dtype=np.float32)
+
+    # All x coordinates are of the form cos(u) * cos(v),
+    # y coordinates are of the form cos(u) * sin(v),
+    # and z coordinates of the form sin(u).
+    vertices[:, 0] = cucv.flatten()
+    vertices[:, 1] = cusv.flatten()
+    vertices[:, 2] = sinu.repeat(res + 1)
+
+    # Generate a list of indices which join the
+    # vertices so they can be used to draw the
+    # sphere as GL_QUADs.
+    # 
+    # The vertex locations for each quad follow
+    # this pattern:
+    # 
+    #  1. (u,         v)
+    #  2. (u + ustep, v)
+    #  3. (u + ustep, v + vstep)
+    #  4. (u,         v + vstep)
+    nquads   = res * res
+    quadIdxs = np.array([0, res + 1, res + 2, 1], dtype=np.uint32)
+
+    indices  = np.tile(quadIdxs, nquads)
+    indices += np.arange(nquads, dtype=np.uint32).repeat(4)
+    indices += np.arange(res,    dtype=np.uint32).repeat(4 * res)
+    
+    return vertices, indices
+
+
+def fullUnitSphere(res):
+    """Generates a unit sphere in the same way as :func:`unitSphere`, but
+    returns all vertices, instead of the unique vertices and an index array.
+
+    :arg res: Resolution - the number of angles to sample.
+
     :returns: A ``numpy.float32`` array of size ``(4 * res**2, 3)`` containing
               the ``(x, y, z)`` vertices which can be used to draw a unit
               sphere (using the ``GL_QUAD`` primitive type).
     """
-
-    # TODO Eliminate duplicate vertices,
-    #      and return an index array
 
     ustep = np.pi       / res
     vstep = np.pi * 2.0 / res

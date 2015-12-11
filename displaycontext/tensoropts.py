@@ -29,6 +29,7 @@ class TensorOpts(vectoropts.VectorOpts):
 
     # Tensor ellipsoid resolution
     tensorResolution = props.Int(default=10)
+
     
     def __init__(self, *args, **kwargs):
         

@@ -12,6 +12,7 @@ import numpy                          as np
 import OpenGL.GL                      as gl
 import OpenGL.raw.GL._types           as gltypes
 import OpenGL.GL.ARB.instanced_arrays as arbia
+import OpenGL.GL.ARB.draw_instanced   as arbdi
 
 import fsl.utils.transform      as transform
 import fsl.fsleyes.gl.resources as glresources
@@ -63,6 +64,7 @@ def init(self):
         setattr(self, '{}Texture'.format(name), tex)
 
     self.vertexBuffer = gl.glGenBuffers(1)
+    self.indexBuffer  = gl.glGenBuffers(1)
     self.voxelBuffer  = gl.glGenBuffers(1)
 
     self.shaders = None
@@ -73,6 +75,7 @@ def init(self):
 
 def destroy(self):
     gl.glDeleteBuffers(1, gltypes.GLuint(self.vertexBuffer))
+    gl.glDeleteBuffers(1, gltypes.GLuint(self.indexBuffer))
     gl.glDeleteBuffers(1, gltypes.GLuint(self.voxelBuffer))
     gl.glDeleteProgram(self.shaders)
     
@@ -189,14 +192,23 @@ def updateShaderState(self):
     # shader will transform these vertices
     # into the tensor ellipsoid for each
     # voxel.
-    vertices = glroutines.unitSphere(resolution).ravel('C')
- 
-    self.nVertices = len(vertices) / 3
+    vertices, indices = glroutines.unitSphere(resolution)
+    
+    self.nVertices = len(indices)
+    vertices       = vertices.ravel('C')
+
+    gl.glUseProgram(0)    
 
     gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertexBuffer)
     gl.glBufferData(
         gl.GL_ARRAY_BUFFER, vertices.nbytes, vertices, gl.GL_STATIC_DRAW)
-    gl.glUseProgram(0)
+
+    gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.indexBuffer)
+    gl.glBufferData(
+        gl.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, gl.GL_STATIC_DRAW)
+
+    gl.glBindBuffer(gl.GL_ARRAY_BUFFER,         0)
+    gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
 
 
 def preDraw(self):
@@ -239,20 +251,23 @@ def draw(self, zpos, xform=None):
 
     voxels  = transform.transform(voxels, d2vMat)
     nVoxels = len(voxels)
+    
+    voxels  = np.array(voxels, dtype=np.float32).ravel('C')
 
-    voxels = np.array(voxels, dtype=np.float32).ravel('C')
-
+    # Copy the voxel coordinates to the voxel buffer
     gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.voxelBuffer)
     gl.glBufferData(
         gl.GL_ARRAY_BUFFER, voxels.nbytes, voxels, gl.GL_STATIC_DRAW)
     gl.glVertexAttribPointer(
         self.voxelPos, 3, gl.GL_FLOAT, gl.GL_FALSE, 0, None)
+
+    # Use one set of voxel coordinates for every sphere drawn
     arbia.glVertexAttribDivisorARB(self.voxelPos, 1)
 
     # Bind the vertex buffer
     gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertexBuffer)
     gl.glVertexAttribPointer(
-        self.vertexPos, 3, gl.GL_FLOAT, gl.GL_FALSE, 0, None) 
+        self.vertexPos, 3, gl.GL_FLOAT, gl.GL_FALSE, 0, None)
 
     if xform is None: xform = v2dMat
     else:             xform = transform.concat(v2dMat, xform)
@@ -260,12 +275,17 @@ def draw(self, zpos, xform=None):
     xform = np.array(xform, dtype=np.float32).ravel('C') 
     gl.glUniformMatrix4fv(self.voxToDisplayMatPos, 1, False, xform)
 
-    gl.glDrawArraysInstanced(gl.GL_QUADS, 0, self.nVertices, nVoxels)
+    # And the vertex index buffer
+    gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.indexBuffer)
+
+    arbdi.glDrawElementsInstancedARB(
+        gl.GL_QUADS, self.nVertices, gl.GL_UNSIGNED_INT, None, nVoxels)
 
 
 def postDraw(self):
     gl.glUseProgram(0)
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
+    gl.glBindBuffer(gl.GL_ARRAY_BUFFER,         0)
+    gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
     self.v1Texture.unbindTexture()
     self.v2Texture.unbindTexture()
     self.v3Texture.unbindTexture()
