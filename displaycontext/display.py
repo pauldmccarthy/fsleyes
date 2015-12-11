@@ -497,7 +497,7 @@ OVERLAY_TYPES = td.TypeDict({
 
     'Image'       : ['volume', 'mask', 'rgbvector', 'linevector', 'label'],
     'Model'       : ['model'],
-    'TensorImage' : ['tensor', 'volume', 'rgbvector', 'linevector'],
+    'TensorImage' : ['tensor', 'rgbvector', 'linevector'],
 })
 """This dictionary provides a mapping between all overlay classes,
 and the possible values that the :attr:`Display.overlayType` property

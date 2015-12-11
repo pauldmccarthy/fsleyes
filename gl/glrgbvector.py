@@ -12,6 +12,7 @@ vector :class:`.Image` overlays in RGB mode.
 import numpy                   as np
 import OpenGL.GL               as gl
 
+import fsl.data.tensorimage    as tensorimage
 import fsl.fsleyes.gl          as fslgl
 import fsl.fsleyes.gl.glvector as glvector
 
@@ -60,17 +61,31 @@ class GLRGBVector(glvector.GLVector):
     def __init__(self, image, display):
         """Create a ``GLRGBVector``.
 
-        :arg image:   The :class:`.Image` instance.
+        :arg image:   An :class:`.Image` or :class:`.TensorImage` instance.
         :arg display: The associated :class:`.Display` instance.
         """
 
-        glvector.GLVector.__init__(self, image, display, self.__prefilter)
+        # If the overlay is a TensorImage, use the
+        # V1 image is the vector data. Otherwise,
+        # assume that the overlay is the vector image.
+        if isinstance(image, tensorimage.TensorImage): vecImage = image.V1()
+        else:                                          vecImage = image
+
+        glvector.GLVector.__init__(self,
+                                   image,
+                                   display,
+                                   prefilter=np.abs,
+                                   vectorImage=vecImage)
+        
         fslgl.glrgbvector_funcs.init(self)
 
         self.displayOpts.addListener('interpolation',
                                      self.name,
                                      self.__interpChanged)
-
+        self.vectorImage.addListener('data',
+                                     self.name,
+                                     self.__dataChanged)
+                          
 
     def destroy(self):
         """Must be called when this ``GLRGBVector`` is no longer needed.
@@ -91,13 +106,6 @@ class GLRGBVector(glvector.GLVector):
         self.__setInterp()
 
         
-    def __prefilter(self, data):
-        """This method is passed to :meth:`.GLVector.__init__` as the
-        ``prefilter`` parameter. It removes the sign from the given data.
-        """
-        return np.abs(data)
-
-        
     def __setInterp(self):
         """Updates the interpolation setting on the :class:`.ImageTexture`
         that contains the vector :class:`.Image` being displayed.
@@ -109,7 +117,14 @@ class GLRGBVector(glvector.GLVector):
         
         self.imageTexture.set(interp=interp)
 
+
+    def __dataChanged(self, *a):
+        """Called when the :attr:`.Image.data` of the vector image
+        changes. Calls :meth:`.GLObject.onUpdate`. 
+        """
+        self.onUpdate()
         
+
     def __interpChanged(self, *a):
         """Called when the :attr:`.RGBVectorOpts.interpolation` property
         changes. Updates the :class:`.ImageTexture` interpolation.

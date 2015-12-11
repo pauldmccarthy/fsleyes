@@ -51,7 +51,7 @@ class GLVector(globject.GLImageObject):
     """
 
     
-    def __init__(self, image, display, prefilter=None):
+    def __init__(self, image, display, prefilter=None, vectorImage=None):
         """Create a ``GLVector`` object bound to the given image and display.
 
         Initialises the OpenGL data required to render the given image.
@@ -64,19 +64,29 @@ class GLVector(globject.GLImageObject):
             instances, so the textures and geometry can be updated when
             necessary.
 
-        :arg image:     An :class:`.Image` object.
+        :arg image:       An :class:`.Nifti1` object.
         
-        :arg display:   A :class:`.Display` object which describes how the
-                        image is to be displayed.
+        :arg display:     A :class:`.Display` object which describes how the
+                          image is to be displayed.
 
-        :arg prefilter: An optional function which filters the data before it
-                        is stored as a 3D texture. See :class:`.ImageTexture`.
-                        Whether or not this function is provided, the data is
-                        transposed so that the fourth dimension is the fastest
-                        changing.
+        :arg prefilter:   An optional function which filters the data before it
+                          is stored as a 3D texture. See
+                          :class:`.ImageTexture`. Whether or not this function
+                          is provided, the data is transposed so that the 
+                          fourth dimension is the fastest changing.
+
+        :arg vectorImage: Optional. If ``None``, the ``image`` is assumed to
+                          be a 4D :class:`.Image` instance which contains
+                          the vector data. If this is not the case, the
+                          ``vectorImage`` parameter can be used to specify
+                          an ``Image`` instance which does contain the
+                          vector data.
         """
 
-        if not image.is4DImage() or image.shape[3] != 3:
+        if vectorImage is None:
+            vectorImage = image
+
+        if len(vectorImage.shape) != 4 or vectorImage.shape[3] != 3:
             raise ValueError('Image must be 4 dimensional, with 3 volumes '
                              'representing the XYZ vector angles')
 
@@ -84,6 +94,7 @@ class GLVector(globject.GLImageObject):
 
         name = self.name
 
+        self.vectorImage    = vectorImage
         self.xColourTexture = textures.ColourMapTexture('{}_x'.format(name))
         self.yColourTexture = textures.ColourMapTexture('{}_y'.format(name))
         self.zColourTexture = textures.ColourMapTexture('{}_z'.format(name))
@@ -225,7 +236,8 @@ class GLVector(globject.GLImageObject):
 
         opts      = self.displayOpts
         prefilter = self.prefilter
-        texName   = '{}_{}'.format(type(self).__name__, id(self.image))
+        vecImage  = self.vectorImage
+        texName   = '{}_{}'.format(type(self).__name__, id(vecImage))
         
         if self.imageTexture is not None:
             glresources.delete(self.imageTexture.getTextureName())
@@ -248,7 +260,7 @@ class GLVector(globject.GLImageObject):
             texName,
             textures.ImageTexture,
             texName,
-            self.image,
+            vecImage,
             nvals=3,
             normalise=True,
             prefilter=realPrefilter) 

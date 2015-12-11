@@ -186,6 +186,7 @@ class GLVolume(globject.GLImageObject):
         display properties are changed.
         """
 
+        image   = self.image
         display = self.display
         opts    = self.displayOpts
         lName   = self.name
@@ -234,6 +235,7 @@ class GLVolume(globject.GLImageObject):
         opts   .addListener('resolution',     lName, imageUpdate,   weak=False)
         opts   .addListener('interpolation',  lName, imageUpdate,   weak=False)
         opts   .addListener('transform',      lName, update,        weak=False)
+        image  .addListener('data',           lName, update,        weak=False)
 
         # Save a flag so the removeDisplayListeners
         # method knows whether it needs to de-register
@@ -258,6 +260,7 @@ class GLVolume(globject.GLImageObject):
         were added by :meth:`addDisplayListeners`.
         """
 
+        image   = self.image
         display = self.display
         opts    = self.displayOpts
 
@@ -276,6 +279,7 @@ class GLVolume(globject.GLImageObject):
         opts   .removeListener(          'resolution',      lName)
         opts   .removeListener(          'interpolation',   lName)
         opts   .removeListener(          'transform',       lName)
+        image  .removeListener(          'data',            lName)
         
         if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume',        lName)

@@ -47,7 +47,7 @@ def init(self):
     self.lineVertices    = None
 
     self._vertexResourceName = '{}_{}_vertices'.format(
-        type(self).__name__, id(self.image))
+        type(self).__name__, id(self.vectorImage))
 
     compileShaders(   self)
     updateShaderState(self)
@@ -114,15 +114,15 @@ def updateVertices(self):
     :meth:`.GLLineVertices.calculateHash` method), this function does nothing.
     """
     
-    image = self.image
-
     if self.lineVertices is None:
         self.lineVertices = glresources.get(
             self._vertexResourceName, gllinevector.GLLineVertices, self) 
 
     if hash(self.lineVertices) != self.lineVertices.calculateHash(self):
 
-        log.debug('Re-generating line vertices for {}'.format(image))
+        log.debug('Re-generating line vertices '
+                  'for {}'.format(self.vectorImage))
+        
         self.lineVertices.refresh(self)
         glresources.set(self._vertexResourceName,
                         self.lineVertices,
@@ -131,8 +131,9 @@ def updateVertices(self):
 
 def updateShaderState(self):
     """Updates all fragment/vertex shader program variables. """
-    
-    opts = self.displayOpts
+
+    image = self.vectorImage
+    opts  = self.displayOpts
 
     gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
     gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
@@ -144,7 +145,7 @@ def updateShaderState(self):
     
     voxValXform  = self.imageTexture.voxValXform
     cmapXform    = self.xColourTexture.getCoordinateTransform()
-    shape        = np.array(list(self.image.shape[:3]) + [0], dtype=np.float32)
+    shape        = np.array(list(image.shape[:3]) + [0], dtype=np.float32)
     invShape     = 1.0 / shape
     modThreshold = [opts.modThreshold / 100.0, 0.0, 0.0, 0.0]
     offset       = [0.5, 0.5, 0.5, 0.0]

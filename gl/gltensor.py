@@ -5,7 +5,10 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
+
 import logging
+
+import numpy as np
 
 import glvector
 
@@ -18,8 +21,11 @@ class GLTensor(glvector.GLVector):
 
     
     def __init__(self, image, display):
-        glvector.GLVector.__init__(self, image, display)
-
+        glvector.GLVector.__init__(self,
+                                   image,
+                                   display,
+                                   prefilter=np.abs,
+                                   vectorImage=image.V1())
         fslgl.gltensor_funcs.init(self)
 
 

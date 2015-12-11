@@ -314,7 +314,7 @@ class GLSimpleObject(GLObject):
 
 class GLImageObject(GLObject):
     """The ``GLImageObject`` class is the base class for all GL representations
-    of :class:`.Image` instances.
+    of :class:`.Nifti1` instances. 
     """
     
     def __init__(self, image, display):
@@ -323,7 +323,8 @@ class GLImageObject(GLObject):
         This constructor adds the following attributes to this instance:
 
         =============== =======================================================
-        ``image``       A reference to the :class:`.Image` being displayed.
+        ``image``       A reference to the :class:`.Nifti1` overlay being
+                        displayed.
         ``display``     A reference to the :class:`.Display` instance
                         associated with the ``image``.
         ``displayOpts`` A reference to the :class:`.DisplayOpts` instance,
@@ -331,7 +332,7 @@ class GLImageObject(GLObject):
                         is assumed to be a sub-class of :class:`.ImageOpts`.
         =============== =======================================================
 
-        :arg image:   The :class:`.Image` instance
+        :arg image:   The :class:`.Nifti1` instance
         
         :arg display: An associated :class:`.Display` instance.
         """
@@ -341,16 +342,7 @@ class GLImageObject(GLObject):
         self.display     = display
         self.displayOpts = display.getDisplayOpts()
 
-        self.image.addListener('data', self.name, self.__imageDataChanged)
-
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
-
-        
-    def __imageDataChanged(self, *a):
-        """Called when the :attr:`.Image.data` changes. Calls
-        :meth:`GLObject.onUpdate`. 
-        """
-        self.onUpdate()
 
         
     def __del__(self):
@@ -363,7 +355,6 @@ class GLImageObject(GLObject):
         implementation. It clears references to the :class:`.Image`,
         :class:`.Display`, and :class:`.DisplayOpts` instances.
         """
-        self.image.removeListener('data', self.name)
         self.image       = None
         self.display     = None
         self.displayOpts = None

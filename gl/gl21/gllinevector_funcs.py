@@ -48,9 +48,6 @@ def init(self):
     self.texCoordBuffer = gl.glGenBuffers(1)
     self.vertexIDBuffer = gl.glGenBuffers(1)
 
-    self._vertexResourceName = '{}_{}_vertices'.format(
-        type(self).__name__, id(self.image))
-
     opts = self.displayOpts
 
     def vertexUpdate(*a):
@@ -137,8 +134,9 @@ def compileShaders(self):
     
 def updateShaderState(self):
     """Updates all variables used by the vertex/fragment shaders. """
-    
-    opts = self.displayOpts
+
+    image = self.vectorImage
+    opts  = self.displayOpts
 
     # The coordinate transformation matrices for 
     # each of the three colour textures are identical,
@@ -146,7 +144,7 @@ def updateShaderState(self):
     cmapXform   = self.xColourTexture.getCoordinateTransform()
     voxValXform = self.imageTexture.voxValXform
     useSpline   = False
-    imageShape  = np.array(self.image.shape[:3], dtype=np.float32)
+    imageShape  = np.array(image.shape[:3], dtype=np.float32)
 
     voxValXform = np.array(voxValXform, dtype=np.float32).ravel('C')
     cmapXform   = np.array(cmapXform,   dtype=np.float32).ravel('C')
@@ -168,7 +166,7 @@ def updateShaderState(self):
     gl.glUniform1i(self.zColourTexturePos, 4)
 
     directed  = opts.directed
-    imageDims = self.image.pixdim[:3]
+    imageDims = image.pixdim[:3]
     d2vMat    = opts.getTransform('display', 'voxel')
     v2dMat    = opts.getTransform('voxel',   'display')
 
@@ -207,7 +205,7 @@ def draw(self, zpos, xform=None):
     """ 
 
 
-    image      = self.image
+    image      = self.vectorImage
     opts       = self.displayOpts
     v2dMat     = opts.getTransform('voxel', 'display')
     resolution = np.array([opts.resolution] * 3)

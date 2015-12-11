@@ -98,7 +98,7 @@ def updateShaderState(self):
     voxValXform = self.imageTexture.voxValXform
     cmapXform   = self.xColourTexture.getCoordinateTransform()
     useSpline   = opts.interpolation == 'spline'
-    imageShape  = np.array(self.image.shape, dtype=np.float32)
+    imageShape  = np.array(self.vectorImage.shape, dtype=np.float32)
 
     gl.glUseProgram(self.shaders)
 

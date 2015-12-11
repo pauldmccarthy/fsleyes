@@ -80,7 +80,7 @@ def updateShaderState(self):
 
     voxValXform  = self.imageTexture.voxValXform
     cmapXform    = self.xColourTexture.getCoordinateTransform()
-    shape        = list(self.image.shape[:3]) + [0]
+    shape        = list(self.vectorImage.shape[:3]) + [0]
     modThreshold = [opts.modThreshold / 100.0, 0.0, 0.0, 0.0]
 
     shaders.setFragmentProgramMatrix(0, voxValXform)
