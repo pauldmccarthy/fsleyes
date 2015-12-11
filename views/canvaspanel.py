@@ -579,10 +579,10 @@ class CanvasPanel(viewpanel.ViewPanel):
         if overlay is None:
             return
 
-        if not isinstance(overlay, fslimage.Image):
+        if not isinstance(overlay, fslimage.Nifti1):
             return
 
-        if not overlay.is4DImage():
+        if len(overlay.shape) != 4:
             return
 
         opts = self._displayCtx.getOpts(overlay)

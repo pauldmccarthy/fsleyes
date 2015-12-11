@@ -242,19 +242,19 @@ class LocationPanel(fslpanel.FSLEyesPanel):
 
         labelPref = strings.labels[self, 'worldLocation']
         labelSufs = [
-            strings.anatomy[fslimage.Image,
+            strings.anatomy['Nifti1',
                             'space',
                             constants.NIFTI_XFORM_UNKNOWN],
-            strings.anatomy[fslimage.Image,
+            strings.anatomy['Nifti1',
                             'space',
                             constants.NIFTI_XFORM_SCANNER_ANAT],
-            strings.anatomy[fslimage.Image,
+            strings.anatomy['Nifti1',
                             'space',
                             constants.NIFTI_XFORM_ALIGNED_ANAT],
-            strings.anatomy[fslimage.Image,
+            strings.anatomy['Nifti1',
                             'space',
                             constants.NIFTI_XFORM_TALAIRACH],
-            strings.anatomy[fslimage.Image,
+            strings.anatomy['Nifti1',
                             'space',
                             constants.NIFTI_XFORM_MNI_152],
             strings.labels[self, 'worldLocation', 'unknown']

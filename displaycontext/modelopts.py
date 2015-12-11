@@ -350,8 +350,8 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
         for overlay in overlays:
 
-            # The overlay must be an Image instance.
-            if not isinstance(overlay, fslimage.Image):
+            # The overlay must be a Nifti1 instance.
+            if not isinstance(overlay, fslimage.Nifti1):
                 continue
 
             imgOptions.append(overlay)

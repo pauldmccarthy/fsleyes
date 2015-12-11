@@ -510,7 +510,7 @@ class DisplayContext(props.SyncableHasProperties):
         # just been added to the list,
         oldList  = self.__overlayList.getLastValue('overlays')[:]
         for overlay in self.__overlayList:
-            if isinstance(overlay, fslimage.Image) and \
+            if isinstance(overlay, fslimage.Nifti1) and \
                (overlay not in oldList):
                 self.__setTransform(overlay)
 
@@ -521,7 +521,7 @@ class DisplayContext(props.SyncableHasProperties):
             # Set the displaySpace to
             # the first new image
             for overlay in self.__overlayList:
-                if isinstance(overlay, fslimage.Image):
+                if isinstance(overlay, fslimage.Nifti1):
                     self.displaySpace = overlay
                     break
             
@@ -557,7 +557,7 @@ class DisplayContext(props.SyncableHasProperties):
         choices    = ['pixdim', 'world']
         
         for overlay in self.__overlayList:
-            if isinstance(overlay, fslimage.Image):
+            if isinstance(overlay, fslimage.Nifti1):
                 choices.append(overlay)
 
         choiceProp.setChoices(choices, instance=self)
@@ -630,7 +630,7 @@ class DisplayContext(props.SyncableHasProperties):
         # new display space
         for overlay in self.__overlayList:
             
-            if not isinstance(overlay, fslimage.Image):
+            if not isinstance(overlay, fslimage.Nifti1):
                 continue
 
             opts = self.getOpts(overlay)

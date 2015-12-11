@@ -227,10 +227,10 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
                 section=dimSect)
 
         info.addInfo(strings.nifti['qform_code'],
-                     strings.anatomy['Image', 'space', qformCode],
+                     strings.anatomy['Nifti1', 'space', qformCode],
                      section=xformSect)
         info.addInfo(strings.nifti['sform_code'],
-                     strings.anatomy['Image', 'space', sformCode],
+                     strings.anatomy['Nifti1', 'space', sformCode],
                      section=xformSect)
 
         if qformCode != constants.NIFTI_XFORM_UNKNOWN:
@@ -247,8 +247,8 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
             xform  = opts.getTransform('world', 'id')
             orient = overlay.getOrientation(i, xform)
             orient = '{} - {}'.format(
-                strings.anatomy['Image', 'lowlong',  orient],
-                strings.anatomy['Image', 'highlong', orient])
+                strings.anatomy['Nifti1', 'lowlong',  orient],
+                strings.anatomy['Nifti1', 'highlong', orient])
             info.addInfo(strings.nifti['voxOrient.{}'.format(i)],
                          orient,
                          section=orientSect)
@@ -257,8 +257,8 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
             xform  = np.eye(4)
             orient = overlay.getOrientation(i, xform)
             orient = '{} - {}'.format(
-                strings.anatomy['Image', 'lowlong',  orient],
-                strings.anatomy['Image', 'highlong', orient])
+                strings.anatomy['Nifti1', 'lowlong',  orient],
+                strings.anatomy['Nifti1', 'highlong', orient])
             info.addInfo(strings.nifti['worldOrient.{}'.format(i)],
                          orient,
                          section=orientSect)
@@ -349,6 +349,10 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
             overlay.indices.shape[0]) 
 
         return info
+
+
+    def __getTensorImageInfo(self, overlay, display):
+        return self.__getImageInfo(overlay, display)
 
 
     def __formatArray(self, array):

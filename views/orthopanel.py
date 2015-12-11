@@ -352,7 +352,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         bgColour = tuple(bgColour)
         fgColour = tuple(fgColour)
-        
+
         overlay = self._displayCtx.getReferenceImage(
             self._displayCtx.getSelectedOverlay())
 
@@ -487,12 +487,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         yorient = overlay.getOrientation(1, xform)
         zorient = overlay.getOrientation(2, xform)
 
-        xlo = strings.anatomy['Image', 'lowshort',  xorient]
-        ylo = strings.anatomy['Image', 'lowshort',  yorient]
-        zlo = strings.anatomy['Image', 'lowshort',  zorient]
-        xhi = strings.anatomy['Image', 'highshort', xorient]
-        yhi = strings.anatomy['Image', 'highshort', yorient]
-        zhi = strings.anatomy['Image', 'highshort', zorient]
+        xlo = strings.anatomy['Nifti1', 'lowshort',  xorient]
+        ylo = strings.anatomy['Nifti1', 'lowshort',  yorient]
+        zlo = strings.anatomy['Nifti1', 'lowshort',  zorient]
+        xhi = strings.anatomy['Nifti1', 'highshort', xorient]
+        yhi = strings.anatomy['Nifti1', 'highshort', yorient]
+        zhi = strings.anatomy['Nifti1', 'highshort', zorient]
 
         log.debug('X orientation: {} - {}'.format(xlo, xhi))
         log.debug('Y orientation: {} - {}'.format(ylo, yhi))

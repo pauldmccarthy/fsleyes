@@ -779,7 +779,7 @@ class SliceCanvas(props.HasProperties):
         # Listen for resolution changes on Image
         # overlays - see __overlayResolutionChanged,
         # and __resolutionLimitChanged
-        if isinstance(overlay, fslimage.Image): 
+        if isinstance(overlay, fslimage.Nifti1): 
             opts = display.getDisplayOpts()
             opts.addListener('resolution',
                              self.name,

@@ -441,21 +441,25 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         instance.
 
         Some non-volumetric overlay types (e.g. the :class:`.Model` - see
-        :class:`.ModelOpts`) may have a *reference* :class:`.Image` instance
+        :class:`.ModelOpts`) may have a *reference* :class:`.Nifti1` instance
         associated with them, allowing the overlay to be localised in the
-        coordinate space defined by the :class:`.Image`. The
+        coordinate space defined by the :class:`.Nifti1`. The
         :class:`.DisplayOpts` sub-class which corresponds to
         such non-volumetric overlays should override this method to return
         that reference image.
 
         :class:`.DisplayOpts` sub-classes which are associated with volumetric
-        overlays (i.e. :class:`.Image` instances) do not need to override
+        overlays (i.e. :class:`.Nifti1` instances) do not need to override
         this method - in this case, the overlay itself is considered to be
         its own reference image, and is returned by the base-class
         implementation of this this method.
+
+        .. note:: The reference :class:`.Nifti1` instance returned by
+                  sub-class implementations of this method must be in
+                  the :class:`.OverlayList`.
         """
 
-        if isinstance(self.overlay, fslimage.Image):
+        if isinstance(self.overlay, fslimage.Nifti1):
             return self.overlay
         return None
 

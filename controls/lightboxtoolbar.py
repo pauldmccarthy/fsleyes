@@ -83,7 +83,7 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
 
         def displaySpaceOptionName(opt):
 
-            if isinstance(opt, fslimage.Image):
+            if isinstance(opt, fslimage.Nifti1):
                 return opt.name
             else:
                 return strings.choices['DisplayContext.displaySpace'][opt] 
