@@ -113,7 +113,7 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         # this attribute will refer to the
         # corresponding DisplayOpts instance, which
         # has a volume property that controls the
-        # volume - see e.g. the ImageOpts class. This
+        # volume - see e.g. the Nifti1Opts class. This
         # attribute is set in _selectedOverlayChanged.
         self.__volumeTarget = None
 
@@ -425,7 +425,7 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         # Enable/disable the volume widget if the
         # overlay is a 4D image, and bind/unbind
         # the widget to the volume property of
-        # the associated ImageOpts instance
+        # the associated Nifti1Opts instance
         if haveRef and refImage.is4DImage():
             opts = self._displayCtx.getOpts(refImage)
             self.__volumeTarget = opts

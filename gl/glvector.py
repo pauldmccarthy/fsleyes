@@ -99,6 +99,7 @@ class GLVector(globject.GLImageObject):
         self.yColourTexture = textures.ColourMapTexture('{}_y'.format(name))
         self.zColourTexture = textures.ColourMapTexture('{}_z'.format(name))
         self.modImage       = None
+        self.modOpts        = None
         self.modTexture     = None
         self.imageTexture   = None
         self.prefilter      = prefilter
@@ -128,6 +129,7 @@ class GLVector(globject.GLImageObject):
         self.imageTexture = None
         self.modTexture   = None
         self.modImage     = None
+        self.modOpts      = None
 
         globject.GLImageObject.destroy(self)
 
@@ -286,12 +288,14 @@ class GLVector(globject.GLImageObject):
 
     def registerModulateImage(self):
         """Called when the :attr:`.VectorOpts.modulate` property changes.
-        Registers a listener with the :attr:`.ImageOpts.volume` property
+        Registers a listener with the :attr:`.Nifti1Opts.volume` property
         of the modulate image, so the modulate texture can be updated when
         the image volume changes.
         """
         
         modImage = self.displayOpts.modulate
+
+        self.modOpts = None
         
         if modImage is None or modImage == 'none': self.modImage = None
         else:                                      self.modImage = modImage
@@ -299,31 +303,30 @@ class GLVector(globject.GLImageObject):
         if self.modImage is None:
             return
 
-        modOpts = self.displayOpts.displayCtx.getOpts(modImage) 
+        self.modOpts = self.displayOpts.displayCtx.getOpts(modImage) 
 
         def volumeChange(*a):
             
-            self.modTexture.set(volume=modOpts.volume)
+            self.modTexture.set(volume=self.modOpts.volume)
             self.refreshModulateTexture()
             self.onUpdate()
 
-        modOpts.addListener('volume', self.name, volumeChange, weak=False) 
+        self.modOpts.addListener('volume', self.name, volumeChange, weak=False) 
 
     
     def deregisterModulateImage(self):
         """Called when the :attr:`.VectorOpts.modulate` property changes.
-        Deregisters the :attr:`.ImageOpts.volume` listener that was
+        Deregisters the :attr:`.Nifti1Opts.volume` listener that was
         registered in :meth:`registerModulateImage`.
         """ 
 
         if self.modImage is None:
             return
 
-        modOpts = self.displayOpts.displayCtx.getOpts(self.modImage) 
-
-        modOpts.removeListener('volume', self.name)
+        self.modOpts.removeListener('volume', self.name)
 
         self.modImage = None
+        self.modOpts  = None
 
             
     def refreshModulateTexture(self):
@@ -338,18 +341,17 @@ class GLVector(globject.GLImageObject):
         if self.modTexture is not None:
             glresources.delete(self.modTexture.getTextureName())
 
-        modImage = self.displayOpts.modulate
+        modImage = self.modImage
+        modOpts  = self.modOpts
 
         if modImage is None or modImage == 'none':
             textureData = np.zeros((5, 5, 5), dtype=np.uint8)
             textureData[:] = 255
             modImage   = fslimage.Image(textureData)
-            modOpts    = None
             norm       = False
             
         else:
-            modOpts = self.displayOpts.displayCtx.getOpts(modImage)
-            norm    = True
+            norm = True
 
         texName = '{}_{}_{}_modulate'.format(
             type(self).__name__, id(self.image), id(modImage))

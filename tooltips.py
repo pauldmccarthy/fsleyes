@@ -56,16 +56,16 @@ properties = TypeDict({
 
     # Overlay DisplayOpts
 
-    'ImageOpts.volume'     : 'The volume number (for 4D images).',
-    'ImageOpts.resolution' : 'Spatial display resolution, in mm.',
-    'ImageOpts.transform'  : 'The affine transformation matrix to apply '
-                             'to this image. You can choose to display '
-                             'the image without any transformation (as if '
-                             'the image voxels are 1mm isotropic); or you '
-                             'can choose to scale the voxels by the pixdim '
-                             'values in the NIFTI header; or you can choose '
-                             'to apply the affine transformation as defined '
-                             'in the NIFTI header.',
+    'Nifti1Opts.volume'     : 'The volume number (for 4D images).',
+    'Nifti1Opts.resolution' : 'Spatial display resolution, in mm.',
+    'Nifti1Opts.transform'  : 'The affine transformation matrix to apply '
+                              'to this image. You can choose to display '
+                              'the image without any transformation (as if '
+                              'the image voxels are 1mm isotropic); or you '
+                              'can choose to scale the voxels by the pixdim '
+                              'values in the NIFTI header; or you can choose '
+                              'to apply the affine transformation as defined '
+                              'in the NIFTI header.',
 
     'VolumeOpts.displayRange'    : 'Data display range - the low value '
                                    'corresponds to the low colour, and the '

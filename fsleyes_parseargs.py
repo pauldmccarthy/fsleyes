@@ -187,7 +187,7 @@ OPTIONS = td.TypeDict({
                         'alpha',
                         'brightness',
                         'contrast'],
-    'ImageOpts'      : ['transform',
+    'Nifti1Opts'     : ['transform',
                         'resolution',
                         'volume'],
     'VolumeOpts'     : ['cmap',
@@ -236,7 +236,7 @@ GROUPNAMES = td.TypeDict({
     'LightBoxOpts'   : 'LightBox display options',
     
     'Display'        : 'Overlay display options',
-    'ImageOpts'      : 'Options for NIFTI images',
+    'Nifti1Opts'     : 'Options for NIFTI images',
     'VolumeOpts'     : 'Volume options',
     'MaskOpts'       : 'Mask options',
     'VectorOpts'     : 'Vector options',
@@ -323,9 +323,9 @@ ARGUMENTS = td.TypeDict({
     'Display.brightness'    : ('b',  'brightness'),
     'Display.contrast'      : ('c',  'contrast'),
 
-    'ImageOpts.resolution'    : ('r',  'resolution'),
-    'ImageOpts.transform'     : ('tf', 'transform'),
-    'ImageOpts.volume'        : ('vl', 'volume'),
+    'Nifti1Opts.resolution'   : ('r',  'resolution'),
+    'Nifti1Opts.transform'    : ('tf', 'transform'),
+    'Nifti1Opts.volume'       : ('vl', 'volume'),
 
     'VolumeOpts.displayRange'   : ('dr', 'displayRange'),
     'VolumeOpts.interpolation'  : ('in', 'interp'),
@@ -428,9 +428,9 @@ HELP = td.TypeDict({
     'Display.brightness'    : 'Brightness',
     'Display.contrast'      : 'Contrast',
 
-    'ImageOpts.resolution' : 'Resolution',
-    'ImageOpts.transform'  : 'Transformation',
-    'ImageOpts.volume'     : 'Volume',
+    'Nifti1Opts.resolution' : 'Resolution',
+    'Nifti1Opts.transform'  : 'Transformation',
+    'Nifti1Opts.volume'     : 'Volume',
 
     'VolumeOpts.displayRange'   : 'Display range',
     'VolumeOpts.clippingRange'  : 'Clipping range',
@@ -687,7 +687,7 @@ def _configOverlayParser(ovlParser):
     """
 
     Display        = fsldisplay.Display
-    ImageOpts      = fsldisplay.ImageOpts
+    Nifti1Opts     = fsldisplay.Nifti1Opts
     VolumeOpts     = fsldisplay.VolumeOpts
     VectorOpts     = fsldisplay.VectorOpts
     RGBVectorOpts  = fsldisplay.RGBVectorOpts
@@ -698,7 +698,7 @@ def _configOverlayParser(ovlParser):
     
     dispParser  = ovlParser.add_argument_group(GROUPNAMES[    Display],
                                                GROUPDESCS.get(Display))
-    imgParser   = ovlParser.add_argument_group(GROUPNAMES[ImageOpts])
+    imgParser   = ovlParser.add_argument_group(GROUPNAMES[Nifti1Opts])
     volParser   = ovlParser.add_argument_group(GROUPNAMES[VolumeOpts])
     vecParser   = ovlParser.add_argument_group(GROUPNAMES[VectorOpts])
     lvParser    = ovlParser.add_argument_group(GROUPNAMES[LineVectorOpts])
@@ -708,7 +708,7 @@ def _configOverlayParser(ovlParser):
     labelParser = ovlParser.add_argument_group(GROUPNAMES[LabelOpts])
 
     targets = [(Display,        dispParser),
-               (ImageOpts,      imgParser),
+               (Nifti1Opts,     imgParser),
                (VolumeOpts,     volParser),
                (VectorOpts,     vecParser),
                (LineVectorOpts, lvParser),

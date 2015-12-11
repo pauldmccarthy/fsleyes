@@ -152,9 +152,9 @@ class OrthoViewProfile(profiles.Profile):
         values, one per display space axis, which specify the distance that
         a navigation operation should move the display.
 
-        If the currently selected overlay is an :class:`.Image` instance, the
+        If the currently selected overlay is an :class:`.Nifti1` instance, the
         distance that a navigation operation should shift the display will
-        differ depending on the value of the :attr:`.ImageOpts.transform`
+        differ depending on the value of the :attr:`.Nifti1Opts.transform`
         property. For example, if ``transform`` is ``id``, the display should
         be moved by one unit (which corresponds to one voxel). But if the
         ``transform`` is ``pixdim``, the display should be moved by one pixdim

@@ -18,7 +18,7 @@ import fsl.data.image as fslimage
 import                   volumeopts
 
 
-class VectorOpts(volumeopts.ImageOpts):
+class VectorOpts(volumeopts.Nifti1Opts):
     """The ``VectorOpts`` class is the base class for :class:`LineVectorOpts`,
     :class:`RGBVectorOpts`, and :class:`.TensorOpts`. It contains display
     settings which are common to each of them.
@@ -67,11 +67,11 @@ class VectorOpts(volumeopts.ImageOpts):
     
     def __init__(self, *args, **kwargs):
         """Create a ``VectorOpts`` instance for the given image.  All
-        arguments are passed through to the :class:`.ImageOpts`
+        arguments are passed through to the :class:`.Nifti1Opts`
         constructor.
         """
         
-        volumeopts.ImageOpts.__init__(self, *args, **kwargs)
+        volumeopts.Nifti1Opts.__init__(self, *args, **kwargs)
 
         self.overlayList.addListener('overlays',
                                      self.name,
@@ -82,7 +82,7 @@ class VectorOpts(volumeopts.ImageOpts):
 
     def destroy(self):
         """Removes some property listeners, and calls the
-        :meth:`.ImageOpts.destroy` method.
+        :meth:`.Nifti1Opts.destroy` method.
         """
         self.overlayList.removeListener('overlays', self.name)
 
@@ -90,7 +90,7 @@ class VectorOpts(volumeopts.ImageOpts):
             display = self.displayCtx.getDisplay(overlay)
             display.removeListener('name', self.name)
 
-        volumeopts.ImageOpts.destroy(self)
+        volumeopts.Nifti1Opts.destroy(self)
 
         
     def __overlayListChanged(self, *a):

@@ -251,7 +251,7 @@ class GLLineVertices(object):
 
         .. note:: The vertex/texture coordinate generation takes into
                   account the current value of the
-                  :attr:`.ImageOpts.resolution` property of the
+                  :attr:`.Nifti1Opts.resolution` property of the
                   :class:`.LineVectorOpts` instance; if this is set to
                   something other than the image resolution, the
                   sub-sampled starting indices and steps are stored

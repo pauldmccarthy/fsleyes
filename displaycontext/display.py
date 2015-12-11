@@ -263,7 +263,7 @@ class Display(props.SyncableHasProperties):
 
         Furthermore, in order for the property values of a common
         ``DisplayOpts`` base type to be shared across sub types (e.g. copying
-        the :attr:`.ImageOpts.transform` property between :class:`.VolumeOpts`
+        the :attr:`.Nifti1Opts.transform` property between :class:`.VolumeOpts`
         and :class:`.LabelOpts` instances), we need to store the name of the
         common base type in the dictionary.
 
@@ -337,7 +337,7 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
 
     
     The ``DisplayOpts`` class is not meant to be created directly - it is a
-    base class for type specific implementations (e.g. the :class:`.ImageOpts`
+    base class for type specific implementations (e.g. the :class:`.VolumeOpts`
     class).
 
     
@@ -473,7 +473,7 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         the display space representation may change - for example, the
         :class:`.Image` overlays can be transformed into the display
         coordinate system in different ways, as defined by the
-        :attr:`.ImageOpts.transform`  property.
+        :attr:`.Nifti1Opts.transform`  property.
         """
         return coords
 

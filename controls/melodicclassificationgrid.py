@@ -335,7 +335,7 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
 
 
     def __volumeChanged(self, *a):
-        """Called when the :attr:`.ImageOpts.volume` property changes. Selects
+        """Called when the :attr:`.Nifti1Opts.volume` property changes. Selects
         the corresponding row in the :class:`.WidgetGrid`.
         """
 
@@ -613,7 +613,7 @@ class LabelGrid(fslpanel.FSLEyesPanel):
 
     def __onTagSelect(self, ev):
         """Called when a tag from a :class:`.TextTagPanel` is selected.
-        Changes the current :attr:`.ImageOpts.volume` to the component
+        Changes the current :attr:`.Nifti1Opts.volume` to the component
         corresponding to the selected tag.
         """
 

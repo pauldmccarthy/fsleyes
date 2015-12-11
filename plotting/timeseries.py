@@ -729,7 +729,7 @@ class MelodicTimeSeries(TimeSeries):
     """A :class:`.TimeSeries` class which encapsulates the time course for
     one component of a :class:`.MelodicImage`. The :meth:`getData` method
     returns the time course of the component specified by the current
-    :class:`.ImageOpts.volume`.
+    :class:`.Nifti1Opts.volume`.
     """
 
     def __init__(self, tsPanel, overlay, displayCtx):
@@ -746,7 +746,7 @@ class MelodicTimeSeries(TimeSeries):
 
     def getComponent(self):
         """Returns the index (starting from 0) of the current Melodic
-        component, as dictated by the :class:`.ImageOpts.volume` property.
+        component, as dictated by the :class:`.Nifti1Opts.volume` property.
         """
         opts = self.displayCtx.getOpts(self.overlay)
         return opts.volume 

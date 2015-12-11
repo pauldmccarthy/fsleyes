@@ -571,7 +571,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         If the currently selected overlay (see
         :attr:`.DisplayContext.selectedOverlay`) is a 4D :class:`.Image`
         being displayed as a ``volume`` (see the :class:`.VolumeOpts` class),
-        the :attr:`.ImageOpts.volume` property is incremented.
+        the :attr:`.Nifti1Opts.volume` property is incremented.
         """
 
         overlay = self._displayCtx.getSelectedOverlay()

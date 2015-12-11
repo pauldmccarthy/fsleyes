@@ -62,7 +62,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
     """
 
     
-    coordSpace = copy.copy(volumeopts.ImageOpts.transform)
+    coordSpace = copy.copy(volumeopts.Nifti1Opts.transform)
     """If :attr:`refImage` is not ``None``, this property defines the
     reference image coordinate space in whihc the model coordinates are
     defined (i.e. voxels, scaled voxels, or world coordinates).
@@ -193,8 +193,8 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
         This method is called whenever the :attr:`refImage` or
         :attr:`coordSpace` properties change and, if a ``refImage`` is
-        specified, whenever the :attr:`.ImageOpts.transform` or
-        :attr:`.ImageOpts.customXform` properties change.
+        specified, whenever the :attr:`.Nifti1Opts.transform` or
+        :attr:`.Nifti1Opts.customXform` properties change.
 
         :arg refImage:    Reference image to use to calculate the coordinates.
                           If ``-1`` the :attr:`refImage` is used (``-1`` is
@@ -205,13 +205,13 @@ class ModelOpts(fsldisplay.DisplayOpts):
                           :attr:`coordSpace` is used.
         
         :arg transform:   Transform to use - if ``None``, and a ``refImage`` is
-                          defined, the :attr:`.ImageOpts.transform` value is
+                          defined, the :attr:`.Nifti1Opts.transform` value is
                           used.
         
         :arg customXform: Custom transform to use (if
                           ``transform=custom``). If ``None``, and a
                           ``refImage`` is defined, the
-                          :attr:`.ImageOpts.customXform` value is used.
+                          :attr:`.Nifti1Opts.customXform` value is used.
         """
 
         if refImage   is -1:   refImage   = self.refImage
@@ -237,8 +237,8 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
 
     def __transformChanged(self, value, valid, ctx, name):
-        """Called when the :attr:`.ImageOpts.transfrom` or
-        :attr:`.ImageOpts.customXform` properties of the current
+        """Called when the :attr:`.Nifti1Opts.transfrom` or
+        :attr:`.Nifti1Opts.customXform` properties of the current
         :attr:`refImage` change. Calls :meth:`__updateBounds`.
         """
 
@@ -274,7 +274,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
         If a new reference image has been specified, removes listeners from
         the old one (if necessary), and adds listeners to the
-        :attr:`.ImageOptstransform` and :attr:`.ImageOpts.customXform`
+        :attr:`.Nifti1Opts.transform` and :attr:`.Nifti1Opts.customXform`
         properties associated with the new image. Calls
         :meth:`__updateBounds`.
         """

@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module defines the :class:`ImageOpts` and :class:`VolumeOpts` classes.
+"""This module defines the :class:`Nifti1Opts` and :class:`VolumeOpts` classes.
 
 
 .. _volumeopts-coordinate-systems:
@@ -15,7 +15,7 @@ An important note on coordinate systems
 
 
 *FSLeyes* displays all overlays in a single coordinate system, referred
-throughout as the *display coordinate system*. However, :class:`.Image`
+throughout as the *display coordinate system*. However, :class:`.Nifti1`
 overlays can potentially be displayed in one of three coordinate systems:
 
 
@@ -33,14 +33,14 @@ overlays can potentially be displayed in one of three coordinate systems:
  ====================== ====================================================
 
 
-The :attr:`ImageOpts.transform` property controls how the image data is
+The :attr:`Nifti1Opts.transform` property controls how the image data is
 transformed into the display coordinate system. It allows any of the above
 spaces to be specified (as ``id``, ``pixdim`` or ``affine``` respectively),
 and also allows a ``custom`` transformation to be specified (see the
 :attr:`customXform` property).
 
 
-Regardless of the space in which the ``Image`` is displayed , the
+Regardless of the space in which the ``Nifti1`` is displayed , the
 voxel-to-display space transformation assumes that integer voxel coordinates
 correspond to the centre of the voxel in the display coordinate system. In
 other words, a voxel at location::
@@ -54,7 +54,7 @@ the space::
     [x-0.5 - x+0.5, y-0.5 - y+0.5, z-0.5 - z+0.5]
 
 
-For example, if the :attr:`ImageOpts.transform` property is set to ``id``, the
+For example, if the :attr:`Nifti1Opts.transform` property is set to ``id``, the
 voxel::
 
     [2, 3, 4]
@@ -85,12 +85,12 @@ import display                as fsldisplay
 log = logging.getLogger(__name__)
 
 
-class ImageOpts(fsldisplay.DisplayOpts):
-    """The ``ImageOpts`` class describes how an :class:`.Image` overlay
+class Nifti1Opts(fsldisplay.DisplayOpts):
+    """The ``Nifti1Opts`` class describes how a :class:`.Nifti1` overlay
     should be displayed.
 
     
-    ``ImageOpts`` is the base class for a number of :class:`.DisplayOpts`
+    ``Nifti1Opts`` is the base class for a number of :class:`.DisplayOpts`
     sub-classes - it contains display options which are common to all overlay
     types that represent a NIFTI1 image.
     """
@@ -127,7 +127,7 @@ class ImageOpts(fsldisplay.DisplayOpts):
 
  
     def __init__(self, *args, **kwargs):
-        """Create an ``ImageOpts`` instance.
+        """Create a ``Nifti1Opts`` instance.
 
         All arguments are passed through to the :class:`.DisplayOpts`
         constructor.
@@ -391,8 +391,8 @@ class ImageOpts(fsldisplay.DisplayOpts):
     
     def getVoxel(self):
         """Calculates and returns the voxel coordinates corresponding to the
-        current :attr:`.DisplayContext.location` for the :class:`.Image`
-        associated with this ``ImageOpts`` instance.
+        current :attr:`.DisplayContext.location` for the :class:`.Nifti1`
+        associated with this ``Nifti1Opts`` instance.
 
         Returns ``None`` if the current location is outside of the image
         bounds.
@@ -418,8 +418,8 @@ class ImageOpts(fsldisplay.DisplayOpts):
     def displayToStandardCoordinates(self, coords):
         """Overrides :meth:`.DisplayOpts.displayToStandardCoordinates`.
         Transforms the given display system coordinates into the world
-        coordinates of the :class:`.Image` associated with this
-        ``ImageOpts`` instance.
+        coordinates of the :class:`.Nifti1` associated with this
+        ``Nifti1Opts`` instance.
         """
         return self.transformCoords(coords, 'display', 'world')
 
@@ -427,13 +427,13 @@ class ImageOpts(fsldisplay.DisplayOpts):
     def standardToDisplayCoordinates(self, coords):
         """Overrides :meth:`.DisplayOpts.standardToDisplayCoordinates`.
         Transforms the given coordinates (assumed to be in the world
-        coordinate system of the ``Image`` associated with this ``ImageOpts``
+        coordinate system of the ``Nifti1`` associated with this ``Nifti1Opts``
         instance) into the display coordinate system.
         """ 
         return self.transformCoords(coords, 'world', 'display')
 
 
-class VolumeOpts(ImageOpts):
+class VolumeOpts(Nifti1Opts):
     """The ``VolumeOpts`` class defines options for displaying :class:`.Image`
     instances as regular 3D volumes.
 
@@ -590,12 +590,12 @@ class VolumeOpts(ImageOpts):
         self.setConstraint('displayRange',  'minDistance', dMinDistance)
         self.setConstraint('clippingRange', 'minDistance', dMinDistance)
 
-        ImageOpts.__init__(self,
-                           overlay,
-                           display,
-                           overlayList,
-                           displayCtx,
-                           **kwargs)
+        Nifti1Opts.__init__(self,
+                            overlay,
+                            display,
+                            overlayList,
+                            displayCtx,
+                            **kwargs)
 
         # The displayRange property of every child VolumeOpts
         # instance is linked to the corresponding 
@@ -646,7 +646,7 @@ class VolumeOpts(ImageOpts):
 
 
     def destroy(self):
-        """Removes property listeners, and calls the :meth:`ImageOpts.destroy`
+        """Removes property listeners, and calls the :meth:`Nifti1Opts.destroy`
         method.
         """
 
@@ -662,7 +662,7 @@ class VolumeOpts(ImageOpts):
                              display,
                              display.getSyncPropertyName('contrast'))
 
-        ImageOpts.destroy(self)
+        Nifti1Opts.destroy(self)
 
 
     def __toggleListeners(self, enable=True):

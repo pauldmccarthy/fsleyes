@@ -63,7 +63,7 @@ class OverlayGroup(props.HasProperties):
     
     _groupBindings = td.TypeDict({
         'Display'        : ['enabled'],
-        'ImageOpts'      : ['volume'],
+        'Nifti1Opts'     : ['volume'],
         'VolumeOpts'     : ['interpolation'],
         'LabelOpts'      : ['outline',
                             'outlineWidth'],
@@ -79,6 +79,9 @@ class OverlayGroup(props.HasProperties):
         'LineVectorOpts' : ['lineWidth',
                             'directed'],
         'RGBVectorOpts'  : ['interpolation'],
+        'TensorOpts'     : ['outline',
+                            'lighting',
+                            'tensorResolution'],
     })
     """This dictionary defines the properties which are bound across
     :class:`.Display` instances :class:`.DisplayOpts` sub-class instances, for
@@ -107,14 +110,15 @@ class OverlayGroup(props.HasProperties):
         # classes into the local namespace
         from fsl.fsleyes.displaycontext import \
             Display,        \
-            ImageOpts,      \
+            Nifti1Opts,     \
             VolumeOpts,     \
             MaskOpts,       \
             VectorOpts,     \
             RGBVectorOpts,  \
             LineVectorOpts, \
             ModelOpts,      \
-            LabelOpts
+            LabelOpts,      \
+            TensorOpts
 
         # Add all of the properties listed
         # in the _groupBindings dict as
@@ -130,9 +134,9 @@ class OverlayGroup(props.HasProperties):
                 
                 self.__hasBeenSet[clsName, propName] = False
 
-        # Special case - make sure that the ImageOpts
+        # Special case - make sure that the Nifti1Opts
         # volume property is not constrained
-        self.setConstraint('ImageOpts_volume', 'maxval', sys.maxint)
+        self.setConstraint('Nifti1Opts_volume', 'maxval', sys.maxint)
 
 
     def __copy__(self):

@@ -16,7 +16,7 @@ import volumeopts
 import fsl.fsleyes.colourmaps as fslcm
 
 
-class LabelOpts(volumeopts.ImageOpts):
+class LabelOpts(volumeopts.Nifti1Opts):
     """The ``LabelOpts`` class defines settings for displaying
     :class:`.Image` overlays as label images., such as anatomical atlas
     images, tissue segmentation images, and so on.
@@ -47,10 +47,10 @@ class LabelOpts(volumeopts.ImageOpts):
 
     def __init__(self, overlay, *args, **kwargs):
         """Create a ``LabelOpts`` instance for the specified ``overlay``.
-        All arguments are passed through to the :class:`.ImageOpts`
+        All arguments are passed through to the :class:`.Nifti1Opts`
         constructor.
         """
-        volumeopts.ImageOpts.__init__(self, overlay, *args, **kwargs)
+        volumeopts.Nifti1Opts.__init__(self, overlay, *args, **kwargs)
 
         luts  = fslcm.getLookupTables()
         alts  = [[l.name, l.key] for l in luts]

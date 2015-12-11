@@ -329,7 +329,7 @@ class GLImageObject(GLObject):
                         associated with the ``image``.
         ``displayOpts`` A reference to the :class:`.DisplayOpts` instance,
                         containing overlay type-specific display options. This
-                        is assumed to be a sub-class of :class:`.ImageOpts`.
+                        is assumed to be a sub-class of :class:`.Nifti1Opts`.
         =============== =======================================================
 
         :arg image:   The :class:`.Nifti1` instance

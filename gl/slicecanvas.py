@@ -82,7 +82,7 @@ class SliceCanvas(props.HasProperties):
     The :attr:`resolutionLimit` property controls the highest resolution at
     which :class:`.Image` overlays are displayed on the ``SliceCanvas``. A
     higher value will result in faster rendering performance. When this
-    property is changed, the :attr:`.ImageOpts.resolution` property for every
+    property is changed, the :attr:`.Nifti1Opts.resolution` property for every
     :class:`.Image` overlay is updated.
 
 
@@ -580,7 +580,7 @@ class SliceCanvas(props.HasProperties):
     def __resolutionLimitChange(self, *a):
         """Called when the :attr:`resolutionLimit` property changes.
 
-        Updates the :attr:`.ImageOpts.resolution` of all :class:`.Image`
+        Updates the :attr:`.Nifti1Opts.resolution` of all :class:`.Nifti1`
         overlays in the overlay list.  Whenever the resolution of an
         overlay is changed, its old value is saved, so it can be restored
         later on when possible.
@@ -594,7 +594,7 @@ class SliceCanvas(props.HasProperties):
 
             # No support for non-volumetric overlay 
             # types yet (or maybe ever?)
-            if not isinstance(opts, fsldisplay.ImageOpts):
+            if not isinstance(opts, fsldisplay.Nifti1Opts):
                 continue
             
             currRes = opts.resolution
@@ -648,7 +648,7 @@ class SliceCanvas(props.HasProperties):
                         
 
     def __overlayResolutionChanged(self, value, valid, opts, name):
-        """Called when the :attr:`.ImageOpts.resolution` property for any
+        """Called when the :attr:`.Nifti1Opts.resolution` property for any
         :class:`.Image` overlay changes. Clears the saved resolution for
         the overlay if necessary (see :meth:`__resolutionLimitChange`).
         """
