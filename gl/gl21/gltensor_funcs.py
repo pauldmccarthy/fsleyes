@@ -145,7 +145,8 @@ def updateShaderState(self):
     gl.glUniform1i(self.l2TexturePos, 9)
     gl.glUniform1i(self.l3TexturePos, 10)
 
-    # Voxel value transforms use by the fragment shader
+    # Texture -> value value offsets/scales
+    # used by the vertex and fragment shaders
     cmapXform   = self.xColourTexture.getCoordinateTransform()
     voxValXform = self.imageTexture.voxValXform
     v1ValXform  = self.v1Texture.voxValXform
@@ -184,23 +185,24 @@ def updateShaderState(self):
     gl.glUniform1f( self.modThresholdPos,  modThreshold)
     gl.glUniform1f( self.useSplinePos,     useSpline)
     
-    # Vertices and indices
-    vertices = glroutines.unitSphere(resolution)
-
-    self.nVertices = len(vertices)
-
-    vertices = vertices.ravel('C')
+    # Vertices of a unit sphere. The vertex
+    # shader will transform these vertices
+    # into the tensor ellipsoid for each
+    # voxel.
+    vertices = glroutines.unitSphere(resolution).ravel('C')
+ 
+    self.nVertices = len(vertices) / 3
 
     gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertexBuffer)
     gl.glBufferData(
         gl.GL_ARRAY_BUFFER, vertices.nbytes, vertices, gl.GL_STATIC_DRAW)
-    gl.glVertexAttribPointer(
-        self.vertexPos, 3, gl.GL_FLOAT, gl.GL_FALSE, 0, None) 
-    
     gl.glUseProgram(0)
 
 
 def preDraw(self):
+    """Must be called before :func:`draw`. Loads the shader programs, binds
+    textures, and enables vertex arrays.
+    """
     gl.glUseProgram(self.shaders) 
     self.v1Texture.bindTexture(gl.GL_TEXTURE5)
     self.v2Texture.bindTexture(gl.GL_TEXTURE6)
@@ -210,7 +212,6 @@ def preDraw(self):
     self.l3Texture.bindTexture(gl.GL_TEXTURE10)
     gl.glEnableVertexAttribArray(self.voxelPos)
     gl.glEnableVertexAttribArray(self.vertexPos)
- 
 
 
 def draw(self, zpos, xform=None):
@@ -248,6 +249,11 @@ def draw(self, zpos, xform=None):
         self.voxelPos, 3, gl.GL_FLOAT, gl.GL_FALSE, 0, None)
     arbia.glVertexAttribDivisorARB(self.voxelPos, 1)
 
+    # Bind the vertex buffer
+    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertexBuffer)
+    gl.glVertexAttribPointer(
+        self.vertexPos, 3, gl.GL_FLOAT, gl.GL_FALSE, 0, None) 
+
     if xform is None: xform = v2dMat
     else:             xform = transform.concat(v2dMat, xform)
     
@@ -267,4 +273,4 @@ def postDraw(self):
     self.l2Texture.unbindTexture()
     self.l3Texture.unbindTexture()
     gl.glDisableVertexAttribArray(self.voxelPos)
-    gl.glDisableVertexAttribArray(self.vertexPos) 
+    gl.glDisableVertexAttribArray(self.vertexPos)
