@@ -132,8 +132,9 @@ class VectorOpts(volumeopts.ImageOpts):
                 continue
 
             modOptions.append(overlay)
-                
-            overlay.addListener('name',
+
+            display = self.displayCtx.getDisplay(overlay)
+            display.addListener('name',
                                 self.name,
                                 self.__overlayListChanged,
                                 overwrite=True)

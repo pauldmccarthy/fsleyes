@@ -349,14 +349,15 @@ class ModelOpts(fsldisplay.DisplayOpts):
         imgOptions = [None]
 
         for overlay in overlays:
-            
+
             # The overlay must be an Image instance.
             if not isinstance(overlay, fslimage.Image):
                 continue
 
             imgOptions.append(overlay)
-                
-            overlay.addListener('name',
+
+            display = self.displayCtx.getDisplay(overlay)
+            display.addListener('name',
                                 self.name,
                                 self.__overlayListChanged,
                                 overwrite=True)
