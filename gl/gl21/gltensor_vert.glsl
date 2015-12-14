@@ -25,17 +25,22 @@ uniform vec3 imageShape;
 
 uniform float resolution;
 
+uniform bool lighting;
+
 attribute vec3  voxel;
 attribute vec3  vertex;
 
 varying vec3 fragVoxCoord;
 varying vec3 fragTexCoord;
 
+varying vec4 fragColourFactor;
+
 
 void main(void) {
 
   // Lookup the tensor parameters from the textures
   vec3 texCoord = (voxel + 0.5) / imageShape;
+  vec3 light;
 
   vec3  v1 = texture3D(v1Texture, texCoord).xyz;
   vec3  v2 = texture3D(v2Texture, texCoord).xyz;
@@ -58,7 +63,9 @@ void main(void) {
   // shift it by the voxel coordinates
   // to transform it in to the image
   // voxel coordinate system.
-  vec3 pos = vertex;
+  vec3 pos  = vertex;
+
+  // TODO scale by the range of l1/l2/l3
   pos.x *= l1 * 150;
   pos.y *= l2 * 150;
   pos.z *= l3 * 150;
@@ -66,11 +73,26 @@ void main(void) {
   pos  = mat3(v1, v2, v3) * pos;
   pos += voxel;
 
+  if (lighting) {
+    
+    vec3 norm = vertex;
+    norm.x   /= l2;
+    norm.y   /= l2;
+    norm.z   /= l3;
+    norm      = mat3(v1, v2, v3) * pos;
+    
+    light     = vec3(1, 1, 1);
+  }
+  
+  else
+    light     = vec3(1, 1, 1);
+
   // Transform from voxels into display
   gl_Position = gl_ModelViewProjectionMatrix *
                 voxToDisplayMat              *
                 vec4(pos, 1);
 
-  fragVoxCoord = voxel;
-  fragTexCoord = texCoord;
+  fragVoxCoord     = voxel;
+  fragTexCoord     = texCoord;
+  fragColourFactor = vec4(light, 1);
 }

@@ -75,6 +75,13 @@ varying vec3 fragVoxCoord;
  */
 varying vec3 fragTexCoord;
 
+/*
+ * The final fragment colour is multiplied by this 
+ * scaling factor - this may be used for vertex-based
+ * lighting.
+ */
+varying vec4 fragColourFactor;
+
 
 void main(void) {
 
@@ -137,5 +144,5 @@ void main(void) {
   if (modValue < modThreshold)
       voxColour.a = 0.0;
 
-  gl_FragColor = voxColour;
+  gl_FragColor = voxColour * fragColourFactor;
 }

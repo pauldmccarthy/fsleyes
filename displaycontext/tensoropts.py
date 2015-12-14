@@ -24,7 +24,7 @@ class TensorOpts(vectoropts.VectorOpts):
 
 
     # Enable/disable lighting effects
-    lighting = props.Boolean(default=False)
+    lighting = props.Boolean(default=True)
 
 
     # Tensor ellipsoid resolution

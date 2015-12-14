@@ -243,12 +243,10 @@ _shaderTypePrefixMap = td.TypeDict({
     ('GLLabel',      'vert') : 'glvolume',
     ('GLLabel',      'frag') : 'gllabel',
     
-    ('GLRGBVector',  'vert') : 'glvolume',
-    
+    ('GLRGBVector',  'vert') : 'glrgbvector',
     ('GLRGBVector',  'frag') : 'glvector',
 
     ('GLLineVector', 'vert') : 'gllinevector',
-    
     ('GLLineVector', 'frag') : 'glvector',
 
     ('GLModel',      'vert') : 'glmodel',

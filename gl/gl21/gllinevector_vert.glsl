@@ -52,7 +52,7 @@ attribute float vertexID;
 
 varying vec3 fragVoxCoord;
 varying vec3 fragTexCoord;
-
+varying vec4 fragColourFactor;
 
 void main(void) {
 
@@ -127,6 +127,7 @@ void main(void) {
                 voxToDisplayMat              *
                 vec4(vertVoxCoord + vector, 1);
 
-  fragVoxCoord = voxCoord;
-  fragTexCoord = texCoord;
+  fragVoxCoord     = voxCoord;
+  fragTexCoord     = texCoord;
+  fragColourFactor = vec4(1, 1, 1, 1);
 }

@@ -103,7 +103,8 @@ def compileShaders(self):
                     'l1Texture',       'l2Texture',  'l3Texture',
                     'v1ValXform',      'v2ValXform', 'v3ValXform',
                     'l1ValXform',      'l2ValXform', 'l3ValXform',
-                    'voxToDisplayMat', 'imageShape', 'resolution']
+                    'voxToDisplayMat', 'imageShape', 'resolution',
+                    'lighting']
 
     vertAtts     = ['voxel', 'vertex']
 
@@ -181,10 +182,12 @@ def updateShaderState(self):
     imageShape   = np.array(self.image.shape[:3], dtype=np.float32)
     resolution   = opts.tensorResolution
     modThreshold = opts.modThreshold / 100.0
+    lighting     = 1 if opts.lighting else 0
     useSpline    = 0
 
     gl.glUniform3fv(self.imageShapePos, 1, imageShape)
     gl.glUniform1f( self.resolutionPos,    resolution)
+    gl.glUniform1f( self.lightingPos,      lighting)
     gl.glUniform1f( self.modThresholdPos,  modThreshold)
     gl.glUniform1f( self.useSplinePos,     useSpline)
     
@@ -215,13 +218,21 @@ def preDraw(self):
     """Must be called before :func:`draw`. Loads the shader programs, binds
     textures, and enables vertex arrays.
     """
-    gl.glUseProgram(self.shaders) 
+    gl.glUseProgram(self.shaders)
+
+    if self.displayOpts.lighting:
+        gl.glEnable(gl.GL_LIGHTING)
+        gl.glEnable(gl.GL_LIGHT0)
+    
+        # gl.glLight(gl.GL_LIGHT0, gl.GL_)
+    
     self.v1Texture.bindTexture(gl.GL_TEXTURE5)
     self.v2Texture.bindTexture(gl.GL_TEXTURE6)
     self.v3Texture.bindTexture(gl.GL_TEXTURE7)
     self.l1Texture.bindTexture(gl.GL_TEXTURE8)
     self.l2Texture.bindTexture(gl.GL_TEXTURE9)
     self.l3Texture.bindTexture(gl.GL_TEXTURE10)
+    
     gl.glEnableVertexAttribArray(self.voxelPos)
     gl.glEnableVertexAttribArray(self.vertexPos)
 
@@ -284,13 +295,20 @@ def draw(self, zpos, xform=None):
 
 def postDraw(self):
     gl.glUseProgram(0)
+
+    if self.displayOpts.lighting: 
+        gl.glDisable(gl.GL_LIGHT0)
+        gl.glDisable(gl.GL_LIGHTING)
+        
     gl.glBindBuffer(gl.GL_ARRAY_BUFFER,         0)
     gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
+    
     self.v1Texture.unbindTexture()
     self.v2Texture.unbindTexture()
     self.v3Texture.unbindTexture()
     self.l1Texture.unbindTexture()
     self.l2Texture.unbindTexture()
     self.l3Texture.unbindTexture()
+    
     gl.glDisableVertexAttribArray(self.voxelPos)
     gl.glDisableVertexAttribArray(self.vertexPos)
