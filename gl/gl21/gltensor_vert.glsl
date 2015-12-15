@@ -27,6 +27,8 @@ uniform float resolution;
 
 uniform bool lighting;
 
+uniform vec3 lightDir;
+
 attribute vec3  voxel;
 attribute vec3  vertex;
 
@@ -63,36 +65,66 @@ void main(void) {
   // shift it by the voxel coordinates
   // to transform it in to the image
   // voxel coordinate system.
-  vec3 pos  = vertex;
+  //
+  // See these web pages for details
+  // on drawing ellipsoids:
+  //
+  //   - http://archive.gamedev.net/archive/reference/  \
+  //     programming/features/superquadric/index.html
+  //
+  //   - paulbourke.net/geometry/circlesphere/
+  vec3 pos     = vertex;
+  mat3 eigvecs = mat3(v1, v2, v3);
 
   // TODO scale by the range of l1/l2/l3
   pos.x *= l1 * 150;
   pos.y *= l2 * 150;
   pos.z *= l3 * 150;
-  
-  pos  = mat3(v1, v2, v3) * pos;
-  pos += voxel;
+  pos    = eigvecs * pos;
+  pos   += voxel;
 
   if (lighting) {
-    
+
+    // Calculate the normal
+    // vector for this vertex.
     vec3 norm = vertex;
-    norm.x   /= l2;
+    norm.x   /= l1;
     norm.y   /= l2;
     norm.z   /= l3;
-    norm      = mat3(v1, v2, v3) * pos;
-    
-    light     = vec3(1, 1, 1);
+
+    // The matrix made up of the eigenvectors
+    // should be orthonormal, so can be used
+    // to transform the vertex surface normals.
+    //
+    // [ orthonormal -> eigvecs = T(I(eigvecs)) ]
+    norm      = eigvecs * norm;
+
+    // GLSL 1.20 calculates the normal
+    // matrix for us; we will have to
+    // calculate it ourselves if we move
+    // to a more modern version of GLSL.
+    norm     = gl_Normal * norm;
+
+    norm = normalize(norm);
+
+    // Calculate the diffuse and
+    // ambient light components
+    float ambient = 0.1;
+    float diffuse = clamp(dot(norm, -lightDir), 0, 1);
+
+    diffuse = (diffuse + ambient);
+    light   = vec3(diffuse, diffuse, diffuse);
   }
   
   else
-    light     = vec3(1, 1, 1);
+    light = vec3(1, 1, 1);
 
   // Transform from voxels into display
   gl_Position = gl_ModelViewProjectionMatrix *
                 voxToDisplayMat              *
                 vec4(pos, 1);
 
-  fragVoxCoord     = voxel;
+  fragVoxCoord     = floor(voxel + 0.5);
   fragTexCoord     = texCoord;
   fragColourFactor = vec4(light, 1);
 }

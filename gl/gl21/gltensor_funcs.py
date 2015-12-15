@@ -104,7 +104,7 @@ def compileShaders(self):
                     'v1ValXform',      'v2ValXform', 'v3ValXform',
                     'l1ValXform',      'l2ValXform', 'l3ValXform',
                     'voxToDisplayMat', 'imageShape', 'resolution',
-                    'lighting']
+                    'lighting',        'lightDir']
 
     vertAtts     = ['voxel', 'vertex']
 
@@ -220,11 +220,21 @@ def preDraw(self):
     """
     gl.glUseProgram(self.shaders)
 
-    if self.displayOpts.lighting:
-        gl.glEnable(gl.GL_LIGHTING)
-        gl.glEnable(gl.GL_LIGHT0)
-    
-        # gl.glLight(gl.GL_LIGHT0, gl.GL_)
+    # Define the light direction in
+    # the world coordinate system
+    lightDir = np.array([1, 1, 1], dtype=np.float32)
+    lightDir[self.zax] = 3
+
+    # Transform it into the display
+    # coordinate system
+    mvMat     = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)
+    lightDir  = np.dot(mvMat[:3, :3], lightDir)
+
+    # Normalise to unit length
+    ldLen     = np.sqrt(np.sum(lightDir ** 2))
+    lightDir /= ldLen
+
+    gl.glUniform3fv(self.lightDirPos, 1, lightDir)
     
     self.v1Texture.bindTexture(gl.GL_TEXTURE5)
     self.v2Texture.bindTexture(gl.GL_TEXTURE6)
@@ -236,6 +246,9 @@ def preDraw(self):
     gl.glEnableVertexAttribArray(self.voxelPos)
     gl.glEnableVertexAttribArray(self.vertexPos)
 
+    gl.glEnable(gl.GL_CULL_FACE)
+    gl.glCullFace(gl.GL_BACK)
+    
 
 def draw(self, zpos, xform=None):
 
@@ -296,10 +309,8 @@ def draw(self, zpos, xform=None):
 def postDraw(self):
     gl.glUseProgram(0)
 
-    if self.displayOpts.lighting: 
-        gl.glDisable(gl.GL_LIGHT0)
-        gl.glDisable(gl.GL_LIGHTING)
-        
+    gl.glDisable(gl.GL_CULL_FACE)
+    
     gl.glBindBuffer(gl.GL_ARRAY_BUFFER,         0)
     gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
     

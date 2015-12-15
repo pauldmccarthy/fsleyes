@@ -83,9 +83,6 @@ def show2D(xax, yax, width, height, lo, hi):
     elif zax == 1:
         gl.glRotatef(270, 1, 0, 0)
 
-    gl.glDepthMask(gl.GL_FALSE)
-    gl.glDisable(gl.GL_DEPTH_TEST)
-
 
 def calculateSamplePoints(shape, resolution, xform, xax, yax, origin='centre'):
     """Calculates a uniform grid of points, in the display coordinate system
@@ -650,22 +647,23 @@ def unitSphere(res):
 
     :returns: A tuple comprising:
     
-              - a ``numpy.float32`` array of size ``((res + 1)**2, 3)``
+              - a ``numpy.float32`` array of size ``(res**2, 3)``
                 containing a set of ``(x, y, z)`` vertices which define
                 the ellipsoid surface.
      
-              - A ``numpy.uint32`` array of size ``(4 * res * res)``
+              - A ``numpy.uint32`` array of size ``(4 * (res - 1)**2)``
                 containing a list of indices into the vertex array,
                 defining a vertex ordering that can be used to draw
                 the ellipsoid using the OpenGL ``GL_QUAD`` primitive type.
+
+
+    .. todo:: Generate indices to use with ``GL_TRIANGLES`` instead of
+              ``GL_QUADS``.
     """
 
-    ustep = np.pi       / res
-    vstep = np.pi * 2.0 / res
-
     # All angles to be sampled
-    u = np.linspace(-np.pi / 2, np.pi / 2 + ustep, res + 1, dtype=np.float32)
-    v = np.linspace(-np.pi,     np.pi     + vstep, res + 1, dtype=np.float32)
+    u = np.linspace(-np.pi / 2, np.pi / 2, res, dtype=np.float32)
+    v = np.linspace(-np.pi,     np.pi,     res, dtype=np.float32)
 
     cosu = np.cos(u)
     cosv = np.cos(v)
@@ -675,14 +673,14 @@ def unitSphere(res):
     cucv = np.outer(cosu, cosv)
     cusv = np.outer(cosu, sinv)
 
-    vertices = np.zeros(((res + 1) ** 2, 3), dtype=np.float32)
+    vertices = np.zeros((res ** 2, 3), dtype=np.float32)
 
     # All x coordinates are of the form cos(u) * cos(v),
     # y coordinates are of the form cos(u) * sin(v),
     # and z coordinates of the form sin(u).
     vertices[:, 0] = cucv.flatten()
     vertices[:, 1] = cusv.flatten()
-    vertices[:, 2] = sinu.repeat(res + 1)
+    vertices[:, 2] = sinu.repeat(res)
 
     # Generate a list of indices which join the
     # vertices so they can be used to draw the
@@ -695,12 +693,12 @@ def unitSphere(res):
     #  2. (u + ustep, v)
     #  3. (u + ustep, v + vstep)
     #  4. (u,         v + vstep)
-    nquads   = res * res
-    quadIdxs = np.array([0, res + 1, res + 2, 1], dtype=np.uint32)
+    nquads   = (res - 1) ** 2
+    quadIdxs = np.array([0, res, res + 1, 1], dtype=np.uint32)
 
     indices  = np.tile(quadIdxs, nquads)
-    indices += np.arange(nquads, dtype=np.uint32).repeat(4)
-    indices += np.arange(res,    dtype=np.uint32).repeat(4 * res)
+    indices += np.arange(nquads,  dtype=np.uint32).repeat(4)
+    indices += np.arange(res - 1, dtype=np.uint32).repeat(4 * (res - 1))
     
     return vertices, indices
 
@@ -711,23 +709,20 @@ def fullUnitSphere(res):
 
     :arg res: Resolution - the number of angles to sample.
 
-    :returns: A ``numpy.float32`` array of size ``(4 * res**2, 3)`` containing
-              the ``(x, y, z)`` vertices which can be used to draw a unit
-              sphere (using the ``GL_QUAD`` primitive type).
+    :returns: A ``numpy.float32`` array of size ``(4 * (res - 1)**2, 3)``
+              containing the ``(x, y, z)`` vertices which can be used to draw
+              a unit sphere (using the ``GL_QUADS`` primitive type).
     """
 
-    ustep = np.pi       / res
-    vstep = np.pi * 2.0 / res
-
-    u = np.linspace(-np.pi / 2, np.pi / 2 + ustep, res + 1, dtype=np.float32)
-    v = np.linspace(-np.pi,     np.pi     + vstep, res + 1, dtype=np.float32)
+    u = np.linspace(-np.pi / 2, np.pi / 2, res, dtype=np.float32)
+    v = np.linspace(-np.pi,     np.pi,     res, dtype=np.float32)
 
     cosu = np.cos(u)
     cosv = np.cos(v)
     sinu = np.sin(u)
     sinv = np.sin(v) 
 
-    vertices = np.zeros((res * res * 4, 3), dtype=np.float32)
+    vertices = np.zeros(((res - 1) * (res - 1) * 4, 3), dtype=np.float32)
 
     cucv   = np.outer(cosu[:-1], cosv[:-1]).flatten()
     cusv   = np.outer(cosu[:-1], sinv[:-1]).flatten()
@@ -738,8 +733,8 @@ def fullUnitSphere(res):
     cucv1  = np.outer(cosu[:-1], cosv[1:]) .flatten()
     cusv1  = np.outer(cosu[:-1], sinv[1:]) .flatten()
     
-    su     = np.repeat(sinu[:-1], res)
-    s1u    = np.repeat(sinu[1:],  res)
+    su     = np.repeat(sinu[:-1], res - 1)
+    s1u    = np.repeat(sinu[1:],  res - 1)
 
     vertices.T[:,  ::4] = [cucv,   cusv,   su]
     vertices.T[:, 1::4] = [cu1cv,  cu1sv,  s1u]
