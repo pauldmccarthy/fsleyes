@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# gltensor_funcs.py -
+# gltensor_funcs.py - OpenGL2.1 functions used by the GLTensor class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -26,6 +26,9 @@ log = logging.getLogger(__name__)
 
 
 def init(self):
+    """Compiles and configures the vertex and fragment shader programs, and
+    creates textures and vertex buffers.
+    """
 
     image = self.image
 
