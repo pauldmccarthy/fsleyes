@@ -19,7 +19,6 @@ uniform mat4 voxToDisplayMat;
 
 uniform vec3 voxelOffset;
 
-
 /*
  * Transformation matrix which transforms the
  * vector texture data to its original data range.
@@ -32,7 +31,11 @@ uniform mat4 voxValXform;
  */
 uniform vec3 imageShape;
 
-
+/*
+ * Line vectors are interpreted as directed - each
+ * line begins in the centre of its voxel, and extends
+ * outwards.
+ */
 uniform bool directed;
 
 /*
@@ -40,7 +43,9 @@ uniform bool directed;
  */
 uniform vec3 imageDims;
 
-
+/*
+ * The current vertex on the current line.
+ */
 attribute vec3 vertex;
 
 /*

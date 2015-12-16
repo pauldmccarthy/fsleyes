@@ -117,7 +117,29 @@ def setFragmentProgramMatrix(index, matrix):
     for i, row in enumerate(matrix):
         arbfp.glProgramLocalParameter4fARB(
             arbfp.GL_FRAGMENT_PROGRAM_ARB, i + index,
-            row[0], row[1], row[2], row[3]) 
+            row[0], row[1], row[2], row[3])
+
+
+def getShaderVars(shaders, vertAtts, vertUniforms, fragUniforms):
+    """
+    """
+
+    import OpenGL.GL as gl
+
+    shaderVars = {}
+
+    for vu in vertUniforms:
+        shaderVars[vu] = gl.glGetUniformLocation(shaders, vu)
+        
+    for va in vertAtts:
+        shaderVars[va] = gl.glGetAttribLocation(shaders, va)
+
+    for fu in fragUniforms:
+        if fu in shaderVars:
+            continue
+        shaderVars[fu] = gl.glGetUniformLocation(shaders, fu)
+
+    return shaderVars
 
 
 def compilePrograms(vertexProgramSrc, fragmentProgramSrc):

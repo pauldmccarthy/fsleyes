@@ -19,16 +19,20 @@ class TensorOpts(vectoropts.VectorOpts):
     """
 
 
-    # Enable/disable lighting effects
     lighting = props.Boolean(default=True)
     """Enables a basic lighting model on the tensor ellipsoids. """
 
 
-    # Tensor ellipsoid resolution
     tensorResolution = props.Int(minval=4, maxval=20, default=10)
     """Tensor ellipsoid resolution - this value controls the number of vertices
     used to represent each tensor. It is ultimately passed to the
     :func:`.routines.unitSphere` function.
+    """
+
+    tensorScale = props.Real(minval=0.0, maxval=5.0, default=1.0)
+    """Scaling factor - by default, the tensor ellipsoids are scaled such that
+    the biggest tensor (as defined by the first principal eigenvalue) fits
+    inside a voxel. This parameter can be used to adjust this scale.
     """
 
     

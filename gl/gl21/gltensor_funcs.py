@@ -103,8 +103,8 @@ def compileShaders(self):
     
     self.shaders = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
 
-    shaderVars = {}
-
+    vertAtts     = ['voxel', 'vertex']
+ 
     vertUniforms = ['v1Texture',       'v2Texture',  'v3Texture',
                     'l1Texture',       'l2Texture',  'l3Texture',
                     'v1ValXform',      'v2ValXform', 'v3ValXform',
@@ -113,25 +113,16 @@ def compileShaders(self):
                     'lighting',        'lightPos',   'normalMatrix',
                     'eigValNorm',      'zax']
 
-    vertAtts     = ['voxel', 'vertex']
-
     fragUniforms = ['imageTexture',   'modulateTexture', 'clipTexture',
                     'clipThreshold',  'xColourTexture',  'yColourTexture',
                     'zColourTexture', 'voxValXform',     'cmapXform',
                     'imageShape',     'useSpline']
 
-    for vu in vertUniforms:
-        shaderVars[vu] = gl.glGetUniformLocation(self.shaders, vu)
-        
-    for va in vertAtts:
-        shaderVars[va] = gl.glGetAttribLocation(self.shaders, va)
 
-    for fu in fragUniforms:
-        if fu in shaderVars:
-            continue
-        shaderVars[fu] = gl.glGetUniformLocation(self.shaders, fu)
-
-    self.shaderVars = shaderVars
+    self.shaderVars = shaders.getShaderVars(self.shaders,
+                                            vertAtts,
+                                            vertUniforms,
+                                            fragUniforms)
 
 
 def updateShaderState(self):
