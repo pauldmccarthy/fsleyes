@@ -9,6 +9,7 @@ import logging
 
 
 import numpy                          as np
+import numpy.linalg                   as npla
 import OpenGL.GL                      as gl
 import OpenGL.raw.GL._types           as gltypes
 import OpenGL.GL.ARB.instanced_arrays as arbia
@@ -104,7 +105,8 @@ def compileShaders(self):
                     'v1ValXform',      'v2ValXform', 'v3ValXform',
                     'l1ValXform',      'l2ValXform', 'l3ValXform',
                     'voxToDisplayMat', 'imageShape', 'resolution',
-                    'lighting',        'lightDir']
+                    'lighting',        'lightPos',   'normalMatrix',
+                    'eigValNorm',      'zax']
 
     vertAtts     = ['voxel', 'vertex']
 
@@ -185,8 +187,12 @@ def updateShaderState(self):
     lighting     = 1 if opts.lighting else 0
     useSpline    = 0
 
+    l1           = self.image. L1()
+    eigValNorm   = 0.5 / abs(l1.data).max()
+
     gl.glUniform3fv(self.imageShapePos, 1, imageShape)
     gl.glUniform1f( self.resolutionPos,    resolution)
+    gl.glUniform1f( self.eigValNormPos,    eigValNorm)
     gl.glUniform1f( self.lightingPos,      lighting)
     gl.glUniform1f( self.modThresholdPos,  modThreshold)
     gl.glUniform1f( self.useSplinePos,     useSpline)
@@ -220,21 +226,26 @@ def preDraw(self):
     """
     gl.glUseProgram(self.shaders)
 
-    # Define the light direction in
+    # Define the light position in
     # the world coordinate system
-    lightDir = np.array([1, 1, 1], dtype=np.float32)
-    lightDir[self.zax] = 3
+    lightPos = np.array([1, 1, -1], dtype=np.float32)
 
-    # Transform it into the display
-    # coordinate system
-    mvMat     = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)
-    lightDir  = np.dot(mvMat[:3, :3], lightDir)
+    lightPos[self.zax] *= 3
 
-    # Normalise to unit length
-    ldLen     = np.sqrt(np.sum(lightDir ** 2))
-    lightDir /= ldLen
+    # Transform the light position into
+    # the display coordinate system,
+    # and normalise to unit length
+    mvMat     = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)[:3, :3]
+    lightPos  = np.dot(mvMat, lightPos)
+    lightPos /= np.sqrt(np.sum(lightPos ** 2))
 
-    gl.glUniform3fv(self.lightDirPos, 1, lightDir)
+    # Calculate a transformation matrix for
+    # normal vectors - T(I(MV matrix))
+    normalMatrix = npla.inv(mvMat).T
+
+    gl.glUniform1f(       self.zaxPos,                    self.zax)
+    gl.glUniform3fv(      self.lightPosPos,     1,        lightPos)
+    gl.glUniformMatrix3fv(self.normalMatrixPos, 1, False, normalMatrix) 
     
     self.v1Texture.bindTexture(gl.GL_TEXTURE5)
     self.v2Texture.bindTexture(gl.GL_TEXTURE6)

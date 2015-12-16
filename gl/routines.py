@@ -76,10 +76,10 @@ def show2D(xax, yax, width, height, lo, hi):
     # TODO There's got to be a more generic way
     # to perform this rotation. This will break
     # if I add functionality allowing the user
-    # to specifty the x/y axes on initialisation. 
+    # to specifty the x/y axes on initialisation.
     if zax == 0:
-        gl.glRotatef(-90, 1, 0, 0)
-        gl.glRotatef(-90, 0, 0, 1)
+        gl.glRotatef(270, 1, 0, 0)
+        gl.glRotatef(270, 0, 0, 1)
     elif zax == 1:
         gl.glRotatef(270, 1, 0, 0)
 
