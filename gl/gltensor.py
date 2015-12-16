@@ -58,6 +58,7 @@ class GLTensor(glvector.GLVector):
 
         opts.addListener('lighting',         name, shaderUpdate, weak=False)
         opts.addListener('tensorResolution', name, shaderUpdate, weak=False)
+        opts.addListener('tensorScale',      name, shaderUpdate, weak=False)
         
 
     def removeListeners(self):
@@ -71,6 +72,7 @@ class GLTensor(glvector.GLVector):
         
         opts.removeListener('lighting',         name)
         opts.removeListener('tensorResolution', name)
+        opts.removeListener('tensorScale',      name)
 
         
     def getDataResolution(self, xax, yax):

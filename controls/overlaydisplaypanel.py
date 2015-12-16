@@ -377,6 +377,7 @@ _DISPLAY_PROPS = td.TypeDict({
             spin=False,
             labels=[strings.choices['TensorOpts.tensorResolution.min'],
                     strings.choices['TensorOpts.tensorResolution.max']]),
+        props.Widget('tensorScale', showLimits=False, spin=False),
         props.Widget('xColour'),
         props.Widget('yColour'),
         props.Widget('zColour'),
@@ -385,6 +386,7 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('suppressZ'),
         props.Widget('modulateImage', labels=_imageName),
         props.Widget('clipImage',     labels=_imageName),
+        
         props.Widget('clipThreshold',
                      showLimits=False,
                      spin=False,

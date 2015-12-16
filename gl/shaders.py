@@ -121,7 +121,15 @@ def setFragmentProgramMatrix(index, matrix):
 
 
 def getShaderVars(shaders, vertAtts, vertUniforms, fragUniforms):
-    """
+    """Gets the position indices for all vertex shader attributes, uniforms,
+    and fragment shader uniforms for the given shader programs.
+
+    :arg shaders:
+    :arg vertAtts:
+    :arg vertUniforms:
+    :arg fragUniforms:
+
+    :returns:
     """
 
     import OpenGL.GL as gl

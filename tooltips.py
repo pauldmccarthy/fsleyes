@@ -186,7 +186,21 @@ properties = TypeDict({
                                'setting defines the space, relative to the '
                                'reference image, in which the model '
                                'coordinates are defined.',
-    
+
+    'TensorOpts.lighting'         : 'If enabled, a simple lighting model is '
+                                    'used to highlight the tensor '
+                                    'orientations.', 
+    'TensorOpts.tensorResolution' : 'This setting controls the number of '
+                                    'vertices used to render each tensor. '
+                                    'A higher value will result in better '
+                                    'looking tensors, but may reduce ' 
+                                    'performance.' ,
+    'TensorOpts.tensorScale'      : 'By default, the tensor radii are scaled '
+                                    'the largest eigenvalue of the tensor '
+                                    'matrix, so that the largest tensor is '
+                                    'drawn to fit within a voxel. This '
+                                    'setting allows the tensor scale to be '
+                                    'adjusted.',
     # SceneOpts
 
     'SceneOpts.showCursor'         : 'Show/hide the cursor which highlights '

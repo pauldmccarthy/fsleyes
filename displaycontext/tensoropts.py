@@ -29,7 +29,8 @@ class TensorOpts(vectoropts.VectorOpts):
     :func:`.routines.unitSphere` function.
     """
 
-    tensorScale = props.Real(minval=0.0, maxval=5.0, default=1.0)
+    
+    tensorScale = props.Percentage(minval=50, maxval=600, default=100)
     """Scaling factor - by default, the tensor ellipsoids are scaled such that
     the biggest tensor (as defined by the first principal eigenvalue) fits
     inside a voxel. This parameter can be used to adjust this scale.

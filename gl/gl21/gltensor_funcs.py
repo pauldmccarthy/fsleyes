@@ -181,11 +181,13 @@ def updateShaderState(self):
     imageShape    = np.array(self.image.shape[:3], dtype=np.float32)
     resolution    = opts.tensorResolution
     clipThreshold = opts.clipThreshold
+    tensorScale   = opts.tensorScale
     lighting      = 1 if opts.lighting else 0
     useSpline     = 0
 
-    l1         = self.image.L1()
-    eigValNorm = 0.5 / abs(l1.data).max()
+    l1          = self.image.L1()
+    eigValNorm  = 0.5 / abs(l1.data).max()
+    eigValNorm *= tensorScale / 100.0
 
     invClipValXform = self.clipTexture .invVoxValXform
     clipThreshold   = clipThreshold * invClipValXform[0, 0] + \
