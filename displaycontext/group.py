@@ -79,8 +79,7 @@ class OverlayGroup(props.HasProperties):
         'LineVectorOpts' : ['lineWidth',
                             'directed'],
         'RGBVectorOpts'  : ['interpolation'],
-        'TensorOpts'     : ['outline',
-                            'lighting',
+        'TensorOpts'     : ['lighting',
                             'tensorResolution'],
     })
     """This dictionary defines the properties which are bound across

@@ -389,6 +389,19 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         return [colourWidget, outlineWidget, widthWidget]
 
 
+    def __makeTensorOptsTools(self, opts):
+        """Creates and returns a collection of controls for editing properties
+        of the given :class:`.TensorOpts` instance.
+        """
+        lightingSpec   = _TOOLBAR_PROPS[opts]['lighting']
+
+        lightingWidget = props.buildGUI(self, opts, lightingSpec)
+        lightingWidget = self.MakeLabelledTool(
+            lightingWidget, strings.properties[opts, 'lighting'])
+        
+        return self.__makeVectorOptsTools(opts) + [lightingWidget] 
+
+
 def _modImageLabel(img):
     """Used to generate labels for the :attr:`.VectorOpts.modulate`
     property choices.
@@ -435,6 +448,11 @@ _TOOLTIPS = td.TypeDict({
     'ModelOpts.outline'      : fsltooltips.properties['ModelOpts.outline'],
     'ModelOpts.outlineWidth' : fsltooltips.properties['ModelOpts.'
                                                       'outlineWidth'],
+
+    'TensorOpts.modulate'     : fsltooltips.properties['VectorOpts.'
+                                                       'modulate'],
+    'TensorOpts.modThreshold' : fsltooltips.properties['VectorOpts.'
+                                                       'modThreshold'], 
 })
 """This dictionary contains tooltips for :class:`.Display` and
 :class:`.DisplayOpts` properties. It is referenced in the
@@ -538,8 +556,7 @@ _TOOLBAR_PROPS = td.TypeDict({
             'lineWidth',
             showLimits=False,
             spin=False,
-            tooltip=_TOOLTIPS['LineVectorOpts.lineWidth']),
-    },
+            tooltip=_TOOLTIPS['LineVectorOpts.lineWidth'])},
 
     'ModelOpts' : {
         'colour'       : props.Widget(
@@ -557,7 +574,19 @@ _TOOLBAR_PROPS = td.TypeDict({
             showLimits=False,
             spin=False,
             tooltip=_TOOLTIPS['ModelOpts.outlineWidth'],
-            enabledWhen=lambda i: i.outline)}
+            enabledWhen=lambda i: i.outline)},
+
+    'TensorOpts' : {
+        'lighting'     : props.Widget('lighting'),
+        'modulate'     : props.Widget(
+            'modulate',
+            labels=_modImageLabel,
+            tooltip=_TOOLTIPS['TensorOpts.modulate']),
+        'modThreshold' : props.Widget(
+            'modThreshold',
+            showLimits=False,
+            spin=False,
+            tooltip=_TOOLTIPS['TensorOpts.modThreshold'])}
 })
 """This dictionary defines specifications for all controls shown on an
 :class:`OverlayDisplayToolBar`. 

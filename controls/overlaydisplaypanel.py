@@ -337,7 +337,7 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('modThreshold', showLimits=False, spin=False)],
 
     'LineVectorOpts' : [
-        props.Widget('resolution',    showLimits=False),
+        props.Widget('resolution', showLimits=False),
         props.Widget('xColour'),
         props.Widget('yColour'),
         props.Widget('zColour'),
@@ -360,8 +360,21 @@ _DISPLAY_PROPS = td.TypeDict({
                      dependencies=['refImage'])],
 
     'TensorOpts' : [
-
-    ],
+        props.Widget('lighting'),
+        props.Widget(
+            'tensorResolution',
+            showLimits=False,
+            spin=False,
+            labels=[strings.choices['TensorOpts.tensorResolution.min'],
+                    strings.choices['TensorOpts.tensorResolution.max']]),
+        props.Widget('xColour'),
+        props.Widget('yColour'),
+        props.Widget('zColour'),
+        props.Widget('suppressX'),
+        props.Widget('suppressY'),
+        props.Widget('suppressZ'),
+        props.Widget('modulate', labels=_imageName),
+        props.Widget('modThreshold', showLimits=False, spin=False)],
 
     'LabelOpts' : [
         props.Widget('lut', labels=lambda l: l.name),
