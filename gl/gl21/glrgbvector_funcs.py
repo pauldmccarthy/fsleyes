@@ -60,60 +60,67 @@ def compileShaders(self):
     
     self.shaders = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
 
-    self.vertexPos          = gl.glGetAttribLocation( self.shaders,
-                                                      'vertex')
-    self.voxCoordPos        = gl.glGetAttribLocation( self.shaders,
-                                                      'voxCoord')
-    self.texCoordPos        = gl.glGetAttribLocation( self.shaders,
-                                                      'texCoord') 
-    self.imageTexturePos    = gl.glGetUniformLocation(self.shaders,
-                                                      'imageTexture')
-    self.modTexturePos      = gl.glGetUniformLocation(self.shaders,
-                                                      'modTexture')
-    self.xColourTexturePos  = gl.glGetUniformLocation(self.shaders,
-                                                      'xColourTexture')
-    self.yColourTexturePos  = gl.glGetUniformLocation(self.shaders,
-                                                      'yColourTexture') 
-    self.zColourTexturePos  = gl.glGetUniformLocation(self.shaders,
-                                                      'zColourTexture')
-    self.modThresholdPos    = gl.glGetUniformLocation(self.shaders,
-                                                      'modThreshold') 
-    self.useSplinePos       = gl.glGetUniformLocation(self.shaders,
-                                                      'useSpline')
-    self.imageShapePos      = gl.glGetUniformLocation(self.shaders,
-                                                      'imageShape')
-    self.voxValXformPos     = gl.glGetUniformLocation(self.shaders,
-                                                      'voxValXform')
-    self.cmapXformPos       = gl.glGetUniformLocation(self.shaders,
-                                                      'cmapXform') 
+    shaderVars   = {}
+
+    vertUniforms = []
+    vertAtts     = ['vertex', 'voxCoord', 'texCoord']
+
+    fragUniforms = ['imageTexture',   'modulateTexture', 'clipTexture',
+                    'clipThreshold',  'xColourTexture',  'yColourTexture',
+                    'zColourTexture', 'voxValXform',     'cmapXform',
+                    'imageShape',     'useSpline']
+
+    for va in vertAtts:
+        shaderVars[va] = gl.glGetAttribLocation(self.shaders, va)
+        
+    for vu in vertUniforms:
+        shaderVars[va] = gl.glGetUniformLocation(self.shaders, vu)
+
+    for fu in fragUniforms:
+        if fu in shaderVars:
+            continue
+        shaderVars[fu] = gl.glGetUniformLocation(self.shaders, fu)
+
+    self.shaderVars = shaderVars
 
 
 def updateShaderState(self):
     """Updates all shader program variables. """
 
-    opts = self.displayOpts
+    opts  = self.displayOpts
+    svars = self.shaderVars
 
     # The coordinate transformation matrices for 
     # each of the three colour textures are identical
-    voxValXform = self.imageTexture.voxValXform
-    cmapXform   = self.xColourTexture.getCoordinateTransform()
-    useSpline   = opts.interpolation == 'spline'
-    imageShape  = np.array(self.vectorImage.shape, dtype=np.float32)
+    voxValXform     = self.imageTexture.voxValXform
+    invClipValXform = self.clipTexture .invVoxValXform
+    cmapXform       = self.xColourTexture.getCoordinateTransform()
+    useSpline       = opts.interpolation == 'spline'
+    imageShape      = np.array(self.vectorImage.shape, dtype=np.float32)
+    clipThreshold   = opts.clipThreshold
 
+    # Transform the clip threshold into
+    # the texture value range, so the
+    # fragment shader can compare texture
+    # values directly to it.
+    clipThreshold = clipThreshold * invClipValXform[0, 0] + \
+                                    invClipValXform[3, 0]
+    
     gl.glUseProgram(self.shaders)
 
-    gl.glUniform1f( self.useSplinePos,     useSpline)
-    gl.glUniform3fv(self.imageShapePos, 1, imageShape)
+    gl.glUniform1f( svars['useSpline'],     useSpline)
+    gl.glUniform3fv(svars['imageShape'], 1, imageShape)
 
-    gl.glUniformMatrix4fv(self.voxValXformPos, 1, False, voxValXform)
-    gl.glUniformMatrix4fv(self.cmapXformPos,   1, False, cmapXform)
+    gl.glUniformMatrix4fv(svars['voxValXform'], 1, False, voxValXform)
+    gl.glUniformMatrix4fv(svars['cmapXform'],   1, False, cmapXform)
 
-    gl.glUniform1f(self.modThresholdPos,   opts.modThreshold / 100.0)
-    gl.glUniform1i(self.imageTexturePos,   0)
-    gl.glUniform1i(self.modTexturePos,     1)
-    gl.glUniform1i(self.xColourTexturePos, 2)
-    gl.glUniform1i(self.yColourTexturePos, 3)
-    gl.glUniform1i(self.zColourTexturePos, 4)
+    gl.glUniform1f(svars['clipThreshold'],   clipThreshold)
+    gl.glUniform1i(svars['imageTexture'],    0)
+    gl.glUniform1i(svars['modulateTexture'], 1)
+    gl.glUniform1i(svars['clipTexture'],     2)
+    gl.glUniform1i(svars['xColourTexture'],  3)
+    gl.glUniform1i(svars['yColourTexture'],  4)
+    gl.glUniform1i(svars['zColourTexture'],  5)
 
     gl.glUseProgram(0)
 

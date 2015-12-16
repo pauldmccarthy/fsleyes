@@ -49,17 +49,23 @@ class VectorOpts(volumeopts.Nifti1Opts):
     """Do not use the Z vector magnitude to colour vectors."""
 
 
-    modulate  = props.Choice()
-    """Modulate the vector colours by another image. Any image which is in the
-     :class:`.OverlayList`, and which has the same voxel dimensions as the
-     vector image can be selected for modulation.
+    modulateImage  = props.Choice()
+    """Modulate the vector colour brightness by another image. Any image which
+    is in the :class:`.OverlayList`, and which has the same voxel dimensions as
+    the vector image can be selected for modulation.
     """
 
     
-    # TODO This is currently a percentage
-    # of the modulation image data range.
-    # It should be an absolute value
-    modThreshold = props.Percentage(default=0.0)
+    clipImage = props.Choice()
+    """Clip voxels from the vector image according to another image. Any image
+    which is in the :class:`.OverlayList`, and which has the same voxel
+    dimensions as the vector image can be selected for clipping. The
+    :attr:`clipThreshold` dictates the value below which vector voxels are
+    clipped.
+    """ 
+
+    
+    clipThreshold = props.Real(default=0.0, minval=0, maxval=1)
     """Hide voxels for which the modulation value is below this threshold,
     as a percentage of the :attr:`modulate` image data range.
     """
@@ -76,8 +82,12 @@ class VectorOpts(volumeopts.Nifti1Opts):
         self.overlayList.addListener('overlays',
                                      self.name,
                                      self.__overlayListChanged)
+        self            .addListener('clipImage',
+                                     self.name,
+                                     self.__clipImageChanged)
         
         self.__overlayListChanged()
+        self.__clipImageChanged()
 
 
     def destroy(self):
@@ -93,14 +103,34 @@ class VectorOpts(volumeopts.Nifti1Opts):
         volumeopts.Nifti1Opts.destroy(self)
 
         
+    def __clipImageChanged(self, *a):
+        """Called when the :attr:`clipImage` property changes. Updates
+        the range of the :attr:`clipThreshold` property.
+        """
+
+        image = self.clipImage
+
+        if image is None:
+            return
+
+        opts   = self.displayCtx.getOpts(image)
+        minval = opts.dataMin
+        maxval = opts.dataMax
+
+        self.setConstraint('clipThreshold', 'minval',  minval)
+        self.setConstraint('clipThreshold', 'maxval',  maxval) 
+
+        
     def __overlayListChanged(self, *a):
-        """Called when the overlay list changes. Updates the :attr:`modulate`
-        property so that it contains a list of overlays which could be used
-        to modulate the vector image.
+        """Called when the overlay list changes. Updates the :attr:`modulateImage`
+        and :attr:`clipImage` properties so that they contain a list of
+        overlays which could be used to modulate the vector image.
         """
         
-        modProp  = self.getProp('modulate')
-        modVal   = self.modulate
+        modProp  = self.getProp('modulateImage')
+        clipProp = self.getProp('clipImage')
+        modVal   = self.modulateImage
+        clipVal  = self.clipImage
         overlays = self.displayCtx.getOrderedOverlays()
 
         # the image for this VectorOpts
@@ -109,29 +139,30 @@ class VectorOpts(volumeopts.Nifti1Opts):
             self.overlayList.removeListener('overlays', self.name)
             return
 
-        modOptions = [None]
+        options = [None]
 
         for overlay in overlays:
             
             # It doesn't make sense to
-            # modulate the image by itself
+            # modulate/clip the image by
+            # itself.
             if overlay is self.overlay:
                 continue
 
-            # The modulate image must
-            # be an image. Duh.
+            # The modulate/clip images
+            # must be images. 
             if not isinstance(overlay, fslimage.Image):
                 continue
 
             # an image can only be used to
-            # modulate the vector image if
-            # it shares the same dimensions
-            # as said vector image. 4D
-            # images are ok though.
+            # modulate/clip the vector image
+            # if it shares the same
+            # dimensions as said vector image.
+            # 4D images are ok though.
             if overlay.shape[:3] != self.overlay.shape[:3]:
                 continue
 
-            modOptions.append(overlay)
+            options.append(overlay)
 
             display = self.displayCtx.getDisplay(overlay)
             display.addListener('name',
@@ -139,10 +170,13 @@ class VectorOpts(volumeopts.Nifti1Opts):
                                 self.__overlayListChanged,
                                 overwrite=True)
             
-        modProp.setChoices(modOptions, instance=self)
+        modProp .setChoices(options, instance=self)
+        clipProp.setChoices(options, instance=self)
 
-        if modVal in overlays: self.modulate = modVal
-        else:                  self.modulate = None
+        if modVal  in overlays: self.modulateImage = modVal
+        else:                   self.modulateImage = None
+        if clipVal in overlays: self.clipImage     = clipVal
+        else:                   self.clipImage     = None 
 
 
 class LineVectorOpts(VectorOpts):

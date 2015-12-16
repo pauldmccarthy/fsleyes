@@ -135,19 +135,25 @@ properties = TypeDict({
                                     'colouring voxels.',
     'VectorOpts.suppressZ'        : 'Ignore the Z vector component when '
                                     'colouring voxels.',
-    'VectorOpts.modulate'         : 'Modulate the vector colours by another '
-                                    'image. The image selected here is '
-                                    'normalised to lie in the range (0, 1), '
-                                    'and the magnitude of each vector is '
+    'VectorOpts.modulateImage'    : 'Modulate the vector colour brightness by '
+                                    'another image. The image selected here '
+                                    'is normalised to lie in the range (0, '
+                                    '1), and the magnitude of each vector is '
                                     'scaled by the corresponding modulation '
                                     'value before it is coloured. The '
                                     'modulation image must have the same '
                                     'voxel dimensions as the vector image.',
-    'VectorOpts.modThreshold'     : 'Vector values which have a corresponding '
-                                    'modulation value that is less than this '
-                                    'threshold are not displayed. The '
-                                    'threshold is a proportion of the '
-                                    'modulation image data range.',
+    'VectorOpts.clipImage'        : 'Clip vector voxels according to the '
+                                    'values in another image. Vector voxels '
+                                    'which correspond to values in the '
+                                    'clipping image that have a value less '
+                                    'than the current clipping threshold are '
+                                    'not shown. The clipping image must have '
+                                    'the same voxel dimensions as the vector '
+                                    'image. ', 
+    'VectorOpts.clipThreshold'    : 'Vector values which have a corresponding '
+                                    'clipping image value that is less than '
+                                    'this threshold are not displayed. ',
     'LineVectorOpts.lineWidth'    : 'The width of each vector line, in '
                                     'display pixels.',
     'LineVectorOpts.directed'     : 'If unchecked, the vector data is assumed '

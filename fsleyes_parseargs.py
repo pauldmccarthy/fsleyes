@@ -205,8 +205,9 @@ OPTIONS = td.TypeDict({
                         'suppressX',
                         'suppressY',
                         'suppressZ',
-                        'modulate',
-                        'modThreshold'],
+                        'modulateImage',
+                        'clipImage',
+                        'clipThreshold'],
     'LineVectorOpts' : ['lineWidth',
                         'directed'],
     'RGBVectorOpts'  : ['interpolation'],
@@ -338,14 +339,15 @@ ARGUMENTS = td.TypeDict({
     'MaskOpts.invert'    : ('mi', 'maskInvert'),
     'MaskOpts.threshold' : ('t',  'threshold'),
 
-    'VectorOpts.xColour'     : ('xc', 'xColour'),
-    'VectorOpts.yColour'     : ('yc', 'yColour'),
-    'VectorOpts.zColour'     : ('zc', 'zColour'),
-    'VectorOpts.suppressX'   : ('xs', 'suppressX'),
-    'VectorOpts.suppressY'   : ('ys', 'suppressY'),
-    'VectorOpts.suppressZ'   : ('zs', 'suppressZ'),
-    'VectorOpts.modulate'    : ('m',  'modulate'),
-    'VectorOpts.modThreshold': ('mt', 'modThreshold'),
+    'VectorOpts.xColour'       : ('xc', 'xColour'),
+    'VectorOpts.yColour'       : ('yc', 'yColour'),
+    'VectorOpts.zColour'       : ('zc', 'zColour'),
+    'VectorOpts.suppressX'     : ('xs', 'suppressX'),
+    'VectorOpts.suppressY'     : ('ys', 'suppressY'),
+    'VectorOpts.suppressZ'     : ('zs', 'suppressZ'),
+    'VectorOpts.modulateImage' : ('md', 'modulateImage'),
+    'VectorOpts.clipImage'     : ('cl', 'clipImage'),
+    'VectorOpts.clipThreshold' : ('ct', 'clipThreshold'),
 
     'LineVectorOpts.lineWidth'    : ('lvw', 'lineWidth'),
     'LineVectorOpts.directed'     : ('lvi', 'directed'),
@@ -443,16 +445,17 @@ HELP = td.TypeDict({
     'MaskOpts.invert'    : 'Invert',
     'MaskOpts.threshold' : 'Threshold',
 
-    'VectorOpts.xColour'      : 'X colour',
-    'VectorOpts.yColour'      : 'Y colour',
-    'VectorOpts.zColour'      : 'Z colour',
-    'VectorOpts.suppressX'    : 'Suppress X magnitude',
-    'VectorOpts.suppressY'    : 'Suppress Y magnitude',
-    'VectorOpts.suppressZ'    : 'Suppress Z magnitude',
-    'VectorOpts.modulate'     : 'Modulate vector colours',
-    'VectorOpts.modThreshold' : 'Hide voxels where modulation '
-                                'value is below this threshold '
-                                '(expressed as a percentage)',
+    'VectorOpts.xColour'       : 'X colour',
+    'VectorOpts.yColour'       : 'Y colour',
+    'VectorOpts.zColour'       : 'Z colour',
+    'VectorOpts.suppressX'     : 'Suppress X magnitude',
+    'VectorOpts.suppressY'     : 'Suppress Y magnitude',
+    'VectorOpts.suppressZ'     : 'Suppress Z magnitude',
+    'VectorOpts.modulateImage' : 'Modulate vector brightness',
+    'VectorOpts.clipImage'     : 'Clip vector voxels',
+    'VectorOpts.clipThreshold' : 'Hide voxels where clip image '
+                                 'value is below this threshold '
+                                 '(expressed as a percentage)',
 
     'LineVectorOpts.lineWidth'    : 'Line width',
     'LineVectorOpts.directed'     : 'Interpret vectors as directed',
@@ -523,10 +526,11 @@ TRANSFORMS = td.TypeDict({
     # when reading in command line arguments -
     # the transform function specified here
     # is only used when generating arguments
-    'VectorOpts.modulate'   : _imageTrans,
-    'ModelOpts.refImage'    : _imageTrans,
+    'VectorOpts.modulateImage' : _imageTrans,
+    'VectorOpts.clipImage'     : _imageTrans,
+    'ModelOpts.refImage'       : _imageTrans,
 
-    'LabelOpts.lut'         : _lutTrans,
+    'LabelOpts.lut'            : _lutTrans,
 })
 """This dictionary defines any transformations for command line options
 where the value passed on the command line cannot be directly converted
@@ -722,11 +726,16 @@ def _configOverlayParser(ovlParser):
         propNames      = list(OPTIONS[target])
         specialOptions = []
         
-        # The VectorOpts.modulate
-        # option needs special treatment
-        if target == VectorOpts and 'modulate' in propNames:
-            specialOptions.append('modulate')
-            propNames.remove('modulate')
+        # The VectorOpts.modulateImage
+        # and clipImage options need
+        # special treatment
+        if target == VectorOpts and 'modulateImage' in propNames:
+            specialOptions.append('modulateImage')
+            propNames.remove('modulateImage')
+
+        if target == VectorOpts and 'clipImage' in propNames:
+            specialOptions.append('clipImage')
+            propNames.remove('clipImage') 
 
         # The same goes for the
         # ModelOpts.refImage option
@@ -870,12 +879,13 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
     # short/long arguments into a 1D list.
     fileOpts = []
 
-    # The VectorOpts.modulate option allows
-    # the user to specify another image file
-    # by which the vector image colours are
-    # to be modulated. The same goes for the
-    # ModelOpts.refImage option
-    fileOpts.extend(ARGUMENTS[fsldisplay.VectorOpts, 'modulate'])
+    # The VectorOpts.modulateImage and
+    # clipImage options allow the user
+    # to specify another image file.
+    # The same goes for the
+    # ModelOpts.refImage option.
+    fileOpts.extend(ARGUMENTS[fsldisplay.VectorOpts, 'modulateImage'])
+    fileOpts.extend(ARGUMENTS[fsldisplay.VectorOpts, 'clipImage'])
     fileOpts.extend(ARGUMENTS[fsldisplay.ModelOpts,  'refImage']) 
 
     # There is a possibility that the user
@@ -1156,12 +1166,13 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
         # DisplayOpts instance will be replaced
         opts = display.getDisplayOpts()
 
-        # VectorOpts.modulate is a Choice property,
-        # where the valid choices are defined by
-        # the current contents of the overlay list.
-        # So when the user specifies a modulation
-        # image, we need to do an explicit check
-        # to see if the specified image is vaid
+        # VectorOpts.modulateImage and clipImage
+        # are Choice properties, where the valid
+        # choices are defined by the current
+        # contents of the overlay list. So when
+        # the user specifies one of these images,
+        # we need to do an explicit check to see
+        # if the specified image is valid
         # 
         # Here, I'm loading the image, and checking
         # to see if it can be used to modulate the
@@ -1171,10 +1182,10 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
         # value. If the modulate file is not valid,
         # an error is raised.
         if isinstance(opts, fsldisplay.VectorOpts) and \
-           args.overlays[i].modulate is not None:
+           args.overlays[i].modulateImage is not None:
 
             modImage = _findOrLoad(overlayList,
-                                   args.overlays[i].modulate,
+                                   args.overlays[i].modulateImage,
                                    fslimage.Image,
                                    overlay)
 
@@ -1183,12 +1194,32 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                     'Image {} cannot be used to modulate {} - '
                     'dimensions don\'t match'.format(modImage, overlay))
 
-            opts.modulate             = modImage
-            args.overlays[i].modulate = None
+            opts.modulateImage             = modImage
+            args.overlays[i].modulateImage = None
 
             log.debug('Set {} to be modulated by {}'.format(
                 overlay, modImage))
 
+        # Same process for VectorOpts.clipImage
+        if isinstance(opts, fsldisplay.VectorOpts) and \
+           args.overlays[i].clipImage is not None:
+
+            clipImage = _findOrLoad(overlayList,
+                                    args.overlays[i].clipImage,
+                                    fslimage.Image,
+                                    overlay)
+
+            if clipImage.shape != overlay.shape[ :3]:
+                raise RuntimeError(
+                    'Image {} cannot be used to clip {} - '
+                    'dimensions don\'t match'.format(clipImage, overlay))
+
+            opts.clipImage                 = clipImage
+            args.overlays[i].modulateImage = None
+
+            log.debug('Set {} to be clipped by {}'.format(
+                overlay, clipImage))
+ 
         # A similar process is followed for 
         # the ModelOpts.refImage property
         if isinstance(overlay, fslmodel.Model)        and \

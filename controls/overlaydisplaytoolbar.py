@@ -330,8 +330,8 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         of the given :class:`.VectorOpts` instance.
         """        
         
-        modSpec   = _TOOLBAR_PROPS[opts]['modulate']
-        thresSpec = _TOOLBAR_PROPS[opts]['modThreshold']
+        modSpec   = _TOOLBAR_PROPS[opts]['modulateImage']
+        thresSpec = _TOOLBAR_PROPS[opts]['clipThreshold']
 
         panel = wx.Panel(self)
         sizer = wx.FlexGridSizer(2, 2)
@@ -342,8 +342,8 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         modLabel    = wx.StaticText(panel)
         thresLabel  = wx.StaticText(panel)
 
-        modLabel  .SetLabel(strings.properties[opts, 'modulate'])
-        thresLabel.SetLabel(strings.properties[opts, 'modThreshold'])
+        modLabel  .SetLabel(strings.properties[opts, 'modulateImage'])
+        thresLabel.SetLabel(strings.properties[opts, 'clipThreshold'])
 
         sizer.Add(modLabel)
         sizer.Add(modWidget,   flag=wx.EXPAND)
@@ -406,7 +406,7 @@ def _modImageLabel(img):
     """Used to generate labels for the :attr:`.VectorOpts.modulate`
     property choices.
     """
-    if img is None: return strings.choices['VectorOpts.modulate.none']
+    if img is None: return strings.choices['VectorOpts.modulateImage.none']
     else:           return img.name
 
     
@@ -432,15 +432,15 @@ _TOOLTIPS = td.TypeDict({
     'LabelOpts.outlineWidth' : fsltooltips.properties['LabelOpts.'
                                                       'outlineWidth'],
 
-    'RGBVectorOpts.modulate'     : fsltooltips.properties['VectorOpts.'
-                                                          'modulate'],
-    'RGBVectorOpts.modThreshold' : fsltooltips.properties['VectorOpts.'
-                                                          'modThreshold'],
+    'RGBVectorOpts.modulateImage' : fsltooltips.properties['VectorOpts.'
+                                                           'modulateImage'],
+    'RGBVectorOpts.clipThreshold' : fsltooltips.properties['VectorOpts.'
+                                                           'clipThreshold'],
 
-    'LineVectorOpts.modulate'     : fsltooltips.properties['VectorOpts.'
-                                                           'modulate'],
-    'LineVectorOpts.modThreshold' : fsltooltips.properties['VectorOpts.'
-                                                           'modThreshold'],
+    'LineVectorOpts.modulateImage' : fsltooltips.properties['VectorOpts.'
+                                                            'modulateImage'],
+    'LineVectorOpts.clipThreshold' : fsltooltips.properties['VectorOpts.'
+                                                            'clipThreshold'],
     'LineVectorOpts.lineWidth'    : fsltooltips.properties['LineVectorOpts.'
                                                            'lineWidth'],
 
@@ -449,10 +449,10 @@ _TOOLTIPS = td.TypeDict({
     'ModelOpts.outlineWidth' : fsltooltips.properties['ModelOpts.'
                                                       'outlineWidth'],
 
-    'TensorOpts.modulate'     : fsltooltips.properties['VectorOpts.'
-                                                       'modulate'],
-    'TensorOpts.modThreshold' : fsltooltips.properties['VectorOpts.'
-                                                       'modThreshold'], 
+    'TensorOpts.modulateImage' : fsltooltips.properties['VectorOpts.'
+                                                        'modulateImage'],
+    'TensorOpts.clipThreshold' : fsltooltips.properties['VectorOpts.'
+                                                        'clipThreshold'], 
 })
 """This dictionary contains tooltips for :class:`.Display` and
 :class:`.DisplayOpts` properties. It is referenced in the
@@ -532,26 +532,26 @@ _TOOLBAR_PROPS = td.TypeDict({
             spin=False)},
 
     'RGBVectorOpts' : {
-        'modulate'     : props.Widget(
-            'modulate',
+        'modulateImage' : props.Widget(
+            'modulateImage',
             labels=_modImageLabel,
-            tooltip=_TOOLTIPS['RGBVectorOpts.modulate']),
-        'modThreshold' : props.Widget(
-            'modThreshold',
+            tooltip=_TOOLTIPS['RGBVectorOpts.modulateImage']),
+        'clipThreshold' : props.Widget(
+            'clipThreshold',
             showLimits=False,
             spin=False,
-            tooltip=_TOOLTIPS['RGBVectorOpts.modThreshold'])},
+            tooltip=_TOOLTIPS['RGBVectorOpts.clipThreshold'])},
 
     'LineVectorOpts' : {
-        'modulate'     : props.Widget(
-            'modulate',
+        'modulateImage' : props.Widget(
+            'modulateImage',
             labels=_modImageLabel,
-            tooltip=_TOOLTIPS['LineVectorOpts.modulate']),
-        'modThreshold' : props.Widget(
-            'modThreshold',
+            tooltip=_TOOLTIPS['LineVectorOpts.modulateImage']),
+        'clipThreshold' : props.Widget(
+            'clipThreshold',
             showLimits=False,
             spin=False,
-            tooltip=_TOOLTIPS['LineVectorOpts.modThreshold']), 
+            tooltip=_TOOLTIPS['LineVectorOpts.clipThreshold']), 
         'lineWidth' : props.Widget(
             'lineWidth',
             showLimits=False,
@@ -577,16 +577,16 @@ _TOOLBAR_PROPS = td.TypeDict({
             enabledWhen=lambda i: i.outline)},
 
     'TensorOpts' : {
-        'lighting'     : props.Widget('lighting'),
-        'modulate'     : props.Widget(
-            'modulate',
+        'lighting'      : props.Widget('lighting'),
+        'modulateImage' : props.Widget(
+            'modulateImage',
             labels=_modImageLabel,
-            tooltip=_TOOLTIPS['TensorOpts.modulate']),
-        'modThreshold' : props.Widget(
-            'modThreshold',
+            tooltip=_TOOLTIPS['TensorOpts.modulateImage']),
+        'clipThreshold' : props.Widget(
+            'clipThreshold',
             showLimits=False,
             spin=False,
-            tooltip=_TOOLTIPS['TensorOpts.modThreshold'])}
+            tooltip=_TOOLTIPS['TensorOpts.clipThreshold'])}
 })
 """This dictionary defines specifications for all controls shown on an
 :class:`OverlayDisplayToolBar`. 

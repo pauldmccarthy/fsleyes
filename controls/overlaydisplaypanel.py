@@ -275,8 +275,8 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
 
 
 def _imageName(img):
-    """Used to generate choice labels for the :attr`.VectorOpts.modulate` and
-    :attr:`.ModelOpts.refImage` properties.
+    """Used to generate choice labels for the :attr`.VectorOpts.modulateImage`,
+    :attr`.VectorOpts.clipImage` and :attr:`.ModelOpts.refImage` properties.
     """
     if img is None: return 'None'
     else:           return img.name
@@ -333,8 +333,13 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('suppressX'),
         props.Widget('suppressY'),
         props.Widget('suppressZ'),
-        props.Widget('modulate', labels=_imageName),
-        props.Widget('modThreshold', showLimits=False, spin=False)],
+        props.Widget('modulateImage', labels=_imageName),
+        props.Widget('clipImage',     labels=_imageName),
+        props.Widget('clipThreshold',
+                     showLimits=False,
+                     spin=False,
+                     dependencies=['clipImage'],
+                     enabledWhen=lambda o, ci: ci is not None)],
 
     'LineVectorOpts' : [
         props.Widget('resolution', showLimits=False),
@@ -346,8 +351,13 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('suppressZ'),
         props.Widget('directed'),
         props.Widget('lineWidth', showLimits=False),
-        props.Widget('modulate', labels=_imageName),
-        props.Widget('modThreshold', showLimits=False, spin=False)],
+        props.Widget('modulateImage', labels=_imageName),
+        props.Widget('clipImage',     labels=_imageName),
+        props.Widget('clipThreshold',
+                     showLimits=False,
+                     spin=False,
+                     dependencies=['clipImage'],
+                     enabledWhen=lambda o, ci: ci is not None)],
 
     'ModelOpts' : [
         props.Widget('colour'),
@@ -373,8 +383,13 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('suppressX'),
         props.Widget('suppressY'),
         props.Widget('suppressZ'),
-        props.Widget('modulate', labels=_imageName),
-        props.Widget('modThreshold', showLimits=False, spin=False)],
+        props.Widget('modulateImage', labels=_imageName),
+        props.Widget('clipImage',     labels=_imageName),
+        props.Widget('clipThreshold',
+                     showLimits=False,
+                     spin=False,
+                     dependencies=['clipImage'],
+                     enabledWhen=lambda o, ci: ci is not None)],
 
     'LabelOpts' : [
         props.Widget('lut', labels=lambda l: l.name),

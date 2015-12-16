@@ -18,14 +18,21 @@ uniform sampler3D imageTexture;
  * Modulation texture containing values by
  * which the vector colours are to be modulated.
  */
-uniform sampler3D modTexture;
+uniform sampler3D modulateTexture;
+
 
 /*
- * If the modulation value is below this
- * threshold, the fragment is made
- * transparent.
+ * Texture containing values which determine
+ * whether a vector voxel should be clipped.
  */
-uniform float modThreshold;
+uniform sampler3D clipTexture;
+
+
+/*
+ * If the clipping value is below this
+ * threshold, the fragment is clipped.
+ */
+uniform float clipThreshold;
 
 /*
  * Colour map for the X vector component.
@@ -106,14 +113,23 @@ void main(void) {
     voxValue = texture3D(imageTexture, fragTexCoord).xyz;
   }
 
-  /* Look up the modulation value */
+  /* Look up the modulation and clipping values */
   float modValue;
+  float clipValue;
   if (useSpline) {
-    modValue = spline_interp(modTexture, fragTexCoord, imageShape, 0);
+    modValue  = spline_interp(modulateTexture, fragTexCoord, imageShape, 0);
+    clipValue = spline_interp(clipTexture,     fragTexCoord, imageShape, 0);
   }
   else {
-    modValue = texture3D(modTexture, fragTexCoord).x;
-  }  
+    modValue  = texture3D(modulateTexture, fragTexCoord).x;
+    clipValue = texture3D(clipTexture,     fragTexCoord).x;
+  }
+
+  /* Knock out voxels where the clipping value is below the threshold */
+  if (clipValue < clipThreshold) {
+      gl_FragColor.a = 0.0;
+      return;
+  }
 
   /*
    * Transform the voxel texture values 
@@ -139,10 +155,6 @@ void main(void) {
 
   /* Take the highest alpha of the three colour maps */
   voxColour.a = max(max(xColour.a, yColour.a), zColour.a);
-
-  /* Knock out voxels where the modulation value is below the threshold */
-  if (modValue < modThreshold)
-      voxColour.a = 0.0;
 
   gl_FragColor = voxColour * fragColourFactor;
 }
