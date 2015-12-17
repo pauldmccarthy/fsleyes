@@ -114,9 +114,9 @@ def compileShaders(self):
                     'eigValNorm',      'zax']
 
     fragUniforms = ['imageTexture',   'modulateTexture', 'clipTexture',
-                    'clipThreshold',  'xColourTexture',  'yColourTexture',
-                    'zColourTexture', 'voxValXform',     'cmapXform',
-                    'imageShape',     'useSpline']
+                    'clipLow',        'clipHigh',        'xColourTexture',
+                    'yColourTexture', 'zColourTexture',  'voxValXform',
+                    'cmapXform',      'imageShape',     'useSpline']
 
 
     self.shaderVars = shaders.getShaderVars(self.shaders,
@@ -180,7 +180,7 @@ def updateShaderState(self):
     # Other miscellaneous uniforms
     imageShape    = np.array(self.image.shape[:3], dtype=np.float32)
     resolution    = opts.tensorResolution
-    clipThreshold = opts.clipThreshold
+    clippingRange = opts.clippingRange
     tensorScale   = opts.tensorScale
     lighting      = 1 if opts.lighting else 0
     useSpline     = 0
@@ -189,16 +189,23 @@ def updateShaderState(self):
     eigValNorm  = 0.5 / abs(l1.data).max()
     eigValNorm *= tensorScale / 100.0
 
-    invClipValXform = self.clipTexture .invVoxValXform
-    clipThreshold   = clipThreshold * invClipValXform[0, 0] + \
-                                      invClipValXform[3, 0] 
+    if opts.clipImage is not None:
+        invClipValXform = self.clipTexture .invVoxValXform
+        clipLow         = clippingRange[0] * invClipValXform[0, 0] + \
+                                             invClipValXform[3, 0]
+        clipHigh        = clippingRange[1] * invClipValXform[0, 0] + \
+                                             invClipValXform[3, 0]
+    else:
+        clipLow  = 0
+        clipHigh = 1
 
-    gl.glUniform3fv(svars['imageShape'], 1,  imageShape)
-    gl.glUniform1f( svars['resolution'],     resolution)
-    gl.glUniform1f( svars['eigValNorm'],     eigValNorm)
-    gl.glUniform1f( svars['lighting'],       lighting)
-    gl.glUniform1f( svars['clipThreshold'],  clipThreshold)
-    gl.glUniform1f( svars['useSpline'],      useSpline)
+    gl.glUniform3fv(svars['imageShape'], 1, imageShape)
+    gl.glUniform1f( svars['resolution'],    resolution)
+    gl.glUniform1f( svars['eigValNorm'],    eigValNorm)
+    gl.glUniform1f( svars['lighting'],      lighting)
+    gl.glUniform1f( svars['clipLow'],       clipLow)
+    gl.glUniform1f( svars['clipHigh'],      clipHigh)
+    gl.glUniform1f( svars['useSpline'],     useSpline)
     
     # Vertices of a unit sphere. The vertex
     # shader will transform these vertices

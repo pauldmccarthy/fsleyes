@@ -326,7 +326,8 @@ _DISPLAY_PROPS = td.TypeDict({
 
     'RGBVectorOpts' : [
         props.Widget('resolution', showLimits=False),
-        props.Widget('interpolation'),
+        props.Widget('interpolation',
+                     labels=strings.choices['VolumeOpts.interpolation']),
         props.Widget('xColour'),
         props.Widget('yColour'),
         props.Widget('zColour'),
@@ -335,9 +336,11 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('suppressZ'),
         props.Widget('modulateImage', labels=_imageName),
         props.Widget('clipImage',     labels=_imageName),
-        props.Widget('clipThreshold',
+        props.Widget('clippingRange',
                      showLimits=False,
-                     spin=False,
+                     slider=True,
+                     labels=[strings.choices['VectorOpts.clippingRange.min'],
+                             strings.choices['VectorOpts.clippingRange.max']],
                      dependencies=['clipImage'],
                      enabledWhen=lambda o, ci: ci is not None)],
 
@@ -353,9 +356,11 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('lineWidth', showLimits=False),
         props.Widget('modulateImage', labels=_imageName),
         props.Widget('clipImage',     labels=_imageName),
-        props.Widget('clipThreshold',
+        props.Widget('clippingRange',
                      showLimits=False,
-                     spin=False,
+                     slider=True,
+                     labels=[strings.choices['VectorOpts.clippingRange.min'],
+                             strings.choices['VectorOpts.clippingRange.max']],
                      dependencies=['clipImage'],
                      enabledWhen=lambda o, ci: ci is not None)],
 
@@ -386,10 +391,11 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('suppressZ'),
         props.Widget('modulateImage', labels=_imageName),
         props.Widget('clipImage',     labels=_imageName),
-        
-        props.Widget('clipThreshold',
+        props.Widget('clippingRange',
                      showLimits=False,
-                     spin=False,
+                     slider=True,
+                     labels=[strings.choices['VectorOpts.clippingRange.min'],
+                             strings.choices['VectorOpts.clippingRange.max']],
                      dependencies=['clipImage'],
                      enabledWhen=lambda o, ci: ci is not None)],
 

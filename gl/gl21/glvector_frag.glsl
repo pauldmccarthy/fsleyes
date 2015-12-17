@@ -29,10 +29,13 @@ uniform sampler3D clipTexture;
 
 
 /*
- * If the clipping value is below this
- * threshold, the fragment is clipped.
+ * If the clipping value is outside of
+ * this range, the fragment is clipped.
+ * These values should be in the texture 
+ * data range of the clipTexture.
  */
-uniform float clipThreshold;
+uniform float clipLow;
+uniform float clipHigh;
 
 /*
  * Colour map for the X vector component.
@@ -125,8 +128,8 @@ void main(void) {
     clipValue = texture3D(clipTexture,     fragTexCoord).x;
   }
 
-  /* Knock out voxels where the clipping value is below the threshold */
-  if (clipValue < clipThreshold) {
+  /* Knock out voxels where the clipping value is outside the clipping range */
+  if (clipValue < clipLow || clipValue > clipHigh) {
       gl_FragColor.a = 0.0;
       return;
   }

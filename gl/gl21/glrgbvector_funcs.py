@@ -66,9 +66,9 @@ def compileShaders(self):
     vertAtts     = ['vertex', 'voxCoord', 'texCoord']
 
     fragUniforms = ['imageTexture',   'modulateTexture', 'clipTexture',
-                    'clipThreshold',  'xColourTexture',  'yColourTexture',
-                    'zColourTexture', 'voxValXform',     'cmapXform',
-                    'imageShape',     'useSpline']
+                    'clipLow',        'clipHigh',        'xColourTexture',
+                    'yColourTexture', 'zColourTexture',  'voxValXform',
+                    'cmapXform',      'imageShape',      'useSpline']
 
     for va in vertAtts:
         shaderVars[va] = gl.glGetAttribLocation(self.shaders, va)
@@ -97,14 +97,20 @@ def updateShaderState(self):
     cmapXform       = self.xColourTexture.getCoordinateTransform()
     useSpline       = opts.interpolation == 'spline'
     imageShape      = np.array(self.vectorImage.shape, dtype=np.float32)
-    clipThreshold   = opts.clipThreshold
+    clippingRange   = opts.clippingRange
 
     # Transform the clip threshold into
     # the texture value range, so the
     # fragment shader can compare texture
     # values directly to it.
-    clipThreshold = clipThreshold * invClipValXform[0, 0] + \
-                                    invClipValXform[3, 0]
+    if opts.clipImage is not None:
+        clipLow  = clippingRange[0] * \
+            invClipValXform[0, 0] + invClipValXform[3, 0]
+        clipHigh = clippingRange[1] * \
+            invClipValXform[0, 0] + invClipValXform[3, 0]
+    else:
+        clipLow  = 0
+        clipHigh = 1
     
     gl.glUseProgram(self.shaders)
 
@@ -114,7 +120,8 @@ def updateShaderState(self):
     gl.glUniformMatrix4fv(svars['voxValXform'], 1, False, voxValXform)
     gl.glUniformMatrix4fv(svars['cmapXform'],   1, False, cmapXform)
 
-    gl.glUniform1f(svars['clipThreshold'],   clipThreshold)
+    gl.glUniform1f(svars['clipLow'],         clipLow)
+    gl.glUniform1f(svars['clipHigh'],        clipHigh)
     gl.glUniform1i(svars['imageTexture'],    0)
     gl.glUniform1i(svars['modulateTexture'], 1)
     gl.glUniform1i(svars['clipTexture'],     2)

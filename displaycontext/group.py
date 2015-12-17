@@ -76,7 +76,7 @@ class OverlayGroup(props.HasProperties):
                             'suppressZ',
                             'modulateImage',
                             'clipImage',
-                            'clipThreshold'],
+                            'clippingRange'],
         'LineVectorOpts' : ['lineWidth',
                             'directed'],
         'RGBVectorOpts'  : ['interpolation'],

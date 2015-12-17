@@ -151,9 +151,9 @@ properties = TypeDict({
                                     'not shown. The clipping image must have '
                                     'the same voxel dimensions as the vector '
                                     'image. ', 
-    'VectorOpts.clipThreshold'    : 'Vector values which have a corresponding '
-                                    'clipping image value that is less than '
-                                    'this threshold are not displayed. ',
+    'VectorOpts.clippingRange'    : 'Vector values which have a corresponding '
+                                    'clipping image value that is outside of '
+                                    'this range are not displayed. ',
     'LineVectorOpts.lineWidth'    : 'The width of each vector line, in '
                                     'display pixels.',
     'LineVectorOpts.directed'     : 'If unchecked, the vector data is assumed '

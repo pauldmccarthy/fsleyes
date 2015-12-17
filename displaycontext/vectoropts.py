@@ -60,15 +60,13 @@ class VectorOpts(volumeopts.Nifti1Opts):
     """Clip voxels from the vector image according to another image. Any image
     which is in the :class:`.OverlayList`, and which has the same voxel
     dimensions as the vector image can be selected for clipping. The
-    :attr:`clipThreshold` dictates the value below which vector voxels are
+    :attr:`clippingRange` dictates the value below which vector voxels are
     clipped.
     """ 
 
     
-    clipThreshold = props.Real(default=0.0, minval=0, maxval=1)
-    """Hide voxels for which the modulation value is below this threshold,
-    as a percentage of the :attr:`modulate` image data range.
-    """
+    clippingRange = props.Bounds(ndims=1)
+    """Hide voxels for which the clip image value is outside of this range. """
 
     
     def __init__(self, *args, **kwargs):
@@ -105,20 +103,24 @@ class VectorOpts(volumeopts.Nifti1Opts):
         
     def __clipImageChanged(self, *a):
         """Called when the :attr:`clipImage` property changes. Updates
-        the range of the :attr:`clipThreshold` property.
+        the range of the :attr:`clippingRange` property.
         """
 
         image = self.clipImage
 
         if image is None:
+            self.clippingRange.xmin = 0
+            self.clippingRange.xmax = 1
+            self.clippingRange.x    = [0, 1]
             return
 
         opts   = self.displayCtx.getOpts(image)
         minval = opts.dataMin
         maxval = opts.dataMax
 
-        self.setConstraint('clipThreshold', 'minval',  minval)
-        self.setConstraint('clipThreshold', 'maxval',  maxval) 
+        self.clippingRange.xmin =  minval
+        self.clippingRange.xmax =  maxval
+        self.clippingRange.x    = [minval, maxval]
 
         
     def __overlayListChanged(self, *a):

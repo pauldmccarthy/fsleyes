@@ -331,7 +331,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         """        
         
         modSpec   = _TOOLBAR_PROPS[opts]['modulateImage']
-        thresSpec = _TOOLBAR_PROPS[opts]['clipThreshold']
+        thresSpec = _TOOLBAR_PROPS[opts]['clippingRange']
 
         panel = wx.Panel(self)
         sizer = wx.FlexGridSizer(2, 2)
@@ -342,8 +342,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         modLabel    = wx.StaticText(panel)
         thresLabel  = wx.StaticText(panel)
 
-        modLabel  .SetLabel(strings.properties[opts, 'modulateImage'])
-        thresLabel.SetLabel(strings.properties[opts, 'clipThreshold'])
+        modLabel.SetLabel(strings.properties[opts, 'modulateImage'])
 
         sizer.Add(modLabel)
         sizer.Add(modWidget,   flag=wx.EXPAND)
@@ -434,13 +433,13 @@ _TOOLTIPS = td.TypeDict({
 
     'RGBVectorOpts.modulateImage' : fsltooltips.properties['VectorOpts.'
                                                            'modulateImage'],
-    'RGBVectorOpts.clipThreshold' : fsltooltips.properties['VectorOpts.'
-                                                           'clipThreshold'],
+    'RGBVectorOpts.clippingRange' : fsltooltips.properties['VectorOpts.'
+                                                           'clippingRange'],
 
     'LineVectorOpts.modulateImage' : fsltooltips.properties['VectorOpts.'
                                                             'modulateImage'],
-    'LineVectorOpts.clipThreshold' : fsltooltips.properties['VectorOpts.'
-                                                            'clipThreshold'],
+    'LineVectorOpts.clippingRange' : fsltooltips.properties['VectorOpts.'
+                                                            'clippingRange'],
     'LineVectorOpts.lineWidth'    : fsltooltips.properties['LineVectorOpts.'
                                                            'lineWidth'],
 
@@ -451,8 +450,8 @@ _TOOLTIPS = td.TypeDict({
 
     'TensorOpts.modulateImage' : fsltooltips.properties['VectorOpts.'
                                                         'modulateImage'],
-    'TensorOpts.clipThreshold' : fsltooltips.properties['VectorOpts.'
-                                                        'clipThreshold'], 
+    'TensorOpts.clippingRange' : fsltooltips.properties['VectorOpts.'
+                                                        'clippingRange'], 
 })
 """This dictionary contains tooltips for :class:`.Display` and
 :class:`.DisplayOpts` properties. It is referenced in the
@@ -536,22 +535,28 @@ _TOOLBAR_PROPS = td.TypeDict({
             'modulateImage',
             labels=_modImageLabel,
             tooltip=_TOOLTIPS['RGBVectorOpts.modulateImage']),
-        'clipThreshold' : props.Widget(
-            'clipThreshold',
+        'clippingRange' : props.Widget(
+            'clippingRange',
             showLimits=False,
-            spin=False,
-            tooltip=_TOOLTIPS['RGBVectorOpts.clipThreshold'])},
+            slider=True,
+            labels=[strings.choices['VectorOpts.clippingRange.min'],
+                    strings.choices['VectorOpts.clippingRange.max']],
+            dependencies=['clipImage'],
+            enabledWhen=lambda o, ci: ci is not None)},
 
     'LineVectorOpts' : {
         'modulateImage' : props.Widget(
             'modulateImage',
             labels=_modImageLabel,
             tooltip=_TOOLTIPS['LineVectorOpts.modulateImage']),
-        'clipThreshold' : props.Widget(
-            'clipThreshold',
+        'clippingRange' : props.Widget(
+            'clippingRange',
             showLimits=False,
-            spin=False,
-            tooltip=_TOOLTIPS['LineVectorOpts.clipThreshold']), 
+            slider=True,
+            labels=[strings.choices['VectorOpts.clippingRange.min'],
+                    strings.choices['VectorOpts.clippingRange.max']],
+            dependencies=['clipImage'],
+            enabledWhen=lambda o, ci: ci is not None),
         'lineWidth' : props.Widget(
             'lineWidth',
             showLimits=False,
@@ -582,11 +587,14 @@ _TOOLBAR_PROPS = td.TypeDict({
             'modulateImage',
             labels=_modImageLabel,
             tooltip=_TOOLTIPS['TensorOpts.modulateImage']),
-        'clipThreshold' : props.Widget(
-            'clipThreshold',
+        'clippingRange' : props.Widget(
+            'clippingRange',
             showLimits=False,
-            spin=False,
-            tooltip=_TOOLTIPS['TensorOpts.clipThreshold'])}
+            slider=True,
+            labels=[strings.choices['VectorOpts.clippingRange.min'],
+                    strings.choices['VectorOpts.clippingRange.max']],
+            dependencies=['clipImage'],
+            enabledWhen=lambda o, ci: ci is not None)}
 })
 """This dictionary defines specifications for all controls shown on an
 :class:`OverlayDisplayToolBar`. 

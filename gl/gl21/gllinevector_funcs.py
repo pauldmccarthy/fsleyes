@@ -101,9 +101,9 @@ def compileShaders(self):
                     'directed',     'imageDims']
 
     fragUniforms = ['imageTexture',   'modulateTexture', 'clipTexture',
-                    'clipThreshold',  'xColourTexture',  'yColourTexture',
-                    'zColourTexture', 'voxValXform',     'cmapXform',
-                    'imageShape',     'useSpline']
+                    'clipLow',        'clipHigh',        'xColourTexture',
+                    'yColourTexture', 'zColourTexture',  'voxValXform',
+                    'cmapXform',      'imageShape',      'useSpline']
 
     self.shaderVars = shaders.getShaderVars(self.shaders,
                                             vertAtts,
@@ -125,14 +125,21 @@ def updateShaderState(self):
     voxValXform   = self.imageTexture.voxValXform
     useSpline     = False
     imageShape    = np.array(image.shape[:3], dtype=np.float32)
-    clipThreshold = opts.clipThreshold
+    clippingRange = opts.clippingRange.x
 
     voxValXform = np.array(voxValXform, dtype=np.float32).ravel('C')
     cmapXform   = np.array(cmapXform,   dtype=np.float32).ravel('C')
 
-    invClipValXform = self.clipTexture .invVoxValXform
-    clipThreshold   = clipThreshold * invClipValXform[0, 0] + \
-                                      invClipValXform[3, 0] 
+
+    if opts.clipImage is not None:
+        invClipValXform = self.clipTexture .invVoxValXform
+        clipLow         = clippingRange[0] * invClipValXform[0, 0] + \
+                                             invClipValXform[3, 0]
+        clipHigh        = clippingRange[1] * invClipValXform[0, 0] + \
+                                             invClipValXform[3, 0]
+    else:
+        clipLow  = 0
+        clipHigh = 1
 
     gl.glUseProgram(self.shaders)
 
@@ -142,7 +149,8 @@ def updateShaderState(self):
     gl.glUniformMatrix4fv(svars['voxValXform'], 1, False, voxValXform)
     gl.glUniformMatrix4fv(svars['cmapXform'],   1, False, cmapXform)
 
-    gl.glUniform1f(svars['clipThreshold'], clipThreshold)
+    gl.glUniform1f(svars['clipLow'],  clipLow)
+    gl.glUniform1f(svars['clipHigh'], clipHigh)
 
     gl.glUniform1i(svars['imageTexture'],    0)
     gl.glUniform1i(svars['modulateTexture'], 1)

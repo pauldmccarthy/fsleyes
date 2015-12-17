@@ -207,7 +207,7 @@ OPTIONS = td.TypeDict({
                         'suppressZ',
                         'modulateImage',
                         'clipImage',
-                        'clipThreshold'],
+                        'clippingRange'],
     'LineVectorOpts' : ['lineWidth',
                         'directed'],
     'RGBVectorOpts'  : ['interpolation'],
@@ -347,7 +347,7 @@ ARGUMENTS = td.TypeDict({
     'VectorOpts.suppressZ'     : ('zs', 'suppressZ'),
     'VectorOpts.modulateImage' : ('md', 'modulateImage'),
     'VectorOpts.clipImage'     : ('cl', 'clipImage'),
-    'VectorOpts.clipThreshold' : ('ct', 'clipThreshold'),
+    'VectorOpts.clippingRange' : ('cp', 'clipRange'),
 
     'LineVectorOpts.lineWidth'    : ('lvw', 'lineWidth'),
     'LineVectorOpts.directed'     : ('lvi', 'directed'),
@@ -453,9 +453,8 @@ HELP = td.TypeDict({
     'VectorOpts.suppressZ'     : 'Suppress Z magnitude',
     'VectorOpts.modulateImage' : 'Modulate vector brightness',
     'VectorOpts.clipImage'     : 'Clip vector voxels',
-    'VectorOpts.clipThreshold' : 'Hide voxels where clip image '
-                                 'value is below this threshold '
-                                 '(expressed as a percentage)',
+    'VectorOpts.clippingRange' : 'Hide voxels where clip image '
+                                 'value is outside of this range.',
 
     'LineVectorOpts.lineWidth'    : 'Line width',
     'LineVectorOpts.directed'     : 'Interpret vectors as directed',

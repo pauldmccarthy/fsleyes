@@ -212,7 +212,7 @@ class GLVector(globject.GLImageObject):
         opts   .addListener('suppressZ',     name, cmapUpdate,    weak=False)
         opts   .addListener('modulateImage', name, modUpdate,     weak=False)
         opts   .addListener('clipImage',     name, clipUpdate,    weak=False)
-        opts   .addListener('clipThreshold', name, shaderUpdate,  weak=False)
+        opts   .addListener('clippingRange', name, shaderUpdate,  weak=False)
         opts   .addListener('resolution',    name, imageUpdate,   weak=False)
         opts   .addListener('transform',     name, update,        weak=False)
 
@@ -244,7 +244,7 @@ class GLVector(globject.GLImageObject):
         opts   .removeListener('suppressZ',     name)
         opts   .removeListener('modulateImage', name)
         opts   .removeListener('clipImage',     name)
-        opts   .removeListener('clipThreshold', name)
+        opts   .removeListener('clippingRange', name)
         opts   .removeListener('volume',        name)
         opts   .removeListener('resolution',    name)
         opts   .removeListener('transform' ,    name)
