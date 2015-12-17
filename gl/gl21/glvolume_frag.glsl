@@ -9,9 +9,14 @@
 #pragma include test_in_bounds.glsl
 
 /*
- * image data texture.
+ * image data texture, used for colouring.
  */
 uniform sampler3D imageTexture;
+
+/*
+ * image data texture, used for clipping.
+ */
+uniform sampler3D clipTexture;
 
 /*
  * Texture containing the colour map.
@@ -24,13 +29,21 @@ uniform sampler1D colourTexture;
 uniform sampler1D negColourTexture;
 
 /*
+ * Flag which tells the shader whether 
+ * the image and clip textures are actually
+ * the same - if they are, set this to true
+ * to avoid an extra texture lookup.
+ */
+uniform bool imageIsClip;
+
+/*
  * Flag which determines whether to 
  * use the negative colour map.
  */
 uniform bool useNegCmap;
 
 /*
- * Shape of the imageTexture.
+ * Shape of the imageTexture/clipTexture.
  */
 uniform vec3 imageShape;
 
@@ -86,6 +99,7 @@ varying vec3 fragTexCoord;
 void main(void) {
 
     float voxValue;
+    float clipValue;
     vec4  normVoxValue;
     bool  negCmap  = false;
     vec3  voxCoord = fragVoxCoord;
@@ -109,6 +123,15 @@ void main(void) {
     else           voxValue = texture3D(    imageTexture,
                                             fragTexCoord).r;
 
+    
+    if      (imageIsClip) clipValue = voxValue;
+    else if (useSpline)   clipValue = spline_interp(clipTexture,
+                                                    fragTexCoord,
+                                                    imageShape,
+                                                    0);
+    else                  clipValue = texture3D(    clipTexture,
+                                                    fragTexCoord).r; 
+
     /*
      * If we are using a negative colour map, 
      * and the voxel value is below the negative 
@@ -122,11 +145,12 @@ void main(void) {
         voxValue = texZero + (texZero - voxValue);
     }
 
+
     /*
      * Clip out of range voxel values
      */
-    if ((!invertClip && (voxValue <  clipLow || voxValue >  clipHigh)) ||
-        ( invertClip && (voxValue >= clipLow && voxValue <= clipHigh))) {
+    if ((!invertClip && (clipValue <  clipLow || clipValue >  clipHigh)) ||
+        ( invertClip && (clipValue >= clipLow && clipValue <= clipHigh))) {
       
         gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
         return;

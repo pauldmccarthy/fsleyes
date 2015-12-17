@@ -59,11 +59,12 @@ def compileShaders(self):
 
     shaderVars = {}
 
-    vertAtts     = ['vertex',       'voxCoord',      'texCoord']
-    fragUniforms = ['imageTexture', 'colourTexture', 'negColourTexture',
-                    'useNegCmap',   'imageShape',    'useSpline',
-                    'voxValXform',  'clipLow',       'clipHigh',
-                    'texZero',      'invertClip']
+    vertAtts     = ['vertex',           'voxCoord',    'texCoord']
+    fragUniforms = ['imageTexture',     'clipTexture', 'colourTexture',
+                    'negColourTexture', 'imageIsClip', 'useNegCmap',
+                    'imageShape',       'useSpline',   'voxValXform',
+                    'clipLow',          'clipHigh',    'texZero',
+                    'invertClip']
 
     for va in vertAtts:
         shaderVars[va] = gl.glGetAttribLocation(self.shaders, va)
@@ -111,16 +112,18 @@ def updateShaderState(self):
     gl.glUniform3fv(svars['imageShape'], 1, np.array(self.image.shape,
                                                      dtype=np.float32))
 
-    gl.glUniform1f(svars['clipLow'],    clipLow)
-    gl.glUniform1f(svars['clipHigh'],   clipHigh)
-    gl.glUniform1f(svars['texZero'],    texZero)
-    gl.glUniform1f(svars['invertClip'], opts.invertClipping)
-    gl.glUniform1f(svars['useNegCmap'], opts.useNegativeCmap)
+    gl.glUniform1f(svars['clipLow'],     clipLow)
+    gl.glUniform1f(svars['clipHigh'],    clipHigh)
+    gl.glUniform1f(svars['texZero'],     texZero)
+    gl.glUniform1f(svars['invertClip'],  opts.invertClipping)
+    gl.glUniform1f(svars['useNegCmap'],  opts.useNegativeCmap)
+    gl.glUniform1f(svars['imageIsClip'], 1)
  
     gl.glUniformMatrix4fv(svars['voxValXform'], 1, False, vvx)
 
     # Set up the colour and image textures
     gl.glUniform1i(svars['imageTexture'],     0)
+    gl.glUniform1i(svars['clipTexture'],      0)
     gl.glUniform1i(svars['colourTexture'],    1)
     gl.glUniform1i(svars['negColourTexture'], 2)
 
