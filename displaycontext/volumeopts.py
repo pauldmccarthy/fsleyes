@@ -76,6 +76,7 @@ import numpy as np
 
 import props
 
+import fsl.data.image         as fslimage
 import fsl.utils.transform    as transform
 import fsl.fsleyes.colourmaps as fslcm
 import fsl.fsleyes.actions    as actions
@@ -489,6 +490,17 @@ class VolumeOpts(Nifti1Opts):
     """
 
     
+    clipImage = props.Choice()
+    """Clip voxels according to the values in another image. By default, voxels
+    are clipped by the values in the image itself - this property allows the
+    user to choose another image by which voxels are to be clipped. Any image
+    which is in the :class:`.OverlayList`, and which has the same voxel
+    dimensions as the primary image can be selected for clipping. The
+    :attr:`clippingRange` property dictates the values outside of which voxels
+    are clipped.
+    """ 
+
+    
     cmap = props.ColourMap()
     """The colour map, a :class:`matplotlib.colors.Colourmap` instance."""
 
@@ -572,15 +584,7 @@ class VolumeOpts(Nifti1Opts):
             self.dataMax = 0
 
         # Keep range values 0.01% apart.
-        dMinDistance = abs(self.dataMax - self.dataMin) / 10000.0
-
-        self.clippingRange.xmin = self.dataMin - dMinDistance
-        self.clippingRange.xmax = self.dataMax + dMinDistance
-        
-        # By default, the lowest values
-        # in the image are clipped
-        self.clippingRange.xlo  = self.dataMin + dMinDistance
-        self.clippingRange.xhi  = self.dataMax + dMinDistance
+        dMinDistance = abs(self.dataMax - self.dataMin) / 10000.0 
 
         self.displayRange.xlo  = self.dataMin
         self.displayRange.xhi  = self.dataMax
@@ -588,7 +592,6 @@ class VolumeOpts(Nifti1Opts):
         self.displayRange.xmax = self.dataMax
         
         self.setConstraint('displayRange',  'minDistance', dMinDistance)
-        self.setConstraint('clippingRange', 'minDistance', dMinDistance)
 
         Nifti1Opts.__init__(self,
                             overlay,
@@ -596,26 +599,45 @@ class VolumeOpts(Nifti1Opts):
                             overlayList,
                             displayCtx,
                             **kwargs)
-
+        
         # The displayRange property of every child VolumeOpts
         # instance is linked to the corresponding 
         # Display.brightness/contrast properties, so changes
-        # in one are reflected in the other.
-        if kwargs.get('parent', None) is not None:
-            display.addListener('brightness', self.name, self.__briconChanged)
-            display.addListener('contrast',   self.name, self.__briconChanged)
-            self   .addListener('displayRange',
-                                self.name,
-                                self.__displayRangeChanged)
-            self   .addListener('useNegativeCmap',
-                                self.name,
-                                self.__useNegativeCmapChanged)
-            self   .addListener('linkLowRanges',
-                                self.name,
-                                self.__linkLowRangesChanged)
-            self   .addListener('linkHighRanges',
-                                self.name,
-                                self.__linkHighRangesChanged)
+        # in one are reflected in the other. This interaction
+        # complicates the relationship between parent and child
+        # VolumeOpts instances, so we only implement it on
+        # children.
+        #
+        # NOTE: This means that if we use a parent-less
+        #       DisplayContext for display, this bricon-display
+        #       range relationship will break.
+        # 
+        if self.getParent() is not None:
+            display    .addListener('brightness',
+                                    self.name,
+                                    self.__briconChanged)
+            display    .addListener('contrast',
+                                    self.name,
+                                    self.__briconChanged)
+            self       .addListener('displayRange',
+                                    self.name,
+                                    self.__displayRangeChanged)
+            self       .addListener('useNegativeCmap',
+                                    self.name,
+                                    self.__useNegativeCmapChanged)
+            self       .addListener('linkLowRanges',
+                                    self.name,
+                                    self.__linkLowRangesChanged)
+            self       .addListener('linkHighRanges',
+                                    self.name,
+                                    self.__linkHighRangesChanged)
+            
+            overlayList.addListener('overlays',
+                                    self.name,
+                                    self.__overlayListChanged)
+            self       .addListener('clipImage',
+                                    self.name,
+                                    self.__clipImageChanged)
 
             # Because displayRange and bri/con are intrinsically
             # linked, it makes no sense to let the user sync/unsync
@@ -638,6 +660,15 @@ class VolumeOpts(Nifti1Opts):
             if self.linkLowRanges:   self.__linkLowRangesChanged()
             if self.linkHighRanges:  self.__linkHighRangesChanged()
 
+        # If we have a parent, the clipImage and
+        # clippingRange settings will have been
+        # synced to the parent instance. Otherwise,
+        # we need to configure their initial values.
+        else:
+            self.__overlayListChanged()
+            self.__clipImageChanged()
+
+
 
     @actions.action
     def resetDisplayRange(self):
@@ -649,6 +680,8 @@ class VolumeOpts(Nifti1Opts):
         """Removes property listeners, and calls the :meth:`Nifti1Opts.destroy`
         method.
         """
+
+        self.overlayList.removeListener('overlays', self.name)
 
         if self.getParent() is not None:
             display = self.display
@@ -663,6 +696,82 @@ class VolumeOpts(Nifti1Opts):
                              display.getSyncPropertyName('contrast'))
 
         Nifti1Opts.destroy(self)
+
+
+    def __overlayListChanged(self, *a):
+        """Called when the :`class:`.OverlayList` changes. Updates the
+        options of the :attr:`clipImage` property.
+        """
+        
+        clipProp = self.getProp('clipImage')
+        clipVal  = self.clipImage
+        overlays = self.displayCtx.getOrderedOverlays()
+        
+        options  = [None]
+
+        for overlay in overlays:
+            
+            if overlay is self.overlay:                     continue
+            if not isinstance(overlay, fslimage.Image):     continue
+            if overlay.shape[:3] != self.overlay.shape[:3]: continue
+
+            options.append(overlay)
+
+        clipProp.setChoices(options, instance=self)
+
+        if clipVal in options: self.clipImage = clipVal
+        else:                  self.clipImage = None 
+    
+        
+    def __clipImageChanged(self, *a):
+        """Called when the :attr:`clipImage` property is changed. Updates
+         the range of the :attr:`clippingRange` property.
+        """
+
+        if self.clipImage is None:
+            dataMin = self.dataMin
+            dataMax = self.dataMax
+            
+            self.enableProperty('linkLowRanges')
+            self.enableProperty('linkHighRanges') 
+        else:
+            opts    = self.displayCtx.getOpts(self.clipImage)
+            dataMin = opts.dataMin
+            dataMax = opts.dataMax
+
+            if self.propertyIsEnabled('linkLowRanges'):
+
+                self.disableListener('linkLowRanges',  self.name)
+                self.disableListener('linkHighRanges', self.name)
+ 
+                self.linkLowRanges  = False
+                self.linkHighRanges = False
+            
+                self.__linkLowRangesChanged()
+                self.__linkHighRangesChanged()
+            
+                self.disableProperty('linkLowRanges')
+                self.disableProperty('linkHighRanges')
+            
+        # Keep range values 0.01% apart.
+        dMinDistance = abs(dataMax - dataMin) / 10000.0
+
+        log.debug('Clip image changed for {}: {} - new '
+                  'clipping range: [{: 0.5f} - {: 0.5f}]'.format(
+                      self.overlay,
+                      self.clipImage,
+                      dataMin,
+                      dataMax))
+
+        self.clippingRange.xmin = dataMin - dMinDistance
+        self.clippingRange.xmax = dataMax + dMinDistance
+        
+        # By default, the lowest values
+        # in the image are clipped
+        self.clippingRange.xlo = dataMin + dMinDistance
+        self.clippingRange.xhi = dataMax + dMinDistance
+
+        self.setConstraint('clippingRange', 'minDistance', dMinDistance)
 
 
     def __toggleListeners(self, enable=True):
@@ -815,4 +924,5 @@ class VolumeOpts(Nifti1Opts):
                            bindatt=False,
                            unbind=not val)
 
-        cRangePV.set(dRangePV.get())
+        if val:
+            cRangePV.set(dRangePV.get())

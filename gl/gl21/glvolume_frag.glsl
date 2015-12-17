@@ -123,7 +123,10 @@ void main(void) {
     else           voxValue = texture3D(    imageTexture,
                                             fragTexCoord).r;
 
-    
+
+    /*
+     * Look up the clipping value
+     */
     if      (imageIsClip) clipValue = voxValue;
     else if (useSpline)   clipValue = spline_interp(clipTexture,
                                                     fragTexCoord,

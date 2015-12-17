@@ -318,7 +318,8 @@ _DISPLAY_PROPS = td.TypeDict({
                      showLimits=False,
                      slider=True,
                      labels=[strings.choices['VolumeOpts.displayRange.min'],
-                             strings.choices['VolumeOpts.displayRange.max']])],
+                             strings.choices['VolumeOpts.displayRange.max']]),
+        props.Widget('clipImage', labels=_imageName)],
 
     'MaskOpts' : [
         props.Widget('resolution', showLimits=False),
