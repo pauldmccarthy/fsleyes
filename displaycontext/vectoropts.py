@@ -49,6 +49,22 @@ class VectorOpts(volumeopts.Nifti1Opts):
     """Do not use the Z vector magnitude to colour vectors."""
 
 
+    cmap = props.ColourMap()
+    """If an image is selected as the :attr:`colourImage`, this colour map
+    is used to colour the vector voxels.
+    """
+
+    
+    colourImage = props.Choice()
+    """Colour vector voxels by the values contained in this image. Any image which
+    is in the :class:`.OverlayList`, and which has the same voxel dimensions as
+    the vector image can be selected for modulation. If a ``colourImage`` is
+    selected, the :attr:`xColour`, :attr:`yColour`, :attr:`zColour`,
+    :attr:`suppressX`, :attr:`suppressY`, and :attr:`suppressZ` properties are
+    all ignored.
+    """
+
+
     modulateImage  = props.Choice()
     """Modulate the vector colour brightness by another image. Any image which
     is in the :class:`.OverlayList`, and which has the same voxel dimensions as
@@ -124,16 +140,19 @@ class VectorOpts(volumeopts.Nifti1Opts):
 
         
     def __overlayListChanged(self, *a):
-        """Called when the overlay list changes. Updates the :attr:`modulateImage`
-        and :attr:`clipImage` properties so that they contain a list of
-        overlays which could be used to modulate the vector image.
+        """Called when the overlay list changes. Updates the :attr:`modulateImage`,
+        :attr:`colourImage` and :attr:`clipImage` properties so that they
+        contain a list of overlays which could be used to modulate the vector
+        image.
         """
         
-        modProp  = self.getProp('modulateImage')
-        clipProp = self.getProp('clipImage')
-        modVal   = self.modulateImage
-        clipVal  = self.clipImage
-        overlays = self.displayCtx.getOrderedOverlays()
+        modProp    = self.getProp('modulateImage')
+        clipProp   = self.getProp('clipImage')
+        colourProp = self.getProp('colourImage')
+        modVal     = self.modulateImage
+        clipVal    = self.clipImage
+        colourVal  = self.clipImage
+        overlays   = self.displayCtx.getOrderedOverlays()
 
         # the image for this VectorOpts
         # instance has been removed
@@ -151,14 +170,14 @@ class VectorOpts(volumeopts.Nifti1Opts):
             if overlay is self.overlay:
                 continue
 
-            # The modulate/clip images
-            # must be images. 
+            # The modulate/clip/colour
+            # images must be images. 
             if not isinstance(overlay, fslimage.Image):
                 continue
 
             # an image can only be used to
-            # modulate/clip the vector image
-            # if it shares the same
+            # modulate/clip/colour the vector
+            # image if it shares the same
             # dimensions as said vector image.
             # 4D images are ok though.
             if overlay.shape[:3] != self.overlay.shape[:3]:
@@ -172,13 +191,16 @@ class VectorOpts(volumeopts.Nifti1Opts):
                                 self.__overlayListChanged,
                                 overwrite=True)
             
-        modProp .setChoices(options, instance=self)
-        clipProp.setChoices(options, instance=self)
+        modProp   .setChoices(options, instance=self)
+        clipProp  .setChoices(options, instance=self)
+        colourProp.setChoices(options, instance=self)
 
-        if modVal  in overlays: self.modulateImage = modVal
-        else:                   self.modulateImage = None
-        if clipVal in overlays: self.clipImage     = clipVal
-        else:                   self.clipImage     = None 
+        if modVal    in overlays: self.modulateImage = modVal
+        else:                     self.modulateImage = None
+        if clipVal   in overlays: self.clipImage     = clipVal
+        else:                     self.clipImage     = None
+        if colourVal in overlays: self.colourImage   = colourVal
+        else:                     self.colourImage   = None 
 
 
 class LineVectorOpts(VectorOpts):

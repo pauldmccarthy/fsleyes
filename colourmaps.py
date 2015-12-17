@@ -265,29 +265,35 @@ def registerColourMap(cmapFile,
 
     _cmaps[key] = _Map(key, name, cmap, None, False)
 
-    # TODO Any new DisplayOpts sub-types which have a 
-    #      colour map will need to be patched here
-
-    log.debug('Patching VolumeOpts instances and class '
+    log.debug('Patching DisplayOpts instances and class '
               'to support new colour map {}'.format(key))
 
     import fsl.fsleyes.displaycontext as fsldisplay
     
-    # update the VolumeOpts colour map property
-    # for any existing VolumeOpts instances
-    cmapProp    = fsldisplay.VolumeOpts.getProp('cmap')
-    negCmapProp = fsldisplay.VolumeOpts.getProp('negativeCmap')
-    
+    # A list of all DisplayOpts colour map properties
+    # 
+    # TODO Any new DisplayOpts sub-types which have a 
+    #      colour map will need to be patched here
+    cmapProps = []
+    cmapProps.append((fsldisplay.VolumeOpts, 'cmap'))
+    cmapProps.append((fsldisplay.VolumeOpts, 'negativeCmap'))
+    cmapProps.append((fsldisplay.VectorOpts, 'cmap'))
+
+    # Update the colour map properties
+    # for any existing instances 
     for overlay in overlayList:
         opts = displayCtx.getOpts(overlay)
-        
-        if isinstance(opts, fsldisplay.VolumeOpts):
-            cmapProp   .addColourMap(key, opts)
-            negCmapProp.addColourMap(key, opts)
 
-    # and for all future volume overlays
-    cmapProp   .addColourMap(key)
-    negCmapProp.addColourMap(key)
+        for cls, propName in cmapProps:
+            if isinstance(opts, cls):
+                prop = opts.getProp(propName)
+                prop.addColourMap(key, opts)
+
+    # and for all future overlays
+    for cls, propName in cmapProps:
+        
+        prop = cls.getProp(propName)
+        prop.addColourMap(key)
                 
 
 def registerLookupTable(lut,

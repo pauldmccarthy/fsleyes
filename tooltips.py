@@ -120,28 +120,37 @@ properties = TypeDict({
     'VectorOpts.xColour'          : 'The colour corresponding to the X '
                                     'component of the vector - the brightness '
                                     'of the colour corresponds to the '
-                                    'magnitude of the X component',
+                                    'magnitude of the X component. This '
+                                    'option has no effect if a colour image '
+                                    'is selected.', 
     'VectorOpts.yColour'          : 'The colour corresponding to the Y '
                                     'component of the vector - the brightness '
                                     'of the colour corresponds to the '
-                                    'magnitude of the Y component.',
+                                    'magnitude of the Y component. This '
+                                    'option has no effect if a colour image '
+                                    'is selected.', 
     'VectorOpts.zColour'          : 'The colour corresponding to the Z '
                                     'component of the vector - the brightness '
                                     'of the colour corresponds to the '
-                                    'magnitude of the Z component.',
+                                    'magnitude of the Z component. This '
+                                    'option has no effect if a colour image '
+                                    'is selected.',
     'VectorOpts.suppressX'        : 'Ignore the X vector component when '
-                                    'colouring voxels.',
+                                    'colouring voxels. This option has no '
+                                    'effect if a colour image is selected.', 
     'VectorOpts.suppressY'        : 'Ignore the Y vector component when '
-                                    'colouring voxels.',
+                                    'colouring voxels. This option has no '
+                                    'effect if a colour image is selected.', 
     'VectorOpts.suppressZ'        : 'Ignore the Z vector component when '
-                                    'colouring voxels.',
+                                    'colouring voxels. This option has no '
+                                    'effect if a colour image is selected.', 
     'VectorOpts.modulateImage'    : 'Modulate the vector colour brightness by '
                                     'another image. The image selected here '
                                     'is normalised to lie in the range (0, '
-                                    '1), and the magnitude of each vector is '
-                                    'scaled by the corresponding modulation '
-                                    'value before it is coloured. The '
-                                    'modulation image must have the same '
+                                    '1), and the brightness of each vector '
+                                    'colour is scaled by the corresponding '
+                                    'modulation value before it is coloured. '
+                                    'The modulation image must have the same '
                                     'voxel dimensions as the vector image.',
     'VectorOpts.clipImage'        : 'Clip vector voxels according to the '
                                     'values in another image. Vector voxels '
@@ -150,10 +159,17 @@ properties = TypeDict({
                                     'than the current clipping threshold are '
                                     'not shown. The clipping image must have '
                                     'the same voxel dimensions as the vector '
-                                    'image. ', 
+                                    'image. ',
+    'VectorOpts.colourImage'      : 'Colour the vectors according to the '
+                                    'values in another image, and by the '
+                                    'selected colour map. The colour image '
+                                    'must have the same voxel dimensions as '
+                                    'the vector image. ',
     'VectorOpts.clippingRange'    : 'Vector values which have a corresponding '
                                     'clipping image value that is outside of '
                                     'this range are not displayed. ',
+    'VectorOpts.cmap'             : 'Colour map to use for colouring vector '
+                                    'voxels, if a colour image is selected.', 
     'LineVectorOpts.lineWidth'    : 'The width of each vector line, in '
                                     'display pixels.',
     'LineVectorOpts.directed'     : 'If unchecked, the vector data is assumed '

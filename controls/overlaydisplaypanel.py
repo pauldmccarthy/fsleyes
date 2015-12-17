@@ -10,6 +10,7 @@ control* panel which allows the user to change overlay display settings.
 
 
 import logging
+import functools
 
 import wx
 import props
@@ -206,13 +207,16 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
 
         self.__widgets.ClearGroup(groupName)
 
-        dispProps = _DISPLAY_PROPS.get(target, [])
+        dispProps = _DISPLAY_PROPS.get(target, [], allhits=True)
+        dispProps = functools.reduce(lambda a, b: a + b, dispProps)
+ 
         labels    = [strings.properties.get((target, p.key), p.key)
                      for p in dispProps]
         tooltips  = [fsltooltips.properties.get((target, p.key), None)
                      for p in dispProps]
 
         widgets = []
+
 
         for p in dispProps:
 
@@ -276,7 +280,8 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
 
 def _imageName(img):
     """Used to generate choice labels for the :attr`.VectorOpts.modulateImage`,
-    :attr`.VectorOpts.clipImage` and :attr:`.ModelOpts.refImage` properties.
+    :attr`.VectorOpts.clipImage`, :attr`.VectorOpts.colourImage` and
+    :attr:`.ModelOpts.refImage` properties.
     """
     if img is None: return 'None'
     else:           return img.name
@@ -324,45 +329,46 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('invert'),
         props.Widget('threshold',  showLimits=False)],
 
+    'VectorOpts' : [
+        props.Widget('colourImage',   labels=_imageName),
+        props.Widget('modulateImage', labels=_imageName),
+        props.Widget('clipImage',     labels=_imageName),
+        props.Widget('cmap',
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is not None), 
+        props.Widget('clippingRange',
+                     showLimits=False,
+                     slider=True,
+                     labels=[strings.choices['VectorOpts.clippingRange.min'],
+                             strings.choices['VectorOpts.clippingRange.max']],
+                     dependencies=['clipImage'],
+                     enabledWhen=lambda o, ci: ci is not None),
+        props.Widget('xColour',
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is None), 
+        props.Widget('yColour',
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is None),
+        props.Widget('zColour',
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is None),
+        props.Widget('suppressX',
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is None),
+        props.Widget('suppressY',
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is None),
+        props.Widget('suppressZ',
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is None)],
+
     'RGBVectorOpts' : [
         props.Widget('resolution', showLimits=False),
         props.Widget('interpolation',
-                     labels=strings.choices['VolumeOpts.interpolation']),
-        props.Widget('xColour'),
-        props.Widget('yColour'),
-        props.Widget('zColour'),
-        props.Widget('suppressX'),
-        props.Widget('suppressY'),
-        props.Widget('suppressZ'),
-        props.Widget('modulateImage', labels=_imageName),
-        props.Widget('clipImage',     labels=_imageName),
-        props.Widget('clippingRange',
-                     showLimits=False,
-                     slider=True,
-                     labels=[strings.choices['VectorOpts.clippingRange.min'],
-                             strings.choices['VectorOpts.clippingRange.max']],
-                     dependencies=['clipImage'],
-                     enabledWhen=lambda o, ci: ci is not None)],
+                     labels=strings.choices['VolumeOpts.interpolation'])],
 
     'LineVectorOpts' : [
-        props.Widget('resolution', showLimits=False),
-        props.Widget('xColour'),
-        props.Widget('yColour'),
-        props.Widget('zColour'),
-        props.Widget('suppressX'),
-        props.Widget('suppressY'),
-        props.Widget('suppressZ'),
-        props.Widget('directed'),
-        props.Widget('lineWidth', showLimits=False),
-        props.Widget('modulateImage', labels=_imageName),
-        props.Widget('clipImage',     labels=_imageName),
-        props.Widget('clippingRange',
-                     showLimits=False,
-                     slider=True,
-                     labels=[strings.choices['VectorOpts.clippingRange.min'],
-                             strings.choices['VectorOpts.clippingRange.max']],
-                     dependencies=['clipImage'],
-                     enabledWhen=lambda o, ci: ci is not None)],
+        props.Widget('resolution', showLimits=False)],
 
     'ModelOpts' : [
         props.Widget('colour'),
@@ -382,22 +388,7 @@ _DISPLAY_PROPS = td.TypeDict({
             spin=False,
             labels=[strings.choices['TensorOpts.tensorResolution.min'],
                     strings.choices['TensorOpts.tensorResolution.max']]),
-        props.Widget('tensorScale', showLimits=False, spin=False),
-        props.Widget('xColour'),
-        props.Widget('yColour'),
-        props.Widget('zColour'),
-        props.Widget('suppressX'),
-        props.Widget('suppressY'),
-        props.Widget('suppressZ'),
-        props.Widget('modulateImage', labels=_imageName),
-        props.Widget('clipImage',     labels=_imageName),
-        props.Widget('clippingRange',
-                     showLimits=False,
-                     slider=True,
-                     labels=[strings.choices['VectorOpts.clippingRange.min'],
-                             strings.choices['VectorOpts.clippingRange.max']],
-                     dependencies=['clipImage'],
-                     enabledWhen=lambda o, ci: ci is not None)],
+        props.Widget('tensorScale', showLimits=False, spin=False)],
 
     'LabelOpts' : [
         props.Widget('lut', labels=lambda l: l.name),
