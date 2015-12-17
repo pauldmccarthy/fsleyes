@@ -88,6 +88,14 @@ class GLVolume(globject.GLImageObject):
     image bounds.
 
     
+    Image voxels may be clipped according to the
+    :attr:`.VolumeOpts.clippingRange` property. By default, the voxel value
+    is compared against the clipping range, but the
+    :attr:`.VolumeOpts.clipImage` property allows the data from a different
+    image (of the same dimensions) to be used for clipping. If specified,
+    this clipping image is stored as another :class:`.ImageTexture`.
+
+    
     **Textures**
 
 
@@ -102,7 +110,13 @@ class GLVolume(globject.GLImageObject):
     
      - A :class:`.ColourMapTexture`, a 1D texture which contains the
        colour map defined by the :attr:`.VolumeOpts.negativeCmap` property.
-       This is bound to texture unit 2. 
+       This is bound to texture unit 2.
+
+     - An :class:`.ImageTexture` which contains the clippimg image data.
+       This is bound to texture unit 1. If the :attr:`.VolumeOpts.clipImage`
+       property is not specified (i.e. it has a value of ``None``), this
+       texture will not be bound - in this case, the image texture is used
+       for clipping.
 
 
     **Attributes**
@@ -110,9 +124,12 @@ class GLVolume(globject.GLImageObject):
 
     The following attributes are available on a ``GLVolume`` instance:
 
-    ==================== =================================================
+    ==================== ==================================================
     ``imageTexture``     The :class:`.ImageTexture` which stores the image
                          data.
+    ``clipTexture``      The :class:`.ImageTexture` which stores the clip
+                         image data.   If :attr:`.VolumeOpts.clipImage`
+                         is ``None``, this attribute will also be ``None``.
     ``colourTexture``    The :class:`.ColourMapTexture` used to store the
                          colour map.
     ``negColourTexture`` The :class:`.ColourMapTexture` used to store the
@@ -120,7 +137,7 @@ class GLVolume(globject.GLImageObject):
     ``texName``          A name used for the ``imageTexture``,
                          ``colourTexture``, and ``negColourTexture`. The
                          name for the latter is suffixed with ``'_neg'``.
-    ==================== =================================================
+    ==================== ==================================================
     """
 
     
@@ -139,15 +156,17 @@ class GLVolume(globject.GLImageObject):
         # updated when its display properties are changed
         self.addDisplayListeners()
 
-        # Create an image texture and a colour map texture
-        self.texName = '{}_{}'.format(type(self).__name__, id(self.image))
+        # Create an image texture, clip texture, and a colour map texture
+        self.texName  = '{}_{}'.format(type(self).__name__, id(self.image))
 
-        self.imageTexture     = None 
+        self.imageTexture     = None
+        self.clipTexture      = None 
         self.colourTexture    = textures.ColourMapTexture(self.texName)
         self.negColourTexture = textures.ColourMapTexture(
             '{}_neg'.format(self.texName))
 
         self.refreshImageTexture()
+        self.refreshClipTexture()
         self.refreshColourTextures()
         
         fslgl.glvolume_funcs.init(self)
@@ -161,11 +180,15 @@ class GLVolume(globject.GLImageObject):
         """
 
         glresources.delete(self.imageTexture.getTextureName())
+
+        if self.clipTexture is not None:
+            glresources.delete(self.clipTexture.getTextureName())
         
         self.colourTexture   .destroy()
         self.negColourTexture.destroy()
         
         self.imageTexture     = None
+        self.clipTexture      = None
         self.colourTexture    = None
         self.negColourTexture = None
         
@@ -222,9 +245,15 @@ class GLVolume(globject.GLImageObject):
             fslgl.glvolume_funcs.updateShaderState(self)
             self.onUpdate()
 
+        def clipUpdate(*a):
+            self.refreshClipTexture()
+            fslgl.glvolume_funcs.updateShaderState(self)
+            self.onUpdate()
+
         display.addListener('alpha',          lName, colourUpdate,  weak=False)
         opts   .addListener('displayRange',   lName, colourUpdate,  weak=False)
         opts   .addListener('clippingRange',  lName, shaderUpdate,  weak=False)
+        opts   .addListener('clipImage',      lName, clipUpdate,    weak=False)
         opts   .addListener('invertClipping', lName, shaderUpdate,  weak=False)
         opts   .addListener('cmap',           lName, colourUpdate,  weak=False)
         opts   .addListener('negativeCmap',   lName, colourUpdate,  weak=False)
@@ -269,6 +298,7 @@ class GLVolume(globject.GLImageObject):
         display.removeListener(          'alpha',           lName)
         opts   .removeListener(          'displayRange',    lName)
         opts   .removeListener(          'clippingRange',   lName)
+        opts   .removeListener(          'clipImage',       lName)
         opts   .removeListener(          'invertClipping',  lName)
         opts   .removeListener(          'cmap',            lName)
         opts   .removeListener(          'negativeCmap',    lName)
@@ -326,6 +356,32 @@ class GLVolume(globject.GLImageObject):
             textures.ImageTexture,
             texName,
             self.image,
+            interp=interp)
+
+        
+    def refreshClipTexture(self):
+        """Refreshes the :class:`.ImageTexture` used to store the
+        :attr:`.VolumeOpts.clipImage`.
+        """
+        opts      = self.displayOpts
+        clipImage = opts.clipImage
+        texName   = '{}_{}'.format(type(self).__name__, id(clipImage))
+
+        if self.clipTexture is not None:
+            glresources.delete(self.clipTexture.getTextureName())
+            self.clipTexture = None
+            
+        if clipImage is None:
+            return
+            
+        if opts.interpolation == 'none': interp = gl.GL_NEAREST
+        else:                            interp = gl.GL_LINEAR
+
+        self.clipTexture = glresources.get(
+            texName, 
+            textures.ImageTexture,
+            texName,
+            clipImage,
             interp=interp) 
 
     
@@ -365,6 +421,9 @@ class GLVolume(globject.GLImageObject):
         self.colourTexture   .bindTexture(gl.GL_TEXTURE1)
         self.negColourTexture.bindTexture(gl.GL_TEXTURE2)
 
+        if self.clipTexture is not None:
+            self.clipTexture .bindTexture(gl.GL_TEXTURE3)
+
         fslgl.glvolume_funcs.preDraw(self)
 
         
@@ -400,5 +459,8 @@ class GLVolume(globject.GLImageObject):
         self.imageTexture    .unbindTexture()
         self.colourTexture   .unbindTexture()
         self.negColourTexture.unbindTexture()
+
+        if self.clipTexture is not None:
+            self.clipTexture.unbindTexture()
         
         fslgl.glvolume_funcs.postDraw(self) 

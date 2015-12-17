@@ -91,7 +91,9 @@ def updateShaderState(self):
     # range, but the shader needs them to be in image
     # texture value range (0.0 - 1.0). So let's scale 
     # them.
-    xform    = self.imageTexture.invVoxValXform
+    if opts.clipImage is None: xform = self.imageTexture.invVoxValXform
+    else:                      xform = self.clipTexture .invVoxValXform
+    
     clipLow  = opts.clippingRange[0] * xform[0, 0] + xform[3, 0]
     clipHigh = opts.clippingRange[1] * xform[0, 0] + xform[3, 0]
     texZero  = 0.0                   * xform[0, 0] + xform[3, 0]
@@ -117,15 +119,15 @@ def updateShaderState(self):
     gl.glUniform1f(svars['texZero'],     texZero)
     gl.glUniform1f(svars['invertClip'],  opts.invertClipping)
     gl.glUniform1f(svars['useNegCmap'],  opts.useNegativeCmap)
-    gl.glUniform1f(svars['imageIsClip'], 1)
+    gl.glUniform1f(svars['imageIsClip'], opts.clipImage is None)
  
     gl.glUniformMatrix4fv(svars['voxValXform'], 1, False, vvx)
 
     # Set up the colour and image textures
     gl.glUniform1i(svars['imageTexture'],     0)
-    gl.glUniform1i(svars['clipTexture'],      0)
     gl.glUniform1i(svars['colourTexture'],    1)
     gl.glUniform1i(svars['negColourTexture'], 2)
+    gl.glUniform1i(svars['clipTexture'],      3)
 
     gl.glUseProgram(0)
 
