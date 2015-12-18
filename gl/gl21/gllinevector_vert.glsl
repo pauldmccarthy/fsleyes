@@ -6,18 +6,17 @@
  */
 #version 120
 
-#pragma include spline_interp.glsl
-
 /*
  * Vector image containing XYZ vector data.
  */
 uniform sampler3D imageTexture;
 
-
+/*
+ * Transformations between voxel and 
+ * display coordinate systems.
+ */
 uniform mat4 displayToVoxMat;
 uniform mat4 voxToDisplayMat;
-
-uniform vec3 voxelOffset;
 
 /*
  * Transformation matrix which transforms the
@@ -25,6 +24,10 @@ uniform vec3 voxelOffset;
  */
 uniform mat4 voxValXform;
 
+/*
+ * Constant offset to add to voxel coordinates.
+ */
+uniform vec3 voxelOffset;
 
 /*
  * Shape of the image texture.
@@ -32,16 +35,16 @@ uniform mat4 voxValXform;
 uniform vec3 imageShape;
 
 /*
+ * Dimensions of one voxel in the image texture.
+ */
+uniform vec3 imageDims;
+
+/*
  * Line vectors are interpreted as directed - each
  * line begins in the centre of its voxel, and extends
  * outwards.
  */
 uniform bool directed;
-
-/*
- * Dimensions of one voxel in the image texture.
- */
-uniform vec3 imageDims;
 
 /*
  * The current vertex on the current line.

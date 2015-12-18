@@ -45,7 +45,9 @@ def compileShaders(self, vertAtts, vertUniforms):
                                             fragUniforms) 
 
     
-def updateFragmentShaderState(self):
+def updateFragmentShaderState(
+        self,
+        useSpline=False):
     """
     """
     opts                = self.displayOpts
@@ -56,7 +58,7 @@ def updateFragmentShaderState(self):
 
         voxValXform     = self.colourTexture.voxValXform
         invVoxValXform  = self.colourTexture.invVoxValXform
-        invClipValXform = self.clipTexture .invVoxValXform
+        invClipValXform = self.clipTexture  .invVoxValXform
         clippingRange   = opts.clippingRange
         imageShape      = self.vectorImage.shape[:3]
         imageShape      = np.array(imageShape, dtype=np.float32)
@@ -65,7 +67,7 @@ def updateFragmentShaderState(self):
         img2CmapXform = transform.concat(
             voxValXform,
             self.cmapTexture.getCoordinateTransform())
-        img2CmapXform = np.array(voxValXform, dtype=np.float32).ravel('C') 
+        img2CmapXform = np.array(img2CmapXform, dtype=np.float32).ravel('C') 
         
         if opts.clipImage is not None:
             clipLow  = clippingRange[0] * \
@@ -86,7 +88,7 @@ def updateFragmentShaderState(self):
         
         gl.glUniform1i(svars['imageIsClip'], False)
         gl.glUniform1i(svars['useNegCmap'],  False)
-        gl.glUniform1i(svars['useSpline'],   False)
+        gl.glUniform1i(svars['useSpline'],   useSpline)
         gl.glUniform1f(svars['clipLow'],     clipLow)
         gl.glUniform1f(svars['clipHigh'],    clipHigh)
         gl.glUniform1f(svars['texZero'],     texZero)
@@ -99,7 +101,6 @@ def updateFragmentShaderState(self):
         voxValXform     = self.imageTexture.voxValXform
         invClipValXform = self.clipTexture .invVoxValXform
         cmapXform       = self.xColourTexture.getCoordinateTransform()
-        useSpline       = opts.interpolation == 'spline'
         imageShape      = np.array(self.vectorImage.shape, dtype=np.float32)
         clippingRange   = opts.clippingRange
 

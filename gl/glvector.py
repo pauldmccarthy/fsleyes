@@ -229,6 +229,7 @@ class GLVector(globject.GLImageObject):
             self.refreshAuxTexture( 'colour')
             
             self.compileShaders()
+            self.refreshColourTextures()
             self.updateShaderState()
             self.onUpdate() 
  
@@ -554,7 +555,7 @@ class GLVector(globject.GLImageObject):
                 (dmin, dmax),
                 display.brightness / 100.0,
                 display.contrast   / 100.0)
-
+            
         self.cmapTexture.set(cmap=opts.cmap,
                              alpha=display.alpha / 100.0,
                              displayRange=(dmin, dmax)) 

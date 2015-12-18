@@ -373,7 +373,8 @@ _DISPLAY_PROPS = td.TypeDict({
                      labels=strings.choices['VolumeOpts.interpolation'])],
 
     'LineVectorOpts' : [
-        props.Widget('resolution', showLimits=False)],
+        props.Widget('resolution', showLimits=False),
+        props.Widget('lineWidth',  showLimits=False)],
 
     'ModelOpts' : [
         props.Widget('colour'),

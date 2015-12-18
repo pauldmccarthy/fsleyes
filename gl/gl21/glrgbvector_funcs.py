@@ -60,8 +60,12 @@ def compileShaders(self):
 def updateShaderState(self):
     """Updates all shader program variables. """
 
+    opts = self.displayOpts
+
+    useSpline = opts.interpolation == 'spline'
+
     gl.glUseProgram(self.shaders)
-    glvector_funcs.updateFragmentShaderState(self)
+    glvector_funcs.updateFragmentShaderState(self, useSpline=useSpline)
     gl.glUseProgram(0) 
 
 
