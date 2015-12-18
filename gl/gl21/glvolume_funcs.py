@@ -55,26 +55,20 @@ def compileShaders(self):
 
     vertShaderSrc = shaders.getVertexShader(  self)
     fragShaderSrc = shaders.getFragmentShader(self)
-    self.shaders = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
-
-    shaderVars = {}
-
+    
+    vertUniforms = []
     vertAtts     = ['vertex',           'voxCoord',    'texCoord']
     fragUniforms = ['imageTexture',     'clipTexture', 'colourTexture',
                     'negColourTexture', 'imageIsClip', 'useNegCmap',
-                    'imageShape',       'useSpline',   'voxValXform',
+                    'imageShape',       'useSpline',   'img2CmapXform',
                     'clipLow',          'clipHigh',    'texZero',
                     'invertClip']
 
-    for va in vertAtts:
-        shaderVars[va] = gl.glGetAttribLocation(self.shaders, va)
-        
-    for fu in fragUniforms:
-        if fu in shaderVars:
-            continue
-        shaderVars[fu] = gl.glGetUniformLocation(self.shaders, fu)
-
-    self.shaderVars = shaderVars
+    self.shaders    = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
+    self.shaderVars = shaders.getShaderVars(self.shaders,
+                                            vertAtts,
+                                            vertUniforms,
+                                            fragUniforms)
 
 
 def updateShaderState(self):
@@ -98,18 +92,16 @@ def updateShaderState(self):
     clipHigh = opts.clippingRange[1] * xform[0, 0] + xform[3, 0]
     texZero  = 0.0                   * xform[0, 0] + xform[3, 0]
 
-    # Bind transformation matrix to transform
-    # from image texture values to voxel values,
-    # and and to scale said voxel values to
-    # colour map texture coordinates
-    vvx = transform.concat(self.imageTexture.voxValXform,
-                           self.colourTexture.getCoordinateTransform())
-    vvx = np.array(vvx, dtype=np.float32).ravel('C')
+    # Create a single transformation matrix
+    # which transforms from image texture values
+    # to voxel values, and scales said voxel
+    # values to colour map texture coordinates.
+    img2CmapXform = transform.concat(
+        self.imageTexture.voxValXform,
+        self.colourTexture.getCoordinateTransform())
+    img2CmapXform = np.array(img2CmapXform, dtype=np.float32).ravel('C')
 
 
-    # bind the current interpolation setting,
-    # image shape, and image->screen axis
-    # mappings
     gl.glUniform1f( svars['useSpline'],     opts.interpolation == 'spline')
     gl.glUniform3fv(svars['imageShape'], 1, np.array(self.image.shape,
                                                      dtype=np.float32))
@@ -121,7 +113,7 @@ def updateShaderState(self):
     gl.glUniform1f(svars['useNegCmap'],  opts.useNegativeCmap)
     gl.glUniform1f(svars['imageIsClip'], opts.clipImage is None)
  
-    gl.glUniformMatrix4fv(svars['voxValXform'], 1, False, vvx)
+    gl.glUniformMatrix4fv(svars['img2CmapXform'], 1, False, img2CmapXform)
 
     # Set up the colour and image textures
     gl.glUniform1i(svars['imageTexture'],     0)

@@ -29,6 +29,18 @@ uniform sampler1D colourTexture;
 uniform sampler1D negColourTexture;
 
 /*
+ * Matrix which can be used to transform a texture value 
+ * from the imageTexture into a texture coordinate for 
+ * the colourTexture.
+ */
+uniform mat4 img2CmapXform;
+
+/*
+ * Shape of the imageTexture/clipTexture.
+ */
+uniform vec3 imageShape;
+
+/*
  * Flag which tells the shader whether 
  * the image and clip textures are actually
  * the same - if they are, set this to true
@@ -43,21 +55,9 @@ uniform bool imageIsClip;
 uniform bool useNegCmap;
 
 /*
- * Shape of the imageTexture/clipTexture.
- */
-uniform vec3 imageShape;
-
-/*
  * Use spline interpolation?
  */
 uniform bool useSpline;
-
-/*
- * Transformation matrix to apply to the voxel value,
- * so it can be used as a texture coordinate in the
- * colourTexture.
- */
-uniform mat4 voxValXform;
 
 /*
  * Clip voxels below this value. This must be specified
@@ -163,7 +163,7 @@ void main(void) {
      * Transform the voxel value to a colour map texture
      * coordinate, and look up the colour for the voxel value
      */ 
-    normVoxValue = voxValXform * vec4(voxValue, 0, 0, 1);
+    normVoxValue = img2CmapXform * vec4(voxValue, 0, 0, 1);
 
     if (negCmap) gl_FragColor = texture1D(negColourTexture, normVoxValue.x);
     else         gl_FragColor = texture1D(colourTexture,    normVoxValue.x);
