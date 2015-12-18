@@ -22,13 +22,14 @@ following functions:
    compileShaders
 
 
-Some functions are also provided for use with OpenGL 1.4, which make setting
-program variables a bit less painful:
+Some functions are also provided which make setting program variables a bit
+less painful:
 
 
 .. autosummary::
    :nosignatures:
 
+   getShaderVars
    setVertexProgramVector
    setVertexProgramMatrix
    setFragmentProgramVector
@@ -124,12 +125,12 @@ def getShaderVars(shaders, vertAtts, vertUniforms, fragUniforms):
     """Gets the position indices for all vertex shader attributes, uniforms,
     and fragment shader uniforms for the given shader programs.
 
-    :arg shaders:
-    :arg vertAtts:
-    :arg vertUniforms:
-    :arg fragUniforms:
+    :arg shaders:      Reference to the compiled shader program.
+    :arg vertAtts:     List of attributes required by the vertex shader.
+    :arg vertUniforms: List of uniforms required by the vertex shader.
+    :arg fragUniforms: List of uniforms required by the fragment shader.
 
-    :returns:
+    :returns:  A dictionary of ``{name : position}`` mappings.
     """
 
     import OpenGL.GL as gl

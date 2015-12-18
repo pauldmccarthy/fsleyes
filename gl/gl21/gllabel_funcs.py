@@ -50,46 +50,35 @@ def compileShaders(self):
 
     vertShaderSrc = shaders.getVertexShader(  self)
     fragShaderSrc = shaders.getFragmentShader(self)
-    self.shaders = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
 
-    self.vertexPos         = gl.glGetAttribLocation( self.shaders,
-                                                     'vertex')
-    self.voxCoordPos       = gl.glGetAttribLocation( self.shaders,
-                                                     'voxCoord')
-    self.texCoordPos       = gl.glGetAttribLocation( self.shaders,
-                                                     'texCoord') 
-    self.imageTexturePos   = gl.glGetUniformLocation(self.shaders,
-                                                     'imageTexture')
-    self.lutTexturePos     = gl.glGetUniformLocation(self.shaders,
-                                                     'lutTexture')
-    self.voxValXformPos    = gl.glGetUniformLocation(self.shaders,
-                                                     'voxValXform') 
-    self.imageShapePos     = gl.glGetUniformLocation(self.shaders,
-                                                     'imageShape')
-    self.useSplinePos      = gl.glGetUniformLocation(self.shaders,
-                                                     'useSpline')
-    self.numLabelsPos      = gl.glGetUniformLocation(self.shaders,
-                                                     'numLabels')
-    self.outlinePos        = gl.glGetUniformLocation(self.shaders,
-                                                     'outline') 
-    self.outlineOffsetsPos = gl.glGetUniformLocation(self.shaders,
-                                                     'outlineOffsets')
+    vertAtts     = ['vertex',       'voxCoord',   'texCoord']
+    vertUniforms = []
+    fragUniforms = ['imageTexture', 'lutTexture', 'voxValXform',
+                    'imageShape',   'numLabels',  'outline',
+                    'outlineOffsets']
+
+    self.shaders    = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
+    self.shaderVars = shaders.getShaderVars(self.shaders,
+                                            vertAtts,
+                                            vertUniforms,
+                                            fragUniforms)
 
 
 def updateShaderState(self):
     """Updates all shader program variables. """
 
-    opts = self.displayOpts
+    opts  = self.displayOpts
+    svars = self.shaderVars
 
     gl.glUseProgram(self.shaders)
 
-    gl.glUniform1f( self.outlinePos,       opts.outline)
-    gl.glUniform1f( self.numLabelsPos,     opts.lut.max() + 1)
-    gl.glUniform3fv(self.imageShapePos, 1, np.array(self.image.shape[:3],
+    gl.glUniform1f( svars['outline'],       opts.outline)
+    gl.glUniform1f( svars['numLabels'],     opts.lut.max() + 1)
+    gl.glUniform3fv(svars['imageShape'], 1, np.array(self.image.shape[:3],
                                                      dtype=np.float32))
     
     vvx = self.imageTexture.voxValXform.ravel('C')
-    gl.glUniformMatrix4fv(self.voxValXformPos, 1, False, vvx)
+    gl.glUniformMatrix4fv(svars['voxValXform'], 1, False, vvx)
 
     outlineOffsets = opts.outlineWidth / \
                      np.array(self.image.shape[:3], dtype=np.float32)
@@ -100,10 +89,10 @@ def updateShaderState(self):
     else:
         outlineOffsets[self.zax] = -1
 
-    gl.glUniform3fv(self.outlineOffsetsPos, 1, outlineOffsets)
+    gl.glUniform3fv(svars['outlineOffsets'], 1, outlineOffsets)
 
-    gl.glUniform1i(self.imageTexturePos, 0)
-    gl.glUniform1i(self.lutTexturePos,   1) 
+    gl.glUniform1i(svars['imageTexture'], 0)
+    gl.glUniform1i(svars['lutTexture'],   1) 
 
     gl.glUseProgram(0)
 

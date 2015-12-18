@@ -60,7 +60,7 @@ class GLMask(glvolume.GLVolume):
             self.onUpdate() 
             
         def colourUpdate(*a):
-            self.refreshColourTexture()
+            self.refreshColourTextures()
             fslgl.glvolume_funcs.updateShaderState(self)
             self.onUpdate()
 
@@ -131,7 +131,7 @@ class GLMask(glvolume.GLVolume):
                 not self.displayOpts.isSyncedToParent('resolution'))
 
         
-    def refreshColourTexture(self, *a):
+    def refreshColourTextures(self, *a):
         """Overrides :meth:`.GLVolume.refreshColourTexture`.
 
         Creates a colour texture which contains the current mask colour, and a

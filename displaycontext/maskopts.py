@@ -62,17 +62,19 @@ class MaskOpts(volumeopts.Nifti1Opts):
 
         # Mask images are rendered using GLMask, which
         # inherits from GLVolume. The latter assumes
-        # that 'clippingRange', 'interpolation', and
-        # 'invertClipping' attributes are present on
-        # Opts instances (see the VolumeOpts class).
-        # So we're adding dummy attributes to make the
-        # GLVolume rendering code happy.
+        # that the DisplayOpts instance passed to it
+        # has the following attributes (see the
+        # VolumeOpts class). So we're adding dummy
+        # attributes to make the GLVolume rendering
+        # code happy.
         #
         # TODO Write independent GLMask rendering routines
         # instead of using the GLVolume implementations
-        self.clippingRange  = (self.dataMin - 1, self.dataMax + 1)
-        self.interpolation  = 'none'
-        self.invertClipping = False
+        self.clippingRange   = (self.dataMin - 1, self.dataMax + 1)
+        self.interpolation   = 'none'
+        self.invertClipping  = False
+        self.useNegativeCmap = False
+        self.clipImage       = None
 
         self.threshold.xmin = self.dataMin - dMinDistance
         self.threshold.xmax = self.dataMax + dMinDistance
