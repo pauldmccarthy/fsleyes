@@ -110,10 +110,6 @@ class VectorOpts(volumeopts.Nifti1Opts):
         """
         self.overlayList.removeListener('overlays', self.name)
 
-        for overlay in self.overlayList:
-            display = self.displayCtx.getDisplay(overlay)
-            display.removeListener('name', self.name)
-
         volumeopts.Nifti1Opts.destroy(self)
 
         
@@ -151,7 +147,7 @@ class VectorOpts(volumeopts.Nifti1Opts):
         colourProp = self.getProp('colourImage')
         modVal     = self.modulateImage
         clipVal    = self.clipImage
-        colourVal  = self.clipImage
+        colourVal  = self.colourImage
         overlays   = self.displayCtx.getOrderedOverlays()
 
         # the image for this VectorOpts
@@ -184,23 +180,17 @@ class VectorOpts(volumeopts.Nifti1Opts):
                 continue
 
             options.append(overlay)
-
-            display = self.displayCtx.getDisplay(overlay)
-            display.addListener('name',
-                                self.name,
-                                self.__overlayListChanged,
-                                overwrite=True)
             
         modProp   .setChoices(options, instance=self)
         clipProp  .setChoices(options, instance=self)
         colourProp.setChoices(options, instance=self)
 
-        if modVal    in overlays: self.modulateImage = modVal
-        else:                     self.modulateImage = None
-        if clipVal   in overlays: self.clipImage     = clipVal
-        else:                     self.clipImage     = None
-        if colourVal in overlays: self.colourImage   = colourVal
-        else:                     self.colourImage   = None 
+        if modVal    in options: self.modulateImage = modVal
+        else:                    self.modulateImage = None
+        if clipVal   in options: self.clipImage     = clipVal
+        else:                    self.clipImage     = None
+        if colourVal in options: self.colourImage   = colourVal
+        else:                    self.colourImage   = None 
 
 
 class LineVectorOpts(VectorOpts):

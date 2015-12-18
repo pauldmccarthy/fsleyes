@@ -33,27 +33,62 @@ class GLVector(globject.GLImageObject):
     by this class.
 
 
-    The :class:`.Image` is stored on the GPU as a 3D RGB
-    :class:`.ImageTexture`, where the ``R`` channel contains the ``x`` vector
-    values, the ``G`` channel the ``y`` values, and the ``B`` channel the
-    ``z`` values.
+    The ``image`` overlay passed to :meth:`__init__` is assumed to be
+    an :class:`.Image` instance which contains vector data. If this is not
+    the case, the ``vectorImage`` parameter may be used to pass in the
+    :class:`.Image` that contains the vector data.
+
+    This vector image is stored on the GPU as a 3D RGB :class:`.ImageTexture`,
+    where the ``R`` channel contains the ``x`` vector values, the ``G``
+    channel the ``y`` values, and the ``B`` channel the ``z`` values.
 
 
-    Three 1D :class:`.ColourMapTexture` instances are used to store a colour
-    table for each of the ``x``, ``y`` and ``z`` components. A custom fragment
-    shader program looks up the ``xyz`` vector values, looks up colours for
-    each of them, and combines the three colours to form the final fragment
-    colour.
+    *Colouring*
 
+    A ``GLVector`` can be coloured in one of two ways:
 
-    The colour of each vector may be modulated by another image, specified by
-    the :attr:`.VectorOpts.modulateImage` property.  This modulation image is
-    stored as a 3D single-channel :class:`.ImageTexture`.
+     - Each voxel is coloured according to the orientation of the vector.
+       Three 1D :class:`.ColourMapTexture` instances are used to store a
+       colour table for each of the ``x``, ``y`` and ``z`` components. A
+       custom fragment shader program looks up the ``xyz`` vector values,
+       looks up colours for each of them, and combines the three colours to
+       form the final fragment colour. The colours for each component
+       are specified by the :attr:`.VectorOpts.xColour`,
+       :attr:`.VectorOpts.yColour`, and :attr:`.VectorOpts.zColour`
+       properties.
+
+     - Each voxel is coloured according to the values contained in another
+       image, which are used to look up a colour in a colour map. The image
+       and colour map are respectively specified by the
+       :attr:`.VectorOpts.colourImage` and :attr:`.VectorOpts.cmap` properties.
 
     
-    Vector voxels may be clipped according to the values of another image,
-    specified by the :attr:`.VectorOpts.clipImage` property.  This clipping
-    image is stored as a 3D single-channel :class:`.ImageTexture`. 
+    In either case, the brightness of each vector colour may be modulated by
+    another image, specified by the :attr:`.VectorOpts.modulateImage`
+    property.  This modulation image is stored as a 3D single-channel
+    :class:`.ImageTexture`.
+
+    Finally, vector voxels may be clipped according to the values of another
+    image, specified by the :attr:`.VectorOpts.clipImage` property.  This
+    clipping image is stored as a 3D single-channel :class:`.ImageTexture`, and
+    the clipping thresholds specified by the :attr:`.VectorOpts.clippingRange`
+    property.
+
+    
+    *Textures*
+
+    The ``GLVector`` class configures its textures in the following manner:
+
+    =================== ================== 
+    ``imageTexture``    ``gl.GL_TEXTURE0``
+    ``modulateTexture`` ``gl.GL_TEXTURE1``
+    ``clipTexture``     ``gl.GL_TEXTURE2``
+    ``colourTexture``   ``gl.GL_TEXTURE3``
+    ``xColourTexture``  ``gl.GL_TEXTURE4``
+    ``yColourTexture``  ``gl.GL_TEXTURE5``
+    ``zColourTexture``  ``gl.GL_TEXTURE6``
+    ``cmapTexture``     ``gl.GL_TEXTURE7``
+    =================== ==================
     """
 
     
@@ -63,8 +98,8 @@ class GLVector(globject.GLImageObject):
         Initialises the OpenGL data required to render the given image.
         This method does the following:
         
-          - Creates the image texture, the modulate texture, and the three
-            colour map textures.
+          - Creates the vector image texture, the modulate, clipping and colour
+            image textures, and the four colour map textures.
 
           - Adds listeners to the :class:`.Display` and :class:`.VectorOpts`
             instances, so the textures and geometry can be updated when
@@ -101,22 +136,28 @@ class GLVector(globject.GLImageObject):
         name = self.name
 
         self.vectorImage     = vectorImage
-        self.xColourTexture  = textures.ColourMapTexture('{}_x'.format(name))
-        self.yColourTexture  = textures.ColourMapTexture('{}_y'.format(name))
-        self.zColourTexture  = textures.ColourMapTexture('{}_z'.format(name))
+        self.xColourTexture  = textures.ColourMapTexture('{}_x' .format(name))
+        self.yColourTexture  = textures.ColourMapTexture('{}_y' .format(name))
+        self.zColourTexture  = textures.ColourMapTexture('{}_z' .format(name))
+        self.cmapTexture     = textures.ColourMapTexture('{}_cm'.format(name))
+        
         self.modulateImage   = None
         self.clipImage       = None
+        self.colourImage     = None
         self.modulateOpts    = None
         self.clipOpts        = None
+        self.colourOpts      = None
         self.modulateTexture = None
         self.clipTexture     = None
+        self.colourTexture   = None
         self.imageTexture    = None
         self.prefilter       = prefilter
 
         self.addListeners()
         self.refreshImageTexture()
-        self.refreshModClipTexture('modulate')
-        self.refreshModClipTexture('clip')
+        self.refreshAuxTexture('modulate')
+        self.refreshAuxTexture('clip')
+        self.refreshAuxTexture('colour')
         self.refreshColourTextures()
 
         
@@ -129,22 +170,28 @@ class GLVector(globject.GLImageObject):
         self.xColourTexture.destroy()
         self.yColourTexture.destroy()
         self.zColourTexture.destroy()
+        self.cmapTexture   .destroy()
 
         glresources.delete(self.imageTexture   .getTextureName())
         glresources.delete(self.modulateTexture.getTextureName())
         glresources.delete(self.clipTexture    .getTextureName())
+        glresources.delete(self.colourTexture  .getTextureName())
 
         self.removeListeners()
-        self.deregisterModClipImage('modulate')
-        self.deregisterModClipImage('clip')
+        self.deregisterAuxImage('modulate')
+        self.deregisterAuxImage('clip')
+        self.deregisterAuxImage('colour')
 
         self.imageTexture    = None
         self.modulateTexture = None
         self.clipTexture     = None
+        self.colourTexture   = None
         self.modulateImage   = None
         self.clipImage       = None
+        self.colourImage     = None
         self.modulateOpts    = None
         self.clipOpts        = None
+        self.colourOpts      = None
 
         globject.GLImageObject.destroy(self)
 
@@ -163,18 +210,27 @@ class GLVector(globject.GLImageObject):
             self.onUpdate()
         
         def modUpdate( *a):
-            self.deregisterModClipImage('modulate')
-            self.registerModClipImage('modulate') 
-            self.refreshModClipTexture('modulate')
+            self.deregisterAuxImage('modulate')
+            self.registerAuxImage(  'modulate') 
+            self.refreshAuxTexture( 'modulate')
             self.updateShaderState()
             self.onUpdate()
 
         def clipUpdate( *a):
-            self.deregisterModClipImage('clip')
-            self.registerModClipImage('clip')
-            self.refreshModClipTexture('clip')
+            self.deregisterAuxImage('clip')
+            self.registerAuxImage(  'clip')
+            self.refreshAuxTexture( 'clip')
             self.updateShaderState()
             self.onUpdate()
+
+        def colourUpdate( *a):
+            self.deregisterAuxImage('colour')
+            self.registerAuxImage(  'colour')
+            self.refreshAuxTexture( 'colour')
+            
+            self.compileShaders()
+            self.updateShaderState()
+            self.onUpdate() 
  
         def cmapUpdate(*a):
             self.refreshColourTextures()
@@ -201,20 +257,22 @@ class GLVector(globject.GLImageObject):
             self.updateShaderState()
             self.onUpdate()
 
-        display.addListener('alpha',         name, cmapUpdate,    weak=False)
-        display.addListener('brightness',    name, cmapUpdate,    weak=False)
-        display.addListener('contrast',      name, cmapUpdate,    weak=False)
-        opts   .addListener('xColour',       name, cmapUpdate,    weak=False)
-        opts   .addListener('yColour',       name, cmapUpdate,    weak=False)
-        opts   .addListener('zColour',       name, cmapUpdate,    weak=False)
-        opts   .addListener('suppressX',     name, cmapUpdate,    weak=False)
-        opts   .addListener('suppressY',     name, cmapUpdate,    weak=False)
-        opts   .addListener('suppressZ',     name, cmapUpdate,    weak=False)
-        opts   .addListener('modulateImage', name, modUpdate,     weak=False)
-        opts   .addListener('clipImage',     name, clipUpdate,    weak=False)
-        opts   .addListener('clippingRange', name, shaderUpdate,  weak=False)
-        opts   .addListener('resolution',    name, imageUpdate,   weak=False)
-        opts   .addListener('transform',     name, update,        weak=False)
+        display.addListener('alpha',         name, cmapUpdate,   weak=False)
+        display.addListener('brightness',    name, cmapUpdate,   weak=False)
+        display.addListener('contrast',      name, cmapUpdate,   weak=False)
+        opts   .addListener('xColour',       name, cmapUpdate,   weak=False)
+        opts   .addListener('yColour',       name, cmapUpdate,   weak=False)
+        opts   .addListener('zColour',       name, cmapUpdate,   weak=False)
+        opts   .addListener('cmap',          name, cmapUpdate,   weak=False)
+        opts   .addListener('suppressX',     name, cmapUpdate,   weak=False)
+        opts   .addListener('suppressY',     name, cmapUpdate,   weak=False)
+        opts   .addListener('suppressZ',     name, cmapUpdate,   weak=False)
+        opts   .addListener('modulateImage', name, modUpdate,    weak=False)
+        opts   .addListener('clipImage',     name, clipUpdate,   weak=False)
+        opts   .addListener('colourImage',   name, colourUpdate, weak=False)
+        opts   .addListener('clippingRange', name, shaderUpdate, weak=False)
+        opts   .addListener('resolution',    name, imageUpdate,  weak=False)
+        opts   .addListener('transform',     name, update,       weak=False)
 
         # See comment in GLVolume.addDisplayListeners about this
         self.__syncListenersRegistered = opts.getParent() is not None 
@@ -239,11 +297,13 @@ class GLVector(globject.GLImageObject):
         opts   .removeListener('xColour',       name)
         opts   .removeListener('yColour',       name)
         opts   .removeListener('zColour',       name)
+        opts   .removeListener('cmap',          name)
         opts   .removeListener('suppressX',     name)
         opts   .removeListener('suppressY',     name)
         opts   .removeListener('suppressZ',     name)
         opts   .removeListener('modulateImage', name)
         opts   .removeListener('clipImage',     name)
+        opts   .removeListener('colourImage',   name)
         opts   .removeListener('clippingRange', name)
         opts   .removeListener('volume',        name)
         opts   .removeListener('resolution',    name)
@@ -311,17 +371,17 @@ class GLVector(globject.GLImageObject):
 
 
 
-    def registerModClipImage(self, which):
-        """Called when the :attr:`.VectorOpts.modulateImage` or
-        :attr:`.VectorOpts.clipImage` properties change. Registers a listener
-        with the :attr:`.Nifti1Opts.volume` property of the modulate/clip
-        image, so the modulate/clip textures can be updated when the image
+    def registerAuxImage(self, which):
+        """Called when the :attr:`.VectorOpts.modulateImage`,
+        :attr:`.VectorOpts.clipImage`, or :attr:`.VectorOpts.colourImage`
+        properties change. Registers a listener with the
+        :attr:`.Nifti1Opts.volume` property of the modulate/clip/colour image,
+        so the modulate/clip/colour textures can be updated when the image
         volume changes.
         """
 
         imageAttr = '{}Image'  .format(which)
         optsAttr  = '{}Opts'   .format(which)
-        texAttr   = '{}Texture'.format(which) 
         
         image = getattr(self.displayOpts, imageAttr)
 
@@ -335,19 +395,17 @@ class GLVector(globject.GLImageObject):
             return
 
         opts = self.displayOpts.displayCtx.getOpts(image)
-        tex  = getattr(self, texAttr)
 
         setattr(self, optsAttr, opts)
 
         def volumeChange(*a):
             
-            tex.set(volume=opts.volume)
-            self.refreshModClipTexture(which)
+            self.refreshAuxTexture(which)
             self.onUpdate()
 
         # We set overwrite=True, because
-        # the modulate and clip images may
-        # be the same.
+        # the modulate/clip/colour images
+        # may be the same.
         opts.addListener('volume',
                          self.name,
                          volumeChange,
@@ -355,11 +413,11 @@ class GLVector(globject.GLImageObject):
                          weak=False) 
 
     
-    def deregisterModClipImage(self, which):
-        """Called when the :attr:`.VectorOpts.modulateImage` or
-        :attr:`.VectorOpts.clipImage` properties change.
-        Deregisters the :attr:`.Nifti1Opts.volume` listener that was
-        registered in :meth:`registerModClipImage`.
+    def deregisterAuxImage(self, which):
+        """Called when the :attr:`.VectorOpts.modulateImage`,
+        :attr:`.VectorOpts.clipImage` or :attr:`.VectorOpts.colourImage`
+        properties change.  Deregisters the :attr:`.Nifti1Opts.volume`
+        listener that was registered in :meth:`registerAuxImage`.
         """
 
         imageAttr = '{}Image'.format(which)
@@ -374,13 +432,13 @@ class GLVector(globject.GLImageObject):
         setattr(self, optsAttr,  None)
  
             
-    def refreshModClipTexture(self, which):
-        """Called when the :attr`.VectorOpts.modulate` property changes.
-
-        Reconfigures the modulation :class:`.ImageTexture`. If no modulation
-        image is selected, a 'dummy' texture is creatad, which contains all
-        white values (and which result in the modulation texture having no
-        effect).
+    def refreshAuxTexture(self, which):
+        """Called when the :attr`.VectorOpts.modulateImage`,
+        :attr`.VectorOpts.clipImage`, or :attr`.VectorOpts.colourImage`
+        properties changes.  Reconfigures the modulation/clip/colour
+        :class:`.ImageTexture`. If no image is selected, a 'dummy' texture is
+        creatad, which contains all white values (and which result in the
+        auxillary textures having no effect).
         """
 
         imageAttr = '{}Image'  .format(which)
@@ -412,7 +470,7 @@ class GLVector(globject.GLImageObject):
                         not opts.isSyncedToParent('volume'))
 
             # TODO If unsynced, this GLVector needs to 
-            # update the mod/clip textures whenever
+            # update the mod/clip/colour textures whenever
             # their volume/resolution properties change.
             # Right?
             if unsynced:
@@ -430,12 +488,14 @@ class GLVector(globject.GLImageObject):
 
     def refreshColourTextures(self, colourRes=256):
         """Called when the component colour maps need to be updated, when one
-        of the :attr:`.VectorOpts.xColour`, ``yColour``, ``zColour``,
+        of the :attr:`.VectorOpts.xColour`, ``yColour``, ``zColour``, ``cmap``,
         ``suppressX``, ``suppressY``, or ``suppressZ`` properties change.
 
         Regenerates the colour textures.
         """
 
+        # Refresh the xColour/yColour/zColour
+        # textures first
         display = self.display
         opts    = self.displayOpts
 
@@ -479,33 +539,55 @@ class GLVector(globject.GLImageObject):
                 cmap = np.zeros((colourRes, 4))
 
             texture.set(cmap=cmap, displayRange=drange)
+
+        # Now do the cmap texture
+        if self.colourImage is None:
+            dmin, dmax = 0.0, 1.0
+        else:
+            
+            colourImageOpts = opts.displayCtx.getOpts(self.colourImage)
+
+            dmin = colourImageOpts.dataMin
+            dmax = colourImageOpts.dataMax
+
+            dmin, dmax = fslcm.briconToDisplayRange(
+                (dmin, dmax),
+                display.brightness / 100.0,
+                display.contrast   / 100.0)
+
+        self.cmapTexture.set(cmap=opts.cmap,
+                             alpha=display.alpha / 100.0,
+                             displayRange=(dmin, dmax)) 
         
         
     def preDraw(self):
         """Must be called by subclass implementations.
 
-        Ensures that the six textures (the vector, clip, and modulation
-        images, and the three colour textures) are bound to texture units 0-5
-        respectively.
+        Ensures that all of the textures used by this ``GLVector``are bound to
+        their corresponding texture units.
         """
         
         self.imageTexture   .bindTexture(gl.GL_TEXTURE0)
         self.modulateTexture.bindTexture(gl.GL_TEXTURE1)
         self.clipTexture    .bindTexture(gl.GL_TEXTURE2)
-        self.xColourTexture .bindTexture(gl.GL_TEXTURE3)
-        self.yColourTexture .bindTexture(gl.GL_TEXTURE4)
-        self.zColourTexture .bindTexture(gl.GL_TEXTURE5)
+        self.colourTexture  .bindTexture(gl.GL_TEXTURE3)
+        self.xColourTexture .bindTexture(gl.GL_TEXTURE4)
+        self.yColourTexture .bindTexture(gl.GL_TEXTURE5)
+        self.zColourTexture .bindTexture(gl.GL_TEXTURE6)
+        self.cmapTexture    .bindTexture(gl.GL_TEXTURE7)
 
         
     def postDraw(self):
         """Must be called by subclass implementations.
 
-        Unbindes the six GL textures.
+        Unbinds all of the textures used by this ``GLVector``.
         """
 
         self.imageTexture   .unbindTexture()
         self.modulateTexture.unbindTexture()
         self.clipTexture    .unbindTexture()
+        self.colourTexture  .unbindTexture()
         self.xColourTexture .unbindTexture()
         self.yColourTexture .unbindTexture()
         self.zColourTexture .unbindTexture()
+        self.cmapTexture    .unbindTexture()

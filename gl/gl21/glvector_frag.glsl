@@ -20,22 +20,11 @@ uniform sampler3D imageTexture;
  */
 uniform sampler3D modulateTexture;
 
-
 /*
  * Texture containing values which determine
  * whether a vector voxel should be clipped.
  */
 uniform sampler3D clipTexture;
-
-
-/*
- * If the clipping value is outside of
- * this range, the fragment is clipped.
- * These values should be in the texture 
- * data range of the clipTexture.
- */
-uniform float clipLow;
-uniform float clipHigh;
 
 /*
  * Colour map for the X vector component.
@@ -68,6 +57,15 @@ uniform mat4 cmapXform;
  * Shape of the image texture.
  */
 uniform vec3 imageShape;
+
+/*
+ * If the clipping value is outside of
+ * this range, the fragment is clipped.
+ * These values should be in the texture 
+ * data range of the clipTexture.
+ */
+uniform float clipLow;
+uniform float clipHigh;
 
 /*
  * Use spline interpolation?
