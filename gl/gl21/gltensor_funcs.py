@@ -193,23 +193,19 @@ def preDraw(self):
     svars = self.shaderVars
 
     # Define the light position in
-    # the world coordinate system
-    lightPos = np.array([1, 1, -1], dtype=np.float32)
-
-    lightPos[self.zax] *= 3
-
-    # Transform the light position into
-    # the display coordinate system,
-    # and normalise to unit length
-    mvMat     = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)[:3, :3]
-    lightPos  = np.dot(mvMat, lightPos)
-    lightPos /= np.sqrt(np.sum(lightPos ** 2))
+    # the eye coordinate system
+    lightPos  = np.array([-1, -1, 4], dtype=np.float32)
+    lightPos /= np.sqrt(np.sum(lightPos ** 2)) 
 
     # Calculate a transformation matrix for
-    # normal vectors - T(I(MV matrix))
-    normalMatrix = npla.inv(mvMat).T
+    # normal vectors - T(I(MV matrix)) 
+    mvMat        = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)[:3, :3]
+    v2dMat       = self.displayOpts.getTransform('voxel', 'display')[:3, :3]
+    
+    normalMatrix = transform.concat(mvMat, v2dMat)
+    normalMatrix = npla.inv(normalMatrix).T
+    normalMatrix = np.array(normalMatrix, dtype=np.float32).ravel('C')
 
-    gl.glUniform1f(       svars['zax'],                    self.zax)
     gl.glUniform3fv(      svars['lightPos'],     1,        lightPos)
     gl.glUniformMatrix3fv(svars['normalMatrix'], 1, False, normalMatrix) 
     

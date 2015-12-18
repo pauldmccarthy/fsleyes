@@ -69,14 +69,8 @@ uniform float eigValNorm;
 uniform bool lighting;
 
 /*
- * The display coordinate system axis which is the depth 
- * axis. Required for some horrible lighting related hackiness.
- */
-uniform float zax;
-
-/*
- * Position of the directional light - must be specified
- *  in the view coordinate system..
+ * Position of the directional light - must be 
+ * specified in eye/screen space.
  */
 uniform vec3 lightPos;
 
@@ -170,6 +164,23 @@ void main(void) {
     norm.y /= l2;
     norm.z /= l3;
 
+    // The eigenvector matrix should only
+    // define rotations and scalings (not
+    // reflections), so here we make sure
+    // that it has a positive determinant.
+    float det = eigvecs[0][0] * eigvecs[1][1] * eigvecs[2][2] +
+                eigvecs[0][1] * eigvecs[1][2] * eigvecs[2][0] +
+                eigvecs[1][0] * eigvecs[2][1] * eigvecs[0][2] -
+                eigvecs[2][0] * eigvecs[1][1] * eigvecs[0][2] -
+                eigvecs[0][0] * eigvecs[1][2] * eigvecs[2][1] -
+                eigvecs[0][1] * eigvecs[1][0] * eigvecs[2][2];
+
+    // The matrix is orthonormal, so
+    // inverting it should be enough
+    // to invert the determinant.
+    if (det < 0)
+      eigvecs = -eigvecs;
+
     // Transform the normal vectors by eigvecs
     // to rotate them into the voxel coordinate
     // system, and then transform them by the
@@ -182,9 +193,8 @@ void main(void) {
     // calculated for us in gltensor_funcs.
     //
     // [ orthonormal -> eigvecs = T(I(eigvecs)) ]
-    norm = eigvecs      * norm;
-    norm = normalMatrix * norm;
-    norm = normalize(norm);
+    norm = normalize(normalMatrix * eigvecs * norm);
+
 
     // I honestly have no idea why this is necessary.
     // There is some weird interaction going on in the
@@ -193,39 +203,27 @@ void main(void) {
     // eigvecs matrix), and then on to display space
     // (through the normalMatrix).
     //
-    // If our depth axis (zax) is y or z (1 or 2),
-    // and the eigvecs matrix has a negative determinant,
-    // we need to flip the z value of the normal vector.
-    // But if zax is 0, and the eigvecs matrix has a
-    // positive determinant, we need to flip the y value
-    // of the normal vector.
+    // If the eigvecs matrix has a negative determinant,
+    // we need to flip the xy values of the normal vector.
     //
-    // If we don't do this, the lighting on the ellipsoids
-    // appears to be coming from behind them, instead of in
-    // front. I don't know what the hell is going on here.
-    float det = eigvecs[0][0] * eigvecs[1][1] * eigvecs[2][2] +
-                eigvecs[0][1] * eigvecs[1][2] * eigvecs[2][0] +
-                eigvecs[1][0] * eigvecs[2][1] * eigvecs[0][2] -
-                eigvecs[2][0] * eigvecs[1][1] * eigvecs[0][2] -
-                eigvecs[0][0] * eigvecs[1][2] * eigvecs[2][1] -
-                eigvecs[0][1] * eigvecs[1][0] * eigvecs[2][2];
+    // If we don't do this, the lighting direction on
+    // ellipsoids with positive/negative determinants
+    // is inverted. I don't know what the hell is going
+    // on here.
+    if (det < 0)
+       norm.xy = -norm.xy;
 
-    // Avert your eyes.
-    if (det < 0) {
-      if (zax == 0) 
-        norm.y = -norm.y;
-    }
-    else if (zax > 0) {
-      norm.z = -norm.z;
-    }
-
-    // Calculate the diffuse and
-    // ambient light components 
-    float ambient = 0.3;
     float angle   = dot(norm, -lightPos);
-    float diffuse = max(sign(angle) * angle * angle, 0);
 
-    diffuse = diffuse + ambient;
+    // More hackiness - I'm squaring the angle
+    // for a more dramatic lighting effect, but
+    // am not discarding negative values. Banding
+    // will occur if the light direction is near
+    // parallel to the xy plane.
+    float diffuse = max(angle * angle, 0);
+
+    // Add an ambient light level of 30%
+    diffuse = diffuse + 0.3;
     light   = vec3(diffuse, diffuse, diffuse);
   }
 
