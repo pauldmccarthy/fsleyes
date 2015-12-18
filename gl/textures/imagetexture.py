@@ -53,7 +53,9 @@ class ImageTexture(texture.Texture):
                  nvals=1,
                  normalise=False,
                  prefilter=None,
-                 interp=gl.GL_NEAREST):
+                 interp=gl.GL_NEAREST,
+                 resolution=None,
+                 volume=None):
         """Create an ``ImageTexture``. A listener is added to the
         :attr:`.Image.data` property, so that the texture data can be
         refreshed whenever the image data changes - see the
@@ -108,8 +110,8 @@ class ImageTexture(texture.Texture):
         self.__imageDataChanged(False)
         self.set(interp=interp,
                  prefilter=prefilter,
-                 resolution=None,
-                 volume=None,
+                 resolution=resolution,
+                 volume=volume,
                  normalise=normalise)
 
 

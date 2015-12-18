@@ -622,6 +622,14 @@ class VolumeOpts(Nifti1Opts):
             self       .addListener('displayRange',
                                     self.name,
                                     self.__displayRangeChanged)
+
+            # In fact, the interaction between many of the
+            # VolumeOpts properties really screws with
+            # the parent-child sync relationship, so I'm
+            # just completely avoiding it by only registering
+            # listeners on child instances. See note above
+            # about why this will probably break future
+            # usage.
             self       .addListener('useNegativeCmap',
                                     self.name,
                                     self.__useNegativeCmapChanged)
@@ -739,6 +747,12 @@ class VolumeOpts(Nifti1Opts):
             dataMin = opts.dataMin
             dataMax = opts.dataMax
 
+            # If the clipping range is based on another
+            # image, it makes no sense to link the low/
+            # high display/clipping ranges, as they are
+            # probably different. So if a clip image is
+            # selected, we disable the link range
+            # properties.
             if self.propertyIsEnabled('linkLowRanges'):
 
                 self.disableListener('linkLowRanges',  self.name)
@@ -749,9 +763,11 @@ class VolumeOpts(Nifti1Opts):
             
                 self.__linkLowRangesChanged()
                 self.__linkHighRangesChanged()
-            
+
                 self.disableProperty('linkLowRanges')
                 self.disableProperty('linkHighRanges')
+                self.enableListener('linkLowRanges',  self.name)
+                self.enableListener('linkHighRanges', self.name) 
             
         # Keep range values 0.01% apart.
         dMinDistance = abs(dataMax - dataMin) / 10000.0

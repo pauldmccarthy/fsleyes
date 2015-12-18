@@ -215,9 +215,13 @@ class FSLEyesFrame(wx.Frame):
         # CanvasPanels are unsynced; other
         # ViewPanels (e.g. TimeSeriesPanel) remain
         # synced by default.
-        if panelId > 1 and issubclass(panelCls, views.CanvasPanel):
+        if panelId == 1:
+            childDC.syncToParent('overlayOrder')
+            childDC.syncOverlayDisplay = True
+            
+        elif issubclass(panelCls, views.CanvasPanel):
             childDC.syncOverlayDisplay = False
-        
+
         panel = panelCls(
             self,
             self.__overlayList,

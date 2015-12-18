@@ -159,6 +159,13 @@ class GLVolume(globject.GLImageObject):
         # Create an image texture, clip texture, and a colour map texture
         self.texName  = '{}_{}'.format(type(self).__name__, id(self.image))
 
+        # References to the clip image and
+        # associated DisplayOpts instance,
+        # if it is set.
+        self.clipImage        = None
+        self.clipOpts         = None
+
+        # Refs to all of the texture objects.
         self.imageTexture     = None
         self.clipTexture      = None 
         self.colourTexture    = textures.ColourMapTexture(self.texName)
@@ -186,12 +193,13 @@ class GLVolume(globject.GLImageObject):
         
         self.colourTexture   .destroy()
         self.negColourTexture.destroy()
-        
+
         self.imageTexture     = None
         self.clipTexture      = None
         self.colourTexture    = None
         self.negColourTexture = None
-        
+
+        self.deregisterClipImage()
         self.removeDisplayListeners()
         
         fslgl.glvolume_funcs  .destroy(self)
@@ -241,11 +249,16 @@ class GLVolume(globject.GLImageObject):
             self.imageTexture.set(volume=volume,
                                   interp=interp,
                                   resolution=resolution)
-            
+
+            if self.clipTexture is not None:
+                self.clipTexture.set(interp=interp, resolution=resolution)
+
             fslgl.glvolume_funcs.updateShaderState(self)
             self.onUpdate()
 
         def clipUpdate(*a):
+            self.deregisterClipImage()
+            self.registerClipImage()
             self.refreshClipTexture()
             fslgl.glvolume_funcs.updateShaderState(self)
             self.onUpdate()
@@ -358,14 +371,57 @@ class GLVolume(globject.GLImageObject):
             self.image,
             interp=interp)
 
+
+    def registerClipImage(self):
+        """Called whenever the :attr:`.VolumeOpts.clipImage` property changes.
+        Adds property listeners to the :class:`.Nifti1Opts` instance
+        associated with the new clip image, if necessary.
+        """
+
+        clipImage = self.displayOpts.clipImage
+
+        if clipImage is None:
+            return
+
+        clipOpts = self.displayOpts.displayCtx.getOpts(clipImage) 
+
+        self.clipImage = clipImage
+        self.clipOpts  = clipOpts
         
+        def updateClipTexture(*a):
+            self.clipTexture.set(volume=clipOpts.volume)
+            self.onUpdate()
+
+        clipOpts.addListener('volume',
+                             self.name,
+                             updateClipTexture,
+                             weak=False)
+
+    
+    def deregisterClipImage(self):
+        """Called whenever the :attr:`.VolumeOpts.clipImage` property changes.
+        Removes property listeners from the :class:`.Nifti1Opts` instance
+        associated with the old clip image, if necessary.
+        """
+
+        if self.clipImage is None:
+            return
+
+        self.clipOpts.removeListener('volume', self.name)
+
+        self.clipImage = None
+        self.clipOpts  = None
+        
+
     def refreshClipTexture(self):
-        """Refreshes the :class:`.ImageTexture` used to store the
+        """Re-creates the :class:`.ImageTexture` used to store the
         :attr:`.VolumeOpts.clipImage`.
         """
+        clipImage = self.clipImage
         opts      = self.displayOpts
-        clipImage = opts.clipImage
-        texName   = '{}_{}'.format(type(self).__name__, id(clipImage))
+        clipOpts  = self.clipOpts
+
+        texName   = '{}_clip_{}'.format(type(self).__name__, id(clipImage))
 
         if self.clipTexture is not None:
             glresources.delete(self.clipTexture.getTextureName())
@@ -373,16 +429,18 @@ class GLVolume(globject.GLImageObject):
             
         if clipImage is None:
             return
-            
+
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                            interp = gl.GL_LINEAR
+        else:                            interp = gl.GL_LINEAR 
 
         self.clipTexture = glresources.get(
             texName, 
             textures.ImageTexture,
             texName,
             clipImage,
-            interp=interp) 
+            interp=interp,
+            resolution=opts.resolution,
+            volume=clipOpts.volume)
 
     
     def refreshColourTextures(self):
