@@ -19,7 +19,7 @@ import fsl.utils.transform      as transform
 import fsl.fsleyes.gl.resources as glresources
 import fsl.fsleyes.gl.routines  as glroutines
 import fsl.fsleyes.gl.textures  as textures
-import fsl.fsleyes.gl.shaders   as shaders
+import                             glvector_funcs
 
 
 log = logging.getLogger(__name__)
@@ -94,17 +94,8 @@ def destroy(self):
 
 
 def compileShaders(self):
-    
-    if self.shaders is not None:
-        gl.glDeleteProgram(self.shaders)
-
-    vertShaderSrc = shaders.getVertexShader(  self)
-    fragShaderSrc = shaders.getFragmentShader(self)
-    
-    self.shaders = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
 
     vertAtts     = ['voxel', 'vertex']
- 
     vertUniforms = ['v1Texture',       'v2Texture',  'v3Texture',
                     'l1Texture',       'l2Texture',  'l3Texture',
                     'v1ValXform',      'v2ValXform', 'v3ValXform',
@@ -113,45 +104,28 @@ def compileShaders(self):
                     'lighting',        'lightPos',   'normalMatrix',
                     'eigValNorm',      'zax']
 
-    fragUniforms = ['imageTexture',   'modulateTexture', 'clipTexture',
-                    'clipLow',        'clipHigh',        'xColourTexture',
-                    'yColourTexture', 'zColourTexture',  'voxValXform',
-                    'cmapXform',      'imageShape',     'useSpline']
-
-
-    self.shaderVars = shaders.getShaderVars(self.shaders,
-                                            vertAtts,
-                                            vertUniforms,
-                                            fragUniforms)
+    glvector_funcs.compileShaders(self, vertAtts, vertUniforms)
 
 
 def updateShaderState(self):
 
     gl.glUseProgram(self.shaders)
 
+    glvector_funcs.updateFragmentShaderState(self)
+
     opts  = self.displayOpts
     svars = self.shaderVars
 
-    # Textures used by the fragment shader
-    gl.glUniform1i(svars['imageTexture'],    0)
-    gl.glUniform1i(svars['modulateTexture'], 1)
-    gl.glUniform1i(svars['clipTexture'],     2)
-    gl.glUniform1i(svars['xColourTexture'],  3)
-    gl.glUniform1i(svars['yColourTexture'],  4)
-    gl.glUniform1i(svars['zColourTexture'],  5)
-
     # Textures used by the vertex shader
-    gl.glUniform1i(svars['v1Texture'], 6)
-    gl.glUniform1i(svars['v2Texture'], 7)
-    gl.glUniform1i(svars['v3Texture'], 8)
-    gl.glUniform1i(svars['l1Texture'], 9)
-    gl.glUniform1i(svars['l2Texture'], 10)
-    gl.glUniform1i(svars['l3Texture'], 11)
+    gl.glUniform1i(svars['v1Texture'], 8)
+    gl.glUniform1i(svars['v2Texture'], 9)
+    gl.glUniform1i(svars['v3Texture'], 10)
+    gl.glUniform1i(svars['l1Texture'], 11)
+    gl.glUniform1i(svars['l2Texture'], 12)
+    gl.glUniform1i(svars['l3Texture'], 13)
 
     # Texture -> value value offsets/scales
     # used by the vertex and fragment shaders
-    cmapXform   = self.xColourTexture.getCoordinateTransform()
-    voxValXform = self.imageTexture.voxValXform
     v1ValXform  = self.v1Texture.voxValXform
     v2ValXform  = self.v2Texture.voxValXform
     v3ValXform  = self.v3Texture.voxValXform
@@ -159,8 +133,6 @@ def updateShaderState(self):
     l2ValXform  = self.l2Texture.voxValXform
     l3ValXform  = self.l3Texture.voxValXform
     
-    voxValXform = np.array(voxValXform, dtype=np.float32).ravel('C')
-    cmapXform   = np.array(cmapXform,   dtype=np.float32).ravel('C')
     v1ValXform  = np.array(v1ValXform,  dtype=np.float32).ravel('C')
     v2ValXform  = np.array(v2ValXform,  dtype=np.float32).ravel('C')
     v3ValXform  = np.array(v3ValXform,  dtype=np.float32).ravel('C')
@@ -168,8 +140,6 @@ def updateShaderState(self):
     l2ValXform  = np.array(l2ValXform,  dtype=np.float32).ravel('C')
     l3ValXform  = np.array(l3ValXform,  dtype=np.float32).ravel('C')
     
-    gl.glUniformMatrix4fv(svars['voxValXform'], 1, False, voxValXform)
-    gl.glUniformMatrix4fv(svars['cmapXform'],   1, False, cmapXform)
     gl.glUniformMatrix4fv(svars['v1ValXform'],  1, False, v1ValXform)
     gl.glUniformMatrix4fv(svars['v2ValXform'],  1, False, v2ValXform)
     gl.glUniformMatrix4fv(svars['v3ValXform'],  1, False, v3ValXform)
@@ -180,32 +150,16 @@ def updateShaderState(self):
     # Other miscellaneous uniforms
     imageShape    = np.array(self.image.shape[:3], dtype=np.float32)
     resolution    = opts.tensorResolution
-    clippingRange = opts.clippingRange
     tensorScale   = opts.tensorScale
     lighting      = 1 if opts.lighting else 0
-    useSpline     = 0
 
     l1          = self.image.L1()
     eigValNorm  = 0.5 / abs(l1.data).max()
     eigValNorm *= tensorScale / 100.0
 
-    if opts.clipImage is not None:
-        invClipValXform = self.clipTexture .invVoxValXform
-        clipLow         = clippingRange[0] * invClipValXform[0, 0] + \
-                                             invClipValXform[3, 0]
-        clipHigh        = clippingRange[1] * invClipValXform[0, 0] + \
-                                             invClipValXform[3, 0]
-    else:
-        clipLow  = 0
-        clipHigh = 1
-
     gl.glUniform3fv(svars['imageShape'], 1, imageShape)
-    gl.glUniform1f( svars['resolution'],    resolution)
     gl.glUniform1f( svars['eigValNorm'],    eigValNorm)
     gl.glUniform1f( svars['lighting'],      lighting)
-    gl.glUniform1f( svars['clipLow'],       clipLow)
-    gl.glUniform1f( svars['clipHigh'],      clipHigh)
-    gl.glUniform1f( svars['useSpline'],     useSpline)
     
     # Vertices of a unit sphere. The vertex
     # shader will transform these vertices
@@ -259,12 +213,12 @@ def preDraw(self):
     gl.glUniform3fv(      svars['lightPos'],     1,        lightPos)
     gl.glUniformMatrix3fv(svars['normalMatrix'], 1, False, normalMatrix) 
     
-    self.v1Texture.bindTexture(gl.GL_TEXTURE6)
-    self.v2Texture.bindTexture(gl.GL_TEXTURE7)
-    self.v3Texture.bindTexture(gl.GL_TEXTURE8)
-    self.l1Texture.bindTexture(gl.GL_TEXTURE9)
-    self.l2Texture.bindTexture(gl.GL_TEXTURE10)
-    self.l3Texture.bindTexture(gl.GL_TEXTURE11)
+    self.v1Texture.bindTexture(gl.GL_TEXTURE8)
+    self.v2Texture.bindTexture(gl.GL_TEXTURE9)
+    self.v3Texture.bindTexture(gl.GL_TEXTURE10)
+    self.l1Texture.bindTexture(gl.GL_TEXTURE11)
+    self.l2Texture.bindTexture(gl.GL_TEXTURE12)
+    self.l3Texture.bindTexture(gl.GL_TEXTURE13)
     
     gl.glEnableVertexAttribArray(svars['voxel'])
     gl.glEnableVertexAttribArray(svars['vertex'])

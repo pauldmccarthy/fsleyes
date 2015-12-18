@@ -95,12 +95,19 @@ varying vec3 fragVoxCoord;
  */
 varying vec3 fragTexCoord;
 
+/*
+ * Multiplicative factor to apply to the colour - can 
+ * be used for vertex-based lighting.
+ */
+varying vec4 fragColourFactor;
+
 
 void main(void) {
 
     float voxValue;
     float clipValue;
     vec4  normVoxValue;
+    vec4  colour;
     bool  negCmap  = false;
     vec3  voxCoord = fragVoxCoord;
 
@@ -165,6 +172,8 @@ void main(void) {
      */ 
     normVoxValue = img2CmapXform * vec4(voxValue, 0, 0, 1);
 
-    if (negCmap) gl_FragColor = texture1D(negColourTexture, normVoxValue.x);
-    else         gl_FragColor = texture1D(colourTexture,    normVoxValue.x);
+    if (negCmap) colour = texture1D(negColourTexture, normVoxValue.x);
+    else         colour = texture1D(colourTexture,    normVoxValue.x);
+
+    gl_FragColor = colour * fragColourFactor;
 }
