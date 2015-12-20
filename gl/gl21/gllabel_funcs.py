@@ -13,30 +13,27 @@ Rendering of a ``GLLabel`` is very similar to that of a ``GLVolume`` - the
 """
 
 
-import numpy                  as np
-import OpenGL.GL              as gl
-import OpenGL.raw.GL._types   as gltypes
+import numpy                       as np
 
-import fsl.fsleyes.gl.shaders as shaders
-import                           glvolume_funcs
+import fsl.fsleyes.gl.shaders      as shaders
+import fsl.fsleyes.gl.glsl.program as glslprogram
+import                                glvolume_funcs
 
 
 def init(self):
     """Calls the :func:`compileShaders` and :func:`updateShaderState`
     functions, and creates a GL buffer for storing vertex attributes.
     """    
-    self.shaders = None
+    self.shader = None
 
     compileShaders(   self)
     updateShaderState(self)
-
-    self.vertexAttrBuffer = gl.glGenBuffers(1)
     
 
 def destroy(self):
     """Destroys the shader programs, and the vertex buffer. """
-    gl.glDeleteBuffers(1, gltypes.GLuint(self.vertexAttrBuffer))
-    gl.glDeleteProgram(self.shaders) 
+    self.shader.delete()
+    self.shader = None
 
 
 def compileShaders(self):
@@ -45,56 +42,42 @@ def compileShaders(self):
     shader variables as attributes on the :class:`.GLLabel` instance.
     """
 
-    if self.shaders is not None:
-        gl.glDeleteProgram(self.shaders)
+    if self.shader is not None:
+        self.shader.delete()
 
-    vertShaderSrc = shaders.getVertexShader(  self)
-    fragShaderSrc = shaders.getFragmentShader(self)
+    vertSrc = shaders.getVertexShader(  self)
+    fragSrc = shaders.getFragmentShader(self)
 
-    vertAtts     = ['vertex',       'voxCoord',   'texCoord']
-    vertUniforms = []
-    fragUniforms = ['imageTexture', 'lutTexture', 'voxValXform',
-                    'imageShape',   'numLabels',  'outline',
-                    'outlineOffsets']
-
-    self.shaders    = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
-    self.shaderVars = shaders.getShaderVars(self.shaders,
-                                            vertAtts,
-                                            vertUniforms,
-                                            fragUniforms)
+    self.shader = glslprogram.ShaderProgram(vertSrc, fragSrc)
 
 
 def updateShaderState(self):
     """Updates all shader program variables. """
 
-    opts  = self.displayOpts
-    svars = self.shaderVars
+    opts   = self.displayOpts
+    shader = self.shader
 
-    gl.glUseProgram(self.shaders)
-
-    gl.glUniform1f( svars['outline'],       opts.outline)
-    gl.glUniform1f( svars['numLabels'],     opts.lut.max() + 1)
-    gl.glUniform3fv(svars['imageShape'], 1, np.array(self.image.shape[:3],
-                                                     dtype=np.float32))
-    
-    vvx = self.imageTexture.voxValXform.ravel('C')
-    gl.glUniformMatrix4fv(svars['voxValXform'], 1, False, vvx)
-
-    outlineOffsets = opts.outlineWidth / \
-                     np.array(self.image.shape[:3], dtype=np.float32)
+    imageShape      = np.array(self.image.shape[:3])
+    vvx             = self.imageTexture.voxValXform
+    outlineOffsets  = opts.outlineWidth / imageShape
     
     if opts.transform == 'affine':
         minOffset = outlineOffsets.min()
         outlineOffsets = np.array([minOffset] * 3)
     else:
-        outlineOffsets[self.zax] = -1
+        outlineOffsets[self.zax] = -1 
 
-    gl.glUniform3fv(svars['outlineOffsets'], 1, outlineOffsets)
+    shader.load()
 
-    gl.glUniform1i(svars['imageTexture'], 0)
-    gl.glUniform1i(svars['lutTexture'],   1) 
+    shader.set('outline',        opts.outline)
+    shader.set('numLabels',      opts.lut.max() + 1)
+    shader.set('imageShape',     imageShape)
+    shader.set('voxValXform',    vvx)
+    shader.set('outlineOffsets', outlineOffsets)
+    shader.set('imageTexture',   0)
+    shader.set('lutTexture',     1)
 
-    gl.glUseProgram(0)
+    shader.unload()
 
 
 preDraw  = glvolume_funcs.preDraw

@@ -29,7 +29,6 @@ less painful:
 .. autosummary::
    :nosignatures:
 
-   getShaderVars
    setVertexProgramVector
    setVertexProgramMatrix
    setFragmentProgramVector
@@ -121,36 +120,6 @@ def setFragmentProgramMatrix(index, matrix):
             row[0], row[1], row[2], row[3])
 
 
-def getShaderVars(shaders, vertAtts, vertUniforms, fragUniforms):
-    """Gets the position indices for all vertex shader attributes, uniforms,
-    and fragment shader uniforms for the given shader programs.
-
-    :arg shaders:      Reference to the compiled shader program.
-    :arg vertAtts:     List of attributes required by the vertex shader.
-    :arg vertUniforms: List of uniforms required by the vertex shader.
-    :arg fragUniforms: List of uniforms required by the fragment shader.
-
-    :returns:  A dictionary of ``{name : position}`` mappings.
-    """
-
-    import OpenGL.GL as gl
-
-    shaderVars = {}
-
-    for vu in vertUniforms:
-        shaderVars[vu] = gl.glGetUniformLocation(shaders, vu)
-        
-    for va in vertAtts:
-        shaderVars[va] = gl.glGetAttribLocation(shaders, va)
-
-    for fu in fragUniforms:
-        if fu in shaderVars:
-            continue
-        shaderVars[fu] = gl.glGetUniformLocation(shaders, fu)
-
-    return shaderVars
-
-
 def compilePrograms(vertexProgramSrc, fragmentProgramSrc):
     """Compiles the given vertex and fragment programs (written according
     to the ``ARB_vertex_program`` and ``ARB_fragment_program`` extensions),
@@ -207,54 +176,6 @@ def compilePrograms(vertexProgramSrc, fragmentProgramSrc):
     return vertexProgram, fragmentProgram
 
 
-def compileShaders(vertShaderSrc, fragShaderSrc):
-    """Compiles and links the OpenGL GLSL vertex and fragment shader
-    programs, and returns a reference to the resulting program. Raises
-    an error if compilation/linking fails.
-
-    .. note:: I'm explicitly not using the PyOpenGL
-              :func:`OpenGL.GL.shaders.compileProgram` function, because it
-              attempts to validate the program after compilation, which fails
-              due to texture data not being bound at the time of validation.
-    """
-    import OpenGL.GL as gl
-    
-    # vertex shader
-    vertShader = gl.glCreateShader(gl.GL_VERTEX_SHADER)
-    gl.glShaderSource(vertShader, vertShaderSrc)
-    gl.glCompileShader(vertShader)
-    vertResult = gl.glGetShaderiv(vertShader, gl.GL_COMPILE_STATUS)
-
-    if vertResult != gl.GL_TRUE:
-        raise RuntimeError('{}'.format(gl.glGetShaderInfoLog(vertShader)))
-
-    # fragment shader
-    fragShader = gl.glCreateShader(gl.GL_FRAGMENT_SHADER)
-    gl.glShaderSource(fragShader, fragShaderSrc)
-    gl.glCompileShader(fragShader)
-    fragResult = gl.glGetShaderiv(fragShader, gl.GL_COMPILE_STATUS)
-
-    if fragResult != gl.GL_TRUE:
-        raise RuntimeError('{}'.format(gl.glGetShaderInfoLog(fragShader)))
-
-    # link all of the shaders!
-    program = gl.glCreateProgram()
-    gl.glAttachShader(program, vertShader)
-    gl.glAttachShader(program, fragShader)
-
-    gl.glLinkProgram(program)
-
-    gl.glDeleteShader(vertShader)
-    gl.glDeleteShader(fragShader)
-
-    linkResult = gl.glGetProgramiv(program, gl.GL_LINK_STATUS)
-
-    if linkResult != gl.GL_TRUE:
-        raise RuntimeError('{}'.format(gl.glGetProgramInfoLog(program)))
-
-    return program
-
-
 def getVertexShader(globj):
     """Returns the vertex shader source for the given GL object."""
     return _getShader(globj, 'vert')
@@ -263,7 +184,6 @@ def getVertexShader(globj):
 def getFragmentShader(globj):
     """Returns the fragment shader source for the given GL object.""" 
     return _getShader(globj, 'frag')
-
 
 
 _shaderTypePrefixMap = td.TypeDict({

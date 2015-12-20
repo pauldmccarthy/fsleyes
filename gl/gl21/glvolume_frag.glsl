@@ -153,6 +153,12 @@ void main(void) {
 
         negCmap  = true;
         voxValue = texZero + (texZero - voxValue);
+
+        // Invert the clip value as well, if the
+        // image and clip textures are the same
+        if (imageIsClip) {
+          clipValue = texZero + (texZero - clipValue);
+        }
     }
 
 
