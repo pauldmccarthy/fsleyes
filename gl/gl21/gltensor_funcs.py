@@ -11,8 +11,6 @@ import logging
 import numpy                          as np
 import numpy.linalg                   as npla
 import OpenGL.GL                      as gl
-import OpenGL.raw.GL._types           as gltypes
-import OpenGL.GL.ARB.instanced_arrays as arbia
 import OpenGL.GL.ARB.draw_instanced   as arbdi
 
 import fsl.utils.transform      as transform
@@ -67,21 +65,15 @@ def init(self):
 
         setattr(self, '{}Texture'.format(name), tex)
 
-    self.vertexBuffer = gl.glGenBuffers(1)
-    self.indexBuffer  = gl.glGenBuffers(1)
-    self.voxelBuffer  = gl.glGenBuffers(1)
-
-    self.shaders = None
+    self.shader = None
 
     compileShaders(self)
     updateShaderState(self)
 
 
 def destroy(self):
-    gl.glDeleteBuffers(1, gltypes.GLuint(self.vertexBuffer))
-    gl.glDeleteBuffers(1, gltypes.GLuint(self.indexBuffer))
-    gl.glDeleteBuffers(1, gltypes.GLuint(self.voxelBuffer))
-    gl.glDeleteProgram(self.shaders)
+    self.shader.delete()
+    self.shader = None
     
     names = ['v1', 'v2', 'v3', 'l1', 'l2', 'l3']
 
@@ -94,35 +86,16 @@ def destroy(self):
 
 
 def compileShaders(self):
-
-    vertAtts     = ['voxel', 'vertex']
-    vertUniforms = ['v1Texture',       'v2Texture',  'v3Texture',
-                    'l1Texture',       'l2Texture',  'l3Texture',
-                    'v1ValXform',      'v2ValXform', 'v3ValXform',
-                    'l1ValXform',      'l2ValXform', 'l3ValXform',
-                    'voxToDisplayMat', 'imageShape', 'resolution',
-                    'lighting',        'lightPos',   'normalMatrix',
-                    'eigValNorm',      'zax']
-
-    glvector_funcs.compileShaders(self, vertAtts, vertUniforms)
+    self.shader = glvector_funcs.compileShaders(self, indexed=True)
 
 
 def updateShaderState(self):
 
-    gl.glUseProgram(self.shaders)
-
+    shader = self.shader
+    opts   = self.displayOpts
+    
+    shader.load()
     glvector_funcs.updateFragmentShaderState(self)
-
-    opts  = self.displayOpts
-    svars = self.shaderVars
-
-    # Textures used by the vertex shader
-    gl.glUniform1i(svars['v1Texture'], 8)
-    gl.glUniform1i(svars['v2Texture'], 9)
-    gl.glUniform1i(svars['v3Texture'], 10)
-    gl.glUniform1i(svars['l1Texture'], 11)
-    gl.glUniform1i(svars['l2Texture'], 12)
-    gl.glUniform1i(svars['l3Texture'], 13)
 
     # Texture -> value value offsets/scales
     # used by the vertex and fragment shaders
@@ -132,34 +105,40 @@ def updateShaderState(self):
     l1ValXform  = self.l1Texture.voxValXform
     l2ValXform  = self.l2Texture.voxValXform
     l3ValXform  = self.l3Texture.voxValXform
-    
-    v1ValXform  = np.array(v1ValXform,  dtype=np.float32).ravel('C')
-    v2ValXform  = np.array(v2ValXform,  dtype=np.float32).ravel('C')
-    v3ValXform  = np.array(v3ValXform,  dtype=np.float32).ravel('C')
-    l1ValXform  = np.array(l1ValXform,  dtype=np.float32).ravel('C')
-    l2ValXform  = np.array(l2ValXform,  dtype=np.float32).ravel('C')
-    l3ValXform  = np.array(l3ValXform,  dtype=np.float32).ravel('C')
-    
-    gl.glUniformMatrix4fv(svars['v1ValXform'],  1, False, v1ValXform)
-    gl.glUniformMatrix4fv(svars['v2ValXform'],  1, False, v2ValXform)
-    gl.glUniformMatrix4fv(svars['v3ValXform'],  1, False, v3ValXform)
-    gl.glUniformMatrix4fv(svars['l1ValXform'],  1, False, l1ValXform)
-    gl.glUniformMatrix4fv(svars['l2ValXform'],  1, False, l2ValXform)
-    gl.glUniformMatrix4fv(svars['l3ValXform'],  1, False, l3ValXform)
 
     # Other miscellaneous uniforms
-    imageShape    = np.array(self.image.shape[:3], dtype=np.float32)
+    imageShape    = self.image.shape[:3]
     resolution    = opts.tensorResolution
     tensorScale   = opts.tensorScale
-    lighting      = 1 if opts.lighting else 0
 
     l1          = self.image.L1()
-    eigValNorm  = 0.5 / abs(l1.data).max()
+    eigValNorm  = 0.5 / np.abs(l1.data).max()
     eigValNorm *= tensorScale / 100.0
 
-    gl.glUniform3fv(svars['imageShape'], 1, imageShape)
-    gl.glUniform1f( svars['eigValNorm'],    eigValNorm)
-    gl.glUniform1f( svars['lighting'],      lighting)
+    # Define the light position in
+    # the eye coordinate system
+    lightPos  = np.array([-1, -1, 4], dtype=np.float32)
+    lightPos /= np.sqrt(np.sum(lightPos ** 2)) 
+ 
+    # Textures used by the vertex shader
+    shader.set('v1Texture', 8)
+    shader.set('v2Texture', 9)
+    shader.set('v3Texture', 10)
+    shader.set('l1Texture', 11)
+    shader.set('l2Texture', 12)
+    shader.set('l3Texture', 13)
+    
+    shader.set('v1ValXform', v1ValXform)
+    shader.set('v2ValXform', v2ValXform)
+    shader.set('v3ValXform', v3ValXform)
+    shader.set('l1ValXform', l1ValXform)
+    shader.set('l2ValXform', l2ValXform)
+    shader.set('l3ValXform', l3ValXform)
+
+    shader.set('imageShape', imageShape)
+    shader.set('eigValNorm', eigValNorm)
+    shader.set('lighting',   opts.lighting)
+    shader.set('lightPos',   lightPos)
     
     # Vertices of a unit sphere. The vertex
     # shader will transform these vertices
@@ -168,34 +147,19 @@ def updateShaderState(self):
     vertices, indices = glroutines.unitSphere(resolution)
     
     self.nVertices = len(indices)
-    vertices       = vertices.ravel('C')
 
-    gl.glUseProgram(0)    
-
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertexBuffer)
-    gl.glBufferData(
-        gl.GL_ARRAY_BUFFER, vertices.nbytes, vertices, gl.GL_STATIC_DRAW)
-
-    gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.indexBuffer)
-    gl.glBufferData(
-        gl.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, gl.GL_STATIC_DRAW)
-
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER,         0)
-    gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
+    shader.setAtt('vertex', vertices)
+    shader.setIndices(indices)
+    shader.unload()
 
 
 def preDraw(self):
     """Must be called before :func:`draw`. Loads the shader programs, binds
     textures, and enables vertex arrays.
     """
-    gl.glUseProgram(self.shaders)
-
-    svars = self.shaderVars
-
-    # Define the light position in
-    # the eye coordinate system
-    lightPos  = np.array([-1, -1, 4], dtype=np.float32)
-    lightPos /= np.sqrt(np.sum(lightPos ** 2)) 
+    
+    shader = self.shader
+    shader.load()
 
     # Calculate a transformation matrix for
     # normal vectors - T(I(MV matrix)) 
@@ -204,20 +168,15 @@ def preDraw(self):
     
     normalMatrix = transform.concat(mvMat, v2dMat)
     normalMatrix = npla.inv(normalMatrix).T
-    normalMatrix = np.array(normalMatrix, dtype=np.float32).ravel('C')
 
-    gl.glUniform3fv(      svars['lightPos'],     1,        lightPos)
-    gl.glUniformMatrix3fv(svars['normalMatrix'], 1, False, normalMatrix) 
-    
+    shader.set('normalMatrix', normalMatrix)
+
     self.v1Texture.bindTexture(gl.GL_TEXTURE8)
     self.v2Texture.bindTexture(gl.GL_TEXTURE9)
     self.v3Texture.bindTexture(gl.GL_TEXTURE10)
     self.l1Texture.bindTexture(gl.GL_TEXTURE11)
     self.l2Texture.bindTexture(gl.GL_TEXTURE12)
     self.l3Texture.bindTexture(gl.GL_TEXTURE13)
-    
-    gl.glEnableVertexAttribArray(svars['voxel'])
-    gl.glEnableVertexAttribArray(svars['vertex'])
 
     gl.glEnable(gl.GL_CULL_FACE)
     gl.glCullFace(gl.GL_BACK)
@@ -227,9 +186,12 @@ def draw(self, zpos, xform=None):
 
     image  = self.image
     opts   = self.displayOpts
-    svars  = self.shaderVars
+    shader = self.shader
     v2dMat = opts.getTransform('voxel',   'display')
     d2vMat = opts.getTransform('display', 'voxel')
+
+    if xform is None: xform = v2dMat
+    else:             xform = transform.concat(v2dMat, xform)
 
     resolution = np.array([opts.resolution] * 3)
 
@@ -249,47 +211,23 @@ def draw(self, zpos, xform=None):
 
     voxels  = transform.transform(voxels, d2vMat)
     nVoxels = len(voxels)
-    
-    voxels  = np.array(voxels, dtype=np.float32).ravel('C')
 
-    # Copy the voxel coordinates to the voxel buffer
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.voxelBuffer)
-    gl.glBufferData(
-        gl.GL_ARRAY_BUFFER, voxels.nbytes, voxels, gl.GL_STATIC_DRAW)
-    gl.glVertexAttribPointer(
-        svars['voxel'], 3, gl.GL_FLOAT, gl.GL_FALSE, 0, None)
-
-    # Use one set of voxel coordinates for every sphere drawn
-    arbia.glVertexAttribDivisorARB(svars['voxel'], 1)
-
-    # Bind the vertex buffer
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertexBuffer)
-    gl.glVertexAttribPointer(
-        svars['vertex'], 3, gl.GL_FLOAT, gl.GL_FALSE, 0, None)
-
-    if xform is None: xform = v2dMat
-    else:             xform = transform.concat(v2dMat, xform)
-    
-    xform = np.array(xform, dtype=np.float32).ravel('C') 
-    gl.glUniformMatrix4fv(svars['voxToDisplayMat'], 1, False, xform)
-
-    # And the vertex index buffer
-    gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.indexBuffer)
+    # Set divisor to 1, so we use one set of
+    # voxel coordinates for every sphere drawn
+    shader.loadAtts()
+    shader.setAtt('voxel',           voxels, divisor=1)
+    shader.set(   'voxToDisplayMat', xform)
 
     arbdi.glDrawElementsInstancedARB(
         gl.GL_QUADS, self.nVertices, gl.GL_UNSIGNED_INT, None, nVoxels)
 
 
 def postDraw(self):
-    
-    svars = self.shaderVars
-    
-    gl.glUseProgram(0)
+
+    self.shader.unloadAtts()
+    self.shader.unload()
 
     gl.glDisable(gl.GL_CULL_FACE)
-    
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER,         0)
-    gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
     
     self.v1Texture.unbindTexture()
     self.v2Texture.unbindTexture()
@@ -297,6 +235,3 @@ def postDraw(self):
     self.l1Texture.unbindTexture()
     self.l2Texture.unbindTexture()
     self.l3Texture.unbindTexture()
-    
-    gl.glDisableVertexAttribArray(svars['voxel'])
-    gl.glDisableVertexAttribArray(svars['vertex'])

@@ -14,6 +14,7 @@ import logging
 import numpy                as np
 import OpenGL.GL            as gl
 import OpenGL.raw.GL._types as gltypes
+import OpenGL.GL.ARB.instanced_arrays as arbia
 
 import parse
 
@@ -33,7 +34,10 @@ GLSL_ATTRIBUTE_TYPES = {
 
 class ShaderProgram(object):
 
-    def __init__(self, vertSrc, fragSrc):
+    def __init__(self,
+                 vertSrc,
+                 fragSrc,
+                 indexed=False):
 
         self.program     = self.__compile(vertSrc, fragSrc)
         
@@ -62,9 +66,11 @@ class ShaderProgram(object):
         # they only need to be set once.
         vertUnifs = [vu for vu in vertUnifs if vu not in fragUnifs]
 
-        self.vertUniforms   = vuNames
-        self.vertAttributes = vaNames
-        self.fragUniforms   = fuNames
+        self.vertUniforms    = vuNames
+        self.vertAttributes  = vaNames
+        self.fragUniforms    = fuNames
+
+        self.vertAttDivisors = {}
 
         self.types     = allTypes
         self.positions = self.__getPositions(self.program,
@@ -77,6 +83,9 @@ class ShaderProgram(object):
         for att in self.vertAttributes:
             self.buffers[att] = gl.glGenBuffers(1)
 
+        if indexed: self.indexBuffer = gl.glGenBuffers(1)
+        else:       self.indexBuffer = None
+
             
     def load(self):
         gl.glUseProgram(self.program)
@@ -84,12 +93,36 @@ class ShaderProgram(object):
 
     def loadAtts(self):
         for att in self.vertAttributes:
-            gl.glEnableVertexAttribArray(self.positions[att])
+
+            aPos           = self.positions[          att]
+            aType          = self.types[              att]
+            aBuf           = self.buffers[            att]
+            aDivisor       = self.vertAttDivisors.get(att)
+            glType, glSize = GLSL_ATTRIBUTE_TYPES[aType]
+
+            gl.glBindBuffer(gl.GL_ARRAY_BUFFER, aBuf)
+            gl.glEnableVertexAttribArray(aPos)
+            gl.glVertexAttribPointer(    aPos,
+                                         glSize,
+                                         glType,
+                                         gl.GL_FALSE,
+                                         0,
+                                         None)
+
+            if aDivisor is not None:
+                arbia.glVertexAttribDivisorARB(aPos, aDivisor)
+            
+        if self.indexBuffer is not None:
+            gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.indexBuffer) 
 
             
     def unloadAtts(self):
         for att in self.vertAttributes:
             gl.glDisableVertexAttribArray(self.positions[att])
+            
+        if self.indexBuffer is not None:
+            gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
+            
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
         
@@ -122,13 +155,10 @@ class ShaderProgram(object):
         setfunc(vPos, value)
 
 
-    def setAtt(self, name, value):
+    def setAtt(self, name, value, divisor=None):
 
-        aPos  = self.positions[name]
-        aType = self.types[    name]
-        aBuf  = self.buffers[  name]
-
-        glType, glSize = GLSL_ATTRIBUTE_TYPES[aType]
+        aType    = self.types[  name]
+        aBuf     = self.buffers[name]
 
         castfunc = getattr(self, '_attribute_{}'.format(aType), None)
 
@@ -142,10 +172,31 @@ class ShaderProgram(object):
             aType, name, value.shape)) 
 
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, aBuf)
-        gl.glBufferData(
-            gl.GL_ARRAY_BUFFER, value.nbytes, value, gl.GL_STATIC_DRAW)
-        gl.glVertexAttribPointer(
-            aPos, glSize, glType, gl.GL_FALSE, 0, None) 
+        gl.glBufferData(gl.GL_ARRAY_BUFFER,
+                        value.nbytes,
+                        value,
+                        gl.GL_STATIC_DRAW)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
+
+        if divisor is not None:
+            self.vertAttDivisors[name] = divisor
+
+
+    def setIndices(self, indices):
+
+        if self.indexBuffer is None:
+            raise RuntimeError('Shader program was not '
+                               'configured with index support')
+
+        indices = np.array(indices, dtype=np.uint32)
+        
+        gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER,
+                        self.indexBuffer)
+        gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER,
+                        indices.nbytes,
+                        indices,
+                        gl.GL_STATIC_DRAW)
+        gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0) 
 
         
     def __getPositions(self, shaders, vertAtts, vertUniforms, fragUniforms):

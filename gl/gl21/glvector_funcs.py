@@ -11,7 +11,7 @@ import fsl.fsleyes.gl.glsl.program as glslprogram
 import fsl.utils.transform         as transform
 
 
-def compileShaders(self):
+def compileShaders(self, indexed=False):
 
     if self.shader is not None:
         self.shader.delete()
@@ -25,7 +25,7 @@ def compileShaders(self):
     vertSrc = shaders.getVertexShader(  self)
     fragSrc = shaders.getFragmentShader(fragShader)
     
-    return glslprogram.ShaderProgram(vertSrc, fragSrc)
+    return glslprogram.ShaderProgram(vertSrc, fragSrc, indexed)
 
     
 def updateFragmentShaderState(self, useSpline=False):
@@ -35,7 +35,7 @@ def updateFragmentShaderState(self, useSpline=False):
     shader              = self.shader
     useVolumeFragShader = opts.colourImage is not None
 
-    invClipValXform = self.clipTexture  .invVoxValXform
+    invClipValXform = self.clipTexture.invVoxValXform
     clippingRange   = opts.clippingRange
     imageShape      = self.vectorImage.shape[:3]
 
