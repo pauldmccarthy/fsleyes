@@ -315,7 +315,7 @@ class ShaderProgram(object):
 
 
     def _uniform_vec2(self, pos, val):
-        gl.glUniform2fv(pos, np.array(val, dtype=np.float32))
+        gl.glUniform2fv(pos, 1, np.array(val, dtype=np.float32))
 
 
     def _uniform_vec3(self, pos, val):

@@ -76,6 +76,7 @@ class GLModel(globject.GLObject):
 
         globject.GLObject.__init__(self)
 
+        self.shader  = None
         self.overlay = overlay
         self.display = display
         self.opts    = display.getDisplayOpts()

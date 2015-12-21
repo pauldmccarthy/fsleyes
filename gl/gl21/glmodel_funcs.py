@@ -8,10 +8,9 @@
 class to render :class:`.Model` overlays in an OpenGL 2.1 compatible manner.
 """
 
-import numpy                  as np
-import OpenGL.GL              as gl
 
-import fsl.fsleyes.gl.shaders as shaders
+import fsl.fsleyes.gl.shaders      as shaders
+import fsl.fsleyes.gl.glsl.program as glslprogram
 
 
 def compileShaders(self):
@@ -19,19 +18,22 @@ def compileShaders(self):
     instance. The shaders, and locations of uniform variables, are added
     as attributes of the instance.
     """
-    vertShaderSrc = shaders.getVertexShader(  self)
-    fragShaderSrc = shaders.getFragmentShader(self)
-    self.shaders  = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
 
-    self.texPos    = gl.glGetUniformLocation(self.shaders, 'tex')
-    self.offsetPos = gl.glGetUniformLocation(self.shaders, 'offsets')
+    if self.shader is not None:
+        self.shader.delete()
+    
+    vertSrc = shaders.getVertexShader(  self)
+    fragSrc = shaders.getFragmentShader(self)
+
+    self.shader = glslprogram.ShaderProgram(vertSrc, fragSrc)
 
 
 def destroy(self):
     """Deletes the vertex/fragment shaders that were compiled by
     :func:`compileShaders`.
     """
-    gl.glDeleteProgram(self.shaders)
+    self.shader.delete()
+    self.shader = None
 
 
 def updateShaders(self):
@@ -48,19 +50,19 @@ def updateShaders(self):
     # width/height (whichever is smaller)
     outlineWidth *= 10
     offsets = 2 * [min(outlineWidth / width, outlineWidth / height)]
-    offsets = np.array(offsets, dtype=np.float32)
 
-    gl.glUseProgram(self.shaders)
-    gl.glUniform1i( self.texPos,    0)
-    gl.glUniform2fv(self.offsetPos, 1, offsets)
-    gl.glUseProgram(0)
+    self.shader.load()
+    self.shader.set('tex',     0)
+    self.shader.set('offsets', offsets)
+    self.shader.unload()
 
 
 def loadShaders(self):
     """Loads the :class:`.GLModel` vertex/fragment shaders. """
-    gl.glUseProgram(self.shaders)
+
+    self.shader.load()
 
 
 def unloadShaders(self):
     """Un-loads the :class:`.GLModel` vertex/fragment shaders. """
-    gl.glUseProgram(0)
+    self.shader.unload()
