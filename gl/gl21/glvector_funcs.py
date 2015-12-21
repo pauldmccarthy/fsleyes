@@ -6,128 +6,89 @@
 #
 
 
-import OpenGL.GL as gl
-import numpy     as np
-
-import fsl.fsleyes.gl.shaders as shaders
-import fsl.utils.transform    as transform
+import fsl.fsleyes.gl.shaders      as shaders
+import fsl.fsleyes.gl.glsl.program as glslprogram
+import fsl.utils.transform         as transform
 
 
-def compileShaders(self, vertAtts, vertUniforms):
+def compileShaders(self):
 
-    if self.shaders is not None:
-        gl.glDeleteProgram(self.shaders) 
+    if self.shader is not None:
+        self.shader.delete()
 
     opts                = self.displayOpts
     useVolumeFragShader = opts.colourImage is not None
 
-    if useVolumeFragShader:
-        fragShader   = 'GLVolume'
-        fragUniforms = ['imageTexture',     'clipTexture', 'colourTexture',
-                        'negColourTexture', 'imageIsClip', 'useNegCmap',
-                        'imageShape',       'useSpline',   'img2CmapXform',
-                        'clipLow',          'clipHigh',    'texZero',
-                        'invertClip'] 
+    if useVolumeFragShader: fragShader = 'GLVolume'
+    else:                   fragShader = self
+
+    vertSrc = shaders.getVertexShader(  self)
+    fragSrc = shaders.getFragmentShader(fragShader)
+    
+    return glslprogram.ShaderProgram(vertSrc, fragSrc)
+
+    
+def updateFragmentShaderState(self, useSpline=False):
+    """
+    """
+    opts                = self.displayOpts
+    shader              = self.shader
+    useVolumeFragShader = opts.colourImage is not None
+
+    invClipValXform = self.clipTexture  .invVoxValXform
+    clippingRange   = opts.clippingRange
+    imageShape      = self.vectorImage.shape[:3]
+
+    # Transform the clip threshold into
+    # the texture value range, so the
+    # fragment shader can compare texture
+    # values directly to it.    
+    if opts.clipImage is not None:
+        clipLow  = clippingRange[0] * \
+            invClipValXform[0, 0] + invClipValXform[3, 0]
+        clipHigh = clippingRange[1] * \
+            invClipValXform[0, 0] + invClipValXform[3, 0]
     else:
-        fragShader   = self
-        fragUniforms = ['imageTexture',   'modulateTexture', 'clipTexture',
-                        'clipLow',        'clipHigh',        'xColourTexture',
-                        'yColourTexture', 'zColourTexture',  'voxValXform',
-                        'cmapXform',      'imageShape',      'useSpline'] 
-
-    vertShaderSrc = shaders.getVertexShader(  self)
-    fragShaderSrc = shaders.getFragmentShader(fragShader)
-    
-    self.shaders    = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
-    self.shaderVars = shaders.getShaderVars(self.shaders,
-                                            vertAtts,
-                                            vertUniforms,
-                                            fragUniforms) 
-
-    
-def updateFragmentShaderState(
-        self,
-        useSpline=False):
-    """
-    """
-    opts                = self.displayOpts
-    svars               = self.shaderVars
-    useVolumeFragShader = opts.colourImage is not None
+        clipLow  = 0
+        clipHigh = 1
 
     if useVolumeFragShader:
 
         voxValXform     = self.colourTexture.voxValXform
         invVoxValXform  = self.colourTexture.invVoxValXform
-        invClipValXform = self.clipTexture  .invVoxValXform
-        clippingRange   = opts.clippingRange
-        imageShape      = self.vectorImage.shape[:3]
-        imageShape      = np.array(imageShape, dtype=np.float32)
         texZero         = 0.0 * invVoxValXform[0, 0] + invVoxValXform[3, 0]
-
-        img2CmapXform = transform.concat(
+        img2CmapXform   = transform.concat(
             voxValXform,
             self.cmapTexture.getCoordinateTransform())
-        img2CmapXform = np.array(img2CmapXform, dtype=np.float32).ravel('C') 
-        
-        if opts.clipImage is not None:
-            clipLow  = clippingRange[0] * \
-                invClipValXform[0, 0] + invClipValXform[3, 0]
-            clipHigh = clippingRange[1] * \
-                invClipValXform[0, 0] + invClipValXform[3, 0]
-        else:
-            clipLow  = 0
-            clipHigh = 1
- 
-        gl.glUniform1i(svars['imageTexture'],      3)
-        gl.glUniform1i(svars['clipTexture'],       2)
-        gl.glUniform1i(svars['colourTexture'],     7)
-        gl.glUniform1i(svars['negColourTexture'],  7)
-        
-        gl.glUniformMatrix4fv(svars['img2CmapXform'], 1, False, img2CmapXform)
-        gl.glUniform3fv(      svars['imageShape'],  1,          imageShape)
-        
-        gl.glUniform1i(svars['imageIsClip'], False)
-        gl.glUniform1i(svars['useNegCmap'],  False)
-        gl.glUniform1i(svars['useSpline'],   useSpline)
-        gl.glUniform1f(svars['clipLow'],     clipLow)
-        gl.glUniform1f(svars['clipHigh'],    clipHigh)
-        gl.glUniform1f(svars['texZero'],     texZero)
-        gl.glUniform1i(svars['invertClip'],  False)
+
+        shader.set('imageTexture',     3)
+        shader.set('clipTexture',      2)
+        shader.set('colourTexture',    7)
+        shader.set('negColourTexture', 7)
+        shader.set('img2CmapXform',    img2CmapXform)
+        shader.set('imageShape',       imageShape)
+        shader.set('imageIsClip',      False)
+        shader.set('useNegCmap',       False)
+        shader.set('useSpline',        useSpline)
+        shader.set('clipLow',          clipLow)
+        shader.set('clipHigh',         clipHigh)
+        shader.set('texZero',          texZero)
+        shader.set('invertClip',       False)
     
     else:
 
-        # The coordinate transformation matrices for 
-        # each of the three colour textures are identical
-        voxValXform     = self.imageTexture.voxValXform
-        invClipValXform = self.clipTexture .invVoxValXform
-        cmapXform       = self.xColourTexture.getCoordinateTransform()
-        imageShape      = np.array(self.vectorImage.shape, dtype=np.float32)
-        clippingRange   = opts.clippingRange
+        voxValXform = self.imageTexture.voxValXform
+        cmapXform   = self.xColourTexture.getCoordinateTransform()
 
-        # Transform the clip threshold into
-        # the texture value range, so the
-        # fragment shader can compare texture
-        # values directly to it.
-        if opts.clipImage is not None:
-            clipLow  = clippingRange[0] * \
-                invClipValXform[0, 0] + invClipValXform[3, 0]
-            clipHigh = clippingRange[1] * \
-                invClipValXform[0, 0] + invClipValXform[3, 0]
-        else:
-            clipLow  = 0
-            clipHigh = 1
-
-        gl.glUniform1i(svars['imageTexture'],    0)
-        gl.glUniform1i(svars['modulateTexture'], 1)
-        gl.glUniform1i(svars['clipTexture'],     2)
-        gl.glUniform1i(svars['xColourTexture'],  4)
-        gl.glUniform1i(svars['yColourTexture'],  5)
-        gl.glUniform1i(svars['zColourTexture'],  6)
-        
-        gl.glUniformMatrix4fv(svars['voxValXform'], 1, False, voxValXform)
-        gl.glUniformMatrix4fv(svars['cmapXform'],   1, False, cmapXform)
-        
-        gl.glUniform3fv(svars['imageShape'], 1, imageShape)
-        gl.glUniform1f( svars['clipLow'],       clipLow)
-        gl.glUniform1f( svars['clipHigh'],      clipHigh) 
-        gl.glUniform1f( svars['useSpline'],     useSpline)
+        shader.set('imageTexture',    0)
+        shader.set('modulateTexture', 1)
+        shader.set('clipTexture',     2)
+        shader.set('xColourTexture',  4)
+        shader.set('yColourTexture',  5)
+        shader.set('zColourTexture',  6)
+        shader.set('voxValXform',     voxValXform)
+        shader.set('cmapXform',       cmapXform)
+        shader.set('imageShape',      imageShape)
+        shader.set('clipLow',         clipLow)
+        shader.set('clipHigh',        clipHigh) 
+        shader.set('useSpline',       useSpline)

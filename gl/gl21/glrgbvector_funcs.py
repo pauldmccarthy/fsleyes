@@ -16,11 +16,8 @@ by this module.
 """
 
 
-import OpenGL.GL            as gl
-import OpenGL.raw.GL._types as gltypes
-
-import                         glvolume_funcs
-import                         glvector_funcs
+import glvolume_funcs
+import glvector_funcs
 
 
 def init(self):
@@ -29,20 +26,18 @@ def init(self):
     information.
     """
 
-    self.shaders = None
+    self.shader = None
 
     compileShaders(   self)
     updateShaderState(self)
-
-    self.vertexAttrBuffer = gl.glGenBuffers(1)
 
 
 def destroy(self):
     """Destroys the vertex buffer and vertex/fragment shaders created
     in :func:`init`.
     """
-    gl.glDeleteBuffers(1, gltypes.GLuint(self.vertexAttrBuffer))
-    gl.glDeleteProgram(self.shaders)
+    self.shader.delete()
+    self.shader = None
 
     
 def compileShaders(self):
@@ -50,23 +45,18 @@ def compileShaders(self):
     :class:`.GLRGBVector` instances. Stores references to the shader
     programs, and to all shader variables on the ``GLRGBVector`` instance.
     """
-
-    vertUniforms = []
-    vertAtts     = ['vertex', 'voxCoord', 'texCoord']
-
-    glvector_funcs.compileShaders(self, vertAtts, vertUniforms)
+    self.shader = glvector_funcs.compileShaders(self)
 
 
 def updateShaderState(self):
     """Updates all shader program variables. """
 
-    opts = self.displayOpts
-
+    opts      = self.displayOpts
     useSpline = opts.interpolation == 'spline'
 
-    gl.glUseProgram(self.shaders)
+    self.shader.load()
     glvector_funcs.updateFragmentShaderState(self, useSpline=useSpline)
-    gl.glUseProgram(0) 
+    self.shader.unload()
 
 
 preDraw  = glvolume_funcs.preDraw
