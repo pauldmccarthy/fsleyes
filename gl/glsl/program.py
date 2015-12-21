@@ -89,12 +89,12 @@ class ShaderProgram(object):
             
     def unloadAtts(self):
         for att in self.vertAttributes:
-            gl.glDisableVertexAttribArray(self.positions[att]) 
+            gl.glDisableVertexAttribArray(self.positions[att])
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
         
     def unload(self):
         gl.glUseProgram(0)
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
 
     def delete(self):

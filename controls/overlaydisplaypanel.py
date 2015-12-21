@@ -336,7 +336,10 @@ _DISPLAY_PROPS = td.TypeDict({
 
     'VectorOpts' : [
         props.Widget('colourImage',   labels=_imageName),
-        props.Widget('modulateImage', labels=_imageName),
+        props.Widget('modulateImage',
+                     labels=_imageName,
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is None),
         props.Widget('clipImage',     labels=_imageName),
         props.Widget('cmap',
                      dependencies=['colourImage'],

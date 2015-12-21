@@ -22,14 +22,12 @@ vector.
 
 import logging
 
-import numpy                       as np
-import OpenGL.GL                   as gl
-import OpenGL.raw.GL._types        as gltypes
+import numpy                   as np
+import OpenGL.GL               as gl
 
-import fsl.utils.transform         as transform
-import fsl.fsleyes.gl.routines     as glroutines
-import fsl.fsleyes.gl.shaders      as shaders
-import                                glvector_funcs
+import fsl.utils.transform     as transform
+import fsl.fsleyes.gl.routines as glroutines
+import                            glvector_funcs
 
 
 log = logging.getLogger(__name__)
@@ -44,10 +42,7 @@ def init(self):
     :class:`.Image`  overlay.
     """
     
-    self.shaders        = None
-    self.vertexBuffer   = gl.glGenBuffers(1)
-    self.texCoordBuffer = gl.glGenBuffers(1)
-    self.vertexIDBuffer = gl.glGenBuffers(1)
+    self.shader = None
 
     compileShaders(   self)
     updateShaderState(self)
@@ -58,10 +53,7 @@ def destroy(self):
     removes property listeners from the :class:`.LineVectorOpts`
     instance.
     """
-    gl.glDeleteBuffers(1, gltypes.GLuint(self.vertexBuffer))
-    gl.glDeleteBuffers(1, gltypes.GLuint(self.vertexIDBuffer))
-    gl.glDeleteBuffers(1, gltypes.GLuint(self.texCoordBuffer))
-    gl.glDeleteProgram(self.shaders)
+    self.shader.delete()
 
 
 def compileShaders(self):
@@ -69,28 +61,21 @@ def compileShaders(self):
     shader variables as attributes of the :class:`.GLLineVector`.
     """
 
-    vertAtts     = ['vertex', 'vertexID']
-    vertUniforms = ['imageTexture', 'displayToVoxMat', 'voxToDisplayMat',
-                    'voxelOffset',  'voxValXform',     'imageShape',
-                    'directed',     'imageDims']
-
-    glvector_funcs.compileShaders(self, vertAtts, vertUniforms)
+    self.shader = glvector_funcs.compileShaders(self)
 
     
 def updateShaderState(self):
     """Updates all variables used by the vertex/fragment shaders. """
 
-
-    gl.glUseProgram(self.shaders)
+    shader = self.shader
+    shader.load()
+    
     glvector_funcs.updateFragmentShaderState(self)
 
     image = self.vectorImage
     opts  = self.displayOpts
-    svars = self.shaderVars
 
     vvxMat     = self.imageTexture.voxValXform
-    imageShape = np.array(image.shape[:3], dtype=np.float32)
-
     directed   = opts.directed
     imageDims  = image.pixdim[:3]
     d2vMat     = opts.getTransform('display', 'voxel')
@@ -100,32 +85,23 @@ def updateShaderState(self):
     # transformed voxel coordinates, so
     # it can floor them to get integer
     # voxel coordinates
-    offset    = [0.5, 0.5, 0.5]
+    offset = [0.5, 0.5, 0.5]
 
-    offset    = np.array(offset,    dtype=np.float32)
-    imageDims = np.array(imageDims, dtype=np.float32)
-    d2vMat    = np.array(d2vMat,    dtype=np.float32).ravel('C')
-    v2dMat    = np.array(v2dMat,    dtype=np.float32).ravel('C')
-    vvxMat    = np.array(vvxMat,    dtype=np.float32).ravel('C')
- 
-    gl.glUniform1i(       svars['imageTexture'],       0)
-    gl.glUniformMatrix4fv(svars['displayToVoxMat'], 1, False, d2vMat)
-    gl.glUniformMatrix4fv(svars['voxToDisplayMat'], 1, False, v2dMat)
-    gl.glUniformMatrix4fv(svars['voxValXform'],     1, False, vvxMat)
-    
-    gl.glUniform3fv(svars['voxelOffset'], 1, offset)
-    gl.glUniform3fv(svars['imageShape'],  1, imageShape)
-    gl.glUniform3fv(svars['imageDims'],   1, imageDims)
-    gl.glUniform1f( svars['directed'],       directed)
+    shader.set('displayToVoxMat', d2vMat)
+    shader.set('voxToDisplayMat', v2dMat)
+    shader.set('voxValXform',     vvxMat)
+    shader.set('voxelOffset',     offset)
+    shader.set('imageDims',       imageDims)
+    shader.set('directed',        directed)
 
-    gl.glUseProgram(0) 
+    shader.unload()
 
 
 def preDraw(self):
     """Prepares the GL state for drawing. This amounts to loading the
     vertex/fragment shader programs.
     """
-    gl.glUseProgram(self.shaders)
+    self.shader.load()
 
 
 def draw(self, zpos, xform=None):
@@ -137,9 +113,9 @@ def draw(self, zpos, xform=None):
 
     image      = self.vectorImage
     opts       = self.displayOpts
-    svars      = self.shaderVars
+    shader     = self.shader
     v2dMat     = opts.getTransform('voxel', 'display')
-    resolution = np.array([opts.resolution] * 3)
+    resolution = [opts.resolution] * 3
 
     if opts.transform == 'id':
         resolution = resolution / min(image.pixdim[:3])
@@ -157,37 +133,19 @@ def draw(self, zpos, xform=None):
 
     vertices = np.repeat(vertices, 2, 0)
     indices  = np.arange(vertices.shape[0], dtype=np.uint32)
-    vertices = vertices.ravel('C')
 
     if xform is None: xform = v2dMat
     else:             xform = transform.concat(v2dMat, xform)
+
+    shader.set(   'voxToDisplayMat', xform)
+    shader.setAtt('vertexID',        indices)
+    shader.setAtt('vertex',          vertices)
+    shader.loadAtts()
     
-    xform = np.array(xform, dtype=np.float32).ravel('C') 
-    gl.glUniformMatrix4fv(svars['voxToDisplayMat'], 1, False, xform)
-
-    # bind the vertex ID buffer
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertexIDBuffer)
-    gl.glBufferData(
-        gl.GL_ARRAY_BUFFER, indices.nbytes, indices, gl.GL_STATIC_DRAW)
-    gl.glVertexAttribPointer(
-        svars['vertexID'], 1, gl.GL_UNSIGNED_INT, gl.GL_FALSE, 0, None)
-
-    # and the vertex buffer
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertexBuffer)
-    gl.glBufferData(
-        gl.GL_ARRAY_BUFFER, vertices.nbytes, vertices, gl.GL_STATIC_DRAW)    
-    gl.glVertexAttribPointer(
-        svars['vertex'], 3, gl.GL_FLOAT, gl.GL_FALSE, 0, None)
-
-    gl.glEnableVertexAttribArray(svars['vertex']) 
-    gl.glEnableVertexAttribArray(svars['vertexID'])
-        
     gl.glLineWidth(opts.lineWidth)
     gl.glDrawArrays(gl.GL_LINES, 0, vertices.size / 3)
 
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
-    gl.glDisableVertexAttribArray(svars['vertexID'])
-    gl.glDisableVertexAttribArray(svars['vertex'])
+    shader.unloadAtts()
 
 
 def drawAll(self, zposes, xforms):
@@ -199,4 +157,4 @@ def drawAll(self, zposes, xforms):
 
 def postDraw(self):
     """Clears the GL state after drawing. """
-    gl.glUseProgram(0)
+    self.shader.unload()
