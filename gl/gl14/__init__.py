@@ -22,3 +22,5 @@ import glrgbvector_funcs
 import gllinevector_funcs
 import glmodel_funcs
 import gllabel_funcs
+
+gltensor_funcs = None

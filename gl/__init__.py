@@ -310,7 +310,9 @@ def bootstrap(glVersion=None):
 
 
         # List any GL21 extensions here
-        exts = ['GL_EXT_framebuffer_object']
+        exts = ['GL_EXT_framebuffer_object',
+                'GL_ARB_instanced_arrays',
+                'GL_ARB_draw_instanced']
         
         if not all(map(glexts.hasExtension, exts)):
             log.debug('One of these OpenGL extensions is '
@@ -337,10 +339,14 @@ def bootstrap(glVersion=None):
 
         # Spline interpolation is not currently
         # available in the GL14 implementation
-        import fsl.fsleyes.displaycontext as dc
+        import fsl.fsleyes.displaycontext         as dc
+        import fsl.fsleyes.displaycontext.display as fsldisplay
         dc.VolumeOpts   .interpolation.removeChoice('spline')
         dc.RGBVectorOpts.interpolation.removeChoice('spline')
-        
+
+        # Tensor overlays are not available in GL14
+        dc        .ALL_OVERLAY_TYPES               .remove('tensor')
+        fsldisplay    .OVERLAY_TYPES['TensorImage'].remove('tensor')
 
     renderer = gl.glGetString(gl.GL_RENDERER)
     log.debug('Using OpenGL {} implementation with renderer {}'.format(

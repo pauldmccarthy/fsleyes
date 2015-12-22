@@ -11,9 +11,9 @@ a GLSL shader program comprising a vertex shader and a fragment shader.
 
 import logging
 
-import numpy                as np
-import OpenGL.GL            as gl
-import OpenGL.raw.GL._types as gltypes
+import numpy                          as np
+import OpenGL.GL                      as gl
+import OpenGL.raw.GL._types           as gltypes
 import OpenGL.GL.ARB.instanced_arrays as arbia
 
 import parse
@@ -126,7 +126,13 @@ class ShaderProgram(object):
     def unloadAtts(self):
         for att in self.vertAttributes:
             gl.glDisableVertexAttribArray(self.positions[att])
+
+            pos     = self.positions[          att]
+            divisor = self.vertAttDivisors.get(att)
             
+            if divisor is not None:
+                arbia.glVertexAttribDivisorARB(pos, 0)
+                
         if self.indexBuffer is not None:
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
             
