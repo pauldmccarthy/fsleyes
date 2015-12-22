@@ -246,6 +246,7 @@ class AnnotationObject(globject.GLSimpleObject):
         
         :arg width:  Line width to use for the annotation.
         """
+        globject.GLSimpleObject.__init__(self)
         
         self.colour = colour
         self.width  = width

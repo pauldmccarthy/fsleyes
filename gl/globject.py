@@ -149,7 +149,14 @@ class GLObject(object):
         
         self.__updateListeners = {}
 
-        
+        log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
+
+
+    def __del__(self):
+        """Prints a log message."""
+        log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
+
+
     def addUpdateListener(self, name, listener):
         """Adds a listener function which will be called whenever this
         ``GLObject`` representation changes.
@@ -342,13 +349,6 @@ class GLImageObject(GLObject):
         self.display     = display
         self.displayOpts = display.getDisplayOpts()
 
-        log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
-
-        
-    def __del__(self):
-        """Prints a log message."""
-        log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
-        
 
     def destroy(self):
         """If this method is overridden, it should be called by the subclass

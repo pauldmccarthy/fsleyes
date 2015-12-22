@@ -108,7 +108,8 @@ class VectorOpts(volumeopts.Nifti1Opts):
         """Removes some property listeners, and calls the
         :meth:`.Nifti1Opts.destroy` method.
         """
-        self.overlayList.removeListener('overlays', self.name)
+        self.overlayList.removeListener('overlays',  self.name)
+        self            .removeListener('clipImage', self.name)
 
         volumeopts.Nifti1Opts.destroy(self)
 

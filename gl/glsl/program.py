@@ -86,6 +86,13 @@ class ShaderProgram(object):
         if indexed: self.indexBuffer = gl.glGenBuffers(1)
         else:       self.indexBuffer = None
 
+        log.memory('{}.init({})'.format(type(self).__name__, id(self)))
+
+        
+    def __del__(self):
+        """Prints a log message. """
+        log.memory('{}.del({})'.format(type(self).__name__, id(self)))
+
             
     def load(self):
         gl.glUseProgram(self.program)

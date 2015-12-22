@@ -11,6 +11,7 @@ general display settings for displaying the overlays in a
 
 import sys
 import logging
+import weakref
 
 import numpy as np
 
@@ -145,10 +146,11 @@ class DisplayContext(props.SyncableHasProperties):
        set such that it transforms from the image voxel space to the scaled
        voxel space of the reference image.
 
-    .. note:: The :attr:`.Nifti1Opts.transform` property of any :class:`.Nifti1`
-              overlay can be set independently of this property. However,
-              whenever *this* property changes, it will change the ``transform``
-              property for every ``Nifti1``, in the manner described above.
+    .. note:: The :attr:`.Nifti1Opts.transform` property of any
+              :class:`.Nifti1` overlay can be set independently of this
+              property. However, whenever *this* property changes, it will
+              change the ``transform`` property for every ``Nifti1``, in the
+              manner described above.
     """
 
 
@@ -233,8 +235,11 @@ class DisplayContext(props.SyncableHasProperties):
         # it has not already been set (if this
         # is a child DC, the cache will have
         # already been set on the parent)
-        try:             locPropVal.getAttribute('standardCoords')
-        except KeyError: locPropVal.setAttribute('standardCoords', {})
+        try:
+            locPropVal.getAttribute('standardCoords')
+        except KeyError:
+            locPropVal.setAttribute('standardCoords',
+                                    weakref.WeakKeyDictionary())
 
         # The overlayListChanged and displaySpaceChanged
         # methods do important things - check them out
@@ -424,7 +429,8 @@ class DisplayContext(props.SyncableHasProperties):
             return
 
         locPropVal     = self.getPropVal('location')
-        standardCoords = dict(locPropVal.getAttribute('standardCoords'))
+        standardCoords = weakref.WeakKeyDictionary(
+            locPropVal.getAttribute('standardCoords'))
         
         standardCoords[overlay] = np.array(coords).tolist()
         
@@ -593,8 +599,8 @@ class DisplayContext(props.SyncableHasProperties):
         
     def __displaySpaceChanged(self, *a):
         """Called when the :attr:`displaySpace` property changes. Updates the
-        :attr:`.Nifti1Opts.transform` property for all :class:`.Nifti1` overlays
-        in the :class:`.OverlayList`.
+        :attr:`.Nifti1Opts.transform` property for all :class:`.Nifti1`
+        overlays in the :class:`.OverlayList`.
         """
 
         # If this DC is synced to a parent, let the

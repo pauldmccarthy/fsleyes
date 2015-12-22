@@ -630,6 +630,10 @@ class VolumeOpts(Nifti1Opts):
             # listeners on child instances. See note above
             # about why this will probably break future
             # usage.
+            overlayList.addListener('overlays',
+                                    self.name,
+                                    self.__overlayListChanged)
+ 
             self       .addListener('useNegativeCmap',
                                     self.name,
                                     self.__useNegativeCmapChanged)
@@ -639,10 +643,6 @@ class VolumeOpts(Nifti1Opts):
             self       .addListener('linkHighRanges',
                                     self.name,
                                     self.__linkHighRangesChanged)
-            
-            overlayList.addListener('overlays',
-                                    self.name,
-                                    self.__overlayListChanged)
             self       .addListener('clipImage',
                                     self.name,
                                     self.__clipImageChanged)
@@ -677,33 +677,40 @@ class VolumeOpts(Nifti1Opts):
             self.__clipImageChanged()
 
 
-
-    @actions.action
-    def resetDisplayRange(self):
-        """Resets the display range to the data range."""
-        self.displayRange.x = [self.dataMin, self.dataMax]
-
-
     def destroy(self):
         """Removes property listeners, and calls the :meth:`Nifti1Opts.destroy`
         method.
         """
 
-        self.overlayList.removeListener('overlays', self.name)
-
         if self.getParent() is not None:
-            display = self.display
-            display.removeListener('brightness',   self.name)
-            display.removeListener('contrast',     self.name)
-            self   .removeListener('displayRange', self.name)
+            overlayList = self.overlayList
+            display     = self.display
+            overlayList.removeListener('overlays',        self.name) 
+            display    .removeListener('brightness',      self.name)
+            display    .removeListener('contrast',        self.name)
+            self       .removeListener('displayRange',    self.name)
+            self       .removeListener('useNegativeCmap', self.name)
+            self       .removeListener('linkLowRanges',   self.name)
+            self       .removeListener('linkHighRanges',  self.name)
+            self       .removeListener('clipImage',       self.name)
+            
             self.unbindProps(self   .getSyncPropertyName('displayRange'),
                              display,
                              display.getSyncPropertyName('brightness'))
             self.unbindProps(self   .getSyncPropertyName('displayRange'), 
                              display,
                              display.getSyncPropertyName('contrast'))
+            
+            self.__linkRangesChanged(0, False)
+            self.__linkRangesChanged(1, False)
 
         Nifti1Opts.destroy(self)
+
+
+    @actions.action
+    def resetDisplayRange(self):
+        """Resets the display range to the data range."""
+        self.displayRange.x = [self.dataMin, self.dataMax]
 
 
     def __overlayListChanged(self, *a):
