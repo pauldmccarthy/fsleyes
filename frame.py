@@ -600,6 +600,7 @@ class FSLEyesFrame(wx.Frame):
 
         # Global actions
         actionz = [actions.OpenFileAction,
+                   actions.OpenDirAction,
                    actions.OpenStandardAction,
                    actions.CopyOverlayAction,
                    actions.SaveOverlayAction]

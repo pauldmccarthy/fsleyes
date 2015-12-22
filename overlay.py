@@ -105,15 +105,25 @@ class OverlayList(props.HasProperties):
         self.overlays.extend(overlays)
 
 
-    def addOverlays(self, fromDir=None, addToEnd=True):
+    def addOverlays(self, fromDir=None, addToEnd=True, dirdlg=False):
         """Convenience method for interactively adding overlays to this
         :class:`OverlayList`.
 
-        Returns: A list containing the overlays that were added - the list
-                 will be empty if no overlays were added.
+        :arg fromDir:  Initial directory to show in the dialog - see
+                       :func:`interactiveAddOverlays`.
+
+        :arg dirdlg:   Use a directory chooser instead of a file dialog - see
+                       :func:`interactiveAddOverlays`.
+        
+        :arg addToEnd: If ``True`` (the default), the loaded overlays are added
+                       to the end of this ``OverlayList``. Otherwise they are
+                       added to the beginning.
+
+        :returns:      A list containing the overlays that were added - the 
+                       list will be empty if no overlays were added.
         """
 
-        overlays = interactiveLoadOverlays(fromDir)
+        overlays = interactiveLoadOverlays(fromDir=fromDir, dirdlg=dirdlg)
 
         if len(overlays) > 0:
             if addToEnd: self.extend(      overlays)
@@ -346,7 +356,7 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
     return overlays
 
 
-def interactiveLoadOverlays(fromDir=None, **kwargs):
+def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
     """Convenience function for interactively loading one or more overlays.
     
     Pops up a file dialog prompting the user to select one or more overlays
@@ -356,6 +366,8 @@ def interactiveLoadOverlays(fromDir=None, **kwargs):
                   ``None``, the most recently visited directory (via this
                   function) is used, or a directory from An already loaded
                   overlay, or the current working directory.
+    
+    :arg dirdlg:  Use a directory chooser instead of a file dialog.
 
     :arg kwargs:  Passed  through to the :func:`loadOverlays` function.
 
@@ -380,16 +392,25 @@ def interactiveLoadOverlays(fromDir=None, **kwargs):
         if fromDir is None:
             fromDir = os.getcwd()
 
-    dlg = wx.FileDialog(app.GetTopWindow(),
-                        message=strings.titles['overlay.addOverlays.dialog'],
-                        defaultDir=fromDir,
-                        wildcard=makeWildcard(),
-                        style=wx.FD_OPEN | wx.FD_MULTIPLE)
+    msg = strings.titles['overlay.addOverlays.dialog']
+
+    if dirdlg:
+        dlg = wx.DirDialog(app.GetTopWindow(),
+                           message=msg,
+                           defaultPath=fromDir,
+                           style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
+    else:
+        dlg = wx.FileDialog(app.GetTopWindow(),
+                            message=msg,
+                            defaultDir=fromDir,
+                            wildcard=makeWildcard(),
+                            style=wx.FD_OPEN | wx.FD_MULTIPLE)
 
     if dlg.ShowModal() != wx.ID_OK:
         return []
 
-    paths  = dlg.GetPaths()
+    if dirdlg: paths = [dlg.GetPath()]
+    else:      paths =  dlg.GetPaths()
 
     dlg.Destroy()
     del dlg

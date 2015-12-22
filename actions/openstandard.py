@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 #
-# openstandardaction.py - Action which allows the user to open standard
-#                         images.
+# openstandard.py - Action which allows the user to open standard images.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -49,7 +48,8 @@ class OpenStandardAction(action.Action):
         added some overlays, updates the
         :attr:`.DisplayContext.selectedOverlay` accordingly.
         """
-        added = self.__overlayList.addOverlays(self.__stddir, addToEnd=False)
+        added = self.__overlayList.addOverlays(
+            fromDir=self.__stddir, addToEnd=False)
         
         if len(added) > 0:
             self.__displayCtx.selectedOverlay = \

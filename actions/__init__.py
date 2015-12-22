@@ -119,6 +119,7 @@ import fsl.data.strings as strings
 import action
 import copyoverlay
 import openfile
+import opendir
 import openstandard
 import saveoverlay
 import loadcolourmap
@@ -131,6 +132,7 @@ Action                   = action            .Action
 ToggleAction             = action            .ToggleAction
 CopyOverlayAction        = copyoverlay       .CopyOverlayAction
 OpenFileAction           = openfile          .OpenFileAction
+OpenDirAction            = opendir           .OpenDirAction
 OpenStandardAction       = openstandard      .OpenStandardAction
 SaveOverlayAction        = saveoverlay       .SaveOverlayAction
 LoadColourMapAction      = loadcolourmap     .LoadColourMapAction
