@@ -101,7 +101,7 @@ class VectorOpts(volumeopts.Nifti1Opts):
             self            .addListener('clipImage',
                                          self.name,
                                          self.__clipImageChanged)
-
+        else:
             self.__overlayListChanged()
             self.__clipImageChanged()
 

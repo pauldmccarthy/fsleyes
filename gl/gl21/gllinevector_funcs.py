@@ -87,6 +87,7 @@ def updateShaderState(self):
     # voxel coordinates
     offset = [0.5, 0.5, 0.5]
 
+    shader.set('vectorTexture',   0)
     shader.set('displayToVoxMat', d2vMat)
     shader.set('voxToDisplayMat', v2dMat)
     shader.set('voxValXform',     vvxMat)

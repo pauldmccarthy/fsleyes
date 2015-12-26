@@ -9,7 +9,7 @@
 /*
  * Vector image containing XYZ vector data.
  */
-uniform sampler3D imageTexture;
+uniform sampler3D vectorTexture;
 
 /*
  * Transformations between voxel and 
@@ -98,7 +98,7 @@ void main(void) {
   /*
    * Retrieve the vector values for this voxel
    */
-  vector = texture3D(imageTexture, texCoord).xyz;
+  vector = texture3D(vectorTexture, texCoord).xyz;
 
   /*
    * Transform the vector values  from their

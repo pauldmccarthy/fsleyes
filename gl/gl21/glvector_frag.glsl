@@ -12,7 +12,7 @@
 /*
  * Vector image containing XYZ vector data.
  */
-uniform sampler3D imageTexture;
+uniform sampler3D vectorTexture;
 
 /*
  * Modulation texture containing values by
@@ -106,12 +106,12 @@ void main(void) {
    */
   vec3 voxValue;
   if (useSpline) {
-    voxValue.x = spline_interp(imageTexture, fragTexCoord, imageShape, 0);
-    voxValue.y = spline_interp(imageTexture, fragTexCoord, imageShape, 1);
-    voxValue.z = spline_interp(imageTexture, fragTexCoord, imageShape, 2);
+    voxValue.x = spline_interp(vectorTexture, fragTexCoord, imageShape, 0);
+    voxValue.y = spline_interp(vectorTexture, fragTexCoord, imageShape, 1);
+    voxValue.z = spline_interp(vectorTexture, fragTexCoord, imageShape, 2);
   }
   else {
-    voxValue = texture3D(imageTexture, fragTexCoord).xyz;
+    voxValue = texture3D(vectorTexture, fragTexCoord).xyz;
   }
 
   /* Look up the modulation and clipping values */

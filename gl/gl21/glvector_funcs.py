@@ -61,8 +61,8 @@ def updateFragmentShaderState(self, useSpline=False):
             voxValXform,
             self.cmapTexture.getCoordinateTransform())
 
-        shader.set('imageTexture',     3)
         shader.set('clipTexture',      2)
+        shader.set('imageTexture',     3)
         shader.set('colourTexture',    7)
         shader.set('negColourTexture', 7)
         shader.set('img2CmapXform',    img2CmapXform)
@@ -80,7 +80,7 @@ def updateFragmentShaderState(self, useSpline=False):
         voxValXform = self.imageTexture.voxValXform
         cmapXform   = self.xColourTexture.getCoordinateTransform()
 
-        shader.set('imageTexture',    0)
+        shader.set('vectorTexture',   0)
         shader.set('modulateTexture', 1)
         shader.set('clipTexture',     2)
         shader.set('xColourTexture',  4)
