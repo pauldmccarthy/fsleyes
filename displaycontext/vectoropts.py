@@ -93,15 +93,17 @@ class VectorOpts(volumeopts.Nifti1Opts):
         
         volumeopts.Nifti1Opts.__init__(self, *args, **kwargs)
 
-        self.overlayList.addListener('overlays',
-                                     self.name,
-                                     self.__overlayListChanged)
-        self            .addListener('clipImage',
-                                     self.name,
-                                     self.__clipImageChanged)
-        
-        self.__overlayListChanged()
-        self.__clipImageChanged()
+        if self.getParent() is not None:
+            
+            self.overlayList.addListener('overlays',
+                                         self.name,
+                                         self.__overlayListChanged)
+            self            .addListener('clipImage',
+                                         self.name,
+                                         self.__clipImageChanged)
+
+            self.__overlayListChanged()
+            self.__clipImageChanged()
 
 
     def destroy(self):

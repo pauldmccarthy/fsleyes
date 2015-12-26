@@ -153,6 +153,14 @@ class GLVector(globject.GLImageObject):
         self.imageTexture    = None
         self.prefilter       = prefilter
 
+        # Make sure we are registered with the
+        # auxillary images if any of them are set.
+        opts = self.displayOpts
+        
+        if opts.colourImage   is not None: self.registerAuxImage('colour')
+        if opts.modulateImage is not None: self.registerAuxImage('modulate')
+        if opts.clipImage     is not None: self.registerAuxImage('clip') 
+
         self.addListeners()
         self.refreshImageTexture()
         self.refreshAuxTexture('modulate')

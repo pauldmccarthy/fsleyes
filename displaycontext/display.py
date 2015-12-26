@@ -9,6 +9,7 @@ which encapsulate overlay display settings.
 """
 
 import logging
+import inspect
 
 import props
 
@@ -121,7 +122,8 @@ class Display(props.SyncableHasProperties):
         # has different property values to our own,
         # and our values need to be updated
         props.SyncableHasProperties.__init__(
-            self, parent=parent,
+            self,
+            parent=parent,
 
             # These properties cannot be unbound, as
             # they affect the OpenGL representation 
@@ -252,9 +254,10 @@ class Display(props.SyncableHasProperties):
                        state=self.__displayCtx.syncOverlayDisplay)
 
 
-    def __findOptBaseType(self, optType):
-        """Finds the top level base class for the given :class:`DisplayOpts`
-        subclass.
+    def __findOptBaseType(self, optType, optName):
+        """Finds the class, in the hierarchy of the given ``optType`` (a
+        :class:`.DisplayOpts` sub-class) in which the given ``optName``
+        is defined.
 
         This method is used by the :meth:`__saveOldDisplayOpts` method, and
         is an annoying necessity caused by the way that the :class:`.TypeDict`
@@ -266,22 +269,12 @@ class Display(props.SyncableHasProperties):
         the :attr:`.Nifti1Opts.transform` property between :class:`.VolumeOpts`
         and :class:`.LabelOpts` instances), we need to store the name of the
         common base type in the dictionary.
-
-        So this method just recursively finds and returns the highest base
-        type of the given ``optType`` which is a sub-type of ``DisplayOpts``.
         """
 
-        bases = optType.__bases__
-
-        if DisplayOpts in bases:
-            return optType
-
-        for base in bases:
-            
-            base = self.__findOptBaseType(base)
-            if base is not None:
+        for base in inspect.getmro(optType):
+            if optName in base.__dict__:
                 return base
-
+            
         return None
 
     
@@ -297,9 +290,14 @@ class Display(props.SyncableHasProperties):
             return
 
         for propName in opts.getAllProperties()[0]:
-            base = self.__findOptBaseType(type(opts))
+            base = self.__findOptBaseType(type(opts), propName)
             base = base.__name__
-            self.__oldOptValues[base, propName] = getattr(opts, propName)
+            val  = getattr(opts, propName)
+
+            log.debug('Saving {}.{} = {} [{} {}]'.format(
+                base, propName, val, type(opts).__name__, id(self)))
+            
+            self.__oldOptValues[base, propName] = val
 
     
     def __restoreOldDisplayOpts(self):
@@ -315,11 +313,18 @@ class Display(props.SyncableHasProperties):
             
             try:
                 value = self.__oldOptValues[opts, propName]
+
+                if not hasattr(opts, propName):
+                    continue
+
+                log.debug('Restoring {}.{} = {} [{}]'.format(
+                    type(opts).__name__, propName, value, id(self)))
+
                 setattr(opts, propName, value)
                 
             except KeyError:
                 pass
-                
+
     
     def __overlayTypeChanged(self, *a):
         """Called when the :attr:`overlayType` property changes. Makes sure

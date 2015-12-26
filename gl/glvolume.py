@@ -172,6 +172,12 @@ class GLVolume(globject.GLImageObject):
         self.negColourTexture = textures.ColourMapTexture(
             '{}_neg'.format(self.texName))
 
+        # If the VolumeOpts instance has
+        # inherited a clipImage value,
+        # make sure we're registered with it.
+        if self.displayOpts.clipImage is not None:
+            self.registerClipImage()
+
         self.refreshImageTexture()
         self.refreshClipTexture()
         self.refreshColourTextures()
