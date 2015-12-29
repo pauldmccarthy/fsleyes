@@ -35,8 +35,10 @@
 #                          component determines the clipping direction - pass
 #                          in -1 for the above behaviour, or +1 to invert
 #                          this behaviour (i.e. to clip values that are within
-#                          the range). Clipping values are assumed to be
-#                          normalised to the image texture value range.
+#                          the range). The (w) component is a boolen flag which
+#                          indicates whether the image texture is to be used
+#                          as the clip texture. Clipping values are assumed to
+#                          be normalised to the image texture value range.
 #
 #   program.local[6]     - Negative colour map control. The (x) component
 #                          is a boolean flag controlling whether the negative
@@ -57,10 +59,12 @@ TEMP  voxCoord;
 TEMP  voxClipLo;
 TEMP  voxClipHi;
 TEMP  voxValue;
+TEMP  clipValue;
 TEMP  posColour;
 TEMP  negColour;
 TEMP  useNegCmap;
 TEMP  negVoxValue;
+TEMP  negClipValue;
 
 PARAM imageShape = program.local[4];
 PARAM clipping   = program.local[5];
@@ -81,8 +85,15 @@ MOV voxCoord, fragment.texcoord[1];
 #pragma include test_in_bounds.prog
 
 # look up image voxel value
-# from 3D image texture
-TEX voxValue.x, fragment.texcoord[0], texture[0], 3D;
+# and clipping value from 3D
+# image/clipping textures
+TEX voxValue.x,  fragment.texcoord[0], texture[0], 3D;
+TEX clipValue.x, fragment.texcoord[0], texture[3], 3D;
+
+# If the image texture is the clip
+# texture, overwrite the clip value
+# we just looked up.
+CMP clipValue.x, clipping.w, clipValue.x, voxValue.x;
 
 # Figure out which negative colour map
 # should be used for this fragment.
@@ -108,16 +119,27 @@ MUL useNegCmap.x, useNegCmap.x, -1;
 ADD negVoxValue.x, negCmap.y,     negCmap.y;
 SUB negVoxValue.x, negVoxValue.x, voxValue.x;
 
+# And do the same for the clip value -
+# this is necessary if the image texture
+# is the clipping texture.
+ADD negClipValue.x, negCmap.y,      negCmap.y;
+SUB negClipValue.x, negClipValue.x, clipValue.x;
+
 # If we're using the negative colour
 # map, replace the original voxel
 # value with the inverted one.
 CMP voxValue.x, useNegCmap.x, negVoxValue.x, voxValue.x;
 
+# And do the same to the clip value if
+# the image texture is the clip texture.
+CMP negClipValue.x, useNegCmap.x, negClipValue.x, clipValue.x;
+CMP clipValue.x, clipping.w, clipValue.x, negClipValue.x;
+
 # Test the low clipping range
-SUB voxClipLo, voxValue.x, clipping.x;
+SUB voxClipLo, clipValue.x, clipping.x;
 
 # And the high clipping range
-SUB voxClipHi, voxValue.x, clipping.y;
+SUB voxClipHi, clipValue.x, clipping.y;
 
 # Multiply the low/high results - after
 # this, voxClipLo will be positive if
