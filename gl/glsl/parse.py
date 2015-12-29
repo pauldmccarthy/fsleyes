@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # parse.py - Simple parser for extracting information about a GLSL program.
-
+# 
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 # Based on work by Nicolas P. Rougier
@@ -51,10 +51,11 @@ about the program.
 
 
 from __future__ import print_function
-
+import sys
 import logging
 
 import pyparsing as pp
+
 
 log = logging.getLogger(__name__)
 
@@ -167,11 +168,14 @@ def parseGLSL(source):
     return decs
 
 
-if __name__ == '__main__':
-    import sys
+def main():
+    """If this module is executed as a script, this function is called.
+    It expects a path to a ``glsl`` file as a single parameter. This file
+    is parsed, and information about it printed to standard output.
+    """
 
     if len(sys.argv) != 2:
-        print('Usage: glslparse.py file.glsl')
+        print('Usage: {}.py file.glsl'.format(__name__))
         sys.exit(0)
 
     infile = sys.argv[1]
@@ -187,3 +191,7 @@ if __name__ == '__main__':
         print('\n--{}--\n'.format(d.upper()))
         for t, n in v:
             print('{}: {}'.format(t, n))
+
+            
+if __name__ == '__main__':
+    main()

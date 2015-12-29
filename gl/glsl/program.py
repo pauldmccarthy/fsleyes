@@ -30,14 +30,85 @@ GLSL_ATTRIBUTE_TYPES = {
     'vec3'          : (gl.GL_FLOAT, 3),
     'vec4'          : (gl.GL_FLOAT, 3)
 }
+"""This dictionary contains mappings between GLSL data types, and their
+corresponding GL types and sizes.
+"""
 
 
 class ShaderProgram(object):
+    """The ``ShaderProgram`` class encapsulates information and logic about
+    a GLSL 1.20 shader program, comprising a vertex shader and a fragment
+    shader. It provides methods to set shader attribute and uniform values,
+    to configure attributes, and to load/unload the program. Furthermore,
+    the ``ShaderProgram`` makes sure that all uniform and attribut variables
+    are converted to the appropriate type. The following methods are available
+    on a ``ShaderProgram``:
 
-    def __init__(self,
-                 vertSrc,
-                 fragSrc,
-                 indexed=False):
+    
+    .. autosummary::
+       :nosignatures:
+
+       load
+       unload
+       delete
+       loadAtts
+       unloadAtts
+       set
+       setAtt
+       setIndices
+
+
+    Typical usage of a ``ShaderProgram`` will look something like the
+    following::
+
+        vertSrc = 'vertex shader source'
+        fragSrc = 'vertex shader source'
+
+        program = ShaderProgram(vertSrc, fragSrc)
+
+        # Load the program
+        program.load()
+
+        # Set some uniform values
+        program.set('lighting', True)
+        program.set('lightPos', [0, 0, -1])
+
+        # Create and set vertex attributes
+        vertices, normals = createVertices()
+    
+        program.setAtt('vertex', vertices)
+        program.setAtt('normal', normals)
+
+        # Load the attributes
+        program.loadAtts()
+
+        # Draw the scene
+        gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
+
+        # Clear the GL state
+        program.unload()
+        program.unloadAtts()
+
+
+        # Delete the program when
+        # we no longer need it
+        program.delete()
+    """
+    
+
+    def __init__(self, vertSrc, fragSrc, indexed=False):
+        """Create a ``ShaderProgram``.
+
+        :arg vertSrc: String containing vertex shader source code.
+        
+        :arg fragSrc: String containing fragment shader source code.
+        
+        :arg indexed: If ``True``, it is assumed that the vertices processed
+                      by this shader program will be drawn using an index
+                      array.  A vertex buffer object is created to store
+                      vertex indices - this buffer is expected to be populated
+                      via the :meth:`setIndices` method.
+        """
 
         self.program     = self.__compile(vertSrc, fragSrc)
         
@@ -95,10 +166,16 @@ class ShaderProgram(object):
 
             
     def load(self):
+        """Loads this ``ShaderProgram`` into the GL state.
+        """
         gl.glUseProgram(self.program)
 
 
     def loadAtts(self):
+        """Binds all of the shader program ``attribute`` variables - you
+        must set the data for each attribute via :meth:`setAtt` before
+        calling this method.
+        """
         for att in self.vertAttributes:
 
             aPos           = self.positions[          att]
@@ -124,6 +201,8 @@ class ShaderProgram(object):
 
             
     def unloadAtts(self):
+        """Disables all vertex attributes, and unbinds associated vertex buffers.
+        """
         for att in self.vertAttributes:
             gl.glDisableVertexAttribArray(self.positions[att])
 
@@ -140,10 +219,12 @@ class ShaderProgram(object):
 
         
     def unload(self):
+        """Unloads the GL shader program. """
         gl.glUseProgram(0)
 
 
     def delete(self):
+        """Deletes all GL resources managed by this ``ShaderProgram`. """
         gl.glDeleteProgram(self.program)
 
         for buf in self.buffers.values():
@@ -152,6 +233,7 @@ class ShaderProgram(object):
         
         
     def set(self, name, value):
+        """Sets the value for the specified GLSL ``uniform`` variable. """
 
         vPos  = self.positions[name]
         vType = self.types[    name]
@@ -169,6 +251,11 @@ class ShaderProgram(object):
 
 
     def setAtt(self, name, value, divisor=None):
+        """Sets the value for the specified GLSL ``attribute`` variable.
+
+        :arg divisor: If specified, this value is used as a divisor for this
+                      attribute via the ``glVetexAttribDivisor`` function.
+        """ 
 
         aType    = self.types[  name]
         aBuf     = self.buffers[name]
@@ -196,6 +283,10 @@ class ShaderProgram(object):
 
 
     def setIndices(self, indices):
+        """If an index array is to be used by this ``ShaderProgram`` (see the
+        ``indexed`` argument to :meth:`__init__`), the index array may be set
+        via this method.
+        """
 
         if self.indexBuffer is None:
             raise RuntimeError('Shader program was not '

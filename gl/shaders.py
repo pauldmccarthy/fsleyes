@@ -22,7 +22,7 @@ following functions:
    compileShaders
 
 
-Some functions are also provided which make setting program variables a bit
+Some functions are also provided which make setting ARB program variables a bit
 less painful:
 
 
