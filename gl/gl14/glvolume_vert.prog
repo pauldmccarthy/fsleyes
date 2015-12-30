@@ -6,17 +6,18 @@
 # passes the corresponding voxel and texture coordinates through to the
 # fragment program.
 #
-# Inputs:
-#    vertex.texcoord[0] - Texture coordinates
-#    program.local[0]   - image shape
-#
+# Input parameters:
+#    imageShape    - image shape
+# 
+# Input attributes:
+#    texCoord - Texture coordinates
 #
 # Outputs:
 #    result.texcoord[0] - Texture coordinates
 #    result.texcoord[1] - Voxel coordinates
 #
 
-PARAM imageShape = program.local[0];
+PARAM imageShape = {{ param.imageShape }};
 
 TEMP voxCoord;
 
@@ -26,12 +27,12 @@ DP4 result.position.y, state.matrix.mvp.row[1], vertex.position;
 DP4 result.position.z, state.matrix.mvp.row[2], vertex.position;
 DP4 result.position.w, state.matrix.mvp.row[3], vertex.position;
 
-MOV result.texcoord[0], vertex.texcoord[0];
-
-# Transform the texture coordinates into voxel coordinates
-MOV voxCoord, vertex.texcoord[0];
+# Transform the texture coordinates
+# into voxel coordinates
+MOV voxCoord, {{ attr.texCoord }};
 MUL voxCoord, voxCoord, imageShape;
 
-MOV result.texcoord[1], voxCoord;
+MOV {{ varying.texCoord }}, {{ attr.texCoord }};
+MOV {{ varying.voxCoord }}, voxCoord;
 
 END

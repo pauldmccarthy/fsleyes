@@ -66,29 +66,26 @@ TEMP  useNegCmap;
 TEMP  negVoxValue;
 TEMP  negClipValue;
 
-PARAM imageShape = program.local[4];
-PARAM clipping   = program.local[5];
-PARAM negCmap    = program.local[6];
+PARAM imageShape = {{ param.imageShape }};
+PARAM clipping   = {{ param.clipping   }};
+PARAM negCmap    = {{ param.negCmap    }};
   
 # This matrix scales the voxel value to
 # lie in a range which is appropriate to
 # the current display range 
-PARAM voxValXform[4] = { program.local[0],
-                         program.local[1],
-                         program.local[2],
-                         program.local[3] };
+PARAM voxValXform[4] = {{ param.voxValXform }};
 
 # retrieve the voxel coordinates,
 # bail if they are are out of bounds  
-MOV voxCoord, fragment.texcoord[1];
+MOV voxCoord, {{ varying.voxCoord }};
 
 #pragma include test_in_bounds.prog
 
 # look up image voxel value
 # and clipping value from 3D
 # image/clipping textures
-TEX voxValue.x,  fragment.texcoord[0], texture[0], 3D;
-TEX clipValue.x, fragment.texcoord[0], texture[3], 3D;
+TEX voxValue.x,  {{ varying.texCoord }}, {{ texture.imageTexture }}, 3D;
+TEX clipValue.x, {{ varying.texCoord }}, {{ texture.clipTexture  }}, 3D;
 
 # If the image texture is the clip
 # texture, overwrite the clip value
@@ -165,8 +162,8 @@ MAD voxValue, voxValue, voxValXform[0].x, voxValXform[3].x;
 
 # look up the appropriate colour
 # in the 1D colour map texture
-TEX posColour, voxValue.x, texture[1], 1D;
-TEX negColour, voxValue.x, texture[2], 1D;
+TEX posColour, voxValue.x, {{ texture.colourTexture    }}, 1D;
+TEX negColour, voxValue.x, {{ texture.negColourTexture }}, 1D;
 
 # useNegCmap is negative if the
 # negative colour map should be

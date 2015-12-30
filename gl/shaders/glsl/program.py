@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides he :class:`ShaderProgram` class, which encapsulates
+"""This module provides he :class:`GLSLShader` class, which encapsulates
 a GLSL shader program comprising a vertex shader and a fragment shader.
 """
 
@@ -35,14 +35,14 @@ corresponding GL types and sizes.
 """
 
 
-class ShaderProgram(object):
-    """The ``ShaderProgram`` class encapsulates information and logic about
+class GLSLShader(object):
+    """The ``GLSLShader`` class encapsulates information and logic about
     a GLSL 1.20 shader program, comprising a vertex shader and a fragment
     shader. It provides methods to set shader attribute and uniform values,
     to configure attributes, and to load/unload the program. Furthermore,
-    the ``ShaderProgram`` makes sure that all uniform and attribut variables
+    the ``GLSLShader`` makes sure that all uniform and attribut variables
     are converted to the appropriate type. The following methods are available
-    on a ``ShaderProgram``:
+    on a ``GLSLShader``:
 
     
     .. autosummary::
@@ -58,13 +58,13 @@ class ShaderProgram(object):
        setIndices
 
 
-    Typical usage of a ``ShaderProgram`` will look something like the
+    Typical usage of a ``GLSLShader`` will look something like the
     following::
 
         vertSrc = 'vertex shader source'
         fragSrc = 'vertex shader source'
 
-        program = ShaderProgram(vertSrc, fragSrc)
+        program = GLSLShader(vertSrc, fragSrc)
 
         # Load the program
         program.load()
@@ -97,7 +97,7 @@ class ShaderProgram(object):
     
 
     def __init__(self, vertSrc, fragSrc, indexed=False):
-        """Create a ``ShaderProgram``.
+        """Create a ``GLSLShader``.
 
         :arg vertSrc: String containing vertex shader source code.
         
@@ -166,7 +166,7 @@ class ShaderProgram(object):
 
             
     def load(self):
-        """Loads this ``ShaderProgram`` into the GL state.
+        """Loads this ``GLSLShader`` into the GL state.
         """
         gl.glUseProgram(self.program)
 
@@ -224,7 +224,7 @@ class ShaderProgram(object):
 
 
     def delete(self):
-        """Deletes all GL resources managed by this ``ShaderProgram`. """
+        """Deletes all GL resources managed by this ``GLSLShader`. """
         gl.glDeleteProgram(self.program)
 
         for buf in self.buffers.values():
@@ -283,7 +283,7 @@ class ShaderProgram(object):
 
 
     def setIndices(self, indices):
-        """If an index array is to be used by this ``ShaderProgram`` (see the
+        """If an index array is to be used by this ``GLSLShader`` (see the
         ``indexed`` argument to :meth:`__init__`), the index array may be set
         via this method.
         """
