@@ -21,8 +21,9 @@ import OpenGL.GL.ARB.fragment_program as arbfp
 import OpenGL.GL.ARB.vertex_program   as arbvp
 import OpenGL.raw.GL._types           as gltypes
 
-import                           glvolume_funcs
-import fsl.fsleyes.gl.shaders as shaders
+import                                   glvolume_funcs
+import                                   glvector_funcs
+import fsl.fsleyes.gl.shaders         as shaders
 
 
 def init(self):
@@ -39,9 +40,8 @@ def init(self):
 
 def destroy(self):
     """Destroys the vertex/fragment shader programs created in :func:`init`.
-    """ 
-    arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
-    arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram)) 
+    """
+    glvector_funcs.destroy(self)
 
     
 def compileShaders(self):
@@ -49,47 +49,23 @@ def compileShaders(self):
     :class:`.GLRGBVector` instances. Stores references to the shader
     programs on the ``GLRGBVector`` instance. 
     """
-    if self.vertexProgram is not None:
-        arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
-        
-    if self.fragmentProgram is not None:
-        arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram)) 
-
-    vertShaderSrc = shaders.getVertexShader(  self)
-    fragShaderSrc = shaders.getFragmentShader(self)
-
-    vertexProgram, fragmentProgram = shaders.compilePrograms(
-        vertShaderSrc, fragShaderSrc)
-
-    self.vertexProgram   = vertexProgram
-    self.fragmentProgram = fragmentProgram        
+    glvector_funcs.compileShaders(self)
 
 
 def updateShaderState(self):
     """Updates all variables used by the vertex/fragment shader programs. """
 
-    opts = self.displayOpts
+    glvector_funcs.updateFragmentShaderState(self)
+
+    shape = list(self.vectorImage.shape[:3])
     
-    gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-    gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
-
-    arbvp.glBindProgramARB(arbvp.GL_VERTEX_PROGRAM_ARB,
-                           self.vertexProgram)
-    arbfp.glBindProgramARB(arbfp.GL_FRAGMENT_PROGRAM_ARB,
-                           self.fragmentProgram)
-
-    voxValXform  = self.imageTexture.voxValXform
-    cmapXform    = self.xColourTexture.getCoordinateTransform()
-    shape        = list(self.vectorImage.shape[:3]) + [0]
-    modThreshold = [opts.modThreshold / 100.0, 0.0, 0.0, 0.0]
-
-    shaders.setFragmentProgramMatrix(0, voxValXform)
-    shaders.setFragmentProgramMatrix(4, cmapXform)
-    shaders.setFragmentProgramVector(8, shape + [0])
-    shaders.setFragmentProgramVector(9, modThreshold)
+    gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB)
+    
+    arbvp.glBindProgramARB(arbvp.GL_VERTEX_PROGRAM_ARB, self.vertexProgram)
+    
+    shaders.setVertexProgramVector(0, shape + [0])
     
     gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-    gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
 
 
 preDraw  = glvolume_funcs.preDraw

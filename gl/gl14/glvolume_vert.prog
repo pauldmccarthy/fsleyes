@@ -28,7 +28,7 @@ DP4 result.position.w, state.matrix.mvp.row[3], vertex.position;
 
 MOV result.texcoord[0], vertex.texcoord[0];
 
-# Transform the voxel coordinates into texture coordinates
+# Transform the texture coordinates into voxel coordinates
 MOV voxCoord, vertex.texcoord[0];
 MUL voxCoord, voxCoord, imageShape;
 
