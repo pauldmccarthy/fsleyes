@@ -89,7 +89,7 @@ def compileShaders(self):
     :class:`.GLLineVector` instance. This also results in a call to
     :func:`updateVertices`.
     """
-    glvector_funcs.compileShaders(self)
+    glvector_funcs.compileShaders(self, 'gllinevector')
     updateVertices(self)
 
 

@@ -49,7 +49,7 @@ def compileShaders(self):
     :class:`.GLRGBVector` instances. Stores references to the shader
     programs on the ``GLRGBVector`` instance. 
     """
-    glvector_funcs.compileShaders(self)
+    glvector_funcs.compileShaders(self, 'glvolume')
 
 
 def updateShaderState(self):

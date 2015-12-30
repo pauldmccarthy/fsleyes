@@ -23,7 +23,7 @@ def destroy(self):
     self.fragmentProgram = None
 
     
-def compileShaders(self):
+def compileShaders(self, vertShader):
     """Compiles the vertex/fragment shader programs used for drawing
     :class:`.GLRGBVector` instances. Stores references to the shader
     programs on the ``GLRGBVector`` instance. 
@@ -34,8 +34,8 @@ def compileShaders(self):
     if self.fragmentProgram is not None:
         arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram)) 
 
-    vertShaderSrc = shaders.getVertexShader(  self)
-    fragShaderSrc = shaders.getFragmentShader(self)
+    vertShaderSrc = shaders.getVertexShader(  vertShader)
+    fragShaderSrc = shaders.getFragmentShader('glvector')
 
     vertexProgram, fragmentProgram = shaders.compilePrograms(
         vertShaderSrc, fragShaderSrc)

@@ -23,8 +23,8 @@ def compileShaders(self):
     instance.
     """
     
-    vertShaderSrc = shaders.getVertexShader(  self)
-    fragShaderSrc = shaders.getFragmentShader(self)
+    vertShaderSrc = shaders.getVertexShader(  'glmodel')
+    fragShaderSrc = shaders.getFragmentShader('glmodel')
 
     vertexProgram, fragmentProgram = shaders.compilePrograms(
         vertShaderSrc, fragShaderSrc)
