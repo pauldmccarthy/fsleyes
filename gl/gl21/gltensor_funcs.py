@@ -86,7 +86,7 @@ def destroy(self):
 
 
 def compileShaders(self):
-    self.shader = glvector_funcs.compileShaders(self, indexed=True)
+    self.shader = glvector_funcs.compileShaders(self, 'gltensor', indexed=True)
 
 
 def updateShaderState(self):

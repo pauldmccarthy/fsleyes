@@ -61,7 +61,7 @@ def compileShaders(self):
     shader variables as attributes of the :class:`.GLLineVector`.
     """
 
-    self.shader = glvector_funcs.compileShaders(self)
+    self.shader = glvector_funcs.compileShaders(self, 'gllinevector')
 
     
 def updateShaderState(self):

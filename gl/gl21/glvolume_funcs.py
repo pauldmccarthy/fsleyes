@@ -11,12 +11,11 @@ class to render :class:`.Image` overlays in an OpenGL 2.1 compatible manner.
 
 import logging
 
-import numpy                       as np
-import OpenGL.GL                   as gl
+import numpy                  as np
+import OpenGL.GL              as gl
 
-import fsl.fsleyes.gl.shaders      as shaders
-import fsl.fsleyes.gl.glsl.program as glslprogram
-import fsl.utils.transform         as transform
+import fsl.fsleyes.gl.shaders as shaders
+import fsl.utils.transform    as transform
 
 
 log = logging.getLogger(__name__)
@@ -50,10 +49,10 @@ def compileShaders(self):
     if self.shader is not None:
         self.shader.delete()
 
-    vertSrc = shaders.getVertexShader(  self)
-    fragSrc = shaders.getFragmentShader(self)
+    vertSrc = shaders.getVertexShader(  'glvolume')
+    fragSrc = shaders.getFragmentShader('glvolume')
 
-    self.shader = glslprogram.ShaderProgram(vertSrc, fragSrc)
+    self.shader = shaders.GLSLShader(vertSrc, fragSrc)
 
 
 def updateShaderState(self):

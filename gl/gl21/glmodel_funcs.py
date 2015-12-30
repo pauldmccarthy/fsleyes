@@ -9,8 +9,7 @@ class to render :class:`.Model` overlays in an OpenGL 2.1 compatible manner.
 """
 
 
-import fsl.fsleyes.gl.shaders      as shaders
-import fsl.fsleyes.gl.glsl.program as glslprogram
+import fsl.fsleyes.gl.shaders as shaders
 
 
 def compileShaders(self):
@@ -22,10 +21,10 @@ def compileShaders(self):
     if self.shader is not None:
         self.shader.delete()
     
-    vertSrc = shaders.getVertexShader(  self)
-    fragSrc = shaders.getFragmentShader(self)
+    vertSrc = shaders.getVertexShader(  'glmodel')
+    fragSrc = shaders.getFragmentShader('glmodel')
 
-    self.shader = glslprogram.ShaderProgram(vertSrc, fragSrc)
+    self.shader = shaders.GLSLShader(vertSrc, fragSrc)
 
 
 def destroy(self):

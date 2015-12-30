@@ -6,12 +6,11 @@
 #
 
 
-import fsl.fsleyes.gl.shaders      as shaders
-import fsl.fsleyes.gl.glsl.program as glslprogram
-import fsl.utils.transform         as transform
+import fsl.fsleyes.gl.shaders as shaders
+import fsl.utils.transform    as transform
 
 
-def compileShaders(self, indexed=False):
+def compileShaders(self, vertShader, indexed=False):
 
     if self.shader is not None:
         self.shader.delete()
@@ -19,13 +18,13 @@ def compileShaders(self, indexed=False):
     opts                = self.displayOpts
     useVolumeFragShader = opts.colourImage is not None
 
-    if useVolumeFragShader: fragShader = 'GLVolume'
-    else:                   fragShader = self
+    if useVolumeFragShader: fragShader = 'glvolume'
+    else:                   fragShader = 'glvector'
 
-    vertSrc = shaders.getVertexShader(  self)
+    vertSrc = shaders.getVertexShader(  vertShader)
     fragSrc = shaders.getFragmentShader(fragShader)
     
-    return glslprogram.ShaderProgram(vertSrc, fragSrc, indexed)
+    return shaders.GLSLShader(vertSrc, fragSrc, indexed)
 
     
 def updateFragmentShaderState(self, useSpline=False):

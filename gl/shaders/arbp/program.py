@@ -9,7 +9,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class ARBProgram(object):
+class ARBPShader(object):
     
     def __init__(self,
                  vertSrc,

@@ -13,11 +13,10 @@ Rendering of a ``GLLabel`` is very similar to that of a ``GLVolume`` - the
 """
 
 
-import numpy                       as np
+import numpy                  as np
 
-import fsl.fsleyes.gl.shaders      as shaders
-import fsl.fsleyes.gl.glsl.program as glslprogram
-import                                glvolume_funcs
+import fsl.fsleyes.gl.shaders as shaders
+import                           glvolume_funcs
 
 
 def init(self):
@@ -45,10 +44,10 @@ def compileShaders(self):
     if self.shader is not None:
         self.shader.delete()
 
-    vertSrc = shaders.getVertexShader(  self)
-    fragSrc = shaders.getFragmentShader(self)
+    vertSrc = shaders.getVertexShader(  'glvolume')
+    fragSrc = shaders.getFragmentShader('gllabel')
 
-    self.shader = glslprogram.ShaderProgram(vertSrc, fragSrc)
+    self.shader = shaders.GLSLShader(vertSrc, fragSrc)
 
 
 def updateShaderState(self):
