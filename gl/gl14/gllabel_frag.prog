@@ -29,27 +29,24 @@ TEMP  lutCoord;
 TEMP  invNumLabels;
 TEMP  voxValue;
 
-PARAM imageShape    = program.local[4];
-MOV   invNumLabels,   program.local[5];
-PARAM outline       = program.local[6];
+PARAM imageShape    = {{ param_imageShape   }};
+MOV   invNumLabels,   {{ param_invNumLabels }};
+PARAM outline       = {{ param_outline      }};
 
 # This matrix scales the voxel value to
 # lie in a range which is appropriate to
 # the current display range 
-PARAM voxValXform[4] = { program.local[0],
-                         program.local[1],
-                         program.local[2],
-                         program.local[3] };
+PARAM voxValXform[4] = {{ param4_voxValXform }};
 
 # retrieve the voxel coordinates,
 # bail if they are are out of bounds  
-MOV voxCoord, fragment.texcoord[1];
+MOV voxCoord, {{ varying_voxCoord }};
 
 #pragma include test_in_bounds.prog
 
 # look up image voxel value
 # from 3D image texture
-TEX voxValue, fragment.texcoord[0], texture[0], 3D;
+TEX voxValue, {{ varying_texCoord }}, {{ texture_imageTexture }}, 3D;
 
 # Scale the texture value
 # to its original voxel value
@@ -63,7 +60,7 @@ MUL lutCoord, lutCoord, invNumLabels;
 
 # look up the appropriate colour
 # in the 1D colour map texture
-TEX result.color, lutCoord.x, texture[1], 1D;
+TEX result.color, lutCoord.x, {{ texture_lutTexture }}, 1D;
 
 
 # Test whether this fragment lies 
@@ -74,7 +71,7 @@ TEMP val;
 TEMP tol;
 TEMP offsets;
 
-MOV coord, fragment.texcoord[0];
+MOV coord, {{ varying_texCoord }};
 MOV val,   voxValue;
 MOV tol,   invNumLabels.x;
 MUL tol,   tol, 0.001;

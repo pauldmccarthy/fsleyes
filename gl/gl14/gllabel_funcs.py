@@ -14,24 +14,18 @@ defined in the :mod:`.gl14.glvolume_funcs` are re-used by this module.
 """
 
 
-import numpy                          as np
-
-import OpenGL.GL                      as gl
-import OpenGL.raw.GL._types           as gltypes
-import OpenGL.GL.ARB.fragment_program as arbfp
-import OpenGL.GL.ARB.vertex_program   as arbvp
+import numpy                  as np
 
 import fsl.fsleyes.gl.shaders as shaders
-
-import glvolume_funcs
+import                           glvolume_funcs
 
 
 def init(self):
     """Calls the :func:`compileShaders` and :func:`updateShaderState`
     functions.
     """
-    self.vertexProgram   = None
-    self.fragmentProgram = None
+
+    self.shader = None
     
     compileShaders(   self)
     updateShaderState(self) 
@@ -39,48 +33,39 @@ def init(self):
 
 def destroy(self):
     """Deletes handles to the vertex/fragment shader programs. """
-    arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
-    arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram)) 
+    self.shader.delete()
+    self.shader = None
 
 
 def compileShaders(self):
     """Compiles the vertex and fragment shader programs used to render
     :class:`.GLLabel` instances.
     """
-    if self.vertexProgram is not None:
-        arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
+    if self.shader is not None:
+        self.shader.delete()
         
-    if self.fragmentProgram is not None:
-        arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram)) 
+    vertSrc  = shaders.getVertexShader(  'glvolume')
+    fragSrc  = shaders.getFragmentShader('gllabel')
+    textures = {
+        'imageTexture' : 0,
+        'lutTexture'   : 1,
+    }
 
-    vertShaderSrc = shaders.getVertexShader(  'glvolume')
-    fragShaderSrc = shaders.getFragmentShader('gllabel')
-
-    vertexProgram, fragmentProgram = shaders.compilePrograms(
-        vertShaderSrc, fragShaderSrc)
-
-    self.vertexProgram   = vertexProgram
-    self.fragmentProgram = fragmentProgram 
+    self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures) 
 
 
 def updateShaderState(self):
     """Updates all shader program variables. """
     
     opts = self.displayOpts
-
+    
     # enable the vertex and fragment programs
-    gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-    gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
-
-    arbvp.glBindProgramARB(arbvp.GL_VERTEX_PROGRAM_ARB,
-                           self.vertexProgram)
-    arbfp.glBindProgramARB(arbfp.GL_FRAGMENT_PROGRAM_ARB,
-                           self.fragmentProgram)
+    self.shader.load()
 
     voxValXform  = self.imageTexture.voxValXform
-    shape        = list(self.image.shape[:3])
+    shape        = list(self.image.shape[:3]) + [0]
     offsets      = opts.outlineWidth / \
-                   np.array(self.image.shape[:3], dtype=np.float32)    
+                   np.array(self.image.shape[:3], dtype=np.float32)
     invNumLabels = 1.0 / (opts.lut.max() + 1)
 
     if opts.transform == 'affine':
@@ -92,14 +77,13 @@ def updateShaderState(self):
     if opts.outline: offsets = [1] + list(offsets)
     else:            offsets = [0] + list(offsets)
 
-    shaders.setVertexProgramVector(  0, shape + [0])
-    shaders.setFragmentProgramMatrix(0, voxValXform)
-    shaders.setFragmentProgramVector(4, shape + [0])
-    shaders.setFragmentProgramVector(5, [invNumLabels, 0, 0, 0])
-    shaders.setFragmentProgramVector(6, offsets)
+    self.shader.setVertParam('imageShape',   shape)
+    self.shader.setFragParam('imageShape',   shape)
+    self.shader.setFragParam('voxValXform',  voxValXform)
+    self.shader.setFragParam('invNumLabels', [invNumLabels, 0, 0, 0])
+    self.shader.setFragParam('outline',      offsets)
 
-    gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-    gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB) 
+    self.shader.unload()
 
 
 preDraw  = glvolume_funcs.preDraw

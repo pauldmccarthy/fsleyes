@@ -50,31 +50,37 @@ def parseARBP(vertSrc, fragSrc):
             'varying'   : vVaryings}
 
 
-def fillARBP(vertSrc, fragSrc, vertParams, fragParams, textures, attrs):
+def fillARBP(vertSrc,
+             fragSrc,
+             vertParams,
+             vertParamLens,
+             fragParams,
+             fragParamLens,
+             textures,
+             attrs):
     
-    if vertParams   is None: vertParams = {}
-    if fragParams   is None: fragParams = {}
-    if textures     is None: textures   = {}
-    if attrs        is None: attrs      = {}
-
     vertVars = _findDeclaredVariables(vertSrc)
     fragVars = _findDeclaredVariables(fragSrc)
     
     _checkVariableValidity(
         vertVars, fragVars, vertParams, fragParams, textures, attrs)
 
-    for name, (number, length) in vertParams.items():
+    for name, number in vertParams.items():
+        
+        length = vertParamLens[name]
         
         if length == 1: name = 'param_{}'  .format(name)
         else:           name = 'param{}_{}'.format(name, length)
         
         vertParams[name] = _param(number, length)
         
-    for name, (number, length) in fragParams.items():
+    for name, number in fragParams.items():
+
+        length = fragParamLens[name]
         
         if length == 1: name = 'param_{}'  .format(name)
-        else:           name = 'param{}_{}'.format(name, length)
-        
+        else:           name = 'param{}_{}'.format(length, name)
+
         fragParams[name] = _param(number, length)
     
     textures = {'texture_{}'.format(n) : _texture(v)
@@ -195,7 +201,7 @@ def _param(number, length):
         bits = ['program.local[{}]'.format(n) for n in range(number,
                                                              number + length)]
 
-        return '{{ {} }}'.format(','.join(bits))
+        return '{{ {} }}'.format(', '.join(bits))
 
 
 def _texture(number):

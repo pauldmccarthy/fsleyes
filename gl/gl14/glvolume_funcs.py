@@ -11,11 +11,8 @@ class to render :class:`.Image` overlays in an OpenGL 1.4 compatible manner.
 
 import logging
 
-import numpy                          as np
-import OpenGL.GL                      as gl
-import OpenGL.raw.GL._types           as gltypes
-import OpenGL.GL.ARB.fragment_program as arbfp
-import OpenGL.GL.ARB.vertex_program   as arbvp
+import numpy                  as np
+import OpenGL.GL              as gl
 
 import fsl.utils.transform    as transform
 import fsl.fsleyes.gl.shaders as shaders
@@ -27,8 +24,7 @@ log = logging.getLogger(__name__)
 def init(self):
     """Calls :func:`compileShaders` and :func:`updateShaderState`."""
 
-    self.vertexProgram   = None
-    self.fragmentProgram = None
+    self.shader = None
     
     compileShaders(   self)
     updateShaderState(self)
@@ -37,8 +33,8 @@ def init(self):
 def destroy(self):
     """Deletes handles to the vertex/fragment programs."""
 
-    arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
-    arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram))
+    self.shader.delete()
+    self.shader = None
 
 
 def compileShaders(self):
@@ -49,20 +45,19 @@ def compileShaders(self):
     ``framgentProgram`` respectively.
     """
 
-    if self.vertexProgram is not None:
-        arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
-        
-    if self.fragmentProgram is not None:
-        arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram)) 
+    if self.shader is not None:
+        self.shader.delete()
 
-    vertShaderSrc = shaders.getVertexShader(  'glvolume')
-    fragShaderSrc = shaders.getFragmentShader('glvolume')
+    vertSrc  = shaders.getVertexShader(  'glvolume')
+    fragSrc  = shaders.getFragmentShader('glvolume')
+    textures = {
+        'imageTexture'     : 0,
+        'colourTexture'    : 1,
+        'negColourTexture' : 2,
+        'clipTexture'      : 3
+    }
 
-    vertexProgram, fragmentProgram = shaders.compilePrograms(
-        vertShaderSrc, fragShaderSrc)
-
-    self.vertexProgram   = vertexProgram
-    self.fragmentProgram = fragmentProgram    
+    self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)
 
     
 def updateShaderState(self):
@@ -70,13 +65,7 @@ def updateShaderState(self):
     opts = self.displayOpts
 
     # enable the vertex and fragment programs
-    gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-    gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
-
-    arbvp.glBindProgramARB(arbvp.GL_VERTEX_PROGRAM_ARB,
-                           self.vertexProgram)
-    arbfp.glBindProgramARB(arbfp.GL_FRAGMENT_PROGRAM_ARB,
-                           self.fragmentProgram)
+    self.shader.load()
 
     # The voxValXform transformation turns
     # an image texture value into a raw
@@ -104,16 +93,19 @@ def updateShaderState(self):
     clipLo  = opts.clippingRange[0] * clipXform[0, 0] + clipXform[3, 0]
     clipHi  = opts.clippingRange[1] * clipXform[0, 0] + clipXform[3, 0]
     texZero = 0.0                   * imgXform[ 0, 0] + imgXform[ 3, 0]
-    
-    shaders.setVertexProgramVector(  0, shape + [0])
-    
-    shaders.setFragmentProgramMatrix(0, voxValXform)
-    shaders.setFragmentProgramVector(4, shape + [0])
-    shaders.setFragmentProgramVector(5, [clipLo, clipHi, invClip, imageIsClip])
-    shaders.setFragmentProgramVector(6, [useNegCmap, texZero, 0, 0])
 
-    gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-    gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB) 
+
+    shape    = shape + [0]
+    clipping = [clipLo, clipHi, invClip, imageIsClip]
+    negCmap  = [useNegCmap, texZero, 0, 0]
+
+    self.shader.setVertParam('imageShape',  shape)
+    self.shader.setFragParam('voxValXform', voxValXform)
+    self.shader.setFragParam('imageShape',  shape)
+    self.shader.setFragParam('clipping',    clipping)
+    self.shader.setFragParam('negCmap',     negCmap)
+    
+    self.shader.unload()
 
 
 def preDraw(self):
@@ -121,34 +113,18 @@ def preDraw(self):
 
     # enable drawing from a vertex array
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-
-    gl.glClientActiveTexture(gl.GL_TEXTURE0)
-    gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-
-    # enable the vertex and fragment programs
-    gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-    gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
-
-    arbvp.glBindProgramARB(arbvp.GL_VERTEX_PROGRAM_ARB,
-                           self.vertexProgram)
-    arbfp.glBindProgramARB(arbfp.GL_FRAGMENT_PROGRAM_ARB,
-                           self.fragmentProgram)
+    self.shader.load()
 
 
 def draw(self, zpos, xform=None):
     """Draws a slice of the image at the given Z location. """
     
     vertices, voxCoords, texCoords = self.generateVertices(zpos, xform)
-    
-    # Tex coords are texture 0 coords
-    # Vox coords are texture 1 coords
-    vertices  = np.array(vertices,  dtype=np.float32).ravel('C')
-    texCoords = np.array(texCoords, dtype=np.float32).ravel('C')
 
+    self.shader.setAttr('texCoord', texCoords)
+
+    vertices = np.array(vertices,  dtype=np.float32).ravel('C')
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-
-    gl.glClientActiveTexture(gl.GL_TEXTURE0)
-    gl.glTexCoordPointer(3, gl.GL_FLOAT, 0, texCoords)
     
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
@@ -168,14 +144,11 @@ def drawAll(self, zposes, xforms):
         vertices[ i * 6: i * 6 + 6, :] = v
         texCoords[i * 6: i * 6 + 6, :] = tc
 
-    vertices  = vertices .ravel('C')
-    texCoords = texCoords.ravel('C')
+    self.shader.setAttr('texCoord', texCoords)
 
+    vertices = vertices.ravel('C')
+    
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-
-    gl.glClientActiveTexture(gl.GL_TEXTURE0)
-    gl.glTexCoordPointer(3, gl.GL_FLOAT, 0, texCoords)
-
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, nslices * 6) 
 
 
@@ -183,10 +156,5 @@ def postDraw(self):
     """Cleans up the GL state after drawing from the given :class:`.GLVolume`
     instance.
     """
-
     gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-    gl.glClientActiveTexture(gl.GL_TEXTURE0)
-    gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-
-    gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
-    gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB)
+    self.shader.unload()

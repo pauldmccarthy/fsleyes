@@ -20,6 +20,6 @@ DP4 result.position.z, state.matrix.mvp.row[2], vertex.position;
 DP4 result.position.w, state.matrix.mvp.row[3], vertex.position;
 
 # Copy the vertex texture coordinate
-MOV result.texcoord[0], vertex.texcoord[0];
+MOV {{ varying_texCoord }}, {{ attr_texCoord }};
 
 END
