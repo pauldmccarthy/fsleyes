@@ -16,23 +16,16 @@ by this module.
 """
 
 
-import OpenGL.GL                      as gl
-import OpenGL.GL.ARB.fragment_program as arbfp
-import OpenGL.GL.ARB.vertex_program   as arbvp
-import OpenGL.raw.GL._types           as gltypes
-
-import                                   glvolume_funcs
-import                                   glvector_funcs
-import fsl.fsleyes.gl.shaders         as shaders
+import glvolume_funcs
+import glvector_funcs
 
 
 def init(self):
     """Calls the :func:`compileShaders` and :func:`updateShaderState`
     functions.
     """
-    
-    self.vertexProgram   = None
-    self.fragmentProgram = None
+
+    self.shader = None
     
     compileShaders(   self)
     updateShaderState(self)
@@ -58,14 +51,10 @@ def updateShaderState(self):
     glvector_funcs.updateFragmentShaderState(self)
 
     shape = list(self.vectorImage.shape[:3])
-    
-    gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB)
-    
-    arbvp.glBindProgramARB(arbvp.GL_VERTEX_PROGRAM_ARB, self.vertexProgram)
-    
-    shaders.setVertexProgramVector(0, shape + [0])
-    
-    gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB) 
+
+    self.shader.load()
+    self.shader.setVertParam('imageShape', shape + [0])
+    self.shader.unload()
 
 
 preDraw  = glvolume_funcs.preDraw

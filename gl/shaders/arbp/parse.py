@@ -170,7 +170,7 @@ def _checkVariableValidity(vertVars,
     if len(fAttrs) != 0:
         raise ValueError('Attribute access in fragment program')
 
-    if vVaryings != fVaryings:
+    if any([n not in vVaryings for n in fVaryings]):
         raise ValueError('Fragment/vertex varyings do not match')
 
     if any([n not in vParams for n in vertParamMap]):

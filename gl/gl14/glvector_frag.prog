@@ -60,20 +60,13 @@ TEMP  zColour;
 TEMP  fragColour;
 TEMP  clipLow;
 TEMP  clipHigh;
-PARAM voxValXform[4] = { program.local[0],
-                         program.local[1],
-                         program.local[2],
-                         program.local[3] };
-PARAM cmapXform[4]   = { program.local[4],
-                         program.local[5],
-                         program.local[6],
-                         program.local[7] };
-                         
-PARAM imageShape     =   program.local[8];
-PARAM clipping       =   program.local[9];
+PARAM voxValXform[4] = {{ param4_voxValXform }};
+PARAM cmapXform[4]   = {{ param4_cmapXform   }};
+PARAM imageShape     = {{ param_imageShape   }};
+PARAM clipping       = {{ param_clipping     }};
 
 # retrieve the voxel coordinates 
-MOV voxCoord, fragment.texcoord[1];
+MOV voxCoord, {{ varying_voxCoord }};
 
 # Bail if the voxel coordinate
 # is out of the image space
@@ -81,9 +74,9 @@ MOV voxCoord, fragment.texcoord[1];
 
 # look up vector, modulation, and clipping
 # values from the three 3D textures.
-TEX voxValue,  fragment.texcoord[0], texture[0], 3D;
-TEX modValue,  fragment.texcoord[0], texture[1], 3D;
-TEX clipValue, fragment.texcoord[0], texture[2], 3D;
+TEX voxValue,  {{ varying_texCoord }}, {{ texture_vectorTexture   }}, 3D;
+TEX modValue,  {{ varying_texCoord }}, {{ texture_modulateTexture }}, 3D;
+TEX clipValue, {{ varying_texCoord }}, {{ texture_clipTexture     }}, 3D;
 
 # If the clipping value is
 # below the low clipping
@@ -108,9 +101,9 @@ MUL voxValue, voxValue, modValue.x;
 
 # Use the vector values to look up the
 # colours for each xyz direction
-TEX xColour, voxValue.x, texture[4], 1D;
-TEX yColour, voxValue.y, texture[5], 1D;
-TEX zColour, voxValue.z, texture[6], 1D;
+TEX xColour, voxValue.x, {{ texture_xColourTexture }}, 1D;
+TEX yColour, voxValue.y, {{ texture_yColourTexture }}, 1D;
+TEX zColour, voxValue.z, {{ texture_zColourTexture }}, 1D;
 
 # Cumulatively combine the rgb
 # channels of those three colours
