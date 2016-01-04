@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 #
-# program.py -
+# program.py - The ARBPShader class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`ARBPShader` class, which encapsulates
+an OpenGL shader program written according to the ``ARB_vertex_program``
+and ``ARB_fragment_program`` extensions.
+"""
 
 import logging
 
@@ -21,8 +25,92 @@ log = logging.getLogger(__name__)
 
 
 class ARBPShader(object):
+    """The ``ARBPShader`` class encapsulates an OpenGL shader program
+    written according to the ``ARB_vertex_program`` and
+    ``ARB_fragment_program`` extensions. It parses and compiles vertex
+    and fragment program code, and provides methods to load/unload
+    the program, and to set vertex/fragment program parameters and vertex
+    attributes.
+
+    
+    The ``ARBPShader`` class assumes that vertex/fragment program source
+    has been written to work with the functions defined in the 
+    :mod:`.arbp.parse` module, which allows programs to be written so that 
+    parameter, vertex attribute and texture locations do not have to be hard
+    coded in the source.  Texture locations may be specified in
+    :meth:`__init__`, and parameter/vertex attribute locations are
+    automatically assigned by the ``ARBPShader``.
+
+
+    The following methods are available on an ``ARBPShader`` instance:
+
+    .. autosummary::
+       :nosignatures:
+
+       load
+       unload
+       delete
+       setVertParam
+       setFragParam
+       setAttr
+
+    Typcical usage of an ``ARBPShader`` will look something like the
+    following::
+
+        vertSrc = 'vertex shader source'
+        fragSrc = 'vertex shader source'
+
+        # You must specify the texture unit
+        # assignments at creation time.
+        textures = {
+            'colourMapTexture' : 0,
+            'dataTexture'      : 1
+        } 
+
+        program = GLSLShader(vertSrc, fragSrc, textures)
+
+        # Load the program
+        program.load()
+
+        # Set some parameters
+        program.setVertParam('transform', np.eye(4))
+        program.setFragParam('clipping',  [0, 1, 0, 0])
+
+        # Create and set vertex attributes
+        vertices, normals = createVertices() 
+
+        program.setAttr('normals', normals)
+
+        # Draw the scene
+        gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
+
+        # Clear the GL state
+        program.unload()
+
+        # Delete the program when
+        # it is no longer needed
+        program.delete()
+
+
+    .. warning:: The ``ARBPShader`` uses texture coordinates to pass vertex
+                 attributes to the shader programs. Therefore, if you are using
+                 an ``ARBPShader`` you cannot directly use texture coordinates.
+
+
+    See also the :class:`.GLSLShader`, which provides similar functionality for
+    GLSL shader programs.
+    """
     
     def __init__(self, vertSrc, fragSrc, textureMap=None):
+        """Create an ``ARBPShader``.
+
+        :arg vertSrc:    Vertex program source.
+        
+        :arg fragSrc:    Fragment program source.
+        
+        :arg textureMap: A dictionary of ``{name : int}`` mappings, specifying
+                         the texture unit assignments.
+        """
 
         decs = parse.parseARBP(vertSrc, fragSrc)
 
@@ -65,14 +153,23 @@ class ARBPShader(object):
         
         self.vertexProgram   = vp
         self.fragmentProgram = fp
+
+        log.memory('{}.init({})'.format(type(self).__name__, id(self)))
+
+
+    def __del__(self):
+        """Prints a log message. """
+        log.memory('{}.del({})'.format(type(self).__name__, id(self))) 
         
 
     def delete(self):
+        """Deletes all GL resources managed by this ``ARBPShader``. """
         arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
         arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram))
 
 
     def load(self):
+        """Loads the shader program. """
         gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
         gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
 
@@ -89,6 +186,7 @@ class ARBPShader(object):
 
 
     def unload(self):
+        """Unloads the shader program. """
         gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
         gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB)
 
@@ -100,6 +198,12 @@ class ARBPShader(object):
 
 
     def setVertParam(self, name, value):
+        """Sets the value of the specified vertex program parameter.
+
+        .. note:: It is assumed that the value is either a sequence of length
+        4 (for vector parameters), or a ``numpy`` array of shape ``(n, 4)``
+        (for matrix parameters).
+        """
 
         pos   = self.vertParamPositions[name]
         value = np.array(value, dtype=np.float32).reshape((-1, 4))
@@ -111,7 +215,9 @@ class ARBPShader(object):
 
     
     def setFragParam(self, name, value):
-
+        """Sets the value of the specified vertex program parameter. See 
+        :meth:`setVertParam` for infomration about possible values.
+        """
         pos   = self.fragParamPositions[name]
         value = np.array(value, dtype=np.float32).reshape((-1, 4))
     
@@ -122,7 +228,12 @@ class ARBPShader(object):
 
 
     def setAttr(self, name, value):
-
+        """Sets the value of the specified vertex attribute. Each vertex
+        attribute is mapped to a texture coordinate. It is assumed that
+        the given value is a ``numpy`` array of shape ``(n, l)``, where
+        ``n`` is the number of vertices being drawn, and ``l`` is the
+        number of components in each vertex attribute coordinate.
+        """
         texUnit = self.__getAttrTexUnit(name)
         size    = value.shape[1]
         value   = np.array(value, dtype=np.float32)
@@ -133,6 +244,9 @@ class ARBPShader(object):
 
 
     def __getAttrTexUnit(self, attr):
+        """Returns the texture unit identifier which corresponds to the named
+        vertex attribute.
+        """
 
         pos     = self.attrPositions[attr]
         texUnit = 'GL_TEXTURE{}'.format(pos)
@@ -142,6 +256,20 @@ class ARBPShader(object):
 
 
     def __generatePositions(self, textureMap=None):
+        """Called by :meth:`__init__`. Generates positions for vertex/fragment
+        program parameters and vertex attributes.
+
+        The lengths of each vertex/fragment parameter are known (see
+        :mod:`.arbp.parse`), so these parameters are set up to be sequentially
+        stored in the program parameter memory.
+
+        Vertex attributes are passed to the vertex program as texture
+        coordinates.
+
+        If texture units were not specified in ``__init__``, texture units are
+        also automatically assigned to each texture used in the fragment
+        program.
+        """
 
         vpPoses   = {}
         fpPoses   = {}
@@ -179,8 +307,9 @@ class ARBPShader(object):
 
 
     def __compile(self, vertSrc, fragSrc):
-        """Compiles the vertex and fragment programs and returns references
-        to the compiled programs.
+        """Called by :meth:`__init__`. Compiles the vertex and fragment
+        programs and returns references to the compiled programs.
+
         """
 
         gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 

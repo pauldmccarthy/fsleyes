@@ -1,11 +1,41 @@
 #!/usr/bin/env python
 #
-# __init__.py -
+# __init__.py - Funtions for managing OpenGL shader programs.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""The ``shaders`` package contains classes and functions for parsing,
+compiling, and managing OpenGL shader programs. Two types of shader
+program are supported:
 
-import logging
+
+ - GLSL 1.20 vertex and fragment shaders.
+
+ - ``ARB_vertex_program`` and ``ARB_fragment_program`` shader programs.
+
+
+The :mod:`.glsl` and :mod:`.arbp` packages respectively define the
+:class:`.GLSLShader` and :class:`.ARBPShader` classes, which may be
+used to manage shader programs of the corresponding type.
+
+
+Some package-level functions are defined here, for finding and loading
+shader source code:
+
+
+ - :func:`getVertexShader`:   Locate and load the source code for a specific
+                              vertex shader.
+
+ - :func:`getFragmentShader`: Locate and load the source code for a specific
+                              fragment shader.
+
+
+Each of these functions locate shader source files, load the source code, and
+run them through the :func:`preprocess` function, which performs some simple
+preprocessing on the source. This applies to both GLSL and ARB assembly
+shader programs.
+"""
+
 
 import os.path        as op
 
@@ -15,36 +45,34 @@ import glsl.program   as glslprogram
 import arbp.program   as arbpprogram
 
 
-log = logging.getLogger(__name__)
-
-
 GLSLShader = glslprogram.GLSLShader
 ARBPShader = arbpprogram.ARBPShader
 
 
 def getVertexShader(prefix):
-    """Returns the vertex shader source for the given GL object."""
+    """Returns the vertex shader source for the given GL type (e.g.
+    'glvolume').
+    """
     return _getShader(prefix, 'vert')
 
 
 def getFragmentShader(prefix):
-    """Returns the fragment shader source for the given GL object.""" 
+    """Returns the fragment shader source for the given GL type.""" 
     return _getShader(prefix, 'frag')
 
 
 def _getShader(prefix, shaderType):
-    """Returns the shader source for the given GL object and the given
+    """Returns the shader source for the given GL type and the given
     shader type ('vert' or 'frag').
     """
     fname = _getFileName(prefix, shaderType)
     with open(fname, 'rt') as f: src = f.read()
-    return _preprocess(src)    
+    return preprocess(src)    
 
 
 def _getFileName(prefix, shaderType):
-    """Returns the file name of the shader program for the given GL object
-    and shader type. The ``globj`` parameter may alternately be a string,
-    in which case it is used as the prefix for the shader program file name.
+    """Returns the file name of the shader program for the given GL type
+    and shader type.
     """
 
     if   fslgl.GL_VERSION == '2.1':
@@ -61,7 +89,7 @@ def _getFileName(prefix, shaderType):
         prefix, shaderType, suffix))
  
 
-def _preprocess(src):
+def preprocess(src):
     """'Preprocess' the given shader source.
 
     This amounts to searching for lines containing '#pragma include filename',

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# program.py - Class which encapsulates a GLSL shader program.
+# program.py - The GLSLShader class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -40,7 +40,7 @@ class GLSLShader(object):
     a GLSL 1.20 shader program, comprising a vertex shader and a fragment
     shader. It provides methods to set shader attribute and uniform values,
     to configure attributes, and to load/unload the program. Furthermore,
-    the ``GLSLShader`` makes sure that all uniform and attribut variables
+    the ``GLSLShader`` makes sure that all uniform and attribute variables
     are converted to the appropriate type. The following methods are available
     on a ``GLSLShader``:
 
