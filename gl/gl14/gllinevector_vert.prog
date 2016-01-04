@@ -20,8 +20,8 @@
 
 TEMP texCoord;
 
-PARAM invImageShape = program.local[0];
-PARAM voxelOffsets  = program.local[1];
+PARAM invImageShape = {{ param_invImageShape }};
+PARAM voxelOffsets  = {{ param_voxelOffsets  }};
 
 # Transform the vertex position (which is in voxel
 # coordinates) into display coordinates.  It is
@@ -38,13 +38,13 @@ MOV texCoord, vertex.position;
 ADD texCoord, texCoord, voxelOffsets;
 FLR texCoord, texCoord;
 
-MOV result.texcoord[1], texCoord;
+MOV {{ varying_voxCoord }}, texCoord;
 
 # Transform those integer voxel
 # coordinates into texture coordinates
 ADD texCoord, texCoord, { 0.5, 0.5, 0.5, 0.0 };
 MUL texCoord, texCoord, invImageShape;
 
-MOV result.texcoord[0], texCoord;
+MOV {{ varying_texCoord }}, texCoord;
 
 END

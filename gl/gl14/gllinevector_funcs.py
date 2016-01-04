@@ -18,17 +18,14 @@ according to the orientation of the underlying vector.
 
 import logging
 
-import numpy                          as np
+import numpy                       as np
 
-import OpenGL.GL                      as gl
-import OpenGL.GL.ARB.fragment_program as arbfp
-import OpenGL.GL.ARB.vertex_program   as arbvp
+import OpenGL.GL                   as gl
 
-import fsl.utils.transform            as transform
-import fsl.fsleyes.gl.gllinevector    as gllinevector
-import fsl.fsleyes.gl.resources       as glresources
-import fsl.fsleyes.gl.shaders         as shaders
-import                                   glvector_funcs
+import fsl.utils.transform         as transform
+import fsl.fsleyes.gl.gllinevector as gllinevector
+import fsl.fsleyes.gl.resources    as glresources
+import                                glvector_funcs
 
 
 log = logging.getLogger(__name__)
@@ -42,9 +39,8 @@ def init(self):
     :func:`updateShaderState`, and :func:`updateVertices` functions.
     """
 
-    self.vertexProgram   = None
-    self.fragmentProgram = None
-    self.lineVertices    = None
+    self.shader       = None
+    self.lineVertices = None
 
     self._vertexResourceName = '{}_{}_vertices'.format(
         type(self).__name__, id(self.vectorImage))
@@ -122,32 +118,23 @@ def updateShaderState(self):
 
     glvector_funcs.updateFragmentShaderState(self)
 
-    gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-
-    arbvp.glBindProgramARB(arbvp.GL_VERTEX_PROGRAM_ARB, self.vertexProgram)
-    
     shape    = np.array(list(image.shape[:3]) + [0], dtype=np.float32)
     invShape = 1.0 / shape
     offset   = [0.5, 0.5, 0.5, 0.0]
 
-    shaders.setVertexProgramVector(0, invShape)
-    shaders.setVertexProgramVector(1, offset)
+    self.shader.load()
+ 
+    self.shader.setVertParam('invImageShape', invShape)
+    self.shader.setVertParam('voxelOffsets',  offset)
 
-    gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB) 
+    self.shader.unload()
     
 
 def preDraw(self):
     """Initialises the GL state ready for drawing the :class:`.GLLineVector`.
     """
-    gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-    gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
-
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-
-    arbvp.glBindProgramARB(arbvp.GL_VERTEX_PROGRAM_ARB,
-                           self.vertexProgram)
-    arbfp.glBindProgramARB(arbfp.GL_FRAGMENT_PROGRAM_ARB,
-                           self.fragmentProgram) 
+    self.shader.load()
 
 
 def draw(self, zpos, xform=None):
@@ -186,7 +173,5 @@ def drawAll(self, zposes, xforms):
 
 def postDraw(self):
     """Clears the GL state after drawing the :class:`.GLLineVector`. """    
-    gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-    gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
-    
+    self.shader.unload()
     gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
