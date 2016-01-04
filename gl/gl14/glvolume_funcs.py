@@ -94,14 +94,13 @@ def updateShaderState(self):
     clipHi  = opts.clippingRange[1] * clipXform[0, 0] + clipXform[3, 0]
     texZero = 0.0                   * imgXform[ 0, 0] + imgXform[ 3, 0]
 
-
     shape    = shape + [0]
     clipping = [clipLo, clipHi, invClip, imageIsClip]
     negCmap  = [useNegCmap, texZero, 0, 0]
 
     self.shader.setVertParam('imageShape',  shape)
-    self.shader.setFragParam('voxValXform', voxValXform)
     self.shader.setFragParam('imageShape',  shape)
+    self.shader.setFragParam('voxValXform', voxValXform)
     self.shader.setFragParam('clipping',    clipping)
     self.shader.setFragParam('negCmap',     negCmap)
     

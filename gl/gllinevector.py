@@ -322,9 +322,6 @@ class GLLineVertices(object):
         texCoords = (texCoords + 0.5) / np.array(image.shape[:3],
                                                  dtype=np.float32)
 
-        if opts.transform in ('id', 'pixdim'):
-            vertices += 0.5
-
         self.vertices  = vertices
         self.texCoords = texCoords
         self.starts    = starts

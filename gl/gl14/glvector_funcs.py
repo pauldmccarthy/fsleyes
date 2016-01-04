@@ -7,6 +7,7 @@
 
 
 import fsl.fsleyes.gl.shaders as shaders
+import fsl.utils.transform    as transform
 
 
 def destroy(self):
@@ -24,45 +25,80 @@ def compileShaders(self, vertShader):
     if self.shader is not None:
         self.shader.delete()
 
+    opts                = self.displayOpts
+    useVolumeFragShader = opts.colourImage is not None
+
+    if useVolumeFragShader: fragShader = 'glvolume'
+    else:                   fragShader = 'glvector'
+    
     vertSrc  = shaders.getVertexShader(  vertShader)
-    fragSrc  = shaders.getFragmentShader('glvector')
-    textures = {
-        'vectorTexture'   : 0,
-        'modulateTexture' : 1,
-        'clipTexture'     : 2,
-        'xColourTexture'  : 4,
-        'yColourTexture'  : 5,
-        'zColourTexture'  : 6
-    }
+    fragSrc  = shaders.getFragmentShader(fragShader)
+
+    if useVolumeFragShader:
+        textures = {
+            'imageTexture'     : 3,
+            'clipTexture'      : 2,
+            'colourTexture'    : 7,
+            'negColourTexture' : 7
+        }
+
+    else:
+        textures = {
+            'vectorTexture'   : 0,
+            'modulateTexture' : 1,
+            'clipTexture'     : 2,
+            'xColourTexture'  : 4,
+            'yColourTexture'  : 5,
+            'zColourTexture'  : 6
+        } 
         
     self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)
 
 
 def updateFragmentShaderState(self):
 
-    opts = self.displayOpts
+    opts                = self.displayOpts
+    useVolumeFragShader = opts.colourImage is not None 
 
-    self.shader.load()
-    
-    voxValXform     = self.imageTexture.voxValXform
     invClipValXform = self.clipTexture.invVoxValXform
-
-    cmapXform       = self.xColourTexture.getCoordinateTransform()
     shape           = list(self.vectorImage.shape[:3])
     clippingRange   = opts.clippingRange
     
     if opts.clipImage is not None:
-        clipLow  = clippingRange[0] * \
+        clipLo = clippingRange[0] * \
             invClipValXform[0, 0] + invClipValXform[3, 0]
-        clipHigh = clippingRange[1] * \
+        clipHi = clippingRange[1] * \
             invClipValXform[0, 0] + invClipValXform[3, 0]
     else:
-        clipLow  = 0
-        clipHigh = 1
+        clipLo = 0
+        clipHi = 1
 
-    self.shader.setFragParam('voxValXform', voxValXform)
-    self.shader.setFragParam('cmapXform',   cmapXform)
-    self.shader.setFragParam('imageShape',  shape + [0])
-    self.shader.setFragParam('clipping',    [clipLow, clipHigh, 0, 0])
+    clipping = [clipLo, clipHi, -1, -1]
+
+    self.shader.load()
+
+    # Inputs which are required by both the
+    # glvolume and glvetor fragment shaders
+    self.shader.setFragParam('imageShape', shape + [0])
+    self.shader.setFragParam('clipping',   clipping)
+    
+    if useVolumeFragShader:
+        
+        voxValXform    = self.colourTexture.voxValXform
+        invVoxValXform = self.colourTexture.voxValXform
+        cmapXform      = self.cmapTexture.getCoordinateTransform()
+        voxValXform    = transform.concat(voxValXform, cmapXform)
+        texZero        = 0.0 * invVoxValXform[0, 0] + invVoxValXform[3, 0]
+        
+        self.shader.setFragParam('voxValXform', voxValXform)
+        self.shader.setFragParam('negCmap',     [0, texZero, 0, 0])
+
+    else:
+
+        voxValXform = self.imageTexture.voxValXform 
+        cmapXform   = self.xColourTexture.getCoordinateTransform()
+        
+        self.shader.setFragParam('voxValXform', voxValXform)
+        self.shader.setFragParam('cmapXform',   cmapXform)
 
     self.shader.unload()
