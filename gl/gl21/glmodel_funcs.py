@@ -6,6 +6,9 @@
 #
 """This module provides functions which are used by the :class:`.GLModel`
 class to render :class:`.Model` overlays in an OpenGL 2.1 compatible manner.
+
+A :class:`.GLSLShader` is used to manage the ``glmodel`` vertex/fragment
+shader programs.
 """
 
 
@@ -13,9 +16,8 @@ import fsl.fsleyes.gl.shaders as shaders
 
 
 def compileShaders(self):
-    """Compiles vertex and fragment shaders for the given :class:`.GLModel`
-    instance. The shaders, and locations of uniform variables, are added
-    as attributes of the instance.
+    """Loads the ``glmodel`` vertex/fragment shader source and creates a
+    :class:`.GLSLShader` instance.
     """
 
     if self.shader is not None:

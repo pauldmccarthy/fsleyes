@@ -6,6 +6,9 @@
 #
 """This module provides functions which are used by the :class:`.GLVolume`
 class to render :class:`.Image` overlays in an OpenGL 2.1 compatible manner.
+
+A :class:`.GLSLShader` is used to manage the ``glvolume`` vertex/fragment
+shader programs.
 """
 
 
@@ -22,9 +25,7 @@ log = logging.getLogger(__name__)
 
 
 def init(self):
-    """Calls :func:`compileShaders` and :func:`updateShaderState`,
-    and creates a GL buffer which will be used to store vertex data.
-    """
+    """Calls :func:`compileShaders` and :func:`updateShaderState`. """
 
     self.shader = None
     
@@ -33,17 +34,15 @@ def init(self):
                     
 
 def destroy(self):
-    """Cleans up the vertex buffer handle and shader programs."""
+    """Cleans up the shader programs."""
 
     self.shader.delete()
     self.shader = None
 
 
 def compileShaders(self):
-    """Compiles and links the OpenGL GLSL vertex and fragment shader
-    programs, and attaches a reference to the resulting program, and
-    all GLSL variables, as attributes on the given :class:`.GLVolume`
-    object. 
+    """Loads the vertex/fragment shader source, and creates a
+    :class:`.GLSLShader`.
     """
 
     if self.shader is not None:
@@ -84,6 +83,7 @@ def updateShaderState(self):
         self.colourTexture.getCoordinateTransform())
 
     shader.load()
+    
     shader.set('useSpline',        opts.interpolation == 'spline')
     shader.set('imageShape',       self.image.shape[:3])
     shader.set('clipLow',          clipLow)

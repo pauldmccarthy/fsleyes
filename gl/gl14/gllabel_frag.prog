@@ -3,23 +3,32 @@
 # Fragment program used for rendering GLLabel instances.
 # This is to be used with the glvolume_vert.prog vertex shader.
 #
-# Inputs:
-#   fragment.texcoord[0] - Fragment texture coordinates
-#   fragment.texcoord[1] - Fragment voxel coordinates
+# Input parameters:
 #
-#   program.local[0]
-#   program.local[1]
-#   program.local[2]
-#   program.local[3]     - Matrix which transforms image texture
-#                          data into the original data range
-#   program.local[4]     - Image shape
-#   program.local[5]     - 1.0 / (number of labels in the lookup table)
-#   program.local[6]     - If the x component is non-zero, show region
+#   voxValXform          - Matrix which transforms image texture
+#                          data into the original data range.
+#
+#   imageShape           - Image shape
+#
+#   invNumLabels         - 1.0 / (number of labels in the lookup table)
+#
+#   outline              - If the x component is non-zero, show region
 #                          outlines. The yzw components specify the
 #                          border/outline widths along each axis.
 #
+# Input attributes:
+#
+#   texCoord - Fragment texture coordinates
+#   voxCoord - Fragment voxel coordinates
+#
+# Input textures:
+#
+#   imageTexture - 3D texture containing the image data
+#   lutTexture   - 1D texture containing the lookup table colours
+#
 # Outputs:
-#   result.color         - Fragment colour.
+#
+#   result.color - Fragment colour.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -29,13 +38,9 @@ TEMP  lutCoord;
 TEMP  invNumLabels;
 TEMP  voxValue;
 
-PARAM imageShape    = {{ param_imageShape   }};
-MOV   invNumLabels,   {{ param_invNumLabels }};
-PARAM outline       = {{ param_outline      }};
-
-# This matrix scales the voxel value to
-# lie in a range which is appropriate to
-# the current display range 
+PARAM imageShape     = {{ param_imageShape   }};
+MOV   invNumLabels,    {{ param_invNumLabels }};
+PARAM outline        = {{ param_outline      }};
 PARAM voxValXform[4] = {{ param4_voxValXform }};
 
 # retrieve the voxel coordinates,

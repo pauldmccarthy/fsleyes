@@ -6,6 +6,9 @@
 #
 """This module provides functions which are used by the :class:`.GLModel`
 class to render :class:`.Model` overlays in an OpenGL 1.4 compatible manner.
+
+An :class:`.ARBPShader` is used to manage the ``glmodel`` vertex/fragment
+programs.
 """
 
 
@@ -13,9 +16,8 @@ import fsl.fsleyes.gl.shaders as shaders
 
 
 def compileShaders(self):
-    """Compiles vertex and fragment shader programs for the given
-    :class:`.GLModel` instance. The shaders are added as attributes of the
-    instance.
+    """Loads the ``glmodel`` vertex and fragment shader program source,
+    and creates a :class:`.ARBPShader` instance.
     """
     
     vertSrc  = shaders.getVertexShader(  'glmodel')

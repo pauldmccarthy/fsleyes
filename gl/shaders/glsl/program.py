@@ -62,7 +62,7 @@ class GLSLShader(object):
     following::
 
         vertSrc = 'vertex shader source'
-        fragSrc = 'vertex shader source'
+        fragSrc = 'fragment shader source'
 
         program = GLSLShader(vertSrc, fragSrc)
 

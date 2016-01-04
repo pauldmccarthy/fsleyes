@@ -6,6 +6,9 @@
 #
 """This module provides functions which are used by the :class:`.GLVolume`
 class to render :class:`.Image` overlays in an OpenGL 1.4 compatible manner.
+
+An :class:`.ARBPShader` is used to manage the ``glvolume`` vertex/fragment
+programs.
 """
 
 
@@ -38,12 +41,7 @@ def destroy(self):
 
 
 def compileShaders(self):
-    """Compiles the vertex and fragment programs used for rendering
-    :class:`.GLVolume` instances. This is performed using the :mod:`.shaders`
-    module. The compiled vertex and shader programs are stored as attributes
-    on the ``GLVolume`` instance, called ``vertexProgram`` and
-    ``framgentProgram`` respectively.
-    """
+    """Creates a :class:`.ARBPShader` instance. """
 
     if self.shader is not None:
         self.shader.delete()
@@ -62,6 +60,7 @@ def compileShaders(self):
     
 def updateShaderState(self):
     """Sets all variables required by the vertex and fragment programs. """
+    
     opts = self.displayOpts
 
     # enable the vertex and fragment programs
@@ -77,7 +76,8 @@ def updateShaderState(self):
     voxValXform = transform.concat(self.imageTexture.voxValXform,
                                    self.colourTexture.getCoordinateTransform())
     
-    # The fragment program needs to know the image shape
+    # The vertex and fragment programs
+    # need to know the image shape
     shape = list(self.image.shape[:3])
 
     # And the clipping range, normalised
@@ -110,7 +110,6 @@ def updateShaderState(self):
 def preDraw(self):
     """Prepares to draw a slice from the given :class:`.GLVolume` instance. """
 
-    # enable drawing from a vertex array
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
     self.shader.load()
 

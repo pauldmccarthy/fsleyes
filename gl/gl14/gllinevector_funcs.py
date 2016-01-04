@@ -9,6 +9,11 @@ class to render :class:`.Image` overlays as line vector images in an OpenGL 1.4
 compatible manner.
 
 
+This module uses functions in the :mod:`.gl14.glvector_funcs` module, which
+contains logic used for rendering both ``GLRGBVector`` and ``GLLineVector``
+instances.
+
+
 A :class:`.GLLineVertices` instance is used to generate line vertices and
 texture coordinates for each voxel in the image. A fragment shader (the same
 as that used by the :class:`.GLRGBVector` class) is used to colour each line
@@ -81,9 +86,9 @@ def destroy(self):
 
 
 def compileShaders(self):
-    """Compiles the vertex/fragment shader programs used to draw the
-    :class:`.GLLineVector` instance. This also results in a call to
-    :func:`updateVertices`.
+    """Compiles shader programs via the
+    :func:`.gl14.glvector_funcs.compileShaders` function,
+    and calls the :func:`updateVertices` function.
     """
     glvector_funcs.compileShaders(self, 'gllinevector')
     updateVertices(self)
@@ -112,7 +117,10 @@ def updateVertices(self):
 
 
 def updateShaderState(self):
-    """Updates all fragment/vertex shader program variables. """
+    """Updates all fragment/vertex shader program variables.  The fragment
+    shader is configured by the
+    :func:`.gl21.glvector_funcs.updateFragmentShaderState` function.
+    """
 
     image = self.vectorImage
 

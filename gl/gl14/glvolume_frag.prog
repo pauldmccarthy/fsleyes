@@ -3,54 +3,65 @@
 # Fragment program used for rendering GLVolume instances.
 #
 # This fragment program does the following:
-# 
-#  - Retrieves the display space/voxel coordinates corresponding to the
-#    fragment
-# 
-#  - Uses those voxel coordinates to look up the corresponding voxel
-#    value in the 3D image texture.
-# 
-#  - Uses that voxel value to look up the corresponding colour in the
-#    1D colour map texture.
-# 
-#  - Sets the fragment colour.
 #
-# Required inputs:
 #
-#   fragment.texcoord[0] - Fragment texture coordinates
-#   fragment.texcoord[1] - Fragment voxel coordinates 
+#  1. Retrieves the display space/voxel coordinates corresponding to the
+#     fragment.
 #
-#   program.local[0]  
-#   program.local[1]
-#   program.local[2]
-#   program.local[3]     - Matrix which transforms voxel values into the range
-#                          [0, 1], for use as a colour map texture coordinate
-#
-#   program.local[4]     - Image shape - number of voxels along the xyz
-#                          dimensions in the image
+#  2. Kills the fragment if it is out of the voxel bounds.
 # 
-#   program.local[5]     - Vector containing clipping values - voxels with a
-#                          value below the low threshold (x), or above the
-#                          high threshold (y) will not be shown. The (z)
-#                          component determines the clipping direction - pass
-#                          in -1 for the above behaviour, or +1 to invert
-#                          this behaviour (i.e. to clip values that are within
-#                          the range). The (w) component is a boolen flag which
-#                          indicates whether the image texture is to be used
-#                          as the clip texture. Clipping values are assumed to
-#                          be normalised to the image texture value range.
+#  3. Uses those voxel coordinates to look up the corresponding voxel
+#     value in the 3D image and clipping textures.
 #
-#   program.local[6]     - Negative colour map control. The (x) component
-#                          is a boolean flag controlling whether the negative
-#                          colour map is used. The (y) component is the display
-#                          range centre (the value above which the regular 
-#                          colour map is used, and below which the negative
-#                          colour map is used), as a voxel value, normalised to
-#                          the image texture value range.
-#  
+#  5. Kills the fragment if the value is out of the clipping range.
+# 
+#  6. Uses the voxel value to look up the corresponding colour in the
+#     1D colour map texture.
+# 
+#  7. Sets the fragment colour accordingly.
+#
+# Input parameters:
+#
+#   voxValXform - Matrix which transforms voxel values into the range
+#                 [0, 1], for use as a colour map texture coordinate
+#
+#   imageShape  - Image shape - number of voxels along the xyz
+#                 dimensions in the image
+# 
+#   clipping    - Vector containing clipping values - voxels with a
+#                 value below the low threshold (x), or above the
+#                 high threshold (y) will not be shown. The (z)
+#                 component determines the clipping direction - pass
+#                 in -1 for the above behaviour, or +1 to invert
+#                 this behaviour (i.e. to clip values that are within
+#                 the range). The (w) component is a boolen flag which
+#                 indicates whether the image texture is to be used
+#                 as the clip texture. Clipping values are assumed to
+#                 be normalised to the image texture value range.
+#
+#   negCmap     - Negative colour map control. The (x) component
+#                 is a boolean flag controlling whether the negative
+#                 colour map is used. The (y) component is the display
+#                 range centre (the value above which the regular 
+#                 colour map is used, and below which the negative
+#                 colour map is used), as a voxel value, normalised to
+#                 the image texture value range.
+#
+# Input attributes:
+#
+#   texCoord - Fragment texture coordinates
+#   voxCoord - Fragment voxel coordinates
+#
+# Input textures:
+#
+#   imageTexture     - 3D texture containing the image
+#   clipTexture      - 3D texture containing clipping image
+#   colourTexture    - 1D texture containing colour map
+#   negColourTexture - 1D texture containing negative colour map
+#
 # Outputs:
 #
-#   result.color         - The fragment colour
+#   result.color - The fragment colour
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -66,19 +77,15 @@ TEMP  useNegCmap;
 TEMP  negVoxValue;
 TEMP  negClipValue;
 
-PARAM imageShape = {{ param_imageShape }};
-PARAM clipping   = {{ param_clipping   }};
-PARAM negCmap    = {{ param_negCmap    }};
-  
-# This matrix scales the voxel value to
-# lie in a range which is appropriate to
-# the current display range 
+PARAM imageShape     = {{ param_imageShape }};
+PARAM clipping       = {{ param_clipping   }};
+PARAM negCmap        = {{ param_negCmap    }};
 PARAM voxValXform[4] = {{ param4_voxValXform }};
 
-# retrieve the voxel coordinates,
-# bail if they are are out of bounds  
+# retrieve the voxel coordinates
 MOV voxCoord, {{ varying_voxCoord }};
 
+# bail if they are are out of bounds  
 #pragma include test_in_bounds.prog
 
 # look up image voxel value

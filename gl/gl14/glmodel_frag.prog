@@ -2,9 +2,15 @@
 #
 # Fragment program used for rendering GLModel instances.
 #
-# Inputs:
-#   fragment.texcoord[0] - Texture coordinates
-#   program.local[0]     - Offsets (used as edge widths - see edge2D.prog)
+# Input parameters:
+#   offsets - Offsets (used as edge widths - see edge2D.prog)
+#
+# Input textures:
+#   renderTexture - 2D texture containing the rendered model.
+#
+# Input attributes:
+#   texCoord  - Texture coordinates
+#   
 #
 # Outputs:
 #   result.color         - Fragment colour.

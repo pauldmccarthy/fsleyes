@@ -9,10 +9,16 @@ class to render :class:`.Image` overlays as RGB vector images in an OpenGL 1.4
 compatible manner.
 
 
+This module uses functions in the :mod:`.gl14.glvector_funcs` module, which
+contains logic used for rendering both ``GLRGBVector`` and ``GLLineVector``
+instances.
+
+
 Rendering of a ``GLRGBVector`` is very similar to that of a
-:class:`.GLVolume`; therefore, the ``preDraw``, ``draw``, ``drawAll`` and
-``postDraw`` functions defined in the :mod:`.gl14.glvolume_funcs` are re-used
-by this module.
+:class:`.GLVolume`, with the exception that a different fragment shader
+(``glvector``) may be used. Therefore, the ``preDraw``, ``draw``, ``drawAll``
+and ``postDraw`` functions defined in the :mod:`.gl14.glvolume_funcs` are
+re-used by this module.
 """
 
 
@@ -38,15 +44,16 @@ def destroy(self):
 
     
 def compileShaders(self):
-    """Compiles the vertex/fragment shader programs used for drawing
-    :class:`.GLRGBVector` instances. Stores references to the shader
-    programs on the ``GLRGBVector`` instance. 
+    """Calls the :mod:`.gl14.glvector_funcs.compileShaders` function.
     """
     glvector_funcs.compileShaders(self, 'glvolume')
 
 
 def updateShaderState(self):
-    """Updates all variables used by the vertex/fragment shader programs. """
+    """Updates all variables used by the vertex/fragment shader programs.  The
+    fragment shader is configured by the
+    :func:.gl21.glvector_funcs.updateFragmentShaderState` function.
+    """
 
     glvector_funcs.updateFragmentShaderState(self)
 

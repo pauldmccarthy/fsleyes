@@ -8,8 +8,9 @@
 class to render :class:`.Image` overlays in an OpenGL 1.4 compatible manner.
 
 
-Rendering of a ``GLLabel`` is very similar to that of a :class:`.GLVolume`;
-therefore, the ``preDraw``, ``draw``, ``drawAll`` and ``postDraw`` functions
+Rendering of a ``GLLabel`` is very similar to that of a :class:`.GLVolume`,
+with the exception that a different fragment program (``gllabel``) is used.
+Therefore, the ``preDraw``, ``draw``, ``drawAll`` and ``postDraw`` functions
 defined in the :mod:`.gl14.glvolume_funcs` are re-used by this module.
 """
 
@@ -38,8 +39,8 @@ def destroy(self):
 
 
 def compileShaders(self):
-    """Compiles the vertex and fragment shader programs used to render
-    :class:`.GLLabel` instances.
+    """Loads vertex and fragment shader program source, and creates an
+    :class:`.ARBPShader` instance.
     """
     if self.shader is not None:
         self.shader.delete()
@@ -59,7 +60,6 @@ def updateShaderState(self):
     
     opts = self.displayOpts
     
-    # enable the vertex and fragment programs
     self.shader.load()
 
     voxValXform  = self.imageTexture.voxValXform

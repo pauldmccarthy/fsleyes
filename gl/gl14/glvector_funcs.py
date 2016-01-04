@@ -1,9 +1,15 @@
 #!/usr/bin/env python
 #
-# glvector_funcs.py -
+# glvector_funcs.py - Functions used by glrgbvector_funcs and
+#                     gllinevector_funcs.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module contains logic for managing vertex and fragment shader programs
+used for rendering :class:`.GLRGBVector` and :class:`.GLLineVector` instances.
+These functions are used by the :mod:`.gl14.glrgbvector_funcs` and
+:mod:`.gl14.gllinevector_funcs` modules.
+"""
 
 
 import fsl.fsleyes.gl.shaders as shaders
@@ -18,9 +24,12 @@ def destroy(self):
 
     
 def compileShaders(self, vertShader):
-    """Compiles the vertex/fragment shader programs used for drawing
-    :class:`.GLRGBVector` instances. Stores references to the shader
-    programs on the ``GLRGBVector`` instance. 
+    """Compiles the vertex/fragment shader programs (by creating a
+    :class:`.GLSLShader` instance).
+
+    If the :attr:`.VectorOpts.colourImage` property is set, the ``glvolume``
+    fragment shader is used. Otherwise, the ``glvector`` fragment shader
+    is used.
     """
     if self.shader is not None:
         self.shader.delete()
@@ -56,7 +65,10 @@ def compileShaders(self, vertShader):
 
 
 def updateFragmentShaderState(self):
-
+    """Updates the state of the fragment shader - it may be either the
+    ``glvolume`` or the ``glvector`` shader.
+    """
+    
     opts                = self.displayOpts
     useVolumeFragShader = opts.colourImage is not None 
 

@@ -9,14 +9,18 @@ class to render :class:`.Image` overlays as line vector images in an OpenGL 2.1
 compatible manner.
 
 
-This module uses two different techniques to render a ``GLLineVector``. The
-voxel coordinates for every vector are passed directly to a vertex shader
+This module uses functions in the :mod:`.gl21.glvector_funcs` module, which
+contains logic used for rendering both ``GLRGBVector`` and ``GLLineVector``
+instances.
+
+
+The voxel coordinates for every vector are passed directly to a vertex shader
 program which calculates the position of the corresponding line vertices.
 
 
-A fragment shader (the same as that used by the :class:`.GLRGBVector` class)
-is used to colour each line according to the orientation of the underlying
-vector.
+The ``glvector`` fragment shader (the same as that used by the
+:class:`.GLRGBVector` class) is used to colour each line according to the
+orientation of the underlying vector.
 """
 
 
@@ -35,11 +39,8 @@ log = logging.getLogger(__name__)
 
 def init(self):
     """Compiles and configures the vertex/fragment shaders used to render the
-    ``GLLineVector`` (via calls to :func:`compileShaders` and
-    :func:`updateShaderState`), creates GL buffers for storing vertices,
-    texture coordinates, and vertex IDs, and adds listeners to some properties
-    of the :class:`.LineVectorOpts` instance associated with the vector
-    :class:`.Image`  overlay.
+    ``GLLineVector`` via calls to :func:`compileShaders` and
+    :func:`updateShaderState.
     """
     
     self.shader = None
@@ -49,23 +50,23 @@ def init(self):
 
     
 def destroy(self):
-    """Deletes the vertex/fragment shaders and the GL buffers, and
-    removes property listeners from the :class:`.LineVectorOpts`
-    instance.
-    """
+    """Deletes the vertex/fragment shaders. """
     self.shader.delete()
 
 
 def compileShaders(self):
-    """Compiles the vertex/fragment shaders, and stores references to all
-    shader variables as attributes of the :class:`.GLLineVector`.
+    """Compiles the vertex/fragment shaders via the
+    :func:`.gl21.glvector_funcs.compileShaders` function.
     """
 
     self.shader = glvector_funcs.compileShaders(self, 'gllinevector')
 
     
 def updateShaderState(self):
-    """Updates all variables used by the vertex/fragment shaders. """
+    """Updates all variables used by the vertex/fragment shaders. The fragment
+    shader is configured by the
+    :func:`.gl21.glvector_funcs.updateFragmentShaderState` function.
+    """
 
     shader = self.shader
     shader.load()
@@ -110,7 +111,6 @@ def draw(self, zpos, xform=None):
     Voxel coordinates are passed to the vertex shader, which calculates
     the corresponding line vertex locations.
     """ 
-
 
     image      = self.vectorImage
     opts       = self.displayOpts

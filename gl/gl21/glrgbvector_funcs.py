@@ -9,10 +9,16 @@ class to render :class:`.Image` overlays as RGB vector images in an OpenGL 2.1
 compatible manner.
 
 
+This module uses functions in the :mod:`.gl21.glvector_funcs` module, which
+contains logic used for rendering both ``GLRGBVector`` and ``GLLineVector``
+instances.
+
+
 Rendering of a ``GLRGBVector`` is very similar to that of a
-:class:`.GLVolume`; therefore, the ``preDraw``, ``draw``, ``drawAll`` and
-``postDraw`` functions defined in the :mod:`.gl21.glvolume_funcs` are re-used
-by this module.
+:class:`.GLVolume`, with the exception that a different fragment shader
+(``glvector``) may be used. Therefore, the ``preDraw``, ``draw``, ``drawAll``
+and ``postDraw`` functions defined in the :mod:`.gl21.glvolume_funcs` are
+re-used by this module.
 """
 
 
@@ -22,8 +28,7 @@ import glvector_funcs
 
 def init(self):
     """Calls the :func:`compileShaders` and :func:`updateShaderState`
-    functions, and creates a GL vertex buffer for storing vertex
-    information.
+    functions.
     """
 
     self.shader = None
@@ -41,15 +46,15 @@ def destroy(self):
 
     
 def compileShaders(self):
-    """Compiles the vertex/fragment shaders used for drawing
-    :class:`.GLRGBVector` instances. Stores references to the shader
-    programs, and to all shader variables on the ``GLRGBVector`` instance.
-    """
+    """Calls :func:`.gl21.glvector_funcs.compileShaders`. """
     self.shader = glvector_funcs.compileShaders(self, 'glvolume')
 
 
 def updateShaderState(self):
-    """Updates all shader program variables. """
+    """Updates all shader program variables. The fragment shader is
+    configured by the :func:.gl21.glvector_funcs.updateFragmentShaderState`
+    function.
+    """
 
     opts      = self.displayOpts
     useSpline = opts.interpolation == 'spline'

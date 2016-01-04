@@ -7,7 +7,8 @@
 """This module provides functions which are used by the :class:`.GLLabel`
 class to render :class:`.Image` overlays in an OpenGL 2.1 compatible manner.
 
-Rendering of a ``GLLabel`` is very similar to that of a ``GLVolume`` - the
+Rendering of a ``GLLabel`` is very similar to that of a ``GLVolume``, with the
+exception that a different fragment shader (``gllabel``) is used. The
 ``preDraw``, ``draw``, ``drawAll`` and ``postDraw`` functions defined in the
 :mod:`.gl21.glvolume_funcs` are re-used by this module.
 """
@@ -21,7 +22,7 @@ import                           glvolume_funcs
 
 def init(self):
     """Calls the :func:`compileShaders` and :func:`updateShaderState`
-    functions, and creates a GL buffer for storing vertex attributes.
+    functions.
     """    
     self.shader = None
 
@@ -30,15 +31,14 @@ def init(self):
     
 
 def destroy(self):
-    """Destroys the shader programs, and the vertex buffer. """
+    """Destroys the shader programs. """
     self.shader.delete()
     self.shader = None
 
 
 def compileShaders(self):
-    """Compiles vertex/fragment shader programs used to render
-    :class:`.GLLabel` instances, and stores the positions of all
-    shader variables as attributes on the :class:`.GLLabel` instance.
+    """Loads the vertex/fragment shader source code, and creates a
+    :class:`.GLSLShader` program.
     """
 
     if self.shader is not None:

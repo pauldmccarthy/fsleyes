@@ -113,7 +113,7 @@ class GLVolume(globject.GLImageObject):
        This is bound to texture unit 2.
 
      - An :class:`.ImageTexture` which contains the clippimg image data.
-       This is bound to texture unit 1. If the :attr:`.VolumeOpts.clipImage`
+       This is bound to texture unit 3. If the :attr:`.VolumeOpts.clipImage`
        property is not specified (i.e. it has a value of ``None``), this
        texture will not be bound - in this case, the image texture is used
        for clipping.
