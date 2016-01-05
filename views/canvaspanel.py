@@ -321,11 +321,13 @@ class CanvasPanel(viewpanel.ViewPanel):
 
     
     @actions.toggleControlAction(overlayinfopanel.OverlayInfoPanel)
-    def toggleOverlayInfo(self):
+    def toggleOverlayInfo(self, floatPane=False):
         """Toggles an :class:`.OverlayInfoPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """        
-        self.togglePanel(overlayinfopanel.OverlayInfoPanel, location=wx.LEFT)
+        self.togglePanel(overlayinfopanel.OverlayInfoPanel,
+                         location=wx.LEFT,
+                         floatPane=floatPane)
     
 
     @actions.toggleControlAction(atlaspanel.AtlasPanel)

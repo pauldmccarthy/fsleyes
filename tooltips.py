@@ -453,6 +453,9 @@ actions = TypeDict({
     'CanvasPanel.toggleDisplayPanel' : 'Show more overlay display settings',
     'CanvasPanel.toggleCanvasSettingsPanel' : 'Show more view '
                                               'control settings',
+    'CanvasPanel.toggleOverlayInfo' : 'Show/hide the overlay '
+                                      'information panel',
+ 
 
     'OrthoViewProfile.resetZoom'    : 'Reset zoom level to 100%',
     'OrthoViewProfile.centreCursor' : 'Reset location to centre of scene',

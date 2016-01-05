@@ -16,12 +16,12 @@ import wx
 
 import props
 
-import fsl.fsleyes.toolbar  as fsltoolbar
-import fsl.fsleyes.icons    as icons
-import fsl.fsleyes.tooltips as fsltooltips
-import fsl.fsleyes.actions  as actions
-import fsl.utils.typedict   as td
-import fsl.data.strings     as strings
+import fsl.fsleyes.toolbar                   as fsltoolbar
+import fsl.fsleyes.icons                     as icons
+import fsl.fsleyes.tooltips                  as fsltooltips
+import fsl.fsleyes.actions                   as actions
+import fsl.utils.typedict                    as td
+import fsl.data.strings                      as strings
 
 
 log = logging.getLogger(__name__)
@@ -206,7 +206,8 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.Display` instance.
         """
-        
+
+        viewPanel = self.__viewPanel
         dispSpecs = _TOOLBAR_PROPS[display]
 
         # Display settings
@@ -215,6 +216,13 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         alphaSpec = dispSpecs['alpha']
         briSpec   = dispSpecs['brightness']
         conSpec   = dispSpecs['contrast']
+
+        # Button which toggles overlay info 
+        infoSpec = actions.ToggleActionButton(
+            'toggleOverlayInfo',
+            actionKwargs={'floatPane' : True},
+            icon=icons.findImageFile('information24'),
+            tooltip=fsltooltips.actions[viewPanel, 'toggleOverlayInfo'])
 
         # Name/overlay type and brightness/contrast
         # are respectively placed together
@@ -228,11 +236,12 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         nameTypePanel.SetSizer(nameTypeSizer)
         briconPanel  .SetSizer(briconSizer)
 
-        nameWidget  = props.buildGUI(nameTypePanel, display, nameSpec)
-        typeWidget  = props.buildGUI(nameTypePanel, display, typeSpec)
-        briWidget   = props.buildGUI(briconPanel,   display, briSpec)
-        conWidget   = props.buildGUI(briconPanel,   display, conSpec)
-        alphaWidget = props.buildGUI(self,          display, alphaSpec)
+        infoWidget  = props.buildGUI(self,          viewPanel, infoSpec)
+        nameWidget  = props.buildGUI(nameTypePanel, display,   nameSpec)
+        typeWidget  = props.buildGUI(nameTypePanel, display,   typeSpec)
+        briWidget   = props.buildGUI(briconPanel,   display,   briSpec)
+        conWidget   = props.buildGUI(briconPanel,   display,   conSpec)
+        alphaWidget = props.buildGUI(self,          display,   alphaSpec)
 
         briLabel    = wx.StaticText(briconPanel)
         conLabel    = wx.StaticText(briconPanel)
@@ -254,7 +263,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         briconSizer.Add(conLabel)
         briconSizer.Add(conWidget)
 
-        return [nameTypePanel, alphaPanel, briconPanel]
+        return [infoWidget, nameTypePanel, alphaPanel, briconPanel]
 
 
     def __makeVolumeOptsTools(self, opts):
@@ -403,7 +412,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         lightingWidget = self.MakeLabelledTool(
             lightingWidget, strings.properties[opts, 'lighting'])
         
-        return self.__makeVectorOptsTools(opts) + [lightingWidget] 
+        return self.__makeVectorOptsTools(opts) + [lightingWidget]
 
 
 def _imageLabel(img):

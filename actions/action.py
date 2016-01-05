@@ -184,11 +184,16 @@ class ToggleAction(Action):
         """
 
         import wx
+        import pwidgets.bitmaptoggle as bmptoggle
         
         Action.bindToWidget(self, parent, evType, widget)
 
         if isinstance(widget, wx.MenuItem):
             widget.Check(self.toggled)
+        elif isinstance(widget, (wx.CheckBox,
+                                 wx.ToggleButton,
+                                 bmptoggle.BitmapToggleButton)):
+            widget.SetValue(self.toggled)
 
         
     def __toggledChanged(self, *a):
