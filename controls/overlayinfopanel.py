@@ -9,6 +9,8 @@ panel which displays information about the currently selected overlay.
 """
 
 
+import logging
+
 import collections
 
 import wx
@@ -16,9 +18,13 @@ import wx.html2 as wxhtml
 
 import numpy as np
 
+import fsl.data.image      as fslimage
 import fsl.data.strings    as strings
 import fsl.data.constants  as constants
 import fsl.fsleyes.panel   as fslpanel
+
+
+log = logging.getLogger(__name__)
 
 
 class OverlayInfoPanel(fslpanel.FSLEyesPanel):
@@ -39,6 +45,7 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
     :class:`.Image`        :meth:`__getImageInfo`
     :class:`.FEATImage`    :meth:`__getFEATImageInfo`
     :class:`.MelodicImage` :meth:`__getMelodicImageInfo`
+    :class:`.TensorImage`  :meth:`__getTensorImageInfo`
     :class:`.Model`        :meth:`__getModelInfo`
     ====================== =============================
     """
@@ -69,6 +76,7 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
 
         self.__currentOverlay = None
         self.__currentDisplay = None
+        self.__currentOpts    = None
         self.__selectedOverlayChanged()
 
         self.SetMinSize((350, 500))
@@ -106,17 +114,17 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
             self.__info.SetPage('', '')
             self.__info.Refresh()
             return
-
-        # Info for this overlay
-        # is already being shown
-        if overlay == self.__currentOverlay:
-            return
         
         if self.__currentDisplay is not None:
-            self.__currentDisplay.removeListener('name', self._name)
+            self.__currentDisplay.removeListener('name',        self._name)
+            self.__currentDisplay.removeListener('overlayType', self._name)
+            
+        if self.__currentOpts is not None:
+            self.__currentOpts.removeListener('transform', self._name) 
             
         self.__currenOverlay = None
         self.__currenDisplay = None
+        self.__currenOpts    = None
         
         if overlay is not None:
             self.__currentOverlay = overlay
@@ -125,15 +133,40 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
             self.__currentDisplay.addListener('name',
                                               self._name,
                                               self.__overlayNameChanged)
-        
+            self.__currentDisplay.addListener('overlayType',
+                                              self._name,
+                                              self.__selectedOverlayChanged)
+
+            if isinstance(overlay, fslimage.Nifti1):
+                self.__currentOpts = self.__currentDisplay.getDisplayOpts()
+
+                self.__currentOpts.addListener('transform',
+                                               self._name,
+                                               self.__overlayTransformChanged)
+
         self.__updateInformation()
 
+        
+    def __overlayTypeChanged(self, *a):
+        """Called when the :attr:`.Display.overlayType` for the current
+        overlay changes. Re-registers with the ``Display`` and
+        ``DisplayOpts`` instances associated with the overlay.
+        """
+        self.__selectedOverlayChanged() 
+        
         
     def __overlayNameChanged(self, *a):
         """Called when the :attr:`.Display.name` for the current overlay
         changes. Updates the information display.
         """
         self.__updateInformation()
+
+        
+    def __overlayTransformChanged(self, *a):
+        """Called when the :attr:`.Nifti1Opts.transform` for the current
+        overlay changes. Updates the information display.
+        """
+        self.__updateInformation() 
 
 
     def __updateInformation(self):
@@ -191,6 +224,23 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
         info.addSection(xformSect)
         info.addSection(orientSect)
 
+        displaySpace = strings.labels[self,
+                                      overlay,
+                                      'displaySpace',
+                                      opts.transform]
+        
+        if opts.transform == 'custom':
+            dsImg = self._displayCtx.displaySpace
+            if isinstance(dsImg, fslimage.Nifti1):
+                dsDisplay    = self._displayCtx.getDisplay(dsImg)
+                displaySpace = displaySpace.format(dsDisplay.name)
+            else:
+                log.warn('{} transform ({}) seems to be out '
+                         'of date (display space: {})'.format(
+                             overlay,
+                             opts.transform,
+                             self._displayCtx.displaySpace))
+            
         info.addInfo(strings.labels[self, 'dataSource'],
                      overlay.dataSource,
                      section=generalSect)
@@ -205,6 +255,14 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
                      section=generalSect)
         info.addInfo(strings.nifti['intent_name'],
                      hdr['intent_name'],
+                     section=generalSect)
+
+        info.addInfo(strings.labels[self, 'overlayType'],
+                     strings.choices[display, 'overlayType'][
+                         display.overlayType],
+                     section=generalSect)
+        info.addInfo(strings.labels[self, 'displaySpace'],
+                     displaySpace,
                      section=generalSect)
         
         info.addInfo(strings.nifti['dimensions'],
@@ -354,6 +412,13 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
 
 
     def __getTensorImageInfo(self, overlay, display):
+        """Creates and returns an :class:`OverlayInfo` object containing
+        information about the given :class:`.TensorImage` overlay.
+
+        :arg overlay: A :class:`.TensorImage` instance.
+        :arg display: The :class:`.Display` instance assocated with the
+                      ``TensorImage``. 
+        """
         return self.__getImageInfo(overlay, display)
 
 
@@ -364,7 +429,7 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
 
         lines = []
 
-        lines.append('<table border="0">')
+        lines.append('<table border="0" style="font-size: small;>')
 
         for rowi in range(array.shape[0]):
 

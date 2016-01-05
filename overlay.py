@@ -41,6 +41,8 @@ Currently (``fslpy`` version |version|) the only overlay types in existence
 
    ~fsl.data.image.Image
    ~fsl.data.featimage.FEATImage
+   ~fsl.data.melodicimage.MelodicImage
+   ~fsl.data.tensorimage.TensorImage
    ~fsl.data.model.Model
 
 
