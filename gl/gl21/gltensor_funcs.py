@@ -4,8 +4,45 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides functions which are used by the :class:`.GLTensor`
+class for rendering :class:`.TensorImage` overlays in an OpenGL 2.1 compatible
+manner.
 
-import logging
+
+The eigenvalues and eigenvectors of the ``TensorImage`` are stored as 3D
+:class:`.ImageTexture` instances, using the :mod:`.gl.resources` module. For
+each voxel, the vertices of a unit sphere are passed to the ``gltensor``
+vertex shader, which looks up the eigenvectors and values for the voxel, and
+transforms the sphere accordingly.
+
+
+The rendering code makes use of the OpenGL ``ARB_draw_instanced`` extension
+so that voxel coordinates do not need to be repeated for every vertex of
+a single tensor.
+
+
+If the :attr:`.VectorOpts.colourImage` property is not set, the ``glvector``
+fragment shader is used to colour the tensors. Otherwise, the ``glvolume``
+fragment shader is used to colour the tensors according to the specified
+``colourImage``. The functions in the :mod:`.gl21.glvector_funcs` module
+are used to manage the fragment shader.
+
+
+The following textures are used for rendering a ``GLTensor`` instance - this
+is in addition to the textures that are used for :class:`.GLVector` instances
+(of which the ``GLTensor`` is a sub-class):
+
+  ============== ================== ==================
+  Attribute name Description        Texture unit
+  ============== ================== ==================
+  ``v1Texture``  First eigenvector  ``gl.GL_TEXTURE8``
+  ``v2Texture``  Second eigenvector ``gl.GL_TEXTURE9``
+  ``v3Texture``  Third eigenvector  ``gl.GL_TEXTURE10``
+  ``l1Texture``  First eigenvalue   ``gl.GL_TEXTURE11``
+  ``l2Texture``  Second eigenvalue  ``gl.GL_TEXTURE12``
+  ``l3Texture``  Third eigenvalue   ``gl.GL_TEXTURE13``
+  ============== ================== ==================
+"""
 
 
 import numpy                          as np
@@ -20,12 +57,9 @@ import fsl.fsleyes.gl.textures  as textures
 import                             glvector_funcs
 
 
-log = logging.getLogger(__name__)
-
-
 def init(self):
-    """Compiles and configures the vertex and fragment shader programs, and
-    creates textures and vertex buffers.
+    """Creates textures for the tensor eigenvalue and eigenvector images,
+    and calls :func:`compileShaders` and :func:`updateShaderState`.
     """
 
     image = self.image
@@ -36,7 +70,6 @@ def init(self):
     l1 = image.L1()
     l2 = image.L2()
     l3 = image.L3()
-
 
     def vPrefilter(d):
         return d.transpose((3, 0, 1, 2))
@@ -72,6 +105,8 @@ def init(self):
 
 
 def destroy(self):
+    """Deletes the :class:`.GLSLShader`, and all textures. """
+    
     self.shader.delete()
     self.shader = None
     
@@ -86,10 +121,17 @@ def destroy(self):
 
 
 def compileShaders(self):
+    """Creates a :class:`.GLSLShader` for drawing this ``GLTensor``. This is
+    done via a call to :func:`.gl21.glvector_funcs.compileShaders`.
+    """
     self.shader = glvector_funcs.compileShaders(self, 'gltensor', indexed=True)
 
 
 def updateShaderState(self):
+    """Updates the state of the vertex and fragment shaders. The fragment
+    shader is updated via the :func:`.gl21.glvector_funcs.updateShaderState`
+    function.
+    """
 
     shader = self.shader
     opts   = self.displayOpts
@@ -154,8 +196,8 @@ def updateShaderState(self):
 
 
 def preDraw(self):
-    """Must be called before :func:`draw`. Loads the shader programs, binds
-    textures, and enables vertex arrays.
+    """Must be called before :func:`draw`. Loads the shader programs, does
+    some shader state configuration, and binds textures to texture units.
     """
     
     shader = self.shader
@@ -183,6 +225,9 @@ def preDraw(self):
     
 
 def draw(self, zpos, xform=None):
+    """Generates voxel coordinates for each tensor to be drawn, does some
+    final shader state configuration, and draws the tensors.
+    """
 
     image  = self.image
     opts   = self.displayOpts
@@ -223,6 +268,7 @@ def draw(self, zpos, xform=None):
 
 
 def postDraw(self):
+    """Unloads the shader program, and unbinds the textures. """
 
     self.shader.unloadAtts()
     self.shader.unload()

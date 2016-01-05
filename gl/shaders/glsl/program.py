@@ -255,6 +255,10 @@ class GLSLShader(object):
 
         :arg divisor: If specified, this value is used as a divisor for this
                       attribute via the ``glVetexAttribDivisor`` function.
+
+        .. note:: If a ``divisor`` is specified, the OpenGL
+                  ``ARB_instanced_arrays`` extension must be
+                  available.
         """ 
 
         aType    = self.types[  name]

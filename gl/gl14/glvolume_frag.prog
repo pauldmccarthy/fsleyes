@@ -47,7 +47,7 @@
 #                 colour map is used), as a voxel value, normalised to
 #                 the image texture value range.
 #
-# Input attributes:
+# Input varyings:
 #
 #   texCoord - Fragment texture coordinates
 #   voxCoord - Fragment voxel coordinates
@@ -58,10 +58,6 @@
 #   clipTexture      - 3D texture containing clipping image
 #   colourTexture    - 1D texture containing colour map
 #   negColourTexture - 1D texture containing negative colour map
-#
-# Outputs:
-#
-#   result.color - The fragment colour
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #

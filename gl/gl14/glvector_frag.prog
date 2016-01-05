@@ -16,36 +16,37 @@
 #
 #  - Uses those voxel values to colour the fragment.
 #
-# Required inputs:
+# Input parameters:
+#
+#   voxValXform - Transformation matrix which transforms the vector
+#                 image voxel values from their texture value
+#                 to the original data range.
+#
+#   cmapXform   - Transformation matrix which transforms the vector
+#                 image voxel values from their data values
+#                 to a value which can be used as texture coordinates
+#                 for the colour map textures.
+#
+#   imageShape  - Image shape - number of voxels along the xyz
+#                 dimensions in the image
+#
+#   clipping    - Clipping thresholds. The (x) component contains
+#                 the low clipping threshold, and the (y) component
+#                 contains the high threshold.
+#
+# Input textures:
+#
+#   vectorTexture   - 3D texture containing the vector data.
+#   modulateTexture - 3D texture containing brightness modulation values.
+#   clipTexture     - 3D texture containing clipping values.
+#   xColourTexture  - 1D texture containing the X vector component colour map.
+#   yColourTexture  - 1D texture containing the Y vector component colour map.
+#   zColourTexture  - 1D texture containing the Z vector component colour map.
+#
+# Input varyings:
 # 
-#   fragment.texcoord[0] - Fragment texture coordinates
-#   fragment.texcoord[1] - Fragment voxel coordinates 
-#
-#   program.local[0]
-#   program.local[1]
-#   program.local[2]
-#   program.local[3] - Transformation matrix which transforms the vector
-#                      image voxel values from their texture value
-#                      to the original data range.
-#
-#   program.local[4]
-#   program.local[5]
-#   program.local[6]
-#   program.local[7] - Transformation matrix which transforms the vector
-#                      image voxel values from their data values
-#                      to a value which can be used as texture coordinates
-#                      for the colour map textures.
-#
-#   program.local[8] - Image shape - number of voxels along the xyz
-#                      dimensions in the image
-#
-#   program.local[9] - Clipping thresholds. The (x) component contains
-#                      the low clipping threshold, and the (y) component
-#                      contains the high threshold.
-#
-# Outputs:
-#
-#   result.color     - The fragment colour.
+#   texCoord - Fragment texture coordinates
+#   voxCoord - Fragment voxel coordinates 
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #

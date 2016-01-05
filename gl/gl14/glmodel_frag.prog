@@ -8,12 +8,8 @@
 # Input textures:
 #   renderTexture - 2D texture containing the rendered model.
 #
-# Input attributes:
+# Input varyings:
 #   texCoord  - Texture coordinates
-#   
-#
-# Outputs:
-#   result.color         - Fragment colour.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com> 
 #

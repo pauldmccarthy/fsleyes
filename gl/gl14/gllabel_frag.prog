@@ -16,7 +16,7 @@
 #                          outlines. The yzw components specify the
 #                          border/outline widths along each axis.
 #
-# Input attributes:
+# Input varyings:
 #
 #   texCoord - Fragment texture coordinates
 #   voxCoord - Fragment voxel coordinates
@@ -25,10 +25,6 @@
 #
 #   imageTexture - 3D texture containing the image data
 #   lutTexture   - 1D texture containing the lookup table colours
-#
-# Outputs:
-#
-#   result.color - Fragment colour.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #

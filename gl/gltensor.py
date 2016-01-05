@@ -20,11 +20,23 @@ import fsl.fsleyes.gl as fslgl
 
 class GLTensor(glvector.GLVector):
     """The ``GLTensor`` class encapsulates the logic required to render
-    :class:`.TensorImage` overlays.
+    :class:`.TensorImage` overlays.  Most of the functionality is in the
+    :mod:`.gl21.gltensor_funcs` module.
+
+    .. note:: The ``GLTensor``  is not supported on versions of OpenGL older
+              than 2.1.
     """
 
     
     def __init__(self, image, display):
+        """Create a ``GLTensor``. Calls the :func:`.gl21.gltensor_funcs.init`
+        function.
+
+        :arg image:   A :class:`.TensorImage` overlay.
+        
+        :arg display: The :class:`.Display` instance associated with the
+                      ``image``.
+        """
         glvector.GLVector.__init__(self,
                                    image,
                                    display,
@@ -88,32 +100,39 @@ class GLTensor(glvector.GLVector):
 
 
     def compileShaders(self):
-        """Overrides :meth:`.GLVector.compileShaders`.
+        """Overrides :meth:`.GLVector.compileShaders`. Calls the
+        :func:`.gl21.gltensor_funcs.compileShaders` function.
         """
         fslgl.gltensor_funcs.compileShaders(self)
 
 
     def updateShaderState(self):
-        """Overrides :meth:`.GLVector.updateShaderState`.
+        """Overrides :meth:`.GLVector.updateShaderState`. Calls the
+        :func:`.gl21.gltensor_funcs.updateShaderState` function.
         """ 
         fslgl.gltensor_funcs.updateShaderState(self)
 
         
     def preDraw(self):
-        """Overrides :meth:`.GLVector.preDraw`.
+        """Overrides :meth:`.GLVector.preDraw`. Calls the
+        :meth:`.GLVector.preDraw` method, and the
+        :func:`.gl21.gltensor_funcs.preDraw` function.
         """ 
         glvector.GLVector.preDraw(self)
         fslgl.gltensor_funcs.preDraw(self)
 
 
     def draw(self, zpos, xform=None):
-        """
+        """Overrides :meth:`.GLVector.draw`. Calls the
+        :func:`.gl21.gltensor_funcs.draw` function.
         """
         fslgl.gltensor_funcs.draw(self, zpos, xform)
 
 
     def postDraw(self):
-        """Overrides :meth:`.GLVector.postDraw`.
+        """Overrides :meth:`.GLVector.postDraw`. Calls the
+        :meth:`.GLVector.postDraw` method, and the
+        :func:`.gl21.gltensor_funcs.postDraw` function.
         """ 
         glvector.GLVector.postDraw(self)
         fslgl.gltensor_funcs.postDraw(self)
