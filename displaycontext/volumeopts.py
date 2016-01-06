@@ -565,34 +565,16 @@ class VolumeOpts(Nifti1Opts):
         constructor.
         """
 
-        # Attributes controlling image display. Only
-        # determine the real min/max for small images -
-        # if it's memory mapped, we have no idea how big
-        # it may be! So we calculate the min/max of a
-        # sample (either a slice or an image, depending
-        # on whether the image is 3D or 4D)
-        if np.prod(overlay.shape) > 2 ** 30:
-            sample = overlay.data[..., overlay.shape[-1] / 2]
-            self.dataMin = float(np.nanmin(sample))
-            self.dataMax = float(np.nanmax(sample))
-        else:
-            self.dataMin = float(np.nanmin(overlay.data))
-            self.dataMax = float(np.nanmax(overlay.data))
+        # The dataRangeChanged method needs acces to the
+        # overlay, but we want to update the display/
+        # clipping range before calling the constructor,
+        # as we would otherwise clobber values inherited
+        # from the parent VolumeOpts (if any).
+        self.overlay = overlay
 
-        if np.any(np.isnan((self.dataMin, self.dataMax))):
-            self.dataMin = 0
-            self.dataMax = 0
-
-        # Keep range values 0.01% apart.
-        dMinDistance = abs(self.dataMax - self.dataMin) / 10000.0 
-
-        self.displayRange.xlo  = self.dataMin
-        self.displayRange.xhi  = self.dataMax
-        self.displayRange.xmin = self.dataMin
-        self.displayRange.xmax = self.dataMax
+        self.__dataRangeChanged()
+        self.displayRange.x = [self.dataMin, self.dataMax]
         
-        self.setConstraint('displayRange',  'minDistance', dMinDistance)
-
         Nifti1Opts.__init__(self,
                             overlay,
                             display,
@@ -613,6 +595,10 @@ class VolumeOpts(Nifti1Opts):
         #       range relationship will break.
         # 
         if self.getParent() is not None:
+
+            overlay    .addListener('dataRange',
+                                    self.name,
+                                    self.__dataRangeChanged)
             display    .addListener('brightness',
                                     self.name,
                                     self.__briconChanged)
@@ -713,6 +699,27 @@ class VolumeOpts(Nifti1Opts):
         self.displayRange.x = [self.dataMin, self.dataMax]
 
 
+    def __dataRangeChanged(self, *a):
+        """Called when the :attr:`.Image.dataRange` property changes.
+        Updates the limits of the :attr:`displayRange` and
+        :attr:`.clippingRange` properties.
+        """
+        
+        self.dataMin           = self.overlay.dataRange.xlo
+        self.dataMax           = self.overlay.dataRange.xhi
+        self.displayRange.xmin = self.dataMin
+        self.displayRange.xmax = self.dataMax
+
+        # Keep range values 0.01% apart.
+        dMinDistance = abs(self.dataMax - self.dataMin) / 10000.0
+        self.setConstraint('displayRange', 'minDistance', dMinDistance)
+
+        if self.clipImage is None:
+            self.clippingRange.xmin = self.dataMin - dMinDistance
+            self.clippingRange.xmax = self.dataMax + dMinDistance
+            self.setConstraint('clippingRange', 'minDistance', dMinDistance)
+ 
+
     def __overlayListChanged(self, *a):
         """Called when the :`class:`.OverlayList` changes. Updates the
         options of the :attr:`clipImage` property.
@@ -750,9 +757,8 @@ class VolumeOpts(Nifti1Opts):
             self.enableProperty('linkLowRanges')
             self.enableProperty('linkHighRanges') 
         else:
-            opts    = self.displayCtx.getOpts(self.clipImage)
-            dataMin = opts.dataMin
-            dataMax = opts.dataMax
+            dataMin = self.clipImage.dataRange.xlo
+            dataMax = self.clipImage.dataRange.xhi
 
             # If the clipping range is based on another
             # image, it makes no sense to link the low/

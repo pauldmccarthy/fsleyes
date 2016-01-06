@@ -13,7 +13,6 @@ import collections
 
 import numpy                       as np
 import scipy.ndimage.measurements  as ndimeas
-import scipy.ndimage.interpolation as ndiint
 
 import props
 
@@ -219,6 +218,9 @@ class Selection(props.HasProperties):
         """
         
         xs, ys, zs = np.where(self.selection > 0)
+
+        if len(xs) == 0:
+            return np.array([]).reshape(0, 0, 0), (0, 0, 0)
 
         xlo = xs.min()
         ylo = ys.min()
