@@ -61,10 +61,10 @@ class ModelOpts(fsldisplay.DisplayOpts):
     as the reference image.
     """
 
-    
+
     coordSpace = copy.copy(volumeopts.Nifti1Opts.transform)
     """If :attr:`refImage` is not ``None``, this property defines the
-    reference image coordinate space in whihc the model coordinates are
+    reference image coordinate space in which the model coordinates are
     defined (i.e. voxels, scaled voxels, or world coordinates).
     """
 
@@ -73,6 +73,12 @@ class ModelOpts(fsldisplay.DisplayOpts):
         """Create a ``ModelOpts`` instance. All arguments are passed through
         to the :class:`.DisplayOpts` constructor.
         """
+
+        # The Nifti1Opts.transform property has a
+        # 'custom' option which is not applicable
+        # to our coordSpace property.
+        coordSpace = self.getProp('coordSpace')
+        coordSpace.removeChoice('custom', self)
 
         # Create a random, highly
         # saturated colour
@@ -247,7 +253,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
         if   name == 'transform':
             transform   = refOpts.getLastValue('transform')
             customXform = refOpts.customXform
-        elif name == 'customXForm': 
+        elif name == 'customXform': 
             transform   = refOpts.transform
             customXform = refOpts.getLastValue('customXform')
 
