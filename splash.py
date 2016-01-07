@@ -72,4 +72,5 @@ class FSLEyesSplash(wx.Frame):
     def SetStatus(self, text):
         """Sets the text shown on the status bar to the specified ``text``. """
         self.__statusBar.SetLabel(text)
-        wx.YieldIfNeeded()
+        self.__statusBar.Refresh()
+        self.__statusBar.Update()
