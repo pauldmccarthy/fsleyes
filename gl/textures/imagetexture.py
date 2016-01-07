@@ -76,6 +76,16 @@ class ImageTexture(texture.Texture):
                         pre-processing on the data before it is copied to the 
                         GPU - see the :meth:`__prepareTextureData` method.
 
+
+        .. note:: The ``prefilter`` function must be able to accept data of
+                  any shape, not just the image data. This is because the
+                  ``prefilter`` function may be passed the full image data,
+                  and/or individual values (specifically the data
+                  minimum/maximum). This is important to keep in mind for 
+                  e.g. :class:`.GLVector` types, which need to transpose the 
+                  image data so the fourth dimension is the fastest changing.
+                  The ``prefilter`` function may assume that is is passed
+                  a ``numpy`` array.
         """
 
         texture.Texture.__init__(self, name, 3)
@@ -88,26 +98,28 @@ class ImageTexture(texture.Texture):
                                'size {} requested for '
                                'image shape {}'.format(nvals, image.shape))
 
+        self.__name       = '{}_{}'.format(type(self).__name__, id(self)) 
         self.image        = image
         self.__nvals      = nvals
+        self.__dataMin    = None
+        self.__dataMax    = None
         self.__interp     = None
         self.__resolution = None
         self.__volume     = None
         self.__normalise  = None
-        self.__prefilter  = prefilter
-        # The __prefilter attribute is needed
-        # by the __imageDataChanged method,
-        # so we set it above. The other
-        # attributes are configured in the
-        # call to the set method, below.
 
-        self.__name = '{}_{}'.format(type(self).__name__, id(self))
+        # The prefilter is needed by the imageDataChanged
+        # method (which initialises dataMin/dataMax). All
+        # other attributes are initialised in the call
+        # to set() below.
+        self.__prefilter = prefilter
+
+        self.__imageDataChanged(refresh=False)
+
         self.image.addListener('data',
                                self.__name,
-                               lambda *a: self.__imageDataChanged(),
-                               weak=False)
+                               self.__imageDataChanged)
 
-        self.__imageDataChanged(False)
         self.set(interp=interp,
                  prefilter=prefilter,
                  resolution=resolution,
@@ -186,12 +198,13 @@ class ImageTexture(texture.Texture):
 
         if not changed:
             return
-        
+
+        oldPrefilter      = self.__prefilter
         self.__interp     = interp
         self.__prefilter  = prefilter
         self.__resolution = resolution
         self.__volume     = volume
-            
+ 
         # If the data is of a type which cannot be
         # stored natively as an OpenGL texture, the
         # data is cast to a standard type, and
@@ -203,9 +216,13 @@ class ImageTexture(texture.Texture):
                                                       np.uint16,
                                                       np.int16)
 
-        if prefilter != self.__prefilter:
-            self.__imageDataChanged(False)
- 
+        # If the prefilter function has
+        # changed, we may need to
+        # re-calculate the image data
+        # range.
+        if prefilter != oldPrefilter:
+            self.__imageDataChanged(refresh=False)
+        
         self.refresh()
 
         
@@ -280,18 +297,28 @@ class ImageTexture(texture.Texture):
         self.unbindTexture()
     
 
-    def __imageDataChanged(self, refresh=True):
+    def __imageDataChanged(self, *args, **kwargs):
         """Called when the :attr:`.Image.data` property changes. Refreshes
         the texture data accordingly.
         """
 
-        data  = self.image.data
+        refresh = kwargs.get('refresh', True)
 
+        # The image keeps track of its own
+        # data range, so get a copy of it
+        drange = np.array(self.image.dataRange.x, dtype=np.float32)
+
+        # The prefilter function has to be
+        # applied to the data range as well
+        # as the data itself. This is why
+        # the prefilter function must accept
+        # data of any shape (see note in
+        # __init__ comments).
         if self.__prefilter is not None:
-            data = self.__prefilter(data)
-        
-        self.__dataMin  = float(np.nanmin(data))
-        self.__dataMax  = float(np.nanmax(data))
+            drange = self.__prefilter(drange)
+            
+        self.__dataMin = float(drange[0])
+        self.__dataMax = float(drange[1])
 
         if refresh:
             self.refresh()
@@ -351,7 +378,7 @@ class ImageTexture(texture.Texture):
         ================== ==============================================
         """        
 
-        data  = self.image.data
+        data = self.image.data
 
         if self.__prefilter is not None:
             data = self.__prefilter(data)

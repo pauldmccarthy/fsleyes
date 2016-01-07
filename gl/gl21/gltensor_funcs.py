@@ -72,7 +72,8 @@ def init(self):
     l3 = image.L3()
 
     def vPrefilter(d):
-        return d.transpose((3, 0, 1, 2))
+        if len(d.shape) != 4: return d
+        else:                 return d.transpose((3, 0, 1, 2))
 
     names = ['v1', 'v2', 'v3', 'l1', 'l2', 'l3']
     imgs  = [ v1,   v2,   v3,   l1,   l2,   l3]

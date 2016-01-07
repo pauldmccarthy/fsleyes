@@ -124,8 +124,8 @@ class GLVector(globject.GLImageObject):
                           vector data.
         """
 
-        if vectorImage is None:
-            vectorImage = image
+        if vectorImage is None: vectorImage = image
+        if prefilter   is None: prefilter   = lambda d: d
 
         if len(vectorImage.shape) != 4 or vectorImage.shape[3] != 3:
             raise ValueError('Image must be 4 dimensional, with 3 volumes '
@@ -336,14 +336,13 @@ class GLVector(globject.GLImageObject):
         
         if self.imageTexture is not None:
             glresources.delete(self.imageTexture.getTextureName())
-            
+
         # the fourth dimension (the vector directions) 
         # must be the fastest changing in the texture data
-        if prefilter is None:
-            realPrefilter = lambda d:           d.transpose((3, 0, 1, 2))
-        else:
-            realPrefilter = lambda d: prefilter(d.transpose((3, 0, 1, 2)))
-
+        def realPrefilter(d):
+            if len(d.shape) != 4: return prefilter(d)
+            else:                 return prefilter(d.transpose((3, 0, 1, 2)))
+            
         unsynced = (opts.getParent() is None                or 
                     not opts.isSyncedToParent('resolution') or
                     not opts.isSyncedToParent('volume'))
