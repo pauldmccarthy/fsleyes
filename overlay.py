@@ -21,8 +21,8 @@ an overlay type are:
   - Must be able to be created with a single ``__init__`` parameter, which
     is a string specifying the data source location (e.g. a file name).
 
-  - Must have an attribute called ``name``, which is used as the display name
-    for the overlay.
+  - Must have an attribute called ``name``, which is used as the initial
+    display name for the overlay.
 
   - Must have an attribute called ``dataSource``, which is used to identify
     the source of the overlay data.
@@ -66,6 +66,7 @@ import props
 
 import fsl.data.strings   as strings
 import fsl.utils.settings as fslsettings
+import fsl.utils.status   as status
 
 
 log = logging.getLogger(__name__)
@@ -267,7 +268,7 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
 
     :arg loadFunc:  A function which is called just before each overlay
                     is loaded, and is passed the overlay path. The default
-                    load function uses a :mod:`wx` popup frame to display
+                    load function uses the :mod:`.status` module to display
                     the name of the overlay currently being loaded. Pass in
                     ``None`` to disable this default behaviour.
 
@@ -289,18 +290,11 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
 
     defaultLoad = loadFunc == 'default'
 
-    # If the default load function is
-    # being used, create a dialog window
-    # to show the currently loading image
-    if defaultLoad:
-        import fsl.utils.dialog as fsldlg
-        loadDlg = fsldlg.SimpleMessageDialog()
-
     # The default load function updates
     # the dialog window created above
     def defaultLoadFunc(s):
         msg = strings.messages['overlay.loadOverlays.loading'].format(s)
-        loadDlg.SetMessage(msg)
+        status.update(msg)
 
     # The default error function
     # shows an error dialog
@@ -325,11 +319,6 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
     
     overlays = []
 
-    # If using the default load 
-    # function, show the dialog
-    if defaultLoad:
-        loadDlg.Show()
-
     # Load the images
     for path in paths:
 
@@ -349,8 +338,7 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
         except Exception as e: errorFunc(path, e)
 
     if defaultLoad:
-        loadDlg.Close()
-        loadDlg.Destroy()
+        status.clear()
 
     if saveDir and len(paths) > 0:
         fslsettings.write('loadOverlayLastDir', op.dirname(paths[-1]))

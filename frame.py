@@ -16,6 +16,7 @@ import wx.lib.agw.aui     as aui
 
 import fsl.data.strings   as strings
 import fsl.utils.settings as fslsettings
+import fsl.utils.status   as status
 
 import views
 import actions
@@ -117,11 +118,25 @@ class FSLEyesFrame(wx.Frame):
         
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
+        self.__mainPanel   = wx.Panel(self)
+        self.__statusBar   = wx.StaticText(self)
         self.__auiManager  = aui.AuiManager(
-            self,
+            self.__mainPanel,
             agwFlags=(aui.AUI_MGR_RECTANGLE_HINT |
                       aui.AUI_MGR_NO_VENETIAN_BLINDS_FADE |
                       aui.AUI_MGR_LIVE_RESIZE))
+
+        self.__sizer = wx.BoxSizer(wx.VERTICAL)
+        self.__sizer.Add(self.__mainPanel, flag=wx.EXPAND, proportion=1)
+        self.__sizer.Add(self.__statusBar, flag=wx.EXPAND)
+
+        self.SetSizer(self.__sizer)
+
+        # Re-direct status updates to the status bar
+        def update(msg):
+            self.__statusBar.SetLabel(msg)
+            wx.YieldIfNeeded()
+        status.setTarget(update)
 
         # Keeping track of all open view panels
         # 
@@ -149,6 +164,8 @@ class FSLEyesFrame(wx.Frame):
 
         self.__auiManager.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onViewPanelClose)
         self             .Bind(wx.EVT_CLOSE,           self.__onClose)
+
+        self.Layout()
 
         
     def getViewPanels(self):
@@ -223,7 +240,7 @@ class FSLEyesFrame(wx.Frame):
             childDC.syncOverlayDisplay = False
 
         panel = panelCls(
-            self,
+            self.__mainPanel,
             self.__overlayList,
             childDC)
 

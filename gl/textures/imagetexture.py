@@ -16,6 +16,7 @@ import numpy     as np
 import OpenGL.GL as gl
 
 import fsl.utils.transform     as transform
+import fsl.utils.status        as status
 import fsl.fsleyes.gl.routines as glroutines
 
 import texture
@@ -527,6 +528,9 @@ class ImageTexture(texture.Texture):
             be used as-is).
         """
 
+        status.update('Preparing data for image {} - this may '
+                      'take some time ...'.format(self.image.name))
+
         image = self.image
         data  = image.data
         dtype = data.dtype
@@ -560,5 +564,7 @@ class ImageTexture(texture.Texture):
         elif dtype == np.int8:   data = np.array(data + 128,   dtype=np.uint8)
         elif dtype == np.uint16: pass
         elif dtype == np.int16:  data = np.array(data + 32768, dtype=np.uint16)
+
+        status.clear()
 
         return data

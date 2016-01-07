@@ -25,7 +25,7 @@ import textwrap
 import collections
 
 import fsl.utils.settings   as fslsettings
-import fsl.utils.dialog     as fsldlg
+import fsl.utils.status     as status
 import fsl.data.strings     as strings
 
 
@@ -71,7 +71,7 @@ def loadPerspective(frame, name, **kwargs):
     applyPerspective(frame, name, persp, **kwargs)
 
 
-def applyPerspective(frame, name, perspective, showMessage=True, message=None):
+def applyPerspective(frame, name, perspective, message=None):
     """
     """
               
@@ -80,14 +80,12 @@ def applyPerspective(frame, name, perspective, showMessage=True, message=None):
 
     # Show a message while re-configuring the frame
 
-    if showMessage:
-        if message is None:
-            message = strings.messages[
-                'perspectives.applyingPerspective'].format(
-                    strings.perspectives.get(name, name))
+    if message is None:
+        message = strings.messages[
+            'perspectives.applyingPerspective'].format(
+                strings.perspectives.get(name, name))
             
-        dlg = fsldlg.SimpleMessageDialog(frame, message)
-        dlg.Show()
+    status.update(message)
 
     # Clear all existing view
     # panels from the frame
@@ -112,9 +110,7 @@ def applyPerspective(frame, name, perspective, showMessage=True, message=None):
             
         vp.getAuiManager().LoadPerspective(vpLayout)
 
-    if showMessage:
-        dlg.Close()
-        dlg.Destroy()
+    status.clear()
 
             
 def savePerspective(frame, name):
