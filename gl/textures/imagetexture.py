@@ -113,11 +113,6 @@ class ImageTexture(texture.Texture):
         self.image        = image
         self.__nvals      = nvals
 
-        # The dataMin/Max are updated
-        # in the imageDataChanged method
-        self.__dataMin    = None
-        self.__dataMax    = None
-
         # The texture settings are updated in the set method.
         # The prefilter is needed by the imageDataChanged
         # method (which initialises dataMin/dataMax). All
@@ -129,15 +124,13 @@ class ImageTexture(texture.Texture):
         self.__volume     = None
         self.__normalise  = None
 
-        # The __readay  attribute is
-        # modified in the refresh method 
+        # The dataMin/dataMax/ready attributes
+        # are modified in the refresh method
+        self.__dataMin    = None
+        self.__dataMax    = None
         self.__ready      = False
 
-        self.__imageDataChanged(refresh=False)
-
-        self.image.addListener('data',
-                               self.__name,
-                               self.__imageDataChanged)
+        self.image.addListener('data', self.__name, self.refresh)
 
         self.set(interp=interp,
                  prefilter=prefilter,
@@ -261,6 +254,26 @@ class ImageTexture(texture.Texture):
         # This can take a long time for large images, so we
         # do it in a separate thread using the async module.
         def genData():
+
+            if self.__prefilter is None:
+                self.__dataMin = self.image.dataRange.xlo
+                self.__dataMax = self.image.dataRange.xhi
+            else:
+
+                # TODO If the prefilter function is just
+                #      performing a transpose, then I don't
+                #      need to re-calculate the data range.
+                #      Can I limiit the operations that the
+                #      prefilter function can do, so I know
+                #      whether a re-calc is necessary? Or
+                #      can I somehow be told whether the
+                #      prefilter is changing the data, so
+                #      I know whether I need to re-calc here?
+                data = self.__prefilter(self.image.data)
+                
+                self.__dataMin = np.nanmin(data)
+                self.__dataMax = np.nanmax(data)
+            
             self.__determineTextureType()
             self.__data = self.__prepareTextureData()
 
@@ -278,7 +291,7 @@ class ImageTexture(texture.Texture):
             if len(data.shape) == 4: self.textureShape = data.shape[1:]
             else:                    self.textureShape = data.shape
 
-            log.debug('Refreshing 3D texture (id {}) for '
+            log.debug('Configuring 3D texture (id {}) for '
                       '{} (data shape: {})'.format(
                           self.getTextureHandle(),
                           self.getTextureName(),
@@ -333,39 +346,14 @@ class ImageTexture(texture.Texture):
                             data)
 
             self.unbindTexture()
+            log.debug('{}({}) is ready to use'.format(
+                type(self).__name__, self.image))
             self.__ready = True
 
         async.run(
             genData,
             onFinish=configTexture,
             name='{}.genData({})'.format(type(self).__name__, self.image))
-    
-
-    def __imageDataChanged(self, *args, **kwargs):
-        """Called when the :attr:`.Image.data` property changes. Refreshes
-        the texture data accordingly.
-        """
-
-        refresh = kwargs.get('refresh', True)
-
-        # The image keeps track of its own
-        # data range, so get a copy of it
-        drange = np.array(self.image.dataRange.x, dtype=np.float32)
-
-        # The prefilter function has to be
-        # applied to the data range as well
-        # as the data itself. This is why
-        # the prefilter function must accept
-        # data of any shape (see note in
-        # __init__ comments).
-        if self.__prefilter is not None:
-            drange = self.__prefilter(drange)
-            
-        self.__dataMin = float(drange[0])
-        self.__dataMax = float(drange[1])
-
-        if refresh:
-            self.refresh()
 
 
     def __determineTextureType(self):

@@ -132,11 +132,16 @@ class FSLEyesFrame(wx.Frame):
 
         self.SetSizer(self.__sizer)
 
-        # Re-direct status updates to the status bar
+        # Re-direct status updates to the
+        # status bar. Make sure that the
+        # status bar is updated on the main
+        # loop
         def update(msg):
-            self.__statusBar.SetLabel(msg)
-            self.__statusBar.Refresh()
-            self.__statusBar.Update()
+            def realUpdate():
+                self.__statusBar.SetLabel(msg)
+                self.__statusBar.Refresh()
+                self.__statusBar.Update()
+            wx.CallAfter(realUpdate)
         status.setTarget(update)
 
         # Keeping track of all open view panels
