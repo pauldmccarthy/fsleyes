@@ -110,8 +110,6 @@ def applyPerspective(frame, name, perspective, message=None):
             
         vp.getAuiManager().LoadPerspective(vpLayout)
 
-    status.clear()
-
             
 def savePerspective(frame, name):
     """

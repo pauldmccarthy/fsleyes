@@ -113,8 +113,8 @@ import logging
 import props
 
 import fsl.utils.typedict as td
-
-import overlay as fsloverlay
+import fsl.utils.status   as status
+import overlay            as fsloverlay
 
 # The colour maps module needs to be imported
 # before the displaycontext.opts modules are
@@ -1143,6 +1143,9 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
 
     # per-overlay display arguments
     for i, overlay in enumerate(overlayList):
+
+        status.update('Applying display settings '
+                      'to {}...'.format(overlay.name))
 
         display = displayCtx.getDisplay(overlay)
 

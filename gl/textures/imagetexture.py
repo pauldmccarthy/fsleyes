@@ -575,6 +575,4 @@ class ImageTexture(texture.Texture):
         elif dtype == np.uint16: pass
         elif dtype == np.int16:  data = np.array(data + 32768, dtype=np.uint16)
 
-        status.clear()
-
         return data

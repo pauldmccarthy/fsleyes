@@ -17,6 +17,7 @@ import numpy as np
 import props
 
 import fsl.data.image                         as fslimage
+import fsl.utils.status                       as status
 import fsl.fsleyes.displaycontext             as fsldisplay
 import fsl.fsleyes.displaycontext.canvasopts  as canvasopts
 import fsl.fsleyes.gl.routines                as glroutines
@@ -754,6 +755,9 @@ class SliceCanvas(props.HasProperties):
         # manually call this method again later.
         if not self._setGLContext():
             return None
+
+        status.update('Creating GL representation '
+                      'for {}...'.format(overlay.name))
 
         globj = globject.createGLObject(overlay, display)
 

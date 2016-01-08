@@ -337,9 +337,6 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
         try:                   overlays.append(dtype(path))
         except Exception as e: errorFunc(path, e)
 
-    if defaultLoad:
-        status.clear()
-
     if saveDir and len(paths) > 0:
         fslsettings.write('loadOverlayLastDir', op.dirname(paths[-1]))
             

@@ -638,8 +638,8 @@ class WXGLCanvasTarget(object):
         import wx
 
         def doInit(*a):
-            self._initGL()
             self._glReady = True
+            self._initGL()
             self._draw()
 
         if not self._glReady:
