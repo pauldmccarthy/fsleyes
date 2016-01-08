@@ -51,7 +51,7 @@ def init(self):
     
 def destroy(self):
     """Deletes the vertex/fragment shaders. """
-    self.shader.delete()
+    self.shader.destroy()
 
 
 def compileShaders(self):

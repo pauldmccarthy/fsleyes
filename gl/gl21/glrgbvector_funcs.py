@@ -41,7 +41,7 @@ def destroy(self):
     """Destroys the vertex buffer and vertex/fragment shaders created
     in :func:`init`.
     """
-    self.shader.delete()
+    self.shader.destroy()
     self.shader = None
 
     

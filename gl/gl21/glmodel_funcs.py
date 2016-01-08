@@ -21,7 +21,7 @@ def compileShaders(self):
     """
 
     if self.shader is not None:
-        self.shader.delete()
+        self.shader.destroy()
     
     vertSrc = shaders.getVertexShader(  'glmodel')
     fragSrc = shaders.getFragmentShader('glmodel')
@@ -33,7 +33,7 @@ def destroy(self):
     """Deletes the vertex/fragment shaders that were compiled by
     :func:`compileShaders`.
     """
-    self.shader.delete()
+    self.shader.destroy()
     self.shader = None
 
 

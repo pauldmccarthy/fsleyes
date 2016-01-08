@@ -32,7 +32,7 @@ def init(self):
 
 def destroy(self):
     """Destroys the shader programs. """
-    self.shader.delete()
+    self.shader.destroy()
     self.shader = None
 
 
@@ -42,7 +42,7 @@ def compileShaders(self):
     """
 
     if self.shader is not None:
-        self.shader.delete()
+        self.shader.destroy()
 
     vertSrc = shaders.getVertexShader(  'glvolume')
     fragSrc = shaders.getFragmentShader('gllabel')

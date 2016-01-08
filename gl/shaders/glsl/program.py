@@ -50,7 +50,7 @@ class GLSLShader(object):
 
        load
        unload
-       delete
+       destroy
        loadAtts
        unloadAtts
        set
@@ -92,7 +92,7 @@ class GLSLShader(object):
 
         # Delete the program when
         # we no longer need it
-        program.delete()
+        program.destroy()
     """
     
 
@@ -223,7 +223,7 @@ class GLSLShader(object):
         gl.glUseProgram(0)
 
 
-    def delete(self):
+    def destroy(self):
         """Deletes all GL resources managed by this ``GLSLShader`. """
         gl.glDeleteProgram(self.program)
 

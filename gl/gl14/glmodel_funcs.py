@@ -32,7 +32,7 @@ def destroy(self):
     """Deletes the vertex/fragment shader programs that were compiled by
     :func:`compileShaders`.
     """
-    self.shader.delete()
+    self.shader.destroy()
     self.shader = None
 
 

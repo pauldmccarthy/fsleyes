@@ -19,7 +19,7 @@ import fsl.utils.transform    as transform
 def destroy(self):
     """Destroys the vertex/fragment shader programs created in :func:`init`.
     """
-    self.shader.delete()
+    self.shader.destroy()
     self.shader = None
 
     
@@ -32,7 +32,7 @@ def compileShaders(self, vertShader):
     is used.
     """
     if self.shader is not None:
-        self.shader.delete()
+        self.shader.destroy()
 
     opts                = self.displayOpts
     useVolumeFragShader = opts.colourImage is not None

@@ -107,7 +107,7 @@ def init(self):
 def destroy(self):
     """Deletes the :class:`.GLSLShader`, and all textures. """
     
-    self.shader.delete()
+    self.shader.destroy()
     self.shader = None
     
     names = ['v1', 'v2', 'v3', 'l1', 'l2', 'l3']

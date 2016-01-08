@@ -26,7 +26,7 @@ def compileShaders(self, vertShader, indexed=False):
     """
     
     if self.shader is not None:
-        self.shader.delete()
+        self.shader.destroy()
 
     opts                = self.displayOpts
     useVolumeFragShader = opts.colourImage is not None

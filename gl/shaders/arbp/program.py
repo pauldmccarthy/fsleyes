@@ -49,7 +49,7 @@ class ARBPShader(object):
 
        load
        unload
-       delete
+       destroy
        setVertParam
        setFragParam
        setAttr
@@ -89,7 +89,7 @@ class ARBPShader(object):
 
         # Delete the program when
         # it is no longer needed
-        program.delete()
+        program.destroy()
 
 
     .. warning:: The ``ARBPShader`` uses texture coordinates to pass vertex
@@ -162,7 +162,7 @@ class ARBPShader(object):
         log.memory('{}.del({})'.format(type(self).__name__, id(self))) 
         
 
-    def delete(self):
+    def destroy(self):
         """Deletes all GL resources managed by this ``ARBPShader``. """
         arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
         arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram))
