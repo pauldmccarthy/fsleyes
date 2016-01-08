@@ -354,8 +354,7 @@ class GLVector(globject.GLImageObject):
         # the fourth dimension (the vector directions) 
         # must be the fastest changing in the texture data
         def realPrefilter(d):
-            if len(d.shape) != 4: return prefilter(d)
-            else:                 return prefilter(d.transpose((3, 0, 1, 2)))
+            return prefilter(d.transpose((3, 0, 1, 2)))
             
         unsynced = (opts.getParent() is None                or 
                     not opts.isSyncedToParent('resolution') or

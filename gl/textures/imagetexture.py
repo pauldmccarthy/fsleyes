@@ -86,17 +86,6 @@ class ImageTexture(texture.Texture):
         :arg prefilter: An optional function which may perform any 
                         pre-processing on the data before it is copied to the 
                         GPU - see the :meth:`__prepareTextureData` method.
-
-
-        .. note:: The ``prefilter`` function must be able to accept data of
-                  any shape, not just the image data. This is because the
-                  ``prefilter`` function may be passed the full image data,
-                  and/or individual values (specifically the data
-                  minimum/maximum). This is important to keep in mind for 
-                  e.g. :class:`.GLVector` types, which need to transpose the 
-                  image data so the fourth dimension is the fastest changing.
-                  The ``prefilter`` function may assume that is is passed
-                  a ``numpy`` array.
         """
 
         texture.Texture.__init__(self, name, 3)
@@ -113,12 +102,10 @@ class ImageTexture(texture.Texture):
         self.image        = image
         self.__nvals      = nvals
 
-        # The texture settings are updated in the set method.
-        # The prefilter is needed by the imageDataChanged
-        # method (which initialises dataMin/dataMax). All
-        # other attributes are initialised in the call
-        # to set() below.
-        self.__prefilter  = prefilter
+        # All of these texture settings
+        # are updated in the set method,
+        # called below.
+        self.__prefilter  = None
         self.__interp     = None
         self.__resolution = None
         self.__volume     = None
@@ -218,7 +205,6 @@ class ImageTexture(texture.Texture):
         if not changed:
             return
 
-        oldPrefilter      = self.__prefilter
         self.__interp     = interp
         self.__prefilter  = prefilter
         self.__resolution = resolution
@@ -235,13 +221,6 @@ class ImageTexture(texture.Texture):
                                                       np.uint16,
                                                       np.int16)
 
-        # If the prefilter function has
-        # changed, we may need to
-        # re-calculate the image data
-        # range.
-        if prefilter != oldPrefilter:
-            self.__imageDataChanged(refresh=False)
-        
         self.refresh()
 
         
