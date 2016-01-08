@@ -51,10 +51,13 @@ about the program.
 
 
 from __future__ import print_function
+
 import sys
 import logging
 
 import pyparsing as pp
+
+import fsl.utils.memoize as memoize
 
 
 log = logging.getLogger(__name__)
@@ -160,6 +163,7 @@ def getDeclarations(code):
     return decs
 
 
+@memoize.memoizeMD5
 def parseGLSL(source):
     """Parses the given GLSL source, and returns:
       - The attribute declarations.
