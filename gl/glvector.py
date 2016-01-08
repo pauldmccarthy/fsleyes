@@ -204,6 +204,20 @@ class GLVector(globject.GLImageObject):
         globject.GLImageObject.destroy(self)
 
 
+    def ready(self):
+        """Returns ``True`` if this ``GLVector`` is ready to be drawn,
+        ``False`` otherwise.
+        """
+        return all((self.imageTexture    is not None,
+                    self.modulateTexture is not None,
+                    self.clipTexture     is not None,
+                    self.colourTexture   is not None,
+                    self.imageTexture   .ready(),
+                    self.modulateTexture.ready(),
+                    self.clipTexture    .ready(),
+                    self.colourTexture  .ready()))
+
+
     def addListeners(self):
         """Called by :meth:`__init__`. Adds listeners to properties of the
         :class:`.Display` and :class:`.VectorOpts` instances, so that the GL

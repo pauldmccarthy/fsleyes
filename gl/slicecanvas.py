@@ -1151,6 +1151,11 @@ class SliceCanvas(props.HasProperties):
                                 'for overlay {}!'.format(overlay))
                     continue
 
+            # The GLObject is not ready
+            # to be drawn yet.
+            if not globj.ready():
+                continue
+
             # On-screen rendering - the globject is
             # rendered directly to the screen canvas
             if self.renderMode == 'onscreen':

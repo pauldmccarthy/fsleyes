@@ -212,6 +212,21 @@ class GLVolume(globject.GLImageObject):
         globject.GLImageObject.destroy(self)
 
         
+    def ready(self):
+        """Returns ``True`` if this ``GLVolume`` is ready to be drawn,
+        ``False`` otherwise.
+        """
+
+        if self.displayOpts.clipImage is None:
+            return (self.imageTexture is not None and
+                    self.imageTexture.ready())
+        else:
+            return (self.imageTexture is not None and
+                    self.clipTexture  is not None and
+                    self.imageTexture.ready()     and
+                    self.clipTexture .ready())
+
+        
     def addDisplayListeners(self):
         """Called by :meth:`__init__`.
 

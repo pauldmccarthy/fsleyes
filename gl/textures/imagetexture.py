@@ -17,6 +17,7 @@ import OpenGL.GL as gl
 
 import fsl.utils.transform     as transform
 import fsl.utils.status        as status
+import fsl.utils.async         as async
 import fsl.fsleyes.gl.routines as glroutines
 
 import texture
@@ -46,7 +47,16 @@ class ImageTexture(texture.Texture):
        setResolution
        setVolume
        setNormalise
+
+
+    When an ``ImageTexture`` is created, and when its settings are changed, it
+    needs to prepare the image data to be passed to OpenGL - for large images,
+    this can be a time consuming process, so this is performed on a separate
+    thread (using the :mod:`.async` module). The :meth:`ready` method returns
+    ``True`` or ``False`` to indicate whether the ``ImageTexture`` can be used
+    - you should not use the texture until :meth:`ready` returns ``True``.
     """
+
     
     def __init__(self,
                  name,                 
@@ -102,18 +112,26 @@ class ImageTexture(texture.Texture):
         self.__name       = '{}_{}'.format(type(self).__name__, id(self)) 
         self.image        = image
         self.__nvals      = nvals
+
+        # The dataMin/Max are updated
+        # in the imageDataChanged method
         self.__dataMin    = None
         self.__dataMax    = None
+
+        # The texture settings are updated in the set method.
+        # The prefilter is needed by the imageDataChanged
+        # method (which initialises dataMin/dataMax). All
+        # other attributes are initialised in the call
+        # to set() below.
+        self.__prefilter  = prefilter
         self.__interp     = None
         self.__resolution = None
         self.__volume     = None
         self.__normalise  = None
 
-        # The prefilter is needed by the imageDataChanged
-        # method (which initialises dataMin/dataMax). All
-        # other attributes are initialised in the call
-        # to set() below.
-        self.__prefilter = prefilter
+        # The __readay  attribute is
+        # modified in the refresh method 
+        self.__ready      = False
 
         self.__imageDataChanged(refresh=False)
 
@@ -126,6 +144,13 @@ class ImageTexture(texture.Texture):
                  resolution=resolution,
                  volume=volume,
                  normalise=normalise)
+
+
+    def ready(self):
+        """Returns ``True`` if this ``ImageTexture`` is ready to be used,
+        ``False`` otherwise.
+        """
+        return self.__ready
 
 
     def destroy(self):
@@ -231,71 +256,89 @@ class ImageTexture(texture.Texture):
         """(Re-)generates the OpenGL texture used to store the image data.
         """
 
-        self.__determineTextureType()
-        data = self.__prepareTextureData()
+        self.__ready = False
 
-        # It is assumed that, for textures with more than one
-        # value per voxel (e.g. RGB textures), the data is
-        # arranged accordingly, i.e. with the voxel value
-        # dimension the fastest changing
-        if len(data.shape) == 4: self.textureShape = data.shape[1:]
-        else:                    self.textureShape = data.shape
+        # This can take a long time for large images, so we
+        # do it in a separate thread using the async module.
+        def genData():
+            self.__determineTextureType()
+            self.__data = self.__prepareTextureData()
 
-        log.debug('Refreshing 3D texture (id {}) for '
-                  '{} (data shape: {})'.format(
-                      self.getTextureHandle(),
-                      self.getTextureName(),
-                      self.textureShape))
+        # Once the genData function has finished,
+        # we'll configure the texture back on the
+        # main thread - OpenGL doesn't play nicely
+        # with multi-threading.
+        def configTexture():
+            data = self.__data
 
-        # The image data is flattened, with fortran dimension
-        # ordering, so the data, as stored on the GPU, has its
-        # first dimension as the fastest changing.
-        data = data.ravel(order='F')
+            # It is assumed that, for textures with more than one
+            # value per voxel (e.g. RGB textures), the data is
+            # arranged accordingly, i.e. with the voxel value
+            # dimension the fastest changing
+            if len(data.shape) == 4: self.textureShape = data.shape[1:]
+            else:                    self.textureShape = data.shape
 
-        # Enable storage of tightly packed data of any size (i.e.
-        # our texture shape does not have to be divisible by 4).
-        gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
-        gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
+            log.debug('Refreshing 3D texture (id {}) for '
+                      '{} (data shape: {})'.format(
+                          self.getTextureHandle(),
+                          self.getTextureName(),
+                          self.textureShape))
 
-        self.bindTexture()
+            # The image data is flattened, with fortran dimension
+            # ordering, so the data, as stored on the GPU, has its
+            # first dimension as the fastest changing.
+            data = data.ravel(order='F')
 
-        # set interpolation routine
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_TEXTURE_MAG_FILTER,
-                           self.__interp)
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_TEXTURE_MIN_FILTER,
-                           self.__interp)
+            # Enable storage of tightly packed data of any size (i.e.
+            # our texture shape does not have to be divisible by 4).
+            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
+            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
 
-        # Clamp texture borders to the edge
-        # values - it is the responsibility
-        # of the rendering logic to not draw
-        # anything outside of the image space
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_TEXTURE_WRAP_S,
-                           gl.GL_CLAMP_TO_EDGE)
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_TEXTURE_WRAP_T,
-                           gl.GL_CLAMP_TO_EDGE)
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_TEXTURE_WRAP_R,
-                           gl.GL_CLAMP_TO_EDGE)
+            self.bindTexture()
 
-        # create the texture according to
-        # the format determined by the
-        # _determineTextureType method.
-        gl.glTexImage3D(gl.GL_TEXTURE_3D,
-                        0,
-                        self.texIntFmt,
-                        self.textureShape[0],
-                        self.textureShape[1],
-                        self.textureShape[2],
-                        0,
-                        self.texFmt,
-                        self.texDtype,
-                        data)
+            # set interpolation routine
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_TEXTURE_MAG_FILTER,
+                               self.__interp)
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_TEXTURE_MIN_FILTER,
+                               self.__interp)
 
-        self.unbindTexture()
+            # Clamp texture borders to the edge
+            # values - it is the responsibility
+            # of the rendering logic to not draw
+            # anything outside of the image space
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_TEXTURE_WRAP_S,
+                               gl.GL_CLAMP_TO_EDGE)
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_TEXTURE_WRAP_T,
+                               gl.GL_CLAMP_TO_EDGE)
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_TEXTURE_WRAP_R,
+                               gl.GL_CLAMP_TO_EDGE)
+
+            # create the texture according to
+            # the format determined by the
+            # _determineTextureType method.
+            gl.glTexImage3D(gl.GL_TEXTURE_3D,
+                            0,
+                            self.texIntFmt,
+                            self.textureShape[0],
+                            self.textureShape[1],
+                            self.textureShape[2],
+                            0,
+                            self.texFmt,
+                            self.texDtype,
+                            data)
+
+            self.unbindTexture()
+            self.__ready = True
+
+        async.run(
+            genData,
+            onFinish=configTexture,
+            name='{}.genData({})'.format(type(self).__name__, self.image))
     
 
     def __imageDataChanged(self, *args, **kwargs):

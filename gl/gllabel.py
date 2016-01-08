@@ -75,6 +75,13 @@ class GLLabel(globject.GLImageObject):
         fslgl.gllabel_funcs.destroy(self)
         globject.GLImageObject.destroy(self)
 
+        
+    def ready(self):
+        """Returns ``True`` if this ``GLLabel`` is ready to be drawn, ``False``
+        otherwise.
+        """
+        return self.imageTexture is not None and self.imageTexture.ready()
+
 
     def addListeners(self):
         """Called by :meth:`__init__`. Adds listeners to several properties of

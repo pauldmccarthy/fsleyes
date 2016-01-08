@@ -113,6 +113,7 @@ class GLObject(object):
 
           getDisplayBounds
           getDataResolution
+          ready
           destroy
           preDraw
           draw
@@ -183,6 +184,16 @@ class GLObject(object):
             listener(self)
 
 
+    def ready(self):
+        """This method must return ``True`` or ``False`` to indicate
+        whether this ``GLObject`` is ready to be drawn. The method should,
+        for example, make sure that all :class:`.ImageTexture` objects
+        are ready to be used.
+        """
+        raise NotImplementedError('The ready method must be '
+                                  'implemented by GLObject subclasses') 
+
+    
     def getDisplayBounds(self):
         """This method must calculate and return a bounding box, in the
         display coordinate system, which contains the entire ``GLObject``.
@@ -302,6 +313,11 @@ class GLSimpleObject(GLObject):
     def __init__(self):
         """Create a ``GLSimpleObject``. """
         GLObject.__init__(self)
+
+
+    def ready(self):
+        """Overrides :meth:`GLObject.ready`. Returns ``True``. """
+        return True
 
         
     def destroy( self):
