@@ -66,7 +66,7 @@ class GLTensor(glvector.GLVector):
 
         def shaderUpdate(*a):
             self.updateShaderState()
-            self.onUpdate()
+            self.notify()
 
         opts.addListener('lighting',         name, shaderUpdate, weak=False)
         opts.addListener('tensorResolution', name, shaderUpdate, weak=False)

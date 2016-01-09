@@ -72,7 +72,7 @@ class GLLineVector(glvector.GLVector):
         fslgl.gllinevector_funcs.init(self)
 
         def update(*a):
-            self.onUpdate()
+            self.notify()
 
         self.displayOpts.addListener('lineWidth',
                                      self.name,

@@ -18,6 +18,7 @@ import numpy as np
 
 import routines            as glroutines
 import fsl.utils.transform as transform
+import fsl.utils.notifier  as notifier
 
 
 log = logging.getLogger(__name__)
@@ -64,7 +65,7 @@ def createGLObject(overlay, display):
     else:               return None
 
 
-class GLObject(object):
+class GLObject(notifier.Notifier):
     """The :class:`GLObject` class is a base class for all 2D OpenGL
     objects displayed in *FSLeyes*.
 
@@ -91,10 +92,11 @@ class GLObject(object):
     
 
     Entities which are interested in changes to a ``GLObject`` representation
-    may register as *update listeners*, via the :meth:`addUpdateListener`
+    may register as *update listeners*, via the :meth:`.Notifier.register`
     method. Whenever the state of a ``GLObject`` changes, all update listeners
     will be called. It is the resposibility of sub-class implementations to
-    call the :meth:`onUpdate` method to facilitate this notification process.
+    call the :meth:`.Notifier.notify` method to facilitate this notification
+    process.
 
 
     **Sub-class resposibilities***
@@ -104,7 +106,7 @@ class GLObject(object):
     
      - Call :meth:`__init__`.
 
-     - Call :meth:`onUpdate` whenever its OpenGL representation changes.
+     - Call :meth:`notify` whenever its OpenGL representation changes.
 
      - Override the following methods:
     
@@ -147,8 +149,6 @@ class GLObject(object):
         self.xax  = 0
         self.yax  = 1
         self.zax  = 2
-        
-        self.__updateListeners = {}
 
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
@@ -156,32 +156,6 @@ class GLObject(object):
     def __del__(self):
         """Prints a log message."""
         log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
-
-
-    def addUpdateListener(self, name, listener):
-        """Adds a listener function which will be called whenever this
-        ``GLObject`` representation changes.
-
-        The listener function must accept a single parameter, which is
-        a reference to this ``GLObject``.
-        """
-        self.__updateListeners[name] = listener
-
-        
-    def removeUpdateListener(self, name):
-        """Removes a listener previously registered via
-        :meth:`addUpdateListener`.
-        """
-        self.__updateListeners.pop(name, None)
-
-
-    def onUpdate(self):
-        """This method must be called by subclasses whenever the GL object
-        representation changes - it notifies any registered listeners of the
-        change.
-        """
-        for name, listener in self.__updateListeners.items():
-            listener(self)
 
 
     def ready(self):

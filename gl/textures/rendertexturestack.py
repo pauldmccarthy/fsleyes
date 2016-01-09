@@ -66,7 +66,7 @@ class RenderTextureStack(object):
         self.__lastDrawnTexture   = None
         self.__updateQueue        = []
 
-        self.__globj.addUpdateListener(
+        self.__globj.register(
             '{}_{}'.format(type(self).__name__, id(self)),
             self.__onGLObjectUpdate)
 

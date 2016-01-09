@@ -322,7 +322,7 @@ class GLObjectRenderTexture(RenderTexture):
         RenderTexture.__init__(self, name)
 
         name = '{}_{}'.format(self.getTextureName(), id(self))
-        globj.addUpdateListener(name, self.__updateSize)
+        globj.register(name, self.__updateSize)
 
         self.__updateSize()        
 
@@ -334,7 +334,7 @@ class GLObjectRenderTexture(RenderTexture):
         """
 
         name = '{}_{}'.format(self.getTextureName(), id(self))
-        self.__globj.removeUpdateListener(name) 
+        self.__globj.deregister(name) 
         RenderTexture.destroy(self)
 
         

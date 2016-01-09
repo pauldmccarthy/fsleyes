@@ -117,11 +117,11 @@ class GLModel(globject.GLObject):
         opts    = self.opts
 
         def refresh(*a):
-            self.onUpdate()
+            self.notify()
 
         def shaderUpdate(*a):
             fslgl.glmodel_funcs.updateShaders(self)
-            self.onUpdate()
+            self.notify()
         
         opts   .addListener('bounds',       name, self._updateVertices)
         opts   .addListener('colour',       name, refresh,      weak=False)
@@ -171,7 +171,7 @@ class GLModel(globject.GLObject):
 
         self.vertices = np.array(vertices, dtype=np.float32)
         self.indices  = np.array(indices,  dtype=np.uint32)
-        self.onUpdate()
+        self.notify()
 
         
     def getDisplayBounds(self):

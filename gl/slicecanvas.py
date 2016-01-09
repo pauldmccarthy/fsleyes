@@ -763,7 +763,7 @@ class SliceCanvas(props.HasProperties):
 
         if globj is not None:
             globj.setAxes(self.xax, self.yax)
-            globj.addUpdateListener(self.name, self._refresh)
+            globj.register(self.name, self._refresh)
 
         self._glObjects[overlay] = globj
 

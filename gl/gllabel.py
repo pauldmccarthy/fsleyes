@@ -95,21 +95,21 @@ class GLLabel(globject.GLImageObject):
         name    = self.name
 
         def update(*a):
-            self.onUpdate()
+            self.notify()
 
         def shaderUpdate(*a):
             fslgl.gllabel_funcs.updateShaderState(self)
-            self.onUpdate()
+            self.notify()
             
         def shaderCompile(*a):
             fslgl.gllabel_funcs.compileShaders(self)
             fslgl.gllabel_funcs.updateShaderState(self)
-            self.onUpdate() 
+            self.notify() 
 
         def lutUpdate(*a):
             self.refreshLutTexture()
             fslgl.gllabel_funcs.updateShaderState(self)
-            self.onUpdate()
+            self.notify()
 
         def lutChanged(*a):
             if self.__lut is not None:
@@ -125,14 +125,14 @@ class GLLabel(globject.GLImageObject):
         def imageRefresh(*a):
             self.refreshImageTexture()
             fslgl.gllabel_funcs.updateShaderState(self)
-            self.onUpdate()
+            self.notify()
             
         def imageUpdate(*a):
             self.imageTexture.set(volume=opts.volume,
                                   resolution=opts.resolution)
             
             fslgl.gllabel_funcs.updateShaderState(self)
-            self.onUpdate() 
+            self.notify() 
 
         self.__lut = opts.lut
 

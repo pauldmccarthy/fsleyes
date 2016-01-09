@@ -244,21 +244,21 @@ class GLVolume(globject.GLImageObject):
         lName   = self.name
 
         def update(*a):
-            self.onUpdate()
+            self.notify()
         
         def colourUpdate(*a):
             self.refreshColourTextures()
             fslgl.glvolume_funcs.updateShaderState(self)
-            self.onUpdate()
+            self.notify()
 
         def shaderUpdate(*a):
             fslgl.glvolume_funcs.updateShaderState(self)
-            self.onUpdate()
+            self.notify()
 
         def imageRefresh(*a):
             self.refreshImageTexture()
             fslgl.glvolume_funcs.updateShaderState(self)
-            self.onUpdate()
+            self.notify()
 
         def imageUpdate(*a):
             volume     = opts.volume
@@ -275,14 +275,14 @@ class GLVolume(globject.GLImageObject):
                 self.clipTexture.set(interp=interp, resolution=resolution)
 
             fslgl.glvolume_funcs.updateShaderState(self)
-            self.onUpdate()
+            self.notify()
 
         def clipUpdate(*a):
             self.deregisterClipImage()
             self.registerClipImage()
             self.refreshClipTexture()
             fslgl.glvolume_funcs.updateShaderState(self)
-            self.onUpdate()
+            self.notify()
 
         display.addListener('alpha',          lName, colourUpdate,  weak=False)
         opts   .addListener('displayRange',   lName, colourUpdate,  weak=False)
@@ -411,7 +411,7 @@ class GLVolume(globject.GLImageObject):
         
         def updateClipTexture(*a):
             self.clipTexture.set(volume=clipOpts.volume)
-            self.onUpdate()
+            self.notify()
 
         clipOpts.addListener('volume',
                              self.name,

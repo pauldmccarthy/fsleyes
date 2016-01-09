@@ -48,26 +48,26 @@ class GLMask(glvolume.GLVolume):
         name    = self.name
 
         def update(*a):
-            self.onUpdate()
+            self.notify()
 
         def shaderCompile(*a):
             fslgl.glvolume_funcs.compileShaders(   self)
             fslgl.glvolume_funcs.updateShaderState(self)
-            self.onUpdate() 
+            self.notify() 
         
         def shaderUpdate(*a):
             fslgl.glvolume_funcs.updateShaderState(self)
-            self.onUpdate() 
+            self.notify() 
             
         def colourUpdate(*a):
             self.refreshColourTextures()
             fslgl.glvolume_funcs.updateShaderState(self)
-            self.onUpdate()
+            self.notify()
 
         def imageRefresh(*a):
             self.refreshImageTexture()
             fslgl.glvolume_funcs.updateShaderState(self)
-            self.onUpdate()
+            self.notify()
 
         def imageUpdate(*a):
             volume     = opts.volume
@@ -76,7 +76,7 @@ class GLMask(glvolume.GLVolume):
             self.imageTexture.set(volume=volume, resolution=resolution)
             
             fslgl.glvolume_funcs.updateShaderState(self) 
-            self.onUpdate()
+            self.notify()
 
         display.addListener('alpha',         name, colourUpdate,  weak=False)
         display.addListener('brightness',    name, colourUpdate,  weak=False)

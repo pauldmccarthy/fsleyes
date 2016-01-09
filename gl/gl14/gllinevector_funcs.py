@@ -59,7 +59,7 @@ def init(self):
     def vertexUpdate(*a):
         updateVertices(self)
         updateShaderState(self)
-        self.onUpdate()
+        self.notify()
 
     name = '{}_vertices'.format(self.name)
 

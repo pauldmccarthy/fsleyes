@@ -120,9 +120,9 @@ class GLRGBVector(glvector.GLVector):
 
     def __dataChanged(self, *a):
         """Called when the :attr:`.Image.data` of the vector image
-        changes. Calls :meth:`.GLObject.onUpdate`. 
+        changes. Calls :meth:`.GLObject.notify`. 
         """
-        self.onUpdate()
+        self.notify()
         
 
     def __interpChanged(self, *a):
@@ -131,7 +131,7 @@ class GLRGBVector(glvector.GLVector):
         """
         self.__setInterp()
         self.updateShaderState()
-        self.onUpdate()
+        self.notify()
 
 
     def compileShaders(self):

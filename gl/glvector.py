@@ -229,21 +229,21 @@ class GLVector(globject.GLImageObject):
         name    = self.name
 
         def update(*a):
-            self.onUpdate()
+            self.notify()
         
         def modUpdate( *a):
             self.deregisterAuxImage('modulate')
             self.registerAuxImage(  'modulate') 
             self.refreshAuxTexture( 'modulate')
             self.updateShaderState()
-            self.onUpdate()
+            self.notify()
 
         def clipUpdate( *a):
             self.deregisterAuxImage('clip')
             self.registerAuxImage(  'clip')
             self.refreshAuxTexture( 'clip')
             self.updateShaderState()
-            self.onUpdate()
+            self.notify()
 
         def colourUpdate( *a):
             self.deregisterAuxImage('colour')
@@ -253,32 +253,32 @@ class GLVector(globject.GLImageObject):
             self.compileShaders()
             self.refreshColourTextures()
             self.updateShaderState()
-            self.onUpdate() 
+            self.notify() 
  
         def cmapUpdate(*a):
             self.refreshColourTextures()
             self.updateShaderState()
-            self.onUpdate()
+            self.notify()
             
         def shaderUpdate(*a):
             self.updateShaderState()
-            self.onUpdate() 
+            self.notify() 
 
         def shaderCompile(*a):
             self.compileShaders()
             self.updateShaderState()
-            self.onUpdate()
+            self.notify()
 
         def imageRefresh(*a):
             self.refreshImageTexture()
             self.updateShaderState()
-            self.onUpdate()
+            self.notify()
             
         def imageUpdate(*a):
 
             self.imageTexture.set(resolution=opts.resolution)
             self.updateShaderState()
-            self.onUpdate()
+            self.notify()
 
         display.addListener('alpha',         name, cmapUpdate,   weak=False)
         display.addListener('brightness',    name, cmapUpdate,   weak=False)
@@ -422,7 +422,7 @@ class GLVector(globject.GLImageObject):
         def volumeChange(*a):
             
             self.refreshAuxTexture(which)
-            self.onUpdate()
+            self.notify()
 
         # We set overwrite=True, because
         # the modulate/clip/colour images
