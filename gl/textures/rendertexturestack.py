@@ -15,6 +15,7 @@ import logging
 import OpenGL.GL as gl
 
 import fsl.fsleyes.gl.routines as glroutines
+import fsl.utils.async         as async
 import                            rendertexture
 
 
@@ -32,21 +33,18 @@ class RenderTextureStack(object):
     provides better performance than rendering the ``GLObject`` slice
     in real time.
 
-    The :class:`.RenderTexture` textures are updated in an idle loop, which is
-    triggered by the ``wx.EVT_IDLE`` event.
+    The :class:`.RenderTexture` textures are updated in an idle loop, via the
+    :func:`.async.idle` function.
     """
 
     
     def __init__(self, globj):
-        """Create a ``RenderTextureStack``. A listener is registered on the
-        ``wx.EVT_IDLE`` event, so that the :meth:`__textureUpdateLoop` method
-        is called periodically.  An update listener is registered on the
-        ``GLObject``, so that the textures can be refreshed whenever it
+        """Create a ``RenderTextureStack``. An update listener is registered
+        on the ``GLObject``, so that the textures can be refreshed whenever it
         changes.
 
         :arg globj: The :class:`.GLObject` instance.
         """
-
 
         self.name = '{}_{}_{}'.format(
             type(self).__name__,
@@ -70,8 +68,7 @@ class RenderTextureStack(object):
             '{}_{}'.format(type(self).__name__, id(self)),
             self.__onGLObjectUpdate)
 
-        import wx
-        wx.GetApp().Bind(wx.EVT_IDLE, self.__textureUpdateLoop)
+        async.idle(self.__textureUpdateLoop)
 
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
@@ -155,14 +152,14 @@ class RenderTextureStack(object):
         
     def __destroyTextures(self):
         """Destroys all :class:`.RenderTexture` instances. This is performed
-        asynchronously, via the ``.wx.CallLater`` function.
+        asynchronously, via the ``.async.idle`` function.
         """
 
-        import wx
         texes = self.__textures
         self.__textures = []
+
         for tex in texes:
-            wx.CallLater(50, tex.destroy)
+            async.idle(tex.destroy)
 
 
     def __onGLObjectUpdate(self, *a):
@@ -205,12 +202,16 @@ class RenderTextureStack(object):
         self.__updateQueue  = idxs
 
 
-    def __textureUpdateLoop(self, ev):
-        """This method is called periodically through the ``wx.EVT_IDLE``
-        event. It loops through all :class:`.RenderTexture` instances, and
+    def __textureUpdateLoop(self):
+        """This method is called via the :func:`.async.idle` function.
+        It loops through all :class:`.RenderTexture` instances, and
         refreshes any that have been marked as *dirty*.
+
+        Each call to this method causes one ``RenderTexture`` to be
+        refreshed. After a ``RenderTexture`` has been refreshed, if there
+        are dirty more ``RenderTexture`` instances, this method re-schedules
+        itself to be called again via :func:`.async.idle`.
         """
-        ev.Skip()
 
         if len(self.__updateQueue) == 0 or len(self.__textures) == 0:
             return
@@ -228,7 +229,7 @@ class RenderTextureStack(object):
         self.__refreshTexture(tex, idx)
 
         if len(self.__updateQueue) > 0:
-            ev.RequestMore()
+            async.idle(self.__textureUpdateLoop)
 
         
     def __refreshTexture(self, tex, idx):
