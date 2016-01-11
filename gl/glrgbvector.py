@@ -100,22 +100,14 @@ class GLRGBVector(glvector.GLVector):
 
     def refreshImageTexture(self):
         """Overrides :meth:`.GLVector.refreshImageTexture`. Calls the base
-        class implementation, and calls :meth:`__setInterp`.
-        """
-        glvector.GLVector.refreshImageTexture(self)
-        self.__setInterp()
-
-        
-    def __setInterp(self):
-        """Updates the interpolation setting on the :class:`.ImageTexture`
-        that contains the vector :class:`.Image` being displayed.
+        class implementation.
         """
         opts = self.displayOpts
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR 
         
-        self.imageTexture.set(interp=interp)
+        glvector.GLVector.refreshImageTexture(self, interp)
 
 
     def __dataChanged(self, *a):
@@ -129,9 +121,17 @@ class GLRGBVector(glvector.GLVector):
         """Called when the :attr:`.RGBVectorOpts.interpolation` property
         changes. Updates the :class:`.ImageTexture` interpolation.
         """
-        self.__setInterp()
+        opts = self.displayOpts
+
+        if opts.interpolation == 'none': interp = gl.GL_NEAREST
+        else:                            interp = gl.GL_LINEAR 
+        
+        texChange = self.imageTexture.set(interp=interp)
         self.updateShaderState()
-        self.notify()
+
+        # See comments in GLVolume.addDisplayListeners about this
+        if not texChange:
+            self.notify()
 
 
     def compileShaders(self):

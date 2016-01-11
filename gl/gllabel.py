@@ -68,6 +68,7 @@ class GLLabel(globject.GLImageObject):
         the :class:`.ImageTexture` and :class:`.LookupTableTexture`.
         """
 
+        self.imageTexture.deregister(self.name)
         glresources.delete(self.imageTexture.getTextureName())
         self.lutTexture.destroy()
 
@@ -125,14 +126,12 @@ class GLLabel(globject.GLImageObject):
         def imageRefresh(*a):
             self.refreshImageTexture()
             fslgl.gllabel_funcs.updateShaderState(self)
-            self.notify()
             
         def imageUpdate(*a):
             self.imageTexture.set(volume=opts.volume,
                                   resolution=opts.resolution)
             
             fslgl.gllabel_funcs.updateShaderState(self)
-            self.notify() 
 
         self.__lut = opts.lut
 
@@ -210,13 +209,15 @@ class GLLabel(globject.GLImageObject):
             texName = '{}_unsync_{}'.format(texName, id(opts))
 
         if self.imageTexture is not None:
+            self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.getTextureName())
             
         self.imageTexture = glresources.get(
             texName, 
             textures.ImageTexture,
             texName,
-            self.image) 
+            self.image)
+        self.imageTexture.register(self.name, lambda *a: self.notify())
 
 
     def refreshLutTexture(self, *a):

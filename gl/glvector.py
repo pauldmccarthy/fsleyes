@@ -180,10 +180,12 @@ class GLVector(globject.GLImageObject):
         self.zColourTexture.destroy()
         self.cmapTexture   .destroy()
 
-        glresources.delete(self.imageTexture   .getTextureName())
-        glresources.delete(self.modulateTexture.getTextureName())
-        glresources.delete(self.clipTexture    .getTextureName())
-        glresources.delete(self.colourTexture  .getTextureName())
+        for tex in (self.imageTexture,
+                    self.modulateTexture,
+                    self.clipTexture,
+                    self.colourTexture):
+            tex.deregister(self.name)
+            glresources.delete(tex.getTextureName())
 
         self.removeListeners()
         self.deregisterAuxImage('modulate')
@@ -236,14 +238,12 @@ class GLVector(globject.GLImageObject):
             self.registerAuxImage(  'modulate') 
             self.refreshAuxTexture( 'modulate')
             self.updateShaderState()
-            self.notify()
 
         def clipUpdate( *a):
             self.deregisterAuxImage('clip')
             self.registerAuxImage(  'clip')
             self.refreshAuxTexture( 'clip')
             self.updateShaderState()
-            self.notify()
 
         def colourUpdate( *a):
             self.deregisterAuxImage('colour')
@@ -253,7 +253,6 @@ class GLVector(globject.GLImageObject):
             self.compileShaders()
             self.refreshColourTextures()
             self.updateShaderState()
-            self.notify() 
  
         def cmapUpdate(*a):
             self.refreshColourTextures()
@@ -272,13 +271,11 @@ class GLVector(globject.GLImageObject):
         def imageRefresh(*a):
             self.refreshImageTexture()
             self.updateShaderState()
-            self.notify()
             
         def imageUpdate(*a):
 
             self.imageTexture.set(resolution=opts.resolution)
             self.updateShaderState()
-            self.notify()
 
         display.addListener('alpha',         name, cmapUpdate,   weak=False)
         display.addListener('brightness',    name, cmapUpdate,   weak=False)
@@ -336,11 +333,15 @@ class GLVector(globject.GLImageObject):
             opts.removeSyncChangeListener('resolution', name)
 
 
-    def refreshImageTexture(self):
+    def refreshImageTexture(self, interp=gl.GL_NEAREST):
         """Called by :meth:`__init__`, and when the :class:`.ImageTexture`
         needs to be updated. (Re-)creates the ``ImageTexture``, using the
         :mod:`.resources` module so that the texture can be shared by other
         users.
+        
+        :arg interp: Interpolation method (``GL_NEAREST`` or ``GL_LINEAR``).
+                     Used by sub-class implementations (see
+                     :class:`.GLRGBVector`).
         """
 
         opts      = self.displayOpts
@@ -349,6 +350,7 @@ class GLVector(globject.GLImageObject):
         texName   = '{}_{}'.format(type(self).__name__, id(vecImage))
         
         if self.imageTexture is not None:
+            self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.getTextureName())
 
         # the fourth dimension (the vector directions) 
@@ -369,8 +371,10 @@ class GLVector(globject.GLImageObject):
             texName,
             vecImage,
             nvals=3,
+            interp=interp,
             normalise=True,
-            prefilter=realPrefilter) 
+            prefilter=realPrefilter)
+        self.imageTexture.register(self.name, lambda *a: self.notify())
 
     
     def compileShaders(self):
@@ -471,6 +475,7 @@ class GLVector(globject.GLImageObject):
         tex   = getattr(self, texAttr)
 
         if tex is not None:
+            tex.deregister(self.name)
             glresources.delete(tex.getTextureName())
 
         if image is None:
@@ -503,6 +508,7 @@ class GLVector(globject.GLImageObject):
             texName,
             image,
             normalise=norm)
+        tex.register(self.name, lambda *a: self.notify())
         
         setattr(self, texAttr, tex)
 

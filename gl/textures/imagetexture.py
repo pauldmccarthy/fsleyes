@@ -18,6 +18,7 @@ import OpenGL.GL as gl
 import fsl.utils.transform     as transform
 import fsl.utils.status        as status
 import fsl.utils.async         as async
+import fsl.utils.notifier      as notifier
 import fsl.fsleyes.gl.routines as glroutines
 
 import texture
@@ -26,7 +27,7 @@ import texture
 log = logging.getLogger(__name__)
 
 
-class ImageTexture(texture.Texture):
+class ImageTexture(texture.Texture, notifier.Notifier):
     """The ``ImageTexture`` class contains the logic required to create and
     manage a 3D texture which represents a :class:`.Image` instance.
 
@@ -53,8 +54,10 @@ class ImageTexture(texture.Texture):
     needs to prepare the image data to be passed to OpenGL - for large images,
     this can be a time consuming process, so this is performed on a separate
     thread (using the :mod:`.async` module). The :meth:`ready` method returns
-    ``True`` or ``False`` to indicate whether the ``ImageTexture`` can be used
-    - you should not use the texture until :meth:`ready` returns ``True``.
+    ``True`` or ``False`` to indicate whether the ``ImageTexture`` can be used.
+    Furthermore, the ``ImageTexture`` class derives from :class:`.Notifier`,
+    so listeners can register to be notified when an ``ImageTexture`` is ready
+    to be used.
     """
 
     
@@ -113,9 +116,13 @@ class ImageTexture(texture.Texture):
 
         # The dataMin/dataMax/ready attributes
         # are modified in the refresh method
+        # (which is called via the set method
+        # below). If __ready is False, refresh
+        # will throw an error, so we initialise
+        # it to True.
         self.__dataMin    = None
         self.__dataMax    = None
-        self.__ready      = False
+        self.__ready      = True
 
         self.image.addListener('data', self.__name, self.refresh)
 
@@ -189,6 +196,9 @@ class ImageTexture(texture.Texture):
         ``volume``     See :meth:`setVolume`.
         ``normalise``  See :meth:`setNormalise`.
         ============== ==========================
+
+        :returns: ``True`` if any settings have changed and the
+                  ``ImageTexture`` is to be refreshed , ``False`` otherwise.
         """
         interp     = kwargs.get('interp',     self.__interp)
         prefilter  = kwargs.get('prefilter',  self.__prefilter)
@@ -196,14 +206,14 @@ class ImageTexture(texture.Texture):
         volume     = kwargs.get('volume',     self.__volume)
         normalise  = kwargs.get('normalise',  self.__normalise)
 
-        changed = (interp     != self.__interp     or
-                   prefilter  != self.__prefilter  or
-                   resolution != self.__resolution or
-                   volume     != self.__volume     or
-                   normalise  != self.__normalise)
+        changed = {'interp'     : interp     != self.__interp,
+                   'prefilter'  : prefilter  != self.__prefilter,
+                   'resolution' : resolution != self.__resolution,
+                   'volume'     : volume     != self.__volume,
+                   'normalise'  : normalise  != self.__normalise}
 
-        if not changed:
-            return
+        if not any(changed.values()):
+            return False
 
         self.__interp     = interp
         self.__prefilter  = prefilter
@@ -221,12 +231,32 @@ class ImageTexture(texture.Texture):
                                                       np.uint16,
                                                       np.int16)
 
-        self.refresh()
+        refreshRange =      changed['prefilter']
+        refreshData  = any((changed['prefilter'],
+                            changed['resolution'],
+                            changed['volume'],
+                            changed['normalise']))
+
+        self.refresh(refreshData=refreshData, refreshRange=refreshRange)
+        
+        return True
 
         
-    def refresh(self, *a):
-        """(Re-)generates the OpenGL texture used to store the image data.
+    def refresh(self, *args, **kwargs):
+        """(Re-)generates the OpenGL texture used to store the image data. 
+
+        :arg refreshData:  If ``True`` (the default), the data is re-sampled.
+        :arg refreshRange: If ``True`` (the default), the data range is
+                           re-calculated.
+
+        All other arguments are ignored.
         """
+
+        if not self.__ready:
+            raise RuntimeError('Texture already being refreshed')
+
+        refreshData  = kwargs.get('refreshData',  True)
+        refreshRange = kwargs.get('refreshRange', True)
 
         self.__ready = False
 
@@ -237,7 +267,8 @@ class ImageTexture(texture.Texture):
             if self.__prefilter is None:
                 self.__dataMin = self.image.dataRange.xlo
                 self.__dataMax = self.image.dataRange.xhi
-            else:
+                
+            elif refreshRange:
 
                 # TODO If the prefilter function is just
                 #      performing a transpose, then I don't
@@ -252,9 +283,10 @@ class ImageTexture(texture.Texture):
                 
                 self.__dataMin = np.nanmin(data)
                 self.__dataMax = np.nanmax(data)
-            
-            self.__determineTextureType()
-            self.__data = self.__prepareTextureData()
+
+            if refreshData:
+                self.__determineTextureType()
+                self.__data = self.__prepareTextureData()
 
         # Once the genData function has finished,
         # we'll configure the texture back on the
@@ -328,6 +360,7 @@ class ImageTexture(texture.Texture):
             log.debug('{}({}) is ready to use'.format(
                 type(self).__name__, self.image))
             self.__ready = True
+            self.notify()
 
         async.run(
             genData,

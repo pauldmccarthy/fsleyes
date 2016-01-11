@@ -192,9 +192,11 @@ class GLVolume(globject.GLImageObject):
         and calls :meth:`.GLImageObject.destroy`.
         """
 
+        self.imageTexture.deregister(self.name)
         glresources.delete(self.imageTexture.getTextureName())
 
         if self.clipTexture is not None:
+            self.clipTexture.deregister(self.name)
             glresources.delete(self.clipTexture.getTextureName())
         
         self.colourTexture   .destroy()
@@ -256,9 +258,18 @@ class GLVolume(globject.GLImageObject):
             self.notify()
 
         def imageRefresh(*a):
-            self.refreshImageTexture()
+            texChange = self.refreshImageTexture()
             fslgl.glvolume_funcs.updateShaderState(self)
-            self.notify()
+
+            # If the texture settings have been changed,
+            # the texture will asynchronously notify
+            # this GLVolume (which is registered in the
+            # refreshImageTexture method). If texture
+            # settings have not been changed, the async
+            # notify will not occur, so we have to do it
+            # here.
+            if not texChange:
+                self.notify()
 
         def imageUpdate(*a):
             volume     = opts.volume
@@ -267,22 +278,23 @@ class GLVolume(globject.GLImageObject):
             if opts.interpolation == 'none': interp = gl.GL_NEAREST
             else:                            interp = gl.GL_LINEAR
             
-            self.imageTexture.set(volume=volume,
-                                  interp=interp,
-                                  resolution=resolution)
+            texChange = self.imageTexture.set(volume=volume,
+                                              interp=interp,
+                                              resolution=resolution)
 
             if self.clipTexture is not None:
                 self.clipTexture.set(interp=interp, resolution=resolution)
 
             fslgl.glvolume_funcs.updateShaderState(self)
-            self.notify()
+
+            if not texChange:
+                self.notify()
 
         def clipUpdate(*a):
             self.deregisterClipImage()
             self.registerClipImage()
             self.refreshClipTexture()
             fslgl.glvolume_funcs.updateShaderState(self)
-            self.notify()
 
         display.addListener('alpha',          lName, colourUpdate,  weak=False)
         opts   .addListener('displayRange',   lName, colourUpdate,  weak=False)
@@ -380,6 +392,7 @@ class GLVolume(globject.GLImageObject):
             texName = '{}_unsync_{}'.format(texName, id(opts))
 
         if self.imageTexture is not None:
+            self.imageTexture.deregsiter(self.name)
             glresources.delete(self.imageTexture.getTextureName())
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
@@ -391,6 +404,8 @@ class GLVolume(globject.GLImageObject):
             texName,
             self.image,
             interp=interp)
+
+        self.imageTexture.register(self.name, lambda *a: self.notify())
 
 
     def registerClipImage(self):
@@ -445,6 +460,7 @@ class GLVolume(globject.GLImageObject):
         texName   = '{}_clip_{}'.format(type(self).__name__, id(clipImage))
 
         if self.clipTexture is not None:
+            self.clipTexture.deregister(self.name)
             glresources.delete(self.clipTexture.getTextureName())
             self.clipTexture = None
             
@@ -462,6 +478,8 @@ class GLVolume(globject.GLImageObject):
             interp=interp,
             resolution=opts.resolution,
             volume=clipOpts.volume)
+        
+        self.clipTexture.register(self.name, lambda *a: self.notify())
 
     
     def refreshColourTextures(self):
