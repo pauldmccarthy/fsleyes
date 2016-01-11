@@ -159,7 +159,8 @@ class ARBPShader(object):
 
     def __del__(self):
         """Prints a log message. """
-        log.memory('{}.del({})'.format(type(self).__name__, id(self))) 
+        if log:
+            log.memory('{}.del({})'.format(type(self).__name__, id(self))) 
         
 
     def destroy(self):

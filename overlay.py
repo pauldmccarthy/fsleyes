@@ -288,8 +288,6 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
                     not an :class:`OverlayList`.
     """
 
-    defaultLoad = loadFunc == 'default'
-
     # The default load function updates
     # the dialog window created above
     def defaultLoadFunc(s):
