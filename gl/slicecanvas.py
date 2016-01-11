@@ -18,6 +18,7 @@ import props
 
 import fsl.data.image                         as fslimage
 import fsl.utils.status                       as status
+import fsl.utils.async                        as async
 import fsl.fsleyes.displaycontext             as fsldisplay
 import fsl.fsleyes.displaycontext.canvasopts  as canvasopts
 import fsl.fsleyes.gl.routines                as glroutines
@@ -719,13 +720,20 @@ class SliceCanvas(props.HasProperties):
         self._refresh()
 
 
-    def __genGLObject(self, overlay, updateRenderTextures=True):
+    def __genGLObject(self, overlay, updateRenderTextures=True, refresh=True):
         """Creates a :class:`.GLObject` instance for the given ``overlay``,
         destroying any existing instance.
 
         If ``updateRenderTextures`` is ``True`` (the default), and the
         :attr:`.renderMode` is ``offscreen`` or ``prerender``, any
         render texture associated with the overlay is destroyed.
+
+        If ``refresh`` is ``True`` (the default), the :meth:`_refresh` method
+        is called after the ``GLObject`` has been created.
+
+        .. note:: If running in ``wx`` (i.e. via a :class:`.WXGLSliceCanvas`),
+                  the :class:`.GLObject` instnace will be created on the
+                  ``wx.EVT_IDLE`` lopp (via the :mod:`.idle` module).
         """
 
         display = self.displayCtx.getDisplay(overlay)
@@ -748,58 +756,63 @@ class SliceCanvas(props.HasProperties):
                     if tex is not None:
                         glresources.delete(name)
 
-        # We need a GL context to create a new GL
-        # object. If we can't get it now, the
-        # _glObjects value for this overlay will
-        # stay as None, and the _draw method will
-        # manually call this method again later.
-        if not self._setGLContext():
-            return None
+        def create():
 
-        status.update('Creating GL representation '
-                      'for {}...'.format(overlay.name))
+            # We need a GL context to create a new GL
+            # object. If we can't get it now, we simply
+            # reschedule this function to be run later
+            # on.
+            if not self._setGLContext():
+                async.idle(create)
+                return
 
-        globj = globject.createGLObject(overlay, display)
-
-        if globj is not None:
-            globj.setAxes(self.xax, self.yax)
-            globj.register(self.name, self._refresh)
-
-        self._glObjects[overlay] = globj
-
-        if updateRenderTextures:
-            self._updateRenderTextures() 
-
-        display.addListener('overlayType',
-                            self.name,
-                            self.__overlayTypeChanged,
-                            overwrite=True)
-
-        display.addListener('enabled',
-                            self.name,
-                            self._refresh,
-                            overwrite=True)
-
-        # Listen for resolution changes on Image
-        # overlays - see __overlayResolutionChanged,
-        # and __resolutionLimitChanged
-        if isinstance(overlay, fslimage.Nifti1): 
-            opts = display.getDisplayOpts()
-            opts.addListener('resolution',
-                             self.name,
-                             self.__overlayResolutionChanged,
-                             overwrite=True)
-
-        return globj
- 
+            status.update('Creating GL representation '
+                          'for {}...'.format(overlay.name))
             
-    def _overlayListChanged(self, *a):
+            globj = globject.createGLObject(overlay, display)
+
+            if globj is not None:
+                globj.setAxes(self.xax, self.yax)
+                globj.register(self.name, self._refresh)
+
+            self._glObjects[overlay] = globj
+
+            if updateRenderTextures:
+                self._updateRenderTextures() 
+
+            display.addListener('overlayType',
+                                self.name,
+                                self.__overlayTypeChanged,
+                                overwrite=True)
+
+            display.addListener('enabled',
+                                self.name,
+                                self._refresh,
+                                overwrite=True)
+
+            # Listen for resolution changes on Image
+            # overlays - see __overlayResolutionChanged,
+            # and __resolutionLimitChanged
+            if isinstance(overlay, fslimage.Nifti1): 
+                opts = display.getDisplayOpts()
+                opts.addListener('resolution',
+                                 self.name,
+                                 self.__overlayResolutionChanged,
+                                 overwrite=True)
+
+            if refresh:
+                self._refresh()
+
+        async.idle(create)
+
+        
+    def _overlayListChanged(self, *args, **kwargs):
         """This method is called every time an overlay is added or removed
         to/from the overlay list.
 
-        For newly added overlays, it creates the appropriate :mod:`.GLObject`
-        type, which initialises the OpenGL data necessary to render the
-        overlay, and then triggers a refresh.
+        For newly added overlays, calls the :meth:`__genGLObject` method,
+        which initialises the OpenGL data necessary to render the
+        overlay.
         """
 
         # Destroy any GL objects for overlays
@@ -821,11 +834,20 @@ class SliceCanvas(props.HasProperties):
             if overlay in self._glObjects:
                 continue
 
-            self.__genGLObject(overlay, updateRenderTextures=False)
+            self.__genGLObject(overlay,
+                               updateRenderTextures=False,
+                               refresh=False)
 
-        self._updateRenderTextures()
-        self.__resolutionLimitChange()
-        self._refresh()
+        # All the GLObjects are created using
+        # async.idle, so we call refresh in the
+        # same way to make sure it gets called
+        # after all the GLObject creations.
+        def refresh():
+            self._updateRenderTextures()
+            self.__resolutionLimitChange()
+            self._refresh()
+
+        async.idle(refresh)
 
 
     def _overlayBoundsChanged(self, *a):
@@ -1146,14 +1168,10 @@ class SliceCanvas(props.HasProperties):
                 continue
             
             if globj is None:
-                globj = self.__genGLObject(overlay)
-
-                # We can't generate a GLObject for 
-                # this overlay, for some reason
-                if globj is None:
-                    log.warning('Cannot generate a GL representation '
-                                'for overlay {}!'.format(overlay))
-                    continue
+                # The GLObject has not been created
+                # yet - we assume here that the
+                # __genGLObject method is on the case
+                continue
 
             # The GLObject is not ready
             # to be drawn yet.

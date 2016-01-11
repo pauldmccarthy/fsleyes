@@ -252,8 +252,10 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         All other arguments are ignored.
         """
 
+        # The texture is already
+        # being refreshed - ignore
         if not self.__ready:
-            raise RuntimeError('Texture already being refreshed')
+            return
 
         refreshData  = kwargs.get('refreshData',  True)
         refreshRange = kwargs.get('refreshRange', True)

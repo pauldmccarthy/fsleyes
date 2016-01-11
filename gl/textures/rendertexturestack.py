@@ -237,12 +237,16 @@ class RenderTextureStack(object):
         :arg idx: Index of the ``RenderTexture``.
         """
 
-        zpos = self.__indexToZpos(idx)
-        xax  = self.__xax
-        yax  = self.__yax
+        globj = self.__globj
+        zpos  = self.__indexToZpos(idx)
+        xax   = self.__xax
+        yax   = self.__yax
 
-        lo, hi = self.__globj.getDisplayBounds()
-        res    = self.__globj.getDataResolution(xax, yax)
+        if not globj.ready():
+            return
+
+        lo, hi = globj.getDisplayBounds()
+        res    = globj.getDataResolution(xax, yax)
 
         if res is not None:
             width  = res[xax]
@@ -268,9 +272,9 @@ class RenderTextureStack(object):
         glroutines.show2D(xax, yax, width, height, lo, hi)
         glroutines.clear((0, 0, 0, 0))
 
-        self.__globj.preDraw()
-        self.__globj.draw(zpos)
-        self.__globj.postDraw()
+        globj.preDraw()
+        globj.draw(zpos)
+        globj.postDraw()
         tex.unbindAsRenderTarget()
         
         gl.glViewport(*oldSize)
