@@ -15,7 +15,9 @@ import logging
 import OpenGL.GL as gl
 
 import fsl.fsleyes.gl.routines as glroutines
+import fsl.fsleyes.gl.globject as globject
 import fsl.utils.async         as async
+import fsl.utils.status        as status
 import                            rendertexture
 
 
@@ -146,7 +148,6 @@ class RenderTextureStack(object):
             self.__textures.append(
                 rendertexture.RenderTexture('{}_{}'.format(self.name, i)))
 
-        self.__textureDirty = [True] * numTextures
         self.__onGLObjectUpdate()
 
         
@@ -201,6 +202,8 @@ class RenderTextureStack(object):
         self.__textureDirty = [True] * len(self.__textures)
         self.__updateQueue  = idxs
 
+        async.idle(self.__textureUpdateLoop)
+
 
     def __textureUpdateLoop(self):
         """This method is called via the :func:`.async.idle` function.
@@ -218,15 +221,14 @@ class RenderTextureStack(object):
 
         idx = self.__updateQueue.pop(0)
 
-        if not self.__textureDirty[idx]:
-            return
+        if self.__textureDirty[idx]:
 
-        tex = self.__textures[idx]
+            tex = self.__textures[idx]
         
-        log.debug('Refreshing texture slice {} (zax {})'.format(
-            idx, self.__zax))
+            log.debug('Refreshing texture slice {} (zax {})'.format(
+                idx, self.__zax))
         
-        self.__refreshTexture(tex, idx)
+            self.__refreshTexture(tex, idx)
 
         if len(self.__updateQueue) > 0:
             async.idle(self.__textureUpdateLoop)
@@ -246,6 +248,13 @@ class RenderTextureStack(object):
 
         if not globj.ready():
             return
+
+        if isinstance(globj, globject.GLImageObject):
+            name = globj.image.name
+        else:
+            name = type(globj).__name__
+
+        status.update('Pre-rendering {} slice {}...'.format(name, zpos))
 
         lo, hi = globj.getDisplayBounds()
         res    = globj.getDataResolution(xax, yax)
