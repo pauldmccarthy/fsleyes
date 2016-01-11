@@ -766,9 +766,6 @@ class SliceCanvas(props.HasProperties):
                 async.idle(create)
                 return
 
-            status.update('Creating GL representation '
-                          'for {}...'.format(overlay.name))
-            
             globj = globject.createGLObject(overlay, display)
 
             if globj is not None:

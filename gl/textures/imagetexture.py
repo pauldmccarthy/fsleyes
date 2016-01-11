@@ -574,7 +574,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         """
 
         status.update('Preparing data for image {} - this may '
-                      'take some time ...'.format(self.image.name))
+                      'take some time ...'.format(self.image.name), None)
 
         image = self.image
         data  = image.data
@@ -609,5 +609,8 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         elif dtype == np.int8:   data = np.array(data + 128,   dtype=np.uint8)
         elif dtype == np.uint16: pass
         elif dtype == np.int16:  data = np.array(data + 32768, dtype=np.uint16)
+
+        status.update('Data preparation for {} '
+                      'complete.'.format(self.image.name))
 
         return data
