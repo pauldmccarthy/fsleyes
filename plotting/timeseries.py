@@ -274,6 +274,9 @@ class FEATTimeSeries(VoxelTimeSeries):
         self.__evTs        = [None] * numEVs
         self.__peTs        = [None] * numEVs
         self.__copeTs      = [None] * numCOPEs
+
+        if not self.overlay.hasStats():
+            self.plotFullModelFit = False
         
         self.addListener('plotFullModelFit',
                          self.name,

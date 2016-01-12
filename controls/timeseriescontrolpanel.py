@@ -116,8 +116,9 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
         overlay = ts.overlay
         widgets = self.getWidgetList()
 
-        if not (isinstance(overlay, fslfeatimage.FEATImage) and
-                isinstance(ts,      timeseries.FEATTimeSeries)):
+        if not (isinstance(overlay, fslfeatimage.FEATImage)    and
+                isinstance(ts,      timeseries.FEATTimeSeries) and
+                overlay.hasStats()):
             return
 
         full    = props.makeWidget(     widgets, ts, 'plotFullModelFit')
