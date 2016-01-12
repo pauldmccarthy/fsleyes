@@ -95,6 +95,7 @@ def applyPerspective(frame, name, perspective, message=None):
     # Add all of the view panels
     # specified in the perspective
     for vp in frameChildren:
+        log.debug('Adding view panel {} to frame'.format(vp.__name__))
         frame.addViewPanel(vp)
 
     # Apply the layout to those view panels
@@ -106,6 +107,8 @@ def applyPerspective(frame, name, perspective, message=None):
     for vp, vpChildren, vpLayout in zip(viewPanels, vpChildrens, vpLayouts):
         
         for child in vpChildren:
+            log.debug('Adding control panel {} to {}'.format(
+                child.__name__, type(vp).__name__))
             _addControlPanel(vp, child)
             
         vp.getAuiManager().LoadPerspective(vpLayout)
@@ -318,7 +321,7 @@ def deserialisePerspective(persp):
     # Collate the children/layouts for each view panel
     vpChildren = []
     vpLayouts  = []
-    for i in range(2, len(frameChildren) + 2, 2):
+    for i in range(2, len(frameChildren) + 3, 2):
         vpChildren.append(lines[i]) 
         vpLayouts .append(lines[i + 1])
 
