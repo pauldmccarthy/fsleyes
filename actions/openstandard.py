@@ -48,9 +48,12 @@ class OpenStandardAction(action.Action):
         added some overlays, updates the
         :attr:`.DisplayContext.selectedOverlay` accordingly.
         """
-        added = self.__overlayList.addOverlays(
-            fromDir=self.__stddir, addToEnd=False)
+
+        def onLoad(overlays):
         
-        if len(added) > 0:
-            self.__displayCtx.selectedOverlay = \
-                self.__displayCtx.overlayOrder[0]
+            if len(overlays) > 0:
+                self.__displayCtx.selectedOverlay = \
+                    self.__displayCtx.overlayOrder[0]
+        
+        self.__overlayList.addOverlays(
+            fromDir=self.__stddir, addToEnd=False, onLoad=onLoad)

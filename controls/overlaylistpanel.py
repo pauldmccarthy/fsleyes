@@ -208,18 +208,20 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
         """Called when the *add* button on the list box is pressed.
         Calls the :meth:`.OverlayList.addOverlays` method.
         """
-        overlays = self._overlayList.addOverlays()
 
-        if len(overlays) == 0:
-            return
+        def onLoad(overlays):
+            if len(overlays) == 0:
+                return
         
-        self._displayCtx.selectedOverlay = len(self._overlayList) - 1
+            self._displayCtx.selectedOverlay = len(self._overlayList) - 1
 
-        if self._displayCtx.autoDisplay:
-            for overlay in overlays:
-                autodisplay.autoDisplay(overlay,
-                                        self._overlayList,
-                                        self._displayCtx)
+            if self._displayCtx.autoDisplay:
+                for overlay in overlays:
+                    autodisplay.autoDisplay(overlay,
+                                            self._overlayList,
+                                            self._displayCtx)
+
+        self._overlayList.addOverlays(onLoad=onLoad)
 
 
     def __lbRemove(self, ev):

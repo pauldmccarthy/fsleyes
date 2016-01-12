@@ -67,6 +67,7 @@ import props
 import fsl.data.strings   as strings
 import fsl.utils.settings as fslsettings
 import fsl.utils.status   as status
+import fsl.utils.async    as async
 
 
 log = logging.getLogger(__name__)
@@ -108,9 +109,18 @@ class OverlayList(props.HasProperties):
         self.overlays.extend(overlays)
 
 
-    def addOverlays(self, fromDir=None, addToEnd=True, dirdlg=False):
+    def addOverlays(self,
+                    fromDir=None,
+                    addToEnd=True,
+                    dirdlg=False,
+                    onLoad=None):
         """Convenience method for interactively adding overlays to this
         :class:`OverlayList`.
+
+        .. note:: The overlays are added asynchronously via the
+                  :func:`.async.idle` function - use the ``onLoad`` argument
+                  if you wish to be notified when the overlays have been
+                  loaded.
 
         :arg fromDir:  Initial directory to show in the dialog - see
                        :func:`interactiveAddOverlays`.
@@ -122,17 +132,25 @@ class OverlayList(props.HasProperties):
                        to the end of this ``OverlayList``. Otherwise they are
                        added to the beginning.
 
-        :returns:      A list containing the overlays that were added - the 
-                       list will be empty if no overlays were added.
+        :arg onLoad:   Optional function to call after the overlays have been
+                       loaded. Must accept a single parameter - a list of the
+                       overlays that were added. The list will be empty if no
+                       overlays were added.
         """
 
-        overlays = interactiveLoadOverlays(fromDir=fromDir, dirdlg=dirdlg)
+        def realOnLoad(overlays):
+            
+            if len(overlays) > 0:
+                if addToEnd: self.extend(      overlays)
+                else:        self.insertAll(0, overlays)
 
-        if len(overlays) > 0:
-            if addToEnd: self.extend(      overlays)
-            else:        self.insertAll(0, overlays)
+            if onLoad is not None:
+                onLoad(overlays)
 
-        return overlays
+        interactiveLoadOverlays(
+            fromDir=fromDir,
+            dirdlg=dirdlg,
+            onLoad=realOnLoad)
 
 
     def find(self, name):
@@ -262,9 +280,17 @@ def makeWildcard():
     return '|'.join(wcParts)
 
 
-def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
+def loadOverlays(paths,
+                 loadFunc='default',
+                 errorFunc='default',
+                 saveDir=True,
+                 onLoad=None):
     """Loads all of the overlays specified in the sequence of files
     contained in ``paths``.
+
+    .. note:: The overlays are loaded asynchronously via :func:`.async.idle`.
+              Use the ``onLoad`` argument if you wish to be notified when
+              the overlays have been loaded.
 
     :arg loadFunc:  A function which is called just before each overlay
                     is loaded, and is passed the overlay path. The default
@@ -283,6 +309,10 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
     :arg saveDir:   If ``True`` (the default), the directory of the last
                     overlay in the list of ``paths`` is saved, and used
                     later on as the default load directory.
+
+    :arg onLoad:    Optional function to call when all overlays have been
+                    loaded. Must accept one parameter - a list containing
+                    the overlays that were loaded.
 
     :returns:       A list of overlay objects - just a regular ``list``, 
                     not an :class:`OverlayList`.
@@ -305,6 +335,34 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
                   exc_info=True)
         wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK) 
 
+    # A function which loads a single overlay
+    def loadPath(path):
+
+        loadFunc(path)
+
+        dtype, path = guessDataSourceType(path)
+
+        if dtype is None:
+            errorFunc(
+                path, strings.messages['overlay.loadOverlays.unknownType'])
+            return
+        
+        log.debug('Loading overlay {} (guessed data type: {})'.format(
+            path, dtype.__name__))
+        
+        try:                   overlays.append(dtype(path))
+        except Exception as e: errorFunc(path, e)
+
+    # This function gets called after 
+    # all overlays have been loaded
+    def realOnLoad():
+
+        if saveDir and len(paths) > 0:
+            fslsettings.write('loadOverlayLastDir', op.dirname(paths[-1]))
+
+        if onLoad is not None:
+            onLoad(overlays)
+
     # If loadFunc or errorFunc are explicitly set to
     # None, use these no-op load/error functions
     if loadFunc  is None: loadFunc  = lambda s:    None
@@ -314,31 +372,14 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
     # default functions defined above
     if loadFunc  == 'default': loadFunc  = defaultLoadFunc
     if errorFunc == 'default': errorFunc = defaultErrorFunc
-    
-    overlays = []
 
+    overlays = []
+            
     # Load the images
     for path in paths:
-
-        loadFunc(path)
-
-        dtype, path = guessDataSourceType(path)
-
-        if dtype is None:
-            errorFunc(
-                path,
-                strings.messages['overlay.loadOverlays.unknownType'])
-            continue
-
-        log.debug('Loading overlay {} (guessed data type: {})'.format(
-            path, dtype.__name__))
-        try:                   overlays.append(dtype(path))
-        except Exception as e: errorFunc(path, e)
-
-    if saveDir and len(paths) > 0:
-        fslsettings.write('loadOverlayLastDir', op.dirname(paths[-1]))
-            
-    return overlays
+        async.idle(loadPath, path)
+        
+    async.idle(realOnLoad)
 
 
 def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
@@ -356,8 +397,6 @@ def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
 
     :arg kwargs:  Passed  through to the :func:`loadOverlays` function.
 
-    :returns:     A list containing the overlays that were loaded.
-    
     :raise ImportError:  if :mod:`wx` is not present.
     :raise RuntimeError: if a :class:`wx.App` has not been created.
     """
@@ -397,12 +436,10 @@ def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
     if dirdlg: paths = [dlg.GetPath()]
     else:      paths =  dlg.GetPaths()
 
+    dlg.Close()
     dlg.Destroy()
-    del dlg
-    
-    images = loadOverlays(paths, saveDir=saveFromDir, **kwargs)
-
-    return images
+     
+    loadOverlays(paths, saveDir=saveFromDir, **kwargs)
     
 
 def saveOverlay(overlay, fromDir=None):

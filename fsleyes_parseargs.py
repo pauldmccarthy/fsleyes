@@ -1119,6 +1119,13 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
     """Loads and configures any overlays which were specified on the
     command line.
 
+    .. warning:: This function uses the :func:`.overlay.loadOverlay` function
+                 which in turn uses :func:`.async.idle` to load the overlays.
+                 This means that the overlays are loaded and configured
+                 asynchronously, meaning that they may not be loaded by the
+                 time that this function returns. See the
+                 :func:`.overlay.loadOverlay` documentation for more details.
+
     :arg args:        A :class:`~argparse.Namespace` instance, as returned
                       by the :func:`parseArgs` function.
     
@@ -1135,115 +1142,121 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
     import fsl.data.image as fslimage
     import fsl.data.model as fslmodel
 
+    # The fsleyes.oberlay.loadOverlay function
+    # works asynchronously - this function will
+    # get called once all of the overlays have
+    # been loaded.
+    def onLoad(overlays):
+
+        overlayList.extend(overlays)
+
+        for i, overlay in enumerate(overlayList):
+
+            status.update('Applying display settings '
+                          'to {}...'.format(overlay.name))
+
+            display = displayCtx.getDisplay(overlay)
+
+            # Figure out how many arguments
+            # were passed in for this overlay
+            nArgs = len([v for k, v in vars(args.overlays[i]).items()
+                         if k != 'overlay' and v is not None])
+
+            # If no arguments were passed,
+            # apply default display settings 
+            if nArgs == 0 and args.autoDisplay:
+                autodisplay.autoDisplay(overlay, overlayList, displayCtx)
+            else:
+                _applyArgs(args.overlays[i], display)
+
+            # Retrieve the DisplayOpts instance
+            # after applying arguments to the
+            # Display instance - if the overlay
+            # type is set on the command line, the
+            # DisplayOpts instance will be replaced
+            opts = display.getDisplayOpts()
+
+            # VectorOpts.modulateImage and clipImage
+            # are Choice properties, where the valid
+            # choices are defined by the current
+            # contents of the overlay list. So when
+            # the user specifies one of these images,
+            # we need to do an explicit check to see
+            # if the specified image is valid
+            # 
+            # Here, I'm loading the image, and checking
+            # to see if it can be used to modulate the
+            # vector image (just with a dimension check).
+            # If it can, I add it to the image list - the
+            # applyArguments function will apply the
+            # value. If the modulate file is not valid,
+            # an error is raised.
+            if isinstance(opts, fsldisplay.VectorOpts) and \
+               args.overlays[i].modulateImage is not None:
+
+                modImage = _findOrLoad(overlayList,
+                                       args.overlays[i].modulateImage,
+                                       fslimage.Image,
+                                       overlay)
+
+                if modImage.shape != overlay.shape[ :3]:
+                    raise RuntimeError(
+                        'Image {} cannot be used to modulate {} - '
+                        'dimensions don\'t match'.format(modImage, overlay))
+
+                opts.modulateImage             = modImage
+                args.overlays[i].modulateImage = None
+
+                log.debug('Set {} to be modulated by {}'.format(
+                    overlay, modImage))
+
+            # Same process for VectorOpts.clipImage
+            if isinstance(opts, fsldisplay.VectorOpts) and \
+               args.overlays[i].clipImage is not None:
+
+                clipImage = _findOrLoad(overlayList,
+                                        args.overlays[i].clipImage,
+                                        fslimage.Image,
+                                        overlay)
+
+                if clipImage.shape != overlay.shape[ :3]:
+                    raise RuntimeError(
+                        'Image {} cannot be used to clip {} - '
+                        'dimensions don\'t match'.format(clipImage, overlay))
+
+                opts.clipImage                 = clipImage
+                args.overlays[i].modulateImage = None
+
+                log.debug('Set {} to be clipped by {}'.format(
+                    overlay, clipImage))
+
+            # A similar process is followed for 
+            # the ModelOpts.refImage property
+            if isinstance(overlay, fslmodel.Model)        and \
+               isinstance(opts,    fsldisplay.ModelOpts)  and \
+               args.overlays[i].modelRefImage is not None:
+
+                refImage = _findOrLoad(overlayList,
+                                       args.overlays[i].modelRefImage,
+                                       fslimage.Image,
+                                       overlay)
+
+                opts.refImage                  = refImage
+                args.overlays[i].modelRefImage = None
+
+                log.debug('Set {} reference image to {}'.format(
+                    overlay, refImage)) 
+
+            # After handling the special cases
+            # above, we can apply the CLI
+            # options to the Opts instance
+            _applyArgs(args.overlays[i], opts)
+
     paths = [o.overlay for o in args.overlays]
 
     if len(paths) > 0:
-        overlays = fsloverlay.loadOverlays(paths, **kwargs)
-        overlayList.extend(overlays)
-
-    # per-overlay display arguments
-    for i, overlay in enumerate(overlayList):
-
-        status.update('Applying display settings '
-                      'to {}...'.format(overlay.name))
-
-        display = displayCtx.getDisplay(overlay)
-
-        # Figure out how many arguments
-        # were passed in for this overlay
-        nArgs = len([v for k, v in vars(args.overlays[i]).items()
-                     if k != 'overlay' and v is not None])
-
-        # If no arguments were passed,
-        # apply default display settings 
-        if nArgs == 0 and args.autoDisplay:
-            autodisplay.autoDisplay(overlay, overlayList, displayCtx)
-        else:
-            _applyArgs(args.overlays[i], display)
-
-        # Retrieve the DisplayOpts instance
-        # after applying arguments to the
-        # Display instance - if the overlay
-        # type is set on the command line, the
-        # DisplayOpts instance will be replaced
-        opts = display.getDisplayOpts()
-
-        # VectorOpts.modulateImage and clipImage
-        # are Choice properties, where the valid
-        # choices are defined by the current
-        # contents of the overlay list. So when
-        # the user specifies one of these images,
-        # we need to do an explicit check to see
-        # if the specified image is valid
-        # 
-        # Here, I'm loading the image, and checking
-        # to see if it can be used to modulate the
-        # vector image (just with a dimension check).
-        # If it can, I add it to the image list - the
-        # applyArguments function will apply the
-        # value. If the modulate file is not valid,
-        # an error is raised.
-        if isinstance(opts, fsldisplay.VectorOpts) and \
-           args.overlays[i].modulateImage is not None:
-
-            modImage = _findOrLoad(overlayList,
-                                   args.overlays[i].modulateImage,
-                                   fslimage.Image,
-                                   overlay)
-
-            if modImage.shape != overlay.shape[ :3]:
-                raise RuntimeError(
-                    'Image {} cannot be used to modulate {} - '
-                    'dimensions don\'t match'.format(modImage, overlay))
-
-            opts.modulateImage             = modImage
-            args.overlays[i].modulateImage = None
-
-            log.debug('Set {} to be modulated by {}'.format(
-                overlay, modImage))
-
-        # Same process for VectorOpts.clipImage
-        if isinstance(opts, fsldisplay.VectorOpts) and \
-           args.overlays[i].clipImage is not None:
-
-            clipImage = _findOrLoad(overlayList,
-                                    args.overlays[i].clipImage,
-                                    fslimage.Image,
-                                    overlay)
-
-            if clipImage.shape != overlay.shape[ :3]:
-                raise RuntimeError(
-                    'Image {} cannot be used to clip {} - '
-                    'dimensions don\'t match'.format(clipImage, overlay))
-
-            opts.clipImage                 = clipImage
-            args.overlays[i].modulateImage = None
-
-            log.debug('Set {} to be clipped by {}'.format(
-                overlay, clipImage))
+        fsloverlay.loadOverlays(paths, onLoad=onLoad, **kwargs)
  
-        # A similar process is followed for 
-        # the ModelOpts.refImage property
-        if isinstance(overlay, fslmodel.Model)        and \
-           isinstance(opts,    fsldisplay.ModelOpts)  and \
-           args.overlays[i].modelRefImage is not None:
-
-            refImage = _findOrLoad(overlayList,
-                                   args.overlays[i].modelRefImage,
-                                   fslimage.Image,
-                                   overlay)
-
-            opts.refImage                  = refImage
-            args.overlays[i].modelRefImage = None
-            
-            log.debug('Set {} reference image to {}'.format(
-                overlay, refImage)) 
-
-        # After handling the special cases
-        # above, we can apply the CLI
-        # options to the Opts instance
-        _applyArgs(args.overlays[i], opts)
-
         
 def _findOrLoad(overlayList, overlayFile, overlayType, relatedTo=None):
     """Searches for the given ``overlayFile`` in the ``overlayList``. If not

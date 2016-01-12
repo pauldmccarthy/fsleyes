@@ -37,15 +37,18 @@ class OpenFileAction(action.Action):
         updates the :attr:`.DisplayContext.selectedOverlay` accordingly.
         """
 
-        overlays = self.__overlayList.addOverlays()
-
-        if len(overlays) == 0:
-            return
+        def onLoad(overlays):
+            
+            if len(overlays) == 0:
+                return
         
-        self.__displayCtx.selectedOverlay = self.__displayCtx.overlayOrder[-1]
+            self.__displayCtx.selectedOverlay = \
+                self.__displayCtx.overlayOrder[-1]
 
-        if self.__displayCtx.autoDisplay:
-            for overlay in overlays:
-                autodisplay.autoDisplay(overlay,
-                                        self.__overlayList,
-                                        self.__displayCtx)
+            if self.__displayCtx.autoDisplay:
+                for overlay in overlays:
+                    autodisplay.autoDisplay(overlay,
+                                            self.__overlayList,
+                                            self.__displayCtx)
+        
+        self.__overlayList.addOverlays(onLoad=onLoad)
