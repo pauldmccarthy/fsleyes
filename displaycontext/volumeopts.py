@@ -593,8 +593,9 @@ class VolumeOpts(Nifti1Opts):
         # NOTE: This means that if we use a parent-less
         #       DisplayContext for display, this bricon-display
         #       range relationship will break.
-        # 
-        if self.getParent() is not None:
+        #
+        self.__registered = self.getParent() is not None
+        if self.__registered:
 
             overlay    .addListener('dataRange',
                                     self.name,
@@ -668,7 +669,8 @@ class VolumeOpts(Nifti1Opts):
         method.
         """
 
-        if self.getParent() is not None:
+        if self.__registered:
+
             overlayList = self.overlayList
             display     = self.display
             overlayList.removeListener('overlays',        self.name) 
