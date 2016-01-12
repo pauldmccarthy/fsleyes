@@ -698,7 +698,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # Make a list of widgets - the canvases,
         # anatomical labels (if displayed), and
         # spacers for the empty cells
-        space = (1, 1)
+        space = (0, 0)
         xlbls = self.__xLabels
         ylbls = self.__yLabels
         zlbls = self.__zLabels

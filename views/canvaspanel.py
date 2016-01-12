@@ -22,6 +22,8 @@ import props
 
 import fsl.fsleyes.fsleyes_parseargs                   as fsleyes_parseargs
 import fsl.utils.dialog                                as fsldlg
+import fsl.utils.async                                 as async
+import fsl.utils.status                                as status
 import fsl.utils.settings                              as fslsettings
 import fsl.data.image                                  as fslimage
 import fsl.data.strings                                as strings
@@ -687,24 +689,8 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
     :arg canvas:      A :class:`CanvasPanel` instance. 
     """
 
-    def relativePosition(child, ancestor):
-        """Calculates the position of the given ``child``, relative
-        to its ``ancestor``. We use this to locate all GL canvases
-        relative to the canvas panel container, as they are not
-        necessarily direct children of the container.
-        """
-
-        if child.GetParent() is ancestor:
-            return child.GetPosition().Get()
-
-        xpos, ypos = child.GetPosition().Get()
-        xoff, yoff = relativePosition(child.GetParent(), ancestor)
-
-        return xpos + xoff, ypos + yoff
-    
     # Ask the user where they want 
     # the screenshot to be saved
-
     fromDir = fslsettings.read('canvasPanelScreenshotLastDir',
                                default=os.getcwd())
     
@@ -724,7 +710,6 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
     dlg.Close()
     dlg.Destroy()
     wx.Yield()
-
 
     def doScreenshot():
 
@@ -753,36 +738,45 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
         # direct parent of the colour bar
         # canvas, and an ancestor of the
         # other GL canvases
-        parent        = canvasPanel.getContainerPanel()
-        width, height = parent.GetClientSize().Get()
-        windowDC      = wx.WindowDC(parent)
-        memoryDC      = wx.MemoryDC()
-        bmp           = wx.EmptyBitmap(width, height)
+        parent                  = canvasPanel.getContainerPanel()
+        totalWidth, totalHeight = parent.GetClientSize().Get()
+        absPosx,    absPosy     = parent.GetScreenPosition()
+        windowDC                = wx.WindowDC(parent)
+        memoryDC                = wx.MemoryDC()
+        bmp                     = wx.EmptyBitmap(totalWidth, totalHeight)
 
-        wx.Yield()
-
-        # Copy the contents of the canvas container
-        # to the bitmap
+        # Copy the contents of the canvas
+        # container to the bitmap
         memoryDC.SelectObject(bmp)
         memoryDC.Blit(
             0,
             0,
-            width,
-            height,
+            totalWidth,
+            totalHeight,
             windowDC,
             0,
             0)
         memoryDC.SelectObject(wx.NullBitmap)
 
-        # Make a H*W*4 bitmap array 
-        data = np.zeros((height, width, 4), dtype=np.uint8)
+        # Make a H*W*4 bitmap array, and copy
+        # the container screen grab into it.
+        # We initialise the bitmap to the
+        # current background colour, due to
+        # some sizing issues that will be
+        # revealed below.
+        opts     = canvasPanel.getSceneOptions()
+        bgColour = np.array(opts.bgColour) * 255
+        
+        data          = np.zeros((totalHeight, totalWidth, 4), dtype=np.uint8)
+        data[:, :, :] = bgColour
+ 
         rgb  = bmp.ConvertToImage().GetData()
         rgb  = np.fromstring(rgb, dtype=np.uint8)
 
         log.debug('Creating bitmap {} * {} for {} screenshot'.format(
-            width, height, type(canvasPanel).__name__))
-
-        data[:, :, :3] = rgb.reshape(height, width, 3)
+            totalWidth, totalHeight, type(canvasPanel).__name__))
+        
+        data[:, :, :3] = rgb.reshape(totalHeight, totalWidth, 3)
 
         # Patch in bitmaps for every GL canvas
         for glCanvas in glCanvases:
@@ -797,27 +791,58 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
             if not glCanvas.IsShown():
                 continue
 
-            pos   = relativePosition(glCanvas, parent)
-            size  = glCanvas.GetClientSize().Get()
+            width, height = glCanvas.GetClientSize().Get()
+            posx, posy    = glCanvas.GetScreenPosition()
 
-            xstart = pos[0]
-            ystart = pos[1]
-            xend   = xstart + size[0]
-            yend   = ystart + size[1]
+            posx -= absPosx
+            posy -= absPosy
+
+            log.debug('Canvas {} position: ({}, {}); size: ({}, {})'.format( 
+                type(glCanvas).__name__, posx, posy, width, height)) 
+
+            xstart = posx
+            ystart = posy
+            xend   = xstart + width
+            yend   = ystart + height
 
             bmp = glCanvas.getBitmap()
 
-            # There seems to ber a size/position miscalculation
-            # somewhere, such that if the last canvas is on the
-            # hard edge of the parent, the canvas size spills
-            # over the parent size byt a couple of pixels.. If
-            # this occurs, I truncate the canvas bitmap accordingly.
-            if xend > width or yend > height:
-                xend = width
-                yend = height
-                w    = xend - xstart
-                h    = yend - ystart
-                bmp  = bmp[:h, :w, :]
+            # Under OSX, there seems to be a size/position
+            # miscalculation  somewhere, such that if the last
+            # canvas is on the hard edge of the parent, the
+            # canvas size spills over the parent size by a
+            # couple of pixels. If this occurs, I re-size the
+            # final bitmap accordingly.
+            #
+            # n.b. This is why I initialise the bitmap array
+            #      to the canvas panel background colour.
+            if xend > totalWidth:
+                
+                oldWidth    = totalWidth
+                totalWidth  = xend
+                newData     = np.zeros((totalHeight, totalWidth, 4),
+                                       dtype=np.uint8)
+                
+                newData[:, :, :]         = bgColour
+                newData[:, :oldWidth, :] = data
+                data                     = newData
+
+                log.debug('Adjusted bitmap width: {} -> {}'.format(
+                    oldWidth, totalWidth))
+                
+            if yend > totalHeight:
+                
+                oldHeight   = totalHeight
+                totalHeight = yend
+                newData     = np.zeros((totalHeight, totalWidth, 4),
+                                       dtype=np.uint8)
+                
+                newData[:, :, :]          = bgColour
+                newData[:oldHeight, :, :] = data
+                data                      = newData
+
+                log.debug('Adjusted bitmap height: {} -> {}'.format(
+                    oldHeight, totalHeight)) 
 
             log.debug('Patching {} in at [{} - {}], [{} - {}]'.format(
                 type(glCanvas).__name__, xstart, xend, ystart, yend))
@@ -828,9 +853,8 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
 
         mplimg.imsave(filename, data)
 
-    fsldlg.ProcessingDialog(
-        canvasPanel.GetTopLevelParent(),
-        strings.messages['CanvasPanel.screenshot.pleaseWait'],
-        doScreenshot).Run(mainThread=True)
+    async.idle(doScreenshot)
+    status.update(
+        strings.messages['CanvasPanel.screenshot.pleaseWait'].format(filename))
 
     fslsettings.write('canvasPanelScreenshotLastDir', op.dirname(filename))
