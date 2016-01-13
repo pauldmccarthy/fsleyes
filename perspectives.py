@@ -100,12 +100,18 @@ def applyPerspective(frame, name, perspective, message=None):
     :arg perspective: The serialised perspective string.
     :arg message:     A message to display (using the :mod:`.status` module).
     """
+
+    import fsl.fsleyes.views as views
               
-    persp = deserialisePerspective(perspective)
-    frameChildren, frameLayout, vpChildrens, vpLayouts = persp
+    persp         = deserialisePerspective(perspective)
+    frameChildren = persp[0]
+    frameLayout   = persp[1]
+    vpChildrens   = persp[2]
+    vpLayouts     = persp[3]
+    vpPanelProps  = persp[4]
+    vpSceneProps  = persp[5]
 
     # Show a message while re-configuring the frame
-
     if message is None:
         message = strings.messages[
             'perspectives.applyingPerspective'].format(
@@ -130,14 +136,36 @@ def applyPerspective(frame, name, perspective, message=None):
     # For each view panel, add all of the
     # control panels, and lay them out
     viewPanels = frame.getViewPanels()
-    for vp, vpChildren, vpLayout in zip(viewPanels, vpChildrens, vpLayouts):
+    for i in range(len(viewPanels)):
+
+        vp         = viewPanels[  i]
+        children   = vpChildrens[ i]
+        layout     = vpLayouts[   i]
+        panelProps = vpPanelProps[i]
+        sceneProps = vpSceneProps[i]
         
-        for child in vpChildren:
+        for child in children:
             log.debug('Adding control panel {} to {}'.format(
                 child.__name__, type(vp).__name__))
             _addControlPanel(vp, child)
             
-        vp.getAuiManager().LoadPerspective(vpLayout)
+        vp.getAuiManager().LoadPerspective(layout)
+
+        # Apply saved property values
+        # to the view panel.
+        for name, val in panelProps.items():
+            log.debug('Setting {}.{} = {}'.format(
+                type(vp).__name__, name, val))
+            vp.deserialise(name, val)
+
+        # And, if it is a CanvasPanel,
+        # to its SceneOpts instance.
+        if isinstance(vp, views.CanvasPanel):
+            opts = vp.getSceneOptions()
+            for name, val in sceneProps.items():
+                log.debug('Setting {}.{} = {}'.format(
+                    type(opts).__name__, name, val))
+                opts.deserialise(name, val)
 
             
 def savePerspective(frame, name):
@@ -217,7 +245,7 @@ def serialisePerspective(frame):
     Each of these pieces of information are then concatenated into a single
     newline separated string.
     """
-    
+
     # We'll start by defining this silly function, which
     # takes an ``AuiManager`` layout string, and a list
     # of the children which are being managed by the
@@ -263,13 +291,13 @@ def serialisePerspective(frame):
     # list of the children of the frame
     frameLayout   = patchLayoutString(auiMgr, viewPanels)
     frameChildren = [type(vp).__name__ for vp in viewPanels]
-    frameChildren = ','.join(frameChildren) + ','
+    frameChildren = ','.join(frameChildren)
 
     # We are going to build a list of layout strings,
     # one for each ViewPanel, and a corresponding list
     # of control panels displayed on each ViewPanel.
-    vpLayouts   = [] 
-    vpChildrens = []
+    vpLayouts = [] 
+    vpConfigs = []
 
     for vp in viewPanels:
 
@@ -284,20 +312,35 @@ def serialisePerspective(frame):
         ctrlPanels  = vp.getPanels()
         centrePanel = vp.getCentrePanel()
 
-        # The process is now identical to that used
-        # for the frame layout and children, above.
+        # As above for the frame, generate a layout
+        # string and a list of control panels - the
+        # children of the view panel.
         vpLayout    = patchLayoutString(vpAuiMgr, [centrePanel] + ctrlPanels)
         vpChildren  = [type(cp).__name__ for cp in ctrlPanels]
-        vpChildren  = ','.join(vpChildren) + ','
+        vpChildren  = ','.join(vpChildren)
 
-        vpLayouts  .append(vpLayout)
-        vpChildrens.append(vpChildren)
+        # Get the panel and scene settings
+        panelProps, sceneProps = _getPanelProps(vp)
+
+        # And turn them into comma-separated key-value pairs.
+        panelProps = ['{}={}'.format(k, v) for k, v in panelProps.items()]
+        sceneProps = ['{}={}'.format(k, v) for k, v in sceneProps.items()]
+        
+        panelProps = ','.join(panelProps)
+        sceneProps = ','.join(sceneProps)
+
+        # Build the config string - the children,
+        # the panel settings and the scene settings.
+        vpConfig = ';'.join([vpChildren, panelProps, sceneProps])
+
+        vpLayouts.append(vpLayout)
+        vpConfigs.append(vpConfig)
 
     # We serialise all of these pieces of information
     # as a single newline-separated string.
     perspective = [frameChildren, frameLayout]
-    for vpChildren, vpLayout in zip(vpChildrens, vpLayouts):
-        perspective.append(vpChildren)
+    for vpConfig, vpLayout in zip(vpConfigs, vpLayouts):
+        perspective.append(vpConfig)
         perspective.append(vpLayout)
 
     # And we're done!
@@ -310,36 +353,31 @@ def deserialisePerspective(persp):
 
     :returns: A tuple containing the following:
 
-                - A list of :class:`.ViewPanel` classes
+                - A list of :class:`.ViewPanel` class types - the
+                  children of the :class:`.FSLEyesFrame`.
     
                 - An ``aui`` layout string for the :class:`.FSLEyesFrame`
    
                 - A list of lists, one for each ``ViewPanel``, with each
-                  list containing the control panel classes for the
-                  corresponding ``ViewPanel``.
+                  list containing a collection of control panel class
+                  types - the children of the corresponding ``ViewPanel``.
     
                 - A list of strings, one ``aui`` layout string for each
-                  ``ViewPanel``. 
+                  ``ViewPanel``.
+
+                - A list of dictionaries, one for each ``ViewPanel``,
+                  containing property ``{name : value}`` pairs to be
+                  applied to the ``ViewPanel``.
+
+                - A list of dictionaries, one for each ``ViewPanel``,
+                  containing property ``{name : value}`` pairs to be applied
+                  to the :class:`.SceneOpts` instance associated with the
+                  ``ViewPanel``. If the ``ViewPanel`` is not a
+                  :class:`.CanvasPanel`, the dictionary will be empty.
     """
 
     import fsl.fsleyes.views    as views
     import fsl.fsleyes.controls as controls
-    
-    # This function deserialises a string which was
-    # generated by the serialisePerspective function.
-    # It returns:
-    # 
-    #  - A list of ViewPanel class types - the
-    #    children of the FSLEyesFrame.
-    # 
-    #  - A layout string for the FSLEyesFrame.
-    # 
-    #  - A list of lists, each inner list containing
-    #    a collection of ControlPanel class types -
-    #    the children of the corresponding ViewPanel.
-    # 
-    #  - A list of layout strings, one for each
-    #    ViewPanel.
     
     lines = persp.split('\n')
     lines = [l.strip() for l in lines]
@@ -358,22 +396,58 @@ def deserialisePerspective(persp):
     frameChildren = [getattr(views, fc) for fc in frameChildren]
 
     # Collate the children/layouts for each view panel
-    vpChildren = []
-    vpLayouts  = []
-    for i in range(2, len(frameChildren) + 3, 2):
-        vpChildren.append(lines[i]) 
-        vpLayouts .append(lines[i + 1])
+    vpChildren   = []
+    vpLayouts    = []
+    vpPanelProps = []
+    vpSceneProps = []
+ 
+    for i in range(len(frameChildren)):
 
-    # And the ViewPanel children are control panels,
-    # all defined in the fsl.fsleyes.controls package.
+        linei = (i * 2) + 2
+
+        config = lines[linei]
+        layout = lines[linei + 1]
+
+        children, panelProps, sceneProps = config.split(';')
+
+        vpChildren   .append(children) 
+        vpLayouts    .append(layout)
+        vpPanelProps .append(panelProps)
+        vpSceneProps .append(sceneProps)
+
+    # The ViewPanel children string is a comma-separated
+    # list of control panel class names. All control panels
+    # should be defined in the fsl.fsleyes.controls package.
     for i in range(len(vpChildren)):
 
-        vpChildren[i] = vpChildren[i].split(',')
-        vpChildren[i] = [vpc.strip() for vpc in vpChildren[i]]
-        vpChildren[i] = [vpc         for vpc in vpChildren[i] if vpc != ''] 
-        vpChildren[i] = [getattr(controls, vpc) for vpc in vpChildren[i]]
+        children      = vpChildren[i].split(',')
+        children      = [vpc.strip() for vpc in children]
+        children      = [vpc         for vpc in children if vpc != '']
+        children      = [getattr(controls, vpc) for vpc in children]
+        vpChildren[i] = children
 
-    return frameChildren, frameLayout, vpChildren, vpLayouts
+    # The panel props and scene props strings are
+    # comma-separated lists of 'prop=value' pairs.
+    # We'll turn them into a dict for convenience.
+    for i in range(len(vpPanelProps)):
+        props           = vpPanelProps[i].split(',')
+        props           = [p for p in props if p != '']
+        props           = [p.split('=') for p in props]
+        vpPanelProps[i] = dict(props)
+
+    for i in range(len(vpSceneProps)):
+        props           = vpSceneProps[i].split(',')
+        props           = [p for p in props if p != '']
+        props           = [p.split('=') for p in props]
+        vpSceneProps[i] = dict(props)
+        
+
+    return (frameChildren,
+            frameLayout,
+            vpChildren,
+            vpLayouts,
+            vpPanelProps,
+            vpSceneProps)
 
 
 def _addToPerspectivesList(persp):
@@ -429,25 +503,58 @@ def _addControlPanel(viewPanel, panelType):
 
     viewPanel.togglePanel(panelType, **args)
 
+
+def _getPanelProps(panel):
+    """
+    """
+
+    import fsl.fsleyes.views as views
+
+    if not isinstance(panel, views.CanvasPanel):
+        return {}, {}
+
+    panelType = type(panel).__name__
+    opts      = panel.getSceneOptions()
+    
+    panelProps, sceneProps = VIEWPANEL_PROPS[panelType]
+
+    panelProps = {name : panel.serialise(name) for name in panelProps}
+    sceneProps = {name : opts .serialise(name) for name in sceneProps}
+
+    return panelProps, sceneProps
+    
+
+VIEWPANEL_PROPS = {
+    'OrthoPanel'    : [['syncLocation',  'syncOverlayOrder',  'syncOverlayDisplay'],
+                       ['showCursor',    'bgColour',          'cursorColour',
+                        'showColourBar', 'colourBarLocation', 'showXCanvas',
+                        'showYCanvas',   'showZCanvas',       'showLabels',
+                        'layout']
+                       ],
+    'LightBoxPanel' : [['syncLocation',  'syncOverlayOrder',  'syncOverlayDisplay'],
+                       ['showCursor',    'bgColour',          'cursorColour',
+                        'showColourBar', 'colourBarLocation', 'zax',
+                        'showGridLines', 'highlightSlice']]}
+
     
 BUILT_IN_PERSPECTIVES = collections.OrderedDict((
     ('default',
      textwrap.dedent("""
-                     OrthoPanel,
+                     OrthoPanel
                      layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
-                     LocationPanel,OverlayListPanel,OverlayDisplayToolBar,OrthoToolBar,
-                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=440;besth=109;minw=440;minh=109;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=440;floath=125;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=197;besth=80;minw=197;minh=80;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=197;floath=96;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=860;besth=49;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=755;besth=34;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=130|dock_size(1,10,0)=36|dock_size(1,11,0)=51|
+                     OverlayDisplayToolBar,OrthoToolBar,LocationPanel,OverlayListPanel;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True;layout=grid,showLabels=True,bgColour=#000000ff,showCursor=True,showZCanvas=True,cursorColour=#00ff00ff,showColourBar=False,showYCanvas=True,showXCanvas=True,colourBarLocation=top
+                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=855;besth=49;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=748;besth=34;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=440;besth=111;minw=440;minh=109;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=440;floath=127;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=204;besth=80;minw=197;minh=80;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=204;floath=96;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=130|dock_size(1,10,0)=36|dock_size(1,11,0)=51|
                      """)),
 
     ('melodic',
      textwrap.dedent("""
-                     LightBoxPanel,TimeSeriesPanel,PowerSpectrumPanel,
+                     LightBoxPanel,TimeSeriesPanel,PowerSpectrumPanel
                      layout2|name=LightBoxPanel 1;caption=Lightbox View 1;state=67377088;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=853;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=TimeSeriesPanel 2;caption=Time series 2;state=67377148;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=472;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=PowerSpectrumPanel 3;caption=Power spectra 3;state=67377148;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=472;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=195|
-                     OverlayListPanel,OverlayDisplayToolBar,LocationPanel,LightBoxToolBar,MelodicClassificationPanel,
+                     OverlayListPanel,OverlayDisplayToolBar,LocationPanel,LightBoxToolBar,MelodicClassificationPanel;;
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=204;besth=80;minw=197;minh=80;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=204;floath=96;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=810;besth=49;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=440;besth=111;minw=440;minh=109;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=440;floath=127;notebookid=-1;transparent=255|name=LightBoxToolBar;caption=Lightbox view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=753;besth=43;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=MelodicClassificationPanel;caption=Melodic IC classification;state=67373052;dir=2;layer=0;row=0;pos=0;prop=100000;bestw=400;besth=100;minw=400;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=400;floath=116;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=130|dock_size(1,10,0)=45|dock_size(1,11,0)=51|dock_size(2,0,0)=402|
-                     ,
+                     ;;
                      layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=640;besth=480;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=642|
-                     ,
+                     ;;
                      layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=640;besth=480;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=642|'
                      """)),
 
@@ -455,8 +562,8 @@ BUILT_IN_PERSPECTIVES = collections.OrderedDict((
      textwrap.dedent("""
                      OrthoPanel,TimeSeriesPanel,
                      layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67377088;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=853;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=TimeSeriesPanel 2;caption=Time series 2;state=67377148;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=472;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=261|
-                     OverlayDisplayToolBar,LocationPanel,AtlasPanel,OverlayListPanel,OrthoToolBar,ClusterPanel,
+                     OverlayDisplayToolBar,LocationPanel,AtlasPanel,OverlayListPanel,OrthoToolBar,ClusterPanel;;
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=860;besth=49;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=2;row=0;pos=1;prop=98544;bestw=440;besth=109;minw=440;minh=109;maxw=-1;maxh=-1;floatx=2730;floaty=1104;floatw=440;floath=125;notebookid=-1;transparent=255|name=AtlasPanel;caption=Atlases;state=67373052;dir=2;layer=1;row=0;pos=0;prop=98904;bestw=318;besth=84;minw=318;minh=84;maxw=-1;maxh=-1;floatx=1091;floaty=143;floatw=318;floath=100;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=2;row=0;pos=0;prop=87792;bestw=197;besth=80;minw=197;minh=80;maxw=-1;maxh=-1;floatx=2608;floaty=1116;floatw=197;floath=96;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=1;pos=0;prop=100000;bestw=815;besth=34;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=2072;floaty=80;floatw=824;floath=50;notebookid=-1;transparent=255|name=ClusterPanel;caption=Cluster browser;state=67373052;dir=2;layer=1;row=0;pos=1;prop=114760;bestw=390;besth=96;minw=390;minh=96;maxw=-1;maxh=-1;floatx=3516;floaty=636;floatw=390;floath=112;notebookid=-1;transparent=255|dock_size(5,0,0)=10|dock_size(2,1,0)=566|dock_size(1,10,0)=51|dock_size(1,10,1)=36|dock_size(3,2,0)=130|
-                     ,
+                     ;;
                      layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=640;besth=480;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=642|
                      """))))
