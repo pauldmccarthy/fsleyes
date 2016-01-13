@@ -117,12 +117,10 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         # The dataMin/dataMax/ready attributes
         # are modified in the refresh method
         # (which is called via the set method
-        # below). If __ready is False, refresh
-        # will throw an error, so we initialise
-        # it to True.
+        # below). 
         self.__dataMin    = None
         self.__dataMax    = None
-        self.__ready      = True
+        self.__ready      = False
 
         self.image.addListener('data', self.__name, self.refresh)
 
@@ -130,7 +128,9 @@ class ImageTexture(texture.Texture, notifier.Notifier):
                  prefilter=prefilter,
                  resolution=resolution,
                  volume=volume,
-                 normalise=normalise)
+                 normalise=normalise,
+                 refresh=False)
+        self.__refresh()
 
 
     def ready(self):
@@ -189,13 +189,15 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         """Set any parameters on this ``ImageTexture``. Valid keyword
         arguments are:
 
-        ============== ==========================
+        ============== =======================================================
         ``interp``     See :meth:`setInterp`.
         ``prefilter``  See :meth:`setPrefilter`.
         ``resolution`` See :meth:`setResolution`.
         ``volume``     See :meth:`setVolume`.
         ``normalise``  See :meth:`setNormalise`.
-        ============== ==========================
+        ``refresh``    If ``True`` (the default), the :meth:`refresh` function
+                       is called (but only if a setting has changed).
+        ============== =======================================================
 
         :returns: ``True`` if any settings have changed and the
                   ``ImageTexture`` is to be refreshed , ``False`` otherwise.
@@ -205,6 +207,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         resolution = kwargs.get('resolution', self.__resolution)
         volume     = kwargs.get('volume',     self.__volume)
         normalise  = kwargs.get('normalise',  self.__normalise)
+        refresh    = kwargs.get('refresh',    True)
 
         changed = {'interp'     : interp     != self.__interp,
                    'prefilter'  : prefilter  != self.__prefilter,
@@ -237,7 +240,8 @@ class ImageTexture(texture.Texture, notifier.Notifier):
                             changed['volume'],
                             changed['normalise']))
 
-        self.refresh(refreshData=refreshData, refreshRange=refreshRange)
+        if refresh:
+            self.refresh(refreshData=refreshData, refreshRange=refreshRange)
         
         return True
 
@@ -245,17 +249,29 @@ class ImageTexture(texture.Texture, notifier.Notifier):
     def refresh(self, *args, **kwargs):
         """(Re-)generates the OpenGL texture used to store the image data. 
 
-        :arg refreshData:  If ``True`` (the default), the data is re-sampled.
-        :arg refreshRange: If ``True`` (the default), the data range is
-                           re-calculated.
-
-        All other arguments are ignored.
+        .. note:: This method is a wrapper around the :meth:`__refresh` method,
+                  which does the real work, and which is not intended to be
+                  called from outside the ``ImageTexture`` class.
         """
 
         # The texture is already
         # being refreshed - ignore
         if not self.__ready:
             return
+
+        self.__refresh(*args, **kwargs)
+        
+
+    def __refresh(self, *args, **kwargs):
+        """(Re-)generates the OpenGL texture used to store the image data.
+        
+        :arg refreshData:  If ``True`` (the default), the data is re-sampled.
+        :arg refreshRange: If ``True`` (the default), the data range is
+                           re-calculated.
+
+        .. note:: The texture data is generated on a separate thread, using
+                  the :func:`.async.run` function. 
+        """
 
         refreshData  = kwargs.get('refreshData',  True)
         refreshRange = kwargs.get('refreshRange', True)

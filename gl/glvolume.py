@@ -392,7 +392,7 @@ class GLVolume(globject.GLImageObject):
             texName = '{}_unsync_{}'.format(texName, id(opts))
 
         if self.imageTexture is not None:
-            self.imageTexture.deregsiter(self.name)
+            self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.getTextureName())
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST

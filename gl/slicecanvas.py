@@ -17,7 +17,6 @@ import numpy as np
 import props
 
 import fsl.data.image                         as fslimage
-import fsl.utils.status                       as status
 import fsl.utils.async                        as async
 import fsl.fsleyes.displaycontext             as fsldisplay
 import fsl.fsleyes.displaycontext.canvasopts  as canvasopts
@@ -266,6 +265,7 @@ class SliceCanvas(props.HasProperties):
             disp.removeListener('enabled',      self.name)
 
             if globj is not None:
+                globj.deregister(self.name)
                 globj.destroy()
 
             rt, rtName = self._prerenderTextures.get(overlay, (None, None))
@@ -742,6 +742,7 @@ class SliceCanvas(props.HasProperties):
         # any) to clean up after itself
         globj = self._glObjects.pop(overlay, None)
         if globj is not None:
+            globj.deregister(self.name)
             globj.destroy()
 
             if updateRenderTextures:
