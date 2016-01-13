@@ -4,8 +4,16 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides functions for managing *perspectives*, view and
-control panel layouts for *FSLeyes*.
+"""This module provides functions for managing *perspectives* - stored view
+and control panel layouts for *FSLeyes*. Perspectives are persisted using the
+:mod:`.settings` module. A few perspectives are also *built in*, and are
+defined in the :attr:`BUILT_IN_PERSPECTIVES` dictionary.
+
+
+The ``perspectives`` module provides the following functions. These are
+intended for use by the :class:`.FSLEyesFrame`, but can be used in other ways
+too:
+
 
 .. autosummary::
    :nosignatures:
@@ -17,6 +25,17 @@ control panel layouts for *FSLeyes*.
    removePerspective
    serialisePerspective
    deserialisePerspective
+
+
+A perspective defines a layout for a :class:`.FSLEyesFrame`. It specifies the
+type and layout of one or more *views* (defined in the :mod:`.views` module)
+and, within each view, the type and layout of one or more *controls* (defined
+in the :mod:`.controls` module). See the :mod:`.fsleyes` documentation for an
+overview of views and controls.
+
+
+All of this information is stored as a string - see the
+:func:`serialisePerspective` function for details on its storage format.
 """
 
 
@@ -33,8 +52,7 @@ log = logging.getLogger(__name__)
 
 
 def getAllPerspectives():
-    """
-    """
+    """Returns a list containing the names of all saved perspectives. """
     
     # A list of all saved perspective names
     # is saved as a comma-separated string
@@ -52,7 +70,9 @@ def getAllPerspectives():
 
 
 def loadPerspective(frame, name, **kwargs):
-    """
+    """Load the named perspective, and apply it to the given
+    :class:`.FSLEyesFrame`. The ``kwargs`` are passed through to the
+    :func:`applyPerspective` function.
     """
 
     if name in BUILT_IN_PERSPECTIVES.keys():
@@ -72,7 +92,13 @@ def loadPerspective(frame, name, **kwargs):
 
 
 def applyPerspective(frame, name, perspective, message=None):
-    """
+    """Applies the given serialised perspective string to the given
+    :class:`.FSLEyesFrame`.
+
+    :arg frame:       The :class:`.FSLEyesFrame` instance.
+    :arg name:        The perspective name.
+    :arg perspective: The serialised perspective string.
+    :arg message:     A message to display (using the :mod:`.status` module).
     """
               
     persp = deserialisePerspective(perspective)
@@ -115,7 +141,8 @@ def applyPerspective(frame, name, perspective, message=None):
 
             
 def savePerspective(frame, name):
-    """
+    """Serialises the layout of the given :class:`.FSLEyesFrame` and saves
+    it as a perspective with the given name.
     """
 
     if name in BUILT_IN_PERSPECTIVES.keys():
@@ -133,66 +160,64 @@ def savePerspective(frame, name):
 
     
 def removePerspective(name):
-    """
-    """
+    """Deletes the named perspective. """
+    
     log.debug('Deleting perspective with name {}'.format(name))
-
     fslsettings.delete('fsleyes.perspectives.{}'.format(name))
     _removeFromPerspectivesList(name)
 
     
 def serialisePerspective(frame):
-    """
-    """
+    """Serialises the layout of the given :class:`.FSLEyesFrame`, and returns
+    it as a string.
+    
+    .. note:: This function was written against wx.lib.agw.aui.AuiManager as
+              it exists in wxPython 3.0.2.0.
+    
+     *FSLeyes* uses a hierarchy of ``wx.lib.agw.aui.AuiManager`` instances for
+     its layout - the :class:`.FSLEyesFrame` uses an ``AuiManager`` to lay out
+     :class:`.ViewPanel` instances, and each of these ``ViewPanels`` use their
+     own ``AuiManager`` to lay out control panels.
 
-    # Written against wx.lib.agw.aui.AuiManager as it
-    # exists in wxPython 3.0.2.0.
-    #
-    # FSLEyes uses a hierarchy of AuiManager instances
-    # for its layout - the FSLEyesFrame uses an AuiManager
-    # to lay out ViewPanel instances, and each of these
-    # ViewPanels use their own AuiManager to lay out
-    # control panels. The layout for a single AuiManager
-    # can be serialised to a string via the
-    # AuiManager.SavePerspective and AuiManager.SavePaneInfo
-    # methods.
-    #
-    # An Aui perspective string consists of:
-    #   - A name.
-    #
-    #   - A set of key-value set of key-value pairs defining
-    #     the top level panel layout.
-    #
-    #   - A set of key-value pairs for each pane,
-    #     defining its layout. the AuiManager.SavePaneInfo
-    #     method returns this for a single pane.
-    # 
-    # These are all encoded in a single string, with
-    # the above components separated with '|'
-    # characters, and the pane-level key-value pairs
-    # separated with a ';' character. For example:
-    #
-    # layoutName|key1=value1|name=Pane1;caption=Pane 1|\
-    # name=Pane2;caption=Pane 2|doc_size(5,0,0)=22|
-    #
-    # The following code is going to query each of the
-    # AuiManagers, and extract the following:
-    # 
-    #    - A layout string for the FSLEyesFrame
-    #
-    #    - A string containing a comma-separated list of
-    #      ViewPanels (class names, in the same order as
-    #      they are specified in the frame layout string)
-    #
-    #    - For each ViewPanel:
-    #
-    #       - A layout string for the ViewPanel
-    #       - A string containing a comma-separated list
-    #         of ControlPanels (class names, in the same
-    #         order as specified in the ViewPanel layout
-    #         string)
-    #
-    # 
+     The layout for a single ``AuiManager`` can be serialised to a string via
+     the ``AuiManager.SavePerspective`` and ``AuiManager.SavePaneInfo``
+     methods. One of these strings consists of:
+    
+       - A name.
+    
+       - A set of key-value set of key-value pairs defining the top level
+         panel layout.
+    
+       - A set of key-value pairs for each pane, defining its layout. the
+         ``AuiManager.SavePaneInfo`` method returns this for a single pane.
+     
+     These are all encoded in a single string, with the above components
+     separated with '|' characters, and the pane-level key-value pairs
+     separated with a ';' character. For example:
+    
+     layoutName|key1=value1|name=Pane1;caption=Pane 1|\
+     name=Pane2;caption=Pane 2|doc_size(5,0,0)=22|
+    
+     This function queries each of the AuiManagers, and extracts the following:
+     
+        - A layout string for the :class:`.FSLEyesFrame`.
+    
+        - A string containing a comma-separated list of :class:`.ViewPanel`
+          class names, in the same order as they are specified in the frame
+          layout string.
+    
+        - For each ``ViewPanel``:
+    
+           - A layout string for the ``ViewPanel``
+    
+           - A string containing a comma-separated list of control panel class
+             names, in the same order as specified in the ``ViewPanel`` layout
+             string.
+
+    Each of these pieces of information are then concatenated into a single
+    newline separated string.
+    """
+    
     # We'll start by defining this silly function, which
     # takes an ``AuiManager`` layout string, and a list
     # of the children which are being managed by the
@@ -280,7 +305,21 @@ def serialisePerspective(frame):
 
 
 def deserialisePerspective(persp):
-    """
+    """Deserialises a perspective string which was created by the
+    :func:`serialisePerspective` string.
+
+    :returns: A tuple containing the following:
+
+                - A list of :class:`.ViewPanel` classes
+    
+                - An ``aui`` layout string for the :class:`.FSLEyesFrame`
+   
+                - A list of lists, one for each ``ViewPanel``, with each
+                  list containing the control panel classes for the
+                  corresponding ``ViewPanel``.
+    
+                - A list of strings, one ``aui`` layout string for each
+                  ``ViewPanel``. 
     """
 
     import fsl.fsleyes.views    as views
@@ -338,8 +377,7 @@ def deserialisePerspective(persp):
 
 
 def _addToPerspectivesList(persp):
-    """
-    """
+    """Adds the given perspective name to the list of saved perspectives. """
     perspectives = getAllPerspectives()
 
     if persp not in perspectives:
@@ -352,7 +390,7 @@ def _addToPerspectivesList(persp):
 
 
 def _removeFromPerspectivesList(persp):
-    """
+    """Removes the given perspective name from the list of saved perspectives.
     """
     
     perspectives = getAllPerspectives()
@@ -367,7 +405,10 @@ def _removeFromPerspectivesList(persp):
 
 
 def _addControlPanel(viewPanel, panelType):
-    """
+    """Adds a control panel to the given :class:`.ViewPanel`.
+
+    :arg viewPanel: A :class:`.ViewPanel` instance.
+    :arg panelType: A control panel type.
     """
     import fsl.fsleyes.controls as controls
 
