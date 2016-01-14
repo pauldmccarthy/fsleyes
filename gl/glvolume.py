@@ -409,7 +409,7 @@ class GLVolume(globject.GLImageObject):
             self.image,
             interp=interp)
 
-        self.imageTexture.register(self.name, lambda *a: self.notify())
+        self.imageTexture.register(self.name, self.__textureChanged)
 
 
     def registerClipImage(self):
@@ -483,7 +483,7 @@ class GLVolume(globject.GLImageObject):
             resolution=opts.resolution,
             volume=clipOpts.volume)
         
-        self.clipTexture.register(self.name, lambda *a: self.notify())
+        self.clipTexture.register(self.name, self.__textureChanged)
 
     
     def refreshColourTextures(self):
@@ -565,3 +565,12 @@ class GLVolume(globject.GLImageObject):
             self.clipTexture.unbindTexture()
         
         fslgl.glvolume_funcs.postDraw(self) 
+
+
+    def __textureChanged(self, *a):
+        """Called when either of the the :class:`.ImageTexture` instances,
+        containing the image or clipping data are refreshed. Notifies
+        listeners of this ``GLLabel`` (via the :class:`.Notifier` base
+        class).
+        """
+        self.notify()

@@ -42,6 +42,8 @@ class LabelOpts(volumeopts.Nifti1Opts):
     showNames = props.Boolean(default=False)
     """If ``True``, region names (as defined by the current
     :class:`.LookupTable`) will be shown alongside each labelled region.
+
+    .. note:: Not implemented yet.
     """
 
 

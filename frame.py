@@ -67,8 +67,8 @@ class FSLEyesFrame(wx.Frame):
     **Programming interface**
 
     
-    At this stage, ``FSLEyesFrame`` only provides a couple of methods for
-    programmatically configuring the display:
+    The ``FSLEyesFrame`` provides the following methods for programmatically
+    configuring the display:
 
     .. autosummary::
        :nosignatures:

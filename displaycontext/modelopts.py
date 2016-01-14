@@ -46,7 +46,10 @@ class ModelOpts(fsldisplay.DisplayOpts):
     
 
     showName = props.Boolean(default=False)
-    """If ``True``, the model name is shown alongside the model. """
+    """If ``True``, the model name is shown alongside the model.
+
+    .. note:: Not implemented yet.
+    """
 
     
     refImage = props.Choice()

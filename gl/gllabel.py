@@ -209,6 +209,10 @@ class GLLabel(globject.GLImageObject):
             texName = '{}_unsync_{}'.format(texName, id(opts))
 
         if self.imageTexture is not None:
+            
+            if self.imageTexture.getTextureName() == texName:
+                return 
+            
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.getTextureName())
             
@@ -217,7 +221,8 @@ class GLLabel(globject.GLImageObject):
             textures.ImageTexture,
             texName,
             self.image)
-        self.imageTexture.register(self.name, lambda *a: self.notify())
+        
+        self.imageTexture.register(self.name, self.__imageTextureChanged)
 
 
     def refreshLutTexture(self, *a):
@@ -255,3 +260,11 @@ class GLLabel(globject.GLImageObject):
         self.imageTexture.unbindTexture()
         self.lutTexture  .unbindTexture()
         fslgl.gllabel_funcs.postDraw(self)
+
+        
+    def __imageTextureChanged(self, *a):
+        """Called when the :class:`.ImageTexture` containing the image data
+        is refreshed. Notifies listeners of this ``GLLabel`` (via the
+        :class:`.Notifier` base class).
+        """
+        self.notify()

@@ -374,7 +374,8 @@ class GLVector(globject.GLImageObject):
             interp=interp,
             normalise=True,
             prefilter=realPrefilter)
-        self.imageTexture.register(self.name, lambda *a: self.notify())
+        
+        self.imageTexture.register(self.name, self.__textureChanged)
 
     
     def compileShaders(self):
@@ -508,7 +509,8 @@ class GLVector(globject.GLImageObject):
             texName,
             image,
             normalise=norm)
-        tex.register(self.name, lambda *a: self.notify())
+        
+        tex.register(self.name, self.__textureChanged)
         
         setattr(self, texAttr, tex)
 
@@ -618,3 +620,11 @@ class GLVector(globject.GLImageObject):
         self.yColourTexture .unbindTexture()
         self.zColourTexture .unbindTexture()
         self.cmapTexture    .unbindTexture()
+
+        
+    def __textureChanged(self, *a):
+        """Called when any of the :class:`.ImageTexture` instances containing
+        image, clipping, modulation or colour data, are refreshed. Notifies
+        listeners of this ``GLVector`` (via the :class:`.Notifier` base class).
+        """
+        self.notify()
