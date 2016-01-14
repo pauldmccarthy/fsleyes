@@ -99,22 +99,40 @@ To make this new propery settable via the command line, you need to:
              # .
              # .
          })
+
+
+  4. If the property specifies a file/path name (e.g.
+     :attr:`.VolumeOpts.clipImage`), add an entry in the :attr:`FILE_OPTIONS`
+     dictionary::
+
+         FILE_OPTIONS = td.TypeDict({
+             # .
+             # .
+             # .
+             'ModelOpts' : ['refImage', 'rotation'],
+             # .
+             # .
+             # .
+         }) 
 """
 
 
 from __future__ import print_function
 
-import sys
 import os.path as op
-import functools
-import argparse
-import logging
+import            sys
+import            logging
+import            textwrap
+import            argparse
+import            functools
+import            collections
 
 import props
 
 import fsl.utils.typedict as td
 import fsl.utils.status   as status
 import overlay            as fsloverlay
+
 
 # The colour maps module needs to be imported
 # before the displaycontext.opts modules are
@@ -123,9 +141,9 @@ import overlay            as fsloverlay
 import colourmaps as colourmaps
 colourmaps.init()
 
-import displaycontext as fsldisplay
 
-import autodisplay
+import displaycontext as fsldisplay
+import                   autodisplay
 
 
 log = logging.getLogger(__name__)
@@ -137,7 +155,7 @@ def concat(lists):
     This function is used a few times, and writing concat(lists) is
     nicer-looking than writing lambda blah blah each time.
     """
-    return functools.reduce(lambda a, b: a + b, lists)
+    return list(functools.reduce(lambda a, b: a + b, lists))
 
 
 # Names of all of the property which are 
@@ -183,6 +201,7 @@ OPTIONS = td.TypeDict({
     # The order in which properties are listed
     # here is the order in which they are applied.
     'Display'        : ['name',
+                        'enabled',
                         'overlayType',
                         'alpha',
                         'brightness',
@@ -190,12 +209,17 @@ OPTIONS = td.TypeDict({
     'Nifti1Opts'     : ['transform',
                         'resolution',
                         'volume'],
-    'VolumeOpts'     : ['cmap',
-                        'displayRange',
+    'VolumeOpts'     : ['displayRange',
                         'clippingRange',
-                        'invert',
                         'invertClipping',
-                        'interpolation'],
+                        'clipImage',
+                        'cmap',
+                        'negativeCmap',
+                        'useNegativeCmap',
+                        'interpolation',
+                        'invert',
+                        'linkLowRanges',
+                        'linkHighRanges'],
     'MaskOpts'       : ['colour',
                         'invert',
                         'threshold'],
@@ -205,6 +229,8 @@ OPTIONS = td.TypeDict({
                         'suppressX',
                         'suppressY',
                         'suppressZ',
+                        'cmap',
+                        'colourImage',
                         'modulateImage',
                         'clipImage',
                         'clippingRange'],
@@ -215,7 +241,9 @@ OPTIONS = td.TypeDict({
                         'outline',
                         'outlineWidth',
                         'refImage'],
-    'TensorOpts'     : [],
+    'TensorOpts'     : ['lighting',
+                        'tensorResolution',
+                        'tensorScale'],
     'LabelOpts'      : ['lut',
                         'outline',
                         'outlineWidth'],
@@ -245,11 +273,13 @@ GROUPNAMES = td.TypeDict({
     'RGBVectorOpts'  : 'RGB vector options',
     'ModelOpts'      : 'Model options',
     'LabelOpts'      : 'Label options',
+    'TensorOpts'     : 'Tensor options',
 })
 """Command line arguments are grouped according to the class to which
 they are applied (see the :data:`ARGUMENTS` dictionary). This dictionary
 defines descriptions for ecah command line group.
 """
+
 
 # Descriptions for each group
 GROUPDESCS = td.TypeDict({
@@ -267,18 +297,20 @@ GROUPDESCS = td.TypeDict({
                      'overlay which is listed before that option. '
                      'Passing any display option for an overlay will '
                      'override the \'--autoDisplay\' setting for that '
-                     'overlay.'
+                     'overlay.',
+
+    'VolumeOpts'     : 'These options are applied to \'volume\' overlays.',
+    'MaskOpts'       : 'These options are applied to \'mask\' overlays.',
+    'LabelOpts'      : 'These options are applied to \'label\' overlays.',
+    'LineVectorOpts' : 'These options are applied to \'linevector\' overlays.',
+    'RGBVectorOpts'  : 'These options are applied to \'rgbvector\' overlays.',
+    'ModelOpts'      : 'These options are applied to \'model\' overlays.',
+    'TensorOpts'     : 'These options are applied to \'tensor\' overlays.',
 })
 """This dictionary contains descriptions for each argument group. """
 
+
 # Short/long arguments for all of those options
-# 
-# There cannot be any collisions between the main
-# options, the scene options, and the colour bar
-# options.
-#
-# There can't be any collisions between the 
-# Display options and the *Opts options.
 ARGUMENTS = td.TypeDict({
 
     'Main.help'            : ('h',  'help'),
@@ -318,26 +350,32 @@ ARGUMENTS = td.TypeDict({
     'LightBoxOpts.highlightSlice' : ('hs', 'highlightSlice'),
     'LightBoxOpts.zax'            : ('zx', 'zaxis'),
 
-    'Display.name'          : ('n',  'name'),
-    'Display.overlayType'   : ('ot', 'overlayType'),
-    'Display.alpha'         : ('a',  'alpha'),
-    'Display.brightness'    : ('b',  'brightness'),
-    'Display.contrast'      : ('c',  'contrast'),
+    'Display.name'          : ('na',  'name'),
+    'Display.enabled'       : ('en',  'enabled'),
+    'Display.overlayType'   : ('ot',  'overlayType'),
+    'Display.alpha'         : ('al',  'alpha'),
+    'Display.brightness'    : ('bri', 'brightness'),
+    'Display.contrast'      : ('con', 'contrast'),
 
-    'Nifti1Opts.resolution'   : ('r',  'resolution'),
-    'Nifti1Opts.transform'    : ('tf', 'transform'),
-    'Nifti1Opts.volume'       : ('vl', 'volume'),
+    'Nifti1Opts.resolution'   : ('res', 'resolution'),
+    'Nifti1Opts.transform'    : ('tf',  'transform'),
+    'Nifti1Opts.volume'       : ('vol', 'volume'),
 
-    'VolumeOpts.displayRange'   : ('dr', 'displayRange'),
-    'VolumeOpts.interpolation'  : ('in', 'interp'),
-    'VolumeOpts.invertClipping' : ('ic', 'invertClipping'),
-    'VolumeOpts.clippingRange'  : ('cr', 'clippingRange'),
-    'VolumeOpts.cmap'           : ('cm', 'cmap'),
-    'VolumeOpts.invert'         : ('ci', 'cmapInvert'),
+    'VolumeOpts.displayRange'    : ('dr', 'displayRange'),
+    'VolumeOpts.clippingRange'   : ('cr', 'clippingRange'),
+    'VolumeOpts.invertClipping'  : ('ic', 'invertClipping'),
+    'VolumeOpts.clipImage'       : ('ci', 'clipImage'),
+    'VolumeOpts.cmap'            : ('cm', 'cmap'),
+    'VolumeOpts.negativeCmap'    : ('nc', 'negativeCmap'),
+    'VolumeOpts.useNegativeCmap' : ('un', 'useNegativeCmap'),
+    'VolumeOpts.interpolation'   : ('in', 'interpolation'),
+    'VolumeOpts.invert'          : ('i',  'invert'),
+    'VolumeOpts.linkLowRanges'   : ('ll', 'linkLowRanges'),
+    'VolumeOpts.linkHighRanges'  : ('lh', 'linkHighRanges'),
 
-    'MaskOpts.colour'    : ('co', 'maskColour'),
-    'MaskOpts.invert'    : ('mi', 'maskInvert'),
-    'MaskOpts.threshold' : ('t',  'threshold'),
+    'MaskOpts.colour'    : ('c',  'maskColour'),
+    'MaskOpts.invert'    : ('i',  'maskInvert'),
+    'MaskOpts.threshold' : ('th', 'threshold'),
 
     'VectorOpts.xColour'       : ('xc', 'xColour'),
     'VectorOpts.yColour'       : ('yc', 'yColour'),
@@ -345,13 +383,19 @@ ARGUMENTS = td.TypeDict({
     'VectorOpts.suppressX'     : ('xs', 'suppressX'),
     'VectorOpts.suppressY'     : ('ys', 'suppressY'),
     'VectorOpts.suppressZ'     : ('zs', 'suppressZ'),
-    'VectorOpts.modulateImage' : ('md', 'modulateImage'),
+    'VectorOpts.cmap'          : ('cm', 'cmap'),
+    'VectorOpts.colourImage'   : ('ci', 'colourImage'),
+    'VectorOpts.modulateImage' : ('mi', 'modulateImage'),
     'VectorOpts.clipImage'     : ('cl', 'clipImage'),
-    'VectorOpts.clippingRange' : ('cp', 'clipRange'),
+    'VectorOpts.clippingRange' : ('cr', 'clippingRange'),
 
     'LineVectorOpts.lineWidth'    : ('lvw', 'lineWidth'),
     'LineVectorOpts.directed'     : ('lvi', 'directed'),
     'RGBVectorOpts.interpolation' : ('rvi', 'rvInterpolation'),
+
+    'TensorOpts.lighting'         : ('l',  'lighting'),
+    'TensorOpts.tensorResolution' : ('tr', 'tensorResolution'),
+    'TensorOpts.tensorScale'      : ('s',  'scale'),
 
     'ModelOpts.colour'       : ('mc',  'modelColour'),
     'ModelOpts.outline'      : ('mo',  'modelOutline'),
@@ -495,6 +539,24 @@ EXTRA = td.TypeDict({
 to the :func:`.props.addParserArguments` function.
 """
 
+
+# File options need special treatment
+FILE_OPTIONS = td.TypeDict({
+    'VolumeOpts' : ['clipImage'],
+    'VectorOpts' : ['clipImage',
+                    'colourImage',
+                    'modulateImage'],
+    'ModelOpts'  : ['refImage'],
+})
+"""Arguments which accept file or path names need special treatment.
+This is because the first step in the :func:`parseArgs` function is
+to search through the list of arguments, and identify all arguments
+which look like overlays. This procedure needs to figure out whether
+an argument that looks like an overlay (i.e. a file/directory path)
+is actually an overlay, or is an argument for another overlay.
+""" 
+
+
 # Transform functions for properties where the
 # value passed in on the command line needs to
 # be manipulated before the property value is
@@ -520,24 +582,21 @@ TRANSFORMS = td.TypeDict({
     'OrthoOpts.showYCanvas' : lambda b: not b,
     'OrthoOpts.showZCanvas' : lambda b: not b,
     'OrthoOpts.showLabels'  : lambda b: not b,
-
-    # These properties are handled specially
-    # when reading in command line arguments -
-    # the transform function specified here
-    # is only used when generating arguments
-    'VectorOpts.modulateImage' : _imageTrans,
-    'VectorOpts.clipImage'     : _imageTrans,
-    'ModelOpts.refImage'       : _imageTrans,
-
-    'LabelOpts.lut'            : _lutTrans,
+    'LabelOpts.lut'         : _lutTrans,
 })
 """This dictionary defines any transformations for command line options
 where the value passed on the command line cannot be directly converted
 into the corresponding property value.
 """
 
+# All of the file options need special treatment
+for target, fileOpts in FILE_OPTIONS.items():
+    for fileOpt in fileOpts:
+        key             = '{}.{}'.format(target, fileOpt)
+        TRANSFORMS[key] = _imageTrans
 
-def _setupParsers(mainParser):
+
+def _setupMainParser(mainParser):
     """Sets up an argument parser which handles options related
     to the scene. This function configures the following argument
     groups:
@@ -584,7 +643,7 @@ def _configParser(target, parser, propNames=None):
     for propName in propNames:
 
         shortArg, longArg = ARGUMENTS[ target, propName]
-        helpText          = HELP[      target, propName]
+        helpText          = HELP .get((target, propName), 'nohelp')
         propExtra         = EXTRA.get((target, propName), None)
 
         shortArgs[propName] = shortArg
@@ -684,63 +743,46 @@ def _configLightBoxParser(lbParser):
     _configParser(fsldisplay.LightBoxOpts, lbParser)
 
 
-def _configOverlayParser(ovlParser):
-    """Adds options to the given parser allowing the user to
-    configure the display of a single overlay.
+def _setupOverlayParsers():
+    """Creates a set of parsers which handle command line options for
+    :class:`.Display` instances, and for all :class:`.DisplayOpts` instances.
     """
 
     Display        = fsldisplay.Display
-    Nifti1Opts     = fsldisplay.Nifti1Opts
     VolumeOpts     = fsldisplay.VolumeOpts
-    VectorOpts     = fsldisplay.VectorOpts
     RGBVectorOpts  = fsldisplay.RGBVectorOpts
     LineVectorOpts = fsldisplay.LineVectorOpts
+    TensorOpts     = fsldisplay.TensorOpts
     MaskOpts       = fsldisplay.MaskOpts
     ModelOpts      = fsldisplay.ModelOpts
     LabelOpts      = fsldisplay.LabelOpts
-    
-    dispParser  = ovlParser.add_argument_group(GROUPNAMES[    Display],
-                                               GROUPDESCS.get(Display))
-    imgParser   = ovlParser.add_argument_group(GROUPNAMES[Nifti1Opts])
-    volParser   = ovlParser.add_argument_group(GROUPNAMES[VolumeOpts])
-    vecParser   = ovlParser.add_argument_group(GROUPNAMES[VectorOpts])
-    lvParser    = ovlParser.add_argument_group(GROUPNAMES[LineVectorOpts])
-    rvParser    = ovlParser.add_argument_group(GROUPNAMES[RGBVectorOpts])
-    maskParser  = ovlParser.add_argument_group(GROUPNAMES[MaskOpts])
-    modelParser = ovlParser.add_argument_group(GROUPNAMES[ModelOpts])
-    labelParser = ovlParser.add_argument_group(GROUPNAMES[LabelOpts])
 
-    targets = [(Display,        dispParser),
-               (Nifti1Opts,     imgParser),
-               (VolumeOpts,     volParser),
-               (VectorOpts,     vecParser),
-               (LineVectorOpts, lvParser),
-               (RGBVectorOpts,  rvParser),
-               (MaskOpts,       maskParser),
-               (ModelOpts,      modelParser),
-               (LabelOpts,      labelParser)]
+    # A parser is created and returned
+    # for each one of these types.
+    parserTypes = [Display, VolumeOpts, MaskOpts, LabelOpts,
+                   ModelOpts, LineVectorOpts, RGBVectorOpts,
+                   TensorOpts]
 
-    for target, parser in targets:
+    # Dictionary containing the Display parser,
+    # and parsers for each overlay type 
+    parsers = collections.OrderedDict()
 
-        propNames      = list(OPTIONS[target])
-        specialOptions = []
+    # Create and configure
+    # each of the parsers
+    for target in parserTypes:
+
+        parser          = argparse.ArgumentParser(add_help=False)
+        parsers[target] = parser
+        propNames       = concat(OPTIONS.get(target, allhits=True))
+        specialOptions  = []
         
-        # The VectorOpts.modulateImage
-        # and clipImage options need
-        # special treatment
-        if target == VectorOpts and 'modulateImage' in propNames:
-            specialOptions.append('modulateImage')
-            propNames.remove('modulateImage')
-
-        if target == VectorOpts and 'clipImage' in propNames:
-            specialOptions.append('clipImage')
-            propNames.remove('clipImage') 
-
-        # The same goes for the
-        # ModelOpts.refImage option
-        if target == ModelOpts and 'refImage' in propNames:
-            specialOptions.append('refImage')
-            propNames.remove('refImage') 
+        # The file options need
+        # to be configured manually.
+        fileOpts = FILE_OPTIONS.get(target, [])
+        for propName in fileOpts:
+            if propName in propNames:
+                specialOptions.append(propName)
+                propNames     .remove(propName)
 
         _configParser(target, parser, propNames)
 
@@ -749,7 +791,7 @@ def _configOverlayParser(ovlParser):
         # module - see the handleOverlayArgs function.
         for opt in specialOptions:
             shortArg, longArg = ARGUMENTS[target, opt]
-            helpText          = HELP[     target, opt]
+            helpText          = HELP.get((target, opt), 'no help')
 
             shortArg =  '-{}'.format(shortArg)
             longArg  = '--{}'.format(longArg)
@@ -758,6 +800,8 @@ def _configOverlayParser(ovlParser):
                 longArg,
                 metavar='FILE',
                 help=helpText)
+
+    return parsers
 
             
 def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
@@ -797,20 +841,22 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
                      name,
                      toolOptsDesc)
 
-    # So I'm using two argument parsers - the
-    # mainParser parses application options
+    # So I'm using multiple argument parsers. First of
+    # all, the mainParser parses application options
     mainParser.usage       = usageStr
     mainParser.prog        = name
     mainParser.description = desc
 
-    _setupParsers(mainParser)
+    _setupMainParser(mainParser)
 
-    # And the ovlParser parses overlay display options
-    # for a single overlay - below we're going to
+    # And a separate parser for Display options and one
+    # for each DisplayOpts sub-class that corresponds
+    # to an overlay type. Below we're going to
     # manually step through the list of arguments,
-    # and pass each block of arguments to the ovlParser
-    # one at a time
-    ovlParser = argparse.ArgumentParser(add_help=False)
+    # and pass each block of arguments to the Display
+    # parser, and to the appropriate display opts
+    # parser, one at a time.
+    overlayParsers = _setupOverlayParsers()
 
     # Because I'm splitting the argument parsing across two
     # parsers, I'm using a custom print_help function 
@@ -818,53 +864,37 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
 
         # Print help for the main parser first,
         # and then separately for the overlay parser
-        if shortHelp: mainParser.print_usage()
-        else:         mainParser.print_help()
+        if shortHelp: helpText = mainParser.format_usage()
+        else:         helpText = mainParser.format_help()
 
         # Did I mention that I hate argparse?  Why
-        # can't we customise the help text? 
-        dispGroup = GROUPNAMES[fsldisplay.Display]
-        if shortHelp:
-            ovlHelp    = ovlParser.format_usage()
-            ovlHelp    = ovlHelp.split('\n')
+        # can't we customise the help text?
+        for target, parser in overlayParsers.items():
 
-            # Argparse usage text starts with 'usage [toolname]:',
-            # and then proceeds to give short help for all the
-            # possible arguments. Here, we're removing this
-            # 'usage [toolname]:' section, and replacing it with
-            # spaces. We're also adding the overlay display argument
-            # group title to the beginning of the usage text
-            start      = ' '.join(ovlHelp[0].split()[:2])
-            ovlHelp[0] = ovlHelp[0].replace(start, ' ' * len(start))
+            groupName = GROUPNAMES.get(target, None)
+            groupDesc = GROUPDESCS.get(target, None)
+
+            groupDesc = '\n  '.join(textwrap.wrap(groupDesc, 60))
             
-            ovlHelp.insert(0, dispGroup)
+            if shortHelp:
+                helpText = ''
 
-            ovlHelp = '\n'.join(ovlHelp)
-        else:
+            else:
 
-            # Here we're skipping over the first section of
-            # the overlay parser help text,  everything before
-            # where the help text contains the overlay display
-            # options (which were identifying by searching
-            # through the text for the argument group title)
-            ovlHelp = ovlParser.format_help()
-            ovlHelp = ovlHelp[ovlHelp.index(dispGroup):]
-            
-        print() 
-        print(ovlHelp)
+                helpText += '\n' + groupName + ':\n'
+                if groupDesc is not None:
+                    helpText += '  ' + groupDesc + '\n'
 
-    # And I want to handle overlay argument errors,
-    # rather than having the overlay parser force
-    # the program to exit
-    def ovlArgError(message):
-        raise RuntimeError(message)
+                ovlHelp = parser.format_help()
 
-    # The argparse internals are completely inconfigurable,
-    # and completely undocumented. Here, I'm monkey-patching
-    # the overlay parser error handler 
-    ovlParser.error = ovlArgError
+                skipTo    = 'optional arguments:'
+                optStart  = ovlHelp.index(skipTo)
+                optStart += len(skipTo) + 1
+                ovlHelp   = ovlHelp[optStart:]
+                
+                helpText += '\n' + ovlHelp
 
-    _configOverlayParser(ovlParser)
+        print(helpText)
 
     # Figure out where the overlay files
     # are in the argument list, accounting
@@ -878,14 +908,9 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
     # short/long arguments into a 1D list.
     fileOpts = []
 
-    # The VectorOpts.modulateImage and
-    # clipImage options allow the user
-    # to specify another image file.
-    # The same goes for the
-    # ModelOpts.refImage option.
-    fileOpts.extend(ARGUMENTS[fsldisplay.VectorOpts, 'modulateImage'])
-    fileOpts.extend(ARGUMENTS[fsldisplay.VectorOpts, 'clipImage'])
-    fileOpts.extend(ARGUMENTS[fsldisplay.ModelOpts,  'refImage']) 
+    for target, propNames in FILE_OPTIONS.items():
+        for propName in propNames:
+            fileOpts.extend(ARGUMENTS[target, propName])
 
     # There is a possibility that the user
     # may specify an overlay name which is the
@@ -896,7 +921,8 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
 
     # Compile a list of arguments which
     # look like overlay file names
-    ovlIdxs = []
+    ovlIdxs  = []
+    ovlTypes = []
     
     for i in range(len(argv)):
 
@@ -920,8 +946,10 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
 
         # Otherwise, it's an overlay
         # file that needs to be loaded
-        ovlIdxs.append(i)
-        
+        ovlIdxs .append(i)
+        ovlTypes.append(dtype)
+
+    # Why is this here?
     ovlIdxs.append(len(argv))
 
     # Separate the program arguments 
@@ -942,22 +970,35 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
     for i in range(len(ovlIdxs) - 1):
 
         ovlArgv = argv[ovlIdxs[i]:ovlIdxs[i + 1]]
-        ovlFile = ovlArgv[0]
-        ovlArgv = ovlArgv[1:]
+        ovlFile = ovlArgv[ 0]
+        ovlType = ovlTypes[i]
+        ovlArgv = ovlArgv[ 1:]
 
-        try:
-            ovlNamespace         = ovlParser.parse_args(ovlArgv)
-            ovlNamespace.overlay = ovlFile
-            
-        except Exception as e:
-            printHelp(shortHelp=True)
-            print(e.message)
-            sys.exit(1)
+        # FIrst parse the arguments with the Display parser
+        displayParser          = overlayParsers[fsldisplay.Display]
+        displayArgs, remaining = displayParser.parse_known_args(ovlArgv)
+
+        # If the user did not specify an overlay type
+        # for this overlay, use its default (see the
+        # display.OVERLAY_TYPES) dictionary)
+        if displayArgs.overlayType is None:
+            displayArgs.overlayType = fsldisplay.OVERLAY_TYPES[ovlType][0]
+
+        # Parse the remaining arguemnts
+        # with the DisplayOpts parser
+        optType    = fsldisplay.DISPLAY_OPTS_MAP[displayArgs.overlayType]
+        optsParser = overlayParsers[optType]
+        optsArgs   = optsParser.parse_args(remaining)
+
+        # Attach the path and the opts namespace
+        # to the display namespace object
+        displayArgs.overlay = ovlFile
+        displayArgs.opts    = optsArgs
 
         # We just add a list of argparse.Namespace
-        # objects, one for each overlay, to the
-        # parent Namespace object.
-        namespace.overlays.append(ovlNamespace)
+        # objects, one for each overlay, to
+        # the parent Namespace object.
+        namespace.overlays.append(displayArgs)
 
     return namespace
 
@@ -1140,7 +1181,6 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
     """
 
     import fsl.data.image as fslimage
-    import fsl.data.model as fslmodel
 
     # The fsleyes.oberlay.loadOverlay function
     # works asynchronously - this function will
@@ -1157,32 +1197,47 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
 
             display = displayCtx.getDisplay(overlay)
 
+            # Get the argparse.Namespace object
+            # corresponding to the Display instance,
+            # and to the DisplayOpts instance
+            displayArgs = args.overlays[i]
+            optsArgs    = args.overlays[i].opts
+
+            delattr(displayArgs, 'overlay')
+            delattr(displayArgs, 'opts')
+
             # Figure out how many arguments
             # were passed in for this overlay
-            nArgs = len([v for k, v in vars(args.overlays[i]).items()
-                         if k != 'overlay' and v is not None])
+
+            allArgs = ([v for k, v in vars(displayArgs).items()] +
+                       [v for k, v in vars(optsArgs)   .items()])
+            nArgs   = len([a for a in allArgs if a is not None])
 
             # If no arguments were passed,
             # apply default display settings 
             if nArgs == 0 and args.autoDisplay:
                 autodisplay.autoDisplay(overlay, overlayList, displayCtx)
-            else:
-                _applyArgs(args.overlays[i], display)
+                continue
+
+            # Otherwise, we start by applying
+            # arguments to the Display instance
+            _applyArgs(displayArgs, display)
 
             # Retrieve the DisplayOpts instance
             # after applying arguments to the
             # Display instance - if the overlay
             # type is set on the command line, the
-            # DisplayOpts instance will be replaced
+            # DisplayOpts instance will have been
+            # re-created
             opts = display.getDisplayOpts()
 
-            # VectorOpts.modulateImage and clipImage
+            # All options in the FILE_OPTIONS dictionary
             # are Choice properties, where the valid
             # choices are defined by the current
             # contents of the overlay list. So when
             # the user specifies one of these images,
             # we need to do an explicit check to see
-            # if the specified image is valid
+            # if the specified image is valid.
             # 
             # Here, I'm loading the image, and checking
             # to see if it can be used to modulate the
@@ -1191,66 +1246,31 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
             # applyArguments function will apply the
             # value. If the modulate file is not valid,
             # an error is raised.
-            if isinstance(opts, fsldisplay.VectorOpts) and \
-               args.overlays[i].modulateImage is not None:
+            fileOpts = FILE_OPTIONS.get(opts, [])
 
-                modImage = _findOrLoad(overlayList,
-                                       args.overlays[i].modulateImage,
-                                       fslimage.Image,
-                                       overlay)
+            for fileOpt in fileOpts:
+                value = getattr(opts, fileOpt) 
+                if value is not None:
 
-                if modImage.shape != overlay.shape[ :3]:
-                    raise RuntimeError(
-                        'Image {} cannot be used to modulate {} - '
-                        'dimensions don\'t match'.format(modImage, overlay))
-
-                opts.modulateImage             = modImage
-                args.overlays[i].modulateImage = None
-
-                log.debug('Set {} to be modulated by {}'.format(
-                    overlay, modImage))
-
-            # Same process for VectorOpts.clipImage
-            if isinstance(opts, fsldisplay.VectorOpts) and \
-               args.overlays[i].clipImage is not None:
-
-                clipImage = _findOrLoad(overlayList,
-                                        args.overlays[i].clipImage,
+                    image = _findOrLoad(overlayList,
+                                        value,
                                         fslimage.Image,
                                         overlay)
 
-                if clipImage.shape != overlay.shape[ :3]:
-                    raise RuntimeError(
-                        'Image {} cannot be used to clip {} - '
-                        'dimensions don\'t match'.format(clipImage, overlay))
+                    # With the exception of ModelOpts.refImage,
+                    # all of hte file options specify images which
+                    # must match the overlay shape to be valid.
+                    if not isinstance(opts, fsldisplay.ModelOpts):
+                        if image.shape != overlay.shape[ :3]:
+                            raise RuntimeError('')
 
-                opts.clipImage                 = clipImage
-                args.overlays[i].modulateImage = None
-
-                log.debug('Set {} to be clipped by {}'.format(
-                    overlay, clipImage))
-
-            # A similar process is followed for 
-            # the ModelOpts.refImage property
-            if isinstance(overlay, fslmodel.Model)        and \
-               isinstance(opts,    fsldisplay.ModelOpts)  and \
-               args.overlays[i].modelRefImage is not None:
-
-                refImage = _findOrLoad(overlayList,
-                                       args.overlays[i].modelRefImage,
-                                       fslimage.Image,
-                                       overlay)
-
-                opts.refImage                  = refImage
-                args.overlays[i].modelRefImage = None
-
-                log.debug('Set {} reference image to {}'.format(
-                    overlay, refImage)) 
+                    setattr(opts,     fileOpt, image)
+                    setattr(optsArgs, fileOpt, None)
 
             # After handling the special cases
             # above, we can apply the CLI
             # options to the Opts instance
-            _applyArgs(args.overlays[i], opts)
+            _applyArgs(optsArgs, opts)
 
     paths = [o.overlay for o in args.overlays]
 

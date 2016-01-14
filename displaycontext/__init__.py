@@ -164,3 +164,6 @@ ALL_OVERLAY_TYPES = list(set(
 :attr:`.Display.overlayType` property and tge :data:`.display.OVERLAY_TYPES`
 dictionary for more details.
 """
+
+OVERLAY_TYPES    = display.OVERLAY_TYPES
+DISPLAY_OPTS_MAP = display.DISPLAY_OPTS_MAP
