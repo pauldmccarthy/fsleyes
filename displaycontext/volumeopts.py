@@ -655,6 +655,11 @@ class VolumeOpts(Nifti1Opts):
             if self.linkLowRanges:   self.__linkLowRangesChanged()
             if self.linkHighRanges:  self.__linkHighRangesChanged()
 
+            if not self.isSyncedToParent('clipImage'):
+                self.__overlayListChanged()
+            if not self.isSyncedToParent('clippingRange'):
+                self.__clipImageChanged()
+
         # If we have a parent, the clipImage and
         # clippingRange settings will have been
         # synced to the parent instance. Otherwise,

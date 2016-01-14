@@ -392,6 +392,10 @@ class GLVolume(globject.GLImageObject):
             texName = '{}_unsync_{}'.format(texName, id(opts))
 
         if self.imageTexture is not None:
+            
+            if self.imageTexture.getTextureName() == texName:
+                return
+            
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.getTextureName())
 
