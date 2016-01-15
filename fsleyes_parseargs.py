@@ -173,6 +173,7 @@ import            collections
 import props
 
 import fsl.utils.typedict as td
+import fsl.utils.async    as async
 import fsl.utils.status   as status
 import overlay            as fsloverlay
 
@@ -447,8 +448,8 @@ ARGUMENTS = td.TypeDict({
     'Main.help'            : ('h',  'help'),
     'Main.glversion'       : ('gl', 'glversion'),
     'Main.scene'           : ('s',  'scene'),
-    'Main.voxelLoc'        : ('v',  'voxelloc'),
-    'Main.worldLoc'        : ('w',  'worldloc'),
+    'Main.voxelLoc'        : ('v',  'voxelLoc'),
+    'Main.worldLoc'        : ('w',  'worldLoc'),
     'Main.selectedOverlay' : ('o',  'selectedOverlay'),
     'Main.autoDisplay'     : ('ad', 'autoDisplay'),
     
@@ -558,8 +559,7 @@ HELP = td.TypeDict({
 
     'Main.help'          : 'Display this help and exit',
     'Main.glversion'     : 'Desired (major, minor) OpenGL version',
-    'Main.scene'         : 'Scene to show. If not provided, the '
-                           'previous scene layout is restored.',
+    'Main.scene'         : 'Scene to show',
 
     # TODO how about other overlay types?
     'Main.voxelLoc'        : 'Location to show (voxel coordinates of '
@@ -613,8 +613,11 @@ HELP = td.TypeDict({
     'Nifti1Opts.transform'  : 'Transformation',
     'Nifti1Opts.volume'     : 'Volume',
 
-    'VolumeOpts.displayRange'    : 'Display range',
-    'VolumeOpts.clippingRange'   : 'Clipping range',
+    'VolumeOpts.displayRange'    : 'Display range. Setting this will '
+                                   'override brightnes/contrast settings.',
+    'VolumeOpts.clippingRange'   : 'Clipping range. Setting this will override'
+                                   'the low display range (unless low ranges '
+                                   'are unlinked).', 
     'VolumeOpts.invertClipping'  : 'Invert clipping',
     'VolumeOpts.clipImage'       : 'Image containing clipping values '
                                    '(defaults to the image itself)' ,
@@ -656,7 +659,7 @@ HELP = td.TypeDict({
 
     'TensorOpts.lighting'         : 'Disable lighting effect',
     'TensorOpts.tensorResolution' : 'Tensor resolution (quality)',
-    'TensorOpts.tensorScale'      : 'Tensor size (% of voxel size)',
+    'TensorOpts.tensorScale'      : 'Tensor size (percentage of voxel size)',
     
     'LabelOpts.lut'          : 'Label image LUT',
     'LabelOpts.outline'      : 'Show label outlines',
@@ -1289,6 +1292,13 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
     instance according to the arguments that were passed in on the command
     line.
 
+    .. note:: The scene arguments are applied asynchronously using
+              :func:`.async.idle`. This is done because the
+              :func:`.applyOverlayArgs` function also applies its
+              arguments asynchrnously, and we want the order of
+              application to match the order in which these functions
+              were called.
+
     :arg args:        :class:`argparse.Namespace` object containing the parsed
                       command line arguments.
 
@@ -1298,39 +1308,56 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
 
     :arg sceneOpts:   A :class:`.SceneOpts` instance.
     """
-    
-    # First apply all command line options
-    # related to the display context
 
-    # selectedOverlay
-    if args.selectedOverlay is not None:
-        if args.selectedOverlay < len(overlayList):
-            displayCtx.selectedOverlay = args.selectedOverlay
-    else:
-        if len(overlayList) > 0:
-            displayCtx.selectedOverlay = len(overlayList) - 1
+    def apply():
 
-    # Auto display
-    displayCtx.autoDisplay = args.autoDisplay
+        # First apply all command line options
+        # related to the display context
 
-    # voxel/world location
-    if len(overlayList) > 0:
-        if args.worldloc:
-            wloc = args.worldloc
-        elif args.voxelloc:
-            opts = displayCtx.getOpts(overlayList[0])
-            vloc = args.voxelloc
-            wloc = opts.transformCoords([vloc], 'voxel', 'display')[0]
-          
+        # selectedOverlay
+        if args.selectedOverlay is not None:
+            if args.selectedOverlay < len(overlayList):
+                displayCtx.selectedOverlay = args.selectedOverlay
         else:
-            wloc = [displayCtx.bounds.xlo + 0.5 * displayCtx.bounds.xlen,
-                    displayCtx.bounds.ylo + 0.5 * displayCtx.bounds.ylen,
-                    displayCtx.bounds.zlo + 0.5 * displayCtx.bounds.zlen]
+            if len(overlayList) > 0:
+                displayCtx.selectedOverlay = len(overlayList) - 1
 
-        displayCtx.location.xyz = wloc
+        # Auto display
+        displayCtx.autoDisplay = args.autoDisplay
 
-    # Now, apply arguments to the SceneOpts instance
-    _applyArgs(args, sceneOpts)
+        # voxel/world location
+        if len(overlayList) > 0:
+
+            defaultLoc = [displayCtx.bounds.xlo + 0.5 * displayCtx.bounds.xlen,
+                          displayCtx.bounds.ylo + 0.5 * displayCtx.bounds.ylen,
+                          displayCtx.bounds.zlo + 0.5 * displayCtx.bounds.zlen]
+            
+            opts   = displayCtx.getOpts(overlayList[0])
+            refimg = opts.getReferenceImage()
+            
+            if refimg is None:
+                displayLoc = defaultLoc
+            else:
+                refOpts = displayCtx.getOpts(refimg)
+
+                if args.voxelLoc:
+                    displayLoc = refOpts.transformCoords([args.voxelLoc],
+                                                         'voxel',
+                                                         'display')[0]
+                elif args.worldLoc:
+                    displayLoc = refOpts.transformCoords([args.worldLoc],
+                                                         'world',
+                                                         'display')[0] 
+
+                else:
+                    displayLoc = defaultLoc
+
+            displayCtx.location.xyz = displayLoc
+
+        # Now, apply arguments to the SceneOpts instance
+        _applyArgs(args, sceneOpts)
+        
+    async.idle(apply)
 
 
 def generateSceneArgs(overlayList, displayCtx, sceneOpts, exclude=None):

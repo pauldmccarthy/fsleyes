@@ -75,7 +75,7 @@ class _FSLEyesPanel(actions.ActionProvider, props.SyncableHasProperties):
 
     
     def __init__(self, overlayList, displayCtx):
-        """Create a :class:`ViewPanel`.
+        """Create a :class:`_FSLEyesPanel`.
 
         :arg overlayList: A :class:`.OverlayList` instance.
         
@@ -95,6 +95,13 @@ class _FSLEyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         self._name        = '{}_{}'.format(self.__class__.__name__, id(self))
         
         self.__destroyed  = False
+
+
+    def getDisplayContext(self):
+        """Returns a reference to the :class:`.DisplayContext` that is
+        associated with this ``_FSLEyesPanel``.
+        """
+        return self._displayCtx
 
         
     def destroy(self):
