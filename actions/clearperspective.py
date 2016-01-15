@@ -9,8 +9,6 @@ the user to clear/delete all saved perspectives.
 """
 
 
-import wx
-
 import fsl.data.strings         as strings
 import                             action
 import fsl.fsleyes.perspectives as perspectives
@@ -32,6 +30,8 @@ class ClearPerspectiveAction(action.Action):
         """Deletes all saved perspectives. Gets the user to confirm that
         they want to proceed before doing so.
         """
+
+        import wx
 
         dlg = wx.MessageDialog(
             wx.GetTopLevelWindows()[0],

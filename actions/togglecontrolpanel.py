@@ -10,8 +10,6 @@ the addition/removal of control panels.
 """
 
 
-import wx.lib.agw.aui as aui
-
 import action
 
 
@@ -37,6 +35,8 @@ class ToggleControlPanelAction(action.ToggleAction):
         :arg cpType:   The type of the control panel being managed by this
                        ``ToggleControlPanelAction``.
         """
+
+        import wx.lib.agw.aui as aui
 
         action.ToggleAction.__init__(self, func, instance)
 

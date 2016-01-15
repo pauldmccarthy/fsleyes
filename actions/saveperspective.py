@@ -8,8 +8,6 @@
 which allows the user to save the current perspective.
 """
 
-import wx
-
 import fsl.data.strings         as strings
 import                             action
 import fsl.fsleyes.perspectives as perspectives
@@ -37,6 +35,8 @@ class SavePerspectiveAction(action.Action):
         The user is prompted to enter a name, and the current frame layout
         is saved via the :func:`.perspectives.savePerspective` function.
         """
+
+        import wx
 
         builtIns = perspectives.BUILT_IN_PERSPECTIVES.keys()
         saved    = perspectives.getAllPerspectives()

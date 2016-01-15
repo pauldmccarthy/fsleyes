@@ -108,9 +108,13 @@ class Action(props.HasProperties):
         """Unbinds all widgets which have been bound via :meth:`bindToWidget`.
         """
 
-        import wx
-        
         for parent, evType, widget in self.__boundWidgets:
+
+            # If running in a non-GUI application,
+            # there will be no bound widgets, so
+            # this import will never be executed.
+            # Yes, it is hacky.
+            import wx
 
             # Only attempt to unbind if the parent
             # and widget have not been destroyed

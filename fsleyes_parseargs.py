@@ -999,7 +999,12 @@ def _setupOverlayParsers(forHelp=False):
     return dispParser, otParser, parsers
 
             
-def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
+def parseArgs(mainParser,
+              argv,
+              name,
+              desc,
+              toolOptsDesc='[options]',
+              fileOpts=None):
     """Parses the given command line arguments, returning an
     :class:`argparse.Namespace` object containing all the arguments.
 
@@ -1024,7 +1029,17 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
       - toolOptsDesc: A string describing the tool-specific options (those
                       options which are handled by the tool, not by this
                       module).
+
+
+      - fileOpts:     If the ``mainParser`` has already been configured to
+                      accept some arguments, you must pass any arguments
+                      that accept a file name as a list here. Otherwise,
+                      the file name may be incorrectly identified as a
+                      path to an overlay.
     """
+
+    if fileOpts is None: fileOpts = []
+    else:                fileOpts = list(fileOpts)
 
     log.debug('Parsing arguments for {}: {}'.format(name, argv))
 
@@ -1093,8 +1108,6 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
     # to account for when we're searching
     # for overlay files, flattening the
     # short/long arguments into a 1D list.
-    fileOpts = []
-
     for target, propNames in FILE_OPTIONS.items():
         for propName in propNames:
             fileOpts.extend(ARGUMENTS[target, propName])
@@ -1105,6 +1118,8 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
     # sure that such situations don't result
     # in an overlay file match.
     fileOpts.extend(ARGUMENTS[fsldisplay.Display, 'name'])
+
+    log.debug('Identifying overlay paths (ignoring: {})'.format(fileOpts))
 
     # Compile a list of arguments which
     # look like overlay file names
@@ -1143,6 +1158,9 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
     # from the overlay display arguments
     progArgv = argv[:ovlIdxs[0]]
     ovlArgv  = argv[ ovlIdxs[0]:]
+
+    log.debug('Main arguments:    {}'.format(progArgv))
+    log.debug('Overlay arguments: {}'.format(ovlArgv))
 
     # Parse the application options with the mainParser
     try:
