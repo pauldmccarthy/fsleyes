@@ -340,6 +340,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         self.__setLabelColours(bg, fg)
 
+        self.Refresh()
+        self.Update()
+
 
     def __setLabelColours(self, bgColour, fgColour):
         """Used by the :meth:`__bgColourChanged` and :meth:`__refreshLabels`

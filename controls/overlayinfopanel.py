@@ -125,8 +125,9 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
 
 
     _optProps = td.TypeDict({
-        'Image' : ['transform'],
-        'Model' : ['refImage', 'coordSpace']
+        'Image'       : ['transform'],
+        'Model'       : ['refImage', 'coordSpace'],
+        'TensorImage' : ['transform'],
     })
     """This dictionary contains a list of :class:`.DisplayOpts` properties
     that, when changed, should result in the information being refreshed.
@@ -154,7 +155,7 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
                             self._name,
                             self.__overlayTypeChanged)
 
-        for propName in OverlayInfoPanel._optProps[overlay]:
+        for propName in OverlayInfoPanel._optProps.get(overlay, []):
             opts.addListener(propName, self._name, self.__overlayOptsChanged) 
 
     

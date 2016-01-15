@@ -15,11 +15,15 @@ broadly split into the following groups:
 
  - *Main* arguments control the overall scene display, such as the
    display type (e.g. orthographic or lightbox), the displayed location,
-   and whether to show a colour bar.
+   and whether to show a colour bar. These arguemnts generally correspond
+   to properties of the :class:`.SceneOpts`, :class:`.OrthoOpts`,
+   :class:`.LightBoxOpts` and :class:`.DisplayContext` classes.
 
 
  - *Display* arguments control the display for a single overlay file (e.g.
-   a NIFTI1 image), such as interpolation, colour map, etc.
+   a NIFTI1 image), such as interpolation, colour map, etc. These arguments
+   correspond to properties of the :class:`.Display` class, and sub-classes
+   of :class:`.DisplayOpts`.
 
 
 This module provides the following functions: 
@@ -32,6 +36,45 @@ This module provides the following functions:
    generateSceneArgs
    generateOverlayArgs
    applyOverlayArgs
+
+
+--------------------------
+``argparse`` modifications
+--------------------------
+
+
+The ``argparse`` module is quite frustrating to work with for the command
+line interface that I want to provide. Therefore, this module modifies
+the behaviour of ``argparse.ArgumentParser`` instances (by monkey-patching
+instances - not the class itself) such that:
+
+ - Prefix matching (a.k.a. abbreviation) is disabled
+
+ - An error is raised when invalid arguments are passed, rather than
+   the program exiting.
+
+
+------------------------------
+Command line parsing procedure
+------------------------------
+
+
+*FSLeyes* command line arguments are processed using the following procedure
+ (implemented in the :func:`parseArgs` function):
+
+
+ 1. All overlay paths are identified.
+
+ 2. *Main* arguments are separated out from the *display* arguments for every
+    overlay.
+
+ 3. Main arguments are parsed.
+
+ 4. The display arguments for each overlay are parsed, using a parser that
+    is only configured to identify the overlay type.
+
+ 5. The display arguments for each overlay are parsed again, using a parser
+    that is configured to handle arguments specific to the overlay type.
 
 
 -------------------------------
@@ -113,7 +156,7 @@ To make this new propery settable via the command line, you need to:
              # .
              # .
              # .
-         }) 
+         })
 """
 
 
@@ -147,6 +190,97 @@ import                   autodisplay
 
 
 log = logging.getLogger(__name__)
+
+
+def _get_option_tuples(self, option_string):
+    """By default, the ``argparse`` module uses a *prefix matching* strategy,
+    which allows the user to (unambiguously) specify only part of an argument.
+    
+    While this may be a good idea for simple programs with a small number of
+    arguments, it is very disruptive to the way that I have designed this
+    module.
+
+    To disable this prefix matching functionality, this function is
+    monkey-patched into all ArgumentParser instances created in this module.
+
+    
+    .. note:: This is unnecessary in python 3.5 and above, due to the addition
+              of tge ``allow_abbrev`` option.
+
+
+    See http://stackoverflow.com/questions/33900846/\
+    disable-unique-prefix-matches-for-argparse-and-optparse
+    """
+    result = []
+
+    # option strings starting with two prefix characters are only
+    # split at the '='
+    chars = self.prefix_chars
+    if option_string[0] in chars and option_string[1] in chars:
+        if '=' in option_string:
+            option_prefix, explicit_arg = option_string.split('=', 1)
+        else:
+            option_prefix = option_string
+            explicit_arg = None
+        for option_string in self._option_string_actions:
+            if option_string == option_prefix:
+                action = self._option_string_actions[option_string]
+                tup = action, option_string, explicit_arg
+                result.append(tup)
+
+    # single character options can be concatenated with their arguments
+    # but multiple character options always have to have their argument
+    # separate
+    elif option_string[0] in chars and option_string[1] not in chars:
+        option_prefix = option_string
+        explicit_arg = None
+        short_option_prefix = option_string[:2]
+        short_explicit_arg = option_string[2:]
+
+        for option_string in self._option_string_actions:
+            if option_string == short_option_prefix:
+                action = self._option_string_actions[option_string]
+                tup = action, option_string, short_explicit_arg
+                result.append(tup)
+            elif option_string == option_prefix:
+                action = self._option_string_actions[option_string]
+                tup = action, option_string, explicit_arg
+                result.append(tup)
+
+    # shouldn't ever get here
+    else:
+        self.error(('unexpected option string: %s') % option_string)
+
+    # return the collected option tuples
+    return result
+
+
+class ArgumentError(Exception):
+    """Custom ``Exception`` class raised by ``ArgumentParser`` instances
+    created and used in this module.
+    """
+    pass
+
+
+def ArgumentParser(*args, **kwargs):
+    """Wrapper around the ``argparse.ArgumentParser` constructor which
+    creates, monkey-patches, and returns an ``ArgumentParser`` instance.
+    """
+    import types
+    ap = argparse.ArgumentParser(*args, **kwargs)
+
+    def ovlArgError(message):
+        raise ArgumentError(message)
+
+    # 1. I don't want prefix matching.
+    # 
+    # 2. I want to handle argument errors,
+    #    rather than having the parser 
+    #    force the program to exit
+    ap._get_option_tuples = types.MethodType(_get_option_tuples, ap) 
+    ap.error              = ovlArgError 
+    
+    return ap
 
 
 def concat(lists):
@@ -263,12 +397,9 @@ GROUPNAMES = td.TypeDict({
     'SceneOpts'      : 'Scene options',
     'OrthoOpts'      : 'Ortho display options',
     'LightBoxOpts'   : 'LightBox display options',
-    
     'Display'        : 'Overlay display options',
-    'Nifti1Opts'     : 'Options for NIFTI images',
     'VolumeOpts'     : 'Volume options',
     'MaskOpts'       : 'Mask options',
-    'VectorOpts'     : 'Vector options',
     'LineVectorOpts' : 'Line vector options',
     'RGBVectorOpts'  : 'RGB vector options',
     'ModelOpts'      : 'Model options',
@@ -350,16 +481,16 @@ ARGUMENTS = td.TypeDict({
     'LightBoxOpts.highlightSlice' : ('hs', 'highlightSlice'),
     'LightBoxOpts.zax'            : ('zx', 'zaxis'),
 
-    'Display.name'          : ('na',  'name'),
-    'Display.enabled'       : ('en',  'enabled'),
-    'Display.overlayType'   : ('ot',  'overlayType'),
-    'Display.alpha'         : ('al',  'alpha'),
-    'Display.brightness'    : ('bri', 'brightness'),
-    'Display.contrast'      : ('con', 'contrast'),
+    'Display.name'          : ('n',  'name'),
+    'Display.enabled'       : ('d',  'disabled'),
+    'Display.overlayType'   : ('ot', 'overlayType'),
+    'Display.alpha'         : ('a',  'alpha'),
+    'Display.brightness'    : ('b',  'brightness'),
+    'Display.contrast'      : ('c',  'contrast'),
 
-    'Nifti1Opts.resolution'   : ('res', 'resolution'),
-    'Nifti1Opts.transform'    : ('tf',  'transform'),
-    'Nifti1Opts.volume'       : ('vol', 'volume'),
+    'Nifti1Opts.resolution'   : ('r',  'resolution'),
+    'Nifti1Opts.transform'    : ('tf', 'transform'),
+    'Nifti1Opts.volume'       : ('v',  'volume'),
 
     'VolumeOpts.displayRange'    : ('dr', 'displayRange'),
     'VolumeOpts.clippingRange'   : ('cr', 'clippingRange'),
@@ -370,12 +501,12 @@ ARGUMENTS = td.TypeDict({
     'VolumeOpts.useNegativeCmap' : ('un', 'useNegativeCmap'),
     'VolumeOpts.interpolation'   : ('in', 'interpolation'),
     'VolumeOpts.invert'          : ('i',  'invert'),
-    'VolumeOpts.linkLowRanges'   : ('ll', 'linkLowRanges'),
+    'VolumeOpts.linkLowRanges'   : ('ll', 'unlinkLowRanges'),
     'VolumeOpts.linkHighRanges'  : ('lh', 'linkHighRanges'),
 
-    'MaskOpts.colour'    : ('c',  'maskColour'),
+    'MaskOpts.colour'    : ('mc', 'maskColour'),
     'MaskOpts.invert'    : ('i',  'maskInvert'),
-    'MaskOpts.threshold' : ('th', 'threshold'),
+    'MaskOpts.threshold' : ('t',  'threshold'),
 
     'VectorOpts.xColour'       : ('xc', 'xColour'),
     'VectorOpts.yColour'       : ('yc', 'yColour'),
@@ -389,22 +520,23 @@ ARGUMENTS = td.TypeDict({
     'VectorOpts.clipImage'     : ('cl', 'clipImage'),
     'VectorOpts.clippingRange' : ('cr', 'clippingRange'),
 
-    'LineVectorOpts.lineWidth'    : ('lvw', 'lineWidth'),
-    'LineVectorOpts.directed'     : ('lvi', 'directed'),
-    'RGBVectorOpts.interpolation' : ('rvi', 'rvInterpolation'),
+    'LineVectorOpts.lineWidth'    : ('lw', 'lineWidth'),
+    'LineVectorOpts.directed'     : ('ld', 'directed'),
+    
+    'RGBVectorOpts.interpolation' : ('i',  'interpolation'),
 
-    'TensorOpts.lighting'         : ('l',  'lighting'),
+    'TensorOpts.lighting'         : ('dl', 'disableLighting'),
     'TensorOpts.tensorResolution' : ('tr', 'tensorResolution'),
     'TensorOpts.tensorScale'      : ('s',  'scale'),
 
-    'ModelOpts.colour'       : ('mc',  'modelColour'),
-    'ModelOpts.outline'      : ('mo',  'modelOutline'),
-    'ModelOpts.outlineWidth' : ('mw',  'modelOutlineWidth'),
-    'ModelOpts.refImage'     : ('mr',  'modelRefImage'),
+    'ModelOpts.colour'       : ('mc', 'colour'),
+    'ModelOpts.outline'      : ('o',  'outline'),
+    'ModelOpts.outlineWidth' : ('w',  'outlineWidth'),
+    'ModelOpts.refImage'     : ('r',  'refImage'),
 
-    'LabelOpts.lut'          : ('ll',  'lut'),
-    'LabelOpts.outline'      : ('lo',  'labelOutline'),
-    'LabelOpts.outlineWidth' : ('lw',  'labelOutlineWidth'),
+    'LabelOpts.lut'          : ('l',  'lut'),
+    'LabelOpts.outline'      : ('o',  'outline'),
+    'LabelOpts.outlineWidth' : ('w',  'outlineWidth'),
 })
 """This dictionary defines the short and long command line flags to be used
 for every option.
@@ -414,10 +546,12 @@ for every option.
              and the :class:`.LightBoxOpts` options.
 
           2. There cannot be any collisions between the :class:`.Display`
-             options and any of the :class:`.DisplayOpts` options.
+             options and any one set of :class:`.DisplayOpts` options.
 
-          3. There *can* be collisions between these two groups though.
+          3. There *can* be collisions between these two groups, and 
+             between the options for different :class:`.DisplayOpts` types.
 """
+
 
 # Help text for all of the options
 HELP = td.TypeDict({
@@ -469,6 +603,7 @@ HELP = td.TypeDict({
     'LightBoxOpts.zax'            : 'Z axis',
 
     'Display.name'          : 'Overlay name',
+    'Display.enabled'       : 'Disable (hide) overlay',
     'Display.overlayType'   : 'Overlay type',
     'Display.alpha'         : 'Opacity',
     'Display.brightness'    : 'Brightness',
@@ -478,12 +613,20 @@ HELP = td.TypeDict({
     'Nifti1Opts.transform'  : 'Transformation',
     'Nifti1Opts.volume'     : 'Volume',
 
-    'VolumeOpts.displayRange'   : 'Display range',
-    'VolumeOpts.clippingRange'  : 'Clipping range',
-    'VolumeOpts.invertClipping' : 'Invert clipping',
-    'VolumeOpts.cmap'           : 'Colour map',
-    'VolumeOpts.interpolation'  : 'Interpolation',
-    'VolumeOpts.invert'         : 'Invert colour map',
+    'VolumeOpts.displayRange'    : 'Display range',
+    'VolumeOpts.clippingRange'   : 'Clipping range',
+    'VolumeOpts.invertClipping'  : 'Invert clipping',
+    'VolumeOpts.clipImage'       : 'Image containing clipping values '
+                                   '(defaults to the image itself)' ,
+    'VolumeOpts.cmap'            : 'Colour map',
+    'VolumeOpts.negativeCmap'    : 'Colour map for negative values '
+                                   '(only used if the negative '
+                                   'colour map is enabled)', 
+    'VolumeOpts.useNegativeCmap' : 'Use negative colour map',
+    'VolumeOpts.interpolation'   : 'Interpolation',
+    'VolumeOpts.invert'          : 'Invert colour map',
+    'VolumeOpts.linkLowRanges'   : 'Unlink low display/clipping ranges',
+    'VolumeOpts.linkHighRanges'  : 'Link high display/clipping ranges',
 
     'MaskOpts.colour'    : 'Colour',
     'MaskOpts.invert'    : 'Invert',
@@ -495,10 +638,12 @@ HELP = td.TypeDict({
     'VectorOpts.suppressX'     : 'Suppress X magnitude',
     'VectorOpts.suppressY'     : 'Suppress Y magnitude',
     'VectorOpts.suppressZ'     : 'Suppress Z magnitude',
-    'VectorOpts.modulateImage' : 'Modulate vector brightness',
-    'VectorOpts.clipImage'     : 'Clip vector voxels',
-    'VectorOpts.clippingRange' : 'Hide voxels where clip image '
-                                 'value is outside of this range.',
+    'VectorOpts.cmap'          : 'Colour map (only used if a '
+                                 'colour image is provided)',
+    'VectorOpts.colourImage'   : 'Image to colour vectors with',
+    'VectorOpts.modulateImage' : 'Image to modulate vector brightness with',
+    'VectorOpts.clipImage'     : 'Image to clip vectors with',
+    'VectorOpts.clippingRange' : 'Clipping range',
 
     'LineVectorOpts.lineWidth'    : 'Line width',
     'LineVectorOpts.directed'     : 'Interpret vectors as directed',
@@ -508,6 +653,10 @@ HELP = td.TypeDict({
     'ModelOpts.outline'      : 'Show model outline',
     'ModelOpts.outlineWidth' : 'Model outline width',
     'ModelOpts.refImage'     : 'Reference image for model',
+
+    'TensorOpts.lighting'         : 'Disable lighting effect',
+    'TensorOpts.tensorResolution' : 'Tensor resolution (quality)',
+    'TensorOpts.tensorScale'      : 'Tensor size (% of voxel size)',
     
     'LabelOpts.lut'          : 'Label image LUT',
     'LabelOpts.outline'      : 'Show label outlines',
@@ -577,12 +726,15 @@ def _lutTrans(l):
 
     
 TRANSFORMS = td.TypeDict({
-    'SceneOpts.showCursor'  : lambda b: not b,
-    'OrthoOpts.showXCanvas' : lambda b: not b,
-    'OrthoOpts.showYCanvas' : lambda b: not b,
-    'OrthoOpts.showZCanvas' : lambda b: not b,
-    'OrthoOpts.showLabels'  : lambda b: not b,
-    'LabelOpts.lut'         : _lutTrans,
+    'SceneOpts.showCursor'     : lambda b: not b,
+    'OrthoOpts.showXCanvas'    : lambda b: not b,
+    'OrthoOpts.showYCanvas'    : lambda b: not b,
+    'OrthoOpts.showZCanvas'    : lambda b: not b,
+    'OrthoOpts.showLabels'     : lambda b: not b,
+    'Display.enabled'          : lambda b: not b,
+    'VolumeOpts.linkLowRanges' : lambda b: not b,
+    'TensorOpts.lighting'      : lambda b: not b, 
+    'LabelOpts.lut'            : _lutTrans,
 })
 """This dictionary defines any transformations for command line options
 where the value passed on the command line cannot be directly converted
@@ -743,9 +895,31 @@ def _configLightBoxParser(lbParser):
     _configParser(fsldisplay.LightBoxOpts, lbParser)
 
 
-def _setupOverlayParsers():
+def _setupOverlayParsers(forHelp=False):
     """Creates a set of parsers which handle command line options for
     :class:`.Display` instances, and for all :class:`.DisplayOpts` instances.
+
+    :arg forHelp: If ``False`` (the default), each of the parsers created
+                  to handle options for the :class:`.DisplayOpts`
+                  sub-classes will be configured so that the can also
+                  handle options for :class:`.Display` properties. Otherwise,
+                  the ``DisplayOpts`` parsers will be configured to only
+                  handle ``DisplayOpts`` properties. This option is available
+                  to make it easier to separate the help sections when
+                  printing help.
+
+    :returns: A tuple containing:
+    
+                - An ``ArgumentParser`` which parses arguments specifying
+                  the :class:`.Display` properties. This parser is not 
+                  actually used to parse arguments - it is only used to
+                  generate help text.
+    
+                - An ``ArgumentParser`` which just parses arguments specifying
+                  the :attr:`.Display.overlayType` property. 
+
+                - An ``ArgumentParser`` which parses arguments specifying
+                  :class:`.Display` and :class:`.DisplayOpts` properties.
     """
 
     Display        = fsldisplay.Display
@@ -759,19 +933,37 @@ def _setupOverlayParsers():
 
     # A parser is created and returned
     # for each one of these types.
-    parserTypes = [Display, VolumeOpts, MaskOpts, LabelOpts,
-                   ModelOpts, LineVectorOpts, RGBVectorOpts,
-                   TensorOpts]
+    parserTypes = [VolumeOpts, MaskOpts, LabelOpts,
+                   ModelOpts, LineVectorOpts,
+                   RGBVectorOpts, TensorOpts]
 
     # Dictionary containing the Display parser,
-    # and parsers for each overlay type 
+    # and parsers for each overlay type. We use
+    # an ordered dict to control the order in
+    # which help options are printed.
     parsers = collections.OrderedDict()
+
+    # The Display parser is used as a parent
+    # for each of the DisplayOpts parsers
+    otParser   = ArgumentParser(add_help=False)
+    dispParser = ArgumentParser(add_help=False)
+    dispProps  = list(OPTIONS[Display])
+
+    if not forHelp:
+        dispProps.remove('overlayType')
+    
+    _configParser(Display, dispParser, dispProps)
+    _configParser(Display, otParser,   ['overlayType'])
 
     # Create and configure
     # each of the parsers
     for target in parserTypes:
 
-        parser          = argparse.ArgumentParser(add_help=False)
+        if not forHelp: parents = [dispParser]
+        else:           parents = []
+
+        parser = ArgumentParser(prog='', add_help=False, parents=parents)
+        
         parsers[target] = parser
         propNames       = concat(OPTIONS.get(target, allhits=True))
         specialOptions  = []
@@ -801,7 +993,7 @@ def _setupOverlayParsers():
                 metavar='FILE',
                 help=helpText)
 
-    return parsers
+    return dispParser, otParser, parsers
 
             
 def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
@@ -841,58 +1033,50 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
                      name,
                      toolOptsDesc)
 
-    # So I'm using multiple argument parsers. First of
-    # all, the mainParser parses application options
+    # So I'm using multiple argument parsers. First
+    # of all, the mainParser parses application
+    # options. We'll create additional parsers for
+    # handling overlays a bit later on.
     mainParser.usage       = usageStr
     mainParser.prog        = name
     mainParser.description = desc
 
     _setupMainParser(mainParser)
 
-    # And a separate parser for Display options and one
-    # for each DisplayOpts sub-class that corresponds
-    # to an overlay type. Below we're going to
-    # manually step through the list of arguments,
-    # and pass each block of arguments to the Display
-    # parser, and to the appropriate display opts
-    # parser, one at a time.
-    overlayParsers = _setupOverlayParsers()
-
     # Because I'm splitting the argument parsing across two
     # parsers, I'm using a custom print_help function 
-    def printHelp(shortHelp=False):
+    def printHelp():
+
+        # Create a bunch of parsers for handling
+        # overlay display options
+        dispParser, _, optParsers = _setupOverlayParsers(forHelp=True)
 
         # Print help for the main parser first,
         # and then separately for the overlay parser
-        if shortHelp: helpText = mainParser.format_usage()
-        else:         helpText = mainParser.format_help()
+        helpText = mainParser.format_help()
 
-        # Did I mention that I hate argparse?  Why
-        # can't we customise the help text?
-        for target, parser in overlayParsers.items():
+        optParsers = ([(fsldisplay.Display, dispParser)] +
+                      list(optParsers.items()))
+
+        for target, parser in optParsers:
 
             groupName = GROUPNAMES.get(target, None)
             groupDesc = GROUPDESCS.get(target, None)
 
             groupDesc = '\n  '.join(textwrap.wrap(groupDesc, 60))
             
-            if shortHelp:
-                helpText = ''
+            helpText += '\n' + groupName + ':\n'
+            if groupDesc is not None:
+                helpText += '  ' + groupDesc + '\n'
 
-            else:
+            ovlHelp = parser.format_help()
 
-                helpText += '\n' + groupName + ':\n'
-                if groupDesc is not None:
-                    helpText += '  ' + groupDesc + '\n'
+            skipTo    = 'optional arguments:'
+            optStart  = ovlHelp.index(skipTo)
+            optStart += len(skipTo) + 1
+            ovlHelp   = ovlHelp[optStart:]
 
-                ovlHelp = parser.format_help()
-
-                skipTo    = 'optional arguments:'
-                optStart  = ovlHelp.index(skipTo)
-                optStart += len(skipTo) + 1
-                ovlHelp   = ovlHelp[optStart:]
-                
-                helpText += '\n' + ovlHelp
+            helpText += '\n' + ovlHelp
 
         print(helpText)
 
@@ -958,15 +1142,39 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
     ovlArgv  = argv[ ovlIdxs[0]:]
 
     # Parse the application options with the mainParser
-    namespace = mainParser.parse_args(progArgv)
+    try:
+        namespace = mainParser.parse_args(progArgv)
+        
+    except ArgumentError as e:
+        print(e.message)
+        print() 
+        mainParser.print_usage()
+        sys.exit(1)
 
     if namespace.help:
         printHelp()
         sys.exit(0)
+
+    # Now, we'll create additiona parsers to handle
+    # the Display and DisplayOpts options for each
+    # overlay . Below we're going to manually step
+    # through the list of arguments for each overlay,
+    # and perform a two-pass parse on them.
+    #
+    # First, we use a parser which is only configured
+    # to handle arguments for the Display.overlayType
+    # property.
+    #
+    # Then, now that we know the overlay type, we can
+    # then use the appropriate display opts parser to
+    # handle the rest of the options.
+    dispParser, otParser, optParsers = _setupOverlayParsers()
  
-    # Then parse each block of
-    # display options one by one.
+    # Parse each block of display options one by one,
+    # and aggregate the results into a list attached
+    # to the main parser namespace object.
     namespace.overlays = []
+    
     for i in range(len(ovlIdxs) - 1):
 
         ovlArgv = argv[ovlIdxs[i]:ovlIdxs[i + 1]]
@@ -974,31 +1182,56 @@ def parseArgs(mainParser, argv, name, desc, toolOptsDesc='[options]'):
         ovlType = ovlTypes[i]
         ovlArgv = ovlArgv[ 1:]
 
-        # FIrst parse the arguments with the Display parser
-        displayParser          = overlayParsers[fsldisplay.Display]
-        displayArgs, remaining = displayParser.parse_known_args(ovlArgv)
+        # First use the overlay type parser 
+        # to see if the user has explicitly
+        # specified an overlay type
+        try:
+            otArgs, remaining = otParser.parse_known_args(ovlArgv)
+        
+        except ArgumentError as e:
+            print(e.message)
+            print()
+            mainParser.print_usage()
+            sys.exit(1)
 
         # If the user did not specify an overlay type
         # for this overlay, use its default (see the
         # display.OVERLAY_TYPES) dictionary)
-        if displayArgs.overlayType is None:
-            displayArgs.overlayType = fsldisplay.OVERLAY_TYPES[ovlType][0]
+        if otArgs.overlayType is None:
+            otArgs.overlayType = fsldisplay.OVERLAY_TYPES[ovlType][0]
 
-        # Parse the remaining arguemnts
-        # with the DisplayOpts parser
-        optType    = fsldisplay.DISPLAY_OPTS_MAP[displayArgs.overlayType]
-        optsParser = overlayParsers[optType]
-        optsArgs   = optsParser.parse_args(remaining)
+        # Now parse the Display/DisplayOpts
+        # with the appropriate parser
+        optType   = fsldisplay.DISPLAY_OPTS_MAP[otArgs.overlayType]
+        optParser = optParsers[optType]
 
-        # Attach the path and the opts namespace
-        # to the display namespace object
-        displayArgs.overlay = ovlFile
-        displayArgs.opts    = optsArgs
+        try: optArgs = optParser.parse_args(remaining)
+        
+        except ArgumentError as e:
+            print(e.message)
+            print()
+            mainParser.print_usage()
+            print()
+            print('Options for \'{}\' overlays'.format(otArgs.overlayType))
+            optUsage = optParser.format_usage()
+            
+            # Remove the 'usage: ' prefix
+            # generated by argparse
+            optUsage = '      ' + optUsage[6:]
+            
+            print(optUsage)
+            sys.exit(1)
+ 
+
+        # Attach the path and the overlay
+        # type to the opts namespace object
+        optArgs.overlayType = otArgs.overlayType
+        optArgs.overlay     = ovlFile
 
         # We just add a list of argparse.Namespace
         # objects, one for each overlay, to
         # the parent Namespace object.
-        namespace.overlays.append(displayArgs)
+        namespace.overlays.append(optArgs)
 
     return namespace
 
@@ -1196,21 +1429,14 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                           'to {}...'.format(overlay.name))
 
             display = displayCtx.getDisplay(overlay)
+            optArgs = args.overlays[i]
 
-            # Get the argparse.Namespace object
-            # corresponding to the Display instance,
-            # and to the DisplayOpts instance
-            displayArgs = args.overlays[i]
-            optsArgs    = args.overlays[i].opts
-
-            delattr(displayArgs, 'overlay')
-            delattr(displayArgs, 'opts')
+            delattr(optArgs, 'overlay')
 
             # Figure out how many arguments
             # were passed in for this overlay
 
-            allArgs = ([v for k, v in vars(displayArgs).items()] +
-                       [v for k, v in vars(optsArgs)   .items()])
+            allArgs = [v for k, v in vars(optArgs).items()]
             nArgs   = len([a for a in allArgs if a is not None])
 
             # If no arguments were passed,
@@ -1221,7 +1447,7 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
 
             # Otherwise, we start by applying
             # arguments to the Display instance
-            _applyArgs(displayArgs, display)
+            _applyArgs(optArgs, display)
 
             # Retrieve the DisplayOpts instance
             # after applying arguments to the
@@ -1258,19 +1484,19 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                                         overlay)
 
                     # With the exception of ModelOpts.refImage,
-                    # all of hte file options specify images which
+                    # all of the file options specify images which
                     # must match the overlay shape to be valid.
                     if not isinstance(opts, fsldisplay.ModelOpts):
                         if image.shape != overlay.shape[ :3]:
                             raise RuntimeError('')
 
-                    setattr(opts,     fileOpt, image)
-                    setattr(optsArgs, fileOpt, None)
+                    setattr(opts,    fileOpt, image)
+                    setattr(optArgs, fileOpt, None)
 
             # After handling the special cases
             # above, we can apply the CLI
             # options to the Opts instance
-            _applyArgs(optsArgs, opts)
+            _applyArgs(optArgs, opts)
 
     paths = [o.overlay for o in args.overlays]
 
