@@ -416,14 +416,14 @@ defines descriptions for ecah command line group.
 # Descriptions for each group
 GROUPDESCS = td.TypeDict({
 
-    'SceneOpts'    : 'These settings are only applied if the \'--scene\' '
-                     'option is set to \'lightbox\' or \'ortho\'.',
+    'SceneOpts'    : 'These settings are applied to every '
+                     'orthographic and lightbox view.',
 
-    'OrthoOpts'    : 'These settings are only applied if the \'--scene\' '
-                     'option is set to \'ortho\'.', 
+    'OrthoOpts'    : 'These settings are applied to every '
+                     'ortho view.', 
 
-    'LightBoxOpts' : 'These settings are only applied if the \'--scene\' '
-                     'option is set to \'lightbox\'.',
+    'LightBoxOpts' : 'These settings are applied to every '
+                     'lightbox view.',
  
     'Display'      : 'Each display option will be applied to the '
                      'overlay which is listed before that option. '

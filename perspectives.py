@@ -252,7 +252,32 @@ def serialisePerspective(frame):
     # AuiManager, and makes sure that the order of the
     # child pane layout specifications in the string is
     # the same as the order of the children in the list.
-    def patchLayoutString(auiMgr, panels):
+    #
+    # If the 'rename' argument is True, this function
+    # performs an additional step.
+    #
+    # The FSLEyesFrame gives each of its view panels a
+    # unique name of the form "ClassName index", where
+    # the 'index' is a sequentially increasing identifier
+    # number (so that multiple views of the same type can
+    # be differentiated). If the 'rename' argument to
+    # this function is True, these names are adjusted so
+    # that they begin at 1 and increase sequentially. This
+    # is done by the patchPanelName function, defined
+    # below.
+    #
+    # This name adjustment is required to handle
+    # situations where the indices of existing view panels
+    # are not sequential, as when a layout is applied, the
+    # view panel names given by the FSLEyesFrame must
+    # match the names that are specified in the layout
+    # perspective string.
+    #
+    # In addition to patching the name of each panel,
+    # the 'rename' argument will also cause the panel
+    # caption (its display title) to be adjusted so that
+    # it is in line with the name.
+    def patchLayoutString(auiMgr, panels, rename=False):
 
         layoutStr = auiMgr.SavePerspective()
 
@@ -276,12 +301,48 @@ def serialisePerspective(frame):
                 pi          += 1
                 sections[si] = panelLayout
 
+                if rename:
+                    sections[si] = patchPanelName(sections[si], pi)
+
         # Now the panel layouts in our layout string
         # are in the same order as our list of view
         # panels - we can re-join the layout string
         # sections, and we're done.
         return '|'.join(sections) + '|'
 
+    # The purpose of this function is described above.
+    def patchPanelName(layoutString, index):
+        # In each AUI layout section, 'key=value'
+        # pairs are separated with a semi-colon
+        kvps = layoutString.split(';')
+
+        # And each 'key=value' pair is separated
+        # with an equals character
+        kvps = [kvp.split('=') for kvp in kvps]
+        kvps = collections.OrderedDict(kvps)
+
+        # We need to update the indices contained
+        # in the 'name' and 'caption' values
+        name    = kvps['name']
+        caption = kvps['caption']
+
+        # Strip off the old index
+        name    = ' '.join(name   .split()[:-1])
+        caption = ' '.join(caption.split()[:-1])
+
+        # Patch in the new index
+        name    = '{} {}'.format(name,    index)
+        caption = '{} {}'.format(caption, index)
+
+        kvps['name']    = name
+        kvps['caption'] = caption
+
+        # Reconstruct the layout string
+        kvps = ['='.join((k, v)) for k, v in kvps.items()]
+        kvps = ';'.join(kvps)
+
+        return kvps
+                                      
     # Now we can start extracting the layout information.
     # We start with the FSLEyesFrame layout.
     auiMgr     = frame.getAuiManager()
@@ -289,7 +350,7 @@ def serialisePerspective(frame):
 
     # Generate the frame layout string, and a
     # list of the children of the frame
-    frameLayout   = patchLayoutString(auiMgr, viewPanels)
+    frameLayout   = patchLayoutString(auiMgr, viewPanels, True)
     frameChildren = [type(vp).__name__ for vp in viewPanels]
     frameChildren = ','.join(frameChildren)
 

@@ -86,7 +86,8 @@ class FSLEyesFrame(wx.Frame):
                  parent,
                  overlayList,
                  displayCtx,
-                 restore=False):
+                 restore=False,
+                 save=True):
         """Create a ``FSLEyesFrame``.
 
         .. note:: The ``restore`` functionality is not currently implemented.
@@ -101,6 +102,8 @@ class FSLEyesFrame(wx.Frame):
         
         :arg restore:     Restores previous saved layout. If ``False``, no 
                           view panels will be displayed.
+
+        :arg save:        Save current layout when closed. 
         """
         
         wx.Frame.__init__(self, parent, title='FSLeyes')
@@ -163,10 +166,7 @@ class FSLEyesFrame(wx.Frame):
         self.__makeMenuBar()
         self.__restoreState(restore)
 
-        # If we have not restored the previous
-        # layout, we are not going to save the
-        # layout on exit.
-        self.__saveLayout = restore
+        self.__saveLayout = save
 
         self.__auiManager.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onViewPanelClose)
         self             .Bind(wx.EVT_CLOSE,           self.__onClose)
@@ -468,6 +468,11 @@ class FSLEyesFrame(wx.Frame):
             size     = self.GetSize().Get()
             position = self.GetScreenPosition().Get()
             layout   = perspectives.serialisePerspective(self)
+
+
+            log.debug('Saving size: {}'    .format(size))
+            log.debug('Saving position: {}'.format(position))
+            log.debug('Saving layout: {}'  .format(layout))
             
             fslsettings.write('framesize',     str(size))
             fslsettings.write('frameposition', str(position))
@@ -592,6 +597,7 @@ class FSLEyesFrame(wx.Frame):
             if layout is None:
                 perspectives.loadPerspective(self, 'default')
             else:
+                log.debug('Restoring previous layout: {}'.format(layout))
                 perspectives.applyPerspective(
                     self,
                     'framelayout',
