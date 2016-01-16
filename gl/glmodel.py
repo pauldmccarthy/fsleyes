@@ -106,6 +106,12 @@ class GLModel(globject.GLObject):
         self.opts    = None
 
         
+    def ready(self):
+        """Overrides :meth:`.GLObject.ready`. Always returns ``True``.
+        """
+        return True
+
+        
     def addListeners(self):
         """Called by :meth:`__init__`. Adds some property listeners to the
         :class:`.Display` and :class:`.ModelOpts` instances so the OpenGL
