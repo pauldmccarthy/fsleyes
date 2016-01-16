@@ -746,7 +746,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             display = self.displayCtx.getDisplay(overlay)
             globj   = self._glObjects.get(overlay, None)
 
-            if (globj is None) or (not display.enabled):
+            if (globj is None) or (not globj.ready()) or (not display.enabled):
                 continue
 
             log.debug('Drawing {} slices ({} - {}) for '

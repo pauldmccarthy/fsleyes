@@ -496,7 +496,7 @@ ARGUMENTS = td.TypeDict({
     'VolumeOpts.displayRange'    : ('dr', 'displayRange'),
     'VolumeOpts.clippingRange'   : ('cr', 'clippingRange'),
     'VolumeOpts.invertClipping'  : ('ic', 'invertClipping'),
-    'VolumeOpts.clipImage'       : ('ci', 'clipImage'),
+    'VolumeOpts.clipImage'       : ('cl', 'clipImage'),
     'VolumeOpts.cmap'            : ('cm', 'cmap'),
     'VolumeOpts.negativeCmap'    : ('nc', 'negativeCmap'),
     'VolumeOpts.useNegativeCmap' : ('un', 'useNegativeCmap'),
@@ -516,8 +516,8 @@ ARGUMENTS = td.TypeDict({
     'VectorOpts.suppressY'     : ('ys', 'suppressY'),
     'VectorOpts.suppressZ'     : ('zs', 'suppressZ'),
     'VectorOpts.cmap'          : ('cm', 'cmap'),
-    'VectorOpts.colourImage'   : ('ci', 'colourImage'),
-    'VectorOpts.modulateImage' : ('mi', 'modulateImage'),
+    'VectorOpts.colourImage'   : ('co', 'colourImage'),
+    'VectorOpts.modulateImage' : ('mo', 'modulateImage'),
     'VectorOpts.clipImage'     : ('cl', 'clipImage'),
     'VectorOpts.clippingRange' : ('cr', 'clippingRange'),
 
@@ -1519,7 +1519,7 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
             fileOpts = FILE_OPTIONS.get(opts, [])
 
             for fileOpt in fileOpts:
-                value = getattr(opts, fileOpt) 
+                value = getattr(optArgs, fileOpt)
                 if value is not None:
 
                     image = _findOrLoad(overlayList,

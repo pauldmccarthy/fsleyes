@@ -520,7 +520,9 @@ class SliceCanvas(props.HasProperties):
         # But if any display/opts properties
         # are not synchronised, we'll use our
         # own texture stack. 
-        if not (display.allSyncedToParent() and 
+        if not (display.getParent()         and
+                display.allSyncedToParent() and 
+                opts   .getParent()         and
                 opts   .allSyncedToParent()):
 
             name = '{}_{}'.format(id(self.displayCtx), name)
