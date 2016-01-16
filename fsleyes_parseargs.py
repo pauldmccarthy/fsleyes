@@ -836,7 +836,6 @@ def _configMainParser(mainParser):
                             nargs=2,
                             help=mainHelp['glversion'])
     mainParser.add_argument(*mainArgs['scene'],
-                            choices=('ortho', 'lightbox'),
                             help=mainHelp['scene'])
     mainParser.add_argument(*mainArgs['voxelLoc'],
                             metavar=('X', 'Y', 'Z'),
