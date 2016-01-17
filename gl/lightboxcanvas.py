@@ -600,11 +600,11 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         xmin = self.displayCtx.bounds.getLo( self.xax)
         ymin = self.displayCtx.bounds.getLo( self.yax)
 
-        rowLines = np.zeros(((self.nrows - 1) * 2, 2), dtype=np.float32)
-        colLines = np.zeros(((self.ncols - 1) * 2, 2), dtype=np.float32)
+        rowLines = np.zeros(((self._totalRows - 1) * 2, 2), dtype=np.float32)
+        colLines = np.zeros(((self.ncols      - 1) * 2, 2), dtype=np.float32)
         
         topRow = self._totalRows - self.topRow 
-        btmRow = topRow          - self.nrows
+        btmRow = topRow          - self._totalRows
 
         rowLines[:, 1] = np.arange(
             ymin + (btmRow + 1) * ylen,
@@ -612,12 +612,12 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         rowLines[:, 0] = np.tile(
             np.array([xmin, xmin + self.ncols * xlen]),
-            self.nrows - 1)
+            self._totalRows - 1)
         
         colLines[:, 0] = np.arange(
             xmin + xlen,
-            xmin + xlen * self.ncols, xlen).repeat(2) 
-        
+            xmin + xlen * self.ncols, xlen).repeat(2)
+
         colLines[:, 1] = np.tile(np.array([
             ymin + btmRow * ylen,
             ymin + topRow * ylen]), self.ncols - 1)
