@@ -252,6 +252,11 @@ class GLLabel(globject.GLImageObject):
         """Calls the version-dependent ``draw`` function. """
         fslgl.gllabel_funcs.draw(self, zpos, xform)
 
+        
+    def drawAll(self, zpos, xform=None):
+        """Calls the version-dependent ``drawAll`` function. """
+        fslgl.gllabel_funcs.drawAll(self, zpos, xform) 
+
 
     def postDraw(self):
         """Unbinds the ``ImageTexture`` and ``LookupTableTexture``, and calls

@@ -217,6 +217,8 @@ class ARBPShader(object):
 
         pos   = self.vertParamPositions[name]
         value = np.array(value, dtype=np.float32).reshape((-1, 4))
+
+        log.debug('Setting vertex parameter {} = {}'.format(name, value))
         
         for i, row in enumerate(value):
             arbvp.glProgramLocalParameter4fARB(
@@ -230,6 +232,8 @@ class ARBPShader(object):
         """
         pos   = self.fragParamPositions[name]
         value = np.array(value, dtype=np.float32).reshape((-1, 4))
+
+        log.debug('Setting fragment parameter {} = {}'.format(name, value))
     
         for i, row in enumerate(value):
             arbfp.glProgramLocalParameter4fARB(
@@ -247,8 +251,12 @@ class ARBPShader(object):
         texUnit = self.__getAttrTexUnit(name)
         size    = value.shape[1]
         value   = np.array(value, dtype=np.float32)
-        value   = value.ravel('C')
+
+        log.debug('Setting vertex attribute {} = [{} * {}]'.format(
+            name, value.shape[0], size))
         
+        value = value.ravel('C')
+
         gl.glClientActiveTexture(texUnit)
         gl.glTexCoordPointer(size, gl.GL_FLOAT, 0, value)
 

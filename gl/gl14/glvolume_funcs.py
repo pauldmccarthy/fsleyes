@@ -117,10 +117,11 @@ def preDraw(self):
 
 def draw(self, zpos, xform=None):
     """Draws a slice of the image at the given Z location. """
-    
+
     vertices, voxCoords, texCoords = self.generateVertices(zpos, xform)
 
-    vertices = np.array(vertices,  dtype=np.float32).ravel('C')
+    vertices = np.array(vertices, dtype=np.float32).ravel('C')
+
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
 
     self.shader.setAttr('texCoord', texCoords)
@@ -136,18 +137,25 @@ def drawAll(self, zposes, xforms):
     nslices   = len(zposes)
     vertices  = np.zeros((nslices * 6, 3), dtype=np.float32)
     texCoords = np.zeros((nslices * 6, 3), dtype=np.float32)
+    indices   = np.arange(nslices * 6,     dtype=np.uint32)
 
     for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
         
         v, vc, tc = self.generateVertices(zpos, xform)
+        
         vertices[ i * 6: i * 6 + 6, :] = v
         texCoords[i * 6: i * 6 + 6, :] = tc
 
     vertices = vertices.ravel('C')
 
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+
     self.shader.setAttr('texCoord', texCoords)
-    gl.glDrawArrays(gl.GL_TRIANGLES, 0, nslices * 6) 
+    
+    gl.glDrawElements(gl.GL_TRIANGLES,
+                      nslices * 6,
+                      gl.GL_UNSIGNED_INT,
+                      indices)
 
 
 def postDraw(self):
