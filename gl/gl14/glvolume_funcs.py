@@ -110,8 +110,9 @@ def updateShaderState(self):
 def preDraw(self):
     """Prepares to draw a slice from the given :class:`.GLVolume` instance. """
 
-    gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
     self.shader.load()
+    self.shader.loadAtts()
+    gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
 
 
 def draw(self, zpos, xform=None):
@@ -119,10 +120,10 @@ def draw(self, zpos, xform=None):
     
     vertices, voxCoords, texCoords = self.generateVertices(zpos, xform)
 
-    self.shader.setAttr('texCoord', texCoords)
-
     vertices = np.array(vertices,  dtype=np.float32).ravel('C')
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+
+    self.shader.setAttr('texCoord', texCoords)
     
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
@@ -142,11 +143,10 @@ def drawAll(self, zposes, xforms):
         vertices[ i * 6: i * 6 + 6, :] = v
         texCoords[i * 6: i * 6 + 6, :] = tc
 
-    self.shader.setAttr('texCoord', texCoords)
-
     vertices = vertices.ravel('C')
-    
+
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+    self.shader.setAttr('texCoord', texCoords)
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, nslices * 6) 
 
 
@@ -155,4 +155,5 @@ def postDraw(self):
     instance.
     """
     gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+    self.shader.unloadAtts()
     self.shader.unload()

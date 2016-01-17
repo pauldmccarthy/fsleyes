@@ -69,8 +69,11 @@ class ARBPShader(object):
 
         program = GLSLShader(vertSrc, fragSrc, textures)
 
-        # Load the program
+        # Load the program, and
+        # enable program attributes
+        # (texture coordinates)
         program.load()
+        progra.loadAtts()
 
         # Set some parameters
         program.setVertParam('transform', np.eye(4))
@@ -85,6 +88,7 @@ class ARBPShader(object):
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
 
         # Clear the GL state
+        program.unloadAtts()
         program.unload()
 
         # Delete the program when
@@ -179,6 +183,8 @@ class ARBPShader(object):
         arbfp.glBindProgramARB(arbfp.GL_FRAGMENT_PROGRAM_ARB,
                                self.fragmentProgram)
 
+    def loadAtts(self):
+        """Enables texture coordinates for all shader program attributes. """
         for attr in self.attrs:
             texUnit = self.__getAttrTexUnit(attr)
 
@@ -191,6 +197,9 @@ class ARBPShader(object):
         gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
         gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB)
 
+        
+    def unloadAtts(self):
+        """Disables texture coordinates on all texture units. """
         for attr in self.attrs:
             texUnit = self.__getAttrTexUnit(attr)
 
