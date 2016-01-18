@@ -859,15 +859,18 @@ class SliceCanvas(props.HasProperties):
         """
 
         ovlBounds = self.displayCtx.bounds
+        oldPos    = self.pos.xy
 
+        self.disableNotification('pos')
         self.pos.setMin(0, ovlBounds.getLo(self.xax))
         self.pos.setMax(0, ovlBounds.getHi(self.xax))
         self.pos.setMin(1, ovlBounds.getLo(self.yax))
         self.pos.setMax(1, ovlBounds.getHi(self.yax))
         self.pos.setMin(2, ovlBounds.getLo(self.zax))
         self.pos.setMax(2, ovlBounds.getHi(self.zax))
+        self.enableNotification('pos')
 
-        self._updateDisplayBounds()
+        self._updateDisplayBounds(oldLoc=oldPos)
 
 
     def _zoomChanged(self, *a):
@@ -931,10 +934,15 @@ class SliceCanvas(props.HasProperties):
         return (xmin, xmax, ymin, ymax)
 
         
-    def _updateDisplayBounds(self, xmin=None, xmax=None, ymin=None, ymax=None):
+    def _updateDisplayBounds(self,
+                             xmin=None,
+                             xmax=None,
+                             ymin=None,
+                             ymax=None,
+                             oldLoc=None):
         """Called on canvas resizes, overlay bound changes, and zoom changes.
         
-        Calculates the bounding box, in world coordinates, to be displayed on
+        Calculates the bounding box, in display coordinates, to be displayed on
         the canvas. Stores this bounding box in the displayBounds property. If
         any of the parameters are not provided, the
         :attr:`.DisplayContext.bounds` are used.
@@ -943,11 +951,20 @@ class SliceCanvas(props.HasProperties):
         .. note:: This method is used internally, and also by the
                   :class:`.WXGLSliceCanvas` class.
 
+        .. warning:: This code assumes that, if the display coordinate system
+                     has changed, the display context location has already
+                     been updated.  See the
+                     :meth:`.DisplayContext.__displaySpaceChanged` method.
         
-        :arg xmin: Minimum x (horizontal) value to be in the display bounds.
-        :arg xmax: Maximum x value to be in the display bounds.
-        :arg ymin: Minimum y (vertical) value to be in the display bounds.
-        :arg ymax: Maximum y value to be in the display bounds.
+        
+        :arg xmin:   Minimum x (horizontal) value to be in the display bounds.
+        :arg xmax:   Maximum x value to be in the display bounds.
+        :arg ymin:   Minimum y (vertical) value to be in the display bounds.
+        :arg ymax:   Maximum y value to be in the display bounds.
+        :arg oldLoc: If provided, should be the ``(x, y)`` location shown on
+                     this ``SliceCanvas`` - the new display bounds will be
+                     adjusted so that this location remains the same, with
+                     respect to the new field of view.
         """
 
         if xmin is None: xmin = self.displayCtx.bounds.getLo(self.xax)
@@ -991,11 +1008,44 @@ class SliceCanvas(props.HasProperties):
             ymin          = ymin - 0.5 * (newDispHeight - dispHeight)
             ymax          = ymax + 0.5 * (newDispHeight - dispHeight)
 
+        oldxmin, oldxmax, oldymin, oldymax = self.displayBounds[:]
+
+        self.disableNotification('displayBounds')
         self.displayBounds.setLimits(0, xmin, xmax)
-        self.displayBounds.setLimits(1, ymin, ymax) 
+        self.displayBounds.setLimits(1, ymin, ymax)
+        self.enableNotification('displayBounds')
 
         xmin, xmax, ymin, ymax = self._applyZoom(xmin, xmax, ymin, ymax)
 
+        if oldLoc and (oldxmax > oldxmin) and (oldymax > oldymin):
+
+            # Calculate the normalised distance from the
+            # old cursor loaction to the old bound corner
+            oldxoff = (oldLoc[0] - oldxmin) / (oldxmax - oldxmin)
+            oldyoff = (oldLoc[1] - oldymin) / (oldymax - oldymin)
+
+            # Re-set the new bounds to the current
+            # display location, offset by the same
+            # amount that it used to be (as 
+            # calculated above).
+            #
+            # N.B. This code assumes that, if the display
+            #      coordinate system has changed, the display
+            #      context location has already been updated.
+            #      See the DisplayContext.__displaySpaceChanged
+            #      method.
+            xloc = self.displayCtx.location[self.xax]
+            yloc = self.displayCtx.location[self.yax]
+ 
+            xlen = xmax - xmin
+            ylen = ymax - ymin
+
+            xmin = xloc - oldxoff * xlen
+            ymin = yloc - oldyoff * ylen
+            
+            xmax = xmin + xlen
+            ymax = ymin + ylen
+            
         log.debug('Final display bounds: X: ({}, {}) Y: ({}, {})'.format(
             xmin, xmax, ymin, ymax))
 

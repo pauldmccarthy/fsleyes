@@ -478,7 +478,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         self._genSliceLocations()
         
         
-    def _updateDisplayBounds(self):
+    def _updateDisplayBounds(self, *args, **kwargs):
         """Overrides :meth:`.SliceCanvas._updateDisplayBounds`.
 
         Called on canvas resizes, display bound changes and lightbox slice

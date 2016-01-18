@@ -48,6 +48,7 @@ class LightBoxOpts(sceneopts.SceneOpts):
         """
         sceneopts.SceneOpts.__init__(self, *args, **kwargs)
         self.setConstraint('zoom', 'minval', 10)
+        self.setConstraint('zoom', 'maxval', 1000)
 
         
     def _onPerformanceChange(self, *a):
