@@ -1480,11 +1480,12 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
             # Figure out how many arguments
             # were passed in for this overlay
 
-            allArgs = [v for k, v in vars(optArgs).items()]
+            allArgs = [v for k, v in vars(optArgs).items()
+                       if k != 'overlayType']
             nArgs   = len([a for a in allArgs if a is not None])
 
             # If no arguments were passed,
-            # apply default display settings 
+            # apply default display settings
             if nArgs == 0 and args.autoDisplay:
                 autodisplay.autoDisplay(overlay, overlayList, displayCtx)
                 continue
