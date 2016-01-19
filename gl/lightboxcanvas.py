@@ -109,14 +109,6 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         slicecanvas.SliceCanvas.__init__(self, overlayList, displayCtx, zax)
 
-        # default to showing the entire slice range
-        zmin, zmax = displayCtx.bounds.getRange(self.zax)
-        self.zrange.xmin = zmin
-        self.zrange.xmax = zmax
-        self.zrange.x    = zmin, zmax
-
-        self._slicePropsChanged()
-
         self.addListener('sliceSpacing',   self.name, self._slicePropsChanged)
         self.addListener('ncols',          self.name, self._slicePropsChanged)
         self.addListener('nrows',          self.name, self._slicePropsChanged)
@@ -258,6 +250,17 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         self._genSliceLocations()
         self._zPosChanged()
         self._updateDisplayBounds()
+
+        if log.getEffectiveLevel() == logging.DEBUG:
+            props = [('nrows',        self.nrows),
+                     ('ncols',        self.ncols),
+                     ('sliceSpacing', self.sliceSpacing),
+                     ('zrange',       self.zrange)]
+
+            props = '; '.join(['{}={}'.format(k, v) for k, v in props])
+
+            log.debug('Lightbox properties changed: [{}]'.format(props))
+            
         self._refresh()
 
 
@@ -404,12 +407,11 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
 
     def _updateZAxisProperties(self):
-        """Called by the :meth:`_overlayBoundsChanged` method.
+        """Called by the :meth:`_overlayListChanged` and
+        :meth:`_overlayBoundsChanged` methods.
 
-        The purpose of this method is to set the slice spacing and displayed Z
-        range to something sensible when the Z axis, or Z bounds are
-        changed (e.g. due to overlays being added/removed, or to overlay
-        transformation matrices being changed).
+        Updates the constraints (minimum/maximum values) of the
+        :attr:`sliceSpacing` and :attr:`zrange` properties.
         """
 
         if len(self.overlayList) == 0:
@@ -418,11 +420,15 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             self.sliceSpacing = 0
         else:
 
-            # Pick a sensible default for the
+            # Get the new Z range from the
+            # display context bounding box.
+            #
+            # And calculate the minimum possible
             # slice spacing - the smallest pixdim
-            # across all overlays in the list 
-            newZGap = sys.float_info.max
-
+            # across all overlays in the list.
+            newZRange = self.displayCtx.bounds.getRange(self.zax)
+            newZGap   = sys.float_info.max
+            
             for overlay in self.overlayList:
 
                 overlay = self.displayCtx.getReferenceImage(overlay)
@@ -442,26 +448,17 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
                 if zgap < newZGap:
                     newZGap = zgap
 
-            newZRange = self.displayCtx.bounds.getRange(self.zax)
-
             # If there were no volumetric overlays
             # in the overlay list, choose an arbitrary
             # default slice spacing
             if newZGap == sys.float_info.max:
-                newZGap = (newZRange[1] - newZRange[0]) / 10.0
+                newZGap = (newZRange[1] - newZRange[0]) / 50.0
 
-            # Changing the zrange/sliceSpacing properties will, in most cases,
-            # trigger a call to _slicePropsChanged. But for overlays which have
-            # the same range across more than one dimension, the call might not
-            # happen. So we do a check and, if the dimension ranges are the
-            # same,  manually call _slicePropsChanged. Bringing out the ugly
-            # side of event driven programming.
+            # Update the zrange and slice
+            # spacing constraints
             self.zrange.setLimits(0, *newZRange)
             self.setConstraint('zrange',       'minDistance', newZGap)
             self.setConstraint('sliceSpacing', 'minval',      newZGap)
-
-            self.zrange.x     = newZRange
-            self.sliceSpacing = newZGap
 
 
     def _overlayBoundsChanged(self, *a):

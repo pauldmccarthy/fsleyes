@@ -261,7 +261,11 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                                  self._name,
                                  self.__transformChanged)
 
-        self.__transformChanged()
+        # If the current zrange is [0, 0] we'll
+        # assume that it needs to be initialised.
+        sceneOpts = self.getSceneOptions()
+        if sceneOpts.zrange == [0.0, 0.0]:
+            sceneOpts.zrange = self._displayCtx.bounds.getRange(sceneOpts.zax)
 
 
     def __transformChanged(self, *a):
@@ -286,11 +290,13 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         if opts.transform == 'id':
             sceneOpts.sliceSpacing = 1
-            sceneOpts.zrange.x     = (0, overlay.shape[sceneOpts.zax] - 1)
-        else:
+        elif opts.transform == 'pixdim':
             sceneOpts.sliceSpacing = overlay.pixdim[sceneOpts.zax]
-            sceneOpts.zrange.x     = (loBounds[sceneOpts.zax],
-                                      hiBounds[sceneOpts.zax])
+        else:
+            sceneOpts.sliceSpacing = min(overlay.pixdim[sceneOpts.zax])
+            
+        sceneOpts.zrange.x = (loBounds[sceneOpts.zax],
+                              hiBounds[sceneOpts.zax])
 
         self.__onResize()
 
