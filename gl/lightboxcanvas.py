@@ -21,6 +21,7 @@ import fsl.fsleyes.gl.slicecanvas            as slicecanvas
 import fsl.fsleyes.gl.resources              as glresources
 import fsl.fsleyes.gl.routines               as glroutines
 import fsl.fsleyes.gl.textures               as textures
+import fsl.data.image                        as fslimage
 
 
 log = logging.getLogger(__name__)
@@ -71,6 +72,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
        canvasToWorld
        worldToCanvas
        getTotalRows
+       calcSliceSpacing
     """
 
     
@@ -232,6 +234,54 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         """Returns the total number of rows that may be displayed. """
         return self._totalRows
 
+
+    def calcSliceSpacing(self, overlay):
+        """Calculates and returns a Z-axis slice spacing value suitable
+        for the given overlay. 
+        """
+        displayCtx = self.displayCtx
+        opts       = displayCtx.getOpts(overlay)
+        overlay    = displayCtx.getReferenceImage(overlay)
+        zmin, zmax = opts.bounds.getLimits(self.zax)
+
+        # If the overlay does not have a
+        # reference NIFTI1 image, choose
+        # an arbitrary slice spacing. 
+        if   overlay is None:            return (zmax - zmin) / 50.0
+
+        # Otherwise return a spacing
+        # appropriate for the current
+        # display space
+        if   opts.transform == 'id':     return 1
+        elif opts.transform == 'pixdim': return overlay.pixdim[self.zax]
+        elif opts.transform == 'affine': return min(overlay.pixdim[:3])
+
+        # This overlay is being displayed with a
+        # custrom transformation matrix  - check
+        # to see what display space we're in
+        displaySpace = displayCtx.displaySpace
+
+        if isinstance(displaySpace, fslimage.Nifti1):
+            return self.calcSliceSpacing(displaySpace)
+        else:
+            return min(overlay.pixdim[:3])
+
+
+    def _zAxisChanged(self, *a):
+        """Overrides :meth:`.SliceCanvas._zAxisChanged`. Calls that
+        method, and then resets the :attr:`sliceSpacing` and :attr:`zrange`
+        properties to sensible values.
+        """
+        slicecanvas.SliceCanvas._zAxisChanged(self, *a)
+
+        overlay = self.displayCtx.getSelectedOverlay()
+
+        if overlay is None:
+            return
+
+        self.sliceSpacing = self.calcSliceSpacing(overlay)
+        self.zrange.x     = self.displayCtx.bounds.getRange(self.zax)
+
         
     def _topRowChanged(self, *a):
         """Called when the :attr:`topRow` property changes.  Adjusts display
@@ -346,7 +396,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
            height == 0:
             return
 
-        self._nslices   = int(np.floor(zlen / self.sliceSpacing))
+        self._nslices   = int(np.ceil(zlen / self.sliceSpacing))
         self._totalRows = int(np.ceil(self._nslices / float(self.ncols)))
 
         if self._nslices == 0 or self._totalRows == 0:
@@ -418,47 +468,29 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             self.setConstraint('zrange', 'minDistance', 0)
             self.zrange.x     = (0, 0)
             self.sliceSpacing = 0
-        else:
+            return
 
-            # Get the new Z range from the
-            # display context bounding box.
-            #
-            # And calculate the minimum possible
-            # slice spacing - the smallest pixdim
-            # across all overlays in the list.
-            newZRange = self.displayCtx.bounds.getRange(self.zax)
-            newZGap   = sys.float_info.max
-            
-            for overlay in self.overlayList:
+        # Get the new Z range from the
+        # display context bounding box.
+        #
+        # And calculate the minimum possible
+        # slice spacing - the smallest pixdim
+        # across all overlays in the list.
+        newZRange = self.displayCtx.bounds.getRange(self.zax)
+        newZGap   = sys.float_info.max
 
-                overlay = self.displayCtx.getReferenceImage(overlay)
-                
-                if overlay is None:
-                    continue
-                
-                opts = self.displayCtx.getOpts(overlay)
+        for overlay in self.overlayList:
 
-                if   opts.transform == 'id':
-                    zgap = 1
-                elif opts.transform == 'pixdim':
-                    zgap = overlay.pixdim[self.zax]
-                else:
-                    zgap = min(overlay.pixdim[:3])
+            zgap = self.calcSliceSpacing(overlay)
 
-                if zgap < newZGap:
-                    newZGap = zgap
+            if zgap < newZGap:
+                newZGap = zgap
 
-            # If there were no volumetric overlays
-            # in the overlay list, choose an arbitrary
-            # default slice spacing
-            if newZGap == sys.float_info.max:
-                newZGap = (newZRange[1] - newZRange[0]) / 50.0
-
-            # Update the zrange and slice
-            # spacing constraints
-            self.zrange.setLimits(0, *newZRange)
-            self.setConstraint('zrange',       'minDistance', newZGap)
-            self.setConstraint('sliceSpacing', 'minval',      newZGap)
+        # Update the zrange and slice
+        # spacing constraints
+        self.zrange.setLimits(0, *newZRange)
+        self.setConstraint('zrange',       'minDistance', newZGap)
+        self.setConstraint('sliceSpacing', 'minval',      newZGap)
 
 
     def _overlayBoundsChanged(self, *a):

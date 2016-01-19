@@ -261,11 +261,16 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                                  self._name,
                                  self.__transformChanged)
 
-        # If the current zrange is [0, 0] we'll
-        # assume that it needs to be initialised.
-        sceneOpts = self.getSceneOptions()
-        if sceneOpts.zrange == [0.0, 0.0]:
-            sceneOpts.zrange = self._displayCtx.bounds.getRange(sceneOpts.zax)
+        # If the current zrange is [0, 0]
+        # we'll assume that the spacing/
+        # zrange need to be initialised.
+        lbCanvas = self.__lbCanvas
+        opts     = self.getSceneOptions()
+        
+        if opts.zrange == [0.0, 0.0]:
+            
+            opts.sliceSpacing = lbCanvas.calcSliceSpacing(selectedOverlay)
+            opts.zrange       = self._displayCtx.bounds.getRange(opts.zax)
 
 
     def __transformChanged(self, *a):
@@ -288,15 +293,12 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         loBounds = opts.bounds.getLo()
         hiBounds = opts.bounds.getHi()
 
-        if opts.transform == 'id':
-            sceneOpts.sliceSpacing = 1
-        elif opts.transform == 'pixdim':
-            sceneOpts.sliceSpacing = overlay.pixdim[sceneOpts.zax]
-        else:
-            sceneOpts.sliceSpacing = min(overlay.pixdim[sceneOpts.zax])
-            
-        sceneOpts.zrange.x = (loBounds[sceneOpts.zax],
-                              hiBounds[sceneOpts.zax])
+        # Reset the spacing/zrange. Not
+        # sure if this is the best idea,
+        # but it's here for the time being.
+        sceneOpts.sliceSpacing = self.__lbCanvas.calcSliceSpacing(overlay)
+        sceneOpts.zrange.x     = (loBounds[sceneOpts.zax],
+                                  hiBounds[sceneOpts.zax])
 
         self.__onResize()
 
