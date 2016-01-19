@@ -325,13 +325,13 @@ OPTIONS = td.TypeDict({
                        'showXCanvas',
                        'showYCanvas',
                        'showZCanvas'],
-    'LightBoxOpts'  : ['sliceSpacing',
+    'LightBoxOpts'  : ['zax',
+                       'sliceSpacing',
+                       'zrange',
                        'ncols',
                        'nrows',
-                       'zrange',
                        'showGridLines',
-                       'highlightSlice',
-                       'zax'],
+                       'highlightSlice'],
 
     # The order in which properties are listed
     # here is the order in which they are applied.
