@@ -242,7 +242,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         displayCtx = self.displayCtx
         opts       = displayCtx.getOpts(overlay)
         overlay    = displayCtx.getReferenceImage(overlay)
-        zmin, zmax = opts.bounds.getLimits(self.zax)
+        zmin, zmax = opts.bounds.getRange(self.zax)
 
         # If the overlay does not have a
         # reference NIFTI1 image, choose

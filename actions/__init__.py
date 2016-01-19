@@ -478,7 +478,7 @@ class ToggleActionButton(props.Toggle):
         elif isinstance(widget, wx.ToggleButton):
             ev = wx.EVT_TOGGLEBUTTON
         elif isinstance(widget, bmptoggle.BitmapToggleButton):
-            ev = bmptoggle.EVT_BITMAP_TOGGLE_EVENT
+            ev = bmptoggle.EVT_BITMAP_TOGGLE
             
         else:
             raise RuntimeError(

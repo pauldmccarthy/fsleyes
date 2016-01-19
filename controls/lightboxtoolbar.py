@@ -56,13 +56,20 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
         
         icons = {
             'screenshot'                : fslicons.findImageFile('camera24'),
-            'movieMode'                 : fslicons.findImageFile('movie24'),
-            'toggleCanvasSettingsPanel' : fslicons.findImageFile('gear24'),
+            'movieMode'                 : [
+                fslicons.findImageFile('movieHighlight24'),
+                fslicons.findImageFile('movie24')],
+            'toggleCanvasSettingsPanel' : [
+                fslicons.findImageFile('gearHighlight24'),
+                fslicons.findImageFile('gear24')],
 
             'zax' : {
-                0 : fslicons.findImageFile('sagittalSlice24'),
-                1 : fslicons.findImageFile('coronalSlice24'),
-                2 : fslicons.findImageFile('axialSlice24'),
+                0 : [fslicons.findImageFile('sagittalSliceHighlight24'),
+                     fslicons.findImageFile('sagittalSlice24')],
+                1 : [fslicons.findImageFile('coronalSliceHighlight24'),
+                     fslicons.findImageFile('coronalSlice24')],
+                2 : [fslicons.findImageFile('axialSliceHighlight24'),
+                     fslicons.findImageFile('axialSlice24')],
             }
         }
 

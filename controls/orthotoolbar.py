@@ -85,20 +85,35 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
 
         icons = {
             'screenshot'       : fslicons.findImageFile('camera24'),
-            'movieMode'        : fslicons.findImageFile('movie24'),
-            'showXCanvas'      : fslicons.findImageFile('sagittalSlice24'),
-            'showYCanvas'      : fslicons.findImageFile('coronalSlice24'),
-            'showZCanvas'      : fslicons.findImageFile('axialSlice24'),
-            'toggleCanvasSettingsPanel' : fslicons.findImageFile('gear24'),
+            'movieMode'        : [
+                fslicons.findImageFile('movieHighlight24'),
+                fslicons.findImageFile('movie24')],
+            'showXCanvas'      : [
+                fslicons.findImageFile('sagittalSliceHighlight24'),
+                fslicons.findImageFile('sagittalSlice24')],
+            'showYCanvas'      : [
+                fslicons.findImageFile('coronalSliceHighlight24'),
+                fslicons.findImageFile('coronalSlice24')],
+            'showZCanvas'      : [
+                fslicons.findImageFile('axialSliceHighlight24'),
+                fslicons.findImageFile('axialSlice24')],
+            'toggleCanvasSettingsPanel' : [
+                fslicons.findImageFile('gearHighlight24'),
+                fslicons.findImageFile('gear24')],
 
             'resetZoom'    : fslicons.findImageFile('resetZoom24'),
             'centreCursor' : fslicons.findImageFile('centre24'),
 
             'layout' : {
-                'horizontal' : fslicons.findImageFile('horizontalLayout24'),
-                'vertical'   : fslicons.findImageFile('verticalLayout24'),
-                'grid'       : fslicons.findImageFile('gridLayout24'),
-            }
+                'horizontal' : [
+                    fslicons.findImageFile('horizontalLayoutHighlight24'),
+                    fslicons.findImageFile('horizontalLayout24')],
+                'vertical'   : [
+                    fslicons.findImageFile('verticalLayoutHighlight24'),
+                    fslicons.findImageFile('verticalLayout24')],
+                'grid'       : [
+                    fslicons.findImageFile('gridLayoutHighlight24'),
+                    fslicons.findImageFile('gridLayout24')]}
         }
 
         tooltips = {
