@@ -93,7 +93,9 @@ class VectorOpts(volumeopts.Nifti1Opts):
         
         volumeopts.Nifti1Opts.__init__(self, *args, **kwargs)
 
-        if self.getParent() is not None:
+        self.__registered = self.getParent() is not None
+
+        if self.__registered:
             
             self.overlayList.addListener('overlays',
                                          self.name,
@@ -101,6 +103,14 @@ class VectorOpts(volumeopts.Nifti1Opts):
             self            .addListener('clipImage',
                                          self.name,
                                          self.__clipImageChanged)
+
+            if not self.isSyncedToParent('modulateImage'):
+                self.__refreshAuxImage('modulateImage')
+            if not self.isSyncedToParent('clipImage'):
+                self.__refreshAuxImage('clipImage')
+            if not self.isSyncedToParent('colourImage'):
+                self.__refreshAuxImage('colourImage') 
+
         else:
             self.__overlayListChanged()
             self.__clipImageChanged()
@@ -110,8 +120,9 @@ class VectorOpts(volumeopts.Nifti1Opts):
         """Removes some property listeners, and calls the
         :meth:`.Nifti1Opts.destroy` method.
         """
-        self.overlayList.removeListener('overlays',  self.name)
-        self            .removeListener('clipImage', self.name)
+        if self.__registered:
+            self.overlayList.removeListener('overlays',  self.name)
+            self            .removeListener('clipImage', self.name)
 
         volumeopts.Nifti1Opts.destroy(self)
 
@@ -145,27 +156,35 @@ class VectorOpts(volumeopts.Nifti1Opts):
         image.
         """
         
-        modProp    = self.getProp('modulateImage')
-        clipProp   = self.getProp('clipImage')
-        colourProp = self.getProp('colourImage')
-        modVal     = self.modulateImage
-        clipVal    = self.clipImage
-        colourVal  = self.colourImage
-        overlays   = self.displayCtx.getOrderedOverlays()
+        overlays = self.displayCtx.getOrderedOverlays()
 
         # the image for this VectorOpts
         # instance has been removed
         if self.overlay not in overlays:
-            self.overlayList.removeListener('overlays', self.name)
             return
+        
+        self.__refreshAuxImage('modulateImage')
+        self.__refreshAuxImage('clipImage')
+        self.__refreshAuxImage('colourImage')
+
+
+    def __refreshAuxImage(self, imageName):
+        """Updates the named image property (:attr:`modulateImage`,
+        :attr:`colourImage` or :attr:`clipImage`) so that it contains a list
+        of overlays which could be used to modulate the vector image.
+        """
+        
+        prop     = self.getProp(imageName)
+        val      = self.modulateImage
+        overlays = self.displayCtx.getOrderedOverlays()
 
         options = [None]
 
         for overlay in overlays:
             
             # It doesn't make sense to
-            # modulate/clip the image by
-            # itself.
+            # modulate/clip/colour the
+            # image by itself.
             if overlay is self.overlay:
                 continue
 
@@ -184,16 +203,10 @@ class VectorOpts(volumeopts.Nifti1Opts):
 
             options.append(overlay)
             
-        modProp   .setChoices(options, instance=self)
-        clipProp  .setChoices(options, instance=self)
-        colourProp.setChoices(options, instance=self)
+        prop.setChoices(options, instance=self)
 
-        if modVal    in options: self.modulateImage = modVal
-        else:                    self.modulateImage = None
-        if clipVal   in options: self.clipImage     = clipVal
-        else:                    self.clipImage     = None
-        if colourVal in options: self.colourImage   = colourVal
-        else:                    self.colourImage   = None 
+        if val in options: setattr(self, imageName, val)
+        else:              setattr(self, imageName, None)
 
 
 class LineVectorOpts(VectorOpts):

@@ -452,7 +452,22 @@ class FSLEyesFrame(wx.Frame):
         if numPanels >= 1 and wasCentre:
             paneInfo = self.__auiManager.GetPane(self.__viewPanels[0])
             paneInfo.Centre().Dockable(False).CaptionVisible(numPanels > 1)
+            
+        # If there's only one panel left,
+        # and it is a canvas panel, sync
+        # its display properties to the
+        # master display context.
+        if numPanels == 1 and \
+           isinstance(self.__viewPanels[0], views.CanvasPanel):
+            dctx = self.__viewPanels[0].getDisplayContext()
 
+            # TODO Currently this causes the child
+            # context to inherit the values of the
+            # parent context. But we need the
+            # opposite - for the parent to inherit
+            # the values of the child.
+            dctx.syncOverlayDisplay = True
+            dctx.syncToParent('overlayOrder')
         
     def __onClose(self, ev):
         """Called when the user closes this ``FSLEyesFrame``.
