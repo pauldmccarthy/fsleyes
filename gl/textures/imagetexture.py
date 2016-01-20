@@ -69,7 +69,8 @@ class ImageTexture(texture.Texture, notifier.Notifier):
                  prefilter=None,
                  interp=gl.GL_NEAREST,
                  resolution=None,
-                 volume=None):
+                 volume=None,
+                 notify=True):
         """Create an ``ImageTexture``. A listener is added to the
         :attr:`.Image.data` property, so that the texture data can be
         refreshed whenever the image data changes - see the
@@ -89,6 +90,8 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         :arg prefilter: An optional function which may perform any 
                         pre-processing on the data before it is copied to the 
                         GPU - see the :meth:`__prepareTextureData` method.
+
+        :arg notify:    Passed to the initial call to :meth:`refresh`.
         """
 
         texture.Texture.__init__(self, name, 3)
@@ -114,13 +117,13 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         self.__volume     = None
         self.__normalise  = None
 
-        # The dataMin/dataMax/ready attributes
-        # are modified in the refresh method
-        # (which is called via the set method
-        # below). 
-        self.__dataMin    = None
-        self.__dataMax    = None
-        self.__ready      = False
+        # These attributes are modified
+        # in the refresh method (which is
+        # called via the set method below). 
+        self.__dataMin       = None
+        self.__dataMax       = None
+        self.__ready         = False
+        self.__refreshThread = None
 
         self.image.addListener('data', self.__name, self.refresh)
 
@@ -130,14 +133,8 @@ class ImageTexture(texture.Texture, notifier.Notifier):
                  volume=volume,
                  normalise=normalise,
                  refresh=False)
-        self.__refresh()
-
-
-    def ready(self):
-        """Returns ``True`` if this ``ImageTexture`` is ready to be used,
-        ``False`` otherwise.
-        """
-        return self.__ready
+        
+        self.__refresh(notify=notify)
 
 
     def destroy(self):
@@ -148,6 +145,21 @@ class ImageTexture(texture.Texture, notifier.Notifier):
 
         texture.Texture.destroy(self)
         self.image.removeListener('data', self.__name)
+
+        
+    def ready(self):
+        """Returns ``True`` if this ``ImageTexture`` is ready to be used,
+        ``False`` otherwise.
+        """
+        return self.__ready
+
+
+    def refreshThread(self):
+        """If this ``ImageTexture`` is in the process of being refreshed
+        on another thread, this method returns a reference to the ``Thread``
+        object. Otherwise, this method returns ``None``.
+        """
+        return self.__refreshThread
 
 
     def setInterp(self, interp):
@@ -197,6 +209,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         ``normalise``  See :meth:`setNormalise`.
         ``refresh``    If ``True`` (the default), the :meth:`refresh` function
                        is called (but only if a setting has changed).
+        ``notify``     Passed through to the :meth:`refresh` method.
         ============== =======================================================
 
         :returns: ``True`` if any settings have changed and the
@@ -208,6 +221,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         volume     = kwargs.get('volume',     self.__volume)
         normalise  = kwargs.get('normalise',  self.__normalise)
         refresh    = kwargs.get('refresh',    True)
+        notify     = kwargs.get('notify',     True)
 
         changed = {'interp'     : interp     != self.__interp,
                    'prefilter'  : prefilter  != self.__prefilter,
@@ -241,7 +255,9 @@ class ImageTexture(texture.Texture, notifier.Notifier):
                             changed['normalise']))
 
         if refresh:
-            self.refresh(refreshData=refreshData, refreshRange=refreshRange)
+            self.refresh(refreshData=refreshData,
+                         refreshRange=refreshRange,
+                         notify=notify)
         
         return True
 
@@ -269,12 +285,19 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         :arg refreshRange: If ``True`` (the default), the data range is
                            re-calculated.
 
+        :arg notify:       If ``True`` (the default), a notification is
+                           triggered via the :class:`.Notifier` base-class,
+                           when ``ImageTexture`` has been refreshed, and is
+                           ready to use. Otherwise, the notification is
+                           suppressed.
+
         .. note:: The texture data is generated on a separate thread, using
                   the :func:`.async.run` function. 
         """
 
         refreshData  = kwargs.get('refreshData',  True)
         refreshRange = kwargs.get('refreshRange', True)
+        notify       = kwargs.get('notify',       True)
 
         self.__ready = False
 
@@ -377,10 +400,14 @@ class ImageTexture(texture.Texture, notifier.Notifier):
             self.unbindTexture()
             log.debug('{}({}) is ready to use'.format(
                 type(self).__name__, self.image))
-            self.__ready = True
-            self.notify()
+            
+            self.__refreshThread = None
+            self.__ready         = True
 
-        async.run(
+            if notify:
+                self.notify()
+
+        self.__refreshThread = async.run(
             genData,
             onFinish=configTexture,
             name='{}.genData({})'.format(type(self).__name__, self.image))

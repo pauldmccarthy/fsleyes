@@ -406,9 +406,6 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         nounbind = kwargs.get('nounbind', [])
         nounbind.append('bounds')
         kwargs['nounbind'] = nounbind
-
-        props.SyncableHasProperties.__init__(self, **kwargs)
-        actions.ActionProvider     .__init__(self)
         
         self.overlay     = overlay
         self.display     = display
@@ -416,6 +413,9 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         self.displayCtx  = displayCtx
         self.overlayType = display.overlayType
         self.name        = '{}_{}'.format(type(self).__name__, id(self))
+
+        props.SyncableHasProperties.__init__(self, **kwargs)
+        actions.ActionProvider     .__init__(self)
 
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
