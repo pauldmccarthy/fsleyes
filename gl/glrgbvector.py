@@ -13,6 +13,7 @@ import numpy                   as np
 import OpenGL.GL               as gl
 
 import fsl.data.tensorimage    as tensorimage
+import fsl.utils.async         as async
 import fsl.fsleyes.gl          as fslgl
 import fsl.fsleyes.gl.glvector as glvector
 
@@ -75,9 +76,9 @@ class GLRGBVector(glvector.GLVector):
                                    image,
                                    display,
                                    prefilter=np.abs,
-                                   vectorImage=vecImage)
-        
-        fslgl.glrgbvector_funcs.init(self)
+                                   vectorImage=vecImage,
+                                   init=lambda: fslgl.glrgbvector_funcs.init(
+                                       self))
 
         self.displayOpts.addListener('interpolation',
                                      self.name,
@@ -107,7 +108,7 @@ class GLRGBVector(glvector.GLVector):
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR 
         
-        glvector.GLVector.refreshImageTexture(self, interp)
+        return glvector.GLVector.refreshImageTexture(self, interp)
 
 
     def __dataChanged(self, *a):
@@ -126,12 +127,13 @@ class GLRGBVector(glvector.GLVector):
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR 
         
-        texChange = self.imageTexture.set(interp=interp)
-        self.updateShaderState()
+        self.imageTexture.set(interp=interp)
 
-        # See comments in GLVolume.addDisplayListeners about this
-        if not texChange:
-            self.notify()
+        def onRefresh():
+            self.updateShaderState()
+            self.notify() 
+
+        async.wait([self.imageTexture.refreshThread()], onRefresh)
 
 
     def compileShaders(self):

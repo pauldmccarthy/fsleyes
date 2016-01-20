@@ -67,9 +67,12 @@ class GLLineVector(glvector.GLVector):
         if isinstance(image, tensorimage.TensorImage): vecImage = image.V1()
         else:                                          vecImage = image
 
-        glvector.GLVector.__init__(self, image, display, vectorImage=vecImage)
-        
-        fslgl.gllinevector_funcs.init(self)
+        glvector.GLVector.__init__(self,
+                                   image,
+                                   display,
+                                   vectorImage=vecImage,
+                                   init=lambda: fslgl.gllinevector_funcs.init(
+                                       self))
 
         def update(*a):
             self.notify()

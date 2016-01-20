@@ -14,6 +14,7 @@ import numpy                    as np
 import OpenGL.GL                as gl
 
 import fsl.data.image           as fslimage
+import fsl.utils.async          as async
 import fsl.fsleyes.colourmaps   as fslcm
 import resources                as glresources
 import                             textures
@@ -92,7 +93,12 @@ class GLVector(globject.GLImageObject):
     """
 
     
-    def __init__(self, image, display, prefilter=None, vectorImage=None):
+    def __init__(self,
+                 image,
+                 display,
+                 prefilter=None,
+                 vectorImage=None,
+                 init=None):
         """Create a ``GLVector`` object bound to the given image and display.
 
         Initialises the OpenGL data required to render the given image.
@@ -122,6 +128,11 @@ class GLVector(globject.GLImageObject):
                           ``vectorImage`` parameter can be used to specify
                           an ``Image`` instance which does contain the
                           vector data.
+
+        :arg init:        An optional function to be called when all of the
+                          :class:`.ImageTexture` instances associated with
+                          this ``GLVector`` have been initialised.
+        
         """
 
         if vectorImage is None: vectorImage = image
@@ -140,7 +151,8 @@ class GLVector(globject.GLImageObject):
         self.yColourTexture  = textures.ColourMapTexture('{}_y' .format(name))
         self.zColourTexture  = textures.ColourMapTexture('{}_z' .format(name))
         self.cmapTexture     = textures.ColourMapTexture('{}_cm'.format(name))
-        
+
+        self.shader          = None
         self.modulateImage   = None
         self.clipImage       = None
         self.colourImage     = None
@@ -162,11 +174,18 @@ class GLVector(globject.GLImageObject):
         if opts.clipImage     is not None: self.registerAuxImage('clip') 
 
         self.addListeners()
-        self.refreshImageTexture()
-        self.refreshAuxTexture('modulate')
-        self.refreshAuxTexture('clip')
-        self.refreshAuxTexture('colour')
         self.refreshColourTextures()
+
+        def texRefresh():
+            if init is not None:
+                init()
+            self.notify()
+
+        async.wait([self.refreshImageTexture(),
+                    self.refreshAuxTexture('modulate'),
+                    self.refreshAuxTexture('clip'),
+                    self.refreshAuxTexture('colour')],
+                   texRefresh)
 
         
     def destroy(self):
@@ -210,7 +229,8 @@ class GLVector(globject.GLImageObject):
         """Returns ``True`` if this ``GLVector`` is ready to be drawn,
         ``False`` otherwise.
         """
-        return all((self.imageTexture    is not None,
+        return all((self.shader          is not None,
+                    self.imageTexture    is not None,
                     self.modulateTexture is not None,
                     self.clipTexture     is not None,
                     self.colourTexture   is not None,
@@ -232,50 +252,47 @@ class GLVector(globject.GLImageObject):
 
         def update(*a):
             self.notify()
+            
+        def shaderUpdate(*a):
+            if self.ready():
+                self.updateShaderState()
+                self.notify() 
         
         def modUpdate( *a):
             self.deregisterAuxImage('modulate')
-            self.registerAuxImage(  'modulate') 
-            self.refreshAuxTexture( 'modulate')
-            self.updateShaderState()
+            self.registerAuxImage(  'modulate')
+            async.wait([self.refreshAuxTexture( 'modulate')], shaderUpdate)
 
         def clipUpdate( *a):
             self.deregisterAuxImage('clip')
             self.registerAuxImage(  'clip')
-            self.refreshAuxTexture( 'clip')
-            self.updateShaderState()
+            async.wait([self.refreshAuxTexture( 'clip')], shaderUpdate)
 
         def colourUpdate( *a):
             self.deregisterAuxImage('colour')
             self.registerAuxImage(  'colour')
-            self.refreshAuxTexture( 'colour')
+
+            def onRefresh():
+                self.compileShaders()
+                self.refreshColourTextures()
+                shaderUpdate()
+                
+            async.wait([self.refreshAuxTexture( 'colour')], onRefresh)
             
-            self.compileShaders()
-            self.refreshColourTextures()
-            self.updateShaderState()
- 
         def cmapUpdate(*a):
             self.refreshColourTextures()
-            self.updateShaderState()
-            self.notify()
-            
-        def shaderUpdate(*a):
-            self.updateShaderState()
-            self.notify() 
+            shaderUpdate()
 
         def shaderCompile(*a):
             self.compileShaders()
-            self.updateShaderState()
-            self.notify()
+            shaderUpdate()
 
         def imageRefresh(*a):
-            self.refreshImageTexture()
-            self.updateShaderState()
+            async.wait([self.refreshImageTexture()], shaderUpdate)
             
         def imageUpdate(*a):
-
             self.imageTexture.set(resolution=opts.resolution)
-            self.updateShaderState()
+            async.wait([self.imageTexture.refreshThread()], shaderUpdate)
 
         display.addListener('alpha',         name, cmapUpdate,   weak=False)
         display.addListener('brightness',    name, cmapUpdate,   weak=False)
@@ -373,9 +390,12 @@ class GLVector(globject.GLImageObject):
             nvals=3,
             interp=interp,
             normalise=True,
-            prefilter=realPrefilter)
+            prefilter=realPrefilter,
+            notify=False)
         
         self.imageTexture.register(self.name, self.__textureChanged)
+
+        return self.imageTexture.refreshThread()
 
     
     def compileShaders(self):
@@ -408,8 +428,10 @@ class GLVector(globject.GLImageObject):
 
         imageAttr = '{}Image'  .format(which)
         optsAttr  = '{}Opts'   .format(which)
+        texAttr   = '{}Texture'.format(which)
         
         image = getattr(self.displayOpts, imageAttr)
+        tex   = getattr(self,             texAttr)
 
         if image is None or image == 'none':
             image = None
@@ -426,8 +448,12 @@ class GLVector(globject.GLImageObject):
 
         def volumeChange(*a):
             
-            self.refreshAuxTexture(which)
-            self.notify()
+            def onRefresh():
+                self.updateShaderState()
+                self.notify()
+                
+            tex.set(volume=opts.volume)
+            async.wait([tex.refreshThread()], onRefresh)
 
         # We set overwrite=True, because
         # the modulate/clip/colour images
@@ -508,11 +534,14 @@ class GLVector(globject.GLImageObject):
             textures.ImageTexture,
             texName,
             image,
-            normalise=norm)
+            normalise=norm,
+            notify=False)
         
         tex.register(self.name, self.__textureChanged)
         
         setattr(self, texAttr, tex)
+
+        return tex.refreshThread()
 
 
     def refreshColourTextures(self, colourRes=256):

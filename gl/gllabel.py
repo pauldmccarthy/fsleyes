@@ -9,12 +9,13 @@ functionality to render an :class:`.Image` overlay as a label/atlas image.
 """
 
 
-import OpenGL.GL      as gl
+import OpenGL.GL       as gl
 
-import fsl.fsleyes.gl as fslgl
-import resources      as glresources
-import                   globject
-import                   textures
+import fsl.fsleyes.gl  as fslgl
+import fsl.utils.async as async
+import resources       as glresources
+import                    globject
+import                    textures
 
 
 class GLLabel(globject.GLImageObject):
@@ -99,18 +100,17 @@ class GLLabel(globject.GLImageObject):
             self.notify()
 
         def shaderUpdate(*a):
-            fslgl.gllabel_funcs.updateShaderState(self)
-            self.notify()
+            if self.ready():
+                fslgl.gllabel_funcs.updateShaderState(self)
+                self.notify()
             
         def shaderCompile(*a):
             fslgl.gllabel_funcs.compileShaders(self)
-            fslgl.gllabel_funcs.updateShaderState(self)
-            self.notify() 
+            shaderUpdate()
 
         def lutUpdate(*a):
             self.refreshLutTexture()
-            fslgl.gllabel_funcs.updateShaderState(self)
-            self.notify()
+            shaderUpdate()
 
         def lutChanged(*a):
             if self.__lut is not None:
@@ -124,14 +124,13 @@ class GLLabel(globject.GLImageObject):
             lutUpdate()
 
         def imageRefresh(*a):
-            self.refreshImageTexture()
-            fslgl.gllabel_funcs.updateShaderState(self)
+            async.wait([self.refreshImageTexture()], shaderUpdate)
             
         def imageUpdate(*a):
             self.imageTexture.set(volume=opts.volume,
                                   resolution=opts.resolution)
-            
-            fslgl.gllabel_funcs.updateShaderState(self)
+
+            async.wait([self.imageTexture.refreshThread()], shaderUpdate)
 
         self.__lut = opts.lut
 
@@ -184,13 +183,13 @@ class GLLabel(globject.GLImageObject):
             opts.removeSyncChangeListener('resolution', name)
 
 
-        
     def setAxes(self, xax, yax):
         """Overrides :meth:`.GLImageObject.setAxes`. Updates the shader
-        program state,
+        program state.
         """
         globject.GLImageObject.setAxes(self, xax, yax)
-        fslgl.gllabel_funcs.updateShaderState(self)
+        if self.ready():
+            fslgl.gllabel_funcs.updateShaderState(self)
 
 
     def refreshImageTexture(self):
@@ -211,7 +210,7 @@ class GLLabel(globject.GLImageObject):
         if self.imageTexture is not None:
             
             if self.imageTexture.getTextureName() == texName:
-                return 
+                return None
             
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.getTextureName())
@@ -220,9 +219,12 @@ class GLLabel(globject.GLImageObject):
             texName, 
             textures.ImageTexture,
             texName,
-            self.image)
+            self.image,
+            notify=False)
         
         self.imageTexture.register(self.name, self.__imageTextureChanged)
+
+        return self.imageTexture.refreshThread()
 
 
     def refreshLutTexture(self, *a):

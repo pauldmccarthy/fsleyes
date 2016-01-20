@@ -14,6 +14,7 @@ import numpy                  as np
 
 import fsl.fsleyes.gl         as fslgl
 import fsl.fsleyes.colourmaps as colourmaps
+import fsl.utils.async        as async
 import                           glvolume
 
 
@@ -49,34 +50,29 @@ class GLMask(glvolume.GLVolume):
 
         def update(*a):
             self.notify()
-
-        def shaderCompile(*a):
-            fslgl.glvolume_funcs.compileShaders(   self)
-            fslgl.glvolume_funcs.updateShaderState(self)
-            self.notify() 
         
         def shaderUpdate(*a):
-            fslgl.glvolume_funcs.updateShaderState(self)
-            self.notify() 
-            
+            if self.ready():
+                fslgl.glvolume_funcs.updateShaderState(self)
+                self.notify() 
+
+        def shaderCompile(*a):
+            fslgl.glvolume_funcs.compileShaders(self)
+            shaderUpdate()
+
         def colourUpdate(*a):
             self.refreshColourTextures()
-            fslgl.glvolume_funcs.updateShaderState(self)
-            self.notify()
+            shaderUpdate()
 
         def imageRefresh(*a):
-            self.refreshImageTexture()
-            fslgl.glvolume_funcs.updateShaderState(self)
-            self.notify()
+            async.wait([self.refreshImageTexture()], shaderUpdate)
 
         def imageUpdate(*a):
             volume     = opts.volume
             resolution = opts.resolution
 
             self.imageTexture.set(volume=volume, resolution=resolution)
-            
-            fslgl.glvolume_funcs.updateShaderState(self) 
-            self.notify()
+            async.wait([self.refreshThread()], shaderUpdate)
 
         display.addListener('alpha',         name, colourUpdate,  weak=False)
         display.addListener('brightness',    name, colourUpdate,  weak=False)

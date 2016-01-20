@@ -264,25 +264,20 @@ class GLVolume(globject.GLImageObject):
 
         def update(*a):
             self.notify()
-        
-        def colourUpdate(*a):
-            self.refreshColourTextures()
-            if self.ready():
-                fslgl.glvolume_funcs.updateShaderState(self)
-                self.notify()
+
 
         def shaderUpdate(*a):
             if self.ready():
                 fslgl.glvolume_funcs.updateShaderState(self)
                 self.notify()
-
-        def onTextureRefresh():
+        
+        def colourUpdate(*a):
+            self.refreshColourTextures()
             if self.ready():
-                fslgl.glvolume_funcs.updateShaderState(self)
-                self.notify() 
+                shaderUpdate()
 
         def imageRefresh(*a):
-            async.wait([self.refreshImageTexture()], onTextureRefresh)
+            async.wait([self.refreshImageTexture()], shaderUpdate)
 
         def imageUpdate(*a):
             volume     = opts.volume
@@ -304,12 +299,12 @@ class GLVolume(globject.GLImageObject):
                                      notify=False)
                 waitfor.append(self.clipTexture.refreshThread())
 
-            async.wait(waitfor, onTextureRefresh)
+            async.wait(waitfor, shaderUpdate)
 
         def clipUpdate(*a):
             self.deregisterClipImage()
             self.registerClipImage()
-            async.wait([self.refreshClipTexture()], onTextureRefresh)
+            async.wait([self.refreshClipTexture()], shaderUpdate)
 
         display.addListener('alpha',          lName, colourUpdate,  weak=False)
         opts   .addListener('displayRange',   lName, colourUpdate,  weak=False)
@@ -397,6 +392,11 @@ class GLVolume(globject.GLImageObject):
         :class:`.Image` data. This is performed through the :mod:`.resources`
         module, so the image texture can be shared between multiple
         ``GLVolume`` instances.
+
+        :returns: A reference to the ``Thread`` instance which is
+                  asynchronously updating the :class:`.ImageTexture`,
+                  or ``None`` if the texture is updated - see the
+                  :meth:`.ImageTexture.refreshThread` method.
         """
 
         opts     = self.displayOpts
@@ -447,9 +447,13 @@ class GLVolume(globject.GLImageObject):
         self.clipOpts  = clipOpts
         
         def updateClipTexture(*a):
+
+            def onRefresh():
+                fslgl.glvolume_funcs.updateShaderState(self)
+                self.notify()
+            
             self.clipTexture.set(volume=clipOpts.volume)
-            async.wait([self.clipTexture.refreshThread()],
-                       fslgl.glvolume_funcs.updateShaderState, self)
+            async.wait([self.clipTexture.refreshThread()], onRefresh)
 
         clipOpts.addListener('volume',
                              self.name,

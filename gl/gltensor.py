@@ -41,8 +41,9 @@ class GLTensor(glvector.GLVector):
                                    image,
                                    display,
                                    prefilter=np.abs,
-                                   vectorImage=image.V1())
-        fslgl.gltensor_funcs.init(self)
+                                   vectorImage=image.V1(),
+                                   init=lambda: fslgl.gltensor_funcs.init(
+                                       self))
 
 
     def destroy(self):
@@ -65,8 +66,9 @@ class GLTensor(glvector.GLVector):
         opts = self.displayOpts
 
         def shaderUpdate(*a):
-            self.updateShaderState()
-            self.notify()
+            if self.ready():
+                self.updateShaderState()
+                self.notify()
 
         opts.addListener('lighting',         name, shaderUpdate, weak=False)
         opts.addListener('tensorResolution', name, shaderUpdate, weak=False)
