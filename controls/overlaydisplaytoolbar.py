@@ -221,7 +221,8 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         infoSpec = actions.ToggleActionButton(
             'toggleOverlayInfo',
             actionKwargs={'floatPane' : True},
-            icon=icons.findImageFile('information24'),
+            icon=[icons.findImageFile('informationHighlight24'),
+                  icons.findImageFile('information24')],
             tooltip=fsltooltips.actions[viewPanel, 'toggleOverlayInfo'])
 
         # Name/overlay type and brightness/contrast
@@ -407,10 +408,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         of the given :class:`.TensorOpts` instance.
         """
         lightingSpec   = _TOOLBAR_PROPS[opts]['lighting']
-
         lightingWidget = props.buildGUI(self, opts, lightingSpec)
-        lightingWidget = self.MakeLabelledTool(
-            lightingWidget, strings.properties[opts, 'lighting'])
         
         return self.__makeVectorOptsTools(opts) + [lightingWidget]
 
@@ -517,7 +515,9 @@ _TOOLBAR_PROPS = td.TypeDict({
             'threshold',
             showLimits=False,
             spin=False,
-            tooltip=_TOOLTIPS['MaskOpts.threshold']),
+            tooltip=_TOOLTIPS['MaskOpts.threshold'],
+            labels=[strings.choices['MaskOpts.threshold.min'],
+                    strings.choices['MaskOpts.threshold.max']]),
         'colour'    : props.Widget(
             'colour',
             size=(24, 24),
@@ -556,6 +556,8 @@ _TOOLBAR_PROPS = td.TypeDict({
             slider=True,
             spin=False,
             tooltip=_TOOLTIPS['VectorOpts.clippingRange'],
+            labels=[strings.choices['VectorOpts.clippingRange.min'],
+                    strings.choices['VectorOpts.clippingRange.max']],
             dependencies=['clipImage'],
             enabledWhen=lambda o, ci: ci is not None)},
 
@@ -574,6 +576,8 @@ _TOOLBAR_PROPS = td.TypeDict({
             slider=True,
             spin=False,
             tooltip=_TOOLTIPS['VectorOpts.clippingRange'],
+            labels=[strings.choices['VectorOpts.clippingRange.min'],
+                    strings.choices['VectorOpts.clippingRange.max']], 
             dependencies=['clipImage'],
             enabledWhen=lambda o, ci: ci is not None),
         'lineWidth' : props.Widget(
@@ -603,6 +607,8 @@ _TOOLBAR_PROPS = td.TypeDict({
     'TensorOpts' : {
         'lighting'      : props.Widget(
             'lighting',
+            icon=[icons.findImageFile('lightbulbHighlight24'),
+                  icons.findImageFile('lightbulb24')],
             tooltip=_TOOLTIPS['TensorOpts.lighting']),
         'modulateImage' : props.Widget(
             'modulateImage',
@@ -618,6 +624,8 @@ _TOOLBAR_PROPS = td.TypeDict({
             slider=True,
             spin=False,
             tooltip=_TOOLTIPS['VectorOpts.clipImage'],
+            labels=[strings.choices['VectorOpts.clippingRange.min'],
+                    strings.choices['VectorOpts.clippingRange.max']],
             dependencies=['clipImage'],
             enabledWhen=lambda o, ci: ci is not None)}
 })

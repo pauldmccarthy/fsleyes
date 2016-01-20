@@ -15,6 +15,8 @@ import wx
 
 import props
 
+import pwidgets.bitmaptoggle   as bmptoggle
+
 import pwidgets.elistbox       as elistbox
 
 import fsl.fsleyes.panel       as fslpanel
@@ -319,17 +321,19 @@ class ListItemWidget(wx.Panel):
         if wx.Platform == '__WXMAC__': btnStyle = wx.BU_EXACTFIT
         else:                          btnStyle = wx.BU_EXACTFIT | wx.BU_NOTEXT
 
-        self.__saveButton = wx.Button(      self, style=btnStyle)
-        self.__lockButton = wx.ToggleButton(self, style=btnStyle)
+        self.__saveButton = wx.Button(                   self, style=btnStyle)
+        self.__lockButton = bmptoggle.BitmapToggleButton(self, style=btnStyle)
 
         self.__saveButton.SetBitmap(icons.loadBitmap('floppydisk16'))
-        self.__lockButton.SetBitmap(icons.loadBitmap('chainlink16'))
+        self.__lockButton.SetBitmap(icons.loadBitmap('chainlinkHighlight16'),
+                                    icons.loadBitmap('chainlink16'))
         
         self.__visibility = props.makeWidget(
             self,
             display,
             'enabled',
-            icon=icons.findImageFile('eye16'))
+            icon=[icons.findImageFile('eyeHighlight16'),
+                  icons.findImageFile('eye16')])
 
         self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
 
