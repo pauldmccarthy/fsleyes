@@ -459,16 +459,31 @@ class FSLEyesFrame(wx.Frame):
         # master display context.
         if numPanels == 1 and \
            isinstance(self.__viewPanels[0], views.CanvasPanel):
-            dctx = self.__viewPanels[0].getDisplayContext()
+            
+            dctx     = self.__viewPanels[0].getDisplayContext()
+            displays = [dctx.getDisplay(o) for o in self.__overlayList]
 
-            # TODO Currently this causes the child
-            # context to inherit the values of the
-            # parent context. But we need the
-            # opposite - for the parent to inherit
-            # the values of the child.
+            # Make sure that the parent context
+            # inherits the values from this context
+            dctx.setBindingDirection(False)
+
+            for display in displays:
+                opts = display.getDisplayOpts()
+                display.setBindingDirection(False)
+                opts   .setBindingDirection(False)
+            
             dctx.syncOverlayDisplay = True
             dctx.syncToParent('overlayOrder')
-        
+
+            # Reset the binding directiona
+            dctx.setBindingDirection(True)
+
+            for display in displays:
+                opts = display.getDisplayOpts()
+                display.setBindingDirection(True)
+                opts   .setBindingDirection(True) 
+
+            
     def __onClose(self, ev):
         """Called when the user closes this ``FSLEyesFrame``.
 
