@@ -741,6 +741,15 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if not self._setGLContext():
             return
 
+        overlays = self.displayCtx.getOrderedOverlays()
+        globjs   = [self._glObjects.get(o, None) for o in overlays]
+        globjs   = [g for g in globjs if g is not None]
+
+        # Skip the render if any GLObjects are not
+        # ready - see comments in SliceCanvas._draw.
+        if any([not g.ready() for g in globjs]):
+            return 
+
         if self.renderMode == 'offscreen':
             
             log.debug('Rendering to off-screen texture')
@@ -770,12 +779,12 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             endSlice = self._nslices    
 
         # Draw all the slices for all the overlays.
-        for overlay in self.displayCtx.getOrderedOverlays():
+        for overlay, globj in zip(overlays, globjs):
 
             display = self.displayCtx.getDisplay(overlay)
             globj   = self._glObjects.get(overlay, None)
 
-            if (globj is None) or (not globj.ready()) or (not display.enabled):
+            if not display.enabled:
                 continue
 
             log.debug('Drawing {} slices ({} - {}) for '

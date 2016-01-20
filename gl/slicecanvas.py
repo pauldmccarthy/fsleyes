@@ -1202,30 +1202,37 @@ class SliceCanvas(props.HasProperties):
         if not self._setGLContext():
             return
 
+        overlays = self.displayCtx.getOrderedOverlays()
+        globjs   = [self._glObjects.get(o, None) for o in overlays]
+        
+        # If an overlay does not yet have a corresponding
+        # GLObject, we presume that it hasn't been created
+        # yet (and that the __genGLObject method is on the
+        # case).
+        globjs   = [g for g in globjs if g is not None]
+
+        # Do not draw anything if some globjects
+        # are not ready. This is because, if a
+        # GLObject was drawn, but is now temporarily
+        # not ready (e.g. it has an image texture
+        # that is being asynchronously refreshed),
+        # drawing the scene now would cause
+        # flickering of that GLObject.
+        if any([not g.ready() for g in globjs]):
+            return
+
         # Set the viewport to match the current 
         # display bounds and canvas size
         if self.renderMode is not 'offscreen':
             self._setViewport()
             glroutines.clear(self.bgColour)
             
-        for overlay in self.displayCtx.getOrderedOverlays():
+        for overlay, globj in zip(overlays, globjs):
 
             display = self.displayCtx.getDisplay(overlay)
             opts    = display.getDisplayOpts()
-            globj   = self._glObjects.get(overlay, None)
 
             if not display.enabled:
-                continue
-            
-            if globj is None:
-                # The GLObject has not been created
-                # yet - we assume here that the
-                # __genGLObject method is on the case
-                continue
-
-            # The GLObject is not ready
-            # to be drawn yet.
-            if not globj.ready():
                 continue
 
             # On-screen rendering - the globject is
