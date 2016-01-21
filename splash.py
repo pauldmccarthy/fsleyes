@@ -44,8 +44,9 @@ class FSLEyesSplash(wx.Frame):
         """
         
         wx.Frame.__init__(self, parent, style=0)
-        
-        splashfile = op.join(op.dirname(__file__), 'splash.png')
+
+        splashfile = op.join(op.dirname(__file__),
+                             'icons', 'splash', 'splash.png')
         splashbmp  = wx.Bitmap(splashfile, wx.BITMAP_TYPE_PNG)
         splashimg  = splashbmp.ConvertToImage()
     
@@ -54,9 +55,9 @@ class FSLEyesSplash(wx.Frame):
         
         self.__statusBar.SetLabel(strings.messages[self, 'default'])
 
-        self.__statusBar.SetBackgroundColour('#636a70')
+        self.__statusBar.SetBackgroundColour('#000000')
         self.__statusBar.SetForegroundColour('#ffffff')
-        self            .SetBackgroundColour('#636a70')
+        self            .SetBackgroundColour('#000000')
         
         self.__sizer = wx.BoxSizer(wx.VERTICAL)
 
