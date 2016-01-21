@@ -718,28 +718,23 @@ class SliceCanvas(props.HasProperties):
                   'changed to {}'.format(display.name,
                                          display.overlayType))
 
-        self.__genGLObject(display.getOverlay())
+        self.__regenGLObject(display.getOverlay())
         self._refresh()
 
 
-    def __genGLObject(self, overlay, updateRenderTextures=True, refresh=True):
-        """Creates a :class:`.GLObject` instance for the given ``overlay``,
-        destroying any existing instance.
+    def __regenGLObject(self,
+                        overlay,
+                        updateRenderTextures=True,
+                        refresh=True):
+        """Destroys any existing :class:`.GLObject` associated with the given
+        ``overlay``, and creates a new one (via the :meth:`__genGLObject`
+        method).
 
         If ``updateRenderTextures`` is ``True`` (the default), and the
         :attr:`.renderMode` is ``offscreen`` or ``prerender``, any
-        render texture associated with the overlay is destroyed.
-
-        If ``refresh`` is ``True`` (the default), the :meth:`_refresh` method
-        is called after the ``GLObject`` has been created.
-
-        .. note:: If running in ``wx`` (i.e. via a :class:`.WXGLSliceCanvas`),
-                  the :class:`.GLObject` instnace will be created on the
-                  ``wx.EVT_IDLE`` lopp (via the :mod:`.idle` module).
+        render texture associated with the overlay is destroyed. 
         """
-
-        display = self.displayCtx.getDisplay(overlay)
-
+        
         # Tell the previous GLObject (if
         # any) to clean up after itself
         globj = self._glObjects.pop(overlay, None)
@@ -759,14 +754,35 @@ class SliceCanvas(props.HasProperties):
                     if tex is not None:
                         glresources.delete(name)
 
+        self.__genGLObject(overlay, updateRenderTextures, refresh)
+
+
+    def __genGLObject(self, overlay, updateRenderTextures=True, refresh=True):
+        """Creates a :class:`.GLObject` instance for the given ``overlay``.
+        Does nothing if a ``GLObject`` already exists for the given overlay.
+
+        If ``updateRenderTextures`` is ``True`` (the default), and the
+        :attr:`.renderMode` is ``offscreen`` or ``prerender``, any
+        textures for the overlay are updated.
+
+        If ``refresh`` is ``True`` (the default), the :meth:`_refresh` method
+        is called after the ``GLObject`` has been created.
+
+        .. note:: If running in ``wx`` (i.e. via a :class:`.WXGLSliceCanvas`),
+                  the :class:`.GLObject` instnace will be created on the
+                  ``wx.EVT_IDLE`` lopp (via the :mod:`.idle` module).
+        """
+        
+        display = self.displayCtx.getDisplay(overlay)
+
+        if overlay in self._glObjects:
+            return
+
         def create():
 
             # We need a GL context to create a new GL
-            # object. If we can't get it now, we simply
-            # reschedule this function to be run later
-            # on.
+            # object. If we can't get it now, 
             if not self._setGLContext():
-                async.idle(create)
                 return
 
             globj = globject.createGLObject(overlay, display)
@@ -834,9 +850,9 @@ class SliceCanvas(props.HasProperties):
             if overlay in self._glObjects:
                 continue
 
-            self.__genGLObject(overlay,
-                               updateRenderTextures=False,
-                               refresh=False)
+            self.__regenGLObject(overlay,
+                                 updateRenderTextures=False,
+                                 refresh=False)
 
         # All the GLObjects are created using
         # async.idle, so we call refresh in the
@@ -1203,14 +1219,18 @@ class SliceCanvas(props.HasProperties):
             return
 
         overlays = self.displayCtx.getOrderedOverlays()
-        globjs   = [self._glObjects.get(o, None) for o in overlays]
-        
-        # If an overlay does not yet have a corresponding
-        # GLObject, we presume that it hasn't been created
-        # yet (and that the __genGLObject method is on the
-        # case).
-        globjs   = [g for g in globjs if g is not None]
-
+        globjs   = []
+        for ovl in overlays:
+            
+            globj = self._glObjects.get(ovl, None)
+            
+            # If an overlay does not yet have a corresponding
+            # GLObject, we presume that it hasn't been created
+            # yet, so we'll tell genGLObject to create one for
+            # it.
+            if globj is None: self.__genGLObject(ovl)
+            else:             globjs.append(globj)
+                
         # Do not draw anything if some globjects
         # are not ready. This is because, if a
         # GLObject was drawn, but is now temporarily
