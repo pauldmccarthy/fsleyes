@@ -731,9 +731,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         annot = self.getAnnotations()
 
-        annot.line(xverts[0], xverts[1], colour=(0, 1, 0), width=1)
-        annot.line(yverts[0], yverts[1], colour=(0, 1, 0), width=1)
+        kwargs = {
+            'colour' : self.cursorColour,
+            'width'  : 1
+        }
 
+        annot.line(xverts[0], xverts[1], **kwargs)
+        annot.line(yverts[0], yverts[1], **kwargs)
+        
         
     def _draw(self, *a):
         """Draws the current scene to the canvas. """
