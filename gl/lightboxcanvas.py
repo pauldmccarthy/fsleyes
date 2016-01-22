@@ -741,18 +741,10 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if not self._setGLContext():
             return
         
-        # See comments regarding this process in
-        # SliceCanvas.._draw. I guess I should
-        # put this in a method or something.
-        overlays = self.displayCtx.getOrderedOverlays()
-        globjs   = []
+        overlays, globjs = self._getGLObjects()
         
-        for ovl in overlays:
-            globj = self._glObjects.get(ovl, None)
-            
-            if   globj is None: self.__genGLObject(ovl)
-            elif globj:         globjs.append(globj)
-            
+        # See comment in SliceCanvas._draw
+        # regarding this test
         if any([not g.ready() for g in globjs]):
             return
 

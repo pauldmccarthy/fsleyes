@@ -873,6 +873,37 @@ class SliceCanvas(props.HasProperties):
         async.idle(refresh)
 
 
+    def _getGLObjects(self):
+        """Called by :meth:`_draw`. Builds a list of all :class:`.GLObjects`
+        to be drawn.
+
+        :returns: A list of overlays, and a list of corresponding
+                  :class:`.GLObjects` to be drawn.
+        """
+
+        overlays = [] 
+        globjs   = []
+        for ovl in self.displayCtx.getOrderedOverlays():
+            
+            globj = self._glObjects.get(ovl, None)
+            
+            # If an overlay does not yet have a corresponding
+            # GLObject, we presume that it hasn't been created
+            # yet, so we'll tell genGLObject to create one for
+            # it.
+            if   globj is None: self.__genGLObject(ovl)
+            
+            # If there is a value for this overlay in
+            # the globjects dictionary, but it evaluates
+            # to False, then GLObject creation has been
+            # scheduled for the overlay - see genGLObject.
+            elif globj:
+                overlays.append(ovl)
+                globjs  .append(globj)
+ 
+        return overlays, globjs
+
+    
     def _overlayBoundsChanged(self, *a):
         """Called when the display bounds are changed.
 
@@ -1225,24 +1256,8 @@ class SliceCanvas(props.HasProperties):
         if not self._setGLContext():
             return
 
-        overlays = self.displayCtx.getOrderedOverlays()
-        globjs   = []
-        for ovl in overlays:
-            
-            globj = self._glObjects.get(ovl, None)
-            
-            # If an overlay does not yet have a corresponding
-            # GLObject, we presume that it hasn't been created
-            # yet, so we'll tell genGLObject to create one for
-            # it.
-            if   globj is None: self.__genGLObject(ovl)
-            
-            # If there is a value for this overlay in
-            # the globjects dictionary, but it evaluates
-            # to False, then GLObject creation has been
-            # scheduled for the overlay - see genGLObject.
-            elif globj:         globjs.append(globj)
-                
+        overlays, globjs = self._getGLObjects()
+
         # Do not draw anything if some globjects
         # are not ready. This is because, if a
         # GLObject was drawn, but is now temporarily
