@@ -740,15 +740,21 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         if not self._setGLContext():
             return
-
+        
+        # See comments regarding this process in
+        # SliceCanvas.._draw. I guess I should
+        # put this in a method or something.
         overlays = self.displayCtx.getOrderedOverlays()
-        globjs   = [self._glObjects.get(o, None) for o in overlays]
-        globjs   = [g for g in globjs if g is not None]
-
-        # Skip the render if any GLObjects are not
-        # ready - see comments in SliceCanvas._draw.
+        globjs   = []
+        
+        for ovl in overlays:
+            globj = self._glObjects.get(ovl, None)
+            
+            if   globj is None: self.__genGLObject(ovl)
+            elif globj:         globjs.append(globj)
+            
         if any([not g.ready() for g in globjs]):
-            return 
+            return
 
         if self.renderMode == 'offscreen':
             
