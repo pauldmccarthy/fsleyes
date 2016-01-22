@@ -778,6 +778,13 @@ class SliceCanvas(props.HasProperties):
         if overlay in self._glObjects:
             return
 
+        # We put a placeholder value in
+        # the globjects dictionary, so
+        # that the _draw method knows
+        # that creation for this overlay
+        # is pending.
+        self._glObjects[overlay] = False
+
         def create():
 
             # We need a GL context to create a new GL
@@ -1228,8 +1235,13 @@ class SliceCanvas(props.HasProperties):
             # GLObject, we presume that it hasn't been created
             # yet, so we'll tell genGLObject to create one for
             # it.
-            if globj is None: self.__genGLObject(ovl)
-            else:             globjs.append(globj)
+            if   globj is None: self.__genGLObject(ovl)
+            
+            # If there is a value for this overlay in
+            # the globjects dictionary, but it evaluates
+            # to False, then GLObject creation has been
+            # scheduled for the overlay - see genGLObject.
+            elif globj:         globjs.append(globj)
                 
         # Do not draw anything if some globjects
         # are not ready. This is because, if a
