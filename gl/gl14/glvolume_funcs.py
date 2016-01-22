@@ -106,6 +106,8 @@ def updateShaderState(self):
     
     self.shader.unload()
 
+    return True
+
 
 def preDraw(self):
     """Prepares to draw a slice from the given :class:`.GLVolume` instance. """

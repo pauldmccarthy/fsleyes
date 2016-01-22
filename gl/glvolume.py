@@ -265,11 +265,10 @@ class GLVolume(globject.GLImageObject):
         def update(*a):
             self.notify()
 
-
         def shaderUpdate(*a):
             if self.ready():
-                fslgl.glvolume_funcs.updateShaderState(self)
-                self.notify()
+                if fslgl.glvolume_funcs.updateShaderState(self):
+                    self.notify()
         
         def colourUpdate(*a):
             self.refreshColourTextures()

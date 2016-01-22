@@ -83,23 +83,27 @@ def updateShaderState(self):
         self.colourTexture.getCoordinateTransform())
 
     shader.load()
-    
-    shader.set('useSpline',        opts.interpolation == 'spline')
-    shader.set('imageShape',       self.image.shape[:3])
-    shader.set('clipLow',          clipLow)
-    shader.set('clipHigh',         clipHigh)
-    shader.set('texZero',          texZero)
-    shader.set('invertClip',       opts.invertClipping)
-    shader.set('useNegCmap',       opts.useNegativeCmap)
-    shader.set('imageIsClip',      opts.clipImage is None)
-    shader.set('img2CmapXform',    img2CmapXform)
 
-    shader.set('imageTexture',     0)
-    shader.set('colourTexture',    1)
-    shader.set('negColourTexture', 2)
-    shader.set('clipTexture',      3)
+    changed = False
+    
+    changed |= shader.set('useSpline',        opts.interpolation == 'spline')
+    changed |= shader.set('imageShape',       self.image.shape[:3])
+    changed |= shader.set('clipLow',          clipLow)
+    changed |= shader.set('clipHigh',         clipHigh)
+    changed |= shader.set('texZero',          texZero)
+    changed |= shader.set('invertClip',       opts.invertClipping)
+    changed |= shader.set('useNegCmap',       opts.useNegativeCmap)
+    changed |= shader.set('imageIsClip',      opts.clipImage is None)
+    changed |= shader.set('img2CmapXform',    img2CmapXform)
+
+    changed |= shader.set('imageTexture',     0)
+    changed |= shader.set('colourTexture',    1)
+    changed |= shader.set('negColourTexture', 2)
+    changed |= shader.set('clipTexture',      3)
 
     shader.unload()
+
+    return changed
 
 
 def preDraw(self):

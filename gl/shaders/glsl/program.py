@@ -149,6 +149,13 @@ class GLSLShader(object):
                                              self.vertUniforms,
                                              self.fragUniforms)
 
+        # We cache the most recent value for
+        # every uniform. When a call to set()
+        # is made, if the value is unchanged,
+        # we skip the GL call.
+        self.values = {n : None for n in self.positions.keys()}
+
+        # Buffers for vertex attributes
         self.buffers = {}
 
         for att in self.vertAttributes:
@@ -234,7 +241,16 @@ class GLSLShader(object):
         
         
     def set(self, name, value):
-        """Sets the value for the specified GLSL ``uniform`` variable. """
+        """Sets the value for the specified GLSL ``uniform`` variable.
+
+        The ``GLSLShader`` keeps a copy of the value of every uniform, to
+        avoid unnecessary GL calls.
+
+        :returns: ``True`` if the value was changed, ``False`` otherwise.
+        """
+
+        if self.values[name] == value:
+            return False
 
         vPos  = self.positions[name]
         vType = self.types[    name]
@@ -249,6 +265,8 @@ class GLSLShader(object):
             vType, name, value))
 
         setfunc(vPos, value)
+
+        return True
 
 
     def setAtt(self, name, value, divisor=None):
