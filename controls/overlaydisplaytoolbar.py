@@ -217,7 +217,15 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         briSpec   = dispSpecs['brightness']
         conSpec   = dispSpecs['contrast']
 
-        # Button which toggles overlay info 
+        # Buttons which toggle overlay
+        # info and display panel
+        panelSpec = actions.ToggleActionButton(
+            'toggleDisplayPanel',
+            actionKwargs={'floatPane' : True},
+            icon=[icons.findImageFile('gearHighlight24'),
+                  icons.findImageFile('gear24')],
+            tooltip=fsltooltips.actions[viewPanel, 'toggleDisplayPanel'])
+ 
         infoSpec = actions.ToggleActionButton(
             'toggleOverlayInfo',
             actionKwargs={'floatPane' : True},
@@ -236,7 +244,8 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
 
         nameTypePanel.SetSizer(nameTypeSizer)
         briconPanel  .SetSizer(briconSizer)
-
+        
+        panelWidget = props.buildGUI(self,          viewPanel, panelSpec)
         infoWidget  = props.buildGUI(self,          viewPanel, infoSpec)
         nameWidget  = props.buildGUI(nameTypePanel, display,   nameSpec)
         typeWidget  = props.buildGUI(nameTypePanel, display,   typeSpec)
@@ -264,7 +273,11 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         briconSizer.Add(conLabel)
         briconSizer.Add(conWidget)
 
-        return [infoWidget, nameTypePanel, alphaPanel, briconPanel]
+        return [panelWidget,
+                infoWidget,
+                nameTypePanel,
+                alphaPanel,
+                briconPanel]
 
 
     def __makeVolumeOptsTools(self, opts):

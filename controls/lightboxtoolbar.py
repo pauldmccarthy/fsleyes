@@ -60,8 +60,8 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
                 fslicons.findImageFile('movieHighlight24'),
                 fslicons.findImageFile('movie24')],
             'toggleCanvasSettingsPanel' : [
-                fslicons.findImageFile('gearHighlight24'),
-                fslicons.findImageFile('gear24')],
+                fslicons.findImageFile('spannerHighlight24'),
+                fslicons.findImageFile('spanner24')],
 
             'zax' : {
                 0 : [fslicons.findImageFile('sagittalSliceHighlight24'),

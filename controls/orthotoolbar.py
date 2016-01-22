@@ -98,8 +98,8 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
                 fslicons.findImageFile('axialSliceHighlight24'),
                 fslicons.findImageFile('axialSlice24')],
             'toggleCanvasSettingsPanel' : [
-                fslicons.findImageFile('gearHighlight24'),
-                fslicons.findImageFile('gear24')],
+                fslicons.findImageFile('spannerHighlight24'),
+                fslicons.findImageFile('spanner24')],
 
             'resetZoom'    : fslicons.findImageFile('resetZoom24'),
             'centreCursor' : fslicons.findImageFile('centre24'),
