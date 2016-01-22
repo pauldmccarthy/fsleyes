@@ -371,7 +371,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
                 globj = self._glObjects.get(overlay, None)
 
-                if globj is None:
+                if (globj is None) or (not globj):
                     continue
                 
                 rt, name = self._getPreRenderTexture(globj, overlay)

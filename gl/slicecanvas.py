@@ -463,7 +463,7 @@ class SliceCanvas(props.HasProperties):
             globj   = self._glObjects.get(overlay, None)
             display = self.displayCtx.getDisplay(overlay)
 
-            if globj is None:
+            if (globj is None) or (not globj):
                 continue
 
             # For offscreen render mode, GLObjects are
@@ -687,7 +687,7 @@ class SliceCanvas(props.HasProperties):
 
         for ovl, globj in self._glObjects.items():
 
-            if globj is not None:
+            if (globj is not None) and globj:
                 globj.setAxes(self.xax, self.yax)
 
         self._overlayBoundsChanged()
