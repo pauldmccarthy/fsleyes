@@ -101,8 +101,8 @@ class GLLabel(globject.GLImageObject):
 
         def shaderUpdate(*a):
             if self.ready():
-                fslgl.gllabel_funcs.updateShaderState(self)
-                self.notify()
+                if fslgl.gllabel_funcs.updateShaderState(self):
+                    self.notify()
             
         def shaderCompile(*a):
             fslgl.gllabel_funcs.compileShaders(self)

@@ -60,8 +60,11 @@ def updateShaderState(self):
     useSpline = opts.interpolation == 'spline'
 
     self.shader.load()
-    glvector_funcs.updateFragmentShaderState(self, useSpline=useSpline)
+    changed = glvector_funcs.updateFragmentShaderState(self,
+                                                       useSpline=useSpline)
     self.shader.unload()
+
+    return changed
 
 
 preDraw  = glvolume_funcs.preDraw

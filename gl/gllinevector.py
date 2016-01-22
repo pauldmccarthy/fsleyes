@@ -122,7 +122,7 @@ class GLLineVector(glvector.GLVector):
         """Overrides :meth:`.GLVector.updateShaderState`. Calls the OpenGL
         version-specific ``updateShaderState`` function.
         """ 
-        fslgl.gllinevector_funcs.updateShaderState(self)
+        return fslgl.gllinevector_funcs.updateShaderState(self)
  
 
     def preDraw(self):

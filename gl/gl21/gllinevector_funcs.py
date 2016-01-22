@@ -71,16 +71,15 @@ def updateShaderState(self):
     shader = self.shader
     shader.load()
     
-    glvector_funcs.updateFragmentShaderState(self)
+    changed   = glvector_funcs.updateFragmentShaderState(self)
+    image     = self.vectorImage
+    opts      = self.displayOpts
 
-    image = self.vectorImage
-    opts  = self.displayOpts
-
-    vvxMat     = self.imageTexture.voxValXform
-    directed   = opts.directed
-    imageDims  = image.pixdim[:3]
-    d2vMat     = opts.getTransform('display', 'voxel')
-    v2dMat     = opts.getTransform('voxel',   'display')
+    vvxMat    = self.imageTexture.voxValXform
+    directed  = opts.directed
+    imageDims = image.pixdim[:3]
+    d2vMat    = opts.getTransform('display', 'voxel')
+    v2dMat    = opts.getTransform('voxel',   'display')
 
     # The shader adds these offsets to
     # transformed voxel coordinates, so
@@ -88,15 +87,17 @@ def updateShaderState(self):
     # voxel coordinates
     offset = [0.5, 0.5, 0.5]
 
-    shader.set('vectorTexture',   0)
-    shader.set('displayToVoxMat', d2vMat)
-    shader.set('voxToDisplayMat', v2dMat)
-    shader.set('voxValXform',     vvxMat)
-    shader.set('voxelOffset',     offset)
-    shader.set('imageDims',       imageDims)
-    shader.set('directed',        directed)
+    changed |= shader.set('vectorTexture',   0)
+    changed |= shader.set('displayToVoxMat', d2vMat)
+    changed |= shader.set('voxToDisplayMat', v2dMat)
+    changed |= shader.set('voxValXform',     vvxMat)
+    changed |= shader.set('voxelOffset',     offset)
+    changed |= shader.set('imageDims',       imageDims)
+    changed |= shader.set('directed',        directed)
 
     shader.unload()
+
+    return changed
 
 
 def preDraw(self):

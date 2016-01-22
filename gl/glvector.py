@@ -255,8 +255,8 @@ class GLVector(globject.GLImageObject):
             
         def shaderUpdate(*a):
             if self.ready():
-                self.updateShaderState()
-                self.notify() 
+                if self.updateShaderState():
+                    self.notify() 
         
         def modUpdate( *a):
             self.deregisterAuxImage('modulate')
@@ -410,7 +410,8 @@ class GLVector(globject.GLImageObject):
     def updateShaderState(self):
         """This method must be provided by subclasses (the
         :class:`.GLRGBVector` and :class:`.GLLineVector` classes), and must
-        update the state of the vertex/fragment shader programs.
+        update the state of the vertex/fragment shader programs. It must return
+        ``True`` if the shader state was updated, ``False`` otherwise.
         """
         raise NotImplementedError('updateShaderState must be implemented by '
                                   '{} subclasses'.format(type(self).__name__))

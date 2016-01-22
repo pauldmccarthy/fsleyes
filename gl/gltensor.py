@@ -112,7 +112,7 @@ class GLTensor(glvector.GLVector):
         """Overrides :meth:`.GLVector.updateShaderState`. Calls the
         :func:`.gl21.gltensor_funcs.updateShaderState` function.
         """ 
-        fslgl.gltensor_funcs.updateShaderState(self)
+        return fslgl.gltensor_funcs.updateShaderState(self)
 
         
     def preDraw(self):

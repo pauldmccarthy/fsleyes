@@ -68,15 +68,19 @@ def updateShaderState(self):
 
     shader.load()
 
-    shader.set('outline',        opts.outline)
-    shader.set('numLabels',      opts.lut.max() + 1)
-    shader.set('imageShape',     imageShape)
-    shader.set('voxValXform',    vvx)
-    shader.set('outlineOffsets', outlineOffsets)
-    shader.set('imageTexture',   0)
-    shader.set('lutTexture',     1)
+    changed = False
+
+    changed |= shader.set('outline',        opts.outline)
+    changed |= shader.set('numLabels',      opts.lut.max() + 1)
+    changed |= shader.set('imageShape',     imageShape)
+    changed |= shader.set('voxValXform',    vvx)
+    changed |= shader.set('outlineOffsets', outlineOffsets)
+    changed |= shader.set('imageTexture',   0)
+    changed |= shader.set('lutTexture',     1)
 
     shader.unload()
+
+    return changed
 
 
 preDraw  = glvolume_funcs.preDraw

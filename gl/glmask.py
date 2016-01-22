@@ -53,8 +53,8 @@ class GLMask(glvolume.GLVolume):
         
         def shaderUpdate(*a):
             if self.ready():
-                fslgl.glvolume_funcs.updateShaderState(self)
-                self.notify() 
+                if fslgl.glvolume_funcs.updateShaderState(self):
+                    self.notify() 
 
         def shaderCompile(*a):
             fslgl.glvolume_funcs.compileShaders(self)

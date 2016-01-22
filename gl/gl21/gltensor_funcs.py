@@ -137,7 +137,8 @@ def updateShaderState(self):
     opts   = self.displayOpts
     
     shader.load()
-    glvector_funcs.updateFragmentShaderState(self)
+    
+    changed = glvector_funcs.updateFragmentShaderState(self)
 
     # Texture -> value value offsets/scales
     # used by the vertex and fragment shaders
@@ -163,24 +164,24 @@ def updateShaderState(self):
     lightPos /= np.sqrt(np.sum(lightPos ** 2)) 
  
     # Textures used by the vertex shader
-    shader.set('v1Texture', 8)
-    shader.set('v2Texture', 9)
-    shader.set('v3Texture', 10)
-    shader.set('l1Texture', 11)
-    shader.set('l2Texture', 12)
-    shader.set('l3Texture', 13)
+    changed |= shader.set('v1Texture', 8)
+    changed |= shader.set('v2Texture', 9)
+    changed |= shader.set('v3Texture', 10)
+    changed |= shader.set('l1Texture', 11)
+    changed |= shader.set('l2Texture', 12)
+    changed |= shader.set('l3Texture', 13)
     
-    shader.set('v1ValXform', v1ValXform)
-    shader.set('v2ValXform', v2ValXform)
-    shader.set('v3ValXform', v3ValXform)
-    shader.set('l1ValXform', l1ValXform)
-    shader.set('l2ValXform', l2ValXform)
-    shader.set('l3ValXform', l3ValXform)
+    changed |= shader.set('v1ValXform', v1ValXform)
+    changed |= shader.set('v2ValXform', v2ValXform)
+    changed |= shader.set('v3ValXform', v3ValXform)
+    changed |= shader.set('l1ValXform', l1ValXform)
+    changed |= shader.set('l2ValXform', l2ValXform)
+    changed |= shader.set('l3ValXform', l3ValXform)
 
-    shader.set('imageShape', imageShape)
-    shader.set('eigValNorm', eigValNorm)
-    shader.set('lighting',   opts.lighting)
-    shader.set('lightPos',   lightPos)
+    changed |= shader.set('imageShape', imageShape)
+    changed |= shader.set('eigValNorm', eigValNorm)
+    changed |= shader.set('lighting',   opts.lighting)
+    changed |= shader.set('lightPos',   lightPos)
     
     # Vertices of a unit sphere. The vertex
     # shader will transform these vertices
@@ -193,6 +194,8 @@ def updateShaderState(self):
     shader.setAtt('vertex', vertices)
     shader.setIndices(indices)
     shader.unload()
+
+    return changed
 
 
 def preDraw(self):

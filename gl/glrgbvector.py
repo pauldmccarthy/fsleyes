@@ -147,7 +147,7 @@ class GLRGBVector(glvector.GLVector):
         """Overrides :meth:`.GLVector.compileShaders`. Calls the OpenGL
         version-specific ``updateShaderState`` function.
         """ 
-        fslgl.glrgbvector_funcs.updateShaderState(self)
+        return fslgl.glrgbvector_funcs.updateShaderState(self)
 
 
     def preDraw(self):

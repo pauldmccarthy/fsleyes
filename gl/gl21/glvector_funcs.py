@@ -44,6 +44,8 @@ def updateFragmentShaderState(self, useSpline=False):
     """Updates the state of the fragment shader - it may be either the
     ``glvolume`` or the ``glvector`` shader.
     """
+
+    changed             = False
     opts                = self.displayOpts
     shader              = self.shader
     useVolumeFragShader = opts.colourImage is not None
@@ -74,34 +76,36 @@ def updateFragmentShaderState(self, useSpline=False):
             voxValXform,
             self.cmapTexture.getCoordinateTransform())
 
-        shader.set('clipTexture',      2)
-        shader.set('imageTexture',     3)
-        shader.set('colourTexture',    7)
-        shader.set('negColourTexture', 7)
-        shader.set('img2CmapXform',    img2CmapXform)
-        shader.set('imageShape',       imageShape)
-        shader.set('imageIsClip',      False)
-        shader.set('useNegCmap',       False)
-        shader.set('useSpline',        useSpline)
-        shader.set('clipLow',          clipLow)
-        shader.set('clipHigh',         clipHigh)
-        shader.set('texZero',          texZero)
-        shader.set('invertClip',       False)
+        changed |= shader.set('clipTexture',      2)
+        changed |= shader.set('imageTexture',     3)
+        changed |= shader.set('colourTexture',    7)
+        changed |= shader.set('negColourTexture', 7)
+        changed |= shader.set('img2CmapXform',    img2CmapXform)
+        changed |= shader.set('imageShape',       imageShape)
+        changed |= shader.set('imageIsClip',      False)
+        changed |= shader.set('useNegCmap',       False)
+        changed |= shader.set('useSpline',        useSpline)
+        changed |= shader.set('clipLow',          clipLow)
+        changed |= shader.set('clipHigh',         clipHigh)
+        changed |= shader.set('texZero',          texZero)
+        changed |= shader.set('invertClip',       False)
     
     else:
 
         voxValXform = self.imageTexture.voxValXform
         cmapXform   = self.xColourTexture.getCoordinateTransform()
 
-        shader.set('vectorTexture',   0)
-        shader.set('modulateTexture', 1)
-        shader.set('clipTexture',     2)
-        shader.set('xColourTexture',  4)
-        shader.set('yColourTexture',  5)
-        shader.set('zColourTexture',  6)
-        shader.set('voxValXform',     voxValXform)
-        shader.set('cmapXform',       cmapXform)
-        shader.set('imageShape',      imageShape)
-        shader.set('clipLow',         clipLow)
-        shader.set('clipHigh',        clipHigh) 
-        shader.set('useSpline',       useSpline)
+        changed |= shader.set('vectorTexture',   0)
+        changed |= shader.set('modulateTexture', 1)
+        changed |= shader.set('clipTexture',     2)
+        changed |= shader.set('xColourTexture',  4)
+        changed |= shader.set('yColourTexture',  5)
+        changed |= shader.set('zColourTexture',  6)
+        changed |= shader.set('voxValXform',     voxValXform)
+        changed |= shader.set('cmapXform',       cmapXform)
+        changed |= shader.set('imageShape',      imageShape)
+        changed |= shader.set('clipLow',         clipLow)
+        changed |= shader.set('clipHigh',        clipHigh) 
+        changed |= shader.set('useSpline',       useSpline)
+
+    return changed

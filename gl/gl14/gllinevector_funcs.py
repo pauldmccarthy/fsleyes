@@ -136,6 +136,8 @@ def updateShaderState(self):
     self.shader.setVertParam('voxelOffsets',  offset)
 
     self.shader.unload()
+
+    return True
     
 
 def preDraw(self):

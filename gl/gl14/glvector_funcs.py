@@ -114,3 +114,5 @@ def updateFragmentShaderState(self):
         self.shader.setFragParam('cmapXform',   cmapXform)
 
     self.shader.unload()
+
+    return True

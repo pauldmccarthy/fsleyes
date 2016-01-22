@@ -63,6 +63,8 @@ def updateShaderState(self):
     self.shader.setVertParam('imageShape', shape + [0])
     self.shader.unload()
 
+    return True
+
 
 preDraw  = glvolume_funcs.preDraw
 draw     = glvolume_funcs.draw
