@@ -264,7 +264,9 @@ class SliceCanvas(props.HasProperties):
             disp.removeListener('overlayType',  self.name)
             disp.removeListener('enabled',      self.name)
 
-            if globj is not None:
+            # globj could be None, or could
+            # be False - see genGLObject.
+            if globj:
                 globj.deregister(self.name)
                 globj.destroy()
 
@@ -790,6 +792,7 @@ class SliceCanvas(props.HasProperties):
             # We need a GL context to create a new GL
             # object. If we can't get it now, 
             if not self._setGLContext():
+                self._glObjects.pop(overlay)
                 return
 
             globj = globject.createGLObject(overlay, display)
