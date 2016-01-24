@@ -564,8 +564,9 @@ HELP = td.TypeDict({
     # TODO how about other overlay types?
     'Main.voxelLoc'        : 'Location to show (voxel coordinates of '
                              'first overlay)',
-    'Main.worldLoc'        : 'Location to show (world coordinates, '
-                             'takes precedence over --voxelloc)',
+    'Main.worldLoc'        : 'Location to show (world coordinates of '
+                             'first overlay, takes precedence over '
+                             '--voxelloc)', 
     'Main.selectedOverlay' : 'Selected overlay (default: last)',
     'Main.autoDisplay'     : 'Automatically configure display settings to '
                              'overlays (unless any display settings are '
