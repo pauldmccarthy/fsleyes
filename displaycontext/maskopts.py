@@ -80,6 +80,5 @@ class MaskOpts(volumeopts.Nifti1Opts):
         self.threshold.xmax = self.dataMax + dMinDistance
         self.threshold.xlo  = self.dataMin + dMinDistance
         self.threshold.xhi  = self.dataMax + dMinDistance 
-        self.setConstraint('threshold', 'minDistance', dMinDistance)
 
         volumeopts.Nifti1Opts.__init__(self, overlay, *args, **kwargs)

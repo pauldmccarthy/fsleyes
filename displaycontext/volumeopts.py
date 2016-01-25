@@ -717,14 +717,11 @@ class VolumeOpts(Nifti1Opts):
         self.displayRange.xmin = self.dataMin
         self.displayRange.xmax = self.dataMax
 
-        # Keep range values 0.01% apart.
         dMinDistance = abs(self.dataMax - self.dataMin) / 10000.0
-        self.setConstraint('displayRange', 'minDistance', dMinDistance)
 
         if self.clipImage is None:
             self.clippingRange.xmin = self.dataMin - dMinDistance
             self.clippingRange.xmax = self.dataMax + dMinDistance
-            self.setConstraint('clippingRange', 'minDistance', dMinDistance)
  
 
     def __overlayListChanged(self, *a):
