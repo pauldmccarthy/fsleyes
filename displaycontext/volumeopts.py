@@ -804,8 +804,6 @@ class VolumeOpts(Nifti1Opts):
         self.clippingRange.xlo = dataMin + dMinDistance
         self.clippingRange.xhi = dataMax + dMinDistance
 
-        self.setConstraint('clippingRange', 'minDistance', dMinDistance)
-
 
     def __toggleListeners(self, enable=True):
         """This method enables/disables the property listeners which
