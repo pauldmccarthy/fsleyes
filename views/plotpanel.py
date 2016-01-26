@@ -903,10 +903,11 @@ class OverlayPlotPanel(PlotPanel):
            property on the corresponding target.
 
         This method must therefore return a tuple containing:
-         - A :class:`.DataSeries` instance, or ``None`` if the overlay
-           is incompatible.
-         - A list of *target* instances.
-         * A list of *property names*.
+        
+          - A :class:`.DataSeries` instance, or ``None`` if the overlay
+            is incompatible.
+          - A list of *target* instances.
+          - A list of *property names*.
         
         The target and property name lists must have the same length.
         """

@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides he :class:`GLSLShader` class, which encapsulates
+"""This module provides the :class:`GLSLShader` class, which encapsulates
 a GLSL shader program comprising a vertex shader and a fragment shader.
 """
 
@@ -232,7 +232,7 @@ class GLSLShader(object):
 
 
     def destroy(self):
-        """Deletes all GL resources managed by this ``GLSLShader`. """
+        """Deletes all GL resources managed by this ``GLSLShader``. """
         gl.glDeleteProgram(self.program)
 
         for buf in self.buffers.values():

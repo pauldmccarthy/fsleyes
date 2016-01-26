@@ -211,8 +211,8 @@ class ARBPShader(object):
         """Sets the value of the specified vertex program parameter.
 
         .. note:: It is assumed that the value is either a sequence of length
-        4 (for vector parameters), or a ``numpy`` array of shape ``(n, 4)``
-        (for matrix parameters).
+                  4 (for vector parameters), or a ``numpy`` array of shape 
+                  ``(n, 4)`` (for matrix parameters).
         """
 
         pos   = self.vertParamPositions[name]

@@ -318,7 +318,7 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         .. note:: This method assumes that the given ``overlay`` is an
                   :class:`.Image` which has the same voxel dimensions as,
                   and shares the the same world coordinate system as the
-                 ``featImage``.
+                  ``featImage``.
 
         
         :arg overlay:   The overlay for which clusters are currently being

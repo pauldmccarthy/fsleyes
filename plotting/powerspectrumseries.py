@@ -10,7 +10,7 @@ by the :class:`.PowerSpectrumPanel` for plotting power spectra.
 The following classes are provided:
 
 .. autosummary::
-   :nosignature:
+   :nosignatures:
 
    PowerSpectrumSeries
    VoxelPowerSpectrumSeries

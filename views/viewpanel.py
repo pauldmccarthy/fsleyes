@@ -69,7 +69,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
     **Programming interface**
 
 
-    The following methods are available on a ``Viewpanel` for programmatically
+    The following methods are available on a ``Viewpanel`` for programmatically
     controlling its display and layout:
 
 

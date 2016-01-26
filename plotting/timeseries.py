@@ -13,7 +13,6 @@ are use by the :class:`.TimeSeriesPanel`. The following classes are provided:
    TimeSeries
    VoxelTimeSeries
    FEATTimeSeries
-   FEATModelTimeSeries
    FEATPartialFitTimeSeries
    FEATEVTimeSeries
    FEATResidualTimeSeries

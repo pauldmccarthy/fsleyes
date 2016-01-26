@@ -40,7 +40,7 @@ log = logging.getLogger(__name__)
 def init(self):
     """Compiles and configures the vertex/fragment shaders used to render the
     ``GLLineVector`` via calls to :func:`compileShaders` and
-    :func:`updateShaderState.
+    :func:`updateShaderState`.
     """
     
     self.shader = None

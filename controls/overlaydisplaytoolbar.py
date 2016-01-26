@@ -50,14 +50,14 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
     .. autosummary::
        :nosignatures:
 
-       __makeDisplayTools
-       __makeVolumeOptsTools
-       __makeMaskOptsTools
-       __makeLabelOptsTools
-       __makeVectorOptsTools
-       __makeRGBVectorOptsTools
-       __makeLineVectorOptsTools
-       __makeModelOptsTools
+       _OverlayDisplayToolBar__makeDisplayTools
+       _OverlayDisplayToolBar__makeVolumeOptsTools
+       _OverlayDisplayToolBar__makeMaskOptsTools
+       _OverlayDisplayToolBar__makeLabelOptsTools
+       _OverlayDisplayToolBar__makeVectorOptsTools
+       _OverlayDisplayToolBar__makeRGBVectorOptsTools
+       _OverlayDisplayToolBar__makeLineVectorOptsTools
+       _OverlayDisplayToolBar__makeModelOptsTools
     """
     
     def __init__(self, parent, overlayList, displayCtx, viewPanel):

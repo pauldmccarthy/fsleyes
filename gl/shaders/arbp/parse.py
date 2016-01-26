@@ -54,7 +54,7 @@ from a 3D image texture::
 
 
 And the corresponding fragment program, which looks up the voxel value
-and colours the fragment accordingly:
+and colours the fragment accordingly::
 
 
     !!ARBfp1.0

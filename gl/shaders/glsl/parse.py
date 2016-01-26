@@ -111,10 +111,11 @@ STRUCT     = pp.Literal("struct").suppress()
 def getDeclarations(code):
     """Get all declarations prefixed with a storage qualifier.
     
-    Code example
-    ------------
-    uniform lowp vec4 fg_color = vec4(1),
-                      bg_color = vec4(vec3(0),1);
+    *Code example*
+
+    ::
+        uniform lowp vec4 fg_color = vec4(1),
+                          bg_color = vec4(vec3(0),1);
     """
 
     # Callable expression

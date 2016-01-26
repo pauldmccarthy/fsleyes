@@ -14,7 +14,7 @@ performed, enabled and disabled, and may be bound to a GUI menu item or
 button. The :class:`ActionProvider` class represents some entity which can
 perform one or more actions.  As the :class:`.FSLEyesPanel` class derives from
 :class:`ActionProvider` pretty much everything in FSLEyes is an
-:classf:`ActionProvider`. 
+:class:`ActionProvider`. 
 
 
 The :func:`action` and :func:`toggleAction` functions are intended to be used

@@ -997,7 +997,7 @@ class LookupTable(props.HasProperties):
 
     def getByName(self, name):
         """Returns the :class:`LutLabel` instance associated with the given
-        ``name``, or ``None`` if there is no ``LutLabel`. The name comparison
+        ``name``, or ``None`` if there is no ``LutLabel``. The name comparison
         is case-insensitive.
         """
         name = name.lower()

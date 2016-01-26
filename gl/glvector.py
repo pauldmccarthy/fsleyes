@@ -622,8 +622,8 @@ class GLVector(globject.GLImageObject):
     def preDraw(self):
         """Must be called by subclass implementations.
 
-        Ensures that all of the textures used by this ``GLVector``are bound to
-        their corresponding texture units.
+        Ensures that all of the textures used by this ``GLVector`` are bound
+        to their corresponding texture units.
         """
         
         self.imageTexture   .bindTexture(gl.GL_TEXTURE0)
