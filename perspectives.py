@@ -30,8 +30,8 @@ too:
 A perspective defines a layout for a :class:`.FSLEyesFrame`. It specifies the
 type and layout of one or more *views* (defined in the :mod:`.views` module)
 and, within each view, the type and layout of one or more *controls* (defined
-in the :mod:`.controls` module). See the :mod:`.fsleyes` documentation for an
-overview of views and controls.
+in the :mod:`.controls` module). See the :mod:`~fsl.fsleyes` documentation for
+an overview of views and controls.
 
 
 All of this information is stored as a string - see the
