@@ -23,7 +23,6 @@ The following control panels currently exist:
    ~fsl.fsleyes.controls.canvassettingspanel.CanvasSettingsPanel
    ~fsl.fsleyes.controls.clusterpanel.ClusterPanel
    ~fsl.fsleyes.controls.histogramcontrolpanel.HistogramControlPanel
-   ~fsl.fsleyes.controls.histogramlistpanel.HistogramListPanel
    ~fsl.fsleyes.controls.lightboxtoolbar.LightBoxToolBar
    ~fsl.fsleyes.controls.locationpanel.LocationPanel
    ~fsl.fsleyes.controls.lookuptablepanel.LookupTablePanel
@@ -33,7 +32,48 @@ The following control panels currently exist:
    ~fsl.fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar
    ~fsl.fsleyes.controls.overlayinfopanel.OverlayInfoPanel
    ~fsl.fsleyes.controls.overlaylistpanel.OverlayListPanel
+   ~fsl.fsleyes.controls.plotcontrolpanel.PlotControlPanel
+   ~fsl.fsleyes.controls.plotlistpanel.PlotListPanel
+   ~fsl.fsleyes.controls.powerspectrumcontrolpanel.PowerSpectrumControlPanel
    ~fsl.fsleyes.controls.shellpanel.ShellPanel
    ~fsl.fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
-   ~fsl.fsleyes.controls.timeserieslistpanel.TimeSeriesListPanel
 """
+
+import atlaspanel
+import canvassettingspanel
+import clusterpanel
+import histogramcontrolpanel
+import lightboxtoolbar
+import locationpanel
+import lookuptablepanel
+import melodicclassificationpanel
+import orthoedittoolbar
+import orthotoolbar
+import overlaydisplaypanel
+import overlaydisplaytoolbar
+import overlayinfopanel
+import overlaylistpanel
+import plotlistpanel
+import powerspectrumcontrolpanel
+import shellpanel
+import timeseriescontrolpanel
+
+
+AtlasPanel                 = atlaspanel.AtlasPanel
+CanvasSettingsPanel        = canvassettingspanel.CanvasSettingsPanel
+ClusterPanel               = clusterpanel.ClusterPanel
+HistogramControlPanel      = histogramcontrolpanel.HistogramControlPanel
+LightBoxToolBar            = lightboxtoolbar.LightBoxToolBar
+LocationPanel              = locationpanel.LocationPanel
+LookupTablePanel           = lookuptablepanel.LookupTablePanel
+MelodicClassificationPanel = melodicclassificationpanel.MelodicClassificationPanel
+OrthoEditToolBar           = orthoedittoolbar.OrthoEditToolBar
+OrthoToolBar               = orthotoolbar.OrthoToolBar
+OverlayDisplayPanel        = overlaydisplaypanel.OverlayDisplayPanel
+OverlayDisplayToolBar      = overlaydisplaytoolbar.OverlayDisplayToolBar
+OverlayInfoPanel           = overlayinfopanel.OverlayInfoPanel
+OverlayListPanel           = overlaylistpanel.OverlayListPanel
+PlotListPanel              = plotlistpanel.PlotListPanel
+PowerSpectrumControlPanel  = powerspectrumcontrolpanel.PowerSpectrumControlPanel
+ShellPanel                 = shellpanel.ShellPanel
+TimeSeriesControlPanel     = timeseriescontrolpanel.TimeSeriesControlPanel

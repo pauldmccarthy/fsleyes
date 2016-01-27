@@ -9,22 +9,19 @@ control* which allows the user to configure a :class:`.TimeSeriesPanel`.
 """
 
 
-import wx
-
 import                                    props
-import pwidgets.widgetlist             as widgetlist
 
-import fsl.fsleyes.panel               as fslpanel
-import fsl.fsleyes.displaycontext      as fsldisplay
-import fsl.fsleyes.plotting.timeseries as timeseries
+import                                    plotcontrolpanel
 import fsl.fsleyes.tooltips            as fsltooltips
+import fsl.fsleyes.plotting.timeseries as timeseries
+import fsl.data.featimage              as fslfeatimage
 import fsl.data.strings                as strings
 
 
-class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
-    """The ``TimeSeriesControlPanel`` is a :class:`.FSLEyesPanel` which allows
-    the user to configure a :class:`.TimeSeriesPanel`. It contains controls
-    which are linked to the properties of the ``TimeSeriesPanel``,
+class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
+    """The ``TimeSeriesControlPanel`` is a :class:`.PlotContrlPanel` which
+    allows the user to configure a :class:`.TimeSeriesPanel`. It contains
+    controls which are linked to the properties of the ``TimeSeriesPanel``,
     (which include properties defined on the :class:`.PlotPanel` base class),
     and the :class:`.TimeSeries` class.
 
@@ -56,219 +53,73 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
     """
 
     
-    def __init__(self, parent, overlayList, displayCtx, tsPanel):
-        """Create a ``TimeSeriesControlPanel``.
-
-        :arg parent:      The :mod:`wx` parent object.
-        
-        :arg overlayList: The :class:`.OverlayList`.
-        
-        :arg displayCtx:  The :class:`.DisplayContext` instance.
-        
-        :arg tsPanel:     The :class:`.TimeSeriesPanel` associated with this
-                          ``TimeSeriesControlPanel``.
+    def __init__(self, *args, **kwargs):
+        """Create a ``TimeSeriesControlPanel``. All arguments are passed
+        through to the :meth:`.PlotControlPanel.__init__` method.
         """
 
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        plotcontrolpanel.PlotControlPanel.__init__(self, *args, **kwargs)
 
-        self.__tsPanel = tsPanel
-        self.__widgets = widgetlist.WidgetList(self)
-        self.__sizer   = wx.BoxSizer(wx.VERTICAL)
+        tsPanel = self.getPlotPanel()
+        tsPanel.addListener('plotMelodicICs',
+                            self._name,
+                            self.__plotMelodicICsChanged)
 
-        self.SetSizer(self.__sizer)
-        self.__sizer.Add(self.__widgets, flag=wx.EXPAND, proportion=1)
+        
+    def destroy(self):
+        """Must be called when this ``TimeSeriesControlPanel`` is no longer
+        needed. Removes some property listeners, and calls
+        :meth:`.PlotControlPanel.destroy`.
+        """
+        psPanel = self.getPlotPanel()
+        psPanel.removeListener('plotMelodicICs', self._name)
+        plotcontrolpanel.PlotControlPanel.destroy(self) 
 
-        tsProps   = ['showMode',
-                     'plotMode',
-                     'usePixdim',
-                     'plotMelodicICs']
-        plotProps = ['xLogScale',
-                     'yLogScale',
-                     'smooth',
-                     'legend',
-                     'ticks',
-                     'grid',
-                     'autoScale']
 
-        self.__widgets.AddGroup(
-            'tsSettings',
-            strings.labels[self, 'tsSettings'])
+    def generateCustomPlotPanelWidgets(self, groupName):
+        """Overrides :meth:`.PlotControlPanel.generateCustomPlotPanelWidgets`.
+
+        Adds some widgets for controlling some properties of the
+        :class:`.TimeSeriesPanel`.
+        """
+
+        widgets = self.getWidgetList()
+        tsPanel = self.getPlotPanel()
+        tsProps = ['showMode',
+                   'plotMode',
+                   'usePixdim',
+                   'plotMelodicICs']
 
         for prop in tsProps:
             kwargs = {}
             if prop == 'plotMode':
-                kwargs['labels'] = strings.choices['TimeSeriesPanel.plotMode']
+                kwargs['labels'] = strings.choices[tsPanel, 'plotMode']
             elif prop == 'showMode':
-                kwargs['labels'] = strings.choices['TimeSeriesPanel.showMode']
+                kwargs['labels'] = strings.choices[tsPanel, 'showMode']
                 
-            widget = props.makeWidget(self.__widgets, tsPanel, prop, **kwargs)
-            self.__widgets.AddWidget(
+            widget = props.makeWidget(widgets, tsPanel, prop, **kwargs)
+            widgets.AddWidget(
                 widget,
                 displayName=strings.properties[tsPanel, prop],
                 tooltip=fsltooltips.properties[tsPanel, prop],
-                groupName='tsSettings')
-
-        self.__widgets.AddGroup(
-            'plotSettings',
-            strings.labels[tsPanel, 'plotSettings'])
-        
-        for prop in plotProps:
-            self.__widgets.AddWidget(
-                props.makeWidget(self.__widgets, tsPanel, prop),
-                displayName=strings.properties[tsPanel, prop],
-                tooltip=fsltooltips.properties[tsPanel, prop],
-                groupName='plotSettings')
-
-        xlabel = props.makeWidget(self.__widgets, tsPanel, 'xlabel')
-        ylabel = props.makeWidget(self.__widgets, tsPanel, 'ylabel')
-
-        labels = wx.BoxSizer(wx.HORIZONTAL)
-
-        labels.Add(wx.StaticText(self.__widgets,
-                                 label=strings.labels[tsPanel, 'xlabel']))
-        labels.Add(xlabel, flag=wx.EXPAND, proportion=1)
-        labels.Add(wx.StaticText(self.__widgets,
-                                 label=strings.labels[tsPanel, 'ylabel']))
-        labels.Add(ylabel, flag=wx.EXPAND, proportion=1) 
-
-        limits = props.makeListWidgets(self.__widgets, tsPanel, 'limits')
-        xlims  = wx.BoxSizer(wx.HORIZONTAL)
-        ylims  = wx.BoxSizer(wx.HORIZONTAL)
-        
-        xlims.Add(limits[0], flag=wx.EXPAND, proportion=1)
-        xlims.Add(limits[1], flag=wx.EXPAND, proportion=1)
-        ylims.Add(limits[2], flag=wx.EXPAND, proportion=1)
-        ylims.Add(limits[3], flag=wx.EXPAND, proportion=1) 
-
-        self.__widgets.AddWidget(
-            labels,
-            displayName=strings.labels[tsPanel, 'labels'],
-            tooltip=fsltooltips.misc[  tsPanel, 'labels'],
-            groupName='plotSettings')
-        self.__widgets.AddWidget(
-            xlims,
-            displayName=strings.labels[tsPanel, 'xlim'],
-            tooltip=fsltooltips.misc[  tsPanel, 'xlim'],
-            groupName='plotSettings')
-        self.__widgets.AddWidget(
-            ylims,
-            displayName=strings.labels[tsPanel, 'ylim'],
-            tooltip=fsltooltips.misc[  tsPanel, 'ylim'],
-            groupName='plotSettings')
-
-        displayCtx .addListener('selectedOverlay',
-                                self._name,
-                                self.__selectedOverlayChanged)
-        overlayList.addListener('overlays',
-                                self._name,
-                                self.__selectedOverlayChanged)
-
-        # This attribute keeps track of the currently
-        # selected overlay, so the widget list group
-        # names can be updated if the overlay name
-        # changes.
-        self.__selectedOverlay = None
-        self.__selectedOverlayChanged()
+                groupName=groupName)
 
 
-    def destroy(self):
-        """Must be called when this ``TimeSeriesControlPanel`` is no longer
-        needed. Removes some property listeners, and calls the
-        :meth:`.FSLEyesPanel.destroy` method.
-        """
-        self._displayCtx .removeListener('selectedOverlay', self._name)
-        self._overlayList.removeListener('overlays',        self._name)
+    def generateCustomDataSeriesWidgets(self, ts, groupName):
+        """Overrides :meth:`.PlotControlPanel.generateCustomDataSeriesWidgets`.
 
-        if self.__selectedOverlay is not None:
-            display = self._displayCtx.getDisplay(self.__selectedOverlay)
-            display.removeListener('name', self._name)
-            
-        fslpanel.FSLEyesPanel.destroy(self)
-
-
-    def __selectedOverlayNameChanged(self, *a):
-        """Called when the :attr:`.Display.name` property for the currently
-        selected overlay changes. Updates the display name of the *FEAT plot
-        settings* and *current time course* sections if necessary.
-        """
-        display = self._displayCtx.getDisplay(self.__selectedOverlay)
-        
-        if self.__widgets.HasGroup('currentFEATSettings'):
-            self.__widgets.RenameGroup(
-                'currentFEATSettings',
-                strings.labels[self, 'currentFEATSettings'].format(
-                    display.name))
-
-        if self.__widgets.HasGroup('currentSettings'):
-            self.__widgets.RenameGroup(
-                'currentSettings',
-                strings.labels[self, 'currentSettings'].format(display.name)) 
-
-    
-    def __selectedOverlayChanged(self, *a):
-        """Called when the :attr:`.DisplayContext.selectedOverlay` or
-        :class:`.OverlayList` changes. If the newly selected overlay is a
-        :class:`.FEATImage`, the *FEAT plot settings* section is updated.
-        """
-
-        # We're assuminbg that the TimeSeriesPanel has
-        # already updated its current TimeSeries for
-        # the newly selected overlay.
-        if self.__selectedOverlay is not None:
-            try:
-                display = self._displayCtx.getDisplay(self.__selectedOverlay)
-                display.removeListener('name', self._name)
-                
-            # The overlay may have been
-            # removed from the overlay list
-            except fsldisplay.InvalidOverlayError:
-                pass
-                
-            self.__selectedOverlay = None
-
-        if self.__widgets.HasGroup('currentSettings'):
-            self.__widgets.RemoveGroup('currentSettings') 
- 
-        if self.__widgets.HasGroup('currentFEATSettings'):
-            self.__widgets.RemoveGroup('currentFEATSettings')
-
-        overlay = self._displayCtx.getSelectedOverlay()
-
-        if overlay is None:
-            return
-
-        ts = self.__tsPanel.getTimeSeries(overlay)
-
-        if ts is None:
-            return
-
-        self.__selectedOverlay = overlay
-
-        display = self._displayCtx.getDisplay(overlay)
-
-        display.addListener('name',
-                            self._name,
-                            self.__selectedOverlayNameChanged)
-
-        self.__showSettingsForTimeSeries(ts)
-
-        if isinstance(ts, timeseries.FEATTimeSeries):
-            self.__showFEATSettingsForTimeSeries(ts)
-
-
-    def __showFEATSettingsForTimeSeries(self, ts):
-        """(Re-)crates the *FEAT settings* section for the given
-        :class:`.FEATTimeSeries` instance.
+        If the given :class:`.TimeSeries` is a :class:`.FEATTimeSeries`
+        instance, this method adds some widgets for controlling the
+        FEAT-related settings of the instance.
         """
 
         overlay = ts.overlay
-        display = self._displayCtx.getDisplay(overlay)
-        widgets = self.__widgets
+        widgets = self.getWidgetList()
 
-        widgets.AddGroup(
-            'currentFEATSettings',
-            displayName=strings.labels[self, 'currentFEATSettings'].format(
-                display.name))
+        if not (isinstance(overlay, fslfeatimage.FEATImage)    and
+                isinstance(ts,      timeseries.FEATTimeSeries) and
+                overlay.hasStats()):
+            return
 
         full    = props.makeWidget(     widgets, ts, 'plotFullModelFit')
         res     = props.makeWidget(     widgets, ts, 'plotResiduals')
@@ -282,26 +133,26 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
             data,
             displayName=strings.properties[ts, 'plotData'],
             tooltip=fsltooltips.properties[ts, 'plotData'],
-            groupName='currentFEATSettings') 
+            groupName=groupName)
         widgets.AddWidget(
             full,
             displayName=strings.properties[ts, 'plotFullModelFit'],
             tooltip=fsltooltips.properties[ts, 'plotFullModelFit'],
-            groupName='currentFEATSettings')
+            groupName=groupName)
         
         widgets.AddWidget(
             res,
             displayName=strings.properties[ts, 'plotResiduals'],
             tooltip=fsltooltips.properties[ts, 'plotResiduals'],
-            groupName='currentFEATSettings')
+            groupName=groupName)
         
         widgets.AddWidget(
             partial,
             displayName=strings.properties[ts, 'plotPartial'],
             tooltip=fsltooltips.properties[ts, 'plotPartial'],
-            groupName='currentFEATSettings')
+            groupName=groupName)
 
-        widgets.AddSpace(groupName='currentFEATSettings')
+        widgets.AddSpace(groupName=groupName)
 
         for i, ev in enumerate(evs):
 
@@ -311,9 +162,9 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
                 displayName=strings.properties[ts, 'plotEVs'].format(
                     i + 1, evName),
                 tooltip=fsltooltips.properties[ts, 'plotEVs'],
-                groupName='currentFEATSettings')
+                groupName=groupName)
 
-        widgets.AddSpace(groupName='currentFEATSettings')
+        widgets.AddSpace(groupName=groupName)
             
         for i, pe in enumerate(pes):
             evName = overlay.evNames()[i]
@@ -322,9 +173,9 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
                 displayName=strings.properties[ts, 'plotPEFits'].format(
                     i + 1, evName),
                 tooltip=fsltooltips.properties[ts, 'plotPEFits'],
-                groupName='currentFEATSettings')
+                groupName=groupName)
 
-        widgets.AddSpace(groupName='currentFEATSettings')
+        widgets.AddSpace(groupName=groupName)
 
         copeNames = overlay.contrastNames()
         for i, (cope, name) in enumerate(zip(copes, copeNames)):
@@ -333,49 +184,14 @@ class TimeSeriesControlPanel(fslpanel.FSLEyesPanel):
                 displayName=strings.properties[ts, 'plotCOPEFits'].format(
                     i + 1, name),
                 tooltip=fsltooltips.properties[ts, 'plotCOPEFits'],
-                groupName='currentFEATSettings') 
+                groupName=groupName) 
 
 
-    def __showSettingsForTimeSeries(self, ts):
-        """Called by the :meth:`__selectedOverlayChanged` method. Refreshes
-        the *Settings for the current time course* section, for the given
-        :class:`.TimeSeries` instance.
+    def __plotMelodicICsChanged(self, *a):
+        """Called when the :attr:`.TimeSeriesPanel.plotMelodicICs` property
+        changes. If the current overlay is a :class:`.MelodicImage`,
+        re-generates the widgets in the *current time course* section, as
+        the :class:`.TimeSeries` instance associated with the overlay may
+        have been re-created.
         """
-        overlay = ts.overlay
-        display = self._displayCtx.getDisplay(overlay)
-        widgets = self.__widgets
-
-        self.__widgets.AddGroup(
-            'currentSettings',
-            strings.labels[self, 'currentSettings'].format(display.name))
-
-        colour    = props.makeWidget(widgets, ts, 'colour')
-        alpha     = props.makeWidget(widgets, ts, 'alpha',
-                                     showLimits=False, spin=False)
-        lineWidth = props.makeWidget(widgets, ts, 'lineWidth')
-        lineStyle = props.makeWidget(
-            widgets,
-            ts,
-            'lineStyle',
-            labels=strings.choices['DataSeries.lineStyle'])
-
-        widgets.AddWidget(
-            colour,
-            displayName=strings.properties[ts, 'colour'],
-            tooltip=fsltooltips.properties[ts, 'colour'],
-            groupName='currentSettings')
-        widgets.AddWidget(
-            alpha,
-            displayName=strings.properties[ts, 'alpha'],
-            tooltip=fsltooltips.properties[ts, 'alpha'],
-            groupName='currentSettings')
-        widgets.AddWidget(
-            lineWidth,
-            displayName=strings.properties[ts, 'lineWidth'],
-            tooltip=fsltooltips.properties[ts, 'lineWidth'],
-            groupName='currentSettings') 
-        widgets.AddWidget(
-            lineStyle,
-            displayName=strings.properties[ts, 'lineStyle'],
-            tooltip=fsltooltips.properties[ts, 'lineStyle'],
-            groupName='currentSettings')
+        self.refreshDataSeriesWidgets()

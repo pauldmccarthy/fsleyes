@@ -210,7 +210,8 @@ def init():
                 if   suffix == 'cmap': registerColourMap(  mapFile, **kwargs)
                 elif suffix == 'lut':  registerLookupTable(mapFile, **kwargs)
                 
-                register[key].installed = True
+                register[key].installed    = True
+                register[key].mapObj.saved = True
 
             except Exception as e:
                 log.warn('Error processing custom {} '
@@ -264,26 +265,35 @@ def registerColourMap(cmapFile,
 
     _cmaps[key] = _Map(key, name, cmap, None, False)
 
-    # TODO Any new DisplayOpts sub-types which have a 
-    #      colour map will need to be patched here
-
-    log.debug('Patching VolumeOpts instances and class '
+    log.debug('Patching DisplayOpts instances and class '
               'to support new colour map {}'.format(key))
 
     import fsl.fsleyes.displaycontext as fsldisplay
     
-    # update the VolumeOpts colour map property
-    # for any existing VolumeOpts instances
-    cmapProp = fsldisplay.VolumeOpts.getProp('cmap')
-    
+    # A list of all DisplayOpts colour map properties
+    # 
+    # TODO Any new DisplayOpts sub-types which have a 
+    #      colour map will need to be patched here
+    cmapProps = []
+    cmapProps.append((fsldisplay.VolumeOpts, 'cmap'))
+    cmapProps.append((fsldisplay.VolumeOpts, 'negativeCmap'))
+    cmapProps.append((fsldisplay.VectorOpts, 'cmap'))
+
+    # Update the colour map properties
+    # for any existing instances 
     for overlay in overlayList:
         opts = displayCtx.getOpts(overlay)
-        
-        if isinstance(opts, fsldisplay.VolumeOpts):
-            cmapProp.addColourMap(key, opts)
 
-    # and for all future volume overlays
-    cmapProp.addColourMap(key)
+        for cls, propName in cmapProps:
+            if isinstance(opts, cls):
+                prop = opts.getProp(propName)
+                prop.addColourMap(key, opts)
+
+    # and for all future overlays
+    for cls, propName in cmapProps:
+        
+        prop = cls.getProp(propName)
+        prop.addColourMap(key)
                 
 
 def registerLookupTable(lut,
@@ -763,6 +773,12 @@ class LutLabel(object):
     instances.
 
 
+    .. note:: When a ``LutLabel`` is created, the specified name is converted
+              to lower case. This is done to make comparisons easier. The
+              original name is still accessible through the :meth:`displayName`
+              method.
+
+
     .. note:: ``LutLabel`` instances are only intended to be created by
               :class:`LookupTable` instances. They are intended to be used
               externally, however.
@@ -789,10 +805,11 @@ class LutLabel(object):
         if colour  is None: colour  = (0, 0, 0)
         if enabled is None: enabled = True
         
-        self.__value   = value
-        self.__name    = name
-        self.__colour  = colour
-        self.__enabled = enabled
+        self.__value       = value
+        self.__displayName = name
+        self.__name        = name.lower()
+        self.__colour      = colour
+        self.__enabled     = enabled
 
 
     def value(self):
@@ -803,6 +820,11 @@ class LutLabel(object):
     def name(self):
         """Returns the name of this ``LutLabel``. """ 
         return self.__name
+
+
+    def displayName(self):
+        """Returns the display name of this ``LutLabel``. """
+        return self.__displayName
 
     
     def colour(self):
@@ -871,6 +893,11 @@ class LookupTable(props.HasProperties):
     :meth:`get` method. New label values can be added, and existing label
     names/colours modified, via the :meth:`set` method. Label values can be
     removed via the meth:`delete` method.
+
+
+    .. note:: All label names are converted to lower case internally, but the
+              name that is initially specified is still available - see the
+              :class:`LutLabel` class documentation.
 
     .. warning:: Do not directly modify the :attr:`labels` list. If you do,
                  it will be your fault when things break. Use the :meth:`set`
@@ -968,6 +995,36 @@ class LookupTable(props.HasProperties):
         return self.__find(value)[1]
 
 
+    def getByName(self, name):
+        """Returns the :class:`LutLabel` instance associated with the given
+        ``name``, or ``None`` if there is no ``LutLabel``. The name comparison
+        is case-insensitive.
+        """
+        name = name.lower()
+        
+        for i, ll in enumerate(self.labels):
+            if ll.name() == name:
+                return ll
+            
+        return None
+
+
+    def new(self, name, colour=None, enabled=True):
+        """Create a new label. The new label is given the value ``max() + 1``.
+
+        :arg name:    Label name
+        :arg colour:  Label colour. If not previded, a random colour is used.
+        :arg enabled: Label enabled state .
+        """
+        if colour is None:
+            colour = randomBrightColour()
+            
+        return self.set(self.max() + 1,
+                        name=name,
+                        colour=colour,
+                        enabled=enabled)
+
+
     def set(self, value, **kwargs):
         """Create a new label with the given value, or updates the
         colour/name/enabled states associated with the given value.
@@ -996,7 +1053,7 @@ class LookupTable(props.HasProperties):
 
         # Create a new LutLabel instance with the
         # new, existing, or default label settings
-        name    = kwargs.get('name',    label.name())
+        name    = kwargs.get('name',    label.displayName())
         colour  = kwargs.get('colour',  label.colour())
         enabled = kwargs.get('enabled', label.enabled())
         label   = LutLabel(value, name, colour, enabled)
@@ -1024,6 +1081,8 @@ class LookupTable(props.HasProperties):
         # or an existing label name/colour has been changed
         if lutChanged:
             self.saved = False
+
+        return label
 
 
     def delete(self, value):
@@ -1064,7 +1123,7 @@ class LookupTable(props.HasProperties):
             for label in self.labels:
                 value  = label.value()
                 colour = label.colour()
-                name   = label.name()
+                name   = label.displayName()
 
                 tkns   = [value, colour[0], colour[1], colour[2], name]
                 line   = ' '.join(map(str, tkns))

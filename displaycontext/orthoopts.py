@@ -9,11 +9,15 @@ settings used by the :class:`.OrthoPanel` class.
 """
 
 
+import logging
 import copy
 
 import props
 
 import sceneopts
+
+
+log = logging.getLogger(__name__)
 
 
 class OrthoOpts(sceneopts.SceneOpts):
@@ -88,3 +92,32 @@ class OrthoOpts(sceneopts.SceneOpts):
         self.xzoom = self.zoom
         self.yzoom = self.zoom
         self.zzoom = self.zoom
+
+        
+    def _onPerformanceChange(self, *a):
+        """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the
+        values of the :attr:`renderMode` and :attr:`resolutionLimit`
+        properties according to the performance setting.
+        """        
+
+        if   self.performance == 4:
+            self.renderMode      = 'onscreen'
+            self.resolutionLimit = 0
+
+        elif self.performance == 3:
+            self.renderMode      = 'offscreen'
+            self.resolutionLimit = 0 
+            
+        elif self.performance == 2:
+            self.renderMode      = 'prerender'
+            self.resolutionLimit = 0
+
+        elif self.performance == 1:
+            self.renderMode      = 'prerender'
+            self.resolutionLimit = 1
+
+        log.debug('Performance settings changed: '
+                  'renderMode={}, '
+                  'resolutionLimit={}'.format(
+                      self.renderMode,
+                      self.resolutionLimit))

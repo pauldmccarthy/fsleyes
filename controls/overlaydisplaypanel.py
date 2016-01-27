@@ -10,6 +10,7 @@ control* panel which allows the user to change overlay display settings.
 
 
 import logging
+import functools
 
 import wx
 import props
@@ -40,7 +41,7 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
        :scale: 50%
        :align: center
 
-    An ``OverlayDisplayPanel`` uses a :class:`.WidgetGrid` to organise the
+    An ``OverlayDisplayPanel`` uses a :class:`.WidgetList` to organise the
     settings into two main sections:
 
       - Settings which are common across all overlays - these are defined
@@ -206,25 +207,24 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
 
         self.__widgets.ClearGroup(groupName)
 
-        dispProps = _DISPLAY_PROPS[target]
-        labels    = [strings.properties[target, p.key] for p in dispProps]
+        dispProps = _DISPLAY_PROPS.get(target, [], allhits=True)
+        dispProps = functools.reduce(lambda a, b: a + b, dispProps)
+ 
+        labels    = [strings.properties.get((target, p.key), p.key)
+                     for p in dispProps]
         tooltips  = [fsltooltips.properties.get((target, p.key), None)
                      for p in dispProps]
 
         widgets = []
 
+
         for p in dispProps:
 
-            widget = props.buildGUI(self.__widgets,
-                                    target,
-                                    p,
-                                    showUnlink=False)            
+            widget = props.buildGUI(self.__widgets, target, p)
 
-            # Add a 'load colour map' button next 
-            # to the VolumeOpts.cmap control
-            if isinstance(target, displayctx.VolumeOpts) and \
-               p.key == 'cmap':
-                widget = self.__buildColourMapWidget(widget)
+            # Build a panel for the VolumeOpts colour map controls.
+            if isinstance(target, displayctx.VolumeOpts) and p.key == 'cmap':
+                widget = self.__buildColourMapWidget(target, widget)
                 
             widgets.append(widget)
 
@@ -238,30 +238,49 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
         self.Layout()
 
 
-    def __buildColourMapWidget(self, cmapWidget):
-        """Creates a control which allows the user to load a custom colour
-        map. This control is added to the settings for :class:`.Image`
-        overlays with a :attr:`.Display.overlayType`  of ``'volume'``.
+    def __buildColourMapWidget(self, target, cmapWidget):
+        """Builds a panel which contains widgets for controlling the
+        :attr:`.VolumeOpts.cmap`, :attr:`.VolumeOpts.negativeCmap`, and
+        :attr:`.VolumeOpts.useNegativeCmap`.
         """
 
-        action = loadcmap.LoadColourMapAction(self._overlayList,
-                                              self._displayCtx)
+        widgets = self.__widgets
 
-        button = wx.Button(self.__widgets)
-        button.SetLabel(strings.labels[self, 'loadCmap'])
+        # Button to load a new
+        # colour map from file
+        loadAction = loadcmap.LoadColourMapAction(self._displayCtx,
+                                                  self._overlayList)
 
-        action.bindToWidget(self, wx.EVT_BUTTON, button)
+        loadButton = wx.Button(widgets)
+        loadButton.SetLabel(strings.labels[self, 'loadCmap'])
 
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        loadAction.bindToWidget(self, wx.EVT_BUTTON, loadButton)
 
-        sizer.Add(cmapWidget, flag=wx.EXPAND, proportion=1)
-        sizer.Add(button,     flag=wx.EXPAND)
+        # Negative colour map widget
+        negCmap    = props.Widget('negativeCmap',
+                                  enabledWhen=lambda i, enc: enc,
+                                  dependencies=['useNegativeCmap'])
+        useNegCmap = props.Widget('useNegativeCmap')
+        
+        negCmap    = props.buildGUI(widgets, target, negCmap)
+        useNegCmap = props.buildGUI(widgets, target, useNegCmap)
+
+        useNegCmap.SetLabel(strings.properties[target, 'useNegativeCmap'])
+
+        sizer = wx.FlexGridSizer(2, 2)
+        sizer.AddGrowableCol(0)
+
+        sizer.Add(cmapWidget, flag=wx.EXPAND)
+        sizer.Add(loadButton, flag=wx.EXPAND)
+        sizer.Add(negCmap,    flag=wx.EXPAND)
+        sizer.Add(useNegCmap, flag=wx.EXPAND)
         
         return sizer
 
 
 def _imageName(img):
-    """Used to generate choice labels for the :attr`.VectorOpts.modulate` and
+    """Used to generate choice labels for the :attr`.VectorOpts.modulateImage`,
+    :attr`.VectorOpts.clipImage`, :attr`.VectorOpts.colourImage` and
     :attr:`.ModelOpts.refImage` properties.
     """
     if img is None: return 'None'
@@ -287,9 +306,13 @@ _DISPLAY_PROPS = td.TypeDict({
                      labels=strings.choices['VolumeOpts.interpolation']),
         props.Widget('cmap'),
         props.Widget('invert'),
-        props.Widget('invertClipping',
-                     enabledWhen=lambda o, sw: not sw,
-                     dependencies=[(lambda o: o.display, 'softwareMode')]),
+        props.Widget('invertClipping'),
+        props.Widget('linkLowRanges',
+                     dependencies=['clipImage'],
+                     enabledWhen=lambda vo, ci: ci is None),
+        props.Widget('linkHighRanges',
+                     dependencies=['clipImage'],
+                     enabledWhen=lambda vo, ci: ci is None),
         props.Widget('displayRange',
                      showLimits=False,
                      slider=True,
@@ -299,7 +322,8 @@ _DISPLAY_PROPS = td.TypeDict({
                      showLimits=False,
                      slider=True,
                      labels=[strings.choices['VolumeOpts.displayRange.min'],
-                             strings.choices['VolumeOpts.displayRange.max']])],
+                             strings.choices['VolumeOpts.displayRange.max']]),
+        props.Widget('clipImage', labels=_imageName)],
 
     'MaskOpts' : [
         props.Widget('resolution', showLimits=False),
@@ -310,30 +334,50 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('invert'),
         props.Widget('threshold',  showLimits=False)],
 
+    'VectorOpts' : [
+        props.Widget('colourImage',   labels=_imageName),
+        props.Widget('modulateImage',
+                     labels=_imageName,
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is None),
+        props.Widget('clipImage',     labels=_imageName),
+        props.Widget('cmap',
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is not None), 
+        props.Widget('clippingRange',
+                     showLimits=False,
+                     slider=True,
+                     labels=[strings.choices['VectorOpts.clippingRange.min'],
+                             strings.choices['VectorOpts.clippingRange.max']],
+                     dependencies=['clipImage'],
+                     enabledWhen=lambda o, ci: ci is not None),
+        props.Widget('xColour',
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is None), 
+        props.Widget('yColour',
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is None),
+        props.Widget('zColour',
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is None),
+        props.Widget('suppressX',
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is None),
+        props.Widget('suppressY',
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is None),
+        props.Widget('suppressZ',
+                     dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is None)],
+
     'RGBVectorOpts' : [
         props.Widget('resolution', showLimits=False),
-        props.Widget('interpolation'),
-        props.Widget('xColour'),
-        props.Widget('yColour'),
-        props.Widget('zColour'),
-        props.Widget('suppressX'),
-        props.Widget('suppressY'),
-        props.Widget('suppressZ'),
-        props.Widget('modulate', labels=_imageName),
-        props.Widget('modThreshold', showLimits=False, spin=False)],
+        props.Widget('interpolation',
+                     labels=strings.choices['VolumeOpts.interpolation'])],
 
     'LineVectorOpts' : [
-        props.Widget('resolution',    showLimits=False),
-        props.Widget('xColour'),
-        props.Widget('yColour'),
-        props.Widget('zColour'),
-        props.Widget('suppressX'),
-        props.Widget('suppressY'),
-        props.Widget('suppressZ'),
-        props.Widget('directed'),
-        props.Widget('lineWidth', showLimits=False),
-        props.Widget('modulate', labels=_imageName),
-        props.Widget('modThreshold', showLimits=False, spin=False)],
+        props.Widget('resolution', showLimits=False),
+        props.Widget('lineWidth',  showLimits=False)],
 
     'ModelOpts' : [
         props.Widget('colour'),
@@ -343,17 +387,23 @@ _DISPLAY_PROPS = td.TypeDict({
         # props.Widget('showName'),
         props.Widget('coordSpace',
                      enabledWhen=lambda o, ri: ri != 'none',
+                     labels=strings.choices['Nifti1Opts.transform'],
                      dependencies=['refImage'])],
+
+    'TensorOpts' : [
+        props.Widget('lighting'),
+        props.Widget(
+            'tensorResolution',
+            showLimits=False,
+            spin=False,
+            labels=[strings.choices['TensorOpts.tensorResolution.min'],
+                    strings.choices['TensorOpts.tensorResolution.max']]),
+        props.Widget('tensorScale', showLimits=False, spin=False)],
 
     'LabelOpts' : [
         props.Widget('lut', labels=lambda l: l.name),
-        props.Widget('outline',
-                     enabledWhen=lambda o, sw: not sw,
-                     dependencies=[(lambda o: o.display, 'softwareMode')]),
-        props.Widget('outlineWidth',
-                     showLimits=False,
-                     enabledWhen=lambda o, sw: not sw,
-                     dependencies=[(lambda o: o.display, 'softwareMode')]),
+        props.Widget('outline'),
+        props.Widget('outlineWidth', showLimits=False),
         # props.Widget('showNames'),
         props.Widget('resolution',   showLimits=False),
         props.Widget('volume',

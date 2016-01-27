@@ -15,6 +15,7 @@ exist:
    ~fsl.fsleyes.gl.gl21.gllinevector_funcs
    ~fsl.fsleyes.gl.gl21.glmodel_funcs
    ~fsl.fsleyes.gl.gl21.gllabel_funcs
+   ~fsl.fsleyes.gl.gl21.gltensor_funcs
 """
 
 import glvolume_funcs
@@ -22,3 +23,4 @@ import glrgbvector_funcs
 import gllinevector_funcs
 import glmodel_funcs
 import gllabel_funcs
+import gltensor_funcs

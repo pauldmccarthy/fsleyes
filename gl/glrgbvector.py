@@ -12,6 +12,8 @@ vector :class:`.Image` overlays in RGB mode.
 import numpy                   as np
 import OpenGL.GL               as gl
 
+import fsl.data.tensorimage    as tensorimage
+import fsl.utils.async         as async
 import fsl.fsleyes.gl          as fslgl
 import fsl.fsleyes.gl.glvector as glvector
 
@@ -60,17 +62,31 @@ class GLRGBVector(glvector.GLVector):
     def __init__(self, image, display):
         """Create a ``GLRGBVector``.
 
-        :arg image:   The :class:`.Image` instance.
+        :arg image:   An :class:`.Image` or :class:`.TensorImage` instance.
         :arg display: The associated :class:`.Display` instance.
         """
 
-        glvector.GLVector.__init__(self, image, display, self.__prefilter)
-        fslgl.glrgbvector_funcs.init(self)
+        # If the overlay is a TensorImage, use the
+        # V1 image is the vector data. Otherwise,
+        # assume that the overlay is the vector image.
+        if isinstance(image, tensorimage.TensorImage): vecImage = image.V1()
+        else:                                          vecImage = image
+
+        glvector.GLVector.__init__(self,
+                                   image,
+                                   display,
+                                   prefilter=np.abs,
+                                   vectorImage=vecImage,
+                                   init=lambda: fslgl.glrgbvector_funcs.init(
+                                       self))
 
         self.displayOpts.addListener('interpolation',
                                      self.name,
                                      self.__interpChanged)
-
+        self.vectorImage.addListener('data',
+                                     self.name,
+                                     self.__dataChanged)
+                          
 
     def destroy(self):
         """Must be called when this ``GLRGBVector`` is no longer needed.
@@ -85,22 +101,26 @@ class GLRGBVector(glvector.GLVector):
 
     def refreshImageTexture(self):
         """Overrides :meth:`.GLVector.refreshImageTexture`. Calls the base
-        class implementation, and calls :meth:`__setInterp`.
+        class implementation.
         """
-        glvector.GLVector.refreshImageTexture(self)
-        self.__setInterp()
+        opts = self.displayOpts
 
+        if opts.interpolation == 'none': interp = gl.GL_NEAREST
+        else:                            interp = gl.GL_LINEAR 
         
-    def __prefilter(self, data):
-        """This method is passed to :meth:`.GLVector.__init__` as the
-        ``prefilter`` parameter. It removes the sign from the given data.
+        return glvector.GLVector.refreshImageTexture(self, interp)
+
+
+    def __dataChanged(self, *a):
+        """Called when the :attr:`.Image.data` of the vector image
+        changes. Calls :meth:`.GLObject.notify`. 
         """
-        return np.abs(data)
-
+        self.notify()
         
-    def __setInterp(self):
-        """Updates the interpolation setting on the :class:`.ImageTexture`
-        that contains the vector :class:`.Image` being displayed.
+
+    def __interpChanged(self, *a):
+        """Called when the :attr:`.RGBVectorOpts.interpolation` property
+        changes. Updates the :class:`.ImageTexture` interpolation.
         """
         opts = self.displayOpts
 
@@ -109,14 +129,11 @@ class GLRGBVector(glvector.GLVector):
         
         self.imageTexture.set(interp=interp)
 
-        
-    def __interpChanged(self, *a):
-        """Called when the :attr:`.RGBVectorOpts.interpolation` property
-        changes. Updates the :class:`.ImageTexture` interpolation.
-        """
-        self.__setInterp()
-        self.updateShaderState()
-        self.onUpdate()
+        def onRefresh():
+            self.updateShaderState()
+            self.notify() 
+
+        async.wait([self.imageTexture.refreshThread()], onRefresh)
 
 
     def compileShaders(self):
@@ -130,7 +147,7 @@ class GLRGBVector(glvector.GLVector):
         """Overrides :meth:`.GLVector.compileShaders`. Calls the OpenGL
         version-specific ``updateShaderState`` function.
         """ 
-        fslgl.glrgbvector_funcs.updateShaderState(self)
+        return fslgl.glrgbvector_funcs.updateShaderState(self)
 
 
     def preDraw(self):

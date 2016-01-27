@@ -184,8 +184,10 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 
 
 _ICONS = {
-    'view'                    :  fslicons.findImageFile('eye24'),
-    'edit'                    :  fslicons.findImageFile('pencil24'),
+    'view'                    :  [fslicons.findImageFile('eyeHighlight24'),
+                                  fslicons.findImageFile('eye24')],
+    'edit'                    :  [fslicons.findImageFile('pencilHighlight24'),
+                                  fslicons.findImageFile('pencil24')],
     'selectionIs3D'           : [fslicons.findImageFile('selection3D24'),
                                  fslicons.findImageFile('selection2D24')],
     'clearSelection'          :  fslicons.findImageFile('clear24'),

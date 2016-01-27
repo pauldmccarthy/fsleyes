@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 #
-# openstandardaction.py - Action which allows the user to open standard
-#                         images.
+# openstandard.py - Action which allows the user to open standard images.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -13,20 +12,25 @@ to load in standard space images from the ``$FSLDIR/data/standard/`` directory.
 import os
 import os.path as op
 
-import logging
-
-import fsl.fsleyes.actions as actions
+import action
 
 
-log = logging.getLogger(__name__)
-
-
-class OpenStandardAction(actions.Action):
+class OpenStandardAction(action.Action):
     """The ``OpenStandardAction`` prompts the user to open one or more
     overlays, using ``$FSLDIR/data/standard/`` as the default directory.
     """
+
+    
     def __init__(self, overlayList, displayCtx):
-        actions.Action.__init__(self, overlayList, displayCtx)
+        """Create an ``OpenStandardAction``.
+
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`.
+        """ 
+        action.Action.__init__(self, self.__openStandard)
+
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
         
         # disable this action
         # if $FSLDIR is not set
@@ -39,10 +43,17 @@ class OpenStandardAction(actions.Action):
             self.enabled  = False
         
         
-    def doAction(self):
+    def __openStandard(self):
         """Calls the :meth:`.OverlayList.addOverlays` method. If the user
         added some overlays, updates the
         :attr:`.DisplayContext.selectedOverlay` accordingly.
         """
-        if self._overlayList.addOverlays(self.__stddir, addToEnd=False):
-            self._displayCtx.selectedOverlay = self._displayCtx.overlayOrder[0]
+
+        def onLoad(overlays):
+        
+            if len(overlays) > 0:
+                self.__displayCtx.selectedOverlay = \
+                    self.__displayCtx.overlayOrder[0]
+        
+        self.__overlayList.addOverlays(
+            fromDir=self.__stddir, addToEnd=False, onLoad=onLoad)

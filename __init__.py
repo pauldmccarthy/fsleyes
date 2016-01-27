@@ -26,8 +26,10 @@ Amongst other things, *FSLeyes* provides the following features:
   - Lightbox view (:mod:`.lightboxpanel`)
   - Time series plotting (:mod:`.timeseriespanel`)
   - Histogram plotting (:mod:`.histogrampanel`)
+  - Power spectrum plotting (:mod:`.powerspectrumpanel`)
   - FSL atlas explorer (:mod:`.atlaspanel`)
   - FEAT cluster results explorer (:mod:`.clusterpanel`)
+  - Melodic component classification (:mod:`.melodicclassificationpanel`)
   - NIFTI1 image editing (:mod:`.editor`)
   - A comprehensive command line interface (:mod:`.fsleyes_parseargs`)
 
@@ -180,12 +182,13 @@ The rest of *FSLeyes* is organised into the following sub-packages:
 Some other miscellaneous modules are contained in the ``fsleyes`` package:
 
 .. autosummary::
-   ~fsl.fsleyes.tooltips
-   ~fsl.fsleyes.icons
-   ~fsl.fsleyes.colourmaps
-   ~fsl.fsleyes.splash
    ~fsl.fsleyes.frame
    ~fsl.fsleyes.panel
    ~fsl.fsleyes.toolbar
-
+   ~fsl.fsleyes.tooltips
+   ~fsl.fsleyes.perspectives
+   ~fsl.fsleyes.icons
+   ~fsl.fsleyes.colourmaps
+   ~fsl.fsleyes.plotting
+   ~fsl.fsleyes.splash
 """

@@ -10,16 +10,19 @@ for FSLeyes.
 
 
 import logging
-import collections
 
 import wx
 import wx.lib.agw.aui     as aui
 
 import fsl.data.strings   as strings
 import fsl.utils.settings as fslsettings
+import fsl.utils.status   as status
 
 import views
 import actions
+import tooltips
+import perspectives
+
 import displaycontext
 
 
@@ -55,24 +58,27 @@ class FSLEyesFrame(wx.Frame):
 
 
     When a ``FSLEyesFrame`` is closed, it saves some display settings so that
-    they can be restored  the next time a ``FSLEyesFrame`` is opened. The
+    they can be restored the next time a ``FSLEyesFrame`` is opened. The
     settings are saved using the :class:`~fsl.utils.settings` module.
-
-    Currently, only the frame position and size are saved - in the future, I
-    plan to save and restore the ``ViewPanel`` layout as well.
+    Currently, the frame position, size, and layout (see the
+    :mod:`.perspectives` module) are saved.
 
 
     **Programming interface**
 
     
-    At this stage, ``FSLEyesFrame`` only provides a couple of methods for
-    programmatically configuring the display:
+    The ``FSLEyesFrame`` provides the following methods for programmatically
+    configuring the display:
 
     .. autosummary::
        :nosignatures:
 
        getViewPanels
+       getViewPanelInfo
        addViewPanel
+       removeViewPanel 
+       getAuiManager
+       refreshPerspectiveMenu
     """
 
     
@@ -80,7 +86,8 @@ class FSLEyesFrame(wx.Frame):
                  parent,
                  overlayList,
                  displayCtx,
-                 restore=True):
+                 restore=False,
+                 save=True):
         """Create a ``FSLEyesFrame``.
 
         .. note:: The ``restore`` functionality is not currently implemented.
@@ -95,9 +102,13 @@ class FSLEyesFrame(wx.Frame):
         
         :arg restore:     Restores previous saved layout. If ``False``, no 
                           view panels will be displayed.
+
+        :arg save:        Save current layout when closed. 
         """
         
         wx.Frame.__init__(self, parent, title='FSLeyes')
+
+        tooltips.initTooltips()
 
         # Default application font - this is
         # inherited by all child controls.
@@ -110,37 +121,90 @@ class FSLEyesFrame(wx.Frame):
         
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
+        self.__mainPanel   = wx.Panel(self)
+        self.__statusBar   = wx.StaticText(self)
         self.__auiManager  = aui.AuiManager(
-            self,
+            self.__mainPanel,
             agwFlags=(aui.AUI_MGR_RECTANGLE_HINT |
                       aui.AUI_MGR_NO_VENETIAN_BLINDS_FADE |
                       aui.AUI_MGR_LIVE_RESIZE))
 
+        self.__sizer = wx.BoxSizer(wx.VERTICAL)
+        self.__sizer.Add(self.__mainPanel, flag=wx.EXPAND, proportion=1)
+        self.__sizer.Add(self.__statusBar, flag=wx.EXPAND)
+
+        self.SetSizer(self.__sizer)
+
+        # Re-direct status updates to the
+        # status bar. Make sure that the
+        # status bar is updated on the main
+        # loop
+        def update(msg):
+            def realUpdate():
+                self.__statusBar.SetLabel(msg)
+                self.__statusBar.Refresh()
+                self.__statusBar.Update()
+            wx.CallAfter(realUpdate)
+        status.setTarget(update)
+
         # Keeping track of all open view panels
         # 
-        # The __viewPanels dict contains
-        # {AuiPaneInfo : ViewPanel} mappings
+        # The __viewPanels list contains all
+        # [ViewPanel] instances
         #
         # The other dicts contain
         # {ViewPanel : something} mappings
         # 
-        self.__viewPanels     = collections.OrderedDict()
+        self.__viewPanels     = []
         self.__viewPanelDCs   = {}
         self.__viewPanelMenus = {}
         self.__viewPanelIDs   = {}
 
+        self.__menuBar   = None
+        self.__perspMenu = None
+        
         self.__makeMenuBar()
         self.__restoreState(restore)
 
+        self.__saveLayout = save
+
         self.__auiManager.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onViewPanelClose)
         self             .Bind(wx.EVT_CLOSE,           self.__onClose)
+
+        self.Layout()
 
         
     def getViewPanels(self):
         """Returns a list of all :class:`.ViewPanel` instances that are
         currenlty displayed in this ``FSLEyesFrame``.
         """
-        return self.__viewPanels.values()
+        return list(self.__viewPanels)
+
+
+    def getViewPanelInfo(self, viewPanel):
+        """Returns the ``AuiPaneInfo`` class which contains layout information
+        about the given :class:`.ViewPanel`.
+        """
+        return self.__auiManager.GetPane(viewPanel)
+
+
+    def getAuiManager(self):
+        """Returns the ``wx.lib.agw.aui.AuiManager` object which is managing
+        the layout of this ``FSLEyesFrame``.
+        """
+        return self.__auiManager
+
+
+    def removeViewPanel(self, viewPanel):
+        """Removes the given :class:`.ViewPanel` from this ``FSLEyesFrame``.
+        """
+
+        paneInfo = self.__auiManager.GetPane(viewPanel)
+        
+        self.__onViewPanelClose(panel=viewPanel)
+        
+        self.__auiManager.ClosePane(paneInfo)
+        self.__auiManager.Update() 
 
 
     def addViewPanel(self, panelCls):
@@ -156,8 +220,12 @@ class FSLEyesFrame(wx.Frame):
             panelId = 1
         else:
             panelId = max(self.__viewPanelIDs.values()) + 1
-            
-        title   = '{} {}'.format(strings.titles[panelCls], panelId)
+
+        # The PaneInfo Name contains the panel
+        # class name - this is used for saving
+        # and restoring perspectives .
+        name  = '{} {}'.format(panelCls.__name__,        panelId)
+        title = '{} {}'.format(strings.titles[panelCls], panelId)
 
         childDC = displaycontext.DisplayContext(
             self.__overlayList,
@@ -170,11 +238,15 @@ class FSLEyesFrame(wx.Frame):
         # CanvasPanels are unsynced; other
         # ViewPanels (e.g. TimeSeriesPanel) remain
         # synced by default.
-        if panelId > 1 and issubclass(panelCls, views.CanvasPanel):
+        if panelId == 1:
+            childDC.syncToParent('overlayOrder')
+            childDC.syncOverlayDisplay = True
+            
+        elif issubclass(panelCls, views.CanvasPanel):
             childDC.syncOverlayDisplay = False
-        
+
         panel = panelCls(
-            self,
+            self.__mainPanel,
             self.__overlayList,
             childDC)
 
@@ -184,10 +256,10 @@ class FSLEyesFrame(wx.Frame):
             id(childDC)))
 
         paneInfo = (aui.AuiPaneInfo()
-                    .Name(title)
+                    .Name(name)
                     .Caption(title)
-                    .Dockable()
                     .CloseButton()
+                    .Dockable()
                     .Resizable()
                     .DestroyOnClose())
 
@@ -199,7 +271,7 @@ class FSLEyesFrame(wx.Frame):
         # So if we only have one panel, we
         # hide the caption bar
         if panelId == 1:
-            paneInfo.Centre().CaptionVisible(False)
+            paneInfo.Centre().Dockable(False).CaptionVisible(False)
             
         # But then re-show it when another
         # panel is added. The __viewPanels
@@ -207,7 +279,8 @@ class FSLEyesFrame(wx.Frame):
         # first key is the AuiPaneInfo of
         # the first panel that was added.
         else:
-            self.__viewPanels.keys()[0].CaptionVisible(True)
+            self.__auiManager.GetPane(self.__viewPanels[0])\
+                             .CaptionVisible(True)
 
         # If this is not the first view panel,
         # give it a sensible initial size.
@@ -224,16 +297,26 @@ class FSLEyesFrame(wx.Frame):
             else:
                 paneInfo.Right().BestSize(width / 3, -1)
 
-        self.__viewPanels[  paneInfo] = panel
-        self.__viewPanelDCs[panel]    = childDC
-        self.__viewPanelIDs[panel]    = panelId
+        self.__viewPanels.append(panel)
+        self.__viewPanelDCs[     panel] = childDC
+        self.__viewPanelIDs[     panel] = panelId
         
         self.__auiManager.AddPane(panel, paneInfo)
         self.__addViewPanelMenu(  panel, title)
 
         self.__auiManager.Update()
 
+        # PlotPanels don't draw themselves
+        # automatically when created.
+        if isinstance(panel, views.PlotPanel):
+            panel.draw()
+
         self.Thaw()
+
+
+    def refreshPerspectiveMenu(self):
+        """Re-creates the *View -> Perspectives* sub-menu. """
+        self.__makePerspectiveMenu()
 
 
     def __addViewPanelMenu(self, panel, title):
@@ -254,29 +337,57 @@ class FSLEyesFrame(wx.Frame):
 
         self.__viewPanelMenus[panel] = submenu
 
-        for actionName, actionObj in actionz.items():
-            
+        # Separate out the normal actions from
+        # the toggle actions, as we will put a
+        # separator between them.
+        regularActions = []
+        toggleActions  = []
+
+        for actionName, actionObj in actionz:
+            if isinstance(actionObj, actions.ToggleAction):
+                toggleActions .append((actionName, actionObj))
+            else:
+                regularActions.append((actionName, actionObj))
+
+        # Non-toggle actions
+        for actionName, actionObj in regularActions:
             menuItem = menu.Append(
                 wx.ID_ANY,
-                strings.actions[panel, actionName])
+                strings.actions[panel, actionName],
+                kind=wx.ITEM_NORMAL)
+            
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
+
+        # Separator
+        if len(regularActions) > 0 and len(toggleActions) > 0:
+            menu.AppendSeparator()
+
+        # Toggle actions
+        for actionName, actionObj in toggleActions:
+
+            menuItem = menu.Append(
+                wx.ID_ANY,
+                strings.actions[panel, actionName],
+                kind=wx.ITEM_CHECK)
+            
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
         # Add a 'Close' action to
         # the menu for every panel 
         def closeViewPanel(ev):
-            paneInfo = self.__auiManager.GetPane(panel)
-            self.__onViewPanelClose(    paneInfo=paneInfo)
-            self.__auiManager.ClosePane(paneInfo)
-            self.__auiManager.Update()
+            self.removeViewPanel(panel)
+
+        # But put another separator before it
+        if len(regularActions) > 0 or len(toggleActions) > 0:
+            menu.AppendSeparator()
 
         closeItem = menu.Append(
             wx.ID_ANY,
             strings.actions[self, 'closeViewPanel'])
         self.Bind(wx.EVT_MENU, closeViewPanel, closeItem)
-            
     
 
-    def __onViewPanelClose(self, ev=None, paneInfo=None):
+    def __onViewPanelClose(self, ev=None, panel=None):
         """Called when the user closes a :class:`.ViewPanel`.
 
         The :meth:`__addViewPanelMenu` method adds a *Close* menu item
@@ -292,16 +403,28 @@ class FSLEyesFrame(wx.Frame):
 
         if ev is not None:
             ev.Skip()
+            
+            # Undocumented - the window associated with an
+            # AuiPaneInfo is available as an attribute called
+            # 'window'. Honestly, I don't know why there is
+            # not a method available on the AuiPaneInfo or
+            # AuiManager to retrieve a managed Window given
+            # the associated AuiPaneInfo object.
             paneInfo = ev.GetPane()
+            panel    = paneInfo.window
+            
+        elif panel is not None:
+            paneInfo = self.__auiManager.GetPane(panel)
 
-        panel = self .__viewPanels.pop(paneInfo, None)        
-
-        if panel is None:
+        # This method may get called when
+        # the user closes a control panel
+        if panel is None or panel not in self.__viewPanels:
             return
 
-        self       .__viewPanelIDs  .pop(panel)
-        dctx = self.__viewPanelDCs  .pop(panel)
-        menu = self.__viewPanelMenus.pop(panel, None)
+        self       .__viewPanels    .remove(panel)
+        self       .__viewPanelIDs  .pop(   panel)
+        dctx = self.__viewPanelDCs  .pop(   panel)
+        menu = self.__viewPanelMenus.pop(   panel, None)
 
         log.debug('Destroying {} ({}) and '
                   'associated DisplayContext ({})'.format(
@@ -309,11 +432,7 @@ class FSLEyesFrame(wx.Frame):
                       id(panel),
                       id(dctx)))
 
-        # Unbind view panel menu
-        # items, and remove the menu
-        for actionName, actionObj in panel.getActions().items():
-            actionObj.unbindAllWidgets()
-
+        # Remove the view panel menu
         if menu is not None:
             self.__settingsMenu.Remove(menu.GetId())
 
@@ -330,11 +449,41 @@ class FSLEyesFrame(wx.Frame):
         numPanels = len(self.__viewPanels)
         wasCentre = paneInfo.dock_direction_get() == aui.AUI_DOCK_CENTRE
         
-        if numPanels == 1 or (numPanels > 0 and wasCentre):
-            paneInfo = self.__viewPanels.keys()[0]
-            paneInfo.Centre().CaptionVisible(False)
+        if numPanels >= 1 and wasCentre:
+            paneInfo = self.__auiManager.GetPane(self.__viewPanels[0])
+            paneInfo.Centre().Dockable(False).CaptionVisible(numPanels > 1)
+            
+        # If there's only one panel left,
+        # and it is a canvas panel, sync
+        # its display properties to the
+        # master display context.
+        if numPanels == 1 and \
+           isinstance(self.__viewPanels[0], views.CanvasPanel):
+            
+            dctx     = self.__viewPanels[0].getDisplayContext()
+            displays = [dctx.getDisplay(o) for o in self.__overlayList]
 
-        
+            # Make sure that the parent context
+            # inherits the values from this context
+            dctx.setBindingDirection(False)
+
+            for display in displays:
+                opts = display.getDisplayOpts()
+                display.setBindingDirection(False)
+                opts   .setBindingDirection(False)
+            
+            dctx.syncOverlayDisplay = True
+            dctx.syncToParent('overlayOrder')
+
+            # Reset the binding directiona
+            dctx.setBindingDirection(True)
+
+            for display in displays:
+                opts = display.getDisplayOpts()
+                display.setBindingDirection(True)
+                opts   .setBindingDirection(True) 
+
+            
     def __onClose(self, ev):
         """Called when the user closes this ``FSLEyesFrame``.
 
@@ -344,16 +493,25 @@ class FSLEyesFrame(wx.Frame):
 
         ev.Skip()
 
-        size     = self.GetSize().Get()
-        position = self.GetScreenPosition().Get()
+        if self.__saveLayout:
+            
+            size     = self.GetSize().Get()
+            position = self.GetScreenPosition().Get()
+            layout   = perspectives.serialisePerspective(self)
 
-        fslsettings.write('framesize',     str(size))
-        fslsettings.write('frameposition', str(position))
 
+            log.debug('Saving size: {}'    .format(size))
+            log.debug('Saving position: {}'.format(position))
+            log.debug('Saving layout: {}'  .format(layout))
+            
+            fslsettings.write('framesize',     str(size))
+            fslsettings.write('frameposition', str(position))
+            fslsettings.write('framelayout',   layout)
+        
         # It's nice to explicitly clean
         # up our FSLEyesPanels, otherwise
         # they'll probably complain
-        for panel in self.__viewPanels.values():
+        for panel in self.__viewPanels:
             panel.destroy()
 
         
@@ -369,58 +527,23 @@ class FSLEyesFrame(wx.Frame):
         """A proxy for the :meth:`__parseSavedSize` method.""" 
         return self.__parseSavedSize(size)
 
-            
-    def __parseSavedLayout(self, layout):
-        """Parses the given string, which is assumed to contain an encoded
-        :class:`.AuiManager` perspective (see
-        :meth:`.AuiManager.SavePerspective`).
-
-        Returns a list of class names, specifying the control panels
-        (e.g. :class:`.OverlayListPanel`) which were previously open, and need
-        to be created.
-
-        .. warning:: This method is not currently being used - it is from a
-                     previous version. I may use it in the future to restore
-                     ``ViewPanel`` layouts, or I may re-write it.
-        """
-
-        try:
-
-            names    = [] 
-            sections = layout.split('|')[1:]
-
-            for section in sections:
-                
-                if section.strip() == '': continue
-                
-                attrs = section.split(';')
-                attrs = dict([tuple(nvpair.split('=')) for nvpair in attrs])
-
-                if 'name' in attrs:
-                    names.append(attrs['name'])
-
-            return names
-        except:
-            return []
-
     
-    def __restoreState(self, restore=True):
+    def __restoreState(self, restore):
         """Called by :meth:`__init__`.
 
         If any frame size/layout properties have previously been saved via the
         :mod:`~fsl.utils.settings` module, they are read in, and applied to
         this frame.
 
-        :arg bool default: If ``True``, any saved state is ignored.
+        :arg restore: If ``False``, any saved layout state is ignored.
         """
 
         from operator import itemgetter as iget
 
         # Restore the saved frame size/position
-        size     = self.__parseSavedSize(
-            fslsettings.read('framesize'))
-        position = self.__parseSavedPoint(
-            fslsettings.read('frameposition'))        
+        size     = self.__parseSavedSize( fslsettings.read('framesize'))
+        position = self.__parseSavedPoint(fslsettings.read('frameposition'))
+        layout   =                        fslsettings.read('framelayout')
 
         if (size is not None) and (position is not None):
 
@@ -500,22 +623,16 @@ class FSLEyesFrame(wx.Frame):
         else:
             self.Centre()
 
-        # TODO Restore the previous view panel layout.
-        #      Currently, we just display an OrthoPanel.
         if restore:
-
-            self.addViewPanel(views.OrthoPanel)
-
-            viewPanel = self.getViewPanels()[0]
-
-            # Set up a default for ortho views
-            # layout (this will hopefully eventually
-            # be restored from a saved state)
-            import fsl.fsleyes.controls.overlaylistpanel as olp
-            import fsl.fsleyes.controls.locationpanel    as lop
-
-            viewPanel.togglePanel(olp.OverlayListPanel)
-            viewPanel.togglePanel(lop.LocationPanel)
+            if layout is None:
+                perspectives.loadPerspective(self, 'default')
+            else:
+                log.debug('Restoring previous layout: {}'.format(layout))
+                perspectives.applyPerspective(
+                    self,
+                    'framelayout',
+                    layout,
+                    message=strings.messages[self, 'restoringLayout'])
 
             
     def __makeMenuBar(self):
@@ -524,10 +641,14 @@ class FSLEyesFrame(wx.Frame):
         menuBar = wx.MenuBar()
         self.SetMenuBar(menuBar)
 
-        fileMenu     = wx.Menu()
-        viewMenu     = wx.Menu()
-        settingsMenu = wx.Menu() 
- 
+        fileMenu        = wx.Menu()
+        viewMenu        = wx.Menu()
+        perspectiveMenu = wx.Menu() 
+        settingsMenu    = wx.Menu()
+
+        self.__menuBar   = menuBar
+        self.__perspMenu = perspectiveMenu
+        
         menuBar.Append(fileMenu,     'File')
         menuBar.Append(viewMenu,     'View')
         menuBar.Append(settingsMenu, 'Settings') 
@@ -536,18 +657,83 @@ class FSLEyesFrame(wx.Frame):
         self.__viewMenu     = viewMenu
         self.__settingsMenu = settingsMenu
 
-        viewPanels = views   .listViewPanels()
-        actionz    = actions .listGlobalActions()
-
+        # Global actions
+        actionz = [actions.OpenFileAction,
+                   actions.OpenDirAction,
+                   actions.OpenStandardAction,
+                   actions.CopyOverlayAction,
+                   actions.SaveOverlayAction]
+ 
         for action in actionz:
-            menuItem = fileMenu.Append(wx.ID_ANY, strings.actions[action])
-            
+            menuItem  = fileMenu.Append(wx.ID_ANY, strings.actions[action])
             actionObj = action(self.__overlayList, self.__displayCtx)
 
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
+        # Shortcuts to open a new view panel
+        viewPanels = [views.OrthoPanel,
+                      views.LightBoxPanel,
+                      views.TimeSeriesPanel,
+                      views.PowerSpectrumPanel,
+                      views.HistogramPanel]
+        
         for viewPanel in viewPanels:
             viewAction = viewMenu.Append(wx.ID_ANY, strings.titles[viewPanel]) 
             self.Bind(wx.EVT_MENU,
                       lambda ev, vp=viewPanel: self.addViewPanel(vp),
                       viewAction)
+
+        # Perspectives
+        viewMenu.AppendSeparator()
+        viewMenu.AppendSubMenu(perspectiveMenu, 'Perspectives')
+        self.__makePerspectiveMenu()
+
+        
+    def __makePerspectiveMenu(self):
+        """Re-creates the *View->Perspectives* menu. """
+
+        perspMenu = self.__perspMenu
+
+        # Remove any existing menu items
+        for item in perspMenu.GetMenuItems():
+            perspMenu.DeleteItem(item)
+
+        builtIns = perspectives.BUILT_IN_PERSPECTIVES.keys()
+        saved    = perspectives.getAllPerspectives()
+
+        # Add a menu item to load each built-in perspectives
+        for persp in builtIns:
+            menuItem  = perspMenu.Append(
+                wx.ID_ANY, strings.perspectives.get(persp, persp))
+            
+            actionObj = actions.LoadPerspectiveAction(self, persp)
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
+
+        if len(builtIns) > 0:
+            perspMenu.AppendSeparator()
+
+        # Add a menu item to load each saved perspective
+        for persp in saved:
+            
+            menuItem  = perspMenu.Append(
+                wx.ID_ANY, strings.perspectives.get(persp, persp))
+            actionObj = actions.LoadPerspectiveAction(self, persp)
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
+
+        # Add menu items for other perspective
+        # operations, but separate them from the
+        # existing perspectives
+        if len(saved) > 0:
+            perspMenu.AppendSeparator()
+
+        # TODO: Delete a single perspective?
+        #       Save to/load from file? 
+        perspActions = [actions.SavePerspectiveAction,
+                        actions.ClearPerspectiveAction]
+
+        for pa in perspActions:
+
+            actionObj     = pa(self)
+            perspMenuItem = perspMenu.Append(wx.ID_ANY, strings.actions[pa])
+            
+            actionObj.bindToWidget(self, wx.EVT_MENU, perspMenuItem)

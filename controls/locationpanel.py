@@ -113,7 +113,7 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         # this attribute will refer to the
         # corresponding DisplayOpts instance, which
         # has a volume property that controls the
-        # volume - see e.g. the ImageOpts class. This
+        # volume - see e.g. the Nifti1Opts class. This
         # attribute is set in _selectedOverlayChanged.
         self.__volumeTarget = None
 
@@ -242,19 +242,19 @@ class LocationPanel(fslpanel.FSLEyesPanel):
 
         labelPref = strings.labels[self, 'worldLocation']
         labelSufs = [
-            strings.anatomy[fslimage.Image,
+            strings.anatomy['Nifti1',
                             'space',
                             constants.NIFTI_XFORM_UNKNOWN],
-            strings.anatomy[fslimage.Image,
+            strings.anatomy['Nifti1',
                             'space',
                             constants.NIFTI_XFORM_SCANNER_ANAT],
-            strings.anatomy[fslimage.Image,
+            strings.anatomy['Nifti1',
                             'space',
                             constants.NIFTI_XFORM_ALIGNED_ANAT],
-            strings.anatomy[fslimage.Image,
+            strings.anatomy['Nifti1',
                             'space',
                             constants.NIFTI_XFORM_TALAIRACH],
-            strings.anatomy[fslimage.Image,
+            strings.anatomy['Nifti1',
                             'space',
                             constants.NIFTI_XFORM_MNI_152],
             strings.labels[self, 'worldLocation', 'unknown']
@@ -425,7 +425,7 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         # Enable/disable the volume widget if the
         # overlay is a 4D image, and bind/unbind
         # the widget to the volume property of
-        # the associated ImageOpts instance
+        # the associated Nifti1Opts instance
         if haveRef and refImage.is4DImage():
             opts = self._displayCtx.getOpts(refImage)
             self.__volumeTarget = opts

@@ -2,12 +2,14 @@
 #
 # Fragment program used for rendering GLModel instances.
 #
-# Inputs:
-#   fragment.texcoord[0] - Texture coordinates
-#   program.local[0]     - Offsets (used as edge widths - see edge2D.prog)
+# Input parameters:
+#   offsets - Offsets (used as edge widths - see edge2D.prog)
 #
-# Outputs:
-#   result.color         - Fragment colour.
+# Input textures:
+#   renderTexture - 2D texture containing the rendered model.
+#
+# Input varyings:
+#   texCoord  - Texture coordinates
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com> 
 #
@@ -19,11 +21,11 @@ TEMP output;
 # edge detection tolerance is
 # 1 / 255 - a colour change of 1 bit
 PARAM tol     = 0.00392156862745098;
-PARAM offsets = program.local[0];
+PARAM offsets = {{ param_offsets }};
 
-MOV coord, fragment.texcoord[0];
+MOV coord, {{ varying_texCoord }};
 
-TEX val, coord, texture[0], 2D;
+TEX val, coord, {{ texture_renderTexture }}, 2D;
 
 #pragma include edge2D.prog
 

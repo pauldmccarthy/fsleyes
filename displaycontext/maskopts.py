@@ -17,7 +17,7 @@ import fsl.data.strings as strings
 import                     volumeopts
 
 
-class MaskOpts(volumeopts.ImageOpts):
+class MaskOpts(volumeopts.Nifti1Opts):
     """The ``MaskOpts`` class defines settings for displaying an
     :class:`.Image` overlay as a binary mask.
     """
@@ -42,7 +42,7 @@ class MaskOpts(volumeopts.ImageOpts):
 
     def __init__(self, overlay, *args, **kwargs):
         """Create a ``MaskOpts`` instance for the given overlay. All arguments
-        are passed through to the :class:`.ImageOpts` constructor.
+        are passed through to the :class:`.Nifti1Opts` constructor.
         """
 
         if np.prod(overlay.shape) > 2 ** 30:
@@ -62,22 +62,23 @@ class MaskOpts(volumeopts.ImageOpts):
 
         # Mask images are rendered using GLMask, which
         # inherits from GLVolume. The latter assumes
-        # that 'clippingRange', 'interpolation', and
-        # 'invertClipping' attributes are present on
-        # Opts instances (see the VolumeOpts class).
-        # So we're adding dummy attributes to make the
-        # GLVolume rendering code happy.
+        # that the DisplayOpts instance passed to it
+        # has the following attributes (see the
+        # VolumeOpts class). So we're adding dummy
+        # attributes to make the GLVolume rendering
+        # code happy.
         #
         # TODO Write independent GLMask rendering routines
         # instead of using the GLVolume implementations
-        self.clippingRange  = (self.dataMin - 1, self.dataMax + 1)
-        self.interpolation  = 'none'
-        self.invertClipping = False
+        self.clippingRange   = (self.dataMin - 1, self.dataMax + 1)
+        self.interpolation   = 'none'
+        self.invertClipping  = False
+        self.useNegativeCmap = False
+        self.clipImage       = None
 
         self.threshold.xmin = self.dataMin - dMinDistance
         self.threshold.xmax = self.dataMax + dMinDistance
         self.threshold.xlo  = self.dataMin + dMinDistance
         self.threshold.xhi  = self.dataMax + dMinDistance 
-        self.setConstraint('threshold', 'minDistance', dMinDistance)
 
-        volumeopts.ImageOpts.__init__(self, overlay, *args, **kwargs)
+        volumeopts.Nifti1Opts.__init__(self, overlay, *args, **kwargs)

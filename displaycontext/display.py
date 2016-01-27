@@ -9,6 +9,7 @@ which encapsulate overlay display settings.
 """
 
 import logging
+import inspect
 
 import props
 
@@ -61,12 +62,6 @@ class Display(props.SyncableHasProperties):
     """Contrast - 50% is normal contrast."""
 
 
-    softwareMode = props.Boolean(default=False)
-    """If possible, optimise for a low-performance rendering environment
-    (e.g. a software-based OpenGL renderer).
-    """
-
-    
     def __init__(self,
                  overlay,
                  overlayList,
@@ -108,8 +103,12 @@ class Display(props.SyncableHasProperties):
         # a vector
         if isinstance(overlay, fslimage.Image) and \
            (len(overlay.shape) != 4 or overlay.shape[-1] != 3):
-            possibleTypes.remove('rgbvector')
-            possibleTypes.remove('linevector')
+            
+            try:               possibleTypes.remove('rgbvector')
+            except ValueError: pass
+            
+            try:               possibleTypes.remove('linevector')
+            except ValueError: pass
             
         for pt in possibleTypes:
             log.debug('Enabling overlay type {} for {}'.format(pt, overlay))
@@ -123,11 +122,12 @@ class Display(props.SyncableHasProperties):
         # has different property values to our own,
         # and our values need to be updated
         props.SyncableHasProperties.__init__(
-            self, parent=parent,
+            self,
+            parent=parent,
 
             # These properties cannot be unbound, as
             # they affect the OpenGL representation 
-            nounbind=['softwareMode', 'overlayType'],
+            nounbind=['overlayType'],
 
             # Initial sync state between this
             # Display and the parent Display
@@ -175,7 +175,8 @@ class Display(props.SyncableHasProperties):
         
     def __del__(self):
         """Prints a log message."""
-        log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
+        if log:
+            log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
 
     
     def getOverlay(self):
@@ -254,9 +255,10 @@ class Display(props.SyncableHasProperties):
                        state=self.__displayCtx.syncOverlayDisplay)
 
 
-    def __findOptBaseType(self, optType):
-        """Finds the top level base class for the given :class:`DisplayOpts`
-        subclass.
+    def __findOptBaseType(self, optType, optName):
+        """Finds the class, in the hierarchy of the given ``optType`` (a
+        :class:`.DisplayOpts` sub-class) in which the given ``optName``
+        is defined.
 
         This method is used by the :meth:`__saveOldDisplayOpts` method, and
         is an annoying necessity caused by the way that the :class:`.TypeDict`
@@ -265,25 +267,15 @@ class Display(props.SyncableHasProperties):
 
         Furthermore, in order for the property values of a common
         ``DisplayOpts`` base type to be shared across sub types (e.g. copying
-        the :attr:`.ImageOpts.transform` property between :class:`.VolumeOpts`
+        the :attr:`.Nifti1Opts.transform` property between :class:`.VolumeOpts`
         and :class:`.LabelOpts` instances), we need to store the name of the
         common base type in the dictionary.
-
-        So this method just recursively finds and returns the highest base
-        type of the given ``optType`` which is a sub-type of ``DisplayOpts``.
         """
 
-        bases = optType.__bases__
-
-        if DisplayOpts in bases:
-            return optType
-
-        for base in bases:
-            
-            base = self.__findOptBaseType(base)
-            if base is not None:
+        for base in inspect.getmro(optType):
+            if optName in base.__dict__:
                 return base
-
+            
         return None
 
     
@@ -299,9 +291,14 @@ class Display(props.SyncableHasProperties):
             return
 
         for propName in opts.getAllProperties()[0]:
-            base = self.__findOptBaseType(type(opts))
+            base = self.__findOptBaseType(type(opts), propName)
             base = base.__name__
-            self.__oldOptValues[base, propName] = getattr(opts, propName)
+            val  = getattr(opts, propName)
+
+            log.debug('Saving {}.{} = {} [{} {}]'.format(
+                base, propName, val, type(opts).__name__, id(self)))
+            
+            self.__oldOptValues[base, propName] = val
 
     
     def __restoreOldDisplayOpts(self):
@@ -317,11 +314,18 @@ class Display(props.SyncableHasProperties):
             
             try:
                 value = self.__oldOptValues[opts, propName]
+
+                if not hasattr(opts, propName):
+                    continue
+
+                log.debug('Restoring {}.{} = {} [{}]'.format(
+                    type(opts).__name__, propName, value, id(self)))
+
                 setattr(opts, propName, value)
                 
             except KeyError:
                 pass
-                
+
     
     def __overlayTypeChanged(self, *a):
         """Called when the :attr:`overlayType` property changes. Makes sure
@@ -332,14 +336,14 @@ class Display(props.SyncableHasProperties):
         self.__restoreOldDisplayOpts()
 
 
-class DisplayOpts(actions.ActionProvider):
+class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
     """The ``DisplayOpts`` class contains overlay type specific display
     settings. ``DisplayOpts`` instances are managed by :class:`Display`
     instances.
 
     
     The ``DisplayOpts`` class is not meant to be created directly - it is a
-    base class for type specific implementations (e.g. the :class:`.ImageOpts`
+    base class for type specific implementations (e.g. the :class:`.VolumeOpts`
     class).
 
     
@@ -397,20 +401,11 @@ class DisplayOpts(actions.ActionProvider):
         
         :arg displayCtx:  A :class:`.DisplayContext` instance describing
                           how the overlays are to be displayed.
-        
-        :arg kwargs:      Passed through to the
-                          :class:`.ActionProvider` constructor.
         """
 
         nounbind = kwargs.get('nounbind', [])
         nounbind.append('bounds')
         kwargs['nounbind'] = nounbind
-
-        actions.ActionProvider.__init__(
-            self,
-            overlayList,
-            displayCtx,
-            **kwargs)
         
         self.overlay     = overlay
         self.display     = display
@@ -419,12 +414,16 @@ class DisplayOpts(actions.ActionProvider):
         self.overlayType = display.overlayType
         self.name        = '{}_{}'.format(type(self).__name__, id(self))
 
+        props.SyncableHasProperties.__init__(self, **kwargs)
+        actions.ActionProvider     .__init__(self)
+
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
         
     def __del__(self):
         """Prints a log message."""
-        log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
+        if log:
+            log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
 
         
     def destroy(self):
@@ -435,6 +434,8 @@ class DisplayOpts(actions.ActionProvider):
         must call this method, **after** performing its own clean up.
         """
         actions.ActionProvider.destroy(self)
+
+        self.detachFromParent()
 
         self.overlay     = None
         self.display     = None
@@ -447,21 +448,25 @@ class DisplayOpts(actions.ActionProvider):
         instance.
 
         Some non-volumetric overlay types (e.g. the :class:`.Model` - see
-        :class:`.ModelOpts`) may have a *reference* :class:`.Image` instance
+        :class:`.ModelOpts`) may have a *reference* :class:`.Nifti1` instance
         associated with them, allowing the overlay to be localised in the
-        coordinate space defined by the :class:`.Image`. The
+        coordinate space defined by the :class:`.Nifti1`. The
         :class:`.DisplayOpts` sub-class which corresponds to
         such non-volumetric overlays should override this method to return
         that reference image.
 
         :class:`.DisplayOpts` sub-classes which are associated with volumetric
-        overlays (i.e. :class:`.Image` instances) do not need to override
+        overlays (i.e. :class:`.Nifti1` instances) do not need to override
         this method - in this case, the overlay itself is considered to be
         its own reference image, and is returned by the base-class
         implementation of this this method.
+
+        .. note:: The reference :class:`.Nifti1` instance returned by
+                  sub-class implementations of this method must be in
+                  the :class:`.OverlayList`.
         """
 
-        if isinstance(self.overlay, fslimage.Image):
+        if isinstance(self.overlay, fslimage.Nifti1):
             return self.overlay
         return None
 
@@ -475,7 +480,7 @@ class DisplayOpts(actions.ActionProvider):
         the display space representation may change - for example, the
         :class:`.Image` overlays can be transformed into the display
         coordinate system in different ways, as defined by the
-        :attr:`.ImageOpts.transform`  property.
+        :attr:`.Nifti1Opts.transform`  property.
         """
         return coords
 
@@ -496,12 +501,14 @@ import vectoropts
 import maskopts
 import labelopts
 import modelopts
+import tensoropts
 
 
 OVERLAY_TYPES = td.TypeDict({
 
-    'Image' : ['volume', 'mask', 'rgbvector', 'linevector', 'label'],
-    'Model' : ['model']
+    'Image'       : ['volume', 'mask', 'rgbvector', 'linevector', 'label'],
+    'Model'       : ['model'],
+    'TensorImage' : ['tensor', 'rgbvector', 'linevector'],
 })
 """This dictionary provides a mapping between all overlay classes,
 and the possible values that the :attr:`Display.overlayType` property
@@ -519,6 +526,7 @@ DISPLAY_OPTS_MAP = {
     'mask'       : maskopts.  MaskOpts,
     'model'      : modelopts. ModelOpts,
     'label'      : labelopts. LabelOpts,
+    'tensor'     : tensoropts.TensorOpts,
 }
 """This dictionary provides a mapping between each overlay type, and
 the :class:`DisplayOpts` subclass which contains overlay type-specific

@@ -64,6 +64,24 @@ class ViewPanel(fslpanel.FSLEyesPanel):
     profile can be changed with the :attr:`profile` property, and can be
     accessed with the :meth:`getCurrentProfile` method. See the
     :mod:`.profiles` package for more information on interaction profiles.
+
+
+    **Programming interface**
+
+
+    The following methods are available on a ``Viewpanel`` for programmatically
+    controlling its display and layout:
+
+
+    .. autosummary::
+       :nosignatures:
+
+       togglePanel
+       isPanelOpen
+       getPanel
+       getPanels
+       getPanelInfo
+       getAuiManager
     """
     
 
@@ -71,18 +89,27 @@ class ViewPanel(fslpanel.FSLEyesPanel):
     """The current interaction profile for this ``ViewPanel``. """
 
     
-    def __init__(self, parent, overlayList, displayCtx, actionz=None):
+    def __init__(self, parent, overlayList, displayCtx):
         """Create a ``ViewPanel``. All arguments are passed through to the
         :class:`.FSLEyesPanel` constructor.
         """
 
-        fslpanel.FSLEyesPanel.__init__(
-            self, parent, overlayList, displayCtx, actionz)
+        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__profileManager = profiles.ProfileManager(
             self, overlayList, displayCtx)
 
-        self.__panels = {}
+        # The centrePanel attribute stores a reference
+        # to the main (centre) panel on this ViewPanel.
+        # It is set by sub-class implementations via
+        # the setCentrePanel method.
+        # 
+        # The panels dictionary stores a collection
+        # of {type : instance} mappings of active
+        # FSLeyes control panels that are contained
+        # in this view panel.
+        self.__centrePanel = None
+        self.__panels      = {}
 
         self.__auiMgr = aui.AuiManager(
             self,
@@ -158,6 +185,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         self.__profileManager = None
         self.__auiMgr         = None
         self.__panels         = None
+        self.__centrePanel    = None
 
         fslpanel.FSLEyesPanel.destroy(self)
         
@@ -176,11 +204,18 @@ class ViewPanel(fslpanel.FSLEyesPanel):
 
 
     def setCentrePanel(self, panel):
-        """Set the primary centre panel for this ``ViewPanel``. """
+        """Set the primary centre panel for this ``ViewPanel``. This method
+        is only intended to be called by sub-classes.
+        """
         
         panel.Reparent(self)
-        self.__auiMgr.AddPane(panel, wx.CENTRE)
+        paneInfo = (aui.AuiPaneInfo()
+                    .Name(type(panel).__name__)
+                    .CentrePane())
+
+        self.__auiMgr.AddPane(panel, paneInfo)
         self.__auiMgrUpdate()
+        self.__centrePanel = panel
 
 
     def togglePanel(self, panelType, *args, **kwargs):
@@ -215,9 +250,9 @@ class ViewPanel(fslpanel.FSLEyesPanel):
 
         .. warning::    Do not define a control (a.k.a. secondary) panel
                         constructor to accept arguments with the names
-                        ``floatPane`` or ``location``, as arguments with
-                        those names will get eaten by this method before
-                        they can be passed to the constructor.
+                        ``floatPane`` or ``location``, as arguments with those
+                        names will get eaten by this method before they can be
+                        passed to the constructor.
         """
 
         location  = kwargs.pop('location',  wx.BOTTOM)
@@ -231,83 +266,84 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         # The panel is already open - close it
         if window is not None:
             self.__onPaneClose(None, window)
+            return
 
-        # Create a new panel of the specified type
-        else:
-            
-            paneInfo = aui.AuiPaneInfo()
-            window   = panelType(
-                self, self._overlayList, self._displayCtx, *args, **kwargs)
+        # Otherwise, create a new panel of the specified type.
+        # The PaneInfo Name is the control panel class name -
+        # this is used for saving and restoring perspectives.
+        paneInfo = aui.AuiPaneInfo().Name(panelType.__name__)
+        window   = panelType(
+            self, self._overlayList, self._displayCtx, *args, **kwargs)
+
+        if isinstance(window, fsltoolbar.FSLEyesToolBar):
+
+            # ToolbarPane sets the panel layer to 10
+            paneInfo.ToolbarPane()
+
+            # We are going to put any new toolbars on 
+            # the top of the panel, below any existing
+            # toolbars. This is annoyingly complicated,
+            # because the AUI designer(s) decided to
+            # give the innermost layer an index of 0.
+            # 
+            # So in order to put a new toolbar at the
+            # innermost layer, we need to adjust the
+            # layers of all other existing toolbars
+
+            for p in self.__panels.values():
+                if isinstance(p, fsltoolbar.FSLEyesToolBar):
+                    info = self.__auiMgr.GetPane(p)
+
+                    # This is nasty - the agw.aui.AuiPaneInfo
+                    # class doesn't have any publicly documented
+                    # methods of querying its current state.
+                    # So I'm accessing its undocumented instance
+                    # attributes (determined by browsing the
+                    # source code)
+                    if info.IsDocked() and \
+                       info.dock_direction == aui.AUI_DOCK_TOP:
+                        info.Layer(info.dock_layer + 1)
+
+            # When the toolbar contents change,
+            # update the layout, so that the
+            # toolbar's new size is accommodated
+            window.Bind(fsltoolbar.EVT_TOOLBAR_EVENT, self.__auiMgrUpdate)
+
+        paneInfo.Caption(strings.titles[window])                
+
+        # Dock the pane at the position specified
+        # by the location parameter
+        if floatPane is False:
 
             if isinstance(window, fsltoolbar.FSLEyesToolBar):
-
-                # ToolbarPane sets the panel layer to 10
-                paneInfo.ToolbarPane()
-
-                # We are going to put any new toolbars on 
-                # the top of the panel, below any existing
-                # toolbars. This is annoyingly complicated,
-                # because the AUI designer(s) decided to
-                # give the innermost layer an index of 0.
-                # 
-                # So in order to put a new toolbar at the
-                # innermost layer, we need to adjust the
-                # layers of all other existing toolbars
-                
-                for p in self.__panels.values():
-                    if isinstance(p, fsltoolbar.FSLEyesToolBar):
-                        info = self.__auiMgr.GetPane(p)
-
-                        # This is nasty - the agw.aui.AuiPaneInfo
-                        # class doesn't have any publicly documented
-                        # methods of querying its current state.
-                        # So I'm accessing its undocumented instance
-                        # attributes (determined by browsing the
-                        # source code)
-                        if info.IsDocked() and \
-                           info.dock_direction == aui.AUI_DOCK_TOP:
-                            info.Layer(info.dock_layer + 1)
-
-                # When the toolbar contents change,
-                # update the layout, so that the
-                # toolbar's new size is accommodated
-                window.Bind(fsltoolbar.EVT_TOOLBAR_EVENT, self.__auiMgrUpdate)
-
-            paneInfo.Caption(strings.titles[window])                
-
-            # Dock the pane at the position specified
-            # by the location parameter
-            if floatPane is False:
-
-                if isinstance(window, fsltoolbar.FSLEyesToolBar):
-                    location = aui.AUI_DOCK_TOP
-                else:
-                    if   location == wx.TOP:    location = aui.AUI_DOCK_TOP
-                    elif location == wx.BOTTOM: location = aui.AUI_DOCK_BOTTOM
-                    elif location == wx.LEFT:   location = aui.AUI_DOCK_LEFT
-                    elif location == wx.RIGHT:  location = aui.AUI_DOCK_RIGHT
-
-                paneInfo.Direction(location)
-
-            # Or, for floating panes, centre the
-            # floating pane on this ViewPanel 
+                location = aui.AUI_DOCK_TOP
             else:
+                if   location == wx.TOP:    location = aui.AUI_DOCK_TOP
+                elif location == wx.BOTTOM: location = aui.AUI_DOCK_BOTTOM
+                elif location == wx.LEFT:   location = aui.AUI_DOCK_LEFT
+                elif location == wx.RIGHT:  location = aui.AUI_DOCK_RIGHT
 
-                selfPos    = self.GetScreenPosition().Get()
-                selfSize   = self.GetSize().Get()
-                selfCentre = (selfPos[0] + selfSize[0] * 0.5,
-                              selfPos[1] + selfSize[1] * 0.5)
+            paneInfo.Direction(location)
 
-                paneSize = window.GetBestSize().Get()
-                panePos  = (selfCentre[0] - paneSize[0] * 0.5,
-                            selfCentre[1] - paneSize[1] * 0.5)
+        # Or, for floating panes, centre the
+        # floating pane on this ViewPanel 
+        else:
 
-                paneInfo.Float() \
-                        .FloatingPosition(panePos)
-                    
-            self.__auiMgr.AddPane(window, paneInfo)
-            self.__panels[panelType] = window
-            self.__auiMgrUpdate()
+            selfPos    = self.GetScreenPosition().Get()
+            selfSize   = self.GetSize().Get()
+            selfCentre = (selfPos[0] + selfSize[0] * 0.5,
+                          selfPos[1] + selfSize[1] * 0.5)
+
+            paneSize = window.GetBestSize().Get()
+            panePos  = (selfCentre[0] - paneSize[0] * 0.5,
+                        selfCentre[1] - paneSize[1] * 0.5)
+
+            paneInfo.Float() \
+                    .FloatingPosition(panePos)
+
+        self.__auiMgr.AddPane(window, paneInfo)
+        self.__panels[panelType] = window
+        self.__auiMgrUpdate()
 
             
     def isPanelOpen(self, panelType):
@@ -323,6 +359,33 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         """
         if panelType in self.__panels: return self.__panels[panelType]
         else:                          return None
+
+
+    def getCentrePanel(self):
+        """Returns the primary (centre) panel on this ``ViewPanel``.
+        """
+        return self.__centrePanel
+        
+
+    def getPanels(self):
+        """Returns a list containing all control panels currently shown in this
+        ``ViewPanel``.
+        """
+        return list(self.__panels.values())
+
+
+    def getPanelInfo(self, panel):
+        """Returns the ``AuiPaneInfo`` object which contains information about
+        the given control panel.
+        """
+        return self.__auiMgr.GetPane(panel)
+
+
+    def getAuiManager(self):
+        """Returns the ``wx.lib.agw.aui.AuiManager`` object which manages the
+        layout of this ``ViewPanel``.
+        """
+        return self.__auiMgr
  
 
     def __selectedOverlayChanged(self, *a):
@@ -493,6 +556,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         
         if isinstance(panel, (fslpanel  .FSLEyesPanel,
                               fsltoolbar.FSLEyesToolBar)):
+            
             self.__panels.pop(type(panel))
 
             # calling fslpanel.FSLEyesPanel.destroy()

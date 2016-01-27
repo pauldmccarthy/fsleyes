@@ -13,10 +13,10 @@ sort of view of a collection of overlay objects, contained within an
 
 
 ``FSLEyesPanel`` instances are also :class:`.ActionProvider` instances - any
-actions which are specified during construction may (or may not ) be exposed
-to the user. Furthermore, any display configuration options which should be
-made available available to the user can be added as :class:`.PropertyBase`
-attributes of the :class:`FSLEyesPanel` subclass.
+actions which are specified in the class definitions may (or may not) be
+exposed to the user. Furthermore, any display configuration options which
+should be made available available to the user can be added as
+:class:`.PropertyBase` attributes of the :class:`FSLEyesPanel` subclass.
 
 
 .. note:: ``FSLEyesPanel`` instances are usually displayed within a
@@ -42,6 +42,8 @@ import logging
 
 import wx
 
+import props
+
 import actions
 import displaycontext
 
@@ -49,7 +51,7 @@ import displaycontext
 log = logging.getLogger(__name__)
 
 
-class _FSLEyesPanel(actions.ActionProvider):
+class _FSLEyesPanel(actions.ActionProvider, props.SyncableHasProperties):
     """The ``_FSLEyesPanel`` is the base class for the :class:`.FSLEyesPanel`
     and the :class:`.FSLEyesToolBar`.
 
@@ -72,22 +74,16 @@ class _FSLEyesPanel(actions.ActionProvider):
     """ 
 
     
-    def __init__(self,
-                 overlayList,
-                 displayCtx,
-                 actionz=None):
-        """Create a :class:`ViewPanel`.
+    def __init__(self, overlayList, displayCtx):
+        """Create a :class:`_FSLEyesPanel`.
 
         :arg overlayList: A :class:`.OverlayList` instance.
         
         :arg displayCtx:  A :class:`.DisplayContext` instance.
-
-        :arg actionz:     A dictionary containing ``{name -> function}``
-                          actions (see :class:`.ActionProvider`).
         """
         
-        actions.ActionProvider.__init__(
-            self, overlayList, displayCtx, actions=actionz)
+        actions.ActionProvider     .__init__(self)
+        props.SyncableHasProperties.__init__(self)
 
         if not isinstance(displayCtx, displaycontext.DisplayContext):
             raise TypeError(
@@ -99,6 +95,13 @@ class _FSLEyesPanel(actions.ActionProvider):
         self._name        = '{}_{}'.format(self.__class__.__name__, id(self))
         
         self.__destroyed  = False
+
+
+    def getDisplayContext(self):
+        """Returns a reference to the :class:`.DisplayContext` that is
+        associated with this ``_FSLEyesPanel``.
+        """
+        return self._displayCtx
 
         
     def destroy(self):
@@ -151,6 +154,6 @@ class FSLEyesPanel(_FSLEyesPanel, wx.PyPanel):
     *FSLeyes*. See the :mod:`~fsl.fsleyes` documentation for more details.
     """
     
-    def __init__(self, parent, overlayList, displayCtx, actionz=None):
+    def __init__(self, parent, overlayList, displayCtx):
         wx.PyPanel.__init__(self, parent)
-        _FSLEyesPanel.__init__(self, overlayList, displayCtx, actionz)
+        _FSLEyesPanel.__init__(self, overlayList, displayCtx)

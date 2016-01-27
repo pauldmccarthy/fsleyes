@@ -12,12 +12,13 @@ functionality to display a 2D slice from a collection of 3D overlays.
 import copy
 import logging
 
-import numpy     as np 
-import OpenGL.GL as gl
+import numpy as np 
 
 import props
 
 import fsl.data.image                         as fslimage
+import fsl.utils.async                        as async
+import fsl.fsleyes.displaycontext             as fsldisplay
 import fsl.fsleyes.displaycontext.canvasopts  as canvasopts
 import fsl.fsleyes.gl.routines                as glroutines
 import fsl.fsleyes.gl.resources               as glresources
@@ -72,25 +73,18 @@ class SliceCanvas(props.HasProperties):
     **Performance optimisations**
 
     
-    The :attr:`renderMode`, :attr:`softwareMode`, and :attr:`resolutionLimit`
-    properties control various ``SliceCanvas`` performance settings, which can
-    be useful when running in a low performance environment (e.g. when only a
-    software based GL driver is available). See also the
-    :attr:`.SceneOpts.performance` setting.
+    The :attr:`renderMode` and :attr:`resolutionLimit` properties control
+    various ``SliceCanvas`` performance settings, which can be useful when
+    running in a low performance environment (e.g. when only a software based
+    GL driver is available). See also the :attr:`.SceneOpts.performance`
+    setting.
 
     
     The :attr:`resolutionLimit` property controls the highest resolution at
     which :class:`.Image` overlays are displayed on the ``SliceCanvas``. A
     higher value will result in faster rendering performance. When this
-    property is changed, the :attr:`.ImageOpts.resolution` property for every
+    property is changed, the :attr:`.Nifti1Opts.resolution` property for every
     :class:`.Image` overlay is updated.
-
-
-    The :attr:`softwareMode` property controls the OpenGL shader program that
-    is used to render overlays - several :class:`.GLObject` types have shader
-    programs which are optimised for low-performance environments (at the cost
-    of a reduced feature set). This property is linked to the
-    :attr:`.Display.softwareMode` property.
 
 
     The :attr:`renderMode` property controls the way in which the
@@ -156,7 +150,6 @@ class SliceCanvas(props.HasProperties):
     cursorColour    = copy.copy(canvasopts.SliceCanvasOpts.cursorColour)
     bgColour        = copy.copy(canvasopts.SliceCanvasOpts.bgColour)
     renderMode      = copy.copy(canvasopts.SliceCanvasOpts.renderMode)
-    softwareMode    = copy.copy(canvasopts.SliceCanvasOpts.softwareMode)
     resolutionLimit = copy.copy(canvasopts.SliceCanvasOpts.resolutionLimit)
     
         
@@ -191,6 +184,16 @@ class SliceCanvas(props.HasProperties):
         self._offscreenTextures = {}
         self._prerenderTextures = {}
 
+        # When the render mode is changed,
+        # overlay resolutions are potentially
+        # modified. When this happends, this
+        # is used to store the old overlay
+        # resolution, so it can be restored
+        # if the render mode is changed back.
+        # See the __resolutionLimitChanged
+        # method.
+        self.__overlayResolutions = {}
+
         # The zax property is the image axis which maps to the
         # 'depth' axis of this canvas. The _zAxisChanged method
         # also fixes the values of 'xax' and 'yax'.
@@ -215,7 +218,7 @@ class SliceCanvas(props.HasProperties):
         self.addListener('renderMode',    self.name, self._renderModeChange)
         self.addListener('resolutionLimit',
                          self.name,
-                         self._resolutionLimitChange) 
+                         self.__resolutionLimitChange) 
         
         # When the overlay list changes, refresh the
         # display, and update the display bounds
@@ -228,6 +231,9 @@ class SliceCanvas(props.HasProperties):
         self.displayCtx .addListener('bounds',
                                      self.name,
                                      self._overlayBoundsChanged)
+        self.displayCtx .addListener('syncOverlayDisplay',
+                                     self.name,
+                                     self._syncOverlayDisplayChanged) 
 
 
     def destroy(self):
@@ -253,13 +259,16 @@ class SliceCanvas(props.HasProperties):
 
         for overlay in self.overlayList:
             disp  = self.displayCtx.getDisplay(overlay)
-            globj = self._glObjects[overlay]
+            globj = self._glObjects.get(overlay)
 
             disp.removeListener('overlayType',  self.name)
             disp.removeListener('enabled',      self.name)
-            disp.unbindProps(   'softwareMode', self)
 
-            globj.destroy()
+            # globj could be None, or could
+            # be False - see genGLObject.
+            if globj:
+                globj.deregister(self.name)
+                globj.destroy()
 
             rt, rtName = self._prerenderTextures.get(overlay, (None, None))
             ot         = self._offscreenTextures.get(overlay, None)
@@ -456,7 +465,7 @@ class SliceCanvas(props.HasProperties):
             globj   = self._glObjects.get(overlay, None)
             display = self.displayCtx.getDisplay(overlay)
 
-            if globj is None:
+            if (globj is None) or (not globj):
                 continue
 
             # For offscreen render mode, GLObjects are
@@ -481,22 +490,54 @@ class SliceCanvas(props.HasProperties):
             # is managed by a RenderTextureStack
             # object.
             elif self.renderMode == 'prerender':
-                name = '{}_{}_zax{}'.format(
-                    id(overlay),
-                    textures.RenderTextureStack.__name__,
-                    self.zax)
-
-                if glresources.exists(name):
-                    rt = glresources.get(name)
-                    
-                else:
-                    rt = textures.RenderTextureStack(globj)
-                    rt.setAxes(self.xax, self.yax)
-                    glresources.set(name, rt)
-
+                rt, name = self._getPreRenderTexture(globj, overlay)
                 self._prerenderTextures[overlay] = rt, name
 
         self._refresh()
+
+        
+    def _getPreRenderTexture(self, globj, overlay):
+        """Creates/retrieves a :class:`.RenderTextureStack` for the given
+        :class:`.GLObject`. A tuple containing the ``RenderTextureStack``,
+        and its name, as passed to the :mod:`.resources` module, is returned.
+
+        :arg globj:   The :class:`.GLObject` instance.
+        :arg overlay: The overlay object.
+        """
+
+        display = self.displayCtx.getDisplay(overlay)
+        opts    = display.getDisplayOpts()
+
+        name = '{}_{}_zax{}'.format(
+            id(overlay),
+            textures.RenderTextureStack.__name__,
+            self.zax) 
+
+        # If all display/opts properties
+        # are synchronised to the parent,
+        # then we use a texture stack that
+        # might be shared across multiple
+        # views.
+        # 
+        # But if any display/opts properties
+        # are not synchronised, we'll use our
+        # own texture stack. 
+        if not (display.getParent()         and
+                display.allSyncedToParent() and 
+                opts   .getParent()         and
+                opts   .allSyncedToParent()):
+
+            name = '{}_{}'.format(id(self.displayCtx), name)
+
+        if glresources.exists(name):
+            rt = glresources.get(name)
+
+        else:
+            rt = textures.RenderTextureStack(globj)
+            rt.setAxes(self.xax, self.yax)
+            glresources.set(name, rt)
+
+        return rt, name
 
                 
     def _renderModeChange(self, *a):
@@ -526,27 +567,98 @@ class SliceCanvas(props.HasProperties):
         self._updateRenderTextures()
 
 
-    def _resolutionLimitChange(self, *a):
+    def _syncOverlayDisplayChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.syncOverlayDisplay`
+        property changes. If the current :attr:`renderMode` is ``prerender``,
+        the :class:`.RenderTextureStack` instances for each overlay are 
+        re-created.
+        
+        This is done because, if all display properties for an overlay are
+        synchronised, then a single ``RenderTextureStack`` can be shared
+        across multiple displays. However, if any display properties are not
+        synchronised, then a separate ``RenderTextureStack`` is needed for
+        the :class:`.DisplayContext` used by this ``SliceCanvas``.
+        """
+        if self.renderMode == 'prerender':
+            self._renderModeChange(self)
+    
+
+    def __resolutionLimitChange(self, *a):
         """Called when the :attr:`resolutionLimit` property changes.
 
-        Updates the minimum resolution of all overlays in the overlay list.
+        Updates the :attr:`.Nifti1Opts.resolution` of all :class:`.Nifti1`
+        overlays in the overlay list.  Whenever the resolution of an
+        overlay is changed, its old value is saved, so it can be restored
+        later on when possible.
         """
+
+        limit = self.resolutionLimit
 
         for ovl in self.overlayList:
 
+            opts = self.displayCtx.getOpts(ovl)
+
             # No support for non-volumetric overlay 
             # types yet (or maybe ever?)
-            if not isinstance(ovl, fslimage.Image):
+            if not isinstance(opts, fsldisplay.Nifti1Opts):
                 continue
+            
+            currRes = opts.resolution
+            lastRes = self.__overlayResolutions.get(ovl)
 
-            opts   = self.displayCtx.getOpts(ovl)
-            minres = min(ovl.pixdim[:3])
+            listening = opts.hasListener('resolution', self.name)
 
-            if self.resolutionLimit > minres:
-                minres = self.resolutionLimit
+            if listening:
+                opts.disableListener('resolution', self.name)
 
-            if opts.resolution < minres:
-                opts.resolution = minres
+            # The overlay resolution is below
+            # the limit - set it to the limit
+            if currRes < limit:
+
+                log.debug('Limiting overlay {} resolution to {}'.format(
+                    ovl, limit))
+
+                opts.resolution = limit
+
+                # Save the old resolution so we
+                # can restore it later if needed
+                if ovl not in self.__overlayResolutions:
+                    log.debug('Caching overlay {} resolution: {}'.format(
+                        ovl, limit))
+                    
+                    self.__overlayResolutions[ovl] = currRes
+
+            # We have previously modified the
+            # resolution of this overlay - restore
+            # it
+            elif ovl in self.__overlayResolutions:
+
+                # but only if the old resolution
+                # is within the new limits. 
+                if lastRes >= limit:
+
+                    log.debug('Restoring overlay {} resolution to {}, '
+                              'and clearing cache'.format(ovl, lastRes))
+                    opts.resolution = lastRes
+
+                    # We've restored the modified overlay
+                    # resolution - clear it from the cache
+                    self.__overlayResolutions.pop(ovl)
+                else:
+                    log.debug('Limiting overlay {} resolution to {}'.format(
+                        ovl, limit))
+                    opts.resolution = limit
+
+            if listening:
+                opts.enableListener('resolution', self.name)
+                        
+
+    def __overlayResolutionChanged(self, value, valid, opts, name):
+        """Called when the :attr:`.Nifti1Opts.resolution` property for any
+        :class:`.Image` overlay changes. Clears the saved resolution for
+        the overlay if necessary (see :meth:`__resolutionLimitChange`).
+        """
+        self.__overlayResolutions.pop(opts.overlay, None)
 
 
     def _zAxisChanged(self, *a):
@@ -577,7 +689,7 @@ class SliceCanvas(props.HasProperties):
 
         for ovl, globj in self._glObjects.items():
 
-            if globj is not None:
+            if (globj is not None) and globj:
                 globj.setAxes(self.xax, self.yax)
 
         self._overlayBoundsChanged()
@@ -608,25 +720,28 @@ class SliceCanvas(props.HasProperties):
                   'changed to {}'.format(display.name,
                                          display.overlayType))
 
-        self.__genGLObject(display.getOverlay())
+        self.__regenGLObject(display.getOverlay())
         self._refresh()
 
 
-    def __genGLObject(self, overlay, updateRenderTextures=True):
-        """Creates a :class:`.GLObject` instance for the given ``overlay``,
-        destroying any existing instance.
+    def __regenGLObject(self,
+                        overlay,
+                        updateRenderTextures=True,
+                        refresh=True):
+        """Destroys any existing :class:`.GLObject` associated with the given
+        ``overlay``, and creates a new one (via the :meth:`__genGLObject`
+        method).
 
         If ``updateRenderTextures`` is ``True`` (the default), and the
         :attr:`.renderMode` is ``offscreen`` or ``prerender``, any
-        render texture associated with the overlay is destroyed.
+        render texture associated with the overlay is destroyed. 
         """
-
-        display = self.displayCtx.getDisplay(overlay)
-
+        
         # Tell the previous GLObject (if
         # any) to clean up after itself
         globj = self._glObjects.pop(overlay, None)
         if globj is not None:
+            globj.deregister(self.name)
             globj.destroy()
 
             if updateRenderTextures:
@@ -641,48 +756,89 @@ class SliceCanvas(props.HasProperties):
                     if tex is not None:
                         glresources.delete(name)
 
-        # We need a GL context to create a new GL
-        # object. If we can't get it now, the
-        # _glObjects value for this overlay will
-        # stay as None, and the _draw method will
-        # manually call this method again later.
-        if not self._setGLContext():
-            return None
+        self.__genGLObject(overlay, updateRenderTextures, refresh)
 
-        globj = globject.createGLObject(overlay, display)
 
-        if globj is not None:
-            globj.setAxes(self.xax, self.yax)
-            globj.addUpdateListener(self.name, self._refresh)
+    def __genGLObject(self, overlay, updateRenderTextures=True, refresh=True):
+        """Creates a :class:`.GLObject` instance for the given ``overlay``.
+        Does nothing if a ``GLObject`` already exists for the given overlay.
 
-        self._glObjects[overlay] = globj
+        If ``updateRenderTextures`` is ``True`` (the default), and the
+        :attr:`.renderMode` is ``offscreen`` or ``prerender``, any
+        textures for the overlay are updated.
 
-        if updateRenderTextures:
-            self._updateRenderTextures() 
+        If ``refresh`` is ``True`` (the default), the :meth:`_refresh` method
+        is called after the ``GLObject`` has been created.
 
-        if not display.isBound('softwareMode', self):
-            display.bindProps('softwareMode', self)
+        .. note:: If running in ``wx`` (i.e. via a :class:`.WXGLSliceCanvas`),
+                  the :class:`.GLObject` instnace will be created on the
+                  ``wx.EVT_IDLE`` lopp (via the :mod:`.idle` module).
+        """
+        
+        display = self.displayCtx.getDisplay(overlay)
 
-        display.addListener('overlayType',
-                            self.name,
-                            self.__overlayTypeChanged,
-                            overwrite=True)
+        if overlay in self._glObjects:
+            return
 
-        display.addListener('enabled',
-                            self.name,
-                            self._refresh,
-                            overwrite=True)
+        # We put a placeholder value in
+        # the globjects dictionary, so
+        # that the _draw method knows
+        # that creation for this overlay
+        # is pending.
+        self._glObjects[overlay] = False
 
-        return globj
- 
-            
-    def _overlayListChanged(self, *a):
+        def create():
+
+            # We need a GL context to create a new GL
+            # object. If we can't get it now, 
+            if not self._setGLContext():
+                self._glObjects.pop(overlay)
+                return
+
+            globj = globject.createGLObject(overlay, display)
+
+            if globj is not None:
+                globj.setAxes(self.xax, self.yax)
+                globj.register(self.name, self._refresh)
+
+            self._glObjects[overlay] = globj
+
+            if updateRenderTextures:
+                self._updateRenderTextures() 
+
+            display.addListener('overlayType',
+                                self.name,
+                                self.__overlayTypeChanged,
+                                overwrite=True)
+
+            display.addListener('enabled',
+                                self.name,
+                                self._refresh,
+                                overwrite=True)
+
+            # Listen for resolution changes on Image
+            # overlays - see __overlayResolutionChanged,
+            # and __resolutionLimitChanged
+            if isinstance(overlay, fslimage.Nifti1): 
+                opts = display.getDisplayOpts()
+                opts.addListener('resolution',
+                                 self.name,
+                                 self.__overlayResolutionChanged,
+                                 overwrite=True)
+
+            if refresh:
+                self._refresh()
+
+        async.idle(create)
+
+        
+    def _overlayListChanged(self, *args, **kwargs):
         """This method is called every time an overlay is added or removed
         to/from the overlay list.
 
-        For newly added overlays, it creates the appropriate :mod:`.GLObject`
-        type, which initialises the OpenGL data necessary to render the
-        overlay, and then triggers a refresh.
+        For newly added overlays, calls the :meth:`__genGLObject` method,
+        which initialises the OpenGL data necessary to render the
+        overlay.
         """
 
         # Destroy any GL objects for overlays
@@ -704,13 +860,53 @@ class SliceCanvas(props.HasProperties):
             if overlay in self._glObjects:
                 continue
 
-            self.__genGLObject(overlay, updateRenderTextures=False)
+            self.__regenGLObject(overlay,
+                                 updateRenderTextures=False,
+                                 refresh=False)
 
-        self._updateRenderTextures()
-        self._resolutionLimitChange()
-        self._refresh()
+        # All the GLObjects are created using
+        # async.idle, so we call refresh in the
+        # same way to make sure it gets called
+        # after all the GLObject creations.
+        def refresh():
+            self._updateRenderTextures()
+            self.__resolutionLimitChange()
+            self._refresh()
+
+        async.idle(refresh)
 
 
+    def _getGLObjects(self):
+        """Called by :meth:`_draw`. Builds a list of all :class:`.GLObjects`
+        to be drawn.
+
+        :returns: A list of overlays, and a list of corresponding
+                  :class:`.GLObjects` to be drawn.
+        """
+
+        overlays = [] 
+        globjs   = []
+        for ovl in self.displayCtx.getOrderedOverlays():
+            
+            globj = self._glObjects.get(ovl, None)
+            
+            # If an overlay does not yet have a corresponding
+            # GLObject, we presume that it hasn't been created
+            # yet, so we'll tell genGLObject to create one for
+            # it.
+            if   globj is None: self.__genGLObject(ovl)
+            
+            # If there is a value for this overlay in
+            # the globjects dictionary, but it evaluates
+            # to False, then GLObject creation has been
+            # scheduled for the overlay - see genGLObject.
+            elif globj:
+                overlays.append(ovl)
+                globjs  .append(globj)
+ 
+        return overlays, globjs
+
+    
     def _overlayBoundsChanged(self, *a):
         """Called when the display bounds are changed.
 
@@ -720,15 +916,18 @@ class SliceCanvas(props.HasProperties):
         """
 
         ovlBounds = self.displayCtx.bounds
+        oldPos    = self.pos.xy
 
+        self.disableNotification('pos')
         self.pos.setMin(0, ovlBounds.getLo(self.xax))
         self.pos.setMax(0, ovlBounds.getHi(self.xax))
         self.pos.setMin(1, ovlBounds.getLo(self.yax))
         self.pos.setMax(1, ovlBounds.getHi(self.yax))
         self.pos.setMin(2, ovlBounds.getLo(self.zax))
         self.pos.setMax(2, ovlBounds.getHi(self.zax))
+        self.enableNotification('pos')
 
-        self._updateDisplayBounds()
+        self._updateDisplayBounds(oldLoc=oldPos)
 
 
     def _zoomChanged(self, *a):
@@ -792,10 +991,15 @@ class SliceCanvas(props.HasProperties):
         return (xmin, xmax, ymin, ymax)
 
         
-    def _updateDisplayBounds(self, xmin=None, xmax=None, ymin=None, ymax=None):
+    def _updateDisplayBounds(self,
+                             xmin=None,
+                             xmax=None,
+                             ymin=None,
+                             ymax=None,
+                             oldLoc=None):
         """Called on canvas resizes, overlay bound changes, and zoom changes.
         
-        Calculates the bounding box, in world coordinates, to be displayed on
+        Calculates the bounding box, in display coordinates, to be displayed on
         the canvas. Stores this bounding box in the displayBounds property. If
         any of the parameters are not provided, the
         :attr:`.DisplayContext.bounds` are used.
@@ -804,11 +1008,20 @@ class SliceCanvas(props.HasProperties):
         .. note:: This method is used internally, and also by the
                   :class:`.WXGLSliceCanvas` class.
 
+        .. warning:: This code assumes that, if the display coordinate system
+                     has changed, the display context location has already
+                     been updated.  See the
+                     :meth:`.DisplayContext.__displaySpaceChanged` method.
         
-        :arg xmin: Minimum x (horizontal) value to be in the display bounds.
-        :arg xmax: Maximum x value to be in the display bounds.
-        :arg ymin: Minimum y (vertical) value to be in the display bounds.
-        :arg ymax: Maximum y value to be in the display bounds.
+        
+        :arg xmin:   Minimum x (horizontal) value to be in the display bounds.
+        :arg xmax:   Maximum x value to be in the display bounds.
+        :arg ymin:   Minimum y (vertical) value to be in the display bounds.
+        :arg ymax:   Maximum y value to be in the display bounds.
+        :arg oldLoc: If provided, should be the ``(x, y)`` location shown on
+                     this ``SliceCanvas`` - the new display bounds will be
+                     adjusted so that this location remains the same, with
+                     respect to the new field of view.
         """
 
         if xmin is None: xmin = self.displayCtx.bounds.getLo(self.xax)
@@ -852,11 +1065,44 @@ class SliceCanvas(props.HasProperties):
             ymin          = ymin - 0.5 * (newDispHeight - dispHeight)
             ymax          = ymax + 0.5 * (newDispHeight - dispHeight)
 
+        oldxmin, oldxmax, oldymin, oldymax = self.displayBounds[:]
+
+        self.disableNotification('displayBounds')
         self.displayBounds.setLimits(0, xmin, xmax)
-        self.displayBounds.setLimits(1, ymin, ymax) 
+        self.displayBounds.setLimits(1, ymin, ymax)
+        self.enableNotification('displayBounds')
 
         xmin, xmax, ymin, ymax = self._applyZoom(xmin, xmax, ymin, ymax)
 
+        if oldLoc and (oldxmax > oldxmin) and (oldymax > oldymin):
+
+            # Calculate the normalised distance from the
+            # old cursor loaction to the old bound corner
+            oldxoff = (oldLoc[0] - oldxmin) / (oldxmax - oldxmin)
+            oldyoff = (oldLoc[1] - oldymin) / (oldymax - oldymin)
+
+            # Re-set the new bounds to the current
+            # display location, offset by the same
+            # amount that it used to be (as 
+            # calculated above).
+            #
+            # N.B. This code assumes that, if the display
+            #      coordinate system has changed, the display
+            #      context location has already been updated.
+            #      See the DisplayContext.__displaySpaceChanged
+            #      method.
+            xloc = self.displayCtx.location[self.xax]
+            yloc = self.displayCtx.location[self.yax]
+ 
+            xlen = xmax - xmin
+            ylen = ymax - ymin
+
+            xmin = xloc - oldxoff * xlen
+            ymin = yloc - oldyoff * ylen
+            
+            xmax = xmin + xlen
+            ymax = ymin + ylen
+            
         log.debug('Final display bounds: X: ({}, {}) Y: ({}, {})'.format(
             xmin, xmax, ymin, ymax))
 
@@ -904,13 +1150,6 @@ class SliceCanvas(props.HasProperties):
             size = self._getSize()
             
         width, height = size
-
-        # clear the canvas
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
-
-        # enable transparency
-        gl.glEnable(gl.GL_BLEND)
-        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)        
         
         if (len(self.overlayList) == 0) or \
            (width  == 0)                or \
@@ -1017,27 +1256,34 @@ class SliceCanvas(props.HasProperties):
         if width == 0 or height == 0:
             return
 
-        gl.glClearColor(*self.bgColour)
-
         if not self._setGLContext():
+            return
+
+        overlays, globjs = self._getGLObjects()
+
+        # Do not draw anything if some globjects
+        # are not ready. This is because, if a
+        # GLObject was drawn, but is now temporarily
+        # not ready (e.g. it has an image texture
+        # that is being asynchronously refreshed),
+        # drawing the scene now would cause
+        # flickering of that GLObject.
+        if any([not g.ready() for g in globjs]):
             return
 
         # Set the viewport to match the current 
         # display bounds and canvas size
         if self.renderMode is not 'offscreen':
             self._setViewport()
-
-        for overlay in self.displayCtx.getOrderedOverlays():
+            glroutines.clear(self.bgColour)
+            
+        for overlay, globj in zip(overlays, globjs):
 
             display = self.displayCtx.getDisplay(overlay)
             opts    = display.getDisplayOpts()
-            globj   = self._glObjects.get(overlay, None)
 
             if not display.enabled:
                 continue
-            
-            if globj is None:
-                globj = self.__genGLObject(overlay)
 
             # On-screen rendering - the globject is
             # rendered directly to the screen canvas
@@ -1075,7 +1321,7 @@ class SliceCanvas(props.HasProperties):
                 rt.bindAsRenderTarget()
                 rt.setRenderViewport(self.xax, self.yax, lo, hi)
                 
-                gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+                glroutines.clear((0, 0, 0, 0))
 
                 globj.preDraw()
                 globj.draw(self.pos.z)
@@ -1106,6 +1352,7 @@ class SliceCanvas(props.HasProperties):
         # to the screen canvas.
         if self.renderMode == 'offscreen':
             self._setViewport()
+            glroutines.clear(self.bgColour)
             self._drawOffscreenTextures() 
 
         if self.showCursor:

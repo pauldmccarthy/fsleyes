@@ -6,82 +6,52 @@
 #
 """This module provides functions which are used by the :class:`.GLVolume`
 class to render :class:`.Image` overlays in an OpenGL 2.1 compatible manner.
+
+A :class:`.GLSLShader` is used to manage the ``glvolume`` vertex/fragment
+shader programs.
 """
 
 
 import logging
-import ctypes
 
 import numpy                  as np
 import OpenGL.GL              as gl
-import OpenGL.raw.GL._types   as gltypes
 
-import fsl.fsleyes.gl.shaders  as shaders
-import fsl.utils.transform     as transform
+import fsl.fsleyes.gl.shaders as shaders
+import fsl.utils.transform    as transform
 
 
 log = logging.getLogger(__name__)
 
 
 def init(self):
-    """Calls :func:`compileShaders` and :func:`updateShaderState`,
-    and creates a GL buffer which will be used to store vertex data.
-    """
+    """Calls :func:`compileShaders` and :func:`updateShaderState`. """
 
-    self.shaders = None
+    self.shader = None
     
     compileShaders(   self)
     updateShaderState(self)
-    
-    self.vertexAttrBuffer = gl.glGenBuffers(1)
                     
 
 def destroy(self):
-    """Cleans up the vertex buffer handle and shader programs."""
+    """Cleans up the shader programs."""
 
-    gl.glDeleteBuffers(1, gltypes.GLuint(self.vertexAttrBuffer))
-    gl.glDeleteProgram(self.shaders)
+    self.shader.destroy()
+    self.shader = None
 
 
 def compileShaders(self):
-    """Compiles and links the OpenGL GLSL vertex and fragment shader
-    programs, and attaches a reference to the resulting program, and
-    all GLSL variables, as attributes on the given :class:`.GLVolume`
-    object. 
+    """Loads the vertex/fragment shader source, and creates a
+    :class:`.GLSLShader`.
     """
 
-    if self.shaders is not None:
-        gl.glDeleteProgram(self.shaders)
+    if self.shader is not None:
+        self.shader.destroy()
 
-    vertShaderSrc = shaders.getVertexShader(  self,
-                                              sw=self.display.softwareMode)
-    fragShaderSrc = shaders.getFragmentShader(self,
-                                              sw=self.display.softwareMode)
-    self.shaders = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
+    vertSrc = shaders.getVertexShader(  'glvolume')
+    fragSrc = shaders.getFragmentShader('glvolume')
 
-    # indices of all vertex/fragment shader parameters
-    self.vertexPos          = gl.glGetAttribLocation( self.shaders,
-                                                      'vertex')
-    self.voxCoordPos        = gl.glGetAttribLocation( self.shaders,
-                                                      'voxCoord')
-    self.texCoordPos        = gl.glGetAttribLocation( self.shaders,
-                                                      'texCoord') 
-    self.imageTexturePos    = gl.glGetUniformLocation(self.shaders,
-                                                      'imageTexture')
-    self.colourTexturePos   = gl.glGetUniformLocation(self.shaders,
-                                                      'colourTexture') 
-    self.imageShapePos      = gl.glGetUniformLocation(self.shaders,
-                                                      'imageShape')
-    self.useSplinePos       = gl.glGetUniformLocation(self.shaders,
-                                                      'useSpline')
-    self.voxValXformPos     = gl.glGetUniformLocation(self.shaders,
-                                                      'voxValXform')
-    self.clipLowPos         = gl.glGetUniformLocation(self.shaders,
-                                                      'clipLow')
-    self.clipHighPos        = gl.glGetUniformLocation(self.shaders,
-                                                      'clipHigh')
-    self.invertClipPos      = gl.glGetUniformLocation(self.shaders,
-                                                      'invertClip')
+    self.shader = shaders.GLSLShader(vertSrc, fragSrc)
 
 
 def updateShaderState(self):
@@ -89,96 +59,60 @@ def updateShaderState(self):
     current display properties.
     """
 
-    opts = self.displayOpts
-
-    gl.glUseProgram(self.shaders)
-    
-    # bind the current interpolation setting,
-    # image shape, and image->screen axis
-    # mappings
-    gl.glUniform1f( self.useSplinePos,     opts.interpolation == 'spline')
-    gl.glUniform3fv(self.imageShapePos, 1, np.array(self.image.shape,
-                                                     dtype=np.float32))
+    opts   = self.displayOpts
+    shader = self.shader
 
     # The clipping range options are in the voxel value
     # range, but the shader needs them to be in image
     # texture value range (0.0 - 1.0). So let's scale 
     # them.
-    xform    = self.imageTexture.invVoxValXform
-    clipLow  = opts.clippingRange[0] * xform[0, 0] + xform[3, 0]
-    clipHigh = opts.clippingRange[1] * xform[0, 0] + xform[3, 0]
-
-    gl.glUniform1f(self.clipLowPos,    clipLow)
-    gl.glUniform1f(self.clipHighPos,   clipHigh)
-    gl.glUniform1f(self.invertClipPos, opts.invertClipping)
+    imgXform = self.imageTexture.invVoxValXform
+    if opts.clipImage is None: clipXform = imgXform
+    else:                      clipXform = self.clipTexture.invVoxValXform
     
-    # Bind transformation matrix to transform
-    # from image texture values to voxel values,
-    # and and to scale said voxel values to
-    # colour map texture coordinates
-    vvx = transform.concat(self.imageTexture.voxValXform,
-                           self.colourTexture.getCoordinateTransform())
-    vvx = np.array(vvx, dtype=np.float32).ravel('C')
+    clipLow  = opts.clippingRange[0] * clipXform[0, 0] + clipXform[3, 0]
+    clipHigh = opts.clippingRange[1] * clipXform[0, 0] + clipXform[3, 0]
+    texZero  = 0.0                   * imgXform[ 0, 0] + imgXform[ 3, 0]
+
+    # Create a single transformation matrix
+    # which transforms from image texture values
+    # to voxel values, and scales said voxel
+    # values to colour map texture coordinates.
+    img2CmapXform = transform.concat(
+        self.imageTexture.voxValXform,
+        self.colourTexture.getCoordinateTransform())
+
+    shader.load()
+
+    changed = False
     
-    gl.glUniformMatrix4fv(self.voxValXformPos, 1, False, vvx)
+    changed |= shader.set('useSpline',        opts.interpolation == 'spline')
+    changed |= shader.set('imageShape',       self.image.shape[:3])
+    changed |= shader.set('clipLow',          clipLow)
+    changed |= shader.set('clipHigh',         clipHigh)
+    changed |= shader.set('texZero',          texZero)
+    changed |= shader.set('invertClip',       opts.invertClipping)
+    changed |= shader.set('useNegCmap',       opts.useNegativeCmap)
+    changed |= shader.set('imageIsClip',      opts.clipImage is None)
+    changed |= shader.set('img2CmapXform',    img2CmapXform)
 
-    # Set up the colour and image textures
-    gl.glUniform1i(self.imageTexturePos,  0)
-    gl.glUniform1i(self.colourTexturePos, 1)
+    changed |= shader.set('imageTexture',     0)
+    changed |= shader.set('colourTexture',    1)
+    changed |= shader.set('negColourTexture', 2)
+    changed |= shader.set('clipTexture',      3)
 
-    gl.glUseProgram(0)
+    shader.unload()
+
+    return changed
 
 
 def preDraw(self):
     """Sets up the GL state to draw a slice from the given :class:`.GLVolume`
     instance.
     """
-
-    # load the shaders
-    gl.glUseProgram(self.shaders)
+    self.shader.load()
 
 
-def _prepareVertexAttributes(self, vertices, voxCoords, texCoords):
-    """Prepares a data buffer which contains the given vertices,
-    voxel coordinates, and texture coordinates, ready to be passed in to
-    the shader programs.
-    """
-
-    buf    = np.zeros((vertices.shape[0] * 3, 3), dtype=np.float32)
-    verPos = self.vertexPos
-    voxPos = self.voxCoordPos
-    texPos = self.texCoordPos
-
-    # We store each of the three coordinate
-    # sets in a single interleaved buffer
-    buf[ ::3, :] = vertices
-    buf[1::3, :] = voxCoords
-    buf[2::3, :] = texCoords
-
-    buf = buf.ravel('C')
-    
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertexAttrBuffer)
-    gl.glBufferData(gl.GL_ARRAY_BUFFER, buf.nbytes, buf, gl.GL_STATIC_DRAW)
-
-    gl.glVertexAttribPointer(
-        verPos, 3, gl.GL_FLOAT, gl.GL_FALSE, 36, None)
-    gl.glVertexAttribPointer(
-        texPos, 3, gl.GL_FLOAT, gl.GL_FALSE, 36, ctypes.c_void_p(24))
-
-    # The sw shader does not use voxel coordinates
-    # so attempting to binding would raise an error.
-    # So we only attempt to bind if softwareMode is
-    # false, and there is a shader uniform position
-    # for the voxel coordinates available.
-    if not self.display.softwareMode and voxPos != -1:
-        gl.glVertexAttribPointer(
-            voxPos, 3, gl.GL_FLOAT, gl.GL_FALSE, 36, ctypes.c_void_p(12))
-        gl.glEnableVertexAttribArray(self.voxCoordPos)
-
-    gl.glEnableVertexAttribArray(self.vertexPos)
-    gl.glEnableVertexAttribArray(self.texCoordPos) 
-
-    
 def draw(self, zpos, xform=None):
     """Draws the specified slice from the specified image on the canvas.
 
@@ -192,7 +126,12 @@ def draw(self, zpos, xform=None):
     """
 
     vertices, voxCoords, texCoords = self.generateVertices(zpos, xform)
-    _prepareVertexAttributes(self, vertices, voxCoords, texCoords)
+
+    self.shader.setAtt('vertex',   vertices)
+    self.shader.setAtt('voxCoord', voxCoords)
+    self.shader.setAtt('texCoord', texCoords)
+
+    self.shader.loadAtts()
 
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
@@ -212,7 +151,12 @@ def drawAll(self, zposes, xforms):
         voxCoords[i * 6: i * 6 + 6, :] = vc
         texCoords[i * 6: i * 6 + 6, :] = tc
 
-    _prepareVertexAttributes(self, vertices, voxCoords, texCoords)
+    self.shader.setAtt('vertex',   vertices)
+    self.shader.setAtt('voxCoord', voxCoords)
+    self.shader.setAtt('texCoord', texCoords)
+
+    self.shader.loadAtts()
+
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6 * nslices)
 
 
@@ -220,14 +164,5 @@ def postDraw(self):
     """Cleans up the GL state after drawing from the given :class:`.GLVolume`
     instance.
     """
-
-    gl.glDisableVertexAttribArray(self.vertexPos)
-    gl.glDisableVertexAttribArray(self.texCoordPos)
-
-    # See comments in _prepareVertexAttributes
-    # about softwareMode/voxel coordinates
-    if not self.display.softwareMode and self.voxCoordPos != -1:
-        gl.glDisableVertexAttribArray(self.voxCoordPos)
-    
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
-    gl.glUseProgram(0)
+    self.shader.unloadAtts()
+    self.shader.unload()

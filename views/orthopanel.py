@@ -25,9 +25,9 @@ import fsl.data.strings                           as strings
 import fsl.data.constants                         as constants
 import fsl.utils.layout                           as fsllayout
 import fsl.fsleyes.gl                             as fslgl
+import fsl.fsleyes.actions                        as actions
 import fsl.fsleyes.colourmaps                     as colourmaps
 import fsl.fsleyes.gl.wxglslicecanvas             as slicecanvas
-import fsl.fsleyes.controls.overlaydisplaytoolbar as overlaydisplaytoolbar
 import fsl.fsleyes.controls.orthotoolbar          as orthotoolbar
 import fsl.fsleyes.controls.orthoedittoolbar      as orthoedittoolbar
 import fsl.fsleyes.displaycontext.orthoopts       as orthoopts
@@ -103,50 +103,29 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     The ``OrthoPanel`` adds a few extra actions to those provided by the 
     :class:`.CanvasPanel` class:
 
-
-    ====================== ==========================================
-    ``toggleOrthoToolBar`` Shows/hides an :class:`.OrthoToolBar`.
-    ``toggleEditToolBar``  Shows/hides an :class:`.OrthoEditToolBar`.
-    ====================== ==========================================
-
-
-    When an ``OrthoPanel`` is created, it will automatically add the
-    following control panels:
-
     .. autosummary::
        :nosignatures:
     
-       ~fsl.fsleyes.controls.orthotoolbar.OrthoToolBar
-       ~fsl.fsleyes.controls.orthoedittoolbar.OrthoEditToolBar
-       ~fsl.fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar
+       toggleOrthoToolBar
+       toggleEditToolBar
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, addToolbars=True):
+    def __init__(self, parent, overlayList, displayCtx):
         """Create an ``OrthoPanel``.
 
         :arg parent:      The :mod:`wx` parent.
         :arg overlayList: An :class:`.OverlayList` instance.
         :arg displayCtx:  A :class:`.DisplayContext` instance.
-        :arg addToolbars: If ``False``, the toolbars (listed above) are not
-                          added. Defaults to ``True``.
         """
 
         sceneOpts = orthoopts.OrthoOpts()
-
-        actionz = {
-            'toggleOrthoToolBar' : lambda *a: self.togglePanel(
-                orthotoolbar.OrthoToolBar, ortho=self),
-            'toggleEditToolBar' : lambda *a: self.togglePanel(
-                orthoedittoolbar.OrthoEditToolBar, ortho=self), 
-        }
 
         canvaspanel.CanvasPanel.__init__(self,
                                          parent,
                                          overlayList,
                                          displayCtx,
-                                         sceneOpts,
-                                         actionz)
+                                         sceneOpts)
 
         contentPanel = self.getContentPanel()
 
@@ -202,10 +181,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__ycanvas.bindProps('renderMode',      sceneOpts)
         self.__zcanvas.bindProps('renderMode',      sceneOpts)
 
-        self.__xcanvas.bindProps('softwareMode',    sceneOpts)
-        self.__ycanvas.bindProps('softwareMode',    sceneOpts)
-        self.__zcanvas.bindProps('softwareMode',    sceneOpts)
-
         self.__xcanvas.bindProps('resolutionLimit', sceneOpts)
         self.__ycanvas.bindProps('resolutionLimit', sceneOpts)
         self.__zcanvas.bindProps('resolutionLimit', sceneOpts) 
@@ -246,20 +221,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.centrePanelLayout()
         self.initProfile()
 
-        # The ViewPanel AuiManager seems to
-        # struggle if we add these toolbars
-        # immediately, so we'll do it asynchronously 
-        def _addToolbars():
-            self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar,
-                             viewPanel=self)
-            self.togglePanel(orthotoolbar.OrthoToolBar,
-                             ortho=self) 
-            self.togglePanel(orthoedittoolbar.OrthoEditToolBar,
-                             ortho=self) 
-
-        if addToolbars:
-            wx.CallAfter(_addToolbars)
-
 
     def destroy(self):
         """Must be called when this ``OrthoPanel`` is closed.
@@ -286,6 +247,47 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             opts.removeListener('bounds', self._name)
 
         canvaspanel.CanvasPanel.destroy(self)
+
+
+    @actions.toggleControlAction(orthotoolbar.OrthoToolBar)
+    def toggleOrthoToolBar(self):
+        """Shows/hides an :class:`.OrthoToolBar`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(orthotoolbar.OrthoToolBar, ortho=self)
+
+
+    @actions.toggleControlAction(orthoedittoolbar.OrthoEditToolBar)
+    def toggleEditToolBar(self):
+        """Shows/hides an :class:`.OrthoEditToolBar`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """ 
+        self.togglePanel(orthoedittoolbar.OrthoEditToolBar, ortho=self)
+
+
+    def getActions(self):
+        """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
+        :mod:`.actions` that are defined on this ``OrthoPanel``.
+        """
+        actions = [self.screenshot,
+                   self.showCommandLineArgs,
+                   self.toggleOverlayList,
+                   self.toggleLocationPanel,
+                   self.toggleOrthoToolBar,
+                   self.toggleEditToolBar,
+                   self.toggleDisplayToolBar,
+                   self.toggleDisplayPanel,
+                   self.toggleCanvasSettingsPanel,
+                   self.toggleOverlayInfo,
+                   self.toggleAtlasPanel,
+                   self.toggleLookupTablePanel,
+                   self.toggleClusterPanel,
+                   self.toggleClassificationPanel,
+                   self.toggleShell]
+
+        names = [a.__name__ for a in actions]
+
+        return zip(names, actions)
 
             
     def getGLCanvases(self):
@@ -338,6 +340,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         self.__setLabelColours(bg, fg)
 
+        self.Refresh()
+        self.Update()
+
 
     def __setLabelColours(self, bgColour, fgColour):
         """Used by the :meth:`__bgColourChanged` and :meth:`__refreshLabels`
@@ -350,7 +355,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         bgColour = tuple(bgColour)
         fgColour = tuple(fgColour)
-        
+
         overlay = self._displayCtx.getReferenceImage(
             self._displayCtx.getSelectedOverlay())
 
@@ -485,12 +490,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         yorient = overlay.getOrientation(1, xform)
         zorient = overlay.getOrientation(2, xform)
 
-        xlo = strings.anatomy['Image', 'lowshort',  xorient]
-        ylo = strings.anatomy['Image', 'lowshort',  yorient]
-        zlo = strings.anatomy['Image', 'lowshort',  zorient]
-        xhi = strings.anatomy['Image', 'highshort', xorient]
-        yhi = strings.anatomy['Image', 'highshort', yorient]
-        zhi = strings.anatomy['Image', 'highshort', zorient]
+        xlo = strings.anatomy['Nifti1', 'lowshort',  xorient]
+        ylo = strings.anatomy['Nifti1', 'lowshort',  yorient]
+        zlo = strings.anatomy['Nifti1', 'lowshort',  zorient]
+        xhi = strings.anatomy['Nifti1', 'highshort', xorient]
+        yhi = strings.anatomy['Nifti1', 'highshort', yorient]
+        zhi = strings.anatomy['Nifti1', 'highshort', zorient]
 
         log.debug('X orientation: {} - {}'.format(xlo, xhi))
         log.debug('Y orientation: {} - {}'.format(ylo, yhi))
@@ -696,7 +701,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # Make a list of widgets - the canvases,
         # anatomical labels (if displayed), and
         # spacers for the empty cells
-        space = (1, 1)
+        space = (0, 0)
         xlbls = self.__xLabels
         ylbls = self.__yLabels
         zlbls = self.__zLabels
@@ -807,10 +812,7 @@ class OrthoFrame(wx.Frame):
         ctx, dummyCanvas = fslgl.getWXGLContext() 
         fslgl.bootstrap()
         
-        self.panel = OrthoPanel(self,
-                                overlayList,
-                                displayCtx,
-                                addToolbars=False)
+        self.panel = OrthoPanel(self, overlayList, displayCtx)
         self.Layout()
 
         if dummyCanvas is not None:
@@ -850,10 +852,7 @@ class OrthoDialog(wx.Dialog):
         ctx, dummyCanvas = fslgl.getWXGLContext()
         fslgl.bootstrap()
         
-        self.panel = OrthoPanel(self,
-                                overlayList,
-                                displayCtx,
-                                addToolbars=False)
+        self.panel = OrthoPanel(self, overlayList, displayCtx)
         self.Layout()
 
         if dummyCanvas is not None:

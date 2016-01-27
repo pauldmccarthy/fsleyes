@@ -13,7 +13,6 @@ are use by the :class:`.TimeSeriesPanel`. The following classes are provided:
    TimeSeries
    VoxelTimeSeries
    FEATTimeSeries
-   FEATModelTimeSeries
    FEATPartialFitTimeSeries
    FEATEVTimeSeries
    FEATResidualTimeSeries
@@ -31,10 +30,10 @@ import fsl.data.strings as strings
 
 
 class TimeSeries(dataseries.DataSeries):
-    """Encapsulates time series data from an overlay.  :class:`.Image`
-    overlay. The ``TimeSeries`` class is the base-class for all other classes
-    in this module - its :meth:`getData` method implements some pre-processing
-    routines which are required by the :class:`.TimeSeriesPanel`.
+    """Encapsulates time series data from an overlay.  The ``TimeSeries`` class
+    is the base-class for all other classes in this module - its
+    :meth:`getData` method implements some pre-processing routines which are
+    required by the :class:`.TimeSeriesPanel`.
 
     The following methods are intended to be overridden and/or called by
     sub-class implementations:
@@ -120,7 +119,8 @@ class VoxelTimeSeries(TimeSeries):
         """
 
         display = self.displayCtx.getDisplay(self.overlay)
-        coords  = self.getVoxel()
+        opts    = display.getDisplayOpts()
+        coords  = opts.getVoxel()
 
         if coords is not None:
             return '{} [{} {} {}]'.format(display.name,
@@ -130,33 +130,6 @@ class VoxelTimeSeries(TimeSeries):
         else:
             return '{} [out of bounds]'.format(display.name) 
 
-    
-    def getVoxel(self):
-        """Calculates and returns the voxel coordinates corresponding to the
-        current :attr:`.DisplayContext.location` for the overlay associated
-        with this ``VoxelTimeSeries``.
-
-        Returns ``None`` if the current location is outside of the image
-        bounds.
-        """
-
-        overlay = self.overlay
-        opts    = self.displayCtx.getOpts(overlay)
-        x, y, z = self.displayCtx.location.xyz
-
-        vox     = opts.transformCoords([[x, y, z]], 'display', 'voxel')[0]
-        vox     = map(int, np.round(vox))
-
-        if vox[0] < 0                 or \
-           vox[1] < 0                 or \
-           vox[2] < 0                 or \
-           vox[0] >= overlay.shape[0] or \
-           vox[1] >= overlay.shape[1] or \
-           vox[2] >= overlay.shape[2]:
-            return None
-
-        return vox
-
 
     def getData(self, xdata=None, ydata=None):
         """Returns the data at the current voxel location. The ``xdata`` and
@@ -165,7 +138,8 @@ class VoxelTimeSeries(TimeSeries):
         """
 
         if ydata is None:
-            xyz = self.getVoxel()
+            opts = self.displayCtx.getOpts(self.overlay)
+            xyz  = opts.getVoxel()
 
             if xyz is None:
                 return [], []
@@ -299,6 +273,9 @@ class FEATTimeSeries(VoxelTimeSeries):
         self.__evTs        = [None] * numEVs
         self.__peTs        = [None] * numEVs
         self.__copeTs      = [None] * numCOPEs
+
+        if not self.overlay.hasStats():
+            self.plotFullModelFit = False
         
         self.addListener('plotFullModelFit',
                          self.name,
@@ -566,8 +543,9 @@ class FEATPartialFitTimeSeries(VoxelTimeSeries):
 
         See the :meth:`.FEATImage.partialFit` method.
         """
-
-        coords = self.getVoxel()
+        opts   = self.displayCtx.getOpts(self.overlay)
+        coords = opts.getVoxel()
+        
         if coords is None:
             return [], []
         
@@ -654,7 +632,9 @@ class FEATResidualTimeSeries(VoxelTimeSeries):
     
     def getData(self):
         """Returns the residuals for the current voxel. """
-        voxel = self.getVoxel()
+
+        opts  = self.displayCtx.getOpts(self.overlay)
+        voxel = opts.getVoxel()
         
         if voxel is None:
             return [], []
@@ -734,7 +714,8 @@ class FEATModelFitTimeSeries(VoxelTimeSeries):
     def getData(self):
         """Returns the FEAT model fit at the current voxel. """
 
-        voxel    = self.getVoxel()
+        opts     = self.displayCtx.getOpts(self.overlay)
+        voxel    = opts.getVoxel()
         fitType  = self.fitType
         contrast = self.contrast 
 
@@ -750,7 +731,7 @@ class MelodicTimeSeries(TimeSeries):
     """A :class:`.TimeSeries` class which encapsulates the time course for
     one component of a :class:`.MelodicImage`. The :meth:`getData` method
     returns the time course of the component specified by the current
-    :class:`.ImageOpts.volume`.
+    :class:`.Nifti1Opts.volume`.
     """
 
     def __init__(self, tsPanel, overlay, displayCtx):
@@ -767,7 +748,7 @@ class MelodicTimeSeries(TimeSeries):
 
     def getComponent(self):
         """Returns the index (starting from 0) of the current Melodic
-        component, as dictated by the :class:`.ImageOpts.volume` property.
+        component, as dictated by the :class:`.Nifti1Opts.volume` property.
         """
         opts = self.displayCtx.getOpts(self.overlay)
         return opts.volume 

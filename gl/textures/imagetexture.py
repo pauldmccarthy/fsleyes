@@ -16,6 +16,9 @@ import numpy     as np
 import OpenGL.GL as gl
 
 import fsl.utils.transform     as transform
+import fsl.utils.status        as status
+import fsl.utils.async         as async
+import fsl.utils.notifier      as notifier
 import fsl.fsleyes.gl.routines as glroutines
 
 import texture
@@ -24,7 +27,7 @@ import texture
 log = logging.getLogger(__name__)
 
 
-class ImageTexture(texture.Texture):
+class ImageTexture(texture.Texture, notifier.Notifier):
     """The ``ImageTexture`` class contains the logic required to create and
     manage a 3D texture which represents a :class:`.Image` instance.
 
@@ -45,7 +48,18 @@ class ImageTexture(texture.Texture):
        setResolution
        setVolume
        setNormalise
+
+
+    When an ``ImageTexture`` is created, and when its settings are changed, it
+    needs to prepare the image data to be passed to OpenGL - for large images,
+    this can be a time consuming process, so this is performed on a separate
+    thread (using the :mod:`.async` module). The :meth:`ready` method returns
+    ``True`` or ``False`` to indicate whether the ``ImageTexture`` can be used.
+    Furthermore, the ``ImageTexture`` class derives from :class:`.Notifier`,
+    so listeners can register to be notified when an ``ImageTexture`` is ready
+    to be used.
     """
+
     
     def __init__(self,
                  name,                 
@@ -53,7 +67,10 @@ class ImageTexture(texture.Texture):
                  nvals=1,
                  normalise=False,
                  prefilter=None,
-                 interp=gl.GL_NEAREST):
+                 interp=gl.GL_NEAREST,
+                 resolution=None,
+                 volume=None,
+                 notify=True):
         """Create an ``ImageTexture``. A listener is added to the
         :attr:`.Image.data` property, so that the texture data can be
         refreshed whenever the image data changes - see the
@@ -74,6 +91,7 @@ class ImageTexture(texture.Texture):
                         pre-processing on the data before it is copied to the 
                         GPU - see the :meth:`__prepareTextureData` method.
 
+        :arg notify:    Passed to the initial call to :meth:`refresh`.
         """
 
         texture.Texture.__init__(self, name, 3)
@@ -86,31 +104,37 @@ class ImageTexture(texture.Texture):
                                'size {} requested for '
                                'image shape {}'.format(nvals, image.shape))
 
+        self.__name       = '{}_{}'.format(type(self).__name__, id(self)) 
         self.image        = image
         self.__nvals      = nvals
+
+        # All of these texture settings
+        # are updated in the set method,
+        # called below.
+        self.__prefilter  = None
         self.__interp     = None
         self.__resolution = None
         self.__volume     = None
         self.__normalise  = None
-        self.__prefilter  = prefilter
-        # The __prefilter attribute is needed
-        # by the __imageDataChanged method,
-        # so we set it above. The other
-        # attributes are configured in the
-        # call to the set method, below.
 
-        self.__name = '{}_{}'.format(type(self).__name__, id(self))
-        self.image.addListener('data',
-                               self.__name,
-                               lambda *a: self.__imageDataChanged(),
-                               weak=False)
+        # These attributes are modified
+        # in the refresh method (which is
+        # called via the set method below). 
+        self.__dataMin       = None
+        self.__dataMax       = None
+        self.__ready         = False
+        self.__refreshThread = None
 
-        self.__imageDataChanged(False)
+        self.image.addListener('data', self.__name, self.refresh)
+
         self.set(interp=interp,
                  prefilter=prefilter,
-                 resolution=None,
-                 volume=None,
-                 normalise=normalise)
+                 resolution=resolution,
+                 volume=volume,
+                 normalise=normalise,
+                 refresh=False)
+        
+        self.__refresh(notify=notify)
 
 
     def destroy(self):
@@ -121,6 +145,21 @@ class ImageTexture(texture.Texture):
 
         texture.Texture.destroy(self)
         self.image.removeListener('data', self.__name)
+
+        
+    def ready(self):
+        """Returns ``True`` if this ``ImageTexture`` is ready to be used,
+        ``False`` otherwise.
+        """
+        return self.__ready
+
+
+    def refreshThread(self):
+        """If this ``ImageTexture`` is in the process of being refreshed
+        on another thread, this method returns a reference to the ``Thread``
+        object. Otherwise, this method returns ``None``.
+        """
+        return self.__refreshThread
 
 
     def setInterp(self, interp):
@@ -162,34 +201,42 @@ class ImageTexture(texture.Texture):
         """Set any parameters on this ``ImageTexture``. Valid keyword
         arguments are:
 
-        ============== ==========================
+        ============== =======================================================
         ``interp``     See :meth:`setInterp`.
         ``prefilter``  See :meth:`setPrefilter`.
         ``resolution`` See :meth:`setResolution`.
         ``volume``     See :meth:`setVolume`.
         ``normalise``  See :meth:`setNormalise`.
-        ============== ==========================
+        ``refresh``    If ``True`` (the default), the :meth:`refresh` function
+                       is called (but only if a setting has changed).
+        ``notify``     Passed through to the :meth:`refresh` method.
+        ============== =======================================================
+
+        :returns: ``True`` if any settings have changed and the
+                  ``ImageTexture`` is to be refreshed , ``False`` otherwise.
         """
         interp     = kwargs.get('interp',     self.__interp)
         prefilter  = kwargs.get('prefilter',  self.__prefilter)
         resolution = kwargs.get('resolution', self.__resolution)
         volume     = kwargs.get('volume',     self.__volume)
         normalise  = kwargs.get('normalise',  self.__normalise)
+        refresh    = kwargs.get('refresh',    True)
+        notify     = kwargs.get('notify',     True)
 
-        changed = (interp     != self.__interp     or
-                   prefilter  != self.__prefilter  or
-                   resolution != self.__resolution or
-                   volume     != self.__volume     or
-                   normalise  != self.__normalise)
+        changed = {'interp'     : interp     != self.__interp,
+                   'prefilter'  : prefilter  != self.__prefilter,
+                   'resolution' : resolution != self.__resolution,
+                   'volume'     : volume     != self.__volume,
+                   'normalise'  : normalise  != self.__normalise}
 
-        if not changed:
-            return
-        
+        if not any(changed.values()):
+            return False
+
         self.__interp     = interp
         self.__prefilter  = prefilter
         self.__resolution = resolution
         self.__volume     = volume
-            
+ 
         # If the data is of a type which cannot be
         # stored natively as an OpenGL texture, the
         # data is cast to a standard type, and
@@ -201,98 +248,169 @@ class ImageTexture(texture.Texture):
                                                       np.uint16,
                                                       np.int16)
 
-        if prefilter != self.__prefilter:
-            self.__imageDataChanged(False)
- 
-        self.refresh()
-
-        
-    def refresh(self, *a):
-        """(Re-)generates the OpenGL texture used to store the image data.
-        """
-
-        self.__determineTextureType()
-        data = self.__prepareTextureData()
-
-        # It is assumed that, for textures with more than one
-        # value per voxel (e.g. RGB textures), the data is
-        # arranged accordingly, i.e. with the voxel value
-        # dimension the fastest changing
-        if len(data.shape) == 4: self.textureShape = data.shape[1:]
-        else:                    self.textureShape = data.shape
-
-        log.debug('Refreshing 3D texture (id {}) for '
-                  '{} (data shape: {})'.format(
-                      self.getTextureHandle(),
-                      self.getTextureName(),
-                      self.textureShape))
-
-        # The image data is flattened, with fortran dimension
-        # ordering, so the data, as stored on the GPU, has its
-        # first dimension as the fastest changing.
-        data = data.ravel(order='F')
-
-        # Enable storage of tightly packed data of any size (i.e.
-        # our texture shape does not have to be divisible by 4).
-        gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
-        gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
-
-        self.bindTexture()
-
-        # set interpolation routine
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_TEXTURE_MAG_FILTER,
-                           self.__interp)
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_TEXTURE_MIN_FILTER,
-                           self.__interp)
-
-        # Clamp texture borders to the edge
-        # values - it is the responsibility
-        # of the rendering logic to not draw
-        # anything outside of the image space
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_TEXTURE_WRAP_S,
-                           gl.GL_CLAMP_TO_EDGE)
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_TEXTURE_WRAP_T,
-                           gl.GL_CLAMP_TO_EDGE)
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_TEXTURE_WRAP_R,
-                           gl.GL_CLAMP_TO_EDGE)
-
-        # create the texture according to
-        # the format determined by the
-        # _determineTextureType method.
-        gl.glTexImage3D(gl.GL_TEXTURE_3D,
-                        0,
-                        self.texIntFmt,
-                        self.textureShape[0],
-                        self.textureShape[1],
-                        self.textureShape[2],
-                        0,
-                        self.texFmt,
-                        self.texDtype,
-                        data)
-
-        self.unbindTexture()
-    
-
-    def __imageDataChanged(self, refresh=True):
-        """Called when the :attr:`.Image.data` property changes. Refreshes
-        the texture data accordingly.
-        """
-
-        data  = self.image.data
-
-        if self.__prefilter is not None:
-            data = self.__prefilter(data)
-        
-        self.__dataMin  = float(np.nanmin(data))
-        self.__dataMax  = float(np.nanmax(data))
+        refreshRange =      changed['prefilter']
+        refreshData  = any((changed['prefilter'],
+                            changed['resolution'],
+                            changed['volume'],
+                            changed['normalise']))
 
         if refresh:
-            self.refresh()
+            self.refresh(refreshData=refreshData,
+                         refreshRange=refreshRange,
+                         notify=notify)
+        
+        return True
+
+        
+    def refresh(self, *args, **kwargs):
+        """(Re-)generates the OpenGL texture used to store the image data. 
+
+        .. note:: This method is a wrapper around the :meth:`__refresh` method,
+                  which does the real work, and which is not intended to be
+                  called from outside the ``ImageTexture`` class.
+        """
+
+        # The texture is already
+        # being refreshed - ignore
+        if not self.__ready:
+            return
+
+        self.__refresh(*args, **kwargs)
+        
+
+    def __refresh(self, *args, **kwargs):
+        """(Re-)generates the OpenGL texture used to store the image data.
+        
+        :arg refreshData:  If ``True`` (the default), the data is re-sampled.
+        :arg refreshRange: If ``True`` (the default), the data range is
+                           re-calculated.
+
+        :arg notify:       If ``True`` (the default), a notification is
+                           triggered via the :class:`.Notifier` base-class,
+                           when ``ImageTexture`` has been refreshed, and is
+                           ready to use. Otherwise, the notification is
+                           suppressed.
+
+        .. note:: The texture data is generated on a separate thread, using
+                  the :func:`.async.run` function. 
+        """
+
+        refreshData  = kwargs.get('refreshData',  True)
+        refreshRange = kwargs.get('refreshRange', True)
+        notify       = kwargs.get('notify',       True)
+
+        self.__ready = False
+
+        # This can take a long time for large images, so we
+        # do it in a separate thread using the async module.
+        def genData():
+
+            if self.__prefilter is None:
+                self.__dataMin = self.image.dataRange.xlo
+                self.__dataMax = self.image.dataRange.xhi
+                
+            elif refreshRange:
+
+                # TODO If the prefilter function is just
+                #      performing a transpose, then I don't
+                #      need to re-calculate the data range.
+                #      Can I limiit the operations that the
+                #      prefilter function can do, so I know
+                #      whether a re-calc is necessary? Or
+                #      can I somehow be told whether the
+                #      prefilter is changing the data, so
+                #      I know whether I need to re-calc here?
+                data = self.__prefilter(self.image.data)
+                
+                self.__dataMin = np.nanmin(data)
+                self.__dataMax = np.nanmax(data)
+
+            if refreshData:
+                self.__determineTextureType()
+                self.__data = self.__prepareTextureData()
+
+        # Once the genData function has finished,
+        # we'll configure the texture back on the
+        # main thread - OpenGL doesn't play nicely
+        # with multi-threading.
+        def configTexture():
+            data = self.__data
+
+            # It is assumed that, for textures with more than one
+            # value per voxel (e.g. RGB textures), the data is
+            # arranged accordingly, i.e. with the voxel value
+            # dimension the fastest changing
+            if len(data.shape) == 4: self.textureShape = data.shape[1:]
+            else:                    self.textureShape = data.shape
+
+            log.debug('Configuring 3D texture (id {}) for '
+                      '{} (data shape: {})'.format(
+                          self.getTextureHandle(),
+                          self.getTextureName(),
+                          self.textureShape))
+
+            # The image data is flattened, with fortran dimension
+            # ordering, so the data, as stored on the GPU, has its
+            # first dimension as the fastest changing.
+            data = data.ravel(order='F')
+
+            # Enable storage of tightly packed data of any size (i.e.
+            # our texture shape does not have to be divisible by 4).
+            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
+            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
+
+            self.bindTexture()
+
+            # set interpolation routine
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_TEXTURE_MAG_FILTER,
+                               self.__interp)
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_TEXTURE_MIN_FILTER,
+                               self.__interp)
+
+            # Clamp texture borders to the edge
+            # values - it is the responsibility
+            # of the rendering logic to not draw
+            # anything outside of the image space
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_TEXTURE_WRAP_S,
+                               gl.GL_CLAMP_TO_EDGE)
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_TEXTURE_WRAP_T,
+                               gl.GL_CLAMP_TO_EDGE)
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_TEXTURE_WRAP_R,
+                               gl.GL_CLAMP_TO_EDGE)
+
+            # create the texture according to
+            # the format determined by the
+            # _determineTextureType method.
+            gl.glTexImage3D(gl.GL_TEXTURE_3D,
+                            0,
+                            self.texIntFmt,
+                            self.textureShape[0],
+                            self.textureShape[1],
+                            self.textureShape[2],
+                            0,
+                            self.texFmt,
+                            self.texDtype,
+                            data)
+
+            self.unbindTexture()
+            log.debug('{}({}) is ready to use'.format(
+                type(self).__name__, self.image))
+            
+            self.__refreshThread = None
+            self.__ready         = True
+
+            if notify:
+                self.notify()
+
+        self.__refreshThread = async.run(
+            genData,
+            onFinish=configTexture,
+            name='{}.genData({})'.format(type(self).__name__, self.image))
 
 
     def __determineTextureType(self):
@@ -349,7 +467,7 @@ class ImageTexture(texture.Texture):
         ================== ==============================================
         """        
 
-        data  = self.image.data
+        data = self.image.data
 
         if self.__prefilter is not None:
             data = self.__prefilter(data)
@@ -498,6 +616,9 @@ class ImageTexture(texture.Texture):
             be used as-is).
         """
 
+        status.update('Preparing data for image {} - this may '
+                      'take some time ...'.format(self.image.name), None)
+
         image = self.image
         data  = image.data
         dtype = data.dtype
@@ -531,5 +652,8 @@ class ImageTexture(texture.Texture):
         elif dtype == np.int8:   data = np.array(data + 128,   dtype=np.uint8)
         elif dtype == np.uint16: pass
         elif dtype == np.int16:  data = np.array(data + 32768, dtype=np.uint16)
+
+        status.update('Data preparation for {} '
+                      'complete.'.format(self.image.name))
 
         return data

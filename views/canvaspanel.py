@@ -12,7 +12,6 @@ class for all panels which display overlays using ``OpenGL``.
 import os
 import os.path as op
 import logging
-import collections
 
 import wx
 
@@ -21,23 +20,28 @@ import matplotlib.image as mplimg
 
 import props
 
-import fsl.fsleyes.fsleyes_parseargs              as fsleyes_parseargs
-import fsl.utils.dialog                           as fsldlg
-import fsl.utils.settings                         as fslsettings
-import fsl.data.image                             as fslimage
-import fsl.data.strings                           as strings
-import fsl.fsleyes.displaycontext                 as displayctx
-import fsl.fsleyes.controls.overlaylistpanel      as overlaylistpanel
-import fsl.fsleyes.controls.overlayinfopanel      as overlayinfopanel
-import fsl.fsleyes.controls.atlaspanel            as atlaspanel
-import fsl.fsleyes.controls.overlaydisplaytoolbar as overlaydisplaytoolbar
-import fsl.fsleyes.controls.locationpanel         as locationpanel
-import fsl.fsleyes.controls.clusterpanel          as clusterpanel
-import fsl.fsleyes.controls.lookuptablepanel      as lookuptablepanel
-import fsl.fsleyes.controls.shellpanel            as shellpanel
-
-import                                               colourbarpanel
-import                                               viewpanel
+import fsl.fsleyes.fsleyes_parseargs                   as fsleyes_parseargs
+import fsl.utils.dialog                                as fsldlg
+import fsl.utils.async                                 as async
+import fsl.utils.status                                as status
+import fsl.utils.settings                              as fslsettings
+import fsl.data.image                                  as fslimage
+import fsl.data.strings                                as strings
+import fsl.fsleyes.actions                             as actions
+import fsl.fsleyes.displaycontext                      as displayctx
+import fsl.fsleyes.controls.overlaylistpanel           as overlaylistpanel
+import fsl.fsleyes.controls.overlayinfopanel           as overlayinfopanel
+import fsl.fsleyes.controls.atlaspanel                 as atlaspanel
+import fsl.fsleyes.controls.overlaydisplaytoolbar      as overlaydisplaytoolbar
+import fsl.fsleyes.controls.overlaydisplaypanel        as overlaydisplaypanel
+import fsl.fsleyes.controls.canvassettingspanel        as canvassettingspanel
+import fsl.fsleyes.controls.locationpanel              as locationpanel
+import fsl.fsleyes.controls.clusterpanel               as clusterpanel
+import fsl.fsleyes.controls.lookuptablepanel           as lookuptablepanel
+import fsl.fsleyes.controls.melodicclassificationpanel as melclasspanel
+import fsl.fsleyes.controls.shellpanel                 as shellpanel
+import                                                    colourbarpanel
+import                                                    viewpanel
 
 
 log = logging.getLogger(__name__)
@@ -80,33 +84,24 @@ class CanvasPanel(viewpanel.ViewPanel):
 
 
     The following actions are available through a ``CanvasPanel`` (see
-    :class:`.ActionProvider`). They toggle a range of
+    the :mod:`.actions` module). They toggle a range of
     :mod:`control <.controls>` panels:
-    
-    
-    =========================== ===========================================
-    ``toggleOverlayList``       Toggles an :class:`.OverlayListPanel`.
-    ``toggleOverlayInfo``       Toggles an :class:`.OverlayInfoPanel`.
-    ``toggleAtlasPanel``        Toggles an :class:`.AtlasPanel`.
-    ``toggleDisplayProperties`` Toggles an :class:`.OverlayDisplayToolBar`.
-    ``toggleLocationPanel``     Toggles a :class:`.LocationPanel`.
-    ``toggleClusterPanel``      Toggles a :class:`.ClusterPanel`.
-    ``toggleLookupTablePanel``  Toggles a :class:`.LookupTablePanel`.
-    ``toggleShell``             Toggles a :class:`.ShellPanel`.
-    =========================== ===========================================
-
-    
-    A couple of other actions are also provided, with the same names as their
-    corresponding methods:
 
     .. autosummary::
        :nosignatures:
     
        screenshot
        showCommandLineArgs
-
-    Sub-classes can add their own actions via the ``extraActions`` constructor
-    argument.
+       toggleOverlayList
+       toggleOverlayInfo
+       toggleAtlasPanel
+       toggleDisplayToolBar
+       toggleCanvasSettingsPanel
+       toggleLocationPanel
+       toggleClusterPanel
+       toggleLookupTablePanel
+       toggleClassificationPanel
+       toggleShell
 
 
     .. _canvaspanel-adding-content:
@@ -220,12 +215,7 @@ class CanvasPanel(viewpanel.ViewPanel):
     """
     
 
-    def __init__(self,
-                 parent,
-                 overlayList,
-                 displayCtx,
-                 sceneOpts,
-                 extraActions=None):
+    def __init__(self, parent, overlayList, displayCtx, sceneOpts):
         """Create a ``CanvasPanel``.
 
         :arg parent:       The :mod:`wx` parent object.
@@ -237,51 +227,9 @@ class CanvasPanel(viewpanel.ViewPanel):
         :arg sceneOpts:    A :class:`.SceneOpts` instance for this
                            ``CanvasPanel`` - must be created by
                            sub-classes.
-        
-        :arg extraActions: A dictionary of ``{name : function}`` mappings,
-                           containing extra actions defined by sub-classes.
         """
 
-        if extraActions is None:
-            extraActions = {}
-
-        actionz = [
-            ('screenshot',              self.screenshot),
-            ('showCommandLineArgs',     self.showCommandLineArgs),
-            ('toggleOverlayList',       lambda *a: self.togglePanel(
-                overlaylistpanel.OverlayListPanel,
-                location=wx.BOTTOM)),
-            ('toggleOverlayInfo',       lambda *a: self.togglePanel(
-                overlayinfopanel.OverlayInfoPanel,
-                location=wx.RIGHT)), 
-            ('toggleAtlasPanel',        lambda *a: self.togglePanel(
-                atlaspanel.AtlasPanel,
-                location=wx.BOTTOM)),
-            ('toggleDisplayProperties', lambda *a: self.togglePanel(
-                overlaydisplaytoolbar.OverlayDisplayToolBar,
-                viewPanel=self)),
-            ('toggleLocationPanel',     lambda *a: self.togglePanel(
-                locationpanel.LocationPanel,
-                location=wx.BOTTOM)),
-            ('toggleClusterPanel',      lambda *a: self.togglePanel(
-                clusterpanel.ClusterPanel,
-                location=wx.TOP)), 
-            ('toggleLookupTablePanel',  lambda *a: self.togglePanel(
-                lookuptablepanel.LookupTablePanel,
-                location=wx.TOP))]
-
-        actionz += extraActions.items()
-
-        actionz += [
-            ('toggleShell', lambda *a: self.togglePanel(
-                shellpanel.ShellPanel,
-                self.getSceneOptions(),
-                location=wx.BOTTOM))]
-        
-        actionz = collections.OrderedDict(actionz)
-        
-        viewpanel.ViewPanel.__init__(
-            self, parent, overlayList, displayCtx, actionz)
+        viewpanel.ViewPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__opts = sceneOpts
         
@@ -348,20 +296,118 @@ class CanvasPanel(viewpanel.ViewPanel):
             
         viewpanel.ViewPanel.destroy(self)
 
-    
-    def screenshot(self, *a):
+
+    @actions.action
+    def screenshot(self):
         """Takes a screenshot of the currently displayed scene on this
         ``CanvasPanel``. See the :func:`_screenshot` function.
         """
         _screenshot(self._overlayList, self._displayCtx, self)
 
 
-    def showCommandLineArgs(self, *a):
+    @actions.action
+    def showCommandLineArgs(self):
         """Shows the command line arguments which can be used to re-create
         the currently displayed scene. See the :func:`_showCommandLineArgs`
         function.
         """
         _showCommandLineArgs(self._overlayList, self._displayCtx, self)
+
+        
+    @actions.toggleControlAction(overlaylistpanel.OverlayListPanel)
+    def toggleOverlayList(self):
+        """Toggles an :class:`.OverlayListPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(overlaylistpanel.OverlayListPanel, location=wx.BOTTOM)
+
+    
+    @actions.toggleControlAction(overlayinfopanel.OverlayInfoPanel)
+    def toggleOverlayInfo(self, floatPane=False):
+        """Toggles an :class:`.OverlayInfoPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """        
+        self.togglePanel(overlayinfopanel.OverlayInfoPanel,
+                         location=wx.LEFT,
+                         floatPane=floatPane)
+    
+
+    @actions.toggleControlAction(atlaspanel.AtlasPanel)
+    def toggleAtlasPanel(self):
+        """Toggles an :class:`.AtlasPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(atlaspanel.AtlasPanel, location=wx.BOTTOM) 
+
+
+    @actions.toggleControlAction(overlaydisplaytoolbar.OverlayDisplayToolBar)
+    def toggleDisplayToolBar(self):
+        """Toggles an :class:`.OverlayDisplayToolBar`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """ 
+        self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar,
+                         viewPanel=self)
+
+        
+    @actions.toggleControlAction(overlaydisplaypanel.OverlayDisplayPanel)
+    def toggleDisplayPanel(self, floatPane=False):
+        """Toggles an :class:`.OverlayDisplayPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(overlaydisplaypanel.OverlayDisplayPanel,
+                         floatPane=floatPane,
+                         location=wx.LEFT) 
+        
+
+    @actions.toggleControlAction(canvassettingspanel.CanvasSettingsPanel)
+    def toggleCanvasSettingsPanel(self, floatPane=False):
+        """Toggles a :class:`.CanvasSettingsPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(canvassettingspanel.CanvasSettingsPanel,
+                         canvasPanel=self, 
+                         floatPane=floatPane,
+                         location=wx.LEFT) 
+
+        
+    @actions.toggleControlAction(locationpanel.LocationPanel)
+    def toggleLocationPanel(self):
+        """Toggles a :class:`.LocationPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(locationpanel.LocationPanel, location=wx.BOTTOM) 
+
+
+    @actions.toggleControlAction(clusterpanel.ClusterPanel)
+    def toggleClusterPanel(self):
+        """Toggles a :class:`.ClusterPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """ 
+        self.togglePanel(clusterpanel.ClusterPanel, location=wx.TOP) 
+
+
+    @actions.toggleControlAction(lookuptablepanel.LookupTablePanel)
+    def toggleLookupTablePanel(self):
+        """Toggles a :class:`.LookupTablePanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """ 
+        self.togglePanel(lookuptablepanel.LookupTablePanel, location=wx.TOP)
+
+    @actions.toggleControlAction(melclasspanel.MelodicClassificationPanel)
+    def toggleClassificationPanel(self):
+        """Toggles a :class:`.MelodicClassificationPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """ 
+        self.togglePanel(melclasspanel.MelodicClassificationPanel,
+                         location=wx.RIGHT)
+
+
+    @actions.toggleControlAction(shellpanel.ShellPanel)
+    def toggleShell(self):
+        """Toggles a :class:`.ShellPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(shellpanel.ShellPanel, self, location=wx.BOTTOM) 
 
 
     def getSceneOptions(self):
@@ -529,7 +575,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         If the currently selected overlay (see
         :attr:`.DisplayContext.selectedOverlay`) is a 4D :class:`.Image`
         being displayed as a ``volume`` (see the :class:`.VolumeOpts` class),
-        the :attr:`.ImageOpts.volume` property is incremented.
+        the :attr:`.Nifti1Opts.volume` property is incremented.
         """
 
         overlay = self._displayCtx.getSelectedOverlay()
@@ -537,10 +583,10 @@ class CanvasPanel(viewpanel.ViewPanel):
         if overlay is None:
             return
 
-        if not isinstance(overlay, fslimage.Image):
+        if not isinstance(overlay, fslimage.Nifti1):
             return
 
-        if not overlay.is4DImage():
+        if len(overlay.shape) != 4:
             return
 
         opts = self._displayCtx.getOpts(overlay)
@@ -643,24 +689,8 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
     :arg canvas:      A :class:`CanvasPanel` instance. 
     """
 
-    def relativePosition(child, ancestor):
-        """Calculates the position of the given ``child``, relative
-        to its ``ancestor``. We use this to locate all GL canvases
-        relative to the canvas panel container, as they are not
-        necessarily direct children of the container.
-        """
-
-        if child.GetParent() is ancestor:
-            return child.GetPosition().Get()
-
-        xpos, ypos = child.GetPosition().Get()
-        xoff, yoff = relativePosition(child.GetParent(), ancestor)
-
-        return xpos + xoff, ypos + yoff
-    
     # Ask the user where they want 
     # the screenshot to be saved
-
     fromDir = fslsettings.read('canvasPanelScreenshotLastDir',
                                default=os.getcwd())
     
@@ -680,7 +710,6 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
     dlg.Close()
     dlg.Destroy()
     wx.Yield()
-
 
     def doScreenshot():
 
@@ -709,36 +738,45 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
         # direct parent of the colour bar
         # canvas, and an ancestor of the
         # other GL canvases
-        parent        = canvasPanel.getContainerPanel()
-        width, height = parent.GetClientSize().Get()
-        windowDC      = wx.WindowDC(parent)
-        memoryDC      = wx.MemoryDC()
-        bmp           = wx.EmptyBitmap(width, height)
+        parent                  = canvasPanel.getContainerPanel()
+        totalWidth, totalHeight = parent.GetClientSize().Get()
+        absPosx,    absPosy     = parent.GetScreenPosition()
+        windowDC                = wx.WindowDC(parent)
+        memoryDC                = wx.MemoryDC()
+        bmp                     = wx.EmptyBitmap(totalWidth, totalHeight)
 
-        wx.Yield()
-
-        # Copy the contents of the canvas container
-        # to the bitmap
+        # Copy the contents of the canvas
+        # container to the bitmap
         memoryDC.SelectObject(bmp)
         memoryDC.Blit(
             0,
             0,
-            width,
-            height,
+            totalWidth,
+            totalHeight,
             windowDC,
             0,
             0)
         memoryDC.SelectObject(wx.NullBitmap)
 
-        # Make a H*W*4 bitmap array 
-        data = np.zeros((height, width, 4), dtype=np.uint8)
+        # Make a H*W*4 bitmap array, and copy
+        # the container screen grab into it.
+        # We initialise the bitmap to the
+        # current background colour, due to
+        # some sizing issues that will be
+        # revealed below.
+        opts     = canvasPanel.getSceneOptions()
+        bgColour = np.array(opts.bgColour) * 255
+        
+        data          = np.zeros((totalHeight, totalWidth, 4), dtype=np.uint8)
+        data[:, :, :] = bgColour
+ 
         rgb  = bmp.ConvertToImage().GetData()
         rgb  = np.fromstring(rgb, dtype=np.uint8)
 
         log.debug('Creating bitmap {} * {} for {} screenshot'.format(
-            width, height, type(canvasPanel).__name__))
-
-        data[:, :, :3] = rgb.reshape(height, width, 3)
+            totalWidth, totalHeight, type(canvasPanel).__name__))
+        
+        data[:, :, :3] = rgb.reshape(totalHeight, totalWidth, 3)
 
         # Patch in bitmaps for every GL canvas
         for glCanvas in glCanvases:
@@ -753,27 +791,58 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
             if not glCanvas.IsShown():
                 continue
 
-            pos   = relativePosition(glCanvas, parent)
-            size  = glCanvas.GetClientSize().Get()
+            width, height = glCanvas.GetClientSize().Get()
+            posx, posy    = glCanvas.GetScreenPosition()
 
-            xstart = pos[0]
-            ystart = pos[1]
-            xend   = xstart + size[0]
-            yend   = ystart + size[1]
+            posx -= absPosx
+            posy -= absPosy
+
+            log.debug('Canvas {} position: ({}, {}); size: ({}, {})'.format( 
+                type(glCanvas).__name__, posx, posy, width, height)) 
+
+            xstart = posx
+            ystart = posy
+            xend   = xstart + width
+            yend   = ystart + height
 
             bmp = glCanvas.getBitmap()
 
-            # There seems to ber a size/position miscalculation
-            # somewhere, such that if the last canvas is on the
-            # hard edge of the parent, the canvas size spills
-            # over the parent size byt a couple of pixels.. If
-            # this occurs, I truncate the canvas bitmap accordingly.
-            if xend > width or yend > height:
-                xend = width
-                yend = height
-                w    = xend - xstart
-                h    = yend - ystart
-                bmp  = bmp[:h, :w, :]
+            # Under OSX, there seems to be a size/position
+            # miscalculation  somewhere, such that if the last
+            # canvas is on the hard edge of the parent, the
+            # canvas size spills over the parent size by a
+            # couple of pixels. If this occurs, I re-size the
+            # final bitmap accordingly.
+            #
+            # n.b. This is why I initialise the bitmap array
+            #      to the canvas panel background colour.
+            if xend > totalWidth:
+                
+                oldWidth    = totalWidth
+                totalWidth  = xend
+                newData     = np.zeros((totalHeight, totalWidth, 4),
+                                       dtype=np.uint8)
+                
+                newData[:, :, :]         = bgColour
+                newData[:, :oldWidth, :] = data
+                data                     = newData
+
+                log.debug('Adjusted bitmap width: {} -> {}'.format(
+                    oldWidth, totalWidth))
+                
+            if yend > totalHeight:
+                
+                oldHeight   = totalHeight
+                totalHeight = yend
+                newData     = np.zeros((totalHeight, totalWidth, 4),
+                                       dtype=np.uint8)
+                
+                newData[:, :, :]          = bgColour
+                newData[:oldHeight, :, :] = data
+                data                      = newData
+
+                log.debug('Adjusted bitmap height: {} -> {}'.format(
+                    oldHeight, totalHeight)) 
 
             log.debug('Patching {} in at [{} - {}], [{} - {}]'.format(
                 type(glCanvas).__name__, xstart, xend, ystart, yend))
@@ -784,9 +853,8 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
 
         mplimg.imsave(filename, data)
 
-    fsldlg.ProcessingDialog(
-        canvasPanel.GetTopLevelParent(),
-        strings.messages['CanvasPanel.screenshot.pleaseWait'],
-        doScreenshot).Run(mainThread=True)
+    async.idle(doScreenshot)
+    status.update(
+        strings.messages['CanvasPanel.screenshot.pleaseWait'].format(filename))
 
     fslsettings.write('canvasPanelScreenshotLastDir', op.dirname(filename))

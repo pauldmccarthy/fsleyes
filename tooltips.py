@@ -14,10 +14,23 @@ into the following categories:
  :data:`actions`    Tooltips for :class:`.ActionProvider` actions.
  :data:`misc`       Tooltips for everything else.
  ================== ================================================
+
+The :func:`initTooltips` function initialises some parameters controlling
+tooltip display. It is called by the :class:`.FSLEyesFrame` upon creation.
 """
 
 
 from fsl.utils.typedict import TypeDict
+
+
+def initTooltips():
+    """Sets some parameters controlling tooltip display. """
+    import wx
+    wx.ToolTip.Enable(     True)
+    wx.ToolTip.SetDelay(   1500)
+    wx.ToolTip.SetMaxWidth(300)
+    wx.ToolTip.SetReshow(  3000)
+    wx.ToolTip.SetAutoPop( 5000)
 
 
 properties = TypeDict({
@@ -43,16 +56,16 @@ properties = TypeDict({
 
     # Overlay DisplayOpts
 
-    'ImageOpts.volume'     : 'The volume number (for 4D images).',
-    'ImageOpts.resolution' : 'Spatial display resolution, in mm.',
-    'ImageOpts.transform'  : 'The affine transformation matrix to apply '
-                             'to this image. You can choose to display '
-                             'the image without any transformation (as if '
-                             'the image voxels are 1mm isotropic); or you '
-                             'can choose to scale the voxels by the pixdim '
-                             'values in the NIFTI header; or you can choose '
-                             'to apply the affine transformation as defined '
-                             'in the NIFTI header.',
+    'Nifti1Opts.volume'     : 'The volume number (for 4D images).',
+    'Nifti1Opts.resolution' : 'Spatial display resolution, in mm.',
+    'Nifti1Opts.transform'  : 'The affine transformation matrix to apply '
+                              'to this image. You can choose to display '
+                              'the image without any transformation (as if '
+                              'the image voxels are 1mm isotropic); or you '
+                              'can choose to scale the voxels by the pixdim '
+                              'values in the NIFTI header; or you can choose '
+                              'to apply the affine transformation as defined '
+                              'in the NIFTI header.',
 
     'VolumeOpts.displayRange'    : 'Data display range - the low value '
                                    'corresponds to the low colour, and the '
@@ -68,6 +81,11 @@ properties = TypeDict({
                                    'This option is useful for displaying '
                                    'statistic images.',
     'VolumeOpts.cmap'            : 'The colour map to use.',
+    'VolumeOpts.negativeCmap'    : 'The colour map to use for negative '
+                                   'values.',
+    'VolumeOpts.useNegativeCmap' : 'Enable the negative colour map - '
+                                   'this allows positive and negative '
+                                   'values to be coloured independently.',
     'VolumeOpts.interpolation'   : 'Interpolate the image data for display '
                                    'purposes. You can choose no  '
                                    'interpolation (equivalent to nearest '
@@ -102,34 +120,56 @@ properties = TypeDict({
     'VectorOpts.xColour'          : 'The colour corresponding to the X '
                                     'component of the vector - the brightness '
                                     'of the colour corresponds to the '
-                                    'magnitude of the X component',
+                                    'magnitude of the X component. This '
+                                    'option has no effect if a colour image '
+                                    'is selected.', 
     'VectorOpts.yColour'          : 'The colour corresponding to the Y '
                                     'component of the vector - the brightness '
                                     'of the colour corresponds to the '
-                                    'magnitude of the Y component.',
+                                    'magnitude of the Y component. This '
+                                    'option has no effect if a colour image '
+                                    'is selected.', 
     'VectorOpts.zColour'          : 'The colour corresponding to the Z '
                                     'component of the vector - the brightness '
                                     'of the colour corresponds to the '
-                                    'magnitude of the Z component.',
+                                    'magnitude of the Z component. This '
+                                    'option has no effect if a colour image '
+                                    'is selected.',
     'VectorOpts.suppressX'        : 'Ignore the X vector component when '
-                                    'colouring voxels.',
+                                    'colouring voxels. This option has no '
+                                    'effect if a colour image is selected.', 
     'VectorOpts.suppressY'        : 'Ignore the Y vector component when '
-                                    'colouring voxels.',
+                                    'colouring voxels. This option has no '
+                                    'effect if a colour image is selected.', 
     'VectorOpts.suppressZ'        : 'Ignore the Z vector component when '
-                                    'colouring voxels.',
-    'VectorOpts.modulate'         : 'Modulate the vector colours by another '
-                                    'image. The image selected here is '
-                                    'normalised to lie in the range (0, 1), '
-                                    'and the magnitude of each vector is '
-                                    'scaled by the corresponding modulation '
-                                    'value before it is coloured. The '
-                                    'modulation image must have the same '
+                                    'colouring voxels. This option has no '
+                                    'effect if a colour image is selected.', 
+    'VectorOpts.modulateImage'    : 'Modulate the vector colour brightness by '
+                                    'another image. The image selected here '
+                                    'is normalised to lie in the range (0, '
+                                    '1), and the brightness of each vector '
+                                    'colour is scaled by the corresponding '
+                                    'modulation value before it is coloured. '
+                                    'The modulation image must have the same '
                                     'voxel dimensions as the vector image.',
-    'VectorOpts.modThreshold'     : 'Vector values which have a corresponding '
-                                    'modulation value that is less than this '
-                                    'threshold are not displayed. The '
-                                    'threshold is a proportion of the '
-                                    'modulation image data range.',
+    'VectorOpts.clipImage'        : 'Clip vector voxels according to the '
+                                    'values in another image. Vector voxels '
+                                    'which correspond to values in the '
+                                    'clipping image that have a value less '
+                                    'than the current clipping threshold are '
+                                    'not shown. The clipping image must have '
+                                    'the same voxel dimensions as the vector '
+                                    'image. ',
+    'VectorOpts.colourImage'      : 'Colour the vectors according to the '
+                                    'values in another image, and by the '
+                                    'selected colour map. The colour image '
+                                    'must have the same voxel dimensions as '
+                                    'the vector image. ',
+    'VectorOpts.clippingRange'    : 'Vector values which have a corresponding '
+                                    'clipping image value that is outside of '
+                                    'this range are not displayed. ',
+    'VectorOpts.cmap'             : 'Colour map to use for colouring vector '
+                                    'voxels, if a colour image is selected.', 
     'LineVectorOpts.lineWidth'    : 'The width of each vector line, in '
                                     'display pixels.',
     'LineVectorOpts.directed'     : 'If unchecked, the vector data is assumed '
@@ -162,7 +202,21 @@ properties = TypeDict({
                                'setting defines the space, relative to the '
                                'reference image, in which the model '
                                'coordinates are defined.',
-    
+
+    'TensorOpts.lighting'         : 'If enabled, a simple lighting model is '
+                                    'used to highlight the tensor '
+                                    'orientations.', 
+    'TensorOpts.tensorResolution' : 'This setting controls the number of '
+                                    'vertices used to render each tensor. '
+                                    'A higher value will result in better '
+                                    'looking tensors, but may reduce ' 
+                                    'performance.' ,
+    'TensorOpts.tensorScale'      : 'By default, the tensor radii are scaled '
+                                    'the largest eigenvalue of the tensor '
+                                    'matrix, so that the largest tensor is '
+                                    'drawn to fit within a voxel. This '
+                                    'setting allows the tensor scale to be '
+                                    'adjusted.',
     # SceneOpts
 
     'SceneOpts.showCursor'         : 'Show/hide the cursor which highlights '
@@ -284,13 +338,32 @@ properties = TypeDict({
     'TimeSeriesPanel.currentLineStyle' : 'Line style of the current time '
                                          'series.', 
 
-    'HistogramPanel.autoBin'     : 'If checked, automatically calculate the '
-                                   'number of bins to use in the histogram '
-                                   'calculation.', 
-    'HistogramPanel.showCurrent' : 'Show the histogram for the currently '
-                                   'selected overlay.', 
+    'HistogramPanel.showMode'    : 'Choose which histograms to plot - '
+                                   'you can choose to plot the histogram '
+                                   'for the currently selected '
+                                   'overlay, the histograms for all '
+                                   'compatible overlays, or just those '
+                                   'that have been added to the histogram '
+                                   'list.',
     'HistogramPanel.histType'    : 'Show histogram data as raw counts, or '
                                    'as probabilities.',
+
+    'PowerSpectrumPanel.plotFrequencies'  : 'If checked, the x values '
+                                            'are transformed into frequency '
+                                            'values.',
+    'PowerSpectrumPanel.plotMelodicICs'   : 'If checked, the component power '
+                                            'spectra are plotted for Melodic '
+                                            'images. If not checked, Melodic '
+                                            'images are treated as regular 4D '
+                                            'images.',
+    'PowerSpectrumPanel.showMode'         : 'Choose which power spectra to '
+                                            'plot -  you can choose to plot '
+                                            'the power spectrum for the '
+                                            'currently selected overlay, the '
+                                            'power spectra for all compatible '
+                                            'overlays, or just those that '
+                                            'have been added to the power '
+                                            'spectra list.', 
 
     # DataSeries
 
@@ -313,6 +386,9 @@ properties = TypeDict({
     'FEATTimeSeries.plotPartial'      : 'Plot the raw data, after regression '
                                         'against the selected PE/COPE.',
 
+    'HistogramSeries.autoBin'         : 'If checked, automatically calculate '
+                                        'the number of bins to use in the '
+                                        'histogram calculation.', 
     'HistogramSeries.nbins'           : 'Number of bins to use in the '
                                         'histogram calculation (not '
                                         'applicable  if auto-binning is '
@@ -329,6 +405,12 @@ properties = TypeDict({
                                         'histogram for (4D images only).',
     'HistogramSeries.dataRange'       : 'Data range to include in the '
                                         'histogram.',
+
+
+    'PowerSpectrumSeries.varNorm'     : 'If checked, the data is demeaned and '
+                                        'normalised by its standard deviation '
+                                        'before its power spectrum is '
+                                        'calculated via a fourier transform.', 
 
     # Profiles
 
@@ -368,9 +450,12 @@ properties = TypeDict({
 
 actions = TypeDict({
     'CanvasPanel.screenshot'        : 'Take a screenshot of the current scene',
-    
-    'OrthoToolBar.more'             : 'Show more view control settings',
-    'LightBoxToolBar.more'          : 'Show more view control settings',
+    'CanvasPanel.toggleDisplayPanel' : 'Show more overlay display settings',
+    'CanvasPanel.toggleCanvasSettingsPanel' : 'Show more view '
+                                              'control settings',
+    'CanvasPanel.toggleOverlayInfo' : 'Show/hide the overlay '
+                                      'information panel',
+ 
 
     'OrthoViewProfile.resetZoom'    : 'Reset zoom level to 100%',
     'OrthoViewProfile.centreCursor' : 'Reset location to centre of scene',
@@ -388,14 +473,12 @@ actions = TypeDict({
 
     'VolumeOpts.resetDisplayRange' : 'Reset the display range '
                                      'to the data range.',
-    
-    'OverlayDisplayToolBar.more' : 'Show more overlay display settings.',
 })
 
 
 
 misc = TypeDict({
-    'PlotPanel.labels' : 'X/Y axis labels.',
-    'PlotPanel.xlim'   : 'X axis data limits.',
-    'PlotPanel.ylim'   : 'Y axis data limits.'
+    'PlotControlPanel.labels' : 'X/Y axis labels.',
+    'PlotControlPanel.xlim'   : 'X axis data limits.',
+    'PlotControlPanel.ylim'   : 'Y axis data limits.'
 })

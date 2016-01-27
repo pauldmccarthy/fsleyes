@@ -14,6 +14,7 @@ import numpy                  as np
 
 import fsl.fsleyes.gl         as fslgl
 import fsl.fsleyes.colourmaps as colourmaps
+import fsl.utils.async        as async
 import                           glvolume
 
 
@@ -47,35 +48,32 @@ class GLMask(glvolume.GLVolume):
         opts    = self.displayOpts
         name    = self.name
 
-        def shaderCompile(*a):
-            fslgl.glvolume_funcs.compileShaders(   self)
-            fslgl.glvolume_funcs.updateShaderState(self)
-            self.onUpdate() 
+        def update(*a):
+            self.notify()
         
         def shaderUpdate(*a):
-            fslgl.glvolume_funcs.updateShaderState(self)
-            self.onUpdate() 
-            
+            if self.ready():
+                if fslgl.glvolume_funcs.updateShaderState(self):
+                    self.notify() 
+
+        def shaderCompile(*a):
+            fslgl.glvolume_funcs.compileShaders(self)
+            shaderUpdate()
+
         def colourUpdate(*a):
-            self.refreshColourTexture()
-            fslgl.glvolume_funcs.updateShaderState(self)
-            self.onUpdate()
+            self.refreshColourTextures()
+            shaderUpdate()
 
         def imageRefresh(*a):
-            self.refreshImageTexture()
-            fslgl.glvolume_funcs.updateShaderState(self)
-            self.onUpdate()
+            async.wait([self.refreshImageTexture()], shaderUpdate)
 
         def imageUpdate(*a):
             volume     = opts.volume
             resolution = opts.resolution
 
             self.imageTexture.set(volume=volume, resolution=resolution)
-            
-            fslgl.glvolume_funcs.updateShaderState(self) 
-            self.onUpdate()
+            async.wait([self.refreshThread()], shaderUpdate)
 
-        display.addListener('softwareMode',  name, shaderCompile, weak=False)
         display.addListener('alpha',         name, colourUpdate,  weak=False)
         display.addListener('brightness',    name, colourUpdate,  weak=False)
         display.addListener('contrast',      name, colourUpdate,  weak=False)
@@ -84,8 +82,12 @@ class GLMask(glvolume.GLVolume):
         opts   .addListener('invert',        name, colourUpdate,  weak=False)
         opts   .addListener('volume',        name, imageUpdate,   weak=False)
         opts   .addListener('resolution',    name, imageUpdate,   weak=False)
+        opts   .addListener('transform',     name, update,        weak=False)
 
-        if opts.getParent() is not None:
+        # See comment in GLVolume.addDisplayListeners about this
+        self.__syncListenersRegistered = opts.getParent() is not None
+
+        if self.__syncListenersRegistered:
             opts.addSyncChangeListener(
                 'volume',     name, imageRefresh, weak=False)
             opts.addSyncChangeListener(
@@ -102,7 +104,6 @@ class GLMask(glvolume.GLVolume):
         opts    = self.displayOpts
         name    = self.name
         
-        display.removeListener(          'softwareMode',  name)
         display.removeListener(          'alpha',         name)
         display.removeListener(          'brightness',    name)
         display.removeListener(          'contrast',      name)
@@ -111,8 +112,9 @@ class GLMask(glvolume.GLVolume):
         opts   .removeListener(          'invert',        name)
         opts   .removeListener(          'volume',        name)
         opts   .removeListener(          'resolution',    name)
+        opts   .removeListener(          'transform',     name)
 
-        if opts.getParent() is not None:
+        if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume',     name)
             opts.removeSyncChangeListener('resolution', name)
 
@@ -125,7 +127,7 @@ class GLMask(glvolume.GLVolume):
                 not self.displayOpts.isSyncedToParent('resolution'))
 
         
-    def refreshColourTexture(self, *a):
+    def refreshColourTextures(self, *a):
         """Overrides :meth:`.GLVolume.refreshColourTexture`.
 
         Creates a colour texture which contains the current mask colour, and a

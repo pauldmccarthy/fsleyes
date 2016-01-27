@@ -15,12 +15,12 @@ import wx
 
 import numpy as np
 
-import fsl.utils.layout                           as fsllayout
-import fsl.fsleyes.gl.wxgllightboxcanvas          as lightboxcanvas
-import fsl.fsleyes.controls.lightboxtoolbar       as lightboxtoolbar
-import fsl.fsleyes.controls.overlaydisplaytoolbar as overlaydisplaytoolbar
-import fsl.fsleyes.displaycontext.lightboxopts    as lightboxopts
-import                                               canvaspanel
+import fsl.utils.layout                        as fsllayout
+import fsl.fsleyes.actions                     as actions
+import fsl.fsleyes.gl.wxgllightboxcanvas       as lightboxcanvas
+import fsl.fsleyes.controls.lightboxtoolbar    as lightboxtoolbar
+import fsl.fsleyes.displaycontext.lightboxopts as lightboxopts
+import                                            canvaspanel
 
 
 log = logging.getLogger(__name__)
@@ -47,19 +47,10 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
     The ``LightBoxPanel`` adds the following actions to those already
     provided by the :class:`.CanvasPanel`:
 
-    ========================= ========================================
-    ``toggleLightBoxToolBar`` Shows/hides a :class:`.LightBoxToolBar`.
-    ========================= ========================================
-
-    
-    When a ``LightBoxPanel`` is created, it will automatically add the
-    following control panels:
-
     .. autosummary::
        :nosignatures:
 
-       ~fsl.fsleyes.controls.lightboxtoolbar.LightBoxToolBar
-       ~fsl.fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar
+       toggleLightBoxToolBar
     """
 
 
@@ -73,17 +64,11 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         sceneOpts = lightboxopts.LightBoxOpts()
 
-        actionz = {
-            'toggleLightBoxToolBar' : lambda *a: self.togglePanel(
-                lightboxtoolbar.LightBoxToolBar, lb=self)
-        }
-
         canvaspanel.CanvasPanel.__init__(self,
                                          parent,
                                          overlayList,
                                          displayCtx,
-                                         sceneOpts,
-                                         actionz)
+                                         sceneOpts)
 
         self.__scrollbar = wx.ScrollBar(
             self.getCentrePanel(),
@@ -101,7 +86,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         self.__lbCanvas.bindProps('showGridLines',   sceneOpts)
         self.__lbCanvas.bindProps('highlightSlice',  sceneOpts)
         self.__lbCanvas.bindProps('renderMode',      sceneOpts)
-        self.__lbCanvas.bindProps('softwareMode',    sceneOpts)
         self.__lbCanvas.bindProps('resolutionLimit', sceneOpts)
 
         # Bind these properties the other way around,
@@ -166,16 +150,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         self.centrePanelLayout()
         self.initProfile()
 
-        # The ViewPanel AuiManager seems to
-        # struggle if we add these toolbars
-        # immediately, so we'll do it asynchronously
-        def addToolbars():
-            self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar,
-                             viewPanel=self)
-            self.togglePanel(lightboxtoolbar.LightBoxToolBar, lb=self)
-
-        wx.CallAfter(addToolbars)
-
 
     def destroy(self):
         """Must be called when this ``LightBoxPanel`` is closed.
@@ -191,6 +165,38 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         self.__lbCanvas.destroy()
 
         canvaspanel.CanvasPanel.destroy(self)
+
+
+    @actions.toggleControlAction(lightboxtoolbar.LightBoxToolBar)
+    def toggleLightBoxToolBar(self):
+        """Shows/hides a :class:`.LightBoxToolBar`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """        
+        self.togglePanel(lightboxtoolbar.LightBoxToolBar, lb=self)
+
+        
+    def getActions(self):
+        """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
+        :mod:`.actions` that are defined on this ``LightBoxPanel``.
+        """
+        actions = [self.screenshot,
+                   self.showCommandLineArgs,
+                   self.toggleOverlayList,
+                   self.toggleLocationPanel,
+                   self.toggleLightBoxToolBar, 
+                   self.toggleDisplayToolBar,
+                   self.toggleDisplayPanel,
+                   self.toggleCanvasSettingsPanel,
+                   self.toggleOverlayInfo,
+                   self.toggleAtlasPanel,
+                   self.toggleLookupTablePanel,
+                   self.toggleClusterPanel,
+                   self.toggleClassificationPanel,
+                   self.toggleShell]
+
+        names = [a.__name__ for a in actions]
+
+        return zip(names, actions)
 
 
     def getGLCanvases(self):
@@ -227,10 +233,10 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
     def __selectedOverlayChanged(self, *a):
         """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
 
-        If the currently selected overlay is an :class:`.Image` instance, or
+        If the currently selected overlay is a :class:`.Nifti1` instance, or
         has an associated reference image (see
         :meth:`.DisplayOpts.getReferenceImage`), a listener is registered on
-        the reference image :attr:`.ImageOpts.transform` property, so that the
+        the reference image :attr:`.Nifti1Opts.transform` property, so that the
         :meth:`__transformChanged` method will be called when it changes.
         """
 
@@ -255,11 +261,20 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                                  self._name,
                                  self.__transformChanged)
 
-        self.__transformChanged()
+        # If the current zrange is [0, 0]
+        # we'll assume that the spacing/
+        # zrange need to be initialised.
+        lbCanvas = self.__lbCanvas
+        opts     = self.getSceneOptions()
+        
+        if opts.zrange == [0.0, 0.0]:
+            
+            opts.sliceSpacing = lbCanvas.calcSliceSpacing(selectedOverlay)
+            opts.zrange       = self._displayCtx.bounds.getRange(opts.zax)
 
 
     def __transformChanged(self, *a):
-        """Called when the :attr:`.ImageOpts.transform` property for the
+        """Called when the :attr:`.Nifti1Opts.transform` property for the
         reference image of the currently selected overlay changes.
 
         Updates the :attr:`.LightBoxOpts.sliceSpacing` and
@@ -278,13 +293,12 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         loBounds = opts.bounds.getLo()
         hiBounds = opts.bounds.getHi()
 
-        if opts.transform == 'id':
-            sceneOpts.sliceSpacing = 1
-            sceneOpts.zrange.x     = (0, overlay.shape[sceneOpts.zax] - 1)
-        else:
-            sceneOpts.sliceSpacing = overlay.pixdim[sceneOpts.zax]
-            sceneOpts.zrange.x     = (loBounds[sceneOpts.zax],
-                                      hiBounds[sceneOpts.zax])
+        # Reset the spacing/zrange. Not
+        # sure if this is the best idea,
+        # but it's here for the time being.
+        sceneOpts.sliceSpacing = self.__lbCanvas.calcSliceSpacing(overlay)
+        sceneOpts.zrange.x     = (loBounds[sceneOpts.zax],
+                                  hiBounds[sceneOpts.zax])
 
         self.__onResize()
 

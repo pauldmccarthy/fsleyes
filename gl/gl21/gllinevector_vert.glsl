@@ -6,19 +6,17 @@
  */
 #version 120
 
-#pragma include spline_interp.glsl
-
 /*
  * Vector image containing XYZ vector data.
  */
-uniform sampler3D imageTexture;
+uniform sampler3D vectorTexture;
 
-
+/*
+ * Transformations between voxel and 
+ * display coordinate systems.
+ */
 uniform mat4 displayToVoxMat;
 uniform mat4 voxToDisplayMat;
-
-uniform vec3 voxelOffset;
-
 
 /*
  * Transformation matrix which transforms the
@@ -26,21 +24,31 @@ uniform vec3 voxelOffset;
  */
 uniform mat4 voxValXform;
 
+/*
+ * Constant offset to add to voxel coordinates.
+ */
+uniform vec3 voxelOffset;
 
 /*
  * Shape of the image texture.
  */
 uniform vec3 imageShape;
 
-
-uniform bool directed;
-
 /*
  * Dimensions of one voxel in the image texture.
  */
 uniform vec3 imageDims;
 
+/*
+ * Line vectors are interpreted as directed - each
+ * line begins in the centre of its voxel, and extends
+ * outwards.
+ */
+uniform bool directed;
 
+/*
+ * The current vertex on the current line.
+ */
 attribute vec3 vertex;
 
 /*
@@ -52,7 +60,7 @@ attribute float vertexID;
 
 varying vec3 fragVoxCoord;
 varying vec3 fragTexCoord;
-
+varying vec4 fragColourFactor;
 
 void main(void) {
 
@@ -90,7 +98,7 @@ void main(void) {
   /*
    * Retrieve the vector values for this voxel
    */
-  vector = texture3D(imageTexture, texCoord).xyz;
+  vector = texture3D(vectorTexture, texCoord).xyz;
 
   /*
    * Transform the vector values  from their
@@ -127,6 +135,7 @@ void main(void) {
                 voxToDisplayMat              *
                 vec4(vertVoxCoord + vector, 1);
 
-  fragVoxCoord = voxCoord;
-  fragTexCoord = texCoord;
+  fragVoxCoord     = voxCoord;
+  fragTexCoord     = texCoord;
+  fragColourFactor = vec4(1, 1, 1, 1);
 }

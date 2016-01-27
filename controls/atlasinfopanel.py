@@ -170,14 +170,19 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
             text.SetPage(strings.messages['AtlasInfoPanel.chooseAnAtlas'])
             return
 
-        opts = self._displayCtx.getOpts(overlay)
-        loc  = self._displayCtx.location
-        loc  = opts.transformCoords([loc], 'display', 'world')[0]
-
         lines = []
 
         if topText is not None:
             lines.append(topText)
+
+        if overlay is None:
+            text.SetPage('<br>'.join(lines))
+            text.Refresh()
+            return
+
+        opts = self._displayCtx.getOpts(overlay)
+        loc  = self._displayCtx.location
+        loc  = opts.transformCoords([loc], 'display', 'world')[0]
         
         # Three types of hyperlink:
         #   - one for complete (summary) label atlases,

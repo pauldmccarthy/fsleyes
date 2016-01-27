@@ -8,37 +8,49 @@
 which creates a copy of the currently selected overlay.
 """
 
-import logging
 
-import numpy               as np
+import numpy          as np
 
-import fsl.fsleyes.actions as actions
-import fsl.data.image      as fslimage
-
-
-log = logging.getLogger(__name__)
+import                   action
+import fsl.data.image as fslimage
 
 
-class CopyOverlayAction(actions.Action):
+class CopyOverlayAction(action.Action):
     """The ``CopyOverlayAction`` does as its name suggests - it creates a
-    copy  of the currently selected overlay.
+    copy of the currently selected overlay.
     """
 
     
-    def __init__(self, *args, **kwargs):
-        """Create a ``CopyOverlayAction``. All arguments are passed through
-        to the :class:`.Action` constructor.
-        """
-        actions.Action.__init__(self, *args, **kwargs)
+    def __init__(self, overlayList, displayCtx):
+        """Create a ``CopyOverlayAction``.
 
-        self._displayCtx .addListener('selectedOverlay',
-                                      self._name,
-                                      self.__selectedOverlayChanged)
-        self._overlayList.addListener('overlays',
-                                      self._name,
-                                      self.__selectedOverlayChanged)
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`.
+        """
+        action.Action.__init__(self, self.__copyOverlay)
+
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
+        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+
+        displayCtx .addListener('selectedOverlay',
+                                self.__name,
+                                self.__selectedOverlayChanged)
+        overlayList.addListener('overlays',
+                                self.__name,
+                                self.__selectedOverlayChanged)
 
         self.__selectedOverlayChanged()
+
+
+    def destroy(self):
+        """Removes listeners from the :class:`.DisplayContext` and
+        :class:`.OverlayList`, and calls :meth:`.Action.destroy`.
+        """
+
+        self.__displayCtx .removeListener('selectedOverlay', self.__name)
+        self.__overlayList.removeListener('overlays',        self.__name)
+        action.Action.destroy(self)
 
         
     def __selectedOverlayChanged(self, *a):
@@ -47,29 +59,19 @@ class CopyOverlayAction(actions.Action):
         Enables/disables this action depending on the nature of the selected
         overlay.
         """
-        overlay = self._displayCtx.getSelectedOverlay()
+        overlay = self.__displayCtx.getSelectedOverlay()
         
         self.enabled = (overlay is not None) and \
                        isinstance(overlay, fslimage.Image)
-
-
-    def destroy(self):
-        """Removes listeners from the :class:`.DisplayContext` and
-        :class:`.OverlayList`, and calls :meth:`.Action.destroy`.
-        """
-
-        self._displayCtx .removeListener('selectedOverlay', self._name)
-        self._overlayList.removeListener('overlays',        self._name)
-        actions.Action.destroy(self)
     
     
-    def doAction(self):
+    def __copyOverlay(self):
         """Creates a copy of the currently selected overlay, and inserts it
         into the :class:`.OverlayList`.
         """
 
-        ovlIdx  = self._displayCtx.selectedOverlay
-        overlay = self._overlayList[ovlIdx]
+        ovlIdx  = self.__displayCtx.selectedOverlay
+        overlay = self.__overlayList[ovlIdx]
 
         if overlay is None:
             return
@@ -86,4 +88,4 @@ class CopyOverlayAction(actions.Action):
 
         # TODO copy display properties
         
-        self._overlayList.insert(ovlIdx + 1, copy)
+        self.__overlayList.insert(ovlIdx + 1, copy)

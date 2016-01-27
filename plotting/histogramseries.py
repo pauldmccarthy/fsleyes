@@ -23,17 +23,20 @@ log = logging.getLogger(__name__)
 
 class HistogramSeries(dataseries.DataSeries):
     """A ``HistogramSeries`` generates histogram data from an :class:`.Image`
-    instance.
+    overlay.
     """
 
     
     nbins = props.Int(minval=10, maxval=500, default=100, clamped=True)
     """Number of bins to use in the histogram. This value is overridden
-    by the :attr:`HistogramPanel.autoBin` setting.
+    by the :attr:`autoBin` setting.
+    """
 
-    .. note:: I'm not sure why ``autoBin`` is a :class:`HistogramPanel`
-              setting, rather than a ``HistogramSeries`` setting. I might 
-              change this some time.
+    
+    autoBin = props.Boolean(default=True)
+    """If ``True``, the number of bins used for each :class:`HistogramSeries`
+    is calculated automatically. Otherwise, :attr:`HistogramSeries.nbins` bins
+    are used.
     """
 
     
@@ -72,7 +75,6 @@ class HistogramSeries(dataseries.DataSeries):
 
     def __init__(self,
                  overlay,
-                 hsPanel,
                  displayCtx,
                  overlayList,
                  volume=0,
@@ -81,9 +83,6 @@ class HistogramSeries(dataseries.DataSeries):
 
         :arg overlay:     The :class:`.Image` overlay to calculate a histogram
                           for.
-        
-        :arg hsPanel:     The :class:`HistogramPanel` that is displaying this
-                          ``HistogramSeries``.
         
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         
@@ -105,7 +104,6 @@ class HistogramSeries(dataseries.DataSeries):
         dataseries.DataSeries.__init__(self, overlay)
 
         self.volume        = volume
-        self.__hsPanel     = hsPanel
         self.__name        = '{}_{}'.format(type(self).__name__, id(self))
 
         self.__displayCtx  = displayCtx
@@ -151,6 +149,9 @@ class HistogramSeries(dataseries.DataSeries):
         self       .addListener('nbins',
                                 self.__name,
                                 self.__histPropsChanged)
+        self       .addListener('autoBin',
+                                self.__name,
+                                self.__histPropsChanged) 
         self       .addListener('ignoreZeros',
                                 self.__name,
                                 self.__histPropsChanged)
@@ -160,13 +161,6 @@ class HistogramSeries(dataseries.DataSeries):
         self       .addListener('showOverlay',
                                 self.__name,
                                 self.__showOverlayChanged)
-
-        
-    def update(self):
-        """This method may be called to force re-calculation of the
-        histogram data.
-        """
-        self.__histPropsChanged()
 
         
     def destroy(self):
@@ -188,6 +182,22 @@ class HistogramSeries(dataseries.DataSeries):
         if self.__overlay3D is not None:
             self.__overlayList.remove(self.__overlay3D)
             self.__overlay3D = None
+
+            
+    def getData(self):
+        """Overrides :meth:`.DataSeries.getData`.
+
+        Returns  a tuple containing the ``(x, y)`` histogram data.
+        """
+
+        return self.__xdata, self.__ydata
+
+
+    def getNumHistogramValues(self):
+        """Returns the number of values which were used in calculating the
+        histogram.
+        """
+        return self.__nvals
 
         
     def __initProperties(self):
@@ -318,7 +328,7 @@ class HistogramSeries(dataseries.DataSeries):
             if self.includeOutliers: data = self.__finiteData
             else:                    data = self.__clippedFiniteData 
         
-        if self.__hsPanel.autoBin:
+        if self.autoBin:
             nbins = self.__autoBin(data, self.dataRange.x)
 
             if self.hasListener('nbins', self.__name):
@@ -443,42 +453,3 @@ class HistogramSeries(dataseries.DataSeries):
         nbins = int((adjMax - adjMin) / binSize) + 1
 
         return nbins
-            
-
-    def getData(self):
-        """Overrides :meth:`.DataSeries.getData`.
-
-        Returns  a tuple containing the ``(x, y)`` histogram data.
-        """
-
-        if len(self.__xdata) == 0 or \
-           len(self.__ydata) == 0:
-            return self.__xdata, self.__ydata
-
-        # If smoothing is not enabled, we'll
-        # munge the histogram data a bit so
-        # that plt.plot(drawstyle='steps-pre')
-        # plots it nicely.
-        if not self.__hsPanel.smooth:
-
-            xdata = np.zeros(len(self.__xdata) + 1, dtype=np.float32)
-            ydata = np.zeros(len(self.__ydata) + 2, dtype=np.float32)
-
-            xdata[ :-1] = self.__xdata
-            xdata[  -1] = self.__xdata[-1]
-            ydata[1:-1] = self.__ydata
-
-
-        # If smoothing is enabled, the above munge
-        # is not necessary, and will probably cause
-        # the spline interpolation (performed by 
-        # the PlotPanel) to fail.
-        else:
-            xdata = np.array(self.__xdata[:-1], dtype=np.float32)
-            ydata = np.array(self.__ydata,      dtype=np.float32)
-
-        nvals    = self.__nvals
-        histType = self.__hsPanel.histType
-            
-        if   histType == 'count':       return xdata, ydata
-        elif histType == 'probability': return xdata, ydata / nvals

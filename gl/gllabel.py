@@ -9,12 +9,13 @@ functionality to render an :class:`.Image` overlay as a label/atlas image.
 """
 
 
-import OpenGL.GL      as gl
+import OpenGL.GL       as gl
 
-import fsl.fsleyes.gl as fslgl
-import resources      as glresources
-import                   globject
-import                   textures
+import fsl.fsleyes.gl  as fslgl
+import fsl.utils.async as async
+import resources       as glresources
+import                    globject
+import                    textures
 
 
 class GLLabel(globject.GLImageObject):
@@ -68,12 +69,20 @@ class GLLabel(globject.GLImageObject):
         the :class:`.ImageTexture` and :class:`.LookupTableTexture`.
         """
 
+        self.imageTexture.deregister(self.name)
         glresources.delete(self.imageTexture.getTextureName())
         self.lutTexture.destroy()
 
         self.removeListeners()
         fslgl.gllabel_funcs.destroy(self)
         globject.GLImageObject.destroy(self)
+
+        
+    def ready(self):
+        """Returns ``True`` if this ``GLLabel`` is ready to be drawn, ``False``
+        otherwise.
+        """
+        return self.imageTexture is not None and self.imageTexture.ready()
 
 
     def addListeners(self):
@@ -82,23 +91,26 @@ class GLLabel(globject.GLImageObject):
         representation can be updated when they change.
         """
 
+        image   = self.image
         display = self.display
         opts    = self.displayOpts
         name    = self.name
 
+        def update(*a):
+            self.notify()
+
         def shaderUpdate(*a):
-            fslgl.gllabel_funcs.updateShaderState(self)
-            self.onUpdate()
+            if self.ready():
+                if fslgl.gllabel_funcs.updateShaderState(self):
+                    self.notify()
             
         def shaderCompile(*a):
             fslgl.gllabel_funcs.compileShaders(self)
-            fslgl.gllabel_funcs.updateShaderState(self)
-            self.onUpdate() 
+            shaderUpdate()
 
         def lutUpdate(*a):
             self.refreshLutTexture()
-            fslgl.gllabel_funcs.updateShaderState(self)
-            self.onUpdate()
+            shaderUpdate()
 
         def lutChanged(*a):
             if self.__lut is not None:
@@ -112,31 +124,32 @@ class GLLabel(globject.GLImageObject):
             lutUpdate()
 
         def imageRefresh(*a):
-            self.refreshImageTexture()
-            fslgl.gllabel_funcs.updateShaderState(self)
-            self.onUpdate()
+            async.wait([self.refreshImageTexture()], shaderUpdate)
             
         def imageUpdate(*a):
             self.imageTexture.set(volume=opts.volume,
                                   resolution=opts.resolution)
-            
-            fslgl.gllabel_funcs.updateShaderState(self)
-            self.onUpdate() 
+
+            async.wait([self.imageTexture.refreshThread()], shaderUpdate)
 
         self.__lut = opts.lut
 
         display .addListener('alpha',        name, lutUpdate,     weak=False)
         display .addListener('brightness',   name, lutUpdate,     weak=False)
         display .addListener('contrast',     name, lutUpdate,     weak=False)
-        display .addListener('softwareMode', name, shaderCompile, weak=False)
         opts    .addListener('outline',      name, shaderUpdate,  weak=False)
         opts    .addListener('outlineWidth', name, shaderUpdate,  weak=False)
         opts    .addListener('lut',          name, lutChanged,    weak=False)
         opts    .addListener('volume',       name, imageUpdate,   weak=False)
         opts    .addListener('resolution',   name, imageUpdate,   weak=False)
+        opts    .addListener('transform',    name, update,        weak=False)
+        image   .addListener('data',         name, update,        weak=False)
         opts.lut.addListener('labels',       name, lutUpdate,     weak=False)
 
-        if opts.getParent() is not None:
+        # See comment in GLVolume.addDisplayListeners about this
+        self.__syncListenersRegistered = opts.getParent() is not None
+
+        if self.__syncListenersRegistered: 
             opts.addSyncChangeListener(
                 'volume',     name, imageRefresh, weak=False)
             opts.addSyncChangeListener(
@@ -147,6 +160,8 @@ class GLLabel(globject.GLImageObject):
         """Called by :meth:`destroy`. Removes all of the listeners that were
         added by :meth:`addListeners`.
         """
+
+        image   = self.image
         display = self.display
         opts    = self.displayOpts
         name    = self.name
@@ -154,26 +169,27 @@ class GLLabel(globject.GLImageObject):
         display .removeListener(          'alpha',        name)
         display .removeListener(          'brightness',   name)
         display .removeListener(          'contrast',     name)
-        display .removeListener(          'softwareMode', name)
         opts    .removeListener(          'outline',      name)
         opts    .removeListener(          'outlineWidth', name)
         opts    .removeListener(          'lut',          name)
         opts    .removeListener(          'volume',       name)
         opts    .removeListener(          'resolution',   name)
+        opts    .removeListener(          'transform',    name)
+        image   .removeListener(          'data',         name)
         opts.lut.removeListener(          'labels',       name)
 
-        if opts.getParent() is not None:
+        if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume',     name)
             opts.removeSyncChangeListener('resolution', name)
 
 
-        
     def setAxes(self, xax, yax):
         """Overrides :meth:`.GLImageObject.setAxes`. Updates the shader
-        program state,
+        program state.
         """
         globject.GLImageObject.setAxes(self, xax, yax)
-        fslgl.gllabel_funcs.updateShaderState(self)
+        if self.ready():
+            fslgl.gllabel_funcs.updateShaderState(self)
 
 
     def refreshImageTexture(self):
@@ -192,13 +208,23 @@ class GLLabel(globject.GLImageObject):
             texName = '{}_unsync_{}'.format(texName, id(opts))
 
         if self.imageTexture is not None:
+            
+            if self.imageTexture.getTextureName() == texName:
+                return None
+            
+            self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.getTextureName())
             
         self.imageTexture = glresources.get(
             texName, 
             textures.ImageTexture,
             texName,
-            self.image) 
+            self.image,
+            notify=False)
+        
+        self.imageTexture.register(self.name, self.__imageTextureChanged)
+
+        return self.imageTexture.refreshThread()
 
 
     def refreshLutTexture(self, *a):
@@ -228,6 +254,11 @@ class GLLabel(globject.GLImageObject):
         """Calls the version-dependent ``draw`` function. """
         fslgl.gllabel_funcs.draw(self, zpos, xform)
 
+        
+    def drawAll(self, zpos, xform=None):
+        """Calls the version-dependent ``drawAll`` function. """
+        fslgl.gllabel_funcs.drawAll(self, zpos, xform) 
+
 
     def postDraw(self):
         """Unbinds the ``ImageTexture`` and ``LookupTableTexture``, and calls
@@ -236,3 +267,11 @@ class GLLabel(globject.GLImageObject):
         self.imageTexture.unbindTexture()
         self.lutTexture  .unbindTexture()
         fslgl.gllabel_funcs.postDraw(self)
+
+        
+    def __imageTextureChanged(self, *a):
+        """Called when the :class:`.ImageTexture` containing the image data
+        is refreshed. Notifies listeners of this ``GLLabel`` (via the
+        :class:`.Notifier` base class).
+        """
+        self.notify()

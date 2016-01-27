@@ -46,7 +46,10 @@ class ModelOpts(fsldisplay.DisplayOpts):
     
 
     showName = props.Boolean(default=False)
-    """If ``True``, the model name is shown alongside the model. """
+    """If ``True``, the model name is shown alongside the model.
+
+    .. note:: Not implemented yet.
+    """
 
     
     refImage = props.Choice()
@@ -61,10 +64,10 @@ class ModelOpts(fsldisplay.DisplayOpts):
     as the reference image.
     """
 
-    
-    coordSpace = copy.copy(volumeopts.ImageOpts.transform)
+
+    coordSpace = copy.copy(volumeopts.Nifti1Opts.transform)
     """If :attr:`refImage` is not ``None``, this property defines the
-    reference image coordinate space in whihc the model coordinates are
+    reference image coordinate space in which the model coordinates are
     defined (i.e. voxels, scaled voxels, or world coordinates).
     """
 
@@ -73,6 +76,12 @@ class ModelOpts(fsldisplay.DisplayOpts):
         """Create a ``ModelOpts`` instance. All arguments are passed through
         to the :class:`.DisplayOpts` constructor.
         """
+
+        # The Nifti1Opts.transform property has a
+        # 'custom' option which is not applicable
+        # to our coordSpace property.
+        coordSpace = self.getProp('coordSpace')
+        coordSpace.removeChoice('custom', self)
 
         # Create a random, highly
         # saturated colour
@@ -193,8 +202,8 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
         This method is called whenever the :attr:`refImage` or
         :attr:`coordSpace` properties change and, if a ``refImage`` is
-        specified, whenever the :attr:`.ImageOpts.transform` or
-        :attr:`.ImageOpts.customXform` properties change.
+        specified, whenever the :attr:`.Nifti1Opts.transform` or
+        :attr:`.Nifti1Opts.customXform` properties change.
 
         :arg refImage:    Reference image to use to calculate the coordinates.
                           If ``-1`` the :attr:`refImage` is used (``-1`` is
@@ -205,13 +214,13 @@ class ModelOpts(fsldisplay.DisplayOpts):
                           :attr:`coordSpace` is used.
         
         :arg transform:   Transform to use - if ``None``, and a ``refImage`` is
-                          defined, the :attr:`.ImageOpts.transform` value is
+                          defined, the :attr:`.Nifti1Opts.transform` value is
                           used.
         
         :arg customXform: Custom transform to use (if
                           ``transform=custom``). If ``None``, and a
                           ``refImage`` is defined, the
-                          :attr:`.ImageOpts.customXform` value is used.
+                          :attr:`.Nifti1Opts.customXform` value is used.
         """
 
         if refImage   is -1:   refImage   = self.refImage
@@ -237,8 +246,8 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
 
     def __transformChanged(self, value, valid, ctx, name):
-        """Called when the :attr:`.ImageOpts.transfrom` or
-        :attr:`.ImageOpts.customXform` properties of the current
+        """Called when the :attr:`.Nifti1Opts.transfrom` or
+        :attr:`.Nifti1Opts.customXform` properties of the current
         :attr:`refImage` change. Calls :meth:`__updateBounds`.
         """
 
@@ -247,7 +256,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
         if   name == 'transform':
             transform   = refOpts.getLastValue('transform')
             customXform = refOpts.customXform
-        elif name == 'customXForm': 
+        elif name == 'customXform': 
             transform   = refOpts.transform
             customXform = refOpts.getLastValue('customXform')
 
@@ -274,7 +283,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
         If a new reference image has been specified, removes listeners from
         the old one (if necessary), and adds listeners to the
-        :attr:`.ImageOptstransform` and :attr:`.ImageOpts.customXform`
+        :attr:`.Nifti1Opts.transform` and :attr:`.Nifti1Opts.customXform`
         properties associated with the new image. Calls
         :meth:`__updateBounds`.
         """
@@ -349,14 +358,15 @@ class ModelOpts(fsldisplay.DisplayOpts):
         imgOptions = [None]
 
         for overlay in overlays:
-            
-            # The overlay must be an Image instance.
-            if not isinstance(overlay, fslimage.Image):
+
+            # The overlay must be a Nifti1 instance.
+            if not isinstance(overlay, fslimage.Nifti1):
                 continue
 
             imgOptions.append(overlay)
-                
-            overlay.addListener('name',
+
+            display = self.displayCtx.getDisplay(overlay)
+            display.addListener('name',
                                 self.name,
                                 self.__overlayListChanged,
                                 overwrite=True)

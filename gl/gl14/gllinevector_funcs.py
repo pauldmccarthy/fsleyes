@@ -9,6 +9,11 @@ class to render :class:`.Image` overlays as line vector images in an OpenGL 1.4
 compatible manner.
 
 
+This module uses functions in the :mod:`.gl14.glvector_funcs` module, which
+contains logic used for rendering both ``GLRGBVector`` and ``GLLineVector``
+instances.
+
+
 A :class:`.GLLineVertices` instance is used to generate line vertices and
 texture coordinates for each voxel in the image. A fragment shader (the same
 as that used by the :class:`.GLRGBVector` class) is used to colour each line
@@ -18,17 +23,14 @@ according to the orientation of the underlying vector.
 
 import logging
 
-import numpy                          as np
+import numpy                       as np
 
-import OpenGL.GL                      as gl
-import OpenGL.GL.ARB.fragment_program as arbfp
-import OpenGL.GL.ARB.vertex_program   as arbvp
-import OpenGL.raw.GL._types           as gltypes
+import OpenGL.GL                   as gl
 
-import fsl.utils.transform            as transform
-import fsl.fsleyes.gl.gllinevector    as gllinevector
-import fsl.fsleyes.gl.resources       as glresources
-import fsl.fsleyes.gl.shaders         as shaders
+import fsl.utils.transform         as transform
+import fsl.fsleyes.gl.gllinevector as gllinevector
+import fsl.fsleyes.gl.resources    as glresources
+import                                glvector_funcs
 
 
 log = logging.getLogger(__name__)
@@ -42,12 +44,11 @@ def init(self):
     :func:`updateShaderState`, and :func:`updateVertices` functions.
     """
 
-    self.vertexProgram   = None
-    self.fragmentProgram = None
-    self.lineVertices    = None
+    self.shader       = None
+    self.lineVertices = None
 
     self._vertexResourceName = '{}_{}_vertices'.format(
-        type(self).__name__, id(self.image))
+        type(self).__name__, id(self.vectorImage))
 
     compileShaders(   self)
     updateShaderState(self)
@@ -58,7 +59,7 @@ def init(self):
     def vertexUpdate(*a):
         updateVertices(self)
         updateShaderState(self)
-        self.onUpdate()
+        self.notify()
 
     name = '{}_vertices'.format(self.name)
 
@@ -72,8 +73,8 @@ def destroy(self):
     ``GLLineVertices`` instance, and removes property listeners from the
     :class:`.LineVectorOpts` instance.
     """
-    arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
-    arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram))
+
+    glvector_funcs.destroy(self)
 
     name = '{}_vertices'.format(self.name)
 
@@ -85,27 +86,11 @@ def destroy(self):
 
 
 def compileShaders(self):
-    """Compiles the vertex/fragment shader programs used to draw the
-    :class:`.GLLineVector` instance. This also results in a call to
-    :func:`updateVertices`.
+    """Compiles shader programs via the
+    :func:`.gl14.glvector_funcs.compileShaders` function,
+    and calls the :func:`updateVertices` function.
     """
-    if self.vertexProgram is not None:
-        arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
-        
-    if self.fragmentProgram is not None:
-        arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram)) 
-
-    vertShaderSrc = shaders.getVertexShader(  self,
-                                              sw=self.display.softwareMode)
-    fragShaderSrc = shaders.getFragmentShader(self,
-                                              sw=self.display.softwareMode)
-
-    vertexProgram, fragmentProgram = shaders.compilePrograms(
-        vertShaderSrc, fragShaderSrc)
-
-    self.vertexProgram   = vertexProgram
-    self.fragmentProgram = fragmentProgram
-
+    glvector_funcs.compileShaders(self, 'gllinevector')
     updateVertices(self)
 
 
@@ -116,15 +101,15 @@ def updateVertices(self):
     :meth:`.GLLineVertices.calculateHash` method), this function does nothing.
     """
     
-    image = self.image
-
     if self.lineVertices is None:
         self.lineVertices = glresources.get(
             self._vertexResourceName, gllinevector.GLLineVertices, self) 
 
     if hash(self.lineVertices) != self.lineVertices.calculateHash(self):
 
-        log.debug('Re-generating line vertices for {}'.format(image))
+        log.debug('Re-generating line vertices '
+                  'for {}'.format(self.vectorImage))
+        
         self.lineVertices.refresh(self)
         glresources.set(self._vertexResourceName,
                         self.lineVertices,
@@ -132,54 +117,34 @@ def updateVertices(self):
 
 
 def updateShaderState(self):
-    """Updates all fragment/vertex shader program variables. """
-    
-    opts = self.displayOpts
+    """Updates all fragment/vertex shader program variables.  The fragment
+    shader is configured by the
+    :func:`.gl21.glvector_funcs.updateFragmentShaderState` function.
+    """
 
-    gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-    gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
+    image = self.vectorImage
 
-    arbvp.glBindProgramARB(arbvp.GL_VERTEX_PROGRAM_ARB,
-                           self.vertexProgram)
-    arbfp.glBindProgramARB(arbfp.GL_FRAGMENT_PROGRAM_ARB,
-                           self.fragmentProgram)
-    
-    voxValXform  = self.imageTexture.voxValXform
-    cmapXform    = self.xColourTexture.getCoordinateTransform()
-    shape        = np.array(list(self.image.shape[:3]) + [0], dtype=np.float32)
-    invShape     = 1.0 / shape
-    modThreshold = [opts.modThreshold / 100.0, 0.0, 0.0, 0.0]
-    offset       = [0.5, 0.5, 0.5, 0.0]
+    glvector_funcs.updateFragmentShaderState(self)
 
-    # Vertex program inputs
-    shaders.setVertexProgramVector(  0, invShape)
-    shaders.setVertexProgramVector(  1, offset)
+    shape    = np.array(list(image.shape[:3]) + [0], dtype=np.float32)
+    invShape = 1.0 / shape
+    offset   = [0.5, 0.5, 0.5, 0.0]
 
-    # Fragment program inputs
-    shaders.setFragmentProgramMatrix(0, voxValXform)
-    shaders.setFragmentProgramMatrix(4, cmapXform)
-    shaders.setFragmentProgramVector(8, shape)
-    shaders.setFragmentProgramVector(9, modThreshold)
+    self.shader.load()
+ 
+    self.shader.setVertParam('invImageShape', invShape)
+    self.shader.setVertParam('voxelOffsets',  offset)
 
-    gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-    gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
+    self.shader.unload()
+
+    return True
     
 
 def preDraw(self):
     """Initialises the GL state ready for drawing the :class:`.GLLineVector`.
     """
-    gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-    gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
-
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-
-    if self.display.softwareMode:
-        gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-
-    arbvp.glBindProgramARB(arbvp.GL_VERTEX_PROGRAM_ARB,
-                           self.vertexProgram)
-    arbfp.glBindProgramARB(arbfp.GL_FRAGMENT_PROGRAM_ARB,
-                           self.fragmentProgram) 
+    self.shader.load()
 
 
 def draw(self, zpos, xform=None):
@@ -187,17 +152,11 @@ def draw(self, zpos, xform=None):
     at the specified Z location.
     """
 
-    display             = self.display
     opts                = self.displayOpts
     vertices, texCoords = self.lineVertices.getVertices(zpos, self)
 
     if vertices.size == 0:
         return
-
-    if display.softwareMode:
-        texCoords = texCoords.ravel('C')
-        gl.glClientActiveTexture(gl.GL_TEXTURE0)
-        gl.glTexCoordPointer(3, gl.GL_FLOAT, 0, texCoords)
 
     vertices = vertices.ravel('C')
     v2d      = opts.getTransform('voxel', 'display')
@@ -224,10 +183,5 @@ def drawAll(self, zposes, xforms):
 
 def postDraw(self):
     """Clears the GL state after drawing the :class:`.GLLineVector`. """    
-    gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-    gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
-    
+    self.shader.unload()
     gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-
-    if self.display.softwareMode:
-        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)

@@ -7,15 +7,14 @@
 """This module provides functions which are used by the :class:`.GLLabel`
 class to render :class:`.Image` overlays in an OpenGL 2.1 compatible manner.
 
-Rendering of a ``GLLabel`` is very similar to that of a ``GLVolume`` - the
+Rendering of a ``GLLabel`` is very similar to that of a ``GLVolume``, with the
+exception that a different fragment shader (``gllabel``) is used. The
 ``preDraw``, ``draw``, ``drawAll`` and ``postDraw`` functions defined in the
 :mod:`.gl21.glvolume_funcs` are re-used by this module.
 """
 
 
 import numpy                  as np
-import OpenGL.GL              as gl
-import OpenGL.raw.GL._types   as gltypes
 
 import fsl.fsleyes.gl.shaders as shaders
 import                           glvolume_funcs
@@ -23,91 +22,65 @@ import                           glvolume_funcs
 
 def init(self):
     """Calls the :func:`compileShaders` and :func:`updateShaderState`
-    functions, and creates a GL buffer for storing vertex attributes.
+    functions.
     """    
-    self.shaders = None
+    self.shader = None
 
     compileShaders(   self)
     updateShaderState(self)
-
-    self.vertexAttrBuffer = gl.glGenBuffers(1)
     
 
 def destroy(self):
-    """Destroys the shader programs, and the vertex buffer. """
-    gl.glDeleteBuffers(1, gltypes.GLuint(self.vertexAttrBuffer))
-    gl.glDeleteProgram(self.shaders) 
+    """Destroys the shader programs. """
+    self.shader.destroy()
+    self.shader = None
 
 
 def compileShaders(self):
-    """Compiles vertex/fragment shader programs used to render
-    :class:`.GLLabel` instances, and stores the positions of all
-    shader variables as attributes on the :class:`.GLLabel` instance.
+    """Loads the vertex/fragment shader source code, and creates a
+    :class:`.GLSLShader` program.
     """
 
-    if self.shaders is not None:
-        gl.glDeleteProgram(self.shaders)
+    if self.shader is not None:
+        self.shader.destroy()
 
-    vertShaderSrc = shaders.getVertexShader(  self,
-                                              sw=self.display.softwareMode)
-    fragShaderSrc = shaders.getFragmentShader(self,
-                                              sw=self.display.softwareMode)
-    self.shaders = shaders.compileShaders(vertShaderSrc, fragShaderSrc)
+    vertSrc = shaders.getVertexShader(  'glvolume')
+    fragSrc = shaders.getFragmentShader('gllabel')
 
-    self.vertexPos         = gl.glGetAttribLocation( self.shaders,
-                                                     'vertex')
-    self.voxCoordPos       = gl.glGetAttribLocation( self.shaders,
-                                                     'voxCoord')
-    self.texCoordPos       = gl.glGetAttribLocation( self.shaders,
-                                                     'texCoord') 
-    self.imageTexturePos   = gl.glGetUniformLocation(self.shaders,
-                                                     'imageTexture')
-    self.lutTexturePos     = gl.glGetUniformLocation(self.shaders,
-                                                     'lutTexture')
-    self.voxValXformPos    = gl.glGetUniformLocation(self.shaders,
-                                                     'voxValXform') 
-    self.imageShapePos     = gl.glGetUniformLocation(self.shaders,
-                                                     'imageShape')
-    self.useSplinePos      = gl.glGetUniformLocation(self.shaders,
-                                                     'useSpline')
-    self.numLabelsPos      = gl.glGetUniformLocation(self.shaders,
-                                                     'numLabels')
-    self.outlinePos        = gl.glGetUniformLocation(self.shaders,
-                                                     'outline') 
-    self.outlineOffsetsPos = gl.glGetUniformLocation(self.shaders,
-                                                     'outlineOffsets')
+    self.shader = shaders.GLSLShader(vertSrc, fragSrc)
 
 
 def updateShaderState(self):
     """Updates all shader program variables. """
 
-    opts = self.displayOpts
+    opts   = self.displayOpts
+    shader = self.shader
 
-    gl.glUseProgram(self.shaders)
-
-    gl.glUniform1f( self.outlinePos,       opts.outline)
-    gl.glUniform1f( self.numLabelsPos,     opts.lut.max() + 1)
-    gl.glUniform3fv(self.imageShapePos, 1, np.array(self.image.shape[:3],
-                                                     dtype=np.float32))
-    
-    vvx = self.imageTexture.voxValXform.ravel('C')
-    gl.glUniformMatrix4fv(self.voxValXformPos, 1, False, vvx)
-
-    outlineOffsets = opts.outlineWidth / \
-                     np.array(self.image.shape[:3], dtype=np.float32)
+    imageShape      = np.array(self.image.shape[:3])
+    vvx             = self.imageTexture.voxValXform
+    outlineOffsets  = opts.outlineWidth / imageShape
     
     if opts.transform == 'affine':
         minOffset = outlineOffsets.min()
         outlineOffsets = np.array([minOffset] * 3)
     else:
-        outlineOffsets[self.zax] = -1
+        outlineOffsets[self.zax] = -1 
 
-    gl.glUniform3fv(self.outlineOffsetsPos, 1, outlineOffsets)
+    shader.load()
 
-    gl.glUniform1i(self.imageTexturePos, 0)
-    gl.glUniform1i(self.lutTexturePos,   1) 
+    changed = False
 
-    gl.glUseProgram(0)
+    changed |= shader.set('outline',        opts.outline)
+    changed |= shader.set('numLabels',      opts.lut.max() + 1)
+    changed |= shader.set('imageShape',     imageShape)
+    changed |= shader.set('voxValXform',    vvx)
+    changed |= shader.set('outlineOffsets', outlineOffsets)
+    changed |= shader.set('imageTexture',   0)
+    changed |= shader.set('lutTexture',     1)
+
+    shader.unload()
+
+    return changed
 
 
 preDraw  = glvolume_funcs.preDraw

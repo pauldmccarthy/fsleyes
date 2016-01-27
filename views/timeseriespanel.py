@@ -19,20 +19,21 @@ import                                                plotpanel
 import fsl.data.featimage                          as fslfeatimage
 import fsl.data.melodicimage                       as fslmelimage
 import fsl.data.image                              as fslimage
-import fsl.fsleyes.colourmaps                      as fslcmaps
+import fsl.fsleyes.actions                         as actions
 import fsl.fsleyes.plotting                        as plotting
 import fsl.fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
-import fsl.fsleyes.controls.timeserieslistpanel    as timeserieslistpanel
+import fsl.fsleyes.controls.plotlistpanel          as plotlistpanel
 
 
 log = logging.getLogger(__name__)
 
 
-class TimeSeriesPanel(plotpanel.PlotPanel):
-    """The ``TimeSeriesPanel`` is a :class:`.PlotPanel` which plots time series
-    data from :class:`.Image` overlays. A ``TimeSeriesPanel`` looks something
-    like the following:
+class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
+    """The ``TimeSeriesPanel`` is an :class:`.OverlayPlotPanel` which plots
+    time series data from overlays. A ``TimeSeriesPanel`` looks something like
+    the following:
 
+    
     .. image:: images/timeseriespanel.png
        :scale: 50%
        :align: center
@@ -42,7 +43,8 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
     which encapsulate time series data from an overlay. All ``TimeSeries``
     classes are defined in the :mod:`.plotting.timeseries` module; these are
     all sub-classes of the :class:`.DataSeries` class - see the
-    :class:`.PlotPanel` documentation for more details:
+    :class:`.PlotPanel` and :class:`.OverlayPlotPanel` documentation for more
+    details:
 
     .. autosummary::
        :nosignatures:
@@ -50,24 +52,6 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
        ~fsl.fsleyes.plotting.timeseries.TimeSeries
        ~fsl.fsleyes.plotting.timeseries.FEATTimeSeries
        ~fsl.fsleyes.plotting.timeseries.MelodicTimeSeries
-
-    
-    **The current time course**
-
-    
-    By default, the ``TimeSeriesPanel`` plots the time series of the current
-    voxel from the currently selected overlay, which is determined from the
-    :attr:`.DisplayContext.selectedOverlay`. This time series is referred to
-    as the *current* time course. The :attr:`showMode` property allows the
-    user to choose between showing only the current time course, showing the
-    time course for all (compatible) overlays, or only showing the time
-    courses that have been added to the :attr:`.PlotPanel.dataSeries` list.
-    
-
-    Other time courses can be *held* by adding them to the
-    :attr:`.PlotPanel.dataSeries` list - the :class:`.TimeSeriesListPanel`
-    provides the user with the ability to add/remove time courses from the
-    ``dataSeries`` list.
 
 
     **Control panels**
@@ -79,21 +63,18 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
     .. autosummary::
        :nosignatures:
 
-       ~fsl.fsleyes.controls.timeserieslistpanel.TimeSeriesListPanel
+       ~fsl.fsleyes.controls.plotlistpanel.PlotListPanel
        ~fsl.fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
 
     
     The ``TimeSeriesPanel`` defines some :mod:`.actions`, allowing the user
-    to show/hide these control panels (see the :meth:`.ViewPanel.togglePanel`
-    method):
+    to show/hide these control panels:
 
-    =========================== ===============================================
-    ``toggleTimeSeriesList``    Shows/hides a :class:`.TimeSeriesListPanel`.
-    ``toggleTimeSeriesControl`` Shows/hides a :class:`.TimeSeriesControlPanel`.
-    =========================== ===============================================
+    .. autosummary::
+       :nosignatures:
 
-    New ``TimeSeriesPanel`` instances will display a ``TimeSeriesListPanel``
-    and a ``TimeSeriesControlPanel`` by default.
+       toggleTimeSeriesList
+       toggleTimeSeriesControl
 
 
     **FEATures**
@@ -114,7 +95,7 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
     The ``TimeSeriesPanel`` also has some functionality for
     :class:`.MelodicImage` overlays - a :class:`.MelodicTimeSeries` instance
     is used to plot the component time courses for the current component (as
-    defined by the :attr:`.ImageOpts.volume` property). 
+    defined by the :attr:`.Nifti1Opts.volume` property).
     """
 
     
@@ -122,21 +103,6 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
     """If ``True``, the X axis data is scaled by the pixdim value of the
     selected overlay (which, for FMRI time series data is typically set
     to the TR time).
-    """
-
-
-    showMode = props.Choice(('current', 'all', 'none'))
-    """Defines which time series to plot.
-
-
-    =========== ======================================================
-    ``current`` The time course for  the currently selected overlay is
-                plotted.
-    ``all``     The time courses for all compatible overlays in the
-                :class:`.OverlayList` are plotted.
-    ``none``    Only the ``TimeSeries`` that are in the
-                :attr:`.PlotPanel.dataSeries` list will be plotted.
-    =========== ======================================================
     """
 
     
@@ -168,74 +134,14 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
         :arg displayCtx:  A :class:`.DisplayContext` instance.
         """
 
-        actionz = {
-            'toggleTimeSeriesList'    : lambda *a: self.togglePanel(
-                timeserieslistpanel.TimeSeriesListPanel,
-                self,
-                location=wx.TOP),
-            'toggleTimeSeriesControl' : lambda *a: self.togglePanel(
-                timeseriescontrolpanel.TimeSeriesControlPanel,
-                self,
-                location=wx.TOP) 
-        }
+        plotpanel.OverlayPlotPanel.__init__(
+            self, parent, overlayList, displayCtx)
 
-        plotpanel.PlotPanel.__init__(
-            self, parent, overlayList, displayCtx, actionz=actionz)
-
-        figure = self.getFigure()
-
-        figure.subplots_adjust(
-            top=1.0, bottom=0.0, left=0.0, right=1.0)
-
-        figure.patch.set_visible(False)
-
-        self       .addListener('plotMode',        self._name, self.draw)
-        self       .addListener('usePixdim',       self._name, self.draw)
-        self       .addListener('showMode',        self._name, self.draw)
-        displayCtx .addListener('selectedOverlay', self._name, self.draw)
-        self       .addListener('plotMelodicICs',
-                                self._name,
-                                self.__plotMelodicICsChanged)
-        overlayList.addListener('overlays',
-                                self._name,
-                                self.__overlayListChanged) 
-
-        # The currentTss attribute is a dictionary of
-        #
-        #   {overlay : TimeSeries}
-        #
-        # mappings, containing a TimeSeries instance for
-        # each compatible overlay in the overlay list.
-        # 
-        # Different TimeSeries types need to be re-drawn
-        # when different properties change. For example,
-        # a TimeSeries instance needs to be redrawn when
-        # the DisplayContext.location property changes,
-        # whereas a MelodicTimeSeries instance needs to
-        # be redrawn when the VolumeOpts.volume property
-        # changes.
-        #
-        # Therefore, the refreshProps dictionary contains
-        # a set of
-        #
-        #   {overlay : ([targets], [propNames])}
-        #
-        # mappings - for each overlay, a list of
-        # target objects (e.g. DisplayContext, VolumeOpts,
-        # etc), and a list of property names on each,
-        # defining the properties that need to trigger a
-        # redraw.
-        self.__currentTss     = {}
-        self.__refreshProps   = {} 
-        self.__overlayColours = {}
-
-        def addPanels():
-            self.run('toggleTimeSeriesControl') 
-            self.run('toggleTimeSeriesList') 
-
-        wx.CallAfter(addPanels)
-
-        self.__overlayListChanged()
+        self.addListener('plotMode',  self._name, self.draw)
+        self.addListener('usePixdim', self._name, self.draw)
+        self.addListener('plotMelodicICs',
+                         self._name,
+                         self.__plotMelodicICsChanged)
 
 
     def destroy(self):
@@ -243,24 +149,42 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
         method.
         """
         
-        self.removeListener('plotMode',  self._name)
-        self.removeListener('usePixdim', self._name)
-        self.removeListener('showMode',  self._name)
+        self.removeListener('plotMode',       self._name)
+        self.removeListener('usePixdim',      self._name)
+        self.removeListener('plotMelodicICs', self._name)
         
-        self._overlayList.removeListener('overlays',        self._name)
-        self._displayCtx .removeListener('selectedOverlay', self._name)
+        plotpanel.OverlayPlotPanel.destroy(self)
 
-        for (targets, propNames) in self.__refreshProps.values():
-            for target, propName in zip(targets, propNames):
-                target.removeListener(propName, self._name)
 
-        for ts in self.__currentTss.values():
-            ts.removeGlobalListener(self)
+    @actions.toggleControlAction(plotlistpanel.PlotListPanel)
+    def toggleTimeSeriesList(self):
+        """Shows/hides a :class:`.PlotListPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(plotlistpanel.PlotListPanel, self, location=wx.TOP)
 
-        self.__currentTss   = None
-        self.__refreshProps = None
+        
+    @actions.toggleControlAction(timeseriescontrolpanel.TimeSeriesControlPanel)
+    def toggleTimeSeriesControl(self):
+        """Shows/hides a :class:`.TimeSeriesControlPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(timeseriescontrolpanel.TimeSeriesControlPanel,
+                         self,
+                         location=wx.TOP)
 
-        plotpanel.PlotPanel.destroy(self) 
+        
+    def getActions(self):
+        """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
+        :mod:`.actions` that are defined on this ``TimeSeriesPanel``.
+        """
+        actions = [self.screenshot,
+                   self.toggleTimeSeriesList,
+                   self.toggleTimeSeriesControl]
+
+        names = [a.__name__ for a in actions]
+
+        return zip(names, actions)
 
 
     def draw(self, *a):
@@ -277,7 +201,7 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
         else:
             overlays = []
 
-        tss = [self.__currentTss.get(o) for o in overlays]
+        tss = [self.getDataSeries(o) for o in overlays]
         tss = [ts for ts in tss if ts is not None]
 
         for i, ts in enumerate(list(tss)):
@@ -286,138 +210,23 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
                 tss = tss[:i] + ts.getModelTimeSeries() + tss[i:]
 
         for ts in tss:
+
+            # Changing the label might trigger
+            # another call to this method, as
+            # the PlotPanel might have a listener
+            # registered on it.
+            ts.disableNotification('label')
             ts.label = ts.makeLabel()
+            ts.enableNotification('label')
 
         self.drawDataSeries(extraSeries=tss,
                             preproc=self.__prepareTimeSeriesData)
 
 
-    def getTimeSeries(self, overlay):
-        """Returns the :class:`.TimeSeries` instance for the specified
-        overlay, or ``None`` if there is none.
-        """
-        return self.__currentTss.get(overlay)
-
-
-    def __prepareTimeSeriesData(self, ts):
-        """Given a :class:`.TimeSeries` instance, scales and normalises
-        the x and y data according to the current values of the
-        :attr:`usePixdim` and :attr:`plotMode` properties.
-
-        This method is used as a preprocessing function for all
-        :class:`.TimeSeries` instances that are plotted - see the
-        :meth:`.PlotPanel.drawDataSeries` method.
-        """
-
-        xdata, ydata = ts.getData()
-
-        if self.usePixdim:
-            if isinstance(ts.overlay, fslmelimage.MelodicImage):
-                xdata *= ts.overlay.tr
-            else:
-                xdata *= ts.overlay.pixdim[3]
-        
-        if self.plotMode == 'demean':
-            ydata = ydata - ydata.mean()
-
-        elif self.plotMode == 'normalise':
-            ymin  = ydata.min()
-            ymax  = ydata.max()
-            ydata = 2 * (ydata - ymin) / (ymax - ymin) - 1
-            
-        elif self.plotMode == 'percentChange':
-            mean  = ydata.mean()
-            ydata =  100 * (ydata / mean) - 100
-            
-        return xdata, ydata 
-
-
-    def __overlayListChanged(self, *a):
-        """Called when the :class:`.OverlayList` changes. Makes sure that
-        there are no :class:`.TimeSeries` instances in the
-        :attr:`.PlotPanel.dataSeries` list, or in the internal cache, which
-        refer to overlays that no longer exist.
-
-        Also calls :meth:`__updateCurrentTimeSeries`, whic ensures that a
-        :class:`.TimeSeries` instance for every compatiblew overlay is
-        cached internally.
-        """
-
-        for ds in self.dataSeries:
-            if ds.overlay not in self._overlayList:
-                self.dataSeries.remove(ds)
-                ds.destroy()
-        
-        for overlay in list(self.__currentTss.keys()):
-            if overlay not in self._overlayList:
-                self.__clearCacheForOverlay(overlay)
-
-        self.__updateCurrentTimeSeries()
-        self.draw()
-
-
-    def __clearCacheForOverlay(self, overlay):
-        """Destroys the internally cached :class:`.TimeSeries` for the given
-        overlay.
-        """
-        
-        ts                 = self.__currentTss  .pop(overlay, None)
-        targets, propNames = self.__refreshProps.pop(overlay, ([], []))
-
-        if ts is not None:
-            ts.destroy()
-
-        for t, p in zip(targets, propNames):
-            t.removeListener(p, self._name)
-
-        
-    def __plotMelodicICsChanged(self, *a):
-        """Called when the :attr:`plotMelodicICs` property changes. Re-creates
-        the internally cached :class:`.TimeSeries` instances for all
-        :class:`.MelodicImage` overlays in the :class:`.OverlayList`.
-        """
-
-        for overlay in self._overlayList:
-            if isinstance(overlay, fslmelimage.MelodicImage):
-                self.__clearCacheForOverlay(overlay)
-
-        self.__updateCurrentTimeSeries()
-        self.draw()
-
-        
-    def __updateCurrentTimeSeries(self, *a):
-        """Makes sure that a :class:`.TimeSeries` instance exists for every
-        compatible overlay in the :class:`.OverlayList`, and that
-        relevant property listeners are registered so they are redrawn as
-        needed.
-        """
-
-        for ovl in self._overlayList:
-            if ovl not in self.__currentTss:
-                
-                ts, refreshTargets, refreshProps = self.__genOneTimeSeries(ovl)
-
-                if ts is None:
-                    continue
-
-                self.__currentTss[  ovl] = ts
-                self.__refreshProps[ovl] = (refreshTargets, refreshProps)
-                
-                ts.addGlobalListener(self._name, self.draw, overwrite=True)
-        
-        for targets, propNames in self.__refreshProps.values():
-            for target, propName in zip(targets, propNames):
-                target.addListener(propName,
-                                   self._name,
-                                   self.draw,
-                                   overwrite=True)
-
-
-    
-    def __genOneTimeSeries(self, overlay):
-        """Creates and returns a :class:`.TimeSeries` instance (or an
-        instance of one of the :class:`.TimeSeries` sub-classes) for the
-        specified overlay.
+    def createDataSeries(self, overlay):
+        """Overrides :meth:`.OverlayPlotPanel.createDataSeries`. Creates and
+        returns a :class:`.TimeSeries` instance (or an instance of one of the
+        :class:`.TimeSeries` sub-classes) for the specified overlay.
 
         Returns a tuple containing the following:
         
@@ -451,10 +260,57 @@ class TimeSeriesPanel(plotpanel.PlotPanel):
             targets   = [self._displayCtx]
             propNames = ['location'] 
 
-        ts.colour    = fslcmaps.randomDarkColour()
+        ts.colour    = self.getOverlayPlotColour(overlay)
         ts.alpha     = 1
         ts.lineWidth = 1
         ts.lineStyle = '-'
         ts.label     = ts.makeLabel()
                 
         return ts, targets, propNames
+
+
+    def __prepareTimeSeriesData(self, ts):
+        """Given a :class:`.TimeSeries` instance, scales and normalises
+        the x and y data according to the current values of the
+        :attr:`usePixdim` and :attr:`plotMode` properties.
+
+        This method is used as a preprocessing function for all
+        :class:`.TimeSeries` instances that are plotted - see the
+        :meth:`.PlotPanel.drawDataSeries` method.
+        """
+
+        xdata, ydata = ts.getData()
+
+        if self.usePixdim:
+            if isinstance(ts.overlay, fslmelimage.MelodicImage):
+                xdata = xdata * ts.overlay.tr
+            else:
+                xdata = xdata * ts.overlay.pixdim[3]
+        
+        if self.plotMode == 'demean':
+            ydata = ydata - ydata.mean()
+
+        elif self.plotMode == 'normalise':
+            ymin  = ydata.min()
+            ymax  = ydata.max()
+            ydata = 2 * (ydata - ymin) / (ymax - ymin) - 1
+            
+        elif self.plotMode == 'percentChange':
+            mean  = ydata.mean()
+            ydata = 100 * (ydata / mean) - 100
+            
+        return xdata, ydata 
+
+
+    def __plotMelodicICsChanged(self, *a):
+        """Called when the :attr:`plotMelodicICs` property changes. Re-creates
+        the internally cached :class:`.TimeSeries` instances for all
+        :class:`.MelodicImage` overlays in the :class:`.OverlayList`.
+        """
+
+        for overlay in self._overlayList:
+            if isinstance(overlay, fslmelimage.MelodicImage):
+                self.clearDataSeries(overlay)
+
+        self.updateDataSeries()
+        self.draw()

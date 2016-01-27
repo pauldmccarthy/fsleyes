@@ -20,6 +20,22 @@ import fsl.utils.transform as transform
 log = logging.getLogger(__name__)
 
 
+def clear(bgColour):
+    """Clears the current frame buffer, and does some standard setup
+    operations.
+    """
+
+    # set the background colour
+    gl.glClearColor(*bgColour)
+
+    # clear the buffer
+    gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
+
+    # enable transparency
+    gl.glEnable(gl.GL_BLEND) 
+    gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+
+
 def show2D(xax, yax, width, height, lo, hi):
     """Configures the OpenGL viewport for 2D othorgraphic display.
 
@@ -60,10 +76,10 @@ def show2D(xax, yax, width, height, lo, hi):
     # TODO There's got to be a more generic way
     # to perform this rotation. This will break
     # if I add functionality allowing the user
-    # to specifty the x/y axes on initialisation. 
+    # to specifty the x/y axes on initialisation.
     if zax == 0:
-        gl.glRotatef(-90, 1, 0, 0)
-        gl.glRotatef(-90, 0, 0, 1)
+        gl.glRotatef(270, 1, 0, 0)
+        gl.glRotatef(270, 0, 0, 1)
     elif zax == 1:
         gl.glRotatef(270, 1, 0, 0)
 
@@ -619,3 +635,110 @@ def planeEquation(xyz1, xyz2, xyz3):
               (x3 * ((y1 * z2) - (y2 * z1))))
 
     return eq
+
+
+def unitSphere(res):
+    """Generates a unit sphere, as described in the *Sphere Generation*
+    article, on Paul Bourke's excellent website:
+
+        http://paulbourke.net/geometry/circlesphere/
+
+    :arg res: Resolution - the number of angles to sample.
+
+    :returns: A tuple comprising:
+    
+              - a ``numpy.float32`` array of size ``(res**2, 3)``
+                containing a set of ``(x, y, z)`` vertices which define
+                the ellipsoid surface.
+     
+              - A ``numpy.uint32`` array of size ``(4 * (res - 1)**2)``
+                containing a list of indices into the vertex array,
+                defining a vertex ordering that can be used to draw
+                the ellipsoid using the OpenGL ``GL_QUAD`` primitive type.
+
+
+    .. todo:: Generate indices to use with ``GL_TRIANGLES`` instead of
+              ``GL_QUADS``.
+    """
+
+    # All angles to be sampled
+    u = np.linspace(-np.pi / 2, np.pi / 2, res, dtype=np.float32)
+    v = np.linspace(-np.pi,     np.pi,     res, dtype=np.float32)
+
+    cosu = np.cos(u)
+    cosv = np.cos(v)
+    sinu = np.sin(u)
+    sinv = np.sin(v) 
+
+    cucv = np.outer(cosu, cosv)
+    cusv = np.outer(cosu, sinv)
+
+    vertices = np.zeros((res ** 2, 3), dtype=np.float32)
+
+    # All x coordinates are of the form cos(u) * cos(v),
+    # y coordinates are of the form cos(u) * sin(v),
+    # and z coordinates of the form sin(u).
+    vertices[:, 0] = cucv.flatten()
+    vertices[:, 1] = cusv.flatten()
+    vertices[:, 2] = sinu.repeat(res)
+
+    # Generate a list of indices which join the
+    # vertices so they can be used to draw the
+    # sphere as GL_QUADs.
+    # 
+    # The vertex locations for each quad follow
+    # this pattern:
+    # 
+    #  1. (u,         v)
+    #  2. (u + ustep, v)
+    #  3. (u + ustep, v + vstep)
+    #  4. (u,         v + vstep)
+    nquads   = (res - 1) ** 2
+    quadIdxs = np.array([0, res, res + 1, 1], dtype=np.uint32)
+
+    indices  = np.tile(quadIdxs, nquads)
+    indices += np.arange(nquads,  dtype=np.uint32).repeat(4)
+    indices += np.arange(res - 1, dtype=np.uint32).repeat(4 * (res - 1))
+    
+    return vertices, indices
+
+
+def fullUnitSphere(res):
+    """Generates a unit sphere in the same way as :func:`unitSphere`, but
+    returns all vertices, instead of the unique vertices and an index array.
+
+    :arg res: Resolution - the number of angles to sample.
+
+    :returns: A ``numpy.float32`` array of size ``(4 * (res - 1)**2, 3)``
+              containing the ``(x, y, z)`` vertices which can be used to draw
+              a unit sphere (using the ``GL_QUADS`` primitive type).
+    """
+
+    u = np.linspace(-np.pi / 2, np.pi / 2, res, dtype=np.float32)
+    v = np.linspace(-np.pi,     np.pi,     res, dtype=np.float32)
+
+    cosu = np.cos(u)
+    cosv = np.cos(v)
+    sinu = np.sin(u)
+    sinv = np.sin(v) 
+
+    vertices = np.zeros(((res - 1) * (res - 1) * 4, 3), dtype=np.float32)
+
+    cucv   = np.outer(cosu[:-1], cosv[:-1]).flatten()
+    cusv   = np.outer(cosu[:-1], sinv[:-1]).flatten()
+    cu1cv  = np.outer(cosu[1:],  cosv[:-1]).flatten()
+    cu1sv  = np.outer(cosu[1:],  sinv[:-1]).flatten()
+    cu1cv1 = np.outer(cosu[1:],  cosv[1:]) .flatten()
+    cu1sv1 = np.outer(cosu[1:],  sinv[1:]) .flatten()
+    cucv1  = np.outer(cosu[:-1], cosv[1:]) .flatten()
+    cusv1  = np.outer(cosu[:-1], sinv[1:]) .flatten()
+    
+    su     = np.repeat(sinu[:-1], res - 1)
+    s1u    = np.repeat(sinu[1:],  res - 1)
+
+    vertices.T[:,  ::4] = [cucv,   cusv,   su]
+    vertices.T[:, 1::4] = [cu1cv,  cu1sv,  s1u]
+    vertices.T[:, 2::4] = [cu1cv1, cu1sv1, s1u]
+    vertices.T[:, 3::4] = [cucv1,  cusv1,  su]
+
+    return vertices

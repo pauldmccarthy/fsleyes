@@ -4,16 +4,94 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This package provides a collection of actions, and two package-level
-classes - the :class:`Action` class and the :class:`ActionProvider` class.
+"""This package provides a collection of actions, classes - the
+:class:`.Action` class and the :class:`.ActionProvider` class, and the
+:func:`action` and :func:`toggleAction` decorators.
 
 
-The :class:`Action` class represents some sort of action which may be
+The :class:`.Action` class represents some sort of action which may be
 performed, enabled and disabled, and may be bound to a GUI menu item or
-button.
+button. The :class:`ActionProvider` class represents some entity which can
+perform one or more actions.  As the :class:`.FSLEyesPanel` class derives from
+:class:`ActionProvider` pretty much everything in FSLEyes is an
+:class:`ActionProvider`. 
 
 
-Some 'global' actions are also provided in this package:
+The :func:`action` and :func:`toggleAction` functions are intended to be used
+as decorators upon the methods of a class which derives from
+:class:`ActionProvider`. For example::
+
+    >>> import fsl.fsleyes.actions as actions
+    >>> class Thing(actions.ActionProvider):
+            @actions.action
+            def doFirstThing(self):
+                print 'First thing done'
+            @actions.action
+            def doSecondThing(self):
+                print 'Second thing done'
+            @actions.toggleAction
+            def toggleOtherThing(self):
+                print 'Other thing toggled'
+
+
+In this example, when an instance of ``Thing`` is defined, each of the methods
+that are defined as actions will be available through the methods defined in
+the :class:`ActionProvder`. For example::
+
+    >>> t = Thing()
+    >>> print t.getActions()
+    [('doFirstThing', Action(doFirstThing)),
+     ('doSecondThing', Action(doSecondThing)),
+     ('toggleOtherThing', ToggleAction(toggleOtherThing))]
+
+
+You can enable/disable actions through the :meth:`ActionProvider.enableAction`
+and :meth:`ActionProvider.disableAction` methods::
+
+    >>> t.disableAction('doFirstThing')
+    >>> t.doFirstThing()
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+      File "/.../fsl/fsleyes/actions/__init__.py", line 139, in __call__
+        self.__name))
+    fsl.fsleyes.actions.ActionDisabledError: Action doFirstThing is disabled
+
+
+It is useful to know that each method on the ``t`` instance has actually been
+replaced with an :class:`.Action` instance, which encapsulates the method.
+Using this knowledge, you can access the ``Action`` instances directly::
+
+    >>> t.doFirstThing.enabled = True
+    >>> t.doFirstThing()
+    First thing done
+
+
+The :meth:`.Action.bindToWidget` method allows a widget to be bound to an
+:class:`.Action`. For example::
+
+    # We're assuming here that a wx.App, and
+    # a parent window, has been created
+    >>> button = wx.Button(parent, label='Do the first thing!')
+    >>> t.doSecondThing.bindToWidget(parent, button, wx.EVT_BUTTON)
+
+
+All bound widgets of an ``Action`` can be accessed through the
+:meth:`.Action.getBoundWidgets` method, and can be unbound via the
+:meth:`.Action.unbindAllWidgets` method.
+
+
+This module also provides two classes which allow a widget to be automatically
+created for, and bound to an ``Action`` or ``ToggleAction`` (through the
+:mod:`props.build` package):
+
+ .. autosummary::
+    :nosignatures:
+
+    ActionButton
+    ToggleActionButton
+
+
+Finally, some 'global' actions are also provided in this package:
 
  .. autosummary::
 
@@ -22,47 +100,281 @@ Some 'global' actions are also provided in this package:
     ~fsl.fsleyes.actions.openfile
     ~fsl.fsleyes.actions.openstandard
     ~fsl.fsleyes.actions.saveoverlay
-
-
-The :class:`ActionProvider` class represents some entity which can perform
-one or more actions.  As the :class:`.FSLEyesPanel` class derives from
-:class:`ActionProvider` pretty much everything in FSLEyes is an
-:class:`ActionProvider`.
+    ~fsl.fsleyes.actions.saveperspective
+    ~fsl.fsleyes.actions.loadperspective
+    ~fsl.fsleyes.actions.clearperspective
+    ~fsl.fsleyes.actions.togglecontrolpanel
 """
 
 
 import logging
-import collections
+import types
+import inspect
+import functools
 
 import props
 
 import fsl.data.strings as strings
 
+import action
+import copyoverlay
+import openfile
+import opendir
+import openstandard
+import saveoverlay
+import loadcolourmap
+import saveperspective
+import loadperspective
+import clearperspective
+import togglecontrolpanel
+
+Action                   = action            .Action
+ToggleAction             = action            .ToggleAction
+CopyOverlayAction        = copyoverlay       .CopyOverlayAction
+OpenFileAction           = openfile          .OpenFileAction
+OpenDirAction            = opendir           .OpenDirAction
+OpenStandardAction       = openstandard      .OpenStandardAction
+SaveOverlayAction        = saveoverlay       .SaveOverlayAction
+LoadColourMapAction      = loadcolourmap     .LoadColourMapAction
+SavePerspectiveAction    = saveperspective   .SavePerspectiveAction
+LoadPerspectiveAction    = loadperspective   .LoadPerspectiveAction
+ClearPerspectiveAction   = clearperspective  .ClearPerspectiveAction
+ToggleControlPanelAction = togglecontrolpanel.ToggleControlPanelAction
+
 
 log = logging.getLogger(__name__)
 
 
-def listGlobalActions():
-    """Convenience function which returns a list containing all
-    :class:`.Action` classes in the :mod:`actions` package.
+def action(*args, **kwargs):
+    """A decorator which identifies a class method as an action. """
+    return ActionFactory(Action, *args, **kwargs)
+
+
+def toggleAction(*args, **kwargs):
+    """A decorator which identifies a class method as a toggle action. """
+    return ActionFactory(ToggleAction, *args, **kwargs)
+
+
+def toggleControlAction(*args, **kwargs):
+    """A decorator which identifies a class method as a
+    :class:`.ToggleControlPanelAction`.
+    """
+    return ActionFactory(ToggleControlPanelAction, *args, **kwargs)
+
+
+class ActionProvider(object):
+    """The ``ActionProvider`` class is intended to be used as a base class for
+    classes which contain actions. The :func:`action` and :func:`toggleAction`
+    functions can be used as decorators on class methods, to denote them as
+    actions.
     """
 
-    import openfile
-    import openstandard
-    import copyoverlay
-    import saveoverlay
+    def destroy(self):
+        """Must be called when this ``ActionProvider`` is no longer needed.
+        Calls the :meth:`Action.destroy` method of all ``Action`` instances.
+        """
+        for name, action in self.getActions():
+            action.destroy()
+
+
+    def getAction(self, name):
+        """Return the :class:`Action` instance with the specified name. """
+        return getattr(self, name)
+
+
+    def enableAction(self, name, enable=True):
+        """Enable/disable the named :class:`Action`. """
+        self.getAction(name).enabled = enable
+
+        
+    def disableAction(self, name):
+        """Disable the named :class:`Action`. """
+        self.enableAction(name, False)
+
     
-    return [openfile    .OpenFileAction,
-            openstandard.OpenStandardAction,
-            copyoverlay .CopyOverlayAction,
-            saveoverlay .SaveOverlayAction]
+    def getActions(self):
+        """Return a list containing the ``(name, Action)`` of all
+        :class:`Action` instances in this ``ActionProvider``.
+        
+        Sub-classes may wish to override this method to enforce a specific
+        ordering of their actions.
+        """
+    
+        acts = []
+        
+        for name, attr in inspect.getmembers(self):
+            if isinstance(attr, Action):
+                acts.append((name, attr))
+                
+        return acts
 
 
+class ActionFactory(object):
+    """The ``ActionFactory`` is used by the :func:`action` and
+    :func:`toggleAction` decorators. Its job is to create :class:`Action`
+    instances for :class:`ActionProvider` instances.
+
+    
+    .. warning:: This class contains difficult-to-understand code. Read up
+                 on decorators and descriptors before proceeding.
+
+
+    .. note:: This class has no use outside of this module, except for use
+              with custom :class:`.Action`/:class:`.ToggleAction` sub-classes
+              and corresponding decorators (along the lines of :func:`.action`
+              and :func:`.toggleAction`). A custom decorator simply needs
+              to return ``ActionFactory(CustomActionClass, *args, **kwargs)``,
+              where the ``*args`` and ``**kwargs`` are the arguments passed to
+              the :class:`Action` sub-class.
+    
+              See the :func:`toggleControlAction` decorator for an example.
+
+    
+    *Boring technical details*
+    
+    
+    Consider the following class::
+
+        class MyThing(ActionProvider):
+
+            @action
+            def myAction(self):
+                # do things here
+
+                
+    The ``MyClass.myAction`` method has been marked as an action, using the
+    :func:`action` decorator. However, the :func:`action` decorator cannot
+    create an :class:`Action` instance at the point of class definition,
+    because this would lead to a single ``Action`` instance being shared by
+    multiple ``MyThing`` instances.  We need to be able to create an ``Action``
+    instance for every ``MyThing`` instance, whilst still allowing the action
+    decorator to be used on class methods.
+
+
+    So when the :func:`action` or :func:`toggleAction` is used in a class
+    definition, an ``ActionFactory`` is created, and used as the decorator
+    of the unbound class method.
+
+    
+    Later on, when the ``ActionFactory`` detects that it being is accessed
+    through an instance of the class (a ``MyThing`` instance in the example
+    above), it creates an :class:`Action` instance, and then replaces itself
+    with this ``Action`` instance - the ``Action`` instance becomes the
+    decorator of the bound method. This is possible because the
+    ``ActionFactory`` is a descriptor - it uses the :meth:`__get__` method
+    so it can differentiate between class-level and instance-level accesses
+    of the decorated method.
+
+    
+    The ``ActionFactory`` supports class-method decorators both with and
+    without arguments. While neither the :class:`.Action`, nor the
+    :class:`.ToggleAction` classes accept any optional arguments, this may be
+    useful for custom sub-classes, i.e.::
+
+        class MyThing(ActionProvider):
+
+            @action
+            def myAction(self):
+                # do things here
+
+            @customAction()
+            def myAction2(self):
+                # do things here
+
+            @otherCustomAction(arg1=8)
+            def myAction3(self):
+                # do things here
+    """
+
+    
+    def __init__(self, actionType, *args, **kwargs):
+        """Create an ``ActionFactory``.
+
+        :arg actionType: The action type (e.g. :class:`Action` or
+                         :class:`ToggleAction`).
+
+        The remaining arguments may comprise a single callable object, (an
+        ``@action`` style decorator was used) or a collection of arguments
+        passed to the decorator (an ``@action(...)`` style decorator was
+        used).
+        """
+        
+        self.__actionType  = actionType
+        self.__args        = args
+        self.__kwargs      = kwargs
+        self.__func        = None
+
+        # A no-brackets style
+        # decorator was used
+        if len(kwargs) == 0 and \
+           len(args)   == 1 and \
+           isinstance(args[0], (types.FunctionType,
+                                types.MethodType)):
+            
+            self.__func = args[0]
+            self.__args = self.__args[1:]
+
+        
+    def __call__(self, func=None):
+        """If this ``ActionFactory`` was instantiated through a brackets-style
+        decorator (e.g. ``@action(arg1=1, arg2=2)``), this method is called
+        immediately after :meth:`__init__`, with a reference to the decorated
+        function. Otherwise, (an ``@action`` style decorator was used), this
+        method should never be called.
+        """
+
+        if self.__func is not None:
+            log.warn('ActionFactory.__call__ was called, but function is '
+                     'alreday set ({})! I\'m really confused.'.format(
+                         self.__func.__name__))
+        
+        self.__func = func
+        return self
+    
+    
+    def __get__(self, instance, cls):
+        """When this ``ActionFactory`` is accessed through an instance,
+        an :class:`Action` instance is created. This ``ActionFactory`` is
+        then replaced by the ``Action`` instance.
+
+        If this ``ActionFactory`` is accessed through a class, the
+        encapsulated function is returned.
+        """
+        
+        # Class-level access
+        if instance is None:
+            return self.__func
+        
+        else:
+            
+            # Create an Action for the instance
+            action = self.__actionType(
+                self.__func,
+                instance,
+                *self.__args,
+                **self.__kwargs)
+
+            # and replace this ActionFactory
+            # with the Action on the instance.
+            setattr(instance, self.__func.__name__, action)
+            return functools.update_wrapper(action, self.__func)
+
+    
 class ActionButton(props.Button):
     """Extends the :class:`props.Button` class to encapsulate an
     :class:`Action` instance.
+
+    Only actions which are defined using the :func:`action` or
+    :func:`toggleAction` decorator are supported.
     """
-    def __init__(self, actionName, classType=None, **kwargs):
+
+    
+    def __init__(self,
+                 actionName,
+                 classType=None,
+                 actionArgs=None,
+                 actionKwargs=None, 
+                 **kwargs):
         """Create an ``ActionButton``.
 
         :arg actionName: Name of the action
@@ -72,7 +384,12 @@ class ActionButton(props.Button):
         :arg kwargs:     Passed to the :class:`props.Button` constructor.
         """
 
-        self.name = actionName
+        if actionArgs   is None: actionArgs   = []
+        if actionKwargs is None: actionKwargs = {} 
+
+        self.__name         = actionName
+        self.__actionArgs   = actionArgs
+        self.__actionKwargs = actionKwargs 
 
         if classType is not None:
             text = strings.actions.get((classType, actionName), actionName)
@@ -88,229 +405,89 @@ class ActionButton(props.Button):
             **kwargs)
 
 
-    def __setup(self, instance, parent, widget, *a):
+    def __setup(self, instance, parent, widget):
         """Called when the button is created. Binds the button widget to the
         ``Action`` instance.
         """
         import wx
-        instance.getAction(self.name).bindToWidget(
+        instance.getAction(self.__name).bindToWidget(
             parent, wx.EVT_BUTTON, widget)
 
         
-    def __onButton(self, instance, *a):
+    def __onButton(self, instance, widget):
         """Called when the button is pushed. Runs the action."""
-        instance.run(self.name)         
+        instance.getAction(self.__name)(*self.__actionArgs,
+                                        **self.__actionKwargs)
 
 
-class Action(props.HasProperties):
-    """Class which represents an action of some sort.
+class ToggleActionButton(props.Toggle):
+    """Extends the :class:`props.Toggle` class to encapsulate a
+    :class:`ToggleAction` instance.
 
-    The actual action which is performed may be specified either by
-    specifying it it during initialisation (the ``action`` parameter to
-    :meth:`__init__`), or by subclasses overriding the :meth:`doAction`
-    method. The former method will take precedence over the latter.
+    Only actions which are defined using the :func:`action` or
+    :func:`toggleAction` decorator are supported.
     """
 
     
-    enabled = props.Boolean(default=True)
-    """Controls whether the action is currently enabled or disabled.
-    When this property is ``False`` calls to :meth:`doAction` will
-    result in a ``RuntimeError``.
-    """
+    def __init__(self,
+                 actionName,
+                 icon,
+                 actionArgs=None,
+                 actionKwargs=None,
+                 **kwargs):
+        """Create a ``ToggleActionButton``.
+
+        :arg actionName:   Name of the action
+
+        :arg icon:         One or two icon file names to use on the button.
+
+        :arg actionArgs:   Positional arguments to pass to the
+                           :class:`.ToggleAction` when it is invoked.
+
+        :arg actionKwargs: Keyword arguments to pass to the
+                           :class:`.ToggleAction` when it is invoked.
+
+        :arg kwargs:       Passed to the :class:`props.Toggle` constructor.
+        """
+
+        if actionArgs   is None: actionArgs   = []
+        if actionKwargs is None: actionKwargs = {}
+
+        self.__name         = actionName
+        self.__actionArgs   = actionArgs
+        self.__actionKwargs = actionKwargs
+
+        props.Toggle.__init__(
+            self,
+            key=actionName,
+            icon=icon,
+            setup=self.__setup,
+            callback=self.__onToggle,
+            **kwargs)
 
     
-    def __init__(self, overlayList, displayCtx, action=None):
-        """Create an ``Action``.
-        
-        :arg overlayList: An :class:`.OverlayList` instance
-                          containing the list of overlays being displayed.
-
-        :arg displayCtx:  A :class:`.DisplayContext` instance defining how
-                          the overlays are to be displayed.
-
-        :arg action:      The action function. If not provided, assumes that
-                          the :meth:`doAction` method has been overridden.
-        """
-        self._overlayList  = overlayList
-        self._displayCtx   = displayCtx
-        self._boundWidgets = []
-        self._name         = '{}_{}'.format(self.__class__.__name__, id(self))
-        
-        if action is not None:
-            self.doAction = action
-            
-        self.__enabledDoAction = self.doAction
-
-        self.addListener('enabled',
-                         'Action_{}_internal'.format(id(self)),
-                         self._enabledChanged)
-
-        
-    def bindToWidget(self, parent, evType, widget):
-        """Binds this action to the given :mod:`wx` widget.
-
-        :arg parent: The :mod:`wx` object on which the event should be bound.
-
-        :arg evType: The :mod:`wx` event type.
-
-        :arg widget: The :mod:`wx` widget.
-        """
-
-        def wrappedAction(ev):
-            self.doAction()
-            
-        parent.Bind(evType, wrappedAction, widget)
-        widget.Enable(self.enabled)
-        self._boundWidgets.append((parent, evType, widget))
-
-
-    def destroy(self):
-        self.unbindAllWidgets()
-        self.__enabledDoAction  = None
-        self.__disabledDoAction = None
-
-
-    def unbindAllWidgets(self):
-        """Unbinds all widgets which have been bound via :meth:`bindToWidget`.
-        """
-
+    def __setup(self, instance, parent, widget):
+        """Called when the toggle widget is created. Binds the widget to the
+        ``ToggleAction`` instance.
+        """ 
         import wx
+        import pwidgets.bitmaptoggle as bmptoggle
         
-        for parent, evType, widget in self._boundWidgets:
-
-            # Only attempt to unbind if the parent
-            # and widget have not been destroyed
-            try:
-                parent.Unbind(evType, source=widget)
-            except wx.PyDeadObjectError:
-                pass
+        if isinstance(widget, wx.CheckBox):
+            ev = wx.EVT_BUTTON
+        elif isinstance(widget, wx.ToggleButton):
+            ev = wx.EVT_TOGGLEBUTTON
+        elif isinstance(widget, bmptoggle.BitmapToggleButton):
+            ev = bmptoggle.EVT_BITMAP_TOGGLE
             
-        self._boundWidgets = []
+        else:
+            raise RuntimeError(
+                'Unknown widget {}'.format(type(widget).__name__))
 
-
-    def _enabledChanged(self, *args):
-        """Internal method which is called when the :attr:`enabled` property
-        changes. Enables/disables the action, and any bound widgets.
-        """
-        if self.enabled: self.doAction = self.__enabledDoAction
-        else:            self.doAction = self.__disabledDoAction
-
-        for _, _, widget in self._boundWidgets:
-            widget.Enable(self.enabled)
-
-
-    def __disabledDoAction(self, *args):
-        """This method gets called when the action is disabled."""
-        raise RuntimeError('{} is disabled'.format(self.__class__.__name__))
-    
-
-    def __enabledDoAction(self, *args):
-        """This method is set in :meth:`__init__`; it gets called when the
-        action is enabled."""
-        pass
+        instance.getAction(self.__name).bindToWidget(parent, ev, widget)
 
     
-    def doAction(self, *args):
-        """This method must be overridden by subclasses.
-
-        It performs the action, or raises a ``RuntimeError`` if the action
-        is disabled.
-        """
-        raise NotImplementedError('Action object must implement '
-                                  'the doAction method') 
-
-
-class ActionProvider(props.SyncableHasProperties):
-    """An :class:`ActionProvider` is some entity which can perform actions.
-
-    Said entity is also a :class:`~props.HasProperties` instance, so can
-    optionally define some properties which, along with any defined actions,
-    will ultimately be exposed to the user.
-    """
-
-    def __init__(self, overlayList, displayCtx, **kwargs):
-        """Create an :class:`ActionProvider` instance.
-
-        :arg overlayList: An :class:`.OverlayList` instance containing the
-                          list of overlays being displayed.
-
-        :arg displayCtx:  A :class:`.DisplayContext` instance defining how
-                          the overlays are to be displayed. 
-
-        :arg actions:     A dictionary containing ``{name -> function}``
-                          mappings, where each function is an action that
-                          should be made available to the user.
-
-        :arg kwargs:      Passed to the :class:`.SyncableHasProperties`
-                          constructor.
-        """
-
-        actions = kwargs.pop('actions', None)
-
-        props.SyncableHasProperties.__init__(self, **kwargs)
-
-        if actions is None:
-            actions = {}
-
-        self.__actions = collections.OrderedDict()
-
-        for name, func in actions.items():
-            act = Action(overlayList, displayCtx, action=func)
-            self.__actions[name] = act
-
-            
-    def destroy(self):
-        """This method should be called when this ``ActionProvider`` is
-        about to be destroyed. It ensures that all ``Action`` instances
-        are cleared.
-        """
-        for n, act in self.__actions.items():
-            act.destroy()
-            
-        self.__actions = None
-
-            
-    def addActionToggleListener(self, name, listenerName, func):
-        """Add a listener function which will be called when the named action
-        is enabled or disabled.
-        """
-
-        self.__actions[name].addListener('enabled', listenerName, func)
-
-
-    def getAction(self, name):
-        """Return the :class:`Action` object of the given name. """
-        return self.__actions[name]
-
-        
-    def getActions(self):
-        """Return a dictionary containing ``{name -> Action}`` mappings for
-        all defined actions.
-        """
-        return collections.OrderedDict(self.__actions)
-
-
-    def isEnabled(self, name):
-        """Return ``True`` if the named action is enabled, ``False`` otherwise.
-        """
-        return self.__actions[name].enabled
-
-    
-    def enable(self, name, enable=True):
-        """Enables/disables the named action. """ 
-        self.__actions[name].enabled = enable
-
-        
-    def disable(self, name):
-        """Disables the named action. """ 
-        self.__actions[name].enabled = False
-
-
-    def toggle(self, name):
-        """Toggles the state of the named action. """ 
-        self.__actions[name].enabled = not self.__actions[name].enabled
-
-
-    def run(self, name, *args):
-        """Performs the named action."""
-        self.__actions[name].doAction(*args)
+    def __onToggle(self, instance, widget):
+        """Called when the widget is toggled. Runs the action."""
+        instance.getAction(self.__name)(*self.__actionArgs,
+                                        **self.__actionKwargs)

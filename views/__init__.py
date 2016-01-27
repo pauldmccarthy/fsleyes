@@ -12,9 +12,7 @@ the :mod:`~fsl.fsleyes` package documentation.  It contains a collection of
 views.
 
 
-A package-level convenience function, :func:`listViewPanels`, is provided to
-allow dynamic lookup of all :class:`.ViewPanel` sub-classes. The following
-:class:`.ViewPanel` sub-classes currently exist:
+The following :class:`.ViewPanel` sub-classes currently exist:
 
 .. autosummary::
    :nosignatures:
@@ -23,7 +21,9 @@ allow dynamic lookup of all :class:`.ViewPanel` sub-classes. The following
    ~fsl.fsleyes.views.orthopanel.OrthoPanel
    ~fsl.fsleyes.views.lightboxpanel.LightBoxPanel
    ~fsl.fsleyes.views.plotpanel.PlotPanel
+   ~fsl.fsleyes.views.plotpanel.OverlayPlotPanel
    ~fsl.fsleyes.views.timeseriespanel.TimeSeriesPanel
+   ~fsl.fsleyes.views.powerspectrumpanel.PowerSpectrumPanel
    ~fsl.fsleyes.views.histogrampanel.HistogramPanel
 """
 
@@ -36,35 +36,16 @@ import canvaspanel
 import orthopanel
 import lightboxpanel
 import timeseriespanel
+import powerspectrumpanel
 import histogrampanel
 
 
-FSLEyesPanel    = fslpanel       .FSLEyesPanel
-ViewPanel       = viewpanel      .ViewPanel
-PlotPanel       = plotpanel      .PlotPanel
-CanvasPanel     = canvaspanel    .CanvasPanel
-OrthoPanel      = orthopanel     .OrthoPanel
-LightBoxPanel   = lightboxpanel  .LightBoxPanel
-TimeSeriesPanel = timeseriespanel.TimeSeriesPanel
-HistogramPanel  = histogrampanel .HistogramPanel
-
-
-def listViewPanels():
-    """Convenience function which returns a list containing all
-    :class:`.ViewPanel` sub-classes in the ``views`` package.
-    """
-
-    atts = globals()
-
-    viewPanels = []
-
-    for name, val in atts.items():
-        
-        if not isinstance(val, type): continue
-        if val == FSLEyesPanel:       continue
-            
-        if issubclass(val, FSLEyesPanel) and \
-           val not in (CanvasPanel, ViewPanel, PlotPanel):
-            viewPanels.append(val)
-            
-    return viewPanels
+FSLEyesPanel       = fslpanel          .FSLEyesPanel
+ViewPanel          = viewpanel         .ViewPanel
+PlotPanel          = plotpanel         .PlotPanel
+CanvasPanel        = canvaspanel       .CanvasPanel
+OrthoPanel         = orthopanel        .OrthoPanel
+LightBoxPanel      = lightboxpanel     .LightBoxPanel
+TimeSeriesPanel    = timeseriespanel   .TimeSeriesPanel
+PowerSpectrumPanel = powerspectrumpanel.PowerSpectrumPanel
+HistogramPanel     = histogrampanel    .HistogramPanel

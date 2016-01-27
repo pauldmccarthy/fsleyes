@@ -26,7 +26,7 @@ class ShellPanel(fslpanel.FSLEyesPanel):
     that owns this ``ShellPanel``.
     """
 
-    def __init__(self, parent, overlayList, displayCtx, sceneOpts):
+    def __init__(self, parent, overlayList, displayCtx, canvasPanel):
         """Create a ``ShellPanel``.
 
         :arg parent:      The :mod:`wx` parent object, assumed to be the
@@ -37,15 +37,15 @@ class ShellPanel(fslpanel.FSLEyesPanel):
         :arg displayCtx:  The :class:`.DisplayContext` of the
                           :class:`.CanvasPanel` that owns this ``ShellPanel``.
         
-        :arg sceneOpts:   The :class:`.SceneOpts` of the
-                          :class:`.CanvasPanel` that owns this ``ShellPanel``.
+        :arg canvasPanel: The :class:`.CanvasPanel` that owns this
+                          ``ShellPanel``.
         """
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         lcls = {
             'displayCtx'  : displayCtx,
             'overlayList' : overlayList,
-            'sceneOpts'   : sceneOpts,
+            'sceneOpts'   : canvasPanel.getSceneOptions(),
             'viewPanel'   : parent,
         }
 

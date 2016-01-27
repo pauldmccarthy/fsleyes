@@ -9,16 +9,23 @@ panel which displays information about the currently selected overlay.
 """
 
 
+import logging
+
 import collections
 
 import wx
-import wx.html as wxhtml
+import wx.html2 as wxhtml
 
 import numpy as np
 
+import fsl.data.image      as fslimage
 import fsl.data.strings    as strings
 import fsl.data.constants  as constants
+import fsl.utils.typedict  as td
 import fsl.fsleyes.panel   as fslpanel
+
+
+log = logging.getLogger(__name__)
 
 
 class OverlayInfoPanel(fslpanel.FSLEyesPanel):
@@ -39,6 +46,7 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
     :class:`.Image`        :meth:`__getImageInfo`
     :class:`.FEATImage`    :meth:`__getFEATImageInfo`
     :class:`.MelodicImage` :meth:`__getMelodicImageInfo`
+    :class:`.TensorImage`  :meth:`__getTensorImageInfo`
     :class:`.Model`        :meth:`__getModelInfo`
     ====================== =============================
     """
@@ -54,26 +62,25 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
 
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
-        self.__info  = wxhtml.HtmlWindow(self)
+        self.__info  = wxhtml.WebView.New(self)
         self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.__sizer.Add(self.__info, flag=wx.EXPAND, proportion=1)
-
-        self.__info.SetStandardFonts(self.GetFont().GetPointSize())
         
         self.SetSizer(self.__sizer)
 
         displayCtx .addListener('selectedOverlay',
                                 self._name,
-                                self.__selectedOverlayChanged)
+                                self.__selectedOverlayChanged) 
         overlayList.addListener('overlays',
                                 self._name,
                                 self.__selectedOverlayChanged)
 
         self.__currentOverlay = None
         self.__currentDisplay = None
+        self.__currentOpts    = None
         self.__selectedOverlayChanged()
 
-        self.SetMinSize((300, 200))
+        self.SetMinSize((350, 500))
         self.Layout()
 
         
@@ -94,7 +101,7 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
 
         fslpanel.FSLEyesPanel.destroy(self)
 
-
+        
     def __selectedOverlayChanged(self, *a):
         """Called when the :class:`.OverlayList` or
         :attr:`.DisplayContext.selectedOverlay` changes. Refreshes the
@@ -105,37 +112,97 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
 
         # Overlay list is empty
         if overlay is None:
-            self.__info.SetPage('')
+            self.__info.SetPage('', '')
             self.__info.Refresh()
             return
-
-        # Info for this overlay
-        # is already being shown
-        if overlay == self.__currentOverlay:
-            return
         
-        if self.__currentDisplay is not None:
-            self.__currentDisplay.removeListener('name', self._name)
-            
-        self.__currenOverlay = None
-        self.__currenDisplay = None
+        self.__deregisterOverlay()
         
         if overlay is not None:
-            self.__currentOverlay = overlay
-            self.__currentDisplay = self._displayCtx.getDisplay(overlay)
+            self.__registerOverlay(overlay)
 
-            self.__currentDisplay.addListener('name',
-                                              self._name,
-                                              self.__overlayNameChanged)
-        
         self.__updateInformation()
 
+
+    _optProps = td.TypeDict({
+        'Image'       : ['transform'],
+        'Model'       : ['refImage', 'coordSpace'],
+        'TensorImage' : ['transform'],
+    })
+    """This dictionary contains a list of :class:`.DisplayOpts` properties
+    that, when changed, should result in the information being refreshed.
+    It is used by th e:meth:`__registerOverlay` and :meth:`__deregisterOverlay`
+    methods.
+    """
+    
+
+    def __registerOverlay(self, overlay):
+        """Registers property listeners with the given overlay so the
+        information can be refreshed when necessary.
+        """
+
+        display = self._displayCtx.getDisplay(overlay)
+        opts    = display.getDisplayOpts()
+
+        self.__currentOverlay = overlay
+        self.__currentDisplay = display
+        self.__currentOpts    = opts
+
+        display.addListener('name',
+                            self._name,
+                            self.__overlayNameChanged)
+        display.addListener('overlayType',
+                            self._name,
+                            self.__overlayTypeChanged)
+
+        for propName in OverlayInfoPanel._optProps.get(overlay, []):
+            opts.addListener(propName, self._name, self.__overlayOptsChanged) 
+
+    
+    def __deregisterOverlay(self):
+        """De-registers property listeners from the overlay that was
+        previously registered via :meth:`__registerOverlay`.
+        """ 
+
+        if self.__currentOverlay is None:
+            return
+
+        overlay = self.__currentOverlay
+        display = self.__currentDisplay
+        opts    = self.__currentOpts
+
+        self.__currentOverlay = None
+        self.__currentDisplay = None
+        self.__currentOpts    = None
+
+        display.removeListener('name',        self._name)
+        display.removeListener('overlayType', self._name)
+
+        for propName in OverlayInfoPanel._optProps[overlay]:
+            opts.removeListener(propName, self._name)
+
+        
+    def __overlayTypeChanged(self, *a):
+        """Called when the :attr:`.Display.overlayType` for the current
+        overlay changes. Re-registers with the ``Display`` and
+        ``DisplayOpts`` instances associated with the overlay.
+        """
+        self.__selectedOverlayChanged() 
+        
         
     def __overlayNameChanged(self, *a):
         """Called when the :attr:`.Display.name` for the current overlay
         changes. Updates the information display.
         """
         self.__updateInformation()
+
+        
+    def __overlayOptsChanged(self, *a):
+        """Called when any :class:`.DisplayOpts` properties for the current
+        overlay change. Updates the information display. The properties that
+        trigger a refresh are  defined in the :attr:`_optProps` dictionary.
+        """
+        self.__updateInformation() 
 
 
     def __updateInformation(self):
@@ -150,23 +217,17 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
                                             type(overlay).__name__)
         infoFunc  = getattr(self, infoFunc, None)
 
-        # Try and preserve the
-        # current scroll position 
-        scrollPos = self.__info.GetViewStart()
-
         # Overlay is none, or the overlay 
         # type is not supported
         if infoFunc is None:
-            self.__info.SetPage('')
+            self.__info.SetPage('', '')
             self.__info.Refresh()
             return
 
         info = infoFunc(overlay, display)
 
-        self.__info.SetPage(self.__formatOverlayInfo(info))
-
+        self.__info.SetPage(self.__formatOverlayInfo(info), '')
         self.__info.Refresh()
-        self.__info.Scroll(scrollPos)
 
 
     def __getImageInfo(self, overlay, display):
@@ -188,22 +249,57 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
         voxUnits, timeUnits = hdr.get_xyzt_units()
         qformCode           = int(hdr['qform_code'])
         sformCode           = int(hdr['sform_code'])
-        
-        dimSect    = strings.labels[self, overlay, 'dimensions']
-        xformSect  = strings.labels[self, overlay, 'transform']
-        orientSect = strings.labels[self, overlay, 'orient']
 
+        generalSect = strings.labels[self,          'general']
+        dimSect     = strings.labels[self, overlay, 'dimensions']
+        xformSect   = strings.labels[self, overlay, 'transform']
+        orientSect  = strings.labels[self, overlay, 'orient']
+
+        info.addSection(generalSect)
         info.addSection(dimSect)
         info.addSection(xformSect)
         info.addSection(orientSect)
 
-        info.addInfo(strings.labels[self, 'dataSource'], overlay.dataSource)
+        displaySpace = strings.labels[self,
+                                      overlay,
+                                      'displaySpace',
+                                      opts.transform]
+        
+        if opts.transform == 'custom':
+            dsImg = self._displayCtx.displaySpace
+            if isinstance(dsImg, fslimage.Nifti1):
+                dsDisplay    = self._displayCtx.getDisplay(dsImg)
+                displaySpace = displaySpace.format(dsDisplay.name)
+            else:
+                log.warn('{} transform ({}) seems to be out '
+                         'of date (display space: {})'.format(
+                             overlay,
+                             opts.transform,
+                             self._displayCtx.displaySpace))
+            
+        info.addInfo(strings.labels[self, 'dataSource'],
+                     overlay.dataSource,
+                     section=generalSect)
         info.addInfo(strings.nifti['datatype'],
-                     strings.nifti['datatype', int(hdr['datatype'])])
-        info.addInfo(strings.nifti['descrip'], hdr['descrip'])
+                     strings.nifti['datatype', int(hdr['datatype'])],
+                     section=generalSect)
+        info.addInfo(strings.nifti['descrip'],
+                     hdr['descrip'],
+                     section=generalSect)
         info.addInfo(strings.nifti['intent_code'],
-                     strings.nifti['intent_code', int(hdr['intent_code'])])
-        info.addInfo(strings.nifti['intent_name'], hdr['intent_name'])
+                     strings.nifti['intent_code', int(hdr['intent_code'])],
+                     section=generalSect)
+        info.addInfo(strings.nifti['intent_name'],
+                     hdr['intent_name'],
+                     section=generalSect)
+
+        info.addInfo(strings.labels[self, 'overlayType'],
+                     strings.choices[display, 'overlayType'][
+                         display.overlayType],
+                     section=generalSect)
+        info.addInfo(strings.labels[self, 'displaySpace'],
+                     displaySpace,
+                     section=generalSect)
         
         info.addInfo(strings.nifti['dimensions'],
                      '{}D'.format(len(overlay.shape)),
@@ -218,8 +314,8 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
             
             pixdim = hdr['pixdim'][i + 1]
 
-            if   i  < 3: pixdim = '{} {}'.format(pixdim, voxUnits)
-            elif i == 3: pixdim = '{} {}'.format(pixdim, timeUnits)
+            if   i  < 3: pixdim = '{:0.4g} {}'.format(pixdim, voxUnits)
+            elif i == 3: pixdim = '{:0.4g} {}'.format(pixdim, timeUnits)
                 
             info.addInfo(
                 strings.nifti['pixdim{}'.format(i + 1)],
@@ -227,10 +323,10 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
                 section=dimSect)
 
         info.addInfo(strings.nifti['qform_code'],
-                     strings.anatomy['Image', 'space', qformCode],
+                     strings.anatomy['Nifti1', 'space', qformCode],
                      section=xformSect)
         info.addInfo(strings.nifti['sform_code'],
-                     strings.anatomy['Image', 'space', sformCode],
+                     strings.anatomy['Nifti1', 'space', sformCode],
                      section=xformSect)
 
         if qformCode != constants.NIFTI_XFORM_UNKNOWN:
@@ -247,8 +343,8 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
             xform  = opts.getTransform('world', 'id')
             orient = overlay.getOrientation(i, xform)
             orient = '{} - {}'.format(
-                strings.anatomy['Image', 'lowlong',  orient],
-                strings.anatomy['Image', 'highlong', orient])
+                strings.anatomy['Nifti1', 'lowlong',  orient],
+                strings.anatomy['Nifti1', 'highlong', orient])
             info.addInfo(strings.nifti['voxOrient.{}'.format(i)],
                          orient,
                          section=orientSect)
@@ -257,8 +353,8 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
             xform  = np.eye(4)
             orient = overlay.getOrientation(i, xform)
             orient = '{} - {}'.format(
-                strings.anatomy['Image', 'lowlong',  orient],
-                strings.anatomy['Image', 'highlong', orient])
+                strings.anatomy['Nifti1', 'lowlong',  orient],
+                strings.anatomy['Nifti1', 'highlong', orient])
             info.addInfo(strings.nifti['worldOrient.{}'.format(i)],
                          orient,
                          section=orientSect)
@@ -276,17 +372,22 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
         """ 
         info = self.__getImageInfo(overlay, display)
 
-        featInfo = collections.OrderedDict([
+        featInfo = [
             ('analysisName', overlay.getAnalysisName()),
+            ('analysisDir',  overlay.getFEATDir()),
             ('numPoints',    overlay.numPoints()),
             ('numEVs',       overlay.numEVs()),
-            ('numContrasts', overlay.numContrasts()),
-        ])
+            ('numContrasts', overlay.numContrasts())]
+
+        topLevel = overlay.getTopLevelAnalysisDir()
+
+        if topLevel is not None:
+            featInfo.insert(2, ('partOfAnalysis', topLevel))
 
         secName = strings.labels[self, overlay, 'featInfo']
         info.addSection(secName)
 
-        for k, v in featInfo.items():
+        for k, v in featInfo:
             info.addInfo(strings.feat[k], v, section=secName)
 
         return info
@@ -303,17 +404,21 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
 
         info = self.__getImageInfo(overlay, display)
 
-        melInfo = collections.OrderedDict([
-            ('tr',             overlay.tr),
+        melInfo = [
             ('dataFile',       overlay.getDataFile()),
-            ('partOfAnalysis', overlay.getTopLevelAnalysisDir()),
-            ('numComponents',  overlay.numComponents()),
-        ])
+            ('analysisDir',    overlay.getMelodicDir()),
+            ('tr',             overlay.tr),
+            ('numComponents',  overlay.numComponents())]
+
+        topLevel = overlay.getTopLevelAnalysisDir()
+        
+        if topLevel is not None:
+            melInfo.insert(2, ('partOfAnalysis', topLevel))
 
         secName = strings.labels[self, overlay, 'melodicInfo']
         info.addSection(secName)
 
-        for k, v in melInfo.items():
+        for k, v in melInfo:
             info.addInfo(strings.melodic[k], v, section=secName)
 
         return info
@@ -327,17 +432,74 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
         :arg display: The :class:`.Display` instance assocated with the
                       ``Model``.
         """ 
+
+        opts   = display.getDisplayOpts()
+        refImg = opts.refImage
+
+        modelInfo = [
+            ('numVertices', overlay.vertices.shape[0]),
+            ('numIndices',  overlay.indices .shape[0]),
+        ]
+
+        if refImg is None:
+            modelInfo.append(
+                ('displaySpace', strings.labels[
+                    self, overlay, 'coordSpace', 'display']))
+        else:
+            
+            refOpts      = self._displayCtx.getOpts(refImg)
+            dsImg        = self._displayCtx.displaySpace
+            displaySpace = strings.labels[
+                self, refImg, 'displaySpace', refOpts.transform]
+            coordSpace   = strings.labels[
+                self, overlay,
+                'coordSpace', opts.coordSpace].format(refImg.name)
+
+            if refOpts.transform == 'custom':
+                dsDisplay    = self._displayCtx.getDisplay(dsImg)
+                displaySpace = displaySpace.format(dsDisplay.name)
+
+            modelInfo.append(('refImage',     refImg.dataSource))
+            modelInfo.append(('coordSpace',   coordSpace))
+            modelInfo.append(('displaySpace', displaySpace))
+
         info = OverlayInfo('{} - {}'.format(
             display.name,
             strings.labels[self, overlay]))
-
+        
         info.addInfo(strings.labels[self, 'dataSource'], overlay.dataSource)
-        info.addInfo(
-            strings.labels[self, overlay, 'numVertices'],
-            overlay.vertices.shape[0])
-        info.addInfo(
-            strings.labels[self, overlay, 'numIndices'],
-            overlay.indices.shape[0]) 
+
+        for name, value in modelInfo:
+            info.addInfo(strings.labels[self, overlay, name], value) 
+
+        return info
+
+
+    def __getTensorImageInfo(self, overlay, display):
+        """Creates and returns an :class:`OverlayInfo` object containing
+        information about the given :class:`.TensorImage` overlay.
+
+        :arg overlay: A :class:`.TensorImage` instance.
+        :arg display: The :class:`.Display` instance assocated with the
+                      ``TensorImage``. 
+        """
+        info = self.__getImageInfo(overlay, display)
+
+        tensorInfo = [
+            ('v1', overlay.V1().dataSource),
+            ('v2', overlay.V2().dataSource),
+            ('v3', overlay.V3().dataSource),
+            ('l1', overlay.L1().dataSource),
+            ('l2', overlay.L2().dataSource),
+            ('l3', overlay.L3().dataSource),
+        ]
+
+        section = strings.labels[self, overlay, 'tensorInfo']
+
+        info.addSection(section)
+        
+        for name, val in tensorInfo:
+            info.addInfo(strings.tensor[name], val, section)
 
         return info
 
@@ -349,15 +511,17 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
 
         lines = []
 
-        lines.append('<table border="0">')
+        lines.append('<table border="0" style="font-size: small;">')
 
         for rowi in range(array.shape[0]):
 
             lines.append('<tr>')
 
             for coli in range(array.shape[1]):
-                lines.append('<td>{}</td>'.format(array[rowi, coli]))
+                lines.append('<td>{:0.4g}</td>'.format(array[rowi, coli]))
             lines.append('</tr>')
+
+        lines.append('</table>')
             
         return ''.join(lines)
 
@@ -368,25 +532,33 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
         """
         lines = []
 
-        lines.append('<h3>{}</h3>'.format(info.title))
+        lines.append('<html>')
+        lines.append('<body style="font-family: '
+                     'sans-serif; font-size: small;">')
+        lines.append('<h2>{}</h2>'.format(info.title))
 
         sections = []
-        sections.append((None, info.info))
+
+        if len(info.info) > 0:
+            sections.append((None, info.info))
         
         for secName, secInf in info.sections.items():
             sections.append((secName, secInf))
 
         for i, (secName, secInf) in enumerate(sections):
 
-            if secName is not None:
-                lines.append('<h4>{}</h4>'.format(secName))
+            lines.append('<div style="float:left; margin: 5px; '
+                         'background-color: #f0f0f0;">')
 
-            lines.append('<table border="0">')
+            if secName is not None:
+                lines.append('<h3>{}</h3>'.format(secName))
+
+            lines.append('<table border="0" style="font-size: small;">')
 
             for i, (infName, infData) in enumerate(secInf):
 
-                if i % 2: bgColour = '#ffffff'
-                else:     bgColour = '#ffeeee'
+                if i % 2: bgColour = '#f0f0f0'
+                else:     bgColour = '#cdcdff'
 
                 lines.append('<tr bgcolor="{}">'
                              '<td><b>{}</b></td>'
@@ -396,6 +568,10 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
                                  infData))
 
             lines.append('</table>')
+            lines.append('</div>')
+
+
+        lines.append('</body></html>')
 
         return '\n'.join(lines)
 

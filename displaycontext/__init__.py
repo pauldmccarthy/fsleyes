@@ -72,7 +72,7 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
 .. autosummary::
    :nosignatures:
 
-   ~fsl.fsleyes.displaycontext.volumeopts.ImageOpts
+   ~fsl.fsleyes.displaycontext.volumeopts.Nifti1Opts
    ~fsl.fsleyes.displaycontext.volumeopts.VolumeOpts
    ~fsl.fsleyes.displaycontext.maskopts.MaskOpts
    ~fsl.fsleyes.displaycontext.vectoropts.VectorOpts
@@ -80,6 +80,7 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
    ~fsl.fsleyes.displaycontext.vectoropts.LineVectorOpts
    ~fsl.fsleyes.displaycontext.modelopts.ModelOpts
    ~fsl.fsleyes.displaycontext.labelopts.LabelOpts
+   ~fsl.fsleyes.displaycontext.tensoropts.TensorOpts
 
 
 --------------
@@ -142,7 +143,7 @@ from group          import OverlayGroup
 from sceneopts      import SceneOpts
 from orthoopts      import OrthoOpts
 from lightboxopts   import LightBoxOpts
-from volumeopts     import ImageOpts
+from volumeopts     import Nifti1Opts
 from volumeopts     import VolumeOpts
 from maskopts       import MaskOpts
 from vectoropts     import VectorOpts
@@ -150,6 +151,7 @@ from vectoropts     import RGBVectorOpts
 from vectoropts     import LineVectorOpts
 from modelopts      import ModelOpts
 from labelopts      import LabelOpts
+from tensoropts     import TensorOpts
 
 
 from displaycontext import InvalidOverlayError
@@ -162,3 +164,6 @@ ALL_OVERLAY_TYPES = list(set(
 :attr:`.Display.overlayType` property and tge :data:`.display.OVERLAY_TYPES`
 dictionary for more details.
 """
+
+OVERLAY_TYPES    = display.OVERLAY_TYPES
+DISPLAY_OPTS_MAP = display.DISPLAY_OPTS_MAP

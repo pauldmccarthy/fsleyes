@@ -9,29 +9,29 @@ class to render :class:`.Image` overlays as RGB vector images in an OpenGL 1.4
 compatible manner.
 
 
+This module uses functions in the :mod:`.gl14.glvector_funcs` module, which
+contains logic used for rendering both ``GLRGBVector`` and ``GLLineVector``
+instances.
+
+
 Rendering of a ``GLRGBVector`` is very similar to that of a
-:class:`.GLVolume`; therefore, the ``preDraw``, ``draw``, ``drawAll`` and
-``postDraw`` functions defined in the :mod:`.gl14.glvolume_funcs` are re-used
-by this module.
+:class:`.GLVolume`, with the exception that a different fragment shader
+(``glvector``) may be used. Therefore, the ``preDraw``, ``draw``, ``drawAll``
+and ``postDraw`` functions defined in the :mod:`.gl14.glvolume_funcs` are
+re-used by this module.
 """
 
 
-import OpenGL.GL                      as gl
-import OpenGL.GL.ARB.fragment_program as arbfp
-import OpenGL.GL.ARB.vertex_program   as arbvp
-import OpenGL.raw.GL._types           as gltypes
-
-import                           glvolume_funcs
-import fsl.fsleyes.gl.shaders as shaders
+import glvolume_funcs
+import glvector_funcs
 
 
 def init(self):
     """Calls the :func:`compileShaders` and :func:`updateShaderState`
     functions.
     """
-    
-    self.vertexProgram   = None
-    self.fragmentProgram = None
+
+    self.shader = None
     
     compileShaders(   self)
     updateShaderState(self)
@@ -39,59 +39,31 @@ def init(self):
 
 def destroy(self):
     """Destroys the vertex/fragment shader programs created in :func:`init`.
-    """ 
-    arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
-    arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram)) 
+    """
+    glvector_funcs.destroy(self)
 
     
 def compileShaders(self):
-    """Compiles the vertex/fragment shader programs used for drawing
-    :class:`.GLRGBVector` instances. Stores references to the shader
-    programs on the ``GLRGBVector`` instance. 
+    """Calls the :mod:`.gl14.glvector_funcs.compileShaders` function.
     """
-    if self.vertexProgram is not None:
-        arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
-        
-    if self.fragmentProgram is not None:
-        arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram)) 
-
-    vertShaderSrc = shaders.getVertexShader(  self,
-                                              sw=self.display.softwareMode)
-    fragShaderSrc = shaders.getFragmentShader(self,
-                                              sw=self.display.softwareMode)
-
-    vertexProgram, fragmentProgram = shaders.compilePrograms(
-        vertShaderSrc, fragShaderSrc)
-
-    self.vertexProgram   = vertexProgram
-    self.fragmentProgram = fragmentProgram        
+    glvector_funcs.compileShaders(self, 'glvolume')
 
 
 def updateShaderState(self):
-    """Updates all variables used by the vertex/fragment shader programs. """
+    """Updates all variables used by the vertex/fragment shader programs.  The
+    fragment shader is configured by the
+    :func:.gl21.glvector_funcs.updateFragmentShaderState` function.
+    """
 
-    opts = self.displayOpts
-    
-    gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-    gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
+    glvector_funcs.updateFragmentShaderState(self)
 
-    arbvp.glBindProgramARB(arbvp.GL_VERTEX_PROGRAM_ARB,
-                           self.vertexProgram)
-    arbfp.glBindProgramARB(arbfp.GL_FRAGMENT_PROGRAM_ARB,
-                           self.fragmentProgram)
+    shape = list(self.vectorImage.shape[:3])
 
-    voxValXform  = self.imageTexture.voxValXform
-    cmapXform    = self.xColourTexture.getCoordinateTransform()
-    shape        = list(self.image.shape[:3]) + [0]
-    modThreshold = [opts.modThreshold / 100.0, 0.0, 0.0, 0.0]
+    self.shader.load()
+    self.shader.setVertParam('imageShape', shape + [0])
+    self.shader.unload()
 
-    shaders.setFragmentProgramMatrix(0, voxValXform)
-    shaders.setFragmentProgramMatrix(4, cmapXform)
-    shaders.setFragmentProgramVector(8, shape + [0])
-    shaders.setFragmentProgramVector(9, modThreshold)
-    
-    gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB) 
-    gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
+    return True
 
 
 preDraw  = glvolume_funcs.preDraw

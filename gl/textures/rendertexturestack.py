@@ -15,6 +15,9 @@ import logging
 import OpenGL.GL as gl
 
 import fsl.fsleyes.gl.routines as glroutines
+import fsl.fsleyes.gl.globject as globject
+import fsl.utils.async         as async
+import fsl.utils.status        as status
 import                            rendertexture
 
 
@@ -32,21 +35,18 @@ class RenderTextureStack(object):
     provides better performance than rendering the ``GLObject`` slice
     in real time.
 
-    The :class:`.RenderTexture` textures are updated in an idle loop, which is
-    triggered by the ``wx.EVT_IDLE`` event.
+    The :class:`.RenderTexture` textures are updated in an idle loop, via the
+    :func:`.async.idle` function.
     """
 
     
     def __init__(self, globj):
-        """Create a ``RenderTextureStack``. A listener is registered on the
-        ``wx.EVT_IDLE`` event, so that the :meth:`__textureUpdateLoop` method
-        is called periodically.  An update listener is registered on the
-        ``GLObject``, so that the textures can be refreshed whenever it
+        """Create a ``RenderTextureStack``. An update listener is registered
+        on the ``GLObject``, so that the textures can be refreshed whenever it
         changes.
 
         :arg globj: The :class:`.GLObject` instance.
         """
-
 
         self.name = '{}_{}_{}'.format(
             type(self).__name__,
@@ -66,12 +66,19 @@ class RenderTextureStack(object):
         self.__lastDrawnTexture   = None
         self.__updateQueue        = []
 
-        self.__globj.addUpdateListener(
+        self.__globj.register(
             '{}_{}'.format(type(self).__name__, id(self)),
-            self.__refreshAllTextures)
+            self.__onGLObjectUpdate)
 
-        import wx
-        wx.GetApp().Bind(wx.EVT_IDLE, self.__textureUpdateLoop)
+        async.idle(self.__textureUpdateLoop)
+
+        log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
+
+        
+    def __del__(self):
+        """Prints a log message."""
+        if log:
+            log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
 
         
     def destroy(self):
@@ -127,8 +134,7 @@ class RenderTextureStack(object):
         self.__yax = yax
         self.__zax = zax
 
-        lo, hi = self.__globj.getDisplayBounds()
-        res    = self.__globj.getDataResolution(xax, yax)
+        res = self.__globj.getDataResolution(xax, yax)
 
         if res is not None: numTextures = res[zax]
         else:               numTextures = self.__defaultNumTextures
@@ -136,29 +142,37 @@ class RenderTextureStack(object):
         if numTextures > self.__maxNumTextures:
             numTextures = self.__maxNumTextures
 
-        self.__zmin = lo[zax]
-        self.__zmax = hi[zax]
-
         self.__destroyTextures()
         
         for i in range(numTextures):
             self.__textures.append(
                 rendertexture.RenderTexture('{}_{}'.format(self.name, i)))
 
-        self.__textureDirty = [True] * numTextures
-        self.__refreshAllTextures()
+        self.__onGLObjectUpdate()
 
         
     def __destroyTextures(self):
         """Destroys all :class:`.RenderTexture` instances. This is performed
-        asynchronously, via the ``.wx.CallLater`` function.
+        asynchronously, via the ``.async.idle`` function.
         """
 
-        import wx
         texes = self.__textures
         self.__textures = []
+
         for tex in texes:
-            wx.CallLater(50, tex.destroy)
+            async.idle(tex.destroy)
+
+
+    def __onGLObjectUpdate(self, *a):
+        """Called when the :class:`.GLObject` display is updated. Re-calculates
+        the display space Z-axis range, and marks all render textures as dirty.
+        """
+        
+        lo, hi      = self.__globj.getDisplayBounds()
+        self.__zmin = lo[self.__zax]
+        self.__zmax = hi[self.__zax]
+
+        self.__refreshAllTextures()
 
             
     def __refreshAllTextures(self, *a):
@@ -188,31 +202,36 @@ class RenderTextureStack(object):
         self.__textureDirty = [True] * len(self.__textures)
         self.__updateQueue  = idxs
 
+        async.idle(self.__textureUpdateLoop)
 
-    def __textureUpdateLoop(self, ev):
-        """This method is called periodically through the ``wx.EVT_IDLE``
-        event. It loops through all :class:`.RenderTexture` instances, and
+
+    def __textureUpdateLoop(self):
+        """This method is called via the :func:`.async.idle` function.
+        It loops through all :class:`.RenderTexture` instances, and
         refreshes any that have been marked as *dirty*.
+
+        Each call to this method causes one ``RenderTexture`` to be
+        refreshed. After a ``RenderTexture`` has been refreshed, if there
+        are dirty more ``RenderTexture`` instances, this method re-schedules
+        itself to be called again via :func:`.async.idle`.
         """
-        ev.Skip()
 
         if len(self.__updateQueue) == 0 or len(self.__textures) == 0:
             return
 
         idx = self.__updateQueue.pop(0)
 
-        if not self.__textureDirty[idx]:
-            return
+        if self.__textureDirty[idx]:
 
-        tex = self.__textures[idx]
+            tex = self.__textures[idx]
         
-        log.debug('Refreshing texture slice {} (zax {})'.format(
-            idx, self.__zax))
+            log.debug('Refreshing texture slice {} (zax {})'.format(
+                idx, self.__zax))
         
-        self.__refreshTexture(tex, idx)
+            self.__refreshTexture(tex, idx)
 
         if len(self.__updateQueue) > 0:
-            ev.RequestMore()
+            async.idle(self.__textureUpdateLoop)
 
         
     def __refreshTexture(self, tex, idx):
@@ -222,12 +241,23 @@ class RenderTextureStack(object):
         :arg idx: Index of the ``RenderTexture``.
         """
 
-        zpos = self.__indexToZpos(idx)
-        xax  = self.__xax
-        yax  = self.__yax
+        globj = self.__globj
+        zpos  = self.__indexToZpos(idx)
+        xax   = self.__xax
+        yax   = self.__yax
 
-        lo, hi = self.__globj.getDisplayBounds()
-        res    = self.__globj.getDataResolution(xax, yax)
+        if not globj.ready():
+            return
+
+        if isinstance(globj, globject.GLImageObject):
+            name = globj.image.name
+        else:
+            name = type(globj).__name__
+
+        status.update('Pre-rendering {} slice {}...'.format(name, zpos))
+
+        lo, hi = globj.getDisplayBounds()
+        res    = globj.getDataResolution(xax, yax)
 
         if res is not None:
             width  = res[xax]
@@ -249,13 +279,13 @@ class RenderTextureStack(object):
         oldProjMat    = gl.glGetFloatv(  gl.GL_PROJECTION_MATRIX)
         oldMVMat      = gl.glGetFloatv(  gl.GL_MODELVIEW_MATRIX)
 
-        glroutines.show2D(xax, yax, width, height, lo, hi)
-
         tex.bindAsRenderTarget()
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-        self.__globj.preDraw()
-        self.__globj.draw(zpos)
-        self.__globj.postDraw()
+        glroutines.show2D(xax, yax, width, height, lo, hi)
+        glroutines.clear((0, 0, 0, 0))
+
+        globj.preDraw()
+        globj.draw(zpos)
+        globj.postDraw()
         tex.unbindAsRenderTarget()
         
         gl.glViewport(*oldSize)

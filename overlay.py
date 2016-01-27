@@ -21,8 +21,8 @@ an overlay type are:
   - Must be able to be created with a single ``__init__`` parameter, which
     is a string specifying the data source location (e.g. a file name).
 
-  - Must have an attribute called ``name``, which is used as the display name
-    for the overlay.
+  - Must have an attribute called ``name``, which is used as the initial
+    display name for the overlay.
 
   - Must have an attribute called ``dataSource``, which is used to identify
     the source of the overlay data.
@@ -41,6 +41,8 @@ Currently (``fslpy`` version |version|) the only overlay types in existence
 
    ~fsl.data.image.Image
    ~fsl.data.featimage.FEATImage
+   ~fsl.data.melodicimage.MelodicImage
+   ~fsl.data.tensorimage.TensorImage
    ~fsl.data.model.Model
 
 
@@ -64,6 +66,8 @@ import props
 
 import fsl.data.strings   as strings
 import fsl.utils.settings as fslsettings
+import fsl.utils.status   as status
+import fsl.utils.async    as async
 
 
 log = logging.getLogger(__name__)
@@ -105,23 +109,48 @@ class OverlayList(props.HasProperties):
         self.overlays.extend(overlays)
 
 
-    def addOverlays(self, fromDir=None, addToEnd=True):
+    def addOverlays(self,
+                    fromDir=None,
+                    addToEnd=True,
+                    dirdlg=False,
+                    onLoad=None):
         """Convenience method for interactively adding overlays to this
         :class:`OverlayList`.
 
-        Returns: ``True`` if some overlays were added to the list, ``False``
-                 otherwise.
+        .. note:: The overlays are added asynchronously via the
+                  :func:`.async.idle` function - use the ``onLoad`` argument
+                  if you wish to be notified when the overlays have been
+                  loaded.
+
+        :arg fromDir:  Initial directory to show in the dialog - see
+                       :func:`interactiveAddOverlays`.
+
+        :arg dirdlg:   Use a directory chooser instead of a file dialog - see
+                       :func:`interactiveAddOverlays`.
+        
+        :arg addToEnd: If ``True`` (the default), the loaded overlays are added
+                       to the end of this ``OverlayList``. Otherwise they are
+                       added to the beginning.
+
+        :arg onLoad:   Optional function to call after the overlays have been
+                       loaded. Must accept a single parameter - a list of the
+                       overlays that were added. The list will be empty if no
+                       overlays were added.
         """
 
-        overlays = interactiveLoadOverlays(fromDir)
+        def realOnLoad(overlays):
+            
+            if len(overlays) > 0:
+                if addToEnd: self.extend(      overlays)
+                else:        self.insertAll(0, overlays)
 
-        if len(overlays) == 0:
-            return False
-        
-        if addToEnd: self.extend(      overlays)
-        else:        self.insertAll(0, overlays)
+            if onLoad is not None:
+                onLoad(overlays)
 
-        return True
+        interactiveLoadOverlays(
+            fromDir=fromDir,
+            dirdlg=dirdlg,
+            onLoad=realOnLoad)
 
 
     def find(self, name):
@@ -195,6 +224,7 @@ def guessDataSourceType(path):
     import fsl.data.model          as fslmodel
     import fsl.data.featimage      as fslfeatimage
     import fsl.data.melodicimage   as fslmelimage
+    import fsl.data.tensorimage    as tensorimage
     import fsl.data.melodicresults as melresults
     import fsl.data.featresults    as featresults
 
@@ -204,44 +234,25 @@ def guessDataSourceType(path):
     if path.endswith('.vtk'):
         return fslmodel.Model, path
 
-    # Now, we check to see if the given
-    # path is part of a FEAT or MELODIC
-    # analysis. The way we go about this is
-    # a bit silly, but is necessary due to
-    # the fact thet a melodic analysis can
-    # be contained  within a feat analysis
-    # (or another melodic analysis). So we
-    # check for all analysis types and, if
-    # more than one analysis type matches,
-    # we return the one with the longest
-    # path name.
-    analyses = [
-        (fslfeatimage.FEATImage,    featresults.getFEATDir(   path)),
-        (fslmelimage .MelodicImage, melresults .getMelodicDir(path))]
+    # Analysis directory?
+    if op.isdir(path):
+        if melresults.isMelodicDir(path):
+            return fslmelimage.MelodicImage, path
 
-    # Remove the analysis types that didn't match
-    # (the get*Dir function returned None)
-    analyses = [(t, d) for (t, d) in analyses if d is not None]
+        elif featresults.isFEATDir(path):
+            return fslfeatimage.FEATImage, path
 
-    # If we have one or more matches for
-    # an analysis directory, we return
-    # the one with the longest path
-    if len(analyses) > 0:
+        elif tensorimage.isPathToTensorData(path):
+            return tensorimage.TensorImage, path
 
-        dirlens = map(len, [d for (t, d) in analyses])
-        maxidx  = dirlens.index(max(dirlens))
+    # Assume it's a NIFTI image
+    try:               path = fslimage.addExt(path, mustExist=True)
+    except ValueError: return None, path
+
+    if   melresults.isMelodicImage(path): return fslmelimage.MelodicImage, path
+    elif featresults.isFEATImage(  path): return fslfeatimage.FEATImage,   path
+    else:                                 return fslimage.Image,           path
         
-        return analyses[maxidx]
-
-    # If the path is not an analysis directory,
-    # see if it is a regular nifti image
-    try:
-        path = fslimage.addExt(path, mustExist=True)
-        return fslimage.Image, path
-    
-    except ValueError:
-        pass
-
     # Otherwise, I don't
     # know what to do
     return None, path
@@ -269,13 +280,21 @@ def makeWildcard():
     return '|'.join(wcParts)
 
 
-def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
+def loadOverlays(paths,
+                 loadFunc='default',
+                 errorFunc='default',
+                 saveDir=True,
+                 onLoad=None):
     """Loads all of the overlays specified in the sequence of files
     contained in ``paths``.
 
+    .. note:: The overlays are loaded asynchronously via :func:`.async.idle`.
+              Use the ``onLoad`` argument if you wish to be notified when
+              the overlays have been loaded.
+
     :arg loadFunc:  A function which is called just before each overlay
                     is loaded, and is passed the overlay path. The default
-                    load function uses a :mod:`wx` popup frame to display
+                    load function uses the :mod:`.status` module to display
                     the name of the overlay currently being loaded. Pass in
                     ``None`` to disable this default behaviour.
 
@@ -291,24 +310,19 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
                     overlay in the list of ``paths`` is saved, and used
                     later on as the default load directory.
 
+    :arg onLoad:    Optional function to call when all overlays have been
+                    loaded. Must accept one parameter - a list containing
+                    the overlays that were loaded.
+
     :returns:       A list of overlay objects - just a regular ``list``, 
                     not an :class:`OverlayList`.
     """
-
-    defaultLoad = loadFunc == 'default'
-
-    # If the default load function is
-    # being used, create a dialog window
-    # to show the currently loading image
-    if defaultLoad:
-        import fsl.utils.dialog as fsldlg
-        loadDlg = fsldlg.SimpleMessageDialog()
 
     # The default load function updates
     # the dialog window created above
     def defaultLoadFunc(s):
         msg = strings.messages['overlay.loadOverlays.loading'].format(s)
-        loadDlg.SetMessage(msg)
+        status.update(msg)
 
     # The default error function
     # shows an error dialog
@@ -321,6 +335,34 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
                   exc_info=True)
         wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK) 
 
+    # A function which loads a single overlay
+    def loadPath(path):
+
+        loadFunc(path)
+
+        dtype, path = guessDataSourceType(path)
+
+        if dtype is None:
+            errorFunc(
+                path, strings.messages['overlay.loadOverlays.unknownType'])
+            return
+        
+        log.debug('Loading overlay {} (guessed data type: {})'.format(
+            path, dtype.__name__))
+        
+        try:                   overlays.append(dtype(path))
+        except Exception as e: errorFunc(path, e)
+
+    # This function gets called after 
+    # all overlays have been loaded
+    def realOnLoad():
+
+        if saveDir and len(paths) > 0:
+            fslsettings.write('loadOverlayLastDir', op.dirname(paths[-1]))
+
+        if onLoad is not None:
+            onLoad(overlays)
+
     # If loadFunc or errorFunc are explicitly set to
     # None, use these no-op load/error functions
     if loadFunc  is None: loadFunc  = lambda s:    None
@@ -330,43 +372,17 @@ def loadOverlays(paths, loadFunc='default', errorFunc='default', saveDir=True):
     # default functions defined above
     if loadFunc  == 'default': loadFunc  = defaultLoadFunc
     if errorFunc == 'default': errorFunc = defaultErrorFunc
-    
+
     overlays = []
-
-    # If using the default load 
-    # function, show the dialog
-    if defaultLoad:
-        loadDlg.Show()
-
+            
     # Load the images
     for path in paths:
-
-        loadFunc(path)
-
-        dtype, path = guessDataSourceType(path)
-
-        if dtype is None:
-            errorFunc(
-                path,
-                strings.messages['overlay.loadOverlays.unknownType'])
-            continue
-
-        log.debug('Loading overlay {} (guessed data type: {})'.format(
-            path, dtype.__name__))
-        try:                   overlays.append(dtype(path))
-        except Exception as e: errorFunc(path, e)
-
-    if defaultLoad:
-        loadDlg.Close()
-        loadDlg.Destroy()
-
-    if saveDir and len(paths) > 0:
-        fslsettings.write('loadOverlayLastDir', op.dirname(paths[-1]))
-            
-    return overlays
+        async.idle(loadPath, path)
+        
+    async.idle(realOnLoad)
 
 
-def interactiveLoadOverlays(fromDir=None, **kwargs):
+def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
     """Convenience function for interactively loading one or more overlays.
     
     Pops up a file dialog prompting the user to select one or more overlays
@@ -376,11 +392,11 @@ def interactiveLoadOverlays(fromDir=None, **kwargs):
                   ``None``, the most recently visited directory (via this
                   function) is used, or a directory from An already loaded
                   overlay, or the current working directory.
+    
+    :arg dirdlg:  Use a directory chooser instead of a file dialog.
 
     :arg kwargs:  Passed  through to the :func:`loadOverlays` function.
 
-    :returns:     A list containing the overlays that were loaded.
-    
     :raise ImportError:  if :mod:`wx` is not present.
     :raise RuntimeError: if a :class:`wx.App` has not been created.
     """
@@ -400,23 +416,30 @@ def interactiveLoadOverlays(fromDir=None, **kwargs):
         if fromDir is None:
             fromDir = os.getcwd()
 
-    dlg = wx.FileDialog(app.GetTopWindow(),
-                        message=strings.titles['overlay.addOverlays.dialog'],
-                        defaultDir=fromDir,
-                        wildcard=makeWildcard(),
-                        style=wx.FD_OPEN | wx.FD_MULTIPLE)
+    msg = strings.titles['overlay.addOverlays.dialog']
+
+    if dirdlg:
+        dlg = wx.DirDialog(app.GetTopWindow(),
+                           message=msg,
+                           defaultPath=fromDir,
+                           style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
+    else:
+        dlg = wx.FileDialog(app.GetTopWindow(),
+                            message=msg,
+                            defaultDir=fromDir,
+                            wildcard=makeWildcard(),
+                            style=wx.FD_OPEN | wx.FD_MULTIPLE)
 
     if dlg.ShowModal() != wx.ID_OK:
         return []
 
-    paths  = dlg.GetPaths()
+    if dirdlg: paths = [dlg.GetPath()]
+    else:      paths =  dlg.GetPaths()
 
+    dlg.Close()
     dlg.Destroy()
-    del dlg
-    
-    images = loadOverlays(paths, saveDir=saveFromDir, **kwargs)
-
-    return images
+     
+    loadOverlays(paths, saveDir=saveFromDir, **kwargs)
     
 
 def saveOverlay(overlay, fromDir=None):

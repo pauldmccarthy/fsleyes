@@ -13,6 +13,7 @@ import logging
 import wx
 
 import fsl.fsleyes.profiles as profiles
+import fsl.fsleyes.actions  as actions
 
 
 log = logging.getLogger(__name__)
@@ -47,14 +48,13 @@ class OrthoViewProfile(profiles.Profile):
     ========== ==============================================================
 
 
-    The ``OrthoViewProfile`` class also defines a few actions:
+    The ``OrthoViewProfile`` class also defines a few :mod:`.actions`:
 
+    .. autosummary::
+       :nosignatures:
 
-    ================ ========================================================
-    ``resetZoom``    Resets the zoom on every :class:`.SliceCanvas` to 100%.
-    ``centreCursor`` Moves the :attr:`.DisplayContext.location` to the centre
-                     of the display coordinate system.
-    ================ ========================================================
+       resetZoom
+       centreCursor
     """
 
     
@@ -62,8 +62,7 @@ class OrthoViewProfile(profiles.Profile):
                  viewPanel,
                  overlayList,
                  displayCtx,
-                 extraModes=None,
-                 extraActions=None):
+                 extraModes=None):
         """Creates an :class:`OrthoViewProfile`, which can be registered
         with the given ``viewPanel``.
 
@@ -81,29 +80,18 @@ class OrthoViewProfile(profiles.Profile):
         
         :arg extraModes:   Extra modes to pass through to the
                            :class:`.Profile` constructor.
-        
-        :arg extraActions: Extra actions to pass through to the
-                           :class:`.Profile` constructor.
         """
 
-        if extraModes   is None: extraModes   = []
-        if extraActions is None: extraActions = {}
+        if extraModes is None:
+            extraModes = []
 
-        modes   = ['nav', 'pan', 'zoom', 'bricon']
-        actionz = {
-            'resetZoom'    : self.resetZoom,
-            'centreCursor' : self.centreCursor,
-        }
-
-        modes   = modes + extraModes
-        actionz = dict(actionz.items() + extraActions.items())
+        modes = ['nav', 'pan', 'zoom', 'bricon'] + extraModes
 
         profiles.Profile.__init__(self,
                                   viewPanel,
                                   overlayList,
                                   displayCtx,
-                                  modes,
-                                  actionz)
+                                  modes)
 
         self.__xcanvas = viewPanel.getXCanvas()
         self.__ycanvas = viewPanel.getYCanvas()
@@ -124,7 +112,8 @@ class OrthoViewProfile(profiles.Profile):
         return [self.__xcanvas, self.__ycanvas, self.__zcanvas]
 
 
-    def resetZoom(self, *a):
+    @actions.action
+    def resetZoom(self):
         """Sets the :class:`.SceneOpts.zoom`, :class:`.OrthoOpts.xzoom`,
         :class:`.OrthoOpts.yzoom`,  and :class:`.OrthoOpts.zzoom` properties
         to 100%.
@@ -138,7 +127,8 @@ class OrthoViewProfile(profiles.Profile):
         opts.zzoom = 100
 
 
-    def centreCursor(self, *a):
+    @actions.action
+    def centreCursor(self):
         """Sets the :attr:`.DisplayContext.location` to the centre of the
         :attr:`.DisplayContext.bounds`.
         """
@@ -162,9 +152,9 @@ class OrthoViewProfile(profiles.Profile):
         values, one per display space axis, which specify the distance that
         a navigation operation should move the display.
 
-        If the currently selected overlay is an :class:`.Image` instance, the
+        If the currently selected overlay is an :class:`.Nifti1` instance, the
         distance that a navigation operation should shift the display will
-        differ depending on the value of the :attr:`.ImageOpts.transform`
+        differ depending on the value of the :attr:`.Nifti1Opts.transform`
         property. For example, if ``transform`` is ``id``, the display should
         be moved by one unit (which corresponds to one voxel). But if the
         ``transform`` is ``pixdim``, the display should be moved by one pixdim

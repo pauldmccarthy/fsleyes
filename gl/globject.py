@@ -18,6 +18,7 @@ import numpy as np
 
 import routines            as glroutines
 import fsl.utils.transform as transform
+import fsl.utils.notifier  as notifier
 
 
 log = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ def getGLObjectType(overlayType):
     import gllinevector
     import glmodel
     import gllabel
+    import gltensor
 
     typeMap = {
         'volume'     : glvolume    .GLVolume,
@@ -41,7 +43,8 @@ def getGLObjectType(overlayType):
         'rgbvector'  : glrgbvector .GLRGBVector,
         'linevector' : gllinevector.GLLineVector,
         'model'      : glmodel     .GLModel,
-        'label'      : gllabel     .GLLabel
+        'label'      : gllabel     .GLLabel,
+        'tensor'     : gltensor    .GLTensor
     }
 
     return typeMap.get(overlayType, None)
@@ -62,7 +65,7 @@ def createGLObject(overlay, display):
     else:               return None
 
 
-class GLObject(object):
+class GLObject(notifier.Notifier):
     """The :class:`GLObject` class is a base class for all 2D OpenGL
     objects displayed in *FSLeyes*.
 
@@ -89,10 +92,11 @@ class GLObject(object):
     
 
     Entities which are interested in changes to a ``GLObject`` representation
-    may register as *update listeners*, via the :meth:`addUpdateListener`
+    may register as *update listeners*, via the :meth:`.Notifier.register`
     method. Whenever the state of a ``GLObject`` changes, all update listeners
     will be called. It is the resposibility of sub-class implementations to
-    call the :meth:`onUpdate` method to facilitate this notification process.
+    call the :meth:`.Notifier.notify` method to facilitate this notification
+    process.
 
 
     **Sub-class resposibilities***
@@ -102,7 +106,7 @@ class GLObject(object):
     
      - Call :meth:`__init__`.
 
-     - Call :meth:`onUpdate` whenever its OpenGL representation changes.
+     - Call :meth:`notify` whenever its OpenGL representation changes.
 
      - Override the following methods:
     
@@ -111,6 +115,7 @@ class GLObject(object):
 
           getDisplayBounds
           getDataResolution
+          ready
           destroy
           preDraw
           draw
@@ -144,36 +149,26 @@ class GLObject(object):
         self.xax  = 0
         self.yax  = 1
         self.zax  = 2
-        
-        self.__updateListeners = {}
 
-        
-    def addUpdateListener(self, name, listener):
-        """Adds a listener function which will be called whenever this
-        ``GLObject`` representation changes.
+        log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
-        The listener function must accept a single parameter, which is
-        a reference to this ``GLObject``.
+
+    def __del__(self):
+        """Prints a log message."""
+        if log:
+            log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
+
+
+    def ready(self):
+        """This method must return ``True`` or ``False`` to indicate
+        whether this ``GLObject`` is ready to be drawn. The method should,
+        for example, make sure that all :class:`.ImageTexture` objects
+        are ready to be used.
         """
-        self.__updateListeners[name] = listener
+        raise NotImplementedError('The ready method must be '
+                                  'implemented by GLObject subclasses') 
 
-        
-    def removeUpdateListener(self, name):
-        """Removes a listener previously registered via
-        :meth:`addUpdateListener`.
-        """
-        self.__updateListeners.pop(name, None)
-
-
-    def onUpdate(self):
-        """This method must be called by subclasses whenever the GL object
-        representation changes - it notifies any registered listeners of the
-        change.
-        """
-        for name, listener in self.__updateListeners.items():
-            listener(self)
-
-
+    
     def getDisplayBounds(self):
         """This method must calculate and return a bounding box, in the
         display coordinate system, which contains the entire ``GLObject``.
@@ -294,6 +289,11 @@ class GLSimpleObject(GLObject):
         """Create a ``GLSimpleObject``. """
         GLObject.__init__(self)
 
+
+    def ready(self):
+        """Overrides :meth:`GLObject.ready`. Returns ``True``. """
+        return True
+
         
     def destroy( self):
         """Overrides :meth:`GLObject.destroy`. Does nothing. """
@@ -312,7 +312,7 @@ class GLSimpleObject(GLObject):
 
 class GLImageObject(GLObject):
     """The ``GLImageObject`` class is the base class for all GL representations
-    of :class:`.Image` instances.
+    of :class:`.Nifti1` instances. 
     """
     
     def __init__(self, image, display):
@@ -321,15 +321,16 @@ class GLImageObject(GLObject):
         This constructor adds the following attributes to this instance:
 
         =============== =======================================================
-        ``image``       A reference to the :class:`.Image` being displayed.
+        ``image``       A reference to the :class:`.Nifti1` overlay being
+                        displayed.
         ``display``     A reference to the :class:`.Display` instance
                         associated with the ``image``.
         ``displayOpts`` A reference to the :class:`.DisplayOpts` instance,
                         containing overlay type-specific display options. This
-                        is assumed to be a sub-class of :class:`.ImageOpts`.
+                        is assumed to be a sub-class of :class:`.Nifti1Opts`.
         =============== =======================================================
 
-        :arg image:   The :class:`.Image` instance
+        :arg image:   The :class:`.Nifti1` instance
         
         :arg display: An associated :class:`.Display` instance.
         """
@@ -339,29 +340,12 @@ class GLImageObject(GLObject):
         self.display     = display
         self.displayOpts = display.getDisplayOpts()
 
-        self.image.addListener('data', self.name, self.__imageDataChanged)
-
-        log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
-
-        
-    def __imageDataChanged(self, *a):
-        """Called when the :attr:`.Image.data` changes. Calls
-        :meth:`GLObject.onUpdate`. 
-        """
-        self.onUpdate()
-
-        
-    def __del__(self):
-        """Prints a log message."""
-        log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
-        
 
     def destroy(self):
         """If this method is overridden, it should be called by the subclass
         implementation. It clears references to the :class:`.Image`,
         :class:`.Display`, and :class:`.DisplayOpts` instances.
         """
-        self.image.removeListener('data', self.name)
         self.image       = None
         self.display     = None
         self.displayOpts = None
@@ -380,22 +364,36 @@ class GLImageObject(GLObject):
         ``GLImageObject``.
         """
 
-        image   = self.image
-        opts    = self.displayOpts
-        res     = opts.resolution 
-        
-        if opts.transform in ('id', 'pixdim'):
+        import nibabel as nib
 
-            pixdim = np.array(image.pixdim[:3])
-            steps  = [res, res, res] / pixdim
-            res    = image.shape[:3] / steps
-            
-            return np.array(res.round(), dtype=np.uint32)
-        
-        else:
-            lo, hi = map(np.array, self.getDisplayBounds())
-            minres = int(round(((hi - lo) / res).min()))
-            return [minres] * 3
+        image = self.image
+        opts  = self.displayOpts
+        res   = opts.resolution
+
+        # Figure out a good display resolution
+        # along each voxel dimension
+        pixdim = np.array(image.pixdim[:3])
+        steps  = [res, res, res] / pixdim
+        steps  = np.maximum(steps, [1, 1, 1])
+        res    = image.shape[:3] / steps
+
+        # Make sure the pixel
+        # resolutions are integers
+        res = np.array(res.round(), dtype=np.uint32)
+
+        # Figure out an approximate 
+        # correspondence between the
+        # voxel axes and the display
+        # coordinate system axes. 
+        xform = opts.getTransform('id', 'display')
+        axes  = nib.orientations.aff2axcodes(
+            xform, ((0, 0), (1, 1), (2, 2)))
+
+        # Re-order the voxel resolutions
+        # in the display space
+        res = [res[axes[0]], res[axes[1]], res[axes[2]]]
+
+        return res
 
         
     def generateVertices(self, zpos, xform):

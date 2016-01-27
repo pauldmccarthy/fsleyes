@@ -123,6 +123,7 @@ as:
    ~fsl.fsleyes.gl.gllinevector.GLLineVector
    ~fsl.fsleyes.gl.glrgbvector.GLRGBVector
    ~fsl.fsleyes.gl.glmodel.GLModel
+   ~fsl.fsleyes.gl.gltensor.GLTensor
 
 These objects are created and destroyed automatically by :class:`.SliceCanvas`
 instances, so application code does not need to worry about them too much.
@@ -263,7 +264,10 @@ def bootstrap(glVersion=None):
                            rendering :class:`.GLModel` instances.
     
     ``gllabel_funcs``      The version-specific module containing functions for
-                           rendering :class:`.GLLabel` instances. 
+                           rendering :class:`.GLLabel` instances.
+    
+    ``gltensor_funcs``     The version-specific module containing functions for
+                           rendering :class:`.GLTensor` instances. 
     ====================== ====================================================
     
 
@@ -306,7 +310,9 @@ def bootstrap(glVersion=None):
 
 
         # List any GL21 extensions here
-        exts = ['GL_EXT_framebuffer_object']
+        exts = ['GL_EXT_framebuffer_object',
+                'GL_ARB_instanced_arrays',
+                'GL_ARB_draw_instanced']
         
         if not all(map(glexts.hasExtension, exts)):
             log.debug('One of these OpenGL extensions is '
@@ -333,10 +339,14 @@ def bootstrap(glVersion=None):
 
         # Spline interpolation is not currently
         # available in the GL14 implementation
-        import fsl.fsleyes.displaycontext as dc
+        import fsl.fsleyes.displaycontext         as dc
+        import fsl.fsleyes.displaycontext.display as fsldisplay
         dc.VolumeOpts   .interpolation.removeChoice('spline')
         dc.RGBVectorOpts.interpolation.removeChoice('spline')
-        
+
+        # Tensor overlays are not available in GL14
+        dc        .ALL_OVERLAY_TYPES               .remove('tensor')
+        fsldisplay    .OVERLAY_TYPES['TensorImage'].remove('tensor')
 
     renderer = gl.glGetString(gl.GL_RENDERER)
     log.debug('Using OpenGL {} implementation with renderer {}'.format(
@@ -375,6 +385,7 @@ def bootstrap(glVersion=None):
     thismod.gllinevector_funcs = glpkg.gllinevector_funcs
     thismod.glmodel_funcs      = glpkg.glmodel_funcs
     thismod.gllabel_funcs      = glpkg.gllabel_funcs
+    thismod.gltensor_funcs     = glpkg.gltensor_funcs
     thismod._bootstrapped      = True
 
 
@@ -627,8 +638,8 @@ class WXGLCanvasTarget(object):
         import wx
 
         def doInit(*a):
-            self._initGL()
             self._glReady = True
+            self._initGL()
             self._draw()
 
         if not self._glReady:

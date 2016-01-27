@@ -102,11 +102,18 @@ class Texture(object):
         
         else:            raise ValueError('Invalid number of dimensions')
 
+        log.memory('{}.init ({})'.format(type(self).__name__, id(self))) 
         log.debug('Created {} ({}) for {}: {}'.format(type(self).__name__,
                                                       id(self),
                                                       self.__name,
                                                       self.__texture))
 
+
+    def __del__(self):
+        """Prints a log message."""
+        if log:
+            log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
+        
         
     def destroy(self):
         """Must be called when this ``Texture`` is no longer needed. Deletes
@@ -143,8 +150,7 @@ class Texture(object):
 
         if textureUnit is not None:
             gl.glActiveTexture(textureUnit)
-            gl.glEnable(self.__ttype)
-
+            
         gl.glBindTexture(self.__ttype, self.__texture)
 
         self.__textureUnit = textureUnit
@@ -155,7 +161,6 @@ class Texture(object):
 
         if self.__textureUnit is not None:
             gl.glActiveTexture(self.__textureUnit)
-            gl.glDisable(self.__ttype)
             
         gl.glBindTexture(self.__ttype, 0)
 
@@ -354,7 +359,8 @@ class Texture2D(Texture):
         self.bindTexture(gl.GL_TEXTURE0)
 
         gl.glClientActiveTexture(gl.GL_TEXTURE0)
-        gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        gl.glEnable(             gl.GL_TEXTURE_2D)
+        gl.glEnableClientState(  gl.GL_TEXTURE_COORD_ARRAY)
 
         gl.glTexEnvf(gl.GL_TEXTURE_ENV,
                      gl.GL_TEXTURE_ENV_MODE,
@@ -367,6 +373,7 @@ class Texture2D(Texture):
 
         self.unbindTexture()
 
+        gl.glDisable(           gl.GL_TEXTURE_2D)
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY) 
  

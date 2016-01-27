@@ -58,8 +58,7 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
                  parent,
                  overlayList,
                  displayCtx,
-                 height=32,
-                 actionz=None):
+                 height=32):
         """Create a ``FSLEyesToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
@@ -79,7 +78,7 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
         """
         
         wx.PyPanel.__init__(self, parent)
-        fslpanel._FSLEyesPanel.__init__(self, overlayList, displayCtx, actionz)
+        fslpanel._FSLEyesPanel.__init__(self, overlayList, displayCtx)
 
         self.__tools      = []
         self.__index      = 0

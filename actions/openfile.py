@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# openfileaction.py - Action which allows the user to load overlay files.
+# openfile.py - Action which allows the user to load overlay files.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -9,26 +9,46 @@ load overlay files into the :class:`.OverlayList`.
 """
 
 
-import logging
+import action
 
-import fsl.fsleyes.actions as actions
-
-
-log = logging.getLogger(__name__)
+import fsl.fsleyes.autodisplay as autodisplay
 
 
-class OpenFileAction(actions.Action):
+class OpenFileAction(action.Action):
     """The ``OpenFileAction`` allows the user to add files to the
     :class:`.OverlayList`. This functionality is provided by the
     :meth:`.OverlayList.addOverlays` method.
     """
 
-    
-    def doAction(self):
+    def __init__(self, overlayList, displayCtx):
+        """Create an ``OpenFileAction``.
+
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`.
+        """
+        action.Action.__init__(self, self.__openFile)
+
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
+        
+
+    def __openFile(self):
         """Calls :meth:`.OverlayList.addOverlays` method. If overlays were added,
         updates the :attr:`.DisplayContext.selectedOverlay` accordingly.
         """
+
+        def onLoad(overlays):
+            
+            if len(overlays) == 0:
+                return
         
-        if self._overlayList.addOverlays():
-            self._displayCtx.selectedOverlay = \
-                self._displayCtx.overlayOrder[-1]
+            self.__displayCtx.selectedOverlay = \
+                self.__displayCtx.overlayOrder[-1]
+
+            if self.__displayCtx.autoDisplay:
+                for overlay in overlays:
+                    autodisplay.autoDisplay(overlay,
+                                            self.__overlayList,
+                                            self.__displayCtx)
+        
+        self.__overlayList.addOverlays(onLoad=onLoad)

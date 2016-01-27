@@ -295,7 +295,7 @@ class GLObjectRenderTexture(RenderTexture):
     size can be re-calculated.
     """
     
-    def __init__(self, name, globj, xax, yax, maxResolution=1024):
+    def __init__(self, name, globj, xax, yax, maxResolution=2048):
         """Create a ``GLObjectRenderTexture``.
 
         :arg name:          A unique name for this ``GLObjectRenderTexture``.
@@ -322,7 +322,7 @@ class GLObjectRenderTexture(RenderTexture):
         RenderTexture.__init__(self, name)
 
         name = '{}_{}'.format(self.getTextureName(), id(self))
-        globj.addUpdateListener(name, self.__updateSize)
+        globj.register(name, self.__updateSize)
 
         self.__updateSize()        
 
@@ -334,7 +334,7 @@ class GLObjectRenderTexture(RenderTexture):
         """
 
         name = '{}_{}'.format(self.getTextureName(), id(self))
-        self.__globj.removeUpdateListener(name) 
+        self.__globj.deregister(name) 
         RenderTexture.destroy(self)
 
         
@@ -382,7 +382,6 @@ class GLObjectRenderTexture(RenderTexture):
                 (width, height)))
 
         if width > maxRes or height > maxRes:
-            oldWidth, oldHeight = width, height
             ratio = min(width, height) / float(max(width, height))
 
             if width > height:
@@ -395,12 +394,7 @@ class GLObjectRenderTexture(RenderTexture):
             width  = int(round(width))
             height = int(round(height))
 
-            log.debug('Limiting texture resolution to {}x{} '
-                      '(for {} resolution {}x{})'.format(
-                          width,
-                          height,
-                          type(globj).__name__,
-                          oldWidth,
-                          oldHeight))
+        log.debug('Setting {} texture resolution to {}x{}'.format(
+            type(globj).__name__, width, height))
 
         RenderTexture.setSize(self, width, height) 

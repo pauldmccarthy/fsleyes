@@ -24,8 +24,8 @@ import fsl.data.atlases                       as atlases
 import fsl.data.strings                       as strings
 import fsl.utils.dialog                       as fsldlg
 import fsl.fsleyes.panel                      as fslpanel
-import fsl.fsleyes.controls.atlasoverlaypanel as atlasoverlaypanel
-import fsl.fsleyes.controls.atlasinfopanel    as atlasinfopanel        
+import                                           atlasoverlaypanel
+import                                           atlasinfopanel 
 
 
 log = logging.getLogger(__name__)

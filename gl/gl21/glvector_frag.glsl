@@ -12,20 +12,19 @@
 /*
  * Vector image containing XYZ vector data.
  */
-uniform sampler3D imageTexture;
+uniform sampler3D vectorTexture;
 
 /*
  * Modulation texture containing values by
  * which the vector colours are to be modulated.
  */
-uniform sampler3D modTexture;
+uniform sampler3D modulateTexture;
 
 /*
- * If the modulation value is below this
- * threshold, the fragment is made
- * transparent.
+ * Texture containing values which determine
+ * whether a vector voxel should be clipped.
  */
-uniform float modThreshold;
+uniform sampler3D clipTexture;
 
 /*
  * Colour map for the X vector component.
@@ -60,6 +59,15 @@ uniform mat4 cmapXform;
 uniform vec3 imageShape;
 
 /*
+ * If the clipping value is outside of
+ * this range, the fragment is clipped.
+ * These values should be in the texture 
+ * data range of the clipTexture.
+ */
+uniform float clipLow;
+uniform float clipHigh;
+
+/*
  * Use spline interpolation?
  */
 uniform bool useSpline;
@@ -74,6 +82,13 @@ varying vec3 fragVoxCoord;
  * Corresponding texture coordinates
  */
 varying vec3 fragTexCoord;
+
+/*
+ * The final fragment colour is multiplied by this 
+ * scaling factor - this may be used for vertex-based
+ * lighting.
+ */
+varying vec4 fragColourFactor;
 
 
 void main(void) {
@@ -91,22 +106,31 @@ void main(void) {
    */
   vec3 voxValue;
   if (useSpline) {
-    voxValue.x = spline_interp(imageTexture, fragTexCoord, imageShape, 0);
-    voxValue.y = spline_interp(imageTexture, fragTexCoord, imageShape, 1);
-    voxValue.z = spline_interp(imageTexture, fragTexCoord, imageShape, 2);
+    voxValue.x = spline_interp(vectorTexture, fragTexCoord, imageShape, 0);
+    voxValue.y = spline_interp(vectorTexture, fragTexCoord, imageShape, 1);
+    voxValue.z = spline_interp(vectorTexture, fragTexCoord, imageShape, 2);
   }
   else {
-    voxValue = texture3D(imageTexture, fragTexCoord).xyz;
+    voxValue = texture3D(vectorTexture, fragTexCoord).xyz;
   }
 
-  /* Look up the modulation value */
+  /* Look up the modulation and clipping values */
   float modValue;
+  float clipValue;
   if (useSpline) {
-    modValue = spline_interp(modTexture, fragTexCoord, imageShape, 0);
+    modValue  = spline_interp(modulateTexture, fragTexCoord, imageShape, 0);
+    clipValue = spline_interp(clipTexture,     fragTexCoord, imageShape, 0);
   }
   else {
-    modValue = texture3D(modTexture, fragTexCoord).x;
-  }  
+    modValue  = texture3D(modulateTexture, fragTexCoord).x;
+    clipValue = texture3D(clipTexture,     fragTexCoord).x;
+  }
+
+  /* Knock out voxels where the clipping value is outside the clipping range */
+  if (clipValue < clipLow || clipValue > clipHigh) {
+      gl_FragColor.a = 0.0;
+      return;
+  }
 
   /*
    * Transform the voxel texture values 
@@ -133,9 +157,5 @@ void main(void) {
   /* Take the highest alpha of the three colour maps */
   voxColour.a = max(max(xColour.a, yColour.a), zColour.a);
 
-  /* Knock out voxels where the modulation value is below the threshold */
-  if (modValue < modThreshold)
-      voxColour.a = 0.0;
-
-  gl_FragColor = voxColour;
+  gl_FragColor = voxColour * fragColourFactor;
 }

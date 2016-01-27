@@ -15,11 +15,14 @@ import wx
 
 import props
 
-import pwidgets.elistbox as elistbox
+import pwidgets.bitmaptoggle   as bmptoggle
 
-import fsl.fsleyes.panel as fslpanel
-import fsl.fsleyes.icons as icons
-import fsl.data.image    as fslimage
+import pwidgets.elistbox       as elistbox
+
+import fsl.fsleyes.panel       as fslpanel
+import fsl.fsleyes.icons       as icons
+import fsl.fsleyes.autodisplay as autodisplay
+import fsl.data.image          as fslimage
 
 
 log = logging.getLogger(__name__)
@@ -207,8 +210,20 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
         """Called when the *add* button on the list box is pressed.
         Calls the :meth:`.OverlayList.addOverlays` method.
         """
-        if self._overlayList.addOverlays():
+
+        def onLoad(overlays):
+            if len(overlays) == 0:
+                return
+        
             self._displayCtx.selectedOverlay = len(self._overlayList) - 1
+
+            if self._displayCtx.autoDisplay:
+                for overlay in overlays:
+                    autodisplay.autoDisplay(overlay,
+                                            self._overlayList,
+                                            self._displayCtx)
+
+        self._overlayList.addOverlays(onLoad=onLoad)
 
 
     def __lbRemove(self, ev):
@@ -270,14 +285,14 @@ class ListItemWidget(wx.Panel):
     """ 
 
     
-    unsavedDefaultBG = '#ffaaaa'
+    unsavedDefaultBG = '#ffeeee'
     """This colour is used as the default background colour for
     :class:`.Image` overlays with an :attr:`.Image.saved` property
     of ``False``.
     """
 
     
-    unsavedSelectedBG = '#aa4444'
+    unsavedSelectedBG = '#ffcdcd'
     """This colour is used as the background colour for :class:`.Image`
     overlays with an :attr:`.Image.saved` property of ``False``, when
     they are selected in the :class:`OverlayListPanel`.
@@ -306,17 +321,19 @@ class ListItemWidget(wx.Panel):
         if wx.Platform == '__WXMAC__': btnStyle = wx.BU_EXACTFIT
         else:                          btnStyle = wx.BU_EXACTFIT | wx.BU_NOTEXT
 
-        self.__saveButton = wx.Button(      self, style=btnStyle)
-        self.__lockButton = wx.ToggleButton(self, style=btnStyle)
+        self.__saveButton = wx.Button(                   self, style=btnStyle)
+        self.__lockButton = bmptoggle.BitmapToggleButton(self, style=btnStyle)
 
         self.__saveButton.SetBitmap(icons.loadBitmap('floppydisk16'))
-        self.__lockButton.SetBitmap(icons.loadBitmap('chainlink16'))
+        self.__lockButton.SetBitmap(icons.loadBitmap('chainlinkHighlight16'),
+                                    icons.loadBitmap('chainlink16'))
         
         self.__visibility = props.makeWidget(
             self,
             display,
             'enabled',
-            icon=icons.findImageFile('eye16'))
+            icon=[icons.findImageFile('eyeHighlight16'),
+                  icons.findImageFile('eye16')])
 
         self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
 

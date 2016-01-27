@@ -55,10 +55,8 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """ 
 
-        actionz = {'more' : self.showMoreSettings}
-        
         fsltoolbar.FSLEyesToolBar.__init__(
-            self, parent, overlayList, displayCtx, 24, actionz)
+            self, parent, overlayList, displayCtx, 24)
         
         self.orthoPanel = ortho
 
@@ -86,21 +84,36 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
         profile   = ortho.getCurrentProfile()
 
         icons = {
-            'screenshot'  : fslicons.findImageFile('camera24'),
-            'movieMode'   : fslicons.findImageFile('movie24'),
-            'showXCanvas' : fslicons.findImageFile('sagittalSlice24'),
-            'showYCanvas' : fslicons.findImageFile('coronalSlice24'),
-            'showZCanvas' : fslicons.findImageFile('axialSlice24'),
-            'more'        : fslicons.findImageFile('gear24'),
+            'screenshot'       : fslicons.findImageFile('camera24'),
+            'movieMode'        : [
+                fslicons.findImageFile('movieHighlight24'),
+                fslicons.findImageFile('movie24')],
+            'showXCanvas'      : [
+                fslicons.findImageFile('sagittalSliceHighlight24'),
+                fslicons.findImageFile('sagittalSlice24')],
+            'showYCanvas'      : [
+                fslicons.findImageFile('coronalSliceHighlight24'),
+                fslicons.findImageFile('coronalSlice24')],
+            'showZCanvas'      : [
+                fslicons.findImageFile('axialSliceHighlight24'),
+                fslicons.findImageFile('axialSlice24')],
+            'toggleCanvasSettingsPanel' : [
+                fslicons.findImageFile('spannerHighlight24'),
+                fslicons.findImageFile('spanner24')],
 
             'resetZoom'    : fslicons.findImageFile('resetZoom24'),
             'centreCursor' : fslicons.findImageFile('centre24'),
 
             'layout' : {
-                'horizontal' : fslicons.findImageFile('horizontalLayout24'),
-                'vertical'   : fslicons.findImageFile('verticalLayout24'),
-                'grid'       : fslicons.findImageFile('gridLayout24'),
-            }
+                'horizontal' : [
+                    fslicons.findImageFile('horizontalLayoutHighlight24'),
+                    fslicons.findImageFile('horizontalLayout24')],
+                'vertical'   : [
+                    fslicons.findImageFile('verticalLayoutHighlight24'),
+                    fslicons.findImageFile('verticalLayout24')],
+                'grid'       : [
+                    fslicons.findImageFile('gridLayoutHighlight24'),
+                    fslicons.findImageFile('gridLayout24')]}
         }
 
         tooltips = {
@@ -114,25 +127,26 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
             'displaySpace' : fsltooltips.properties[dctx,      'displaySpace'],
             'resetZoom'    : fsltooltips.actions[   profile,   'resetZoom'],
             'centreCursor' : fsltooltips.actions[   profile,   'centreCursor'],
-            'more'         : fsltooltips.actions[   self,      'more'],
+            'toggleCanvasSettingsPanel' : fsltooltips.actions[
+                ortho, 'toggleCanvasSettingsPanel'],
             
         }
         
-        targets    = {'screenshot'   : ortho,
-                      'movieMode'    : ortho,
-                      'zoom'         : orthoOpts,
-                      'layout'       : orthoOpts,
-                      'showXCanvas'  : orthoOpts,
-                      'showYCanvas'  : orthoOpts,
-                      'showZCanvas'  : orthoOpts,
-                      'displaySpace' : dctx,
-                      'resetZoom'    : profile,
-                      'centreCursor' : profile,
-                      'more'         : self}
+        targets    = {'screenshot'                : ortho,
+                      'movieMode'                 : ortho,
+                      'zoom'                      : orthoOpts,
+                      'layout'                    : orthoOpts,
+                      'showXCanvas'               : orthoOpts,
+                      'showYCanvas'               : orthoOpts,
+                      'showZCanvas'               : orthoOpts,
+                      'displaySpace'              : dctx,
+                      'resetZoom'                 : profile,
+                      'centreCursor'              : profile,
+                      'toggleCanvasSettingsPanel' : ortho}
 
         def displaySpaceOptionName(opt):
 
-            if isinstance(opt, fslimage.Image):
+            if isinstance(opt, fslimage.Nifti1):
                 return opt.name
             else:
                 return strings.choices['DisplayContext.displaySpace'][opt]        
@@ -140,9 +154,11 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
 
         toolSpecs = [
 
-            actions.ActionButton('more',
-                                 icon=icons['more'],
-                                 tooltip=tooltips['more']),
+            actions.ToggleActionButton(
+                'toggleCanvasSettingsPanel',
+                actionKwargs={'floatPane' : True},
+                icon=icons['toggleCanvasSettingsPanel'],
+                tooltip=tooltips['toggleCanvasSettingsPanel']),
             actions.ActionButton('screenshot',
                                  icon=icons['screenshot'],
                                  tooltip=tooltips['screenshot']),
@@ -191,17 +207,3 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
             tools.append(widget)
 
         self.SetTools(tools, destroy=True) 
-
-    
-    def showMoreSettings(self, *a):
-        """Opens a :class:`.CanvasSettingsPanel` for the
-        :class:`.OrthoPanel` that owns this ``OrthoToolBar``.
-
-        The ``CanvasSettingsPanel`` is opened as a floating pane - see the
-        :meth:`.ViewPanel.togglePanel` method.
-        """
-        
-        import canvassettingspanel
-        self.orthoPanel.togglePanel(canvassettingspanel.CanvasSettingsPanel,
-                                    self.orthoPanel,
-                                    floatPane=True)

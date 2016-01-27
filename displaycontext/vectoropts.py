@@ -18,10 +18,10 @@ import fsl.data.image as fslimage
 import                   volumeopts
 
 
-class VectorOpts(volumeopts.ImageOpts):
-    """The ``VectorOpts`` class is the base class for :class:`LineVectorOpts` and
-    :class:`RGBVectorOpts`. It contains display settings which are common to
-    both.
+class VectorOpts(volumeopts.Nifti1Opts):
+    """The ``VectorOpts`` class is the base class for :class:`LineVectorOpts`,
+    :class:`RGBVectorOpts`, and :class:`.TensorOpts`. It contains display
+    settings which are common to each of them.
     """
 
 
@@ -49,97 +49,164 @@ class VectorOpts(volumeopts.ImageOpts):
     """Do not use the Z vector magnitude to colour vectors."""
 
 
-    modulate  = props.Choice()
-    """Modulate the vector colours by another image. Any image which is in the
-     :class:`.OverlayList`, and which has the same voxel dimensions as the
-     vector image can be selected for modulation.
+    cmap = props.ColourMap()
+    """If an image is selected as the :attr:`colourImage`, this colour map
+    is used to colour the vector voxels.
     """
 
     
-    # TODO This is currently a percentage
-    # of the modulation image data range.
-    # It should be an absolute value
-    modThreshold = props.Percentage(default=0.0)
-    """Hide voxels for which the modulation value is below this threshold,
-    as a percentage of the :attr:`modulate` image data range.
+    colourImage = props.Choice()
+    """Colour vector voxels by the values contained in this image. Any image which
+    is in the :class:`.OverlayList`, and which has the same voxel dimensions as
+    the vector image can be selected for modulation. If a ``colourImage`` is
+    selected, the :attr:`xColour`, :attr:`yColour`, :attr:`zColour`,
+    :attr:`suppressX`, :attr:`suppressY`, and :attr:`suppressZ` properties are
+    all ignored.
     """
+
+
+    modulateImage  = props.Choice()
+    """Modulate the vector colour brightness by another image. Any image which
+    is in the :class:`.OverlayList`, and which has the same voxel dimensions as
+    the vector image can be selected for modulation.
+    """
+
+    
+    clipImage = props.Choice()
+    """Clip voxels from the vector image according to another image. Any image
+    which is in the :class:`.OverlayList`, and which has the same voxel
+    dimensions as the vector image can be selected for clipping. The
+    :attr:`clippingRange` dictates the value below which vector voxels are
+    clipped.
+    """ 
+
+    
+    clippingRange = props.Bounds(ndims=1)
+    """Hide voxels for which the clip image value is outside of this range. """
 
     
     def __init__(self, *args, **kwargs):
         """Create a ``VectorOpts`` instance for the given image.  All
-        arguments are passed through to the :class:`.ImageOpts`
+        arguments are passed through to the :class:`.Nifti1Opts`
         constructor.
         """
         
-        volumeopts.ImageOpts.__init__(self, *args, **kwargs)
+        volumeopts.Nifti1Opts.__init__(self, *args, **kwargs)
 
-        self.overlayList.addListener('overlays',
-                                     self.name,
-                                     self.__overlayListChanged)
-        
-        self.__overlayListChanged()
+        self.__registered = self.getParent() is not None
+
+        if self.__registered:
+            
+            self.overlayList.addListener('overlays',
+                                         self.name,
+                                         self.__overlayListChanged)
+            self            .addListener('clipImage',
+                                         self.name,
+                                         self.__clipImageChanged)
+
+            if not self.isSyncedToParent('modulateImage'):
+                self.__refreshAuxImage('modulateImage')
+            if not self.isSyncedToParent('clipImage'):
+                self.__refreshAuxImage('clipImage')
+            if not self.isSyncedToParent('colourImage'):
+                self.__refreshAuxImage('colourImage') 
+
+        else:
+            self.__overlayListChanged()
+            self.__clipImageChanged()
 
 
     def destroy(self):
         """Removes some property listeners, and calls the
-        :meth:`.ImageOpts.destroy` method.
+        :meth:`.Nifti1Opts.destroy` method.
         """
-        self.overlayList.removeListener('overlays', self.name)
+        if self.__registered:
+            self.overlayList.removeListener('overlays',  self.name)
+            self            .removeListener('clipImage', self.name)
 
-        for overlay in self.overlayList:
-            display = self.displayCtx.getDisplay(overlay)
-            display.removeListener('name', self.name)
+        volumeopts.Nifti1Opts.destroy(self)
 
-        volumeopts.ImageOpts.destroy(self)
+        
+    def __clipImageChanged(self, *a):
+        """Called when the :attr:`clipImage` property changes. Updates
+        the range of the :attr:`clippingRange` property.
+        """
+
+        image = self.clipImage
+
+        if image is None:
+            self.clippingRange.xmin = 0
+            self.clippingRange.xmax = 1
+            self.clippingRange.x    = [0, 1]
+            return
+
+        opts   = self.displayCtx.getOpts(image)
+        minval = opts.dataMin
+        maxval = opts.dataMax
+
+        self.clippingRange.xmin =  minval
+        self.clippingRange.xmax =  maxval
+        self.clippingRange.x    = [minval, maxval]
 
         
     def __overlayListChanged(self, *a):
-        """Called when the overlay list changes. Updates the :attr:`modulate`
-        property so that it contains a list of overlays which could be used
-        to modulate the vector image.
+        """Called when the overlay list changes. Updates the :attr:`modulateImage`,
+        :attr:`colourImage` and :attr:`clipImage` properties so that they
+        contain a list of overlays which could be used to modulate the vector
+        image.
         """
         
-        modProp  = self.getProp('modulate')
-        modVal   = self.modulate
         overlays = self.displayCtx.getOrderedOverlays()
 
         # the image for this VectorOpts
         # instance has been removed
         if self.overlay not in overlays:
-            self.overlayList.removeListener('overlays', self.name)
             return
+        
+        self.__refreshAuxImage('modulateImage')
+        self.__refreshAuxImage('clipImage')
+        self.__refreshAuxImage('colourImage')
 
-        modOptions = [None]
+
+    def __refreshAuxImage(self, imageName):
+        """Updates the named image property (:attr:`modulateImage`,
+        :attr:`colourImage` or :attr:`clipImage`) so that it contains a list
+        of overlays which could be used to modulate the vector image.
+        """
+        
+        prop     = self.getProp(imageName)
+        val      = self.modulateImage
+        overlays = self.displayCtx.getOrderedOverlays()
+
+        options = [None]
 
         for overlay in overlays:
             
             # It doesn't make sense to
-            # modulate the image by itself
+            # modulate/clip/colour the
+            # image by itself.
             if overlay is self.overlay:
                 continue
 
-            # The modulate image must
-            # be an image. Duh.
+            # The modulate/clip/colour
+            # images must be images. 
             if not isinstance(overlay, fslimage.Image):
                 continue
 
-            # an image can only be used to modulate
-            # the vector image if it shares the same
-            # dimensions as said vector image
-            if overlay.shape != self.overlay.shape[:3]:
+            # an image can only be used to
+            # modulate/clip/colour the vector
+            # image if it shares the same
+            # dimensions as said vector image.
+            # 4D images are ok though.
+            if overlay.shape[:3] != self.overlay.shape[:3]:
                 continue
 
-            modOptions.append(overlay)
-                
-            overlay.addListener('name',
-                                self.name,
-                                self.__overlayListChanged,
-                                overwrite=True)
+            options.append(overlay)
             
-        modProp.setChoices(modOptions, instance=self)
+        prop.setChoices(options, instance=self)
 
-        if modVal in overlays: self.modulate = modVal
-        else:                  self.modulate = None
+        if val in options: setattr(self, imageName, val)
+        else:              setattr(self, imageName, None)
 
 
 class LineVectorOpts(VectorOpts):

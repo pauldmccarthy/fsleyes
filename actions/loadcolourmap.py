@@ -12,7 +12,7 @@ import logging
 import os.path as op
 
 import fsl.data.strings       as strings
-import fsl.fsleyes.actions    as actions
+import                           action
 import fsl.fsleyes.colourmaps as fslcmap
 
 
@@ -22,16 +22,29 @@ log = logging.getLogger(__name__)
 _stringID = 'actions.loadcolourmap.'
 
 
-class LoadColourMapAction(actions.Action):
-    """The ``LoadColourMapAction`` allows the yser to select a colour
+class LoadColourMapAction(action.Action):
+    """The ``LoadColourMapAction`` allows the user to select a colour
     map file and give it a name.
 
     The loaded colour map is then registered with the :mod:`.colourmaps`
     module. The user is also given the option to permanently save the
     loaded colour map in *FSLeyes*.
     """
+
     
-    def doAction(self):
+    def __init__(self, overlayList, displayCtx):
+        """Create a ``LoadColourMapAction``.
+        
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`. 
+        """
+        action.Action.__init__(self, self.__loadColourMap)
+
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx 
+
+        
+    def __loadColourMap(self):
         """This method does the following:
 
         1. Prompts the user to select a colour map file
@@ -91,8 +104,8 @@ class LoadColourMapAction(actions.Action):
 
         # register the selected colour map file
         fslcmap.registerColourMap(cmapFile,
-                                  self._overlayList,
-                                  self._displayCtx,
+                                  self.__overlayList,
+                                  self.__displayCtx,
                                   cmapName)
 
         # ask the user if they want to install

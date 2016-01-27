@@ -2,13 +2,12 @@
 #
 # Vertex program for rendering GLModel instances.
 #
-# Inputs:
-#    vertex.texcoord[0] - Texture coordinates
+# Input attributes:
+#    texCoord - Texture coordinates
 #
 # Outputs:
-#    result.position
-#    result.texcoord[0] - Texture coordinates (passed through to fragment
-#                         shader).
+#    texCoord - Texture coordinates (passed through to fragment
+#               shader).
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com> 
 #
@@ -20,6 +19,6 @@ DP4 result.position.z, state.matrix.mvp.row[2], vertex.position;
 DP4 result.position.w, state.matrix.mvp.row[3], vertex.position;
 
 # Copy the vertex texture coordinate
-MOV result.texcoord[0], vertex.texcoord[0];
+MOV {{ varying_texCoord }}, {{ attr_texCoord }};
 
 END

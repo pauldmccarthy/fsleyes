@@ -8,11 +8,10 @@
 vector :class:`.Image` overlays in line mode.
 
 
-The :class:`.GLLineVertices` class is also defined in this module, and is
-used in certain rendering situations - when running in OpenGL 1.4, and
-when running in *software* (a.k.a. low performance) mode, in OpenGL 2.1. See
-the :mod:`.gl14.gllinevector_funcs` and :mod:`.gl21.gllinevector_funcs`
-modules for more details.
+The :class:`.GLLineVertices` class is also defined in this module, and is used
+in certain rendering situations - specifically, when running in OpenGL
+1.4. See the :mod:`.gl14.gllinevector_funcs` and
+:mod:`.gl21.gllinevector_funcs` modules for more details.
 """
 
 import logging
@@ -20,6 +19,7 @@ import logging
 import numpy                   as np
 
 import fsl.utils.transform     as transform
+import fsl.data.tensorimage    as tensorimage
 import fsl.fsleyes.gl          as fslgl
 import fsl.fsleyes.gl.glvector as glvector
 import fsl.fsleyes.gl.routines as glroutines
@@ -56,20 +56,35 @@ class GLLineVector(glvector.GLVector):
     def __init__(self, image, display):
         """Create a ``GLLineVector`` instance.
 
-        :arg image:   The :class:`.Image` instance.
+        :arg image:   An :class:`.Image` or :class:`.TensorImage` instance.
 
         :arg display: The associated :class:`.Display` instance.
         """
         
-        glvector.GLVector.__init__(self, image, display)
-        
-        fslgl.gllinevector_funcs.init(self)
+        # If the overlay is a TensorImage, use the
+        # V1 image is the vector data. Otherwise,
+        # assume that the overlay is the vector image.
+        if isinstance(image, tensorimage.TensorImage): vecImage = image.V1()
+        else:                                          vecImage = image
+
+        glvector.GLVector.__init__(self,
+                                   image,
+                                   display,
+                                   vectorImage=vecImage,
+                                   init=lambda: fslgl.gllinevector_funcs.init(
+                                       self))
 
         def update(*a):
-            self.onUpdate()
+            self.notify()
 
-        self.displayOpts.addListener(
-            'lineWidth', self.name, update, weak=False)
+        self.displayOpts.addListener('lineWidth',
+                                     self.name,
+                                     update,
+                                     weak=False)
+        self.vectorImage.addListener('data',
+                                     self.name,
+                                     update,
+                                     weak=False) 
 
         
     def destroy(self):
@@ -79,6 +94,7 @@ class GLLineVector(glvector.GLVector):
         function, and calls the :meth:`.GLVector.destroy` method.
         """ 
         self.displayOpts.removeListener('lineWidth', self.name)
+        self.vectorImage.removeListener('data',      self.name)
         fslgl.gllinevector_funcs.destroy(self)
         glvector.GLVector.destroy(self)
 
@@ -89,8 +105,8 @@ class GLLineVector(glvector.GLVector):
         """
 
         res       = list(glvector.GLVector.getDataResolution(self, xax, yax))
-        res[xax] *= 16
-        res[yax] *= 16
+        res[xax] *= 20
+        res[yax] *= 20
         
         return res
 
@@ -106,7 +122,7 @@ class GLLineVector(glvector.GLVector):
         """Overrides :meth:`.GLVector.updateShaderState`. Calls the OpenGL
         version-specific ``updateShaderState`` function.
         """ 
-        fslgl.gllinevector_funcs.updateShaderState(self)
+        return fslgl.gllinevector_funcs.updateShaderState(self)
  
 
     def preDraw(self):
@@ -238,7 +254,7 @@ class GLLineVertices(object):
 
         .. note:: The vertex/texture coordinate generation takes into
                   account the current value of the
-                  :attr:`.ImageOpts.resolution` property of the
+                  :attr:`.Nifti1Opts.resolution` property of the
                   :class:`.LineVectorOpts` instance; if this is set to
                   something other than the image resolution, the
                   sub-sampled starting indices and steps are stored
@@ -248,7 +264,7 @@ class GLLineVertices(object):
         """
 
         opts  = glvec.displayOpts
-        image = glvec.image
+        image = glvec.vectorImage
 
         # Extract a sub-sample of the vector image
         # at the current display resolution
@@ -308,9 +324,6 @@ class GLLineVertices(object):
         texCoords = vertices.round()
         texCoords = (texCoords + 0.5) / np.array(image.shape[:3],
                                                  dtype=np.float32)
-
-        if opts.transform in ('id', 'pixdim'):
-            vertices += 0.5
 
         self.vertices  = vertices
         self.texCoords = texCoords

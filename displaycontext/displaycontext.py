@@ -11,6 +11,7 @@ general display settings for displaying the overlays in a
 
 import sys
 import logging
+import weakref
 
 import numpy as np
 
@@ -119,36 +120,46 @@ class DisplayContext(props.SyncableHasProperties):
 
     displaySpace = props.Choice(('pixdim', 'world'), default='pixdim')
     """The *space* in which overlays are displayed. This property globally
-    controls the :attr:`.ImageOpts.transform` property of all :class:`.Image`
+    controls the :attr:`.Nifti1Opts.transform` property of all :class:`.Nifti1`
     overlays. It has three settings, described below.
 
     
     1. **Scaled voxel** space (a.k.a. ``pixdim``)
 
-       All :class:`.Image` overlays are displayed with scaled voxels - the
-       :attr:`.ImageOpts.transform` property for every ``Image`` overlay is
+       All :class:`.Nifti1` overlays are displayed with scaled voxels - the
+       :attr:`.Nifti1Opts.transform` property for every ``Nifti1`` overlay is
        set to ``pixdim``.
     
     2. **World** space (a.k.a. ``world``)
 
-       All :class:`.Image` overlays are displayed in the space defined by
-       their affine transformation matrix - the :attr:`.ImageOpts.transform`
-       property for every ``Image`` overlay is set to ``affine``.
+       All :class:`.Nifti1` overlays are displayed in the space defined by
+       their affine transformation matrix - the :attr:`.Nifti1Opts.transform`
+       property for every ``Nifti1`` overlay is set to ``affine``.
 
     3. **Reference image** space
 
-       A single :class:`.Image` overlay is selected as a *reference* image,
-       and is displayed in scaled voxel space (:attr:`.ImageOpts.transform` is
-       set to ``pixdim``). All other ``Image`` overlays are transformed into
-       this reference space - their :attr:`.ImageOpts.transform` property is
-       set to ``custom``, and their :attr:`.ImageOpts.customXform` matrix is
+       A single :class:`.Nifti1` overlay is selected as a *reference* image,
+       and is displayed in scaled voxel space (:attr:`.Nifti1Opts.transform` is
+       set to ``pixdim``). All other ``Nifti1`` overlays are transformed into
+       this reference space - their :attr:`.Nifti1Opts.transform` property is
+       set to ``custom``, and their :attr:`.Nifti1Opts.customXform` matrix is
        set such that it transforms from the image voxel space to the scaled
        voxel space of the reference image.
 
-    .. note:: The :attr:`.ImageOpts.transform` property of any :class:`.Image`
-              overlay can be set independently of this property. However,
-              whenever this property changes, it will change the ``transform``
-              property for every ``Image``, in the manner described above.
+    .. note:: The :attr:`.Nifti1Opts.transform` property of any
+              :class:`.Nifti1` overlay can be set independently of this
+              property. However, whenever *this* property changes, it will
+              change the ``transform`` property for every ``Nifti1``, in the
+              manner described above.
+    """
+
+
+    autoDisplay = props.Boolean(default=False)
+    """If ``True``, whenever an overlay is added to the :class:`.OverlayList`,
+    the :mod:`autodisplay` module will be used to automatically configure
+    its display settings. Note that the ``DisplayContext`` does not perform
+    this configuration - this flag is used by other modules (e.g. the
+    :class:`.OverlayListPanel` and the :class:`.OpenFileAction`).
     """
 
 
@@ -165,11 +176,24 @@ class DisplayContext(props.SyncableHasProperties):
         props.SyncableHasProperties.__init__(
             self,
             parent=parent,
-            nounbind=['overlayGroups', 'displaySpace', 'bounds'],
-            nobind=[  'syncOverlayDisplay'])
+            nounbind=['overlayGroups',
+                      'displaySpace',
+                      'bounds',
+                      'autoDisplay'],
+            nobind=[  'syncOverlayDisplay'],
+            state={'overlayOrder' : False})
 
         self.__overlayList = overlayList
-        self.__name         = '{}_{}'.format(self.__class__.__name__, id(self))
+        self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
+
+        # The overlayOrder is unsynced by
+        # default, but we will inherit the
+        # current parent value. If this
+        # DC is a parent, the overlayOrder
+        # will be initialised in the call
+        # to __syncOverlayOrder, below.
+        if parent is not None:
+            self.overlayOrder[:] = parent.overlayOrder[:]
 
         # Keep track of the overlay list length so
         # we can do some things in the
@@ -211,8 +235,11 @@ class DisplayContext(props.SyncableHasProperties):
         # it has not already been set (if this
         # is a child DC, the cache will have
         # already been set on the parent)
-        try:             locPropVal.getAttribute('standardCoords')
-        except KeyError: locPropVal.setAttribute('standardCoords', {})
+        try:
+            locPropVal.getAttribute('standardCoords')
+        except KeyError:
+            locPropVal.setAttribute('standardCoords',
+                                    weakref.WeakKeyDictionary())
 
         # The overlayListChanged and displaySpaceChanged
         # methods do important things - check them out
@@ -235,7 +262,8 @@ class DisplayContext(props.SyncableHasProperties):
         
     def __del__(self):
         """Prints a log message."""
-        log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
+        if log:
+            log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
 
         
     def destroy(self):
@@ -245,6 +273,8 @@ class DisplayContext(props.SyncableHasProperties):
         When a ``DisplayContext`` is destroyed, all of the :class:`.Display`
         instances managed by it are destroyed as well.
         """
+
+        self.detachFromParent()
 
         self.__overlayList.removeListener('overlays', self.__name)
 
@@ -400,7 +430,8 @@ class DisplayContext(props.SyncableHasProperties):
             return
 
         locPropVal     = self.getPropVal('location')
-        standardCoords = dict(locPropVal.getAttribute('standardCoords'))
+        standardCoords = weakref.WeakKeyDictionary(
+            locPropVal.getAttribute('standardCoords'))
         
         standardCoords[overlay] = np.array(coords).tolist()
         
@@ -486,7 +517,7 @@ class DisplayContext(props.SyncableHasProperties):
         # just been added to the list,
         oldList  = self.__overlayList.getLastValue('overlays')[:]
         for overlay in self.__overlayList:
-            if isinstance(overlay, fslimage.Image) and \
+            if isinstance(overlay, fslimage.Nifti1) and \
                (overlay not in oldList):
                 self.__setTransform(overlay)
 
@@ -497,7 +528,7 @@ class DisplayContext(props.SyncableHasProperties):
             # Set the displaySpace to
             # the first new image
             for overlay in self.__overlayList:
-                if isinstance(overlay, fslimage.Image):
+                if isinstance(overlay, fslimage.Nifti1):
                     self.displaySpace = overlay
                     break
             
@@ -533,15 +564,15 @@ class DisplayContext(props.SyncableHasProperties):
         choices    = ['pixdim', 'world']
         
         for overlay in self.__overlayList:
-            if isinstance(overlay, fslimage.Image):
+            if isinstance(overlay, fslimage.Nifti1):
                 choices.append(overlay)
 
         choiceProp.setChoices(choices, instance=self)
 
 
     def __setTransform(self, image):
-        """Sets the :attr:`.ImageOpts.transform` property associated with
-        the given :class:`.Image` overlay to a sensible value, given the
+        """Sets the :attr:`.Nifti1Opts.transform` property associated with
+        the given :class:`.Nifti1` overlay to a sensible value, given the
         current value of the :attr:`.displaySpace` property.
 
         Called by the :meth:`__displaySpaceChanged` method, and by
@@ -569,8 +600,8 @@ class DisplayContext(props.SyncableHasProperties):
         
     def __displaySpaceChanged(self, *a):
         """Called when the :attr:`displaySpace` property changes. Updates the
-        :attr:`.ImageOpts.transform` property for all :class:`.Image` overlays
-        in the :class:`.OverlayList`.
+        :attr:`.Nifti1Opts.transform` property for all :class:`.Nifti1`
+        overlays in the :class:`.OverlayList`.
         """
 
         # If this DC is synced to a parent, let the
@@ -606,7 +637,7 @@ class DisplayContext(props.SyncableHasProperties):
         # new display space
         for overlay in self.__overlayList:
             
-            if not isinstance(overlay, fslimage.Image):
+            if not isinstance(overlay, fslimage.Nifti1):
                 continue
 
             opts = self.getOpts(overlay)

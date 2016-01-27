@@ -36,7 +36,7 @@ class SliceCanvasOpts(props.HasProperties):
 
     
     zoom = props.Percentage(minval=100.0,
-                            maxval=1000.0,
+                            maxval=5000.0,
                             default=100.0,
                             clamped=True)
     """The :attr:`.DisplayContext.bounds` are divided by this zoom
@@ -90,13 +90,6 @@ class SliceCanvasOpts(props.HasProperties):
     See the :class:`.SliceCanvas` for more details.
     """
     
-    
-    softwareMode = props.Boolean(default=False)
-    """If ``True``, the :attr:`.Display.softwareMode` property for every
-    displayed overlay is set to ``True``. This will result in better
-    performance for slow systems (e.g. software based OpenGL renderers).
-    """
-
     
     resolutionLimit = props.Real(default=0, minval=0, maxval=5, clamped=True)
     """The minimum resolution at which overlays should be drawn. A higher

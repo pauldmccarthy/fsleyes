@@ -246,6 +246,7 @@ class AnnotationObject(globject.GLSimpleObject):
         
         :arg width:  Line width to use for the annotation.
         """
+        globject.GLSimpleObject.__init__(self)
         
         self.colour = colour
         self.width  = width
@@ -524,9 +525,10 @@ class VoxelSelection(AnnotationObject):
         texs  = np.array(texs,  dtype=np.float32).ravel('C')
 
         self.texture.bindTexture(gl.GL_TEXTURE0)
-
+        
         gl.glTexEnvf(gl.GL_TEXTURE_ENV, gl.GL_TEXTURE_ENV_MODE, gl.GL_MODULATE)
-
+        
+        gl.glEnable(gl.GL_TEXTURE_3D)        
         gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
 
         gl.glVertexPointer(  3, gl.GL_FLOAT, 0, verts)
@@ -534,5 +536,6 @@ class VoxelSelection(AnnotationObject):
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        gl.glDisable(gl.GL_TEXTURE_3D)
 
         self.texture.unbindTexture()

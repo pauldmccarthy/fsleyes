@@ -104,7 +104,7 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
 
         def _displaySpaceOptionName(opt):
 
-            if isinstance(opt, fslimage.Image):
+            if isinstance(opt, fslimage.Nifti1):
                 return opt.name
             else:
                 return strings.choices['DisplayContext.displaySpace'][opt]
