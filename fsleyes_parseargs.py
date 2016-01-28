@@ -302,7 +302,6 @@ OPTIONS = td.TypeDict({
                        'scene',
                        'voxelLoc',
                        'worldLoc',
-                       'selectedOverlay',
                        'autoDisplay'],
 
     # From here on, all of the keys are
@@ -450,7 +449,6 @@ ARGUMENTS = td.TypeDict({
     'Main.scene'           : ('s',  'scene'),
     'Main.voxelLoc'        : ('v',  'voxelLoc'),
     'Main.worldLoc'        : ('w',  'worldLoc'),
-    'Main.selectedOverlay' : ('o',  'selectedOverlay'),
     'Main.autoDisplay'     : ('ad', 'autoDisplay'),
     
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar'),
@@ -567,7 +565,6 @@ HELP = td.TypeDict({
     'Main.worldLoc'        : 'Location to show (world coordinates of '
                              'first overlay, takes precedence over '
                              '--voxelloc)', 
-    'Main.selectedOverlay' : 'Selected overlay (default: last)',
     'Main.autoDisplay'     : 'Automatically configure display settings to '
                              'overlays (unless any display settings are '
                              'specified)',
@@ -591,9 +588,12 @@ HELP = td.TypeDict({
     'OrthoOpts.showZCanvas' : 'Hide the Z canvas',
     'OrthoOpts.showLabels'  : 'Hide orientation labels',
 
-    'OrthoOpts.xcentre'     : 'X canvas display centre (world coordinates)',
-    'OrthoOpts.ycentre'     : 'Y canvas display centre (world coordinates)',
-    'OrthoOpts.zcentre'     : 'Z canvas display centre (world coordinates)',
+    'OrthoOpts.xcentre'     : 'X canvas display centre (YZ world coordinates '
+                              'of first overlay)',
+    'OrthoOpts.ycentre'     : 'Y canvas display centre (XZ world coordinates)'
+                              'of first overlay)', 
+    'OrthoOpts.zcentre'     : 'Z canvas display centre (XY world coordinates)'
+                              'of first overlay)', 
 
     'LightBoxOpts.sliceSpacing'   : 'Slice spacing',
     'LightBoxOpts.ncols'          : 'Number of columns',
@@ -720,8 +720,9 @@ is actually an overlay, or is an argument for another overlay.
 # non-reversible ones), you'll need to have
 # an inverse transforms dictionary
 def _imageTrans(i):
-    if i == 'none': return None
-    else:           return i.dataSource
+    if   i              is  None:  return None
+    elif str(i).lower() == 'none': return None
+    else:                          return i.dataSource
 
 
 def _lutTrans(l):
@@ -848,9 +849,6 @@ def _configMainParser(mainParser):
                             type=float,
                             nargs=3,
                             help=mainHelp['worldLoc'])
-    mainParser.add_argument(*mainArgs['selectedOverlay'],
-                            type=int,
-                            help=mainHelp['selectedOverlay'])
     mainParser.add_argument(*mainArgs['autoDisplay'],
                             action='store_true',
                             help=mainHelp['autoDisplay']) 
@@ -1305,6 +1303,61 @@ def _generateArgs(source, propNames=None):
                                    longArgs=longArgs)
 
 
+def calcCanvasCentres(args, overlayList, displayCtx):
+    """Convenience function which calculates and returns the locations of the
+    ``xcentre``, ``ycentre``, and ``zcentre`` arguments, in the display
+    coordinate system.
+
+    .. todo:: Allow transformation in both directions.
+    """
+
+    loc = displayCtx.location.xyz
+    xc  = args.xcentre
+    yc  = args.ycentre
+    zc  = args.zcentre
+
+    if len(overlayList) == 0:
+        return ((loc[1], loc[2]),
+                (loc[0], loc[2]),
+                (loc[0], loc[1]))
+
+    opts   = displayCtx.getOpts(overlayList[0])
+    refimg = opts.getReferenceImage()
+
+    # This overlay has no referecne image -
+    # therefore its world coordinate system
+    # is equivalent to the display coordinate
+    # system.
+    if refimg is None:
+        if xc is None: xc = (loc[1], loc[2])
+        if yc is None: yc = (loc[0], loc[2])
+        if zc is None: zc = (loc[0], loc[1])
+        return xc, yc, zc
+
+    # Transform the display location into
+    # world coordinates of the overlay
+    loc = opts.transformCoords([loc], 'display', 'world')[0]
+
+    if xc is None: xc = (loc[1], loc[2])
+    if yc is None: yc = (loc[0], loc[2])
+    if zc is None: zc = (loc[0], loc[1])
+
+    # Fill in the horizontal/vertical coordinates
+    xc  = [loc[0], xc[ 0], xc[ 1]]
+    yc  = [yc[ 0], loc[1], yc[ 1]]
+    zc  = [zc[ 0], zc[ 1], loc[2]]
+
+    # Transform them from the overlay world
+    # coordinates into display coordinates
+    xc, yc, zc = opts.transformCoords([xc, yc, zc], 'world', 'display')
+
+    xc = xc[1], xc[2]
+    yc = yc[0], yc[2]
+    zc = zc[0], zc[1]
+
+    return xc, yc, zc
+
+
 def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
     """Configures the scene displayed by the given :class:`.DisplayContext`
     instance according to the arguments that were passed in on the command
@@ -1330,15 +1383,12 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
     def apply():
 
         # First apply all command line options
-        # related to the display context
+        # related to the display context.
 
-        # selectedOverlay
-        if args.selectedOverlay is not None:
-            if args.selectedOverlay < len(overlayList):
-                displayCtx.selectedOverlay = args.selectedOverlay
-        else:
-            if len(overlayList) > 0:
-                displayCtx.selectedOverlay = len(overlayList) - 1
+        # Set the selected overlay 
+        # to the first specified
+        if len(overlayList) > 0:
+            displayCtx.selectedOverlay = 0
 
         # Auto display
         displayCtx.autoDisplay = args.autoDisplay
@@ -1404,12 +1454,21 @@ def generateSceneArgs(overlayList, displayCtx, sceneOpts, exclude=None):
 
     # main options
     if len(overlayList) > 0:
-        args += ['--{}'.format(ARGUMENTS['Main.worldLoc'][1])]
-        args += ['{}'.format(c) for c in displayCtx.location.xyz]
 
-    if displayCtx.selectedOverlay is not None:
-        args += ['--{}'.format(ARGUMENTS['Main.selectedOverlay'][1])]
-        args += ['{}'.format(displayCtx.selectedOverlay)]
+        # Get the world location, in
+        # terms of the first overlay 
+        worldLoc = displayCtx.location.xyz
+        opts     = displayCtx.getOpts(overlayList[0])
+        refimg   = opts.getReferenceImage()
+        
+        if refimg is not None:
+            refOpts  = displayCtx.getOpts(refimg)
+            worldLoc = refOpts.transformCoords([worldLoc],
+                                               'display',
+                                               'world')[0] 
+
+        args += ['--{}'.format(ARGUMENTS['Main.worldLoc'][1])]
+        args += ['{}'.format(c) for c in worldLoc]
 
     props = OPTIONS.get(sceneOpts, allhits=True)
 

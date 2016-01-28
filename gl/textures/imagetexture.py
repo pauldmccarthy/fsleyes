@@ -352,7 +352,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
             # The image data is flattened, with fortran dimension
             # ordering, so the data, as stored on the GPU, has its
             # first dimension as the fastest changing.
-            data = data.ravel(order='F')
+            data = data.flatten(order='F')
 
             # Enable storage of tightly packed data of any size (i.e.
             # our texture shape does not have to be divisible by 4).

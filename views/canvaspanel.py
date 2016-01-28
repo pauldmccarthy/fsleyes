@@ -658,16 +658,46 @@ def _genCommandLineArgs(overlayList, displayCtx, canvas):
         xcanvas = canvas.getXCanvas()
         ycanvas = canvas.getYCanvas()
         zcanvas = canvas.getZCanvas()
-        
+
+        # Get the canvas centres in the
+        # display coordinate system
+        xc = xcanvas.getDisplayCentre()
+        yc = ycanvas.getDisplayCentre()
+        zc = zcanvas.getDisplayCentre()
+
+        # The getDisplayCentre method only
+        # returns horizontal/vertical values,
+        # so we have to make the positions 3D.
+        loc = displayCtx.location.xyz
+        xc  = [loc[0], xc[ 0], xc[ 1]]
+        yc  = [yc[ 0], loc[1], yc[ 1]]
+        zc  = [zc[ 0], zc[ 1], loc[2]]
+
+        # Transform the centres into the world
+        # coordinate system of the first overlay.
+        if len(overlayList) > 0:
+            opts   = displayCtx.getOpts(overlayList[0])
+            refimg = opts.getReferenceImage()
+            
+            if refimg is not None:
+                xc, yc, zc = opts.transformCoords(
+                    [xc, yc, zc], 'display', 'world')
+                
+                # And turn back into 2D (horizontal/
+                # vertical) positions
+                xc = xc[1], xc[2]
+                yc = yc[0], yc[2]
+                zc = zc[0], zc[1]
+
         argv += ['--{}'.format(fsleyes_parseargs.ARGUMENTS[sceneOpts,
                                                            'xcentre'][1])]
-        argv += ['{}'.format(c) for c in xcanvas.pos.xy]
+        argv += ['{}'.format(c) for c in xc]
         argv += ['--{}'.format(fsleyes_parseargs.ARGUMENTS[sceneOpts,
                                                            'ycentre'][1])]
-        argv += ['{}'.format(c) for c in ycanvas.pos.xy]
+        argv += ['{}'.format(c) for c in yc]
         argv += ['--{}'.format(fsleyes_parseargs.ARGUMENTS[sceneOpts,
                                                            'zcentre'][1])]
-        argv += ['{}'.format(c) for c in zcanvas.pos.xy]
+        argv += ['{}'.format(c) for c in zc]
 
     # Add display options for each overlay
     for overlay in overlayList:
