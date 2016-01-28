@@ -544,8 +544,11 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         elif dtype == np.uint16: scale = 65535
         elif dtype == np.int16:  scale = 65535
 
-        voxValXform = transform.scaleOffsetXform(scale, offset)
-
+        # If the data range is 0 (min == max)
+        # we just set an identity xform
+        if scale == 0: voxValXform = np.eye(4)
+        else:          voxValXform = transform.scaleOffsetXform(scale, offset)
+        
         # This is all just for logging purposes
         if log.getEffectiveLevel() == logging.DEBUG:
 
