@@ -422,6 +422,7 @@ class GLVolume(globject.GLImageObject):
             texName,
             self.image,
             interp=interp,
+            resolution=opts.resolution,
             notify=False)
 
         self.imageTexture.register(self.name, self.__textureChanged)

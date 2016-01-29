@@ -65,12 +65,8 @@ class ImageTexture(texture.Texture, notifier.Notifier):
                  name,                 
                  image,
                  nvals=1,
-                 normalise=False,
-                 prefilter=None,
-                 interp=gl.GL_NEAREST,
-                 resolution=None,
-                 volume=None,
-                 notify=True):
+                 notify=True,
+                 **kwargs):
         """Create an ``ImageTexture``. A listener is added to the
         :attr:`.Image.data` property, so that the texture data can be
         refreshed whenever the image data changes - see the
@@ -83,15 +79,11 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         :arg nvals:     Number of values per voxel. For example. a normal MRI
                         or fMRI image contains only one value for each voxel.
                         However, DTI data contains three values per voxel.
-        
-        :arg normalise: If ``True``, the image data is normalised to lie in the
-                        range ``[0.0, 1.0]``.
-        
-        :arg prefilter: An optional function which may perform any 
-                        pre-processing on the data before it is copied to the 
-                        GPU - see the :meth:`__prepareTextureData` method.
-
+ 
         :arg notify:    Passed to the initial call to :meth:`refresh`.
+
+        All other keyword arguments are passed through to the :meth:`set`
+        method, and thus used as initial texture settings.
         """
 
         texture.Texture.__init__(self, name, 3)
@@ -127,12 +119,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
 
         self.image.addListener('data', self.__name, self.refresh)
 
-        self.set(interp=interp,
-                 prefilter=prefilter,
-                 resolution=resolution,
-                 volume=volume,
-                 normalise=normalise,
-                 refresh=False)
+        self.set(refresh=False, **kwargs)
         
         self.__refresh(notify=notify)
 
@@ -352,7 +339,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
             # The image data is flattened, with fortran dimension
             # ordering, so the data, as stored on the GPU, has its
             # first dimension as the fastest changing.
-            data = data.ravel(order='F')
+            data = data.flatten(order='F')
 
             # Enable storage of tightly packed data of any size (i.e.
             # our texture shape does not have to be divisible by 4).
@@ -544,8 +531,11 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         elif dtype == np.uint16: scale = 65535
         elif dtype == np.int16:  scale = 65535
 
-        voxValXform = transform.scaleOffsetXform(scale, offset)
-
+        # If the data range is 0 (min == max)
+        # we just set an identity xform
+        if scale == 0: voxValXform = np.eye(4)
+        else:          voxValXform = transform.scaleOffsetXform(scale, offset)
+        
         # This is all just for logging purposes
         if log.getEffectiveLevel() == logging.DEBUG:
 

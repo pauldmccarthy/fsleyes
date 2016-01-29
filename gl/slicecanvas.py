@@ -374,13 +374,21 @@ class SliceCanvas(props.HasProperties):
     def centreDisplayAt(self, xpos, ypos):
         """Pans the display so the given x/y position is in the centre. """
 
-        # work out current display centre
+        xcentre, ycentre = self.getDisplayCentre()
+
+        # move to the new centre
+        self.panDisplayBy(xpos - xcentre, ypos - ycentre)
+
+
+    def getDisplayCentre(self):
+        """Returns the horizontal/vertical position, in display coordinates,
+        of the current centre of the display bounds.
+        """
         bounds  = self.displayBounds
         xcentre = bounds.xlo + (bounds.xhi - bounds.xlo) * 0.5
         ycentre = bounds.ylo + (bounds.yhi - bounds.ylo) * 0.5
 
-        # move to the new centre
-        self.panDisplayBy(xpos - xcentre, ypos - ycentre)
+        return xcentre, ycentre
 
 
     def panDisplayToShow(self, xpos, ypos):

@@ -16,12 +16,13 @@ import wx
 
 import props
 
-import fsl.fsleyes.toolbar                   as fsltoolbar
-import fsl.fsleyes.icons                     as icons
-import fsl.fsleyes.tooltips                  as fsltooltips
-import fsl.fsleyes.actions                   as actions
-import fsl.utils.typedict                    as td
-import fsl.data.strings                      as strings
+import fsl.fsleyes.toolbar    as fsltoolbar
+import fsl.fsleyes.icons      as icons
+import fsl.fsleyes.tooltips   as fsltooltips
+import fsl.fsleyes.actions    as actions
+import fsl.fsleyes.colourmaps as fslcm
+import fsl.utils.typedict     as td
+import fsl.data.strings       as strings
 
 
 log = logging.getLogger(__name__)
@@ -521,6 +522,7 @@ _TOOLBAR_PROPS = td.TypeDict({
             tooltip=_TOOLTIPS['VolumeOpts.resetDisplayRange']), 
         'cmap' : props.Widget(
             'cmap',
+            labels=fslcm.getColourMapLabel,
             tooltip=_TOOLTIPS['VolumeOpts.cmap'])},
 
     'MaskOpts' : {
