@@ -17,7 +17,8 @@ import pwidgets.elistbox as elistbox
 
 import fsl.data.atlases  as atlases
 import fsl.data.strings  as strings
-import fsl.utils.dialog  as dialog
+import fsl.utils.status  as status
+import fsl.utils.async   as async
 import fsl.fsleyes.panel as fslpanel
 
 
@@ -212,9 +213,9 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
 
         If a region list (a list of :class:`OverlayListWidget` items for every
         region in the atlas, to be displayed in the region list) has not yet
-        been created, it is created - a :class:`.ProcessingDialog` is displayed
-        while this takes place, as it can be time consuming for atlases with a
-        large number of regions (hint: Talairach).
+        been created, it is created - this is done asynchronously (via the
+        :func:`async.idle` function), as it can take quite a long time for
+        some of the atlases (e.g. the Talairach and Juelich).
 
         Then the region list is updated to show the regions for the newly
         selected atlas.
@@ -225,53 +226,80 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
         regionList = self.__regionLists[atlasIdx]
 
         if regionList is None:
-            
+
+            # The region list for this atlas has not yet been
+            # created. So we create the list, and then create
+            # a widget for every region in the atlas. Some of
+            # the atlases (Juelich and Talairach in particular)
+            # have a large number of regions, so we create the
+            # widgets asynchronously on the wx idle loop.
             regionList = elistbox.EditableListBox(
                 self.__regionPanel,
                 style=(elistbox.ELB_NO_ADD    |
                        elistbox.ELB_NO_REMOVE |
                        elistbox.ELB_NO_MOVE))
+            regionList.Show(False)
 
+            self.__regionLists[atlasIdx] = regionList
 
-            def buildRegionList():
+            def addToRegionList(label, i):
 
-                log.debug('Creating region list for {} ({})'.format(
-                    atlasDesc.atlasID, id(regionList)))
+                regionList.Append(label.name)
+                widget = OverlayListWidget(regionList,
+                                           atlasDesc.atlasID,
+                                           self.__atlasPanel,
+                                           label.index)
+                regionList.SetItemWidget(i, widget)
 
-                self.__regionLists[atlasIdx] = regionList
+            log.debug('Creating region list for {} ({})'.format(
+                atlasDesc.atlasID, id(regionList)))
 
-                for i, label in enumerate(atlasDesc.labels):
-                    regionList.Append(label.name)
-                    widget = OverlayListWidget(regionList,
-                                               atlasDesc.atlasID,
-                                               self.__atlasPanel,
-                                               label.index)
-                    regionList.SetItemWidget(i, widget)
-                    wx.Yield()
-
-                filterStr = self.__regionFilter.GetValue().lower().strip()
-                regionList.ApplyFilter(filterStr, ignoreCase=True)
-
-                self.__updateAtlasState(atlasIdx)
-
-            dialog.ProcessingDialog(
-                None,
+            status.update(
                 strings.messages[self, 'loadRegions'].format(atlasDesc.name),
-                buildRegionList).Run(mainThread=True)
-            
-        log.debug('Showing region list for {} ({})'.format(
-            atlasDesc.atlasID, id(regionList)))
+                timeout=None)
 
-        old = self.__regionSizer.GetItem(1).GetWindow()
-        
-        if old is not None:
-            old.Show(False)
-            
-        regionList.Show(True)
-        self.__regionSizer.Remove(1)
-        
-        self.__regionSizer.Insert(1, regionList, flag=wx.EXPAND, proportion=1)
-        self.__regionSizer.Layout()
+            # Schedule addToRegionList on the
+            # wx idle loop for every region.
+            # Disable the panel while this is
+            # occurring.
+            self.Disable()
+            for i, label in enumerate(atlasDesc.labels):
+                async.idle(addToRegionList, label, i)
+
+        # This function changes the displayed region
+        # list. We schedule it on the wx idle loop,
+        # so it will get called after the region list
+        # has been populated (if it has not been
+        # displayed before).
+        def changeAtlasList():
+
+            filterStr = self.__regionFilter.GetValue().lower().strip()
+            regionList.ApplyFilter(filterStr, ignoreCase=True)
+
+            self.__updateAtlasState(atlasIdx)
+
+            status.update(strings.messages[self, 'regionsLoaded'].format(
+                atlasDesc.name))
+            log.debug('Showing region list for {} ({})'.format(
+                atlasDesc.atlasID, id(regionList)))
+
+            old = self.__regionSizer.GetItem(1).GetWindow()
+
+            if old is not None:
+                old.Show(False)
+
+            regionList.Show(True)
+            self.__regionSizer.Remove(1)
+
+            self.__regionSizer.Insert(1,
+                                      regionList,
+                                      flag=wx.EXPAND,
+                                      proportion=1)
+            self.__regionSizer.Layout()
+
+            self.Enable()
+ 
+        async.idle(changeAtlasList)
 
         
 class OverlayListWidget(wx.Panel):

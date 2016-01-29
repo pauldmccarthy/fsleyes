@@ -622,10 +622,10 @@ def _showCommandLineArgs(overlayList, displayCtx, canvas):
         style=(fsldlg.TED_OK        |
                fsldlg.TED_READONLY  |
                fsldlg.TED_MULTILINE |
-               fsldlg.TED_COPY))
+               fsldlg.TED_COPY      |
+               fsldlg.TED_COPY_MESSAGE))
 
     dlg.CentreOnParent()
-
     dlg.ShowModal()
 
 
