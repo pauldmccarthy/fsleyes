@@ -349,12 +349,16 @@ class ImageTexture(texture.Texture, notifier.Notifier):
             self.bindTexture()
 
             # set interpolation routine
+            interp = self.__interp
+            if interp is None:
+                interp = gl.GL_NEAREST
+                
             gl.glTexParameteri(gl.GL_TEXTURE_3D,
                                gl.GL_TEXTURE_MAG_FILTER,
-                               self.__interp)
+                               interp)
             gl.glTexParameteri(gl.GL_TEXTURE_3D,
                                gl.GL_TEXTURE_MIN_FILTER,
-                               self.__interp)
+                               interp)
 
             # Clamp texture borders to the edge
             # values - it is the responsibility
