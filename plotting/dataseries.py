@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# dataseries.py -
+# dataseries.py - The DataSeries class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`DataSeries` class, the base class for
+classes used by :class:`.PlotPanel` views for plotting data.
+"""
 
 import logging
 
