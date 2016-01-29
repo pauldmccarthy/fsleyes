@@ -134,10 +134,15 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
         """Enables information display for the atlas with the specified ID
         (see the :mod:`.atlases` module for details on atlas IDs).
         """
-        self.__enabledAtlases[atlasID] = self.__atlasPanel.loadAtlas(atlasID,
-                                                                     False)
-        self.__locationChanged()
 
+        def onLoad(atlas):
+            self.__enabledAtlases[atlasID] = atlas
+            self.__locationChanged()
+            self.Enable()
+
+        self.Disable()
+        self.__atlasPanel.loadAtlas(atlasID, False, onLoad)
+        
         
     def disableAtlasInfo(self, atlasID):
         """Disables information display for the atlas with the specified ID.
