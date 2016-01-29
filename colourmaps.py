@@ -52,6 +52,8 @@ The following functions are available for managing and accessing colour maps:
    :nosignatures:
 
    getColourMaps
+   getColourMap
+   getColourMapLabel
    registerColourMap
    installColourMap
    isColourMapRegistered
@@ -256,7 +258,7 @@ def registerColourMap(cmapFile,
     if overlayList is None: overlayList = []
 
     data = np.loadtxt(cmapFile)
-    cmap = colors.ListedColormap(data, name)
+    cmap = colors.ListedColormap(data, key)
 
     log.debug('Loading and registering custom '
               'colour map: {}'.format(cmapFile))
@@ -399,6 +401,11 @@ def getColourMaps():
 def getColourMap(cmapName):
     """Returns the colour map instance of the specified name."""
     return _caseInsensitiveLookup(_cmaps, cmapName).mapObj
+
+
+def getColourMapLabel(cmapName):
+    """Returns a label/display name for the specified colour map. """
+    return _caseInsensitiveLookup(_cmaps, cmapName).name
 
 
 def isColourMapRegistered(cmapName):

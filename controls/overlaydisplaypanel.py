@@ -21,6 +21,7 @@ import fsl.utils.typedict                as td
 import fsl.data.strings                  as strings
 import fsl.fsleyes.tooltips              as fsltooltips
 import fsl.fsleyes.panel                 as fslpanel
+import fsl.fsleyes.colourmaps            as fslcm
 import fsl.fsleyes.actions.loadcolourmap as loadcmap
 import fsl.fsleyes.displaycontext        as displayctx
 
@@ -258,6 +259,7 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
 
         # Negative colour map widget
         negCmap    = props.Widget('negativeCmap',
+                                  labels=fslcm.getColourMapLabel,
                                   enabledWhen=lambda i, enc: enc,
                                   dependencies=['useNegativeCmap'])
         useNegCmap = props.Widget('useNegativeCmap')
@@ -304,7 +306,8 @@ _DISPLAY_PROPS = td.TypeDict({
                      enabledWhen=lambda o: o.overlay.is4DImage()),
         props.Widget('interpolation',
                      labels=strings.choices['VolumeOpts.interpolation']),
-        props.Widget('cmap'),
+        props.Widget('cmap',
+                     labels=fslcm.getColourMapLabel),
         props.Widget('invert'),
         props.Widget('invertClipping'),
         props.Widget('linkLowRanges',
@@ -342,6 +345,7 @@ _DISPLAY_PROPS = td.TypeDict({
                      enabledWhen=lambda o, ci: ci is None),
         props.Widget('clipImage',     labels=_imageName),
         props.Widget('cmap',
+                     labels=fslcm.getColourMapLabel,
                      dependencies=['colourImage'],
                      enabledWhen=lambda o, ci: ci is not None), 
         props.Widget('clippingRange',
