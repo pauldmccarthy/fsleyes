@@ -101,9 +101,6 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
                 fslicons.findImageFile('spannerHighlight24'),
                 fslicons.findImageFile('spanner24')],
 
-            'resetZoom'    : fslicons.findImageFile('resetZoom24'),
-            'centreCursor' : fslicons.findImageFile('centre24'),
-
             'layout' : {
                 'horizontal' : [
                     fslicons.findImageFile('horizontalLayoutHighlight24'),
@@ -125,8 +122,6 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
             'showYCanvas'  : fsltooltips.properties[orthoOpts, 'showYCanvas'],
             'showZCanvas'  : fsltooltips.properties[orthoOpts, 'showZCanvas'],
             'displaySpace' : fsltooltips.properties[dctx,      'displaySpace'],
-            'resetZoom'    : fsltooltips.actions[   profile,   'resetZoom'],
-            'centreCursor' : fsltooltips.actions[   profile,   'centreCursor'],
             'toggleCanvasSettingsPanel' : fsltooltips.actions[
                 ortho, 'toggleCanvasSettingsPanel'],
             
@@ -140,8 +135,6 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
                       'showYCanvas'               : orthoOpts,
                       'showZCanvas'               : orthoOpts,
                       'displaySpace'              : dctx,
-                      'resetZoom'                 : profile,
-                      'centreCursor'              : profile,
                       'toggleCanvasSettingsPanel' : ortho}
 
         def displaySpaceOptionName(opt):
@@ -177,12 +170,6 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
             props  .Widget(      'movieMode', 
                                  icon=icons['movieMode'],
                                  tooltip=tooltips['movieMode']), 
-            actions.ActionButton('resetZoom',
-                                 icon=icons['resetZoom'],
-                                 tooltip=tooltips['resetZoom']),
-            actions.ActionButton('centreCursor',
-                                 icon=icons['centreCursor'],
-                                 tooltip=tooltips['centreCursor']),
             props.Widget(        'displaySpace',
                                  labels=displaySpaceOptionName,
                                  tooltip=tooltips['displaySpace'],
