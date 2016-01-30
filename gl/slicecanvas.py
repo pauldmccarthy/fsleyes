@@ -473,7 +473,7 @@ class SliceCanvas(props.HasProperties):
             globj   = self._glObjects.get(overlay, None)
             display = self.displayCtx.getDisplay(overlay)
 
-            if (globj is None) or (not globj):
+            if not globj:
                 continue
 
             # For offscreen render mode, GLObjects are
@@ -696,8 +696,7 @@ class SliceCanvas(props.HasProperties):
         self._annotations.setAxes(self.xax, self.yax)
 
         for ovl, globj in self._glObjects.items():
-
-            if (globj is not None) and globj:
+            if globj:
                 globj.setAxes(self.xax, self.yax)
 
         self._overlayBoundsChanged()
@@ -748,7 +747,7 @@ class SliceCanvas(props.HasProperties):
         # Tell the previous GLObject (if
         # any) to clean up after itself
         globj = self._glObjects.pop(overlay, None)
-        if globj is not None:
+        if globj:
             globj.deregister(self.name)
             globj.destroy()
 
@@ -854,7 +853,7 @@ class SliceCanvas(props.HasProperties):
         for ovl, globj in self._glObjects.items():
             if ovl not in self.overlayList:
                 self._glObjects.pop(ovl)
-                if globj is not None:
+                if globj:
                     globj.destroy()
 
         # Create a GL object for any new overlays,
