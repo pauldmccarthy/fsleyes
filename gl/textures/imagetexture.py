@@ -538,8 +538,15 @@ class ImageTexture(texture.Texture, notifier.Notifier):
 
         # If the data range is 0 (min == max)
         # we just set an identity xform
-        if scale == 0: voxValXform = np.eye(4)
-        else:          voxValXform = transform.scaleOffsetXform(scale, offset)
+        if scale == 0:
+            voxValXform    = np.eye(4)
+            invVoxValXform = np.eye(4)
+        else:
+            invScale       = 1.0 / scale
+            voxValXform    = transform.scaleOffsetXform(scale, offset)
+            invVoxValXform = transform.scaleOffsetXform(
+                invScale,
+                -offset * invScale)
         
         # This is all just for logging purposes
         if log.getEffectiveLevel() == logging.DEBUG:
@@ -589,7 +596,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         self.texIntFmt      = intFmt
         self.texDtype       = texDtype
         self.voxValXform    = voxValXform
-        self.invVoxValXform = transform.invert(voxValXform)
+        self.invVoxValXform = invVoxValXform
 
 
     def __prepareTextureData(self):
