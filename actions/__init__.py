@@ -122,6 +122,8 @@ import openfile
 import opendir
 import openstandard
 import saveoverlay
+import removeoverlay
+import removealloverlays
 import loadcolourmap
 import saveperspective
 import loadperspective
@@ -135,6 +137,8 @@ OpenFileAction           = openfile          .OpenFileAction
 OpenDirAction            = opendir           .OpenDirAction
 OpenStandardAction       = openstandard      .OpenStandardAction
 SaveOverlayAction        = saveoverlay       .SaveOverlayAction
+RemoveOverlayAction      = removeoverlay     .RemoveOverlayAction
+RemoveAllOverlaysAction  = removealloverlays .RemoveAllOverlaysAction
 LoadColourMapAction      = loadcolourmap     .LoadColourMapAction
 SavePerspectiveAction    = saveperspective   .SavePerspectiveAction
 LoadPerspectiveAction    = loadperspective   .LoadPerspectiveAction

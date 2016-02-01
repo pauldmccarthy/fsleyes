@@ -661,10 +661,17 @@ class FSLEyesFrame(wx.Frame):
         actionz = [actions.OpenFileAction,
                    actions.OpenDirAction,
                    actions.OpenStandardAction,
+                   'sep',
                    actions.CopyOverlayAction,
-                   actions.SaveOverlayAction]
+                   actions.SaveOverlayAction,
+                   actions.RemoveOverlayAction,
+                   actions.RemoveAllOverlaysAction]
  
         for action in actionz:
+
+            if action == 'sep':
+                fileMenu.AppendSeparator()
+                continue
             menuItem  = fileMenu.Append(wx.ID_ANY, strings.actions[action])
             actionObj = action(self.__overlayList, self.__displayCtx)
 
