@@ -144,9 +144,15 @@ class VectorOpts(volumeopts.Nifti1Opts):
         minval = opts.dataMin
         maxval = opts.dataMax
 
-        self.clippingRange.xmin =  minval
-        self.clippingRange.xmax =  maxval
-        self.clippingRange.x    = [minval, maxval]
+        # Clipping works with <= and >=, so
+        # we add an offset allowing the user
+        # to configure the overlay such that
+        # no voxels are clipped.
+        distance = (maxval - minval) / 10000.0
+
+        self.clippingRange.xmin =  minval - distance
+        self.clippingRange.xmax =  maxval + distance
+        self.clippingRange.x    = [minval, maxval + distance]
 
         
     def __overlayListChanged(self, *a):
