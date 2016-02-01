@@ -865,14 +865,18 @@ class VolumeOpts(Nifti1Opts):
                         peer.        isSyncedToParent('displayRange'))):
                 continue
 
+            bri = peer.display.hasListener('brightness',   peer.name)
+            con = peer.display.hasListener('contrast',     peer.name)
+            dr  = peer        .hasListener('displayRange', peer.name)
+
             if enable:
-                peer.display.enableListener('brightness',   peer.name)
-                peer.display.enableListener('contrast',     peer.name)
-                peer        .enableListener('displayRange', peer.name)
+                if bri: peer.display.enableListener('brightness',   peer.name)
+                if con: peer.display.enableListener('contrast',     peer.name)
+                if dr:  peer        .enableListener('displayRange', peer.name)
             else:
-                peer.display.disableListener('brightness',   peer.name)
-                peer.display.disableListener('contrast',     peer.name)
-                peer        .disableListener('displayRange', peer.name) 
+                if bri: peer.display.disableListener('brightness',   peer.name)
+                if con: peer.display.disableListener('contrast',     peer.name)
+                if dr:  peer        .disableListener('displayRange', peer.name)
                 
 
     def __briconChanged(self, *a):
