@@ -95,8 +95,9 @@ TEX clipValue.x, {{ varying_texCoord }}, {{ texture_clipTexture  }}, 3D;
 # we just looked up.
 CMP clipValue.x, clipping.w, clipValue.x, voxValue.x;
 
-# Figure out which negative colour map
+# Figure out which colour map
 # should be used for this fragment.
+#
 # We use the negative colour map ...
 # 
 # if the voxel value is less than
@@ -136,28 +137,43 @@ CMP negClipValue.x, useNegCmap.x, negClipValue.x, clipValue.x;
 CMP clipValue.x, clipping.w, clipValue.x, negClipValue.x;
 
 # Test the low clipping range
-SUB voxClipLo, clipValue.x, clipping.x;
+SUB voxClipLo.x, clipValue.x, clipping.x;
 
 # And the high clipping range
-SUB voxClipHi, clipValue.x, clipping.y;
+SUB voxClipHi.x, clipValue.x, clipping.y;
 
 # Multiply the low/high results - after
 # this, voxClipLo will be positive if
 # the value is outside of the clipping
 # range, or negative if the value is
 # within the clipping range
-MUL voxClipLo, voxClipLo, voxClipHi;
+MUL voxClipLo.x, voxClipLo.x, voxClipHi.x;
 
 # Multiply by the clipping.z setting -
 # this will invert the sign if normal
-# clipping is active
-MUL voxClipLo, voxClipLo, clipping.z;
+# (as opposed to inverted) clipping is
+# active.
+MUL voxClipLo.x, voxClipLo.x, clipping.z;
+
+# We need to clip voxels if the value is
+# less than or equal to the low clipping
+# range, or greater than or equal to the
+# high clipping range. This equates to
+# testing whether voxClipLo is less than
+# or equal to zero. Unfortunately the KIL
+# instruction tests for less than zero.
+# So these three instructions manipulate
+# voxClipLo such that values which are
+# less than or equal to 0 are set to -1.
+MUL voxClipLo.x, voxClipLo.x, -1.0;
+SGE voxClipLo.x, voxClipLo.x,  0.0;
+MUL voxClipLo.x, voxClipLo.x, -1.0;
 
 # If the voxel value is outside 
 # the clipping range (or inside,
 # if clipping is inverted), don't
 # draw it
-KIL voxClipLo;
+KIL voxClipLo.x;
 
 # Scale voxel value according
 # to the current display range

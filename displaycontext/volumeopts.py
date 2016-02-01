@@ -480,7 +480,14 @@ class VolumeOpts(Nifti1Opts):
 
     
     clippingRange = props.Bounds(ndims=1)
-    """Values outside of this range are not shown."""
+    """Values outside of this range are not shown.  Clipping works as follows:
+    
+     - Image values less than or equal to the minimum clipping value are
+       clipped.
+
+     - Image values greater than or equal to the maximum clipping value are
+       clipped. 
+    """
 
     
     invertClipping = props.Boolean(default=False)
@@ -706,22 +713,44 @@ class VolumeOpts(Nifti1Opts):
         self.displayRange.x = [self.dataMin, self.dataMax]
 
 
+    def __updateDataRange(self, absolute=False):
+        """Configures the minimum/maximum bounds of the :attr:`displayRange`
+        and :attr:`clippingRange` properties.
+        """
+
+        dataMin = self.overlay.dataRange.xlo
+        dataMax = self.overlay.dataRange.xhi
+
+        if absolute:
+            dmin     = 0
+            dmax     = max((abs(dataMin), abs(dataMax)))
+        else:
+            dmin     = dataMin
+            dmax     = dataMax
+
+        self.dataMin           = dataMin
+        self.dataMax           = dataMax
+        self.displayRange.xmin = dmin
+        self.displayRange.xmax = dmax
+
+        if self.clipImage is None:
+
+            # Clipping works on >= and <=, so we add
+            # a small offset to the clipping limits
+            # so the user can configure the scene such
+            # that no values are clipped.
+            distance = abs(dmax - dmin) / 10000.0
+
+            self.clippingRange.xmin = dmin - distance
+            self.clippingRange.xmax = dmax + distance
+
+
     def __dataRangeChanged(self, *a):
         """Called when the :attr:`.Image.dataRange` property changes.
         Updates the limits of the :attr:`displayRange` and
         :attr:`.clippingRange` properties.
         """
-        
-        self.dataMin           = self.overlay.dataRange.xlo
-        self.dataMax           = self.overlay.dataRange.xhi
-        self.displayRange.xmin = self.dataMin
-        self.displayRange.xmax = self.dataMax
-
-        dMinDistance = abs(self.dataMax - self.dataMin) / 10000.0
-
-        if self.clipImage is None:
-            self.clippingRange.xmin = self.dataMin - dMinDistance
-            self.clippingRange.xmax = self.dataMax + dMinDistance
+        self.__updateDataRange(absolute=self.useNegativeCmap)
  
 
     def __overlayListChanged(self, *a):
@@ -786,9 +815,6 @@ class VolumeOpts(Nifti1Opts):
                 self.enableListener('linkLowRanges',  self.name)
                 self.enableListener('linkHighRanges', self.name) 
             
-        # Keep range values 0.01% apart.
-        dMinDistance = abs(dataMax - dataMin) / 10000.0
-
         log.debug('Clip image changed for {}: {} - new '
                   'clipping range: [{: 0.5f} - {: 0.5f}]'.format(
                       self.overlay,
@@ -796,13 +822,9 @@ class VolumeOpts(Nifti1Opts):
                       dataMin,
                       dataMax))
 
-        self.clippingRange.xmin = dataMin - dMinDistance
-        self.clippingRange.xmax = dataMax + dMinDistance
-        
-        # By default, the lowest values
-        # in the image are clipped
-        self.clippingRange.xlo = dataMin + dMinDistance
-        self.clippingRange.xhi = dataMax + dMinDistance
+        self.__updateDataRange(absolute=self.useNegativeCmap)
+
+        self.clippingRange.x = dataMin, self.clippingRange.xmax
 
 
     def __toggleListeners(self, enable=True):
@@ -907,14 +929,12 @@ class VolumeOpts(Nifti1Opts):
         if self.useNegativeCmap:
             self.display.disableProperty('brightness')
             self.display.disableProperty('contrast')
-            self.displayRange .xmin = 0.0
-            self.clippingRange.xmin = 0.0
-            
         else:
             self.display.enableProperty('brightness')
             self.display.enableProperty('contrast')
-            self.displayRange .xmin = self.dataMin
-            self.clippingRange.xmin = self.dataMin
+
+        self.__updateDataRange(absolute=self.useNegativeCmap)
+            
 
 
     def __linkLowRangesChanged(self, *a):
