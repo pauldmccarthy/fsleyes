@@ -96,14 +96,17 @@ Finally, some 'global' actions are also provided in this package:
  .. autosummary::
 
     ~fsl.fsleyes.actions.copyoverlay
-    ~fsl.fsleyes.actions.loadcolourmap
     ~fsl.fsleyes.actions.openfile
     ~fsl.fsleyes.actions.openstandard
     ~fsl.fsleyes.actions.saveoverlay
+    ~fsl.fsleyes.actions.removeoverlay
+    ~fsl.fsleyes.actions.removealloverlays
+    ~fsl.fsleyes.actions.loadcolourmap
     ~fsl.fsleyes.actions.saveperspective
     ~fsl.fsleyes.actions.loadperspective
     ~fsl.fsleyes.actions.clearperspective
     ~fsl.fsleyes.actions.togglecontrolpanel
+    ~fsl.fsleyes.actions.diagnosticreport
 """
 
 
@@ -129,6 +132,8 @@ import saveperspective
 import loadperspective
 import clearperspective
 import togglecontrolpanel
+import diagnosticreport
+
 
 Action                   = action            .Action
 ToggleAction             = action            .ToggleAction
@@ -144,6 +149,7 @@ SavePerspectiveAction    = saveperspective   .SavePerspectiveAction
 LoadPerspectiveAction    = loadperspective   .LoadPerspectiveAction
 ClearPerspectiveAction   = clearperspective  .ClearPerspectiveAction
 ToggleControlPanelAction = togglecontrolpanel.ToggleControlPanelAction
+DiagnosticReportAction   = diagnosticreport  .DiagnosticReportAction
 
 
 log = logging.getLogger(__name__)
