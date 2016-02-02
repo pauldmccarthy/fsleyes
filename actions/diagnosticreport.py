@@ -27,10 +27,21 @@ log = logging.getLogger(__name__)
 
 
 class DiagnosticReportAction(action.Action):
-    """
+    """The ``DiagnosticReportAction`` generates a JSON-formatted report file
+    containing information about the current state of *FSLeyes*. When the this
+    :class:`.Action` is run, the user is prompted to select a location to save
+    the file Then the report is generated, and written out to the specified
+    location.
     """
 
+    
     def __init__(self, overlayList, displayCtx, frame):
+        """Create a ``DiagnosticReportAction``.
+
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The master :class:`.DisplayContext`.
+        :arg frame:       The :class:`.FSLEyesFrame`.
+        """
 
         action.Action.__init__(self, self.__action)
 
@@ -40,6 +51,17 @@ class DiagnosticReportAction(action.Action):
 
 
     def __action(self):
+        """This method is the guts of the ``DiagnosticReportAction``. It does
+        the following:
+
+          1. Prompts the user to select a location to save the report file.
+
+          2. Generates the report.
+
+          3. Formats the report as JSON.
+
+          4. Saves the report to the specified location.
+        """
 
         dlg = wx.FileDialog( 
             self.__frame,
@@ -64,8 +86,11 @@ class DiagnosticReportAction(action.Action):
             f.write(report)
 
 
-
     def __generateReport(self):
+        """Generates and returns a *report*, a hierarchical dictionary
+        containing information about the current system and *FSLeyes*
+        state.
+        """
 
         import fsl.version              as version
         import fsl.fsleyes.perspectives as perspectives
@@ -107,13 +132,101 @@ class DiagnosticReportAction(action.Action):
 
 
     def __displayContextReport(self, overlayList, displayCtx):
+        """Creates and returns a hierarchical dictionary containing
+        information about the given :class:`.DisplayContext` and the
+        :class:`.Display`/:class:`.DisplayOpts` instances which it
+        is managing.
+        """
+
+        report   = OrderedDict()
+        overlays = []
+        props    = displayCtx.getAllProperties()[0]
+
+        for overlay in overlayList:
+
+            display = displayCtx.getDisplay(overlay)
+            opts    = displayCtx.getOpts(   overlay)
+
+            overlays.append(OrderedDict([
+                ('Display',     self.__displayReport(    display)),
+                ('DisplayOpts', self.__displayOptsReport(opts))]))
+
+        for prop in props:
+            report[prop] = str(getattr(displayCtx, prop))
+            
+        report['overlays'] = overlays
+
+        return report
+
+    
+    def __displayReport(self, display):
+        """Creates and returns a dictionary containing informtion about
+        the given :class:`.Display` instance.
+        """
         
-        pass
+        report = OrderedDict()
+        props  = display.getAllProperties()[0]
 
+        for prop in props:
+            report[prop] = str(getattr(display, prop))
+        
+        return report 
+
+    
+    def __displayOptsReport(self, opts):
+        """Creates and returns a dictionary containing informtion about
+        the given :class:`.DisplayOpts` instance.
+        """ 
+        
+        report = OrderedDict()
+
+        report['type'] = type(opts).__name__
+
+        props  = opts.getAllProperties()[0]
+
+        for prop in props:
+            value = getattr(opts, prop)
+            if prop in ('cmap', 'negativeCmap'):
+                value = value.name
+                
+            report[prop] = str(value)
+
+        return report
+
+    
     def __viewPanelReport(self, viewPanel):
-        pass
+        """Creates and returns a dictionary containing informtion about
+        the given :class:`.ViewPanel`.
+        """ 
 
+        import fsl.fsleyes.views as views
+        
+        report = OrderedDict()
+        props  = viewPanel.getAllProperties()[0]
 
+        report['type'] = type(viewPanel).__name__
+
+        for prop in props:
+            report[prop] = str(getattr(viewPanel, prop))
+
+        if isinstance(viewPanel, views.CanvasPanel):
+            
+            sceneOptsReport = OrderedDict()
+            sceneOpts       = viewPanel.getSceneOptions()
+            props           = sceneOpts.getAllProperties()[0]
+
+            sceneOptsReport['type'] = type(sceneOpts).__name__
+            
+            for prop in props:
+                sceneOptsReport[prop] = str(getattr(sceneOpts, prop))
+
+            report['SceneOpts'] = sceneOptsReport
+        
+        return report
+
+    
     def __formatReport(self, reportDict):
-
+        """Converts the given hierarchical dictionary to a JSON-formatted
+        string.
+        """
         return json.dumps(reportDict, indent=2)
