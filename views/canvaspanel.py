@@ -691,13 +691,13 @@ def _genCommandLineArgs(overlayList, displayCtx, canvas):
 
         argv += ['--{}'.format(fsleyes_parseargs.ARGUMENTS[sceneOpts,
                                                            'xcentre'][1])]
-        argv += ['{}'.format(c) for c in xc]
+        argv += ['{:0.8f}'.format(c) for c in xc]
         argv += ['--{}'.format(fsleyes_parseargs.ARGUMENTS[sceneOpts,
                                                            'ycentre'][1])]
-        argv += ['{}'.format(c) for c in yc]
+        argv += ['{:0.8f}'.format(c) for c in yc]
         argv += ['--{}'.format(fsleyes_parseargs.ARGUMENTS[sceneOpts,
                                                            'zcentre'][1])]
-        argv += ['{}'.format(c) for c in zc]
+        argv += ['{:0.8f}'.format(c) for c in zc]
 
     # Add display options for each overlay
     for overlay in overlayList:

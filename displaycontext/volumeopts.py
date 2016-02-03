@@ -701,8 +701,8 @@ class VolumeOpts(Nifti1Opts):
                              display,
                              display.getSyncPropertyName('contrast'))
             
-            self.__linkRangesChanged(0, False)
-            self.__linkRangesChanged(1, False)
+            self.__linkRangesChanged(False, 0)
+            self.__linkRangesChanged(False, 1)
 
         Nifti1Opts.destroy(self)
 
