@@ -1467,9 +1467,9 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
         # related to the display context.
 
         # Set the selected overlay 
-        # to the first specified
+        # to the last specified
         if len(overlayList) > 0:
-            displayCtx.selectedOverlay = 0
+            displayCtx.selectedOverlay = len(overlayList) - 1
 
         # Auto display
         displayCtx.autoDisplay = args.autoDisplay
