@@ -298,6 +298,7 @@ def concat(lists):
 OPTIONS = td.TypeDict({
 
     'Main'          : ['help',
+                       'fullhelp',
                        'glversion',
                        'scene',
                        'voxelLoc',
@@ -445,6 +446,7 @@ GROUPDESCS = td.TypeDict({
 ARGUMENTS = td.TypeDict({
 
     'Main.help'            : ('h',  'help'),
+    'Main.fullhelp'        : ('fh', 'fullhelp'),
     'Main.glversion'       : ('gl', 'glversion'),
     'Main.scene'           : ('s',  'scene'),
     'Main.voxelLoc'        : ('v',  'voxelLoc'),
@@ -555,16 +557,16 @@ for every option.
 # Help text for all of the options
 HELP = td.TypeDict({
 
-    'Main.help'          : 'Display this help and exit',
+    'Main.help'          : 'Display basic FSLeyes options and exit',
+    'Main.fullhelp'      : 'Display all FSLeyes options and exit',
     'Main.glversion'     : 'Desired (major, minor) OpenGL version',
     'Main.scene'         : 'Scene to show',
 
-    # TODO how about other overlay types?
     'Main.voxelLoc'        : 'Location to show (voxel coordinates of '
                              'first overlay)',
     'Main.worldLoc'        : 'Location to show (world coordinates of '
                              'first overlay, takes precedence over '
-                             '--voxelloc)', 
+                             '--voxelLoc)', 
     'Main.autoDisplay'     : 'Automatically configure display settings to '
                              'overlays (unless any display settings are '
                              'specified)',
@@ -616,9 +618,9 @@ HELP = td.TypeDict({
 
     'VolumeOpts.displayRange'    : 'Display range. Setting this will '
                                    'override brightnes/contrast settings.',
-    'VolumeOpts.clippingRange'   : 'Clipping range. Setting this will override'
-                                   'the low display range (unless low ranges '
-                                   'are unlinked).', 
+    'VolumeOpts.clippingRange'   : 'Clipping range. Setting this will '
+                                   'override the low display range (unless '
+                                   'low ranges are unlinked).', 
     'VolumeOpts.invertClipping'  : 'Invert clipping',
     'VolumeOpts.clipImage'       : 'Image containing clipping values '
                                    '(defaults to the image itself)' ,
@@ -832,6 +834,9 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['help'],
                             action='store_true',
                             help=mainHelp['help'])
+    mainParser.add_argument(*mainArgs['fullhelp'],
+                            action='store_true',
+                            help=mainHelp['fullhelp']) 
     mainParser.add_argument(*mainArgs['glversion'],
                             metavar=('MAJOR', 'MINOR'),
                             type=int,
@@ -1059,43 +1064,6 @@ def parseArgs(mainParser,
 
     _setupMainParser(mainParser)
 
-    # Because I'm splitting the argument parsing across two
-    # parsers, I'm using a custom print_help function 
-    def printHelp():
-
-        # Create a bunch of parsers for handling
-        # overlay display options
-        dispParser, _, optParsers = _setupOverlayParsers(forHelp=True)
-
-        # Print help for the main parser first,
-        # and then separately for the overlay parser
-        helpText = mainParser.format_help()
-
-        optParsers = ([(fsldisplay.Display, dispParser)] +
-                      list(optParsers.items()))
-
-        for target, parser in optParsers:
-
-            groupName = GROUPNAMES.get(target, None)
-            groupDesc = GROUPDESCS.get(target, None)
-
-            groupDesc = '\n  '.join(textwrap.wrap(groupDesc, 60))
-            
-            helpText += '\n' + groupName + ':\n'
-            if groupDesc is not None:
-                helpText += '  ' + groupDesc + '\n'
-
-            ovlHelp = parser.format_help()
-
-            skipTo    = 'optional arguments:'
-            optStart  = ovlHelp.index(skipTo)
-            optStart += len(skipTo) + 1
-            ovlHelp   = ovlHelp[optStart:]
-
-            helpText += '\n' + ovlHelp
-
-        print(helpText)
-
     # Figure out where the overlay files
     # are in the argument list, accounting
     # for any options which accept file
@@ -1171,7 +1139,11 @@ def parseArgs(mainParser,
         sys.exit(1)
 
     if namespace.help:
-        printHelp()
+        _printShortHelp(mainParser)
+        sys.exit(0)
+
+    if namespace.fullhelp:
+        _printFullHelp(mainParser)
         sys.exit(0)
 
     # Now, we'll create additiona parsers to handle
@@ -1253,6 +1225,115 @@ def parseArgs(mainParser,
         namespace.overlays.append(optArgs)
 
     return namespace
+
+
+def _printShortHelp(mainParser):
+    """Prints out help for a selection of arguments.
+
+    :arg mainParser: The top level ``ArgumentParser``.
+    """
+
+    mainArgs    = ['help', 'fullhelp', 'scene', 'autoDisplay']
+    displayArgs = ['overlayType', 'alpha', 'brightness', 'contrast']
+    volumeArgs  = ['displayRange', 'clippingRange', 'cmap']
+
+    mainArgs    = ['--{}'.format(o) for o in mainArgs]
+    displayArgs = ['--{}'.format(o) for o in displayArgs]
+    volumeArgs  = ['--{}'.format(o) for o in volumeArgs]
+
+    allArgs = td.TypeDict({
+        'Main'       : mainArgs,
+        'Display'    : displayArgs,
+        'VolumeOpts' : volumeArgs})
+
+    dispParser, _, optParsers = _setupOverlayParsers(forHelp=True)
+
+    parsers = ([(fsldisplay.Display,    dispParser),
+                (fsldisplay.VolumeOpts, optParsers[fsldisplay.VolumeOpts])])
+
+    # The public argparse API is quite inflexible
+    # with respect to dynamic modification of
+    # arguments and help text. Here I'm using
+    # undocumented attributes and features to
+    # suppress the help text for argument groups
+    # and arguments.
+    for group in mainParser._action_groups:
+        group.title       = argparse.SUPPRESS
+        group.description = argparse.SUPPRESS
+
+    for action in mainParser._actions:
+        if all([o not in allArgs['Main'] for o in action.option_strings]):
+            action.help = argparse.SUPPRESS
+
+    helpText = mainParser.format_help()
+
+    for target, parser in parsers:
+
+        args = allArgs[target]
+
+        for action in parser._actions:
+            if all([o not in args for o in action.option_strings]):
+                action.help = argparse.SUPPRESS
+
+        groupName = GROUPNAMES.get(target, None)
+        groupDesc = GROUPDESCS.get(target, None)
+
+        groupDesc = '\n  '.join(textwrap.wrap(groupDesc, 60))
+
+        helpText += '\n' + groupName + ':\n'
+        if groupDesc is not None:
+            helpText += '  ' + groupDesc + '\n'
+
+        ovlHelp = parser.format_help()
+
+        skipTo    = 'optional arguments:'
+        optStart  = ovlHelp.index(skipTo)
+        optStart += len(skipTo) + 1
+        ovlHelp   = ovlHelp[optStart:]
+
+        helpText += '\n' + ovlHelp
+
+    print(helpText)
+    
+
+def _printFullHelp(mainParser):
+    """Prints out help for all arguments.
+
+    :arg mainParser: The top level ``ArgumentParser``.
+    """ 
+
+    # Create a bunch of parsers for handling
+    # overlay display options
+    dispParser, _, optParsers = _setupOverlayParsers(forHelp=True)
+
+    # Print help for the main parser first,
+    # and then separately for the overlay parser
+    helpText = mainParser.format_help()
+
+    optParsers = ([(fsldisplay.Display, dispParser)] +
+                  list(optParsers.items()))
+
+    for target, parser in optParsers:
+
+        groupName = GROUPNAMES.get(target, None)
+        groupDesc = GROUPDESCS.get(target, None)
+
+        groupDesc = '\n  '.join(textwrap.wrap(groupDesc, 60))
+
+        helpText += '\n' + groupName + ':\n'
+        if groupDesc is not None:
+            helpText += '  ' + groupDesc + '\n'
+
+        ovlHelp = parser.format_help()
+
+        skipTo    = 'optional arguments:'
+        optStart  = ovlHelp.index(skipTo)
+        optStart += len(skipTo) + 1
+        ovlHelp   = ovlHelp[optStart:]
+
+        helpText += '\n' + ovlHelp
+
+    print(helpText) 
 
 
 def _applyArgs(args, target, propNames=None):
