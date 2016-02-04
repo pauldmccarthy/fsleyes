@@ -131,8 +131,11 @@ class GLVector(globject.GLImageObject):
 
         :arg init:        An optional function to be called when all of the
                           :class:`.ImageTexture` instances associated with
-                          this ``GLVector`` have been initialised.
-        
+                          this ``GLVector`` have been initialised. If this
+                          function does any initialisation on one or more
+                          separate threads, it should return references to
+                          those threads so that this method is able to
+                          determine when initialisation is complete.
         """
 
         if vectorImage is None: vectorImage = image
@@ -177,9 +180,8 @@ class GLVector(globject.GLImageObject):
         self.refreshColourTextures()
 
         def texRefresh():
-            if init is not None:
-                init()
-            self.notify()
+            if init is not None: async.wait(init(), self.notify)
+            else:                self.notify()
 
         async.wait([self.refreshImageTexture(),
                     self.refreshAuxTexture('modulate'),

@@ -60,6 +60,10 @@ import                             glvector_funcs
 def init(self):
     """Creates textures for the tensor eigenvalue and eigenvector images,
     and calls :func:`compileShaders` and :func:`updateShaderState`.
+
+    :returns: A list of ``Thread`` instances, one for each of the
+             :class:`.ImageTexture` instances that are created. See
+             the ``init`` parameter to :meth:`.GLVector.__init__`.
     """
 
     image = self.image
@@ -74,8 +78,9 @@ def init(self):
     def vPrefilter(d):
         return d.transpose((3, 0, 1, 2))
 
-    names = ['v1', 'v2', 'v3', 'l1', 'l2', 'l3']
-    imgs  = [ v1,   v2,   v3,   l1,   l2,   l3]
+    names      = ['v1', 'v2', 'v3', 'l1', 'l2', 'l3']
+    imgs       = [ v1,   v2,   v3,   l1,   l2,   l3]
+    texThreads = []
 
     for  name, img in zip(names, imgs):
         texName = '{}_{}_{}'.format(type(self).__name__, name, id(img))
@@ -96,12 +101,16 @@ def init(self):
             normalise=True,
             prefilter=prefilter)
 
+        texThreads.append(tex.refreshThread())
+
         setattr(self, '{}Texture'.format(name), tex)
 
     self.shader = None
 
     compileShaders(self)
     updateShaderState(self)
+
+    return texThreads
 
 
 def destroy(self):
@@ -262,10 +271,10 @@ def draw(self, zpos, xform=None):
 
     # Set divisor to 1, so we use one set of
     # voxel coordinates for every sphere drawn
-    shader.loadAtts()
     shader.setAtt('voxel',           voxels, divisor=1)
     shader.set(   'voxToDisplayMat', xform)
-
+    shader.loadAtts()
+    
     arbdi.glDrawElementsInstancedARB(
         gl.GL_QUADS, self.nVertices, gl.GL_UNSIGNED_INT, None, nVoxels)
 
