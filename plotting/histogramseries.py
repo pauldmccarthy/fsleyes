@@ -14,8 +14,10 @@ import numpy as np
 
 import props
 
-import fsl.data.image as fslimage
-import                   dataseries
+import fsl.data.image   as fslimage
+import fsl.utils.status as status
+import fsl.utils.async  as async
+import                     dataseries
 
 
 log = logging.getLogger(__name__)
@@ -135,6 +137,13 @@ class HistogramSeries(dataseries.DataSeries):
         # Otherwise we need to calculate
         # it all for ourselves
         else:
+            self.__nvals              = 0
+            self.__finiteData         = np.array([])
+            self.__xdata              = np.array([])
+            self.__ydata              = np.array([])
+            self.__nonZeroData        = np.array([])
+            self.__clippedFiniteData  = np.array([])
+            self.__clippedNonZeroData = np.array([])
             self.__initProperties()
             
         overlayList.addListener('overlays',
@@ -206,40 +215,61 @@ class HistogramSeries(dataseries.DataSeries):
 
         .. note:: This method is never called if a ``baseHs`` is provided to
                  :meth:`__init__`.
+
+        .. note:: The work performed by this method is done on a separate
+                  thread, via the :mod:`.async` module. If you want to be
+                  notified when the work is complete, register a listener on
+                  the :attr:`dataRange` property (via
+                  :meth:`.HasProperties.addListener`).
         """
 
         log.debug('Performining initial histogram '
                   'calculations for overlay {}'.format(
                       self.overlay.name))
 
-        data  = self.overlay.data[:]
-        
-        finData = data[np.isfinite(data)]
-        dmin    = finData.min()
-        dmax    = finData.max()
-        dist    = (dmax - dmin) / 10000.0
-        
-        nzData = finData[finData != 0]
-        nzmin  = nzData.min()
-        nzmax  = nzData.max()
+        status.update('Performing initial histogram calculation '
+                      'for overlay {}...'.format(self.overlay.name)) 
 
-        self.dataRange.xmin = dmin
-        self.dataRange.xmax = dmax  + dist
-        self.dataRange.xlo  = nzmin
-        self.dataRange.xhi  = nzmax + dist
+        def init():
 
-        self.nbins = self.__autoBin(nzData, self.dataRange.x)
+            data  = self.overlay.data[:]
 
-        if not self.overlay.is4DImage():
-            
-            self.__finiteData  = finData
-            self.__nonZeroData = nzData
-            self.__dataRangeChanged(callHistPropsChanged=False)
-            
-        else:
-            self.__volumeChanged(callHistPropsChanged=False)
+            finData = data[np.isfinite(data)]
+            dmin    = finData.min()
+            dmax    = finData.max()
+            dist    = (dmax - dmin) / 10000.0
 
-        self.__histPropsChanged()
+            nzData = finData[finData != 0]
+            nzmin  = nzData.min()
+            nzmax  = nzData.max()
+
+            self.disableNotification('dataRange')
+            self.disableNotification('nbins')
+            self.dataRange.xmin = dmin
+            self.dataRange.xmax = dmax  + dist
+            self.dataRange.xlo  = nzmin
+            self.dataRange.xhi  = nzmax + dist
+
+            self.nbins = self.__autoBin(nzData, self.dataRange.x)
+
+            self.enableNotification('dataRange')
+            self.enableNotification('nbins') 
+
+            if not self.overlay.is4DImage():
+
+                self.__finiteData  = finData
+                self.__nonZeroData = nzData
+                self.__dataRangeChanged(callHistPropsChanged=False)
+
+            else:
+                self.__volumeChanged(callHistPropsChanged=False)
+
+            self.__histPropsChanged()
+
+        def onFinish():
+            self.notify('dataRange')
+
+        async.run(init, onFinish=onFinish)
 
         
     def __volumeChanged(
@@ -297,7 +327,7 @@ class HistogramSeries(dataseries.DataSeries):
         """
         finData = self.__finiteData
         nzData  = self.__nonZeroData
-        
+
         self.__clippedFiniteData  = finData[(finData >= self.dataRange.xlo) &
                                             (finData <  self.dataRange.xhi)]
         self.__clippedNonZeroData = nzData[ (nzData  >= self.dataRange.xlo) &
@@ -314,6 +344,9 @@ class HistogramSeries(dataseries.DataSeries):
 
         log.debug('Calculating histogram for '
                   'overlay {}'.format(self.overlay.name))
+
+        status.update('Calculating histogram for '
+                      'overlay {}'.format(self.overlay.name))
 
         if self.dataRange.xhi - self.dataRange.xlo < 0.00000001:
             self.__xdata = np.array([])
@@ -353,6 +386,9 @@ class HistogramSeries(dataseries.DataSeries):
         self.__xdata = histX
         self.__ydata = histY
         self.__nvals = histY.sum()
+
+        status.update('Histogram for {} calculated.'.format(
+            self.overlay.name))
 
         log.debug('Calculated histogram for overlay '
                   '{} (number of values: {}, number '

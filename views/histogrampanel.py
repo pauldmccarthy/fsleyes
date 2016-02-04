@@ -18,8 +18,7 @@ import numpy as np
 import props
 
 import fsl.data.image                             as fslimage
-import fsl.data.strings                           as strings
-import fsl.utils.dialog                           as fsldlg
+
 import fsl.fsleyes.actions                        as actions
 import fsl.fsleyes.plotting.histogramseries       as histogramseries
 import fsl.fsleyes.controls.histogramcontrolpanel as histogramcontrolpanel
@@ -170,20 +169,9 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         if not isinstance(overlay, fslimage.Image):
             return None, None, None
 
-
-        # We are creating a new HS instance, so it
-        # needs to do some initla data range/histogram
-        # calculations. Show a message while this is
-        # happening. 
-        def loadHs():
-            return histogramseries.HistogramSeries(overlay,
-                                                   self._displayCtx,
-                                                   self._overlayList)
-
-        hs = fsldlg.ProcessingDialog(
-            None,
-            strings.messages[self, 'calcHist'].format(overlay.name),
-            loadHs).Run()
+        hs = histogramseries.HistogramSeries(overlay,
+                                             self._displayCtx,
+                                             self._overlayList)
         
         hs.colour      = self.getOverlayPlotColour(overlay)
         hs.alpha       = 1
