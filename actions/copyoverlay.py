@@ -21,11 +21,12 @@ class CopyOverlayAction(action.Action):
     """
 
     
-    def __init__(self, overlayList, displayCtx):
+    def __init__(self, overlayList, displayCtx, frame):
         """Create a ``CopyOverlayAction``.
 
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
+        :arg frame:       The :class:`.FSLEyesFrame`.
         """
         action.Action.__init__(self, self.__copyOverlay)
 

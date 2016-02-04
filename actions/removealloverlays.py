@@ -17,11 +17,12 @@ class RemoveAllOverlaysAction(action.Action):
     overlays from the :class:`.OverlayList`.
     """
 
-    def __init__(self, overlayList, displayCtx):
+    def __init__(self, overlayList, displayCtx, frame):
         """Create a ``RemoveAllOverlaysAction``.
 
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
+        :arg frame:       The :class:`.FSLEyesFrame`.
         """ 
 
         action.Action.__init__(self, self.__removeOverlay)

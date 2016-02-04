@@ -21,11 +21,12 @@ class OpenDirAction(action.Action):
     :meth:`.OverlayList.addOverlays` method.
     """
 
-    def __init__(self, overlayList, displayCtx):
+    def __init__(self, overlayList, displayCtx, frame):
         """Create an ``OpenDirAction``.
 
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
+        :arg frame:       The :class:`.FSLEyesFrame`.
         """
         action.Action.__init__(self, self.__openDir)
 

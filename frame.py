@@ -681,7 +681,7 @@ class FSLEyesFrame(wx.Frame):
                 fileMenu.AppendSeparator()
                 continue
             menuItem  = fileMenu.Append(wx.ID_ANY, strings.actions[action])
-            actionObj = action(self.__overlayList, self.__displayCtx)
+            actionObj = action(self.__overlayList, self.__displayCtx, self)
 
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
