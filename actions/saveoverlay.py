@@ -68,7 +68,8 @@ class SaveOverlayAction(action.Action):
                         (not overlay.saved))
 
         for ovl in self.__overlayList:
-            if not isinstance(ovl, fslimage.Image):
+            
+            if type(ovl) != fslimage.Image:
                 continue
             
             ovl.removeListener('saved', self.__name)

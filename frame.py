@@ -672,6 +672,8 @@ class FSLEyesFrame(wx.Frame):
                    'sep',
                    actions.CopyOverlayAction,
                    actions.SaveOverlayAction,
+                   actions.ReloadOverlayAction,
+                   'sep',
                    actions.RemoveOverlayAction,
                    actions.RemoveAllOverlaysAction]
  

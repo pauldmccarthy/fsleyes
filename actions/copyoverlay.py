@@ -60,10 +60,9 @@ class CopyOverlayAction(action.Action):
         Enables/disables this action depending on the nature of the selected
         overlay.
         """
-        overlay = self.__displayCtx.getSelectedOverlay()
         
-        self.enabled = (overlay is not None) and \
-                       isinstance(overlay, fslimage.Image)
+        ovl          = self.__displayCtx.getSelectedOverlay()
+        self.enabled = (ovl is not None) and (type(ovl) == fslimage.Image)
     
     
     def __copyOverlay(self):

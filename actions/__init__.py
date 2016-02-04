@@ -125,6 +125,7 @@ import openfile
 import opendir
 import openstandard
 import saveoverlay
+import reloadoverlay
 import removeoverlay
 import removealloverlays
 import loadcolourmap
@@ -142,6 +143,7 @@ OpenFileAction           = openfile          .OpenFileAction
 OpenDirAction            = opendir           .OpenDirAction
 OpenStandardAction       = openstandard      .OpenStandardAction
 SaveOverlayAction        = saveoverlay       .SaveOverlayAction
+ReloadOverlayAction      = reloadoverlay     .ReloadOverlayAction
 RemoveOverlayAction      = removeoverlay     .RemoveOverlayAction
 RemoveAllOverlaysAction  = removealloverlays .RemoveAllOverlaysAction
 LoadColourMapAction      = loadcolourmap     .LoadColourMapAction
