@@ -249,7 +249,19 @@ class GLSLShader(object):
         :returns: ``True`` if the value was changed, ``False`` otherwise.
         """
 
-        if self.values[name] == value:
+        oldVal = self.values[name]
+
+        oldIsArray = isinstance(oldVal, np.ndarray)
+        newIsArray = isinstance(value,  np.ndarray)
+        isarray    = oldIsArray or newIsArray
+
+        if oldIsArray and (not newIsArray): value  = np.array(value)
+        if newIsArray and (not oldIsArray): oldVal = np.array(oldVal)
+
+        if isarray: nochange = np.all(oldVal == value)
+        else:       nochange =        oldVal == value
+
+        if nochange:
             return False
 
         vPos  = self.positions[name]
