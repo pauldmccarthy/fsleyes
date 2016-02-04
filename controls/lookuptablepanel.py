@@ -32,6 +32,8 @@ import pwidgets.elistbox          as elistbox
 import fsl.fsleyes.panel          as fslpanel
 import fsl.fsleyes.displaycontext as displayctx
 import fsl.fsleyes.colourmaps     as fslcmaps
+import fsl.utils.async            as async
+import fsl.utils.status           as status
 import fsl.data.strings           as strings
 import fsl.data.melodicimage      as fslmelimage
 
@@ -217,18 +219,24 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         ``LookupTable``.
         """
 
-        log.debug('Creating lookup table label list')
+        log   .debug( 'Creating lookup table label list')
+        status.update('Creating lookup table label list...', timeout=None)
 
         self.__labelList.Clear()
 
-        lut = self.__selectedLut
+        lut     = self.__selectedLut
+        nlabels = len(lut.labels)
 
-        for i, label in enumerate(lut.labels):
-
+        def addLabel(i, label):
             self.__labelList.Append(label.displayName())
-
             widget = LabelWidget(self, lut, label.value())
             self.__labelList.SetItemWidget(i, widget)
+
+            if i == nlabels - 1:
+                status.update('Lookup table label list created.')
+
+        for i, label in enumerate(lut.labels):
+            async.idle(addLabel, i, label)
 
 
     def __setLut(self, lut):
