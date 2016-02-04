@@ -624,15 +624,23 @@ class FSLEyesFrame(wx.Frame):
             self.Centre()
 
         if restore:
+            if layout is not None:
+                log.debug('Restoring previous layout: {}'.format(layout))
+
+                try:
+                    perspectives.applyPerspective(
+                        self,
+                        'framelayout',
+                        layout,
+                        message=strings.messages[self, 'restoringLayout'])
+                except:
+                    log.warn('Previous layout could not be restored - '
+                             'falling back to default layout.')
+                    layout = None
+
             if layout is None:
                 perspectives.loadPerspective(self, 'default')
-            else:
-                log.debug('Restoring previous layout: {}'.format(layout))
-                perspectives.applyPerspective(
-                    self,
-                    'framelayout',
-                    layout,
-                    message=strings.messages[self, 'restoringLayout'])
+                
 
             
     def __makeMenuBar(self):
