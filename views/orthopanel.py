@@ -334,6 +334,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.getContentPanel().SetBackgroundColour(bg)
         self.getContentPanel().SetForegroundColour(fg)
 
+        cbCanvas = self.getColourBarCanvas()
+        if cbCanvas is not None:
+            cbCanvas.textColour = fg
+
         self.__xcanvas.SetBackgroundColour(bg)
         self.__ycanvas.SetBackgroundColour(bg)
         self.__zcanvas.SetBackgroundColour(bg)

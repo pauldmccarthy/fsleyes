@@ -16,8 +16,6 @@ import logging
 import platform
 from collections import OrderedDict
 
-import wx
-
 import                     action
 import fsl.data.strings as strings
 import fsl.utils.status as status
@@ -62,6 +60,8 @@ class DiagnosticReportAction(action.Action):
 
           4. Saves the report to the specified location.
         """
+
+        import wx
 
         dlg = wx.FileDialog( 
             self.__frame,

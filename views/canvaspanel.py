@@ -28,6 +28,7 @@ import fsl.utils.settings                              as fslsettings
 import fsl.data.image                                  as fslimage
 import fsl.data.strings                                as strings
 import fsl.fsleyes.actions                             as actions
+import fsl.fsleyes.colourmaps                          as colourmaps
 import fsl.fsleyes.displaycontext                      as displayctx
 import fsl.fsleyes.controls.overlaylistpanel           as overlaylistpanel
 import fsl.fsleyes.controls.overlayinfopanel           as overlayinfopanel
@@ -504,6 +505,10 @@ class CanvasPanel(viewpanel.ViewPanel):
         if self.__colourBar is None:
             self.__colourBar = colourbarpanel.ColourBarPanel(
                 self.__containerPanel, self._overlayList, self._displayCtx)
+            
+            bg = self.getSceneOptions().bgColour
+            fg = colourmaps.complementaryColour(bg) 
+            self.__colourBar.getCanvas().textColour = fg
 
         self.__opts.bindProps('colourBarLabelSide',
                               self.__colourBar,

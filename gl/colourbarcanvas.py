@@ -53,16 +53,20 @@ class ColourBarCanvas(props.HasProperties):
     horizontal/vertical).
     """
 
+    
+    textColour = props.Colour(default=(1, 1, 1, 1))
+    """Colour to use for the colour bar label. """
+
+    
     def __init__(self):
         """Adds a few listeners to the properties of this object, to update
         the colour bar when they change.
         """
 
         self._tex  = None
-        self._name = '{}_{}'.format(self.__class__.__name__, id(self)) 
+        self._name = '{}_{}'.format(self.__class__.__name__, id(self))
 
-        for prop in ('cmap', 'vrange', 'label', 'orientation', 'labelSide'):
-            self.addListener(prop, self._name, self.__updateTexture)
+        self.addGlobalListener(self._name, self.__updateTexture)
 
             
     def __updateTexture(self, *a):
@@ -85,6 +89,7 @@ class ColourBarCanvas(props.HasProperties):
         Destroys the :class:`.Texture2D` instance used to render the colour
         bar.
         """
+        self.removeGlobalListener(self._name)
         self._tex.destroy()
 
 
@@ -113,13 +118,15 @@ class ColourBarCanvas(props.HasProperties):
             bitmap = np.zeros((w, h, 4), dtype=np.uint8)
         else:
             bitmap = cbarbmp.colourBarBitmap(
-                self.cmap,
-                self.vrange.xlo,
-                self.vrange.xhi,
-                w, h,
-                self.label,
-                self.orientation,
-                labelSide)
+                cmap=self.cmap,
+                vmin=self.vrange.xlo,
+                vmax=self.vrange.xhi,
+                width=w,
+                height=h,
+                label=self.label,
+                orientation=self.orientation,
+                labelside=labelSide,
+                textColour=self.textColour)
 
         if self._tex is None:
             self._tex = textures.Texture2D('{}_{}'.format(
