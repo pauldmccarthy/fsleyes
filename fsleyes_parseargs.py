@@ -1489,14 +1489,15 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
             else:
                 refOpts = displayCtx.getOpts(refimg)
 
-                if args.voxelLoc:
+                if args.worldLoc:
+                    displayLoc = refOpts.transformCoords([args.worldLoc],
+                                                         'world',
+                                                         'display')[0]
+                    
+                elif args.voxelLoc:
                     displayLoc = refOpts.transformCoords([args.voxelLoc],
                                                          'voxel',
                                                          'display')[0]
-                elif args.worldLoc:
-                    displayLoc = refOpts.transformCoords([args.worldLoc],
-                                                         'world',
-                                                         'display')[0] 
 
                 else:
                     displayLoc = defaultLoc
