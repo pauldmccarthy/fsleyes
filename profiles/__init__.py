@@ -605,13 +605,13 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         if self.__lastMousePos  is None: self.__lastMousePos  = mouseLoc
         if self.__lastCanvasPos is None: self.__lastCanvasPos = canvasLoc
 
-        handler = self.__getHandler(
-            ev, '{}MouseDown'.format(self.__getMouseButton(ev)))
+        evType  = '{}MouseDown'.format(self.__getMouseButton(ev))
+        handler = self.__getHandler(ev, evType)
         if handler is None:
             return
 
-        log.debug('Mouse down event ({}, {}) on canvas {}'.format(
-            mouseLoc, canvasLoc, canvas.name))
+        log.debug('{} event ({}, {}) on canvas {}'.format(
+            evType, mouseLoc, canvasLoc, canvas.name))
 
         handler(ev, canvas, mouseLoc, canvasLoc)
 
@@ -624,9 +624,9 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
         Delegates to a mode specific handler if one is present.
         """
-        
-        handler = self.__getHandler(
-            ev, '{}MouseUp'.format(self.__getMouseButton(ev)))
+
+        evType  = '{}MouseUp'.format(self.__getMouseButton(ev))
+        handler = self.__getHandler(ev, evType)
 
         if handler is None:
             self.__mouseDownPos  = None
@@ -636,8 +636,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         canvas              = ev.GetEventObject()
         mouseLoc, canvasLoc = self.__getMouseLocation(ev)
 
-        log.debug('Mouse up event ({}, {}) on canvas {}'.format(
-            mouseLoc, canvasLoc, canvas.name))
+        log.debug('{} event ({}, {}) on canvas {}'.format(
+            evType, mouseLoc, canvasLoc, canvas.name))
 
         handler(ev, canvas, mouseLoc, canvasLoc)
         self.__mouseDownPos  = None
@@ -682,13 +682,13 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         canvas              = ev.GetEventObject()
         mouseLoc, canvasLoc = self.__getMouseLocation(ev)
 
-        handler = self.__getHandler(
-            ev, '{}MouseDrag'.format(self.__getMouseButton(ev)))
+        evType  = '{}MouseDrag'.format(self.__getMouseButton(ev))
+        handler = self.__getHandler(ev, evType)
         if handler is None:
             return 
 
-        log.debug('Mouse drag event ({}, {}) on canvas {}'.format(
-            mouseLoc, canvasLoc, canvas.name))
+        log.debug('{} event ({}, {}) on canvas {}'.format(
+            evType, mouseLoc, canvasLoc, canvas.name))
 
         handler(ev, canvas, mouseLoc, canvasLoc)
 

@@ -65,11 +65,10 @@ tempModeMap = {
     # Command/CTRL puts the user in zoom mode,
     # and ALT puts the user in pan mode
     OrthoViewProfile : OrderedDict((
-        (('nav',  wx.WXK_CONTROL), 'zoom'),
-        (('pan',  wx.WXK_CONTROL), 'zoom'),
-        (('nav',  wx.WXK_ALT),     'pan'),
-        (('zoom', wx.WXK_ALT),     'pan'),
-        (('nav',  wx.WXK_SHIFT),   'bricon'))),
+        (('nav',   wx.WXK_CONTROL),                'zoom'),
+        (('nav',   wx.WXK_ALT),                    'pan'),
+        (('nav',   wx.WXK_SHIFT),                  'slice'),
+        (('nav',  (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'bricon'))),
 
     # OrthoEditProfile inherits all of the
     # settings for OrthoViewProfile above,
@@ -118,31 +117,35 @@ altHandlerMap = {
 
     OrthoViewProfile : OrderedDict((
         
-        # in navigate mode, the left mouse button
-        # navigates, the right mouse button draws
-        # a zoom rectangle, and the middle button
-        # pans 
+        # in navigate, slice, and zoom mode, the
+        # left mouse button navigates, the right
+        # mouse button draws a zoom rectangle,
+        # and the middle button pans.
         (('nav',  'LeftMouseDown'),   ('nav',  'LeftMouseDrag')),
-        (('nav',  'MiddleMouseDown'), ('pan',  'LeftMouseDown')),
         (('nav',  'MiddleMouseDrag'), ('pan',  'LeftMouseDrag')),
-        (('nav',  'RightMouseDown'),  ('zoom', 'LeftMouseDown')),
-        (('nav',  'RightMouseDrag'),  ('zoom', 'LeftMouseDrag')),
-        (('nav',  'RightMouseUp'),    ('zoom', 'LeftMouseUp')),
+        (('nav',  'RightMouseDown'),  ('zoom', 'RightMouseDown')),
+        (('nav',  'RightMouseDrag'),  ('zoom', 'RightMouseDrag')),
+        (('nav',  'RightMouseUp'),    ('zoom', 'RightMouseUp')),
 
-        # In pan mode, the left mouse button pans,
-        # and right mouse button navigates
-        (('pan',  'LeftMouseDown'),   ('pan',  'LeftMouseDrag')),
-        (('pan',  'RightMouseDown'),  ('nav',  'LeftMouseDown')),
-        (('pan',  'RightMouseDrag'),  ('nav',  'LeftMouseDrag')),
+        # In slice mode, the left and right
+        # mouse buttons work as for nav mode.
+        (('slice', 'LeftMouseDown'),   ('nav',  'LeftMouseDown')),
+        (('slice', 'LeftMouseDrag'),   ('nav',  'LeftMouseDrag')),
+        (('slice', 'MiddleMouseDrag'), ('pan',  'LeftMouseDrag')),
+        (('slice', 'RightMouseDown'),  ('zoom', 'RightMouseDown')),
+        (('slice', 'RightMouseDrag'),  ('zoom', 'RightMouseDrag')),
+        (('slice', 'RightMouseUp'),    ('zoom', 'RightMouseUp')),
 
         # In zoom mode, the left mouse button
-        # draws a zoom rectangle, the right mouse
-        # button navigates, and the middle mouse
-        # button pans 
-        (('zoom', 'LeftMouseDown'),   ('zoom', 'LeftMouseDrag')),
-        (('zoom', 'RightMouseDown'),  ('nav',  'LeftMouseDown')),
-        (('zoom', 'RightMouseDrag'),  ('nav',  'LeftMouseDrag')),
-        (('zoom', 'MiddleMouseDrag'), ('pan',  'LeftMouseDrag')))),
+        # navigates, the right mouse button
+        # draws a zoom rectangle, and the
+        # middle mouse button pans 
+        (('zoom', 'RightMouseDown'),  ('zoom', 'RightMouseDrag')),
+        (('zoom', 'LeftMouseDown'),   ('nav',  'LeftMouseDown')),
+        (('zoom', 'LeftMouseDrag'),   ('nav',  'LeftMouseDrag')),
+        (('zoom', 'MiddleMouseDrag'), ('pan',  'LeftMouseDrag')),
+
+        (('bricon', 'LeftMouseDown'), ('bricon', 'LeftMouseDrag')))),
 
     OrthoEditProfile : OrderedDict((
 

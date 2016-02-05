@@ -5,8 +5,9 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This package provides a collection of actions, classes - the
-:class:`.Action` class and the :class:`.ActionProvider` class, and the
-:func:`action` and :func:`toggleAction` decorators.
+:class:`~fsl.fsleyes.actions.action.Action` class and the
+:class:`.ActionProvider` class, and the :func:`action` and
+:func:`toggleAction` decorators.
 
 
 The :class:`.Action` class represents some sort of action which may be

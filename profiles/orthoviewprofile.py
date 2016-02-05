@@ -14,6 +14,8 @@ import wx
 
 import fsl.fsleyes.profiles as profiles
 import fsl.fsleyes.actions  as actions
+import fsl.data.image       as fslimage
+import fsl.data.constants   as constants
 
 
 log = logging.getLogger(__name__)
@@ -32,6 +34,9 @@ class OrthoViewProfile(profiles.Profile):
     ``nav``    The user can change the currently displayed location. This is
                accomplished by updating the :attr:`.DisplayContext.location`
                property on left mouse drags.
+
+    ``slice``  The user can change the current slice shown on a single
+               canvas.
     
     ``zoom``   The user can zoom in/out of a canvas with the mouse wheel, and
                draw a rectangle on a canvas in which to zoom. This is
@@ -85,13 +90,19 @@ class OrthoViewProfile(profiles.Profile):
         if extraModes is None:
             extraModes = []
 
-        modes = ['nav', 'pan', 'zoom', 'bricon'] + extraModes
+        modes = ['nav', 'slice', 'pan', 'zoom', 'bricon'] + extraModes
 
         profiles.Profile.__init__(self,
                                   viewPanel,
                                   overlayList,
                                   displayCtx,
                                   modes)
+
+        # We create our own name and use it
+        # for registering property listeners,
+        # so sub-classes can use Profile._name
+        # to register its own listeners.
+        self.__name    = 'OrthoViewProfile_{}'.format(self._name)
 
         self.__xcanvas = viewPanel.getXCanvas()
         self.__ycanvas = viewPanel.getYCanvas()
@@ -102,6 +113,22 @@ class OrthoViewProfile(profiles.Profile):
         # see the _zoomModeLeftMouse* handlers
         self.__lastRect = None
 
+        overlayList.addListener('overlays',
+                                self.__name,
+                                self.__selectedOverlayChanged) 
+        displayCtx .addListener('selectedOverlay',
+                                self.__name,
+                                self.__selectedOverlayChanged)
+
+
+    def destroy(self):
+        """Must be called when this ``OrthoViewProfile`` is no longer needed.
+        Removes some property listeners, and calls :meth:`.Profile.destroy`.
+        """
+        self._overlayList.removeListener('overlays',        self.__name)
+        self._displayCtx .removeListener('selectedOverlay', self.__name)
+        profiles.Profile.destroy(self)
+
 
     def getEventTargets(self):
         """Overrides :meth:`.Profile.getEventTargets`.
@@ -110,6 +137,21 @@ class OrthoViewProfile(profiles.Profile):
         :class:`.OrthoPanel` instance that is using this ``OrthoViewProfile``.
         """
         return [self.__xcanvas, self.__ycanvas, self.__zcanvas]
+
+
+    def __selectedOverlayChanged(self, *a):
+        """Called when the :class:`.OverlayList` or
+        :attr:`.DisplayContext.selectedOverlay` changes. Enables/disables
+        the action methods based on the newly selected overlay.
+        """
+        
+        ovl = self._displayCtx.getSelectedOverlay()
+        
+        if   ovl is None:                                       enable = False
+        elif not isinstance(ovl, fslimage.Nifti1):              enable = False
+        elif ovl.getXFormCode != constants.NIFTI_XFORM_MNI_152: enable = False
+        
+        self.centreCursorMNI152.enable = enable
 
 
     @actions.action
@@ -140,6 +182,20 @@ class OrthoViewProfile(profiles.Profile):
         zmid = bounds.zlo + 0.5 * bounds.zlen
 
         self._displayCtx.location.xyz = [xmid, ymid, zmid]
+
+
+    @actions.action
+    def centreCursorMNI152(self):
+        """If the currently selected overlay is aligned to MNI152 space, sets
+        the :attr:`.DisplayContext.location` to MNI152 location (0, 0, 0).
+        """
+
+        ovl  = self._displayCtx.getSelectedOverlay()
+        opts = self._displayCtx.getOptx(ovl)
+
+        origin = opts.transformCoords([0, 0, 0], 'world', 'display')
+
+        self._displayCtx.location.xyz = origin
 
 
     ########################
@@ -181,7 +237,7 @@ class OrthoViewProfile(profiles.Profile):
             elif opts.transform == 'pixdim': offsets = overlay.pixdim
 
             # Otherwise we'll just move an arbitrary 
-            # amount in the image world space - 1mm
+            # amount in the display coordinate system
             else:                            offsets = [1, 1, 1]
 
         return offsets
@@ -241,8 +297,13 @@ class OrthoViewProfile(profiles.Profile):
 
         self._displayCtx.location.xyz = pos
 
+        
+    #####################
+    # Slice mode handlers
+    #####################
 
-    def _navModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
+    
+    def _sliceModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
         """Handles mouse wheel movement in ``nav`` mode.
 
         Mouse wheel movement on a canvas changes the depth location displayed
@@ -305,10 +366,10 @@ class OrthoViewProfile(profiles.Profile):
         self._zoomModeMouseWheel(None, canvas, zoom)
 
         
-    def _zoomModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
-        """Handles left mouse drags in ``zoom`` mode.
+    def _zoomModeRightMouseDrag(self, ev, canvas, mousePos, canvasPos):
+        """Handles right mouse drags in ``zoom`` mode.
 
-        Left mouse drags in zoom mode draw a rectangle on the target
+        Right mouse drags in zoom mode draw a rectangle on the target
         canvas.
 
         When the user releases the mouse (see :meth:`_zoomModeLeftMouseUp`),
@@ -331,10 +392,10 @@ class OrthoViewProfile(profiles.Profile):
         canvas.Refresh()
 
         
-    def _zoomModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
-        """Handles left mouse up events in ``zoom`` mode.
+    def _zoomModeRightMouseUp(self, ev, canvas, mousePos, canvasPos):
+        """Handles right mouse up events in ``zoom`` mode.
 
-        When the left mouse is released in zoom mode, the target
+        When the right mouse is released in zoom mode, the target
         canvas is zoomed in to the rectangle region that was drawn by the
         user.
         """
@@ -343,6 +404,10 @@ class OrthoViewProfile(profiles.Profile):
             return
 
         mouseDownPos, canvasDownPos = self.getMouseDownLocation()
+        
+        if mouseDownPos  is None or \
+           canvasDownPos is None:
+            return
 
         if self.__lastRect is not None:
             canvas.getAnnotations().dequeue(self.__lastRect)
@@ -417,6 +482,11 @@ class OrthoViewProfile(profiles.Profile):
         else:                     return
 
         canvas.panDisplayBy(xoff, yoff)
+
+
+    #############
+    # Bricon mode
+    #############
 
 
     def _briconModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
