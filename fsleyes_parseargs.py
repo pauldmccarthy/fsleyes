@@ -1234,6 +1234,30 @@ def _printShortHelp(mainParser):
     :arg mainParser: The top level ``ArgumentParser``.
     """
 
+    # First, we build a list of all arguments
+    # that are handled by the main parser.
+    # This is done so that we can differentiate
+    # between arguments added by this module, and
+    # arguments added by users of this module 
+    # (e.g. the render tool adds a few arguments
+    # to the main parser before it is passed to
+    # this module for configuration).
+
+    allMain     = OPTIONS['Main']
+    allScene    = OPTIONS['SceneOpts']
+    allOrtho    = OPTIONS['OrthoOpts']
+    allLightBox = OPTIONS['LightBoxOpts']
+
+    allMainArgs =  \
+        [ARGUMENTS['Main.{}'        .format(o)] for o in allMain]  + \
+        [ARGUMENTS['SceneOpts.{}'   .format(o)] for o in allScene] + \
+        [ARGUMENTS['OrthoOpts.{}'   .format(o)] for o in allOrtho] + \
+        [ARGUMENTS['LightBoxOpts.{}'.format(o)] for o in allLightBox]
+    allMainArgs = ['--{}'.format(a[1]) for a in allMainArgs]
+ 
+    # Now we build a list of all arguments
+    # that we want to show help for, in this
+    # shortened help page.
     mainArgs    = ['help', 'fullhelp', 'scene', 'autoDisplay']
     displayArgs = ['overlayType', 'alpha', 'brightness', 'contrast']
     volumeArgs  = ['displayRange', 'clippingRange', 'cmap', 'linkLowRanges']
@@ -1251,31 +1275,47 @@ def _printShortHelp(mainParser):
         'Display'    : displayArgs,
         'VolumeOpts' : volumeArgs})
 
-    dispParser, _, optParsers = _setupOverlayParsers(forHelp=True)
-
-    parsers = ([(fsldisplay.Display,    dispParser),
-                (fsldisplay.VolumeOpts, optParsers[fsldisplay.VolumeOpts])])
-
     # The public argparse API is quite inflexible
     # with respect to dynamic modification of
     # arguments and help text. Here I'm using
     # undocumented attributes and features to
     # suppress the help text for argument groups
-    # and arguments.
+    # and arguments...
+
+    # Suppress all of the main parser argument groups
     for group in mainParser._action_groups:
         group.title       = argparse.SUPPRESS
         group.description = argparse.SUPPRESS
 
+    # Suppress main parser arguments that we
+    # don't want to show
     for action in mainParser._actions:
+
+        # We want to show any arguments that are
+        # defined outside of this module (e.g. render)
+        if all([o not in allMainArgs for o in action.option_strings]):
+            continue
+
+        # We don't want to show any other argument that
+        # are not specified in the hard coded mainArgs
+        # list above.
         if all([o not in allArgs['Main'] for o in action.option_strings]):
             action.help = argparse.SUPPRESS
 
+    # Generate the help text for main options
     helpText = mainParser.format_help()
+
+    # Now configure Display/DisplayOpts parsers
+    dispParser, _, optParsers = _setupOverlayParsers(forHelp=True)
+    parsers = ([(fsldisplay.Display,    dispParser),
+                (fsldisplay.VolumeOpts, optParsers[fsldisplay.VolumeOpts])])
 
     for target, parser in parsers:
 
         args = allArgs[target]
 
+        # Suppress all arguments that
+        # are not listed above
         for action in parser._actions:
             if all([o not in args for o in action.option_strings]):
                 action.help = argparse.SUPPRESS
