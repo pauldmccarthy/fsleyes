@@ -23,6 +23,7 @@ import fsl.fsleyes.panel       as fslpanel
 import fsl.fsleyes.icons       as icons
 import fsl.fsleyes.autodisplay as autodisplay
 import fsl.data.image          as fslimage
+import fsl.data.strings        as strings
 
 
 log = logging.getLogger(__name__)
@@ -162,9 +163,7 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
             name     = display.name
             if name is None: name = ''
 
-            tooltip = overlay.dataSource
-            
-            self.__listBox.Append(name, overlay, tooltip)
+            self.__listBox.Append(name, overlay)
 
             widget = ListItemWidget(self,
                                     overlay,
@@ -438,6 +437,11 @@ class ListItemWidget(wx.Panel):
                 idx,
                 ListItemWidget.unsavedDefaultBG,
                 ListItemWidget.unsavedSelectedBG),
+
+        tooltip = self.__overlay.dataSource
+        if tooltip is None:
+            tooltip = strings.labels['OverlayListPanel.noDataSource'] 
+        self.__listBox.SetItemTooltip(idx, tooltip)
 
             
     def __vizChanged(self, *a):

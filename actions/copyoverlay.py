@@ -93,6 +93,12 @@ class CopyOverlayAction(action.Action):
         destDisplay = self.__displayCtx.getDisplay(copy)
 
         for prop in srcDisplay.getAllProperties()[0]:
+            
+            # Don't override the name
+            # that we set above
+            if prop == 'name':
+                continue
+            
             val = getattr(srcDisplay, prop)
             setattr(destDisplay, prop, val)
 
