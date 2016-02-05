@@ -344,7 +344,9 @@ OPTIONS = td.TypeDict({
     'Nifti1Opts'     : ['transform',
                         'resolution',
                         'volume'],
-    'VolumeOpts'     : ['displayRange',
+    'VolumeOpts'     : ['linkLowRanges',
+                        'linkHighRanges',
+                        'displayRange',
                         'clippingRange',
                         'invertClipping',
                         'clipImage',
@@ -352,9 +354,7 @@ OPTIONS = td.TypeDict({
                         'negativeCmap',
                         'useNegativeCmap',
                         'interpolation',
-                        'invert',
-                        'linkLowRanges',
-                        'linkHighRanges'],
+                        'invert'],
     'MaskOpts'       : ['colour',
                         'invert',
                         'threshold'],
@@ -649,7 +649,8 @@ HELP = td.TypeDict({
     'VectorOpts.colourImage'   : 'Image to colour vectors with',
     'VectorOpts.modulateImage' : 'Image to modulate vector brightness with',
     'VectorOpts.clipImage'     : 'Image to clip vectors with',
-    'VectorOpts.clippingRange' : 'Clipping range',
+    'VectorOpts.clippingRange' : 'Clipping range (only used if a '
+                                 'clipping image is provided)', 
 
     'LineVectorOpts.lineWidth'    : 'Line width',
     'LineVectorOpts.directed'     : 'Interpret vectors as directed',
@@ -1235,11 +1236,15 @@ def _printShortHelp(mainParser):
 
     mainArgs    = ['help', 'fullhelp', 'scene', 'autoDisplay']
     displayArgs = ['overlayType', 'alpha', 'brightness', 'contrast']
-    volumeArgs  = ['displayRange', 'clippingRange', 'cmap']
+    volumeArgs  = ['displayRange', 'clippingRange', 'cmap', 'linkLowRanges']
 
-    mainArgs    = ['--{}'.format(o) for o in mainArgs]
-    displayArgs = ['--{}'.format(o) for o in displayArgs]
-    volumeArgs  = ['--{}'.format(o) for o in volumeArgs]
+    mainArgs    = [ARGUMENTS['Main.{}'      .format(a)] for a in mainArgs]
+    displayArgs = [ARGUMENTS['Display.{}'   .format(a)] for a in displayArgs]
+    volumeArgs  = [ARGUMENTS['VolumeOpts.{}'.format(a)] for a in volumeArgs]
+
+    mainArgs    = ['--{}'.format(a[1]) for a in mainArgs]
+    displayArgs = ['--{}'.format(a[1]) for a in displayArgs]
+    volumeArgs  = ['--{}'.format(a[1]) for a in volumeArgs]
 
     allArgs = td.TypeDict({
         'Main'       : mainArgs,
@@ -1670,15 +1675,23 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                                         fslimage.Image,
                                         overlay)
 
+                    setattr(optArgs, fileOpt, None)
+
                     # With the exception of ModelOpts.refImage,
                     # all of the file options specify images which
                     # must match the overlay shape to be valid.
                     if not isinstance(opts, fsldisplay.ModelOpts):
-                        if image.shape != overlay.shape[ :3]:
-                            raise RuntimeError('')
+                        if image.shape[:3] != overlay.shape[:3]:
+                            log.warn('{}: Shape of {} ({}) does not '
+                                     'match shape of {} ({})'.format(
+                                         fileOpt,
+                                         overlay,
+                                         overlay.shape[:3],
+                                         image,
+                                         image.shape[:3]))
+                            continue
 
-                    setattr(opts,    fileOpt, image)
-                    setattr(optArgs, fileOpt, None)
+                    setattr(opts, fileOpt, image)
 
             # After handling the special cases
             # above, we can apply the CLI
