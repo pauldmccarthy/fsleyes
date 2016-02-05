@@ -13,7 +13,8 @@ import logging
 
 import action
 
-import fsl.data.image as fslimage
+import fsl.data.image   as fslimage
+import fsl.utils.status as status
 
 
 log = logging.getLogger(__name__)
@@ -63,14 +64,6 @@ class ReloadOverlayAction(action.Action):
         """Called when the currently selected overlay changes. Enables/disables
         this ``Action`` depending on the type of the newly selected overlay.
         """
-
-        # This action is permanently disabled until
-        # I write the __reloadOverlay method.
-        self.enabled = False
-
-        if True:
-            return
-
         ovl          = self.__displayCtx.getSelectedOverlay()
         self.enabled = (ovl is not None) and (type(ovl) == fslimage.Image)
 
@@ -83,17 +76,63 @@ class ReloadOverlayAction(action.Action):
         if ovl is None or type(ovl) != fslimage.Image:
             raise RuntimeError('Only Image overlays can be reloaded')
 
-        # 1. Get references to all Display/DisplayOpts
-        #    instances, and save all their settings.
+        index      = self.__overlayList.index(ovl)
+        dataSource = ovl.dataSource
 
-        # 2. Get the overlay data source
+        status.update('Reloading {}...'.format(dataSource))
 
-        # 3. Remove the overlay from the overlay list
- 
-        # 4. Re-add the overlay at the same
-        #    location in the overlay list
+        # Get refs to all DisplayContexts -
+        # the master one, and the one for
+        # every view panel.
+        displayCtxs  = [self.__displayCtx]
+        viewPanels   = self.__frame.getViewPanels()
+        displayCtxs += [vp.getDisplayContext() for vp in viewPanels]
 
-        # 5. Re-configure the new Display/DisplayOpts
-        #    instances settings saved in step 1.
+        # Now get refs to all Display and
+        # DisplayOpts instances for this
+        # overlay.
+        displays = []
+        opts     = []
 
-        log.warn('Not functional yet')
+        for dctx in displayCtxs:
+            displays.append(self.__displayCtx.getDisplay(ovl))
+            opts    .append(self.__displayCtx.getOpts(   ovl))
+
+        # Turn those references into
+        # {prop : value} dictionaries
+        for i in range(len(displays)):
+            
+            d = displays[i]
+            o = opts[    i]
+            
+            displayProps = d.getAllProperties()[0]
+            optProps     = o.getAllProperties()[0]
+
+            displays[i] = {p : getattr(d, p) for p in displayProps}
+            opts[    i] = {p : getattr(o, p) for p in optProps}
+
+        # Now that we've got all the settings for
+        # this overlay, we'll remove it from the
+        # list.
+        self.__overlayList.remove(ovl)
+
+        # Now we re-load the overlay, and add it
+        # back in to the list at the same location
+        ovl = fslimage.Image(dataSource)
+        self.__overlayList.insert(index, ovl)
+
+        # The last step is to re-apply all of the
+        # Display/DisplayOpts settings to the
+        # newly created Display/DisplayOpts
+        # instances.
+        for i, dctx in enumerate(displayCtxs):
+
+            displayProps = displays[i]
+            optProps     = opts[    i]
+            d            = dctx.getDisplay(ovl)
+            o            = dctx.getOpts(   ovl)
+
+            for prop, val in displayProps.items(): setattr(d, prop, val)
+            for prop, val in optProps    .items(): setattr(o, prop, val)
+
+        status.update('{} reloaded.'.format(dataSource))
