@@ -592,9 +592,9 @@ HELP = td.TypeDict({
 
     'OrthoOpts.xcentre'     : 'X canvas display centre (YZ world coordinates '
                               'of first overlay)',
-    'OrthoOpts.ycentre'     : 'Y canvas display centre (XZ world coordinates)'
+    'OrthoOpts.ycentre'     : 'Y canvas display centre (XZ world coordinates '
                               'of first overlay)', 
-    'OrthoOpts.zcentre'     : 'Z canvas display centre (XY world coordinates)'
+    'OrthoOpts.zcentre'     : 'Z canvas display centre (XY world coordinates '
                               'of first overlay)', 
 
     'LightBoxOpts.sliceSpacing'   : 'Slice spacing',
@@ -1716,6 +1716,23 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                                         overlay)
 
                     setattr(optArgs, fileOpt, None)
+
+                    # If the user specified both clipImage
+                    # arguments and linklow/high range
+                    # arguments, an error will be raised
+                    # when we try to set the link properties
+                    # on the VolumeOpts instance (because
+                    # they have been disabled). So we
+                    # clear themfrom the argparse namespace
+                    # to prevent this from occurring.
+                    if fileOpt == 'clipImage' and \
+                       isinstance(opts, fsldisplay.VolumeOpts):
+
+                        llr = ARGUMENTS['VolumeOpts.linkLowRanges'][ 1]
+                        lhr = ARGUMENTS['VolumeOpts.linkHighRanges'][1]
+
+                        setattr(optArgs, llr, None)
+                        setattr(optArgs, lhr, None)
 
                     # With the exception of ModelOpts.refImage,
                     # all of the file options specify images which

@@ -721,28 +721,38 @@ class VolumeOpts(Nifti1Opts):
         dataMin = self.overlay.dataRange.xlo
         dataMax = self.overlay.dataRange.xhi
 
+        dmin = dataMin
+        dmax = dataMax
+        
         if absolute:
-            dmin     = 0
-            dmax     = max((abs(dataMin), abs(dataMax)))
-        else:
-            dmin     = dataMin
-            dmax     = dataMax
+            dmin = min((0,            abs(dataMin)))
+            dmax = max((abs(dataMin), abs(dataMax)))
 
         self.dataMin           = dataMin
         self.dataMax           = dataMax
         self.displayRange.xmin = dmin
         self.displayRange.xmax = dmax
 
-        if self.clipImage is None:
+        # If a clipping image is set, 
+        # we use its range instead of 
+        # our overlay's range, for the
+        # clippingRange property.
+        if self.clipImage is not None:
+            dmin = self.clipImage.dataRange.xlo
+            dmax = self.clipImage.dataRange.xhi
+            
+            if absolute:
+                dmin = min((0,            abs(dataMin)))
+                dmax = max((abs(dataMin), abs(dataMax)))
 
-            # Clipping works on >= and <=, so we add
-            # a small offset to the clipping limits
-            # so the user can configure the scene such
-            # that no values are clipped.
-            distance = abs(dmax - dmin) / 10000.0
+        # Clipping works on >= and <=, so we add
+        # a small offset to the clipping limits
+        # so the user can configure the scene such
+        # that no values are clipped.
+        distance = abs(dmax - dmin) / 10000.0
 
-            self.clippingRange.xmin = dmin - distance
-            self.clippingRange.xmax = dmax + distance
+        self.clippingRange.xmin = dmin - distance
+        self.clippingRange.xmax = dmax + distance
 
 
     def __dataRangeChanged(self, *a):
