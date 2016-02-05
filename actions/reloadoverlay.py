@@ -10,6 +10,7 @@ which reloads the currently selected overlay from disk.
 
 
 import logging
+import os.path as op
 
 import action
 
@@ -65,7 +66,10 @@ class ReloadOverlayAction(action.Action):
         this ``Action`` depending on the type of the newly selected overlay.
         """
         ovl          = self.__displayCtx.getSelectedOverlay()
-        self.enabled = (ovl is not None) and (type(ovl) == fslimage.Image)
+        self.enabled = (ovl            is not None)  and \
+                       (ovl.dataSource is not None)  and \
+                       (type(ovl) == fslimage.Image) and \
+                       op.exists(ovl.dataSource)
 
     
     def __reloadOverlay(self):
@@ -130,9 +134,17 @@ class ReloadOverlayAction(action.Action):
             displayProps = displays[i]
             optProps     = opts[    i]
             d            = dctx.getDisplay(ovl)
-            o            = dctx.getOpts(   ovl)
 
-            for prop, val in displayProps.items(): setattr(d, prop, val)
-            for prop, val in optProps    .items(): setattr(o, prop, val)
+            for prop, val in displayProps.items():
+                setattr(d, prop, val)
+
+            # Get a ref to the DisplayOpts instance
+            # after we have configured the Display,
+            # as its overlay type may have changed
+            # (and hence the DisplayOpts instance
+            # may have been re-created).
+            o = dctx.getOpts(ovl)
+            for prop, val in optProps.items():
+                setattr(o, prop, val)
 
         status.update('{} reloaded.'.format(dataSource))

@@ -77,7 +77,7 @@ class CopyOverlayAction(action.Action):
             return
 
         # TODO support for other overlay types
-        if not isinstance(overlay, fslimage.Image):
+        if type(overlay) != fslimage.Image:
             raise RuntimeError('Currently, only {} instances can be '
                                'copied'.format(fslimage.Image.__name__))
                 
@@ -85,7 +85,22 @@ class CopyOverlayAction(action.Action):
         header = overlay.nibImage.get_header()
         name   = '{}_copy'.format(overlay.name)
         copy   = fslimage.Image(data, name=name, header=header)
-
-        # TODO copy display properties
         
         self.__overlayList.insert(ovlIdx + 1, copy)
+        
+        # Copy the Display settings
+        srcDisplay  = self.__displayCtx.getDisplay(overlay)
+        destDisplay = self.__displayCtx.getDisplay(copy)
+
+        for prop in srcDisplay.getAllProperties()[0]:
+            val = getattr(srcDisplay, prop)
+            setattr(destDisplay, prop, val)
+
+        # And after the Display has been configured
+        # copy the DisplayOpts settings.
+        srcOpts  = self.__displayCtx.getOpts(overlay)
+        destOpts = self.__displayCtx.getOpts(copy)
+
+        for prop in srcOpts.getAllProperties()[0]:
+            val = getattr(srcOpts, prop)
+            setattr(destOpts, prop, val)
