@@ -108,6 +108,7 @@ class DiagnosticReportAction(action.Action):
         report['Python']   = '{}  {}'.format(platform.python_version(),
                                              platform.python_compiler())
         report['Version']  = version.__version__
+        report['OpenGL']   = self.__openGLReport()
         report['Settings'] = self.__settingsReport()
         report['Layout']   = perspectives.serialisePerspective(self.__frame)
         report['Overlays'] = overlays
@@ -161,6 +162,22 @@ class DiagnosticReportAction(action.Action):
 
         for k, v in persps:
             report['perspectives.{}'.format(k)] = str(v)
+
+        return report
+
+
+    def __openGLReport(self):
+        """Creates and returns a dictionary containing information about the
+        OpenGL platform.
+        """
+
+        import OpenGL.GL as gl
+
+        report = OrderedDict()
+
+        report['Version']    = gl.glGetString(gl.GL_VERSION)
+        report['Renderer']   = gl.glGetString(gl.GL_RENDERER)
+        report['Extensions'] = gl.glGetString(gl.GL_EXTENSIONS).split(' ')
 
         return report
 
