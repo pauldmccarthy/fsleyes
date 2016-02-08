@@ -17,6 +17,8 @@ import numpy                        as np
 import                                 props
 import fsl.data.image               as fslimage
 import fsl.data.strings             as strings
+import fsl.utils.dialog             as fsldlg
+import fsl.utils.status             as status
 import fsl.fsleyes.actions          as actions
 import fsl.fsleyes.editor.editor    as fsleditor
 import fsl.fsleyes.gl.annotations   as annotations
@@ -25,6 +27,17 @@ import orthoviewprofile
 
 
 log = logging.getLogger(__name__)
+
+
+
+_suppressDisplaySpaceWarning = False
+"""Whenever an :class:`OrthoEditProfile` is active, and the
+:attr:`.DisplayContext.selectedOverlay` changes, the ``OrthoEditProfile``
+changes the :attr:`.DisplayContext.displaySpace` to the newly selected
+overlay. If this boolean flag is ``True``, a warning message is shown
+to the user. The message dialog has a checkbox which updates this attribute,
+and thus allows the user to suppress the warning in the future.
+"""
 
 
 class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
@@ -177,7 +190,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__selecting         = False
         self.__lastDist          = None
         self.__currentOverlay    = None
-
 
         orthoviewprofile.OrthoViewProfile.__init__(
             self,
@@ -519,13 +531,29 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # display a message to the user, as this may
         # otherwise be confusing
         if self._displayCtx.displaySpace != overlay:
-            
+
             msg = strings.messages[self, 'displaySpaceChange']
             msg = msg.format(overlay.name)
 
-            wx.MessageDialog(self._viewPanel,
-                             message=msg,
-                             style=wx.OK).ShowModal()
+            global _suppressDisplaySpaceWarning
+            if not _suppressDisplaySpaceWarning:
+
+                cbMsg = strings.messages[self, 'displaySpaceChange.suppress']
+                title = strings.titles[  self, 'displaySpaceChange']
+                
+                dlg   = fsldlg.CheckBoxMessageDialog(
+                    self._viewPanel,
+                    title=title,
+                    message=msg,
+                    cbMessage=cbMsg,
+                    cbState=_suppressDisplaySpaceWarning,
+                    icon=wx.ICON_INFORMATION)
+
+                dlg.ShowModal()
+
+                _suppressDisplaySpaceWarning  = dlg.CheckBoxState()
+
+            status.update(msg) 
             self._displayCtx.displaySpace = overlay
 
         # Load the editor for the overlay (create
@@ -638,6 +666,13 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         cursors  = [self.__xCursorAnnotation,
                     self.__yCursorAnnotation,
                     self.__zCursorAnnotation]
+
+        # The annotations may be none if there is no
+        # selected overlay, or if the selected overlay
+        # is in the proicess of being changed (see the 
+        # __selectedOverlayChanged method above).
+        if any([c is None for c in cursors]):
+            return
 
         # If we are running in a low
         # performance mode, the cursor
