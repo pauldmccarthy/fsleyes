@@ -292,8 +292,11 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         # event handlers - see the profilemap
         # module
         import profilemap
-        
-        for cls in inspect.getmro(self.__class__):
+
+        # We reverse the mro, so that the
+        # modes/handlers defined on this
+        # class take precedence.
+        for cls in reversed(inspect.getmro(self.__class__)):
             
             tempModes   = profilemap.tempModeMap  .get(cls, {})
             altHandlers = profilemap.altHandlerMap.get(cls, {})
@@ -514,13 +517,6 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
             handlerName = '_{}{}'.format(evType[0].lower(),
                                          evType[1:])
 
-        handler = getattr(self, handlerName, None)
-
-        if handler is not None:
-            log.debug('Handler found for mode {}, event {}'.format(mode,
-                                                                   evType))
-            return handler
-        
         # No handler found - search 
         # the alternate handler map
         alt = self.__altHandlerMap.get((mode, evType), None)
@@ -531,6 +527,12 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
             altMode, altEvType = alt
             return self.__getHandler(ev, altEvType, altMode)
 
+        handler = getattr(self, handlerName, None)
+
+        if handler is not None:
+            log.debug('Handler found for mode {}, event {}'.format(mode,
+                                                                   evType))
+            return handler
         return None
 
         

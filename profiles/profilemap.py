@@ -194,4 +194,9 @@ alternate handler mapping::
 states that when the ``Profile`` is in ``'zoom'`` mode, and a
 ``MiddleMouseDrag`` event occurs, the ``LeftMouseDrag`` handler for the
 ``'pan'`` mode should be called.
+
+.. note:: Event bindings defined in the ``altHandlerMap`` take precdence over
+          the event bindings defined in the :class:`.Profile` sub-class. So
+          you can use the ``altHandlerMap`` to override the default behaviour
+          of a ``Profile``.
 """

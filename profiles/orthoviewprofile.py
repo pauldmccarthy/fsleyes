@@ -238,7 +238,7 @@ class OrthoViewProfile(profiles.Profile):
 
             # Otherwise we'll just move an arbitrary 
             # amount in the display coordinate system
-            else:                            offsets = [1, 1, 1]
+            else:                            offsets = overlay.pixdim
 
         return offsets
 
