@@ -261,7 +261,6 @@ _TOOLBAR_SPECS  = {
     'edit' : [
         props.Widget(
             'selectionIs3D',
-            enabledWhen=lambda p: p.mode in ['sel', 'desel'],
             icon=_ICONS['selectionIs3D'],
             tooltip=_TOOLTIPS['selectionIs3D'],
             toggle=True),
@@ -313,7 +312,6 @@ _TOOLBAR_SPECS  = {
             tooltip=_TOOLTIPS['selectionOverlayColour']), 
         props.Widget(
             'selectionSize',
-            enabledWhen=lambda p: p.mode in ['sel', 'desel'],
             label=_LABELS['selectionSize'],
             tooltip=_TOOLTIPS['selectionSize']),
         props.Widget(

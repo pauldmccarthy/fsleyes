@@ -72,31 +72,19 @@ tempModeMap = {
 
     # OrthoEditProfile inherits all of the
     # settings for OrthoViewProfile above,
-    # and adds new settings for the edit
-    # modes (sel, desel, and selint)
+    # but overrides a few key ones.
     OrthoEditProfile : OrderedDict((
 
-        # CTRL+Shift puts the user in
-        # deselect mode (or select
-        # mode if in deselect mode)
-        (('sel',    (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'desel'),
-        (('selint', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'desel'),
-        (('desel',  (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'sel'),
+        # Shift/CTRL+Shift puts the
+        # user in select/deselect mode
+        (('nav',     wx.WXK_SHIFT),                  'sel'),
+        (('nav',    (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'desel'),
 
-        # ALT puts the user in pan mode,
-        (('sel',    wx.WXK_ALT),     'pan'),
-        (('selint', wx.WXK_ALT),     'pan'),
-        (('desel',  wx.WXK_ALT),     'pan'),
-
-        # Shift puts the user in navigate mode,
-        (('sel',    wx.WXK_SHIFT),   'nav'),
-        (('desel',  wx.WXK_SHIFT),   'nav'),
-        (('selint', wx.WXK_SHIFT),   'nav'),
-
-        # Command/CTRL puts the user in zoom mode,
-        (('sel',    wx.WXK_CONTROL), 'zoom'),
-        (('desel',  wx.WXK_CONTROL), 'zoom'),
-        (('selint', wx.WXK_CONTROL), 'zoom'))),
+        (('selint',  wx.WXK_CONTROL),                'zoom'),
+        (('selint',  wx.WXK_ALT),                    'pan'),
+        (('selint',  wx.WXK_SHIFT),                  'sel'),
+        (('selint', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'pan'),
+    )),
 
     LightBoxViewProfile : OrderedDict((
         (('view', wx.WXK_CONTROL), 'zoom'), ))
@@ -149,32 +137,32 @@ altHandlerMap = {
 
     OrthoEditProfile : OrderedDict((
 
-        # In select and select-by-intensity 
-        # mode, the right mouse button deselects
-        (('sel',    'RightMouseDown'),  ('desel',  'LeftMouseDown')),
-        (('sel',    'RightMouseDrag'),  ('desel',  'LeftMouseDrag')),
-        (('sel',    'RightMouseUp'),    ('desel',  'LeftMouseUp')),
-        (('selint', 'RightMouseDown'),  ('desel',  'LeftMouseDown')),
-        (('selint', 'RightMouseDrag'),  ('desel',  'LeftMouseDrag')),
-        (('selint', 'RightMouseUp'),    ('desel',  'LeftMouseUp')), 
+        # The OrthoEditProfile is in
+        # 'nav' mode by default.
+        # 
+        # Right mouse button allows
+        # the user to select voxels
+        (('nav', 'RightMouseDown'), ('sel', 'LeftMouseDown')),
+        (('nav', 'RightMouseDrag'), ('sel', 'LeftMouseDrag')),
+        (('nav', 'RightMouseUp'),   ('sel', 'LeftMouseUp')),
 
-        # In select/deselect/selint
-        # mode, the middle mouse buyton pans
-        (('sel',    'MiddleMouseDown'), ('pan',    'LeftMouseDown')),
-        (('sel',    'MiddleMouseDrag'), ('pan',    'LeftMouseDrag')),
-        (('desel',  'MiddleMouseDrag'), ('pan',    'LeftMouseDrag')),
-        (('selint', 'MiddleMouseDown'), ('pan',    'LeftMouseDown')),
-        (('selint', 'MiddleMouseDrag'), ('pan',    'LeftMouseDrag')),
+        # When in select mode (e.g. when the
+        # shift key is held down), the right
+        # mouse button allows the user to
+        # deselect voxels.
+        (('sel',    'RightMouseDown'),  ('desel', 'LeftMouseDown')),
+        (('sel',    'RightMouseDrag'),  ('desel', 'LeftMouseDrag')),
+        (('sel',    'RightMouseUp'),    ('desel', 'LeftMouseUp')),
 
-        # The selection cursor is shown in deselect
-        # mode the same as for select mode
-        (('desel',  'MouseMove'),       ('sel',    'MouseMove')),
+        # Middle mouse always pans.
+        (('sel',    'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('desel',  'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('selint', 'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
 
-
-        # Keyboard navigation works in the select
-        # modes in the same way that it works
-        # in navigate mode (as defined in the
-        # OrthoViewProfile)
+        # Keyboard navigation works in the
+        # select modes in the same way that
+        # it works in navigate mode (as
+        # defined in the OrthoViewProfile)
         (('sel',    'Char'), ('nav', 'Char')),
         (('desel',  'Char'), ('nav', 'Char')),
         (('selint', 'Char'), ('nav', 'Char')),

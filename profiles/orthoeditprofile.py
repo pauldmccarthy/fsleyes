@@ -752,8 +752,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         Increases/decreases the current :attr:`selectionSize`.
         """
 
-        if   wheelDir > 0: self.selectionSize += 1
-        elif wheelDir < 0: self.selectionSize -= 1
+        if   wheelDir > 0: self.selectionSize -= 1
+        elif wheelDir < 0: self.selectionSize += 1
 
         voxel = self.__getVoxelLocation(canvasPos)
         self.__drawCursorAnnotation(canvas, voxel)
