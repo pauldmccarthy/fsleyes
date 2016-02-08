@@ -503,36 +503,41 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         specified.
         """
 
+        # Is a temporary mode active?
         tempMode = self.__getTempMode(ev)
 
         if mode is None:
             if tempMode is None: mode = self.mode
             else:                mode = tempMode
 
-        # Search for a method which can
-        # handle the specified mode/evtype
+        # Is an alternate handler active?
+        # Alternate handlers take precedence
+        # over default handlers.
+        alt = self.__altHandlerMap.get((mode, evType), None)
+
+        # An alternate handler has
+        # been specified for this
+        # event - look it up.
+        if alt is not None:
+            altMode, altEvType = alt
+            return self.__getHandler(ev, altEvType, altMode)
+
+        # Otherwise search for a default
+        # method which can handle the
+        # specified mode/evtype.
         if mode is not None:
             handlerName = '_{}Mode{}'.format(mode, evType)
         else:
             handlerName = '_{}{}'.format(evType[0].lower(),
                                          evType[1:])
 
-        # No handler found - search 
-        # the alternate handler map
-        alt = self.__altHandlerMap.get((mode, evType), None)
-
-        # An alternate handler has
-        # been specified - look it up
-        if alt is not None:
-            altMode, altEvType = alt
-            return self.__getHandler(ev, altEvType, altMode)
-
         handler = getattr(self, handlerName, None)
 
         if handler is not None:
-            log.debug('Handler found for mode {}, event {}'.format(mode,
-                                                                   evType))
+            log.debug('Handler found for mode {}, event {}'.format(
+                mode, evType))
             return handler
+
         return None
 
         

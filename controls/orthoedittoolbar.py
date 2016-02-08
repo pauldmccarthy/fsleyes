@@ -123,7 +123,7 @@ class OrthoEditToolBar(fsltoolbar.FSLEyesToolBar):
         profile = ortho.getCurrentProfile()
         
         if self.selint: profile.mode = 'selint'
-        else:           profile.mode = 'sel'
+        else:           profile.mode = 'nav'
 
 
     def __profileChanged(self, *a):

@@ -184,9 +184,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__ycanvas           = viewPanel.getYCanvas()
         self.__zcanvas           = viewPanel.getZCanvas() 
         self.__selAnnotation     = None
-        self.__xCursorAnnotation = None
-        self.__yCursorAnnotation = None
-        self.__zCursorAnnotation = None
         self.__selecting         = False
         self.__lastDist          = None
         self.__currentOverlay    = None
@@ -198,7 +195,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             displayCtx,
             ['sel', 'desel', 'selint'])
 
-        self.mode = 'sel'
+        self.mode = 'nav'
 
         displayCtx .addListener('selectedOverlay',
                                 self._name,
@@ -235,24 +232,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.__selAnnotation is not None:
             self.__selAnnotaiton.destroy()
             
-        if self.__xCursorAnnotation is not None:
-            self.__xCursorAnnotaiton.destroy()
-            
-        if self.__yCursorAnnotation is not None:
-            self.__yCursorAnnotaiton.destroy()
-            
-        if self.__zCursorAnnotation is not None:
-            self.__zCursorAnnotaiton.destroy() 
- 
-        self.__editors           = None
-        self.__xcanvas           = None
-        self.__ycanvas           = None
-        self.__zcanvas           = None
-        self.__selAnnotation     = None
-        self.__xCursorAnnotation = None
-        self.__yCursorAnnotation = None
-        self.__zCursorAnnotation = None
-        self.__currentOverlay    = None
+        self.__editors        = None
+        self.__xcanvas        = None
+        self.__ycanvas        = None
+        self.__zcanvas        = None
+        self.__selAnnotation  = None
+        self.__currentOverlay = None
 
         orthoviewprofile.OrthoViewProfile.destroy(self)
 
@@ -268,21 +253,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__zcanvas.getAnnotations().dequeue(sa, hold=True)
             sa.destroy()
 
-        xca = self.__xCursorAnnotation
-        yca = self.__yCursorAnnotation
-        zca = self.__zCursorAnnotation
-
-        if xca is not None:
-            self.__xcanvas.getAnnotations().dequeue(xca, hold=True)
-        if yca is not None:
-            self.__ycanvas.getAnnotations().dequeue(yca, hold=True)
-        if zca is not None:
-            self.__zcanvas.getAnnotations().dequeue(zca, hold=True)
-
-        self.__selAnnotation     = None
-        self.__xCursorAnnotation = None
-        self.__yCursorAnnotation = None
-        self.__zCursorAnnotation = None
+        self.__selAnnotation = None
             
         orthoviewprofile.OrthoViewProfile.deregister(self)
 
@@ -417,13 +388,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.__selAnnotation is not None:
             self.__selAnnotation.colour = self.selectionOverlayColour
 
-        if self.__xCursorAnnotation is not None:
-            self.__xCursorAnnotation.colour = self.selectionCursorColour
-        if self.__yCursorAnnotation is not None:
-            self.__yCursorAnnotation.colour = self.selectionCursorColour
-        if self.__zCursorAnnotation is not None:
-            self.__zCursorAnnotation.colour = self.selectionCursorColour 
-
 
     def __selectedOverlayChanged(self, *a):
         """Called when either the :class:`.OverlayList` or
@@ -484,20 +448,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             zannot.dequeue(self.__selAnnotation, hold=True)
             
             self.__selAnnotation.destroy()
-
-        xca = self.__xCursorAnnotation
-        yca = self.__yCursorAnnotation
-        zca = self.__zCursorAnnotation
-
-        # And the cursor annotations
-        if xca is not None: xannot.dequeue(xca, hold=True)
-        if yca is not None: yannot.dequeue(yca, hold=True)
-        if zca is not None: yannot.dequeue(xca, hold=True)
             
-        self.__xCursorAnnotation = None
-        self.__yCursorAnnotation = None
-        self.__zCursorAnnotation = None
-        self.__selAnnotation     = None
+        self.__selAnnotation = None
 
         # Remove property listeners from the
         # editor/selection instances associated
@@ -614,23 +566,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             opts.getTransform('voxel',  'pixdim'),
             colour=self.selectionOverlayColour)
 
-        # Create cursor annotatinos on each canvas
-        kwargs = {'colour' : self.selectionCursorColour,
-                  'width'  : 2}
-
-        xca = annotations.Rect((0, 0), 0, 0, **kwargs)
-        yca = annotations.Rect((0, 0), 0, 0, **kwargs)
-        zca = annotations.Rect((0, 0), 0, 0, **kwargs)
-        self.__xCursorAnnotation = xca
-        self.__yCursorAnnotation = yca
-        self.__zCursorAnnotation = zca
-        
-        xannot.obj(self.__selAnnotation,     hold=True)
-        yannot.obj(self.__selAnnotation,     hold=True)
-        zannot.obj(self.__selAnnotation,     hold=True)
-        xannot.obj(self.__xCursorAnnotation, hold=True)
-        yannot.obj(self.__yCursorAnnotation, hold=True)
-        zannot.obj(self.__zCursorAnnotation, hold=True)
+        xannot.obj(self.__selAnnotation, hold=True)
+        yannot.obj(self.__selAnnotation, hold=True)
+        zannot.obj(self.__selAnnotation, hold=True)
 
         self._viewPanel.Refresh()
 
@@ -685,19 +623,16 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :arg blockSize: Size of the cursor square/cube.
         """
 
-        opts  = self._displayCtx.getOpts(self.__currentOverlay)
-
+        opts     = self._displayCtx.getOpts(self.__currentOverlay)
         canvases = [self.__xcanvas, self.__ycanvas, self.__zcanvas]
-        cursors  = [self.__xCursorAnnotation,
-                    self.__yCursorAnnotation,
-                    self.__zCursorAnnotation]
 
-        # The annotations may be none if there is no
-        # selected overlay, or if the selected overlay
-        # is in the proicess of being changed (see the 
-        # __selectedOverlayChanged method above).
-        if any([c is None for c in cursors]):
-            return
+        # Create a cursor annotation for each canvas
+        kwargs  = {'colour' : self.selectionCursorColour,
+                   'width'  : 2}
+
+        cursors = [annotations.Rect((0, 0), 0, 0, **kwargs),
+                   annotations.Rect((0, 0), 0, 0, **kwargs),
+                   annotations.Rect((0, 0), 0, 0, **kwargs)]
 
         # If we are running in a low
         # performance mode, the cursor
@@ -755,6 +690,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             cursor.xy = cmin[[xax, yax]]
             cursor.w  = cmax[xax] - cmin[xax]
             cursor.h  = cmax[yax] - cmin[yax]
+
+        # Queue the cursors
+        for cursor, canvas in zip(cursors, canvases):
+            canvas.getAnnotations().obj(cursor)
             
 
     def __applySelection(self, canvas, voxel, add=True):
@@ -882,15 +821,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         selection cursor annotation is not shown on any canvas.
         """
         
-        cursors = [self.__xCursorAnnotation,
-                   self.__yCursorAnnotation,
-                   self.__zCursorAnnotation]
-
-        for cursor in cursors:
-            if cursor is not None:
-                cursor.w = 0
-                cursor.h = 0
-
         self.__refreshCanvases(ev, canvas)
 
         
