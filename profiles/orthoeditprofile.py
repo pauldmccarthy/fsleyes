@@ -443,9 +443,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         #
         #  4. Load/create a new Editor for the new overlay
         #
-        #  5. Add property listeners to the editor/selection
+        #  5. Transfer the exsiting selection to the new
+        #     overlay if possible.
         #
-        #  6. Create canvas annotations
+        #  6. Add property listeners to the editor/selection
+        #
+        #  7. Create canvas annotations
         #
         # Here we go....
 
@@ -461,11 +464,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         #         self.__editors.pop(overlay)
         #         editor.destroy()
 
-        overlay = self._displayCtx.getSelectedOverlay()
+        oldOverlay = self.__currentOverlay
+        overlay    = self._displayCtx.getSelectedOverlay()
         
         # If the selected overlay hasn't changed,
         # we don't need to do anything
-        if overlay == self.__currentOverlay:
+        if overlay == oldOverlay:
             return
 
         # Destroy all existing canvas annotations
@@ -498,12 +502,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # Remove property listeners from the
         # editor/selection instances associated
         # with the previously selected overlay
-        if self.__currentOverlay is not None:
-            editor = self.__editors[self.__currentOverlay]
+        if oldOverlay is not None:
+            editor = self.__editors[oldOverlay]
 
             log.debug('De-registering listeners from Editor {} ({})'.format(
-                id(editor),
-                self.__currentOverlay.name))
+                id(editor), oldOverlay.name))
             editor.getSelection().removeListener('selection', self._name)
             editor               .removeListener('canUndo',   self._name)
             editor               .removeListener('canRedo',   self._name)
@@ -567,15 +570,37 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                                       self._displayCtx)
             self.__editors[overlay] = editor
 
+        # Transfer the existing selection
+        # to the new overlay, if possible.
+        #
+        # Currently we only transfer
+        # the selection for images
+        # with the same shape.
+        if oldOverlay is not None                        and \
+           oldOverlay.shape[:3]     == overlay.shape[:3] and \
+           np.allclose(oldOverlay.voxToWorldMat, overlay.voxToWorldMat):
+
+            log.debug('Transferring selection from {} to {}'.format(
+                oldOverlay.name,
+                overlay.name))
+            
+            oldSelection = self.__editors[oldOverlay].getSelection()
+            newSelection = editor.getSelection()
+
+            newSelection.setSelection(oldSelection.selection, (0, 0, 0))
+
+        # Register property listeners with the
+        # new Editor and Selection instances.
         log.debug('Registering listeners with Editor {} ({})'.format(
             id(editor),
-            self.__currentOverlay.name)) 
+            self.__currentOverlay.name))
+        
         editor.getSelection().addListener('selection',
                                           self._name,
                                           self.__selectionChanged)
         editor.addListener('canUndo', self._name, self.__undoStateChanged)
         editor.addListener('canRedo', self._name, self.__undoStateChanged)
-
+        
         # Update undo/redo button states, and
         # selection action button states
         self.__undoStateChanged()
