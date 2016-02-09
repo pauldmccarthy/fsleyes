@@ -132,7 +132,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     """
 
     
-    fillValue = props.Real(default=0)
+    fillValue = props.Real(default=0, clamped=True)
     """The value used by the ``fillSelection`` action - all voxels in the
     selection will be filled with this value.
     """
@@ -403,6 +403,23 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__selAnnotation.colour = self.selectionOverlayColour
 
 
+    def __setFillValueLimits(self, overlay):
+        """Called by the :meth:`__selectedOverlayChanged` method. Updates the
+        min/max limits of the :attr:`fillValue` property so it can only be
+        set to values within the overlay data range.
+        """
+        
+        if issubclass(overlay.data.dtype.type, np.integer):
+            dmin = np.iinfo(overlay.data.dtype).min
+            dmax = np.iinfo(overlay.data.dtype).max
+        else:
+            dmin = None
+            dmax = None
+
+        self.setConstraint('fillValue', 'minval', dmin)
+        self.setConstraint('fillValue', 'maxval', dmax)
+
+
     def __selectedOverlayChanged(self, *a):
         """Called when either the :class:`.OverlayList` or
         :attr:`.DisplayContext.selectedOverlay` change.
@@ -486,6 +503,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         display = self._displayCtx.getDisplay(overlay)
         opts    = display.getDisplayOpts()
+
+        # Update the fillValue limits
+        self.__setFillValueLimits(overlay)
 
         # Edit mode is only supported on
         # images with the 'volume' type

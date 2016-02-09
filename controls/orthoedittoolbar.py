@@ -336,7 +336,8 @@ _TOOLBAR_SPECS  = {
         props.Widget(
             'fillValue',
             label=_LABELS['fillValue'],
-            tooltip=_TOOLTIPS['fillValue']),
+            tooltip=_TOOLTIPS['fillValue'],
+            slider=False),
         props.Widget(
             'intensityThres',
             label=_LABELS['intensityThres'],
