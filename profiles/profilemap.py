@@ -77,13 +77,14 @@ tempModeMap = {
 
         # Shift/CTRL+Shift puts the
         # user in select/deselect mode
-        (('nav',     wx.WXK_SHIFT),                  'sel'),
-        (('nav',    (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'desel'),
+        (('nav',    (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'sel'),
+        (('nav',    (wx.WXK_ALT,     wx.WXK_SHIFT)), 'desel'),
 
         (('selint',  wx.WXK_CONTROL),                'zoom'),
         (('selint',  wx.WXK_ALT),                    'pan'),
-        (('selint',  wx.WXK_SHIFT),                  'sel'),
-        (('selint', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'pan'),
+        (('selint',  wx.WXK_SHIFT),                  'slice'),
+        (('selint', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'sel'),
+        (('selint', (wx.WXK_ALT,     wx.WXK_SHIFT)), 'desel'), 
     )),
 
     LightBoxViewProfile : OrderedDict((
