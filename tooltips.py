@@ -436,8 +436,8 @@ properties = TypeDict({
                                                 'the search.',
     'OrthoEditProfile.localFill'              : 'If selecting by intensity, '
                                                 'only select voxels which are '
-                                                'adjacent to an already  '
-                                                'selected voxel',
+                                                'adjacent to an already '
+                                                'selected voxel.',
     'OrthoEditProfile.limitToRadius'          : 'If selecting by intensity, '
                                                 'limit the search to a sphere '
                                                 'of the specified radius.',

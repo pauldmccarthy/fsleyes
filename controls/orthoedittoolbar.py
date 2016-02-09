@@ -184,23 +184,34 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 
 
 _ICONS = {
-    'view'                    :  [fslicons.findImageFile('eyeHighlight24'),
-                                  fslicons.findImageFile('eye24')],
-    'edit'                    :  [fslicons.findImageFile('pencilHighlight24'),
-                                  fslicons.findImageFile('pencil24')],
-    'selectionIs3D'           : [fslicons.findImageFile('selection3DHighlight24'),
-                                 fslicons.findImageFile('selection3D24'),
-                                 fslicons.findImageFile('selection2DHighlight24'),
-                                 fslicons.findImageFile('selection2D24')],
+    'view'                    :  [
+        fslicons.findImageFile('eyeHighlight24'),
+        fslicons.findImageFile('eye24')],
+    'edit'                    :  [
+        fslicons.findImageFile('pencilHighlight24'),
+        fslicons.findImageFile('pencil24')],
+    'selectionIs3D'           : [
+        fslicons.findImageFile('selection3DHighlight24'),
+        fslicons.findImageFile('selection3D24'),
+        fslicons.findImageFile('selection2DHighlight24'),
+        fslicons.findImageFile('selection2D24')],
+    
     'clearSelection'          :  fslicons.findImageFile('clear24'),
     'undo'                    :  fslicons.findImageFile('undo24'),
     'redo'                    :  fslicons.findImageFile('redo24'),
     'fillSelection'           :  fslicons.findImageFile('fill24'),
     'createMaskFromSelection' :  fslicons.findImageFile('createMask24'),
     'createROIFromSelection'  :  fslicons.findImageFile('createROI24'),
-    'limitToRadius'           :  fslicons.findImageFile('radius24'),
-    'localFill'               :  fslicons.findImageFile('localsearch24'),
-    'selint'                  :  fslicons.findImageFile('selectByIntensity24'),
+    
+    'limitToRadius'           :  [
+        fslicons.findImageFile('radiusHighlight24'),
+        fslicons.findImageFile('radius24')],
+    'localFill'               :  [
+        fslicons.findImageFile('localsearchHighlight24'),
+        fslicons.findImageFile('localsearch24')],
+    'selint'                  :  [
+        fslicons.findImageFile('selectByIntensityHighlight24'),
+        fslicons.findImageFile('selectByIntensity24')],
 }
 """This dictionary contains icons for some :class:`OrthoEditToolBar`
 controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
