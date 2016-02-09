@@ -288,6 +288,20 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     @actions.action
+    def eraseSelection(self):
+        """Fills the current selection with zero. See
+        :meth:`.Editor.fillSelection`.
+        """
+        if self.__currentOverlay is None:
+            return
+
+        editor = self.__editors[self.__currentOverlay]
+                
+        editor.fillSelection(0)
+        editor.getSelection().clearSelection() 
+
+
+    @actions.action
     def createMaskFromSelection(self):
         """Creates a new mask :class:`.Image` from the current selection.
         See :meth:`.Editor.createMaskFromSelection`.

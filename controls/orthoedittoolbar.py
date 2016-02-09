@@ -200,6 +200,7 @@ _ICONS = {
     'undo'                    :  fslicons.findImageFile('undo24'),
     'redo'                    :  fslicons.findImageFile('redo24'),
     'fillSelection'           :  fslicons.findImageFile('fill24'),
+    'eraseSelection'          :  fslicons.findImageFile('erase24'),
     'createMaskFromSelection' :  fslicons.findImageFile('createMask24'),
     'createROIFromSelection'  :  fslicons.findImageFile('createROI24'),
     
@@ -222,9 +223,10 @@ _TOOLTIPS = {
     'profile'                 : fsltooltips.properties['OrthoPanel.profile'],
     'selectionIs3D'           : fsltooltips.properties['OrthoEditProfile.'
                                                        'selectionIs3D'],
-    
     'clearSelection'          : fsltooltips.actions['OrthoEditProfile.'
                                                     'clearSelection'],
+    'eraseSelection'          : fsltooltips.actions['OrthoEditProfile.'
+                                                    'eraseSelection'], 
     'undo'                    : fsltooltips.actions['OrthoEditProfile.'
                                                     'undo'],
     'redo'                    : fsltooltips.actions['OrthoEditProfile.'
@@ -293,6 +295,10 @@ _TOOLBAR_SPECS  = {
             'fillSelection',
             icon=_ICONS['fillSelection'],
             tooltip=_TOOLTIPS['fillSelection']),
+        actions.ActionButton(
+            'eraseSelection',
+            icon=_ICONS['eraseSelection'],
+            tooltip=_TOOLTIPS['eraseSelection']), 
         actions.ActionButton(
             'createMaskFromSelection',
             icon=_ICONS['createMaskFromSelection'],
