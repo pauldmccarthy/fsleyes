@@ -634,13 +634,13 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     
     def __getVoxelLocation(self, canvasPos):
         """Returns the voxel location, for the currently selected overlay,
-        which corresponds to the specified canvas position.
+        which corresponds to the specified canvas position. Returns ``None``
+        if the current canvas position is out of bounds for the current
+        overlay.
         """
         
-        opts  = self._displayCtx.getOpts(self.__currentOverlay)
-        voxel = opts.transformCoords([canvasPos], 'display', 'voxel')[0]
-
-        return np.int32(np.round(voxel))
+        opts = self._displayCtx.getOpts(self.__currentOverlay)
+        return opts.getVoxel(canvasPos)
 
 
     def __drawCursorAnnotation(self, canvas, voxel, blockSize=None):
@@ -790,8 +790,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         elif wheelDir < 0: self.selectionSize += 1
 
         voxel = self.__getVoxelLocation(canvasPos)
-        self.__drawCursorAnnotation(canvas, voxel)
-        self.__refreshCanvases(ev, canvas)
+
+        if voxel is not None:
+            self.__drawCursorAnnotation(canvas, voxel)
+            self.__refreshCanvases(ev, canvas)
 
 
     def _selModeMouseMove(self, ev, canvas, mousePos, canvasPos):
@@ -801,8 +803,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         (see :meth:`__draweCursorAnnotation`).
         """
         voxel = self.__getVoxelLocation(canvasPos)
-        self.__drawCursorAnnotation(canvas, voxel)
-        self.__refreshCanvases(ev,  canvas)
+
+        if voxel is not None:
+            self.__drawCursorAnnotation(canvas, voxel)
+            self.__refreshCanvases(ev,  canvas)
 
 
     def _selModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
@@ -815,13 +819,13 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             return
         
         editor = self.__editors[self.__currentOverlay]
-        
-        editor.startChangeGroup()
+        voxel  = self.__getVoxelLocation(canvasPos)
 
-        voxel = self.__getVoxelLocation(canvasPos)
-        self.__applySelection(      canvas, voxel)
-        self.__drawCursorAnnotation(canvas, voxel)
-        self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
+        if voxel is not None:
+            editor.startChangeGroup()
+            self.__applySelection(      canvas, voxel)
+            self.__drawCursorAnnotation(canvas, voxel)
+            self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
 
 
     def _selModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -830,9 +834,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         Adds to the current :class:`Selection`.
         """        
         voxel = self.__getVoxelLocation(canvasPos)
-        self.__applySelection(      canvas, voxel)
-        self.__drawCursorAnnotation(canvas, voxel)
-        self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
+
+        if voxel is not None:
+            self.__applySelection(      canvas, voxel)
+            self.__drawCursorAnnotation(canvas, voxel)
+            self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
 
 
     def _selModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
@@ -868,13 +874,13 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             return
         
         editor = self.__editors[self.__currentOverlay]
+        voxel  = self.__getVoxelLocation(canvasPos)
 
-        editor.startChangeGroup()
-
-        voxel = self.__getVoxelLocation(canvasPos)
-        self.__applySelection(      canvas, voxel, False)
-        self.__drawCursorAnnotation(canvas, voxel)
-        self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
+        if voxel is not None:
+            editor.startChangeGroup()
+            self.__applySelection(      canvas, voxel, False)
+            self.__drawCursorAnnotation(canvas, voxel)
+            self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
 
 
     def _deselModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -883,9 +889,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         Removes from the current :class:`Selection`.        
         """ 
         voxel = self.__getVoxelLocation(canvasPos)
-        self.__applySelection(      canvas, voxel, False)
-        self.__drawCursorAnnotation(canvas, voxel)
-        self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
+        
+        if voxel is not None:
+            self.__applySelection(      canvas, voxel, False)
+            self.__drawCursorAnnotation(canvas, voxel)
+            self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
 
         
     def _deselModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
@@ -948,8 +956,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :meth:`__drawCursorAnnotation`).
         """
         voxel = self.__getVoxelLocation(canvasPos)
-        self.__drawCursorAnnotation(canvas, voxel, 1)
-        self.__refreshCanvases(ev,  canvas)
+
+        if voxel is not None:
+            self.__drawCursorAnnotation(canvas, voxel, 1)
+            self.__refreshCanvases(ev,  canvas)
 
         
     def _selintModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
@@ -963,15 +973,17 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.__currentOverlay is None:
             return
         
-        editor = self.__editors[self.__currentOverlay] 
+        editor = self.__editors[self.__currentOverlay]
+        voxel  = self.__getVoxelLocation(canvasPos)
 
-        editor.startChangeGroup()
-        editor.getSelection().clearSelection()
-        
-        self.__selecting = True
-        self.__lastDist  = 0
-        self.__selintSelect(self.__getVoxelLocation(canvasPos))
-        self.__refreshCanvases(ev, canvas, mousePos, canvasPos)
+        if voxel is not None:
+            editor.startChangeGroup()
+            editor.getSelection().clearSelection()
+
+            self.__selecting = True
+            self.__lastDist  = 0
+            self.__selintSelect(voxel)
+            self.__refreshCanvases(ev, canvas, mousePos, canvasPos)
 
         
     def _selintModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -990,9 +1002,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         if not self.limitToRadius:
             voxel = self.__getVoxelLocation(canvasPos)
-            self.__drawCursorAnnotation(canvas, voxel, 1)
 
-            refreshArgs = (ev, canvas, mousePos, canvasPos)
+            if voxel is not None:
+                self.__drawCursorAnnotation(canvas, voxel, 1)
+                refreshArgs = (ev, canvas, mousePos, canvasPos)
             
         else:
             mouseDownPos, canvasDownPos = self.getMouseDownLocation()
@@ -1007,8 +1020,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
             refreshArgs = (ev, canvas)
 
-        self.__selintSelect(voxel)
-        self.__refreshCanvases(*refreshArgs)
+        if voxel is not None:
+            self.__selintSelect(voxel)
+            self.__refreshCanvases(*refreshArgs)
 
         
     def _selintModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
@@ -1035,8 +1049,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         mouseDownPos, canvasDownPos = self.getMouseDownLocation()
         voxel                       = self.__getVoxelLocation(canvasDownPos) 
 
-        self.__selintSelect(voxel)
-        self.__refreshCanvases(ev, canvas)
+        if voxel is not None:
+            self.__selintSelect(voxel)
+            self.__refreshCanvases(ev, canvas)
 
         
     def _selintModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):

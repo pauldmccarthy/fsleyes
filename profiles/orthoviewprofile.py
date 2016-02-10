@@ -12,6 +12,8 @@ import logging
 
 import wx
 
+import numpy as np
+
 import fsl.fsleyes.profiles as profiles
 import fsl.fsleyes.actions  as actions
 import fsl.data.image       as fslimage
@@ -203,10 +205,12 @@ class OrthoViewProfile(profiles.Profile):
     ########################
 
     
-    def __getNavOffsets(self):
+    def __offsetLocation(self, x, y, z):
         """Used by some ``nav`` mode handlers. Returns a sequence of three
-        values, one per display space axis, which specify the distance that
-        a navigation operation should move the display.
+        values, one per display space axis, which specify the amount by
+        which the :attr:`.DisplayContext.location` should be changed,
+        according to the directions specified by the ``x``, ``y``, and ``z``
+        arguments.
 
         If the currently selected overlay is an :class:`.Nifti1` instance, the
         distance that a navigation operation should shift the display will
@@ -215,32 +219,80 @@ class OrthoViewProfile(profiles.Profile):
         be moved by one unit (which corresponds to one voxel). But if the
         ``transform`` is ``pixdim``, the display should be moved by one pixdim
         (e.g. 2, for a "math:`2mm^3` image).
+
+        Each of the ``x``, ``y`` and ``z`` arguments are interpreted as being
+        positive, zero, or negative. A positive/negative value indicates that
+        the display location should be increased/decreased along the
+        corresponding axis, and zero indicates that the location should stay
+        the same along an axis.
         """
         
         overlay = self._displayCtx.getReferenceImage(
             self._displayCtx.getSelectedOverlay())
 
-        # The currently selected overlay is non-volumetric,
-        # and does not have a reference image
-        if overlay is None:
-            offsets = [1, 1, 1]
+        # If non-zero, round to -1 or +1
+        x = np.sign(x) * np.ceil(np.abs(np.clip(x, -1, 1)))
+        y = np.sign(y) * np.ceil(np.abs(np.clip(y, -1, 1)))
+        z = np.sign(z) * np.ceil(np.abs(np.clip(z, -1, 1)))
 
-        # We have a voluemtric reference image to play with
+        # If the currently selected overlay
+        # is non-volumetric, and does not
+        # have a reference image, we'll just
+        # move by +/-1 along each axis (as
+        # specified by the x/y/z parameters).
+        if overlay is None:
+            dloc     = self._displayCtx.location.xyz
+            dloc[0] += x
+            dloc[1] += y
+            dloc[2] += z
+
+        # But if we have a voluemtric reference
+        # image to play with, we're going to
+        # move to the next/previous voxel along
+        # each axis (as specified by x/y/z),
+        # and calculate the corresponding location
+        # in display space coordinates.
         else:
 
-            opts = self._displayCtx.getOpts(overlay)
+            # We use this complicated looking
+            # code so that the adjusted location
+            # is centered within the next/previous
+            # voxel on the depth axis.
+            # 
+            # The procedure is as follows:
+            # 
+            #   1. Calculate the current display
+            #      location in voxels. If we are
+            #      displaying in id/pixdim space,
+            #      we round the voxels to integers,
+            #      otherwise we use floating point
+            #      voxel coordinates.
+            #       
+            #   2. Offset the voxel coordinates
+            #      according to the x/y/z parameters. To
+            #      do this we use the Image.axisMapping
+            #      method which returns the approximate
+            #      correspondence between voxel axes and
+            #      display axes.
+            #
+            #   3. Transform the voxel coordinates back
+            #      into the display coordinate system.
 
-            # If we're displaying voxel space,
-            # we want a keypress to move one
-            # voxel in the appropriate direction
-            if   opts.transform == 'id':     offsets = [1, 1, 1]
-            elif opts.transform == 'pixdim': offsets = overlay.pixdim
+            offsets  = [x, y, z]
+            opts     = self._displayCtx.getOpts(overlay)
+            vround   = opts.transform in ('id', 'pixdim')
+            vloc     = opts.getVoxel(clip=False, vround=vround)
+            voxAxes  = overlay.axisMapping(opts.getTransform('voxel',
+                                                             'display'))
 
-            # Otherwise we'll just move an arbitrary 
-            # amount in the display coordinate system
-            else:                            offsets = overlay.pixdim
+            for i in range(3):
+                vdir       = np.sign(voxAxes[i])
+                vax        = np.abs(voxAxes[i]) - 1
+                vloc[vax] += vdir * offsets[i]
 
-        return offsets
+            dloc = opts.transformCoords([vloc], 'voxel', 'display')[0]
+
+        return dloc
 
 
     def _navModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -263,39 +315,24 @@ class OrthoViewProfile(profiles.Profile):
         :attr:`.DisplayContext.location`.  Arrow keys map to the
         horizontal/vertical axes, and -/+ keys map to the depth axis of the
         canvas which was the target of the event.
-
-        Page up/page down changes the :attr:`.DisplayContext.selectedOverlay`.
         """
 
         if len(self._overlayList) == 0:
             return
 
-        pos     = self._displayCtx.location.xyz
-        offsets = self.__getNavOffsets()
-
         try:    ch = chr(key)
         except: ch = None
 
-        if   key == wx.WXK_LEFT:  pos[canvas.xax] -= offsets[canvas.xax]
-        elif key == wx.WXK_RIGHT: pos[canvas.xax] += offsets[canvas.xax]
-        elif key == wx.WXK_UP:    pos[canvas.yax] += offsets[canvas.yax]
-        elif key == wx.WXK_DOWN:  pos[canvas.yax] -= offsets[canvas.yax]
-        elif ch  in ('-', '_'):   pos[canvas.zax] -= offsets[canvas.zax]
-        elif ch  in ('+', '='):   pos[canvas.zax] += offsets[canvas.zax]
+        dirs = [0, 0, 0]
 
-        elif key in (wx.WXK_PAGEUP, wx.WXK_PAGEDOWN):
-            overlay = self._displayCtx.getSelectedOverlay()
-            idx     = self._displayCtx.getOverlayOrder(overlay)
+        if   key == wx.WXK_LEFT:  dirs[canvas.xax] = -1
+        elif key == wx.WXK_RIGHT: dirs[canvas.xax] =  1
+        elif key == wx.WXK_UP:    dirs[canvas.yax] =  1
+        elif key == wx.WXK_DOWN:  dirs[canvas.yax] = -1
+        elif ch  in ('+', '='):   dirs[canvas.zax] =  1
+        elif ch  in ('-', '_'):   dirs[canvas.zax] = -1
 
-            if   key == wx.WXK_PAGEUP:   idx += 1
-            elif key == wx.WXK_PAGEDOWN: idx -= 1
-
-            idx    %= len(self._overlayList)
-            idx     = self._displayCtx.overlayOrder[idx]
-
-            self._displayCtx.selectedOverlay = idx 
-
-        self._displayCtx.location.xyz = pos
+        self._displayCtx.location.xyz = self.__offsetLocation(*dirs)
 
         
     #####################
@@ -313,13 +350,14 @@ class OrthoViewProfile(profiles.Profile):
         if len(self._overlayList) == 0:
             return
 
-        pos     = self._displayCtx.location.xyz
-        offsets = self.__getNavOffsets()
+        dirs = [0, 0, 0]
 
-        if   wheel > 0: pos[canvas.zax] -= offsets[canvas.zax]
-        elif wheel < 0: pos[canvas.zax] += offsets[canvas.zax]
+        if   wheel > 0: dirs[canvas.zax] = -1
+        elif wheel < 0: dirs[canvas.zax] =  1
 
-        self._displayCtx.location.xyz = pos        
+        pos = self.__offsetLocation(*dirs)
+
+        self._displayCtx.location[canvas.zax] = pos[canvas.zax]
 
         
     ####################
