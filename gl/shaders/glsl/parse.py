@@ -127,7 +127,7 @@ def getDeclarations(code):
     # Value
     VALUE = (EXPRESSION |
              pp.Word(pp.alphanums + '_()+-/*')).setParseAction(
-                 pp.keepOriginalText)
+                 pp.originalTextFor)
 
     # Single declaration
     VARIABLE = (IDENTIFIER.setResultsName('name') +
