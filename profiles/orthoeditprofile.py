@@ -989,37 +989,16 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     def _selintModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse drag events in ``selint`` mode.
 
-        If :attr:`limitToRadius` is ``True``, the :attr:`searchRadius` is
-        increased to the distance between the current mouse location, and
-        the mouse down location, and a select-by-intensity is re-run with
-        the same seed location (the mouse down location), and the new
-        search radius.
-
-        If ``limitToRadius`` is ``False``, a select-by-intensity is re-run
-        with the current mouse location.  See the :meth:`__selintSelect`
-        method.
+        A select-by-intensity is re-run with the current mouse location.  See
+        the :meth:`__selintSelect` method.
         """ 
 
-        if not self.limitToRadius:
-            voxel = self.__getVoxelLocation(canvasPos)
+        voxel = self.__getVoxelLocation(canvasPos)
 
-            if voxel is not None:
-                self.__drawCursorAnnotation(canvas, voxel, 1)
-                refreshArgs = (ev, canvas, mousePos, canvasPos)
+        if voxel is not None:
+            self.__drawCursorAnnotation(canvas, voxel, 1)
+            refreshArgs = (ev, canvas, mousePos, canvasPos)
             
-        else:
-            mouseDownPos, canvasDownPos = self.getMouseDownLocation()
-            voxel = self.__getVoxelLocation(
-                canvasDownPos)
-
-            cx,  cy,  cz  = canvasPos
-            cdx, cdy, cdz = canvasDownPos
-
-            dist = np.sqrt((cx - cdx) ** 2 + (cy - cdy) ** 2 + (cz - cdz) ** 2)
-            self.searchRadius = dist
-
-            refreshArgs = (ev, canvas)
-
         if voxel is not None:
             self.__selintSelect(voxel)
             self.__refreshCanvases(*refreshArgs)
@@ -1030,8 +1009,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         If the mouse button is down, the :attr:`intensityThres` value is
         decreased/increased according to the mouse wheel direction, and
-        select-by-intensity is re-run with the mouse-down location as
-        the seed location.
+        select-by-intensity is re-run at the current mouse location.
         """
 
         if not self.__selecting:
@@ -1046,8 +1024,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if   wheel > 0: self.intensityThres += step
         elif wheel < 0: self.intensityThres -= step
 
-        mouseDownPos, canvasDownPos = self.getMouseDownLocation()
-        voxel                       = self.__getVoxelLocation(canvasDownPos) 
+        voxel = self.__getVoxelLocation(canvasPos) 
 
         if voxel is not None:
             self.__selintSelect(voxel)
