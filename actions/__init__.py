@@ -108,6 +108,7 @@ Finally, some 'global' actions are also provided in this package:
     ~fsl.fsleyes.actions.clearperspective
     ~fsl.fsleyes.actions.togglecontrolpanel
     ~fsl.fsleyes.actions.diagnosticreport
+    ~fsl.fsleyes.actions.about
 """
 
 
@@ -135,6 +136,7 @@ import loadperspective
 import clearperspective
 import togglecontrolpanel
 import diagnosticreport
+import about
 
 
 Action                   = action            .Action
@@ -153,6 +155,7 @@ LoadPerspectiveAction    = loadperspective   .LoadPerspectiveAction
 ClearPerspectiveAction   = clearperspective  .ClearPerspectiveAction
 ToggleControlPanelAction = togglecontrolpanel.ToggleControlPanelAction
 DiagnosticReportAction   = diagnosticreport  .DiagnosticReportAction
+AboutAction              = about             .AboutAction
 
 
 log = logging.getLogger(__name__)
