@@ -127,8 +127,8 @@ def calculateSamplePoints(shape, resolution, xform, xax, yax, origin='centre'):
     # values of a bounding box which
     # encapsulates the entire image,
     # in the display coordinate system
-    xmin, xmax = transform.axisBounds(shape, xform, xax, origin)
-    ymin, ymax = transform.axisBounds(shape, xform, yax, origin)
+    xmin, xmax = transform.axisBounds(shape, xform, xax, origin, boundary=None)
+    ymin, ymax = transform.axisBounds(shape, xform, yax, origin, boundary=None)
 
     # Number of samples along each display
     # axis, given the requested resolution
@@ -455,8 +455,10 @@ def slice2D(dataShape,
     """
 
     zax        = 3 - xax - yax
-    xmin, xmax = transform.axisBounds(dataShape, voxToDisplayMat, xax, origin)
-    ymin, ymax = transform.axisBounds(dataShape, voxToDisplayMat, yax, origin)
+    xmin, xmax = transform.axisBounds(
+        dataShape, voxToDisplayMat, xax, origin, boundary=None)
+    ymin, ymax = transform.axisBounds(
+        dataShape, voxToDisplayMat, yax, origin, boundary=None)
 
     if geometry == 'triangles':
 
