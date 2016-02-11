@@ -1175,6 +1175,10 @@ class SliceCanvas(props.HasProperties):
         if self.invertX: xmin, xmax = xmax, xmin
         if self.invertY: ymin, ymax = ymax, ymin
 
+        # Add a bit of padding to the depth limits
+        zmin -= 1e-3
+        zmax += 1e-3
+
         lo = [None] * 3
         hi = [None] * 3
 
