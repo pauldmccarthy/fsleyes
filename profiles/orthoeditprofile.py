@@ -939,7 +939,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # than this selection, clear the whole selection 
         if self.__lastDist is None or \
            np.any(np.array(searchRadius) < self.__lastDist):
-            editor.getSelection().clearSelection()
+            selection.disableNotification('selection')
+            selection.clearSelection()
+            selection.enableNotification('selection')
 
         editor.getSelection().selectByValue(
             voxel,

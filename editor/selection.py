@@ -105,6 +105,7 @@ class Selection(props.HasProperties):
         self.__image              = image
         self.__display            = display
         self.__opts               = display.getDisplayOpts()
+        self.__clear              = False
         self.__lastChangeOffset   = None
         self.__lastChangeOldBlock = None
         self.__lastChangeNewBlock = None
@@ -238,12 +239,17 @@ class Selection(props.HasProperties):
     def clearSelection(self):
         """Clears (sets to 0) the entire selection. """
 
+        if self.__clear:
+            return
+
         log.debug('Clearing selection ({})'.format(id(self)))
         
         self.__lastChangeOffset     = [0, 0, 0]
         self.__lastChangeOldBlock   = np.array(self.selection)
         self.selection[:]           = False
         self.__lastChangeNewBlock   = np.array(self.selection)
+
+        self.__clear = True
 
         self.notify('selection')
 
@@ -473,6 +479,9 @@ class Selection(props.HasProperties):
             id(self), xlo, xhi, ylo, yhi, zlo, zhi))
 
         self.selection[xlo:xhi, ylo:yhi, zlo:zhi] = block
+
+        self.__clear = False
+        
         self.notify('selection') 
 
         
