@@ -105,7 +105,7 @@ class Selection(props.HasProperties):
         self.__image              = image
         self.__display            = display
         self.__opts               = display.getDisplayOpts()
-        self.__clear              = False
+        self.__clear              = True
         self.__lastChangeOffset   = None
         self.__lastChangeOldBlock = None
         self.__lastChangeNewBlock = None
@@ -176,7 +176,16 @@ class Selection(props.HasProperties):
         :arg block:  A ``numpy.uint8`` array containing a selection.
         :arg offset: Voxel coordinates specifying the block location. 
         """
-        self.clearSelection()
+
+        restrict = [
+            slice(offset[0], offset[0] + block.shape[0]),
+            slice(offset[1], offset[1] + block.shape[1]),
+            slice(offset[2], offset[2] + block.shape[2])]
+
+        self.disableNotification('selection')
+        self.clearSelection(restrict)
+        self.enableNotification('selection')
+        
         self.__updateSelectionBlock(block, offset)
 
         
@@ -236,20 +245,35 @@ class Selection(props.HasProperties):
         return selection, (xlo, ylo, zlo)
 
         
-    def clearSelection(self):
-        """Clears (sets to 0) the entire selection. """
+    def clearSelection(self, restrict=None):
+        """Clears (sets to 0) the entire selection, or the selection specified
+        by the ``restrict`` parameter, if it is given.
+
+        :arg restrict: An optional sequence of three ``slice`` objects,
+                       specifying the portion of the selection to clear.
+        """
 
         if self.__clear:
             return
 
-        log.debug('Clearing selection ({})'.format(id(self)))
-        
-        self.__lastChangeOffset     = [0, 0, 0]
-        self.__lastChangeOldBlock   = np.array(self.selection)
-        self.selection[:]           = False
-        self.__lastChangeNewBlock   = np.array(self.selection)
+        fRestrict = self.__fixSlices(restrict)
+        offset    = [r.start if r.start is not None else 0 for r in fRestrict]
 
-        self.__clear = True
+        log.debug('Clearing selection ({}): {}'.format(id(self), fRestrict))
+
+        block                     = np.array(self.selection[fRestrict])
+        self.selection[fRestrict] = False
+
+        self.__storeChange(block,
+                           np.array(self.selection[fRestrict]),
+                           offset)
+
+        # Set the internal clear flag to True,
+        # when the entire selection has been
+        # cleared, so we can skip subsequent
+        # redundant clears.
+        if restrict is None:
+            self.__clear = True
 
         self.notify('selection')
 
@@ -264,9 +288,19 @@ class Selection(props.HasProperties):
          - Voxel coordinates denoting the block location in the full
            :attr:`selection` array.
         """
-        return (self.__lastChangeOldBlock,
-                self.__lastChangeNewBlock,
-                self.__lastChangeOffset)
+
+        changes = (self.__lastChangeOldBlock,
+                   self.__lastChangeNewBlock,
+                   self.__lastChangeOffset)
+
+        return changes
+
+
+    def __storeChange(self, old, new, offset):
+
+        self.__lastChangeOldBlock = old
+        self.__lastChangeNewBlock = new
+        self.__lastChangeOffset   = offset
 
 
     def getIndices(self, restrict=None):
@@ -280,18 +314,15 @@ class Selection(props.HasProperties):
                        full selection to consider.
         """
 
-        if restrict is None: selection = self.selection
-        else:                selection = self.selection[restrict]
+        restrict   = self.__fixSlices(restrict)
+        xs, ys, zs = np.where(self.selection[restrict])
+        result     = np.vstack((xs, ys, zs)).T
 
-        xs, ys, zs = np.where(selection)
-
-        result = np.vstack((xs, ys, zs)).T
-
-        if restrict is not None:
-
-            for ax in range(3):
-                off = restrict[ax].start
-                if off is None: off = 0
+        for ax in range(3):
+            
+            off = restrict[ax].start
+            
+            if off is not None:
                 result[:, ax] += off
 
         return result
@@ -336,6 +367,7 @@ class Selection(props.HasProperties):
         else:
             raise RuntimeError('Only 3D and 4D images are currently supported')
 
+        shape   = data.shape
         seedLoc = np.array(seedLoc)
         value   = data[seedLoc[0], seedLoc[1], seedLoc[2]]
 
@@ -347,14 +379,45 @@ class Selection(props.HasProperties):
             searchRadius = np.array([0, 0, 0])
         elif not isinstance(searchRadius, collections.Sequence):
             searchRadius = np.array([searchRadius] * 3)
-
+            
         searchRadius = np.ceil(searchRadius)
+        searchOffset = (0, 0, 0)
+
+        # Reduce the data set if
+        # restrictions have been
+        # specified
+        if restrict is not None:
+
+            restrict = self.__fixSlices(restrict)
+            xs, xe   = restrict[0].start, restrict[0].step
+            ys, ye   = restrict[1].start, restrict[1].step
+            zs, ze   = restrict[2].start, restrict[2].step
+
+            if xs is None: xs = 0
+            if ys is None: ys = 0
+            if zs is None: zs = 0
+            if xe is None: xe = data.shape[0]
+            if ye is None: ye = data.shape[1]
+            if ze is None: ze = data.shape[2]
+
+            # The seed location has to be in the sub-set
+            # o the image specified by the restrictions
+            if seedLoc[0] < xs or seedLoc[0] >= xe or \
+               seedLoc[1] < ys or seedLoc[1] >= ye or \
+               seedLoc[2] < zs or seedLoc[2] >= ze:
+                raise ValueError('Seed location ({}) is outside '
+                                 'of restrictions ({})'.format(
+                                     seedLoc, ((xs, xe), (ys, ye), (zs, ze))))
+                
+            data         = data[restrict]
+            shape        = data.shape
+            searchOffset = [start for start in [xs, ys, zs]]
+            seedLoc      = [sl - so for sl, so in zip(seedLoc, searchOffset)]
 
         # No search radius - search
         # through the entire image
         if np.any(searchRadius == 0):
             searchSpace  = data
-            searchOffset = (0, 0, 0)
             searchMask   = None
 
         # Search radius specified - limit
@@ -367,7 +430,6 @@ class Selection(props.HasProperties):
 
             # Calculate xyz indices 
             # of the search space
-            shape = data.shape
             for ax in range(3):
 
                 idx = seedLoc[     ax]
@@ -377,7 +439,7 @@ class Selection(props.HasProperties):
                 hi = idx + rad + 1
 
                 if lo < 0:             lo = 0
-                if hi > shape[ax] - 1: hi = shape[ax] - 1
+                if hi > shape[ax] - 1: hi = shape[ax]
 
                 ranges[ax] = np.arange(lo, hi)
                 slices[ax] = slice(    lo, hi)
@@ -402,9 +464,9 @@ class Selection(props.HasProperties):
             # Extract the search space, and
             # create the ellipsoid mask
             searchSpace  = data[slices]
-            searchOffset = (ranges[0][0], ranges[1][0], ranges[2][0])
+            searchOffset = [so + r[0] for so, r in zip(searchOffset, ranges)]
             searchMask   = dists <= 1
-            
+
         if precision is None: hits = searchSpace == value
         else:                 hits = np.abs(searchSpace - value) < precision
 
@@ -468,16 +530,14 @@ class Selection(props.HasProperties):
             offset = (0, 0, 0)
 
         xlo, ylo, zlo = offset
+        xhi           = xlo + block.shape[0]
+        yhi           = ylo + block.shape[1]
+        zhi           = zlo + block.shape[2]
 
-        xhi = xlo + block.shape[0]
-        yhi = ylo + block.shape[1]
-        zhi = zlo + block.shape[2]
-
-        self.__lastChangeOffset   = offset
-        self.__lastChangeOldBlock = np.array(self.selection[xlo:xhi,
-                                                            ylo:yhi,
-                                                            zlo:zhi])
-        self.__lastChangeNewBlock = np.array(block)
+        self.__storeChange(
+            np.array(self.selection[xlo:xhi, ylo:yhi, zlo:zhi]),
+            np.array(block),
+            offset)
 
         log.debug('Updating selection ({}) block [{}:{}, {}:{}, {}:{}]'.format(
             id(self), xlo, xhi, ylo, yhi, zlo, zhi))
@@ -503,6 +563,25 @@ class Selection(props.HasProperties):
 
         return np.array(self.selection[xlo:xhi, ylo:yhi, zlo:zhi])
 
+
+    def __fixSlices(self, slices):
+        """A convenience method used by :meth:`selectByValue`,
+        :meth:`clearSelection` and :meth:`getIndices`, to sanitise their
+        ``restrict`` parameter.
+        """
+
+        if slices is None:
+            slices = [None, None, None]
+
+        if len(slices) != 3:
+            raise ValueError('Three slice objects are required')
+
+        for i, s in enumerate(slices):
+            if s is None:
+                slices[i] = slice(None)
+
+        return slices
+        
     
     @classmethod
     def generateBlock(cls, voxel, blockSize, shape, axes=(0, 1, 2)):

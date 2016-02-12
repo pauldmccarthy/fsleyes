@@ -185,7 +185,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__zcanvas           = viewPanel.getZCanvas() 
         self.__selAnnotation     = None
         self.__selecting         = False
-        self.__lastDist          = None
         self.__currentOverlay    = None
 
         orthoviewprofile.OrthoViewProfile.__init__(
@@ -943,24 +942,26 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             restrict      = [slice(None, None, None) for i in range(3)]
             restrict[zax] = slice(voxel[zax], voxel[zax] + 1)
 
-        # If the last selection covered a bigger radius
-        # than this selection, clear the whole selection
+        # Clear the whole selection before
+        # selecting voxels. This is not
+        # necessary if we are not limiting
+        # to a search radius, as the
+        # selectByValue method will
+        # replace the selection in the
+        # search region (either the whole
+        # image, or the current slice).
         selection = editor.getSelection()
-        
-        if self.__lastDist is None or \
-           np.any(np.array(searchRadius) < self.__lastDist):
+        if searchRadius is not None:
             selection.disableNotification('selection')
-            selection.clearSelection()
+            selection.clearSelection(restrict)
             selection.enableNotification('selection')
 
-        editor.getSelection().selectByValue(
+        selection.selectByValue(
             voxel,
             precision=self.intensityThres,
             searchRadius=searchRadius,
             local=self.localFill,
             restrict=restrict)
-
-        self.__lastDist = searchRadius
 
         
     def _selintModeMouseMove(self, ev, canvas, mousePos, canvasPos):
@@ -993,7 +994,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             editor.startChangeGroup()
 
             self.__selecting = True
-            self.__lastDist  = 0
             self.__selintSelect(voxel, canvas)
             self.__refreshCanvases(ev, canvas, mousePos, canvasPos)
 
@@ -1008,10 +1008,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         voxel = self.__getVoxelLocation(canvasPos)
 
         if voxel is not None:
-            self.__drawCursorAnnotation(canvas, voxel, 1)
+            
             refreshArgs = (ev, canvas, mousePos, canvasPos)
             
-        if voxel is not None:
+            self.__drawCursorAnnotation(canvas, voxel, 1)
             self.__selintSelect(voxel, canvas)
             self.__refreshCanvases(*refreshArgs)
 
