@@ -296,12 +296,13 @@ class Selection(props.HasProperties):
 
         return result
 
-    
+
     def selectByValue(self,
                       seedLoc,
                       precision=None,
                       searchRadius=None,
-                      local=False):
+                      local=False,
+                      restrict=None):
         """A *bucket fill* style selection routine. Given a seed location,
         finds all voxels which have a value similar to that of that location.
         The current selection is replaced with all voxels that were found.
@@ -323,6 +324,9 @@ class Selection(props.HasProperties):
         :arg local:        If ``True``, a voxel will only be selected if it
                            is adjacent to an already selected voxel (using
                            8-neighbour connectivity).
+
+        :arg restrict:     An optional sequence of three ``slice`` object,
+                           specifying a sub-set of the image to search.
         """
 
         if   len(self.__image.shape) == 3:
