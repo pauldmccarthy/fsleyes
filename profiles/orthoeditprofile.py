@@ -53,18 +53,28 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     The ``OrthoEditProfile`` has the following modes, in addition to those
     already defined by the :class:`.OrthoViewProfile`:
 
-    ========== ===============================================================
-    ``sel``    Select mode. The user is able to manually add voxels to the
-               selection using a *cursor*. The cursor size can be changed
-               with the :attr:`selectionSize` property, and the cursor can be
-               toggled between a 2D square and a 3D cube via the
-               :attr:`selectionIs3D` property.
+    =========== ===============================================================
+    ``sel``     Select mode. The user is able to manually add voxels to the
+                selection using a *cursor*. The cursor size can be changed
+                with the :attr:`selectionSize` property, and the cursor can be
+                toggled between a 2D square and a 3D cube via the
+                :attr:`selectionIs3D` property.
     
-    ``desel``  Deselect mode. Identical to ``sel`` mode, except that the
-               cursor is used to remove voxels from the selection.
+    ``desel``   Deselect mode. Identical to ``sel`` mode, except that the
+                cursor is used to remove voxels from the selection.
+
+
+    ``chsize``  Change-size mode. The use can change the :attr:`selectionSize`
+                attribute via the mouse wheel.
     
-    ``selint`` Select by intensity mode.
-    ========== ===============================================================
+    ``selint``  Select by intensity mode.
+
+    ``chthres`` Change-threshold mode. The user can change the
+                :attr:`intensityThres` via the mouse wheel.
+
+    ``chrad``   Change-radius mode. The user can change the
+                :attr:`searchRadius` via the mouse wheel. 
+    =========== ===============================================================
 
 
     **Actions**
@@ -160,7 +170,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     """
 
     
-    searchRadius = props.Real(minval=0.0, default=0.0, clamped=True)
+    searchRadius = props.Real(minval=0.01, default=0.0, clamped=True)
     """In ``selint`` mode, if :attr:`limitToRadius` is true, this property
     specifies the search sphere radius. Passed as the ``searchRadius``
     argument to the :meth:`.Selection.selectByValue` method.
@@ -192,7 +202,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             viewPanel,
             overlayList,
             displayCtx,
-            ['sel', 'desel', 'selint'])
+            ['sel', 'desel', 'chsize', 'selint', 'chthres', 'chrad'])
 
         self.mode = 'nav'
 
@@ -778,22 +788,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         else:
             canvas.Refresh()
 
-            
-    def _selModeMouseWheel(self, ev, canvas, wheelDir, mousePos, canvasPos):
-        """Handles mouse wheel events in ``sel`` mode.
-
-        Increases/decreases the current :attr:`selectionSize`.
-        """
-
-        if   wheelDir > 0: self.selectionSize -= 1
-        elif wheelDir < 0: self.selectionSize += 1
-
-        voxel = self.__getVoxelLocation(canvasPos)
-
-        if voxel is not None:
-            self.__drawCursorAnnotation(canvas, voxel)
-            self.__refreshCanvases(ev, canvas)
-
 
     def _selModeMouseMove(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse motion events in ``sel`` mode.
@@ -861,6 +855,22 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
         
         self.__refreshCanvases(ev, canvas)
+
+            
+    def _chsizeModeMouseWheel(self, ev, canvas, wheelDir, mousePos, canvasPos):
+        """Handles mouse wheel events in ``chsize`` mode.
+
+        Increases/decreases the current :attr:`selectionSize`.
+        """
+
+        if   wheelDir > 0: self.selectionSize -= 1
+        elif wheelDir < 0: self.selectionSize += 1
+
+        voxel = self.__getVoxelLocation(canvasPos)
+
+        if voxel is not None:
+            self.__drawCursorAnnotation(canvas, voxel)
+            self.__refreshCanvases(ev, canvas)
 
         
     def _deselModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
@@ -1017,33 +1027,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__refreshCanvases(*refreshArgs)
 
         
-    def _selintModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
-        """Handles mouse wheel events in ``selint`` mode.
-
-        If the mouse button is down, the :attr:`intensityThres` value is
-        decreased/increased according to the mouse wheel direction, and
-        select-by-intensity is re-run at the current mouse location.
-        """
-
-        if not self.__selecting:
-            return
-
-        overlay = self._displayCtx.getSelectedOverlay()
-        opts    = self._displayCtx.getOpts(overlay)
-
-        dataRange = opts.dataMax - opts.dataMin
-        step      = 0.01 * dataRange
-
-        if   wheel > 0: self.intensityThres += step
-        elif wheel < 0: self.intensityThres -= step
-
-        voxel = self.__getVoxelLocation(canvasPos) 
-
-        if voxel is not None:
-            self.__selintSelect(voxel, canvas)
-            self.__refreshCanvases(ev, canvas)
-
-        
     def _selintModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse up events in ``selint`` mode. Ends the :class:`.Editor`
         change group that was started in the :meth:`_selintModeLeftMouseDown`
@@ -1058,3 +1041,50 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         
         self.__selecting = False
         self._viewPanel.Refresh()
+
+
+    def _chthresModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
+        """Handles mouse wheel events in ``chthres`` mode.
+
+        The :attr:`intensityThres` value is decreased/increased according to
+        the mouse wheel direction. If the mouse button is down,
+        select-by-intensity is re-run at the current mouse location.
+        """ 
+        overlay = self._displayCtx.getSelectedOverlay()
+        opts    = self._displayCtx.getOpts(overlay)
+
+        dataRange = opts.dataMax - opts.dataMin
+        step      = 0.01 * dataRange
+
+        if   wheel > 0: self.intensityThres += step
+        elif wheel < 0: self.intensityThres -= step
+        else:           return
+
+        if self.__selecting:
+            
+            voxel = self.__getVoxelLocation(canvasPos) 
+
+            if voxel is not None:
+                self.__selintSelect(voxel, canvas)
+                self.__refreshCanvases(ev, canvas) 
+
+                
+    def _chradModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
+        """Handles mouse wheel events in ``chrad`` mode.
+
+        The :attr:`searchRadius` value is decreased/increased according
+        to the mouse wheel direction. If the mouse button is down,
+        select-by-intensity is re-run at the current mouse location.
+        """ 
+
+        if   wheel > 0: self.searchRadius -= 5
+        elif wheel < 0: self.searchRadius += 5
+        else:           return
+
+        if self.__selecting:
+            
+            voxel = self.__getVoxelLocation(canvasPos) 
+
+            if voxel is not None:
+                self.__selintSelect(voxel, canvas)
+                self.__refreshCanvases(ev, canvas) 

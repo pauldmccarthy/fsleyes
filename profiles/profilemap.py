@@ -75,16 +75,15 @@ tempModeMap = {
     # but overrides a few key ones.
     OrthoEditProfile : OrderedDict((
 
-        # Shift/CTRL+Shift puts the
-        # user in select/deselect mode
+        # CTRL+Shift puts the 
+        # user in select mode
         (('nav',    (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'sel'),
-        (('nav',    (wx.WXK_ALT,     wx.WXK_SHIFT)), 'desel'),
-
+        
         (('selint',  wx.WXK_CONTROL),                'zoom'),
         (('selint',  wx.WXK_ALT),                    'pan'),
         (('selint',  wx.WXK_SHIFT),                  'slice'),
         (('selint', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'sel'),
-        (('selint', (wx.WXK_ALT,     wx.WXK_SHIFT)), 'desel'), 
+        (('selint', (wx.WXK_ALT,     wx.WXK_SHIFT)), 'chrad'),
     )),
 
     LightBoxViewProfile : OrderedDict((
@@ -151,14 +150,18 @@ altHandlerMap = {
         # shift key is held down), the right
         # mouse button allows the user to
         # deselect voxels.
-        (('sel',    'RightMouseDown'),  ('desel', 'LeftMouseDown')),
-        (('sel',    'RightMouseDrag'),  ('desel', 'LeftMouseDrag')),
-        (('sel',    'RightMouseUp'),    ('desel', 'LeftMouseUp')),
-
+        (('sel',    'RightMouseDown'),  ('desel',  'LeftMouseDown')),
+        (('sel',    'RightMouseDrag'),  ('desel',  'LeftMouseDrag')),
+        (('sel',    'RightMouseUp'),    ('desel',  'LeftMouseUp')),
+        
         # Middle mouse always pans.
         (('sel',    'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
         (('desel',  'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
         (('selint', 'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+
+        (('sel',    'MouseWheel'),      ('chsize',  'MiddleMouse')),
+        (('desel',  'MouseWheel'),      ('chsize',  'MiddleMouse')),
+        (('selint', 'MouseWheel'),      ('chthres', 'MouseWheel')),
 
         # Keyboard navigation works in the
         # select modes in the same way that
