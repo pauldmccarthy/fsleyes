@@ -961,7 +961,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             precision=self.intensityThres,
             searchRadius=searchRadius,
             local=self.localFill,
-            restrict=restrict)
+            restrict=restrict,
+            combine=True)
 
         
     def _selintModeMouseMove(self, ev, canvas, mousePos, canvasPos):
