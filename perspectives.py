@@ -121,8 +121,7 @@ def applyPerspective(frame, name, perspective, message=None):
 
     # Clear all existing view
     # panels from the frame
-    for vp in frame.getViewPanels():
-        frame.removeViewPanel(vp)
+    frame.removeAllViewPanels()
 
     # Add all of the view panels
     # specified in the perspective

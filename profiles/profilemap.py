@@ -65,39 +65,26 @@ tempModeMap = {
     # Command/CTRL puts the user in zoom mode,
     # and ALT puts the user in pan mode
     OrthoViewProfile : OrderedDict((
-        (('nav',  wx.WXK_CONTROL), 'zoom'),
-        (('pan',  wx.WXK_CONTROL), 'zoom'),
-        (('nav',  wx.WXK_ALT),     'pan'),
-        (('zoom', wx.WXK_ALT),     'pan'),
-        (('nav',  wx.WXK_SHIFT),   'bricon'))),
+        (('nav',   wx.WXK_CONTROL),                'zoom'),
+        (('nav',   wx.WXK_ALT),                    'pan'),
+        (('nav',   wx.WXK_SHIFT),                  'slice'),
+        (('nav',  (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'bricon'))),
 
     # OrthoEditProfile inherits all of the
     # settings for OrthoViewProfile above,
-    # and adds new settings for the edit
-    # modes (sel, desel, and selint)
+    # but overrides a few key ones.
     OrthoEditProfile : OrderedDict((
 
-        # CTRL+Shift puts the user in
-        # deselect mode (or select
-        # mode if in deselect mode)
-        (('sel',    (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'desel'),
-        (('selint', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'desel'),
-        (('desel',  (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'sel'),
-
-        # ALT puts the user in pan mode,
-        (('sel',    wx.WXK_ALT),     'pan'),
-        (('selint', wx.WXK_ALT),     'pan'),
-        (('desel',  wx.WXK_ALT),     'pan'),
-
-        # Shift puts the user in navigate mode,
-        (('sel',    wx.WXK_SHIFT),   'nav'),
-        (('desel',  wx.WXK_SHIFT),   'nav'),
-        (('selint', wx.WXK_SHIFT),   'nav'),
-
-        # Command/CTRL puts the user in zoom mode,
-        (('sel',    wx.WXK_CONTROL), 'zoom'),
-        (('desel',  wx.WXK_CONTROL), 'zoom'),
-        (('selint', wx.WXK_CONTROL), 'zoom'))),
+        # CTRL+Shift puts the 
+        # user in select mode
+        (('nav',    (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'sel'),
+        
+        (('selint',  wx.WXK_CONTROL),                'zoom'),
+        (('selint',  wx.WXK_ALT),                    'pan'),
+        (('selint',  wx.WXK_SHIFT),                  'slice'),
+        (('selint', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'sel'),
+        (('selint', (wx.WXK_ALT,     wx.WXK_SHIFT)), 'chrad'),
+    )),
 
     LightBoxViewProfile : OrderedDict((
         (('view', wx.WXK_CONTROL), 'zoom'), ))
@@ -118,60 +105,68 @@ altHandlerMap = {
 
     OrthoViewProfile : OrderedDict((
         
-        # in navigate mode, the left mouse button
-        # navigates, the right mouse button draws
-        # a zoom rectangle, and the middle button
-        # pans 
+        # in navigate, slice, and zoom mode, the
+        # left mouse button navigates, the right
+        # mouse button draws a zoom rectangle,
+        # and the middle button pans.
         (('nav',  'LeftMouseDown'),   ('nav',  'LeftMouseDrag')),
-        (('nav',  'MiddleMouseDown'), ('pan',  'LeftMouseDown')),
         (('nav',  'MiddleMouseDrag'), ('pan',  'LeftMouseDrag')),
-        (('nav',  'RightMouseDown'),  ('zoom', 'LeftMouseDown')),
-        (('nav',  'RightMouseDrag'),  ('zoom', 'LeftMouseDrag')),
-        (('nav',  'RightMouseUp'),    ('zoom', 'LeftMouseUp')),
+        (('nav',  'RightMouseDown'),  ('zoom', 'RightMouseDown')),
+        (('nav',  'RightMouseDrag'),  ('zoom', 'RightMouseDrag')),
+        (('nav',  'RightMouseUp'),    ('zoom', 'RightMouseUp')),
 
-        # In pan mode, the left mouse button pans,
-        # and right mouse button navigates
-        (('pan',  'LeftMouseDown'),   ('pan',  'LeftMouseDrag')),
-        (('pan',  'RightMouseDown'),  ('nav',  'LeftMouseDown')),
-        (('pan',  'RightMouseDrag'),  ('nav',  'LeftMouseDrag')),
+        # In slice mode, the left and right
+        # mouse buttons work as for nav mode.
+        (('slice', 'LeftMouseDown'),   ('nav',  'LeftMouseDown')),
+        (('slice', 'LeftMouseDrag'),   ('nav',  'LeftMouseDrag')),
+        (('slice', 'MiddleMouseDrag'), ('pan',  'LeftMouseDrag')),
+        (('slice', 'RightMouseDown'),  ('zoom', 'RightMouseDown')),
+        (('slice', 'RightMouseDrag'),  ('zoom', 'RightMouseDrag')),
+        (('slice', 'RightMouseUp'),    ('zoom', 'RightMouseUp')),
 
         # In zoom mode, the left mouse button
-        # draws a zoom rectangle, the right mouse
-        # button navigates, and the middle mouse
-        # button pans 
-        (('zoom', 'LeftMouseDown'),   ('zoom', 'LeftMouseDrag')),
-        (('zoom', 'RightMouseDown'),  ('nav',  'LeftMouseDown')),
-        (('zoom', 'RightMouseDrag'),  ('nav',  'LeftMouseDrag')),
-        (('zoom', 'MiddleMouseDrag'), ('pan',  'LeftMouseDrag')))),
+        # navigates, the right mouse button
+        # draws a zoom rectangle, and the
+        # middle mouse button pans 
+        (('zoom', 'RightMouseDown'),  ('zoom', 'RightMouseDrag')),
+        (('zoom', 'LeftMouseDown'),   ('nav',  'LeftMouseDown')),
+        (('zoom', 'LeftMouseDrag'),   ('nav',  'LeftMouseDrag')),
+        (('zoom', 'MiddleMouseDrag'), ('pan',  'LeftMouseDrag')),
+
+        (('bricon', 'LeftMouseDown'), ('bricon', 'LeftMouseDrag')))),
 
     OrthoEditProfile : OrderedDict((
 
-        # In select and select-by-intensity 
-        # mode, the right mouse button deselects
+        # The OrthoEditProfile is in
+        # 'nav' mode by default.
+        # 
+        # Right mouse button allows
+        # the user to select voxels
+        (('nav', 'RightMouseDown'), ('sel', 'LeftMouseDown')),
+        (('nav', 'RightMouseDrag'), ('sel', 'LeftMouseDrag')),
+        (('nav', 'RightMouseUp'),   ('sel', 'LeftMouseUp')),
+
+        # When in select mode (e.g. when the
+        # shift key is held down), the right
+        # mouse button allows the user to
+        # deselect voxels.
         (('sel',    'RightMouseDown'),  ('desel',  'LeftMouseDown')),
         (('sel',    'RightMouseDrag'),  ('desel',  'LeftMouseDrag')),
         (('sel',    'RightMouseUp'),    ('desel',  'LeftMouseUp')),
-        (('selint', 'RightMouseDown'),  ('desel',  'LeftMouseDown')),
-        (('selint', 'RightMouseDrag'),  ('desel',  'LeftMouseDrag')),
-        (('selint', 'RightMouseUp'),    ('desel',  'LeftMouseUp')), 
+        
+        # Middle mouse always pans.
+        (('sel',    'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('desel',  'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('selint', 'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
 
-        # In select/deselect/selint
-        # mode, the middle mouse buyton pans
-        (('sel',    'MiddleMouseDown'), ('pan',    'LeftMouseDown')),
-        (('sel',    'MiddleMouseDrag'), ('pan',    'LeftMouseDrag')),
-        (('desel',  'MiddleMouseDrag'), ('pan',    'LeftMouseDrag')),
-        (('selint', 'MiddleMouseDown'), ('pan',    'LeftMouseDown')),
-        (('selint', 'MiddleMouseDrag'), ('pan',    'LeftMouseDrag')),
+        (('sel',    'MouseWheel'),      ('chsize',  'MiddleMouse')),
+        (('desel',  'MouseWheel'),      ('chsize',  'MiddleMouse')),
+        (('selint', 'MouseWheel'),      ('chthres', 'MouseWheel')),
 
-        # The selection cursor is shown in deselect
-        # mode the same as for select mode
-        (('desel',  'MouseMove'),       ('sel',    'MouseMove')),
-
-
-        # Keyboard navigation works in the select
-        # modes in the same way that it works
-        # in navigate mode (as defined in the
-        # OrthoViewProfile)
+        # Keyboard navigation works in the
+        # select modes in the same way that
+        # it works in navigate mode (as
+        # defined in the OrthoViewProfile)
         (('sel',    'Char'), ('nav', 'Char')),
         (('desel',  'Char'), ('nav', 'Char')),
         (('selint', 'Char'), ('nav', 'Char')),
@@ -191,4 +186,9 @@ alternate handler mapping::
 states that when the ``Profile`` is in ``'zoom'`` mode, and a
 ``MiddleMouseDrag`` event occurs, the ``LeftMouseDrag`` handler for the
 ``'pan'`` mode should be called.
+
+.. note:: Event bindings defined in the ``altHandlerMap`` take precdence over
+          the event bindings defined in the :class:`.Profile` sub-class. So
+          you can use the ``altHandlerMap`` to override the default behaviour
+          of a ``Profile``.
 """

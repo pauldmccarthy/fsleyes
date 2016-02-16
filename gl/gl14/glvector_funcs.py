@@ -82,8 +82,8 @@ def updateFragmentShaderState(self):
         clipHi = clippingRange[1] * \
             invClipValXform[0, 0] + invClipValXform[3, 0]
     else:
-        clipLo = 0
-        clipHi = 1
+        clipLo = -0.1
+        clipHi =  1.1
 
     clipping = [clipLo, clipHi, -1, -1]
 

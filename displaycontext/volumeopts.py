@@ -369,7 +369,7 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
         return (0, 0, 0), (0, 0, 0)
 
 
-    def transformCoords(self, coords, from_, to_):
+    def transformCoords(self, coords, from_, to_, vround=False):
         """Transforms the given coordinates from ``from_`` to ``to_``.
 
         The ``from_`` and ``to_`` parameters must both be one of:
@@ -379,41 +379,85 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
            - ``world``:   The image world coordinate system
            - ``custom``:  The coordinate system defined by the custom
                           transformation matrix (see :attr:`customXform`)
+
+        :arg coords: Coordinates to transform
+        :arg from_:  Space to transform from
+        :arg to_:    Space to transform to
+        :arg vround: If ``True``, and ``to_ == 'voxel'``, the transformed
+                     coordinates are rounded to the nearest integer.
         """
 
         xform     = self.getTransform(       from_, to_)
         pre, post = self.getTransformOffsets(from_, to_)
         
-        coords    = np.array(coords) + pre
-        coords    = transform.transform(coords, xform)
+        coords    = np.array(coords)                   + pre
+        coords    = transform.transform(coords, xform) + post
+        
+        # Round to integer voxel coordinates?
+        if to_ == 'voxel' and vround:
 
-        return coords + post
+            # The transformation matrices treat integer
+            # voxel coordinates as the voxel centre (e.g.
+            # a voxel [3, 4, 5] fills the space:
+            # 
+            # [2.5-3.5, 3.5-4.5, 4.5-5.5].
+            #
+            # So all we need to do is round to the
+            # nearest integer.
+            #
+            # Note that the numpy.round function breaks
+            # ties (e.g. 7.5) by rounding to the nearest
+            # *even* integer, which can cause funky
+            # behaviour. So we take (floor(x)+0.5) instead
+            # of rounding, to force consistent behaviour
+            # (i.e. always rounding central values up).
+            coords = np.floor(coords + 0.5)
+
+        return coords
 
     
-    def getVoxel(self):
+    def getVoxel(self, xyz=None, clip=True, vround=True):
         """Calculates and returns the voxel coordinates corresponding to the
-        current :attr:`.DisplayContext.location` for the :class:`.Nifti1`
-        associated with this ``Nifti1Opts`` instance.
+        given location (assumed to be in the display coordinate system) for
+        the :class:`.Nifti1` associated with this ``Nifti1Opts`` instance..
 
-        Returns ``None`` if the current location is outside of the image
-        bounds.
+        :arg xyz:    Display space location to convert to voxels. If not
+                     provided, the current :attr:`.DisplayContext.location`
+                     is used.
+
+        :arg clip:   If ``False``, and the transformed coordinates are out of
+                     the voxel coordinate bounds, the coordinates returned
+                     anyway. Defaults to ``True``.
+
+
+        :arg vround: If ``True``, the returned voxel coordinates are rounded
+                     to the nearest integer. Otherwise they may be fractional.
+                    
+
+        :returns:    ``None`` if the location is outside of the image bounds,
+                     unless ``clip=False``.
         """
 
+        if xyz is not None: x, y, z = xyz
+        else:               x, y, z = self.displayCtx.location.xyz
+
         overlay = self.overlay
-        x, y, z = self.displayCtx.location.xyz
+        vox     = self.transformCoords([[x, y, z]],
+                                       'display',
+                                       'voxel',
+                                       vround=vround)[0]
 
-        vox     = self.transformCoords([[x, y, z]], 'display', 'voxel')[0]
-        vox     = map(int, np.round(vox))
+        if vround:
+            vox = map(int, vox)
 
-        if vox[0] < 0                 or \
-           vox[1] < 0                 or \
-           vox[2] < 0                 or \
-           vox[0] >= overlay.shape[0] or \
-           vox[1] >= overlay.shape[1] or \
-           vox[2] >= overlay.shape[2]:
-            return None
+        if not clip:
+            return vox
 
-        return vox 
+        for ax in (0, 1, 2):
+            if vox[ax] < 0 or vox[ax] >= overlay.shape[ax]:
+                return None
+
+        return vox
 
 
     def displayToStandardCoordinates(self, coords):
@@ -480,7 +524,14 @@ class VolumeOpts(Nifti1Opts):
 
     
     clippingRange = props.Bounds(ndims=1)
-    """Values outside of this range are not shown."""
+    """Values outside of this range are not shown.  Clipping works as follows:
+    
+     - Image values less than or equal to the minimum clipping value are
+       clipped.
+
+     - Image values greater than or equal to the maximum clipping value are
+       clipped. 
+    """
 
     
     invertClipping = props.Boolean(default=False)
@@ -694,8 +745,8 @@ class VolumeOpts(Nifti1Opts):
                              display,
                              display.getSyncPropertyName('contrast'))
             
-            self.__linkRangesChanged(0, False)
-            self.__linkRangesChanged(1, False)
+            self.__linkRangesChanged(False, 0)
+            self.__linkRangesChanged(False, 1)
 
         Nifti1Opts.destroy(self)
 
@@ -706,22 +757,54 @@ class VolumeOpts(Nifti1Opts):
         self.displayRange.x = [self.dataMin, self.dataMax]
 
 
+    def __updateDataRange(self, absolute=False):
+        """Configures the minimum/maximum bounds of the :attr:`displayRange`
+        and :attr:`clippingRange` properties.
+        """
+
+        dataMin = self.overlay.dataRange.xlo
+        dataMax = self.overlay.dataRange.xhi
+
+        dmin = dataMin
+        dmax = dataMax
+        
+        if absolute:
+            dmin = min((0,            abs(dataMin)))
+            dmax = max((abs(dataMin), abs(dataMax)))
+
+        self.dataMin           = dataMin
+        self.dataMax           = dataMax
+        self.displayRange.xmin = dmin
+        self.displayRange.xmax = dmax
+
+        # If a clipping image is set, 
+        # we use its range instead of 
+        # our overlay's range, for the
+        # clippingRange property.
+        if self.clipImage is not None:
+            dmin = self.clipImage.dataRange.xlo
+            dmax = self.clipImage.dataRange.xhi
+            
+            if absolute:
+                dmin = min((0,            abs(dataMin)))
+                dmax = max((abs(dataMin), abs(dataMax)))
+
+        # Clipping works on >= and <=, so we add
+        # a small offset to the clipping limits
+        # so the user can configure the scene such
+        # that no values are clipped.
+        distance = abs(dmax - dmin) / 10000.0
+
+        self.clippingRange.xmin = dmin - distance
+        self.clippingRange.xmax = dmax + distance
+
+
     def __dataRangeChanged(self, *a):
         """Called when the :attr:`.Image.dataRange` property changes.
         Updates the limits of the :attr:`displayRange` and
         :attr:`.clippingRange` properties.
         """
-        
-        self.dataMin           = self.overlay.dataRange.xlo
-        self.dataMax           = self.overlay.dataRange.xhi
-        self.displayRange.xmin = self.dataMin
-        self.displayRange.xmax = self.dataMax
-
-        dMinDistance = abs(self.dataMax - self.dataMin) / 10000.0
-
-        if self.clipImage is None:
-            self.clippingRange.xmin = self.dataMin - dMinDistance
-            self.clippingRange.xmax = self.dataMax + dMinDistance
+        self.__updateDataRange(absolute=self.useNegativeCmap)
  
 
     def __overlayListChanged(self, *a):
@@ -786,9 +869,6 @@ class VolumeOpts(Nifti1Opts):
                 self.enableListener('linkLowRanges',  self.name)
                 self.enableListener('linkHighRanges', self.name) 
             
-        # Keep range values 0.01% apart.
-        dMinDistance = abs(dataMax - dataMin) / 10000.0
-
         log.debug('Clip image changed for {}: {} - new '
                   'clipping range: [{: 0.5f} - {: 0.5f}]'.format(
                       self.overlay,
@@ -796,13 +876,9 @@ class VolumeOpts(Nifti1Opts):
                       dataMin,
                       dataMax))
 
-        self.clippingRange.xmin = dataMin - dMinDistance
-        self.clippingRange.xmax = dataMax + dMinDistance
-        
-        # By default, the lowest values
-        # in the image are clipped
-        self.clippingRange.xlo = dataMin + dMinDistance
-        self.clippingRange.xhi = dataMax + dMinDistance
+        self.__updateDataRange(absolute=self.useNegativeCmap)
+
+        self.clippingRange.x = dataMin, self.clippingRange.xmax
 
 
     def __toggleListeners(self, enable=True):
@@ -843,14 +919,18 @@ class VolumeOpts(Nifti1Opts):
                         peer.        isSyncedToParent('displayRange'))):
                 continue
 
+            bri = peer.display.hasListener('brightness',   peer.name)
+            con = peer.display.hasListener('contrast',     peer.name)
+            dr  = peer        .hasListener('displayRange', peer.name)
+
             if enable:
-                peer.display.enableListener('brightness',   peer.name)
-                peer.display.enableListener('contrast',     peer.name)
-                peer        .enableListener('displayRange', peer.name)
+                if bri: peer.display.enableListener('brightness',   peer.name)
+                if con: peer.display.enableListener('contrast',     peer.name)
+                if dr:  peer        .enableListener('displayRange', peer.name)
             else:
-                peer.display.disableListener('brightness',   peer.name)
-                peer.display.disableListener('contrast',     peer.name)
-                peer        .disableListener('displayRange', peer.name) 
+                if bri: peer.display.disableListener('brightness',   peer.name)
+                if con: peer.display.disableListener('contrast',     peer.name)
+                if dr:  peer        .disableListener('displayRange', peer.name)
                 
 
     def __briconChanged(self, *a):
@@ -907,14 +987,12 @@ class VolumeOpts(Nifti1Opts):
         if self.useNegativeCmap:
             self.display.disableProperty('brightness')
             self.display.disableProperty('contrast')
-            self.displayRange .xmin = 0.0
-            self.clippingRange.xmin = 0.0
-            
         else:
             self.display.enableProperty('brightness')
             self.display.enableProperty('contrast')
-            self.displayRange .xmin = self.dataMin
-            self.clippingRange.xmin = self.dataMin
+
+        self.__updateDataRange(absolute=self.useNegativeCmap)
+            
 
 
     def __linkLowRangesChanged(self, *a):

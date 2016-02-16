@@ -536,7 +536,10 @@ class LocationPanel(fslpanel.FSLEyesPanel):
 
         if self.__refImage is not None:
             opts    = self._displayCtx.getOpts(self.__refImage)
-            xformed = opts.transformCoords([coords], source, target)[0]
+            xformed = opts.transformCoords([coords],
+                                           source,
+                                           target,
+                                           vround=target == 'voxel')[0]
         else:
             xformed = coords
 
@@ -544,8 +547,8 @@ class LocationPanel(fslpanel.FSLEyesPanel):
             source, coords, target, xformed))
 
         if   target == 'display': self._displayCtx.location.xyz = xformed
-        elif target == 'voxel':   self.voxelLocation.xyz = np.round(xformed)
-        elif target == 'world':   self.worldLocation.xyz = xformed
+        elif target == 'voxel':   self.voxelLocation       .xyz = xformed
+        elif target == 'world':   self.worldLocation       .xyz = xformed
         
     
     def __postPropagate(self):
@@ -596,21 +599,13 @@ class LocationPanel(fslpanel.FSLEyesPanel):
                 info = '{}'.format(strings.labels[self, 'noData'])
             else:
                 opts = self._displayCtx.getOpts(overlay)
-                vloc = opts.transformCoords(
-                    [self._displayCtx.location.xyz], 'display', 'voxel')[0]
+                vloc = opts.getVoxel()
 
-                vloc = tuple(map(int, np.round(vloc)))
+                if vloc is not None:
+                    if overlay.is4DImage():
+                        vloc = vloc + [opts.volume]
 
-                if overlay.is4DImage():
-                    vloc = vloc + (opts.volume,)
-
-                inBounds = True
-                for i in range(3):
-                    if vloc[i] < 0 or vloc[i] >= overlay.shape[i]:
-                        inBounds = False
-
-                if inBounds:
-                    vval = overlay.data[vloc]
+                    vval = overlay.data[tuple(vloc)]
                     info = '[{}]: {}'.format(' '.join(map(str, vloc)), vval)
                 else:
                     info = strings.labels[self, 'outOfBounds']

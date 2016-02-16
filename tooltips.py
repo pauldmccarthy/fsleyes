@@ -436,8 +436,8 @@ properties = TypeDict({
                                                 'the search.',
     'OrthoEditProfile.localFill'              : 'If selecting by intensity, '
                                                 'only select voxels which are '
-                                                'adjacent to an already  '
-                                                'selected voxel',
+                                                'adjacent to an already '
+                                                'selected voxel.',
     'OrthoEditProfile.limitToRadius'          : 'If selecting by intensity, '
                                                 'limit the search to a sphere '
                                                 'of the specified radius.',
@@ -465,6 +465,8 @@ actions = TypeDict({
                                                  'undone action',
     'OrthoEditProfile.fillSelection'           : 'Fill the selection with '
                                                  'the current fill value',
+    'OrthoEditProfile.eraseSelection'          : 'Erase the selection (fill '
+                                                 'it with 0)', 
     'OrthoEditProfile.clearSelection'          : 'Clear the current selection',
     'OrthoEditProfile.createMaskFromSelection' : 'Create a new mask overlay '
                                                  'from the current selection',

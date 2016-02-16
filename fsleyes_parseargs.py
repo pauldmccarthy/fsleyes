@@ -298,6 +298,7 @@ def concat(lists):
 OPTIONS = td.TypeDict({
 
     'Main'          : ['help',
+                       'fullhelp',
                        'glversion',
                        'scene',
                        'voxelLoc',
@@ -343,7 +344,9 @@ OPTIONS = td.TypeDict({
     'Nifti1Opts'     : ['transform',
                         'resolution',
                         'volume'],
-    'VolumeOpts'     : ['displayRange',
+    'VolumeOpts'     : ['linkLowRanges',
+                        'linkHighRanges',
+                        'displayRange',
                         'clippingRange',
                         'invertClipping',
                         'clipImage',
@@ -351,9 +354,7 @@ OPTIONS = td.TypeDict({
                         'negativeCmap',
                         'useNegativeCmap',
                         'interpolation',
-                        'invert',
-                        'linkLowRanges',
-                        'linkHighRanges'],
+                        'invert'],
     'MaskOpts'       : ['colour',
                         'invert',
                         'threshold'],
@@ -445,6 +446,7 @@ GROUPDESCS = td.TypeDict({
 ARGUMENTS = td.TypeDict({
 
     'Main.help'            : ('h',  'help'),
+    'Main.fullhelp'        : ('fh', 'fullhelp'),
     'Main.glversion'       : ('gl', 'glversion'),
     'Main.scene'           : ('s',  'scene'),
     'Main.voxelLoc'        : ('v',  'voxelLoc'),
@@ -555,16 +557,16 @@ for every option.
 # Help text for all of the options
 HELP = td.TypeDict({
 
-    'Main.help'          : 'Display this help and exit',
+    'Main.help'          : 'Display basic FSLeyes options and exit',
+    'Main.fullhelp'      : 'Display all FSLeyes options and exit',
     'Main.glversion'     : 'Desired (major, minor) OpenGL version',
     'Main.scene'         : 'Scene to show',
 
-    # TODO how about other overlay types?
     'Main.voxelLoc'        : 'Location to show (voxel coordinates of '
                              'first overlay)',
     'Main.worldLoc'        : 'Location to show (world coordinates of '
                              'first overlay, takes precedence over '
-                             '--voxelloc)', 
+                             '--voxelLoc)', 
     'Main.autoDisplay'     : 'Automatically configure display settings to '
                              'overlays (unless any display settings are '
                              'specified)',
@@ -590,9 +592,9 @@ HELP = td.TypeDict({
 
     'OrthoOpts.xcentre'     : 'X canvas display centre (YZ world coordinates '
                               'of first overlay)',
-    'OrthoOpts.ycentre'     : 'Y canvas display centre (XZ world coordinates)'
+    'OrthoOpts.ycentre'     : 'Y canvas display centre (XZ world coordinates '
                               'of first overlay)', 
-    'OrthoOpts.zcentre'     : 'Z canvas display centre (XY world coordinates)'
+    'OrthoOpts.zcentre'     : 'Z canvas display centre (XY world coordinates '
                               'of first overlay)', 
 
     'LightBoxOpts.sliceSpacing'   : 'Slice spacing',
@@ -616,9 +618,9 @@ HELP = td.TypeDict({
 
     'VolumeOpts.displayRange'    : 'Display range. Setting this will '
                                    'override brightnes/contrast settings.',
-    'VolumeOpts.clippingRange'   : 'Clipping range. Setting this will override'
-                                   'the low display range (unless low ranges '
-                                   'are unlinked).', 
+    'VolumeOpts.clippingRange'   : 'Clipping range. Setting this will '
+                                   'override the low display range (unless '
+                                   'low ranges are unlinked).', 
     'VolumeOpts.invertClipping'  : 'Invert clipping',
     'VolumeOpts.clipImage'       : 'Image containing clipping values '
                                    '(defaults to the image itself)' ,
@@ -647,7 +649,8 @@ HELP = td.TypeDict({
     'VectorOpts.colourImage'   : 'Image to colour vectors with',
     'VectorOpts.modulateImage' : 'Image to modulate vector brightness with',
     'VectorOpts.clipImage'     : 'Image to clip vectors with',
-    'VectorOpts.clippingRange' : 'Clipping range',
+    'VectorOpts.clippingRange' : 'Clipping range (only used if a '
+                                 'clipping image is provided)', 
 
     'LineVectorOpts.lineWidth'    : 'Line width',
     'LineVectorOpts.directed'     : 'Interpret vectors as directed',
@@ -832,6 +835,9 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['help'],
                             action='store_true',
                             help=mainHelp['help'])
+    mainParser.add_argument(*mainArgs['fullhelp'],
+                            action='store_true',
+                            help=mainHelp['fullhelp']) 
     mainParser.add_argument(*mainArgs['glversion'],
                             metavar=('MAJOR', 'MINOR'),
                             type=int,
@@ -1059,43 +1065,6 @@ def parseArgs(mainParser,
 
     _setupMainParser(mainParser)
 
-    # Because I'm splitting the argument parsing across two
-    # parsers, I'm using a custom print_help function 
-    def printHelp():
-
-        # Create a bunch of parsers for handling
-        # overlay display options
-        dispParser, _, optParsers = _setupOverlayParsers(forHelp=True)
-
-        # Print help for the main parser first,
-        # and then separately for the overlay parser
-        helpText = mainParser.format_help()
-
-        optParsers = ([(fsldisplay.Display, dispParser)] +
-                      list(optParsers.items()))
-
-        for target, parser in optParsers:
-
-            groupName = GROUPNAMES.get(target, None)
-            groupDesc = GROUPDESCS.get(target, None)
-
-            groupDesc = '\n  '.join(textwrap.wrap(groupDesc, 60))
-            
-            helpText += '\n' + groupName + ':\n'
-            if groupDesc is not None:
-                helpText += '  ' + groupDesc + '\n'
-
-            ovlHelp = parser.format_help()
-
-            skipTo    = 'optional arguments:'
-            optStart  = ovlHelp.index(skipTo)
-            optStart += len(skipTo) + 1
-            ovlHelp   = ovlHelp[optStart:]
-
-            helpText += '\n' + ovlHelp
-
-        print(helpText)
-
     # Figure out where the overlay files
     # are in the argument list, accounting
     # for any options which accept file
@@ -1171,7 +1140,11 @@ def parseArgs(mainParser,
         sys.exit(1)
 
     if namespace.help:
-        printHelp()
+        _printShortHelp(mainParser)
+        sys.exit(0)
+
+    if namespace.fullhelp:
+        _printFullHelp(mainParser)
         sys.exit(0)
 
     # Now, we'll create additiona parsers to handle
@@ -1253,6 +1226,159 @@ def parseArgs(mainParser,
         namespace.overlays.append(optArgs)
 
     return namespace
+
+
+def _printShortHelp(mainParser):
+    """Prints out help for a selection of arguments.
+
+    :arg mainParser: The top level ``ArgumentParser``.
+    """
+
+    # First, we build a list of all arguments
+    # that are handled by the main parser.
+    # This is done so that we can differentiate
+    # between arguments added by this module, and
+    # arguments added by users of this module 
+    # (e.g. the render tool adds a few arguments
+    # to the main parser before it is passed to
+    # this module for configuration).
+
+    allMain     = OPTIONS['Main']
+    allScene    = OPTIONS['SceneOpts']
+    allOrtho    = OPTIONS['OrthoOpts']
+    allLightBox = OPTIONS['LightBoxOpts']
+
+    allMainArgs =  \
+        [ARGUMENTS['Main.{}'        .format(o)] for o in allMain]  + \
+        [ARGUMENTS['SceneOpts.{}'   .format(o)] for o in allScene] + \
+        [ARGUMENTS['OrthoOpts.{}'   .format(o)] for o in allOrtho] + \
+        [ARGUMENTS['LightBoxOpts.{}'.format(o)] for o in allLightBox]
+    allMainArgs = ['--{}'.format(a[1]) for a in allMainArgs]
+ 
+    # Now we build a list of all arguments
+    # that we want to show help for, in this
+    # shortened help page.
+    mainArgs    = ['help', 'fullhelp', 'scene', 'autoDisplay']
+    displayArgs = ['overlayType', 'alpha', 'brightness', 'contrast']
+    volumeArgs  = ['displayRange', 'clippingRange', 'cmap', 'linkLowRanges']
+
+    mainArgs    = [ARGUMENTS['Main.{}'      .format(a)] for a in mainArgs]
+    displayArgs = [ARGUMENTS['Display.{}'   .format(a)] for a in displayArgs]
+    volumeArgs  = [ARGUMENTS['VolumeOpts.{}'.format(a)] for a in volumeArgs]
+
+    mainArgs    = ['--{}'.format(a[1]) for a in mainArgs]
+    displayArgs = ['--{}'.format(a[1]) for a in displayArgs]
+    volumeArgs  = ['--{}'.format(a[1]) for a in volumeArgs]
+
+    allArgs = td.TypeDict({
+        'Main'       : mainArgs,
+        'Display'    : displayArgs,
+        'VolumeOpts' : volumeArgs})
+
+    # The public argparse API is quite inflexible
+    # with respect to dynamic modification of
+    # arguments and help text. Here I'm using
+    # undocumented attributes and features to
+    # suppress the help text for argument groups
+    # and arguments...
+
+    # Suppress all of the main parser argument groups
+    for group in mainParser._action_groups:
+        group.title       = argparse.SUPPRESS
+        group.description = argparse.SUPPRESS
+
+    # Suppress main parser arguments that we
+    # don't want to show
+    for action in mainParser._actions:
+
+        # We want to show any arguments that are
+        # defined outside of this module (e.g. render)
+        if all([o not in allMainArgs for o in action.option_strings]):
+            continue
+
+        # We don't want to show any other argument that
+        # are not specified in the hard coded mainArgs
+        # list above.
+        if all([o not in allArgs['Main'] for o in action.option_strings]):
+            action.help = argparse.SUPPRESS
+
+    # Generate the help text for main options
+    helpText = mainParser.format_help()
+
+    # Now configure Display/DisplayOpts parsers
+    dispParser, _, optParsers = _setupOverlayParsers(forHelp=True)
+    parsers = ([(fsldisplay.Display,    dispParser),
+                (fsldisplay.VolumeOpts, optParsers[fsldisplay.VolumeOpts])])
+
+    for target, parser in parsers:
+
+        args = allArgs[target]
+
+        # Suppress all arguments that
+        # are not listed above
+        for action in parser._actions:
+            if all([o not in args for o in action.option_strings]):
+                action.help = argparse.SUPPRESS
+
+        groupName = GROUPNAMES.get(target, None)
+        groupDesc = GROUPDESCS.get(target, None)
+
+        groupDesc = '\n  '.join(textwrap.wrap(groupDesc, 60))
+
+        helpText += '\n' + groupName + ':\n'
+        if groupDesc is not None:
+            helpText += '  ' + groupDesc + '\n'
+
+        ovlHelp = parser.format_help()
+
+        skipTo    = 'optional arguments:'
+        optStart  = ovlHelp.index(skipTo)
+        optStart += len(skipTo) + 1
+        ovlHelp   = ovlHelp[optStart:]
+
+        helpText += '\n' + ovlHelp
+
+    print(helpText)
+    
+
+def _printFullHelp(mainParser):
+    """Prints out help for all arguments.
+
+    :arg mainParser: The top level ``ArgumentParser``.
+    """ 
+
+    # Create a bunch of parsers for handling
+    # overlay display options
+    dispParser, _, optParsers = _setupOverlayParsers(forHelp=True)
+
+    # Print help for the main parser first,
+    # and then separately for the overlay parser
+    helpText = mainParser.format_help()
+
+    optParsers = ([(fsldisplay.Display, dispParser)] +
+                  list(optParsers.items()))
+
+    for target, parser in optParsers:
+
+        groupName = GROUPNAMES.get(target, None)
+        groupDesc = GROUPDESCS.get(target, None)
+
+        groupDesc = '\n  '.join(textwrap.wrap(groupDesc, 60))
+
+        helpText += '\n' + groupName + ':\n'
+        if groupDesc is not None:
+            helpText += '  ' + groupDesc + '\n'
+
+        ovlHelp = parser.format_help()
+
+        skipTo    = 'optional arguments:'
+        optStart  = ovlHelp.index(skipTo)
+        optStart += len(skipTo) + 1
+        ovlHelp   = ovlHelp[optStart:]
+
+        helpText += '\n' + ovlHelp
+
+    print(helpText) 
 
 
 def _applyArgs(args, target, propNames=None):
@@ -1386,9 +1512,9 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
         # related to the display context.
 
         # Set the selected overlay 
-        # to the first specified
+        # to the last specified
         if len(overlayList) > 0:
-            displayCtx.selectedOverlay = 0
+            displayCtx.selectedOverlay = len(overlayList) - 1
 
         # Auto display
         displayCtx.autoDisplay = args.autoDisplay
@@ -1408,14 +1534,15 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
             else:
                 refOpts = displayCtx.getOpts(refimg)
 
-                if args.voxelLoc:
+                if args.worldLoc:
+                    displayLoc = refOpts.transformCoords([args.worldLoc],
+                                                         'world',
+                                                         'display')[0]
+                    
+                elif args.voxelLoc:
                     displayLoc = refOpts.transformCoords([args.voxelLoc],
                                                          'voxel',
                                                          'display')[0]
-                elif args.worldLoc:
-                    displayLoc = refOpts.transformCoords([args.worldLoc],
-                                                         'world',
-                                                         'display')[0] 
 
                 else:
                     displayLoc = defaultLoc
@@ -1588,15 +1715,40 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                                         fslimage.Image,
                                         overlay)
 
+                    setattr(optArgs, fileOpt, None)
+
+                    # If the user specified both clipImage
+                    # arguments and linklow/high range
+                    # arguments, an error will be raised
+                    # when we try to set the link properties
+                    # on the VolumeOpts instance (because
+                    # they have been disabled). So we
+                    # clear themfrom the argparse namespace
+                    # to prevent this from occurring.
+                    if fileOpt == 'clipImage' and \
+                       isinstance(opts, fsldisplay.VolumeOpts):
+
+                        llr = ARGUMENTS['VolumeOpts.linkLowRanges'][ 1]
+                        lhr = ARGUMENTS['VolumeOpts.linkHighRanges'][1]
+
+                        setattr(optArgs, llr, None)
+                        setattr(optArgs, lhr, None)
+
                     # With the exception of ModelOpts.refImage,
                     # all of the file options specify images which
                     # must match the overlay shape to be valid.
                     if not isinstance(opts, fsldisplay.ModelOpts):
-                        if image.shape != overlay.shape[ :3]:
-                            raise RuntimeError('')
+                        if image.shape[:3] != overlay.shape[:3]:
+                            log.warn('{}: Shape of {} ({}) does not '
+                                     'match shape of {} ({})'.format(
+                                         fileOpt,
+                                         overlay,
+                                         overlay.shape[:3],
+                                         image,
+                                         image.shape[:3]))
+                            continue
 
-                    setattr(opts,    fileOpt, image)
-                    setattr(optArgs, fileOpt, None)
+                    setattr(opts, fileOpt, image)
 
             # After handling the special cases
             # above, we can apply the CLI

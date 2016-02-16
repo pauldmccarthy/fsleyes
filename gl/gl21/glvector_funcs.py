@@ -64,8 +64,8 @@ def updateFragmentShaderState(self, useSpline=False):
         clipHigh = clippingRange[1] * \
             invClipValXform[0, 0] + invClipValXform[3, 0]
     else:
-        clipLow  = 0
-        clipHigh = 1
+        clipLow  = -0.1
+        clipHigh =  1.1
 
     if useVolumeFragShader:
 

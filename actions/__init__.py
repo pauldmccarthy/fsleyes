@@ -5,8 +5,9 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This package provides a collection of actions, classes - the
-:class:`.Action` class and the :class:`.ActionProvider` class, and the
-:func:`action` and :func:`toggleAction` decorators.
+:class:`~fsl.fsleyes.actions.action.Action` class and the
+:class:`.ActionProvider` class, and the :func:`action` and
+:func:`toggleAction` decorators.
 
 
 The :class:`.Action` class represents some sort of action which may be
@@ -96,14 +97,18 @@ Finally, some 'global' actions are also provided in this package:
  .. autosummary::
 
     ~fsl.fsleyes.actions.copyoverlay
-    ~fsl.fsleyes.actions.loadcolourmap
     ~fsl.fsleyes.actions.openfile
     ~fsl.fsleyes.actions.openstandard
     ~fsl.fsleyes.actions.saveoverlay
+    ~fsl.fsleyes.actions.removeoverlay
+    ~fsl.fsleyes.actions.removealloverlays
+    ~fsl.fsleyes.actions.loadcolourmap
     ~fsl.fsleyes.actions.saveperspective
     ~fsl.fsleyes.actions.loadperspective
     ~fsl.fsleyes.actions.clearperspective
     ~fsl.fsleyes.actions.togglecontrolpanel
+    ~fsl.fsleyes.actions.diagnosticreport
+    ~fsl.fsleyes.actions.about
 """
 
 
@@ -122,11 +127,17 @@ import openfile
 import opendir
 import openstandard
 import saveoverlay
+import reloadoverlay
+import removeoverlay
+import removealloverlays
 import loadcolourmap
 import saveperspective
 import loadperspective
 import clearperspective
 import togglecontrolpanel
+import diagnosticreport
+import about
+
 
 Action                   = action            .Action
 ToggleAction             = action            .ToggleAction
@@ -135,11 +146,16 @@ OpenFileAction           = openfile          .OpenFileAction
 OpenDirAction            = opendir           .OpenDirAction
 OpenStandardAction       = openstandard      .OpenStandardAction
 SaveOverlayAction        = saveoverlay       .SaveOverlayAction
+ReloadOverlayAction      = reloadoverlay     .ReloadOverlayAction
+RemoveOverlayAction      = removeoverlay     .RemoveOverlayAction
+RemoveAllOverlaysAction  = removealloverlays .RemoveAllOverlaysAction
 LoadColourMapAction      = loadcolourmap     .LoadColourMapAction
 SavePerspectiveAction    = saveperspective   .SavePerspectiveAction
 LoadPerspectiveAction    = loadperspective   .LoadPerspectiveAction
 ClearPerspectiveAction   = clearperspective  .ClearPerspectiveAction
 ToggleControlPanelAction = togglecontrolpanel.ToggleControlPanelAction
+DiagnosticReportAction   = diagnosticreport  .DiagnosticReportAction
+AboutAction              = about             .AboutAction
 
 
 log = logging.getLogger(__name__)

@@ -147,6 +147,16 @@ class OverlayGroup(props.HasProperties):
         """
         return OverlayGroup(self, self.__displayCtx, self.__overlayList)
 
+
+    def __str__(self):
+        """Returns a string representation of this ``OverlayGroup``."""
+        return str([str(o) for o in self.overlays])
+
+    
+    def __repr__(self):
+        """Returns a string representation of this ``OverlayGroup``."""
+        return '[{}]'.format(', '.join([str(o) for o in self.overlays]))
+
             
     def addOverlay(self, overlay):
         """Add an overlay to this ``OverlayGroup``.

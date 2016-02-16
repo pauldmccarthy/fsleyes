@@ -19,11 +19,12 @@ class SaveOverlayAction(action.Action):
     """
 
     
-    def __init__(self, overlayList, displayCtx):
+    def __init__(self, overlayList, displayCtx, frame):
         """Create a ``SaveOverlayAction``. 
         
         :arg overlayList: The :class:`.OverlayList`.
-        :arg displayCtx:  The :class:`.DisplayContext`. 
+        :arg displayCtx:  The :class:`.DisplayContext`.
+        :arg frame:       The :class:`.FSLEyesFrame`.
         """
         action.Action.__init__(self, self.__saveOverlay)
 
@@ -67,7 +68,8 @@ class SaveOverlayAction(action.Action):
                         (not overlay.saved))
 
         for ovl in self.__overlayList:
-            if not isinstance(ovl, fslimage.Image):
+            
+            if type(ovl) != fslimage.Image:
                 continue
             
             ovl.removeListener('saved', self.__name)

@@ -216,24 +216,24 @@ class ImageTexture(texture.Texture, notifier.Notifier):
                    'volume'     : volume     != self.__volume,
                    'normalise'  : normalise  != self.__normalise}
 
-        if not any(changed.values()):
+        if self.__ready and (not any(changed.values())):
             return False
 
         self.__interp     = interp
         self.__prefilter  = prefilter
         self.__resolution = resolution
         self.__volume     = volume
- 
+
         # If the data is of a type which cannot be
         # stored natively as an OpenGL texture, the
         # data is cast to a standard type, and
         # normalised - see _determineTextureType
         # and _prepareTextureData
         dtype = self.image.data.dtype
-        self.__normalise = normalise or dtype not in (np.uint8,
-                                                      np.int8,
-                                                      np.uint16,
-                                                      np.int16)
+        self.__normalise = bool(normalise) or dtype not in (np.uint8,
+                                                            np.int8,
+                                                            np.uint16,
+                                                            np.int16)
 
         refreshRange =      changed['prefilter']
         refreshData  = any((changed['prefilter'],
@@ -349,12 +349,16 @@ class ImageTexture(texture.Texture, notifier.Notifier):
             self.bindTexture()
 
             # set interpolation routine
+            interp = self.__interp
+            if interp is None:
+                interp = gl.GL_NEAREST
+                
             gl.glTexParameteri(gl.GL_TEXTURE_3D,
                                gl.GL_TEXTURE_MAG_FILTER,
-                               self.__interp)
+                               interp)
             gl.glTexParameteri(gl.GL_TEXTURE_3D,
                                gl.GL_TEXTURE_MIN_FILTER,
-                               self.__interp)
+                               interp)
 
             # Clamp texture borders to the edge
             # values - it is the responsibility
@@ -459,9 +463,10 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         if self.__prefilter is not None:
             data = self.__prefilter(data)
         
-        dtype = data.dtype
-        dmin  = self.__dataMin
-        dmax  = self.__dataMax
+        dtype     = data.dtype
+        dmin      = self.__dataMin
+        dmax      = self.__dataMax
+        normalise = bool(self.__normalise)
 
         # Signed data types are a pain in the arse.
         #
@@ -470,7 +475,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         # for signed types.
 
         # Texture data type
-        if   self.__normalise:   texDtype = gl.GL_UNSIGNED_SHORT
+        if   normalise:          texDtype = gl.GL_UNSIGNED_SHORT
         elif dtype == np.uint8:  texDtype = gl.GL_UNSIGNED_BYTE
         elif dtype == np.int8:   texDtype = gl.GL_UNSIGNED_BYTE
         elif dtype == np.uint16: texDtype = gl.GL_UNSIGNED_SHORT
@@ -489,28 +494,28 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         # Internal texture format
         if self.__nvals == 1:
 
-            if   self.__normalise:   intFmt = gl.GL_LUMINANCE16
+            if   normalise:          intFmt = gl.GL_LUMINANCE16
             elif dtype == np.uint8:  intFmt = gl.GL_LUMINANCE8
             elif dtype == np.int8:   intFmt = gl.GL_LUMINANCE8
             elif dtype == np.uint16: intFmt = gl.GL_LUMINANCE16
             elif dtype == np.int16:  intFmt = gl.GL_LUMINANCE16
 
         elif self.__nvals == 2:
-            if   self.__normalise:   intFmt = gl.GL_LUMINANCE16_ALPHA16
+            if   normalise:          intFmt = gl.GL_LUMINANCE16_ALPHA16
             elif dtype == np.uint8:  intFmt = gl.GL_LUMINANCE8_ALPHA8
             elif dtype == np.int8:   intFmt = gl.GL_LUMINANCE8_ALPHA8
             elif dtype == np.uint16: intFmt = gl.GL_LUMINANCE16_ALPHA16
             elif dtype == np.int16:  intFmt = gl.GL_LUMINANCE16_ALPHA16
 
         elif self.__nvals == 3:
-            if   self.__normalise:   intFmt = gl.GL_RGB16
+            if   normalise:          intFmt = gl.GL_RGB16
             elif dtype == np.uint8:  intFmt = gl.GL_RGB8
             elif dtype == np.int8:   intFmt = gl.GL_RGB8
             elif dtype == np.uint16: intFmt = gl.GL_RGB16
             elif dtype == np.int16:  intFmt = gl.GL_RGB16
             
         elif self.__nvals == 4:
-            if   self.__normalise:   intFmt = gl.GL_RGBA16
+            if   normalise:          intFmt = gl.GL_RGBA16
             elif dtype == np.uint8:  intFmt = gl.GL_RGBA8
             elif dtype == np.int8:   intFmt = gl.GL_RGBA8
             elif dtype == np.uint16: intFmt = gl.GL_RGBA16
@@ -519,13 +524,13 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         # Offsets/scales which can be used to transform from
         # the texture data (which may be offset or normalised)
         # back to the original voxel data
-        if   self.__normalise:   offset =  dmin
+        if   normalise:          offset =  dmin
         elif dtype == np.uint8:  offset =  0
         elif dtype == np.int8:   offset = -128
         elif dtype == np.uint16: offset =  0
         elif dtype == np.int16:  offset = -32768
 
-        if   self.__normalise:   scale = dmax - dmin
+        if   normalise:          scale = dmax - dmin
         elif dtype == np.uint8:  scale = 255
         elif dtype == np.int8:   scale = 255
         elif dtype == np.uint16: scale = 65535
@@ -533,8 +538,15 @@ class ImageTexture(texture.Texture, notifier.Notifier):
 
         # If the data range is 0 (min == max)
         # we just set an identity xform
-        if scale == 0: voxValXform = np.eye(4)
-        else:          voxValXform = transform.scaleOffsetXform(scale, offset)
+        if scale == 0:
+            voxValXform    = np.eye(4)
+            invVoxValXform = np.eye(4)
+        else:
+            invScale       = 1.0 / scale
+            voxValXform    = transform.scaleOffsetXform(scale, offset)
+            invVoxValXform = transform.scaleOffsetXform(
+                invScale,
+                -offset * invScale)
         
         # This is all just for logging purposes
         if log.getEffectiveLevel() == logging.DEBUG:
@@ -576,7 +588,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
                           sTexDtype,
                           sTexFmt,
                           sIntFmt,
-                          self.__normalise,
+                          normalise,
                           scale,
                           offset))
 
@@ -584,7 +596,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         self.texIntFmt      = intFmt
         self.texDtype       = texDtype
         self.voxValXform    = voxValXform
-        self.invVoxValXform = transform.invert(voxValXform)
+        self.invVoxValXform = invVoxValXform
 
 
     def __prepareTextureData(self):

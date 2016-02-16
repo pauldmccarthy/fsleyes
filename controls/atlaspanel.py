@@ -17,15 +17,16 @@ import          logging
 import numpy as np
 import          wx
 
-import pwidgets.notebook                      as notebook
+import pwidgets.notebook as notebook
 
-import fsl.data.image                         as fslimage
-import fsl.data.atlases                       as atlases
-import fsl.data.strings                       as strings
-import fsl.utils.dialog                       as fsldlg
-import fsl.fsleyes.panel                      as fslpanel
-import                                           atlasoverlaypanel
-import                                           atlasinfopanel 
+import fsl.data.image    as fslimage
+import fsl.data.atlases  as atlases
+import fsl.data.strings  as strings
+import fsl.utils.status  as status
+import fsl.utils.async   as async
+import fsl.fsleyes.panel as fslpanel
+import                      atlasoverlaypanel
+import                      atlasinfopanel 
 
 
 log = logging.getLogger(__name__)
@@ -194,9 +195,17 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
         fslpanel.FSLEyesPanel.destroy(self)
 
 
-    def loadAtlas(self, atlasID, summary):
-        """Loads the atlas image with the specified ID .  See the
-        :func:`.atlases.loadAtlas` function for details on the arguments.
+    def loadAtlas(self, atlasID, summary, onLoad=None):
+        """Loads the atlas image with the specified ID. The atlas is loaded
+        asynchronously (via the :mod:`.async` module), as it can take some
+        time. Use the `onLoad` argument if you need to do something when the
+        atlas has been loaded.
+
+        :arg onLoad: Optional. A function which is called when the atlas has
+                     been loaded.
+
+        See the :func:`.atlases.loadAtlas` function for details on the other
+        arguments.
         """
 
         desc = atlases.getAtlasDescription(atlasID)
@@ -207,25 +216,29 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
         atlas = self.__loadedAtlases.get((atlasID, summary), None)
 
         if atlas is None:
+            
             log.debug('Loading atlas {}/{}'.format(
                 atlasID, 'label' if summary else 'prob'))
 
-            dlg = fsldlg.SimpleMessageDialog(
-                None,
-                message=strings.messages[self, 'loadingAtlas'].format(atlasID))
+            status.update('Loading atlas {}...'.format(atlasID), timeout=None)
 
-            dlg.Show()
-
-            try:
-                atlas = atlases.loadAtlas(atlasID, summary)
+            def load():
             
-            finally:
-                dlg.Close()
-                dlg.Destroy()                
+                atlas = atlases.loadAtlas(atlasID, summary)
+                self.__loadedAtlases[atlasID, summary] = atlas
 
-            self.__loadedAtlases[atlasID, summary] = atlas
+                status.update('Atlas {} loaded.'.format(atlasID))                    
 
-        return atlas
+                if onLoad is not None:
+                    async.idle(onLoad, atlas)
+
+            async.run(load)
+
+        # If the atlas has already been loaded,
+        # pass it straight to the onload function
+        elif onLoad is not None:
+            onLoad(atlas)
+                    
 
 
     def getOverlayName(self, atlasID, labelIdx, summary):
@@ -290,66 +303,67 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
             log.debug('Removed overlay {}'.format(overlayName))
             return
 
-        atlas = self.loadAtlas(atlasID, summary)
+        def onLoad(atlas):
+            # label image
+            if labelIdx is None:
+                overlayType = 'label'
+                data        = atlas.data
 
-        # label image
-        if labelIdx is None:
-            overlayType = 'label'
-            data        = atlas.data
-
-        else:
-
-            # regional label image
-            if summary:
-                if   atlasDesc.atlasType == 'probabilistic':
-                    labelVal = labelIdx + 1
-                elif atlasDesc.atlasType == 'label':
-                    labelVal = labelIdx
-
-                overlayType = 'mask' 
-                data        = np.zeros(atlas.shape, dtype=np.uint16)
-                data[atlas.data == labelIdx] = labelVal
-                
-            # regional probability image
             else:
-                overlayType = 'volume' 
-                data        = atlas.data[:, :, :, labelIdx]
 
-        overlay = fslimage.Image(
-            data,
-            header=atlas.nibImage.get_header(),
-            name=overlayName)
+                # regional label image
+                if summary:
+                    if   atlasDesc.atlasType == 'probabilistic':
+                        labelVal = labelIdx + 1
+                    elif atlasDesc.atlasType == 'label':
+                        labelVal = labelIdx
 
-        self._overlayList.disableListener('overlays', self._name)
-        self._overlayList.append(overlay)
-        self._overlayList.enableListener('overlays', self._name)
+                    overlayType = 'mask' 
+                    data        = np.zeros(atlas.shape, dtype=np.uint16)
+                    data[atlas.data == labelIdx] = labelVal
 
-        self.__overlayPanel.setOverlayState(
-            atlasID, labelIdx, summary, True) 
-        
-        self.__enabledOverlays[overlayName] = (overlay,
-                                               atlasID,
-                                               labelIdx,
-                                               summary)
-        
-        log.debug('Added overlay {}'.format(overlayName))
+                # regional probability image
+                else:
+                    overlayType = 'volume' 
+                    data        = atlas.data[:, :, :, labelIdx]
 
-        display             = self._displayCtx.getDisplay(overlay)
-        display.overlayType = overlayType
-        opts                = display.getDisplayOpts()
+            overlay = fslimage.Image(
+                data,
+                header=atlas.nibImage.get_header(),
+                name=overlayName)
 
-        if   overlayType == 'mask':   opts.colour = np.random.random(3)
-        elif overlayType == 'volume': opts.cmap   = 'hot'
-        elif overlayType == 'label':
-            
-            # The Harvard-Oxford atlases
-            # have special colour maps
-            if   atlasID == 'HarvardOxford-Cortical':
-                opts.lut = 'harvard-oxford-cortical'
-            elif atlasID == 'HarvardOxford-Subcortical':
-                opts.lut = 'harvard-oxford-subcortical'
-            else:
-                opts.lut = 'random'
+            self._overlayList.disableListener('overlays', self._name)
+            self._overlayList.append(overlay)
+            self._overlayList.enableListener('overlays', self._name)
+
+            self.__overlayPanel.setOverlayState(
+                atlasID, labelIdx, summary, True) 
+
+            self.__enabledOverlays[overlayName] = (overlay,
+                                                   atlasID,
+                                                   labelIdx,
+                                                   summary)
+
+            log.debug('Added overlay {}'.format(overlayName))
+
+            display             = self._displayCtx.getDisplay(overlay)
+            display.overlayType = overlayType
+            opts                = display.getDisplayOpts()
+
+            if   overlayType == 'mask':   opts.colour = np.random.random(3)
+            elif overlayType == 'volume': opts.cmap   = 'hot'
+            elif overlayType == 'label':
+
+                # The Harvard-Oxford atlases
+                # have special colour maps
+                if   atlasID == 'HarvardOxford-Cortical':
+                    opts.lut = 'harvard-oxford-cortical'
+                elif atlasID == 'HarvardOxford-Subcortical':
+                    opts.lut = 'harvard-oxford-subcortical'
+                else:
+                    opts.lut = 'random'
+
+        self.loadAtlas(atlasID, summary, onLoad)
 
 
     def locateRegion(self, atlasID, labelIdx):

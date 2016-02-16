@@ -127,7 +127,7 @@ void main(void) {
   }
 
   /* Knock out voxels where the clipping value is outside the clipping range */
-  if (clipValue < clipLow || clipValue > clipHigh) {
+  if (clipValue <= clipLow || clipValue >= clipHigh) {
       gl_FragColor.a = 0.0;
       return;
   }

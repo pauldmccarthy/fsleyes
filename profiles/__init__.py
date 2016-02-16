@@ -292,8 +292,11 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         # event handlers - see the profilemap
         # module
         import profilemap
-        
-        for cls in inspect.getmro(self.__class__):
+
+        # We reverse the mro, so that the
+        # modes/handlers defined on this
+        # class take precedence.
+        for cls in reversed(inspect.getmro(self.__class__)):
             
             tempModes   = profilemap.tempModeMap  .get(cls, {})
             altHandlers = profilemap.altHandlerMap.get(cls, {})
@@ -500,14 +503,28 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         specified.
         """
 
+        # Is a temporary mode active?
         tempMode = self.__getTempMode(ev)
 
         if mode is None:
             if tempMode is None: mode = self.mode
             else:                mode = tempMode
 
-        # Search for a method which can
-        # handle the specified mode/evtype
+        # Is an alternate handler active?
+        # Alternate handlers take precedence
+        # over default handlers.
+        alt = self.__altHandlerMap.get((mode, evType), None)
+
+        # An alternate handler has
+        # been specified for this
+        # event - look it up.
+        if alt is not None:
+            altMode, altEvType = alt
+            return self.__getHandler(ev, altEvType, altMode)
+
+        # Otherwise search for a default
+        # method which can handle the
+        # specified mode/evtype.
         if mode is not None:
             handlerName = '_{}Mode{}'.format(mode, evType)
         else:
@@ -517,19 +534,9 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         handler = getattr(self, handlerName, None)
 
         if handler is not None:
-            log.debug('Handler found for mode {}, event {}'.format(mode,
-                                                                   evType))
+            log.debug('Handler found for mode {}, event {}'.format(
+                mode, evType))
             return handler
-        
-        # No handler found - search 
-        # the alternate handler map
-        alt = self.__altHandlerMap.get((mode, evType), None)
-
-        # An alternate handler has
-        # been specified - look it up
-        if alt is not None:
-            altMode, altEvType = alt
-            return self.__getHandler(ev, altEvType, altMode)
 
         return None
 
@@ -605,13 +612,13 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         if self.__lastMousePos  is None: self.__lastMousePos  = mouseLoc
         if self.__lastCanvasPos is None: self.__lastCanvasPos = canvasLoc
 
-        handler = self.__getHandler(
-            ev, '{}MouseDown'.format(self.__getMouseButton(ev)))
+        evType  = '{}MouseDown'.format(self.__getMouseButton(ev))
+        handler = self.__getHandler(ev, evType)
         if handler is None:
             return
 
-        log.debug('Mouse down event ({}, {}) on canvas {}'.format(
-            mouseLoc, canvasLoc, canvas.name))
+        log.debug('{} event ({}, {}) on canvas {}'.format(
+            evType, mouseLoc, canvasLoc, canvas.name))
 
         handler(ev, canvas, mouseLoc, canvasLoc)
 
@@ -624,9 +631,9 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
         Delegates to a mode specific handler if one is present.
         """
-        
-        handler = self.__getHandler(
-            ev, '{}MouseUp'.format(self.__getMouseButton(ev)))
+
+        evType  = '{}MouseUp'.format(self.__getMouseButton(ev))
+        handler = self.__getHandler(ev, evType)
 
         if handler is None:
             self.__mouseDownPos  = None
@@ -636,8 +643,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         canvas              = ev.GetEventObject()
         mouseLoc, canvasLoc = self.__getMouseLocation(ev)
 
-        log.debug('Mouse up event ({}, {}) on canvas {}'.format(
-            mouseLoc, canvasLoc, canvas.name))
+        log.debug('{} event ({}, {}) on canvas {}'.format(
+            evType, mouseLoc, canvasLoc, canvas.name))
 
         handler(ev, canvas, mouseLoc, canvasLoc)
         self.__mouseDownPos  = None
@@ -682,13 +689,13 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         canvas              = ev.GetEventObject()
         mouseLoc, canvasLoc = self.__getMouseLocation(ev)
 
-        handler = self.__getHandler(
-            ev, '{}MouseDrag'.format(self.__getMouseButton(ev)))
+        evType  = '{}MouseDrag'.format(self.__getMouseButton(ev))
+        handler = self.__getHandler(ev, evType)
         if handler is None:
             return 
 
-        log.debug('Mouse drag event ({}, {}) on canvas {}'.format(
-            mouseLoc, canvasLoc, canvas.name))
+        log.debug('{} event ({}, {}) on canvas {}'.format(
+            evType, mouseLoc, canvasLoc, canvas.name))
 
         handler(ev, canvas, mouseLoc, canvasLoc)
 

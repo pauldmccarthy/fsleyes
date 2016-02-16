@@ -161,11 +161,12 @@ void main(void) {
         }
     }
 
-
     /*
      * Clip out of range voxel values
      */
-    if ((!invertClip && (clipValue <  clipLow || clipValue >  clipHigh)) ||
+
+    
+    if ((!invertClip && (clipValue <= clipLow || clipValue >= clipHigh)) ||
         ( invertClip && (clipValue >= clipLow && clipValue <= clipHigh))) {
       
         gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);

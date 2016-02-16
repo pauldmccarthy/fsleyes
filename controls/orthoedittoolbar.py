@@ -123,7 +123,7 @@ class OrthoEditToolBar(fsltoolbar.FSLEyesToolBar):
         profile = ortho.getCurrentProfile()
         
         if self.selint: profile.mode = 'selint'
-        else:           profile.mode = 'sel'
+        else:           profile.mode = 'nav'
 
 
     def __profileChanged(self, *a):
@@ -184,21 +184,35 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 
 
 _ICONS = {
-    'view'                    :  [fslicons.findImageFile('eyeHighlight24'),
-                                  fslicons.findImageFile('eye24')],
-    'edit'                    :  [fslicons.findImageFile('pencilHighlight24'),
-                                  fslicons.findImageFile('pencil24')],
-    'selectionIs3D'           : [fslicons.findImageFile('selection3D24'),
-                                 fslicons.findImageFile('selection2D24')],
+    'view'                    :  [
+        fslicons.findImageFile('eyeHighlight24'),
+        fslicons.findImageFile('eye24')],
+    'edit'                    :  [
+        fslicons.findImageFile('pencilHighlight24'),
+        fslicons.findImageFile('pencil24')],
+    'selectionIs3D'           : [
+        fslicons.findImageFile('selection3DHighlight24'),
+        fslicons.findImageFile('selection3D24'),
+        fslicons.findImageFile('selection2DHighlight24'),
+        fslicons.findImageFile('selection2D24')],
+    
     'clearSelection'          :  fslicons.findImageFile('clear24'),
     'undo'                    :  fslicons.findImageFile('undo24'),
     'redo'                    :  fslicons.findImageFile('redo24'),
     'fillSelection'           :  fslicons.findImageFile('fill24'),
+    'eraseSelection'          :  fslicons.findImageFile('erase24'),
     'createMaskFromSelection' :  fslicons.findImageFile('createMask24'),
     'createROIFromSelection'  :  fslicons.findImageFile('createROI24'),
-    'limitToRadius'           :  fslicons.findImageFile('radius24'),
-    'localFill'               :  fslicons.findImageFile('localsearch24'),
-    'selint'                  :  fslicons.findImageFile('selectByIntensity24'),
+    
+    'limitToRadius'           :  [
+        fslicons.findImageFile('radiusHighlight24'),
+        fslicons.findImageFile('radius24')],
+    'localFill'               :  [
+        fslicons.findImageFile('localsearchHighlight24'),
+        fslicons.findImageFile('localsearch24')],
+    'selint'                  :  [
+        fslicons.findImageFile('selectByIntensityHighlight24'),
+        fslicons.findImageFile('selectByIntensity24')],
 }
 """This dictionary contains icons for some :class:`OrthoEditToolBar`
 controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
@@ -209,9 +223,10 @@ _TOOLTIPS = {
     'profile'                 : fsltooltips.properties['OrthoPanel.profile'],
     'selectionIs3D'           : fsltooltips.properties['OrthoEditProfile.'
                                                        'selectionIs3D'],
-    
     'clearSelection'          : fsltooltips.actions['OrthoEditProfile.'
                                                     'clearSelection'],
+    'eraseSelection'          : fsltooltips.actions['OrthoEditProfile.'
+                                                    'eraseSelection'], 
     'undo'                    : fsltooltips.actions['OrthoEditProfile.'
                                                     'undo'],
     'redo'                    : fsltooltips.actions['OrthoEditProfile.'
@@ -261,10 +276,9 @@ _TOOLBAR_SPECS  = {
     'edit' : [
         props.Widget(
             'selectionIs3D',
-            enabledWhen=lambda p: p.mode in ['sel', 'desel'],
             icon=_ICONS['selectionIs3D'],
             tooltip=_TOOLTIPS['selectionIs3D'],
-            toggle=True),
+            toggle=False),
         actions.ActionButton(
             'clearSelection',
             icon=_ICONS['clearSelection'],
@@ -281,6 +295,10 @@ _TOOLBAR_SPECS  = {
             'fillSelection',
             icon=_ICONS['fillSelection'],
             tooltip=_TOOLTIPS['fillSelection']),
+        actions.ActionButton(
+            'eraseSelection',
+            icon=_ICONS['eraseSelection'],
+            tooltip=_TOOLTIPS['eraseSelection']), 
         actions.ActionButton(
             'createMaskFromSelection',
             icon=_ICONS['createMaskFromSelection'],
@@ -313,13 +331,13 @@ _TOOLBAR_SPECS  = {
             tooltip=_TOOLTIPS['selectionOverlayColour']), 
         props.Widget(
             'selectionSize',
-            enabledWhen=lambda p: p.mode in ['sel', 'desel'],
             label=_LABELS['selectionSize'],
             tooltip=_TOOLTIPS['selectionSize']),
         props.Widget(
             'fillValue',
             label=_LABELS['fillValue'],
-            tooltip=_TOOLTIPS['fillValue']),
+            tooltip=_TOOLTIPS['fillValue'],
+            slider=False),
         props.Widget(
             'intensityThres',
             label=_LABELS['intensityThres'],

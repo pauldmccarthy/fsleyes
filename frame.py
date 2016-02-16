@@ -76,7 +76,8 @@ class FSLEyesFrame(wx.Frame):
        getViewPanels
        getViewPanelInfo
        addViewPanel
-       removeViewPanel 
+       removeViewPanel
+       removeAllViewPanels
        getAuiManager
        refreshPerspectiveMenu
     """
@@ -204,6 +205,33 @@ class FSLEyesFrame(wx.Frame):
         self.__onViewPanelClose(panel=viewPanel)
         
         self.__auiManager.ClosePane(paneInfo)
+        self.__auiManager.Update()
+
+
+    def removeAllViewPanels(self):
+        """Removes all view panels from this ``FSLEyesFrame``.
+
+        .. note:: This method should be used to clear the frame, rather than
+                  removing each :class:`.ViewPanel` individually via
+                  :meth:`removeViewPanel`. This is because when one
+                  ``ViewPanel`` is closed, the display settings of the
+                  remaining ``ViewPanel`` instances may be modified.  If these
+                  remaining ``ViewPanels`` are then immediately closed, thay
+                  may not have had enough time to reconfigure themselves (e.g.
+                  :class:`.GLVolume` instances re-creating their
+                  :class:`.ImageTexture` instance due to a change in
+                  :attr:`.DisplayContext.syncOverlayDisplay`), and ugly things
+                  will happen (e.g. an :class:`.ImageTexture` trying to
+                  configure itself *after* it has already been destroyed).
+
+                  So just use this method instead.
+        """
+        for vp in list(self.__viewPanels):
+            
+            paneInfo = self.__auiManager.GetPane(vp)
+            self.__onViewPanelClose(panel=vp, displaySync=False)
+            self.__auiManager.ClosePane(paneInfo)
+            
         self.__auiManager.Update() 
 
 
@@ -387,8 +415,10 @@ class FSLEyesFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, closeViewPanel, closeItem)
     
 
-    def __onViewPanelClose(self, ev=None, panel=None):
-        """Called when the user closes a :class:`.ViewPanel`.
+    def __onViewPanelClose(self, ev=None, panel=None, displaySync=True):
+        """Called when the user closes a :class:`.ViewPanel`. May also
+        be called programmatically via the :meth:`removeViewPanel` or
+        :removeAllViewPanels` :method.
 
         The :meth:`__addViewPanelMenu` method adds a *Close* menu item
         for every view panel, and binds it to this method.
@@ -399,6 +429,20 @@ class FSLEyesFrame(wx.Frame):
          2. Removes the *Settings* sub-menu corresponding to the ``ViewPanel``.
          3. Makes sure that any remaining ``ViewPanel`` panels are arranged
             nicely.
+         4. If the ``displaySync`` parameter is ``True``, and only one
+            :class:`.ViewPanel` is remaining, its :class:`.DisplayContext`
+            is synchronised to the master :class:`.DisplayContext`.
+
+        :arg ev:          ``wx`` event, passed when a :class:`.ViewPanel` is 
+                          closed by the user:
+
+        :arg panel:       If called programmatically, the :class:`.ViewPanel`
+                          to close.
+
+        :arg displaySync: If ``True`` (the default), and only one ``ViewPanel``
+                          remains after this one is removed, that remaining
+                          ``ViewPanel`` is synchronised to the master
+                          :class:`.DisplayContext`.
         """
 
         if ev is not None:
@@ -457,7 +501,8 @@ class FSLEyesFrame(wx.Frame):
         # and it is a canvas panel, sync
         # its display properties to the
         # master display context.
-        if numPanels == 1 and \
+        if displaySync    and \
+           numPanels == 1 and \
            isinstance(self.__viewPanels[0], views.CanvasPanel):
             
             dctx     = self.__viewPanels[0].getDisplayContext()
@@ -624,15 +669,23 @@ class FSLEyesFrame(wx.Frame):
             self.Centre()
 
         if restore:
+            if layout is not None:
+                log.debug('Restoring previous layout: {}'.format(layout))
+
+                try:
+                    perspectives.applyPerspective(
+                        self,
+                        'framelayout',
+                        layout,
+                        message=strings.messages[self, 'restoringLayout'])
+                except:
+                    log.warn('Previous layout could not be restored - '
+                             'falling back to default layout.')
+                    layout = None
+
             if layout is None:
                 perspectives.loadPerspective(self, 'default')
-            else:
-                log.debug('Restoring previous layout: {}'.format(layout))
-                perspectives.applyPerspective(
-                    self,
-                    'framelayout',
-                    layout,
-                    message=strings.messages[self, 'restoringLayout'])
+                
 
             
     def __makeMenuBar(self):
@@ -661,12 +714,21 @@ class FSLEyesFrame(wx.Frame):
         actionz = [actions.OpenFileAction,
                    actions.OpenDirAction,
                    actions.OpenStandardAction,
+                   'sep',
                    actions.CopyOverlayAction,
-                   actions.SaveOverlayAction]
+                   actions.SaveOverlayAction,
+                   actions.ReloadOverlayAction,
+                   'sep',
+                   actions.RemoveOverlayAction,
+                   actions.RemoveAllOverlaysAction]
  
         for action in actionz:
+
+            if action == 'sep':
+                fileMenu.AppendSeparator()
+                continue
             menuItem  = fileMenu.Append(wx.ID_ANY, strings.actions[action])
-            actionObj = action(self.__overlayList, self.__displayCtx)
+            actionObj = action(self.__overlayList, self.__displayCtx, self)
 
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 

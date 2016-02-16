@@ -105,6 +105,7 @@ class Selection(props.HasProperties):
         self.__image              = image
         self.__display            = display
         self.__opts               = display.getDisplayOpts()
+        self.__clear              = True
         self.__lastChangeOffset   = None
         self.__lastChangeOldBlock = None
         self.__lastChangeNewBlock = None
@@ -129,79 +130,110 @@ class Selection(props.HasProperties):
 
 
 
-    def selectBlock(self, voxel, blockSize, axes=(0, 1, 2)):
+    def selectBlock(self, voxel, blockSize, axes=(0, 1, 2), combine=False):
         """Selects the block (sets all voxels to 1) specified by the given
         voxel and block size.
 
         :arg voxel:     Starting voxel coordinates of the block.
+        
         :arg blockSize: Size of the block along each axis.
+        
         :arg axes:      Limit the block to the specified axes.
 
+        :arg combine:   Combine this change with the previous stored change 
+                        (see :meth:`__storeChange`). 
         """
-        self.addToSelection(*self.generateBlock(voxel,
-                                                blockSize,
-                                                self.selection.shape,
-                                                axes))
+        
+        block, offset = self.generateBlock(voxel,
+                                           blockSize,
+                                           self.selection.shape,
+                                           axes)
+        
+        self.addToSelection(block, offset, combine)
 
         
-    def deselectBlock(self, voxel, blockSize, axes=(0, 1, 2)):
+    def deselectBlock(self, voxel, blockSize, axes=(0, 1, 2), combine=False):
         """De-selects the block (sets all voxels to 0) specified by the given
         voxel and block size.
 
         :arg voxel:     Starting voxel coordinates of the block.
+        
         :arg blockSize: Size of the block along each axis.
-        :arg axes:      Limit the block to the specified axes.        
-        """ 
-        self.removeFromSelection(*self.generateBlock(voxel,
-                                                     blockSize,
-                                                     self.selection.shape,
-                                                     axes)) 
+        
+        :arg axes:      Limit the block to the specified axes.
+
+        :arg combine:   Combine this change with the previous stored change 
+                        (see :meth:`__storeChange`). 
+        """
+
+        block, offset = self.generateBlock(voxel,
+                                           blockSize,
+                                           self.selection.shape,
+                                           axes)
+        
+        self.removeFromSelection(block, offset, combine) 
 
         
-    def setSelection(self, block, offset):
+    def setSelection(self, block, offset, combine=False):
         """Copies the given ``block`` into the selection, starting at
         ``offset``.
 
-        :arg block:  A ``numpy.uint8`` array containing a selection.
-        :arg offset: Voxel coordinates specifying the block location.
+        :arg block:   A ``numpy.uint8`` array containing a selection.
+        
+        :arg offset:  Voxel coordinates specifying the block location.
+
+        :arg combine: Combine this change with the previous stored change (see
+                      :meth:`__storeChange`). 
         """
-        self.__updateSelectionBlock(block, offset) 
+        self.__updateSelectionBlock(block, offset, combine) 
         
     
-    def replaceSelection(self, block, offset):
-        """Clears the entire selection, then copies the given ``block``
-        into the selection, starting at ``offset``.
+    def replaceSelection(self, block, offset, combine=False):
+        """Copies the given ``block`` into the selection, starting at
+        ``offset``.
         
-        :arg block:  A ``numpy.uint8`` array containing a selection.
-        :arg offset: Voxel coordinates specifying the block location. 
+        :arg block:   A ``numpy.uint8`` array containing a selection.
+        
+        :arg offset:  Voxel coordinates specifying the block location.
+        
+        :arg combine: Combine this change with the previous stored change (see
+                      :meth:`__storeChange`). 
         """
-        self.clearSelection()
-        self.__updateSelectionBlock(block, offset)
+
+        self.__updateSelectionBlock(block, offset, combine)
 
         
-    def addToSelection(self, block, offset):
+    def addToSelection(self, block, offset, combine=False):
         """Adds the selection (via a boolean OR operation) in the given
         ``block`` to the current selection, starting at ``offset``.
 
-        :arg block:  A ``numpy.uint8`` array containing a selection.
-        :arg offset: Voxel coordinates specifying the block location. 
+        :arg block:   A ``numpy.uint8`` array containing a selection.
+        
+        :arg offset:  Voxel coordinates specifying the block location.
+                
+        :arg combine: Combine this change with the previous stored change (see
+                      :meth:`__storeChange`). 
         """
         existing = self.__getSelectionBlock(block.shape, offset)
         block    = np.logical_or(block, existing)
         
-        self.__updateSelectionBlock(block, offset)
+        self.__updateSelectionBlock(block, offset, combine)
 
 
-    def removeFromSelection(self, block, offset):
+    def removeFromSelection(self, block, offset, combine=False):
         """Clears all voxels in the selection where the values in ``block``
         are non-zero.
         
-        :arg block:  A ``numpy.uint8`` array containing a selection.
-        :arg offset: Voxel coordinates specifying the block location. 
+        :arg block:   A ``numpy.uint8`` array containing a selection.
+        
+        :arg offset:  Voxel coordinates specifying the block location.
+        
+        :arg combine: Combine this change with the previous stored change (see
+                      :meth:`__storeChange`).         
         """
         existing             = self.__getSelectionBlock(block.shape, offset)
         existing[block != 0] = False
-        self.__updateSelectionBlock(existing, offset)
+        self.__updateSelectionBlock(existing, offset, combine)
 
     
     def getSelectionSize(self):
@@ -235,15 +267,40 @@ class Selection(props.HasProperties):
         return selection, (xlo, ylo, zlo)
 
         
-    def clearSelection(self):
-        """Clears (sets to 0) the entire selection. """
+    def clearSelection(self, restrict=None, combine=False):
+        """Clears (sets to 0) the entire selection, or the selection specified
+        by the ``restrict`` parameter, if it is given.
 
-        log.debug('Clearing selection ({})'.format(id(self)))
-        
-        self.__lastChangeOffset     = [0, 0, 0]
-        self.__lastChangeOldBlock   = np.array(self.selection)
-        self.selection[:]           = False
-        self.__lastChangeNewBlock   = np.array(self.selection)
+        :arg restrict: An optional sequence of three ``slice`` objects,
+                       specifying the portion of the selection to clear.
+
+        :arg combine:  Combine this change with the previous stored change (see
+                       :meth:`__storeChange`).
+        """
+
+        if self.__clear:
+            self.__clearChange()
+            return
+
+        fRestrict = self.__fixSlices(restrict)
+        offset    = [r.start if r.start is not None else 0 for r in fRestrict]
+
+        log.debug('Clearing selection ({}): {}'.format(id(self), fRestrict))
+
+        block                     = np.array(self.selection[fRestrict])
+        self.selection[fRestrict] = False
+
+        self.__storeChange(block,
+                           np.array(self.selection[fRestrict]),
+                           offset,
+                           combine)
+
+        # Set the internal clear flag to True,
+        # when the entire selection has been
+        # cleared, so we can skip subsequent
+        # redundant clears.
+        if restrict is None:
+            self.__clear = True
 
         self.notify('selection')
 
@@ -258,9 +315,129 @@ class Selection(props.HasProperties):
          - Voxel coordinates denoting the block location in the full
            :attr:`selection` array.
         """
+
         return (self.__lastChangeOldBlock,
                 self.__lastChangeNewBlock,
                 self.__lastChangeOffset)
+
+
+    def __clearChange(self):
+        """
+        """
+        self.__lastChangeOldBlock = None
+        self.__lastChangeNewBlock = None
+        self.__lastChangeOffset   = None
+
+
+    def __storeChange(self, old, new, offset, combine=False):
+        """Stores the given selection change.
+
+        :arg old:     A copy of the portion of the :attr:`selection` that 
+                      has changed,
+        
+        :arg new:     The new selection values.
+        
+        :arg offset:  Offset into the full :attr:`selection` array
+        
+        :arg combine: If ``False`` (the default), the previously stored change
+                      will be replaced by the current change. Otherwise the
+                      previous and current changes will be combined.
+        """
+
+        # Not combining changes (or there
+        # is no previously stored change).
+        # We store the change, replacing
+        # the previous one.
+        if (not combine) or (self.__lastChangeOldBlock is None):
+
+            if log.getEffectiveLevel() == logging.DEBUG:
+                log.debug('Replacing previously stored change with: '
+                          '[({}, {}), ({}, {}), ({}, {})] ({} selected)'
+                          .format(offset[0], offset[0] + old.shape[0],
+                                  offset[1], offset[1] + old.shape[1],
+                                  offset[2], offset[2] + old.shape[2],
+                                  new.sum()))
+            
+            self.__lastChangeOldBlock = old
+            self.__lastChangeNewBlock = new
+            self.__lastChangeOffset   = offset
+            return
+
+        # Otherwise, we combine the old
+        # change with the new one.
+        lcOld     = self.__lastChangeOldBlock
+        lcNew     = self.__lastChangeNewBlock
+        lcOffset  = self.__lastChangeOffset
+
+        # Calculate/organise low/high indices
+        # for each change set:
+        # 
+        #  - one for the current change (passed
+        #    in to this method call)
+        #
+        #  - One for the last stored change
+        #
+        #  - One for the combination of the above
+        currIdxs = []
+        lastIdxs = []
+        cmbIdxs  = []
+
+        for ax in range(3):
+
+            currLo = offset[  ax]
+            lastLo = lcOffset[ax]
+            currHi = offset[  ax] + old  .shape[ax]
+            lastHi = lcOffset[ax] + lcOld.shape[ax]
+
+            cmbLo  = min(currLo, lastLo)
+            cmbHi  = max(currHi, lastHi)
+
+            currIdxs.append((currLo, currHi))
+            lastIdxs.append((lastLo, lastHi))
+            cmbIdxs .append((cmbLo,  cmbHi))
+
+        # Make slice objects for each of the indices,
+        # to make indexing easier. The last/current
+        # slice objects are defined relative to the
+        # combined space of both.
+        cmbSlices  = [slice(lo, hi) for lo, hi in cmbIdxs]
+        
+        lastSlices = [slice(lLo - cmLo, lHi - cmLo)
+                      for ((lLo, lHi), (cmLo, cmHi))
+                      in zip(lastIdxs, cmbIdxs)]
+        
+        currSlices = [slice(cuLo - cmLo, cuHi - cmLo)
+                      for ((cuLo, cuHi), (cmLo, cmHi))
+                      in zip(currIdxs, cmbIdxs)]
+
+        cmbOld    = np.array(self.selection[cmbSlices])
+        cmbNew    = np.array(cmbOld)
+
+        cmbOld[lastSlices] = lcOld
+        cmbNew[lastSlices] = lcNew
+        cmbNew[currSlices] = new
+
+        if log.getEffectiveLevel() == logging.DEBUG:
+            log.debug('Combining changes: '
+                      '[({}, {}), ({}, {}), ({}, {})] ({} selected) + '
+                      '[({}, {}), ({}, {}), ({}, {})] ({} selected) = '
+                      '[({}, {}), ({}, {}), ({}, {})] ({} selected)'.format(
+                          lastIdxs[0][0], lastIdxs[0][1],
+                          lastIdxs[1][0], lastIdxs[1][1],
+                          lastIdxs[2][0], lastIdxs[2][1],
+                          lcNew.sum(),
+                          currIdxs[0][0], currIdxs[0][1],
+                          currIdxs[1][0], currIdxs[1][1],
+                          currIdxs[2][0], currIdxs[2][1],
+                          new.sum(),
+                          cmbIdxs[0][0], cmbIdxs[0][1],
+                          cmbIdxs[1][0], cmbIdxs[1][1],
+                          cmbIdxs[2][0], cmbIdxs[2][1],
+                          cmbNew.sum()))
+        
+        self.__lastChangeOldBlock = cmbOld
+        self.__lastChangeNewBlock = cmbNew
+        self.__lastChangeOffset   = cmbIdxs[0][0], cmbIdxs[1][0], cmbIdxs[2][0]
 
 
     def getIndices(self, restrict=None):
@@ -274,28 +451,27 @@ class Selection(props.HasProperties):
                        full selection to consider.
         """
 
-        if restrict is None: selection = self.selection
-        else:                selection = self.selection[restrict]
+        restrict   = self.__fixSlices(restrict)
+        xs, ys, zs = np.where(self.selection[restrict])
+        result     = np.vstack((xs, ys, zs)).T
 
-        xs, ys, zs = np.where(selection)
-
-        result = np.vstack((xs, ys, zs)).T
-
-        if restrict is not None:
-
-            for ax in range(3):
-                off = restrict[ax].start
-                if off is None: off = 0
+        for ax in range(3):
+            
+            off = restrict[ax].start
+            
+            if off is not None:
                 result[:, ax] += off
 
         return result
 
-    
+
     def selectByValue(self,
                       seedLoc,
                       precision=None,
                       searchRadius=None,
-                      local=False):
+                      local=False,
+                      restrict=None,
+                      combine=False):
         """A *bucket fill* style selection routine. Given a seed location,
         finds all voxels which have a value similar to that of that location.
         The current selection is replaced with all voxels that were found.
@@ -317,6 +493,12 @@ class Selection(props.HasProperties):
         :arg local:        If ``True``, a voxel will only be selected if it
                            is adjacent to an already selected voxel (using
                            8-neighbour connectivity).
+
+        :arg restrict:     An optional sequence of three ``slice`` object,
+                           specifying a sub-set of the image to search.
+
+        :arg combine:      Combine with the previous stored change (see
+                           :meth:`__storeChange`).
         """
 
         if   len(self.__image.shape) == 3:
@@ -326,6 +508,7 @@ class Selection(props.HasProperties):
         else:
             raise RuntimeError('Only 3D and 4D images are currently supported')
 
+        shape   = data.shape
         seedLoc = np.array(seedLoc)
         value   = data[seedLoc[0], seedLoc[1], seedLoc[2]]
 
@@ -337,14 +520,45 @@ class Selection(props.HasProperties):
             searchRadius = np.array([0, 0, 0])
         elif not isinstance(searchRadius, collections.Sequence):
             searchRadius = np.array([searchRadius] * 3)
-
+            
         searchRadius = np.ceil(searchRadius)
+        searchOffset = (0, 0, 0)
+
+        # Reduce the data set if
+        # restrictions have been
+        # specified
+        if restrict is not None:
+
+            restrict = self.__fixSlices(restrict)
+            xs, xe   = restrict[0].start, restrict[0].step
+            ys, ye   = restrict[1].start, restrict[1].step
+            zs, ze   = restrict[2].start, restrict[2].step
+
+            if xs is None: xs = 0
+            if ys is None: ys = 0
+            if zs is None: zs = 0
+            if xe is None: xe = data.shape[0]
+            if ye is None: ye = data.shape[1]
+            if ze is None: ze = data.shape[2]
+
+            # The seed location has to be in the sub-set
+            # o the image specified by the restrictions
+            if seedLoc[0] < xs or seedLoc[0] >= xe or \
+               seedLoc[1] < ys or seedLoc[1] >= ye or \
+               seedLoc[2] < zs or seedLoc[2] >= ze:
+                raise ValueError('Seed location ({}) is outside '
+                                 'of restrictions ({})'.format(
+                                     seedLoc, ((xs, xe), (ys, ye), (zs, ze))))
+                
+            data         = data[restrict]
+            shape        = data.shape
+            searchOffset = [start for start in [xs, ys, zs]]
+            seedLoc      = [sl - so for sl, so in zip(seedLoc, searchOffset)]
 
         # No search radius - search
         # through the entire image
         if np.any(searchRadius == 0):
             searchSpace  = data
-            searchOffset = (0, 0, 0)
             searchMask   = None
 
         # Search radius specified - limit
@@ -357,7 +571,6 @@ class Selection(props.HasProperties):
 
             # Calculate xyz indices 
             # of the search space
-            shape = data.shape
             for ax in range(3):
 
                 idx = seedLoc[     ax]
@@ -367,7 +580,7 @@ class Selection(props.HasProperties):
                 hi = idx + rad + 1
 
                 if lo < 0:             lo = 0
-                if hi > shape[ax] - 1: hi = shape[ax] - 1
+                if hi > shape[ax] - 1: hi = shape[ax]
 
                 ranges[ax] = np.arange(lo, hi)
                 slices[ax] = slice(    lo, hi)
@@ -392,9 +605,9 @@ class Selection(props.HasProperties):
             # Extract the search space, and
             # create the ellipsoid mask
             searchSpace  = data[slices]
-            searchOffset = (ranges[0][0], ranges[1][0], ranges[2][0])
+            searchOffset = [so + r[0] for so, r in zip(searchOffset, ranges)]
             searchMask   = dists <= 1
-            
+
         if precision is None: hits = searchSpace == value
         else:                 hits = np.abs(searchSpace - value) < precision
 
@@ -412,7 +625,7 @@ class Selection(props.HasProperties):
             seedLabel = hits[seedLoc[0], seedLoc[1], seedLoc[2]]
             hits      = hits == seedLabel
 
-        self.replaceSelection(hits, searchOffset)
+        self.replaceSelection(hits, searchOffset, combine)
 
     
     def transferSelection(self, destImg, destDisplay):
@@ -436,17 +649,20 @@ class Selection(props.HasProperties):
         raise NotImplementedError('todo')
         
 
-    def __updateSelectionBlock(self, block, offset):
+    def __updateSelectionBlock(self, block, offset, combine=False):
         """Replaces the current selection at the specified ``offset`` with the
         given ``block``.
 
         The old values for the block are stored, and can be retrieved via the
         :meth:`getLastChange` method.
 
-        :arg block:  A ``numpy.uint8`` array containing the new selection
-                     values.
+        :arg block:   A ``numpy.uint8`` array containing the new selection
+                      values.
 
-        :arg offset: Voxel coordinates specifying the location of ``block``.
+        :arg offset:  Voxel coordinates specifying the location of ``block``.
+
+        :arg combine: Combine with the previous stored change (see
+                      :meth:`__storeChange`).
         """
 
         block = np.array(block, dtype=np.uint8)
@@ -458,21 +674,23 @@ class Selection(props.HasProperties):
             offset = (0, 0, 0)
 
         xlo, ylo, zlo = offset
+        xhi           = xlo + block.shape[0]
+        yhi           = ylo + block.shape[1]
+        zhi           = zlo + block.shape[2]
 
-        xhi = xlo + block.shape[0]
-        yhi = ylo + block.shape[1]
-        zhi = zlo + block.shape[2]
-
-        self.__lastChangeOffset   = offset
-        self.__lastChangeOldBlock = np.array(self.selection[xlo:xhi,
-                                                            ylo:yhi,
-                                                            zlo:zhi])
-        self.__lastChangeNewBlock = np.array(block)
+        self.__storeChange(
+            np.array(self.selection[xlo:xhi, ylo:yhi, zlo:zhi]),
+            np.array(block),
+            offset,
+            combine)
 
         log.debug('Updating selection ({}) block [{}:{}, {}:{}, {}:{}]'.format(
             id(self), xlo, xhi, ylo, yhi, zlo, zhi))
 
         self.selection[xlo:xhi, ylo:yhi, zlo:zhi] = block
+
+        self.__clear = False
+        
         self.notify('selection') 
 
         
@@ -490,6 +708,25 @@ class Selection(props.HasProperties):
 
         return np.array(self.selection[xlo:xhi, ylo:yhi, zlo:zhi])
 
+
+    def __fixSlices(self, slices):
+        """A convenience method used by :meth:`selectByValue`,
+        :meth:`clearSelection` and :meth:`getIndices`, to sanitise their
+        ``restrict`` parameter.
+        """
+
+        if slices is None:
+            slices = [None, None, None]
+
+        if len(slices) != 3:
+            raise ValueError('Three slice objects are required')
+
+        for i, s in enumerate(slices):
+            if s is None:
+                slices[i] = slice(None)
+
+        return slices
+        
     
     @classmethod
     def generateBlock(cls, voxel, blockSize, shape, axes=(0, 1, 2)):

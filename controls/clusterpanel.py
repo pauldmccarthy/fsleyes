@@ -14,7 +14,8 @@ import                         wx
 import pwidgets.widgetgrid  as widgetgrid
 
 import fsl.fsleyes.panel    as fslpanel
-import fsl.utils.dialog     as fsldlg
+import fsl.utils.async      as async
+import fsl.utils.status     as status
 import fsl.data.strings     as strings
 import fsl.data.image       as fslimage
 import fsl.data.featimage   as featimage
@@ -349,6 +350,12 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         conName = featImage.contrastNames()[contrast]
         opts    = self._displayCtx.getOpts(overlay)
 
+        # We hide the grid and disable
+        # this panle while the grid is
+        # being created.
+        grid.Hide()
+        self.Disable()
+        
         grid.SetGridSize(len(clusters), 10)
 
         grid.ShowRowLabels(False)
@@ -375,14 +382,13 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
             return sizer
 
         # Creating all of the widgets could
-        # take a bit of time, so we'll 
+        # take a bit of time, so we'll
+        # do it asynchronously via async.idle
         # display a message while doing so.
-        dlg = fsldlg.SimpleMessageDialog()
-        dlg.SetMessage(strings.messages[self, 'loadingCluster'].format(
-            contrast + 1, conName))
-        dlg.Show()
+        status.update(strings.messages[self, 'loadingCluster'].format(
+            contrast + 1, conName), timeout=None)
 
-        for i, clust in enumerate(clusters):
+        def addCluster(i, clust):
 
             zmaxbtn    = makeCoordButton((clust.zmaxx,
                                           clust.zmaxy,
@@ -405,11 +411,19 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
             grid.SetText(  i, cols['copemax'],       fmt(clust.copemax))
             grid.SetWidget(i, cols['copemaxcoords'], copemaxbtn)
             grid.SetText(  i, cols['copemean'],      fmt(clust.copemean))
+            
+        for i, clust in enumerate(clusters):
+            async.idle(addCluster, i, clust)
 
-        grid.Refresh()
-
-        dlg.Close()
-        dlg.Destroy()
+        # Refresh the grid widget when all
+        # clusters have been added.
+        def onFinish():
+            status.update('All clusters loaded.')
+            self.Enable()
+            grid.Show()
+            grid.Refresh()
+            
+        async.idle(onFinish)
 
         return grid
         

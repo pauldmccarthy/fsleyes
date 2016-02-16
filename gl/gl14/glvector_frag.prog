@@ -59,8 +59,7 @@ TEMP  xColour;
 TEMP  yColour;
 TEMP  zColour;
 TEMP  fragColour;
-TEMP  clipLow;
-TEMP  clipHigh;
+TEMP  clipResult;
 PARAM voxValXform[4] = {{ param4_voxValXform }};
 PARAM cmapXform[4]   = {{ param4_cmapXform   }};
 PARAM imageShape     = {{ param_imageShape   }};
@@ -80,15 +79,21 @@ TEX modValue,  {{ varying_texCoord }}, {{ texture_modulateTexture }}, 3D;
 TEX clipValue, {{ varying_texCoord }}, {{ texture_clipTexture     }}, 3D;
 
 # If the clipping value is
-# below the low clipping
-# range, or abvve the high
-# clipping range, kill the
-# fragment.
-SUB clipLow,  clipValue.x, clipping.x;
-SUB clipHigh, clipping.y,  clipValue.x;
+# <= the low clipping range,
+# or >= the high clipping
+# range, kill the fragment.
+SUB clipResult.x, clipValue.x, clipping.x;
+SUB clipResult.y, clipping.y,  clipValue.x;
 
-KIL clipLow;
-KIL clipHigh;
+# Set the clipResults which are less than or
+# equal to zero to negative 1. See comment
+# about this in glvolume_frag.prog.
+MUL clipResult, clipResult, -1.0;
+SGE clipResult, clipResult,  0.0;
+MUL clipResult, clipResult, -1.0;
+
+KIL clipResult.x;
+KIL clipResult.y;
 
 # Transform vector values from their normalised 
 # texture range to their original data range,

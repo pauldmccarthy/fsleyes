@@ -207,6 +207,9 @@ class GLVolume(globject.GLImageObject):
         and calls :meth:`.GLImageObject.destroy`.
         """
 
+        self.deregisterClipImage()
+        self.removeDisplayListeners()
+
         self.imageTexture.deregister(self.name)
         glresources.delete(self.imageTexture.getTextureName())
 
@@ -221,9 +224,6 @@ class GLVolume(globject.GLImageObject):
         self.clipTexture      = None
         self.colourTexture    = None
         self.negColourTexture = None
-
-        self.deregisterClipImage()
-        self.removeDisplayListeners()
         
         fslgl.glvolume_funcs  .destroy(self)
         globject.GLImageObject.destroy(self)
