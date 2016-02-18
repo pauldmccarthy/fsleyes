@@ -276,7 +276,9 @@ class DisplayContext(props.SyncableHasProperties):
 
         self.detachFromParent()
 
-        self.__overlayList.removeListener('overlays', self.__name)
+        self.__overlayList.removeListener('overlays',           self.__name)
+        self              .removeListener('syncOverlayDisplay', self.__name)
+        self              .removeListener('displaySpace',       self.__name)
 
         for overlay, display in self.__displays.items():
             display.destroy()
