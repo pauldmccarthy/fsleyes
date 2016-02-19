@@ -57,11 +57,15 @@ class GLLabel(globject.GLImageObject):
         self.lutTexture   = textures.LookupTableTexture(lutTexName)
         self.imageTexture = None
 
-        self.refreshImageTexture()
+        self.addListeners()
+
         self.refreshLutTexture()
  
-        fslgl.gllabel_funcs.init(self)
-        self.addListeners()
+        def onTextureReady():
+            fslgl.gllabel_funcs.init(self)
+            self.notify() 
+ 
+        async.wait([self.refreshImageTexture()], onTextureReady)
 
         
     def destroy(self):
