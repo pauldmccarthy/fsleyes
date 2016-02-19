@@ -531,6 +531,9 @@ class GLVector(globject.GLImageObject):
             # Right?
             if unsynced:
                 texName = '{}_unsync_{}'.format(texName, id(opts))
+
+        if opts is not None: volume = opts.volume
+        else:                volume = 0
  
         tex = glresources.get(
             texName,
@@ -538,7 +541,7 @@ class GLVector(globject.GLImageObject):
             texName,
             image,
             normalise=norm,
-            volume=opts.volume,
+            volume=volume,
             notify=False)
         
         tex.register(self.name, self.__textureChanged)
