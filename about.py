@@ -43,6 +43,7 @@ class AboutDialog(wx.Dialog):
         emailLabel      = wx.StaticText(self)
         companyLabel    = wx.StaticText(self)
         versionLabel    = wx.StaticText(self)
+        vcsVersionLabel = wx.StaticText(self)
         glVersionLabel  = wx.StaticText(self)
         glRendererLabel = wx.StaticText(self)
         softwareField   = wx.TextCtrl(  self,
@@ -60,6 +61,7 @@ class AboutDialog(wx.Dialog):
                 emailLabel,
                 companyLabel,
                 versionLabel,
+                vcsVersionLabel,
                 glVersionLabel,
                 glRendererLabel,
                 softwareField]
@@ -71,10 +73,11 @@ class AboutDialog(wx.Dialog):
         softwareField.SetDefaultStyle(wx.TextAttr('#ffffff', wx.NullColour))
 
         # Create / retrieve all the content
-        verStr   = version.__version__
-        glVerStr = gl.glGetString(gl.GL_VERSION)
-        glRenStr = gl.glGetString(gl.GL_RENDERER)
-        swlibs   = strings.about['libs']
+        verStr    = version.__version__
+        vcsVerStr = version.__vcs_version__
+        glVerStr  = gl.glGetString(gl.GL_VERSION)
+        glRenStr  = gl.glGetString(gl.GL_RENDERER)
+        swlibs    = strings.about['libs']
 
         swVersions = []
         for lib in swlibs:
@@ -90,10 +93,11 @@ class AboutDialog(wx.Dialog):
             
             swVersions.append(swVer)
 
-        verStr   = strings.about['version']   .format(verStr)
-        glVerStr = strings.about['glVersion'] .format(glVerStr)
-        glRenStr = strings.about['glRenderer'].format(glRenStr)
-        swStr    = strings.about['software']  .format(*swVersions)
+        verStr    = strings.about['version']   .format(verStr)
+        vcsVerStr = strings.about['vcsVersion'].format(vcsVerStr)
+        glVerStr  = strings.about['glVersion'] .format(glVerStr)
+        glRenStr  = strings.about['glRenderer'].format(glRenStr)
+        swStr     = strings.about['software']  .format(*swVersions)
 
         # Tack the license file contents onto
         # the end of the software description.
@@ -113,6 +117,7 @@ class AboutDialog(wx.Dialog):
         emailLabel     .SetLabel(strings.about['email'])
         companyLabel   .SetLabel(strings.about['company'])
         versionLabel   .SetLabel(verStr)
+        vcsVersionLabel.SetLabel(vcsVerStr)
         glVersionLabel .SetLabel(glVerStr)
         glRendererLabel.SetLabel(glRenStr)
         softwareField  .SetValue(swStr)
@@ -135,6 +140,7 @@ class AboutDialog(wx.Dialog):
 
         row3Sizer.Add(glVersionLabel,  flag=wx.EXPAND)
         row3Sizer.Add((1, 1),          flag=wx.EXPAND, proportion=1)
+        row3Sizer.Add(vcsVersionLabel, flag=wx.EXPAND)
         
         row4Sizer.Add(glRendererLabel, flag=wx.EXPAND)
         row4Sizer.Add((1, 1),          flag=wx.EXPAND, proportion=1)

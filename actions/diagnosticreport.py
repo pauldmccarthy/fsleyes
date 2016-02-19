@@ -104,14 +104,15 @@ class DiagnosticReportAction(action.Action):
                 ('name',   ovl.name),
                 ('source', ovl.dataSource)]))
 
-        report['Platform'] = platform.platform()
-        report['Python']   = '{}  {}'.format(platform.python_version(),
-                                             platform.python_compiler())
-        report['Version']  = version.__version__
-        report['OpenGL']   = self.__openGLReport()
-        report['Settings'] = self.__settingsReport()
-        report['Layout']   = perspectives.serialisePerspective(self.__frame)
-        report['Overlays'] = overlays
+        report['Platform']    = platform.platform()
+        report['Python']      = '{}  {}'.format(platform.python_version(),
+                                                platform.python_compiler())
+        report['Version']     = version.__version__
+        report['VCS Version'] = version.__vcs_version__
+        report['OpenGL']      = self.__openGLReport()
+        report['Settings']    = self.__settingsReport()
+        report['Layout']      = perspectives.serialisePerspective(self.__frame)
+        report['Overlays']    = overlays
 
         report['Master display context'] = self.__displayContextReport(
             self.__overlayList,
