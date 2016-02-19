@@ -609,10 +609,20 @@ class LabelWidget(wx.Panel):
 
         # Disable the LutPanel listener, otherwise
         # it will recreate the label list (see
-        # LookupTablePanel._createLabelList)
-        self.__lut.disableListener('labels', self.__lutPanel._name)
+        # LookupTablePanel._createLabelList).
+        # 
+        # We check to see if a listener exists,
+        # because the panel will only register
+        # a listener on label overlays.
+        toggle = self.__lut.hasListener('labels', self.__lutPanel._name)
+
+        if toggle:
+            self.__lut.disableListener('labels', self.__lutPanel._name)
+            
         self.__lut.set(self.__value, enabled=self.__enableBox.GetValue())
-        self.__lut.enableListener('labels', self.__lutPanel._name)
+
+        if toggle:
+            self.__lut.enableListener('labels', self.__lutPanel._name)
 
         
     def __onColour(self, ev):
@@ -623,10 +633,16 @@ class LabelWidget(wx.Panel):
         newColour = self.__colourButton.GetColour()
         newColour = [c / 255.0 for c in newColour]
 
-        # See comment in __onEnable 
-        self.__lut.disableListener('labels', self.__lutPanel._name)
+        # See comment in __onEnable
+        toggle = self.__lut.hasListener('labels', self.__lutPanel._name)
+
+        if toggle:
+            self.__lut.disableListener('labels', self.__lutPanel._name)
+            
         self.__lut.set(self.__value, colour=newColour)
-        self.__lut.enableListener('labels', self.__lutPanel._name)
+
+        if toggle:
+            self.__lut.enableListener('labels', self.__lutPanel._name)
 
         
 class NewLutDialog(wx.Dialog):
