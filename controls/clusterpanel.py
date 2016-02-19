@@ -494,6 +494,11 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
             return
 
         overlay = self._displayCtx.getSelectedOverlay()
+
+        # Overlay is in-memory
+        if overlay.dataSource is None:
+            return
+        
         featDir = featresults.getAnalysisDir(overlay.dataSource)
 
         # No FEAT analysis, or not an Image,
