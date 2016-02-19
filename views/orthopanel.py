@@ -456,11 +456,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         :class:`.SliceCanvas`.
         """
 
-        sceneOpts = self.getSceneOptions()
-        allLabels = self.__xLabels.values() + \
-                    self.__yLabels.values() + \
-                    self.__zLabels.values()
-
+        sopts = self.getSceneOptions()
+        
         # Are we showing or hiding the labels?
         if len(self._overlayList) == 0:
             show = False
@@ -470,18 +467,22 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         # Labels are only supported if we
         # have a volumetric reference image 
-        if   overlay is None:      show = False
-        elif sceneOpts.showLabels: show = True
-        else:                      show = False
+        if   overlay is None:  showLabels = False
+        elif sopts.showLabels: showLabels = True
+        else:                  showLabels = False
 
-        for lbl in allLabels:
-            self.__canvasSizer.Show(lbl, show)
+        canvases  = [self.__xcanvas,    self.__ycanvas,    self.__zcanvas]
+        allLabels = [self.__xLabels,    self.__yLabels,    self.__zLabels]
+        shows     = [sopts.showXCanvas, sopts.showYCanvas, sopts.showZCanvas]
+
+        for canvas, labels, show in zip(canvases, allLabels, shows):
+            for lbl in labels.values():
+                self.__canvasSizer.Show(lbl, show and showLabels)
 
         # If we're hiding the labels, do no more
-        if not show:
+        if not showLabels:
             self.PostSizeEvent()
             return
-
 
         log.debug('Refreshing orientation labels '
                   'according to {}'.format(overlay.name))
@@ -505,7 +506,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         log.debug('Y orientation: {} - {}'.format(ylo, yhi))
         log.debug('Z orientation: {} - {}'.format(zlo, zhi))
 
-        bg = sceneOpts.bgColour
+        bg = sopts.bgColour
         fg = colourmaps.complementaryColour(bg)
         bg = [int(round(c * 255)) for c in bg]
         fg = [int(round(c * 255)) for c in fg]        
