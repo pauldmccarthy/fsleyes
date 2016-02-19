@@ -278,7 +278,7 @@ class ListItemWidget(wx.Panel):
     """
 
     
-    disabledFG = '#CCCCCC'
+    disabledFG = '#888888'
     """This colour is used as the foreground (text) colour for overlays
     where their :attr:`.Display.enabled` property is ``False``.
     """ 
