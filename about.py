@@ -98,7 +98,6 @@ class AboutDialog(wx.Dialog):
                              strings.about['company'],
                              strings.about['author'],
                              strings.about['email'],
-                             verStr,
                              vcsVerStr,
                              glVerStr,
                              glRenStr))
