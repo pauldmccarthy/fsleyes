@@ -446,8 +446,9 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
                 grids     = self.__clusterGrids.pop(featImage)
                 
                 for grid in grids:
-                    self.__mainSizer.Detach(grid)
-                    grid.Destroy()
+                    if grid is not None:
+                        self.__mainSizer.Detach(grid)
+                        grid.Destroy()
         
         self.__selectedOverlayChanged()
         self.__enableOverlayButtons()
