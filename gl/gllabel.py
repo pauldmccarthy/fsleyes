@@ -220,7 +220,8 @@ class GLLabel(globject.GLImageObject):
             textures.ImageTexture,
             texName,
             self.image,
-            notify=False)
+            notify=False,
+            volume=opts.volume)
         
         self.imageTexture.register(self.name, self.__imageTextureChanged)
 

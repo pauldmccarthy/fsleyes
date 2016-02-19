@@ -538,6 +538,7 @@ class GLVector(globject.GLImageObject):
             texName,
             image,
             normalise=norm,
+            volume=opts.volume,
             notify=False)
         
         tex.register(self.name, self.__textureChanged)
