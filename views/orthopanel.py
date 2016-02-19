@@ -762,11 +762,14 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                        space,         space,            space]
 
         # Add all those widgets to the grid sizer
-        flag = wx.ALIGN_CENTRE_HORIZONTAL | wx.ALIGN_CENTRE_VERTICAL
+        flag     = wx.ALIGN_CENTRE_HORIZONTAL | wx.ALIGN_CENTRE_VERTICAL
+        canvases = [self.__xcanvas, self.__ycanvas, self.__zcanvas]
         
         for w in widgets:
-            self.__canvasSizer.Add(w, flag=flag)
-                                          
+            
+            if w in canvases: self.__canvasSizer.Add(w, flag=flag | wx.EXPAND)
+            else:             self.__canvasSizer.Add(w, flag=flag)
+            
         self.getContentPanel().SetSizer(self.__canvasSizer)
 
         # Calculate/ adjust the appropriate sizes
