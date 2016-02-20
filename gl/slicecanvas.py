@@ -955,8 +955,19 @@ class SliceCanvas(props.HasProperties):
         if self.zoom == 100.0:
             return (xmin, xmax, ymin, ymax)
 
+        # The zoom is specified as a value
+        # between 100 and 5000 (the minval/
+        # maxaval). To make the zoom smoother
+        # at low levels, we re-scale this
+        # value to be exponential across the
+        # range.
+        minzoom = self.getConstraint('zoom', 'minval')
+        maxzoom = self.getConstraint('zoom', 'maxval')
+        zoom    = (self.zoom - minzoom) / maxzoom
+        zoom    = minzoom + (zoom ** 3) * maxzoom
+
         bounds     = self.displayBounds
-        zoomFactor = 100.0 / self.zoom
+        zoomFactor = 100.0 / zoom
 
         xlen    = xmax - xmin
         ylen    = ymax - ymin
