@@ -552,33 +552,31 @@ class ViewPanel(fslpanel.FSLEyesPanel):
             ev.Skip()
             panel = ev.GetPane().window
 
-        log.debug('Panel closed: {}'.format(type(panel).__name__))
-        
         if isinstance(panel, (fslpanel  .FSLEyesPanel,
                               fsltoolbar.FSLEyesToolBar)):
             
-            self.__panels.pop(type(panel))
+            panel = self.__panels.pop(type(panel), None)
 
-            # calling fslpanel.FSLEyesPanel.destroy()
-            # here -  wx.Destroy is done below
-            panel.destroy()
-
-            # Even when the user closes a pane,
-            # AUI does not detach said pane -
-            # we have to do it manually
-            self.__auiMgr.DetachPane(panel)
-            self.__auiMgrUpdate()
-
-        # WTF AUI. Sometimes this method gets called
-        # twice for a panel, the second time with a
-        # reference to a wx._wxpyDeadObject; in such
-        # situations, the Destroy method call below
-        # will result in an exception being raised.
-        else:
-            return
+            # WTF AUI. Sometimes this method gets called
+            # twice for a panel, the second time with a
+            # reference to a wx._wxpyDeadObject; in such
+            # situations, the Destroy method call below
+            # will result in an exception being raised.
+            if panel is not None:
         
-        panel.Destroy()
+                log.debug('Panel closed: {}'.format(type(panel).__name__))
 
+                # calling fslpanel.FSLEyesPanel.destroy()
+                # here -  wx.Destroy is done below
+                panel.destroy()
+
+                # Even when the user closes a pane,
+                # AUI does not detach said pane -
+                # we have to do it manually
+                self.__auiMgr.DetachPane(panel)
+                self.__auiMgrUpdate()
+                
+                panel.Destroy()
 
 #
 # Here I am monkey patching the wx.agw.aui.framemanager.AuiFloatingFrame

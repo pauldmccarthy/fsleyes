@@ -192,6 +192,9 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
         self.__enabledOverlays = None
         self.__infoPanel     .destroy()
         self.__overlayPanel  .destroy()
+        
+        self._overlayList.removeListener('overlays', self._name)
+        
         fslpanel.FSLEyesPanel.destroy(self)
 
 
