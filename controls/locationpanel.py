@@ -10,6 +10,7 @@ panel which shows information about the current display location.
 
 
 import logging
+import itertools as it
 
 import wx
 import wx.html as wxhtml
@@ -20,6 +21,7 @@ import props
 
 import pwidgets.floatspin  as floatspin
 
+import fsl.utils.typedict  as td
 import fsl.utils.transform as transform
 import fsl.data.image      as fslimage
 import fsl.data.constants  as constants
@@ -70,6 +72,18 @@ class LocationPanel(fslpanel.FSLEyesPanel):
     display the current :attr:`.DisplayContext.location` as-is (i.e. in the
     display coordinate system); furthermore, the voxel location controls will
     be disabled.
+
+
+    **Location updates**
+
+    
+    The :data:`DISPLAYOPTS_BOUNDS` and :data:`DISPLAYOPTS_INFO` dictionaries
+    contain lists of property names that the :class:`.LocationPanel` listens
+    on for changes, so it knows when the location widgets, and information
+    about the currenty location, need to be refreshed. For example, when the
+    :attr`.Nifti1Opts.volume` property of a :class:`.Nifti1` overlay changes,
+    the volume index, and potentially the overlay information, needs to be
+    updated.
     """
 
     
@@ -98,24 +112,13 @@ class LocationPanel(fslpanel.FSLEyesPanel):
 
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
-        # The world and voxel locations dispalyed by the LocationPanel
-        # are only really relevant to volumetric (i.e. NIFTI) overlay
-        # types. However, other overlay types (e.g. Model instances)
-        # may have an associated 'reference' image, from which details
-        # of the coordinate system may be obtained.
-        #
-        # When the current overlay is either an Image instance, or has
-        # an associated reference image, this attributes is used to
-        # store a reference to the image.
-        self.__refImage = None
-        
-        # When the currently selected overlay is 4D,
-        # this attribute will refer to the
-        # corresponding DisplayOpts instance, which
-        # has a volume property that controls the
-        # volume - see e.g. the Nifti1Opts class. This
-        # attribute is set in _selectedOverlayChanged.
-        self.__volumeTarget = None
+        # Whenever the selected overlay changes,
+        # a reference to it and its DisplayOpts
+        # instance is stored, as property listeners
+        # are registered on it (and need to be
+        # de-registered later on).
+        self.__registeredOverlay = None
+        self.__registeredOpts    = None
 
         self.__column1 = wx.Panel(self)
         self.__column2 = wx.Panel(self)
@@ -221,6 +224,8 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         self._displayCtx .removeListener('selectedOverlay', self._name)
         self._displayCtx .removeListener('location',        self._name)
 
+        self.__deregisterOverlay()
+
         fslpanel.FSLEyesPanel.destroy(self)
 
 
@@ -272,81 +277,153 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         
     def __selectedOverlayChanged(self, *a):
         """Called when the :attr:`.DisplayContext.selectedOverlay` or
-        :class:`.OverlayList` is changed. Refreshes the ``LocationPanel``
-        interface accordingly.
+        :class:`.OverlayList` is changed. Registered with the new overlay,
+        and refreshes the ``LocationPanel`` interface accordingly.
         """
 
-        self.__updateReferenceImage()
-        self.__updateWidgets()
+        self.__deregisterOverlay()
 
         if len(self._overlayList) == 0:
+            self.__updateWidgets()
             self.__updateLocationInfo()
+            
+        else:
+            self.__registerOverlay()
+            self.__updateWidgets()
+            self.__displayLocationChanged()
+
+        
+    def __registerOverlay(self):
+        """Registers property listeners with the :class:`.Display` and
+        :class:`.DisplayOpts` instances associated with the currently
+        selected overlay.
+        """
+
+        overlay = self._displayCtx.getSelectedOverlay()
+
+        if overlay is None:
             return
 
-        # Register a listener on the DisplayOpts 
-        # instance of the currently selected overlay,
-        # so we can update the location if the
-        # overlay bounds change.
-        overlay = self._displayCtx.getSelectedOverlay()
-        for ovl in self._overlayList:
-            display = self._displayCtx.getDisplay(ovl)
-            opts    = display.getDisplayOpts()
-            
-            if ovl is overlay:
-                opts.addListener('bounds',
-                                 self._name,
-                                 self.__overlayBoundsChanged,
-                                 overwrite=True)
-            else:
-                opts.removeListener('bounds', self._name)
+        display = self._displayCtx.getDisplay(overlay)
+        opts    = display.getDisplayOpts()
 
-        # Refresh the world/voxel location properties
-        self.__displayLocationChanged()
+        self.__registeredOverlay = overlay
+        self.__registeredOpts    = opts
+
+        # The properties that we need to
+        # listen for are specified in the
+        # DISPLAYOPTS_BOUNDS and
+        # DISPLAYOPTS_INFO dictionaries.
+        boundPropNames = DISPLAYOPTS_BOUNDS.get(opts, [], allhits=True)
+        infoPropNames  = DISPLAYOPTS_INFO  .get(opts, [], allhits=True)
+        boundPropNames = it.chain(*boundPropNames)
+        infoPropNames  = it.chain(*infoPropNames)
+
+        # DisplayOpts instances get re-created
+        # when an overlay type is changed, so
+        # we need to re-register when this happens.
+        display.addListener('overlayType',
+                            self._name,
+                            self.__selectedOverlayChanged)
+
+        for n in boundPropNames:
+            opts.addListener(n, self._name, self.__boundsOptsChanged)
+        for n in infoPropNames:
+            opts.addListener(n, self._name, self.__infoOptsChanged) 
+
+        # Enable the volume widget if the
+        # overlay is a 4D image, and bind
+        # the widget to the volume property
+        # of  the associated Nifti1Opts
+        # instance
+        is4D = isinstance(overlay, fslimage.Nifti1) and \
+               len(overlay.shape) >= 4              and \
+               overlay.shape[3] > 1 
+
+        if is4D:
+            props.bindWidget(
+                self.__volume, opts, 'volume', floatspin.EVT_FLOATSPIN)
+
+            self.__volume.SetRange(0, overlay.shape[3] - 1)
+            self.__volume.SetValue(opts.volume)
+
+            self.__volume     .Enable()
+            self.__volumeLabel.Enable()
+        else:
+            self.__volume.SetRange(0, 0)
+            self.__volume.SetValue(0)
+            self.__volume.Disable() 
+
+    
+    def __deregisterOverlay(self):
+        """De-registers property listeners with the :class:`.Display` and
+        :class:`.DisplayOpts` instances associated with the previously
+        registered overlay.
+        """
+        
+        opts    = self.__registeredOpts
+        overlay = self.__registeredOverlay
+
+        if overlay is None:
+            return
+
+        self.__registeredOpts    = None
+        self.__registeredOverlay = None
+
+        display        = opts.display
+        boundPropNames = DISPLAYOPTS_BOUNDS.get(opts, [], allhits=True)
+        infoPropNames  = DISPLAYOPTS_INFO  .get(opts, [], allhits=True)
+        boundPropNames = it.chain(*boundPropNames)
+        infoPropNames  = it.chain(*infoPropNames)
+
+        if display is not None:
+            display.removeListener('overlayType', self._name)
+
+        for p in boundPropNames: opts.removeListener(p, self._name)
+        for p in infoPropNames:  opts.removeListener(p, self._name) 
+
+        is4D      = isinstance(overlay, fslimage.Nifti1) and \
+                    len(overlay.shape) >= 4              and \
+                    overlay.shape[3] > 1 
+ 
+        if is4D:
+            props.unbindWidget(self.__volume,
+                               opts,
+                               'volume',
+                               floatspin.EVT_FLOATSPIN)
 
 
-    def __overlayBoundsChanged(self, *a):
-        """Called when the :attr:`.DisplayOpts.bounds` property associated
-        with the currently selected overlay changes. Updates the
+    def __boundsOptsChanged(self, *a):
+        """Called when a :class:`.DisplayOpts` property associated
+        with the currently selected overlay, and listed in the
+        :data:`DISPLAYOPTS_BOUNDS` dictionary, changes. Refreshes the
+        ``LocationPanel`` interface accordingly.
+        """ 
+        self.__updateWidgets()
+        self.__displayLocationChanged() 
+
+        
+    def __infoOptsChanged(self, *a):
+        """Called when a :class:`.DisplayOpts` property associated
+        with the currently selected overlay, and listed in the
+        :data:`DISPLAYOPTS_INFO` dictionary, changes. Refreshes the
         ``LocationPanel`` interface accordingly.
         """
-
-        self.__updateReferenceImage()
-        self.__updateWidgets()
         self.__displayLocationChanged()
-        
-
-    def __updateReferenceImage(self):
-        """Called by the :meth:`__selectedOverlayChanged` and
-        :meth:`__overlayBoundsChanged` methods. Looks at the currently
-        selected overlay, and figures out if there is a reference image
-        that can be used to transform between display, world, and voxel
-        coordinate systems.
-        """
-
-        refImage = None
-        
-        # Look at the currently selected overlay, and
-        # see if there is an associated NIFTI image
-        # that can be used as a reference image
-        if len(self._overlayList) > 0:
-
-            overlay  = self._displayCtx.getSelectedOverlay()
-            refImage = self._displayCtx.getReferenceImage(overlay)
-
-            log.debug('Reference image for overlay {}: {}'.format(
-                overlay, refImage))
-
-        self.__refImage = refImage
         
 
     def __updateWidgets(self):
         """Called by the :meth:`__selectedOverlayChanged` and
-        :meth:`__overlayBoundsChanged` methods.  Enables/disables the
+        :meth:`__displayOptsChanged` methods.  Enables/disables the
         voxel/world location and volume controls depending on the currently
         selected overlay (or reference image).
         """
 
-        refImage = self.__refImage
+        overlay = self.__registeredOverlay
+        opts    = self.__registeredOpts
+
+        if overlay is not None: refImage = opts.getReferenceImage()
+        else:                   refImage = None
 
         haveRef = refImage is not None
 
@@ -406,42 +483,6 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         self.enableNotification('worldLocation')
         self.enableNotification('voxelLocation')
 
-        ###############
-        # Volume widget
-        ###############
-
-        # Unbind any listeners between the previous
-        # reference image and the volume widget
-        if self.__volumeTarget is not None:
-            props.unbindWidget(self.__volume,
-                               self.__volumeTarget,
-                               'volume',
-                               floatspin.EVT_FLOATSPIN)
-            
-            self.__volumeTarget = None
-            self.__volume.SetValue(0)
-            self.__volume.SetRange(0, 0)
-
-        # Enable/disable the volume widget if the
-        # overlay is a 4D image, and bind/unbind
-        # the widget to the volume property of
-        # the associated Nifti1Opts instance
-        if haveRef and refImage.is4DImage():
-            opts = self._displayCtx.getOpts(refImage)
-            self.__volumeTarget = opts
-
-            props.bindWidget(
-                self.__volume, opts, 'volume', floatspin.EVT_FLOATSPIN)
-
-            self.__volume.SetRange(0, refImage.shape[3] - 1)
-            self.__volume.SetValue(opts.volume)
-
-            self.__volume     .Enable()
-            self.__volumeLabel.Enable()
-        else:
-            self.__volume     .Disable()
-            self.__volumeLabel.Disable() 
-
             
     def __displayLocationChanged(self, *a):
         """Called when the :attr:`.DisplayContext.location` changes.
@@ -461,7 +502,8 @@ class LocationPanel(fslpanel.FSLEyesPanel):
                   between the three location properties.
         """
 
-        if len(self._overlayList) == 0: return
+        if len(self._overlayList) == 0:      return
+        if self.__registeredOverlay is None: return
 
         self.__prePropagate()
         self.__propagate('display', 'voxel')
@@ -476,7 +518,8 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         :attr:`.DisplayContext.location` properties.
         """
         
-        if len(self._overlayList) == 0: return
+        if len(self._overlayList) == 0:      return
+        if self.__registeredOverlay is None: return
 
         self.__prePropagate()
         self.__propagate('world', 'voxel')
@@ -491,7 +534,8 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         :attr:`.DisplayContext.location` properties.
         """ 
         
-        if len(self._overlayList) == 0: return
+        if len(self._overlayList) == 0:      return
+        if self.__registeredOverlay is None: return
 
         self.__prePropagate()
         self.__propagate('voxel', 'world')
@@ -534,8 +578,10 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         elif source == 'voxel':   coords = self.voxelLocation.xyz
         elif source == 'world':   coords = self.worldLocation.xyz
 
-        if self.__refImage is not None:
-            opts    = self._displayCtx.getOpts(self.__refImage)
+        refImage = self.__registeredOpts.getReferenceImage()
+
+        if refImage is not None:
+            opts    = self._displayCtx.getOpts(refImage)
             xformed = opts.transformCoords([coords],
                                            source,
                                            target,
@@ -574,7 +620,8 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         in the :class:`.OverlayList`.
         """
 
-        if len(self._overlayList) == 0:
+        if len(self._overlayList) == 0 or \
+           self.__registeredOverlay is None: 
             self.__info.SetPage('')
             return
 
@@ -616,3 +663,25 @@ class LocationPanel(fslpanel.FSLEyesPanel):
                 
         self.__info.SetPage('<br>'.join(lines))
         self.__info.Refresh()
+
+
+DISPLAYOPTS_BOUNDS = td.TypeDict({
+    'DisplayOpts' : ['bounds'],
+    'ModelOpts'   : ['refImage'],
+})
+"""Different :class:`.DisplayOpts` types have different properties which
+affect the current overlay bounds.  Therefore, when the current overlay
+changes (as dictated by the :attr:`.DisplayContext.selectedOverlay`
+property),the :meth:`__registerOverlay` method registers property
+listeners on the properties specified in this dictionary.
+"""
+
+
+DISPLAYOPTS_INFO = td.TypeDict({
+    'Nifti1Opts'  : ['volume'],
+}) 
+"""Different :class:`.DisplayOpts` types have different properties which
+affect the current overlay location information.  Therefore, when the current
+overlay changes the :meth:`__registerOverlay` method registers property
+listeners on the properties specified in this dictionary.
+"""
