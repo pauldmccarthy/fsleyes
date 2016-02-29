@@ -370,7 +370,7 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         self.__registeredOpts    = None
         self.__registeredOverlay = None
 
-        display        = opts.display
+        display        = self._displayCtx.getDisplay(overlay)
         boundPropNames = DISPLAYOPTS_BOUNDS.get(opts, [], allhits=True)
         infoPropNames  = DISPLAYOPTS_INFO  .get(opts, [], allhits=True)
         boundPropNames = it.chain(*boundPropNames)
