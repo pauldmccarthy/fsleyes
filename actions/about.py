@@ -9,8 +9,7 @@ displays an about dialog for *FSLeyes*.
 """
 
 
-import                      action
-import fsl.fsleyes.about as aboutdlg
+import action
 
 
 class AboutAction(action.Action):
@@ -35,6 +34,8 @@ class AboutAction(action.Action):
 
     def __showDialog(self):
         """Creates and shows an :class:`.AboutDialog`. """
+
+        import fsl.fsleyes.about as aboutdlg
 
         dlg = aboutdlg.AboutDialog(self.__frame)
         dlg.Show()
