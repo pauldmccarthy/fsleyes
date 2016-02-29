@@ -118,6 +118,7 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         # are registered on it (and need to be
         # de-registered later on).
         self.__registeredOverlay = None
+        self.__registeredDisplay = None
         self.__registeredOpts    = None
 
         self.__column1 = wx.Panel(self)
@@ -308,6 +309,7 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         opts    = display.getDisplayOpts()
 
         self.__registeredOverlay = overlay
+        self.__registeredDisplay = display
         self.__registeredOpts    = opts
 
         # The properties that we need to
@@ -362,15 +364,16 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         """
         
         opts    = self.__registeredOpts
+        display = self.__registeredDisplay
         overlay = self.__registeredOverlay
 
         if overlay is None:
             return
 
         self.__registeredOpts    = None
+        self.__registeredDisplay = None
         self.__registeredOverlay = None
 
-        display        = self._displayCtx.getDisplay(overlay)
         boundPropNames = DISPLAYOPTS_BOUNDS.get(opts, [], allhits=True)
         infoPropNames  = DISPLAYOPTS_INFO  .get(opts, [], allhits=True)
         boundPropNames = it.chain(*boundPropNames)
