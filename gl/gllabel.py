@@ -43,19 +43,24 @@ class GLLabel(globject.GLImageObject):
     """
 
     
-    def __init__(self, image, display):
+    def __init__(self, image, display, xax, yax):
         """Create a ``GLLabel``.
 
         :arg image:   The :class:`.Image` instance.
         :arg display: The associated :class:`.Display` instance.
+        :arg xax:     Initial display X axis
+        :arg yax:     Initial display Y axis        
         """
 
-        globject.GLImageObject.__init__(self, image, display)
+        globject.GLImageObject.__init__(self, image, display, xax, yax)
 
-        lutTexName   = '{}_lut'.format(self.name)
-
+        lutTexName        = '{}_lut'.format(self.name)
         self.lutTexture   = textures.LookupTableTexture(lutTexName)
         self.imageTexture = None
+
+        # The shader attribute will be created 
+        # by the gllabel_funcs module
+        self.shader       = None
 
         self.addListeners()
 
@@ -86,7 +91,9 @@ class GLLabel(globject.GLImageObject):
         """Returns ``True`` if this ``GLLabel`` is ready to be drawn, ``False``
         otherwise.
         """
-        return self.imageTexture is not None and self.imageTexture.ready()
+        return self.shader       is not None and \
+               self.imageTexture is not None and \
+               self.imageTexture.ready()
 
 
     def addListeners(self):

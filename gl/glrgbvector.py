@@ -59,11 +59,13 @@ class GLRGBVector(glvector.GLVector):
     """
 
 
-    def __init__(self, image, display):
+    def __init__(self, image, display, xax, yax):
         """Create a ``GLRGBVector``.
 
         :arg image:   An :class:`.Image` or :class:`.TensorImage` instance.
         :arg display: The associated :class:`.Display` instance.
+        :arg xax:     Initial display X axis
+        :arg yax:     Initial display Y axis        
         """
 
         # If the overlay is a TensorImage, use the
@@ -75,6 +77,8 @@ class GLRGBVector(glvector.GLVector):
         glvector.GLVector.__init__(self,
                                    image,
                                    display,
+                                   xax,
+                                   yax,
                                    prefilter=np.abs,
                                    vectorImage=vecImage,
                                    init=lambda: fslgl.glrgbvector_funcs.init(

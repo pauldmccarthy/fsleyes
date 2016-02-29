@@ -53,12 +53,13 @@ class GLLineVector(glvector.GLVector):
     """
 
 
-    def __init__(self, image, display):
+    def __init__(self, image, display, xax, yax):
         """Create a ``GLLineVector`` instance.
 
         :arg image:   An :class:`.Image` or :class:`.TensorImage` instance.
-
         :arg display: The associated :class:`.Display` instance.
+        :arg xax:     Initial display X axis
+        :arg yax:     Initial display Y axis
         """
         
         # If the overlay is a TensorImage, use the
@@ -70,6 +71,8 @@ class GLLineVector(glvector.GLVector):
         glvector.GLVector.__init__(self,
                                    image,
                                    display,
+                                   xax,
+                                   yax,
                                    vectorImage=vecImage,
                                    init=lambda: fslgl.gllinevector_funcs.init(
                                        self))

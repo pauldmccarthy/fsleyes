@@ -802,10 +802,12 @@ class SliceCanvas(props.HasProperties):
                 self._glObjects.pop(overlay)
                 return
 
-            globj = globject.createGLObject(overlay, display)
+            globj = globject.createGLObject(overlay,
+                                            display,
+                                            self.xax,
+                                            self.yax)
 
             if globj is not None:
-                globj.setAxes(self.xax, self.yax)
                 globj.register(self.name, self._refresh)
 
             self._glObjects[overlay] = globj
