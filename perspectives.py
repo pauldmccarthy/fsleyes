@@ -585,16 +585,33 @@ def _getPanelProps(panel):
     
 
 VIEWPANEL_PROPS = {
-    'OrthoPanel'    : [['syncLocation',  'syncOverlayOrder',  'syncOverlayDisplay'],
-                       ['showCursor',    'bgColour',          'cursorColour',
-                        'showColourBar', 'colourBarLocation', 'showXCanvas',
-                        'showYCanvas',   'showZCanvas',       'showLabels',
+    'OrthoPanel'    : [['syncLocation',
+                        'syncOverlayOrder',
+                        'syncOverlayDisplay',
+                        'movieRate'],
+                       ['showCursor',
+                        'bgColour',
+                        'cursorColour',
+                        'showColourBar',
+                        'colourBarLocation',
+                        'showXCanvas',
+                        'showYCanvas',
+                        'showZCanvas',
+                        'showLabels',
                         'layout']
                        ],
-    'LightBoxPanel' : [['syncLocation',  'syncOverlayOrder',  'syncOverlayDisplay'],
-                       ['showCursor',    'bgColour',          'cursorColour',
-                        'showColourBar', 'colourBarLocation', 'zax',
-                        'showGridLines', 'highlightSlice']]}
+    'LightBoxPanel' : [['syncLocation',
+                        'syncOverlayOrder',
+                        'syncOverlayDisplay',
+                        'movieRate'],
+                       ['showCursor',
+                        'bgColour',
+                        'cursorColour',
+                        'showColourBar',
+                        'colourBarLocation',
+                        'zax',
+                        'showGridLines',
+                        'highlightSlice']]}
 
     
 BUILT_IN_PERSPECTIVES = collections.OrderedDict((
