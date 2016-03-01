@@ -228,13 +228,26 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         nlabels = len(lut.labels)
 
         def addLabel(i, label):
-            self.__labelList.Append(label.displayName())
-            widget = LabelWidget(self, lut, label.value())
-            self.__labelList.SetItemWidget(i, widget)
 
-            if i == nlabels - 1:
-                status.update('Lookup table label list created.')
+            # If the user closes this panel while the
+            # label list is being created, wx will
+            # complain when we try to append things
+            # to a widget that has been destroyed.
+            try:
+                self.__labelList.Append(label.displayName())
+                widget = LabelWidget(self, lut, label.value())
+                self.__labelList.SetItemWidget(i, widget)
 
+                if i == nlabels - 1:
+                    status.update('Lookup table label list created.')
+                    
+            except wx.PyDeadObjectError:
+                pass
+
+        # This can take a while for big lookup tables,
+        # so we'll do it on the idle loop, one label
+        # at a time - the user can do other stuff while
+        # the list is being built.
         for i, label in enumerate(lut.labels):
             async.idle(addLabel, i, label)
 
