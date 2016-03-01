@@ -136,6 +136,7 @@ class SliceCanvas(props.HasProperties):
        panDisplayBy
        centreDisplayAt
        panDisplayToShow
+       zoomTo
        getAnnotations
     """
 
@@ -375,8 +376,6 @@ class SliceCanvas(props.HasProperties):
         """Pans the display so the given x/y position is in the centre. """
 
         xcentre, ycentre = self.getDisplayCentre()
-
-        # move to the new centre
         self.panDisplayBy(xpos - xcentre, ypos - ycentre)
 
 
@@ -412,6 +411,56 @@ class SliceCanvas(props.HasProperties):
         
         if xoff != 0 or yoff != 0:
             self.panDisplayBy(xoff, yoff)
+
+
+    def zoomTo(self, xlo, xhi, ylo, yhi):
+        """Zooms the canvas to the given rectangle, specified in
+        horizontal/vertical display coordinates.
+        """
+        
+        # We are going to convert the rectangle specified by
+        # the inputs into a zoom value, set the canvas zoom
+        # level, and then centre the canvas on the rectangle.
+
+        # Middle of the rectangle, used 
+        # at the end for centering
+        xmid = xlo + (xhi - xlo) / 2.0
+        ymid = ylo + (yhi - ylo) / 2.0
+
+        # Size of the rectangle
+        rectXlen = abs(xhi - xlo)
+        rectYlen = abs(yhi - ylo)
+
+        if rectXlen == 0: return
+        if rectYlen == 0: return
+
+        # Size of the canvas limits, 
+        # and the zoom value limits
+        xmin, xmax = self.displayBounds.getLimits(0)
+        ymin, ymax = self.displayBounds.getLimits(1)
+        zoommin    = self.getConstraint('zoom', 'minval')
+        zoommax    = self.getConstraint('zoom', 'maxval') 
+
+        xlen    = xmax    - xmin
+        ylen    = ymax    - ymin
+        zoomlen = zoommax - zoommin
+
+        # Calculate the ratio of the
+        # rectangle to the canvas limits
+        xratio = rectXlen / xlen
+        yratio = rectYlen / ylen
+        ratio  = max(xratio, yratio)
+
+        # Calculate the zoom from this ratio -
+        # this is the inverse of the zoom->canvas
+        # bounds calculation, as implemented in
+        # _applyZoom.
+        zoom  = 100.0 / ratio
+        zoom  = ((zoom - zoommin) / zoomlen) ** (1.0 / 3.0)
+        zoom  = zoommin + zoom * zoomlen
+        
+        self.zoom = zoom
+        self.centreDisplayAt(xmid, ymid)
 
 
     def getAnnotations(self):
@@ -965,11 +1014,19 @@ class SliceCanvas(props.HasProperties):
         # range.
         minzoom = self.getConstraint('zoom', 'minval')
         maxzoom = self.getConstraint('zoom', 'maxval')
-        zoom    = (self.zoom - minzoom) / maxzoom
-        zoom    = minzoom + (zoom ** 3) * maxzoom
 
-        bounds     = self.displayBounds
+        # Transform zoom from [100 - 5000] into
+        # [0.0 - 1.0], then turn it from linear
+        # [0.0 - 1.0] to exponential [0.0 - 1.0],
+        # and then finally back to [100 - 5000].
+        zoom    = (self.zoom - minzoom) / (maxzoom - minzoom)
+        zoom    = minzoom + (zoom ** 3) * (maxzoom - minzoom)
+
+        # Then turn zoom from [100 - 5000]
+        # to [1.0 - 0.0] - this value is
+        # then used to scale the given bounds
         zoomFactor = 100.0 / zoom
+        bounds     = self.displayBounds
 
         xlen    = xmax - xmin
         ylen    = ymax - ymin
@@ -1019,9 +1076,9 @@ class SliceCanvas(props.HasProperties):
                              oldLoc=None):
         """Called on canvas resizes, overlay bound changes, and zoom changes.
         
-        Calculates the bounding box, in display coordinates, to be displayed on
-        the canvas. Stores this bounding box in the displayBounds property. If
-        any of the parameters are not provided, the
+        Calculates the bounding box, in display coordinates, to be displayed
+        on the canvas. Stores this bounding box in the :attr:`displayBounds`
+        property. If any of the parameters are not provided, the
         :attr:`.DisplayContext.bounds` are used.
 
         

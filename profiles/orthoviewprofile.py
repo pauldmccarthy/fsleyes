@@ -451,31 +451,12 @@ class OrthoViewProfile(profiles.Profile):
             canvas.getAnnotations().dequeue(self.__lastRect)
             self.__lastRect = None
 
-        rectXlen = abs(canvasPos[canvas.xax] - canvasDownPos[canvas.xax])
-        rectYlen = abs(canvasPos[canvas.yax] - canvasDownPos[canvas.yax])
+        xlo = min(canvasPos[canvas.xax], canvasDownPos[canvas.xax])
+        xhi = max(canvasPos[canvas.xax], canvasDownPos[canvas.xax])
+        ylo = min(canvasPos[canvas.yax], canvasDownPos[canvas.yax])
+        yhi = max(canvasPos[canvas.yax], canvasDownPos[canvas.yax])
 
-        if rectXlen == 0: return
-        if rectYlen == 0: return
-
-        rectXmid = (canvasPos[canvas.xax] + canvasDownPos[canvas.xax]) / 2.0
-        rectYmid = (canvasPos[canvas.yax] + canvasDownPos[canvas.yax]) / 2.0
-
-        xlen = self._displayCtx.bounds.getLen(canvas.xax)
-        ylen = self._displayCtx.bounds.getLen(canvas.yax)
-
-        xzoom   = xlen / rectXlen
-        yzoom   = ylen / rectYlen
-        zoom    = min(xzoom, yzoom) * 100.0
-        maxzoom = canvas.getConstraint('zoom', 'maxval')
-
-        if zoom >= maxzoom:
-            zoom = maxzoom
-
-        if zoom > canvas.zoom:
-            canvas.zoom = zoom
-            canvas.centreDisplayAt(rectXmid, rectYmid)
-
-        canvas.Refresh()
+        canvas.zoomTo(xlo, xhi, ylo, yhi)
         
         
     ###################
