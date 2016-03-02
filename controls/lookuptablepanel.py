@@ -79,7 +79,6 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """ 
-
         
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
@@ -219,37 +218,64 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         ``LookupTable``.
         """
 
+        # The label list is created asynchronously on
+        # the wx.Idle loop, because it can take some
+        # time for big lookup tables. In the event
+        # that the list needs to be re-created (e.g.
+        # the current lookup table is changed), this
+        # attribute is used to tell any existing
+        # scheduled creation routine (the addLabel
+        # function defined below) to stop.
+        self.__cancelLabelListCreation = True
+
         log   .debug( 'Creating lookup table label list')
         status.update('Creating lookup table label list...', timeout=None)
 
+        self.Disable()
         self.__labelList.Clear()
 
         lut     = self.__selectedLut
         nlabels = len(lut.labels)
 
-        def addLabel(i, label):
+        def addLabel(labelIdx):
+
+            if self.__cancelLabelListCreation:
+                return
 
             # If the user closes this panel while the
             # label list is being created, wx will
             # complain when we try to append things
             # to a widget that has been destroyed.
             try:
-                self.__labelList.Append(label.displayName())
+                label  = lut.labels[labelIdx]
                 widget = LabelWidget(self, lut, label.value())
-                self.__labelList.SetItemWidget(i, widget)
+                
+                self.__labelList.Append(label.displayName())
+                self.__labelList.SetItemWidget(labelIdx, widget)
 
-                if i == nlabels - 1:
+                if labelIdx == nlabels - 1:
                     status.update('Lookup table label list created.')
+                    self.Enable()
+                else:
+                    async.idle(addLabel, labelIdx + 1)
                     
             except wx.PyDeadObjectError:
                 pass
 
-        # This can take a while for big lookup tables,
-        # so we'll do it on the idle loop, one label
-        # at a time - the user can do other stuff while
-        # the list is being built.
-        for i, label in enumerate(lut.labels):
-            async.idle(addLabel, i, label)
+        # The idle loop is a queue, so after
+        # any currently scheduled addLabel
+        # job has completed, we clear the
+        # cancel flag, and start re-creating
+        # the list.
+        def clearCancel():
+            self.__cancelLabelListCreation = False
+
+        async.idle(clearCancel)
+
+        # If this is a new lut, it
+        # won't have any labels
+        if len(lut.labels) == 0: self.Enable()
+        else:                    async.idle(addLabel, 0)
 
 
     def __setLut(self, lut):
@@ -332,7 +358,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         log.debug('Creating and registering new '
                   'LookupTable: {}'.format(name))
 
-        lut = fslcmaps.LookupTable(name)
+        lut = fslcmaps.LookupTable(key=name, name=name)
         fslcmaps.registerLookupTable(lut, self._overlayList, self._displayCtx)
 
         self.__updateLutChoices()
@@ -359,7 +385,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         log.debug('Creating and registering new '
                   'LookupTable {} (copied from {})'.format(newName, oldName))
 
-        lut = fslcmaps.LookupTable(newName)
+        lut = fslcmaps.LookupTable(key=newName, name=newName)
 
         for label in self.__selectedLut.labels:
             lut.set(label.value(),
@@ -727,7 +753,7 @@ class NewLutDialog(wx.Dialog):
         """Called when the user confirms the dialog. Saves the name that the 
         user entered, and closes the dialog.
         """
-        self.__enteredName = self._name.GetValue()
+        self.__enteredName = self.__name.GetValue()
         self.EndModal(wx.ID_OK)
 
 
