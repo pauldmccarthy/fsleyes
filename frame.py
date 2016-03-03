@@ -522,14 +522,19 @@ class FSLEyesFrame(wx.Frame):
         dctx .destroy()
 
         # If the removed panel was the centre
-        # pane, or if there is only one panel
-        # left, move another panel to the centre
+        # pane, move another panel to the centre
         numPanels = len(self.__viewPanels)
         wasCentre = paneInfo.dock_direction_get() == aui.AUI_DOCK_CENTRE
         
         if numPanels >= 1 and wasCentre:
             paneInfo = self.__auiManager.GetPane(self.__viewPanels[0])
-            paneInfo.Centre().Dockable(False).CaptionVisible(numPanels > 1)
+            paneInfo.Centre()
+
+        # If there is only one panel
+        # left, hide its title bar
+        if numPanels == 1:
+            paneInfo = self.__auiManager.GetPane(self.__viewPanels[0])
+            paneInfo.Dockable(False).CaptionVisible(False)
             
         # If there's only one panel left,
         # and it is a canvas panel, sync
