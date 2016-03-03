@@ -9,6 +9,7 @@ for all of the *FSLeyes view* panels. See the :mod:`~fsl.fsleyes` package
 documentation for more details.
 """
 
+
 import logging
 
 import                   wx
@@ -111,12 +112,16 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         self.__centrePanel = None
         self.__panels      = {}
 
+        # See note in FSLEyesFrame about
+        # the user of aero docking guides.
         self.__auiMgr = aui.AuiManager(
             self,
             agwFlags=(aui.AUI_MGR_RECTANGLE_HINT          |
                       aui.AUI_MGR_NO_VENETIAN_BLINDS_FADE |
                       aui.AUI_MGR_ALLOW_FLOATING          |
-                      aui.AUI_MGR_LIVE_RESIZE)) 
+                      aui.AUI_MGR_AERO_DOCKING_GUIDES     |
+                      aui.AUI_MGR_LIVE_RESIZE))
+
         self.__auiMgr.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onPaneClose)
 
         # Use a different listener name so that subclasses
@@ -579,8 +584,9 @@ class ViewPanel(fslpanel.FSLEyesPanel):
                 panel.Destroy()
 
 #
-# Here I am monkey patching the wx.agw.aui.framemanager.AuiFloatingFrame
-# __init__ method.
+# Here I am monkey patching the
+# wx.agw.aui.framemanager.AuiFloatingFrame.__init__ method.
+#
 #
 # I am doing this because I have observed some strange behaviour when running
 # a remote instance of this application over an SSH/X11 session, with the X11
@@ -625,3 +631,30 @@ def AuiFloatingFrame__init__(*args, **kwargs):
 # Patch my constructor in to the class definition.
 AuiFloatingFrame__real__init__ = aui.AuiFloatingFrame.__init__
 aui.AuiFloatingFrame.__init__  = AuiFloatingFrame__init__
+
+# I am also monkey-patching the wx.lib.agw.aui.AuiDockingGuide.__init__ method,
+# because in this instance, when running over SSH/X11, the wx.FRAME_TOOL_WINDOW
+# style seems to result in the docking guide frames being given title bars,
+# which is quite undesirable.
+def AuiDockingGuide__init__(*args, **kwargs):
+
+    if 'style' in kwargs:
+        style = kwargs['style']
+
+    # This is the default style, as defined 
+    # in the AuiDockingGuide constructor
+    else:
+        style = (wx.FRAME_TOOL_WINDOW |
+                 wx.FRAME_STAY_ON_TOP |
+                 wx.FRAME_NO_TASKBAR  |
+                 wx.NO_BORDER)
+
+    style &= ~wx.FRAME_TOOL_WINDOW
+
+    kwargs['style'] = style
+    
+    return AuiDockingGuide__real__init__(*args, **kwargs)
+
+
+AuiDockingGuide__real__init__ = aui.AuiDockingGuide.__init__
+aui.AuiDockingGuide.__init__  = AuiDockingGuide__init__

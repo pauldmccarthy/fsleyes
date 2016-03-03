@@ -210,7 +210,8 @@ def serialisePerspective(frame):
      the ``AuiManager.SavePerspective`` and ``AuiManager.SavePaneInfo``
      methods. One of these strings consists of:
     
-       - A name.
+       - A name, `'layout1'` or `'layout2'`, specifying the AUI version 
+         (this will always be at least `'layout2'` for *FSLeyes*).
     
        - A set of key-value set of key-value pairs defining the top level
          panel layout.
@@ -222,7 +223,7 @@ def serialisePerspective(frame):
      separated with '|' characters, and the pane-level key-value pairs
      separated with a ';' character. For example:
     
-     layoutName|key1=value1|name=Pane1;caption=Pane 1|\
+     layout2|key1=value1|name=Pane1;caption=Pane 1|\
      name=Pane2;caption=Pane 2|doc_size(5,0,0)=22|
     
      This function queries each of the AuiManagers, and extracts the following:
