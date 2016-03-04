@@ -18,6 +18,7 @@ import OpenGL.raw.GL._types           as gltypes
 import OpenGL.GL.ARB.fragment_program as arbfp
 import OpenGL.GL.ARB.vertex_program   as arbvp
 
+import fsl.utils.memoize              as memoize
 import                                   parse
 
 
@@ -207,12 +208,17 @@ class ARBPShader(object):
             gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
 
 
+    @memoize.Instanceify(memoize.skipUnchanged)
     def setVertParam(self, name, value):
         """Sets the value of the specified vertex program parameter.
 
         .. note:: It is assumed that the value is either a sequence of length
                   4 (for vector parameters), or a ``numpy`` array of shape 
                   ``(n, 4)`` (for matrix parameters).
+
+        .. note:: This method is decorated by the
+                  :func:`.memoize.skipUnchanged` decorator, which returns
+                  ``True`` if the value was changed, and ``False`` otherwise.
         """
 
         pos   = self.vertParamPositions[name]
@@ -225,10 +231,15 @@ class ARBPShader(object):
                 arbvp.GL_VERTEX_PROGRAM_ARB, pos + i,
                 row[0], row[1], row[2], row[3]) 
 
-    
+
+    @memoize.Instanceify(memoize.skipUnchanged)
     def setFragParam(self, name, value):
         """Sets the value of the specified vertex program parameter. See 
         :meth:`setVertParam` for infomration about possible values.
+
+        .. note:: This method is decorated by the
+                  :func:`.memoize.skipUnchanged` decorator, which returns
+                  ``True`` if the value was changed, and ``False`` otherwise.        
         """
         pos   = self.fragParamPositions[name]
         value = np.array(value, dtype=np.float32).reshape((-1, 4))

@@ -273,11 +273,14 @@ class GLVolume(globject.GLImageObject):
             if self.ready():
                 if fslgl.glvolume_funcs.updateShaderState(self):
                     self.notify()
+
+        def cmapUpdate(*a):
+            self.refreshColourTextures()
+            self.notify()
         
         def colourUpdate(*a):
             self.refreshColourTextures()
-            if self.ready():
-                shaderUpdate()
+            shaderUpdate()
 
         def imageRefresh(*a):
             async.wait([self.refreshImageTexture()], shaderUpdate)
@@ -314,8 +317,8 @@ class GLVolume(globject.GLImageObject):
         opts   .addListener('clippingRange',  lName, shaderUpdate,  weak=False)
         opts   .addListener('clipImage',      lName, clipUpdate,    weak=False)
         opts   .addListener('invertClipping', lName, shaderUpdate,  weak=False)
-        opts   .addListener('cmap',           lName, colourUpdate,  weak=False)
-        opts   .addListener('negativeCmap',   lName, colourUpdate,  weak=False)
+        opts   .addListener('cmap',           lName, cmapUpdate,    weak=False)
+        opts   .addListener('negativeCmap',   lName, cmapUpdate,    weak=False)
         opts   .addListener('useNegativeCmap',
                             lName, colourUpdate,  weak=False)
         opts   .addListener('invert',         lName, colourUpdate,  weak=False)
