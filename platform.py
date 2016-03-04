@@ -5,6 +5,8 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
+import os
+
 haveGui    = False
 wxFlavour  = None
 wxPlatform = None
@@ -16,18 +18,28 @@ WX_PHOENIX = 2
 WX_MAC = 1
 WX_GTK = 2
 
+class Platform(object):
+    def __init__(self):
 
-try:
-    import wx
-    haveGui = True
+        self.haveGui    = False
+        self.wxFlavour  = None
+        self.wxPlatform = None
 
-except ImportError:
-    haveGui = False
+        try:
+            import wx
+            self.haveGui = True
 
+        except ImportError:
+            pass
 
-if 'phoenix' in wx.PlatformInformation: wxFlavour = WX_PHOENIX
-else:                                   wxFlavour = WX_PYTHON
+        if self.haveGui:
+            if 'phoenix' in wx.PlatformInformation:
+                self.wxFlavour = WX_PHOENIX
+                
+            if 'MAC' in wx.Platform:
+                self.wxPlatform = WX_MAC
 
-
-if   'MAC' in wx.Platform: wxPlatform = WX_MAC
-elif 'GTK' in wx.Platform: wxPlatform = WX_GTK
+        # TODO Make Platform a notifier, so
+        #      things can register to listen
+        #      for changes to $FSLDIR
+        self.fsldir = os.environ['FSLDIR']
