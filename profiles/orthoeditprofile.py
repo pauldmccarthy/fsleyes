@@ -17,6 +17,7 @@ import numpy                        as np
 import                                 props
 import fsl.data.image               as fslimage
 import fsl.data.strings             as strings
+import fsl.utils.async              as async
 import fsl.utils.dialog             as fsldlg
 import fsl.utils.status             as status
 import fsl.fsleyes.actions          as actions
@@ -868,9 +869,16 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         voxel = self.__getVoxelLocation(canvasPos)
 
-        if voxel is not None:
+        if voxel is None:
+            return
+
+        # See comment in OrthoViewProfile._zoomModeMouseWheel
+        # about timeout
+        def update():
             self.__drawCursorAnnotation(canvas, voxel)
             self.__refreshCanvases(ev, canvas)
+
+        async.idle(update, timeout=0.1)
 
         
     def _deselModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
@@ -1056,17 +1064,24 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         dataRange = opts.dataMax - opts.dataMin
         step      = 0.01 * dataRange
 
-        if   wheel > 0: self.intensityThres += step
-        elif wheel < 0: self.intensityThres -= step
+        if   wheel > 0: offset =  step
+        elif wheel < 0: offset = -step
         else:           return
 
-        if self.__selecting:
-            
-            voxel = self.__getVoxelLocation(canvasPos) 
 
-            if voxel is not None:
-                self.__selintSelect(voxel, canvas)
-                self.__refreshCanvases(ev, canvas) 
+        # See comment in OrthoViewProfile._zoomModeMouseWheel
+        # about timeout
+        def update():
+            self.intensityThres += offset
+            if self.__selecting:
+
+                voxel = self.__getVoxelLocation(canvasPos) 
+
+                if voxel is not None:
+                    self.__selintSelect(voxel, canvas)
+                    self.__refreshCanvases(ev, canvas)
+
+        async.idle(update, timeout=0.1)
 
                 
     def _chradModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
@@ -1077,14 +1092,22 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         select-by-intensity is re-run at the current mouse location.
         """ 
 
-        if   wheel > 0: self.searchRadius -= 5
-        elif wheel < 0: self.searchRadius += 5
+        if   wheel > 0: offset = -5
+        elif wheel < 0: offset =  5
         else:           return
 
-        if self.__selecting:
-            
-            voxel = self.__getVoxelLocation(canvasPos) 
+        # See comment in OrthoViewProfile._zoomModeMouseWheel
+        # about timeout
+        def update():
 
-            if voxel is not None:
-                self.__selintSelect(voxel, canvas)
-                self.__refreshCanvases(ev, canvas) 
+            self.searchRadius += offset
+
+            if self.__selecting:
+
+                voxel = self.__getVoxelLocation(canvasPos) 
+
+                if voxel is not None:
+                    self.__selintSelect(voxel, canvas)
+                    self.__refreshCanvases(ev, canvas) 
+
+        async.idle(update, timeout=0.1)

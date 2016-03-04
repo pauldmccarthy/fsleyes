@@ -16,6 +16,7 @@ import numpy as np
 
 import fsl.fsleyes.profiles as profiles
 import fsl.fsleyes.actions  as actions
+import fsl.utils.async      as async
 import fsl.data.image       as fslimage
 import fsl.data.constants   as constants
 
@@ -332,7 +333,11 @@ class OrthoViewProfile(profiles.Profile):
         elif ch  in ('+', '='):   dirs[canvas.zax] =  1
         elif ch  in ('-', '_'):   dirs[canvas.zax] = -1
 
-        self._displayCtx.location.xyz = self.__offsetLocation(*dirs)
+        def update():
+            self._displayCtx.location.xyz = self.__offsetLocation(*dirs)
+
+        # See comment in _zoomModeMouseWheel about timeout
+        async.idle(update, timeout=0.1)
 
         
     #####################
@@ -357,7 +362,11 @@ class OrthoViewProfile(profiles.Profile):
 
         pos = self.__offsetLocation(*dirs)
 
-        self._displayCtx.location[canvas.zax] = pos[canvas.zax]
+        def update():
+            self._displayCtx.location[canvas.zax] = pos[canvas.zax]
+
+        # See comment in _zoomModeMouseWheel about timeout
+        async.idle(update, timeout=0.1)
 
         
     ####################
@@ -378,7 +387,17 @@ class OrthoViewProfile(profiles.Profile):
         """
         if   wheel > 0: wheel =  50
         elif wheel < 0: wheel = -50
-        canvas.zoom += wheel
+
+        # Over SSH/X11, mouse wheel events seem to get queued,
+        # and continue to get processed after the user has
+        # stopped spinning the mouse wheel, which is super
+        # frustrating. So we do the update asynchronously, and
+        # set a time out to drop the event, and prevent the
+        # horribleness from happening.
+        def update():
+            canvas.zoom += wheel
+        
+        async.idle(update, timeout=0.1)
 
         
     def _zoomModeChar(self, ev, canvas, key):
@@ -500,7 +519,11 @@ class OrthoViewProfile(profiles.Profile):
         elif key == wx.WXK_RIGHT: xoff =  2
         else:                     return
 
-        canvas.panDisplayBy(xoff, yoff)
+        def update():
+            canvas.panDisplayBy(xoff, yoff)
+
+        # See comment in _zoomModeMouseWheel about timeout
+        async.idle(update, timeout=0.1)
 
 
     #############
