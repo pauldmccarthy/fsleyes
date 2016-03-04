@@ -31,10 +31,11 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
-import fsl.fsleyes.gl.globject as globject
-import fsl.fsleyes.gl.routines as glroutines
-import fsl.fsleyes.gl.textures as textures
-import fsl.utils.transform     as transform
+import fsl.fsleyes.gl.globject  as globject
+import fsl.fsleyes.gl.routines  as glroutines
+import fsl.fsleyes.gl.resources as glresources
+import fsl.fsleyes.gl.textures  as textures
+import fsl.utils.transform      as transform
 
 
 log = logging.getLogger(__name__)
@@ -525,9 +526,13 @@ class VoxelSelection(AnnotationObject):
         self.displayToVoxMat = displayToVoxMat
         self.voxToDisplayMat = voxToDisplayMat
         self.offsets         = offsets
+
+        texName = '{}_{}'.format(type(self).__name__, id(selection))
         
-        self.texture = textures.SelectionTexture(
-            '{}_{}'.format(type(self).__name__, id(selection)),
+        self.texture = glresources.get(
+            texName,
+            textures.SelectionTexture,
+            texName,
             selection)
 
         
@@ -535,7 +540,7 @@ class VoxelSelection(AnnotationObject):
         """Must be called when this ``VoxelSelection`` is no longer needed.
         Destroys the :class:`.SelectionTexture`.
         """
-        self.texture.destroy()
+        glresources.delete(self.texture.getTextureName())
         self.texture = None
 
 

@@ -159,8 +159,8 @@ altHandlerMap = {
         (('desel',  'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
         (('selint', 'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
 
-        (('sel',    'MouseWheel'),      ('chsize',  'MiddleMouse')),
-        (('desel',  'MouseWheel'),      ('chsize',  'MiddleMouse')),
+        (('sel',    'MouseWheel'),      ('chsize',  'MouseWheel')),
+        (('desel',  'MouseWheel'),      ('chsize',  'MouseWheel')),
         (('selint', 'MouseWheel'),      ('chthres', 'MouseWheel')),
 
         # Keyboard navigation works in the

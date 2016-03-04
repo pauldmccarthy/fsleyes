@@ -46,7 +46,7 @@ texture, and will increase its reference count::
          interp=gl.GL_LINEAR)
 
 
-.. note:: Here, we have used ``'myTexture'`` as the resource key in practice,
+.. note:: Here, we have used ``'myTexture'`` as the resource key. In practice,
           you will need to use something that is guaranteed to be unique
           throughout your application.
 
