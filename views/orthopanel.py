@@ -406,8 +406,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         for canvas, labels, show in zip(canvases, allLabels, shows):
 
+            # See WXGLSliceCanvas.Show for
+            # details of a horrible bug, and
+            # equally horrible workaround..
             canvas.Show(show)
-            self.__canvasSizer.Show(canvas, show)
 
             for label in labels.values():
                 self.__canvasSizer.Show(label, show and opts.showLabels)

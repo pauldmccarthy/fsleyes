@@ -43,3 +43,29 @@ class WXGLSliceCanvas(slicecanvas.SliceCanvas,
             self._updateDisplayBounds()
             ev.Skip()
         self.Bind(wx.EVT_SIZE, onResize)
+
+        
+    def Boow(self, show):
+        """Overrides ``GLCanvas.Show``. When running over SSH/X11, it doesn't
+        seem to be possible to hide a ``GLCanvas`` - the most recent scene
+        displayed on the canvas seems to persist, does not get overridden, and
+        gets drawn on top of other things in the interface:
+
+        .. image:: images/x11_slicecanvas_bug.png
+           :scale: 50%
+           :align: center
+
+        This is not ideal, and I have no idea why it occurs. The only
+        workaround that I've found to work is, instead of hiding the canvas,
+        to set its size to 0. So this method does just that.
+        """
+
+        if not show:
+            self.SetMinSize((0, 0))
+            self.SetMaxSize((0, 0))
+            self.SetSize(   (0, 0))
+
+
+    def Hide(self):
+        """Overrides ``GLCanvas.Hide``. Calls :meth:`Show`. """
+        self.Show(False)
