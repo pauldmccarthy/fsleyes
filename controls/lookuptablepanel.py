@@ -136,6 +136,9 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         self.__selectedOpts    = None
         self.__selectedLut     = None
 
+        # See the __createLabelList method
+        self.__labelListCreateKey = 0
+
         overlayList.addListener('overlays',
                                 self._name,
                                 self.__selectedOverlayChanged)
@@ -223,10 +226,11 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         # time for big lookup tables. In the event
         # that the list needs to be re-created (e.g.
         # the current lookup table is changed), this
-        # attribute is used to tell any existing
-        # scheduled creation routine (the addLabel
-        # function defined below) to stop.
-        self.__cancelLabelListCreation = True
+        # attribute is used so that scheduled creation
+        # routines (the addLabel function defined
+        # below) can tell whether they should cancel.
+        myCreateKey = (self.__labelListCreateKey + 1) % 65536
+        self.__labelListCreateKey = myCreateKey
 
         log   .debug( 'Creating lookup table label list')
         status.update('Creating lookup table label list...', timeout=None)
@@ -239,7 +243,9 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
 
         def addLabel(labelIdx):
 
-            if self.__cancelLabelListCreation:
+            # A new request to re-create the list has
+            # been made - cancel this creation chain.
+            if self.__labelListCreateKey != myCreateKey:
                 return
 
             # If the user closes this panel while the
@@ -262,16 +268,6 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
             except wx.PyDeadObjectError:
                 pass
 
-        # The idle loop is a queue, so after
-        # any currently scheduled addLabel
-        # job has completed, we clear the
-        # cancel flag, and start re-creating
-        # the list.
-        def clearCancel():
-            self.__cancelLabelListCreation = False
-
-        async.idle(clearCancel)
-
         # If this is a new lut, it
         # won't have any labels
         if len(lut.labels) == 0: self.Enable()
@@ -286,6 +282,9 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         :class:`.LabelOpts` instance, its :attr:`.LabelOpts.lut` property is
         set to the new ``LookupTable``.
         """
+
+        if self.__selectedLut == lut:
+            return
 
         log.debug('Selecting lut: {}'.format(lut))
 
