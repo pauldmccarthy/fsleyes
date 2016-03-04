@@ -243,16 +243,17 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
 
         def addLabel(labelIdx):
 
-            # A new request to re-create the list has
-            # been made - cancel this creation chain.
-            if self.__labelListCreateKey != myCreateKey:
-                return
-
             # If the user closes this panel while the
             # label list is being created, wx will
             # complain when we try to append things
             # to a widget that has been destroyed.
             try:
+
+                # A new request to re-create the list has
+                # been made - cancel this creation chain.
+                if self.__labelListCreateKey != myCreateKey:
+                    return
+ 
                 label  = lut.labels[labelIdx]
                 widget = LabelWidget(self, lut, label.value())
                 
