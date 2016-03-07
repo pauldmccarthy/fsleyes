@@ -45,7 +45,7 @@ class WXGLSliceCanvas(slicecanvas.SliceCanvas,
         self.Bind(wx.EVT_SIZE, onResize)
 
         
-    def Boow(self, show):
+    def Show(self, show):
         """Overrides ``GLCanvas.Show``. When running over SSH/X11, it doesn't
         seem to be possible to hide a ``GLCanvas`` - the most recent scene
         displayed on the canvas seems to persist, does not get overridden, and
