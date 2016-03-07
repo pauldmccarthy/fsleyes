@@ -263,8 +263,8 @@ class GLVector(globject.GLImageObject):
             
         def shaderUpdate(*a):
             if self.ready():
-                if self.updateShaderState():
-                    self.notify() 
+                self.updateShaderState()
+                self.notify() 
         
         def modUpdate( *a):
             self.deregisterAuxImage('modulate')

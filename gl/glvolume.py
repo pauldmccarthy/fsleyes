@@ -271,8 +271,13 @@ class GLVolume(globject.GLImageObject):
 
         def shaderUpdate(*a):
             if self.ready():
+                fslgl.glvolume_funcs.updateShaderState(self)
+                self.notify()
+                
+        def condShaderUpdate(*a):
+            if self.ready():
                 if fslgl.glvolume_funcs.updateShaderState(self):
-                    self.notify()
+                    self.notify() 
 
         def cmapUpdate(*a):
             self.refreshColourTextures()
@@ -314,13 +319,15 @@ class GLVolume(globject.GLImageObject):
 
         display.addListener('alpha',          lName, colourUpdate,  weak=False)
         opts   .addListener('displayRange',   lName, colourUpdate,  weak=False)
-        opts   .addListener('clippingRange',  lName, shaderUpdate,  weak=False)
+        opts   .addListener('clippingRange',
+                            lName, condShaderUpdate, weak=False)
         opts   .addListener('clipImage',      lName, clipUpdate,    weak=False)
-        opts   .addListener('invertClipping', lName, shaderUpdate,  weak=False)
+        opts   .addListener('invertClipping',
+                            lName, condShaderUpdate,  weak=False)
         opts   .addListener('cmap',           lName, cmapUpdate,    weak=False)
         opts   .addListener('negativeCmap',   lName, cmapUpdate,    weak=False)
         opts   .addListener('useNegativeCmap',
-                            lName, colourUpdate,  weak=False)
+                            lName, condShaderUpdate, weak=False)
         opts   .addListener('invert',         lName, colourUpdate,  weak=False)
         opts   .addListener('volume',         lName, imageUpdate,   weak=False)
         opts   .addListener('resolution',     lName, imageUpdate,   weak=False)

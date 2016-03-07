@@ -112,10 +112,8 @@ class GLLabel(globject.GLImageObject):
 
         def shaderUpdate(*a):
             if self.ready():
-                if fslgl.gllabel_funcs.updateShaderState(self):
-                    self.notify()
-                    return True
-            return False
+                fslgl.gllabel_funcs.updateShaderState(self)
+                self.notify()
             
         def shaderCompile(*a):
             fslgl.gllabel_funcs.compileShaders(self)
@@ -123,7 +121,7 @@ class GLLabel(globject.GLImageObject):
 
         def lutUpdate(*a):
             self.refreshLutTexture()
-            return shaderUpdate()
+            shaderUpdate()
 
         def lutChanged(*a):
             if self.__lut is not None:
@@ -134,8 +132,8 @@ class GLLabel(globject.GLImageObject):
             if self.__lut is not None:
                 self.__lut.addListener('labels', self.name, lutUpdate)
  
-            if not lutUpdate():
-                self.notify()
+            self.refreshLutTexture()
+            shaderUpdate()
 
         def imageRefresh(*a):
             async.wait([self.refreshImageTexture()], shaderUpdate)
