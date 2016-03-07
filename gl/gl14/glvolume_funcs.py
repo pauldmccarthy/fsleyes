@@ -98,15 +98,16 @@ def updateShaderState(self):
     clipping = [clipLo, clipHi, invClip, imageIsClip]
     negCmap  = [useNegCmap, texZero, 0, 0]
 
-    self.shader.setVertParam('imageShape',  shape)
-    self.shader.setFragParam('imageShape',  shape)
-    self.shader.setFragParam('voxValXform', voxValXform)
-    self.shader.setFragParam('clipping',    clipping)
-    self.shader.setFragParam('negCmap',     negCmap)
+    changed  = False
+    changed |= self.shader.setVertParam('imageShape',  shape)
+    changed |= self.shader.setFragParam('imageShape',  shape)
+    changed |= self.shader.setFragParam('voxValXform', voxValXform)
+    changed |= self.shader.setFragParam('clipping',    clipping)
+    changed |= self.shader.setFragParam('negCmap',     negCmap)
     
     self.shader.unload()
 
-    return True
+    return changed
 
 
 def preDraw(self):

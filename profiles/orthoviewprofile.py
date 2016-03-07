@@ -491,11 +491,11 @@ class OrthoViewProfile(profiles.Profile):
 
         If the target canvas is not zoomed in, this has no effect.
         """
-
-        if canvasPos is None:
-            return
         
         mouseDownPos, canvasDownPos = self.getMouseDownLocation()
+
+        if canvasPos     is None: return
+        if canvasDownPos is None: return
 
         xoff = canvasPos[canvas.xax] - canvasDownPos[canvas.xax]
         yoff = canvasPos[canvas.yax] - canvasDownPos[canvas.yax]
