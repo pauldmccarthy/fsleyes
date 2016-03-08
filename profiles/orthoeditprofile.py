@@ -840,16 +840,16 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         On all lower performance settings, only the source canvas is updated.
         """
         perf = self._viewPanel.getSceneOptions().performance
-        if perf == 4:
-            if mousePos is None or canvasPos is None:
-                self._viewPanel.Refresh()
 
-            # If running in high performance mode, we make
-            # the canvas location track the edit cursor
-            # location, so that the other two canvases
-            # update to display the current cursor location.
-            else:
-                self._navModeLeftMouseDrag(ev, canvas, mousePos, canvasPos)
+        # If running in high performance mode, we make
+        # the canvas location track the edit cursor
+        # location, so that the other two canvases
+        # update to display the current cursor location.
+        if perf == 4               and \
+           (mousePos  is not None) and \
+           (canvasPos is not None):
+            self._navModeLeftMouseDrag(ev, canvas, mousePos, canvasPos)
+            
         else:
             canvas.Refresh()
 
