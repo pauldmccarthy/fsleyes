@@ -300,6 +300,10 @@ class ActionFactory(object):
             @otherCustomAction(arg1=8)
             def myAction3(self):
                 # do things here
+
+
+    .. todo:: Merge/replace this class with the :class:`.memoize.Instanceify`
+              decorator.
     """
 
     

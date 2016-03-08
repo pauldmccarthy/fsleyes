@@ -349,12 +349,12 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
         if self.__widgets.HasGroup('currentDSSettings'):
             self.__widgets.RenameGroup(
                 'currentDSSettings',
-                strings.labels[self, 'currentDSettings'].format(display.name))
+                strings.labels[self, 'currentDSSettings'].format(display.name))
         
         if self.__widgets.HasGroup('customDSSettings'):
             self.__widgets.RenameGroup(
                 'customDSSettings',
-                strings.labels[self, 'customDSettings'].format(display.name)) 
+                strings.labels[self, 'customDSSettings'].format(display.name)) 
 
     
     def __selectedOverlayChanged(self, *a):

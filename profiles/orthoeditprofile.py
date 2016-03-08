@@ -17,6 +17,7 @@ import numpy                        as np
 import                                 props
 import fsl.data.image               as fslimage
 import fsl.data.strings             as strings
+import fsl.utils.async              as async
 import fsl.utils.dialog             as fsldlg
 import fsl.utils.status             as status
 import fsl.fsleyes.actions          as actions
@@ -193,7 +194,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__xcanvas           = viewPanel.getXCanvas()
         self.__ycanvas           = viewPanel.getYCanvas()
         self.__zcanvas           = viewPanel.getZCanvas() 
-        self.__selAnnotation     = None
+        self.__xselAnnotation    = None
+        self.__yselAnnotation    = None
+        self.__zselAnnotation    = None
         self.__selecting         = False
         self.__currentOverlay    = None
 
@@ -238,14 +241,29 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             editor.removeListener('canRedo', self._name)
             editor.destroy()
 
-        if self.__selAnnotation is not None:
-            self.__selAnnotaiton.destroy()
+        xannot = self.__xcanvas.getAnnotations()
+        yannot = self.__ycanvas.getAnnotations()
+        zannot = self.__zcanvas.getAnnotations()
+
+        if self.__xselAnnotation is not None:
+            xannot.dequeue(self.__xselAnnotation, hold=True)
+            self.__xselAnnotaiton.destroy()
+            
+        if self.__yselAnnotation is not None:
+            yannot.dequeue(self.__yselAnnotation, hold=True)
+            self.__yselAnnotaiton.destroy()
+            
+        if self.__zselAnnotation is not None:
+            zannot.dequeue(self.__zselAnnotation, hold=True)
+            self.__zselAnnotaiton.destroy()
             
         self.__editors        = None
         self.__xcanvas        = None
         self.__ycanvas        = None
         self.__zcanvas        = None
-        self.__selAnnotation  = None
+        self.__xselAnnotation = None
+        self.__yselAnnotation = None
+        self.__zselAnnotation = None
         self.__currentOverlay = None
 
         orthoviewprofile.OrthoViewProfile.destroy(self)
@@ -255,14 +273,26 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """Destroys all :mod:`.annotations`, and calls
         :meth:`.OrthoViewProfile.deregister`.
         """
-        if self.__selAnnotation is not None:
-            sa = self.__selAnnotation
-            self.__xcanvas.getAnnotations().dequeue(sa, hold=True)
-            self.__ycanvas.getAnnotations().dequeue(sa, hold=True)
-            self.__zcanvas.getAnnotations().dequeue(sa, hold=True)
-            sa.destroy()
 
-        self.__selAnnotation = None
+        xannot = self.__xcanvas.getAnnotations()
+        yannot = self.__ycanvas.getAnnotations()
+        zannot = self.__zcanvas.getAnnotations()
+        
+        if self.__xselAnnotation is not None:
+            xannot.dequeue(self.__xselAnnotation, hold=True)
+            self.__xselAnnotation.destroy()
+
+        if self.__yselAnnotation is not None:
+            yannot.dequeue(self.__yselAnnotation, hold=True)
+            self.__yselAnnotation.destroy()
+
+        if self.__zselAnnotation is not None:
+            zannot.dequeue(self.__zselAnnotation, hold=True)
+            self.__zselAnnotation.destroy()
+
+        self.__xselAnnotation = None
+        self.__yselAnnotation = None
+        self.__zselAnnotation = None
             
         orthoviewprofile.OrthoViewProfile.deregister(self)
 
@@ -358,7 +388,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         editor.getSelection().enableNotification('selection')
         
         self.__selectionChanged()
-        self.__selAnnotation.texture.refresh()
+        self.__xselAnnotation.texture.refresh()
         self._viewPanel.Refresh()
 
 
@@ -373,12 +403,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         editor = self.__editors[self.__currentOverlay]
 
+        # See comment in undo method 
+        # about disabling notification
         editor.getSelection().disableNotification('selection')
         editor.redo()
         editor.getSelection().enableNotification('selection')
         
         self.__selectionChanged()
-        self.__selAnnotation.texture.refresh()
+        self.__xselAnnotation.texture.refresh()
         self._viewPanel.Refresh()
  
 
@@ -408,8 +440,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         
         Updates the  :mod:`.annotations` colours accordingly.
         """
-        if self.__selAnnotation is not None:
-            self.__selAnnotation.colour = self.selectionOverlayColour
+        if self.__xselAnnotation is not None:
+            self.__xselAnnotation.colour = self.selectionOverlayColour
+            
+        if self.__yselAnnotation is not None:
+            self.__yselAnnotation.colour = self.selectionOverlayColour
+            
+        if self.__zselAnnotation is not None:
+            self.__zselAnnotation.colour = self.selectionOverlayColour 
 
 
     def __setFillValueLimits(self, overlay):
@@ -482,14 +520,21 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         zannot = self.__zcanvas.getAnnotations()        
 
         # Clear the selection annotation
-        if self.__selAnnotation is not None:
-            xannot.dequeue(self.__selAnnotation, hold=True)
-            yannot.dequeue(self.__selAnnotation, hold=True)
-            zannot.dequeue(self.__selAnnotation, hold=True)
+        if self.__xselAnnotation is not None:
+            xannot.dequeue(self.__xselAnnotation, hold=True)
+            self.__xselAnnotation.destroy()
             
-            self.__selAnnotation.destroy()
+        if self.__yselAnnotation is not None:
+            yannot.dequeue(self.__yselAnnotation, hold=True)
+            self.__yselAnnotation.destroy()
             
-        self.__selAnnotation = None
+        if self.__zselAnnotation is not None:
+            zannot.dequeue(self.__zselAnnotation, hold=True)
+            self.__zselAnnotation.destroy()
+            
+        self.__xselAnnotation = None
+        self.__yselAnnotation = None
+        self.__zselAnnotation = None
 
         # Remove property listeners from the
         # editor/selection instances associated
@@ -603,15 +648,33 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     
         # Create a selection annotation and
         # queue it on the canvases for drawing
-        self.__selAnnotation = annotations.VoxelSelection( 
+        self.__xselAnnotation = annotations.VoxelSelection(
+            self.__xcanvas.xax,
+            self.__xcanvas.yax,
             editor.getSelection(),
             opts.getTransform('pixdim', 'voxel'),
             opts.getTransform('voxel',  'pixdim'),
             colour=self.selectionOverlayColour)
+        
+        self.__yselAnnotation = annotations.VoxelSelection(
+            self.__ycanvas.xax,
+            self.__ycanvas.yax,
+            editor.getSelection(),
+            opts.getTransform('pixdim', 'voxel'),
+            opts.getTransform('voxel',  'pixdim'),
+            colour=self.selectionOverlayColour)
+        
+        self.__zselAnnotation = annotations.VoxelSelection(
+            self.__zcanvas.xax,
+            self.__zcanvas.yax,
+            editor.getSelection(),
+            opts.getTransform('pixdim', 'voxel'),
+            opts.getTransform('voxel',  'pixdim'),
+            colour=self.selectionOverlayColour) 
 
-        xannot.obj(self.__selAnnotation, hold=True)
-        yannot.obj(self.__selAnnotation, hold=True)
-        zannot.obj(self.__selAnnotation, hold=True)
+        xannot.obj(self.__xselAnnotation, hold=True)
+        yannot.obj(self.__yselAnnotation, hold=True)
+        zannot.obj(self.__zselAnnotation, hold=True)
 
         self._viewPanel.Refresh()
 
@@ -673,9 +736,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         kwargs  = {'colour' : self.selectionCursorColour,
                    'width'  : 2}
 
-        cursors = [annotations.Rect((0, 0), 0, 0, **kwargs),
-                   annotations.Rect((0, 0), 0, 0, **kwargs),
-                   annotations.Rect((0, 0), 0, 0, **kwargs)]
+        cursors = []
+
+        for c in canvases:
+            r = annotations.Rect(c.xax, c.yax, (0, 0), 0, 0, **kwargs)
+            cursors.append(r)
 
         # If we are running in a low
         # performance mode, the cursor
@@ -775,16 +840,16 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         On all lower performance settings, only the source canvas is updated.
         """
         perf = self._viewPanel.getSceneOptions().performance
-        if perf == 4:
-            if mousePos is None or canvasPos is None:
-                self._viewPanel.Refresh()
 
-            # If running in high performance mode, we make
-            # the canvas location track the edit cursor
-            # location, so that the other two canvases
-            # update to display the current cursor location.
-            else:
-                self._navModeLeftMouseDrag(ev, canvas, mousePos, canvasPos)
+        # If running in high performance mode, we make
+        # the canvas location track the edit cursor
+        # location, so that the other two canvases
+        # update to display the current cursor location.
+        if perf == 4               and \
+           (mousePos  is not None) and \
+           (canvasPos is not None):
+            self._navModeLeftMouseDrag(ev, canvas, mousePos, canvasPos)
+            
         else:
             canvas.Refresh()
 
@@ -868,9 +933,16 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         voxel = self.__getVoxelLocation(canvasPos)
 
-        if voxel is not None:
+        if voxel is None:
+            return
+
+        # See comment in OrthoViewProfile._zoomModeMouseWheel
+        # about timeout
+        def update():
             self.__drawCursorAnnotation(canvas, voxel)
             self.__refreshCanvases(ev, canvas)
+
+        async.idle(update, timeout=0.1)
 
         
     def _deselModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
@@ -1056,17 +1128,24 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         dataRange = opts.dataMax - opts.dataMin
         step      = 0.01 * dataRange
 
-        if   wheel > 0: self.intensityThres += step
-        elif wheel < 0: self.intensityThres -= step
+        if   wheel > 0: offset =  step
+        elif wheel < 0: offset = -step
         else:           return
 
-        if self.__selecting:
-            
-            voxel = self.__getVoxelLocation(canvasPos) 
 
-            if voxel is not None:
-                self.__selintSelect(voxel, canvas)
-                self.__refreshCanvases(ev, canvas) 
+        # See comment in OrthoViewProfile._zoomModeMouseWheel
+        # about timeout
+        def update():
+            self.intensityThres += offset
+            if self.__selecting:
+
+                voxel = self.__getVoxelLocation(canvasPos) 
+
+                if voxel is not None:
+                    self.__selintSelect(voxel, canvas)
+                    self.__refreshCanvases(ev, canvas)
+
+        async.idle(update, timeout=0.1)
 
                 
     def _chradModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
@@ -1077,14 +1156,22 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         select-by-intensity is re-run at the current mouse location.
         """ 
 
-        if   wheel > 0: self.searchRadius -= 5
-        elif wheel < 0: self.searchRadius += 5
+        if   wheel > 0: offset = -5
+        elif wheel < 0: offset =  5
         else:           return
 
-        if self.__selecting:
-            
-            voxel = self.__getVoxelLocation(canvasPos) 
+        # See comment in OrthoViewProfile._zoomModeMouseWheel
+        # about timeout
+        def update():
 
-            if voxel is not None:
-                self.__selintSelect(voxel, canvas)
-                self.__refreshCanvases(ev, canvas) 
+            self.searchRadius += offset
+
+            if self.__selecting:
+
+                voxel = self.__getVoxelLocation(canvasPos) 
+
+                if voxel is not None:
+                    self.__selintSelect(voxel, canvas)
+                    self.__refreshCanvases(ev, canvas) 
+
+        async.idle(update, timeout=0.1)

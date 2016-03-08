@@ -31,10 +31,11 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
-import fsl.fsleyes.gl.globject as globject
-import fsl.fsleyes.gl.routines as glroutines
-import fsl.fsleyes.gl.textures as textures
-import fsl.utils.transform     as transform
+import fsl.fsleyes.gl.globject  as globject
+import fsl.fsleyes.gl.routines  as glroutines
+import fsl.fsleyes.gl.resources as glresources
+import fsl.fsleyes.gl.textures  as textures
+import fsl.utils.transform      as transform
 
 
 log = logging.getLogger(__name__)
@@ -95,21 +96,27 @@ class Annotations(object):
     def line(self, *args, **kwargs):
         """Queues a line for drawing - see the :class:`Line` class. """
         hold = kwargs.pop('hold', False)
-        return self.obj(Line(*args, **kwargs), hold)
+        obj  = Line(self.__xax, self.__yax, *args, **kwargs)
+        
+        return self.obj(obj, hold)
 
         
     def rect(self, *args, **kwargs):
         """Queues a rectangle for drawing - see the :class:`Rectangle` class.
         """
         hold = kwargs.pop('hold', False)
-        return self.obj(Rect(*args, **kwargs), hold)
+        obj  = Rect(self.__xax, self.__yax, *args, **kwargs)
+        
+        return self.obj(obj, hold)
 
 
     def grid(self, *args, **kwargs):
         """Queues a voxel grid for drawing - see the :class:`VoxelGrid` class.
         """ 
         hold = kwargs.pop('hold', False)
-        return self.obj(VoxelGrid(*args, **kwargs), hold)
+        obj  = VoxelGrid(self.__xax, self.__yax, *args, **kwargs)
+        
+        return self.obj(obj, hold)
 
     
     def selection(self, *args, **kwargs):
@@ -117,7 +124,9 @@ class Annotations(object):
         class.
         """ 
         hold = kwargs.pop('hold', False)
-        return self.obj(VoxelSelection(*args, **kwargs), hold) 
+        obj  = VoxelSelection(self.__xax, self.__yax, *args, **kwargs)
+        
+        return self.obj(obj, hold) 
     
         
     def obj(self, obj, hold=False):
@@ -236,8 +245,12 @@ class AnnotationObject(globject.GLSimpleObject):
     :meth:`globject.GLObject.draw` method.
     """
     
-    def __init__(self, xform=None, colour=None, width=None):
+    def __init__(self, xax, yax, xform=None, colour=None, width=None):
         """Create an ``AnnotationObject``.
+
+        :arg xax:    Initial display X axis
+
+        :arg yax:    Initial display Y axis        
 
         :arg xform:  Transformation matrix which will be applied to all
                      vertex coordinates.
@@ -246,7 +259,7 @@ class AnnotationObject(globject.GLSimpleObject):
         
         :arg width:  Line width to use for the annotation.
         """
-        globject.GLSimpleObject.__init__(self)
+        globject.GLSimpleObject.__init__(self, xax, yax)
         
         self.colour = colour
         self.width  = width
@@ -269,12 +282,16 @@ class Line(AnnotationObject):
     2D line.
     """
 
-    def __init__(self, xy1, xy2, *args, **kwargs):
+    def __init__(self, xax, yax, xy1, xy2, *args, **kwargs):
         """Create a ``Line`` annotation.
 
         The ``xy1`` and ``xy2`` coordinate tuples should be in relation to the
         axes which map to the horizontal/vertical screen axes on the target
         canvas.
+
+        :arg xax: Initial display X axis
+
+        :arg yax: Initial display Y axis        
 
         :arg xy1: Tuple containing the (x, y) coordinates of one endpoint.
         
@@ -284,7 +301,7 @@ class Line(AnnotationObject):
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.
         """
-        AnnotationObject.__init__(self, *args, **kwargs)
+        AnnotationObject.__init__(self, xax, yax, *args, **kwargs)
         self.xy1 = xy1
         self.xy2 = xy2
 
@@ -310,18 +327,22 @@ class Rect(AnnotationObject):
     2D rectangle.
     """
 
-    def __init__(self, xy, w, h, *args, **kwargs):
+    def __init__(self, xax, yax, xy, w, h, *args, **kwargs):
         """Create a :class:`Rect` annotation.
 
-        :arg xy: Tuple specifying bottom left of the rectangle, in the display
-                 coordinate system.
-        :arg w:  Rectangle width.
-        :arg h:  Rectangle height.
+        :arg xax: Initial display X axis
+
+        :arg yax: Initial display Y axis        
+
+        :arg xy:  Tuple specifying bottom left of the rectangle, in the display
+                  coordinate system.
+        :arg w:   Rectangle width.
+        :arg h:   Rectangle height.
 
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.        
         """
-        AnnotationObject.__init__(self, *args, **kwargs)
+        AnnotationObject.__init__(self, xax, yax, *args, **kwargs)
         self.xy = xy
         self.w  = w
         self.h  = h
@@ -371,6 +392,8 @@ class VoxelGrid(AnnotationObject):
 
     
     def __init__(self,
+                 xax,
+                 yax,
                  selectMask,
                  displayToVoxMat,
                  voxToDisplayMat,
@@ -378,6 +401,10 @@ class VoxelGrid(AnnotationObject):
                  *args,
                  **kwargs):
         """Create a ``VoxelGrid`` annotation.
+
+        :arg xax:             Initial display X axis
+
+        :arg yax:             Initial display Y axis        
 
         :arg selectMask:      A 3D numpy array, the same shape as the image
                               being annotated (or a sub-space of the image - 
@@ -403,7 +430,7 @@ class VoxelGrid(AnnotationObject):
         """
         
         kwargs['xform'] = voxToDisplayMat
-        AnnotationObject.__init__(self, *args, **kwargs)
+        AnnotationObject.__init__(self, xax, yax, *args, **kwargs)
         
         if offsets is None:
             offsets = [0, 0, 0]
@@ -453,6 +480,8 @@ class VoxelSelection(AnnotationObject):
 
     
     def __init__(self,
+                 xax,
+                 yax,
                  selection,
                  displayToVoxMat,
                  voxToDisplayMat,
@@ -460,6 +489,10 @@ class VoxelSelection(AnnotationObject):
                  *args,
                  **kwargs):
         """Create a ``VoxelSelection`` annotation.
+
+        :arg xax:             Initial display X axis
+
+        :arg yax:             Initial display Y axis        
 
         :arg selection:       A :class:`.Selection` instance which defines
                               the voxels to be highlighted.
@@ -484,7 +517,7 @@ class VoxelSelection(AnnotationObject):
         :meth:`AnnotationObject.__init__` method.
         """
         
-        AnnotationObject.__init__(self, *args, **kwargs)
+        AnnotationObject.__init__(self, xax, yax, *args, **kwargs)
 
         if offsets is None:
             offsets = [0, 0, 0]
@@ -493,9 +526,13 @@ class VoxelSelection(AnnotationObject):
         self.displayToVoxMat = displayToVoxMat
         self.voxToDisplayMat = voxToDisplayMat
         self.offsets         = offsets
+
+        texName = '{}_{}'.format(type(self).__name__, id(selection))
         
-        self.texture = textures.SelectionTexture(
-            '{}_{}'.format(type(self).__name__, id(selection)),
+        self.texture = glresources.get(
+            texName,
+            textures.SelectionTexture,
+            texName,
             selection)
 
         
@@ -503,7 +540,7 @@ class VoxelSelection(AnnotationObject):
         """Must be called when this ``VoxelSelection`` is no longer needed.
         Destroys the :class:`.SelectionTexture`.
         """
-        self.texture.destroy()
+        glresources.delete(self.texture.getTextureName())
         self.texture = None
 
 

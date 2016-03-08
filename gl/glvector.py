@@ -96,6 +96,8 @@ class GLVector(globject.GLImageObject):
     def __init__(self,
                  image,
                  display,
+                 xax,
+                 yax,
                  prefilter=None,
                  vectorImage=None,
                  init=None):
@@ -115,6 +117,10 @@ class GLVector(globject.GLImageObject):
         
         :arg display:     A :class:`.Display` object which describes how the
                           image is to be displayed.
+
+        :arg xax:         Initial display X axis
+
+        :arg yax:         Initial display Y axis        
 
         :arg prefilter:   An optional function which filters the data before it
                           is stored as a 3D texture. See
@@ -145,7 +151,7 @@ class GLVector(globject.GLImageObject):
             raise ValueError('Image must be 4 dimensional, with 3 volumes '
                              'representing the XYZ vector angles')
 
-        globject.GLImageObject.__init__(self, image, display)
+        globject.GLImageObject.__init__(self, image, display, xax, yax)
 
         name = self.name
 
@@ -257,8 +263,8 @@ class GLVector(globject.GLImageObject):
             
         def shaderUpdate(*a):
             if self.ready():
-                if self.updateShaderState():
-                    self.notify() 
+                self.updateShaderState()
+                self.notify() 
         
         def modUpdate( *a):
             self.deregisterAuxImage('modulate')
@@ -531,6 +537,9 @@ class GLVector(globject.GLImageObject):
             # Right?
             if unsynced:
                 texName = '{}_unsync_{}'.format(texName, id(opts))
+
+        if opts is not None: volume = opts.volume
+        else:                volume = 0
  
         tex = glresources.get(
             texName,
@@ -538,6 +547,7 @@ class GLVector(globject.GLImageObject):
             texName,
             image,
             normalise=norm,
+            volume=volume,
             notify=False)
         
         tex.register(self.name, self.__textureChanged)

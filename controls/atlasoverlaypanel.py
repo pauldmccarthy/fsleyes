@@ -244,12 +244,23 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
 
             def addToRegionList(label, i):
 
-                regionList.Append(label.name)
-                widget = OverlayListWidget(regionList,
-                                           atlasDesc.atlasID,
-                                           self.__atlasPanel,
-                                           label.index)
-                regionList.SetItemWidget(i, widget)
+                # If the user kills this panel while
+                # the region list is being updated,
+                # suppress wx complaints.
+                #
+                # TODO You could make a chain of
+                # async.idle functions. instead of
+                # scheduling them all at once
+                try:
+                    regionList.Append(label.name)
+                    widget = OverlayListWidget(regionList,
+                                               atlasDesc.atlasID,
+                                               self.__atlasPanel,
+                                               label.index)
+                    regionList.SetItemWidget(i, widget)
+                    
+                except wx.PyDeadObjectError:
+                    pass
 
             log.debug('Creating region list for {} ({})'.format(
                 atlasDesc.atlasID, id(regionList)))
@@ -273,31 +284,38 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
         # displayed before).
         def changeAtlasList():
 
-            filterStr = self.__regionFilter.GetValue().lower().strip()
-            regionList.ApplyFilter(filterStr, ignoreCase=True)
+            # See comment above about
+            # suppressing wx complaints
+            try:
 
-            self.__updateAtlasState(atlasIdx)
+                filterStr = self.__regionFilter.GetValue().lower().strip()
+                regionList.ApplyFilter(filterStr, ignoreCase=True)
 
-            status.update(strings.messages[self, 'regionsLoaded'].format(
-                atlasDesc.name))
-            log.debug('Showing region list for {} ({})'.format(
-                atlasDesc.atlasID, id(regionList)))
+                self.__updateAtlasState(atlasIdx)
 
-            old = self.__regionSizer.GetItem(1).GetWindow()
+                status.update(strings.messages[self, 'regionsLoaded'].format(
+                    atlasDesc.name))
+                log.debug('Showing region list for {} ({})'.format(
+                    atlasDesc.atlasID, id(regionList)))
 
-            if old is not None:
-                old.Show(False)
+                old = self.__regionSizer.GetItem(1).GetWindow()
 
-            regionList.Show(True)
-            self.__regionSizer.Remove(1)
+                if old is not None:
+                    old.Show(False)
 
-            self.__regionSizer.Insert(1,
-                                      regionList,
-                                      flag=wx.EXPAND,
-                                      proportion=1)
-            self.__regionSizer.Layout()
+                regionList.Show(True)
+                self.__regionSizer.Remove(1)
 
-            self.Enable()
+                self.__regionSizer.Insert(1,
+                                          regionList,
+                                          flag=wx.EXPAND,
+                                          proportion=1)
+                self.__regionSizer.Layout()
+
+                self.Enable()
+                
+            except wx.PyDeadObjectError:
+                pass
  
         async.idle(changeAtlasList)
 

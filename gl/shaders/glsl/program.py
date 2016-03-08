@@ -18,6 +18,8 @@ import OpenGL.GL.ARB.instanced_arrays as arbia
 
 import parse
 
+import fsl.utils.memoize as memoize
+
 
 log = logging.getLogger(__name__)
 
@@ -149,12 +151,6 @@ class GLSLShader(object):
                                              self.vertUniforms,
                                              self.fragUniforms)
 
-        # We cache the most recent value for
-        # every uniform. When a call to set()
-        # is made, if the value is unchanged,
-        # we skip the GL call.
-        self.values = {n : None for n in self.positions.keys()}
-
         # Buffers for vertex attributes
         self.buffers = {}
 
@@ -239,30 +235,19 @@ class GLSLShader(object):
             gl.glDeleteBuffers(1, gltypes.GLuint(buf))
         self.program = None
         
-        
+
+    @memoize.Instanceify(memoize.skipUnchanged)
     def set(self, name, value):
         """Sets the value for the specified GLSL ``uniform`` variable.
 
         The ``GLSLShader`` keeps a copy of the value of every uniform, to
         avoid unnecessary GL calls.
 
-        :returns: ``True`` if the value was changed, ``False`` otherwise.
+        
+        .. note:: This method is decorated by the
+                  :func:`.memoize.skipUnchanged` decorator, which returns
+                  ``True`` if the value was changed, ``False`` otherwise.
         """
-
-        oldVal = self.values[name]
-
-        oldIsArray = isinstance(oldVal, np.ndarray)
-        newIsArray = isinstance(value,  np.ndarray)
-        isarray    = oldIsArray or newIsArray
-
-        if oldIsArray and (not newIsArray): value  = np.array(value)
-        if newIsArray and (not oldIsArray): oldVal = np.array(oldVal)
-
-        if isarray: nochange = np.all(oldVal == value)
-        else:       nochange =        oldVal == value
-
-        if nochange:
-            return False
 
         vPos  = self.positions[name]
         vType = self.types[    name]
@@ -277,8 +262,6 @@ class GLSLShader(object):
             vType, name, value))
 
         setfunc(vPos, value)
-
-        return True
 
 
     def setAtt(self, name, value, divisor=None):

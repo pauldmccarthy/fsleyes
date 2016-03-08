@@ -65,6 +65,7 @@ import os.path as op
 import props
 
 import fsl.data.strings   as strings
+import fsl.data.image     as fslimage
 import fsl.utils.settings as fslsettings
 import fsl.utils.status   as status
 import fsl.utils.async    as async
@@ -157,9 +158,27 @@ class OverlayList(props.HasProperties):
         """Returns the first overlay with the given ``name`` or ``dataSource``,
         or ``None`` if there is no overlay with said ``name``/``dataSource``.
         """
+
+        if name is None:
+            return None
+        
         for overlay in self.overlays:
-            if overlay.name == name or overlay.dataSource == name:
+
+            if overlay.name == name:
                 return overlay
+
+            if overlay.dataSource is None:
+                return None
+
+            # Ignore file extensions for NIFTI1 images.
+            if isinstance(overlay, fslimage.Image):
+                if fslimage.removeExt(overlay.dataSource) == \
+                   fslimage.removeExt(name):
+                    return overlay
+            else:
+                if overlay.dataSource == name:
+                    return overlay
+                
         return None
             
 

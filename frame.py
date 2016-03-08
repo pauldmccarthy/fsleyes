@@ -124,10 +124,44 @@ class FSLEyesFrame(wx.Frame):
         self.__displayCtx  = displayCtx
         self.__mainPanel   = wx.Panel(self)
         self.__statusBar   = wx.StaticText(self)
+
+        # Even though the FSLEyesFrame does not allow
+        # panels to be floated, I am specifying the
+        # docking guide style for complicated reasons...
+        # 
+        # Each ViewPanel contained in this FSLEyesFrame
+        # has an AuiManager of its own; these child
+        # AuiManagers do support floating of their
+        # child panels. However, it seems that when
+        # a floating child panel of a ViewPanel is
+        # docked, this top-level AuiManager is called
+        # to draw the docking guides. This is because
+        # the wx.lib.agw.aui.framemanager.GetManager
+        # function uses the wx event handling system
+        # to figure out which AuiManager should be used
+        # to maange the docking (which is a ridiculous
+        # way to do this, in my opinion).
+        #
+        # Anyway, this means that the docking guides
+        # will be drawn according to the style set up
+        # in this AuiManager, instead of the ViewPanel
+        # AuiManager, which is the one that is actually
+        # managing the panel being docked.
+        #
+        # This wouldn't be a problem, if not for the fact
+        # that, when running over SSH/X11, the default
+        # docking guides seem to get sized incorrectly,
+        # and look terrible (probably related to the
+        # AuiDockingGuide monkey-patch at the bottom of
+        # viewpanel.py).
+        # 
+        # This problem does not occur with the aero/
+        # whidbey guides.
         self.__auiManager  = aui.AuiManager(
             self.__mainPanel,
-            agwFlags=(aui.AUI_MGR_RECTANGLE_HINT |
+            agwFlags=(aui.AUI_MGR_RECTANGLE_HINT          |
                       aui.AUI_MGR_NO_VENETIAN_BLINDS_FADE |
+                      aui.AUI_MGR_AERO_DOCKING_GUIDES     |
                       aui.AUI_MGR_LIVE_RESIZE))
 
         self.__sizer = wx.BoxSizer(wx.VERTICAL)
@@ -488,14 +522,19 @@ class FSLEyesFrame(wx.Frame):
         dctx .destroy()
 
         # If the removed panel was the centre
-        # pane, or if there is only one panel
-        # left, move another panel to the centre
+        # pane, move another panel to the centre
         numPanels = len(self.__viewPanels)
         wasCentre = paneInfo.dock_direction_get() == aui.AUI_DOCK_CENTRE
         
         if numPanels >= 1 and wasCentre:
             paneInfo = self.__auiManager.GetPane(self.__viewPanels[0])
-            paneInfo.Centre().Dockable(False).CaptionVisible(numPanels > 1)
+            paneInfo.Centre()
+
+        # If there is only one panel
+        # left, hide its title bar
+        if numPanels == 1:
+            paneInfo = self.__auiManager.GetPane(self.__viewPanels[0])
+            paneInfo.Dockable(False).CaptionVisible(False)
             
         # If there's only one panel left,
         # and it is a canvas panel, sync

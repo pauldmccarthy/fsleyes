@@ -53,9 +53,9 @@ class GLMask(glvolume.GLVolume):
         
         def shaderUpdate(*a):
             if self.ready():
-                if fslgl.glvolume_funcs.updateShaderState(self):
-                    self.notify() 
-
+                fslgl.glvolume_funcs.updateShaderState(self)
+                self.notify()
+                    
         def shaderCompile(*a):
             fslgl.glvolume_funcs.compileShaders(self)
             shaderUpdate()
@@ -72,7 +72,7 @@ class GLMask(glvolume.GLVolume):
             resolution = opts.resolution
 
             self.imageTexture.set(volume=volume, resolution=resolution)
-            async.wait([self.refreshThread()], shaderUpdate)
+            async.wait([self.refreshImageTexture()], shaderUpdate)
 
         display.addListener('alpha',         name, colourUpdate,  weak=False)
         display.addListener('brightness',    name, colourUpdate,  weak=False)

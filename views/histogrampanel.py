@@ -112,8 +112,9 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         """Shows/hides a :class:`.HistogramControlPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(
-            histogramcontrolpanel.HistogramControlPanel, self, location=wx.TOP)
+        self.togglePanel(histogramcontrolpanel.HistogramControlPanel,
+                         self,
+                         location=wx.RIGHT)
 
         
     def getActions(self):

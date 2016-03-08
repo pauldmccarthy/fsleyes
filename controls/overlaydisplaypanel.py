@@ -205,8 +205,9 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
                         to :class:`.Display` or :class:`.DisplayOpts`
                         properties.
         """
-
-        self.__widgets.ClearGroup(groupName)
+        
+        self.__widgets.ClearGroup( groupName)
+        self.__widgets.RenameGroup(groupName, strings.labels[self, target])
 
         dispProps = _DISPLAY_PROPS.get(target, [], allhits=True)
         dispProps = functools.reduce(lambda a, b: a + b, dispProps)

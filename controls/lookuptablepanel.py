@@ -79,7 +79,6 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """ 
-
         
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
@@ -136,6 +135,9 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         self.__selectedOverlay = None
         self.__selectedOpts    = None
         self.__selectedLut     = None
+
+        # See the __createLabelList method
+        self.__labelListCreateKey = 0
 
         overlayList.addListener('overlays',
                                 self._name,
@@ -219,24 +221,58 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         ``LookupTable``.
         """
 
+        # The label list is created asynchronously on
+        # the wx.Idle loop, because it can take some
+        # time for big lookup tables. In the event
+        # that the list needs to be re-created (e.g.
+        # the current lookup table is changed), this
+        # attribute is used so that scheduled creation
+        # routines (the addLabel function defined
+        # below) can tell whether they should cancel.
+        myCreateKey = (self.__labelListCreateKey + 1) % 65536
+        self.__labelListCreateKey = myCreateKey
+
         log   .debug( 'Creating lookup table label list')
         status.update('Creating lookup table label list...', timeout=None)
 
+        self.Disable()
         self.__labelList.Clear()
 
         lut     = self.__selectedLut
         nlabels = len(lut.labels)
 
-        def addLabel(i, label):
-            self.__labelList.Append(label.displayName())
-            widget = LabelWidget(self, lut, label.value())
-            self.__labelList.SetItemWidget(i, widget)
+        def addLabel(labelIdx):
 
-            if i == nlabels - 1:
-                status.update('Lookup table label list created.')
+            # If the user closes this panel while the
+            # label list is being created, wx will
+            # complain when we try to append things
+            # to a widget that has been destroyed.
+            try:
 
-        for i, label in enumerate(lut.labels):
-            async.idle(addLabel, i, label)
+                # A new request to re-create the list has
+                # been made - cancel this creation chain.
+                if self.__labelListCreateKey != myCreateKey:
+                    return
+ 
+                label  = lut.labels[labelIdx]
+                widget = LabelWidget(self, lut, label.value())
+                
+                self.__labelList.Append(label.displayName())
+                self.__labelList.SetItemWidget(labelIdx, widget)
+
+                if labelIdx == nlabels - 1:
+                    status.update('Lookup table label list created.')
+                    self.Enable()
+                else:
+                    async.idle(addLabel, labelIdx + 1)
+                    
+            except wx.PyDeadObjectError:
+                pass
+
+        # If this is a new lut, it
+        # won't have any labels
+        if len(lut.labels) == 0: self.Enable()
+        else:                    async.idle(addLabel, 0)
 
 
     def __setLut(self, lut):
@@ -247,6 +283,9 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         :class:`.LabelOpts` instance, its :attr:`.LabelOpts.lut` property is
         set to the new ``LookupTable``.
         """
+
+        if self.__selectedLut == lut:
+            return
 
         log.debug('Selecting lut: {}'.format(lut))
 
@@ -319,7 +358,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         log.debug('Creating and registering new '
                   'LookupTable: {}'.format(name))
 
-        lut = fslcmaps.LookupTable(name)
+        lut = fslcmaps.LookupTable(key=name, name=name)
         fslcmaps.registerLookupTable(lut, self._overlayList, self._displayCtx)
 
         self.__updateLutChoices()
@@ -346,7 +385,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         log.debug('Creating and registering new '
                   'LookupTable {} (copied from {})'.format(newName, oldName))
 
-        lut = fslcmaps.LookupTable(newName)
+        lut = fslcmaps.LookupTable(key=newName, name=newName)
 
         for label in self.__selectedLut.labels:
             lut.set(label.value(),
@@ -609,10 +648,20 @@ class LabelWidget(wx.Panel):
 
         # Disable the LutPanel listener, otherwise
         # it will recreate the label list (see
-        # LookupTablePanel._createLabelList)
-        self.__lut.disableListener('labels', self.__lutPanel._name)
+        # LookupTablePanel._createLabelList).
+        # 
+        # We check to see if a listener exists,
+        # because the panel will only register
+        # a listener on label overlays.
+        toggle = self.__lut.hasListener('labels', self.__lutPanel._name)
+
+        if toggle:
+            self.__lut.disableListener('labels', self.__lutPanel._name)
+            
         self.__lut.set(self.__value, enabled=self.__enableBox.GetValue())
-        self.__lut.enableListener('labels', self.__lutPanel._name)
+
+        if toggle:
+            self.__lut.enableListener('labels', self.__lutPanel._name)
 
         
     def __onColour(self, ev):
@@ -623,10 +672,16 @@ class LabelWidget(wx.Panel):
         newColour = self.__colourButton.GetColour()
         newColour = [c / 255.0 for c in newColour]
 
-        # See comment in __onEnable 
-        self.__lut.disableListener('labels', self.__lutPanel._name)
+        # See comment in __onEnable
+        toggle = self.__lut.hasListener('labels', self.__lutPanel._name)
+
+        if toggle:
+            self.__lut.disableListener('labels', self.__lutPanel._name)
+            
         self.__lut.set(self.__value, colour=newColour)
-        self.__lut.enableListener('labels', self.__lutPanel._name)
+
+        if toggle:
+            self.__lut.enableListener('labels', self.__lutPanel._name)
 
         
 class NewLutDialog(wx.Dialog):
@@ -698,7 +753,7 @@ class NewLutDialog(wx.Dialog):
         """Called when the user confirms the dialog. Saves the name that the 
         user entered, and closes the dialog.
         """
-        self.__enteredName = self._name.GetValue()
+        self.__enteredName = self.__name.GetValue()
         self.EndModal(wx.ID_OK)
 
 

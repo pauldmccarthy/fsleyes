@@ -38,43 +38,27 @@ class AboutDialog(wx.Dialog):
         splashimg       = splashbmp.ConvertToImage()
 
         # Create all the widgets
-        splashPanel     = imagepanel.ImagePanel(self, splashimg)
-        authorLabel     = wx.StaticText(self)
-        emailLabel      = wx.StaticText(self)
-        companyLabel    = wx.StaticText(self)
-        versionLabel    = wx.StaticText(self)
-        glVersionLabel  = wx.StaticText(self)
-        glRendererLabel = wx.StaticText(self)
-        softwareField   = wx.TextCtrl(  self,
-                                        size=(-1, 200),
-                                        style=(wx.TE_LEFT      |
-                                               wx.TE_RICH      | 
-                                               wx.TE_MULTILINE |
-                                               wx.TE_READONLY  |
-                                               wx.TE_AUTO_URL))
-        closeButton     = wx.Button(    self, id=wx.ID_CANCEL)
+        splashPanel = imagepanel.ImagePanel(self, splashimg)
+        textPanel   = wx.TextCtrl(self,
+                                  size=(-1, 200),
+                                  style=(wx.TE_LEFT      |
+                                         wx.TE_RICH      | 
+                                         wx.TE_MULTILINE |
+                                         wx.TE_READONLY  |
+                                         wx.TE_AUTO_URL))
+        closeButton = wx.Button(self, id=wx.ID_CANCEL)
 
         # Set foreground/background colours
-        objs = [self,
-                authorLabel,
-                emailLabel,
-                companyLabel,
-                versionLabel,
-                glVersionLabel,
-                glRendererLabel,
-                softwareField]
-
-        for obj in objs:
-            obj.SetBackgroundColour('#000000')
-            obj.SetForegroundColour('#ffffff')
-
-        softwareField.SetDefaultStyle(wx.TextAttr('#ffffff', wx.NullColour))
+        textPanel.SetBackgroundColour('#000000')
+        textPanel.SetForegroundColour('#ffffff')
+        textPanel.SetDefaultStyle(wx.TextAttr('#ffffff', wx.NullColour))
 
         # Create / retrieve all the content
-        verStr   = version.__version__
-        glVerStr = gl.glGetString(gl.GL_VERSION)
-        glRenStr = gl.glGetString(gl.GL_RENDERER)
-        swlibs   = strings.about['libs']
+        verStr    = version.__version__
+        vcsVerStr = version.__vcs_version__
+        glVerStr  = gl.glGetString(gl.GL_VERSION)
+        glRenStr  = gl.glGetString(gl.GL_RENDERER)
+        swlibs    = strings.about['libs']
 
         swVersions = []
         for lib in swlibs:
@@ -90,10 +74,11 @@ class AboutDialog(wx.Dialog):
             
             swVersions.append(swVer)
 
-        verStr   = strings.about['version']   .format(verStr)
-        glVerStr = strings.about['glVersion'] .format(glVerStr)
-        glRenStr = strings.about['glRenderer'].format(glRenStr)
-        swStr    = strings.about['software']  .format(*swVersions)
+        verStr    = strings.about['version']   .format(verStr)
+        vcsVerStr = strings.about['vcsVersion'].format(vcsVerStr)
+        glVerStr  = strings.about['glVersion'] .format(glVerStr)
+        glRenStr  = strings.about['glRenderer'].format(glRenStr)
+        swStr     = strings.about['software']  .format(*swVersions)
 
         # Tack the license file contents onto
         # the end of the software description.
@@ -109,47 +94,26 @@ class AboutDialog(wx.Dialog):
         swStr = swStr.strip()
 
         # Set the widget content
-        authorLabel    .SetLabel(strings.about['author'])
-        emailLabel     .SetLabel(strings.about['email'])
-        companyLabel   .SetLabel(strings.about['company'])
-        versionLabel   .SetLabel(verStr)
-        glVersionLabel .SetLabel(glVerStr)
-        glRendererLabel.SetLabel(glRenStr)
-        softwareField  .SetValue(swStr)
-        closeButton    .SetLabel('Close')
+        infoStr = '\n'.join((verStr,
+                             strings.about['company'],
+                             strings.about['author'],
+                             strings.about['email'],
+                             vcsVerStr,
+                             glVerStr,
+                             glRenStr))
+
+        
+
+        textPanel  .SetValue(infoStr + '\n\n' + swStr)
+        closeButton.SetLabel('Close')
 
         # Arrange the widgets
-        mainSizer = wx.BoxSizer(wx.VERTICAL)
-        row1Sizer = wx.BoxSizer(wx.HORIZONTAL)
-        row2Sizer = wx.BoxSizer(wx.HORIZONTAL)
-        row3Sizer = wx.BoxSizer(wx.HORIZONTAL)
-        row4Sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer = wx.BoxSizer(wx.VERTICAL)
 
-        row1Sizer.Add(versionLabel,    flag=wx.EXPAND)
-        row1Sizer.Add((1, 1),          flag=wx.EXPAND, proportion=1)
-        row1Sizer.Add(authorLabel,     flag=wx.EXPAND)
- 
-        row2Sizer.Add(companyLabel,    flag=wx.EXPAND)
-        row2Sizer.Add((1, 1),          flag=wx.EXPAND, proportion=1)
-        row2Sizer.Add(emailLabel,      flag=wx.EXPAND)
+        sizer.Add(splashPanel)
+        sizer.Add(textPanel, flag=wx.EXPAND, proportion=1)
+        sizer.Add(closeButton, flag=wx.EXPAND)
 
-        row3Sizer.Add(glVersionLabel,  flag=wx.EXPAND)
-        row3Sizer.Add((1, 1),          flag=wx.EXPAND, proportion=1)
-        
-        row4Sizer.Add(glRendererLabel, flag=wx.EXPAND)
-        row4Sizer.Add((1, 1),          flag=wx.EXPAND, proportion=1)
-
-        rowargs = {'border' : 3,
-                   'flag'   : wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM}
-
-        mainSizer.Add(splashPanel)
-        mainSizer.Add(row1Sizer,     **rowargs)
-        mainSizer.Add(row2Sizer,     **rowargs)
-        mainSizer.Add(row3Sizer,     **rowargs)
-        mainSizer.Add(row4Sizer,     **rowargs)
-        mainSizer.Add(softwareField, flag=wx.EXPAND, proportion=1)
-        mainSizer.Add(closeButton,   flag=wx.EXPAND)
-
-        self.SetSizer(mainSizer)
+        self.SetSizer(sizer)
         self.Layout()
         self.Fit()

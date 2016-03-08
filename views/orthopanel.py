@@ -328,21 +328,23 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         bg = self.getSceneOptions().bgColour
         fg = colourmaps.complementaryColour(bg)
 
-        bg = [int(round(c * 255)) for c in bg]
-        fg = [int(round(c * 255)) for c in fg]
+        # All wxwidgets things need colours
+        # to be specified between 0 and 255
+        intbg = [int(round(c * 255)) for c in bg]
+        intfg = [int(round(c * 255)) for c in fg]
 
-        self.getContentPanel().SetBackgroundColour(bg)
-        self.getContentPanel().SetForegroundColour(fg)
+        self.getContentPanel().SetBackgroundColour(intbg)
+        self.getContentPanel().SetForegroundColour(intfg)
 
         cbCanvas = self.getColourBarCanvas()
         if cbCanvas is not None:
             cbCanvas.textColour = fg
 
-        self.__xcanvas.SetBackgroundColour(bg)
-        self.__ycanvas.SetBackgroundColour(bg)
-        self.__zcanvas.SetBackgroundColour(bg)
+        self.__xcanvas.SetBackgroundColour(intbg)
+        self.__ycanvas.SetBackgroundColour(intbg)
+        self.__zcanvas.SetBackgroundColour(intbg)
 
-        self.__setLabelColours(bg, fg)
+        self.__setLabelColours(intbg, intfg)
 
         self.Refresh()
         self.Update()
@@ -406,8 +408,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         for canvas, labels, show in zip(canvases, allLabels, shows):
 
+            # See WXGLSliceCanvas.Show for
+            # details of a horrible bug, and
+            # equally horrible workaround..
             canvas.Show(show)
-            self.__canvasSizer.Show(canvas, show)
 
             for label in labels.values():
                 self.__canvasSizer.Show(label, show and opts.showLabels)
@@ -456,11 +460,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         :class:`.SliceCanvas`.
         """
 
-        sceneOpts = self.getSceneOptions()
-        allLabels = self.__xLabels.values() + \
-                    self.__yLabels.values() + \
-                    self.__zLabels.values()
-
+        sopts = self.getSceneOptions()
+        
         # Are we showing or hiding the labels?
         if len(self._overlayList) == 0:
             show = False
@@ -470,18 +471,22 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         # Labels are only supported if we
         # have a volumetric reference image 
-        if   overlay is None:      show = False
-        elif sceneOpts.showLabels: show = True
-        else:                      show = False
+        if   overlay is None:  showLabels = False
+        elif sopts.showLabels: showLabels = True
+        else:                  showLabels = False
 
-        for lbl in allLabels:
-            self.__canvasSizer.Show(lbl, show)
+        canvases  = [self.__xcanvas,    self.__ycanvas,    self.__zcanvas]
+        allLabels = [self.__xLabels,    self.__yLabels,    self.__zLabels]
+        shows     = [sopts.showXCanvas, sopts.showYCanvas, sopts.showZCanvas]
+
+        for canvas, labels, show in zip(canvases, allLabels, shows):
+            for lbl in labels.values():
+                self.__canvasSizer.Show(lbl, show and showLabels)
 
         # If we're hiding the labels, do no more
-        if not show:
+        if not showLabels:
             self.PostSizeEvent()
             return
-
 
         log.debug('Refreshing orientation labels '
                   'according to {}'.format(overlay.name))
@@ -505,7 +510,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         log.debug('Y orientation: {} - {}'.format(ylo, yhi))
         log.debug('Z orientation: {} - {}'.format(zlo, zhi))
 
-        bg = sceneOpts.bgColour
+        bg = sopts.bgColour
         fg = colourmaps.complementaryColour(bg)
         bg = [int(round(c * 255)) for c in bg]
         fg = [int(round(c * 255)) for c in fg]        
@@ -761,11 +766,14 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                        space,         space,            space]
 
         # Add all those widgets to the grid sizer
-        flag = wx.ALIGN_CENTRE_HORIZONTAL | wx.ALIGN_CENTRE_VERTICAL
+        flag     = wx.ALIGN_CENTRE_HORIZONTAL | wx.ALIGN_CENTRE_VERTICAL
+        canvases = [self.__xcanvas, self.__ycanvas, self.__zcanvas]
         
         for w in widgets:
-            self.__canvasSizer.Add(w, flag=flag)
-                                          
+            
+            if w in canvases: self.__canvasSizer.Add(w, flag=flag | wx.EXPAND)
+            else:             self.__canvasSizer.Add(w, flag=flag)
+            
         self.getContentPanel().SetSizer(self.__canvasSizer)
 
         # Calculate/ adjust the appropriate sizes

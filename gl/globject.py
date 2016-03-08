@@ -50,7 +50,7 @@ def getGLObjectType(overlayType):
     return typeMap.get(overlayType, None)
 
 
-def createGLObject(overlay, display):
+def createGLObject(overlay, display, xax, yax):
     """Create :class:`GLObject` instance for the given overlay, as specified
     by the :attr:`.Display.overlayType` property.
 
@@ -58,10 +58,14 @@ def createGLObject(overlay, display):
     
     :arg display: A :class:`.Display` instance describing how the overlay
                   should be displayed.
+
+    :arg xax:     Initial display X axis
+
+    :arg yax:     Initial display Y axis    
     """
     ctr = getGLObjectType(display.overlayType)
 
-    if ctr is not None: return ctr(overlay, display)
+    if ctr is not None: return ctr(overlay, display, xax, yax)
     else:               return None
 
 
@@ -104,7 +108,11 @@ class GLObject(notifier.Notifier):
     
     Sub-class implementations must do the following:
     
-     - Call :meth:`__init__`.
+     - Call :meth:`__init__`. A ``GLObject.__init__`` sub-class method must
+       have the following signature::
+    
+           def __init__(self, overlay, display, xax, yax)
+    
 
      - Call :meth:`notify` whenever its OpenGL representation changes.
 
@@ -132,23 +140,26 @@ class GLObject(notifier.Notifier):
     """
 
     
-    def __init__(self):
-        """Create a :class:`GLObject`.  The constructor adds one attribute
+    def __init__(self, xax, yax):
+        """Create a :class:`GLObject`.  The constructor adds one attribute 
         to this instance, ``name``, which is simply a unique name for this
-        instance, and gives default values to the ``xax``, ``yax``, and
-        ``zax`` attributes.
+        instance, and gives values to the ``xax``, ``yax``, and ``zax``
+        attributes.
 
         Subclass implementations must call this method, and should also
         perform any necessary OpenGL initialisation, such as creating
         textures.
+
+        :arg xax: Initial display X axis
+        :arg yax: Initial display Y axis
         """
 
         # Give this instance a name, and set 
         # initial values for the display axes
         self.name = '{}_{}'.format(type(self).__name__, id(self))
-        self.xax  = 0
-        self.yax  = 1
-        self.zax  = 2
+        self.xax  = xax
+        self.yax  = yax
+        self.zax  = 3 - xax - yax
 
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
@@ -285,9 +296,9 @@ class GLSimpleObject(GLObject):
     be called.
     """
 
-    def __init__(self):
+    def __init__(self, xax, yax):
         """Create a ``GLSimpleObject``. """
-        GLObject.__init__(self)
+        GLObject.__init__(self, xax, yax)
 
 
     def ready(self):
@@ -315,7 +326,7 @@ class GLImageObject(GLObject):
     of :class:`.Nifti1` instances. 
     """
     
-    def __init__(self, image, display):
+    def __init__(self, image, display, xax, yax):
         """Create a ``GLImageObject``.
 
         This constructor adds the following attributes to this instance:
@@ -333,9 +344,13 @@ class GLImageObject(GLObject):
         :arg image:   The :class:`.Nifti1` instance
         
         :arg display: An associated :class:`.Display` instance.
+
+        :arg xax:     Initial display X axis
+
+        :arg yax:     Initial display Y axis
         """
         
-        GLObject.__init__(self)
+        GLObject.__init__(self, xax, yax)
         self.image       = image
         self.display     = display
         self.displayOpts = display.getDisplayOpts()

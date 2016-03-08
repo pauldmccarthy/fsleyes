@@ -16,6 +16,7 @@ import numpy as np
 
 import fsl.fsleyes.profiles as profiles
 import fsl.fsleyes.actions  as actions
+import fsl.utils.async      as async
 import fsl.data.image       as fslimage
 import fsl.data.constants   as constants
 
@@ -332,7 +333,11 @@ class OrthoViewProfile(profiles.Profile):
         elif ch  in ('+', '='):   dirs[canvas.zax] =  1
         elif ch  in ('-', '_'):   dirs[canvas.zax] = -1
 
-        self._displayCtx.location.xyz = self.__offsetLocation(*dirs)
+        def update():
+            self._displayCtx.location.xyz = self.__offsetLocation(*dirs)
+
+        # See comment in _zoomModeMouseWheel about timeout
+        async.idle(update, timeout=0.1)
 
         
     #####################
@@ -357,7 +362,11 @@ class OrthoViewProfile(profiles.Profile):
 
         pos = self.__offsetLocation(*dirs)
 
-        self._displayCtx.location[canvas.zax] = pos[canvas.zax]
+        def update():
+            self._displayCtx.location[canvas.zax] = pos[canvas.zax]
+
+        # See comment in _zoomModeMouseWheel about timeout
+        async.idle(update, timeout=0.1)
 
         
     ####################
@@ -378,7 +387,17 @@ class OrthoViewProfile(profiles.Profile):
         """
         if   wheel > 0: wheel =  50
         elif wheel < 0: wheel = -50
-        canvas.zoom += wheel
+
+        # Over SSH/X11, mouse wheel events seem to get queued,
+        # and continue to get processed after the user has
+        # stopped spinning the mouse wheel, which is super
+        # frustrating. So we do the update asynchronously, and
+        # set a time out to drop the event, and prevent the
+        # horribleness from happening.
+        def update():
+            canvas.zoom += wheel
+        
+        async.idle(update, timeout=0.1)
 
         
     def _zoomModeChar(self, ev, canvas, key):
@@ -451,31 +470,12 @@ class OrthoViewProfile(profiles.Profile):
             canvas.getAnnotations().dequeue(self.__lastRect)
             self.__lastRect = None
 
-        rectXlen = abs(canvasPos[canvas.xax] - canvasDownPos[canvas.xax])
-        rectYlen = abs(canvasPos[canvas.yax] - canvasDownPos[canvas.yax])
+        xlo = min(canvasPos[canvas.xax], canvasDownPos[canvas.xax])
+        xhi = max(canvasPos[canvas.xax], canvasDownPos[canvas.xax])
+        ylo = min(canvasPos[canvas.yax], canvasDownPos[canvas.yax])
+        yhi = max(canvasPos[canvas.yax], canvasDownPos[canvas.yax])
 
-        if rectXlen == 0: return
-        if rectYlen == 0: return
-
-        rectXmid = (canvasPos[canvas.xax] + canvasDownPos[canvas.xax]) / 2.0
-        rectYmid = (canvasPos[canvas.yax] + canvasDownPos[canvas.yax]) / 2.0
-
-        xlen = self._displayCtx.bounds.getLen(canvas.xax)
-        ylen = self._displayCtx.bounds.getLen(canvas.yax)
-
-        xzoom   = xlen / rectXlen
-        yzoom   = ylen / rectYlen
-        zoom    = min(xzoom, yzoom) * 100.0
-        maxzoom = canvas.getConstraint('zoom', 'maxval')
-
-        if zoom >= maxzoom:
-            zoom = maxzoom
-
-        if zoom > canvas.zoom:
-            canvas.zoom = zoom
-            canvas.centreDisplayAt(rectXmid, rectYmid)
-
-        canvas.Refresh()
+        canvas.zoomTo(xlo, xhi, ylo, yhi)
         
         
     ###################
@@ -491,11 +491,11 @@ class OrthoViewProfile(profiles.Profile):
 
         If the target canvas is not zoomed in, this has no effect.
         """
-
-        if canvasPos is None:
-            return
         
         mouseDownPos, canvasDownPos = self.getMouseDownLocation()
+
+        if canvasPos     is None: return
+        if canvasDownPos is None: return
 
         xoff = canvasPos[canvas.xax] - canvasDownPos[canvas.xax]
         yoff = canvasPos[canvas.yax] - canvasDownPos[canvas.yax]
@@ -519,7 +519,11 @@ class OrthoViewProfile(profiles.Profile):
         elif key == wx.WXK_RIGHT: xoff =  2
         else:                     return
 
-        canvas.panDisplayBy(xoff, yoff)
+        def update():
+            canvas.panDisplayBy(xoff, yoff)
+
+        # See comment in _zoomModeMouseWheel about timeout
+        async.idle(update, timeout=0.1)
 
 
     #############

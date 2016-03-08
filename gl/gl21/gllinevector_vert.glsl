@@ -64,10 +64,12 @@ varying vec4 fragColourFactor;
 
 void main(void) {
 
-  vec3 texCoord;
-  vec3 vector;
-  vec3 voxCoord;
-  vec3 vertVoxCoord;
+  
+  vec3  texCoord;
+  vec3  vector;
+  vec3  voxCoord;
+  vec3  vertVoxCoord;
+  float vectorLen;
 
   /*
    * The vertVoxCoord vector contains the floating
@@ -105,11 +107,28 @@ void main(void) {
    * texture range of [0,1] to the original
    * data range
    */
-  vector *= voxValXform[0].x;
-  vector += voxValXform[3].x;
+  vector   *= voxValXform[0].x;
+  vector   += voxValXform[3].x;
+  vectorLen = length(vector);
 
-  // Scale the vector so it has length 0.5 
-  vector /= 2 * length(vector);
+  /* 
+   * Kill the vector if its length is 0. 
+   * We have to be tolerant of errors, 
+   * because of the transformation to/
+   * from the texture data range. This 
+   * may end up being too tolerant.
+   */
+  if (vectorLen < 0.0001) {
+    fragColourFactor = vec4(0, 0, 0, 0);
+    return;
+  }
+
+  /*
+   * Scale the vector so it has length 
+   * 0.5. Note that here we are assuming 
+   * that all vectors are of length 1.
+   */
+  vector /= 2 * vectorLen;
 
   /*
    * Scale the vector by the minimum voxel length,

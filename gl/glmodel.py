@@ -65,16 +65,20 @@ class GLModel(globject.GLObject):
     """
 
     
-    def __init__(self, overlay, display):
+    def __init__(self, overlay, display, xax, yax):
         """Create a ``GLModel``.
 
         :arg overlay: A :class:`.Model` overlay.
 
         :arg display: A :class:`.Display` instance defining how the
                       ``overlay`` is to be displayed.
+        
+        :arg xax:     Initial display X axis
+
+        :arg yax:     Initial display Y axis        
         """
 
-        globject.GLObject.__init__(self)
+        globject.GLObject.__init__(self, xax, yax)
 
         self.shader  = None
         self.overlay = overlay

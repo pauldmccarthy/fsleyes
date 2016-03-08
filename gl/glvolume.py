@@ -142,16 +142,20 @@ class GLVolume(globject.GLImageObject):
     """
 
     
-    def __init__(self, image, display):
+    def __init__(self, image, display, xax, yax):
         """Create a ``GLVolume`` object.
 
         :arg image:   An :class:`.Image` object.
         
         :arg display: A :class:`.Display` object which describes how the image
                       is to be displayed.
+
+        :arg xax:     Initial display X axis
+
+        :arg yax:     Initial display Y axis 
         """
 
-        globject.GLImageObject.__init__(self, image, display)
+        globject.GLImageObject.__init__(self, image, display, xax, yax)
 
         # Add listeners to this image so the view can be
         # updated when its display properties are changed
@@ -257,69 +261,32 @@ class GLVolume(globject.GLImageObject):
         display properties are changed.
         """
 
-        image   = self.image
         display = self.display
         opts    = self.displayOpts
-        lName   = self.name
+        name    = self.name
 
-        def update(*a):
-            self.notify()
+        crPVs   = opts.getPropVal('clippingRange').getPropertyValueList()
 
-        def shaderUpdate(*a):
-            if self.ready():
-                if fslgl.glvolume_funcs.updateShaderState(self):
-                    self.notify()
+        display .addListener('alpha',           name, self._alphaChanged)
+        opts    .addListener('displayRange',    name,
+                             self._displayRangeChanged)
         
-        def colourUpdate(*a):
-            self.refreshColourTextures()
-            if self.ready():
-                shaderUpdate()
-
-        def imageRefresh(*a):
-            async.wait([self.refreshImageTexture()], shaderUpdate)
-
-        def imageUpdate(*a):
-            volume     = opts.volume
-            resolution = opts.resolution
-
-            if opts.interpolation == 'none': interp = gl.GL_NEAREST
-            else:                            interp = gl.GL_LINEAR
-            
-            self.imageTexture.set(volume=volume,
-                                  interp=interp,
-                                  resolution=resolution,
-                                  notify=False)
-
-            waitfor = [self.imageTexture.refreshThread()]
-
-            if self.clipTexture is not None:
-                self.clipTexture.set(interp=interp,
-                                     resolution=resolution,
-                                     notify=False)
-                waitfor.append(self.clipTexture.refreshThread())
-
-            async.wait(waitfor, shaderUpdate)
-
-        def clipUpdate(*a):
-            self.deregisterClipImage()
-            self.registerClipImage()
-            async.wait([self.refreshClipTexture()], shaderUpdate)
-
-        display.addListener('alpha',          lName, colourUpdate,  weak=False)
-        opts   .addListener('displayRange',   lName, colourUpdate,  weak=False)
-        opts   .addListener('clippingRange',  lName, shaderUpdate,  weak=False)
-        opts   .addListener('clipImage',      lName, clipUpdate,    weak=False)
-        opts   .addListener('invertClipping', lName, shaderUpdate,  weak=False)
-        opts   .addListener('cmap',           lName, colourUpdate,  weak=False)
-        opts   .addListener('negativeCmap',   lName, colourUpdate,  weak=False)
-        opts   .addListener('useNegativeCmap',
-                            lName, colourUpdate,  weak=False)
-        opts   .addListener('invert',         lName, colourUpdate,  weak=False)
-        opts   .addListener('volume',         lName, imageUpdate,   weak=False)
-        opts   .addListener('resolution',     lName, imageUpdate,   weak=False)
-        opts   .addListener('interpolation',  lName, imageUpdate,   weak=False)
-        opts   .addListener('transform',      lName, update,        weak=False)
-        image  .addListener('data',           lName, update,        weak=False)
+        crPVs[0].addListener(name, self._lowClippingRangeChanged)
+        crPVs[1].addListener(name, self._highClippingRangeChanged)
+        
+        opts    .addListener('clipImage',       name, self._clipImageChanged)
+        opts    .addListener('invertClipping',  name,
+                             self._invertClippingChanged)
+        opts    .addListener('cmap',            name, self._cmapChanged)
+        opts    .addListener('negativeCmap',    name, self._cmapChanged)
+        opts    .addListener('useNegativeCmap', name,
+                             self._useNegativeCmapChanged)
+        opts    .addListener('invert',          name, self._invertChanged)
+        opts    .addListener('volume',          name, self._volumeChanged)
+        opts    .addListener('interpolation',   name,
+                             self._interpolationChanged)
+        opts    .addListener('resolution',      name, self._resolutionChanged)
+        opts    .addListener('transform',       name, self._transformChanged)
 
         # Save a flag so the removeDisplayListeners
         # method knows whether it needs to de-register
@@ -331,12 +298,15 @@ class GLVolume(globject.GLImageObject):
         self.__syncListenersRegistered = opts.getParent() is not None
 
         if self.__syncListenersRegistered:
-            opts.addSyncChangeListener(
-                'volume',        lName, imageRefresh, weak=False)
-            opts.addSyncChangeListener(
-                'resolution',    lName, imageRefresh, weak=False)
-            opts.addSyncChangeListener(
-                'interpolation', lName, imageRefresh, weak=False)
+            opts.addSyncChangeListener('volume',
+                                       name,
+                                       self._imageSyncChanged)
+            opts.addSyncChangeListener('resolution',
+                                       name,
+                                       self._imageSyncChanged)
+            opts.addSyncChangeListener('interpolation',
+                                       name,
+                                       self._imageSyncChanged)
 
 
     def removeDisplayListeners(self):
@@ -347,29 +317,30 @@ class GLVolume(globject.GLImageObject):
         image   = self.image
         display = self.display
         opts    = self.displayOpts
+        name    = self.name
+        crPVs   = opts.getPropVal('clippingRange').getPropertyValueList()
 
-        lName = self.name
-        
-        display.removeListener(          'alpha',           lName)
-        opts   .removeListener(          'displayRange',    lName)
-        opts   .removeListener(          'clippingRange',   lName)
-        opts   .removeListener(          'clipImage',       lName)
-        opts   .removeListener(          'invertClipping',  lName)
-        opts   .removeListener(          'cmap',            lName)
-        opts   .removeListener(          'negativeCmap',    lName)
-        opts   .removeListener(          'useNegativeCmap', lName)
-        opts   .removeListener(          'cmap',            lName)
-        opts   .removeListener(          'invert',          lName)
-        opts   .removeListener(          'volume',          lName)
-        opts   .removeListener(          'resolution',      lName)
-        opts   .removeListener(          'interpolation',   lName)
-        opts   .removeListener(          'transform',       lName)
-        image  .removeListener(          'data',            lName)
+        display .removeListener(          'alpha',           name)
+        opts    .removeListener(          'displayRange',    name)
+        crPVs[0].removeListener(name)
+        crPVs[1].removeListener(name)
+        opts    .removeListener(          'clipImage',       name)
+        opts    .removeListener(          'invertClipping',  name)
+        opts    .removeListener(          'cmap',            name)
+        opts    .removeListener(          'negativeCmap',    name)
+        opts    .removeListener(          'useNegativeCmap', name)
+        opts    .removeListener(          'cmap',            name)
+        opts    .removeListener(          'invert',          name)
+        opts    .removeListener(          'volume',          name)
+        opts    .removeListener(          'resolution',      name)
+        opts    .removeListener(          'interpolation',   name)
+        opts    .removeListener(          'transform',       name)
+        image   .removeListener(          'data',            name)
         
         if self.__syncListenersRegistered:
-            opts.removeSyncChangeListener('volume',        lName)
-            opts.removeSyncChangeListener('resolution',    lName)
-            opts.removeSyncChangeListener('interpolation', lName)
+            opts.removeSyncChangeListener('volume',        name)
+            opts.removeSyncChangeListener('resolution',    name)
+            opts.removeSyncChangeListener('interpolation', name)
 
         
     def testUnsynced(self):
@@ -384,7 +355,144 @@ class GLVolume(globject.GLImageObject):
                 not self.displayOpts.isSyncedToParent('volume')     or
                 not self.displayOpts.isSyncedToParent('resolution') or
                 not self.displayOpts.isSyncedToParent('interpolation'))
+
+
+    def _alphaChanged(self, *a):
+        """Called when the :attr:`.Display.alpha` property changes. """
+        self.refreshColourTextures()
+        self.notify()
+
+
+    def _displayRangeChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.displayRange` property changes.
+        """
+        self.refreshColourTextures()
+        if fslgl.glvolume_funcs.updateShaderState(self):
+            self.notify()
+
+            
+    def _lowClippingRangeChanged(self, *a):
+        """Called when the low :attr:`.VolumeOpts.clippingRange` property
+        changes. Separate listeners are used for the low and high clipping
+        values to avoid unnecessary duplicate refreshes in the event that the
+        :attr:`.VolumeOpts.linkLowRanges` or
+        :attr:`.VolumeOpts.linkHighRanges` flags are set.
+        """ 
+        if self.displayOpts.linkLowRanges:
+            return
         
+        if fslgl.glvolume_funcs.updateShaderState(self):
+            self.notify()
+
+    def _highClippingRangeChanged(self, *a):
+        """Called when the high :attr:`.VolumeOpts.clippingRange` property
+        changes (see :meth:`_lowClippingRangeChanged`).
+        """ 
+        if self.displayOpts.linkHighRanges:
+            return
+        
+        if fslgl.glvolume_funcs.updateShaderState(self):
+            self.notify()
+
+            
+    def _clipImageChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.clipImage` property changes.
+        """
+        def onRefresh():
+            if fslgl.glvolume_funcs.updateShaderState(self):
+                self.notify()
+        
+        self.deregisterClipImage()
+        self.registerClipImage()
+        async.wait([self.refreshClipTexture()], onRefresh)
+
+        
+    def _invertClippingChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.invertClipping` property changes.
+        """ 
+        if fslgl.glvolume_funcs.updateShaderState(self):
+            self.notify()
+
+
+    def _cmapChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.cmap` or
+        :attr:`.VolumeOpts.negativeCmap` properties change.
+        """
+        self.refreshColourTextures()
+        self.notify()
+
+        
+    def _useNegativeCmapChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.useNegativeCmap` property
+        changes.
+        """ 
+        if fslgl.glvolume_funcs.updateShaderState(self):
+            self.notify()
+
+            
+    def _invertChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.invert` property changes. """
+        self.refreshColourTextures()
+        fslgl.glvolume_funcs.updateShaderState(self)
+        self.notify()
+
+
+    def _volumeChanged(self, *a):
+        """Called when the :attr:`.Nifti1Opts.volume` property changes. """
+        opts       = self.displayOpts
+        volume     = opts.volume
+        resolution = opts.resolution
+
+        if opts.interpolation == 'none': interp = gl.GL_NEAREST
+        else:                            interp = gl.GL_LINEAR
+
+        self.imageTexture.set(volume=volume,
+                              interp=interp,
+                              resolution=resolution,
+                              notify=False)
+
+        waitfor = [self.imageTexture.refreshThread()]
+
+        if self.clipTexture is not None:
+            self.clipTexture.set(interp=interp,
+                                 resolution=resolution,
+                                 notify=False)
+            waitfor.append(self.clipTexture.refreshThread())
+
+        def onRefresh():
+            fslgl.glvolume_funcs.updateShaderState(self)
+            self.notify()
+            
+        async.wait(waitfor, onRefresh)
+
+
+    def _interpolationChanged(self, *a):
+        """Called when the :attr:`.Nifti1Opts.interpolation` property changes.
+        """
+        self._volumeChanged()
+
+        
+    def _resolutionChanged(self, *a):
+        """Called when the :attr:`.Nifti1Opts.resolution` property changes.
+        """ 
+        self._volumeChanged() 
+
+
+    def _transformChanged(self, *a):
+        """Called when the :attr:`.Nifti1Opts.transform` property changes.
+        """ 
+        self.notify()
+
+
+    def _imageSyncChanged(self, *a):
+        """Called when the synchronisation state of the
+        :attr:`.Nifti1Opts.volume`, :attr:`.Nifti1Opts.resolution`, or
+        :attr:`.VolumeOpts.interpolation` properties change.
+        """ 
+        self.refreshImageTexture()
+        fslgl.glvolume_funcs.updateShaderState(self)
+        self.notify()
+
 
     def refreshImageTexture(self):
         """Refreshes the :class:`.ImageTexture` used to store the
@@ -423,7 +531,8 @@ class GLVolume(globject.GLImageObject):
             self.image,
             interp=interp,
             resolution=opts.resolution,
-            notify=False)
+            notify=False,
+            volume=opts.volume)
 
         self.imageTexture.register(self.name, self.__textureChanged)
 

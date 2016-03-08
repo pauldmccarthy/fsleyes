@@ -43,25 +43,34 @@ class GLLabel(globject.GLImageObject):
     """
 
     
-    def __init__(self, image, display):
+    def __init__(self, image, display, xax, yax):
         """Create a ``GLLabel``.
 
         :arg image:   The :class:`.Image` instance.
         :arg display: The associated :class:`.Display` instance.
+        :arg xax:     Initial display X axis
+        :arg yax:     Initial display Y axis        
         """
 
-        globject.GLImageObject.__init__(self, image, display)
+        globject.GLImageObject.__init__(self, image, display, xax, yax)
 
-        lutTexName   = '{}_lut'.format(self.name)
-
+        lutTexName        = '{}_lut'.format(self.name)
         self.lutTexture   = textures.LookupTableTexture(lutTexName)
         self.imageTexture = None
 
-        self.refreshImageTexture()
+        # The shader attribute will be created 
+        # by the gllabel_funcs module
+        self.shader       = None
+
+        self.addListeners()
+
         self.refreshLutTexture()
  
-        fslgl.gllabel_funcs.init(self)
-        self.addListeners()
+        def onTextureReady():
+            fslgl.gllabel_funcs.init(self)
+            self.notify() 
+ 
+        async.wait([self.refreshImageTexture()], onTextureReady)
 
         
     def destroy(self):
@@ -82,7 +91,9 @@ class GLLabel(globject.GLImageObject):
         """Returns ``True`` if this ``GLLabel`` is ready to be drawn, ``False``
         otherwise.
         """
-        return self.imageTexture is not None and self.imageTexture.ready()
+        return self.shader       is not None and \
+               self.imageTexture is not None and \
+               self.imageTexture.ready()
 
 
     def addListeners(self):
@@ -101,8 +112,8 @@ class GLLabel(globject.GLImageObject):
 
         def shaderUpdate(*a):
             if self.ready():
-                if fslgl.gllabel_funcs.updateShaderState(self):
-                    self.notify()
+                fslgl.gllabel_funcs.updateShaderState(self)
+                self.notify()
             
         def shaderCompile(*a):
             fslgl.gllabel_funcs.compileShaders(self)
@@ -121,7 +132,8 @@ class GLLabel(globject.GLImageObject):
             if self.__lut is not None:
                 self.__lut.addListener('labels', self.name, lutUpdate)
  
-            lutUpdate()
+            self.refreshLutTexture()
+            shaderUpdate()
 
         def imageRefresh(*a):
             async.wait([self.refreshImageTexture()], shaderUpdate)
@@ -220,7 +232,8 @@ class GLLabel(globject.GLImageObject):
             textures.ImageTexture,
             texName,
             self.image,
-            notify=False)
+            notify=False,
+            volume=opts.volume)
         
         self.imageTexture.register(self.name, self.__imageTextureChanged)
 

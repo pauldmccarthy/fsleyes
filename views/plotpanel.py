@@ -399,6 +399,11 @@ class PlotPanel(viewpanel.ViewPanel):
 
         for ds in toPlot:
             xlim, ylim = self.__drawOneDataSeries(ds, preproc, **plotArgs)
+
+            if (xlim[1] - xlim[0] < 0.0000000001) or \
+               (ylim[1] - ylim[0] < 0.0000000001):
+                continue
+            
             xlims.append(xlim)
             ylims.append(ylim)
 
@@ -942,6 +947,8 @@ class OverlayPlotPanel(PlotPanel):
         for ovl in self._overlayList:
             if ovl in self.__dataSeries:
                 continue
+
+            log.debug('Creating a DataSeries for overlay {}'.format(ovl))
                 
             ds, refreshTargets, refreshProps = self.createDataSeries(ovl)
 

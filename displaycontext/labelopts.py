@@ -55,7 +55,7 @@ class LabelOpts(volumeopts.Nifti1Opts):
         volumeopts.Nifti1Opts.__init__(self, overlay, *args, **kwargs)
 
         luts  = fslcm.getLookupTables()
-        alts  = [[l.name, l.key] for l in luts]
+        alts  = [list(set((l.name, l.key))) for l in luts]
 
         lutChoice = self.getProp('lut')
         lutChoice.setChoices(luts, alternates=alts)

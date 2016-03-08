@@ -372,13 +372,13 @@ def registerLookupTable(lut,
 
         lutChoice = opts.getProp('lut')
         lutChoice.addChoice(lut,
-                            alternate=[lut.name, key],
+                            alternate=list(set((lut.name, key))),
                             instance=opts)
 
     # and for any future label overlays
     fsldisplay.LabelOpts.lut.addChoice(
         lut,
-        alternate=[lut.name, key])
+        alternate=list(set((lut.name, key))))
     
     return lut
 

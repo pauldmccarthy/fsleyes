@@ -28,7 +28,7 @@ class GLTensor(glvector.GLVector):
     """
 
     
-    def __init__(self, image, display):
+    def __init__(self, image, display, xax, yax):
         """Create a ``GLTensor``. Calls the :func:`.gl21.gltensor_funcs.init`
         function.
 
@@ -36,10 +36,16 @@ class GLTensor(glvector.GLVector):
         
         :arg display: The :class:`.Display` instance associated with the
                       ``image``.
+        
+        :arg xax:     Initial display X axis
+
+        :arg yax:     Initial display Y axis        
         """
         glvector.GLVector.__init__(self,
                                    image,
                                    display,
+                                   xax,
+                                   yax,
                                    prefilter=np.abs,
                                    vectorImage=image.V1(),
                                    init=lambda: fslgl.gltensor_funcs.init(

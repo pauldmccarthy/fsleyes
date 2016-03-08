@@ -11,6 +11,7 @@
 import logging
 
 import fsl.fsleyes.profiles as profiles
+import fsl.utils.async      as async
 
 
 log = logging.getLogger(__name__)
@@ -76,7 +77,12 @@ class LightBoxViewProfile(profiles.Profile):
         if   wheel > 0: wheel = -1
         elif wheel < 0: wheel =  1
 
-        self._viewPanel.getCanvas().topRow += wheel
+        # See comment in OrthoViewProfile._zoomModeMouseWheel
+        # about timeout
+        def update():
+            self._viewPanel.getCanvas().topRow += wheel
+
+        async.idle(update, timeout=0.1)
 
         
     def _viewModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -106,4 +112,10 @@ class LightBoxViewProfile(profiles.Profile):
 
         if   wheel > 0: wheel =  50
         elif wheel < 0: wheel = -50
-        self._viewPanel.getSceneOptions().zoom += wheel 
+
+        # see comment in OrthoViewProfile._zoomModeMouseWheel
+        # about timeout
+        def update():
+            self._viewPanel.getSceneOptions().zoom += wheel
+
+        async.idle(update, timeout=0.1)

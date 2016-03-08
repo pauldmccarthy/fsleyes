@@ -439,15 +439,26 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         # WidgetGrid panels for overlays
         # that have been removed from the
         # list.
-        for overlay in self.__featImages.keys():
+        for overlay in list(self.__featImages.keys()):
             if overlay not in self._overlayList:
                 
-                featImage = self.__featImages  .pop(overlay)
-                grids     = self.__clusterGrids.pop(featImage)
-                
-                for grid in grids:
-                    self.__mainSizer.Detach(grid)
-                    grid.Destroy()
+                featImage = self.__featImages.pop(overlay)
+
+                # Has the feat image associated with
+                # this overlay also been removed?
+                if featImage is overlay or \
+                   featImage not in self._overlayList:
+
+                    # The grid widgets for the feat image
+                    # associated with this overlay may
+                    # have already been destroyed.
+                    try:             grids = self.__clusterGrids.pop(featImage)
+                    except KeyError: grids = []
+
+                    for grid in grids:
+                        if grid is not None:
+                            self.__mainSizer.Detach(grid)
+                            grid.Destroy()
         
         self.__selectedOverlayChanged()
         self.__enableOverlayButtons()
@@ -493,6 +504,12 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
             return
 
         overlay = self._displayCtx.getSelectedOverlay()
+
+        # Overlay is in-memory
+        if overlay.dataSource is None:
+            self.__disable(strings.messages[self, 'notFEAT'])
+            return
+        
         featDir = featresults.getAnalysisDir(overlay.dataSource)
 
         # No FEAT analysis, or not an Image,

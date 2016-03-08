@@ -126,8 +126,8 @@ def updateShaderState(self):
 
     glvector_funcs.updateFragmentShaderState(self)
 
-    shape    = np.array(list(image.shape[:3]) + [0], dtype=np.float32)
-    invShape = 1.0 / shape
+    shape    = list(image.shape[:3])
+    invShape = [1.0 / s for s in shape] + [0]
     offset   = [0.5, 0.5, 0.5, 0.0]
 
     self.shader.load()
