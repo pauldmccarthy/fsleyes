@@ -237,15 +237,15 @@ class GLVector(globject.GLImageObject):
         """Returns ``True`` if this ``GLVector`` is ready to be drawn,
         ``False`` otherwise.
         """
-        return all((self.shader          is not None,
-                    self.imageTexture    is not None,
-                    self.modulateTexture is not None,
-                    self.clipTexture     is not None,
-                    self.colourTexture   is not None,
-                    self.imageTexture   .ready(),
-                    self.modulateTexture.ready(),
-                    self.clipTexture    .ready(),
-                    self.colourTexture  .ready()))
+        return (self.shader          is not None and
+                self.imageTexture    is not None and
+                self.modulateTexture is not None and
+                self.clipTexture     is not None and
+                self.colourTexture   is not None and 
+                self.imageTexture   .ready()     and 
+                self.modulateTexture.ready()     and 
+                self.clipTexture    .ready()     and 
+                self.colourTexture  .ready())
 
 
     def addListeners(self):

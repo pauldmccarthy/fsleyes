@@ -91,9 +91,9 @@ class GLLabel(globject.GLImageObject):
         """Returns ``True`` if this ``GLLabel`` is ready to be drawn, ``False``
         otherwise.
         """
-        return self.shader       is not None and \
-               self.imageTexture is not None and \
-               self.imageTexture.ready()
+        return (self.shader       is not None and
+                self.imageTexture is not None and
+                self.imageTexture.ready())
 
 
     def addListeners(self):
