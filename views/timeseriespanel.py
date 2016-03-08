@@ -172,7 +172,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         """
         self.togglePanel(timeseriescontrolpanel.TimeSeriesControlPanel,
                          self,
-                         location=wx.TOP)
+                         location=wx.RIGHT)
 
         
     def getActions(self):

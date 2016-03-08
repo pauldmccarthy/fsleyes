@@ -116,7 +116,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         """
         self.togglePanel(pscontrol.PowerSpectrumControlPanel,
                          self,
-                         location=wx.TOP)
+                         location=wx.RIGHT)
 
         
     @actions.toggleControlAction(plotlistpanel.PlotListPanel)
