@@ -51,7 +51,7 @@ class WXGLSliceCanvas(slicecanvas.SliceCanvas,
         displayed on the canvas seems to persist, does not get overridden, and
         gets drawn on top of other things in the interface:
 
-        .. image:: images/x11_slicecanvas_bug.png
+        .. image:: images/x11_slicecanvas_show_bug.png
            :scale: 50%
            :align: center
 
