@@ -245,14 +245,15 @@ class SliceCanvas(props.HasProperties):
         :class:`.DisplayContext`, and :class:`.Display` instances, and
         destroys OpenGL representations of all overlays.
         """
-        self.removeListener('zax',           self.name)
-        self.removeListener('pos',           self.name)
-        self.removeListener('displayBounds', self.name)
-        self.removeListener('showCursor',    self.name)
-        self.removeListener('invertX',       self.name)
-        self.removeListener('invertY',       self.name)
-        self.removeListener('zoom',          self.name)
-        self.removeListener('renderMode',    self.name)
+        self.removeListener('zax',             self.name)
+        self.removeListener('pos',             self.name)
+        self.removeListener('displayBounds',   self.name)
+        self.removeListener('showCursor',      self.name)
+        self.removeListener('invertX',         self.name)
+        self.removeListener('invertY',         self.name)
+        self.removeListener('zoom',            self.name)
+        self.removeListener('renderMode',      self.name)
+        self.removeListener('resolutionLimit', self.name)
 
         self.overlayList.removeListener('overlays',     self.name)
         self.displayCtx .removeListener('bounds',       self.name)
