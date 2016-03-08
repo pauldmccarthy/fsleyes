@@ -328,21 +328,23 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         bg = self.getSceneOptions().bgColour
         fg = colourmaps.complementaryColour(bg)
 
-        bg = [int(round(c * 255)) for c in bg]
-        fg = [int(round(c * 255)) for c in fg]
+        # All wxwidgets things need colours
+        # to be specified between 0 and 255
+        intbg = [int(round(c * 255)) for c in bg]
+        intfg = [int(round(c * 255)) for c in fg]
 
-        self.getContentPanel().SetBackgroundColour(bg)
-        self.getContentPanel().SetForegroundColour(fg)
+        self.getContentPanel().SetBackgroundColour(intbg)
+        self.getContentPanel().SetForegroundColour(intfg)
 
         cbCanvas = self.getColourBarCanvas()
         if cbCanvas is not None:
             cbCanvas.textColour = fg
 
-        self.__xcanvas.SetBackgroundColour(bg)
-        self.__ycanvas.SetBackgroundColour(bg)
-        self.__zcanvas.SetBackgroundColour(bg)
+        self.__xcanvas.SetBackgroundColour(intbg)
+        self.__ycanvas.SetBackgroundColour(intbg)
+        self.__zcanvas.SetBackgroundColour(intbg)
 
-        self.__setLabelColours(bg, fg)
+        self.__setLabelColours(intbg, intfg)
 
         self.Refresh()
         self.Update()
