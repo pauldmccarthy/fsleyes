@@ -17,6 +17,7 @@ import                                                props
 
 import                                                plotpanel
 import fsl.data.featimage                          as fslfeatimage
+import fsl.data.featresults                        as featresults
 import fsl.data.melodicimage                       as fslmelimage
 import fsl.data.image                              as fslimage
 import fsl.fsleyes.actions                         as actions
@@ -241,24 +242,55 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         data to be plotted), a tuple of ``None`` values is returned.
         """
 
-        if not (isinstance(overlay, fslimage.Image) and overlay.is4DImage()):
+        if not isinstance(overlay, fslimage.Image):
             return None, None, None
 
-        if isinstance(overlay, fslfeatimage.FEATImage):
-            ts = plotting.FEATTimeSeries(self, overlay, self._displayCtx)
+        if overlay.dataSource is not None:
+            featPath = featresults.getAnalysisDir(overlay.dataSource)
+        else:
+            featPath = None
+
+        # Is this a FEAT filtered_func_data image,
+        # or an image in a FEAT directory?
+        if isinstance(overlay, fslfeatimage.FEATImage) or featPath is not None:
+
+            dataPath  = featresults.getDataFile(featPath)
+            featImage = self._overlayList.find(dataPath)
+
+            # If this is an image in a FEAT directory, but the
+            # filtered_func_data for that FEAT directory has
+            # not been loaded, we show nothing. 
+            if not isinstance(overlay, fslfeatimage.FEATImage) and \
+               featImage is None:
+                return None, None, None
+
+            # If the filtered_func for this FEAT analysis
+            # has been loaded, we show its time series.
+            overlay  = featImage
+            ts        = plotting.FEATTimeSeries(self,
+                                                overlay,
+                                                self._displayCtx)
             targets   = [self._displayCtx]
             propNames = ['location']
-            
+
+        # If this is a melodic IC image, and we are
+        # currently configured to plot component ICs,
+        # we use a MelodicTimeSeries object.
         elif isinstance(overlay, fslmelimage.MelodicImage) and \
              self.plotMelodicICs:
             ts = plotting.MelodicTimeSeries(self, overlay, self._displayCtx)
             targets   = [self._displayCtx.getOpts(overlay)]
-            propNames = ['volume'] 
-            
-        else:
+            propNames = ['volume']
+
+        # Otherwise we just plot
+        # bog-standard 4D voxel data
+        elif len(overlay.shape) == 4 and overlay.shape[3] > 1:
             ts = plotting.VoxelTimeSeries(self, overlay, self._displayCtx)
             targets   = [self._displayCtx]
-            propNames = ['location'] 
+            propNames = ['location']
+            
+        else:
+            return None, None, None
 
         ts.colour    = self.getOverlayPlotColour(overlay)
         ts.alpha     = 1
