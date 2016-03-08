@@ -497,6 +497,7 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
 
         # Overlay is in-memory
         if overlay.dataSource is None:
+            self.__disable(strings.messages[self, 'notFEAT'])
             return
         
         featDir = featresults.getAnalysisDir(overlay.dataSource)
