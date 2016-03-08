@@ -947,6 +947,8 @@ class OverlayPlotPanel(PlotPanel):
         for ovl in self._overlayList:
             if ovl in self.__dataSeries:
                 continue
+
+            log.debug('Creating a DataSeries for overlay {}'.format(ovl))
                 
             ds, refreshTargets, refreshProps = self.createDataSeries(ovl)
 

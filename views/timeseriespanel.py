@@ -205,10 +205,15 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         tss = [self.getDataSeries(o) for o in overlays]
         tss = [ts for ts in tss if ts is not None]
 
-        for i, ts in enumerate(list(tss)):
+        # Include all of the extra model series
+        # for all FEATTimeSeries instances
+        newTss = []
+        for ts in tss:
             if isinstance(ts, plotting.FEATTimeSeries):
-                tss.pop(i)
-                tss = tss[:i] + ts.getModelTimeSeries() + tss[i:]
+                newTss += ts.getModelTimeSeries()
+            else:
+                newTss.append(ts)
+        tss = newTss
 
         for ts in tss:
 
