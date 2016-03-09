@@ -407,8 +407,12 @@ class PlotPanel(viewpanel.ViewPanel):
             xlims.append(xlim)
             ylims.append(ylim)
 
-        (xmin, xmax), (ymin, ymax) = self.__calcLimits(
-            xlims, ylims, axxlim, axylim, width, height)
+        if len(xlims) == 0:
+            xmin, xmax = 0.0, 0.0
+            ymin, ymax = 0.0, 0.0
+        else:
+            (xmin, xmax), (ymin, ymax) = self.__calcLimits(
+                xlims, ylims, axxlim, axylim, width, height)
 
         if xmax - xmin < 0.0000000001 or \
            ymax - ymin < 0.0000000001:
