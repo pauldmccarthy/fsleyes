@@ -285,11 +285,11 @@ def bootstrap(glVersion=None):
     thismod = sys.modules[__name__]
 
     if hasattr(thismod, '_bootstrapped'):
-        return 
+        return
 
     if glVersion is None:
         glVer        = gl.glGetString(gl.GL_VERSION).split()[0]
-        major, minor = map(int, glVer.split('.'))
+        major, minor = map(int, glVer.split('.'))[:2]
     else:
         major, minor = glVersion
 
