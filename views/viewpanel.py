@@ -557,31 +557,49 @@ class ViewPanel(fslpanel.FSLEyesPanel):
             ev.Skip()
             panel = ev.GetPane().window
 
-        if isinstance(panel, (fslpanel  .FSLEyesPanel,
-                              fsltoolbar.FSLEyesToolBar)):
-            
-            panel = self.__panels.pop(type(panel), None)
+        # If the user has grouped multiple control panels
+        # into a single tabbed notebook, and then closed
+        # the entire notebook, the AuiManager will generate
+        # a single close event, and will pass us that
+        # notebook. So we have to look in the notebook
+        # to see which control panels were actually closed.
+        if isinstance(panel, wx.lib.agw.aui.AuiNotebook):
+            panels = [panel.GetPage(i) for i in range(panel.GetPageCount())]
+        else:
+            panels = [panel]
 
-            # WTF AUI. Sometimes this method gets called
-            # twice for a panel, the second time with a
-            # reference to a wx._wxpyDeadObject; in such
-            # situations, the Destroy method call below
-            # will result in an exception being raised.
-            if panel is not None:
-        
-                log.debug('Panel closed: {}'.format(type(panel).__name__))
+
+        for panel in list(panels):
+
+            if isinstance(panel, (fslpanel  .FSLEyesPanel,
+                                  fsltoolbar.FSLEyesToolBar)):
+
+                # WTF AUI. Sometimes this method gets called
+                # twice for a panel, the second time with a
+                # reference to a wx._wxpyDeadObject; in such
+                # situations, the Destroy method call below
+                # would result in an exception being raised.
+                if self.__panels.pop(type(panel), None) is None:
+                    panels.remove(panel)
 
                 # calling fslpanel.FSLEyesPanel.destroy()
-                # here -  wx.Destroy is done below
-                panel.destroy()
+                # here -  wx.Destroy is done below 
+                else:
+                    log.debug('Panel closed: {}'.format(type(panel).__name__))
+                    panel.destroy()
 
-                # Even when the user closes a pane,
-                # AUI does not detach said pane -
-                # we have to do it manually
-                self.__auiMgr.DetachPane(panel)
-                self.__auiMgrUpdate()
-                
-                panel.Destroy()
+        # Destroy all the panels
+        for panel in panels:
+                    
+            # Even when the user closes a pane,
+            # AUI does not detach said pane -
+            # we have to do it manually
+            self.__auiMgr.DetachPane(panel)
+            wx.CallAfter(panel.Destroy)
+
+        # Update the view panel layout
+        wx.CallAfter(self.__auiMgrUpdate)
+            
 
 #
 # Here I am monkey patching the
