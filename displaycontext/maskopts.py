@@ -54,7 +54,7 @@ class MaskOpts(volumeopts.Nifti1Opts):
             self.dataMax = float(overlay.data.max())
 
         dRangeLen    = abs(self.dataMax - self.dataMin)
-        dMinDistance = dRangeLen / 10000.0
+        dMinDistance = dRangeLen / 100.0
 
         #################
         # This is a hack.

@@ -793,7 +793,7 @@ class VolumeOpts(Nifti1Opts):
         # a small offset to the clipping limits
         # so the user can configure the scene such
         # that no values are clipped.
-        distance = abs(dmax - dmin) / 10000.0
+        distance = abs(dmax - dmin) / 100.0
 
         self.clippingRange.xmin = dmin - distance
         self.clippingRange.xmax = dmax + distance

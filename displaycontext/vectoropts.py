@@ -148,7 +148,7 @@ class VectorOpts(volumeopts.Nifti1Opts):
         # we add an offset allowing the user
         # to configure the overlay such that
         # no voxels are clipped.
-        distance = (maxval - minval) / 10000.0
+        distance = (maxval - minval) / 100.0
 
         self.clippingRange.xmin =  minval - distance
         self.clippingRange.xmax =  maxval + distance
