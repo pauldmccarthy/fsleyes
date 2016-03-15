@@ -40,7 +40,6 @@ import fsl.fsleyes.controls.locationpanel              as locationpanel
 import fsl.fsleyes.controls.clusterpanel               as clusterpanel
 import fsl.fsleyes.controls.lookuptablepanel           as lookuptablepanel
 import fsl.fsleyes.controls.melodicclassificationpanel as melclasspanel
-import fsl.fsleyes.controls.shellpanel                 as shellpanel
 import                                                    colourbarpanel
 import                                                    viewpanel
 
@@ -102,7 +101,6 @@ class CanvasPanel(viewpanel.ViewPanel):
        toggleClusterPanel
        toggleLookupTablePanel
        toggleClassificationPanel
-       toggleShell
 
 
     .. _canvaspanel-adding-content:
@@ -401,14 +399,6 @@ class CanvasPanel(viewpanel.ViewPanel):
         """ 
         self.togglePanel(melclasspanel.MelodicClassificationPanel,
                          location=wx.RIGHT)
-
-
-    @actions.toggleControlAction(shellpanel.ShellPanel)
-    def toggleShell(self):
-        """Toggles a :class:`.ShellPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(shellpanel.ShellPanel, self, location=wx.BOTTOM) 
 
 
     def getSceneOptions(self):

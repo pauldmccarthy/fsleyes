@@ -556,7 +556,6 @@ def _addControlPanel(viewPanel, panelType):
         controls.OverlayDisplayToolBar     : {'viewPanel'   : viewPanel},
         controls.PlotListPanel             : {'plotPanel'   : viewPanel},
         controls.PowerSpectrumControlPanel : {'plotPanel'   : viewPanel},
-        controls.ShellPanel                : {'canvasPanel' : viewPanel},
         controls.TimeSeriesControlPanel    : {'plotPanel'   : viewPanel},
     }
 

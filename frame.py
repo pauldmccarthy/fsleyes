@@ -307,10 +307,15 @@ class FSLEyesFrame(wx.Frame):
         elif issubclass(panelCls, views.CanvasPanel):
             childDC.syncOverlayDisplay = False
 
-        panel = panelCls(
-            self.__mainPanel,
-            self.__overlayList,
-            childDC)
+        if panelCls is views.ShellPanel:
+            panel = panelCls(self.__mainPanel,
+                             self.__overlayList,
+                             childDC,
+                             self)
+        else:
+            panel = panelCls(self.__mainPanel,
+                             self.__overlayList,
+                             childDC)
 
         log.debug('Created new {} ({}) with DisplayContext {}'.format(
             panelCls.__name__,
@@ -349,9 +354,10 @@ class FSLEyesFrame(wx.Frame):
         if panelId > 1:
             width, height = self.GetClientSize().Get()
 
-            # PlotPanels are initially
-            # placed along the bottom
-            if isinstance(panel, views.PlotPanel):
+            # PlotPanels/ShellPanels are
+            # initially placed along the
+            # bottom
+            if isinstance(panel, (views.PlotPanel, views.ShellPanel)):
                 paneInfo.Bottom().BestSize(-1, height / 3)
 
             # Other panels (e.g. CanvasPanels)
@@ -776,7 +782,8 @@ class FSLEyesFrame(wx.Frame):
                       views.LightBoxPanel,
                       views.TimeSeriesPanel,
                       views.PowerSpectrumPanel,
-                      views.HistogramPanel]
+                      views.HistogramPanel,
+                      views.ShellPanel]
         
         for viewPanel in viewPanels:
             viewAction = viewMenu.Append(wx.ID_ANY, strings.titles[viewPanel]) 

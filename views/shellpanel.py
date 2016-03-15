@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`ShellPanel` class, a *FSLeyes control*
+"""This module provides the :class:`ShellPanel` class, a *FSLeyes view*
 which contains an interactive Python shell.
 """
 
@@ -13,11 +13,11 @@ import wx
 
 import wx.py.shell as wxshell
 
-import fsl.fsleyes.panel as fslpanel
+from . import viewpanel
 
 
-class ShellPanel(fslpanel.FSLEyesPanel):
-    """A ``ShellPanel`` is a :class:`.FSLEyesPanel` which contains an
+class ShellPanel(viewpanel.ViewPanel):
+    """A ``ShellPanel`` is a :class:`.ViewPanel` which contains an
     interactive Python shell.
 
     A ``ShellPanel`` allows the user to programmatically interact with the
@@ -26,7 +26,7 @@ class ShellPanel(fslpanel.FSLEyesPanel):
     that owns this ``ShellPanel``.
     """
 
-    def __init__(self, parent, overlayList, displayCtx, canvasPanel):
+    def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``ShellPanel``.
 
         :arg parent:      The :mod:`wx` parent object, assumed to be the
@@ -37,15 +37,15 @@ class ShellPanel(fslpanel.FSLEyesPanel):
         :arg displayCtx:  The :class:`.DisplayContext` of the
                           :class:`.CanvasPanel` that owns this ``ShellPanel``.
         
-        :arg canvasPanel: The :class:`.CanvasPanel` that owns this
+        :arg frame:       The :class:`.FSLEyesFrame` that owns this
                           ``ShellPanel``.
         """
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        viewpanel.ViewPanel.__init__(self, parent, overlayList, displayCtx)
 
         lcls = {
             'displayCtx'  : displayCtx,
             'overlayList' : overlayList,
-            'sceneOpts'   : canvasPanel.getSceneOptions(),
+            'frame'       : frame,
             'viewPanel'   : parent,
         }
 
@@ -55,7 +55,7 @@ class ShellPanel(fslpanel.FSLEyesPanel):
                       'Available variables are:\n'
                       '  - overlayList\n' 
                       '  - displayCtx\n'
-                      '  - sceneOpts\n\n'
+                      '  - frame\n'
                       '  - viewPanel\n\n', 
             locals=lcls,
             showInterpIntro=False)
@@ -91,4 +91,4 @@ class ShellPanel(fslpanel.FSLEyesPanel):
         """Must be called when this ``ShellPanel`` is no longer needed.
         Calls the :meth:`.FSLEyesPanel.destroy` method.
         """
-        fslpanel.FSLEyesPanel.destroy(self)
+        viewpanel.ViewPanel.destroy(self)

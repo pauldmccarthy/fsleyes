@@ -25,6 +25,7 @@ The following :class:`.ViewPanel` sub-classes currently exist:
    ~fsl.fsleyes.views.timeseriespanel.TimeSeriesPanel
    ~fsl.fsleyes.views.powerspectrumpanel.PowerSpectrumPanel
    ~fsl.fsleyes.views.histogrampanel.HistogramPanel
+   ~fsl.fsleyes.views.shellpanel.ShellPanel
 """
 
 
@@ -38,6 +39,7 @@ import lightboxpanel
 import timeseriespanel
 import powerspectrumpanel
 import histogrampanel
+import shellpanel
 
 
 FSLEyesPanel       = fslpanel          .FSLEyesPanel
@@ -49,3 +51,4 @@ LightBoxPanel      = lightboxpanel     .LightBoxPanel
 TimeSeriesPanel    = timeseriespanel   .TimeSeriesPanel
 PowerSpectrumPanel = powerspectrumpanel.PowerSpectrumPanel
 HistogramPanel     = histogrampanel    .HistogramPanel
+ShellPanel         = shellpanel        .ShellPanel

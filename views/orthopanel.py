@@ -282,8 +282,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleAtlasPanel,
                    self.toggleLookupTablePanel,
                    self.toggleClusterPanel,
-                   self.toggleClassificationPanel,
-                   self.toggleShell]
+                   self.toggleClassificationPanel]
 
         names = [a.__name__ for a in actions]
 

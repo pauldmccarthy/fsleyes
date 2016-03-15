@@ -35,7 +35,6 @@ The following control panels currently exist:
    ~fsl.fsleyes.controls.plotcontrolpanel.PlotControlPanel
    ~fsl.fsleyes.controls.plotlistpanel.PlotListPanel
    ~fsl.fsleyes.controls.powerspectrumcontrolpanel.PowerSpectrumControlPanel
-   ~fsl.fsleyes.controls.shellpanel.ShellPanel
    ~fsl.fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
 """
 
@@ -55,7 +54,6 @@ import overlayinfopanel
 import overlaylistpanel
 import plotlistpanel
 import powerspectrumcontrolpanel
-import shellpanel
 import timeseriescontrolpanel
 
 
@@ -75,5 +73,4 @@ OverlayInfoPanel           = overlayinfopanel.OverlayInfoPanel
 OverlayListPanel           = overlaylistpanel.OverlayListPanel
 PlotListPanel              = plotlistpanel.PlotListPanel
 PowerSpectrumControlPanel  = powerspectrumcontrolpanel.PowerSpectrumControlPanel
-ShellPanel                 = shellpanel.ShellPanel
 TimeSeriesControlPanel     = timeseriescontrolpanel.TimeSeriesControlPanel
