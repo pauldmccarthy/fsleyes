@@ -341,12 +341,12 @@ class ImageTexture(texture.Texture, notifier.Notifier):
             # first dimension as the fastest changing.
             data = data.flatten(order='F')
 
+            self.bindTexture()
+
             # Enable storage of tightly packed data of any size (i.e.
             # our texture shape does not have to be divisible by 4).
-            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
-            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
-
-            self.bindTexture()
+            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   data.dtype.alignment)
+            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, data.dtype.alignment)
 
             # set interpolation routine
             interp = self.__interp

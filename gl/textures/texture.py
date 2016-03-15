@@ -261,9 +261,17 @@ class Texture2D(Texture):
             raise ValueError('Invalid size: {}'.format((self.__width,
                                                         self.__height)))
 
+        data = self.__data
+
+        if data is not None:
+            data      = data.ravel('F')
+            alignment = data.dtype.alignemnt
+        else:
+            alignment = 1
+
         self.bindTexture()
-        gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
-        gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
+        gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   alignment)
+        gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, alignment)
 
         gl.glTexParameteri(gl.GL_TEXTURE_2D,
                            gl.GL_TEXTURE_MAG_FILTER,
@@ -277,11 +285,6 @@ class Texture2D(Texture):
         gl.glTexParameteri(gl.GL_TEXTURE_2D,
                            gl.GL_TEXTURE_WRAP_T,
                            gl.GL_CLAMP_TO_BORDER)
-
-        data = self.__data
-
-        if data is not None:
-            data = data.ravel('F')
 
         log.debug('Configuring {} ({}) with size {}x{}'.format(
             type(self).__name__,
