@@ -16,9 +16,11 @@ import logging
 import platform
 from collections import OrderedDict
 
-import                     action
-import fsl.data.strings as strings
-import fsl.utils.status as status
+import fsl.data.strings  as strings
+import fsl.utils.status  as status
+import fsl.fsleyes.state as fslstate
+
+from . import               action
 
 
 log = logging.getLogger(__name__)
@@ -92,8 +94,7 @@ class DiagnosticReportAction(action.Action):
         state.
         """
 
-        import fsl.version              as version
-        import fsl.fsleyes.perspectives as perspectives
+        import fsl.version as version
 
         report   = OrderedDict()
         overlays = []
@@ -111,25 +112,11 @@ class DiagnosticReportAction(action.Action):
         report['VCS Version'] = version.__vcs_version__
         report['OpenGL']      = self.__openGLReport()
         report['Settings']    = self.__settingsReport()
-        report['Layout']      = perspectives.serialisePerspective(self.__frame)
-        report['Overlays']    = overlays
 
-        report['Master display context'] = self.__displayContextReport(
-            self.__overlayList,
-            self.__displayCtx)
+        state = fslstate.save(self.__frame)
 
-        for viewPanel in self.__frame.getViewPanels():
-
-            # Accessing the undocumented
-            # AuiPaneInfo.name attribute
-            vpName       = self.__frame.getViewPanelInfo(viewPanel).name
-            vpDisplayCtx = viewPanel.getDisplayContext()
-
-            report[vpName] = OrderedDict([
-                ('View',            self.__viewPanelReport(viewPanel)),
-                ('Display context', self.__displayContextReport(
-                    self.__overlayList,
-                    vpDisplayCtx))])
+        for k, v in state.items():
+            report[k] = v
 
         return report
 
@@ -180,100 +167,6 @@ class DiagnosticReportAction(action.Action):
         report['Renderer']   = gl.glGetString(gl.GL_RENDERER)
         report['Extensions'] = gl.glGetString(gl.GL_EXTENSIONS).split(' ')
 
-        return report
-
-
-    def __displayContextReport(self, overlayList, displayCtx):
-        """Creates and returns a hierarchical dictionary containing
-        information about the given :class:`.DisplayContext` and the
-        :class:`.Display`/:class:`.DisplayOpts` instances which it
-        is managing.
-        """
-
-        report   = OrderedDict()
-        overlays = []
-        props    = displayCtx.getAllProperties()[0]
-
-        for overlay in overlayList:
-
-            display = displayCtx.getDisplay(overlay)
-            opts    = displayCtx.getOpts(   overlay)
-
-            overlays.append(OrderedDict([
-                ('Display',     self.__displayReport(    display)),
-                ('DisplayOpts', self.__displayOptsReport(opts))]))
-
-        for prop in props:
-            report[prop] = str(getattr(displayCtx, prop))
-            
-        report['overlays'] = overlays
-
-        return report
-
-    
-    def __displayReport(self, display):
-        """Creates and returns a dictionary containing informtion about
-        the given :class:`.Display` instance.
-        """
-        
-        report = OrderedDict()
-        props  = display.getAllProperties()[0]
-
-        for prop in props:
-            report[prop] = str(getattr(display, prop))
-        
-        return report 
-
-    
-    def __displayOptsReport(self, opts):
-        """Creates and returns a dictionary containing informtion about
-        the given :class:`.DisplayOpts` instance.
-        """ 
-        
-        report = OrderedDict()
-
-        report['type'] = type(opts).__name__
-
-        props  = opts.getAllProperties()[0]
-
-        for prop in props:
-            value = getattr(opts, prop)
-            if prop in ('cmap', 'negativeCmap'):
-                value = value.name
-                
-            report[prop] = str(value)
-
-        return report
-
-    
-    def __viewPanelReport(self, viewPanel):
-        """Creates and returns a dictionary containing informtion about
-        the given :class:`.ViewPanel`.
-        """ 
-
-        import fsl.fsleyes.views as views
-        
-        report = OrderedDict()
-        props  = viewPanel.getAllProperties()[0]
-
-        report['type'] = type(viewPanel).__name__
-
-        for prop in props:
-            report[prop] = str(getattr(viewPanel, prop))
-
-        if isinstance(viewPanel, views.CanvasPanel):
-            
-            sceneOptsReport = OrderedDict()
-            sceneOpts       = viewPanel.getSceneOptions()
-            props           = sceneOpts.getAllProperties()[0]
-
-            sceneOptsReport['type'] = type(sceneOpts).__name__
-            
-            for prop in props:
-                sceneOptsReport[prop] = str(getattr(sceneOpts, prop))
-
-            report['SceneOpts'] = sceneOptsReport
-        
         return report
 
     

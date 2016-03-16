@@ -187,8 +187,11 @@ Some other miscellaneous modules are contained in the ``fsleyes`` package:
    ~fsl.fsleyes.toolbar
    ~fsl.fsleyes.tooltips
    ~fsl.fsleyes.perspectives
+   ~fsl.fsleyes.autodisplay
+   ~fsl.fsleyes.state
    ~fsl.fsleyes.icons
    ~fsl.fsleyes.colourmaps
    ~fsl.fsleyes.plotting
    ~fsl.fsleyes.splash
+   ~fsl.fsleyes.about
 """

@@ -73,6 +73,8 @@ class FSLEyesFrame(wx.Frame):
     .. autosummary::
        :nosignatures:
 
+       getOverlayList
+       getDisplayContext
        getViewPanels
        getViewPanelInfo
        addViewPanel
@@ -209,6 +211,20 @@ class FSLEyesFrame(wx.Frame):
         self.Layout()
 
         
+    def getOverlayList(self):
+        """Returns the :class:`.OverlayList` which contains the overlays
+        being displayed by this ``FSLEyesFrame``.
+        """
+        return self.__overlayList
+
+    
+    def getDisplayContext(self):
+        """Returns the top-level :class:`.DisplayContext` associated with this
+        ``FSLEyesFrame``.
+        """
+        return self.__displayCtx
+
+        
     def getViewPanels(self):
         """Returns a list of all :class:`.ViewPanel` instances that are
         currenlty displayed in this ``FSLEyesFrame``.
@@ -266,7 +282,7 @@ class FSLEyesFrame(wx.Frame):
             self.__onViewPanelClose(panel=vp, displaySync=False)
             self.__auiManager.ClosePane(paneInfo)
             
-        self.__auiManager.Update() 
+        self.__auiManager.Update()
 
 
     def addViewPanel(self, panelCls):

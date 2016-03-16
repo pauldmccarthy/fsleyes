@@ -565,7 +565,11 @@ def _addControlPanel(viewPanel, panelType):
 
 
 def _getPanelProps(panel):
-    """
+    """Creates and returns two dictionaries, containing properties of the given
+    :class:`.ViewPanel` (and its associated :class:`.SceneOpts` instance, if
+    it is a :class:`.CanvasPanel`), which are to be saved as part of a
+    seriaised *FSLeyes* perspective. The properties to be saved are listed in
+    the :data:`VIEWPANEL_PROPS` dictionary.
     """
 
     import fsl.fsleyes.views as views
