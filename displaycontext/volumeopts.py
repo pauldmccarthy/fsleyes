@@ -784,10 +784,6 @@ class VolumeOpts(Nifti1Opts):
         if self.clipImage is not None:
             dmin = self.clipImage.dataRange.xlo
             dmax = self.clipImage.dataRange.xhi
-            
-            if absolute:
-                dmin = min((0,            abs(dataMin)))
-                dmax = max((abs(dataMin), abs(dataMax)))
 
         # Clipping works on >= and <=, so we add
         # a small offset to the clipping limits
