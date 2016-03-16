@@ -126,6 +126,7 @@ import copyoverlay
 import openfile
 import opendir
 import openstandard
+import runscript
 import saveoverlay
 import reloadoverlay
 import removeoverlay
@@ -145,6 +146,7 @@ CopyOverlayAction        = copyoverlay       .CopyOverlayAction
 OpenFileAction           = openfile          .OpenFileAction
 OpenDirAction            = opendir           .OpenDirAction
 OpenStandardAction       = openstandard      .OpenStandardAction
+RunScriptAction          = runscript         .RunScriptAction
 SaveOverlayAction        = saveoverlay       .SaveOverlayAction
 ReloadOverlayAction      = reloadoverlay     .ReloadOverlayAction
 RemoveOverlayAction      = removeoverlay     .RemoveOverlayAction

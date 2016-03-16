@@ -82,6 +82,7 @@ class FSLEyesFrame(wx.Frame):
        removeAllViewPanels
        getAuiManager
        refreshPerspectiveMenu
+       runScript
     """
 
     
@@ -403,6 +404,11 @@ class FSLEyesFrame(wx.Frame):
         self.__makePerspectiveMenu()
 
 
+    def runScript(self):
+        """Runs a custom python script, via a :class:`.RunScriptAction`. """
+        actions.RunScriptAction(self.__overlayList, self.__displayCtx, self)()
+
+        
     def __addViewPanelMenu(self, panel, title):
         """Called by :meth:`addViewPanel`. Adds a menu item for the newly
         created :class:`.ViewPanel` instance.
@@ -775,6 +781,7 @@ class FSLEyesFrame(wx.Frame):
         actionz = [actions.OpenFileAction,
                    actions.OpenDirAction,
                    actions.OpenStandardAction,
+                   actions.RunScriptAction,
                    'sep',
                    actions.CopyOverlayAction,
                    actions.SaveOverlayAction,
