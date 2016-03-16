@@ -264,14 +264,11 @@ class Texture2D(Texture):
         data = self.__data
 
         if data is not None:
-            data      = data.ravel('F')
-            alignment = data.dtype.alignemnt
-        else:
-            alignment = 1
+            data = data.ravel('F')
 
         self.bindTexture()
-        gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   alignment)
-        gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, alignment)
+        gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
+        gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
 
         gl.glTexParameteri(gl.GL_TEXTURE_2D,
                            gl.GL_TEXTURE_MAG_FILTER,

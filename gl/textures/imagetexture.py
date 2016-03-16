@@ -345,8 +345,8 @@ class ImageTexture(texture.Texture, notifier.Notifier):
 
             # Enable storage of tightly packed data of any size (i.e.
             # our texture shape does not have to be divisible by 4).
-            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   data.dtype.alignment)
-            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, data.dtype.alignment)
+            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
+            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
 
             # set interpolation routine
             interp = self.__interp
