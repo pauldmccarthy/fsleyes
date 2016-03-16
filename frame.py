@@ -404,9 +404,13 @@ class FSLEyesFrame(wx.Frame):
         self.__makePerspectiveMenu()
 
 
-    def runScript(self):
+    def runScript(self, script=None):
         """Runs a custom python script, via a :class:`.RunScriptAction`. """
-        actions.RunScriptAction(self.__overlayList, self.__displayCtx, self)()
+        
+        rsa = actions.RunScriptAction(self.__overlayList,
+                                      self.__displayCtx,
+                                      self)
+        rsa(script)
 
         
     def __addViewPanelMenu(self, panel, title):

@@ -15,6 +15,8 @@ import wx.py.shell as wxshell
 
 from . import viewpanel
 
+import fsl.fsleyes.actions.runscript as runscript
+
 
 class ShellPanel(viewpanel.ViewPanel):
     """A ``ShellPanel`` is a :class:`.ViewPanel` which contains an
@@ -42,22 +44,19 @@ class ShellPanel(viewpanel.ViewPanel):
         """
         viewpanel.ViewPanel.__init__(self, parent, overlayList, displayCtx)
 
-        lcls = {
-            'displayCtx'  : displayCtx,
-            'overlayList' : overlayList,
-            'frame'       : frame,
-            'viewPanel'   : parent,
-        }
+        _globals, _locals = runscript.fsleyesScriptEnvironment(frame,
+                                                               overlayList,
+                                                               displayCtx)
+
 
         shell = wxshell.Shell(
             self,
             introText='   FSLEyes python shell\n\n'
-                      'Available variables are:\n'
+                      'Available FSLeyes variables are:\n'
                       '  - overlayList\n' 
                       '  - displayCtx\n'
-                      '  - frame\n'
-                      '  - viewPanel\n\n', 
-            locals=lcls,
+                      '  - frame\n',
+            locals=_locals,
             showInterpIntro=False)
 
         # TODO set up environment so that users can
@@ -66,14 +65,12 @@ class ShellPanel(viewpanel.ViewPanel):
         #
         #   - Load overlays from a URL
         #
-        #   - make plots - already possible with pylab, but make
-        #     sure it works properly (i.e. doesn't clobber the shell)
+        #   - make plots
         #
         #   - run scripts (add a 'load/run' button)
         #
         #   - open/close view panels, and manipulate existing view panels
         #   
-        shell.push('from pylab import *\n')
 
         font = shell.GetFont()
 
