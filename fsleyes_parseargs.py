@@ -341,8 +341,7 @@ OPTIONS = td.TypeDict({
                         'alpha',
                         'brightness',
                         'contrast'],
-    'Nifti1Opts'     : ['transform',
-                        'resolution',
+    'Nifti1Opts'     : ['resolution',
                         'volume'],
     'VolumeOpts'     : ['linkLowRanges',
                         'linkHighRanges',
@@ -490,7 +489,6 @@ ARGUMENTS = td.TypeDict({
     'Display.contrast'      : ('c',  'contrast'),
 
     'Nifti1Opts.resolution'   : ('r',  'resolution'),
-    'Nifti1Opts.transform'    : ('tf', 'transform'),
     'Nifti1Opts.volume'       : ('v',  'volume'),
 
     'VolumeOpts.displayRange'    : ('dr', 'displayRange'),
@@ -613,7 +611,6 @@ HELP = td.TypeDict({
     'Display.contrast'      : 'Contrast',
 
     'Nifti1Opts.resolution' : 'Resolution',
-    'Nifti1Opts.transform'  : 'Transformation',
     'Nifti1Opts.volume'     : 'Volume',
 
     'VolumeOpts.displayRange'    : 'Display range. Setting this will '
