@@ -200,7 +200,7 @@ def _MelodicImageDisplay(overlay, overlayList, displayCtx):
         overlayList.insert(idx, meanImg)
 
 
-def _ModelDisplay(overlay, display, overlayList, displayCtx):
+def _ModelDisplay(overlay, overlayList, displayCtx):
     """Automatically configure display settings for the given :class:`.Model`
     overlay.
     """
