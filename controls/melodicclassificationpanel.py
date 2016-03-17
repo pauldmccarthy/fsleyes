@@ -180,7 +180,7 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
            overlay.
 
         If the number of labels in the file is less than the number of
-        melodic_IC components, thew remaining components are labelled
+        melodic_IC components, the remaining components are labelled
         as unknown. If the number of labels in the file is greater than
         the number of melodic_IC components, an error is shown, and
         nothing is done.
@@ -245,6 +245,11 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
 
             melclass.enableNotification('labels') 
             lut     .enableNotification('labels')
+
+            # Make sure that lut listeners
+            # are notified, in case any
+            # new labels were added.
+            lut.notify('labels')
 
             # If we have just loaded a MelodicImage,
             # make sure it is selected. If we loaded
