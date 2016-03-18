@@ -181,7 +181,7 @@ class VectorOpts(volumeopts.Nifti1Opts):
         """
         
         prop     = self.getProp(imageName)
-        val      = self.modulateImage
+        val      = getattr(self, imageName)
         overlays = self.displayCtx.getOrderedOverlays()
 
         options = [None]
