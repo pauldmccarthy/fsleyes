@@ -31,6 +31,8 @@ def compileShaders(self, vertShader, indexed=False):
     opts                = self.displayOpts
     useVolumeFragShader = opts.colourImage is not None
 
+    self.useVolumeFragShader = useVolumeFragShader
+
     if useVolumeFragShader: fragShader = 'glvolume'
     else:                   fragShader = 'glvector'
 
@@ -48,7 +50,6 @@ def updateFragmentShaderState(self, useSpline=False):
     changed             = False
     opts                = self.displayOpts
     shader              = self.shader
-    useVolumeFragShader = opts.colourImage is not None
 
     invClipValXform = self.clipTexture.invVoxValXform
     clippingRange   = opts.clippingRange
@@ -67,7 +68,7 @@ def updateFragmentShaderState(self, useSpline=False):
         clipLow  = -0.1
         clipHigh =  1.1
 
-    if useVolumeFragShader:
+    if self.useVolumeFragShader:
 
         voxValXform     = self.colourTexture.voxValXform
         invVoxValXform  = self.colourTexture.invVoxValXform
