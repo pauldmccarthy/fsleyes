@@ -17,8 +17,9 @@ import                                                props
 
 import                                                plotpanel
 import fsl.data.featimage                          as fslfeatimage
-import fsl.data.featresults                        as featresults
 import fsl.data.melodicimage                       as fslmelimage
+import fsl.data.featresults                        as featresults
+import fsl.data.melodicresults                     as melresults
 import fsl.data.image                              as fslimage
 import fsl.fsleyes.actions                         as actions
 import fsl.fsleyes.plotting                        as plotting
@@ -252,9 +253,18 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         if overlay.dataSource is not None:
             featPath = featresults.getAnalysisDir(overlay.dataSource)
+            melPath  = melresults .getAnalysisDir(overlay.dataSource)
         else:
             featPath = None
+            melPath  = None
 
+        # If this overlay is from an .ica dir
+        # inside a .feat dir or vice versa,
+        # the longer/deeper path takes precedence.
+        if (featPath is not None) and (melPath is not None):
+            if len(melPath) > len(featPath): featPath = None
+            else:                            melPath  = None
+            
         # Is this a FEAT filtered_func_data image,
         # or an image in a FEAT directory?
         if isinstance(overlay, fslfeatimage.FEATImage) or featPath is not None:
