@@ -208,13 +208,13 @@ class SliceCanvas(props.HasProperties):
         # when any of the properties of this
         # canvas change, we need to redraw
         self.addListener('zax',           self.name, self._zAxisChanged)
-        self.addListener('pos',           self.name, self._draw)
-        self.addListener('displayBounds', self.name, self._draw)
-        self.addListener('bgColour',      self.name, self._draw)
-        self.addListener('cursorColour',  self.name, self._draw)
-        self.addListener('showCursor',    self.name, self._draw)
-        self.addListener('invertX',       self.name, self._draw)
-        self.addListener('invertY',       self.name, self._draw)
+        self.addListener('pos',           self.name, self._refresh)
+        self.addListener('displayBounds', self.name, self._refresh)
+        self.addListener('bgColour',      self.name, self._refresh)
+        self.addListener('cursorColour',  self.name, self._refresh)
+        self.addListener('showCursor',    self.name, self._refresh)
+        self.addListener('invertX',       self.name, self._refresh)
+        self.addListener('invertY',       self.name, self._refresh)
         self.addListener('zoom',          self.name, self._zoomChanged)
         self.addListener('renderMode',    self.name, self._renderModeChange)
         self.addListener('resolutionLimit',

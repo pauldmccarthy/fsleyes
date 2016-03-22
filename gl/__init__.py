@@ -187,8 +187,13 @@ package also contains the following:
    ~fsl.fsleyes.gl.shaders
 """
 
-import logging 
+
+import logging
+import platform
 import os
+
+import fsl.utils.async    as async
+import fsl.utils.platform as fslplatform
 
 
 log = logging.getLogger(__name__)
@@ -251,6 +256,9 @@ def bootstrap(glVersion=None):
     ``GL_VERSION``         A string containing the target OpenGL version, in 
                            the format ``major.minor``, e.g. ``2.1``.
 
+
+    ``GL_RENDERER``        A string containing the name of the OpenGL renderer.
+
     ``glvolume_funcs``     The version-specific module containing functions for
                            rendering :class:`.GLVolume` instances.
 
@@ -269,6 +277,11 @@ def bootstrap(glVersion=None):
     ``gltensor_funcs``     The version-specific module containing functions for
                            rendering :class:`.GLTensor` instances. 
     ====================== ====================================================
+
+
+    This function also sets the :attr:`.Platform.glVersion` and
+    :attr:`.Platform.glRenderer` properties of the
+    :attr:`fsl.utils.platform.platform` instance.
     
 
     :arg glVersion: A tuple containing the desired (major, minor) OpenGL API
@@ -307,7 +320,6 @@ def bootstrap(glVersion=None):
     # few extensions - if they're not present,
     # fall back to the gl14 implementation
     if glpkg == gl21:
-
 
         # List any GL21 extensions here
         exts = ['GL_EXT_framebuffer_object',
@@ -380,6 +392,7 @@ def bootstrap(glVersion=None):
         except ValueError: pass
 
     thismod.GL_VERSION         = verstr
+    thismod.GL_RENDERER        = renderer
     thismod.glvolume_funcs     = glpkg.glvolume_funcs
     thismod.glrgbvector_funcs  = glpkg.glrgbvector_funcs
     thismod.gllinevector_funcs = glpkg.gllinevector_funcs
@@ -387,6 +400,9 @@ def bootstrap(glVersion=None):
     thismod.gllabel_funcs      = glpkg.gllabel_funcs
     thismod.gltensor_funcs     = glpkg.gltensor_funcs
     thismod._bootstrapped      = True
+    
+    fslplatform.glVersion      = thismod.GL_VERSION
+    fslplatform.glRenderer     = thismod.GL_RENDERER
 
 
 def getWXGLContext(parent=None):
@@ -612,6 +628,25 @@ class WXGLCanvasTarget(object):
 
         self._glReady = False
         self.Bind(wx.EVT_PAINT, self._mainDraw)
+
+        # Using the Apple software renderer under OSX,
+        # we need to call refresh on the idle loop,
+        # otherwise refresh of multiple canvases (i.e.
+        # the OrthoPanel). gets all screwed up. Don't
+        # know why.
+        if platform.system() == 'Darwin' and \
+           'software' in fslplatform.glRenderer.lower():
+
+            def refresh(*a):
+                async.idle(self.Refresh)
+
+        # On other platforms/renderers,
+        # we can call Refresh directly
+        else:
+            def refresh(*a):
+                self.Refresh()
+
+        self._refresh = refresh
     
 
     def _initGL(self):
@@ -622,8 +657,12 @@ class WXGLCanvasTarget(object):
 
 
     def _draw(self, *a):
-        """This method should implement the OpenGL drawing logic. Must be
+        """This method should implement the OpenGL drawing logic - it must be
         implemented by subclasses.
+
+        .. note:: When runing with an on-screen display, this method should
+                  never be called directly - call the :meth:`_refresh` method
+                  instead.
         """
         raise NotImplementedError()
  
@@ -670,9 +709,10 @@ class WXGLCanvasTarget(object):
 
         
     def _refresh(self, *a):
-        """Triggers a redraw via the :meth:`_draw` method."""
-        self.Refresh()
+        """Triggers a redraw via the :meth:`_draw` method.
 
+        .. note:: This method is dynamically assigned in :meth:`__init__`.
+        """
         
     def _postDraw(self):
         """Called after the scene has been rendered. Swaps the front/back
