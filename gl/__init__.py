@@ -189,10 +189,8 @@ package also contains the following:
 
 
 import logging
-import platform
 import os
 
-import fsl.utils.async    as async
 import fsl.utils.platform as fslplatform
 
 
@@ -625,28 +623,12 @@ class WXGLCanvasTarget(object):
         """
 
         import wx
+        import wx.glcanvas as wxgl
 
         self._glReady = False
+
+        self.__context = wxgl.GLContext(self, other=getWXGLContext()[0])
         self.Bind(wx.EVT_PAINT, self._mainDraw)
-
-        # Using the Apple software renderer under OSX,
-        # we need to call refresh on the idle loop,
-        # otherwise refresh of multiple canvases (i.e.
-        # the OrthoPanel). gets all screwed up. Don't
-        # know why.
-        if platform.system() == 'Darwin' and \
-           'software' in fslplatform.glRenderer.lower():
-
-            def refresh(*a):
-                async.idle(self.Refresh)
-
-        # On other platforms/renderers,
-        # we can call Refresh directly
-        else:
-            def refresh(*a):
-                self.Refresh()
-
-        self._refresh = refresh
     
 
     def _initGL(self):
@@ -704,15 +686,14 @@ class WXGLCanvasTarget(object):
         log.debug('Setting context target to {} ({})'.format(
             type(self).__name__, id(self)))
         
-        getWXGLContext()[0].SetCurrent(self)
+        self.__context.SetCurrent(self)
         return True
 
         
     def _refresh(self, *a):
-        """Triggers a redraw via the :meth:`_draw` method.
-
-        .. note:: This method is dynamically assigned in :meth:`__init__`.
-        """
+        """Triggers a redraw via the :meth:`_draw` method. """
+        self.Refresh()
+        
         
     def _postDraw(self):
         """Called after the scene has been rendered. Swaps the front/back

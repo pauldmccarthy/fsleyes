@@ -37,14 +37,18 @@ class WXGLSliceCanvas(slicecanvas.SliceCanvas,
         slicecanvas.SliceCanvas.__init__(self, overlayList, displayCtx, zax)
         fslgl.WXGLCanvasTarget .__init__(self)
 
-        # When the canvas is resized, we have to update
-        # the display bounds to preserve the aspect ratio
-        def onResize(ev):
-            self._updateDisplayBounds()
-            ev.Skip()
-        self.Bind(wx.EVT_SIZE, onResize)
+        self.Bind(wx.EVT_SIZE, self.__onResize)
 
-        
+
+    def __onResize(self, ev):
+        """Called on ``wx.EVT_SIZE`` events, when the canvas is resized. When
+        the canvas is resized, we have to update the display bounds to preserve
+        the aspect ratio.
+        """
+        self._updateDisplayBounds()
+        ev.Skip()
+
+
     def Show(self, show):
         """Overrides ``GLCanvas.Show``. When running over SSH/X11, it doesn't
         seem to be possible to hide a ``GLCanvas`` - the most recent scene
