@@ -9,10 +9,11 @@ to load in standard space images from the ``$FSLDIR/data/standard/`` directory.
 """
 
 
-import os
 import os.path as op
 
-import action
+from . import action
+
+import fsl.utils.platform as fslplatform
 
 
 class OpenStandardAction(action.Action):
@@ -33,16 +34,40 @@ class OpenStandardAction(action.Action):
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
         
-        # disable this action
-        # if $FSLDIR is not set
-        fsldir = os.environ.get('FSLDIR', None)
+        self.__setStandardDir()
 
+        # If FSLDIR is not set, the setStandardDir
+        # disables this action. But we'll listen 
+        # for changes to FSLDIR, in case it gets 
+        # set later on.
+        fslplatform.platform.register(
+            '{}_{}'.format(type(self).__name__, id(self)),
+            self.__setStandardDir)
+
+        
+    def destroy(self):
+        """Must be called when this ``OpenStandardAction`` is no longer
+        needed. Performs some clean-up.
+        """
+        fslplatform.platform.deregister(
+            '{}_{}'.format(type(self).__name__, id(self)))
+
+
+    def __setStandardDir(self, *a):
+        """Called by :meth:`__init__`, and when the
+        :attr:`~fsl.utils.Platform.fsldir` property is changed. Updates
+        the path to the FSLDIR standard directory.
+        """
+
+        fsldir = fslplatform.platform.fsldir
+        
         if fsldir is not None:
             self.__stddir = op.join(fsldir, 'data', 'standard')
         else:
             self.__stddir = None
-            self.enabled  = False
-        
+            
+        self.enabled = self.__stddir is not None
+            
         
     def __openStandard(self):
         """Calls the :meth:`.OverlayList.addOverlays` method. If the user
