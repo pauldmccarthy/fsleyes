@@ -190,6 +190,7 @@ package also contains the following:
 
 import logging
 import os
+import platform
 
 import fsl.utils.platform as fslplatform
 
@@ -617,7 +618,7 @@ class WXGLCanvasTarget(object):
 
 
     def __init__(self):
-        """Create a ``WXGLCanasTarget``.
+        """Create a ``WXGLCanvasTarget``.
 
         Binds :attr:`wx.EVT_PAINT` events to the :meth:`_mainDraw` method.
         """
@@ -627,7 +628,23 @@ class WXGLCanvasTarget(object):
 
         self._glReady = False
 
-        self.__context = wxgl.GLContext(self, other=getWXGLContext()[0])
+        context = getWXGLContext()[0]
+
+        # If we are on OSX, and using the Apple Software
+        # Renderer (e.g. in a virtual machine), then it
+        # seems that we have to have a separate context
+        # for each display. If we don't, then strange
+        # refresh problems will occur.
+        if platform.system() == 'Darwin' and \
+           'software' in fslplatform.glRenderer.lower():
+            
+            log.debug('Creating separate GL context for '
+                      'WXGLCanvasTarget {}'.format(id(self)))
+
+            context = wxgl.GLContext(self, other=context)
+
+        self.__context = context
+
         self.Bind(wx.EVT_PAINT, self._mainDraw)
     
 
