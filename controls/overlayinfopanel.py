@@ -19,10 +19,10 @@ import wx.html2 as wxhtml
 import numpy as np
 
 import fsl.data.image      as fslimage
-import fsl.data.strings    as strings
 import fsl.data.constants  as constants
 import fsl.utils.typedict  as td
 import fsl.fsleyes.panel   as fslpanel
+import fsl.fsleyes.strings as strings
 
 
 log = logging.getLogger(__name__)

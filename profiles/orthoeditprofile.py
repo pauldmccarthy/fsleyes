@@ -16,10 +16,10 @@ import numpy                        as np
 
 import                                 props
 import fsl.data.image               as fslimage
-import fsl.data.strings             as strings
 import fsl.utils.async              as async
 import fsl.utils.dialog             as fsldlg
 import fsl.utils.status             as status
+import fsl.fsleyes.strings          as strings
 import fsl.fsleyes.actions          as actions
 import fsl.fsleyes.editor.editor    as fsleditor
 import fsl.fsleyes.gl.annotations   as annotations

@@ -17,9 +17,9 @@ import pwidgets.widgetgrid        as widgetgrid
 import pwidgets.texttag           as texttag
 
 import fsl.fsleyes.panel          as fslpanel
+import fsl.fsleyes.strings        as strings
 import fsl.fsleyes.displaycontext as fsldisplay
 import fsl.data.melodicimage      as fslmelimage
-import fsl.data.strings           as strings
 
 
 log = logging.getLogger(__name__)

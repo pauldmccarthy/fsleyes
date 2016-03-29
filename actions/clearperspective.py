@@ -9,7 +9,7 @@ the user to clear/delete all saved perspectives.
 """
 
 
-import fsl.data.strings         as strings
+import fsl.fsleyes.strings      as strings
 import                             action
 import fsl.fsleyes.perspectives as perspectives
 

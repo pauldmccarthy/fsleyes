@@ -17,7 +17,7 @@ import fsl.fsleyes.toolbar  as fsltoolbar
 import fsl.fsleyes.actions  as actions
 import fsl.fsleyes.icons    as fslicons
 import fsl.fsleyes.tooltips as fsltooltips
-import fsl.data.strings     as strings
+import fsl.fsleyes.strings  as strings
 import fsl.data.image       as fslimage
 
 

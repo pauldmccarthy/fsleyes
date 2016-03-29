@@ -31,7 +31,7 @@ from matplotlib.backends.backend_wx    import NavigationToolbar2Wx
 
 import                           props
 import                           viewpanel
-import fsl.data.strings       as strings
+import fsl.fsleyes.strings    as strings
 import fsl.fsleyes.actions    as actions
 import fsl.fsleyes.colourmaps as fslcm
 

@@ -16,7 +16,7 @@ import fsl.fsleyes.toolbar  as fsltoolbar
 import fsl.fsleyes.icons    as fslicons
 import fsl.fsleyes.tooltips as fsltooltips
 import fsl.fsleyes.actions  as actions
-import fsl.data.strings     as strings
+import fsl.fsleyes.strings  as strings
 
 
 class OrthoToolBar(fsltoolbar.FSLEyesToolBar):

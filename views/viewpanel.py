@@ -21,8 +21,8 @@ import fsl.fsleyes.panel          as fslpanel
 import fsl.fsleyes.toolbar        as fsltoolbar
 import fsl.fsleyes.profiles       as profiles
 import fsl.fsleyes.displaycontext as fsldisplay
+import fsl.fsleyes.strings        as strings
 import fsl.data.image             as fslimage
-import fsl.data.strings           as strings
 
 
 log = logging.getLogger(__name__)

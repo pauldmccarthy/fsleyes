@@ -16,8 +16,8 @@ import wx.html             as wxhtml
 import pwidgets.elistbox   as elistbox
 
 import fsl.fsleyes.panel   as fslpanel
+import fsl.fsleyes.strings as strings
 import fsl.data.atlases    as atlases
-import fsl.data.strings    as strings
 import fsl.data.constants  as constants
 
 

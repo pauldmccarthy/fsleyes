@@ -21,9 +21,9 @@ import logging
 
 import wx
 
-import fsl.data.strings                           as strings
 import fsl.data.constants                         as constants
 import fsl.utils.layout                           as fsllayout
+import fsl.fsleyes.strings                        as strings
 import fsl.fsleyes.gl                             as fslgl
 import fsl.fsleyes.actions                        as actions
 import fsl.fsleyes.colourmaps                     as colourmaps

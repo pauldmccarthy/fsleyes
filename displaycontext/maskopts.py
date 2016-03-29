@@ -13,8 +13,8 @@ import numpy as np
 
 import props
 
-import fsl.data.strings as strings
-import                     volumeopts
+import fsl.fsleyes.strings as strings
+import                        volumeopts
 
 
 class MaskOpts(volumeopts.Nifti1Opts):

@@ -14,7 +14,7 @@ import                                             props
 import                                             plotcontrolpanel
 import fsl.fsleyes.tooltips                     as fsltooltips
 import fsl.fsleyes.plotting.powerspectrumseries as powerspectrumseries
-import fsl.data.strings                         as strings
+import fsl.fsleyes.strings                      as strings
 
 
 class PowerSpectrumControlPanel(plotcontrolpanel.PlotControlPanel):

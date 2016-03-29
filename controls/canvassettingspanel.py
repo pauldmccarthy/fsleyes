@@ -15,10 +15,11 @@ import props
 
 import pwidgets.widgetlist  as widgetlist
 
-import fsl.data.strings     as strings
 import fsl.data.image       as fslimage
 import fsl.fsleyes.panel    as fslpanel
 import fsl.fsleyes.tooltips as fsltooltips
+import fsl.fsleyes.strings  as strings
+
 
 
 class CanvasSettingsPanel(fslpanel.FSLEyesPanel):

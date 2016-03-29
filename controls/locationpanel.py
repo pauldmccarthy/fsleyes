@@ -25,8 +25,8 @@ import fsl.utils.typedict  as td
 import fsl.utils.transform as transform
 import fsl.data.image      as fslimage
 import fsl.data.constants  as constants
-import fsl.data.strings    as strings
 import fsl.fsleyes.panel   as fslpanel
+import fsl.fsleyes.strings as strings
 
 
 log = logging.getLogger(__name__)

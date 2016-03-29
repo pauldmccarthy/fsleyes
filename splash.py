@@ -14,7 +14,7 @@ import os.path as op
 import wx
 
 import fsl.fsleyes.widgets.imagepanel as imagepanel
-import fsl.data.strings               as strings
+import fsl.fsleyes.strings            as strings
 
 
 class FSLEyesSplash(wx.Frame):

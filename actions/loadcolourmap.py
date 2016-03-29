@@ -11,8 +11,8 @@ user to load a new colour map.
 import logging
 import os.path as op
 
-import fsl.data.strings       as strings
 import                           action
+import fsl.fsleyes.strings    as strings
 import fsl.fsleyes.colourmaps as fslcmap
 
 

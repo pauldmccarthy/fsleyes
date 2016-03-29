@@ -18,7 +18,7 @@ import props
 import pwidgets.widgetlist               as widgetlist
 
 import fsl.utils.typedict                as td
-import fsl.data.strings                  as strings
+import fsl.fsleyes.strings               as strings
 import fsl.fsleyes.tooltips              as fsltooltips
 import fsl.fsleyes.panel                 as fslpanel
 import fsl.fsleyes.colourmaps            as fslcm

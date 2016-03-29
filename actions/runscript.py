@@ -20,14 +20,14 @@ available for other purposes:
 
 from __future__ import print_function
 
-import __future__         as futures
-import                       os
-import os.path            as op
-import                       logging
+import __future__          as futures
+import                        os
+import os.path             as op
+import                        logging
 
-import fsl.utils.settings as fslsettings
-import fsl.data.strings   as strings
-from . import                action
+import fsl.utils.settings  as fslsettings
+import fsl.fsleyes.strings as strings
+from . import                 action
 
 
 log = logging.getLogger(__name__)

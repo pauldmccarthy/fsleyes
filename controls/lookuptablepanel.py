@@ -32,9 +32,9 @@ import pwidgets.elistbox          as elistbox
 import fsl.fsleyes.panel          as fslpanel
 import fsl.fsleyes.displaycontext as displayctx
 import fsl.fsleyes.colourmaps     as fslcmaps
+import fsl.fsleyes.strings        as strings
 import fsl.utils.async            as async
 import fsl.utils.status           as status
-import fsl.data.strings           as strings
 import fsl.data.melodicimage      as fslmelimage
 
 

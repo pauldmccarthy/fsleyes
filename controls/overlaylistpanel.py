@@ -22,8 +22,8 @@ import pwidgets.elistbox       as elistbox
 import fsl.fsleyes.panel       as fslpanel
 import fsl.fsleyes.icons       as icons
 import fsl.fsleyes.autodisplay as autodisplay
+import fsl.fsleyes.strings     as strings
 import fsl.data.image          as fslimage
-import fsl.data.strings        as strings
 
 
 log = logging.getLogger(__name__)

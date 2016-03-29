@@ -64,11 +64,11 @@ import os.path as op
 
 import props
 
-import fsl.data.strings   as strings
-import fsl.data.image     as fslimage
-import fsl.utils.settings as fslsettings
-import fsl.utils.status   as status
-import fsl.utils.async    as async
+import fsl.fsleyes.strings as strings
+import fsl.data.image      as fslimage
+import fsl.utils.settings  as fslsettings
+import fsl.utils.status    as status
+import fsl.utils.async     as async
 
 
 log = logging.getLogger(__name__)

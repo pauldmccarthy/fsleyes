@@ -21,7 +21,7 @@ import pwidgets.elistbox    as elistbox
 import fsl.fsleyes.panel    as fslpanel
 import fsl.fsleyes.plotting as plotting
 import fsl.fsleyes.tooltips as fsltooltips
-import fsl.data.strings     as strings
+import fsl.fsleyes.strings  as strings
 
 
 class PlotListPanel(fslpanel.FSLEyesPanel):

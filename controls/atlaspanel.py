@@ -17,16 +17,16 @@ import          logging
 import numpy as np
 import          wx
 
-import pwidgets.notebook as notebook
+import pwidgets.notebook   as notebook
 
-import fsl.data.image    as fslimage
-import fsl.data.atlases  as atlases
-import fsl.data.strings  as strings
-import fsl.utils.status  as status
-import fsl.utils.async   as async
-import fsl.fsleyes.panel as fslpanel
-import                      atlasoverlaypanel
-import                      atlasinfopanel 
+import fsl.data.image      as fslimage
+import fsl.data.atlases    as atlases
+import fsl.utils.status    as status
+import fsl.utils.async     as async
+import fsl.fsleyes.panel   as fslpanel
+import fsl.fsleyes.strings as strings
+import                        atlasoverlaypanel
+import                        atlasinfopanel 
 
 
 log = logging.getLogger(__name__)

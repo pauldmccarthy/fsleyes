@@ -119,7 +119,7 @@ import functools
 
 import props
 
-import fsl.data.strings as strings
+import fsl.fsleyes.strings as strings
 
 import action
 import copyoverlay

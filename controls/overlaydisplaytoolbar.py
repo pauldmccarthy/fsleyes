@@ -21,8 +21,8 @@ import fsl.fsleyes.icons      as icons
 import fsl.fsleyes.tooltips   as fsltooltips
 import fsl.fsleyes.actions    as actions
 import fsl.fsleyes.colourmaps as fslcm
+import fsl.fsleyes.strings    as strings
 import fsl.utils.typedict     as td
-import fsl.data.strings       as strings
 
 
 log = logging.getLogger(__name__)

@@ -19,7 +19,7 @@ import pwidgets.widgetlist        as widgetlist
 import fsl.fsleyes.panel          as fslpanel
 import fsl.fsleyes.tooltips       as fsltooltips
 import fsl.fsleyes.displaycontext as fsldisplay
-import fsl.data.strings           as strings
+import fsl.fsleyes.strings        as strings
 
 
 class PlotControlPanel(fslpanel.FSLEyesPanel):

@@ -14,8 +14,8 @@ import                                    props
 import                                    plotcontrolpanel
 import fsl.fsleyes.tooltips            as fsltooltips
 import fsl.fsleyes.plotting.timeseries as timeseries
+import fsl.fsleyes.strings             as strings
 import fsl.data.featimage              as fslfeatimage
-import fsl.data.strings                as strings
 
 
 class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):

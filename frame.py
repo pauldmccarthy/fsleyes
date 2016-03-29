@@ -14,9 +14,9 @@ import logging
 import wx
 import wx.lib.agw.aui     as aui
 
-import fsl.data.strings   as strings
-import fsl.utils.settings as fslsettings
-import fsl.utils.status   as status
+import fsl.fsleyes.strings as strings
+import fsl.utils.settings  as fslsettings
+import fsl.utils.status    as status
 
 import views
 import actions

@@ -45,7 +45,7 @@ import collections
 
 import fsl.utils.settings   as fslsettings
 import fsl.utils.status     as status
-import fsl.data.strings     as strings
+import fsl.fsleyes.strings  as strings
 
 
 log = logging.getLogger(__name__)

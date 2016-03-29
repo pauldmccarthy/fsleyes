@@ -14,9 +14,9 @@ import                         wx
 import pwidgets.widgetgrid  as widgetgrid
 
 import fsl.fsleyes.panel    as fslpanel
+import fsl.fsleyes.strings  as strings
 import fsl.utils.async      as async
 import fsl.utils.status     as status
-import fsl.data.strings     as strings
 import fsl.data.image       as fslimage
 import fsl.data.featimage   as featimage
 import fsl.data.featresults as featresults

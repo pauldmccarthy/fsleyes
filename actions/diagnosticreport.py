@@ -16,9 +16,9 @@ import logging
 import platform
 from collections import OrderedDict
 
-import fsl.data.strings  as strings
-import fsl.utils.status  as status
-import fsl.fsleyes.state as fslstate
+import fsl.utils.status    as status
+import fsl.fsleyes.strings as strings
+import fsl.fsleyes.state   as fslstate
 
 from . import               action
 

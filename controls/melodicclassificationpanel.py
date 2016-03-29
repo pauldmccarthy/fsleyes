@@ -19,12 +19,12 @@ import wx
 import pwidgets.notebook         as notebook
 
 import fsl.utils.settings        as fslsettings
-import fsl.data.strings          as strings
 import fsl.data.melodicresults   as fslmelresults
 import fsl.data.melodicimage     as fslmelimage
 import fsl.fsleyes.colourmaps    as fslcm
 import fsl.fsleyes.panel         as fslpanel
 import fsl.fsleyes.autodisplay   as autodisplay
+import fsl.fsleyes.strings       as strings
 import melodicclassificationgrid as melodicgrid
 
 

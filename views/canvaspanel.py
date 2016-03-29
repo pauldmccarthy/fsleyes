@@ -26,7 +26,7 @@ import fsl.utils.async                                 as async
 import fsl.utils.status                                as status
 import fsl.utils.settings                              as fslsettings
 import fsl.data.image                                  as fslimage
-import fsl.data.strings                                as strings
+import fsl.fsleyes.strings                             as strings
 import fsl.fsleyes.actions                             as actions
 import fsl.fsleyes.colourmaps                          as colourmaps
 import fsl.fsleyes.displaycontext                      as displayctx

@@ -13,13 +13,14 @@ import logging
 
 import wx
 
-import pwidgets.elistbox as elistbox
+import pwidgets.elistbox   as elistbox
 
-import fsl.data.atlases  as atlases
-import fsl.data.strings  as strings
-import fsl.utils.status  as status
-import fsl.utils.async   as async
-import fsl.fsleyes.panel as fslpanel
+import fsl.data.atlases    as atlases
+import fsl.utils.status    as status
+import fsl.utils.async     as async
+import fsl.fsleyes.panel   as fslpanel
+import fsl.fsleyes.strings as strings
+
 
 
 log = logging.getLogger(__name__)

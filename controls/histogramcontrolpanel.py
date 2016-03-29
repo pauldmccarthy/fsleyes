@@ -12,8 +12,8 @@ control* panel which allows a :class:`.HistogramPanel` to be configured.
 import                         props
 
 import fsl.fsleyes.tooltips as fsltooltips
+import fsl.fsleyes.strings  as strings
 import                         plotcontrolpanel
-import fsl.data.strings     as strings
 
 
 class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):

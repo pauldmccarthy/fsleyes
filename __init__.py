@@ -186,6 +186,7 @@ Some other miscellaneous modules are contained in the ``fsleyes`` package:
    ~fsl.fsleyes.panel
    ~fsl.fsleyes.toolbar
    ~fsl.fsleyes.tooltips
+   ~fsl.fsleyes.strings
    ~fsl.fsleyes.perspectives
    ~fsl.fsleyes.autodisplay
    ~fsl.fsleyes.state
