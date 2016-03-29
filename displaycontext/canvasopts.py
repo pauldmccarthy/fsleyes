@@ -59,7 +59,8 @@ class SliceCanvasOpts(props.HasProperties):
  
 
     zax = props.Choice((0, 1, 2),
-                       alternates=[['x', 'X'], ['y', 'Y'], ['z', 'Z']])
+                       alternates=[['x', 'X'], ['y', 'Y'], ['z', 'Z']],
+                       allowStr=True)
     """The display coordinate system axis to be used as the screen *depth*
     axis.
     """
