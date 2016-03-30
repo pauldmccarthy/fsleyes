@@ -12,11 +12,12 @@ for FSLeyes.
 import logging
 
 import wx
-import wx.lib.agw.aui     as aui
+import wx.lib.agw.aui                     as aui
 
-import fsl.fsleyes.strings as strings
-import fsl.utils.settings  as fslsettings
-import fsl.utils.status    as status
+import fsl.fsleyes.strings                as strings
+import fsl.utils.settings                 as fslsettings
+import fsl.utils.status                   as status
+from   fsl.utils.platform import platform as fslplatform
 
 import views
 import actions
@@ -118,8 +119,9 @@ class FSLEyesFrame(wx.Frame):
         # inherited by all child controls.
         font = self.GetFont()
 
-        if wx.Platform == '__WXGTK__': font.SetPointSize(8)
-        else:                          font.SetPointSize(10)
+        if fslplatform.wxPlatform == fslplatform.WX_GTK: font.SetPointSize(8)
+        else:                                            font.SetPointSize(10)
+        
         font.SetWeight(wx.FONTWEIGHT_LIGHT)
         self.SetFont(font)
         
