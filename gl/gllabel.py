@@ -140,7 +140,8 @@ class GLLabel(globject.GLImageObject):
             
         def imageUpdate(*a):
             self.imageTexture.set(volume=opts.volume,
-                                  resolution=opts.resolution)
+                                  resolution=opts.resolution,
+                                  notify=False)
 
             async.wait([self.imageTexture.refreshThread()], shaderUpdate)
 
@@ -233,7 +234,8 @@ class GLLabel(globject.GLImageObject):
             texName,
             self.image,
             notify=False,
-            volume=opts.volume)
+            volume=opts.volume,
+            resolution=opts.resolution)
         
         self.imageTexture.register(self.name, self.__imageTextureChanged)
 
