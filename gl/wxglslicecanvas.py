@@ -63,7 +63,7 @@ class WXGLSliceCanvas(slicecanvas.SliceCanvas,
         workaround that I've found to work is, instead of hiding the canvas,
         to set its size to 0. So this method does just that.
         """
-
+        wxgl.GLCanvas.Show(self, show)
         if not show:
             self.SetMinSize((0, 0))
             self.SetMaxSize((0, 0))
