@@ -48,7 +48,6 @@ class ShellPanel(viewpanel.ViewPanel):
                                                                overlayList,
                                                                displayCtx)
 
-
         shell = wxshell.Shell(
             self,
             introText='   FSLEyes python shell\n\n'
@@ -73,15 +72,8 @@ class ShellPanel(viewpanel.ViewPanel):
         #   
 
         font = shell.GetFont()
-
         shell.SetFont(font.Larger())
-        
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.SetSizer(sizer)
-
-        sizer.Add(shell, flag=wx.EXPAND, proportion=1)
-
-        self.SetMinSize((300, 200))
+        self.setCentrePanel(shell)
 
 
     def destroy(self):
