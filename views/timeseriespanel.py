@@ -275,13 +275,13 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             # If this is an image in a FEAT directory, but the
             # filtered_func_data for that FEAT directory has
             # not been loaded, we show nothing. 
-            if not isinstance(overlay, fslfeatimage.FEATImage) and \
-               featImage is None:
-                return None, None, None
-
+            if not isinstance(overlay, fslfeatimage.FEATImage):
+                
+                if featImage is None: return None, None, None
+                else:                 overlay = featImage
+            
             # If the filtered_func for this FEAT analysis
             # has been loaded, we show its time series.
-            overlay  = featImage
             ts        = plotting.FEATTimeSeries(self,
                                                 overlay,
                                                 self._displayCtx)
