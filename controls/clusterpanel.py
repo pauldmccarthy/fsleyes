@@ -477,6 +477,12 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         featImage = self.__featImages[overlay]
         contrast  = self.__statSelect.GetSelection()
 
+        # No cluster results
+        if contrast < 0:
+            self.__addZStats   .Enable(False)
+            self.__addClustMask.Enable(False)
+            return
+
         zstat     = featImage.getZStats(     contrast)
         clustMask = featImage.getClusterMask(contrast)
 

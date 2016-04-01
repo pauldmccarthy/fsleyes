@@ -354,6 +354,10 @@ def bootstrap(glVersion=None):
         import fsl.fsleyes.displaycontext.display as fsldisplay
         dc.VolumeOpts   .interpolation.removeChoice('spline')
         dc.RGBVectorOpts.interpolation.removeChoice('spline')
+        dc.VolumeOpts   .interpolation.updateChoice('linear',
+                                                    newAlt=['spline'])
+        dc.RGBVectorOpts.interpolation.updateChoice('linear',
+                                                    newAlt=['spline']) 
 
         # Tensor overlays are not available in GL14
         dc        .ALL_OVERLAY_TYPES               .remove('tensor')
@@ -376,19 +380,7 @@ def bootstrap(glVersion=None):
                   'lowering default performance settings.')
 
         import fsl.fsleyes.displaycontext as dc
-
         dc.SceneOpts.performance.setConstraint(None, 'default', 2)
-
-        # And disable some fancy options - spline
-        # may have been disabled above, so absorb
-        # the ValueError if it occurs
-
-        # TODO Remove this code duplication
-        try:
-            dc.VolumeOpts   .interpolation.removeChoice('spline')
-            dc.RGBVectorOpts.interpolation.removeChoice('spline')
-            
-        except ValueError: pass
 
     thismod.GL_VERSION         = verstr
     thismod.GL_RENDERER        = renderer
