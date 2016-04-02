@@ -9,8 +9,6 @@ which contains an interactive Python shell.
 """
 
 
-import wx
-
 import wx.py.shell as wxshell
 
 from . import viewpanel
@@ -47,6 +45,7 @@ class ShellPanel(viewpanel.ViewPanel):
         _globals, _locals = runscript.fsleyesScriptEnvironment(frame,
                                                                overlayList,
                                                                displayCtx)
+
 
         shell = wxshell.Shell(
             self,

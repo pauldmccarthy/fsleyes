@@ -295,8 +295,6 @@ class FSLEyesFrame(wx.Frame):
         :arg panelCls: The :class:`.ViewPanel` type to be added.
         """
 
-        self.Freeze()
-
         if len(self.__viewPanelIDs) == 0:
             panelId = 1
         else:
@@ -397,8 +395,6 @@ class FSLEyesFrame(wx.Frame):
         # automatically when created.
         if isinstance(panel, views.PlotPanel):
             panel.draw()
-
-        self.Thaw()
 
 
     def refreshPerspectiveMenu(self):
