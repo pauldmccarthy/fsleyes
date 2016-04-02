@@ -9,6 +9,7 @@
 
 .. _volumeopts-coordinate-systems:
 
+
 ---------------------------------------
 An important note on coordinate systems
 ---------------------------------------
@@ -72,7 +73,8 @@ to the centre of a voxel.
 
 import logging
 
-import numpy as np
+import numpy        as np
+import numpy.linalg as npla
 
 import props
 
@@ -238,50 +240,79 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
 
         image = self.overlay
 
-        voxToIdMat        = np.eye(4)
-        voxToPixdimMat    = np.diag(list(image.pixdim[:3]) + [1.0])
-        voxToAffineMat    = image.voxToWorldMat.T
-        voxToCustomMat    = self.customXform
-        
-        idToVoxMat        = transform.invert(voxToIdMat)
-        idToPixdimMat     = transform.concat(idToVoxMat, voxToPixdimMat)
-        idToAffineMat     = transform.concat(idToVoxMat, voxToAffineMat)
-        idToCustomMat     = transform.concat(idToVoxMat, voxToCustomMat)
+        voxToIdMat         = np.eye(4)
+        voxToPixdimMat     = np.diag(list(image.pixdim[:3]) + [1.0])
+        voxToPixFlipMat    = np.array(voxToPixdimMat)
+        voxToAffineMat     = image.voxToWorldMat.T
+        voxToCustomMat     = self.customXform
 
-        pixdimToVoxMat    = transform.invert(voxToPixdimMat)
-        pixdimToIdMat     = transform.concat(pixdimToVoxMat, voxToIdMat)
-        pixdimToAffineMat = transform.concat(pixdimToVoxMat, voxToAffineMat)
-        pixdimToCustomMat = transform.concat(pixdimToVoxMat, voxToCustomMat)
+        # pixdim-flip space differs from
+        # pixdim space only if the affine
+        # matrix has a positive determinant
+        if npla.det(voxToAffineMat) > 0:
+            x               = image.shape[0]
+            flip            = transform.scaleOffsetXform([-1, 1, 1], [x, 0, 0])
+            voxToPixFlipMat = transform.concat(voxToPixFlipMat, flip)
 
-        affineToVoxMat    = image.worldToVoxMat.T
-        affineToIdMat     = transform.concat(affineToVoxMat, voxToIdMat)
-        affineToPixdimMat = transform.concat(affineToVoxMat, voxToPixdimMat)
-        affineToCustomMat = transform.concat(affineToVoxMat, voxToCustomMat)
+        idToVoxMat         = transform.invert(voxToIdMat)
+        idToPixdimMat      = transform.concat(idToVoxMat, voxToPixdimMat)
+        idToPixFlipMat     = transform.concat(idToVoxMat, voxToPixFlipMat)
+        idToAffineMat      = transform.concat(idToVoxMat, voxToAffineMat)
+        idToCustomMat      = transform.concat(idToVoxMat, voxToCustomMat)
 
-        customToVoxMat    = transform.invert(voxToCustomMat)
-        customToIdMat     = transform.concat(customToVoxMat, voxToIdMat)
-        customToPixdimMat = transform.concat(customToVoxMat, voxToPixdimMat)
-        customToAffineMat = transform.concat(customToVoxMat, voxToAffineMat)
+        pixdimToVoxMat     = transform.invert(voxToPixdimMat)
+        pixdimToIdMat      = transform.concat(pixdimToVoxMat, voxToIdMat)
+        pixdimToPixFlipMat = transform.concat(pixdimToVoxMat, voxToPixFlipMat)
+        pixdimToAffineMat  = transform.concat(pixdimToVoxMat, voxToAffineMat)
+        pixdimToCustomMat  = transform.concat(pixdimToVoxMat, voxToCustomMat)
 
-        self.__xforms['id',  'id']     = np.eye(4)
-        self.__xforms['id',  'pixdim'] = idToPixdimMat 
-        self.__xforms['id',  'affine'] = idToAffineMat
-        self.__xforms['id',  'custom'] = idToCustomMat
+        pixFlipToVoxMat    = transform.invert(voxToPixFlipMat)
+        pixFlipToIdMat     = transform.concat(pixFlipToVoxMat, voxToIdMat)
+        pixFlipToPixdimMat = transform.concat(pixFlipToVoxMat, voxToPixdimMat)
+        pixFlipToAffineMat = transform.concat(pixFlipToVoxMat, voxToAffineMat)
+        pixFlipToCustomMat = transform.concat(pixFlipToVoxMat, voxToCustomMat)
 
-        self.__xforms['pixdim', 'pixdim'] = np.eye(4)
-        self.__xforms['pixdim', 'id']     = pixdimToIdMat
-        self.__xforms['pixdim', 'affine'] = pixdimToAffineMat
-        self.__xforms['pixdim', 'custom'] = pixdimToCustomMat
+        affineToVoxMat     = image.worldToVoxMat.T
+        affineToIdMat      = transform.concat(affineToVoxMat, voxToIdMat)
+        affineToPixdimMat  = transform.concat(affineToVoxMat, voxToPixdimMat)
+        affineToPixFlipMat = transform.concat(affineToVoxMat, voxToPixFlipMat)
+        affineToCustomMat  = transform.concat(affineToVoxMat, voxToCustomMat)
+
+        customToVoxMat     = transform.invert(voxToCustomMat)
+        customToIdMat      = transform.concat(customToVoxMat, voxToIdMat)
+        customToPixdimMat  = transform.concat(customToVoxMat, voxToPixdimMat)
+        customToPixFlipMat = transform.concat(customToVoxMat, voxToPixFlipMat)
+        customToAffineMat  = transform.concat(customToVoxMat, voxToAffineMat)
+
+        self.__xforms['id',  'id']          = np.eye(4)
+        self.__xforms['id',  'pixdim']      = idToPixdimMat
+        self.__xforms['id',  'pixdim-flip'] = idToPixFlipMat 
+        self.__xforms['id',  'affine']      = idToAffineMat
+        self.__xforms['id',  'custom']      = idToCustomMat
+
+        self.__xforms['pixdim', 'pixdim']      = np.eye(4)
+        self.__xforms['pixdim', 'id']          = pixdimToIdMat
+        self.__xforms['pixdim', 'pixdim-flip'] = pixdimToPixFlipMat
+        self.__xforms['pixdim', 'affine']      = pixdimToAffineMat
+        self.__xforms['pixdim', 'custom']      = pixdimToCustomMat
+
+        self.__xforms['pixdim-flip', 'pixdim-flip'] = np.eye(4)
+        self.__xforms['pixdim-flip', 'id']          = pixFlipToIdMat
+        self.__xforms['pixdim-flip', 'pixdim']      = pixFlipToPixdimMat
+        self.__xforms['pixdim-flip', 'affine']      = pixFlipToAffineMat
+        self.__xforms['pixdim-flip', 'custom']      = pixFlipToCustomMat 
  
-        self.__xforms['affine', 'affine'] = np.eye(4)
-        self.__xforms['affine', 'id']     = affineToIdMat
-        self.__xforms['affine', 'pixdim'] = affineToPixdimMat
-        self.__xforms['affine', 'custom'] = affineToCustomMat
+        self.__xforms['affine', 'affine']      = np.eye(4)
+        self.__xforms['affine', 'id']          = affineToIdMat
+        self.__xforms['affine', 'pixdim']      = affineToPixdimMat
+        self.__xforms['affine', 'pixdim-flip'] = affineToPixFlipMat
+        self.__xforms['affine', 'custom']      = affineToCustomMat
 
-        self.__xforms['custom', 'custom'] = np.eye(4)
-        self.__xforms['custom', 'id']     = customToIdMat
-        self.__xforms['custom', 'pixdim'] = customToPixdimMat
-        self.__xforms['custom', 'affine'] = customToAffineMat
+        self.__xforms['custom', 'custom']      = np.eye(4)
+        self.__xforms['custom', 'id']          = customToIdMat
+        self.__xforms['custom', 'pixdim']      = customToPixdimMat
+        self.__xforms['custom', 'pixdim-flip'] = customToPixFlipMat
+        self.__xforms['custom', 'affine']      = customToAffineMat
 
 
     def getTransform(self, from_, to, xform=None):
@@ -290,29 +321,51 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
         are:
 
         
-        =========== ======================================================
-        ``id``      Voxel coordinates
+        =============== ======================================================
+        ``id``          Voxel coordinates
         
-        ``voxel``   Equivalent to ``id``.
+        ``voxel``       Equivalent to ``id``.
         
-        ``pixdim``  Voxel coordinates, scaled by voxel dimensions
-        
-        ``affine``  World coordinates, as defined by the NIFTI1
-                    ``qform``/``sform``. See :attr:`.Image.voxToWorldMat`.
+        ``pixdim``      Voxel coordinates, scaled by voxel dimensions
 
-        ``world``   Equivalent to ``affine``.
+        ``pixdim-flip`` Voxel coordinates, scaled by voxel dimensions, and
+                        with the X axis flipped if the affine matrix has
+                        a positivie determinant. If the affine matrix does
+                        not have a positive determinant, this is equivalent to
+                        ``pixdim``.
 
-        ``custom``  Coordinates in the space defined by the custom
-                    transformation matrix, as specified via the
-                    :attr:`customXform` property.
+        ``pixflip``     Equivalent to ``pixdim-flip``.
         
-        ``display`` Equivalent to the current value of :attr:`transform`.
-        =========== ======================================================
+        ``affine``      World coordinates, as defined by the NIFTI1
+                        ``qform``/``sform``. See :attr:`.Image.voxToWorldMat`.
+
+        ``world``       Equivalent to ``affine``.
+
+        ``custom``      Coordinates in the space defined by the custom
+                        transformation matrix, as specified via the
+                        :attr:`customXform` property.
+        
+        ``display``     Equivalent to the current value of :attr:`transform`.
+        =============== ======================================================
 
         
         If the ``xform`` parameter is provided, and one of ``from_`` or ``to``
         is ``display``, the value of ``xform`` is used instead of the current
         value of :attr:`transform`.
+
+        
+        .. note:: While the ``pixdim-flip`` space is not a display option for
+                  ``Nifti1``, the transformations for this space are made
+                  available theough this method as it is the coordinate system
+                  used internally by many of the FSL tools.  Most importantly,
+                  this is the coordinate system used in the VTK sub-cortical
+                  segmentation model files output by FIRST, and is hence used
+                  by the :class:`.ModelOpts` class to transform VTK model
+                  coordinates.
+
+                  http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT/FAQ#What_is_the_\
+                  format_of_the_matrix_used_by_FLIRT.2C_and_how_does_it_\
+                  relate_to_the_transformation_parameters.3F
         """
 
         if xform is None:
@@ -321,10 +374,12 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
         if   from_ == 'display': from_ = xform
         elif from_ == 'world':   from_ = 'affine'
         elif from_ == 'voxel':   from_ = 'id'
+        elif from_ == 'pixflip': from_ = 'pixdim-flip'
         
         if   to    == 'display': to    = xform
         elif to    == 'world':   to    = 'affine'
         elif to    == 'voxel':   to    = 'id'
+        elif to    == 'pixflip': to    = 'pixdim-flip'
 
         return self.__xforms[from_, to]
 
