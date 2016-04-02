@@ -1768,9 +1768,11 @@ def _findOrLoad(overlayList, overlayFile, overlayType, relatedTo=None):
     appended to the end of the list.
     """
 
-    overlay = overlayList.find(overlayFile)
+    overlayFile = op.abspath(overlayFile)
+    overlay     = overlayList.find(overlayFile)
 
     if overlay is None:
+
         overlay = overlayType(overlayFile)
 
         if relatedTo is not None:
