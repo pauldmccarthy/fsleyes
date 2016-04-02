@@ -368,7 +368,33 @@ class ModelOpts(fsldisplay.DisplayOpts):
         lohi.sort(axis=0)
         lo, hi = lohi[0, :], lohi[1, :]
 
+        oldBounds = self.bounds
         self.bounds = [lo[0], hi[0], lo[1], hi[1], lo[2], hi[2]]
+
+        # Horrible hack here.
+
+        # The coordSpace/refImage/transform property
+        # change may not result in a change to the
+        # bound values. But listeners of the bounds
+        # property need to be notified regardless, as
+        # the model space has changed (e.g. it may
+        # have just been flipped along an axis).
+        # For example, the OrthoPanel needs to refresh
+        # its orientation labels.
+        # 
+        # This method is only called on the 'master'
+        # ModelOpts instance - the bounds on child
+        # instances are synced automatically. So we
+        # have to force notification of all bounds
+        # listeners on the child instances.
+        #
+        # Hopefully in the future I will come up with
+        # a solution to these horrible parent-child
+        # discrepancies.
+        if oldBounds == self.bounds:
+            children = self.getChildren()
+            for c in [self] + children:
+                c.notify('bounds')
             
     
     def __overlayListChanged(self, *a):
