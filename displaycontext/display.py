@@ -362,7 +362,7 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
     ``displayCtx``  The :class:`.DisplayContext` instance which is
                     responsible for all ``Display`` and ``DisplayOpts``
                     instances.
-    ``name``        A unique name for this ``DIsplayOpts`` instance.
+    ``name``        A unique name for this ``DisplayOpts`` instance.
     =============== ======================================================
     """
 

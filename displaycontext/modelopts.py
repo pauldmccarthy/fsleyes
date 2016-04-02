@@ -101,39 +101,50 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
         self.__oldRefImage = None
 
-        self.overlayList.addListener('overlays',
-                                     self.name,
-                                     self.__overlayListChanged)
+        # A number of callback functions are used to
+        # keep the refImage, coordSpace and transform
+        # properties consistent. Only the master
+        # ModelOpts instance needs to register these
+        # listeners.
+        self.__registered = self.getParent() is None
+        if self.__registered:
+            self.overlayList.addListener('overlays',
+                                         self.name,
+                                         self.__overlayListChanged,
+                                         immediate=True)
 
-        self.addListener('refImage',
-                         self.name,
-                         self.__refImageChanged,
-                         immediate=True)
-        self.addListener('coordSpace',
-                         self.name,
-                         self.__coordSpaceChanged,
-                         immediate=True)
+            self.addListener('refImage',
+                             self.name,
+                             self.__refImageChanged,
+                             immediate=True)
+            self.addListener('coordSpace',
+                             self.name,
+                             self.__coordSpaceChanged,
+                             immediate=True)
         
-        self.__overlayListChanged()
-        self.__updateBounds()
+            self.__overlayListChanged()
+            self.__updateBounds()
 
 
     def destroy(self):
         """Removes some property listeners, and calls the
         :meth:`.DisplayOpts.destroy` method.
         """
-        self.overlayList.removeListener('overlays', self.name)
 
-        for overlay in self.overlayList:
-            display = self.displayCtx.getDisplay(overlay)
-            display.removeListener('name', self.name)
+        if self.__registered:
 
-        if self.refImage is not None and \
-           self.refImage in self.overlayList:
-            opts = self.displayCtx.getOpts(self.refImage)
-            opts.removeListener('transform',   self.name)
-            opts.removeListener('customXform', self.name)
-                
+            self.overlayList.removeListener('overlays', self.name)
+
+            for overlay in self.overlayList:
+                display = self.displayCtx.getDisplay(overlay)
+                display.removeListener('name', self.name)
+
+            if self.refImage is not None and \
+               self.refImage in self.overlayList:
+                opts = self.displayCtx.getOpts(self.refImage)
+                opts.removeListener('transform',   self.name)
+                opts.removeListener('customXform', self.name)
+
         fsldisplay.DisplayOpts.destroy(self)
 
 
@@ -290,6 +301,11 @@ class ModelOpts(fsldisplay.DisplayOpts):
         
         oldValue = self.getLastValue('refImage')
 
+        # The reference image may have been
+        # removed from the overlay list
+        if oldValue not in self.overlayList:
+            oldValue = None
+
         self.__cacheCoords(refImage=oldValue) 
 
         # TODO You are not tracking changes to the
@@ -370,8 +386,10 @@ class ModelOpts(fsldisplay.DisplayOpts):
                                 self.name,
                                 self.__overlayListChanged,
                                 overwrite=True)
-            
-        imgProp.setChoices(imgOptions, instance=self)
 
-        if imgVal in overlays: self.refImage = imgVal
-        else:                  self.refImage = None
+        # The previous refImage may have
+        # been removed from the overlay list
+        if imgVal in imgOptions: self.refImage = imgVal
+        else:                    self.refImage = None
+ 
+        imgProp.setChoices(imgOptions, instance=self)
