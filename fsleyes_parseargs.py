@@ -303,7 +303,8 @@ OPTIONS = td.TypeDict({
                        'scene',
                        'voxelLoc',
                        'worldLoc',
-                       'autoDisplay'],
+                       'autoDisplay',
+                       'displaySpace'],
 
     # From here on, all of the keys are
     # the names of HasProperties classes,
@@ -452,6 +453,7 @@ ARGUMENTS = td.TypeDict({
     'Main.voxelLoc'        : ('v',  'voxelLoc'),
     'Main.worldLoc'        : ('w',  'worldLoc'),
     'Main.autoDisplay'     : ('ad', 'autoDisplay'),
+    'Main.displaySpace'    : ('ds', 'displaySpace'),
     
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar'),
     'SceneOpts.bgColour'           : ('bg',  'bgColour'),
@@ -567,9 +569,11 @@ HELP = td.TypeDict({
     'Main.worldLoc'        : 'Location to show (world coordinates of '
                              'first overlay, takes precedence over '
                              '--voxelLoc)', 
-    'Main.autoDisplay'     : 'Automatically configure display settings to '
-                             'overlays (unless any display settings are '
+    'Main.autoDisplay'     : 'Automatically configure overlay display '
+                             'settings (unless any display settings are '
                              'specified)',
+    'Main.displaySpace'    : 'Space in which all overlays are displayed - '
+                             'can be "pixdim", "world", or a NIFTI image.', 
 
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
                                      'highlighting the current location',
@@ -697,6 +701,7 @@ to the :func:`.props.addParserArguments` function.
 
 # File options need special treatment
 FILE_OPTIONS = td.TypeDict({
+    'Main'       : ['displaySpace'],
     'VolumeOpts' : ['clipImage'],
     'VectorOpts' : ['clipImage',
                     'colourImage',
@@ -722,9 +727,17 @@ is actually an overlay, or is an argument for another overlay.
 # non-reversible ones), you'll need to have
 # an inverse transforms dictionary
 def _imageTrans(i):
-    if   i              is  None:  return None
-    elif str(i).lower() == 'none': return None
-    else:                          return i.dataSource
+    
+    stri = str(i).lower()
+    
+    if   i    is  None:    return None
+    elif stri == 'none':   return None
+
+    # Special cases for Main.displaySpace
+    elif stri == 'world':  return 'world'
+    elif stri == 'pixdim': return 'pixdim'
+
+    else:                  return i.dataSource
 
 
 def _lutTrans(l):
@@ -856,7 +869,10 @@ def _configMainParser(mainParser):
                             help=mainHelp['worldLoc'])
     mainParser.add_argument(*mainArgs['autoDisplay'],
                             action='store_true',
-                            help=mainHelp['autoDisplay']) 
+                            help=mainHelp['autoDisplay'])
+    mainParser.add_argument(*mainArgs['displaySpace'],
+                            type=str,
+                            help=mainHelp['displaySpace'])
     
 
 def _configSceneParser(sceneParser):
@@ -1507,8 +1523,22 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
 
     def apply():
 
+        import fsl.data.image as fslimage
+
         # First apply all command line options
-        # related to the display context.
+        # related to the display context...
+
+        # Display space may be a string,
+        # or a path to an image
+        if args.displaySpace is not None and op.exists(args.displaySpace):
+            displaySpace = _findOrLoad(overlayList,
+                                       args.displaySpace,
+                                       fslimage.Image)
+        else:
+            displaySpace = args.displaySpace
+
+        if displaySpace is not None:
+            displayCtx.displaySpace = displaySpace
 
         # Set the selected overlay 
         # to the last specified
@@ -1645,7 +1675,7 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
 
     import fsl.data.image as fslimage
 
-    # The fsleyes.oberlay.loadOverlay function
+    # The fsleyes.overlay.loadOverlay function
     # works asynchronously - this function will
     # get called once all of the overlays have
     # been loaded.
