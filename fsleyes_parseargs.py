@@ -374,7 +374,8 @@ OPTIONS = td.TypeDict({
     'ModelOpts'      : ['colour',
                         'outline',
                         'outlineWidth',
-                        'refImage'],
+                        'refImage',
+                        'coordSpace'],
     'TensorOpts'     : ['lighting',
                         'tensorResolution',
                         'tensorScale'],
@@ -532,6 +533,7 @@ ARGUMENTS = td.TypeDict({
     'ModelOpts.outline'      : ('o',  'outline'),
     'ModelOpts.outlineWidth' : ('w',  'outlineWidth'),
     'ModelOpts.refImage'     : ('r',  'refImage'),
+    'ModelOpts.coordSpace'   : ('s',  'coordSpace'),
 
     'LabelOpts.lut'          : ('l',  'lut'),
     'LabelOpts.outline'      : ('o',  'outline'),
