@@ -9,8 +9,9 @@ to render :class:`.Model` overlays.
 """
 
 
-import numpy     as np
-import OpenGL.GL as gl
+import numpy        as np
+import numpy.linalg as npla
+import OpenGL.GL    as gl
 
 import                            globject
 import fsl.utils.transform     as transform
@@ -173,10 +174,9 @@ class GLModel(globject.GLObject):
 
         vertices = self.overlay.vertices
         indices  = self.overlay.indices
+        xform    = self.opts.getCoordSpaceTransform()
 
-        xform = self.opts.getCoordSpaceTransform()
-
-        if xform is not None:
+        if not np.all(xform == np.eye(4)):
             vertices = transform.transform(vertices, xform)
 
         self.vertices = np.array(vertices, dtype=np.float32)
@@ -330,16 +330,19 @@ class GLModel(globject.GLObject):
         # plane.
         gl.glStencilFunc(gl.GL_ALWAYS, 0, 0)
 
-        # I don't understand why, but if any of the
-        # display system axes are inverted, we need
-        # to render the back faces first, otherwise
-        # the cross-section mask will not be created
-        # correctly.
+        # If the model coordinate transformation
+        # has a positive determinant, we need to
+        # render the back faces first, otherwise
+        # the cross-section mask will not be
+        # created correctly. Something to do with
+        # the vertex unwinding order, I guess.
         direction = [gl.GL_INCR, gl.GL_DECR]
-
-        if np.any(np.array(hi) < 0.0): faceOrder = [gl.GL_FRONT, gl.GL_BACK]
-        else:                          faceOrder = [gl.GL_BACK,  gl.GL_FRONT]
         
+        if npla.det(opts.getCoordSpaceTransform()) > 0:
+            faceOrder = [gl.GL_BACK,  gl.GL_FRONT]
+        else:
+            faceOrder = [gl.GL_FRONT, gl.GL_BACK]
+
         for face, direction in zip(faceOrder, direction):
             
             gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, direction)

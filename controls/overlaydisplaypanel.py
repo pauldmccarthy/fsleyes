@@ -392,7 +392,7 @@ _DISPLAY_PROPS = td.TypeDict({
         # props.Widget('showName'),
         props.Widget('coordSpace',
                      enabledWhen=lambda o, ri: ri != 'none',
-                     labels=strings.choices['Nifti1Opts.transform'],
+                     labels=strings.choices['ModelOpts.coordSpace'],
                      dependencies=['refImage'])],
 
     'TensorOpts' : [

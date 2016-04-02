@@ -9,8 +9,6 @@ for displaying :class:`.Model` overlays.
 """
 
 
-import copy
-
 import numpy as np
 
 import props
@@ -20,8 +18,6 @@ import display                as fsldisplay
 import fsl.fsleyes.colourmaps as colourmaps
 import fsl.data.image         as fslimage
 import fsl.utils.transform    as transform
-
-import volumeopts
 
 
 class ModelOpts(fsldisplay.DisplayOpts):
@@ -65,10 +61,37 @@ class ModelOpts(fsldisplay.DisplayOpts):
     """
 
 
-    coordSpace = copy.copy(volumeopts.Nifti1Opts.transform)
+    # This property is implicitly tightly-coupled to
+    # the Nifti1Opts.getTransform method - the choices
+    # defined in this property are assumed to be valid
+    # inputs to that method.
+    coordSpace = props.Choice(('affine', 'pixdim', 'pixdim-flip', 'id'),
+                              default='pixdim-flip')
     """If :attr:`refImage` is not ``None``, this property defines the
     reference image coordinate space in which the model coordinates are
     defined (i.e. voxels, scaled voxels, or world coordinates).
+
+    =============== =========================================================
+    ``affine``      The model coordinates are defined in the reference image
+                    world coordinate system.
+    
+    ``id``          The model coordinates are defined in the reference image
+                    voxel coordinate system.
+    
+    ``pixdim``      The model coordinates are defined in the reference image
+                    voxel coordinate system, scaled by the voxel pixdims.
+    
+    ``pixdim-flip`` The model coordinates are defined in the reference image
+                    voxel coordinate system, scaled by the voxel pixdims. If
+                    the reference image transformation matrix has a positive
+                    determinant, the X axis is flipped.
+    =============== =========================================================
+
+    The default value is ``pixdim-flip``, as this is the coordinate system
+    used in the VTK sub-cortical segmentation model files output by FIRST.
+    See also the :ref:`note on coordinate systems
+    <volumeopts-coordinate-systems>`, and the :meth:`.Nifti1Opts.getTransform`
+    method.
     """
 
 
@@ -76,12 +99,6 @@ class ModelOpts(fsldisplay.DisplayOpts):
         """Create a ``ModelOpts`` instance. All arguments are passed through
         to the :class:`.DisplayOpts` constructor.
         """
-
-        # The Nifti1Opts.transform property has a
-        # 'custom' option which is not applicable
-        # to our coordSpace property.
-        coordSpace = self.getProp('coordSpace')
-        coordSpace.removeChoice('custom', self)
 
         # Create a random, highly
         # saturated colour
@@ -162,11 +179,12 @@ class ModelOpts(fsldisplay.DisplayOpts):
         the :class:`.Model` vertex coordinates into the display coordinate
         system.
 
-        If no :attr:`refImage` is selected, this method returns ``None``.
+        If no :attr:`refImage` is selected, this method returns an identity
+        transformation.
         """
 
         if self.refImage is None:
-            return None
+            return np.eye(4)
 
         opts = self.displayCtx.getOpts(self.refImage)
 
@@ -346,11 +364,9 @@ class ModelOpts(fsldisplay.DisplayOpts):
         lo, hi = self.overlay.getBounds()
         xform  = self.getCoordSpaceTransform()
 
-        if xform is not None:
-
-            lohi = transform.transform([lo, hi], xform)
-            lohi.sort(axis=0)
-            lo, hi = lohi[0, :], lohi[1, :]
+        lohi   = transform.transform([lo, hi], xform)
+        lohi.sort(axis=0)
+        lo, hi = lohi[0, :], lohi[1, :]
 
         self.bounds = [lo[0], hi[0], lo[1], hi[1], lo[2], hi[2]]
             

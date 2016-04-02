@@ -416,16 +416,22 @@ labels = TypeDict({
     'OverlayInfoPanel.MelodicImage'             : 'NIFTI1 image '
                                                   '(MELODIC analysis)', 
     'OverlayInfoPanel.MelodicImage.melodicInfo' : 'MELODIC information',
-    'OverlayInfoPanel.Model'                    : 'VTK model',
-    'OverlayInfoPanel.Model.numVertices'        : 'Number of vertices',
-    'OverlayInfoPanel.Model.numIndices'         : 'Number of indices',
-    'OverlayInfoPanel.Model.displaySpace'       : 'Display space',
-    'OverlayInfoPanel.Model.refImage'           : 'Reference image',
-    'OverlayInfoPanel.Model.coordSpace'         : 'Vertices defined in',
-    'OverlayInfoPanel.Model.coordSpace.id'      : 'Voxels ({})',
-    'OverlayInfoPanel.Model.coordSpace.pixdim'  : 'Scaled voxels ({})',
-    'OverlayInfoPanel.Model.coordSpace.affine'  : 'World coordinates ({})',
-    'OverlayInfoPanel.Model.coordSpace.display' : 'Display coordinate system',
+    
+    'OverlayInfoPanel.Model'                        : 'VTK model',
+    'OverlayInfoPanel.Model.numVertices'            : 'Number of vertices',
+    'OverlayInfoPanel.Model.numIndices'             : 'Number of indices',
+    'OverlayInfoPanel.Model.displaySpace'           : 'Display space',
+    'OverlayInfoPanel.Model.refImage'               : 'Reference image',
+    'OverlayInfoPanel.Model.coordSpace'             : 'Vertices defined in',
+    'OverlayInfoPanel.Model.coordSpace.id'          : 'Voxels ({})',
+    'OverlayInfoPanel.Model.coordSpace.pixdim'      : 'Scaled voxels ({})',
+    'OverlayInfoPanel.Model.coordSpace.pixdim-flip' : 'Scaled voxels forced '
+                                                      'to radiological '
+                                                      'orientation ({})',
+    'OverlayInfoPanel.Model.coordSpace.affine'      : 'World coordinates ({})',
+    'OverlayInfoPanel.Model.coordSpace.display'     : 'Display coordinate '
+                                                      'system',
+    
     'OverlayInfoPanel.dataSource'               : 'Data source',
 
     'OverlayInfoPanel.TensorImage'              : 'NIFTI1 diffusion '
@@ -650,6 +656,12 @@ choices = TypeDict({
     'VectorOpts.clippingRange.max' : 'Clip max.', 
 
     'ModelOpts.refImage.none'     : 'No reference image',
+
+    'ModelOpts.coordSpace' : {'affine'      : 'World coordinates',
+                              'pixdim'      : 'Scaled voxels',
+                              'pixdim-flip' : 'Scaled voxels forced to '
+                                              'radiological orientation',
+                              'id'          : 'Voxels'}, 
 
     'TensorOpts.tensorResolution.min' : 'Low',
     'TensorOpts.tensorResolution.max' : 'High',
