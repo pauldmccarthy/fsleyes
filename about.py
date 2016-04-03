@@ -14,9 +14,9 @@ import os.path   as op
 import              wx
 import OpenGL.GL as gl
 
-import fsl.fsleyes.widgets.imagepanel as imagepanel
-import fsl.fsleyes.strings            as strings
-import fsl.version                    as version
+import fsl.utils.imagepanel as imagepanel
+import fsl.fsleyes.strings  as strings
+import fsl.version          as version
 
 
 class AboutDialog(wx.Dialog):
