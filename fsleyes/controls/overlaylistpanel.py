@@ -15,15 +15,15 @@ import wx
 
 import props
 
-import pwidgets.bitmaptoggle   as bmptoggle
+import pwidgets.bitmaptoggle as bmptoggle
 
-import pwidgets.elistbox       as elistbox
+import pwidgets.elistbox     as elistbox
 
-import fsl.fsleyes.panel       as fslpanel
-import fsl.fsleyes.icons       as icons
-import fsl.fsleyes.autodisplay as autodisplay
-import fsl.fsleyes.strings     as strings
-import fsl.data.image          as fslimage
+import fsleyes.panel         as fslpanel
+import fsleyes.icons         as icons
+import fsleyes.autodisplay   as autodisplay
+import fsleyes.strings       as strings
+import fsl.data.image        as fslimage
 
 
 log = logging.getLogger(__name__)

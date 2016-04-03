@@ -37,12 +37,11 @@ shader programs.
 """
 
 
-import os.path        as op
+import os.path            as op
 
-import fsl.fsleyes.gl as fslgl
-
-import glsl.program   as glslprogram
-import arbp.program   as arbpprogram
+import fsleyes.gl         as fslgl
+from .glsl import program as glslprogram
+from .arbp import program as arbpprogram
 
 
 GLSLShader = glslprogram.GLSLShader

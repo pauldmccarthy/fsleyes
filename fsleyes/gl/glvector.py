@@ -10,15 +10,15 @@ image.
 """
 
 
-import numpy                    as np
-import OpenGL.GL                as gl
+import numpy              as np
+import OpenGL.GL          as gl
 
-import fsl.data.image           as fslimage
-import fsl.utils.async          as async
-import fsl.fsleyes.colourmaps   as fslcm
-import resources                as glresources
-import                             textures
-import                             globject
+import fsl.data.image     as fslimage
+import fsl.utils.async    as async
+import fsleyes.colourmaps as fslcm
+from . import resources   as glresources
+from . import                textures
+from . import                globject
 
 
 class GLVector(globject.GLImageObject):

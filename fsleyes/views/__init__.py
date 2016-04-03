@@ -29,17 +29,17 @@ The following :class:`.ViewPanel` sub-classes currently exist:
 """
 
 
-import fsl.fsleyes.panel as fslpanel
+import fsleyes.panel as fslpanel
 
-import viewpanel
-import plotpanel
-import canvaspanel
-import orthopanel
-import lightboxpanel
-import timeseriespanel
-import powerspectrumpanel
-import histogrampanel
-import shellpanel
+from . import viewpanel
+from . import plotpanel
+from . import canvaspanel
+from . import orthopanel
+from . import lightboxpanel
+from . import timeseriespanel
+from . import powerspectrumpanel
+from . import histogrampanel
+from . import shellpanel
 
 
 FSLEyesPanel       = fslpanel          .FSLEyesPanel

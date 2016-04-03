@@ -9,7 +9,7 @@
 """
 
 
-import fsl.fsleyes.gl  as fslgl
+import fsleyes.gl      as fslgl
 import colourbarcanvas as cbarcanvas
 
 

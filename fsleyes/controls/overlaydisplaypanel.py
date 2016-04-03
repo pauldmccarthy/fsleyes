@@ -15,15 +15,15 @@ import functools
 import wx
 import props
 
-import pwidgets.widgetlist               as widgetlist
+import pwidgets.widgetlist           as widgetlist
 
-import fsl.utils.typedict                as td
-import fsl.fsleyes.strings               as strings
-import fsl.fsleyes.tooltips              as fsltooltips
-import fsl.fsleyes.panel                 as fslpanel
-import fsl.fsleyes.colourmaps            as fslcm
-import fsl.fsleyes.actions.loadcolourmap as loadcmap
-import fsl.fsleyes.displaycontext        as displayctx
+import fsl.utils.typedict            as td
+import fsleyes.strings               as strings
+import fsleyes.tooltips              as fsltooltips
+import fsleyes.panel                 as fslpanel
+import fsleyes.colourmaps            as fslcm
+import fsleyes.actions.loadcolourmap as loadcmap
+import fsleyes.displaycontext        as displayctx
 
 
 log = logging.getLogger(__name__)

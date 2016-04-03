@@ -14,11 +14,11 @@ shader programs.
 
 import logging
 
-import numpy                  as np
-import OpenGL.GL              as gl
+import numpy               as np
+import OpenGL.GL           as gl
 
-import fsl.fsleyes.gl.shaders as shaders
-import fsl.utils.transform    as transform
+import fsleyes.gl.shaders  as shaders
+import fsl.utils.transform as transform
 
 
 log = logging.getLogger(__name__)

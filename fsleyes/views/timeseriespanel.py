@@ -13,18 +13,18 @@ import logging
 
 import wx
 
-import                                                props
+import                                            props
 
-import                                                plotpanel
-import fsl.data.featimage                          as fslfeatimage
-import fsl.data.melodicimage                       as fslmelimage
-import fsl.data.featresults                        as featresults
-import fsl.data.melodicresults                     as melresults
-import fsl.data.image                              as fslimage
-import fsl.fsleyes.actions                         as actions
-import fsl.fsleyes.plotting                        as plotting
-import fsl.fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
-import fsl.fsleyes.controls.plotlistpanel          as plotlistpanel
+import fsl.data.featimage                      as fslfeatimage
+import fsl.data.melodicimage                   as fslmelimage
+import fsl.data.featresults                    as featresults
+import fsl.data.melodicresults                 as melresults
+import fsl.data.image                          as fslimage
+import fsleyes.actions                         as actions
+import fsleyes.plotting                        as plotting
+import fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
+import fsleyes.controls.plotlistpanel          as plotlistpanel
+from . import                                     plotpanel
 
 
 log = logging.getLogger(__name__)

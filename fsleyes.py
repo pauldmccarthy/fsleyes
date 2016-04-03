@@ -28,8 +28,8 @@ import logging
 import textwrap
 import argparse
 
-import fsl.fsleyes.perspectives           as perspectives
-import fsl.fsleyes.strings                as strings
+import fsleyes.perspectives               as perspectives
+import fsleyes.strings                    as strings
 import fsl.utils.status                   as status
 import fsl.utils.async                    as async
 from   fsl.utils.platform import platform as fslplatform
@@ -41,7 +41,7 @@ log = logging.getLogger(__name__)
 def init():
     """Creates and returns a :class:`.FSLEyesSplash` frame. """
 
-    import fsl.fsleyes.splash as fslsplash
+    import fsleyes.splash as fslsplash
 
     frame = fslsplash.FSLEyesSplash(None)
 
@@ -61,7 +61,7 @@ def parseArgs(argv):
     :arg argv: command line arguments for ``fsleyes``.
     """
 
-    import fsl.fsleyes.fsleyes_parseargs as fsleyes_parseargs
+    import fsleyes.fsleyes_parseargs as fsleyes_parseargs
 
     parser = argparse.ArgumentParser(
         add_help=False,
@@ -124,10 +124,10 @@ def context(args, splash):
                 - the :class:`.FSLEyesSplash` frame
     """
 
-    import fsl.fsleyes.overlay           as fsloverlay
-    import fsl.fsleyes.fsleyes_parseargs as fsleyes_parseargs
-    import fsl.fsleyes.displaycontext    as displaycontext
-    import fsl.fsleyes.gl                as fslgl
+    import fsleyes.overlay           as fsloverlay
+    import fsleyes.fsleyes_parseargs as fsleyes_parseargs
+    import fsleyes.displaycontext    as displaycontext
+    import fsleyes.gl                as fslgl
     import props
     
     props.initGUI()
@@ -208,10 +208,10 @@ def interface(parent, args, ctx):
     """
 
     import                                  wx
-    import fsl.fsleyes.fsleyes_parseargs as fsleyes_parseargs
-    import fsl.fsleyes.frame             as fsleyesframe
-    import fsl.fsleyes.displaycontext    as fsldisplay
-    import fsl.fsleyes.views             as views
+    import fsleyes.fsleyes_parseargs as fsleyes_parseargs
+    import fsleyes.frame             as fsleyesframe
+    import fsleyes.displaycontext    as fsldisplay
+    import fsleyes.views             as views
 
     overlayList, displayCtx, splashFrame = ctx
 
@@ -323,7 +323,7 @@ def diagnosticReport(frame, ctx):
     Creates and calls a :class:`.DiagnosticReportAction`.
     """
     overlayList, displayCtx, _ = ctx
-    import fsl.fsleyes.actions as actions
+    import fsleyes.actions as actions
     actions.DiagnosticReportAction(overlayList, displayCtx, frame)()
 
 
@@ -332,7 +332,7 @@ def about(frame, ctx):
     Creates and calls an :class:`.AboutAction`.
     """
     overlayList, displayCtx, _ = ctx
-    import fsl.fsleyes.actions as actions
+    import fsleyes.actions as actions
     actions.AboutAction(overlayList, displayCtx, frame)() 
 
     

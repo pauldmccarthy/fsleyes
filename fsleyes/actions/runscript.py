@@ -26,7 +26,7 @@ import os.path             as op
 import                        logging
 
 import fsl.utils.settings  as fslsettings
-import fsl.fsleyes.strings as strings
+import fsleyes.strings     as strings
 from . import                 action
 
 
@@ -161,8 +161,8 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         },
     }
     
-    import fsl.fsleyes.views     as views
-    import fsl.fsleyes.controls  as controls
+    import fsleyes.views     as views
+    import fsleyes.controls  as controls
     import fsl.data.image        as image
     import fsl.data.featimage    as featimage
     import fsl.data.melodicimage as melimage

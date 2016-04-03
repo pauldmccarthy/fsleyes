@@ -14,17 +14,16 @@ import logging
 import wx
 import wx.lib.agw.aui                     as aui
 
-import fsl.fsleyes.strings                as strings
+import fsleyes.strings                    as strings
 import fsl.utils.settings                 as fslsettings
 import fsl.utils.status                   as status
 from   fsl.utils.platform import platform as fslplatform
 
-import views
-import actions
-import tooltips
-import perspectives
-
-import displaycontext
+from . import views
+from . import actions
+from . import tooltips
+from . import perspectives
+from . import displaycontext
 
 
 log = logging.getLogger(__name__)

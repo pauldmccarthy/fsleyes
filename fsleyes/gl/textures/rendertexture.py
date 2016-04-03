@@ -20,8 +20,8 @@ import OpenGL.GL                        as gl
 import OpenGL.raw.GL._types             as gltypes
 import OpenGL.GL.EXT.framebuffer_object as glfbo
 
-import                            texture
-import fsl.fsleyes.gl.routines as glroutines
+import fsleyes.gl.routines as glroutines
+from . import                 texture
 
 
 log = logging.getLogger(__name__)

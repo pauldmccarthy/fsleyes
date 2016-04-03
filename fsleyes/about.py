@@ -15,7 +15,7 @@ import              wx
 import OpenGL.GL as gl
 
 import fsl.utils.imagepanel as imagepanel
-import fsl.fsleyes.strings  as strings
+import fsleyes.strings      as strings
 import fsl.version          as version
 
 

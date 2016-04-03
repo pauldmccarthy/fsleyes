@@ -15,13 +15,12 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
-import fsl.utils.transform     as transform
-import fsl.utils.status        as status
-import fsl.utils.async         as async
-import fsl.utils.notifier      as notifier
-import fsl.fsleyes.gl.routines as glroutines
-
-import texture
+import fsl.utils.transform as transform
+import fsl.utils.status    as status
+import fsl.utils.async     as async
+import fsl.utils.notifier  as notifier
+import fsleyes.gl.routines as glroutines
+from . import                 texture
 
 
 log = logging.getLogger(__name__)

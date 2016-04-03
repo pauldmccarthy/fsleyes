@@ -16,16 +16,16 @@ import logging
 
 import wx
 
-import pwidgets.notebook         as notebook
+import pwidgets.notebook                as notebook
 
-import fsl.utils.settings        as fslsettings
-import fsl.data.melodicresults   as fslmelresults
-import fsl.data.melodicimage     as fslmelimage
-import fsl.fsleyes.colourmaps    as fslcm
-import fsl.fsleyes.panel         as fslpanel
-import fsl.fsleyes.autodisplay   as autodisplay
-import fsl.fsleyes.strings       as strings
-import melodicclassificationgrid as melodicgrid
+import fsl.utils.settings               as fslsettings
+import fsl.data.melodicresults          as fslmelresults
+import fsl.data.melodicimage            as fslmelimage
+import fsleyes.colourmaps               as fslcm
+import fsleyes.panel                    as fslpanel
+import fsleyes.autodisplay              as autodisplay
+import fsleyes.strings                  as strings
+from . import melodicclassificationgrid as melodicgrid
 
 
 log = logging.getLogger(__name__)

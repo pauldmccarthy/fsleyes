@@ -16,12 +16,12 @@ import wx
 
 import props
 
-import pwidgets.elistbox    as elistbox
+import pwidgets.elistbox as elistbox
 
-import fsl.fsleyes.panel    as fslpanel
-import fsl.fsleyes.plotting as plotting
-import fsl.fsleyes.tooltips as fsltooltips
-import fsl.fsleyes.strings  as strings
+import fsleyes.panel     as fslpanel
+import fsleyes.plotting  as plotting
+import fsleyes.tooltips  as fsltooltips
+import fsleyes.strings   as strings
 
 
 class PlotListPanel(fslpanel.FSLEyesPanel):

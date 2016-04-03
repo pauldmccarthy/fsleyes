@@ -12,7 +12,7 @@ Icons can be looked up by their ID, which  is simply the icon file base name.
 For exmaple, the bitmap for an icon called ``gear24.png``  can be retreived
 like so::
 
-    import fsl.fsleyes.icons as icons
+    import fsleyes.icons as icons
 
     # Get the file name
     fname = icons.findImageFile('gear24')

@@ -9,8 +9,8 @@
 """
 
 
-import fsl.fsleyes.gl   as fslgl
-import slicecanvas      as sc
+import fsleyes.gl         as fslgl
+from . import slicecanvas as sc
 
 
 class OSMesaSliceCanvas(sc.SliceCanvas, fslgl.OSMesaCanvasTarget):

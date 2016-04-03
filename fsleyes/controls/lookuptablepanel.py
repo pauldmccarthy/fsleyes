@@ -27,15 +27,15 @@ import wx
 
 import numpy as np
 
-import pwidgets.elistbox          as elistbox
+import pwidgets.elistbox      as elistbox
 
-import fsl.fsleyes.panel          as fslpanel
-import fsl.fsleyes.displaycontext as displayctx
-import fsl.fsleyes.colourmaps     as fslcmaps
-import fsl.fsleyes.strings        as strings
-import fsl.utils.async            as async
-import fsl.utils.status           as status
-import fsl.data.melodicimage      as fslmelimage
+import fsleyes.panel          as fslpanel
+import fsleyes.displaycontext as displayctx
+import fsleyes.colourmaps     as fslcmaps
+import fsleyes.strings        as strings
+import fsl.utils.async        as async
+import fsl.utils.status       as status
+import fsl.data.melodicimage  as fslmelimage
 
 
 log = logging.getLogger(__name__)

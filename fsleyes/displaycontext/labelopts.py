@@ -11,9 +11,8 @@ atlas images, tissue segmentation images, and so on.
 
 import props
 
-import volumeopts
-
-import fsl.fsleyes.colourmaps as fslcm
+import fsleyes.colourmaps as fslcm
+from . import                volumeopts
 
 
 class LabelOpts(volumeopts.Nifti1Opts):

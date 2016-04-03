@@ -9,13 +9,13 @@ functionality to render an :class:`.Image` overlay as a label/atlas image.
 """
 
 
-import OpenGL.GL       as gl
+import OpenGL.GL        as gl
 
-import fsl.fsleyes.gl  as fslgl
-import fsl.utils.async as async
-import resources       as glresources
-import                    globject
-import                    textures
+import fsleyes.gl       as fslgl
+import fsl.utils.async  as async
+from . import resources as glresources
+from . import              globject
+from . import              textures
 
 
 class GLLabel(globject.GLImageObject):

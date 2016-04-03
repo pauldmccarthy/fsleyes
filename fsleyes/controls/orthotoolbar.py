@@ -11,12 +11,12 @@
 
 import props
 
-import fsl.data.image       as fslimage
-import fsl.fsleyes.toolbar  as fsltoolbar
-import fsl.fsleyes.icons    as fslicons
-import fsl.fsleyes.tooltips as fsltooltips
-import fsl.fsleyes.actions  as actions
-import fsl.fsleyes.strings  as strings
+import fsl.data.image   as fslimage
+import fsleyes.toolbar  as fsltoolbar
+import fsleyes.icons    as fslicons
+import fsleyes.tooltips as fsltooltips
+import fsleyes.actions  as actions
+import fsleyes.strings  as strings
 
 
 class OrthoToolBar(fsltoolbar.FSLEyesToolBar):

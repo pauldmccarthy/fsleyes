@@ -10,9 +10,9 @@ load overlay files, specified with a directory, into the :class:`.OverlayList`.
 """
 
 
-import action
 
-import fsl.fsleyes.autodisplay as autodisplay
+import fsleyes.autodisplay as autodisplay
+from . import                 action
 
 
 class OpenDirAction(action.Action):

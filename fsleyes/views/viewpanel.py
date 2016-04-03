@@ -17,12 +17,12 @@ import wx.lib.agw.aui as aui
 
 import props
 
-import fsl.fsleyes.panel          as fslpanel
-import fsl.fsleyes.toolbar        as fsltoolbar
-import fsl.fsleyes.profiles       as profiles
-import fsl.fsleyes.displaycontext as fsldisplay
-import fsl.fsleyes.strings        as strings
-import fsl.data.image             as fslimage
+import fsleyes.panel          as fslpanel
+import fsleyes.toolbar        as fsltoolbar
+import fsleyes.profiles       as profiles
+import fsleyes.displaycontext as fsldisplay
+import fsleyes.strings        as strings
+import fsl.data.image         as fslimage
 
 
 log = logging.getLogger(__name__)

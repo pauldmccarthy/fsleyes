@@ -16,13 +16,13 @@ in certain rendering situations - specifically, when running in OpenGL
 
 import logging
 
-import numpy                   as np
+import numpy                as np
 
-import fsl.utils.transform     as transform
-import fsl.data.tensorimage    as tensorimage
-import fsl.fsleyes.gl          as fslgl
-import fsl.fsleyes.gl.glvector as glvector
-import fsl.fsleyes.gl.routines as glroutines
+import fsl.utils.transform  as transform
+import fsl.data.tensorimage as tensorimage
+import fsleyes.gl           as fslgl
+import fsleyes.gl.glvector  as glvector
+import fsleyes.gl.routines  as glroutines
 
 
 log = logging.getLogger(__name__)

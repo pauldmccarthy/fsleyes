@@ -13,10 +13,10 @@
 
 
 import wx
-import wx.glcanvas              as wxgl
+import wx.glcanvas as wxgl
 
-import lightboxcanvas           as lightboxcanvas
-import fsl.fsleyes.gl           as fslgl
+import fsleyes.gl  as fslgl
+from . import         lightboxcanvas
 
 
 class WXGLLightBoxCanvas(lightboxcanvas.LightBoxCanvas,

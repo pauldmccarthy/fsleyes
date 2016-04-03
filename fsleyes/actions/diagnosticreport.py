@@ -16,11 +16,10 @@ import logging
 import platform
 from collections import OrderedDict
 
-import fsl.utils.status    as status
-import fsl.fsleyes.strings as strings
-import fsl.fsleyes.state   as fslstate
-
-from . import               action
+import fsl.utils.status as status
+import fsleyes.strings  as strings
+import fsleyes.state    as fslstate
+from . import              action
 
 
 log = logging.getLogger(__name__)
@@ -128,8 +127,8 @@ class DiagnosticReportAction(action.Action):
          - Saved perspectives stored via the :mod:`.perspectives` module.
         """
 
-        import fsl.fsleyes.perspectives as perspectives
-        import fsl.utils.settings       as fslsettings
+        import fsleyes.perspectives as perspectives
+        import fsl.utils.settings   as fslsettings
         
         report   = OrderedDict()
 

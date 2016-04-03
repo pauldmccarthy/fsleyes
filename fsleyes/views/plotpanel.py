@@ -29,11 +29,11 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as Canvas
 from matplotlib.backends.backend_wx    import NavigationToolbar2Wx
 
-import                           props
-import                           viewpanel
-import fsl.fsleyes.strings    as strings
-import fsl.fsleyes.actions    as actions
-import fsl.fsleyes.colourmaps as fslcm
+import                       props
+import fsleyes.strings    as strings
+import fsleyes.actions    as actions
+import fsleyes.colourmaps as fslcm
+from . import                viewpanel
 
 
 log = logging.getLogger(__name__)

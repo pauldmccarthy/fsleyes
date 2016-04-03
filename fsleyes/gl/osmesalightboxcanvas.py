@@ -9,8 +9,8 @@
 """
 
 
-import fsl.fsleyes.gl as fslgl
-import lightboxcanvas
+import fsleyes.gl as fslgl
+from . import        lightboxcanvas
 
 
 class OSMesaLightBoxCanvas(lightboxcanvas.LightBoxCanvas,

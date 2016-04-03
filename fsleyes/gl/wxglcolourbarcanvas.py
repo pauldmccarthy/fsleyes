@@ -12,8 +12,8 @@
 import wx
 import wx.glcanvas as wxgl
 
-import fsl.fsleyes.gl                 as fslgl
-import fsl.fsleyes.gl.colourbarcanvas as cbarcanvas
+import fsleyes.gl                 as fslgl
+import fsleyes.gl.colourbarcanvas as cbarcanvas
 
  
 class WXGLColourBarCanvas(cbarcanvas.ColourBarCanvas,

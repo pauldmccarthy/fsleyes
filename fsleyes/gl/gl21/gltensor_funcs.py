@@ -45,16 +45,16 @@ is in addition to the textures that are used for :class:`.GLVector` instances
 """
 
 
-import numpy                          as np
-import numpy.linalg                   as npla
-import OpenGL.GL                      as gl
-import OpenGL.GL.ARB.draw_instanced   as arbdi
+import numpy                        as np
+import numpy.linalg                 as npla
+import OpenGL.GL                    as gl
+import OpenGL.GL.ARB.draw_instanced as arbdi
 
-import fsl.utils.transform      as transform
-import fsl.fsleyes.gl.resources as glresources
-import fsl.fsleyes.gl.routines  as glroutines
-import fsl.fsleyes.gl.textures  as textures
-import                             glvector_funcs
+import fsl.utils.transform  as transform
+import fsleyes.gl.resources as glresources
+import fsleyes.gl.routines  as glroutines
+import fsleyes.gl.textures  as textures
+from . import                  glvector_funcs
 
 
 def init(self):

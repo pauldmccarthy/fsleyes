@@ -14,11 +14,11 @@ import wx
 
 import numpy as np
 
-import fsl.fsleyes.profiles as profiles
-import fsl.fsleyes.actions  as actions
-import fsl.utils.async      as async
-import fsl.data.image       as fslimage
-import fsl.data.constants   as constants
+import fsleyes.profiles   as profiles
+import fsleyes.actions    as actions
+import fsl.utils.async    as async
+import fsl.data.image     as fslimage
+import fsl.data.constants as constants
 
 
 log = logging.getLogger(__name__)

@@ -16,12 +16,12 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
-import fsl.fsleyes.displaycontext.canvasopts as canvasopts
-import fsl.fsleyes.gl.slicecanvas            as slicecanvas
-import fsl.fsleyes.gl.resources              as glresources
-import fsl.fsleyes.gl.routines               as glroutines
-import fsl.fsleyes.gl.textures               as textures
-import fsl.data.image                        as fslimage
+import fsleyes.displaycontext.canvasopts as canvasopts
+import fsleyes.gl.slicecanvas            as slicecanvas
+import fsleyes.gl.resources              as glresources
+import fsleyes.gl.routines               as glroutines
+import fsleyes.gl.textures               as textures
+import fsl.data.image                    as fslimage
 
 
 log = logging.getLogger(__name__)

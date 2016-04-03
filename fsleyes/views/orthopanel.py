@@ -21,17 +21,17 @@ import logging
 
 import wx
 
-import fsl.data.constants                         as constants
-import fsl.utils.layout                           as fsllayout
-import fsl.fsleyes.strings                        as strings
-import fsl.fsleyes.gl                             as fslgl
-import fsl.fsleyes.actions                        as actions
-import fsl.fsleyes.colourmaps                     as colourmaps
-import fsl.fsleyes.gl.wxglslicecanvas             as slicecanvas
-import fsl.fsleyes.controls.orthotoolbar          as orthotoolbar
-import fsl.fsleyes.controls.orthoedittoolbar      as orthoedittoolbar
-import fsl.fsleyes.displaycontext.orthoopts       as orthoopts
-import                                               canvaspanel
+import fsl.data.constants                     as constants
+import fsl.utils.layout                       as fsllayout
+import fsleyes.strings                        as strings
+import fsleyes.gl                             as fslgl
+import fsleyes.actions                        as actions
+import fsleyes.colourmaps                     as colourmaps
+import fsleyes.gl.wxglslicecanvas             as slicecanvas
+import fsleyes.controls.orthotoolbar          as orthotoolbar
+import fsleyes.controls.orthoedittoolbar      as orthoedittoolbar
+import fsleyes.displaycontext.orthoopts       as orthoopts
+from . import                                    canvaspanel
 
 
 log = logging.getLogger(__name__)

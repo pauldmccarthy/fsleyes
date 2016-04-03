@@ -128,7 +128,7 @@ def _viewPanelState(viewPanel):
     :class:`.ViewPanel`.
     """ 
 
-    import fsl.fsleyes.views as views
+    import fsleyes.views as views
 
     state     = OrderedDict()
     propNames = viewPanel.getAllProperties()[0]

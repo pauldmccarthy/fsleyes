@@ -26,12 +26,12 @@ orientation of the underlying vector.
 
 import logging
 
-import numpy                   as np
-import OpenGL.GL               as gl
+import numpy               as np
+import OpenGL.GL           as gl
 
-import fsl.utils.transform     as transform
-import fsl.fsleyes.gl.routines as glroutines
-import                            glvector_funcs
+import fsl.utils.transform as transform
+import fsleyes.gl.routines as glroutines
+from . import                 glvector_funcs
 
 
 log = logging.getLogger(__name__)

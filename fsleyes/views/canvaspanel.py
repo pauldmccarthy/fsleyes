@@ -20,28 +20,28 @@ import matplotlib.image as mplimg
 
 import props
 
-import fsl.fsleyes.fsleyes_parseargs                   as fsleyes_parseargs
-import fsl.utils.dialog                                as fsldlg
-import fsl.utils.async                                 as async
-import fsl.utils.status                                as status
-import fsl.utils.settings                              as fslsettings
-import fsl.data.image                                  as fslimage
-import fsl.fsleyes.strings                             as strings
-import fsl.fsleyes.actions                             as actions
-import fsl.fsleyes.colourmaps                          as colourmaps
-import fsl.fsleyes.displaycontext                      as displayctx
-import fsl.fsleyes.controls.overlaylistpanel           as overlaylistpanel
-import fsl.fsleyes.controls.overlayinfopanel           as overlayinfopanel
-import fsl.fsleyes.controls.atlaspanel                 as atlaspanel
-import fsl.fsleyes.controls.overlaydisplaytoolbar      as overlaydisplaytoolbar
-import fsl.fsleyes.controls.overlaydisplaypanel        as overlaydisplaypanel
-import fsl.fsleyes.controls.canvassettingspanel        as canvassettingspanel
-import fsl.fsleyes.controls.locationpanel              as locationpanel
-import fsl.fsleyes.controls.clusterpanel               as clusterpanel
-import fsl.fsleyes.controls.lookuptablepanel           as lookuptablepanel
-import fsl.fsleyes.controls.melodicclassificationpanel as melclasspanel
-import                                                    colourbarpanel
-import                                                    viewpanel
+import fsleyes.fsleyes_parseargs                   as fsleyes_parseargs
+import fsl.utils.dialog                            as fsldlg
+import fsl.utils.async                             as async
+import fsl.utils.status                            as status
+import fsl.utils.settings                          as fslsettings
+import fsl.data.image                              as fslimage
+import fsleyes.strings                             as strings
+import fsleyes.actions                             as actions
+import fsleyes.colourmaps                          as colourmaps
+import fsleyes.displaycontext                      as displayctx
+import fsleyes.controls.overlaylistpanel           as overlaylistpanel
+import fsleyes.controls.overlayinfopanel           as overlayinfopanel
+import fsleyes.controls.atlaspanel                 as atlaspanel
+import fsleyes.controls.overlaydisplaytoolbar      as overlaydisplaytoolbar
+import fsleyes.controls.overlaydisplaypanel        as overlaydisplaypanel
+import fsleyes.controls.canvassettingspanel        as canvassettingspanel
+import fsleyes.controls.locationpanel              as locationpanel
+import fsleyes.controls.clusterpanel               as clusterpanel
+import fsleyes.controls.lookuptablepanel           as lookuptablepanel
+import fsleyes.controls.melodicclassificationpanel as melclasspanel
+from . import                                         colourbarpanel
+from . import                                         viewpanel
 
 
 log = logging.getLogger(__name__)

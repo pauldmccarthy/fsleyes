@@ -12,13 +12,13 @@ encapsulates the data and logic required to render 2D slice of an
 
 import logging
 
-import OpenGL.GL       as gl
+import OpenGL.GL        as gl
 
-import fsl.fsleyes.gl  as fslgl
-import fsl.utils.async as async
-import                    textures
-import                    globject
-import resources       as glresources
+import fsleyes.gl       as fslgl
+import fsl.utils.async  as async
+from . import              textures
+from . import              globject
+from . import resources as glresources
 
 
 log = logging.getLogger(__name__)

@@ -12,8 +12,8 @@ These functions are used by the :mod:`.gl21.glrgbvector_funcs` and
 """
 
 
-import fsl.fsleyes.gl.shaders as shaders
-import fsl.utils.transform    as transform
+import fsleyes.gl.shaders  as shaders
+import fsl.utils.transform as transform
 
 
 def compileShaders(self, vertShader, indexed=False):

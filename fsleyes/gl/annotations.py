@@ -31,11 +31,11 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
-import fsl.fsleyes.gl.globject  as globject
-import fsl.fsleyes.gl.routines  as glroutines
-import fsl.fsleyes.gl.resources as glresources
-import fsl.fsleyes.gl.textures  as textures
-import fsl.utils.transform      as transform
+import fsleyes.gl.globject  as globject
+import fsleyes.gl.routines  as glroutines
+import fsleyes.gl.resources as glresources
+import fsleyes.gl.textures  as textures
+import fsl.utils.transform  as transform
 
 
 log = logging.getLogger(__name__)

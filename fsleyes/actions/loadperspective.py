@@ -8,8 +8,8 @@
 """
 
 
-import                             action
-import fsl.fsleyes.perspectives as perspectives
+import fsleyes.perspectives as perspectives
+from . import                  action
 
 
 class LoadPerspectiveAction(action.Action):

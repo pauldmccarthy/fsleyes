@@ -13,12 +13,12 @@ import numpy        as np
 import numpy.linalg as npla
 import OpenGL.GL    as gl
 
-import                            globject
-import fsl.utils.transform     as transform
-import fsl.fsleyes.gl          as fslgl
-import fsl.fsleyes.gl.routines as glroutines
-import fsl.fsleyes.gl.textures as textures
-import fsl.fsleyes.colourmaps  as fslcmaps
+from . import                 globject
+import fsl.utils.transform as transform
+import fsleyes.gl          as fslgl
+import fsleyes.gl.routines as glroutines
+import fsleyes.gl.textures as textures
+import fsleyes.colourmaps  as fslcmaps
 
 
 class GLModel(globject.GLObject):

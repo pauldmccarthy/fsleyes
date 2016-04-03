@@ -8,9 +8,10 @@
 which allows the user to save the current perspective.
 """
 
-from . import                      action
-import fsl.fsleyes.strings      as strings
-import fsl.fsleyes.perspectives as perspectives
+
+import fsleyes.strings      as strings
+import fsleyes.perspectives as perspectives
+from . import                  action
 
 
 class SavePerspectiveAction(action.Action):

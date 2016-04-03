@@ -42,7 +42,7 @@ All of the classes mentioned on ths page are defined in sub-modules, but are
 imported into, and are thus available from, the ``displaycontext`` package
 namespace. For example::
 
-    import fsl.fsleyes.displaycontext as fsldc
+    import fsleyes.displaycontext as fsldc
 
     # The VolumeOpts class is defined in the
     # fsl.fsleyes.displaycontext.volumeopts

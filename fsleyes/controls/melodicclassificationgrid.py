@@ -13,13 +13,13 @@ import logging
 
 import wx
 
-import pwidgets.widgetgrid        as widgetgrid
-import pwidgets.texttag           as texttag
+import pwidgets.widgetgrid    as widgetgrid
+import pwidgets.texttag       as texttag
 
-import fsl.fsleyes.panel          as fslpanel
-import fsl.fsleyes.strings        as strings
-import fsl.fsleyes.displaycontext as fsldisplay
-import fsl.data.melodicimage      as fslmelimage
+import fsleyes.panel          as fslpanel
+import fsleyes.strings        as strings
+import fsleyes.displaycontext as fsldisplay
+import fsl.data.melodicimage  as fslmelimage
 
 
 log = logging.getLogger(__name__)

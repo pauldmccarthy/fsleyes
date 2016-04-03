@@ -10,10 +10,10 @@
 
 
 import wx
-import wx.glcanvas    as wxgl
+import wx.glcanvas as wxgl
 
-import slicecanvas    as slicecanvas
-import fsl.fsleyes.gl as fslgl
+import fsleyes.gl  as fslgl
+from . import         slicecanvas
 
 
 class WXGLSliceCanvas(slicecanvas.SliceCanvas,

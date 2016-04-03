@@ -13,12 +13,12 @@ import wx
 
 import props
 
-import pwidgets.widgetlist  as widgetlist
+import pwidgets.widgetlist as widgetlist
 
-import fsl.data.image       as fslimage
-import fsl.fsleyes.panel    as fslpanel
-import fsl.fsleyes.tooltips as fsltooltips
-import fsl.fsleyes.strings  as strings
+import fsl.data.image      as fslimage
+import fsleyes.panel       as fslpanel
+import fsleyes.tooltips    as fsltooltips
+import fsleyes.strings     as strings
 
 
 
@@ -132,8 +132,8 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
             props.Widget('highlightSlice'),
             props.Widget('showGridLines')]
 
-        import fsl.fsleyes.views.orthopanel    as orthopanel
-        import fsl.fsleyes.views.lightboxpanel as lightboxpanel
+        import fsleyes.views.orthopanel    as orthopanel
+        import fsleyes.views.lightboxpanel as lightboxpanel
 
         if isinstance(canvasPanel, orthopanel.OrthoPanel):
             panelGroup = 'ortho'

@@ -26,9 +26,9 @@ key. As an example, let's say that we have a :class:`.Image` called
 ``myImage``::
 
  
-    import fsl.fsleyes.gl.resources as glresources
-    import fsl.fsleyes.gl.textures  as gltextures
-    import fsl.data.image           as fslimage
+    import fsleyes.gl.resources as glresources
+    import fsleyes.gl.textures  as gltextures
+    import fsl.data.image       as fslimage
 
     image = fslimage.Image('data.nii.gz')
 

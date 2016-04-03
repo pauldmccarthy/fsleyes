@@ -14,10 +14,10 @@ exception that a different fragment shader (``gllabel``) is used. The
 """
 
 
-import numpy                  as np
+import numpy              as np
 
-import fsl.fsleyes.gl.shaders as shaders
-import                           glvolume_funcs
+import fsleyes.gl.shaders as shaders
+from . import                glvolume_funcs
 
 
 def init(self):

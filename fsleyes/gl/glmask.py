@@ -10,12 +10,12 @@ functionality for rendering an :class:`.Image` overlay as a binary mask.
 
 import logging
 
-import numpy                  as np
+import numpy              as np
 
-import fsl.fsleyes.gl         as fslgl
-import fsl.fsleyes.colourmaps as colourmaps
-import fsl.utils.async        as async
-import                           glvolume
+import fsleyes.gl         as fslgl
+import fsleyes.colourmaps as colourmaps
+import fsl.utils.async    as async
+from . import                glvolume
 
 
 log = logging.getLogger(__name__)

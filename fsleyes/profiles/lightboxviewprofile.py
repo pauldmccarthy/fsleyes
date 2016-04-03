@@ -10,8 +10,8 @@
 
 import logging
 
-import fsl.fsleyes.profiles as profiles
-import fsl.utils.async      as async
+import fsleyes.profiles as profiles
+import fsl.utils.async  as async
 
 
 log = logging.getLogger(__name__)

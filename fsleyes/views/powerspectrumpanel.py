@@ -17,13 +17,13 @@ import numpy as np
 
 import props
 
-import                                                   plotpanel
-import fsl.fsleyes.actions                            as actions
-import fsl.fsleyes.plotting.powerspectrumseries       as psseries
-import fsl.fsleyes.controls.powerspectrumcontrolpanel as pscontrol
-import fsl.fsleyes.controls.plotlistpanel             as plotlistpanel
-import fsl.data.image                                 as fslimage
-import fsl.data.melodicimage                          as fslmelimage
+import fsleyes.actions                            as actions
+import fsleyes.plotting.powerspectrumseries       as psseries
+import fsleyes.controls.powerspectrumcontrolpanel as pscontrol
+import fsleyes.controls.plotlistpanel             as plotlistpanel
+import fsl.data.image                             as fslimage
+import fsl.data.melodicimage                      as fslmelimage
+from . import                                        plotpanel
 
 
 log = logging.getLogger(__name__)

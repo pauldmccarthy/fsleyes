@@ -13,9 +13,9 @@ import inspect
 
 import props
 
-import fsl.utils.typedict  as td
-import fsl.data.image      as fslimage
-import fsl.fsleyes.actions as actions
+import fsl.utils.typedict as td
+import fsl.data.image     as fslimage
+import fsleyes.actions    as actions
 
 
 log = logging.getLogger(__name__)

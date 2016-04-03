@@ -9,13 +9,13 @@ control* which allows the user to configure a :class:`.TimeSeriesPanel`.
 """
 
 
-import                                    props
+import                                props
 
-import                                    plotcontrolpanel
-import fsl.fsleyes.tooltips            as fsltooltips
-import fsl.fsleyes.plotting.timeseries as timeseries
-import fsl.fsleyes.strings             as strings
-import fsl.data.featimage              as fslfeatimage
+import fsleyes.tooltips            as fsltooltips
+import fsleyes.plotting.timeseries as timeseries
+import fsleyes.strings             as strings
+import fsl.data.featimage          as fslfeatimage
+from . import                         plotcontrolpanel
 
 
 class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):

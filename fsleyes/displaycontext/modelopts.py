@@ -13,11 +13,11 @@ import numpy as np
 
 import props
 
-import display                as fsldisplay
+from . import display       as fsldisplay
 
-import fsl.fsleyes.colourmaps as colourmaps
-import fsl.data.image         as fslimage
-import fsl.utils.transform    as transform
+import fsleyes.colourmaps   as colourmaps
+import fsl.data.image       as fslimage
+import fsl.utils.transform  as transform
 
 
 class ModelOpts(fsldisplay.DisplayOpts):

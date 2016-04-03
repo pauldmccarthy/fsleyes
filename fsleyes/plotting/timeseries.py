@@ -25,8 +25,8 @@ import numpy as np
 
 import props
 
-import                        dataseries
-import fsl.fsleyes.strings as strings
+import fsleyes.strings as strings
+from . import             dataseries
 
 
 class TimeSeries(dataseries.DataSeries):

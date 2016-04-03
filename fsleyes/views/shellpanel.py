@@ -11,9 +11,8 @@ which contains an interactive Python shell.
 
 import wx.py.shell as wxshell
 
-from . import viewpanel
-
-import fsl.fsleyes.actions.runscript as runscript
+import fsleyes.actions.runscript as runscript
+from . import                       viewpanel
 
 
 class ShellPanel(viewpanel.ViewPanel):

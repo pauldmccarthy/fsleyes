@@ -11,11 +11,11 @@ which renders a colour bar.
 
 import wx
 
-import fsl.data.image                         as fslimage
-import fsl.fsleyes.panel                      as fslpanel
-import fsl.fsleyes.displaycontext             as fsldc
-import fsl.fsleyes.displaycontext.volumeopts  as volumeopts
-import fsl.fsleyes.gl.wxglcolourbarcanvas     as cbarcanvas
+import fsl.data.image                     as fslimage
+import fsleyes.panel                      as fslpanel
+import fsleyes.displaycontext             as fsldc
+import fsleyes.displaycontext.volumeopts  as volumeopts
+import fsleyes.gl.wxglcolourbarcanvas     as cbarcanvas
 
 
 class ColourBarPanel(fslpanel.FSLEyesPanel):

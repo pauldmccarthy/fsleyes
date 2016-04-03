@@ -23,14 +23,14 @@ according to the orientation of the underlying vector.
 
 import logging
 
-import numpy                       as np
+import numpy                   as np
 
-import OpenGL.GL                   as gl
+import OpenGL.GL               as gl
 
-import fsl.utils.transform         as transform
-import fsl.fsleyes.gl.gllinevector as gllinevector
-import fsl.fsleyes.gl.resources    as glresources
-import                                glvector_funcs
+import fsl.utils.transform     as transform
+import fsleyes.gl.gllinevector as gllinevector
+import fsleyes.gl.resources    as glresources
+from . import                     glvector_funcs
 
 
 log = logging.getLogger(__name__)

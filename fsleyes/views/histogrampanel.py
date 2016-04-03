@@ -17,13 +17,13 @@ import numpy as np
 
 import props
 
-import fsl.data.image                             as fslimage
+import fsl.data.image                         as fslimage
 
-import fsl.fsleyes.actions                        as actions
-import fsl.fsleyes.plotting.histogramseries       as histogramseries
-import fsl.fsleyes.controls.histogramcontrolpanel as histogramcontrolpanel
-import fsl.fsleyes.controls.plotlistpanel         as plotlistpanel
-import                                               plotpanel
+import fsleyes.actions                        as actions
+import fsleyes.plotting.histogramseries       as histogramseries
+import fsleyes.controls.histogramcontrolpanel as histogramcontrolpanel
+import fsleyes.controls.plotlistpanel         as plotlistpanel
+from . import                                    plotpanel
 
 
 log = logging.getLogger(__name__)

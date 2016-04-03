@@ -14,11 +14,11 @@ import logging
 
 import OpenGL.GL as gl
 
-import fsl.fsleyes.gl.routines as glroutines
-import fsl.fsleyes.gl.globject as globject
-import fsl.utils.async         as async
-import fsl.utils.status        as status
-import                            rendertexture
+import fsleyes.gl.routines as glroutines
+import fsleyes.gl.globject as globject
+import fsl.utils.async     as async
+import fsl.utils.status    as status
+from . import                 rendertexture
 
 
 log = logging.getLogger(__name__)

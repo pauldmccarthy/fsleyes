@@ -11,11 +11,10 @@ See :mod:`.gl21.gltensor_funcs`.
 """
 
 
-import numpy as np
+import numpy      as np
 
-import glvector
-
-import fsl.fsleyes.gl as fslgl
+import fsleyes.gl as fslgl
+from . import        glvector
 
 
 class GLTensor(glvector.GLVector):

@@ -20,8 +20,8 @@ Quick start
 
 ::
 
-    import fsl.fsleyes.gl as fslgl
-    import fsl.fsleyes.gl.wxglslicecanvas as slicecanvas
+    import fsleyes.gl as fslgl
+    import fsleyes.gl.wxglslicecanvas as slicecanvas
 
     # Make sure that an OpenGL context
     # has been created. This procedure
@@ -350,8 +350,8 @@ def bootstrap(glVersion=None):
 
         # Spline interpolation is not currently
         # available in the GL14 implementation
-        import fsl.fsleyes.displaycontext         as dc
-        import fsl.fsleyes.displaycontext.display as fsldisplay
+        import fsleyes.displaycontext         as dc
+        import fsleyes.displaycontext.display as fsldisplay
         dc.VolumeOpts   .interpolation.removeChoice('spline')
         dc.RGBVectorOpts.interpolation.removeChoice('spline')
         dc.VolumeOpts   .interpolation.updateChoice('linear',
@@ -379,7 +379,7 @@ def bootstrap(glVersion=None):
         log.debug('Software-based rendering detected - '
                   'lowering default performance settings.')
 
-        import fsl.fsleyes.displaycontext as dc
+        import fsleyes.displaycontext as dc
         dc.SceneOpts.performance.setConstraint(None, 'default', 2)
 
     thismod.GL_VERSION         = verstr

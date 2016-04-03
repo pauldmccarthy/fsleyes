@@ -35,7 +35,7 @@ class AboutAction(action.Action):
     def __showDialog(self):
         """Creates and shows an :class:`.AboutDialog`. """
 
-        import fsl.fsleyes.about as aboutdlg
+        import fsleyes.about as aboutdlg
 
         dlg = aboutdlg.AboutDialog(self.__frame)
         dlg.Show()

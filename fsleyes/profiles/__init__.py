@@ -32,7 +32,7 @@ import wx
 
 import props
 
-import fsl.fsleyes.actions as actions
+import fsleyes.actions as actions
 
 
 log = logging.getLogger(__name__)

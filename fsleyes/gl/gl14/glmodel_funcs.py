@@ -12,7 +12,7 @@ programs.
 """
 
 
-import fsl.fsleyes.gl.shaders as shaders
+import fsleyes.gl.shaders as shaders
 
 
 def compileShaders(self):

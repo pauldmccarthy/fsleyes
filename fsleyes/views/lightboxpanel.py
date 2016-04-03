@@ -15,12 +15,12 @@ import wx
 
 import numpy as np
 
-import fsl.utils.layout                        as fsllayout
-import fsl.fsleyes.actions                     as actions
-import fsl.fsleyes.gl.wxgllightboxcanvas       as lightboxcanvas
-import fsl.fsleyes.controls.lightboxtoolbar    as lightboxtoolbar
-import fsl.fsleyes.displaycontext.lightboxopts as lightboxopts
-import                                            canvaspanel
+import fsl.utils.layout                    as fsllayout
+import fsleyes.actions                     as actions
+import fsleyes.gl.wxgllightboxcanvas       as lightboxcanvas
+import fsleyes.controls.lightboxtoolbar    as lightboxtoolbar
+import fsleyes.displaycontext.lightboxopts as lightboxopts
+from . import                                 canvaspanel
 
 
 log = logging.getLogger(__name__)

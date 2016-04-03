@@ -9,13 +9,13 @@ vector :class:`.Image` overlays in RGB mode.
 """
 
 
-import numpy                   as np
-import OpenGL.GL               as gl
+import numpy                as np
+import OpenGL.GL            as gl
 
-import fsl.data.tensorimage    as tensorimage
-import fsl.utils.async         as async
-import fsl.fsleyes.gl          as fslgl
-import fsl.fsleyes.gl.glvector as glvector
+import fsl.data.tensorimage as tensorimage
+import fsl.utils.async      as async
+import fsleyes.gl           as fslgl
+import fsleyes.gl.glvector  as glvector
 
 
 class GLRGBVector(glvector.GLVector):

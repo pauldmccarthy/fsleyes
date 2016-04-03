@@ -25,9 +25,9 @@ should be made available available to the user can be added as
           an :class:`.OverlayList` and a :class:`.DisplayContext`.
           For example::
 
-              import fsl.fsleyes.overlay          as ovl
-              import fsl.fsleyes.displaycontext   as dc
-              import fsl.fsleyes.views.orthopanel as op
+              import fsleyes.overlay          as ovl
+              import fsleyes.displaycontext   as dc
+              import fsleyes.views.orthopanel as op
 
               overlayList = ovl.OverlayList()
               displayCtx  = dc.DisplayContext(overlayList)

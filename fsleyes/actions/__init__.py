@@ -22,7 +22,7 @@ The :func:`action` and :func:`toggleAction` functions are intended to be used
 as decorators upon the methods of a class which derives from
 :class:`ActionProvider`. For example::
 
-    >>> import fsl.fsleyes.actions as actions
+    >>> import fsleyes.actions as actions
     >>> class Thing(actions.ActionProvider):
             @actions.action
             def doFirstThing(self):
@@ -119,25 +119,25 @@ import functools
 
 import props
 
-import fsl.fsleyes.strings as strings
+import fsleyes.strings as strings
 
-import action
-import copyoverlay
-import openfile
-import opendir
-import openstandard
-import runscript
-import saveoverlay
-import reloadoverlay
-import removeoverlay
-import removealloverlays
-import loadcolourmap
-import saveperspective
-import loadperspective
-import clearperspective
-import togglecontrolpanel
-import diagnosticreport
-import about
+from . import action
+from . import copyoverlay
+from . import openfile
+from . import opendir
+from . import openstandard
+from . import runscript
+from . import saveoverlay
+from . import reloadoverlay
+from . import removeoverlay
+from . import removealloverlays
+from . import loadcolourmap
+from . import saveperspective
+from . import loadperspective
+from . import clearperspective
+from . import togglecontrolpanel
+from . import diagnosticreport
+from . import about
 
 
 Action                   = action            .Action

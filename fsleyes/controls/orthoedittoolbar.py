@@ -14,11 +14,11 @@ import logging
 
 import props
 
-import fsl.fsleyes.toolbar  as fsltoolbar
-import fsl.fsleyes.actions  as actions
-import fsl.fsleyes.icons    as fslicons
-import fsl.fsleyes.tooltips as fsltooltips
-import fsl.fsleyes.strings  as strings
+import fsleyes.toolbar  as fsltoolbar
+import fsleyes.actions  as actions
+import fsleyes.icons    as fslicons
+import fsleyes.tooltips as fsltooltips
+import fsleyes.strings  as strings
 
 from fsl.fsleyes.profiles.orthoeditprofile import OrthoEditProfile
 

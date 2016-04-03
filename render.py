@@ -23,17 +23,17 @@ import            argparse
 import props
 
 import fsl
-import fsl.utils.layout                        as fsllayout
-import fsl.utils.colourbarbitmap               as cbarbitmap
-import fsl.utils.textbitmap                    as textbitmap
-import fsl.data.constants                      as constants
-import fsl.fsleyes.strings                     as strings
-import fsl.fsleyes.overlay                     as fsloverlay
-import fsl.fsleyes.colourmaps                  as fslcm
-import fsl.fsleyes.fsleyes_parseargs           as fsleyes_parseargs
-import fsl.fsleyes.displaycontext              as displaycontext
-import fsl.fsleyes.displaycontext.orthoopts    as orthoopts
-import fsl.fsleyes.displaycontext.lightboxopts as lightboxopts
+import fsl.utils.layout                    as fsllayout
+import fsl.utils.colourbarbitmap           as cbarbitmap
+import fsl.utils.textbitmap                as textbitmap
+import fsl.data.constants                  as constants
+import fsleyes.strings                     as strings
+import fsleyes.overlay                     as fsloverlay
+import fsleyes.colourmaps                  as fslcm
+import fsleyes.fsleyes_parseargs           as fsleyes_parseargs
+import fsleyes.displaycontext              as displaycontext
+import fsleyes.displaycontext.orthoopts    as orthoopts
+import fsleyes.displaycontext.lightboxopts as lightboxopts
 
 
 log = logging.getLogger(__name__)
@@ -304,9 +304,9 @@ def run(args, context):
     os.environ[_LD_LIBRARY_PATH] = os.environ.get(_LD_LIBRARY_PATH, '') + \
                                    op.pathsep + env['FSL_OSMESA_PATH']
 
-    import fsl.fsleyes.gl                      as fslgl
-    import fsl.fsleyes.gl.osmesaslicecanvas    as slicecanvas
-    import fsl.fsleyes.gl.osmesalightboxcanvas as lightboxcanvas
+    import fsleyes.gl                      as fslgl
+    import fsleyes.gl.osmesaslicecanvas    as slicecanvas
+    import fsleyes.gl.osmesalightboxcanvas as lightboxcanvas
 
     # Make sure than an OpenGL context 
     # exists, and initalise OpenGL modules

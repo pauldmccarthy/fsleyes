@@ -9,12 +9,12 @@
 """
 
 
-import                                             props
+import                                         props
 
-import                                             plotcontrolpanel
-import fsl.fsleyes.tooltips                     as fsltooltips
-import fsl.fsleyes.plotting.powerspectrumseries as powerspectrumseries
-import fsl.fsleyes.strings                      as strings
+import fsleyes.tooltips                     as fsltooltips
+import fsleyes.plotting.powerspectrumseries as powerspectrumseries
+import fsleyes.strings                      as strings
+from . import                                  plotcontrolpanel
 
 
 class PowerSpectrumControlPanel(plotcontrolpanel.PlotControlPanel):

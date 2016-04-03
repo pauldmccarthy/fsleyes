@@ -21,7 +21,7 @@ import numpy     as np
 import props
 
 import fsl.utils.colourbarbitmap as cbarbmp
-import fsl.fsleyes.gl.textures   as textures
+import fsleyes.gl.textures       as textures
 
 
 log = logging.getLogger(__name__)

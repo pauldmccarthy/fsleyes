@@ -9,9 +9,8 @@ load overlay files into the :class:`.OverlayList`.
 """
 
 
-import action
-
-import fsl.fsleyes.autodisplay as autodisplay
+import fsleyes.autodisplay as autodisplay
+from . import                 action
 
 
 class OpenFileAction(action.Action):

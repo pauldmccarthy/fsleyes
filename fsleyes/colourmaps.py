@@ -270,7 +270,7 @@ def registerColourMap(cmapFile,
     log.debug('Patching DisplayOpts instances and class '
               'to support new colour map {}'.format(key))
 
-    import fsl.fsleyes.displaycontext as fsldisplay
+    import fsleyes.displaycontext as fsldisplay
     
     # A list of all DisplayOpts colour map properties
     # 
@@ -360,7 +360,7 @@ def registerLookupTable(lut,
     log.debug('Patching LabelOpts classes to support '
               'new LookupTable {}'.format(key))
 
-    import fsl.fsleyes.displaycontext as fsldisplay
+    import fsleyes.displaycontext as fsldisplay
 
     # Update the lut property for
     # any existing label overlays

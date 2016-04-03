@@ -14,12 +14,12 @@ import wx
 
 import props
 
-import pwidgets.widgetlist        as widgetlist
+import pwidgets.widgetlist    as widgetlist
 
-import fsl.fsleyes.panel          as fslpanel
-import fsl.fsleyes.tooltips       as fsltooltips
-import fsl.fsleyes.displaycontext as fsldisplay
-import fsl.fsleyes.strings        as strings
+import fsleyes.panel          as fslpanel
+import fsleyes.tooltips       as fsltooltips
+import fsleyes.displaycontext as fsldisplay
+import fsleyes.strings        as strings
 
 
 class PlotControlPanel(fslpanel.FSLEyesPanel):

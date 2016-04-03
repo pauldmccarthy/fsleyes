@@ -15,8 +15,8 @@ import wx.lib.newevent as wxevent
 
 import numpy as np
 
-import fsl.fsleyes.panel   as fslpanel
-import fsl.fsleyes.icons   as icons
+import fsleyes.panel as fslpanel
+import fsleyes.icons as icons
 
 
 log = logging.getLogger(__name__)

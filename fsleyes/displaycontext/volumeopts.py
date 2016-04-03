@@ -78,11 +78,11 @@ import numpy.linalg as npla
 
 import props
 
-import fsl.data.image         as fslimage
-import fsl.utils.transform    as transform
-import fsl.fsleyes.colourmaps as fslcm
-import fsl.fsleyes.actions    as actions
-import display                as fsldisplay
+import fsl.data.image      as fslimage
+import fsl.utils.transform as transform
+import fsleyes.colourmaps  as fslcm
+import fsleyes.actions     as actions
+from . import display      as fsldisplay
 
 
 log = logging.getLogger(__name__)

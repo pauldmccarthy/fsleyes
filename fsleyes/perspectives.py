@@ -43,9 +43,9 @@ import logging
 import textwrap
 import collections
 
-import fsl.utils.settings   as fslsettings
-import fsl.utils.status     as status
-import fsl.fsleyes.strings  as strings
+import fsl.utils.settings as fslsettings
+import fsl.utils.status   as status
+import fsleyes.strings    as strings
 
 
 log = logging.getLogger(__name__)
@@ -101,7 +101,7 @@ def applyPerspective(frame, name, perspective, message=None):
     :arg message:     A message to display (using the :mod:`.status` module).
     """
 
-    import fsl.fsleyes.views as views
+    import fsleyes.views as views
               
     persp         = deserialisePerspective(perspective)
     frameChildren = persp[0]
@@ -437,8 +437,8 @@ def deserialisePerspective(persp):
                   :class:`.CanvasPanel`, the dictionary will be empty.
     """
 
-    import fsl.fsleyes.views    as views
-    import fsl.fsleyes.controls as controls
+    import fsleyes.views    as views
+    import fsleyes.controls as controls
     
     lines = persp.split('\n')
     lines = [l.strip() for l in lines]
@@ -545,7 +545,7 @@ def _addControlPanel(viewPanel, panelType):
     :arg viewPanel: A :class:`.ViewPanel` instance.
     :arg panelType: A control panel type.
     """
-    import fsl.fsleyes.controls as controls
+    import fsleyes.controls as controls
 
     args = {
         controls.CanvasSettingsPanel       : {'canvasPanel' : viewPanel},
@@ -572,7 +572,7 @@ def _getPanelProps(panel):
     the :data:`VIEWPANEL_PROPS` dictionary.
     """
 
-    import fsl.fsleyes.views as views
+    import fsleyes.views as views
 
     if not isinstance(panel, views.CanvasPanel):
         return {}, {}

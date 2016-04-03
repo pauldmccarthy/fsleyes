@@ -13,8 +13,8 @@ import                         wx
 
 import pwidgets.widgetgrid  as widgetgrid
 
-import fsl.fsleyes.panel    as fslpanel
-import fsl.fsleyes.strings  as strings
+import fsleyes.panel        as fslpanel
+import fsleyes.strings      as strings
 import fsl.utils.async      as async
 import fsl.utils.status     as status
 import fsl.data.image       as fslimage

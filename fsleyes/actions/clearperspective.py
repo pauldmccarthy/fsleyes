@@ -9,9 +9,9 @@ the user to clear/delete all saved perspectives.
 """
 
 
-import fsl.fsleyes.strings      as strings
-import                             action
-import fsl.fsleyes.perspectives as perspectives
+import fsleyes.strings      as strings
+import fsleyes.perspectives as perspectives
+from . import                  action
 
 
 class ClearPerspectiveAction(action.Action):
