@@ -19,9 +19,12 @@ The [Documentation for users](http://users.fmrib.ox.ac.uk/~paulmc/fsleyes/index.
 provides a comprehensive overview of how to use *FSLeyes*.
 
 
-Take a look at the [Documentation for
-developers](http://users.fmrib.ox.ac.uk/~paulmc/fsleyes/index.html) if you want
-to program with *FSLeyes*.
+Take a look at the `fsleyes`, `fslpy` and `props` API documentation if you
+want to program with *FSLeyes*.
+
+ - [FSLeyes](http://users.fmrib.ox.ac.uk/~paulmc/fsleyes_apidoc/index.html)
+ - [fslpy](http://users.fmrib.ox.ac.uk/~paulmc/fslpy/index.html)
+ - [props](http://users.fmrib.ox.ac.uk/~paulmc/props/index.html) 
 
 
 Dependencies
