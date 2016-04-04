@@ -13,9 +13,9 @@ version number and information.
    __vcs_version__
 """
 
-__version__ = '0.9a'
+__version__ = 'dev'
 """Current version number, as a string. """
 
 
-__vcs_version__ = '0.9a'
+__vcs_version__ = 'dev'
 """VCS (Version Control System) version number, for internal use. """

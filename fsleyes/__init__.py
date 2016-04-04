@@ -203,3 +203,8 @@ Some other miscellaneous modules are contained in the ``fsleyes`` package:
    ~fsleyes.splash
    ~fsleyes.about
 """
+
+
+from . import version
+
+__version__ = version.__version__
