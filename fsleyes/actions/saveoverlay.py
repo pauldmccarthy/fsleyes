@@ -10,7 +10,7 @@ to save the currently selected overlay.
 
 
 import fsl.data.image as fslimage
-import                   action
+from . import            action
 
 
 class SaveOverlayAction(action.Action):

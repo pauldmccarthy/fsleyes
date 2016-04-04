@@ -8,9 +8,12 @@
 See the :mod:`.actions` package documentation for more details.
 """
 
+
 import logging
 
 import props
+
+from fsl.utils.platform import platform as fslplatform
 
 
 log = logging.getLogger(__name__)
@@ -118,11 +121,19 @@ class Action(props.HasProperties):
 
             # Only attempt to unbind if the parent
             # and widget have not been destroyed
-            try:
-                parent.Unbind(evType, source=widget)
-            except wx.PyDeadObjectError:
-                pass
-            
+
+            # wxPython-Phoenix
+            if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
+                if parent:
+                    parent.Unbind(evType, source=widget)
+
+            # old wxPython
+            elif fslplatform.wxFlavour == fslplatform.WX_PYTHON:
+                try:
+                    parent.Unbind(evType, source=widget)
+                except wx.PyDeadObjectError:
+                    pass
+                
         self.__boundWidgets = []
 
         

@@ -11,9 +11,8 @@ to load in standard space images from the ``$FSLDIR/data/standard/`` directory.
 
 import os.path as op
 
-from . import action
-
 import fsl.utils.platform as fslplatform
+from . import                action
 
 
 class OpenStandardAction(action.Action):

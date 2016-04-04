@@ -9,7 +9,7 @@ uesr to remove all overlays from the :class:`.OverlayList`.
 """
 
 
-import action
+from . import action
 
 
 class RemoveAllOverlaysAction(action.Action):

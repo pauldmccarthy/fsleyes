@@ -10,7 +10,7 @@ the addition/removal of control panels.
 """
 
 
-import action
+from . import action
 
 
 class ToggleControlPanelAction(action.ToggleAction):

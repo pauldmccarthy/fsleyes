@@ -11,8 +11,8 @@ which creates a copy of the currently selected overlay.
 
 import numpy          as np
 
-import                   action
 import fsl.data.image as fslimage
+from . import            action
 
 
 class CopyOverlayAction(action.Action):

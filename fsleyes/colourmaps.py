@@ -132,6 +132,8 @@ import os.path as op
 
 from collections import OrderedDict
 
+import six
+
 import numpy as np
 
 import props
@@ -327,8 +329,8 @@ def registerLookupTable(lut,
                       to the ``name``. 
     """
 
-    if isinstance(lut, basestring): lutFile = lut
-    else:                           lutFile = None
+    if isinstance(lut, six.string_types): lutFile = lut
+    else:                                 lutFile = None
 
     if overlayList is None:
         overlayList = []
@@ -395,7 +397,7 @@ def getLookupTable(lutName):
         
 def getColourMaps():
     """Returns a list containing the names of all available colour maps."""
-    return  _cmaps.keys()
+    return list(_cmaps.keys())
 
 
 def getColourMap(cmapName):
@@ -855,12 +857,12 @@ class LutLabel(object):
                 self.__colour  == other.__colour and
                 self.__enabled == other.__enabled)
 
-    
-    def __cmp__(self, other):
-        """Comparison operator - compares two ``LutLabel`` instances
+
+    def __lt__(self, other):
+        """Less-than operator - compares two ``LutLabel`` instances
         based on their value.
-        """
-        return self.__value.__cmp__(other.__value)
+        """ 
+        return self.__value < other.__value
 
     
     def __hash__(self):
@@ -1045,7 +1047,7 @@ class LookupTable(props.HasProperties):
         # At the moment, we are restricting
         # lookup tables to be unsigned 16 bit.
         # See gl/textures/lookuptabletexture.py
-        if not isinstance(value, (int, long)) or \
+        if not isinstance(value, six.integer_types) or \
            value < 0 or value > 65535:
             raise ValueError('Lookup table values must be '
                              '16 bit unsigned integers.')

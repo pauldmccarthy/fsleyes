@@ -9,7 +9,7 @@ displays an about dialog for *FSLeyes*.
 """
 
 
-import action
+from . import action
 
 
 class AboutAction(action.Action):

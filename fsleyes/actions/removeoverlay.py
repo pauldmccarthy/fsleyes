@@ -9,7 +9,7 @@ to remove the currently selected overlay.
 """
 
 
-import action
+from . import action
 
 
 class RemoveOverlayAction(action.Action):

@@ -12,10 +12,9 @@ which reloads the currently selected overlay from disk.
 import logging
 import os.path as op
 
-import action
-
 import fsl.data.image   as fslimage
 import fsl.utils.status as status
+from . import              action
 
 
 log = logging.getLogger(__name__)
