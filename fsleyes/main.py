@@ -10,10 +10,7 @@
    :scale: 50%
    :align: center
 
-This module provides the front-end to *FSLeyes*, the FSL image viewer.  Nearly
-all of the ``fsleyes`` functionality is located in the :mod:`fsleyes`
-package. This module just parses command line arguments (via the
-:mod:`.parseargs` module) and does some GUI bootstrapping necessities.
+This module provides the entry point to *FSLeyes*, the FSL image viewer.  
 
 
 See the :mod:`fsleyes` package documentation for more details on ``fsleyes``.
@@ -45,7 +42,9 @@ log = None
 
 
 def main(args=None):
-    """*FSLeyes* entry point. """
+    """*FSLeyes* entry point. Shows a :class:`.FSLeyesSplash` screen, parses
+    command line arguments, and shows a :class:`.FSLeyesFrame`.
+    """
     
     if args is None:
         args = sys.argv[1:]
@@ -78,12 +77,12 @@ def main(args=None):
             frame = makeFrame(namespace, displayCtx, overlayList, splash)
             frame.Show()
 
+            if not namespace.skipfslcheck:
+                wx.CallAfter(fslDirWarning, frame)
+
         # Sleep a bit so the main thread (on which
         # wx.MainLoop is running) can start. 
         time.sleep(0.1)
-
-        if not namespace.skipfslcheck:
-            wx.CallAfter(fslDirWarning)
             
         wx.CallAfter(realBuild)
 
@@ -456,15 +455,12 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     return frame
 
 
-def fslDirWarning():
+def fslDirWarning(parent):
     """Checks to see if the ``$FSLDIR`` environment variable is set, or
     if a FSL installation directory has been saved previously. If not,
     displays a warning via a :class:`.FSLDirDialog`.
 
-    :arg parent:       A ``wx`` parent object.
-    
-    :arg fslEnvActive: Set to ``True`` if ``$FSLDIR`` is set, ``False``
-                       otherwise.
+    :arg parent: A ``wx`` parent object.
     """
 
     if fslplatform.fsldir is not None:
@@ -483,7 +479,7 @@ def fslDirWarning():
 
     from fsl.utils.dialog import FSLDirDialog
 
-    dlg = FSLDirDialog(None, 'FSLeyes')
+    dlg = FSLDirDialog(parent, 'FSLeyes')
         
     if dlg.ShowModal() == wx.ID_OK:
             

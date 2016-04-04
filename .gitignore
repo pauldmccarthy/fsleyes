@@ -1,0 +1,3 @@
+*.pyc
+apidoc/html
+fsleyes_doc/html

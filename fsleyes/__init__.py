@@ -169,11 +169,13 @@ Package organisation
 The rest of *FSLeyes* is organised into the following sub-packages:
 
 .. autosummary::
+
    ~fsleyes.views
    ~fsleyes.controls
    ~fsleyes.displaycontext
    ~fsleyes.gl
    ~fsleyes.profiles
+   ~fsleyes.plotting
    ~fsleyes.editor
    ~fsleyes.actions
 
@@ -181,11 +183,17 @@ The rest of *FSLeyes* is organised into the following sub-packages:
 Some other miscellaneous modules are contained in the ``fsleyes`` package:
 
 .. autosummary::
+
+   ~fsleyes.main
+   ~fsleyes.render
+   ~fsleyes.parseargs
+   ~fsleyes.version
    ~fsleyes.frame
    ~fsleyes.panel
    ~fsleyes.toolbar
    ~fsleyes.tooltips
    ~fsleyes.strings
+   ~fsleyes.overlay
    ~fsleyes.perspectives
    ~fsleyes.autodisplay
    ~fsleyes.state
