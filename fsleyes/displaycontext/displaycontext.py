@@ -17,7 +17,6 @@ import numpy as np
 
 import props
 
-import display             as fsldisplay
 import fsl.data.image      as fslimage
 import fsl.utils.transform as transform
 
@@ -325,12 +324,14 @@ class DisplayContext(props.SyncableHasProperties):
                 dParent = self.getParent().getDisplay(overlay, overlayType)
                 if overlayType is None:
                     overlayType = dParent.overlayType
+
+            from .display import Display
                 
-            display = fsldisplay.Display(overlay,
-                                         self.__overlayList,
-                                         self,
-                                         parent=dParent,
-                                         overlayType=overlayType)
+            display = Display(overlay,
+                              self.__overlayList,
+                              self,
+                              parent=dParent,
+                              overlayType=overlayType)
             self.__displays[overlay] = display
         
         return display

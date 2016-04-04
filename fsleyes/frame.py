@@ -8,6 +8,8 @@
 for FSLeyes.
 """
 
+from __future__ import division
+
 
 import logging
 
@@ -375,12 +377,12 @@ class FSLEyesFrame(wx.Frame):
             # initially placed along the
             # bottom
             if isinstance(panel, (views.PlotPanel, views.ShellPanel)):
-                paneInfo.Bottom().BestSize(-1, height / 3)
+                paneInfo.Bottom().BestSize(-1, height // 3)
 
             # Other panels (e.g. CanvasPanels)
             # are placed on the right
             else:
-                paneInfo.Right().BestSize(width / 3, -1)
+                paneInfo.Right().BestSize(width // 3, -1)
 
         self.__viewPanels.append(panel)
         self.__viewPanelDCs[     panel] = childDC

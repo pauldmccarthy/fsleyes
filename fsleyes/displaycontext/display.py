@@ -237,8 +237,9 @@ class Display(props.SyncableHasProperties):
         ``DisplayOpts`` sub-class that is created is dictated by the current
         value of the :attr:`overlayType` property.
 
-        The :data:`DISPLAY_OPTS_MAP` dictionary defines the mapping between
-        :attr:`overlayType` values, and ``DisplayOpts`` sub-class types.
+        The :data:`.displaycontext.DISPLAY_OPTS_MAP` dictionary defines the
+        mapping between :attr:`overlayType` values, and ``DisplayOpts``
+        sub-class types.
         """
 
         if self.getParent() is None:

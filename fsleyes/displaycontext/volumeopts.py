@@ -503,7 +503,7 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
                                        vround=vround)[0]
 
         if vround:
-            vox = map(int, vox)
+            vox = [int(v) for v in vox]
 
         if not clip:
             return vox

@@ -12,8 +12,8 @@ by :class:`.LightBoxPanel` instances for managing their display settings.
 import logging
 import copy
 
-import sceneopts
-import canvasopts
+from . import sceneopts
+from . import canvasopts
 
 
 log = logging.getLogger(__name__)

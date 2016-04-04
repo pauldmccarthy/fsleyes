@@ -14,7 +14,7 @@ import logging
 
 import props
 
-import canvasopts
+from . import canvasopts
 
 
 log = logging.getLogger(__name__)

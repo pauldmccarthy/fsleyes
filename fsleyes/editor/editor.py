@@ -16,9 +16,9 @@ import collections
 import numpy as np
 
 import props
-import selection
 
 import fsl.data.image as fslimage
+from . import            selection
 
 
 log = logging.getLogger(__name__)

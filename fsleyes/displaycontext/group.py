@@ -12,6 +12,8 @@ import sys
 import logging
 import copy
 
+import six
+
 import props
 
 import fsl.utils.typedict as td
@@ -136,7 +138,7 @@ class OverlayGroup(props.HasProperties):
 
         # Special case - make sure that the Nifti1Opts
         # volume property is not constrained
-        self.setConstraint('Nifti1Opts_volume', 'maxval', sys.maxint)
+        self.setConstraint('Nifti1Opts_volume', 'maxval', six.MAXSIZE)
 
 
     def __copy__(self):

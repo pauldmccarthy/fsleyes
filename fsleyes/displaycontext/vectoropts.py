@@ -15,7 +15,7 @@ import copy
 import props
 
 import fsl.data.image as fslimage
-import                   volumeopts
+from . import            volumeopts
 
 
 class VectorOpts(volumeopts.Nifti1Opts):

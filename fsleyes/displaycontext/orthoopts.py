@@ -14,7 +14,7 @@ import copy
 
 import props
 
-import sceneopts
+from . import sceneopts
 
 
 log = logging.getLogger(__name__)
