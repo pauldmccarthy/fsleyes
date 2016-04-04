@@ -41,8 +41,8 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
     .. autosummary::
        :nosignatures:
 
-       ~fsl.fsleyes.controls.plotlistpanel.PlotListPanel
-       ~fsl.fsleyes.controls.powerspectrumcontrolpanel.PowerSpectrumControlPanel
+       ~fsleyes.controls.plotlistpanel.PlotListPanel
+       ~fsleyes.controls.powerspectrumcontrolpanel.PowerSpectrumControlPanel
 
     
     The following actions are provided, in addition to those already provided

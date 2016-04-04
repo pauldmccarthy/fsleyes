@@ -58,9 +58,9 @@ canvases are defined in the ``gl`` package:
 .. autosummary::
    :nosignatures:
 
-   ~fsl.fsleyes.gl.slicecanvas.SliceCanvas
-   ~fsl.fsleyes.gl.lightboxcanvas.LightBoxCanvas
-   ~fsl.fsleyes.gl.colourbarcanvas.ColourBarCanvas
+   ~fsleyes.gl.slicecanvas.SliceCanvas
+   ~fsleyes.gl.lightboxcanvas.LightBoxCanvas
+   ~fsleyes.gl.colourbarcanvas.ColourBarCanvas
 
 
 These classes are not intended to be used directly. This is because the ``gl``
@@ -90,12 +90,12 @@ implementations for each of the available canvases:
 .. autosummary::
    :nosignatures:
 
-   ~fsl.fsleyes.gl.wxglslicecanvas.WXGLSliceCanvas
-   ~fsl.fsleyes.gl.wxgllightboxcanvas.WXGLLightBoxCanvas
-   ~fsl.fsleyes.gl.wxglcolourbarcanvas.WXGLColourBarCanvas
-   ~fsl.fsleyes.gl.osmesaslicecanvas.OSMesaSliceCanvas
-   ~fsl.fsleyes.gl.osmesalightboxcanvas.OSMesaLightBoxCanvas
-   ~fsl.fsleyes.gl.osmesacolourbarcanvas.OSMesaColourBarCanvas
+   ~fsleyes.gl.wxglslicecanvas.WXGLSliceCanvas
+   ~fsleyes.gl.wxgllightboxcanvas.WXGLLightBoxCanvas
+   ~fsleyes.gl.wxglcolourbarcanvas.WXGLColourBarCanvas
+   ~fsleyes.gl.osmesaslicecanvas.OSMesaSliceCanvas
+   ~fsleyes.gl.osmesalightboxcanvas.OSMesaLightBoxCanvas
+   ~fsleyes.gl.osmesacolourbarcanvas.OSMesaColourBarCanvas
 
 
 The classes listed above are the ones which are intended to be instantiated
@@ -117,13 +117,13 @@ as:
 
 .. autosummary::
 
-   ~fsl.fsleyes.gl.glvolume.GLVolume
-   ~fsl.fsleyes.gl.glmask.GLMask
-   ~fsl.fsleyes.gl.gllabel.GLLabel
-   ~fsl.fsleyes.gl.gllinevector.GLLineVector
-   ~fsl.fsleyes.gl.glrgbvector.GLRGBVector
-   ~fsl.fsleyes.gl.glmodel.GLModel
-   ~fsl.fsleyes.gl.gltensor.GLTensor
+   ~fsleyes.gl.glvolume.GLVolume
+   ~fsleyes.gl.glmask.GLMask
+   ~fsleyes.gl.gllabel.GLLabel
+   ~fsleyes.gl.gllinevector.GLLineVector
+   ~fsleyes.gl.glrgbvector.GLRGBVector
+   ~fsleyes.gl.glmodel.GLModel
+   ~fsleyes.gl.gltensor.GLTensor
 
 These objects are created and destroyed automatically by :class:`.SliceCanvas`
 instances, so application code does not need to worry about them too much.
@@ -181,10 +181,10 @@ package also contains the following:
 
 .. autosummary::
 
-   ~fsl.fsleyes.gl.textures
-   ~fsl.fsleyes.gl.routines
-   ~fsl.fsleyes.gl.resources
-   ~fsl.fsleyes.gl.shaders
+   ~fsleyes.gl.textures
+   ~fsleyes.gl.routines
+   ~fsleyes.gl.resources
+   ~fsleyes.gl.shaders
 """
 
 
@@ -245,7 +245,7 @@ def bootstrap(glVersion=None):
     and a canvas is available for drawing, but before any attempt to draw
     anything.  It will figure out which version-dependent package needs to be
     loaded, and will attach all of the modules contained in said package to
-    the :mod:`~fsl.fsleyes.gl` package.  The version-independent modules may
+    the :mod:`~fsleyes.gl` package.  The version-independent modules may
     then simply access these version-dependent modules through this module.
 
 

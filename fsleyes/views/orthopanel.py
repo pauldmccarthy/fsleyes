@@ -94,7 +94,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     
     ``edit`` Simple editing of :class:`.Image` overlays, using the
              :class:`.OrthoEditProfile` (see also the
-             :mod:`~fsl.fsleyes.editor` package).
+             :mod:`~fsleyes.editor` package).
     ======== =========================================================
     
 

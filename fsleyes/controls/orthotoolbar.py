@@ -40,9 +40,9 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
     .. autosummary::
        :nosignatures:
 
-       ~fsl.fsleyes.views.orthopanel.OrthoPanel
-       ~fsl.fsleyes.displaycontext.orthoopts.OrthoOpts
-       ~fsl.fsleyes.profiles.orthoviewprofile.OrthoViewProfile
+       ~fsleyes.views.orthopanel.OrthoPanel
+       ~fsleyes.displaycontext.orthoopts.OrthoOpts
+       ~fsleyes.profiles.orthoviewprofile.OrthoViewProfile
     """
 
     

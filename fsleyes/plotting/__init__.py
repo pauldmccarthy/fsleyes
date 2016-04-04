@@ -10,10 +10,10 @@ for plotting data, and are defined in the following sub-modules:
 
 .. autosummary::
 
-   ~fsl.fsleyes.plotting.dataseries
-   ~fsl.fsleyes.plotting.timeseries
-   ~fsl.fsleyes.plotting.histogramseries
-   ~fsl.fsleyes.plotting.powerspectrumseries
+   ~fsleyes.plotting.dataseries
+   ~fsleyes.plotting.timeseries
+   ~fsleyes.plotting.histogramseries
+   ~fsleyes.plotting.powerspectrumseries
 """
 
 from . import dataseries

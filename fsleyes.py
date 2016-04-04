@@ -11,13 +11,12 @@
    :align: center
 
 This module provides the front-end to *FSLeyes*, the FSL image viewer.  Nearly
-all of the ``fsleyes`` functionality is located in the :mod:`fsl.fsleyes`
+all of the ``fsleyes`` functionality is located in the :mod:`fsleyes`
 package. This module just parses command line arguments (via the
-:mod:`.fsleyes_parseargs` module) and does some GUI bootstrapping necessities.
+:mod:`.parseargs` module) and does some GUI bootstrapping necessities.
 
 
-See the :mod:`~fsl.fsleyes` package documentation for more details on
-``fsleyes``.
+See the :mod:`fsleyes` package documentation for more details on ``fsleyes``.
 """
 
 
@@ -217,10 +216,10 @@ def configLogging(namespace):
         log.setLevel(logging.DEBUG)
 
         # make some noisy things quiet
-        logging.getLogger('fsl.fsleyes.gl')   .setLevel(logging.MEMORY)
-        logging.getLogger('fsl.fsleyes.views').setLevel(logging.MEMORY)
-        logging.getLogger('props')            .setLevel(logging.WARNING)
-        logging.getLogger('pwidgets')         .setLevel(logging.WARNING)
+        logging.getLogger('fsleyes.gl')   .setLevel(logging.MEMORY)
+        logging.getLogger('fsleyes.views').setLevel(logging.MEMORY)
+        logging.getLogger('props')        .setLevel(logging.WARNING)
+        logging.getLogger('pwidgets')     .setLevel(logging.WARNING)
     elif namespace.verbose == 2:
         log.setLevel(logging.DEBUG)
         logging.getLogger('props')   .setLevel(logging.WARNING)
@@ -248,7 +247,7 @@ def makeDisplayContext(namespace, splash):
 
     This function does a few things:
 
-     1. Initialises OpenGL (see the :mod:`fsl.fsleyes.gl` package).
+     1. Initialises OpenGL (see the :mod:`fsleyes.gl` package).
 
      2. Creates the :class:`.OverlayList` and the top level
         :class:`.DisplayContext`.

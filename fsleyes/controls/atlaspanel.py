@@ -6,7 +6,7 @@
 #
 """This module provides the :class:`AtlasPanel`, a *FSLeyes control* panel
 which allows the user to browse the FSL atlas images. See the
-:mod:`~fsl.fsleyes` package documentation for more details on control panels,
+:mod:`~fsleyes` package documentation for more details on control panels,
 and the :mod:`.atlases` module for more details on the atlases available in
 FSL.
 """

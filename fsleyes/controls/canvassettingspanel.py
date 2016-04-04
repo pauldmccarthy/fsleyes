@@ -38,10 +38,10 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
     .. autosummary::
        :nosignatures:
 
-       ~fsl.fsleyes.views.CanvasPanel
-       ~fsl.fsleyes.displaycontext.SceneOpts
-       ~fsl.fsleyes.displaycontext.OrthoOpts
-       ~fsl.fsleyes.displaycontext.LightBoxOpts
+       ~fsleyes.views.CanvasPanel
+       ~fsleyes.displaycontext.SceneOpts
+       ~fsleyes.displaycontext.OrthoOpts
+       ~fsleyes.displaycontext.LightBoxOpts
 
     The ``CanvasSettingsPanel`` divides the displayed settings into those
     which are common to all :class:`.CanvasPanel` instances, and those which

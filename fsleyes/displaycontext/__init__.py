@@ -45,9 +45,9 @@ namespace. For example::
     import fsleyes.displaycontext as fsldc
 
     # The VolumeOpts class is defined in the
-    # fsl.fsleyes.displaycontext.volumeopts
+    # fsleyes.displaycontext.volumeopts
     # module, but is available in the 
-    # fsl.fsleyes.displaycontext namespace.
+    # fsleyes.displaycontext namespace.
     volopts = fsldc.VolumeOpts(overlay, display, overlayList, displayCtx)
 
 
@@ -72,15 +72,15 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
 .. autosummary::
    :nosignatures:
 
-   ~fsl.fsleyes.displaycontext.volumeopts.Nifti1Opts
-   ~fsl.fsleyes.displaycontext.volumeopts.VolumeOpts
-   ~fsl.fsleyes.displaycontext.maskopts.MaskOpts
-   ~fsl.fsleyes.displaycontext.vectoropts.VectorOpts
-   ~fsl.fsleyes.displaycontext.vectoropts.RGBVectorOpts
-   ~fsl.fsleyes.displaycontext.vectoropts.LineVectorOpts
-   ~fsl.fsleyes.displaycontext.modelopts.ModelOpts
-   ~fsl.fsleyes.displaycontext.labelopts.LabelOpts
-   ~fsl.fsleyes.displaycontext.tensoropts.TensorOpts
+   ~fsleyes.displaycontext.volumeopts.Nifti1Opts
+   ~fsleyes.displaycontext.volumeopts.VolumeOpts
+   ~fsleyes.displaycontext.maskopts.MaskOpts
+   ~fsleyes.displaycontext.vectoropts.VectorOpts
+   ~fsleyes.displaycontext.vectoropts.RGBVectorOpts
+   ~fsleyes.displaycontext.vectoropts.LineVectorOpts
+   ~fsleyes.displaycontext.modelopts.ModelOpts
+   ~fsleyes.displaycontext.labelopts.LabelOpts
+   ~fsleyes.displaycontext.tensoropts.TensorOpts
 
 
 --------------
@@ -110,11 +110,11 @@ define *scene* options:
 .. autosummary::
    :nosignatures:
 
-   ~fsl.fsleyes.displaycontext.canvasopts.SliceCanvasOpts
-   ~fsl.fsleyes.displaycontext.canvasopts.LightBoxCanvasOpts
-   ~fsl.fsleyes.displaycontext.sceneopts.SceneOpts
-   ~fsl.fsleyes.displaycontext.orthoopts.OrthoOpts
-   ~fsl.fsleyes.displaycontext.lightboxopts.LightBoxOpts
+   ~fsleyes.displaycontext.canvasopts.SliceCanvasOpts
+   ~fsleyes.displaycontext.canvasopts.LightBoxCanvasOpts
+   ~fsleyes.displaycontext.sceneopts.SceneOpts
+   ~fsleyes.displaycontext.orthoopts.OrthoOpts
+   ~fsleyes.displaycontext.lightboxopts.LightBoxOpts
 
 
 .. note:: Aside from an increase in code modularity and cleanliness, another

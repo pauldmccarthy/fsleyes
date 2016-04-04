@@ -48,8 +48,8 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
     .. autosummary::
        :nosignatures:
 
-       ~fsl.fsleyes.controls.plotlistpanel.PlotListPanel
-       ~fsl.fsleyes.controls.histogramcontrolpanel.HistogramControlPanel
+       ~fsleyes.controls.plotlistpanel.PlotListPanel
+       ~fsleyes.controls.histogramcontrolpanel.HistogramControlPanel
 
     
     The following :mod:`actions` are provided, in addition to those already

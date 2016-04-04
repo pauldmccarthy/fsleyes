@@ -157,7 +157,7 @@ overlay in the ``OverlayList``) are linked to the master ``DisplayContext``
 the ``props`` package.
 
 
-See the :mod:`~fsl.fsleyes.displaycontext` package documentation for more
+See the :mod:`~fsleyes.displaycontext` package documentation for more
 details.
 
 
@@ -169,29 +169,29 @@ Package organisation
 The rest of *FSLeyes* is organised into the following sub-packages:
 
 .. autosummary::
-   ~fsl.fsleyes.views
-   ~fsl.fsleyes.controls
-   ~fsl.fsleyes.displaycontext
-   ~fsl.fsleyes.gl
-   ~fsl.fsleyes.profiles
-   ~fsl.fsleyes.editor
-   ~fsl.fsleyes.actions
+   ~fsleyes.views
+   ~fsleyes.controls
+   ~fsleyes.displaycontext
+   ~fsleyes.gl
+   ~fsleyes.profiles
+   ~fsleyes.editor
+   ~fsleyes.actions
 
 
 Some other miscellaneous modules are contained in the ``fsleyes`` package:
 
 .. autosummary::
-   ~fsl.fsleyes.frame
-   ~fsl.fsleyes.panel
-   ~fsl.fsleyes.toolbar
-   ~fsl.fsleyes.tooltips
-   ~fsl.fsleyes.strings
-   ~fsl.fsleyes.perspectives
-   ~fsl.fsleyes.autodisplay
-   ~fsl.fsleyes.state
-   ~fsl.fsleyes.icons
-   ~fsl.fsleyes.colourmaps
-   ~fsl.fsleyes.plotting
-   ~fsl.fsleyes.splash
-   ~fsl.fsleyes.about
+   ~fsleyes.frame
+   ~fsleyes.panel
+   ~fsleyes.toolbar
+   ~fsleyes.tooltips
+   ~fsleyes.strings
+   ~fsleyes.perspectives
+   ~fsleyes.autodisplay
+   ~fsleyes.state
+   ~fsleyes.icons
+   ~fsleyes.colourmaps
+   ~fsleyes.plotting
+   ~fsleyes.splash
+   ~fsleyes.about
 """

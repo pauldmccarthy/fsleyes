@@ -5,9 +5,8 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This package provides a collection of actions, classes - the
-:class:`~fsl.fsleyes.actions.action.Action` class and the
-:class:`.ActionProvider` class, and the :func:`action` and
-:func:`toggleAction` decorators.
+:class:`~fsleyes.actions.action.Action` class and the :class:`.ActionProvider`
+class, and the :func:`action` and :func:`toggleAction` decorators.
 
 
 The :class:`.Action` class represents some sort of action which may be
@@ -53,9 +52,9 @@ and :meth:`ActionProvider.disableAction` methods::
     >>> t.doFirstThing()
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
-      File "/.../fsl/fsleyes/actions/__init__.py", line 139, in __call__
+      File "/.../fsleyes/actions/__init__.py", line 139, in __call__
         self.__name))
-    fsl.fsleyes.actions.ActionDisabledError: Action doFirstThing is disabled
+    fsleyes.actions.ActionDisabledError: Action doFirstThing is disabled
 
 
 It is useful to know that each method on the ``t`` instance has actually been
@@ -96,19 +95,19 @@ Finally, some 'global' actions are also provided in this package:
 
  .. autosummary::
 
-    ~fsl.fsleyes.actions.copyoverlay
-    ~fsl.fsleyes.actions.openfile
-    ~fsl.fsleyes.actions.openstandard
-    ~fsl.fsleyes.actions.saveoverlay
-    ~fsl.fsleyes.actions.removeoverlay
-    ~fsl.fsleyes.actions.removealloverlays
-    ~fsl.fsleyes.actions.loadcolourmap
-    ~fsl.fsleyes.actions.saveperspective
-    ~fsl.fsleyes.actions.loadperspective
-    ~fsl.fsleyes.actions.clearperspective
-    ~fsl.fsleyes.actions.togglecontrolpanel
-    ~fsl.fsleyes.actions.diagnosticreport
-    ~fsl.fsleyes.actions.about
+    ~fsleyes.actions.copyoverlay
+    ~fsleyes.actions.openfile
+    ~fsleyes.actions.openstandard
+    ~fsleyes.actions.saveoverlay
+    ~fsleyes.actions.removeoverlay
+    ~fsleyes.actions.removealloverlays
+    ~fsleyes.actions.loadcolourmap
+    ~fsleyes.actions.saveperspective
+    ~fsleyes.actions.loadperspective
+    ~fsleyes.actions.clearperspective
+    ~fsleyes.actions.togglecontrolpanel
+    ~fsleyes.actions.diagnosticreport
+    ~fsleyes.actions.about
 """
 
 

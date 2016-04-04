@@ -10,8 +10,8 @@ rendering in *FSLeyes*.
 
 The :func:`init` function must be called before any colour maps or lookup
 tables can be accessed. When :func:`init` is called, it searches in the
-``fsl/fsleyes/colourmaps/`` and ``fsl/fsleyes/luts/`` directories, and
-attempts to load all files within which have the suffix ``.cmap`` or ``.lut``
+``fsleyes/colourmaps/`` and ``fsleyes/luts/`` directories, and attempts to
+load all files within which have the suffix ``.cmap`` or ``.lut``
 respectively.
 
 
@@ -38,8 +38,8 @@ name prefix as the colour map name), and thus made available for rendering
 purposes.
 
 
-If a file named ``order.txt`` exists in the ``fsl/fsleyes/colourmaps/``
-directory, it is assumed to contain a list of colour map names, and colour map
+If a file named ``order.txt`` exists in the ``fsleyes/colourmaps/`` directory,
+it is assumed to contain a list of colour map names, and colour map
 identifiers, defining the order in which the colour maps should be displayed
 to the user. Any colour maps which are not listed in the ``order.txt`` file
 will be appended to the end of the list, and their name will be derived from
@@ -441,7 +441,7 @@ def isLookupTableInstalled(lutName):
 
 def installColourMap(cmapName):
     """Attempts to install a previously registered colourmap into the
-    ``fsl/fsleyes/colourmaps`` directory.
+    ``fsleyes/colourmaps`` directory.
     """
 
     # keyerror if not registered
@@ -466,7 +466,7 @@ def installColourMap(cmapName):
 
 def installLookupTable(lutName):
     """Attempts to install/save a previously registered lookup table into
-    the ``fsl/fsleyes/luts`` directory.
+    the ``fsleyes/luts`` directory.
     """
     
     # keyerror if not registered
@@ -753,9 +753,9 @@ class _Map(object):
                           exists in memory, or is a built in :mod:`matplotlib`
                           colourmap.
 
-        :arg installed:   ``True`` if this is a built in :mod:`matplotlib`
+        :arg installed: ``True`` if this is a built in :mod:`matplotlib`
                           colourmap or is installed in the
-                          ``fsl/fsleyes/colourmaps/`` or ``fsl/fsleyes/luts/``
+                          ``fsleyes/colourmaps/`` or ``fsleyes/luts/``
                           directory, ``False`` otherwise.
         """
         self.key       = key

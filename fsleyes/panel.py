@@ -185,7 +185,7 @@ class FSLEyesPanel(six.with_metaclass(FSLEyesPanelMeta,
                                       _FSLEyesPanel,
                                       FSLEyesPanelBase)):
     """The ``FSLEyesPanel`` is the base class for all view and control panels in
-    *FSLeyes*. See the :mod:`~fsl.fsleyes` documentation for more details.
+    *FSLeyes*. See the :mod:`fsleyes` documentation for more details.
     """
     
     def __init__(self, parent, overlayList, displayCtx):

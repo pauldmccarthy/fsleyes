@@ -10,11 +10,11 @@ exist:
 
 .. autosummary::
 
-   ~fsl.fsleyes.gl.gl14.glvolume_funcs
-   ~fsl.fsleyes.gl.gl14.glrgbvector_funcs
-   ~fsl.fsleyes.gl.gl14.gllinevector_funcs
-   ~fsl.fsleyes.gl.gl14.glmodel_funcs
-   ~fsl.fsleyes.gl.gl14.gllabel_funcs
+   ~fsleyes.gl.gl14.glvolume_funcs
+   ~fsleyes.gl.gl14.glrgbvector_funcs
+   ~fsleyes.gl.gl14.gllinevector_funcs
+   ~fsleyes.gl.gl14.glmodel_funcs
+   ~fsleyes.gl.gl14.gllabel_funcs
 """
 
 from . import glvolume_funcs

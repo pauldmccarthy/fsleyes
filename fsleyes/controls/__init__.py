@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """The ``controls`` package is the home of all *FSLeyes controls*, as
-described in the :mod:`~fsl.fsleyes` package documentation.
+described in the :mod:`~fsleyes` package documentation.
 
 
 Every control panel is a sub-class of either the :class:`.FSLEyesPanel` or

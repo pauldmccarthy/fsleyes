@@ -44,7 +44,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     """The ``OrthoEditProfile`` class is an interaction profile for use with
     the :class:`.OrthoPanel` class. It gives the user the ability to make
     changes to :class:`.Image` overlays, by using the functionality of the
-    :mod:`~fsl.fsleyes.editor` package.
+    :mod:`~fsleyes.editor` package.
 
 
     **Modes**
@@ -716,7 +716,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
     def __drawCursorAnnotation(self, canvas, voxel, blockSize=None):
         """Draws the cursor annotation. Highlights the specified voxel with a
-        :class:`~fsl.fsleyes.gl.annotations.Rect` annotation.
+        :class:`~fsleyes.gl.annotations.Rect` annotation.
         
         This is used by mouse motion event handlers, so the user can
         see the possible selection, and thus what would happen if they

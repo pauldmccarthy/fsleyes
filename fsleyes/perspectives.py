@@ -30,7 +30,7 @@ too:
 A perspective defines a layout for a :class:`.FSLEyesFrame`. It specifies the
 type and layout of one or more *views* (defined in the :mod:`.views` module)
 and, within each view, the type and layout of one or more *controls* (defined
-in the :mod:`.controls` module). See the :mod:`~fsl.fsleyes` documentation for
+in the :mod:`.controls` module). See the :mod:`fsleyes` documentation for
 an overview of views and controls.
 
 
@@ -449,7 +449,7 @@ def deserialisePerspective(persp):
 
     # The children strings are comma-separated
     # class names. The frame children are ViewPanels,
-    # which are all defined in the fsl.fsleyes.views
+    # which are all defined in the fsleyes.views
     # package.
     frameChildren = frameChildren.split(',')
     frameChildren = [fc.strip() for fc in frameChildren]
@@ -478,7 +478,7 @@ def deserialisePerspective(persp):
 
     # The ViewPanel children string is a comma-separated
     # list of control panel class names. All control panels
-    # should be defined in the fsl.fsleyes.controls package.
+    # should be defined in the fsleyes.controls package.
     for i in range(len(vpChildren)):
 
         children      = vpChildren[i].split(',')

@@ -759,9 +759,9 @@ class OverlayPlotPanel(PlotPanel):
     .. autosummary::
        :nosignatures:
 
-       ~fsl.fsleyes.views.timeseriespanel.TimeSeriesPanel
-       ~fsl.fsleyes.views.histogrampanel.HistogramPanel
-       ~fsl.fsleyes.views.powerspectrumpanel.PowerSpectrumPanel
+       ~fsleyes.views.timeseriespanel.TimeSeriesPanel
+       ~fsleyes.views.histogrampanel.HistogramPanel
+       ~fsleyes.views.powerspectrumpanel.PowerSpectrumPanel
     """
 
     

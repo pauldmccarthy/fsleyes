@@ -51,9 +51,9 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     .. autosummary::
        :nosignatures:
 
-       ~fsl.fsleyes.plotting.timeseries.TimeSeries
-       ~fsl.fsleyes.plotting.timeseries.FEATTimeSeries
-       ~fsl.fsleyes.plotting.timeseries.MelodicTimeSeries
+       ~fsleyes.plotting.timeseries.TimeSeries
+       ~fsleyes.plotting.timeseries.FEATTimeSeries
+       ~fsleyes.plotting.timeseries.MelodicTimeSeries
 
 
     **Control panels**
@@ -65,8 +65,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     .. autosummary::
        :nosignatures:
 
-       ~fsl.fsleyes.controls.plotlistpanel.PlotListPanel
-       ~fsl.fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
+       ~fsleyes.controls.plotlistpanel.PlotListPanel
+       ~fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
 
     
     The ``TimeSeriesPanel`` defines some :mod:`.actions`, allowing the user

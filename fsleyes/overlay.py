@@ -27,7 +27,7 @@ an overlay type are:
   - Must have an attribute called ``dataSource``, which is used to identify
     the source of the overlay data.
 
-  - Must be supported by the :mod:`~fsl.fsleyes.gl` package .. ok, this is a
+  - Must be supported by the :mod:`~fsleyes.gl` package .. ok, this is a
     pretty big requirement .. See the :mod:`.globject` and the
     :data:`.displaycontext.OVERLAY_TYPES` documentation for details on how to
     get started with this one.
