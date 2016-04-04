@@ -51,7 +51,7 @@ class AboutDialog(wx.Dialog):
         # Set foreground/background colours
         textPanel.SetBackgroundColour('#000000')
         textPanel.SetForegroundColour('#ffffff')
-        textPanel.SetDefaultStyle(wx.TextAttr('#ffffff', wx.NullColour))
+        textPanel.SetDefaultStyle(wx.TextAttr('#ffffff', '#000000'))
 
         # Create / retrieve all the content
         verStr    = version.__version__

@@ -424,9 +424,16 @@ class FSLEyesToolBar(fslpanel.FSLEyesPanel):
                 else:
                     tools[i].Show(False)
 
-        sizer.Insert(self.__numVisible, (0, 0), flag=wx.EXPAND, proportion=1)
-        sizer.Insert(self.__numVisible + 1, self.__rightButton, flag=wx.EXPAND)
-        sizer.Insert(0,                     self.__leftButton,  flag=wx.EXPAND)
+        if self.__numVisible > 0:
+            sizer.Insert(self.__numVisible, (0, 0),
+                         flag=wx.EXPAND,
+                         proportion=1)
+            sizer.Insert(self.__numVisible + 1,
+                         self.__rightButton,
+                         flag=wx.EXPAND)
+            sizer.Insert(0,
+                         self.__leftButton,
+                         flag=wx.EXPAND)
 
         self.Layout()
 
