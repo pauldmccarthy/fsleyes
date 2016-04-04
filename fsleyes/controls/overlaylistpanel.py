@@ -15,15 +15,16 @@ import wx
 
 import props
 
-import pwidgets.bitmaptoggle as bmptoggle
+import pwidgets.bitmaptoggle            as bmptoggle
 
-import pwidgets.elistbox     as elistbox
+import pwidgets.elistbox                as elistbox
 
-import fsleyes.panel         as fslpanel
-import fsleyes.icons         as icons
-import fsleyes.autodisplay   as autodisplay
-import fsleyes.strings       as strings
-import fsl.data.image        as fslimage
+import fsleyes.panel                    as fslpanel
+import fsleyes.icons                    as icons
+import fsleyes.autodisplay              as autodisplay
+import fsleyes.strings                  as strings
+import fsl.data.image                   as fslimage
+from fsl.utils.platform import platform as fslplatform
 
 
 log = logging.getLogger(__name__)
@@ -326,6 +327,12 @@ class ListItemWidget(wx.Panel):
         self.__saveButton.SetBitmap(icons.loadBitmap('floppydisk16'))
         self.__lockButton.SetBitmap(icons.loadBitmap('chainlinkHighlight16'),
                                     icons.loadBitmap('chainlink16'))
+
+        # Under wxPython/Phoenix, button
+        # labels default to "Button", and
+        # BU_NOTEXT has no effect.
+        if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
+            self.__saveButton.SetLabel(" ")
         
         self.__visibility = props.makeWidget(
             self,

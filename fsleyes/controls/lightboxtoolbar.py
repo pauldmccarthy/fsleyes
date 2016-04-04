@@ -146,7 +146,7 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
 
         # Slice spacing and zoom go on a single panel
         panel = wx.Panel(self)
-        sizer = wx.FlexGridSizer(2, 2)
+        sizer = wx.FlexGridSizer(2, 2, 0, 0)
         panel.SetSizer(sizer)
 
         more         = props.buildGUI(self,

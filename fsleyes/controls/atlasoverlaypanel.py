@@ -191,9 +191,8 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
         if filterStr == '':
             nhits = 0
         else:
-            nhits = len(filter(
-                lambda l: filterStr in l.name.lower(),
-                atlasDesc.labels))
+            nhits = len([l for l in atlasDesc.labels
+                         if filterStr in l.name.lower()])
 
         if nhits == 0:
             weight = wx.FONTWEIGHT_LIGHT

@@ -11,6 +11,8 @@ panel for viewing cluster results from a FEAT analysis.
 import                         logging
 import                         wx
 
+import                         six
+
 import pwidgets.widgetgrid  as widgetgrid
 
 import fsleyes.panel        as fslpanel
@@ -367,7 +369,9 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         def makeCoordButton(coords):
 
             label = wx.StaticText(grid, label='[{} {} {}]'.format(*coords))
-            btn   = wx.Button(grid, label=u'\u2192', style=wx.BU_EXACTFIT)
+            btn   = wx.Button(grid,
+                              label=six.u('\u2192'),
+                              style=wx.BU_EXACTFIT)
             
             sizer = wx.BoxSizer(wx.HORIZONTAL)
             sizer.Add(label, flag=wx.EXPAND, proportion=1)
@@ -596,7 +600,7 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         try:
             # clusts is a list of (contrast, clusterList) tuples 
             clusts = [(c, featImage.clusterResults(c)) for c in range(numCons)]
-            clusts = filter(lambda (con, clust): clust is not None, clusts)
+            clusts = [c for c in clusts if c[1] is not None]
 
         # Error parsing the cluster data
         except Exception as e:

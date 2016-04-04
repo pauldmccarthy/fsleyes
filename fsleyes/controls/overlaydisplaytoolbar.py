@@ -239,7 +239,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         nameTypePanel = wx.Panel(self)
         briconPanel   = wx.Panel(self)
         nameTypeSizer = wx.BoxSizer(wx.VERTICAL)
-        briconSizer   = wx.FlexGridSizer(2, 2)
+        briconSizer   = wx.FlexGridSizer(2, 2, 0, 0)
         
         briconSizer.AddGrowableCol(1)
 

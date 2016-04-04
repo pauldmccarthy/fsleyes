@@ -270,7 +270,7 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
 
         useNegCmap.SetLabel(strings.properties[target, 'useNegativeCmap'])
 
-        sizer = wx.FlexGridSizer(2, 2)
+        sizer = wx.FlexGridSizer(2, 2, 0, 0)
         sizer.AddGrowableCol(0)
 
         sizer.Add(cmapWidget, flag=wx.EXPAND)

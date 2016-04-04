@@ -524,7 +524,7 @@ class LabelGrid(fslpanel.FSLEyesPanel):
             
             tags.ClearTags()
 
-            tags.SetOptions(map(str, range(1, numComps + 1)))
+            tags.SetOptions([str(i) for i in range(1, numComps + 1)])
 
             for comp in comps:
 

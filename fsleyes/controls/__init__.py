@@ -19,42 +19,42 @@ The following control panels currently exist:
 .. autosummary::
    :nosignatures:
 
-   ~fsl.fsleyes.controls.atlaspanel.AtlasPanel
-   ~fsl.fsleyes.controls.canvassettingspanel.CanvasSettingsPanel
-   ~fsl.fsleyes.controls.clusterpanel.ClusterPanel
-   ~fsl.fsleyes.controls.histogramcontrolpanel.HistogramControlPanel
-   ~fsl.fsleyes.controls.lightboxtoolbar.LightBoxToolBar
-   ~fsl.fsleyes.controls.locationpanel.LocationPanel
-   ~fsl.fsleyes.controls.lookuptablepanel.LookupTablePanel
-   ~fsl.fsleyes.controls.orthoedittoolbar.OrthoEditToolBar
-   ~fsl.fsleyes.controls.orthotoolbar.OrthoToolBar
-   ~fsl.fsleyes.controls.overlaydisplaypanel.OverlayDisplayPanel
-   ~fsl.fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar
-   ~fsl.fsleyes.controls.overlayinfopanel.OverlayInfoPanel
-   ~fsl.fsleyes.controls.overlaylistpanel.OverlayListPanel
-   ~fsl.fsleyes.controls.plotcontrolpanel.PlotControlPanel
-   ~fsl.fsleyes.controls.plotlistpanel.PlotListPanel
-   ~fsl.fsleyes.controls.powerspectrumcontrolpanel.PowerSpectrumControlPanel
-   ~fsl.fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
+   ~fsleyes.controls.atlaspanel.AtlasPanel
+   ~fsleyes.controls.canvassettingspanel.CanvasSettingsPanel
+   ~fsleyes.controls.clusterpanel.ClusterPanel
+   ~fsleyes.controls.histogramcontrolpanel.HistogramControlPanel
+   ~fsleyes.controls.lightboxtoolbar.LightBoxToolBar
+   ~fsleyes.controls.locationpanel.LocationPanel
+   ~fsleyes.controls.lookuptablepanel.LookupTablePanel
+   ~fsleyes.controls.orthoedittoolbar.OrthoEditToolBar
+   ~fsleyes.controls.orthotoolbar.OrthoToolBar
+   ~fsleyes.controls.overlaydisplaypanel.OverlayDisplayPanel
+   ~fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar
+   ~fsleyes.controls.overlayinfopanel.OverlayInfoPanel
+   ~fsleyes.controls.overlaylistpanel.OverlayListPanel
+   ~fsleyes.controls.plotcontrolpanel.PlotControlPanel
+   ~fsleyes.controls.plotlistpanel.PlotListPanel
+   ~fsleyes.controls.powerspectrumcontrolpanel.PowerSpectrumControlPanel
+   ~fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
 """
 
-import atlaspanel
-import canvassettingspanel
-import clusterpanel
-import histogramcontrolpanel
-import lightboxtoolbar
-import locationpanel
-import lookuptablepanel
-import melodicclassificationpanel
-import orthoedittoolbar
-import orthotoolbar
-import overlaydisplaypanel
-import overlaydisplaytoolbar
-import overlayinfopanel
-import overlaylistpanel
-import plotlistpanel
-import powerspectrumcontrolpanel
-import timeseriescontrolpanel
+from . import atlaspanel
+from . import canvassettingspanel
+from . import clusterpanel
+from . import histogramcontrolpanel
+from . import lightboxtoolbar
+from . import locationpanel
+from . import lookuptablepanel
+from . import melodicclassificationpanel
+from . import orthoedittoolbar
+from . import orthotoolbar
+from . import overlaydisplaypanel
+from . import overlaydisplaytoolbar
+from . import overlayinfopanel
+from . import overlaylistpanel
+from . import plotlistpanel
+from . import powerspectrumcontrolpanel
+from . import timeseriescontrolpanel
 
 
 AtlasPanel                 = atlaspanel.AtlasPanel
