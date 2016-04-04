@@ -86,7 +86,6 @@ def _displayContextState(overlayList, displayCtx):
 
     for propName in propNames:
         state[propName] = props.serialise(displayCtx, propName)
-        print 'displayCtx.{} = {}'.format(propName, state[propName])
 
     state['Overlays'] = overlays
 

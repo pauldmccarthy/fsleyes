@@ -303,7 +303,7 @@ def bootstrap(glVersion=None):
 
     if glVersion is None:
         glVer        = gl.glGetString(gl.GL_VERSION).split()[0].decode('ascii')
-        major, minor = map(int, glVer.split('.'))[:2]
+        major, minor = [int(v) for v in glVer.split('.')][:2]
     else:
         major, minor = glVersion
 

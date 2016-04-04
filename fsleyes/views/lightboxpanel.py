@@ -195,7 +195,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         names = [a.__name__ for a in actions]
 
-        return zip(names, actions)
+        return list(zip(names, actions))
 
 
     def getGLCanvases(self):

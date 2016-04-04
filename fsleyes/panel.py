@@ -167,7 +167,7 @@ which derives from ``wx.siplib.wrappertype``, and the
 # wxPython/Phoenix
 if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
 
-    import wx.sipilib as sip
+    import wx.siplib as sip
 
     class PhoenixMeta(props.SyncablePropertyOwner, sip.wrappertype):
         pass

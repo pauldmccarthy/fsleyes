@@ -18,6 +18,7 @@ A couple of other classes are provided for convenience:
 
 
 import logging
+import itertools as it
 
 import wx
 
@@ -286,7 +287,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         names = [a.__name__ for a in actions]
 
-        return zip(names, actions)
+        return list(zip(names, actions))
 
             
     def getGLCanvases(self):
@@ -364,9 +365,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         overlay = self._displayCtx.getReferenceImage(
             self._displayCtx.getSelectedOverlay())
 
-        allLabels = self.__xLabels.values() + \
-                    self.__yLabels.values() + \
-                    self.__zLabels.values() 
+        allLabels = it.chain(self.__xLabels.values(),
+                             self.__yLabels.values(),
+                             self.__zLabels.values())
 
         if overlay is not None:
             opts  = self._displayCtx.getOpts(overlay)
@@ -554,8 +555,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         if len(self._overlayList) == 0: return
         if not any(show):               return
 
-        canvases, labels, _ = zip(*filter(lambda (c, l, s): s,
-                                          zip(canvases, labels, show)))
+        canvases, labels = zip(*[(c, l)
+                                 for (c, l, s)
+                                 in zip(canvases, labels, show)
+                                 if s])
 
         canvases = list(canvases)
         labels   = list(labels)
@@ -686,7 +689,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # if layout is something other than the above three,
         # then something's gone wrong and I'm going to crash
 
-        self.__canvasSizer = wx.FlexGridSizer(nrows, ncols)
+        self.__canvasSizer = wx.FlexGridSizer(nrows, ncols, 0, 0)
 
         # The rows/columns that contain
         # canvases must also be growable

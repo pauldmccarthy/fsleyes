@@ -127,7 +127,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
         names = [a.__name__ for a in actions]
 
-        return zip(names, actions)
+        return list(zip(names, actions))
 
         
     def draw(self, *a):

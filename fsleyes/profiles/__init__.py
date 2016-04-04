@@ -464,7 +464,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         corresponding x/y/z display space coordinates.
         """
 
-        mx, my    = ev.GetPositionTuple()
+        mx, my    = ev.GetPosition()
         canvas    = ev.GetEventObject()
         w, h      = canvas.GetClientSize()
         my        = h - my
