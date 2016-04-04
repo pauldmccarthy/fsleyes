@@ -41,9 +41,10 @@ class FSLEyesFrame(wx.Frame):
     **Menus**
 
     
-    The ``FSLEyesFrame`` has three menus:
+    The ``FSLEyesFrame`` has the following menus:
 
     ========== ==============================================================
+    *FSLeyes*  General actions, such as help, quit, about.
     *File*     Global actions, such as adding a new overlay
     *View*     Options to open a new :class:`.ViewPanel`.
     *Settings* Options which are specific to the currently visible
@@ -753,7 +754,6 @@ class FSLEyesFrame(wx.Frame):
 
             if layout is None:
                 perspectives.loadPerspective(self, 'default')
-                
 
             
     def __makeMenuBar(self):
@@ -762,6 +762,12 @@ class FSLEyesFrame(wx.Frame):
         menuBar = wx.MenuBar()
         self.SetMenuBar(menuBar)
 
+        # We use the application menu under OSX
+        # if fslplatform.wxPlatform == fslplatform.WX_MAC_COCOA:
+        #     fsleyesMenu = menuBar.OSXGetAppleMenu()
+        # else:
+        fsleyesMenu     = wx.Menu()
+
         fileMenu        = wx.Menu()
         viewMenu        = wx.Menu()
         perspectiveMenu = wx.Menu() 
@@ -769,38 +775,84 @@ class FSLEyesFrame(wx.Frame):
 
         self.__menuBar   = menuBar
         self.__perspMenu = perspectiveMenu
-        
+
+        menuBar.Append(fsleyesMenu,  'FSLeyes')
         menuBar.Append(fileMenu,     'File')
         menuBar.Append(viewMenu,     'View')
         menuBar.Append(settingsMenu, 'Settings') 
 
+        self.__fsleyesMenu  = fsleyesMenu
         self.__fileMenu     = fileMenu
         self.__viewMenu     = viewMenu
         self.__settingsMenu = settingsMenu
 
-        # Global actions
-        actionz = [actions.OpenFileAction,
-                   actions.OpenDirAction,
-                   actions.OpenStandardAction,
-                   actions.RunScriptAction,
-                   'sep',
-                   actions.CopyOverlayAction,
-                   actions.SaveOverlayAction,
-                   actions.ReloadOverlayAction,
-                   'sep',
-                   actions.RemoveOverlayAction,
-                   actions.RemoveAllOverlaysAction]
- 
-        for action in actionz:
+        self.__makeFSLeyesMenu(  fsleyesMenu)
+        self.__makeFileMenu(     fileMenu)
+        self.__makeViewPanelMenu(viewMenu)
 
-            if action == 'sep':
-                fileMenu.AppendSeparator()
-                continue
-            menuItem  = fileMenu.Append(wx.ID_ANY, strings.actions[action])
-            actionObj = action(self.__overlayList, self.__displayCtx, self)
+        # Perspectives
+        viewMenu.AppendSeparator()
+        viewMenu.AppendSubMenu(perspectiveMenu, 'Perspectives')
+        self.__makePerspectiveMenu()
 
+
+    def __makeFSLeyesMenu(self, menu):
+        """Called by :meth:`__makeMenuBar`. Creates the *FSLeyes* menu. """
+
+        def help():
+            import fsl.utils.webpage as webpage
+            webpage.openPage('http://users.fmrib.ox.ac.uk/~paulmc/fsleyes/')
+
+        def quit():
+            self.Close()
+
+        fsleyesActions = [
+            (actions.AboutAction(
+                self.__overlayList, self.__displayCtx, self),
+             strings.actions['AboutAction'],
+             wx.ID_ABOUT),
+            (actions.DiagnosticReportAction(
+                self.__overlayList, self.__displayCtx, self),
+             strings.actions['DiagnosticReportAction'],
+             wx.ID_ANY),
+            (actions.Action(help), 'Help', wx.ID_HELP),
+            (actions.Action(quit), 'Quit', wx.ID_EXIT)]
+
+        for actionObj, title, id in fsleyesActions:
+            menuItem = menu.Append(id, title)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
+        
+    def __makeFileMenu(self, menu):
+        """Called by :meth:`__makeMenuBar`. Creates the *File* menu. """
+
+        fileActions = [actions.OpenFileAction,
+                       actions.OpenDirAction,
+                       actions.OpenStandardAction,
+                       actions.RunScriptAction,
+                       'sep',
+                       actions.CopyOverlayAction,
+                       actions.SaveOverlayAction,
+                       actions.ReloadOverlayAction,
+                       'sep',
+                       actions.RemoveOverlayAction,
+                       actions.RemoveAllOverlaysAction]
+ 
+        for action in fileActions:
+
+            if action == 'sep':
+                menu.AppendSeparator()
+                continue
+            
+            menuItem  = menu.Append(wx.ID_ANY, strings.actions[action])
+            actionObj = action(self.__overlayList, self.__displayCtx, self)
+
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem) 
+
+
+    def __makeViewPanelMenu(self, menu):
+        """Called by :meth:`__makeMenuBar`. Creates the view panel menu. """
+        
         # Shortcuts to open a new view panel
         viewPanels = [views.OrthoPanel,
                       views.LightBoxPanel,
@@ -810,19 +862,16 @@ class FSLEyesFrame(wx.Frame):
                       views.ShellPanel]
         
         for viewPanel in viewPanels:
-            viewAction = viewMenu.Append(wx.ID_ANY, strings.titles[viewPanel]) 
+            viewAction = menu.Append(wx.ID_ANY, strings.titles[viewPanel]) 
             self.Bind(wx.EVT_MENU,
                       lambda ev, vp=viewPanel: self.addViewPanel(vp),
                       viewAction)
-
-        # Perspectives
-        viewMenu.AppendSeparator()
-        viewMenu.AppendSubMenu(perspectiveMenu, 'Perspectives')
-        self.__makePerspectiveMenu()
-
+            
         
     def __makePerspectiveMenu(self):
-        """Re-creates the *View->Perspectives* menu. """
+        """Called by :meth:`__makeMenuBar` and :meth:`refreshPerspectiveMenu`.
+        Re-creates the *View->Perspectives* menu.
+        """
 
         perspMenu = self.__perspMenu
 

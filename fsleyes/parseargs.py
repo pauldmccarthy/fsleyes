@@ -6,7 +6,7 @@
 #
 """This module encapsulates the logic for parsing command line arguments which
 specify a scene to be displayed in *FSLeyes*.  This logic is shared between
-the :mod:`~fsl.tools.fsleyes` and :mod:`~fsl.tools.render` tools.  This module
+the :mod:`fsleyes` and :mod:`render` tools.  This module
 make use of the command line generation features of the :mod:`props` package.
 
 
@@ -172,17 +172,18 @@ import            collections
 
 import props
 
-import fsl.utils.typedict as td
-import fsl.utils.async    as async
-import fsl.utils.status   as status
-import overlay            as fsloverlay
+import fsl.utils.typedict                 as td
+import fsl.utils.async                    as async
+import fsl.utils.status                   as status
+from   fsl.utils.platform import platform as fslplatform
+from   .                  import overlay  as fsloverlay
 
 
 # The colour maps module needs to be imported
 # before the displaycontext.opts modules are
 # imported, as some of their class definitions
 # rely on the colourmaps being initialised
-import colourmaps as colourmaps
+from . import colourmaps 
 colourmaps.init()
 
 
@@ -299,6 +300,11 @@ OPTIONS = td.TypeDict({
 
     'Main'          : ['help',
                        'fullhelp',
+                       'verbose',
+                       'version',
+                       'skipfslcheck',
+                       'noisy',
+                       'memory',
                        'glversion',
                        'scene',
                        'voxelLoc',
@@ -448,10 +454,15 @@ ARGUMENTS = td.TypeDict({
 
     'Main.help'            : ('h',  'help'),
     'Main.fullhelp'        : ('fh', 'fullhelp'),
+    'Main.verbose'         : ('v',  'verbose'),
+    'Main.version'         : ('V',  'version'),
+    'Main.skipfslcheck'    : ('S',  'skipfslcheck'),
+    'Main.noisy'           : ('n',  'noisy'),
+    'Main.memory'          : ('m',  'memory'),
     'Main.glversion'       : ('gl', 'glversion'),
     'Main.scene'           : ('s',  'scene'),
-    'Main.voxelLoc'        : ('v',  'voxelLoc'),
-    'Main.worldLoc'        : ('w',  'worldLoc'),
+    'Main.voxelLoc'        : ('vl', 'voxelLoc'),
+    'Main.worldLoc'        : ('wl', 'worldLoc'),
     'Main.autoDisplay'     : ('ad', 'autoDisplay'),
     'Main.displaySpace'    : ('ds', 'displaySpace'),
     
@@ -561,6 +572,11 @@ HELP = td.TypeDict({
 
     'Main.help'          : 'Display basic FSLeyes options and exit',
     'Main.fullhelp'      : 'Display all FSLeyes options and exit',
+    'Main.verbose'       : 'Verbose output (can be used up to 3 times)',
+    'Main.version'       : 'Print the current fslpy version and exit',
+    'Main.skipfslcheck'  : 'Skip $FSLDIR check/warning',
+    'Main.noisy'         : 'Make the specified module noisy',
+    'Main.memory'        : 'Output memory events (implied if -v is set)',
     'Main.glversion'     : 'Desired (major, minor) OpenGL version',
     'Main.scene'         : 'Scene to show',
 
@@ -849,7 +865,29 @@ def _configMainParser(mainParser):
                             help=mainHelp['help'])
     mainParser.add_argument(*mainArgs['fullhelp'],
                             action='store_true',
-                            help=mainHelp['fullhelp']) 
+                            help=mainHelp['fullhelp'])
+    mainParser.add_argument(*mainArgs['version'],
+                            action='store_true',
+                            help=mainHelp['version'])
+    mainParser.add_argument(*mainArgs['skipfslcheck'],
+                            action='store_true',
+                            help=mainHelp['skipfslcheck'])
+
+    # Debug messages are stripped from frozen
+    # versions of FSLeyes, so there's no point
+    # in keeping these arguments.
+    if not fslplatform.frozen:
+        mainParser.add_argument(*mainArgs['verbose'],
+                                action='count',
+                                help=mainHelp['verbose'])
+        mainParser.add_argument(*mainArgs['noisy'],
+                                metavar='MODULE',
+                                action='append',
+                                help=mainHelp['noisy'])
+        mainParser.add_argument(*mainArgs['memory'],
+                                action='store_true',
+                                help=mainHelp['memory'])
+        
     mainParser.add_argument(*mainArgs['glversion'],
                             metavar=('MAJOR', 'MINOR'),
                             type=int,

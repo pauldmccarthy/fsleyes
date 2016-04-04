@@ -134,36 +134,61 @@ define *scene* options:
 """
 
 
-import display
+import itertools          as it
+import fsl.utils.typedict as td
+
+from .               import display
+from .displaycontext import DisplayContext
+from .display        import Display
+from .group          import OverlayGroup
+from .sceneopts      import SceneOpts
+from .orthoopts      import OrthoOpts
+from .lightboxopts   import LightBoxOpts
+from .volumeopts     import Nifti1Opts
+from .volumeopts     import VolumeOpts
+from .maskopts       import MaskOpts
+from .vectoropts     import VectorOpts
+from .vectoropts     import RGBVectorOpts
+from .vectoropts     import LineVectorOpts
+from .modelopts      import ModelOpts
+from .labelopts      import LabelOpts
+from .tensoropts     import TensorOpts
+
+from .displaycontext import InvalidOverlayError
 
 
-from displaycontext import DisplayContext
-from display        import Display
-from group          import OverlayGroup
-from sceneopts      import SceneOpts
-from orthoopts      import OrthoOpts
-from lightboxopts   import LightBoxOpts
-from volumeopts     import Nifti1Opts
-from volumeopts     import VolumeOpts
-from maskopts       import MaskOpts
-from vectoropts     import VectorOpts
-from vectoropts     import RGBVectorOpts
-from vectoropts     import LineVectorOpts
-from modelopts      import ModelOpts
-from labelopts      import LabelOpts
-from tensoropts     import TensorOpts
+OVERLAY_TYPES = td.TypeDict({
+
+    'Image'       : ['volume', 'mask', 'rgbvector', 'linevector', 'label'],
+    'Model'       : ['model'],
+    'TensorImage' : ['tensor', 'rgbvector', 'linevector'],
+})
+"""This dictionary provides a mapping between all overlay classes,
+and the possible values that the :attr:`Display.overlayType` property
+may take for each of them. 
+
+For each overlay class, the first entry in the corresponding overlay type
+list is used as the default overlay type.
+"""
 
 
-from displaycontext import InvalidOverlayError
-
-
-ALL_OVERLAY_TYPES = list(set(
-    reduce(lambda a, b: a + b,
-           display.OVERLAY_TYPES.values())))
+ALL_OVERLAY_TYPES = list(set(it.chain(*OVERLAY_TYPES.values())))
 """This attribute contains a list of all possible overlay types - see the
 :attr:`.Display.overlayType` property and tge :data:`.display.OVERLAY_TYPES`
 dictionary for more details.
 """
 
-OVERLAY_TYPES    = display.OVERLAY_TYPES
-DISPLAY_OPTS_MAP = display.DISPLAY_OPTS_MAP
+
+DISPLAY_OPTS_MAP = {
+    'volume'     : VolumeOpts,
+    'rgbvector'  : RGBVectorOpts,
+    'linevector' : LineVectorOpts,
+    'mask'       : MaskOpts,
+    'model'      : ModelOpts,
+    'label'      : LabelOpts,
+    'tensor'     : TensorOpts,
+}
+"""This dictionary provides a mapping between each overlay type, and
+the :class:`DisplayOpts` subclass which contains overlay type-specific
+display options.
+"""

@@ -20,12 +20,12 @@ import matplotlib.image as mplimg
 
 import props
 
-import fsleyes.fsleyes_parseargs                   as fsleyes_parseargs
 import fsl.utils.dialog                            as fsldlg
 import fsl.utils.async                             as async
 import fsl.utils.status                            as status
 import fsl.utils.settings                          as fslsettings
 import fsl.data.image                              as fslimage
+import fsleyes.parseargs                           as parseargs
 import fsleyes.strings                             as strings
 import fsleyes.actions                             as actions
 import fsleyes.colourmaps                          as colourmaps
@@ -640,7 +640,7 @@ def _genCommandLineArgs(overlayList, displayCtx, canvas):
 
     # Add scene options
     sceneOpts = canvas.getSceneOptions()
-    argv += fsleyes_parseargs.generateSceneArgs(
+    argv += parseargs.generateSceneArgs(
         overlayList,
         displayCtx,
         sceneOpts,
@@ -684,21 +684,18 @@ def _genCommandLineArgs(overlayList, displayCtx, canvas):
                 yc = yc[0], yc[2]
                 zc = zc[0], zc[1]
 
-        argv += ['--{}'.format(fsleyes_parseargs.ARGUMENTS[sceneOpts,
-                                                           'xcentre'][1])]
+        argv += ['--{}'.format(parseargs.ARGUMENTS[sceneOpts, 'xcentre'][1])]
         argv += ['{:0.8f}'.format(c) for c in xc]
-        argv += ['--{}'.format(fsleyes_parseargs.ARGUMENTS[sceneOpts,
-                                                           'ycentre'][1])]
+        argv += ['--{}'.format(parseargs.ARGUMENTS[sceneOpts, 'ycentre'][1])]
         argv += ['{:0.8f}'.format(c) for c in yc]
-        argv += ['--{}'.format(fsleyes_parseargs.ARGUMENTS[sceneOpts,
-                                                           'zcentre'][1])]
+        argv += ['--{}'.format(parseargs.ARGUMENTS[sceneOpts, 'zcentre'][1])]
         argv += ['{:0.8f}'.format(c) for c in zc]
 
     # Add display options for each overlay
     for overlay in overlayList:
 
         fname   = overlay.dataSource
-        ovlArgv = fsleyes_parseargs.generateOverlayArgs(overlay, displayCtx)
+        ovlArgv = parseargs.generateOverlayArgs(overlay, displayCtx)
         argv   += [fname] + ovlArgv
 
     return argv

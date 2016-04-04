@@ -20,7 +20,7 @@ import fsleyes.icons    as fslicons
 import fsleyes.tooltips as fsltooltips
 import fsleyes.strings  as strings
 
-from fsl.fsleyes.profiles.orthoeditprofile import OrthoEditProfile
+from fsleyes.profiles.orthoeditprofile import OrthoEditProfile
 
 
 log = logging.getLogger(__name__)

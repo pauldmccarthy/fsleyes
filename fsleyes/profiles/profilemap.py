@@ -24,12 +24,12 @@ from collections import OrderedDict
 
 import wx
 
-from fsl.fsleyes.views.orthopanel             import OrthoPanel
-from fsl.fsleyes.views.lightboxpanel          import LightBoxPanel
+from fsleyes.views.orthopanel             import OrthoPanel
+from fsleyes.views.lightboxpanel          import LightBoxPanel
 
-from fsl.fsleyes.profiles.orthoviewprofile    import OrthoViewProfile
-from fsl.fsleyes.profiles.orthoeditprofile    import OrthoEditProfile
-from fsl.fsleyes.profiles.lightboxviewprofile import LightBoxViewProfile
+from fsleyes.profiles.orthoviewprofile    import OrthoViewProfile
+from fsleyes.profiles.orthoeditprofile    import OrthoEditProfile
+from fsleyes.profiles.lightboxviewprofile import LightBoxViewProfile
 
 
 log = logging.getLogger(__name__)

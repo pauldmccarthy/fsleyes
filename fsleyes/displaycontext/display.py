@@ -42,8 +42,10 @@ class Display(props.SyncableHasProperties):
     displayed.
 
     The options for this property are populated in the :meth:`__init__`
-    method, from the :attr:`OVERLAY_TYPES` dictionary. A :class:`DisplayOpts`
-    sub-class exists for every possible value that this property may take.
+    method, from the :attr:`.displaycontext.OVERLAY_TYPES` dictionary. A
+    :class:`DisplayOpts` sub-class exists for every possible value that this
+    property may take.
+
     """
     
     enabled = props.Boolean(default=True)
@@ -92,6 +94,8 @@ class Display(props.SyncableHasProperties):
 
         # Populate the possible choices
         # for the overlayType property
+        from . import OVERLAY_TYPES
+ 
         overlayTypeProp = self.getProp('overlayType')
         possibleTypes   = list(OVERLAY_TYPES[overlay])
 
@@ -241,6 +245,8 @@ class Display(props.SyncableHasProperties):
             oParent = None
         else:
             oParent = self.getParent().getDisplayOpts()
+
+        from . import DISPLAY_OPTS_MAP
 
         optType = DISPLAY_OPTS_MAP[self.overlayType]
         
@@ -494,41 +500,3 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         coordinate system is not the same as the display coordinate system.
         """
         return coords
-
-
-import volumeopts
-import vectoropts
-import maskopts
-import labelopts
-import modelopts
-import tensoropts
-
-
-OVERLAY_TYPES = td.TypeDict({
-
-    'Image'       : ['volume', 'mask', 'rgbvector', 'linevector', 'label'],
-    'Model'       : ['model'],
-    'TensorImage' : ['tensor', 'rgbvector', 'linevector'],
-})
-"""This dictionary provides a mapping between all overlay classes,
-and the possible values that the :attr:`Display.overlayType` property
-may take for each of them. 
-
-For each overlay class, the first entry in the corresponding overlay type
-list is used as the default overlay type.
-"""
-
-
-DISPLAY_OPTS_MAP = {
-    'volume'     : volumeopts.VolumeOpts,
-    'rgbvector'  : vectoropts.RGBVectorOpts,
-    'linevector' : vectoropts.LineVectorOpts,
-    'mask'       : maskopts.  MaskOpts,
-    'model'      : modelopts. ModelOpts,
-    'label'      : labelopts. LabelOpts,
-    'tensor'     : tensoropts.TensorOpts,
-}
-"""This dictionary provides a mapping between each overlay type, and
-the :class:`DisplayOpts` subclass which contains overlay type-specific
-display options.
-"""

@@ -108,7 +108,7 @@ class OverlayGroup(props.HasProperties):
 
         # Import all of the Display/DisplayOpts
         # classes into the local namespace
-        from fsl.fsleyes.displaycontext import \
+        from fsleyes.displaycontext import \
             Display,        \
             Nifti1Opts,     \
             VolumeOpts,     \
