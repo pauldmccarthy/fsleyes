@@ -22,7 +22,7 @@ import fsleyes.icons as icons
 log = logging.getLogger(__name__)
 
 
-class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
+class FSLEyesToolBar(fslpanel.FSLEyesPanel):
     """Base class for all *FSLeyes* toolbars.
 
     The ``FSLEyesToolBar`` is a regular :class:`wx.PyPanel` which to which a
@@ -77,8 +77,7 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
                           :meth:`.ActionProvider.__init__`.
         """
         
-        wx.PyPanel.__init__(self, parent)
-        fslpanel._FSLEyesPanel.__init__(self, overlayList, displayCtx)
+        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__tools      = []
         self.__index      = 0
@@ -152,7 +151,7 @@ class FSLEyesToolBar(fslpanel._FSLEyesPanel, wx.PyPanel):
         :arg args:   Passed to the ``Enable`` method of each tool.
         :arg kwargs: Passed to the ``Enable`` method of each tool.
         """
-        wx.PyPanel.Enable(self, *args, **kwargs)
+        super(FSLEyesToolBar, self).Enable(*args, **kwargs)
         for t in self.__tools:
             t.Enable(*args, **kwargs)
 

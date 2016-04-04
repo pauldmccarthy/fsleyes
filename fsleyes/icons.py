@@ -43,7 +43,6 @@ def loadBitmap(iconId):
     """
 
     filename = findImageFile(iconId)
-    bmp = wx.EmptyBitmap(1, 1)
-    bmp.LoadFile(filename, wx.BITMAP_TYPE_PNG)
+    bmp      = wx.Bitmap(filename, wx.BITMAP_TYPE_PNG)
 
     return bmp

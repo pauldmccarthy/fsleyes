@@ -25,9 +25,8 @@ import numpy.fft as fft
 
 import props
 
-import dataseries
-
 import fsl.data.melodicimage as fslmelimage
+from . import                   dataseries
 
 
 log = logging.getLogger(__name__)

@@ -40,12 +40,15 @@ should be made available available to the user can be added as
 
 import logging
 
+import six
+
 import wx
 
 import props
 
-import actions
-import displaycontext
+from fsl.utils.platform import platform as fslplatform
+from .                  import             actions
+from .                  import             displaycontext
 
 
 log = logging.getLogger(__name__)
@@ -149,11 +152,42 @@ class _FSLEyesPanel(actions.ActionProvider, props.SyncableHasProperties):
                         'this is probably a bug!'.format(type(self).__name__))
 
 
-class FSLEyesPanel(_FSLEyesPanel, wx.PyPanel):
+FSLEyesPanelBase = None
+"""Under Python2/wxPython, we need to derive from ``wx.PyPanel``. But
+under Python3/wxPython-Phoenix, we need to derive from ``wx.Panel``.
+"""
+
+
+FSLEyesPanelMeta = None
+"""Under Python3/wxPython-Phoenix, we need to specify a custom meta-class
+which derives from ``wx.siplib.wrappertype``, and the
+``props.SyncablePropertyOwner``. This is not necessary under Python2/wxPython.
+"""
+
+# wxPython/Phoenix
+if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
+
+    import wx.sipilib as sip
+
+    class PhoenixMeta(props.SyncablePropertyOwner, sip.wrappertype):
+        pass
+
+    FSLEyesPanelMeta = PhoenixMeta
+    FSLEyesPanelBase = wx.Panel
+
+# Old wxPython
+else:
+    FSLEyesPanelMeta = props.SyncablePropertyOwner
+    FSLEyesPanelBase = wx.PyPanel
+
+
+class FSLEyesPanel(six.with_metaclass(FSLEyesPanelMeta,
+                                      _FSLEyesPanel,
+                                      FSLEyesPanelBase)):
     """The ``FSLEyesPanel`` is the base class for all view and control panels in
     *FSLeyes*. See the :mod:`~fsl.fsleyes` documentation for more details.
     """
     
     def __init__(self, parent, overlayList, displayCtx):
-        wx.PyPanel.__init__(self, parent)
+        FSLEyesPanelBase.__init__(self, parent)
         _FSLEyesPanel.__init__(self, overlayList, displayCtx)

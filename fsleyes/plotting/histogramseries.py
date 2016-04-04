@@ -17,7 +17,7 @@ import props
 import fsl.data.image   as fslimage
 import fsl.utils.status as status
 import fsl.utils.async  as async
-import                     dataseries
+from . import              dataseries
 
 
 log = logging.getLogger(__name__)

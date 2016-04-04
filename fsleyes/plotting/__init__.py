@@ -16,10 +16,10 @@ for plotting data, and are defined in the following sub-modules:
    ~fsl.fsleyes.plotting.powerspectrumseries
 """
 
-import dataseries
-import timeseries
-import histogramseries
-import powerspectrumseries
+from . import dataseries
+from . import timeseries
+from . import histogramseries
+from . import powerspectrumseries
 
 DataSeries                 = dataseries         .DataSeries
 TimeSeries                 = timeseries         .TimeSeries

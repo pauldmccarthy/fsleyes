@@ -61,7 +61,7 @@ class ProfileManager(object):
         :arg displayCtx:  The :class:`.DisplayContext` instance which defines
                           how overlays are being displayed.
         """
-        import profilemap
+        from . import profilemap
         
         self.__viewPanel      = viewPanel
         self.__viewCls        = viewPanel.__class__
@@ -107,7 +107,7 @@ class ProfileManager(object):
         and creates a new one corresponding to the named profile.
         """
 
-        import profilemap
+        from . import profilemap
 
         profileCls = profilemap.profileHandlers[self.__viewCls, profile]
 
@@ -291,7 +291,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         # Configure temporary modes and alternate
         # event handlers - see the profilemap
         # module
-        import profilemap
+        from . import profilemap
 
         # We reverse the mro, so that the
         # modes/handlers defined on this
