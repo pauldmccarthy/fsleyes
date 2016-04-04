@@ -24,6 +24,9 @@ orientation of the underlying vector.
 """
 
 
+from __future__ import division
+
+
 import logging
 
 import numpy               as np
@@ -145,7 +148,7 @@ def draw(self, zpos, xform=None):
     shader.loadAtts()
     
     gl.glLineWidth(opts.lineWidth)
-    gl.glDrawArrays(gl.GL_LINES, 0, vertices.size / 3)
+    gl.glDrawArrays(gl.GL_LINES, 0, vertices.size // 3)
 
     shader.unloadAtts()
 

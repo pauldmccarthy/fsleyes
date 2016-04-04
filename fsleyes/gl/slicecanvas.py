@@ -497,13 +497,13 @@ class SliceCanvas(props.HasProperties):
         # If any overlays have been removed from the overlay
         # list, destroy the associated render texture stack
         if self.renderMode == 'offscreen':
-            for ovl, texture in self._offscreenTextures.items():
+            for ovl, texture in list(self._offscreenTextures.items()):
                 if ovl not in self.overlayList:
                     self._offscreenTextures.pop(ovl)
                     texture.destroy()
             
         elif self.renderMode == 'prerender':
-            for ovl, (texture, name) in self._prerenderTextures.items():
+            for ovl, (texture, name) in list(self._prerenderTextures.items()):
                 if ovl not in self.overlayList:
                     self._prerenderTextures.pop(ovl)
                     glresources.delete(name)
@@ -604,11 +604,11 @@ class SliceCanvas(props.HasProperties):
         log.debug('Render mode changed: {}'.format(self.renderMode))
 
         # destroy any existing render textures
-        for ovl, texture in self._offscreenTextures.items():
+        for ovl, texture in list(self._offscreenTextures.items()):
             self._offscreenTextures.pop(ovl)
             texture.destroy()
             
-        for ovl, (texture, name) in self._prerenderTextures.items():
+        for ovl, (texture, name) in list(self._prerenderTextures.items()):
             self._prerenderTextures.pop(ovl)
             glresources.delete(name)
 
@@ -738,14 +738,14 @@ class SliceCanvas(props.HasProperties):
 
         # Figure out the new x and y axes
         # based on the new zax value
-        dims = range(3)
+        dims = list(range(3))
         dims.pop(self.zax)
         self.xax = dims[0]
         self.yax = dims[1]
 
         self._annotations.setAxes(self.xax, self.yax)
 
-        for ovl, globj in self._glObjects.items():
+        for ovl, globj in list(self._glObjects.items()):
             if globj:
                 globj.setAxes(self.xax, self.yax)
 
@@ -902,7 +902,7 @@ class SliceCanvas(props.HasProperties):
 
         # Destroy any GL objects for overlays
         # which are no longer in the list
-        for ovl, globj in self._glObjects.items():
+        for ovl, globj in list(self._glObjects.items()):
             if ovl not in self.overlayList:
                 self._glObjects.pop(ovl)
                 if globj:

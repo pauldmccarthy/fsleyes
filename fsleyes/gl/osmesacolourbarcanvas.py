@@ -9,8 +9,8 @@
 """
 
 
-import fsleyes.gl      as fslgl
-import colourbarcanvas as cbarcanvas
+import fsleyes.gl             as fslgl
+from . import colourbarcanvas as cbarcanvas
 
 
 class OSMesaColourBarCanvas(cbarcanvas.ColourBarCanvas,

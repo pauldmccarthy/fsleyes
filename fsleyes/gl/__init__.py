@@ -188,11 +188,13 @@ package also contains the following:
 """
 
 
-import logging
 import os
+import logging
 import platform
 
-import fsl.utils.platform as fslplatform
+import props
+
+from fsl.utils.platform import platform as fslplatform
 
 
 log = logging.getLogger(__name__)
@@ -291,8 +293,8 @@ def bootstrap(glVersion=None):
     import sys
     import OpenGL.GL         as gl
     import OpenGL.extensions as glexts
-    import gl14
-    import gl21
+    from . import               gl14
+    from . import               gl21
 
     thismod = sys.modules[__name__]
 
@@ -300,7 +302,7 @@ def bootstrap(glVersion=None):
         return
 
     if glVersion is None:
-        glVer        = gl.glGetString(gl.GL_VERSION).split()[0]
+        glVer        = gl.glGetString(gl.GL_VERSION).split()[0].decode('ascii')
         major, minor = map(int, glVer.split('.'))[:2]
     else:
         major, minor = glVersion
@@ -351,7 +353,6 @@ def bootstrap(glVersion=None):
         # Spline interpolation is not currently
         # available in the GL14 implementation
         import fsleyes.displaycontext         as dc
-        import fsleyes.displaycontext.display as fsldisplay
         dc.VolumeOpts   .interpolation.removeChoice('spline')
         dc.RGBVectorOpts.interpolation.removeChoice('spline')
         dc.VolumeOpts   .interpolation.updateChoice('linear',
@@ -360,10 +361,10 @@ def bootstrap(glVersion=None):
                                                     newAlt=['spline']) 
 
         # Tensor overlays are not available in GL14
-        dc        .ALL_OVERLAY_TYPES               .remove('tensor')
-        fsldisplay    .OVERLAY_TYPES['TensorImage'].remove('tensor')
+        dc.ALL_OVERLAY_TYPES           .remove('tensor')
+        dc.OVERLAY_TYPES['TensorImage'].remove('tensor')
 
-    renderer = gl.glGetString(gl.GL_RENDERER)
+    renderer = gl.glGetString(gl.GL_RENDERER).decode('ascii')
     log.debug('Using OpenGL {} implementation with renderer {}'.format(
         verstr, renderer))
 
@@ -592,6 +593,26 @@ class OSMesaCanvasTarget(object):
         """
         import matplotlib.image as mplimg
         mplimg.imsave(filename, self.getBitmap()) 
+
+
+WXGLMetaClass = None
+"""Under Python3/wxPython-Phoenix, we must specify a meta-class which derives
+from the ``wx.siplib.wrappertype``, and from the :class:`.props.PropertyOwner`
+meta-class.  This is not necessary under Python2/wxPython.
+"""
+
+
+if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
+
+    import wx.siplib as sip
+
+    class PhoenixMeta(props.PropertyOwner, sip.wrappertype):
+        pass
+
+    WXGLMetaClass = PhoenixMeta
+    
+else:
+    WXGLMetaClass = props.PropertyOwner
 
 
 class WXGLCanvasTarget(object):

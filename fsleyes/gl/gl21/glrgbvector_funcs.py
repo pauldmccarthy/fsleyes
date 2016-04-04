@@ -22,8 +22,8 @@ re-used by this module.
 """
 
 
-import glvolume_funcs
-import glvector_funcs
+from . import glvolume_funcs
+from . import glvector_funcs
 
 
 def init(self):

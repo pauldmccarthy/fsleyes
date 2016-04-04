@@ -16,9 +16,9 @@ import logging
 
 import numpy as np
 
-import routines            as glroutines
 import fsl.utils.transform as transform
 import fsl.utils.notifier  as notifier
+from . import routines     as glroutines
 
 
 log = logging.getLogger(__name__)
@@ -29,13 +29,13 @@ def getGLObjectType(overlayType):
     given :attr:`.Display.overlayType` value.
     """
 
-    import glvolume
-    import glmask
-    import glrgbvector
-    import gllinevector
-    import glmodel
-    import gllabel
-    import gltensor
+    from . import glvolume
+    from . import glmask
+    from . import glrgbvector
+    from . import gllinevector
+    from . import glmodel
+    from . import gllabel
+    from . import gltensor
 
     typeMap = {
         'volume'     : glvolume    .GLVolume,

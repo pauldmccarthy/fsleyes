@@ -358,7 +358,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             
             # Delete any RenderTextureStack instances for
             # overlays which have been removed from the list
-            for overlay, (tex, name) in self._prerenderTextures.items():
+            for overlay, (tex, name) in list(self._prerenderTextures.items()):
                 if overlay not in self.overlayList:
                     self._prerenderTextures.pop(overlay)
                     glresources.delete(name)

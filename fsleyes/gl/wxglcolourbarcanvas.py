@@ -9,16 +9,19 @@
 """
 
 
+import six
+
 import wx
 import wx.glcanvas as wxgl
 
 import fsleyes.gl                 as fslgl
 import fsleyes.gl.colourbarcanvas as cbarcanvas
 
- 
-class WXGLColourBarCanvas(cbarcanvas.ColourBarCanvas,
-                          fslgl.WXGLCanvasTarget,
-                          wxgl.GLCanvas):
+
+class WXGLColourBarCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
+                                             cbarcanvas.ColourBarCanvas,
+                                             fslgl.WXGLCanvasTarget,
+                                             wxgl.GLCanvas)):
     """The ``WXGLColourBarCanvas`` is a :class:`.ColourBarCanvas`, a
     :class:`wx.glcanvas.GLCanvas` and a :class:`.WXGLCanvasTarget`. If you
     want to use a :class:`.ColourBarCanvas` in your :mod:`wx` application, then

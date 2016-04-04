@@ -90,7 +90,7 @@ class Texture(object):
                   through to the :meth:`__init__` method.
         """
 
-        self.__texture     = gl.glGenTextures(1)
+        self.__texture     = int(gl.glGenTextures(1))
         self.__name        = name
         self.__ndims       = ndims
         

@@ -162,13 +162,13 @@ To make this new propery settable via the command line, you need to:
 
 from __future__ import print_function
 
-import os.path as op
-import            sys
-import            logging
-import            textwrap
-import            argparse
-import            functools
-import            collections
+import os.path   as op
+import itertools as it
+import              sys
+import              logging
+import              textwrap
+import              argparse
+import              collections
 
 import props
 
@@ -187,8 +187,8 @@ from . import colourmaps
 colourmaps.init()
 
 
-import displaycontext as fsldisplay
-import                   autodisplay
+from . import displaycontext as fsldisplay
+from . import                   autodisplay
 
 
 log = logging.getLogger(__name__)
@@ -283,15 +283,6 @@ def ArgumentParser(*args, **kwargs):
     ap.error              = ovlArgError 
     
     return ap
-
-
-def concat(lists):
-    """Concatenates a list of lists.
-
-    This function is used a few times, and writing concat(lists) is
-    nicer-looking than writing lambda blah blah each time.
-    """
-    return list(functools.reduce(lambda a, b: a + b, lists))
 
 
 # Names of all of the property which are 
@@ -1025,7 +1016,7 @@ def _setupOverlayParsers(forHelp=False):
         parser = ArgumentParser(prog='', add_help=False, parents=parents)
         
         parsers[target] = parser
-        propNames       = concat(OPTIONS.get(target, allhits=True))
+        propNames       = list(it.chain(*OPTIONS.get(target, allhits=True)))
         specialOptions  = []
         
         # The file options need
@@ -1438,7 +1429,7 @@ def _applyArgs(args, target, propNames=None):
     """Applies the given command line arguments to the given target object."""
 
     if propNames is None:
-        propNames = concat(OPTIONS.get(target, allhits=True))
+        propNames = list(it.chain(*OPTIONS.get(target, allhits=True)))
         
     longArgs  = {name : ARGUMENTS[target, name][1] for name in propNames}
     xforms    = {}
@@ -1466,7 +1457,7 @@ def _generateArgs(source, propNames=None):
     """
 
     if propNames is None:
-        propNames = concat(OPTIONS.get(source, allhits=True))
+        propNames = list(it.chain(*OPTIONS.get(source, allhits=True)))
         
     longArgs  = {name : ARGUMENTS[source, name][1] for name in propNames}
     xforms    = {}
@@ -1667,7 +1658,7 @@ def generateSceneArgs(overlayList, displayCtx, sceneOpts, exclude=None):
     props = OPTIONS.get(sceneOpts, allhits=True)
 
     props = [p for p in props if p not in exclude]
-    args += _generateArgs(sceneOpts, concat(props))
+    args += _generateArgs(sceneOpts, list(it.chain(*props)))
 
     return args
 

@@ -18,9 +18,10 @@ exist:
    ~fsl.fsleyes.gl.gl21.gltensor_funcs
 """
 
-import glvolume_funcs
-import glrgbvector_funcs
-import gllinevector_funcs
-import glmodel_funcs
-import gllabel_funcs
-import gltensor_funcs
+
+from . import glvolume_funcs
+from . import glrgbvector_funcs
+from . import gllinevector_funcs
+from . import glmodel_funcs
+from . import gllabel_funcs
+from . import gltensor_funcs

@@ -9,6 +9,8 @@
 """
 
 
+import six
+
 import wx
 import wx.glcanvas as wxgl
 
@@ -16,9 +18,10 @@ import fsleyes.gl  as fslgl
 from . import         slicecanvas
 
 
-class WXGLSliceCanvas(slicecanvas.SliceCanvas,
-                      wxgl.GLCanvas,
-                      fslgl.WXGLCanvasTarget):
+class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
+                                         slicecanvas.SliceCanvas,
+                                         wxgl.GLCanvas,
+                                         fslgl.WXGLCanvasTarget)):
     """The ``WXGLSliceCanvas`` is a :class:`.SliceCanvas`, a
     :class:`wx.glcanvas.GLCanvas` and a :class:`.WXGLCanvasTarget`. If you
     want to use a :class:`.SliceCanvas` in your :mod:`wx` application, then

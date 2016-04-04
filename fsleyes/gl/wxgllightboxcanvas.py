@@ -12,6 +12,8 @@
 """
 
 
+import six
+
 import wx
 import wx.glcanvas as wxgl
 
@@ -19,9 +21,10 @@ import fsleyes.gl  as fslgl
 from . import         lightboxcanvas
 
 
-class WXGLLightBoxCanvas(lightboxcanvas.LightBoxCanvas,
-                         wxgl.GLCanvas,
-                         fslgl.WXGLCanvasTarget):
+class WXGLLightBoxCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
+                                            lightboxcanvas.LightBoxCanvas,
+                                            wxgl.GLCanvas,
+                                            fslgl.WXGLCanvasTarget)):
     """The ``WXGLLightBoxCanvas`` is a :class:`.LightBoxCanvas`, a
     :class:`wx.glcanvas.GLCanvas` and a :class:`.WXGLCanvasTarget`. If you
     want to use a :class:`.LightBoxCanvas` in your :mod:`wx` application,

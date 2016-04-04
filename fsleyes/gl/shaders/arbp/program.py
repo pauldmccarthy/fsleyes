@@ -19,7 +19,7 @@ import OpenGL.GL.ARB.fragment_program as arbfp
 import OpenGL.GL.ARB.vertex_program   as arbvp
 
 import fsl.utils.memoize              as memoize
-import                                   parse
+from . import                            parse
 
 
 log = logging.getLogger(__name__)

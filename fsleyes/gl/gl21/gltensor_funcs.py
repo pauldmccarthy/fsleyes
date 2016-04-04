@@ -255,7 +255,7 @@ def draw(self, zpos, xform=None):
     if opts.transform == 'id':
         resolution = resolution / min(image.pixdim[:3])
     elif opts.transform == 'pixdim':
-        resolution = map(lambda r, p: max(r, p), resolution, image.pixdim[:3])
+        resolution = [max(r, p) for r, p in zip(resolution, image.pixdim[:3])]
 
     voxels = glroutines.calculateSamplePoints(
         image.shape,

@@ -32,12 +32,12 @@ The following texture types are defined in this package:
 
 # All *Texture classes are made available at the
 # textures package level due to these imports
-from texture            import Texture
-from texture            import Texture2D
-from imagetexture       import ImageTexture
-from colourmaptexture   import ColourMapTexture
-from lookuptabletexture import LookupTableTexture
-from selectiontexture   import SelectionTexture
-from rendertexture      import RenderTexture
-from rendertexture      import GLObjectRenderTexture
-from rendertexturestack import RenderTextureStack
+from .texture            import Texture
+from .texture            import Texture2D
+from .imagetexture       import ImageTexture
+from .colourmaptexture   import ColourMapTexture
+from .lookuptabletexture import LookupTableTexture
+from .selectiontexture   import SelectionTexture
+from .rendertexture      import RenderTexture
+from .rendertexture      import GLObjectRenderTexture
+from .rendertexturestack import RenderTextureStack

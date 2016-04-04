@@ -16,9 +16,8 @@ import OpenGL.GL                      as gl
 import OpenGL.raw.GL._types           as gltypes
 import OpenGL.GL.ARB.instanced_arrays as arbia
 
-import parse
-
 import fsl.utils.memoize as memoize
+from . import               parse
 
 
 log = logging.getLogger(__name__)
