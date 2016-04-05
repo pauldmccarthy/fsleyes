@@ -169,22 +169,6 @@ sub-packages.
 
 Because of this, the package-level :func:`bootstrap` function must be called
 before any ``GLObject`` instances are created. 
-
-
-----------------------------------
-Other things in the ``gl`` package
-----------------------------------
-
-
-In addition to the *canvases* and *objects* described above, the ``gl``
-package also contains the following:
-
-.. autosummary::
-
-   ~fsleyes.gl.textures
-   ~fsleyes.gl.routines
-   ~fsleyes.gl.resources
-   ~fsleyes.gl.shaders
 """
 
 

@@ -5,11 +5,9 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module implements an application which provides off-screen rendering
-capability for scenes which can otherwise be displayed via fsleyes.
+capability for scenes which can otherwise be displayed via *FSLeyes*.
 
-See:
-  - :mod:`fsl.tools.fsleyes`
-  - :mod:`fsl.fsleyes.fsleyes_parseargs`
+.. warning:: ``render`` is currently broken.
 """
 
 
@@ -30,7 +28,7 @@ import fsl.data.constants                  as constants
 import fsleyes.strings                     as strings
 import fsleyes.overlay                     as fsloverlay
 import fsleyes.colourmaps                  as fslcm
-import fsleyes.fsleyes_parseargs           as fsleyes_parseargs
+import fsleyes.parseargs                   as parseargs
 import fsleyes.displaycontext              as displaycontext
 import fsleyes.displaycontext.orthoopts    as orthoopts
 import fsleyes.displaycontext.lightboxopts as lightboxopts
@@ -318,7 +316,7 @@ def run(args, context):
     if   args.scene == 'ortho':    sceneOpts = orthoopts   .OrthoOpts()
     elif args.scene == 'lightbox': sceneOpts = lightboxopts.LightBoxOpts()
 
-    fsleyes_parseargs.applySceneArgs(args, overlayList, displayCtx, sceneOpts)
+    parseargs.applySceneArgs(args, overlayList, displayCtx, sceneOpts)
 
     # Calculate canvas and colour bar sizes
     # so that the entire scene will fit in
@@ -347,9 +345,9 @@ def run(args, context):
     # Ortho view -> up to three canvases
     elif args.scene == 'ortho':
 
-        xc, yc, zc = fsleyes_parseargs.calcCanvasCentres(args,
-                                                         overlayList,
-                                                         displayCtx) 
+        xc, yc, zc = parseargs.calcCanvasCentres(args,
+                                                 overlayList,
+                                                 displayCtx) 
  
         # Build a list containing the horizontal 
         # and vertical axes for each canvas
@@ -500,12 +498,12 @@ def parseArgs(argv):
         Tensor overlays are not supported by render.
         """)
     
-    namespace = fsleyes_parseargs.parseArgs(mainParser,
-                                            argv,
-                                            name,
-                                            description,
-                                            optStr,
-                                            fileOpts=['of', 'outfile'])
+    namespace = parseargs.parseArgs(mainParser,
+                                    argv,
+                                    name,
+                                    description,
+                                    optStr,
+                                    fileOpts=['of', 'outfile'])
 
     if namespace.outfile is None:
         log.error('outfile is required')
@@ -545,7 +543,7 @@ def context(args, *a, **kwa):
 
     # Load the overlays specified on the command
     # line, and configure their display properties
-    fsleyes_parseargs.applyOverlayArgs(
+    parseargs.applyOverlayArgs(
         args, overlayList, masterDisplayCtx, loadFunc=load, errorFunc=error)
 
     if len(overlayList) == 0:

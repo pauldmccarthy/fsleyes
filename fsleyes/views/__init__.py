@@ -10,22 +10,6 @@ the :mod:`~fsleyes` package documentation.  It contains a collection of
 :class:`FSLEyesPanel` sub-classes which provide a view of the overlays in an
 :class:`.OverlayList`.  The :class:`.ViewPanel` is the base-class for all
 views.
-
-
-The following :class:`.ViewPanel` sub-classes currently exist:
-
-.. autosummary::
-   :nosignatures:
-
-   ~fsleyes.views.canvaspanel.CanvasPanel
-   ~fsleyes.views.orthopanel.OrthoPanel
-   ~fsleyes.views.lightboxpanel.LightBoxPanel
-   ~fsleyes.views.plotpanel.PlotPanel
-   ~fsleyes.views.plotpanel.OverlayPlotPanel
-   ~fsleyes.views.timeseriespanel.TimeSeriesPanel
-   ~fsleyes.views.powerspectrumpanel.PowerSpectrumPanel
-   ~fsleyes.views.histogrampanel.HistogramPanel
-   ~fsleyes.views.shellpanel.ShellPanel
 """
 
 

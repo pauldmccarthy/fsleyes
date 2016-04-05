@@ -6,15 +6,9 @@
 #
 """The ``plotting`` package contains the :class:`.DataSeries` class, and
 all of its sub-classes. These classes are used by :class:`.PlotPanel` views
-for plotting data, and are defined in the following sub-modules:
-
-.. autosummary::
-
-   ~fsleyes.plotting.dataseries
-   ~fsleyes.plotting.timeseries
-   ~fsleyes.plotting.histogramseries
-   ~fsleyes.plotting.powerspectrumseries
+for plotting data.
 """
+
 
 from . import dataseries
 from . import timeseries

@@ -4,7 +4,14 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This package contains the application logic for *FSLeyes*.
+"""*FSLeyes* - a 3D image viewer.
+
+This package contains the application logic for *FSLeyes*.
+
+
+.. image:: images/fsleyes.png
+   :scale: 50%
+   :align: center
 
 
 --------
@@ -36,6 +43,16 @@ Amongst other things, *FSLeyes* provides the following features:
 
 *FSLeyes* makes heavy use of the :mod:`props` project, which provides an
 event related framework.
+
+
+------------
+Entry points
+------------
+
+
+*FSLeyes* may be started with the :func:`fsleyes.main.main` function. *FSLeyes*
+also includes an off-screen screenshot generator called `render`, which may
+be started via the :func:`fsleyes.render.main` function.
 
 
 ---------------------------
@@ -161,47 +178,8 @@ See the :mod:`~fsleyes.displaycontext` package documentation for more
 details.
 
 
---------------------
-Package organisation
---------------------
-
-
-The rest of *FSLeyes* is organised into the following sub-packages:
-
-.. autosummary::
-
-   ~fsleyes.views
-   ~fsleyes.controls
-   ~fsleyes.displaycontext
-   ~fsleyes.gl
-   ~fsleyes.profiles
-   ~fsleyes.plotting
-   ~fsleyes.editor
-   ~fsleyes.actions
-
-
-Some other miscellaneous modules are contained in the ``fsleyes`` package:
-
-.. autosummary::
-
-   ~fsleyes.main
-   ~fsleyes.render
-   ~fsleyes.parseargs
-   ~fsleyes.version
-   ~fsleyes.frame
-   ~fsleyes.panel
-   ~fsleyes.toolbar
-   ~fsleyes.tooltips
-   ~fsleyes.strings
-   ~fsleyes.overlay
-   ~fsleyes.perspectives
-   ~fsleyes.autodisplay
-   ~fsleyes.state
-   ~fsleyes.icons
-   ~fsleyes.colourmaps
-   ~fsleyes.plotting
-   ~fsleyes.splash
-   ~fsleyes.about
+.. note:: The current version of FSLeyes (|version|) lives in the
+          :mod:`fsleyes.version` module.
 """
 
 

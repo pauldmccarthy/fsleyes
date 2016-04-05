@@ -4,14 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""*FSLeyes* - a 3D image viewer.
-
-.. image:: images/fsleyes.png
-   :scale: 50%
-   :align: center
-
-This module provides the entry point to *FSLeyes*, the FSL image viewer.  
-
+"""This module provides the entry point to *FSLeyes*, the FSL image viewer.  
 
 See the :mod:`fsleyes` package documentation for more details on ``fsleyes``.
 """

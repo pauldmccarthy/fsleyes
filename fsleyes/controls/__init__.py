@@ -12,31 +12,8 @@ Every control panel is a sub-class of either the :class:`.FSLEyesPanel` or
 :class:`.FSLEyesToolBar`, and each panel allows the user to control some
 aspect of either the specific :class:`.ViewPanel` that the control panel is
 embedded within, or some general aspect of *FSLeyes*.
-
-
-The following control panels currently exist:
-
-.. autosummary::
-   :nosignatures:
-
-   ~fsleyes.controls.atlaspanel.AtlasPanel
-   ~fsleyes.controls.canvassettingspanel.CanvasSettingsPanel
-   ~fsleyes.controls.clusterpanel.ClusterPanel
-   ~fsleyes.controls.histogramcontrolpanel.HistogramControlPanel
-   ~fsleyes.controls.lightboxtoolbar.LightBoxToolBar
-   ~fsleyes.controls.locationpanel.LocationPanel
-   ~fsleyes.controls.lookuptablepanel.LookupTablePanel
-   ~fsleyes.controls.orthoedittoolbar.OrthoEditToolBar
-   ~fsleyes.controls.orthotoolbar.OrthoToolBar
-   ~fsleyes.controls.overlaydisplaypanel.OverlayDisplayPanel
-   ~fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar
-   ~fsleyes.controls.overlayinfopanel.OverlayInfoPanel
-   ~fsleyes.controls.overlaylistpanel.OverlayListPanel
-   ~fsleyes.controls.plotcontrolpanel.PlotControlPanel
-   ~fsleyes.controls.plotlistpanel.PlotListPanel
-   ~fsleyes.controls.powerspectrumcontrolpanel.PowerSpectrumControlPanel
-   ~fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
 """
+
 
 from . import atlaspanel
 from . import canvassettingspanel

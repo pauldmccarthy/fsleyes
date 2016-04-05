@@ -5,16 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This package contains modules for rendering various :class:`.GLObject`
-types in an OpenGL 1.4 compatible manner. The following modules currently
-exist:
-
-.. autosummary::
-
-   ~fsleyes.gl.gl14.glvolume_funcs
-   ~fsleyes.gl.gl14.glrgbvector_funcs
-   ~fsleyes.gl.gl14.gllinevector_funcs
-   ~fsleyes.gl.gl14.glmodel_funcs
-   ~fsleyes.gl.gl14.gllabel_funcs
+types in an OpenGL 1.4 compatible manner.
 """
 
 from . import glvolume_funcs

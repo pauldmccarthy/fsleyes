@@ -11,22 +11,6 @@ textures for various purposes.
 .. todo:: There is a lot of duplicate code in the various texture sub-classes.
           This will hopefully be rectified at some stage in the future -
           shared code will be moved into the :class:`.Texture` class.
-
-
-The following texture types are defined in this package:
-
-.. autosummary::
-   :nosignatures:
-
-   ~fsleyes.gl.textures.texture.Texture
-   ~fsleyes.gl.textures.texture.Texture2D
-   ~fsleyes.gl.textures.imagetexture.ImageTexture
-   ~fsleyes.gl.textures.colourmaptexture.ColourMapTexture
-   ~fsleyes.gl.textures.lookuptabletexture.LookupTableTexture
-   ~fsleyes.gl.textures.selectiontexture.SelectionTexture
-   ~fsleyes.gl.textures.rendertexture.RenderTexture
-   ~fsleyes.gl.textures.rendertexture.GLObjectRenderTexture
-   ~fsleyes.gl.textures.rendertexturestack.RenderTextureStack
 """
 
 
