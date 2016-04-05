@@ -136,16 +136,17 @@ import          six
 import numpy as np
 
 import          props
+import          fsleyes
 
 
 log = logging.getLogger(__name__)
 
 
-_cmapDir = None
+_cmapDir = op.join(fsleyes.resourceDir, 'fsleyes', 'colourmaps')
 """The directory in which all colour map files are stored. """
 
 
-_lutDir = None
+_lutDir  = op.join(fsleyes.resourceDir, 'fsleyes', 'luts')
 """The directory in which all lookup table files are stored. """
 
 
@@ -161,29 +162,18 @@ _luts = None
 """
 
 
-def init(cmapDir=None):
+def init():
     """This function must be called before any of the other functions in this
     module can be used.
 
     It initialises the colour map and lookup table registers, loading all
     colour map and lookup table files that exist.
-
-    :arg cmapDir: A directory which contains two sub-directories
-                  ``colourmaps`` and ``luts``, which respectively contain
-                  the colour map/lookup table files. If ``None``, defaults
-                  to the :mod:`fsleyes` package directory.
     """
 
     global _cmapDir
     global _lutDir
     global _cmaps
     global _luts
-
-    if cmapDir is None:
-        cmapDir = op.dirname(__file__)
-
-    _cmapDir = op.join(cmapDir, 'colourmaps')
-    _lutDir  = op.join(cmapDir, 'luts')
 
     registers = []
 

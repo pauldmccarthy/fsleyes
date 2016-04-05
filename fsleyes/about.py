@@ -16,6 +16,7 @@ import OpenGL.GL as gl
 
 import fsl.utils.imagepanel as imagepanel
 import fsleyes.strings      as strings
+import fsleyes.splash       as splash
 import fsl.version          as version
 
 
@@ -32,10 +33,8 @@ class AboutDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent, title=strings.about['title'])
 
         # Load the splash screen
-        splashfile      = op.join(op.dirname(__file__),
-                                  'icons', 'splash', 'splash.png')
-        splashbmp       = wx.Bitmap(splashfile, wx.BITMAP_TYPE_PNG)
-        splashimg       = splashbmp.ConvertToImage()
+        splashbmp = wx.Bitmap(splash.SPLASH_FILE, wx.BITMAP_TYPE_PNG)
+        splashimg = splashbmp.ConvertToImage()
 
         # Create all the widgets
         splashPanel = imagepanel.ImagePanel(self, splashimg)

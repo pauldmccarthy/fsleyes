@@ -25,6 +25,7 @@ import argparse
 import threading
 
 from fsl.utils.platform import platform as fslplatform
+import fsleyes
 
 
 # The logger is assigned in 
@@ -50,18 +51,18 @@ def main(args=None):
     # the python source code.
     if fslplatform.frozen:
         sp          = wx.StandardPaths.Get()
-        resourceDir = op.join(sp.GetResourcesDir(), 'fsleyes')
-
+        resourceDir = op.join(sp.GetResourcesDir())
+        
     # Otherwise we assume that the resources
     # are living alongside the FSLeyes source.
     else:
-        resourceDir = op.dirname(__file__)
+        resourceDir = op.join(op.dirname(__file__), '..')
 
-    resourceDir = op.abspath(resourceDir)
+    fsleyes.resourceDir = op.abspath(resourceDir)
 
     # Show the splash screen
     # as soon as possible
-    splash = makeSplash(op.join(resourceDir, 'icons', 'splash'))
+    splash = makeSplash()
 
     # We are going do all processing on the
     # wx.MainLoop, so the GUI can be shown
@@ -86,7 +87,7 @@ def main(args=None):
             namespace = parseArgs(args)
             
             # Initialise sub-modules/packages
-            initialise(splash, namespace, resourceDir)
+            initialise(splash, namespace)
 
             # Configure logging (this has to be done
             # after cli arguments have been parsed)
@@ -115,24 +116,18 @@ def main(args=None):
     app.MainLoop()
 
 
-def initialise(splash, namespace, resourceDir):
+def initialise(splash, namespace):
     """Called by :func:`main`. Bootstraps/Initialises various parts of
     *FSLeyes*.
     """
 
     import                       props
     import fsleyes.gl         as fslgl
-    import fsleyes.icons      as icons
     import fsleyes.colourmaps as colourmaps
-
-    cmapDir = resourceDir
-    iconDir = op.join(resourceDir, 'icons')
-    glDir   = op.join(resourceDir, 'gl')
 
     props.initGUI()
 
-    colourmaps.init(cmapDir)
-    icons     .init(iconDir)
+    colourmaps.init()
 
     # Force the creation of a wx.glcanvas.GLContext object,
     # and initialise OpenGL version-specific module loads.
@@ -140,7 +135,7 @@ def initialise(splash, namespace, resourceDir):
     # canvas created by the gl.getWXGLContext function.
     try:
         fslgl.getWXGLContext(splash)
-        fslgl.bootstrap(namespace.glversion, glDir)
+        fslgl.bootstrap(namespace.glversion)
         
     except:
         log.error('Unable to initialise OpenGL!', exc_info=True)
@@ -193,12 +188,12 @@ def parseArgs(argv):
                                fileOpts=['r', 'runscript'])
 
 
-def makeSplash(splashDir):
+def makeSplash():
     """Creates and returns a :class:`.FSLEyesSplash` frame. """
     
     import fsleyes.splash as fslsplash
 
-    frame = fslsplash.FSLEyesSplash(None, splashDir)
+    frame = fslsplash.FSLEyesSplash(None)
 
     frame.CentreOnScreen()
     frame.Show()
@@ -245,6 +240,15 @@ def configLogging(namespace):
     
     log = logging.getLogger()
     log.addHandler(logHandler)
+
+    # Everything below this point sets up verbosity
+    # as requested by the user. But verbosity-related
+    # command line arguments are not exposed to the
+    # user in frozen versions of FSLeyes, so if we're
+    # running as a frozen app, there's nothing else
+    # to do.
+    if fslplatform.frozen:
+        return
 
     # Now we can set up logging
     # as requested by the user.

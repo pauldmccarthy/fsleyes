@@ -13,8 +13,14 @@ import os.path as op
 
 import wx
 
+import                         fsleyes
 import fsl.utils.imagepanel as imagepanel
 import fsleyes.strings      as strings
+
+
+SPLASH_FILE = op.join(
+    fsleyes.resourceDir, 'fsleyes', 'icons', 'splash', 'splash.png')
+"""Path to the splash screen image file. """
 
 
 class FSLEyesSplash(wx.Frame):
@@ -37,23 +43,15 @@ class FSLEyesSplash(wx.Frame):
         splash.Close()
     """
     
-    def __init__(self, parent, splashDir=None):
+    def __init__(self, parent):
         """Create a ``FSLEyesSplash`` frame.
 
-        :arg parent:    The :mod:`wx` parent object.
-
-        :arg splashDir: Directory in which a file called ``splash.png`` can be
-                        found. If ``None``, it is assumed to be in
-                        ``./icons/splash/`` (relative to this module).
+        :arg parent: The :mod:`wx` parent object.
         """
         
         wx.Frame.__init__(self, parent, style=0)
 
-        if splashDir is None:
-            splashDir = op.join(op.dirname(__file__), 'icons', 'splash')
-
-        splashfile = op.join(splashDir, 'splash.png')
-        splashbmp  = wx.Bitmap(splashfile, wx.BITMAP_TYPE_PNG)
+        splashbmp  = wx.Bitmap(SPLASH_FILE, wx.BITMAP_TYPE_PNG)
         splashimg  = splashbmp.ConvertToImage()
     
         self.__splashPanel = imagepanel.ImagePanel(self, splashimg)

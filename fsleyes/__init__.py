@@ -183,6 +183,17 @@ details.
 """
 
 
+import os.path as op
+
 from . import version
 
+
 __version__ = version.__version__
+"""The current *FSLeyes* version (read from the :mod:`fsleyes.version` module).
+"""
+
+
+resourceDir = op.dirname(__file__)
+"""Base directory which contains all *FSLeyes* resource (e.g. icon files).
+This may be overridden by :func:`fsleyes.main.main`.
+"""
