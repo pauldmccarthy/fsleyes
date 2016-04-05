@@ -24,6 +24,8 @@ import textwrap
 import argparse
 import threading
 
+from fsl.utils.platform import platform as fslplatform
+
 
 # The logger is assigned in 
 # the configLogging function
@@ -38,8 +40,28 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
-    app       = wx.App()
-    splash    = makeSplash()
+    # First thing's first. Create a wx.App, 
+    # and figure out where all our stuff is.
+    app = wx.App()
+    app.SetAppName('FSLeyes')
+ 
+    # If we are running from a bundled application,
+    # the FSLeyes resources might not be alongside
+    # the python source code.
+    if fslplatform.frozen:
+        sp          = wx.StandardPaths.Get()
+        resourceDir = op.join(sp.GetResourceDir(), 'fsleyes')
+
+    # Otherwise we assume that the resources
+    # are living alongside the FSLeyes source.
+    else:
+        resourceDir = op.dirname(__file__)
+
+    resourceDir = op.abspath(resourceDir)
+
+    # Show the splash screen
+    # as soon as possible
+    splash = makeSplash(op.join(resourceDir, 'icons', 'splash'))
 
     # We are going do all processing on the
     # wx.MainLoop, so the GUI can be shown
@@ -61,7 +83,7 @@ def main(args=None):
         def realBuild():
 
             namespace = parseArgs(args)
-            initialise(splash, namespace)
+            initialise(splash, namespace, resourceDir)
             configLogging(namespace)
             
             overlayList, displayCtx = makeDisplayContext(namespace, splash)
@@ -82,27 +104,12 @@ def main(args=None):
     app.MainLoop()
 
 
-def initialise(splash, namespace):
+def initialise(splash, namespace, resourceDir):
 
     import                                       props
-    from   fsl.utils.platform import platform as fslplatform
     import fsleyes.gl                         as fslgl
     import fsleyes.icons                      as icons
     import fsleyes.colourmaps                 as colourmaps
-
-    # If we are running from a bundled application,
-    # the FSLeyes resources might not be alongside
-    # the python source code
-    if fslplatform.frozen:
-        sp          = wx.StandardPaths.Get()
-        resourceDir = sp.GetResourceDir()
-
-    # Otherwise we assume that the resources
-    # are alongside the FSLeyes source.
-    else:
-        resourceDir = op.dirname(__file__)
-
-    resourceDir = op.abspath(resourceDir)
 
     cmapDir = resourceDir
     iconDir = op.join(resourceDir, 'icons')
@@ -172,12 +179,12 @@ def parseArgs(argv):
                                fileOpts=['r', 'runscript'])
 
 
-def makeSplash():
+def makeSplash(splashDir):
     """Creates and returns a :class:`.FSLEyesSplash` frame. """
 
     import fsleyes.splash as fslsplash
 
-    frame = fslsplash.FSLEyesSplash(None)
+    frame = fslsplash.FSLEyesSplash(None, splashDir)
 
     frame.CentreOnScreen()
     frame.Show()

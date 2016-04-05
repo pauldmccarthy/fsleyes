@@ -37,16 +37,22 @@ class FSLEyesSplash(wx.Frame):
         splash.Close()
     """
     
-    def __init__(self, parent):
+    def __init__(self, parent, splashDir=None):
         """Create a ``FSLEyesSplash`` frame.
 
-        :arg parent: The :mod:`wx` parent object.
+        :arg parent:    The :mod:`wx` parent object.
+
+        :arg splashDir: Directory in which a file called ``splash.png`` can be
+                        found. If ``None``, it is assumed to be in
+                        ``./icons/splash/`` (relative to this module).
         """
         
         wx.Frame.__init__(self, parent, style=0)
 
-        splashfile = op.join(op.dirname(__file__),
-                             'icons', 'splash', 'splash.png')
+        if splashDir is None:
+            splashDir = op.join(op.dirname(__file__), 'icons', 'splash')
+
+        splashfile = op.join(splashDir, 'splash.png')
         splashbmp  = wx.Bitmap(splashfile, wx.BITMAP_TYPE_PNG)
         splashimg  = splashbmp.ConvertToImage()
     
