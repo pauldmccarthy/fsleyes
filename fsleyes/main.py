@@ -50,7 +50,7 @@ def main(args=None):
     # the python source code.
     if fslplatform.frozen:
         sp          = wx.StandardPaths.Get()
-        resourceDir = op.join(sp.GetResourceDir(), 'fsleyes')
+        resourceDir = op.join(sp.GetResourcesDir(), 'fsleyes')
 
     # Otherwise we assume that the resources
     # are living alongside the FSLeyes source.
@@ -82,22 +82,33 @@ def main(args=None):
 
         def realBuild():
 
+            # Parse command line arguments
             namespace = parseArgs(args)
-            initialise(splash, namespace, resourceDir)
-            configLogging(namespace)
             
+            # Initialise sub-modules/packages
+            initialise(splash, namespace, resourceDir)
+
+            # Configure logging (this has to be done
+            # after cli arguments have been parsed)
+            configLogging(namespace)
+
+            # Now the main stuff - create the overlay
+            # list and the master display context,
+            # and then create the FSLEyesFrame.
             overlayList, displayCtx = makeDisplayContext(namespace, splash)
             frame = makeFrame(namespace, displayCtx, overlayList, splash)
-            
+
+            app.SetTopWindow(frame)
             frame.Show()
 
+            # Check that $FSLDIR is set, complain 
+            # to the user if it isn't
             if not namespace.skipfslcheck:
                 wx.CallAfter(fslDirWarning, frame)
 
         # Sleep a bit so the main thread (on which
         # wx.MainLoop is running) can start. 
         time.sleep(0.05)
-            
         wx.CallAfter(realBuild)
 
     threading.Thread(target=buildGUI).start()
@@ -105,11 +116,14 @@ def main(args=None):
 
 
 def initialise(splash, namespace, resourceDir):
+    """Called by :func:`main`. Bootstraps/Initialises various parts of
+    *FSLeyes*.
+    """
 
-    import                                       props
-    import fsleyes.gl                         as fslgl
-    import fsleyes.icons                      as icons
-    import fsleyes.colourmaps                 as colourmaps
+    import                       props
+    import fsleyes.gl         as fslgl
+    import fsleyes.icons      as icons
+    import fsleyes.colourmaps as colourmaps
 
     cmapDir = resourceDir
     iconDir = op.join(resourceDir, 'icons')
@@ -181,7 +195,7 @@ def parseArgs(argv):
 
 def makeSplash(splashDir):
     """Creates and returns a :class:`.FSLEyesSplash` frame. """
-
+    
     import fsleyes.splash as fslsplash
 
     frame = fslsplash.FSLEyesSplash(None, splashDir)
@@ -202,8 +216,6 @@ def configLogging(namespace):
               when we are running a frozen version.
     """
 
-    from fsl.utils.platform import platform as fslplatform
-
     global log
     
     # make numpy/matplotlib quiet
@@ -211,12 +223,8 @@ def configLogging(namespace):
     warnings.filterwarnings('ignore', module='mpl_toolkits')
     warnings.filterwarnings('ignore', module='numpy')
 
-    # No logging in frozen apps
-    if fslplatform.frozen:
-        return
-
     # Set up my own custom logging level
-    # for tracing memory related events
+    # for tracing memory related events.
     logging.MEMORY = 15
     def _logmemory(self, message, *args, **kwargs):
         """Log function for my custom ``logging.MEMORY`` logging level. """
@@ -224,7 +232,7 @@ def configLogging(namespace):
             self._log(logging.MEMORY, message, args, **kwargs)
 
     logging.Logger.memory = _logmemory
-    logging.addLevelName(logging.MEMORY, 'MEMORY')
+    logging.addLevelName(logging.MEMORY, 'MEMORY') 
 
     # Set up the root logger
     logFormatter = logging.Formatter('%(levelname)8.8s '
@@ -321,10 +329,9 @@ def makeDisplayContext(namespace, splash):
     # ever exists) and the master DisplayContext.
     # A new DisplayContext instance will be
     # created for every new view that is opened
-    # in the FSLEyesFrame (which is created in
-    # the interface function, above), but all
-    # child DisplayContext instances will be
-    # linked to this master one.
+    # in the FSLEyesFrame, but all child
+    # DisplayContext instances will be linked to
+    # this master one.
     overlayList = fsloverlay.OverlayList()
     displayCtx  = displaycontext.DisplayContext(overlayList)
 
