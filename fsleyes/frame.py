@@ -8,18 +8,22 @@
 for FSLeyes.
 """
 
+
 from __future__ import division
 
-
 import logging
+
+import os.path as op
 
 import wx
 import wx.lib.agw.aui                     as aui
 
-import fsleyes.strings                    as strings
 import fsl.utils.settings                 as fslsettings
 import fsl.utils.status                   as status
 from   fsl.utils.platform import platform as fslplatform
+
+import                                       fsleyes
+import fsleyes.strings                    as strings
 
 from . import views
 from . import actions
@@ -802,8 +806,22 @@ class FSLEyesFrame(wx.Frame):
         """Called by :meth:`__makeMenuBar`. Creates the *FSLeyes* menu. """
 
         def help():
+
+            if fslplatform.frozen:
+                url = op.join(
+                    fsleyes.resourceDir, 'userdoc', 'index.html')
+            else:
+                url = op.join(
+                    fsleyes.resourceDir, 'userdoc', 'html', 'index.html')
+
             import fsl.utils.webpage as webpage
-            webpage.openPage('http://users.fmrib.ox.ac.uk/~paulmc/fsleyes/')
+
+            # Show locally stored help files
+            if op.exists(url):
+                webpage.openFile(url)
+            else:
+                url = 'http://users.fmrib.ox.ac.uk/~paulmc/fsleyes/'
+                webpage.openPage(url)
 
         def quit():
             self.Close()
