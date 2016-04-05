@@ -19,6 +19,10 @@ like so::
 
     # Get a wx.Bitmap containing the gear icon
     gearBmp = icons.loadBitmap('gear24')
+
+
+.. note:: The :func:`init` function must be called before any of the other
+          functions in this module may be used.
 """
 
 
@@ -27,14 +31,26 @@ import os.path as op
 import wx
 
 
-_ICON_PATH = op.join(op.dirname(__file__), 'icons')
+_iconDir = None 
 """The directory which contains all of the icons used in *FSLeyes*. """
+
+
+def init(iconDir=None):
+    """Must be called before the other functions in this module. Sets
+    the :data:`_iconDir`, the directory in which icon files may be found.
+    Defaults to a directory called ``icons``, in the same directory as
+    this module.
+    """
+    global _iconDir
+
+    if iconDir is None: _iconDir = op.join(op.dirname(__file__), 'icons')
+    else:               _iconDir = iconDir
 
 
 def findImageFile(iconId):
     """Returns the full path to the icon with the given ``iconId``.
     """
-    return op.join(_ICON_PATH, '{}.png'.format(iconId))
+    return op.join(_iconDir, '{}.png'.format(iconId))
 
 
 def loadBitmap(iconId):

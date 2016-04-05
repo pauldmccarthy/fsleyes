@@ -165,6 +165,7 @@ from __future__ import print_function
 import os.path   as op
 import itertools as it
 import              sys
+import              types
 import              logging
 import              textwrap
 import              argparse
@@ -172,22 +173,15 @@ import              collections
 
 import props
 
+import fsl.data.image                     as fslimage
 import fsl.utils.typedict                 as td
 import fsl.utils.async                    as async
 import fsl.utils.status                   as status
 from   fsl.utils.platform import platform as fslplatform
 from   .                  import overlay  as fsloverlay
 
-
-# The colour maps module needs to be imported
-# before the displaycontext.opts modules are
-# imported, as some of their class definitions
-# rely on the colourmaps being initialised
-from . import colourmaps 
-colourmaps.init()
-
-
 from . import displaycontext as fsldisplay
+from . import                   colourmaps 
 from . import                   autodisplay
 
 
@@ -268,7 +262,7 @@ def ArgumentParser(*args, **kwargs):
     """Wrapper around the ``argparse.ArgumentParser` constructor which
     creates, monkey-patches, and returns an ``ArgumentParser`` instance.
     """
-    import types
+
     ap = argparse.ArgumentParser(*args, **kwargs)
 
     def ovlArgError(message):
@@ -1552,8 +1546,6 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
 
     def apply():
 
-        import fsl.data.image as fslimage
-
         # First apply all command line options
         # related to the display context...
 
@@ -1701,8 +1693,6 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
     :arg kwargs:      Passed through to the :func:`.Overlay.loadOverlays`
                       function.
     """
-
-    import fsl.data.image as fslimage
 
     # The fsleyes.overlay.loadOverlay function
     # works asynchronously - this function will

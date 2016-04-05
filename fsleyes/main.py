@@ -15,6 +15,7 @@ from __future__ import print_function
 import wx
 
 import os
+import os.path as op
 import sys
 import time
 import logging
@@ -22,11 +23,6 @@ import warnings
 import textwrap
 import argparse
 import threading
-
-import fsleyes.perspectives               as perspectives
-import fsl.utils.status                   as status
-import fsl.utils.async                    as async
-from   fsl.utils.platform import platform as fslplatform
 
 
 # The logger is assigned in 
@@ -44,9 +40,6 @@ def main(args=None):
 
     app       = wx.App()
     splash    = makeSplash()
-    namespace = parseArgs(args)
-    
-    configLogging(namespace)
 
     # We are going do all processing on the
     # wx.MainLoop, so the GUI can be shown
@@ -66,8 +59,14 @@ def main(args=None):
     def buildGUI():
 
         def realBuild():
+
+            namespace = parseArgs(args)
+            initialise(splash, namespace)
+            configLogging(namespace)
+            
             overlayList, displayCtx = makeDisplayContext(namespace, splash)
             frame = makeFrame(namespace, displayCtx, overlayList, splash)
+            
             frame.Show()
 
             if not namespace.skipfslcheck:
@@ -75,12 +74,57 @@ def main(args=None):
 
         # Sleep a bit so the main thread (on which
         # wx.MainLoop is running) can start. 
-        time.sleep(0.1)
+        time.sleep(0.05)
             
         wx.CallAfter(realBuild)
 
     threading.Thread(target=buildGUI).start()
     app.MainLoop()
+
+
+def initialise(splash, namespace):
+
+    import                                       props
+    from   fsl.utils.platform import platform as fslplatform
+    import fsleyes.gl                         as fslgl
+    import fsleyes.icons                      as icons
+    import fsleyes.colourmaps                 as colourmaps
+
+    # If we are running from a bundled application,
+    # the FSLeyes resources might not be alongside
+    # the python source code
+    if fslplatform.frozen:
+        sp          = wx.StandardPaths.Get()
+        resourceDir = sp.GetResourceDir()
+
+    # Otherwise we assume that the resources
+    # are alongside the FSLeyes source.
+    else:
+        resourceDir = op.dirname(__file__)
+
+    resourceDir = op.abspath(resourceDir)
+
+    cmapDir = resourceDir
+    iconDir = op.join(resourceDir, 'icons')
+    glDir   = op.join(resourceDir, 'gl')
+
+    props.initGUI()
+
+    colourmaps.init(cmapDir)
+    icons     .init(iconDir)
+
+    # Force the creation of a wx.glcanvas.GLContext object,
+    # and initialise OpenGL version-specific module loads.
+    # The splash screen is used as the parent of the dummy
+    # canvas created by the gl.getWXGLContext function.
+    try:
+        fslgl.getWXGLContext(splash)
+        fslgl.bootstrap(namespace.glversion, glDir)
+        
+    except:
+        log.error('Unable to initialise OpenGL!', exc_info=True)
+        splash.Destroy()
+        sys.exit(1)
     
 
 def parseArgs(argv):
@@ -151,8 +195,10 @@ def configLogging(namespace):
               when we are running a frozen version.
     """
 
-    global log
+    from fsl.utils.platform import platform as fslplatform
 
+    global log
+    
     # make numpy/matplotlib quiet
     warnings.filterwarnings('ignore', module='matplotlib')
     warnings.filterwarnings('ignore', module='mpl_toolkits')
@@ -255,30 +301,10 @@ def makeDisplayContext(namespace, splash):
                 - the master :class:`.DisplayContext`
     """
 
+    import fsl.utils.status       as status
     import fsleyes.overlay        as fsloverlay
     import fsleyes.parseargs      as parseargs
     import fsleyes.displaycontext as displaycontext
-    import fsleyes.gl             as fslgl
-    import props
-    
-    props.initGUI()
-
-    # The splash screen is used as the parent of the dummy
-    # canvas created by the gl.getWXGLContext function; the
-    # splash screen frame is returned by this function, and
-    # passed through to the interface function below, which
-    # takes care of destroying it.    
-    
-    # force the creation of a wx.glcanvas.GLContext object,
-    # and initialise OpenGL version-specific module loads.
-    try:
-        fslgl.getWXGLContext(splash)
-        fslgl.bootstrap(namespace.glversion)
-        
-    except:
-        log.error('Unable to initialise OpenGL!', exc_info=True)
-        splash.Destroy()
-        sys.exit(1)
 
     # Redirect status updates
     # to the splash frame
@@ -340,11 +366,15 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     :returns: the :class:`.FSLEyesFrame` that was created.
     """
 
-    import fsleyes.parseargs      as parseargs
-    import fsleyes.frame          as fsleyesframe
-    import fsleyes.displaycontext as fsldisplay
-    import fsleyes.views          as views
-
+    import fsl.utils.status                   as status
+    import fsl.utils.async                    as async
+    from   fsl.utils.platform import platform as fslplatform
+    import fsleyes.parseargs                  as parseargs
+    import fsleyes.frame                      as fsleyesframe
+    import fsleyes.displaycontext             as fsldisplay
+    import fsleyes.perspectives               as perspectives
+    import fsleyes.views                      as views
+    
     # Set up the frame scene (a.k.a. layout, perspective)
     # The scene argument can be:
     #
@@ -455,6 +485,8 @@ def fslDirWarning(parent):
 
     :arg parent: A ``wx`` parent object.
     """
+
+    from fsl.utils.platform import platform as fslplatform
 
     if fslplatform.fsldir is not None:
         return

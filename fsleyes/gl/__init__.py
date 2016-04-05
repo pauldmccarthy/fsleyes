@@ -173,6 +173,7 @@ before any ``GLObject`` instances are created.
 
 
 import os
+import os.path as op
 import logging
 import platform
 
@@ -217,7 +218,7 @@ if os.environ.get('PYOPENGL_PLATFORM', None) == 'osmesa':
     OpenGL.STORE_POINTERS = False
 
 
-def bootstrap(glVersion=None):
+def bootstrap(glVersion=None, shaderDir=None):
     """Imports modules appropriate to the specified OpenGL version.
 
     The available OpenGL API version can only be queried once an OpenGL
@@ -269,14 +270,22 @@ def bootstrap(glVersion=None):
     :attr:`fsl.utils.platform.platform` instance.
     
 
-    :arg glVersion: A tuple containing the desired (major, minor) OpenGL API
-                    version to use. If ``None``, the best possible API version
-                    will be used.
+    :arg glVersion:   A tuple containing the desired (major, minor) OpenGL API
+                      version to use. If ``None``, the best possible API
+                      version will be used.
+
+    :arg shaderDir: Directory in which shader source files can be located.
+                    This defaults to the :mod:`fsleyes.gl` package directory,
+                    but may be different for frozen applications. The
+                    specified directory must contain ``gl14`` and ``gl21``
+                    sub-directories, in which ``ARB`` and ``glsl`` source
+                    files are respectively located.
     """
 
     import sys
     import OpenGL.GL         as gl
     import OpenGL.extensions as glexts
+    from . import               shaders
     from . import               gl14
     from . import               gl21
 
@@ -290,6 +299,9 @@ def bootstrap(glVersion=None):
         major, minor = [int(v) for v in glVer.split('.')][:2]
     else:
         major, minor = glVersion
+
+    if shaderDir is None:
+        shaderDir = op.dirname(__file__)
 
     glpkg = None
 
@@ -366,6 +378,8 @@ def bootstrap(glVersion=None):
 
         import fsleyes.displaycontext as dc
         dc.SceneOpts.performance.setConstraint(None, 'default', 2)
+
+    shaders.init(shaderDir)
 
     thismod.GL_VERSION         = verstr
     thismod.GL_RENDERER        = renderer

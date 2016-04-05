@@ -4,8 +4,8 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""The ``shaders`` package contains classes and functions for parsing,
-compiling, and managing OpenGL shader programs. Two types of shader
+"""The ``shaders`` package contains classes and functions for finding,
+parsing, compiling, and managing OpenGL shader programs. Two types of shader
 program are supported:
 
 
@@ -34,6 +34,11 @@ Each of these functions locate shader source files, load the source code, and
 run them through the :func:`preprocess` function, which performs some simple
 preprocessing on the source. This applies to both GLSL and ARB assembly
 shader programs.
+
+
+.. note:: The :func:`init` function must be called before the package-level
+          functions defined here can be used, to specify the location in
+          which the shader source files may be found.
 """
 
 
@@ -46,6 +51,29 @@ from .arbp import program as arbpprogram
 
 GLSLShader = glslprogram.GLSLShader
 ARBPShader = arbpprogram.ARBPShader
+
+
+_shaderDir = None
+"""Directory in which the ``ARB`` and ``glsl`` source files can be found.
+This attribute is set via the :func:`init` function.
+
+``ARB`` files are assumed to be in a sub-directory called ``gl14``, and
+``glsl`` files in a sub-directory called ``gl21``.
+"""
+
+
+def init(shaderDir=None):
+    """Must be called before any of the other functions in this package can
+    be called. Sets the :data:`_shaderDir`, the directory in which the shader
+    source files can be found.
+    """
+    
+    global _shaderDir
+    
+    if shaderDir is None:
+        shaderDir = op.join(op.dirname(__file__), '..')
+
+    _shaderDir = shaderDir
 
 
 def getVertexShader(prefix):
@@ -74,6 +102,9 @@ def _getFileName(prefix, shaderType):
     and shader type.
     """
 
+    if _shaderDir is None:
+        raise RuntimeError('shaders package has not been initialised')
+
     if   fslgl.GL_VERSION == '2.1':
         subdir = 'gl21'
         suffix = 'glsl'
@@ -84,7 +115,7 @@ def _getFileName(prefix, shaderType):
     if shaderType not in ('vert', 'frag'):
         raise RuntimeError('Invalid shader type: {}'.format(shaderType))
 
-    return op.join(op.dirname(__file__), '..', subdir, '{}_{}.{}'.format(
+    return op.join(_shaderDir, subdir, '{}_{}.{}'.format(
         prefix, shaderType, suffix))
  
 

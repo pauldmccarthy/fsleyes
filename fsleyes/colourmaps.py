@@ -132,26 +132,58 @@ import os.path as op
 
 from collections import OrderedDict
 
-import six
-
+import          six
 import numpy as np
 
-import props
+import          props
 
 
 log = logging.getLogger(__name__)
 
 
-def init():
+_cmapDir = None
+"""The directory in which all colour map files are stored. """
+
+
+_lutDir = None
+"""The directory in which all lookup table files are stored. """
+
+
+_cmaps = None
+"""An ``OrderedDict`` which contains all registered colour maps as
+``{key : _Map}`` mappings.
+"""
+
+
+_luts = None
+"""An ``OrderedDict`` which contains all registered lookup tables as
+``{key : _Map}`` mappings.
+"""
+
+
+def init(cmapDir=None):
     """This function must be called before any of the other functions in this
     module can be used.
 
     It initialises the colour map and lookup table registers, loading all
     colour map and lookup table files that exist.
+
+    :arg cmapDir: A directory which contains two sub-directories
+                  ``colourmaps`` and ``luts``, which respectively contain
+                  the colour map/lookup table files. If ``None``, defaults
+                  to the :mod:`fsleyes` package directory.
     """
 
+    global _cmapDir
+    global _lutDir
     global _cmaps
     global _luts
+
+    if cmapDir is None:
+        cmapDir = op.dirname(__file__)
+
+    _cmapDir = op.join(cmapDir, 'colourmaps')
+    _lutDir  = op.join(cmapDir, 'luts')
 
     registers = []
 
@@ -682,25 +714,6 @@ def complementaryColour(rgb):
     nr, ng, nb = colorsys.hls_to_rgb(nh, nl, ns)
 
     return [nr, ng, nb] + a
-
-
-_cmapDir = op.join(op.dirname(__file__), 'colourmaps')
-"""The directory in which all colour map files are stored. """
-
-
-_lutDir = op.join(op.dirname(__file__), 'luts')
-"""The directory in which all lookup table files are stored. """
-
-_cmaps = None
-"""An ``OrderedDict`` which contains all registered colour maps as
-``{key : _Map}`` mappings.
-"""
-
-
-_luts = None
-"""An ``OrderedDict`` which contains all registered lookup tables as
-``{key : _Map}`` mappings.
-"""
 
 
 def _caseInsensitiveLookup(d, k, default=None):
