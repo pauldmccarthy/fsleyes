@@ -187,9 +187,16 @@ class FSLEyesFrame(wx.Frame):
         # loop
         def update(msg):
             def realUpdate():
-                self.__statusBar.SetLabel(msg)
-                self.__statusBar.Refresh()
-                self.__statusBar.Update()
+                # This function might get called after
+                # the status bar has been destroyed,
+                # so we'll absorb any errors.
+                try:
+                    self.__statusBar.SetLabel(msg)
+                    self.__statusBar.Refresh()
+                    self.__statusBar.Update()
+                except:
+                    pass
+                
             wx.CallAfter(realUpdate)
         status.setTarget(update)
 

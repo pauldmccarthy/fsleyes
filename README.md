@@ -54,8 +54,6 @@ Dependencies
  >   - Sphinx is only needed for building the documentation.
  >
  >   - OSMesa is only needed for the off-screen `render` program.
- >
- >   - Pillow is only needed for saving screenshots in formats other than PNG.
  > 
  >   - If you are installing *FSLeyes* manually, don't worry too much about 
  >     having the exact version of each of the packages - just try with 

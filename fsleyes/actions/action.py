@@ -106,34 +106,59 @@ class Action(props.HasProperties):
         widget.Enable(self.enabled)
         self.__boundWidgets.append((parent, evType, widget))
 
+        
+    def unbindWidget(self, widget):
+        """Unbinds the given widget from this ``Action``. """
 
+        # Figure out the index into __boundWidgets,
+        # as we need this to pass to __unbindWidget,
+        # which does the real work.
+        index = -1
+        
+        for i, (p, e, w) in self.__boundWidgets:
+            if w == widget:
+                index = i
+                break
+
+        if index == -1:
+            raise ValueError('Widget {} is not bound'.format(type().__name__))
+
+        self.__unbindWidget(    index)
+        self.__boundWidgets.pop(index)
+
+
+    def __unbindWidget(self, index):
+        """Unbinds the widget at the specified index into the
+        ``__boundWidgets`` list. Does not remove it from the list.
+        """
+        import wx
+        
+        parent, evType, widget = self.__boundWidgets[index]
+        
+        # Only attempt to unbind if the parent
+        # and widget have not been destroyed
+
+        # wxPython-Phoenix
+        if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
+            if parent:
+                parent.Unbind(evType, source=widget)
+
+        # old wxPython
+        elif fslplatform.wxFlavour == fslplatform.WX_PYTHON:
+            try:
+                parent.Unbind(evType, source=widget)
+                
+            except wx.PyDeadObjectError:
+                pass
+            
+        
     def unbindAllWidgets(self):
         """Unbinds all widgets which have been bound via :meth:`bindToWidget`.
         """
 
-        for parent, evType, widget in self.__boundWidgets:
+        for i in range(len(self.__boundWidgets)):
+            self.__unbindWidget(i)
 
-            # If running in a non-GUI application,
-            # there will be no bound widgets, so
-            # this import will never be executed.
-            # Yes, it is hacky.
-            import wx
-
-            # Only attempt to unbind if the parent
-            # and widget have not been destroyed
-
-            # wxPython-Phoenix
-            if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
-                if parent:
-                    parent.Unbind(evType, source=widget)
-
-            # old wxPython
-            elif fslplatform.wxFlavour == fslplatform.WX_PYTHON:
-                try:
-                    parent.Unbind(evType, source=widget)
-                except wx.PyDeadObjectError:
-                    pass
-                
         self.__boundWidgets = []
 
         
@@ -219,12 +244,19 @@ class ToggleAction(Action):
         import wx
         import pwidgets.bitmaptoggle as bmptoggle
         
-        for widget in self.getBoundWidgets():
+        for widget in list(self.getBoundWidgets()):
 
-            if isinstance(widget, wx.MenuItem):
-                widget.Check(self.toggled)
-                
-            elif isinstance(widget, (wx.CheckBox,
-                                     wx.ToggleButton,
-                                     bmptoggle.BitmapToggleButton)):
-                widget.SetValue(self.toggled)
+            # An error will be raised if a widget
+            # has been destroyed, so we'll unbind
+            # any widgets which no longer exist.
+            try:
+                if isinstance(widget, wx.MenuItem):
+                    widget.Check(self.toggled)
+
+                elif isinstance(widget, (wx.CheckBox,
+                                         wx.ToggleButton,
+                                         bmptoggle.BitmapToggleButton)):
+                    widget.SetValue(self.toggled)
+                    
+            except:
+                self.unbindWidget(widget)

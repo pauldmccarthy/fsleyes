@@ -325,7 +325,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         # lut/outline width widgets
         # are on a single panel
         lutWidthPanel = wx.Panel(self)
-        lutWidthSizer = wx.FlexGridSizer(2, 2)
+        lutWidthSizer = wx.FlexGridSizer(2, 2, 0, 0)
         lutWidthPanel.SetSizer(lutWidthSizer)
         
         lutWidget     = props.buildGUI(lutWidthPanel, opts, lutSpec)

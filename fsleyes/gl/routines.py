@@ -7,6 +7,8 @@
 """This module contains a collection of miscellaneous OpenGL routines. """
 
 
+from __future__ import division
+
 import logging
 
 import itertools           as it
@@ -536,17 +538,17 @@ def subsample(data, resolution, pixdim=None, volume=None):
     if volume is None:
         volume = slice(None, None, None)
 
-    xstep = np.round(resolution / pixdim[0])
-    ystep = np.round(resolution / pixdim[1]) 
-    zstep = np.round(resolution / pixdim[2])
+    xstep = int(np.round(resolution / pixdim[0]))
+    ystep = int(np.round(resolution / pixdim[1]))
+    zstep = int(np.round(resolution / pixdim[2]))
 
     if xstep < 1: xstep = 1
     if ystep < 1: ystep = 1
     if zstep < 1: zstep = 1
 
-    xstart = np.floor(xstep / 2)
-    ystart = np.floor(ystep / 2)
-    zstart = np.floor(zstep / 2)
+    xstart = int(np.floor(xstep / 2))
+    ystart = int(np.floor(ystep / 2))
+    zstart = int(np.floor(zstep / 2))
 
     if xstart >= data.shape[0]: xstart = data.shape[0] - 1
     if ystart >= data.shape[1]: ystart = data.shape[1] - 1
