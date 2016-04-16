@@ -80,6 +80,7 @@ class ReloadOverlayAction(action.Action):
             raise RuntimeError('Only Image overlays can be reloaded')
 
         index      = self.__overlayList.index(ovl)
+        order      = self.__displayCtx.overlayOrder[:]
         dataSource = ovl.dataSource
 
         status.update('Reloading {}...'.format(dataSource))
@@ -116,13 +117,18 @@ class ReloadOverlayAction(action.Action):
 
         # Now that we've got all the settings for
         # this overlay, we'll remove it from the
-        # list.
+        # list. 
         self.__overlayList.remove(ovl)
 
         # Now we re-load the overlay, and add it
         # back in to the list at the same location
         ovl = fslimage.Image(dataSource)
         self.__overlayList.insert(index, ovl)
+
+        # Make sure the overlay is selected, 
+        # and the display order is preserved 
+        self.__displayCtx.selectOverlay(ovl)
+        self.__displayCtx.overlayOrder = order
 
         # The last step is to re-apply all of the
         # Display/DisplayOpts settings to the
