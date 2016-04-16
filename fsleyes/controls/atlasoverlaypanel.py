@@ -122,6 +122,7 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
             self.__updateAtlasState(i)
             widget = OverlayListWidget(self.__atlasList,
                                        atlasDesc.atlasID,
+                                       i, 
                                        atlasPanel)
             self.__atlasList.SetItemWidget(i, widget)
         
@@ -255,6 +256,7 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
                     regionList.Append(label.name)
                     widget = OverlayListWidget(regionList,
                                                atlasDesc.atlasID,
+                                               i,
                                                self.__atlasPanel,
                                                label.index)
                     regionList.SetItemWidget(i, widget)
@@ -338,17 +340,21 @@ class OverlayListWidget(wx.Panel):
     """
 
     
-    def __init__(self, parent, atlasID, atlasPanel, labelIdx=None):
+    def __init__(self, parent, atlasID, listIdx, atlasPanel, labelIdx=None):
         """Create an ``OverlayListWidget``.
 
-        :arg parent:     The :mod:`wx` parent object.
+        :arg parent:     The :mod:`wx` parent object - this is assumed to be
+                         an :class:`.EditableListBox`.
         
         :arg atlasID:    The atlas identifier.
+
+        :arg listIdx:    The index of this ``OverlayListWidget`` in the
+                         ``EditableListBox``.
         
         :arg atlasPanel: The :class:`.AtlasPanel` which owns the
                          :class:`AtlasOverlayPanel` that created this
                          ``OverlayListWidget``.
-        
+
         :arg labelIdx:   Label index of the region, if this
                          ``OverlatyListWidget`` corresponds to a region,
                          or ``None``  if it corresponds to an atlas.
@@ -359,6 +365,8 @@ class OverlayListWidget(wx.Panel):
         self.__atlasID    = atlasID
         self.__atlasDesc  = atlases.getAtlasDescription(atlasID)
         self.__atlasPanel = atlasPanel
+        self.__atlasList  = parent
+        self.__listIdx    = listIdx
         self.__labelIdx   = labelIdx
 
         self.__enableBox = wx.CheckBox(self)
@@ -392,6 +400,7 @@ class OverlayListWidget(wx.Panel):
         :meth:`.AtlasPanel.toggleOverlay` method, to toggle the overlay
         for the atlas/region associated with this ``OverlayListWidget``..
         """
+        self.__atlasList.SetSelection(self.__listIdx)
         self.__atlasPanel.toggleOverlay(
             self.__atlasID,
             self.__labelIdx,

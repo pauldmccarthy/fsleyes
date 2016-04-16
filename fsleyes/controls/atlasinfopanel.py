@@ -90,6 +90,7 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
             
             self.__atlasList.Append(atlasDesc.name, atlasDesc.atlasID)
             widget = AtlasListWidget(self.__atlasList,
+                                     i,
                                      self,
                                      atlasDesc.atlasID)
             self.__atlasList.SetItemWidget(i, widget)        
@@ -300,10 +301,14 @@ class AtlasListWidget(wx.CheckBox):
     """
 
     
-    def __init__(self, parent, atlasInfoPanel, atlasID):
+    def __init__(self, parent, listIdx, atlasInfoPanel, atlasID):
         """Create an ``AtlasListWidget``.
 
-        :arg parent:         The :mod:`wx` parent object.
+        :arg parent:         The :mod:`wx` parent object, assumed to be an
+                             :class:`.EditableListBox`.
+
+        :arg listIdx:        Index of this ``AtlasListWidget`` in the
+                             ``EditableListBox``.
         
         :arg atlasInfoPanel: the :class:`AtlasInfoPanel` instance that owns
                              this ``AtlasListWidget``.
@@ -314,7 +319,9 @@ class AtlasListWidget(wx.CheckBox):
 
         wx.CheckBox.__init__(self, parent)
 
+        self.__atlasList      = parent
         self.__atlasID        = atlasID
+        self.__listIdx        = listIdx
         self.__atlasInfoPanel = atlasInfoPanel
 
         self.Bind(wx.EVT_CHECKBOX, self.__onEnable)
@@ -324,6 +331,8 @@ class AtlasListWidget(wx.CheckBox):
         """Called when this ``AtlasListWidget`` is clicked. Toggles
         information display for the atlas associated with this widget.
         """
+
+        self.__atlasList.SetSelection(self.__listIdx)
 
         if self.GetValue():
             self.__atlasInfoPanel.enableAtlasInfo( self.__atlasID)

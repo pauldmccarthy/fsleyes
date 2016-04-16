@@ -450,7 +450,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
             return
 
         if not isinstance(overlay, fslimage.Image) or \
-           display.overlayType != 'volume':
+           display.overlayType not in ('volume', 'label', 'mask'):
             
             # change profile if needed,
             if self.profile == 'edit':

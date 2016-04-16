@@ -561,9 +561,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__setFillValueLimits(overlay)
 
         # Edit mode is only supported on
-        # images with the 'volume' type
+        # images with the 'volume', 'mask'
+        # or 'label' types
         if not isinstance(overlay, fslimage.Image) or \
-           display.overlayType != 'volume':
+           display.overlayType not in ('volume', 'mask', 'label'):
             
             self.__currentOverlay = None
             return
