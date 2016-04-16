@@ -83,6 +83,7 @@ def updateShaderState(self):
     imageDims = image.pixdim[:3]
     d2vMat    = opts.getTransform('display', 'voxel')
     v2dMat    = opts.getTransform('voxel',   'display')
+    xFlip     = image.isNeurological() and opts.neuroFlip
 
     # The shader adds these offsets to
     # transformed voxel coordinates, so
@@ -97,6 +98,7 @@ def updateShaderState(self):
     changed |= shader.set('voxelOffset',     offset)
     changed |= shader.set('imageDims',       imageDims)
     changed |= shader.set('directed',        directed)
+    changed |= shader.set('xFlip',           xFlip)
 
     shader.unload()
 

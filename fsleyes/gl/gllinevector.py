@@ -283,6 +283,10 @@ class GLLineVertices(object):
         z        = vertices[:, :, :, 2]
         lens     = np.sqrt(x ** 2 + y ** 2 + z ** 2)
 
+        # Flip vectors about the x axis if necessary
+        if opts.neuroFlip and image.isNeurological():
+            x = -x
+
         # scale the vector lengths to 0.5
         with np.errstate(invalid='ignore'):
             vertices[:, :, :, 0] = 0.5 * x / lens

@@ -40,6 +40,12 @@ uniform vec3 imageShape;
 uniform vec3 imageDims;
 
 /*
+ * If true, the vectors are 
+ * inverted about the x axis.
+ */
+uniform bool xFlip;
+
+/*
  * Line vectors are interpreted as directed - each
  * line begins in the centre of its voxel, and extends
  * outwards.
@@ -110,6 +116,10 @@ void main(void) {
   vector   *= voxValXform[0].x;
   vector   += voxValXform[3].x;
   vectorLen = length(vector);
+
+  /* Invert about the x axis if necessary */
+  if (xFlip)
+    vector.x = -vector.x;
 
   /* 
    * Kill the vector if its length is 0. 
