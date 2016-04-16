@@ -49,6 +49,15 @@ class VectorOpts(volumeopts.Nifti1Opts):
     """Do not use the Z vector magnitude to colour vectors."""
 
 
+    neuroFlip = props.Boolean(default=True)
+    """If ``True``, and the displayed image looks like it is in neurological
+    orientation, vectors are flipped along the x-axis. This property is
+    only applicable to the :class:`.LineVectorOpts` and :class:`.TensorOpts`
+    classes. See the :meth:`.Nifti1Opts.getTransform` method for more
+    information.
+    """
+
+    
     cmap = props.ColourMap()
     """If an image is selected as the :attr:`colourImage`, this colour map
     is used to colour the vector voxels.

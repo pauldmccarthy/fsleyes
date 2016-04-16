@@ -38,7 +38,10 @@ The :attr:`Nifti1Opts.transform` property controls how the image data is
 transformed into the display coordinate system. It allows any of the above
 spaces to be specified (as ``id``, ``pixdim`` or ``affine``` respectively),
 and also allows a ``custom`` transformation to be specified (see the
-:attr:`customXform` property).
+:attr:`customXform` property). This ``custom`` transformation is used to
+transform one image into the space of another, by concatentating multiple
+transformation matrices - see the :attr:`.DisplayContext.displaySpace`
+property.
 
 
 Regardless of the space in which the ``Nifti1`` is displayed , the
@@ -73,8 +76,7 @@ to the centre of a voxel.
 
 import logging
 
-import numpy        as np
-import numpy.linalg as npla
+import numpy as np
 
 import props
 
@@ -247,9 +249,9 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
         voxToCustomMat     = self.customXform
 
         # pixdim-flip space differs from
-        # pixdim space only if the affine
-        # matrix has a positive determinant
-        if npla.det(voxToAffineMat) > 0:
+        # pixdim space only if the image
+        # is in neurological orientation
+        if image.isNeurological():
             x               = image.shape[0]
             flip            = transform.scaleOffsetXform([-1, 1, 1], [x, 0, 0])
             voxToPixFlipMat = transform.concat(voxToPixFlipMat, flip)
@@ -357,11 +359,16 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
         .. note:: While the ``pixdim-flip`` space is not a display option for
                   ``Nifti1``, the transformations for this space are made
                   available theough this method as it is the coordinate system
-                  used internally by many of the FSL tools.  Most importantly,
+                  used internally by many of the FSL tools.  For instance,
                   this is the coordinate system used in the VTK sub-cortical
-                  segmentation model files output by FIRST, and is hence used
-                  by the :class:`.ModelOpts` class to transform VTK model
+                  segmentation model files output by ``first``, and is hence 
+                  used by the :class:`.ModelOpts` class to transform VTK model
                   coordinates.
+
+                  Furthermore, the vectors in eigenvector images images output
+                  by ``dtifit`` are oriented according to this space, so if
+                  the input data is in neurological orientation, these vectors
+                  need to be inverted along the x axis.
 
                   http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT/FAQ#What_is_the_\
                   format_of_the_matrix_used_by_FLIRT.2C_and_how_does_it_\

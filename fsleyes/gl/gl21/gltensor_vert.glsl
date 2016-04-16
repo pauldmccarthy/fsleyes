@@ -75,6 +75,12 @@ uniform bool lighting;
 uniform vec3 lightPos;
 
 /*
+ * If true, the V1, V2 and V3 eigenvectors 
+ * are flipped about the x axis.
+ */
+uniform bool xFlip;
+
+/*
  * Voxel corresponding to the current vertex.
  */
 attribute vec3 voxel;
@@ -123,6 +129,14 @@ void main(void) {
   l1 = l1 * l1ValXform[0].x + l1ValXform[3].x;
   l2 = l2 * l2ValXform[0].x + l2ValXform[3].x;
   l3 = l3 * l3ValXform[0].x + l3ValXform[3].x;
+
+  // Invert the vectors about
+  // the x axis if necessary
+  if (xFlip) {
+    v1.x = -v1.x;
+    v2.x = -v2.x;
+    v3.x = -v3.x;
+  }
 
   // Transform the sphere by the tensor
   // eigenvalues and eigenvectors, and

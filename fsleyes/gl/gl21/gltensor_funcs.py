@@ -142,6 +142,7 @@ def updateShaderState(self):
     function.
     """
 
+    image  = self.image
     shader = self.shader
     opts   = self.displayOpts
     
@@ -159,11 +160,12 @@ def updateShaderState(self):
     l3ValXform  = self.l3Texture.voxValXform
 
     # Other miscellaneous uniforms
-    imageShape    = self.image.shape[:3]
+    imageShape    = image.shape[:3]
     resolution    = opts.tensorResolution
     tensorScale   = opts.tensorScale
+    xFlip         = opts.neuroFlip and image.isNeurological()
 
-    l1          = self.image.L1()
+    l1          = image.L1()
     eigValNorm  = 0.5 / np.abs(l1.data).max()
     eigValNorm *= tensorScale / 100.0
 
@@ -179,7 +181,9 @@ def updateShaderState(self):
     changed |= shader.set('l1Texture', 11)
     changed |= shader.set('l2Texture', 12)
     changed |= shader.set('l3Texture', 13)
-    
+
+    # Texture value -> actual
+    # value transformations
     changed |= shader.set('v1ValXform', v1ValXform)
     changed |= shader.set('v2ValXform', v2ValXform)
     changed |= shader.set('v3ValXform', v3ValXform)
@@ -187,6 +191,8 @@ def updateShaderState(self):
     changed |= shader.set('l2ValXform', l2ValXform)
     changed |= shader.set('l3ValXform', l3ValXform)
 
+    # Other settings
+    changed |= shader.set('xFlip',      xFlip)
     changed |= shader.set('imageShape', imageShape)
     changed |= shader.set('eigValNorm', eigValNorm)
     changed |= shader.set('lighting',   opts.lighting)
