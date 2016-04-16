@@ -425,9 +425,8 @@ labels = TypeDict({
     'OverlayInfoPanel.Model.coordSpace'             : 'Vertices defined in',
     'OverlayInfoPanel.Model.coordSpace.id'          : 'Voxels ({})',
     'OverlayInfoPanel.Model.coordSpace.pixdim'      : 'Scaled voxels ({})',
-    'OverlayInfoPanel.Model.coordSpace.pixdim-flip' : 'Scaled voxels forced '
-                                                      'to radiological '
-                                                      'orientation ({})',
+    'OverlayInfoPanel.Model.coordSpace.pixdim-flip' : 'Scaled voxels [FSL '
+                                                      'convention] ({})',
     'OverlayInfoPanel.Model.coordSpace.affine'      : 'World coordinates ({})',
     'OverlayInfoPanel.Model.coordSpace.display'     : 'Display coordinate '
                                                       'system',
@@ -585,7 +584,7 @@ properties = TypeDict({
     'VectorOpts.modulateImage' : 'Modulate by',
     'VectorOpts.clipImage'     : 'Clip by',
     'VectorOpts.clippingRange' : 'Clipping range',
-    'VectorOpts.neuroFlip'     : 'Neurological/radiological flip',
+    'VectorOpts.neuroFlip'     : 'Neurological flip (FSL convention)',
 
     'RGBVectorOpts.interpolation' : 'Interpolation',
 
