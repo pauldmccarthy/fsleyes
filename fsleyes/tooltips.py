@@ -169,7 +169,10 @@ properties = TypeDict({
                                     'clipping image value that is outside of '
                                     'this range are not displayed. ',
     'VectorOpts.cmap'             : 'Colour map to use for colouring vector '
-                                    'voxels, if a colour image is selected.', 
+                                    'voxels, if a colour image is selected.',
+    'VectorOpts.neuroFlip'        : 'If the image is in neurological '
+                                    'orientation, the vectors are flipped '
+                                    'about the x axis.',
     'LineVectorOpts.lineWidth'    : 'The width of each vector line, in '
                                     'display pixels.',
     'LineVectorOpts.directed'     : 'If unchecked, the vector data is assumed '

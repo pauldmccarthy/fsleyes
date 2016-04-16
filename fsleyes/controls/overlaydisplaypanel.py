@@ -381,6 +381,8 @@ _DISPLAY_PROPS = td.TypeDict({
                      labels=strings.choices['VolumeOpts.interpolation'])],
 
     'LineVectorOpts' : [
+        props.Widget('directed'),
+        props.Widget('neuroFlip'),
         props.Widget('resolution', showLimits=False),
         props.Widget('lineWidth',  showLimits=False)],
 
@@ -397,6 +399,7 @@ _DISPLAY_PROPS = td.TypeDict({
 
     'TensorOpts' : [
         props.Widget('lighting'),
+        props.Widget('neuroFlip'),
         props.Widget(
             'tensorResolution',
             showLimits=False,

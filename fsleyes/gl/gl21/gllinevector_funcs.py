@@ -51,11 +51,21 @@ def init(self):
     compileShaders(   self)
     updateShaderState(self)
 
+    def update(*a, **kwa):
+        updateShaderState(self)
+        self.notify()
+
+    self.displayOpts.addListener('neuroFlip', self.name, update, weak=False)
+    self.displayOpts.addListener('directed',  self.name, update, weak=False)
+
     
 def destroy(self):
     """Deletes the vertex/fragment shaders. """
-    self.shader.destroy()
 
+    self.displayOpts.removeListener('neuroFlip', self.name)
+    self.displayOpts.removeListener('directed',  self.name)
+    self.shader.destroy()
+ 
 
 def compileShaders(self):
     """Compiles the vertex/fragment shaders via the

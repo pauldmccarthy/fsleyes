@@ -585,6 +585,7 @@ properties = TypeDict({
     'VectorOpts.modulateImage' : 'Modulate by',
     'VectorOpts.clipImage'     : 'Clip by',
     'VectorOpts.clippingRange' : 'Clipping range',
+    'VectorOpts.neuroFlip'     : 'Neurological/radiological flip',
 
     'RGBVectorOpts.interpolation' : 'Interpolation',
 

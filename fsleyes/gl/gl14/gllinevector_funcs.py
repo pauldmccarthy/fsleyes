@@ -68,6 +68,7 @@ def init(self):
     opts.addListener('transform',  name, vertexUpdate, weak=False)
     opts.addListener('resolution', name, vertexUpdate, weak=False)
     opts.addListener('directed',   name, vertexUpdate, weak=False)
+    opts.addListener('neuroFlip',  name, vertexUpdate, weak=False)
 
 
 def destroy(self):
@@ -83,6 +84,7 @@ def destroy(self):
     self.displayOpts.removeListener('transform',  name)
     self.displayOpts.removeListener('resolution', name)
     self.displayOpts.removeListener('directed',   name)
+    self.displayOpts.removeListener('neuroFlip',  name)
 
     glresources.delete(self._vertexResourceName)
 

@@ -234,6 +234,7 @@ class GLLineVertices(object):
         opts = glvec.displayOpts
         return (hash(opts.transform)  ^
                 hash(opts.resolution) ^
+                hash(opts.neuroFlip)  ^ 
                 hash(opts.directed)) 
 
         
