@@ -83,6 +83,10 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
 
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
+        # See the enableAtlasPanel method 
+        # for info about this attribute.
+        self.__atlasPanelEnableStack = 0
+
         self.__atlasPanel      = atlasPanel
         self.__contentPanel    = wx.SplitterWindow(self,
                                                    style=wx.SP_LIVE_UPDATE)
@@ -123,7 +127,8 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
             widget = OverlayListWidget(self.__atlasList,
                                        atlasDesc.atlasID,
                                        i, 
-                                       atlasPanel)
+                                       atlasPanel,
+                                       self)
             self.__atlasList.SetItemWidget(i, widget)
         
         self.__regionFilter.Bind(wx.EVT_TEXT, self.__onRegionFilter)
@@ -209,8 +214,9 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
         self.__atlasList.SetItemForegroundColour(atlasIdx, colour, colour) 
  
             
-    def __onAtlasSelect(self, ev):
-        """Called when the user selects an atlas in the atlas list.
+    def __onAtlasSelect(self, ev=None, atlasIdx=None, atlasDesc=None):
+        """Called when the user selects an atlas in the atlas list, or
+        the :meth:`selectAtlas` method is called.
 
         If a region list (a list of :class:`OverlayListWidget` items for every
         region in the atlas, to be displayed in the region list) has not yet
@@ -222,9 +228,12 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
         selected atlas.
         """
 
-        atlasDesc  = ev.data
-        atlasIdx   = ev.idx
-        regionList = self.__regionLists[atlasIdx]
+        if ev is not None:
+            atlasDesc  = ev.data
+            atlasIdx   = ev.idx
+
+        atlasPanelDisabled = False
+        regionList         = self.__regionLists[atlasIdx]
 
         if regionList is None:
 
@@ -258,6 +267,7 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
                                                atlasDesc.atlasID,
                                                i,
                                                self.__atlasPanel,
+                                               self,
                                                label.index)
                     regionList.SetItemWidget(i, widget)
                     
@@ -275,7 +285,8 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
             # wx idle loop for every region.
             # Disable the panel while this is
             # occurring.
-            self.Disable()
+            atlasPanelDisabled = True
+            self.enableAtlasPanel(False)
             for i, label in enumerate(atlasDesc.labels):
                 async.idle(addToRegionList, label, i)
 
@@ -314,12 +325,60 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
                                           proportion=1)
                 self.__regionSizer.Layout()
 
-                self.Enable()
+                if atlasPanelDisabled:
+                    self.enableAtlasPanel()
                 
             except wx.PyDeadObjectError:
                 pass
  
         async.idle(changeAtlasList)
+
+
+    def selectAtlas(self, atlasIdx, atlasDesc):
+        """Selects the specified atlas. This method is used by
+        :class:`OverlayListWidget` instances.
+
+        :arg atlasIdx:  Index of the atlas in the atlas list.
+
+        :arg atlasDesc: The :class:`.AtlasDescription` instance for the
+                        atlas.
+        """
+
+        self.__atlasList.SetSelection(atlasIdx)
+        self.__onAtlasSelect(atlasIdx=atlasIdx, atlasDesc=atlasDesc)
+
+
+    def enableAtlasPanel(self, enable=True):
+        """Disables/enables the :class:`.AtlasPanel` which contains this
+        ``AtlasOverlayPanel``. This method is used by
+        :class:`OverlayListWidget` instances.
+
+        This method keeps a count of the number of times that it has been
+        called - the count is increased every time a request is made
+        to disable the ``AtlasPanel``, and decreased on requests to
+        enable it. The ``AtlasPanel`` is only enabled when the count
+        reaches 0.
+
+        This ugly method solves an awkward problem - the ``AtlasOverlayPanel``
+        disables the ``AtlasPanel`` when an atlas overlay is toggled on/off
+        (via an ``OverlayListWidget``), and when an atlas region list is being
+        generated (via the :meth:`__onAtlasSelect` method). If both of these
+        things occur at the same time, the ``AtlasPanel`` could be prematurely
+        re-enabled. This method overcomes this problem.
+        """ 
+        count = self.__atlasPanelEnableStack
+        if enable:
+            count -= 1
+
+            if count <= 0:
+                count = 0
+                self.__atlasPanel.Enable()
+
+        else:
+            count += 1
+            self.__atlasPanel.Disable()
+
+        self.__atlasPanelEnableStack = count
 
         
 class OverlayListWidget(wx.Panel):
@@ -340,34 +399,44 @@ class OverlayListWidget(wx.Panel):
     """
 
     
-    def __init__(self, parent, atlasID, listIdx, atlasPanel, labelIdx=None):
+    def __init__(self,
+                 parent,
+                 atlasID,
+                 listIdx,
+                 atlasPanel,
+                 atlasOvlPanel,
+                 labelIdx=None):
         """Create an ``OverlayListWidget``.
 
-        :arg parent:     The :mod:`wx` parent object - this is assumed to be
-                         an :class:`.EditableListBox`.
+        :arg parent:        The :mod:`wx` parent object - this is assumed to 
+                            be an :class:`.EditableListBox`.
         
-        :arg atlasID:    The atlas identifier.
+        :arg atlasID:       The atlas identifier.
 
-        :arg listIdx:    The index of this ``OverlayListWidget`` in the
-                         ``EditableListBox``.
+        :arg listIdx:       The index of this ``OverlayListWidget`` in the
+                            ``EditableListBox``.
+
+        :arg atlasOvlPanel: The :class:`AtlasOverlayPanel` which created this
+                            ``OverlayListWidget``.
         
-        :arg atlasPanel: The :class:`.AtlasPanel` which owns the
-                         :class:`AtlasOverlayPanel` that created this
-                         ``OverlayListWidget``.
+        :arg atlasPanel:    The :class:`.AtlasPanel` which owns the
+                            :class:`AtlasOverlayPanel` that created this
+                            ``OverlayListWidget``.
 
-        :arg labelIdx:   Label index of the region, if this
-                         ``OverlatyListWidget`` corresponds to a region,
-                         or ``None``  if it corresponds to an atlas.
+        :arg labelIdx:      Label index of the region, if this
+                            ``OverlatyListWidget`` corresponds to a region,
+                            or ``None``  if it corresponds to an atlas.
         """
 
         wx.Panel.__init__(self, parent)
         
-        self.__atlasID    = atlasID
-        self.__atlasDesc  = atlases.getAtlasDescription(atlasID)
-        self.__atlasPanel = atlasPanel
-        self.__atlasList  = parent
-        self.__listIdx    = listIdx
-        self.__labelIdx   = labelIdx
+        self.__atlasID       = atlasID
+        self.__atlasDesc     = atlases.getAtlasDescription(atlasID)
+        self.__atlasPanel    = atlasPanel
+        self.__atlasOvlPanel = atlasOvlPanel
+        self.__atlasList     = parent
+        self.__listIdx       = listIdx
+        self.__labelIdx      = labelIdx
 
         self.__enableBox = wx.CheckBox(self)
         self.__enableBox.SetValue(False)
@@ -400,11 +469,17 @@ class OverlayListWidget(wx.Panel):
         :meth:`.AtlasPanel.toggleOverlay` method, to toggle the overlay
         for the atlas/region associated with this ``OverlayListWidget``..
         """
-        self.__atlasList.SetSelection(self.__listIdx)
+
+        def onLoad():
+            self.__atlasOvlPanel.enableAtlasPanel()
+
+        self.__atlasOvlPanel.enableAtlasPanel(False)
         self.__atlasPanel.toggleOverlay(
             self.__atlasID,
             self.__labelIdx,
-            self.__atlasDesc.atlasType == 'label')
+            self.__atlasDesc.atlasType == 'label',
+            onLoad=onLoad)
+        self.__atlasOvlPanel.selectAtlas(self.__listIdx, self.__atlasDesc)
 
         
     def __onLocate(self, ev):
