@@ -8,7 +8,6 @@
 the display properties of one or more overlays to be linked.
 """
 
-import sys
 import logging
 import copy
 
@@ -64,7 +63,7 @@ class OverlayGroup(props.HasProperties):
 
     
     _groupBindings = td.TypeDict({
-        'Display'        : ['enabled'],
+        'Display'        : [],
         'Nifti1Opts'     : ['volume'],
         'VolumeOpts'     : ['interpolation'],
         'LabelOpts'      : ['outline',
