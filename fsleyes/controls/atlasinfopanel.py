@@ -258,7 +258,11 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
         # is loaded
         summary = showType != 'prob'
 
-        self.__atlasPanel.toggleOverlay(atlasID, labelIndex, summary)
+        def onLoad():
+            self.__atlasPanel.Enable()
+
+        self.__atlasPanel.Disable()
+        self.__atlasPanel.toggleOverlay(atlasID, labelIndex, summary, onLoad)
 
 
     def __selectedOverlayChanged(self, *a):

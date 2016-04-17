@@ -283,10 +283,14 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
         return self._overlayList.find(name) is not None
     
 
-    def toggleOverlay(self, atlasID, labelIdx, summary):
+    def toggleOverlay(self, atlasID, labelIdx, summary, onLoad=None):
         """Adds or removes the specified overlay to/from the
-        :class:`.OverlayList`. See :meth:`getOverlayName` for details on the
-        arguments.
+        :class:`.OverlayList`.
+
+        :arg onLoad: Optional function to be called when the overlay has been
+                     added/removed.
+
+        See :meth:`getOverlayName` for details on the other arguments.
         """
 
         atlasDesc            = atlases.getAtlasDescription(atlasID)
@@ -304,9 +308,12 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
                 atlasID, labelIdx, summary, False)
             
             log.debug('Removed overlay {}'.format(overlayName))
+
+            if onLoad is not None:
+                onLoad()
             return
 
-        def onLoad(atlas):
+        def realOnLoad(atlas):
             # label image
             if labelIdx is None:
                 overlayType = 'label'
@@ -366,7 +373,10 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
                 else:
                     opts.lut = 'random'
 
-        self.loadAtlas(atlasID, summary, onLoad)
+            if onLoad is not None:
+                onLoad()
+
+        self.loadAtlas(atlasID, summary, realOnLoad)
 
 
     def locateRegion(self, atlasID, labelIdx):
