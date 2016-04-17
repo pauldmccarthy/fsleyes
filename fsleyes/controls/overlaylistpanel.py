@@ -23,6 +23,7 @@ import fsleyes.panel                    as fslpanel
 import fsleyes.icons                    as icons
 import fsleyes.autodisplay              as autodisplay
 import fsleyes.strings                  as strings
+import fsleyes.tooltips                 as fsltooltips
 import fsl.data.image                   as fslimage
 from fsl.utils.platform import platform as fslplatform
 
@@ -340,6 +341,12 @@ class ListItemWidget(wx.Panel):
             'enabled',
             icon=[icons.findImageFile('eyeHighlight16'),
                   icons.findImageFile('eye16')])
+
+        self.__visibility.SetToolTipString(fsltooltips.properties[display,
+                                                                  'enabled'])
+        self.__saveButton.SetToolTipString(fsltooltips.actions[self, 'save'])
+        self.__lockButton.SetToolTipString(fsltooltips.actions[self, 'group'])
+
 
         self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
 

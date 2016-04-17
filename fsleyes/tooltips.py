@@ -479,6 +479,12 @@ actions = TypeDict({
 
     'VolumeOpts.resetDisplayRange' : 'Reset the display range '
                                      'to the data range.',
+
+    # Items in the OverlayListPanel
+    'ListItemWidget.save'  : 'Save this overlay to a file',
+    'ListItemWidget.group' : 'Link some properties of this overlay '
+                             'with other linked overlays (e.g. '
+                             'volume)',
 })
 
 
