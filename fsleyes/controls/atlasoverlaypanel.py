@@ -13,7 +13,8 @@ import logging
 
 import wx
 
-import pwidgets.elistbox as elistbox
+import pwidgets.elistbox             as elistbox
+import pwidgets.placeholder_textctrl as plctext
 
 import fsl.data.atlases  as atlases
 import fsl.utils.status  as status
@@ -96,8 +97,9 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
                    elistbox.ELB_NO_REMOVE |
                    elistbox.ELB_NO_MOVE))
 
-        self.__regionPanel     = wx.Panel(   self.__contentPanel)
-        self.__regionFilter    = wx.TextCtrl(self.__regionPanel)
+        self.__regionPanel     = wx.Panel(self.__contentPanel)
+        self.__regionFilter    = plctext.PlaceholderTextCtrl(
+            self.__regionPanel, placeholder='Search')
 
         atlasDescs = atlases.listAtlases()
 
