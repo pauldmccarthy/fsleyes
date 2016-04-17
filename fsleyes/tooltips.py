@@ -240,9 +240,12 @@ properties = TypeDict({
                                      'display quality, but may be too slow on '
                                      'some older systems.',
 
-    'OrthoOpts.showXCanvas' : 'Show / hide the X canvas.',
-    'OrthoOpts.showYCanvas' : 'Show / hide the Y canvas.',
-    'OrthoOpts.showZCanvas' : 'Show / hide the Z canvas.',
+    'OrthoOpts.showXCanvas' : 'Show / hide the X canvas '
+                              '(sagittal in MNI space).',
+    'OrthoOpts.showYCanvas' : 'Show / hide the Y canvas '
+                              '(coronal in MNI space).',
+    'OrthoOpts.showZCanvas' : 'Show / hide the Z canvas '
+                              '(axial in MNI space).',
     'OrthoOpts.showLabels'  : 'If the currently selected overlay is a NIFTI1 '
                               'image, show / hide anatomical orientation '
                               'labels.',
