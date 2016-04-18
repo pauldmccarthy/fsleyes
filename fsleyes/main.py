@@ -384,14 +384,13 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     :returns: the :class:`.FSLEyesFrame` that was created.
     """
 
-    import fsl.utils.status                   as status
-    import fsl.utils.async                    as async
-    from   fsl.utils.platform import platform as fslplatform
-    import fsleyes.parseargs                  as parseargs
-    import fsleyes.frame                      as fsleyesframe
-    import fsleyes.displaycontext             as fsldisplay
-    import fsleyes.perspectives               as perspectives
-    import fsleyes.views                      as views
+    import fsl.utils.status       as status
+    import fsl.utils.async        as async
+    import fsleyes.parseargs      as parseargs
+    import fsleyes.frame          as fsleyesframe
+    import fsleyes.displaycontext as fsldisplay
+    import fsleyes.perspectives   as perspectives
+    import fsleyes.views          as views
     
     # Set up the frame scene (a.k.a. layout, perspective)
     # The scene argument can be:
@@ -504,8 +503,6 @@ def fslDirWarning(parent):
     :arg parent: A ``wx`` parent object.
     """
 
-    from fsl.utils.platform import platform as fslplatform
-
     if fslplatform.fsldir is not None:
         return
 
@@ -516,8 +513,8 @@ def fslDirWarning(parent):
     fsldir = fslsettings.read('fsldir')
 
     if fsldir is not None:
-        os.environ['FSLDIR']        = fsldir
-        fslplatform.platform.fsldir = fsldir
+        os.environ['FSLDIR'] = fsldir
+        fslplatform.fsldir   = fsldir
         return
 
     from fsl.utils.dialog import FSLDirDialog
@@ -531,7 +528,7 @@ def fslDirWarning(parent):
         log.debug('Setting $FSLDIR to {} (specified '
                   'by user)'.format(fsldir))
 
-        fslplatform.platform.fsldir   = fsldir
+        fslplatform.fsldir            = fsldir
         os.environ[         'FSLDIR'] = fsldir
         fslsettings.write(  'fsldir',   fsldir)
 
