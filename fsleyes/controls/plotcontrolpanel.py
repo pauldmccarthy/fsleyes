@@ -365,8 +365,8 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
 
 
     def __autoScaleChanged(self, *a):
-        """Called when the :atrr:`.PlotPanel.autoScale` property changes. If
-        widgets have been created for the :atrr:`.PlotPanel.limits`, they
+        """Called when the :attr:`.PlotPanel.autoScale` property changes. If
+        widgets have been created for the :attr:`.PlotPanel.limits`, they
         are enabled/disabled according to the new ``autoScale`` value.
         """
 

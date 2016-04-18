@@ -32,6 +32,7 @@ from . import overlaylistpanel
 from . import plotlistpanel
 from . import powerspectrumcontrolpanel
 from . import timeseriescontrolpanel
+from . import timeseriestoolbar
 
 
 AtlasPanel                 = atlaspanel.AtlasPanel
@@ -51,3 +52,4 @@ OverlayListPanel           = overlaylistpanel.OverlayListPanel
 PlotListPanel              = plotlistpanel.PlotListPanel
 PowerSpectrumControlPanel  = powerspectrumcontrolpanel.PowerSpectrumControlPanel
 TimeSeriesControlPanel     = timeseriescontrolpanel.TimeSeriesControlPanel
+TimeSeriesToolBar          = timeseriestoolbar.TimeSeriesToolBar

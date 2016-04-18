@@ -557,6 +557,7 @@ def _addControlPanel(viewPanel, panelType):
         controls.PlotListPanel             : {'plotPanel'   : viewPanel},
         controls.PowerSpectrumControlPanel : {'plotPanel'   : viewPanel},
         controls.TimeSeriesControlPanel    : {'plotPanel'   : viewPanel},
+        controls.TimeSeriesToolBar         : {'tsPanel'     : viewPanel},
     }
 
     args = args.get(panelType, {})

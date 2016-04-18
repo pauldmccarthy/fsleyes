@@ -461,6 +461,8 @@ actions = TypeDict({
                                               'control settings',
     'CanvasPanel.toggleOverlayInfo' : 'Show/hide the overlay '
                                       'information panel',
+
+    'PlotPanel.screenshot' : 'Take a screenshot of the current plot',
  
 
     'OrthoViewProfile.resetZoom'    : 'Reset zoom level on '

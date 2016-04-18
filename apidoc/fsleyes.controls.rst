@@ -23,8 +23,10 @@ fsleyes.controls package
    fsleyes.controls.overlaylistpanel
    fsleyes.controls.plotcontrolpanel
    fsleyes.controls.plotlistpanel
+   fsleyes.controls.plottoolbar
    fsleyes.controls.powerspectrumcontrolpanel
    fsleyes.controls.timeseriescontrolpanel
+   fsleyes.controls.timeseriestoolbar
 
 .. automodule:: fsleyes.controls
     :members:

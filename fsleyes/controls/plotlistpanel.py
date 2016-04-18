@@ -19,7 +19,6 @@ import props
 import pwidgets.elistbox as elistbox
 
 import fsleyes.panel     as fslpanel
-import fsleyes.plotting  as plotting
 import fsleyes.tooltips  as fsltooltips
 import fsleyes.strings   as strings
 
@@ -113,58 +112,7 @@ class PlotListPanel(fslpanel.FSLEyesPanel):
         :attr:`.PlotPanel.dataSeries` list of the :class:`.OverlayPlotPanel`.
         """
 
-        overlay = self._displayCtx.getSelectedOverlay()
-
-        if overlay is None:
-            return
-        
-        ds = self.__plotPanel.getDataSeries(overlay)
-
-        if ds is None:
-            return
-
-        opts = self._displayCtx.getOpts(overlay)
-
-        if isinstance(ds, plotting.FEATTimeSeries):
-            toAdd = list(ds.getModelTimeSeries())
-        else:
-            toAdd = [ds]
-
-        copies = []
-
-        for ds in toAdd:
-
-            copy = plotting.DataSeries(overlay)
-
-            copy.alpha     = ds.alpha
-            copy.lineWidth = ds.lineWidth
-            copy.lineStyle = ds.lineStyle
-            copy.colour    = ds.colour
-            copy.label     = ds.label
-
-            copy.setData(*ds.getData())
-
-            copies.append(copy)
-
-            # This is a bit hacky.
-            # When the user selects a data series in
-            # the list, we want to change the selected
-            # overlay/location/volume/etc to the
-            # properties associated with the data series.
-            # So here we're adding some attributes to
-            # each data series instance so that the
-            # __onListSelect method can update the
-            # display properties.
-            #
-            if isinstance(ds, (plotting.MelodicTimeSeries,
-                               plotting.MelodicPowerSpectrumSeries)):
-                copy._volume = opts.volume
-                
-            elif isinstance(ds, (plotting.VoxelTimeSeries,
-                                 plotting.VoxelPowerSpectrumSeries)):
-                copy._location = opts.getVoxel()
-                
-        self.__plotPanel.dataSeries.extend(copies)
+        self.__plotPanel.addDataSeries()
 
         
     def __onListEdit(self, ev):

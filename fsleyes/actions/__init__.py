@@ -412,10 +412,13 @@ class ActionButton(props.Button):
         self.__actionArgs   = actionArgs
         self.__actionKwargs = actionKwargs 
 
-        if classType is not None:
-            text = strings.actions.get((classType, actionName), actionName)
-        else:
-            text = actionName
+        text = kwargs.pop('text', None)
+
+        if text is None:
+            if classType is not None:
+                text = strings.actions.get((classType, actionName), actionName)
+            else:
+                text = actionName
 
         props.Button.__init__(
             self,

@@ -370,9 +370,7 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
                   the input data is in neurological orientation, these vectors
                   need to be inverted along the x axis.
 
-                  http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT/FAQ#What_is_the_\
-                  format_of_the_matrix_used_by_FLIRT.2C_and_how_does_it_\
-                  relate_to_the_transformation_parameters.3F
+                  http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT/FAQ#What_is_the_format_of_the_matrix_used_by_FLIRT.2C_and_how_does_it_relate_to_the_transformation_parameters.3F
         """
 
         if xform is None:

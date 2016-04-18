@@ -23,6 +23,7 @@ import fsl.data.image                          as fslimage
 import fsleyes.actions                         as actions
 import fsleyes.plotting                        as plotting
 import fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
+import fsleyes.controls.timeseriestoolbar      as timeseriestoolbar
 import fsleyes.controls.plotlistpanel          as plotlistpanel
 from . import                                     plotpanel
 
@@ -175,6 +176,14 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
                          self,
                          location=wx.RIGHT)
 
+
+    @actions.toggleControlAction(timeseriestoolbar.TimeSeriesToolBar)
+    def toggleTimeSeriesToolBar(self):
+        """Shows/hides a :class:`.TimeSeriesToolBar`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(timeseriestoolbar.TimeSeriesToolBar, tsPanel=self) 
+
         
     def getActions(self):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
@@ -182,7 +191,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         """
         actions = [self.screenshot,
                    self.toggleTimeSeriesList,
-                   self.toggleTimeSeriesControl]
+                   self.toggleTimeSeriesControl,
+                   self.toggleTimeSeriesToolBar]
 
         names = [a.__name__ for a in actions]
 

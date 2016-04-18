@@ -33,6 +33,7 @@ import                       props
 import fsleyes.strings    as strings
 import fsleyes.actions    as actions
 import fsleyes.colourmaps as fslcm
+import fsleyes.plotting   as plotting
 from . import                viewpanel
 
 
@@ -195,7 +196,7 @@ class PlotPanel(viewpanel.ViewPanel):
         self.__figure = figure
         self.__axis   = axis
         self.__canvas = canvas
-        self.__name   = 'OverlayPlotPanel_{}'.format(self._name)
+        self.__name   = 'PlotPanel_{}'.format(self._name)
 
         if interactive:
             
@@ -731,6 +732,8 @@ class OverlayPlotPanel(PlotPanel):
        getDataSeries
        clearDataSeries
        updateDataSeries
+       addDataSeries
+       removeDataSeries
 
     
     **The current data series**
@@ -833,6 +836,9 @@ class OverlayPlotPanel(PlotPanel):
         self             .addListener('showMode',
                                       self.__name,
                                       self.__showModeChanged)
+        self             .addListener('dataSeries',
+                                      self.__name,
+                                      self.__dataSeriesChanged) 
         self._displayCtx .addListener('selectedOverlay',
                                       self.__name,
                                       self.__selectedOverlayChanged)
@@ -881,7 +887,87 @@ class OverlayPlotPanel(PlotPanel):
             self.plotColours[overlay] = colour
 
         return colour
- 
+
+
+    @actions.action
+    def addDataSeries(self):
+        """Adds the :class:`.DataSeries` associated with the currently
+        selected overlay to the :attr:`PlotPanel.dataSeries` list.
+        """
+        
+        overlay = self._displayCtx.getSelectedOverlay()
+
+        if overlay is None:
+            return
+        
+        ds = self.getDataSeries(overlay)
+
+        if ds is None:
+            return
+
+        opts = self._displayCtx.getOpts(overlay)
+
+        if isinstance(ds, plotting.FEATTimeSeries):
+            toAdd = list(ds.getModelTimeSeries())
+        else:
+            toAdd = [ds]
+
+        copies = []
+
+        for ds in toAdd:
+
+            copy = plotting.DataSeries(overlay)
+
+            copy.alpha     = ds.alpha
+            copy.lineWidth = ds.lineWidth
+            copy.lineStyle = ds.lineStyle
+            copy.colour    = ds.colour
+            copy.label     = ds.label
+
+            copy.setData(*ds.getData())
+
+            copies.append(copy)
+
+            # This is disgraceful. It wasn't too bad
+            # when this function was defined in the
+            # PlotListPanel class, but is a horrendous
+            # hack now that it is defined here in the
+            # PlotPanel class.
+            # 
+            # At some stage I will remove this offensive
+            # code, and figure out a more robust system
+            # for appending this metadata to DataSeries
+            # instances. 
+            #
+            # When the user selects a data series in
+            # the list, we want to change the selected
+            # overlay/location/volume/etc to the
+            # properties associated with the data series.
+            # So here we're adding some attributes to
+            # each data series instance so that the
+            # PlotListPanel.__onListSelect method can
+            # update the display properties.
+            if isinstance(ds, (plotting.MelodicTimeSeries,
+                               plotting.MelodicPowerSpectrumSeries)):
+                copy._volume = opts.volume
+                
+            elif isinstance(ds, (plotting.VoxelTimeSeries,
+                                 plotting.VoxelPowerSpectrumSeries)):
+                copy._location = opts.getVoxel()
+                
+        self.dataSeries.extend(copies)
+        
+        return copies
+
+
+    @actions.action
+    def removeDataSeries(self, *a):
+        """Removes the most recently added :class:`.DataSeries` from this
+        ``OverlayPlotPanel``.
+        """
+        if len(self.dataSeries) > 0:
+            self.dataSeries.pop()
+    
 
     def createDataSeries(self, overlay):
         """This method must be implemented by sub-classes. It must create and
@@ -1031,6 +1117,13 @@ class OverlayPlotPanel(PlotPanel):
         """ 
         self.updateDataSeries()
         self.draw()
+
+
+    def __dataSeriesChanged(self, *a):
+        """Called when the :attr:`dataSeries` list changes. Enables/disables
+        the :meth:`removeDataSeries` action accordingly.
+        """
+        self.removeDataSeries.enabled = len(self.dataSeries) > 0
 
 
     def __selectedOverlayChanged(self, *a):

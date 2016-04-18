@@ -763,6 +763,7 @@ class FSLEyesFrame(wx.Frame):
                 except:
                     log.warn('Previous layout could not be restored - '
                              'falling back to default layout.')
+                    log.debug('Layout restore error', exc_info=True)
                     layout = None
 
             if layout is None:

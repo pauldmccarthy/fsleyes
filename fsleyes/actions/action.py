@@ -203,7 +203,7 @@ class ToggleAction(Action):
 
         
     def __call__(self, *args, **kwargs):
-        """Call this ``ToggleAction`. The value of the :attr:`toggled` property
+        """Call this ``ToggleAction``. The value of the :attr:`toggled` property
         is flipped.
         """
 
