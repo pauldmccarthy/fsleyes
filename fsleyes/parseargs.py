@@ -360,7 +360,8 @@ OPTIONS = td.TypeDict({
                         'modulateImage',
                         'clipImage',
                         'clippingRange'],
-    'LineVectorOpts' : ['lineWidth',
+    'LineVectorOpts' : ['neuroFlip',
+                        'lineWidth',
                         'directed'],
     'RGBVectorOpts'  : ['interpolation'],
     'ModelOpts'      : ['colour',
@@ -369,6 +370,7 @@ OPTIONS = td.TypeDict({
                         'refImage',
                         'coordSpace'],
     'TensorOpts'     : ['lighting',
+                        'neuroFlip',
                         'tensorResolution',
                         'tensorScale'],
     'LabelOpts'      : ['lut',
@@ -517,6 +519,7 @@ ARGUMENTS = td.TypeDict({
     'VectorOpts.modulateImage' : ('mo', 'modulateImage'),
     'VectorOpts.clipImage'     : ('cl', 'clipImage'),
     'VectorOpts.clippingRange' : ('cr', 'clippingRange'),
+    'VectorOpts.neuroFlip'     : ('df', 'disableNeuroFlip'),
 
     'LineVectorOpts.lineWidth'    : ('lw', 'lineWidth'),
     'LineVectorOpts.directed'     : ('ld', 'directed'),
@@ -655,7 +658,9 @@ HELP = td.TypeDict({
     'VectorOpts.clipImage'     : 'Image to clip vectors with',
     'VectorOpts.clippingRange' : 'Clipping range (only used if a '
                                  'clipping image is provided)', 
-
+    'VectorOpts.neuroFlip'     : 'Do not flip vectors stored in '
+                                 'neurological orientation',
+    
     'LineVectorOpts.lineWidth'    : 'Line width',
     'LineVectorOpts.directed'     : 'Interpret vectors as directed',
     'RGBVectorOpts.interpolation' : 'Interpolation',
@@ -754,6 +759,7 @@ TRANSFORMS = td.TypeDict({
     'OrthoOpts.showLabels'     : lambda b: not b,
     'Display.enabled'          : lambda b: not b,
     'VolumeOpts.linkLowRanges' : lambda b: not b,
+    'VectorOpts.neuroFlip'     : lambda b: not b, 
     'TensorOpts.lighting'      : lambda b: not b, 
     'LabelOpts.lut'            : _lutTrans,
 })
