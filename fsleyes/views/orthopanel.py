@@ -22,6 +22,8 @@ import itertools as it
 
 import wx
 
+import pwidgets.textpanel                     as textpanel
+
 import fsl.data.constants                     as constants
 import fsl.utils.layout                       as fsllayout
 import fsleyes.strings                        as strings
@@ -152,9 +154,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__zLabels = {}
         
         for side in ('left', 'right', 'top', 'bottom'):
-            self.__xLabels[side] = wx.StaticText(contentPanel)
-            self.__yLabels[side] = wx.StaticText(contentPanel)
-            self.__zLabels[side] = wx.StaticText(contentPanel)
+            self.__xLabels[side] = textpanel.TextPanel(contentPanel)
+            self.__yLabels[side] = textpanel.TextPanel(contentPanel)
+            self.__zLabels[side] = textpanel.TextPanel(contentPanel)
 
         self.__xcanvas.bindProps('showCursor',   sceneOpts)
         self.__ycanvas.bindProps('showCursor',   sceneOpts)
@@ -493,19 +495,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         # Figure out the orientation of the
         # image in the display coordinate system
-        opts    = self._displayCtx.getOpts(overlay)
-        xform   = opts.getTransform('world', 'display')
-        xorient = overlay.getOrientation(0, xform)
-        yorient = overlay.getOrientation(1, xform)
-        zorient = overlay.getOrientation(2, xform)
-
-        xlo = strings.anatomy['Nifti1', 'lowshort',  xorient]
-        ylo = strings.anatomy['Nifti1', 'lowshort',  yorient]
-        zlo = strings.anatomy['Nifti1', 'lowshort',  zorient]
-        xhi = strings.anatomy['Nifti1', 'highshort', xorient]
-        yhi = strings.anatomy['Nifti1', 'highshort', yorient]
-        zhi = strings.anatomy['Nifti1', 'highshort', zorient]
-
+        (xlo, ylo, zlo, xhi, yhi, zhi), vertOrient = self.__getLabels(overlay)
+        
         log.debug('X orientation: {} - {}'.format(xlo, xhi))
         log.debug('Y orientation: {} - {}'.format(ylo, yhi))
         log.debug('Z orientation: {} - {}'.format(zlo, zhi))
@@ -530,7 +521,64 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__zLabels['bottom'].SetLabel(ylo)
         self.__zLabels['top']   .SetLabel(yhi)
 
+        if vertOrient: vertOrient = wx.VERTICAL
+        else:          vertOrient = wx.HORIZONTAL
+
+        self.__xLabels['left'] .SetOrient(vertOrient)
+        self.__yLabels['left'] .SetOrient(vertOrient)
+        self.__zLabels['left'] .SetOrient(vertOrient)
+        self.__xLabels['right'].SetOrient(vertOrient)
+        self.__yLabels['right'].SetOrient(vertOrient)
+        self.__zLabels['right'].SetOrient(vertOrient)
+
         self.PostSizeEvent()
+
+        
+    def __getLabels(self, refImage):
+        """Generates some orientation labels to use for the given reference
+        image (assumed to be a :class:`.Nifti1` overlay).
+        """
+        
+        opts = self._displayCtx.getOpts(refImage)
+
+        vertOrient = False
+        
+        # If we are displaying in voxels/scaled voxels,
+        # and this image is not the current display
+        # image, then we do not show anatomical
+        # orientation labels, as there's no guarantee
+        # that all of the loaded overlays are in the
+        # same orientation, and it can get confusing.
+        if opts.transform in ('id', 'pixdim') and \
+           self._displayCtx.displaySpace != refImage:
+            xlo        = 'Xmin'
+            xhi        = 'Xmax'
+            ylo        = 'Ymin'
+            yhi        = 'Ymax'
+            zlo        = 'Zmin'
+            zhi        = 'Zmax'
+            vertOrient = True
+
+        # Otherwise we assume that all images
+        # are aligned to each other, so we
+        # estimate the current image's orientation
+        # in the display coordinate system
+        else:
+
+            vertOrient = False
+            xform      = opts.getTransform('world', 'display')
+            xorient    = refImage.getOrientation(0, xform)
+            yorient    = refImage.getOrientation(1, xform)
+            zorient    = refImage.getOrientation(2, xform)
+
+            xlo        = strings.anatomy['Nifti1', 'lowshort',  xorient]
+            ylo        = strings.anatomy['Nifti1', 'lowshort',  yorient]
+            zlo        = strings.anatomy['Nifti1', 'lowshort',  zorient]
+            xhi        = strings.anatomy['Nifti1', 'highshort', xorient]
+            yhi        = strings.anatomy['Nifti1', 'highshort', yorient]
+            zhi        = strings.anatomy['Nifti1', 'highshort', zorient]
+
+        return (xlo, ylo, zlo, xhi, yhi, zhi), vertOrient
 
 
     def __calcCanvasSizes(self, *a):
