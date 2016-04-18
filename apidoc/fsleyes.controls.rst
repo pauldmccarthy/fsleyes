@@ -10,6 +10,7 @@ fsleyes.controls package
    fsleyes.controls.canvassettingspanel
    fsleyes.controls.clusterpanel
    fsleyes.controls.histogramcontrolpanel
+   fsleyes.controls.histogramtoolbar
    fsleyes.controls.lightboxtoolbar
    fsleyes.controls.locationpanel
    fsleyes.controls.lookuptablepanel

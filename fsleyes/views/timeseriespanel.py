@@ -190,9 +190,9 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         :mod:`.actions` that are defined on this ``TimeSeriesPanel``.
         """
         actions = [self.screenshot,
+                   self.toggleTimeSeriesToolBar,
                    self.toggleTimeSeriesList,
-                   self.toggleTimeSeriesControl,
-                   self.toggleTimeSeriesToolBar]
+                   self.toggleTimeSeriesControl]
 
         names = [a.__name__ for a in actions]
 

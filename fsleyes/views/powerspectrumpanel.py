@@ -21,6 +21,7 @@ import fsleyes.actions                            as actions
 import fsleyes.plotting.powerspectrumseries       as psseries
 import fsleyes.controls.powerspectrumcontrolpanel as pscontrol
 import fsleyes.controls.plotlistpanel             as plotlistpanel
+import fsleyes.controls.plottoolbar               as plottoolbar
 import fsl.data.image                             as fslimage
 import fsl.data.melodicimage                      as fslmelimage
 from . import                                        plotpanel
@@ -126,7 +127,15 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         """ 
         self.togglePanel(plotlistpanel.PlotListPanel,
                          self,
-                         location=wx.TOP) 
+                         location=wx.TOP)
+
+
+    @actions.toggleControlAction(plottoolbar.PlotToolBar)
+    def togglePowerSpectrumToolBar(self):
+        """Shows/hides a :class:`.PlotToolBar`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(plottoolbar.PlotToolBar, plotPanel=self)
 
         
     def getActions(self):
@@ -134,6 +143,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         :mod:`.actions` that are defined on this ``PowerSpectrumPanel``.
         """
         actions = [self.screenshot,
+                   self.togglePowerSpectrumToolBar,
                    self.togglePowerSpectrumList,
                    self.togglePowerSpectrumControl]
 

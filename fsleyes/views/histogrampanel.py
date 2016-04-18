@@ -22,6 +22,7 @@ import fsl.data.image                         as fslimage
 import fsleyes.actions                        as actions
 import fsleyes.plotting.histogramseries       as histogramseries
 import fsleyes.controls.histogramcontrolpanel as histogramcontrolpanel
+import fsleyes.controls.histogramtoolbar      as histogramtoolbar
 import fsleyes.controls.plotlistpanel         as plotlistpanel
 from . import                                    plotpanel
 
@@ -117,11 +118,20 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
                          location=wx.RIGHT)
 
         
+    @actions.toggleControlAction(histogramtoolbar.HistogramToolBar)
+    def toggleHistogramToolBar(self):
+        """Shows/hides a :class:`.HistogramToolBar`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(histogramtoolbar.HistogramToolBar, histPanel=self) 
+
+        
     def getActions(self):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``HistogramPanel``.
         """
         actions = [self.screenshot,
+                   self.toggleHistogramToolBar,
                    self.toggleHistogramList,
                    self.toggleHistogramControl]
 

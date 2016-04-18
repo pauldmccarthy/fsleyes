@@ -214,7 +214,10 @@ titles = TypeDict({
     'PowerSpectrumControlPanel' : 'Power spectrum control',
     'ClusterPanel'              : 'Cluster browser',
     'OverlayInfoPanel'          : 'Overlay information',
+    'PlotToolBar'               : 'Plot toolbar',
     'TimeSeriesToolBar'         : 'Time series toolbar',
+    'HistogramToolBar'          : 'Histogram toolbar',
+    
 
     'MelodicClassificationPanel' : 'Melodic IC classification',
 
@@ -277,9 +280,10 @@ actions = TypeDict({
     'TimeSeriesPanel.toggleTimeSeriesToolBar'       : 'Time series toolbar', 
     'HistogramPanel.toggleHistogramList'            : 'Histogram list',
     'HistogramPanel.toggleHistogramControl'         : 'Histogram control',
+    'HistogramPanel.toggleHistogramToolBar'         : 'Histogram toolbar',
     'PowerSpectrumPanel.togglePowerSpectrumList'    : 'Power spectrum list',
-    'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Power spectrum '
-                                                      'control', 
+    'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Power spectrum control',
+    'PowerSpectrumPanel.togglePowerSpectrumToolBar' : 'Power spectrum toolbar',
 
     'OrthoViewProfile.centreCursor' : 'Centre cursor',
     'OrthoViewProfile.resetZoom'    : 'Reset zoom',

@@ -847,6 +847,7 @@ class OverlayPlotPanel(PlotPanel):
                                       self.__overlayListChanged)
         
         self.updateDataSeries()
+        self.__dataSeriesChanged()
 
 
     def destroy(self):
