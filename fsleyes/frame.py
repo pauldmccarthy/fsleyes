@@ -409,6 +409,8 @@ class FSLEyesFrame(wx.Frame):
         if isinstance(panel, views.PlotPanel):
             panel.draw()
 
+        return panel
+
 
     def refreshPerspectiveMenu(self):
         """Re-creates the *View -> Perspectives* sub-menu. """
@@ -890,12 +892,40 @@ class FSLEyesFrame(wx.Frame):
                       views.ShellPanel]
         
         for viewPanel in viewPanels:
-            viewAction = menu.Append(wx.ID_ANY, strings.titles[viewPanel]) 
-            self.Bind(wx.EVT_MENU,
-                      lambda ev, vp=viewPanel: self.addViewPanel(vp),
-                      viewAction)
+            viewAction = menu.Append(wx.ID_ANY, strings.titles[viewPanel])
+
+            def addViewPanel(ev, vp=viewPanel):
+                vp = self.addViewPanel(vp)
+                self.__newViewPanelDefaultLayout(vp)
             
-        
+            self.Bind(wx.EVT_MENU, addViewPanel, viewAction)
+
+
+    def __newViewPanelDefaultLayout(self, viewPanel):
+        """After a :class:`.ViewPanel` is added via a menu item (see the
+        :meth:`__makeViewPanelMenu` method), this a method is called to
+        perform some basic initialisation on the panel. This basically amounts
+        to adding toolbars.
+        """
+
+        if isinstance(viewPanel, views.TimeSeriesPanel):
+            viewPanel.toggleTimeSeriesToolBar()
+            
+        elif isinstance(viewPanel, views.HistogramPanel):
+            viewPanel.toggleHistogramToolBar()
+            
+        elif isinstance(viewPanel, views.PowerSpectrumPanel):
+            viewPanel.togglePowerSpectrumToolBar()
+            
+        elif isinstance(viewPanel, views.OrthoPanel):
+            viewPanel.toggleDisplayToolBar()
+            viewPanel.toggleOrthoToolBar()
+            
+        elif isinstance(viewPanel, views.LightBoxPanel):
+            viewPanel.toggleDisplayToolBar()
+            viewPanel.toggleLightBoxToolBar() 
+
+
     def __makePerspectiveMenu(self):
         """Called by :meth:`__makeMenuBar` and :meth:`refreshPerspectiveMenu`.
         Re-creates the *View->Perspectives* menu.
