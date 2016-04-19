@@ -186,8 +186,9 @@ class GLVector(globject.GLImageObject):
         self.refreshColourTextures()
 
         def texRefresh():
-            if init is not None: async.wait(init(), self.notify)
-            else:                self.notify()
+            if not self.destroyed():
+                if init is not None: async.wait(init(), self.notify)
+                else:                self.notify()
 
         async.wait([self.refreshImageTexture(),
                     self.refreshAuxTexture('modulate'),

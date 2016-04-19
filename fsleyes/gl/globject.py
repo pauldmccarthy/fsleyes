@@ -125,6 +125,7 @@ class GLObject(notifier.Notifier):
           getDataResolution
           ready
           destroy
+          destroyed
           preDraw
           draw
           postDraw
@@ -235,6 +236,16 @@ class GLObject(notifier.Notifier):
         """
         raise NotImplementedError()
 
+
+    def destroyed(self):
+        """This method is called to test whether a call has been made to
+        :meth:`destroy`.
+        
+        It should return ``True`` if this ``GLObject`` has been destroyed,
+        ``False`` otherwise.
+        """
+        raise NotImplementedError()
+
     
     def preDraw(self):
         """This method is called at the start of a draw routine.
@@ -299,6 +310,7 @@ class GLSimpleObject(GLObject):
     def __init__(self, xax, yax):
         """Create a ``GLSimpleObject``. """
         GLObject.__init__(self, xax, yax)
+        self.__destroyed = False
 
 
     def ready(self):
@@ -308,7 +320,15 @@ class GLSimpleObject(GLObject):
         
     def destroy( self):
         """Overrides :meth:`GLObject.destroy`. Does nothing. """
-        pass
+        self.__destroyed = True
+
+
+    def destroyed(self):
+        """Overrides :meth:`GLObject.destroy`. Returns ``True`` if
+        :meth:`destroy` hs been called, ``False`` otherwise.
+        
+        """
+        return self.__destroyed
 
     
     def preDraw(self):
@@ -364,6 +384,13 @@ class GLImageObject(GLObject):
         self.image       = None
         self.display     = None
         self.displayOpts = None
+
+
+    def destroyed(self):
+        """Returns ``True`` if :meth:`destroy` has been called, ``False``
+        otherwise.
+        """
+        return self.image is None
 
 
     def getDisplayBounds(self):

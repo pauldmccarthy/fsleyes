@@ -197,8 +197,9 @@ class GLVolume(globject.GLImageObject):
         # for them to finish before initialising
         # the shaders.
         def onTextureReady():
-            fslgl.glvolume_funcs.init(self)
-            self.notify()
+            if not self.destroyed():
+                fslgl.glvolume_funcs.init(self)
+                self.notify()
         
         async.wait((self.refreshImageTexture(), self.refreshClipTexture()),
                    onTextureReady)

@@ -67,8 +67,9 @@ class GLLabel(globject.GLImageObject):
         self.refreshLutTexture()
  
         def onTextureReady():
-            fslgl.gllabel_funcs.init(self)
-            self.notify() 
+            if not self.destroyed():
+                fslgl.gllabel_funcs.init(self)
+                self.notify() 
  
         async.wait([self.refreshImageTexture()], onTextureReady)
 
