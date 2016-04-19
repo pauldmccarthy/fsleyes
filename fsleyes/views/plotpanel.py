@@ -30,6 +30,7 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as Canvas
 from matplotlib.backends.backend_wx    import NavigationToolbar2Wx
 
 import                       props
+import fsl.utils.async    as async
 import fsl.data.image     as fslimage
 import fsleyes.strings    as strings
 import fsleyes.actions    as actions
@@ -226,7 +227,7 @@ class PlotPanel(viewpanel.ViewPanel):
                          'smooth',
                          'xlabel',
                          'ylabel']:
-            self.addListener(propName, self.__name, self.draw)
+            self.addListener(propName, self.__name, self.asyncDraw)
             
         # custom listeners for a couple of properties
         self.addListener('dataSeries',
@@ -264,6 +265,15 @@ class PlotPanel(viewpanel.ViewPanel):
         raise NotImplementedError('The draw method must be '
                                   'implemented by PlotPanel subclasses')
 
+
+    def asyncDraw(self, *a):
+        """Schedules :meth:`draw` to be run asynchronously. This method
+        should be used in preference to calling :meth:`draw` directly
+        in most cases, particularly where the call occurs within a
+        property callback function.
+        """
+        async.idle(self.draw)
+    
         
     def destroy(self):
         """Removes some property listeners, and then calls
@@ -622,8 +632,8 @@ class PlotPanel(viewpanel.ViewPanel):
         """
         
         for ds in self.dataSeries:
-            ds.addGlobalListener(self.__name, self.draw, overwrite=True)
-        self.draw()
+            ds.addGlobalListener(self.__name, self.asyncDraw, overwrite=True)
+        self.asyncDraw()
 
 
     def __limitsChanged(self, *a):
@@ -634,7 +644,7 @@ class PlotPanel(viewpanel.ViewPanel):
         axis = self.getAxis()
         axis.set_xlim(self.limits.x)
         axis.set_ylim(self.limits.y)
-        self.draw()
+        self.asyncDraw()
 
         
     def __calcLimits(self,
@@ -1117,7 +1127,9 @@ class OverlayPlotPanel(PlotPanel):
             addListener = overlay in targetOverlays
 
             if addListener:
-                ds.addGlobalListener(self.__name, self.draw, overwrite=True)
+                ds.addGlobalListener(self.__name,
+                                     self.asyncDraw,
+                                     overwrite=True)
             else:
                 try:    ds.removeGlobalListener(self.__name)
                 except: pass
@@ -1132,7 +1144,7 @@ class OverlayPlotPanel(PlotPanel):
                     
                     target.addListener(propName,
                                        self.__name,
-                                       self.draw,
+                                       self.asyncDraw,
                                        overwrite=True)
                 else:
                     log.debug('Removing listener on {}.{} for {} data '
@@ -1149,7 +1161,7 @@ class OverlayPlotPanel(PlotPanel):
         appropriate time (see the :meth:`updateDataSeries` method).
         """ 
         self.updateDataSeries()
-        self.draw()
+        self.asyncDraw()
 
 
     def __dataSeriesChanged(self, *a):
@@ -1165,8 +1177,9 @@ class OverlayPlotPanel(PlotPanel):
         plot can be updated at the appropriate time (see the
         :meth:`updateDataSeries` method).
         """
+
         self.updateDataSeries()
-        self.draw()
+        self.asyncDraw()
 
     
     def __overlayListChanged(self, *a):
