@@ -155,8 +155,9 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         else:
             overlays = []
 
-        overlays = [o for o in overlays
-                    if not isinstance(o, fslimage.ProxyImage)]
+        overlays = [o.getBase() if isinstance(o, fslimage.ProxyImage)
+                    else o
+                    for o in overlays]
 
         hss = [self.getDataSeries(o) for o in overlays]
         hss = [hs for hs in hss if hs is not None]

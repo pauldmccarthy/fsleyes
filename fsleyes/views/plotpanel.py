@@ -1088,14 +1088,16 @@ class OverlayPlotPanel(PlotPanel):
         elif self.showMode == 'current': targetOverlays = [selectedOverlay]
         else:                            targetOverlays = []
 
+        targetOverlays = [o.getBase() if isinstance(o, fslimage.ProxyImage)
+                          else o
+                          for o in targetOverlays]
+
         # Build a list of all overlays, ordered by
         # those we are not interested in, followed
-        # by those that we are interested in. 
+        # by those that we are interested in.
         allOverlays = self.__refreshProps.keys()
         allOverlays = set(allOverlays) - set(targetOverlays)
         allOverlays = list(allOverlays) + targetOverlays
-        allOverlays = [o for o in allOverlays
-                       if not isinstance(o, fslimage.ProxyImage)]
         
         # Make sure that property listeners are not
         # registered on overlays that we're not

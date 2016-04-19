@@ -415,7 +415,10 @@ class HistogramSeries(dataseries.DataSeries):
 
             log.debug('Removing 3D histogram overlay mask for {}'.format(
                 self.overlay.name))
-            self.__overlayList.remove(self.__overlay3D)
+
+            if self.__overlay3D in self.__overlayList:
+                self.__overlayList.remove(self.__overlay3D)
+                
             self.__overlay3D = None
 
         else:
