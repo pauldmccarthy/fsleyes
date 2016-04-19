@@ -13,14 +13,15 @@ import logging
 
 import wx
 
-import pwidgets.elistbox             as elistbox
-import pwidgets.placeholder_textctrl as plctext
+import pwidgets.elistbox                  as elistbox
+import pwidgets.placeholder_textctrl      as plctext
 
-import fsl.data.atlases  as atlases
-import fsl.utils.status  as status
-import fsl.utils.async   as async
-import fsleyes.panel     as fslpanel
-import fsleyes.strings   as strings
+import fsl.data.atlases                   as atlases
+import fsl.utils.status                   as status
+import fsl.utils.async                    as async
+from   fsl.utils.platform import platform as fslplatform
+import fsleyes.panel                      as fslpanel
+import fsleyes.strings                    as strings
 
 
 
@@ -88,6 +89,13 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
         # for info about this attribute.
         self.__atlasPanelEnableStack = 0
 
+        # References to an EditableListBox
+        # for each atlas, containing a list
+        # of its regions. These are created
+        # on-demand in the __onAtlasSelect
+        # method.
+        self.__regionLists = []
+
         self.__atlasPanel      = atlasPanel
         self.__contentPanel    = wx.SplitterWindow(self,
                                                    style=wx.SP_LIVE_UPDATE)
@@ -101,10 +109,6 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
         self.__regionFilter    = plctext.PlaceholderTextCtrl(
             self.__regionPanel, placeholder='Search')
 
-        atlasDescs = atlases.listAtlases()
-
-        self.__regionLists = [None] * len(atlasDescs)
-
         self.__contentPanel.SetMinimumPaneSize(50)
         self.__contentPanel.SplitVertically(self.__atlasList,
                                             self.__regionPanel)
@@ -114,7 +118,7 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
         self.__regionSizer = wx.BoxSizer(wx.VERTICAL)
         
         self.__regionSizer.Add(self.__regionFilter, flag=wx.EXPAND)
-        self.__regionSizer.AddStretchSpacer()        
+        self.__regionSizer.AddStretchSpacer()
         
         self.__sizer      .Add(self.__contentPanel,
                                flag=wx.EXPAND,
@@ -123,19 +127,13 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
         self.__regionPanel.SetSizer(self.__regionSizer) 
         self              .SetSizer(self.__sizer)
 
-        for i, atlasDesc in enumerate(atlasDescs):
-            self.__atlasList.Append(atlasDesc.name, atlasDesc)
-            self.__updateAtlasState(i)
-            widget = OverlayListWidget(self.__atlasList,
-                                       atlasDesc.atlasID,
-                                       i, 
-                                       atlasPanel,
-                                       self)
-            self.__atlasList.SetItemWidget(i, widget)
-        
         self.__regionFilter.Bind(wx.EVT_TEXT, self.__onRegionFilter)
         self.__atlasList.Bind(elistbox.EVT_ELB_SELECT_EVENT,
                               self.__onAtlasSelect)
+
+        fslplatform.register(self._name, self.__fslDirChanged)
+
+        self.__buildAtlasList()
 
         self.__regionSizer.Layout()
         self.__sizer      .Layout()
@@ -164,6 +162,49 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
             
             if regionList is not None:
                 regionList.GetItemWidget(labelIdx).SetEnableState(state)
+
+                
+    def __fslDirChanged(self, *a):
+        """Called when the :attr:`.Platform.fsldir` changes. Refreshes
+        the atlas list.
+        """ 
+        self.__buildAtlasList()
+
+    
+    def __buildAtlasList(self):
+        """Clears and recreates the atlas list. Also clears all existing
+        region lists.
+        """
+
+        atlasDescs = atlases.listAtlases()
+
+        # If a region list is currently
+        # being shown, clear it. 
+        regionList = self.__regionSizer.GetItem(1).GetWindow()
+        if regionList is not None:
+            self.__regionSizer.Remove(1)
+            self.__regionSizer.AddStretchSpacer()
+
+        # Destroy any existing region lists
+        for regionList in self.__regionLists:
+            if regionList is not None:
+                regionList.Destroy()
+                
+        self.__regionLists = [None] * len(atlasDescs)
+                
+        # Now clear and re-populate the atlas list
+        self.__atlasList.Clear()
+        for i, atlasDesc in enumerate(atlasDescs):
+            self.__atlasList.Append(atlasDesc.name, atlasDesc)
+            self.__updateAtlasState(i)
+            widget = OverlayListWidget(self.__atlasList,
+                                       atlasDesc.atlasID,
+                                       i, 
+                                       self.__atlasPanel,
+                                       self)
+            self.__atlasList.SetItemWidget(i, widget)
+
+        self.__regionSizer.Layout()
 
 
     def __onRegionFilter(self, ev):
@@ -313,14 +354,14 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
                 log.debug('Showing region list for {} ({})'.format(
                     atlasDesc.atlasID, id(regionList)))
 
+                # Hide the currently
+                # shown region list 
                 old = self.__regionSizer.GetItem(1).GetWindow()
-
                 if old is not None:
                     old.Show(False)
 
                 regionList.Show(True)
                 self.__regionSizer.Remove(1)
-
                 self.__regionSizer.Insert(1,
                                           regionList,
                                           flag=wx.EXPAND,

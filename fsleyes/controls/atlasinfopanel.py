@@ -11,14 +11,15 @@ that is used by the :class:`.AtlasPanel`.
 import logging
 
 import wx
-import wx.html             as wxhtml
+import wx.html                            as wxhtml
 
-import pwidgets.elistbox   as elistbox
+import pwidgets.elistbox                  as elistbox
 
-import fsleyes.panel       as fslpanel
-import fsleyes.strings     as strings
-import fsl.data.atlases    as atlases
-import fsl.data.constants  as constants
+import fsleyes.panel                      as fslpanel
+import fsleyes.strings                    as strings
+from   fsl.utils.platform import platform as fslplatform
+import fsl.data.atlases                   as atlases
+import fsl.data.constants                 as constants
 
 
 log = logging.getLogger(__name__)
@@ -86,21 +87,14 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
                                             self.__infoPanel) 
         self.__contentPanel.SetSashGravity(0.4)
         
-        for i, atlasDesc in enumerate(atlases.listAtlases()):
-            
-            self.__atlasList.Append(atlasDesc.name, atlasDesc.atlasID)
-            widget = AtlasListWidget(self.__atlasList,
-                                     i,
-                                     self,
-                                     atlasDesc.atlasID)
-            self.__atlasList.SetItemWidget(i, widget)        
-
         # The info panel contains clickable links
         # for the currently displayed regions -
         # when a link is clicked, the location
         # is centred at the corresponding region
         self.__infoPanel.Bind(wxhtml.EVT_HTML_LINK_CLICKED,
                               self.__infoPanelLinkClicked)
+
+        fslplatform.register(self._name, self.__fslDirChanged)
 
         overlayList.addListener('overlays',
                                 self._name,
@@ -112,9 +106,10 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
                                 self._name,
                                 self.__locationChanged)
 
+        self.__buildAtlasList()
         self.__selectedOverlayChanged()
+        
         self.Layout()
-
         self.SetMinSize(self.__sizer.GetMinSize())
 
         
@@ -150,6 +145,29 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
         """
         self.__enabledAtlases.pop(atlasID)
         self.__locationChanged()
+
+
+    def __fslDirChanged(self, *a):
+        """Called when the :attr:`.Platform.fsldir` changes. Refreshes
+        the atlas list.
+        """
+        self.__buildAtlasList()
+
+
+    def __buildAtlasList(self):
+        """Clears and then builds the list of available atlases. """
+
+        self.__enabledAtlases = {}
+        self.__atlasList.Clear()
+        
+        for i, atlasDesc in enumerate(atlases.listAtlases()):
+            
+            self.__atlasList.Append(atlasDesc.name, atlasDesc.atlasID)
+            widget = AtlasListWidget(self.__atlasList,
+                                     i,
+                                     self,
+                                     atlasDesc.atlasID)
+            self.__atlasList.SetItemWidget(i, widget) 
 
 
     def __locationChanged(self, *a):
