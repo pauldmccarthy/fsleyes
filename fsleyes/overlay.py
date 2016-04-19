@@ -168,7 +168,7 @@ class OverlayList(props.HasProperties):
                 return overlay
 
             if overlay.dataSource is None:
-                return None
+                continue
 
             # Ignore file extensions for NIFTI1 images.
             if isinstance(overlay, fslimage.Image):
