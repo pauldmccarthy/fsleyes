@@ -47,7 +47,7 @@ class HistogramSeries(dataseries.DataSeries):
 
     
     showOverlay = props.Boolean(default=False)
-    """If ``True``, a 3D mask :class:`.Image` overlay is added to the
+    """If ``True``, a mask :class:`.ProxyImage` overlay is added to the
     :class:`.OverlayList`, which highlights the voxels that have been included
     in the histogram.
     """
@@ -408,28 +408,29 @@ class HistogramSeries(dataseries.DataSeries):
         the histogram data range changes, and vice versa.
         """
 
-        if not self.showOverlay:
-            if self.__overlay3D is not None:
+        if      self.showOverlay  and (self.__overlay3D is not None): return
+        if (not self.showOverlay) and (self.__overlay3D is     None): return 
 
-                log.debug('Removing 3D histogram overlay mask for {}'.format(
-                    self.overlay.name))
-                self.__overlayList.remove(self.__overlay3D)
-                self.__overlay3D = None
+        if not self.showOverlay:
+
+            log.debug('Removing 3D histogram overlay mask for {}'.format(
+                self.overlay.name))
+            self.__overlayList.remove(self.__overlay3D)
+            self.__overlay3D = None
 
         else:
 
             log.debug('Creating 3D histogram overlay mask for {}'.format(
                 self.overlay.name))
             
-            self.__overlay3D = fslimage.Image(
-                self.overlay.data,
-                name='{}/histogram/mask'.format(self.overlay.name),
-                header=self.overlay.nibImage.get_header())
+            self.__overlay3D = fslimage.ProxyImage(
+                self.overlay,
+                name='{}/histogram/mask'.format(self.overlay.name))
 
             self.__overlayList.append(self.__overlay3D)
 
-            opts = self.__displayCtx.getOpts(self.__overlay3D,
-                                             overlayType='mask')
+            opts = self.__displayCtx.getOpts(
+                self.__overlay3D, overlayType='mask')
 
             opts.bindProps('volume',    self)
             opts.bindProps('colour',    self)

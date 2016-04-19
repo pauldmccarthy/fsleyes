@@ -30,6 +30,7 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as Canvas
 from matplotlib.backends.backend_wx    import NavigationToolbar2Wx
 
 import                       props
+import fsl.data.image     as fslimage
 import fsleyes.strings    as strings
 import fsleyes.actions    as actions
 import fsleyes.colourmaps as fslcm
@@ -750,6 +751,17 @@ class OverlayPlotPanel(PlotPanel):
     :attr:`.PlotPanel.dataSeries` list.
 
 
+    **Proxy images**
+
+    
+    The ``OverlayPlotPanel`` will replace all :class:`.ProxyImage` instances
+    with their base images. This functionality was originally added to support
+    the :attr:`.HistogramSeries.showOverlay` functionality - it adds a mask
+    image to the :class:`.OverlayList` to display the histogram range.
+    Sub-classes may wish to adhere to the same logic (replacing ``ProxyImage``
+    instances with their bases)
+
+
     **Control panels**
 
 
@@ -871,6 +883,10 @@ class OverlayPlotPanel(PlotPanel):
         """Returns the :class:`.DataSeries` instance associated with the
         specified overlay, or ``None`` if there is no ``DataSeries`` instance.
         """
+        
+        if isinstance(overlay, fslimage.ProxyImage):
+            overlay = overlay.getBase() 
+        
         return self.__dataSeries.get(overlay)
 
 
@@ -880,6 +896,9 @@ class OverlayPlotPanel(PlotPanel):
         dictionary, it is returned. Otherwise a random colour is generated,
         added to ``plotColours``, and returned.
         """
+        
+        if isinstance(overlay, fslimage.ProxyImage):
+            overlay = overlay.getBase() 
 
         colour = self.plotColours.get(overlay)
 
@@ -900,6 +919,9 @@ class OverlayPlotPanel(PlotPanel):
 
         if overlay is None:
             return
+
+        if isinstance(overlay, fslimage.ProxyImage):
+            overlay = overlay.getBase() 
         
         ds = self.getDataSeries(overlay)
 
@@ -1015,6 +1037,9 @@ class OverlayPlotPanel(PlotPanel):
         """Destroys the internally cached :class:`.DataSeries` for the given
         overlay.
         """
+
+        if isinstance(overlay, fslimage.ProxyImage):
+            overlay = overlay.getBase()
         
         ds                 = self.__dataSeries  .pop(overlay, None)
         targets, propNames = self.__refreshProps.pop(overlay, ([], []))
@@ -1037,6 +1062,9 @@ class OverlayPlotPanel(PlotPanel):
         # exists for every compatible overlay
         for ovl in self._overlayList:
             if ovl in self.__dataSeries:
+                continue
+
+            if isinstance(ovl, fslimage.ProxyImage):
                 continue
 
             log.debug('Creating a DataSeries for overlay {}'.format(ovl))
@@ -1066,6 +1094,8 @@ class OverlayPlotPanel(PlotPanel):
         allOverlays = self.__refreshProps.keys()
         allOverlays = set(allOverlays) - set(targetOverlays)
         allOverlays = list(allOverlays) + targetOverlays
+        allOverlays = [o for o in allOverlays
+                       if not isinstance(o, fslimage.ProxyImage)]
         
         # Make sure that property listeners are not
         # registered on overlays that we're not

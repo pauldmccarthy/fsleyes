@@ -239,7 +239,6 @@ def guessDataSourceType(path):
     is unrecognised, the first tuple value will be ``None``.
     """
 
-    import fsl.data.image          as fslimage
     import fsl.data.model          as fslmodel
     import fsl.data.featimage      as fslfeatimage
     import fsl.data.melodicimage   as fslmelimage
@@ -282,7 +281,6 @@ def makeWildcard():
     the the displayed file types to supported overlay file types.
     """
 
-    import fsl.data.image as fslimage
     import fsl.data.model as fslmodel
     
     allowedExts  = fslimage.ALLOWED_EXTENSIONS     + \
@@ -477,8 +475,6 @@ def saveOverlay(overlay, fromDir=None):
     :raise RuntimeError: if a :class:`wx.App` has not been created.
     :raise ValueError:   if ``overlay`` is not an :class:`.Image` instance.
     """
-
-    import fsl.data.image as fslimage
 
     if not isinstance(overlay, fslimage.Image):
         raise ValueError('Only Image overlays are supported')

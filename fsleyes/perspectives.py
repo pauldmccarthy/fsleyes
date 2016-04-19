@@ -550,6 +550,7 @@ def _addControlPanel(viewPanel, panelType):
     args = {
         controls.CanvasSettingsPanel       : {'canvasPanel' : viewPanel},
         controls.HistogramControlPanel     : {'plotPanel'   : viewPanel},
+        controls.HistogramToolBar          : {'histPanel'   : viewPanel},
         controls.LightBoxToolBar           : {'lb'          : viewPanel},
         controls.OrthoEditToolBar          : {'ortho'       : viewPanel},
         controls.OrthoToolBar              : {'ortho'       : viewPanel},
