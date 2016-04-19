@@ -198,6 +198,9 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         self._displayCtx .addListener('selectedOverlay',
                                       self._name,
                                       self.__selectedOverlayChanged)
+        self._displayCtx .addListener('overlayOrder',
+                                      self._name,
+                                      self.__overlayOrderChanged) 
         self._displayCtx .addListener('location',
                                       self._name,
                                       self.__displayLocationChanged)
@@ -413,8 +416,15 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         ``LocationPanel`` interface accordingly.
         """
         self.__displayLocationChanged()
-        
 
+        
+    def __overlayOrderChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.overlayOrder` changes,
+        Refreshes the information panel.
+        """
+        self.__displayLocationChanged() 
+
+        
     def __updateWidgets(self):
         """Called by the :meth:`__selectedOverlayChanged` and
         :meth:`__displayOptsChanged` methods.  Enables/disables the
@@ -628,13 +638,13 @@ class LocationPanel(fslpanel.FSLEyesPanel):
             self.__info.SetPage('')
             return
 
-        overlays = self._displayCtx.getOrderedOverlays()
+        # Reverse the overlay order so they
+        # are ordered the same on the info
+        # page as in the overlay list panel
+        overlays = reversed(self._displayCtx.getOrderedOverlays())
         selOvl   = self._displayCtx.getSelectedOverlay()
+        lines    = []
         
-        overlays.remove(selOvl)
-        overlays.insert(0, selOvl)
-
-        lines = []
         for overlay in overlays:
 
             display = self._displayCtx.getDisplay(overlay)
@@ -642,8 +652,8 @@ class LocationPanel(fslpanel.FSLEyesPanel):
             if not display.enabled:
                 continue
 
+            info = None
             title = '<b>{}</b>'.format(overlay.name)
-            info  = None
 
             if not isinstance(overlay, fslimage.Image):
                 info = '{}'.format(strings.labels[self, 'noData'])
@@ -660,7 +670,13 @@ class LocationPanel(fslpanel.FSLEyesPanel):
                 else:
                     info = strings.labels[self, 'outOfBounds']
 
+            if overlay is selOvl:
+                title = '&nbsp;&nbsp;&nbsp;{}'.format(title)
+                if info is not None:
+                    info = '&nbsp;&nbsp;&nbsp;{}'.format(info)
+
             lines.append(title)
+            
             if info is not None:
                 lines.append(info)
                 
