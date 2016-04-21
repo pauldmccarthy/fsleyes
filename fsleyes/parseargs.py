@@ -436,6 +436,19 @@ GROUPDESCS = td.TypeDict({
 """This dictionary contains descriptions for each argument group. """
 
 
+GROUPEPILOGS = td.TypeDict({
+
+    'Display'    : 'Available overlay types: '
+                   '{}'.format(', '.join(fsldisplay.ALL_OVERLAY_TYPES)),
+    'LabelOpts'  : 'Available lookup tables: '
+                   '{}'.format(', '.join(colourmaps.scanLookupTables())),
+    'VolumeOpts' : 'Available colour maps: '
+                   '{}'.format(', '.join(colourmaps.scanColourMaps())),
+})
+
+print(GROUPEPILOGS['Display'])
+
+
 # Short/long arguments for all of those options
 ARGUMENTS = td.TypeDict({
 
@@ -706,8 +719,11 @@ cmapSettings = {
 }
 
 EXTRA = td.TypeDict({
-    'Display.overlayType' : {'choices' : fsldisplay.ALL_OVERLAY_TYPES,
-                             'default' : fsldisplay.ALL_OVERLAY_TYPES[0]},
+    'Display.overlayType' : {
+        'choices' : fsldisplay.ALL_OVERLAY_TYPES,
+        'default' : fsldisplay.ALL_OVERLAY_TYPES[0],
+        'metavar' : 'TYPE',
+    },
 
     'LabelOpts.lut'           : lutSettings,
     'VolumeOpts.cmap'         : cmapSettings,
@@ -807,7 +823,7 @@ def _setupMainParser(mainParser):
     # Options defining the overall scene,
     # and separate parser groups for scene
     # settings, ortho, and lightbox.
- 
+
     mainGroup  = mainParser.add_argument_group(GROUPNAMES[    'Main'],
                                                GROUPDESCS.get('Main'))
     sceneGroup = mainParser.add_argument_group(GROUPNAMES[    'SceneOpts'],
@@ -1013,7 +1029,7 @@ def _setupOverlayParsers(forHelp=False):
     # The Display parser is used as a parent
     # for each of the DisplayOpts parsers
     otParser   = ArgumentParser(add_help=False)
-    dispParser = ArgumentParser(add_help=False)
+    dispParser = ArgumentParser(add_help=False, epilog=GROUPEPILOGS[Display])
     dispProps  = list(OPTIONS[Display])
 
     if not forHelp:
@@ -1029,7 +1045,10 @@ def _setupOverlayParsers(forHelp=False):
         if not forHelp: parents = [dispParser]
         else:           parents = []
 
-        parser = ArgumentParser(prog='', add_help=False, parents=parents)
+        parser = ArgumentParser(prog='',
+                                add_help=False,
+                                parents=parents,
+                                epilog=GROUPEPILOGS.get(target))
         
         parsers[target] = parser
         propNames       = list(it.chain(*OPTIONS.get(target, allhits=True)))
@@ -1110,8 +1129,8 @@ def parseArgs(mainParser,
     # I hate argparse. By default, it does not support
     # the command line interface that I want to provide,
     # as demonstrated in this usage string. 
-    usageStr   = '{} {} [overlayfile [displayOpts]] '\
-                 '[overlayfile [displayOpts]] ...'.format(
+    usageStr   = '{} {} [file [displayOpts]] '\
+                 '[file [displayOpts]] ...'.format(
                      name,
                      toolOptsDesc)
 
@@ -1318,9 +1337,9 @@ def _printShortHelp(mainParser):
     # Now we build a list of all arguments
     # that we want to show help for, in this
     # shortened help page.
-    mainArgs    = ['help', 'fullhelp', 'scene', 'autoDisplay']
-    displayArgs = ['overlayType', 'alpha', 'brightness', 'contrast']
-    volumeArgs  = ['displayRange', 'clippingRange', 'cmap', 'linkLowRanges']
+    mainArgs    = ['help', 'fullhelp']
+    displayArgs = ['alpha', 'brightness', 'contrast']
+    volumeArgs  = ['displayRange', 'clippingRange', 'cmap']
 
     mainArgs    = [ARGUMENTS['Main.{}'      .format(a)] for a in mainArgs]
     displayArgs = [ARGUMENTS['Display.{}'   .format(a)] for a in displayArgs]
@@ -1351,11 +1370,6 @@ def _printShortHelp(mainParser):
     # don't want to show
     for action in mainParser._actions:
 
-        # We want to show any arguments that are
-        # defined outside of this module (e.g. render)
-        if all([o not in allMainArgs for o in action.option_strings]):
-            continue
-
         # We don't want to show any other argument that
         # are not specified in the hard coded mainArgs
         # list above.
@@ -1363,6 +1377,8 @@ def _printShortHelp(mainParser):
             action.help = argparse.SUPPRESS
 
     # Generate the help text for main options
+    mainParser.description = None
+    mainParser.epilog      = None 
     helpText = mainParser.format_help()
 
     # Now configure Display/DisplayOpts parsers
@@ -1370,7 +1386,12 @@ def _printShortHelp(mainParser):
     parsers = ([(fsldisplay.Display,    dispParser),
                 (fsldisplay.VolumeOpts, optParsers[fsldisplay.VolumeOpts])])
 
+    helpText += '\n' + GROUPNAMES[fsldisplay.Display] + '\n'
+
     for target, parser in parsers:
+        
+        parser.description = None
+        parser.epilog      = None
 
         args = allArgs[target]
 
@@ -1380,17 +1401,7 @@ def _printShortHelp(mainParser):
             if all([o not in args for o in action.option_strings]):
                 action.help = argparse.SUPPRESS
 
-        groupName = GROUPNAMES.get(target, None)
-        groupDesc = GROUPDESCS.get(target, None)
-
-        groupDesc = '\n  '.join(textwrap.wrap(groupDesc, 60))
-
-        helpText += '\n' + groupName + ':\n'
-        if groupDesc is not None:
-            helpText += '  ' + groupDesc + '\n'
-
-        ovlHelp = parser.format_help()
-
+        ovlHelp   = parser.format_help()
         skipTo    = 'optional arguments:'
         optStart  = ovlHelp.index(skipTo)
         optStart += len(skipTo) + 1
