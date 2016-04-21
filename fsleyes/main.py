@@ -60,9 +60,12 @@ def main(args=None):
 
     fsleyes.resourceDir = op.abspath(resourceDir)
 
-    # Show the splash screen
-    # as soon as possible
+    # Show the splash screen as soon as
+    # possible, unless it looks like the
+    # user is asking for command line help.
     splash = makeSplash()
+    if (len(args) > 0) and (args[0] in ('-h', '-fh', '--help', '--fullhelp')):
+        splash.Hide()
 
     # We are going do all processing on the
     # wx.MainLoop, so the GUI can be shown
@@ -79,12 +82,17 @@ def main(args=None):
     # (so it is executed after wx.MainLoop
     # has been called), but it schedules its
     # work to be done on the wx.MainLoop. 
-    def buildGUI():
+    def buildGUI(splash):
 
-        def realBuild():
+        def realBuild(splash):
 
             # Parse command line arguments
             namespace = parseArgs(args)
+
+            # Make sure the splash screen is
+            # visible - it probably is if we
+            # got this far, but just to be sure.
+            splash.Show()
             
             # Initialise sub-modules/packages
             initialise(splash, namespace)
@@ -110,9 +118,9 @@ def main(args=None):
         # Sleep a bit so the main thread (on which
         # wx.MainLoop is running) can start. 
         time.sleep(0.05)
-        wx.CallAfter(realBuild)
+        wx.CallAfter(realBuild, splash)
 
-    threading.Thread(target=buildGUI).start()
+    threading.Thread(target=buildGUI, args=[splash]).start()
     app.MainLoop()
 
 
