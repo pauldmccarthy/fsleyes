@@ -14,6 +14,9 @@ tables can be accessed. When :func:`init` is called, it searches in the
 load all files within which have the suffix ``.cmap`` or ``.lut``
 respectively.
 
+.. note:: Only the :func:`scanColourMaps` and :func:`scanLookupTables`
+          functions may be called before :func:`init` is called.
+
 
 -----------
 Colour maps
@@ -51,6 +54,7 @@ The following functions are available for managing and accessing colour maps:
 .. autosummary::
    :nosignatures:
 
+   scanColourMaps
    getColourMaps
    getColourMap
    getColourMapLabel
@@ -96,6 +100,7 @@ The following functions are available to access and manage
 .. autosummary::
    :nosignatures:
 
+   scanLookupTables
    getLookupTables
    registerLookupTable
    installLookupTable
@@ -160,6 +165,24 @@ _luts = None
 """An ``OrderedDict`` which contains all registered lookup tables as
 ``{key : _Map}`` mappings.
 """
+
+
+def scanColourMaps():
+    """Scans the colour maps directory, and returns a list containing the
+    names of all colour maps contained within. This function may be called
+    before :func:`init`.
+    """
+    cmapFiles = glob.glob(op.join(_cmapDir, '*cmap'))
+    return [op.splitext(op.basename(f))[0] for f in cmapFiles]
+
+
+def scanLookupTables():
+    """Scans the lookup tables directory, and returns a list containing the
+    names of all lookup tables contained within. This function may be called
+    before :func:`init`.
+    """
+    lutFiles = glob.glob(op.join(_lutDir, '*lut'))
+    return [op.splitext(op.basename(f))[0] for f in lutFiles] 
 
 
 def init():

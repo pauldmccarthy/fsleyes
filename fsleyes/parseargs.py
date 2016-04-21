@@ -680,25 +680,41 @@ HELP = td.TypeDict({
 })
 """This dictionary defines the help text for all command line options."""
 
-
+# 
 # Extra settings for some properties, passed through 
 # to the props.cli.addParserArguments function.
+#
+
+# Settings for the LabelOpts.lut property - we don't
+# want to pre-load all LUTs as it takes too long,
+# so we're using the scanLookupTables function to
+# grab the names of all existing LUTs, and then
+# using them as the CLI options.
+lutSettings = {
+
+    'choices'       : colourmaps.scanLookupTables(),
+    'useAlts'       : False,
+    'metavar'       : 'LUT',
+    'default'       : 'random',
+}
+
+# Similar procedure for the colour map properties
+cmapSettings = {
+    'choices'  : colourmaps.scanColourMaps(),
+    'metavar'  : 'CMAP',
+    'parseStr' : True
+}
+
 EXTRA = td.TypeDict({
     'Display.overlayType' : {'choices' : fsldisplay.ALL_OVERLAY_TYPES,
                              'default' : fsldisplay.ALL_OVERLAY_TYPES[0]},
 
-    'LabelOpts.lut'       : {
-        # The LabelOpts.lut choice property has
-        # LookupTable instances as values, which
-        # obviously cannot be passed in on the
-        # command line. But the lut property will
-        # also accept the lut key as an alternate
-        # value, so we accept these on the command
-        # line instead. See the colourmaps and
-        # labelopts modules for more detail.
-        'choices'       : [],
-        'useAlts'       : True
-    }
+    'LabelOpts.lut'           : lutSettings,
+    'VolumeOpts.cmap'         : cmapSettings,
+    'VolumeOpts.negativeCmap' : cmapSettings,
+    'LineVectorOpts.cmap'     : cmapSettings,
+    'RGBVectorOpts.cmap'      : cmapSettings,
+    'TensorOpts.cmap'         : cmapSettings,
 })
 """This dictionary defines any extra settings to be passed through
 to the :func:`.props.addParserArguments` function.
