@@ -446,8 +446,6 @@ GROUPEPILOGS = td.TypeDict({
                    '{}'.format(', '.join(colourmaps.scanColourMaps())),
 })
 
-print(GROUPEPILOGS['Display'])
-
 
 # Short/long arguments for all of those options
 ARGUMENTS = td.TypeDict({
