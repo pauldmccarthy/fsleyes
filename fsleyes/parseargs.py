@@ -1336,7 +1336,7 @@ def _printShortHelp(mainParser):
     # that we want to show help for, in this
     # shortened help page.
     mainArgs    = ['help', 'fullhelp']
-    displayArgs = ['alpha', 'brightness', 'contrast']
+    displayArgs = ['alpha']
     volumeArgs  = ['displayRange', 'clippingRange', 'cmap']
 
     mainArgs    = [ARGUMENTS['Main.{}'      .format(a)] for a in mainArgs]
