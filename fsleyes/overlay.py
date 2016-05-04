@@ -244,7 +244,7 @@ def guessDataSourceType(path):
     import fsl.data.melodicimage   as fslmelimage
     import fsl.data.tensorimage    as tensorimage
     import fsl.data.melodicresults as melresults
-    import fsl.data.featresults    as featresults
+    import fsl.data.featanalysis   as featanalysis
 
     path = op.abspath(path)
 
@@ -257,7 +257,7 @@ def guessDataSourceType(path):
         if melresults.isMelodicDir(path):
             return fslmelimage.MelodicImage, path
 
-        elif featresults.isFEATDir(path):
+        elif featanalysis.isFEATDir(path):
             return fslfeatimage.FEATImage, path
 
         elif tensorimage.isPathToTensorData(path):
@@ -268,7 +268,7 @@ def guessDataSourceType(path):
     except ValueError: return None, path
 
     if   melresults.isMelodicImage(path): return fslmelimage.MelodicImage, path
-    elif featresults.isFEATImage(  path): return fslfeatimage.FEATImage,   path
+    elif featanalysis.isFEATImage( path): return fslfeatimage.FEATImage,   path
     else:                                 return fslimage.Image,           path
         
     # Otherwise, I don't

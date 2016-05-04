@@ -17,7 +17,7 @@ import                                            props
 
 import fsl.data.featimage                      as fslfeatimage
 import fsl.data.melodicimage                   as fslmelimage
-import fsl.data.featresults                    as featresults
+import fsl.data.featanalysis                   as featanalysis
 import fsl.data.melodicresults                 as melresults
 import fsl.data.image                          as fslimage
 import fsleyes.actions                         as actions
@@ -262,8 +262,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             return None, None, None
 
         if overlay.dataSource is not None:
-            featPath = featresults.getAnalysisDir(overlay.dataSource)
-            melPath  = melresults .getAnalysisDir(overlay.dataSource)
+            featPath = featanalysis.getAnalysisDir(overlay.dataSource)
+            melPath  = melresults  .getAnalysisDir(overlay.dataSource)
         else:
             featPath = None
             melPath  = None
@@ -279,7 +279,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         # or an image in a FEAT directory?
         if isinstance(overlay, fslfeatimage.FEATImage) or featPath is not None:
 
-            dataPath  = featresults.getDataFile(featPath)
+            dataPath  = featanalysis.getDataFile(featPath)
             featImage = self._overlayList.find(dataPath)
 
             # If this is an image in a FEAT directory, but the

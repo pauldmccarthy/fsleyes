@@ -11,17 +11,17 @@ panel for viewing cluster results from a FEAT analysis.
 import                         logging
 import                         wx
 
-import                         six
+import                          six
 
-import pwidgets.widgetgrid  as widgetgrid
+import pwidgets.widgetgrid   as widgetgrid
 
-import fsleyes.panel        as fslpanel
-import fsleyes.strings      as strings
-import fsl.utils.async      as async
-import fsl.utils.status     as status
-import fsl.data.image       as fslimage
-import fsl.data.featimage   as featimage
-import fsl.data.featresults as featresults
+import fsleyes.panel         as fslpanel
+import fsleyes.strings       as strings
+import fsl.utils.async       as async
+import fsl.utils.status      as status
+import fsl.data.image        as fslimage
+import fsl.data.featimage    as featimage
+import fsl.data.featanalysis as featanalysis
 
 
 log = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
     :attr:`.DisplayContext.selectedOverlay` property), a ``ClusterPanel``
     tries to identify the FEAT analysis associated with the overlay. If
     the overlay is a :class:`.FEATImage`, then no work needs to be done.
-    Otherwise, the ``ClusterPanel`` uses functions in the :mod:`.featresults`
+    Otherwise, the ``ClusterPanel`` uses functions in the :mod:`.featanalysis`
     module to identify the FEAT directory. Ultimately, a reference to a
     :class:`.FEATImage` associated with the currently selected overlay is
     obtained, so the ``ClusterPanel`` can retrieve contrast and cluster
@@ -520,7 +520,7 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
             self.__disable(strings.messages[self, 'notFEAT'])
             return
         
-        featDir = featresults.getAnalysisDir(overlay.dataSource)
+        featDir = featanalysis.getAnalysisDir(overlay.dataSource)
 
         # No FEAT analysis, or not an Image,
         # can't do anything with that 
