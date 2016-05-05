@@ -18,7 +18,6 @@ import fsleyes.actions  as actions
 import fsleyes.icons    as fslicons
 import fsleyes.tooltips as fsltooltips
 import fsleyes.strings  as strings
-import fsl.data.image   as fslimage
 
 
 class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
@@ -81,20 +80,10 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
             'sliceSpacing' : fsltooltips.properties[lbOpts,  'sliceSpacing'],
             'zrange'       : fsltooltips.properties[lbOpts,  'zrange'],
             'zoom'         : fsltooltips.properties[lbOpts,  'zoom'],
-            'displaySpace' : fsltooltips.properties[displayCtx,
-                                                    'displaySpace'],
-            
             'toggleCanvasSettingsPanel' : fsltooltips.actions[
                 lb, 'toggleCanvasSettingsPanel'],
         }
 
-        def displaySpaceOptionName(opt):
-
-            if isinstance(opt, fslimage.Nifti1):
-                return opt.name
-            else:
-                return strings.choices['DisplayContext.displaySpace'][opt] 
-        
         specs = {
             
             'toggleCanvasSettingsPanel' : actions.ToggleActionButton(
@@ -137,11 +126,6 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
                 spin=False,
                 showLimits=False,
                 tooltip=tooltips['zoom']),
- 
-            'displaySpace' : props.Widget(
-                'displaySpace',
-                labels=displaySpaceOptionName,
-                tooltip=tooltips['displaySpace'])
         }
 
         # Slice spacing and zoom go on a single panel
@@ -158,22 +142,17 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
         zrange       = props.buildGUI(self,  lbOpts,     specs['zrange'])
         zoom         = props.buildGUI(panel, lbOpts,     specs['zoom'])
         spacing      = props.buildGUI(panel, lbOpts,     specs['sliceSpacing'])
-        displaySpace = props.buildGUI(panel, displayCtx, specs['displaySpace'])
         zoomLabel    = wx.StaticText(panel)
         spacingLabel = wx.StaticText(panel)
 
         zoomLabel   .SetLabel(strings.properties[lbOpts, 'zoom'])
         spacingLabel.SetLabel(strings.properties[lbOpts, 'sliceSpacing'])
 
-        displaySpace = self.MakeLabelledTool(
-            displaySpace,
-            strings.properties[displayCtx, 'displaySpace'])
-
         sizer.Add(zoomLabel)
         sizer.Add(zoom,    flag=wx.EXPAND)
         sizer.Add(spacingLabel)
         sizer.Add(spacing, flag=wx.EXPAND)
 
-        tools = [more, screenshot, zax, movieMode, displaySpace, zrange, panel]
+        tools = [more, screenshot, zax, movieMode, zrange, panel]
         
         self.SetTools(tools) 

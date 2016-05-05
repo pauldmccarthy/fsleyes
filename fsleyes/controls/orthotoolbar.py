@@ -11,7 +11,6 @@
 
 import props
 
-import fsl.data.image   as fslimage
 import fsleyes.toolbar  as fsltoolbar
 import fsleyes.icons    as fslicons
 import fsleyes.tooltips as fsltooltips
@@ -78,7 +77,6 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
         Re-creates all tools shown on this ``OrthoToolBar``.
         """
 
-        dctx      = self._displayCtx
         ortho     = self.orthoPanel
         orthoOpts = ortho.getSceneOptions()
         profile   = ortho.getCurrentProfile()
@@ -123,7 +121,6 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
             'showXCanvas'  : fsltooltips.properties[orthoOpts, 'showXCanvas'],
             'showYCanvas'  : fsltooltips.properties[orthoOpts, 'showYCanvas'],
             'showZCanvas'  : fsltooltips.properties[orthoOpts, 'showZCanvas'],
-            'displaySpace' : fsltooltips.properties[dctx,      'displaySpace'],
             'toggleCanvasSettingsPanel' : fsltooltips.actions[
                 ortho, 'toggleCanvasSettingsPanel'],
             
@@ -137,15 +134,7 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
                       'showXCanvas'               : orthoOpts,
                       'showYCanvas'               : orthoOpts,
                       'showZCanvas'               : orthoOpts,
-                      'displaySpace'              : dctx,
                       'toggleCanvasSettingsPanel' : ortho}
-
-        def displaySpaceOptionName(opt):
-
-            if isinstance(opt, fslimage.Nifti1):
-                return opt.name
-            else:
-                return strings.choices['DisplayContext.displaySpace'][opt]        
 
 
         toolSpecs = [
@@ -176,11 +165,6 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
             actions.ActionButton('resetZoom', 
                                  icon=icons['resetZoom'],
                                  tooltip=tooltips['resetZoom']), 
-            props.Widget(        'displaySpace',
-                                 labels=displaySpaceOptionName,
-                                 tooltip=tooltips['displaySpace'],
-                                 dependencies=[(ortho, 'profile')],
-                                 enabledWhen=lambda i, p: p == 'view'),
             props.Widget(        'zoom',
                                  spin=False,
                                  showLimits=False,
@@ -192,7 +176,7 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
         for spec in toolSpecs:
             widget = props.buildGUI(self, targets[spec.key], spec)
 
-            if spec.key in ('zoom', 'displaySpace'):
+            if spec.key in ('zoom', ):
                 widget = self.MakeLabelledTool(
                     widget,
                     strings.properties[targets[spec.key], spec.key])
