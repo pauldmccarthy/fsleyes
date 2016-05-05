@@ -62,9 +62,15 @@ def main(args=None):
 
     # Show the splash screen as soon as
     # possible, unless it looks like the
-    # user is asking for command line help.
+    # user is asking for the software
+    # version or command line help.
     splash = makeSplash()
-    if (len(args) > 0) and (args[0] in ('-h', '-fh', '--help', '--fullhelp')):
+    if (len(args) > 0) and (args[0] in ('-V',
+                                        '-h',
+                                        '-fh',
+                                        '--version',
+                                        '--help',
+                                        '--fullhelp')):
         splash.Hide()
 
     # We are going do all processing on the

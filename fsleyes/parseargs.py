@@ -583,7 +583,7 @@ HELP = td.TypeDict({
     'Main.help'          : 'Display basic FSLeyes options and exit',
     'Main.fullhelp'      : 'Display all FSLeyes options and exit',
     'Main.verbose'       : 'Verbose output (can be used up to 3 times)',
-    'Main.version'       : 'Print the current fslpy version and exit',
+    'Main.version'       : 'Print the current version and exit',
     'Main.skipfslcheck'  : 'Skip $FSLDIR check/warning',
     'Main.noisy'         : 'Make the specified module noisy',
     'Main.memory'        : 'Output memory events (implied if -v is set)',
@@ -1272,6 +1272,10 @@ def parseArgs(mainParser,
         _printFullHelp(mainParser)
         sys.exit(0)
 
+    if namespace.version:
+        _printVersion(name)
+        sys.exit(0)
+
     # Now, we'll create additiona parsers to handle
     # the Display and DisplayOpts options for each
     # overlay . Below we're going to manually step
@@ -1351,6 +1355,20 @@ def parseArgs(mainParser,
         namespace.overlays.append(optArgs)
 
     return namespace
+
+
+def _printVersion(name):
+    """Prints the current FSLeyes version.
+
+    :arg name: Name of the tool (probably either ``fsleyes`` or ``render``).
+    """
+
+    from . import version
+
+    print('{}/FSLeyes version {} (internal version: {})'.format(
+        name,
+        version.__version__,
+        version.__vcs_version__))
 
 
 def _printShortHelp(mainParser):
