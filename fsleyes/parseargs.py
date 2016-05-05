@@ -279,6 +279,17 @@ def ArgumentParser(*args, **kwargs):
     return ap
 
 
+class FSLEyesHelpFormatter(argparse.RawDescriptionHelpFormatter):
+    """A custom ``argparse.HelpFormatter`` class which customises a few
+    annoying things about default ``argparse`` behaviour.
+    """
+    def _format_usage(self, usage, actions, groups, prefix):
+
+        # Inhibit the 'usage: ' prefix 
+        return argparse.RawDescriptionHelpFormatter._format_usage(
+            self, usage, actions, groups, '')
+
+
 # Names of all of the property which are 
 # customisable via command line arguments.
 OPTIONS = td.TypeDict({
@@ -392,7 +403,7 @@ GROUPNAMES = td.TypeDict({
     'SceneOpts'      : 'Scene options',
     'OrthoOpts'      : 'Ortho display options',
     'LightBoxOpts'   : 'LightBox display options',
-    'Display'        : 'Overlay display options',
+    'Display'        : 'Display options',
     'VolumeOpts'     : 'Volume options',
     'MaskOpts'       : 'Mask options',
     'LineVectorOpts' : 'Line vector options',
@@ -691,6 +702,17 @@ HELP = td.TypeDict({
 })
 """This dictionary defines the help text for all command line options."""
 
+
+# Help text for some properties, when user requests short (abbreviated) help.
+SHORT_HELP = td.TypeDict({
+    'VolumeOpts.displayRange'  : 'Display range',
+    'VolumeOpts.clippingRange' : 'Clipping range. Setting this will '
+                                 'override the display range.',
+})
+"""This dictionary defines the help text for some properties, used when the
+user requests a short (abbreviated) version of the command line help.
+"""
+
 # 
 # Extra settings for some properties, passed through 
 # to the props.cli.addParserArguments function.
@@ -805,6 +827,17 @@ for target, fileOpts in FILE_OPTIONS.items():
         TRANSFORMS[key] = _imageTrans
 
 
+EXAMPLES = """\
+Examples:
+
+{0} --help
+{0} --fullhelp
+{0} T1.nii.gz --cmap red
+{0} MNI152_T1_2mm.nii.gz -dr 1000 10000
+{0} MNI152_T1_2mm.nii.gz -dr 1000 10000 zstats.nii.gz -cm hot -dr -5 5
+"""
+
+
 def _setupMainParser(mainParser):
     """Sets up an argument parser which handles options related
     to the scene. This function configures the following argument
@@ -837,7 +870,7 @@ def _setupMainParser(mainParser):
     _configLightBoxParser( lbGroup)
 
 
-def _configParser(target, parser, propNames=None):
+def _configParser(target, parser, propNames=None, shortHelp=False):
     """Configures the given parser so it will parse arguments for the
     given target.
     """
@@ -852,8 +885,11 @@ def _configParser(target, parser, propNames=None):
     for propName in propNames:
 
         shortArg, longArg = ARGUMENTS[ target, propName]
-        helpText          = HELP .get((target, propName), 'nohelp')
         propExtra         = EXTRA.get((target, propName), None)
+        helpText          = HELP .get((target, propName), 'no help')
+
+        if shortHelp:
+            helpText = SHORT_HELP.get((target, propName), helpText)
 
         shortArgs[propName] = shortArg
         longArgs[ propName] = longArg
@@ -976,18 +1012,22 @@ def _configLightBoxParser(lbParser):
     _configParser(fsldisplay.LightBoxOpts, lbParser)
 
 
-def _setupOverlayParsers(forHelp=False):
+def _setupOverlayParsers(forHelp=False, shortHelp=False):
     """Creates a set of parsers which handle command line options for
     :class:`.Display` instances, and for all :class:`.DisplayOpts` instances.
 
-    :arg forHelp: If ``False`` (the default), each of the parsers created
-                  to handle options for the :class:`.DisplayOpts`
-                  sub-classes will be configured so that the can also
-                  handle options for :class:`.Display` properties. Otherwise,
-                  the ``DisplayOpts`` parsers will be configured to only
-                  handle ``DisplayOpts`` properties. This option is available
-                  to make it easier to separate the help sections when
-                  printing help.
+    :arg forHelp:   If ``False`` (the default), each of the parsers created to
+                    handle options for the :class:`.DisplayOpts` sub-classes
+                    will be configured so that the can also handle options for
+                    :class:`.Display` properties. Otherwise, the
+                    ``DisplayOpts`` parsers will be configured to only handle
+                    ``DisplayOpts`` properties. This option is available to
+                    make it easier to separate the help sections when printing
+                    help.
+
+    :arg shortHelp: If ``False`` (the default), help text will be taken from
+                    the :data:`HELP` dictionary. Otherwise, help text will
+                    be taken from the :data:`SHORT_HELP` dictionary.
 
     :returns: A tuple containing:
     
@@ -1033,8 +1073,8 @@ def _setupOverlayParsers(forHelp=False):
     if not forHelp:
         dispProps.remove('overlayType')
     
-    _configParser(Display, dispParser, dispProps)
-    _configParser(Display, otParser,   ['overlayType'])
+    _configParser(Display, dispParser, dispProps,       shortHelp=shortHelp)
+    _configParser(Display, otParser,   ['overlayType'], shortHelp=shortHelp)
 
     # Create and configure
     # each of the parsers
@@ -1060,7 +1100,7 @@ def _setupOverlayParsers(forHelp=False):
                 specialOptions.append(propName)
                 propNames     .remove(propName)
 
-        _configParser(target, parser, propNames)
+        _configParser(target, parser, propNames, shortHelp=shortHelp)
 
         # We need to process the special options
         # manually, rather than using the props.cli
@@ -1083,8 +1123,9 @@ def _setupOverlayParsers(forHelp=False):
 def parseArgs(mainParser,
               argv,
               name,
-              desc,
-              toolOptsDesc='[options]',
+              prolog=None,
+              desc=None,
+              usageProlog=None,
               fileOpts=None):
     """Parses the given command line arguments, returning an
     :class:`argparse.Namespace` object containing all the arguments.
@@ -1111,7 +1152,6 @@ def parseArgs(mainParser,
                       options which are handled by the tool, not by this
                       module).
 
-
       - fileOpts:     If the ``mainParser`` has already been configured to
                       accept some arguments, you must pass any arguments
                       that accept a file name as a list here. Otherwise,
@@ -1126,17 +1166,25 @@ def parseArgs(mainParser,
 
     # I hate argparse. By default, it does not support
     # the command line interface that I want to provide,
-    # as demonstrated in this usage string. 
-    usageStr   = '{} {} [file [displayOpts]] '\
-                 '[file [displayOpts]] ...'.format(
-                     name,
-                     toolOptsDesc)
+    # as demonstrated in this usage string.
+    if usageProlog is not None:
+        usageProlog = ' {}'.format(usageProlog)
+    else:
+        usageProlog = ''
+        
+    usageStr = 'Usage: {}{} file [displayOpts] file [displayOpts] ...'.format(
+        name,
+        usageProlog)
+
+    if prolog is not None:
+        usageStr = '{}\n{}'.format(prolog, usageStr)
 
     # So I'm using multiple argument parsers. First
     # of all, the mainParser parses application
     # options. We'll create additional parsers for
     # handling overlays a bit later on.
     mainParser.usage       = usageStr
+    mainParser.epilog      = EXAMPLES.format(name)
     mainParser.prog        = name
     mainParser.description = desc
 
@@ -1376,11 +1424,11 @@ def _printShortHelp(mainParser):
 
     # Generate the help text for main options
     mainParser.description = None
-    mainParser.epilog      = None 
     helpText = mainParser.format_help()
 
     # Now configure Display/DisplayOpts parsers
-    dispParser, _, optParsers = _setupOverlayParsers(forHelp=True)
+    dispParser, _, optParsers = _setupOverlayParsers(forHelp=True,
+                                                     shortHelp=True)
     parsers = ([(fsldisplay.Display,    dispParser),
                 (fsldisplay.VolumeOpts, optParsers[fsldisplay.VolumeOpts])])
 
@@ -1392,7 +1440,7 @@ def _printShortHelp(mainParser):
         parser.epilog      = None
 
         args = allArgs[target]
-
+            
         # Suppress all arguments that
         # are not listed above
         for action in parser._actions:
@@ -1414,7 +1462,12 @@ def _printFullHelp(mainParser):
     """Prints out help for all arguments.
 
     :arg mainParser: The top level ``ArgumentParser``.
-    """ 
+    """
+
+    # The epilog contains EXAMPLES,
+    # but we only want them displayed
+    # in the short help.
+    mainParser.epilog = None
 
     # Create a bunch of parsers for handling
     # overlay display options

@@ -160,10 +160,11 @@ def parseArgs(argv):
     """
 
     import fsleyes.parseargs as parseargs
+    import fsleyes.version   as version
 
     parser = argparse.ArgumentParser(
         add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=parseargs.FSLEyesHelpFormatter)
 
     parser.add_argument('-r', '--runscript',
                         metavar='SCRIPTFILE',
@@ -174,7 +175,8 @@ def parseArgs(argv):
     # to make fsl.utils.settings work without a
     # wx.App (so we can retrieve the perspective
     # list before the GUI is created).
-    name        = 'FSLeyes'
+    name        = 'fsleyes'
+    prolog      = 'FSLeyes version {}\n'.format(version.__version__)
     description = textwrap.dedent("""\
         FSLeyes - the FSL image viewer.
         
@@ -192,7 +194,8 @@ def parseArgs(argv):
     return parseargs.parseArgs(parser,
                                argv,
                                name,
-                               description,
+                               prolog=prolog,
+                               desc=description,
                                fileOpts=['r', 'runscript'])
 
 
