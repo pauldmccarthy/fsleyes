@@ -595,7 +595,12 @@ class FEATEVTimeSeries(TimeSeries):
         
     def getData(self):
         """Returns the time course of the EV specified in the constructor. """
-        data = self.overlay.getDesign()[:, self.idx]
+
+        opts   = self.displayCtx.getOpts(self.overlay)
+        coords = opts.getVoxel()
+        design = self.overlay.getDesign(coords)
+        data   = design[:, self.idx]
+        
         return TimeSeries.getData(self, ydata=data)
     
 

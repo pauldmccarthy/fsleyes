@@ -338,6 +338,9 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         xdata, ydata = ts.getData()
 
+        if len(xdata) == 0:
+            return xdata, ydata
+
         if self.usePixdim:
             if isinstance(ts.overlay, fslmelimage.MelodicImage):
                 xdata = xdata * ts.overlay.tr
