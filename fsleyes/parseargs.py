@@ -1432,7 +1432,7 @@ def _printShortHelp(mainParser):
     parsers = ([(fsldisplay.Display,    dispParser),
                 (fsldisplay.VolumeOpts, optParsers[fsldisplay.VolumeOpts])])
 
-    helpText += '\n' + GROUPNAMES[fsldisplay.Display] + '\n'
+    helpText += '\n' + GROUPNAMES[fsldisplay.Display] + '\n\n'
 
     for target, parser in parsers:
         
@@ -1453,7 +1453,9 @@ def _printShortHelp(mainParser):
         optStart += len(skipTo) + 1
         ovlHelp   = ovlHelp[optStart:]
 
-        helpText += '\n' + ovlHelp
+        helpText += ovlHelp
+
+    helpText += '\n' + GROUPEPILOGS['VolumeOpts'] + '\n'
 
     print(helpText)
     
