@@ -928,6 +928,7 @@ about = {
      - numpy [{}] (http://www.numpy.org)
      - pillow [{}]  (http://python-pillow.org/)
      - props [{}] (https://git.fmrib.ox.ac.uk/paulmc/props)
+     - fslpy [{}] (https://git.fmrib.ox.ac.uk/paulmc/fslpy)
      - pyopengl [{}] (http://pyopengl.sourceforge.net)
      - pyparsing [{}] (http://pyparsing.wikispaces.com/)
      - scipy [{}] (http://www.scipy.org)
@@ -941,7 +942,7 @@ about = {
     # dynamically looks up the version number for
     # each of them, and inserts them into the above
     # string.
-    'libs' : ['jinja2', 'matplotlib', 'nibabel', 'numpy',
-              'PIL',    'props',      'OpenGL',  'pyparsing',
-              'scipy',  'wx'],
+    'libs' : ['jinja2',    'matplotlib', 'nibabel', 'numpy',
+              'PIL',       'props',      'fsl',     'OpenGL',
+              'pyparsing', 'scipy',      'wx'],
 }
