@@ -239,6 +239,9 @@ class GLVolume(globject.GLImageObject):
         ``False`` otherwise.
         """
 
+        if self.destroyed():
+            return False
+
         if self.displayOpts.clipImage is None:
             return (self.shader       is not None and
                     self.imageTexture is not None and
