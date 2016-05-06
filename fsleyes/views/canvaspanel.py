@@ -591,8 +591,20 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         limit = overlay.shape[3]
 
+        # We want the canvas refreshes to be
+        # synchronised. So we 'freeze' them
+        # while changing the image volume, and
+        # then refresh them all afterwards.
+        canvases = self.getGLCanvases()
+        for c in canvases:
+            c.Freeze()
+
         if opts.volume == limit - 1: opts.volume  = 0
         else:                        opts.volume += 1
+
+        # Unfreeze and refresh
+        for c in canvases: c.Thaw() 
+        for c in canvases: c.Refresh()
 
 
 def _showCommandLineArgs(overlayList, displayCtx, canvas):
