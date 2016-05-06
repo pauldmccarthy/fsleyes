@@ -949,7 +949,16 @@ class OverlayPlotPanel(PlotPanel):
 
         for ds in toAdd:
 
-            copy = plotting.DataSeries(overlay)
+            # Create the DataSeries copy with
+            # the ds.overlay instead of the
+            # selected overlay, because if,
+            # for example, this is a zstat
+            # image in a FEAT directory, these
+            # data series will have been
+            # created with the corresponding
+            # filtered_func_data image, not
+            # the zstat image.
+            copy = plotting.DataSeries(ds.overlay)
 
             copy.alpha     = ds.alpha
             copy.lineWidth = ds.lineWidth
