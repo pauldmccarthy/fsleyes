@@ -378,7 +378,7 @@ class ListItemWidget(wx.Panel):
         self             .Bind(wx.EVT_WINDOW_DESTROY, self.__onDestroy)
 
         self.__overlayGroupChanged()
-        self.__vizChanged()
+        self.__vizChanged(selectOverlay=False)
         self.__saveStateChanged()
 
 
@@ -458,12 +458,21 @@ class ListItemWidget(wx.Panel):
         self.__listBox.SetItemTooltip(idx, tooltip)
 
             
-    def __vizChanged(self, *a):
+    def __vizChanged(self, *args, **kwargs):
         """Called when the :attr:`.Display.enabled` property of the overlay
         changes. Updates the state of the *enabled* buton, and changes the
         item foreground colour.
+
+        :arg selectOverlay: If ``True`` (the default), the overlay is set to
+                            the :attr:`.DisplayContext.selectedOverlay`.
+
+        All other arguments are ignored.
         """
-        self.__displayCtx.selectOverlay(self.__overlay)
+
+        selectOverlay = kwargs.get('selectOverlay', True)
+
+        if selectOverlay:
+            self.__displayCtx.selectOverlay(self.__overlay)
 
         idx = self.__listBox.IndexOf(self.__overlay)
 
