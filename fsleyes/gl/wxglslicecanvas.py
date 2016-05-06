@@ -20,8 +20,8 @@ from . import         slicecanvas
 
 class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
                                          slicecanvas.SliceCanvas,
-                                         wxgl.GLCanvas,
-                                         fslgl.WXGLCanvasTarget)):
+                                         fslgl.WXGLCanvasTarget,
+                                         wxgl.GLCanvas)):
     """The ``WXGLSliceCanvas`` is a :class:`.SliceCanvas`, a
     :class:`wx.glcanvas.GLCanvas` and a :class:`.WXGLCanvasTarget`. If you
     want to use a :class:`.SliceCanvas` in your :mod:`wx` application, then
@@ -37,12 +37,12 @@ class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
         """
 
         wxgl.GLCanvas          .__init__(self, parent)
-        slicecanvas.SliceCanvas.__init__(self, overlayList, displayCtx, zax)
         fslgl.WXGLCanvasTarget .__init__(self)
+        slicecanvas.SliceCanvas.__init__(self, overlayList, displayCtx, zax)
 
         self.Bind(wx.EVT_SIZE, self.__onResize)
 
-
+    
     def __onResize(self, ev):
         """Called on ``wx.EVT_SIZE`` events, when the canvas is resized. When
         the canvas is resized, we have to update the display bounds to preserve

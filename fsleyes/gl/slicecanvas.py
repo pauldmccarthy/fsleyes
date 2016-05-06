@@ -208,13 +208,13 @@ class SliceCanvas(props.HasProperties):
         # when any of the properties of this
         # canvas change, we need to redraw
         self.addListener('zax',           self.name, self._zAxisChanged)
-        self.addListener('pos',           self.name, self._refresh)
-        self.addListener('displayBounds', self.name, self._refresh)
-        self.addListener('bgColour',      self.name, self._refresh)
-        self.addListener('cursorColour',  self.name, self._refresh)
-        self.addListener('showCursor',    self.name, self._refresh)
-        self.addListener('invertX',       self.name, self._refresh)
-        self.addListener('invertY',       self.name, self._refresh)
+        self.addListener('pos',           self.name, self.Refresh)
+        self.addListener('displayBounds', self.name, self.Refresh)
+        self.addListener('bgColour',      self.name, self.Refresh)
+        self.addListener('cursorColour',  self.name, self.Refresh)
+        self.addListener('showCursor',    self.name, self.Refresh)
+        self.addListener('invertX',       self.name, self.Refresh)
+        self.addListener('invertY',       self.name, self.Refresh)
         self.addListener('zoom',          self.name, self._zoomChanged)
         self.addListener('renderMode',    self.name, self._renderModeChange)
         self.addListener('resolutionLimit',
@@ -228,7 +228,7 @@ class SliceCanvas(props.HasProperties):
                                      self._overlayListChanged)
         self.displayCtx .addListener('overlayOrder',
                                      self.name,
-                                     self._refresh) 
+                                     self.Refresh) 
         self.displayCtx .addListener('bounds',
                                      self.name,
                                      self._overlayBoundsChanged)
@@ -551,7 +551,7 @@ class SliceCanvas(props.HasProperties):
                 rt, name = self._getPreRenderTexture(globj, overlay)
                 self._prerenderTextures[overlay] = rt, name
 
-        self._refresh()
+        self.Refresh()
 
         
     def _getPreRenderTexture(self, globj, overlay):
@@ -617,7 +617,7 @@ class SliceCanvas(props.HasProperties):
         # displayed on the screen, so render
         # textures are not needed.
         if self.renderMode == 'onscreen':
-            self._refresh()
+            self.Refresh()
             return
 
         # Off-screen or prerender rendering - update
@@ -778,7 +778,7 @@ class SliceCanvas(props.HasProperties):
                                          display.overlayType))
 
         self.__regenGLObject(display.getOverlay())
-        self._refresh()
+        self.Refresh()
 
 
     def __regenGLObject(self,
@@ -824,7 +824,7 @@ class SliceCanvas(props.HasProperties):
         :attr:`.renderMode` is ``offscreen`` or ``prerender``, any
         textures for the overlay are updated.
 
-        If ``refresh`` is ``True`` (the default), the :meth:`_refresh` method
+        If ``refresh`` is ``True`` (the default), the :meth:`Refresh` method
         is called after the ``GLObject`` has been created.
 
         .. note:: If running in ``wx`` (i.e. via a :class:`.WXGLSliceCanvas`),
@@ -858,7 +858,7 @@ class SliceCanvas(props.HasProperties):
                                             self.yax)
 
             if globj is not None:
-                globj.register(self.name, self._refresh)
+                globj.register(self.name, self.Refresh)
 
             self._glObjects[overlay] = globj
 
@@ -872,7 +872,7 @@ class SliceCanvas(props.HasProperties):
 
             display.addListener('enabled',
                                 self.name,
-                                self._refresh,
+                                self.Refresh,
                                 overwrite=True)
 
             # Listen for resolution changes on Image
@@ -886,7 +886,7 @@ class SliceCanvas(props.HasProperties):
                                  overwrite=True)
 
             if refresh:
-                self._refresh()
+                self.Refresh()
 
         async.idle(create)
 
@@ -930,7 +930,7 @@ class SliceCanvas(props.HasProperties):
         def refresh():
             self._updateRenderTextures()
             self.__resolutionLimitChange()
-            self._refresh()
+            self.Refresh()
 
         async.idle(refresh)
 

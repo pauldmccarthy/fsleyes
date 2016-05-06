@@ -115,8 +115,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         self.addListener('ncols',          self.name, self._slicePropsChanged)
         self.addListener('nrows',          self.name, self._slicePropsChanged)
         self.addListener('zrange',         self.name, self._slicePropsChanged)
-        self.addListener('showGridLines',  self.name, self._refresh)
-        self.addListener('highlightSlice', self.name, self._refresh)
+        self.addListener('showGridLines',  self.name, self.Refresh)
+        self.addListener('highlightSlice', self.name, self.Refresh)
         self.addListener('topRow',         self.name, self._topRowChanged)
 
         # Add a listener to the position so when it
@@ -288,7 +288,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         range and refreshes the canvas.
         """
         self._updateDisplayBounds()
-        self._refresh()
+        self.Refresh()
 
 
     def _slicePropsChanged(self, *a):
@@ -311,7 +311,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
             log.debug('Lightbox properties changed: [{}]'.format(props))
             
-        self._refresh()
+        self.Refresh()
 
 
     def _renderModeChange(self, *a):
@@ -377,7 +377,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
                 rt, name = self._getPreRenderTexture(globj, overlay)
                 self._prerenderTextures[overlay] = rt, name
 
-        self._refresh()
+        self.Refresh()
 
 
     def _calcNumSlices(self, *a):

@@ -23,8 +23,8 @@ from . import         lightboxcanvas
 
 class WXGLLightBoxCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
                                             lightboxcanvas.LightBoxCanvas,
-                                            wxgl.GLCanvas,
-                                            fslgl.WXGLCanvasTarget)):
+                                            fslgl.WXGLCanvasTarget,
+                                            wxgl.GLCanvas)):
     """The ``WXGLLightBoxCanvas`` is a :class:`.LightBoxCanvas`, a
     :class:`wx.glcanvas.GLCanvas` and a :class:`.WXGLCanvasTarget`. If you
     want to use a :class:`.LightBoxCanvas` in your :mod:`wx` application,
@@ -41,11 +41,11 @@ class WXGLLightBoxCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
         """ 
 
         wxgl.GLCanvas                .__init__(self, parent)
+        fslgl.WXGLCanvasTarget       .__init__(self)
         lightboxcanvas.LightBoxCanvas.__init__(self,
                                                overlayList,
                                                displayCtx,
                                                zax)
-        fslgl.WXGLCanvasTarget       .__init__(self)
 
         # When the canvas is resized, we have to update
         # the display bounds to preserve the aspect ratio

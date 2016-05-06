@@ -71,7 +71,7 @@ class ColourBarCanvas(props.HasProperties):
             
     def __updateTexture(self, *a):
         self._genColourBarTexture()
-        self._refresh()
+        self.Refresh()
         
 
     def _initGL(self):
