@@ -59,6 +59,9 @@ def updateShaderState(self):
     current display properties.
     """
 
+    if self.destroyed():
+        return
+
     opts   = self.displayOpts
     shader = self.shader
 
