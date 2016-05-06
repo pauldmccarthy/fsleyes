@@ -178,7 +178,8 @@ import platform
 
 import props
 
-from fsl.utils.platform import platform as fslplatform
+import fsl.utils.async                    as async
+from   fsl.utils.platform import platform as fslplatform
 
 
 log = logging.getLogger(__name__)
@@ -662,8 +663,14 @@ class WXGLCanvasTarget(object):
 
     
     def __onPaint(self, ev):
-        """Called on ``wx.EVT_PAINT`` events. Does nothing. """
-        pass 
+        """Called on ``wx.EVT_PAINT`` events. Schedules :meth:`Refresh`
+        to be called on the idle loop.
+        """
+
+        # GL canvases do need to be refreshed
+        # on EVT_PAINT events. If they are not,
+        # the canvas will be corrupted.
+        async.idle(self.Refresh)
  
 
     def _initGL(self):
