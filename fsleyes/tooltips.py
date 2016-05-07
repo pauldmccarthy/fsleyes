@@ -460,9 +460,25 @@ actions = TypeDict({
     'CanvasPanel.toggleCanvasSettingsPanel' : 'Show more view '
                                               'control settings',
     'CanvasPanel.toggleOverlayInfo' : 'Show/hide the overlay '
-                                      'information panel',
+                                      'information panel.',
 
-    'PlotPanel.screenshot' : 'Take a screenshot of the current plot',
+    'PlotPanel.screenshot' : 'Take a screenshot of the current plot.',
+
+    'TimeSeriesPanel.toggleTimeSeriesControl' : 'Show/hide the time '
+                                                'series control panel.',
+    'TimeSeriesPanel.toggleTimeSeriesList'    : 'Show/hide the time '
+                                                'series list panel.',
+    'HistogramPanel.toggleHistogramControl'   : 'Show/hide the histogram '
+                                                'control panel.',
+    'HistogramPanel.toggleHistogramList'      : 'Show/hide the histogram '
+                                                'list panel.',
+    
+    'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Show/hide the power '
+                                                      'spectrum control '
+                                                      'panel.',
+    'PowerSpectrumPanel.togglePowerSpectrumList'    : 'Show/hide the power '
+                                                      'spectrum list '
+                                                      'panel.', 
  
 
     'OrthoViewProfile.resetZoom'    : 'Reset zoom level on '

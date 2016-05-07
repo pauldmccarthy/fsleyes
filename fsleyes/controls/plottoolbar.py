@@ -20,7 +20,8 @@ import fsleyes.toolbar  as fsltoolbar
 
 class PlotToolBar(fsltoolbar.FSLEyesToolBar):
     """The ``PlotToolBar`` is a toolbar for use with an
-    :class:`.OverlayPlotPanel`.
+    :class:`.OverlayPlotPanel`. It creates toolbar controls which
+    are common to all :class:`.OverlayPlotPanel` types.
     """
 
     def __init__(self, parent, overlayList, displayCtx, plotPanel):

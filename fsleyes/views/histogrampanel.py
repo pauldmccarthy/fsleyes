@@ -101,21 +101,25 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
         
     @actions.toggleControlAction(plotlistpanel.PlotListPanel)
-    def toggleHistogramList(self):
+    def toggleHistogramList(self, floatPane=False):
         """Shows/hides a :class:`.PlotListPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(plotlistpanel.PlotListPanel, self, location=wx.TOP)
+        self.togglePanel(plotlistpanel.PlotListPanel,
+                         self,
+                         location=wx.TOP,
+                         floatPane=floatPane)
 
         
     @actions.toggleControlAction(histogramcontrolpanel.HistogramControlPanel)
-    def toggleHistogramControl(self):
+    def toggleHistogramControl(self, floatPane=False):
         """Shows/hides a :class:`.HistogramControlPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
         self.togglePanel(histogramcontrolpanel.HistogramControlPanel,
                          self,
-                         location=wx.RIGHT)
+                         location=wx.RIGHT,
+                         floatPane=floatPane)
 
         
     @actions.toggleControlAction(histogramtoolbar.HistogramToolBar)

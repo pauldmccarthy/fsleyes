@@ -160,21 +160,25 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
 
     @actions.toggleControlAction(plotlistpanel.PlotListPanel)
-    def toggleTimeSeriesList(self):
+    def toggleTimeSeriesList(self, floatPane=False):
         """Shows/hides a :class:`.PlotListPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(plotlistpanel.PlotListPanel, self, location=wx.TOP)
+        self.togglePanel(plotlistpanel.PlotListPanel,
+                         self,
+                         location=wx.TOP,
+                         floatPane=floatPane)
 
         
     @actions.toggleControlAction(timeseriescontrolpanel.TimeSeriesControlPanel)
-    def toggleTimeSeriesControl(self):
+    def toggleTimeSeriesControl(self, floatPane=False):
         """Shows/hides a :class:`.TimeSeriesControlPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
         self.togglePanel(timeseriescontrolpanel.TimeSeriesControlPanel,
                          self,
-                         location=wx.RIGHT)
+                         location=wx.RIGHT,
+                         floatPane=floatPane)
 
 
     @actions.toggleControlAction(timeseriestoolbar.TimeSeriesToolBar)

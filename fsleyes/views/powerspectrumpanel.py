@@ -111,23 +111,25 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
 
 
     @actions.toggleControlAction(pscontrol.PowerSpectrumControlPanel)
-    def togglePowerSpectrumControl(self):
+    def togglePowerSpectrumControl(self, floatPane=False):
         """Shows/hides a :class:`.PowerSpectrumControlPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
         self.togglePanel(pscontrol.PowerSpectrumControlPanel,
                          self,
-                         location=wx.RIGHT)
+                         location=wx.RIGHT,
+                         floatPane=floatPane)
 
         
     @actions.toggleControlAction(plotlistpanel.PlotListPanel)
-    def togglePowerSpectrumList(self):
+    def togglePowerSpectrumList(self, floatPane=False):
         """Shows/hides a :class:`.PlotListPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """ 
         self.togglePanel(plotlistpanel.PlotListPanel,
                          self,
-                         location=wx.TOP)
+                         location=wx.TOP,
+                         floatPane=floatPane)
 
 
     @actions.toggleControlAction(plottoolbar.PlotToolBar)
