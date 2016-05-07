@@ -117,6 +117,8 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
         self.__selectedOverlayChanged()
         self.__autoScaleChanged()
 
+        self.SetMinSize(self.__sizer.GetMinSize())
+
         
     def destroy(self):
         """Must be called when this ``PlotControlPanel`` is no longer

@@ -26,6 +26,7 @@ fsleyes.controls package
    fsleyes.controls.plotlistpanel
    fsleyes.controls.plottoolbar
    fsleyes.controls.powerspectrumcontrolpanel
+   fsleyes.controls.powerspectrumtoolbar
    fsleyes.controls.timeseriescontrolpanel
    fsleyes.controls.timeseriestoolbar
 

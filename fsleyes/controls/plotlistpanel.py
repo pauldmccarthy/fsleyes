@@ -76,7 +76,8 @@ class PlotListPanel(fslpanel.FSLEyesPanel):
 
         self.__dataSeriesChanged()
         self.Layout()
-
+        self.SetMinSize(self.__sizer.GetMinSize())
+ 
         
     def destroy(self):
         """Must be called when this ``PlotListPanel`` is no longer
