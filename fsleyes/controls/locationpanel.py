@@ -670,7 +670,10 @@ class LocationPanel(fslpanel.FSLEyesPanel):
                 else:
                     info = strings.labels[self, 'outOfBounds']
 
-            if overlay is selOvl:
+            # Indent info for unselected overlays,
+            # to make the info for the selected
+            # overlay a bit more obvious. 
+            if overlay is not selOvl:
                 title = '&nbsp;&nbsp;&nbsp;{}'.format(title)
                 if info is not None:
                     info = '&nbsp;&nbsp;&nbsp;{}'.format(info)
