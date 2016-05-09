@@ -15,8 +15,6 @@ import functools
 import wx
 import props
 
-import pwidgets.widgetlist           as widgetlist
-
 import fsl.utils.typedict            as td
 import fsleyes.strings               as strings
 import fsleyes.tooltips              as fsltooltips
@@ -29,7 +27,7 @@ import fsleyes.displaycontext        as displayctx
 log = logging.getLogger(__name__)
 
     
-class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
+class OverlayDisplayPanel(fslpanel.FSLEyesSettingsPanel):
     """The ``OverlayDisplayPanel`` is a :Class:`.FSLEyesPanel` which allows
     the user to change the display settings of the currently selected
     overlay (which is defined by the :attr:`.DisplayContext.selectedOverlay`
@@ -66,16 +64,10 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """
 
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
-
-        self.__overlayName = wx.StaticText(self, style=wx.ALIGN_CENTRE)
-        self.__widgets     = widgetlist.WidgetList(self)
-        self.__sizer       = wx.BoxSizer(wx.VERTICAL)
-
-        self.SetSizer(self.__sizer)
-
-        self.__sizer.Add(self.__overlayName, flag=wx.EXPAND)
-        self.__sizer.Add(self.__widgets,     flag=wx.EXPAND, proportion=1)
+        fslpanel.FSLEyesSettingsPanel.__init__(self,
+                                               parent,
+                                               overlayList,
+                                               displayCtx)
 
         displayCtx .addListener('selectedOverlay',
                                  self._name,
@@ -86,9 +78,6 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
 
         self.__currentOverlay = None
         self.__selectedOverlayChanged()
-
-        self.Layout()
-        self.SetMinSize((100, 50))
 
         
     def destroy(self):
@@ -106,9 +95,9 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
             display = self._displayCtx.getDisplay(self.__currentOverlay)
             
             display.removeListener('overlayType', self._name)
-            display.removeListener('name',        self._name)
 
         self.__currentOverlay = None
+        
         fslpanel.FSLEyesPanel.destroy(self)
 
 
@@ -121,11 +110,11 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
 
         overlay     = self._displayCtx.getSelectedOverlay()
         lastOverlay = self.__currentOverlay
+        widgetList  = self.getWidgetList()
 
         if overlay is None:
             self.__currentOverlay = None
-            self.__overlayName.SetLabel('')
-            self.__widgets.Clear()
+            widgetList.Clear()
             self.Layout()
             return
 
@@ -138,9 +127,7 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
            lastOverlay in self._overlayList:
             
             lastDisplay = self._displayCtx.getDisplay(lastOverlay)
-            
             lastDisplay.removeListener('overlayType', self._name)
-            lastDisplay.removeListener('name',        self._name)
 
         if lastOverlay is not None:
             displayExpanded = self.__widgets.IsExpanded('display')
@@ -153,32 +140,19 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
         opts    = display.getDisplayOpts()
             
         display.addListener('overlayType', self._name, self.__ovlTypeChanged)
-        display.addListener('name',        self._name, self.__ovlNameChanged) 
         
-        self.__widgets.Clear()
-        self.__widgets.AddGroup('display', strings.labels[self, display])
-        self.__widgets.AddGroup('opts',    strings.labels[self, opts]) 
+        widgetList.Clear()
+        widgetList.AddGroup('display', strings.labels[self, display])
+        widgetList.AddGroup('opts',    strings.labels[self, opts]) 
 
-        self.__overlayName.SetLabel(display.name)
         self.__updateWidgets(display, 'display')
         self.__updateWidgets(opts,    'opts')
 
-        self.__widgets.Expand('display', displayExpanded)
-        self.__widgets.Expand('opts',    optsExpanded)
+        widgetList.Expand('display', displayExpanded)
+        widgetList.Expand('opts',    optsExpanded)
         
         self.Layout()
 
-        
-    def __ovlNameChanged(self, *a):
-        """Called when the :attr:`.Display.name` of the current overlay
-        changes. Updates the text label at the top of this
-        ``OverlayDisplayPanel``.
-        """
-        
-        display = self._displayCtx.getDisplay(self.__currentOverlay)
-        self.__overlayName.SetLabel(display.name)
-        self.Layout()
-        
 
     def __ovlTypeChanged(self, *a):
         """Called when the :attr:`.Display.overlayType` of the current overlay
@@ -205,24 +179,24 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
                         to :class:`.Display` or :class:`.DisplayOpts`
                         properties.
         """
+
+        widgetList = self.getWidgetList()
         
-        self.__widgets.ClearGroup( groupName)
-        self.__widgets.RenameGroup(groupName, strings.labels[self, target])
+        widgetList.ClearGroup( groupName)
+        widgetList.RenameGroup(groupName, strings.labels[self, target])
 
         dispProps = _DISPLAY_PROPS.get(target, [], allhits=True)
         dispProps = functools.reduce(lambda a, b: a + b, dispProps)
  
-        labels    = [strings.properties.get((target, p.key), p.key)
-                     for p in dispProps]
-        tooltips  = [fsltooltips.properties.get((target, p.key), None)
-                     for p in dispProps]
-
-        widgets = []
-
+        labels   = [strings.properties.get((target, p.key), p.key)
+                    for p in dispProps]
+        tooltips = [fsltooltips.properties.get((target, p.key), None)
+                    for p in dispProps]
+        widgets  = []
 
         for p in dispProps:
 
-            widget = props.buildGUI(self.__widgets, target, p)
+            widget = props.buildGUI(widgetList, target, p)
 
             # Build a panel for the VolumeOpts colour map controls.
             if isinstance(target, displayctx.VolumeOpts) and p.key == 'cmap':
@@ -231,7 +205,7 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
             widgets.append(widget)
 
         for label, tooltip, widget in zip(labels, tooltips, widgets):
-            self.__widgets.AddWidget(
+            widgetList.AddWidget(
                 widget,
                 label,
                 tooltip=tooltip, 
@@ -246,7 +220,7 @@ class OverlayDisplayPanel(fslpanel.FSLEyesPanel):
         :attr:`.VolumeOpts.useNegativeCmap`.
         """
 
-        widgets = self.__widgets
+        widgets = self.getWidgetList()
 
         # Button to load a new
         # colour map from file

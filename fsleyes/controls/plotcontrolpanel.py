@@ -14,15 +14,13 @@ import wx
 
 import props
 
-import pwidgets.widgetlist    as widgetlist
-
 import fsleyes.panel          as fslpanel
 import fsleyes.tooltips       as fsltooltips
 import fsleyes.displaycontext as fsldisplay
 import fsleyes.strings        as strings
 
 
-class PlotControlPanel(fslpanel.FSLEyesPanel):
+class PlotControlPanel(fslpanel.FSLEyesSettingsPanel):
     """The ``PlotControlPanel`` is a *FSLeyes control* panel which allows
     the user to control a :class:`.OverlayPlotPanel`. The ``PlotControlPanel``
     may be used as is, or may be sub-classed for more customisation.
@@ -67,20 +65,20 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
                           ``PlotControlPanel``.
         """
 
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLEyesSettingsPanel.__init__(self,
+                                               parent,
+                                               overlayList,
+                                               displayCtx)
         
         self.__plotPanel = plotPanel
-        self.__widgets   = widgetlist.WidgetList(self)
-        self.__sizer     = wx.BoxSizer(wx.VERTICAL)
 
-        self.SetSizer(self.__sizer)
-        self.__sizer.Add(self.__widgets, flag=wx.EXPAND, proportion=1)
+        widgets = self.getWidgetList()
 
-        self.__widgets.AddGroup(
+        widgets.AddGroup(
             'customPlotSettings',
             strings.labels[self, 'customPlotSettings'])
 
-        self.__widgets.AddGroup(
+        widgets.AddGroup(
             'plotSettings',
             strings.labels[self, 'plotSettings'])
 
@@ -95,8 +93,8 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
 
         # Delete the custom group if
         # nothing has been added to it
-        if self.__widgets.GroupSize('customPlotSettings') == 0:
-            self.__widgets.RemoveGroup('customPlotSettings') 
+        if widgets.GroupSize('customPlotSettings') == 0:
+            widgets.RemoveGroup('customPlotSettings') 
 
         displayCtx .addListener('selectedOverlay',
                                 self._name,
@@ -116,8 +114,6 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
         self.__selectedOverlay = None
         self.__selectedOverlayChanged()
         self.__autoScaleChanged()
-
-        self.SetMinSize(self.__sizer.GetMinSize())
 
         
     def destroy(self):
@@ -143,13 +139,6 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
         return self.__plotPanel
 
     
-    def getWidgetList(self):
-        """Returns the :class:`WidgetList` used by this ``PlotControlPanel``
-        to display the control widgets.
-        """
-        return self.__widgets
-
-    
     def generateCustomPlotPanelWidgets(self, groupName):
         """May be overridden by sub-classes to add a group of widgets
         controlling :class:`.OverlayPlotPanel` properties.
@@ -171,7 +160,7 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
         :arg groupName: The :class:`.WidgetList` group name.
         """
 
-        widgetList = self.__widgets
+        widgetList = self.getWidgetList()
         plotPanel  = self.__plotPanel
 
         plotProps = ['xLogScale',
@@ -235,6 +224,9 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
         """Re-creates all of the widgets controlling properties of the
         current :class:`.DataSeries` instance.
         """
+
+        widgets = self.getWidgetList()
+        
         if self.__selectedOverlay is not None:
             try:
                 display = self._displayCtx.getDisplay(self.__selectedOverlay)
@@ -247,10 +239,10 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
                 
             self.__selectedOverlay = None
 
-        if self.__widgets.HasGroup('currentDSSettings'):
-            self.__widgets.RemoveGroup('currentDSSettings')
-        if self.__widgets.HasGroup('customDSSettings'):
-            self.__widgets.RemoveGroup('customDSSettings') 
+        if widgets.HasGroup('currentDSSettings'):
+            widgets.RemoveGroup('currentDSSettings')
+        if widgets.HasGroup('customDSSettings'):
+            widgets.RemoveGroup('customDSSettings') 
 
         overlay = self._displayCtx.getSelectedOverlay()
 
@@ -270,10 +262,10 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
                             self._name,
                             self.__selectedOverlayNameChanged)
 
-        self.__widgets.AddGroup(
+        widgets.AddGroup(
             'currentDSSettings',
             strings.labels[self, 'currentDSSettings'].format(display.name))
-        self.__widgets.AddGroup(
+        widgets.AddGroup(
             'customDSSettings',
             strings.labels[self, 'customDSSettings'].format(display.name)) 
         
@@ -282,8 +274,8 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
 
         # Delete the custom group if
         # nothing has been added to it
-        if self.__widgets.GroupSize('customDSSettings') == 0:
-            self.__widgets.RemoveGroup('customDSSettings') 
+        if widgets.GroupSize('customDSSettings') == 0:
+            widgets.RemoveGroup('customDSSettings') 
  
     
     def generateDataSeriesWidgets(self, ds, groupName):
@@ -296,7 +288,7 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
         :arg groupName: The :class:`.WidgetList` group name.
         """
         
-        widgetList = self.__widgets
+        widgetList = self.getWidgetList()
         
         colour    = props.makeWidget(widgetList, ds, 'colour')
         alpha     = props.makeWidget(widgetList, ds, 'alpha',
@@ -346,15 +338,17 @@ class PlotControlPanel(fslpanel.FSLEyesPanel):
         selected overlay changes. Updates the display name of the
         :class:`.DataSeries` settings sections if necessary.
         """
+
+        widgets = self.getWidgetList()
         display = self._displayCtx.getDisplay(self.__selectedOverlay)
         
-        if self.__widgets.HasGroup('currentDSSettings'):
-            self.__widgets.RenameGroup(
+        if widgets.HasGroup('currentDSSettings'):
+            widgets.RenameGroup(
                 'currentDSSettings',
                 strings.labels[self, 'currentDSSettings'].format(display.name))
         
-        if self.__widgets.HasGroup('customDSSettings'):
-            self.__widgets.RenameGroup(
+        if widgets.HasGroup('customDSSettings'):
+            widgets.RenameGroup(
                 'customDSSettings',
                 strings.labels[self, 'customDSSettings'].format(display.name)) 
 
