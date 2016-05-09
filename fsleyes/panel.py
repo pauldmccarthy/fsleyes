@@ -141,6 +141,13 @@ class _FSLEyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         self._overlayList = None
         self.__destroyed  = True
 
+        
+    def destroyed(self):
+        """Returns ``True`` if a call to :meth:`destroy` has been made,
+        ``False`` otherwise.
+        """
+        return self.__destroyed
+
     
     def __del__(self):
         """If the :meth:`destroy` method has not been called, a warning message

@@ -272,7 +272,8 @@ class PlotPanel(viewpanel.ViewPanel):
         in most cases, particularly where the call occurs within a
         property callback function.
         """
-        async.idle(self.draw)
+        if not self.destroyed():
+            async.idle(self.draw)
     
         
     def destroy(self):
@@ -963,8 +964,15 @@ class OverlayPlotPanel(PlotPanel):
             copy.alpha     = ds.alpha
             copy.lineWidth = ds.lineWidth
             copy.lineStyle = ds.lineStyle
-            copy.colour    = ds.colour
             copy.label     = ds.label
+
+            # Use a new colour for the added
+            # DataSeries, because otherwise
+            # the added series colour will
+            # clash with the overlay colour
+            # (see the plotColours class
+            # attribute).
+            copy.colour = fslcm.randomDarkColour()
 
             copy.setData(*ds.getData())
 
