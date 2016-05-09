@@ -14,7 +14,6 @@ from __future__ import print_function
 
 import wx
 
-import os
 import os.path as op
 import sys
 import time
@@ -530,8 +529,7 @@ def fslDirWarning(parent):
     fsldir = fslsettings.read('fsldir')
 
     if fsldir is not None:
-        os.environ['FSLDIR'] = fsldir
-        fslplatform.fsldir   = fsldir
+        fslplatform.fsldir = fsldir
         return
 
     from fsl.utils.dialog import FSLDirDialog
@@ -545,9 +543,8 @@ def fslDirWarning(parent):
         log.debug('Setting $FSLDIR to {} (specified '
                   'by user)'.format(fsldir))
 
-        fslplatform.fsldir            = fsldir
-        os.environ[         'FSLDIR'] = fsldir
-        fslsettings.write(  'fsldir',   fsldir)
+        fslplatform.fsldir        = fsldir
+        fslsettings.write('fsldir', fsldir)
 
 
 if __name__ == '__main__':
