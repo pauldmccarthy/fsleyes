@@ -126,14 +126,20 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
         fslpanel.FSLEyesPanel.destroy(self)
 
 
-    def enableAtlasInfo(self, atlasID):
+    def enableAtlasInfo(self, atlasID, refresh=False):
         """Enables information display for the atlas with the specified ID
         (see the :mod:`.atlases` module for details on atlas IDs).
+
+        If ``refresh`` is ``True`` (the default), the HTML information panel
+        is updated.
         """
 
         def onLoad(atlas):
             self.__enabledAtlases[atlasID] = atlas
-            self.__locationChanged()
+
+            if refresh:
+                self.__locationChanged()
+                
             self.Enable()
 
         self.Disable()
@@ -152,6 +158,7 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
         the atlas list.
         """
         self.__buildAtlasList()
+        self.__locationChanged()
 
 
     def __buildAtlasList(self):
@@ -159,16 +166,34 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
 
         self.__enabledAtlases = {}
         self.__atlasList.Clear()
+
+        defaultEnabled = []
         
         for i, atlasDesc in enumerate(atlases.listAtlases()):
+
+            # Enable the Harvard Oxford cortical
+            # and subcortical atlases by default
+            enable = atlasDesc.atlasID in ('harvardoxford-cortical',
+                                           'harvardoxford-subcortical')
             
             self.__atlasList.Append(atlasDesc.name, atlasDesc.atlasID)
             widget = AtlasListWidget(self.__atlasList,
                                      i,
                                      self,
-                                     atlasDesc.atlasID)
-            self.__atlasList.SetItemWidget(i, widget) 
+                                     atlasDesc.atlasID,
+                                     enabled=enable)
+            self.__atlasList.SetItemWidget(i, widget)
 
+            if enable:
+                defaultEnabled.append(atlasDesc.atlasID)
+
+        # Turn on atlas info for the atlaes which
+        # are enabled by default. Refresh the info
+        # panel after the last atlas has been
+        # enabled.
+        for i, atlasID in enumerate(defaultEnabled):
+            self.enableAtlasInfo(atlasID, i == len(defaultEnabled) - 1)
+ 
 
     def __locationChanged(self, *a):
         """Called when the :attr:`.DisplayContext.location` property changes.
@@ -301,6 +326,13 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
 
             opts = self._displayCtx.getOpts(ovl)
 
+            # Add a listener to the bounds property for
+            # the selected overlay. Bounds is used as a
+            # proxy for the overlay referene image (e.g.
+            # Model overlays) - if the reference image
+            # changes, the overlay may have been moved
+            # into MNI152 space, so we can display atlas
+            # info.
             if ovl == selOverlay:
                 opts.addListener('bounds',
                                  self._name,
@@ -323,7 +355,12 @@ class AtlasListWidget(wx.CheckBox):
     """
 
     
-    def __init__(self, parent, listIdx, atlasInfoPanel, atlasID):
+    def __init__(self,
+                 parent,
+                 listIdx,
+                 atlasInfoPanel,
+                 atlasID,
+                 enabled=False):
         """Create an ``AtlasListWidget``.
 
         :arg parent:         The :mod:`wx` parent object, assumed to be an
@@ -337,6 +374,8 @@ class AtlasListWidget(wx.CheckBox):
         
         :arg atlasID:        The atlas identifier associated with this
                              ``AtlasListWidget``.
+
+        :arg enabled:        Initial checkbox state (defaults to False).
         """
 
         wx.CheckBox.__init__(self, parent)
@@ -345,6 +384,8 @@ class AtlasListWidget(wx.CheckBox):
         self.__atlasID        = atlasID
         self.__listIdx        = listIdx
         self.__atlasInfoPanel = atlasInfoPanel
+
+        self.SetValue(enabled)
 
         self.Bind(wx.EVT_CHECKBOX, self.__onEnable)
 
