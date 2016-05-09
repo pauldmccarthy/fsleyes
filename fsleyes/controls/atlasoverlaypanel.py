@@ -522,7 +522,6 @@ class OverlayListWidget(wx.Panel):
             self.__labelIdx,
             self.__atlasDesc.atlasType == 'label',
             onLoad=onLoad)
-        self.__atlasOvlPanel.selectAtlas(self.__listIdx, self.__atlasDesc)
 
         
     def __onLocate(self, ev):
