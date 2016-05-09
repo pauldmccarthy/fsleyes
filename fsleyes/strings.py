@@ -193,7 +193,7 @@ titles = TypeDict({
     'PlotPanel.screenshot.error'      : 'Error saving screenshot',
 
     'AtlasInfoPanel'      : 'Atlas information',
-    'AtlasOverlayPanel'   : 'Atlas overlays',
+    'AtlasOverlayPanel'   : 'Atlas search',
 
     'OverlayListPanel'          : 'Overlay list',
     'AtlasPanel'                : 'Atlases',
