@@ -4,12 +4,15 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`FSLEyesPanel` class.
+"""This module provides the :class:`FSLEyesPanel` and
+:class:`FSLEyesSettingsPanel` classes.
 
 
 A :class:`FSLEyesPanel` object is a :class:`wx.PyPanel` which provides some
 sort of view of a collection of overlay objects, contained within an
-:class:`.OverlayList`. 
+:class:`.OverlayList`.  The :class:`FSLEyesSettingsPanel` is a convenience
+class for certain *FSLeyes* control panels (see the ::mod:`fsleyes`
+documentation).
 
 
 ``FSLEyesPanel`` instances are also :class:`.ActionProvider` instances - any
@@ -42,9 +45,11 @@ import logging
 
 import six
 
-import wx
+import                   wx
+import wx.lib.agw.aui as wxaui
 
-import props
+import                        props
+import pwidgets.widgetlist as widgetlist
 
 from fsl.utils.platform import platform as fslplatform
 from .                  import             actions
@@ -198,3 +203,48 @@ class FSLEyesPanel(six.with_metaclass(FSLEyesPanelMeta,
     def __init__(self, parent, overlayList, displayCtx):
         FSLEyesPanelBase.__init__(self, parent)
         _FSLEyesPanel.__init__(self, overlayList, displayCtx)
+
+
+class FSLEyesSettingsPanel(FSLEyesPanel):
+    """The ``FSLEyesSettingsPanel`` is a convenience class for *FSLeyes*
+    control panels which use a :class:`pwidgets.WidgetList` to display a
+    collection of controls for the user.  When displayed as a dialog/floating
+    frame, the ``FSLEyesSettingsPanel`` will automatically resize itself to
+    fit its contents. See the :class:`.CanvasSettingsPanel` for an example.
+    """
+
+    
+    def __init__(self, *args, **kwargs):
+        """Create an ``FSLEyesSettingsPanel``.  All arguments are passed to
+        the :meth:`FSLEyesPanel.__init__` method.
+        """
+
+        FSLEyesPanel.__init__(self, *args, **kwargs)
+
+        self.__widgets = widgetlist.WidgetList(self)
+        self.__sizer   = wx.BoxSizer(wx.VERTICAL)
+
+        self.SetSizer(self.__sizer)
+
+        self.__sizer.Add(self.__widgets, flag=wx.EXPAND, proportion=1)
+
+        self.SetMinSize((80, 80))
+
+        self.__widgets.Bind(widgetlist.EVT_WL_CHANGE_EVENT,
+                            self.__widgetListChange)
+
+
+    def getWidgetList(self):
+        """Returns the :class:`pwidgets.WidgetList` which should be used by
+        sub-classes to display content to the user.
+        """
+        return self.__widgets
+
+
+    def __widgetListChange(self, ev):
+        """Called whenever the widget list contents change. If this panel
+        is floating, its parent is autmatically resized.
+        """
+        if isinstance(self.GetTopLevelParent(), wxaui.AuiFloatingFrame):
+            self.SetBestSize(self.__widgets.GetBestSize())
+            self.GetTopLevelParent().Fit()

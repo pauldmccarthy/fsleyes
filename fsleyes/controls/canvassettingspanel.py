@@ -9,11 +9,7 @@ control* panel which displays settings for a :class:`.CanvasPanel`.
 """
 
 
-import wx
-
 import props
-
-import pwidgets.widgetlist as widgetlist
 
 import fsl.data.image      as fslimage
 import fsleyes.panel       as fslpanel
@@ -21,8 +17,7 @@ import fsleyes.tooltips    as fsltooltips
 import fsleyes.strings     as strings
 
 
-
-class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
+class CanvasSettingsPanel(fslpanel.FSLEyesSettingsPanel):
     """The ``CanvasSettingsPanel`` is a *FSLeyes control* which displays
     settings for a :class:`.CanvasPanel` instance. A ``CanvasSettingsPanel``
     looks something like this:
@@ -59,25 +54,20 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
         :arg canvasPanel: The :class:`.CanvasPanel` instance.
         """
         
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLEyesSettingsPanel.__init__(self,
+                                               parent,
+                                               overlayList,
+                                               displayCtx)
 
         self.__canvasPanel = canvasPanel
-        self.__widgets     = widgetlist.WidgetList(self)
-        self.__sizer       = wx.BoxSizer(wx.VERTICAL)
-
-        self.SetSizer(self.__sizer)
-
-        self.__sizer.Add(self.__widgets, flag=wx.EXPAND, proportion=1)
-
         self.__makeTools()
 
-        self.SetMinSize((21, 21))
-
-
+        
     def __makeTools(self):
 
         displayCtx  = self._displayCtx
         canvasPanel = self.__canvasPanel
+        widgets     = self.getWidgetList()
 
         canvasPanelProps = [
             props.Widget('syncOverlayOrder'),
@@ -143,17 +133,17 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
             panelGroup = 'lightbox'
             panelProps = lightBoxOptsProps
 
-        self.__widgets.AddGroup('scene' ,    strings.labels[self, 'scene'])
-        self.__widgets.AddGroup( panelGroup, strings.labels[self,  panelGroup])
+        widgets.AddGroup('scene' ,    strings.labels[self, 'scene'])
+        widgets.AddGroup( panelGroup, strings.labels[self,  panelGroup])
 
         for dispProp in canvasPanelProps:
 
-            widget = props.buildGUI(self.__widgets,
+            widget = props.buildGUI(widgets,
                                     canvasPanel,
                                     dispProp,
                                     showUnlink=False)
             
-            self.__widgets.AddWidget(
+            widgets.AddWidget(
                 widget,
                 displayName=strings.properties[canvasPanel, dispProp.key],
                 tooltip=fsltooltips.properties[canvasPanel, dispProp.key],
@@ -163,24 +153,24 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
 
         for dispProp in sceneOptsProps:
 
-            widget = props.buildGUI(self.__widgets,
+            widget = props.buildGUI(widgets,
                                     opts,
                                     dispProp,
                                     showUnlink=False)
             
-            self.__widgets.AddWidget(
+            widgets.AddWidget(
                 widget,
                 displayName=strings.properties[opts, dispProp.key],
                 tooltip=fsltooltips.properties[opts, dispProp.key],
                 groupName='scene')
 
         for dispProp in displayCtxProps:
-            widget = props.buildGUI(self.__widgets,
+            widget = props.buildGUI(widgets,
                                     displayCtx,
                                     dispProp,
                                     showUnlink=False)
             
-            self.__widgets.AddWidget(
+            widgets.AddWidget(
                 widget,
                 displayName=strings.properties[displayCtx, dispProp.key],
                 tooltip=fsltooltips.properties[displayCtx, dispProp.key],
@@ -188,16 +178,16 @@ class CanvasSettingsPanel(fslpanel.FSLEyesPanel):
 
         for dispProp in panelProps:
 
-            widget = props.buildGUI(self.__widgets,
+            widget = props.buildGUI(widgets,
                                     opts,
                                     dispProp,
                                     showUnlink=False)
             
-            self.__widgets.AddWidget(
+            widgets.AddWidget(
                 widget,
                 displayName=strings.properties[opts, dispProp.key],
                 tooltip=fsltooltips.properties[opts, dispProp.key],
                 groupName=panelGroup)
 
-        self.__widgets.Expand('scene')
-        self.__widgets.Expand(panelGroup)
+        widgets.Expand('scene')
+        widgets.Expand(panelGroup)
