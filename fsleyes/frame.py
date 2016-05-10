@@ -778,11 +778,29 @@ class FSLEyesFrame(wx.Frame):
         menuBar = wx.MenuBar()
         self.SetMenuBar(menuBar)
 
-        # We use the application menu under OSX
-        # if fslplatform.wxPlatform == fslplatform.WX_MAC_COCOA:
-        #     fsleyesMenu = menuBar.OSXGetAppleMenu()
-        # else:
-        fsleyesMenu     = wx.Menu()
+        # The menu bar on OSX/wxPython is a bit different
+        # than the menu bar on OSX/wxPhoenix, or on Linux.
+        # This is because under OSX/wxPython, we can't get
+        # access to the built-in application menu.
+        onOSX       = fslplatform.wxPlatform in (fslplatform.WX_MAC_CARBON,
+                                                 fslplatform.WX_MAC_COCOA)
+        haveAppMenu = (onOSX and 
+                       fslplatform.wxFlavour == fslplatform.WX_PHOENIX)
+
+        # On linux, we create a FSLeyes menu
+        if not onOSX: 
+            fsleyesMenu = wx.Menu()
+            menuBar.Append(fsleyesMenu, 'FSLeyes')
+
+        # On OSX/wxPhoenix, we can 
+        # get the built-in app menu
+        elif haveAppMenu:
+            fsleyesMenu = menuBar.OSXGetAppleMenu()
+
+        # On OSX/wxPython, we fudge
+        # things a bit - see below.
+        else:
+            fsleyesMenu = None
 
         fileMenu        = wx.Menu()
         viewMenu        = wx.Menu()
@@ -792,7 +810,6 @@ class FSLEyesFrame(wx.Frame):
         self.__menuBar   = menuBar
         self.__perspMenu = perspectiveMenu
 
-        menuBar.Append(fsleyesMenu,  'FSLeyes')
         menuBar.Append(fileMenu,     'File')
         menuBar.Append(viewMenu,     'View')
         menuBar.Append(settingsMenu, 'Settings') 
@@ -802,11 +819,23 @@ class FSLEyesFrame(wx.Frame):
         self.__viewMenu     = viewMenu
         self.__settingsMenu = settingsMenu
 
-        self.__makeFSLeyesMenu(  fsleyesMenu)
-        self.__makeFileMenu(     fileMenu)
+        self.__makeFileMenu(fileMenu)
+
+        # We have a FSLeyes menu
+        if fsleyesMenu is not None:
+            self.__makeFSLeyesMenu(fsleyesMenu)
+
+        # We don't have a FSLeyes menu -
+        # throw all of the FSLeyes menu
+        # stuff onto the end of the File
+        # menu.
+        else:
+            fileMenu.AppendSeparator()
+            self.__makeFSLeyesMenu(fileMenu)
+            
         self.__makeViewPanelMenu(viewMenu)
 
-        # Perspectives
+        # Perspectives 
         viewMenu.AppendSeparator()
         viewMenu.AppendSubMenu(perspectiveMenu, 'Perspectives')
         self.__makePerspectiveMenu()
