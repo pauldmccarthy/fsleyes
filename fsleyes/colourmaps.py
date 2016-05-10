@@ -147,11 +147,11 @@ import          fsleyes
 log = logging.getLogger(__name__)
 
 
-_cmapDir = op.join(fsleyes.resourceDir, 'fsleyes', 'colourmaps')
+_cmapDir = op.join(fsleyes.assetDir, 'assets', 'colourmaps')
 """The directory in which all colour map files are stored. """
 
 
-_lutDir  = op.join(fsleyes.resourceDir, 'fsleyes', 'luts')
+_lutDir  = op.join(fsleyes.assetDir, 'assets', 'luts')
 """The directory in which all lookup table files are stored. """
 
 

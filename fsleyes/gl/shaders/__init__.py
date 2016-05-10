@@ -49,7 +49,7 @@ GLSLShader = glslprogram.GLSLShader
 ARBPShader = arbpprogram.ARBPShader
 
 
-SHADER_DIR = op.join(fsleyes.resourceDir, 'fsleyes', 'gl')
+SHADER_DIR = op.join(fsleyes.assetDir, 'assets', 'gl')
 """Directory in which the ``ARB`` and ``glsl`` source files can be found.
 ``ARB`` files are assumed to be in a sub-directory called ``gl14``, and
 ``glsl`` files in a sub-directory called ``gl21``.

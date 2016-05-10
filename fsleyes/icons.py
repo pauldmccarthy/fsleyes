@@ -29,7 +29,7 @@ import wx
 import fsleyes
 
 
-ICON_DIR = op.join(fsleyes.resourceDir, 'fsleyes', 'icons')
+ICON_DIR = op.join(fsleyes.assetDir, 'assets', 'icons')
 """The directory which contains all of the icons used in *FSLeyes*. """
 
 

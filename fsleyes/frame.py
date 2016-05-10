@@ -819,10 +819,10 @@ class FSLEyesFrame(wx.Frame):
 
             if fslplatform.frozen:
                 url = op.join(
-                    fsleyes.resourceDir, 'userdoc', 'index.html')
+                    fsleyes.assetDir, 'userdoc', 'index.html')
             else:
                 url = op.join(
-                    fsleyes.resourceDir, 'userdoc', 'html', 'index.html')
+                    fsleyes.assetDir, 'userdoc', 'html', 'index.html')
 
             import fsl.utils.webpage as webpage
 

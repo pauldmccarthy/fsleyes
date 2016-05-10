@@ -193,7 +193,7 @@ __version__ = version.__version__
 """
 
 
-resourceDir = op.dirname(__file__)
-"""Base directory which contains all *FSLeyes* resource (e.g. icon files).
-This may be overridden by :func:`fsleyes.main.main`.
+assetDir = op.join(op.dirname(__file__), '..')
+"""Base directory which contains all *FSLeyes* assets/resources (e.g. icon
+files).  This may be overridden by :func:`fsleyes.main.main`.
 """

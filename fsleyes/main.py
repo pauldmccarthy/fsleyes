@@ -49,15 +49,15 @@ def main(args=None):
     # the FSLeyes resources might not be alongside
     # the python source code.
     if fslplatform.frozen:
-        sp          = wx.StandardPaths.Get()
-        resourceDir = op.join(sp.GetResourcesDir())
+        sp       = wx.StandardPaths.Get()
+        assetDir = op.join(sp.GetResourcesDir())
         
     # Otherwise we assume that the resources
     # are living alongside the FSLeyes source.
     else:
-        resourceDir = op.join(op.dirname(__file__), '..')
+        assetDir = op.join(op.dirname(__file__), '..')
 
-    fsleyes.resourceDir = op.abspath(resourceDir)
+    fsleyes.assetDir = op.abspath(assetDir)
 
     # Show the splash screen as soon as
     # possible, unless it looks like the
