@@ -130,8 +130,8 @@ class OverlayDisplayPanel(fslpanel.FSLEyesSettingsPanel):
             lastDisplay.removeListener('overlayType', self._name)
 
         if lastOverlay is not None:
-            displayExpanded = self.__widgets.IsExpanded('display')
-            optsExpanded    = self.__widgets.IsExpanded('opts')
+            displayExpanded = widgetList.IsExpanded('display')
+            optsExpanded    = widgetList.IsExpanded('opts')
         else:
             displayExpanded = True
             optsExpanded    = True
