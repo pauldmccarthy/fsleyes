@@ -1,0 +1,80 @@
+# Edge detection routine for 2D textures - see also edge3D.prog.
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+
+
+TEMP off;
+TEMP back;
+TEMP front;
+TEMP tempCoord;
+TEMP isEdgeBack0;
+TEMP isEdgeBack1;
+TEMP isEdgeFront0;
+TEMP isEdgeFront1;
+TEMP isEdge;
+
+# Test along the x axis
+MOV off, offsets;
+MUL off, off, {1, 0, 0, 0};
+
+# Sample a value behind the coordinate
+MOV tempCoord, coord;
+ADD tempCoord, tempCoord, off;
+TEX back, tempCoord, texture[0], 2D;
+
+# Sample a value in front of the coordinatea
+MOV tempCoord, coord;
+SUB tempCoord, tempCoord, off;
+TEX front, tempCoord, texture[0], 2D;
+
+SUB back,  back,  val;
+SUB front, front, val;
+ABS back,  back;
+ABS front, front;
+
+SLT isEdgeBack0,  tol, back;
+SLT isEdgeFront0, tol, front; 
+
+
+# Test along the y axis
+MOV off, offsets;
+MUL off, off, {0, 1, 0, 0};
+
+# Sample a value behind the coordinate
+MOV tempCoord, coord;
+ADD tempCoord, tempCoord, off;
+TEX back, tempCoord, texture[0], 2D;
+
+# Sample a value in front of the coordinatea
+MOV tempCoord, coord;
+SUB tempCoord, tempCoord, off;
+TEX front, tempCoord, texture[0], 2D;
+
+SUB back,  back,  val;
+SUB front, front, val;
+ABS back,  back;
+ABS front, front;
+
+SLT isEdgeBack1,  tol, back;
+SLT isEdgeFront1, tol, front;  
+
+
+# For each of the isEdgeBack/isEdgeFront
+# vectors, set all components to 1 if an
+# edge was found on any component.
+DP4 isEdgeBack0,  isEdgeBack0,  isEdgeBack0;
+DP4 isEdgeFront0, isEdgeFront0, isEdgeFront0;
+DP4 isEdgeBack1,  isEdgeBack1,  isEdgeBack1;
+DP4 isEdgeFront1, isEdgeFront1, isEdgeFront1;
+
+# Set isEdge.i  if there was an edge
+# on any component of the i axis.
+MAX isEdge.x, isEdgeBack0, isEdgeFront0;
+MAX isEdge.y, isEdgeBack1, isEdgeFront1;
+
+# Clamp the isEdge values to 1
+SGE isEdge, isEdge, 1;
+
+# Clear if offsets[i] < 0
+CMP isEdge, offsets, 0, isEdge;

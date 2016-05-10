@@ -1,0 +1,57 @@
+# Inputs:
+#    - coord
+#    - invShape
+#    - output
+
+TEMP s1;
+TEMP s2;
+TEMP s3;
+TEMP s4;
+TEMP sx;
+TEMP sy;
+TEMP temp1;
+TEMP temp2;
+
+MUL invShape, invShape, { -1, -1, 0, 0 };
+ADD temp1, coord, invShape;
+TEX s1, temp1, texture[0], 2D;
+
+MUL invShape, invShape, { -1, 1, 0, 0 };
+ADD temp1, coord, invShape;
+TEX s2, temp1, texture[0], 2D;
+
+MUL invShape, invShape, { -1, -1, 0, 0 };
+ADD temp1, coord, invShape;
+TEX s3, temp1, texture[0], 2D;
+
+MUL invShape, invShape, { -1, 1, 0, 0 };
+ADD temp1, coord, invShape;
+TEX s4, temp1, texture[0], 2D;
+
+ADD sx, s4, s3;
+SUB sx, sx, s2;
+SUB sx, sx, s1;
+MUL sx, sx, { 4, 4, 4, 4 };
+
+ADD sy, s2, s4;
+SUB sy, sy, s1;
+SUB sy, sy, s3;
+MUL sy, sy, { 4, 4, 4, 4 };
+
+MUL sx, sx, sx;
+MUL sy, sy, sy;
+
+MOV temp1, sx;
+ADD temp1, temp1, sy;
+
+MOV temp2, temp1;
+
+RSQ temp1.x, temp1.x;
+RSQ temp1.y, temp1.y;
+RSQ temp1.z, temp1.z;
+RSQ temp1.w, temp1.w;
+
+MUL temp1, temp1, temp2;
+
+
+MOV output, temp1;

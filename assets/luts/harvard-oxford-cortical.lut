@@ -1,0 +1,48 @@
+1  0.00000 0.93333 0.00000 Frontal Pole
+2  0.62745 0.32157 0.17647 Insular Cortex
+3  1.00000 0.85490 0.72549 Superior Frontal Gyrus
+4  0.00000 0.80784 0.81961 Middle Frontal Gyrus
+5  0.49804 1.00000 0.83137 Inferior Frontal Gyrus, pars triangularis
+6  0.69804 0.13333 0.13333 Inferior Frontal Gyrus, pars opercularis
+7  0.93333 0.00000 0.00000 Precentral Gyrus
+8  0.13333 0.54510 0.13333 Temporal Pole
+9  0.81569 0.12549 0.56471 Superior Temporal Gyrus, anterior division
+10 0.67843 1.00000 0.18431 Superior Temporal Gyrus, posterior division
+11 0.94118 0.90196 0.54902 Middle Temporal Gyrus, anterior division
+12 0.67843 0.84706 0.90196 Middle Temporal Gyrus, posterior division
+13 0.93333 0.93333 0.00000 Middle Temporal Gyrus, temporooccipital part
+14 0.19608 0.80392 0.19608 Inferior Temporal Gyrus, anterior division
+15 1.00000 0.00000 1.00000 Inferior Temporal Gyrus, posterior division
+16 0.69020 0.18824 0.37647 Inferior Temporal Gyrus, temporooccipital part
+17 0.00000 1.00000 0.49804 Postcentral Gyrus
+18 0.96078 0.87059 0.70196 Superior Parietal Lobule
+19 1.00000 0.64706 0.00000 Supramarginal Gyrus, anterior division
+20 1.00000 0.27059 0.00000 Supramarginal Gyrus, posterior division
+21 0.80392 0.35686 0.27059 Angular Gyrus
+22 1.00000 0.75294 0.79608 Lateral Occipital Cortex, superior division
+23 0.59608 0.98431 0.59608 Lateral Occipital Cortex, inferior division
+24 0.39216 0.58431 0.92941 Intracalcarine Cortex
+25 0.62745 0.12549 0.94118 Frontal Medial Cortex
+26 0.93333 0.50980 0.93333 Juxtapositional Lobule Cortex (formerly Supplementary Motor Cortex)
+27 0.93333 0.78824 0.00000 Subcallosal Cortex
+28 0.85490 0.43922 0.83922 Paracingulate Gyrus
+29 1.00000 0.24314 0.58824 Cingulate Gyrus, anterior division
+30 0.00000 0.00000 1.00000 Cingulate Gyrus, posterior division
+31 0.15294 0.25098 0.54510 Precuneous Cortex
+32 0.98039 0.50196 0.44706 Cuneal Cortex
+33 1.00000 0.43137 0.70588 Frontal Orbital Cortex
+34 1.00000 0.38824 0.27843 Parahippocampal Gyrus, anterior division
+35 1.00000 1.00000 0.00000 Parahippocampal Gyrus, posterior division
+36 0.00000 0.39216 0.00000 Lingual Gyrus
+37 0.80392 0.36078 0.36078 Temporal Fusiform Cortex, anterior division
+38 0.64706 0.16471 0.16471 Temporal Fusiform Cortex, posterior division
+39 0.60000 0.19608 0.80000 Temporal Occipital Fusiform Cortex
+40 0.00000 1.00000 1.00000 Occipital Fusiform Gyrus
+41 0.86667 0.62745 0.86667 Frontal Operculum Cortex
+42 0.52941 0.80784 0.92157 Central Opercular Cortex
+43 0.82353 0.70588 0.54902 Parietal Operculum Cortex
+44 1.00000 0.84314 0.00000 Planum Polare
+45 0.00000 0.00000 0.50196 Heschl's Gyrus (includes H1 and H2)
+46 0.18039 0.54510 0.34118 Planum Temporale
+47 0.40000 0.80392 0.66667 Supracalcarine Cortex
+48 0.00000 1.00000 0.00000 Occipital Pole
