@@ -226,8 +226,14 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
             status.update('Loading atlas {}...'.format(atlasID), timeout=None)
 
             def load():
-            
+
                 atlas = atlases.loadAtlas(atlasID, summary)
+
+                # The atlas panel may be destroyed
+                # before the atlas is loaded.
+                if self.destroyed():
+                    return
+                
                 self.__loadedAtlases[atlasID, summary] = atlas
 
                 status.update('Atlas {} loaded.'.format(atlasID))                    

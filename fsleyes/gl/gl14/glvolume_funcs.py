@@ -61,7 +61,7 @@ def compileShaders(self):
 def updateShaderState(self):
     """Sets all variables required by the vertex and fragment programs. """
 
-    if self.destroyed():
+    if self.destroyed() or not self.imageTexture.ready():
         return
     
     opts = self.displayOpts

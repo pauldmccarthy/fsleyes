@@ -224,8 +224,8 @@ class OverlayDisplayPanel(fslpanel.FSLEyesSettingsPanel):
 
         # Button to load a new
         # colour map from file
-        loadAction = loadcmap.LoadColourMapAction(self._displayCtx,
-                                                  self._overlayList)
+        loadAction = loadcmap.LoadColourMapAction(self._overlayList,
+                                                  self._displayCtx)
 
         loadButton = wx.Button(widgets)
         loadButton.SetLabel(strings.labels[self, 'loadCmap'])
