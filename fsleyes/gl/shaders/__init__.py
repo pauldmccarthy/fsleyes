@@ -49,11 +49,12 @@ GLSLShader = glslprogram.GLSLShader
 ARBPShader = arbpprogram.ARBPShader
 
 
-SHADER_DIR = op.join(fsleyes.assetDir, 'assets', 'gl')
-"""Directory in which the ``ARB`` and ``glsl`` source files can be found.
-``ARB`` files are assumed to be in a sub-directory called ``gl14``, and
-``glsl`` files in a sub-directory called ``gl21``.
-"""
+def getShaderDir():
+    """Returns the irectory in which the ``ARB`` and ``glsl`` source files
+    can be found.  ``ARB`` files are assumed to be in a sub-directory called
+    ``gl14``, and ``glsl`` files in a sub-directory called ``gl21``.
+    """
+    return op.join(fsleyes.assetDir, 'assets', 'gl')    
 
 
 def getVertexShader(prefix):
@@ -92,7 +93,7 @@ def _getFileName(prefix, shaderType):
     if shaderType not in ('vert', 'frag'):
         raise RuntimeError('Invalid shader type: {}'.format(shaderType))
 
-    return op.join(SHADER_DIR, subdir, '{}_{}.{}'.format(
+    return op.join(getShaderDir(), subdir, '{}_{}.{}'.format(
         prefix, shaderType, suffix))
  
 
@@ -125,7 +126,7 @@ def preprocess(src):
         includes.append((linei, line[2]))
 
     for linei, fname in includes:
-        fname = op.join(SHADER_DIR, subdir, fname)
+        fname = op.join(getShaderDir(), subdir, fname)
         with open(fname, 'rt') as f:
             lines[linei] = f.read()
 

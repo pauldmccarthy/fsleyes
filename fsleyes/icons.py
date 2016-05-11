@@ -29,14 +29,17 @@ import wx
 import fsleyes
 
 
-ICON_DIR = op.join(fsleyes.assetDir, 'assets', 'icons')
-"""The directory which contains all of the icons used in *FSLeyes*. """
+def getIconDir():
+    """Returns the directory which contains all of the icons used in
+     *FSLeyes*.
+    """
+    return op.join(fsleyes.assetDir, 'assets', 'icons')
 
 
 def findImageFile(iconId):
     """Returns the full path to the icon with the given ``iconId``.
     """
-    return op.join(ICON_DIR, '{}.png'.format(iconId))
+    return op.join(getIconDir(), '{}.png'.format(iconId))
 
 
 def loadBitmap(iconId):

@@ -14,7 +14,6 @@ from __future__ import print_function
 
 import wx
 
-import os.path as op
 import sys
 import logging
 import warnings
@@ -44,20 +43,11 @@ def main(args=None):
     # and figure out where all our stuff is.
     app = wx.App()
     app.SetAppName('FSLeyes')
- 
-    # If we are running from a bundled application,
-    # the FSLeyes resources might not be alongside
-    # the python source code.
-    if fslplatform.frozen:
-        sp       = wx.StandardPaths.Get()
-        assetDir = op.join(sp.GetResourcesDir())
-        
-    # Otherwise we assume that the resources
-    # are living alongside the FSLeyes source.
-    else:
-        assetDir = op.join(op.dirname(__file__), '..')
 
-    fsleyes.assetDir = op.abspath(assetDir)
+    # Make sure the FSLeyes asset
+    # directory (containing e.g.
+    # icon images) is set.
+    fsleyes.setAssetDir()
 
     # Show the splash screen as soon as
     # possible, unless it looks like the

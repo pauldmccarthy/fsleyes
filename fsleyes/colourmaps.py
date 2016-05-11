@@ -147,12 +147,14 @@ import          fsleyes
 log = logging.getLogger(__name__)
 
 
-_cmapDir = op.join(fsleyes.assetDir, 'assets', 'colourmaps')
-"""The directory in which all colour map files are stored. """
+def getCmapDir():
+    """Returns the directory in which all colour map files are stored."""
+    return op.join(fsleyes.assetDir, 'assets', 'colourmaps')
 
 
-_lutDir  = op.join(fsleyes.assetDir, 'assets', 'luts')
-"""The directory in which all lookup table files are stored. """
+def getLutDir():
+    """Returns the directory in which all lookup table files are stored. """
+    return op.join(fsleyes.assetDir, 'assets', 'luts')
 
 
 _cmaps = None
@@ -172,7 +174,7 @@ def scanColourMaps():
     names of all colour maps contained within. This function may be called
     before :func:`init`.
     """
-    cmapFiles = glob.glob(op.join(_cmapDir, '*cmap'))
+    cmapFiles = glob.glob(op.join(getCmapDir(), '*cmap'))
     return [op.splitext(op.basename(f))[0] for f in cmapFiles]
 
 
@@ -181,7 +183,7 @@ def scanLookupTables():
     names of all lookup tables contained within. This function may be called
     before :func:`init`.
     """
-    lutFiles = glob.glob(op.join(_lutDir, '*lut'))
+    lutFiles = glob.glob(op.join(getLutDir(), '*lut'))
     return [op.splitext(op.basename(f))[0] for f in lutFiles] 
 
 
@@ -193,8 +195,6 @@ def init():
     colour map and lookup table files that exist.
     """
 
-    global _cmapDir
-    global _lutDir
     global _cmaps
     global _luts
 
@@ -202,11 +202,11 @@ def init():
 
     if _cmaps is None:
         _cmaps = OrderedDict()
-        registers.append((_cmaps, _cmapDir, 'cmap'))
+        registers.append((_cmaps, getCmapDir(), 'cmap'))
 
     if _luts is None:
         _luts = OrderedDict()
-        registers.append((_luts, _lutDir, 'lut'))
+        registers.append((_luts, getLutDir(), 'lut'))
 
     if len(registers) == 0:
         return
@@ -495,9 +495,9 @@ def installColourMap(cmapName):
     if cmap.mapFile is not None:
         destFile = cmap.mapFile
     else:
-        destFile = op.join(op.dirname(__file__),
-                           'colourmaps',
-                           '{}.cmap'.format(cmapName))
+        destFile = op.join(
+            getCmapDir(),
+            '{}.cmap'.format(cmapName.lower().replace(' ', '_')))
 
     log.debug('Installing colour map {} to {}'.format(cmapName, destFile))
 
@@ -521,7 +521,7 @@ def installLookupTable(lutName):
         destFile = lut.mapFile
     else:
         destFile = op.join(
-            _lutDir,
+            getLutDir(),
             '{}.lut'.format(lutName.lower().replace(' ', '_')))
 
     log.debug('Installing lookup table {} to {}'.format(lutName, destFile))

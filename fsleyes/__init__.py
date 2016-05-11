@@ -189,11 +189,38 @@ from . import version
 
 
 __version__ = version.__version__
-"""The current *FSLeyes* version (read from the :mod:`fsleyes.version` module).
+"""The current *FSLeyes* version (read from the :mod:`fsleyes.version`
+module).
 """
 
 
-assetDir = op.join(op.dirname(__file__), '..')
+assetDir = None
 """Base directory which contains all *FSLeyes* assets/resources (e.g. icon
-files).  This may be overridden by :func:`fsleyes.main.main`.
+files). This is set in the :func:`setAssetDir` function.
 """
+
+
+def setAssetDir():
+    """Sets the :data:`assetDir` attribute. This function *must* be called
+    before most other things in *FSLeyes* are used.
+    """
+    
+    global assetDir
+    
+    import wx
+    from fsl.utils.platform import platform
+
+    # If we are running from a bundled application,
+    # wx will know where the FSLeyes resources are
+    if platform.frozen:
+        sp       = wx.StandardPaths.Get()
+        assetDir = op.join(sp.GetResourcesDir())
+
+        
+    # Otherwise we are running from a code install;
+    # assume that the resources are living alongside
+    # the fsleyes package directory.
+    else:
+        assetDir = op.join(op.dirname(__file__), '..')    
+
+    assetDir = op.abspath(assetDir)

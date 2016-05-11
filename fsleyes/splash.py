@@ -18,10 +18,9 @@ import fsl.utils.imagepanel as imagepanel
 import fsleyes.strings      as strings
 
 
-SPLASH_FILE = op.join(
-    fsleyes.assetDir, 'assets', 'icons', 'splash', 'splash.png')
-"""Path to the splash screen image file. """
-
+def getSplashFile():
+    """Returns the path to the splash screen image file. """
+    return op.join(fsleyes.assetDir, 'assets', 'icons', 'splash', 'splash.png')
 
 
 class FSLEyesSplash(wx.Frame):
@@ -52,7 +51,7 @@ class FSLEyesSplash(wx.Frame):
         
         wx.Frame.__init__(self, parent, style=0)
 
-        splashbmp  = wx.Bitmap(SPLASH_FILE, wx.BITMAP_TYPE_PNG)
+        splashbmp  = wx.Bitmap(getSplashFile(), wx.BITMAP_TYPE_PNG)
         splashimg  = splashbmp.ConvertToImage()
     
         self.__splashPanel = imagepanel.ImagePanel(self, splashimg)

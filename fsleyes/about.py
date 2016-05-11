@@ -33,7 +33,7 @@ class AboutDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent, title=strings.about['title'])
 
         # Load the splash screen
-        splashbmp = wx.Bitmap(splash.SPLASH_FILE, wx.BITMAP_TYPE_PNG)
+        splashbmp = wx.Bitmap(splash.getSplashFile(), wx.BITMAP_TYPE_PNG)
         splashimg = splashbmp.ConvertToImage()
 
         # Create all the widgets
