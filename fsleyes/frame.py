@@ -181,12 +181,15 @@ class FSLEyesFrame(wx.Frame):
 
         self.SetSizer(self.__sizer)
 
-        # Re-direct status updates to the
-        # status bar. Make sure that the
-        # status bar is updated on the main
-        # loop
+        # Re-direct status updates
+        # to the status bar. 
         def update(msg):
+
+            # Do the update via wx.CallAfter to
+            # make sure that the status bar is
+            # updated on the main loop.
             def realUpdate():
+                
                 # This function might get called after
                 # the status bar has been destroyed,
                 # so we'll absorb any errors.

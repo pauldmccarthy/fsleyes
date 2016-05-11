@@ -16,15 +16,15 @@ import wx
 
 import os.path as op
 import sys
-import time
 import logging
 import warnings
 import textwrap
 import argparse
-import threading
 
 from fsl.utils.platform import platform as fslplatform
-import fsleyes
+
+import                  fsleyes
+from . import splash as fslsplash
 
 
 # The logger is assigned in 
@@ -63,7 +63,8 @@ def main(args=None):
     # possible, unless it looks like the
     # user is asking for the software
     # version or command line help.
-    splash = makeSplash()
+    splash = fslsplash.FSLEyesSplash(None)
+ 
     if (len(args) > 0) and (args[0] in ('-V',
                                         '-h',
                                         '-fh',
@@ -82,50 +83,57 @@ def main(args=None):
     # user while it is loading overlays and
     # setting up the interface.
     # 
-    # To make this work, this buildGUI
-    # function is called on a separate thread
-    # (so it is executed after wx.MainLoop
-    # has been called), but it schedules its
-    # work to be done on the wx.MainLoop. 
+    # So all of the work is defined in this
+    # function, which is scheduled to be
+    # executed on the wx main loop.
     def buildGUI(splash):
 
-        def realBuild(splash):
+        # Parse command line arguments. If the
+        # user has asked for help (see above),
+        # this will cause the application to
+        # print help and exit. Hence we make
+        # sure the splash screen is shown after
+        # arguments have been parsed.
+        namespace = parseArgs(args)
 
-            # Parse command line arguments
-            namespace = parseArgs(args)
+        # Make sure the splash screen is visible,
+        # and really make sure that it gets drawn.
+        # Without the Refresh, Update, Yield, this
+        # is not a guarantee on GTK.
+        splash.Show()
+        splash.CentreOnScreen()
+        splash.Refresh()
+        splash.Update()
+        wx.Yield()
 
-            # Make sure the splash screen is
-            # visible - it probably is if we
-            # got this far, but just to be sure.
-            splash.Show()
-            
-            # Initialise sub-modules/packages
-            initialise(splash, namespace)
+        # Initialise sub-modules/packages
+        initialise(splash, namespace)
 
-            # Configure logging (this has to be done
-            # after cli arguments have been parsed)
-            configLogging(namespace)
+        # Configure logging (this has to be done
+        # after cli arguments have been parsed)
+        configLogging(namespace)
 
-            # Now the main stuff - create the overlay
-            # list and the master display context,
-            # and then create the FSLEyesFrame.
-            overlayList, displayCtx = makeDisplayContext(namespace, splash)
-            frame = makeFrame(namespace, displayCtx, overlayList, splash)
+        # Now the main stuff - create the overlay
+        # list and the master display context,
+        # and then create the FSLEyesFrame.
+        overlayList, displayCtx = makeDisplayContext(namespace, splash)
+        frame = makeFrame(namespace, displayCtx, overlayList, splash)
 
-            app.SetTopWindow(frame)
-            frame.Show()
+        app.SetTopWindow(frame)
+        frame.Show()
 
-            # Check that $FSLDIR is set, complain 
-            # to the user if it isn't
-            if not namespace.skipfslcheck:
-                wx.CallAfter(fslDirWarning, frame)
+        # Check that $FSLDIR is set, complain 
+        # to the user if it isn't
+        if not namespace.skipfslcheck:
+            wx.CallAfter(fslDirWarning, frame)
 
-        # Sleep a bit so the main thread (on which
-        # wx.MainLoop is running) can start. 
-        time.sleep(0.05)
-        wx.CallAfter(realBuild, splash)
-
-    threading.Thread(target=buildGUI, args=[splash]).start()
+    # Note: If no wx.Frame is created, the
+    # wx.MainLoop call will exit immediately,
+    # even if we have scheduled something via
+    # wx.CallAfter. In this case, we have
+    # already created the splash screen, so
+    # all is well.
+    wx.CallAfter(buildGUI, splash)
     app.MainLoop()
 
 
@@ -202,21 +210,6 @@ def parseArgs(argv):
                                prolog=prolog,
                                desc=description,
                                fileOpts=['r', 'runscript'])
-
-
-def makeSplash():
-    """Creates and returns a :class:`.FSLEyesSplash` frame. """
-    
-    import fsleyes.splash as fslsplash
-
-    frame = fslsplash.FSLEyesSplash(None)
-
-    frame.CentreOnScreen()
-    frame.Show()
-    frame.Refresh()
-    frame.Update()
-
-    return frame
 
 
 def configLogging(namespace):
@@ -341,9 +334,14 @@ def makeDisplayContext(namespace, splash):
     import fsleyes.parseargs      as parseargs
     import fsleyes.displaycontext as displaycontext
 
+    # Splash status update must be
+    # performed on the main thread.
+    def splashStatus(msg):
+        wx.CallAfter(splash.SetStatus, msg)
+        
     # Redirect status updates
     # to the splash frame
-    status.setTarget(splash.SetStatus)
+    status.setTarget(splashStatus)
 
     # Create the overlay list (only one of these
     # ever exists) and the master DisplayContext.
