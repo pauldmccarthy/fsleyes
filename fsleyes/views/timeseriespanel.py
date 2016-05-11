@@ -18,7 +18,7 @@ import                                            props
 import fsl.data.featimage                      as fslfeatimage
 import fsl.data.melodicimage                   as fslmelimage
 import fsl.data.featanalysis                   as featanalysis
-import fsl.data.melodicresults                 as melresults
+import fsl.data.melodicanalysis                as melanalysis
 import fsl.data.image                          as fslimage
 import fsleyes.actions                         as actions
 import fsleyes.plotting                        as plotting
@@ -267,7 +267,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         if overlay.dataSource is not None:
             featPath = featanalysis.getAnalysisDir(overlay.dataSource)
-            melPath  = melresults  .getAnalysisDir(overlay.dataSource)
+            melPath  = melanalysis .getAnalysisDir(overlay.dataSource)
         else:
             featPath = None
             melPath  = None

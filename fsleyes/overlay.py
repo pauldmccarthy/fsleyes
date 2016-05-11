@@ -239,12 +239,12 @@ def guessDataSourceType(path):
     is unrecognised, the first tuple value will be ``None``.
     """
 
-    import fsl.data.model          as fslmodel
-    import fsl.data.featimage      as fslfeatimage
-    import fsl.data.melodicimage   as fslmelimage
-    import fsl.data.tensorimage    as tensorimage
-    import fsl.data.melodicresults as melresults
-    import fsl.data.featanalysis   as featanalysis
+    import fsl.data.model           as fslmodel
+    import fsl.data.featimage       as featimage
+    import fsl.data.melodicimage    as melimage
+    import fsl.data.tensorimage     as tensorimage
+    import fsl.data.melodicanalysis as melanalysis
+    import fsl.data.featanalysis    as featanalysis
 
     path = op.abspath(path)
 
@@ -254,11 +254,11 @@ def guessDataSourceType(path):
 
     # Analysis directory?
     if op.isdir(path):
-        if melresults.isMelodicDir(path):
-            return fslmelimage.MelodicImage, path
+        if melanalysis.isMelodicDir(path):
+            return melimage.MelodicImage, path
 
         elif featanalysis.isFEATDir(path):
-            return fslfeatimage.FEATImage, path
+            return featimage.FEATImage, path
 
         elif tensorimage.isPathToTensorData(path):
             return tensorimage.TensorImage, path
@@ -267,9 +267,9 @@ def guessDataSourceType(path):
     try:               path = fslimage.addExt(path, mustExist=True)
     except ValueError: return None, path
 
-    if   melresults.isMelodicImage(path): return fslmelimage.MelodicImage, path
-    elif featanalysis.isFEATImage( path): return fslfeatimage.FEATImage,   path
-    else:                                 return fslimage.Image,           path
+    if   melanalysis .isMelodicImage(path): return melimage.MelodicImage, path
+    elif featanalysis.isFEATImage(   path): return featimage.FEATImage,   path
+    else:                                   return fslimage.Image,        path
         
     # Otherwise, I don't
     # know what to do

@@ -19,7 +19,7 @@ import wx
 import pwidgets.notebook                as notebook
 
 import fsl.utils.settings               as fslsettings
-import fsl.data.melodicresults          as fslmelresults
+import fsl.data.melodiclabels           as fslmellabels
 import fsl.data.melodicimage            as fslmelimage
 import fsleyes.colourmaps               as fslcm
 import fsleyes.panel                    as fslpanel
@@ -288,7 +288,7 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
         # Load the specified label file
         filename = dlg.GetPath()
         try:
-            melDir, allLabels = fslmelresults.loadMelodicLabelFile(filename)
+            melDir, allLabels = fslmellabels.loadLabelFile(filename)
 
         # Problem loading the file
         except Exception as e:
