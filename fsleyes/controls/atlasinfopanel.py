@@ -172,10 +172,13 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
         """
 
         self.__enabledAtlases = {}
-        self.__atlasList.Clear()
 
         defaultEnabled = []
         atlasDescs     = None
+
+        # Don't bother if fsldir is not set
+        if fslplatform.fsldir is None:
+            return
 
         # First we load the atlas descriptions. This
         # is a potentially time consuming operation,
@@ -200,6 +203,7 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
             except wx.PyDeadObjectError:
                 return
 
+            self.__atlasList.Clear()
             for i, atlasDesc in enumerate(atlasDescs):
 
                 # Enable the Harvard Oxford cortical

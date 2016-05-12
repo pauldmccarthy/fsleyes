@@ -178,6 +178,10 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
 
         atlasDescs = None
 
+        # Don't bother if fsldir is not set
+        if fslplatform.fsldir is None:
+            return 
+
         # See AtlasInfoPanel.__buildAtlasList
         # for a more commented version of what
         # is essentially the same process as
