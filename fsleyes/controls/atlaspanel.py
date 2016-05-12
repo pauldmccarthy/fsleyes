@@ -281,6 +281,13 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
         :class:`.OverlayList`.
         """
 
+        niftis = [o for o in self._overlayList
+                  if isinstance(o, fslimage.Nifti1)]
+
+        # No overlays to match resolution against
+        if len(niftis) == 0:
+            matchResolution = False
+
         # If we don't need to match resolution,
         # return the highest available resolution
         # (the lowest value).
@@ -289,9 +296,7 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
 
         # Find the highest resolution
         # in the overlay list
-        pixdims = [ovl.pixdim[:3]
-                   for ovl in self._overlayList
-                   if isinstance(ovl, fslimage.Nifti1)]
+        pixdims = [o.pixdim[:3] for o in niftis]
         res     = np.concatenate(pixdims).min()
 
         # identify the atlas with the
