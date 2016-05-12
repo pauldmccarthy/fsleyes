@@ -176,35 +176,61 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
         region lists.
         """
 
-        atlasDescs = atlases.listAtlases()
+        atlasDescs = None
 
-        # If a region list is currently
-        # being shown, clear it. 
-        regionList = self.__regionSizer.GetItem(1).GetWindow()
-        if regionList is not None:
-            self.__regionSizer.Remove(1)
-            self.__regionSizer.AddStretchSpacer()
+        # See AtlasInfoPanel.__buildAtlasList
+        # for a more commented version of what
+        # is essentially the same process as
+        # below.
+        #
+        # TL,DR: Loading atlas descriptions might take
+        #        time, so it is performed asynchronously
+        #        on a separate thread.
+        def loadAtlases():
+            global atlasDescs
+            atlasDescs = atlases.listAtlases()
 
-        # Destroy any existing region lists
-        for regionList in self.__regionLists:
+        def buildList():
+            global atlasDescs
+
+            # We might have been destroyed
+            # while the atlases were being
+            # loaded.
+            try:
+                if self.destroyed():
+                    return
+            except wx.PyDeadObjectError:
+                return
+            
+            # If a region list is currently
+            # being shown, clear it. 
+            regionList = self.__regionSizer.GetItem(1).GetWindow()
             if regionList is not None:
-                regionList.Destroy()
-                
-        self.__regionLists = [None] * len(atlasDescs)
-                
-        # Now clear and re-populate the atlas list
-        self.__atlasList.Clear()
-        for i, atlasDesc in enumerate(atlasDescs):
-            self.__atlasList.Append(atlasDesc.name, atlasDesc)
-            self.__updateAtlasState(i)
-            widget = OverlayListWidget(self.__atlasList,
-                                       atlasDesc.atlasID,
-                                       i, 
-                                       self.__atlasPanel,
-                                       self)
-            self.__atlasList.SetItemWidget(i, widget)
+                self.__regionSizer.Remove(1)
+                self.__regionSizer.AddStretchSpacer()
 
-        self.__regionSizer.Layout()
+            # Destroy any existing region lists
+            for regionList in self.__regionLists:
+                if regionList is not None:
+                    regionList.Destroy()
+
+            self.__regionLists = [None] * len(atlasDescs)
+
+            # Now clear and re-populate the atlas list
+            self.__atlasList.Clear()
+            for i, atlasDesc in enumerate(atlasDescs):
+                self.__atlasList.Append(atlasDesc.name, atlasDesc)
+                self.__updateAtlasState(i)
+                widget = OverlayListWidget(self.__atlasList,
+                                           atlasDesc.atlasID,
+                                           i, 
+                                           self.__atlasPanel,
+                                           self)
+                self.__atlasList.SetItemWidget(i, widget)
+
+            self.__regionSizer.Layout()
+
+        async.run(loadAtlases, buildList)
 
 
     def __onRegionFilter(self, ev):

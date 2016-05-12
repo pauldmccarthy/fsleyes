@@ -18,6 +18,7 @@ import pwidgets.elistbox                  as elistbox
 import fsleyes.panel                      as fslpanel
 import fsleyes.strings                    as strings
 from   fsl.utils.platform import platform as fslplatform
+import fsl.utils.async                    as async
 import fsl.data.atlases                   as atlases
 import fsl.data.constants                 as constants
 
@@ -162,37 +163,70 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
 
 
     def __buildAtlasList(self):
-        """Clears and then builds the list of available atlases. """
+        """Clears and then builds the list of available atlases. The 
+        This is performed asynchronously, via the :func:`.async.run` function,
+        although the atlas list widget is updated on the ``wx`` idle loop.
+        """
 
         self.__enabledAtlases = {}
         self.__atlasList.Clear()
 
         defaultEnabled = []
-        
-        for i, atlasDesc in enumerate(atlases.listAtlases()):
+        atlasDescs     = None
 
-            # Enable the Harvard Oxford cortical
-            # and subcortical atlases by default
-            enable = atlasDesc.atlasID in ('harvardoxford-cortical',
-                                           'harvardoxford-subcortical')
-            
-            self.__atlasList.Append(atlasDesc.name, atlasDesc.atlasID)
-            widget = AtlasListWidget(self.__atlasList,
-                                     i,
-                                     self,
-                                     atlasDesc.atlasID,
-                                     enabled=enable)
-            self.__atlasList.SetItemWidget(i, widget)
+        # First we load the atlas descriptions. This
+        # is a potentially time consuming operation,
+        # so it is performed on a separate thread.
+        def loadAtlases():
+            global atlasDescs
+            atlasDescs = atlases.listAtlases()
 
-            if enable:
-                defaultEnabled.append(atlasDesc.atlasID)
+        # When the atlas descriptions have been
+        # loaded, we populate the atlas list control.
+        # This is performed on the wx idle loop.
+        def buildList():
 
-        # Turn on atlas info for the atlaes which
-        # are enabled by default. Refresh the info
-        # panel after the last atlas has been
-        # enabled.
-        for i, atlasID in enumerate(defaultEnabled):
-            self.enableAtlasInfo(atlasID, i == len(defaultEnabled) - 1)
+            global atlasDescs
+
+            # We might have been destroyed
+            # while the atlases were being
+            # loaded.
+            try:
+                if self.destroyed():
+                    return
+            except wx.PyDeadObjectError:
+                return
+
+            for i, atlasDesc in enumerate(atlasDescs):
+
+                # Enable the Harvard Oxford cortical
+                # and subcortical atlases by default
+                enable = atlasDesc.atlasID in ('harvardoxford-cortical',
+                                               'harvardoxford-subcortical')
+
+                self.__atlasList.Append(atlasDesc.name, atlasDesc.atlasID)
+                widget = AtlasListWidget(self.__atlasList,
+                                         i,
+                                         self,
+                                         atlasDesc.atlasID,
+                                         enabled=enable)
+                self.__atlasList.SetItemWidget(i, widget)
+
+                if enable:
+                    defaultEnabled.append(atlasDesc.atlasID)
+
+            # Turn on atlas info for the atlaes which
+            # are enabled by default. Refresh the info
+            # panel after the last atlas has been
+            # enabled.
+            for i, atlasID in enumerate(defaultEnabled):
+                self.enableAtlasInfo(atlasID, i == len(defaultEnabled) - 1)
+
+        # Submit the job. loadAtlases is run
+        # on a separate thread, and buildList
+        # is queued on the wx.main loop when
+        # loadAtlases has finished.
+        async.run(loadAtlases, buildList)
  
 
     def __locationChanged(self, *a):
@@ -206,7 +240,7 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
 
         topText = None
         
-        if len(atlases.listAtlases()) == 0:
+        if self.__atlasList.GetCount() == 0:
             text.SetPage(strings.messages['AtlasInfoPanel.atlasDisabled'])
             return
 
