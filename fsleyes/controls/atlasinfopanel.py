@@ -135,26 +135,51 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
         is updated.
         """
 
+        listWidget = self.__atlasList.GetItemWidget(
+            self.__atlasList.IndexOf(atlasID))
+
         def onLoad(atlas):
             self.__enabledAtlases[atlasID] = atlas
+
+            listWidget.SetValue(True)
 
             if refresh:
                 self.__locationChanged()
                 
             self.Enable()
 
+        def onError(e):
+            
+            message = strings.messages[self, 'loadAtlasError']
+            message = message.format(
+                atlasID, '{} ({})'.format(type(e).__name__, str(e)))
+            wx.MessageDialog(
+                self.GetTopLevelParent(),
+                message=message,
+                style=(wx.ICON_EXCLAMATION | wx.OK)).ShowModal()
+
+            listWidget.SetValue(False)
+            self.Enable()
+
         self.Disable()
         self.__atlasPanel.loadAtlas(atlasID,
                                     summary=False,
                                     onLoad=onLoad,
+                                    onError=onError,
                                     matchResolution=False)
         
         
     def disableAtlasInfo(self, atlasID):
         """Disables information display for the atlas with the specified ID.
         """
+        
+        listWidget = self.__atlasList.GetItemWidget(
+            self.__atlasList.IndexOf(atlasID))
+        
         self.__enabledAtlases.pop(atlasID)
         self.__locationChanged()
+
+        listWidget.SetValue(False)
 
 
     def __fslDirChanged(self, *a):
@@ -345,8 +370,22 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
         def onLoad():
             self.__atlasPanel.Enable()
 
+        def onError(e):
+            message = strings.messages[self, 'loadAtlasError']
+            message = message.format(
+                atlasID, '{} ({})'.format(type(e).__name__, str(e)))
+            wx.MessageDialog(
+                self.GetTopLevelParent(),
+                message=message,
+                style=(wx.ICON_EXCLAMATION | wx.OK)).ShowModal()
+            self.__atlasPanel.Enable() 
+
         self.__atlasPanel.Disable()
-        self.__atlasPanel.toggleOverlay(atlasID, labelIndex, summary, onLoad)
+        self.__atlasPanel.toggleOverlay(atlasID,
+                                        labelIndex,
+                                        summary,
+                                        onLoad=onLoad,
+                                        onError=onError)
 
 
     def __selectedOverlayChanged(self, *a):

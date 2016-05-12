@@ -546,12 +546,29 @@ class OverlayListWidget(wx.Panel):
         def onLoad():
             self.__atlasOvlPanel.enableAtlasPanel()
 
+        def onError(e):
+            message = strings.messages[self.__atlasOvlPanel, 'loadAtlasError']
+            message = message.format(
+                self.__atlasID, '{} ({})'.format(type(e).__name__, str(e)))
+            wx.MessageDialog(
+                self.GetTopLevelParent(),
+                message=message,
+                style=(wx.ICON_EXCLAMATION | wx.OK)).ShowModal()
+            
+            self.__atlasOvlPanel.enableAtlasPanel()
+            self.__enableBox.SetValue(
+                self.__atlasPanel.getOverlayState(
+                    self.__atlasID,
+                    self.__labelIdx,
+                    self.__atlasDesc.atlasType == 'label'))
+
         self.__atlasOvlPanel.enableAtlasPanel(False)
         self.__atlasPanel.toggleOverlay(
             self.__atlasID,
             self.__labelIdx,
             self.__atlasDesc.atlasType == 'label',
-            onLoad=onLoad)
+            onLoad=onLoad,
+            onError=onError)
 
         
     def __onLocate(self, ev):

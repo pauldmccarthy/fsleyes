@@ -86,9 +86,13 @@ messages = TypeDict({
 
     'AtlasPanel.loadingAtlas' : 'Loading {} atlas ...',
 
-    'AtlasOverlayPanel.loadRegions'   : 'Loading region descriptions '
-                                        'for {} ...',
-    'AtlasOverlayPanel.regionsLoaded' : '{} region descriptions loaded.',
+    'AtlasOverlayPanel.loadRegions'    : 'Loading region descriptions '
+                                         'for {} ...',
+    'AtlasOverlayPanel.regionsLoaded'  : '{} region descriptions loaded.',
+
+    'AtlasOverlayPanel.loadAtlasError' : 'An error occurred while trying '
+                                        'to load the atlas overlay for '
+                                        '"{}":\nDetails: {}', 
 
     'AtlasInfoPanel.notMNISpace'   : 'The selected overlay does not appear to '
                                      'be in MNI152 space - atlas '
@@ -96,6 +100,9 @@ messages = TypeDict({
 
     'AtlasInfoPanel.chooseAnAtlas' : 'Choose an atlas!',
     'AtlasInfoPanel.atlasDisabled' : 'Atlases are not available',
+
+    'AtlasInfoPanel.loadAtlasError' : 'An error occurred while trying '
+                                      'to load the atlas "{}":\nDetails: {}',
 
     'CanvasPanel.screenshot'            : 'Save screenshot',
     'CanvasPanel.screenshot.notSaved'   : 'Overlay {} needs saving before a '
