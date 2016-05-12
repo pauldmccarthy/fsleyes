@@ -573,6 +573,9 @@ class CanvasPanel(viewpanel.ViewPanel):
         the :attr:`.Nifti1Opts.volume` property is incremented.
         """
 
+        if self.destroyed():
+            return
+
         overlay = self._displayCtx.getSelectedOverlay()
 
         if overlay is None:

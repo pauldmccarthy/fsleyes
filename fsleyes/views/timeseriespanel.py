@@ -208,6 +208,9 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         instances to the :meth:`.PlotPanel.drawDataSeries` method.
         """
 
+        if self.destroyed():
+            return
+
         if self.showMode == 'all':
             overlays = self._overlayList[:]
             
