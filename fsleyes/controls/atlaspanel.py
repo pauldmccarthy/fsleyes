@@ -198,7 +198,12 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
         fslpanel.FSLEyesPanel.destroy(self)
 
 
-    def loadAtlas(self, atlasID, summary, onLoad=None, matchResolution=True):
+    def loadAtlas(self,
+                  atlasID,
+                  summary,
+                  onLoad=None,
+                  onError=None,
+                  matchResolution=True):
         """Loads the atlas image with the specified ID. The atlas is loaded
         asynchronously (via the :mod:`.async` module), as it can take some
         time. Use the `onLoad` argument if you need to do something when the
@@ -257,12 +262,12 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
                     
                 self.__loadedAtlases[atlasID, summary, res] = atlas
 
-                status.update('Atlas {} loaded.'.format(atlasID))                    
+                status.update('Atlas {} loaded.'.format(atlasID))
 
                 if onLoad is not None:
                     async.idle(onLoad, atlas)
 
-            async.run(load)
+            async.run(load, onError=onError)
 
         # If the atlas has already been loaded,
         # pass it straight to the onload function
@@ -337,12 +342,20 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
         return self._overlayList.find(name) is not None
     
 
-    def toggleOverlay(self, atlasID, labelIdx, summary, onLoad=None):
+    def toggleOverlay(self,
+                      atlasID,
+                      labelIdx,
+                      summary,
+                      onLoad=None,
+                      onError=None):
         """Adds or removes the specified overlay to/from the
         :class:`.OverlayList`.
 
-        :arg onLoad: Optional function to be called when the overlay has been
-                     added/removed.
+        :arg onLoad:  Optional function to be called when the overlay has been
+                      added/removed.
+        
+        :arg onError: Optional function to be called if an error occurs while
+                      loading an overlay.  
 
         See :meth:`getOverlayName` for details on the other arguments.
         """
@@ -430,7 +443,7 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
             if onLoad is not None:
                 onLoad()
 
-        self.loadAtlas(atlasID, summary, realOnLoad)
+        self.loadAtlas(atlasID, summary, onLoad=realOnLoad, onError=onError)
 
 
     def locateRegion(self, atlasID, labelIdx):
