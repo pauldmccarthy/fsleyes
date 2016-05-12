@@ -149,7 +149,7 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         # Cache of loaded atlases
-        # and enabled atlas overlays
+        # and enabled atlas overlays.
         self.__enabledOverlays = {}
         self.__loadedAtlases   = {}
 
@@ -198,25 +198,33 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
         fslpanel.FSLEyesPanel.destroy(self)
 
 
-    def loadAtlas(self, atlasID, summary, onLoad=None):
+    def loadAtlas(self, atlasID, summary, onLoad=None, matchResolution=True):
         """Loads the atlas image with the specified ID. The atlas is loaded
         asynchronously (via the :mod:`.async` module), as it can take some
         time. Use the `onLoad` argument if you need to do something when the
         atlas has been loaded.
 
-        :arg onLoad: Optional. A function which is called when the atlas has
-                     been loaded.
+        :arg onLoad:          Optional. A function which is called when the 
+                              atlas has been loaded.
+
+        :arg matchResolution: If ``True`` (the default), the version of the
+                              atlas with the most suitable resolution, based
+                              on the current contents of the 
+                              :class:`.OverlayList`, is loaded.
 
         See the :func:`.atlases.loadAtlas` function for details on the other
         arguments.
         """
 
+        # Get the atlas description, and the
+        # most suitable resolution to load.
         desc = atlases.getAtlasDescription(atlasID)
+        res  = self.__getSuitableResolution(desc, matchResolution)
 
         if desc.atlasType == 'summary':
             summary = True
 
-        atlas = self.__loadedAtlases.get((atlasID, summary), None)
+        atlas = self.__loadedAtlases.get((atlasID, summary, res), None)
 
         if atlas is None:
             
@@ -227,7 +235,7 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
 
             def load():
 
-                atlas = atlases.loadAtlas(atlasID, summary)
+                atlas = atlases.loadAtlas(atlasID, summary, resolution=res)
 
                 # The atlas panel may be destroyed
                 # before the atlas is loaded.
@@ -242,7 +250,7 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
                 except wx.PyDeadObjectError:
                     return
                     
-                self.__loadedAtlases[atlasID, summary] = atlas
+                self.__loadedAtlases[atlasID, summary, res] = atlas
 
                 status.update('Atlas {} loaded.'.format(atlasID))                    
 
@@ -256,6 +264,33 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
         elif onLoad is not None:
             onLoad(atlas)
                     
+
+    def __getSuitableResolution(self, desc, matchResolution=True):
+        """Used by the :meth:`loadAtlas` method. Determines a suitable
+        atlas resolution to load, based on the current contents of the
+        :class:`.OverlayList`.
+        """
+
+        # If we don't need to match resolution,
+        # return the highest available resolution
+        # (the lowest value).
+        if not matchResolution:
+            return np.concatenate(desc.pixdims).min()
+
+        # Find the highest resolution
+        # in the overlay list
+        pixdims = [ovl.pixdim[:3]
+                   for ovl in self._overlayList
+                   if isinstance(ovl, fslimage.Nifti1)]
+        res     = np.concatenate(pixdims).min()
+
+        # identify the atlas with the
+        # nearest resolution to the
+        # requested resolution
+        reses = np.concatenate(desc.pixdims)
+        res   = reses[np.argmin(np.abs(reses - res))]
+
+        return res
 
 
     def getOverlayName(self, atlasID, labelIdx, summary):

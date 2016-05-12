@@ -144,7 +144,10 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
             self.Enable()
 
         self.Disable()
-        self.__atlasPanel.loadAtlas(atlasID, False, onLoad)
+        self.__atlasPanel.loadAtlas(atlasID,
+                                    summary=False,
+                                    onLoad=onLoad,
+                                    matchResolution=False)
         
         
     def disableAtlasInfo(self, atlasID):
