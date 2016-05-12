@@ -205,7 +205,12 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
         atlas has been loaded.
 
         :arg onLoad:          Optional. A function which is called when the 
-                              atlas has been loaded.
+                              atlas has been loaded, and which is passed the
+                              loaded :class:`.Atlas` image.
+
+        :arg onError:         Optional. A function which is called if the
+                              atlas loading job raises an error. Passed the
+                              ``Exception`` that was raised.
 
         :arg matchResolution: If ``True`` (the default), the version of the
                               atlas with the most suitable resolution, based

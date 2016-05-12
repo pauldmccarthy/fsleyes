@@ -229,7 +229,7 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
         # on a separate thread, and buildList
         # is queued on the wx.main loop when
         # loadAtlases has finished.
-        async.run(loadAtlases, buildList)
+        async.run(loadAtlases, onFinish=buildList)
  
 
     def __locationChanged(self, *a):

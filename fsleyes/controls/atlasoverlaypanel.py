@@ -230,7 +230,7 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
 
             self.__regionSizer.Layout()
 
-        async.run(loadAtlases, buildList)
+        async.run(loadAtlases, onFinish=buildList)
 
 
     def __onRegionFilter(self, ev):
