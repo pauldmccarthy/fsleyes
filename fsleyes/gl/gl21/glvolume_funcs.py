@@ -59,7 +59,7 @@ def updateShaderState(self):
     current display properties.
     """
 
-    if self.destroyed() or not self.imageTexture.ready():
+    if not self.ready():
         return
 
     opts   = self.displayOpts
