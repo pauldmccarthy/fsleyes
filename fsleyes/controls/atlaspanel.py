@@ -231,9 +231,17 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
 
                 # The atlas panel may be destroyed
                 # before the atlas is loaded.
-                if self.destroyed():
+                try:
+                    if self.destroyed():
+                        return
+                    
+                # If the panel has really been
+                # destroyed, wx won't even allow
+                # us to access the destroyed
+                # method
+                except wx.PyDeadObjectError:
                     return
-                
+                    
                 self.__loadedAtlases[atlasID, summary] = atlas
 
                 status.update('Atlas {} loaded.'.format(atlasID))                    
