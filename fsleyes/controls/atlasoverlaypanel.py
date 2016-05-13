@@ -200,10 +200,7 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
             # We might have been destroyed
             # while the atlases were being
             # loaded.
-            try:
-                if self.destroyed():
-                    return
-            except wx.PyDeadObjectError:
+            if not self or self.destroyed():
                 return
             
             # If a region list is currently
@@ -545,11 +542,8 @@ class OverlayListWidget(wx.Panel):
 
         def onLoad():
 
-            try:
-                if self.destroyed():
-                    return
-            except wx.PyDeadObjectError:
-                return 
+            if not self or self.destroyed():
+                return
                 
             self.__atlasOvlPanel.enableAtlasPanel()
 

@@ -285,6 +285,13 @@ class SliceCanvas(props.HasProperties):
         self._offscreenTextures = None
 
 
+    def destroyed(self):
+        """Returns ``True`` if a call to :meth:`destroy` has been made,
+        ``False`` otherwise.
+        """
+        return self.overlayList is None
+
+
     def calcPixelDims(self):
         """Calculate and return the approximate size (width, height) of one
         pixel in display space.
@@ -845,6 +852,9 @@ class SliceCanvas(props.HasProperties):
         self._glObjects[overlay] = False
 
         def create():
+
+            if not self or self.destroyed():
+                return
 
             # We need a GL context to create a new GL
             # object. If we can't get it now, 

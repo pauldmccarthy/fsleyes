@@ -140,10 +140,7 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
 
         def onLoad(atlas):
 
-            try:
-                if self.destroyed():
-                    return
-            except wx.PyDeadObjectError:
+            if not self or self.destroyed():
                 return
     
             self.__enabledAtlases[atlasID] = atlas
@@ -229,10 +226,7 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
             # We might have been destroyed
             # while the atlases were being
             # loaded.
-            try:
-                if self.destroyed():
-                    return
-            except wx.PyDeadObjectError:
+            if not self or self.destroyed():
                 return
 
             self.__atlasList.Clear()

@@ -515,6 +515,9 @@ class LocationPanel(fslpanel.FSLEyesPanel):
                   between the three location properties.
         """
 
+        if not self or self.destroyed():
+            return
+
         if len(self._overlayList) == 0:      return
         if self.__registeredOverlay is None: return
 

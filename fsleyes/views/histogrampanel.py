@@ -150,11 +150,8 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         :meth:`.PlotPanel.drawDataSeries` method.
         """
 
-        try:
-            if self.destroyed():
-                return
-        except wx.PyDeadObjectError:
-            return 
+        if not self or self.destroyed():
+            return
 
         if self.showMode == 'all':
             overlays = self._overlayList[:]
