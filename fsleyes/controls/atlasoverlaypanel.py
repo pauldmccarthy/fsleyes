@@ -542,7 +542,9 @@ class OverlayListWidget(wx.Panel):
 
         def onLoad():
 
-            if not self or self.destroyed():
+            if not self or \
+               not self.__atlasOvlPanel or \
+               self.__atlasOvlPanel .destroyed():
                 return
                 
             self.__atlasOvlPanel.enableAtlasPanel()
