@@ -208,7 +208,10 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         instances to the :meth:`.PlotPanel.drawDataSeries` method.
         """
 
-        if self.destroyed():
+        try:
+            if self.destroyed():
+                return
+        except wx.PyDeadObjectError:
             return
 
         if self.showMode == 'all':

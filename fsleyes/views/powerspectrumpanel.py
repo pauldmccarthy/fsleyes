@@ -161,6 +161,12 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         :meth:`.PlotPanel.drawDataSeries` method.
         """
 
+        try:
+            if self.destroyed():
+                return
+        except wx.PyDeadObjectError:
+            return
+
         if self.showMode == 'all':
             overlays = self._overlayList[:]
         elif self.showMode == 'current':
