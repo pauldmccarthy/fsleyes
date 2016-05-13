@@ -357,7 +357,13 @@ class PlotControlPanel(fslpanel.FSLEyesSettingsPanel):
         """Called when the :attr:`.DisplayContext.selectedOverlay` or
         :class:`.OverlayList` changes. 
         """
-        self.refreshDataSeriesWidgets()
+
+        # Double check that the selected overlay has
+        # changed before refreshing the panel, as it
+        # may not have (e.g. new overlay added, but
+        # selected overlay stayed the same).
+        if self._displayCtx.getSelectedOverlay() is not self.__selectedOverlay:
+            self.refreshDataSeriesWidgets()
 
 
     def __autoScaleChanged(self, *a):
