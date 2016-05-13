@@ -14,8 +14,9 @@ import six
 import wx
 import wx.glcanvas as wxgl
 
-import fsleyes.gl  as fslgl
-from . import         slicecanvas
+from   fsl.utils.platform import platform 
+import fsleyes.gl         as     fslgl
+from   .                  import slicecanvas
 
 
 class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
@@ -66,8 +67,13 @@ class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
         workaround that I've found to work is, instead of hiding the canvas,
         to set its size to 0. So this method does just that.
         """
-        wxgl.GLCanvas.Show(self, show)
-        if not show:
+
+        # If not in SSH, we can just
+        # show/hide normally.
+        if not platform.inSSHSession:
+            wxgl.GLCanvas.Show(self, show)
+            
+        elif not show:
             self.SetMinSize((0, 0))
             self.SetMaxSize((0, 0))
             self.SetSize(   (0, 0))

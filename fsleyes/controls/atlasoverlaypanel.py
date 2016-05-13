@@ -544,6 +544,13 @@ class OverlayListWidget(wx.Panel):
         """
 
         def onLoad():
+
+            try:
+                if self.destroyed():
+                    return
+            except wx.PyDeadObjectError:
+                return 
+                
             self.__atlasOvlPanel.enableAtlasPanel()
 
         def onError(e):

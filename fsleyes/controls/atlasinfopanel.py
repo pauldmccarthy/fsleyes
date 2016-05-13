@@ -139,6 +139,13 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
             self.__atlasList.IndexOf(atlasID))
 
         def onLoad(atlas):
+
+            try:
+                if self.destroyed():
+                    return
+            except wx.PyDeadObjectError:
+                return
+    
             self.__enabledAtlases[atlasID] = atlas
 
             listWidget.SetValue(True)
