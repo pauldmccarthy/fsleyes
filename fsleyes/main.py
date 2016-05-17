@@ -95,13 +95,14 @@ def main(args=None):
         splash.Refresh()
         splash.Update()
         wx.Yield()
+        
+        # Configure logging (this has to be done
+        # after cli arguments have been parsed,
+        # but before initialise is called).
+        configLogging(namespace)
 
         # Initialise sub-modules/packages
         initialise(splash, namespace)
-
-        # Configure logging (this has to be done
-        # after cli arguments have been parsed)
-        configLogging(namespace)
 
         # Now the main stuff - create the overlay
         # list and the master display context,
