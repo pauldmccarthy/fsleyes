@@ -8,8 +8,11 @@
 user to load a new colour map.
 """
 
-import logging
+import            logging
+import            os
 import os.path as op
+
+import fsl.utils.settings as fslsettings
 
 import fsleyes.strings    as strings
 import fsleyes.colourmaps as fslcmap
@@ -61,9 +64,14 @@ class LoadColourMapAction(action.Action):
 
         app = wx.GetApp()
 
+        # Get the most recent colour map
+        # directory if there is one
+        loadDir = fslsettings.read('fsleyes.loadcolourmap', os.getcwd())
+
         # prompt the user to choose a colour map file
         dlg = wx.FileDialog(
             app.GetTopWindow(),
+            defaultDir=loadDir,
             message=strings.messages[_stringID + 'loadcmap'],
             style=wx.FD_OPEN)
 
@@ -73,6 +81,7 @@ class LoadColourMapAction(action.Action):
         # prompt the user to choose  a name for the colour
         # map (using the filename prefix as the default)
         cmapFile = dlg.GetPath()
+        cmapDir  = op.dirname(cmapFile)
         cmapName = op.splitext(op.basename(cmapFile))[0]
 
         cmapNameMsg = strings.messages[_stringID + 'namecmap']
@@ -107,6 +116,9 @@ class LoadColourMapAction(action.Action):
                                   self.__overlayList,
                                   self.__displayCtx,
                                   cmapName)
+
+        # Save the directory for next time
+        fslsettings.write('fsleyes.loadcolourmap', cmapDir)
 
         # ask the user if they want to install
         # the colour map for future use
