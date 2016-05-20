@@ -118,13 +118,24 @@ def main(args=None):
         if not namespace.skipfslcheck:
             wx.CallAfter(fslDirWarning, frame)
 
+    # The call to buildGUI is wrapped with
+    # this function, which simply causes
+    # the application to bomb out if buildGUI
+    # raises an error.
+    def buildGUIWrapper(splash):
+        try:
+            buildGUI(splash)
+        except:
+            wx.CallAfter(sys.exit, 1)
+            raise
+
     # Note: If no wx.Frame is created, the
     # wx.MainLoop call will exit immediately,
     # even if we have scheduled something via
     # wx.CallAfter. In this case, we have
     # already created the splash screen, so
     # all is well.
-    wx.CallAfter(buildGUI, splash)
+    wx.CallAfter(buildGUIWrapper, splash)
     app.MainLoop()
 
 
