@@ -284,12 +284,13 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         if zthres is not None:
 
             absmax = max(map(abs, (opts.dataMin, opts.dataMax)))
-            
-            opts.cmap            = 'Render3'
-            opts.invertClipping  = True
-            opts.centreRanges    = True
-            opts.displayRange.x  = -absmax, absmax
-            opts.clippingRange.x = -zthres, zthres
+
+            opts.useNegativeCmap  = True
+            opts.cmap             = 'Red-Yellow'
+            opts.negativeCmap     = 'Blue-LightBlue'
+            opts.linkLowRanges    = True
+            opts.displayRange.xlo = 2.3
+            opts.displayRange.xhi = absmax
 
     
     def __addClustMaskClick(self, ev):
@@ -404,7 +405,9 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
                                           clust.copemaxy,
                                           clust.copemaxz))
 
-            fmt = lambda v: '{}'.format(v)
+            def fmt(v):
+                return '{}'.format(v)
+            
             grid.SetText(  i, cols['index'],         fmt(clust.index))
             grid.SetText(  i, cols['nvoxels'],       fmt(clust.nvoxels))
             grid.SetText(  i, cols['p'],             fmt(clust.p))
