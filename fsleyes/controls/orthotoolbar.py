@@ -166,7 +166,8 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
                                  icon=icons['resetZoom'],
                                  tooltip=tooltips['resetZoom']), 
             props.Widget(        'zoom',
-                                 spin=False,
+                                 spin=True,
+                                 slider=True,
                                  showLimits=False,
                                  tooltip=tooltips['zoom']),
         ]

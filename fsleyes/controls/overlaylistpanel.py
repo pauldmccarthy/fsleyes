@@ -103,8 +103,20 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
         self.__selectedOverlayChanged()
 
         self.Layout()
+        
+        self.__minSize = self.__sizer.GetMinSize()
+        self.SetMinSize(self.__minSize)
 
-        self.SetMinSize(self.__sizer.GetMinSize())
+        
+    def GetMinSize(self):
+        """Returns the minimum size for this ``OverlayListPanel``.
+
+        Under Linux/GTK, the ``wx.agw.lib.aui`` layout manager seems to
+        arbitrarily adjust the minimum sizes of some panels. Therefore, The
+        minimum size of the ``OverlayListPanel`` is calculated in
+        :meth:`__init__`, and is fixed.
+        """ 
+        return self.__minSize
 
 
     def destroy(self):

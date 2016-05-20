@@ -213,10 +213,17 @@ class LocationPanel(fslpanel.FSLEyesPanel):
 
         self.__selectedOverlayChanged()
 
-        self.__worldLabel.SetMinSize(self.__calcWorldLabelMinSize())
-        self.__info      .SetMinSize((150, 100))
+        self.__worldLabel .SetMinSize(self.__calcWorldLabelMinSize())
+        self.__voxelLabel .SetMinSize(self.__voxelLabel .GetBestSize())
+        self.__volumeLabel.SetMinSize(self.__volumeLabel.GetBestSize())
+        self.__column1    .SetMinSize(self.__column1    .GetBestSize())
+        self.__column2    .SetMinSize(self.__column2    .GetBestSize())
+        self.__info       .SetMinSize((100, 100))
+        
         self.Layout()
-        self.SetMinSize(self.__sizer.GetMinSize())
+
+        self.__minSize = self.__sizer.GetMinSize()
+        self.SetMinSize(self.__minSize)
 
 
     def destroy(self):
@@ -231,6 +238,23 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         self.__deregisterOverlay()
 
         fslpanel.FSLEyesPanel.destroy(self)
+
+        
+    def GetMinSize(self):
+        """Returns the minimum size for this ``LocationPanel``.
+
+        Under Linux/GTK, the ``wx.agw.lib.aui`` layout manager seems to
+        arbitrarily adjust the minimum sizes of some panels. Therefore, The
+        minimum size of the ``LocationPanel`` is calculated in
+        :meth:`__init__`, and is fixed.
+        """
+        return self.__minSize
+
+
+    def DoGetBestClientSize(self):
+        """Returns the best size for this ``LocationPanel``.
+        """
+        return self.__minSize
 
 
     def __calcWorldLabelMinSize(self):
