@@ -96,6 +96,17 @@ def updateFragmentShaderState(self, useSpline=False):
         voxValXform = self.imageTexture.voxValXform
         cmapXform   = self.xColourTexture.getCoordinateTransform()
 
+        # Make sure the vector values
+        # are normalised to 0 - 1 for
+        # the colour map lookup (the
+        # fragment shader will take
+        # the absolute value before
+        # doing the cmap lookup).
+        dmin, dmax = self.image.dataRange
+        drange     = max(abs(dmin), abs(dmax))
+        normXform  = transform.scaleOffsetXform([1.0  / drange] * 3, [0] * 3)
+        cmapXform  = transform.concat(normXform, cmapXform)
+
         changed |= shader.set('vectorTexture',   0)
         changed |= shader.set('modulateTexture', 1)
         changed |= shader.set('clipTexture',     2)
