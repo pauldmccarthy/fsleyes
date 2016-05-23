@@ -61,7 +61,7 @@ class OrthoViewProfile(profiles.Profile):
     .. autosummary::
        :nosignatures:
 
-       resetZoom
+       resetDisplay
        centreCursor
     """
 
@@ -158,13 +158,20 @@ class OrthoViewProfile(profiles.Profile):
 
 
     @actions.action
-    def resetZoom(self):
-        """Sets the :class:`.SceneOpts.zoom`, :class:`.OrthoOpts.xzoom`,
-        :class:`.OrthoOpts.yzoom`,  and :class:`.OrthoOpts.zzoom` properties
-        to 100%.
+    def resetDisplay(self):
+        """Resets the display bounds for all canvases. Also resets the
+        :class:`.SceneOpts.zoom`, :class:`.OrthoOpts.xzoom`,
+        :class:`.OrthoOpts.yzoom`, and :class:`.OrthoOpts.zzoom` properties to
+        100%.
+
+        See the :meth:`.SliceCanvas.resetDisplay` method.
         """
 
         opts = self._viewPanel.getSceneOptions()
+
+        self.__xcanvas.resetDisplay()
+        self.__ycanvas.resetDisplay()
+        self.__zcanvas.resetDisplay()
 
         opts.zoom  = 100
         opts.xzoom = 100

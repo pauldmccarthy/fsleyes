@@ -481,8 +481,7 @@ actions = TypeDict({
                                                       'panel.', 
  
 
-    'OrthoViewProfile.resetZoom'    : 'Reset zoom level on '
-                                      'all canvases to 100%',
+    'OrthoViewProfile.resetDisplay' : 'Reset the display on all canvases.',
     'OrthoViewProfile.centreCursor' : 'Reset location to centre of scene',
 
     'OrthoEditProfile.undo'                    : 'Undo the most recent action',

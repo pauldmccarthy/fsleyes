@@ -136,6 +136,7 @@ class SliceCanvas(props.HasProperties):
        centreDisplayAt
        panDisplayToShow
        zoomTo
+       resetDisplay
        getAnnotations
     """
 
@@ -428,6 +429,17 @@ class SliceCanvas(props.HasProperties):
         
         self.zoom = zoom
         self.centreDisplayAt(xmid, ymid)
+
+
+    def resetDisplay(self):
+        """Resets the :attr:`zoom` to 100%, and sets the canvas display
+        bounds to the overaly bounding box (from the
+        :attr:`.DisplayContext.bounds`)
+        """
+        self.disableListener('zoom', self.name)
+        self.zoom = 100
+        self.enableListener('zoom',  self.name)
+        self._updateDisplayBounds()
 
 
     def getAnnotations(self):

@@ -83,7 +83,7 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
 
         icons = {
             'screenshot'       : fslicons.findImageFile('camera24'),
-            'resetZoom'        : fslicons.findImageFile('resetZoom24'),
+            'resetDisplay'     : fslicons.findImageFile('resetZoom24'),
             'movieMode'        : [
                 fslicons.findImageFile('movieHighlight24'),
                 fslicons.findImageFile('movie24')],
@@ -114,7 +114,7 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
 
         tooltips = {
             'screenshot'   : fsltooltips.actions[   ortho,     'screenshot'],
-            'resetZoom'    : fsltooltips.actions[   profile,   'resetZoom'],
+            'resetDisplay' : fsltooltips.actions[   profile,   'resetDisplay'],
             'movieMode'    : fsltooltips.properties[ortho,     'movieMode'],
             'zoom'         : fsltooltips.properties[orthoOpts, 'zoom'],
             'layout'       : fsltooltips.properties[orthoOpts, 'layout'],
@@ -128,7 +128,7 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
         
         targets    = {'screenshot'                : ortho,
                       'movieMode'                 : ortho,
-                      'resetZoom'                 : profile,
+                      'resetDisplay'              : profile,
                       'zoom'                      : orthoOpts,
                       'layout'                    : orthoOpts,
                       'showXCanvas'               : orthoOpts,
@@ -162,9 +162,9 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
             props  .Widget(      'movieMode', 
                                  icon=icons['movieMode'],
                                  tooltip=tooltips['movieMode']),
-            actions.ActionButton('resetZoom', 
-                                 icon=icons['resetZoom'],
-                                 tooltip=tooltips['resetZoom']), 
+            actions.ActionButton('resetDisplay', 
+                                 icon=icons['resetDisplay'],
+                                 tooltip=tooltips['resetDisplay']), 
             props.Widget(        'zoom',
                                  spin=True,
                                  slider=True,

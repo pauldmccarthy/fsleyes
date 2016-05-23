@@ -293,7 +293,7 @@ actions = TypeDict({
     'PowerSpectrumPanel.togglePowerSpectrumToolBar' : 'Power spectrum toolbar',
 
     'OrthoViewProfile.centreCursor' : 'Centre cursor',
-    'OrthoViewProfile.resetZoom'    : 'Reset zoom',
+    'OrthoViewProfile.resetDisplay' : 'Reset display',
 
 
     'OrthoEditProfile.undo'                    : 'Undo',
