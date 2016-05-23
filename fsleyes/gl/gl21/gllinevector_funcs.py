@@ -55,15 +55,17 @@ def init(self):
         updateShaderState(self)
         self.notify()
 
-    self.displayOpts.addListener('neuroFlip', self.name, update, weak=False)
-    self.displayOpts.addListener('directed',  self.name, update, weak=False)
+    self.displayOpts.addListener('neuroFlip',   self.name, update, weak=False)
+    self.displayOpts.addListener('directed',    self.name, update, weak=False)
+    self.displayOpts.addListener('scaleLength', self.name, update, weak=False)
 
     
 def destroy(self):
     """Deletes the vertex/fragment shaders. """
 
-    self.displayOpts.removeListener('neuroFlip', self.name)
-    self.displayOpts.removeListener('directed',  self.name)
+    self.displayOpts.removeListener('neuroFlip',   self.name)
+    self.displayOpts.removeListener('directed',    self.name)
+    self.displayOpts.removeListener('scaleLength', self.name)
     self.shader.destroy()
  
 
@@ -84,16 +86,17 @@ def updateShaderState(self):
     shader = self.shader
     shader.load()
     
-    changed   = glvector_funcs.updateFragmentShaderState(self)
-    image     = self.vectorImage
-    opts      = self.displayOpts
+    changed     = glvector_funcs.updateFragmentShaderState(self)
+    image       = self.vectorImage
+    opts        = self.displayOpts
 
-    vvxMat    = self.imageTexture.voxValXform
-    directed  = opts.directed
-    imageDims = image.pixdim[:3]
-    d2vMat    = opts.getTransform('display', 'voxel')
-    v2dMat    = opts.getTransform('voxel',   'display')
-    xFlip     = image.isNeurological() and opts.neuroFlip
+    vvxMat      = self.imageTexture.voxValXform
+    directed    = opts.directed
+    scaleLength = opts.scaleLength
+    imageDims   = image.pixdim[:3]
+    d2vMat      = opts.getTransform('display', 'voxel')
+    v2dMat      = opts.getTransform('voxel',   'display')
+    xFlip       = image.isNeurological() and opts.neuroFlip
 
     # The shader adds these offsets to
     # transformed voxel coordinates, so
@@ -108,6 +111,7 @@ def updateShaderState(self):
     changed |= shader.set('voxelOffset',     offset)
     changed |= shader.set('imageDims',       imageDims)
     changed |= shader.set('directed',        directed)
+    changed |= shader.set('scaleLength',     scaleLength)
     changed |= shader.set('xFlip',           xFlip)
 
     shader.unload()

@@ -53,6 +53,12 @@ uniform bool xFlip;
 uniform bool directed;
 
 /*
+ * If true, each vector is scaled to have a length 
+ * of 1 in the image coordinate system.
+ */
+uniform bool scaleLength;
+
+/*
  * The current vertex on the current line.
  */
 attribute vec3 vertex;
@@ -133,18 +139,22 @@ void main(void) {
     return;
   }
 
-  /*
-   * Scale the vector so it has length 
-   * 0.5. Note that here we are assuming 
-   * that all vectors are of length 1.
-   */
-  vector /= 2 * vectorLen;
 
-  /*
-   * Scale the vector by the minimum voxel length,
-   * so it is a unit vector within real world space 
-   */
-  vector /= imageDims / min(imageDims.x, min(imageDims.y, imageDims.z));
+  if (scaleLength) {
+
+    /*
+     * Scale the vector so it has length 
+     * 0.5. Note that here we are assuming 
+     * that all vectors are of length 1.
+     */
+    vector /= 2 * vectorLen;
+
+    /*
+     * Scale the vector by the minimum voxel length,
+     * so it is a unit vector within real world space 
+     */
+    vector /= imageDims / min(imageDims.x, min(imageDims.y, imageDims.z));
+  }
 
   /*
    * Vertices are coming in as line pairs - flip

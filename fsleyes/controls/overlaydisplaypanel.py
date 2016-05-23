@@ -356,6 +356,7 @@ _DISPLAY_PROPS = td.TypeDict({
 
     'LineVectorOpts' : [
         props.Widget('directed'),
+        props.Widget('scaleLength'),
         props.Widget('neuroFlip'),
         props.Widget('resolution', showLimits=False),
         props.Widget('lineWidth',  showLimits=False)],

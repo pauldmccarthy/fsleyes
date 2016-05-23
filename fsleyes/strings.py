@@ -602,8 +602,9 @@ properties = TypeDict({
 
     'RGBVectorOpts.interpolation' : 'Interpolation',
 
-    'LineVectorOpts.directed'  : 'Interpret vectors as directed',
-    'LineVectorOpts.lineWidth' : 'Line width',
+    'LineVectorOpts.directed'    : 'Interpret vectors as directed',
+    'LineVectorOpts.lineWidth'   : 'Line width',
+    'LineVectorOpts.scaleLength' : 'Scale vectors to unit length',
 
     'ModelOpts.colour'       : 'Colour',
     'ModelOpts.outline'      : 'Show outline only',
