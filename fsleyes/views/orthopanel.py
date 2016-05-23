@@ -194,7 +194,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                       self.__overlayListChanged)
         self._displayCtx .addListener('bounds',
                                       self._name,
-                                      self.__refreshLayout) 
+                                      self.__refreshLayout)
+        self._displayCtx .addListener('displaySpace',
+                                      self._name,
+                                      self.__refreshLabels) 
         self._displayCtx .addListener('selectedOverlay',
                                       self._name,
                                       self.__overlayListChanged)
@@ -446,6 +449,13 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                              overwrite=True)
                 
         # anatomical orientation may have changed with an image change
+        self.__refreshLabels()
+
+        
+    def __displaySpaceChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.displaySpace` changes.
+        Refreshes the anatomical orientation labels.
+        """
         self.__refreshLabels()
 
             
