@@ -85,8 +85,9 @@ class PlotControlPanel(fslpanel.FSLEyesSettingsPanel):
         # A reference to the x/y plot limit widgets
         # is stored here by the generatePlotPanelWidgets
         # method, so they can be enabled/disabled when
-        # autoScale changes
-        self.__limitWidgets = None
+        # xAutoScale/yAutoScale changes
+        self.__xLimitWidgets = None
+        self.__yLimitWidgets = None
         
         self.generateCustomPlotPanelWidgets('customPlotSettings')
         self.generatePlotPanelWidgets(      'plotSettings')
@@ -103,9 +104,12 @@ class PlotControlPanel(fslpanel.FSLEyesSettingsPanel):
                                 self._name,
                                 self.__selectedOverlayChanged)
 
-        plotPanel.addListener('autoScale',
+        plotPanel.addListener('xAutoScale',
                               self._name,
                               self.__autoScaleChanged)
+        plotPanel.addListener('yAutoScale',
+                              self._name,
+                              self.__autoScaleChanged) 
 
         # This attribute keeps track of the currently
         # selected overlay, so the widget list group
@@ -169,7 +173,8 @@ class PlotControlPanel(fslpanel.FSLEyesSettingsPanel):
                      'legend',
                      'ticks',
                      'grid',
-                     'autoScale']
+                     'xAutoScale',
+                     'yAutoScale']
 
         for prop in plotProps:
             widgetList.AddWidget(
@@ -182,10 +187,12 @@ class PlotControlPanel(fslpanel.FSLEyesSettingsPanel):
         xlims  = wx.BoxSizer(wx.HORIZONTAL)
         ylims  = wx.BoxSizer(wx.HORIZONTAL)
 
-        # Store a ref to the limit widgets
+        # Store refs to the limit widgets
         # so they can be enabled/disabled
-        # when autoScale changes.
-        self.__limitWidgets = limits
+        # when xAutoScale/yAutoScale
+        # changes.
+        self.__xLimitWidgets = [limits[0], limits[1]]
+        self.__yLimitWidgets = [limits[2], limits[3]]
 
         xlims.Add(limits[0], flag=wx.EXPAND, proportion=1)
         xlims.Add(limits[1], flag=wx.EXPAND, proportion=1)
@@ -367,13 +374,16 @@ class PlotControlPanel(fslpanel.FSLEyesSettingsPanel):
 
 
     def __autoScaleChanged(self, *a):
-        """Called when the :attr:`.PlotPanel.autoScale` property changes. If
-        widgets have been created for the :attr:`.PlotPanel.limits`, they
-        are enabled/disabled according to the new ``autoScale`` value.
+        """Called when the :attr:`.PlotPanel.xAutoScale` or
+        :attr:`.PlotPanel.yAutoScale` properties change. If widgets have been
+        created for the :attr:`.PlotPanel.limits`, they are enabled/disabled
+        according to the new ``xAutoScale`` ``yAutoScale`` value.
         """
 
-        if self.__limitWidgets is None:
+        if self.__xLimitWidgets is None or self.__yLimitWidgets is None:
             return
         
-        for l in self.__limitWidgets:
-            l.Enable(not self.__plotPanel.autoScale)
+        for l in self.__xLimitWidgets:
+            l.Enable(not self.__plotPanel.xAutoScale)
+        for l in self.__yLimitWidgets:
+            l.Enable(not self.__plotPanel.yAutoScale) 

@@ -500,15 +500,16 @@ properties = TypeDict({
     'OrthoOpts.yzoom'       : 'Y zoom',
     'OrthoOpts.zzoom'       : 'Z zoom',
 
-    'PlotPanel.legend'    : 'Show legend',
-    'PlotPanel.ticks'     : 'Show ticks',
-    'PlotPanel.grid'      : 'Show grid',
-    'PlotPanel.smooth'    : 'Smooth',
-    'PlotPanel.autoScale' : 'Auto-scale',
-    'PlotPanel.xLogScale' : 'Log scale (x axis)',
-    'PlotPanel.yLogScale' : 'Log scale (y axis)',
-    'PlotPanel.xlabel'    : 'X label',
-    'PlotPanel.ylabel'    : 'Y label',
+    'PlotPanel.legend'     : 'Show legend',
+    'PlotPanel.ticks'      : 'Show ticks',
+    'PlotPanel.grid'       : 'Show grid',
+    'PlotPanel.smooth'     : 'Smooth',
+    'PlotPanel.xAutoScale' : 'Auto-scale (x axis)',
+    'PlotPanel.yAutoScale' : 'Auto-scale (y axis)',
+    'PlotPanel.xLogScale'  : 'Log scale (x axis)',
+    'PlotPanel.yLogScale'  : 'Log scale (y axis)',
+    'PlotPanel.xlabel'     : 'X label',
+    'PlotPanel.ylabel'     : 'Y label',
     
     'TimeSeriesPanel.plotMode'         : 'Plotting mode',
     'TimeSeriesPanel.usePixdim'        : 'Use pixdims',
@@ -720,7 +721,7 @@ choices = TypeDict({
                                   'all'     : 'Show the histograms '
                                               'for all overlays',
                                   'none'    : 'Only show the histograms '
-                                              'in the time series list'},
+                                              'in the histogram list'},
     
     'PowerSpectrumPanel.showMode' : {'current' : 'Show the power spectrum for '
                                                  'the currently selected '

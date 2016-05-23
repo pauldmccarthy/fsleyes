@@ -115,10 +115,16 @@ class PlotPanel(viewpanel.ViewPanel):
     ``DataSeries`` instance in the :attr:`dataSeries` list.
     """
 
+
+    xAutoScale = props.Boolean(default=True)
+    """If ``True``, the plot :attr:`limits` for the X axis are automatically 
+    updated to fit all plotted data.
+    """
+
     
-    autoScale = props.Boolean(default=True)
-    """If ``True``, the plot :attr:`limits` are automatically updated to
-    fit all plotted data.
+    yAutoScale = props.Boolean(default=True)
+    """If ``True``, the plot :attr:`limits` for the Y axis are automatically 
+    updated to fit all plotted data.
     """
 
     
@@ -161,8 +167,9 @@ class PlotPanel(viewpanel.ViewPanel):
 
     
     limits = props.Bounds(ndims=2)
-    """The x/y axis limits. If :attr:`autoScale` is ``True``, these limit
-    values are automatically updated on every call to :meth:`drawDataSeries`.
+    """The x/y axis limits. If :attr:`xAutoScale` and :attr:`yAutoScale` are
+    ``True``, these limit values are automatically updated on every call to
+    :meth:`drawDataSeries`.
     """
 
     
@@ -217,7 +224,8 @@ class PlotPanel(viewpanel.ViewPanel):
 
         # Redraw whenever any property changes, 
         for propName in ['legend',
-                         'autoScale',
+                         'xAutoScale',
+                         'yAutoScale',
                          'xLogScale',
                          'yLogScale',
                          'ticks',
@@ -272,8 +280,11 @@ class PlotPanel(viewpanel.ViewPanel):
         in most cases, particularly where the call occurs within a
         property callback function.
         """
-        if not self.destroyed():
-            async.idle(self.draw)
+
+        idleName = '{}.draw'.format(id(self))
+
+        if not self.destroyed() and not async.inIdle(idleName):
+            async.idle(self.draw, name=idleName)
     
         
     def destroy(self):
@@ -284,7 +295,8 @@ class PlotPanel(viewpanel.ViewPanel):
         self.removeListener('limits',     self.__name)
         
         for propName in ['legend',
-                         'autoScale',
+                         'xAutoScale',
+                         'yAutoScale',
                          'xLogScale',
                          'yLogScale',
                          'ticks',
@@ -659,9 +671,10 @@ class PlotPanel(viewpanel.ViewPanel):
         Also updates the :attr:`limits` property. This method is called by
         the :meth:`drawDataSeries` method.
 
-        If :attr:`autoScale` is enabled, the limits are calculated from the
-        data range, using the canvas width and height to maintain consistent
-        padding around the plotted data, irrespective of the canvas size.
+        If :attr:`xAutoScale` or :attr:`yAutoScale` are enabled, the limits are
+        calculated from the data range, using the canvas width and height to
+        maintain consistent padding around the plotted data, irrespective of
+        the canvas size.
 
         . Otherwise, the existing axis limits are retained.
 
@@ -680,26 +693,33 @@ class PlotPanel(viewpanel.ViewPanel):
         :arg axHeight:  Canvas height in pixels
         """
 
-        if self.autoScale:
+        if self.xAutoScale:
 
             xmin = min([lim[0] for lim in dataxlims])
             xmax = max([lim[1] for lim in dataxlims])
-            ymin = min([lim[0] for lim in dataylims])
-            ymax = max([lim[1] for lim in dataylims])
-
-            bPad = (ymax - ymin) * (50.0 / axHeight)
-            tPad = (ymax - ymin) * (50.0 / axHeight)
+            
             lPad = (xmax - xmin) * (50.0 / axWidth)
             rPad = (xmax - xmin) * (50.0 / axWidth)
 
             xmin = xmin - lPad
-            xmax = xmax + rPad
+            xmax = xmax + rPad 
+        else:
+            xmin = axisxlims[0]
+            xmax = axisxlims[1] 
+
+        if self.yAutoScale:
+            
+            ymin = min([lim[0] for lim in dataylims])
+            ymax = max([lim[1] for lim in dataylims])
+            
+            bPad = (ymax - ymin) * (50.0 / axHeight)
+            tPad = (ymax - ymin) * (50.0 / axHeight)
+
             ymin = ymin - bPad
             ymax = ymax + tPad 
             
         else:
-            xmin = axisxlims[0]
-            xmax = axisxlims[1]
+
             ymin = axisylims[0]
             ymax = axisylims[1]
 

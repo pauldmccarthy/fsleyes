@@ -296,21 +296,25 @@ properties = TypeDict({
                                        'when movie mode is enabled. Low = '
                                        'fast, and high = slow.', 
 
-    'PlotPanel.legend'    : 'Show / hide a legend for series which have '
-                            'been added to the plot.',
-    'PlotPanel.autoScale' : 'If checked, the plot limits are automatically '
-                            'adjusted whenever the plot contents change.',
-    'PlotPanel.xLogScale' : 'If checked, a log (base 10) scale is used for '
-                            'the x axis.',
-    'PlotPanel.yLogScale' : 'If checked, a log (base 10) scale is used for '
-                            'the y axis.',
-    'PlotPanel.ticks'     : 'Show / hide axis ticks and tick labels.',
-    'PlotPanel.grid'      : 'Show hide plot grid.' ,
-    'PlotPanel.smooth'    : 'Smooth displayed data series (with cubic spline '
-                            'interpolation).',
-    'PlotPanel.xlabel'    : 'Set the x axis label.',
-    'PlotPanel.ylabel'    : 'Set the y axis label.',
-    'PlotPanel.limits'    : 'Manually set the x/y axis limits.',
+    'PlotPanel.legend'     : 'Show / hide a legend for series which have '
+                             'been added to the plot.',
+    'PlotPanel.xAutoScale' : 'If checked, the plot X axis limits are '
+                             'automatically adjusted whenever the plot '
+                             'contents change.',
+    'PlotPanel.yAutoScale' : 'If checked, the plot Y axis limits are '
+                             'automatically adjusted whenever the plot '
+                             'contents change.', 
+    'PlotPanel.xLogScale'  : 'If checked, a log (base 10) scale is used for '
+                             'the x axis.',
+    'PlotPanel.yLogScale'  : 'If checked, a log (base 10) scale is used for '
+                             'the y axis.',
+    'PlotPanel.ticks'      : 'Show / hide axis ticks and tick labels.',
+    'PlotPanel.grid'       : 'Show hide plot grid.' ,
+    'PlotPanel.smooth'     : 'Smooth displayed data series (with cubic spline '
+                             'interpolation).',
+    'PlotPanel.xlabel'     : 'Set the x axis label.',
+    'PlotPanel.ylabel'     : 'Set the y axis label.',
+    'PlotPanel.limits'     : 'Manually set the x/y axis limits.',
 
     'TimeSeriesPanel.usePixdim'        : 'If checked, the x axis data is '
                                          'scaled by the time dimension pixdim '
