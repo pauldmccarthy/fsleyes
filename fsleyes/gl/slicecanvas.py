@@ -401,10 +401,10 @@ class SliceCanvas(props.HasProperties):
         if rectXlen == 0: return
         if rectYlen == 0: return
 
-        # Size of the canvas limits, 
-        # and the zoom value limits
-        xmin, xmax = self.displayBounds.getLimits(0)
-        ymin, ymax = self.displayBounds.getLimits(1)
+        # Size of the overlay bounding
+        # box, and the zoom value limits
+        xmin, xmax = self.displayCtx.bounds.getRange(self.xax)
+        ymin, ymax = self.displayCtx.bounds.getRange(self.yax)
         zoommin    = self.getConstraint('zoom', 'minval')
         zoommax    = self.getConstraint('zoom', 'maxval') 
 
