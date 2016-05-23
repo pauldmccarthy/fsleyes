@@ -426,10 +426,23 @@ class SliceCanvas(props.HasProperties):
         zoom  = 100.0 / ratio
         zoom  = ((zoom - zoommin) / zoomlen) ** (1.0 / 3.0)
         zoom  = zoommin + zoom * zoomlen
+
+        # Update the zoom value, call updateDisplayBounds
+        # to apply the new zoom to the display bounds,
+        # then centre the display on the calculated
+        # centre point.
+        self.disableListener('zoom',          self.name)
+        self.disableListener('displayBounds', self.name)
         
         self.zoom = zoom
+        self._updateDisplayBounds()
         self.centreDisplayAt(xmid, ymid)
-
+        
+        self.enableListener('zoom',          self.name)
+        self.enableListener('displayBounds', self.name)
+        
+        self.Refresh()
+ 
 
     def resetDisplay(self):
         """Resets the :attr:`zoom` to 100%, and sets the canvas display
@@ -974,7 +987,9 @@ class SliceCanvas(props.HasProperties):
         """Called when the :attr:`zoom` property changes. Updates the
         display bounds.
         """
-        self._updateDisplayBounds()
+        loc = [self.displayCtx.location[self.xax],
+               self.displayCtx.location[self.yax]]
+        self._updateDisplayBounds(oldLoc=loc)
         
 
     def _applyZoom(self, xmin, xmax, ymin, ymax):
