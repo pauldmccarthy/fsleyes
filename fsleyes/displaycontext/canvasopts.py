@@ -44,7 +44,7 @@ class SliceCanvasOpts(props.HasProperties):
     """
 
     
-    displayBounds = props.Bounds(ndims=2)
+    displayBounds = props.Bounds(ndims=2, clamped=False)
     """The display bound x/y values specify the horizontal/vertical display
     range of the canvas, in display coordinates. This may be a larger area
     than the size of the displayed overlays, as it is adjusted to preserve

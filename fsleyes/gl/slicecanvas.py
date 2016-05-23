@@ -131,7 +131,6 @@ class SliceCanvas(props.HasProperties):
     .. autosummary::
        :nosignatures:
     
-       calcPixelDims
        canvasToWorld
        panDisplayBy
        centreDisplayAt
@@ -291,21 +290,6 @@ class SliceCanvas(props.HasProperties):
         """
         return self.overlayList is None
 
-
-    def calcPixelDims(self):
-        """Calculate and return the approximate size (width, height) of one
-        pixel in display space.
-        """
-        
-        xmin, xmax = self.displayCtx.bounds.getRange(self.xax)
-        ymin, ymax = self.displayCtx.bounds.getRange(self.yax)
-        
-        w, h = self._getSize()
-        pixx = (xmax - xmin) / float(w)
-        pixy = (ymax - ymin) / float(h) 
-
-        return pixx, pixy
-
     
     def canvasToWorld(self, xpos, ypos):
         """Given pixel x/y coordinates on this canvas, translates them
@@ -343,39 +327,12 @@ class SliceCanvas(props.HasProperties):
 
         if len(self.overlayList) == 0: return
         
-        dispBounds = self.displayBounds
-        ovlBounds  = self.displayCtx.bounds
-
         xmin, xmax, ymin, ymax = self.displayBounds[:]
 
         xmin = xmin + xoff
         xmax = xmax + xoff
         ymin = ymin + yoff
         ymax = ymax + yoff
-
-        if dispBounds.xlen > ovlBounds.getLen(self.xax):
-            xmin = dispBounds.xlo
-            xmax = dispBounds.xhi
-            
-        elif xmin < ovlBounds.getLo(self.xax):
-            xmin = ovlBounds.getLo(self.xax)
-            xmax = xmin + self.displayBounds.getLen(0)
-            
-        elif xmax > ovlBounds.getHi(self.xax):
-            xmax = ovlBounds.getHi(self.xax)
-            xmin = xmax - self.displayBounds.getLen(0)
-            
-        if dispBounds.ylen > ovlBounds.getLen(self.yax):
-            ymin = dispBounds.ylo
-            ymax = dispBounds.yhi
-            
-        elif ymin < ovlBounds.getLo(self.yax):
-            ymin = ovlBounds.getLo(self.yax)
-            ymax = ymin + self.displayBounds.getLen(1)
-
-        elif ymax > ovlBounds.getHi(self.yax):
-            ymax = ovlBounds.getHi(self.yax)
-            ymin = ymax - self.displayBounds.getLen(1)
 
         self.displayBounds[:] = [xmin, xmax, ymin, ymax]
 
@@ -405,6 +362,8 @@ class SliceCanvas(props.HasProperties):
 
         bounds = self.displayBounds
 
+        # Do nothing if the position
+        # is already being displayed
         if xpos >= bounds.xlo and xpos <= bounds.xhi and \
            ypos >= bounds.ylo and ypos <= bounds.yhi: return
 
@@ -1023,21 +982,22 @@ class SliceCanvas(props.HasProperties):
         # at low levels, we re-scale this
         # value to be exponential across the
         # range.
+        # 
+        # This is done by transforming the zoom
+        # from [100 - 5000] into [0.0 - 1.0], then
+        # turning it from linear [0.0 - 1.0] to
+        # exponential [0.0 - 1.0], and then finally
+        # transforming it back to [100 - 5000].
         minzoom = self.getConstraint('zoom', 'minval')
         maxzoom = self.getConstraint('zoom', 'maxval')
-
-        # Transform zoom from [100 - 5000] into
-        # [0.0 - 1.0], then turn it from linear
-        # [0.0 - 1.0] to exponential [0.0 - 1.0],
-        # and then finally back to [100 - 5000].
         zoom    = (self.zoom - minzoom) / (maxzoom - minzoom)
         zoom    = minzoom + (zoom ** 3) * (maxzoom - minzoom)
 
-        # Then turn zoom from [100 - 5000]
-        # to [1.0 - 0.0] - this value is
-        # then used to scale the given bounds
+        # Then we transform the zoom from
+        # [100 - 5000] to [1.0 - 0.0] - this
+        # value is used to scale the given
+        # bounds. 
         zoomFactor = 100.0 / zoom
-        bounds     = self.displayBounds
 
         xlen    = xmax - xmin
         ylen    = ymax - ymin
@@ -1046,36 +1006,18 @@ class SliceCanvas(props.HasProperties):
  
         # centre the zoomed-in rectangle on
         # the current displayBounds centre
-        xmid = bounds.xlo + 0.5 * bounds.xlen
-        ymid = bounds.ylo + 0.5 * bounds.ylen
+        #
+        # TODO Centre on current displayCtx.location
+        bounds = self.displayBounds 
+        xmid   = bounds.xlo + 0.5 * bounds.xlen
+        ymid   = bounds.ylo + 0.5 * bounds.ylen
 
         # new x/y min/max bounds
         xmin = xmid - 0.5 * newxlen
         xmax = xmid + 0.5 * newxlen
         ymin = ymid - 0.5 * newylen
         ymax = ymid + 0.5 * newylen
-
-        xlen = xmax - xmin
-        ylen = ymax - ymin
-
-        # clamp x/y min/max values to the
-        # displayBounds constraints
-        if xmin < bounds.getMin(0):
-            xmin = bounds.getMin(0)
-            xmax = xmin + xlen
-            
-        elif xmax > bounds.getMax(0):
-            xmax = bounds.getMax(0)
-            xmin = xmax - xlen
-            
-        if ymin < bounds.getMin(1):
-            ymin = bounds.getMin(1)
-            ymax = ymin + ylen
-
-        elif ymax > bounds.getMax(1):
-            ymax = bounds.getMax(1)
-            ymin = ymax - ylen
-
+        
         return (xmin, xmax, ymin, ymax)
 
         
@@ -1153,19 +1095,23 @@ class SliceCanvas(props.HasProperties):
             ymin          = ymin - 0.5 * (newDispHeight - dispHeight)
             ymax          = ymax + 0.5 * (newDispHeight - dispHeight)
 
+        # Save the display bounds in case
+        # we need to preserve them with
+        # respect to the current display
+        # location.
         oldxmin, oldxmax, oldymin, oldymax = self.displayBounds[:]
 
-        self.disableNotification('displayBounds')
-        self.displayBounds.setLimits(0, xmin, xmax)
-        self.displayBounds.setLimits(1, ymin, ymax)
-        self.enableNotification('displayBounds')
-
+        # Adjust the display bounds according
+        # to the current zoom level.
         xmin, xmax, ymin, ymax = self._applyZoom(xmin, xmax, ymin, ymax)
 
+        # If a location (oldLoc) has been provided,
+        # adjust the bounds so they are consistent
+        # with respect to that location.
         if oldLoc and (oldxmax > oldxmin) and (oldymax > oldymin):
 
             # Calculate the normalised distance from the
-            # old cursor loaction to the old bound corner
+            # old cursor location to the old bound corner
             oldxoff = (oldLoc[0] - oldxmin) / (oldxmax - oldxmin)
             oldyoff = (oldLoc[1] - oldymin) / (oldymax - oldymin)
 
@@ -1283,16 +1229,6 @@ class SliceCanvas(props.HasProperties):
 
         x = self.pos.x
         y = self.pos.y
-
-        # How big is one pixel in world space?
-        pixx, pixy = self.calcPixelDims()
-
-        # add a little padding to the lines if they are 
-        # on the boundary, so they don't get cropped        
-        if x <= xmin: x = xmin + 0.5 * pixx
-        if x >= xmax: x = xmax - 0.5 * pixx
-        if y <= ymin: y = ymin + 0.5 * pixy
-        if y >= ymax: y = ymax - 0.5 * pixy
 
         xverts[:, 0] = x
         xverts[:, 1] = [ymin, ymax]
