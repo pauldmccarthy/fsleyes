@@ -254,7 +254,8 @@ class DisplayContext(props.SyncableHasProperties):
                          self.__syncOverlayDisplayChanged)
         self.addListener('displaySpace',
                          self.__name,
-                         self.__displaySpaceChanged)
+                         self.__displaySpaceChanged,
+                         immediate=True)
 
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
