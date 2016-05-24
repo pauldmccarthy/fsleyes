@@ -373,7 +373,8 @@ OPTIONS = td.TypeDict({
                         'clippingRange'],
     'LineVectorOpts' : ['neuroFlip',
                         'lineWidth',
-                        'directed'],
+                        'directed',
+                        'scaleLength'],
     'RGBVectorOpts'  : ['interpolation'],
     'ModelOpts'      : ['colour',
                         'outline',
@@ -545,6 +546,7 @@ ARGUMENTS = td.TypeDict({
 
     'LineVectorOpts.lineWidth'    : ('lw', 'lineWidth'),
     'LineVectorOpts.directed'     : ('ld', 'directed'),
+    'LineVectorOpts.scaleLength'  : ('un', 'unscaled'),
     
     'RGBVectorOpts.interpolation' : ('i',  'interpolation'),
 
@@ -685,6 +687,7 @@ HELP = td.TypeDict({
     
     'LineVectorOpts.lineWidth'    : 'Line width',
     'LineVectorOpts.directed'     : 'Interpret vectors as directed',
+    'LineVectorOpts.scaleLength'  : 'Do not scale lines to unit length',
     'RGBVectorOpts.interpolation' : 'Interpolation',
 
     'ModelOpts.colour'       : 'Model colour',
@@ -804,16 +807,17 @@ def _lutTrans(l):
 
     
 TRANSFORMS = td.TypeDict({
-    'SceneOpts.showCursor'     : lambda b: not b,
-    'OrthoOpts.showXCanvas'    : lambda b: not b,
-    'OrthoOpts.showYCanvas'    : lambda b: not b,
-    'OrthoOpts.showZCanvas'    : lambda b: not b,
-    'OrthoOpts.showLabels'     : lambda b: not b,
-    'Display.enabled'          : lambda b: not b,
-    'VolumeOpts.linkLowRanges' : lambda b: not b,
-    'VectorOpts.neuroFlip'     : lambda b: not b, 
-    'TensorOpts.lighting'      : lambda b: not b, 
-    'LabelOpts.lut'            : _lutTrans,
+    'SceneOpts.showCursor'       : lambda b : not b,
+    'OrthoOpts.showXCanvas'      : lambda b : not b,
+    'OrthoOpts.showYCanvas'      : lambda b : not b,
+    'OrthoOpts.showZCanvas'      : lambda b : not b,
+    'OrthoOpts.showLabels'       : lambda b : not b,
+    'Display.enabled'            : lambda b : not b,
+    'VolumeOpts.linkLowRanges'   : lambda b : not b,
+    'VectorOpts.neuroFlip'       : lambda b : not b,
+    'LineVectorOpts.scaleLength' : lambda b : not b, 
+    'TensorOpts.lighting'        : lambda b : not b, 
+    'LabelOpts.lut'              : _lutTrans,
 })
 """This dictionary defines any transformations for command line options
 where the value passed on the command line cannot be directly converted
