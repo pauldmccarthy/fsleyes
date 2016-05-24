@@ -875,6 +875,21 @@ nifti = TypeDict({
     ('intent_code',  2003)  :  'NIFTI_INTENT_CODE_RGB_VECTOR',
     ('intent_code',  2004)  :  'NIFTI_INTENT_CODE_RGBA_VECTOR',
     ('intent_code',  2005)  :  'NIFTI_INTENT_CODE_SHAPE',
+
+    ###########################################
+    # Non-standard (FSL-specific) intent codes.
+    ###########################################
+
+    # FNIRT
+    ('intent_code',  2006)  :  'FSL_FNIRT_DISPLACEMENT_FIELD',
+    ('intent_code',  2007)  :  'FSL_CUBIC_SPLINE_COEFFICIENTS',
+    ('intent_code',  2008)  :  'FSL_DCT_COEFFICIENTS',
+    ('intent_code',  2009)  :  'FSL_QUADRATIC_SPLINE_COEFFICIENTS',
+
+    # TOPUP
+    ('intent_code',  2016)  :  'FSL_TOPUP_CUBIC_SPLINE_COEFFICIENTS',
+    ('intent_code',  2017)  :  'FSL_TOPUP_QUADRATIC_SPLINE_COEFFICIENTS',
+    ('intent_code',  2018)  :  'FSL_TOPUP_FIELD',
 })
 
 

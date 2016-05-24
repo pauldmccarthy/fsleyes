@@ -276,18 +276,23 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
                              overlay,
                              opts.transform,
                              self._displayCtx.displaySpace))
+
+        dataType = strings.nifti.get(('datatype',    int(hdr['datatype'])),
+                                     'Unknown')
+        intent   = strings.nifti.get(('intent_code', int(hdr['intent_code'])),
+                                     'Unknown')
             
         info.addInfo(strings.labels[self, 'dataSource'],
                      overlay.dataSource,
                      section=generalSect)
         info.addInfo(strings.nifti['datatype'],
-                     strings.nifti['datatype', int(hdr['datatype'])],
+                     dataType,
                      section=generalSect)
         info.addInfo(strings.nifti['descrip'],
                      hdr['descrip'],
                      section=generalSect)
         info.addInfo(strings.nifti['intent_code'],
-                     strings.nifti['intent_code', int(hdr['intent_code'])],
+                     intent,
                      section=generalSect)
         info.addInfo(strings.nifti['intent_name'],
                      hdr['intent_name'],
