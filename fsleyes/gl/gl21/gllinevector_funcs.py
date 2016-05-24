@@ -55,9 +55,20 @@ def init(self):
         updateShaderState(self)
         self.notify()
 
+    # GLVector.addListener adds a listener
+    # for the transform property, so we
+    # overwrite it here - we need to update
+    # the display<->voxel transformation
+    # matrices whenever the transform
+    # changes.
     self.displayOpts.addListener('neuroFlip',   self.name, update, weak=False)
     self.displayOpts.addListener('directed',    self.name, update, weak=False)
     self.displayOpts.addListener('scaleLength', self.name, update, weak=False)
+    self.displayOpts.addListener('transform',
+                                 self.name,
+                                 update,
+                                 overwrite=True,
+                                 weak=False)
 
     
 def destroy(self):
@@ -66,6 +77,8 @@ def destroy(self):
     self.displayOpts.removeListener('neuroFlip',   self.name)
     self.displayOpts.removeListener('directed',    self.name)
     self.displayOpts.removeListener('scaleLength', self.name)
+    self.displayOpts.removeListener('transform',   self.name)
+    
     self.shader.destroy()
  
 
