@@ -36,9 +36,12 @@ import fsl.data.constants as constants
 
 messages = TypeDict({
 
-    'FSLEyesSplash.default'        : 'Loading ...',
+    'FSLEyesSplash.default' : 'Loading ...',
 
-    'FSLEyesFrame.restoringLayout' : 'Restoring layout from last session ...',
+    'FSLEyesFrame.restoringLayout'     : 'Restoring layout from last '
+                                         'session ...',
+    'FSLEyesFrame.saveLayout'          : 'Save this layout for next time?',
+    'FSLEyesFrame.dontAskToSaveLayout' : 'Never ask me again',
 
     'image.loadImage.decompress' : '{} is a large file ({:0.0f} MB) - '
                                    'decompressing to {}, to allow memory '
@@ -189,6 +192,8 @@ titles = TypeDict({
     'overlay.addOverlays.dialog' : 'Open overlay files',
     
     'overlay.loadOverlays.error'  : 'Error loading overlay',
+
+    'FSLEyesFrame.saveLayout' : 'Save layout',
 
     'OrthoPanel'         : 'Ortho View',
     'LightBoxPanel'      : 'Lightbox View',

@@ -410,9 +410,6 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     
     # Set up the frame scene (a.k.a. layout, perspective)
     # The scene argument can be:
-    #
-    #   - 'lightbox' or 'ortho', specifying a single view
-    #      panel to display.
     # 
     #   - The name of a saved (or built-in) perspective
     # 

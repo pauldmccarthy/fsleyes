@@ -135,7 +135,10 @@ class DiagnosticReportAction(action.Action):
         # TODO When you update the fsl.utils.settings module,
         #      use its functionality to read out *all* saved
         #      settings, instead of hard coding them here.
-        settings = ['fsldir', 'framelayout', 'frameposition', 'framesize']
+        settings = ['fsldir',
+                    'fsleyes.frame.layout',
+                    'fsleyes.frame.position',
+                    'fsleyes.frame.size']
         settings = {s : fslsettings.read(s) for s in settings}
 
         persps   = perspectives.getAllPerspectives()

@@ -19,6 +19,7 @@ import wx
 import wx.lib.agw.aui                     as aui
 
 import fsl.utils.settings                 as fslsettings
+import fsl.utils.dialog                   as fsldlg
 import fsl.utils.status                   as status
 from   fsl.utils.platform import platform as fslplatform
 
@@ -629,17 +630,48 @@ class FSLEyesFrame(wx.Frame):
             
             size     = self.GetSize().Get()
             position = self.GetScreenPosition().Get()
-            layout   = perspectives.serialisePerspective(self)
-
 
             log.debug('Saving size: {}'    .format(size))
             log.debug('Saving position: {}'.format(position))
-            log.debug('Saving layout: {}'  .format(layout))
             
-            fslsettings.write('framesize',     str(size))
-            fslsettings.write('frameposition', str(position))
-            fslsettings.write('framelayout',   layout)
-        
+            fslsettings.write('fsleyes.frame.size',     str(size))
+            fslsettings.write('fsleyes.frame.position', str(position))
+
+            # Ask the user if they want to save the layout,
+            # as some people might not like the previous
+            # layout being restored on startup.
+            save      = fslsettings.read('fsleyes.frame.saveLayout',      True)
+            askToSave = fslsettings.read('fsleyes.frame.askToSaveLayout', True)
+            save      = fslsettings.strToBool(save)
+            askToSave = fslsettings.strToBool(askToSave)
+
+            if askToSave:
+
+                # Give the user the option of suppressing
+                # this dialog forever more
+                dlg = fsldlg.CheckBoxMessageDialog(
+                    self,
+                    strings.titles[self, 'saveLayout'],
+                    message=strings.messages[self, 'saveLayout'],
+                    cbMessages=[strings.messages[self, 'dontAskToSaveLayout']],
+                    cbStates=[False],
+                    okBtnText='Yes',
+                    cancelBtnText='No',
+                    icon=wx.ICON_QUESTION)
+
+                save = dlg.ShowModal() == wx.ID_OK
+
+                fslsettings.write('fsleyes.frame.saveLayout', save) 
+                fslsettings.write('fsleyes.frame.askToSaveLayout',
+                                  not dlg.CheckBoxState())
+
+            if save:
+                layout = perspectives.serialisePerspective(self)
+                log.debug('Saving layout: {}'.format(layout))
+                fslsettings.write('fsleyes.frame.layout', layout)
+            else:
+                fslsettings.delete('fsleyes.frame.layout')
+                
         # It's nice to explicitly clean
         # up our FSLEyesPanels, otherwise
         # they'll probably complain
@@ -673,9 +705,11 @@ class FSLEyesFrame(wx.Frame):
         from operator import itemgetter as iget
 
         # Restore the saved frame size/position
-        size     = self.__parseSavedSize( fslsettings.read('framesize'))
-        position = self.__parseSavedPoint(fslsettings.read('frameposition'))
-        layout   =                        fslsettings.read('framelayout')
+        size     = fslsettings.read('fsleyes.frame.size')
+        position = fslsettings.read('fsleyes.frame.position')
+        layout   = fslsettings.read('fsleyes.frame.layout')
+        size     = self.__parseSavedSize(size)
+        position = self.__parseSavedPoint(position)
 
         if (size is not None) and (position is not None):
 
@@ -762,7 +796,7 @@ class FSLEyesFrame(wx.Frame):
                 try:
                     perspectives.applyPerspective(
                         self,
-                        'framelayout',
+                        'fsleyes.frame.layout',
                         layout,
                         message=strings.messages[self, 'restoringLayout'])
                 except:
