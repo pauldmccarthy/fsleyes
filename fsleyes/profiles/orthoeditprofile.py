@@ -588,8 +588,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                     self._viewPanel,
                     title=title,
                     message=msg,
-                    cbMessage=cbMsg,
-                    cbState=_suppressDisplaySpaceWarning,
+                    cbMessages=[cbMsg],
+                    cbStates=[_suppressDisplaySpaceWarning],
                     icon=wx.ICON_INFORMATION)
 
                 dlg.ShowModal()

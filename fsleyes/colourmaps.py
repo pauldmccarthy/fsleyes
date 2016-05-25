@@ -617,6 +617,9 @@ def displayRangeToBricon(dataRange, displayRange):
     drange     = dmax - dmin
     dmid       = dmin + 0.5 * drange
 
+    if drange == 0:
+        return 0, 0
+
     # These are inversions of the equations in
     # the _briconToScaleOffset function above,
     # which calculate the display ranges from
