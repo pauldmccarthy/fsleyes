@@ -81,6 +81,11 @@ messages = TypeDict({
     'actions.loadcolourmap.installerror'     : 'An error occurred while '
                                                'installing the colour map',
 
+    'actions.copyoverlay.createMask'  : 'Create empty mask image '
+                                        'with same dimensions',
+    'actions.copyoverlay.copyDisplay' : 'Copy display properties',
+    'actions.copyoverlay.copy4D'      : 'Copy 4D image',
+
     'RunScriptAction.runScript' : 'Choose a FSLeyes script to run',
     'RunScriptAction.crash'     : 'The script {} has crashed! Reason: {}',
 

@@ -14,6 +14,7 @@ import numpy              as np
 import fsl.data.image     as fslimage
 import fsl.utils.dialog   as fsldlg
 import fsl.utils.settings as fslsettings
+import fsleyes.strings    as strings
 from . import                action
 
 
@@ -120,34 +121,30 @@ class CopyOverlayAction(action.Action):
         copyDisplaySetting = 'fsleyes.actions.copyoverlay.copyDisplay'
         copy4DSetting      = 'fsleyes.actions.copyoverlay.copy4D'
 
-        # The fsl.utils.settings module will
-        # hopefully soon be type-aware, and
-        # this code will become unnecessary.
-        def strToBool(s):
-            s = str(s).lower()
-            if   s == 'true':  return True
-            elif s == 'false': return False
-            else:              return bool(s)
-
-        createMask  = strToBool(fslsettings.read(createMaskSetting,  False))
-        copyDisplay = strToBool(fslsettings.read(copyDisplaySetting, False))
-        copy4D      = strToBool(fslsettings.read(copy4DSetting,      False))
+        createMask  = fslsettings.read(createMaskSetting,  False)
+        copyDisplay = fslsettings.read(copyDisplaySetting, False)
+        copy4D      = fslsettings.read(copy4DSetting,      False)
         is4D        = len(overlay.shape) > 3 and overlay.shape[3] > 1
 
-        options.append('Create empty mask image with same dimensions')
+        # the settings module is not yet type-aware
+        createMask  = fslsettings.strToBool(createMask)
+        copyDisplay = fslsettings.strToBool(copyDisplay)
+        copy4D      = fslsettings.strToBool(copy4D)
+
+        options.append(strings.messages['actions.copyoverlay.createMask'])
         states .append(createMask)
 
-        options.append('Copy display properties')
+        options.append(strings.messages['actions.copyoverlay.copyDisplay'])
         states .append(copyDisplay)
 
         if is4D:
-            options.append('Copy 4D image')
+            options.append(strings.messages['actions.copyoverlay.copy4D'])
             states .append(copy4D)
 
         # Ask the user what they want to do
         dlg = fsldlg.CheckBoxMessageDialog(
             self.__frame,
-            title='Copy overlay',
+            title=strings.actions[self],
             message='Copy {}'.format(display.name),
             cbMessages=options,
             cbStates=states,
