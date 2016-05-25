@@ -306,7 +306,9 @@ OPTIONS = td.TypeDict({
                        'voxelLoc',
                        'worldLoc',
                        'autoDisplay',
-                       'displaySpace'],
+                       'displaySpace',
+                       'standard',
+                       'standard1mm'],
 
     # From here on, all of the keys are
     # the names of HasProperties classes,
@@ -462,19 +464,21 @@ GROUPEPILOGS = td.TypeDict({
 # Short/long arguments for all of those options
 ARGUMENTS = td.TypeDict({
 
-    'Main.help'            : ('h',  'help'),
-    'Main.fullhelp'        : ('fh', 'fullhelp'),
-    'Main.verbose'         : ('v',  'verbose'),
-    'Main.version'         : ('V',  'version'),
-    'Main.skipfslcheck'    : ('S',  'skipfslcheck'),
-    'Main.noisy'           : ('n',  'noisy'),
-    'Main.memory'          : ('m',  'memory'),
-    'Main.glversion'       : ('gl', 'glversion'),
-    'Main.scene'           : ('s',  'scene'),
-    'Main.voxelLoc'        : ('vl', 'voxelLoc'),
-    'Main.worldLoc'        : ('wl', 'worldLoc'),
-    'Main.autoDisplay'     : ('ad', 'autoDisplay'),
-    'Main.displaySpace'    : ('ds', 'displaySpace'),
+    'Main.help'            : ('h',      'help'),
+    'Main.fullhelp'        : ('fh',     'fullhelp'),
+    'Main.verbose'         : ('v',      'verbose'),
+    'Main.version'         : ('V',      'version'),
+    'Main.skipfslcheck'    : ('S',      'skipfslcheck'),
+    'Main.noisy'           : ('n',      'noisy'),
+    'Main.memory'          : ('m',      'memory'),
+    'Main.glversion'       : ('gl',     'glversion'),
+    'Main.scene'           : ('s',      'scene'),
+    'Main.voxelLoc'        : ('vl',     'voxelLoc'),
+    'Main.worldLoc'        : ('wl',     'worldLoc'),
+    'Main.autoDisplay'     : ('ad',     'autoDisplay'),
+    'Main.displaySpace'    : ('ds',     'displaySpace'),
+    'Main.standard'        : ('std',    'standard'),
+    'Main.standard1mm'     : ('std1mm', 'standard1mm'),
     
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar'),
     'SceneOpts.bgColour'           : ('bg',  'bgColour'),
@@ -601,7 +605,11 @@ HELP = td.TypeDict({
                              'settings (unless any display settings are '
                              'specified)',
     'Main.displaySpace'    : 'Space in which all overlays are displayed - '
-                             'can be "pixdim", "world", or a NIFTI image.', 
+                             'can be "pixdim", "world", or a NIFTI image.',
+    'Main.standard'        : 'Add the MNI152 2mm standard image as an '
+                             'underlay (only if $FSLDIR is set).',
+    'Main.standard1mm'     : 'Add the MNI152 1mm standard image as an '
+                             'underlay (only if $FSLDIR is set).', 
 
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
                                      'highlighting the current location',
@@ -972,6 +980,13 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['displaySpace'],
                             type=str,
                             help=mainHelp['displaySpace'])
+
+    mainParser.add_argument(*mainArgs['standard'],
+                            action='store_true',
+                            help=mainHelp['standard'])
+    mainParser.add_argument(*mainArgs['standard1mm'],
+                            action='store_true',
+                            help=mainHelp['standard1mm']) 
     
 
 def _configSceneParser(sceneParser):
@@ -1706,6 +1721,24 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
                     displayLoc = defaultLoc
 
             displayCtx.location.xyz = displayLoc
+
+        # Standard underlays
+        if args.standard and fslplatform.fsldir is not None:
+            filename = op.join(fslplatform.fsldir,
+                               'data',
+                               'standard',
+                               'MNI152_T1_2mm')
+            std = fslimage.Image(filename)
+            overlayList.insert(0, std)
+
+        
+        if args.standard1mm and fslplatform.fsldir is not None:
+            filename = op.join(fslplatform.fsldir,
+                               'data',
+                               'standard',
+                               'MNI152_T1_1mm')
+            std = fslimage.Image(filename)
+            overlayList.insert(0, std) 
 
         # Now, apply arguments to the SceneOpts instance
         _applyArgs(args, sceneOpts)
