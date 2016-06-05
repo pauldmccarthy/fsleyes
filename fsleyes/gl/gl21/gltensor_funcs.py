@@ -165,9 +165,11 @@ def updateShaderState(self):
     tensorScale   = opts.tensorScale
     xFlip         = opts.neuroFlip and image.isNeurological()
 
-    l1          = image.L1()
-    eigValNorm  = 0.5 / np.abs(l1.data).max()
-    eigValNorm *= tensorScale / 100.0
+
+    l1           = image.L1()
+    l1min, l1max = l1.dataRange
+    eigValNorm   = 0.5 / max((abs(l1min), abs(l1max)))
+    eigValNorm  *= tensorScale / 100.0
 
     # Define the light position in
     # the eye coordinate system

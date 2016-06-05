@@ -40,12 +40,18 @@ class GLTensor(glvector.GLVector):
 
         :arg yax:     Initial display Y axis        
         """
+
+        prefilter = np.abs
+        def prefilterRange(dmin, dmax):
+            return max((0, dmin)), max((abs(dmin), abs(dmax))) 
+        
         glvector.GLVector.__init__(self,
                                    image,
                                    display,
                                    xax,
                                    yax,
-                                   prefilter=np.abs,
+                                   prefilter=prefilter,
+                                   prefilterRange=prefilterRange,
                                    vectorImage=image.V1(),
                                    init=lambda: fslgl.gltensor_funcs.init(
                                        self))

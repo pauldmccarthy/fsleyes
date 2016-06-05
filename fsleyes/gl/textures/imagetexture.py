@@ -102,11 +102,12 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         # All of these texture settings
         # are updated in the set method,
         # called below.
-        self.__prefilter  = None
-        self.__interp     = None
-        self.__resolution = None
-        self.__volume     = None
-        self.__normalise  = None
+        self.__prefilter      = None
+        self.__prefilterRange = None
+        self.__interp         = None
+        self.__resolution     = None
+        self.__volume         = None
+        self.__normalise      = None
 
         # These attributes are modified
         # in the refresh method (which is
@@ -156,8 +157,24 @@ class ImageTexture(texture.Texture, notifier.Notifier):
 
         
     def setPrefilter(self, prefilter):
-        """Sets the prefilter function - see :meth:`__init__`. """
+        """Sets the prefilter function - texture data is passed through
+        this function before being uploaded to the GPU.
+
+        If this function changes the range of the data, you must also
+        provide a ``prefilterRange`` function - see :meth:`setPrefilterRange`.
+        """
         self.set(prefilter=prefilter)
+
+        
+    def setPrefilterRange(self, prefilterRange):
+        """Sets the prefilter range function - if the ``prefilter`` function
+        changes the data range, this function must be provided. It is passed
+        two parameters - the known data minimum and maximum, and must adjust
+        these values so that they reflect the adjusted range of the data that
+        was passed to the ``prefilter`` function.
+
+        """
+        self.set(prefilterRange=prefilterRange) 
 
         
     def setResolution(self, resolution):
@@ -187,41 +204,46 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         """Set any parameters on this ``ImageTexture``. Valid keyword
         arguments are:
 
-        ============== =======================================================
-        ``interp``     See :meth:`setInterp`.
-        ``prefilter``  See :meth:`setPrefilter`.
-        ``resolution`` See :meth:`setResolution`.
-        ``volume``     See :meth:`setVolume`.
-        ``normalise``  See :meth:`setNormalise`.
-        ``refresh``    If ``True`` (the default), the :meth:`refresh` function
-                       is called (but only if a setting has changed).
-        ``notify``     Passed through to the :meth:`refresh` method.
-        ============== =======================================================
+        ================== ==============================================
+        ``interp``         See :meth:`setInterp`.
+        ``prefilter``      See :meth:`setPrefilter`.
+        ``prefilterRange`` See :meth:`setPrefilterRange`
+        ``resolution``     See :meth:`setResolution`.
+        ``volume``         See :meth:`setVolume`.
+        ``normalise``      See :meth:`setNormalise`.
+        ``refresh``        If ``True`` (the default), the :meth:`refresh`
+                           function is called (but only if a setting has 
+                           changed). 
+        ``notify``         Passed through to the :meth:`refresh` method.
+        ============== =================================================
 
         :returns: ``True`` if any settings have changed and the
                   ``ImageTexture`` is to be refreshed , ``False`` otherwise.
         """
-        interp     = kwargs.get('interp',     self.__interp)
-        prefilter  = kwargs.get('prefilter',  self.__prefilter)
-        resolution = kwargs.get('resolution', self.__resolution)
-        volume     = kwargs.get('volume',     self.__volume)
-        normalise  = kwargs.get('normalise',  self.__normalise)
-        refresh    = kwargs.get('refresh',    True)
-        notify     = kwargs.get('notify',     True)
+        interp         = kwargs.get('interp',         self.__interp)
+        prefilter      = kwargs.get('prefilter',      self.__prefilter)
+        prefilterRange = kwargs.get('prefilterRange', self.__prefilterRange)
+        resolution     = kwargs.get('resolution',     self.__resolution)
+        volume         = kwargs.get('volume',         self.__volume)
+        normalise      = kwargs.get('normalise',      self.__normalise)
+        refresh        = kwargs.get('refresh',        True)
+        notify         = kwargs.get('notify',         True)
 
-        changed = {'interp'     : interp     != self.__interp,
-                   'prefilter'  : prefilter  != self.__prefilter,
-                   'resolution' : resolution != self.__resolution,
-                   'volume'     : volume     != self.__volume,
-                   'normalise'  : normalise  != self.__normalise}
+        changed = {'interp'         : interp         != self.__interp,
+                   'prefilter'      : prefilter      != self.__prefilter,
+                   'prefilterRange' : prefilterRange != self.__prefilterRange,
+                   'resolution'     : resolution     != self.__resolution,
+                   'volume'         : volume         != self.__volume,
+                   'normalise'      : normalise      != self.__normalise}
 
         if self.__ready and (not any(changed.values())):
             return False
 
-        self.__interp     = interp
-        self.__prefilter  = prefilter
-        self.__resolution = resolution
-        self.__volume     = volume
+        self.__interp         = interp
+        self.__prefilter      = prefilter
+        self.__prefilterRange = prefilterRange
+        self.__resolution     = resolution
+        self.__volume         = volume
 
         # If the data is of a type which cannot be
         # stored natively as an OpenGL texture, the
@@ -234,16 +256,14 @@ class ImageTexture(texture.Texture, notifier.Notifier):
                                                             np.uint16,
                                                             np.int16)
 
-        refreshRange =      changed['prefilter']
         refreshData  = any((changed['prefilter'],
+                            changed['prefilterRange'],
                             changed['resolution'],
                             changed['volume'],
                             changed['normalise']))
 
         if refresh:
-            self.refresh(refreshData=refreshData,
-                         refreshRange=refreshRange,
-                         notify=notify)
+            self.refresh(refreshData=refreshData, notify=notify)
         
         return True
 
@@ -268,8 +288,6 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         """(Re-)generates the OpenGL texture used to store the image data.
         
         :arg refreshData:  If ``True`` (the default), the data is re-sampled.
-        :arg refreshRange: If ``True`` (the default), the data range is
-                           re-calculated.
 
         :arg notify:       If ``True`` (the default), a notification is
                            triggered via the :class:`.Notifier` base-class,
@@ -281,9 +299,8 @@ class ImageTexture(texture.Texture, notifier.Notifier):
                   the :func:`.async.run` function. 
         """
 
-        refreshData  = kwargs.get('refreshData',  True)
-        refreshRange = kwargs.get('refreshRange', True)
-        notify       = kwargs.get('notify',       True)
+        refreshData = kwargs.get('refreshData', True)
+        notify      = kwargs.get('notify',      True)
 
         self.__ready = False
 
@@ -291,26 +308,14 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         # do it in a separate thread using the async module.
         def genData():
 
-            if self.__prefilter is None:
-                dmin, dmax = self.image.dataRange
-                self.__dataMin = dmin
-                self.__dataMax = dmax
-                
-            elif refreshRange:
+            dmin, dmax = self.image.dataRange
 
-                # TODO If the prefilter function is just
-                #      performing a transpose, then I don't
-                #      need to re-calculate the data range.
-                #      Can I limiit the operations that the
-                #      prefilter function can do, so I know
-                #      whether a re-calc is necessary? Or
-                #      can I somehow be told whether the
-                #      prefilter is changing the data, so
-                #      I know whether I need to re-calc here?
-                data = self.__prefilter(self.image.data)
+            if self.__prefilter      is not None and \
+               self.__prefilterRange is not None:
+                dmin, dmax = self.__prefilterRange(dmin, dmax)
                 
-                self.__dataMin = np.nanmin(data)
-                self.__dataMax = np.nanmax(data)
+            self.__dataMin = dmin
+            self.__dataMax = dmax
 
             if refreshData:
                 self.__determineTextureType()

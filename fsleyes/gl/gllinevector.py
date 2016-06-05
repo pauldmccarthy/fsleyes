@@ -77,17 +77,7 @@ class GLLineVector(glvector.GLVector):
                                    init=lambda: fslgl.gllinevector_funcs.init(
                                        self))
 
-        def update(*a):
-            self.notify()
-
-        self.displayOpts.addListener('lineWidth',
-                                     self.name,
-                                     update,
-                                     weak=False)
-        self.vectorImage.addListener('data',
-                                     self.name,
-                                     update,
-                                     weak=False) 
+        self.displayOpts.addListener('lineWidth', self.name, self.notify)
 
         
     def destroy(self):
@@ -97,7 +87,6 @@ class GLLineVector(glvector.GLVector):
         function, and calls the :meth:`.GLVector.destroy` method.
         """ 
         self.displayOpts.removeListener('lineWidth', self.name)
-        self.vectorImage.removeListener('data',      self.name)
         fslgl.gllinevector_funcs.destroy(self)
         glvector.GLVector.destroy(self)
 
@@ -273,7 +262,7 @@ class GLLineVertices(object):
 
         # Extract a sub-sample of the vector image
         # at the current display resolution
-        data, starts, steps = glroutines.subsample(image.data,
+        data, starts, steps = glroutines.subsample(image[:],
                                                    opts.resolution,
                                                    image.pixdim)
 

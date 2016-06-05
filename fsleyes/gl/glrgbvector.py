@@ -74,12 +74,17 @@ class GLRGBVector(glvector.GLVector):
         if isinstance(image, tensorimage.TensorImage): vecImage = image.V1()
         else:                                          vecImage = image
 
+        prefilter = np.abs
+        def prefilterRange(dmin, dmax):
+            return max((0, dmin)), max((abs(dmin), abs(dmax)))
+
         glvector.GLVector.__init__(self,
                                    image,
                                    display,
                                    xax,
                                    yax,
-                                   prefilter=np.abs,
+                                   prefilter=prefilter,
+                                   prefilterRange=prefilterRange,
                                    vectorImage=vecImage,
                                    init=lambda: fslgl.glrgbvector_funcs.init(
                                        self))
@@ -87,9 +92,6 @@ class GLRGBVector(glvector.GLVector):
         self.displayOpts.addListener('interpolation',
                                      self.name,
                                      self.__interpChanged)
-        self.vectorImage.addListener('data',
-                                     self.name,
-                                     self.__dataChanged)
                           
 
     def destroy(self):
@@ -114,13 +116,6 @@ class GLRGBVector(glvector.GLVector):
         
         return glvector.GLVector.refreshImageTexture(self, interp)
 
-
-    def __dataChanged(self, *a):
-        """Called when the :attr:`.Image.data` of the vector image
-        changes. Calls :meth:`.GLObject.notify`. 
-        """
-        self.notify()
-        
 
     def __interpChanged(self, *a):
         """Called when the :attr:`.RGBVectorOpts.interpolation` property

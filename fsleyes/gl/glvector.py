@@ -99,6 +99,7 @@ class GLVector(globject.GLImageObject):
                  xax,
                  yax,
                  prefilter=None,
+                 prefilterRange=None,
                  vectorImage=None,
                  init=None):
         """Create a ``GLVector`` object bound to the given image and display.
@@ -113,39 +114,45 @@ class GLVector(globject.GLImageObject):
             instances, so the textures and geometry can be updated when
             necessary.
 
-        :arg image:       An :class:`.Nifti1` object.
+        :arg image:          An :class:`.Nifti1` object.
         
-        :arg display:     A :class:`.Display` object which describes how the
-                          image is to be displayed.
+        :arg display:        A :class:`.Display` object which describes how the
+                             image is to be displayed.
 
-        :arg xax:         Initial display X axis
+        :arg xax:            Initial display X axis
 
-        :arg yax:         Initial display Y axis        
+        :arg yax:            Initial display Y axis        
 
-        :arg prefilter:   An optional function which filters the data before it
-                          is stored as a 3D texture. See
-                          :class:`.ImageTexture`. Whether or not this function
-                          is provided, the data is transposed so that the 
-                          fourth dimension is the fastest changing.
+        :arg prefilter:      An optional function which filters the data before
+                             it is stored as a 3D texture. See
+                             :class:`.ImageTexture`. Whether or not this 
+                             function is provided, the data is transposed so 
+                             that the fourth dimension is the fastest changing.
 
-        :arg vectorImage: Optional. If ``None``, the ``image`` is assumed to
-                          be a 4D :class:`.Image` instance which contains
-                          the vector data. If this is not the case, the
-                          ``vectorImage`` parameter can be used to specify
-                          an ``Image`` instance which does contain the
-                          vector data.
+        :arg prefilterRange: If the provided ``prefilter`` function will cause
+                             the range of the data to change, this function 
+                             must be provided, and must, given the original
+                             data range, return a suitably adjusted adjust data
+                             range.
 
-        :arg init:        An optional function to be called when all of the
-                          :class:`.ImageTexture` instances associated with
-                          this ``GLVector`` have been initialised. If this
-                          function does any initialisation on one or more
-                          separate threads, it should return references to
-                          those threads so that this method is able to
-                          determine when initialisation is complete.
+        :arg vectorImage:    Optional. If ``None``, the ``image`` is assumed to
+                             be a 4D :class:`.Image` instance which contains
+                             the vector data. If this is not the case, the
+                             ``vectorImage`` parameter can be used to specify
+                             an ``Image`` instance which does contain the
+                             vector data.
+
+        :arg init:           An optional function to be called when all of the
+                             :class:`.ImageTexture` instances associated with
+                             this ``GLVector`` have been initialised. If this
+                             function does any initialisation on one or more
+                             separate threads, it should return references to
+                             those threads so that this method is able to
+                             determine when initialisation is complete.
         """
 
         if vectorImage is None: vectorImage = image
-        if prefilter   is None: prefilter   = lambda d: d
+        if prefilter   is None: prefilter   = lambda  d: d
 
         if len(vectorImage.shape) != 4 or vectorImage.shape[3] != 3:
             raise ValueError('Image must be 4 dimensional, with 3 volumes '
@@ -173,6 +180,7 @@ class GLVector(globject.GLImageObject):
         self.colourTexture   = None
         self.imageTexture    = None
         self.prefilter       = prefilter
+        self.prefilterRange  = prefilterRange
 
         # Make sure we are registered with the
         # auxillary images if any of them are set.
@@ -370,10 +378,11 @@ class GLVector(globject.GLImageObject):
                      :class:`.GLRGBVector`).
         """
 
-        opts      = self.displayOpts
-        prefilter = self.prefilter
-        vecImage  = self.vectorImage
-        texName   = '{}_{}'.format(type(self).__name__, id(vecImage))
+        opts           = self.displayOpts
+        prefilter      = self.prefilter
+        prefilterRange = self.prefilterRange
+        vecImage       = self.vectorImage
+        texName        = '{}_{}'.format(type(self).__name__, id(vecImage))
         
         if self.imageTexture is not None:
             self.imageTexture.deregister(self.name)
@@ -400,6 +409,7 @@ class GLVector(globject.GLImageObject):
             interp=interp,
             normalise=True,
             prefilter=realPrefilter,
+            prefilterRange=prefilterRange,
             notify=False)
         
         self.imageTexture.register(self.name, self.__textureChanged)
