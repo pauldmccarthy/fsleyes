@@ -587,7 +587,9 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
             # As a last resort, if the FEATImage is not
             # in the overlay list, we'll create one.
             if featImage is None:
-                featImage = featimage.FEATImage(featDir, loadData=False)
+                featImage = featimage.FEATImage(featDir,
+                                                loadData=False,
+                                                calcRange=False)
                 
             self.__featImages[overlay] = featImage
 

@@ -65,23 +65,23 @@ class SaveOverlayAction(action.Action):
 
         self.enabled = ((overlay is not None)               and
                         isinstance(overlay, fslimage.Image) and 
-                        (not overlay.saved))
+                        (not overlay.saveState))
 
         for ovl in self.__overlayList:
             
             if type(ovl) != fslimage.Image:
                 continue
             
-            ovl.removeListener('saved', self.__name)
+            ovl.deregister(self.__name, 'saveState')
 
             # Register a listener on the saved property
             # of the currently selected image, so we can
             # enable the save action when the image
             # becomes 'unsaved', and vice versa.
             if ovl is overlay:
-                ovl.addListener('saved',
-                                self.__name,
-                                self.__overlaySaveStateChanged)
+                ovl.register(self.__name,
+                             self.__overlaySaveStateChanged,
+                             'saveState')
  
 
     def __overlaySaveStateChanged(self, *a):
@@ -101,7 +101,7 @@ class SaveOverlayAction(action.Action):
         elif not isinstance(overlay, fslimage.Image):
             self.enabled = False
         else:
-            self.enabled = not overlay.saved
+            self.enabled = not overlay.saveState
 
         
     def __saveOverlay(self):

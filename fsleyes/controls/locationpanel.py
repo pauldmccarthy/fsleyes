@@ -692,7 +692,7 @@ class LocationPanel(fslpanel.FSLEyesPanel):
                     if overlay.is4DImage():
                         vloc = vloc + [opts.volume]
 
-                    vval = overlay.data[tuple(vloc)]
+                    vval = overlay[tuple(vloc)]
                     info = '[{}]: {}'.format(' '.join(map(str, vloc)), vval)
                 else:
                     info = strings.labels[self, 'outOfBounds']

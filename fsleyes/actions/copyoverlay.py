@@ -174,8 +174,8 @@ class CopyOverlayAction(action.Action):
             if copy4D: data = np.zeros(overlay.shape)
             else:      data = np.zeros(overlay.shape[:3])
         else:
-            if copy4D: data = np.copy(overlay.data)
-            else:      data = np.copy(overlay.data[:, :, :, opts.volume])
+            if copy4D: data = np.copy(overlay[:])
+            else:      data = np.copy(overlay[:, :, :, opts.volume])
 
         # Create the copy, put it in the list
         header = overlay.nibImage.get_header()

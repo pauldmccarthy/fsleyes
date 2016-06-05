@@ -381,7 +381,7 @@ class ListItemWidget(wx.Panel):
                             self.__overlayGroupChanged)
         
         if isinstance(overlay, fslimage.Image):
-            overlay.addListener('saved', self.__name, self.__saveStateChanged)
+            overlay.register(self.__name, self.__saveStateChanged, 'saveState')
         else:
             self.__saveButton.Enable(False)
 
@@ -439,7 +439,7 @@ class ListItemWidget(wx.Panel):
         group         .removeListener('overlays', self.__name)
 
         if isinstance(self.__overlay, fslimage.Image):
-            self.__overlay.removeListener('saved', self.__name)
+            self.__overlay.deregister(self.__name, 'saved')
 
         
     def __saveStateChanged(self, *a):
@@ -453,9 +453,9 @@ class ListItemWidget(wx.Panel):
         
         idx = self.__listBox.IndexOf(self.__overlay)
         
-        self.__saveButton.Enable(not self.__overlay.saved)
+        self.__saveButton.Enable(not self.__overlay.saveState)
 
-        if self.__overlay.saved:
+        if self.__overlay.saveState:
             self.__listBox.SetItemBackgroundColour(idx)
             
         else:
