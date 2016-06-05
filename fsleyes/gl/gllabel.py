@@ -157,7 +157,6 @@ class GLLabel(globject.GLImageObject):
         opts    .addListener('volume',       name, imageUpdate,   weak=False)
         opts    .addListener('resolution',   name, imageUpdate,   weak=False)
         opts    .addListener('transform',    name, update,        weak=False)
-        image   .addListener('data',         name, update,        weak=False)
         opts.lut.addListener('labels',       name, lutUpdate,     weak=False)
 
         # See comment in GLVolume.addDisplayListeners about this
@@ -189,7 +188,6 @@ class GLLabel(globject.GLImageObject):
         opts    .removeListener(          'volume',       name)
         opts    .removeListener(          'resolution',   name)
         opts    .removeListener(          'transform',    name)
-        image   .removeListener(          'data',         name)
         opts.lut.removeListener(          'labels',       name)
 
         if self.__syncListenersRegistered:

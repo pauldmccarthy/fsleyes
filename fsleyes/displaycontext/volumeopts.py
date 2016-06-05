@@ -168,7 +168,7 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
         self.__transformChanged()
  
         # is this a 4D volume?
-        if self.overlay.is4DImage():
+        if len(self.overlay.shape) == 4:
             self.setConstraint('volume', 'maxval', overlay.shape[3] - 1)
 
         # limit resolution to the image dimensions
@@ -575,6 +575,13 @@ class VolumeOpts(Nifti1Opts):
     """
 
     
+    # The displayRange and clippingRange properties
+    # are not clamped (they can take values outside
+    # of their minimum/maximum values) because the
+    # data range for large images may not be known,
+    # and may change as more data is read from disk.
+
+    
     displayRange = props.Bounds(ndims=1, clamped=False)
     """Image values which map to the minimum and maximum colour map colours.
     The values that this property can take are unbound because of the
@@ -583,7 +590,7 @@ class VolumeOpts(Nifti1Opts):
     """
 
     
-    clippingRange = props.Bounds(ndims=1)
+    clippingRange = props.Bounds(ndims=1, clamped=False)
     """Values outside of this range are not shown.  Clipping works as follows:
     
      - Image values less than or equal to the minimum clipping value are
@@ -708,9 +715,9 @@ class VolumeOpts(Nifti1Opts):
         self.__registered = self.getParent() is not None
         if self.__registered:
 
-            overlay    .addListener('dataRange',
-                                    self.name,
-                                    self.__dataRangeChanged)
+            overlay    .register(   self.name,
+                                    self.__dataRangeChanged,
+                                    'dataRange')
             display    .addListener('brightness',
                                     self.name,
                                     self.__briconChanged)
@@ -789,6 +796,9 @@ class VolumeOpts(Nifti1Opts):
 
             overlayList = self.overlayList
             display     = self.display
+            overlay     = self.overlay
+
+            overlay    .deregister(    self.name,         'dataRange')
             overlayList.removeListener('overlays',        self.name) 
             display    .removeListener('brightness',      self.name)
             display    .removeListener('contrast',        self.name)
@@ -822,8 +832,7 @@ class VolumeOpts(Nifti1Opts):
         and :attr:`clippingRange` properties.
         """
 
-        dataMin = self.overlay.dataRange.xlo
-        dataMax = self.overlay.dataRange.xhi
+        dataMin, dataMax = self.overlay.dataRange
 
         dmin = dataMin
         dmax = dataMax
@@ -842,8 +851,7 @@ class VolumeOpts(Nifti1Opts):
         # our overlay's range, for the
         # clippingRange property.
         if self.clipImage is not None:
-            dmin = self.clipImage.dataRange.xlo
-            dmax = self.clipImage.dataRange.xhi
+            dmin, dmax = self.clipImage.dataRange
 
         # Clipping works on >= and <=, so we add
         # a small offset to the clipping limits
@@ -900,8 +908,7 @@ class VolumeOpts(Nifti1Opts):
             self.enableProperty('linkLowRanges')
             self.enableProperty('linkHighRanges') 
         else:
-            dataMin = self.clipImage.dataRange.xlo
-            dataMax = self.clipImage.dataRange.xhi
+            dataMin, dataMax = self.clipImage.dataRange
 
             # If the clipping range is based on another
             # image, it makes no sense to link the low/
@@ -1049,7 +1056,6 @@ class VolumeOpts(Nifti1Opts):
 
         self.__updateDataRange(absolute=self.useNegativeCmap)
             
-
 
     def __linkLowRangesChanged(self, *a):
         """Called when the :attr:`linkLowRanges` property changes. Calls the

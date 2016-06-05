@@ -9,8 +9,6 @@ for displaying an :class:`.Image` overlay as a binary mask.
 """
 
 
-import numpy as np
-
 import props
 
 import fsleyes.strings as strings
@@ -45,13 +43,7 @@ class MaskOpts(volumeopts.Nifti1Opts):
         are passed through to the :class:`.Nifti1Opts` constructor.
         """
 
-        if np.prod(overlay.shape) > 2 ** 30:
-            sample = overlay.data[..., overlay.shape[-1] / 2]
-            self.dataMin = float(sample.min())
-            self.dataMax = float(sample.max())
-        else:
-            self.dataMin = float(overlay.data.min())
-            self.dataMax = float(overlay.data.max())
+        self.dataMin, self.dataMax = overlay.dataRange
 
         dRangeLen    = abs(self.dataMax - self.dataMin)
         dMinDistance = dRangeLen / 100.0

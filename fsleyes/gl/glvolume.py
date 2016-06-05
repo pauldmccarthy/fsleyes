@@ -318,7 +318,6 @@ class GLVolume(globject.GLImageObject):
         were added by :meth:`addDisplayListeners`.
         """
 
-        image   = self.image
         display = self.display
         opts    = self.displayOpts
         name    = self.name
@@ -339,7 +338,6 @@ class GLVolume(globject.GLImageObject):
         opts    .removeListener(          'resolution',      name)
         opts    .removeListener(          'interpolation',   name)
         opts    .removeListener(          'transform',       name)
-        image   .removeListener(          'data',            name)
         
         if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume',        name)

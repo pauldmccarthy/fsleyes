@@ -116,7 +116,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         self.__ready         = False
         self.__refreshThread = None
 
-        self.image.addListener('data', self.__name, self.refresh)
+        self.image.register(self.__name, self.refresh, 'data')
 
         self.set(refresh=False, **kwargs)
         
@@ -130,7 +130,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         """
 
         texture.Texture.destroy(self)
-        self.image.removeListener('data', self.__name)
+        self.image.deregister(self.__name, 'data')
 
         
     def ready(self):
@@ -228,7 +228,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         # data is cast to a standard type, and
         # normalised - see _determineTextureType
         # and _prepareTextureData
-        dtype = self.image.data.dtype
+        dtype = self.image.dtype
         self.__normalise = bool(normalise) or dtype not in (np.uint8,
                                                             np.int8,
                                                             np.uint16,
@@ -292,8 +292,9 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         def genData():
 
             if self.__prefilter is None:
-                self.__dataMin = self.image.dataRange.xlo
-                self.__dataMax = self.image.dataRange.xhi
+                dmin, dmax = self.image.dataRange
+                self.__dataMin = dmin
+                self.__dataMax = dmax
                 
             elif refreshRange:
 
@@ -457,12 +458,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         ================== ==============================================
         """        
 
-        data = self.image.data
-
-        if self.__prefilter is not None:
-            data = self.__prefilter(data)
-        
-        dtype     = data.dtype
+        dtype     = self.image.dtype
         dmin      = self.__dataMin
         dmax      = self.__dataMax
         normalise = bool(self.__normalise)
@@ -621,8 +617,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
                       'take some time ...'.format(self.image.name), None)
 
         image = self.image
-        data  = image.data
-        dtype = data.dtype
+        dtype = image.dtype
 
         volume     = self.__volume
         resolution = self.__resolution
@@ -632,9 +627,11 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         if volume is None:
             volume = 0
 
-        if image.is4DImage() and self.__nvals == 1:
-            data = data[..., volume]
-
+        if len(image.shape) == 4 and self.__nvals == 1:
+            data = image[..., volume]
+        else:
+            data = image[:]
+            
         if resolution is not None:
             data = glroutines.subsample(data, resolution, image.pixdim)[0]
             
