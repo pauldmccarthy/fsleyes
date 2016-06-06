@@ -181,13 +181,17 @@ class SliceCanvas(props.HasProperties):
         # If render mode is offscren or prerender, these
         # dictionaries will contain a RenderTexture or
         # RenderTextureStack instance for each overlay in
-        # the overlay list
+        # the overlay list. These dictionaries are
+        # respectively of the form:
+        #     { overlay : RenderTexture              }
+        #     { overlay : (RenderTextureStack, name) }
+        # 
         self._offscreenTextures = {}
         self._prerenderTextures = {}
 
         # When the render mode is changed,
         # overlay resolutions are potentially
-        # modified. When this happends, this
+        # modified. When this happens, this
         # is used to store the old overlay
         # resolution, so it can be restored
         # if the render mode is changed back.
@@ -852,7 +856,13 @@ class SliceCanvas(props.HasProperties):
                                             self.yax)
 
             if globj is not None:
-                globj.register(self.name, self.Refresh)
+                globj.register(self.name, self.__onGLObjectUpdate)
+
+                # A hack which allows us to easily
+                # retrieve the overlay associated
+                # with a given GLObject. See the
+                # __onGLObjectUpdate method.
+                globj._sc_overlay = overlay
 
             self._glObjects[overlay] = globj
 
@@ -884,6 +894,25 @@ class SliceCanvas(props.HasProperties):
 
         async.idle(create)
 
+        
+    def __onGLObjectUpdate(self, globj):
+        """Called when a :class:`.GLObject` has been updated, and needs to be
+        redrawn.
+        """
+
+        # If we are in prerender mode, we
+        # need to tell the RenderTextureStack
+        # for this GLObject to update itself.
+        if self.renderMode == 'prerender':
+
+            overlay  = globj._sc_overlay
+            rt, name = self._prerenderTextures.get(overlay, (None, None))
+            
+            if rt is not None:
+                rt.onGLObjectUpdate()
+            
+        self.Refresh()
+        
         
     def _overlayListChanged(self, *args, **kwargs):
         """This method is called every time an overlay is added or removed
