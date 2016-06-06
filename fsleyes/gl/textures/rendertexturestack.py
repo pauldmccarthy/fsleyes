@@ -37,6 +37,14 @@ class RenderTextureStack(object):
 
     The :class:`.RenderTexture` textures are updated in an idle loop, via the
     :func:`.async.idle` function.
+
+
+    .. note:: A ``RenderTextureStack`` instance must be manually updated
+              whenever its ``GLObject`` changes, via the
+              :meth:`onGLObjectUpdate` method. ``RenderTextureStack``
+              instances do not explicitly listen for ``GLObject`` changes
+              themselves, because there is no guarantee that the textures
+              will be refreshed before they need to be drawn.
     """
 
     
@@ -65,10 +73,6 @@ class RenderTextureStack(object):
 
         self.__lastDrawnTexture   = None
         self.__updateQueue        = []
-
-        self.__globj.register(
-            '{}_{}'.format(type(self).__name__, id(self)),
-            self.__onGLObjectUpdate)
 
         async.idle(self.__textureUpdateLoop)
 
@@ -154,7 +158,7 @@ class RenderTextureStack(object):
             self.__textures.append(
                 rendertexture.RenderTexture('{}_{}'.format(self.name, i)))
 
-        self.__onGLObjectUpdate()
+        self.onGLObjectUpdate()
 
         
     def __destroyTextures(self):
@@ -169,9 +173,10 @@ class RenderTextureStack(object):
             async.idle(tex.destroy)
 
 
-    def __onGLObjectUpdate(self, *a):
-        """Called when the :class:`.GLObject` display is updated. Re-calculates
-        the display space Z-axis range, and marks all render textures as dirty.
+    def onGLObjectUpdate(self):
+        """Must be called called when the :class:`.GLObject` display is
+        updated. Re-calculates the display space Z-axis range, and marks
+        all render textures as dirty.
         """
         
         lo, hi      = self.__globj.getDisplayBounds()
