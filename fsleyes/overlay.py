@@ -13,13 +13,14 @@ application.
 **What is an overlay?**
 
 
-The definition of an *overlay* is fairly broad; any object can be a added to
+The definition of an *overlay* is fairly broad; any object can be added to
 the ``OverlayList``  - there is no ``Overlay`` base class, nor any interface
 which must be provided by an overlay object. The only requirements imposed on
 an overlay type are:
 
   - Must be able to be created with a single ``__init__`` parameter, which
-    is a string specifying the data source location (e.g. a file name).
+    is a string specifying the data source location (e.g. a file name) (but
+    see the note below about ``Image`` overlays).
 
   - Must have an attribute called ``name``, which is used as the initial
     display name for the overlay.
@@ -33,7 +34,15 @@ an overlay type are:
     get started with this one.
 
 
-Currently (``fslpy`` version |version|) the only overlay types in existence
+One further requirement is imposed on overlay types which derive from the
+:class:`.Image` class:
+
+ -  The ``__init__`` method fo ll sub-classes of the ``Image`` class must
+    accept the ``loadData`` and ``calcRange`` parameters, and pass them 
+    through to the base class ``__init__`` method.
+ 
+
+Currently (``fsleyes`` version |version|) the only overlay types in existence
 (and able to be rendered) are:
 
 .. autosummary::
@@ -54,6 +63,7 @@ A few other utility functions are provided by this module:
    guessDataSourceType
    makeWildcard
    loadOverlays
+   loadImage
    interactiveLoadOverlays
    saveOverlay
 """
@@ -61,6 +71,8 @@ A few other utility functions are provided by this module:
 import logging
 import os
 import os.path as op
+
+import numpy as np
 
 import props
 
@@ -373,11 +385,11 @@ def loadOverlays(paths,
     # shows an error dialog
     def defaultErrorFunc(s, e):
         import wx
-        e     = str(e)
-        msg   = strings.messages['overlay.loadOverlays.error'].format(s, e)
+        msg   = strings.messages['overlay.loadOverlays.error'].format(
+            s, type(e).__name__, str(e))
         title = strings.titles[  'overlay.loadOverlays.error']
-        log.debug('Error loading overlay ({}), ({})'.format(s, e),
-                  exc_info=True)
+        log.warning('Error loading overlay ({}), ({})'.format(s, str(e)),
+                    exc_info=True)
         wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK) 
 
     # A function which loads a single overlay
@@ -395,8 +407,16 @@ def loadOverlays(paths,
         log.debug('Loading overlay {} (guessed data type: {})'.format(
             path, dtype.__name__))
         
-        try:                   overlays.append(dtype(path))
-        except Exception as e: errorFunc(path, e)
+        try:
+            if issubclass(dtype, fslimage.Image):
+                overlay = loadImage(dtype, path)
+            else:
+                overlay = dtype(path)
+
+            overlays.append(overlay)
+
+        except Exception as e:
+            errorFunc(path, e)
 
     # This function gets called after 
     # all overlays have been loaded
@@ -425,6 +445,41 @@ def loadOverlays(paths,
         async.idle(loadPath, path)
         
     async.idle(realOnLoad)
+
+
+def loadImage(dtype, path):
+    """Called by the :func:`loadOverlays` function. Loads an overlay which
+    is represented by an ``Image`` instance, or a sub-class of ``Image``.
+    Depending upon the image size, the data may be loaded into memory or
+    kept on disk, and the initial image data range may be calculated
+    from the whole image, or from a sample.
+
+    :arg dtype: Overlay type (``Image``, or a sub-class of ``Image``).
+    :arg path:  Path to the overlay file.
+    """
+
+    image  = dtype(path, loadData=False, calcRange=False)
+    nbytes = np.prod(image.shape) * image.dtype.itemsize
+
+    memthres   = fslsettings.read('fsleyes.overlay.memthres',   2147483648)
+    rangethres = fslsettings.read('fsleyes.overlay.rangethres', 419430400)
+
+    # If the image is bigger than the
+    # memory threshold, keep it on disk. 
+    if nbytes < memthres:
+        log.debug('Loading {} into memory'.format(path))
+        image.loadData()
+    else:
+        log.debug('Keeping {} on disk'.format(path))
+
+    # If the image size is less than the range
+    # threshold, calculate the full data range
+    # now. Otherwise calculate the data range
+    # from a sample. This is handled by the
+    # Image.calcRange method.
+    image.calcRange(rangethres)
+
+    return image
 
 
 def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):

@@ -66,7 +66,7 @@ messages = TypeDict({
 
     'overlay.loadOverlays.loading'     : 'Loading {} ...',
     'overlay.loadOverlays.error'       : 'An error occurred loading the image '
-                                         '{}\n\nDetails: {}',
+                                         '{}\n\nDetails: {} - {}',
 
     'overlay.loadOverlays.unknownType' : 'Unknown data type',
 
