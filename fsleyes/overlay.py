@@ -227,8 +227,36 @@ class OverlayList(props.HasProperties):
         return self.overlays.insert(index, item)
     
     def insertAll(self, index, items):
-        return self.overlays.insertAll(index, items) 
+        return self.overlays.insertAll(index, items)
 
+
+class ProxyImage(fslimage.Image):
+    """The ``ProxyImage`` class is a simple wrapper around an :class:`Image`
+    instance. It is intended to be used to represent images or data which
+    are derived from another image.
+    """
+
+    def __init__(self, base, *args, **kwargs):
+        """Create a ``ProxyImage``.
+
+        :arg base: The :class:`Image` instance upon which this ``ProxyImage``
+                   is based.
+        """
+
+        if not isinstance(base, fslimage.Image):
+            raise ValueError('Base image must be an Image instance')
+
+        self.__base = base
+
+        kwargs['header'] = base.nibImage.get_header()
+
+        fslimage.Image.__init__(self, base.data, *args, **kwargs)
+        
+
+    def getBase(self):
+        """Returns the base :class:`Image` of this ``ProxyImage``. """
+        return self.__base
+    
 
 def guessDataSourceType(path):
     """A convenience function which, given the name of a file or directory,

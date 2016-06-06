@@ -34,6 +34,7 @@ import fsl.utils.async    as async
 import fsl.data.image     as fslimage
 import fsleyes.strings    as strings
 import fsleyes.actions    as actions
+import fsleyes.overlay    as fsloverlay
 import fsleyes.colourmaps as fslcm
 import fsleyes.plotting   as plotting
 from . import                viewpanel
@@ -915,7 +916,7 @@ class OverlayPlotPanel(PlotPanel):
         specified overlay, or ``None`` if there is no ``DataSeries`` instance.
         """
         
-        if isinstance(overlay, fslimage.ProxyImage):
+        if isinstance(overlay, fsloverlay.ProxyImage):
             overlay = overlay.getBase() 
         
         return self.__dataSeries.get(overlay)
@@ -928,7 +929,7 @@ class OverlayPlotPanel(PlotPanel):
         added to ``plotColours``, and returned.
         """
         
-        if isinstance(overlay, fslimage.ProxyImage):
+        if isinstance(overlay, fsloverlay.ProxyImage):
             overlay = overlay.getBase() 
 
         colour = self.plotColours.get(overlay)
@@ -951,7 +952,7 @@ class OverlayPlotPanel(PlotPanel):
         if overlay is None:
             return
 
-        if isinstance(overlay, fslimage.ProxyImage):
+        if isinstance(overlay, fsloverlay.ProxyImage):
             overlay = overlay.getBase() 
         
         ds = self.getDataSeries(overlay)
@@ -1085,7 +1086,7 @@ class OverlayPlotPanel(PlotPanel):
         overlay.
         """
 
-        if isinstance(overlay, fslimage.ProxyImage):
+        if isinstance(overlay, fsloverlay.ProxyImage):
             overlay = overlay.getBase()
         
         ds                 = self.__dataSeries  .pop(overlay, None)
@@ -1111,7 +1112,7 @@ class OverlayPlotPanel(PlotPanel):
             if ovl in self.__dataSeries:
                 continue
 
-            if isinstance(ovl, fslimage.ProxyImage):
+            if isinstance(ovl, fsloverlay.ProxyImage):
                 continue
 
             log.debug('Creating a DataSeries for overlay {}'.format(ovl))
@@ -1135,7 +1136,7 @@ class OverlayPlotPanel(PlotPanel):
         elif self.showMode == 'current': targetOverlays = [selectedOverlay]
         else:                            targetOverlays = []
 
-        targetOverlays = [o.getBase() if isinstance(o, fslimage.ProxyImage)
+        targetOverlays = [o.getBase() if isinstance(o, fsloverlay.ProxyImage)
                           else o
                           for o in targetOverlays]
 

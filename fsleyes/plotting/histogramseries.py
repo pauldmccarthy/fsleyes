@@ -14,9 +14,9 @@ import numpy as np
 
 import props
 
-import fsl.data.image   as fslimage
 import fsl.utils.status as status
 import fsl.utils.async  as async
+import fsleyes.overlay  as fsloverlay
 from . import              dataseries
 
 
@@ -426,7 +426,7 @@ class HistogramSeries(dataseries.DataSeries):
             log.debug('Creating 3D histogram overlay mask for {}'.format(
                 self.overlay.name))
             
-            self.__overlay3D = fslimage.ProxyImage(
+            self.__overlay3D = fsloverlay.ProxyImage(
                 self.overlay,
                 name='{}/histogram/mask'.format(self.overlay.name))
 

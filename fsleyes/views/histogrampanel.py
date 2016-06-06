@@ -20,6 +20,7 @@ import props
 import fsl.data.image                         as fslimage
 
 import fsleyes.actions                        as actions
+import fsleyes.overlay                        as fsloverlay
 import fsleyes.plotting.histogramseries       as histogramseries
 import fsleyes.controls.histogramcontrolpanel as histogramcontrolpanel
 import fsleyes.controls.histogramtoolbar      as histogramtoolbar
@@ -162,7 +163,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         else:
             overlays = []
 
-        overlays = [o.getBase() if isinstance(o, fslimage.ProxyImage)
+        overlays = [o.getBase() if isinstance(o, fsloverlay.ProxyImage)
                     else o
                     for o in overlays]
 
@@ -191,7 +192,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         if not isinstance(overlay, fslimage.Image):
             return None, None, None
 
-        if isinstance(overlay, fslimage.ProxyImage):
+        if isinstance(overlay, fsloverlay.ProxyImage):
             overlay = overlay.getBase()
 
         hs = histogramseries.HistogramSeries(overlay,
