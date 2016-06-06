@@ -138,7 +138,7 @@ class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
 
         x, y, z = voxel
 
-        ydata = self.overlay.data[x, y, z, :]
+        ydata = self.overlay[x, y, z, :]
         ydata = self.calcPowerSpectrum(ydata)
         xdata = np.arange(len(ydata), dtype=np.float32)
 

@@ -146,7 +146,7 @@ class VoxelTimeSeries(TimeSeries):
 
             x, y, z = xyz
 
-            ydata = self.overlay.data[x, y, z, :]
+            ydata = self.overlay[x, y, z, :]
 
         if xdata is None:
             xdata = np.arange(len(ydata))
@@ -645,7 +645,7 @@ class FEATResidualTimeSeries(VoxelTimeSeries):
             return [], []
 
         x, y, z = voxel
-        data    = self.overlay.getResiduals().data[x, y, z, :]
+        data    = self.overlay.getResiduals()[x, y, z, :]
         
         return VoxelTimeSeries.getData(self, ydata=data)
             

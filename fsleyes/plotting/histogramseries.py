@@ -232,7 +232,7 @@ class HistogramSeries(dataseries.DataSeries):
 
         def init():
 
-            data  = self.overlay.data[:]
+            data  = self.overlay[:]
 
             finData = data[np.isfinite(data)]
             dmin    = finData.min()
@@ -293,8 +293,8 @@ class HistogramSeries(dataseries.DataSeries):
         :meth:`.HasProperties.addListener` method).        
         """
 
-        if self.overlay.is4DImage(): data = self.overlay.data[..., self.volume]
-        else:                        data = self.overlay.data[:]
+        if self.overlay.is4DImage(): data = self.overlay[..., self.volume]
+        else:                        data = self.overlay[:]
 
         data = data[np.isfinite(data)]
 
