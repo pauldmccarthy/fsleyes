@@ -119,6 +119,12 @@ class RenderTextureStack(object):
         if self.__textureDirty[texIdx]:
             self.__refreshTexture(texture, texIdx)
 
+        log.debug('Drawing pre-rendered texture '
+                  '[zax {}]: (zpos {}, slice {})'.format(
+                      self.__zax,
+                      zpos,
+                      texIdx))
+
         texture.drawOnBounds(
             zpos, lo[xax], hi[xax], lo[yax], hi[yax], xax, yax, xform)
 
@@ -172,6 +178,11 @@ class RenderTextureStack(object):
         self.__zmin = lo[self.__zax]
         self.__zmax = hi[self.__zax]
 
+        log.debug('GLObject range [zax {}]: {} - {}'.format(
+            self.__zax,
+            self.__zmin,
+            self.__zmax))
+
         self.__refreshAllTextures()
 
             
@@ -186,18 +197,18 @@ class RenderTextureStack(object):
             lastIdx = len(self.__textures) / 2
             
         aboveIdxs = range(lastIdx, len(self.__textures))
-        belowIdxs = range(lastIdx, 0, -1)
+        belowIdxs = range(lastIdx - 1, -1, -1)
 
         idxs = [0] * len(self.__textures)
 
         for i in range(len(self.__textures)):
             
             if len(aboveIdxs) > 0 and len(belowIdxs) > 0:
-                if i % 2: idxs[i] = aboveIdxs.pop(0)
-                else:     idxs[i] = belowIdxs.pop(0)
+                if i % 2: idxs[i] = belowIdxs.pop(0)
+                else:     idxs[i] = aboveIdxs.pop(0)
                 
             elif len(aboveIdxs) > 0: idxs[i] = aboveIdxs.pop(0)
-            else:                    idxs[i] = belowIdxs.pop(0) 
+            else:                    idxs[i] = belowIdxs.pop(0)
 
         self.__textureDirty = [True] * len(self.__textures)
         self.__updateQueue  = idxs
@@ -304,11 +315,12 @@ class RenderTextureStack(object):
         zmin  = self.__zmin
         zmax  = self.__zmax
         ntexs = len(self.__textures)
-        limit = len(self.__textures) - 1
-        index = ntexs * (zpos - zmin) / (zmax - zmin)
+        step  = (zmax - zmin) / float(ntexs)
+        index = (zpos - zmin) / step
 
-        if index > limit and index <= limit + 1:
-            index = limit
+        # Be a little bit lenient at the boundaries
+        if abs(index)         < 0.01: index = 0
+        if abs(index - ntexs) < 0.01: index = ntexs - 1
 
         return int(index)
 
@@ -320,4 +332,6 @@ class RenderTextureStack(object):
         zmin  = self.__zmin
         zmax  = self.__zmax
         ntexs = len(self.__textures)
-        return index * (zmax - zmin) / ntexs + zmin
+        step  = (zmax - zmin) / float(ntexs)
+        
+        return index * (zmax - zmin) / ntexs + (zmin + 0.5 * step)
