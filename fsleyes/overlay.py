@@ -38,8 +38,8 @@ One further requirement is imposed on overlay types which derive from the
 :class:`.Image` class:
 
  -  The ``__init__`` method fo ll sub-classes of the ``Image`` class must
-    accept the ``loadData`` and ``calcRange`` parameters, and pass them 
-    through to the base class ``__init__`` method.
+    accept the ``loadData``, ``calcRange``, and ``indexed`` parameters, and
+    pass them through to the base class ``__init__`` method.
  
 
 Currently (``fsleyes`` version |version|) the only overlay types in existence
@@ -458,11 +458,25 @@ def loadImage(dtype, path):
     :arg path:  Path to the overlay file.
     """
 
-    image  = dtype(path, loadData=False, calcRange=False)
-    nbytes = np.prod(image.shape) * image.dtype.itemsize
-
     memthres   = fslsettings.read('fsleyes.overlay.memthres',   2147483648)
     rangethres = fslsettings.read('fsleyes.overlay.rangethres', 419430400)
+    idxthres   = fslsettings.read('fsleyes.overlay.idxthres',   memthres / 2)
+
+    # We're going to load the file
+    # twice - first to get its
+    # dimensions, and then for real. 
+    image = fslimage.Image(path,
+                           loadData=False,
+                           calcRange=False,
+                           indexed=False)
+    nbytes = np.prod(image.shape) * image.dtype.itemsize
+    image  = None
+
+    # If the file is compressed (gzipped),
+    # index the file if its compressed size
+    # is greater than the index threshold.
+    indexed = nbytes > idxthres
+    image   = dtype(path, loadData=False, calcRange=False, indexed=indexed)
 
     # If the image is bigger than the
     # memory threshold, keep it on disk. 
