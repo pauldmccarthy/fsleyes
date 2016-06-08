@@ -717,7 +717,8 @@ class VolumeOpts(Nifti1Opts):
 
             overlay    .register(   self.name,
                                     self.__dataRangeChanged,
-                                    'dataRange')
+                                    'dataRange',
+                                    runOnIdle=True)
             display    .addListener('brightness',
                                     self.name,
                                     self.__briconChanged)

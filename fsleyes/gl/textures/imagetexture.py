@@ -117,7 +117,7 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         self.__ready         = False
         self.__refreshThread = None
 
-        self.image.register(self.__name, self.refresh, 'data')
+        self.image.register(self.__name, self.refresh, 'data', runOnIdle=True)
 
         self.set(refresh=False, **kwargs)
         
