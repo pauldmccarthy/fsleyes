@@ -93,7 +93,7 @@ class DiagnosticReportAction(action.Action):
         state.
         """
 
-        import fsl.version as version
+        import fsleyes.version as version
 
         report   = OrderedDict()
         overlays = []
