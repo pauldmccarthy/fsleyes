@@ -112,8 +112,6 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         # These attributes are modified
         # in the refresh method (which is
         # called via the set method below). 
-        self.__dataMin       = None
-        self.__dataMax       = None
         self.__ready         = False
         self.__refreshThread = None
 
@@ -308,18 +306,9 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         # do it in a separate thread using the async module.
         def genData():
 
-            dmin, dmax = self.image.dataRange
-
-            if self.__prefilter      is not None and \
-               self.__prefilterRange is not None:
-                dmin, dmax = self.__prefilterRange(dmin, dmax)
-                
-            self.__dataMin = dmin
-            self.__dataMax = dmax
-
             if refreshData:
                 self.__determineTextureType()
-                self.__data = self.__prepareTextureData()
+                self.__prepareTextureData()
 
         # Once the genData function has finished,
         # we'll configure the texture back on the
@@ -453,19 +442,10 @@ class ImageTexture(texture.Texture, notifier.Notifier):
 
         ``texDtype``       The raw type of the texture data (e.g.
                            ``GL_UNSIGNED_SHORT``)
-
-        ``voxValXform``    An affine transformation matrix which encodes 
-                           an offset and a scale, which may be used to 
-                           transform the texture data from the range 
-                           ``[0.0, 1.0]`` to its raw data range.
-
-        ``invVoxValXform`` Inverse of ``voxValXform``.
         ================== ==============================================
         """        
 
         dtype     = self.image.dtype
-        dmin      = self.__dataMin
-        dmax      = self.__dataMax
         normalise = bool(self.__normalise)
 
         # Signed data types are a pain in the arse.
@@ -521,33 +501,6 @@ class ImageTexture(texture.Texture, notifier.Notifier):
             elif dtype == np.uint16: intFmt = gl.GL_RGBA16
             elif dtype == np.int16:  intFmt = gl.GL_RGBA16 
 
-        # Offsets/scales which can be used to transform from
-        # the texture data (which may be offset or normalised)
-        # back to the original voxel data
-        if   normalise:          offset =  dmin
-        elif dtype == np.uint8:  offset =  0
-        elif dtype == np.int8:   offset = -128
-        elif dtype == np.uint16: offset =  0
-        elif dtype == np.int16:  offset = -32768
-
-        if   normalise:          scale = dmax - dmin
-        elif dtype == np.uint8:  scale = 255
-        elif dtype == np.int8:   scale = 255
-        elif dtype == np.uint16: scale = 65535
-        elif dtype == np.int16:  scale = 65535
-
-        # If the data range is 0 (min == max)
-        # we just set an identity xform
-        if scale == 0:
-            voxValXform    = np.eye(4)
-            invVoxValXform = np.eye(4)
-        else:
-            invScale       = 1.0 / scale
-            voxValXform    = transform.scaleOffsetXform(scale, offset)
-            invVoxValXform = transform.scaleOffsetXform(
-                invScale,
-                -offset * invScale)
-        
         # This is all just for logging purposes
         if log.getEffectiveLevel() == logging.DEBUG:
 
@@ -583,20 +536,16 @@ class ImageTexture(texture.Texture, notifier.Notifier):
                 sIntFmt = 'GL_RGBA16' 
             
             log.debug('Image texture ({}) is to be stored as {}/{}/{} '
-                      '(normalised: {} -  scale {}, offset {})'.format(
+                      '(normalised: {})'.format(
                           self.image,
                           sTexDtype,
                           sTexFmt,
                           sIntFmt,
-                          normalise,
-                          scale,
-                          offset))
+                          normalise))
 
-        self.texFmt         = texFmt
-        self.texIntFmt      = intFmt
-        self.texDtype       = texDtype
-        self.voxValXform    = voxValXform
-        self.invVoxValXform = invVoxValXform
+        self.texFmt    = texFmt
+        self.texIntFmt = intFmt
+        self.texDtype  = texDtype
 
 
     def __prepareTextureData(self):
@@ -616,6 +565,21 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         
           - Casting to a different data type (if the image data type cannot
             be used as-is).
+
+        This method sets the following attributes on this ``ImageTexture``
+        instance:
+
+        ================== =============================================
+        ``__data``         A ``numpy`` array containing the image data,
+                           ready to be copied to the GPU.
+
+        ``voxValXform``    An affine transformation matrix which encodes 
+                           an offset and a scale, which may be used to 
+                           transform the texture data from the range 
+                           ``[0.0, 1.0]`` to its raw data range.
+
+        ``invVoxValXform`` Inverse of ``voxValXform``.
+        ================== =============================================
         """
 
         status.update('Preparing data for image {} - this may '
@@ -624,10 +588,11 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         image = self.image
         dtype = image.dtype
 
-        volume     = self.__volume
-        resolution = self.__resolution
-        prefilter  = self.__prefilter
-        normalise  = self.__normalise
+        volume         = self.__volume
+        resolution     = self.__resolution
+        prefilter      = self.__prefilter
+        prefilterRange = self.__prefilterRange
+        normalise      = self.__normalise
 
         if volume is None:
             volume = 0
@@ -636,7 +601,36 @@ class ImageTexture(texture.Texture, notifier.Notifier):
             data = image[..., volume]
         else:
             data = image[:]
-            
+
+        dmin, dmax = image.dataRange
+
+        # Offsets/scales which can be used to transform from
+        # the texture data (which may be offset or normalised)
+        # back to the original voxel data
+        if   normalise:          offset =  dmin
+        elif dtype == np.uint8:  offset =  0
+        elif dtype == np.int8:   offset = -128
+        elif dtype == np.uint16: offset =  0
+        elif dtype == np.int16:  offset = -32768
+
+        if   normalise:          scale = dmax - dmin
+        elif dtype == np.uint8:  scale = 255
+        elif dtype == np.int8:   scale = 255
+        elif dtype == np.uint16: scale = 65535
+        elif dtype == np.int16:  scale = 65535
+
+        # If the data range is 0 (min == max)
+        # we just set an identity xform
+        if scale == 0:
+            voxValXform    = np.eye(4)
+            invVoxValXform = np.eye(4)
+        else:
+            invScale       = 1.0 / scale
+            voxValXform    = transform.scaleOffsetXform(scale, offset)
+            invVoxValXform = transform.scaleOffsetXform(
+                invScale,
+                -offset * invScale)
+        
         if resolution is not None:
             data = glroutines.subsample(data, resolution, image.pixdim)[0]
             
@@ -644,10 +638,13 @@ class ImageTexture(texture.Texture, notifier.Notifier):
             data = prefilter(data)
         
         if normalise:
-            dmin = float(self.__dataMin)
-            dmax = float(self.__dataMax)
+            if prefilter      is not None and \
+               prefilterRange is not None:
+                dmin, dmax = prefilterRange(dmin, dmax)
+                
             if dmax != dmin:
-                data = (data - dmin) / (dmax - dmin)
+                data = (data - dmin) / float(dmax - dmin)
+
             data = np.round(data * 65535)
             data = np.array(data, dtype=np.uint16)
             
@@ -659,4 +656,6 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         status.update('Data preparation for {} '
                       'complete.'.format(self.image.name))
 
-        return data
+        self.__data         = data
+        self.voxValXform    = voxValXform
+        self.invVoxValXform = invVoxValXform
