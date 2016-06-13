@@ -835,33 +835,64 @@ class VolumeOpts(Nifti1Opts):
 
         dataMin, dataMax = self.overlay.dataRange
 
-        dmin = dataMin
-        dmax = dataMax
+        self.dataMin = dataMin
+        self.dataMax = dataMax
+
+        drmin = dataMin
+        drmax = dataMax
         
         if absolute:
-            dmin = min((0,            abs(dataMin)))
-            dmax = max((abs(dataMin), abs(dataMax)))
-
-        self.dataMin           = dataMin
-        self.dataMax           = dataMax
-        self.displayRange.xmin = dmin
-        self.displayRange.xmax = dmax
-
+            drmin = min((0,            abs(dataMin)))
+            drmax = max((abs(dataMin), abs(dataMax)))
+            
         # If a clipping image is set, 
         # we use its range instead of 
         # our overlay's range, for the
         # clippingRange property.
         if self.clipImage is not None:
-            dmin, dmax = self.clipImage.dataRange
+            crmin, crmax = self.clipImage.dataRange
+
+        else:
+            crmin, crmax = drmin, drmax
 
         # Clipping works on >= and <=, so we add
         # a small offset to the clipping limits
         # so the user can configure the scene such
         # that no values are clipped.
-        distance = abs(dmax - dmin) / 100.0
+        croff  = abs(crmax - crmin) / 100.0
+        crmin -= croff
+        crmax += croff
+ 
+        self.disableNotification('displayRange')
+        self.disableNotification('clippingRange')
 
-        self.clippingRange.xmin = dmin - distance
-        self.clippingRange.xmax = dmax + distance
+        # If display/clipping are all 0,
+        # we assume that they haven't
+        # yet been set
+        drUnset = self.displayRange .xlo == 0 and self.displayRange .xhi == 0
+        crUnset = self.clippingRange.xlo == 0 and self.clippingRange.xhi == 0
+        crGrow  = self.clippingRange.xhi == self.clippingRange.xmax
+        
+        self.displayRange .xmin = drmin
+        self.displayRange .xmax = drmax
+        self.clippingRange.xmin = crmin
+        self.clippingRange.xmax = crmax
+
+        # If the ranges have not yet been set,
+        # initialise them to the min/max.
+        # Also, if the high clipping range
+        # was previously equal to the max
+        # clipping range, keep that relationship,
+        # otherwise high values will be clipped.
+        if drUnset: self.displayRange .x   = drmin,         drmax
+        if crUnset: self.clippingRange.x   = crmin + croff, crmax
+        if crGrow:  self.clippingRange.xhi = crmax
+        
+        self.enableNotification('displayRange')
+        self.enableNotification('clippingRange')
+
+        self.notify('displayRange')
+        self.notify('clippingRange')
 
 
     def __dataRangeChanged(self, *a):
