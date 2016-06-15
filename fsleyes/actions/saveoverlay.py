@@ -132,13 +132,19 @@ class SaveOverlayAction(action.Action):
            isinstance(overlay, fslimage.Image) and \
            (not overlay.saveState):
 
-            saveOverlay(overlay)
+            display = self.__displayCtx.getDisplay(overlay)
+            saveOverlay(overlay, display)
 
 
-def saveOverlay(overlay):
-    """Saves the currently selected overlay (only if it is a
-    :class:`.Image`), by a call to :meth:`.Image.save`.
+def saveOverlay(overlay, display=None):
+    """Saves the currently selected overlay (only if it is a :class:`.Image`),
+    by a call to :meth:`.Image.save`. If a ``display`` is provided, the
+    :attr:`.Display.name` may be updated to match the new overlay file name.
+
+    :arg overlay: The :class:`.Image` overlay to save
+    :arg display: The :class:`.Display` instance associated with the overlay.
     """
+    
 
     import wx
 
@@ -202,8 +208,18 @@ def saveOverlay(overlay):
     # added by addExt, which is invariably .nii.gz).
     savePath = fslimage.removeExt(dlg.GetPath())
     savePath = fslimage.addExt(   savePath, mustExist=False)
+    oldPath  = overlay.dataSource
 
     doSave(overlay, savePath)
+
+    # If image was in memory, or its old
+    # name equalled the old datasource
+    # base name update its name.
+    if oldPath is None or \
+       fslimage.removeExt(op.basename(oldPath)) == overlay.name:
+        
+        overlay.name = fslimage.removeExt(op.basename(savePath))
+        display.name = overlay.name
 
 
 def doSave(overlay, path=None):

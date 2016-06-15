@@ -411,7 +411,7 @@ class ListItemWidget(wx.Panel):
         self.__displayCtx.selectOverlay(self.__overlay)
 
         if not self.__overlay.saveState:
-            saveoverlay.saveOverlay(self.__overlay)
+            saveoverlay.saveOverlay(self.__overlay, self.__display)
 
 
     def __onLockButton(self, ev):
