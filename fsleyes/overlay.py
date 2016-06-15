@@ -316,17 +316,17 @@ def guessDataSourceType(path):
     return None, path
 
 
-def makeWildcard():
+def makeWildcard(allowedExts=None, descs=None):
     """Returns a wildcard string for use in a file dialog, to limit
     the the displayed file types to supported overlay file types.
     """
 
     import fsl.data.model as fslmodel
-    
-    allowedExts  = fslimage.ALLOWED_EXTENSIONS     + \
-                   fslmodel.ALLOWED_EXTENSIONS
-    descs        = fslimage.EXTENSION_DESCRIPTIONS + \
-                   fslmodel.EXTENSION_DESCRIPTIONS
+
+    if allowedExts is None: allowedExts  = fslimage.ALLOWED_EXTENSIONS     + \
+                                           fslmodel.ALLOWED_EXTENSIONS
+    if descs       is None: descs        = fslimage.EXTENSION_DESCRIPTIONS + \
+                                           fslmodel.EXTENSION_DESCRIPTIONS
 
     exts  = ['*{}'.format(ext) for ext in allowedExts]
     exts  = [';'.join(exts)]        + exts
@@ -423,7 +423,7 @@ def loadOverlays(paths,
     def realOnLoad():
 
         if saveDir and len(paths) > 0:
-            fslsettings.write('loadOverlayLastDir', op.dirname(paths[-1]))
+            fslsettings.write('loadSaveOverlayDir', op.dirname(paths[-1]))
 
         if onLoad is not None:
             onLoad(overlays)
@@ -525,7 +525,7 @@ def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
     if fromDir is None:
         
         saveFromDir = True
-        fromDir     = fslsettings.read('loadOverlayLastDir')
+        fromDir     = fslsettings.read('loadSaveOverlayDir')
         
         if fromDir is None:
             fromDir = os.getcwd()

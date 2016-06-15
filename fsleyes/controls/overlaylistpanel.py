@@ -24,6 +24,7 @@ import fsleyes.icons                    as icons
 import fsleyes.autodisplay              as autodisplay
 import fsleyes.strings                  as strings
 import fsleyes.tooltips                 as fsltooltips
+import fsleyes.actions.saveoverlay      as saveoverlay
 import fsl.data.image                   as fslimage
 from fsl.utils.platform import platform as fslplatform
 
@@ -408,7 +409,9 @@ class ListItemWidget(wx.Panel):
         :meth:`.Image.save` method.
         """
         self.__displayCtx.selectOverlay(self.__overlay)
-        self.__overlay.save()
+
+        if not self.__overlay.saveState:
+            saveoverlay.saveOverlay(self.__overlay)
 
 
     def __onLockButton(self, ev):

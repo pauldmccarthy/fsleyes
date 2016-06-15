@@ -332,7 +332,7 @@ class PlotPanel(viewpanel.ViewPanel):
         dlg = wx.FileDialog(self,
                             message=strings.messages[self, 'screenshot'],
                             wildcard=wildcard,
-                            style=wx.FD_SAVE)
+                            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 
         if dlg.ShowModal() != wx.ID_OK:
             return

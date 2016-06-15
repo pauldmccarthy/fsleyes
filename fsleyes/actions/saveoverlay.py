@@ -5,12 +5,29 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`SaveOverlayAction`, which allows the user
-to save the currently selected overlay.
+to save the currently selected overlay. A couple of standalone functions are
+defined in this module, which do the real work:
+
+.. autosummary::
+   :nosignatures:
+
+   saveOverlay
+   doSave
 """
 
 
-import fsl.data.image as fslimage
-from . import            action
+import logging
+
+import                       os
+import os.path            as op
+
+import fsl.utils.settings as fslsettings
+import fsl.data.image     as fslimage
+import fsleyes.strings    as strings
+from . import                action
+
+
+log = logging.getLogger(__name__)
 
 
 class SaveOverlayAction(action.Action):
@@ -82,7 +99,7 @@ class SaveOverlayAction(action.Action):
                 ovl.register(self.__name,
                              self.__overlaySaveStateChanged,
                              'saveState')
- 
+
 
     def __overlaySaveStateChanged(self, *a):
         """Called when the :attr:`.Image.saved` property of the currently
@@ -103,19 +120,109 @@ class SaveOverlayAction(action.Action):
         else:
             self.enabled = not overlay.saveState
 
-        
+
     def __saveOverlay(self):
-        """Saves the currently selected overlay (only if it is a
-        :class:`.Image`), by a call to :meth:`.Image.save`.
+        """Called when this :class:`.Action` is executed. Calls
+        :func:`saveOverlay` with the currentyl selected overlay.
         """
-        
+
         overlay = self.__displayCtx.getSelectedOverlay()
-        
-        if overlay is None:
+
+        if (overlay is not None)               and \
+           isinstance(overlay, fslimage.Image) and \
+           (not overlay.saveState):
+
+            saveOverlay(overlay)
+
+
+def saveOverlay(overlay):
+    """Saves the currently selected overlay (only if it is a
+    :class:`.Image`), by a call to :meth:`.Image.save`.
+    """
+
+    import wx
+
+    # TODO support for other overlay types
+    if not isinstance(overlay, fslimage.Image):
+        raise RuntimeError('Non-volumetric types not supported yet')
+
+    # If this image has been loaded from a file,
+    # ask the user whether they want to overwrite
+    # that file, or save the image to a new file.
+    if overlay.dataSource is not None:
+
+        msg   = strings.messages['SaveOverlayAction.overwrite'].format(
+            overlay.dataSource)
+        title = strings.titles[  'SaveOverlayAction.overwrite'].format(
+            overlay.dataSource)
+
+        dlg = wx.MessageDialog(
+            wx.GetTopLevelWindows()[0],
+            message=msg,
+            caption=title,
+            style=(wx.ICON_WARNING  |
+                   wx.YES_NO        |
+                   wx.CANCEL        |
+                   wx.NO_DEFAULT))
+        dlg.SetYesNoCancelLabels(
+            strings.labels['SaveOverlayAction.overwrite'],
+            strings.labels['SaveOverlayAction.saveNew'],
+            strings.labels['SaveOverlayAction.cancel'])
+
+        response = dlg.ShowModal()
+
+        # Cancel == cancel the save
+        # Yes    == overwrite the existing file
+        # No     == save to a new file (prompt the user for the file name)
+        if response == wx.ID_CANCEL:
             return
 
-        # TODO support for other overlay types
-        if not isinstance(overlay, fslimage.Image):
-            raise RuntimeError('Non-volumetric types not supported yet') 
-        
-        overlay.save()
+        if response == wx.ID_YES:
+            doSave(overlay)
+            return
+
+        fromDir = op.dirname(overlay.dataSource)
+    else:
+        fromDir = fslsettings.read('loadSaveOverlayDir', os.getcwd())
+
+    # Ask the user where they
+    # want to save the image
+    msg = strings.titles['SaveOverlayAction.saveFile']
+    dlg = wx.FileDialog(wx.GetApp().GetTopWindow(),
+                        message=msg,
+                        defaultDir=fromDir,
+                        style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) 
+
+    if dlg.ShowModal() != wx.ID_OK:
+        return
+
+    # Remove any extensions that may have been added
+    # (n.b. this does mean that the user is unable to
+    # save the file in any format other than that
+    # added by addExt, which is invariably .nii.gz).
+    savePath = fslimage.removeExt(dlg.GetPath())
+    savePath = fslimage.addExt(   savePath, mustExist=False)
+
+    doSave(overlay, savePath)
+
+
+def doSave(overlay, path=None):
+    """Called by :func:`saveOverlay`.  Tries to save the given ``overlay`` to 
+    the given ``path``, and shows an error message if something goes wrong.
+    """
+
+    try:
+        overlay.save(path)
+
+    except Exception as e:
+        import wx
+
+        msg   = strings.messages['SaveOverlayAction.saveError'].format(
+            path,
+            type(e).__name__,
+            str(e))
+        title = strings.titles[  'SaveOverlayAction.saveError']
+
+        log.warning('Error saving overlay ({})'.format(str(e)),
+                    exc_info=True)
+        wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK) 

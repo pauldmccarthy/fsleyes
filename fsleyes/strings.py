@@ -64,6 +64,9 @@ messages = TypeDict({
                                             'cleared! Are you sure you want '
                                             'to continue?',
 
+    'SaveOverlayAction.overwrite'      : 'Do you want to overwrite {}, or '
+                                         'save the image to a new file?',
+
     'overlay.loadOverlays.loading'     : 'Loading {} ...',
     'overlay.loadOverlays.error'       : 'An error occurred loading the image '
                                          '{}\n\nDetails: {} - {}',
@@ -178,12 +181,11 @@ messages = TypeDict({
     'MelodicClassificationPanel.diffMelDir.labels'  : 'Load the overlay in '
                                                       'the label file',
     'MelodicClassificationPanel.diffMelDir.overlay' : 'Apply the labels to '
-                                                      'the current overlay'
+                                                      'the current overlay',
 
 
-    'An error occurred while '
-                                               'saving the file {}.'
-                                               '\n\nDetails: {}', 
+    'SaveOverlayAction.saveError' : 'An error occurred while saving the '
+                                    'file {}.\n\nDetails: {} - {}', 
 })
 
 
@@ -248,6 +250,9 @@ titles = TypeDict({
 
     'ClearPerspectiveAction.confirmClear'  : 'Clear all perspectives?',
     'DiagnosticReportAction.saveReport'    : 'Save diagnostic report',
+    'SaveOverlayAction.overwrite'          : 'Overwrite existing file?',
+    'SaveOverlayAction.saveFile'           : 'Save overlay to file',
+    'SaveOverlayAction.saveError'          : 'Error saving file',
 
     'OrthoEditProfile.displaySpaceChange' : 'Changing display space',
 })
@@ -469,7 +474,11 @@ labels = TypeDict({
     'ComponentGrid.componentColumn'             : 'IC #',
     'ComponentGrid.labelColumn'                 : 'Labels',
     'LabelGrid.componentColumn'                 : 'IC #',
-    'LabelGrid.labelColumn'                     : 'Label', 
+    'LabelGrid.labelColumn'                     : 'Label',
+
+    'SaveOverlayAction.overwrite' : 'Overwrite',
+    'SaveOverlayAction.saveNew'   : 'Save to new file',
+    'SaveOverlayAction.cancel'    : 'Cancel',
 })
 
 

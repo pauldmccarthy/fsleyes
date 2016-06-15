@@ -272,7 +272,7 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
         # Otherwise it will be the most
         # recent overlay load directory.
         else:
-            loadDir = fslsettings.read('loadOverlayLastDir', os.getcwd())
+            loadDir = fslsettings.read('loadSaveOverlayDir', os.getcwd())
 
         # Ask the user to select a label file
         dlg = wx.FileDialog(
@@ -398,7 +398,7 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
                                         self._overlayList,
                                         self._displayCtx)
 
-            fslsettings.write('loadOverlayLastDir', op.abspath(melDir)) 
+            fslsettings.write('loadSaveOverlayDir', op.abspath(melDir)) 
 
         except Exception as e:
 
@@ -423,7 +423,7 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
             self,
             message=strings.titles[self, 'saveDialog'],
             defaultDir=overlay.getMelodicDir(),
-            style=wx.FD_SAVE)
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
         
         if dlg.ShowModal() != wx.ID_OK:
             return

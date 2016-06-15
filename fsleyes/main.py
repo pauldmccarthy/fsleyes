@@ -137,6 +137,7 @@ def main(args=None):
     # all is well.
     wx.CallAfter(buildGUIWrapper, splash)
     app.MainLoop()
+    shutdown()
 
 
 def initialise(splash, namespace):
@@ -164,6 +165,19 @@ def initialise(splash, namespace):
         log.error('Unable to initialise OpenGL!', exc_info=True)
         splash.Destroy()
         sys.exit(1)
+
+
+def shutdown():
+    """Called when FSLeyes exits normally (i.e. the user closes the window).
+    Does some final clean-up before exiting.
+    """
+
+    import fsl.utils.settings as fslsettings
+    
+    # Clear the cached directory for loading/saving
+    # files - when FSLeyes starts up, we want it to
+    # default to the current directory.
+    fslsettings.delete('loadSaveOverlayDir')
     
 
 def parseArgs(argv):

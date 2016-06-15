@@ -735,7 +735,7 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
         canvasPanel,
         message=strings.messages['CanvasPanel.screenshot'],
         defaultDir=fromDir,
-        style=wx.FD_SAVE)
+        style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 
     if dlg.ShowModal() != wx.ID_OK:
         return

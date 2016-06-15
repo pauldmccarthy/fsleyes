@@ -69,7 +69,7 @@ class DiagnosticReportAction(action.Action):
             message=strings.titles[self, 'saveReport'],
             defaultDir=os.getcwd(),
             defaultFile='report.txt',
-            style=wx.FD_SAVE)
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 
         if dlg.ShowModal()  != wx.ID_OK:
             return
