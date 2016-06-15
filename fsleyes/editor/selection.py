@@ -322,7 +322,7 @@ class Selection(props.HasProperties):
 
 
     def __clearChange(self):
-        """
+        """Clears the most recent change that was made to this ``Selection``. 
         """
         self.__lastChangeOldBlock = None
         self.__lastChangeNewBlock = None

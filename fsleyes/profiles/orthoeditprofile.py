@@ -455,9 +455,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         set to values within the overlay data range.
         """
         
-        if issubclass(overlay.data.dtype.type, np.integer):
-            dmin = np.iinfo(overlay.data.dtype).min
-            dmax = np.iinfo(overlay.data.dtype).max
+        if issubclass(overlay.dtype.type, np.integer):
+            dmin = np.iinfo(overlay.dtype).min
+            dmax = np.iinfo(overlay.dtype).max
         else:
             dmin = None
             dmax = None

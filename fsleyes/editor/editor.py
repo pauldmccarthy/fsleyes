@@ -186,9 +186,9 @@ class Editor(props.HasProperties):
         zhi = zlo + selectBlock.shape[2]
 
         if   len(image.shape) == 3:
-            oldVals = image.data[xlo:xhi, ylo:yhi, zlo:zhi]
+            oldVals = image[xlo:xhi, ylo:yhi, zlo:zhi]
         elif len(image.shape) == 4:
-            oldVals = image.data[xlo:xhi, ylo:yhi, zlo:zhi, opts.volume]
+            oldVals = image[xlo:xhi, ylo:yhi, zlo:zhi, opts.volume]
         else:
             raise RuntimeError('Only 3D and 4D images are currently supported')
 
@@ -239,17 +239,17 @@ class Editor(props.HasProperties):
         overlayIdx = self.__overlayList.index(image) 
         opts       = self.__displayCtx.getDisplay(image)
         
-        roi       = np.zeros(image.shape[:3], dtype=image.data.dtype)
+        roi       = np.zeros(image.shape[:3], dtype=image.dtype)
         selection = self.__selection.selection > 0
 
         if   len(image.shape) == 3:
-            roi[selection] = image.data[selection]
+            roi[selection] = image[selection]
         elif len(image.shape) == 4:
-            roi[selection] = image.data[:, :, :, opts.volume][selection]
+            roi[selection] = image[:, :, :, opts.volume][selection]
         else:
             raise RuntimeError('Only 3D and 4D images are currently supported')
 
-        header = image.nibImage.get_header()
+        header = image.header
         name   = '{}_roi'.format(image.name)
 
         roiImage = fslimage.Image(roi, name=name, header=header)
@@ -380,7 +380,12 @@ class Editor(props.HasProperties):
             log.debug('Changing image data - offset '
                       '{}, volume {}, size {}'.format(
                           change.offset, change.volume, change.oldVals.shape))
-            image.applyChange(change.offset, change.newVals, volume)
+
+            sliceobj = self.__makeSlice(change.offset,
+                                        change.newVals.shape,
+                                        volume)
+            
+            image[sliceobj] = change.newVals
             
         elif isinstance(change, SelectionChange):
             self.__selection.disableListener('selection', self.__name)
@@ -404,12 +409,34 @@ class Editor(props.HasProperties):
             log.debug('Reverting image data change - offset '
                       '{}, volume {}, size {}'.format(
                           change.offset, change.volume, change.oldVals.shape))
-            image.applyChange(change.offset, change.oldVals, volume)
+
+            sliceobj = self.__makeSlice(change.offset,
+                                        change.oldVals.shape,
+                                        volume)
+            image[sliceobj] = change.oldVals
             
         elif isinstance(change, SelectionChange):
             self.__selection.disableListener('selection', self.__name)
             self.__selection.setSelection(change.oldSelection, change.offset)
             self.__selection.enableListener('selection', self.__name)
+
+
+    def __makeSlice(self, offset, shape, volume=None):
+        """Generate a tuple of ``slice`` objects and/or integers, suitable for
+        indexing a region of a 3D image at the given ``offset``, with the given
+        ``shape``. If the image is 4D, the generated slice will index the
+        specified ``volume``.
+        """
+
+        sliceobjs = []
+
+        for i in range(len(offset)):
+            sliceobjs.append(slice(offset[i], offset[i] + shape[i], 1))
+
+        if volume is not None:
+            sliceobjs.append(volume)
+
+        return tuple(sliceobjs)
 
 
 class ValueChange(object):
