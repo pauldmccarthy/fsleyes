@@ -955,7 +955,8 @@ about = {
     FSLeyes was developed at the FMRIB Centre, Nuffield Department of Clinical Neurosciences, Oxford University, United Kingdom.
     
     FSLeyes is a Python application which leverages the following open-source software libraries:
-    
+
+     - indexed_gzip [{}] (https://github.com/pauldmccarthy/indexed_gzip/)
      - jinja2 [{}] (http://jinja.pocoo.org)
      - matplotlib [{}] (http://www.matplotlib.org)
      - nibabel [{}] (http://nipy.org/nibabel)
@@ -966,6 +967,7 @@ about = {
      - pyopengl [{}] (http://pyopengl.sourceforge.net)
      - pyparsing [{}] (http://pyparsing.wikispaces.com/)
      - scipy [{}] (http://www.scipy.org)
+     - six [{}] (https://pythonhosted.org/six/)
      - wxPython [{}] (http://www.wxpython.org)
     
     Some of the icons used in FSLeyes are derived from the Freeline icon set, by Enes Dal, available at https://www.iconfinder.com/Enesdal, and released under the Creative Commons (Attribution 3.0 Unported) license.
@@ -976,7 +978,9 @@ about = {
     # dynamically looks up the version number for
     # each of them, and inserts them into the above
     # string.
-    'libs' : ['jinja2',    'matplotlib', 'nibabel', 'numpy',
-              'PIL',       'props',      'fsl',     'OpenGL',
-              'pyparsing', 'scipy',      'wx'],
+    'libs' : ['indexed_gzip', 'jinja2',    'matplotlib',
+              'nibabel',      'numpy',     'PIL',
+              'props',        'fsl',       'OpenGL',
+              'pyparsing',    'scipy',     'six',
+              'wx'],
 }

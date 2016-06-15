@@ -34,21 +34,23 @@ Dependencies
 *FSLeyes* depends upon the following libraries:
 
 
-| Library                                           | Version |
-| ------------------------------------------------- | ------- |
-| [props](https://git.fmrib.ox.ac.uk/paulmc/props/) | Latest  |
-| [fslpy](https://git.fmrib.ox.ac.uk/paulmc/fslpy/) | Latest  |
-| [PyOpenGL](http://pyopengl.sourceforge.net/)      | 3.1.0   |
-| [numpy](http://www.numpy.org/)                    | 1.11.1  |
-| [scipy](http://www.scipy.org/)                    | 0.17.0  |
-| [matplotlib](http://matplotlib.org/)              | 1.5.1   |
-| [nibabel](http://nipy.org/nibabel/)               | 2.0.2   |
-| [Pillow](https://python-pillow.github.io/)        | 3.2.0   |
-| [PyParsing](http://pyparsing.wikispaces.com/)     | 2.1.1   |
-| [Jinja2](http://jinja.pocoo.org/)                 | 2.8     |
-| [wxPython](http://wxpython.org/)                  | 3.0.2.0 |
-| [OSMesa](http://mesa3d.org/)                      | 8.0.5   |
-| [Sphinx](http://www.sphinx-doc.org/en/stable/)    | 1.4.1   |
+| Library                                                        | Version |
+| -------------------------------------------------------------- | ------- |
+| [props](https://git.fmrib.ox.ac.uk/paulmc/props/)              | Latest  |
+| [fslpy](https://git.fmrib.ox.ac.uk/paulmc/fslpy/)              | Latest  |
+| [indexed_gzip](https://github.com/pauldmccarthy/indexed_gzip/) | Latest  |
+| [PyOpenGL](http://pyopengl.sourceforge.net/)                   | 3.1.0   |
+| [numpy](http://www.numpy.org/)                                 | 1.11.1  |
+| [scipy](http://www.scipy.org/)                                 | 0.17.0  |
+| [six](https://pythonhosted.org/six/)                           | 1.10.0  |
+| [matplotlib](http://matplotlib.org/)                           | 1.5.1   |
+| [nibabel](http://nipy.org/nibabel/)                            | 2.0.2   |
+| [Pillow](https://python-pillow.github.io/)                     | 3.2.0   |
+| [PyParsing](http://pyparsing.wikispaces.com/)                  | 2.1.1   |
+| [Jinja2](http://jinja.pocoo.org/)                              | 2.8     |
+| [wxPython](http://wxpython.org/)                               | 3.0.2.0 |
+| [OSMesa](http://mesa3d.org/)                                   | 8.0.5   |
+| [Sphinx](http://www.sphinx-doc.org/en/stable/)                 | 1.4.1   |
 
  > Notes:
  >   - Sphinx is only needed for building the documentation.
