@@ -392,9 +392,9 @@ class Selection(props.HasProperties):
             cmbLo  = min(currLo, lastLo)
             cmbHi  = max(currHi, lastHi)
 
-            currIdxs.append((currLo, currHi))
-            lastIdxs.append((lastLo, lastHi))
-            cmbIdxs .append((cmbLo,  cmbHi))
+            currIdxs.append((int(currLo), int(currHi)))
+            lastIdxs.append((int(lastLo), int(lastHi)))
+            cmbIdxs .append((int(cmbLo),  int(cmbHi)))
 
         # Make slice objects for each of the indices,
         # to make indexing easier. The last/current
@@ -502,9 +502,9 @@ class Selection(props.HasProperties):
         """
 
         if   len(self.__image.shape) == 3:
-            data = self.__image.data
+            data = self.__image[:]
         elif len(self.__image.shape) == 4:
-            data = self.__image.data[:, :, :, self.__opts.volume]
+            data = self.__image[:, :, :, self.__opts.volume]
         else:
             raise RuntimeError('Only 3D and 4D images are currently supported')
 
@@ -576,8 +576,8 @@ class Selection(props.HasProperties):
                 idx = seedLoc[     ax]
                 rad = searchRadius[ax]
 
-                lo = idx - rad
-                hi = idx + rad + 1
+                lo = int(round(idx - rad))
+                hi = int(round(idx + rad + 1))
 
                 if lo < 0:             lo = 0
                 if hi > shape[ax] - 1: hi = shape[ax]
@@ -673,10 +673,10 @@ class Selection(props.HasProperties):
         if offset is None:
             offset = (0, 0, 0)
 
-        xlo, ylo, zlo = offset
-        xhi           = xlo + block.shape[0]
-        yhi           = ylo + block.shape[1]
-        zhi           = zlo + block.shape[2]
+        xlo, ylo, zlo = [int(o) for o in offset]
+        xhi           = int(xlo + block.shape[0])
+        yhi           = int(ylo + block.shape[1])
+        zhi           = int(zlo + block.shape[2])
 
         self.__storeChange(
             np.array(self.selection[xlo:xhi, ylo:yhi, zlo:zhi]),

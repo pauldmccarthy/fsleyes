@@ -237,13 +237,16 @@ class Editor(props.HasProperties):
         # ValueError if the image has been 
         # removed from the overlay list
         overlayIdx = self.__overlayList.index(image) 
-        opts       = self.__displayCtx.getDisplay(image)
+        opts       = self.__displayCtx.getOpts(image)
         
         roi       = np.zeros(image.shape[:3], dtype=image.dtype)
         selection = self.__selection.selection > 0
 
         if   len(image.shape) == 3:
-            roi[selection] = image[selection]
+            # The image class can't handle fancy indexing,
+            # so we need to retrieve the whole image, then
+            # we can use the boolean selection mask array.
+            roi[selection] = image[:][selection]
         elif len(image.shape) == 4:
             roi[selection] = image[:, :, :, opts.volume][selection]
         else:

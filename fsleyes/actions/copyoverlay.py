@@ -178,7 +178,7 @@ class CopyOverlayAction(action.Action):
             else:      data = np.copy(overlay[:, :, :, opts.volume])
 
         # Create the copy, put it in the list
-        header = overlay.nibImage.get_header()
+        header = overlay.header
         name   = '{}_copy'.format(overlay.name)
         copy   = fslimage.Image(data, name=name, header=header)
         

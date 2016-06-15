@@ -247,7 +247,8 @@ class DisplayContext(props.SyncableHasProperties):
         
         overlayList.addListener('overlays',
                                 self.__name,
-                                self.__overlayListChanged)
+                                self.__overlayListChanged,
+                                immediate=True)
 
         self.addListener('syncOverlayDisplay',
                          self.__name,
@@ -380,7 +381,8 @@ class DisplayContext(props.SyncableHasProperties):
         """Returns the currently selected overlay object,
         or ``None`` if there are no overlays.
         """
-        if len(self.__overlayList) == 0: return None
+        if len(self.__overlayList) == 0:                    return None
+        if self.selectedOverlay >= len(self.__overlayList): return None
         
         return self.__overlayList[self.selectedOverlay]
 

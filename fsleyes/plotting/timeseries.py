@@ -139,7 +139,7 @@ class VoxelTimeSeries(TimeSeries):
 
         if ydata is None:
             opts = self.displayCtx.getOpts(self.overlay)
-            xyz  = opts.getVoxel()
+            xyz  = opts.getVoxel(vround=True)
 
             if xyz is None:
                 return [], []
