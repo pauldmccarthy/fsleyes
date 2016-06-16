@@ -142,6 +142,11 @@ def updateShaderState(self):
     function.
     """
 
+    # TODO GLTensor.ready does not
+    # check V1/2/3/L1/2/3 textures
+    if not self.ready():
+        return
+
     image  = self.image
     shader = self.shader
     opts   = self.displayOpts

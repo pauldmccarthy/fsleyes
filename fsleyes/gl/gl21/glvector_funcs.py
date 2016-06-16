@@ -47,8 +47,6 @@ def updateFragmentShaderState(self, useSpline=False):
     ``glvolume`` or the ``glvector`` shader.
     """
 
-    import fsleyes.gl.gltensor as gltensor
-
     changed             = False
     opts                = self.displayOpts
     shader              = self.shader
@@ -105,12 +103,13 @@ def updateFragmentShaderState(self, useSpline=False):
         # the absolute value before
         # doing the cmap lookup).
         
-        if isinstance(self, gltensor.GLTensor):
-            dmin, dmax = self.vectorImage.dataRange
-        else:
-            dmin, dmax = self.image.dataRange
+        dmin, dmax = self.vectorImage.dataRange
+
+        if self.prefilter is not None and self.prefilterRange is not None:
+            dmin, dmax = self.prefilterRange(dmin, dmax)
             
-        drange     = max(abs(dmin), abs(dmax))
+        drange = max(abs(dmin), abs(dmax))
+        
         normXform  = transform.scaleOffsetXform([1.0  / drange] * 3, [0] * 3)
         cmapXform  = transform.concat(normXform, cmapXform)
 

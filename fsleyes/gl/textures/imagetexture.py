@@ -604,6 +604,10 @@ class ImageTexture(texture.Texture, notifier.Notifier):
 
         dmin, dmax = image.dataRange
 
+        if prefilter      is not None and \
+           prefilterRange is not None:
+            dmin, dmax = prefilterRange(dmin, dmax)
+
         # Offsets/scales which can be used to transform from
         # the texture data (which may be offset or normalised)
         # back to the original voxel data
@@ -633,21 +637,18 @@ class ImageTexture(texture.Texture, notifier.Notifier):
         
         if resolution is not None:
             data = glroutines.subsample(data, resolution, image.pixdim)[0]
-            
+
         if prefilter is not None:
             data = prefilter(data)
-        
+
         if normalise:
-            if prefilter      is not None and \
-               prefilterRange is not None:
-                dmin, dmax = prefilterRange(dmin, dmax)
                 
             if dmax != dmin:
                 data = (data - dmin) / float(dmax - dmin)
 
             data = np.round(data * 65535)
             data = np.array(data, dtype=np.uint16)
-            
+
         elif dtype == np.uint8:  pass
         elif dtype == np.int8:   data = np.array(data + 128,   dtype=np.uint8)
         elif dtype == np.uint16: pass
