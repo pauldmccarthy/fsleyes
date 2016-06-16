@@ -274,9 +274,9 @@ class GLVolume(globject.GLImageObject):
         display .addListener('alpha',           name, self._alphaChanged)
         opts    .addListener('displayRange',    name,
                              self._displayRangeChanged)
-        
-        crPVs[0].addListener(name, self._lowClippingRangeChanged)
-        crPVs[1].addListener(name, self._highClippingRangeChanged)
+
+        crPVs[0].addListener(name, self._lowClippingRangeChanged,  weak=False)
+        crPVs[1].addListener(name, self._highClippingRangeChanged, weak=False)
         
         opts    .addListener('clipImage',       name, self._clipImageChanged)
         opts    .addListener('invertClipping',  name,
@@ -372,7 +372,8 @@ class GLVolume(globject.GLImageObject):
         if fslgl.glvolume_funcs.updateShaderState(self):
             self.notify()
 
-            
+
+    @globject.runWhenReady
     def _lowClippingRangeChanged(self, *a):
         """Called when the low :attr:`.VolumeOpts.clippingRange` property
         changes. Separate listeners are used for the low and high clipping
@@ -386,6 +387,8 @@ class GLVolume(globject.GLImageObject):
         if fslgl.glvolume_funcs.updateShaderState(self):
             self.notify()
 
+
+    @globject.runWhenReady
     def _highClippingRangeChanged(self, *a):
         """Called when the high :attr:`.VolumeOpts.clippingRange` property
         changes (see :meth:`_lowClippingRangeChanged`).
