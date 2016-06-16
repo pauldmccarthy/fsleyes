@@ -394,12 +394,12 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
 
                     overlayType = 'mask' 
                     data        = np.zeros(atlas.shape, dtype=np.uint16)
-                    data[atlas.data == labelIdx] = labelVal
+                    data[atlas[:] == labelIdx] = labelVal
 
                 # regional probability image
                 else:
                     overlayType = 'volume' 
-                    data        = atlas.data[:, :, :, labelIdx]
+                    data        = atlas[:, :, :, labelIdx]
 
             overlay = fslimage.Image(
                 data,
