@@ -464,11 +464,20 @@ def loadImage(dtype, path):
 
     # We're going to load the file
     # twice - first to get its
-    # dimensions, and then for real. 
-    image = fslimage.Image(path,
-                           loadData=False,
-                           calcRange=False,
-                           indexed=False)
+    # dimensions, and then for real.
+    #
+    # TODO It is annoying that you have to create a 'dtype'
+    #      instance twice, as e.g. the MelodicImage does a
+    #      bunch of extra stuff (e.g. loading component
+    #      time courses) that don't need to be done. Maybe
+    #      the path passed to this function could be resolved
+    #      (e.g. ./filtered_func.ica/ turned into
+    #      ./filtered_func.ica/melodic_IC) so that you can
+    #      just create a fsl.data.Image, or a nib.Nifti1Image.
+    image = dtype(path,
+                  loadData=False,
+                  calcRange=False,
+                  indexed=False)
     nbytes = np.prod(image.shape) * image.dtype.itemsize
     image  = None
 
