@@ -187,9 +187,12 @@ def saveOverlay(overlay, display=None):
             doSave(overlay)
             return
 
-        fromDir = op.dirname(overlay.dataSource)
+        fromDir  = op.dirname(overlay.dataSource)
+        filename = fslimage.removeExt(op.basename(overlay.dataSource))
+        filename = '{}_copy'.format(filename)
     else:
-        fromDir = fslsettings.read('loadSaveOverlayDir', os.getcwd())
+        fromDir  = fslsettings.read('loadSaveOverlayDir', os.getcwd())
+        filename = overlay.name
 
     # Ask the user where they
     # want to save the image
@@ -197,6 +200,7 @@ def saveOverlay(overlay, display=None):
     dlg = wx.FileDialog(wx.GetApp().GetTopWindow(),
                         message=msg,
                         defaultDir=fromDir,
+                        defaultFile=filename,
                         style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) 
 
     if dlg.ShowModal() != wx.ID_OK:
