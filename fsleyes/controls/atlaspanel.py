@@ -381,7 +381,7 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
             # label image
             if labelIdx is None:
                 overlayType = 'label'
-                data        = atlas.data
+                data        = atlas[:]
 
             else:
 
