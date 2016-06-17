@@ -471,7 +471,20 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
             # behaviour. So we take (floor(x)+0.5) instead
             # of rounding, to force consistent behaviour
             # (i.e. always rounding central values up).
-            coords = np.floor(coords + 0.5)
+            #
+            # We'll also avoid flooring coordinates that
+            # are close to 0 to -1, by clamping them here.
+            coords                        = coords + 0.5
+            coords[np.isclose(coords, 0)] = 0
+            coords                        = np.floor(coords)
+
+            # Clamp the higher voxel coordinates just
+            # like we did to near-0 coordinates
+            shape = self.overlay.shape[:3]
+            for ax in range(3):
+                
+                closeHigh = np.isclose(coords[..., ax], shape[ax])
+                coords[closeHigh, ax] = shape[ax] - 1
 
         return coords
 
