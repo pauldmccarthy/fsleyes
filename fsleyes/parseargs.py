@@ -1336,9 +1336,11 @@ def parseArgs(mainParser,
 
         # If the user did not specify an overlay type
         # for this overlay, use its default (see the
-        # display.OVERLAY_TYPES) dictionary)
-        if otArgs.overlayType is None:
-            otArgs.overlayType = fsldisplay.OVERLAY_TYPES[ovlType][0]
+        # display.OVERLAY_TYPES) dictionary).
+        overlayTypeSet = otArgs.overlayType is not None
+        
+        if not overlayTypeSet:
+            otArgs.overlayType = fsldisplay.getOverlayTypes(ovlType)[0]
 
         # Now parse the Display/DisplayOpts
         # with the appropriate parser
@@ -1362,11 +1364,17 @@ def parseArgs(mainParser,
             print(optUsage)
             sys.exit(1)
  
-
-        # Attach the path and the overlay
-        # type to the opts namespace object
-        optArgs.overlayType = otArgs.overlayType
-        optArgs.overlay     = ovlFile
+        # Attach the path and the overlay type
+        # to the opts namespace object. If an
+        # overlay type was not specified, make
+        # sure that the namespace object reflects
+        # this fact by setting the overlay type
+        # to None, so that it does not override
+        # the choice made by the Display class
+        # when it is created.
+        optArgs.overlay = ovlFile 
+        if overlayTypeSet: optArgs.overlayType = otArgs.overlayType
+        else:              optArgs.overlayType = None
 
         # We just add a list of argparse.Namespace
         # objects, one for each overlay, to
@@ -1896,7 +1904,7 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
             fileOpts = FILE_OPTIONS.get(opts, [])
 
             for fileOpt in fileOpts:
-                value = getattr(optArgs, fileOpt)
+                value = getattr(optArgs, fileOpt, None)
                 if value is not None:
 
                     image = _findOrLoad(overlayList,

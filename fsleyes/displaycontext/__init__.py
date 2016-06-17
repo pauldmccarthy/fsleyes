@@ -192,3 +192,40 @@ DISPLAY_OPTS_MAP = {
 the :class:`DisplayOpts` subclass which contains overlay type-specific
 display options.
 """
+
+
+def getOverlayTypes(overlay):
+    """Returns a list of possible overlay types for the given overlay.
+    This is a wrapper around the :attr:`OVERLAY_TYPES` dictionary, which
+    might adjust the returned list based on properties of the overlay.
+    """
+
+    import fsl.data.image as fslimage
+    
+    possibleTypes = list(OVERLAY_TYPES[overlay])
+
+    if not isinstance(overlay, fslimage.Image):
+        return possibleTypes
+
+    isVector = len(overlay.shape) == 4 and overlay.shape[-1] == 3
+
+    # Special cases:
+    #
+    # If the overlay looks like a vector image,
+    # make rgbvector the default overlay type
+    if isVector:
+        possibleTypes.remove(   'rgbvector')
+        possibleTypes.remove(   'linevector')
+        possibleTypes.insert(0, 'linevector')
+        possibleTypes.insert(0, 'rgbvector')
+        
+    # Otherwise, remove the vector options
+    else:
+        
+        try:               possibleTypes.remove('rgbvector')
+        except ValueError: pass
+
+        try:               possibleTypes.remove('linevector')
+        except ValueError: pass 
+
+    return possibleTypes
