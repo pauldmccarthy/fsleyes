@@ -496,6 +496,7 @@ properties = TypeDict({
     'CanvasPanel.profile'            : 'Mode',
 
     'SceneOpts.showCursor'         : 'Show location cursor',
+    'SceneOpts.cursorGap'          : 'Show gap at cursor centre',
     'SceneOpts.bgColour'           : 'Background colour',
     'SceneOpts.cursorColour'       : 'Location cursor colour',
     'SceneOpts.showColourBar'      : 'Show colour bar',

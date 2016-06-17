@@ -31,6 +31,7 @@ class SceneOpts(props.HasProperties):
 
     
     showCursor      = copy.copy(canvasopts.SliceCanvasOpts.showCursor)
+    cursorGap       = copy.copy(canvasopts.SliceCanvasOpts.cursorGap)
     zoom            = copy.copy(canvasopts.SliceCanvasOpts.zoom)
     bgColour        = copy.copy(canvasopts.SliceCanvasOpts.bgColour)
     cursorColour    = copy.copy(canvasopts.SliceCanvasOpts.cursorColour)

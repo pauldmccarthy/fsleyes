@@ -228,6 +228,7 @@ properties = TypeDict({
 
     'SceneOpts.showCursor'         : 'Show/hide the cursor which highlights '
                                      'the current location.',
+    'SceneOpts.cursorGap'          : 'Show a gap at the cursor centre.',
     'SceneOpts.cursorColour'       : 'Colour of the location cursor.',
     'SceneOpts.bgColour'           : 'Canvas background colour.',
     'SceneOpts.showColourBar'      : 'If the currently selected overlay is a '

@@ -12,7 +12,7 @@ functionality to display a 2D slice from a collection of 3D overlays.
 import copy
 import logging
 
-import numpy as np 
+import numpy as np
 
 import props
 
@@ -145,6 +145,7 @@ class SliceCanvas(props.HasProperties):
     zoom            = copy.copy(canvasopts.SliceCanvasOpts.zoom)
     displayBounds   = copy.copy(canvasopts.SliceCanvasOpts.displayBounds)
     showCursor      = copy.copy(canvasopts.SliceCanvasOpts.showCursor)
+    cursorGap       = copy.copy(canvasopts.SliceCanvasOpts.cursorGap)
     zax             = copy.copy(canvasopts.SliceCanvasOpts.zax)
     invertX         = copy.copy(canvasopts.SliceCanvasOpts.invertX)
     invertY         = copy.copy(canvasopts.SliceCanvasOpts.invertY)
@@ -217,6 +218,7 @@ class SliceCanvas(props.HasProperties):
         self.addListener('bgColour',      self.name, self.Refresh)
         self.addListener('cursorColour',  self.name, self.Refresh)
         self.addListener('showCursor',    self.name, self.Refresh)
+        self.addListener('cursorGap',     self.name, self.Refresh)
         self.addListener('invertX',       self.name, self.Refresh)
         self.addListener('invertY',       self.name, self.Refresh)
         self.addListener('zoom',          self.name, self._zoomChanged)
@@ -1275,10 +1277,6 @@ class SliceCanvas(props.HasProperties):
         
     def _drawCursor(self):
         """Draws a green cursor at the current X/Y position."""
-        
-        # A vertical line at xpos, and a horizontal line at ypos
-        xverts = np.zeros((2, 2))
-        yverts = np.zeros((2, 2))
 
         xmin, xmax = self.displayCtx.bounds.getRange(self.xax)
         ymin, ymax = self.displayCtx.bounds.getRange(self.yax)
@@ -1286,18 +1284,81 @@ class SliceCanvas(props.HasProperties):
         x = self.pos.x
         y = self.pos.y
 
-        xverts[:, 0] = x
-        xverts[:, 1] = [ymin, ymax]
-        yverts[:, 0] = [xmin, xmax]
-        yverts[:, 1] = y
+        lines = []
+
+        # Show a vertical line at xpos,
+        # and a horizontal line at ypos
+        if not self.cursorGap:
+            lines.append(((x,    ymin), (x,    ymax)))
+            lines.append(((xmin, y),    (xmax, y)))
+
+        # As above, but with a gap
+        # at the cursor centre
+        else:
+            ovl = self.displayCtx.getSelectedOverlay()
+
+            # Not a NIFTI image - just
+            # use a fixed gap size
+            if ovl is None or not isinstance(ovl, fslimage.Nifti1):
+                pass
+
+            # If the current overlay is NIFTI, make
+            # the gap size match its voxel size
+            else:
+
+                # Get the current voxel
+                # coordinates, 
+                opts = self.displayCtx.getOpts(ovl)
+                vox  = np.array(opts.getVoxel(vround=False), dtype=np.float32)
+
+                # Figure out the voxel coord axes
+                # that (approximately) correspond
+                # with the display x/y axes.
+                axes = ovl.axisMapping(opts.getTransform('voxel', 'display'))
+                axes = np.abs(axes) - 1
+                xax  = axes[self.xax]
+                yax  = axes[self.yax]
+
+                # Clamp the voxel x/y coords to
+                # the voxel edge (round, then
+                # offset by 0.5 - integer coords
+                # correspond to the voxel centre).
+                vox[xax] = np.round(vox[xax]) - 0.5
+                vox[yax] = np.round(vox[yax]) - 0.5
+
+                # Get the voxels that are above 
+                # and next to our current voxel.
+                voxx = np.copy(vox)
+                voxy = np.copy(vox)
+
+                voxx[xax] += 1
+                voxy[yax] += 1
+
+                # Transform those integer coords back
+                # into display coordinates to get the
+                # display location on the voxel boundary.
+                vloc  = opts.transformCoords(vox,  'voxel', 'display')
+                vlocx = opts.transformCoords(voxx, 'voxel', 'display')
+                vlocy = opts.transformCoords(voxy, 'voxel', 'display')
+                
+                xlow  = min(vloc[self.xax], vlocx[self.xax])
+                xhigh = max(vloc[self.xax], vlocx[self.xax])
+                ylow  = min(vloc[self.yax], vlocy[self.yax])
+                yhigh = max(vloc[self.yax], vlocy[self.yax])
+
+                lines.append(((xmin,  y),     (xlow, y)))
+                lines.append(((xhigh, y),     (xmax, y)))
+                lines.append(((x,     ymin),  (x,    ylow)))
+                lines.append(((x,     yhigh), (x,    ymax)))
 
         kwargs = {
             'colour' : self.cursorColour,
             'width'  : 1
         }
-        
-        self._annotations.line(xverts[0], xverts[1], **kwargs)
-        self._annotations.line(yverts[0], yverts[1], **kwargs)
+
+        for line in lines:
+            self._annotations.line(line[0], line[1], **kwargs)
+            self._annotations.line(line[0], line[1], **kwargs)
 
 
     def _drawOffscreenTextures(self):

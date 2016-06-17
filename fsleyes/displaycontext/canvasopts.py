@@ -56,6 +56,13 @@ class SliceCanvasOpts(props.HasProperties):
     """If ``False``, the crosshairs which show the current cursor location
     will not be drawn.
     """
+
+    
+    cursorGap = props.Boolean(default=False)
+    """If ``True``, and the currently selected overlay is a :class:`.Nifti1`
+    instance, a gap will be shown at the cursor centre (i.e. the current
+    voxel).
+    """
  
 
     zax = props.Choice((0, 1, 2),

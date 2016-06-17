@@ -162,6 +162,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__ycanvas.bindProps('showCursor',   sceneOpts)
         self.__zcanvas.bindProps('showCursor',   sceneOpts)
 
+        self.__xcanvas.bindProps('cursorGap',   sceneOpts)
+        self.__ycanvas.bindProps('cursorGap',   sceneOpts)
+        self.__zcanvas.bindProps('cursorGap',   sceneOpts) 
+
         self.__xcanvas.bindProps('bgColour',     sceneOpts)
         self.__ycanvas.bindProps('bgColour',     sceneOpts)
         self.__zcanvas.bindProps('bgColour',     sceneOpts)

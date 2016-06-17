@@ -110,6 +110,7 @@ class CanvasSettingsPanel(fslpanel.FSLEyesSettingsPanel):
             props.Widget('layout', labels=strings.choices['OrthoOpts.layout']), 
             props.Widget('zoom', spin=False, showLimits=False),
             props.Widget('showLabels'),
+            props.Widget('cursorGap'),
             props.Widget('showXCanvas'),
             props.Widget('showYCanvas'),
             props.Widget('showZCanvas')]
