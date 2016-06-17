@@ -12,13 +12,15 @@ See the :mod:`fsleyes` package documentation for more details on ``fsleyes``.
 
 from __future__ import print_function
 
-import wx
+import            os
+import os.path as op
+import            sys
+import            logging
+import            warnings
+import            textwrap
+import            argparse
 
-import sys
-import logging
-import warnings
-import textwrap
-import argparse
+import wx
 
 from fsl.utils.platform import platform as fslplatform
 
@@ -146,12 +148,41 @@ def initialise(splash, namespace):
     """
 
     import                       props
+    import fsl.utils.settings as fslsettings
     import fsleyes.gl         as fslgl
     import fsleyes.colourmaps as colourmaps
 
     props.initGUI()
 
     colourmaps.init()
+
+    # The save/load directory defaults
+    # to the current working directory.
+    curDir = op.normpath(os.getcwd())
+
+    # But if we are running as a frozen application, check to
+    # see if FSLeyes has been started by the system (e.g.
+    # double-clicking instead of being called from the CLI).
+    #
+    # If so, we set the save/load directory
+    # to the user's home directory instead.
+    if fslplatform.frozen:
+
+        fsleyesDir = op.dirname(__file__)
+
+        if fslplatform.os == 'Darwin':
+
+            fsleyesDir = op.normpath(op.join(fsleyesDir,
+                                             '..', '..', '..', '..'))
+
+            if curDir == fsleyesDir:
+                curDir = op.expanduser('~')
+
+        # TODO does this work under Linux?
+        elif curDir == fsleyesDir:
+            pass
+
+    fslsettings.write('loadSaveOverlayDir', curDir)
 
     # Force the creation of a wx.glcanvas.GLContext object,
     # and initialise OpenGL version-specific module loads.
