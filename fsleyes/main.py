@@ -170,17 +170,25 @@ def initialise(splash, namespace):
 
         fsleyesDir = op.dirname(__file__)
 
+        # If we're a frozen OSX application,
+        # we need to adjust the FSLeyes dir
+        # (which will be:
+        #   [install_dir]/FSLeyes.app/Contents/MacOS/fsleyes/),
+        #
+        # Because the cwd will default to:
+        #   [install_dir/
+        
         if fslplatform.os == 'Darwin':
 
             fsleyesDir = op.normpath(op.join(fsleyesDir,
                                              '..', '..', '..', '..'))
 
-            if curDir == fsleyesDir:
-                curDir = op.expanduser('~')
+        # TODO does this work in linux?
+        elif fslplatform.os == 'Linux':
+            fsleyesDir = op.normpath(op.join(fsleyesDir, '..')) 
 
-        # TODO does this work under Linux?
-        elif curDir == fsleyesDir:
-            pass
+        if curDir == fsleyesDir:
+            curDir = op.expanduser('~')
 
     fslsettings.write('loadSaveOverlayDir', curDir)
 
