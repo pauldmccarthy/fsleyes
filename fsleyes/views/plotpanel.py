@@ -40,6 +40,7 @@ import fsleyes.overlay                    as fsloverlay
 import fsleyes.colourmaps                 as fslcm
 import fsleyes.plotting                   as plotting
 import fsleyes.controls.overlaylistpanel  as overlaylistpanel
+import fsleyes.controls.plotlistpanel     as plotlistpanel
 from . import                                viewpanel
 
 
@@ -1216,6 +1217,17 @@ class OverlayPlotPanel(PlotPanel):
                                         elistbox.ELB_NO_REMOVE |
                                         elistbox.ELB_NO_MOVE),
                          location=wx.LEFT)
+
+
+    @actions.toggleControlAction(plotlistpanel.PlotListPanel)
+    def togglePlotList(self, floatPane=False):
+        """Shows/hides a :class:`.PlotListPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(plotlistpanel.PlotListPanel,
+                         self,
+                         location=wx.LEFT,
+                         floatPane=floatPane)
 
 
     def __showModeChanged(self, *a):

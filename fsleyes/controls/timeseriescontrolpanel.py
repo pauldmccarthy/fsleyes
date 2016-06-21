@@ -85,8 +85,7 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
 
         widgets = self.getWidgetList()
         tsPanel = self.getPlotPanel()
-        tsProps = ['showMode',
-                   'plotMode',
+        tsProps = ['plotMode',
                    'usePixdim',
                    'plotMelodicICs']
 
@@ -94,8 +93,6 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
             kwargs = {}
             if prop == 'plotMode':
                 kwargs['labels'] = strings.choices[tsPanel, 'plotMode']
-            elif prop == 'showMode':
-                kwargs['labels'] = strings.choices[tsPanel, 'showMode']
                 
             widget = props.makeWidget(widgets, tsPanel, prop, **kwargs)
             widgets.AddWidget(

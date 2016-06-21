@@ -297,14 +297,14 @@ actions = TypeDict({
     'LightBoxPanel.toggleLightBoxToolBar' : 'Lightbox toolbar',
 
     'PlotPanel.screenshot'                          : 'Take screenshot',
-    'TimeSeriesPanel.toggleTimeSeriesList'          : 'Time series list',
-    'TimeSeriesPanel.toggleOverlayList'             : 'Overlay list',
+    'OverlayPlotPanel.toggleOverlayList'            : 'Overlay list',
+    'TimeSeriesPanel.togglePlotList'                : 'Time series list',
     'TimeSeriesPanel.toggleTimeSeriesControl'       : 'Time series control',
     'TimeSeriesPanel.toggleTimeSeriesToolBar'       : 'Time series toolbar', 
-    'HistogramPanel.toggleHistogramList'            : 'Histogram list',
+    'HistogramPanel.togglePlotList'                 : 'Histogram list',
     'HistogramPanel.toggleHistogramControl'         : 'Histogram control',
     'HistogramPanel.toggleHistogramToolBar'         : 'Histogram toolbar',
-    'PowerSpectrumPanel.togglePowerSpectrumList'    : 'Power spectrum list',
+    'PowerSpectrumPanel.togglePlotList'             : 'Power spectrum list',
     'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Power spectrum control',
     'PowerSpectrumPanel.togglePowerSpectrumToolBar' : 'Power spectrum toolbar',
 

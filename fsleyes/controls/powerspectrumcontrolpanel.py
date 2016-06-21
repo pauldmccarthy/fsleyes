@@ -53,16 +53,12 @@ class PowerSpectrumControlPanel(plotcontrolpanel.PlotControlPanel):
         
         psPanel = self.getPlotPanel()
         widgets = self.getWidgetList()
-        psProps = ['showMode',
-                   'plotFrequencies',
+        psProps = ['plotFrequencies',
                    'plotMelodicICs']
         
         for prop in psProps:
             
             kwargs = {}
-            
-            if prop == 'showMode':
-                kwargs['labels'] = strings.choices[psPanel, 'showMode']
                 
             widget = props.makeWidget(widgets, psPanel, prop, **kwargs)
             

@@ -43,15 +43,13 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
 
         hsPanel   = self.getPlotPanel()
         widgets   = self.getWidgetList()
-        histProps = ['histType', 'showMode']
+        histProps = ['histType']
 
         for prop in histProps:
 
             kwargs = {}
 
-            if prop == 'showMode':
-                kwargs['labels'] = strings.choices[hsPanel, 'showMode'] 
-            elif prop == 'histType':
+            if prop == 'histType':
                 kwargs['labels'] = strings.choices[hsPanel, 'histType']
 
             widget = props.makeWidget(widgets, hsPanel, prop, **kwargs)

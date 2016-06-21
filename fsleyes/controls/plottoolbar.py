@@ -14,7 +14,6 @@ import props
 import fsleyes.icons    as icons
 import fsleyes.actions  as actions
 import fsleyes.tooltips as tooltips
-import fsleyes.strings  as strings
 import fsleyes.toolbar  as fsltoolbar
 
 
@@ -48,20 +47,12 @@ class PlotToolBar(fsltoolbar.FSLEyesToolBar):
             'screenshot',
             icon=icons.findImageFile('camera24'),
             tooltip=tooltips.actions[plotPanel, 'screenshot'])
-        mode       = props.Widget(
-            'showMode',
-            labels=strings.choices[     plotPanel, 'showMode'],
-            tooltip=tooltips.properties[plotPanel, 'showMode'])
 
         screenshot = props.buildGUI(self, plotPanel, screenshot)
         add        = props.buildGUI(self, plotPanel, add)
         remove     = props.buildGUI(self, plotPanel, remove)
-        mode       = props.buildGUI(self, plotPanel, mode)
 
-        mode = self.MakeLabelledTool(
-            mode, strings.properties[plotPanel, 'showMode'])
-
-        self.SetTools([screenshot, add, remove, mode])
+        self.SetTools([screenshot, add, remove])
 
         
     def getPlotPanel(self):

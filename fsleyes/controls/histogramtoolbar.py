@@ -47,11 +47,11 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
             tooltip=tooltips.actions[histPanel, 'toggleHistogramControl'])
  
         togList = actions.ToggleActionButton(
-            'toggleHistogramList',
+            'togglePlotList',
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('listHighlight24'),
                   icons.findImageFile('list24')],
-            tooltip=tooltips.actions[histPanel, 'toggleHistogramList']) 
+            tooltip=tooltips.actions[histPanel, 'togglePlotList']) 
  
         mode = props.Widget('histType',
                             labels=strings.choices[     histPanel, 'histType'],

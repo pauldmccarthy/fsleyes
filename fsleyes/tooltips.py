@@ -475,17 +475,17 @@ actions = TypeDict({
 
     'TimeSeriesPanel.toggleTimeSeriesControl' : 'Show/hide the time '
                                                 'series control panel.',
-    'TimeSeriesPanel.toggleTimeSeriesList'    : 'Show/hide the time '
+    'TimeSeriesPanel.togglePlotList'          : 'Show/hide the time '
                                                 'series list panel.',
     'HistogramPanel.toggleHistogramControl'   : 'Show/hide the histogram '
                                                 'control panel.',
-    'HistogramPanel.toggleHistogramList'      : 'Show/hide the histogram '
+    'HistogramPanel.togglePlotList'           : 'Show/hide the histogram '
                                                 'list panel.',
     
     'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Show/hide the power '
                                                       'spectrum control '
                                                       'panel.',
-    'PowerSpectrumPanel.togglePowerSpectrumList'    : 'Show/hide the power '
+    'PowerSpectrumPanel.togglePlotList'             : 'Show/hide the power '
                                                       'spectrum list '
                                                       'panel.', 
  
