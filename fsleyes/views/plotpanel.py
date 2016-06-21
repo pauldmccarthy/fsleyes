@@ -1166,12 +1166,21 @@ class OverlayPlotPanel(PlotPanel):
         for overlay in allOverlays:
 
             targets, propNames = self.__refreshProps.get(overlay, (None, None))
+            display            = self._displayCtx.getDisplay(overlay)
+            addListener        = overlay in targetOverlays
+
+            if addListener:
+                if not display.hasListener('enabled', self._name):
+                    display.addListener('enabled',
+                                        self._name,
+                                        self.__displayEnabledChanged)
+            else:
+                display.removeListener('enabled', self._name)
 
             if targets is None:
                 continue
 
-            ds          = self.__dataSeries[overlay]
-            addListener = overlay in targetOverlays
+            ds = self.__dataSeries[overlay]
 
             if addListener:
                 ds.addGlobalListener(self.__name,
@@ -1273,9 +1282,6 @@ class OverlayPlotPanel(PlotPanel):
                 self.dataSeries.remove(ds)
                 ds.destroy()
 
-                display = self._displayCtx.getDisplay(ds.overlay)
-                display.removeListener('enabled', self._name)
-
         for overlay in list(self.__dataSeries.keys()):
             if overlay not in self._overlayList:
                 self.clearDataSeries(overlay)
@@ -1283,10 +1289,6 @@ class OverlayPlotPanel(PlotPanel):
         for overlay in self._overlayList:
             display = self._displayCtx.getDisplay(overlay)
             display.unsyncFromParent('enabled')
-
-            display.addListener('enabled',
-                                self._name,
-                                self.__displayEnabledChanged)
 
         self.__selectedOverlayChanged()
 
