@@ -34,6 +34,10 @@ class DataSeries(props.HasProperties):
     colour = props.Colour()
     """Line colour. """
 
+
+    enabled = props.Boolean(default=True)
+    """Draw or not draw?"""
+
     
     alpha = props.Real(minval=0.0, maxval=1.0, default=1.0, clamped=True)
     """Line transparency."""

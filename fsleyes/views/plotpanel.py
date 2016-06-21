@@ -29,15 +29,18 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as Canvas
 from matplotlib.backends.backend_wx    import NavigationToolbar2Wx
 
-import                       props
-import fsl.utils.async    as async
-import fsl.data.image     as fslimage
-import fsleyes.strings    as strings
-import fsleyes.actions    as actions
-import fsleyes.overlay    as fsloverlay
-import fsleyes.colourmaps as fslcm
-import fsleyes.plotting   as plotting
-from . import                viewpanel
+
+import                                       props
+import pwidgets.elistbox                  as elistbox
+import fsl.utils.async                    as async
+import fsl.data.image                     as fslimage
+import fsleyes.strings                    as strings
+import fsleyes.actions                    as actions
+import fsleyes.overlay                    as fsloverlay
+import fsleyes.colourmaps                 as fslcm
+import fsleyes.plotting                   as plotting
+import fsleyes.controls.overlaylistpanel  as overlaylistpanel
+from . import                                viewpanel
 
 
 log = logging.getLogger(__name__)
@@ -424,6 +427,10 @@ class PlotPanel(viewpanel.ViewPanel):
         ylims = []
 
         for ds in toPlot:
+
+            if not ds.enabled:
+                continue
+
             xlim, ylim = self.__drawOneDataSeries(ds, preproc, **plotArgs)
 
             if (xlim[1] - xlim[0] < 0.0000000001) or \
@@ -812,14 +819,14 @@ class OverlayPlotPanel(PlotPanel):
     """
 
     
-    showMode = props.Choice(('current', 'all', 'none'))
+    showMode = props.Choice(('all', 'current', 'none'))
     """Defines which data series to plot.
 
     =========== =====================================================
+    ``all``     The data series for all compatible overlays in the 
+                :class:`.OverlayList` are plotted.
     ``current`` The data series for the currently selected overlay is
                 plotted.
-    ``all``     The data series for all compatible overlays in the
-                :class:`.OverlayList` are plotted.
     ``none``    Only the ``DataSeries`` that are in the
                 :attr:`.PlotPanel.dataSeries` list will be plotted.
     =========== =====================================================
@@ -889,7 +896,8 @@ class OverlayPlotPanel(PlotPanel):
         self._overlayList.addListener('overlays',
                                       self.__name,
                                       self.__overlayListChanged)
-        
+
+        self.__overlayListChanged()
         self.updateDataSeries()
         self.__dataSeriesChanged()
 
@@ -1193,6 +1201,23 @@ class OverlayPlotPanel(PlotPanel):
                     except: pass
 
 
+    @actions.toggleControlAction(overlaylistpanel.OverlayListPanel)
+    def toggleOverlayList(self):
+        """Shows/hides an :class:`.OverlayListPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """ 
+        self.togglePanel(overlaylistpanel.OverlayListPanel,
+                         showVis=True,
+                         showSave=False,
+                         showGroup=False,
+                         elistboxStyle=(elistbox.ELB_REVERSE   |
+                                        elistbox.ELB_TOOLTIP   |
+                                        elistbox.ELB_NO_ADD    |
+                                        elistbox.ELB_NO_REMOVE |
+                                        elistbox.ELB_NO_MOVE),
+                         location=wx.LEFT)
+
+
     def __showModeChanged(self, *a):
         """Called when the :attr:`showMode` changes.  Makes sure that relevant
         property listeners are registered so the plot can be updated at the
@@ -1236,8 +1261,32 @@ class OverlayPlotPanel(PlotPanel):
                 self.dataSeries.remove(ds)
                 ds.destroy()
 
+                display = self._displayCtx.getDisplay(ds.overlay)
+                display.removeListener('enabled', self._name)
+
         for overlay in list(self.__dataSeries.keys()):
             if overlay not in self._overlayList:
                 self.clearDataSeries(overlay)
 
+        for overlay in self._overlayList:
+            display = self._displayCtx.getDisplay(overlay)
+            display.unsyncFromParent('enabled')
+
+            display.addListener('enabled',
+                                self._name,
+                                self.__displayEnabledChanged)
+
         self.__selectedOverlayChanged()
+
+
+    def __displayEnabledChanged(self, value, valid, display, name):
+        """Called when the :attr:`.Display.enabled` property for any overlay
+        changes. Propagates the change on to the corresponding
+        :attr:`.DataSeries.enabled` property, and triggers a plot refresh.
+        """
+        
+        ds = self.__dataSeries.get(display.getOverlay())
+
+        if ds is not None:
+            ds.enabled = display.enabled
+            self.asyncDraw()

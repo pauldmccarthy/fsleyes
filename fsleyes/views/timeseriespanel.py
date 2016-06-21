@@ -196,6 +196,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         actions = [self.screenshot,
                    self.toggleTimeSeriesToolBar,
                    self.toggleTimeSeriesList,
+                   self.toggleOverlayList,
                    self.toggleTimeSeriesControl]
 
         names = [a.__name__ for a in actions]
@@ -228,7 +229,15 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         newTss = []
         for ts in tss:
             if isinstance(ts, plotting.FEATTimeSeries):
-                newTss += ts.getModelTimeSeries()
+
+                mtss    = ts.getModelTimeSeries()
+                newTss += mtss
+
+                # If the FEATTimeSeries is disabled,
+                # disable the associated model time
+                # series.
+                for mts in mtss:
+                    mts.enabled = ts.enabled
             else:
                 newTss.append(ts)
         tss = newTss

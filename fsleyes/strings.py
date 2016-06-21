@@ -298,6 +298,7 @@ actions = TypeDict({
 
     'PlotPanel.screenshot'                          : 'Take screenshot',
     'TimeSeriesPanel.toggleTimeSeriesList'          : 'Time series list',
+    'TimeSeriesPanel.toggleOverlayList'             : 'Overlay list',
     'TimeSeriesPanel.toggleTimeSeriesControl'       : 'Time series control',
     'TimeSeriesPanel.toggleTimeSeriesToolBar'       : 'Time series toolbar', 
     'HistogramPanel.toggleHistogramList'            : 'Histogram list',
