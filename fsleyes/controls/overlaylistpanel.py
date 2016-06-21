@@ -55,22 +55,45 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
     """
 
     
-    def __init__(self, parent, overlayList, displayCtx):
+    def __init__(self,
+                 parent,
+                 overlayList,
+                 displayCtx,
+                 showVis=True,
+                 showGroup=True,
+                 showSave=True,
+                 elistboxStyle=None):
         """Create an ``OverlayListPanel``.
 
         :param parent:      The :mod:`wx` parent object.
         :param overlayList: An :class:`.OverlayList` instance.
         :param displayCtx:  A :class:`.DisplayContext` instance.
+        :arg showVis:       If ``True`` (the default), a button will be shown
+                            alongside each overlay, allowing the user to
+                            toggle the overlay visibility.
+        :arg showGroup:     If ``True`` (the default), a button will be shown
+                            alongside each overlay, allowing the user to
+                            toggle overlay grouping.
+        :arg showSave:      If ``True`` (the default), a button will be shown
+                            alongside each overlay, allowing the user to save
+                            the overlay (if it is not saved).
+        :arg elistboxStyle: Style flags passed through to the
+                            :class:`.EditableListBox`.
+        
         """
         
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
+        self.__showVis   = showVis
+        self.__showGroup = showGroup
+        self.__showSave  = showSave
+
+        if elistboxStyle is None:
+            elistboxStyle = (elistbox.ELB_REVERSE | elistbox.ELB_TOOLTIP)
+
         # list box containing the list of overlays - it 
         # is populated in the _overlayListChanged method
-        self.__listBox = elistbox.EditableListBox(
-            self,
-            style=(elistbox.ELB_REVERSE | 
-                   elistbox.ELB_TOOLTIP))
+        self.__listBox = elistbox.EditableListBox(self, style=elistboxStyle)
 
         # listeners for when the user does
         # something with the list box
@@ -184,7 +207,10 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
                                     overlay,
                                     display,
                                     self._displayCtx,
-                                    self.__listBox)
+                                    self.__listBox,
+                                    self.__showVis,
+                                    self.__showGroup,
+                                    self.__showSave)
 
             self.__listBox.SetItemWidget(i, widget)
 
@@ -313,7 +339,15 @@ class ListItemWidget(wx.Panel):
     """ 
 
     
-    def __init__(self, parent, overlay, display, displayCtx, listBox):
+    def __init__(self,
+                 parent,
+                 overlay,
+                 display,
+                 displayCtx,
+                 listBox,
+                 showVis=True,
+                 showGroup=True,
+                 showSave=True):
         """Create a ``ListItemWidget``.
 
         :arg parent:     The :mod:`wx` parent object.
@@ -322,6 +356,13 @@ class ListItemWidget(wx.Panel):
         :arg displayCtx: The :class:`.DisplayContext` instance.
         :arg listBox:    The :class:`.EditableListBox` that contains this
                          ``ListItemWidget``.
+        :arg showVis:    If ``True`` (the default), a button will be shown
+                         allowing the user to toggle the overlay visibility.
+        :arg showGroup:  If ``True`` (the default), a button will be shown
+                         allowing the user to toggle overlay grouping.
+        :arg showSave:   If ``True`` (the default), a button will be shown
+                         allowing the user to save the overlay (if it is
+                         not saved).
         """
         wx.Panel.__init__(self, parent)
 
@@ -330,69 +371,83 @@ class ListItemWidget(wx.Panel):
         self.__displayCtx = displayCtx
         self.__listBox    = listBox
         self.__name       = '{}_{}'.format(self.__class__.__name__, id(self))
+        self.__sizer      = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.SetSizer(self.__sizer)
+        self.Bind(wx.EVT_WINDOW_DESTROY, self.__onDestroy)
 
         # BU_NOTEXT causes a segmentation fault under OSX
         if wx.Platform == '__WXMAC__': btnStyle = wx.BU_EXACTFIT
         else:                          btnStyle = wx.BU_EXACTFIT | wx.BU_NOTEXT
 
-        self.__saveButton = wx.Button(                   self, style=btnStyle)
-        self.__lockButton = bmptoggle.BitmapToggleButton(self, style=btnStyle)
+        if showSave:
+            self.__saveButton = wx.Button(self, style=btnStyle)
+            self.__saveButton.SetBitmap(icons.loadBitmap('floppydisk16'))
+            
+            # Under wxPython/Phoenix, button
+            # labels default to "Button", and
+            # BU_NOTEXT has no effect.
+            if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
+                self.__saveButton.SetLabel(" ")
 
-        self.__saveButton.SetBitmap(icons.loadBitmap('floppydisk16'))
-        self.__lockButton.SetBitmap(icons.loadBitmap('chainlinkHighlight16'),
-                                    icons.loadBitmap('chainlink16'))
+            self.__saveButton.SetToolTipString(
+                fsltooltips.actions[self, 'save'])
 
-        # Under wxPython/Phoenix, button
-        # labels default to "Button", and
-        # BU_NOTEXT has no effect.
-        if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
-            self.__saveButton.SetLabel(" ")
-        
-        self.__visibility = props.makeWidget(
-            self,
-            display,
-            'enabled',
-            icon=[icons.findImageFile('eyeHighlight16'),
-                  icons.findImageFile('eye16')])
+            self.__sizer.Add(self.__saveButton, flag=wx.EXPAND, proportion=1)
 
-        self.__visibility.SetToolTipString(fsltooltips.properties[display,
-                                                                  'enabled'])
-        self.__saveButton.SetToolTipString(fsltooltips.actions[self, 'save'])
-        self.__lockButton.SetToolTipString(fsltooltips.actions[self, 'group'])
+            if isinstance(overlay, fslimage.Image):
+                overlay.register(self.__name,
+                                 self.__saveStateChanged,
+                                 'saveState')
+                self.__saveButton.Bind(wx.EVT_BUTTON, self.__onSaveButton)
+            else:
+                self.__saveButton.Enable(False)
 
+            self.__saveStateChanged() 
 
-        self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
+        if showGroup:
+            self.__lockButton = bmptoggle.BitmapToggleButton(
+                self, style=btnStyle)
 
-        self.SetSizer(self.__sizer)
+            self.__lockButton.SetBitmap(
+                icons.loadBitmap('chainlinkHighlight16'),
+                icons.loadBitmap('chainlink16'))
 
-        self.__sizer.Add(self.__saveButton, flag=wx.EXPAND, proportion=1)
-        self.__sizer.Add(self.__lockButton, flag=wx.EXPAND, proportion=1)
-        self.__sizer.Add(self.__visibility, flag=wx.EXPAND, proportion=1)
+            self.__lockButton.SetToolTipString(
+                fsltooltips.actions[self, 'group'])
 
-        # There is currently only one overlay
-        # group in the application. In the
-        # future there may be multiple groups.
-        group = displayCtx.overlayGroups[0]
+            self.__sizer.Add(self.__lockButton, flag=wx.EXPAND, proportion=1)
 
-        display.addListener('enabled',
-                            self.__name,
-                            self.__vizChanged)
-        group  .addListener('overlays',
-                            self.__name,
-                            self.__overlayGroupChanged)
-        
-        if isinstance(overlay, fslimage.Image):
-            overlay.register(self.__name, self.__saveStateChanged, 'saveState')
-        else:
-            self.__saveButton.Enable(False)
+            # There is currently only one overlay
+            # group in the application. In the
+            # future there may be multiple groups.
+            group = displayCtx.overlayGroups[0]
 
-        self.__saveButton.Bind(wx.EVT_BUTTON,         self.__onSaveButton)
-        self.__lockButton.Bind(wx.EVT_TOGGLEBUTTON,   self.__onLockButton)
-        self             .Bind(wx.EVT_WINDOW_DESTROY, self.__onDestroy)
+            group  .addListener('overlays',
+                                self.__name,
+                                self.__overlayGroupChanged)
 
-        self.__overlayGroupChanged()
-        self.__vizChanged(selectOverlay=False)
-        self.__saveStateChanged()
+            self.__lockButton.Bind(wx.EVT_TOGGLEBUTTON, self.__onLockButton)
+            self.__overlayGroupChanged()
+
+        if showVis:
+            self.__visibility = props.makeWidget(
+                self,
+                display,
+                'enabled',
+                icon=[icons.findImageFile('eyeHighlight16'),
+                      icons.findImageFile('eye16')])
+
+            self.__visibility.SetToolTipString(
+                fsltooltips.properties[display, 'enabled'])
+
+            self.__sizer.Add(self.__visibility, flag=wx.EXPAND, proportion=1)
+
+            display.addListener('enabled',
+                                self.__name,
+                                self.__vizChanged)
+                    
+            self.__vizChanged(selectOverlay=False)
 
 
     def __overlayGroupChanged(self, *a):
@@ -438,10 +493,16 @@ class ListItemWidget(wx.Panel):
 
         group = self.__displayCtx.overlayGroups[0]
 
-        self.__display.removeListener('enabled',  self.__name)
-        group         .removeListener('overlays', self.__name)
+        if self.__display.hasListener('enabled',  self.__name):
+            self.__display.removeListener('enabled',  self.__name)
+
+        if group.hasListener('overlays', self.__name):
+            group.removeListener('overlays', self.__name)
 
         if isinstance(self.__overlay, fslimage.Image):
+
+            # Notifier.deregister will ignore 
+            # non-existent listener de-registration
             self.__overlay.deregister(self.__name, 'saved')
 
         
