@@ -62,31 +62,37 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
                  showVis=True,
                  showGroup=True,
                  showSave=True,
+                 propagateSelect=True,
                  elistboxStyle=None):
         """Create an ``OverlayListPanel``.
 
-        :param parent:      The :mod:`wx` parent object.
-        :param overlayList: An :class:`.OverlayList` instance.
-        :param displayCtx:  A :class:`.DisplayContext` instance.
-        :arg showVis:       If ``True`` (the default), a button will be shown
-                            alongside each overlay, allowing the user to
-                            toggle the overlay visibility.
-        :arg showGroup:     If ``True`` (the default), a button will be shown
-                            alongside each overlay, allowing the user to
-                            toggle overlay grouping.
-        :arg showSave:      If ``True`` (the default), a button will be shown
-                            alongside each overlay, allowing the user to save
-                            the overlay (if it is not saved).
-        :arg elistboxStyle: Style flags passed through to the
-                            :class:`.EditableListBox`.
+        :param parent:        The :mod:`wx` parent object.
+        :param overlayList:   An :class:`.OverlayList` instance.
+        :param displayCtx:    A :class:`.DisplayContext` instance.
+        :arg showVis:         If ``True`` (the default), a button will be shown
+                              alongside each overlay, allowing the user to
+                              toggle the overlay visibility.
+        :arg showGroup:       If ``True`` (the default), a button will be shown
+                              alongside each overlay, allowing the user to
+                              toggle overlay grouping.
+        :arg showSave:        If ``True`` (the default), a button will be shown
+                              alongside each overlay, allowing the user to save
+                              the overlay (if it is not saved).
+        :arg propagateSelect: If ``True`` (the default), when an overlay is
+                              selected in the list, the
+                              :attr:`.DisplayContext.selectedOverlay` is
+                              updated accordingly.
+        :arg elistboxStyle:   Style flags passed through to the
+                              :class:`.EditableListBox`.
         
         """
         
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
-        self.__showVis   = showVis
-        self.__showGroup = showGroup
-        self.__showSave  = showSave
+        self.__showVis         = showVis
+        self.__showGroup       = showGroup
+        self.__showSave        = showSave
+        self.__propagateSelect = propagateSelect
 
         if elistboxStyle is None:
             elistboxStyle = (elistbox.ELB_REVERSE | elistbox.ELB_TOOLTIP)
@@ -97,7 +103,8 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
 
         # listeners for when the user does
         # something with the list box
-        self.__listBox.Bind(elistbox.EVT_ELB_SELECT_EVENT,   self.__lbSelect)
+        if self.__propagateSelect:
+            self.__listBox.Bind(elistbox.EVT_ELB_SELECT_EVENT, self.__lbSelect)
         self.__listBox.Bind(elistbox.EVT_ELB_MOVE_EVENT,     self.__lbMove)
         self.__listBox.Bind(elistbox.EVT_ELB_REMOVE_EVENT,   self.__lbRemove)
         self.__listBox.Bind(elistbox.EVT_ELB_ADD_EVENT,      self.__lbAdd)
@@ -118,13 +125,16 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
             self._name,
             self.__overlayListChanged) 
 
-        self._displayCtx.addListener(
-            'selectedOverlay',
-            self._name,
-            self.__selectedOverlayChanged)
+        if self.__propagateSelect:
+            self._displayCtx.addListener(
+                'selectedOverlay',
+                self._name,
+                self.__selectedOverlayChanged)
 
         self.__overlayListChanged()
-        self.__selectedOverlayChanged()
+
+        if self.__propagateSelect:
+            self.__selectedOverlayChanged()
 
         self.Layout()
         
@@ -208,9 +218,10 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
                                     display,
                                     self._displayCtx,
                                     self.__listBox,
-                                    self.__showVis,
-                                    self.__showGroup,
-                                    self.__showSave)
+                                    showVis=self.__showVis,
+                                    showGroup=self.__showGroup,
+                                    showSave=self.__showSave,
+                                    propagateSelect=self.__propagateSelect)
 
             self.__listBox.SetItemWidget(i, widget)
 
@@ -219,7 +230,7 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
                                 self.__overlayNameChanged,
                                 overwrite=True)
 
-        if len(self._overlayList) > 0:
+        if self.__propagateSelect and len(self._overlayList) > 0:
             self.__listBox.SetSelection(
                 self._displayCtx.getOverlayOrder(
                     self._displayCtx.selectedOverlay))
@@ -240,6 +251,10 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
         :class:`.EditableListBox`. Updates the
         :attr:`.DisplayContext.selectedOverlay` property.
         """
+
+        if not self.__propagateSelect:
+            return
+        
         self._displayCtx.disableListener('selectedOverlay', self._name)
         self._displayCtx.selectedOverlay = \
             self._displayCtx.overlayOrder[ev.idx]
@@ -254,8 +269,9 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
         def onLoad(overlays):
             if len(overlays) == 0:
                 return
-        
-            self._displayCtx.selectedOverlay = len(self._overlayList) - 1
+
+            if self.__propagateSelect:
+                self._displayCtx.selectedOverlay = len(self._overlayList) - 1
 
             if self._displayCtx.autoDisplay:
                 for overlay in overlays:
@@ -347,31 +363,41 @@ class ListItemWidget(wx.Panel):
                  listBox,
                  showVis=True,
                  showGroup=True,
-                 showSave=True):
+                 showSave=True,
+                 propagateSelect=True):
         """Create a ``ListItemWidget``.
 
-        :arg parent:     The :mod:`wx` parent object.
-        :arg overlay:    The overlay associated with this ``ListItemWidget``.
-        :arg display:    The :class:`.Display` associated with the overlay.
-        :arg displayCtx: The :class:`.DisplayContext` instance.
-        :arg listBox:    The :class:`.EditableListBox` that contains this
-                         ``ListItemWidget``.
-        :arg showVis:    If ``True`` (the default), a button will be shown
-                         allowing the user to toggle the overlay visibility.
-        :arg showGroup:  If ``True`` (the default), a button will be shown
-                         allowing the user to toggle overlay grouping.
-        :arg showSave:   If ``True`` (the default), a button will be shown
-                         allowing the user to save the overlay (if it is
-                         not saved).
+        :arg parent:          The :mod:`wx` parent object.
+        :arg overlay:         The overlay associated with this
+                              ``ListItemWidget``.
+        :arg display:         The :class:`.Display` associated with the
+                              overlay.
+        :arg displayCtx:      The :class:`.DisplayContext` instance.
+        :arg listBox:         The :class:`.EditableListBox` that contains this
+                              ``ListItemWidget``.
+        :arg showVis:         If ``True`` (the default), a button will be shown
+                              allowing the user to toggle the overlay
+                              visibility.
+        :arg showGroup:       If ``True`` (the default), a button will be shown
+                              allowing the user to toggle overlay grouping.
+        :arg showSave:        If ``True`` (the default), a button will be shown
+                              allowing the user to save the overlay (if it is
+                              not saved).
+        :arg propagateSelect: If ``True`` (the default), when an overlay is
+                              selected in the list, the
+                              :attr:`.DisplayContext.selectedOverlay` is
+                              updated accordingly. 
         """
         wx.Panel.__init__(self, parent)
 
-        self.__overlay    = overlay
-        self.__display    = display
-        self.__displayCtx = displayCtx
-        self.__listBox    = listBox
-        self.__name       = '{}_{}'.format(self.__class__.__name__, id(self))
-        self.__sizer      = wx.BoxSizer(wx.HORIZONTAL)
+        self.__overlay         = overlay
+        self.__display         = display
+        self.__displayCtx      = displayCtx
+        self.__listBox         = listBox
+        self.__propagateSelect = propagateSelect
+        self.__name            = '{}_{}'.format(self.__class__.__name__,
+                                                id(self))
+        self.__sizer           = wx.BoxSizer(wx.HORIZONTAL)
 
         self.SetSizer(self.__sizer)
         self.Bind(wx.EVT_WINDOW_DESTROY, self.__onDestroy)
@@ -463,7 +489,9 @@ class ListItemWidget(wx.Panel):
         """Called when the *save* button is pushed. Calls the
         :meth:`.Image.save` method.
         """
-        self.__displayCtx.selectOverlay(self.__overlay)
+
+        if self.__propagateSelect:
+            self.__displayCtx.selectOverlay(self.__overlay)
 
         if not self.__overlay.saveState:
             saveoverlay.saveOverlay(self.__overlay, self.__display)
@@ -473,7 +501,9 @@ class ListItemWidget(wx.Panel):
         """Called when the *lock* button is pushed. Adds/removes the overlay
         to/from the :class:`.OverlayGroup`.
         """
-        self.__displayCtx.selectOverlay(self.__overlay)
+        if self.__propagateSelect:
+            self.__displayCtx.selectOverlay(self.__overlay)
+            
         group = self.__displayCtx.overlayGroups[0]
         
         if self.__lockButton.GetValue(): group.addOverlay(   self.__overlay)
@@ -547,7 +577,7 @@ class ListItemWidget(wx.Panel):
 
         selectOverlay = kwargs.get('selectOverlay', True)
 
-        if selectOverlay:
+        if selectOverlay and self.__propagateSelect:
             self.__displayCtx.selectOverlay(self.__overlay)
 
         idx = self.__listBox.IndexOf(self.__overlay)

@@ -57,8 +57,9 @@ class PlotListPanel(fslpanel.FSLEyesPanel):
 
         self.__plotPanel = plotPanel
         self.__dsList    = elistbox.EditableListBox(
-            self, style=(elistbox.ELB_NO_MOVE |
-                         elistbox.ELB_EDITABLE))
+            self, style=(elistbox.ELB_NO_MOVE  |
+                         elistbox.ELB_EDITABLE |
+                         elistbox.ELB_WIDGET_RIGHT))
 
         self.__sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.__sizer)

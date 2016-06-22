@@ -1281,6 +1281,11 @@ class OverlayPlotPanel(PlotPanel):
 
         for overlay in self._overlayList:
             display = self._displayCtx.getDisplay(overlay)
+
+            # PlotPanels use the Display.enabled property
+            # to toggle on/off overlay plots. We don't want
+            # this to interfere with CanvasPanels, which
+            # use Display.enabled to toggle on/off overlays.
             display.unsyncFromParent('enabled')
 
         self.__selectedOverlayChanged()

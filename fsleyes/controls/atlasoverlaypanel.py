@@ -573,6 +573,9 @@ class OverlayListWidget(wx.Panel):
             onLoad=onLoad,
             onError=onError)
 
+        if self.__labelIdx is None:
+            self.__atlasOvlPanel.selectAtlas(self.__listIdx, self.__atlasDesc) 
+
         
     def __onLocate(self, ev):
         """Called when the locate region button is clicked only on
