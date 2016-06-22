@@ -480,10 +480,12 @@ class DisplayContext(props.SyncableHasProperties):
         # for every overlay in the list
         for overlay in self.__overlayList:
 
+            ovlType = self.__overlayList.initOverlayType(overlay)
+
             # The getDisplay method
             # will create a Display object
             # if one does not already exist
-            display = self.getDisplay(overlay)
+            display = self.getDisplay(overlay, ovlType)
             opts    = display.getDisplayOpts()
 
             # Register a listener on the overlay type,

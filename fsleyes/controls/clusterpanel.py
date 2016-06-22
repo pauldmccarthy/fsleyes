@@ -274,7 +274,7 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
                 return
 
         log.debug('Adding Z-statistic {} to overlay list'.format(zstats.name))
-        self._overlayList.append(zstats)
+        self._overlayList.append(zstats, overlayType='volume')
 
         opts   = self._displayCtx.getOpts(zstats)
         zthres = float(featImage.thresholds()['z'])
@@ -310,8 +310,7 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
                 return
 
         log.debug('Adding cluster mask {} to overlay list'.format(mask.name))
-        self._overlayList.append(mask)
-        self._displayCtx.getDisplay(mask).overlayType = 'label'
+        self._overlayList.append(mask, overlayType='label')
 
 
     def __genClusterGrid(self, overlay, featImage, contrast, clusters):

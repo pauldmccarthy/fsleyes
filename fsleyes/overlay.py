@@ -121,6 +121,21 @@ class OverlayList(props.HasProperties):
         if overlays is None: overlays = []
         self.overlays.extend(overlays)
 
+        # The append/insert methods allow an initial
+        # overlay type to be specified for newly
+        # added overlays. This can be queried via
+        # the initOverlayType method (and is done so
+        # by DisplayContext instances).
+        self.__initOverlayType = {}
+
+
+    def initOverlayType(self, overlay):
+        """Returns the initial type for the given ``overlay``, if it was
+        specified via the :meth:`append` or :meth:`insert` methods. Returns
+        ``None`` otherwise.
+        """
+        return self.__initOverlayType.get(overlay, None)
+
 
     def addOverlays(self,
                     fromDir=None,
@@ -212,6 +227,10 @@ class OverlayList(props.HasProperties):
         return self.overlays.__setitem__(key, val)
     
     def __delitem__(self, key):
+        ovls = self[key]
+        for ovl in ovls:
+            self.__initOverlayType.pop(ovl, None)
+            
         return self.overlays.__delitem__(key)
     
     def index(self, item):
@@ -220,23 +239,44 @@ class OverlayList(props.HasProperties):
     def count(self, item):
         return self.overlays.count(item)
     
-    def append(self, item):
-        return self.overlays.append(item)
+    def append(self, item, overlayType=None):
+
+        self.disableNotification('overlays')
+        
+        self.overlays.append(item)
+
+        if overlayType is not None:
+            self.__initOverlayType[item] = overlayType
+
+        self.enableNotification('overlays')
+        self.notify('overlays')
     
     def extend(self, iterable):
         return self.overlays.extend(iterable)
     
     def pop(self, index=-1):
-        return self.overlays.pop(index)
+        ovl = self.overlays.pop(index)
+        self.__initOverlayType.pop(ovl, None)
+        return ovl
     
     def move(self, from_, to):
         return self.overlays.move(from_, to)
     
     def remove(self, item):
-        return self.overlays.remove(item)
+        self.__initOverlayType.pop(item, None)
+        self.overlays.remove(item)
     
-    def insert(self, index, item):
-        return self.overlays.insert(index, item)
+    def insert(self, index, item, overlayType=None):
+
+        self.disableNotification('overlays')
+        
+        self.overlays.insert(index, item)
+
+        if overlayType is not None:
+            self.__initOverlayType[item] = overlayType 
+        
+        self.enableNotification('overlays')
+        self.notify('overlays')
     
     def insertAll(self, index, items):
         return self.overlays.insertAll(index, items)
@@ -262,7 +302,7 @@ class ProxyImage(fslimage.Image):
 
         kwargs['header'] = base.nibImage.get_header()
 
-        fslimage.Image.__init__(self, base.data, *args, **kwargs)
+        fslimage.Image.__init__(self, base[:], *args, **kwargs)
         
 
     def getBase(self):

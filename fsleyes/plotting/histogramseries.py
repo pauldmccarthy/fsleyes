@@ -430,10 +430,9 @@ class HistogramSeries(dataseries.DataSeries):
                 self.overlay,
                 name='{}/histogram/mask'.format(self.overlay.name))
 
-            self.__overlayList.append(self.__overlay3D)
+            self.__overlayList.append(self.__overlay3D, overlayType='mask')
 
-            opts = self.__displayCtx.getOpts(
-                self.__overlay3D, overlayType='mask')
+            opts = self.__displayCtx.getOpts(self.__overlay3D)
 
             opts.bindProps('volume',    self)
             opts.bindProps('colour',    self)
