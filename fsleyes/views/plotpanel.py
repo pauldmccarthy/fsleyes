@@ -434,8 +434,7 @@ class PlotPanel(viewpanel.ViewPanel):
 
             xlim, ylim = self.__drawOneDataSeries(ds, preproc, **plotArgs)
 
-            if (xlim[1] - xlim[0] < 0.0000000001) or \
-               (ylim[1] - ylim[0] < 0.0000000001):
+            if np.any(np.isclose([xlim[0], ylim[0]], [xlim[1], ylim[1]])):
                 continue
             
             xlims.append(xlim)
@@ -447,13 +446,6 @@ class PlotPanel(viewpanel.ViewPanel):
         else:
             (xmin, xmax), (ymin, ymax) = self.__calcLimits(
                 xlims, ylims, axxlim, axylim, width, height)
-
-        if xmax - xmin < 0.0000000001 or \
-           ymax - ymin < 0.0000000001:
-            axis.clear()
-            canvas.draw()
-            self.Refresh()
-            return
 
         # x/y axis labels
         xlabel = self.xlabel 
@@ -487,8 +479,9 @@ class PlotPanel(viewpanel.ViewPanel):
             axis.set_yticks([])
 
         # Limits
-        axis.set_xlim((xmin, xmax))
-        axis.set_ylim((ymin, ymax))
+        if xmin != xmax:
+            axis.set_xlim((xmin, xmax))
+            axis.set_ylim((ymin, ymax))
 
         # legend
         labels = [ds.label for ds in toPlot if ds.label is not None]

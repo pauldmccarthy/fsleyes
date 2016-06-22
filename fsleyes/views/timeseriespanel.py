@@ -11,6 +11,8 @@ view* for displaying time series data from :class:`.Image` overlays.
 
 import logging
 
+import numpy as np
+
 import wx
 
 import                                            props
@@ -24,7 +26,6 @@ import fsleyes.actions                         as actions
 import fsleyes.plotting                        as plotting
 import fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
 import fsleyes.controls.timeseriestoolbar      as timeseriestoolbar
-import fsleyes.controls.plotlistpanel          as plotlistpanel
 from . import                                     plotpanel
 
 
@@ -358,7 +359,10 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         elif self.plotMode == 'normalise':
             ymin  = ydata.min()
             ymax  = ydata.max()
-            ydata = 2 * (ydata - ymin) / (ymax - ymin) - 1
+            if not np.isclose(ymin, ymax):
+                ydata = 2 * (ydata - ymin) / (ymax - ymin) - 1
+            else:
+                ydata = np.zeros(len(ydata))
             
         elif self.plotMode == 'percentChange':
             mean  = ydata.mean()

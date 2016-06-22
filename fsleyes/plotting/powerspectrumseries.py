@@ -79,9 +79,15 @@ class PowerSpectrumSeries(dataseries.DataSeries):
         transformation.
         """
         if self.varNorm:
-            data = data - data.mean()
-            data = data / data.std()
-        
+            mean = data.mean()
+            std  = data.std()
+
+            if not np.isclose(std, 0):
+                data = data - mean
+                data = data / std
+            else:
+                data = np.zeros(data.shape)
+
         data = fft.rfft(data)[1:]
         data = np.power(data.real, 2) + np.power(data.imag, 2)
 
