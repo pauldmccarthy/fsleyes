@@ -17,16 +17,17 @@ import          logging
 import numpy as np
 import          wx
 
-import pwidgets.notebook as notebook
+import pwidgets.notebook  as notebook
 
-import fsl.data.image    as fslimage
-import fsl.data.atlases  as atlases
-import fsl.utils.status  as status
-import fsl.utils.async   as async
-import fsleyes.panel     as fslpanel
-import fsleyes.strings   as strings
-from . import               atlasoverlaypanel
-from . import               atlasinfopanel 
+import fsl.data.image     as fslimage
+import fsl.data.atlases   as atlases
+import fsl.data.constants as constants
+import fsl.utils.status   as status
+import fsl.utils.async    as async
+import fsleyes.panel      as fslpanel
+import fsleyes.strings    as strings
+from . import                atlasoverlaypanel
+from . import                atlasinfopanel 
 
 
 log = logging.getLogger(__name__)
@@ -274,7 +275,8 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
         """
 
         niftis = [o for o in self._overlayList
-                  if isinstance(o, fslimage.Nifti1)]
+                  if (isinstance(o, fslimage.Nifti1) and
+                      o.getXFormCode() == constants.NIFTI_XFORM_MNI_152)]
 
         # No overlays to match resolution against
         if len(niftis) == 0:
