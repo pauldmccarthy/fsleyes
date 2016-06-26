@@ -175,28 +175,19 @@ class DataSeriesWidget(wx.Panel):
 
         wx.Panel.__init__(self, parent)
 
-        self.__colour    = props.makeWidget(self,
-                                            dataSeries,
-                                            'colour')
-        self.__alpha     = props.makeWidget(self,
-                                            dataSeries,
-                                            'alpha',
-                                            slider=True,
-                                            spin=False,
-                                            showLimits=False) 
-        self.__lineWidth = props.makeWidget(self,
-                                            dataSeries,
-                                            'lineWidth')
+        self.__enabled   = props.makeWidget(self, dataSeries, 'enabled') 
+        self.__colour    = props.makeWidget(self, dataSeries, 'colour')
+        self.__lineWidth = props.makeWidget(self, dataSeries, 'lineWidth')
         self.__lineStyle = props.makeWidget(
             self,
             dataSeries,
             'lineStyle',
             labels=strings.choices['DataSeries.lineStyle'])
 
+        self.__enabled.SetToolTipString(
+            fsltooltips.properties[dataSeries, 'enabled'])
         self.__colour.SetToolTipString(
             fsltooltips.properties[dataSeries, 'colour'])
-        self.__alpha.SetToolTipString(
-            fsltooltips.properties[dataSeries, 'alpha'])
         self.__lineWidth.SetToolTipString(
             fsltooltips.properties[dataSeries, 'lineWidth'])
         self.__lineStyle.SetToolTipString(
@@ -205,8 +196,8 @@ class DataSeriesWidget(wx.Panel):
         self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.SetSizer(self.__sizer)
 
+        self.__sizer.Add(self.__enabled) 
         self.__sizer.Add(self.__colour)
-        self.__sizer.Add(self.__alpha)
         self.__sizer.Add(self.__lineWidth)
         self.__sizer.Add(self.__lineStyle)
 

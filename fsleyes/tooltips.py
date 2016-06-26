@@ -382,6 +382,7 @@ properties = TypeDict({
 
     # DataSeries
 
+    'DataSeries.enabled'   : 'Show/hide the line.',
     'DataSeries.colour'    : 'Line colour.',
     'DataSeries.alpha'     : 'Line opacity.',
     'DataSeries.label'     : 'Line label (shown in the legend).',

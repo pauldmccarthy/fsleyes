@@ -73,7 +73,13 @@ class PlotPanel(viewpanel.ViewPanel):
       3. Override the :meth:`draw` method, so it calls the
          :meth:`drawDataSeries` method.
 
-      4. If necessary, override the :meth:`destroy` method, but make
+      4. If necessary, override the :meth:`prepareDataSeries` method to
+         perform any preprocessing on ``extraSeries`` passed to the
+         :meth:`drawDataSeries` method (but not applied to
+         :class:`.DataSeries` that have been added to the :attr:`dataSeries`
+         list).
+
+      5. If necessary, override the :meth:`destroy` method, but make
          sure that the base-class implementation is called.
 
     
@@ -383,15 +389,27 @@ class PlotPanel(viewpanel.ViewPanel):
         self.Refresh()
 
 
-    def drawDataSeries(self, extraSeries=None, preproc=None, **plotArgs):
+    def prepareDataSeries(self, ds):
+        """Prepares the data from the given :class:`.DataSeries` so it is
+        ready to be plotted. Called by the :meth:`__drawOneDataSeries` method
+        for any ``extraSeries`` passed to the :meth:`drawDataSeries` method
+        (but not applied to :class:`.DataSeries` that have been added to the
+        :attr:`dataSeries` list).
+
+        This implementation just returns :class:`.DataSeries.getData` -
+        override it to perform any custom preprocessing.
+        """
+        return ds.getData()
+
+
+    def drawDataSeries(self, extraSeries=None, **plotArgs):
         """Plots all of the :class:`.DataSeries` instances in the
-        :attr:`dataSeries` list
+        :attr:`dataSeries` list.
 
         :arg extraSeries: A sequence of additional ``DataSeries`` to be
+                          plotted. These series are passed through the
+                          :meth:`prepareDataSeries` method before being
                           plotted.
-
-        :arg preproc:     An optional preprocessing function - passed to the
-                          :meth:`__drawOneDataSeries` method.
 
         :arg plotArgs:    Passed through to the :meth:`__drawOneDataSeries`
                           method.
@@ -416,8 +434,9 @@ class PlotPanel(viewpanel.ViewPanel):
 
         axis.clear()
 
-        toPlot = self.dataSeries[:]
-        toPlot = extraSeries + toPlot
+        toPlot   = self.dataSeries[:]
+        toPlot   = extraSeries + toPlot
+        preprocs = [True] * len(extraSeries) + [False] * len(toPlot)
 
         if len(toPlot) == 0:
             canvas.draw()
@@ -427,12 +446,14 @@ class PlotPanel(viewpanel.ViewPanel):
         xlims = []
         ylims = []
 
-        for ds in toPlot:
+        for ds, preproc in zip(toPlot, preprocs):
 
             if not ds.enabled:
                 continue
 
-            xlim, ylim = self.__drawOneDataSeries(ds, preproc, **plotArgs)
+            xlim, ylim = self.__drawOneDataSeries(ds,
+                                                  preproc=preproc,
+                                                  **plotArgs)
 
             if np.any(np.isclose([xlim[0], ylim[0]], [xlim[1], ylim[1]])):
                 continue
@@ -511,7 +532,7 @@ class PlotPanel(viewpanel.ViewPanel):
         self.Refresh()
 
         
-    def __drawOneDataSeries(self, ds, preproc=None, **plotArgs):
+    def __drawOneDataSeries(self, ds, preproc=False, **plotArgs):
         """Plots a single :class:`.DataSeries` instance. This method is called
         by the :meth:`drawDataSeries` method.
 
@@ -528,25 +549,19 @@ class PlotPanel(viewpanel.ViewPanel):
 
         :arg ds:       The ``DataSeries`` instance.
 
-        :arg preproc:  An optional preprocessing function which must accept the
-                       ``DataSeries`` instance as its sole argument, and must
-                       return the ``(xdata, ydata)`` with any required
-                       processing applied.  The default preprocessing function
-                       returns the result of a call to
-                       :meth:`.DataSeries.getData`.
-
+        :arg preproc:  If ``True``, ``ds`` is passed through the
+                       :meth:`prepareDataSeries` method before being plotted.
+        
         :arg plotArgs: May be used to customise the plot - these
                        arguments are all passed through to the
                        ``Axis.plot`` function.
         """
         
-        if preproc is None:
-            preproc = lambda s: s.getData()
-
         if ds.alpha == 0:
             return (0, 0), (0, 0)
 
-        xdata, ydata = preproc(ds)
+        if preproc: xdata, ydata = self.prepareDataSeries(ds)
+        else:       xdata, ydata = ds.getData()
 
         if len(xdata) != len(ydata) or len(xdata) == 0:
             return (0, 0), (0, 0)
@@ -748,14 +763,18 @@ class OverlayPlotPanel(PlotPanel):
      2. Implement the :meth:`PlotPanel.draw` method so it honours the
         current value of the :attr:`showMode` property.
 
+     3. Optionally implement the :meth:`prepareDataSeries` method to
+        perform any custom preprocessing.
+
     
     **The internal data series store**
 
 
     The ``OverlayPlotPanel`` maintains a store of :class:`.DataSeries`
-    instances, one for each compatible overlay. The ``OverlayPlotPanel``
-    manages the property listeners that must be registered with each of these
-    ``DataSeries`` to refresh the plot.  These instances are created by the
+    instances, one for each compatible overlay in the
+    :class:`.OverlayList`. The ``OverlayPlotPanel`` manages the property
+    listeners that must be registered with each of these ``DataSeries`` to
+    refresh the plot.  These instances are created by the
     :meth:`createDataSeries` method, which is implemented by sub-classes. The
     following methods are available to sub-classes, for managing the internal
     store of :class:`.DataSeries` instances:
@@ -997,7 +1016,8 @@ class OverlayPlotPanel(PlotPanel):
             # attribute).
             copy.colour = fslcm.randomDarkColour()
 
-            copy.setData(*ds.getData())
+            xdata, ydata = self.prepareDataSeries(ds)
+            copy.setData(xdata, ydata)
 
             copies.append(copy)
 

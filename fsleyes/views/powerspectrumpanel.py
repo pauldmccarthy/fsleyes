@@ -168,8 +168,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
             ps.label = ps.makeLabel()
             ps.enableNotification('label')
 
-        self.drawDataSeries(extraSeries=pss,
-                            preproc=self.__prepareSpectrumData)
+        self.drawDataSeries(extraSeries=pss)
 
 
     def createDataSeries(self, overlay):
@@ -204,11 +203,10 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         return ps, targets, propNames
 
 
-    def __prepareSpectrumData(self, ps):
-        """Performs some pre-processing on the data of the given
-        :class:`.PowerSpectrumSeries` instance. This method is used as the
-        ``preproc`` argument to the :meth:`.PlotPanel.drawDataSeries` method,
-        in :meth:`draw`.
+    def prepareDataSeries(self, ps):
+        """Overrides :meth:`.PlotPanel.prepareDataSeries`.  Performs some
+        pre-processing on the data of the given :class:`.PowerSpectrumSeries`
+        instance.
         """
 
         xdata, ydata = ps.getData()

@@ -242,8 +242,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             ts.label = ts.makeLabel()
             ts.enableNotification('label')
 
-        self.drawDataSeries(extraSeries=tss,
-                            preproc=self.__prepareTimeSeriesData)
+        self.drawDataSeries(extraSeries=tss)
 
 
     def createDataSeries(self, overlay):
@@ -332,14 +331,11 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         return ts, targets, propNames
 
 
-    def __prepareTimeSeriesData(self, ts):
-        """Given a :class:`.TimeSeries` instance, scales and normalises
-        the x and y data according to the current values of the
-        :attr:`usePixdim` and :attr:`plotMode` properties.
-
-        This method is used as a preprocessing function for all
-        :class:`.TimeSeries` instances that are plotted - see the
-        :meth:`.PlotPanel.drawDataSeries` method.
+    def prepareDataSeries(self, ts):
+        """Overrides :class:`.PlotPanel.prepareDataSeries`. Given a
+        :class:`.TimeSeries` instance, scales and normalises the x and y data
+        according to the current values of the :attr:`usePixdim` and
+        :attr:`plotMode` properties.
         """
 
         xdata, ydata = ts.getData()

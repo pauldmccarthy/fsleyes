@@ -165,12 +165,9 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
             hs.enableNotification('label')
 
         if self.smooth:
-            self.drawDataSeries(hss,
-                                preproc=self.__prepareHistogramSeries)
+            self.drawDataSeries(hss)
         else:
-            self.drawDataSeries(hss,
-                                preproc=self.__prepareHistogramSeries,
-                                drawstyle='steps-pre')
+            self.drawDataSeries(hss, drawstyle='steps-pre')
 
 
     def createDataSeries(self, overlay):
@@ -196,10 +193,11 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         return hs, [], []
 
 
-    def __prepareHistogramSeries(self, hs):
-        """Performs some pre-processing on the data contained in the given
-        :class:`.HistogramSeries` instance. This method is used as the
-        ``preproc`` argument to the :meth:`.PlotPanel.drawDataSeries` method.
+    def prepareDataSeries(self, hs):
+        """Overrides :meth:`.PlotPanel.prepareDataSeries`.
+
+        Performs some pre-processing on the data contained in the given
+        :class:`.HistogramSeries` instance. 
         """
 
         xdata, ydata = hs.getData()
