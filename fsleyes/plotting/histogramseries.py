@@ -75,12 +75,7 @@ class HistogramSeries(dataseries.DataSeries):
     """
 
 
-    def __init__(self,
-                 overlay,
-                 displayCtx,
-                 overlayList,
-                 volume=0,
-                 baseHs=None):
+    def __init__(self, overlay, displayCtx, overlayList):
         """Create a ``HistogramSeries``.
 
         :arg overlay:     The :class:`.Image` overlay to calculate a histogram
@@ -89,62 +84,28 @@ class HistogramSeries(dataseries.DataSeries):
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         
         :arg overlayList: The :class:`.OverlayList` instance.
-        
-        :arg volume:      If the ``overlay`` is 4D, the initial value for the
-                          :attr:`volume` property.
-        
-        :arg baseHs:      If a ``HistogramSeries`` has already been created
-                          for the ``overlay``, it may be passed in here, so
-                          that the histogram data can be copied instead of
-                          having to be re-calculated.
         """
 
-        log.debug('New HistogramSeries instance for {} '
-                  '(based on existing instance: {})'.format(
-                      overlay.name, baseHs is not None)) 
+        log.debug('New HistogramSeries instance for {} '.format(overlay.name)) 
 
         dataseries.DataSeries.__init__(self, overlay)
 
-        self.volume        = volume
         self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-
         self.__displayCtx  = displayCtx
         self.__overlayList = overlayList
         self.__overlay3D   = None
 
-        if overlay.is4DImage():
-            self.setConstraint('volume', 'maxval', overlay.shape[3] - 1)
-        
-        # If we have a baseHS, we 
-        # can copy all its data
-        if baseHs is not None:
-            self.dataRange.xmin     = baseHs.dataRange.xmin
-            self.dataRange.xmax     = baseHs.dataRange.xmax
-            self.dataRange.x        = baseHs.dataRange.x
-            self.nbins              = baseHs.nbins
-            self.volume             = baseHs.volume
-            self.ignoreZeros        = baseHs.ignoreZeros
-            self.includeOutliers    = baseHs.includeOutliers
-            
-            self.__nvals              =          baseHs.__nvals
-            self.__xdata              = np.array(baseHs.__xdata)
-            self.__ydata              = np.array(baseHs.__ydata)
-            self.__finiteData         = np.array(baseHs.__finiteData)
-            self.__nonZeroData        = np.array(baseHs.__nonZeroData)
-            self.__clippedFiniteData  = np.array(baseHs.__finiteData)
-            self.__clippedNonZeroData = np.array(baseHs.__nonZeroData) 
+        opts = displayCtx.getOpts(overlay)
+        self.bindProps('volume', opts)
 
-        # Otherwise we need to calculate
-        # it all for ourselves
-        else:
-            self.__nvals              = 0
-            self.__finiteData         = np.array([])
-            self.__xdata              = np.array([])
-            self.__ydata              = np.array([])
-            self.__nonZeroData        = np.array([])
-            self.__clippedFiniteData  = np.array([])
-            self.__clippedNonZeroData = np.array([])
-            self.__initProperties()
+        self.__nvals              = 0
+        self.__finiteData         = np.array([])
+        self.__xdata              = np.array([])
+        self.__ydata              = np.array([])
+        self.__nonZeroData        = np.array([])
+        self.__clippedFiniteData  = np.array([])
+        self.__clippedNonZeroData = np.array([])
+        self.__initProperties()
             
         overlayList.addListener('overlays',
                                 self.__name,
@@ -212,9 +173,6 @@ class HistogramSeries(dataseries.DataSeries):
     def __initProperties(self):
         """Called by :meth:`__init__`. Calculates and caches some things which
         are needed for the histogram calculation.
-
-        .. note:: This method is never called if a ``baseHs`` is provided to
-                 :meth:`__init__`.
 
         .. note:: The work performed by this method is done on a separate
                   thread, via the :mod:`.async` module. If you want to be

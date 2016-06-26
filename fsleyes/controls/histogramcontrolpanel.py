@@ -65,16 +65,24 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
         """Overrides :meth:`.PlotControlPanel.generateCustomDataSeriesWidgets`.
         Adds some widgets to control properties of the
         :class:`.HistogramSeries`.
-        """ 
+        """
+
+        def is4D(h):
+            return len(h.overlay.shape) == 4 and h.overlay.shape[3] > 1
+        
         widgets    = self.getWidgetList()
 
-        volume     = props.makeWidget(widgets, hs, 'volume', showLimits=False)
-        autoBin    = props.makeWidget(widgets, hs, 'autoBin')
-
-        nbinSpec   = props.Widget('nbins',
+        volume     = props.Widget('volume',
+                                  showLimits=False,
+                                  enabledWhen=is4D)
+        autoBin    = props.Widget('autoBin')
+        nbins      = props.Widget('nbins',
                                   enabledWhen=lambda i: not i.autoBin,
                                   showLimits=False)
-        nbins      = props.buildGUI(widgets, hs, nbinSpec)
+
+        volume     = props.buildGUI(widgets, hs, volume)
+        autoBin    = props.buildGUI(widgets, hs, autoBin)
+        nbins      = props.buildGUI(widgets, hs, nbins)
         
         dataRange = props.makeWidget(
             widgets, hs, 'dataRange',
