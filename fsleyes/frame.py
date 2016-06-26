@@ -670,15 +670,6 @@ class FSLEyesFrame(wx.Frame):
         ev.Skip()
 
         if self.__saveLayout:
-            
-            size     = self.GetSize().Get()
-            position = self.GetScreenPosition().Get()
-
-            log.debug('Saving size: {}'    .format(size))
-            log.debug('Saving position: {}'.format(position))
-            
-            fslsettings.write('fsleyes.frame.size',     str(size))
-            fslsettings.write('fsleyes.frame.position', str(position))
 
             # Ask the user if they want to save the layout,
             # as some people might not like the previous
@@ -698,21 +689,39 @@ class FSLEyesFrame(wx.Frame):
                     message=strings.messages[self, 'saveLayout'],
                     cbMessages=[strings.messages[self, 'dontAskToSaveLayout']],
                     cbStates=[False],
-                    okBtnText='Yes',
-                    cancelBtnText='No',
+                    yesText='Yes',
+                    noText='No',
+                    cancelText='Cancel',
                     icon=wx.ICON_QUESTION)
 
-                save = dlg.ShowModal() == wx.ID_OK
+                result = dlg.ShowModal()
+
+                if result == wx.ID_CANCEL:
+                    ev.Skip(False)
+                    ev.Veto()
+                    return
+
+                save = result == wx.ID_YES
 
                 fslsettings.write('fsleyes.frame.saveLayout', save) 
                 fslsettings.write('fsleyes.frame.askToSaveLayout',
                                   not dlg.CheckBoxState())
 
             if save:
-                layout = perspectives.serialisePerspective(self)
-                log.debug('Saving layout: {}'.format(layout))
-                fslsettings.write('fsleyes.frame.layout', layout)
+                layout   = perspectives.serialisePerspective(self)
+                size     = self.GetSize().Get()
+                position = self.GetScreenPosition().Get()
+
+                log.debug('Saving size: {}'    .format(size))
+                log.debug('Saving position: {}'.format(position))
+                log.debug('Saving layout: {}'  .format(layout))
+
+                fslsettings.write('fsleyes.frame.size',     str(size))
+                fslsettings.write('fsleyes.frame.position', str(position))
+                fslsettings.write('fsleyes.frame.layout',   layout)
             else:
+                fslsettings.delete('fsleyes.frame.size')
+                fslsettings.delete('fsleyes.frame.position')
                 fslsettings.delete('fsleyes.frame.layout')
                 
         # It's nice to explicitly clean

@@ -148,10 +148,10 @@ class CopyOverlayAction(action.Action):
             message='Copy {}'.format(display.name),
             cbMessages=options,
             cbStates=states,
-            okBtnText='OK',
-            cancelBtnText='Cancel')
+            yesText='OK',
+            cancelText='Cancel')
 
-        if dlg.ShowModal() != wx.ID_OK:
+        if dlg.ShowModal() != wx.ID_YES:
             return
 
         createMask  = dlg.CheckBoxState(0)
