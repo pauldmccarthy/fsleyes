@@ -326,20 +326,6 @@ class FSLEyesFrame(wx.Frame):
         childDC = displaycontext.DisplayContext(
             self.__overlayList,
             parent=self.__displayCtx)
-        
-        # Create a child DisplayContext. The DC
-        # for the first view panel is synced to
-        # the master DC, but by default the
-        # overlay display settings for subsequent
-        # CanvasPanels are unsynced; other
-        # ViewPanels (e.g. TimeSeriesPanel) remain
-        # synced by default.
-        if panelId == 1:
-            childDC.syncToParent('overlayOrder')
-            childDC.syncOverlayDisplay = True
-            
-        elif issubclass(panelCls, views.CanvasPanel):
-            childDC.syncOverlayDisplay = False
 
         if panelCls is views.ShellPanel:
             panel = panelCls(self.__mainPanel,
@@ -405,6 +391,8 @@ class FSLEyesFrame(wx.Frame):
         
         self.__auiManager.AddPane(panel, paneInfo)
         self.__addViewPanelMenu(  panel, title)
+
+        self.__configDisplaySync(panel)
 
         self.__auiManager.Update()
 
@@ -512,9 +500,8 @@ class FSLEyesFrame(wx.Frame):
          2. Removes the *Settings* sub-menu corresponding to the ``ViewPanel``.
          3. Makes sure that any remaining ``ViewPanel`` panels are arranged
             nicely.
-         4. If the ``displaySync`` parameter is ``True``, and only one
-            :class:`.ViewPanel` is remaining, its :class:`.DisplayContext`
-            is synchronised to the master :class:`.DisplayContext`.
+         4. If the ``displaySync`` parameter is ``True``, calls
+            :meth:`__configDisplaySync`.
 
         :arg ev:          ``wx`` event, passed when a :class:`.ViewPanel` is 
                           closed by the user:
@@ -584,37 +571,93 @@ class FSLEyesFrame(wx.Frame):
         if numPanels == 1:
             paneInfo = self.__auiManager.GetPane(self.__viewPanels[0])
             paneInfo.Dockable(False).CaptionVisible(False)
-            
-        # If there's only one panel left,
-        # and it is a canvas panel, sync
-        # its display properties to the
-        # master display context.
-        if displaySync    and \
-           numPanels == 1 and \
-           isinstance(self.__viewPanels[0], views.CanvasPanel):
-            
-            dctx     = self.__viewPanels[0].getDisplayContext()
-            displays = [dctx.getDisplay(o) for o in self.__overlayList]
+
+        if displaySync:
+            self.__configDisplaySync()
+
+
+    def __configDisplaySync(self, newPanel=None):
+        """Called by :meth:`addViewPanel` and :meth:`__onViewPanelClose`.
+
+        This method ensures that at the display properties and overlay order
+        for the :class:`.DisplayContext` of at least least one
+        :class:`.CanvasPanel` is synced to the master
+        :class:`.DisplayContext`.
+
+        :arg newPanel: If this method has been called as a result of a new
+                       :class:`.ViewPanel` being added, a reference to the
+                       new panel.
+        """
+
+        canvasPanels = [vp for vp in self.__viewPanels
+                        if isinstance(vp, views.CanvasPanel)]
+        canvasCtxs   = [c.getDisplayContext() for c in canvasPanels] 
+        numCanvases  = len(canvasPanels)
+
+        # We only care about
+        # canvas panels.
+        if numCanvases == 0:
+            return
+
+        # Is there at least one canvas panel
+        # which has display properties/overlay
+        # order synced to the master display
+        # context?
+        displaySynced = any([c.syncOverlayDisplay
+                             for c in canvasCtxs
+                             if c is not newPanel])
+        orderSynced   = any([c.isSyncedToParent('overlayOrder')
+                             for c in canvasCtxs
+                             if c is not newPanel])
+
+        # If there is only one CanvasPanel
+        # open, sync its overlay display
+        # properties to the master context
+        if numCanvases == 1:
+            childDC = canvasPanels[0].getDisplayContext()
+            childDC.syncToParent('overlayOrder')
+            childDC.syncOverlayDisplay = True
+
+        # If an existing canvas panel is
+        # already synced to the master,
+        # 
+        # 
+        elif displaySynced and orderSynced:
+            if newPanel is not None:
+                childDC = newPanel.getDisplayContext()
+                childDC.syncOverlayDisplay = False
+                childDC.unsyncFromParent('overlayOrder')
+
+        # If no existing CanvasPanels are
+        # synced to the master context,
+        # re-sync the most recently added
+        # one.
+        else:
+            if newPanel is not None: panel = newPanel
+            else:                    panel = canvasPanels[0]
+            childDC = panel.getDisplayContext()
 
             # Make sure that the parent context
             # inherits the values from this context
-            dctx.setBindingDirection(False)
+            displays = [childDC.getDisplay(o) for o in self.__overlayList]
+
+            childDC.setBindingDirection(False)
 
             for display in displays:
                 opts = display.getDisplayOpts()
                 display.setBindingDirection(False)
-                opts   .setBindingDirection(False)
+                opts   .setBindingDirection(False) 
             
-            dctx.syncOverlayDisplay = True
-            dctx.syncToParent('overlayOrder')
+            childDC.syncOverlayDisplay = True 
+            childDC.syncToParent('overlayOrder')
 
             # Reset the binding directiona
-            dctx.setBindingDirection(True)
+            childDC.setBindingDirection(True)
 
             for display in displays:
                 opts = display.getDisplayOpts()
                 display.setBindingDirection(True)
-                opts   .setBindingDirection(True) 
+                opts   .setBindingDirection(True)
 
             
     def __onClose(self, ev):
