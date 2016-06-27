@@ -1233,10 +1233,10 @@ class OverlayPlotPanel(PlotPanel):
                          showVis=True,
                          showSave=False,
                          showGroup=False,
-                         elistboxStyle=(elistbox.ELB_REVERSE   |
-                                        elistbox.ELB_TOOLTIP   |
-                                        elistbox.ELB_NO_ADD    |
-                                        elistbox.ELB_NO_REMOVE |
+                         elistboxStyle=(elistbox.ELB_REVERSE      |
+                                        elistbox.ELB_TOOLTIP_DOWN |
+                                        elistbox.ELB_NO_ADD       |
+                                        elistbox.ELB_NO_REMOVE    |
                                         elistbox.ELB_NO_MOVE),
                          location=wx.LEFT)
 

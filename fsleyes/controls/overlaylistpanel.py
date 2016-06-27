@@ -95,7 +95,8 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
         self.__propagateSelect = propagateSelect
 
         if elistboxStyle is None:
-            elistboxStyle = (elistbox.ELB_REVERSE | elistbox.ELB_TOOLTIP)
+            elistboxStyle = (elistbox.ELB_REVERSE |
+                             elistbox.ELB_TOOLTIP_DOWN)
 
         # list box containing the list of overlays - it 
         # is populated in the _overlayListChanged method
@@ -224,6 +225,11 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
                                     propagateSelect=self.__propagateSelect)
 
             self.__listBox.SetItemWidget(i, widget)
+
+            tooltip = overlay.dataSource
+            if tooltip is None:
+                tooltip = strings.labels['OverlayListPanel.noDataSource'] 
+            self.__listBox.SetItemTooltip(i, tooltip)
 
             display.addListener('name',
                                 self._name,

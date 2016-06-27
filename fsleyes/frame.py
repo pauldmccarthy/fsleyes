@@ -692,6 +692,7 @@ class FSLEyesFrame(wx.Frame):
                     yesText='Yes',
                     noText='No',
                     cancelText='Cancel',
+                    focus='no',
                     icon=wx.ICON_QUESTION)
 
                 result = dlg.ShowModal()
