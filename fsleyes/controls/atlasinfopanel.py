@@ -324,7 +324,13 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
             if isinstance(atlas, atlases.ProbabilisticAtlas):
                 proportions = atlas.proportions(loc)
 
-                for label, prop in zip(atlas.desc.labels, proportions):
+                if len(proportions) == 0:
+                    continue
+
+                props, labels = zip(*reversed(sorted(
+                    zip(proportions, atlas.desc.labels))))
+
+                for label, prop in zip(labels, props):
                     if prop == 0.0:
                         continue
                     lines.append(probTemplate.format(prop,
