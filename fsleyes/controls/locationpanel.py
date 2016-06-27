@@ -699,11 +699,12 @@ class LocationPanel(fslpanel.FSLEyesPanel):
 
             # Indent info for unselected overlays,
             # to make the info for the selected
-            # overlay a bit more obvious. 
-            if overlay is not selOvl:
-                title = '&nbsp;&nbsp;&nbsp;{}'.format(title)
+            # overlay a bit more obvious.
+            colourFmt = '<span style="color: #6060ff">{}</span>'
+            if overlay is selOvl:
+                title = colourFmt.format(title)
                 if info is not None:
-                    info = '&nbsp;&nbsp;&nbsp;{}'.format(info)
+                    info = colourFmt.format(info)
 
             lines.append(title)
             
