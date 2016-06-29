@@ -52,11 +52,14 @@ class DisplayContext(props.SyncableHasProperties):
     .. autosummary::
        :nosignatures:
 
+        getDisplay
+        getOpts
         getReferenceImage
         selectOverlay
         getSelectedOverlay
         getOverlayOrder
         getOrderedOverlays
+        cacheStandardCoordinates
     """
 
     
@@ -162,6 +165,16 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
+    loadInMemory = props.Boolean(default=False)
+    """If ``True``, all :class:`.Image` instances will be loaded into memory,
+    regardless of their size. Otherwise (the default), large compressed
+    ``Image`` overlays may be kept on disk.
+
+    .. note:: Changing the value of this property will not affect existing
+              ``Image`` overlays.
+    """
+
+
     def __init__(self, overlayList, parent=None):
         """Create a ``DisplayContext``.
 
@@ -178,7 +191,8 @@ class DisplayContext(props.SyncableHasProperties):
             nounbind=['overlayGroups',
                       'displaySpace',
                       'bounds',
-                      'autoDisplay'],
+                      'autoDisplay',
+                      'loadInMemory'],
             nobind=[  'syncOverlayDisplay'],
             state={'overlayOrder' : False})
 
@@ -413,7 +427,7 @@ class DisplayContext(props.SyncableHasProperties):
 
 
     def cacheStandardCoordinates(self, overlay, coords):
-        """Stores the given 'standard' coordinates for the given overlay.
+        """Stores the given _standard_ coordinates for the given overlay.
 
         This method must be called by :class:`.DisplayOpts` sub-classes
         whenever the spatial representation of their overlay changes - 

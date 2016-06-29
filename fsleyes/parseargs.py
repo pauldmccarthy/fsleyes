@@ -308,7 +308,8 @@ OPTIONS = td.TypeDict({
                        'autoDisplay',
                        'displaySpace',
                        'standard',
-                       'standard1mm'],
+                       'standard1mm',
+                       'bigmem'],
 
     # From here on, all of the keys are
     # the names of HasProperties classes,
@@ -479,6 +480,7 @@ ARGUMENTS = td.TypeDict({
     'Main.displaySpace'    : ('ds',     'displaySpace'),
     'Main.standard'        : ('std',    'standard'),
     'Main.standard1mm'     : ('std1mm', 'standard1mm'),
+    'Main.bigmem'          : ('b',      'bigmem'),
     
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar'),
     'SceneOpts.bgColour'           : ('bg',  'bgColour'),
@@ -609,7 +611,9 @@ HELP = td.TypeDict({
     'Main.standard'        : 'Add the MNI152 2mm standard image as an '
                              'underlay (only if $FSLDIR is set).',
     'Main.standard1mm'     : 'Add the MNI152 1mm standard image as an '
-                             'underlay (only if $FSLDIR is set).', 
+                             'underlay (only if $FSLDIR is set).',
+    'Main.bigmem'          : 'Load all images into memory, '
+                             'regardless of size.',
 
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
                                      'highlighting the current location',
@@ -986,7 +990,11 @@ def _configMainParser(mainParser):
                             help=mainHelp['standard'])
     mainParser.add_argument(*mainArgs['standard1mm'],
                             action='store_true',
-                            help=mainHelp['standard1mm']) 
+                            help=mainHelp['standard1mm'])
+
+    mainParser.add_argument(*mainArgs['bigmem'],
+                            action='store_true',
+                            help=mainHelp['bigmem']) 
     
 
 def _configSceneParser(sceneParser):
@@ -1679,6 +1687,8 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
 
         # First apply all command line options
         # related to the display context...
+
+        displayCtx.loadInMemory = args.bigmem
 
         # Display space may be a string,
         # or a path to an image

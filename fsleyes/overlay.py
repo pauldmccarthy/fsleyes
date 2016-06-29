@@ -65,7 +65,6 @@ A few other utility functions are provided by this module:
    loadOverlays
    loadImage
    interactiveLoadOverlays
-   saveOverlay
 """
 
 import logging
@@ -603,26 +602,3 @@ def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
     dlg.Destroy()
      
     loadOverlays(paths, saveDir=saveFromDir, **kwargs)
-    
-
-def saveOverlay(overlay, fromDir=None):
-    """Convenience function for interactively saving changes to an overlay.
-
-    .. note:: Only :class:`.Image` overlays are supported at the moment.
-
-    :param overlay: The overlay instance to be saved.
-
-    :param fromDir: Directory in which the file dialog should start.
-                    If ``None``, the most recently visited directory
-                    (via this function) is used, or the directory from
-                    the given image, or the current working directory.
-
-    :raise ImportError:  if :mod:`wx` is not present.
-    :raise RuntimeError: if a :class:`wx.App` has not been created.
-    :raise ValueError:   if ``overlay`` is not an :class:`.Image` instance.
-    """
-
-    if not isinstance(overlay, fslimage.Image):
-        raise ValueError('Only Image overlays are supported')
-    
-    fslimage.saveImage(overlay, fromDir)

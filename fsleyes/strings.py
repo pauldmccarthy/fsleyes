@@ -43,12 +43,6 @@ messages = TypeDict({
     'FSLEyesFrame.saveLayout'          : 'Save this layout for next time?',
     'FSLEyesFrame.dontAskToSaveLayout' : 'Never ask me again',
 
-    'image.loadImage.decompress' : '{} is a large file ({:0.0f} MB) - '
-                                   'decompressing to {}, to allow memory '
-                                   'mapping...',
-    'image.loadImage.largeFile'  : '{} is a large file ({:0.0f}) MB) - '
-                                   'loading it may take some time...',
-
     'perspectives.applyingPerspective' : 'Applying {} perspective ...',
 
     'SavePerspectiveAction.enterName'        : 'Enter a name for the '
