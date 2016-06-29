@@ -259,7 +259,8 @@ def loadImage(dtype, path, inmem=False):
     image = dtype(path,
                   loadData=False,
                   calcRange=False,
-                  indexed=False)
+                  indexed=False,
+                  threaded=False)
     nbytes = np.prod(image.shape) * image.dtype.itemsize
     image  = None
 
@@ -267,7 +268,11 @@ def loadImage(dtype, path, inmem=False):
     # index the file if its compressed size
     # is greater than the index threshold.
     indexed = nbytes > idxthres
-    image   = dtype(path, loadData=inmem, calcRange=False, indexed=indexed)
+    image   = dtype(path,
+                    loadData=inmem,
+                    calcRange=False,
+                    indexed=indexed,
+                    threaded=indexed)
 
     # If the image is bigger than the
     # memory threshold, keep it on disk. 
