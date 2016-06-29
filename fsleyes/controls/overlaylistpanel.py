@@ -24,6 +24,7 @@ import fsleyes.icons                    as icons
 import fsleyes.autodisplay              as autodisplay
 import fsleyes.strings                  as strings
 import fsleyes.tooltips                 as fsltooltips
+import fsleyes.actions.loadoverlay      as loadoverlay
 import fsleyes.actions.saveoverlay      as saveoverlay
 import fsl.data.image                   as fslimage
 from fsl.utils.platform import platform as fslplatform
@@ -269,12 +270,14 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
         
     def __lbAdd(self, ev):
         """Called when the *add* button on the list box is pressed.
-        Calls the :meth:`.OverlayList.addOverlays` method.
+        Calls the :func:`.loadoverlay.interactiveLoadOverlays` method.
         """
 
         def onLoad(overlays):
             if len(overlays) == 0:
                 return
+
+            self._overlayList.extend(overlays)
 
             if self.__propagateSelect:
                 self._displayCtx.selectedOverlay = len(self._overlayList) - 1
@@ -285,7 +288,7 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
                                             self._overlayList,
                                             self._displayCtx)
 
-        self._overlayList.addOverlays(onLoad=onLoad)
+        loadoverlay.interactiveLoadOverlays(onLoad=onLoad)
 
 
     def __lbRemove(self, ev):

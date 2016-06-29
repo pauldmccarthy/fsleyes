@@ -96,8 +96,9 @@ Finally, some 'global' actions are also provided in this package:
  .. autosummary::
 
     ~fsleyes.actions.copyoverlay
-    ~fsleyes.actions.openfile
-    ~fsleyes.actions.openstandard
+    ~fsleyes.actions.loadoverlay
+    ~fsleyes.actions.loadoverlayfromdir
+    ~fsleyes.actions.loadstandard
     ~fsleyes.actions.saveoverlay
     ~fsleyes.actions.removeoverlay
     ~fsleyes.actions.removealloverlays
@@ -122,9 +123,9 @@ import fsleyes.strings as strings
 
 from . import action
 from . import copyoverlay
-from . import openfile
-from . import opendir
-from . import openstandard
+from . import loadoverlay
+from . import loadoverlayfromdir
+from . import loadstandard
 from . import runscript
 from . import saveoverlay
 from . import reloadoverlay
@@ -142,9 +143,9 @@ from . import about
 Action                   = action            .Action
 ToggleAction             = action            .ToggleAction
 CopyOverlayAction        = copyoverlay       .CopyOverlayAction
-OpenFileAction           = openfile          .OpenFileAction
-OpenDirAction            = opendir           .OpenDirAction
-OpenStandardAction       = openstandard      .OpenStandardAction
+LoadOverlayAction        = loadoverlay       .LoadOverlayAction
+LoadOverlayFromDirAction = loadoverlayfromdir.LoadOverlayFromDirAction
+LoadStandardAction       = loadstandard      .LoadStandardAction
 RunScriptAction          = runscript         .RunScriptAction
 SaveOverlayAction        = saveoverlay       .SaveOverlayAction
 ReloadOverlayAction      = reloadoverlay     .ReloadOverlayAction

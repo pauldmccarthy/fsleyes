@@ -61,11 +61,11 @@ messages = TypeDict({
     'SaveOverlayAction.overwrite'      : 'Do you want to overwrite {}, or '
                                          'save the image to a new file?',
 
-    'overlay.loadOverlays.loading'     : 'Loading {} ...',
-    'overlay.loadOverlays.error'       : 'An error occurred loading the image '
+    'loadOverlays.loading'     : 'Loading {} ...',
+    'loadOverlays.error'       : 'An error occurred loading the image '
                                          '{}\n\nDetails: {} - {}',
 
-    'overlay.loadOverlays.unknownType' : 'Unknown data type',
+    'loadOverlays.unknownType' : 'Unknown data type',
 
     'actions.loadcolourmap.loadcmap'    : 'Open colour map file',
     'actions.loadcolourmap.namecmap'    : 'Enter a name for the colour map - '
@@ -185,9 +185,9 @@ messages = TypeDict({
 
 titles = TypeDict({
     
-    'overlay.addOverlays.dialog' : 'Open overlay files',
+    'interactiveLoadOverlays.dialog' : 'Open overlay files',
     
-    'overlay.loadOverlays.error'  : 'Error loading overlay',
+    'loadOverlays.error'  : 'Error loading overlay',
 
     'FSLEyesFrame.saveLayout' : 'Save layout',
 
@@ -254,20 +254,20 @@ titles = TypeDict({
 
 actions = TypeDict({
 
-    'OpenFileAction'          : 'Add overlay from file',
-    'OpenDirAction'           : 'Add overlay from directory',
-    'OpenStandardAction'      : 'Add standard',
-    'CopyOverlayAction'       : 'Copy overlay',
-    'SaveOverlayAction'       : 'Save overlay',
-    'ReloadOverlayAction'     : 'Reload overlay',
-    'RemoveOverlayAction'     : 'Remove overlay',
-    'RemoveAllOverlaysAction' : 'Remove all overlays',
-    'LoadColourMapAction'     : 'Load custom colour map',
-    'SavePerspectiveAction'   : 'Save current perspective',
-    'ClearPerspectiveAction'  : 'Clear all perspectives',
-    'DiagnosticReportAction'  : 'Diagnostic report',
-    'RunScriptAction'         : 'Run script',
-    'AboutAction'             : 'About FSLeyes',
+    'LoadOverlayAction'        : 'Add overlay from file',
+    'LoadOverlayFromDirAction' : 'Add overlay from directory',
+    'LoadStandardAction'       : 'Add standard',
+    'CopyOverlayAction'        : 'Copy overlay',
+    'SaveOverlayAction'        : 'Save overlay',
+    'ReloadOverlayAction'      : 'Reload overlay',
+    'RemoveOverlayAction'      : 'Remove overlay',
+    'RemoveAllOverlaysAction'  : 'Remove all overlays',
+    'LoadColourMapAction'      : 'Load custom colour map',
+    'SavePerspectiveAction'    : 'Save current perspective',
+    'ClearPerspectiveAction'   : 'Clear all perspectives',
+    'DiagnosticReportAction'   : 'Diagnostic report',
+    'RunScriptAction'          : 'Run script',
+    'AboutAction'              : 'About FSLeyes',
 
     'FSLEyesFrame.closeViewPanel' : 'Close',
 

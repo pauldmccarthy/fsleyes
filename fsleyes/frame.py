@@ -975,9 +975,9 @@ class FSLEyesFrame(wx.Frame):
     def __makeFileMenu(self, menu):
         """Called by :meth:`__makeMenuBar`. Creates the *File* menu. """
 
-        fileActions = [actions.OpenFileAction,
-                       actions.OpenDirAction,
-                       actions.OpenStandardAction,
+        fileActions = [actions.LoadOverlayAction,
+                       actions.LoadOverlayFromDirAction,
+                       actions.LoadStandardAction,
                        actions.RunScriptAction,
                        'sep',
                        actions.CopyOverlayAction,

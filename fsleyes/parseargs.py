@@ -1833,12 +1833,13 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
     """Loads and configures any overlays which were specified on the
     command line.
 
-    .. warning:: This function uses the :func:`.overlay.loadOverlay` function
-                 which in turn uses :func:`.async.idle` to load the overlays.
-                 This means that the overlays are loaded and configured
-                 asynchronously, meaning that they may not be loaded by the
-                 time that this function returns. See the
-                 :func:`.overlay.loadOverlay` documentation for more details.
+    .. warning:: This function uses the :func:`.loadoverlay.loadOverlays`
+                 function which in turn uses :func:`.async.idle` to load the
+                 overlays.  This means that the overlays are loaded and
+                 configured asynchronously, meaning that they may not be
+                 loaded by the time that this function returns. See the
+                 :func:`.loadoverlay.loadOverlays` documentation for more
+                 details.
 
     :arg args:        A :class:`~argparse.Namespace` instance, as returned
                       by the :func:`parseArgs` function.
@@ -1849,9 +1850,12 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
     :arg displayCtx:  A :class:`.DisplayContext` instance, which manages the
                       scene and overlay display.
     
-    :arg kwargs:      Passed through to the :func:`.Overlay.loadOverlays`
+    :arg kwargs:      Passed through to the :func:`.loadoverlay.loadOverlays`
                       function.
+
     """
+
+    import fsleyes.actions.loadoverlay as loadoverlay
 
     # The fsleyes.overlay.loadOverlay function
     # works asynchronously - this function will
@@ -1965,7 +1969,7 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
     paths = [o.overlay for o in args.overlays]
 
     if len(paths) > 0:
-        fsloverlay.loadOverlays(paths, onLoad=onLoad, **kwargs)
+        loadoverlay.loadOverlays(paths, onLoad=onLoad, **kwargs)
  
         
 def _findOrLoad(overlayList, overlayFile, overlayType, relatedTo=None):
