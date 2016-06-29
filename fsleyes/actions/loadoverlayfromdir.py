@@ -62,4 +62,7 @@ class LoadOverlayFromDirAction(action.Action):
                                             self.__overlayList,
                                             self.__displayCtx)
 
-        loadoverlay.interactiveLoadOverlays(dirdlg=True, onLoad=onLoad)
+        loadoverlay.interactiveLoadOverlays(
+            dirdlg=True,
+            onLoad=onLoad,
+            inmem=self.__displayCtx.loadInMemory)

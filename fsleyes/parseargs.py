@@ -1969,7 +1969,10 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
     paths = [o.overlay for o in args.overlays]
 
     if len(paths) > 0:
-        loadoverlay.loadOverlays(paths, onLoad=onLoad, **kwargs)
+        loadoverlay.loadOverlays(paths,
+                                 onLoad=onLoad,
+                                 inmem=displayCtx.loadInMemory,
+                                 **kwargs)
  
         
 def _findOrLoad(overlayList, overlayFile, overlayType, relatedTo=None):

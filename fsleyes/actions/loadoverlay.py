@@ -85,7 +85,8 @@ class LoadOverlayAction(action.Action):
                                             self.__overlayList,
                                             self.__displayCtx)
         
-        interactiveLoadOverlays(onLoad=onLoad)
+        interactiveLoadOverlays(onLoad=onLoad,
+                                inmem=self.__displayCtx.loadInMemory)
 
 
 def makeWildcard(allowedExts=None, descs=None):
@@ -114,7 +115,8 @@ def loadOverlays(paths,
                  loadFunc='default',
                  errorFunc='default',
                  saveDir=True,
-                 onLoad=None):
+                 onLoad=None,
+                 inmem=False):
     """Loads all of the overlays specified in the sequence of files
     contained in ``paths``.
 
@@ -143,6 +145,10 @@ def loadOverlays(paths,
     :arg onLoad:    Optional function to call when all overlays have been
                     loaded. Must accept one parameter - a list containing
                     the overlays that were loaded.
+
+    :arg inmem:     If ``True``, all :class:`.Image` overlays are 
+                    force-loaded into memory. Otherwise, large compressed
+                    files may be kept on disk. Defaults to ``False``.
 
     :returns:       A list of overlay objects - just a regular ``list``, 
                     not an :class:`OverlayList`.
@@ -184,7 +190,7 @@ def loadOverlays(paths,
         
         try:
             if issubclass(dtype, fslimage.Image):
-                overlay = loadImage(dtype, path)
+                overlay = loadImage(dtype, path, inmem=inmem)
             else:
                 overlay = dtype(path)
 
@@ -222,7 +228,7 @@ def loadOverlays(paths,
     async.idle(realOnLoad)
 
 
-def loadImage(dtype, path):
+def loadImage(dtype, path, inmem=False):
     """Called by the :func:`loadOverlays` function. Loads an overlay which
     is represented by an ``Image`` instance, or a sub-class of ``Image``.
     Depending upon the image size, the data may be loaded into memory or
@@ -231,6 +237,7 @@ def loadImage(dtype, path):
 
     :arg dtype: Overlay type (``Image``, or a sub-class of ``Image``).
     :arg path:  Path to the overlay file.
+    :arg inmem: If ``True``, ``Image`` overlays are loaded into memory.
     """
     
     memthres   = fslsettings.read('fsleyes.overlay.memthres',   2147483648)
@@ -260,11 +267,11 @@ def loadImage(dtype, path):
     # index the file if its compressed size
     # is greater than the index threshold.
     indexed = nbytes > idxthres
-    image   = dtype(path, loadData=False, calcRange=False, indexed=indexed)
+    image   = dtype(path, loadData=inmem, calcRange=False, indexed=indexed)
 
     # If the image is bigger than the
     # memory threshold, keep it on disk. 
-    if nbytes < memthres:
+    if inmem or nbytes < memthres:
         log.debug('Loading {} into memory'.format(path))
         image.loadData()
     else:

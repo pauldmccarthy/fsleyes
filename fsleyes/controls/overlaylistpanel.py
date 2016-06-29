@@ -288,7 +288,9 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
                                             self._overlayList,
                                             self._displayCtx)
 
-        loadoverlay.interactiveLoadOverlays(onLoad=onLoad)
+        loadoverlay.interactiveLoadOverlays(
+            onLoad=onLoad,
+            inmem=self._displayCtx.loadInMemory)
 
 
     def __lbRemove(self, ev):

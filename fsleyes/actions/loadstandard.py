@@ -87,5 +87,7 @@ class LoadStandardAction(action.Action):
                 self.__displayCtx.selectedOverlay = \
                     self.__displayCtx.overlayOrder[0]
         
-        loadoverlay.interactiveLoadOverlays(fromDir=self.__stddir,
-                                            onLoad=onLoad)
+        loadoverlay.interactiveLoadOverlays(
+            fromDir=self.__stddir,
+            onLoad=onLoad,
+            inmem=self.__displayCtx.loadInMemory)
