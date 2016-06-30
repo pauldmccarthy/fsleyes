@@ -25,6 +25,8 @@ import numpy as np
 
 import props
 
+import fsl.utils.cache as cache
+import fsl.utils.async as async
 import fsleyes.strings as strings
 from . import             dataseries
 
@@ -112,6 +114,16 @@ class VoxelTimeSeries(TimeSeries):
         """
         TimeSeries.__init__(self, tsPanel, overlay, displayCtx)
 
+        # We use a cache to store data for the
+        # most recently accessed voxels. This is
+        # done to improve performance on big
+        # images (which may be compressed and
+        # on disk).
+        #
+        # TODO You need to invalidate the cache
+        #      when the image data changes.
+        self.__cache = cache.Cache(maxsize=1000)
+
         
     def makeLabel(self):
         """Returns a string representation of this ``VoxelTimeSeries``
@@ -131,6 +143,17 @@ class VoxelTimeSeries(TimeSeries):
             return '{} [out of bounds]'.format(display.name) 
 
 
+    # The PlotPanel uses a new thread to access
+    # data every time the displaycontext location
+    # changes. So we mark this method as mutually
+    # exclusive to prevent multiple
+    # near-simultaneous accesses to the same voxel
+    # location. The first time that a voxel location
+    # is accessed, its data is cached. So when
+    # subsequent (blocked) accesses execute, they
+    # will hit the cache instead of hitting the disk
+    # (which is a good thing).
+    @async.mutex
     def getData(self, xdata=None, ydata=None):
         """Returns the data at the current voxel location. The ``xdata`` and
         ``ydata`` parameters may be used by sub-classes to override this
@@ -146,7 +169,11 @@ class VoxelTimeSeries(TimeSeries):
 
             x, y, z = xyz
 
-            ydata = self.overlay[x, y, z, :]
+            ydata = self.__cache.get((x, y, z), None)
+
+            if ydata is None:
+                ydata = self.overlay[x, y, z, :]
+                self.__cache.put((x, y, z), ydata)
 
         if xdata is None:
             xdata = np.arange(len(ydata))
