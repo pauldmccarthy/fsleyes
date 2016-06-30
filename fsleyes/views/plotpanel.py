@@ -213,10 +213,22 @@ class PlotPanel(viewpanel.ViewPanel):
         
         self.setCentrePanel(canvas)
 
-        self.__figure = figure
-        self.__axis   = axis
-        self.__canvas = canvas
-        self.__name   = 'PlotPanel_{}'.format(self._name)
+        self.__figure    = figure
+        self.__axis      = axis
+        self.__canvas    = canvas
+        self.__name      = 'PlotPanel_{}'.format(self._name)
+
+        # Accessing data from large compressed
+        # files may take time, so we maintain
+        # a queue of plotting requests. The
+        # functions executed on this task
+        # thread are used to prepare data for
+        # plotting - the plotting occurs on
+        # the main WX event loop. See the
+        # drawDataSeries method
+        self.__drawQueue = async.TaskThread()
+        self.__drawQueue.daemon = True
+        self.__drawQueue.start()
 
         if interactive:
             
@@ -302,6 +314,10 @@ class PlotPanel(viewpanel.ViewPanel):
         """Removes some property listeners, and then calls
         :meth:`.ViewPanel.destroy`.
         """
+
+        self.__drawQueue.stop()
+        self.__drawQueue = None
+        
         self.removeListener('dataSeries', self.__name)
         self.removeListener('limits',     self.__name)
         
@@ -372,18 +388,25 @@ class PlotPanel(viewpanel.ViewPanel):
         pass
             
 
-    def message(self, msg):
+    def message(self, msg, clear=True, border=False):
         """Displays the given message in the centre of the figure.
 
         This is a convenience method provided for use by subclasses.
         """
 
         axis = self.getAxis()
-        axis.clear()
-        axis.set_xlim((0.0, 1.0))
-        axis.set_ylim((0.0, 1.0))
 
-        axis.text(0.5, 0.5, msg, ha='center', va='center')
+        if clear:
+            axis.clear()
+            axis.set_xlim((0.0, 1.0))
+            axis.set_ylim((0.0, 1.0))
+
+        # TODO Fancy box border
+
+        axis.text(0.5, 0.5,
+                  msg,
+                  ha='center', va='center',
+                  transform=axis.transAxes)
         
         self.getCanvas().draw()
         self.Refresh()
@@ -406,21 +429,42 @@ class PlotPanel(viewpanel.ViewPanel):
         """Plots all of the :class:`.DataSeries` instances in the
         :attr:`dataSeries` list.
 
+        This method does not do the actual plotting - it is performed
+        asynchronously, to avoid locking up the GUI:
+
+         1. The data for each ``DataSeries`` instance is prepared on
+            separate threads (using :func:`.async.run`).
+        
+         2. A call to :func:`.async.wait` is enqueued on a
+            :class:`.TaskThread`.
+
+         3. This ``wait`` function waits until all of the data preparation
+            threads have completed, and then passes all of the data to
+            the :meth:`__drawDataSeries` method.
+
         :arg extraSeries: A sequence of additional ``DataSeries`` to be
                           plotted. These series are passed through the
                           :meth:`prepareDataSeries` method before being
                           plotted.
 
-        :arg plotArgs:    Passed through to the :meth:`__drawOneDataSeries`
+        :arg plotArgs:    Passed through to the :meth:`__drawDataSeries`
                           method.
         """
 
         if extraSeries is None:
             extraSeries = []
 
-        axis          = self.getAxis()
-        canvas        = self.getCanvas()
-        width, height = canvas.get_width_height()
+        canvas   = self.getCanvas()
+        axis     = self.getAxis()
+        toPlot   = self.dataSeries[:]
+        toPlot   = extraSeries + toPlot
+        preprocs = [True] * len(extraSeries) + [False] * len(toPlot)
+
+        if len(toPlot) == 0:
+            axis.clear()
+            canvas.draw()
+            self.Refresh()
+            return
 
         # Before clearing/redrawing, save
         # a copy of the x/y axis limits -
@@ -428,36 +472,96 @@ class PlotPanel(viewpanel.ViewPanel):
         # via panning/zooming and, if
         # autoLimit is off, we will want
         # to preserve the limits that the
-        # user set.
+        # user set. These are passed to
+        # the __drawDataSeries method.
         axxlim = axis.get_xlim()
         axylim = axis.get_ylim()
 
+        # Here we are preparing the data for
+        # each data series on separate threads,
+        # as data preparation can be time
+        # consuming for large images. We
+        # display a message on the canvas
+        # during preparation.
+        tasks    = []
+        allXdata = [None] * len(toPlot)
+        allYdata = [None] * len(toPlot)
+
+        # Create a separate function
+        # for each data series
+        for idx, (ds, preproc) in enumerate(zip(toPlot, preprocs)):
+
+            def getData(d=ds, p=preproc, i=idx):
+
+                if not d.enabled:
+                    return
+                
+                if p: xdata, ydata = self.prepareDataSeries(d)
+                else: xdata, ydata = d.getData()
+
+                allXdata[i] = xdata
+                allYdata[i] = ydata
+
+            tasks.append(getData)
+
+        # Run the data preparation tasks,
+        # a separate thread for each.
+        tasks = [async.run(t) for t in tasks]
+
+        # Show a message while we're
+        # preparing the data.
+        self.message(strings.messages[self, 'preparingData'],
+                     clear=False,
+                     border=True)
+
+        # Wait until data preparation is
+        # done, then call __drawDataSeries.
+        self.__drawQueue.enqueue('{}.wait'.format(id(self)),
+                                 async.wait,
+                                 tasks,
+                                 self.__drawDataSeries,
+                                 toPlot,
+                                 allXdata,
+                                 allYdata,
+                                 axxlim,
+                                 axylim,
+                                 wait_direct=True,
+                                 **plotArgs) 
+        
+
+    def __drawDataSeries(
+            self,
+            dataSeries,
+            allXdata,
+            allYdata,
+            oldxlim,
+            oldylim,
+            **plotArgs):
+        
+        axis          = self.getAxis()
+        canvas        = self.getCanvas()
+        width, height = canvas.get_width_height()
         axis.clear()
-
-        toPlot   = self.dataSeries[:]
-        toPlot   = extraSeries + toPlot
-        preprocs = [True] * len(extraSeries) + [False] * len(toPlot)
-
-        if len(toPlot) == 0:
-            canvas.draw()
-            self.Refresh()
-            return
 
         xlims = []
         ylims = []
+        
+        for ds, xdata, ydata in zip(dataSeries, allXdata, allYdata):
 
-        for ds, preproc in zip(toPlot, preprocs):
+            if any((ds is None, xdata is None, ydata is None)):
+                continue
 
             if not ds.enabled:
                 continue
 
             xlim, ylim = self.__drawOneDataSeries(ds,
-                                                  preproc=preproc,
+                                                  xdata,
+                                                  ydata,
                                                   **plotArgs)
 
             if np.any(np.isclose([xlim[0], ylim[0]], [xlim[1], ylim[1]])):
                 continue
-            
+
             xlims.append(xlim)
             ylims.append(ylim)
 
@@ -466,7 +570,7 @@ class PlotPanel(viewpanel.ViewPanel):
             ymin, ymax = 0.0, 0.0
         else:
             (xmin, xmax), (ymin, ymax) = self.__calcLimits(
-                xlims, ylims, axxlim, axylim, width, height)
+                xlims, ylims, oldxlim, oldylim, width, height)
 
         # x/y axis labels
         xlabel = self.xlabel 
@@ -505,7 +609,7 @@ class PlotPanel(viewpanel.ViewPanel):
             axis.set_ylim((ymin, ymax))
 
         # legend
-        labels = [ds.label for ds in toPlot if ds.label is not None]
+        labels = [ds.label for ds in dataSeries if ds.label is not None]
         if len(labels) > 0 and self.legend:
             handles, labels = axis.get_legend_handles_labels()
             legend          = axis.legend(
@@ -527,31 +631,18 @@ class PlotPanel(viewpanel.ViewPanel):
         axis.set_axisbelow(True)
         axis.patch.set_facecolor(self.bgColour)
         self.getFigure().patch.set_alpha(0)
-            
+
         canvas.draw()
         self.Refresh()
 
         
-    def __drawOneDataSeries(self, ds, preproc=False, **plotArgs):
+    def __drawOneDataSeries(self, ds, xdata, ydata, **plotArgs):
         """Plots a single :class:`.DataSeries` instance. This method is called
         by the :meth:`drawDataSeries` method.
 
-        .. note:: While a :class:`.PlotPanel` sub-class will typically plot
-                  :class:`.Dataseries` sub-classses (e.g. the
-                  :class:`.TimeSeriesPanel` plots :class:`.TimeSeries`
-                  instances), the ``preproc`` function will potentially be
-                  passed :class:`.DataSeries` instances. This is because the
-                  :class:`.PlotListPanel` converts ``DataSeries``
-                  sub-class instances to ``DataSeries`` instances.
-
-                  Therefore, the ``preproc`` function must be able to handle
-                  ``DataSeries`` instances.
-
         :arg ds:       The ``DataSeries`` instance.
-
-        :arg preproc:  If ``True``, ``ds`` is passed through the
-                       :meth:`prepareDataSeries` method before being plotted.
-        
+        :arg xdata:    X axis data.
+        :arg ydata:    Y axis data.
         :arg plotArgs: May be used to customise the plot - these
                        arguments are all passed through to the
                        ``Axis.plot`` function.
@@ -559,9 +650,6 @@ class PlotPanel(viewpanel.ViewPanel):
         
         if ds.alpha == 0:
             return (0, 0), (0, 0)
-
-        if preproc: xdata, ydata = self.prepareDataSeries(ds)
-        else:       xdata, ydata = ds.getData()
 
         if len(xdata) != len(ydata) or len(xdata) == 0:
             return (0, 0), (0, 0)
@@ -911,7 +999,6 @@ class OverlayPlotPanel(PlotPanel):
                                       self.__overlayListChanged)
 
         self.__overlayListChanged()
-        self.updateDataSeries()
         self.__dataSeriesChanged()
 
 
@@ -1138,7 +1225,7 @@ class OverlayPlotPanel(PlotPanel):
                 continue
 
             log.debug('Creating a DataSeries for overlay {}'.format(ovl))
-                
+
             ds, refreshTargets, refreshProps = self.createDataSeries(ovl)
 
             if ds is None:

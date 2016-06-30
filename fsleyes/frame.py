@@ -396,11 +396,6 @@ class FSLEyesFrame(wx.Frame):
 
         self.__auiManager.Update()
 
-        # PlotPanels don't draw themselves
-        # automatically when created.
-        if isinstance(panel, views.PlotPanel):
-            panel.draw()
-
         return panel
 
 

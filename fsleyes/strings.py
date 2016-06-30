@@ -129,6 +129,8 @@ messages = TypeDict({
                                          'screenshot.\n\n'
                                          'Details: {}',
 
+    'PlotPanel.preparingData'          : 'Preparing data - please wait...',
+
     'HistogramPanel.calcHist'           : 'Calculating histogram for {} ...',
 
     'LookupTablePanel.labelExists' : 'The {} LUT already contains a '
