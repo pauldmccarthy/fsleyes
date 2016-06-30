@@ -25,6 +25,8 @@ import numpy.fft as fft
 
 import props
 
+import fsl.utils.async       as async
+import fsl.utils.cache       as cache
 import fsl.data.melodicimage as fslmelimage
 from . import                   dataseries
 
@@ -109,6 +111,14 @@ class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
 
         PowerSpectrumSeries.__init__(self, *args, **kwargs)
 
+        # We use a cache just like in the
+        # VoxelTimeSeries class - see that
+        # class.
+        # 
+        # TODO You need to invalidate the cache
+        #      when the image data changes.
+        self.__cache = cache.Cache(maxsize=1000) 
+
         if not self.overlay.is4DImage():
             raise ValueError('Overlay is not a 4D image')
 
@@ -131,6 +141,9 @@ class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
             return '{} [out of bounds]'.format(display.name) 
 
 
+    # See VoxelTimeSeries.getData for an
+    # explanation of the mutex decorator.
+    @async.mutex
     def getData(self):
         """Returns the data for the current voxel of the overlay. The current
         voxel is dictated by the :attr:`.DisplayContext.location` property.
@@ -144,7 +157,12 @@ class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
 
         x, y, z = voxel
 
-        ydata = self.overlay[x, y, z, :]
+        ydata = self.__cache.get((x, y, z), None)
+
+        if ydata is None:
+            ydata = self.overlay[x, y, z, :]
+            self.__cache.put((x, y, z), ydata) 
+
         ydata = self.calcPowerSpectrum(ydata)
         xdata = np.arange(len(ydata), dtype=np.float32)
 
