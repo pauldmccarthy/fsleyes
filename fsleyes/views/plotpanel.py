@@ -224,11 +224,30 @@ class PlotPanel(viewpanel.ViewPanel):
         # functions executed on this task
         # thread are used to prepare data for
         # plotting - the plotting occurs on
-        # the main WX event loop. See the
-        # drawDataSeries method
+        # the main WX event loop.
+        #
+        # The drawDataSeries method sets up the
+        # asynchronous data preparation, and the
+        # __drawDataSeries method does the actual
+        # plotting.
         self.__drawQueue = async.TaskThread()
         self.__drawQueue.daemon = True
         self.__drawQueue.start()
+
+        # Whenever a new request comes in to
+        # draw the plot, we can't cancel any
+        # pending requests, as they are running
+        # on separate threads and out of our
+        # control (and could be blocking on I/O).
+        # 
+        # Instead, we keep track of the total
+        # number of pending requests. The
+        # __drawDataSeries method (which does the
+        # actual plotting) will only draw the
+        # plot if there are no pending requests
+        # (because otherwise it would be drawing
+        # out-of-date data).
+        self.__drawRequests = 0
 
         if interactive:
             
@@ -401,12 +420,18 @@ class PlotPanel(viewpanel.ViewPanel):
             axis.set_xlim((0.0, 1.0))
             axis.set_ylim((0.0, 1.0))
 
-        # TODO Fancy box border
+        if border:
+            bbox = {'facecolor' : '#ffffff',
+                    'edgecolor' : '#cdcdff',
+                    'boxstyle'  : 'round,pad=1'}
+        else:
+            bbox = None
 
         axis.text(0.5, 0.5,
                   msg,
                   ha='center', va='center',
-                  transform=axis.transAxes)
+                  transform=axis.transAxes,
+                  bbox=bbox)
         
         self.getCanvas().draw()
         self.Refresh()
@@ -426,8 +451,8 @@ class PlotPanel(viewpanel.ViewPanel):
 
 
     def drawDataSeries(self, extraSeries=None, **plotArgs):
-        """Plots all of the :class:`.DataSeries` instances in the
-        :attr:`dataSeries` list.
+        """Queues a request to plot all of the :class:`.DataSeries` instances
+        in the :attr:`dataSeries` list.
 
         This method does not do the actual plotting - it is performed
         asynchronously, to avoid locking up the GUI:
@@ -449,6 +474,10 @@ class PlotPanel(viewpanel.ViewPanel):
 
         :arg plotArgs:    Passed through to the :meth:`__drawDataSeries`
                           method.
+
+        
+        .. note:: This method must only be called from the main application
+                  thread (the ``wx`` event loop).
         """
 
         if extraSeries is None:
@@ -516,6 +545,7 @@ class PlotPanel(viewpanel.ViewPanel):
 
         # Wait until data preparation is
         # done, then call __drawDataSeries.
+        self.__drawRequests += 1
         self.__drawQueue.enqueue('{}.wait'.format(id(self)),
                                  async.wait,
                                  tasks,
@@ -537,6 +567,33 @@ class PlotPanel(viewpanel.ViewPanel):
             oldxlim,
             oldylim,
             **plotArgs):
+        """Called by :meth:`__drawDataSeries`. Plots all of the data
+        associated with the given ``dataSeries``.
+
+        :arg dataSeries: The list of :class:`.DataSeries` instances to plot.
+        
+        :arg allXdata:   A list of arrays containing X axis data, one for each
+                         ``DataSeries``.
+        
+        :arg allYdata:   A list of arrays containing Y axis data, one for each
+                         ``DataSeries``.
+        
+        :arg oldxlim:    X plot limits from the previous draw. If
+                         ``xAutoScale`` is disabled, this limit is preserved.
+        
+        :arg oldylim:    Y plot limits from the previous draw. If
+                         ``yAutoScale`` is disabled, this limit is preserved.
+        
+        :arg plotArgs:   Remaining arguments passed to the
+                         :meth:`__drawOneDataSeries` method.
+        """
+        
+        # Only draw the plot if there are no
+        # pending draw requests. Otherwise
+        # we would be drawing out-of-date data.
+        self.__drawRequests -= 1
+        if self.__drawRequests != 0:
+            return
         
         axis          = self.getAxis()
         canvas        = self.getCanvas()
