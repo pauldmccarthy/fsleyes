@@ -9,16 +9,14 @@ class for rendering :class:`.TensorImage` overlays in an OpenGL 2.1 compatible
 manner.
 
 
-The eigenvalues and eigenvectors of the ``TensorImage`` are stored as 3D
-:class:`.ImageTexture` instances, using the :mod:`.gl.resources` module. For
-each voxel, the vertices of a unit sphere are passed to the ``gltensor``
-vertex shader, which looks up the eigenvectors and values for the voxel, and
-transforms the sphere accordingly.
-
-
 The rendering code makes use of the OpenGL ``ARB_draw_instanced`` extension
 so that voxel coordinates do not need to be repeated for every vertex of
 a single tensor.
+
+
+For each voxel, the vertices of a unit sphere are passed to the ``gltensor``
+vertex shader, which looks up the eigenvectors and values for the voxel, and
+transforms the sphere accordingly.
 
 
 If the :attr:`.VectorOpts.colourImage` property is not set, the ``glvector``
@@ -26,22 +24,6 @@ fragment shader is used to colour the tensors. Otherwise, the ``glvolume``
 fragment shader is used to colour the tensors according to the specified
 ``colourImage``. The functions in the :mod:`.gl21.glvector_funcs` module
 are used to manage the fragment shader.
-
-
-The following textures are used for rendering a ``GLTensor`` instance - this
-is in addition to the textures that are used for :class:`.GLVector` instances
-(of which the ``GLTensor`` is a sub-class):
-
-  ============== ================== ==================
-  Attribute name Description        Texture unit
-  ============== ================== ==================
-  ``v1Texture``  First eigenvector  ``gl.GL_TEXTURE8``
-  ``v2Texture``  Second eigenvector ``gl.GL_TEXTURE9``
-  ``v3Texture``  Third eigenvector  ``gl.GL_TEXTURE10``
-  ``l1Texture``  First eigenvalue   ``gl.GL_TEXTURE11``
-  ``l2Texture``  Second eigenvalue  ``gl.GL_TEXTURE12``
-  ``l3Texture``  Third eigenvalue   ``gl.GL_TEXTURE13``
-  ============== ================== ==================
 """
 
 
@@ -51,82 +33,25 @@ import OpenGL.GL                    as gl
 import OpenGL.GL.ARB.draw_instanced as arbdi
 
 import fsl.utils.transform  as transform
-import fsleyes.gl.resources as glresources
 import fsleyes.gl.routines  as glroutines
-import fsleyes.gl.textures  as textures
 from . import                  glvector_funcs
 
 
 def init(self):
-    """Creates textures for the tensor eigenvalue and eigenvector images,
-    and calls :func:`compileShaders` and :func:`updateShaderState`.
-
-    :returns: A list of ``Thread`` instances, one for each of the
-             :class:`.ImageTexture` instances that are created. See
-             the ``init`` parameter to :meth:`.GLVector.__init__`.
+    """Calls :func:`compileShaders` and :func:`updateShaderState`.
     """
-
-    image = self.image
-
-    v1 = image.V1()
-    v2 = image.V2()
-    v3 = image.V3()
-    l1 = image.L1()
-    l2 = image.L2()
-    l3 = image.L3()
-
-    def vPrefilter(d):
-        return d.transpose((3, 0, 1, 2))
-
-    names      = ['v1', 'v2', 'v3', 'l1', 'l2', 'l3']
-    imgs       = [ v1,   v2,   v3,   l1,   l2,   l3]
-    texThreads = []
-
-    for  name, img in zip(names, imgs):
-        texName = '{}_{}_{}'.format(type(self).__name__, name, id(img))
-
-        if name[0] == 'v':
-            prefilter = vPrefilter
-            nvals     = 3
-        else:
-            prefilter = None
-            nvals     = 1
-        
-        tex = glresources.get(
-            texName,
-            textures.ImageTexture,
-            texName,
-            img,
-            nvals=nvals,
-            normalise=True,
-            prefilter=prefilter)
-
-        texThreads.append(tex.refreshThread())
-
-        setattr(self, '{}Texture'.format(name), tex)
 
     self.shader = None
 
     compileShaders(self)
     updateShaderState(self)
 
-    return texThreads
-
 
 def destroy(self):
-    """Deletes the :class:`.GLSLShader`, and all textures. """
+    """Deletes the :class:`.GLSLShader`. """
     
     self.shader.destroy()
     self.shader = None
-    
-    names = ['v1', 'v2', 'v3', 'l1', 'l2', 'l3']
-
-    for name in names:
-        attrName = '{}Texture'.format(name)
-        tex      = getattr(self, attrName)
-        
-        glresources.delete(tex.getTextureName())
-        setattr(self, attrName, None)
 
 
 def compileShaders(self):
@@ -142,8 +67,6 @@ def updateShaderState(self):
     function.
     """
 
-    # TODO GLTensor.ready does not
-    # check V1/2/3/L1/2/3 textures
     if not self.ready():
         return
 
@@ -238,13 +161,6 @@ def preDraw(self):
 
     shader.set('normalMatrix', normalMatrix)
 
-    self.v1Texture.bindTexture(gl.GL_TEXTURE8)
-    self.v2Texture.bindTexture(gl.GL_TEXTURE9)
-    self.v3Texture.bindTexture(gl.GL_TEXTURE10)
-    self.l1Texture.bindTexture(gl.GL_TEXTURE11)
-    self.l2Texture.bindTexture(gl.GL_TEXTURE12)
-    self.l3Texture.bindTexture(gl.GL_TEXTURE13)
-
     gl.glEnable(gl.GL_CULL_FACE)
     gl.glCullFace(gl.GL_BACK)
     
@@ -293,16 +209,9 @@ def draw(self, zpos, xform=None):
 
 
 def postDraw(self):
-    """Unloads the shader program, and unbinds the textures. """
+    """Unloads the shader program. """
 
     self.shader.unloadAtts()
     self.shader.unload()
 
     gl.glDisable(gl.GL_CULL_FACE)
-    
-    self.v1Texture.unbindTexture()
-    self.v2Texture.unbindTexture()
-    self.v3Texture.unbindTexture()
-    self.l1Texture.unbindTexture()
-    self.l2Texture.unbindTexture()
-    self.l3Texture.unbindTexture()
