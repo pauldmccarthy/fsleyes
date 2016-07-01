@@ -133,6 +133,7 @@ import logging
 import glob
 import bisect
 import colorsys
+import random
 import os.path as op
 
 from collections import OrderedDict
@@ -676,16 +677,21 @@ def applyBricon(rgb, brightness, contrast):
 
 def randomColour():
     """Generates a random RGB colour. """
-    return np.random.random(3)
+    values = [randomColour.random.random() for i in range(3)]
+    return np.array(values)
+
+# The randomColour function uses a generator
+# with a fixed seed for reproducibility
+randomColour.random = random.Random(x=1)
 
 
 def randomBrightColour():
     """Generates a random saturated RGB colour. """
-    colour                  = np.random.random(3)
+    colour                  = randomColour()
     colour[colour.argmax()] = 1
     colour[colour.argmin()] = 0
 
-    np.random.shuffle(colour)
+    randomColour.random.shuffle(colour)
 
     return colour
 
