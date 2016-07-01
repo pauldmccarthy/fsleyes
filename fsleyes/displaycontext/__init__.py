@@ -136,6 +136,7 @@ define *scene* options:
 
 import itertools          as it
 import fsl.utils.typedict as td
+import fsl.data.constants as constants
 
 from .               import display
 from .displaycontext import DisplayContext
@@ -212,12 +213,14 @@ def getOverlayTypes(overlay):
     # Special cases:
     #
     # If the overlay looks like a vector image,
+    # and its nifti intent code is set as such,
     # make rgbvector the default overlay type
     if isVector:
-        possibleTypes.remove(   'rgbvector')
-        possibleTypes.remove(   'linevector')
-        possibleTypes.insert(0, 'linevector')
-        possibleTypes.insert(0, 'rgbvector')
+        if overlay.intent == constants.NIFTI_INTENT_RGB_VECTOR:
+            possibleTypes.remove(   'rgbvector')
+            possibleTypes.remove(   'linevector')
+            possibleTypes.insert(0, 'linevector')
+            possibleTypes.insert(0, 'rgbvector')
         
     # Otherwise, remove the vector options
     else:
