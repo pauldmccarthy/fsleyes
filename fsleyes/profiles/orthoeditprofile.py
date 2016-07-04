@@ -429,8 +429,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                       editor.canUndo,
                       editor.canRedo))
         
-        self.undo.enable = editor.canUndo
-        self.redo.enable = editor.canRedo
+        self.undo.enabled = editor.canUndo
+        self.redo.enabled = editor.canRedo
 
 
     def __selectionColoursChanged(self, *a):
