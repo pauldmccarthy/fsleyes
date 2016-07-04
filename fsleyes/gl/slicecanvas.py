@@ -1278,38 +1278,51 @@ class SliceCanvas(props.HasProperties):
     def _drawCursor(self):
         """Draws a green cursor at the current X/Y position."""
 
+        ovl        = self.displayCtx.getSelectedOverlay()
         xmin, xmax = self.displayCtx.bounds.getRange(self.xax)
         ymin, ymax = self.displayCtx.bounds.getRange(self.yax)
+        x          = self.pos.x
+        y          = self.pos.y
+        lines      = []
 
-        x = self.pos.x
-        y = self.pos.y
-
-        lines = []
-
-        # Show a vertical line at xpos,
+        # Just show a vertical line at xpos,
         # and a horizontal line at ypos
         if not self.cursorGap:
             lines.append(((x,    ymin), (x,    ymax)))
-            lines.append(((xmin, y),    (xmax, y)))
+            lines.append(((xmin, y),    (xmax, y))) 
 
-        # As above, but with a gap
-        # at the cursor centre
+        # Draw vertical/horizontal cursor lines,
+        # with a gap at the cursor centre
+        
+        # Not a NIFTI image - just
+        # use a fixed gap size
+        elif ovl is None or not isinstance(ovl, fslimage.Nifti1):
+
+            lines.append(((xmin,    y),       (x - 0.5, y)))
+            lines.append(((x + 0.5, y),       (xmax,    y)))
+            lines.append(((x,       ymin),    (x,       y - 0.5)))
+            lines.append(((x,       y + 0.5), (x,       ymax))) 
+
+        # If the current overlay is NIFTI, make
+        # the gap size match its voxel size
         else:
-            ovl = self.displayCtx.getSelectedOverlay()
 
-            # Not a NIFTI image - just
-            # use a fixed gap size
-            if ovl is None or not isinstance(ovl, fslimage.Nifti1):
-                pass
+            # Get the current voxel
+            # coordinates, 
+            opts = self.displayCtx.getOpts(ovl)
+            vox = opts.getVoxel(vround=False)
 
-            # If the current overlay is NIFTI, make
-            # the gap size match its voxel size
+            # Out of bounds of the current
+            # overlay, fall back to using
+            # a fixed size gap
+            if vox is None:
+                xlow  = x - 0.5
+                xhigh = x + 0.5
+                ylow  = y - 0.5
+                yhigh = y + 0.5
             else:
 
-                # Get the current voxel
-                # coordinates, 
-                opts = self.displayCtx.getOpts(ovl)
-                vox  = np.array(opts.getVoxel(vround=False), dtype=np.float32)
+                vox  = np.array(vox, dtype=np.float32)
 
                 # Figure out the voxel coord axes
                 # that (approximately) correspond
@@ -1340,16 +1353,16 @@ class SliceCanvas(props.HasProperties):
                 vloc  = opts.transformCoords(vox,  'voxel', 'display')
                 vlocx = opts.transformCoords(voxx, 'voxel', 'display')
                 vlocy = opts.transformCoords(voxy, 'voxel', 'display')
-                
+
                 xlow  = min(vloc[self.xax], vlocx[self.xax])
                 xhigh = max(vloc[self.xax], vlocx[self.xax])
                 ylow  = min(vloc[self.yax], vlocy[self.yax])
                 yhigh = max(vloc[self.yax], vlocy[self.yax])
 
-                lines.append(((xmin,  y),     (xlow, y)))
-                lines.append(((xhigh, y),     (xmax, y)))
-                lines.append(((x,     ymin),  (x,    ylow)))
-                lines.append(((x,     yhigh), (x,    ymax)))
+            lines.append(((xmin,  y),     (xlow, y)))
+            lines.append(((xhigh, y),     (xmax, y)))
+            lines.append(((x,     ymin),  (x,    ylow)))
+            lines.append(((x,     yhigh), (x,    ymax)))
 
         kwargs = {
             'colour' : self.cursorColour,
