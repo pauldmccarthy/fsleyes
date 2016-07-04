@@ -43,11 +43,6 @@ class MaskOpts(volumeopts.Nifti1Opts):
         are passed through to the :class:`.Nifti1Opts` constructor.
         """
 
-        self.dataMin, self.dataMax = overlay.dataRange
-
-        dRangeLen    = abs(self.dataMax - self.dataMin)
-        dMinDistance = dRangeLen / 100.0
-
         #################
         # This is a hack.
         #################
@@ -61,16 +56,21 @@ class MaskOpts(volumeopts.Nifti1Opts):
         # code happy.
         #
         # TODO Write independent GLMask rendering routines
-        # instead of using the GLVolume implementations
-        self.clippingRange   = (self.dataMin - 1, self.dataMax + 1)
+        # instead of using the GLVolume implementations 
+
+        dataMin, dataMax = overlay.dataRange
+        dRangeLen        = abs(dataMax - dataMin)
+        dMinDistance     = dRangeLen / 100.0
+ 
+        self.clippingRange   = (dataMin - 1, dataMax + 1)
         self.interpolation   = 'none'
         self.invertClipping  = False
         self.useNegativeCmap = False
         self.clipImage       = None
 
-        self.threshold.xmin = self.dataMin - dMinDistance
-        self.threshold.xmax = self.dataMax + dMinDistance
-        self.threshold.xlo  = self.dataMin + dMinDistance
-        self.threshold.xhi  = self.dataMax + dMinDistance 
+        self.threshold.xmin = dataMin - dMinDistance
+        self.threshold.xmax = dataMax + dMinDistance
+        self.threshold.xlo  = dataMin + dMinDistance
+        self.threshold.xhi  = dataMax + dMinDistance 
 
         volumeopts.Nifti1Opts.__init__(self, overlay, *args, **kwargs)

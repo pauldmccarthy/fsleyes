@@ -124,7 +124,7 @@ def _statImageDisplay(overlay, overlayList, displayCtx):
     elif any([token in basename for token in statTokens]) and \
        'rendered' not in basename:
 
-        opts.clippingRange   = [2.3, opts.dataMax]
+        opts.clippingRange   = [2.3, overlay.dataRange[1]]
         opts.displayRange    = [2.3, 7.5]
         opts.useNegativeCmap = True
 
@@ -160,7 +160,7 @@ def _peImageDisplay(overlay, overlayList, displayCtx):
     opts.cmap            = 'Red-Yellow'
     opts.negativeCmap    = 'Blue-LightBlue'
     opts.displayRange    = [1.0, 100.0]
-    opts.clippingRange   = [1.0, opts.dataMax]
+    opts.clippingRange   = [1.0, overlay.dataRange[1]]
     opts.useNegativeCmap = True 
 
 
@@ -181,7 +181,7 @@ def _MelodicImageDisplay(overlay, overlayList, displayCtx):
     opts.cmap            = 'Red-Yellow'
     opts.negativeCmap    = 'Blue-LightBlue'
     opts.displayRange    = [1.5, 5.0]
-    opts.clippingRange   = [1.5, opts.dataMax]
+    opts.clippingRange   = [1.5, overlay.dataRange[1]]
     opts.useNegativeCmap = True
 
     # Add the mean as an underlay

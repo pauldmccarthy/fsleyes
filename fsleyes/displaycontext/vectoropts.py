@@ -149,9 +149,7 @@ class VectorOpts(volumeopts.Nifti1Opts):
             self.clippingRange.x    = [0, 1]
             return
 
-        opts   = self.displayCtx.getOpts(image)
-        minval = opts.dataMin
-        maxval = opts.dataMax
+        minval, maxval = image.dataRange
 
         # Clipping works with <= and >=, so
         # we add an offset allowing the user

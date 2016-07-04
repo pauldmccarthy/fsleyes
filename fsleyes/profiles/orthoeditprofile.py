@@ -1122,10 +1122,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         the mouse wheel direction. If the mouse button is down,
         select-by-intensity is re-run at the current mouse location.
         """ 
-        overlay = self._displayCtx.getSelectedOverlay()
-        opts    = self._displayCtx.getOpts(overlay)
+        overlay   = self._displayCtx.getSelectedOverlay()
 
-        dataRange = opts.dataMax - opts.dataMin
+        dataRange = overlay.dataRange[1] - overlay.dataRange[0]
         step      = 0.01 * dataRange
 
         if   wheel > 0: offset =  step

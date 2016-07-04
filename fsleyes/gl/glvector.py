@@ -626,14 +626,8 @@ class GLVector(globject.GLImageObject):
         if self.colourImage is None:
             dmin, dmax = 0.0, 1.0
         else:
-            
-            colourImageOpts = opts.displayCtx.getOpts(self.colourImage)
-
-            dmin = colourImageOpts.dataMin
-            dmax = colourImageOpts.dataMax
-
             dmin, dmax = fslcm.briconToDisplayRange(
-                (dmin, dmax),
+                self.colourImage.dataRange,
                 display.brightness / 100.0,
                 display.contrast   / 100.0)
             

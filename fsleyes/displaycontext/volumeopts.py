@@ -555,6 +555,7 @@ class VolumeOpts(Nifti1Opts):
     """The ``VolumeOpts`` class defines options for displaying :class:`.Image`
     instances as regular 3D volumes.
 
+
     The ``VolumeOpts`` class links the :attr:`.Display.brightness` and
     :attr:`.Display.contrast` properties to its own :attr:`displayRange`
     property, so changes in either of the former will result in a change to
@@ -562,21 +563,6 @@ class VolumeOpts(Nifti1Opts):
     :func:`~.colourmaps.displayRangeToBricon` and
     :func:`~.colourmaps.briconToDisplayRange` functions, in the
     :mod:`.colourmaps` module.
-
-    In addition to all of the display properties, ``VolumeOpts`` instances
-    have the following attributes:
-
-    =========== ===============================
-    ``dataMin`` The minimum value in the image.
-    ``dataMax`` The maximum value in the image.
-    =========== ===============================
-
-    For large images (where *large* is arbitrarily defined in
-    :meth:`__init__`), the ``dataMin`` and ``dataMax`` attributes will contain
-    range of a sample of the image data, rather their actual values. This is
-    purely to eliminate the need to calculate minimum/maximum values over very
-    large (and potentially memory-mapped) images, which can be a time
-    consuming operation.
 
 
     ``VolumeOpts`` instances provide the following  :mod:`.actions`:
@@ -704,7 +690,8 @@ class VolumeOpts(Nifti1Opts):
         self.overlay = overlay
 
         self.__dataRangeChanged()
-        self.displayRange.x = [self.dataMin, self.dataMax]
+
+        self.displayRange.x = overlay.dataRange
         
         Nifti1Opts.__init__(self,
                             overlay,
@@ -838,7 +825,7 @@ class VolumeOpts(Nifti1Opts):
     @actions.action
     def resetDisplayRange(self):
         """Resets the display range to the data range."""
-        self.displayRange.x = [self.dataMin, self.dataMax]
+        self.displayRange.x = self.overlay.dataRange
 
 
     def __updateDataRange(self, absolute=False):
@@ -847,9 +834,6 @@ class VolumeOpts(Nifti1Opts):
         """
 
         dataMin, dataMax = self.overlay.dataRange
-
-        self.dataMin = dataMin
-        self.dataMax = dataMax
 
         drmin = dataMin
         drmax = dataMax
@@ -955,8 +939,7 @@ class VolumeOpts(Nifti1Opts):
         """
 
         if self.clipImage is None:
-            dataMin = self.dataMin
-            dataMax = self.dataMax
+            dataMin, dataMax = self.overlay.dataRange
             
             self.enableProperty('linkLowRanges')
             self.enableProperty('linkHighRanges') 
@@ -1059,7 +1042,7 @@ class VolumeOpts(Nifti1Opts):
         """
 
         dlo, dhi = fslcm.briconToDisplayRange(
-            (self.dataMin, self.dataMax),
+            self.overlay.dataRange,
             self.display.brightness / 100.0,
             self.display.contrast   / 100.0)
 
@@ -1081,7 +1064,7 @@ class VolumeOpts(Nifti1Opts):
             return
 
         brightness, contrast = fslcm.displayRangeToBricon(
-            (self.dataMin, self.dataMax),
+            self.overlay.dataRange,
             self.displayRange.x)
         
         self.__toggleListeners(False)

@@ -283,7 +283,7 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         # we have a z value threshold
         if zthres is not None:
 
-            absmax = max(map(abs, (opts.dataMin, opts.dataMax)))
+            absmax = max(map(abs, overlay.dataRange))
 
             opts.useNegativeCmap  = True
             opts.cmap             = 'Red-Yellow'
