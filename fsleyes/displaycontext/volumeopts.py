@@ -885,6 +885,9 @@ class VolumeOpts(Nifti1Opts):
         drUnset = self.displayRange .xlo == 0 and self.displayRange .xhi == 0
         crUnset = self.clippingRange.xlo == 0 and self.clippingRange.xhi == 0
         crGrow  = self.clippingRange.xhi == self.clippingRange.xmax
+
+        log.debug('Updating range limits [dr: {} - {}, cr: {} - {}]'.format(
+            drmin, drmax, crmin, crmax))
         
         self.displayRange .xmin = drmin
         self.displayRange .xmax = drmax
@@ -900,6 +903,11 @@ class VolumeOpts(Nifti1Opts):
         if drUnset: self.displayRange .x   = drmin,         drmax
         if crUnset: self.clippingRange.x   = crmin + croff, crmax
         if crGrow:  self.clippingRange.xhi = crmax
+
+        # If using absolute range values, the low
+        # display/clipping should be set to 0
+        if absolute and self.displayRange .xlo < 0: self.displayRange.xlo  = 0
+        if absolute and self.clippingRange.xlo < 0: self.clippingRange.xlo = 0
         
         self.enableNotification('displayRange')
         self.enableNotification('clippingRange')
