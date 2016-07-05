@@ -107,11 +107,11 @@ def calculateSamplePoints(shape, resolution, xform, xax, yax, origin='centre'):
 
     :arg shape:      The shape of the data to be sampled.
 
-    :arg xform:      A transformation matrix which converts from data 
-                     coordinates to the display coordinate system.
-
     :arg resolution: The desired resolution in display coordinates, along
                      each display axis.
+
+    :arg xform:      A transformation matrix which converts from data 
+                     coordinates to the display coordinate system.
 
     :arg xax:        The horizontal display coordinate system axis (0, 1, or
                      2).

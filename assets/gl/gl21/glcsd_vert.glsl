@@ -6,6 +6,9 @@
 #version 120
 
 
+// uniform sampler2D shCoefs;
+
+
 /*
  * Transformation matrix which transforms voxel 
  * coordinates into the display coordinate system.
