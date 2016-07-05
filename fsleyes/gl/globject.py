@@ -51,6 +51,7 @@ def getGLObjectType(overlayType):
     from . import glmodel
     from . import gllabel
     from . import gltensor
+    from . import glcsd
 
     typeMap = {
         'volume'     : glvolume    .GLVolume,
@@ -59,7 +60,8 @@ def getGLObjectType(overlayType):
         'linevector' : gllinevector.GLLineVector,
         'model'      : glmodel     .GLModel,
         'label'      : gllabel     .GLLabel,
-        'tensor'     : gltensor    .GLTensor
+        'tensor'     : gltensor    .GLTensor,
+        'csd'        : glcsd       .GLCSD
     }
 
     return typeMap.get(overlayType, None)

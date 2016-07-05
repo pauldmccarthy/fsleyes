@@ -1078,12 +1078,13 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
     MaskOpts       = fsldisplay.MaskOpts
     ModelOpts      = fsldisplay.ModelOpts
     LabelOpts      = fsldisplay.LabelOpts
+    CSDOpts        = fsldisplay.CSDOpts
 
     # A parser is created and returned
     # for each one of these types.
     parserTypes = [VolumeOpts, MaskOpts, LabelOpts,
                    ModelOpts, LineVectorOpts,
-                   RGBVectorOpts, TensorOpts]
+                   RGBVectorOpts, TensorOpts, CSDOpts]
 
     # Dictionary containing the Display parser,
     # and parsers for each overlay type. We use

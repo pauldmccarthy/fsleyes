@@ -154,13 +154,15 @@ from .vectoropts     import LineVectorOpts
 from .modelopts      import ModelOpts
 from .labelopts      import LabelOpts
 from .tensoropts     import TensorOpts
+from .csdopts        import CSDOpts
 
 from .displaycontext import InvalidOverlayError
 
 
 OVERLAY_TYPES = td.TypeDict({
 
-    'Image'       : ['volume', 'mask', 'rgbvector', 'linevector', 'label'],
+    'Image'       : ['volume',     'mask',  'rgbvector',
+                     'linevector', 'label', 'csd'],
     'Model'       : ['model'],
     'TensorImage' : ['tensor', 'rgbvector', 'linevector'],
 })
@@ -188,6 +190,7 @@ DISPLAY_OPTS_MAP = {
     'model'      : ModelOpts,
     'label'      : LabelOpts,
     'tensor'     : TensorOpts,
+    'csd'        : CSDOpts,
 }
 """This dictionary provides a mapping between each overlay type, and
 the :class:`DisplayOpts` subclass which contains overlay type-specific

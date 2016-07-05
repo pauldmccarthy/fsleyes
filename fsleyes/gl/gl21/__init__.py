@@ -15,3 +15,4 @@ from . import gllinevector_funcs
 from . import glmodel_funcs
 from . import gllabel_funcs
 from . import gltensor_funcs
+from . import glcsd_funcs
