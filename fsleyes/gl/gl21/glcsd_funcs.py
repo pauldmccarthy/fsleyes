@@ -81,19 +81,17 @@ def updateShaderState(self):
 
         allSpheres = np.tile(sphere, (nvoxels, 1))
         
-        for i, (x, y, z) in enumerate(it.product(range(shape[0]),
+        for i, (z, y, x) in enumerate(it.product(range(shape[2]),
                                                  range(shape[1]),
-                                                 range(shape[2]))):
+                                                 range(shape[0]))):
 
-            si = i * nverts
+            si = i  * nverts
             ei = si + nverts
 
             radii   = np.dot(self.shCoefs, image[x, y, z, :])
-
             allSpheres[si:ei, :] *= np.tile(radii.reshape((-1, 1)), (1, 3))
         
         allVoxels = np.repeat(allVoxels, nverts, 0)
-
         
         allIdxs    = np.tile(idxs,    nvoxels)
         allIdxs   += np.repeat(np.arange(0, nvoxels * nverts, nverts, dtype=np.uint32),
