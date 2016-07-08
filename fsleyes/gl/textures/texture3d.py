@@ -385,6 +385,9 @@ class Texture3D(texture.Texture, notifier.Notifier):
             # first dimension as the fastest changing.
             data = data.flatten(order='F')
 
+            print 'Texture Data'
+            print data
+
             self.bindTexture()
 
             # Enable storage of tightly packed data of any size (i.e.
@@ -442,6 +445,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
             if notify:
                 self.notify()
 
+        print 'Running thing'
         self.__refreshThread = async.run(
             genData,
             onFinish=configTexture,

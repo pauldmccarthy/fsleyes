@@ -8,6 +8,7 @@
 import itertools                    as it
 
 import numpy                        as np
+import numpy.linalg                 as npla
 
 import OpenGL.GL                    as gl
 
@@ -15,20 +16,27 @@ import OpenGL.GL.ARB.draw_instanced as arbdi
 
 import fsl.utils.transform          as transform
 import fsleyes.gl.shaders           as shaders
+import fsleyes.gl.textures          as textures
 import fsleyes.gl.routines          as glroutines
 
 
 def init(self):
 
-    self.shader = None
+    self.shader     = None
+    self.radTexture = None
 
     compileShaders(self)
     updateShaderState(self)
 
 
 def destroy(self):
-    self.shader.destroy()
-    self.shader = None
+    if self.shader is not None:
+        self.shader.destroy()
+        self.shader = None
+        
+    if self.radTexture is not None:
+        self.radTexture.destroy()
+        self.radTexture = None 
 
 
 def compileShaders(self):
@@ -60,73 +68,106 @@ def updateShaderState(self):
     changed |= shader.set('xFlip',      xFlip)
     changed |= shader.set('imageShape', shape)
     changed |= shader.set('lighting',   opts.lighting)
+    changed |= shader.set('resolution', self.resolution ** 2)
 
-    allVertices = getattr(type(self), 'allSpheres', None)
+    vertices, indices = glroutines.unitSphere(self.resolution)
 
-    if allVertices is None:
+    self.radTexture, rts = configRadiusTexture(self)
+    self.vertices   = vertices
+    self.indices    = indices
+    self.nVertices  = len(indices)
 
-        sphere, idxs = glroutines.unitSphere(self.resolution)
-
-        nverts    = sphere.shape[0]
-        nvoxels   = np.prod(shape)
-
-        print 'Preparing vertices for {} voxels'.format(nvoxels)
-        
-        allVoxels = np.mgrid[:shape[0], :shape[1], :shape[2]]
-        allVoxels = allVoxels.T.reshape(nvoxels, 3)
-        allVoxels = np.array(allVoxels, dtype=np.uint32)
-
-        print 'allvoxels', allVoxels.dtype, allVoxels.shape
-        print allVoxels
-
-        allSpheres = np.tile(sphere, (nvoxels, 1))
-        
-        for i, (z, y, x) in enumerate(it.product(range(shape[2]),
-                                                 range(shape[1]),
-                                                 range(shape[0]))):
-
-            si = i  * nverts
-            ei = si + nverts
-
-            radii   = np.dot(self.shCoefs, image[x, y, z, :])
-            allSpheres[si:ei, :] *= np.tile(radii.reshape((-1, 1)), (1, 3))
-        
-        allVoxels = np.repeat(allVoxels, nverts, 0)
-        
-        allIdxs    = np.tile(idxs,    nvoxels)
-        allIdxs   += np.repeat(np.arange(0, nvoxels * nverts, nverts, dtype=np.uint32),
-                               len(idxs))
-
-        print 'nVertsPerVoxel', len(idxs)
-        print 'allSpheres', allSpheres.dtype, allSpheres.shape
-        print allSpheres
-        print 'allIdxs', allIdxs.dtype, allIdxs.shape
-        print allIdxs
-        print 'allvoxels', allVoxels.dtype, allVoxels.shape
-        print allVoxels
-
-        type(self).allSpheres     = allSpheres
-        type(self).allVoxels      = allVoxels
-        type(self).allIdxs        = allIdxs
-        type(self).nVertsPerVoxel = len(idxs)
-         
-        print 'Done'
-
-    self.nVertsPerVoxel = type(self).nVertsPerVoxel
-    self.allIdxs        = type(self).allIdxs
-    self.allVoxels      = type(self).allVoxels
-    self.allSpheres     = type(self).allSpheres
-
-    shader.setAtt('vertex', self.allSpheres)
-    shader.setAtt('voxel',  self.allVoxels)
+    print 'Vertices ({} / {})'.format(vertices.dtype, vertices.shape)
+    # print vertices
+    print 'Indices ({} / {})'.format(indices.dtype, indices.shape)
+    # print indices
     
+    shader.set('radTexture',  0)
+
+    print 'Texture shape: {}'.format(rts)
+    shader.set('radTexShape', rts)
+
+    shader.setAtt('vertex', self.vertices)
+    shader.setIndices(indices)
+
     shader.unload()
+
+
+def configRadiusTexture(self):
+
+    image   = self.image
+    shape   = self.image.shape[:3]
+    nverts  = self.resolution ** 2
+    nvoxels = np.prod(shape)
+
+    radTexShape = list(shape) + [nverts]
+    radTexShape = np.array(radTexShape)
+
+    print 'Figuring out radius texture shape '\
+          '(starting with {})'.format(radTexShape)
+
+    rprod = np.prod(radTexShape)
+
+    while radTexShape[-1] != 1:
+        imin          = np.argmin(radTexShape[:3])
+        radTexShape[imin] *= 2
+        radTexShape[-1]   /= 2
+
+    radTexShape = radTexShape[:-1]
+
+    print 'Got shape {} ({} == {})'.format(
+        radTexShape,
+        np.prod(radTexShape),
+        rprod)
+
+    print 'Calculating radii...',
+        
+    radii = np.zeros(nvoxels * nverts, dtype=np.uint8)
+
+    for i, (z, y, x) in enumerate(it.product(range(shape[2]),
+                                             range(shape[1]),
+                                             range(shape[0]))):
+
+        si           = i  * nverts
+        ei           = si + nverts
+        radii[si:ei] = 128 + np.dot(self.shCoefs, image[x, y, z, :]) * 127
+
+        # radii[si:ei] = 95 + 128 * float(x) / (shape[0] - 1)
+        # radii[i] = 95 + 128 * float(x) / (shape[0] - 1)
+
+    radii = radii.reshape(radTexShape, order='F')
+
+    print 'Finished'
+        
+    print 'Creating radius texture ...',
+
+    tex = textures.Texture3D('blah', data=radii)
+
+    rt = tex.refreshThread()
+    if rt is not None:
+        rt.join()
+
+    print 'Finished'
+
+    return tex, radTexShape
 
 
 def preDraw(self):
     shader = self.shader
 
     shader.load()
+
+    # Calculate a transformation matrix for
+    # normal vectors - T(I(MV matrix)) 
+    mvMat        = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)[:3, :3]
+    v2dMat       = self.displayOpts.getTransform('voxel', 'display')[:3, :3]
+    
+    normalMatrix = transform.concat(mvMat, v2dMat)
+    normalMatrix = npla.inv(normalMatrix).T
+
+    shader.set('normalMatrix', normalMatrix)
+
+    self.radTexture.bindTexture(gl.GL_TEXTURE0)
 
     gl.glEnable(gl.GL_CULL_FACE)
     gl.glCullFace(gl.GL_BACK) 
@@ -160,32 +201,21 @@ def draw(self, zpos, xform=None):
 
     voxels[:, self.zax] = zpos
 
-    voxels  = transform.transform(voxels, d2vMat)
-    nvoxels = len(voxels)
+    voxels = transform.transform(voxels, d2vMat)
+    voxels = np.array(np.round(voxels), dtype=np.float32)
 
-    voxelOffsets = np.array(voxels[:, 0]            + \
-                            voxels[:, 1] * shape[0] + \
-                            voxels[:, 2] * shape[0] * shape[1],
-                            dtype=np.uint32) * self.nVertsPerVoxel
-
-    voxelOffsets  = np.repeat(voxelOffsets, self.nVertsPerVoxel)
-
-    off = np.tile(np.arange(self.nVertsPerVoxel, dtype=np.uint32), nvoxels)
-
-    voxelOffsets += off
-
-    indices = self.allIdxs[voxelOffsets]
-
+    shader.setAtt('voxel', voxels, divisor=1)
     shader.set('voxToDisplayMat', xform)
-    
-    shader.setIndices(indices)
 
     shader.loadAtts()
     
-    gl.glDrawElements(gl.GL_QUADS, len(indices), gl.GL_UNSIGNED_INT, None)
+    arbdi.glDrawElementsInstancedARB(
+        gl.GL_QUADS, self.nVertices, gl.GL_UNSIGNED_INT, None, len(voxels)) 
 
 
 def postDraw(self):
     self.shader.unloadAtts()
     self.shader.unload()
+    self.radTexture.unbindTexture()
+    
     gl.glDisable(gl.GL_CULL_FACE)

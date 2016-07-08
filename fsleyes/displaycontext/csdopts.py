@@ -12,6 +12,6 @@ from . import volumeopts
 
 class CSDOpts(volumeopts.Nifti1Opts):
 
-    lighting  = props.Boolean(default=False)
+    lighting  = props.Boolean(default=True)
 
     neuroFlip = props.Boolean(default=True)

@@ -4,9 +4,10 @@
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
 #version 120
+#extension GL_EXT_gpu_shader4 : require
 
+#pragma include roll.glsl
 
-// uniform sampler2D shCoefs;
 
 
 /*
@@ -26,6 +27,12 @@ uniform mat4 voxToDisplayMat;
  */
 uniform mat3 normalMatrix;
 
+
+uniform sampler3D radTexture;
+
+
+uniform vec3 radTexShape;
+
 /*
  * Image shape (x, y, z).
  */
@@ -41,6 +48,13 @@ uniform bool lighting;
  * specified in eye/screen space.
  */
 uniform vec3 lightPos;
+
+
+
+uniform int resolution;
+
+
+
 
 /*
  * If true, the V1, V2 and V3 eigenvectors 
@@ -79,33 +93,39 @@ varying vec4 fragColourFactor;
 
 void main(void) {
 
+    vec3 pos = vertex;
 
-  vec3 pos = vertex;
+    int  flatVoxel = unroll3D(voxel,                  imageShape);
+    vec3 radIdxs   = roll3D(  flatVoxel * resolution + gl_VertexID, radTexShape);
+    radIdxs = (radIdxs + 0.5) / radTexShape;
+
+    float radius = texture3D(radTexture, radIdxs).r - 0.5;
   
-  pos     *= 0.4;
-  pos     += voxel;
+    pos     = pos * radius * 2;
+    pos    += voxel;
+  
+    // Apply lighting if it is enabled
+    vec3 light;
+    if (lighting) {
 
-  // Apply lighting if it is enabled
-  vec3 light;
-  if (lighting) {
-    light = vec3(1, 1, 1);
-  }
-
-  // If lighting is not enabled, the
-  // fragment colour is not modified.
-  else {
-    light = vec3(1, 1, 1);
-  }
-
-  // Transform the vertex from the
-  // voxel coordinate system into
-  // the display coordinate system.
-  gl_Position = gl_ModelViewProjectionMatrix *
-                voxToDisplayMat              *
-                vec4(pos, 1);
-
-  // Send the voxel and texture coordinates, and
-  // the colour scaling factor to the fragment shader.
-  fragVoxCoord     = floor(voxel + 0.5);
-  fragColourFactor = vec4(light, 1);
+      light = vec3(1, 1, 1);
+    }
+  
+    // If lighting is not enabled, the
+    // fragment colour is not modified.
+    else {
+      light = vec3(1, 1, 1);
+    }
+  
+    // Transform the vertex from the
+    // voxel coordinate system into
+    // the display coordinate system.
+    gl_Position = gl_ModelViewProjectionMatrix *
+                  voxToDisplayMat              *
+                  vec4(pos, 1);
+  
+    // Send the voxel and texture coordinates, and
+    // the colour scaling factor to the fragment shader.
+    fragVoxCoord     = floor(voxel + 0.5);
+    fragColourFactor = vec4(light, 1);
 }

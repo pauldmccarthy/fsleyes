@@ -14,6 +14,7 @@ import numpy      as np
 
 import fsleyes.gl as fslgl
 from . import        globject
+from . import        textures
 import               fsleyes
 
 
@@ -30,7 +31,7 @@ class GLCSD(globject.GLImageObject):
         
         globject.GLImageObject.__init__(self, image, display, xax, yax)
 
-        self.full       = True
+        self.full       = False
         self.order      = image.shape[3]
         self.resolution = 16
         self.shCoefs    = np.loadtxt(op.join(
