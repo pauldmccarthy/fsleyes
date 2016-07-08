@@ -4,9 +4,11 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`Texture` and :class:`Texture2D`
-classes, which are the base classes for all other texture types.
+"""This module provides the :class:`Texture` and :class:`Texture2D` classes,
+which are the base classes for all other texture types. See also the
+:class:`.Texture3D` class.
 """
+
 
 import logging
 

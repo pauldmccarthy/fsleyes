@@ -109,7 +109,7 @@ class GLTensor(glvector.GLVector):
                     texName,
                     img,
                     nvals=nvals,
-                    normalise=True,
+                    normalise=img.dataRange,
                     prefilter=prefilter)
 
                 texThreads.append(tex.refreshThread())

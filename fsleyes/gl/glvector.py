@@ -407,7 +407,7 @@ class GLVector(globject.GLImageObject):
             vecImage,
             nvals=3,
             interp=interp,
-            normalise=True,
+            normalise=vecImage.dataRange,
             prefilter=realPrefilter,
             prefilterRange=prefilterRange,
             notify=False)
@@ -529,10 +529,10 @@ class GLVector(globject.GLImageObject):
             textureData    = np.zeros((5, 5, 5), dtype=np.uint8)
             textureData[:] = 255
             image          = fslimage.Image(textureData)
-            norm           = False
+            norm           = None
             
         else:
-            norm = True
+            norm = image.dataRange
 
         texName = '{}_{}_{}_{}'.format(
             type(self).__name__, id(self.image), id(image), which)
