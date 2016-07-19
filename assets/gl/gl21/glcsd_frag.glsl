@@ -19,12 +19,16 @@ uniform vec3 imageShape;
  */
 varying vec3 fragVoxCoord;
 
+varying vec3 fragVertex;
+
 /*
  * The final fragment colour is multiplied by this 
  * scaling factor - this may be used for vertex-based
  * lighting.
  */
 varying vec4 fragColourFactor;
+
+varying float fragRadius;
 
 
 void main(void) {
@@ -35,7 +39,7 @@ void main(void) {
 
     gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
     return;
-  } 
+  }
 
-  gl_FragColor = vec4(1, 0, 0, 1) * fragColourFactor;;
+  gl_FragColor = vec4(fragVertex + 0.5, 1) * fragColourFactor;
 }

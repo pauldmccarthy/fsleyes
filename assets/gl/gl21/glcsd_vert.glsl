@@ -51,7 +51,10 @@ uniform vec3 lightPos;
 
 
 
-uniform int resolution;
+uniform int nVertices;
+
+
+uniform int sizeScaling;
 
 
 
@@ -91,23 +94,26 @@ varying vec3 fragTexCoord;
 varying vec4 fragColourFactor;
 
 
+varying float fragRadius;
+varying vec3  fragVertex;
+
+
 void main(void) {
 
     vec3 pos = vertex;
 
     int  flatVoxel = unroll3D(voxel,                  imageShape);
-    vec3 radIdxs   = roll3D(  flatVoxel * resolution + gl_VertexID, radTexShape);
+    vec3 radIdxs   = roll3D(  flatVoxel * nVertices + gl_VertexID, radTexShape);
     radIdxs = (radIdxs + 0.5) / radTexShape;
 
-    float radius = texture3D(radTexture, radIdxs).r - 0.5;
+    float radius = texture3D(radTexture, radIdxs).r;
   
-    pos     = pos * radius * 2;
+    pos     = pos * radius * sizeScaling;
     pos    += voxel;
   
     // Apply lighting if it is enabled
     vec3 light;
     if (lighting) {
-
       light = vec3(1, 1, 1);
     }
   
@@ -128,4 +134,6 @@ void main(void) {
     // the colour scaling factor to the fragment shader.
     fragVoxCoord     = floor(voxel + 0.5);
     fragColourFactor = vec4(light, 1);
+    fragRadius       = radius;
+    fragVertex       = vertex * radius;
 }

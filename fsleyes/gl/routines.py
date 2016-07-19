@@ -681,10 +681,10 @@ def unitSphere(res):
     cosu = np.cos(u)
     cosv = np.cos(v)
     sinu = np.sin(u)
-    sinv = np.sin(v) 
+    sinv = np.sin(v)
 
-    cucv = np.outer(cosu, cosv)
-    cusv = np.outer(cosu, sinv)
+    cucv = np.outer(cosu, cosv).T
+    cusv = np.outer(cosu, sinv).T
 
     vertices = np.zeros((res ** 2, 3), dtype=np.float32)
 
@@ -693,7 +693,7 @@ def unitSphere(res):
     # and z coordinates of the form sin(u).
     vertices[:, 0] = cucv.flatten()
     vertices[:, 1] = cusv.flatten()
-    vertices[:, 2] = sinu.repeat(res)
+    vertices[:, 2] = np.tile(sinu, res)
 
     # Generate a list of indices which join the
     # vertices so they can be used to draw the

@@ -65,10 +65,12 @@ def updateShaderState(self):
     shader.load()
 
     changed  = False
-    changed |= shader.set('xFlip',      xFlip)
-    changed |= shader.set('imageShape', shape)
-    changed |= shader.set('lighting',   opts.lighting)
-    changed |= shader.set('resolution', self.resolution ** 2)
+    changed |= shader.set('xFlip',       xFlip)
+    changed |= shader.set('imageShape',  shape)
+    changed |= shader.set('lighting',    opts.lighting)
+    changed |= shader.set('lightPos',    lightPos)
+    changed |= shader.set('nVertices',   self.resolution ** 2)
+    changed |= shader.set('sizeScaling', 1.75)
 
     vertices, indices = glroutines.unitSphere(self.resolution)
 
@@ -77,14 +79,8 @@ def updateShaderState(self):
     self.indices    = indices
     self.nVertices  = len(indices)
 
-    print 'Vertices ({} / {})'.format(vertices.dtype, vertices.shape)
-    # print vertices
-    print 'Indices ({} / {})'.format(indices.dtype, indices.shape)
-    # print indices
-    
     shader.set('radTexture',  0)
 
-    print 'Texture shape: {}'.format(rts)
     shader.set('radTexShape', rts)
 
     shader.setAtt('vertex', self.vertices)
@@ -103,9 +99,6 @@ def configRadiusTexture(self):
     radTexShape = list(shape) + [nverts]
     radTexShape = np.array(radTexShape)
 
-    print 'Figuring out radius texture shape '\
-          '(starting with {})'.format(radTexShape)
-
     rprod = np.prod(radTexShape)
 
     while radTexShape[-1] != 1:
@@ -115,13 +108,6 @@ def configRadiusTexture(self):
 
     radTexShape = radTexShape[:-1]
 
-    print 'Got shape {} ({} == {})'.format(
-        radTexShape,
-        np.prod(radTexShape),
-        rprod)
-
-    print 'Calculating radii...',
-        
     radii = np.zeros(nvoxels * nverts, dtype=np.uint8)
 
     for i, (z, y, x) in enumerate(it.product(range(shape[2]),
@@ -130,24 +116,18 @@ def configRadiusTexture(self):
 
         si           = i  * nverts
         ei           = si + nverts
-        radii[si:ei] = 128 + np.dot(self.shCoefs, image[x, y, z, :]) * 127
+        radii[si:ei] = np.dot(self.shCoefs, image[x, y, z, :]) * 255
 
         # radii[si:ei] = 95 + 128 * float(x) / (shape[0] - 1)
         # radii[i] = 95 + 128 * float(x) / (shape[0] - 1)
 
     radii = radii.reshape(radTexShape, order='F')
 
-    print 'Finished'
-        
-    print 'Creating radius texture ...',
-
     tex = textures.Texture3D('blah', data=radii)
 
     rt = tex.refreshThread()
     if rt is not None:
         rt.join()
-
-    print 'Finished'
 
     return tex, radTexShape
 
