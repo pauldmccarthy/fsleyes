@@ -104,7 +104,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         # These attributes are modified
         # in the refresh method (which is
         # called via the set method below). 
-        self.__ready         = False
+        self.__ready         = True
         self.__refreshThread = None
 
         # These attributes are set by the
@@ -345,6 +345,11 @@ class Texture3D(texture.Texture, notifier.Notifier):
         .. note:: The texture data is generated on a separate thread, using
                   the :func:`.async.run` function. 
         """
+
+        # Don't bother if data
+        # hasn't been set
+        if self.__data is None:
+            return
 
         refreshData = kwargs.get('refreshData', True)
         notify      = kwargs.get('notify',      True)

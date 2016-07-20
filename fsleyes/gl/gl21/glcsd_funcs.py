@@ -23,7 +23,7 @@ import fsleyes.gl.routines          as glroutines
 def init(self):
 
     self.shader     = None
-    self.radTexture = None
+    self.radTexture = textures.Texture3D('blah')
 
     compileShaders(self)
     updateShaderState(self)
@@ -69,68 +69,21 @@ def updateShaderState(self):
     changed |= shader.set('imageShape',  shape)
     changed |= shader.set('lighting',    opts.lighting)
     changed |= shader.set('lightPos',    lightPos)
-    changed |= shader.set('nVertices',   self.resolution ** 2)
-    changed |= shader.set('sizeScaling', 1.75)
+    changed |= shader.set('nVertices',   opts.csdResolution ** 2)
+    changed |= shader.set('sizeScaling', opts.size / 100.0)
 
-    vertices, indices = glroutines.unitSphere(self.resolution)
+    vertices, indices = glroutines.unitSphere(opts.csdResolution)
 
-    self.radTexture, rts = configRadiusTexture(self)
     self.vertices   = vertices
     self.indices    = indices
     self.nVertices  = len(indices)
 
     shader.set('radTexture',  0)
 
-    shader.set('radTexShape', rts)
-
     shader.setAtt('vertex', self.vertices)
     shader.setIndices(indices)
 
     shader.unload()
-
-
-def configRadiusTexture(self):
-
-    image   = self.image
-    shape   = self.image.shape[:3]
-    nverts  = self.resolution ** 2
-    nvoxels = np.prod(shape)
-
-    radTexShape = list(shape) + [nverts]
-    radTexShape = np.array(radTexShape)
-
-    rprod = np.prod(radTexShape)
-
-    while radTexShape[-1] != 1:
-        imin          = np.argmin(radTexShape[:3])
-        radTexShape[imin] *= 2
-        radTexShape[-1]   /= 2
-
-    radTexShape = radTexShape[:-1]
-
-    radii = np.zeros(nvoxels * nverts, dtype=np.uint8)
-
-    for i, (z, y, x) in enumerate(it.product(range(shape[2]),
-                                             range(shape[1]),
-                                             range(shape[0]))):
-
-        si           = i  * nverts
-        ei           = si + nverts
-        radii[si:ei] = np.dot(self.shCoefs, image[x, y, z, :]) * 255
-
-        # radii[si:ei] = 95 + 128 * float(x) / (shape[0] - 1)
-        # radii[i] = 95 + 128 * float(x) / (shape[0] - 1)
-
-    radii = radii.reshape(radTexShape, order='F')
-
-    tex = textures.Texture3D('blah', data=radii)
-
-    rt = tex.refreshThread()
-    if rt is not None:
-        rt.join()
-
-    return tex, radTexShape
-
 
 def preDraw(self):
     shader = self.shader
@@ -184,13 +137,49 @@ def draw(self, zpos, xform=None):
     voxels = transform.transform(voxels, d2vMat)
     voxels = np.array(np.round(voxels), dtype=np.float32)
 
+    print 'Calculating radii for {} voxels'.format(voxels.shape[0])
+    radii  = self.getRadii(voxels)
+    print 'Done'
+    
+    radTexShape = np.array(list(radii.shape) + [1, 1])
+
+    # TODO This will break for
+    #      odd-sized dimensions
+    while np.any(radTexShape > 1024):
+        imin = np.argmin(radTexShape)
+        imax = np.argmax(radTexShape)
+
+        # Find the lowest integer divisor
+        # of the maximum dimension size
+        divisor = 0
+        for i in range(2, 10):
+            if radTexShape[imax] % i == 0:
+                divisor = i
+                break
+
+        radTexShape[imax] /= divisor
+        radTexShape[imin] *= divisor
+
+    print 'Reshaping radius: {} -> {}'.format(radii.shape, radTexShape)
+
+    radii = radii.reshape(radTexShape, order='F')
+
+    self.radTexture.set(data=radii)
+
+    print 'Done'
+    
+    rt = self.radTexture.refreshThread()
+    if rt is not None:
+        rt.join()
+
     shader.setAtt('voxel', voxels, divisor=1)
     shader.set('voxToDisplayMat', xform)
+    shader.set('radTexShape', radTexShape)
 
     shader.loadAtts()
     
     arbdi.glDrawElementsInstancedARB(
-        gl.GL_QUADS, self.nVertices, gl.GL_UNSIGNED_INT, None, len(voxels)) 
+        gl.GL_QUADS, self.nVertices, gl.GL_UNSIGNED_INT, None, len(voxels))
 
 
 def postDraw(self):

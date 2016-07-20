@@ -102,11 +102,11 @@ void main(void) {
 
     vec3 pos = vertex;
 
-    int  flatVoxel = unroll3D(voxel,                  imageShape);
-    vec3 radIdxs   = roll3D(  flatVoxel * nVertices + gl_VertexID, radTexShape);
-    radIdxs = (radIdxs + 0.5) / radTexShape;
+    int  flatIdx = gl_InstanceID * nVertices + gl_VertexID;
+    vec3 radIdx  = roll3D(flatIdx, radTexShape);
+    radIdx = (radIdx + 0.5) / radTexShape;
 
-    float radius = texture3D(radTexture, radIdxs).r;
+    float radius = texture3D(radTexture, radIdx).r;
   
     pos     = pos * radius * sizeScaling;
     pos    += voxel;

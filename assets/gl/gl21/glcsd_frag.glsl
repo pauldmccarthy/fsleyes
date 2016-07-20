@@ -41,5 +41,5 @@ void main(void) {
     return;
   }
 
-  gl_FragColor = vec4(fragVertex + 0.5, 1) * fragColourFactor;
+  gl_FragColor = vec4(abs(fragVertex) + 0.5, 1) * fragColourFactor;
 }
