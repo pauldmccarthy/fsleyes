@@ -135,16 +135,13 @@ def draw(self, zpos, xform=None):
     voxels[:, self.zax] = zpos
 
     voxels = transform.transform(voxels, d2vMat)
-    voxels = np.array(np.round(voxels), dtype=np.float32)
+    voxels = np.array(np.round(voxels), dtype=np.int32)
 
-    print 'Calculating radii for {} voxels'.format(voxels.shape[0])
     radii  = self.getRadii(voxels)
-    print 'Done'
     
     radTexShape = np.array(list(radii.shape) + [1, 1])
 
-    # TODO This will break for
-    #      odd-sized dimensions
+    # TODO This needs to be made more robust
     while np.any(radTexShape > 1024):
         imin = np.argmin(radTexShape)
         imax = np.argmax(radTexShape)
@@ -152,7 +149,7 @@ def draw(self, zpos, xform=None):
         # Find the lowest integer divisor
         # of the maximum dimension size
         divisor = 0
-        for i in range(2, 10):
+        for i in (2, 3, 5, 7, 11, 13):
             if radTexShape[imax] % i == 0:
                 divisor = i
                 break
@@ -160,13 +157,9 @@ def draw(self, zpos, xform=None):
         radTexShape[imax] /= divisor
         radTexShape[imin] *= divisor
 
-    print 'Reshaping radius: {} -> {}'.format(radii.shape, radTexShape)
-
     radii = radii.reshape(radTexShape, order='F')
 
     self.radTexture.set(data=radii)
-
-    print 'Done'
     
     rt = self.radTexture.refreshThread()
     if rt is not None:

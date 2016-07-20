@@ -122,6 +122,10 @@ def calculateSamplePoints(shape, resolution, xform, xax, yax, origin='centre'):
                      :func:`.transform.axisBounds` function.
     """
 
+    # TODO Allow a bounding box to be 
+    #      passed in, and only generate 
+    #      points within the bounding box.
+
     xres = resolution[xax]
     yres = resolution[yax]
 

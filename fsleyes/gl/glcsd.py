@@ -82,28 +82,18 @@ class GLCSD(globject.GLImageObject):
 
     def getRadii(self, voxels):
 
-        res   = self.displayOpts.csdResolution ** 2
-        shape = self.image.shape
-        radii = np.zeros(voxels.shape[0] * res, dtype=np.uint8)
-        coef  = self.coefficients        
+        coef  = self.coefficients
 
-        for i, (x, y, z) in enumerate(voxels):
+        # TODO Handle out of bounds x/y/z indices
 
-            if any((x <  0,
-                    y <  0,
-                    z <  0,
-                    x >= shape[0],
-                    y >= shape[1],
-                    z >= shape[2])):
-                continue
+        # We need to [insert description here when you know more
+        #             about the topic].
+        # This can be done with a straight matrix multiplication.
+        x, y, z = voxels.T
+        data    = self.image.nibImage.get_data()[x, y, z, :]
+        radii   = np.dot(coef, data.T)
 
-            si           = i  * res
-            ei           = si + res
-
-            data         = self.image[int(x), int(y), int(z), :]
-            radii[si:ei] = np.dot(coef, data) * 255
-
-        return radii
+        return radii.flatten(order='F')
 
 
     def ready(self):
