@@ -394,7 +394,11 @@ _DISPLAY_PROPS = td.TypeDict({
                      enabledWhen=lambda o: o.overlay.is4DImage())],
 
     'CSDOpts' : [
-        props.Widget('resolution',   showLimits=False)]
+        props.Widget('resolution',   showLimits=False),
+        props.Widget('csdResolution'),
+        props.Widget('lighting'),
+        props.Widget('size', spin=False, showLimits=False),
+        props.Widget('colourMode')]
 })
 """This dictionary contains specifications for all controls that are shown on
 an ``OverlayDisplayPanel``.

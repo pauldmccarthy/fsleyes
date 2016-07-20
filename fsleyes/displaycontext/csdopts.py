@@ -20,6 +20,16 @@ class CSDOpts(volumeopts.Nifti1Opts):
 
     size          = props.Percentage(minval=10, maxval=500, default=100)
 
-    inMemory      = props.Boolean()
-
     colourMode    = props.Choice(('radius', 'direction', 'constant'))
+
+    colour        = props.Colour()
+    # For 'constant'
+
+    colourMap     = props.ColourMap()
+    # For 'radius'
+
+
+    xColour       = props.Colour()
+    yColour       = props.Colour()
+    zColour       = props.Colour()
+    # For 'direction'

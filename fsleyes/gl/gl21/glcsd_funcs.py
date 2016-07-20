@@ -109,7 +109,6 @@ def preDraw(self):
 def draw(self, zpos, xform=None):
     
     image  = self.image
-    shape  = image.shape[:3]
     opts   = self.displayOpts
     shader = self.shader
     v2dMat = opts.getTransform('voxel',   'display')

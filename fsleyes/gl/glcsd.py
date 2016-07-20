@@ -14,16 +14,15 @@ import numpy      as np
 
 import fsleyes.gl as fslgl
 from . import        globject
-from . import        textures
 import               fsleyes
 
 
 log = logging.getLogger(__name__)
 
 
-CSD_FILE_TYPE = {
-    45 : 'half',
-    81 : 'full',
+CSD_TYPE = {
+    45 : 'sym',
+    81 : 'asym',
 }
 
 
@@ -55,7 +54,10 @@ class GLCSD(globject.GLImageObject):
 
         opts.addListener('csdResolution', name, self.csdResChanged,
                          immediate=True)
-
+        opts.addListener('size',       name, self.updateShaderState)
+        opts.addListener('lighting',   name, self.updateShaderState)
+        opts.addListener('colourMode', name, self.updateShaderState)
+        opts.addListener('neuroFlip',  name, self.updateShaderState)
 
     
     def removeListeners(self):
@@ -65,13 +67,18 @@ class GLCSD(globject.GLImageObject):
 
         opts.removeListener('csdResolution', name)
 
+        
+    def updateShaderState(self, *a):
+        fslgl.glcsd_funcs.updateShaderState(self)
+        self.notify()
 
+        
     def csdResChanged(self, *a):
 
         opts        = self.displayOpts
         order       = self.image.shape[3]
         resolution  = opts.csdResolution ** 2
-        fileType    = CSD_FILE_TYPE[order]
+        fileType    = CSD_TYPE[order]
         
         self.coefficients = np.loadtxt(op.join(
             fsleyes.assetDir,
