@@ -55,10 +55,11 @@ class Texture3D(texture.Texture, notifier.Notifier):
        invVoxValXform
 
 
-    When a ``Texture3D`` is created, and when its settings are changed, it
-    may need to prepare the data to be passed to OpenGL - for large textures,
-    this can be a time consuming process, so this is performed on a separate
-    thread (using the :mod:`.async` module). The :meth:`ready` method returns
+    When a ``Texture3D`` is created, and when its settings are changed, it may
+    need to prepare the data to be passed to OpenGL - for large textures, this
+    can be a time consuming process, so this is performed on a separate thread
+    using the :mod:`.async` module (unless the ``threaded`` parameter to
+    :meth:`__init__` is set to ``False``). The :meth:`ready` method returns
     ``True`` or ``False`` to indicate whether the ``Texture3D`` can be used.
 
     Furthermore, the ``Texture3D`` class derives from :class:`.Notifier`, so
@@ -71,6 +72,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
                  name,                 
                  nvals=1,
                  notify=True,
+                 threaded=True,
                  **kwargs):
         """Create a ``Texture3D``.
         
@@ -80,6 +82,13 @@ class Texture3D(texture.Texture, notifier.Notifier):
  
         :arg notify:    Passed to the initial call to :meth:`refresh`.
 
+        :arg threaded:  If ``True`` (the default), the texture data will be
+                        prepared on a separate thread (on calls to
+                        :meth:`refresh`). Otherwise, the texture data is
+                        prepared on the calling thread, and the
+                        :meth:`refresh` call will block until it has been
+                        prepared.
+
         All other keyword arguments are passed through to the :meth:`set`
         method, and thus used as initial texture settings.
         """
@@ -88,6 +97,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         self.__name       = '{}_{}'.format(type(self).__name__, id(self)) 
         self.__nvals      = nvals
+        self.__threaded   = threaded
 
         # All of these texture settings
         # are updated in the set method,
@@ -356,6 +366,8 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         self.__ready = False
 
+        bound = self.isBound()
+
         # This can take a long time for big
         # data, so we do it in a separate
         # thread using the async module.
@@ -390,7 +402,8 @@ class Texture3D(texture.Texture, notifier.Notifier):
             # first dimension as the fastest changing.
             data = data.flatten(order='F')
 
-            self.bindTexture()
+            if not bound:
+                self.bindTexture()
 
             # Enable storage of tightly packed data of any size (i.e.
             # our texture shape does not have to be divisible by 4).
@@ -437,7 +450,9 @@ class Texture3D(texture.Texture, notifier.Notifier):
                             self.__texDtype,
                             data)
 
-            self.unbindTexture()
+            if not bound:
+                self.unbindTexture()
+                
             log.debug('{}({}) is ready to use'.format(
                 type(self).__name__, self.getTextureName()))
             
@@ -447,11 +462,15 @@ class Texture3D(texture.Texture, notifier.Notifier):
             if notify:
                 self.notify()
 
-        self.__refreshThread = async.run(
-            genData,
-            onFinish=configTexture,
-            name='{}.genData({})'.format(type(self).__name__,
-                                         self.getTextureName()))
+        if self.__threaded:
+            self.__refreshThread = async.run(
+                genData,
+                onFinish=configTexture,
+                name='{}.genData({})'.format(type(self).__name__,
+                                             self.getTextureName()))
+        else:
+            genData()
+            configTexture()
 
 
     def __determineTextureType(self):
