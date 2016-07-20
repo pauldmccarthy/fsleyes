@@ -23,7 +23,7 @@ import fsleyes.gl.routines          as glroutines
 def init(self):
 
     self.shader     = None
-    self.radTexture = textures.Texture3D('blah')
+    self.radTexture = textures.Texture3D('blah', threaded=False)
 
     compileShaders(self)
     updateShaderState(self)
@@ -160,10 +160,6 @@ def draw(self, zpos, xform=None):
     radii = radii.reshape(radTexShape, order='F')
 
     self.radTexture.set(data=radii)
-    
-    rt = self.radTexture.refreshThread()
-    if rt is not None:
-        rt.join()
 
     shader.setAtt('voxel', voxels, divisor=1)
     shader.set('voxToDisplayMat', xform)

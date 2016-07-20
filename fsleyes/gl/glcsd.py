@@ -85,11 +85,23 @@ class GLCSD(globject.GLImageObject):
         coef  = self.coefficients
 
         # TODO Handle out of bounds x/y/z indices
+        shape   = self.image.shape[:3]
+        x, y, z = voxels.T
+
+        out = (x <  0)        | \
+              (y <  0)        | \
+              (z <  0)        | \
+              (x >= shape[0]) | \
+              (y >= shape[1]) | \
+              (z >= shape[2])
+
+        x = x[~out]
+        y = y[~out]
+        z = z[~out]
 
         # We need to [insert description here when you know more
         #             about the topic].
         # This can be done with a straight matrix multiplication.
-        x, y, z = voxels.T
         data    = self.image.nibImage.get_data()[x, y, z, :]
         radii   = np.dot(coef, data.T)
 
