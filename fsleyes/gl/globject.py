@@ -292,13 +292,18 @@ class GLObject(notifier.Notifier):
         raise NotImplementedError()
 
     
-    def draw(self, zpos, xform=None):
+    def draw(self, zpos, xform=None, bbox=None):
         """This method should draw a view of this ``GLObject`` - a 2D slice
         at the given Z location, which specifies the position along the screen
         depth axis.
 
-        If the ``xform`` parameter is provided, it should be applied to the
-        model view transformation before drawing.
+        :arg xform: If provided, it must be applied to the model view
+                    transformation before drawing.
+
+        :arg bbox:  If provided, defines the bounding box, in the display
+                    coordinate system, which is to be displayed. Can be used
+                    as a performance hint (i.e. to limit the number of things
+                    that are rendered).
         """
         raise NotImplementedError()
 

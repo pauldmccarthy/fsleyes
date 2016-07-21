@@ -123,8 +123,8 @@ class GLCSD(globject.GLImageObject):
         fslgl.glcsd_funcs.preDraw(self)
 
 
-    def draw(self, zpos, xform=None):
-        fslgl.glcsd_funcs.draw(self, zpos, xform)
+    def draw(self, zpos, xform=None, bbox=None):
+        fslgl.glcsd_funcs.draw(self, zpos, xform, bbox)
 
 
     def postDraw(self):

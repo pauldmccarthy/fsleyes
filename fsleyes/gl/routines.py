@@ -86,7 +86,13 @@ def show2D(xax, yax, width, height, lo, hi):
         gl.glRotatef(270, 1, 0, 0)
 
 
-def calculateSamplePoints(shape, resolution, xform, xax, yax, origin='centre'):
+def calculateSamplePoints(shape,
+                          resolution,
+                          xform,
+                          xax,
+                          yax,
+                          origin='centre',
+                          bbox=None):
     """Calculates a uniform grid of points, in the display coordinate system
     (as specified by the given :class:`.Display` object properties) along the
     x-y plane (as specified by the xax/yax indices), at which the given image
@@ -120,11 +126,12 @@ def calculateSamplePoints(shape, resolution, xform, xax, yax, origin='centre'):
 
     :arg origin:     ``centre`` or ``corner``. See the
                      :func:`.transform.axisBounds` function.
-    """
 
-    # TODO Allow a bounding box to be 
-    #      passed in, and only generate 
-    #      points within the bounding box.
+    :arg bbox:       An optional sequence of three ``(low, high)`` values, 
+                     defining the bounding box in the display coordinate 
+                     system which should be considered - the generated grid 
+                     will be constrained to lie within this bounding box.
+    """
 
     xres = resolution[xax]
     yres = resolution[yax]
@@ -135,6 +142,14 @@ def calculateSamplePoints(shape, resolution, xform, xax, yax, origin='centre'):
     # in the display coordinate system
     xmin, xmax = transform.axisBounds(shape, xform, xax, origin, boundary=None)
     ymin, ymax = transform.axisBounds(shape, xform, yax, origin, boundary=None)
+
+    # Apply bounding box constraint
+    # if it has been provided
+    if bbox is not None:
+        xmin = max((xmin, bbox[xax][0]))
+        xmax = min((xmax, bbox[xax][1]))
+        ymin = max((ymin, bbox[yax][0]))
+        ymax = min((ymax, bbox[yax][1])) 
 
     # Number of samples along each display
     # axis, given the requested resolution
