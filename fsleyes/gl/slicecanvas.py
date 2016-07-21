@@ -1225,7 +1225,9 @@ class SliceCanvas(props.HasProperties):
         :arg zmax: Maximum z location
 
         :returns: A sequence of three ``(low, high)`` values, defining the
-                  display coordinate system bounding box.
+                  display coordinate system bounding box. Note that this
+                  sequence is ordered in absolute terms, not in terms of
+                  the orientation of this ``SliceCanvas``.
         """
 
         xax = self.xax
@@ -1277,9 +1279,7 @@ class SliceCanvas(props.HasProperties):
         # set up 2D orthographic drawing
         glroutines.show2D(xax, yax, width, height, lo, hi)
 
-        return [(lo[xax], hi[xax]),
-                (lo[yax], hi[yax]),
-                (lo[zax], hi[zax])]
+        return [(lo[0], hi[0]), (lo[1], hi[1]), (lo[2], hi[2])]
 
         
     def _drawCursor(self):

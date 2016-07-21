@@ -91,7 +91,7 @@ void main(void) {
    * floor(x + 0.5).
    */
   voxCoord = (displayToVoxMat * vec4(vertex, 1)).xyz;
-  voxCoord = floor(vertVoxCoord + voxelOffset);
+  voxCoord = floor(voxCoord + voxelOffset);
   
   /*
    * Normalise the voxel coordinates to [0.0, 1.0],
