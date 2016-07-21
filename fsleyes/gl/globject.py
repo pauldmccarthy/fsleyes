@@ -478,10 +478,10 @@ class GLImageObject(GLObject):
         return res
 
         
-    def generateVertices(self, zpos, xform):
+    def generateVertices(self, zpos, xform=None, bbox=None):
         """Generates vertex coordinates for a 2D slice of the :class:`.Image`,
-        through the given ``zpos``, with the optional ``xform`` applied to the
-        coordinates.
+        through the given ``zpos``, with the optional ``xform`` and ``bbox``
+        applied to the coordinates.
         
         This is a convenience method for generating vertices which can be used
         to render a slice through a 3D texture. It is used by the
@@ -505,7 +505,8 @@ class GLImageObject(GLObject):
             self.yax,
             zpos, 
             self.displayOpts.getTransform('voxel',   'display'),
-            self.displayOpts.getTransform('display', 'voxel'))
+            self.displayOpts.getTransform('display', 'voxel'),
+            bbox=bbox)
 
         if xform is not None: 
             vertices = transform.transform(vertices, xform)

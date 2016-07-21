@@ -126,11 +126,11 @@ class GLLineVector(glvector.GLVector):
         fslgl.gllinevector_funcs.preDraw(self)
 
 
-    def draw(self, zpos, xform=None):
+    def draw(self, zpos, xform=None, bbox=None):
         """Overrides :meth:`.GLObject.draw`. Calls the OpenGL version-specific
         ``draw`` function.
         """         
-        fslgl.gllinevector_funcs.draw(self, zpos, xform)
+        fslgl.gllinevector_funcs.draw(self, zpos, xform, bbox)
 
     
     def drawAll(self, zposes, xforms):
@@ -333,7 +333,7 @@ class GLLineVertices(object):
         self.__hash    = self.calculateHash(glvec)
  
 
-    def getVertices(self, zpos, glvec):
+    def getVertices(self, zpos, glvec, bbox=None):
         """Extracts and returns a slice of line vertices, and the associated
         texture coordinates, which are in a plane located at the given
         Z position (in display coordinates).

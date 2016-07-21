@@ -264,9 +264,9 @@ class GLLabel(globject.GLImageObject):
         fslgl.gllabel_funcs.preDraw(self)
 
     
-    def draw(self, zpos, xform=None):
+    def draw(self, zpos, xform=None, bbox=None):
         """Calls the version-dependent ``draw`` function. """
-        fslgl.gllabel_funcs.draw(self, zpos, xform)
+        fslgl.gllabel_funcs.draw(self, zpos, xform, bbox)
 
         
     def drawAll(self, zpos, xform=None):

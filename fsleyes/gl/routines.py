@@ -402,7 +402,8 @@ def slice2D(dataShape,
             voxToDisplayMat,
             displayToVoxMat,
             geometry='triangles',
-            origin='centre'):
+            origin='centre',
+            bbox=None):
     """Generates and returns vertices which denote a slice through an
     array of the given ``dataShape``, parallel to the plane defined by the
     given ``xax`` and ``yax`` and at the given z position, in the space
@@ -461,6 +462,12 @@ def slice2D(dataShape,
 
     :arg origin:          ``centre`` or ``corner``. See the
                           :func:`.transform.axisBounds` function.
+
+    :arg bbox:            An optional sequence of three ``(low, high)`` 
+                          values, defining the bounding box in the display 
+                          coordinate system which should be considered - the 
+                          generated grid will be constrained to lie within
+                          this bounding box.
     
     Returns a tuple containing:
     
@@ -480,6 +487,12 @@ def slice2D(dataShape,
         dataShape, voxToDisplayMat, xax, origin, boundary=None)
     ymin, ymax = transform.axisBounds(
         dataShape, voxToDisplayMat, yax, origin, boundary=None)
+
+    if bbox is not None:
+        xmin = max((xmin, bbox[xax][0]))
+        xmax = min((xmax, bbox[xax][1]))
+        ymin = max((ymin, bbox[yax][0]))
+        ymax = min((ymax, bbox[yax][1])) 
 
     if geometry == 'triangles':
 

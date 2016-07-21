@@ -260,7 +260,7 @@ class GLModel(globject.GLObject):
         pass
 
     
-    def draw(self, zpos, xform=None):
+    def draw(self, zpos, xform=None, bbox=None):
         """Overrids :meth:`.GLObject.draw`. Draws a 2D slice of the
         :class:`.Model`, at the specified Z location.
         """

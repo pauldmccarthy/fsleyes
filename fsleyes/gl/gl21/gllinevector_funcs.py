@@ -139,7 +139,7 @@ def preDraw(self):
     self.shader.load()
 
 
-def draw(self, zpos, xform=None):
+def draw(self, zpos, xform=None, bbox=None):
     """Draws the line vectors at a plane at the specified Z location.
     Voxel coordinates are passed to the vertex shader, which calculates
     the corresponding line vertex locations.
@@ -161,7 +161,8 @@ def draw(self, zpos, xform=None):
         resolution,
         v2dMat,
         self.xax,
-        self.yax)[0]
+        self.yax,
+        bbox=bbox)[0]
     
     vertices[:, self.zax] = zpos
 

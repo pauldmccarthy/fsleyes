@@ -157,11 +157,11 @@ class GLRGBVector(glvector.GLVector):
         fslgl.glrgbvector_funcs.preDraw(self)
 
 
-    def draw(self, zpos, xform=None):
+    def draw(self, zpos, xform=None, bbox=None):
         """Overrides :meth:`.GLVector.draw`. Calls the OpenGL version-specific
         ``draw`` function.
         """ 
-        fslgl.glrgbvector_funcs.draw(self, zpos, xform)
+        fslgl.glrgbvector_funcs.draw(self, zpos, xform, bbox)
 
     
     def drawAll(self, zposes, xforms):

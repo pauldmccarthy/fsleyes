@@ -116,7 +116,7 @@ def preDraw(self):
     self.shader.load()
 
 
-def draw(self, zpos, xform=None):
+def draw(self, zpos, xform=None, bbox=None):
     """Draws the specified slice from the specified image on the canvas.
 
     :arg self:    The :class:`.GLVolume` object which is managing the image 
@@ -126,9 +126,11 @@ def draw(self, zpos, xform=None):
     
     :arg xform:   A 4*4 transformation matrix to be applied to the vertex
                   data.
+
+    :arg bbox:    An optional bounding box.
     """
 
-    vertices, voxCoords, texCoords = self.generateVertices(zpos, xform)
+    vertices, voxCoords, texCoords = self.generateVertices(zpos, xform, bbox)
 
     self.shader.setAtt('vertex',   vertices)
     self.shader.setAtt('voxCoord', voxCoords)

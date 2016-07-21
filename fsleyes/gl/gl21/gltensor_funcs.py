@@ -165,7 +165,7 @@ def preDraw(self):
     gl.glCullFace(gl.GL_BACK)
     
 
-def draw(self, zpos, xform=None):
+def draw(self, zpos, xform=None, bbox=None):
     """Generates voxel coordinates for each tensor to be drawn, does some
     final shader state configuration, and draws the tensors.
     """
@@ -191,7 +191,8 @@ def draw(self, zpos, xform=None):
         resolution,
         v2dMat,
         self.xax,
-        self.yax)[0]
+        self.yax,
+        bbox=bbox)[0]
 
     voxels[:, self.zax] = zpos
 
