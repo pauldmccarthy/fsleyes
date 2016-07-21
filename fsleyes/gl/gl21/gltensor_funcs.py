@@ -196,7 +196,7 @@ def draw(self, zpos, xform=None, bbox=None):
 
     voxels[:, self.zax] = zpos
 
-    voxels  = transform.transform(voxels, d2vMat)
+    voxels  = transform.transform(voxels, d2vMat).round()
     nVoxels = len(voxels)
 
     # Set divisor to 1, so we use one set of

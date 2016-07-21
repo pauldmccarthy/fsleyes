@@ -80,15 +80,7 @@ void main(void) {
   vec3  texCoord;
   vec3  vector;
   vec3  voxCoord;
-  vec3  vertVoxCoord;
   float vectorLen;
-
-  /*
-   * The vertVoxCoord vector contains the floating
-   * point voxel coordinates which correspond to the
-   * display coordinates of the current vertex.
-   */
-  vertVoxCoord = (displayToVoxMat * vec4(vertex, 1)).xyz;
 
   /*
    * The voxCoord vector contains the exact integer
@@ -97,7 +89,8 @@ void main(void) {
    *
    * There is no round function in GLSL 1.2, so we use
    * floor(x + 0.5).
-   */  
+   */
+  voxCoord = (displayToVoxMat * vec4(vertex, 1)).xyz;
   voxCoord = floor(vertVoxCoord + voxelOffset);
   
   /*
@@ -143,9 +136,7 @@ void main(void) {
   if (scaleLength) {
 
     /*
-     * Scale the vector so it has length 
-     * 0.5. Note that here we are assuming 
-     * that all vectors are of length 1.
+     * Scale the vector so it has length 0.5. 
      */
     vector /= 2 * vectorLen;
 
@@ -172,7 +163,7 @@ void main(void) {
    */
   gl_Position = gl_ModelViewProjectionMatrix *
                 voxToDisplayMat              *
-                vec4(vertVoxCoord + vector, 1);
+                vec4(voxCoord + vector, 1);
 
   fragVoxCoord     = voxCoord;
   fragTexCoord     = texCoord;

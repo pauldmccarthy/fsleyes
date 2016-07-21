@@ -375,6 +375,15 @@ class GLLineVertices(object):
             coords      = [slice(None)] * 3
             coords[zax] = np.floor((zpos - starts[zax]) / steps[zax])
 
+            if bbox is not None:
+                xmin, xmax = opts.bounds[xax]
+                ymin, ymax = opts.bounds[yax]
+
+                coords[xax] = slice(max((xmin, bbox[xax][0])),
+                                    min((xmax, bbox[xax][1])))
+                coords[yax] = slice(max((ymin, bbox[yax][0])),
+                                    min((ymax, bbox[yax][1])))
+
         # If in affine space, the display
         # coordinate system axes may not
         # be parallel to the voxel
@@ -388,7 +397,8 @@ class GLLineVertices(object):
                 [opts.resolution] * 3,
                 opts.getTransform('voxel', 'display'),
                 xax,
-                yax)[0]
+                yax,
+                bbox=bbox)[0]
             
             coords[:, zax] = zpos
 
