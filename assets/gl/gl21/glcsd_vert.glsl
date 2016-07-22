@@ -37,6 +37,11 @@ uniform mat3 normalMatrix;
 uniform sampler3D radTexture;
 
 /*
+ *
+ */
+uniform sampler1D cmapTexture;
+
+/*
  * Shape of the radius texture.
  */
 uniform vec3 radTexShape;

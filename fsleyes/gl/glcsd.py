@@ -22,6 +22,7 @@ import OpenGL.GL  as gl
 
 
 import fsleyes.gl          as fslgl
+import fsleyes.colourmaps  as fslcm
 import fsleyes.gl.textures as textures
 from . import                 globject
 import                        fsleyes
@@ -42,7 +43,11 @@ class GLCSD(globject.GLImageObject):
 Creates a :class:`.Texture3D` instance for storing radius values, and
     then 
 
-    ``radTexture`` ``gl.GL_TEXTURE0``
+    ``radTexture``     ``gl.GL_TEXTURE0``
+    ``cmapTexture``    ``gl.GL_TEXTURE1``
+    ``xColourTexture`` ``gl.GL_TEXTURE2``
+    ``yColourTexture`` ``gl.GL_TEXTURE3``
+    ``zColourTexture`` ``gl.GL_TEXTURE4``
     """
 
     def __init__(self, image, display, xax, yax):
@@ -51,13 +56,19 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
         
         globject.GLImageObject.__init__(self, image, display, xax, yax)
 
+        name = self.name
+
+        self.radTexture      = textures.Texture3D('{}_radTexture'.format(name),
+                                                  threaded=False)
+        self.cmapTexture     = textures.ColourMapTexture('{}_cm'.format(name))
+        self.xColourTexture  = textures.ColourMapTexture('{}_x' .format(name))
+        self.yColourTexture  = textures.ColourMapTexture('{}_y' .format(name))
+        self.zColourTexture  = textures.ColourMapTexture('{}_z' .format(name)) 
+
         self.addListeners()
         self.csdResChanged()
-
-        self.radTexture = textures.Texture3D('{}_radTexture'.format(self.name),
-                                             threaded=False)
- 
-
+        self.cmapUpdate()
+        
         fslgl.glcsd_funcs.init(self)
 
         
@@ -67,37 +78,102 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
         fslgl.glcsd_funcs.destroy(self)
 
-        if self.radTexture is not None:
-            self.radTexture.destroy()
-            self.radTexture = None 
-        
- 
+        textures = [self.radTexture,
+                    self.cmapTexture,
+                    self.xColourTexture,
+                    self.yColourTexture,
+                    self.zColourTexture]
+
+        for tex in textures:
+            if tex is not None:
+                tex.destroy()
+                tex = None
+
+        self.radTexture     = None
+        self.cmapTexture    = None
+        self.xColourTexture = None
+        self.yColourTexture = None
+        self.zColourTexture = None
 
 
     def addListeners(self):
 
-        opts = self.displayOpts
-        name = self.name
+        display = self.display
+        opts    = self.displayOpts
+        name    = self.name
 
-        opts.addListener('csdResolution', name, self.csdResChanged,
-                         immediate=True)
-        opts.addListener('size',       name, self.updateShaderState)
-        opts.addListener('lighting',   name, self.updateShaderState)
-        opts.addListener('colourMode', name, self.updateShaderState)
-        opts.addListener('neuroFlip',  name, self.updateShaderState)
+        opts   .addListener('resolution',      name, self.notify)
+        opts   .addListener('transform',       name, self.notify)
+        
+        opts   .addListener('csdResolution',   name, self.csdResChanged,
+                            immediate=True)
+        opts   .addListener('size',            name, self.updateShaderState)
+        opts   .addListener('lighting',        name, self.updateShaderState)
+        opts   .addListener('neuroFlip',       name, self.updateShaderState)
+        opts   .addListener('radiusThreshold', name, self.updateShaderState)
+
+        opts   .addListener('colourMode',      name, self.cmapUpdate)
+        opts   .addListener('colour',          name, self.cmapUpdate)
+        opts   .addListener('colourMap',       name, self.cmapUpdate)
+        opts   .addListener('xColour',         name, self.cmapUpdate)
+        opts   .addListener('yColour',         name, self.cmapUpdate)
+        opts   .addListener('zColour',         name, self.cmapUpdate)
+        display.addListener('alpha',           name, self.cmapUpdate)
+        display.addListener('brightness',      name, self.cmapUpdate)
+        display.addListener('contrast',        name, self.cmapUpdate)
 
     
     def removeListeners(self):
-        
-        opts = self.displayOpts
-        name = self.name
 
-        opts.removeListener('csdResolution', name)
+        display = self.display
+        opts    = self.displayOpts
+        name    = self.name
+
+        opts   .removeListener('resolution',      name)
+        opts   .removeListener('transform',       name)
+
+        opts   .removeListener('csdResolution',   name)
+        opts   .removeListener('size',            name)
+        opts   .removeListener('lighting',        name)
+        opts   .removeListener('neuroFlip',       name)
+        opts   .removeListener('radiusThreshold', name)
+        
+        opts   .removeListener('colourMode',      name)
+        opts   .removeListener('colour',          name)
+        opts   .removeListener('colourMap',       name)
+        opts   .removeListener('xColour',         name)
+        opts   .removeListener('yColour',         name)
+        opts   .removeListener('zColour',         name)
+        display.removeListener('alpha',           name)
+        display.removeListener('brightness',      name)
+        display.removeListener('contrast',        name)
 
         
     def updateShaderState(self, *a):
         if fslgl.glcsd_funcs.updateShaderState(self):
             self.notify()
+
+
+    def cmapUpdate(self, *a):
+
+        opts    = self.displayOpts
+        display = self.display
+
+        # The cmapTexture is used when
+        # colouring by radius values,
+        # which are assumed to lie between
+        # 0.0 and 1.0
+        dmin, dmax = fslcm.briconToDisplayRange(
+            (0.0, 1.0),
+            display.brightness / 100.0,
+            display.contrast   / 100.0)
+
+        if opts.colourMap is not None: cmap = opts.colourMap
+        else:                          cmap = np.zeros((4, 3), dtype=np.uint8)
+            
+        self.cmapTexture.set(cmap=cmap,
+                             alpha=display.alpha / 100.0,
+                             displayRange=(dmin, dmax)) 
 
         
     def csdResChanged(self, *a):
@@ -202,7 +278,14 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
 
     def preDraw(self):
-        self.radTexture.bindTexture(gl.GL_TEXTURE0)
+
+        # The radTexture needs to be bound *last*
+        self.cmapTexture   .bindTexture(gl.GL_TEXTURE1)
+        # self.xColourTexture.bindTexture(gl.GL_TEXTURE2)
+        # self.yColourTexture.bindTexture(gl.GL_TEXTURE3)
+        # self.zColourTexture.bindTexture(gl.GL_TEXTURE4)
+        self.radTexture    .bindTexture(gl.GL_TEXTURE0)
+        
         fslgl.glcsd_funcs.preDraw(self)
 
 
@@ -211,5 +294,9 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
 
     def postDraw(self):
-        self.radTexture.unbindTexture()
+        self.radTexture    .unbindTexture()
+        self.cmapTexture   .unbindTexture()
+        # self.xColourTexture.unbindTexture()
+        # self.yColourTexture.unbindTexture()
+        # self.zColourTexture.unbindTexture() 
         fslgl.glcsd_funcs.postDraw(self)

@@ -85,6 +85,7 @@ def updateShaderState(self):
     changed |= shader.set('nVertices',   opts.csdResolution ** 2)
     changed |= shader.set('sizeScaling', opts.size / 100.0)
     changed |= shader.set('radTexture',  0)
+    changed |= shader.set('cmapTexture',  1)
 
     # Vertices only need to be re-generated
     # if the csdResolution has changed.

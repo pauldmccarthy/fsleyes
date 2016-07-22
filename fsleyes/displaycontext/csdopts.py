@@ -12,13 +12,16 @@ from . import volumeopts
 
 class CSDOpts(volumeopts.Nifti1Opts):
 
+
+    csdResolution = props.Choice((16,))
+    
+    size          = props.Percentage(minval=10, maxval=500, default=100)
+
     lighting      = props.Boolean(default=True)
 
     neuroFlip     = props.Boolean(default=True)
 
-    csdResolution = props.Choice((16,))
-
-    size          = props.Percentage(minval=10, maxval=500, default=100)
+    radiusThreshold = props.Real(minval=0.0, maxval=1.0, default=0.0)
 
     colourMode    = props.Choice(('radius', 'direction', 'constant'))
 
