@@ -143,14 +143,6 @@ def calculateSamplePoints(shape,
     xmin, xmax = transform.axisBounds(shape, xform, xax, origin, boundary=None)
     ymin, ymax = transform.axisBounds(shape, xform, yax, origin, boundary=None)
 
-    # Apply bounding box constraint
-    # if it has been provided
-    if bbox is not None:
-        xmin = max((xmin, bbox[xax][0]))
-        xmax = min((xmax, bbox[xax][1]))
-        ymin = max((ymin, bbox[yax][0]))
-        ymax = min((ymax, bbox[yax][1])) 
-
     # Number of samples along each display
     # axis, given the requested resolution
     xNumSamples = np.floor((xmax - xmin) / xres)
@@ -171,8 +163,24 @@ def calculateSamplePoints(shape,
                          ymax - 0.5 * yres,
                          yNumSamples)
 
+    # Apply bounding box constraint
+    # if it has been provided
+    if bbox is not None:
+        xoff   = 0.5 * xres
+        yoff   = 0.5 * yres
+        
+        xmin   = max((xmin, bbox[xax][0] - xoff))
+        xmax   = min((xmax, bbox[xax][1] + xoff))
+        ymin   = max((ymin, bbox[yax][0] - yoff))
+        ymax   = min((ymax, bbox[yax][1] + yoff))
+
+        worldX = worldX[(worldX >= xmin) & (worldX <= xmax)]
+        worldY = worldY[(worldY >= ymin) & (worldY <= ymax)]
+
+    # Generate the coordinates
     worldX, worldY = np.meshgrid(worldX, worldY)
-    
+
+    # reshape them to N*3
     coords = np.zeros((worldX.size, 3), dtype=np.float32)
     coords[:, xax] = worldX.flatten()
     coords[:, yax] = worldY.flatten()
