@@ -144,8 +144,8 @@ def updateShaderState(self):
 
 
 def preDraw(self):
-    """Must be called before :func:`draw`. Loads the shader programs, does
-    some shader state configuration, and binds textures to texture units.
+    """Must be called before :func:`draw`. Loads the shader programs, and
+    does some shader state configuration.
     """
     
     shader = self.shader

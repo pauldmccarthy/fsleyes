@@ -1,8 +1,13 @@
 /*
+ * Functions for moving between 1D coordinates and 2D/3D coordinates.
  *
+ * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
 
 
+/*
+ * Converts a 3D coordinate to the equivalent 1D index.
+ */
 int unroll3D(vec3 indices, vec3 shape) {
 
      float flattened = indices.x + 
@@ -13,6 +18,9 @@ int unroll3D(vec3 indices, vec3 shape) {
 }
 
 
+/*
+ * Converts a 1D index to the equivalent 3D coordinates.
+ */
 vec3 roll3D(int index, vec3 shape) {
 
     float stridex  = shape.x;
