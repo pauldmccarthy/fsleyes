@@ -26,6 +26,7 @@ import OpenGL.GL                    as gl
 import OpenGL.GL.ARB.draw_instanced as arbdi
 
 import fsl.utils.transform          as transform
+import fsleyes.colourmaps           as fslcm
 import fsleyes.gl.shaders           as shaders
 import fsleyes.gl.routines          as glroutines
 
@@ -65,9 +66,10 @@ def compileShaders(self):
 def updateShaderState(self):
     """Updates the state of the vertex and fragment shaders. """
     
-    shader = self.shader
-    image  = self.image
-    opts   = self.displayOpts
+    shader  = self.shader
+    image   = self.image
+    opts    = self.displayOpts
+    display = self.display
 
     if shader is None:
         return
@@ -80,9 +82,15 @@ def updateShaderState(self):
 
     if   opts.colourMode == 'direction': colourMode = 0
     elif opts.colourMode == 'radius':    colourMode = 1
-    elif opts.colourMode == 'constant':  colourMode = 2
 
     cmapXform = self.cmapTexture.getCoordinateTransform()
+
+    colours = np.array([opts.xColour, opts.yColour, opts.zColour])
+    colours = fslcm.applyBricon(colours,
+                                display.brightness / 100.0,
+                                display.contrast   / 100.0)
+
+    colours[:, 3] = display.alpha / 100.0
 
     shader.load()
 
@@ -94,6 +102,9 @@ def updateShaderState(self):
     changed |= shader.set('nVertices',   opts.csdResolution ** 2)
     changed |= shader.set('sizeScaling', opts.size / 100.0)
     changed |= shader.set('colourMode',  colourMode)
+    changed |= shader.set('xColour',     colours[0])
+    changed |= shader.set('yColour',     colours[1])
+    changed |= shader.set('zColour',     colours[2])
     changed |= shader.set('cmapXform',   cmapXform)
     
     changed |= shader.set('radTexture',  0)

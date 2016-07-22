@@ -25,6 +25,11 @@ uniform sampler1D cmapTexture;
 uniform mat4 cmapXform;
 
 
+uniform vec4 xColour;
+uniform vec4 yColour;
+uniform vec4 zColour;
+
+
 /*
  * Shape of the image texture.
  */
@@ -51,6 +56,7 @@ varying float fragRadius;
 void main(void) {
   
   vec3 voxCoords = fragVoxCoord;
+  vec3 normVertex;
   vec4 colour;
 
   if (!test_in_bounds(voxCoords, imageShape)) {
@@ -59,7 +65,15 @@ void main(void) {
     return;
   }
 
-  if (colourMode == 1) {
+  if (colourMode == 0) {
+    normVertex = abs(normalize(fragVertex));
+    colour      = xColour * normVertex.x;
+    colour     += yColour * normVertex.y;
+    colour     += zColour * normVertex.z;
+    colour.a    = xColour.a;
+  }
+
+  else {
 
     vec4 normRadius = cmapXform * vec4(fragRadius, 0, 0, 1);
     

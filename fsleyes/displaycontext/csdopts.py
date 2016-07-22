@@ -23,14 +23,14 @@ class CSDOpts(volumeopts.Nifti1Opts):
 
     radiusThreshold = props.Real(minval=0.0, maxval=1.0, default=0.0)
 
-    colourMode    = props.Choice(('radius', 'direction'))
+    colourMode    = props.Choice(('direction', 'radius'))
 
 
     colourMap     = props.ColourMap()
     # For 'radius'
 
 
-    xColour       = props.Colour()
-    yColour       = props.Colour()
-    zColour       = props.Colour()
+    xColour       = props.Colour(default=(1, 0, 0))
+    yColour       = props.Colour(default=(0, 1, 0))
+    zColour       = props.Colour(default=(0, 0, 1))
     # For 'direction'

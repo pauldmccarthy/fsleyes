@@ -45,9 +45,6 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
     ``radTexture``     ``gl.GL_TEXTURE0``
     ``cmapTexture``    ``gl.GL_TEXTURE1``
-    ``xColourTexture`` ``gl.GL_TEXTURE2``
-    ``yColourTexture`` ``gl.GL_TEXTURE3``
-    ``zColourTexture`` ``gl.GL_TEXTURE4``
     """
 
     def __init__(self, image, display, xax, yax):
@@ -58,13 +55,10 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
         name = self.name
 
-        self.shader          = None
-        self.radTexture      = textures.Texture3D('{}_radTexture'.format(name),
-                                                  threaded=False)
-        self.cmapTexture     = textures.ColourMapTexture('{}_cm'.format(name))
-        self.xColourTexture  = textures.ColourMapTexture('{}_x' .format(name))
-        self.yColourTexture  = textures.ColourMapTexture('{}_y' .format(name))
-        self.zColourTexture  = textures.ColourMapTexture('{}_z' .format(name)) 
+        self.shader      = None
+        self.radTexture  = textures.Texture3D('{}_radTexture'.format(name),
+                                              threaded=False)
+        self.cmapTexture = textures.ColourMapTexture('{}_cm'.format(name))
 
         self.addListeners()
         self.csdResChanged()
@@ -79,22 +73,11 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
         fslgl.glcsd_funcs.destroy(self)
 
-        textures = [self.radTexture,
-                    self.cmapTexture,
-                    self.xColourTexture,
-                    self.yColourTexture,
-                    self.zColourTexture]
+        if self.radTexture  is not None: self.radTexture.destroy()
+        if self.cmapTexture is not None: self.cmapTexture.destroy() 
 
-        for tex in textures:
-            if tex is not None:
-                tex.destroy()
-                tex = None
-
-        self.radTexture     = None
-        self.cmapTexture    = None
-        self.xColourTexture = None
-        self.yColourTexture = None
-        self.zColourTexture = None
+        self.radTexture  = None
+        self.cmapTexture = None
 
 
     def addListeners(self):
@@ -113,11 +96,11 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
         opts   .addListener('neuroFlip',       name, self.updateShaderState)
         opts   .addListener('radiusThreshold', name, self.updateShaderState)
 
-        opts   .addListener('colourMode',      name, self.cmapUpdate)
+        opts   .addListener('colourMode',      name, self.updateShaderState)
         opts   .addListener('colourMap',       name, self.cmapUpdate)
-        opts   .addListener('xColour',         name, self.cmapUpdate)
-        opts   .addListener('yColour',         name, self.cmapUpdate)
-        opts   .addListener('zColour',         name, self.cmapUpdate)
+        opts   .addListener('xColour',         name, self.updateShaderState)
+        opts   .addListener('yColour',         name, self.updateShaderState)
+        opts   .addListener('zColour',         name, self.updateShaderState)
         display.addListener('alpha',           name, self.cmapUpdate)
         display.addListener('brightness',      name, self.cmapUpdate)
         display.addListener('contrast',        name, self.cmapUpdate)
@@ -281,11 +264,8 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
     def preDraw(self):
 
         # The radTexture needs to be bound *last*
-        self.cmapTexture   .bindTexture(gl.GL_TEXTURE1)
-        # self.xColourTexture.bindTexture(gl.GL_TEXTURE2)
-        # self.yColourTexture.bindTexture(gl.GL_TEXTURE3)
-        # self.zColourTexture.bindTexture(gl.GL_TEXTURE4)
-        self.radTexture    .bindTexture(gl.GL_TEXTURE0)
+        self.cmapTexture.bindTexture(gl.GL_TEXTURE1)
+        self.radTexture .bindTexture(gl.GL_TEXTURE0)
         
         fslgl.glcsd_funcs.preDraw(self)
 
@@ -295,9 +275,6 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
 
     def postDraw(self):
-        self.radTexture    .unbindTexture()
-        self.cmapTexture   .unbindTexture()
-        # self.xColourTexture.unbindTexture()
-        # self.yColourTexture.unbindTexture()
-        # self.zColourTexture.unbindTexture() 
+        self.radTexture .unbindTexture()
+        self.cmapTexture.unbindTexture()
         fslgl.glcsd_funcs.postDraw(self)
