@@ -58,6 +58,7 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
         name = self.name
 
+        self.shader          = None
         self.radTexture      = textures.Texture3D('{}_radTexture'.format(name),
                                                   threaded=False)
         self.cmapTexture     = textures.ColourMapTexture('{}_cm'.format(name))
@@ -113,7 +114,6 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
         opts   .addListener('radiusThreshold', name, self.updateShaderState)
 
         opts   .addListener('colourMode',      name, self.cmapUpdate)
-        opts   .addListener('colour',          name, self.cmapUpdate)
         opts   .addListener('colourMap',       name, self.cmapUpdate)
         opts   .addListener('xColour',         name, self.cmapUpdate)
         opts   .addListener('yColour',         name, self.cmapUpdate)
@@ -139,7 +139,6 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
         opts   .removeListener('radiusThreshold', name)
         
         opts   .removeListener('colourMode',      name)
-        opts   .removeListener('colour',          name)
         opts   .removeListener('colourMap',       name)
         opts   .removeListener('xColour',         name)
         opts   .removeListener('yColour',         name)
@@ -152,6 +151,8 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
     def updateShaderState(self, *a):
         if fslgl.glcsd_funcs.updateShaderState(self):
             self.notify()
+            return True
+        return False
 
 
     def cmapUpdate(self, *a):
@@ -168,12 +169,12 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
             display.brightness / 100.0,
             display.contrast   / 100.0)
 
-        if opts.colourMap is not None: cmap = opts.colourMap
-        else:                          cmap = np.zeros((4, 3), dtype=np.uint8)
-            
-        self.cmapTexture.set(cmap=cmap,
+        self.cmapTexture.set(cmap=opts.colourMap,
                              alpha=display.alpha / 100.0,
-                             displayRange=(dmin, dmax)) 
+                             displayRange=(dmin, dmax))
+
+        if not self.updateShaderState():
+            self.notify()
 
         
     def csdResChanged(self, *a):

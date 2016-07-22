@@ -398,8 +398,11 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('csdResolution'),
         props.Widget('lighting'),
         props.Widget('size', spin=False, showLimits=False),
-        props.Widget('colourMode')]
-})
+        props.Widget('colourMode'),
+        props.Widget('colourMap'),
+        props.Widget('xColour'),
+        props.Widget('yColour'),
+        props.Widget('zColour')]})
 """This dictionary contains specifications for all controls that are shown on
 an ``OverlayDisplayPanel``.
 """

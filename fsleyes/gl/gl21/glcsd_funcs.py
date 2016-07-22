@@ -69,11 +69,20 @@ def updateShaderState(self):
     image  = self.image
     opts   = self.displayOpts
 
+    if shader is None:
+        return
+
     lightPos  = np.array([-1, -1, 4], dtype=np.float32)
     lightPos /= np.sqrt(np.sum(lightPos ** 2))
 
     shape = image.shape[:3]
     xFlip = opts.neuroFlip and image.isNeurological()
+
+    if   opts.colourMode == 'direction': colourMode = 0
+    elif opts.colourMode == 'radius':    colourMode = 1
+    elif opts.colourMode == 'constant':  colourMode = 2
+
+    cmapXform = self.cmapTexture.getCoordinateTransform()
 
     shader.load()
 
@@ -84,8 +93,11 @@ def updateShaderState(self):
     changed |= shader.set('lightPos',    lightPos)
     changed |= shader.set('nVertices',   opts.csdResolution ** 2)
     changed |= shader.set('sizeScaling', opts.size / 100.0)
+    changed |= shader.set('colourMode',  colourMode)
+    changed |= shader.set('cmapXform',   cmapXform)
+    
     changed |= shader.set('radTexture',  0)
-    changed |= shader.set('cmapTexture',  1)
+    changed |= shader.set('cmapTexture', 1)
 
     # Vertices only need to be re-generated
     # if the csdResolution has changed.
