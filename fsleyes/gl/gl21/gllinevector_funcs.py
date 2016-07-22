@@ -33,7 +33,6 @@ import numpy               as np
 import OpenGL.GL           as gl
 
 import fsl.utils.transform as transform
-import fsleyes.gl.routines as glroutines
 from . import                 glvector_funcs
 
 
@@ -111,17 +110,10 @@ def updateShaderState(self):
     v2dMat      = opts.getTransform('voxel',   'display')
     xFlip       = image.isNeurological() and opts.neuroFlip
 
-    # The shader adds these offsets to
-    # transformed voxel coordinates, so
-    # it can floor them to get integer
-    # voxel coordinates
-    offset = [0.5, 0.5, 0.5]
-
     changed |= shader.set('vectorTexture',   0)
     changed |= shader.set('displayToVoxMat', d2vMat)
     changed |= shader.set('voxToDisplayMat', v2dMat)
     changed |= shader.set('voxValXform',     vvxMat)
-    changed |= shader.set('voxelOffset',     offset)
     changed |= shader.set('imageDims',       imageDims)
     changed |= shader.set('directed',        directed)
     changed |= shader.set('scaleLength',     scaleLength)
@@ -145,40 +137,24 @@ def draw(self, zpos, xform=None, bbox=None):
     the corresponding line vertex locations.
     """ 
 
-    image      = self.vectorImage
-    opts       = self.displayOpts
-    shader     = self.shader
-    v2dMat     = opts.getTransform('voxel', 'display')
-    resolution = [opts.resolution] * 3
+    opts   = self.displayOpts
+    shader = self.shader
+    v2dMat = opts.getTransform('voxel', 'display')
 
-    if opts.transform == 'id':
-        resolution = resolution / min(image.pixdim[:3])
-    elif opts.transform == 'pixdim':
-        resolution = map(lambda r, p: max(r, p), resolution, image.pixdim[:3])
-
-    vertices = glroutines.calculateSamplePoints(
-        image.shape,
-        resolution,
-        v2dMat,
-        self.xax,
-        self.yax,
-        bbox=bbox)[0]
-    
-    vertices[:, self.zax] = zpos
-
-    vertices = np.repeat(vertices, 2, 0)
-    indices  = np.arange(vertices.shape[0], dtype=np.uint32)
+    voxels  = self.generateVoxelCoordinates(zpos, bbox)
+    voxels  = np.repeat(voxels, 2, 0)
+    indices = np.arange(voxels.shape[0], dtype=np.uint32)
 
     if xform is None: xform = v2dMat
     else:             xform = transform.concat(v2dMat, xform)
 
     shader.set(   'voxToDisplayMat', xform)
     shader.setAtt('vertexID',        indices)
-    shader.setAtt('vertex',          vertices)
+    shader.setAtt('voxel',           voxels)
     shader.loadAtts()
     
     gl.glLineWidth(opts.lineWidth)
-    gl.glDrawArrays(gl.GL_LINES, 0, vertices.size // 3)
+    gl.glDrawArrays(gl.GL_LINES, 0, voxels.size // 3)
 
     shader.unloadAtts()
 

@@ -25,11 +25,6 @@ uniform mat4 voxToDisplayMat;
 uniform mat4 voxValXform;
 
 /*
- * Constant offset to add to voxel coordinates.
- */
-uniform vec3 voxelOffset;
-
-/*
  * Shape of the image texture.
  */
 uniform vec3 imageShape;
@@ -61,7 +56,7 @@ uniform bool scaleLength;
 /*
  * The current vertex on the current line.
  */
-attribute vec3 vertex;
+attribute vec3 voxel;
 
 /*
  * Vertex index - the built-in gl_VertexID
@@ -83,23 +78,13 @@ void main(void) {
   float vectorLen;
 
   /*
-   * The voxCoord vector contains the exact integer
-   * voxel coordinates - we cannot interpolate vector
-   * directions.
-   *
-   * There is no round function in GLSL 1.2, so we use
-   * floor(x + 0.5).
-   */
-  voxCoord = (displayToVoxMat * vec4(vertex, 1)).xyz;
-  voxCoord = floor(voxCoord + voxelOffset);
-  
-  /*
    * Normalise the voxel coordinates to [0.0, 1.0],
    * so they can be used for texture lookup. Add
    * 0.5 to the voxel coordinates first, to re-centre
    * voxel coordinates from  from [i - 0.5, i + 0.5]
    * to [i, i + 1].
    */
+  voxCoord = voxel;
   texCoord = (voxCoord + 0.5) / imageShape;
 
   /*

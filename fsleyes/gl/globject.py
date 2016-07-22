@@ -512,3 +512,57 @@ class GLImageObject(GLObject):
             vertices = transform.transform(vertices, xform)
 
         return vertices, voxCoords, texCoords 
+
+    
+    def generateVoxelCoordinates(self, zpos, bbox=None, space='voxel'):
+        """Generates a grid of voxel coordinates along the
+        XY display coordinate system plane, at the given ``zpos``. The
+        coordinates honour the current :attr:`.Nifti1Opts.resolution` 
+        property.
+
+        :arg zpos:  Position along the display coordinate system Z axis.
+        
+        :arg bbox:  Limiting bounding box.
+        
+        :arg space: Either ``'voxel'`` (the default) or ``'display'``. 
+                    If the latter, the returned coordinates are in terms
+                    of the display coordinate system. Otherwise, the
+                    returned coordinates are integer voxel coordinates.
+
+        :returns: A ``numpy.float32`` array of shape ``(N, 3)``, containing
+                  the coordinates for ``N`` voxels.
+
+        See the :func:`.calculateSamplePoints` function.
+        """
+
+        if space not in ('voxel', 'display'):
+            raise ValueError('Unknown value for space ("{}")'.format(space))
+
+        image      = self.image
+        opts       = self.displayOpts
+        v2dMat     = opts.getTransform('voxel',   'display')
+        d2vMat     = opts.getTransform('display', 'voxel')
+        resolution = np.array([opts.resolution] * 3)
+
+        if opts.transform == 'id':
+            resolution = resolution / min(image.pixdim[:3])
+            
+        elif opts.transform == 'pixdim':
+            resolution = [max(r, p)
+                          for r, p
+                          in zip(resolution, image.pixdim[:3])]
+
+        voxels = glroutines.calculateSamplePoints(
+            image.shape,
+            resolution,
+            v2dMat,
+            self.xax,
+            self.yax,
+            bbox=bbox)[0]
+
+        voxels[:, self.zax] = zpos
+
+        if space == 'voxel':
+            voxels = transform.transform(voxels, d2vMat).round()
+
+        return voxels

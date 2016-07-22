@@ -170,33 +170,14 @@ def draw(self, zpos, xform=None, bbox=None):
     final shader state configuration, and draws the tensors.
     """
 
-    image  = self.image
     opts   = self.displayOpts
     shader = self.shader
     v2dMat = opts.getTransform('voxel',   'display')
-    d2vMat = opts.getTransform('display', 'voxel')
 
     if xform is None: xform = v2dMat
     else:             xform = transform.concat(v2dMat, xform)
 
-    resolution = np.array([opts.resolution] * 3)
-
-    if opts.transform == 'id':
-        resolution = resolution / min(image.pixdim[:3])
-    elif opts.transform == 'pixdim':
-        resolution = [max(r, p) for r, p in zip(resolution, image.pixdim[:3])]
-
-    voxels = glroutines.calculateSamplePoints(
-        image.shape,
-        resolution,
-        v2dMat,
-        self.xax,
-        self.yax,
-        bbox=bbox)[0]
-
-    voxels[:, self.zax] = zpos
-
-    voxels  = transform.transform(voxels, d2vMat).round()
+    voxels  = self.generateVoxelCoordinates(zpos, bbox)
     nVoxels = len(voxels)
 
     # Set divisor to 1, so we use one set of

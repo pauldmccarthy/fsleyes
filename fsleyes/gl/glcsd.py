@@ -127,9 +127,9 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
               (y >= shape[1]) | \
               (z >= shape[2])
 
-        x = x[~out]
-        y = y[~out]
-        z = z[~out]
+        x = np.array(x[~out], dtype=np.int32)
+        y = np.array(y[~out], dtype=np.int32)
+        z = np.array(z[~out], dtype=np.int32)
 
         # We need to [insert description here when you know more
         #             about the topic].
