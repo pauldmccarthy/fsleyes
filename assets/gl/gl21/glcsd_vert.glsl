@@ -139,17 +139,24 @@ void main(void) {
     /* Apply lighting if it is enabled */
     vec3 light;
     if (lighting) {
-      light = vec3(1, 1, 1);
-    }
   
+      vec3 norm   = normalize(normalMatrix * vertex * radius);
+      float angle = dot(norm, -lightPos);
+
+      float diffuse = max(angle * angle, 0);
+      diffuse      += 0.3;
+
+      light = vec3(diffuse, diffuse, diffuse);
+    } 
     /*
      * If lighting is not enabled, the
      * fragment colour is not modified.
      */
     else {
+
       light = vec3(1, 1, 1);
     }
-
+  
     /*
      * Transform the vertex from the
      * voxel coordinate system into
