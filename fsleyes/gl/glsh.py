@@ -136,7 +136,7 @@ class GLSH(globject.GLImageObject):
         opts   .addListener('size',            name, self.updateShaderState)
         opts   .addListener('lighting',        name, self.updateShaderState)
         opts   .addListener('neuroFlip',       name, self.updateShaderState)
-        opts   .addListener('radiusThreshold', name, self.updateShaderState)
+        opts   .addListener('radiusThreshold', name, self.notify)
 
         opts   .addListener('colourMode',      name, self.updateShaderState)
         opts   .addListener('colourMap',       name, self.cmapUpdate)
@@ -222,8 +222,20 @@ class GLSH(globject.GLImageObject):
         contain radii for the given set of voxels (assumed to be an ``(N, 3)``
         numpy array).
 
-        :returns: The adjusted shape of the radius texture.
+        If :attr:`.SHOpts.radiusThreshold` is greater than 0, any voxels for
+        which all radii are less than the threshold are removed from the
+        ``voxels`` array.
+
+        :returns: A tuple containing:
+        
+                   - The ``voxels`` array. If ``SHOpts.radiusThreshold == 0``,
+                     this will be the same as the input. Otherwise, this will
+                     be a new array with sub-threshold voxels removed.
+        
+                   - The adjusted shape of the radius texture. 
         """
+
+        opts = self.displayOpts
         
         # Remove out-of-bounds voxels
         shape   = self.image.shape[:3]
@@ -248,7 +260,13 @@ class GLSH(globject.GLImageObject):
         # *all* voxels.
         params = self.shParams
         coefs  = self.image.nibImage.get_data()[x, y, z, :]
-        radii  = np.dot(params, coefs.T).flatten(order='F')
+        radii  = np.dot(params, coefs.T)
+
+        # Remove sub-threshold voxels/radii
+        if opts.radiusThreshold > 0:
+            aboveThres = np.any(radii >= opts.radiusThreshold, axis=0)
+            radii      = np.array(radii[:, aboveThres])
+            voxels     = np.array(voxels[aboveThres, :])
 
         # The radii are interpreted as a 1D vector
         # containing the radii for every vertex
@@ -266,7 +284,7 @@ class GLSH(globject.GLImageObject):
         # larger than necessary, if the number of
         # voxels cannot easily be divided/dispersed
         # across the other dimensions.
-        radTexShape = np.array(list(radii.shape) + [1, 1])
+        radTexShape = np.array([radii.size, 1, 1])
         maxTexSize  = gl.glGetIntegerv(gl.GL_MAX_3D_TEXTURE_SIZE)
         while np.any(radTexShape > maxTexSize):
 
@@ -306,7 +324,7 @@ class GLSH(globject.GLImageObject):
         # Copy the data to the texture
         self.radTexture.set(data=radii)
 
-        return radTexShape
+        return voxels, radTexShape
 
 
     def ready(self):

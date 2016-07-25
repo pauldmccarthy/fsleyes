@@ -160,8 +160,8 @@ def draw(self, zpos, xform=None, bbox=None):
     if xform is None: xform = v2dMat
     else:             xform = transform.concat(v2dMat, xform)
 
-    voxels      = self.generateVoxelCoordinates(zpos, bbox)
-    radTexShape = self.updateRadTexture(voxels)
+    voxels              = self.generateVoxelCoordinates(zpos, bbox)
+    voxels, radTexShape = self.updateRadTexture(voxels)
 
     shader.setAtt('voxel',           voxels, divisor=1)
     shader.set(   'voxToDisplayMat', xform)

@@ -398,6 +398,7 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('shResolution'),
         props.Widget('lighting'),
         props.Widget('size', spin=False, showLimits=False),
+        props.Widget('radiusThreshold', spin=False, showLimits=False),
         props.Widget('colourMode'),
         props.Widget('colourMap'),
         props.Widget('xColour'),
