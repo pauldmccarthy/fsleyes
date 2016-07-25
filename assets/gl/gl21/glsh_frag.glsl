@@ -16,21 +16,26 @@
 uniform int colourMode;
 
 /*
- *
+ * Texture containing a colour map used when colouring by radius.
  */
 uniform sampler1D cmapTexture;
 
-
+/*
+ * Scale/offset transform used to transform cmapTexture values into
+ * their original data range.
+ */
 uniform mat4 cmapXform;
 
 
+/*
+ * Colours used when colouring by direction.
+ */
 uniform vec4 xColour;
 uniform vec4 yColour;
 uniform vec4 zColour;
 
-
 /*
- * Shape of the image texture.
+ * Shape of the image, used for discarding out of bounds fragments.
  */
 uniform vec3 imageShape;
 
@@ -40,7 +45,15 @@ uniform vec3 imageShape;
  */
 varying vec3 fragVoxCoord;
 
+/*
+ * Vertex location on the FOD.
+ */
 varying vec3 fragVertex;
+
+/*
+ * Vertex radius.
+ */
+varying float fragRadius;
 
 /*
  * The final fragment colour is multiplied by this 
@@ -48,8 +61,6 @@ varying vec3 fragVertex;
  * lighting.
  */
 varying vec4 fragColourFactor;
-
-varying float fragRadius;
 
 
 void main(void) {

@@ -5,8 +5,9 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module contains functions which are used by :class:`.GLSH` instances
-for rendering :class:`.Image` overlays which contain spherical harmonic
-diffusion data, in an OpenGL 2.1 compatible manner.
+for rendering :class:`.Image` overlays which contain fibre orientation
+distribution (FOD) spherical harmonic (SH) coefficients, in an OpenGL 2.1
+compatible manner.
 
 The functions defined in this module are intended to be called by
 :class:`.GLSH` instances.

@@ -1,6 +1,5 @@
 /*
- * OpenGL vertex shader used for rendering GLSH
- * instances - spherical harmonic diffusion data.
+ * OpenGL vertex shader used for rendering GLSH instances.
  *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
@@ -87,14 +86,9 @@ attribute vec3 voxel;
 attribute vec3 vertex;
 
 /*
-V * Voxel coordinate passed through to the fragment shader.
+ * Voxel coordinate passed through to the fragment shader.
  */
 varying vec3 fragVoxCoord;
-
-/*
- * Texture coordinate passed through to the fragment shader.
- */
-varying vec3 fragTexCoord;
 
 /*
  * Multiplicative colour factor passed through to the 
@@ -102,7 +96,10 @@ varying vec3 fragTexCoord;
  */
 varying vec4 fragColourFactor;
 
-
+/*
+ * Vertex radius and location, passed through to the 
+ * fragment shader.
+ */
 varying float fragRadius;
 varying vec3  fragVertex;
 

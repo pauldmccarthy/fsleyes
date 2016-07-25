@@ -5,9 +5,9 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`GLSH` class, a :class:`.GLObject` for
-rendering :class:`.Image` overlays which contain spherical harmonic diffusion
-estimates. The ``GLSH`` class uses functions defined in the
-:mod:`.gl21.glsh_funcs` module.
+rendering :class:`.Image` overlays which contain fibre orientation
+distribution (FOD) spherical harmonic (SH) coefficients.  The ``GLSH`` class
+uses functions defined in the :mod:`.gl21.glsh_funcs` module.
 
 :class:`GLSH` instances can only be rendered in OpenGL 2.1 and above.
 """
@@ -30,17 +30,60 @@ log = logging.getLogger(__name__)
 
 
 class GLSH(globject.GLImageObject):
-    """
+    """The ``GLSH`` class is a :class:`.GLObject` for rendering :class:`.Image`
+    overlays which contain fibre orientation distribution (FOD) spherical
+    harmonic (SH) coefficients.
 
-Creates a :class:`.Texture3D` instance for storing radius values, and
-    then 
 
-    ``radTexture``     ``gl.GL_TEXTURE0``
-    ``cmapTexture``    ``gl.GL_TEXTURE1``
+    This class manages listeners on :class:`.Display` and :class:`.SHOpts`
+    instances, and also manages two textures (described below). The rendering
+    logic is implemented in the :mod:`.gl21.glsh_funcs` module.
+
+
+    Each voxel in a FOD image contains coefficients which describe a spherical
+    function.  The :meth:`SHOpts.getSHParameters` method returns a numpy array
+    which may be used to transform these coefficients into a set of radii which
+    can be applied to the vertices of a sphere to visualise the spherical
+    function.
+
+    
+    These radii are calculated on every call to :meth:`draw` (via the
+    :meth:`updateRadTexture` method), and stored in a :class:`.Texture3D`
+    instance, which is available as an attribute called ``radTexture``. This
+    texture is only 3D out of necessity - it is ultimately interpreted by
+    the ``glsh`` vertex shader as a 1D sequence of values, ordered by voxel
+    then vertex.
+
+
+    ``GLSH`` instances also create and manage a :class:`.ColourMapTexture`,
+     which may be used to colour FODs by their radius values. The colour map
+    is defined by the :attr:`.SHOpts.colourMap` property.
+
+
+    The textures managed by a ``GLSH`` instance are bound to texture units as
+    follows:
+
+    =============== ==================
+    ``radTexture``  ``gl.GL_TEXTURE0``
+    ``cmapTexture`` ``gl.GL_TEXTURE1``
+    =============== ==================
+
     """
 
     def __init__(self, image, display, xax, yax):
-        """
+        """Create a ``GLSH`` object.
+
+
+        Creates a :class:`.Texture3D` instance to store vertex radii and a
+        :class:`.ColourMapTexture` to store the :attr:`.SHOpts.colourMap`,
+        adds property listeners to the :class:`.Display` and :class:`.SHOpts`
+        instances, and calls :func:`.glsh_funcs.init`.
+        
+
+        :arg image:   The :class:`.Image` instance
+        :arg display: The associated :class:`.Display` instance.
+        :arg xax:     Horizontal display axis
+        :arg yax:     Vertical display axis
         """
         
         globject.GLImageObject.__init__(self, image, display, xax, yax)
@@ -60,6 +103,9 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
         
     def destroy(self):
+        """Removes property listeners, destroys textures, and calls
+        :func:`.glsh_funcs.destroy`.
+        """
         
         self.removeListeners()
 
@@ -73,6 +119,10 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
 
     def addListeners(self):
+        """Called by :meth:`__init__`. Adds listeners to properties of the
+        :class:`.Display` and :class:`.SHOpts` instanecs associated with the
+        image.
+        """
 
         display = self.display
         opts    = self.displayOpts
@@ -99,6 +149,9 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
     
     def removeListeners(self):
+        """Called by :meth:`destroy`. Removes listeners added by
+        :meth:`addListeners`.
+        """ 
 
         display = self.display
         opts    = self.displayOpts
@@ -124,6 +177,7 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
         
     def updateShaderState(self, *a):
+        """Calls :func:`.glsh_funcs.updateShaderState`. """
         if fslgl.glsh_funcs.updateShaderState(self):
             self.notify()
             return True
@@ -131,6 +185,9 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
 
     def cmapUpdate(self, *a):
+        """Called when the colour map texture needs to be updated. Updates it,
+        and then calls :meth:`updateShaderState`.
+        """
 
         opts    = self.displayOpts
         display = self.display
@@ -154,33 +211,44 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
         
     def shResChanged(self, *a):
         """Called when the :attr:`.SHOpts.shResolution` property changes.
+        Re-loads the SH parameters from disk, and attaches them as an
+        attribute called ``shParams``.
         """
-        self.coefficients = self.displayOpts.getCoefficients()
+        self.shParams = self.displayOpts.getSHParameters()
 
 
     def updateRadTexture(self, voxels):
+        """Called by :func:`.glsh_funcs.draw`. Updates the radius texture to
+        contain radii for the given set of voxels (assumed to be an ``(N, 3)``
+        numpy array).
 
+        :returns: The adjusted shape of the radius texture.
+        """
+        
         # Remove out-of-bounds voxels
         shape   = self.image.shape[:3]
         x, y, z = voxels.T
-
-        out = (x <  0)        | \
-              (y <  0)        | \
-              (z <  0)        | \
-              (x >= shape[0]) | \
-              (y >= shape[1]) | \
-              (z >= shape[2])
+        out     = (x <  0)        | \
+                  (y <  0)        | \
+                  (z <  0)        | \
+                  (x >= shape[0]) | \
+                  (y >= shape[1]) | \
+                  (z >= shape[2])
 
         x = np.array(x[~out], dtype=np.int32)
         y = np.array(y[~out], dtype=np.int32)
         z = np.array(z[~out], dtype=np.int32)
 
-        # We need to [insert description here when you know more
-        #             about the topic].
-        # This can be done with a straight matrix multiplication.
-        coef  = self.coefficients
-        data  = self.image.nibImage.get_data()[x, y, z, :]
-        radii = np.dot(coef, data.T).flatten(order='F')
+        # The dot product of the SH parameters with
+        # the SH coefficients for a single voxel gives
+        # us the radii for every vertex on the FOD
+        # sphere. We can calculate the radii for every
+        # voxel quickly with a matrix multiplication of
+        # the SH parameters with the SH coefficients of
+        # *all* voxels.
+        params = self.shParams
+        coefs  = self.image.nibImage.get_data()[x, y, z, :]
+        radii  = np.dot(params, coefs.T).flatten(order='F')
 
         # The radii are interpreted as a 1D vector
         # containing the radii for every vertex
@@ -227,8 +295,8 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
             radTexShape[imax] /= divisor
             radTexShape[imin] *= divisor
 
-        # Resize and reshape the radius
-        # array as needed
+        # Resize and reshape the 
+        # radius array as needed
         radTexSize = np.prod(radTexShape)
         if radTexSize != radii.size:
             radii.resize(radTexSize)
@@ -242,12 +310,20 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
 
     def ready(self):
+        """Returns ``True`` if this ``GLSH`` instance is ready to be
+        drawn, ``False`` otherwise.
+        """
         return self.radTexture.ready()
 
 
     def preDraw(self):
-
-        # The radTexture needs to be bound *last*
+        """Binds textures, and calls :func:`.glsh_funcs.preDraw`. """
+        
+        # The radTexture needs to be bound *last*,
+        # because the updateRadTexture method will
+        # be called through draw, and if radTexture
+        # is not the most recently bound texture,
+        # the update will fail.
         self.cmapTexture.bindTexture(gl.GL_TEXTURE1)
         self.radTexture .bindTexture(gl.GL_TEXTURE0)
         
@@ -255,10 +331,12 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
 
     def draw(self, zpos, xform=None, bbox=None):
+        """Calls :func:`.glsh_funcs.draw`. """
         fslgl.glsh_funcs.draw(self, zpos, xform, bbox)
 
 
     def postDraw(self):
+        """Unbinds textures, and calls :func:`.glsh_funcs.postDraw`. """
         self.radTexture .unbindTexture()
         self.cmapTexture.unbindTexture()
         fslgl.glsh_funcs.postDraw(self)

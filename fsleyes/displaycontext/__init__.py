@@ -205,17 +205,20 @@ def getOverlayTypes(overlay):
     """
 
     import fsl.data.image as fslimage
+    from . import            shopts
     
     possibleTypes = list(OVERLAY_TYPES[overlay])
 
     if not isinstance(overlay, fslimage.Image):
         return possibleTypes
 
-    shape         = overlay.shape
+    shape = overlay.shape
+
+    # Could this image be a vector image?
     couldBeVector = len(shape) == 4 and shape[-1] == 3
 
-    # TODO Check shape
-    couldBeSH     = True
+    # Or could it be a SH image?
+    couldBeSH = len(shape) == 4 and shape[-1] in shopts.SH_COEFFICIENT_TYPE
 
     # Special cases:
     #
