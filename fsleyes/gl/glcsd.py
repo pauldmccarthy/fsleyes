@@ -13,7 +13,6 @@ in the :mod:`.gl21.glcsd_funcs` module.
 """
 
 
-import os.path    as op
 import               logging
 
 import numpy      as np
@@ -25,16 +24,9 @@ import fsleyes.gl          as fslgl
 import fsleyes.colourmaps  as fslcm
 import fsleyes.gl.textures as textures
 from . import                 globject
-import                        fsleyes
 
 
 log = logging.getLogger(__name__)
-
-
-CSD_TYPE = {
-    45 : 'sym',
-    81 : 'asym',
-}
 
 
 class GLCSD(globject.GLImageObject):
@@ -161,17 +153,9 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
         
     def csdResChanged(self, *a):
-
-        opts        = self.displayOpts
-        order       = self.image.shape[3]
-        resolution  = opts.csdResolution ** 2
-        fileType    = CSD_TYPE[order]
-        
-        self.coefficients = np.loadtxt(op.join(
-            fsleyes.assetDir,
-            'assets',
-            'csd',
-            '{}x{}_{}.txt'.format(resolution, order, fileType)))
+        """Called when the :attr:`.CSDOpts.csdResolution` property changes.
+        """
+        self.coefficients = self.displayOpts.getCoefficients()
 
 
     def updateRadTexture(self, voxels):

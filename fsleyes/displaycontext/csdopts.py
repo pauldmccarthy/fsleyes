@@ -1,13 +1,27 @@
 #!/usr/bin/env python
 #
-# csdopts.py -
+# csdopts.py - The CSDOpts class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`CSDOpts` class, a :class:`.DisplayOpts`
+class for rendering :class:`.Image` instances which contain CSD data.
+"""
 
-import props
+import os.path as op
 
-from . import volumeopts
+import numpy   as np
+
+import            props
+
+import            fsleyes
+from . import     volumeopts
+
+
+CSD_TYPE = {
+    45 : 'sym',
+    81 : 'asym',
+}
 
 
 class CSDOpts(volumeopts.Nifti1Opts):
@@ -34,3 +48,16 @@ class CSDOpts(volumeopts.Nifti1Opts):
     yColour       = props.Colour(default=(0, 1, 0))
     zColour       = props.Colour(default=(0, 0, 1))
     # For 'direction'
+
+
+    def getCoefficients(self):
+
+        resolution = self.csdResolution ** 2
+        order      = self.overlay.shape[3]
+        fileType   = CSD_TYPE[order]
+        
+        return np.loadtxt(op.join(
+            fsleyes.assetDir,
+            'assets',
+            'csd',
+            '{}x{}_{}.txt'.format(resolution, order, fileType)))
