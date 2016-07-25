@@ -391,6 +391,9 @@ OPTIONS = td.TypeDict({
     'LabelOpts'      : ['lut',
                         'outline',
                         'outlineWidth'],
+    'SHOpts'         : [
+        # TODO
+    ],
 })
 """This dictionary defines all of the options which are exposed on the command
 line.
@@ -415,6 +418,7 @@ GROUPNAMES = td.TypeDict({
     'ModelOpts'      : 'Model options',
     'LabelOpts'      : 'Label options',
     'TensorOpts'     : 'Tensor options',
+    'SHOpts'         : 'SH options',
 })
 """Command line arguments are grouped according to the class to which
 they are applied (see the :data:`ARGUMENTS` dictionary). This dictionary
@@ -447,6 +451,7 @@ GROUPDESCS = td.TypeDict({
     'RGBVectorOpts'  : 'These options are applied to \'rgbvector\' overlays.',
     'ModelOpts'      : 'These options are applied to \'model\' overlays.',
     'TensorOpts'     : 'These options are applied to \'tensor\' overlays.',
+    'SHOpts'         : 'These options are applied to \'sh\' overlays.',
 })
 """This dictionary contains descriptions for each argument group. """
 
@@ -459,6 +464,8 @@ GROUPEPILOGS = td.TypeDict({
                    '{}'.format(', '.join(colourmaps.scanLookupTables())),
     'VolumeOpts' : 'Available colour maps: '
                    '{}'.format(', '.join(colourmaps.scanColourMaps())),
+    'SHOpts'     : 'Available colour maps: '
+                   '{}'.format(', '.join(colourmaps.scanColourMaps())), 
 })
 
 
@@ -1078,13 +1085,13 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
     MaskOpts       = fsldisplay.MaskOpts
     ModelOpts      = fsldisplay.ModelOpts
     LabelOpts      = fsldisplay.LabelOpts
-    CSDOpts        = fsldisplay.CSDOpts
+    SHOpts         = fsldisplay.SHOpts
 
     # A parser is created and returned
     # for each one of these types.
     parserTypes = [VolumeOpts, MaskOpts, LabelOpts,
                    ModelOpts, LineVectorOpts,
-                   RGBVectorOpts, TensorOpts, CSDOpts]
+                   RGBVectorOpts, TensorOpts, SHOpts]
 
     # Dictionary containing the Display parser,
     # and parsers for each overlay type. We use

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 #
-# csdopts.py - The CSDOpts class.
+# shopts.py - The SHOpts class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`CSDOpts` class, a :class:`.DisplayOpts`
-class for rendering :class:`.Image` instances which contain CSD data.
+"""This module provides the :class:`SHOpts` class, a :class:`.DisplayOpts`
+class for rendering :class:`.Image` instances which contain SH data.
 """
 
 import os.path as op
@@ -18,16 +18,16 @@ import            fsleyes
 from . import     volumeopts
 
 
-CSD_TYPE = {
+SH_TYPE = {
     45 : 'sym',
     81 : 'asym',
 }
 
 
-class CSDOpts(volumeopts.Nifti1Opts):
+class SHOpts(volumeopts.Nifti1Opts):
 
 
-    csdResolution = props.Choice((16,))
+    shResolution  = props.Choice((16,))
     
     size          = props.Percentage(minval=10, maxval=500, default=100)
 
@@ -52,12 +52,12 @@ class CSDOpts(volumeopts.Nifti1Opts):
 
     def getCoefficients(self):
 
-        resolution = self.csdResolution ** 2
+        resolution = self.shResolution ** 2
         order      = self.overlay.shape[3]
-        fileType   = CSD_TYPE[order]
+        fileType   = SH_TYPE[order]
         
         return np.loadtxt(op.join(
             fsleyes.assetDir,
             'assets',
-            'csd',
+            'sh',
             '{}x{}_{}.txt'.format(resolution, order, fileType)))

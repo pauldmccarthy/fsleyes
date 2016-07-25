@@ -1,5 +1,5 @@
 /*
- * OpenGL fragment shader used for rendering GLCSD instances.
+ * OpenGL fragment shader used for rendering GLSH instances.
  *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
@@ -12,7 +12,6 @@
  * Colour mode:
  * 0 == colour by direction
  * 1 == colour by radius
- * 2 == use a constant colour
  */
 uniform int colourMode;
 

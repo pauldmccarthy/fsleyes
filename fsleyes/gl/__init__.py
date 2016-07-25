@@ -346,9 +346,11 @@ def bootstrap(glVersion=None):
         dc.RGBVectorOpts.interpolation.updateChoice('linear',
                                                     newAlt=['spline']) 
 
-        # Tensor overlays are not available in GL14
+        # Tensor/SH overlays are not available in GL14
         dc.ALL_OVERLAY_TYPES           .remove('tensor')
+        dc.ALL_OVERLAY_TYPES           .remove('sh')
         dc.OVERLAY_TYPES['TensorImage'].remove('tensor')
+        dc.OVERLAY_TYPES['Image']      .remove('sh') 
 
     renderer = gl.glGetString(gl.GL_RENDERER).decode('ascii')
     log.debug('Using OpenGL {} implementation with renderer {}'.format(
@@ -377,7 +379,7 @@ def bootstrap(glVersion=None):
     thismod.glmodel_funcs      = glpkg.glmodel_funcs
     thismod.gllabel_funcs      = glpkg.gllabel_funcs
     thismod.gltensor_funcs     = glpkg.gltensor_funcs
-    thismod.glcsd_funcs        = glpkg.glcsd_funcs
+    thismod.glsh_funcs         = glpkg.glsh_funcs
     thismod._bootstrapped      = True
     
     fslplatform.glVersion      = thismod.GL_VERSION

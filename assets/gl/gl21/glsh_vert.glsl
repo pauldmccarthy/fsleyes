@@ -1,7 +1,6 @@
 /*
- * OpenGL vertex shader used for rendering GLCSD 
- * instances - spherical deconvolution of diffusion 
- * data.
+ * OpenGL vertex shader used for rendering GLSH
+ * instances - spherical harmonic diffusion data.
  *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */

@@ -413,7 +413,7 @@ labels = TypeDict({
     'OverlayDisplayPanel.LineVectorOpts' : 'Line vector settings',
     'OverlayDisplayPanel.ModelOpts'      : 'Model settings',
     'OverlayDisplayPanel.TensorOpts'     : 'Diffusion tensor settings',
-    'OverlayDisplayPanel.CSDOpts'        : 'Diffusion CSD settings',
+    'OverlayDisplayPanel.SHOpts'         : 'Diffusion SH settings',
     
     'OverlayDisplayPanel.loadCmap'       : 'Load colour map',
 
@@ -715,7 +715,7 @@ choices = TypeDict({
                              'linevector' : '3-direction vector image (Line)',
                              'model'      : '3D model',
                              'tensor'     : 'Diffusion tensor',
-                             'csd'        : 'Diffusion CSD'},
+                             'sh'         : 'Diffusion SH'},
 
     'HistogramPanel.histType' : {'probability' : 'Probability',
                                  'count'       : 'Count'},

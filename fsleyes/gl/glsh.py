@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 #
-# glcsd.py - The GLCSD class.
+# glsh.py - The GLSH class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`GLCSD` class, a :class:`.GLObject` for
-rendering :class:`.Image` overlays which contain spherical deconvolution
-diffusion model estimates. The ``GLCSD`` class uses functions defined
-in the :mod:`.gl21.glcsd_funcs` module.
+"""This module provides the :class:`GLSH` class, a :class:`.GLObject` for
+rendering :class:`.Image` overlays which contain spherical harmonic diffusion
+estimates. The ``GLSH`` class uses functions defined in the
+:mod:`.gl21.glsh_funcs` module.
 
-:class:`GLCSD` instances can only be rendered in OpenGL 2.1 and above.
+:class:`GLSH` instances can only be rendered in OpenGL 2.1 and above.
 """
 
 
@@ -29,7 +29,7 @@ from . import                 globject
 log = logging.getLogger(__name__)
 
 
-class GLCSD(globject.GLImageObject):
+class GLSH(globject.GLImageObject):
     """
 
 Creates a :class:`.Texture3D` instance for storing radius values, and
@@ -53,17 +53,17 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
         self.cmapTexture = textures.ColourMapTexture('{}_cm'.format(name))
 
         self.addListeners()
-        self.csdResChanged()
+        self.shResChanged()
         self.cmapUpdate()
         
-        fslgl.glcsd_funcs.init(self)
+        fslgl.glsh_funcs.init(self)
 
         
     def destroy(self):
         
         self.removeListeners()
 
-        fslgl.glcsd_funcs.destroy(self)
+        fslgl.glsh_funcs.destroy(self)
 
         if self.radTexture  is not None: self.radTexture.destroy()
         if self.cmapTexture is not None: self.cmapTexture.destroy() 
@@ -81,7 +81,7 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
         opts   .addListener('resolution',      name, self.notify)
         opts   .addListener('transform',       name, self.notify)
         
-        opts   .addListener('csdResolution',   name, self.csdResChanged,
+        opts   .addListener('shResolution' ,   name, self.shResChanged,
                             immediate=True)
         opts   .addListener('size',            name, self.updateShaderState)
         opts   .addListener('lighting',        name, self.updateShaderState)
@@ -107,7 +107,7 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
         opts   .removeListener('resolution',      name)
         opts   .removeListener('transform',       name)
 
-        opts   .removeListener('csdResolution',   name)
+        opts   .removeListener('shResolution',    name)
         opts   .removeListener('size',            name)
         opts   .removeListener('lighting',        name)
         opts   .removeListener('neuroFlip',       name)
@@ -124,7 +124,7 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
 
         
     def updateShaderState(self, *a):
-        if fslgl.glcsd_funcs.updateShaderState(self):
+        if fslgl.glsh_funcs.updateShaderState(self):
             self.notify()
             return True
         return False
@@ -152,8 +152,8 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
             self.notify()
 
         
-    def csdResChanged(self, *a):
-        """Called when the :attr:`.CSDOpts.csdResolution` property changes.
+    def shResChanged(self, *a):
+        """Called when the :attr:`.SHOpts.shResolution` property changes.
         """
         self.coefficients = self.displayOpts.getCoefficients()
 
@@ -251,14 +251,14 @@ Creates a :class:`.Texture3D` instance for storing radius values, and
         self.cmapTexture.bindTexture(gl.GL_TEXTURE1)
         self.radTexture .bindTexture(gl.GL_TEXTURE0)
         
-        fslgl.glcsd_funcs.preDraw(self)
+        fslgl.glsh_funcs.preDraw(self)
 
 
     def draw(self, zpos, xform=None, bbox=None):
-        fslgl.glcsd_funcs.draw(self, zpos, xform, bbox)
+        fslgl.glsh_funcs.draw(self, zpos, xform, bbox)
 
 
     def postDraw(self):
         self.radTexture .unbindTexture()
         self.cmapTexture.unbindTexture()
-        fslgl.glcsd_funcs.postDraw(self)
+        fslgl.glsh_funcs.postDraw(self)

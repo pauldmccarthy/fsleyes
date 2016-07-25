@@ -15,4 +15,4 @@ from . import glmodel_funcs
 from . import gllabel_funcs
 
 gltensor_funcs = None
-glcsd_funcs    = None
+glsh_funcs     = None

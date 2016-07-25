@@ -393,9 +393,9 @@ _DISPLAY_PROPS = td.TypeDict({
                      showLimits=False,
                      enabledWhen=lambda o: o.overlay.is4DImage())],
 
-    'CSDOpts' : [
+    'SHOpts' : [
         props.Widget('resolution',   showLimits=False),
-        props.Widget('csdResolution'),
+        props.Widget('shResolution'),
         props.Widget('lighting'),
         props.Widget('size', spin=False, showLimits=False),
         props.Widget('colourMode'),

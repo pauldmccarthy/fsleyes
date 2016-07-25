@@ -154,7 +154,7 @@ from .vectoropts     import LineVectorOpts
 from .modelopts      import ModelOpts
 from .labelopts      import LabelOpts
 from .tensoropts     import TensorOpts
-from .csdopts        import CSDOpts
+from .shopts         import SHOpts
 
 from .displaycontext import InvalidOverlayError
 
@@ -162,7 +162,7 @@ from .displaycontext import InvalidOverlayError
 OVERLAY_TYPES = td.TypeDict({
 
     'Image'       : ['volume',     'mask',  'rgbvector',
-                     'linevector', 'label', 'csd'],
+                     'linevector', 'label', 'sh'],
     'Model'       : ['model'],
     'TensorImage' : ['tensor', 'rgbvector', 'linevector'],
 })
@@ -190,7 +190,7 @@ DISPLAY_OPTS_MAP = {
     'model'      : ModelOpts,
     'label'      : LabelOpts,
     'tensor'     : TensorOpts,
-    'csd'        : CSDOpts,
+    'sh'         : SHOpts,
 }
 """This dictionary provides a mapping between each overlay type, and
 the :class:`DisplayOpts` subclass which contains overlay type-specific
@@ -211,14 +211,18 @@ def getOverlayTypes(overlay):
     if not isinstance(overlay, fslimage.Image):
         return possibleTypes
 
-    isVector = len(overlay.shape) == 4 and overlay.shape[-1] == 3
+    shape         = overlay.shape
+    couldBeVector = len(shape) == 4 and shape[-1] == 3
+
+    # TODO Check shape
+    couldBeSH     = True
 
     # Special cases:
     #
     # If the overlay looks like a vector image,
     # and its nifti intent code is set as such,
     # make rgbvector the default overlay type
-    if isVector:
+    if couldBeVector:
         if overlay.intent == constants.NIFTI_INTENT_RGB_VECTOR:
             possibleTypes.remove(   'rgbvector')
             possibleTypes.remove(   'linevector')
@@ -232,6 +236,9 @@ def getOverlayTypes(overlay):
         except ValueError: pass
 
         try:               possibleTypes.remove('linevector')
-        except ValueError: pass 
+        except ValueError: pass
+
+    if not couldBeSH:
+        possibleTypes.remove('sh')
 
     return possibleTypes

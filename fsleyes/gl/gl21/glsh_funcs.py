@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 #
-# glcsd_funcs.py - Functions used by GLCSD instances.
+# glsh_funcs.py - Functions used by GLSH instances.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module contains functions which are used by :class:`.GLCSD` instances
-for rendering :class:`.Image` overlays which contain spherical deconvolution
-diffusion model fits, in an OpenGL 2.1 compatible manner..
+"""This module contains functions which are used by :class:`.GLSH` instances
+for rendering :class:`.Image` overlays which contain spherical harmonic
+diffusion data, in an OpenGL 2.1 compatible manner.
 
 The functions defined in this module are intended to be called by
-:class:`.GLCSD` instances.
+:class:`.GLSH` instances.
 
 For each voxel, a sphere is drawn, with the position of each vertex on the
-sphere adjusted by the SD coefficients (radii). For one draw call, the radii
+sphere adjusted by the SH coefficients (radii). For one draw call, the radii
 for all voxels and vertices is calculated, and stored in a texture. These
-radii values are then accessed by the ``glcsd_vert.glsl`` vertex shader.
+radii values are then accessed by the ``glsh_vert.glsl`` vertex shader.
 """
 
 
@@ -32,7 +32,7 @@ import fsleyes.gl.routines          as glroutines
 
 
 def init(self):
-    """Called by :meth:`.GLCSD.__init__`. Calls :func:`compileShaders` and
+    """Called by :meth:`.GLSH.__init__`. Calls :func:`compileShaders` and
     :func:`updateShaderState`.
     """
 
@@ -50,15 +50,15 @@ def destroy(self):
         
 
 def compileShaders(self):
-    """Creates a :class:`.GLSLShader`, and attaches it to this :class:`.GLCSD`
+    """Creates a :class:`.GLSLShader`, and attaches it to this :class:`.GLSH`
     instance as an attribute called ``shader``.
     """
     
     if self.shader is not None:
         self.shader.destroy() 
 
-    vertSrc = shaders.getVertexShader(  'glcsd')
-    fragSrc = shaders.getFragmentShader('glcsd')
+    vertSrc = shaders.getVertexShader(  'glsh')
+    fragSrc = shaders.getFragmentShader('glsh')
     
     self.shader = shaders.GLSLShader(vertSrc, fragSrc, indexed=True)
 
@@ -99,7 +99,7 @@ def updateShaderState(self):
     changed |= shader.set('imageShape',  shape)
     changed |= shader.set('lighting',    opts.lighting)
     changed |= shader.set('lightPos',    lightPos)
-    changed |= shader.set('nVertices',   opts.csdResolution ** 2)
+    changed |= shader.set('nVertices',   opts.shResolution ** 2)
     changed |= shader.set('sizeScaling', opts.size / 100.0)
     changed |= shader.set('colourMode',  colourMode)
     changed |= shader.set('xColour',     colours[0])
@@ -111,9 +111,9 @@ def updateShaderState(self):
     changed |= shader.set('cmapTexture', 1)
 
     # Vertices only need to be re-generated
-    # if the csdResolution has changed.
+    # if the shResolution has changed.
     if changed:
-        vertices, indices = glroutines.unitSphere(opts.csdResolution)
+        vertices, indices = glroutines.unitSphere(opts.shResolution)
 
         self.vertices  = vertices
         self.indices   = indices
@@ -128,7 +128,7 @@ def updateShaderState(self):
 
 
 def preDraw(self):
-    """Called by :meth:`.GLCSD.preDraw`. Loads the shader program, and updates
+    """Called by :meth:`.GLSH.preDraw`. Loads the shader program, and updates
     some shader attributes.
     """
     shader = self.shader
@@ -150,7 +150,7 @@ def preDraw(self):
 
 
 def draw(self, zpos, xform=None, bbox=None):
-    """Called by :meth:`.GLCSD.draw`. Draws the scene. """
+    """Called by :meth:`.GLSH.draw`. Draws the scene. """
 
     opts   = self.displayOpts
     shader = self.shader
@@ -173,7 +173,7 @@ def draw(self, zpos, xform=None, bbox=None):
 
 
 def postDraw(self):
-    """Called by :meth:`.GLCSD.draw`. Cleans up the shader program and GL
+    """Called by :meth:`.GLSH.draw`. Cleans up the shader program and GL
     state.
     """
     
