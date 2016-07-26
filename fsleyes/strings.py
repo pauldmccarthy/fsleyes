@@ -413,6 +413,7 @@ labels = TypeDict({
     'OverlayDisplayPanel.LineVectorOpts' : 'Line vector settings',
     'OverlayDisplayPanel.ModelOpts'      : 'Model settings',
     'OverlayDisplayPanel.TensorOpts'     : 'Diffusion tensor settings',
+    'OverlayDisplayPanel.SHOpts'         : 'Diffusion SH settings',
     
     'OverlayDisplayPanel.loadCmap'       : 'Load colour map',
 
@@ -638,6 +639,17 @@ properties = TypeDict({
     'TensorOpts.lighting'          : 'Lighting effects',
     'TensorOpts.tensorResolution'  : 'Ellipsoid quality',
     'TensorOpts.tensorScale'       : 'Tensor size',
+
+    'SHOpts.lighting'        : 'Lighting effects',
+    'SHOpts.size'            : 'FOD size',
+    'SHOpts.radiusThreshold' : 'Radius threshold',
+    'SHOpts.shResolution'    : 'FOD quality',
+    'SHOpts.neuroFlip'       : 'Neurological flip (FSL convention)',
+    'SHOpts.colourMode'      : 'Colour mode',
+    'SHOpts.colourMap'       : 'Radius colour map',
+    'SHOpts.xColour'         : 'X direction colour',
+    'SHOpts.yColour'         : 'Y direction colour',
+    'SHOpts.zColour'         : 'Z direction colour',
 })
 
 
@@ -707,13 +719,18 @@ choices = TypeDict({
                                   'linear' : 'Linear interpolation', 
                                   'spline' : 'Spline interpolation'},
 
+
+    'SHOpts.colourMode' : {'radius'    : 'Colour by radius',
+                           'direction' : 'Colour by direction'},
+
     'Display.overlayType' : {'volume'     : '3D/4D volume',
                              'mask'       : '3D/4D mask image',
                              'label'      : 'Label image',
                              'rgbvector'  : '3-direction vector image (RGB)',
                              'linevector' : '3-direction vector image (Line)',
                              'model'      : '3D model',
-                             'tensor'     : 'Diffusion tensor'},
+                             'tensor'     : 'Diffusion tensor',
+                             'sh'         : 'Diffusion SH'},
 
     'HistogramPanel.histType' : {'probability' : 'Probability',
                                  'count'       : 'Count'},

@@ -25,11 +25,6 @@ uniform mat4 voxToDisplayMat;
 uniform mat4 voxValXform;
 
 /*
- * Constant offset to add to voxel coordinates.
- */
-uniform vec3 voxelOffset;
-
-/*
  * Shape of the image texture.
  */
 uniform vec3 imageShape;
@@ -61,7 +56,7 @@ uniform bool scaleLength;
 /*
  * The current vertex on the current line.
  */
-attribute vec3 vertex;
+attribute vec3 voxel;
 
 /*
  * Vertex index - the built-in gl_VertexID
@@ -80,26 +75,8 @@ void main(void) {
   vec3  texCoord;
   vec3  vector;
   vec3  voxCoord;
-  vec3  vertVoxCoord;
   float vectorLen;
 
-  /*
-   * The vertVoxCoord vector contains the floating
-   * point voxel coordinates which correspond to the
-   * display coordinates of the current vertex.
-   */
-  vertVoxCoord = (displayToVoxMat * vec4(vertex, 1)).xyz;
-
-  /*
-   * The voxCoord vector contains the exact integer
-   * voxel coordinates - we cannot interpolate vector
-   * directions.
-   *
-   * There is no round function in GLSL 1.2, so we use
-   * floor(x + 0.5).
-   */  
-  voxCoord = floor(vertVoxCoord + voxelOffset);
-  
   /*
    * Normalise the voxel coordinates to [0.0, 1.0],
    * so they can be used for texture lookup. Add
@@ -107,6 +84,7 @@ void main(void) {
    * voxel coordinates from  from [i - 0.5, i + 0.5]
    * to [i, i + 1].
    */
+  voxCoord = voxel;
   texCoord = (voxCoord + 0.5) / imageShape;
 
   /*
@@ -143,9 +121,7 @@ void main(void) {
   if (scaleLength) {
 
     /*
-     * Scale the vector so it has length 
-     * 0.5. Note that here we are assuming 
-     * that all vectors are of length 1.
+     * Scale the vector so it has length 0.5. 
      */
     vector /= 2 * vectorLen;
 
@@ -172,7 +148,7 @@ void main(void) {
    */
   gl_Position = gl_ModelViewProjectionMatrix *
                 voxToDisplayMat              *
-                vec4(vertVoxCoord + vector, 1);
+                vec4(voxCoord + vector, 1);
 
   fragVoxCoord     = voxCoord;
   fragTexCoord     = texCoord;

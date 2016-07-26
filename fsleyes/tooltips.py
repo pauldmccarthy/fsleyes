@@ -224,6 +224,14 @@ properties = TypeDict({
                                     'drawn to fit within a voxel. This '
                                     'setting allows the tensor scale to be '
                                     'adjusted.',
+
+    'SHOpts.lighting'         : 'If enabled, a simple lighting model is used '
+                                'to highlight the FODs',
+    'SHOpts.size'             : 'This setting allows the FOD size to be '
+                                'scaled up or down',
+    'SHOpts.radiusThreshold'  : 'This setting allows FODs with small radius '
+                                'to be hidden.', 
+    
     # SceneOpts
 
     'SceneOpts.showCursor'         : 'Show/hide the cursor which highlights '

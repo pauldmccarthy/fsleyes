@@ -18,6 +18,7 @@ textures for various purposes.
 # textures package level due to these imports
 from .texture            import Texture
 from .texture            import Texture2D
+from .texture3d          import Texture3D
 from .imagetexture       import ImageTexture
 from .colourmaptexture   import ColourMapTexture
 from .lookuptabletexture import LookupTableTexture

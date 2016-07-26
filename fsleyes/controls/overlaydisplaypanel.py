@@ -391,8 +391,30 @@ _DISPLAY_PROPS = td.TypeDict({
         props.Widget('resolution',   showLimits=False),
         props.Widget('volume',
                      showLimits=False,
-                     enabledWhen=lambda o: o.overlay.is4DImage())]
-})
+                     enabledWhen=lambda o: o.overlay.is4DImage())],
+
+    'SHOpts' : [
+        props.Widget('resolution',   showLimits=False),
+        props.Widget('shResolution'),
+        props.Widget('lighting'),
+        props.Widget('size',            spin=False, showLimits=False),
+        props.Widget('radiusThreshold', spin=False, showLimits=False),
+        props.Widget('colourMode',
+                     labels=strings.choices['SHOpts.colourMode']),
+        props.Widget('colourMap',
+                     labels=fslcm.getColourMapLabel,
+                     dependencies=['colourMode'],
+                     enabledWhen=lambda o, cm: cm == 'radius'),
+        props.Widget('xColour',
+                     dependencies=['colourMode'],
+                     enabledWhen=lambda o, cm: cm == 'direction'),
+        props.Widget('yColour',
+                     dependencies=['colourMode'],
+                     enabledWhen=lambda o, cm: cm == 'direction'),
+        props.Widget('zColour',
+                     dependencies=['colourMode'],
+                     enabledWhen=lambda o, cm: cm == 'direction')
+    ]})
 """This dictionary contains specifications for all controls that are shown on
 an ``OverlayDisplayPanel``.
 """

@@ -144,8 +144,8 @@ def updateShaderState(self):
 
 
 def preDraw(self):
-    """Must be called before :func:`draw`. Loads the shader programs, does
-    some shader state configuration, and binds textures to texture units.
+    """Must be called before :func:`draw`. Loads the shader programs, and
+    does some shader state configuration.
     """
     
     shader = self.shader
@@ -165,37 +165,19 @@ def preDraw(self):
     gl.glCullFace(gl.GL_BACK)
     
 
-def draw(self, zpos, xform=None):
+def draw(self, zpos, xform=None, bbox=None):
     """Generates voxel coordinates for each tensor to be drawn, does some
     final shader state configuration, and draws the tensors.
     """
 
-    image  = self.image
     opts   = self.displayOpts
     shader = self.shader
     v2dMat = opts.getTransform('voxel',   'display')
-    d2vMat = opts.getTransform('display', 'voxel')
 
     if xform is None: xform = v2dMat
     else:             xform = transform.concat(v2dMat, xform)
 
-    resolution = np.array([opts.resolution] * 3)
-
-    if opts.transform == 'id':
-        resolution = resolution / min(image.pixdim[:3])
-    elif opts.transform == 'pixdim':
-        resolution = [max(r, p) for r, p in zip(resolution, image.pixdim[:3])]
-
-    voxels = glroutines.calculateSamplePoints(
-        image.shape,
-        resolution,
-        v2dMat,
-        self.xax,
-        self.yax)[0]
-
-    voxels[:, self.zax] = zpos
-
-    voxels  = transform.transform(voxels, d2vMat)
+    voxels  = self.generateVoxelCoordinates(zpos, bbox)
     nVoxels = len(voxels)
 
     # Set divisor to 1, so we use one set of

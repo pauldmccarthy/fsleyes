@@ -1223,6 +1223,11 @@ class SliceCanvas(props.HasProperties):
         :arg ymax: Maximum y location
         :arg zmin: Minimum z (depth) location
         :arg zmax: Maximum z location
+
+        :returns: A sequence of three ``(low, high)`` values, defining the
+                  display coordinate system bounding box. Note that this
+                  sequence is ordered in absolute terms, not in terms of
+                  the orientation of this ``SliceCanvas``.
         """
 
         xax = self.xax
@@ -1248,7 +1253,7 @@ class SliceCanvas(props.HasProperties):
            (height == 0)                or \
            (xmin   == xmax)             or \
            (ymin   == ymax):
-            return
+            return [(0, 0), (0, 0), (0, 0)]
 
         log.debug('Setting canvas bounds (size {}, {}): '
                   'X {: 5.1f} - {: 5.1f},'
@@ -1273,6 +1278,8 @@ class SliceCanvas(props.HasProperties):
 
         # set up 2D orthographic drawing
         glroutines.show2D(xax, yax, width, height, lo, hi)
+
+        return [(lo[0], hi[0]), (lo[1], hi[1]), (lo[2], hi[2])]
 
         
     def _drawCursor(self):
@@ -1422,6 +1429,8 @@ class SliceCanvas(props.HasProperties):
 
         overlays, globjs = self._getGLObjects()
 
+        bbox = None
+
         # Do not draw anything if some globjects
         # are not ready. This is because, if a
         # GLObject was drawn, but is now temporarily
@@ -1435,7 +1444,7 @@ class SliceCanvas(props.HasProperties):
         # Set the viewport to match the current 
         # display bounds and canvas size
         if self.renderMode is not 'offscreen':
-            self._setViewport()
+            bbox = self._setViewport()
             glroutines.clear(self.bgColour)
             
         for overlay, globj in zip(overlays, globjs):
@@ -1454,7 +1463,7 @@ class SliceCanvas(props.HasProperties):
                               self.zax, display.name))
 
                 globj.preDraw()
-                globj.draw(self.pos.z)
+                globj.draw(self.pos.z, bbox=bbox)
                 globj.postDraw() 
 
             # Off-screen rendering - each overlay is

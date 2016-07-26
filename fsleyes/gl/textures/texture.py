@@ -4,9 +4,11 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`Texture` and :class:`Texture2D`
-classes, which are the base classes for all other texture types.
+"""This module provides the :class:`Texture` and :class:`Texture2D` classes,
+which are the base classes for all other texture types. See also the
+:class:`.Texture3D` class.
 """
+
 
 import logging
 
@@ -93,6 +95,7 @@ class Texture(object):
         self.__texture     = int(gl.glGenTextures(1))
         self.__name        = name
         self.__ndims       = ndims
+        self.__bound       = False
         
         self.__textureUnit = None
 
@@ -141,6 +144,16 @@ class Texture(object):
         return self.__texture
 
 
+    def isBound(self):
+        """Returns ``True`` if this texture is currently bound, ``False``
+        otherwise.
+
+        .. note:: This method assumes that the :meth:`bindTexture` and
+                 :meth:`unbindTexture` methods are called in pairs.
+        """
+        return self.__bound
+
+
     def bindTexture(self, textureUnit=None):
         """Activates and binds this texture.
 
@@ -153,6 +166,7 @@ class Texture(object):
             
         gl.glBindTexture(self.__ttype, self.__texture)
 
+        self.__bound       = True
         self.__textureUnit = textureUnit
 
 
@@ -164,6 +178,7 @@ class Texture(object):
             
         gl.glBindTexture(self.__ttype, 0)
 
+        self.__bound       = False
         self.__textureUnit = None
 
 

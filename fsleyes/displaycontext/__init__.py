@@ -154,13 +154,15 @@ from .vectoropts     import LineVectorOpts
 from .modelopts      import ModelOpts
 from .labelopts      import LabelOpts
 from .tensoropts     import TensorOpts
+from .shopts         import SHOpts
 
 from .displaycontext import InvalidOverlayError
 
 
 OVERLAY_TYPES = td.TypeDict({
 
-    'Image'       : ['volume', 'mask', 'rgbvector', 'linevector', 'label'],
+    'Image'       : ['volume',     'mask',  'rgbvector',
+                     'linevector', 'label', 'sh'],
     'Model'       : ['model'],
     'TensorImage' : ['tensor', 'rgbvector', 'linevector'],
 })
@@ -188,6 +190,7 @@ DISPLAY_OPTS_MAP = {
     'model'      : ModelOpts,
     'label'      : LabelOpts,
     'tensor'     : TensorOpts,
+    'sh'         : SHOpts,
 }
 """This dictionary provides a mapping between each overlay type, and
 the :class:`DisplayOpts` subclass which contains overlay type-specific
@@ -202,20 +205,27 @@ def getOverlayTypes(overlay):
     """
 
     import fsl.data.image as fslimage
+    from . import            shopts
     
     possibleTypes = list(OVERLAY_TYPES[overlay])
 
     if not isinstance(overlay, fslimage.Image):
         return possibleTypes
 
-    isVector = len(overlay.shape) == 4 and overlay.shape[-1] == 3
+    shape = overlay.shape
+
+    # Could this image be a vector image?
+    couldBeVector = len(shape) == 4 and shape[-1] == 3
+
+    # Or could it be a SH image?
+    couldBeSH = len(shape) == 4 and shape[-1] in shopts.SH_COEFFICIENT_TYPE
 
     # Special cases:
     #
     # If the overlay looks like a vector image,
     # and its nifti intent code is set as such,
     # make rgbvector the default overlay type
-    if isVector:
+    if couldBeVector:
         if overlay.intent == constants.NIFTI_INTENT_RGB_VECTOR:
             possibleTypes.remove(   'rgbvector')
             possibleTypes.remove(   'linevector')
@@ -229,6 +239,9 @@ def getOverlayTypes(overlay):
         except ValueError: pass
 
         try:               possibleTypes.remove('linevector')
-        except ValueError: pass 
+        except ValueError: pass
+
+    if not couldBeSH:
+        possibleTypes.remove('sh')
 
     return possibleTypes

@@ -126,11 +126,11 @@ class GLLineVector(glvector.GLVector):
         fslgl.gllinevector_funcs.preDraw(self)
 
 
-    def draw(self, zpos, xform=None):
+    def draw(self, zpos, xform=None, bbox=None):
         """Overrides :meth:`.GLObject.draw`. Calls the OpenGL version-specific
         ``draw`` function.
         """         
-        fslgl.gllinevector_funcs.draw(self, zpos, xform)
+        fslgl.gllinevector_funcs.draw(self, zpos, xform, bbox)
 
     
     def drawAll(self, zposes, xforms):
@@ -333,7 +333,7 @@ class GLLineVertices(object):
         self.__hash    = self.calculateHash(glvec)
  
 
-    def getVertices(self, zpos, glvec):
+    def getVertices(self, zpos, glvec, bbox=None):
         """Extracts and returns a slice of line vertices, and the associated
         texture coordinates, which are in a plane located at the given
         Z position (in display coordinates).
@@ -375,6 +375,15 @@ class GLLineVertices(object):
             coords      = [slice(None)] * 3
             coords[zax] = np.floor((zpos - starts[zax]) / steps[zax])
 
+            if bbox is not None:
+                xmin, xmax = opts.bounds[xax]
+                ymin, ymax = opts.bounds[yax]
+
+                coords[xax] = slice(max((xmin, bbox[xax][0])),
+                                    min((xmax, bbox[xax][1])))
+                coords[yax] = slice(max((ymin, bbox[yax][0])),
+                                    min((ymax, bbox[yax][1])))
+
         # If in affine space, the display
         # coordinate system axes may not
         # be parallel to the voxel
@@ -388,7 +397,8 @@ class GLLineVertices(object):
                 [opts.resolution] * 3,
                 opts.getTransform('voxel', 'display'),
                 xax,
-                yax)[0]
+                yax,
+                bbox=bbox)[0]
             
             coords[:, zax] = zpos
 

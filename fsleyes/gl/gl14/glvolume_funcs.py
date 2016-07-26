@@ -121,10 +121,10 @@ def preDraw(self):
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
 
 
-def draw(self, zpos, xform=None):
+def draw(self, zpos, xform=None, bbox=None):
     """Draws a slice of the image at the given Z location. """
 
-    vertices, voxCoords, texCoords = self.generateVertices(zpos, xform)
+    vertices, voxCoords, texCoords = self.generateVertices(zpos, xform, bbox)
 
     vertices = np.array(vertices, dtype=np.float32).ravel('C')
 

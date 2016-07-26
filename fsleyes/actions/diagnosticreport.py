@@ -165,9 +165,10 @@ class DiagnosticReportAction(action.Action):
 
         report = OrderedDict()
 
-        report['Version']    = gl.glGetString(gl.GL_VERSION)
-        report['Renderer']   = gl.glGetString(gl.GL_RENDERER)
-        report['Extensions'] = gl.glGetString(gl.GL_EXTENSIONS).split(' ')
+        report['Version']      = gl.glGetString( gl.GL_VERSION)
+        report['Renderer']     = gl.glGetString( gl.GL_RENDERER)
+        report['Texture size'] = str(gl.glGetInteger(gl.GL_MAX_TEXTURE_SIZE))
+        report['Extensions']   = gl.glGetString( gl.GL_EXTENSIONS).split(' ')
 
         return report
 

@@ -51,6 +51,7 @@ def getGLObjectType(overlayType):
     from . import glmodel
     from . import gllabel
     from . import gltensor
+    from . import glsh
 
     typeMap = {
         'volume'     : glvolume    .GLVolume,
@@ -59,7 +60,8 @@ def getGLObjectType(overlayType):
         'linevector' : gllinevector.GLLineVector,
         'model'      : glmodel     .GLModel,
         'label'      : gllabel     .GLLabel,
-        'tensor'     : gltensor    .GLTensor
+        'tensor'     : gltensor    .GLTensor,
+        'sh'         : glsh        .GLSH
     }
 
     return typeMap.get(overlayType, None)
@@ -290,13 +292,18 @@ class GLObject(notifier.Notifier):
         raise NotImplementedError()
 
     
-    def draw(self, zpos, xform=None):
+    def draw(self, zpos, xform=None, bbox=None):
         """This method should draw a view of this ``GLObject`` - a 2D slice
         at the given Z location, which specifies the position along the screen
         depth axis.
 
-        If the ``xform`` parameter is provided, it should be applied to the
-        model view transformation before drawing.
+        :arg xform: If provided, it must be applied to the model view
+                    transformation before drawing.
+
+        :arg bbox:  If provided, defines the bounding box, in the display
+                    coordinate system, which is to be displayed. Can be used
+                    as a performance hint (i.e. to limit the number of things
+                    that are rendered).
         """
         raise NotImplementedError()
 
@@ -471,10 +478,10 @@ class GLImageObject(GLObject):
         return res
 
         
-    def generateVertices(self, zpos, xform):
+    def generateVertices(self, zpos, xform=None, bbox=None):
         """Generates vertex coordinates for a 2D slice of the :class:`.Image`,
-        through the given ``zpos``, with the optional ``xform`` applied to the
-        coordinates.
+        through the given ``zpos``, with the optional ``xform`` and ``bbox``
+        applied to the coordinates.
         
         This is a convenience method for generating vertices which can be used
         to render a slice through a 3D texture. It is used by the
@@ -498,9 +505,64 @@ class GLImageObject(GLObject):
             self.yax,
             zpos, 
             self.displayOpts.getTransform('voxel',   'display'),
-            self.displayOpts.getTransform('display', 'voxel'))
+            self.displayOpts.getTransform('display', 'voxel'),
+            bbox=bbox)
 
         if xform is not None: 
             vertices = transform.transform(vertices, xform)
 
         return vertices, voxCoords, texCoords 
+
+    
+    def generateVoxelCoordinates(self, zpos, bbox=None, space='voxel'):
+        """Generates a grid of voxel coordinates along the
+        XY display coordinate system plane, at the given ``zpos``. The
+        coordinates honour the current :attr:`.Nifti1Opts.resolution` 
+        property.
+
+        :arg zpos:  Position along the display coordinate system Z axis.
+        
+        :arg bbox:  Limiting bounding box.
+        
+        :arg space: Either ``'voxel'`` (the default) or ``'display'``. 
+                    If the latter, the returned coordinates are in terms
+                    of the display coordinate system. Otherwise, the
+                    returned coordinates are integer voxel coordinates.
+
+        :returns: A ``numpy.float32`` array of shape ``(N, 3)``, containing
+                  the coordinates for ``N`` voxels.
+
+        See the :func:`.calculateSamplePoints` function.
+        """
+
+        if space not in ('voxel', 'display'):
+            raise ValueError('Unknown value for space ("{}")'.format(space))
+
+        image      = self.image
+        opts       = self.displayOpts
+        v2dMat     = opts.getTransform('voxel',   'display')
+        d2vMat     = opts.getTransform('display', 'voxel')
+        resolution = np.array([opts.resolution] * 3)
+
+        if opts.transform == 'id':
+            resolution = resolution / min(image.pixdim[:3])
+            
+        elif opts.transform == 'pixdim':
+            resolution = [max(r, p)
+                          for r, p
+                          in zip(resolution, image.pixdim[:3])]
+
+        voxels = glroutines.calculateSamplePoints(
+            image.shape,
+            resolution,
+            v2dMat,
+            self.xax,
+            self.yax,
+            bbox=bbox)[0]
+
+        voxels[:, self.zax] = zpos
+
+        if space == 'voxel':
+            voxels = transform.transform(voxels, d2vMat).round()
+
+        return voxels

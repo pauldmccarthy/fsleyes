@@ -109,7 +109,7 @@ class GLTensor(glvector.GLVector):
                     texName,
                     img,
                     nvals=nvals,
-                    normalise=True,
+                    normalise=img.dataRange,
                     prefilter=prefilter)
 
                 texThreads.append(tex.refreshThread())
@@ -260,11 +260,11 @@ class GLTensor(glvector.GLVector):
         fslgl.gltensor_funcs.preDraw(self)
 
 
-    def draw(self, zpos, xform=None):
+    def draw(self, zpos, xform=None, bbox=None):
         """Overrides :meth:`.GLVector.draw`. Calls the
         :func:`.gl21.gltensor_funcs.draw` function.
         """
-        fslgl.gltensor_funcs.draw(self, zpos, xform)
+        fslgl.gltensor_funcs.draw(self, zpos, xform, bbox)
 
 
     def postDraw(self):

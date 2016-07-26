@@ -313,7 +313,8 @@ def bootstrap(glVersion=None):
         # List any GL21 extensions here
         exts = ['GL_EXT_framebuffer_object',
                 'GL_ARB_instanced_arrays',
-                'GL_ARB_draw_instanced']
+                'GL_ARB_draw_instanced',
+                'GL_EXT_gpu_shader4']
         
         if not all(map(glexts.hasExtension, exts)):
             log.debug('One of these OpenGL extensions is '
@@ -348,9 +349,11 @@ def bootstrap(glVersion=None):
         dc.RGBVectorOpts.interpolation.updateChoice('linear',
                                                     newAlt=['spline']) 
 
-        # Tensor overlays are not available in GL14
+        # Tensor/SH overlays are not available in GL14
         dc.ALL_OVERLAY_TYPES           .remove('tensor')
+        dc.ALL_OVERLAY_TYPES           .remove('sh')
         dc.OVERLAY_TYPES['TensorImage'].remove('tensor')
+        dc.OVERLAY_TYPES['Image']      .remove('sh') 
 
     renderer = gl.glGetString(gl.GL_RENDERER).decode('ascii')
     log.debug('Using OpenGL {} implementation with renderer {}'.format(
@@ -379,6 +382,7 @@ def bootstrap(glVersion=None):
     thismod.glmodel_funcs      = glpkg.glmodel_funcs
     thismod.gllabel_funcs      = glpkg.gllabel_funcs
     thismod.gltensor_funcs     = glpkg.gltensor_funcs
+    thismod.glsh_funcs         = glpkg.glsh_funcs
     thismod._bootstrapped      = True
     
     fslplatform.glVersion      = thismod.GL_VERSION

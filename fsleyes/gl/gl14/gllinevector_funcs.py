@@ -153,13 +153,13 @@ def preDraw(self):
     self.shader.load()
 
 
-def draw(self, zpos, xform=None):
+def draw(self, zpos, xform=None, bbox=None):
     """Draws the line vertices corresponding to a 2D plane located
     at the specified Z location.
     """
 
     opts                = self.displayOpts
-    vertices, texCoords = self.lineVertices.getVertices(zpos, self)
+    vertices, texCoords = self.lineVertices.getVertices(zpos, self, bbox=bbox)
 
     if vertices.size == 0:
         return

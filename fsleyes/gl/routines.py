@@ -86,7 +86,13 @@ def show2D(xax, yax, width, height, lo, hi):
         gl.glRotatef(270, 1, 0, 0)
 
 
-def calculateSamplePoints(shape, resolution, xform, xax, yax, origin='centre'):
+def calculateSamplePoints(shape,
+                          resolution,
+                          xform,
+                          xax,
+                          yax,
+                          origin='centre',
+                          bbox=None):
     """Calculates a uniform grid of points, in the display coordinate system
     (as specified by the given :class:`.Display` object properties) along the
     x-y plane (as specified by the xax/yax indices), at which the given image
@@ -107,11 +113,11 @@ def calculateSamplePoints(shape, resolution, xform, xax, yax, origin='centre'):
 
     :arg shape:      The shape of the data to be sampled.
 
-    :arg xform:      A transformation matrix which converts from data 
-                     coordinates to the display coordinate system.
-
     :arg resolution: The desired resolution in display coordinates, along
                      each display axis.
+
+    :arg xform:      A transformation matrix which converts from data 
+                     coordinates to the display coordinate system.
 
     :arg xax:        The horizontal display coordinate system axis (0, 1, or
                      2).
@@ -120,6 +126,11 @@ def calculateSamplePoints(shape, resolution, xform, xax, yax, origin='centre'):
 
     :arg origin:     ``centre`` or ``corner``. See the
                      :func:`.transform.axisBounds` function.
+
+    :arg bbox:       An optional sequence of three ``(low, high)`` values, 
+                     defining the bounding box in the display coordinate 
+                     system which should be considered - the generated grid 
+                     will be constrained to lie within this bounding box.
     """
 
     xres = resolution[xax]
@@ -152,8 +163,24 @@ def calculateSamplePoints(shape, resolution, xform, xax, yax, origin='centre'):
                          ymax - 0.5 * yres,
                          yNumSamples)
 
+    # Apply bounding box constraint
+    # if it has been provided
+    if bbox is not None:
+        xoff   = 0.5 * xres
+        yoff   = 0.5 * yres
+        
+        xmin   = max((xmin, bbox[xax][0] - xoff))
+        xmax   = min((xmax, bbox[xax][1] + xoff))
+        ymin   = max((ymin, bbox[yax][0] - yoff))
+        ymax   = min((ymax, bbox[yax][1] + yoff))
+
+        worldX = worldX[(worldX >= xmin) & (worldX <= xmax)]
+        worldY = worldY[(worldY >= ymin) & (worldY <= ymax)]
+
+    # Generate the coordinates
     worldX, worldY = np.meshgrid(worldX, worldY)
-    
+
+    # reshape them to N*3
     coords = np.zeros((worldX.size, 3), dtype=np.float32)
     coords[:, xax] = worldX.flatten()
     coords[:, yax] = worldY.flatten()
@@ -383,7 +410,8 @@ def slice2D(dataShape,
             voxToDisplayMat,
             displayToVoxMat,
             geometry='triangles',
-            origin='centre'):
+            origin='centre',
+            bbox=None):
     """Generates and returns vertices which denote a slice through an
     array of the given ``dataShape``, parallel to the plane defined by the
     given ``xax`` and ``yax`` and at the given z position, in the space
@@ -442,6 +470,12 @@ def slice2D(dataShape,
 
     :arg origin:          ``centre`` or ``corner``. See the
                           :func:`.transform.axisBounds` function.
+
+    :arg bbox:            An optional sequence of three ``(low, high)`` 
+                          values, defining the bounding box in the display 
+                          coordinate system which should be considered - the 
+                          generated grid will be constrained to lie within
+                          this bounding box.
     
     Returns a tuple containing:
     
@@ -461,6 +495,12 @@ def slice2D(dataShape,
         dataShape, voxToDisplayMat, xax, origin, boundary=None)
     ymin, ymax = transform.axisBounds(
         dataShape, voxToDisplayMat, yax, origin, boundary=None)
+
+    if bbox is not None:
+        xmin = max((xmin, bbox[xax][0]))
+        xmax = min((xmax, bbox[xax][1]))
+        ymin = max((ymin, bbox[yax][0]))
+        ymax = min((ymax, bbox[yax][1])) 
 
     if geometry == 'triangles':
 
@@ -681,10 +721,10 @@ def unitSphere(res):
     cosu = np.cos(u)
     cosv = np.cos(v)
     sinu = np.sin(u)
-    sinv = np.sin(v) 
+    sinv = np.sin(v)
 
-    cucv = np.outer(cosu, cosv)
-    cusv = np.outer(cosu, sinv)
+    cucv = np.outer(cosu, cosv).T
+    cusv = np.outer(cosu, sinv).T
 
     vertices = np.zeros((res ** 2, 3), dtype=np.float32)
 
@@ -693,7 +733,7 @@ def unitSphere(res):
     # and z coordinates of the form sin(u).
     vertices[:, 0] = cucv.flatten()
     vertices[:, 1] = cusv.flatten()
-    vertices[:, 2] = sinu.repeat(res)
+    vertices[:, 2] = np.tile(sinu, res)
 
     # Generate a list of indices which join the
     # vertices so they can be used to draw the

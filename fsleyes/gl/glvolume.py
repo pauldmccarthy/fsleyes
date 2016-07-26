@@ -668,7 +668,7 @@ class GLVolume(globject.GLImageObject):
         fslgl.glvolume_funcs.preDraw(self)
 
         
-    def draw(self, zpos, xform=None):
+    def draw(self, zpos, xform=None, bbox=None):
         """Draws a 2D slice of the image at the given Z location in the
         display coordinate system.
         
@@ -683,7 +683,7 @@ class GLVolume(globject.GLImageObject):
                   :meth:`preDraw`, and followed by a call to :meth:`postDraw`.
         """
         
-        fslgl.glvolume_funcs.draw(self, zpos, xform)
+        fslgl.glvolume_funcs.draw(self, zpos, xform, bbox)
 
         
     def drawAll(self, zposes, xforms):

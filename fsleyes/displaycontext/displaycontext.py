@@ -170,8 +170,14 @@ class DisplayContext(props.SyncableHasProperties):
     regardless of their size. Otherwise (the default), large compressed
     ``Image`` overlays may be kept on disk.
 
+    
     .. note:: Changing the value of this property will not affect existing
               ``Image`` overlays.
+
+
+    .. note:: This property may end up being used in a more general sense by
+              any code which needs to decide whether to do things in a more
+              or less memory-intensive manner.
     """
 
 
