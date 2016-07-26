@@ -488,7 +488,7 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
         :arg display: The :class:`.Display` instance assocated with the
                       ``TensorImage``. 
         """
-        info = self.__getImageInfo(overlay, display)
+        info = self.__getImageInfo(overlay.L1(), display)
 
         tensorInfo = [
             ('v1', overlay.V1().dataSource),
