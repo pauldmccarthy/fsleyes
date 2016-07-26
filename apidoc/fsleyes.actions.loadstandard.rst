@@ -1,7 +1,7 @@
-fsleyes.actions.openstandard module
+fsleyes.actions.loadstandard module
 ===================================
 
-.. automodule:: fsleyes.actions.openstandard
+.. automodule:: fsleyes.actions.loadstandard
     :members:
     :undoc-members:
     :show-inheritance:

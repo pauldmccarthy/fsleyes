@@ -11,6 +11,7 @@ fsleyes.gl package
    fsleyes.gl.glmask
    fsleyes.gl.glmodel
    fsleyes.gl.globject
+   fsleyes.gl.glsh
    fsleyes.gl.glrgbvector
    fsleyes.gl.gltensor
    fsleyes.gl.glvector

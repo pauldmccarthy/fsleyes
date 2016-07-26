@@ -11,9 +11,9 @@ fsleyes.actions package
    fsleyes.actions.diagnosticreport
    fsleyes.actions.loadcolourmap
    fsleyes.actions.loadperspective
-   fsleyes.actions.opendir
-   fsleyes.actions.openfile
-   fsleyes.actions.openstandard
+   fsleyes.actions.loadoverlay
+   fsleyes.actions.loadoverlayfromdir
+   fsleyes.actions.loadstandard
    fsleyes.actions.reloadoverlay
    fsleyes.actions.removealloverlays
    fsleyes.actions.removeoverlay

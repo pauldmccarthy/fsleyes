@@ -81,6 +81,7 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
    ~fsleyes.displaycontext.modelopts.ModelOpts
    ~fsleyes.displaycontext.labelopts.LabelOpts
    ~fsleyes.displaycontext.tensoropts.TensorOpts
+   ~fsleyes.displaycontext.tensoropts.SHOpts
 
 
 --------------

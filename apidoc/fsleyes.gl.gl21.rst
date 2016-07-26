@@ -8,6 +8,7 @@ fsleyes.gl.gl21 package
    fsleyes.gl.gl21.gllinevector_funcs
    fsleyes.gl.gl21.glmodel_funcs
    fsleyes.gl.gl21.glrgbvector_funcs
+   fsleyes.gl.gl21.glsh_funcs
    fsleyes.gl.gl21.gltensor_funcs
    fsleyes.gl.gl21.glvector_funcs
    fsleyes.gl.gl21.glvolume_funcs
