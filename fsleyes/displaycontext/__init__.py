@@ -243,6 +243,7 @@ def getOverlayTypes(overlay):
         except ValueError: pass
 
     if not couldBeSH:
-        possibleTypes.remove('sh')
+        try:               possibleTypes.remove('sh')
+        except ValueError: pass 
 
     return possibleTypes
