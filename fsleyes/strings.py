@@ -639,6 +639,17 @@ properties = TypeDict({
     'TensorOpts.lighting'          : 'Lighting effects',
     'TensorOpts.tensorResolution'  : 'Ellipsoid quality',
     'TensorOpts.tensorScale'       : 'Tensor size',
+
+    'SHOpts.lighting'        : 'Lighting effects',
+    'SHOpts.size'            : 'FOD size',
+    'SHOpts.radiusThreshold' : 'Radius threshold',
+    'SHOpts.shResolution'    : 'FOD quality',
+    'SHOpts.neuroFlip'       : 'Neurological flip (FSL convention)',
+    'SHOpts.colourMode'      : 'Colour mode',
+    'SHOpts.colourMap'       : 'Radius colour map',
+    'SHOpts.xColour'         : 'X direction colour',
+    'SHOpts.yColour'         : 'Y direction colour',
+    'SHOpts.zColour'         : 'Z direction colour',
 })
 
 
@@ -707,6 +718,10 @@ choices = TypeDict({
     'VolumeOpts.interpolation' : {'none'   : 'No interpolation', 
                                   'linear' : 'Linear interpolation', 
                                   'spline' : 'Spline interpolation'},
+
+
+    'SHOpts.colourMode' : {'radius'    : 'Colour by radius',
+                           'direction' : 'Colour by direction'},
 
     'Display.overlayType' : {'volume'     : '3D/4D volume',
                              'mask'       : '3D/4D mask image',

@@ -59,6 +59,8 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
        _OverlayDisplayToolBar__makeRGBVectorOptsTools
        _OverlayDisplayToolBar__makeLineVectorOptsTools
        _OverlayDisplayToolBar__makeModelOptsTools
+       _OverlayDisplayToolBar__makeTensorOptsTools
+       _OverlayDisplayToolBar__makeSHOptsTools
     """
     
     def __init__(self, parent, overlayList, displayCtx, viewPanel):
@@ -426,6 +428,37 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         
         return self.__makeVectorOptsTools(opts) + [lightingWidget]
 
+    
+    def __makeSHOptsTools(self, opts):
+        """Creates and returns a collection of controls for editing properties
+        of the given :class:`.SHOpts` instance.
+        """
+        lightSpec  = _TOOLBAR_PROPS[opts]['lighting']
+        sizeSpec   = _TOOLBAR_PROPS[opts]['size']
+        radSpec    = _TOOLBAR_PROPS[opts]['radiusThreshold']
+
+
+        panel = wx.Panel(self)
+        sizer = wx.FlexGridSizer(2, 2, 0, 0)
+
+        lightWidget = props.buildGUI(self,  opts, lightSpec)
+        sizeWidget  = props.buildGUI(panel, opts, sizeSpec)
+        radWidget   = props.buildGUI(panel, opts, radSpec)
+
+        sizeLabel = wx.StaticText(panel)
+        radLabel  = wx.StaticText(panel)
+        
+        sizeLabel.SetLabel(strings.properties[opts, 'size']) 
+        radLabel .SetLabel(strings.properties[opts, 'radiusThreshold'])
+
+        sizer.Add(sizeLabel)
+        sizer.Add(sizeWidget)
+        sizer.Add(radLabel)
+        sizer.Add(radWidget)
+        panel.SetSizer(sizer)
+        
+        return [lightWidget, panel] 
+
 
 def _imageLabel(img):
     """Used to generate labels for the :attr:`.VectorOpts.modulateImage`,
@@ -475,6 +508,11 @@ _TOOLTIPS = td.TypeDict({
 
     'TensorOpts.lighting' : fsltooltips.properties['TensorOpts.'
                                                    'lighting'],
+    
+    'SHOpts.lighting'        : fsltooltips.properties['SHOpts.lighting'],
+    'SHOpts.size'            : fsltooltips.properties['SHOpts.size'],
+    'SHOpts.radiusThreshold' : fsltooltips.properties['SHOpts.'
+                                                      'radiusThreshold'], 
 })
 """This dictionary contains tooltips for :class:`.Display` and
 :class:`.DisplayOpts` properties. It is referenced in the
@@ -642,7 +680,28 @@ _TOOLBAR_PROPS = td.TypeDict({
             labels=[strings.choices['VectorOpts.clippingRange.min'],
                     strings.choices['VectorOpts.clippingRange.max']],
             dependencies=['clipImage'],
-            enabledWhen=lambda o, ci: ci is not None)}
+            enabledWhen=lambda o, ci: ci is not None)},
+
+    'SHOpts' : {
+        'lighting'        : props.Widget(
+            'lighting',
+            icon=[icons.findImageFile('lightbulbHighlight24'),
+                  icons.findImageFile('lightbulb24')],
+            tooltip=_TOOLTIPS['SHOpts.lighting']), 
+            
+        'size'            : props.Widget(
+            'size',
+            showLimits=False,
+            slider=True,
+            spin=False,
+            tooltip=_TOOLTIPS['SHOpts.size']),
+        'radiusThreshold' : props.Widget(
+            'radiusThreshold',
+            slider=True,
+            spin=False,
+            showLimits=False,
+            tooltip=_TOOLTIPS['SHOpts.radiusThreshold']),
+    }
 })
 """This dictionary defines specifications for all controls shown on an
 :class:`OverlayDisplayToolBar`. 
