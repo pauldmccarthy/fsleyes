@@ -56,18 +56,18 @@ class GLSH(globject.GLImageObject):
 
 
     ``GLSH`` instances also create and manage a :class:`.ColourMapTexture`,
-     which may be used to colour FODs by their radius values. The colour map
+    which may be used to colour FODs by their radius values. The colour map
     is defined by the :attr:`.SHOpts.colourMap` property.
 
-
+    
     The textures managed by a ``GLSH`` instance are bound to texture units as
     follows:
 
+    
     =============== ==================
     ``radTexture``  ``gl.GL_TEXTURE0``
     ``cmapTexture`` ``gl.GL_TEXTURE1``
     =============== ==================
-
     """
 
     def __init__(self, image, display, xax, yax):
@@ -226,13 +226,13 @@ class GLSH(globject.GLImageObject):
         which all radii are less than the threshold are removed from the
         ``voxels`` array.
 
-        :returns: A tuple containing:
+        This function returns a tuple containing:
         
-                   - The ``voxels`` array. If ``SHOpts.radiusThreshold == 0``,
-                     this will be the same as the input. Otherwise, this will
-                     be a new array with sub-threshold voxels removed.
+          - The ``voxels`` array. If ``SHOpts.radiusThreshold == 0``,
+            this will be the same as the input. Otherwise, this will
+            be a new array with sub-threshold voxels removed.
         
-                   - The adjusted shape of the radius texture. 
+          - The adjusted shape of the radius texture.
         """
 
         opts = self.displayOpts

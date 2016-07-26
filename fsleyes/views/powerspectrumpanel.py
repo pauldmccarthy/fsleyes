@@ -51,7 +51,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
     .. autosummary::
        :nosignatures:
 
-       togglePowerSpectrumList
+       togglePowerSpectrumToolBar
        togglePowerSpectrumControl
 
     
@@ -99,7 +99,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
 
 
     def destroy(self):
-        """Must be called when this ``PowerSpectrumPanel` is no longer
+        """Must be called when this ``PowerSpectrumPanel`` is no longer
         needed. Removes some property listeners, and calls
         :meth:`.OverlayPlotPanel.destroy`.
         """

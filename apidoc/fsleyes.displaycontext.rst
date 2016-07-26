@@ -14,6 +14,7 @@ fsleyes.displaycontext package
    fsleyes.displaycontext.modelopts
    fsleyes.displaycontext.orthoopts
    fsleyes.displaycontext.sceneopts
+   fsleyes.displaycontext.shopts
    fsleyes.displaycontext.tensoropts
    fsleyes.displaycontext.vectoropts
    fsleyes.displaycontext.volumeopts

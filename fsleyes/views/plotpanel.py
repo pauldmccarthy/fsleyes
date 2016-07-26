@@ -963,7 +963,19 @@ class OverlayPlotPanel(PlotPanel):
 
 
     The :class:`.PlotControlPanel` and :class:`.PlotListPanel` are *FSLeyes
-    control* panels which work with the :class:`.OverlayPlotPanel`.
+    control* panels which work with the :class:`.OverlayPlotPanel`. The
+    ``PlotControlPanel`` is not intended to be used directly - plot-specific
+    sub-classes are used instead. The following actions can be used to toggle
+    control panels on an ``OverlayPlotPanel``:
+
+    .. autosummary::
+       :nosignatures:
+
+       toggleOverlayList
+       togglePlotList
+
+
+    **Sub-classes**
 
     
     The ``OverlayPlotPanel`` is the base class for:
@@ -974,6 +986,7 @@ class OverlayPlotPanel(PlotPanel):
        ~fsleyes.views.timeseriespanel.TimeSeriesPanel
        ~fsleyes.views.histogrampanel.HistogramPanel
        ~fsleyes.views.powerspectrumpanel.PowerSpectrumPanel
+
     """
 
     

@@ -59,7 +59,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
     .. autosummary::
        :nosignatures:
    
-       toggleHistogramList
+       toggleHistogramControl
        toggleHistogramControl
     """
 

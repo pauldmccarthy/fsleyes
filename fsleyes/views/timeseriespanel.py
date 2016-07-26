@@ -77,7 +77,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     .. autosummary::
        :nosignatures:
 
-       toggleTimeSeriesList
+       toggleTimeSeriesToolBar
        toggleTimeSeriesControl
 
 
