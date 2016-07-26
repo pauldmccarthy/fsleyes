@@ -49,7 +49,6 @@ class Texture3D(texture.Texture, notifier.Notifier):
        :nosignatures: 
 
        ready
-       refreshThread
        textureShape
        voxValXform
        invVoxValXform
@@ -115,7 +114,6 @@ class Texture3D(texture.Texture, notifier.Notifier):
         # in the refresh method (which is
         # called via the set method below). 
         self.__ready         = True
-        self.__refreshThread = None
 
         # These attributes are set by the
         # __refresh, __determineTextureType,
@@ -126,6 +124,20 @@ class Texture3D(texture.Texture, notifier.Notifier):
         self.__texFmt         = None
         self.__texIntFmt      = None
         self.__texDtype       = None
+
+        # If threading is enabled, texture
+        # refreshes are performed with an
+        # async.TaskThread.
+        if threaded:
+            self.__taskThread = async.TaskThread()
+            self.__taskName   = '{}_{}_refresh'.format(type(self).__name__,
+                                                       id(self))
+
+            self.__taskThread.daemon = True
+            self.__taskThread.start()
+        else:
+            self.__taskThread = None
+            self.__taskName   = None
 
         self.set(refresh=False, **kwargs)
         
@@ -141,20 +153,15 @@ class Texture3D(texture.Texture, notifier.Notifier):
         self.__data         = None
         self.__preparedData = None
 
+        if self.__taskThread is not None:
+            self.__taskThread.stop()
+
         
     def ready(self):
         """Returns ``True`` if this ``Texture3D`` is ready to be used,
         ``False`` otherwise.
         """
         return self.__ready
-
-
-    def refreshThread(self):
-        """If this ``Texture3D`` is in the process of being refreshed
-        on another thread, this method returns a reference to the ``Thread``
-        object. Otherwise, this method returns ``None``.
-        """
-        return self.__refreshThread
 
 
     def setInterp(self, interp):
@@ -382,6 +389,11 @@ class Texture3D(texture.Texture, notifier.Notifier):
         # main thread - OpenGL doesn't play nicely
         # with multi-threading.
         def configTexture():
+
+            if self.__taskThread is not None and \
+               self.__taskThread.isQueued(self.__taskName):
+                return
+            
             data = self.__preparedData
 
             # It is assumed that, for textures with more than one
@@ -456,18 +468,15 @@ class Texture3D(texture.Texture, notifier.Notifier):
             log.debug('{}({}) is ready to use'.format(
                 type(self).__name__, self.getTextureName()))
             
-            self.__refreshThread = None
-            self.__ready         = True
+            self.__ready = True
 
             if notify:
                 self.notify()
 
         if self.__threaded:
-            self.__refreshThread = async.run(
-                genData,
-                onFinish=configTexture,
-                name='{}.genData({})'.format(type(self).__name__,
-                                             self.getTextureName()))
+            self.__taskThread.enqueue(genData,
+                                      taskName=self.__taskName,
+                                      onFinish=configTexture)
         else:
             genData()
             configTexture()

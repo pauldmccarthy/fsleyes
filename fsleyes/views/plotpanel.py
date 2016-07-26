@@ -546,8 +546,7 @@ class PlotPanel(viewpanel.ViewPanel):
         # Wait until data preparation is
         # done, then call __drawDataSeries.
         self.__drawRequests += 1
-        self.__drawQueue.enqueue('{}.wait'.format(id(self)),
-                                 async.wait,
+        self.__drawQueue.enqueue(async.wait,
                                  tasks,
                                  self.__drawDataSeries,
                                  toPlot,
@@ -555,6 +554,7 @@ class PlotPanel(viewpanel.ViewPanel):
                                  allYdata,
                                  axxlim,
                                  axylim,
+                                 taskName='{}.wait'.format(id(self)),
                                  wait_direct=True,
                                  **plotArgs) 
         
