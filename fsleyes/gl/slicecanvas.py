@@ -466,6 +466,18 @@ class SliceCanvas(props.HasProperties):
         annotate the canvas.
         """
         return self._annotations
+
+
+    def getGLObject(self, overlay):
+        """Returns the :class:`.GLObject` associated with the given
+        ``overlay``, or ``None`` if there isn't one.
+        """
+
+        globj = self._glObjects.get(overlay, None)
+
+        # globjs can be set to False
+        if not globj:
+            return None
             
 
     def _initGL(self):

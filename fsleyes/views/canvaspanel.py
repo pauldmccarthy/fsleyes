@@ -202,12 +202,12 @@ class CanvasPanel(viewpanel.ViewPanel):
     volume is changed periodically, according to the :attr:`movieRate`
     property.
 
-    The update is performed on the main application thread with a
-    ``wx.Timer``.
+    The update is performed on the main application thread via
+    ``wx.CallLater``.
     """
 
     
-    movieRate = props.Int(minval=100, maxval=1000, default=750, clamped=True)
+    movieRate = props.Int(minval=10, maxval=1000, default=750, clamped=True)
     """The movie update rate in milliseconds. The value of this property is
     inverted so that a high value corresponds to a fast rate, which makes
     more sense when displayed as an option to the user.
@@ -259,16 +259,9 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         self.setCentrePanel(self.__centrePanel)
 
-        # Stores a reference to a wx.Timer
-        # when movie mode is enabled
-        self.__movieTimer = None
-
         self.addListener('movieMode',
                          self._name,
                          self.__movieModeChanged)
-        self.addListener('movieRate',
-                         self._name,
-                         self.__movieRateChanged)
 
         # Canvas/colour bar layout is managed in
         # the layoutColourBarAndCanvas method
@@ -525,26 +518,12 @@ class CanvasPanel(viewpanel.ViewPanel):
 
 
     def __movieModeChanged(self, *a):
-        """Called when the :attr:`movieMode` property changes. Starts or
-        stops the ``wx.Timer`` used for movie mode.
+        """Called when the :attr:`movieMode` property changes. If it has been
+        enabled, calls :meth:`__movieUpdate`, to start the movie loop.
         """
 
-        if self.__movieTimer is not None:
-            self.__movieTimer.Stop()
-            self.__movieTimer = None
-
-        if not self.movieMode:
-            return
-
-        rate    = self.movieRate
-        rateMin = self.getConstraint('movieRate', 'minval')
-        rateMax = self.getConstraint('movieRate', 'maxval')
-
-        rate = rateMin + (rateMax - rate) 
-        
-        self.__movieTimer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER, self.__movieUpdate)
-        self.__movieTimer.Start(rate)
+        if self.movieMode:
+            self.__movieUpdate()
 
 
     def __colourBarPropsChanged(self, *a):
@@ -552,44 +531,34 @@ class CanvasPanel(viewpanel.ViewPanel):
         :class:`.SceneOpts`). Calls :meth:`canvasPanelLayout`.
         """
         self.centrePanelLayout()
-        
-
-    def __movieRateChanged(self, *a):
-        """Called when the :attr:`movieRate` property changes. Updates
-        the movie rate.
-        """
-        if not self.movieMode:
-            return
-
-        self.__movieModeChanged()
 
         
-    def __movieUpdate(self, ev):
-        """Called by the ``wx.Timer`` used to implement :attr:`movieMode`.
+    def __movieUpdate(self):
+        """Called when :attr:`movieMode` is enabled.
 
         If the currently selected overlay (see
-        :attr:`.DisplayContext.selectedOverlay`) is a 4D :class:`.Image`
-        being displayed as a ``volume`` (see the :class:`.VolumeOpts` class),
-        the :attr:`.Nifti1Opts.volume` property is incremented.
+        :attr:`.DisplayContext.selectedOverlay`) is a 4D :class:`.Image` being
+        displayed as a ``volume`` (see the :class:`.VolumeOpts` class), the
+        :attr:`.Nifti1Opts.volume` property is incremented.
         """
 
-        if self.destroyed():
-            return
 
-        overlay = self._displayCtx.getSelectedOverlay()
+        if self.destroyed():   return
+        if not self.movieMode: return
+
+        overlay  = self._displayCtx.getSelectedOverlay()
+        canvases = self.getGLCanvases()
 
         if overlay is None:
-            return
-
-        if not isinstance(overlay, fslimage.Nifti1):
-            return
-
-        if len(overlay.shape) != 4:
+            self.__nextMovieFrame()
             return
 
         opts = self._displayCtx.getOpts(overlay)
-
-        if not isinstance(opts, displayctx.VolumeOpts):
+        
+        if not isinstance(overlay, fslimage.Nifti1) or \
+           len(overlay.shape) != 4                  or \
+           not isinstance(opts, displayctx.VolumeOpts):
+            self.__nextMovieFrame()
             return
 
         limit = overlay.shape[3]
@@ -598,7 +567,6 @@ class CanvasPanel(viewpanel.ViewPanel):
         # synchronised. So we 'freeze' them
         # while changing the image volume, and
         # then refresh them all afterwards.
-        canvases = self.getGLCanvases()
         for c in canvases:
             c.Freeze()
 
@@ -606,8 +574,42 @@ class CanvasPanel(viewpanel.ViewPanel):
         else:                        opts.volume += 1
 
         # Unfreeze and refresh
+        for c in canvases: c.Refresh() 
         for c in canvases: c.Thaw() 
-        for c in canvases: c.Refresh()
+
+        self.__nextMovieFrame()
+
+
+    def __nextMovieFrame(self):
+        """Called by :meth:`__movieUpdate`. Triggers the next call to
+        ``__movieUpdate``.
+        """
+
+        overlay  = self._displayCtx.getSelectedOverlay()
+        canvases = self.getGLCanvases()
+
+        # This is a bit hacky... We access the GLObjects
+        # associated with the overlay on each canvas,
+        # and wait until they are ready to be drawn.
+        # When they're ready, we trigger a canvas refresh,
+        # and re-start the movie timer.
+        globjs = [c.getGLObject(overlay) for c in canvases]
+
+        def ready():
+            r = all((g.ready() for g in globjs))
+            return r
+
+        def whenReady():
+            # Figure out the rate
+            rate    = self.movieRate
+            rateMin = self.getConstraint('movieRate', 'minval')
+            rateMax = self.getConstraint('movieRate', 'maxval')
+            
+            rate = rateMin + (rateMax - rate)
+
+            wx.CallLater(rate, self.__movieUpdate)
+
+        async.idleWhen(whenReady, ready) 
 
 
 def _showCommandLineArgs(overlayList, displayCtx, canvas):
