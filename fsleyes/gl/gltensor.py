@@ -15,8 +15,6 @@ import numpy                as np
 
 import OpenGL.GL            as gl
 
-import fsl.utils.async      as async
-
 import fsleyes.gl           as fslgl
 import fsleyes.gl.resources as glresources
 import fsleyes.gl.textures  as textures
@@ -70,68 +68,6 @@ class GLTensor(glvector.GLVector):
         def prefilterRange(dmin, dmax):
             return max((0, dmin)), max((abs(dmin), abs(dmax)))
 
-        # This function will get called via
-        # GLVector.__init__ when all of its
-        # textures are ready.
-        def onInit():
-
-            v1 = image.V1()
-            v2 = image.V2()
-            v3 = image.V3()
-            l1 = image.L1()
-            l2 = image.L2()
-            l3 = image.L3()
-
-            def vPrefilter(d):
-                return d.transpose((3, 0, 1, 2))
-
-            # Create a texture for each eigenvalue/
-            # vector, and add each of them as suitably
-            # named attributes on this GLTensor
-            # instance.
-            names      = ['v1', 'v2', 'v3', 'l1', 'l2', 'l3']
-            imgs       = [ v1,   v2,   v3,   l1,   l2,   l3]
-            texThreads = []
-
-            for  name, img in zip(names, imgs):
-                texName = '{}_{}_{}'.format(type(self).__name__, name, id(img))
-
-                if name[0] == 'v':
-                    prefilter = vPrefilter
-                    nvals     = 3
-                else:
-                    prefilter = None
-                    nvals     = 1
-
-                tex = glresources.get(
-                    texName,
-                    textures.ImageTexture,
-                    texName,
-                    img,
-                    nvals=nvals,
-                    normalise=img.dataRange,
-                    prefilter=prefilter)
-
-                texThreads.append(tex.refreshThread())
-
-                setattr(self, '{}Texture'.format(name), tex)
-
-            # gltensor_funcs.init must only be called
-            # after all textures are ready, so we
-            # set up a wait thread on all of the texture
-            # refresh threads.
-            #
-            # When the textures created in GLVector.__init__
-            # are ready, this function (onInit) will be called.
-            # The return value of this function is a wait
-            # thread which will finish when the V123/L123
-            # textures are ready. GLVector.__init__ will then
-            # set up a wait thread on this wait thread, to
-            # do the final initialisation. It's all a little
-            # ugly.
-            return async.wait(texThreads,
-                              lambda: fslgl.gltensor_funcs.init(self))
-        
         glvector.GLVector.__init__(self,
                                    image,
                                    display,
@@ -140,7 +76,46 @@ class GLTensor(glvector.GLVector):
                                    prefilter=prefilter,
                                    prefilterRange=prefilterRange,
                                    vectorImage=image.V1(),
-                                   init=onInit)
+                                   init=lambda: fslgl.gltensor_funcs.init(
+                                       self))
+
+        # Create a texture for each eigenvalue/
+        # vector, and add each of them as suitably
+        # named attributes on this GLTensor
+        # instance.
+        v1 = image.V1()
+        v2 = image.V2()
+        v3 = image.V3()
+        l1 = image.L1()
+        l2 = image.L2()
+        l3 = image.L3()
+
+        def vPrefilter(d):
+            return d.transpose((3, 0, 1, 2))
+        
+        names = ['v1', 'v2', 'v3', 'l1', 'l2', 'l3']
+        imgs  = [ v1,   v2,   v3,   l1,   l2,   l3]
+
+        for  name, img in zip(names, imgs):
+            texName = '{}_{}_{}'.format(type(self).__name__, name, id(img))
+
+            if name[0] == 'v':
+                prefilter = vPrefilter
+                nvals     = 3
+            else:
+                prefilter = None
+                nvals     = 1
+
+            tex = glresources.get(
+                texName,
+                textures.ImageTexture,
+                texName,
+                img,
+                nvals=nvals,
+                normalise=img.dataRange,
+                prefilter=prefilter)
+
+            setattr(self, '{}Texture'.format(name), tex) 
 
 
     def destroy(self):
@@ -160,25 +135,24 @@ class GLTensor(glvector.GLVector):
             setattr(self, attrName, None)
 
 
-    def ready(self):
-        """Returns ``True`` if this ``GLTensor`` is ready to be drawn,
-        ``False`` otherwise.
+    def texturesReady(self):
+        """Overrides :meth:`.GLVector.texturesReady`. Returns ``True`` if all
+        of the textures are ready, ``False`` otherwise.
         """
-
-        return (glvector.GLVector.ready(self) and
-                self.v1Texture is not None    and 
-                self.v2Texture is not None    and 
-                self.v3Texture is not None    and 
-                self.l1Texture is not None    and 
-                self.l2Texture is not None    and 
-                self.l3Texture is not None    and
-                self.v1Texture.ready()        and
-                self.v2Texture.ready()        and
-                self.v3Texture.ready()        and
-                self.l1Texture.ready()        and
-                self.l2Texture.ready()        and
-                self.l3Texture.ready())
-
+        return (glvector.GLVector.texturesReady(self) and 
+                self.v1Texture is not None            and 
+                self.v2Texture is not None            and 
+                self.v3Texture is not None            and 
+                self.l1Texture is not None            and 
+                self.l2Texture is not None            and 
+                self.l3Texture is not None            and
+                self.v1Texture.ready()                and
+                self.v2Texture.ready()                and
+                self.v3Texture.ready()                and
+                self.l1Texture.ready()                and
+                self.l2Texture.ready()                and
+                self.l3Texture.ready()) 
+    
 
     def addListeners(self):
         """Overrides :meth:`.GLVector.addListeners`. Calls the base class
@@ -191,15 +165,10 @@ class GLTensor(glvector.GLVector):
         name = self.name
         opts = self.displayOpts
 
-        def shaderUpdate(*a):
-            if self.ready():
-                self.updateShaderState()
-                self.notify()
-
-        opts.addListener('lighting',         name, shaderUpdate, weak=False)
-        opts.addListener('neuroFlip',        name, shaderUpdate, weak=False)
-        opts.addListener('tensorResolution', name, shaderUpdate, weak=False)
-        opts.addListener('tensorScale',      name, shaderUpdate, weak=False)
+        opts.addListener('lighting',         name, self.asyncUpdateShaderState)
+        opts.addListener('neuroFlip',        name, self.asyncUpdateShaderState)
+        opts.addListener('tensorResolution', name, self.asyncUpdateShaderState)
+        opts.addListener('tensorScale',      name, self.asyncUpdateShaderState)
         
 
     def removeListeners(self):
