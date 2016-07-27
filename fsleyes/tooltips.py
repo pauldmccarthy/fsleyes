@@ -184,10 +184,14 @@ properties = TypeDict({
                                     'data is assumed to be directed - each '
                                     'vector line begins at the voxel centre, '
                                     'and is scaled to have length 0.5mm.',
-    'LineVectorOpts.scaleLength'  : 'If checked, the vector lines are scaled '
-                                    'so that they have a length of 1mm. '
+    'LineVectorOpts.unitLength'   : 'If checked, the vector lines are scaled '
+                                    'so that they have a length of 1mm (times'
+                                    'the length scaling factor). '
                                     'Otherwise the vector lengths are '
                                     'unmodified.',
+    'LineVectorOpts.lengthScale'  : 'Scale the vector line length by this '
+                                    'scaling factor (expressed as a '
+                                    'percentage).', 
     'RGBVectorOpts.interpolation' : 'Interpolate the vector data for display '
                                     'purposes. You can choose none '
                                     '(equivalent to nearest-neighbour), '

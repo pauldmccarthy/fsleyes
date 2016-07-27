@@ -55,6 +55,9 @@ def updateShaderState(self):
     :func:.gl21.glvector_funcs.updateFragmentShaderState` function.
     """
 
+    if not self.ready():
+        return
+
     glvector_funcs.updateFragmentShaderState(self)
 
     shape = list(self.vectorImage.shape[:3])

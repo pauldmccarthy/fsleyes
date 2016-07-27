@@ -622,7 +622,8 @@ properties = TypeDict({
 
     'LineVectorOpts.directed'    : 'Interpret vectors as directed',
     'LineVectorOpts.lineWidth'   : 'Line width',
-    'LineVectorOpts.scaleLength' : 'Scale vectors to unit length',
+    'LineVectorOpts.unitLength'  : 'Scale vectors to unit length',
+    'LineVectorOpts.lengthScale' : 'Length scaling factor (%)',
 
     'ModelOpts.colour'       : 'Colour',
     'ModelOpts.outline'      : 'Show outline only',

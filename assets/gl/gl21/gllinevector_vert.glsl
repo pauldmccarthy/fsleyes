@@ -49,9 +49,14 @@ uniform bool directed;
 
 /*
  * If true, each vector is scaled to have a length 
- * of 1 in the image coordinate system.
+ * of 1*lengthScale in the image coordinate system.
  */
-uniform bool scaleLength;
+uniform bool unitLength;
+
+/*
+ * Scale vector lengths by this amount.
+ */
+uniform float lengthScale;
 
 /*
  * The current vertex on the current line.
@@ -118,7 +123,7 @@ void main(void) {
   }
 
 
-  if (scaleLength) {
+  if (unitLength) {
 
     /*
      * Scale the vector so it has length 0.5. 
@@ -131,6 +136,8 @@ void main(void) {
      */
     vector /= imageDims / min(imageDims.x, min(imageDims.y, imageDims.z));
   }
+
+  vector *= lengthScale;
 
   /*
    * Vertices are coming in as line pairs - flip

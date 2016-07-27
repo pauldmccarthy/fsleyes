@@ -238,10 +238,14 @@ class LineVectorOpts(VectorOpts):
     """
 
     
-    scaleLength = props.Boolean(default=True)
-    """If ``True``, each vector is scaled so that it has a length of 1 (or
-    0.5 if ``directed`` is ``True``).
+    unitLength = props.Boolean(default=True)
+    """If ``True``, each vector is scaled so that it has a length of
+    ``1 * lengthScale`` (or 0.5 if ``directed`` is ``True``).
     """
+
+
+    lengthScale = props.Percentage(minval=10, maxval=500, default=100)
+    """Length scaling factor. """
 
     
     def __init__(self, *args, **kwargs):
@@ -249,7 +253,7 @@ class LineVectorOpts(VectorOpts):
         through  to the :class:`VectorOpts` constructor.
         """
 
-        kwargs['nounbind'] = ['directed', 'scaleLength']
+        kwargs['nounbind'] = ['directed', 'unitLength', 'lengthScale']
 
         VectorOpts.__init__(self, *args, **kwargs)
 

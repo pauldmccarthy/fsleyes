@@ -13,7 +13,6 @@ import numpy                as np
 import OpenGL.GL            as gl
 
 import fsl.data.tensorimage as tensorimage
-import fsl.utils.async      as async
 import fsleyes.gl           as fslgl
 import fsleyes.gl.glvector  as glvector
 
@@ -114,7 +113,7 @@ class GLRGBVector(glvector.GLVector):
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR 
         
-        return glvector.GLVector.refreshImageTexture(self, interp)
+        glvector.GLVector.refreshImageTexture(self, interp)
 
 
     def __interpChanged(self, *a):
@@ -127,12 +126,7 @@ class GLRGBVector(glvector.GLVector):
         else:                            interp = gl.GL_LINEAR 
         
         self.imageTexture.set(interp=interp)
-
-        def onRefresh():
-            self.updateShaderState()
-            self.notify() 
-
-        async.wait([self.imageTexture.refreshThread()], onRefresh)
+        self.asyncUpdateShaderState(alwaysNotify=True) 
 
 
     def compileShaders(self):

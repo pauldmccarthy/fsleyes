@@ -56,6 +56,9 @@ def updateShaderState(self):
     function.
     """
 
+    if not self.ready():
+        return
+
     opts      = self.displayOpts
     useSpline = opts.interpolation == 'spline'
 

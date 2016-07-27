@@ -193,16 +193,17 @@ class GLVector(globject.GLImageObject):
         self.addListeners()
         self.refreshColourTextures()
 
-        def texRefresh():
-            if not self.destroyed():
-                if init is not None: async.wait(init(), self.notify)
-                else:                self.notify()
+        def initWrapper():
+            if init is not None:
+                init(),
+            self.notify()
 
-        async.wait([self.refreshImageTexture(),
-                    self.refreshAuxTexture('modulate'),
-                    self.refreshAuxTexture('clip'),
-                    self.refreshAuxTexture('colour')],
-                   texRefresh)
+        self.refreshImageTexture()
+        self.refreshAuxTexture('modulate')
+        self.refreshAuxTexture('clip')
+        self.refreshAuxTexture('colour')
+
+        async.idleWhen(initWrapper, self.texturesReady)
 
         
     def destroy(self):
@@ -246,8 +247,14 @@ class GLVector(globject.GLImageObject):
         """Returns ``True`` if this ``GLVector`` is ready to be drawn,
         ``False`` otherwise.
         """
-        return (self.shader          is not None and
-                self.imageTexture    is not None and
+        return self.shader is not None and self.texturesReady()
+
+
+    def texturesReady(self):
+        """Returns ``True`` if all of the textures are ready, ``False``
+        otherwise.
+        """
+        return (self.imageTexture    is not None and
                 self.modulateTexture is not None and
                 self.clipTexture     is not None and
                 self.colourTexture   is not None and 
@@ -267,73 +274,29 @@ class GLVector(globject.GLImageObject):
         opts    = self.displayOpts
         name    = self.name
 
-        def update(*a):
-            self.notify()
-            
-        def shaderUpdate(*a):
-            if self.ready():
-                self.updateShaderState()
-                self.notify() 
-        
-        def modUpdate( *a):
-            self.deregisterAuxImage('modulate')
-            self.registerAuxImage(  'modulate')
-            async.wait([self.refreshAuxTexture( 'modulate')], shaderUpdate)
-
-        def clipUpdate( *a):
-            self.deregisterAuxImage('clip')
-            self.registerAuxImage(  'clip')
-            async.wait([self.refreshAuxTexture( 'clip')], shaderUpdate)
-
-        def colourUpdate( *a):
-            self.deregisterAuxImage('colour')
-            self.registerAuxImage(  'colour')
-
-            def onRefresh():
-                self.compileShaders()
-                self.refreshColourTextures()
-                shaderUpdate()
-                
-            async.wait([self.refreshAuxTexture( 'colour')], onRefresh)
-            
-        def cmapUpdate(*a):
-            self.refreshColourTextures()
-            shaderUpdate()
-
-        def shaderCompile(*a):
-            self.compileShaders()
-            shaderUpdate()
-
-        def imageRefresh(*a):
-            async.wait([self.refreshImageTexture()], shaderUpdate)
-            
-        def imageUpdate(*a):
-            self.imageTexture.set(resolution=opts.resolution)
-            async.wait([self.imageTexture.refreshThread()], shaderUpdate)
-
-        display.addListener('alpha',         name, cmapUpdate,   weak=False)
-        display.addListener('brightness',    name, cmapUpdate,   weak=False)
-        display.addListener('contrast',      name, cmapUpdate,   weak=False)
-        opts   .addListener('xColour',       name, cmapUpdate,   weak=False)
-        opts   .addListener('yColour',       name, cmapUpdate,   weak=False)
-        opts   .addListener('zColour',       name, cmapUpdate,   weak=False)
-        opts   .addListener('cmap',          name, cmapUpdate,   weak=False)
-        opts   .addListener('suppressX',     name, cmapUpdate,   weak=False)
-        opts   .addListener('suppressY',     name, cmapUpdate,   weak=False)
-        opts   .addListener('suppressZ',     name, cmapUpdate,   weak=False)
-        opts   .addListener('modulateImage', name, modUpdate,    weak=False)
-        opts   .addListener('clipImage',     name, clipUpdate,   weak=False)
-        opts   .addListener('colourImage',   name, colourUpdate, weak=False)
-        opts   .addListener('clippingRange', name, shaderUpdate, weak=False)
-        opts   .addListener('resolution',    name, imageUpdate,  weak=False)
-        opts   .addListener('transform',     name, update,       weak=False)
+        display.addListener('alpha',         name, self.__cmapPropChanged)
+        display.addListener('brightness',    name, self.__cmapPropChanged)
+        display.addListener('contrast',      name, self.__cmapPropChanged)
+        opts   .addListener('xColour',       name, self.__cmapPropChanged)
+        opts   .addListener('yColour',       name, self.__cmapPropChanged)
+        opts   .addListener('zColour',       name, self.__cmapPropChanged)
+        opts   .addListener('cmap',          name, self.__cmapPropChanged)
+        opts   .addListener('suppressX',     name, self.__cmapPropChanged)
+        opts   .addListener('suppressY',     name, self.__cmapPropChanged)
+        opts   .addListener('suppressZ',     name, self.__cmapPropChanged)
+        opts   .addListener('modulateImage', name, self.__modImageChanged)
+        opts   .addListener('clipImage',     name, self.__clipImageChanged)
+        opts   .addListener('colourImage',   name, self.__colourImageChanged)
+        opts   .addListener('clippingRange', name, self.asyncUpdateShaderState)
+        opts   .addListener('resolution',    name, self.__resolutionChanged)
+        opts   .addListener('transform',     name, self.notify)
 
         # See comment in GLVolume.addDisplayListeners about this
         self.__syncListenersRegistered = opts.getParent() is not None 
 
         if self.__syncListenersRegistered:
             opts.addSyncChangeListener(
-                'resolution', name, imageRefresh, weak=False)
+                'resolution', name, self.__syncChanged)
 
 
     def removeListeners(self):
@@ -414,8 +377,6 @@ class GLVector(globject.GLImageObject):
         
         self.imageTexture.register(self.name, self.__textureChanged)
 
-        return self.imageTexture.refreshThread()
-
     
     def compileShaders(self):
         """This method must be provided by subclasses (the
@@ -436,6 +397,20 @@ class GLVector(globject.GLImageObject):
                                   '{} subclasses'.format(type(self).__name__))
 
 
+    def asyncUpdateShaderState(self, *args, **kwargs):
+        """Calls :meth:`updateShaderState` and then :meth:`.Notifier.notify`, using
+        :func:`.async.idleWhen` function to make sure that it is only called
+        when :meth:`ready` returns ``True``.
+        """
+
+        alwaysNotify = kwargs.pop('alwaysNotify', None)
+
+        def func():
+            if self.updateShaderState() or alwaysNotify:
+                self.notify() 
+
+        async.idleWhen(func, self.ready) 
+        
 
     def registerAuxImage(self, which):
         """Called when the :attr:`.VectorOpts.modulateImage`,
@@ -467,13 +442,8 @@ class GLVector(globject.GLImageObject):
         setattr(self, optsAttr, opts)
 
         def volumeChange(*a):
-            
-            def onRefresh():
-                self.updateShaderState()
-                self.notify()
-                
             tex.set(volume=opts.volume)
-            async.wait([tex.refreshThread()], onRefresh)
+            self.asyncUpdateShaderState(alwaysNotify=True)
 
         # We set overwrite=True, because
         # the modulate/clip/colour images
@@ -564,8 +534,6 @@ class GLVector(globject.GLImageObject):
         tex.register(self.name, self.__textureChanged)
         
         setattr(self, texAttr, tex)
-
-        return tex.refreshThread()
 
 
     def refreshColourTextures(self, colourRes=256):
@@ -668,10 +636,71 @@ class GLVector(globject.GLImageObject):
         self.zColourTexture .unbindTexture()
         self.cmapTexture    .unbindTexture()
 
+
+    def __cmapPropChanged(self, *a):
+        """Called when a :class:`.Display` or :class:`.VectorOpts` property
+        affecting the vector colour settings changes. Calls
+        :meth:`refreshColourTextures` and :meth:`asyncUpdateShaderState`
+        """
+        self.refreshColourTextures()
+        self.asyncUpdateShaderState(alwaysNotify=True)
+
+
+    def __colourImageChanged(self, *a):
+        """Called when the :attr:`.VectorOpts.colourImage` changes. Registers
+        with the new image, and refreshes textures as needed.
+        """
+        self.deregisterAuxImage('colour')
+        self.registerAuxImage(  'colour')
+
+        def onRefresh():
+            self.compileShaders()
+            self.refreshColourTextures()
+            self.asyncUpdateShaderState(alwaysNotify=True)
+                
+        self.refreshAuxTexture('colour')
+        async.idleWhen(onRefresh, self.texturesReady)
+
+
+    def __resolutionChanged(self, *a):
+        """Called when the :attr:`.Nifti1Opts.resolution` property changes.
+        Refreshes the image texture.
+        """
+        self.imageTexture.set(resolution=self.displayOpts.resolution)
+        self.asyncUpdateShaderState(alwaysNotify=True)
+
+
+    def __modImageChanged(self, *a):
+        """Called when the :attr:`.VectorOpts.modulateImage` changes.
+        Registers with the new image, and refreshes textures as needed.
+        """ 
+        self.deregisterAuxImage('modulate')
+        self.registerAuxImage(  'modulate')
+        self.refreshAuxTexture( 'modulate')
+        self.asyncUpdateShaderState(alwaysNotify=True)
+
         
+    def __clipImageChanged(self, *a):
+        """Called when the :attr:`.VectorOpts.clipImage` changes.
+        Registers with the new image, and refreshes textures as needed.
+        """ 
+        self.deregisterAuxImage('clip')
+        self.registerAuxImage(  'clip')
+        self.refreshAuxTexture( 'clip')
+        self.asyncUpdateShaderState(alwaysNotify=True)
+
+    def __syncChanged(self, *a):
+        """Called when the synchronisation state of the
+        :attr:`.Nifti1Opts.resolution` property changes. Refreshes the image
+        texture.
+        """
+        self.refreshImageTexture()
+        self.asyncUpdateShaderState(alwaysNotify=True)
+
+
     def __textureChanged(self, *a):
         """Called when any of the :class:`.ImageTexture` instances containing
         image, clipping, modulation or colour data, are refreshed. Notifies
         listeners of this ``GLVector`` (via the :class:`.Notifier` base class).
         """
-        self.notify()
+        self.asyncUpdateShaderState(alwaysNotify=True)

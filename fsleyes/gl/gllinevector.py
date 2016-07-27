@@ -225,7 +225,8 @@ class GLLineVertices(object):
                 hash(opts.resolution) ^
                 hash(opts.neuroFlip)  ^
                 hash(opts.directed)   ^
-                hash(opts.scaleLength))
+                hash(opts.unitLength) ^
+                hash(opts.lengthScale))
 
         
     def refresh(self, glvec):
@@ -278,7 +279,7 @@ class GLLineVertices(object):
         if opts.neuroFlip and image.isNeurological():
             x = -x
 
-        if opts.scaleLength:
+        if opts.unitLength:
             
             # scale the vector lengths to 0.5
             with np.errstate(invalid='ignore'):
@@ -290,6 +291,9 @@ class GLLineVertices(object):
             # voxel length, so it is a unit vector
             # within real world space
             vertices /= (image.pixdim[:3] / min(image.pixdim[:3]))
+
+        # Scale the vectors by the length scaling factor
+        vertices *= opts.lengthScale / 100.0
         
         # Duplicate vector data so that each
         # vector is represented by two vertices,

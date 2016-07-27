@@ -62,7 +62,8 @@ def init(self):
     # changes.
     self.displayOpts.addListener('neuroFlip',   self.name, update, weak=False)
     self.displayOpts.addListener('directed',    self.name, update, weak=False)
-    self.displayOpts.addListener('scaleLength', self.name, update, weak=False)
+    self.displayOpts.addListener('unitLength',  self.name, update, weak=False)
+    self.displayOpts.addListener('lengthScale', self.name, update, weak=False)
     self.displayOpts.addListener('transform',
                                  self.name,
                                  update,
@@ -75,7 +76,8 @@ def destroy(self):
 
     self.displayOpts.removeListener('neuroFlip',   self.name)
     self.displayOpts.removeListener('directed',    self.name)
-    self.displayOpts.removeListener('scaleLength', self.name)
+    self.displayOpts.removeListener('unitLength',  self.name)
+    self.displayOpts.removeListener('lengthScale', self.name)
     self.displayOpts.removeListener('transform',   self.name)
     
     self.shader.destroy()
@@ -104,7 +106,8 @@ def updateShaderState(self):
 
     vvxMat      = self.imageTexture.voxValXform
     directed    = opts.directed
-    scaleLength = opts.scaleLength
+    unitLength  = opts.unitLength
+    lengthScale = opts.lengthScale / 100.0
     imageDims   = image.pixdim[:3]
     d2vMat      = opts.getTransform('display', 'voxel')
     v2dMat      = opts.getTransform('voxel',   'display')
@@ -116,7 +119,8 @@ def updateShaderState(self):
     changed |= shader.set('voxValXform',     vvxMat)
     changed |= shader.set('imageDims',       imageDims)
     changed |= shader.set('directed',        directed)
-    changed |= shader.set('scaleLength',     scaleLength)
+    changed |= shader.set('unitLength',      unitLength)
+    changed |= shader.set('lengthScale',     lengthScale)
     changed |= shader.set('xFlip',           xFlip)
 
     shader.unload()
