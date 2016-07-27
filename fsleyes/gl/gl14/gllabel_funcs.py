@@ -57,6 +57,9 @@ def compileShaders(self):
 
 def updateShaderState(self):
     """Updates all shader program variables. """
+
+    if not self.ready():
+        return
     
     opts = self.displayOpts
     

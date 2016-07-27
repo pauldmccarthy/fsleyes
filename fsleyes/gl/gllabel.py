@@ -62,16 +62,18 @@ class GLLabel(globject.GLImageObject):
         # by the gllabel_funcs module
         self.shader       = None
 
+        self.__lut = self.displayOpts.lut
+        
         self.addListeners()
-
+        self.registerLut()
         self.refreshLutTexture()
- 
-        def onTextureReady():
-            if not self.destroyed():
-                fslgl.gllabel_funcs.init(self)
-                self.notify() 
- 
-        async.wait([self.refreshImageTexture()], onTextureReady)
+        self.refreshImageTexture()
+        
+        def init():
+            fslgl.gllabel_funcs.init(self)
+            self.notify()
+
+        async.idleWhen(init, self.textureReady)
 
         
     def destroy(self):
@@ -92,9 +94,28 @@ class GLLabel(globject.GLImageObject):
         """Returns ``True`` if this ``GLLabel`` is ready to be drawn, ``False``
         otherwise.
         """
-        return (self.shader       is not None and
-                self.imageTexture is not None and
-                self.imageTexture.ready())
+        return self.shader is not None and self.textureReady()
+
+
+    def textureReady(self):
+        """Returns ``True`` if the ``imageTexture`` is ready to be used,
+        ``False`` otherwise.
+        """
+        return self.imageTexture is not None and self.imageTexture.ready()
+
+
+    def updateShaderState(self, *args, **kwargs):
+        """Calls :func:`.gllabel_funcs.updateShaderState` and
+        :meth:`.Notifier.notify`. Uses :func:`.async.idleWhen` to ensure that
+        they get called when :meth:`ready` returns ``True``.
+        """
+        alwaysNotify = kwargs.pop('alwaysNotify', None)
+
+        def func():
+            if fslgl.gllabel_funcs.updateShaderState(self) or alwaysNotify:
+                self.notify() 
+
+        async.idleWhen(func, self.ready) 
 
 
     def addListeners(self):
@@ -103,70 +124,29 @@ class GLLabel(globject.GLImageObject):
         representation can be updated when they change.
         """
 
-        image   = self.image
         display = self.display
         opts    = self.displayOpts
         name    = self.name
 
-        def update(*a):
-            self.notify()
-
-        def shaderUpdate(*a):
-            if self.ready():
-                fslgl.gllabel_funcs.updateShaderState(self)
-                self.notify()
-            
-        def shaderCompile(*a):
-            fslgl.gllabel_funcs.compileShaders(self)
-            shaderUpdate()
-
-        def lutUpdate(*a):
-            self.refreshLutTexture()
-            shaderUpdate()
-
-        def lutChanged(*a):
-            if self.__lut is not None:
-                self.__lut.removeListener('labels', self.name)
-                
-            self.__lut = opts.lut
-
-            if self.__lut is not None:
-                self.__lut.addListener('labels', self.name, lutUpdate)
- 
-            self.refreshLutTexture()
-            shaderUpdate()
-
-        def imageRefresh(*a):
-            async.wait([self.refreshImageTexture()], shaderUpdate)
-            
-        def imageUpdate(*a):
-            self.imageTexture.set(volume=opts.volume,
-                                  resolution=opts.resolution,
-                                  notify=False)
-
-            async.wait([self.imageTexture.refreshThread()], shaderUpdate)
-
-        self.__lut = opts.lut
-
-        display .addListener('alpha',        name, lutUpdate,     weak=False)
-        display .addListener('brightness',   name, lutUpdate,     weak=False)
-        display .addListener('contrast',     name, lutUpdate,     weak=False)
-        opts    .addListener('outline',      name, shaderUpdate,  weak=False)
-        opts    .addListener('outlineWidth', name, shaderUpdate,  weak=False)
-        opts    .addListener('lut',          name, lutChanged,    weak=False)
-        opts    .addListener('volume',       name, imageUpdate,   weak=False)
-        opts    .addListener('resolution',   name, imageUpdate,   weak=False)
-        opts    .addListener('transform',    name, update,        weak=False)
-        opts.lut.addListener('labels',       name, lutUpdate,     weak=False)
+        display .addListener('alpha',        name, self.__colourPropChanged)
+        display .addListener('brightness',   name, self.__colourPropChanged)
+        display .addListener('contrast',     name, self.__colourPropChanged)
+        opts    .addListener('outline',      name, self.updateShaderState)
+        opts    .addListener('outlineWidth', name, self.updateShaderState)
+        opts    .addListener('lut',          name, self.__lutChanged)
+        opts    .addListener('volume',       name, self.__imagePropChanged)
+        opts    .addListener('resolution',   name, self.__imagePropChanged)
+        opts    .addListener('transform',    name, self.notify)
+        opts.lut.addListener('labels',       name, self.__colourPropChanged)
 
         # See comment in GLVolume.addDisplayListeners about this
         self.__syncListenersRegistered = opts.getParent() is not None
 
         if self.__syncListenersRegistered: 
             opts.addSyncChangeListener(
-                'volume',     name, imageRefresh, weak=False)
+                'volume',     name, self.__imageSyncChanged)
             opts.addSyncChangeListener(
-                'resolution', name, imageRefresh, weak=False)
+                'resolution', name, self.__imageSyncChanged)
 
 
     def removeListeners(self):
@@ -174,7 +154,6 @@ class GLLabel(globject.GLImageObject):
         added by :meth:`addListeners`.
         """
 
-        image   = self.image
         display = self.display
         opts    = self.displayOpts
         name    = self.name
@@ -200,8 +179,7 @@ class GLLabel(globject.GLImageObject):
         program state.
         """
         globject.GLImageObject.setAxes(self, xax, yax)
-        if self.ready():
-            fslgl.gllabel_funcs.updateShaderState(self)
+        self.updateShaderState()
 
 
     def refreshImageTexture(self):
@@ -238,8 +216,6 @@ class GLLabel(globject.GLImageObject):
         
         self.imageTexture.register(self.name, self.__imageTextureChanged)
 
-        return self.imageTexture.refreshThread()
-
 
     def refreshLutTexture(self, *a):
         """Refreshes the :class:`.LookupTableTexture` which stores the
@@ -253,7 +229,24 @@ class GLLabel(globject.GLImageObject):
                             brightness=display.brightness / 100.0,
                             contrast=display.contrast     / 100.0,
                             lut=opts.lut)
+
+
+    def registerLut(self):
+        """Registers a listener on the current :class:`.LookupTable` instance.
+        """
+        opts = self.displayOpts
         
+        if self.__lut is not None:
+            self.__lut.removeListener('labels', self.name)
+
+        self.__lut = opts.lut
+
+        if self.__lut is not None:
+            self.__lut.addListener('labels',
+                                   self.name,
+                                   self.__colourPropChanged) 
+
+
     def preDraw(self):
         """Binds the :class:`.ImageTexture` and :class:`.LookupTableTexture`,
         and calls the version-dependent ``preDraw`` function.
@@ -282,10 +275,48 @@ class GLLabel(globject.GLImageObject):
         self.lutTexture  .unbindTexture()
         fslgl.gllabel_funcs.postDraw(self)
 
+
+    def __lutChanged(self, *a):
+        """Called when the :attr:`.LabelOpts.lut` property changes. Re-creates
+        the :class:`.LookupTableTexture`.
+        """
+
+        self.registerLut()
+        self.refreshLutTexture()
+        self.updateShaderState(alwaysNotify=True)
+
+
+    def __colourPropChanged(self, *a):
+        """Called when a :class:`.Display` property changes (e.g. ``alpha``).
+        Refreshes the LUT texture.
+        """
+        self.refreshLutTexture()
+        self.updateShaderState(alwaysNotify=True)
+
+
+    def __imagePropChanged(self, *a):
+        """Called when the :attr:`.Nifti1Opts.volume` or
+        :attr:`.Nifti1Opts.resolution` properties change. Updates the
+        ``imageTexture`` and calls :meth:`updateShaderState`.
+        """
+        opts = self.displayOpts
+        
+        self.imageTexture.set(volume=opts.volume, resolution=opts.resolution)
+        self.updateShaderState(alwaysNotify=True)
+ 
+    
+    def __imageSyncChanged(self, *a):
+        """Called when the :attr:`.Nifti1Opts.volume` or
+        :attr:`.Nifti1Opts.resolution` properties are synchronised or
+        un-synchronised. Calls :meth:`refreshImageTexture` and
+        :meth:`updateShaderState`.
+        """
+        self.refreshImageTexture()
+        self.updateShaderState(alwaysNotify=True)
+        
         
     def __imageTextureChanged(self, *a):
         """Called when the :class:`.ImageTexture` containing the image data
-        is refreshed. Notifies listeners of this ``GLLabel`` (via the
-        :class:`.Notifier` base class).
+        changes. Calls :meth:`updateShaderState`.
         """
-        self.notify()
+        self.updateShaderState(alwaysNotify=True)
