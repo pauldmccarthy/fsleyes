@@ -12,9 +12,7 @@ import logging
 
 import numpy              as np
 
-import fsleyes.gl         as fslgl
 import fsleyes.colourmaps as colourmaps
-import fsl.utils.async    as async
 from . import                glvolume
 
 
@@ -48,50 +46,24 @@ class GLMask(glvolume.GLVolume):
         opts    = self.displayOpts
         name    = self.name
 
-        def update(*a):
-            self.notify()
-        
-        def shaderUpdate(*a):
-            if self.ready():
-                fslgl.glvolume_funcs.updateShaderState(self)
-                self.notify()
-                    
-        def shaderCompile(*a):
-            fslgl.glvolume_funcs.compileShaders(self)
-            shaderUpdate()
-
-        def colourUpdate(*a):
-            self.refreshColourTextures()
-            shaderUpdate()
-
-        def imageRefresh(*a):
-            async.wait([self.refreshImageTexture()], shaderUpdate)
-
-        def imageUpdate(*a):
-            volume     = opts.volume
-            resolution = opts.resolution
-
-            self.imageTexture.set(volume=volume, resolution=resolution)
-            async.wait([self.refreshImageTexture()], shaderUpdate)
-
-        display.addListener('alpha',         name, colourUpdate,  weak=False)
-        display.addListener('brightness',    name, colourUpdate,  weak=False)
-        display.addListener('contrast',      name, colourUpdate,  weak=False)
-        opts   .addListener('colour',        name, colourUpdate,  weak=False)
-        opts   .addListener('threshold',     name, colourUpdate,  weak=False)
-        opts   .addListener('invert',        name, colourUpdate,  weak=False)
-        opts   .addListener('volume',        name, imageUpdate,   weak=False)
-        opts   .addListener('resolution',    name, imageUpdate,   weak=False)
-        opts   .addListener('transform',     name, update,        weak=False)
+        display.addListener('alpha',         name, self.__updateColourTextures)
+        display.addListener('brightness',    name, self.__updateColourTextures)
+        display.addListener('contrast',      name, self.__updateColourTextures)
+        opts   .addListener('colour',        name, self.__updateColourTextures)
+        opts   .addListener('threshold',     name, self.__updateColourTextures)
+        opts   .addListener('invert',        name, self.__updateColourTextures)
+        opts   .addListener('volume',        name, self.__updateImageTexture)
+        opts   .addListener('resolution',    name, self.__updateImageTexture)
+        opts   .addListener('transform',     name, self.notify)
 
         # See comment in GLVolume.addDisplayListeners about this
         self.__syncListenersRegistered = opts.getParent() is not None
 
         if self.__syncListenersRegistered:
             opts.addSyncChangeListener(
-                'volume',     name, imageRefresh, weak=False)
+                'volume',     name, self.__refreshImageTexture)
             opts.addSyncChangeListener(
-                'resolution', name, imageRefresh, weak=False)
+                'resolution', name, self.__refreshImageTexture)
 
 
     def removeDisplayListeners(self):
@@ -161,3 +133,25 @@ class GLMask(glvolume.GLVolume):
                                border=border,
                                displayRange=(dmin, dmax),
                                alpha=alpha)
+
+
+    def __updateColourTextures(self, *a):
+        """Called when the colour texture needs updating. """
+        self.refreshColourTextures()
+        self.updateShaderState(alwaysNotify=True)
+
+
+    def __updateImageTexture(self, *a):
+        """Called when the image texture needs updating. """
+
+        opts       = self.displayOpts
+        volume     = opts.volume
+        resolution = opts.resolution
+
+        self.imageTexture.set(volume=volume, resolution=resolution) 
+
+
+    def __refreshImageTexture(self, *a):
+        """Called when the image texture needs to be re-created. """
+        self.refreshImageTexture()
+        self.updateShaderState(alwaysNotify=True)
