@@ -140,8 +140,10 @@ class Texture3D(texture.Texture, notifier.Notifier):
             self.__taskName   = None
 
         self.set(refresh=False, **kwargs)
+
+        callback = kwargs.get('callback', None)
         
-        self.__refresh(notify=notify)
+        self.__refresh(notify=notify, callback=callback)
 
 
     def destroy(self):
@@ -264,12 +266,16 @@ class Texture3D(texture.Texture, notifier.Notifier):
         ``normalise``      See :meth:`setNormalise`.
         ``refresh``        If ``True`` (the default), the :meth:`refresh`
                            function is called (but only if a setting has 
-                           changed). 
+                           changed).
+        ``callback``       Optional function which will be called (via
+                           :func:`.async.idle`) when the texture has been
+                           refreshed. Only called if ``refresh`` is
+                           ``True``, and a setting has changed.
         ``notify``         Passed through to the :meth:`refresh` method.
         ================== ==============================================
 
         :returns: ``True`` if any settings have changed and the
-                  ``Texture3D`` is to be refreshed , ``False`` otherwise.
+                  ``Texture3D`` is to be refreshed, ``False`` otherwise.
         """
         interp         = kwargs.get('interp',         self.__interp)
         prefilter      = kwargs.get('prefilter',      self.__prefilter)
@@ -280,6 +286,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         data           = kwargs.get('data',           None)
         refresh        = kwargs.get('refresh',        True)
         notify         = kwargs.get('notify',         True)
+        callback       = kwargs.get('callback',       None)
 
         changed = {'interp'         : interp         != self.__interp,
                    'data'           : data           is not None,
@@ -323,8 +330,10 @@ class Texture3D(texture.Texture, notifier.Notifier):
                            changed['normalise']))
 
         if refresh:
-            self.refresh(refreshData=refreshData, notify=notify)
-        
+            self.refresh(refreshData=refreshData,
+                         notify=notify,
+                         callback=callback)
+            
         return True
 
         
@@ -335,12 +344,6 @@ class Texture3D(texture.Texture, notifier.Notifier):
                   which does the real work, and which is not intended to be
                   called from outside the ``Texture3D`` class.
         """
-
-        # The texture is already
-        # being refreshed - ignore
-        if not self.__ready:
-            return
-
         self.__refresh(*args, **kwargs)
         
 
@@ -356,6 +359,11 @@ class Texture3D(texture.Texture, notifier.Notifier):
                            is ready to use. Otherwise, the notification is
                            suppressed.
 
+        :arg callback:     Optional function which will be called (via
+                           :func:`.async.idle`) when the texture has been
+                           refreshed. Only called if ``refresh`` is
+                           ``True``, and a setting has changed. 
+
         This method sets an attribute ``__textureShape`` on this ``Texture3D``
         instance, containing the shape of the texture data.
 
@@ -370,6 +378,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         refreshData = kwargs.get('refreshData', True)
         notify      = kwargs.get('notify',      True)
+        callback    = kwargs.get('callback',    None)
 
         self.__ready = False
 
@@ -380,6 +389,15 @@ class Texture3D(texture.Texture, notifier.Notifier):
         # thread using the async module.
         def genData():
 
+            # Another genData function is
+            # already queued - don't run.
+            # The TaskThreadVeto error
+            # will stop the TaskThread from
+            # calling configTexture as well.
+            if self.__taskThread is not None and \
+               self.__taskThread.isQueued(self.__taskName):
+                raise async.TaskThreadVeto()
+
             if refreshData:
                 self.__determineTextureType()
                 self.__prepareTextureData()
@@ -389,11 +407,6 @@ class Texture3D(texture.Texture, notifier.Notifier):
         # main thread - OpenGL doesn't play nicely
         # with multi-threading.
         def configTexture():
-
-            if self.__taskThread is not None and \
-               self.__taskThread.isQueued(self.__taskName):
-                return
-            
             data = self.__preparedData
 
             # It is assumed that, for textures with more than one
@@ -472,6 +485,9 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
             if notify:
                 self.notify()
+
+            if callback is not None:
+                callback()
 
         if self.__threaded:
             self.__taskThread.enqueue(genData,

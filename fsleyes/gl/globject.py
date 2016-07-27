@@ -23,14 +23,12 @@ This module also provides a few functions, most importantly
 
    getGLObjectType
    createGLObject
-   runWhenReady
 """
 
 import logging
 
 import numpy as np
 
-import fsl.utils.async     as async
 import fsl.utils.transform as transform
 import fsl.utils.notifier  as notifier
 from . import routines     as glroutines
@@ -84,24 +82,6 @@ def createGLObject(overlay, display, xax, yax):
 
     if ctr is not None: return ctr(overlay, display, xax, yax)
     else:               return None
-
-
-def runWhenReady(func):
-    """A decorator which can be used to ensure that a :class:`GLObject`
-    method gets executed when its :meth:`.GLObject.ready` method returns
-    ``True``.
-
-    If the ``GLObject`` is not ready, the function is scheduled to run later
-    on via :func:`.async.idle`. Otherwise, the function is executed directly.
-    """
-
-    def decorator(globj, *args, **kwargs):
-        if not globj.ready():
-            async.idle(decorator, globj, after=0.2, *args, **kwargs)
-        else:
-            return func(globj, *args, **kwargs)
-
-    return decorator
 
 
 class GLObject(notifier.Notifier):

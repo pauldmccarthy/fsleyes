@@ -14,8 +14,8 @@ import logging
 
 import OpenGL.GL        as gl
 
-import fsleyes.gl       as fslgl
 import fsl.utils.async  as async
+import fsleyes.gl       as fslgl
 from . import              textures
 from . import              globject
 from . import resources as glresources
@@ -189,20 +189,16 @@ class GLVolume(globject.GLImageObject):
             self.registerClipImage()
             
         self.refreshColourTextures()
+        self.refreshImageTexture()
+        self.refreshClipTexture()
 
-        # We can't initialise the shaders until
-        # the image textures are ready to go.
-        # The image textures are created
-        # asynchronously, so we need to wait
-        # for them to finish before initialising
-        # the shaders.
-        def onTextureReady():
-            if not self.destroyed():
-                fslgl.glvolume_funcs.init(self)
-                self.notify()
-        
-        async.wait((self.refreshImageTexture(), self.refreshClipTexture()),
-                   onTextureReady)
+        # Call glvolume_funcs.init when the image
+        # and clip textures are ready to be used.
+        def init():
+            fslgl.glvolume_funcs.init(self)
+            self.notify()
+
+        async.idleWhen(init, self.texturesReady)
 
 
     def destroy(self):
@@ -238,20 +234,23 @@ class GLVolume(globject.GLImageObject):
         """Returns ``True`` if this ``GLVolume`` is ready to be drawn,
         ``False`` otherwise.
         """
+        return (not self.destroyed()    and 
+                self.shader is not None and
+                self.texturesReady())
 
-        if self.destroyed():
-            return False
+    
+    def texturesReady(self):
+        """Returns ``True`` if the ``imageTexture`` and ``clipTexture`` (if
+        applicable) are both ready to be used, ``False`` otherwise.
+        """
+        imageTexReady = (self.imageTexture is not None and 
+                         self.imageTexture.ready())
 
-        if self.displayOpts.clipImage is None:
-            return (self.shader       is not None and
-                    self.imageTexture is not None and
-                    self.imageTexture.ready())
-        else:
-            return (self.shader       is not None and
-                    self.imageTexture is not None and
-                    self.clipTexture  is not None and
-                    self.imageTexture.ready()     and
-                    self.clipTexture .ready())
+        clipTexReady  = (self.clipImage is None or 
+                         (self.clipTexture is not None and
+                          self.clipTexture.ready()))
+
+        return imageTexReady and clipTexReady
 
         
     def addDisplayListeners(self):
@@ -275,8 +274,8 @@ class GLVolume(globject.GLImageObject):
         opts    .addListener('displayRange',    name,
                              self._displayRangeChanged)
 
-        crPVs[0].addListener(name, self._lowClippingRangeChanged,  weak=False)
-        crPVs[1].addListener(name, self._highClippingRangeChanged, weak=False)
+        crPVs[0].addListener(name, self._lowClippingRangeChanged)
+        crPVs[1].addListener(name, self._highClippingRangeChanged)
         
         opts    .addListener('clipImage',       name, self._clipImageChanged)
         opts    .addListener('invertClipping',  name,
@@ -359,156 +358,31 @@ class GLVolume(globject.GLImageObject):
                 not self.displayOpts.isSyncedToParent('interpolation'))
 
 
-    def _alphaChanged(self, *a):
-        """Called when the :attr:`.Display.alpha` property changes. """
-        self.refreshColourTextures()
-        self.notify()
+    def updateShaderState(self, *args, **kwargs):
+        """Calls :func:`.glvolume_funcs.updateShaderState` and then
+        :meth:`.Notifier.notify`. Uses the :func:`.async.idleWhen` function to
+        make sure that it is only called when :meth:`ready` returns ``True``.
 
-
-    def _displayRangeChanged(self, *a):
-        """Called when the :attr:`.VolumeOpts.displayRange` property changes.
+        :arg alwaysNotify: Must be passed as a keyword argument. If
+                           ``False`` (the default), ``notify`` is only called
+                           if ``glvolume_funcs.updateShaderState`` returns
+                           ``True``. Otherwise, ``notify`` is always called.
         """
-        self.refreshColourTextures()
-        if fslgl.glvolume_funcs.updateShaderState(self):
-            self.notify()
 
+        alwaysNotify = kwargs.pop('alwaysNotify', None)
 
-    @globject.runWhenReady
-    def _lowClippingRangeChanged(self, *a):
-        """Called when the low :attr:`.VolumeOpts.clippingRange` property
-        changes. Separate listeners are used for the low and high clipping
-        values to avoid unnecessary duplicate refreshes in the event that the
-        :attr:`.VolumeOpts.linkLowRanges` or
-        :attr:`.VolumeOpts.linkHighRanges` flags are set.
-        """ 
-        if self.displayOpts.linkLowRanges:
-            return
-        
-        if fslgl.glvolume_funcs.updateShaderState(self):
-            self.notify()
+        def func():
+            if fslgl.glvolume_funcs.updateShaderState(self) or alwaysNotify:
+                self.notify() 
 
-
-    @globject.runWhenReady
-    def _highClippingRangeChanged(self, *a):
-        """Called when the high :attr:`.VolumeOpts.clippingRange` property
-        changes (see :meth:`_lowClippingRangeChanged`).
-        """ 
-        if self.displayOpts.linkHighRanges:
-            return
-        
-        if fslgl.glvolume_funcs.updateShaderState(self):
-            self.notify()
-
-            
-    def _clipImageChanged(self, *a):
-        """Called when the :attr:`.VolumeOpts.clipImage` property changes.
-        """
-        def onRefresh():
-            if fslgl.glvolume_funcs.updateShaderState(self):
-                self.notify()
-        
-        self.deregisterClipImage()
-        self.registerClipImage()
-        async.wait([self.refreshClipTexture()], onRefresh)
+        async.idleWhen(func, self.ready)
 
         
-    def _invertClippingChanged(self, *a):
-        """Called when the :attr:`.VolumeOpts.invertClipping` property changes.
-        """ 
-        if fslgl.glvolume_funcs.updateShaderState(self):
-            self.notify()
-
-
-    def _cmapChanged(self, *a):
-        """Called when the :attr:`.VolumeOpts.cmap` or
-        :attr:`.VolumeOpts.negativeCmap` properties change.
-        """
-        self.refreshColourTextures()
-        self.notify()
-
-        
-    def _useNegativeCmapChanged(self, *a):
-        """Called when the :attr:`.VolumeOpts.useNegativeCmap` property
-        changes.
-        """ 
-        if fslgl.glvolume_funcs.updateShaderState(self):
-            self.notify()
-
-            
-    def _invertChanged(self, *a):
-        """Called when the :attr:`.VolumeOpts.invert` property changes. """
-        self.refreshColourTextures()
-        fslgl.glvolume_funcs.updateShaderState(self)
-        self.notify()
-
-
-    def _volumeChanged(self, *a):
-        """Called when the :attr:`.Nifti1Opts.volume` property changes. """
-        opts       = self.displayOpts
-        volume     = opts.volume
-        resolution = opts.resolution
-
-        if opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                            interp = gl.GL_LINEAR
-
-        self.imageTexture.set(volume=volume,
-                              interp=interp,
-                              resolution=resolution,
-                              notify=False)
-
-        waitfor = [self.imageTexture.refreshThread()]
-
-        if self.clipTexture is not None:
-            self.clipTexture.set(interp=interp,
-                                 resolution=resolution,
-                                 notify=False)
-            waitfor.append(self.clipTexture.refreshThread())
-
-        def onRefresh():
-            fslgl.glvolume_funcs.updateShaderState(self)
-            self.notify()
-            
-        async.wait(waitfor, onRefresh)
-
-
-    def _interpolationChanged(self, *a):
-        """Called when the :attr:`.Nifti1Opts.interpolation` property changes.
-        """
-        self._volumeChanged()
-
-        
-    def _resolutionChanged(self, *a):
-        """Called when the :attr:`.Nifti1Opts.resolution` property changes.
-        """ 
-        self._volumeChanged() 
-
-
-    def _transformChanged(self, *a):
-        """Called when the :attr:`.Nifti1Opts.transform` property changes.
-        """ 
-        self.notify()
-
-
-    def _imageSyncChanged(self, *a):
-        """Called when the synchronisation state of the
-        :attr:`.Nifti1Opts.volume`, :attr:`.Nifti1Opts.resolution`, or
-        :attr:`.VolumeOpts.interpolation` properties change.
-        """ 
-        self.refreshImageTexture()
-        fslgl.glvolume_funcs.updateShaderState(self)
-        self.notify()
-
-
     def refreshImageTexture(self):
         """Refreshes the :class:`.ImageTexture` used to store the
         :class:`.Image` data. This is performed through the :mod:`.resources`
         module, so the image texture can be shared between multiple
         ``GLVolume`` instances.
-
-        :returns: A reference to the ``Thread`` instance which is
-                  asynchronously updating the :class:`.ImageTexture`,
-                  or ``None`` if the texture is updated - see the
-                  :meth:`.ImageTexture.refreshThread` method.
         """
 
         opts     = self.displayOpts
@@ -522,7 +396,7 @@ class GLVolume(globject.GLImageObject):
             
             if self.imageTexture.getTextureName() == texName:
                 return None
-            
+
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.getTextureName())
 
@@ -536,12 +410,10 @@ class GLVolume(globject.GLImageObject):
             self.image,
             interp=interp,
             resolution=opts.resolution,
-            notify=False,
-            volume=opts.volume)
+            volume=opts.volume,
+            notify=False)
 
-        self.imageTexture.register(self.name, self.__textureChanged)
-
-        return self.imageTexture.refreshThread()
+        self.imageTexture.register(self.name, self.__texturesChanged)
 
 
     def registerClipImage(self):
@@ -561,13 +433,7 @@ class GLVolume(globject.GLImageObject):
         self.clipOpts  = clipOpts
         
         def updateClipTexture(*a):
-
-            def onRefresh():
-                fslgl.glvolume_funcs.updateShaderState(self)
-                self.notify()
-            
             self.clipTexture.set(volume=clipOpts.volume)
-            async.wait([self.clipTexture.refreshThread()], onRefresh)
 
         clipOpts.addListener('volume',
                              self.name,
@@ -609,7 +475,7 @@ class GLVolume(globject.GLImageObject):
             return None
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                            interp = gl.GL_LINEAR 
+        else:                            interp = gl.GL_LINEAR
 
         self.clipTexture = glresources.get(
             texName, 
@@ -621,9 +487,7 @@ class GLVolume(globject.GLImageObject):
             volume=clipOpts.volume,
             notify=False)
         
-        self.clipTexture.register(self.name, self.__textureChanged)
-
-        return self.clipTexture.refreshThread()
+        self.clipTexture.register(self.name, self.__texturesChanged)
 
     
     def refreshColourTextures(self):
@@ -704,13 +568,127 @@ class GLVolume(globject.GLImageObject):
         if self.clipTexture is not None:
             self.clipTexture.unbindTexture()
         
-        fslgl.glvolume_funcs.postDraw(self) 
+        fslgl.glvolume_funcs.postDraw(self)
 
 
-    def __textureChanged(self, *a):
-        """Called when either of the the :class:`.ImageTexture` instances,
-        containing the image or clipping data are refreshed. Notifies
-        listeners of this ``GLLabel`` (via the :class:`.Notifier` base
-        class).
-        """
+    def _alphaChanged(self, *a):
+        """Called when the :attr:`.Display.alpha` property changes. """
+        self.refreshColourTextures()
         self.notify()
+
+
+    def _displayRangeChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.displayRange` property changes.
+        """
+        self.refreshColourTextures()
+        self.updateShaderState()
+
+
+    def _lowClippingRangeChanged(self, *a):
+        """Called when the low :attr:`.VolumeOpts.clippingRange` property
+        changes. Separate listeners are used for the low and high clipping
+        values to avoid unnecessary duplicate refreshes in the event that the
+        :attr:`.VolumeOpts.linkLowRanges` or
+        :attr:`.VolumeOpts.linkHighRanges` flags are set.
+        """ 
+        if self.displayOpts.linkLowRanges:
+            return
+
+        self.updateShaderState()
+
+
+    def _highClippingRangeChanged(self, *a):
+        """Called when the high :attr:`.VolumeOpts.clippingRange` property
+        changes (see :meth:`_lowClippingRangeChanged`).
+        """ 
+        if self.displayOpts.linkHighRanges:
+            return
+        
+        self.updateShaderState(self)
+
+            
+    def _clipImageChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.clipImage` property changes.
+        """
+        self.deregisterClipImage()
+        self.registerClipImage()
+        self.refreshClipTexture()
+
+        
+    def _invertClippingChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.invertClipping` property changes.
+        """ 
+        self.updateShaderState()
+
+
+    def _cmapChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.cmap` or
+        :attr:`.VolumeOpts.negativeCmap` properties change.
+        """
+        self.refreshColourTextures()
+        self.notify()
+
+        
+    def _useNegativeCmapChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.useNegativeCmap` property
+        changes.
+        """ 
+        self.updateShaderState()
+
+            
+    def _invertChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.invert` property changes. """
+        self.refreshColourTextures()
+        self.updateShaderState()
+
+
+    def _volumeChanged(self, *a):
+        """Called when the :attr:`.Nifti1Opts.volume` property changes. """
+        opts       = self.displayOpts
+        volume     = opts.volume
+        resolution = opts.resolution
+
+        if opts.interpolation == 'none': interp = gl.GL_NEAREST
+        else:                            interp = gl.GL_LINEAR
+
+        self.imageTexture.set(volume=volume,
+                              interp=interp,
+                              resolution=resolution)
+
+        if self.clipTexture is not None:
+            self.clipTexture.set(interp=interp, resolution=resolution)
+
+
+    def _interpolationChanged(self, *a):
+        """Called when the :attr:`.Nifti1Opts.interpolation` property changes.
+        """
+        self._volumeChanged()
+
+        
+    def _resolutionChanged(self, *a):
+        """Called when the :attr:`.Nifti1Opts.resolution` property changes.
+        """ 
+        self._volumeChanged() 
+
+
+    def _transformChanged(self, *a):
+        """Called when the :attr:`.Nifti1Opts.transform` property changes.
+        """ 
+        self.notify()
+
+
+    def _imageSyncChanged(self, *a):
+        """Called when the synchronisation state of the
+        :attr:`.Nifti1Opts.volume`, :attr:`.Nifti1Opts.resolution`, or
+        :attr:`.VolumeOpts.interpolation` properties change.
+        """
+        
+        self.refreshImageTexture()
+        self.updateShaderState(alwaysNotify=True)
+
+
+    def __texturesChanged(self, *a):
+        """Called when either the ``imageTexture`` or the ``clipTexture``
+        changes. Calls :meth:`updateShaderState`.
+        """
+        self.updateShaderState(alwaysNotify=True)
