@@ -115,7 +115,10 @@ class GLLabel(globject.GLImageObject):
             if fslgl.gllabel_funcs.updateShaderState(self) or alwaysNotify:
                 self.notify() 
 
-        async.idleWhen(func, self.ready) 
+        async.idleWhen(func,
+                       self.ready,
+                       name=self.name,
+                       skipIfQueued=True) 
 
 
     def addListeners(self):

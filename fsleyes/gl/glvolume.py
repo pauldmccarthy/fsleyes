@@ -375,7 +375,12 @@ class GLVolume(globject.GLImageObject):
             if fslgl.glvolume_funcs.updateShaderState(self) or alwaysNotify:
                 self.notify() 
 
-        async.idleWhen(func, self.ready)
+        # Don't re-queue the update if it is
+        # already queued on the idle loop
+        async.idleWhen(func,
+                       self.ready,
+                       name=self.name,
+                       skipIfQueued=True)
 
         
     def refreshImageTexture(self):

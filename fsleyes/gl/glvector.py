@@ -405,7 +405,10 @@ class GLVector(globject.GLImageObject):
             if self.updateShaderState() or alwaysNotify:
                 self.notify() 
 
-        async.idleWhen(func, self.ready) 
+        async.idleWhen(func,
+                       self.ready,
+                       name=self.name,
+                       skipIfQueued=True) 
         
 
     def registerAuxImage(self, which):

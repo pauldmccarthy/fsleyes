@@ -490,9 +490,19 @@ class Texture3D(texture.Texture, notifier.Notifier):
                 callback()
 
         if self.__threaded:
-            self.__taskThread.enqueue(genData,
-                                      taskName=self.__taskName,
-                                      onFinish=configTexture)
+            
+            # Don't queue the texture
+            # refresh task twice
+            if not self.__taskThread.isQueued(self.__taskName):
+                self.__taskThread.enqueue(genData,
+                                          taskName=self.__taskName,
+                                          onFinish=configTexture)
+
+            # TODO the task is already queued,
+            #      but a callback function has been
+            #      specified, should you queue the
+            #      callback function?
+            
         else:
             genData()
             configTexture()
