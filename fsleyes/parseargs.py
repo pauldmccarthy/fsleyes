@@ -392,9 +392,16 @@ OPTIONS = td.TypeDict({
     'LabelOpts'      : ['lut',
                         'outline',
                         'outlineWidth'],
-    'SHOpts'         : [
-        # TODO
-    ],
+    'SHOpts'         : ['shResolution',
+                        'size',
+                        'lighting',
+                        'neuroFlip',
+                        'radiusThreshold',
+                        'colourMode',
+                        'colourMap',
+                        'xColour',
+                        'yColour',
+                        'zColour']
 })
 """This dictionary defines all of the options which are exposed on the command
 line.
@@ -578,6 +585,17 @@ ARGUMENTS = td.TypeDict({
     'LabelOpts.lut'          : ('l',  'lut'),
     'LabelOpts.outline'      : ('o',  'outline'),
     'LabelOpts.outlineWidth' : ('w',  'outlineWidth'),
+
+    'SHOpts.shResolution'    : ('sr', 'shResolution'),
+    'SHOpts.size'            : ('s',  'size'),
+    'SHOpts.lighting'        : ('dl', 'lighting'),
+    'SHOpts.neuroFlip'       : ('df', 'neuroFlip'),
+    'SHOpts.radiusThreshold' : ('t',  'radiusThreshold'),
+    'SHOpts.colourMode'      : ('m',  'colourMode'),
+    'SHOpts.colourMap'       : ('cm', 'colourMap'),
+    'SHOpts.xColour'         : ('xc', 'xColour'),
+    'SHOpts.yColour'         : ('yc', 'yColour'),
+    'SHOpts.zColour'         : ('zc', 'zColour'),
 })
 """This dictionary defines the short and long command line flags to be used
 for every option.
@@ -723,7 +741,19 @@ HELP = td.TypeDict({
     
     'LabelOpts.lut'          : 'Label image LUT',
     'LabelOpts.outline'      : 'Show label outlines',
-    'LabelOpts.outlineWidth' : 'Label outline width', 
+    'LabelOpts.outlineWidth' : 'Label outline width',
+
+    'SHOpts.shResolution'    : 'FOD resolution/quality',
+    'SHOpts.size'            : 'FOD size',
+    'SHOpts.lighting'        : 'Disable lighting effect',
+    'SHOpts.neuroFlip'       : 'Do not flip FODs stored in '
+                               'neurological orientation',
+    'SHOpts.radiusThreshold' : 'Hide FODs with radius less than this',
+    'SHOpts.colourMode'      : 'Colour by \'direction\' or \'radius\'',
+    'SHOpts.colourMap'       : 'Colour map, if colouring by \'radius\'',
+    'SHOpts.xColour'         : 'X colour, if colrouing by \'direction\'',
+    'SHOpts.yColour'         : 'Y colour, if colrouing by \'direction\'',
+    'SHOpts.zColour'         : 'Z colour, if colrouing by \'direction\'',
 })
 """This dictionary defines the help text for all command line options."""
 
@@ -776,6 +806,7 @@ EXTRA = td.TypeDict({
     'LineVectorOpts.cmap'     : cmapSettings,
     'RGBVectorOpts.cmap'      : cmapSettings,
     'TensorOpts.cmap'         : cmapSettings,
+    'SHOpts.colourMap'        : cmapSettings,
 })
 """This dictionary defines any extra settings to be passed through
 to the :func:`.props.addParserArguments` function.
@@ -840,6 +871,8 @@ TRANSFORMS = td.TypeDict({
     'LineVectorOpts.unitLength' : lambda b : not b, 
     'TensorOpts.lighting'       : lambda b : not b, 
     'LabelOpts.lut'             : _lutTrans,
+    'SHOpts.lighting'           : lambda b : not b,
+    'SHOpts.neuroFlip'          : lambda b : not b, 
 })
 """This dictionary defines any transformations for command line options
 where the value passed on the command line cannot be directly converted
