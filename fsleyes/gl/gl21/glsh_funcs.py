@@ -119,8 +119,10 @@ def updateShaderState(self):
         self.vertices  = vertices
         self.indices   = indices
         self.nVertices = len(indices)
+        self.vertIdxs  = np.arange(vertices.shape[0], dtype=np.float32)
 
-        shader.setAtt('vertex', self.vertices)
+        shader.setAtt('vertex',   self.vertices)
+        shader.setAtt('vertexID', self.vertIdxs) 
         shader.setIndices(indices)
 
     shader.unload()
@@ -162,8 +164,10 @@ def draw(self, zpos, xform=None, bbox=None):
 
     voxels              = self.generateVoxelCoordinates(zpos, bbox)
     voxels, radTexShape = self.updateRadTexture(voxels)
+    voxIdxs             = np.arange(voxels.shape[0], dtype=np.float32)
 
-    shader.setAtt('voxel',           voxels, divisor=1)
+    shader.setAtt('voxel',           voxels,  divisor=1)
+    shader.setAtt('voxelID',         voxIdxs, divisor=1)
     shader.set(   'voxToDisplayMat', xform)
     shader.set(   'radTexShape',     radTexShape)
 

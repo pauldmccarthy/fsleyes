@@ -314,8 +314,7 @@ def bootstrap(glVersion=None):
         # List any GL21 extensions here
         exts = ['GL_EXT_framebuffer_object',
                 'GL_ARB_instanced_arrays',
-                'GL_ARB_draw_instanced',
-                'GL_EXT_gpu_shader4']
+                'GL_ARB_draw_instanced']
         
         if not all(map(glexts.hasExtension, exts)):
             log.debug('One of these OpenGL extensions is '

@@ -4,7 +4,6 @@
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
 #version 120
-#extension GL_EXT_gpu_shader4 : require
 
 #pragma include roll.glsl
 
@@ -85,6 +84,16 @@ attribute vec3 voxel;
  */
 attribute vec3 vertex;
 
+
+/*
+ * Indices for the current voxel, and the current vertex
+ * within the current voxel. These are built- in (as 
+ * gl_InstanceID and gl_VertexID) in more recent versions 
+ * of GLSL.
+ */
+attribute float voxelID;
+attribute float vertexID;
+
 /*
  * Voxel coordinate passed through to the fragment shader.
  */
@@ -115,7 +124,7 @@ void main(void) {
      * this vertex on the sphere. We need to turn
      * this 1D index into 3D texture coordinates.
      */
-    int  flatIdx = gl_InstanceID * nVertices + gl_VertexID;
+    int  flatIdx = int(voxelID * nVertices + vertexID);
     vec3 radIdx  = roll3D(flatIdx, radTexShape);
     radIdx       = (radIdx + 0.5) / radTexShape;
     float radius = texture3D(radTexture, radIdx).r;
