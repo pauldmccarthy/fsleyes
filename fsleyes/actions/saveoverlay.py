@@ -214,25 +214,31 @@ def saveOverlay(overlay, display=None):
     savePath = fslimage.addExt(   savePath, mustExist=False)
     oldPath  = overlay.dataSource
 
-    doSave(overlay, savePath)
+    if doSave(overlay, savePath):
 
-    # If image was in memory, or its old
-    # name equalled the old datasource
-    # base name update its name.
-    if oldPath is None or \
-       fslimage.removeExt(op.basename(oldPath)) == overlay.name:
-        
-        overlay.name = fslimage.removeExt(op.basename(savePath))
-        display.name = overlay.name
+        saveDir = op.dirname(savePath)
+
+        fslsettings.write('loadSaveOverlayDir', saveDir)
+
+        # If image was in memory, or its old
+        # name equalled the old datasource
+        # base name update its name.
+        if oldPath is None or \
+           fslimage.removeExt(op.basename(oldPath)) == overlay.name:
+
+            overlay.name = fslimage.removeExt(op.basename(savePath))
+            display.name = overlay.name
 
 
 def doSave(overlay, path=None):
     """Called by :func:`saveOverlay`.  Tries to save the given ``overlay`` to 
     the given ``path``, and shows an error message if something goes wrong.
+    Returns ``True`` if the save was successful, ``False`` otherwise.
     """
 
     try:
         overlay.save(path)
+        return True
 
     except Exception as e:
         import wx
@@ -246,3 +252,4 @@ def doSave(overlay, path=None):
         log.warning('Error saving overlay ({})'.format(str(e)),
                     exc_info=True)
         wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK) 
+        return False
