@@ -87,8 +87,13 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
 
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
-        if USE_HTML2: self.__info = wxhtml.WebView.New(self)
-        else:         self.__info = wxhtml.HtmlWindow(self)
+        if USE_HTML2:
+            self.__info = wxhtml.WebView.New(self)
+        else:
+            self.__info = wxhtml.HtmlWindow(self)
+            # wx.html.HtmlWindow defaults
+            # to a slightly bigger font size
+            self.__info.SetStandardFonts(self.GetFont().GetPointSize())
         
         self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.__sizer.Add(self.__info, flag=wx.EXPAND, proportion=1)
