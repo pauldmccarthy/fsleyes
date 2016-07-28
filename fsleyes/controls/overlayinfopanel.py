@@ -9,12 +9,23 @@ panel which displays information about the currently selected overlay.
 """
 
 
+USE_HTML2 = False
+"""Toggle this flag to switch between the simple wx.html renderer,
+and the webkit-backed wx.html2 renderer. Webkit is not necessarily
+present on all systems, and there's no neat way to dynamically
+test whether wx.html2 will work. So I'm sticking with wx.html for
+now.
+"""
+
+
 import logging
 
 import collections
 
 import wx
-import wx.html2 as wxhtml
+
+if USE_HTML2: import wx.html2 as wxhtml
+else:         import wx.html  as wxhtml
 
 import numpy as np
 
@@ -26,6 +37,20 @@ import fsleyes.strings    as strings
 
 
 log = logging.getLogger(__name__)
+
+
+# The wx.html2.WebView.SetPage method differs from
+# the wx.html.HtmlWindow.SetPage method - it requires
+# two parameters. Here we're monkey-patching the
+# HtmlWindow method so that it also accepts two
+# parameters, but ignores the second.
+if not USE_HTML2:
+    
+    def SetPage(self, html, url=None):
+        wxhtml.HtmlWindow._old_SetPage(self, html)
+
+    wxhtml.HtmlWindow._old_SetPage = wxhtml.HtmlWindow.SetPage
+    wxhtml.HtmlWindow.SetPage      = SetPage
 
 
 class OverlayInfoPanel(fslpanel.FSLEyesPanel):
@@ -62,7 +87,9 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
 
         fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
 
-        self.__info  = wxhtml.WebView.New(self)
+        if USE_HTML2: self.__info = wxhtml.WebView.New(self)
+        else:         self.__info = wxhtml.HtmlWindow(self)
+        
         self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.__sizer.Add(self.__info, flag=wx.EXPAND, proportion=1)
         
