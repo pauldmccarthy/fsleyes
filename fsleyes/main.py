@@ -33,6 +33,27 @@ from . import splash as fslsplash
 log = None
 
 
+class FSLEyesApp(wx.App):
+    """FSLeyes-specific sub-class of ``wx.App``. """
+
+    def __init__(self, *args, **kwargs):
+        """Create a ``FSLeyesApp``. """
+        
+        wx.App.__init__(self, *args, **kwargs)
+        
+        self.SetAppName('FSLeyes')
+
+
+    def MacReopenApp(self):
+        """Make sure that the FSLeyes frame is restored if it is minimised,
+        and (e.g.) the dock icon is clicked.
+        """
+
+        frame = self.GetTopWindow()
+        frame.Iconize(False)
+        frame.Raise()
+
+
 def main(args=None):
     """*FSLeyes* entry point. Shows a :class:`.FSLeyesSplash` screen, parses
     command line arguments, and shows a :class:`.FSLeyesFrame`.
@@ -43,8 +64,7 @@ def main(args=None):
 
     # First thing's first. Create a wx.App, 
     # and figure out where all our stuff is.
-    app = wx.App()
-    app.SetAppName('FSLeyes')
+    app = FSLEyesApp()
 
     # Make sure the FSLeyes asset
     # directory (containing e.g.
