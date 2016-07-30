@@ -550,7 +550,30 @@ class GLVector(globject.GLImageObject):
             
         self.cmapTexture.set(cmap=opts.cmap,
                              alpha=display.alpha / 100.0,
-                             displayRange=(dmin, dmax)) 
+                             displayRange=(dmin, dmax))
+
+
+    def getVectorColours(self):
+        """Returns a ``numpy`` array of size ``(3, 4)`` containing the
+        RGBA colours that correspond to the ``x``, ``y``, and ``z`` vector
+        directions.
+        """
+        display = self.display
+        opts    = self.displayOpts
+        
+        colours = np.array([opts.xColour, opts.yColour, opts.zColour])
+        colours = fslcm.applyBricon(colours,
+                                    display.brightness / 100.0,
+                                    display.contrast   / 100.0)
+
+        colours[:, 3] = display.alpha / 100.0
+
+        # Transparent suppression
+        if opts.suppressX: colours[0, :] = [0, 0, 0, 0]
+        if opts.suppressY: colours[1, :] = [0, 0, 0, 0]
+        if opts.suppressZ: colours[2, :] = [0, 0, 0, 0]
+
+        return colours
         
         
     def preDraw(self):

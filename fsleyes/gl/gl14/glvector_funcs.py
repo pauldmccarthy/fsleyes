@@ -45,10 +45,10 @@ def compileShaders(self, vertShader):
 
     if useVolumeFragShader:
         textures = {
-            'imageTexture'     : 3,
             'clipTexture'      : 2,
-            'colourTexture'    : 7,
-            'negColourTexture' : 7
+            'imageTexture'     : 3,
+            'colourTexture'    : 4,
+            'negColourTexture' : 4
         }
 
     else:
@@ -56,9 +56,6 @@ def compileShaders(self, vertShader):
             'vectorTexture'   : 0,
             'modulateTexture' : 1,
             'clipTexture'     : 2,
-            'xColourTexture'  : 4,
-            'yColourTexture'  : 5,
-            'zColourTexture'  : 6
         } 
         
     self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)
@@ -107,11 +104,13 @@ def updateFragmentShaderState(self):
 
     else:
 
-        voxValXform = self.imageTexture.voxValXform 
-        cmapXform   = self.xColourTexture.getCoordinateTransform()
-        
+        voxValXform = self.imageTexture.voxValXform
+        colours     = self.getVectorColours()
+         
         self.shader.setFragParam('voxValXform', voxValXform)
-        self.shader.setFragParam('cmapXform',   cmapXform)
+        self.shader.setFragParam('xColour',     colours[0])
+        self.shader.setFragParam('yColour',     colours[1])
+        self.shader.setFragParam('zColour',     colours[2])
 
     self.shader.unload()
 

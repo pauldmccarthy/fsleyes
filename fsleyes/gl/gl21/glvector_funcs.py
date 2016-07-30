@@ -12,10 +12,7 @@ These functions are used by the :mod:`.gl21.glrgbvector_funcs` and
 """
 
 
-import numpy               as np
-
 import fsl.utils.transform as transform
-import fsleyes.colourmaps  as fslcm
 import fsleyes.gl.shaders  as shaders
 
 
@@ -50,10 +47,9 @@ def updateFragmentShaderState(self, useSpline=False):
     ``glvolume`` or the ``glvector`` shader.
     """
 
-    changed             = False
-    display             = self.display
-    opts                = self.displayOpts
-    shader              = self.shader
+    changed         = False
+    opts            = self.displayOpts
+    shader          = self.shader
 
     invClipValXform = self.clipTexture.invVoxValXform
     clippingRange   = opts.clippingRange
@@ -98,18 +94,7 @@ def updateFragmentShaderState(self, useSpline=False):
     else:
 
         voxValXform = self.imageTexture.voxValXform
-        
-        colours = np.array([opts.xColour, opts.yColour, opts.zColour])
-        colours = fslcm.applyBricon(colours,
-                                    display.brightness / 100.0,
-                                    display.contrast   / 100.0)
-
-        colours[:, 3] = display.alpha / 100.0
-
-        # Transparent suppression
-        if opts.suppressX: colours[0] = [0, 0, 0, 0]
-        if opts.suppressY: colours[1] = [0, 0, 0, 0]
-        if opts.suppressZ: colours[2] = [0, 0, 0, 0]
+        colours     = self.getVectorColours()
 
         changed |= shader.set('vectorTexture',   0)
         changed |= shader.set('modulateTexture', 1)

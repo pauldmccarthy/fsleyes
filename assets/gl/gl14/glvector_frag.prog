@@ -34,14 +34,17 @@
 #                 the low clipping threshold, and the (y) component
 #                 contains the high threshold.
 #
+#   xColour     - Colour corresponding to the X vector direction.
+#
+#   yColour     - Colour corresponding to the Y vector direction.
+#
+#   zColour     - Colour corresponding to the Z vector direction.
+#
 # Input textures:
 #
 #   vectorTexture   - 3D texture containing the vector data.
 #   modulateTexture - 3D texture containing brightness modulation values.
 #   clipTexture     - 3D texture containing clipping values.
-#   xColourTexture  - 1D texture containing the X vector component colour map.
-#   yColourTexture  - 1D texture containing the Y vector component colour map.
-#   zColourTexture  - 1D texture containing the Z vector component colour map.
 #
 # Input varyings:
 # 
@@ -55,15 +58,16 @@ TEMP  voxCoord;
 TEMP  clipValue;
 TEMP  modValue;
 TEMP  voxValue;
-TEMP  xColour;
-TEMP  yColour;
-TEMP  zColour;
 TEMP  fragColour;
 TEMP  clipResult;
 PARAM voxValXform[4] = {{ param4_voxValXform }};
 PARAM cmapXform[4]   = {{ param4_cmapXform   }};
 PARAM imageShape     = {{ param_imageShape   }};
 PARAM clipping       = {{ param_clipping     }};
+PARAM xColour        = {{ param_xColour      }};
+PARAM yColour        = {{ param_yColour      }};
+PARAM zColour        = {{ param_zColour      }};
+
 
 # retrieve the voxel coordinates 
 MOV voxCoord, {{ varying_voxCoord }};
@@ -100,26 +104,15 @@ KIL clipResult.y;
 # and take the absolue value
 MAD voxValue, voxValue, voxValXform[0].x, voxValXform[3].x;
 ABS voxValue, voxValue;
-MAD voxValue, voxValue, cmapXform[  0].x, cmapXform[  3].x;
 
 # Apply the modulation value
 MUL voxValue, voxValue, modValue.x;
 
-# Use the vector values to look up the
-# colours for each xyz direction
-TEX xColour, voxValue.x, {{ texture_xColourTexture }}, 1D;
-TEX yColour, voxValue.y, {{ texture_yColourTexture }}, 1D;
-TEX zColour, voxValue.z, {{ texture_zColourTexture }}, 1D;
-
 # Cumulatively combine the rgb
 # channels of those three colours
-MOV fragColour,             xColour;
-ADD fragColour, fragColour, yColour;
-ADD fragColour, fragColour, zColour;
-
-# Take the highest alpha of the three colour maps
-MAX fragColour.a, xColour.a,    yColour.a;
-MAX fragColour.a, fragColour.a, zColour.a;
+MAD fragColour, voxValue.x, xColour, fragColour;
+MAD fragColour, voxValue.y, yColour, fragColour;
+MAD fragColour, voxValue.z, zColour, fragColour;
 
 # Colour the pixel!
 MOV result.color, fragColour;
