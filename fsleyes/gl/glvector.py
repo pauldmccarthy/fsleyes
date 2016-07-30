@@ -39,6 +39,7 @@ class GLVector(globject.GLImageObject):
     the case, the ``vectorImage`` parameter may be used to pass in the
     :class:`.Image` that contains the vector data.
 
+
     This vector image is stored on the GPU as a 3D RGB :class:`.ImageTexture`,
     where the ``R`` channel contains the ``x`` vector values, the ``G``
     channel the ``y`` values, and the ``B`` channel the ``z`` values.
@@ -49,11 +50,9 @@ class GLVector(globject.GLImageObject):
     A ``GLVector`` can be coloured in one of two ways:
 
      - Each voxel is coloured according to the orientation of the vector.
-       Three 1D :class:`.ColourMapTexture` instances are used to store a
-       colour table for each of the ``x``, ``y`` and ``z`` components. A
-       custom fragment shader program looks up the ``xyz`` vector values,
-       looks up colours for each of them, and combines the three colours to
-       form the final fragment colour. The colours for each component
+       A custom fragment shader program looks up the ``xyz`` vector values,
+       and combines three colours (corresponding to the ``xyz`` directions)
+       to form the final fragment colour. The colours for each component
        are specified by the :attr:`.VectorOpts.xColour`,
        :attr:`.VectorOpts.yColour`, and :attr:`.VectorOpts.zColour`
        properties.
@@ -68,6 +67,7 @@ class GLVector(globject.GLImageObject):
     another image, specified by the :attr:`.VectorOpts.modulateImage`
     property.  This modulation image is stored as a 3D single-channel
     :class:`.ImageTexture`.
+
 
     Finally, vector voxels may be clipped according to the values of another
     image, specified by the :attr:`.VectorOpts.clipImage` property.  This
@@ -85,10 +85,7 @@ class GLVector(globject.GLImageObject):
     ``modulateTexture`` ``gl.GL_TEXTURE1``
     ``clipTexture``     ``gl.GL_TEXTURE2``
     ``colourTexture``   ``gl.GL_TEXTURE3``
-    ``xColourTexture``  ``gl.GL_TEXTURE4``
-    ``yColourTexture``  ``gl.GL_TEXTURE5``
-    ``zColourTexture``  ``gl.GL_TEXTURE6``
-    ``cmapTexture``     ``gl.GL_TEXTURE7``
+    ``cmapTexture``     ``gl.GL_TEXTURE4``
     =================== ==================
     """
 
@@ -107,8 +104,8 @@ class GLVector(globject.GLImageObject):
         Initialises the OpenGL data required to render the given image.
         This method does the following:
         
-          - Creates the vector image texture, the modulate, clipping and colour
-            image textures, and the four colour map textures.
+          - Creates the vector image texture, and the modulate, clipping and
+            colour image textures.
 
           - Adds listeners to the :class:`.Display` and :class:`.VectorOpts`
             instances, so the textures and geometry can be updated when
@@ -159,9 +156,6 @@ class GLVector(globject.GLImageObject):
         name = self.name
 
         self.vectorImage     = vectorImage
-        self.xColourTexture  = textures.ColourMapTexture('{}_x' .format(name))
-        self.yColourTexture  = textures.ColourMapTexture('{}_y' .format(name))
-        self.zColourTexture  = textures.ColourMapTexture('{}_z' .format(name))
         self.cmapTexture     = textures.ColourMapTexture('{}_cm'.format(name))
 
         self.shader          = None
@@ -187,13 +181,13 @@ class GLVector(globject.GLImageObject):
         if opts.clipImage     is not None: self.registerAuxImage('clip') 
 
         self.addListeners()
-        self.refreshColourTextures()
 
         def initWrapper():
             if init is not None:
                 init()
             self.notify()
 
+        self.refreshColourMapTexture()
         self.refreshImageTexture()
         self.refreshAuxTexture('modulate')
         self.refreshAuxTexture('clip')
@@ -208,10 +202,7 @@ class GLVector(globject.GLImageObject):
         :meth:`__init__`.
         """
 
-        self.xColourTexture.destroy()
-        self.yColourTexture.destroy()
-        self.zColourTexture.destroy()
-        self.cmapTexture   .destroy()
+        self.cmapTexture.destroy()
 
         for tex in (self.imageTexture,
                     self.modulateTexture,
@@ -273,13 +264,13 @@ class GLVector(globject.GLImageObject):
         display.addListener('alpha',         name, self.__cmapPropChanged)
         display.addListener('brightness',    name, self.__cmapPropChanged)
         display.addListener('contrast',      name, self.__cmapPropChanged)
-        opts   .addListener('xColour',       name, self.__cmapPropChanged)
-        opts   .addListener('yColour',       name, self.__cmapPropChanged)
-        opts   .addListener('zColour',       name, self.__cmapPropChanged)
+        opts   .addListener('xColour',       name, self.asyncUpdateShaderState)
+        opts   .addListener('yColour',       name, self.asyncUpdateShaderState)
+        opts   .addListener('zColour',       name, self.asyncUpdateShaderState)
+        opts   .addListener('suppressX',     name, self.asyncUpdateShaderState)
+        opts   .addListener('suppressY',     name, self.asyncUpdateShaderState)
+        opts   .addListener('suppressZ',     name, self.asyncUpdateShaderState)
         opts   .addListener('cmap',          name, self.__cmapPropChanged)
-        opts   .addListener('suppressX',     name, self.__cmapPropChanged)
-        opts   .addListener('suppressY',     name, self.__cmapPropChanged)
-        opts   .addListener('suppressZ',     name, self.__cmapPropChanged)
         opts   .addListener('modulateImage', name, self.__modImageChanged)
         opts   .addListener('clipImage',     name, self.__clipImageChanged)
         opts   .addListener('colourImage',   name, self.__colourImageChanged)
@@ -535,59 +526,18 @@ class GLVector(globject.GLImageObject):
         setattr(self, texAttr, tex)
 
 
-    def refreshColourTextures(self, colourRes=256):
+    def refreshColourMapTexture(self, colourRes=256):
         """Called when the component colour maps need to be updated, when one
         of the :attr:`.VectorOpts.xColour`, ``yColour``, ``zColour``, ``cmap``,
         ``suppressX``, ``suppressY``, or ``suppressZ`` properties change.
 
-        Regenerates the colour textures.
+        Regenerates the colour map texture.
         """
 
         # Refresh the xColour/yColour/zColour
         # textures first
         display = self.display
         opts    = self.displayOpts
-
-        xcol = opts.xColour
-        ycol = opts.yColour
-        zcol = opts.zColour
-
-        xcol[3] = 1.0
-        ycol[3] = 1.0
-        zcol[3] = 1.0
-
-        xsup = opts.suppressX
-        ysup = opts.suppressY
-        zsup = opts.suppressZ 
-
-        xtex = self.xColourTexture
-        ytex = self.yColourTexture
-        ztex = self.zColourTexture
-
-        drange = fslcm.briconToDisplayRange(
-            (0.0, 1.0),
-            display.brightness / 100.0,
-            display.contrast   / 100.0)
-        
-        for colour, texture, suppress in zip(
-                (xcol, ycol, zcol),
-                (xtex, ytex, ztex),
-                (xsup, ysup, zsup)):
-
-            if not suppress:
-                
-                cmap = np.array(
-                    [np.linspace(0.0, i, colourRes) for i in colour]).T
-                
-                # Component magnitudes of 0 are
-                # transparent, but any other
-                # magnitude is fully opaque
-                cmap[:, 3] = display.alpha / 100.0
-                cmap[0, 3] = 0.0 
-            else:
-                cmap = np.zeros((colourRes, 4))
-
-            texture.set(cmap=cmap, displayRange=drange)
 
         # Now do the cmap texture
         if self.colourImage is None:
@@ -614,10 +564,7 @@ class GLVector(globject.GLImageObject):
         self.modulateTexture.bindTexture(gl.GL_TEXTURE1)
         self.clipTexture    .bindTexture(gl.GL_TEXTURE2)
         self.colourTexture  .bindTexture(gl.GL_TEXTURE3)
-        self.xColourTexture .bindTexture(gl.GL_TEXTURE4)
-        self.yColourTexture .bindTexture(gl.GL_TEXTURE5)
-        self.zColourTexture .bindTexture(gl.GL_TEXTURE6)
-        self.cmapTexture    .bindTexture(gl.GL_TEXTURE7)
+        self.cmapTexture    .bindTexture(gl.GL_TEXTURE4)
 
         
     def postDraw(self):
@@ -630,18 +577,15 @@ class GLVector(globject.GLImageObject):
         self.modulateTexture.unbindTexture()
         self.clipTexture    .unbindTexture()
         self.colourTexture  .unbindTexture()
-        self.xColourTexture .unbindTexture()
-        self.yColourTexture .unbindTexture()
-        self.zColourTexture .unbindTexture()
         self.cmapTexture    .unbindTexture()
 
 
     def __cmapPropChanged(self, *a):
         """Called when a :class:`.Display` or :class:`.VectorOpts` property
-        affecting the vector colour settings changes. Calls
-        :meth:`refreshColourTextures` and :meth:`asyncUpdateShaderState`
+        affecting the vector colour map settings changes. Calls
+        :meth:`refreshColourMapTexture` and :meth:`asyncUpdateShaderState`
         """
-        self.refreshColourTextures()
+        self.refreshColourMapTexture()
         self.asyncUpdateShaderState(alwaysNotify=True)
 
 
@@ -654,7 +598,7 @@ class GLVector(globject.GLImageObject):
 
         def onRefresh():
             self.compileShaders()
-            self.refreshColourTextures()
+            self.refreshColourMapTexture()
             self.asyncUpdateShaderState(alwaysNotify=True)
                 
         self.refreshAuxTexture('colour')

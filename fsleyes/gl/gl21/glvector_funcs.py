@@ -12,8 +12,11 @@ These functions are used by the :mod:`.gl21.glrgbvector_funcs` and
 """
 
 
-import fsleyes.gl.shaders  as shaders
+import numpy               as np
+
 import fsl.utils.transform as transform
+import fsleyes.colourmaps  as fslcm
+import fsleyes.gl.shaders  as shaders
 
 
 def compileShaders(self, vertShader, indexed=False):
@@ -48,6 +51,7 @@ def updateFragmentShaderState(self, useSpline=False):
     """
 
     changed             = False
+    display             = self.display
     opts                = self.displayOpts
     shader              = self.shader
 
@@ -79,8 +83,8 @@ def updateFragmentShaderState(self, useSpline=False):
 
         changed |= shader.set('clipTexture',      2)
         changed |= shader.set('imageTexture',     3)
-        changed |= shader.set('colourTexture',    7)
-        changed |= shader.set('negColourTexture', 7)
+        changed |= shader.set('colourTexture',    4)
+        changed |= shader.set('negColourTexture', 4)
         changed |= shader.set('img2CmapXform',    img2CmapXform)
         changed |= shader.set('imageShape',       imageShape)
         changed |= shader.set('imageIsClip',      False)
@@ -94,33 +98,26 @@ def updateFragmentShaderState(self, useSpline=False):
     else:
 
         voxValXform = self.imageTexture.voxValXform
-        cmapXform   = self.xColourTexture.getCoordinateTransform()
-
-        # Make sure the vector values
-        # are normalised to 0 - 1 for
-        # the colour map lookup (the
-        # fragment shader will take
-        # the absolute value before
-        # doing the cmap lookup).
         
-        dmin, dmax = self.vectorImage.dataRange
+        colours = np.array([opts.xColour, opts.yColour, opts.zColour])
+        colours = fslcm.applyBricon(colours,
+                                    display.brightness / 100.0,
+                                    display.contrast   / 100.0)
 
-        if self.prefilter is not None and self.prefilterRange is not None:
-            dmin, dmax = self.prefilterRange(dmin, dmax)
-            
-        drange = max(abs(dmin), abs(dmax))
-        
-        normXform  = transform.scaleOffsetXform([1.0  / drange] * 3, [0] * 3)
-        cmapXform  = transform.concat(normXform, cmapXform)
+        colours[:, 3] = display.alpha / 100.0
+
+        # Transparent suppression
+        if opts.suppressX: colours[0] = [0, 0, 0, 0]
+        if opts.suppressY: colours[1] = [0, 0, 0, 0]
+        if opts.suppressZ: colours[2] = [0, 0, 0, 0]
 
         changed |= shader.set('vectorTexture',   0)
         changed |= shader.set('modulateTexture', 1)
         changed |= shader.set('clipTexture',     2)
-        changed |= shader.set('xColourTexture',  4)
-        changed |= shader.set('yColourTexture',  5)
-        changed |= shader.set('zColourTexture',  6)
+        changed |= shader.set('xColour',         colours[0])
+        changed |= shader.set('yColour',         colours[1])
+        changed |= shader.set('zColour',         colours[2])
         changed |= shader.set('voxValXform',     voxValXform)
-        changed |= shader.set('cmapXform',       cmapXform)
         changed |= shader.set('imageShape',      imageShape)
         changed |= shader.set('clipLow',         clipLow)
         changed |= shader.set('clipHigh',        clipHigh) 

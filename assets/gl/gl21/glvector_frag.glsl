@@ -27,36 +27,30 @@ uniform sampler3D modulateTexture;
 uniform sampler3D clipTexture;
 
 /*
- * Colour map for the X vector component.
- */
-uniform sampler1D xColourTexture;
-
-/*
- * Colour map for the Y vector component.
- */
-uniform sampler1D yColourTexture;
-
-/*
- * Colour map for the Z vector component.
- */
-uniform sampler1D zColourTexture;
-
-/*
  * Matrix which transforms from vector image
  * texture values to their original data range.
  */
 uniform mat4 voxValXform;
 
 /*
- * Matrix which transforms from vector image data
- * values to colour map texture coordinates.
- */
-uniform mat4 cmapXform;
-
-/*
  * Shape of the image texture.
  */
 uniform vec3 imageShape;
+
+/*
+ * Colour for the X vector component.
+ */
+uniform vec4 xColour;
+
+/*
+ * Colour for the Y vector component.
+ */
+uniform vec4 yColour;
+
+/*
+ * Colour for the Z vector component.
+ */
+uniform vec4 zColour;
 
 /*
  * If the clipping value is outside of
@@ -133,29 +127,22 @@ void main(void) {
   }
 
   /*
-   * Transform the voxel texture values 
-   * into a range suitable for colour texture
-   * lookup, and take the absolute value
+   * Transform the voxel texture 
+   * values into their original 
+   * range, and take the absolute 
+   * value
    */
   voxValue *= voxValXform[0].x;
   voxValue += voxValXform[3].x;
   voxValue  = abs(voxValue);
-  voxValue *= cmapXform[0].x;
-  voxValue += cmapXform[3].x;
 
   /* Apply the modulation value */
   voxValue *= modValue;
 
-  /* Look up the colours for the xyz components */
-  vec4 xColour = texture1D(xColourTexture, voxValue.x);
-  vec4 yColour = texture1D(yColourTexture, voxValue.y);
-  vec4 zColour = texture1D(zColourTexture, voxValue.z);
-
-  /* Combine those colours */
-  vec4 voxColour = xColour + yColour + zColour;
-
-  /* Take the highest alpha of the three colour maps */
-  voxColour.a = max(max(xColour.a, yColour.a), zColour.a);
+  /* Combine the xyz component colours */
+  vec4 voxColour = voxValue.x * xColour +
+                   voxValue.y * yColour +
+                   voxValue.z * zColour;
 
   gl_FragColor = voxColour * fragColourFactor;
 }
