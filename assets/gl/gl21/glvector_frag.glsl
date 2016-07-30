@@ -136,13 +136,17 @@ void main(void) {
   voxValue += voxValXform[3].x;
   voxValue  = abs(voxValue);
 
-  /* Apply the modulation value */
-  voxValue *= modValue;
-
   /* Combine the xyz component colours */
   vec4 voxColour = voxValue.x * xColour +
                    voxValue.y * yColour +
                    voxValue.z * zColour;
+
+  /* 
+   * Modulate the colour - multiplying the 
+   * modulation value by 2 gives better results. 
+   * This may become a user setting.
+   */
+  voxColour.xyz *= modValue * 2;
 
   gl_FragColor = voxColour * fragColourFactor;
 }

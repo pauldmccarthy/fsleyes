@@ -105,14 +105,22 @@ KIL clipResult.y;
 MAD voxValue, voxValue, voxValXform[0].x, voxValXform[3].x;
 ABS voxValue, voxValue;
 
-# Apply the modulation value
-MUL voxValue, voxValue, modValue.x;
-
 # Cumulatively combine the rgb
 # channels of those three colours
 MAD fragColour, voxValue.x, xColour, fragColour;
 MAD fragColour, voxValue.y, yColour, fragColour;
 MAD fragColour, voxValue.z, zColour, fragColour;
+
+# Copy the alpha value - we don't 
+# want it to be modulated. Using
+# voxValue as a temp variable
+MOV voxValue.a, fragColour.a;
+
+# Modulate the colour, multiplying
+# the mod value by 2 - see glvector_frag.glsl
+MUL fragColour, fragColour, modValue.x;
+MUL fragColour, fragColour, 2;
+MOV fragColour.a, voxValue.a;
 
 # Colour the pixel!
 MOV result.color, fragColour;

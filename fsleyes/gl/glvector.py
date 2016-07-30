@@ -488,8 +488,12 @@ class GLVector(globject.GLImageObject):
             glresources.delete(tex.getTextureName())
 
         if image is None:
+
+            # The glvector fragment shader multiplies the
+            # modulation value by 2, so we fill the dummy
+            # texture values with 0.5 (127/255).
             textureData    = np.zeros((5, 5, 5), dtype=np.uint8)
-            textureData[:] = 255
+            textureData[:] = 127
             image          = fslimage.Image(textureData)
             norm           = None
             
