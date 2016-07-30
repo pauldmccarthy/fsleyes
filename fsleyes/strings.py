@@ -611,6 +611,7 @@ properties = TypeDict({
     'VectorOpts.suppressX'     : 'Suppress X value',
     'VectorOpts.suppressY'     : 'Suppress Y value',
     'VectorOpts.suppressZ'     : 'Suppress Z value',
+    'VectorOpts.suppressMode'  : 'Suppression mode',
     'VectorOpts.colourImage'   : 'Colour by',
     'VectorOpts.cmap'          : 'Colour map',
     'VectorOpts.modulateImage' : 'Modulate by',
@@ -698,7 +699,11 @@ choices = TypeDict({
     'VectorOpts.clipImage.none'     : 'No clipping',
     
     'VectorOpts.clippingRange.min' : 'Clip min.',
-    'VectorOpts.clippingRange.max' : 'Clip max.', 
+    'VectorOpts.clippingRange.max' : 'Clip max.',
+
+    'VectorOpts.suppressMode' : {'white'       : 'White',
+                                 'black'       : 'Black',
+                                 'transparent' : 'Transparent'},
 
     'ModelOpts.refImage.none'     : 'No reference image',
 

@@ -143,7 +143,11 @@ properties = TypeDict({
                                     'effect if a colour image is selected.', 
     'VectorOpts.suppressZ'        : 'Ignore the Z vector component when '
                                     'colouring voxels. This option has no '
-                                    'effect if a colour image is selected.', 
+                                    'effect if a colour image is selected.',
+    'VectorOpts.suppressMode'     : 'When a vector direction is suppressed,'
+                                    'it\'s contribution to the resulting '
+                                    'will be replaced according to this '
+                                    'setting.', 
     'VectorOpts.modulateImage'    : 'Modulate the vector colour brightness by '
                                     'another image. The image selected here '
                                     'is normalised to lie in the range (0, '

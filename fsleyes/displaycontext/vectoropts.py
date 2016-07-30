@@ -49,6 +49,10 @@ class VectorOpts(volumeopts.Nifti1Opts):
     """Do not use the Z vector magnitude to colour vectors."""
 
 
+    suppressMode = props.Choice(('white', 'black', 'transparent'))
+    """How vector direction colours should be suppressed. """
+
+
     neuroFlip = props.Boolean(default=True)
     """If ``True``, and the displayed image looks like it is in neurological
     orientation, vectors are flipped along the x-axis. This property is

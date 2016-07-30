@@ -270,6 +270,7 @@ class GLVector(globject.GLImageObject):
         opts   .addListener('suppressX',     name, self.asyncUpdateShaderState)
         opts   .addListener('suppressY',     name, self.asyncUpdateShaderState)
         opts   .addListener('suppressZ',     name, self.asyncUpdateShaderState)
+        opts   .addListener('suppressMode',  name, self.asyncUpdateShaderState)
         opts   .addListener('cmap',          name, self.__cmapPropChanged)
         opts   .addListener('modulateImage', name, self.__modImageChanged)
         opts   .addListener('clipImage',     name, self.__clipImageChanged)
@@ -305,6 +306,7 @@ class GLVector(globject.GLImageObject):
         opts   .removeListener('suppressX',     name)
         opts   .removeListener('suppressY',     name)
         opts   .removeListener('suppressZ',     name)
+        opts   .removeListener('suppressMode',  name)
         opts   .removeListener('modulateImage', name)
         opts   .removeListener('clipImage',     name)
         opts   .removeListener('colourImage',   name)
@@ -568,10 +570,14 @@ class GLVector(globject.GLImageObject):
 
         colours[:, 3] = display.alpha / 100.0
 
+        if   opts.suppressMode == 'white':       suppressColour = [1, 1, 1, 1]
+        elif opts.suppressMode == 'black':       suppressColour = [0, 0, 0, 1]
+        elif opts.suppressMode == 'transparent': suppressColour = [0, 0, 0, 0]
+
         # Transparent suppression
-        if opts.suppressX: colours[0, :] = [0, 0, 0, 0]
-        if opts.suppressY: colours[1, :] = [0, 0, 0, 0]
-        if opts.suppressZ: colours[2, :] = [0, 0, 0, 0]
+        if opts.suppressX: colours[0, :] = suppressColour
+        if opts.suppressY: colours[1, :] = suppressColour
+        if opts.suppressZ: colours[2, :] = suppressColour
 
         return colours
         

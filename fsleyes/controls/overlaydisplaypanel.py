@@ -347,6 +347,10 @@ _DISPLAY_PROPS = td.TypeDict({
                      enabledWhen=lambda o, ci: ci is None),
         props.Widget('suppressZ',
                      dependencies=['colourImage'],
+                     enabledWhen=lambda o, ci: ci is None),
+        props.Widget('suppressMode',
+                     dependencies=['colourImage'],
+                     labels=strings.choices['VectorOpts.suppressMode'],
                      enabledWhen=lambda o, ci: ci is None)],
 
     'RGBVectorOpts' : [
