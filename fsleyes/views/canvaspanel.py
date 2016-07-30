@@ -588,12 +588,13 @@ class CanvasPanel(viewpanel.ViewPanel):
         overlay  = self._displayCtx.getSelectedOverlay()
         canvases = self.getGLCanvases()
 
-        # This is a bit hacky... We access the GLObjects
-        # associated with the overlay on each canvas,
-        # and wait until they are ready to be drawn.
-        # When they're ready, we trigger a canvas refresh,
-        # and re-start the movie timer.
+        # We access the GLObjects associated with
+        # the overlay on each canvas, and wait until
+        # they are ready to be drawn.  When they're
+        # ready, we trigger a canvas refresh, and
+        # re-start the movie timer.
         globjs = [c.getGLObject(overlay) for c in canvases]
+        globjs = [g for g in globjs if g is not None]
 
         def ready():
             r = all((g.ready() for g in globjs))
