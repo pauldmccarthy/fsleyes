@@ -464,6 +464,17 @@ class Texture3D(texture.Texture, notifier.Notifier):
             # create the texture according to
             # the format determined by the
             # _determineTextureType method.
+            #
+            # note: The ancient Chromium driver (still
+            #       in use by VirtualBox) will improperly
+            #       create 3D textures without two calls
+            #       (to glTexImage3D and glTexSubImage3D).
+            #       If I specify the texture size and set
+            #       the data in a single call, it seems to
+            #       expect that the data or texture
+            #       dimensions always have even size - odd
+            #       sized images will be displayed
+            #       incorrectly.
             gl.glTexImage3D(gl.GL_TEXTURE_3D,
                             0,
                             self.__texIntFmt,
@@ -473,7 +484,15 @@ class Texture3D(texture.Texture, notifier.Notifier):
                             0,
                             self.__texFmt,
                             self.__texDtype,
-                            data)
+                            None)
+            gl.glTexSubImage3D(gl.GL_TEXTURE_3D,
+                               0, 0, 0, 0,
+                               self.__textureShape[0],
+                               self.__textureShape[1],
+                               self.__textureShape[2],
+                               self.__texFmt,
+                               self.__texDtype,
+                               data)
 
             if not bound:
                 self.unbindTexture()
