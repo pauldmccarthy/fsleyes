@@ -184,8 +184,16 @@ details.
 
 
 import os.path as op
+import            logging
+import            warnings
 
-from . import version
+from .                  import             version
+from fsl.utils.platform import platform as fslplatform
+
+
+# The logger is assigned in 
+# the configLogging function
+log = None
 
 
 __version__ = version.__version__
@@ -215,7 +223,6 @@ def setAssetDir():
     if platform.frozen:
         sp       = wx.StandardPaths.Get()
         assetDir = op.join(sp.GetResourcesDir())
-
         
     # Otherwise we are running from a code install;
     # assume that the resources are living alongside
@@ -224,3 +231,98 @@ def setAssetDir():
         assetDir = op.join(op.dirname(__file__), '..')    
 
     assetDir = op.abspath(assetDir)
+
+
+def configLogging(namespace):
+    """Configures *FSLeyes* ``logging``.
+
+    .. note:: All logging calls are usually stripped from frozen
+              versions of *FSLeyes*, so this function does nothing
+              when we are running a frozen version.
+    """
+
+    global log
+    
+    # make numpy/matplotlib quiet
+    warnings.filterwarnings('ignore', module='matplotlib')
+    warnings.filterwarnings('ignore', module='mpl_toolkits')
+    warnings.filterwarnings('ignore', module='numpy')
+
+    # Set up my own custom logging level
+    # for tracing memory related events.
+    logging.MEMORY = 15
+    def _logmemory(self, message, *args, **kwargs):
+        """Log function for my custom ``logging.MEMORY`` logging level. """
+        if self.isEnabledFor(logging.MEMORY):
+            self._log(logging.MEMORY, message, args, **kwargs)
+
+    logging.Logger.memory = _logmemory
+    logging.addLevelName(logging.MEMORY, 'MEMORY') 
+
+    # Set up the root logger
+    logFormatter = logging.Formatter('%(levelname)8.8s '
+                                     '%(filename)20.20s '
+                                     '%(lineno)4d: '
+                                     '%(funcName)-15.15s - '
+                                     '%(message)s')
+    logHandler  = logging.StreamHandler()
+    logHandler.setFormatter(logFormatter)
+    
+    log = logging.getLogger()
+    log.addHandler(logHandler)
+
+    # Everything below this point sets up verbosity
+    # as requested by the user. But verbosity-related
+    # command line arguments are not exposed to the
+    # user in frozen versions of FSLeyes, so if we're
+    # running as a frozen app, there's nothing else
+    # to do.
+    if fslplatform.frozen:
+        return
+
+    # Now we can set up logging
+    # as requested by the user.
+    if namespace.noisy is None:
+        namespace.noisy = []
+
+    if namespace.verbose is None:
+        if namespace.memory:
+            class MemFilter(object):
+                def filter(self, record):
+                    if   record.name in namespace.noisy:   return 1
+                    elif record.levelno == logging.MEMORY: return 1
+                    else:                                  return 0
+
+            log.setLevel(logging.MEMORY)
+            log.handlers[0].addFilter(MemFilter())
+            log.memory('Added filter for MEMORY messages')
+            logging.getLogger('props')   .setLevel(logging.WARNING)
+            logging.getLogger('pwidgets').setLevel(logging.WARNING)            
+        
+    if namespace.verbose == 1:
+        log.setLevel(logging.DEBUG)
+
+        # make some noisy things quiet
+        logging.getLogger('fsleyes.gl')   .setLevel(logging.MEMORY)
+        logging.getLogger('fsleyes.views').setLevel(logging.MEMORY)
+        logging.getLogger('props')        .setLevel(logging.WARNING)
+        logging.getLogger('pwidgets')     .setLevel(logging.WARNING)
+    elif namespace.verbose == 2:
+        log.setLevel(logging.DEBUG)
+        logging.getLogger('props')   .setLevel(logging.WARNING)
+        logging.getLogger('pwidgets').setLevel(logging.WARNING)
+    elif namespace.verbose == 3:
+        log.setLevel(logging.DEBUG)
+        logging.getLogger('props')   .setLevel(logging.DEBUG)
+        logging.getLogger('pwidgets').setLevel(logging.DEBUG)
+
+    for mod in namespace.noisy:
+        logging.getLogger(mod).setLevel(logging.DEBUG)
+
+    # The trace module monkey-patches some
+    # things if its logging level has been
+    # set to DEBUG, so we import it now so
+    # it can set itself up.
+    traceLogger = logging.getLogger('props.trace')
+    if traceLogger.getEffectiveLevel() <= logging.DEBUG:
+        import props.trace
