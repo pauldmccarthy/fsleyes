@@ -531,7 +531,7 @@ class OffScreenCanvasTarget(object):
         :arg height:   Height in pixels
         """
 
-        from fsleyeys.gl.textures import RenderTexture
+        from fsleyes.gl.textures import RenderTexture
         
         self.__width  = width
         self.__height = height

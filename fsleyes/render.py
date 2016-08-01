@@ -6,13 +6,9 @@
 #
 """This module implements an application which provides off-screen rendering
 capability for scenes which can otherwise be displayed via *FSLeyes*.
-
-.. warning:: ``render`` is currently broken.
 """
 
 
-import            os
-import os.path as op
 import            sys
 import            logging
 import            textwrap
@@ -20,11 +16,11 @@ import            argparse
 
 import props
 
-import fsl
 import fsl.utils.layout                    as fsllayout
 import fsl.utils.colourbarbitmap           as cbarbitmap
 import fsl.utils.textbitmap                as textbitmap
 import fsl.data.constants                  as constants
+import                                        fsleyes 
 import fsleyes.strings                     as strings
 import fsleyes.overlay                     as fsloverlay
 import fsleyes.colourmaps                  as fslcm
@@ -32,13 +28,12 @@ import fsleyes.parseargs                   as parseargs
 import fsleyes.displaycontext              as displaycontext
 import fsleyes.displaycontext.orthoopts    as orthoopts
 import fsleyes.displaycontext.lightboxopts as lightboxopts
+import fsleyes.gl                          as fslgl
+import fsleyes.gl.offscreenslicecanvas     as slicecanvas
+import fsleyes.gl.offscreenlightboxcanvas  as lightboxcanvas
 
 
 log = logging.getLogger(__name__)
-
-
-if   sys.platform.startswith('linux'): _LD_LIBRARY_PATH = 'LD_LIBRARY_PATH'
-elif sys.platform         == 'darwin': _LD_LIBRARY_PATH = 'DYLD_LIBRARY_PATH'
 
 
 CBAR_SIZE   = 75
@@ -260,68 +255,35 @@ def calculateOrthoCanvasSizes(
                                height)
 
 
-def run(args, context):
+def main(args=None):
     """Creates and renders an OpenGL scene, and saves it to a file, according
     to the specified command line arguments.
     """
 
-    # If this process is not configured for off-screen
-    # rendering using osmesa, start a new process
-    env = os.environ.copy()
+    if args is None:
+        args = sys.argv[1:]
 
-    if env.get('FSL_OSMESA_PATH', None) is None:
-        
-        log.error('The FSL_OSMESA_PATH environment variable is not set - '
-                  'I need to know where the OSMESA libraries are. Set this '
-                  'variable and rerun render.')
-        sys.exit(1)
-    
-    if env.get('PYOPENGL_PLATFORM', None) != 'osmesa':
-
-        # Tell PyOpenGL that it should use
-        # osmesa for off-screen rendering
-        env['PYOPENGL_PLATFORM'] = 'osmesa'
-        env[_LD_LIBRARY_PATH]    = env['FSL_OSMESA_PATH']
-
-        log.warning('Restarting render.py with '
-                    'off-screen rendering configured...')
-
-        # Restart render with the same arguments,
-        # but with an updated environment
-        argv = list(sys.argv)
-        argv = argv[argv.index('render') + 1:]
-
-        fsl.runTool('render', argv, env=env)
-        sys.exit(0)
-
-    # Make sure that FSL_OSMESA_PATH is definitely on the
-    # library path before OpenGL is imported (which occurs
-    # in fskl.fsleyes.gl) - pyinstaller clears the
-    # DYLD_LIBRARY_PATH env var before running a compiled
-    # script, so our above restart is useless.
-    os.environ[_LD_LIBRARY_PATH] = os.environ.get(_LD_LIBRARY_PATH, '') + \
-                                   op.pathsep + env['FSL_OSMESA_PATH']
-
-    import fsleyes.gl                      as fslgl
-    import fsleyes.gl.osmesaslicecanvas    as slicecanvas
-    import fsleyes.gl.osmesalightboxcanvas as lightboxcanvas
+    namespace = parseArgs(args)
+    fsleyes.configLogging(namespace)
 
     # Make sure than an OpenGL context 
     # exists, and initalise OpenGL modules
-    fslgl.getOSMesaContext()
-    fslgl.bootstrap((1, 4))
+    fsleyes.setAssetDir()
+    fslcm.init()
+    fslgl.getOffScreenContext()
+    fslgl.bootstrap()
 
-    overlayList, displayCtx = context
+    overlayList, displayCtx = makeDisplayContext(namespace)
 
-    if   args.scene == 'ortho':    sceneOpts = orthoopts   .OrthoOpts()
-    elif args.scene == 'lightbox': sceneOpts = lightboxopts.LightBoxOpts()
+    if   namespace.scene == 'ortho':    sceneOpts = orthoopts   .OrthoOpts()
+    elif namespace.scene == 'lightbox': sceneOpts = lightboxopts.LightBoxOpts()
 
-    parseargs.applySceneArgs(args, overlayList, displayCtx, sceneOpts)
+    parseargs.applySceneArgs(namespace, overlayList, displayCtx, sceneOpts)
 
     # Calculate canvas and colour bar sizes
     # so that the entire scene will fit in
     # the width/height specified by the user
-    width, height = args.size
+    width, height = namespace.size
     (width, height), (cbarWidth, cbarHeight) = \
         adjustSizeForColourBar(width,
                                height,
@@ -331,21 +293,21 @@ def run(args, context):
     canvases = []
 
     # Lightbox view -> only one canvas
-    if args.scene == 'lightbox':
-        c = lightboxcanvas.OSMesaLightBoxCanvas(
+    if namespace.scene == 'lightbox':
+        c = lightboxcanvas.OffScreenLightBoxCanvas(
             overlayList,
             displayCtx,
             zax=sceneOpts.zax,
             width=width,
             height=height)
 
-        props.applyArguments(c, args)
+        props.applyArguments(c, namespace)
         canvases.append(c)
 
     # Ortho view -> up to three canvases
-    elif args.scene == 'ortho':
+    elif namespace.scene == 'ortho':
 
-        xc, yc, zc = parseargs.calcCanvasCentres(args,
+        xc, yc, zc = parseargs.calcCanvasCentres(namespace,
                                                  overlayList,
                                                  displayCtx) 
  
@@ -395,7 +357,7 @@ def run(args, context):
             if centre is None:
                 centre = (displayCtx.location[xax], displayCtx.location[yax])
 
-            c = slicecanvas.OSMesaSliceCanvas(
+            c = slicecanvas.OffScreenSliceCanvas(
                 overlayList,
                 displayCtx,
                 zax=zax,
@@ -427,7 +389,7 @@ def run(args, context):
 
     # Show/hide orientation labels -
     # not supported on lightbox view
-    if args.scene == 'lightbox' or not sceneOpts.showLabels:
+    if namespace.scene == 'lightbox' or not sceneOpts.showLabels:
         labelBmps = None
     else:
         labelBmps = buildLabelBitmaps(overlayList,
@@ -438,7 +400,7 @@ def run(args, context):
                                       sceneOpts.bgColour[ 3])
 
     # layout
-    if args.scene == 'lightbox':
+    if namespace.scene == 'lightbox':
         layout = fsllayout.Bitmap(canvases[0])
     else:
         layout = fsllayout.buildOrthoLayout(canvases,
@@ -463,19 +425,19 @@ def run(args, context):
                                            sceneOpts.colourBarLabelSide)
 
  
-    if args.outfile is not None:
+    if namespace.outfile is not None:
         
         import matplotlib.image as mplimg
         bitmap = fsllayout.layoutToBitmap(
             layout, [c * 255 for c in sceneOpts.bgColour])
-        mplimg.imsave(args.outfile, bitmap)
+        mplimg.imsave(namespace.outfile, bitmap)
 
     
 def parseArgs(argv):
     """Creates an argument parser which accepts options for off-screen
     rendering.
     
-    Uses the :mod:`.fsleyes_parseargs` module to peform the actual parsing.
+    Uses the :mod:`.fsleyes.parseargs` module to peform the actual parsing.
     """
 
     mainParser = argparse.ArgumentParser(add_help=False)
@@ -494,8 +456,6 @@ def parseArgs(argv):
 
         Use the '--scene' option to choose between orthographic
         ('ortho') or lightbox ('lightbox') view.
-
-        Tensor overlays are not supported by render.
         """)
     
     namespace = parseargs.parseArgs(mainParser,
@@ -518,7 +478,9 @@ def parseArgs(argv):
     return namespace
 
 
-def context(args, *a, **kwa):
+def makeDisplayContext(namespace):
+    """
+    """
 
     # Create an image list and display context.
     # The DisplayContext, Display and DisplayOpts
@@ -543,16 +505,17 @@ def context(args, *a, **kwa):
 
     # Load the overlays specified on the command
     # line, and configure their display properties
-    parseargs.applyOverlayArgs(
-        args, overlayList, masterDisplayCtx, loadFunc=load, errorFunc=error)
+    parseargs.applyOverlayArgs(namespace,
+                               overlayList,
+                               masterDisplayCtx,
+                               loadFunc=load,
+                               errorFunc=error)
 
     if len(overlayList) == 0:
         raise RuntimeError('At least one overlay must be specified')
 
     return overlayList, childDisplayCtx
- 
 
-FSL_TOOLNAME  = 'Render'
-FSL_EXECUTE   = run
-FSL_CONTEXT   = context
-FSL_PARSEARGS = parseArgs
+
+if __name__ == '__main__':
+    main()
