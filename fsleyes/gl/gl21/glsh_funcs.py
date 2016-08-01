@@ -164,7 +164,11 @@ def draw(self, zpos, xform=None, bbox=None):
 
     voxels              = self.generateVoxelCoordinates(zpos, bbox)
     voxels, radTexShape = self.updateRadTexture(voxels)
-    voxIdxs             = np.arange(voxels.shape[0], dtype=np.float32)
+
+    if len(voxels) == 0:
+        return
+    
+    voxIdxs = np.arange(voxels.shape[0], dtype=np.float32)
 
     shader.setAtt('voxel',           voxels,  divisor=1)
     shader.setAtt('voxelID',         voxIdxs, divisor=1)

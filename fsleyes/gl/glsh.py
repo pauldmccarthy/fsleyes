@@ -231,6 +231,8 @@ class GLSH(globject.GLImageObject):
           - The ``voxels`` array. If ``SHOpts.radiusThreshold == 0``,
             this will be the same as the input. Otherwise, this will
             be a new array with sub-threshold voxels removed.
+            If no voxels are to be rendered (all out of bounds, or below
+            the radius threshold), this will be an empty list.
         
           - The adjusted shape of the radius texture.
         """
@@ -267,6 +269,10 @@ class GLSH(globject.GLImageObject):
             aboveThres = np.any(radii >= opts.radiusThreshold, axis=0)
             radii      = np.array(radii[:, aboveThres])
             voxels     = np.array(voxels[aboveThres, :])
+
+        # No voxels - nothing to do
+        if voxels.shape[0] == 0:
+            return [], [0, 0, 0]
 
         # The radii are interpreted as a 1D vector
         # containing the radii for every vertex
