@@ -69,7 +69,7 @@ package has been written to support two primary use-cases:
   - *On-screen* display of a scene using a :class:`wx.glcanvas.GLCanvas`
     canvas.
 
-  - *Off-screen* renering of a scene using OSMesa.
+  - *Off-screen* renering of a scene.
 
 
 Because of this, the canvas classes listed above are not dependent upon the
@@ -81,7 +81,7 @@ Instead, two base classes are provided for each of the use-cases:
    :nosignatures:
 
    WXGLCanvasTarget
-   OSMesaCanvasTarget
+   OffScreenCanvasTarget
 
 
 And the following sub-classes are defined, providing use-case specific
@@ -93,9 +93,9 @@ implementations for each of the available canvases:
    ~fsleyes.gl.wxglslicecanvas.WXGLSliceCanvas
    ~fsleyes.gl.wxgllightboxcanvas.WXGLLightBoxCanvas
    ~fsleyes.gl.wxglcolourbarcanvas.WXGLColourBarCanvas
-   ~fsleyes.gl.osmesaslicecanvas.OSMesaSliceCanvas
-   ~fsleyes.gl.osmesalightboxcanvas.OSMesaLightBoxCanvas
-   ~fsleyes.gl.osmesacolourbarcanvas.OSMesaColourBarCanvas
+   ~fsleyes.gl.offscreenslicecanvas.OffScreenSliceCanvas
+   ~fsleyes.gl.offscreenlightboxcanvas.OffScreenLightBoxCanvas
+   ~fsleyes.gl.offscreencolourbarcanvas.OffScreenColourBarCanvas
 
 
 The classes listed above are the ones which are intended to be instantiated
@@ -156,8 +156,8 @@ environment as old as OpenGL 1.4.
 
 The available OpenGL API version can only be determined once an OpenGL context
 has been created, and a display is available for rendering. The package-level
-:func:`getWXGLContext` and :func:`getOSMesaContext` functions allow a context
-to be created.
+:func:`getWXGLContext` and :func:`getOffScreenContext` functions allow a
+context to be created.
 
 
 The data structures and rendering logic for some ``GLObject`` classes differs
@@ -169,7 +169,7 @@ sub-packages.
 
 
 Because of this, the package-level :func:`bootstrap` function must be called
-before any ``GLObject`` instances are created. 
+before any ``GLObject`` instances are created.
 """
 
 
@@ -423,7 +423,12 @@ def getWXGLContext(parent=None):
     if hasattr(thismod, '_wxGLContext'):
         return thismod._wxGLContext, None
 
-    if parent is None or not parent.IsShown():
+    if parent is None:
+        parent = wx.Frame(None, style=0)
+        parent.SetSize((1, 1))
+        parent.Show()
+        
+    if not parent.IsShown():
         raise RuntimeError('A visible WX object is required '
                            'to create a GL context')
 
@@ -463,55 +468,79 @@ def getWXGLContext(parent=None):
     thismod._wxGLContext = wxgl.GLContext(canvas)
     thismod._wxGLContext.SetCurrent(canvas)
 
-    return thismod._wxGLContext, canvas
+    return thismod._wxGLContext, parent
 
     
-def getOSMesaContext():
-    """Create and return a GL context object for off-screen rendering using
-    OSMesa.
+def getOffScreenContext():
+    """Create and return a GL context object for off-screen rendering. The
+    type of context created will depend on the platform.
+
+    .. todo:: Elaborate
     """
 
     import sys    
-    import OpenGL.GL              as gl
-    import OpenGL.raw.osmesa.mesa as osmesa
-    import OpenGL.arrays          as glarrays
 
     thismod = sys.modules[__name__]
     
-    if not hasattr(thismod, '_osmesaGLContext'):
+    if hasattr(thismod, '_offscreenGLContext'):
+        return thismod._offscreenGLContext
+
+    # If we're running with a display, 
+    # we'll use a wx context
+    if fslplatform.canHaveGui or fslplatform.haveGui:
+
+        import wx
+
+        if not fslplatform.haveGui:
+            app = wx.App()
+            
+        ctx, dummy = getWXGLContext()
+        wx.CallAfter(dummy.Hide)
+
+        thismod._offscreenGLContext = ctx
+
+    # Otherwise, we use osmesa
+    else:
+        import OpenGL.GL              as gl
+        import OpenGL.raw.osmesa.mesa as osmesa
+        import OpenGL.arrays          as glarrays
 
         # We follow the same process as for the
         # wx.glcanvas.GLContext, described above 
         dummy = glarrays.GLubyteArray.zeros((640, 480, 43))
-        thismod._osmesaGLContext = osmesa.OSMesaCreateContextExt(
+        thismod._offscreenGLContext = osmesa.OSMesaCreateContextExt(
             gl.GL_RGBA, 8, 4, 0, None)
-        osmesa.OSMesaMakeCurrent(thismod._osmesaGLContext,
+        osmesa.OSMesaMakeCurrent(thismod._offscreenGLContext,
                                  dummy,
                                  gl.GL_UNSIGNED_BYTE,
                                  640,
-                                 480) 
+                                 480)
+        
+    return thismod._offscreenGLContext
 
-    return thismod._osmesaGLContext 
 
-
-class OSMesaCanvasTarget(object):
-    """Base class for canvas objects which support off-screen rendering using
-    OSMesa.
+class OffScreenCanvasTarget(object):
+    """Base class for canvas objects which support off-screen rendering.
     """
     
     def __init__(self, width, height):
-        """Create an ``OSMesaCanvasTarget``. An off-screen buffer, to be used
-        as the render target, is created.
+        """Create an ``OffScreenCanvasTarget``. An off-screen buffer, to be
+        used as the render target, is created.
 
         :arg width:    Width in pixels
         :arg height:   Height in pixels
-
         """
-        import OpenGL.arrays as glarrays 
-        self.__width  = width
-        self.__height = height 
-        self.__buffer = glarrays.GLubyteArray.zeros((height, width, 4))
 
+        from fsleyeys.gl.textures import RenderTexture
+        
+        self.__width  = width
+        self.__height = height
+
+        self.__target = RenderTexture(
+            '{}({})_RenderTexture'.format(
+                type(self).__name__,
+                id(self)))
+        
         
     def _getSize(self):
         """Returns a tuple containing the canvas width and height."""
@@ -519,10 +548,10 @@ class OSMesaCanvasTarget(object):
 
         
     def _setGLContext(self):
+        """Configures the GL context to render to this canvas. """ 
         import OpenGL.GL              as gl
         import OpenGL.raw.osmesa.mesa as osmesa
-        """Configures the GL context to render to this canvas. """
-        osmesa.OSMesaMakeCurrent(getOSMesaContext(),
+        osmesa.OSMesaMakeCurrent(getOffScreenContext(),
                                  self.__buffer,
                                  gl.GL_UNSIGNED_BYTE,
                                  self.__width,
@@ -566,7 +595,9 @@ class OSMesaCanvasTarget(object):
 
         self._initGL()
         self._setGLContext()
+        self.__target.bindAsRenderTarget()
         self._draw()
+        self.__target.unbindAsRenderTarget()
 
         
     def getBitmap(self):
@@ -575,22 +606,9 @@ class OSMesaCanvasTarget(object):
         zeros if the scene has not been drawn (via a call to
         :meth:`draw`).
         """
-        import OpenGL.GL        as gl
-        import numpy            as np
 
         self._setGLContext()
-        
-        bmp = gl.glReadPixels(
-            0, 0,
-            self.__width, self.__height,
-            gl.GL_RGBA,
-            gl.GL_UNSIGNED_BYTE)
-        
-        bmp = np.fromstring(bmp, dtype=np.uint8)
-        bmp = bmp.reshape((self.__height, self.__width, 4))
-        bmp = np.flipud(bmp)
-
-        return bmp
+        return self.__target.getData()
 
 
     def saveToFile(self, filename):

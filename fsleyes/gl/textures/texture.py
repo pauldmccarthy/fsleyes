@@ -263,6 +263,33 @@ class Texture2D(Texture):
 
         self.refresh()
 
+
+    def getData(self):
+        """Returns the data stored in this ``Texture2D`` as a ``numpy.uint8``
+        array of shape ``(width, height, 4)``.
+        """
+
+        bound = self.isBound()
+
+        if not bound:
+            self.bindTexture()
+
+        data = gl.glGetTexImage(
+            self.__ttype,
+            0,
+            gl.GL_RGBA,
+            gl.GL_UNSIGNED_BYTE,
+            None)
+
+        if not bound:
+            self.unbindTexture()
+
+        data = np.fromstring(data, dtype=np.uint8)
+        data = data.reshape((self.__width, self.__height, 4))
+        data = np.flipud(data)
+
+        return data
+
         
     def refresh(self):
         """Configures this ``Texture2D``. This includes setting up
