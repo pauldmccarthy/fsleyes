@@ -317,10 +317,10 @@ def bootstrap(glVersion=None):
                 'GL_ARB_draw_instanced']
         
         if not all(map(glexts.hasExtension, exts)):
-            log.debug('One of these OpenGL extensions is '
-                      'not available: [{}]. Falling back '
-                      'to an older OpenGL implementation.'
-                      .format(', '.join(exts))) 
+            log.warning('One of these OpenGL extensions is '
+                        'not available: [{}]. Falling back '
+                        'to an older OpenGL implementation.'
+                        .format(', '.join(exts))) 
             verstr = '1.4'
             glpkg = gl14
 
@@ -331,7 +331,8 @@ def bootstrap(glVersion=None):
         
         exts = ['GL_EXT_framebuffer_object',
                 'GL_ARB_vertex_program',
-                'GL_ARB_fragment_program']
+                'GL_ARB_fragment_program',
+                'GL_ARB_texture_non_power_of_two']
         
         if not all(map(glexts.hasExtension, exts)):
             raise RuntimeError('One of these OpenGL extensions is '
