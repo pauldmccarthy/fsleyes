@@ -22,19 +22,16 @@ class OffScreenSliceCanvas(sc.SliceCanvas, fslgl.OffScreenCanvasTarget):
     def __init__(self,
                  overlayList,
                  displayCtx,
-                 zax=0,
-                 width=0,
-                 height=0):
+                 zax,
+                 *args,
+                 **kwargs):
         """Create an ``OffScreenSliceCanvas``.
         
-        :arg width:    Canvas width in pixels
-        
-        :arg height:   Canvas height in pixels
-
-        See :meth:`.SliceCanvas.__init__` for details on the other arguments.
+        See the :class:`.SliceCanvas` and :class:`.OffscreenCanvasTarget` 
+        classes for details on the other arguments.
         """
 
-        fslgl.OffScreenCanvasTarget.__init__(self, width, height)
+        fslgl.OffScreenCanvasTarget.__init__(self, *args, **kwargs)
         sc.SliceCanvas             .__init__(self,
                                              overlayList,
                                              displayCtx,

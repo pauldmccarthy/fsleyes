@@ -23,20 +23,16 @@ class OffScreenLightBoxCanvas(lightboxcanvas.LightBoxCanvas,
     def __init__(self,
                  overlayList,
                  displayCtx,
-                 zax=0,
-                 width=0,
-                 height=0):
+                 zax,
+                 *args,
+                 **kwargs):
         """Create an ``OffScreenLightBoxCanvas``.
         
-        :arg width:    Canvas width in pixels
-        
-        :arg height:   Canvas height in pixels
-
-        See :meth:`.LightBoxCanvas.__init__` for details on the other
-        arguments.
+        See the :class:`.SliceCanvas` and :class:`.OffscreenCanvasTarget` 
+        classes for details on the other arguments.         
         """
 
-        fslgl.OffScreenCanvasTarget  .__init__(self, width, height)
+        fslgl.OffScreenCanvasTarget  .__init__(self, *args, **kwargs)
         lightboxcanvas.LightBoxCanvas.__init__(self,
                                                overlayList,
                                                displayCtx,

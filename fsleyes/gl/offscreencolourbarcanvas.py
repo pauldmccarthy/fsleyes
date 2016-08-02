@@ -20,13 +20,12 @@ class OffScreenColourBarCanvas(cbarcanvas.ColourBarCanvas,
     """ 
 
     
-    def __init__(self, width=0, height=0):
+    def __init__(self, *args, **kwargs):
         """Create an ``OffScreenColourBarCanvas``.
-        
-        :arg width:  Canvas width in pixels
-        
-        :arg height: Canvas height in pixels
+
+        See the :class:`.OffscreenCanvasTarget` class for details on the
+        parameters.
         """
 
-        fslgl.OffScreenCanvasTarget.__init__(self, width, height)
+        fslgl.OffScreenCanvasTarget.__init__(self, *args, **kwargs)
         cbarcanvas.ColourBarCanvas .__init__(self)
