@@ -270,7 +270,7 @@ def main(args=None):
     # exists, and initalise OpenGL modules
     fsleyes.setAssetDir()
     fslcm.init()
-    fslgl.getOffScreenContext()
+    fslgl.getGLContext()
     fslgl.bootstrap()
 
     overlayList, displayCtx = makeDisplayContext(namespace)

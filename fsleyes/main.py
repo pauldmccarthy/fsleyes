@@ -214,7 +214,7 @@ def initialise(splash, namespace):
     # The splash screen is used as the parent of the dummy
     # canvas created by the gl.getWXGLContext function.
     try:
-        fslgl.getWXGLContext(splash)
+        fslgl.getGLContext(parent=splash)
         fslgl.bootstrap(namespace.glversion)
         
     except:

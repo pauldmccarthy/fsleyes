@@ -390,7 +390,7 @@ def bootstrap(glVersion=None):
     fslplatform.glRenderer     = thismod.GL_RENDERER
 
 
-def getWXGLContext(parent=None):
+def getGLContext(*args, **kwargs):
     """Create and return a GL context object for rendering to a
     :class:`wx.glcanvas.GLCanvas` canvas.
 
@@ -414,93 +414,108 @@ def getWXGLContext(parent=None):
     """
 
     import sys
-    import wx
-    import wx.glcanvas as wxgl
 
     thismod = sys.modules[__name__]
 
     # A context has already been created
-    if hasattr(thismod, '_wxGLContext'):
-        return thismod._wxGLContext, None
+    if hasattr(thismod, '_glContext'):
+        return thismod._glContext
 
-    if parent is None:
-        parent = wx.Frame(None, style=0)
-        parent.SetSize((1, 1))
-        parent.Show()
-        
-    if not parent.IsShown():
-        raise RuntimeError('A visible WX object is required '
-                           'to create a GL context')
+    thismod._glContext = GLContext(*args, **kwargs)
 
-    # We can't create a wx GLContext without
-    # a wx GLCanvas. But we can create a
-    # dummy one, and destroy it after the
-    # context has been created. Destroying
-    # the canvas is the responsibility of the
-    # calling code.
+    return thismod._glContext
 
-    # There's something wrong with wxPython's
-    # GLCanvas (on OSX at least) - the pixel
-    # format attributes have to be set on the
-    # *first* GLCanvas that is created -
-    # setting them on subsequent canvases will
-    # have no effect. But if you set them on
-    # the first canvas, all canvases that are
-    # subsequently created will inherit the
-    # same properties.
-    attribs = [wxgl.WX_GL_RGBA,
-               wxgl.WX_GL_DOUBLEBUFFER,
-               wxgl.WX_GL_STENCIL_SIZE, 4,
-               wxgl.WX_GL_DEPTH_SIZE,   8,
-               0,
-               0] 
 
-    canvas = wxgl.GLCanvas(parent, attribList=attribs)
-    canvas.SetSize((0, 0))
+class GLContext(object):
 
-    # The canvas must be visible before we are
-    # able to set it as the target of the GL context
-    canvas.Show(True)
-    canvas.Refresh()
-    canvas.Update()
-    wx.Yield()
 
-    thismod._wxGLContext = wxgl.GLContext(canvas)
-    thismod._wxGLContext.SetCurrent(canvas)
+    def __init__(self, offscreen=False, parent=None, other=None):
 
-    return thismod._wxGLContext, parent
+        if fslplatform.canHaveGui:
+            offscreen = False
 
+        if not offscreen:
+            ownParent           = parent is None
+            ctx, canvas, parent = self.__createWXGLContext(parent, other)
+        else:
+            ownParent = False
+            ctx       = self.__createOSMesaContext()
+            canvas    = None
+            parent    = None
+
+        self.__context   = ctx
+        self.__canvas    = canvas
+        self.__parent    = parent
+        self.__offscreen = offscreen
+        self.__ownParent = ownParent
+
+
+    def setTarget(self, target):
+        if self.__offscreen:
+            
+            pass
+        else:
+            self.__context.SetCurrent(target)
     
-def getOffScreenContext():
-    """Create and return a GL context object for off-screen rendering. The
-    type of context created will depend on the platform.
 
-    .. todo:: Elaborate
-    """
-
-    import sys    
-
-    thismod = sys.modules[__name__]
-    
-    if hasattr(thismod, '_offscreenGLContext'):
-        return thismod._offscreenGLContext
-
-    # If we're running with a display, 
-    # we'll use a wx context
-    if fslplatform.canHaveGui or fslplatform.haveGui:
+    def __createWXGLContext(self, parent, other):
 
         import wx
+        import wx.glcanvas as wxgl
 
-        if not fslplatform.haveGui:
-            app = wx.App()
-            
-        ctx, dummy = getWXGLContext()
-        wx.CallAfter(dummy.Hide)
+        if other is not None:
+            context = wxgl.GLContext(self.__canvas, other=other)
+            return context, self.__canvas, self.__parent
 
-        thismod._offscreenGLContext = ctx
+        if parent is None:
+            parent = wx.Frame(None, style=0)
+            parent.SetSize((1, 1))
+            parent.Show()
 
-    # Otherwise, we use osmesa
-    else:
+        # We can't create a wx GLContext without
+        # a wx GLCanvas. But we can create a
+        # dummy one, and destroy it after the
+        # context has been created. Destroying
+        # the canvas is the responsibility of the
+        # calling code.
+
+        # There's something wrong with wxPython's
+        # GLCanvas (on OSX at least) - the pixel
+        # format attributes have to be set on the
+        # *first* GLCanvas that is created -
+        # setting them on subsequent canvases will
+        # have no effect. But if you set them on
+        # the first canvas, all canvases that are
+        # subsequently created will inherit the
+        # same properties.
+        attribs = [wxgl.WX_GL_RGBA,
+                   wxgl.WX_GL_DOUBLEBUFFER,
+                   wxgl.WX_GL_STENCIL_SIZE, 4,
+                   wxgl.WX_GL_DEPTH_SIZE,   8,
+                   0,
+                   0] 
+
+        canvas = wxgl.GLCanvas(parent, attribList=attribs)
+        canvas.SetSize((0, 0))
+
+        # The canvas must be visible before we are
+        # able to set it as the target of the GL context
+        canvas.Show(True)
+        canvas.Refresh()
+        canvas.Update()
+        wx.Yield()
+
+        context = wxgl.GLContext(canvas)
+        context.SetCurrent(canvas)
+
+        return context, canvas, parent
+
+
+    def __createOSMesaContext(self):
+        import sys    
+
+        thismod = sys.modules[__name__]
+
         import OpenGL.GL              as gl
         import OpenGL.raw.osmesa.mesa as osmesa
         import OpenGL.arrays          as glarrays
@@ -508,17 +523,17 @@ def getOffScreenContext():
         # We follow the same process as for the
         # wx.glcanvas.GLContext, described above 
         dummy = glarrays.GLubyteArray.zeros((640, 480, 43))
-        thismod._offscreenGLContext = osmesa.OSMesaCreateContextExt(
+        context = osmesa.OSMesaCreateContextExt(
             gl.GL_RGBA, 8, 4, 0, None)
         osmesa.OSMesaMakeCurrent(thismod._offscreenGLContext,
                                  dummy,
                                  gl.GL_UNSIGNED_BYTE,
                                  640,
                                  480)
-        
-    return thismod._offscreenGLContext
 
-
+        return context 
+    
+    
 class OffScreenCanvasTarget(object):
     """Base class for canvas objects which support off-screen rendering.
     """
@@ -535,7 +550,6 @@ class OffScreenCanvasTarget(object):
         
         self.__width  = width
         self.__height = height
-
         self.__target = RenderTexture(
             '{}({})_RenderTexture'.format(
                 type(self).__name__,
@@ -548,15 +562,8 @@ class OffScreenCanvasTarget(object):
 
         
     def _setGLContext(self):
-        """Configures the GL context to render to this canvas. """ 
-        import OpenGL.GL              as gl
-        import OpenGL.raw.osmesa.mesa as osmesa
-        osmesa.OSMesaMakeCurrent(getOffScreenContext(),
-                                 self.__buffer,
-                                 gl.GL_UNSIGNED_BYTE,
-                                 self.__width,
-                                 self.__height)
-        return True
+        """Configures the GL context to render to this canvas. """
+        getGLContext().setTarget(self)
 
         
     def _postDraw(self):
@@ -658,9 +665,8 @@ class WXGLCanvasTarget(object):
         """Create a ``WXGLCanvasTarget``. """
 
         import wx
-        import wx.glcanvas as wxgl
 
-        context = getWXGLContext()[0]
+        context = getGLContext()
 
         # If we are on OSX, and using the Apple Software
         # Renderer (e.g. in a virtual machine), then it
@@ -673,7 +679,7 @@ class WXGLCanvasTarget(object):
             log.debug('Creating separate GL context for '
                       'WXGLCanvasTarget {}'.format(id(self)))
 
-            context = wxgl.GLContext(self, other=context)
+            context = GLContext(other=context)
 
         self.__glReady = False
         self.__frozen  = False
@@ -761,7 +767,7 @@ class WXGLCanvasTarget(object):
         log.debug('Setting context target to {} ({})'.format(
             type(self).__name__, id(self)))
         
-        self.__context.SetCurrent(self)
+        self.__context.setTarget(self)
         return True
 
         
