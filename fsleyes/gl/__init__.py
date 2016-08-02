@@ -20,17 +20,17 @@ Quick start
 
 ::
 
-    import fsleyes.gl as fslgl
+    import fsleyes.gl                 as fslgl
     import fsleyes.gl.wxglslicecanvas as slicecanvas
 
-    # Make sure that an OpenGL context
-    # has been created. This procedure
-    # requires a dummy canvas to be
-    # created.
-    ctx, dummyFrame = fslgl.getWXGLContext()
+    # Make sure that an OpenGL 
+    # context has been created. 
+    fslgl.getGLContext()
 
     # Call gl.bootstrap, to initialise
-    # some package-level stuff
+    # some package-level stuff. This
+    # can only be performed after a
+    # context has been created.
     fslgl.bootstrap()
 
     # Now you can do stuff! The
@@ -39,12 +39,6 @@ Quick start
     # GLObjects for each overlay
     # in the overlay list.
     canvas = slicecanvas.WXGLSliceCanvas(parent, overlayList, displayCtx)
-
-    # But make sure to delete the
-    # dummy canvas after you have
-    # created a real canvas.
-    if dummyFrame is not None:
-        dummyFrame.Destroy()
 
 
 --------
@@ -156,8 +150,7 @@ environment as old as OpenGL 1.4.
 
 The available OpenGL API version can only be determined once an OpenGL context
 has been created, and a display is available for rendering. The package-level
-:func:`getWXGLContext` and :func:`getOffScreenContext` functions allow a
-context to be created.
+:func:`getGLContext` function allows a context to be created.
 
 
 The data structures and rendering logic for some ``GLObject`` classes differs
@@ -169,7 +162,8 @@ sub-packages.
 
 
 Because of this, the package-level :func:`bootstrap` function must be called
-before any ``GLObject`` instances are created.
+before any ``GLObject`` instances are created, but *after* a GL context has
+been created.
 """
 
 
@@ -242,7 +236,6 @@ def bootstrap(glVersion=None):
     ====================== ====================================================
     ``GL_VERSION``         A string containing the target OpenGL version, in 
                            the format ``major.minor``, e.g. ``2.1``.
-
 
     ``GL_RENDERER``        A string containing the name of the OpenGL renderer.
 
@@ -391,26 +384,13 @@ def bootstrap(glVersion=None):
 
 
 def getGLContext(*args, **kwargs):
-    """Create and return a GL context object for rendering to a
-    :class:`wx.glcanvas.GLCanvas` canvas.
+    """Create and return a GL context object for on- or off-screen OpenGL
+    rendering.
 
     If a context object has already been created, it is returned.
-    Otherwise, one is created and returned. In the latter case,
-    the ``parent`` parameter must be a visible :mod:`wx` object.
+    Otherwise, one is created and returned. 
 
-    In either case, this function returns two values:
-    
-      - A :class:`wx.glcanvas.GLContext` instance
-    
-      - If a context instance has previously been created, the second return
-        value is ``None``. Otherwise, a dummy :class:`wx.glcanvas.GLCanvas`
-        instance is returned. This canvas should be destroyed by the caller
-        when it is safe to do so. This seems to primarily be a problem under
-        Linux/GTK - it does not seem to be possible to destroy the dummy
-        canvas immediately after creating the context. So the calling code
-        needs to destroy it at some point in the future (possibly after
-        another, real ``GLCanvas`` has been created, and set as the context
-        target).
+    See the :class:`GLContext` class for details on the arguments.
     """
 
     import sys
@@ -427,14 +407,24 @@ def getGLContext(*args, **kwargs):
 
 
 class GLContext(object):
+    """
+    """
 
-
-    def __init__(self, offscreen=False, parent=None, other=None):
+    def __init__(self,
+                 offscreen=False,
+                 parent=None,
+                 other=None,
+                 createApp=False):
+        """
+        """
 
         if fslplatform.canHaveGui:
-            offscreen = False
 
-        if not offscreen:
+            import wx
+
+            if not fslplatform.haveGui and createApp:
+                app = wx.App()
+            
             ownParent           = parent is None
             ctx, canvas, parent = self.__createWXGLContext(parent, other)
         else:
@@ -451,14 +441,15 @@ class GLContext(object):
 
 
     def setTarget(self, target):
-        if self.__offscreen:
-            
-            pass
-        else:
+        """
+        """
+        if not self.__offscreen:
             self.__context.SetCurrent(target)
     
 
     def __createWXGLContext(self, parent, other):
+        """
+        """
 
         import wx
         import wx.glcanvas as wxgl
@@ -512,6 +503,8 @@ class GLContext(object):
 
 
     def __createOSMesaContext(self):
+        """
+        """
         import sys    
 
         thismod = sys.modules[__name__]
@@ -564,6 +557,7 @@ class OffScreenCanvasTarget(object):
     def _setGLContext(self):
         """Configures the GL context to render to this canvas. """
         getGLContext().setTarget(self)
+        return True
 
         
     def _postDraw(self):
@@ -600,8 +594,10 @@ class OffScreenCanvasTarget(object):
         subclasses.
         """
 
-        self._initGL()
         self._setGLContext()
+        self._initGL()
+        self.__target.setSize(self.__width, self.__height)
+
         self.__target.bindAsRenderTarget()
         self._draw()
         self.__target.unbindAsRenderTarget()

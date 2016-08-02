@@ -275,7 +275,7 @@ class Texture2D(Texture):
             self.bindTexture()
 
         data = gl.glGetTexImage(
-            self.__ttype,
+            gl.GL_TEXTURE_2D,
             0,
             gl.GL_RGBA,
             gl.GL_UNSIGNED_BYTE,
