@@ -68,17 +68,6 @@ class GLTensor(glvector.GLVector):
         def prefilterRange(dmin, dmax):
             return max((0, dmin)), max((abs(dmin), abs(dmax)))
 
-        glvector.GLVector.__init__(self,
-                                   image,
-                                   display,
-                                   xax,
-                                   yax,
-                                   prefilter=prefilter,
-                                   prefilterRange=prefilterRange,
-                                   vectorImage=image.V1(),
-                                   init=lambda: fslgl.gltensor_funcs.init(
-                                       self))
-
         # Create a texture for each eigenvalue/
         # vector, and add each of them as suitably
         # named attributes on this GLTensor
@@ -115,7 +104,18 @@ class GLTensor(glvector.GLVector):
                 normalise=img.dataRange,
                 prefilter=prefilter)
 
-            setattr(self, '{}Texture'.format(name), tex) 
+            setattr(self, '{}Texture'.format(name), tex)
+
+        glvector.GLVector.__init__(self,
+                                   image,
+                                   display,
+                                   xax,
+                                   yax,
+                                   prefilter=prefilter,
+                                   prefilterRange=prefilterRange,
+                                   vectorImage=image.V1(),
+                                   init=lambda: fslgl.gltensor_funcs.init(
+                                       self))
 
 
     def destroy(self):
