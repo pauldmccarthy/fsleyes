@@ -11,14 +11,15 @@
 
 import logging
 
-import numpy               as np
-import OpenGL.GL           as gl
+import numpy                              as np
+import OpenGL.GL                          as gl
 
-import fsl.utils.notifier  as notifier
-import fsl.utils.async     as async
-import fsl.utils.transform as transform
-from . import                 texture
-import fsleyes.gl.routines as glroutines
+import fsl.utils.notifier                 as notifier
+import fsl.utils.async                    as async
+import fsl.utils.transform                as transform
+from   fsl.utils.platform import platform as fslplatform
+from . import                                texture
+import fsleyes.gl.routines                as glroutines
 
 
 log = logging.getLogger(__name__)
@@ -71,7 +72,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
                  name,                 
                  nvals=1,
                  notify=True,
-                 threaded=True,
+                 threaded=None,
                  **kwargs):
         """Create a ``Texture3D``.
         
@@ -81,16 +82,20 @@ class Texture3D(texture.Texture, notifier.Notifier):
  
         :arg notify:    Passed to the initial call to :meth:`refresh`.
 
-        :arg threaded:  If ``True`` (the default), the texture data will be
-                        prepared on a separate thread (on calls to
-                        :meth:`refresh`). Otherwise, the texture data is
+        :arg threaded: If ``True``, the texture data will be prepared on a
+                        separate thread (on calls to
+                        :meth:`refresh`). I ``False``, the texture data is
                         prepared on the calling thread, and the
                         :meth:`refresh` call will block until it has been
-                        prepared.
+                        prepared. Defaults to the value of
+                        :attr:`.fsl.utils.platform.Platform.haveGui`.
 
         All other keyword arguments are passed through to the :meth:`set`
         method, and thus used as initial texture settings.
         """
+
+        if threaded is None:
+            threaded = fslplatform.haveGui
 
         texture.Texture.__init__(self, name, 3)
 

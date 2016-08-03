@@ -254,6 +254,90 @@ def calculateOrthoCanvasSizes(
                                width,
                                height)
 
+    
+def parseArgs(argv):
+    """Creates an argument parser which accepts options for off-screen
+    rendering.
+    
+    Uses the :mod:`.fsleyes.parseargs` module to peform the actual parsing.
+    """
+
+    mainParser = argparse.ArgumentParser(add_help=False)
+
+    mainParser.add_argument('-of', '--outfile',  metavar='OUTPUTFILE',
+                            help='Output image file name')
+    mainParser.add_argument('-sz', '--size', type=int, nargs=2,
+                            metavar=('W', 'H'),
+                            help='Size in pixels (width, height)',
+                            default=(800, 600))
+
+    name        = 'render'
+    optStr      = '-of outfile [options]'
+    description = textwrap.dedent("""\
+        FSLeyes screenshot generator.
+
+        Use the '--scene' option to choose between orthographic
+        ('ortho') or lightbox ('lightbox') view.
+        """)
+    
+    namespace = parseargs.parseArgs(mainParser,
+                                    argv,
+                                    name,
+                                    description,
+                                    optStr,
+                                    fileOpts=['of', 'outfile'])
+
+    if namespace.outfile is None:
+        log.error('outfile is required')
+        mainParser.print_usage()
+        sys.exit(1)
+
+    if namespace.scene not in ('ortho', 'lightbox'):
+        log.info('Unknown scene specified  ("{}") - defaulting '
+                 'to ortho'.format(namespace.scene))
+        namespace.scene = 'ortho'
+ 
+    return namespace
+
+
+def makeDisplayContext(namespace):
+    """
+    """
+
+    # Create an image list and display context.
+    # The DisplayContext, Display and DisplayOpts
+    # classes are designed to be created in a
+    # parent-child hierarchy. So we need to create
+    # a 'dummy' master display context to make
+    # things work properly.
+    overlayList      = fsloverlay.OverlayList()
+    masterDisplayCtx = displaycontext.DisplayContext(overlayList)
+    childDisplayCtx  = displaycontext.DisplayContext(overlayList,
+                                                     parent=masterDisplayCtx)
+
+    # The handleOverlayArgs function uses the
+    # fsl.fsleyes.overlay.loadOverlays function,
+    # which will call these functions as it
+    # goes through the list of overlay to be
+    # loaded.
+    def load(ovl):
+        log.info('Loading overlay {} ...'.format(ovl))
+    def error(ovl, error):
+        log.info('Error loading overlay {}: '.format(ovl, error))
+
+    # Load the overlays specified on the command
+    # line, and configure their display properties
+    parseargs.applyOverlayArgs(namespace,
+                               overlayList,
+                               masterDisplayCtx,
+                               loadFunc=load,
+                               errorFunc=error)
+
+    if len(overlayList) == 0:
+        raise RuntimeError('At least one overlay must be specified')
+
+    return overlayList, childDisplayCtx
+
 
 def main(args=None):
     """Creates and renders an OpenGL scene, and saves it to a file, according
@@ -266,14 +350,14 @@ def main(args=None):
     namespace = parseArgs(args)
     fsleyes.configLogging(namespace)
 
+    overlayList, displayCtx = makeDisplayContext(namespace)
+
     # Make sure than an OpenGL context 
     # exists, and initalise OpenGL modules
     fsleyes.setAssetDir()
     fslcm.init()
     fslgl.getGLContext(offscreen=True, createApp=True)
     fslgl.bootstrap()
-
-    overlayList, displayCtx = makeDisplayContext(namespace)
 
     if   namespace.scene == 'ortho':    sceneOpts = orthoopts   .OrthoOpts()
     elif namespace.scene == 'lightbox': sceneOpts = lightboxopts.LightBoxOpts()
@@ -377,6 +461,7 @@ def main(args=None):
     # Configure each of the canvases (with those
     # properties that are common to both ortho and
     # lightbox canvases) and render them one by one
+    canvasBmps = []
     for i, c in enumerate(canvases):
 
         if   c.zax == 0: c.pos.xyz = displayCtx.location.yzx
@@ -385,7 +470,7 @@ def main(args=None):
 
         c.draw()
 
-        canvases[i] = c.getBitmap()
+        canvasBmps.append(c.getBitmap())
 
     # Show/hide orientation labels -
     # not supported on lightbox view
@@ -395,15 +480,15 @@ def main(args=None):
         labelBmps = buildLabelBitmaps(overlayList,
                                       displayCtx,
                                       canvasAxes,
-                                      canvases,
+                                      canvasBmps,
                                       sceneOpts.bgColour[:3],
                                       sceneOpts.bgColour[ 3])
 
     # layout
     if namespace.scene == 'lightbox':
-        layout = fsllayout.Bitmap(canvases[0])
+        layout = fsllayout.Bitmap(canvasBmps[0])
     else:
-        layout = fsllayout.buildOrthoLayout(canvases,
+        layout = fsllayout.buildOrthoLayout(canvasBmps,
                                             labelBmps,
                                             sceneOpts.layout,
                                             sceneOpts.showLabels,
@@ -431,90 +516,6 @@ def main(args=None):
         bitmap = fsllayout.layoutToBitmap(
             layout, [c * 255 for c in sceneOpts.bgColour])
         mplimg.imsave(namespace.outfile, bitmap)
-
-    
-def parseArgs(argv):
-    """Creates an argument parser which accepts options for off-screen
-    rendering.
-    
-    Uses the :mod:`.fsleyes.parseargs` module to peform the actual parsing.
-    """
-
-    mainParser = argparse.ArgumentParser(add_help=False)
-
-    mainParser.add_argument('-of', '--outfile',  metavar='OUTPUTFILE',
-                            help='Output image file name')
-    mainParser.add_argument('-sz', '--size', type=int, nargs=2,
-                            metavar=('W', 'H'),
-                            help='Size in pixels (width, height)',
-                            default=(800, 600))
-
-    name        = 'render'
-    optStr      = '-of outfile [options]'
-    description = textwrap.dedent("""\
-        FSLeyes screenshot generator.
-
-        Use the '--scene' option to choose between orthographic
-        ('ortho') or lightbox ('lightbox') view.
-        """)
-    
-    namespace = parseargs.parseArgs(mainParser,
-                                    argv,
-                                    name,
-                                    description,
-                                    optStr,
-                                    fileOpts=['of', 'outfile'])
-
-    if namespace.outfile is None:
-        log.error('outfile is required')
-        mainParser.print_usage()
-        sys.exit(1)
-
-    if namespace.scene not in ('ortho', 'lightbox'):
-        log.info('Unknown scene specified  ("{}") - defaulting '
-                 'to ortho'.format(namespace.scene))
-        namespace.scene = 'ortho'
- 
-    return namespace
-
-
-def makeDisplayContext(namespace):
-    """
-    """
-
-    # Create an image list and display context.
-    # The DisplayContext, Display and DisplayOpts
-    # classes are designed to be created in a
-    # parent-child hierarchy. So we need to create
-    # a 'dummy' master display context to make
-    # things work properly.
-    overlayList      = fsloverlay.OverlayList()
-    masterDisplayCtx = displaycontext.DisplayContext(overlayList)
-    childDisplayCtx  = displaycontext.DisplayContext(overlayList,
-                                                     parent=masterDisplayCtx)
-
-    # The handleOverlayArgs function uses the
-    # fsl.fsleyes.overlay.loadOverlays function,
-    # which will call these functions as it
-    # goes through the list of overlay to be
-    # loaded.
-    def load(ovl):
-        log.info('Loading overlay {} ...'.format(ovl))
-    def error(ovl, error):
-        log.info('Error loading overlay {}: '.format(ovl, error))
-
-    # Load the overlays specified on the command
-    # line, and configure their display properties
-    parseargs.applyOverlayArgs(namespace,
-                               overlayList,
-                               masterDisplayCtx,
-                               loadFunc=load,
-                               errorFunc=error)
-
-    if len(overlayList) == 0:
-        raise RuntimeError('At least one overlay must be specified')
-
-    return overlayList, childDisplayCtx
 
 
 if __name__ == '__main__':

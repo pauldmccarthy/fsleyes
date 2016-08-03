@@ -266,7 +266,7 @@ class Texture2D(Texture):
 
     def getData(self):
         """Returns the data stored in this ``Texture2D`` as a ``numpy.uint8``
-        array of shape ``(width, height, 4)``.
+        array of shape ``(height, width, 4)``.
         """
 
         bound = self.isBound()
@@ -285,7 +285,7 @@ class Texture2D(Texture):
             self.unbindTexture()
 
         data = np.fromstring(data, dtype=np.uint8)
-        data = data.reshape((self.__width, self.__height, 4))
+        data = data.reshape((self.__height, self.__width, 4))
         data = np.flipud(data)
 
         return data

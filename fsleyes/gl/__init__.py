@@ -423,7 +423,7 @@ class GLContext(object):
             import wx
 
             if not fslplatform.haveGui and createApp:
-                app = wx.App()
+                self.__app = wx.App()
             
             ownParent           = parent is None
             ctx, canvas, parent = self.__createWXGLContext(parent, other)
