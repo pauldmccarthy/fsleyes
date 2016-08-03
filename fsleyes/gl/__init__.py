@@ -221,6 +221,7 @@ def bootstrap(glVersion=None):
     things a bit complicated, because it means that we are only able to
     choose how to draw things when we actually need to draw them.
 
+
     This function should be called after an OpenGL context has been created,
     and a canvas is available for drawing, but before any attempt to draw
     anything.  It will figure out which version-dependent package needs to be
@@ -407,7 +408,41 @@ def getGLContext(*args, **kwargs):
 
 
 class GLContext(object):
-    """
+    """The ``GLContext`` class manages the creation of, and access to, an
+    OpenGL context. This class abstracts away the differences between
+    creation of on-screen and off-screen rendering contexts.
+    It contains a single method, :meth:`setTarget`, which may
+    be used to set a :class:`.WXGLCanvasTarget` or an
+    :class:`OffScreenCanvasTarget` as the GL rendering target.
+
+
+    On-screen rendering is performed via the ``wx.GLCanvas.GLContext``
+    context, whereas off-screen rendering is performed  via
+    ``OpenGL.raw.osmesa.mesa as osmesa`` (OSMesa is assumed to be available).
+
+
+    If it is possible to do so, a ``wx.glcanvas.GLContext`` will be created,
+    even if an off-screen context has been requested. This is because
+    using the native graphics card is nearly always preferable to using
+    OSMesa.
+
+
+    *Creating an on-screen GL context*
+
+    
+    A ``wx.glcanvas.GLContext`` may only be created once a
+    ``wx.glcanvas.GLCanvas`` has been created, and is visible on screen.
+    The ``GLContext`` class therefore creates a dummy ``GLCanvas``, and 
+    displays it, before creating the ``wx`` GL context.
+
+
+    Because ``wx`` contexts may be used even when an off-screen rendering
+    context has been requested, the ``GLContext`` class has the ability
+    to create and run a temporary ``wx.App``, on which the canvas and
+    context creation process is executed. This horrible ability is necessary,
+    because a ``wx.GLContext`` must be rendering created on a ``wx``
+    application loop. We cannot otherwise guarantee that the ``wx.GLCanvas``
+    will be visible before the ``wx.GLContext`` is created.
     """
 
     def __init__(self,
@@ -415,60 +450,95 @@ class GLContext(object):
                  parent=None,
                  other=None,
                  createApp=False):
+        """Create a ``GLContext``.
+
+        :arg offscreen: On-screen or off-screen context?
+        
+        :arg parent:    Parent ``wx`` GUI object 
+        
+        :arg other:     Another ``GLContext`` instance with which GL state
+                        should be shared.
+        
+        :arg createApp: If ``True``, and if possible, this ``GLContext`` will
+                        create and run a ``wx.App`` so that it can create a
+                        ``wx.glcanvas.GLContext``.
         """
-        """
+
+        self.__offscreen = offscreen
+        self.__ownApp    = False
+        self.__ownParent = False
+        self.__context   = None
+        self.__canvas    = None
+        self.__parent    = None
+        self.__app       = None
 
         if fslplatform.canHaveGui:
 
             import wx
 
-            if not fslplatform.haveGui and createApp:
-                self.__app = wx.App()
-            
-            ownParent           = parent is None
-            ctx, canvas, parent = self.__createWXGLContext(parent, other)
-        else:
-            ownParent = False
-            ctx       = self.__createOSMesaContext()
-            canvas    = None
-            parent    = None
+            self.__ownApp    = not fslplatform.haveGui and createApp
+            self.__ownParent = parent is None
 
-        self.__context   = ctx
-        self.__canvas    = canvas
-        self.__parent    = parent
-        self.__offscreen = offscreen
-        self.__ownParent = ownParent
+            if other is not None:
+                self.__createWXGLContext(other)
+                return
+
+            # Create a wx.App if we've been given permission 
+            # to do so (via he createApp argument)
+            if self.__ownApp:
+                self.__app = wx.App()
+
+            # Create a parent for the
+            # canvas if necessary
+            if self.__ownParent: self.__createWXGLParent()
+            else:                self.__parent = parent
+
+            # Create the GL canvas
+            self.__createWXGLCanvas()
+
+            # Here's where things get ugly. We create the
+            # GL context on the wx main loop, after a
+            # short delay, so that the canvas created
+            # above has been shown.
+            wx.CallLater(100, self.__createWXGLContext)
+
+            # If we've created our own wx.App, run it,
+            # but not before scheduling its destruction
+            # after the context has been created above.
+            if self.__ownApp:
+                wx.CallLater(200, self.__app.ExitMainLoop)
+                self.__app.MainLoop()
+
+        else:
+            self.__createOSMesaContext()
 
 
     def setTarget(self, target):
-        """
+        """Set the given ``WXGLCanvasTarget`` or ``OffScreenCanvasTarget`` as
+        the target for GL rendering with this context.
         """
         if not self.__offscreen:
             self.__context.SetCurrent(target)
+
     
-
-    def __createWXGLContext(self, parent, other):
+    def __createWXGLParent(self):
+        """Create a dummy ``wx.Frame`` to be used as the parent for the
+        dummy ``wx.glcanvas.GLCanvas``.
         """
-        """
-
+        
         import wx
+        self.__parent = wx.Frame(None, style=0)
+        self.__parent.SetSize((0, 0))
+        self.__parent.Show(True)
+        
+
+    def __createWXGLCanvas(self):
+        """Create a dummy ``wx.glcanvas.GLCanvas`` instance which is to
+        be used to create a context. Assigns the canvas to an attributed
+        called ``__canvas``.
+        """
+
         import wx.glcanvas as wxgl
-
-        if other is not None:
-            context = wxgl.GLContext(self.__canvas, other=other)
-            return context, self.__canvas, self.__parent
-
-        if parent is None:
-            parent = wx.Frame(None, style=0)
-            parent.SetSize((1, 1))
-            parent.Show()
-
-        # We can't create a wx GLContext without
-        # a wx GLCanvas. But we can create a
-        # dummy one, and destroy it after the
-        # context has been created. Destroying
-        # the canvas is the responsibility of the
-        # calling code.
 
         # There's something wrong with wxPython's
         # GLCanvas (on OSX at least) - the pixel
@@ -484,56 +554,62 @@ class GLContext(object):
                    wxgl.WX_GL_STENCIL_SIZE, 4,
                    wxgl.WX_GL_DEPTH_SIZE,   8,
                    0,
-                   0] 
+                   0]
 
-        canvas = wxgl.GLCanvas(parent, attribList=attribs)
-        canvas.SetSize((0, 0))
+        self.__canvas = wxgl.GLCanvas(self.__parent, attribList=attribs)
+        self.__canvas.SetSize((0, 0))
+        self.__canvas.Show(True)
 
-        # The canvas must be visible before we are
-        # able to set it as the target of the GL context
-        canvas.Show(True)
-        canvas.Refresh()
-        canvas.Update()
-        wx.Yield()
 
-        context = wxgl.GLContext(canvas)
-        context.SetCurrent(canvas)
+    def __createWXGLContext(self, other=None):
+        """Creates a ``wx.glcanvas.GLContext`` object, assigning it to
+        an attribute called ``__context``. Assumes that a
+        ``wx.glcanvas.GLCanvas`` has already been created.
 
-        return context, canvas, parent
+        :arg other: Another `wx.glcanvas.GLContext`` instance with which
+                    the new context should share GL state.
+        """
+
+        import wx.glcanvas as wxgl
+
+        if other is not None:
+            self.__context = wxgl.GLContext(self.__canvas, other=other)
+
+        else:
+            self.__context = wxgl.GLContext(self.__canvas)
+            self.__context.SetCurrent(self.__canvas)
 
 
     def __createOSMesaContext(self):
+        """Creates an OSMesa context, assigning it to an attribute called
+        ``__context``.
         """
-        """
-        import sys    
-
-        thismod = sys.modules[__name__]
-
+        
         import OpenGL.GL              as gl
         import OpenGL.raw.osmesa.mesa as osmesa
         import OpenGL.arrays          as glarrays
 
-        # We follow the same process as for the
-        # wx.glcanvas.GLContext, described above 
-        dummy = glarrays.GLubyteArray.zeros((640, 480, 43))
+        # We have to create a dummy buffer
+        # for the off-screen context.
+        buffer  = glarrays.GLubyteArray.zeros((640, 480, 4))
         context = osmesa.OSMesaCreateContextExt(
             gl.GL_RGBA, 8, 4, 0, None)
-        osmesa.OSMesaMakeCurrent(thismod._offscreenGLContext,
-                                 dummy,
+        osmesa.OSMesaMakeCurrent(context,
+                                 buffer,
                                  gl.GL_UNSIGNED_BYTE,
                                  640,
                                  480)
 
-        return context 
+        self.__buffer  = buffer
+        self.__context = context
     
     
 class OffScreenCanvasTarget(object):
-    """Base class for canvas objects which support off-screen rendering.
-    """
+    """Base class for canvas objects which support off-screen rendering. """
     
     def __init__(self, width, height):
-        """Create an ``OffScreenCanvasTarget``. An off-screen buffer, to be
-        used as the render target, is created.
+        """Create an ``OffScreenCanvasTarget``. A :class:`.RenderTexture` is
+        created, to be used as the rendering target.
 
         :arg width:    Width in pixels
         :arg height:   Height in pixels
@@ -604,7 +680,7 @@ class OffScreenCanvasTarget(object):
 
         
     def getBitmap(self):
-        """Return a (width*height*4) shaped numpy array containing the
+        """Return a (height*width*4) shaped numpy array containing the
         rendered scene as an RGBA bitmap. The bitmap will be full of
         zeros if the scene has not been drawn (via a call to
         :meth:`draw`).
