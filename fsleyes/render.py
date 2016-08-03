@@ -22,7 +22,8 @@ import fsl.utils.layout                    as fsllayout
 import fsl.utils.colourbarbitmap           as cbarbitmap
 import fsl.utils.textbitmap                as textbitmap
 import fsl.data.constants                  as constants
-import                                        fsleyes 
+import                                        fsleyes
+import fsleyes.version                     as version
 import fsleyes.strings                     as strings
 import fsleyes.overlay                     as fsloverlay
 import fsleyes.colourmaps                  as fslcm
@@ -85,17 +86,23 @@ def parseArgs(argv):
               arguments.
     """
 
-    mainParser = argparse.ArgumentParser(add_help=False)
+    mainParser = argparse.ArgumentParser(
+        add_help=False,
+        formatter_class=parseargs.FSLEyesHelpFormatter)
 
-    mainParser.add_argument('-of', '--outfile',  metavar='OUTPUTFILE',
-                            help='Output image file name')
-    mainParser.add_argument('-sz', '--size', type=int, nargs=2,
+    mainParser.add_argument('-of',
+                            '--outfile',
+                            help='Output image file name'),
+    mainParser.add_argument('-sz',
+                            '--size',
+                            type=int, nargs=2,
                             metavar=('W', 'H'),
                             help='Size in pixels (width, height)',
                             default=(800, 600))
 
     name        = 'render'
-    optStr      = '-of outfile [options]'
+    prolog      = 'FSLeyes render version {}\n'.format(version.__version__)
+    optStr      = '-of outfile'
     description = textwrap.dedent("""\
         FSLeyes screenshot generator.
 
@@ -106,9 +113,11 @@ def parseArgs(argv):
     namespace = parseargs.parseArgs(mainParser,
                                     argv,
                                     name,
-                                    description,
-                                    optStr,
-                                    fileOpts=['of', 'outfile'])
+                                    prolog=prolog,
+                                    desc=description,
+                                    usageProlog=optStr,
+                                    fileOpts=['of', 'outfile'],
+                                    shortHelpExtra=['--outfile', '--size'])
 
     if namespace.outfile is None:
         log.error('outfile is required')
@@ -158,9 +167,6 @@ def makeDisplayContext(namespace):
                                loadFunc=load,
                                errorFunc=error)
 
-    if len(overlayList) == 0:
-        raise RuntimeError('At least one overlay must be specified')
-
     # Create a SceneOpts instance describing
     # the scene to be rendered
     if   namespace.scene == 'ortho':    sceneOpts = orthoopts   .OrthoOpts()
@@ -169,7 +175,10 @@ def makeDisplayContext(namespace):
     parseargs.applySceneArgs(namespace,
                              overlayList,
                              childDisplayCtx,
-                             sceneOpts) 
+                             sceneOpts)
+    
+    if len(overlayList) == 0:
+        raise RuntimeError('At least one overlay must be specified')
 
     return overlayList, childDisplayCtx, sceneOpts
 

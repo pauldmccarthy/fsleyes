@@ -6,7 +6,7 @@
 #
 """This module encapsulates the logic for parsing command line arguments which
 specify a scene to be displayed in *FSLeyes*.  This logic is shared between
-the :mod:`fsleyes` and :mod:`render` tools.  This module
+the :mod:`fsleyes` and :mod:`.render` tools.  This module
 make use of the command line generation features of the :mod:`props` package.
 
 
@@ -891,9 +891,9 @@ Examples:
 
 {0} --help
 {0} --fullhelp
-{0} T1.nii.gz --cmap red
-{0} MNI152_T1_2mm.nii.gz -dr 1000 10000
-{0} MNI152_T1_2mm.nii.gz -dr 1000 10000 zstats.nii.gz -cm hot -dr -5 5
+{0}{1} T1.nii.gz --cmap red
+{0}{1} MNI152_T1_2mm.nii.gz -dr 1000 10000
+{0}{1} MNI152_T1_2mm.nii.gz -dr 1000 10000 zstats.nii.gz -cm hot -dr -5 5
 """
 
 
@@ -914,8 +914,9 @@ def _setupMainParser(mainParser):
     # and separate parser groups for scene
     # settings, ortho, and lightbox.
 
-    mainGroup  = mainParser.add_argument_group(GROUPNAMES[    'Main'],
-                                               GROUPDESCS.get('Main'))
+    mainParser._optionals.title       = GROUPNAMES[    'Main']
+    mainParser._optionals.description = GROUPDESCS.get('Main')
+
     sceneGroup = mainParser.add_argument_group(GROUPNAMES[    'SceneOpts'],
                                                GROUPDESCS.get('SceneOpts'))
     orthoGroup = mainParser.add_argument_group(GROUPNAMES[    'OrthoOpts'],
@@ -923,7 +924,7 @@ def _setupMainParser(mainParser):
     lbGroup    = mainParser.add_argument_group(GROUPNAMES[    'LightBoxOpts'],
                                                GROUPDESCS.get('LightBoxOpts'))
 
-    _configMainParser(     mainGroup)
+    _configMainParser(     mainParser)
     _configSceneParser(    sceneGroup)
     _configOrthoParser(    orthoGroup)
     _configLightBoxParser( lbGroup)
@@ -1197,7 +1198,8 @@ def parseArgs(mainParser,
               prolog=None,
               desc=None,
               usageProlog=None,
-              fileOpts=None):
+              fileOpts=None,
+              shortHelpExtra=None):
     """Parses the given command line arguments, returning an
     :class:`argparse.Namespace` object containing all the arguments.
 
@@ -1208,26 +1210,33 @@ def parseArgs(mainParser,
     instances also has an attribute, called ``overlay``, which contains the
     full path of the overlay file that was speciied.
 
-      - mainParser:   A :class:`argparse.ArgumentParser` which should be
-                      used as the top level parser.
+    :arg mainParser:     A :class:`argparse.ArgumentParser` which should be
+                         used as the top level parser.
     
-      - argv:         The arguments as passed in on the command line.
+    :arg argv:           The arguments as passed in on the command line.
     
-      - name:         The name of the tool - this function might be called by
-                      either the :mod:`~fsl.tools.fsleyes` tool or the
-                      :mod:`~fsl.tools.render` tool.
-    
-      - desc:         A description of the tool.
-    
-      - toolOptsDesc: A string describing the tool-specific options (those
-                      options which are handled by the tool, not by this
-                      module).
+    :arg name:           The name of the tool - this function might be called 
+                         by either the :mod:`~fsl.tools.fsleyes` tool or the
+                         :mod:`~fsl.tools.render` tool.
 
-      - fileOpts:     If the ``mainParser`` has already been configured to
-                      accept some arguments, you must pass any arguments
-                      that accept a file name as a list here. Otherwise,
-                      the file name may be incorrectly identified as a
-                      path to an overlay.
+    :arg prolog:         A string to print before any usage text is printed.
+    
+    :arg desc:           A description of the tool.
+    
+    :arg usageProlog:    A string describing the tool-specific options (those
+                         options which are handled by the tool, not by this
+                         module).
+
+    :arg fileOpts:       If the ``mainParser`` has already been configured to
+                         accept some arguments, you must pass any arguments
+                         that accept a file name as a list here. Otherwise,
+                         the file name may be incorrectly identified as a
+                         path to an overlay.
+
+    :arg shortHelpExtra: If the caller of this function has already added
+                         arguments to the ``mainParser``, the long forms of 
+                         those arguemnts may be passed here as a list to
+                         have them included in the short help text.
     """
 
     if fileOpts is None: fileOpts = []
@@ -1254,8 +1263,9 @@ def parseArgs(mainParser,
     # of all, the mainParser parses application
     # options. We'll create additional parsers for
     # handling overlays a bit later on.
+    
     mainParser.usage       = usageStr
-    mainParser.epilog      = EXAMPLES.format(name)
+    mainParser.epilog      = EXAMPLES.format(name, usageProlog)
     mainParser.prog        = name
     mainParser.description = desc
 
@@ -1336,7 +1346,7 @@ def parseArgs(mainParser,
         sys.exit(1)
 
     if namespace.help:
-        _printShortHelp(mainParser)
+        _printShortHelp(mainParser, shortHelpExtra)
         sys.exit(0)
 
     if namespace.fullhelp:
@@ -1450,11 +1460,17 @@ def _printVersion(name):
         version.__vcs_version__))
 
 
-def _printShortHelp(mainParser):
+def _printShortHelp(mainParser, extra=None):
     """Prints out help for a selection of arguments.
 
     :arg mainParser: The top level ``ArgumentParser``.
+
+    :arg extra:      List containing long forms of any extra main arguments 
+                     to be included in the short help text.
     """
+
+    if extra is None:
+        extra = []
 
     # First, we build a list of all arguments
     # that are handled by the main parser.
@@ -1491,6 +1507,8 @@ def _printShortHelp(mainParser):
     mainArgs    = ['--{}'.format(a[1]) for a in mainArgs]
     displayArgs = ['--{}'.format(a[1]) for a in displayArgs]
     volumeArgs  = ['--{}'.format(a[1]) for a in volumeArgs]
+    
+    mainArgs    = mainArgs + extra
 
     allArgs = td.TypeDict({
         'Main'       : mainArgs,
