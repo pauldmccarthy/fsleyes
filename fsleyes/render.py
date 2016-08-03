@@ -4,15 +4,17 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module implements an application which provides off-screen rendering
+"""The ``render`` module is a program which provides off-screen rendering
 capability for scenes which can otherwise be displayed via *FSLeyes*.
 """
 
 
-import            sys
-import            logging
-import            textwrap
-import            argparse
+import sys
+import logging
+import textwrap
+import argparse
+
+import matplotlib.image as mplimg
 
 import props
 
@@ -36,8 +38,356 @@ import fsleyes.gl.offscreenlightboxcanvas  as lightboxcanvas
 log = logging.getLogger(__name__)
 
 
-CBAR_SIZE   = 75
-LABEL_SIZE  = 20
+CBAR_SIZE  = 75
+"""Height/width, in pixels, of a colour bar. """
+
+
+LABEL_SIZE = 20
+"""Height/width, in pixels, of an orientation label. """
+
+
+def main(args=None):
+    """Entry point for ``render``.
+
+    Creates and renders an OpenGL scene, and saves it to a file, according
+    to the specified command line arguments (which default to
+    ``sys.argv[1:]``).
+    """
+
+    if args is None:
+        args = sys.argv[1:]
+
+    # Initialise FSLeyes, colour maps, and OpenGL
+    fsleyes.setAssetDir()
+    fslcm.init()
+    fslgl.getGLContext(offscreen=True, createApp=True)
+    fslgl.bootstrap() 
+
+    # Parse arguments, and
+    # configure logging/debugging
+    namespace = parseArgs(args)
+    fsleyes.configLogging(namespace)
+
+    # Create a description of the scene
+    overlayList, displayCtx, sceneOpts = makeDisplayContext(namespace)
+
+    # Render that scene, and save it to file
+    bitmap = render(namespace, overlayList, displayCtx, sceneOpts)
+    mplimg.imsave(namespace.outfile, bitmap)
+
+    
+def parseArgs(argv):
+    """Creates an argument parser which accepts options for off-screen
+    rendering. Uses the :mod:`fsleyes.parseargs` module to peform the
+    actual parsing.
+
+    :returns: An ``argparse.Namespace`` object containing the parsed
+              arguments.
+    """
+
+    mainParser = argparse.ArgumentParser(add_help=False)
+
+    mainParser.add_argument('-of', '--outfile',  metavar='OUTPUTFILE',
+                            help='Output image file name')
+    mainParser.add_argument('-sz', '--size', type=int, nargs=2,
+                            metavar=('W', 'H'),
+                            help='Size in pixels (width, height)',
+                            default=(800, 600))
+
+    name        = 'render'
+    optStr      = '-of outfile [options]'
+    description = textwrap.dedent("""\
+        FSLeyes screenshot generator.
+
+        Use the '--scene' option to choose between orthographic
+        ('ortho') or lightbox ('lightbox') view.
+        """)
+    
+    namespace = parseargs.parseArgs(mainParser,
+                                    argv,
+                                    name,
+                                    description,
+                                    optStr,
+                                    fileOpts=['of', 'outfile'])
+
+    if namespace.outfile is None:
+        log.error('outfile is required')
+        mainParser.print_usage()
+        sys.exit(1)
+
+    if namespace.scene not in ('ortho', 'lightbox'):
+        log.info('Unknown scene specified  ("{}") - defaulting '
+                 'to ortho'.format(namespace.scene))
+        namespace.scene = 'ortho'
+ 
+    return namespace
+
+
+def makeDisplayContext(namespace):
+    """Creates :class:`.OverlayList`, :class:`.DisplayContext``, and
+    :class:`.SceneOpts` instances which represent the scene to be rendered,
+    as described by the arguments in the given ``namespace`` object.
+    """
+
+    # Create an overlay list and display context.
+    # The DisplayContext, Display and DisplayOpts
+    # classes are designed to be created in a
+    # parent-child hierarchy. So we need to create
+    # a 'dummy' master display context to make
+    # things work properly.
+    overlayList      = fsloverlay.OverlayList()
+    masterDisplayCtx = displaycontext.DisplayContext(overlayList)
+    childDisplayCtx  = displaycontext.DisplayContext(overlayList,
+                                                     parent=masterDisplayCtx)
+
+    # The handleOverlayArgs function uses the
+    # fsleyes.overlay.loadOverlays function,
+    # which will call these functions as it
+    # goes through the list of overlay to be
+    # loaded.
+    def load(ovl):
+        log.info('Loading overlay {} ...'.format(ovl))
+    def error(ovl, error):
+        log.info('Error loading overlay {}: '.format(ovl, error))
+
+    # Load the overlays specified on the command
+    # line, and configure their display properties
+    parseargs.applyOverlayArgs(namespace,
+                               overlayList,
+                               masterDisplayCtx,
+                               loadFunc=load,
+                               errorFunc=error)
+
+    if len(overlayList) == 0:
+        raise RuntimeError('At least one overlay must be specified')
+
+    # Create a SceneOpts instance describing
+    # the scene to be rendered
+    if   namespace.scene == 'ortho':    sceneOpts = orthoopts   .OrthoOpts()
+    elif namespace.scene == 'lightbox': sceneOpts = lightboxopts.LightBoxOpts()
+
+    parseargs.applySceneArgs(namespace,
+                             overlayList,
+                             childDisplayCtx,
+                             sceneOpts) 
+
+    return overlayList, childDisplayCtx, sceneOpts
+
+
+def render(namespace, overlayList, displayCtx, sceneOpts):
+    """Renders the scene, and returns a bitmap.
+
+    :arg namespace:   ``argparse.Namespace`` object containing command line
+                      arguments.
+
+    :arg overlayList: The :class:`.OverlayList` instance.
+    :arg displayCtx:  The :class:`.DisplayContext` instance.
+    :arg sceneOpts:   The :class:`.SceneOpts` instance.
+    """
+    
+    # Calculate canvas and colour bar sizes
+    # so that the entire scene will fit in
+    # the width/height specified by the user
+    width, height = namespace.size
+    (width, height), (cbarWidth, cbarHeight) = \
+        adjustSizeForColourBar(width,
+                               height,
+                               sceneOpts.showColourBar,
+                               sceneOpts.colourBarLocation)
+
+    # Lightbox view -> only one canvas
+    if namespace.scene == 'lightbox':
+        c = createLightBoxCanvas(namespace,
+                                 width,
+                                 height,
+                                 overlayList,
+                                 displayCtx,
+                                 sceneOpts)
+        canvases = [c]
+
+    # Ortho view -> up to three canvases
+    elif namespace.scene == 'ortho':
+        canvases = createOrthoCanvases(namespace,
+                                       width,
+                                       height,
+                                       overlayList,
+                                       displayCtx,
+                                       sceneOpts)
+
+    # Configure each of the canvases (with those
+    # properties that are common to both ortho and
+    # lightbox canvases) and render them one by one
+    canvasBmps = []
+    for i, c in enumerate(canvases):
+
+        if   c.zax == 0: c.pos.xyz = displayCtx.location.yzx
+        elif c.zax == 1: c.pos.xyz = displayCtx.location.xzy
+        elif c.zax == 2: c.pos.xyz = displayCtx.location.xyz
+
+        c.draw()
+
+        canvasBmps.append(c.getBitmap())
+
+    # Show/hide orientation labels -
+    # not supported on lightbox view
+    if namespace.scene == 'lightbox' or not sceneOpts.showLabels:
+        labelBmps = None
+    else:
+        canvasAxes = [(c.xax, c.yax) for c in canvases]
+        labelBmps  = buildLabelBitmaps(overlayList,
+                                       displayCtx,
+                                       canvasAxes,
+                                       canvasBmps,
+                                       sceneOpts.bgColour[:3],
+                                       sceneOpts.bgColour[ 3])
+
+    # layout the bitmaps
+    if namespace.scene == 'lightbox':
+        layout = fsllayout.Bitmap(canvasBmps[0])
+    else:
+        layout = fsllayout.buildOrthoLayout(canvasBmps,
+                                            labelBmps,
+                                            sceneOpts.layout,
+                                            sceneOpts.showLabels,
+                                            LABEL_SIZE)
+
+    # Render a colour bar if required
+    if sceneOpts.showColourBar:
+        cbarBmp = buildColourBarBitmap(overlayList,
+                                       displayCtx,
+                                       cbarWidth,
+                                       cbarHeight,
+                                       sceneOpts.colourBarLocation,
+                                       sceneOpts.colourBarLabelSide,
+                                       sceneOpts.bgColour)
+        if cbarBmp is not None:
+            layout  = buildColourBarLayout(layout,
+                                           cbarBmp,
+                                           sceneOpts.colourBarLocation,
+                                           sceneOpts.colourBarLabelSide)
+
+    # Turn the layout tree into a bitmap image
+    return fsllayout.layoutToBitmap(
+        layout, [c * 255 for c in sceneOpts.bgColour])
+
+
+def createLightBoxCanvas(namespace,
+                         width,
+                         height, 
+                         overlayList,
+                         displayCtx,
+                         sceneOpts):
+    """Creates, configures, and returns an :class:`.OffScreenLightBoxCanvas`.
+
+    :arg namespace:   ``argparse.Namespace`` object.
+    :arg width:       Available width in pixels.
+    :arg height:      Available height in pixels.
+    :arg overlayList: The :class:`.OverlayList` instance. 
+    :arg displayCtx:  The :class:`.DisplayContext` instance.
+    :arg sceneOpts:   The :class:`.SceneOpts` instance.
+    """
+    
+    canvas = lightboxcanvas.OffScreenLightBoxCanvas(
+        overlayList,
+        displayCtx,
+        zax=sceneOpts.zax,
+        width=width,
+        height=height)
+
+    props.applyArguments(canvas, namespace)
+    
+    return canvas
+
+
+def createOrthoCanvases(namespace,
+                        width,
+                        height, 
+                        overlayList,
+                        displayCtx,
+                        sceneOpts):
+    """Creates, configures, and returns up to three
+    :class:`.OffScreenSliceCanvas` instances, for rendering the scene.
+
+    :arg namespace:   ``argparse.Namespace`` object.
+    :arg width:       Available width in pixels.
+    :arg height:      Available height in pixels.
+    :arg overlayList: The :class:`.OverlayList` instance. 
+    :arg displayCtx:  The :class:`.DisplayContext` instance.
+    :arg sceneOpts:   The :class:`.SceneOpts` instance. 
+    """
+
+    canvases = []
+    
+    xc, yc, zc = parseargs.calcCanvasCentres(namespace,
+                                             overlayList,
+                                             displayCtx) 
+
+    # Build a list containing the horizontal 
+    # and vertical axes for each canvas
+    canvasAxes = []
+    zooms      = []
+    centres    = []
+    if sceneOpts.showXCanvas:
+        canvasAxes.append((1, 2))
+        zooms     .append(sceneOpts.xzoom)
+        centres   .append(xc)
+    if sceneOpts.showYCanvas:
+        canvasAxes.append((0, 2))
+        zooms     .append(sceneOpts.yzoom)
+        centres   .append(yc)
+    if sceneOpts.showZCanvas:
+        canvasAxes.append((0, 1))
+        zooms     .append(sceneOpts.zzoom)
+        centres   .append(zc)
+
+    # Grid layout only makes sense if
+    # we're displaying 3 canvases
+    if sceneOpts.layout == 'grid' and len(canvasAxes) <= 2:
+        sceneOpts.layout = 'horizontal'
+
+    if sceneOpts.layout == 'grid':
+        canvasAxes = [canvasAxes[1], canvasAxes[0], canvasAxes[2]]
+        centres    = [centres[   1], centres[   0], centres[   2]]
+        zooms      = [zooms[     1], zooms[     0], zooms[     2]]
+
+    # Calculate the size in pixels for each canvas
+    sizes = calculateOrthoCanvasSizes(overlayList,
+                                      displayCtx,
+                                      width,
+                                      height,
+                                      canvasAxes,
+                                      sceneOpts.showLabels,
+                                      sceneOpts.layout)
+
+    # Configure the properties on each canvas
+    for ((width, height), (xax, yax), zoom, centre) in zip(sizes,
+                                                           canvasAxes,
+                                                           zooms,
+                                                           centres):
+
+        zax = 3 - xax - yax
+
+        if centre is None:
+            centre = (displayCtx.location[xax], displayCtx.location[yax])
+
+        c = slicecanvas.OffScreenSliceCanvas(
+            overlayList,
+            displayCtx,
+            zax=zax,
+            width=int(width),
+            height=int(height))
+
+        c.showCursor      = sceneOpts.showCursor
+        c.cursorColour    = sceneOpts.cursorColour
+        c.bgColour        = sceneOpts.bgColour
+        c.renderMode      = sceneOpts.renderMode
+        c.resolutionLimit = sceneOpts.resolutionLimit
+
+        if zoom is not None: c.zoom = zoom
+        c.centreDisplayAt(*centre)
+        canvases.append(c)
+
+    return canvases
 
 
 def buildLabelBitmaps(overlayList,
@@ -48,9 +398,23 @@ def buildLabelBitmaps(overlayList,
                       alpha):
     """Creates bitmaps containing anatomical orientation labels.
 
-    Returns a list of dictionaries, one dictionary for each canvas. Each
-    dictionary contains ``{label -> bitmap}`` mappings, where ``label`` is
-    either ``top``, ``bottom``, ``left`` or ``right``.
+    :arg overlayList: The :class:`.OverlayList`.
+    
+    :arg displayCtx:  The :class:`.DisplayContext`.
+    
+    :arg canvasAxes:  A sequence of ``(xax, yax)`` indices, one for each
+                      bitmap in ``canvasBmps``.
+    
+    :arg canvasBmps:  A sequence of bitmaps, one for each canvas.
+    
+    :arg bgColour:    RGB background colour (values between ``0`` and ``1``).
+    
+    :arg alpha:       Transparency.(between ``0`` and ``1``).
+
+    :returns:         A list of dictionaries, one dictionary for each canvas.  
+                      Each dictionary contains ``{label -> bitmap}`` mappings,
+                      where ``label`` is either ``top``, ``bottom``, ``left``
+                      or ``right``.
     """
     
     # Default label colour is determined from the background
@@ -132,6 +496,21 @@ def buildColourBarBitmap(overlayList,
     """If the currently selected overlay has a display range,
     creates and returns a bitmap containing a colour bar. Returns
     ``None`` otherwise.
+
+    :arg overlayList:   The :class:`.OverlayList`.
+    
+    :arg displayCtx:    The :class:`.DisplayContext`.
+    
+    :arg width:         Colour bar width in pixels.
+    
+    :arg height:        Colour bar height in pixels.
+    
+    :arg cbarLocation:  One of  ``'top'``, ``'bottom'``, ``'left'``, or
+                        ``'right'``.
+    
+    :arg cbarLabelSide: One of ``'top-left'`` or ``'bottom-right'``.
+    
+    :arg bgColour:      RGBA background colour.
     """
 
     overlay = displayCtx.getSelectedOverlay()
@@ -179,6 +558,16 @@ def buildColourBarLayout(canvasLayout,
                          cbarLabelSide):
     """Given a layout object containing the rendered canvas bitmaps,
     creates a new layout which incorporates the given colour bar bitmap.
+
+    :arg canvasLayout:  An object describing the canvas layout (see
+                        :mod:`fsl.utils.layout`)
+    
+    :arg cbarBmp:       A bitmap containing a rendered colour bar.
+    
+    :arg cbarLocation:  Colour bar location (see :func:`buildColourBarBitmap`).
+    
+    :arg cbarLabelSide: Colour bar label side (see
+                        :func:`buildColourBarBitmap`).
     """
 
     cbarBmp = fsllayout.Bitmap(cbarBmp)
@@ -194,9 +583,20 @@ def adjustSizeForColourBar(width, height, showColourBar, colourBarLocation):
     """Calculates the widths and heights of the image display space, and the
     colour bar if it is enabled.
 
-    Returns two tuples - the first tuple contains the (width, height) of the
-    available canvas space, and the second contains the (width, height) of
-    the colour bar.
+    :arg width:             Desired width in pixels
+    
+    :arg height:            Desired height in pixels
+    
+    :arg showColourBar:     ``True`` if a colour bar is to be shown, ``False``
+                            otherwise.
+    
+    :arg colourBarLocation: Colour bar location (see
+                            :func:`buildColourBarBitmap`).
+    
+    :returns:               Two tuples - the first tuple contains the
+                            ``(width, height)`` of the available canvas space, 
+                            and the second contains the ``(width, height)`` of 
+                            the colour bar.
     """
 
     if showColourBar:
@@ -216,14 +616,36 @@ def adjustSizeForColourBar(width, height, showColourBar, colourBarLocation):
     return (width, height), (cbarWidth, cbarHeight)
 
 
-def calculateOrthoCanvasSizes(
-        overlayList,
-        displayCtx,
-        width,
-        height,
-        canvasAxes,
-        showLabels,
-        layout):
+def calculateOrthoCanvasSizes(overlayList,
+                              displayCtx,
+                              width,
+                              height,
+                              canvasAxes,
+                              showLabels,
+                              layout):
+    """Calculates the sizes, in pixels, for each canvas to be displayed in an
+    orthographic layout.
+
+    :arg overlayList: The :class:`.OverlayList`.
+    
+    :arg displayCtx:  The :class:`.DisplayContext`.
+    
+    :arg width:       Available width in pixels.
+    
+    :arg height:      Available height in pixels.
+    
+    :arg canvasAxes:  A sequence of ``(xax, yax)`` indices, one for each
+                      bitmap in ``canvasBmps``.
+    
+    :arg showLabels:  ``True`` if orientation labels are to be shown.
+    
+    :arg layout:      Either ``'horizontal'``, ``'vertical'``, or ``'grid'``,
+                      describing the canvas layout.
+
+    :returns:         A list of ``(width, height)`` tuples, one for each 
+                      canvas, each specifying the canvas width and height in 
+                      pixels. 
+    """
 
     bounds   = displayCtx.bounds
     axisLens = [bounds.xlen, bounds.ylen, bounds.zlen]
@@ -253,270 +675,6 @@ def calculateOrthoCanvasSizes(
                                axisLens,
                                width,
                                height)
-
-    
-def parseArgs(argv):
-    """Creates an argument parser which accepts options for off-screen
-    rendering.
-    
-    Uses the :mod:`.fsleyes.parseargs` module to peform the actual parsing.
-    """
-
-    mainParser = argparse.ArgumentParser(add_help=False)
-
-    mainParser.add_argument('-of', '--outfile',  metavar='OUTPUTFILE',
-                            help='Output image file name')
-    mainParser.add_argument('-sz', '--size', type=int, nargs=2,
-                            metavar=('W', 'H'),
-                            help='Size in pixels (width, height)',
-                            default=(800, 600))
-
-    name        = 'render'
-    optStr      = '-of outfile [options]'
-    description = textwrap.dedent("""\
-        FSLeyes screenshot generator.
-
-        Use the '--scene' option to choose between orthographic
-        ('ortho') or lightbox ('lightbox') view.
-        """)
-    
-    namespace = parseargs.parseArgs(mainParser,
-                                    argv,
-                                    name,
-                                    description,
-                                    optStr,
-                                    fileOpts=['of', 'outfile'])
-
-    if namespace.outfile is None:
-        log.error('outfile is required')
-        mainParser.print_usage()
-        sys.exit(1)
-
-    if namespace.scene not in ('ortho', 'lightbox'):
-        log.info('Unknown scene specified  ("{}") - defaulting '
-                 'to ortho'.format(namespace.scene))
-        namespace.scene = 'ortho'
- 
-    return namespace
-
-
-def makeDisplayContext(namespace):
-    """
-    """
-
-    # Create an image list and display context.
-    # The DisplayContext, Display and DisplayOpts
-    # classes are designed to be created in a
-    # parent-child hierarchy. So we need to create
-    # a 'dummy' master display context to make
-    # things work properly.
-    overlayList      = fsloverlay.OverlayList()
-    masterDisplayCtx = displaycontext.DisplayContext(overlayList)
-    childDisplayCtx  = displaycontext.DisplayContext(overlayList,
-                                                     parent=masterDisplayCtx)
-
-    # The handleOverlayArgs function uses the
-    # fsl.fsleyes.overlay.loadOverlays function,
-    # which will call these functions as it
-    # goes through the list of overlay to be
-    # loaded.
-    def load(ovl):
-        log.info('Loading overlay {} ...'.format(ovl))
-    def error(ovl, error):
-        log.info('Error loading overlay {}: '.format(ovl, error))
-
-    # Load the overlays specified on the command
-    # line, and configure their display properties
-    parseargs.applyOverlayArgs(namespace,
-                               overlayList,
-                               masterDisplayCtx,
-                               loadFunc=load,
-                               errorFunc=error)
-
-    if len(overlayList) == 0:
-        raise RuntimeError('At least one overlay must be specified')
-
-    return overlayList, childDisplayCtx
-
-
-def main(args=None):
-    """Creates and renders an OpenGL scene, and saves it to a file, according
-    to the specified command line arguments.
-    """
-
-    if args is None:
-        args = sys.argv[1:]
-
-    namespace = parseArgs(args)
-    fsleyes.configLogging(namespace)
-
-    overlayList, displayCtx = makeDisplayContext(namespace)
-
-    # Make sure than an OpenGL context 
-    # exists, and initalise OpenGL modules
-    fsleyes.setAssetDir()
-    fslcm.init()
-    fslgl.getGLContext(offscreen=True, createApp=True)
-    fslgl.bootstrap()
-
-    if   namespace.scene == 'ortho':    sceneOpts = orthoopts   .OrthoOpts()
-    elif namespace.scene == 'lightbox': sceneOpts = lightboxopts.LightBoxOpts()
-
-    parseargs.applySceneArgs(namespace, overlayList, displayCtx, sceneOpts)
-
-    # Calculate canvas and colour bar sizes
-    # so that the entire scene will fit in
-    # the width/height specified by the user
-    width, height = namespace.size
-    (width, height), (cbarWidth, cbarHeight) = \
-        adjustSizeForColourBar(width,
-                               height,
-                               sceneOpts.showColourBar,
-                               sceneOpts.colourBarLocation)
-    
-    canvases = []
-
-    # Lightbox view -> only one canvas
-    if namespace.scene == 'lightbox':
-        c = lightboxcanvas.OffScreenLightBoxCanvas(
-            overlayList,
-            displayCtx,
-            zax=sceneOpts.zax,
-            width=width,
-            height=height)
-
-        props.applyArguments(c, namespace)
-        canvases.append(c)
-
-    # Ortho view -> up to three canvases
-    elif namespace.scene == 'ortho':
-
-        xc, yc, zc = parseargs.calcCanvasCentres(namespace,
-                                                 overlayList,
-                                                 displayCtx) 
- 
-        # Build a list containing the horizontal 
-        # and vertical axes for each canvas
-        canvasAxes = []
-        zooms      = []
-        centres    = []
-        if sceneOpts.showXCanvas:
-            canvasAxes.append((1, 2))
-            zooms     .append(sceneOpts.xzoom)
-            centres   .append(xc)
-        if sceneOpts.showYCanvas:
-            canvasAxes.append((0, 2))
-            zooms     .append(sceneOpts.yzoom)
-            centres   .append(yc)
-        if sceneOpts.showZCanvas:
-            canvasAxes.append((0, 1))
-            zooms     .append(sceneOpts.zzoom)
-            centres   .append(zc)
-
-        # Grid only makes sense if
-        # we're displaying 3 canvases
-        if sceneOpts.layout == 'grid' and len(canvasAxes) <= 2:
-            sceneOpts.layout = 'horizontal'
-
-        if sceneOpts.layout == 'grid':
-            canvasAxes = [canvasAxes[1], canvasAxes[0], canvasAxes[2]]
-            centres    = [centres[   1], centres[   0], centres[   2]]
-            zooms      = [zooms[     1], zooms[     0], zooms[     2]]
-        
-        sizes = calculateOrthoCanvasSizes(overlayList,
-                                          displayCtx,
-                                          width,
-                                          height,
-                                          canvasAxes,
-                                          sceneOpts.showLabels,
-                                          sceneOpts.layout)
-
-        for ((width, height), (xax, yax), zoom, centre) in zip(sizes,
-                                                               canvasAxes,
-                                                               zooms,
-                                                               centres):
-
-            zax = 3 - xax - yax
-
-            if centre is None:
-                centre = (displayCtx.location[xax], displayCtx.location[yax])
-
-            c = slicecanvas.OffScreenSliceCanvas(
-                overlayList,
-                displayCtx,
-                zax=zax,
-                width=int(width),
-                height=int(height))
-
-            c.showCursor      = sceneOpts.showCursor
-            c.cursorColour    = sceneOpts.cursorColour
-            c.bgColour        = sceneOpts.bgColour
-            c.renderMode      = sceneOpts.renderMode
-            c.resolutionLimit = sceneOpts.resolutionLimit
-            
-            if zoom is not None: c.zoom = zoom
-            c.centreDisplayAt(*centre)
-            canvases.append(c)
-
-    # Configure each of the canvases (with those
-    # properties that are common to both ortho and
-    # lightbox canvases) and render them one by one
-    canvasBmps = []
-    for i, c in enumerate(canvases):
-
-        if   c.zax == 0: c.pos.xyz = displayCtx.location.yzx
-        elif c.zax == 1: c.pos.xyz = displayCtx.location.xzy
-        elif c.zax == 2: c.pos.xyz = displayCtx.location.xyz
-
-        c.draw()
-
-        canvasBmps.append(c.getBitmap())
-
-    # Show/hide orientation labels -
-    # not supported on lightbox view
-    if namespace.scene == 'lightbox' or not sceneOpts.showLabels:
-        labelBmps = None
-    else:
-        labelBmps = buildLabelBitmaps(overlayList,
-                                      displayCtx,
-                                      canvasAxes,
-                                      canvasBmps,
-                                      sceneOpts.bgColour[:3],
-                                      sceneOpts.bgColour[ 3])
-
-    # layout
-    if namespace.scene == 'lightbox':
-        layout = fsllayout.Bitmap(canvasBmps[0])
-    else:
-        layout = fsllayout.buildOrthoLayout(canvasBmps,
-                                            labelBmps,
-                                            sceneOpts.layout,
-                                            sceneOpts.showLabels,
-                                            LABEL_SIZE)
-
-    # Render a colour bar if required
-    if sceneOpts.showColourBar:
-        cbarBmp = buildColourBarBitmap(overlayList,
-                                       displayCtx,
-                                       cbarWidth,
-                                       cbarHeight,
-                                       sceneOpts.colourBarLocation,
-                                       sceneOpts.colourBarLabelSide,
-                                       sceneOpts.bgColour)
-        if cbarBmp is not None:
-            layout  = buildColourBarLayout(layout,
-                                           cbarBmp,
-                                           sceneOpts.colourBarLocation,
-                                           sceneOpts.colourBarLabelSide)
-
- 
-    if namespace.outfile is not None:
-        
-        import matplotlib.image as mplimg
-        bitmap = fsllayout.layoutToBitmap(
-            layout, [c * 255 for c in sceneOpts.bgColour])
-        mplimg.imsave(namespace.outfile, bitmap)
-
 
 if __name__ == '__main__':
     main()
