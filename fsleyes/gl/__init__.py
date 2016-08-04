@@ -191,6 +191,12 @@ log = logging.getLogger(__name__)
 os.environ.pop('LIBGL_ALWAYS_INDIRECT', None)
 
 
+# If there is no display, assume we're
+# running in off-screen / OSMesa mode.
+if not fslplatform.canHaveGui:
+    os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
+
+
 import OpenGL
 
 

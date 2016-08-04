@@ -92,10 +92,17 @@ def main(args=None):
     # user while it is loading overlays and
     # setting up the interface.
     # 
-    # So all of the work is defined in this
-    # function, which is scheduled to be
-    # executed on the wx main loop.
+    # All of the work is defined in a series
+    # of functions, which are chained together
+    # via ugly callbacks, but which are
+    # ultimately  scheduled and executed on the
+    # wx main loop.
+
+    # This is a container, shared amongst
+    # the callbacks, which contains the
+    # parsed argparse.Namespace object.
     namespace = [None]
+
     def init(splash):
 
         # Parse command line arguments. If the
@@ -121,7 +128,10 @@ def main(args=None):
         # but before initialise is called).
         fsleyes.configLogging(namespace[0])
 
-        # Initialise sub-modules/packages
+        # Initialise sub-modules/packages. The
+        # buildGui function is passed through
+        # as a callback, which gets called when
+        # initialisation is complete.
         initialise(splash, namespace[0], buildGui)
 
     def buildGui():
@@ -165,6 +175,16 @@ def main(args=None):
 def initialise(splash, namespace, callback):
     """Called by :func:`main`. Bootstraps/Initialises various parts of
     *FSLeyes*.
+
+    The ``callback`` function is asynchronously called when the initialisation
+    is complete.
+
+    :arg splash:    The :class:`.FSLEyesSplash` screen.
+
+    :arg namespace: The ``argparse.Namespace`` object containing parsed
+                    command line arguments.
+
+    :arg callback:  Function which is called when initialisation is done.
     """
 
     import                       props
@@ -212,16 +232,17 @@ def initialise(splash, namespace, callback):
 
     fslsettings.write('loadSaveOverlayDir', curDir)
 
-    # Force the creation of a wx.glcanvas.GLContext object,
-    # and initialise OpenGL version-specific module loads.
-    # The splash screen is used as the parent of the dummy
-    # canvas created by the gl.getWXGLContext function.
-
+    # This is called by fsleyes.gl.getGLContext
+    # when the GL context is ready to be used.
     def realCallback():
         fslgl.bootstrap(namespace.glversion)
         callback()
         
     try:
+        # Force the creation of a wx.glcanvas.GLContext object,
+        # and initialise OpenGL version-specific module loads.
+        # The splash screen is used as the parent of the dummy
+        # canvas created by the gl.getWXGLContext function.
         fslgl.getGLContext(parent=splash, ready=realCallback)
         
     except:
