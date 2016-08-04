@@ -7,6 +7,19 @@
 """This module provides the entry point to *FSLeyes*, the FSL image viewer.  
 
 See the :mod:`fsleyes` package documentation for more details on ``fsleyes``.
+
+
+.. note:: Even though ``fsleyes`` (this module) and :mod:`fsleyes.render` (the
+          off-screen renderer) are intended to be separate applications, the
+          current version of PyInstaller (3.x) does not support bundling of
+          multiple executables
+          (https://github.com/pyinstaller/pyinstaller/issues/1527).
+
+          So at this point in time, :mod:`.fsleyes.render` can be invoked via
+          ``fsleyes.main`` by passing ``'render'`` as the first argument,
+          e.g.::
+
+              python -m fsleyes.main render ...
 """
 
 
@@ -549,4 +562,13 @@ def fslDirWarning(parent):
 
 
 if __name__ == '__main__':
-    main()
+
+    # Hack to allow render to
+    # be called via fsleyes.main
+    if len(sys.argv) > 1 and sys.argv[1] == 'render':
+        import fsleyes.render as render
+        render.main(sys.argv[2:])
+
+    # Normal FSLeyes invocation
+    else:
+        main()
