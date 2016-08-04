@@ -89,11 +89,11 @@ class GLTensor(glvector.GLVector):
             texName = '{}_{}_{}'.format(type(self).__name__, name, id(img))
 
             if name[0] == 'v':
-                prefilter = vPrefilter
-                nvals     = 3
+                texPrefilter = vPrefilter
+                nvals        = 3
             else:
-                prefilter = None
-                nvals     = 1
+                texPrefilter = None
+                nvals        = 1
 
             tex = glresources.get(
                 texName,
@@ -102,7 +102,7 @@ class GLTensor(glvector.GLVector):
                 img,
                 nvals=nvals,
                 normalise=img.dataRange,
-                prefilter=prefilter)
+                prefilter=texPrefilter)
 
             setattr(self, '{}Texture'.format(name), tex)
 
@@ -167,8 +167,10 @@ class GLTensor(glvector.GLVector):
 
         opts.addListener('lighting',         name, self.asyncUpdateShaderState)
         opts.addListener('neuroFlip',        name, self.asyncUpdateShaderState)
-        opts.addListener('tensorResolution', name, self.asyncUpdateShaderState)
         opts.addListener('tensorScale',      name, self.asyncUpdateShaderState)
+        opts.addListener('tensorResolution',
+                         name,
+                         self.__tensorResolutionChanged)
         
 
     def removeListeners(self):
@@ -251,3 +253,10 @@ class GLTensor(glvector.GLVector):
         
         glvector.GLVector.postDraw(self)
         fslgl.gltensor_funcs.postDraw(self)
+
+
+    def __tensorResolutionChanged(self, *a):
+        """Called when the :attr:`.TensorOpts.tensorResolution` property
+        changes. Calls :meth:`.asyncUpdateShaderState`.
+        """
+        self.asyncUpdateShaderState(alwaysNotify=True)

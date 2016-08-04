@@ -539,12 +539,10 @@ class GLVector(globject.GLImageObject):
         Regenerates the colour map texture.
         """
 
-        # Refresh the xColour/yColour/zColour
-        # textures first
+
         display = self.display
         opts    = self.displayOpts
 
-        # Now do the cmap texture
         if self.colourImage is None:
             dmin, dmax = 0.0, 1.0
         else:
@@ -565,29 +563,32 @@ class GLVector(globject.GLImageObject):
         """
         display = self.display
         opts    = self.displayOpts
+        alpha   = display.alpha / 100.0 
         
         colours = np.array([opts.xColour, opts.yColour, opts.zColour])
         colours = fslcm.applyBricon(colours,
                                     display.brightness / 100.0,
                                     display.contrast   / 100.0)
 
-        colours[:, 3] = display.alpha / 100.0
+        colours[:, 3] = alpha
 
-        if   opts.suppressMode == 'white':       suppressColour = [1, 1, 1, 1]
-        elif opts.suppressMode == 'black':       suppressColour = [0, 0, 0, 1]
-        elif opts.suppressMode == 'transparent': suppressColour = [0, 0, 0, 0]
+        if   opts.suppressMode == 'white':       suppress = [1, 1, 1, alpha]
+        elif opts.suppressMode == 'black':       suppress = [0, 0, 0, alpha]
+        elif opts.suppressMode == 'transparent': suppress = [0, 0, 0, 0]
 
         # Transparent suppression
-        if opts.suppressX: colours[0, :] = suppressColour
-        if opts.suppressY: colours[1, :] = suppressColour
-        if opts.suppressZ: colours[2, :] = suppressColour
+        if opts.suppressX: colours[0, :] = suppress
+        if opts.suppressY: colours[1, :] = suppress
+        if opts.suppressZ: colours[2, :] = suppress
 
         return colours
 
 
     def getClippingRange(self):
-        """Returns the :attr:`clippingRange`, suitable for use in
-        the fragment shader.
+        """Returns the :attr:`clippingRange`, suitable for use in the fragment
+        shader. The returned values are transformed into the clip image
+        texture value range, so the fragment shader can compare texture 
+        values directly to it.
         """
 
         opts = self.displayOpts
