@@ -57,7 +57,7 @@ class GLSH(globject.GLImageObject):
 
     ``GLSH`` instances also create and manage a :class:`.ColourMapTexture`,
     which may be used to colour FODs by their radius values. The colour map
-    is defined by the :attr:`.SHOpts.colourMap` property.
+    is defined by the :attr:`.SHOpts.cmap` property.
 
     
     The textures managed by a ``GLSH`` instance are bound to texture units as
@@ -75,7 +75,7 @@ class GLSH(globject.GLImageObject):
 
 
         Creates a :class:`.Texture3D` instance to store vertex radii and a
-        :class:`.ColourMapTexture` to store the :attr:`.SHOpts.colourMap`,
+        :class:`.ColourMapTexture` to store the :attr:`.SHOpts.cmap`,
         adds property listeners to the :class:`.Display` and :class:`.SHOpts`
         instances, and calls :func:`.glsh_funcs.init`.
         
@@ -139,7 +139,7 @@ class GLSH(globject.GLImageObject):
         opts   .addListener('radiusThreshold', name, self.notify)
 
         opts   .addListener('colourMode',      name, self.updateShaderState)
-        opts   .addListener('colourMap',       name, self.cmapUpdate)
+        opts   .addListener('cmap',            name, self.cmapUpdate)
         opts   .addListener('xColour',         name, self.updateShaderState)
         opts   .addListener('yColour',         name, self.updateShaderState)
         opts   .addListener('zColour',         name, self.updateShaderState)
@@ -167,7 +167,7 @@ class GLSH(globject.GLImageObject):
         opts   .removeListener('radiusThreshold', name)
         
         opts   .removeListener('colourMode',      name)
-        opts   .removeListener('colourMap',       name)
+        opts   .removeListener('cmap',            name)
         opts   .removeListener('xColour',         name)
         opts   .removeListener('yColour',         name)
         opts   .removeListener('zColour',         name)
@@ -201,7 +201,7 @@ class GLSH(globject.GLImageObject):
             display.brightness / 100.0,
             display.contrast   / 100.0)
 
-        self.cmapTexture.set(cmap=opts.colourMap,
+        self.cmapTexture.set(cmap=opts.cmap,
                              alpha=display.alpha / 100.0,
                              displayRange=(dmin, dmax))
 

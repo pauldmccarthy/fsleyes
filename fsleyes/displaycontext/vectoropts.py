@@ -20,8 +20,8 @@ from . import            volumeopts
 
 class VectorOpts(volumeopts.Nifti1Opts):
     """The ``VectorOpts`` class is the base class for :class:`LineVectorOpts`,
-    :class:`RGBVectorOpts`, and :class:`.TensorOpts`. It contains display
-    settings which are common to each of them.
+    :class:`RGBVectorOpts`, :class:`.TensorOpts`, and :class:`.SHOpts`. It
+    contains display settings which are common to each of them.
     """
 
 
@@ -55,10 +55,10 @@ class VectorOpts(volumeopts.Nifti1Opts):
 
     neuroFlip = props.Boolean(default=True)
     """If ``True``, and the displayed image looks like it is in neurological
-    orientation, vectors are flipped along the x-axis. This property is
-    only applicable to the :class:`.LineVectorOpts` and :class:`.TensorOpts`
-    classes. See the :meth:`.Nifti1Opts.getTransform` method for more
-    information.
+    orientation, vectors are flipped along the x-axis. This property is only
+    applicable to the :class:`.LineVectorOpts`, :class:`.TensorOpts`, and
+    :class:`.SHOpts` classes. See the :meth:`.Nifti1Opts.getTransform` method
+    for more information.
     """
 
     
@@ -288,7 +288,6 @@ class LineVectorOpts(VectorOpts):
         kwargs['nounbind'] = ['directed', 'unitLength', 'lengthScale']
 
         VectorOpts.__init__(self, *args, **kwargs)
-
 
 
 class RGBVectorOpts(VectorOpts):

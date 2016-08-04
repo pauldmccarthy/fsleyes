@@ -395,13 +395,8 @@ OPTIONS = td.TypeDict({
     'SHOpts'         : ['shResolution',
                         'size',
                         'lighting',
-                        'neuroFlip',
                         'radiusThreshold',
-                        'colourMode',
-                        'colourMap',
-                        'xColour',
-                        'yColour',
-                        'zColour']
+                        'colourMode']
 })
 """This dictionary defines all of the options which are exposed on the command
 line.

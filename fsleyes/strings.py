@@ -649,7 +649,7 @@ properties = TypeDict({
     'SHOpts.shResolution'    : 'FOD quality',
     'SHOpts.neuroFlip'       : 'Neurological flip (FSL convention)',
     'SHOpts.colourMode'      : 'Colour mode',
-    'SHOpts.colourMap'       : 'Radius colour map',
+    'SHOpts.cmap'            : 'Radius colour map',
     'SHOpts.xColour'         : 'X direction colour',
     'SHOpts.yColour'         : 'Y direction colour',
     'SHOpts.zColour'         : 'Z direction colour',
