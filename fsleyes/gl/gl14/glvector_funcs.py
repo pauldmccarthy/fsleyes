@@ -45,17 +45,17 @@ def compileShaders(self, vertShader):
 
     if useVolumeFragShader:
         textures = {
-            'clipTexture'      : 2,
-            'imageTexture'     : 3,
-            'colourTexture'    : 4,
-            'negColourTexture' : 4
+            'clipTexture'      : 1,
+            'imageTexture'     : 2,
+            'colourTexture'    : 3,
+            'negColourTexture' : 3
         }
 
     else:
         textures = {
-            'vectorTexture'   : 0,
-            'modulateTexture' : 1,
-            'clipTexture'     : 2,
+            'modulateTexture' : 0,
+            'clipTexture'     : 1,
+            'vectorTexture'   : 4, 
         } 
         
     self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)

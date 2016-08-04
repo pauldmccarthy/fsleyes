@@ -113,7 +113,7 @@ def updateShaderState(self):
     v2dMat      = opts.getTransform('voxel',   'display')
     xFlip       = image.isNeurological() and opts.neuroFlip
 
-    changed |= shader.set('vectorTexture',   0)
+    changed |= shader.set('vectorTexture',   4)
     changed |= shader.set('displayToVoxMat', d2vMat)
     changed |= shader.set('voxToDisplayMat', v2dMat)
     changed |= shader.set('voxValXform',     vvxMat)

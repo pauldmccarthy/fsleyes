@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 #
-# glvector.py - The GLVector class.
+# glvector.py - The GLVectorBase and GLVector classes.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`GLVector` class, which encapsulates the
-logic for rendering 2D slices of a ``X*Y*Z*3`` :class:`.Image` as a vector
-image.
+"""This module provides the :class:`GLVectorBase` and :class:`GLVector`
+classes. The ``GLVectorBase`` class encapsulate the logic for rendering
+overlays which contain directional data, and the ``GLVector`` class
+specifically conatins logic for displaying ``X*Y*Z*3`` :class:`.Image`
+overlays. 
 """
 
 
@@ -21,33 +23,23 @@ from . import                textures
 from . import                globject
 
 
-class GLVector(globject.GLImageObject):
-    """The :class:`GLVector` class, which encapsulates the logic for
-    rendering 2D slices of a ``X*Y*Z*3`` :class:`.Image` as a vector image.
-    The ``GLVector`` class is a sub-class of :class:`.GLImageObject`.
+class GLVectorBase(globject.GLImageObject):
+    """The :class:`GLVectorBase` class encapsulates the logic for rendering
+    :class:`.Nifti1` overlay types which represent directional data (and which
+    are described by a :class:`.VectorOpts` instance).  The ``GLVectorBase``
+    class is a sub-class of :class:`.GLImageObject`.
 
 
-    The ``GLVector`` class is a base class which is not intended to be
-    instantiated directly. The :class:`.GLRGBVector`,
-    :class:`.GLLineVector` and :class:`.GLTensor` subclasses should be
-    used instead.  These subclasses share the functionality provided
-    by this class.
-
-
-    The ``image`` overlay passed to :meth:`__init__` is assumed to be
-    an :class:`.Image` instance which contains vector data. If this is not
-    the case, the ``vectorImage`` parameter may be used to pass in the
-    :class:`.Image` that contains the vector data.
-
-
-    This vector image is stored on the GPU as a 3D RGB :class:`.ImageTexture`,
-    where the ``R`` channel contains the ``x`` vector values, the ``G``
-    channel the ``y`` values, and the ``B`` channel the ``z`` values.
+    The ``GLVectorBase`` class is a base class which is not intended to be
+    instantiated directly. The :class:`.GLRGBVector`, :class:`.GLLineVector`,
+    :class:`.GLTensor`, and :class:`.GLSH` subclasses should be used instead.
+    These subclasses share the functionality provided by this class. See also
+    the :class:`GLVector` class, which is also a base class.
 
 
     *Colouring*
 
-    A ``GLVector`` can be coloured in one of two ways:
+    A ``GLVectorBase`` can be coloured in one of two ways:
 
      - Each voxel is coloured according to the orientation of the vector.
        A custom fragment shader program looks up the ``xyz`` vector values,
@@ -55,7 +47,9 @@ class GLVector(globject.GLImageObject):
        to form the final fragment colour. The colours for each component
        are specified by the :attr:`.VectorOpts.xColour`,
        :attr:`.VectorOpts.yColour`, and :attr:`.VectorOpts.zColour`
-       properties.
+       properties. If the image being displayed contains directional data
+       (i.e. is a ``X*Y*Z*3`` vector image), you should use the
+       :class:`GLVector` class.
 
      - Each voxel is coloured according to the values contained in another
        image, which are used to look up a colour in a colour map. The image
@@ -78,84 +72,48 @@ class GLVector(globject.GLImageObject):
     
     *Textures*
 
-    The ``GLVector`` class configures its textures in the following manner:
+    The ``GLVectorBase`` class configures its textures in the following manner:
 
     =================== ================== 
-    ``imageTexture``    ``gl.GL_TEXTURE0``
-    ``modulateTexture`` ``gl.GL_TEXTURE1``
-    ``clipTexture``     ``gl.GL_TEXTURE2``
-    ``colourTexture``   ``gl.GL_TEXTURE3``
-    ``cmapTexture``     ``gl.GL_TEXTURE4``
+    ``modulateTexture`` ``gl.GL_TEXTURE0``
+    ``clipTexture``     ``gl.GL_TEXTURE1``
+    ``colourTexture``   ``gl.GL_TEXTURE2``
+    ``cmapTexture``     ``gl.GL_TEXTURE3``
     =================== ==================
     """
 
     
-    def __init__(self,
-                 image,
-                 display,
-                 xax,
-                 yax,
-                 prefilter=None,
-                 prefilterRange=None,
-                 vectorImage=None,
-                 init=None):
-        """Create a ``GLVector`` object bound to the given image and display.
+    def __init__(self, overlay, display, xax, yax, init=None):
+        """Create a ``GLVectorBase`` object bound to the given overlay and
+        display.
 
-        Initialises the OpenGL data required to render the given image.
-        This method does the following:
+        Initialises the OpenGL data required to render the given vector
+        overlay. This method does the following:
         
-          - Creates the vector image texture, and the modulate, clipping and
-            colour image textures.
+          - Creates the modulate, clipping and colour image textures.
 
           - Adds listeners to the :class:`.Display` and :class:`.VectorOpts`
             instances, so the textures and geometry can be updated when
             necessary.
 
-        :arg image:          An :class:`.Nifti1` object.
+        :arg overlay:        A :class:`.Nifti1` object.
         
         :arg display:        A :class:`.Display` object which describes how the
-                             image is to be displayed.
+                             overlya is to be displayed.
 
         :arg xax:            Initial display X axis
 
         :arg yax:            Initial display Y axis        
 
-        :arg prefilter:      An optional function which filters the data before
-                             it is stored as a 3D texture. See
-                             :class:`.ImageTexture`. Whether or not this 
-                             function is provided, the data is transposed so 
-                             that the fourth dimension is the fastest changing.
-
-        :arg prefilterRange: If the provided ``prefilter`` function will cause
-                             the range of the data to change, this function 
-                             must be provided, and must, given the original
-                             data range, return a suitably adjusted adjust data
-                             range.
-
-        :arg vectorImage:    Optional. If ``None``, the ``image`` is assumed to
-                             be a 4D :class:`.Image` instance which contains
-                             the vector data. If this is not the case, the
-                             ``vectorImage`` parameter can be used to specify
-                             an ``Image`` instance which does contain the
-                             vector data.
-
         :arg init:           An optional function to be called when all of the
                              :class:`.ImageTexture` instances associated with
-                             this ``GLVector`` have been initialised.
+                             this ``GLVectorBase`` have been initialised.
         """
 
-        if vectorImage is None: vectorImage = image
-        if prefilter   is None: prefilter   = lambda  d: d
-
-        if len(vectorImage.shape) != 4 or vectorImage.shape[3] != 3:
-            raise ValueError('Image must be 4 dimensional, with 3 volumes '
-                             'representing the XYZ vector angles')
-
-        globject.GLImageObject.__init__(self, image, display, xax, yax)
+        globject.GLImageObject.__init__(self, overlay, display, xax, yax)
 
         name = self.name
 
-        self.vectorImage     = vectorImage
         self.cmapTexture     = textures.ColourMapTexture('{}_cm'.format(name))
 
         self.shader          = None
@@ -168,9 +126,6 @@ class GLVector(globject.GLImageObject):
         self.modulateTexture = None
         self.clipTexture     = None
         self.colourTexture   = None
-        self.imageTexture    = None
-        self.prefilter       = prefilter
-        self.prefilterRange  = prefilterRange
 
         # Make sure we are registered with the
         # auxillary images if any of them are set.
@@ -188,7 +143,6 @@ class GLVector(globject.GLImageObject):
             self.notify()
 
         self.refreshColourMapTexture()
-        self.refreshImageTexture()
         self.refreshAuxTexture('modulate')
         self.refreshAuxTexture('clip')
         self.refreshAuxTexture('colour')
@@ -197,15 +151,14 @@ class GLVector(globject.GLImageObject):
 
         
     def destroy(self):
-        """Must be called when this ``GLVector`` is no longer needed. Deletes
-        the GL textures, and deregisters the listeners configured in
+        """Must be called when this ``GLVectorBase`` is no longer needed. 
+        Deletes the GL textures, and deregisters the listeners configured in
         :meth:`__init__`.
         """
 
         self.cmapTexture.destroy()
 
-        for tex in (self.imageTexture,
-                    self.modulateTexture,
+        for tex in (self.modulateTexture,
                     self.clipTexture,
                     self.colourTexture):
             tex.deregister(self.name)
@@ -216,7 +169,6 @@ class GLVector(globject.GLImageObject):
         self.deregisterAuxImage('clip')
         self.deregisterAuxImage('colour')
 
-        self.imageTexture    = None
         self.modulateTexture = None
         self.clipTexture     = None
         self.colourTexture   = None
@@ -231,7 +183,7 @@ class GLVector(globject.GLImageObject):
 
 
     def ready(self):
-        """Returns ``True`` if this ``GLVector`` is ready to be drawn,
+        """Returns ``True`` if this ``GLVectorBase`` is ready to be drawn,
         ``False`` otherwise.
         """
         return self.shader is not None and self.texturesReady()
@@ -241,11 +193,9 @@ class GLVector(globject.GLImageObject):
         """Returns ``True`` if all of the textures are ready, ``False``
         otherwise.
         """
-        return (self.imageTexture    is not None and
-                self.modulateTexture is not None and
+        return (self.modulateTexture is not None and
                 self.clipTexture     is not None and
                 self.colourTexture   is not None and 
-                self.imageTexture   .ready()     and 
                 self.modulateTexture.ready()     and 
                 self.clipTexture    .ready()     and 
                 self.colourTexture  .ready())
@@ -277,15 +227,7 @@ class GLVector(globject.GLImageObject):
         opts   .addListener('colourImage',   name, self.__colourImageChanged)
         opts   .addListener('clippingRange', name, self.asyncUpdateShaderState)
         opts   .addListener('modulateRange', name, self.asyncUpdateShaderState)
-        opts   .addListener('resolution',    name, self.__resolutionChanged)
         opts   .addListener('transform',     name, self.notify)
-
-        # See comment in GLVolume.addDisplayListeners about this
-        self.__syncListenersRegistered = opts.getParent() is not None 
-
-        if self.__syncListenersRegistered:
-            opts.addSyncChangeListener(
-                'resolution', name, self.__syncChanged)
 
 
     def removeListeners(self):
@@ -313,73 +255,20 @@ class GLVector(globject.GLImageObject):
         opts   .removeListener('colourImage',   name)
         opts   .removeListener('clippingRange', name)
         opts   .removeListener('modulateRange', name)
-        opts   .removeListener('volume',        name)
-        opts   .removeListener('resolution',    name)
         opts   .removeListener('transform' ,    name)
 
-        if self.__syncListenersRegistered:
-            opts.removeSyncChangeListener('resolution', name)
-
-
-    def refreshImageTexture(self, interp=gl.GL_NEAREST):
-        """Called by :meth:`__init__`, and when the :class:`.ImageTexture`
-        needs to be updated. (Re-)creates the ``ImageTexture``, using the
-        :mod:`.resources` module so that the texture can be shared by other
-        users.
-        
-        :arg interp: Interpolation method (``GL_NEAREST`` or ``GL_LINEAR``).
-                     Used by sub-class implementations (see
-                     :class:`.GLRGBVector`).
-        """
-
-        opts           = self.displayOpts
-        prefilter      = self.prefilter
-        prefilterRange = self.prefilterRange
-        vecImage       = self.vectorImage
-        texName        = '{}_{}'.format(type(self).__name__, id(vecImage))
-        
-        if self.imageTexture is not None:
-            self.imageTexture.deregister(self.name)
-            glresources.delete(self.imageTexture.getTextureName())
-
-        # the fourth dimension (the vector directions) 
-        # must be the fastest changing in the texture data
-        def realPrefilter(d):
-            return prefilter(d.transpose((3, 0, 1, 2)))
-            
-        unsynced = (opts.getParent() is None                or 
-                    not opts.isSyncedToParent('resolution') or
-                    not opts.isSyncedToParent('volume'))
-
-        if unsynced:
-            texName = '{}_unsync_{}'.format(texName, id(opts))
-        
-        self.imageTexture = glresources.get(
-            texName,
-            textures.ImageTexture,
-            texName,
-            vecImage,
-            nvals=3,
-            interp=interp,
-            normalise=vecImage.dataRange,
-            prefilter=realPrefilter,
-            prefilterRange=prefilterRange,
-            notify=False)
-        
-        self.imageTexture.register(self.name, self.__textureChanged)
-
-    
     def compileShaders(self):
-        """This method must be provided by subclasses (the
+        """This method must be provided by subclasses (e.g.g the
         :class:`.GLRGBVector` and :class:`.GLLineVector` classes), and must
-        compile the vertex/fragment shaders used to render this ``GLVector``.
+        compile the vertex/fragment shaders used to render this
+        ``GLVectorBase``.
         .""" 
         raise NotImplementedError('compileShaders must be implemented by '
                                   '{} subclasses'.format(type(self).__name__)) 
 
 
     def updateShaderState(self):
-        """This method must be provided by subclasses (the
+        """This method must be provided by subclasses (e.g. the
         :class:`.GLRGBVector` and :class:`.GLLineVector` classes), and must
         update the state of the vertex/fragment shader programs. It must return
         ``True`` if the shader state was updated, ``False`` otherwise.
@@ -398,7 +287,7 @@ class GLVector(globject.GLImageObject):
 
         def func():
             if self.updateShaderState() or alwaysNotify:
-                self.notify() 
+                self.notify()
 
         async.idleWhen(func,
                        self.ready,
@@ -507,7 +396,7 @@ class GLVector(globject.GLImageObject):
                         not opts.isSyncedToParent('resolution') or
                         not opts.isSyncedToParent('volume'))
 
-            # TODO If unsynced, this GLVector needs to 
+            # TODO If unsynced, this GLVectorBase needs to 
             # update the mod/clip/colour textures whenever
             # their volume/resolution properties change.
             # Right?
@@ -596,10 +485,6 @@ class GLVector(globject.GLImageObject):
         clipLow, clipHigh = opts.clippingRange
         xform             = self.clipTexture.invVoxValXform
         
-        # Transform the clip threshold into
-        # the texture value range, so the
-        # fragment shader can compare texture
-        # values directly to it. 
         if opts.clipImage is not None:
             clipLow  = clipLow  * xform[0, 0] + xform[3, 0]
             clipHigh = clipHigh * xform[0, 0] + xform[3, 0]
@@ -611,8 +496,10 @@ class GLVector(globject.GLImageObject):
 
 
     def getModulateRange(self):
-        """Returns the :attr:`modulateRange`, suitable for use in
-        the fragment shader.
+        """Returns the :attr:`modulateRange`, suitable for use in the fragment
+        shader. The returned values are transformed into the modulate image
+        texture value range, so the fragment shader can compare texture values
+        directly to it.
         """ 
 
         opts = self.displayOpts
@@ -620,7 +507,6 @@ class GLVector(globject.GLImageObject):
         modLow, modHigh = opts.modulateRange
         xform           = self.modulateTexture.invVoxValXform
         
-        # Do the same for the modulation range
         if opts.modulateImage is not None:
             modLow  = modLow  * xform[0, 0] + xform[3, 0]
             modHigh = modHigh * xform[0, 0] + xform[3, 0] 
@@ -634,24 +520,22 @@ class GLVector(globject.GLImageObject):
     def preDraw(self):
         """Must be called by subclass implementations.
 
-        Ensures that all of the textures used by this ``GLVector`` are bound
-        to their corresponding texture units.
+        Ensures that all of the textures managed by this ``GLVectorBase`` are
+        bound to their corresponding texture units.
         """
         
-        self.imageTexture   .bindTexture(gl.GL_TEXTURE0)
-        self.modulateTexture.bindTexture(gl.GL_TEXTURE1)
-        self.clipTexture    .bindTexture(gl.GL_TEXTURE2)
-        self.colourTexture  .bindTexture(gl.GL_TEXTURE3)
-        self.cmapTexture    .bindTexture(gl.GL_TEXTURE4)
+        self.modulateTexture.bindTexture(gl.GL_TEXTURE0)
+        self.clipTexture    .bindTexture(gl.GL_TEXTURE1)
+        self.colourTexture  .bindTexture(gl.GL_TEXTURE2)
+        self.cmapTexture    .bindTexture(gl.GL_TEXTURE3)
 
         
     def postDraw(self):
         """Must be called by subclass implementations.
 
-        Unbinds all of the textures used by this ``GLVector``.
+        Unbinds all of the textures managed by this ``GLVectorBase``.
         """
 
-        self.imageTexture   .unbindTexture()
         self.modulateTexture.unbindTexture()
         self.clipTexture    .unbindTexture()
         self.colourTexture  .unbindTexture()
@@ -661,7 +545,7 @@ class GLVector(globject.GLImageObject):
     def __cmapPropChanged(self, *a):
         """Called when a :class:`.Display` or :class:`.VectorOpts` property
         affecting the vector colour map settings changes. Calls
-        :meth:`refreshColourMapTexture` and :meth:`asyncUpdateShaderState`
+        :meth:`refreshColourMapTexture` and :meth:`asyncUpdateShaderState`.
         """
         self.refreshColourMapTexture()
         self.asyncUpdateShaderState(alwaysNotify=True)
@@ -683,14 +567,6 @@ class GLVector(globject.GLImageObject):
         async.idleWhen(onRefresh, self.texturesReady)
 
 
-    def __resolutionChanged(self, *a):
-        """Called when the :attr:`.Nifti1Opts.resolution` property changes.
-        Refreshes the image texture.
-        """
-        self.imageTexture.set(resolution=self.displayOpts.resolution)
-        self.asyncUpdateShaderState(alwaysNotify=True)
-
-
     def __modImageChanged(self, *a):
         """Called when the :attr:`.VectorOpts.modulateImage` changes.
         Registers with the new image, and refreshes textures as needed.
@@ -710,6 +586,215 @@ class GLVector(globject.GLImageObject):
         self.refreshAuxTexture( 'clip')
         self.asyncUpdateShaderState(alwaysNotify=True)
 
+
+    def __textureChanged(self, *a):
+        """Called when any of the :class:`.ImageTexture` instances containing
+        clipping, modulation or colour data, are refreshed. Notifies
+        listeners of this ``GLVectorBase`` (via the :class:`.Notifier` base
+        class).
+        """
+        self.asyncUpdateShaderState(alwaysNotify=True)
+
+
+class GLVector(GLVectorBase):
+    """The ``GLVector`` class is a sub-class of :class:`GLVectorBase`, which
+    contains some additional logic for rendering :class:`.Image` overlays
+    with a shape ``X*Y*Z*3``, and which contain directional data.
+
+
+    By default , the ``image`` overlay passed to :meth:`__init__` is assumed
+    to be an :class:`.Image` instance which contains vector data. If this is
+    not the case, the ``vectorImage`` parameter may be used to pass in the
+    :class:`.Image` that contains the vector data.
+
+
+    This vector image is stored on the GPU as a 3D RGB :class:`.ImageTexture`,
+    where the ``R`` channel contains the ``x`` vector values, the ``G``
+    channel the ``y`` values, and the ``B`` channel the ``z`` values.
+    
+    This texture is bound to texture unit  ``gl.GL_TEXTURE4`` in the
+    :meth:`preDraw` method.
+    """
+
+    def __init__(self, image, *args, **kwargs):
+        """Create a ``GLVector``. All of the arguments documented here are
+        optional, but if provided, must be passed as keyword arguments. All
+        other arguments are passed through to :meth:`GLVectorBase.__init__`.
+
+        
+        :arg vectorImage:    If ``None``, the ``image`` is assumed to be a 4D
+                             :class:`.Image` instance which contains the
+                             vector data. If this is not the case, the
+                             ``vectorImage`` parameter can be used to specify
+                             an ``Image`` instance which does contain the
+                             vector data.
+
+        :arg prefilter:      An optional function which filters the data before
+                             it is stored as a 3D texture. See
+                             :class:`.Texture3D`. Regardless of whether this 
+                             function is provided, the data is always
+                             transposed so that the fourth dimension is the
+                             fastest changing, before being transferred to the
+                             GPU.
+
+        :arg prefilterRange: If the provided ``prefilter`` function will cause
+                             the range of the data to change, this function 
+                             must be provided, and must, given the original
+                             data range, return a suitably adjusted adjust data
+                             range.
+        """
+
+
+        def defaultPrefilter(d):
+            return d
+
+        vectorImage    = kwargs.pop('vectorImage',    image)
+        prefilter      = kwargs.pop('prefilter',      defaultPrefilter)
+        prefilterRange = kwargs.pop('prefilterRange', None)
+
+        if len(vectorImage.shape) != 4 or vectorImage.shape[3] != 3:
+            raise ValueError('Image must be 4 dimensional, with 3 volumes '
+                             'representing the XYZ vector angles')
+
+        self.vectorImage     = vectorImage
+        self.imageTexture    = None
+        self.prefilter       = prefilter
+        self.prefilterRange  = prefilterRange 
+        
+        GLVectorBase.__init__(self, image, *args, **kwargs)
+
+        self.refreshImageTexture()
+
+
+    def destroy(self):
+        """Overrides :meth:`GLVectorBase.destroy`. Must be called when this
+        ``GLVector`` is no longer needed. Calls :meth:`GLVectorBase.destroy`,
+        and destroys the vector image texture.
+        """
+
+        GLVectorBase.destroy(self)
+        self.imageTexture.deregister(self.name)
+        glresources.delete(self.imageTexture.getTextureName())
+
+        self.imageTexture = None
+
+
+    def texturesReady(self):
+        """Overrides :meth:`GLVectorBase.texturesReady`.  Returns ``True`` if
+        all of the textures managed by this ``GLVector`` are ready to be used,
+        ``False`` otherwise.
+        """
+        return (self.imageTexture is not None and
+                self.imageTexture.ready()     and 
+                GLVectorBase.texturesReady(self))
+
+
+    def addListeners(self):
+        """Overrides :meth:`GLVectorBase.addListeners`. Calls the base
+        implementation, and adds some extra listeners.
+        """
+
+        GLVectorBase.addListeners(self)
+
+        opts = self.displayOpts
+        name = self.name
+
+        opts.addListener('resolution', name, self.__resolutionChanged)
+
+        # See comment in GLVolume.addDisplayListeners about this
+        self.__syncListenersRegistered = opts.getParent() is not None 
+
+        if self.__syncListenersRegistered:
+            opts.addSyncChangeListener(
+                'resolution', name, self.__syncChanged)
+
+
+    def removeListeners(self):
+        """Overrides :meth:`GLVectorBase. Calls the base implementation,
+        and removes the listeners added by :meth:`addListeners`.
+        """
+        GLVectorBase.removeListeners(self)
+
+        self.displayOpts.removeListener('resolution', self.name)
+
+        if self.__syncListenersRegistered:
+            self.displayOpts.removeSyncChangeListener('resolution', self.name)
+
+
+    def refreshImageTexture(self, interp=gl.GL_NEAREST):
+        """Called by :meth:`__init__`, and when the :class:`.ImageTexture`
+        needs to be updated. (Re-)creates the ``ImageTexture``, using the
+        :mod:`.resources` module so that the texture can be shared by other
+        users.
+        
+        :arg interp: Interpolation method (``GL_NEAREST`` or ``GL_LINEAR``).
+                     Used by sub-class implementations (see
+                     :class:`.GLRGBVector`).
+        """
+
+        opts           = self.displayOpts
+        prefilter      = self.prefilter
+        prefilterRange = self.prefilterRange
+        vecImage       = self.vectorImage
+        texName        = '{}_{}'.format(type(self).__name__, id(vecImage))
+        
+        if self.imageTexture is not None:
+            self.imageTexture.deregister(self.name)
+            glresources.delete(self.imageTexture.getTextureName())
+
+
+        print 'Refreshing vector image texture - prefilter: {}, range: {}' \
+            .format(prefilter, prefilterRange)
+
+        # the fourth dimension (the vector directions) 
+        # must be the fastest changing in the texture data
+        def realPrefilter(d):
+            return prefilter(d.transpose((3, 0, 1, 2)))
+            
+        unsynced = (opts.getParent() is None                or 
+                    not opts.isSyncedToParent('resolution') or
+                    not opts.isSyncedToParent('volume'))
+
+        if unsynced:
+            texName = '{}_unsync_{}'.format(texName, id(opts))
+        
+        self.imageTexture = glresources.get(
+            texName,
+            textures.ImageTexture,
+            texName,
+            vecImage,
+            nvals=3,
+            interp=interp,
+            normalise=vecImage.dataRange,
+            prefilter=realPrefilter,
+            prefilterRange=prefilterRange,
+            notify=False)
+        
+        self.imageTexture.register(self.name, self.__textureChanged)
+
+
+    def preDraw(self):
+        """Overrides :meth:`GLVectorBase.
+        """
+        GLVectorBase.preDraw(self)
+        self.imageTexture.bindTexture(gl.GL_TEXTURE4)
+
+
+    def postDraw(self):
+        """Overrides :meth:`GLVectorBase.
+        """
+        GLVectorBase.postDraw(self)
+        self.imageTexture.unbindTexture()
+
+
+    def __resolutionChanged(self, *a):
+        """Called when the :attr:`.Nifti1Opts.resolution` property changes.
+        Refreshes the image texture.
+        """
+        self.imageTexture.set(resolution=self.displayOpts.resolution)
+        self.asyncUpdateShaderState(alwaysNotify=True)
+
+
     def __syncChanged(self, *a):
         """Called when the synchronisation state of the
         :attr:`.Nifti1Opts.resolution` property changes. Refreshes the image
@@ -720,8 +805,8 @@ class GLVector(globject.GLImageObject):
 
 
     def __textureChanged(self, *a):
-        """Called when any of the :class:`.ImageTexture` instances containing
-        image, clipping, modulation or colour data, are refreshed. Notifies
-        listeners of this ``GLVector`` (via the :class:`.Notifier` base class).
+        """Called when the :class:`.ImageTexture` instance containing the vector
+        data is are refreshed. Notifies listeners of this ``GLVector`` (via the
+        :class:`.Notifier` base class).
         """
         self.asyncUpdateShaderState(alwaysNotify=True)
