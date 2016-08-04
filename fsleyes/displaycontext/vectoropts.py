@@ -95,7 +95,15 @@ class VectorOpts(volumeopts.Nifti1Opts):
 
     
     clippingRange = props.Bounds(ndims=1)
-    """Hide voxels for which the clip image value is outside of this range. """
+    """Hide voxels for which the :attr:`clipImage` value is outside of this
+    range.
+    """
+
+
+    modulateRange = props.Bounds(ndims=1)
+    """Data range used in brightness modulation, when a :attr:`modulateImage`
+    is in use.
+    """
 
     
     def __init__(self, *args, **kwargs):
@@ -116,6 +124,9 @@ class VectorOpts(volumeopts.Nifti1Opts):
             self            .addListener('clipImage',
                                          self.name,
                                          self.__clipImageChanged)
+            self            .addListener('modulateImage',
+                                         self.name,
+                                         self.__modulateImageChanged) 
 
             if not self.isSyncedToParent('modulateImage'):
                 self.__refreshAuxImage('modulateImage')
@@ -127,6 +138,7 @@ class VectorOpts(volumeopts.Nifti1Opts):
         else:
             self.__overlayListChanged()
             self.__clipImageChanged()
+            self.__modulateImageChanged()
 
 
     def destroy(self):
@@ -134,8 +146,9 @@ class VectorOpts(volumeopts.Nifti1Opts):
         :meth:`.Nifti1Opts.destroy` method.
         """
         if self.__registered:
-            self.overlayList.removeListener('overlays',  self.name)
-            self            .removeListener('clipImage', self.name)
+            self.overlayList.removeListener('overlays',      self.name)
+            self            .removeListener('clipImage',     self.name)
+            self            .removeListener('modulateImage', self.name)
 
         volumeopts.Nifti1Opts.destroy(self)
 
@@ -164,6 +177,21 @@ class VectorOpts(volumeopts.Nifti1Opts):
         self.clippingRange.xmin =  minval - distance
         self.clippingRange.xmax =  maxval + distance
         self.clippingRange.x    = [minval, maxval + distance]
+
+
+    def __modulateImageChanged(self, *a):
+        """Called when the :attr:`modulateImage` property changes. Updates
+        the range of the :attr:`modulateRange` property.
+        """
+
+        image = self.modulateImage
+
+        if image is None: minval, maxval = 0, 1
+        else:             minval, maxval = image.dataRange
+
+        self.modulateRange.xmin = minval
+        self.modulateRange.xmax = maxval
+        self.modulateRange.x    = [minval, maxval] 
 
         
     def __overlayListChanged(self, *a):

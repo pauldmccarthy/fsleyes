@@ -172,6 +172,9 @@ properties = TypeDict({
     'VectorOpts.clippingRange'    : 'Vector values which have a corresponding '
                                     'clipping image value that is outside of '
                                     'this range are not displayed. ',
+    'VectorOpts.modulateRange'    : 'The data range that is used when '
+                                    'modulating vector brightness by a '
+                                    'modulation image.', 
     'VectorOpts.cmap'             : 'Colour map to use for colouring vector '
                                     'voxels, if a colour image is selected.',
     'VectorOpts.neuroFlip'        : 'If the image is in neurological '

@@ -617,6 +617,7 @@ properties = TypeDict({
     'VectorOpts.modulateImage' : 'Modulate by',
     'VectorOpts.clipImage'     : 'Clip by',
     'VectorOpts.clippingRange' : 'Clipping range',
+    'VectorOpts.modulateRange' : 'Modulation range',
     'VectorOpts.neuroFlip'     : 'Neurological flip (FSL convention)',
 
     'RGBVectorOpts.interpolation' : 'Interpolation',
@@ -700,6 +701,9 @@ choices = TypeDict({
     
     'VectorOpts.clippingRange.min' : 'Clip min.',
     'VectorOpts.clippingRange.max' : 'Clip max.',
+
+    'VectorOpts.modulateRange.min' : 'Mod min.',
+    'VectorOpts.modulateRange.max' : 'Mod max.', 
 
     'VectorOpts.suppressMode' : {'white'       : 'White',
                                  'black'       : 'Black',
