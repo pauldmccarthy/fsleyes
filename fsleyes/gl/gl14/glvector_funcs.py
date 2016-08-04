@@ -68,21 +68,12 @@ def updateFragmentShaderState(self):
     
     opts                = self.displayOpts
     useVolumeFragShader = opts.colourImage is not None 
+    shape               = list(self.vectorImage.shape[:3])
+    modLow,  modHigh    = self.getModulateRange()
+    clipLow, clipHigh   = self.getClippingRange() 
 
-    invClipValXform = self.clipTexture.invVoxValXform
-    shape           = list(self.vectorImage.shape[:3])
-    clippingRange   = opts.clippingRange
-    
-    if opts.clipImage is not None:
-        clipLo = clippingRange[0] * \
-            invClipValXform[0, 0] + invClipValXform[3, 0]
-        clipHi = clippingRange[1] * \
-            invClipValXform[0, 0] + invClipValXform[3, 0]
-    else:
-        clipLo = -0.1
-        clipHi =  1.1
-
-    clipping = [clipLo, clipHi, -1, -1]
+    clipping = [clipLow, clipHigh,                 -1, -1]
+    mod      = [modLow,  1.0 / (modHigh - modLow), -1, -1]
 
     self.shader.load()
 
@@ -108,6 +99,7 @@ def updateFragmentShaderState(self):
         colours     = self.getVectorColours()
          
         self.shader.setFragParam('voxValXform', voxValXform)
+        self.shader.setFragParam('mod',         mod)
         self.shader.setFragParam('xColour',     colours[0])
         self.shader.setFragParam('yColour',     colours[1])
         self.shader.setFragParam('zColour',     colours[2])

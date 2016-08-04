@@ -276,6 +276,7 @@ class GLVector(globject.GLImageObject):
         opts   .addListener('clipImage',     name, self.__clipImageChanged)
         opts   .addListener('colourImage',   name, self.__colourImageChanged)
         opts   .addListener('clippingRange', name, self.asyncUpdateShaderState)
+        opts   .addListener('modulateRange', name, self.asyncUpdateShaderState)
         opts   .addListener('resolution',    name, self.__resolutionChanged)
         opts   .addListener('transform',     name, self.notify)
 
@@ -311,6 +312,7 @@ class GLVector(globject.GLImageObject):
         opts   .removeListener('clipImage',     name)
         opts   .removeListener('colourImage',   name)
         opts   .removeListener('clippingRange', name)
+        opts   .removeListener('modulateRange', name)
         opts   .removeListener('volume',        name)
         opts   .removeListener('resolution',    name)
         opts   .removeListener('transform' ,    name)
@@ -489,11 +491,8 @@ class GLVector(globject.GLImageObject):
 
         if image is None:
 
-            # The glvector fragment shader multiplies the
-            # modulation value by 2, so we fill the dummy
-            # texture values with 0.5 (127/255).
             textureData    = np.zeros((5, 5, 5), dtype=np.uint8)
-            textureData[:] = 127
+            textureData[:] = 255
             image          = fslimage.Image(textureData)
             norm           = None
             
@@ -584,6 +583,51 @@ class GLVector(globject.GLImageObject):
         if opts.suppressZ: colours[2, :] = suppressColour
 
         return colours
+
+
+    def getClippingRange(self):
+        """Returns the :attr:`clippingRange`, suitable for use in
+        the fragment shader.
+        """
+
+        opts = self.displayOpts
+
+        clipLow, clipHigh = opts.clippingRange
+        xform             = self.clipTexture.invVoxValXform
+        
+        # Transform the clip threshold into
+        # the texture value range, so the
+        # fragment shader can compare texture
+        # values directly to it. 
+        if opts.clipImage is not None:
+            clipLow  = clipLow  * xform[0, 0] + xform[3, 0]
+            clipHigh = clipHigh * xform[0, 0] + xform[3, 0]
+        else:
+            clipLow  = -0.1
+            clipHigh =  1.1
+
+        return clipLow, clipHigh 
+
+
+    def getModulateRange(self):
+        """Returns the :attr:`modulateRange`, suitable for use in
+        the fragment shader.
+        """ 
+
+        opts = self.displayOpts
+
+        modLow, modHigh = opts.modulateRange
+        xform           = self.modulateTexture.invVoxValXform
+        
+        # Do the same for the modulation range
+        if opts.modulateImage is not None:
+            modLow  = modLow  * xform[0, 0] + xform[3, 0]
+            modHigh = modHigh * xform[0, 0] + xform[3, 0] 
+        else:
+            modLow  = 0
+            modHigh = 1
+
+        return modLow, modHigh
         
         
     def preDraw(self):

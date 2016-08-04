@@ -61,6 +61,10 @@ uniform vec4 zColour;
 uniform float clipLow;
 uniform float clipHigh;
 
+
+uniform float modLow;
+uniform float modHigh;
+
 /*
  * Use spline interpolation?
  */
@@ -141,12 +145,9 @@ void main(void) {
                    voxValue.y * yColour +
                    voxValue.z * zColour;
 
-  /* 
-   * Modulate the colour - multiplying the 
-   * modulation value by 2 gives better results. 
-   * This may become a user setting.
-   */
-  voxColour.xyz *= modValue * 2;
+  /* Scale the modulation value, and modulate the colour  */
+  modValue       = (modValue + modLow) / (modHigh - modLow);
+  voxColour.xyz *= modValue;
 
   gl_FragColor = voxColour * fragColourFactor;
 }

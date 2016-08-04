@@ -125,7 +125,10 @@ class GLRGBVector(glvector.GLVector):
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR 
         
-        self.imageTexture.set(interp=interp)
+        self.imageTexture   .set(interp=interp)
+        self.modulateTexture.set(interp=interp)
+        self.clipTexture    .set(interp=interp)
+        self.colourTexture  .set(interp=interp)
         self.asyncUpdateShaderState(alwaysNotify=True) 
 
 

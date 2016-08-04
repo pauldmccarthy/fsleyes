@@ -34,6 +34,10 @@
 #                 the low clipping threshold, and the (y) component
 #                 contains the high threshold.
 #
+#   mod         - Modulation range. The (x) component contains
+#                 the low modulation value, and the (y) component
+#                 contains a scaling factor equal to 1 / (modHigh - modLow).
+#
 #   xColour     - Colour corresponding to the X vector direction.
 #
 #   yColour     - Colour corresponding to the Y vector direction.
@@ -64,6 +68,7 @@ PARAM voxValXform[4] = {{ param4_voxValXform }};
 PARAM cmapXform[4]   = {{ param4_cmapXform   }};
 PARAM imageShape     = {{ param_imageShape   }};
 PARAM clipping       = {{ param_clipping     }};
+PARAM mod            = {{ param_mod          }};
 PARAM xColour        = {{ param_xColour      }};
 PARAM yColour        = {{ param_yColour      }};
 PARAM zColour        = {{ param_zColour      }};
@@ -116,10 +121,10 @@ MAD fragColour, voxValue.z, zColour, fragColour;
 # voxValue as a temp variable
 MOV voxValue.a, fragColour.a;
 
-# Modulate the colour, multiplying
-# the mod value by 2 - see glvector_frag.glsl
+# Scale the modulation value, and modulate the colour
+ADD modValue.x, modValue.x, mod.x;
+MUL modValue.x, modValue.x, mod.y;
 MUL fragColour, fragColour, modValue.x;
-MUL fragColour, fragColour, 2;
 MOV fragColour.a, voxValue.a;
 
 # Colour the pixel!

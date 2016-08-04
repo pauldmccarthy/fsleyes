@@ -47,26 +47,11 @@ def updateFragmentShaderState(self, useSpline=False):
     ``glvolume`` or the ``glvector`` shader.
     """
 
-    changed         = False
-    opts            = self.displayOpts
-    shader          = self.shader
-
-    invClipValXform = self.clipTexture.invVoxValXform
-    clippingRange   = opts.clippingRange
-    imageShape      = self.vectorImage.shape[:3]
-
-    # Transform the clip threshold into
-    # the texture value range, so the
-    # fragment shader can compare texture
-    # values directly to it.    
-    if opts.clipImage is not None:
-        clipLow  = clippingRange[0] * \
-            invClipValXform[0, 0] + invClipValXform[3, 0]
-        clipHigh = clippingRange[1] * \
-            invClipValXform[0, 0] + invClipValXform[3, 0]
-    else:
-        clipLow  = -0.1
-        clipHigh =  1.1
+    changed           = False
+    shader            = self.shader
+    imageShape        = self.vectorImage.shape[:3]
+    modLow,  modHigh  = self.getModulateRange()
+    clipLow, clipHigh = self.getClippingRange()
 
     if self.useVolumeFragShader:
 
@@ -93,9 +78,9 @@ def updateFragmentShaderState(self, useSpline=False):
     
     else:
 
-        voxValXform = self.imageTexture.voxValXform
-        colours     = self.getVectorColours()
-
+        voxValXform       = self.imageTexture.voxValXform
+        colours           = self.getVectorColours()
+ 
         changed |= shader.set('vectorTexture',   0)
         changed |= shader.set('modulateTexture', 1)
         changed |= shader.set('clipTexture',     2)
@@ -105,7 +90,9 @@ def updateFragmentShaderState(self, useSpline=False):
         changed |= shader.set('voxValXform',     voxValXform)
         changed |= shader.set('imageShape',      imageShape)
         changed |= shader.set('clipLow',         clipLow)
-        changed |= shader.set('clipHigh',        clipHigh) 
+        changed |= shader.set('clipHigh',        clipHigh)
+        changed |= shader.set('modLow',          modLow)
+        changed |= shader.set('modHigh',         modHigh) 
         changed |= shader.set('useSpline',       useSpline)
 
     return changed
