@@ -95,7 +95,8 @@ def main(args=None):
     # So all of the work is defined in this
     # function, which is scheduled to be
     # executed on the wx main loop.
-    def buildGUI(splash):
+    namespace = [None]
+    def init(splash):
 
         # Parse command line arguments. If the
         # user has asked for help (see above),
@@ -103,7 +104,7 @@ def main(args=None):
         # print help and exit. Hence we make
         # sure the splash screen is shown after
         # arguments have been parsed.
-        namespace = parseArgs(args)
+        namespace[0] = parseArgs(args)
 
         # Make sure the splash screen is visible,
         # and really make sure that it gets drawn.
@@ -118,23 +119,25 @@ def main(args=None):
         # Configure logging (this has to be done
         # after cli arguments have been parsed,
         # but before initialise is called).
-        fsleyes.configLogging(namespace)
+        fsleyes.configLogging(namespace[0])
 
         # Initialise sub-modules/packages
-        initialise(splash, namespace)
+        initialise(splash, namespace[0], buildGui)
+
+    def buildGui():
 
         # Now the main stuff - create the overlay
         # list and the master display context,
         # and then create the FSLEyesFrame.
-        overlayList, displayCtx = makeDisplayContext(namespace, splash)
-        frame = makeFrame(namespace, displayCtx, overlayList, splash)
+        overlayList, displayCtx = makeDisplayContext(namespace[0], splash)
+        frame = makeFrame(namespace[0], displayCtx, overlayList, splash)
 
         app.SetTopWindow(frame)
         frame.Show()
 
         # Check that $FSLDIR is set, complain 
         # to the user if it isn't
-        if not namespace.skipfslcheck:
+        if not namespace[0].skipfslcheck:
             wx.CallAfter(fslDirWarning, frame)
 
     # The call to buildGUI is wrapped with
@@ -143,7 +146,7 @@ def main(args=None):
     # raises an error.
     def buildGUIWrapper(splash):
         try:
-            buildGUI(splash)
+            init(splash)
         except:
             wx.CallAfter(sys.exit, 1)
             raise
@@ -159,7 +162,7 @@ def main(args=None):
     shutdown()
 
 
-def initialise(splash, namespace):
+def initialise(splash, namespace, callback):
     """Called by :func:`main`. Bootstraps/Initialises various parts of
     *FSLeyes*.
     """
@@ -213,9 +216,13 @@ def initialise(splash, namespace):
     # and initialise OpenGL version-specific module loads.
     # The splash screen is used as the parent of the dummy
     # canvas created by the gl.getWXGLContext function.
-    try:
-        fslgl.getGLContext(parent=splash)
+
+    def realCallback():
         fslgl.bootstrap(namespace.glversion)
+        callback()
+        
+    try:
+        fslgl.getGLContext(parent=splash, ready=realCallback)
         
     except:
         log.error('Unable to initialise OpenGL!', exc_info=True)

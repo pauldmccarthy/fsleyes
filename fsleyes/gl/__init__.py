@@ -23,22 +23,26 @@ Quick start
     import fsleyes.gl                 as fslgl
     import fsleyes.gl.wxglslicecanvas as slicecanvas
 
-    # Make sure that an OpenGL 
-    # context has been created. 
-    fslgl.getGLContext()
+    # This function will be called when
+    # the GL context is ready to be used.
+    def ready():
 
-    # Call gl.bootstrap, to initialise
-    # some package-level stuff. This
-    # can only be performed after a
-    # context has been created.
-    fslgl.bootstrap()
+        # The fsleyes.gl package needs to do
+        # some initialisation that can only
+        # be performed once a GL context has
+        # been created.
+        fslgl.bootstrap()
 
-    # Now you can do stuff! The
-    # SliceCanvas will take care
-    # of creating and managing
-    # GLObjects for each overlay
-    # in the overlay list.
-    canvas = slicecanvas.WXGLSliceCanvas(parent, overlayList, displayCtx)
+        # Once a GL context has been created,
+        # you can do stuff! The SliceCanvas
+        # will take care of creating and
+        # managing GLObjects for each overlay
+        # in the overlay list.
+        canvas = slicecanvas.WXGLSliceCanvas(parent, overlayList, displayCtx)
+
+    # Create a GL context, and tell it to
+    # call our function when it is ready.
+    fslgl.getGLContext(ready=ready)
 
 
 --------
@@ -63,7 +67,7 @@ package has been written to support two primary use-cases:
   - *On-screen* display of a scene using a :class:`wx.glcanvas.GLCanvas`
     canvas.
 
-  - *Off-screen* renering of a scene.
+  - *Off-screen* rendering of a scene to a file.
 
 
 Because of this, the canvas classes listed above are not dependent upon the
@@ -163,7 +167,7 @@ sub-packages.
 
 Because of this, the package-level :func:`bootstrap` function must be called
 before any ``GLObject`` instances are created, but *after* a GL context has
-been created.
+been created. 
 """
 
 
@@ -256,7 +260,10 @@ def bootstrap(glVersion=None):
                            rendering :class:`.GLLabel` instances.
     
     ``gltensor_funcs``     The version-specific module containing functions for
-                           rendering :class:`.GLTensor` instances. 
+                           rendering :class:`.GLTensor` instances.
+    
+    ``glsh_funcs``         The version-specific module containing functions for
+                           rendering :class:`.GLSH` instances. 
     ====================== ====================================================
 
 
@@ -392,6 +399,10 @@ def getGLContext(*args, **kwargs):
     Otherwise, one is created and returned. 
 
     See the :class:`GLContext` class for details on the arguments.
+
+    .. warning:: Use the ``ready`` argument to
+                 :meth:`GLContext.__init__`, and don't call :func:`bootstrap`
+                 until it has been called!
     """
 
     import sys
@@ -443,13 +454,30 @@ class GLContext(object):
     because a ``wx.GLContext`` must be rendering created on a ``wx``
     application loop. We cannot otherwise guarantee that the ``wx.GLCanvas``
     will be visible before the ``wx.GLContext`` is created.
+
+
+    The above issue has the effect that the real underlying ``wx.GLContext``
+    may only be created after the ``GLContext.__init__`` method has returned.
+    Therefore, you must use the ``ready`` callback function if you are
+    creating a ``wx`` GL context - this function will be called when the
+    ``GLContext`` is ready to be used.
+
+
+    You can get away without using the ``ready`` callback in the following
+    situations:
+
+      - When you are 100% sure that you will be using OSMesa.
+
+      - When there is not (and never will be) a ``wx.MainLoop`` running, and
+        you pass in ``createApp=True``.
     """
 
     def __init__(self,
                  offscreen=False,
                  parent=None,
                  other=None,
-                 createApp=False):
+                 createApp=False,
+                 ready=None):
         """Create a ``GLContext``.
 
         :arg offscreen: On-screen or off-screen context?
@@ -462,7 +490,16 @@ class GLContext(object):
         :arg createApp: If ``True``, and if possible, this ``GLContext`` will
                         create and run a ``wx.App`` so that it can create a
                         ``wx.glcanvas.GLContext``.
+
+        :arg ready:     Function which will be called when the context has
+                        been created and is ready to use.  
         """
+
+        def defaultReady():
+            pass
+
+        if ready is None:
+            ready = defaultReady
 
         self.__offscreen = offscreen
         self.__ownApp    = False
@@ -472,19 +509,36 @@ class GLContext(object):
         self.__parent    = None
         self.__app       = None
 
-        if fslplatform.canHaveGui:
+        canHaveGui       = fslplatform.canHaveGui
+        haveGui          = fslplatform.haveGui
+
+        # On-screen contexts *must* be
+        # created on the wx.MainLoop
+        if (not offscreen) and (not haveGui):
+            raise ValueError('On-screen GL contexts must be '
+                             'created on the wx.MainLoop')
+
+        # For off-screen, only use 
+        # OSMesa if we have no cnoice
+        if offscreen and not canHaveGui:
+            self.__createOSMesaContext()
+            ready()
+
+        # Use wx if possible
+        else:
 
             import wx
 
-            self.__ownApp    = not fslplatform.haveGui and createApp
+            self.__ownApp    = (not haveGui) and createApp
             self.__ownParent = parent is None
 
             if other is not None:
                 self.__createWXGLContext(other)
                 return
 
-            # Create a wx.App if we've been given permission 
-            # to do so (via he createApp argument)
+            # Create a wx.App if we've been
+            # given permission to do so
+            # (via the createApp argument)
             if self.__ownApp:
                 self.__app = wx.App()
 
@@ -496,21 +550,53 @@ class GLContext(object):
             # Create the GL canvas
             self.__createWXGLCanvas()
 
-            # Here's where things get ugly. We create the
-            # GL context on the wx main loop, after a
-            # short delay, so that the canvas created
-            # above has been shown.
-            wx.CallLater(100, self.__createWXGLContext)
+            # This function creates the context
+            # and does some clean-up afterwards.
+            # It gets scheduled on the wx idle
+            # loop.
+            def create():
 
-            # If we've created our own wx.App, run it,
-            # but not before scheduling its destruction
-            # after the context has been created above.
+                self.__createWXGLContext()
+
+                if ready is not None:
+                    
+                    try:
+                        ready()
+                        
+                    except Exception as e:
+                        log.warning('GLContext callback function raised '
+                                    '{}: {}'.format(type(e).__name__,
+                                                    str(e)),
+                                                    exc_info=True)
+
+                # Destroying the dummy canvas
+                # can be dangerous on GTK, so we
+                # just permanently hide it instead.
+                self.__canvas.Hide()
+
+                # We can hide the parent as well
+                # if we were the one who created
+                # it.
+                if self.__ownParent:
+                    self.__parent.Hide()
+
+                # If we've created and started
+                # our own loop, kill it
+                if self.__ownApp:
+                    self.__app.ExitMainLoop()
+
+            # If we've created our own wx.App, run its
+            # main loop - we need to run the loop
+            # in order to display the GL canvas and
+            # context. But we can kill the loop as soon
+            # as this is done (in the create function
+            # above).  If an existing wx.App is running,
+            # we just schedule the context creation
+            # routine on it.
+            async.idle(create, alwaysQueue=True) 
+
             if self.__ownApp:
-                wx.CallLater(200, self.__app.ExitMainLoop)
                 self.__app.MainLoop()
-
-        else:
-            self.__createOSMesaContext()
 
 
     def setTarget(self, target):
@@ -568,8 +654,11 @@ class GLContext(object):
 
         :arg other: Another `wx.glcanvas.GLContext`` instance with which
                     the new context should share GL state.
+
+        .. warning:: This method *must* be called via the ``wx.MainLoop``.
         """
 
+        import                wx
         import wx.glcanvas as wxgl
 
         if other is not None:
@@ -577,6 +666,13 @@ class GLContext(object):
 
         else:
             self.__context = wxgl.GLContext(self.__canvas)
+
+            # We can't set the context target 
+            # until the dummy canvas is
+            # physically shown on the screen.
+            while not self.__canvas.IsShownOnScreen():
+                wx.Yield()
+
             self.__context.SetCurrent(self.__canvas)
 
 

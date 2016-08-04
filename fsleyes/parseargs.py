@@ -1803,6 +1803,11 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
             displayCtx.location.xyz = displayLoc
 
         # Standard underlays
+        fsldir = fslplatform.fsldir
+        if any((args.standard, args.standard1mm)) and fsldir is None:
+            log.warning('$FSLDIR not set: -std/-std1mm '
+                        'arguments will be ignored')
+        
         if args.standard and fslplatform.fsldir is not None:
             filename = op.join(fslplatform.fsldir,
                                'data',
@@ -1810,7 +1815,6 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
                                'MNI152_T1_2mm')
             std = fslimage.Image(filename)
             overlayList.insert(0, std)
-
         
         if args.standard1mm and fslplatform.fsldir is not None:
             filename = op.join(fslplatform.fsldir,
