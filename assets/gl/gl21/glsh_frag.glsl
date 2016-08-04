@@ -80,7 +80,6 @@ void main(void) {
     colour      = xColour * normVertex.x;
     colour     += yColour * normVertex.y;
     colour     += zColour * normVertex.z;
-    colour.a    = xColour.a;
   }
 
   else {

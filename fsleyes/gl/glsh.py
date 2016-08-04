@@ -21,16 +21,15 @@ import OpenGL.GL  as gl
 
 
 import fsleyes.gl          as fslgl
-import fsleyes.colourmaps  as fslcm
 import fsleyes.gl.textures as textures
-from . import                 globject
+import fsleyes.gl.glvector as glvector
 
 
 log = logging.getLogger(__name__)
 
 
-class GLSH(globject.GLImageObject):
-    """The ``GLSH`` class is a :class:`.GLObject` for rendering :class:`.Image`
+class GLSH(glvector.GLVectorBase):
+    """The ``GLSH`` class is a :class:`.GLVector` for rendering :class:`.Image`
     overlays which contain fibre orientation distribution (FOD) spherical
     harmonic (SH) coefficients.
 
@@ -54,29 +53,16 @@ class GLSH(globject.GLImageObject):
     the ``glsh`` vertex shader as a 1D sequence of values, ordered by voxel
     then vertex.
 
-
-    ``GLSH`` instances also create and manage a :class:`.ColourMapTexture`,
-    which may be used to colour FODs by their radius values. The colour map
-    is defined by the :attr:`.SHOpts.cmap` property.
-
-    
-    The textures managed by a ``GLSH`` instance are bound to texture units as
-    follows:
-
-    
-    =============== ==================
-    ``radTexture``  ``gl.GL_TEXTURE0``
-    ``cmapTexture`` ``gl.GL_TEXTURE1``
-    =============== ==================
+    The radius texture managed by a ``GLSH`` instance is bound to GL
+    texture unit ``GL_TEXTURE4``.
     """
 
     def __init__(self, image, display, xax, yax):
         """Create a ``GLSH`` object.
 
 
-        Creates a :class:`.Texture3D` instance to store vertex radii and a
-        :class:`.ColourMapTexture` to store the :attr:`.SHOpts.cmap`,
-        adds property listeners to the :class:`.Display` and :class:`.SHOpts`
+        Creates a :class:`.Texture3D` instance to store vertex radii, adds
+        property listeners to the :class:`.Display` and :class:`.SHOpts`
         instances, and calls :func:`.glsh_funcs.init`.
         
 
@@ -86,127 +72,89 @@ class GLSH(globject.GLImageObject):
         :arg yax:     Vertical display axis
         """
         
-        globject.GLImageObject.__init__(self, image, display, xax, yax)
-
-        name = self.name
-
-        self.shader      = None
-        self.radTexture  = textures.Texture3D('{}_radTexture'.format(name),
-                                              threaded=False)
-        self.cmapTexture = textures.ColourMapTexture('{}_cm'.format(name))
-
-        self.addListeners()
-        self.shResChanged()
-        self.cmapUpdate()
+        self.shader     = None
+        self.radTexture = None
         
-        fslgl.glsh_funcs.init(self)
+        glvector.GLVectorBase.__init__(
+            self,
+            image,
+            display,
+            xax,
+            yax,
+            init=lambda: fslgl.glsh_funcs.init(self))
+
+        self.radTexture = textures.Texture3D('{}_radTexture'.format(self.name),
+                                             threaded=False)
+        self.shResChanged()
 
         
     def destroy(self):
         """Removes property listeners, destroys textures, and calls
         :func:`.glsh_funcs.destroy`.
         """
+
+        glvector.GLVectorBase.destroy(self)
         
         self.removeListeners()
 
         fslgl.glsh_funcs.destroy(self)
 
-        if self.radTexture  is not None: self.radTexture.destroy()
-        if self.cmapTexture is not None: self.cmapTexture.destroy() 
+        if self.radTexture is not None:
+            self.radTexture.destroy()
 
-        self.radTexture  = None
-        self.cmapTexture = None
+        self.radTexture = None
 
 
     def addListeners(self):
-        """Called by :meth:`__init__`. Adds listeners to properties of the
+        """Overrides :meth:`.GLVectorBase.addListeners`.
+
+        Called by :meth:`__init__`. Adds listeners to properties of the
         :class:`.Display` and :class:`.SHOpts` instanecs associated with the
         image.
         """
 
-        display = self.display
-        opts    = self.displayOpts
-        name    = self.name
+        glvector.GLVectorBase.addListeners(self)
 
-        opts   .addListener('resolution',      name, self.notify)
-        opts   .addListener('transform',       name, self.notify)
-        
-        opts   .addListener('shResolution' ,   name, self.shResChanged,
-                            immediate=True)
-        opts   .addListener('size',            name, self.updateShaderState)
-        opts   .addListener('lighting',        name, self.updateShaderState)
-        opts   .addListener('neuroFlip',       name, self.updateShaderState)
-        opts   .addListener('radiusThreshold', name, self.notify)
+        opts = self.displayOpts
+        name = self.name
 
-        opts   .addListener('colourMode',      name, self.updateShaderState)
-        opts   .addListener('cmap',            name, self.cmapUpdate)
-        opts   .addListener('xColour',         name, self.updateShaderState)
-        opts   .addListener('yColour',         name, self.updateShaderState)
-        opts   .addListener('zColour',         name, self.updateShaderState)
-        display.addListener('alpha',           name, self.cmapUpdate)
-        display.addListener('brightness',      name, self.cmapUpdate)
-        display.addListener('contrast',        name, self.cmapUpdate)
+        opts.addListener('resolution',      name, self.notify)
+        opts.addListener('shResolution' ,   name, self.shResChanged,
+                         immediate=True)
+        opts.addListener('size',            name, self.updateShaderState)
+        opts.addListener('lighting',        name, self.updateShaderState)
+        opts.addListener('neuroFlip',       name, self.updateShaderState)
+        opts.addListener('radiusThreshold', name, self.notify)
+        opts.addListener('colourMode',      name, self.updateShaderState)
 
     
     def removeListeners(self):
-        """Called by :meth:`destroy`. Removes listeners added by
-        :meth:`addListeners`.
-        """ 
+        """Overrides :meth:`.GLVectorBase.removeListeners`. Called by
+        :meth:`destroy`. Removes listeners added by :meth:`addListeners`.
+        """
 
-        display = self.display
-        opts    = self.displayOpts
-        name    = self.name
+        glvector.GLVectorBase.removeListeners(self)
 
-        opts   .removeListener('resolution',      name)
-        opts   .removeListener('transform',       name)
+        opts = self.displayOpts
+        name = self.name
 
-        opts   .removeListener('shResolution',    name)
-        opts   .removeListener('size',            name)
-        opts   .removeListener('lighting',        name)
-        opts   .removeListener('neuroFlip',       name)
-        opts   .removeListener('radiusThreshold', name)
-        
-        opts   .removeListener('colourMode',      name)
-        opts   .removeListener('cmap',            name)
-        opts   .removeListener('xColour',         name)
-        opts   .removeListener('yColour',         name)
-        opts   .removeListener('zColour',         name)
-        display.removeListener('alpha',           name)
-        display.removeListener('brightness',      name)
-        display.removeListener('contrast',        name)
+        opts.removeListener('resolution',      name)
+        opts.removeListener('shResolution',    name)
+        opts.removeListener('size',            name)
+        opts.removeListener('lighting',        name)
+        opts.removeListener('neuroFlip',       name)
+        opts.removeListener('radiusThreshold', name)
+        opts.removeListener('colourMode',      name)
 
         
     def updateShaderState(self, *a):
-        """Calls :func:`.glsh_funcs.updateShaderState`. """
+        """Overrides :meth:`.GLVectorBase.updateShaderState`. Calls
+        :func:`.glsh_funcs.updateShaderState`.
+        """
         if fslgl.glsh_funcs.updateShaderState(self):
             self.notify()
             return True
         return False
-
-
-    def cmapUpdate(self, *a):
-        """Called when the colour map texture needs to be updated. Updates it,
-        and then calls :meth:`updateShaderState`.
-        """
-
-        opts    = self.displayOpts
-        display = self.display
-
-        # The cmapTexture is used when
-        # colouring by radius values,
-        # which are assumed to lie between
-        # 0.0 and 1.0
-        dmin, dmax = fslcm.briconToDisplayRange(
-            (0.0, 1.0),
-            display.brightness / 100.0,
-            display.contrast   / 100.0)
-
-        self.cmapTexture.set(cmap=opts.cmap,
-                             alpha=display.alpha / 100.0,
-                             displayRange=(dmin, dmax))
-
-        if not self.updateShaderState():
-            self.notify()
 
         
     def shResChanged(self, *a):
@@ -333,34 +281,41 @@ class GLSH(globject.GLImageObject):
         return voxels, radTexShape
 
 
-    def ready(self):
-        """Returns ``True`` if this ``GLSH`` instance is ready to be
-        drawn, ``False`` otherwise.
+    def texturesReady(self):
+        """Overrides :meth:`.GLVectorBase.texturesReady`. Returns ``True`` if
+        all textures used by this ``GLSH`` instance are ready to be used,
+        ``False`` otherwise.
         """
-        return self.radTexture.ready()
+        return (self.radTexture is not None and
+                self.radTexture.ready()     and
+                glvector.GLVectorBase.texturesReady(self))
 
 
     def preDraw(self):
-        """Binds textures, and calls :func:`.glsh_funcs.preDraw`. """
+        """Overrides :meth:`.GLVectorBase.preDraw`.  Binds textures, and calls
+        :func:`.glsh_funcs.preDraw`.
+        """
         
         # The radTexture needs to be bound *last*,
         # because the updateRadTexture method will
         # be called through draw, and if radTexture
         # is not the most recently bound texture,
         # the update will fail.
-        self.cmapTexture.bindTexture(gl.GL_TEXTURE1)
-        self.radTexture .bindTexture(gl.GL_TEXTURE0)
-        
+        glvector.GLVectorBase.preDraw(self)
+        self.radTexture .bindTexture(gl.GL_TEXTURE4)
         fslgl.glsh_funcs.preDraw(self)
 
 
     def draw(self, zpos, xform=None, bbox=None):
-        """Calls :func:`.glsh_funcs.draw`. """
+        """Overrides :meth:`.GLObject.draw`. Calls :func:`.glsh_funcs.draw`.
+        """
         fslgl.glsh_funcs.draw(self, zpos, xform, bbox)
 
 
     def postDraw(self):
-        """Unbinds textures, and calls :func:`.glsh_funcs.postDraw`. """
+        """Overrides :meth:`.GLVectorBase.postDraw`.  Unbinds textures, and
+        calls :func:`.glsh_funcs.postDraw`.
+        """
+        glvector.GLVectorBase.postDraw(self)
         self.radTexture .unbindTexture()
-        self.cmapTexture.unbindTexture()
         fslgl.glsh_funcs.postDraw(self)

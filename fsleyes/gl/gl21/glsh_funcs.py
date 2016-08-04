@@ -86,12 +86,7 @@ def updateShaderState(self):
 
     cmapXform = self.cmapTexture.getCoordinateTransform()
 
-    colours = np.array([opts.xColour, opts.yColour, opts.zColour])
-    colours = fslcm.applyBricon(colours,
-                                display.brightness / 100.0,
-                                display.contrast   / 100.0)
-
-    colours[:, 3] = display.alpha / 100.0
+    colours = self.getVectorColours()
 
     shader.load()
 
@@ -107,9 +102,10 @@ def updateShaderState(self):
     changed |= shader.set('yColour',     colours[1])
     changed |= shader.set('zColour',     colours[2])
     changed |= shader.set('cmapXform',   cmapXform)
+
+    changed |= shader.set('cmapTexture', 3)
+    changed |= shader.set('radTexture',  4)
     
-    changed |= shader.set('radTexture',  0)
-    changed |= shader.set('cmapTexture', 1)
 
     # Vertices only need to be re-generated
     # if the shResolution has changed.

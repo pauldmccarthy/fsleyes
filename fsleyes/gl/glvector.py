@@ -257,6 +257,7 @@ class GLVectorBase(globject.GLImageObject):
         opts   .removeListener('modulateRange', name)
         opts   .removeListener('transform' ,    name)
 
+
     def compileShaders(self):
         """This method must be provided by subclasses (e.g.g the
         :class:`.GLRGBVector` and :class:`.GLLineVector` classes), and must
@@ -741,10 +742,6 @@ class GLVector(GLVectorBase):
         if self.imageTexture is not None:
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.getTextureName())
-
-
-        print 'Refreshing vector image texture - prefilter: {}, range: {}' \
-            .format(prefilter, prefilterRange)
 
         # the fourth dimension (the vector directions) 
         # must be the fastest changing in the texture data
