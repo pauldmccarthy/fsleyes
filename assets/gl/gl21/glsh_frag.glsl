@@ -1,5 +1,6 @@
 /*
- * OpenGL fragment shader used for rendering GLSH instances.
+ * OpenGL fragment shader used for rendering GLSH instances,
+ * when they are to be coloured by direction or radius.
  *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
@@ -8,6 +9,7 @@
 
 #pragma include test_in_bounds.glsl
 
+
 /*
  * Colour mode:
  * 0 == colour by direction
@@ -15,18 +17,35 @@
  */
 uniform int colourMode;
 
+
 /*
  * Texture containing a colour map used when colouring by radius.
  */
 uniform sampler1D cmapTexture;
 
 
+/*
+ * Texture to modulate the final colour by.
+ */
 uniform sampler3D modulateTexture;
+
+
+/*
+ * Texture to clip voxels by
+ */
 uniform sampler3D clipTexture;
 
+
+/* 
+ * Clipping range, specified in the clipTexture texture data range.
+ */
 uniform float clipLow;
 uniform float clipHigh;
 
+
+/* 
+ * Modulation range, specified in the modulateTexture texture data range.
+ */
 uniform float modLow;
 uniform float modHigh;
 
@@ -52,10 +71,12 @@ uniform vec4 zColour;
  */
 uniform mat4 colourXform;
 
+
 /*
  * Shape of the image, used for discarding out of bounds fragments.
  */
 uniform vec3 imageShape;
+
 
 /*
  * Coordinates of the fragment in voxel
@@ -64,17 +85,23 @@ uniform vec3 imageShape;
 varying vec3 fragVoxCoord;
 
 
+/*
+ * Corresponding voxel texture coordinates.
+ */
 varying vec3 fragTexCoord;
+
 
 /*
  * Vertex location on the FOD.
  */
 varying vec3 fragVertex;
 
+
 /*
  * Vertex radius.
  */
 varying float fragRadius;
+
 
 /*
  * The final fragment colour is multiplied by this 
