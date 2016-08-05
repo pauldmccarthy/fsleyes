@@ -53,6 +53,15 @@ uniform vec4 yColour;
 uniform vec4 zColour;
 
 /*
+ * Scale/offset transformation matrix 
+ * which scales the voxel value before 
+ * it is combined with the direction 
+ * colours. Used to apply brightness
+ * and contrast settings.
+ */
+uniform mat4 colourXform;
+
+/*
  * If the clipping value is outside of
  * this range, the fragment is clipped.
  * These values should be in the texture 
@@ -134,20 +143,29 @@ void main(void) {
    * Transform the voxel texture 
    * values into their original 
    * range, and take the absolute 
-   * value
+   * value.
    */
   voxValue *= voxValXform[0].x;
   voxValue += voxValXform[3].x;
   voxValue  = abs(voxValue);
 
-  /* Combine the xyz component colours */
+  /* Combine the xyz component colours. */
   vec4 voxColour = voxValue.x * xColour +
                    voxValue.y * yColour +
                    voxValue.z * zColour;
 
+  /* 
+   * Apply the colour scale/offset -
+   * this affects overall brightness,
+   * and contrast between the three 
+   * colours.
+   */
+  voxColour.xyz *= colourXform[0].x;
+  voxColour.xyz += colourXform[3].x; 
+
   /* Scale the modulation value, and modulate the colour  */
-  modValue       = (modValue + modLow) / (modHigh - modLow);
-  voxColour.xyz *= modValue;
+  modValue  = (modValue + modLow) / (modHigh - modLow);
+  voxColour *= modValue;
 
   gl_FragColor = voxColour * fragColourFactor;
 }

@@ -78,8 +78,8 @@ def updateFragmentShaderState(self, useSpline=False):
     
     else:
 
-        voxValXform       = self.imageTexture.voxValXform
-        colours           = self.getVectorColours()
+        voxValXform          = self.imageTexture.voxValXform
+        colours, colourXform = self.getVectorColours()
  
         changed |= shader.set('modulateTexture', 0)
         changed |= shader.set('clipTexture',     1)
@@ -87,6 +87,7 @@ def updateFragmentShaderState(self, useSpline=False):
         changed |= shader.set('xColour',         colours[0])
         changed |= shader.set('yColour',         colours[1])
         changed |= shader.set('zColour',         colours[2])
+        changed |= shader.set('colourXform',     colourXform)
         changed |= shader.set('voxValXform',     voxValXform)
         changed |= shader.set('imageShape',      imageShape)
         changed |= shader.set('clipLow',         clipLow)

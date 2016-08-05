@@ -12,15 +12,16 @@ overlays.
 """
 
 
-import numpy              as np
-import OpenGL.GL          as gl
-
-import fsl.data.image     as fslimage
-import fsl.utils.async    as async
-import fsleyes.colourmaps as fslcm
-from . import resources   as glresources
-from . import                textures
-from . import                globject
+import numpy               as np
+import OpenGL.GL           as gl
+ 
+import fsl.data.image      as fslimage
+import fsl.utils.async     as async
+import fsl.utils.transform as transform
+import fsleyes.colourmaps  as fslcm
+from . import resources    as glresources
+from . import                 textures
+from . import                 globject
 
 
 class GLVectorBase(globject.GLImageObject):
@@ -447,19 +448,26 @@ class GLVectorBase(globject.GLImageObject):
 
 
     def getVectorColours(self):
-        """Returns a ``numpy`` array of size ``(3, 4)`` containing the
-        RGBA colours that correspond to the ``x``, ``y``, and ``z`` vector
-        directions.
+        """Prepares the colours that represent each direction.
+
+
+        Returns:
+          - a ``numpy`` array of size ``(3, 4)`` containing the
+            RGBA colours that correspond to the ``x``, ``y``, and ``z`` 
+            vector directions.
+        
+          - A ``numpy`` array of shape ``(4, 4)`` which encodes a scale
+            and offset to be applied to the vector value before it
+            is combined with the colours, encoding the current
+            brightness and contrast settings.
         """
         display = self.display
         opts    = self.displayOpts
-        alpha   = display.alpha / 100.0 
+        bri     = display.brightness / 100.0
+        con     = display.contrast   / 100.0 
+        alpha   = display.alpha      / 100.0 
         
-        colours = np.array([opts.xColour, opts.yColour, opts.zColour])
-        colours = fslcm.applyBricon(colours,
-                                    display.brightness / 100.0,
-                                    display.contrast   / 100.0)
-
+        colours       = np.array([opts.xColour, opts.yColour, opts.zColour])
         colours[:, 3] = alpha
 
         if   opts.suppressMode == 'white':       suppress = [1, 1, 1, alpha]
@@ -471,7 +479,17 @@ class GLVectorBase(globject.GLImageObject):
         if opts.suppressY: colours[1, :] = suppress
         if opts.suppressZ: colours[2, :] = suppress
 
-        return colours
+        # scaling
+        lo, hi = fslcm.briconToDisplayRange((0, 1), bri, con)
+
+        if hi == lo: scale = 0.0000000000001
+        else:        scale = hi - lo
+        
+        xform = np.identity(4, dtype=np.float32)
+        xform[0, 0] = 1.0 / scale
+        xform[3, 0] = -lo * xform[0, 0]
+        
+        return colours, xform
 
 
     def getClippingRange(self):
