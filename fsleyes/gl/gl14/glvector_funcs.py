@@ -95,14 +95,16 @@ def updateFragmentShaderState(self):
 
     else:
 
-        voxValXform = self.imageTexture.voxValXform
-        colours     = self.getVectorColours()
+        voxValXform          = self.imageTexture.voxValXform
+        colours, colourXform = self.getVectorColours()
          
         self.shader.setFragParam('voxValXform', voxValXform)
         self.shader.setFragParam('mod',         mod)
         self.shader.setFragParam('xColour',     colours[0])
         self.shader.setFragParam('yColour',     colours[1])
         self.shader.setFragParam('zColour',     colours[2])
+        self.shader.setFragParam('colourXform', [colourXform[0, 0],
+                                                 colourXform[3, 0], 0, 0])
 
     self.shader.unload()
 

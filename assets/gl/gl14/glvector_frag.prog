@@ -44,6 +44,12 @@
 #
 #   zColour     - Colour corresponding to the Z vector direction.
 #
+#   colourXform - Scale/offset to be applied to the vector value before
+#                 it is combined with the three colours, for brightness/
+#                 contrast adjustment. The first component contains
+#                 the scaling factor, and the second component contains
+#                 the offset.
+#
 # Input textures:
 #
 #   vectorTexture   - 3D texture containing the vector data.
@@ -72,7 +78,7 @@ PARAM mod            = {{ param_mod          }};
 PARAM xColour        = {{ param_xColour      }};
 PARAM yColour        = {{ param_yColour      }};
 PARAM zColour        = {{ param_zColour      }};
-
+PARAM colourXform    = {{ param_colourXform  }};
 
 # retrieve the voxel coordinates 
 MOV voxCoord, {{ varying_voxCoord }};
@@ -120,6 +126,9 @@ MAD fragColour, voxValue.z, zColour, fragColour;
 # want it to be modulated. Using
 # voxValue as a temp variable
 MOV voxValue.a, fragColour.a;
+
+# Apply the bri/con scale and offset
+MAD fragColour, fragColour, colourXform.x, colourXform.y;
 
 # Scale the modulation value, and modulate the colour
 ADD modValue.x, modValue.x, mod.x;
