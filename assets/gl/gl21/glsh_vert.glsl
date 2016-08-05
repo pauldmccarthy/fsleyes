@@ -1,6 +1,6 @@
 /*
  * OpenGL vertex shader used for rendering GLSH instances, 
- * where the FODs are coloured by direction.
+ * where the FODs are coloured by direction or radius.
  *
  * Most logic is in glsh_vert_common.glsl.
  *
@@ -29,6 +29,9 @@ uniform vec3 imageShape;
  */
 varying vec3 fragVoxCoord;
 
+/*
+ * Corresponding texture coordinates.
+ */
 varying vec3 fragTexCoord;
 
 /*
@@ -38,7 +41,7 @@ varying vec3 fragTexCoord;
 varying vec4 fragColourFactor;
 
 /*
- * Vertex radius and location, passed through to the 
+ * Vertex location and radius, passed through to the 
  * fragment shader.
  */
 varying float fragRadius;
@@ -47,9 +50,9 @@ varying vec3  fragVertex;
 
 void main(void) {
 
-    vec3 pos     = vertex;
+    vec3  pos    = vertex;
     float radius = adjustPosition(pos);
-    vec3 light   = calcLighting(radius);
+    vec3  light  = calcLighting(radius);
   
     /*
      * Transform the vertex from the

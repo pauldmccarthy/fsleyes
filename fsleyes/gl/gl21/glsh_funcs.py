@@ -7,15 +7,23 @@
 """This module contains functions which are used by :class:`.GLSH` instances
 for rendering :class:`.Image` overlays which contain fibre orientation
 distribution (FOD) spherical harmonic (SH) coefficients, in an OpenGL 2.1
-compatible manner.
+compatible manner.  The functions defined in this module are intended to be
+called by :class:`.GLSH` instances.
 
-The functions defined in this module are intended to be called by
-:class:`.GLSH` instances.
 
 For each voxel, a sphere is drawn, with the position of each vertex on the
 sphere adjusted by the SH coefficients (radii). For one draw call, the radii
-for all voxels and vertices is calculated, and stored in a texture. These
-radii values are then accessed by the ``glsh_vert.glsl`` vertex shader.
+for all voxels and vertices is calculated, and stored in a texture.
+
+
+Different vertex/fragment shaders are used depending upon the current settings
+of the :class:`.SHOpts` instance associated with the :class:`.GLSH`. If the
+:attr:`.VectorOpts.colourImage` property is set, the ``glsh_volume_vert.glsl``
+andf ``glvolume_frag.glsl`` shaders are used. In this case, the FODs are each
+voxel are coloured according to the values in the ``colourImage``.  Otherwise,
+the ``glsh_vert.glsl`` and ``glsh_frag.glsl`` shaders are used. In this case,
+the vertices of each FOD are coloured according to their orientation, or to
+their radius.
 """
 
 
@@ -27,9 +35,7 @@ import OpenGL.GL                    as gl
 import OpenGL.GL.ARB.draw_instanced as arbdi
 
 import fsl.utils.transform          as transform
-import fsleyes.colourmaps           as fslcm
 import fsleyes.gl.shaders           as shaders
-import fsleyes.gl.routines          as glroutines
 
 
 def init(self):
@@ -80,7 +86,6 @@ def updateShaderState(self):
     shader  = self.shader
     image   = self.image
     opts    = self.displayOpts
-    display = self.display
 
     if shader is None:
         return
@@ -150,19 +155,9 @@ def updateShaderState(self):
         changed |= shader.set('zColour',         colours[2])
         changed |= shader.set('cmapXform',       cmapXform)
     
-    # Vertices only need to be re-generated
-    # if the shResolution has changed.
-    if changed:
-        vertices, indices = glroutines.unitSphere(opts.shResolution)
-
-        self.vertices  = vertices
-        self.indices   = indices
-        self.nVertices = len(indices)
-        self.vertIdxs  = np.arange(vertices.shape[0], dtype=np.float32)
-
-        shader.setAtt('vertex',   self.vertices)
-        shader.setAtt('vertexID', self.vertIdxs) 
-        shader.setIndices(indices)
+    shader.setAtt('vertex',   self.vertices)
+    shader.setAtt('vertexID', self.vertIdxs) 
+    shader.setIndices(        self.indices)
 
     shader.unload()
 

@@ -24,6 +24,7 @@ uniform mat3 normalMatrix;
  */
 uniform vec3 lightPos;
 
+
 /*
  * Texture containing radius values for each 
  * displayed voxel/vertex.  This texture is 
@@ -31,6 +32,7 @@ uniform vec3 lightPos;
  * as a 1D vector of radius values.
  */
 uniform sampler3D radTexture;
+
 
 /*
  * Shape of the radius texture.

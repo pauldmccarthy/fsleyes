@@ -1,6 +1,8 @@
 /*
- * OpenGL vertex shader used for rendering GLSH instances, when
- * the glvolume fragment shader is being used.
+ * OpenGL vertex shader used for rendering GLSH instances, 
+ * when the FODs are coloured according to the values in
+ * a different image (and hence the glvolume fragment shader 
+ * is being used).
  *
  * Most logic is in glsh_vert_common.glsl.
  *
@@ -10,6 +12,7 @@
 
 #pragma include roll.glsl
 #pragma include glsh_vert_common.glsl
+
 
 /*
  * Transformation matrix which transforms voxel 
@@ -28,10 +31,12 @@ uniform vec3 imageShape;
  */
 varying vec3 fragVoxCoord;
 
+
 /*
  * Corresponding texture coordinates.
  */
 varying vec3 fragTexCoord;
+
 
 /*
  * Multiplicative colour factor passed through to the 

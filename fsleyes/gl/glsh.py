@@ -21,6 +21,7 @@ import OpenGL.GL  as gl
 
 
 import fsleyes.gl          as fslgl
+import fsleyes.gl.routines as glroutines
 import fsleyes.gl.textures as textures
 import fsleyes.gl.glvector as glvector
 
@@ -29,9 +30,9 @@ log = logging.getLogger(__name__)
 
 
 class GLSH(glvector.GLVectorBase):
-    """The ``GLSH`` class is a :class:`.GLVector` for rendering :class:`.Image`
-    overlays which contain fibre orientation distribution (FOD) spherical
-    harmonic (SH) coefficients.
+    """The ``GLSH`` class is a :class:`.GLVectorBase` for rendering
+    :class:`.Image` overlays which contain fibre orientation distribution
+    (FOD) spherical harmonic (SH) coefficients.
 
 
     This class manages listeners on :class:`.Display` and :class:`.SHOpts`
@@ -53,9 +54,35 @@ class GLSH(glvector.GLVectorBase):
     the ``glsh`` vertex shader as a 1D sequence of values, ordered by voxel
     then vertex.
 
+
     The radius texture managed by a ``GLSH`` instance is bound to GL
     texture unit ``GL_TEXTURE4``.
+
+
+    The following attributes are available on a ``GLSH`` instance (and are
+    assumed to be present by the functions in the :mod:`.glsh_funcs` module`):
+
+
+    ============== =====================================================
+    ``radTexture`` :class:`.Texture3D` containing radius values for each
+                    vertex to be displayed in the current draw call.
+    
+    ``vertices``   ``numpy`` array of shape ``(N, 3)`` which comprise
+                   a sphere. The vertex shader will apply the radii to
+                   the vertices contained in this array, to form the FODs
+                   at every voxel.
+    
+    ``indices``    Indices into ``vertices`` defining the faces of the
+                   sphere.
+    
+    ``nVertices``  Total number of rendered vertices (equal to
+                   ``len(indices)``).
+    
+    ``vertIdxs``   Indices for ecah vertex (equal to
+                   ``np.arange(vertices.shape[0])``).
+    ============== =====================================================
     """
+
 
     def __init__(self, image, display, xax, yax):
         """Create a ``GLSH`` object.
@@ -74,7 +101,7 @@ class GLSH(glvector.GLVectorBase):
         
         self.shader     = None
         self.radTexture = None
-        
+
         glvector.GLVectorBase.__init__(
             self,
             image,
@@ -83,9 +110,13 @@ class GLSH(glvector.GLVectorBase):
             yax,
             init=lambda: fslgl.glsh_funcs.init(self))
 
+        self.__shStateChanged()
+
+        # This texture gets updated on
+        # draw calls, so we want it to
+        # run on the main thread.
         self.radTexture = textures.Texture3D('{}_radTexture'.format(self.name),
                                              threaded=False)
-        self.shResChanged()
 
         
     def destroy(self):
@@ -93,8 +124,6 @@ class GLSH(glvector.GLVectorBase):
         :func:`.glsh_funcs.destroy`.
         """
 
-        glvector.GLVectorBase.destroy(self)
-        
         self.removeListeners()
 
         fslgl.glsh_funcs.destroy(self)
@@ -103,6 +132,8 @@ class GLSH(glvector.GLVectorBase):
             self.radTexture.destroy()
 
         self.radTexture = None
+
+        glvector.GLVectorBase.destroy(self)
 
 
     def addListeners(self):
@@ -119,7 +150,7 @@ class GLSH(glvector.GLVectorBase):
         name = self.name
 
         opts.addListener('resolution',      name, self.notify)
-        opts.addListener('shResolution' ,   name, self.shResChanged,
+        opts.addListener('shResolution' ,   name, self.__shStateChanged,
                          immediate=True)
         opts.addListener('size',            name, self.updateShaderState)
         opts.addListener('lighting',        name, self.updateShaderState)
@@ -164,12 +195,29 @@ class GLSH(glvector.GLVectorBase):
         return False
 
         
-    def shResChanged(self, *a):
+    def __shStateChanged(self, *a):
         """Called when the :attr:`.SHOpts.shResolution` property changes.
         Re-loads the SH parameters from disk, and attaches them as an
-        attribute called ``shParams``.
+        attribute called ``__shParams``.
+
+        Also calls :meth:`__updateVertices`.
         """
-        self.shParams = self.displayOpts.getSHParameters()
+        self.__shParams = self.displayOpts.getSHParameters()
+        self.__updateVertices()
+
+
+    def __updateVertices(self):
+        """
+        """
+        
+        opts = self.displayOpts
+        
+        vertices, indices = glroutines.unitSphere(opts.shResolution)
+
+        self.vertices  = vertices
+        self.indices   = indices
+        self.nVertices = len(indices)
+        self.vertIdxs  = np.arange(vertices.shape[0], dtype=np.float32) 
 
 
     def updateRadTexture(self, voxels):
@@ -215,7 +263,7 @@ class GLSH(glvector.GLVectorBase):
         # voxel quickly with a matrix multiplication of
         # the SH parameters with the SH coefficients of
         # *all* voxels.
-        params = self.shParams
+        params = self.__shParams
         coefs  = self.image.nibImage.get_data()[x, y, z, :]
         radii  = np.dot(params, coefs.T)
 
@@ -309,7 +357,7 @@ class GLSH(glvector.GLVectorBase):
         # is not the most recently bound texture,
         # the update will fail.
         glvector.GLVectorBase.preDraw(self)
-        self.radTexture .bindTexture(gl.GL_TEXTURE4)
+        self.radTexture.bindTexture(gl.GL_TEXTURE4)
         fslgl.glsh_funcs.preDraw(self)
 
 
@@ -324,5 +372,5 @@ class GLSH(glvector.GLVectorBase):
         calls :func:`.glsh_funcs.postDraw`.
         """
         glvector.GLVectorBase.postDraw(self)
-        self.radTexture .unbindTexture()
+        self.radTexture.unbindTexture()
         fslgl.glsh_funcs.postDraw(self)
