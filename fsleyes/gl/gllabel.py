@@ -105,9 +105,10 @@ class GLLabel(globject.GLImageObject):
 
 
     def updateShaderState(self, *args, **kwargs):
-        """Calls :func:`.gllabel_funcs.updateShaderState` and
+        """Calls :func:`.gl14.gllabel_funcs.updateShaderState` or
+        :func:`.gl21.gllabel_funcs.updateShaderState`, and
         :meth:`.Notifier.notify`. Uses :func:`.async.idleWhen` to ensure that
-        they get called when :meth:`ready` returns ``True``.
+        they don't get called until :meth:`ready` returns ``True``.
         """
         alwaysNotify = kwargs.pop('alwaysNotify', None)
 

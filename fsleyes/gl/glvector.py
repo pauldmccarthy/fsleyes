@@ -819,14 +819,14 @@ class GLVector(GLVectorBase):
 
 
     def preDraw(self):
-        """Overrides :meth:`GLVectorBase.
+        """Overrides :meth:`GLVectorBase`. Binds the vector image texture.
         """
         GLVectorBase.preDraw(self)
         self.imageTexture.bindTexture(gl.GL_TEXTURE4)
 
 
     def postDraw(self):
-        """Overrides :meth:`GLVectorBase.
+        """Overrides :meth:`GLVectorBase`. Unbinds the vector image texture.
         """
         GLVectorBase.postDraw(self)
         self.imageTexture.unbindTexture()

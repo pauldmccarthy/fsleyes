@@ -359,9 +359,10 @@ class GLVolume(globject.GLImageObject):
 
 
     def updateShaderState(self, *args, **kwargs):
-        """Calls :func:`.glvolume_funcs.updateShaderState` and then
+        """Calls :func:`.gl14.glvolume_funcs.updateShaderState` or
+        :func:`.gl21.glvolume_funcs.updateShaderStatea`, then
         :meth:`.Notifier.notify`. Uses the :func:`.async.idleWhen` function to
-        make sure that it is only called when :meth:`ready` returns ``True``.
+        make sure that it is not called until :meth:`ready` returns ``True``.
 
         :arg alwaysNotify: Must be passed as a keyword argument. If
                            ``False`` (the default), ``notify`` is only called
