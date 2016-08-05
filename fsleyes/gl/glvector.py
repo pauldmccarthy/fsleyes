@@ -17,7 +17,6 @@ import OpenGL.GL           as gl
  
 import fsl.data.image      as fslimage
 import fsl.utils.async     as async
-import fsl.utils.transform as transform
 import fsleyes.colourmaps  as fslcm
 from . import resources    as glresources
 from . import                 textures
@@ -84,7 +83,7 @@ class GLVectorBase(globject.GLImageObject):
     """
 
     
-    def __init__(self, overlay, display, xax, yax, init=None):
+    def __init__(self, overlay, display, xax, yax, init=None, preinit=None):
         """Create a ``GLVectorBase`` object bound to the given overlay and
         display.
 
@@ -100,7 +99,7 @@ class GLVectorBase(globject.GLImageObject):
         :arg overlay:        A :class:`.Nifti1` object.
         
         :arg display:        A :class:`.Display` object which describes how the
-                             overlya is to be displayed.
+                             overlay is to be displayed.
 
         :arg xax:            Initial display X axis
 
@@ -109,6 +108,11 @@ class GLVectorBase(globject.GLImageObject):
         :arg init:           An optional function to be called when all of the
                              :class:`.ImageTexture` instances associated with
                              this ``GLVectorBase`` have been initialised.
+
+        :arg preinit:        An optional functiono be called after this
+                             ``GLVectorBase`` has configured itself, but
+                             *before* ``init`` is called. Used by
+                             :class:`GLVector`.
         """
 
         globject.GLImageObject.__init__(self, overlay, display, xax, yax)
@@ -147,6 +151,9 @@ class GLVectorBase(globject.GLImageObject):
         self.refreshAuxTexture('modulate')
         self.refreshAuxTexture('clip')
         self.refreshAuxTexture('colour')
+
+        if preinit is not None:
+            preinit()
 
         async.idleWhen(initWrapper, self.texturesReady)
 
@@ -479,7 +486,9 @@ class GLVectorBase(globject.GLImageObject):
         if opts.suppressY: colours[1, :] = suppress
         if opts.suppressZ: colours[2, :] = suppress
 
-        # scaling
+        # Scale/offset for brightness/contrast.
+        # Note: This code is a duplicate of
+        # that found in ColourMapTexture.
         lo, hi = fslcm.briconToDisplayRange((0, 1), bri, con)
 
         if hi == lo: scale = 0.0000000000001
@@ -678,11 +687,30 @@ class GLVector(GLVectorBase):
         self.vectorImage     = vectorImage
         self.imageTexture    = None
         self.prefilter       = prefilter
-        self.prefilterRange  = prefilterRange 
-        
-        GLVectorBase.__init__(self, image, *args, **kwargs)
+        self.prefilterRange  = prefilterRange
 
-        self.refreshImageTexture()
+        # Using the preinit hook to overcome a slight 
+        # chicken-and-egg problem. We need to create
+        # the image texture before shaders are created
+        # (which are done via the init hook, as defined
+        # in sub-classes, e.g. GLRGBVector). But we
+        # need access to the display/displayopts objects
+        # in order to configure the image texture.
+        # So pre-init ensures that the GLObject refs 
+        # (display/displayOpts) are set up, then the
+        # image texture is refreshed, then the init hook
+        # is called.
+        preinit = kwargs.pop('preinit', None)
+        def preinitWrapper():
+            self.refreshImageTexture()
+            if preinit is not None:
+                preinit()
+
+        GLVectorBase.__init__(self,
+                              image,
+                              *args,
+                              preinit=preinitWrapper,
+                              **kwargs)
 
 
     def destroy(self):
