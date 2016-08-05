@@ -146,6 +146,13 @@ class GLSH(glvector.GLVectorBase):
         opts.removeListener('radiusThreshold', name)
         opts.removeListener('colourMode',      name)
 
+
+    def compileShaders(self, *a):
+        """Overrides :meth:`.GLVectorBase.compileShaders`. Calls
+        :func:`.glsh_funcs.compileShaders`.
+        """
+        fslgl.glsh_funcs.compileShaders(self)
+
         
     def updateShaderState(self, *a):
         """Overrides :meth:`.GLVectorBase.updateShaderState`. Calls
