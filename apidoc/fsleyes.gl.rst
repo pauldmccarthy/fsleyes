@@ -17,9 +17,9 @@ fsleyes.gl package
    fsleyes.gl.glvector
    fsleyes.gl.glvolume
    fsleyes.gl.lightboxcanvas
-   fsleyes.gl.osmesacolourbarcanvas
-   fsleyes.gl.osmesalightboxcanvas
-   fsleyes.gl.osmesaslicecanvas
+   fsleyes.gl.offscreencolourbarcanvas
+   fsleyes.gl.offscreenlightboxcanvas
+   fsleyes.gl.offscreenslicecanvas
    fsleyes.gl.resources
    fsleyes.gl.routines
    fsleyes.gl.slicecanvas
