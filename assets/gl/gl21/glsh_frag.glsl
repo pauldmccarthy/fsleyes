@@ -44,6 +44,14 @@ uniform vec4 xColour;
 uniform vec4 yColour;
 uniform vec4 zColour;
 
+
+/*
+ * Scale/offset to be applied to the fragment 
+ * colour when colouring by direction. Encodes 
+ * a brightness/contrast adjustment.
+ */
+uniform mat4 colourXform;
+
 /*
  * Shape of the image, used for discarding out of bounds fragments.
  */
@@ -93,12 +101,14 @@ void main(void) {
     colour      = xColour * normVertex.x;
     colour     += yColour * normVertex.y;
     colour     += zColour * normVertex.z;
+
+    colour.xyz *= colourXform[0].x;
+    colour.xyz += colourXform[3].x;
   }
 
   else {
 
     vec4 normRadius = cmapXform * vec4(fragRadius, 0, 0, 1);
-    
     colour = texture1D(cmapTexture, normRadius.x);
   }
 

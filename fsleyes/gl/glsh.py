@@ -207,7 +207,8 @@ class GLSH(glvector.GLVectorBase):
 
 
     def __updateVertices(self):
-        """
+        """Re-generates the vertices of the sphere which represents
+        the FOD for each voxel.
         """
         
         opts = self.displayOpts

@@ -437,17 +437,19 @@ class GLVectorBase(globject.GLImageObject):
         Regenerates the colour map texture.
         """
 
-
         display = self.display
         opts    = self.displayOpts
 
-        if self.colourImage is None:
-            dmin, dmax = 0.0, 1.0
+        if self.colourImage is not None:
+            dmin, dmax = self.colourImage.dataRange
+
         else:
-            dmin, dmax = fslcm.briconToDisplayRange(
-                self.colourImage.dataRange,
-                display.brightness / 100.0,
-                display.contrast   / 100.0)
+            dmin, dmax = 0.0, 1.0
+            
+        dmin, dmax = fslcm.briconToDisplayRange(
+            (dmin, dmax),
+            display.brightness / 100.0,
+            display.contrast   / 100.0)
             
         self.cmapTexture.set(cmap=opts.cmap,
                              alpha=display.alpha / 100.0,

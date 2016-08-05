@@ -99,10 +99,6 @@ def updateShaderState(self):
     if   opts.colourMode == 'direction': colourMode = 0
     elif opts.colourMode == 'radius':    colourMode = 1
 
-    cmapXform = self.cmapTexture.getCoordinateTransform()
-
-    colours = self.getVectorColours()
-
     modLow,  modHigh  = self.getModulateRange()
     clipLow, clipHigh = self.getClippingRange() 
 
@@ -142,6 +138,9 @@ def updateShaderState(self):
     
     else:
 
+        cmapXform            = self.cmapTexture.getCoordinateTransform()
+        colours, colourXform = self.getVectorColours()
+
         changed |= shader.set('modulateTexture', 0)
         changed |= shader.set('clipTexture',     1)
         changed |= shader.set('cmapTexture',     3)
@@ -153,6 +152,7 @@ def updateShaderState(self):
         changed |= shader.set('xColour',         colours[0])
         changed |= shader.set('yColour',         colours[1])
         changed |= shader.set('zColour',         colours[2])
+        changed |= shader.set('colourXform',     colourXform)
         changed |= shader.set('cmapXform',       cmapXform)
     
     shader.setAtt('vertex',   self.vertices)
