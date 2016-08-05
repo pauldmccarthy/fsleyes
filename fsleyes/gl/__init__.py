@@ -551,7 +551,8 @@ class GLContext(object):
             # given permission to do so
             # (via the createApp argument)
             if self.__ownApp:
-                self.__app = wx.App()
+                import fsleyes.main as fm
+                self.__app = fm.FSLeyesApp()
 
             # Create a parent for the
             # canvas if necessary
