@@ -59,10 +59,10 @@ def main(args=None):
         args = sys.argv[1:]
 
     # Initialise FSLeyes, colour maps, and OpenGL
-    fsleyes.setAssetDir()
-    fslcm.init()
     fslgl.getGLContext(offscreen=True, createApp=True)
     fslgl.bootstrap() 
+    fsleyes.setAssetDir()
+    fslcm.init()
 
     # Parse arguments, and
     # configure logging/debugging

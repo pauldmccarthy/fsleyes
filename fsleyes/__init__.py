@@ -210,7 +210,8 @@ files). This is set in the :func:`setAssetDir` function.
 
 def setAssetDir():
     """Sets the :data:`assetDir` attribute. This function *must* be called
-    before most other things in *FSLeyes* are used.
+    before most other things in *FSLeyes* are used, but after a ``wx.App``
+    has been created.
     """
     
     global assetDir
