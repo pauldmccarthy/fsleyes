@@ -482,6 +482,7 @@ class GLContext(object):
                  offscreen=False,
                  parent=None,
                  other=None,
+                 target=None,
                  createApp=False,
                  ready=None):
         """Create a ``GLContext``.
@@ -492,6 +493,10 @@ class GLContext(object):
         
         :arg other:     Another ``GLContext`` instance with which GL state
                         should be shared.
+
+        :arg target:    If ``other`` is not ``None``, this must be a reference
+                        to a ``WXGLCanvasTarget``, the rendering target for the
+                        new context.
         
         :arg createApp: If ``True``, and if possible, this ``GLContext`` will
                         create and run a ``wx.App`` so that it can create a
@@ -539,7 +544,7 @@ class GLContext(object):
             self.__ownParent = parent is None
 
             if other is not None:
-                self.__createWXGLContext(other)
+                self.__createWXGLContext(other=other.__context, target=target)
                 return
 
             # Create a wx.App if we've been
@@ -653,13 +658,17 @@ class GLContext(object):
         self.__canvas.Show(True)
 
 
-    def __createWXGLContext(self, other=None):
+    def __createWXGLContext(self, other=None, target=None):
         """Creates a ``wx.glcanvas.GLContext`` object, assigning it to
         an attribute called ``__context``. Assumes that a
         ``wx.glcanvas.GLCanvas`` has already been created.
 
-        :arg other: Another `wx.glcanvas.GLContext`` instance with which
-                    the new context should share GL state.
+        :arg other:  Another `wx.glcanvas.GLContext`` instance with which
+                     the new context should share GL state.
+
+        :arg target: If ``other`` is not ``None``, this must be a
+                     ``wx.glcanvas.GLCanvas``, the rendering target for the
+                     new context.
 
         .. warning:: This method *must* be called via the ``wx.MainLoop``.
         """
@@ -668,7 +677,7 @@ class GLContext(object):
         import wx.glcanvas as wxgl
 
         if other is not None:
-            self.__context = wxgl.GLContext(self.__canvas, other=other)
+            self.__context = wxgl.GLContext(target, other=other)
 
         else:
             self.__context = wxgl.GLContext(self.__canvas)
@@ -853,7 +862,7 @@ class WXGLCanvasTarget(object):
             log.debug('Creating separate GL context for '
                       'WXGLCanvasTarget {}'.format(id(self)))
 
-            context = GLContext(other=context)
+            context = GLContext(other=context, target=self)
 
         self.__glReady = False
         self.__frozen  = False
