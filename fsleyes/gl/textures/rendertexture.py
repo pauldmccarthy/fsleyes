@@ -269,12 +269,16 @@ class RenderTexture(texture.Texture2D):
             glfbo.GL_RENDERBUFFER_EXT,
             self.__renderBuffer)
 
-        self.unbindAsRenderTarget()
-        self.unbindTexture()            
+        # Get the FBO status before unbinding it -
+        # the Apple software renderer will return
+        # FRAMEBUFFER_UNDEFINED otherwise.
+        status = glfbo.glCheckFramebufferStatusEXT(glfbo.GL_FRAMEBUFFER_EXT)
 
+        self.unbindAsRenderTarget()
+        self.unbindTexture()
+        
         # Complain if something is not right
-        if glfbo.glCheckFramebufferStatusEXT(glfbo.GL_FRAMEBUFFER_EXT) != \
-           glfbo.GL_FRAMEBUFFER_COMPLETE_EXT:
+        if status != glfbo.GL_FRAMEBUFFER_COMPLETE_EXT:
             raise RuntimeError('An error has occurred while '
                                'configuring the frame buffer')
 
