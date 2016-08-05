@@ -61,6 +61,7 @@ with graphics hardware that supports one of the following versions:
    - `ARB_vertex_program`
    - `ARB_fragment_program`
    - `EXT_framebuffer_object`
+   - `GL_ARB_texture_non_power_of_two`
 
  - OpenGL 2.1, with the following extensions:
    - `EXT_framebuffer_object`
