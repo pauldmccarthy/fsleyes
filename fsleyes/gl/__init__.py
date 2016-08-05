@@ -552,7 +552,7 @@ class GLContext(object):
             # (via the createApp argument)
             if self.__ownApp:
                 import fsleyes.main as fm
-                self.__app = fm.FSLeyesApp()
+                self.__app = fm.FSLEyesApp()
 
             # Create a parent for the
             # canvas if necessary
