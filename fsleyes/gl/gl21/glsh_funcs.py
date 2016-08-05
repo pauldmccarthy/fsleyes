@@ -56,10 +56,20 @@ def compileShaders(self):
     """
     
     if self.shader is not None:
-        self.shader.destroy() 
+        self.shader.destroy()
 
-    vertSrc = shaders.getVertexShader(  'glsh')
-    fragSrc = shaders.getFragmentShader('glsh')
+    opts                     = self.displayOpts
+    self.useVolumeFragShader = opts.colourImage is not None
+
+    if self.useVolumeFragShader:
+        vertShader = 'glsh_volume'
+        fragShader = 'glvolume'
+    else:
+        vertShader = 'glsh'
+        fragShader = 'glsh' 
+
+    vertSrc = shaders.getVertexShader(  vertShader)
+    fragSrc = shaders.getFragmentShader(fragShader)
     
     self.shader = shaders.GLSLShader(vertSrc, fragSrc, indexed=True)
 
@@ -88,6 +98,9 @@ def updateShaderState(self):
 
     colours = self.getVectorColours()
 
+    modLow,  modHigh  = self.getModulateRange()
+    clipLow, clipHigh = self.getClippingRange() 
+
     shader.load()
 
     changed  = False
@@ -97,16 +110,46 @@ def updateShaderState(self):
     changed |= shader.set('lightPos',    lightPos)
     changed |= shader.set('nVertices',   opts.shResolution ** 2)
     changed |= shader.set('sizeScaling', opts.size / 100.0)
-    changed |= shader.set('colourMode',  colourMode)
-    changed |= shader.set('xColour',     colours[0])
-    changed |= shader.set('yColour',     colours[1])
-    changed |= shader.set('zColour',     colours[2])
-    changed |= shader.set('cmapXform',   cmapXform)
 
-    changed |= shader.set('cmapTexture', 3)
     changed |= shader.set('radTexture',  4)
-    
 
+    if self.useVolumeFragShader:
+
+        voxValXform     = self.colourTexture.voxValXform
+        invVoxValXform  = self.colourTexture.invVoxValXform
+        texZero         = 0.0 * invVoxValXform[0, 0] + invVoxValXform[3, 0]
+        img2CmapXform   = transform.concat(
+            voxValXform,
+            self.cmapTexture.getCoordinateTransform()) 
+        
+        changed |= shader.set('clipTexture',      1)
+        changed |= shader.set('imageTexture',     2)
+        changed |= shader.set('colourTexture',    3)
+        changed |= shader.set('negColourTexture', 3)
+        changed |= shader.set('img2CmapXform',    img2CmapXform)
+        changed |= shader.set('imageIsClip',      False)
+        changed |= shader.set('useNegCmap',       False)
+        changed |= shader.set('useSpline',        False)
+        changed |= shader.set('clipLow',          clipLow)
+        changed |= shader.set('clipHigh',         clipHigh)
+        changed |= shader.set('texZero',          texZero)
+        changed |= shader.set('invertClip',       False)
+    
+    else:
+
+        changed |= shader.set('modulateTexture', 0)
+        changed |= shader.set('clipTexture',     1)
+        changed |= shader.set('cmapTexture',     3)
+        changed |= shader.set('clipLow',         clipLow)
+        changed |= shader.set('clipHigh',        clipHigh)
+        changed |= shader.set('modLow',          modLow)
+        changed |= shader.set('modHigh',         modHigh)
+        changed |= shader.set('colourMode',      colourMode)
+        changed |= shader.set('xColour',         colours[0])
+        changed |= shader.set('yColour',         colours[1])
+        changed |= shader.set('zColour',         colours[2])
+        changed |= shader.set('cmapXform',       cmapXform)
+    
     # Vertices only need to be re-generated
     # if the shResolution has changed.
     if changed:
