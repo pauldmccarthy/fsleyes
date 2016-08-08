@@ -427,8 +427,8 @@ _DISPLAY_WIDGETS = td.TypeDict({
         slider=True,
         labels=[strings.choices['VectorOpts.modulateRange.min'],
                 strings.choices['VectorOpts.modulateRange.max']],
-        dependencies=['modulateImage'],
-        enabledWhen=lambda o, mi: mi is not None), 
+        dependencies=['colourImage', 'modulateImage'],
+        enabledWhen=lambda o, ci, mi: ci is None and mi is not None), 
     'VectorOpts.xColour'       : props.Widget(
         'xColour',
         dependencies=['colourImage'],
@@ -529,7 +529,42 @@ _DISPLAY_WIDGETS = td.TypeDict({
         showLimits=False),
     'SHOpts.colourMode'      : props.Widget(
         'colourMode', 
-        labels=strings.choices['SHOpts.colourMode']),    
+        labels=strings.choices['SHOpts.colourMode'],
+        dependencies=['colourImage'],
+        enabledWhen=lambda o, ci: ci is None),
+    'SHOpts.cmap' : props.Widget(
+        'cmap',
+        labels=fslcm.getColourMapLabel,
+        dependencies=['colourImage', 'colourMode'],
+        enabledWhen=lambda o, ci, cm: ci is not None or cm == 'radius'),
+    'SHOpts.xColour'         : props.Widget(
+        'xColour',
+        dependencies=['colourImage', 'colourMode'],
+        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),
+    'SHOpts.yColour'         : props.Widget(
+        'yColour',
+        dependencies=['colourImage', 'colourMode'],
+        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),
+    'SHOpts.zColour'         : props.Widget(
+        'zColour',
+        dependencies=['colourImage', 'colourMode'],
+        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),
+    'SHOpts.suppressX'         : props.Widget(
+        'suppressX',
+        dependencies=['colourImage', 'colourMode'],
+        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),
+    'SHOpts.suppressY'         : props.Widget(
+        'suppressY',
+        dependencies=['colourImage', 'colourMode'],
+        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),
+    'SHOpts.suppressZ'         : props.Widget(
+        'suppressZ',
+        dependencies=['colourImage', 'colourMode'],
+        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),
+    'SHOpts.suppressMode'         : props.Widget(
+        'suppressMode',
+        dependencies=['colourImage', 'colourMode'],
+        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),    
 })
 """This dictionary contains specifications for all controls that are shown on
 an ``OverlayDisplayPanel``.
