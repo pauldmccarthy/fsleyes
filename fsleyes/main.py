@@ -48,20 +48,60 @@ class FSLEyesApp(wx.App):
 
     def __init__(self, *args, **kwargs):
         """Create a ``FSLeyesApp``. """
-        
+
+        self.__overlayList = None
+        self.__displayCtx  = None
+
         wx.App.__init__(self, *args, **kwargs)
         
         self.SetAppName('FSLeyes')
 
 
+    def SetOverlayListAndDisplayContext(self, overlayList, displayCtx):
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
+
+
     def MacReopenApp(self):
-        """Make sure that the FSLeyes frame is restored if it is minimised,
-        and (e.g.) the dock icon is clicked.
+        """On OSX, make sure that the FSLeyes frame is restored if it is
+        minimised, and (e.g.) the dock icon is clicked.
         """
 
         frame = self.GetTopWindow()
         frame.Iconize(False)
         frame.Raise()
+
+
+    def MacOpenFiles(self, filenames):
+        """On OSX, support opening files via context menu, and files dropped
+        on the application icon.
+        """
+
+        if self.__overlayList is None:
+            return
+
+        import fsleyes.actions.loadoverlay as loadoverlay
+        import fsleyes.autodisplay         as autodisplay
+
+        def onLoad(overlays):
+
+            if len(overlays) == 0:
+                return
+
+            self.__overlayList.extend(overlays)
+
+            if self.__displayCtx.autoDisplay:
+                for overlay in overlays:
+                    autodisplay.autoDisplay(overlay,
+                                            self.__overlayList,
+                                            self.__displayCtx)
+
+        loadoverlay.loadOverlays(
+            filenames,
+            onLoad=onLoad,
+            inmem=self.__displayCtx.loadInMemory) 
+
+ 
 
 
 def main(args=None):
@@ -153,6 +193,7 @@ def main(args=None):
         # list and the master display context,
         # and then create the FSLEyesFrame.
         overlayList, displayCtx = makeDisplayContext(namespace[0], splash)
+        app.SetOverlayListAndDisplayContext(overlayList, displayCtx)
         frame = makeFrame(namespace[0], displayCtx, overlayList, splash)
 
         app.SetTopWindow(frame)
