@@ -461,15 +461,38 @@ GROUPDESCS = td.TypeDict({
 
 GROUPEPILOGS = td.TypeDict({
 
-    'Display'    : 'Available overlay types: '
-                   '{}'.format(', '.join(fsldisplay.ALL_OVERLAY_TYPES)),
-    'LabelOpts'  : 'Available lookup tables: '
-                   '{}'.format(', '.join(colourmaps.scanLookupTables())),
-    'VolumeOpts' : 'Available colour maps: '
-                   '{}'.format(', '.join(colourmaps.scanColourMaps())),
-    'SHOpts'     : 'Available colour maps: '
-                   '{}'.format(', '.join(colourmaps.scanColourMaps())), 
+    'Display'    : 'Available overlay types: {}',
+    'LabelOpts'  : 'Available lookup tables: {}',
+    'VolumeOpts' : 'Available colour maps: {}',
+    'SHOpts'     : 'Available colour maps: {}'
 })
+"""This dictionary contains epilogs for some types - information to be shown
+after the help for that type. Use the :func:`groupEpilog` function to access
+this dictionary.
+"""
+
+
+def groupEpilog(target):
+    """Return a formatted value from the :attr:`GROUPEPILOGS` dictionary. The
+    ``target`` must be a type.
+    """
+
+    epilog = GROUPEPILOGS.get(target)
+    if epilog is not None:
+
+        if issubclass(target, fsldisplay.Display):
+            epilog = epilog.format(', '.join(fsldisplay.ALL_OVERLAY_TYPES))
+            
+        elif issubclass(target, fsldisplay.LabelOpts):
+            epilog = epilog.format(', '.join(colourmaps.scanLookupTables()))
+            
+        elif issubclass(target, fsldisplay.VolumeOpts):
+            epilog = epilog.format(', '.join(colourmaps.scanColourMaps()))
+
+        elif issubclass(target, fsldisplay.SHOpts):
+            epilog = epilog.format(', '.join(colourmaps.scanColourMaps()))
+
+    return epilog
 
 
 # Short/long arguments for all of those options
@@ -746,9 +769,9 @@ HELP = td.TypeDict({
     'SHOpts.radiusThreshold' : 'Hide FODs with radius less than this',
     'SHOpts.colourMode'      : 'Colour by \'direction\' or \'radius\'',
     'SHOpts.colourMap'       : 'Colour map, if colouring by \'radius\'',
-    'SHOpts.xColour'         : 'X colour, if colrouing by \'direction\'',
-    'SHOpts.yColour'         : 'Y colour, if colrouing by \'direction\'',
-    'SHOpts.zColour'         : 'Z colour, if colrouing by \'direction\'',
+    'SHOpts.xColour'         : 'X colour, if colouring by \'direction\'',
+    'SHOpts.yColour'         : 'Y colour, if colouring by \'direction\'',
+    'SHOpts.zColour'         : 'Z colour, if colouring by \'direction\'',
 })
 """This dictionary defines the help text for all command line options."""
 
@@ -763,49 +786,74 @@ SHORT_HELP = td.TypeDict({
 user requests a short (abbreviated) version of the command line help.
 """
 
-# 
-# Extra settings for some properties, passed through 
-# to the props.cli.addParserArguments function.
-#
 
-# Settings for the LabelOpts.lut property - we don't
-# want to pre-load all LUTs as it takes too long,
-# so we're using the scanLookupTables function to
-# grab the names of all existing LUTs, and then
-# using them as the CLI options.
-lutSettings = {
+def getExtra(target, propName, default=None):
+    """This function returns defines any extra settings to be passed
+    through to the :func:`.props.addParserArguments` function for the
+    given type and property.
+    """
 
-    'choices'       : colourmaps.scanLookupTables(),
-    'useAlts'       : False,
-    'metavar'       : 'LUT',
-    'default'       : 'random',
-}
 
-# Similar procedure for the colour map properties
-cmapSettings = {
-    'choices'  : colourmaps.scanColourMaps(),
-    'metavar'  : 'CMAP',
-    'parseStr' : True
-}
-
-EXTRA = td.TypeDict({
-    'Display.overlayType' : {
+    overlayTypeSettings = {
         'choices' : fsldisplay.ALL_OVERLAY_TYPES,
         'default' : fsldisplay.ALL_OVERLAY_TYPES[0],
         'metavar' : 'TYPE',
-    },
+    } 
 
-    'LabelOpts.lut'           : lutSettings,
-    'VolumeOpts.cmap'         : cmapSettings,
-    'VolumeOpts.negativeCmap' : cmapSettings,
-    'LineVectorOpts.cmap'     : cmapSettings,
-    'RGBVectorOpts.cmap'      : cmapSettings,
-    'TensorOpts.cmap'         : cmapSettings,
-    'SHOpts.colourMap'        : cmapSettings,
-})
-"""This dictionary defines any extra settings to be passed through
-to the :func:`.props.addParserArguments` function.
-"""
+
+    # Settings for the LabelOpts.lut property - we don't
+    # want to pre-load all LUTs as it takes too long,
+    # so we're using the scanLookupTables function to
+    # grab the names of all existing LUTs, and then
+    # using them as the CLI options.
+    lutSettings = {
+
+        'choices'       : colourmaps.scanLookupTables(),
+        'useAlts'       : False,
+        'metavar'       : 'LUT',
+        'default'       : 'random',
+    }
+
+    # Similar procedure for the colour map properties
+    cmapSettings = {
+        'choices'  : colourmaps.scanColourMaps(),
+        'metavar'  : 'CMAP',
+        'parseStr' : True
+    } 
+
+    if target in ('Display', fsldisplay.Display) and \
+       propName == 'overlayType':
+        return overlayTypeSettings
+    
+    elif target in ('LabelOpts', fsldisplay.LabelOpts) \
+         and propName == 'lut':
+        return lutSettings
+    
+    elif target in ('VolumeOpts', fsldisplay.VolumeOpts) \
+         and propName == 'cmap':
+        return cmapSettings
+
+    elif target in ('VolumeOpts', fsldisplay.VolumeOpts) \
+         and propName == 'negativeCmap':
+        return cmapSettings
+
+    elif target in ('LineVectorOpts', fsldisplay.LineVectorOpts) \
+         and propName == 'cmap':
+        return cmapSettings
+
+    elif target in ('RGBVectorOpts', fsldisplay.RGBVectorOpts) \
+         and propName == 'cmap':
+        return cmapSettings
+
+    elif target in ('TensorOpts', fsldisplay.TensorOpts) \
+         and propName == 'cmap':
+        return cmapSettings
+
+    elif target in ('SHOpts', fsldisplay.SHOpts) \
+         and propName == 'cmap':
+        return cmapSettings
+
+    return None
 
 
 # File options need special treatment
@@ -940,8 +988,8 @@ def _configParser(target, parser, propNames=None, shortHelp=False):
     for propName in propNames:
 
         shortArg, longArg = ARGUMENTS[ target, propName]
-        propExtra         = EXTRA.get((target, propName), None)
-        helpText          = HELP .get((target, propName), 'no help')
+        propExtra         = getExtra(target, propName)
+        helpText          = HELP.get((target, propName), 'no help')
 
         if shortHelp:
             helpText = SHORT_HELP.get((target, propName), helpText)
@@ -1134,7 +1182,7 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
     # The Display parser is used as a parent
     # for each of the DisplayOpts parsers
     otParser   = ArgumentParser(add_help=False)
-    dispParser = ArgumentParser(add_help=False, epilog=GROUPEPILOGS[Display])
+    dispParser = ArgumentParser(add_help=False, epilog=groupEpilog(Display))
     dispProps  = list(OPTIONS[Display])
 
     if not forHelp:
@@ -1153,7 +1201,7 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
         parser = ArgumentParser(prog='',
                                 add_help=False,
                                 parents=parents,
-                                epilog=GROUPEPILOGS.get(target))
+                                epilog=groupEpilog(target))
         
         parsers[target] = parser
         propNames       = list(it.chain(*OPTIONS.get(target, allhits=True)))
@@ -1565,7 +1613,7 @@ def _printShortHelp(mainParser, extra=None):
 
         helpText += ovlHelp
 
-    helpText += '\n' + GROUPEPILOGS['VolumeOpts'] + '\n'
+    helpText += '\n' + groupEpilog(fsldisplay.VolumeOpts) + '\n'
 
     print(helpText)
     
