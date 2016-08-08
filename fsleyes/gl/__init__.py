@@ -538,8 +538,6 @@ class GLContext(object):
         # Use wx if possible
         else:
 
-            import wx
-
             self.__ownApp    = (not haveGui) and createApp
             self.__ownParent = parent is None
 

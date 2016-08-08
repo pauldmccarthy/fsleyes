@@ -222,16 +222,31 @@ def setAssetDir():
     # If we are running from a bundled application,
     # wx will know where the FSLeyes resources are
     if platform.frozen:
-        sp       = wx.StandardPaths.Get()
-        assetDir = op.join(sp.GetResourcesDir())
-        
+
+        # If we have a display, assume 
+        # that a wx app has been created
+        if platform.canHaveGui:
+
+            sp       = wx.StandardPaths.Get()
+            assetDir = op.join(sp.GetResourcesDir())
+
+        # Otherwise we have to guess at the location
+        elif platform.os == 'Darwin':
+            assetDir = op.join(op.dirname(__file__), '..', 'Resources')
+        elif platform.os == 'Linux':
+            assetDir = op.join(op.dirname(__file__), '..', 'share', 'FSLeyes')
+
     # Otherwise we are running from a code install;
     # assume that the resources are living alongside
     # the fsleyes package directory.
     else:
-        assetDir = op.join(op.dirname(__file__), '..')    
+        assetDir = op.join(op.dirname(__file__), '..')
 
     assetDir = op.abspath(assetDir)
+
+    if not op.exists(assetDir):
+        raise RuntimeError('Could not find FSLeyes asset directory! '
+                           'It should be at {}'.format(assetDir))
 
 
 def configLogging(namespace):
