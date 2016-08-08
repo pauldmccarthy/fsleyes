@@ -52,7 +52,8 @@ class OverlayDisplayPanel(fslpanel.FSLEyesSettingsPanel):
 
     
     The settings that are displayed on an ``OverlayDisplayPanel`` are
-    defined in the :attr:`_DISPLAY_PROPS` dictionary.
+    defined in the :attr:`_DISPLAY_PROPS` and :attr:`_DISPLAY_WIDGETS`
+    dictionaries.
     """
 
     
@@ -187,6 +188,7 @@ class OverlayDisplayPanel(fslpanel.FSLEyesSettingsPanel):
 
         dispProps = _DISPLAY_PROPS.get(target, [], allhits=True)
         dispProps = functools.reduce(lambda a, b: a + b, dispProps)
+        dispProps = [_DISPLAY_WIDGETS[target, dp] for dp in dispProps]
  
         labels   = [strings.properties.get((target, p.key), p.key)
                     for p in dispProps]
@@ -235,8 +237,8 @@ class OverlayDisplayPanel(fslpanel.FSLEyesSettingsPanel):
         # Negative colour map widget
         negCmap    = props.Widget('negativeCmap',
                                   labels=fslcm.getColourMapLabel,
-                                  enabledWhen=lambda i, enc: enc,
-                                  dependencies=['useNegativeCmap'])
+                                  dependencies=['useNegativeCmap'],
+                                  enabledWhen=lambda i, unc : unc)
         useNegCmap = props.Widget('useNegativeCmap')
         
         negCmap    = props.buildGUI(widgets, target, negCmap)
@@ -265,156 +267,270 @@ def _imageName(img):
 
 
 _DISPLAY_PROPS = td.TypeDict({
-    'Display' : [
-        props.Widget('name'),
-        props.Widget('overlayType',
-                     labels=strings.choices['Display.overlayType']),
-        props.Widget('enabled'),
-        props.Widget('alpha',      showLimits=False),
-        props.Widget('brightness', showLimits=False),
-        props.Widget('contrast',   showLimits=False)],
+    'Display'        : ['name',
+                        'overlayType',
+                        'enabled',
+                        'alpha',
+                        'brightness',
+                        'contrast'],
+    'VolumeOpts'     : ['resolution',
+                        'volume',
+                        'interpolation',
+                        'cmap',
+                        'invert',
+                        'invertClipping',
+                        'linkLowRanges',
+                        'linkHighRanges',
+                        'displayRange',
+                        'clippingRange',
+                        'clipImage'],
+    'MaskOpts'       : ['resolution',
+                        'volume',
+                        'colour',
+                        'invert',
+                        'threshold'],
+    'VectorOpts'     : ['colourImage',
+                        'modulateImage',
+                        'clipImage',
+                        'cmap',
+                        'clippingRange',
+                        'modulateRange',
+                        'xColour',
+                        'yColour',
+                        'zColour',
+                        'suppressX',
+                        'suppressY',
+                        'suppressZ',
+                        'suppressMode'],
+    'RGBVectorOpts'  : ['resolution',
+                        'interpolation'],
+    'LineVectorOpts' : ['directed',
+                        'unitLength',
+                        'neuroFlip',
+                        'resolution',
+                        'lineWidth',
+                        'lengthScale'],
+    'ModelOpts'      : ['ModelOpts.colour',
+                        'ModelOpts.outline',
+                        'ModelOpts.outlineWidth',
+                        'ModelOpts.refImage',
+                        'ModelOpts.coordSpace'],
+    'TensorOpts'     : ['lighting',
+                        'neuroFlip',
+                        'tensorResolution',
+                        'tensorScale'],
+    'LabelOpts'      : ['lut',
+                        'outline',
+                        'outlineWidth',
+                        'resolution',
+                        'volume'],
+    'SHOpts'         : ['resolution',
+                        'shResolution',
+                        'neuroFlip',
+                        'lighting',
+                        'size',
+                        'radiusThreshold',
+                        'colourMode']
+})
+"""This dictionary contains lists of all the properties which are to be
+displayed on an ``OverlayDisplayPanel``.
+"""
 
-    'VolumeOpts' : [
-        props.Widget('resolution',    showLimits=False),
-        props.Widget('volume',
-                     showLimits=False,
-                     enabledWhen=lambda o: o.overlay.is4DImage()),
-        props.Widget('interpolation',
-                     labels=strings.choices['VolumeOpts.interpolation']),
-        props.Widget('cmap',
-                     labels=fslcm.getColourMapLabel),
-        props.Widget('invert'),
-        props.Widget('invertClipping'),
-        props.Widget('linkLowRanges',
-                     dependencies=['clipImage'],
-                     enabledWhen=lambda vo, ci: ci is None),
-        props.Widget('linkHighRanges',
-                     dependencies=['clipImage'],
-                     enabledWhen=lambda vo, ci: ci is None),
-        props.Widget('displayRange',
-                     showLimits=False,
-                     slider=True,
-                     labels=[strings.choices['VolumeOpts.displayRange.min'],
-                             strings.choices['VolumeOpts.displayRange.max']]),
-        props.Widget('clippingRange',
-                     showLimits=False,
-                     slider=True,
-                     labels=[strings.choices['VolumeOpts.displayRange.min'],
-                             strings.choices['VolumeOpts.displayRange.max']]),
-        props.Widget('clipImage', labels=_imageName)],
 
-    'MaskOpts' : [
-        props.Widget('resolution', showLimits=False),
-        props.Widget('volume',
-                     showLimits=False,
-                     enabledWhen=lambda o: o.overlay.is4DImage()),
-        props.Widget('colour'),
-        props.Widget('invert'),
-        props.Widget('threshold',  showLimits=False)],
+_DISPLAY_WIDGETS = td.TypeDict({
 
-    'VectorOpts' : [
-        props.Widget('colourImage',   labels=_imageName),
-        props.Widget('modulateImage',
-                     labels=_imageName,
-                     dependencies=['colourImage'],
-                     enabledWhen=lambda o, ci: ci is None),
-        props.Widget('clipImage',     labels=_imageName),
-        props.Widget('cmap',
-                     labels=fslcm.getColourMapLabel,
-                     dependencies=['colourImage'],
-                     enabledWhen=lambda o, ci: ci is not None), 
-        props.Widget('clippingRange',
-                     showLimits=False,
-                     slider=True,
-                     labels=[strings.choices['VectorOpts.clippingRange.min'],
-                             strings.choices['VectorOpts.clippingRange.max']],
-                     dependencies=['clipImage'],
-                     enabledWhen=lambda o, ci: ci is not None),
-        props.Widget('modulateRange',
-                     showLimits=False,
-                     slider=True,
-                     labels=[strings.choices['VectorOpts.modulateRange.min'],
-                             strings.choices['VectorOpts.modulateRange.max']],
-                     dependencies=['modulateImage'],
-                     enabledWhen=lambda o, mi: mi is not None), 
-        props.Widget('xColour',
-                     dependencies=['colourImage'],
-                     enabledWhen=lambda o, ci: ci is None), 
-        props.Widget('yColour',
-                     dependencies=['colourImage'],
-                     enabledWhen=lambda o, ci: ci is None),
-        props.Widget('zColour',
-                     dependencies=['colourImage'],
-                     enabledWhen=lambda o, ci: ci is None),
-        props.Widget('suppressX',
-                     dependencies=['colourImage'],
-                     enabledWhen=lambda o, ci: ci is None),
-        props.Widget('suppressY',
-                     dependencies=['colourImage'],
-                     enabledWhen=lambda o, ci: ci is None),
-        props.Widget('suppressZ',
-                     dependencies=['colourImage'],
-                     enabledWhen=lambda o, ci: ci is None),
-        props.Widget('suppressMode',
-                     dependencies=['colourImage'],
-                     labels=strings.choices['VectorOpts.suppressMode'],
-                     enabledWhen=lambda o, ci: ci is None)],
+    # Display
+    'Display.name'        : props.Widget('name'),
+    'Display.overlayType' : props.Widget(
+        'overlayType',
+        labels=strings.choices['Display.overlayType']),
+    'Display.enabled'     : props.Widget('enabled'),
+    'Display.alpha'       : props.Widget('alpha',      showLimits=False),
+    'Display.brightness'  : props.Widget('brightness', showLimits=False),
+    'Display.contrast'    : props.Widget('contrast',   showLimits=False),
 
-    'RGBVectorOpts' : [
-        props.Widget('resolution', showLimits=False),
-        props.Widget('interpolation',
-                     labels=strings.choices['VolumeOpts.interpolation'])],
+    # VolumeOpts
+    'VolumeOpts.resolution'     : props.Widget('resolution', showLimits=False),
+    'VolumeOpts.volume'         : props.Widget(
+        'volume',
+        showLimits=False,
+        enabledWhen=lambda o: o.overlay.is4DImage()),
+    'VolumeOpts.interpolation'  : props.Widget(
+        'interpolation',
+        labels=strings.choices['VolumeOpts.interpolation']),
+    'VolumeOpts.cmap'           : props.Widget(
+        'cmap',
+        labels=fslcm.getColourMapLabel),
+    'VolumeOpts.invert'         : props.Widget('invert'),
+    'VolumeOpts.invertClipping' : props.Widget('invertClipping'),
+    'VolumeOpts.linkLowRanges'  : props.Widget(
+        'linkLowRanges',
+        dependencies=['clipImage'],
+        enabledWhen=lambda vo, ci: ci is None),
+    'VolumeOpts.linkHighRanges' : props.Widget(
+        'linkHighRanges',
+        dependencies=['clipImage'],
+        enabledWhen=lambda vo, ci: ci is None),
+    'VolumeOpts.displayRange'   : props.Widget(
+        'displayRange',
+        showLimits=False,
+        slider=True,
+        labels=[strings.choices['VolumeOpts.displayRange.min'],
+                strings.choices['VolumeOpts.displayRange.max']]),
+    'VolumeOpts.clippingRange'  : props.Widget(
+        'clippingRange',
+        showLimits=False,
+        slider=True,
+        labels=[strings.choices['VolumeOpts.displayRange.min'],
+                strings.choices['VolumeOpts.displayRange.max']]),
+    'VolumeOpts.clipImage'      : props.Widget(
+        'clipImage',
+        labels=_imageName),
 
-    'LineVectorOpts' : [
-        props.Widget('directed'),
-        props.Widget('unitLength'),
-        props.Widget('neuroFlip'),
-        props.Widget('resolution',  showLimits=False),
-        props.Widget('lineWidth',   showLimits=False),
-        props.Widget('lengthScale', showLimits=False)],
+    # MaskOpts
+    'MaskOpts.resolution' : props.Widget('resolution', showLimits=False),
+    'MaskOpts.volume'     : props.Widget(
+        'volume',
+        showLimits=False,
+        enabledWhen=lambda o: o.overlay.is4DImage()),
+    'MaskOpts.colour'     : props.Widget('colour'),
+    'MaskOpts.invert'     : props.Widget('invert'),
+    'MaskOpts.threshold'  : props.Widget('threshold', showLimits=False),
 
-    'ModelOpts' : [
-        props.Widget('colour'),
-        props.Widget('outline'),
-        props.Widget('outlineWidth', showLimits=False),
-        props.Widget('refImage', labels=_imageName),
-        # props.Widget('showName'),
-        props.Widget('coordSpace',
-                     enabledWhen=lambda o, ri: ri != 'none',
-                     labels=strings.choices['ModelOpts.coordSpace'],
-                     dependencies=['refImage'])],
+    # VectorOpts (shared by all
+    # the VectorOpts sub-classes)
+    'VectorOpts.colourImage'   : props.Widget(
+        'colourImage',
+        labels=_imageName),
+    'VectorOpts.modulateImage' : props.Widget(
+        'modulateImage',
+        labels=_imageName,
+        dependencies=['colourImage'],
+        enabledWhen=lambda o, ci: ci is None),
+    'VectorOpts.clipImage'     : props.Widget('clipImage', labels=_imageName),
+    'VectorOpts.cmap'          : props.Widget(
+        'cmap',
+        labels=fslcm.getColourMapLabel,
+        dependencies=['colourImage'],
+        enabledWhen=lambda o, ci: ci is not None), 
+    'VectorOpts.clippingRange' : props.Widget(
+        'clippingRange',
+        showLimits=False,
+        slider=True,
+        labels=[strings.choices['VectorOpts.clippingRange.min'],
+                strings.choices['VectorOpts.clippingRange.max']],
+        dependencies=['clipImage'],
+        enabledWhen=lambda o, ci: ci is not None),
+    'VectorOpts.modulateRange' : props.Widget(
+        'modulateRange',
+        showLimits=False,
+        slider=True,
+        labels=[strings.choices['VectorOpts.modulateRange.min'],
+                strings.choices['VectorOpts.modulateRange.max']],
+        dependencies=['modulateImage'],
+        enabledWhen=lambda o, mi: mi is not None), 
+    'VectorOpts.xColour'       : props.Widget(
+        'xColour',
+        dependencies=['colourImage'],
+        enabledWhen=lambda o, ci: ci is None), 
+    'VectorOpts.yColour'       : props.Widget(
+        'yColour',
+        dependencies=['colourImage'],
+        enabledWhen=lambda o, ci: ci is None), 
+    'VectorOpts.zColour'       : props.Widget(
+        'zColour',
+        dependencies=['colourImage'],
+        enabledWhen=lambda o, ci: ci is None), 
+    'VectorOpts.suppressX'     : props.Widget(
+        'suppressX',
+        dependencies=['colourImage'],
+        enabledWhen=lambda o, ci: ci is None),
+    'VectorOpts.suppressY'     : props.Widget(
+        'suppressY',
+        dependencies=['colourImage'],
+        enabledWhen=lambda o, ci: ci is None),
+    'VectorOpts.suppressZ'     : props.Widget(
+        'suppressZ',
+        dependencies=['colourImage'],
+        enabledWhen=lambda o, ci: ci is None),
+    'VectorOpts.suppressMode'  : props.Widget(
+        'suppressMode',
+        dependencies=['colourImage'],
+        labels=strings.choices['VectorOpts.suppressMode'],
+        enabledWhen=lambda o, ci: ci is None),
 
-    'TensorOpts' : [
-        props.Widget('lighting'),
-        props.Widget('neuroFlip'),
-        props.Widget(
-            'tensorResolution',
-            showLimits=False,
-            spin=False,
-            labels=[strings.choices['TensorOpts.tensorResolution.min'],
-                    strings.choices['TensorOpts.tensorResolution.max']]),
-        props.Widget('tensorScale', showLimits=False, spin=False)],
+    # RGBVectorOpts
+    'RGBVectorOpts.resolution'    : props.Widget(
+        'resolution',
+        showLimits=False),
+    'RGBVectorOpts.interpolation' : props.Widget(
+        'interpolation',
+        labels=strings.choices['VolumeOpts.interpolation']),
 
-    'LabelOpts' : [
-        props.Widget('lut', labels=lambda l: l.name),
-        props.Widget('outline'),
-        props.Widget('outlineWidth', showLimits=False),
-        # props.Widget('showNames'),
-        props.Widget('resolution',   showLimits=False),
-        props.Widget('volume',
-                     showLimits=False,
-                     enabledWhen=lambda o: o.overlay.is4DImage())],
+    # LineVectorOpts
+    'LineVectorOpts.directed'    : props.Widget('directed'),
+    'LineVectorOpts.unitLength'  : props.Widget('unitLength'),
+    'LineVectorOpts.neuroFlip'   : props.Widget('neuroFlip'),
+    'LineVectorOpts.resolution'  : props.Widget('resolution',
+                                                showLimits=False),
+    'LineVectorOpts.lineWidth'   : props.Widget('lineWidth',
+                                                showLimits=False),
+    'LineVectorOpts.lengthScale' : props.Widget('lengthScale',
+                                                showLimits=False),
 
-    'SHOpts' : [
-        props.Widget('resolution',   showLimits=False),
-        props.Widget('shResolution'),
-        props.Widget('neuroFlip'),
-        props.Widget('lighting'),
-        props.Widget('size',            spin=False, showLimits=False),
-        props.Widget('radiusThreshold', spin=False, showLimits=False),
-        props.Widget('colourMode',
-                     labels=strings.choices['SHOpts.colourMode']),
-    ]})
+    # ModelOpts
+    'ModelOpts.colour'       : props.Widget('colour'),
+    'ModelOpts.outline'      : props.Widget('outline'),
+    'ModelOpts.outlineWidth' : props.Widget('outlineWidth', showLimits=False),
+    'ModelOpts.refImage'     : props.Widget('refImage', labels=_imageName),
+    'ModelOpts.coordSpace'   : props.Widget(
+        'coordSpace',
+        enabledWhen=lambda o, ri: ri != 'none',
+        labels=strings.choices['ModelOpts.coordSpace'],
+        dependencies=['refImage']),
+
+        
+    # TensorOpts
+    'TensorOpts.lighting'         : props.Widget('lighting'),
+    'TensorOpts.neuroFlip'        : props.Widget('neuroFlip'),
+    'TensorOpts.tensorResolution' : props.Widget(
+        'tensorResolution',
+        showLimits=False,
+        spin=False,
+        labels=[strings.choices['TensorOpts.tensorResolution.min'],
+                strings.choices['TensorOpts.tensorResolution.max']]),
+    'TensorOpts.tensorScale'      : props.Widget(
+        'tensorScale',
+        showLimits=False,
+        spin=False),
+        
+    # LabelOpts
+    'LabelOpts.lut'          : props.Widget('lut', labels=lambda l: l.name),
+    'LabelOpts.outline'      : props.Widget('outline'),
+    'LabelOpts.outlineWidth' : props.Widget('outlineWidth', showLimits=False),
+    'LabelOpts.resolution'   : props.Widget('resolution',   showLimits=False),
+    'LabelOpts.volume'       : props.Widget(
+        'volume',
+        showLimits=False,
+        enabledWhen=lambda o: o.overlay.is4DImage()),
+
+    # SHOpts
+    'SHOpts.resolution'      : props.Widget('resolution',   showLimits=False),
+    'SHOpts.shResolution'    : props.Widget('shResolution'), 
+    'SHOpts.neuroFlip'       : props.Widget('neuroFlip'), 
+    'SHOpts.lighting'        : props.Widget('lighting'), 
+    'SHOpts.size'            : props.Widget(
+        'size',
+        spin=False,
+        showLimits=False),
+    'SHOpts.radiusThreshold' : props.Widget(
+        'radiusThreshold',
+        spin=False,
+        showLimits=False),
+    'SHOpts.colourMode'      : props.Widget(
+        'colourMode', 
+        labels=strings.choices['SHOpts.colourMode']),    
+})
 """This dictionary contains specifications for all controls that are shown on
 an ``OverlayDisplayPanel``.
 """
