@@ -79,14 +79,8 @@ def updateShaderState(self):
     texZero    = 0.0                   * imgXform[ 0, 0] + imgXform[ 3, 0]
     imageShape = self.image.shape[:3]
 
-    if imageIsClip:
-        clipImageShape = imageShape
-        clipCoordXform = np.eye(4)
-    else:
-        clipImageShape = opts.clipImage.shape[:3]
-        clipCoordXform = transform.concat(
-            opts         .getTransform('texture', 'display'),
-            self.clipOpts.getTransform('display', 'texture'))
+    if imageIsClip: clipImageShape = imageShape
+    else:           clipImageShape = opts.clipImage.shape[:3]
 
     # Create a single transformation matrix
     # which transforms from image texture values
@@ -109,7 +103,6 @@ def updateShaderState(self):
     changed |= shader.set('useNegCmap',       opts.useNegativeCmap)
     changed |= shader.set('imageIsClip',      imageIsClip)
     changed |= shader.set('img2CmapXform',    img2CmapXform)
-    changed |= shader.set('clipCoordXform',   clipCoordXform)
     changed |= shader.set('clipImageShape',   clipImageShape)
 
     changed |= shader.set('imageTexture',     0)
@@ -127,6 +120,17 @@ def preDraw(self):
     instance.
     """
     self.shader.load()
+
+    opts = self.displayOpts
+
+    if opts.clipImage is None:
+        clipCoordXform = np.eye(4)
+    else:
+        clipCoordXform = transform.concat(
+            opts         .getTransform('texture', 'display'),
+            self.clipOpts.getTransform('display', 'texture'))
+
+    self.shader.set('clipCoordXform', clipCoordXform)
 
 
 def draw(self, zpos, xform=None, bbox=None):
