@@ -14,7 +14,6 @@ TEMP workspace;
 # If any of the voxel coordinates are
 # less than 0.01, clear the voxel colour
 MOV workspace, voxCoord;
-MOV workspace, voxCoord;
 ADD workspace, workspace, { 0.01, 0.01, 0.01, 999999999999.0};
 KIL workspace;
 

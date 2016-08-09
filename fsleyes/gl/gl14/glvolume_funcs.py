@@ -89,6 +89,13 @@ def updateShaderState(self):
     useNegCmap  = 1 if opts.useNegativeCmap   else  0
     imageIsClip = 1 if opts.clipImage is None else -1
 
+    if opts.clipImage is None:
+        clipCoordXform = np.eye(4)
+    else:
+        clipCoordXform = transform.concat(
+            opts         .getTransform('texture', 'display'),
+            self.clipOpts.getTransform('display', 'texture'))
+
     imgXform = self.imageTexture.invVoxValXform
     if opts.clipImage is None: clipXform = imgXform
     else:                      clipXform = self.clipTexture.invVoxValXform 
@@ -102,11 +109,12 @@ def updateShaderState(self):
     negCmap  = [useNegCmap, texZero, 0, 0]
 
     changed  = False
-    changed |= self.shader.setVertParam('imageShape',  shape)
-    changed |= self.shader.setFragParam('imageShape',  shape)
-    changed |= self.shader.setFragParam('voxValXform', voxValXform)
-    changed |= self.shader.setFragParam('clipping',    clipping)
-    changed |= self.shader.setFragParam('negCmap',     negCmap)
+    changed |= self.shader.setVertParam('imageShape',     shape)
+    changed |= self.shader.setVertParam('clipCoordXform', clipCoordXform.T)
+    changed |= self.shader.setFragParam('imageShape',     shape)
+    changed |= self.shader.setFragParam('voxValXform',    voxValXform)
+    changed |= self.shader.setFragParam('clipping',       clipping)
+    changed |= self.shader.setFragParam('negCmap',        negCmap)
     
     self.shader.unload()
 

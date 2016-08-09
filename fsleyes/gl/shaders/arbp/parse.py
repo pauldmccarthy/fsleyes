@@ -395,7 +395,7 @@ def fillARBP(vertSrc,
         length = vertParamLens[name]
         
         if length == 1: name = 'param_{}'  .format(name)
-        else:           name = 'param{}_{}'.format(name, length)
+        else:           name = 'param{}_{}'.format(length, name)
         
         vertParams[name] = _param(number, length)
         

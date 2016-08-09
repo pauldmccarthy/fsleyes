@@ -49,8 +49,9 @@
 #
 # Input varyings:
 #
-#   texCoord - Fragment texture coordinates
-#   voxCoord - Fragment voxel coordinates
+#   texCoord     - Fragment texture coordinates
+#   voxCoord     - Fragment voxel coordinates
+#   clipTexCoord - Clip image texture coordinates
 #
 # Input textures:
 #
@@ -73,9 +74,13 @@ TEMP  useNegCmap;
 TEMP  negVoxValue;
 TEMP  negClipValue;
 
-PARAM imageShape     = {{ param_imageShape }};
-PARAM clipping       = {{ param_clipping   }};
-PARAM negCmap        = {{ param_negCmap    }};
+TEMP  clipTexCoord;
+TEMP  clipValueNoClip;
+
+
+PARAM imageShape     = {{ param_imageShape   }};
+PARAM clipping       = {{ param_clipping     }};
+PARAM negCmap        = {{ param_negCmap      }};
 PARAM voxValXform[4] = {{ param4_voxValXform }};
 
 # retrieve the voxel coordinates
@@ -87,8 +92,39 @@ MOV voxCoord, {{ varying_voxCoord }};
 # look up image voxel value
 # and clipping value from 3D
 # image/clipping textures
-TEX voxValue.x,  {{ varying_texCoord }}, {{ texture_imageTexture }}, 3D;
-TEX clipValue.x, {{ varying_texCoord }}, {{ texture_clipTexture  }}, 3D;
+TEX voxValue.x,  {{ varying_texCoord }},     {{ texture_imageTexture }}, 3D;
+TEX clipValue.x, {{ varying_clipTexCoord }}, {{ texture_clipTexture  }}, 3D;
+
+# If the clipping texture coords
+# are out of bounds, disable
+# clipping (by clobbering the
+# clip value with something that
+# will cause no clipping to occur).
+
+# clipValueNoClip contains clipLo + 0.5 * (clipHi - clipLo)
+MOV clipValueNoClip.x, clipping.y;
+SUB clipValueNoClip.x, clipValueNoClip.x, clipping.x;
+MUL clipValueNoClip.x, clipValueNoClip.x, 0.5;
+ADD clipValueNoClip.x, clipValueNoClip.x, clipping.x;
+
+# Clobber the clip value if the tex
+# coords on any dimension are less than 0
+MOV clipTexCoord, {{ varying_clipTexCoord }};
+SUB clipTexCoord, clipTexCoord, {0.0000001, 0.0000001, 0.0000001, 0};
+
+CMP clipValue.x, clipTexCoord.x, clipValueNoClip.x, clipValue.x;
+CMP clipValue.x, clipTexCoord.y, clipValueNoClip.x, clipValue.x;
+CMP clipValue.x, clipTexCoord.z, clipValueNoClip.x, clipValue.x;
+
+# Or if the tex coords on any
+# dimension are greater than 1
+MOV clipTexCoord, 1;
+SUB clipTexCoord, clipTexCoord, {{ varying_clipTexCoord }};
+
+CMP clipValue.x, clipTexCoord.x, clipValueNoClip.x, clipValue.x;
+CMP clipValue.x, clipTexCoord.y, clipValueNoClip.x, clipValue.x;
+CMP clipValue.x, clipTexCoord.z, clipValueNoClip.x, clipValue.x;
+
 
 # If the image texture is the clip
 # texture, overwrite the clip value
