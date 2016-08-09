@@ -374,7 +374,15 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
         if sformCode != constants.NIFTI_XFORM_UNKNOWN:
             info.addInfo(strings.nifti['sform'],
                          self.__formatArray(img.get_sform()),
-                         section=xformSect) 
+                         section=xformSect)
+
+        if overlay.isNeurological(): storageOrder = 'neuro'
+        else:                        storageOrder = 'radio'
+        storageOrder = strings.nifti['storageOrder.{}'.format(storageOrder)]
+
+        info.addInfo(strings.nifti['storageOrder'],
+                     storageOrder,
+                     section=orientSect)
 
         for i in range(3):
             xform  = opts.getTransform('world', 'id')

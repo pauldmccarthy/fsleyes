@@ -831,6 +831,10 @@ nifti = TypeDict({
     'intent_code' : 'Intent code',
     'intent_name' : 'Intent name',
 
+    'storageOrder'       : 'Storage order',
+    'storageOrder.radio' : 'Radiological',
+    'storageOrder.neuro' : 'Neurological',
+
     'voxOrient.0'   : 'X voxel orientation',
     'voxOrient.1'   : 'Y voxel orientation',
     'voxOrient.2'   : 'Z voxel orientation',
