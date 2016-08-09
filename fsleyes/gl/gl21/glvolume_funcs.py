@@ -17,8 +17,9 @@ import logging
 import numpy               as np
 import OpenGL.GL           as gl
 
-import fsleyes.gl.shaders  as shaders
 import fsl.utils.transform as transform
+import fsleyes.gl.shaders  as shaders
+import fsleyes.gl.glvolume as glvolume
 
 
 log = logging.getLogger(__name__)
@@ -123,14 +124,15 @@ def preDraw(self):
 
     opts = self.displayOpts
 
-    if opts.clipImage is None:
-        clipCoordXform = np.eye(4)
-    else:
-        clipCoordXform = transform.concat(
-            opts         .getTransform('texture', 'display'),
-            self.clipOpts.getTransform('display', 'texture'))
+    if isinstance(self, glvolume.GLVolume):
+        if opts.clipImage is None:
+            clipCoordXform = np.eye(4)
+        else:
+            clipCoordXform = transform.concat(
+                opts         .getTransform('texture', 'display'),
+                self.clipOpts.getTransform('display', 'texture'))
 
-    self.shader.set('clipCoordXform', clipCoordXform)
+        self.shader.set('clipCoordXform', clipCoordXform)
 
 
 def draw(self, zpos, xform=None, bbox=None):
