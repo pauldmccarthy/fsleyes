@@ -489,7 +489,7 @@ class GLVolume(globject.GLImageObject):
             texName,
             clipImage,
             interp=interp,
-            resolution=opts.resolution,
+            resolution=clipOpts.resolution,
             volume=clipOpts.volume,
             notify=False)
         

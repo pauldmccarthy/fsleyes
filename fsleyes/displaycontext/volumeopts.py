@@ -53,7 +53,7 @@ other words, a voxel at location::
 
 
 will be transformed such that, in the display coordinate system, it occupies
-the space::
+the space that corresponds to::
 
     [x-0.5 - x+0.5, y-0.5 - y+0.5, z-0.5 - z+0.5]
 
@@ -241,12 +241,20 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
         """
 
         image = self.overlay
+        shape = np.array(image.shape[:3])
 
-        voxToIdMat         = np.eye(4)
-        voxToPixdimMat     = np.diag(list(image.pixdim[:3]) + [1.0])
-        voxToPixFlipMat    = np.array(voxToPixdimMat)
-        voxToAffineMat     = image.voxToWorldMat.T
-        voxToCustomMat     = self.customXform
+        voxToIdMat      = np.eye(4)
+        voxToPixdimMat  = np.diag(list(image.pixdim[:3]) + [1.0])
+        voxToPixFlipMat = np.array(voxToPixdimMat)
+        voxToAffineMat  = image.voxToWorldMat.T
+        voxToCustomMat  = self.customXform
+
+        # When going from voxels to textures,
+        # we add 0.5 to centre the voxel (see
+        # the note on coordinate systems at 
+        # the top of this file).
+        voxToTexMat     = transform.scaleOffsetXform(tuple(1.0 / shape),
+                                                     tuple(0.5 / shape))
 
         # pixdim-flip space differs from
         # pixdim space only if the image
@@ -261,60 +269,85 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
         idToPixFlipMat     = transform.concat(idToVoxMat, voxToPixFlipMat)
         idToAffineMat      = transform.concat(idToVoxMat, voxToAffineMat)
         idToCustomMat      = transform.concat(idToVoxMat, voxToCustomMat)
+        idToTexMat         = transform.concat(idToVoxMat, voxToTexMat)
 
         pixdimToVoxMat     = transform.invert(voxToPixdimMat)
         pixdimToIdMat      = transform.concat(pixdimToVoxMat, voxToIdMat)
         pixdimToPixFlipMat = transform.concat(pixdimToVoxMat, voxToPixFlipMat)
         pixdimToAffineMat  = transform.concat(pixdimToVoxMat, voxToAffineMat)
         pixdimToCustomMat  = transform.concat(pixdimToVoxMat, voxToCustomMat)
+        pixdimToTexMat     = transform.concat(pixdimToVoxMat, voxToTexMat)
+        
 
         pixFlipToVoxMat    = transform.invert(voxToPixFlipMat)
         pixFlipToIdMat     = transform.concat(pixFlipToVoxMat, voxToIdMat)
         pixFlipToPixdimMat = transform.concat(pixFlipToVoxMat, voxToPixdimMat)
         pixFlipToAffineMat = transform.concat(pixFlipToVoxMat, voxToAffineMat)
         pixFlipToCustomMat = transform.concat(pixFlipToVoxMat, voxToCustomMat)
+        pixFlipToTexMat    = transform.concat(pixFlipToVoxMat, voxToTexMat)
 
         affineToVoxMat     = image.worldToVoxMat.T
         affineToIdMat      = transform.concat(affineToVoxMat, voxToIdMat)
         affineToPixdimMat  = transform.concat(affineToVoxMat, voxToPixdimMat)
         affineToPixFlipMat = transform.concat(affineToVoxMat, voxToPixFlipMat)
         affineToCustomMat  = transform.concat(affineToVoxMat, voxToCustomMat)
+        affineToTexMat     = transform.concat(affineToVoxMat, voxToTexMat)
 
         customToVoxMat     = transform.invert(voxToCustomMat)
         customToIdMat      = transform.concat(customToVoxMat, voxToIdMat)
         customToPixdimMat  = transform.concat(customToVoxMat, voxToPixdimMat)
         customToPixFlipMat = transform.concat(customToVoxMat, voxToPixFlipMat)
         customToAffineMat  = transform.concat(customToVoxMat, voxToAffineMat)
+        customToTexMat     = transform.concat(customToVoxMat, voxToTexMat)
+
+        texToVoxMat        = transform.invert(voxToTexMat)
+        texToIdMat         = transform.concat(texToVoxMat, voxToIdMat)
+        texToPixdimMat     = transform.concat(texToVoxMat, voxToPixdimMat)
+        texToPixFlipMat    = transform.concat(texToVoxMat, voxToPixFlipMat)
+        texToAffineMat     = transform.concat(texToVoxMat, voxToAffineMat)
+        texToCustomMat     = transform.concat(texToVoxMat, voxToCustomMat) 
 
         self.__xforms['id',  'id']          = np.eye(4)
         self.__xforms['id',  'pixdim']      = idToPixdimMat
         self.__xforms['id',  'pixdim-flip'] = idToPixFlipMat 
         self.__xforms['id',  'affine']      = idToAffineMat
         self.__xforms['id',  'custom']      = idToCustomMat
+        self.__xforms['id',  'texture']     = idToTexMat
 
         self.__xforms['pixdim', 'pixdim']      = np.eye(4)
         self.__xforms['pixdim', 'id']          = pixdimToIdMat
         self.__xforms['pixdim', 'pixdim-flip'] = pixdimToPixFlipMat
         self.__xforms['pixdim', 'affine']      = pixdimToAffineMat
         self.__xforms['pixdim', 'custom']      = pixdimToCustomMat
+        self.__xforms['pixdim', 'texture']     = pixdimToTexMat
 
         self.__xforms['pixdim-flip', 'pixdim-flip'] = np.eye(4)
         self.__xforms['pixdim-flip', 'id']          = pixFlipToIdMat
         self.__xforms['pixdim-flip', 'pixdim']      = pixFlipToPixdimMat
         self.__xforms['pixdim-flip', 'affine']      = pixFlipToAffineMat
-        self.__xforms['pixdim-flip', 'custom']      = pixFlipToCustomMat 
+        self.__xforms['pixdim-flip', 'custom']      = pixFlipToCustomMat
+        self.__xforms['pixdim-flip', 'texture']     = pixFlipToTexMat 
  
         self.__xforms['affine', 'affine']      = np.eye(4)
         self.__xforms['affine', 'id']          = affineToIdMat
         self.__xforms['affine', 'pixdim']      = affineToPixdimMat
         self.__xforms['affine', 'pixdim-flip'] = affineToPixFlipMat
         self.__xforms['affine', 'custom']      = affineToCustomMat
+        self.__xforms['affine', 'texture']     = affineToTexMat
 
         self.__xforms['custom', 'custom']      = np.eye(4)
         self.__xforms['custom', 'id']          = customToIdMat
         self.__xforms['custom', 'pixdim']      = customToPixdimMat
         self.__xforms['custom', 'pixdim-flip'] = customToPixFlipMat
         self.__xforms['custom', 'affine']      = customToAffineMat
+        self.__xforms['custom', 'texture']     = customToTexMat
+
+        self.__xforms['texture', 'texture']     = np.eye(4)
+        self.__xforms['texture', 'id']          = texToIdMat
+        self.__xforms['texture', 'pixdim']      = texToPixdimMat
+        self.__xforms['texture', 'pixdim-flip'] = texToPixFlipMat
+        self.__xforms['texture', 'affine']      = texToAffineMat
+        self.__xforms['texture', 'custom']      = texToCustomMat
 
 
     def getTransform(self, from_, to, xform=None):
@@ -348,6 +381,10 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
                         :attr:`customXform` property.
         
         ``display``     Equivalent to the current value of :attr:`transform`.
+
+        ``texture``     Voxel coordinates scaled to lie between 0.0 and 1.0,
+                        suitable for looking up voxel values when stored as
+                        an OpenGL texture.
         =============== ======================================================
 
         

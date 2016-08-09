@@ -85,12 +85,8 @@ def updateShaderState(self):
     else:
         clipImageShape = opts.clipImage.shape[:3]
         clipCoordXform = transform.concat(
-            transform.scaleOffsetXform(imageShape, 0),
-            opts         .getTransform('voxel',   'display'),
-            self.clipOpts.getTransform('display', 'voxel'),
-            transform.scaleOffsetXform([1.0 / clipImageShape[0],
-                                        1.0 / clipImageShape[1],
-                                        1.0 / clipImageShape[2]], 0))
+            opts         .getTransform('texture', 'display'),
+            self.clipOpts.getTransform('display', 'texture'))
 
     # Create a single transformation matrix
     # which transforms from image texture values
