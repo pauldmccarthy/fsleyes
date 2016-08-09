@@ -69,13 +69,28 @@ def updateShaderState(self):
     # range, but the shader needs them to be in image
     # texture value range (0.0 - 1.0). So let's scale 
     # them.
-    imgXform = self.imageTexture.invVoxValXform
-    if opts.clipImage is None: clipXform = imgXform
-    else:                      clipXform = self.clipTexture.invVoxValXform
-    
-    clipLow  = opts.clippingRange[0] * clipXform[0, 0] + clipXform[3, 0]
-    clipHigh = opts.clippingRange[1] * clipXform[0, 0] + clipXform[3, 0]
-    texZero  = 0.0                   * imgXform[ 0, 0] + imgXform[ 3, 0]
+    imageIsClip = opts.clipImage is None
+    imgXform    = self.imageTexture.invVoxValXform
+    if imageIsClip: clipXform = imgXform
+    else:           clipXform = self.clipTexture.invVoxValXform
+
+    clipLow    = opts.clippingRange[0] * clipXform[0, 0] + clipXform[3, 0]
+    clipHigh   = opts.clippingRange[1] * clipXform[0, 0] + clipXform[3, 0]
+    texZero    = 0.0                   * imgXform[ 0, 0] + imgXform[ 3, 0]
+    imageShape = self.image.shape[:3]
+
+    if imageIsClip:
+        clipImageShape = imageShape
+        clipCoordXform = np.eye(4)
+    else:
+        clipImageShape = opts.clipImage.shape[:3]
+        clipCoordXform = transform.concat(
+            transform.scaleOffsetXform(imageShape, 0),
+            opts         .getTransform('voxel',   'display'),
+            self.clipOpts.getTransform('display', 'voxel'),
+            transform.scaleOffsetXform([1.0 / clipImageShape[0],
+                                        1.0 / clipImageShape[1],
+                                        1.0 / clipImageShape[2]], 0))
 
     # Create a single transformation matrix
     # which transforms from image texture values
@@ -90,14 +105,16 @@ def updateShaderState(self):
     changed = False
     
     changed |= shader.set('useSpline',        opts.interpolation == 'spline')
-    changed |= shader.set('imageShape',       self.image.shape[:3])
+    changed |= shader.set('imageShape',       imageShape)
     changed |= shader.set('clipLow',          clipLow)
     changed |= shader.set('clipHigh',         clipHigh)
     changed |= shader.set('texZero',          texZero)
     changed |= shader.set('invertClip',       opts.invertClipping)
     changed |= shader.set('useNegCmap',       opts.useNegativeCmap)
-    changed |= shader.set('imageIsClip',      opts.clipImage is None)
+    changed |= shader.set('imageIsClip',      imageIsClip)
     changed |= shader.set('img2CmapXform',    img2CmapXform)
+    changed |= shader.set('clipCoordXform',   clipCoordXform)
+    changed |= shader.set('clipImageShape',   clipImageShape)
 
     changed |= shader.set('imageTexture',     0)
     changed |= shader.set('colourTexture',    1)

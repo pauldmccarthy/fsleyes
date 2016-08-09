@@ -41,6 +41,11 @@ uniform mat4 img2CmapXform;
 uniform vec3 imageShape;
 
 /*
+ * Shape of the clipping image.
+ */
+uniform vec3 clipImageShape;
+
+/*
  * Flag which tells the shader whether 
  * the image and clip textures are actually
  * the same - if they are, set this to true
@@ -95,6 +100,12 @@ varying vec3 fragVoxCoord;
  */
 varying vec3 fragTexCoord;
 
+
+/* 
+ * Texture coordinates for clipping image.
+ */
+varying vec3 fragClipTexCoord;
+
 /*
  * Multiplicative factor to apply to the colour - can 
  * be used for vertex-based lighting.
@@ -134,13 +145,24 @@ void main(void) {
     /*
      * Look up the clipping value
      */
-    if      (imageIsClip) clipValue = voxValue;
+
+    if (imageIsClip)
+      clipValue = voxValue;
+
+    /*
+     * Out of bounds of the clipping texture
+     */
+    else if (any(lessThan(   fragClipTexCoord, vec3(0))) ||
+             any(greaterThan(fragClipTexCoord, vec3(1)))) {
+      clipValue = clipLow + 0.5 * (clipHigh - clipLow);
+    }
+    
     else if (useSpline)   clipValue = spline_interp(clipTexture,
-                                                    fragTexCoord,
-                                                    imageShape,
+                                                    fragClipTexCoord,
+                                                    clipImageShape,
                                                     0);
     else                  clipValue = texture3D(    clipTexture,
-                                                    fragTexCoord).r; 
+                                                    fragClipTexCoord).r; 
 
     /*
      * If we are using a negative colour map, 
@@ -164,7 +186,6 @@ void main(void) {
     /*
      * Clip out of range voxel values
      */
-
     
     if ((!invertClip && (clipValue <= clipLow || clipValue >= clipHigh)) ||
         ( invertClip && (clipValue >= clipLow && clipValue <= clipHigh))) {

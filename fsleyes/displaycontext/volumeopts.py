@@ -921,9 +921,8 @@ class VolumeOpts(Nifti1Opts):
 
         for overlay in overlays:
             
-            if overlay is self.overlay:                     continue
-            if not isinstance(overlay, fslimage.Image):     continue
-            if overlay.shape[:3] != self.overlay.shape[:3]: continue
+            if overlay is self.overlay:                 continue
+            if not isinstance(overlay, fslimage.Image): continue
 
             options.append(overlay)
 

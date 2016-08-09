@@ -11,14 +11,22 @@ attribute vec3 vertex;
 attribute vec3 voxCoord;
 attribute vec3 texCoord;
 
+/*
+ * Transformation matrix to transform image texture 
+ * coordinates into clip image texture coordinates.
+ */
+uniform mat4 clipCoordXform;
+
 varying vec3 fragVoxCoord;
 varying vec3 fragTexCoord;
+varying vec3 fragClipTexCoord;
 varying vec4 fragColourFactor;
 
 void main(void) {
 
   fragVoxCoord     = voxCoord;
   fragTexCoord     = texCoord;
+  fragClipTexCoord = (clipCoordXform * vec4(texCoord, 1)).xyz;
   fragColourFactor = vec4(1, 1, 1, 1);
 
   gl_Position = gl_ModelViewProjectionMatrix * vec4(vertex, 1);
