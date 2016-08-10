@@ -73,8 +73,8 @@ def updateShaderState(self):
     modLow,  modHigh    = self.getModulateRange()
     clipLow, clipHigh   = self.getClippingRange() 
 
-    clipping = [clipLow, clipHigh,                 -1, -1]
-    mod      = [modLow,  1.0 / (modHigh - modLow), -1, -1]
+    clipping = [clipLow, clipHigh, -1,                        -1]
+    mod      = [modLow,  modHigh,   1.0 / (modHigh - modLow), -1]
 
     # Inputs which are required by both the
     # glvolume and glvetor fragment shaders

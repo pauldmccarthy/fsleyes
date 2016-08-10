@@ -35,8 +35,10 @@
 #                 contains the high threshold.
 #
 #   mod         - Modulation range. The (x) component contains
-#                 the low modulation value, and the (y) component
-#                 contains a scaling factor equal to 1 / (modHigh - modLow).
+#                 the low modulation value, the (y) component
+#                 the high modulation value, and the (z) component
+#                 contains a scaling factor equal to
+#                 1 / (modHigh - modLow).
 #
 #   xColour     - Colour corresponding to the X vector direction.
 #
@@ -72,6 +74,14 @@ TEMP  modValue;
 TEMP  voxValue;
 TEMP  fragColour;
 TEMP  clipResult;
+TEMP  clipValueNoClip;
+TEMP  modValueNoMod;
+
+TEMP  tb_texcoord;
+TEMP  tb_origval;
+TEMP  tb_borderval;
+TEMP  tb_result;
+
 PARAM voxValXform[4] = {{ param4_voxValXform    }};
 PARAM cmapXform[4]   = {{ param4_cmapXform      }};
 PARAM imageShape     = {{ param_imageShape      }};
@@ -95,11 +105,36 @@ TEX voxValue,  {{ varying_vecTexCoord  }}, {{ texture_vectorTexture   }}, 3D;
 TEX modValue,  {{ varying_modTexCoord  }}, {{ texture_modulateTexture }}, 3D;
 TEX clipValue, {{ varying_clipTexCoord }}, {{ texture_clipTexture     }}, 3D;
 
+# Clobber the clipping/modulation
+# values we just looked up if their
+# texture coords were out of bounds.
 
-# TODO Clobber clipping/modulate values if
-#      clipping/modulate texcoords are out
-#      of bounds.
+# clipValueNoClip contains clipLo + 0.5 * (clipHi - clipLo)
+MOV clipValueNoClip.x, clipping.y;
+SUB clipValueNoClip.x, clipValueNoClip.x, clipping.x;
+MUL clipValueNoClip.x, clipValueNoClip.x, 0.5;
+ADD clipValueNoClip.x, clipValueNoClip.x, clipping.x;
 
+# modValueNoMod contains (modHigh - 2 * modLow) - 
+# this cancels out the modValue scaling at the
+# bottom, so it results in a mod value of 1.
+MOV modValueNoMod.x, mod.x;
+MUL modValueNoMod.x, modValueNoMod.x, -2;
+ADD modValueNoMod.x, modValueNoMod.x, mod.y;
+
+# Clobber clipValue
+MOV tb_texcoord,  {{ varying_clipTexCoord }};
+MOV tb_origval.x,   clipValue.x;
+MOV tb_borderval.x, clipValueNoClip.x;
+#pragma include texture_border.prog
+MOV clipValue.x, tb_result.x;
+
+# Clobber modValue
+MOV tb_texcoord,  {{ varying_modTexCoord }};
+MOV tb_origval.x,   modValue.x;
+MOV tb_borderval.x, modValueNoMod.x;
+#pragma include texture_border.prog
+MOV modValue.x, tb_result.x;
 
 # If the clipping value is
 # <= the low clipping range,
@@ -140,7 +175,7 @@ MAD fragColour, fragColour, colourXform.x, colourXform.y;
 
 # Scale the modulation value, and modulate the colour
 ADD modValue.x, modValue.x, mod.x;
-MUL modValue.x, modValue.x, mod.y;
+MUL modValue.x, modValue.x, mod.z;
 MUL fragColour, fragColour, modValue.x;
 MOV fragColour.a, voxValue.a;
 

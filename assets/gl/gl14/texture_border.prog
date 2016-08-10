@@ -10,24 +10,26 @@
 #   - tb_result    - tb_origval if the texture coords are in bounds,
 #                    or tb_borderval if they're out of bounds.
 
-TEMP tb_texcoord_tmp;
 
-MOV tb_texcoord_tmp, tb_texcoord;
-MOV tb_result.x,     tb_origval.x;
+# Take a copy of origval - after this,
+# tb_origval is used as a temp variable
+# to store the texture coordinates.
+MOV tb_result.x, tb_origval.x;
+MOV tb_origval,  tb_texcoord;
 
 # Clobber the texture value if the tex
 # coords on any dimension are less than 0
-SUB tb_texcoord_tmp, tb_texcoord_tmp, {0.0000001, 0.0000001, 0.0000001, 0};
+SUB tb_origval, tb_origval, {0.0000001, 0.0000001, 0.0000001, 0};
 
-CMP tb_result.x, tb_texcoord_tmp.x, tb_borderval.x, tb_result.x;
-CMP tb_result.x, tb_texcoord_tmp.y, tb_borderval.x, tb_result.x;
-CMP tb_result.x, tb_texcoord_tmp.z, tb_borderval.x, tb_result.x;
+CMP tb_result.x, tb_origval.x, tb_borderval.x, tb_result.x;
+CMP tb_result.x, tb_origval.y, tb_borderval.x, tb_result.x;
+CMP tb_result.x, tb_origval.z, tb_borderval.x, tb_result.x;
 
 # Or if the tex coords on any
 # dimension are greater than 1
-MOV tb_texcoord_tmp, 1;
-SUB tb_texcoord_tmp, tb_texcoord_tmp, tb_texcoord;
+MOV tb_origval, 1;
+SUB tb_origval, tb_origval, tb_texcoord;
 
-CMP tb_result.x, tb_texcoord_tmp.x, tb_borderval.x, tb_result.x;
-CMP tb_result.x, tb_texcoord_tmp.y, tb_borderval.x, tb_result.x;
-CMP tb_result.x, tb_texcoord_tmp.z, tb_borderval.x, tb_result.x;
+CMP tb_result.x, tb_origval.x, tb_borderval.x, tb_result.x;
+CMP tb_result.x, tb_origval.y, tb_borderval.x, tb_result.x;
+CMP tb_result.x, tb_origval.z, tb_borderval.x, tb_result.x;
