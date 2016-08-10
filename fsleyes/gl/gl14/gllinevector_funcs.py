@@ -161,13 +161,15 @@ def draw(self, zpos, xform=None, bbox=None):
     """
 
     opts                = self.displayOpts
-    vertices, texCoords = self.lineVertices.getVertices(zpos, self, bbox=bbox)
+    vertices, voxCoords = self.lineVertices.getVertices(zpos, self, bbox=bbox)
 
     if vertices.size == 0:
         return
 
-    vertices = vertices.ravel('C')
-    v2d      = opts.getTransform('voxel', 'display')
+    self.shader.setAttr('voxCoord', voxCoords)
+    self.shader.loadAtts()
+
+    v2d = opts.getTransform('voxel', 'display')
 
     if xform is None: xform = v2d
     else:             xform = transform.concat(v2d, xform)
