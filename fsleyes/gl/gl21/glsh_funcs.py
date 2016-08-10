@@ -100,7 +100,11 @@ def updateShaderState(self):
     elif opts.colourMode == 'radius':    colourMode = 1
 
     modLow,  modHigh  = self.getModulateRange()
-    clipLow, clipHigh = self.getClippingRange() 
+    clipLow, clipHigh = self.getClippingRange()
+
+    clipXform   = self.getAuxTextureXform('clip')
+    colourXform = self.getAuxTextureXform('colour')
+    modXform    = self.getAuxTextureXform('modulate')
 
     shader.load()
 
@@ -135,25 +139,29 @@ def updateShaderState(self):
         changed |= shader.set('clipHigh',         clipHigh)
         changed |= shader.set('texZero',          texZero)
         changed |= shader.set('invertClip',       False)
+        changed |= shader.set('colourCoordXform', colourXform)
+        changed |= shader.set('clipCoordXform',   clipXform) 
     
     else:
 
         cmapXform            = self.cmapTexture.getCoordinateTransform()
         colours, colourXform = self.getVectorColours()
 
-        changed |= shader.set('modulateTexture', 0)
-        changed |= shader.set('clipTexture',     1)
-        changed |= shader.set('cmapTexture',     3)
-        changed |= shader.set('clipLow',         clipLow)
-        changed |= shader.set('clipHigh',        clipHigh)
-        changed |= shader.set('modLow',          modLow)
-        changed |= shader.set('modHigh',         modHigh)
-        changed |= shader.set('colourMode',      colourMode)
-        changed |= shader.set('xColour',         colours[0])
-        changed |= shader.set('yColour',         colours[1])
-        changed |= shader.set('zColour',         colours[2])
-        changed |= shader.set('colourXform',     colourXform)
-        changed |= shader.set('cmapXform',       cmapXform)
+        changed |= shader.set('modulateTexture',  0)
+        changed |= shader.set('clipTexture',      1)
+        changed |= shader.set('cmapTexture',      3)
+        changed |= shader.set('clipLow',          clipLow)
+        changed |= shader.set('clipHigh',         clipHigh)
+        changed |= shader.set('modLow',           modLow)
+        changed |= shader.set('modHigh',          modHigh)
+        changed |= shader.set('colourMode',       colourMode)
+        changed |= shader.set('xColour',          colours[0])
+        changed |= shader.set('yColour',          colours[1])
+        changed |= shader.set('zColour',          colours[2])
+        changed |= shader.set('colourXform',      colourXform)
+        changed |= shader.set('cmapXform',        cmapXform)
+        changed |= shader.set('clipCoordXform',   clipXform)
+        changed |= shader.set('modCoordXform',    modXform) 
     
     shader.setAtt('vertex',   self.vertices)
     shader.setAtt('vertexID', self.vertIdxs) 

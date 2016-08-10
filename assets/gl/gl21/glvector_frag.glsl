@@ -139,19 +139,21 @@ void main(void) {
   /* Look up the modulation and clipping values */
   float modValue;
   float clipValue;
-  if (useSpline) {
-    modValue  = spline_interp(modulateTexture, fragModTexCoord,  modImageShape,  0);
-    clipValue = spline_interp(clipTexture,     fragClipTexCoord, clipImageShape, 0);
-  }
-  else {
-    modValue  = texture3D(modulateTexture, fragModTexCoord).x;
-    clipValue = texture3D(clipTexture,     fragClipTexCoord).x;
-  }
 
   /* Clobber the clip values if out of bounds */
   if (any(lessThan(   fragClipTexCoord, vec3(0))) ||
       any(greaterThan(fragClipTexCoord, vec3(1)))) {
+    
     clipValue = clipLow + 0.5 * (clipHigh - clipLow);
+  }
+  
+  else {
+    if (useSpline) {
+      clipValue = spline_interp(clipTexture, fragClipTexCoord, clipImageShape, 0);
+    }
+    else {
+      clipValue = texture3D(clipTexture, fragClipTexCoord).x;
+    }
   }
 
   /* And do the same for the modulation value */
@@ -164,7 +166,16 @@ void main(void) {
      * scaling step will result in a value of 1
      */
     modValue = modHigh - 2 * modLow;
-  } 
+  }
+  
+  else {
+    if (useSpline) {
+      modValue = spline_interp(modulateTexture, fragModTexCoord, modImageShape,  0);
+    }
+    else {
+      modValue = texture3D(modulateTexture, fragModTexCoord).x;
+    } 
+  }
 
   /* Knock out voxels where the clipping value is outside the clipping range */
   if (clipValue <= clipLow || clipValue >= clipHigh) {

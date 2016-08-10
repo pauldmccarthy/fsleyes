@@ -17,6 +17,15 @@
  */
 uniform mat4 voxToDisplayMat;
 
+/*
+ * Matrices to transform from vector 
+ * texture coordinates to colour/clip/
+ * modulate image texture coordinates.
+ */
+uniform mat4 colourCoordXform;
+uniform mat4 clipCoordXform;
+uniform mat4 modCoordXform;
+
 
 /*
  * Image shape (x, y, z).
@@ -32,7 +41,13 @@ varying vec3 fragVoxCoord;
 /*
  * Corresponding texture coordinates.
  */
-varying vec3 fragTexCoord;
+varying vec3 fragVecTexCoord;
+
+/*
+ * Clip/modulate image texture coordinates.
+ */
+varying vec3 fragClipTexCoord;
+varying vec3 fragModTexCoord;
 
 /*
  * Multiplicative colour factor passed through to the 
@@ -68,7 +83,9 @@ void main(void) {
      * the colour scaling factor to the fragment shader.
      */
     fragVoxCoord     = floor(voxel + 0.5);
-    fragTexCoord     = (voxel + 0.5) / imageShape;
+    fragVecTexCoord  = (voxel + 0.5) / imageShape;
+    fragClipTexCoord = (clipCoordXform * vec4(fragVecTexCoord, 1)).xyz;
+    fragModTexCoord  = (modCoordXform  * vec4(fragVecTexCoord, 1)).xyz; 
     fragColourFactor = vec4(light, 1);
     fragRadius       = radius;
     fragVertex       = vertex * radius;

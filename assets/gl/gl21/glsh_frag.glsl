@@ -86,9 +86,16 @@ varying vec3 fragVoxCoord;
 
 
 /*
- * Corresponding voxel texture coordinates.
+ * Corresponding vector image texture coordinates.
  */
-varying vec3 fragTexCoord;
+varying vec3 fragVecTexCoord;
+
+/*
+ * Texture coordinates for clip/modulate
+ * images.
+ */
+varying vec3 fragClipTexCoord;
+varying vec3 fragModTexCoord;
 
 
 /*
@@ -139,8 +146,34 @@ void main(void) {
     colour = texture1D(cmapTexture, normRadius.x);
   }
 
-  float modValue  = texture3D(modulateTexture, fragTexCoord).x;
-  float clipValue = texture3D(clipTexture,     fragTexCoord).x;
+  float clipValue;
+  float modValue;
+
+  /* Clobber the clip values if out of bounds */
+  if (any(lessThan(   fragClipTexCoord, vec3(0))) ||
+      any(greaterThan(fragClipTexCoord, vec3(1)))) {
+    
+    clipValue = clipLow + 0.5 * (clipHigh - clipLow);
+  }
+  else {
+    clipValue = texture3D(clipTexture, fragClipTexCoord).x;
+    
+  }
+
+  /* And do the same for the modulation value */
+  if (any(lessThan(   fragModTexCoord, vec3(0))) ||
+      any(greaterThan(fragModTexCoord, vec3(1)))) {
+
+    /* 
+     * modValue gets scaled by the mod range down 
+     * below, but if we give it this value, the 
+     * scaling step will result in a value of 1
+     */
+    modValue = modHigh - 2 * modLow;
+  }
+  else {
+    modValue = texture3D(modulateTexture, fragModTexCoord).x; 
+  }
 
   /* Knock out voxels where the clipping value is outside the clipping range */
   if (clipValue <= clipLow || clipValue >= clipHigh) {
