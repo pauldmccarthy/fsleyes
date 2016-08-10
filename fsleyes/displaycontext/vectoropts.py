@@ -238,14 +238,6 @@ class VectorOpts(volumeopts.Nifti1Opts):
             if not isinstance(overlay, fslimage.Image):
                 continue
 
-            # an image can only be used to
-            # modulate/clip/colour the vector
-            # image if it shares the same
-            # dimensions as said vector image.
-            # 4D images are ok though.
-            if overlay.shape[:3] != self.overlay.shape[:3]:
-                continue
-
             options.append(overlay)
             
         prop.setChoices(options, instance=self)

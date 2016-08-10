@@ -26,6 +26,11 @@ uniform sampler3D modulateTexture;
  */
 uniform sampler3D clipTexture;
 
+
+/* Shapes of the modulate/clipping images */
+uniform vec3 modImageShape;
+uniform vec3 clipImageShape;
+
 /*
  * Matrix which transforms from vector image
  * texture values to their original data range.
@@ -70,7 +75,10 @@ uniform mat4 colourXform;
 uniform float clipLow;
 uniform float clipHigh;
 
-
+/*  
+ * The modulation value is scaled to this 
+ * range before being applied.
+ */
 uniform float modLow;
 uniform float modHigh;
 
@@ -88,7 +96,14 @@ varying vec3 fragVoxCoord;
 /*
  * Corresponding texture coordinates
  */
-varying vec3 fragTexCoord;
+varying vec3 fragVecTexCoord;
+
+/*
+ * Texture coordinates for the clipping 
+ * and modulate images.
+ */
+varying vec3 fragClipTexCoord;
+varying vec3 fragModTexCoord;
 
 /*
  * The final fragment colour is multiplied by this 
@@ -113,24 +128,24 @@ void main(void) {
    */
   vec3 voxValue;
   if (useSpline) {
-    voxValue.x = spline_interp(vectorTexture, fragTexCoord, imageShape, 0);
-    voxValue.y = spline_interp(vectorTexture, fragTexCoord, imageShape, 1);
-    voxValue.z = spline_interp(vectorTexture, fragTexCoord, imageShape, 2);
+    voxValue.x = spline_interp(vectorTexture, fragVecTexCoord, imageShape, 0);
+    voxValue.y = spline_interp(vectorTexture, fragVecTexCoord, imageShape, 1);
+    voxValue.z = spline_interp(vectorTexture, fragVecTexCoord, imageShape, 2);
   }
   else {
-    voxValue = texture3D(vectorTexture, fragTexCoord).xyz;
+    voxValue = texture3D(vectorTexture, fragVecTexCoord).xyz;
   }
 
   /* Look up the modulation and clipping values */
   float modValue;
   float clipValue;
   if (useSpline) {
-    modValue  = spline_interp(modulateTexture, fragTexCoord, imageShape, 0);
-    clipValue = spline_interp(clipTexture,     fragTexCoord, imageShape, 0);
+    modValue  = spline_interp(modulateTexture, fragModTexCoord,  modImageShape,  0);
+    clipValue = spline_interp(clipTexture,     fragClipTexCoord, clipImageShape, 0);
   }
   else {
-    modValue  = texture3D(modulateTexture, fragTexCoord).x;
-    clipValue = texture3D(clipTexture,     fragTexCoord).x;
+    modValue  = texture3D(modulateTexture, fragModTexCoord).x;
+    clipValue = texture3D(clipTexture,     fragClipTexCoord).x;
   }
 
   /* Knock out voxels where the clipping value is outside the clipping range */

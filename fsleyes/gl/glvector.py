@@ -17,6 +17,7 @@ import OpenGL.GL           as gl
  
 import fsl.data.image      as fslimage
 import fsl.utils.async     as async
+import fsl.utils.transform as transform
 import fsleyes.colourmaps  as fslcm
 from . import resources    as glresources
 from . import                 textures
@@ -545,7 +546,24 @@ class GLVectorBase(globject.GLImageObject):
             modHigh = 1
 
         return modLow, modHigh
-        
+
+
+    def getAuxTextureXform(self, which):
+        """Generates and returns a transformation matrix which can be used
+        to transform texture coordinates from the vector image to the specified
+        auxillary image (``'clip'``, ``'modulate'`` or ``'colour'``).
+        """
+        opts     = self.displayOpts
+        auxImage = getattr(self, '{}Image'.format(which), None)
+        auxOpts  = getattr(self, '{}Opts' .format(which), None)
+
+        if auxImage is None:
+            return np.eye(4)
+        else:
+            return transform.concat(
+                opts   .getTransform('texture', 'display'),
+                auxOpts.getTransform('display', 'texture')) 
+
         
     def preDraw(self):
         """Must be called by subclass implementations.

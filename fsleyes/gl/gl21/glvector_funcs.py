@@ -42,9 +42,9 @@ def compileShaders(self, vertShader, indexed=False):
     return shaders.GLSLShader(vertSrc, fragSrc, indexed)
 
     
-def updateFragmentShaderState(self, useSpline=False):
-    """Updates the state of the fragment shader - it may be either the
-    ``glvolume`` or the ``glvector`` shader.
+def updateShaderState(self, useSpline=False):
+    """Updates the state of the vector vertex fragment shader. The fragment
+    shader may be either the ``glvolume`` or the ``glvector`` shader.
     """
 
     changed           = False
@@ -53,6 +53,19 @@ def updateFragmentShaderState(self, useSpline=False):
     modLow,  modHigh  = self.getModulateRange()
     clipLow, clipHigh = self.getClippingRange()
 
+    if self.modulateImage is None: modShape  = [1, 1, 1]
+    else:                          modShape  = self.modulateImage.shape[:3]
+    if self.clipImage     is None: clipShape = [1, 1, 1]
+    else:                          clipShape = self.clipImage.shape[:3]
+
+    clipXform   = self.getAuxTextureXform('clip')
+    colourXform = self.getAuxTextureXform('colour')
+    modXform    = self.getAuxTextureXform('modulate')
+
+    changed |= self.shader.set('clipCoordXform',   clipXform)
+    changed |= self.shader.set('colourCoordXform', colourXform)
+    changed |= self.shader.set('modCoordXform',    modXform)
+ 
     if self.useVolumeFragShader:
 
         voxValXform     = self.colourTexture.voxValXform
@@ -90,6 +103,8 @@ def updateFragmentShaderState(self, useSpline=False):
         changed |= shader.set('colourXform',     colourXform)
         changed |= shader.set('voxValXform',     voxValXform)
         changed |= shader.set('imageShape',      imageShape)
+        changed |= shader.set('modImageShape',   modShape)
+        changed |= shader.set('clipImageShape',  clipShape)
         changed |= shader.set('clipLow',         clipLow)
         changed |= shader.set('clipHigh',        clipHigh)
         changed |= shader.set('modLow',          modLow)

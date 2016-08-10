@@ -47,13 +47,13 @@ def destroy(self):
     
 def compileShaders(self):
     """Calls :func:`.gl21.glvector_funcs.compileShaders`. """
-    self.shader = glvector_funcs.compileShaders(self, 'glvolume')
+    self.shader = glvector_funcs.compileShaders(self, 'glrgbvector')
 
 
 def updateShaderState(self):
-    """Updates all shader program variables. The fragment shader is
-    configured by the :func:.gl21.glvector_funcs.updateFragmentShaderState`
-    function.
+    """Updates all shader program variables. Most of the shader
+    configuration is performed by the
+    :func:.gl21.glvector_funcs.updateShaderState` function.
     """
 
     if not self.ready():
@@ -63,8 +63,7 @@ def updateShaderState(self):
     useSpline = opts.interpolation == 'spline'
 
     self.shader.load()
-    changed = glvector_funcs.updateFragmentShaderState(self,
-                                                       useSpline=useSpline)
+    changed = glvector_funcs.updateShaderState(self, useSpline=useSpline)
     self.shader.unload()
 
     return changed
