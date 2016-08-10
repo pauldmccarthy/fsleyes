@@ -1,0 +1,80 @@
+!!ARBvp1.0
+#
+# Vertex program for rendering GLRGBVector instances. 
+#
+# Performs a standard transformation of the vertex coordinates, and
+# passes the corresponding voxel and texture coordinates through to the
+# fragment program.
+#
+# Input parameters:
+#    imageShape       - image shape
+#    clipCoordXform   - Matrix which transforms image texture coordinates
+#                       into clip image texture coordinates.
+#    colourCoordXform - Matrix which transforms image texture coordinates
+#                       into colour image texture coordinates.
+#    modCoordXform -    Matrix which transforms image texture coordinates
+#                       into modulation image texture coordinates.
+# 
+# Input attributes:
+#    texCoord - Vector image texture coordinates
+#
+# Outputs:
+#    texCoord     - Colour image texture coordinates
+#    vecTexCoord  - Vector image texture coordinates
+#    clipTexCoord - Clip image texture coordinates
+#    modTexCoord  - Modulate image texture coordinates
+#    voxCoord     - Voxel coordinates
+#
+
+PARAM imageShape          = {{ param_imageShape        }};
+PARAM clipCoordXform[4]   = {{ param4_clipCoordXform   }};
+PARAM colourCoordXform[4] = {{ param4_colourCoordXform }};
+PARAM modCoordXform[4]    = {{ param4_modCoordXform    }};
+
+TEMP voxCoord;
+TEMP vecTexCoord;
+TEMP colourTexCoord;
+TEMP clipTexCoord;
+TEMP modTexCoord;
+
+# Transform the vertex position
+# into display coordinates.
+DP4 result.position.x, state.matrix.mvp.row[0], vertex.position;
+DP4 result.position.y, state.matrix.mvp.row[1], vertex.position;
+DP4 result.position.z, state.matrix.mvp.row[2], vertex.position;
+DP4 result.position.w, state.matrix.mvp.row[3], vertex.position;
+
+# Get the texture coordinates, make
+# sure the 4th component is 1.
+MOV vecTexCoord, {{ attr_texCoord }};
+MOV vecTexCoord.w, 1;
+
+# Transform the texture coordinates
+# into voxel coordinates.
+MUL voxCoord, vecTexCoord, imageShape;
+
+# Transform the image texture coordinates
+# into clip/colour/modulate image texture
+# coordinates.
+DP4 clipTexCoord.x,   clipCoordXform[0],   vecTexCoord;
+DP4 clipTexCoord.y,   clipCoordXform[1],   vecTexCoord;
+DP4 clipTexCoord.z,   clipCoordXform[2],   vecTexCoord;
+DP4 clipTexCoord.w,   clipCoordXform[3],   vecTexCoord;
+DP4 colourTexCoord.x, colourCoordXform[0], vecTexCoord;
+DP4 colourTexCoord.y, colourCoordXform[1], vecTexCoord;
+DP4 colourTexCoord.z, colourCoordXform[2], vecTexCoord;
+DP4 colourTexCoord.w, colourCoordXform[3], vecTexCoord;
+DP4 modTexCoord.x,    modCoordXform[0],    vecTexCoord;
+DP4 modTexCoord.y,    modCoordXform[1],    vecTexCoord;
+DP4 modTexCoord.z,    modCoordXform[2],    vecTexCoord;
+DP4 modTexCoord.w,    modCoordXform[3],    vecTexCoord;
+
+# Pass texture and voxel coordinates
+# through to the fragment program.
+MOV {{ varying_voxCoord     }}, voxCoord;
+MOV {{ varying_vecTexCoord  }}, vecTexCoord;
+MOV {{ varying_texCoord     }}, colourTexCoord;
+MOV {{ varying_clipTexCoord }}, clipTexCoord;
+MOV {{ varying_modTexCoord  }}, modTexCoord;
+
+END

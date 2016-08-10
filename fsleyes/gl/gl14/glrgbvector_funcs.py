@@ -46,7 +46,7 @@ def destroy(self):
 def compileShaders(self):
     """Calls the :mod:`.gl14.glvector_funcs.compileShaders` function.
     """
-    glvector_funcs.compileShaders(self, 'glvolume')
+    glvector_funcs.compileShaders(self, 'glrgbvector')
 
 
 def updateShaderState(self):
@@ -58,11 +58,10 @@ def updateShaderState(self):
     if not self.ready():
         return
 
-    glvector_funcs.updateFragmentShaderState(self)
-
     shape = list(self.vectorImage.shape[:3])
 
     self.shader.load()
+    glvector_funcs.updateShaderState(self)
     self.shader.setVertParam('imageShape', shape + [0])
     self.shader.unload()
 

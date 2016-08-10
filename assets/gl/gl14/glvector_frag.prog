@@ -58,8 +58,10 @@
 #
 # Input varyings:
 # 
-#   texCoord - Fragment texture coordinates
-#   voxCoord - Fragment voxel coordinates 
+#   vecTexCoord  - Vector image texture coordinates
+#   clipTexCoord - Clipping image texture coordinates
+#   modTexCoord  - Modulate image texture coordinates
+#   voxCoord     - Fragment voxel coordinates 
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -70,15 +72,15 @@ TEMP  modValue;
 TEMP  voxValue;
 TEMP  fragColour;
 TEMP  clipResult;
-PARAM voxValXform[4] = {{ param4_voxValXform }};
-PARAM cmapXform[4]   = {{ param4_cmapXform   }};
-PARAM imageShape     = {{ param_imageShape   }};
-PARAM clipping       = {{ param_clipping     }};
-PARAM mod            = {{ param_mod          }};
-PARAM xColour        = {{ param_xColour      }};
-PARAM yColour        = {{ param_yColour      }};
-PARAM zColour        = {{ param_zColour      }};
-PARAM colourXform    = {{ param_colourXform  }};
+PARAM voxValXform[4] = {{ param4_voxValXform    }};
+PARAM cmapXform[4]   = {{ param4_cmapXform      }};
+PARAM imageShape     = {{ param_imageShape      }};
+PARAM clipping       = {{ param_clipping        }};
+PARAM mod            = {{ param_mod             }};
+PARAM xColour        = {{ param_xColour         }};
+PARAM yColour        = {{ param_yColour         }};
+PARAM zColour        = {{ param_zColour         }};
+PARAM colourXform    = {{ param_colourXform     }};
 
 # retrieve the voxel coordinates 
 MOV voxCoord, {{ varying_voxCoord }};
@@ -89,9 +91,15 @@ MOV voxCoord, {{ varying_voxCoord }};
 
 # look up vector, modulation, and clipping
 # values from the three 3D textures.
-TEX voxValue,  {{ varying_texCoord }}, {{ texture_vectorTexture   }}, 3D;
-TEX modValue,  {{ varying_texCoord }}, {{ texture_modulateTexture }}, 3D;
-TEX clipValue, {{ varying_texCoord }}, {{ texture_clipTexture     }}, 3D;
+TEX voxValue,  {{ varying_vecTexCoord  }}, {{ texture_vectorTexture   }}, 3D;
+TEX modValue,  {{ varying_modTexCoord  }}, {{ texture_modulateTexture }}, 3D;
+TEX clipValue, {{ varying_clipTexCoord }}, {{ texture_clipTexture     }}, 3D;
+
+
+# TODO Clobber clipping/modulate values if
+#      clipping/modulate texcoords are out
+#      of bounds.
+
 
 # If the clipping value is
 # <= the low clipping range,

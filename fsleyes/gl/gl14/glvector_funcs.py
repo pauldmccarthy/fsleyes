@@ -61,9 +61,10 @@ def compileShaders(self, vertShader):
     self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)
 
 
-def updateFragmentShaderState(self):
-    """Updates the state of the fragment shader - it may be either the
-    ``glvolume`` or the ``glvector`` shader.
+def updateShaderState(self):
+    """Updates the state of the vector vertex and fragment shaders - the
+    fragment shader may may be either the ``glvolume`` or the ``glvector``
+    shader.
     """
     
     opts                = self.displayOpts
@@ -75,12 +76,18 @@ def updateFragmentShaderState(self):
     clipping = [clipLow, clipHigh,                 -1, -1]
     mod      = [modLow,  1.0 / (modHigh - modLow), -1, -1]
 
-    self.shader.load()
-
     # Inputs which are required by both the
     # glvolume and glvetor fragment shaders
     self.shader.setFragParam('imageShape', shape + [0])
     self.shader.setFragParam('clipping',   clipping)
+
+    clipCoordXform   = self.getAuxTextureXform('clip')
+    colourCoordXform = self.getAuxTextureXform('colour')
+    modCoordXform    = self.getAuxTextureXform('modulate')
+
+    self.shader.setVertParam('clipCoordXform',   clipCoordXform.T)
+    self.shader.setVertParam('colourCoordXform', colourCoordXform.T)
+    self.shader.setVertParam('modCoordXform',    modCoordXform.T) 
     
     if useVolumeFragShader:
         
@@ -97,15 +104,12 @@ def updateFragmentShaderState(self):
 
         voxValXform          = self.imageTexture.voxValXform
         colours, colourXform = self.getVectorColours()
-         
-        self.shader.setFragParam('voxValXform', voxValXform)
-        self.shader.setFragParam('mod',         mod)
-        self.shader.setFragParam('xColour',     colours[0])
-        self.shader.setFragParam('yColour',     colours[1])
-        self.shader.setFragParam('zColour',     colours[2])
-        self.shader.setFragParam('colourXform', [colourXform[0, 0],
-                                                 colourXform[3, 0], 0, 0])
 
-    self.shader.unload()
-
+        self.shader.setFragParam('voxValXform',      voxValXform)
+        self.shader.setFragParam('mod',              mod)
+        self.shader.setFragParam('xColour',          colours[0])
+        self.shader.setFragParam('yColour',          colours[1])
+        self.shader.setFragParam('zColour',          colours[2])
+        self.shader.setFragParam('colourXform',      [colourXform[0, 0],
+                                                      colourXform[3, 0], 0, 0])
     return True
