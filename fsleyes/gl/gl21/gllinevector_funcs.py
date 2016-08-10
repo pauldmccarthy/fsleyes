@@ -100,7 +100,7 @@ def updateShaderState(self):
     shader = self.shader
     shader.load()
     
-    changed     = glvector_funcs.updateFragmentShaderState(self)
+    changed     = glvector_funcs.updateShaderState(self)
     image       = self.vectorImage
     opts        = self.displayOpts
 

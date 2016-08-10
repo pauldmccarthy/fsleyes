@@ -19,6 +19,15 @@ uniform mat4 displayToVoxMat;
 uniform mat4 voxToDisplayMat;
 
 /*
+ * Matrices which transform from vector
+ * texture coordinates to colour/clip/
+ * modulate image texture coordinates.
+ */
+uniform mat4 colourCoordXform;
+uniform mat4 clipCoordXform;
+uniform mat4 modCoordXform;
+
+/*
  * Transformation matrix which transforms the
  * vector texture data to its original data range.
  */
@@ -72,6 +81,9 @@ attribute float vertexID;
 
 varying vec3 fragVoxCoord;
 varying vec3 fragTexCoord;
+varying vec3 fragVecTexCoord;
+varying vec3 fragClipTexCoord;
+varying vec3 fragModTexCoord;
 varying vec4 fragColourFactor;
 
 void main(void) {
@@ -158,6 +170,9 @@ void main(void) {
                 vec4(voxCoord + vector, 1);
 
   fragVoxCoord     = voxCoord;
-  fragTexCoord     = texCoord;
+  fragVecTexCoord  = texCoord;
+  fragTexCoord     = (colourCoordXform * vec4(texCoord, 1)).xyz;
+  fragClipTexCoord = (clipCoordXform   * vec4(texCoord, 1)).xyz;
+  fragModTexCoord  = (modCoordXform    * vec4(texCoord, 1)).xyz;
   fragColourFactor = vec4(1, 1, 1, 1);
 }
