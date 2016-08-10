@@ -19,11 +19,11 @@
 #    texCoord - Vector image texture coordinates
 #
 # Outputs:
+#    voxCoord     - Voxel coordinates
 #    texCoord     - Colour image texture coordinates
 #    vecTexCoord  - Vector image texture coordinates
 #    clipTexCoord - Clip image texture coordinates
 #    modTexCoord  - Modulate image texture coordinates
-#    voxCoord     - Voxel coordinates
 #
 
 PARAM imageShape          = {{ param_imageShape        }};

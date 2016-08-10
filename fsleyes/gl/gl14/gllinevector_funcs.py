@@ -132,7 +132,7 @@ def updateShaderState(self):
 
     image = self.vectorImage
 
-    glvector_funcs.updateFragmentShaderState(self)
+    glvector_funcs.updateShaderState(self)
 
     shape    = list(image.shape[:3])
     invShape = [1.0 / s for s in shape] + [0]

@@ -4,21 +4,38 @@
 #
 # Input parameters:
 # 
-#    invImageShape  - (first three components) inverse of image shape
-#    voxelOffsets   - (first three components) Offset to apply to transformed
-#                     voxel coordinates before flooring to integers.
+#    invImageShape    - (first three components) inverse of image shape
+#    voxelOffsets     - (first three components) Offset to apply to transformed
+#                       voxel coordinates before flooring to integers.
+#    clipCoordXform   - Matrix which transforms image texture coordinates
+#                       into clip image texture coordinates.
+#    colourCoordXform - Matrix which transforms image texture coordinates
+#                       into colour image texture coordinates.
+#    modCoordXform -    Matrix which transforms image texture coordinates
+#                       into modulation image texture coordinates. 
 #
 # Outputs:
-#    texCoord - the texture coordinates
-#    voxCoord - the voxel coordinates
+#    voxCoord     - Voxel coordinates
+#    texCoord     - Colour image texture coordinates
+#    vecTexCoord  - Vector image texture coordinates
+#    clipTexCoord - Clip image texture coordinates
+#    modTexCoord  - Modulate image texture coordinates
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
+TEMP voxCoord;
 TEMP texCoord;
+TEMP vecTexCoord;
+TEMP colourTexCoord;
+TEMP clipTexCoord;
+TEMP modTexCoord;
 
-PARAM invImageShape = {{ param_invImageShape }};
-PARAM voxelOffsets  = {{ param_voxelOffsets  }};
+PARAM invImageShape       = {{ param_invImageShape     }};
+PARAM voxelOffsets        = {{ param_voxelOffsets      }};
+PARAM clipCoordXform[4]   = {{ param4_clipCoordXform   }};
+PARAM colourCoordXform[4] = {{ param4_colourCoordXform }};
+PARAM modCoordXform[4]    = {{ param4_modCoordXform    }};
 
 # Transform the vertex position (which is in voxel
 # coordinates) into display coordinates.  It is
@@ -31,17 +48,38 @@ DP4 result.position.w, state.matrix.mvp.row[3], vertex.position;
 
 # Transform the vertex coordinates
 # into integer voxel coordinates
-MOV texCoord, vertex.position;
-ADD texCoord, texCoord, voxelOffsets;
-FLR texCoord, texCoord;
-
-MOV {{ varying_voxCoord }}, texCoord;
+MOV voxCoord, vertex.position;
+ADD voxCoord, voxCoord, voxelOffsets;
+FLR voxCoord, voxCoord;
 
 # Transform those integer voxel
 # coordinates into texture coordinates
-ADD texCoord, texCoord, { 0.5, 0.5, 0.5, 0.0 };
-MUL texCoord, texCoord, invImageShape;
+ADD vecTexCoord, voxCoord, { 0.5, 0.5, 0.5, 0.0 };
+MUL vecTexCoord, vecTexCoord, invImageShape;
+MOV vecTexCoord.w, 1;
 
-MOV {{ varying_texCoord }}, texCoord;
+# Transform the image texture coordinates
+# into clip/colour/modulate image texture
+# coordinates.
+DP4 clipTexCoord.x,   clipCoordXform[0],   vecTexCoord;
+DP4 clipTexCoord.y,   clipCoordXform[1],   vecTexCoord;
+DP4 clipTexCoord.z,   clipCoordXform[2],   vecTexCoord;
+DP4 clipTexCoord.w,   clipCoordXform[3],   vecTexCoord;
+DP4 colourTexCoord.x, colourCoordXform[0], vecTexCoord;
+DP4 colourTexCoord.y, colourCoordXform[1], vecTexCoord;
+DP4 colourTexCoord.z, colourCoordXform[2], vecTexCoord;
+DP4 colourTexCoord.w, colourCoordXform[3], vecTexCoord;
+DP4 modTexCoord.x,    modCoordXform[0],    vecTexCoord;
+DP4 modTexCoord.y,    modCoordXform[1],    vecTexCoord;
+DP4 modTexCoord.z,    modCoordXform[2],    vecTexCoord;
+DP4 modTexCoord.w,    modCoordXform[3],    vecTexCoord;
+
+# Pass texture and voxel coordinates
+# through to the fragment program.
+MOV {{ varying_voxCoord     }}, voxCoord;
+MOV {{ varying_vecTexCoord  }}, vecTexCoord;
+MOV {{ varying_texCoord     }}, colourTexCoord;
+MOV {{ varying_clipTexCoord }}, clipTexCoord;
+MOV {{ varying_modTexCoord  }}, modTexCoord;
 
 END
