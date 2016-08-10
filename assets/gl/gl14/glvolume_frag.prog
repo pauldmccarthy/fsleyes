@@ -73,9 +73,12 @@ TEMP  negColour;
 TEMP  useNegCmap;
 TEMP  negVoxValue;
 TEMP  negClipValue;
-
-TEMP  clipTexCoord;
 TEMP  clipValueNoClip;
+
+TEMP tb_texcoord;
+TEMP tb_origval;
+TEMP tb_borderval;
+TEMP tb_result;
 
 
 PARAM imageShape     = {{ param_imageShape   }};
@@ -107,24 +110,13 @@ SUB clipValueNoClip.x, clipValueNoClip.x, clipping.x;
 MUL clipValueNoClip.x, clipValueNoClip.x, 0.5;
 ADD clipValueNoClip.x, clipValueNoClip.x, clipping.x;
 
-# Clobber the clip value if the tex
-# coords on any dimension are less than 0
-MOV clipTexCoord, {{ varying_clipTexCoord }};
-SUB clipTexCoord, clipTexCoord, {0.0000001, 0.0000001, 0.0000001, 0};
+# Clobber the clip value
+MOV tb_texcoord,  {{ varying_clipTexCoord }};
+MOV tb_origval.x,   clipValue.x;
+MOV tb_borderval.x, clipValueNoClip.x;
+#pragma include texture_border.prog
 
-CMP clipValue.x, clipTexCoord.x, clipValueNoClip.x, clipValue.x;
-CMP clipValue.x, clipTexCoord.y, clipValueNoClip.x, clipValue.x;
-CMP clipValue.x, clipTexCoord.z, clipValueNoClip.x, clipValue.x;
-
-# Or if the tex coords on any
-# dimension are greater than 1
-MOV clipTexCoord, 1;
-SUB clipTexCoord, clipTexCoord, {{ varying_clipTexCoord }};
-
-CMP clipValue.x, clipTexCoord.x, clipValueNoClip.x, clipValue.x;
-CMP clipValue.x, clipTexCoord.y, clipValueNoClip.x, clipValue.x;
-CMP clipValue.x, clipTexCoord.z, clipValueNoClip.x, clipValue.x;
-
+MOV clipValue.x, tb_result.x;
 
 # If the image texture is the clip
 # texture, overwrite the clip value

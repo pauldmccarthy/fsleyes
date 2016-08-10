@@ -1,0 +1,33 @@
+# This routine replaces the value from a texture lookup if the texture
+# coordinates were out of bounds (less than 0 or greater than 1). 
+# 
+# Inputs:
+#   - tb_texcoord  - 3D texture coordinates
+#   - tb_origval   - Value that was retrieved from the texture lookup.
+#   - tb_borderval - Value to use if the coordinates are out of bounds.
+# 
+# Result:
+#   - tb_result    - tb_origval if the texture coords are in bounds,
+#                    or tb_borderval if they're out of bounds.
+
+TEMP tb_texcoord_tmp;
+
+MOV tb_texcoord_tmp, tb_texcoord;
+MOV tb_result.x,     tb_origval.x;
+
+# Clobber the texture value if the tex
+# coords on any dimension are less than 0
+SUB tb_texcoord_tmp, tb_texcoord_tmp, {0.0000001, 0.0000001, 0.0000001, 0};
+
+CMP tb_result.x, tb_texcoord_tmp.x, tb_borderval.x, tb_result.x;
+CMP tb_result.x, tb_texcoord_tmp.y, tb_borderval.x, tb_result.x;
+CMP tb_result.x, tb_texcoord_tmp.z, tb_borderval.x, tb_result.x;
+
+# Or if the tex coords on any
+# dimension are greater than 1
+MOV tb_texcoord_tmp, 1;
+SUB tb_texcoord_tmp, tb_texcoord_tmp, tb_texcoord;
+
+CMP tb_result.x, tb_texcoord_tmp.x, tb_borderval.x, tb_result.x;
+CMP tb_result.x, tb_texcoord_tmp.y, tb_borderval.x, tb_result.x;
+CMP tb_result.x, tb_texcoord_tmp.z, tb_borderval.x, tb_result.x;
