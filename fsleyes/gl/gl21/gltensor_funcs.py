@@ -76,7 +76,7 @@ def updateShaderState(self):
     
     shader.load()
     
-    changed = glvector_funcs.updateFragmentShaderState(self)
+    changed = glvector_funcs.updateShaderState(self)
 
     # Texture -> value value offsets/scales
     # used by the vertex and fragment shaders

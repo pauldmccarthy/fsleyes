@@ -148,6 +148,24 @@ void main(void) {
     clipValue = texture3D(clipTexture,     fragClipTexCoord).x;
   }
 
+  /* Clobber the clip values if out of bounds */
+  if (any(lessThan(   fragClipTexCoord, vec3(0))) ||
+      any(greaterThan(fragClipTexCoord, vec3(1)))) {
+    clipValue = clipLow + 0.5 * (clipHigh - clipLow);
+  }
+
+  /* And do the same for the modulation value */
+  if (any(lessThan(   fragModTexCoord, vec3(0))) ||
+      any(greaterThan(fragModTexCoord, vec3(1)))) {
+
+    /* 
+     * modValue gets scaled by the mod range down 
+     * below, but if we give it this value, the 
+     * scaling step will result in a value of 1
+     */
+    modValue = modHigh - 2 * modLow;
+  } 
+
   /* Knock out voxels where the clipping value is outside the clipping range */
   if (clipValue <= clipLow || clipValue >= clipHigh) {
       gl_FragColor.a = 0.0;
