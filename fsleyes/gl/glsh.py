@@ -42,9 +42,11 @@ class GLSH(glvector.GLVectorBase):
 
     Each voxel in a FOD image contains coefficients which describe a spherical
     function.  The :meth:`SHOpts.getSHParameters` method returns a numpy array
-    which may be used to transform these coefficients into a set of radii which
-    can be applied to the vertices of a sphere to visualise the spherical
-    function.
+    which may be used to transform these coefficients into a set of radii
+    which can be applied to the vertices of a sphere to visualise the
+    spherical function. Pre-calculated vertices of tessellated spheres are
+    used, and are retrieved via the :meth:`.SHOpts.getVertices` and
+    :meth:`.SHOpts.getIndices` methods.
 
     
     These radii are calculated on every call to :meth:`draw` (via the
@@ -67,9 +69,9 @@ class GLSH(glvector.GLVectorBase):
     ``radTexture`` :class:`.Texture3D` containing radius values for each
                     vertex to be displayed in the current draw call.
     
-    ``vertices``   ``numpy`` array of shape ``(N, 3)`` which comprise
-                   a sphere. The vertex shader will apply the radii to
-                   the vertices contained in this array, to form the FODs
+    ``vertices`` ``numpy`` array of shape ``(N, 3)`` which comprise a
+                   tessellated sphere. The vertex shader will apply the radii
+                   to the vertices contained in this array, to form the FODs
                    at every voxel.
     
     ``indices``    Indices into ``vertices`` defining the faces of the
@@ -78,7 +80,7 @@ class GLSH(glvector.GLVectorBase):
     ``nVertices``  Total number of rendered vertices (equal to
                    ``len(indices)``).
     
-    ``vertIdxs``   Indices for ecah vertex (equal to
+    ``vertIdxs``   Indices for each vertex (equal to
                    ``np.arange(vertices.shape[0])``).
     ============== =====================================================
     """
@@ -152,6 +154,8 @@ class GLSH(glvector.GLVectorBase):
         opts.addListener('resolution',      name, self.notify)
         opts.addListener('shResolution' ,   name, self.__shStateChanged,
                          immediate=True)
+        opts.addListener('shOrder'      ,   name, self.__shStateChanged,
+                         immediate=True) 
         opts.addListener('size',            name, self.updateShaderState)
         opts.addListener('lighting',        name, self.updateShaderState)
         opts.addListener('neuroFlip',       name, self.updateShaderState)
@@ -171,6 +175,7 @@ class GLSH(glvector.GLVectorBase):
 
         opts.removeListener('resolution',      name)
         opts.removeListener('shResolution',    name)
+        opts.removeListener('shOrder',         name)
         opts.removeListener('size',            name)
         opts.removeListener('lighting',        name)
         opts.removeListener('neuroFlip',       name)
@@ -199,26 +204,17 @@ class GLSH(glvector.GLVectorBase):
         """Called when the :attr:`.SHOpts.shResolution` property changes.
         Re-loads the SH parameters from disk, and attaches them as an
         attribute called ``__shParams``.
-
-        Also calls :meth:`__updateVertices`.
         """
-        self.__shParams = self.displayOpts.getSHParameters()
-        self.__updateVertices()
 
-
-    def __updateVertices(self):
-        """Re-generates the vertices of the sphere which represents
-        the FOD for each voxel.
-        """
-        
         opts = self.displayOpts
         
-        vertices, indices = glroutines.unitSphere(opts.shResolution)
+        self.__shParams = self.displayOpts.getSHParameters()
+        self.vertices   = opts.getVertices()
+        self.indices    = opts.getIndices()
+        self.nVertices  = len(self.indices)
+        self.vertIdxs   = np.arange(self.vertices.shape[0], dtype=np.float32)
 
-        self.vertices  = vertices
-        self.indices   = indices
-        self.nVertices = len(indices)
-        self.vertIdxs  = np.arange(vertices.shape[0], dtype=np.float32) 
+        self.updateShaderState()
 
 
     def updateRadTexture(self, voxels):

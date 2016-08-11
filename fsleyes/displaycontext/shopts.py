@@ -21,13 +21,29 @@ from . import     vectoropts
 
 
 SH_COEFFICIENT_TYPE = {
-    45 : 'sym',
-    81 : 'asym',
+    9   : ('asym', 2),
+    25  : ('asym', 4),
+    49  : ('asym', 6),
+    81  : ('asym', 8),
+    121 : ('asym', 10),
+    169 : ('asym', 12),
+    225 : ('asym', 14),
+    289 : ('asym', 16),
+    6   : ('sym',  2),
+    15  : ('sym',  4),
+    28  : ('sym',  6),
+    45  : ('sym',  8),
+    66  : ('sym',  10),
+    91  : ('sym',  12),
+    120 : ('sym',  14),
+    153 : ('sym',  16),
 }
 """``Image`` files which contain SH coefficients may be symmetric (only
-containing coefficients for even spherical functions) or asymmetric dictionary
-provides mappings from the number of volumes contained in the image, to the
-file type (either symmetric [``'sym'``] or asymmetric [``'asym'``).
+containing coefficients for even spherical functions) or asymmetric
+(containing coefficients for odd and even functions). This dictionary provides
+mappings from the number coefficients (the volumes contained in the image), to
+the file type (either symmetric [``'sym'``] or asymmetric [``'asym'``), and the
+maximum SH order that was used in generating the coefficients.
 """
 
 
@@ -48,11 +64,27 @@ class SHOpts(vectoropts.VectorOpts):
     """
 
     
-    shResolution = props.Choice((16,))
-    """Resolution of the sphere used to display the FODs at each voxel. This
-    defines the number of latitude and longitude angles sampled around the
-    sphere, so the total number of vertices used will be
-    ``shResolution ** 2``.
+    shResolution = props.Choice((3, 4, 5, 6, 7, 8), default=5)
+    """Resolution of the sphere used to display the FODs at each voxel. The
+    value is equal to the number of iterations that an isocahedron, starting
+    with 12 vertices, is tessellated. The resulting number of vertices is
+    as follows:
+
+    ==================== ==================
+    Number of iterations Number of vertices
+    3                    92
+    4                    162
+    5                    252
+    6                    362
+    7                    492
+    8                    642
+    ==================== ==================
+    """
+
+
+    shOrder = props.Choice()
+    """Maximum spherical harmonic order to visualise. This is populated in
+    :meth:`__init__`.
     """
 
     
@@ -82,17 +114,77 @@ class SHOpts(vectoropts.VectorOpts):
     """
 
 
+    def __init__(self, *args, **kwargs):
+
+        vectoropts.VectorOpts.__init__(self, *args, **kwargs)
+
+        ncoefs             = self.overlay.shape[3]
+        fileType, maxOrder = SH_COEFFICIENT_TYPE.get(ncoefs)
+
+        if fileType is None:
+            raise ValueError('{} does not look like a SH '
+                             'image'.format(self.overlay.name))
+
+        self.__maxOrder = maxOrder
+
+        # If this Opts instance has a parent, 
+        # the shOrder choices will be inherited
+        if self.getParent() is None:
+            vizOrders = range(2, self.__maxOrder + 1, 2)
+            self.getProp('shOrder').setChoices(vizOrders, instance=self)
+            self.shOrder = vizOrders[-1]
+
+
+    @property
+    def maxOrder(self):
+        """Returns the maximum SH order that was used to generate the
+        coefficients of the SH image.
+        """
+        return self.__maxOrder
+
+
     def getSHParameters(self):
         """Load and return a ``numpy`` array containing pre-calculated SH
-        function parameters for the image order and the display resolution.
+        function parameters for the curert maximum SH order and display
+        resolution. The returned array has the shape ``(N, C)``, where ``N``
+        is the number of vertices used to represent each FOD, and ``C`` is
+        the number of SH coefficients.
         """
 
-        resolution = self.shResolution ** 2
-        order      = self.overlay.shape[3]
-        fileType   = SH_COEFFICIENT_TYPE[order]
+        # TODO Adjust matrix if shOrder is
+        #      less than its maximum possible 
+        #      value for this image.
+        return self.__getSHFile('coef')
+    
+
+    def getVertices(self):
+        """Loads and returns a ``numpy`` array of shape ``(N, 3)``, containing
+        ``N`` vertices of a tessellated sphere.
+        """
+        return self.__getSHFile('vert')
+
+
+    def getIndices(self):
+        """Loads and returns a 1D ``numpy`` array, containing indices into
+        the vertex array, specifying the order in which they are to be drawn
+        as triangles.
+        """        
+        return self.__getSHFile('face').flatten()
+
+
+    def __getSHFile(self, what):
+        """Loads and returns a ``numpy`` array from the ``assets/sh``
+        directory.
+        """
         
-        return np.loadtxt(op.join(
+        resolution  = self.shResolution
+        ncoefs      = self.overlay.shape[3]
+        order       = self.shOrder
+        fileType, _ = SH_COEFFICIENT_TYPE[ncoefs]
+        fileName    = op.join(
             fsleyes.assetDir,
             'assets',
             'sh',
-            '{}x{}_{}.txt'.format(resolution, order, fileType)))
+            '{}_{}_{}_{}.txt'.format(fileType, what, resolution, order))
+            
+        return np.loadtxt(fileName) 

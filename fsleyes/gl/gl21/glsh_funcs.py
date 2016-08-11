@@ -113,7 +113,7 @@ def updateShaderState(self):
     changed |= shader.set('imageShape',  shape)
     changed |= shader.set('lighting',    opts.lighting)
     changed |= shader.set('lightPos',    lightPos)
-    changed |= shader.set('nVertices',   opts.shResolution ** 2)
+    changed |= shader.set('nVertices',   self.vertices.shape[0])
     changed |= shader.set('sizeScaling', opts.size / 100.0)
 
     changed |= shader.set('radTexture',  4)
@@ -161,8 +161,8 @@ def updateShaderState(self):
         changed |= shader.set('colourXform',      colourXform)
         changed |= shader.set('cmapXform',        cmapXform)
         changed |= shader.set('clipCoordXform',   clipXform)
-        changed |= shader.set('modCoordXform',    modXform) 
-    
+        changed |= shader.set('modCoordXform',    modXform)
+
     shader.setAtt('vertex',   self.vertices)
     shader.setAtt('vertexID', self.vertIdxs) 
     shader.setIndices(        self.indices)
@@ -190,8 +190,8 @@ def preDraw(self):
 
     shader.set('normalMatrix', normalMatrix)
 
-    gl.glEnable(gl.GL_CULL_FACE)
-    gl.glCullFace(gl.GL_BACK) 
+    # gl.glEnable(gl.GL_CULL_FACE)
+    # gl.glCullFace(gl.GL_BACK) 
 
 
 def draw(self, zpos, xform=None, bbox=None):
@@ -220,7 +220,7 @@ def draw(self, zpos, xform=None, bbox=None):
     shader.loadAtts()
     
     arbdi.glDrawElementsInstancedARB(
-        gl.GL_QUADS, self.nVertices, gl.GL_UNSIGNED_INT, None, len(voxels))
+        gl.GL_TRIANGLES, self.nVertices, gl.GL_UNSIGNED_INT, None, len(voxels))
 
 
 def postDraw(self):
@@ -230,4 +230,4 @@ def postDraw(self):
     
     self.shader.unloadAtts()
     self.shader.unload()
-    gl.glDisable(gl.GL_CULL_FACE)
+    # gl.glDisable(gl.GL_CULL_FACE)
