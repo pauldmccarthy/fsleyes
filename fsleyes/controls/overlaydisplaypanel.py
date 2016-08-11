@@ -516,7 +516,10 @@ _DISPLAY_WIDGETS = td.TypeDict({
 
     # SHOpts
     'SHOpts.resolution'      : props.Widget('resolution',   showLimits=False),
-    'SHOpts.shResolution'    : props.Widget('shResolution'), 
+    'SHOpts.shResolution'    : props.Widget(
+        'shResolution',
+        spin=False,
+        showLimits=False), 
     'SHOpts.neuroFlip'       : props.Widget('neuroFlip'), 
     'SHOpts.lighting'        : props.Widget('lighting'), 
     'SHOpts.size'            : props.Widget(
