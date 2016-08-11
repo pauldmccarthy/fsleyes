@@ -287,7 +287,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         prefilterRange = kwargs.get('prefilterRange', self.__prefilterRange)
         resolution     = kwargs.get('resolution',     self.__resolution)
         scales         = kwargs.get('scales',         self.__scales)
-        normalise      = kwargs.get('normalise',      self.__normalise)
+        normalise      = kwargs.get('normalise',      None)
         data           = kwargs.get('data',           None)
         refresh        = kwargs.get('refresh',        True)
         notify         = kwargs.get('notify',         True)

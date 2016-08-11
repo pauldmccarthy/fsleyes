@@ -64,7 +64,7 @@ class SHOpts(vectoropts.VectorOpts):
     """
 
     
-    shResolution = props.Int(minval=3, maxval=8, default=5)
+    shResolution = props.Int(minval=3, maxval=10, default=5)
     """Resolution of the sphere used to display the FODs at each voxel. The
     value is equal to the number of iterations that an isocahedron, starting
     with 12 vertices, is tessellated. The resulting number of vertices is
@@ -79,6 +79,8 @@ class SHOpts(vectoropts.VectorOpts):
     6                    362
     7                    492
     8                    642
+    9                    812
+    10                   1002
     ==================== ==================
     """
 

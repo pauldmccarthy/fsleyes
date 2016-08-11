@@ -2054,20 +2054,6 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                         setattr(optArgs, llr, None)
                         setattr(optArgs, lhr, None)
 
-                    # With the exception of ModelOpts.refImage,
-                    # all of the file options specify images which
-                    # must match the overlay shape to be valid.
-                    if not isinstance(opts, fsldisplay.ModelOpts):
-                        if image.shape[:3] != overlay.shape[:3]:
-                            log.warn('{}: Shape of {} ({}) does not '
-                                     'match shape of {} ({})'.format(
-                                         fileOpt,
-                                         overlay,
-                                         overlay.shape[:3],
-                                         image,
-                                         image.shape[:3]))
-                            continue
-
                     setattr(opts, fileOpt, image)
 
             # After handling the special cases

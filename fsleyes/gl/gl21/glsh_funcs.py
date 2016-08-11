@@ -190,8 +190,8 @@ def preDraw(self):
 
     shader.set('normalMatrix', normalMatrix)
 
-    # gl.glEnable(gl.GL_CULL_FACE)
-    # gl.glCullFace(gl.GL_BACK) 
+    gl.glEnable(gl.GL_CULL_FACE)
+    gl.glCullFace(gl.GL_BACK) 
 
 
 def draw(self, zpos, xform=None, bbox=None):
@@ -230,4 +230,4 @@ def postDraw(self):
     
     self.shader.unloadAtts()
     self.shader.unload()
-    # gl.glDisable(gl.GL_CULL_FACE)
+    gl.glDisable(gl.GL_CULL_FACE)
