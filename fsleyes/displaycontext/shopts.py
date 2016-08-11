@@ -157,37 +157,42 @@ class SHOpts(vectoropts.VectorOpts):
         # TODO Adjust matrix if shOrder is
         #      less than its maximum possible 
         #      value for this image.
-        return self.__getSHFile('coef')
-    
+
+        resolution = self.shResolution
+        ncoefs     = self.overlay.shape[3]
+        order      = self.shOrder
+        ftype, _   = SH_COEFFICIENT_TYPE[ncoefs]
+        fname     = op.join(
+            fsleyes.assetDir,
+            'assets',
+            'sh',
+            '{}_coef_{}_{}.txt'.format(ftype, resolution, order))
+
+        return np.loadtxt(fname)
+ 
 
     def getVertices(self):
         """Loads and returns a ``numpy`` array of shape ``(N, 3)``, containing
         ``N`` vertices of a tessellated sphere.
         """
-        return self.__getSHFile('vert')
+        fname = op.join(
+            fsleyes.assetDir,
+            'assets',
+            'sh',
+            'vert_{}.txt'.format(self.shResolution))
+
+        return np.loadtxt(fname)
 
 
     def getIndices(self):
         """Loads and returns a 1D ``numpy`` array, containing indices into
         the vertex array, specifying the order in which they are to be drawn
         as triangles.
-        """        
-        return self.__getSHFile('face').flatten()
-
-
-    def __getSHFile(self, what):
-        """Loads and returns a ``numpy`` array from the ``assets/sh``
-        directory.
         """
-        
-        resolution  = self.shResolution
-        ncoefs      = self.overlay.shape[3]
-        order       = self.shOrder
-        fileType, _ = SH_COEFFICIENT_TYPE[ncoefs]
-        fileName    = op.join(
+        fname = op.join(
             fsleyes.assetDir,
             'assets',
             'sh',
-            '{}_{}_{}_{}.txt'.format(fileType, what, resolution, order))
-            
-        return np.loadtxt(fileName) 
+            'face_{}.txt'.format(self.shResolution))
+
+        return np.loadtxt(fname).flatten()
