@@ -192,9 +192,21 @@ class OverlayList(props.HasProperties):
         self.enableNotification('overlays')
         self.notify('overlays')
     
-    def extend(self, iterable):
-        return self.overlays.extend(iterable)
-    
+    def extend(self, iterable, overlayTypes=None):
+
+        self.disableNotification('overlays')
+
+        result = self.overlays.extend(iterable)
+
+        if overlayTypes is not None:
+            for overlay, overlayType in overlayTypes.items():
+                self.__initOverlayType[overlay] = overlayType
+
+        self.enableNotification('overlays')
+        self.notify('overlays')
+
+        return result
+
     def pop(self, index=-1):
         ovl = self.overlays.pop(index)
         self.__initOverlayType.pop(ovl, None)

@@ -1972,7 +1972,22 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
     # been loaded.
     def onLoad(overlays):
 
-        overlayList.extend(overlays)
+        # Do an initial pass through the overlays and their
+        # respective arguments, and build a dictionary of
+        # initial overlay types where they have been specified
+        overlayTypes = {}
+
+        for overlay, optArgs in zip(overlays, args.overlays):
+            overlayType = getattr(optArgs, 'overlayType', None)
+
+            if overlayType is not None:
+                overlayTypes[overlay] = overlayType
+
+        # Add the overlays to the list. This will
+        # trigger the DisplayContext to create
+        # Display/DisplayOpts instances for each
+        # overlay.
+        overlayList.extend(overlays, overlayTypes=overlayTypes)
 
         for i, overlay in enumerate(overlayList):
 
