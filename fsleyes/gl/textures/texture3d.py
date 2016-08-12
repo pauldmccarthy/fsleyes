@@ -282,12 +282,13 @@ class Texture3D(texture.Texture, notifier.Notifier):
         :returns: ``True`` if any settings have changed and the
                   ``Texture3D`` is to be refreshed, ``False`` otherwise.
         """
+
         interp         = kwargs.get('interp',         self.__interp)
         prefilter      = kwargs.get('prefilter',      self.__prefilter)
         prefilterRange = kwargs.get('prefilterRange', self.__prefilterRange)
         resolution     = kwargs.get('resolution',     self.__resolution)
         scales         = kwargs.get('scales',         self.__scales)
-        normalise      = kwargs.get('normalise',      None)
+        normalise      = kwargs.get('normalise',      self.__normalise)
         data           = kwargs.get('data',           None)
         refresh        = kwargs.get('refresh',        True)
         notify         = kwargs.get('notify',         True)
@@ -295,13 +296,13 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         changed = {'interp'         : interp         != self.__interp,
                    'data'           : data           is not None,
+                   'normalise'      : normalise      != self.__normalise,
                    'prefilter'      : prefilter      != self.__prefilter,
                    'prefilterRange' : prefilterRange != self.__prefilterRange,
                    'resolution'     : resolution     != self.__resolution,
-                   'scales'         : scales         != self.__scales,
-                   'normalise'      : normalise      != self.__normalise}
+                   'scales'         : scales         != self.__scales}
 
-        if self.__ready and (not any(changed.values())):
+        if not any(changed.values()):
             return False
 
         self.__interp         = interp
@@ -324,8 +325,11 @@ class Texture3D(texture.Texture, notifier.Notifier):
                 # If the caller has not provided
                 # a normalisation range, we have
                 # to calculate it.
-                if self.__normalise is None:
+                if not changed['normalise']:
                     self.__normalise = np.nanmin(data), np.nanmax(data)
+                    log.debug('Calculated {} data range for normalisation: '
+                              '[{} - {}]'.format(self.__name,
+                                                 *self.__normalise))
 
         refreshData = any((changed['data'],
                            changed['prefilter'],
