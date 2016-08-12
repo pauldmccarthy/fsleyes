@@ -121,21 +121,33 @@ class SHOpts(vectoropts.VectorOpts):
 
         vectoropts.VectorOpts.__init__(self, *args, **kwargs)
 
-        ncoefs             = self.overlay.shape[3]
-        fileType, maxOrder = SH_COEFFICIENT_TYPE.get(ncoefs)
+        ncoefs           = self.overlay.shape[3]
+        shType, maxOrder = SH_COEFFICIENT_TYPE.get(ncoefs)
 
-        if fileType is None:
+        if shType is None:
             raise ValueError('{} does not look like a SH '
                              'image'.format(self.overlay.name))
 
         self.__maxOrder = maxOrder
+        self.__shType   = shType
 
         # If this Opts instance has a parent, 
         # the shOrder choices will be inherited
         if self.getParent() is None:
-            vizOrders = range(2, self.__maxOrder + 1, 2)
+
+            if   shType == 'sym':  vizOrders = range(2, self.__maxOrder + 1, 2)
+            elif shType == 'asym': vizOrders = range(1, self.__maxOrder + 1)
+            
             self.getProp('shOrder').setChoices(vizOrders, instance=self)
             self.shOrder = vizOrders[-1]
+
+
+    @property
+    def shType(self):
+        """Returns either ``'sym'`` or ``'asym'``, depending on the type
+        of the SH coefficients contained in the file.
+        """
+        return self.__shType
 
 
     @property
@@ -157,6 +169,8 @@ class SHOpts(vectoropts.VectorOpts):
         # TODO Adjust matrix if shOrder is
         #      less than its maximum possible 
         #      value for this image.
+        #
+        #      Also, calculate the normal vectors.
 
         resolution = self.shResolution
         ncoefs     = self.overlay.shape[3]

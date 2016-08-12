@@ -21,7 +21,6 @@ import OpenGL.GL  as gl
 
 
 import fsleyes.gl          as fslgl
-import fsleyes.gl.routines as glroutines
 import fsleyes.gl.textures as textures
 import fsleyes.gl.glvector as glvector
 
@@ -190,11 +189,13 @@ class GLSH(glvector.GLVectorBase):
         fslgl.glsh_funcs.compileShaders(self)
 
         
-    def updateShaderState(self, *a):
+    def updateShaderState(self, *a, **kwa):
         """Overrides :meth:`.GLVectorBase.updateShaderState`. Calls
         :func:`.glsh_funcs.updateShaderState`.
         """
-        if fslgl.glsh_funcs.updateShaderState(self):
+        alwaysNotify = kwa.pop('alwaysNotify', False)
+        
+        if fslgl.glsh_funcs.updateShaderState(self) or alwaysNotify:
             self.notify()
             return True
         return False
@@ -214,8 +215,92 @@ class GLSH(glvector.GLVectorBase):
         self.nVertices  = len(self.indices)
         self.vertIdxs   = np.arange(self.vertices.shape[0], dtype=np.float32)
 
-        self.updateShaderState()
+        self.updateShaderState(alwaysNotify=True)
 
+
+    def __coefVolumeMask(self):
+        """Figures out which volumes from the image need to be included in the
+        SH radius calculation. If an image has been generated with a particular
+        maximum SH function order, but is being displayed at a reduced order,
+        a sub-set of the volumes need to be used in the calculation.
+
+
+        :returns A ``slice`` object which can be used to select a subset of
+                 volumes from the SH image.
+
+
+        For a symmetric SH image (which only contains SH functions of even
+        order), each volume corresponds to
+        
+        ======  =============  =====
+        Volume  Maximum order  Order
+        ------  -------------  -----
+        0       0               0
+        1       2              -2
+        2       2              -1
+        3       2               0
+        4       2               1
+        5       2               2
+        6       4              -4
+        7       4              -3
+        8       4              -2
+        9       4              -1
+        10      4               0
+        11      4               1
+        12      4               2
+        13      4               3
+        14      4               4
+        15      6              -6
+        ...     ...            ...
+        ======  =============  =====
+
+
+        Asymmetric images (containing SH functions of both even and odd
+        order) follow the same pattern:
+
+
+        ======  =============  =====
+        Volume  Maximum order  Order
+        ------  -------------  -----
+        0       0               0
+        1       1              -1
+        2       1               0
+        3       1               1
+        4       2              -2
+        5       2              -1
+        6       2               0
+        7       2               1
+        8       2               2
+        9       3              -3
+        10      3              -2
+        11      3              -1
+        12      3               0
+        13      3               1
+        14      3               2
+        15      3               3
+        16      4              -4
+        ...     ...            ...
+        ======  =============  =====
+        """
+        opts      = self.displayOpts
+        maxOrder  = opts.maxOrder
+        dispOrder = opts.shOrder
+        shType    = opts.shType
+        nvols     = self.image.shape[3]
+
+        if maxOrder == dispOrder:
+            return slice(None)
+
+        if shType == 'sym':
+            for o in range(dispOrder + 2, maxOrder + 2, 2):
+                nvols -= 2 * o + 1 
+
+        elif shType == 'asym':
+            for o in range(dispOrder + 1, maxOrder + 1):
+                nvols -= 2 * o + 1
+
+        return slice(nvols)
+    
 
     def updateRadTexture(self, voxels):
         """Called by :func:`.glsh_funcs.draw`. Updates the radius texture to
@@ -261,7 +346,8 @@ class GLSH(glvector.GLVectorBase):
         # the SH parameters with the SH coefficients of
         # *all* voxels.
         params = self.__shParams
-        coefs  = self.image.nibImage.get_data()[x, y, z, :]
+        vols   = self.__coefVolumeMask()
+        coefs  = self.image.nibImage.get_data()[x, y, z, vols]
         radii  = np.dot(params, coefs.T)
 
         # Remove sub-threshold voxels/radii

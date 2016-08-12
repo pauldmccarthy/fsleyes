@@ -241,7 +241,17 @@ properties = TypeDict({
     'SHOpts.size'             : 'This setting allows the FOD size to be '
                                 'scaled up or down',
     'SHOpts.radiusThreshold'  : 'This setting allows FODs with small radius '
-                                'to be hidden.', 
+                                'to be hidden.',
+    'SHOpts.shResolution'     : 'This setting controls the display resolution '
+                                '(number of vertices) used to draw each FOD.',
+    'SHOpts.shOrder'          : 'This setting controls the maximum spherical '
+                                'harmonic function order with which to '
+                                'display FODs.',
+    'SHOpts.colourMode'       : 'FODs can be coloured according to their '
+                                'radius/size, or according to their '
+                                'orientation/direction. This setting is '
+                                'disabled when you choose to colour the FODs '
+                                'by another image (e.g. a FA map).',
     
     # SceneOpts
 

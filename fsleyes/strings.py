@@ -647,6 +647,7 @@ properties = TypeDict({
     'SHOpts.size'            : 'FOD size',
     'SHOpts.radiusThreshold' : 'Radius threshold',
     'SHOpts.shResolution'    : 'FOD quality',
+    'SHOpts.shOrder'         : 'Maximum SH order',
     'SHOpts.neuroFlip'       : 'Neurological flip (FSL convention)',
     'SHOpts.colourMode'      : 'Colour mode',
     'SHOpts.cmap'            : 'Radius colour map',
