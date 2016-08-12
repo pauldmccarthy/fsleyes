@@ -191,6 +191,8 @@ def preDraw(self):
     shader.set('normalMatrix', normalMatrix)
 
     gl.glEnable(gl.GL_CULL_FACE)
+    gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
+    gl.glEnable(gl.GL_DEPTH_TEST)
     gl.glCullFace(gl.GL_BACK) 
 
 
@@ -231,3 +233,4 @@ def postDraw(self):
     self.shader.unloadAtts()
     self.shader.unload()
     gl.glDisable(gl.GL_CULL_FACE)
+    gl.glDisable(gl.GL_DEPTH_TEST)

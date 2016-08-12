@@ -212,4 +212,12 @@ void main(void) {
   voxColour *= modValue;
 
   gl_FragColor = voxColour * fragColourFactor;
+
+  /* Set the fragment depth on a per-voxel basis 
+   * so that items at adjacent voxels (e.g. 
+   * tensors) overlap, rather than intersect.
+   */
+  gl_FragDepth =  fragVoxCoord.x / imageShape.x *
+                  fragVoxCoord.y / imageShape.y *
+                  fragVoxCoord.z / imageShape.z;
 }
