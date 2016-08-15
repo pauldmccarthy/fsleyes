@@ -21,6 +21,7 @@ from . import     vectoropts
 
 
 SH_COEFFICIENT_TYPE = {
+    1   : ('asym', 0),
     9   : ('asym', 2),
     25  : ('asym', 4),
     49  : ('asym', 6),
@@ -29,6 +30,7 @@ SH_COEFFICIENT_TYPE = {
     169 : ('asym', 12),
     225 : ('asym', 14),
     289 : ('asym', 16),
+    1   : ('sym',  0),
     6   : ('sym',  2),
     15  : ('sym',  4),
     28  : ('sym',  6),
@@ -85,7 +87,7 @@ class SHOpts(vectoropts.VectorOpts):
     """
 
 
-    shOrder = props.Choice()
+    shOrder = props.Choice(allowStr=True)
     """Maximum spherical harmonic order to visualise. This is populated in
     :meth:`__init__`.
     """
@@ -95,7 +97,7 @@ class SHOpts(vectoropts.VectorOpts):
     """Display size - this is simply a linear scaling factor. """
     
 
-    lighting = props.Boolean(default=True)
+    lighting = props.Boolean(default=False)
     """Apply a simple directional lighting model to the FODs. """
 
     
@@ -135,8 +137,8 @@ class SHOpts(vectoropts.VectorOpts):
         # the shOrder choices will be inherited
         if self.getParent() is None:
 
-            if   shType == 'sym':  vizOrders = range(2, self.__maxOrder + 1, 2)
-            elif shType == 'asym': vizOrders = range(1, self.__maxOrder + 1)
+            if   shType == 'sym':  vizOrders = range(0, self.__maxOrder + 1, 2)
+            elif shType == 'asym': vizOrders = range(0, self.__maxOrder + 1)
             
             self.getProp('shOrder').setChoices(vizOrders, instance=self)
             self.shOrder = vizOrders[-1]
@@ -182,7 +184,12 @@ class SHOpts(vectoropts.VectorOpts):
             'sh',
             '{}_coef_{}_{}.txt'.format(ftype, resolution, order))
 
-        return np.loadtxt(fname)
+        params = np.loadtxt(fname)
+
+        if len(params.shape) == 1:
+            params = params.reshape((-1, 1))
+
+        return params
  
 
     def getVertices(self):

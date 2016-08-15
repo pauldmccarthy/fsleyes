@@ -393,6 +393,7 @@ OPTIONS = td.TypeDict({
                         'outline',
                         'outlineWidth'],
     'SHOpts'         : ['shResolution',
+                        'shOrder',
                         'size',
                         'lighting',
                         'radiusThreshold',
@@ -605,8 +606,9 @@ ARGUMENTS = td.TypeDict({
     'LabelOpts.outlineWidth' : ('w',  'outlineWidth'),
 
     'SHOpts.shResolution'    : ('sr', 'shResolution'),
+    'SHOpts.shOrder'         : ('so', 'shOrder'),
     'SHOpts.size'            : ('s',  'size'),
-    'SHOpts.lighting'        : ('dl', 'lighting'),
+    'SHOpts.lighting'        : ('l',  'lighting'),
     'SHOpts.neuroFlip'       : ('df', 'neuroFlip'),
     'SHOpts.radiusThreshold' : ('t',  'radiusThreshold'),
     'SHOpts.colourMode'      : ('m',  'colourMode'),
@@ -762,8 +764,9 @@ HELP = td.TypeDict({
     'LabelOpts.outlineWidth' : 'Label outline width',
 
     'SHOpts.shResolution'    : 'FOD resolution/quality',
+    'SHOpts.shOrder'         : 'Maximum SH function order (0-16)',
     'SHOpts.size'            : 'FOD size',
-    'SHOpts.lighting'        : 'Disable lighting effect',
+    'SHOpts.lighting'        : 'Enable lighting effect',
     'SHOpts.neuroFlip'       : 'Do not flip FODs stored in '
                                'neurological orientation',
     'SHOpts.radiusThreshold' : 'Hide FODs with radius less than this',
@@ -819,7 +822,12 @@ def getExtra(target, propName, default=None):
         'choices'  : colourmaps.scanColourMaps(),
         'metavar'  : 'CMAP',
         'parseStr' : True
-    } 
+    }
+
+    shOrderSettings = {
+        'choices' : range(17),
+        'metavar' : 'ORDER',
+    }
 
     if target in ('Display', fsldisplay.Display) and \
        propName == 'overlayType':
@@ -852,6 +860,10 @@ def getExtra(target, propName, default=None):
     elif target in ('SHOpts', fsldisplay.SHOpts) \
          and propName == 'cmap':
         return cmapSettings
+
+    elif target in ('SHOpts', fsldisplay.SHOpts) \
+         and propName == 'shOrder':
+        return shOrderSettings
 
     return None
 
@@ -914,7 +926,7 @@ TRANSFORMS = td.TypeDict({
     'LineVectorOpts.unitLength' : lambda b : not b, 
     'TensorOpts.lighting'       : lambda b : not b, 
     'LabelOpts.lut'             : _lutTrans,
-    'SHOpts.lighting'           : lambda b : not b,
+    # 'SHOpts.lighting'           : lambda b : not b,
     'SHOpts.neuroFlip'          : lambda b : not b, 
 })
 """This dictionary defines any transformations for command line options
