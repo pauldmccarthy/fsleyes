@@ -94,7 +94,7 @@ def updateShaderState(self):
     lightPos /= np.sqrt(np.sum(lightPos ** 2))
 
     shape = image.shape[:3]
-    xFlip = opts.neuroFlip and image.isNeurological()
+    xFlip = opts.neuroOrientFlip and image.isNeurological()
 
     if   opts.colourMode == 'direction': colourMode = 0
     elif opts.colourMode == 'radius':    colourMode = 1

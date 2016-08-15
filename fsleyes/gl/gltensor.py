@@ -166,7 +166,7 @@ class GLTensor(glvector.GLVector):
         opts = self.displayOpts
 
         opts.addListener('lighting',         name, self.asyncUpdateShaderState)
-        opts.addListener('neuroFlip',        name, self.asyncUpdateShaderState)
+        opts.addListener('neuroOrientFlip',  name, self.asyncUpdateShaderState)
         opts.addListener('tensorScale',      name, self.asyncUpdateShaderState)
         opts.addListener('tensorResolution',
                          name,
@@ -183,7 +183,7 @@ class GLTensor(glvector.GLVector):
         opts = self.displayOpts
         
         opts.removeListener('lighting',         name)
-        opts.removeListener('neuroFlip',        name)
+        opts.removeListener('neuroOrientFlip',  name)
         opts.removeListener('tensorResolution', name)
         opts.removeListener('tensorScale',      name)
 

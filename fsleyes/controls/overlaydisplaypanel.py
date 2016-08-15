@@ -306,7 +306,7 @@ _DISPLAY_PROPS = td.TypeDict({
                         'interpolation'],
     'LineVectorOpts' : ['directed',
                         'unitLength',
-                        'neuroFlip',
+                        'neuroOrientFlip',
                         'resolution',
                         'lineWidth',
                         'lengthScale'],
@@ -316,7 +316,7 @@ _DISPLAY_PROPS = td.TypeDict({
                         'ModelOpts.refImage',
                         'ModelOpts.coordSpace'],
     'TensorOpts'     : ['lighting',
-                        'neuroFlip',
+                        'neuroOrientFlip',
                         'tensorResolution',
                         'tensorScale'],
     'LabelOpts'      : ['lut',
@@ -327,7 +327,7 @@ _DISPLAY_PROPS = td.TypeDict({
     'SHOpts'         : ['resolution',
                         'shResolution',
                         'shOrder',
-                        'neuroFlip',
+                        'neuroOrientFlip',
                         'lighting',
                         'size',
                         'radiusThreshold',
@@ -469,15 +469,15 @@ _DISPLAY_WIDGETS = td.TypeDict({
         labels=strings.choices['VolumeOpts.interpolation']),
 
     # LineVectorOpts
-    'LineVectorOpts.directed'    : props.Widget('directed'),
-    'LineVectorOpts.unitLength'  : props.Widget('unitLength'),
-    'LineVectorOpts.neuroFlip'   : props.Widget('neuroFlip'),
-    'LineVectorOpts.resolution'  : props.Widget('resolution',
-                                                showLimits=False),
-    'LineVectorOpts.lineWidth'   : props.Widget('lineWidth',
-                                                showLimits=False),
-    'LineVectorOpts.lengthScale' : props.Widget('lengthScale',
-                                                showLimits=False),
+    'LineVectorOpts.directed'        : props.Widget('directed'),
+    'LineVectorOpts.unitLength'      : props.Widget('unitLength'),
+    'LineVectorOpts.neuroOrientFlip' : props.Widget('neuroOrientFlip'),
+    'LineVectorOpts.resolution'      : props.Widget('resolution',
+                                                    showLimits=False),
+    'LineVectorOpts.lineWidth'       : props.Widget('lineWidth',
+                                                    showLimits=False),
+    'LineVectorOpts.lengthScale'     : props.Widget('lengthScale',
+                                                    showLimits=False),
 
     # ModelOpts
     'ModelOpts.colour'       : props.Widget('colour'),
@@ -493,7 +493,7 @@ _DISPLAY_WIDGETS = td.TypeDict({
         
     # TensorOpts
     'TensorOpts.lighting'         : props.Widget('lighting'),
-    'TensorOpts.neuroFlip'        : props.Widget('neuroFlip'),
+    'tensorOpts.neuroOrientFlip'  : props.Widget('neuroOrientFlip'),
     'TensorOpts.tensorResolution' : props.Widget(
         'tensorResolution',
         showLimits=False,
@@ -522,7 +522,7 @@ _DISPLAY_WIDGETS = td.TypeDict({
         spin=False,
         showLimits=False),
     'SHOpts.shOrder'         : props.Widget('shOrder'), 
-    'SHOpts.neuroFlip'       : props.Widget('neuroFlip'), 
+    'SHOpts.neuroOrientFlip' : props.Widget('neuroOrientFlip'), 
     'SHOpts.lighting'        : props.Widget('lighting'), 
     'SHOpts.size'            : props.Widget(
         'size',

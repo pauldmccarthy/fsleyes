@@ -47,6 +47,8 @@ def init(self):
     
     self.shader = None
 
+    name = self.name
+
     compileShaders(   self)
     updateShaderState(self)
 
@@ -60,12 +62,12 @@ def init(self):
     # the display<->voxel transformation
     # matrices whenever the transform
     # changes.
-    self.displayOpts.addListener('neuroFlip',   self.name, update, weak=False)
-    self.displayOpts.addListener('directed',    self.name, update, weak=False)
-    self.displayOpts.addListener('unitLength',  self.name, update, weak=False)
-    self.displayOpts.addListener('lengthScale', self.name, update, weak=False)
+    self.displayOpts.addListener('neuroOrientFlip', name, update, weak=False)
+    self.displayOpts.addListener('directed',        name, update, weak=False)
+    self.displayOpts.addListener('unitLength',      name, update, weak=False)
+    self.displayOpts.addListener('lengthScale',     name, update, weak=False)
     self.displayOpts.addListener('transform',
-                                 self.name,
+                                 name,
                                  update,
                                  overwrite=True,
                                  weak=False)
@@ -74,11 +76,11 @@ def init(self):
 def destroy(self):
     """Deletes the vertex/fragment shaders. """
 
-    self.displayOpts.removeListener('neuroFlip',   self.name)
-    self.displayOpts.removeListener('directed',    self.name)
-    self.displayOpts.removeListener('unitLength',  self.name)
-    self.displayOpts.removeListener('lengthScale', self.name)
-    self.displayOpts.removeListener('transform',   self.name)
+    self.displayOpts.removeListener('neuroOrientFlip', self.name)
+    self.displayOpts.removeListener('directed',        self.name)
+    self.displayOpts.removeListener('unitLength',      self.name)
+    self.displayOpts.removeListener('lengthScale',     self.name)
+    self.displayOpts.removeListener('transform',       self.name)
     
     self.shader.destroy()
  
@@ -111,7 +113,7 @@ def updateShaderState(self):
     imageDims   = image.pixdim[:3]
     d2vMat      = opts.getTransform('display', 'voxel')
     v2dMat      = opts.getTransform('voxel',   'display')
-    xFlip       = image.isNeurological() and opts.neuroFlip
+    xFlip       = opts.neuroOrientFlip and image.isNeurological()
 
     changed |= shader.set('vectorTexture',   4)
     changed |= shader.set('displayToVoxMat', d2vMat)
