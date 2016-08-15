@@ -485,9 +485,6 @@ def slice2D(dataShape,
 
       - A ``N*3`` ``numpy.float32`` array containing the voxel coordinates
         that correspond to the vertex locations.
-
-      - A ``N*3`` ``numpy.float32`` array containing the texture coordinates
-        that correspond to the voxel coordinates.
     """
 
     zax        = 3 - xax - yax
@@ -533,19 +530,11 @@ def slice2D(dataShape,
     # coordinates to map to the effective range [0, 1]
     if origin == 'centre':
         voxCoords = voxCoords + 0.5
-        texCoords = voxCoords / dataShape
-
-    # If the origin is the voxel corner, we still need
-    # to offset the texture coordinates, as the voxel
-    # coordinate range [-0.5, shape-0.5] must be scaled
-    # to the texture coordinate range [0.0, 1.0].
-    elif origin == 'corner':
-        texCoords = (voxCoords + 0.5) / dataShape
         
-    else:
+    elif origin != 'corner':
         raise ValueError('Unrecognised origin: {}'.format(origin))
 
-    return vertices, voxCoords, texCoords
+    return vertices, voxCoords
 
 
 def subsample(data, resolution, pixdim=None, volume=None):

@@ -551,13 +551,14 @@ class VoxelSelection(AnnotationObject):
         yax   = self.yax
         shape = self.selection.selection.shape
 
-        verts, _, texs = glroutines.slice2D(shape,
-                                            xax,
-                                            yax,
-                                            zpos,
-                                            self.voxToDisplayMat,
-                                            self.displayToVoxMat)
+        verts, voxs = glroutines.slice2D(shape,
+                                         xax,
+                                         yax,
+                                         zpos,
+                                         self.voxToDisplayMat,
+                                         self.displayToVoxMat)
 
+        texs  = voxs / shape
         verts = np.array(verts, dtype=np.float32).ravel('C')
         texs  = np.array(texs,  dtype=np.float32).ravel('C')
 

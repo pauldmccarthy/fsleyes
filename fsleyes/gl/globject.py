@@ -479,7 +479,7 @@ class GLImageObject(GLObject):
             corresponding to each vertex
         """
 
-        vertices, voxCoords, texCoords = glroutines.slice2D(
+        vertices, voxCoords = glroutines.slice2D(
             self.image.shape[:3],
             self.xax,
             self.yax,
@@ -490,6 +490,10 @@ class GLImageObject(GLObject):
 
         if xform is not None: 
             vertices = transform.transform(vertices, xform)
+
+        texCoords = transform.transform(
+            voxCoords,
+            self.displayOpts.getTransform('voxel', 'texture'))
 
         return vertices, voxCoords, texCoords 
 
