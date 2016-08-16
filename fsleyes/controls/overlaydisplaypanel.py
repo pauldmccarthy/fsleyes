@@ -493,7 +493,7 @@ _DISPLAY_WIDGETS = td.TypeDict({
         
     # TensorOpts
     'TensorOpts.lighting'         : props.Widget('lighting'),
-    'tensorOpts.neuroOrientFlip'  : props.Widget('neuroOrientFlip'),
+    'TensorOpts.neuroOrientFlip'  : props.Widget('neuroOrientFlip'),
     'TensorOpts.tensorResolution' : props.Widget(
         'tensorResolution',
         showLimits=False,

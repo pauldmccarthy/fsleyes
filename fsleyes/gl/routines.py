@@ -505,13 +505,17 @@ def slice2D(dataShape,
         # clamp the bounding box limits to the
         # nearest voxel boundary to preserve
         # this alignment.
+
+        # Voxel lengths along x/y axes
         xvlen  = (xmax - xmin) / dataShape[xax]
         yvlen  = (ymax - ymin) / dataShape[yax]
-        
-        bbxmin = xmin + np.floor((bbxmin - xmin) / xvlen)
-        bbxmax = xmin + np.ceil( (bbxmax - xmin) / xvlen)
-        bbymin = ymin + np.floor((bbymin - ymin) / yvlen)
-        bbymax = ymin + np.ceil( (bbymax - ymin) / yvlen)
+
+        # Clamp the bbox limits to the
+        # nearest voxel boundaries
+        bbxmin = xmin + np.floor((bbxmin - xmin) / xvlen) * xvlen
+        bbxmax = xmin + np.ceil( (bbxmax - xmin) / xvlen) * xvlen
+        bbymin = ymin + np.floor((bbymin - ymin) / yvlen) * yvlen
+        bbymax = ymin + np.ceil( (bbymax - ymin) / yvlen) * yvlen
         
         xmin = max((xmin, bbxmin))
         xmax = min((xmax, bbxmax))

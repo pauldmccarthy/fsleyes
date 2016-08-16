@@ -260,7 +260,7 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
         # pixdim space only if the image
         # is in neurological orientation
         if image.isNeurological():
-            x               = image.shape[0]
+            x               = (image.shape[0] - 1) * image.pixdim[0]
             flip            = transform.scaleOffsetXform([-1, 1, 1], [x, 0, 0])
             voxToPixFlipMat = transform.concat(voxToPixFlipMat, flip)
 
