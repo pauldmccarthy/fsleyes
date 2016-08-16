@@ -482,6 +482,7 @@ class GLImageObject(GLObject):
         opts   = self.displayOpts
         v2dMat = opts.getTransform('voxel',   'display')
         d2vMat = opts.getTransform('display', 'voxel')
+        v2tMat = opts.getTransform('voxel',   'texture')
 
         vertices, voxCoords = glroutines.slice2D(
             self.image.shape[:3],
@@ -500,36 +501,11 @@ class GLImageObject(GLObject):
         # axis. We do this to avoid rounding
         # bias when the display Z position is
         # on a voxel boundary.
-        if self.displayOpts.interpolation == 'none':
+        if opts.interpolation == 'none':
+            voxCoords = opts.roundVoxels(voxCoords,
+                                         daxes=[self.zax])
 
-            # We have to round the voxel coordaintes
-            # carefully, depending on the orientation
-            # of the voxel axis w.r.t. the display axis.
-            # We want to round in the same direction
-            # in the display coordinate system, regardless
-            # of the voxel orientation. So we check the
-            # voxel orientation, and round down or up
-            # accordingly.
-            # 
-            # This is primarily to handle the scenario
-            # where we are displaying two aligned images,
-            # but one which is radiological and the other
-            # neurological. If we don't do this, and the
-            # display coordinate Z position is right on a
-            # voxel boundary, the resulting texture
-            # coordinates will cause OpenGL to display
-            # slices that are off-by-one in the neuro 
-            # image.
-            voxAx = self.image.axisMapping(v2dMat)[self.zax]
-
-            if voxAx < 0:
-                voxCoords[:, self.zax] = np.floor(voxCoords[:, self.zax] + 0.5)
-            else:
-                voxCoords[:, self.zax] = np.ceil( voxCoords[:, self.zax] - 0.5)
-
-        texCoords = transform.transform(
-            voxCoords,
-            self.displayOpts.getTransform('voxel', 'texture'))
+        texCoords = transform.transform(voxCoords, v2tMat)
 
         return vertices, voxCoords, texCoords 
 
@@ -583,14 +559,7 @@ class GLImageObject(GLObject):
         voxels[:, self.zax] = zpos
 
         if space == 'voxel':
-
-            # See comments about voxel orientation
-            # in generateVertices above
-            voxAxes  = self.image.axisMapping(v2dMat)
             voxels = transform.transform(voxels, d2vMat)
-
-            for ax, ornt in enumerate(voxAxes):
-                if ornt < 0: voxels[:, ax] = np.floor(voxels[:, ax] + 0.5)
-                else:        voxels[:, ax] = np.ceil( voxels[:, ax] - 0.5)
+            voxels = opts.roundVoxels(voxels)
 
         return voxels

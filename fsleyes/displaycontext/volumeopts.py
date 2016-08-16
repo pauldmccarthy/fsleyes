@@ -45,15 +45,14 @@ property.
 
 
 Regardless of the space in which the ``Nifti1`` is displayed , the
-voxel-to-display space transformation assumes that integer voxel coordinates
-correspond to the centre of the voxel in the display coordinate system. In
-other words, a voxel at location::
+voxel-to-display space transformation (and in general, all of FSLeyes) assumes
+that integer voxel coordinates correspond to the centre of the voxel in the
+display coordinate system. In other words, a voxel at location::
 
     [x, y, z]
 
 
-will be transformed such that, in the display coordinate system, it occupies
-the space that corresponds to::
+is assumed to occupy the space that corresponds to::
 
     [x-0.5 - x+0.5, y-0.5 - y+0.5, z-0.5 - z+0.5]
 
@@ -466,6 +465,91 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
         return (0, 0, 0), (0, 0, 0)
 
 
+    def roundVoxels(self, voxels, daxes=None):
+        """Round the given voxel coordinates to integers. This is a
+        surprisingly complicated operation.
+        
+        FSLeyes and the NIFTI standard map integer voxel coordinates to the
+        voxel centre. For example, a voxel [3, 4, 5] fills the space::
+        
+            [2.5-3.5, 3.5-4.5, 4.5-5.5].
+
+        
+        So all we need to do is round to the nearest integer. But there are a
+        few problems with breaking ties when rounding...
+
+        
+        The numpy.round function breaks ties (e.g. 7.5) by rounding to the
+        nearest *even* integer, which can cause funky behaviour.  So instead
+        of using numpy.round, we take floor(x+0.5), to force consistent
+        behaviour (i.e. always rounding central values up).
+
+        
+        The next problem is that we have to round the voxel coordaintes
+        carefully, depending on the orientation of the voxel axis w.r.t. the
+        display axis. We want to round in the same direction in the display
+        coordinate system, regardless of the voxel orientation. So we need to
+        check the orientation of the voxel axis, and round down or up
+        accordingly.
+
+        
+        This is to handle scenarios where we have two anatomically aligned
+        images, but with opposing storage orders (e.g. one stored
+        neurologically, and one stored radiologically). If we have such
+        images, and the display location is on a voxel boundary, we want the
+        voxel coordinates for one image to be rounded in the same anatomical
+        direction (i.e. the same direction in the display coordinate
+        system). Otherwise the same display location will map to mis-aligned
+        voxels in the two images, because the voxel coordinate rounding will
+        move in anatomically opposing directions.
+
+
+        This method also prevents coordinates that are close to 0 from being
+        set to -1, and coordinates that are close to the axis size from being
+        set to (size + 1). In other words, voxel coordinates which are on the
+        low or high boundaries will be rounded so as to be valid voxel
+        coordinates.
+
+        :arg voxels: A ``(N, 3)`` ``numpy`` array containing the voxel
+                     coordinates to be rounded.
+
+        :arg daxes:  Display coordinate system axes along which to round the
+                     coordinates.
+
+        :returns:    The ``voxels``, rounded appropriately.
+        """
+
+        if daxes is None:
+            daxes = range(3)
+
+        shape = self.overlay.shape[:3]
+        ornts = self.overlay.axisMapping(self.getTransform('voxel', 'display'))
+
+        for dax in daxes:
+
+            ornt = ornts[dax]
+            vax  = abs(ornt) - 1
+            vals = voxels[:, vax]
+
+            if ornt < 0:
+                vals                       = vals + 0.5
+                vals[np.isclose(vals,  0)] = 0
+                vals                       = np.floor(vals)
+                
+            else:
+                vals                       = vals - 0.5
+                vals[np.isclose(vals, -1)] = 0
+                vals                       = np.ceil(vals) 
+
+            # Clamp high voxel coordinates
+            closeHigh = np.isclose(vals, shape[vax])
+            vals[closeHigh] = shape[vax] - 1
+
+            voxels[:, vax] = vals
+
+        return voxels
+
+
     def transformCoords(self, coords, from_, to_, vround=False):
         """Transforms the given coordinates from ``from_`` to ``to_``.
 
@@ -492,36 +576,7 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
         
         # Round to integer voxel coordinates?
         if to_ == 'voxel' and vround:
-
-            # The transformation matrices treat integer
-            # voxel coordinates as the voxel centre (e.g.
-            # a voxel [3, 4, 5] fills the space:
-            # 
-            # [2.5-3.5, 3.5-4.5, 4.5-5.5].
-            #
-            # So all we need to do is round to the
-            # nearest integer.
-            #
-            # Note that the numpy.round function breaks
-            # ties (e.g. 7.5) by rounding to the nearest
-            # *even* integer, which can cause funky
-            # behaviour. So we take (floor(x)+0.5) instead
-            # of rounding, to force consistent behaviour
-            # (i.e. always rounding central values up).
-            #
-            # We'll also avoid flooring coordinates that
-            # are close to 0 to -1, by clamping them here.
-            coords                        = coords + 0.5
-            coords[np.isclose(coords, 0)] = 0
-            coords                        = np.floor(coords)
-
-            # Clamp the higher voxel coordinates just
-            # like we did to near-0 coordinates
-            shape = self.overlay.shape[:3]
-            for ax in range(3):
-                
-                closeHigh = np.isclose(coords[..., ax], shape[ax])
-                coords[closeHigh, ax] = shape[ax] - 1
+            coords = self.roundVoxels(coords)
 
         return coords
 
