@@ -218,6 +218,7 @@ def draw(self, zpos, xform=None, bbox=None):
     shader.setAtt('voxelID',         voxIdxs, divisor=1)
     shader.set(   'voxToDisplayMat', xform)
     shader.set(   'radTexShape',     radTexShape)
+    shader.set(   'radXform',        self.radTexture.voxValXform)
 
     shader.loadAtts()
     

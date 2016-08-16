@@ -41,6 +41,13 @@ uniform vec3 radTexShape;
 
 
 /*
+ * Transformation matrix from radius texture 
+ * values to their original values.
+ */
+uniform mat4 radXform;
+
+
+/*
  * Enable/disable lighting.
  */
 uniform bool lighting;
@@ -106,6 +113,8 @@ float adjustPosition(inout vec3 pos) {
     vec3 radIdx  = roll3D(flatIdx, radTexShape);
     radIdx       = (radIdx + 0.5) / radTexShape;
     float radius = texture3D(radTexture, radIdx).r;
+
+    radius = radius * radXform[0].x + radXform[3].x;
 
     /* Neurological flip if necessary */
     if (xFlip)
