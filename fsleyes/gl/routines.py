@@ -494,10 +494,29 @@ def slice2D(dataShape,
         dataShape, voxToDisplayMat, yax, origin, boundary=None)
 
     if bbox is not None:
-        xmin = max((xmin, bbox[xax][0]))
-        xmax = min((xmax, bbox[xax][1]))
-        ymin = max((ymin, bbox[yax][0]))
-        ymax = min((ymax, bbox[yax][1])) 
+
+        bbxmin = bbox[xax][0]
+        bbxmax = bbox[xax][1]
+        bbymin = bbox[yax][0]
+        bbymax = bbox[yax][1]
+
+        # The returned vertices and voxCoords
+        # have to be aligned, so we need to
+        # clamp the bounding box limits to the
+        # nearest voxel boundary to preserve
+        # this alignment.
+        xvlen  = (xmax - xmin) / dataShape[xax]
+        yvlen  = (ymax - ymin) / dataShape[yax]
+        
+        bbxmin = xmin + np.floor((bbxmin - xmin) / xvlen)
+        bbxmax = xmin + np.ceil( (bbxmax - xmin) / xvlen)
+        bbymin = ymin + np.floor((bbymin - ymin) / yvlen)
+        bbymax = ymin + np.ceil( (bbymax - ymin) / yvlen)
+        
+        xmin = max((xmin, bbxmin))
+        xmax = min((xmax, bbxmax))
+        ymin = max((ymin, bbymin))
+        ymax = min((ymax, bbymax))
 
     if geometry == 'triangles':
 
@@ -523,16 +542,6 @@ def slice2D(dataShape,
     vertices[:, zax] = zpos
 
     voxCoords = transform.transform(vertices, displayToVoxMat)
-
-    # offset by 0.5, because voxel coordinates are by
-    # default centered at 0 (i.e. the space of a voxel
-    # lies in the range [-0.5, 0.5]), but we want voxel
-    # coordinates to map to the effective range [0, 1]
-    if origin == 'centre':
-        voxCoords = voxCoords + 0.5
-        
-    elif origin != 'corner':
-        raise ValueError('Unrecognised origin: {}'.format(origin))
 
     return vertices, voxCoords
 

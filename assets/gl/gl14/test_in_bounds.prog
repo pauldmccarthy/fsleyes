@@ -12,14 +12,14 @@
 TEMP workspace;
 
 # If any of the voxel coordinates are
-# less than 0.01, clear the voxel colour
+# less than -0.51, clear the voxel colour
 MOV workspace, voxCoord;
-ADD workspace, workspace, { 0.01, 0.01, 0.01, 999999999999.0};
+ADD workspace, workspace, { 0.51, 0.51, 0.51, 999999999999.0};
 KIL workspace;
 
 # If any voxel coordinates are greater than
-# the image shape (+ 0.01), clear the voxel colour
+# the image shape (- 0.49), clear the voxel colour
 MOV workspace, imageShape;
 SUB workspace, workspace, voxCoord;
-ADD workspace, workspace, { 0.01, 0.01, 0.01, 999999999999.0};
+ADD workspace, workspace, { 0.49, 0.49, 0.49, 999999999999.0};
 KIL workspace;
