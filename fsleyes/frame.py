@@ -534,12 +534,19 @@ class FSLEyesFrame(wx.Frame):
 
         for actionName, actionObj in actionz:
             if isinstance(actionObj, actions.ToggleAction):
-                toggleActions .append((actionName, actionObj))
+                toggleActions .append((actionName, actionObj, wx.ITEM_CHECK))
             else:
-                regularActions.append((actionName, actionObj))
+                regularActions.append((actionName, actionObj, wx.ITEM_NORMAL))
 
-        # Non-toggle actions
-        for actionName, actionObj in regularActions:
+        actionz = regularActions + [('sep', None, None)] + toggleActions
+
+        for actionName, actionObj, itemType in actionz:
+
+            if actionName == 'sep'     and \
+               len(regularActions) > 0 and \
+               len(toggleActions)  > 0:
+                menu.AppendSeparator()
+                continue
 
             title    = strings.actions[panel, actionName]
             shortcut = shortcuts.actions.get((panel, actionName))
@@ -550,34 +557,13 @@ class FSLEyesFrame(wx.Frame):
             menuItem = menu.Append(
                 wx.ID_ANY,
                 title,
-                kind=wx.ITEM_NORMAL)
-            
+                kind=itemType)
+
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
-        # Separator
-        if len(regularActions) > 0 and len(toggleActions) > 0:
-            menu.AppendSeparator()
-
-        # Toggle actions
-        for actionName, actionObj in toggleActions:
-
-            title    = strings.actions[panel, actionName]
-            shortcut = shortcuts.actions.get((panel, actionName))
-
-            if shortcut is not None:
-                title = '{}\t{}'.format(title, shortcut) 
-
-            menuItem = menu.Append(
-                wx.ID_ANY,
-                title,
-                kind=wx.ITEM_CHECK)
-            
-            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
-
-        # We add a 'Close' action to
-        # the menu for every panel, but
-        # put another separator before
-        # it
+        # We add a 'Close' action to the
+        # menu for every panel, but put
+        # another separator before it
         if len(regularActions) > 0 or len(toggleActions) > 0:
             menu.AppendSeparator()
 
