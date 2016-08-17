@@ -299,7 +299,7 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
         
         if opts.transform == 'custom':
             dsImg = self._displayCtx.displaySpace
-            if isinstance(dsImg, fslimage.Nifti1):
+            if isinstance(dsImg, fslimage.Nifti):
                 dsDisplay    = self._displayCtx.getDisplay(dsImg)
                 displaySpace = displaySpace.format(dsDisplay.name)
             else:
@@ -360,10 +360,10 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
                 section=dimSect)
 
         info.addInfo(strings.nifti['qform_code'],
-                     strings.anatomy['Nifti1', 'space', qformCode],
+                     strings.anatomy['Nifti', 'space', qformCode],
                      section=xformSect)
         info.addInfo(strings.nifti['sform_code'],
-                     strings.anatomy['Nifti1', 'space', sformCode],
+                     strings.anatomy['Nifti', 'space', sformCode],
                      section=xformSect)
 
         if qformCode != constants.NIFTI_XFORM_UNKNOWN:
@@ -388,8 +388,8 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
             xform  = opts.getTransform('world', 'id')
             orient = overlay.getOrientation(i, xform)
             orient = '{} - {}'.format(
-                strings.anatomy['Nifti1', 'lowlong',  orient],
-                strings.anatomy['Nifti1', 'highlong', orient])
+                strings.anatomy['Nifti', 'lowlong',  orient],
+                strings.anatomy['Nifti', 'highlong', orient])
             info.addInfo(strings.nifti['voxOrient.{}'.format(i)],
                          orient,
                          section=orientSect)
@@ -398,8 +398,8 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
             xform  = np.eye(4)
             orient = overlay.getOrientation(i, xform)
             orient = '{} - {}'.format(
-                strings.anatomy['Nifti1', 'lowlong',  orient],
-                strings.anatomy['Nifti1', 'highlong', orient])
+                strings.anatomy['Nifti', 'lowlong',  orient],
+                strings.anatomy['Nifti', 'highlong', orient])
             info.addInfo(strings.nifti['worldOrient.{}'.format(i)],
                          orient,
                          section=orientSect)

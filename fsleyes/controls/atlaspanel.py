@@ -275,7 +275,7 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
         """
 
         niftis = [o for o in self._overlayList
-                  if (isinstance(o, fslimage.Nifti1) and
+                  if (isinstance(o, fslimage.Nifti) and
                       o.getXFormCode() == constants.NIFTI_XFORM_MNI_152)]
 
         # No overlays to match resolution against

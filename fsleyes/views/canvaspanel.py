@@ -539,7 +539,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         If the currently selected overlay (see
         :attr:`.DisplayContext.selectedOverlay`) is a 4D :class:`.Image` being
         displayed as a ``volume`` (see the :class:`.VolumeOpts` class), the
-        :attr:`.Nifti1Opts.volume` property is incremented.
+        :attr:`.NiftiOpts.volume` property is incremented.
         """
 
 
@@ -555,8 +555,8 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         opts = self._displayCtx.getOpts(overlay)
         
-        if not isinstance(overlay, fslimage.Nifti1) or \
-           len(overlay.shape) != 4                  or \
+        if not isinstance(overlay, fslimage.Nifti) or \
+           len(overlay.shape) != 4                 or \
            not isinstance(opts, displayctx.VolumeOpts):
             self.__nextMovieFrame()
             return

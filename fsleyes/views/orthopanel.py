@@ -550,7 +550,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         
     def __getLabels(self, refImage):
         """Generates some orientation labels to use for the given reference
-        image (assumed to be a :class:`.Nifti1` overlay).
+        image (assumed to be a :class:`.Nifti` overlay).
         """
         
         opts = self._displayCtx.getOpts(refImage)
@@ -585,12 +585,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             yorient    = refImage.getOrientation(1, xform)
             zorient    = refImage.getOrientation(2, xform)
 
-            xlo        = strings.anatomy['Nifti1', 'lowshort',  xorient]
-            ylo        = strings.anatomy['Nifti1', 'lowshort',  yorient]
-            zlo        = strings.anatomy['Nifti1', 'lowshort',  zorient]
-            xhi        = strings.anatomy['Nifti1', 'highshort', xorient]
-            yhi        = strings.anatomy['Nifti1', 'highshort', yorient]
-            zhi        = strings.anatomy['Nifti1', 'highshort', zorient]
+            xlo        = strings.anatomy['Nifti', 'lowshort',  xorient]
+            ylo        = strings.anatomy['Nifti', 'lowshort',  yorient]
+            zlo        = strings.anatomy['Nifti', 'lowshort',  zorient]
+            xhi        = strings.anatomy['Nifti', 'highshort', xorient]
+            yhi        = strings.anatomy['Nifti', 'highshort', yorient]
+            zhi        = strings.anatomy['Nifti', 'highshort', zorient]
 
         return (xlo, ylo, zlo, xhi, yhi, zhi), vertOrient
 

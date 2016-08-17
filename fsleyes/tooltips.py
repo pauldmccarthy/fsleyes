@@ -56,16 +56,16 @@ properties = TypeDict({
 
     # Overlay DisplayOpts
 
-    'Nifti1Opts.volume'     : 'The volume number (for 4D images).',
-    'Nifti1Opts.resolution' : 'Spatial display resolution, in mm.',
-    'Nifti1Opts.transform'  : 'The affine transformation matrix to apply '
-                              'to this image. You can choose to display '
-                              'the image without any transformation (as if '
-                              'the image voxels are 1mm isotropic); or you '
-                              'can choose to scale the voxels by the pixdim '
-                              'values in the NIFTI header; or you can choose '
-                              'to apply the affine transformation as defined '
-                              'in the NIFTI header.',
+    'NiftiOpts.volume'     : 'The volume number (for 4D images).',
+    'NiftiOpts.resolution' : 'Spatial display resolution, in mm.',
+    'NiftiOpts.transform'  : 'The affine transformation matrix to apply '
+                             'to this image. You can choose to display '
+                             'the image without any transformation (as if '
+                             'the image voxels are 1mm isotropic); or you '
+                             'can choose to scale the voxels by the pixdim '
+                             'values in the NIFTI header; or you can choose '
+                             'to apply the affine transformation as defined '
+                             'in the NIFTI header.',
 
     'VolumeOpts.displayRange'    : 'Data display range - the low value '
                                    'corresponds to the low colour, and the '
@@ -280,7 +280,7 @@ properties = TypeDict({
                               '(coronal in MNI space).',
     'OrthoOpts.showZCanvas' : 'Show / hide the Z canvas '
                               '(axial in MNI space).',
-    'OrthoOpts.showLabels'  : 'If the currently selected overlay is a NIFTI1 '
+    'OrthoOpts.showLabels'  : 'If the currently selected overlay is a NIFTI '
                               'image, show / hide anatomical orientation '
                               'labels.',
     'OrthoOpts.layout'      : 'How to lay out each of the three canvases.',
@@ -352,7 +352,7 @@ properties = TypeDict({
 
     'TimeSeriesPanel.usePixdim'        : 'If checked, the x axis data is '
                                          'scaled by the time dimension pixdim '
-                                         'value specified in the NIFTI1 '
+                                         'value specified in the NIFTI '
                                          'header.',
     'TimeSeriesPanel.plotMelodicICs'   : 'If checked, the component time '
                                          'courses are plotted for Melodic '

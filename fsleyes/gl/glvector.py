@@ -26,7 +26,7 @@ from . import                 globject
 
 class GLVectorBase(globject.GLImageObject):
     """The :class:`GLVectorBase` class encapsulates the logic for rendering
-    :class:`.Nifti1` overlay types which represent directional data (and which
+    :class:`.Nifti` overlay types which represent directional data (and which
     are described by a :class:`.VectorOpts` instance).  The ``GLVectorBase``
     class is a sub-class of :class:`.GLImageObject`.
 
@@ -97,7 +97,7 @@ class GLVectorBase(globject.GLImageObject):
             instances, so the textures and geometry can be updated when
             necessary.
 
-        :arg overlay:        A :class:`.Nifti1` object.
+        :arg overlay:        A :class:`.Nifti` object.
         
         :arg display:        A :class:`.Display` object which describes how the
                              overlay is to be displayed.
@@ -309,7 +309,7 @@ class GLVectorBase(globject.GLImageObject):
         """Called when the :attr:`.VectorOpts.modulateImage`,
         :attr:`.VectorOpts.clipImage`, or :attr:`.VectorOpts.colourImage`
         properties change. Registers a listener with the
-        :attr:`.Nifti1Opts.volume` property of the modulate/clip/colour image,
+        :attr:`.NiftiOpts.volume` property of the modulate/clip/colour image,
         so the modulate/clip/colour textures can be updated when the image
         volume changes.
         """
@@ -351,7 +351,7 @@ class GLVectorBase(globject.GLImageObject):
     def deregisterAuxImage(self, which):
         """Called when the :attr:`.VectorOpts.modulateImage`,
         :attr:`.VectorOpts.clipImage` or :attr:`.VectorOpts.colourImage`
-        properties change.  Deregisters the :attr:`.Nifti1Opts.volume`
+        properties change.  Deregisters the :attr:`.NiftiOpts.volume`
         listener that was registered in :meth:`registerAuxImage`.
         """
 
@@ -851,7 +851,7 @@ class GLVector(GLVectorBase):
 
 
     def __resolutionChanged(self, *a):
-        """Called when the :attr:`.Nifti1Opts.resolution` property changes.
+        """Called when the :attr:`.NiftiOpts.resolution` property changes.
         Refreshes the image texture.
         """
         self.imageTexture.set(resolution=self.displayOpts.resolution)
@@ -860,7 +860,7 @@ class GLVector(GLVectorBase):
 
     def __syncChanged(self, *a):
         """Called when the synchronisation state of the
-        :attr:`.Nifti1Opts.resolution` property changes. Refreshes the image
+        :attr:`.NiftiOpts.resolution` property changes. Refreshes the image
         texture.
         """
         self.refreshImageTexture()

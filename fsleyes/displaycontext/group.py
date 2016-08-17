@@ -64,7 +64,7 @@ class OverlayGroup(props.HasProperties):
     
     _groupBindings = td.TypeDict({
         'Display'        : [],
-        'Nifti1Opts'     : ['volume'],
+        'NiftiOpts'      : ['volume'],
         'VolumeOpts'     : ['interpolation'],
         'LabelOpts'      : ['outline',
                             'outlineWidth'],
@@ -112,7 +112,7 @@ class OverlayGroup(props.HasProperties):
         # classes into the local namespace
         from fsleyes.displaycontext import \
             Display,        \
-            Nifti1Opts,     \
+            NiftiOpts,      \
             VolumeOpts,     \
             MaskOpts,       \
             VectorOpts,     \
@@ -136,9 +136,9 @@ class OverlayGroup(props.HasProperties):
                 
                 self.__hasBeenSet[clsName, propName] = False
 
-        # Special case - make sure that the Nifti1Opts
+        # Special case - make sure that the NiftiOpts
         # volume property is not constrained
-        self.setConstraint('Nifti1Opts_volume', 'maxval', six.MAXSIZE)
+        self.setConstraint('NiftiOpts_volume', 'maxval', six.MAXSIZE)
 
 
     def __copy__(self):

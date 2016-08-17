@@ -99,7 +99,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     The ``TimeSeriesPanel`` also has some functionality for
     :class:`.MelodicImage` overlays - a :class:`.MelodicTimeSeries` instance
     is used to plot the component time courses for the current component (as
-    defined by the :attr:`.Nifti1Opts.volume` property).
+    defined by the :attr:`.NiftiOpts.volume` property).
     """
 
     

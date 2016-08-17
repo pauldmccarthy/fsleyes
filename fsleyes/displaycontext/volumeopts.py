@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module defines the :class:`Nifti1Opts` and :class:`VolumeOpts` classes.
+"""This module defines the :class:`NiftiOpts` and :class:`VolumeOpts` classes.
 
 
 .. _volumeopts-coordinate-systems:
@@ -16,7 +16,7 @@ An important note on coordinate systems
 
 
 *FSLeyes* displays all overlays in a single coordinate system, referred
-throughout as the *display coordinate system*. However, :class:`.Nifti1`
+throughout as the *display coordinate system*. However, :class:`.Nifti`
 overlays can potentially be displayed in one of four coordinate systems:
 
 
@@ -47,7 +47,7 @@ Pixdim flip
 ^^^^^^^^^^^
 
 
-The :attr:`Nifti1Opts.transform` property controls how the image data is
+The :attr:`NiftiOpts.transform` property controls how the image data is
 transformed into the display coordinate system. It allows any of the above
 spaces to be specified (as ``id``, ``pixdim``, ``pixdim-flip``, or ``affine```
 respectively), and also allows a ``custom`` transformation to be specified
@@ -75,7 +75,7 @@ What is a voxel?
 ^^^^^^^^^^^^^^^^
 
 
-Regardless of the space in which the ``Nifti1`` is displayed , the
+Regardless of the space in which the ``Nifti`` is displayed , the
 voxel-to-display space transformation (and in general, all of FSLeyes) assumes
 that integer voxel coordinates correspond to the centre of the voxel in the
 display coordinate system. In other words, a voxel at location::
@@ -88,7 +88,7 @@ is assumed to occupy the space that corresponds to::
     [x-0.5 - x+0.5, y-0.5 - y+0.5, z-0.5 - z+0.5]
 
 
-For example, if the :attr:`Nifti1Opts.transform` property is set to ``id``, the
+For example, if the :attr:`NiftiOpts.transform` property is set to ``id``, the
 voxel::
 
     [2, 3, 4]
@@ -120,14 +120,14 @@ from . import display      as fsldisplay
 log = logging.getLogger(__name__)
 
 
-class Nifti1Opts(fsldisplay.DisplayOpts):
-    """The ``Nifti1Opts`` class describes how a :class:`.Nifti1` overlay
+class NiftiOpts(fsldisplay.DisplayOpts):
+    """The ``NiftiOpts`` class describes how a :class:`.Nifti` overlay
     should be displayed.
 
     
-    ``Nifti1Opts`` is the base class for a number of :class:`.DisplayOpts`
+    ``NiftiOpts`` is the base class for a number of :class:`.DisplayOpts`
     sub-classes - it contains display options which are common to all overlay
-    types that represent a NIFTI1 image.
+    types that represent a NIFTI image.
     """
 
     
@@ -162,7 +162,7 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
 
  
     def __init__(self, *args, **kwargs):
-        """Create a ``Nifti1Opts`` instance.
+        """Create a ``NiftiOpts`` instance.
 
         All arguments are passed through to the :class:`.DisplayOpts`
         constructor.
@@ -401,7 +401,7 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
 
         ``pixflip``     Equivalent to ``pixdim-flip``.
         
-        ``affine``      World coordinates, as defined by the NIFTI1
+        ``affine``      World coordinates, as defined by the NIFTI
                         ``qform``/``sform``. See :attr:`.Image.voxToWorldMat`.
 
         ``world``       Equivalent to ``affine``.
@@ -556,7 +556,7 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
     def getVoxel(self, xyz=None, clip=True, vround=True):
         """Calculates and returns the voxel coordinates corresponding to the
         given location (assumed to be in the display coordinate system) for
-        the :class:`.Nifti1` associated with this ``Nifti1Opts`` instance..
+        the :class:`.Nifti` associated with this ``NiftiOpts`` instance..
 
         :arg xyz:    Display space location to convert to voxels. If not
                      provided, the current :attr:`.DisplayContext.location`
@@ -600,8 +600,8 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
     def displayToStandardCoordinates(self, coords):
         """Overrides :meth:`.DisplayOpts.displayToStandardCoordinates`.
         Transforms the given display system coordinates into the world
-        coordinates of the :class:`.Nifti1` associated with this
-        ``Nifti1Opts`` instance.
+        coordinates of the :class:`.Nifti` associated with this
+        ``NiftiOpts`` instance.
         """
         return self.transformCoords(coords, 'display', 'world')
 
@@ -609,13 +609,13 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
     def standardToDisplayCoordinates(self, coords):
         """Overrides :meth:`.DisplayOpts.standardToDisplayCoordinates`.
         Transforms the given coordinates (assumed to be in the world
-        coordinate system of the ``Nifti1`` associated with this ``Nifti1Opts``
+        coordinate system of the ``Nifti`` associated with this ``NiftiOpts``
         instance) into the display coordinate system.
         """ 
         return self.transformCoords(coords, 'world', 'display')
 
 
-class VolumeOpts(Nifti1Opts):
+class VolumeOpts(NiftiOpts):
     """The ``VolumeOpts`` class defines options for displaying :class:`.Image`
     instances as regular 3D volumes.
 
@@ -757,12 +757,12 @@ class VolumeOpts(Nifti1Opts):
 
         self.displayRange.x = overlay.dataRange
         
-        Nifti1Opts.__init__(self,
-                            overlay,
-                            display,
-                            overlayList,
-                            displayCtx,
-                            **kwargs)
+        NiftiOpts.__init__(self,
+                           overlay,
+                           display,
+                           overlayList,
+                           displayCtx,
+                           **kwargs)
         
         # The displayRange property of every child VolumeOpts
         # instance is linked to the corresponding 
@@ -853,7 +853,7 @@ class VolumeOpts(Nifti1Opts):
 
 
     def destroy(self):
-        """Removes property listeners, and calls the :meth:`Nifti1Opts.destroy`
+        """Removes property listeners, and calls the :meth:`NiftiOpts.destroy`
         method.
         """
 
@@ -883,7 +883,7 @@ class VolumeOpts(Nifti1Opts):
             self.__linkRangesChanged(False, 0)
             self.__linkRangesChanged(False, 1)
 
-        Nifti1Opts.destroy(self)
+        NiftiOpts.destroy(self)
 
 
     @actions.action

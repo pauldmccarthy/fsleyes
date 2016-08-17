@@ -151,7 +151,7 @@ class OrthoViewProfile(profiles.Profile):
         ovl = self._displayCtx.getSelectedOverlay()
         
         if   ovl is None:                                       enable = False
-        elif not isinstance(ovl, fslimage.Nifti1):              enable = False
+        elif not isinstance(ovl, fslimage.Nifti):               enable = False
         elif ovl.getXFormCode != constants.NIFTI_XFORM_MNI_152: enable = False
         
         self.centreCursorMNI152.enable = enable
@@ -220,9 +220,9 @@ class OrthoViewProfile(profiles.Profile):
         according to the directions specified by the ``x``, ``y``, and ``z``
         arguments.
 
-        If the currently selected overlay is an :class:`.Nifti1` instance, the
+        If the currently selected overlay is an :class:`.Nifti` instance, the
         distance that a navigation operation should shift the display will
-        differ depending on the value of the :attr:`.Nifti1Opts.transform`
+        differ depending on the value of the :attr:`.NiftiOpts.transform`
         property. For example, if ``transform`` is ``id``, the display should
         be moved by one unit (which corresponds to one voxel). But if the
         ``transform`` is ``pixdim``, the display should be moved by one pixdim

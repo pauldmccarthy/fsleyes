@@ -72,7 +72,7 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
 .. autosummary::
    :nosignatures:
 
-   ~fsleyes.displaycontext.volumeopts.Nifti1Opts
+   ~fsleyes.displaycontext.volumeopts.NiftiOpts
    ~fsleyes.displaycontext.volumeopts.VolumeOpts
    ~fsleyes.displaycontext.maskopts.MaskOpts
    ~fsleyes.displaycontext.vectoropts.VectorOpts
@@ -146,7 +146,7 @@ from .group          import OverlayGroup
 from .sceneopts      import SceneOpts
 from .orthoopts      import OrthoOpts
 from .lightboxopts   import LightBoxOpts
-from .volumeopts     import Nifti1Opts
+from .volumeopts     import NiftiOpts
 from .volumeopts     import VolumeOpts
 from .maskopts       import MaskOpts
 from .vectoropts     import VectorOpts

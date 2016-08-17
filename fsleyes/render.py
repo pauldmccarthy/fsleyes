@@ -451,12 +451,12 @@ def buildLabelBitmaps(overlayList,
     if constants.ORIENT_UNKNOWN in [xorient, yorient, zorient]:
         fgColour = 'red'
 
-    xlo = strings.anatomy['Nifti1', 'lowshort',  xorient]
-    ylo = strings.anatomy['Nifti1', 'lowshort',  yorient]
-    zlo = strings.anatomy['Nifti1', 'lowshort',  zorient]
-    xhi = strings.anatomy['Nifti1', 'highshort', xorient]
-    yhi = strings.anatomy['Nifti1', 'highshort', yorient]
-    zhi = strings.anatomy['Nifti1', 'highshort', zorient]
+    xlo = strings.anatomy['Nifti', 'lowshort',  xorient]
+    ylo = strings.anatomy['Nifti', 'lowshort',  yorient]
+    zlo = strings.anatomy['Nifti', 'lowshort',  zorient]
+    xhi = strings.anatomy['Nifti', 'highshort', xorient]
+    yhi = strings.anatomy['Nifti', 'highshort', yorient]
+    zhi = strings.anatomy['Nifti', 'highshort', zorient]
 
     loLabels = [xlo, ylo, zlo]
     hiLabels = [xhi, yhi, zhi]

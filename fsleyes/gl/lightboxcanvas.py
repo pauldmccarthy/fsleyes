@@ -245,7 +245,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         zmin, zmax = opts.bounds.getRange(self.zax)
 
         # If the overlay does not have a
-        # reference NIFTI1 image, choose
+        # reference NIFTI image, choose
         # an arbitrary slice spacing. 
         if   overlay is None:            return (zmax - zmin) / 50.0
 
@@ -261,7 +261,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # to see what display space we're in
         displaySpace = displayCtx.displaySpace
 
-        if isinstance(displaySpace, fslimage.Nifti1):
+        if isinstance(displaySpace, fslimage.Nifti):
             return self.calcSliceSpacing(displaySpace)
         else:
             return min(overlay.pixdim[:3])

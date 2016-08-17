@@ -232,10 +232,10 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
     def __selectedOverlayChanged(self, *a):
         """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
 
-        If the currently selected overlay is a :class:`.Nifti1` instance, or
+        If the currently selected overlay is a :class:`.Nifti` instance, or
         has an associated reference image (see
         :meth:`.DisplayOpts.getReferenceImage`), a listener is registered on
-        the reference image :attr:`.Nifti1Opts.transform` property, so that the
+        the reference image :attr:`.NiftiOpts.transform` property, so that the
         :meth:`__transformChanged` method will be called when it changes.
         """
 
@@ -273,7 +273,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
 
     def __transformChanged(self, *a):
-        """Called when the :attr:`.Nifti1Opts.transform` property for the
+        """Called when the :attr:`.NiftiOpts.transform` property for the
         reference image of the currently selected overlay changes.
 
         Updates the :attr:`.LightBoxOpts.sliceSpacing` and

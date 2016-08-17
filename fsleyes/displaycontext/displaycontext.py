@@ -122,36 +122,36 @@ class DisplayContext(props.SyncableHasProperties):
 
     displaySpace = props.Choice(('pixdim', 'world'), default='pixdim')
     """The *space* in which overlays are displayed. This property globally
-    controls the :attr:`.Nifti1Opts.transform` property of all :class:`.Nifti1`
+    controls the :attr:`.NiftiOpts.transform` property of all :class:`.Nifti`
     overlays. It has three settings, described below.
 
     
     1. **Scaled voxel** space (a.k.a. ``pixdim``)
 
-       All :class:`.Nifti1` overlays are displayed with scaled voxels - the
-       :attr:`.Nifti1Opts.transform` property for every ``Nifti1`` overlay is
+       All :class:`.Nifti` overlays are displayed with scaled voxels - the
+       :attr:`.NiftiOpts.transform` property for every ``Nifti`` overlay is
        set to ``pixdim``.
     
     2. **World** space (a.k.a. ``world``)
 
-       All :class:`.Nifti1` overlays are displayed in the space defined by
-       their affine transformation matrix - the :attr:`.Nifti1Opts.transform`
-       property for every ``Nifti1`` overlay is set to ``affine``.
+       All :class:`.Nifti` overlays are displayed in the space defined by
+       their affine transformation matrix - the :attr:`.NiftiOpts.transform`
+       property for every ``Nifti`` overlay is set to ``affine``.
 
     3. **Reference image** space
 
-       A single :class:`.Nifti1` overlay is selected as a *reference* image,
-       and is displayed in scaled voxel space (:attr:`.Nifti1Opts.transform` is
-       set to ``pixdim``). All other ``Nifti1`` overlays are transformed into
-       this reference space - their :attr:`.Nifti1Opts.transform` property is
-       set to ``custom``, and their :attr:`.Nifti1Opts.customXform` matrix is
+       A single :class:`.Nifti` overlay is selected as a *reference* image,
+       and is displayed in scaled voxel space (:attr:`.NiftiOpts.transform` is
+       set to ``pixdim``). All other ``Nifti`` overlays are transformed into
+       this reference space - their :attr:`.NiftiOpts.transform` property is
+       set to ``custom``, and their :attr:`.NiftiOpts.customXform` matrix is
        set such that it transforms from the image voxel space to the scaled
        voxel space of the reference image.
 
-    .. note:: The :attr:`.Nifti1Opts.transform` property of any
-              :class:`.Nifti1` overlay can be set independently of this
+    .. note:: The :attr:`.NiftiOpts.transform` property of any
+              :class:`.Nifti` overlay can be set independently of this
               property. However, whenever *this* property changes, it will
-              change the ``transform`` property for every ``Nifti1``, in the
+              change the ``transform`` property for every ``Nifti``, in the
               manner described above.
     """
 
@@ -545,7 +545,7 @@ class DisplayContext(props.SyncableHasProperties):
         # just been added to the list,
         oldList  = self.__overlayList.getLastValue('overlays')[:]
         for overlay in self.__overlayList:
-            if isinstance(overlay, fslimage.Nifti1) and \
+            if isinstance(overlay, fslimage.Nifti) and \
                (overlay not in oldList):
                 self.__setTransform(overlay)
 
@@ -556,7 +556,7 @@ class DisplayContext(props.SyncableHasProperties):
             # Set the displaySpace to
             # the first new image
             for overlay in self.__overlayList:
-                if isinstance(overlay, fslimage.Nifti1):
+                if isinstance(overlay, fslimage.Nifti):
                     self.displaySpace = overlay
                     break
             
@@ -592,15 +592,15 @@ class DisplayContext(props.SyncableHasProperties):
         choices    = ['pixdim', 'world']
         
         for overlay in self.__overlayList:
-            if isinstance(overlay, fslimage.Nifti1):
+            if isinstance(overlay, fslimage.Nifti):
                 choices.append(overlay)
 
         choiceProp.setChoices(choices, instance=self)
 
 
     def __setTransform(self, image):
-        """Sets the :attr:`.Nifti1Opts.transform` property associated with
-        the given :class:`.Nifti1` overlay to a sensible value, given the
+        """Sets the :attr:`.NiftiOpts.transform` property associated with
+        the given :class:`.Nifti` overlay to a sensible value, given the
         current value of the :attr:`.displaySpace` property.
 
         Called by the :meth:`__displaySpaceChanged` method, and by
@@ -628,7 +628,7 @@ class DisplayContext(props.SyncableHasProperties):
         
     def __displaySpaceChanged(self, *a):
         """Called when the :attr:`displaySpace` property changes. Updates the
-        :attr:`.Nifti1Opts.transform` property for all :class:`.Nifti1`
+        :attr:`.NiftiOpts.transform` property for all :class:`.Nifti`
         overlays in the :class:`.OverlayList`.
         """
 
@@ -665,7 +665,7 @@ class DisplayContext(props.SyncableHasProperties):
         # new display space
         for overlay in self.__overlayList:
             
-            if not isinstance(overlay, fslimage.Nifti1):
+            if not isinstance(overlay, fslimage.Nifti):
                 continue
 
             opts = self.getOpts(overlay)

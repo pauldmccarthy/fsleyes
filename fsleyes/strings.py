@@ -425,21 +425,21 @@ labels = TypeDict({
     'OverlayInfoPanel.overlayType'         : 'Displayed as',
     'OverlayInfoPanel.displaySpace'        : 'Display space',
 
-    'OverlayInfoPanel.Nifti1.dimensions'   : 'Dimensions',
-    'OverlayInfoPanel.Nifti1.transform'    : 'Transform/space',
-    'OverlayInfoPanel.Nifti1.orient'       : 'Orientation',
+    'OverlayInfoPanel.Nifti.dimensions'   : 'Dimensions',
+    'OverlayInfoPanel.Nifti.transform'    : 'Transform/space',
+    'OverlayInfoPanel.Nifti.orient'       : 'Orientation',
 
-    'OverlayInfoPanel.Nifti1.displaySpace.id'     : 'Raw voxels',
-    'OverlayInfoPanel.Nifti1.displaySpace.pixdim' : 'Scaled voxels',
-    'OverlayInfoPanel.Nifti1.displaySpace.affine' : 'World coordinates',
-    'OverlayInfoPanel.Nifti1.displaySpace.world'  : 'World coordinates',
-    'OverlayInfoPanel.Nifti1.displaySpace.custom' : 'Scaled voxels ({})',
+    'OverlayInfoPanel.Nifti.displaySpace.id'     : 'Raw voxels',
+    'OverlayInfoPanel.Nifti.displaySpace.pixdim' : 'Scaled voxels',
+    'OverlayInfoPanel.Nifti.displaySpace.affine' : 'World coordinates',
+    'OverlayInfoPanel.Nifti.displaySpace.world'  : 'World coordinates',
+    'OverlayInfoPanel.Nifti.displaySpace.custom' : 'Scaled voxels ({})',
     
-    'OverlayInfoPanel.Image'                    : 'NIFTI1 image',
-    'OverlayInfoPanel.FEATImage'                : 'NIFTI1 image '
+    'OverlayInfoPanel.Image'                    : 'NIFTI image',
+    'OverlayInfoPanel.FEATImage'                : 'NIFTI image '
                                                   '(FEAT analysis)',
     'OverlayInfoPanel.FEATImage.featInfo'       : 'FEAT information',
-    'OverlayInfoPanel.MelodicImage'             : 'NIFTI1 image '
+    'OverlayInfoPanel.MelodicImage'             : 'NIFTI image '
                                                   '(MELODIC analysis)', 
     'OverlayInfoPanel.MelodicImage.melodicInfo' : 'MELODIC information',
     
@@ -459,7 +459,7 @@ labels = TypeDict({
     
     'OverlayInfoPanel.dataSource'               : 'Data source',
 
-    'OverlayInfoPanel.TensorImage'              : 'NIFTI1 diffusion '
+    'OverlayInfoPanel.TensorImage'              : 'NIFTI diffusion '
                                                   'tensor images',
     'OverlayInfoPanel.TensorImage.tensorInfo'   : 'Tensor image paths ',
     
@@ -584,9 +584,9 @@ properties = TypeDict({
     'Display.brightness'        : 'Brightness',
     'Display.contrast'          : 'Contrast',
 
-    'Nifti1Opts.resolution' : 'Resolution',
-    'Nifti1Opts.transform'  : 'Image transform',
-    'Nifti1Opts.volume'     : 'Volume',
+    'NiftiOpts.resolution' : 'Resolution',
+    'NiftiOpts.transform'  : 'Image transform',
+    'NiftiOpts.volume'     : 'Volume',
     
     'VolumeOpts.displayRange'    : 'Display range',
     'VolumeOpts.clippingRange'   : 'Clipping range',
@@ -721,10 +721,10 @@ choices = TypeDict({
     'TensorOpts.tensorResolution.min' : 'Low',
     'TensorOpts.tensorResolution.max' : 'High',
 
-    'Nifti1Opts.transform' : {'affine' : 'World coordinates',
-                              'pixdim' : 'Scaled voxels',
-                              'id'     : 'Voxels',
-                              'custom' : 'Custom transformation'},
+    'NiftiOpts.transform' : {'affine' : 'World coordinates',
+                             'pixdim' : 'Scaled voxels',
+                             'id'     : 'Voxels',
+                             'custom' : 'Custom transformation'},
 
     'VolumeOpts.interpolation' : {'none'   : 'No interpolation', 
                                   'linear' : 'Linear interpolation', 
@@ -781,41 +781,41 @@ choices = TypeDict({
 
 anatomy = TypeDict({
 
-    ('Nifti1', 'lowlong',   constants.ORIENT_A2P)               : 'Anterior',
-    ('Nifti1', 'lowlong',   constants.ORIENT_P2A)               : 'Posterior',
-    ('Nifti1', 'lowlong',   constants.ORIENT_L2R)               : 'Left',
-    ('Nifti1', 'lowlong',   constants.ORIENT_R2L)               : 'Right',
-    ('Nifti1', 'lowlong',   constants.ORIENT_I2S)               : 'Inferior',
-    ('Nifti1', 'lowlong',   constants.ORIENT_S2I)               : 'Superior',
-    ('Nifti1', 'lowlong',   constants.ORIENT_UNKNOWN)           : 'Unknown',
-    ('Nifti1', 'highlong',  constants.ORIENT_A2P)               : 'Posterior',
-    ('Nifti1', 'highlong',  constants.ORIENT_P2A)               : 'Anterior',
-    ('Nifti1', 'highlong',  constants.ORIENT_L2R)               : 'Right',
-    ('Nifti1', 'highlong',  constants.ORIENT_R2L)               : 'Left',
-    ('Nifti1', 'highlong',  constants.ORIENT_I2S)               : 'Superior',
-    ('Nifti1', 'highlong',  constants.ORIENT_S2I)               : 'Inferior',
-    ('Nifti1', 'highlong',  constants.ORIENT_UNKNOWN)           : 'Unknown',
-    ('Nifti1', 'lowshort',  constants.ORIENT_A2P)               : 'A',
-    ('Nifti1', 'lowshort',  constants.ORIENT_P2A)               : 'P',
-    ('Nifti1', 'lowshort',  constants.ORIENT_L2R)               : 'L',
-    ('Nifti1', 'lowshort',  constants.ORIENT_R2L)               : 'R',
-    ('Nifti1', 'lowshort',  constants.ORIENT_I2S)               : 'I',
-    ('Nifti1', 'lowshort',  constants.ORIENT_S2I)               : 'S',
-    ('Nifti1', 'lowshort',  constants.ORIENT_UNKNOWN)           : '?',
-    ('Nifti1', 'highshort', constants.ORIENT_A2P)               : 'P',
-    ('Nifti1', 'highshort', constants.ORIENT_P2A)               : 'A',
-    ('Nifti1', 'highshort', constants.ORIENT_L2R)               : 'R',
-    ('Nifti1', 'highshort', constants.ORIENT_R2L)               : 'L',
-    ('Nifti1', 'highshort', constants.ORIENT_I2S)               : 'S',
-    ('Nifti1', 'highshort', constants.ORIENT_S2I)               : 'I',
-    ('Nifti1', 'highshort', constants.ORIENT_UNKNOWN)           : '?',
-    ('Nifti1', 'space',     constants.NIFTI_XFORM_UNKNOWN)      : 'Unknown',
-    ('Nifti1', 'space',     constants.NIFTI_XFORM_SCANNER_ANAT) : 'Scanner '
-                                                                  'anatomical',
-    ('Nifti1', 'space',     constants.NIFTI_XFORM_ALIGNED_ANAT) : 'Aligned '
-                                                                  'anatomical',
-    ('Nifti1', 'space',     constants.NIFTI_XFORM_TALAIRACH)    : 'Talairach', 
-    ('Nifti1', 'space',     constants.NIFTI_XFORM_MNI_152)      : 'MNI152',
+    ('Nifti', 'lowlong',   constants.ORIENT_A2P)               : 'Anterior',
+    ('Nifti', 'lowlong',   constants.ORIENT_P2A)               : 'Posterior',
+    ('Nifti', 'lowlong',   constants.ORIENT_L2R)               : 'Left',
+    ('Nifti', 'lowlong',   constants.ORIENT_R2L)               : 'Right',
+    ('Nifti', 'lowlong',   constants.ORIENT_I2S)               : 'Inferior',
+    ('Nifti', 'lowlong',   constants.ORIENT_S2I)               : 'Superior',
+    ('Nifti', 'lowlong',   constants.ORIENT_UNKNOWN)           : 'Unknown',
+    ('Nifti', 'highlong',  constants.ORIENT_A2P)               : 'Posterior',
+    ('Nifti', 'highlong',  constants.ORIENT_P2A)               : 'Anterior',
+    ('Nifti', 'highlong',  constants.ORIENT_L2R)               : 'Right',
+    ('Nifti', 'highlong',  constants.ORIENT_R2L)               : 'Left',
+    ('Nifti', 'highlong',  constants.ORIENT_I2S)               : 'Superior',
+    ('Nifti', 'highlong',  constants.ORIENT_S2I)               : 'Inferior',
+    ('Nifti', 'highlong',  constants.ORIENT_UNKNOWN)           : 'Unknown',
+    ('Nifti', 'lowshort',  constants.ORIENT_A2P)               : 'A',
+    ('Nifti', 'lowshort',  constants.ORIENT_P2A)               : 'P',
+    ('Nifti', 'lowshort',  constants.ORIENT_L2R)               : 'L',
+    ('Nifti', 'lowshort',  constants.ORIENT_R2L)               : 'R',
+    ('Nifti', 'lowshort',  constants.ORIENT_I2S)               : 'I',
+    ('Nifti', 'lowshort',  constants.ORIENT_S2I)               : 'S',
+    ('Nifti', 'lowshort',  constants.ORIENT_UNKNOWN)           : '?',
+    ('Nifti', 'highshort', constants.ORIENT_A2P)               : 'P',
+    ('Nifti', 'highshort', constants.ORIENT_P2A)               : 'A',
+    ('Nifti', 'highshort', constants.ORIENT_L2R)               : 'R',
+    ('Nifti', 'highshort', constants.ORIENT_R2L)               : 'L',
+    ('Nifti', 'highshort', constants.ORIENT_I2S)               : 'S',
+    ('Nifti', 'highshort', constants.ORIENT_S2I)               : 'I',
+    ('Nifti', 'highshort', constants.ORIENT_UNKNOWN)           : '?',
+    ('Nifti', 'space',     constants.NIFTI_XFORM_UNKNOWN)      : 'Unknown',
+    ('Nifti', 'space',     constants.NIFTI_XFORM_SCANNER_ANAT) : 'Scanner '
+                                                                 'anatomical',
+    ('Nifti', 'space',     constants.NIFTI_XFORM_ALIGNED_ANAT) : 'Aligned '
+                                                                 'anatomical',
+    ('Nifti', 'space',     constants.NIFTI_XFORM_TALAIRACH)    : 'Talairach', 
+    ('Nifti', 'space',     constants.NIFTI_XFORM_MNI_152)      : 'MNI152',
 })
 
 

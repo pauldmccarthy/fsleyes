@@ -172,7 +172,7 @@ class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
 class MelodicPowerSpectrumSeries(PowerSpectrumSeries):
     """The ``MelodicPowerSpectrumSeries`` class encapsulates the power spectrum
     of the time course for a single component of a :class:`.MelodicImage`. The
-    component is dictated by the :attr:`.Nifti1Opts.volume` property.
+    component is dictated by the :attr:`.NiftiOpts.volume` property.
     """
 
     
@@ -202,7 +202,7 @@ class MelodicPowerSpectrumSeries(PowerSpectrumSeries):
 
     def getData(self):
         """Returns the power spectrum for the current component of the
-        :class:`.MelodicImage`, as defined by the :attr:`.Nifti1Opts.volume`
+        :class:`.MelodicImage`, as defined by the :attr:`.NiftiOpts.volume`
         property.
         """
 

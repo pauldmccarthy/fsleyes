@@ -299,8 +299,8 @@ class GLLabel(globject.GLImageObject):
 
 
     def __imagePropChanged(self, *a):
-        """Called when the :attr:`.Nifti1Opts.volume` or
-        :attr:`.Nifti1Opts.resolution` properties change. Updates the
+        """Called when the :attr:`.NiftiOpts.volume` or
+        :attr:`.NiftiOpts.resolution` properties change. Updates the
         ``imageTexture`` and calls :meth:`updateShaderState`.
         """
         opts = self.displayOpts
@@ -310,8 +310,8 @@ class GLLabel(globject.GLImageObject):
  
     
     def __imageSyncChanged(self, *a):
-        """Called when the :attr:`.Nifti1Opts.volume` or
-        :attr:`.Nifti1Opts.resolution` properties are synchronised or
+        """Called when the :attr:`.NiftiOpts.volume` or
+        :attr:`.NiftiOpts.resolution` properties are synchronised or
         un-synchronised. Calls :meth:`refreshImageTexture` and
         :meth:`updateShaderState`.
         """

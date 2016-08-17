@@ -363,7 +363,7 @@ class GLSimpleObject(GLObject):
 
 class GLImageObject(GLObject):
     """The ``GLImageObject`` class is the base class for all GL representations
-    of :class:`.Nifti1` instances. 
+    of :class:`.Nifti` instances. 
     """
     
     def __init__(self, image, display, xax, yax):
@@ -372,16 +372,16 @@ class GLImageObject(GLObject):
         This constructor adds the following attributes to this instance:
 
         =============== =======================================================
-        ``image``       A reference to the :class:`.Nifti1` overlay being
+        ``image``       A reference to the :class:`.Nifti` overlay being
                         displayed.
         ``display``     A reference to the :class:`.Display` instance
                         associated with the ``image``.
         ``displayOpts`` A reference to the :class:`.DisplayOpts` instance,
                         containing overlay type-specific display options. This
-                        is assumed to be a sub-class of :class:`.Nifti1Opts`.
+                        is assumed to be a sub-class of :class:`.NiftiOpts`.
         =============== =======================================================
 
-        :arg image:   The :class:`.Nifti1` instance
+        :arg image:   The :class:`.Nifti` instance
         
         :arg display: An associated :class:`.Display` instance.
 
@@ -513,7 +513,7 @@ class GLImageObject(GLObject):
     def generateVoxelCoordinates(self, zpos, bbox=None, space='voxel'):
         """Generates a grid of voxel coordinates along the
         XY display coordinate system plane, at the given ``zpos``. The
-        coordinates honour the current :attr:`.Nifti1Opts.resolution` 
+        coordinates honour the current :attr:`.NiftiOpts.resolution` 
         property.
 
         :arg zpos:  Position along the display coordinate system Z axis.

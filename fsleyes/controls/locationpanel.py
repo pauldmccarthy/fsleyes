@@ -81,7 +81,7 @@ class LocationPanel(fslpanel.FSLEyesPanel):
     contain lists of property names that the :class:`.LocationPanel` listens
     on for changes, so it knows when the location widgets, and information
     about the currenty location, need to be refreshed. For example, when the
-    :attr`.Nifti1Opts.volume` property of a :class:`.Nifti1` overlay changes,
+    :attr`.NiftiOpts.volume` property of a :class:`.Nifti` overlay changes,
     the volume index, and potentially the overlay information, needs to be
     updated.
     """
@@ -275,19 +275,19 @@ class LocationPanel(fslpanel.FSLEyesPanel):
 
         labelPref = strings.labels[self, 'worldLocation']
         labelSufs = [
-            strings.anatomy['Nifti1',
+            strings.anatomy['Nifti',
                             'space',
                             constants.NIFTI_XFORM_UNKNOWN],
-            strings.anatomy['Nifti1',
+            strings.anatomy['Nifti',
                             'space',
                             constants.NIFTI_XFORM_SCANNER_ANAT],
-            strings.anatomy['Nifti1',
+            strings.anatomy['Nifti',
                             'space',
                             constants.NIFTI_XFORM_ALIGNED_ANAT],
-            strings.anatomy['Nifti1',
+            strings.anatomy['Nifti',
                             'space',
                             constants.NIFTI_XFORM_TALAIRACH],
-            strings.anatomy['Nifti1',
+            strings.anatomy['Nifti',
                             'space',
                             constants.NIFTI_XFORM_MNI_152],
             strings.labels[self, 'worldLocation', 'unknown']
@@ -363,10 +363,10 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         # Enable the volume widget if the
         # overlay is a 4D image, and bind
         # the widget to the volume property
-        # of  the associated Nifti1Opts
+        # of  the associated NiftiOpts
         # instance
-        is4D = isinstance(overlay, fslimage.Nifti1) and \
-               len(overlay.shape) >= 4              and \
+        is4D = isinstance(overlay, fslimage.Nifti) and \
+               len(overlay.shape) >= 4             and \
                overlay.shape[3] > 1 
 
         if is4D:
@@ -412,8 +412,8 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         for p in boundPropNames: opts.removeListener(p, self._name)
         for p in infoPropNames:  opts.removeListener(p, self._name) 
 
-        is4D      = isinstance(overlay, fslimage.Nifti1) and \
-                    len(overlay.shape) >= 4              and \
+        is4D      = isinstance(overlay, fslimage.Nifti) and \
+                    len(overlay.shape) >= 4             and \
                     overlay.shape[3] > 1 
  
         if is4D:
@@ -728,7 +728,7 @@ listeners on the properties specified in this dictionary.
 
 
 DISPLAYOPTS_INFO = td.TypeDict({
-    'Nifti1Opts'  : ['volume'],
+    'NiftiOpts'  : ['volume'],
 }) 
 """Different :class:`.DisplayOpts` types have different properties which
 affect the current overlay location information.  Therefore, when the current

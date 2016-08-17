@@ -59,7 +59,7 @@ class SliceCanvasOpts(props.HasProperties):
 
     
     cursorGap = props.Boolean(default=False)
-    """If ``True``, and the currently selected overlay is a :class:`.Nifti1`
+    """If ``True``, and the currently selected overlay is a :class:`.Nifti`
     instance, a gap will be shown at the cursor centre (i.e. the current
     voxel).
     """

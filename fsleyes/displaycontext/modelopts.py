@@ -62,7 +62,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
 
     # This property is implicitly tightly-coupled to
-    # the Nifti1Opts.getTransform method - the choices
+    # the NiftiOpts.getTransform method - the choices
     # defined in this property are assumed to be valid
     # inputs to that method.
     coordSpace = props.Choice(('affine', 'pixdim', 'pixdim-flip', 'id'),
@@ -90,7 +90,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
     The default value is ``pixdim-flip``, as this is the coordinate system
     used in the VTK sub-cortical segmentation model files output by FIRST.
     See also the :ref:`note on coordinate systems
-    <volumeopts-coordinate-systems>`, and the :meth:`.Nifti1Opts.getTransform`
+    <volumeopts-coordinate-systems>`, and the :meth:`.NiftiOpts.getTransform`
     method.
     """
 
@@ -231,8 +231,8 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
         This method is called whenever the :attr:`refImage` or
         :attr:`coordSpace` properties change and, if a ``refImage`` is
-        specified, whenever the :attr:`.Nifti1Opts.transform` or
-        :attr:`.Nifti1Opts.customXform` properties change.
+        specified, whenever the :attr:`.NiftiOpts.transform` or
+        :attr:`.NiftiOpts.customXform` properties change.
 
         :arg refImage:    Reference image to use to calculate the coordinates.
                           If ``-1`` the :attr:`refImage` is used (``-1`` is
@@ -243,13 +243,13 @@ class ModelOpts(fsldisplay.DisplayOpts):
                           :attr:`coordSpace` is used.
         
         :arg transform:   Transform to use - if ``None``, and a ``refImage`` is
-                          defined, the :attr:`.Nifti1Opts.transform` value is
+                          defined, the :attr:`.NiftiOpts.transform` value is
                           used.
         
         :arg customXform: Custom transform to use (if
                           ``transform=custom``). If ``None``, and a
                           ``refImage`` is defined, the
-                          :attr:`.Nifti1Opts.customXform` value is used.
+                          :attr:`.NiftiOpts.customXform` value is used.
         """
 
         if refImage   is -1:   refImage   = self.refImage
@@ -275,8 +275,8 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
 
     def __transformChanged(self, value, valid, ctx, name):
-        """Called when the :attr:`.Nifti1Opts.transfrom` or
-        :attr:`.Nifti1Opts.customXform` properties of the current
+        """Called when the :attr:`.NiftiOpts.transfrom` or
+        :attr:`.NiftiOpts.customXform` properties of the current
         :attr:`refImage` change. Calls :meth:`__updateBounds`.
         """
 
@@ -312,7 +312,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
         If a new reference image has been specified, removes listeners from
         the old one (if necessary), and adds listeners to the
-        :attr:`.Nifti1Opts.transform` and :attr:`.Nifti1Opts.customXform`
+        :attr:`.NiftiOpts.transform` and :attr:`.NiftiOpts.customXform`
         properties associated with the new image. Calls
         :meth:`__updateBounds`.
         """
@@ -417,8 +417,8 @@ class ModelOpts(fsldisplay.DisplayOpts):
 
         for overlay in overlays:
 
-            # The overlay must be a Nifti1 instance.
-            if not isinstance(overlay, fslimage.Nifti1):
+            # The overlay must be a Nifti instance.
+            if not isinstance(overlay, fslimage.Nifti):
                 continue
 
             imgOptions.append(overlay)

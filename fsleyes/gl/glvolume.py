@@ -424,7 +424,7 @@ class GLVolume(globject.GLImageObject):
 
     def registerClipImage(self):
         """Called whenever the :attr:`.VolumeOpts.clipImage` property changes.
-        Adds property listeners to the :class:`.Nifti1Opts` instance
+        Adds property listeners to the :class:`.NiftiOpts` instance
         associated with the new clip image, if necessary.
         """
 
@@ -449,7 +449,7 @@ class GLVolume(globject.GLImageObject):
     
     def deregisterClipImage(self):
         """Called whenever the :attr:`.VolumeOpts.clipImage` property changes.
-        Removes property listeners from the :class:`.Nifti1Opts` instance
+        Removes property listeners from the :class:`.NiftiOpts` instance
         associated with the old clip image, if necessary.
         """
 
@@ -649,7 +649,7 @@ class GLVolume(globject.GLImageObject):
 
 
     def _volumeChanged(self, *a):
-        """Called when the :attr:`.Nifti1Opts.volume` property changes. """
+        """Called when the :attr:`.NiftiOpts.volume` property changes. """
         opts       = self.displayOpts
         volume     = opts.volume
         resolution = opts.resolution
@@ -666,26 +666,26 @@ class GLVolume(globject.GLImageObject):
 
 
     def _interpolationChanged(self, *a):
-        """Called when the :attr:`.Nifti1Opts.interpolation` property changes.
+        """Called when the :attr:`.NiftiOpts.interpolation` property changes.
         """
         self._volumeChanged()
 
         
     def _resolutionChanged(self, *a):
-        """Called when the :attr:`.Nifti1Opts.resolution` property changes.
+        """Called when the :attr:`.NiftiOpts.resolution` property changes.
         """ 
         self._volumeChanged() 
 
 
     def _transformChanged(self, *a):
-        """Called when the :attr:`.Nifti1Opts.transform` property changes.
+        """Called when the :attr:`.NiftiOpts.transform` property changes.
         """ 
         self.notify()
 
 
     def _imageSyncChanged(self, *a):
         """Called when the synchronisation state of the
-        :attr:`.Nifti1Opts.volume`, :attr:`.Nifti1Opts.resolution`, or
+        :attr:`.NiftiOpts.volume`, :attr:`.NiftiOpts.resolution`, or
         :attr:`.VolumeOpts.interpolation` properties change.
         """
         

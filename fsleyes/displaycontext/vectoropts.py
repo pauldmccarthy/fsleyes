@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`VectorOpts`, :class:`LineVectorOpts`, and
-:class:`RGBVectorOpts` classes, which contain options for displaying NIFTI1
+:class:`RGBVectorOpts` classes, which contain options for displaying NIFTI
 vector images.
 """
 
@@ -18,7 +18,7 @@ import fsl.data.image as fslimage
 from . import            volumeopts
 
 
-class VectorOpts(volumeopts.Nifti1Opts):
+class VectorOpts(volumeopts.NiftiOpts):
     """The ``VectorOpts`` class is the base class for :class:`LineVectorOpts`,
     :class:`RGBVectorOpts`, :class:`.TensorOpts`, and :class:`.SHOpts`. It
     contains display settings which are common to each of them.
@@ -57,7 +57,7 @@ class VectorOpts(volumeopts.Nifti1Opts):
     """If ``True``, and the displayed image looks like it is in neurological
     orientation, vectors are flipped along the x-axis. This property is only
     applicable to the :class:`.LineVectorOpts`, :class:`.TensorOpts`, and
-    :class:`.SHOpts` classes. See the :meth:`.Nifti1Opts.getTransform` method
+    :class:`.SHOpts` classes. See the :meth:`.NiftiOpts.getTransform` method
     for more information.
     """
 
@@ -108,11 +108,11 @@ class VectorOpts(volumeopts.Nifti1Opts):
     
     def __init__(self, *args, **kwargs):
         """Create a ``VectorOpts`` instance for the given image.  All
-        arguments are passed through to the :class:`.Nifti1Opts`
+        arguments are passed through to the :class:`.NiftiOpts`
         constructor.
         """
         
-        volumeopts.Nifti1Opts.__init__(self, *args, **kwargs)
+        volumeopts.NiftiOpts.__init__(self, *args, **kwargs)
 
         self.__registered = self.getParent() is not None
 
@@ -143,14 +143,14 @@ class VectorOpts(volumeopts.Nifti1Opts):
 
     def destroy(self):
         """Removes some property listeners, and calls the
-        :meth:`.Nifti1Opts.destroy` method.
+        :meth:`.NiftiOpts.destroy` method.
         """
         if self.__registered:
             self.overlayList.removeListener('overlays',      self.name)
             self            .removeListener('clipImage',     self.name)
             self            .removeListener('modulateImage', self.name)
 
-        volumeopts.Nifti1Opts.destroy(self)
+        volumeopts.NiftiOpts.destroy(self)
 
         
     def __clipImageChanged(self, *a):

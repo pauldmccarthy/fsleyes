@@ -21,7 +21,7 @@ broadly split into the following groups:
 
 
  - *Display* arguments control the display for a single overlay file (e.g.
-   a NIFTI1 image), such as interpolation, colour map, etc. These arguments
+   a NIFTI image), such as interpolation, colour map, etc. These arguments
    correspond to properties of the :class:`.Display` class, and sub-classes
    of :class:`.DisplayOpts`.
 
@@ -347,7 +347,7 @@ OPTIONS = td.TypeDict({
                         'alpha',
                         'brightness',
                         'contrast'],
-    'Nifti1Opts'     : ['resolution',
+    'NiftiOpts'      : ['resolution',
                         'volume'],
     'VolumeOpts'     : ['linkLowRanges',
                         'linkHighRanges',
@@ -552,8 +552,8 @@ ARGUMENTS = td.TypeDict({
     'Display.brightness'    : ('b',  'brightness'),
     'Display.contrast'      : ('c',  'contrast'),
 
-    'Nifti1Opts.resolution'   : ('r',  'resolution'),
-    'Nifti1Opts.volume'       : ('v',  'volume'),
+    'NiftiOpts.resolution'   : ('r',  'resolution'),
+    'NiftiOpts.volume'       : ('v',  'volume'),
 
     'VolumeOpts.displayRange'    : ('dr', 'displayRange'),
     'VolumeOpts.clippingRange'   : ('cr', 'clippingRange'),
@@ -703,8 +703,8 @@ HELP = td.TypeDict({
     'Display.brightness'    : 'Brightness',
     'Display.contrast'      : 'Contrast',
 
-    'Nifti1Opts.resolution' : 'Resolution',
-    'Nifti1Opts.volume'     : 'Volume',
+    'NiftiOpts.resolution' : 'Resolution',
+    'NiftiOpts.volume'     : 'Volume',
 
     'VolumeOpts.displayRange'    : 'Display range. Setting this will '
                                    'override brightnes/contrast settings.',

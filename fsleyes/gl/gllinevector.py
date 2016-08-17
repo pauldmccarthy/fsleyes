@@ -243,7 +243,7 @@ class GLLineVertices(object):
         called ``vertices``. 
 
         .. note:: The vertexcoordinate generation takes into account the
-                  current value of the :attr:`.Nifti1Opts.resolution` property
+                  current value of the :attr:`.NiftiOpts.resolution` property
                   of the :class:`.LineVectorOpts` instance; if this is set to
                   something other than the image resolution, the sub-sampled
                   starting indices and steps are stored as attributes

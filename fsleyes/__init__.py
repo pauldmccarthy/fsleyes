@@ -22,7 +22,7 @@ Overview
 *FSLeyes* is an OpenGL application for displaying 3D :mod:`overlays
 <.overlay>`. All overlays are stored in a single list, the
 :class:`.OverlayList`. Only one ``OverlayList`` ever exists - this list is
-shared throughout the application.  The primary overlay type is the NIFTI1
+shared throughout the application.  The primary overlay type is the NIFTI
 image format, but other overlay types are supported (VTK models), and more
 will be supported in the future (e.g. surfaces).
 
@@ -37,7 +37,7 @@ Amongst other things, *FSLeyes* provides the following features:
   - FSL atlas explorer (:mod:`.atlaspanel`)
   - FEAT cluster results explorer (:mod:`.clusterpanel`)
   - Melodic component classification (:mod:`.melodicclassificationpanel`)
-  - NIFTI1 image editing (:mod:`.editor`)
+  - NIFTI image editing (:mod:`.editor`)
   - A comprehensive command line interface (:mod:`.fsleyes_parseargs`)
 
 

@@ -260,7 +260,7 @@ class Display(props.SyncableHasProperties):
 
         Furthermore, in order for the property values of a common
         ``DisplayOpts`` base type to be shared across sub types (e.g. copying
-        the :attr:`.Nifti1Opts.transform` property between :class:`.VolumeOpts`
+        the :attr:`.NiftiOpts.transform` property between :class:`.VolumeOpts`
         and :class:`.LabelOpts` instances), we need to store the name of the
         common base type in the dictionary.
         """
@@ -441,25 +441,25 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         instance.
 
         Some non-volumetric overlay types (e.g. the :class:`.Model` - see
-        :class:`.ModelOpts`) may have a *reference* :class:`.Nifti1` instance
+        :class:`.ModelOpts`) may have a *reference* :class:`.Nifti` instance
         associated with them, allowing the overlay to be localised in the
-        coordinate space defined by the :class:`.Nifti1`. The
+        coordinate space defined by the :class:`.Nifti`. The
         :class:`.DisplayOpts` sub-class which corresponds to
         such non-volumetric overlays should override this method to return
         that reference image.
 
         :class:`.DisplayOpts` sub-classes which are associated with volumetric
-        overlays (i.e. :class:`.Nifti1` instances) do not need to override
+        overlays (i.e. :class:`.Nifti` instances) do not need to override
         this method - in this case, the overlay itself is considered to be
         its own reference image, and is returned by the base-class
         implementation of this this method.
 
-        .. note:: The reference :class:`.Nifti1` instance returned by
+        .. note:: The reference :class:`.Nifti` instance returned by
                   sub-class implementations of this method must be in
                   the :class:`.OverlayList`.
         """
 
-        if isinstance(self.overlay, fslimage.Nifti1):
+        if isinstance(self.overlay, fslimage.Nifti):
             return self.overlay
         return None
 
@@ -473,7 +473,7 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         the display space representation may change - for example, the
         :class:`.Image` overlays can be transformed into the display
         coordinate system in different ways, as defined by the
-        :attr:`.Nifti1Opts.transform`  property.
+        :attr:`.NiftiOpts.transform`  property.
         """
         return coords
 

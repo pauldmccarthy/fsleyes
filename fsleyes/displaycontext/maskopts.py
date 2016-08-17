@@ -15,7 +15,7 @@ import fsleyes.strings as strings
 from . import             volumeopts
 
 
-class MaskOpts(volumeopts.Nifti1Opts):
+class MaskOpts(volumeopts.NiftiOpts):
     """The ``MaskOpts`` class defines settings for displaying an
     :class:`.Image` overlay as a binary mask.
     """
@@ -40,7 +40,7 @@ class MaskOpts(volumeopts.Nifti1Opts):
 
     def __init__(self, overlay, *args, **kwargs):
         """Create a ``MaskOpts`` instance for the given overlay. All arguments
-        are passed through to the :class:`.Nifti1Opts` constructor.
+        are passed through to the :class:`.NiftiOpts` constructor.
         """
 
         #################
@@ -73,4 +73,4 @@ class MaskOpts(volumeopts.Nifti1Opts):
         self.threshold.xlo  = dataMin + dMinDistance
         self.threshold.xhi  = dataMax + dMinDistance 
 
-        volumeopts.Nifti1Opts.__init__(self, overlay, *args, **kwargs)
+        volumeopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)

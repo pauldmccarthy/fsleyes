@@ -526,9 +526,9 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
 
         # No FEAT analysis, or not an Image,
         # can't do anything with that 
-        if featDir is None or not isinstance(overlay, fslimage.Nifti1):
+        if featDir is None or not isinstance(overlay, fslimage.Nifti):
             log.debug('Overlay {} is not part of a feat '
-                      'analysis, or is not Nifti1'.format(overlay))
+                      'analysis, or is not Nifti'.format(overlay))
             self.__disable(strings.messages[self, 'notFEAT'])
             return
         
