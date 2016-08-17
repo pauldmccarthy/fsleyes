@@ -17,31 +17,62 @@ An important note on coordinate systems
 
 *FSLeyes* displays all overlays in a single coordinate system, referred
 throughout as the *display coordinate system*. However, :class:`.Nifti1`
-overlays can potentially be displayed in one of three coordinate systems:
+overlays can potentially be displayed in one of four coordinate systems:
 
 
- ====================== ====================================================
- **voxel** space        (a.k.a. ``id``) The image data voxel coordinates
-                        map to the display coordinates.
+ ============================== ===============================================
+ **voxels**                     (a.k.a. ``id``) The image data voxel 
+                                coordinates map to the display coordinates.
 
- **scaled voxel** space (a.k.a. ``pixdim``) The image data voxel coordinates
-                        are scaled by the ``pixdim`` values stored in the
-                        NIFTI1 header.
+ **scaled voxels**              (a.k.a. ``pixdim``) The image data voxel 
+                                coordinates are scaled by the ``pixdim`` values
+                                stored in the NIFTI header.
 
- **world** space        (a.k.a. ``affine``) The image data voxel coordinates
-                        are transformed by the ``qform``/``sform``
-                        transformation matrix stored in the NIFTI1 header.
- ====================== ====================================================
+
+ **radioloigcal scaled voxels** (a.k.a. ``pixdim-flip``) The image data voxel 
+                                coordinates are scaled by the ``pixdim`` values
+                                stored in the NIFTI header and, if the image
+                                appears to be stored in neurological order,
+                                the X (left-right) axis is inverted. 
+
+
+ **world**                      (a.k.a. ``affine``) The image data voxel 
+                                coordinates are transformed by the ``qform``/
+                                ``sform`` transformation matrix stored in the
+                                NIFTI header.
+ ============================== ===============================================
+
+
+Pixdim flip
+^^^^^^^^^^^
 
 
 The :attr:`Nifti1Opts.transform` property controls how the image data is
 transformed into the display coordinate system. It allows any of the above
-spaces to be specified (as ``id``, ``pixdim`` or ``affine``` respectively),
-and also allows a ``custom`` transformation to be specified (see the
-:attr:`customXform` property). This ``custom`` transformation is used to
-transform one image into the space of another, by concatentating multiple
+spaces to be specified (as ``id``, ``pixdim``, ``pixdim-flip``, or ``affine```
+respectively), and also allows a ``custom`` transformation to be specified
+(see the :attr:`customXform` property). This ``custom`` transformation is used
+to transform one image into the space of another, by concatentating multiple
 transformation matrices - see the :attr:`.DisplayContext.displaySpace`
 property.
+
+
+The ``pixdim-flip`` transform is the coordinate system used internally by many
+of the FSL tools.  For instance, this is the coordinate system used by
+FSLView, by ``flirt``, and in the VTK sub-cortical segmentation model files
+output by ``first``.
+
+
+Furthermore, the vectors in eigenvector images images output by ``dtifit`` are
+oriented according to this space, so if the input data is in neurological
+orientation, these vectors need to be inverted along the x axis.
+
+
+http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT/FAQ#What_is_the_format_of_the_matrix_used_by_FLIRT.2C_and_how_does_it_relate_to_the_transformation_parameters.3F
+
+
+What is a voxel?
+^^^^^^^^^^^^^^^^
 
 
 Regardless of the space in which the ``Nifti1`` is displayed , the
@@ -67,7 +98,7 @@ is drawn such that it occupies the space::
     [1.5 - 2.5, 2.5 - 3.5, 3.5 - 4.5]
 
 
-This convention is in line with the convention defined by the ``NIFTI1``
+This convention is in line with the convention defined by the ``NIFTI``
 specification: it assumes that the voxel coordinates ``[x, y, z]`` correspond
 to the centre of a voxel.
 """
@@ -111,7 +142,7 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
 
 
     transform = props.Choice(
-        ('affine', 'pixdim', 'id', 'custom'),
+        ('affine', 'pixdim', 'pixdim-flip', 'id', 'custom'),
         default='pixdim')
     """This property defines how the overlay should be transformd into
     the display coordinate system. See the
@@ -390,23 +421,6 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
         If the ``xform`` parameter is provided, and one of ``from_`` or ``to``
         is ``display``, the value of ``xform`` is used instead of the current
         value of :attr:`transform`.
-
-        
-        .. note:: While the ``pixdim-flip`` space is not a display option for
-                  ``Nifti1``, the transformations for this space are made
-                  available theough this method as it is the coordinate system
-                  used internally by many of the FSL tools.  For instance,
-                  this is the coordinate system used in the VTK sub-cortical
-                  segmentation model files output by ``first``, and is hence 
-                  used by the :class:`.ModelOpts` class to transform VTK model
-                  coordinates.
-
-                  Furthermore, the vectors in eigenvector images images output
-                  by ``dtifit`` are oriented according to this space, so if
-                  the input data is in neurological orientation, these vectors
-                  need to be inverted along the x axis.
-
-                  http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT/FAQ#What_is_the_format_of_the_matrix_used_by_FLIRT.2C_and_how_does_it_relate_to_the_transformation_parameters.3F
         """
 
         if xform is None:
@@ -423,46 +437,6 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
         elif to    == 'pixflip': to    = 'pixdim-flip'
 
         return self.__xforms[from_, to]
-
-
-    def getTransformOffsets(self, from_, to_):
-        """Returns a set of offsets which should be applied to coordinates
-        before/after applying a transfromation.  
-        
-        When an image is displayed in ``id``, ``pixdim`` and ``affine`` space,
-        voxel coordinates map to the voxel centre, so our voxel from above will
-        occupy the space ``(-0.5 - 0.5, 0.5 - 1.5, 1.5 - 2.5)``. This is
-        dictated by the NIFTI specification. See the
-        :ref:`note on coordinate systems <volumeopts-coordinate-systems>`.
-
-        
-        This function returns some offsets to ensure that the coordinate
-        transformation from the source space to the target space is valid,
-        given the above requirements.
-
-
-        A tuple containing two sets of offsets (each of which is a tuple of
-        three values). The first set is to be applied to the source
-        coordinates (in the ``from_`` space) before transformation, and the
-        second set to the target coordinates (in the ``to_`` space) after the
-        transformation.
-
-        
-        See also the :meth:`transformCoords` method, which will perform the
-        transformation correctly for you, without you having to worry about
-        these silly offsets.
-
-        
-        .. note:: This method was written during a crazy time when, in ``id``
-                  or ``pixdim`` space, voxels ``(0, 0, 0)`` of images overlaid
-                  on each other were aligned at the voxel corner, whereas in
-                  ``affine`` space, they were aligned at the voxel
-                  centre. This is no longer the case, so this method is not
-                  actually necessary, and just returns all zeros. But it is
-                  still here, and still being used, just in case we need to
-                  change these conventions again in the future.
-        """
-        return (0, 0, 0), (0, 0, 0)
 
 
     def roundVoxels(self, voxels, daxes=None):
@@ -568,11 +542,9 @@ class Nifti1Opts(fsldisplay.DisplayOpts):
                      coordinates are rounded to the nearest integer.
         """
 
-        xform     = self.getTransform(       from_, to_)
-        pre, post = self.getTransformOffsets(from_, to_)
-        
-        coords    = np.array(coords)                   + pre
-        coords    = transform.transform(coords, xform) + post
+        xform  = self.getTransform(from_, to_)
+        coords = np.array(coords)
+        coords = transform.transform(coords, xform)
         
         # Round to integer voxel coordinates?
         if to_ == 'voxel' and vround:
