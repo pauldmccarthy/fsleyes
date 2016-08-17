@@ -485,6 +485,7 @@ properties = TypeDict({
     'Profile.mode'                   : 'Profile',
     
     'DisplayContext.displaySpace'    : 'Display space',
+    'DisplayContext.lrFlip'          : 'Flip left/right axis',
 
     'CanvasPanel.syncLocation'       : 'Sync location',
     'CanvasPanel.syncOverlayOrder'   : 'Sync overlay order',

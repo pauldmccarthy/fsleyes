@@ -156,6 +156,18 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
+    lrFlip = props.Boolean(default=False)
+    """If ``True``, the X axis (assumed to correspond to the left-right axis) 
+    in 2D views of the scene will be inverted. This allows the user to switch
+    between neurological and radiological views.
+
+    .. note:: This setting is not enforced by the ``DisplayContext``. It is
+              the responsibility of the :class:`.OrthoPanel` and
+              :class:`.LightBoxPanel` (and other potential future 2D view
+              panels) to implement the flip.
+    """
+
+
     autoDisplay = props.Boolean(default=False)
     """If ``True``, whenever an overlay is added to the :class:`.OverlayList`,
     the :mod:`autodisplay` module will be used to automatically configure
@@ -196,6 +208,7 @@ class DisplayContext(props.SyncableHasProperties):
             parent=parent,
             nounbind=['overlayGroups',
                       'displaySpace',
+                      'lrFlip',
                       'bounds',
                       'autoDisplay',
                       'loadInMemory'],

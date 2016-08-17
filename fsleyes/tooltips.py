@@ -39,6 +39,8 @@ properties = TypeDict({
 
     'DisplayContext.displaySpace' : 'The space in which overlays are '
                                     'displayed.',
+    'DisplayContext.lrFlip'       : 'Invert the X (assumed to be the '
+                                    'left-right) axis.',
 
     # Overlay Display
     

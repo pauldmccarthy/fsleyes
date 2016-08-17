@@ -174,6 +174,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__ycanvas.bindProps('cursorColour', sceneOpts)
         self.__zcanvas.bindProps('cursorColour', sceneOpts)
 
+        # L/r flip
+        self.__ycanvas.bindProps('invertX', displayCtx, 'lrFlip')
+        self.__zcanvas.bindProps('invertX', displayCtx, 'lrFlip')
+
         # Callbacks for ortho panel layout options
         sceneOpts.addListener('layout',     self._name, self.__refreshLayout)
         sceneOpts.addListener('showLabels', self._name, self.__refreshLabels)
@@ -200,6 +204,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                       self._name,
                                       self.__refreshLayout)
         self._displayCtx .addListener('displaySpace',
+                                      self._name,
+                                      self.__refreshLabels)
+        self._displayCtx .addListener('lrFlip',
                                       self._name,
                                       self.__refreshLabels) 
         self._displayCtx .addListener('selectedOverlay',
@@ -522,18 +529,32 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         self.__setLabelColours(bg, fg)
 
-        self.__xLabels['left']  .SetLabel(ylo)
-        self.__xLabels['right'] .SetLabel(yhi)
-        self.__xLabels['bottom'].SetLabel(zlo)
-        self.__xLabels['top']   .SetLabel(zhi)
-        self.__yLabels['left']  .SetLabel(xlo)
-        self.__yLabels['right'] .SetLabel(xhi)
-        self.__yLabels['bottom'].SetLabel(zlo)
-        self.__yLabels['top']   .SetLabel(zhi)
-        self.__zLabels['left']  .SetLabel(xlo)
-        self.__zLabels['right'] .SetLabel(xhi)
-        self.__zLabels['bottom'].SetLabel(ylo)
-        self.__zLabels['top']   .SetLabel(yhi)
+        xcxlo, xcxhi = ylo, yhi
+        xcylo, xcyhi = zlo, zhi
+        ycxlo, ycxhi = xlo, xhi
+        ycylo, ycyhi = zlo, zhi
+        zcxlo, zcxhi = xlo, xhi
+        zcylo, zcyhi = ylo, yhi
+
+        if self.__xcanvas.invertX: xcxlo, xcxhi = xcxhi, xcxlo
+        if self.__xcanvas.invertY: xcylo, xcyhi = xcyhi, xcylo
+        if self.__ycanvas.invertX: ycxlo, ycxhi = ycxhi, ycxlo
+        if self.__ycanvas.invertY: ycylo, ycyhi = ycyhi, ycylo
+        if self.__zcanvas.invertX: zcxlo, zcxhi = zcxhi, zcxlo
+        if self.__zcanvas.invertY: zcylo, zcyhi = zcyhi, zcylo
+
+        self.__xLabels['left']  .SetLabel(xcxlo)
+        self.__xLabels['right'] .SetLabel(xcxhi)
+        self.__xLabels['bottom'].SetLabel(xcylo)
+        self.__xLabels['top']   .SetLabel(xcyhi)
+        self.__yLabels['left']  .SetLabel(ycxlo)
+        self.__yLabels['right'] .SetLabel(ycxhi)
+        self.__yLabels['bottom'].SetLabel(ycylo)
+        self.__yLabels['top']   .SetLabel(ycyhi)
+        self.__zLabels['left']  .SetLabel(zcxlo)
+        self.__zLabels['right'] .SetLabel(zcxhi)
+        self.__zLabels['bottom'].SetLabel(zcylo)
+        self.__zLabels['top']   .SetLabel(zcyhi)
 
         if vertOrient: vertOrient = wx.VERTICAL
         else:          vertOrient = wx.HORIZONTAL
@@ -846,6 +867,11 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # the displayed world space aspect ratio is
         # maintained
         self.__calcCanvasSizes()
+
+        # When in grid layout, flip the horizontal axis
+        # of the X canvas (assumed to be A/P), to force
+        # third angle orthographic projection.
+        self.__xcanvas.invertX = layout == 'grid'
 
         self.Layout()
         self.getContentPanel().Layout()
