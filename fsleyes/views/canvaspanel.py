@@ -320,7 +320,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         :meth:`.ViewPanel.togglePanel`.
         """        
         self.togglePanel(overlayinfopanel.OverlayInfoPanel,
-                         location=wx.LEFT,
+                         location=wx.RIGHT,
                          floatPane=floatPane)
     
 

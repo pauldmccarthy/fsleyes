@@ -23,6 +23,10 @@ This logic is encapsulated in two classes:
 
 The :mod:`.profilemap` module contains mappings between ``ViewPanel`` types,
 and their corresponding ``Profile`` types.
+
+
+The ``profiles`` package is also home to the :mod:`.shortcuts` module, which
+defines global *FSLeyes* keyboard shortcuts.
 """
 
 import logging

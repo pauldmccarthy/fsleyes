@@ -25,6 +25,7 @@ from   fsl.utils.platform import platform as fslplatform
 
 import                                       fsleyes
 import fsleyes.strings                    as strings
+import fsleyes.profiles.shortcuts         as shortcuts
 
 from . import views
 from . import actions
@@ -278,6 +279,31 @@ class FSLEyesFrame(wx.Frame):
         self.__auiManager.Update()
 
 
+    def getFocusedViewPanel(self):
+        """Returns the :class:`.ViewPanel` which currently has focus, or
+        ``None`` if no ``ViewPanel`` has focus.
+        """
+        focused = wx.Window.FindFocus()
+
+        while focused is not None:
+
+            if isinstance(focused, views.ViewPanel):
+                return focused
+
+            focused = focused.GetParent() 
+        return None
+
+
+    @actions.action
+    def removeFocusedViewPanel(self, *args, **kwargs):
+        """Removes the :class:`.ViewPanel` which currently has focus. """
+
+        vp = self.getFocusedViewPanel()
+
+        if vp is not None:
+            self.removeViewPanel(vp)
+
+
     def removeAllViewPanels(self):
         """Removes all view panels from this ``FSLEyesFrame``.
 
@@ -399,9 +425,78 @@ class FSLEyesFrame(wx.Frame):
         return panel
 
 
+    @actions.action
+    def addOrthoPanel(self, *args, **kwargs):
+        """Adds a new :class:`.OrthoPanel`."""
+        vp = self.addViewPanel(views.OrthoPanel)
+        self.__newViewPanelDefaultLayout(vp)
+
+
+    @actions.action
+    def addLightBoxPanel(self, *args, **kwargs):
+        """Adds a new :class:`.LightBoxPanel`."""
+        vp = self.addViewPanel(views.LightBoxPanel)
+        self.__newViewPanelDefaultLayout(vp) 
+
+    
+    @actions.action
+    def addTimeSeriesPanel(self, *args, **kwargs):
+        """Adds a new :class:`.TimeSeriesPanel`."""
+        vp = self.addViewPanel(views.TimeSeriesPanel)
+        self.__newViewPanelDefaultLayout(vp)
+
+        
+    @actions.action
+    def addHistogramPanel(self, *args, **kwargs):
+        """Adds a new :class:`.HistogramPanel`."""
+        vp = self.addViewPanel(views.HistogramPanel)
+        self.__newViewPanelDefaultLayout(vp)
+
+    
+    @actions.action
+    def addPowerSpectrumPanel(self, *args, **kwargs):
+        """Adds a new :class:`.PowerSpectrumPanel`."""
+        vp = self.addViewPanel(views.PowerSpectrumPanel)
+        self.__newViewPanelDefaultLayout(vp)
+
+
+    @actions.action
+    def addShellPanel(self, *args, **kwargs):
+        """Adds a new :class:`.ShellPanel`."""
+        vp = self.addViewPanel(views.ShellPanel)
+        self.__newViewPanelDefaultLayout(vp) 
+
+
     def refreshPerspectiveMenu(self):
         """Re-creates the *View -> Perspectives* sub-menu. """
         self.__makePerspectiveMenu()
+
+
+    @actions.action
+    def openHelp(self, *args, **kwargs):
+        """Opens FSLeyes help in a web browser. """
+
+        if fslplatform.frozen:
+            url = op.join(
+                fsleyes.assetDir, 'userdoc', 'index.html')
+        else:
+            url = op.join(
+                fsleyes.assetDir, 'userdoc', 'html', 'index.html')
+
+        import fsl.utils.webpage as webpage
+
+        # Show locally stored help files
+        if op.exists(url):
+            webpage.openFile(url)
+        else:
+            url = 'http://users.fmrib.ox.ac.uk/~paulmc/fsleyes/'
+            webpage.openPage(url)
+
+
+    @actions.action
+    def closeFSLeyes(self, *args, **kwargs):
+        """Closes FSLeyes. """
+        self.Close()
 
 
     def runScript(self, script=None):
@@ -445,9 +540,16 @@ class FSLEyesFrame(wx.Frame):
 
         # Non-toggle actions
         for actionName, actionObj in regularActions:
+
+            title    = strings.actions[panel, actionName]
+            shortcut = shortcuts.actions.get((panel, actionName))
+
+            if shortcut is not None:
+                title = '{}\t{}'.format(title, shortcut)
+
             menuItem = menu.Append(
                 wx.ID_ANY,
-                strings.actions[panel, actionName],
+                title,
                 kind=wx.ITEM_NORMAL)
             
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
@@ -459,26 +561,34 @@ class FSLEyesFrame(wx.Frame):
         # Toggle actions
         for actionName, actionObj in toggleActions:
 
+            title    = strings.actions[panel, actionName]
+            shortcut = shortcuts.actions.get((panel, actionName))
+
+            if shortcut is not None:
+                title = '{}\t{}'.format(title, shortcut) 
+
             menuItem = menu.Append(
                 wx.ID_ANY,
-                strings.actions[panel, actionName],
+                title,
                 kind=wx.ITEM_CHECK)
             
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
-        # Add a 'Close' action to
-        # the menu for every panel 
-        def closeViewPanel(ev):
-            self.removeViewPanel(panel)
-
-        # But put another separator before it
+        # We add a 'Close' action to
+        # the menu for every panel, but
+        # put another separator before
+        # it
         if len(regularActions) > 0 or len(toggleActions) > 0:
             menu.AppendSeparator()
 
-        closeItem = menu.Append(
-            wx.ID_ANY,
-            strings.actions[self, 'closeViewPanel'])
-        self.Bind(wx.EVT_MENU, closeViewPanel, closeItem)
+        title = strings.actions[self, 'removeFocusedViewPanel']
+        shortcut = shortcuts.actions.get((self, 'removeFocusedViewPanel'))
+
+        if shortcut is not None:
+            title = '{}\t{}'.format(title, shortcut)
+
+        closeItem = menu.Append(wx.ID_ANY, title)
+        self.removeFocusedViewPanel.bindToWidget(self, wx.EVT_MENU, closeItem)
     
 
     def __onViewPanelClose(self, ev=None, panel=None, displaySync=True):
@@ -929,42 +1039,38 @@ class FSLEyesFrame(wx.Frame):
     def __makeFSLeyesMenu(self, menu):
         """Called by :meth:`__makeMenuBar`. Creates the *FSLeyes* menu. """
 
-        def help():
-
-            if fslplatform.frozen:
-                url = op.join(
-                    fsleyes.assetDir, 'userdoc', 'index.html')
-            else:
-                url = op.join(
-                    fsleyes.assetDir, 'userdoc', 'html', 'index.html')
-
-            import fsl.utils.webpage as webpage
-
-            # Show locally stored help files
-            if op.exists(url):
-                webpage.openFile(url)
-            else:
-                url = 'http://users.fmrib.ox.ac.uk/~paulmc/fsleyes/'
-                webpage.openPage(url)
-
-        def quit():
-            self.Close()
-
         fsleyesActions = [
-            (actions.AboutAction(
-                self.__overlayList, self.__displayCtx, self),
-             strings.actions['AboutAction'],
+            (actions.AboutAction(self.__overlayList,
+                                 self.__displayCtx,
+                                 self),
+             strings.actions[      actions.AboutAction],
+             shortcuts.actions.get(actions.AboutAction),
              wx.ID_ABOUT),
-            (actions.DiagnosticReportAction(
-                self.__overlayList, self.__displayCtx, self),
-             strings.actions['DiagnosticReportAction'],
+            (actions.DiagnosticReportAction(self.__overlayList,
+                                            self.__displayCtx,
+                                            self),
+             strings.actions[      actions.DiagnosticReportAction],
+             shortcuts.actions.get(actions.DiagnosticReportAction),
              wx.ID_ANY),
-            (actions.Action(help), 'Help', wx.ID_HELP),
-            (actions.Action(quit), 'Quit', wx.ID_EXIT)]
+            (self.openHelp,
+             strings.actions[       self, 'openHelp'],
+             shortcuts.actions.get((self, 'openHelp')),
+             wx.ID_HELP),
+            (self.closeFSLeyes,
+             strings.actions[       self, 'closeFSLeyes'],
+             shortcuts.actions.get((self, 'closeFSLeyes')),
+             wx.ID_EXIT)]
 
-        for actionObj, title, id in fsleyesActions:
-            menuItem = menu.Append(id, title)
-            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
+
+        for action, title, shortcut, wxid in fsleyesActions:
+
+            if shortcut is None: shortcut = ''
+            else:                shortcut = '\t{}'.format(shortcut)
+
+            title = '{}{}'.format(title, shortcut)
+
+            item = menu.Append(wxid, title)
+            action.bindToWidget(self, wx.EVT_MENU, item)
 
         
     def __makeFileMenu(self, menu):
@@ -987,8 +1093,14 @@ class FSLEyesFrame(wx.Frame):
             if action == 'sep':
                 menu.AppendSeparator()
                 continue
+
+            title    = strings.actions[  action]
+            shortcut = shortcuts.actions.get(action)
+
+            if shortcut is not None:
+                title = '{}\t{}'.format(title, shortcut)
             
-            menuItem  = menu.Append(wx.ID_ANY, strings.actions[action])
+            menuItem  = menu.Append(wx.ID_ANY, title)
             actionObj = action(self.__overlayList, self.__displayCtx, self)
 
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem) 
@@ -998,21 +1110,25 @@ class FSLEyesFrame(wx.Frame):
         """Called by :meth:`__makeMenuBar`. Creates the view panel menu. """
         
         # Shortcuts to open a new view panel
-        viewPanels = [views.OrthoPanel,
-                      views.LightBoxPanel,
-                      views.TimeSeriesPanel,
-                      views.PowerSpectrumPanel,
-                      views.HistogramPanel,
-                      views.ShellPanel]
+        vpActions = [self.addOrthoPanel,
+                     self.addLightBoxPanel,
+                     self.addTimeSeriesPanel,
+                     self.addPowerSpectrumPanel,
+                     self.addHistogramPanel,
+                     self.addShellPanel]
         
-        for viewPanel in viewPanels:
-            viewAction = menu.Append(wx.ID_ANY, strings.titles[viewPanel])
+        for action in vpActions:
 
-            def addViewPanel(ev, vp=viewPanel):
-                vp = self.addViewPanel(vp)
-                self.__newViewPanelDefaultLayout(vp)
-            
-            self.Bind(wx.EVT_MENU, addViewPanel, viewAction)
+            shortcut = shortcuts.actions.get((self, action.__name__))
+
+            if shortcut is None: shortcut = ''
+            else:                shortcut = '\t{}'.format(shortcut)
+
+            title = '{}{}'.format(strings.actions[self, action.__name__],
+                                  shortcut)
+
+            item = menu.Append(wx.ID_ANY, title)
+            self.Bind(wx.EVT_MENU, action, item)
 
 
     def __newViewPanelDefaultLayout(self, viewPanel):

@@ -271,7 +271,15 @@ actions = TypeDict({
     'RunScriptAction'          : 'Run script',
     'AboutAction'              : 'About FSLeyes',
 
-    'FSLEyesFrame.closeViewPanel' : 'Close',
+    'FSLEyesFrame.removeFocusedViewPanel' : 'Close',
+    'FSLEyesFrame.addOrthoPanel'          : 'Ortho View',
+    'FSLEyesFrame.addLightBoxPanel'       : 'Lightbox View',
+    'FSLEyesFrame.addTimeSeriesPanel'     : 'Time series',
+    'FSLEyesFrame.addHistogramPanel'      : 'Power spectra',
+    'FSLEyesFrame.addPowerSpectrumPanel'  : 'Histogram',
+    'FSLEyesFrame.addShellPanel'          : 'Python shell',
+    'FSLEyesFrame.openHelp'               : 'Help',
+    'FSLEyesFrame.closeFSLeyes'           : 'Close',
 
     'CanvasPanel.screenshot'                : 'Take screenshot',
     'CanvasPanel.showCommandLineArgs'       : 'Show command line for scene',
