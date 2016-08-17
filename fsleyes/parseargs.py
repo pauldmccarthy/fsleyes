@@ -309,7 +309,8 @@ OPTIONS = td.TypeDict({
                        'displaySpace',
                        'standard',
                        'standard1mm',
-                       'bigmem'],
+                       'bigmem',
+                       'bumMode'],
 
     # From here on, all of the keys are
     # the names of HasProperties classes,
@@ -515,6 +516,7 @@ ARGUMENTS = td.TypeDict({
     'Main.standard'        : ('std',    'standard'),
     'Main.standard1mm'     : ('std1mm', 'standard1mm'),
     'Main.bigmem'          : ('b',      'bigmem'),
+    'Main.bumMode'         : ('bums',   'bumMode'),
     
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar'),
     'SceneOpts.bgColour'           : ('bg',  'bgColour'),
@@ -661,6 +663,7 @@ HELP = td.TypeDict({
                              'underlay (only if $FSLDIR is set).',
     'Main.bigmem'          : 'Load all images into memory, '
                              'regardless of size.',
+    'Main.bumMode'         : 'Make the coronal icon look like a bum',
 
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
                                      'highlighting the current location',
@@ -1093,7 +1096,10 @@ def _configMainParser(mainParser):
 
     mainParser.add_argument(*mainArgs['bigmem'],
                             action='store_true',
-                            help=mainHelp['bigmem']) 
+                            help=mainHelp['bigmem'])
+    mainParser.add_argument(*mainArgs['bumMode'],
+                            action='store_true',
+                            help=mainHelp['bumMode'])
     
 
 def _configSceneParser(sceneParser):
@@ -1640,6 +1646,12 @@ def _printFullHelp(mainParser):
     # but we only want them displayed
     # in the short help.
     mainParser.epilog = None
+
+    # Hide silly options
+    silly = ['--bumMode']
+    for action in mainParser._actions:
+        if any([o in silly for o in action.option_strings]):
+            action.help = argparse.SUPPRESS
 
     # Create a bunch of parsers for handling
     # overlay display options
