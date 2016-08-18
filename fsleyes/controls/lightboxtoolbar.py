@@ -20,6 +20,12 @@ import fsleyes.tooltips as fsltooltips
 import fsleyes.strings  as strings
 
 
+BUM_MODE = False
+"""If ``True``, the icon used for the coronal toggle button is made to look
+like a bum.
+"""
+
+
 class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
     """The ``LightBoxToolBar`` is a :class:`.FSLEyesToolBar` for use with the
     :class:`.LightBoxPanel`. A ``LightBoxToolBar`` looks something like this:
@@ -52,6 +58,11 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
         self.lightBoxPanel = lb
 
         lbOpts = lb.getSceneOptions()
+
+        if BUM_MODE: coronalIcon          = 'coronalBumSlice24'
+        else:        coronalIcon          = 'coronalSlice24'
+        if BUM_MODE: coronalHighlightIcon = 'coronalBumSliceHighlight24'
+        else:        coronalHighlightIcon = 'coronalSliceHighlight24' 
         
         icons = {
             'screenshot'                : fslicons.findImageFile('camera24'),
@@ -65,8 +76,8 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
             'zax' : {
                 0 : [fslicons.findImageFile('sagittalSliceHighlight24'),
                      fslicons.findImageFile('sagittalSlice24')],
-                1 : [fslicons.findImageFile('coronalSliceHighlight24'),
-                     fslicons.findImageFile('coronalSlice24')],
+                1 : [fslicons.findImageFile(coronalHighlightIcon),
+                     fslicons.findImageFile(coronalIcon)],
                 2 : [fslicons.findImageFile('axialSliceHighlight24'),
                      fslicons.findImageFile('axialSlice24')],
             }

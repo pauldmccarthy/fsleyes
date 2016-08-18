@@ -19,7 +19,8 @@ import fsleyes.strings  as strings
 
 
 BUM_MODE = False
-"""If ``True``, the icon used for the coronal toggle button looks like a bum.
+"""If ``True``, the icon used for the coronal toggle button is made to look
+like a bum.
 """
 
 
