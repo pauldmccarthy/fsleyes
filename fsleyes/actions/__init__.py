@@ -199,6 +199,13 @@ class ActionProvider(object):
         """Return the :class:`Action` instance with the specified name. """
         return getattr(self, name)
 
+    
+    def hasAction(self, name):
+        """Return ``True`` if this ``ActionProvider`` has an action with the
+        given name, ``False`` otherwise
+        """
+        return getattr(self, name, None) is not None
+
 
     def enableAction(self, name, enable=True):
         """Enable/disable the named :class:`Action`. """

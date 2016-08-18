@@ -220,6 +220,14 @@ class FSLEyesFrame(wx.Frame):
 
         self.__menuBar   = None
         self.__perspMenu = None
+
+
+        # This dictionary contains mappings of the form
+        #
+        #   { keyboard-shortcut : { ViewPanel : actionName } }
+        #
+        # See the __onViewPanelMenuItem method for details.
+        self.__viewPanelShortcuts = {}
         
         self.__makeMenuBar()
         self.__restoreState(restore)
@@ -554,12 +562,33 @@ class FSLEyesFrame(wx.Frame):
             if shortcut is not None:
                 title = '{}\t{}'.format(title, shortcut)
 
-            menuItem = menu.Append(
-                wx.ID_ANY,
-                title,
-                kind=itemType)
+            menuItem = menu.Append(wx.ID_ANY, title, kind=itemType)
 
-            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
+            # If this action can be called from a
+            # keyboard shortcut, we save it in a
+            # dictionary for reasons explained
+            # in the __onViewPanelMenuItem method.
+            # 
+            # We formalise the shortcut string to the 
+            # wx representation, so it is consistent
+            # regardless of whatever we have put in
+            # the fsleyes.profiles.shortcuts module.
+            if shortcut is not None:
+                
+                shortcut     = menuItem.GetAccel().ToString()
+                shortcutList = self.__viewPanelShortcuts.get(shortcut, {})
+
+                shortcutList[panel] = actionName
+
+                self.__viewPanelShortcuts[shortcut] = shortcutList
+
+            # The __onViewPanelMenuItem method
+            # needs to know which view panel/action
+            # is associated with each callback.
+            def wrapper(ev, vp=panel, aname=actionName, sc=shortcut):
+                self.__onViewPanelMenuItem(vp, aname, sc)
+
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem, wrapper)
 
         # We add a 'Close' action to the
         # menu for every panel, but put
@@ -575,6 +604,68 @@ class FSLEyesFrame(wx.Frame):
 
         closeItem = menu.Append(wx.ID_ANY, title)
         self.removeFocusedViewPanel.bindToWidget(self, wx.EVT_MENU, closeItem)
+
+
+    def __onViewPanelMenuItem(self, viewPanel, actionName, shortcut):
+        """Called when a menu item from a :class:`.ViewPanel` menu is selected,
+        either via menu selection, or from a bound keyboard shortcut. This
+        callback is configured in the :meth:`__addViewPanelMenu` method.
+
+        :arg viewPanel:  The :class:`.ViewPanel` associated with the menu item.
+        
+        :arg actionName: The name of the :class:`.Action` which is associated
+                         with the menu item.
+        
+        :arg shortcut:   The keyboard shortcut code (see
+                         ``wx.AcceleratorEntry.ToString``) associated with the
+                         menu item, of ``None`` if there is no shortcut.
+        """
+
+        # Hacky way to see if this menu item
+        # callback was triggered via a keyboard
+        # shortcut or via direct menu item
+        # selection.
+        keyDown = any((wx.GetKeyState(wx.WXK_CONTROL),
+                       wx.GetKeyState(wx.WXK_ALT),
+                       wx.GetKeyState(wx.WXK_SHIFT)))
+
+        # If there is no keyboard shortcut associated
+        # with this action, or the menu item was selected
+        # directly, we just execute the action directly
+        # on the view panel which is associated with the
+        # menu.
+        if shortcut is None or (not keyDown):
+            viewPanel.getAction(actionName)()
+            return
+
+        # Otherwise we assume that the menu item was
+        # triggered via a keyboard shortcut. In this case,
+        # we want the currently focused ViewPanel to be
+        # the receiver of the action callback.
+        #
+        # However, the same keyboard shortcut might be
+        # used for different ViewPanel actions - for
+        # example, Ctrl-Alt-1 might be bound to
+        # toggleOverlayList on an OrthoPanel, but bound
+        # to toggleTimeSeriesList on a TimeSeriesPanel.
+        #
+        # The idea is that, when the user presses such a
+        # shortcut, the relevant action should be
+        # executed on the currently focused ViewPanel
+        # (if it has an action associated with the
+        # shortcut).
+        #
+        # The __viewPanelShortcuts dictionary contains
+        # mappings from keyboard shortcuts to ViewPanel
+        # actions, so we can easily figure out which
+        # ViewPanel/action to execute based on the
+        # keyboard shortcut.
+        
+        viewPanel  = self.getFocusedViewPanel()
+        actionName = self.__viewPanelShortcuts[shortcut].get(viewPanel, None)
+
+        if actionName is not None:
+            viewPanel.getAction(actionName)()
     
 
     def __onViewPanelClose(self, ev=None, panel=None, displaySync=True):

@@ -91,18 +91,21 @@ class Action(props.HasProperties):
         self.__instance = None
 
         
-    def bindToWidget(self, parent, evType, widget):
+    def bindToWidget(self, parent, evType, widget, wrapper=None):
         """Binds this action to the given :mod:`wx` widget.
 
-        :arg parent: The :mod:`wx` object on which the event should be bound.
-        :arg evType: The :mod:`wx` event type.
-        :arg widget: The :mod:`wx` widget.
+        :arg parent:  The :mod:`wx` object on which the event should be bound.
+        :arg evType:  The :mod:`wx` event type.
+        :arg widget:  The :mod:`wx` widget.
+        :arg wrapper: Optional custom wrapper function used to execute the
+                      action.
         """
 
-        def wrappedAction(ev):
-            self()
+        if wrapper is None:
+            def wrapper(ev):
+                self()
             
-        parent.Bind(evType, wrappedAction, widget)
+        parent.Bind(evType, wrapper, widget)
         widget.Enable(self.enabled)
         self.__boundWidgets.append((parent, evType, widget))
 
@@ -217,7 +220,7 @@ class ToggleAction(Action):
         return result
 
 
-    def bindToWidget(self, parent, evType, widget):
+    def bindToWidget(self, parent, evType, widget, wrapper=None):
         """Bind this ``ToggleAction`` to a widget. If the widget is a
         ``wx.MenuItem``, its ``Check`` is called whenever the :attr:`toggled`
         state changes.
@@ -226,7 +229,7 @@ class ToggleAction(Action):
         import wx
         import pwidgets.bitmaptoggle as bmptoggle
         
-        Action.bindToWidget(self, parent, evType, widget)
+        Action.bindToWidget(self, parent, evType, widget, wrapper)
 
         if isinstance(widget, wx.MenuItem):
             widget.Check(self.toggled)
