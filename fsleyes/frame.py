@@ -50,7 +50,8 @@ class FSLEyesFrame(wx.Frame):
 
     ========== ==============================================================
     *FSLeyes*  General actions, such as help, quit, about.
-    *File*     Global actions, such as adding a new overlay
+    *File*     File actions such as adding a new overlay.
+    *Overlay*  Actions for working with overlays.
     *View*     Options to open a new :class:`.ViewPanel`.
     *Settings* Options which are specific to the currently visible
                :class:`.ViewPanel` instances. A separate sub-menu is added
@@ -149,6 +150,7 @@ class FSLEyesFrame(wx.Frame):
         
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
+        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
         self.__mainPanel   = wx.Panel(self)
         self.__statusBar   = wx.StaticText(self)
 
@@ -235,7 +237,6 @@ class FSLEyesFrame(wx.Frame):
         self.__menuBar   = None
         self.__perspMenu = None
 
-
         # This dictionary contains mappings of the form
         #
         #   { keyboard-shortcut : { ViewPanel : actionName } }
@@ -250,6 +251,13 @@ class FSLEyesFrame(wx.Frame):
 
         self.__auiManager.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onViewPanelClose)
         self             .Bind(wx.EVT_CLOSE,           self.__onClose)
+
+        overlayList.addListener('overlays',
+                                self.__name,
+                                self.__selectedOverlayChanged)
+        displayCtx .addListener('selectedOverlay',
+                                self.__name,
+                                self.__selectedOverlayChanged)
 
         self.Layout()
 
@@ -448,20 +456,30 @@ class FSLEyesFrame(wx.Frame):
 
         if isinstance(viewPanel, views.TimeSeriesPanel):
             viewPanel.toggleTimeSeriesToolBar()
+            viewPanel.toggleOverlayList()
+            viewPanel.togglePlotList()
             
         elif isinstance(viewPanel, views.HistogramPanel):
             viewPanel.toggleHistogramToolBar()
+            viewPanel.toggleOverlayList()
+            viewPanel.togglePlotList()
             
         elif isinstance(viewPanel, views.PowerSpectrumPanel):
             viewPanel.togglePowerSpectrumToolBar()
+            viewPanel.toggleOverlayList()
+            viewPanel.togglePlotList()
             
         elif isinstance(viewPanel, views.OrthoPanel):
             viewPanel.toggleDisplayToolBar()
             viewPanel.toggleOrthoToolBar()
+            viewPanel.toggleOverlayList()
+            viewPanel.toggleLocationPanel()
             
         elif isinstance(viewPanel, views.LightBoxPanel):
             viewPanel.toggleDisplayToolBar()
-            viewPanel.toggleLightBoxToolBar() 
+            viewPanel.toggleLightBoxToolBar()
+            viewPanel.toggleOverlayList()
+            viewPanel.toggleLocationPanel()
 
 
     def refreshPerspectiveMenu(self):
@@ -1037,6 +1055,7 @@ class FSLEyesFrame(wx.Frame):
             fsleyesMenu = None
 
         fileMenu        = wx.Menu()
+        overlayMenu     = wx.Menu()
         viewMenu        = wx.Menu()
         perspectiveMenu = wx.Menu() 
         settingsMenu    = wx.Menu()
@@ -1045,10 +1064,12 @@ class FSLEyesFrame(wx.Frame):
         self.__perspMenu = perspectiveMenu
 
         menuBar.Append(fileMenu,     'File')
+        menuBar.Append(overlayMenu,  'Overlay')
         menuBar.Append(viewMenu,     'View')
         menuBar.Append(settingsMenu, 'Settings') 
 
         self.__fsleyesMenu  = fsleyesMenu
+        self.__overlayMenu  = overlayMenu
         self.__fileMenu     = fileMenu
         self.__viewMenu     = viewMenu
         self.__settingsMenu = settingsMenu
@@ -1066,6 +1087,8 @@ class FSLEyesFrame(wx.Frame):
         else:
             fileMenu.AppendSeparator()
             self.__makeFSLeyesMenu(fileMenu)
+
+        self.__makeOverlayMenu(overlayMenu)
             
         self.__makeViewPanelMenu(viewMenu)
 
@@ -1118,14 +1141,7 @@ class FSLEyesFrame(wx.Frame):
         fileActions = [actions.LoadOverlayAction,
                        actions.LoadOverlayFromDirAction,
                        actions.LoadStandardAction,
-                       actions.RunScriptAction,
-                       'sep',
-                       actions.CopyOverlayAction,
-                       actions.SaveOverlayAction,
-                       actions.ReloadOverlayAction,
-                       'sep',
-                       actions.RemoveOverlayAction,
-                       actions.RemoveAllOverlaysAction]
+                       actions.RunScriptAction]
  
         for action in fileActions:
 
@@ -1152,8 +1168,8 @@ class FSLEyesFrame(wx.Frame):
         vpActions = [self.addOrthoPanel,
                      self.addLightBoxPanel,
                      self.addTimeSeriesPanel,
-                     self.addPowerSpectrumPanel,
                      self.addHistogramPanel,
+                     self.addPowerSpectrumPanel,
                      self.addShellPanel]
         
         for action in vpActions:
@@ -1220,3 +1236,78 @@ class FSLEyesFrame(wx.Frame):
             perspMenuItem = perspMenu.Append(wx.ID_ANY, strings.actions[pa])
             
             actionObj.bindToWidget(self, wx.EVT_MENU, perspMenuItem)
+
+
+    def __makeOverlayMenu(self, menu):
+        """Called by :meth:`__makeMenuBar`. Creates/configures the *Overlay*
+        menu.
+        """
+
+        fileActions = ['selectNextOverlay',
+                       'selectPreviousOverlay',
+                       actions.RemoveAllOverlaysAction,
+                       'sep',
+                       'name',
+                       actions.CopyOverlayAction,
+                       actions.SaveOverlayAction,
+                       actions.ReloadOverlayAction,
+                       actions.RemoveOverlayAction,
+                       'toggleOverlayVisibility']
+
+        for action in fileActions:
+
+            # A dummy menu item which contains the
+            # name of the currently selected overlay.
+            if action == 'name':
+                self.__overlayNameMenuItem = menu.Append(wx.ID_ANY, '<')
+                self.__overlayNameMenuItem.Enable(False)
+                continue
+
+            if action == 'sep':
+
+                menu.AppendSeparator()
+                continue
+
+            # Method on this FSLEyesFrame
+            if isinstance(action, basestring):
+
+                title     = strings.actions[  self, action]
+                shortcut  = shortcuts.actions.get((self, action))
+                actionObj = getattr(self, action)
+
+            # Action class 
+            else:
+                title     = strings.actions[  action]
+                shortcut  = shortcuts.actions.get(action)
+                actionObj = action(self.__overlayList, self.__displayCtx, self)
+
+            if shortcut is not None:
+                title = '{}\t{}'.format(title, shortcut)
+ 
+            menuItem = menu.Append(wx.ID_ANY, title)
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem) 
+
+
+    def __selectedOverlayChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.selectedOverlay`, or
+        when the :attr:`.Display.name` property of the currently selected
+        overlay changes. Updates the overlay name item in the *Overlay*
+        menu*.
+        """
+
+        oldDisplay = getattr(self, '__display', None)
+
+        if oldDisplay is not None:
+            oldDisplay.removeListener('name', self.__name)
+            self.__display = None
+
+        overlay = self.__displayCtx.getSelectedOverlay()
+
+        if overlay is not None:
+            self.__display = self.__displayCtx.getDisplay(overlay)
+            self.__overlayNameMenuItem.SetText(self.__display.name)
+
+            if not self.__display.hasListener('name', self.__name):
+                self.__display.addListener('name',
+                                           self.__name,
+                                           self.__selectedOverlayChanged)

@@ -30,6 +30,11 @@ actions = td.TypeDict({
     'FSLEyesFrame.addPowerSpectrumPanel'  : 'Ctrl-4',
     'FSLEyesFrame.addHistogramPanel'      : 'Ctrl-5',
     'FSLEyesFrame.addShellPanel'          : 'Ctrl-6',
+    
+    'FSLEyesFrame.selectNextOverlay'       : 'Ctrl-Up',
+    'FSLEyesFrame.selectPreviousOverlay'   : 'Ctrl-Down',
+    'FSLEyesFrame.toggleOverlayVisibility' : 'Ctrl-Z',
+ 
 
     # ViewPanel actions must use one
     # of CTRL/ALT or Shift due to
@@ -47,9 +52,17 @@ actions = td.TypeDict({
     'OrthoPanel.toggleOrthoToolBar'         : 'Ctrl-Alt-8',
     'OrthoPanel.toggleEditMode'             : 'Ctrl-E',
 
-    'LightBoxPanel.toggleLightBoxToolBar'   : 'Ctrl-Alt-8',
+    # OrthoPanel.resetView
 
+    'LightBoxPanel.toggleLightBoxToolBar'   : 'Ctrl-Alt-8',
 
     'PlotPanel.toggleOverlayList'         : 'Ctrl-Alt-1',
     'PlotPanel.togglePlotList'            : 'Ctrl-Alt-2',
+
+    'TimeSeriesPanel.toggleTimeSeriesToolBar'       : 'Ctrl-Alt-3',
+    'TimeSeriesPanel.toggleTimeSeriesControl'       : 'Ctrl-Alt-4',
+    'HistogramPanel.toggleHistogramToolBar'         : 'Ctrl-Alt-3',
+    'HistogramPanel.toggleHistogramControl'         : 'Ctrl-Alt-4',
+    'PowerSpectrumPanel.togglePowerSpectrumToolBar' : 'Ctrl-Alt-3',
+    'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Ctrl-Alt-4', 
 })

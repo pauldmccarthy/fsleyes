@@ -501,7 +501,7 @@ class GLImageObject(GLObject):
         # axis. We do this to avoid rounding
         # bias when the display Z position is
         # on a voxel boundary.
-        if opts.interpolation == 'none':
+        if not hasattr(opts, 'interpolation') or opts.interpolation == 'none':
             voxCoords = opts.roundVoxels(voxCoords,
                                          daxes=[self.zax])
 

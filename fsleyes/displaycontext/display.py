@@ -117,7 +117,7 @@ class Display(props.SyncableHasProperties):
 
             # These properties cannot be unbound, as
             # they affect the OpenGL representation 
-            nounbind=['overlayType'],
+            nounbind=['overlayType', 'name'],
 
             # Initial sync state between this
             # Display and the parent Display

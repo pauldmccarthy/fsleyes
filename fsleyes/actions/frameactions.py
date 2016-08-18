@@ -61,6 +61,56 @@ def removeFocusedViewPanel(self, *args, **kwargs):
         self.removeViewPanel(vp)
 
 
+def _changeOverlay(self, offset):
+    """Used by :func:`selectNextOverlay` and :func:`selectPreviousOverlay`.
+    Changes the currently selected overlay by the given offset.
+    """
+
+    overlayList = self.getOverlayList()
+
+    if len(overlayList) in (0, 1):
+        return
+
+    viewPanel = self.getFocusedViewPanel()
+
+    if viewPanel is None: displayCtx = self     .getDisplayContext()
+    else:                 displayCtx = viewPanel.getDisplayContext()
+
+    cur = displayCtx.overlayOrder.index(displayCtx.selectedOverlay)
+    new = displayCtx.overlayOrder[(cur + offset) % len(overlayList)]
+
+    displayCtx.selectedOverlay = new 
+
+
+def selectNextOverlay(self, *args, **kwargs):
+    """Increments the :attr:`.DisplayContext.selectedOverlay`. """
+    _changeOverlay(self, 1)
+
+
+def selectPreviousOverlay(self, *args, **kwargs):
+    """Decrements the :attr:`.DisplayContext.selectedOverlay`. """
+    _changeOverlay(self, -1)
+
+
+def toggleOverlayVisibility(self, *args, **kwargs):
+    """Shows/hides the currently selected overlay. """
+
+    overlayList = self.getOverlayList()
+
+    if len(overlayList) == 0:
+        return
+
+    viewPanel = self.getFocusedViewPanel()
+
+    if viewPanel is None: displayCtx = self     .getDisplayContext()
+    else:                 displayCtx = viewPanel.getDisplayContext()
+
+    overlay = displayCtx.getSelectedOverlay()
+    display = displayCtx.getDisplay(overlay)
+
+    display.enabled = not display.enabled
+
+
 def openHelp(self, *args, **kwargs):
     """Opens FSLeyes help in a web browser. """
 
@@ -86,12 +136,16 @@ def closeFSLeyes(self, *args, **kwargs):
     self.Close()
 
 
-frame.FSLEyesFrame.addOrthoPanel          = actions.action(addOrthoPanel)
-frame.FSLEyesFrame.addLightBoxPanel       = actions.action(addLightBoxPanel)
-frame.FSLEyesFrame.addTimeSeriesPanel     = actions.action(addTimeSeriesPanel)
-frame.FSLEyesFrame.addHistogramPanel      = actions.action(addHistogramPanel)
-frame.FSLEyesFrame.addPowerSpectrumPanel  = actions.action(addPowerSpectrumPanel)
-frame.FSLEyesFrame.addShellPanel          = actions.action(addShellPanel)
-frame.FSLEyesFrame.removeFocusedViewPanel = actions.action(removeFocusedViewPanel)
+frame.FSLEyesFrame.addOrthoPanel           = actions.action(addOrthoPanel)
+frame.FSLEyesFrame.addLightBoxPanel        = actions.action(addLightBoxPanel)
+frame.FSLEyesFrame.addTimeSeriesPanel      = actions.action(addTimeSeriesPanel)
+frame.FSLEyesFrame.addHistogramPanel       = actions.action(addHistogramPanel)
+frame.FSLEyesFrame.addPowerSpectrumPanel   = actions.action(addPowerSpectrumPanel)
+frame.FSLEyesFrame.addShellPanel           = actions.action(addShellPanel)
+frame.FSLEyesFrame.removeFocusedViewPanel  = actions.action(removeFocusedViewPanel)
+frame.FSLEyesFrame.selectNextOverlay       = actions.action(selectNextOverlay)
+frame.FSLEyesFrame.selectPreviousOverlay   = actions.action(selectPreviousOverlay)
+frame.FSLEyesFrame.toggleOverlayVisibility = actions.action(toggleOverlayVisibility)
+
 frame.FSLEyesFrame.openHelp               = actions.action(openHelp)
 frame.FSLEyesFrame.closeFSLeyes           = actions.action(closeFSLeyes)

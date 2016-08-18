@@ -134,9 +134,9 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         :mod:`.actions` that are defined on this ``PowerSpectrumPanel``.
         """
         actions = [self.screenshot,
-                   self.togglePowerSpectrumToolBar,
+                   self.toggleOverlayList, 
                    self.togglePlotList,
-                   self.toggleOverlayList,
+                   self.togglePowerSpectrumToolBar,
                    self.togglePowerSpectrumControl]
 
         names = [a.__name__ for a in actions]
