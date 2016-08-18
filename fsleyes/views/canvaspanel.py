@@ -96,6 +96,7 @@ class CanvasPanel(viewpanel.ViewPanel):
        toggleOverlayInfo
        toggleAtlasPanel
        toggleDisplayToolBar
+       toggleDisplayPanel
        toggleCanvasSettingsPanel
        toggleLocationPanel
        toggleClusterPanel

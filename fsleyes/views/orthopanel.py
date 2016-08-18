@@ -108,9 +108,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
     .. autosummary::
        :nosignatures:
-    
+
+       toggleEditMode
        toggleOrthoToolBar
-       toggleEditToolBar
     """
 
 
@@ -217,12 +217,16 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # changes, update the displayed canvas locations
         self._displayCtx.addListener('location',
                                      self._name,
-                                     self.__locationChanged) 
+                                     self.__locationChanged)
 
         # Callbacks for toggling x/y/z canvas display
         sceneOpts.addListener('showXCanvas', self._name, self.__toggleCanvas)
         sceneOpts.addListener('showYCanvas', self._name, self.__toggleCanvas)
         sceneOpts.addListener('showZCanvas', self._name, self.__toggleCanvas)
+
+        self.toggleEditMode.addListener('toggled',
+                                        self._name,
+                                        self.__onToggleEditMode)
 
         # Call the __onResize method to refresh
         # the slice canvases when the canvas
@@ -275,11 +279,22 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
 
     @actions.toggleControlAction(orthoedittoolbar.OrthoEditToolBar)
-    def toggleEditToolBar(self):
-        """Shows/hides an :class:`.OrthoEditToolBar`. See
-        :meth:`.ViewPanel.togglePanel`.
+    def toggleEditMode(self):
+        """Shows/hides an :class:`.OrthoEditToolBar`. This will also cause the
+        :attr:`.ViewPanel.profile` to bechanged - see
+        :meth:`__onToggleEditMode`.  See also :meth:`.ViewPanel.togglePanel`.
         """ 
         self.togglePanel(orthoedittoolbar.OrthoEditToolBar, ortho=self)
+
+
+    def __onToggleEditMode(self, *args, **kwargs):
+        """Called when the :meth:`toggleEditMode` action is triggered.
+        Updates the :attr:`.ViewPanel.profile` to either ``'edit'`` or
+        ``'view'`` accordingly.
+        """
+
+        if self.toggleEditMode.toggled: self.profile = 'edit'
+        else:                           self.profile = 'view' 
 
 
     def getActions(self):
@@ -288,18 +303,18 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """
         actions = [self.screenshot,
                    self.showCommandLineArgs,
+                   self.toggleEditMode,
                    self.toggleOverlayList,
                    self.toggleLocationPanel,
-                   self.toggleOrthoToolBar,
-                   self.toggleEditToolBar,
-                   self.toggleDisplayToolBar,
+                   self.toggleOverlayInfo,
                    self.toggleDisplayPanel,
                    self.toggleCanvasSettingsPanel,
-                   self.toggleOverlayInfo,
                    self.toggleAtlasPanel,
+                   self.toggleDisplayToolBar, 
+                   self.toggleOrthoToolBar,
                    self.toggleLookupTablePanel,
                    self.toggleClusterPanel,
-                   self.toggleClassificationPanel]
+                   self.toggleClassificationPanel] 
 
         names = [a.__name__ for a in actions]
 

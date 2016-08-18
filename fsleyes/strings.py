@@ -296,7 +296,7 @@ actions = TypeDict({
     'CanvasPanel.toggleClassificationPanel' : 'Melodic IC classification',
     
     'OrthoPanel.toggleOrthoToolBar'     : 'Ortho toolbar',
-    'OrthoPanel.toggleEditToolBar'      : 'Edit toolbar',
+    'OrthoPanel.toggleEditMode'         : 'Edit mode',
 
     'LightBoxPanel.toggleLightBoxToolBar' : 'Lightbox toolbar',
 
