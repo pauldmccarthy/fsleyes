@@ -91,10 +91,12 @@ created for, and bound to an ``Action`` or ``ToggleAction`` (through the
     ToggleActionButton
 
 
-Finally, some 'global' actions are also provided in this package:
+Finally, some 'global' actions, and actions used by the :class:`.FSLEyesFrame`
+are also defined in this package:
 
  .. autosummary::
 
+    ~fsleyes.actions.frameactions
     ~fsleyes.actions.copyoverlay
     ~fsleyes.actions.loadoverlay
     ~fsleyes.actions.loadoverlayfromdir

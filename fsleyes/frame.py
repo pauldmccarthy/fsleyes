@@ -13,8 +13,6 @@ from __future__ import division
 
 import logging
 
-import os.path as op
-
 import wx
 import wx.lib.agw.aui                     as aui
 
@@ -23,7 +21,6 @@ import fsl.utils.dialog                   as fsldlg
 import fsl.utils.status                   as status
 from   fsl.utils.platform import platform as fslplatform
 
-import                                       fsleyes
 import fsleyes.strings                    as strings
 import fsleyes.profiles.shortcuts         as shortcuts
 
@@ -87,11 +84,28 @@ class FSLEyesFrame(wx.Frame):
        getViewPanels
        getViewPanelInfo
        addViewPanel
+       viewPanelDefaultLayout
        removeViewPanel
        removeAllViewPanels
        getAuiManager
        refreshPerspectiveMenu
        runScript
+
+
+    **Actions**
+
+
+    The :mod:`fsleyes.actions.frameactions` module contains some
+    :mod:`.actions` which are monkey-patched into the ``FSLEyesFrame`` class.
+    These actions are made available to the user via menu items and/or keyboard
+    shortcuts.
+
+
+    .. note:: All of the functions defined in the
+              :mod:`fsleyes.actions.frameactions` module are treated as
+              first-class methods of the ``FSLEyesFrame`` class (i.e. they are
+              assumed to be present). They are only in a separate module to
+              keep file sizes down.
     """
 
     
@@ -302,16 +316,6 @@ class FSLEyesFrame(wx.Frame):
         return None
 
 
-    @actions.action
-    def removeFocusedViewPanel(self, *args, **kwargs):
-        """Removes the :class:`.ViewPanel` which currently has focus. """
-
-        vp = self.getFocusedViewPanel()
-
-        if vp is not None:
-            self.removeViewPanel(vp)
-
-
     def removeAllViewPanels(self):
         """Removes all view panels from this ``FSLEyesFrame``.
 
@@ -433,78 +437,36 @@ class FSLEyesFrame(wx.Frame):
         return panel
 
 
-    @actions.action
-    def addOrthoPanel(self, *args, **kwargs):
-        """Adds a new :class:`.OrthoPanel`."""
-        vp = self.addViewPanel(views.OrthoPanel)
-        self.__newViewPanelDefaultLayout(vp)
+    def viewPanelDefaultLayout(self, viewPanel):
+        """After a :class:`.ViewPanel` is added via a menu item (see the
+        :meth:`__makeViewPanelMenu` method), this a method is called to
+        perform some basic initialisation on the panel. This basically amounts
+        to adding toolbars.
+        """
 
+        viewPanel.removeAllPanels()
 
-    @actions.action
-    def addLightBoxPanel(self, *args, **kwargs):
-        """Adds a new :class:`.LightBoxPanel`."""
-        vp = self.addViewPanel(views.LightBoxPanel)
-        self.__newViewPanelDefaultLayout(vp) 
-
-    
-    @actions.action
-    def addTimeSeriesPanel(self, *args, **kwargs):
-        """Adds a new :class:`.TimeSeriesPanel`."""
-        vp = self.addViewPanel(views.TimeSeriesPanel)
-        self.__newViewPanelDefaultLayout(vp)
-
-        
-    @actions.action
-    def addHistogramPanel(self, *args, **kwargs):
-        """Adds a new :class:`.HistogramPanel`."""
-        vp = self.addViewPanel(views.HistogramPanel)
-        self.__newViewPanelDefaultLayout(vp)
-
-    
-    @actions.action
-    def addPowerSpectrumPanel(self, *args, **kwargs):
-        """Adds a new :class:`.PowerSpectrumPanel`."""
-        vp = self.addViewPanel(views.PowerSpectrumPanel)
-        self.__newViewPanelDefaultLayout(vp)
-
-
-    @actions.action
-    def addShellPanel(self, *args, **kwargs):
-        """Adds a new :class:`.ShellPanel`."""
-        vp = self.addViewPanel(views.ShellPanel)
-        self.__newViewPanelDefaultLayout(vp) 
+        if isinstance(viewPanel, views.TimeSeriesPanel):
+            viewPanel.toggleTimeSeriesToolBar()
+            
+        elif isinstance(viewPanel, views.HistogramPanel):
+            viewPanel.toggleHistogramToolBar()
+            
+        elif isinstance(viewPanel, views.PowerSpectrumPanel):
+            viewPanel.togglePowerSpectrumToolBar()
+            
+        elif isinstance(viewPanel, views.OrthoPanel):
+            viewPanel.toggleDisplayToolBar()
+            viewPanel.toggleOrthoToolBar()
+            
+        elif isinstance(viewPanel, views.LightBoxPanel):
+            viewPanel.toggleDisplayToolBar()
+            viewPanel.toggleLightBoxToolBar() 
 
 
     def refreshPerspectiveMenu(self):
         """Re-creates the *View -> Perspectives* sub-menu. """
         self.__makePerspectiveMenu()
-
-
-    @actions.action
-    def openHelp(self, *args, **kwargs):
-        """Opens FSLeyes help in a web browser. """
-
-        if fslplatform.frozen:
-            url = op.join(
-                fsleyes.assetDir, 'userdoc', 'index.html')
-        else:
-            url = op.join(
-                fsleyes.assetDir, 'userdoc', 'html', 'index.html')
-
-        import fsl.utils.webpage as webpage
-
-        # Show locally stored help files
-        if op.exists(url):
-            webpage.openFile(url)
-        else:
-            url = 'http://users.fmrib.ox.ac.uk/~paulmc/fsleyes/'
-            webpage.openPage(url)
-
-
-    @actions.action
-    def closeFSLeyes(self, *args, **kwargs):
-        """Closes FSLeyes. """
-        self.Close()
 
 
     def runScript(self, script=None):
@@ -1206,31 +1168,6 @@ class FSLEyesFrame(wx.Frame):
 
             item = menu.Append(wx.ID_ANY, title)
             self.Bind(wx.EVT_MENU, action, item)
-
-
-    def __newViewPanelDefaultLayout(self, viewPanel):
-        """After a :class:`.ViewPanel` is added via a menu item (see the
-        :meth:`__makeViewPanelMenu` method), this a method is called to
-        perform some basic initialisation on the panel. This basically amounts
-        to adding toolbars.
-        """
-
-        if isinstance(viewPanel, views.TimeSeriesPanel):
-            viewPanel.toggleTimeSeriesToolBar()
-            
-        elif isinstance(viewPanel, views.HistogramPanel):
-            viewPanel.toggleHistogramToolBar()
-            
-        elif isinstance(viewPanel, views.PowerSpectrumPanel):
-            viewPanel.togglePowerSpectrumToolBar()
-            
-        elif isinstance(viewPanel, views.OrthoPanel):
-            viewPanel.toggleDisplayToolBar()
-            viewPanel.toggleOrthoToolBar()
-            
-        elif isinstance(viewPanel, views.LightBoxPanel):
-            viewPanel.toggleDisplayToolBar()
-            viewPanel.toggleLightBoxToolBar() 
 
 
     def __makePerspectiveMenu(self):

@@ -81,6 +81,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
        isPanelOpen
        getPanel
        getPanels
+       removeAllPanels
        getPanelInfo
        getAuiManager
     """
@@ -364,6 +365,13 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         """
         if panelType in self.__panels: return self.__panels[panelType]
         else:                          return None
+
+
+    def removeAllPanels(self):
+        """Remove all control panels from this ``ViewPanel``."""
+
+        for panelType, instance in self.__panels.items():
+            self.togglePanel(panelType)
 
 
     def getCentrePanel(self):

@@ -465,13 +465,20 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     :returns: the :class:`.FSLEyesFrame` that was created.
     """
 
-    import fsl.utils.status       as status
-    import fsl.utils.async        as async
-    import fsleyes.parseargs      as parseargs
-    import fsleyes.frame          as fsleyesframe
-    import fsleyes.displaycontext as fsldisplay
-    import fsleyes.perspectives   as perspectives
-    import fsleyes.views          as views
+    import fsl.utils.status             as status
+    import fsl.utils.async              as async
+    import fsleyes.parseargs            as parseargs
+
+    # The fsleyes.actions.frameactions module
+    # monkey-patches some things into the
+    # FSLEyesFrame class, so it must be
+    # imported immediately after fsleyes.frame.
+    import fsleyes.frame                as fsleyesframe
+    import fsleyes.actions.frameactions as frameactions
+    
+    import fsleyes.displaycontext       as fsldisplay
+    import fsleyes.perspectives         as perspectives
+    import fsleyes.views                as views
     
     # Set up the frame scene (a.k.a. layout, perspective)
     # The scene argument can be:
