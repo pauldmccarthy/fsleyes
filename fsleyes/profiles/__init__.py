@@ -194,6 +194,12 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     called ``_navModeLeftMouseDown``. Then, whenever the profile is in the
     ``nav`` mode, this method will be called on left mouse clicks.
 
+
+    These methods should return ``True`` to indicate that the event was
+    handled, or ``False``  if the event was not handled. This is particularly
+    important for ``Char`` event handlers - we don't want ``Profile``
+    sub-classes to be eating global keyboard shortcuts.
+
     
     The :mod:`.profilemap` module contains a ``tempModeMap`` which, for each
     profile and each mode, defines a keyboard modifier which may be used to
@@ -610,6 +616,10 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         mouseLoc, canvasLoc = self.__getMouseLocation(ev)
         canvas              = ev.GetEventObject()
 
+        # On GTK, a GLCanvas won't be given
+        # focus when it is clicked on.
+        canvas.SetFocus()
+
         self.__mouseDownPos  = mouseLoc
         self.__canvasDownPos = canvasLoc
 
@@ -619,12 +629,14 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         evType  = '{}MouseDown'.format(self.__getMouseButton(ev))
         handler = self.__getHandler(ev, evType)
         if handler is None:
+            ev.Skip()
             return
 
         log.debug('{} event ({}, {}) on canvas {}'.format(
             evType, mouseLoc, canvasLoc, canvas.name))
 
-        handler(ev, canvas, mouseLoc, canvasLoc)
+        if not handler(ev, canvas, mouseLoc, canvasLoc):
+            ev.Skip()
 
         self.__lastMousePos  = mouseLoc
         self.__lastCanvasPos = canvasLoc        
@@ -642,6 +654,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         if handler is None:
             self.__mouseDownPos  = None
             self.__canvasDownPos = None
+            ev.Skip()
             return
 
         canvas              = ev.GetEventObject()
@@ -650,7 +663,9 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         log.debug('{} event ({}, {}) on canvas {}'.format(
             evType, mouseLoc, canvasLoc, canvas.name))
 
-        handler(ev, canvas, mouseLoc, canvasLoc)
+        if not handler(ev, canvas, mouseLoc, canvasLoc):
+            ev.Skip()
+
         self.__mouseDownPos  = None
         self.__canvasDownPos = None
 
@@ -669,6 +684,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         handler = self.__getHandler(ev, 'MouseMove')
 
         if handler is None:
+            ev.Skip()
             return
         
         canvas              = ev.GetEventObject()
@@ -677,7 +693,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         log.debug('Mouse move event ({}, {}) on canvas {}'.format(
             mouseLoc, canvasLoc, canvas.name))
 
-        handler(ev, canvas, mouseLoc, canvasLoc)
+        if not handler(ev, canvas, mouseLoc, canvasLoc):
+            ev.Skip()
 
         self.__lastMousePos  = mouseLoc
         self.__lastCanvasPos = canvasLoc        
@@ -696,12 +713,14 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         evType  = '{}MouseDrag'.format(self.__getMouseButton(ev))
         handler = self.__getHandler(ev, evType)
         if handler is None:
+            ev.Skip()
             return 
 
         log.debug('{} event ({}, {}) on canvas {}'.format(
             evType, mouseLoc, canvasLoc, canvas.name))
 
-        handler(ev, canvas, mouseLoc, canvasLoc)
+        if not handler(ev, canvas, mouseLoc, canvasLoc):
+            ev.Skip()
 
         self.__lastMousePos  = mouseLoc
         self.__lastCanvasPos = canvasLoc
@@ -715,6 +734,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
         handler = self.__getHandler(ev, 'Char')
         if handler is None:
+            ev.Skip()
             return 
 
         canvas = ev.GetEventObject()
@@ -722,4 +742,5 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
         log.debug('Keyboard event ({}) on canvas {}'.format(key, canvas.name))
 
-        handler(ev, canvas, key)
+        if not handler(ev, canvas, key):
+            ev.Skip()

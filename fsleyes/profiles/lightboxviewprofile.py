@@ -76,6 +76,7 @@ class LightBoxViewProfile(profiles.Profile):
 
         if   wheel > 0: wheel = -1
         elif wheel < 0: wheel =  1
+        else:           return False
 
         # See comment in OrthoViewProfile._zoomModeMouseWheel
         # about timeout
@@ -83,6 +84,8 @@ class LightBoxViewProfile(profiles.Profile):
             self._viewPanel.getCanvas().topRow += wheel
 
         async.idle(update, timeout=0.1)
+
+        return True
 
         
     def _viewModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -93,9 +96,11 @@ class LightBoxViewProfile(profiles.Profile):
         """
 
         if canvasPos is None:
-            return
+            return False
 
         self._displayCtx.location.xyz = canvasPos
+
+        return True
 
 
     def _zoomModeMouseWheel(self,
@@ -112,6 +117,7 @@ class LightBoxViewProfile(profiles.Profile):
 
         if   wheel > 0: wheel =  50
         elif wheel < 0: wheel = -50
+        else:           return False
 
         # see comment in OrthoViewProfile._zoomModeMouseWheel
         # about timeout
@@ -119,3 +125,5 @@ class LightBoxViewProfile(profiles.Profile):
             self._viewPanel.getSceneOptions().zoom += wheel
 
         async.idle(update, timeout=0.1)
+
+        return True

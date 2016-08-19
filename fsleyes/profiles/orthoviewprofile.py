@@ -311,9 +311,11 @@ class OrthoViewProfile(profiles.Profile):
         """
 
         if canvasPos is None:
-            return
+            return False
 
         self._displayCtx.location = canvasPos
+
+        return True
 
         
     def _navModeChar(self, ev, canvas, key):
@@ -326,7 +328,7 @@ class OrthoViewProfile(profiles.Profile):
         """
 
         if len(self._overlayList) == 0:
-            return
+            return False
 
         try:    ch = chr(key)
         except: ch = None
@@ -339,6 +341,7 @@ class OrthoViewProfile(profiles.Profile):
         elif key == wx.WXK_DOWN:  dirs[canvas.yax] = -1
         elif ch  in ('+', '='):   dirs[canvas.zax] =  1
         elif ch  in ('-', '_'):   dirs[canvas.zax] = -1
+        else:                     return False
 
         def update():
             self._displayCtx.location.xyz = self.__offsetLocation(*dirs)
@@ -346,21 +349,24 @@ class OrthoViewProfile(profiles.Profile):
         # See comment in _zoomModeMouseWheel about timeout
         async.idle(update, timeout=0.1)
 
+        return True
+
         
     #####################
     # Slice mode handlers
     #####################
 
     
-    def _sliceModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
-        """Handles mouse wheel movement in ``nav`` mode.
+    def _sliceModeMouseWheel(
+            self, ev, canvas, wheel, mousePos=None, canvasPos=None):
+        """Handles mouse wheel movement in ``slice`` mode.
 
         Mouse wheel movement on a canvas changes the depth location displayed
         on that canvas.
         """
 
         if len(self._overlayList) == 0:
-            return
+            return False
 
         dirs = [0, 0, 0]
 
@@ -374,6 +380,22 @@ class OrthoViewProfile(profiles.Profile):
 
         # See comment in _zoomModeMouseWheel about timeout
         async.idle(update, timeout=0.1)
+
+        return True
+
+
+    def _sliceModeChar(self, ev, canvas, key):
+        """Handles character events in ``slice`` mode.
+
+        Up/down and Page-up/Page-down keys will increase/decrease the
+        depth location on the current canvas.
+        """
+
+        if   key in (wx.WXK_UP,   wx.WXK_PAGEUP):   off =  1
+        elif key in (wx.WXK_DOWN, wx.WXK_PAGEDOWN): off = -1
+        else:                                       return False
+
+        return self._sliceModeMouseWheel(ev, canvas, off)
 
         
     ####################
@@ -406,6 +428,8 @@ class OrthoViewProfile(profiles.Profile):
         
         async.idle(update, timeout=0.1)
 
+        return True
+
         
     def _zoomModeChar(self, ev, canvas, key):
         """Handles key presses in ``zoom`` mode.
@@ -419,15 +443,11 @@ class OrthoViewProfile(profiles.Profile):
 
         zoom = 0
 
-        if   key == wx.WXK_DOWN: zoom = -1
-        elif key == wx.WXK_UP:   zoom =  1
-        elif ch  == '-':         zoom = -1
-        elif ch  in ('=', '+'):  zoom =  1
+        if   ch in ('-', '_'):  zoom = -1
+        elif ch in ('=', '+'):  zoom =  1
+        else:                   return False
 
-        if zoom == 0:
-            return
-
-        self._zoomModeMouseWheel(None, canvas, zoom)
+        return self._zoomModeMouseWheel(None, canvas, zoom)
 
         
     def _zoomModeRightMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -441,7 +461,7 @@ class OrthoViewProfile(profiles.Profile):
         """
 
         if canvasPos is None:
-            return
+            return False
 
         mouseDownPos, canvasDownPos = self.getMouseDownLocation()
 
@@ -455,6 +475,8 @@ class OrthoViewProfile(profiles.Profile):
                                                        colour=(1, 1, 0))
         canvas.Refresh()
 
+        return True
+
         
     def _zoomModeRightMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Handles right mouse up events in ``zoom`` mode.
@@ -465,13 +487,13 @@ class OrthoViewProfile(profiles.Profile):
         """
 
         if canvasPos is None:
-            return
+            return False
 
         mouseDownPos, canvasDownPos = self.getMouseDownLocation()
         
         if mouseDownPos  is None or \
            canvasDownPos is None:
-            return
+            return False
 
         if self.__lastRect is not None:
             canvas.getAnnotations().dequeue(self.__lastRect)
@@ -483,6 +505,8 @@ class OrthoViewProfile(profiles.Profile):
         yhi = max(canvasPos[canvas.yax], canvasDownPos[canvas.yax])
 
         canvas.zoomTo(xlo, xhi, ylo, yhi)
+
+        return True
         
         
     ###################
@@ -501,13 +525,15 @@ class OrthoViewProfile(profiles.Profile):
         
         mouseDownPos, canvasDownPos = self.getMouseDownLocation()
 
-        if canvasPos     is None: return
-        if canvasDownPos is None: return
+        if canvasPos     is None: return False
+        if canvasDownPos is None: return False
 
         xoff = canvasPos[canvas.xax] - canvasDownPos[canvas.xax]
         yoff = canvasPos[canvas.yax] - canvasDownPos[canvas.yax]
 
         canvas.panDisplayBy(-xoff, -yoff)
+
+        return True
 
     
     def _panModeChar(self, ev, canvas, key):
@@ -524,13 +550,15 @@ class OrthoViewProfile(profiles.Profile):
         elif key == wx.WXK_UP:    yoff =  2
         elif key == wx.WXK_LEFT:  xoff = -2
         elif key == wx.WXK_RIGHT: xoff =  2
-        else:                     return
+        else:                     return False
 
         def update():
             canvas.panDisplayBy(xoff, yoff)
 
         # See comment in _zoomModeMouseWheel about timeout
         async.idle(update, timeout=0.1)
+
+        return True
 
 
     #############
@@ -549,7 +577,7 @@ class OrthoViewProfile(profiles.Profile):
         overlay = self._displayCtx.getSelectedOverlay()
 
         if overlay is None:
-            return 
+            return False
 
         display = self._displayCtx.getDisplay(overlay)
         w, h    = canvas.GetSize().Get()
@@ -566,3 +594,5 @@ class OrthoViewProfile(profiles.Profile):
 
         display.brightness = 100 * brightness
         display.contrast   = 100 * contrast
+
+        return True

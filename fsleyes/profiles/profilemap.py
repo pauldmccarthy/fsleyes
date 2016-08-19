@@ -56,6 +56,12 @@ instance and profile identifier.
 """
 
 
+# Important: Any temporary modes which use CTRL
+# or CTRL+ALT must not handle character events,
+# as these modifiers are reserved for global
+# shortcuts.
+
+
 # For multi-key combinations, the modifier key
 # IDs must be provided as a tuple, in alphabetical
 # order. For example, to specify shift+ctrl, the

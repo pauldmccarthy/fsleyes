@@ -866,6 +866,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__drawCursorAnnotation(canvas, voxel)
             self.__refreshCanvases(ev,  canvas)
 
+        return voxel is not None
+
 
     def _selModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse down events in ``sel`` mode.
@@ -874,7 +876,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :class:`Selection`.
         """
         if self.__currentOverlay is None:
-            return
+            return False
         
         editor = self.__editors[self.__currentOverlay]
         voxel  = self.__getVoxelLocation(canvasPos)
@@ -884,6 +886,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__applySelection(      canvas, voxel)
             self.__drawCursorAnnotation(canvas, voxel)
             self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
+
+        return voxel is not None
 
 
     def _selModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -898,6 +902,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__drawCursorAnnotation(canvas, voxel)
             self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
 
+        return voxel is not None
+
 
     def _selModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse up events in ``sel`` mode.
@@ -906,12 +912,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :meth:`_selModeLeftMouseDown` method.
         """
         if self.__currentOverlay is None:
-            return
+            return False
         
         editor = self.__editors[self.__currentOverlay] 
         editor.endChangeGroup()
         
         self._viewPanel.Refresh()
+
+        return True
 
 
     def _selModeMouseLeave(self, ev, canvas, mousePos, canvasPos):
@@ -934,7 +942,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         voxel = self.__getVoxelLocation(canvasPos)
 
         if voxel is None:
-            return
+            return False
 
         # See comment in OrthoViewProfile._zoomModeMouseWheel
         # about timeout
@@ -944,6 +952,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         async.idle(update, timeout=0.1)
 
+        return True
+
         
     def _deselModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse down events in ``desel`` mode.
@@ -952,7 +962,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :class:`Selection`.        
         """
         if self.__currentOverlay is None:
-            return
+            return False
         
         editor = self.__editors[self.__currentOverlay]
         voxel  = self.__getVoxelLocation(canvasPos)
@@ -962,6 +972,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__applySelection(      canvas, voxel, False)
             self.__drawCursorAnnotation(canvas, voxel)
             self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
+
+        return voxel is not None
 
 
     def _deselModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -976,6 +988,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__drawCursorAnnotation(canvas, voxel)
             self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
 
+
+        return voxel is not None
+
         
     def _deselModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse up events in ``desel`` mode.
@@ -984,12 +999,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :meth:`_deselModeLeftMouseDown` method.
         """
         if self.__currentOverlay is None:
-            return
+            return False
         
         editor = self.__editors[self.__currentOverlay]
         
         editor.endChangeGroup()
         self._viewPanel.Refresh()
+
+        return True
 
             
     def __selintSelect(self, voxel, canvas):
@@ -1005,7 +1022,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         overlay = self.__currentOverlay
 
         if overlay is None:
-            return
+            return False
 
         editor = self.__editors[self.__currentOverlay]
         
@@ -1046,6 +1063,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             restrict=restrict,
             combine=True)
 
+        return True
+
         
     def _selintModeMouseMove(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse motion events in ``selint`` mode. Draws a selection
@@ -1058,6 +1077,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__drawCursorAnnotation(canvas, voxel, 1)
             self.__refreshCanvases(ev,  canvas)
 
+        return voxel is not None
+
         
     def _selintModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse down events in ``selint`` mode.
@@ -1068,7 +1089,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
 
         if self.__currentOverlay is None:
-            return
+            return False
         
         editor = self.__editors[self.__currentOverlay]
         voxel  = self.__getVoxelLocation(canvasPos)
@@ -1079,6 +1100,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__selecting = True
             self.__selintSelect(voxel, canvas)
             self.__refreshCanvases(ev, canvas, mousePos, canvasPos)
+
+        return voxel is not None
 
         
     def _selintModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -1098,6 +1121,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__selintSelect(voxel, canvas)
             self.__refreshCanvases(*refreshArgs)
 
+        return voxel is not None
+
         
     def _selintModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse up events in ``selint`` mode. Ends the :class:`.Editor`
@@ -1105,7 +1130,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         method.
         """
         if self.__currentOverlay is None:
-            return
+            return False
         
         editor = self.__editors[self.__currentOverlay] 
         
@@ -1113,6 +1138,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         
         self.__selecting = False
         self._viewPanel.Refresh()
+
+        return True
 
 
     def _chthresModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
@@ -1123,13 +1150,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         select-by-intensity is re-run at the current mouse location.
         """ 
         overlay   = self._displayCtx.getSelectedOverlay()
-
         dataRange = overlay.dataRange[1] - overlay.dataRange[0]
         step      = 0.01 * dataRange
 
         if   wheel > 0: offset =  step
         elif wheel < 0: offset = -step
-        else:           return
+        else:           return False
 
 
         # See comment in OrthoViewProfile._zoomModeMouseWheel
@@ -1146,6 +1172,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         async.idle(update, timeout=0.1)
 
+        return True
+
                 
     def _chradModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
         """Handles mouse wheel events in ``chrad`` mode.
@@ -1157,7 +1185,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         if   wheel > 0: offset = -5
         elif wheel < 0: offset =  5
-        else:           return
+        else:           return False
 
         # See comment in OrthoViewProfile._zoomModeMouseWheel
         # about timeout
@@ -1174,3 +1202,5 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                     self.__refreshCanvases(ev, canvas) 
 
         async.idle(update, timeout=0.1)
+
+        return True
