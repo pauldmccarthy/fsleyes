@@ -14,11 +14,11 @@ actions = td.TypeDict({
     
     'LoadOverlayAction'        : 'Ctrl-O',
     'LoadOverlayFromDirAction' : 'Ctrl-D',
-    # 'LoadStandardAction'       : 'Ctrl-?',
-    'CopyOverlayAction'        : 'Ctrl-C',
-    'SaveOverlayAction'        : 'Ctrl-S',
-    'ReloadOverlayAction'      : 'Ctrl-R',
-    'RemoveOverlayAction'      : 'Ctrl-W',
+    'LoadStandardAction'       : 'Ctrl-S',
+    'CopyOverlayAction'        : 'Ctrl-Alt-C',
+    'SaveOverlayAction'        : 'Ctrl-Alt-S',
+    'ReloadOverlayAction'      : 'Ctrl-Alt-R',
+    'RemoveOverlayAction'      : 'Ctrl-Alt-W',
 
     'FSLEyesFrame.closeFSLeyes'           : 'Ctrl-Q',
     'FSLEyesFrame.openHelp'               : 'Ctrl-H',
@@ -27,8 +27,8 @@ actions = td.TypeDict({
     'FSLEyesFrame.addOrthoPanel'          : 'Ctrl-1',
     'FSLEyesFrame.addLightBoxPanel'       : 'Ctrl-2',
     'FSLEyesFrame.addTimeSeriesPanel'     : 'Ctrl-3',
-    'FSLEyesFrame.addPowerSpectrumPanel'  : 'Ctrl-4',
-    'FSLEyesFrame.addHistogramPanel'      : 'Ctrl-5',
+    'FSLEyesFrame.addHistogramPanel'      : 'Ctrl-4',
+    'FSLEyesFrame.addPowerSpectrumPanel'  : 'Ctrl-5',
     'FSLEyesFrame.addShellPanel'          : 'Ctrl-6',
     
     'FSLEyesFrame.selectNextOverlay'       : 'Ctrl-Up',
@@ -51,6 +51,9 @@ actions = td.TypeDict({
     
     'OrthoPanel.toggleOrthoToolBar'         : 'Ctrl-Alt-8',
     'OrthoPanel.toggleEditMode'             : 'Ctrl-E',
+    'OrthoPanel.resetDisplay'               : 'Ctrl-R',
+    'OrthoPanel.centreCursor'               : 'Ctrl-C',
+    'OrthoPanel.centreCursorWorld'          : 'Ctrl-O',
 
     # OrthoPanel.resetView
 

@@ -590,6 +590,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                     message=msg,
                     cbMessages=[cbMsg],
                     cbStates=[_suppressDisplaySpaceWarning],
+                    focus='yes',
                     icon=wx.ICON_INFORMATION)
 
                 dlg.ShowModal()

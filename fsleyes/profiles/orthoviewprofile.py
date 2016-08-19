@@ -14,11 +14,9 @@ import wx
 
 import numpy as np
 
-import fsleyes.profiles   as profiles
-import fsleyes.actions    as actions
-import fsl.utils.async    as async
-import fsl.data.image     as fslimage
-import fsl.data.constants as constants
+import fsleyes.profiles as profiles
+import fsleyes.actions  as actions
+import fsl.utils.async  as async
 
 
 log = logging.getLogger(__name__)
@@ -149,12 +147,10 @@ class OrthoViewProfile(profiles.Profile):
         """
         
         ovl = self._displayCtx.getSelectedOverlay()
-        
-        if   ovl is None:                                       enable = False
-        elif not isinstance(ovl, fslimage.Nifti):               enable = False
-        elif ovl.getXFormCode != constants.NIFTI_XFORM_MNI_152: enable = False
-        
-        self.centreCursorMNI152.enable = enable
+
+        self.resetDisplay     .enabled = ovl is not None
+        self.centreCursor     .enabled = ovl is not None
+        self.centreCursorWorld.enabled = ovl is not None
 
 
     @actions.action
@@ -195,15 +191,20 @@ class OrthoViewProfile(profiles.Profile):
 
 
     @actions.action
-    def centreCursorMNI152(self):
-        """If the currently selected overlay is aligned to MNI152 space, sets
-        the :attr:`.DisplayContext.location` to MNI152 location (0, 0, 0).
+    def centreCursorWorld(self):
+        """Sets the :attr:`.DisplayContext.location` to world location
+        (0, 0, 0), where the 'world' is in terms of the currently selected
+        ovelray.
         """
 
-        ovl  = self._displayCtx.getSelectedOverlay()
-        opts = self._displayCtx.getOptx(ovl)
+        ovl    = self._displayCtx.getSelectedOverlay()
+        refOvl = self._displayCtx.getReferenceImage(ovl)
 
-        origin = opts.transformCoords([0, 0, 0], 'world', 'display')
+        if refOvl is not None:
+            opts   = self._displayCtx.getOpts(refOvl)
+            origin = opts.transformCoords([0, 0, 0], 'world', 'display')
+        else:
+            origin = [0, 0, 0]
 
         self._displayCtx.location.xyz = origin
 

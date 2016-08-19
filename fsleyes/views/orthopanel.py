@@ -287,6 +287,24 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.togglePanel(orthoedittoolbar.OrthoEditToolBar, ortho=self)
 
 
+    @actions.action
+    def resetDisplay(self):
+        """Calls :meth:`.OrthoViewProfile.resetDisplay`. """
+        self.getCurrentProfile().resetDisplay()
+
+
+    @actions.action
+    def centreCursor(self):
+        """Calls :meth:`.OrthoViewProfile.centreCursor`. """
+        self.getCurrentProfile().centreCursor()
+
+
+    @actions.action
+    def centreCursorWorld(self):
+        """Calls :meth:`.OrthoViewProfile.centreCursorWorld`. """
+        self.getCurrentProfile().centreCursorWorld() 
+
+
     def __onToggleEditMode(self, *args, **kwargs):
         """Called when the :meth:`toggleEditMode` action is triggered.
         Updates the :attr:`.ViewPanel.profile` to either ``'edit'`` or
@@ -303,6 +321,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """
         actions = [self.screenshot,
                    self.showCommandLineArgs,
+                   self.resetDisplay,
+                   self.centreCursor,
+                   self.centreCursorWorld,
                    self.toggleEditMode,
                    self.toggleOverlayList,
                    self.toggleLocationPanel,
@@ -476,6 +497,13 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                 
         # anatomical orientation may have changed with an image change
         self.__refreshLabels()
+
+        # Disable actions that need an overlay
+        haveOverlays = len(self._overlayList) > 0
+
+        self.resetDisplay     .enabled = haveOverlays
+        self.centreCursor     .enabled = haveOverlays
+        self.centreCursorWorld.enabled = haveOverlays
 
         
     def __displaySpaceChanged(self, *a):

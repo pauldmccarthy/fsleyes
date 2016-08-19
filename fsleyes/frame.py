@@ -1303,7 +1303,14 @@ class FSLEyesFrame(wx.Frame):
 
         overlay = self.__displayCtx.getSelectedOverlay()
 
-        if overlay is not None:
+        haveOverlays = overlay is not None
+
+        self.selectNextOverlay      .enabled = haveOverlays
+        self.selectPreviousOverlay  .enabled = haveOverlays
+        self.toggleOverlayVisibility.enabled = haveOverlays
+
+        if haveOverlays:
+
             self.__display = self.__displayCtx.getDisplay(overlay)
             self.__overlayNameMenuItem.SetText(self.__display.name)
 

@@ -301,6 +301,9 @@ actions = TypeDict({
     
     'OrthoPanel.toggleOrthoToolBar'     : 'Ortho toolbar',
     'OrthoPanel.toggleEditMode'         : 'Edit mode',
+    'OrthoPanel.resetDisplay'           : 'Reset display',
+    'OrthoPanel.centreCursor'           : 'Centre cursor',
+    'OrthoPanel.centreCursorWorld'      : 'Centre cursor at (0, 0, 0)',
 
     'LightBoxPanel.toggleLightBoxToolBar' : 'Lightbox toolbar',
 
