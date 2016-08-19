@@ -259,11 +259,11 @@ actions = TypeDict({
     'LoadOverlayAction'        : 'Add overlay from file',
     'LoadOverlayFromDirAction' : 'Add overlay from directory',
     'LoadStandardAction'       : 'Add standard',
-    'CopyOverlayAction'        : 'Copy overlay',
-    'SaveOverlayAction'        : 'Save overlay',
-    'ReloadOverlayAction'      : 'Reload overlay',
-    'RemoveOverlayAction'      : 'Remove overlay',
-    'RemoveAllOverlaysAction'  : 'Remove all overlays',
+    'CopyOverlayAction'        : 'Copy',
+    'SaveOverlayAction'        : 'Save',
+    'ReloadOverlayAction'      : 'Reload',
+    'RemoveOverlayAction'      : 'Remove',
+    'RemoveAllOverlaysAction'  : 'Remove all',
     'LoadColourMapAction'      : 'Load custom colour map',
     'SavePerspectiveAction'    : 'Save current perspective',
     'ClearPerspectiveAction'   : 'Clear all perspectives',
@@ -280,9 +280,9 @@ actions = TypeDict({
     'FSLEyesFrame.addShellPanel'           : 'Python shell',
     'FSLEyesFrame.openHelp'                : 'Help',
     'FSLEyesFrame.closeFSLeyes'            : 'Close',
-    'FSLEyesFrame.selectNextOverlay'       : 'Next overlay',
-    'FSLEyesFrame.selectPreviousOverlay'   : 'Previous overlay',
-    'FSLEyesFrame.toggleOverlayVisibility' : 'Show/hide overlay',
+    'FSLEyesFrame.selectNextOverlay'       : 'Next',
+    'FSLEyesFrame.selectPreviousOverlay'   : 'Previous',
+    'FSLEyesFrame.toggleOverlayVisibility' : 'Show/hide',
 
 
     'CanvasPanel.screenshot'                : 'Take screenshot',
@@ -341,6 +341,8 @@ actions = TypeDict({
 
 
 labels = TypeDict({
+
+    'FSLEyesFrame.noOverlays'             : 'No overlays loaded',
 
     'LocationPanel.worldLocation'         : 'Coordinates: ',
     'LocationPanel.worldLocation.unknown' : 'Unknown',
