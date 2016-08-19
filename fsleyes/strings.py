@@ -282,7 +282,7 @@ actions = TypeDict({
     'FSLEyesFrame.closeFSLeyes'            : 'Close',
     'FSLEyesFrame.selectNextOverlay'       : 'Next overlay',
     'FSLEyesFrame.selectPreviousOverlay'   : 'Previous overlay',
-    'FSLEyesFrame.toggleOverlayVisibility' : 'Show/hide',
+    'FSLEyesFrame.toggleOverlayVisibility' : 'Show/hide overlay',
 
 
     'CanvasPanel.screenshot'                : 'Take screenshot',
@@ -304,6 +304,12 @@ actions = TypeDict({
     'OrthoPanel.resetDisplay'           : 'Reset display',
     'OrthoPanel.centreCursor'           : 'Centre cursor',
     'OrthoPanel.centreCursorWorld'      : 'Centre cursor at (0, 0, 0)',
+
+    'OrthoPanel.toggleCursor'           : 'Show/hide location cursor',
+    'OrthoPanel.toggleLabels'           : 'Show/hide labels',
+    'OrthoPanel.toggleXCanvas'          : 'Show/hide X (sagittal) canvas',
+    'OrthoPanel.toggleYCanvas'          : 'Show/hide Y (coronal) canvas',
+    'OrthoPanel.toggleZCanvas'          : 'Show/hide Z (axial) canvas',
 
     'LightBoxPanel.toggleLightBoxToolBar' : 'Lightbox toolbar',
 

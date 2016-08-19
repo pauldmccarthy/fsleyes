@@ -225,6 +225,11 @@ class ActionProvider(object):
         
         Sub-classes may wish to override this method to enforce a specific
         ordering of their actions.
+
+        .. note:: The list returned by this method may contain entries equal
+                  to ``None``. This is used as a hint for GUIs which display
+                  action widgets/menu items to indicate that a separator
+                  should be inserted.
         """
     
         acts = []

@@ -181,6 +181,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         """
         actions = [self.screenshot,
                    self.showCommandLineArgs,
+                   None,
                    self.toggleOverlayList,
                    self.toggleLocationPanel,
                    self.toggleOverlayInfo,
@@ -193,7 +194,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                    self.toggleClusterPanel,
                    self.toggleClassificationPanel]
 
-        names = [a.__name__ for a in actions]
+        names = [a.__name__ if a is not None else None for a in actions]
 
         return list(zip(names, actions))
 

@@ -514,30 +514,22 @@ class FSLEyesFrame(wx.Frame):
 
         self.__viewPanelMenus[panel] = submenu
 
-        # Separate out the normal actions from
-        # the toggle actions, as we will put a
-        # separator between them.
-        regularActions = []
-        toggleActions  = []
-
         for actionName, actionObj in actionz:
-            if isinstance(actionObj, actions.ToggleAction):
-                toggleActions .append((actionName, actionObj, wx.ITEM_CHECK))
-            else:
-                regularActions.append((actionName, actionObj, wx.ITEM_NORMAL))
 
-        actionz = regularActions + [('sep', None, None)] + toggleActions
-
-        for actionName, actionObj, itemType in actionz:
-
-            if actionName == 'sep'     and \
-               len(regularActions) > 0 and \
-               len(toggleActions)  > 0:
+            # If actionObj is None, this is a
+            # hacky hint to insert a separator
+            # - see ActionProvider.getActions.
+            if actionObj is None:
                 menu.AppendSeparator()
                 continue
 
             title    = strings.actions[panel, actionName]
             shortcut = shortcuts.actions.get((panel, actionName))
+
+            if isinstance(actionObj, actions.ToggleAction):
+                itemType = wx.ITEM_CHECK
+            else:
+                itemType = wx.ITEM_NORMAL
 
             if shortcut is not None:
                 title = '{}\t{}'.format(title, shortcut)
@@ -573,7 +565,7 @@ class FSLEyesFrame(wx.Frame):
         # We add a 'Close' action to the
         # menu for every panel, but put
         # another separator before it
-        if len(regularActions) > 0 or len(toggleActions) > 0:
+        if len(actionz) > 0:
             menu.AppendSeparator()
 
         title = strings.actions[self, 'removeFocusedViewPanel']

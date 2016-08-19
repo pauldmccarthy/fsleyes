@@ -56,8 +56,8 @@ instance and profile identifier.
 """
 
 
-# Important: Any temporary modes which use CTRL
-# or CTRL+ALT must not handle character events,
+# Important: Any temporary modes which use CTRL,
+# ALT, or CTRL+ALT must not handle character events,
 # as these modifiers are reserved for global
 # shortcuts.
 

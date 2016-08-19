@@ -111,6 +111,14 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
        toggleEditMode
        toggleOrthoToolBar
+       resetDisplay
+       centreCursor
+       centreCursorWorld
+       toggleCursor
+       toggleLabels
+       toggleXCanvas
+       toggleYCanvas
+       toggleZCanvas
     """
 
 
@@ -194,7 +202,13 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         self.__xcanvas.bindProps('resolutionLimit', sceneOpts)
         self.__ycanvas.bindProps('resolutionLimit', sceneOpts)
-        self.__zcanvas.bindProps('resolutionLimit', sceneOpts) 
+        self.__zcanvas.bindProps('resolutionLimit', sceneOpts)
+
+        self.toggleCursor .bindProps('toggled', sceneOpts, 'showCursor')
+        self.toggleLabels .bindProps('toggled', sceneOpts, 'showLabels')
+        self.toggleXCanvas.bindProps('toggled', sceneOpts, 'showXCanvas')
+        self.toggleYCanvas.bindProps('toggled', sceneOpts, 'showYCanvas')
+        self.toggleZCanvas.bindProps('toggled', sceneOpts, 'showZCanvas')
 
         # Callbacks for overlay list/selected overlay changes
         self._overlayList.addListener('overlays',
@@ -302,7 +316,41 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     @actions.action
     def centreCursorWorld(self):
         """Calls :meth:`.OrthoViewProfile.centreCursorWorld`. """
-        self.getCurrentProfile().centreCursorWorld() 
+        self.getCurrentProfile().centreCursorWorld()
+
+
+    @actions.toggleAction
+    def toggleCursor(self):
+        """Toggles the value of :attr:`.SceneOpts.showCursor`. """
+        # The state of this action gets bound to 
+        # the showCursor attribute in __init__
+
+
+    @actions.toggleAction
+    def toggleLabels(self):
+        """Toggles the value of :attr:`.OrthoOpts.showLabels`. """
+        # The state of this action gets bound to 
+        # the showLabels attribute in __init__ 
+
+
+    @actions.toggleAction
+    def toggleXCanvas(self):
+        """Toggles the value of :attr:`.OrthoOpts.showXCanvas`. """
+        # The state of this action gets bound to 
+        # the showXCanvas attribute in __init__
+
+
+    @actions.toggleAction
+    def toggleYCanvas(self):
+        """Toggles the value of :attr:`.OrthoOpts.showYCanvas`. """
+        # The state of this action gets bound to 
+        # the showYCanvas attribute in __init__
+
+    @actions.toggleAction
+    def toggleZCanvas(self):
+        """Toggles the value of :attr:`.OrthoOpts.showZCanvas`. """
+        # The state of this action gets bound to 
+        # the showZCanvas attribute in __init__
 
 
     def __onToggleEditMode(self, *args, **kwargs):
@@ -321,10 +369,17 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """
         actions = [self.screenshot,
                    self.showCommandLineArgs,
+                   None,
                    self.resetDisplay,
                    self.centreCursor,
                    self.centreCursorWorld,
+                   self.toggleLabels,
+                   self.toggleCursor,
+                   self.toggleXCanvas,
+                   self.toggleYCanvas,
+                   self.toggleZCanvas,
                    self.toggleEditMode,
+                   None,
                    self.toggleOverlayList,
                    self.toggleLocationPanel,
                    self.toggleOverlayInfo,
@@ -337,7 +392,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleClusterPanel,
                    self.toggleClassificationPanel] 
 
-        names = [a.__name__ for a in actions]
+        names = [a.__name__  if a is not None else None for a in actions]
 
         return list(zip(names, actions))
 

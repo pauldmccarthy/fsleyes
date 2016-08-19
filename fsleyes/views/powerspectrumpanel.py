@@ -134,13 +134,14 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         :mod:`.actions` that are defined on this ``PowerSpectrumPanel``.
         """
         actions = [self.screenshot,
+                   None,
                    self.toggleOverlayList, 
                    self.togglePlotList,
                    self.togglePowerSpectrumToolBar,
                    self.togglePowerSpectrumControl]
 
-        names = [a.__name__ for a in actions]
-
+        names = [a.__name__ if a is not None else None for a in actions]
+        
         return list(zip(names, actions))
 
 

@@ -37,7 +37,7 @@ actions = td.TypeDict({
  
 
     # ViewPanel actions must use one
-    # of CTRL/ALT or Shift due to
+    # of CTRL, ALT or Shift due to
     # hacky things in FSLEyesFrame.
 
     'CanvasPanel.toggleOverlayList'         : 'Ctrl-Alt-1',
@@ -50,12 +50,16 @@ actions = td.TypeDict({
     'CanvasPanel.toggleDisplayToolBar'      : 'Ctrl-Alt-7',
     
     'OrthoPanel.toggleOrthoToolBar'         : 'Ctrl-Alt-8',
-    'OrthoPanel.toggleEditMode'             : 'Ctrl-E',
-    'OrthoPanel.resetDisplay'               : 'Ctrl-R',
-    'OrthoPanel.centreCursor'               : 'Ctrl-C',
-    'OrthoPanel.centreCursorWorld'          : 'Ctrl-O',
-
-    # OrthoPanel.resetView
+    
+    'OrthoPanel.toggleEditMode'             : 'Alt-E',
+    'OrthoPanel.resetDisplay'               : 'Alt-R',
+    'OrthoPanel.centreCursor'               : 'Alt-P',
+    'OrthoPanel.centreCursorWorld'          : 'Alt-O',
+    'OrthoPanel.toggleLabels'               : 'Alt-L',
+    'OrthoPanel.toggleCursor'               : 'Alt-C',
+    'OrthoPanel.toggleXCanvas'              : 'Alt-X',
+    'OrthoPanel.toggleYCanvas'              : 'Alt-Y',
+    'OrthoPanel.toggleZCanvas'              : 'Alt-Z',
 
     'LightBoxPanel.toggleLightBoxToolBar'   : 'Ctrl-Alt-8',
 

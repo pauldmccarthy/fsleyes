@@ -124,12 +124,13 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         :mod:`.actions` that are defined on this ``HistogramPanel``.
         """
         actions = [self.screenshot,
+                   None,
                    self.toggleOverlayList, 
                    self.togglePlotList,
                    self.toggleHistogramToolBar,
                    self.toggleHistogramControl]
 
-        names = [a.__name__ for a in actions]
+        names = [a.__name__ if a is not None else None for a in actions]
 
         return list(zip(names, actions))
 
