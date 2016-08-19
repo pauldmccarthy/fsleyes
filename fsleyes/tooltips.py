@@ -282,6 +282,7 @@ properties = TypeDict({
                               '(coronal in MNI space).',
     'OrthoOpts.showZCanvas' : 'Show / hide the Z canvas '
                               '(axial in MNI space).',
+    'OrthoOpts.showCursor'  : 'Show/hide the location cross-hairs.',
     'OrthoOpts.showLabels'  : 'If the currently selected overlay is a NIFTI '
                               'image, show / hide anatomical orientation '
                               'labels.',

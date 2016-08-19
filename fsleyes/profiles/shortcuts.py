@@ -50,6 +50,8 @@ actions = td.TypeDict({
     'CanvasPanel.toggleDisplayToolBar'      : 'Ctrl-Alt-7',
     
     'OrthoPanel.toggleOrthoToolBar'         : 'Ctrl-Alt-8',
+
+    'CanvasPanel.toggleMovieMode'            : 'Alt-M',
     
     'OrthoPanel.toggleEditMode'             : 'Alt-E',
     'OrthoPanel.resetDisplay'               : 'Alt-R',

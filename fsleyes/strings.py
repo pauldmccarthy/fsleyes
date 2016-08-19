@@ -287,6 +287,7 @@ actions = TypeDict({
 
     'CanvasPanel.screenshot'                : 'Take screenshot',
     'CanvasPanel.showCommandLineArgs'       : 'Show command line for scene',
+    'CanvasPanel.toggleMovieMode'           : 'Movie mode',
     'CanvasPanel.toggleColourBar'           : 'Colour bar',
     'CanvasPanel.toggleOverlayList'         : 'Overlay list',
     'CanvasPanel.toggleDisplayToolBar'      : 'Overlay display toolbar',

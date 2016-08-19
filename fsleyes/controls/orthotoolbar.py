@@ -95,6 +95,9 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
         icons = {
             'screenshot'       : fslicons.findImageFile('camera24'),
             'resetDisplay'     : fslicons.findImageFile('resetZoom24'),
+            'showCursor'       : [
+                fslicons.findImageFile('addHighlight24'),
+                fslicons.findImageFile('add24')], 
             'movieMode'        : [
                 fslicons.findImageFile('movieHighlight24'),
                 fslicons.findImageFile('movie24')],
@@ -127,6 +130,7 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
             'screenshot'   : fsltooltips.actions[   ortho,     'screenshot'],
             'resetDisplay' : fsltooltips.actions[   profile,   'resetDisplay'],
             'movieMode'    : fsltooltips.properties[ortho,     'movieMode'],
+            'showCursor'   : fsltooltips.properties[orthoOpts, 'showCursor'],
             'zoom'         : fsltooltips.properties[orthoOpts, 'zoom'],
             'layout'       : fsltooltips.properties[orthoOpts, 'layout'],
             'showXCanvas'  : fsltooltips.properties[orthoOpts, 'showXCanvas'],
@@ -139,6 +143,7 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
         
         targets    = {'screenshot'                : ortho,
                       'movieMode'                 : ortho,
+                      'showCursor'                : orthoOpts,
                       'resetDisplay'              : profile,
                       'zoom'                      : orthoOpts,
                       'layout'                    : orthoOpts,
@@ -173,6 +178,9 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
             props  .Widget(      'movieMode', 
                                  icon=icons['movieMode'],
                                  tooltip=tooltips['movieMode']),
+            props  .Widget(      'showCursor', 
+                                 icon=icons['showCursor'],
+                                 tooltip=tooltips['showCursor']), 
             actions.ActionButton('resetDisplay', 
                                  icon=icons['resetDisplay'],
                                  tooltip=tooltips['resetDisplay']), 

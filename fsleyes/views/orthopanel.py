@@ -324,13 +324,15 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Toggles the value of :attr:`.SceneOpts.showCursor`. """
         # The state of this action gets bound to 
         # the showCursor attribute in __init__
+        pass
 
 
     @actions.toggleAction
     def toggleLabels(self):
         """Toggles the value of :attr:`.OrthoOpts.showLabels`. """
         # The state of this action gets bound to 
-        # the showLabels attribute in __init__ 
+        # the showLabels attribute in __init__
+        pass
 
 
     @actions.toggleAction
@@ -338,6 +340,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Toggles the value of :attr:`.OrthoOpts.showXCanvas`. """
         # The state of this action gets bound to 
         # the showXCanvas attribute in __init__
+        pass
 
 
     @actions.toggleAction
@@ -345,12 +348,15 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Toggles the value of :attr:`.OrthoOpts.showYCanvas`. """
         # The state of this action gets bound to 
         # the showYCanvas attribute in __init__
+        pass
+
 
     @actions.toggleAction
     def toggleZCanvas(self):
         """Toggles the value of :attr:`.OrthoOpts.showZCanvas`. """
         # The state of this action gets bound to 
         # the showZCanvas attribute in __init__
+        pass
 
 
     def __onToggleEditMode(self, *args, **kwargs):
@@ -369,16 +375,18 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """
         actions = [self.screenshot,
                    self.showCommandLineArgs,
+                   self.toggleMovieMode,
+                   self.toggleEditMode,
                    None,
                    self.resetDisplay,
                    self.centreCursor,
-                   self.centreCursorWorld,
+                   self.centreCursorWorld, 
+                   None,
                    self.toggleLabels,
                    self.toggleCursor,
                    self.toggleXCanvas,
                    self.toggleYCanvas,
                    self.toggleZCanvas,
-                   self.toggleEditMode,
                    None,
                    self.toggleOverlayList,
                    self.toggleLocationPanel,

@@ -146,6 +146,5 @@ frame.FSLEyesFrame.removeFocusedViewPanel  = actions.action(removeFocusedViewPan
 frame.FSLEyesFrame.selectNextOverlay       = actions.action(selectNextOverlay)
 frame.FSLEyesFrame.selectPreviousOverlay   = actions.action(selectPreviousOverlay)
 frame.FSLEyesFrame.toggleOverlayVisibility = actions.action(toggleOverlayVisibility)
-
-frame.FSLEyesFrame.openHelp               = actions.action(openHelp)
-frame.FSLEyesFrame.closeFSLeyes           = actions.action(closeFSLeyes)
+frame.FSLEyesFrame.openHelp                = actions.action(openHelp)
+frame.FSLEyesFrame.closeFSLeyes            = actions.action(closeFSLeyes)

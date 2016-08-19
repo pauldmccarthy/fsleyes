@@ -258,6 +258,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.__containerPanel = wx.Panel(self.__centrePanel)
         self.__contentPanel   = wx.Panel(self.__containerPanel)
 
+        self.toggleMovieMode.bindProps('toggled', self, 'movieMode')
+
         self.setCentrePanel(self.__centrePanel)
 
         self.addListener('movieMode',
@@ -305,6 +307,14 @@ class CanvasPanel(viewpanel.ViewPanel):
         function.
         """
         _showCommandLineArgs(self._overlayList, self._displayCtx, self)
+
+
+    @actions.toggleAction
+    def toggleMovieMode(self):
+        """Toggles the value of :attr:`movieMode`. """
+        # The state of this action gets bound to 
+        # the movieMode attribute in __init__ 
+        pass
 
         
     @actions.toggleControlAction(overlaylistpanel.OverlayListPanel)
