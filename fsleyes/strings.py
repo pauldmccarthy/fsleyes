@@ -185,7 +185,13 @@ messages = TypeDict({
 
 
     'SaveOverlayAction.saveError' : 'An error occurred while saving the '
-                                    'file {}.\n\nDetails: {} - {}', 
+                                    'file {}.\n\nDetails: {} - {}',
+
+
+    'ImportDataSeriesAction.selectFile'   : 'Select a file to import',
+    'ImportDataSeriesAction.error'        : 'Could not load {}! Details:\n\n{}',
+    'ImportDataSeriesAction.selectXScale' : 'Set the X axis sampling '
+                                            'rate/scaling factor',
 })
 
 
@@ -255,6 +261,10 @@ titles = TypeDict({
     'SaveOverlayAction.saveError'          : 'Error saving file',
 
     'OrthoEditProfile.displaySpaceChange' : 'Changing display space',
+
+    'ImportDataSeriesAction.error'        : 'Error loading file',
+    'ImportDataSeriesAction.selectXScale' : 'X axis scaling factor',
+
 })
 
 

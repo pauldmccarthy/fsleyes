@@ -42,9 +42,9 @@ class ImportDataSeriesAction(action.Action):
         import wx
         
         # Ask the user where to get the data
-        msg     = strings.messages[self, 'importDataSeries']
+        msg     = strings.messages[self, 'selectFile']
         fromDir = fslsettings.read('loadSaveOverlayDir', os.getcwd())
-        dlg     = wx.FileDialog(self,
+        dlg     = wx.FileDialog(self.__plotPanel,
                                 message=msg,
                                 defaultDir=fromDir,
                                 style=wx.FD_OPEN | wx.FD_MULTIPLE)
@@ -64,8 +64,8 @@ class ImportDataSeriesAction(action.Action):
             data = np.loadtxt(filePath).T
             
         except Exception as e:
-            msg   = strings.messages[self, 'importDataSeries', 'error']
-            title = strings.titles[  self, 'importDataSeries', 'error'].format(
+            title = strings.titles[  self, 'error']
+            msg   = strings.messages[self, 'error'].format(
                 filePath,
                 '{}: {}'.format(type(e).__name__, str(e)))
             
@@ -75,7 +75,7 @@ class ImportDataSeriesAction(action.Action):
         # Ask the user the x axis scaling factor.
         # If the currently selected overlay is
         # Nifti and 4D, default to its pixdim[3]
-        overlay = self.getDisplayContext().getSelectedOverlay()
+        overlay = self.__displayCtx.getSelectedOverlay()
         
         if all((overlay is not None,
                 isinstance(overlay, fslimage.Nifti),
@@ -87,7 +87,7 @@ class ImportDataSeriesAction(action.Action):
 
         title = strings.titles[  self, 'selectXScale']
         msg   = strings.messages[self, 'selectXScale']
-        dlg   = numdlg.NumberDialog(self,
+        dlg   = numdlg.NumberDialog(self.__plotPanel,
                                     title=title,
                                     message=msg,
                                     initial=xscale,

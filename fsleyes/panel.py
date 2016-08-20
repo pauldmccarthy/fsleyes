@@ -111,6 +111,11 @@ class _FSLEyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         """
         return self._displayCtx
 
+    
+    def getOverlayList(self):
+        """Returns a reference to the :class:`.OverlayList`. """
+        return self._overlayList
+
         
     def destroy(self):
         """This method must be called by whatever is managing this 
