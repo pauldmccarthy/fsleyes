@@ -525,8 +525,8 @@ properties = TypeDict({
     
     'Profile.mode'                   : 'Profile',
     
-    'DisplayContext.displaySpace'    : 'Display space',
-    'DisplayContext.lrFlip'          : 'Flip left/right axis',
+    'DisplayContext.displaySpace'     : 'Display space',
+    'DisplayContext.radioOrientation' : 'Display in radiological orientation',
 
     'CanvasPanel.syncLocation'       : 'Link location',
     'CanvasPanel.syncOverlayOrder'   : 'Link overlay order',

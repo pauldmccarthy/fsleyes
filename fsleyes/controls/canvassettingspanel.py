@@ -105,7 +105,7 @@ class CanvasSettingsPanel(fslpanel.FSLEyesSettingsPanel):
                          labels=_displaySpaceOptionName,
                          dependencies=[(canvasPanel, 'profile')],
                          enabledWhen=lambda i, p: p == 'view'),
-            props.Widget('lrFlip')]
+            props.Widget('radioOrientation')]
 
         orthoOptsProps = [
             props.Widget('layout', labels=strings.choices['OrthoOpts.layout']), 

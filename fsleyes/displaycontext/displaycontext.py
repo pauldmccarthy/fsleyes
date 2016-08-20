@@ -151,10 +151,12 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
-    lrFlip = props.Boolean(default=False)
-    """If ``True``, the X axis (assumed to correspond to the left-right axis) 
-    in 2D views of the scene will be inverted. This allows the user to switch
-    between neurological and radiological views.
+    radioOrientation = props.Boolean(default=False)
+    """If ``True``, the X axis (assumed to correspond to the left-right axis) in
+    2D views of the scene will be inverted. For images which are oriented
+    according to the MNI152 convention, this allows the user to switch between
+    neurological and radiological views. ``True`` corresponds to a
+    radiological display, and ``False`` to a neurological display.
 
     .. note:: This setting is not enforced by the ``DisplayContext``. It is
               the responsibility of the :class:`.OrthoPanel` and
@@ -203,7 +205,7 @@ class DisplayContext(props.SyncableHasProperties):
             parent=parent,
             nounbind=['overlayGroups',
                       'displaySpace',
-                      'lrFlip',
+                      'radioOrientation',
                       'bounds',
                       'autoDisplay',
                       'loadInMemory'],

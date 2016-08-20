@@ -37,10 +37,13 @@ properties = TypeDict({
 
     # DisplayContext
 
-    'DisplayContext.displaySpace' : 'The space in which overlays are '
-                                    'displayed.',
-    'DisplayContext.lrFlip'       : 'Invert the X axis (left-right '
-                                    'in MNI space).',
+    'DisplayContext.displaySpace'     : 'The space in which overlays are '
+                                        'displayed.',
+    'DisplayContext.radioOrientation' : 'If checked, images oriented to the '
+                                        'MNI152 standard will be displayed in '
+                                        'radiological orientation. Otherwise '
+                                        'they will be displayed in '
+                                        'neurological orientation.',
 
     # Overlay Display
     

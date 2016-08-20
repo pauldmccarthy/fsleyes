@@ -22,6 +22,8 @@ import itertools as it
 
 import wx
 
+import numpy.linalg as npla
+
 import pwidgets.textpanel                     as textpanel
 
 import fsl.data.constants                     as constants
@@ -182,10 +184,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__ycanvas.bindProps('cursorColour', sceneOpts)
         self.__zcanvas.bindProps('cursorColour', sceneOpts)
 
-        # L/r flip
-        self.__ycanvas.bindProps('invertX', displayCtx, 'lrFlip')
-        self.__zcanvas.bindProps('invertX', displayCtx, 'lrFlip')
-
         # Callbacks for ortho panel layout options
         sceneOpts.addListener('layout',     self._name, self.__refreshLayout)
         sceneOpts.addListener('showLabels', self._name, self.__refreshLabels)
@@ -220,10 +218,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                       self.__refreshLayout)
         self._displayCtx .addListener('displaySpace',
                                       self._name,
-                                      self.__refreshLabels)
-        self._displayCtx .addListener('lrFlip',
+                                      self.__displaySpaceChanged)
+        self._displayCtx .addListener('radioOrientation',
                                       self._name,
-                                      self.__refreshLabels) 
+                                      self.__radioOrientationChanged) 
         self._displayCtx .addListener('selectedOverlay',
                                       self._name,
                                       self.__overlayListChanged)
@@ -539,6 +537,34 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.PostSizeEvent()
 
 
+    def __radioOrientationChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.radioOrientation` property
+        changes. Figures out if the left-right canvas axes need to be flipped,
+        and does so if necessary.
+        """
+
+        if len(self._overlayList) == 0:
+            return
+
+        overlay = self._displayCtx.getReferenceImage(
+            self._displayCtx.getSelectedOverlay())
+
+        if overlay is None:
+            return
+
+        opts  = self._displayCtx.getOpts(overlay)
+        xform = opts.getTransform('pixdim-flip', 'display')
+        neuro = npla.det(xform) < 0
+
+        flip  = any(((    self._displayCtx.radioOrientation and     neuro),
+                     (not self._displayCtx.radioOrientation and not neuro)))
+        
+        self.__ycanvas.invertX = flip
+        self.__zcanvas.invertX = flip
+
+        self.__refreshLabels()
+
+
     def __overlayListChanged(self, *a):
         """Called when the :class:`.OverlayList` or
         :attr:`.DisplayContext.selectedOverlay` is changed.
@@ -575,6 +601,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Called when the :attr:`.DisplayContext.displaySpace` changes.
         Refreshes the anatomical orientation labels.
         """
+        self.__radioOrientationChanged()
         self.__refreshLabels()
 
             

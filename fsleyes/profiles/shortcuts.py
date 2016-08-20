@@ -22,7 +22,7 @@ actions = td.TypeDict({
 
     'FSLEyesFrame.closeFSLeyes'           : 'Ctrl-Q',
     'FSLEyesFrame.openHelp'               : 'Ctrl-H',
-    'FSLEyesFrame.removeFocusedViewPanel' : 'Ctrl-X',
+    'FSLEyesFrame.removeFocusedViewPanel' : 'Ctrl-W',
     
     'FSLEyesFrame.addOrthoPanel'          : 'Ctrl-1',
     'FSLEyesFrame.addLightBoxPanel'       : 'Ctrl-2',
