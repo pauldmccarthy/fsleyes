@@ -12,6 +12,7 @@ the currently selected overlay.
 """
 
 
+import os
 import logging
 
 import wx
@@ -33,7 +34,7 @@ from matplotlib.backends.backend_wx    import NavigationToolbar2Wx
 import                                       props
 import pwidgets.elistbox                  as elistbox
 import fsl.utils.async                    as async
-import fsl.data.image                     as fslimage
+import fsl.utils.settings                 as fslsettings
 import fsleyes.strings                    as strings
 import fsleyes.actions                    as actions
 import fsleyes.overlay                    as fsloverlay
@@ -394,18 +395,32 @@ class PlotPanel(viewpanel.ViewPanel):
                 wx.ICON_ERROR)
 
 
-    # @actions.action
+    @actions.action
     def importDataSeries(self, *a):
-        """Not implemented yet. Imports data series from a text file."""
-        pass
+        """Imports data series from a text file.
 
-
-    # @actions.action
-    def exportDataSeries(self, *a):
-        """Not implemented yet. Exports displayed data series to a text file.
+        See the :class:`.ImportDataSeriesAction`.
         """
-        pass
-            
+
+        actions.ImportDataSeriesAction(self.getOverlayList(),
+                                       self.getDisplayContext(),
+                                       self)()
+
+
+    @actions.action
+    def exportDataSeries(self, *args, **kwargs):
+        """Exports displayed data series to a text file.
+
+        :arg extraSeries: Passed to the :class:`.ExportDataSeriesAction`.
+
+        See the :class:`.ExportDataSeriesAction`.
+        """
+
+        extraSeries = kwargs.get('extraSeries', None)
+        actions.ExportDataSeriesAction(self.getOverlayList(),
+                                       self.getDisplayContext(),
+                                       self)(extraSeries=extraSeries)
+
 
     def message(self, msg, clear=True, border=False):
         """Displays the given message in the centre of the figure.

@@ -134,6 +134,8 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         :mod:`.actions` that are defined on this ``PowerSpectrumPanel``.
         """
         actions = [self.screenshot,
+                   self.importDataSeries,
+                   self.exportDataSeries,
                    None,
                    self.toggleOverlayList, 
                    self.togglePlotList,

@@ -25,6 +25,12 @@ class DataSeries(props.HasProperties):
     overlay to the ``DataSeries`` constructor, and override the
     :meth:`getData` method. The overlay is accessible as an instance
     attribute, confusingly called ``overlay``.
+    
+
+    .. note:: Some ``DataSeries`` instances may not be associated with
+              an overlay (e.g. series imported loaded a text file). In
+              this case, the ``overlay`` attribute will be ``None``.
+    
 
     Each``DataSeries`` instance is plotted as a line, with the line
     style defined by properties on the ``DataSeries`` instance,
@@ -59,7 +65,7 @@ class DataSeries(props.HasProperties):
         """Create a ``DataSeries``.
 
         :arg overlay: The overlay from which the data to be plotted is
-                      retrieved. 
+                      retrieved.  May be ``None``.
         """
         
         self.overlay = overlay

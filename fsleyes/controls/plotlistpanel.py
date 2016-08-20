@@ -133,8 +133,12 @@ class PlotListPanel(fslpanel.FSLEyesPanel):
         """
 
         ds      = ev.data
-        overlay = ds.overlay 
-        opts    = self._displayCtx.getOpts(overlay)
+        overlay = ds.overlay
+
+        if overlay is None:
+            return
+
+        opts = self._displayCtx.getOpts(overlay)
 
         self._displayCtx.selectedOverlay = self._overlayList.index(overlay)
 

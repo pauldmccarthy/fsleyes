@@ -348,6 +348,8 @@ properties = TypeDict({
                              'the y axis.',
     'PlotPanel.ticks'      : 'Show / hide axis ticks and tick labels.',
     'PlotPanel.grid'       : 'Show hide plot grid.' ,
+    'PlotPanel.gridColour' : 'Set the plot grid colour.' ,
+    'PlotPanel.bgColour'   : 'Set the plot background colour.' ,
     'PlotPanel.smooth'     : 'Smooth displayed data series (with cubic spline '
                              'interpolation).',
     'PlotPanel.xlabel'     : 'Set the x axis label.',

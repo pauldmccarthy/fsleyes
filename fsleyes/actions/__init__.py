@@ -111,6 +111,8 @@ are also defined in this package:
     ~fsleyes.actions.togglecontrolpanel
     ~fsleyes.actions.diagnosticreport
     ~fsleyes.actions.about
+    ~fsleyes.actions.importdataseries
+    ~fsleyes.actions.exportdataseries
 """
 
 
@@ -140,6 +142,8 @@ from . import clearperspective
 from . import togglecontrolpanel
 from . import diagnosticreport
 from . import about
+from . import importdataseries
+from . import exportdataseries
 
 
 Action                   = action            .Action
@@ -160,6 +164,8 @@ ClearPerspectiveAction   = clearperspective  .ClearPerspectiveAction
 ToggleControlPanelAction = togglecontrolpanel.ToggleControlPanelAction
 DiagnosticReportAction   = diagnosticreport  .DiagnosticReportAction
 AboutAction              = about             .AboutAction
+ImportDataSeriesAction   = importdataseries  .ImportDataSeriesAction
+ExportDataSeriesAction   = exportdataseries  .ExportDataSeriesAction
 
 
 log = logging.getLogger(__name__)

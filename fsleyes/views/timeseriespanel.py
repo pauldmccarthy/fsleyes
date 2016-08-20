@@ -184,6 +184,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         :mod:`.actions` that are defined on this ``TimeSeriesPanel``.
         """
         actions = [self.screenshot,
+                   self.importDataSeries,
+                   self.exportDataSeries,
                    None,
                    self.toggleOverlayList,
                    self.togglePlotList,

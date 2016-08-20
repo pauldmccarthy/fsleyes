@@ -173,6 +173,8 @@ class PlotControlPanel(fslpanel.FSLEyesSettingsPanel):
                      'legend',
                      'ticks',
                      'grid',
+                     'gridColour',
+                     'bgColour',
                      'xAutoScale',
                      'yAutoScale']
 

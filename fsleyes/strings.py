@@ -12,19 +12,23 @@ The strings are stored in :class:`.TypeDict` dictionaries, roughly organised
 into the following categories:
 
 
- ================== =====================================================
- :data:`messages`   Messages to be displayed to the user.
- :data:`titles`     Titles of windows, panels, and dialogs.
- :data:`actions`    Names of actions tied to menu options, buttons, etc.
- :data:`labels`     Labels for miscellaneous things.
- :data:`properties` Display names for ``props.HasProperties`` properties.
- :data:`choices`    Display names for ``props.HasProperties`` choice
-                    properties.
- :data:`anatomy`    Anatomical and orientation labels.
- :data:`nifti`      Labels for NIFTI header fields.
- :data:`feat`       FEAT specific names and labels.
- :data:`about`      Strings used in the *FSLeyes* about dialog.
- ================== =====================================================
+ ==================== =====================================================
+ :data:`messages`     Messages to be displayed to the user.
+ :data:`titles`       Titles of windows, panels, and dialogs.
+ :data:`actions`      Names of actions tied to menu options, buttons, etc.
+ :data:`labels`       Labels for miscellaneous things.
+ :data:`properties`   Display names for ``props.HasProperties`` properties.
+ :data:`choices`      Display names for ``props.HasProperties`` choice
+                      properties.
+ :data:`anatomy`      Anatomical and orientation labels.
+ :data:`nifti`        Labels for NIFTI header fields.
+ :data:`feat`         FEAT specific names and labels.
+ :data:`melodic`      MELODIC specific names and labels.
+ :data:`perspectives` Perspective labels.
+ :data:`tensor`       Tensor overlay labels.
+ :data:`plotLabels`   Labels to use for plot data loaded from known files.
+ :data:`about`        Strings used in the *FSLeyes* about dialog.
+ ==================== =====================================================
 """
 
 
@@ -315,6 +319,8 @@ actions = TypeDict({
     'LightBoxPanel.toggleLightBoxToolBar' : 'Lightbox toolbar',
 
     'PlotPanel.screenshot'                          : 'Take screenshot',
+    'PlotPanel.importDataSeries'                    : 'Import ...',
+    'PlotPanel.exportDataSeries'                    : 'Export ...',
     'OverlayPlotPanel.toggleOverlayList'            : 'Overlay list',
     'TimeSeriesPanel.togglePlotList'                : 'Time series list',
     'TimeSeriesPanel.toggleTimeSeriesControl'       : 'Time series control',
@@ -547,6 +553,8 @@ properties = TypeDict({
     'PlotPanel.legend'     : 'Show legend',
     'PlotPanel.ticks'      : 'Show ticks',
     'PlotPanel.grid'       : 'Show grid',
+    'PlotPanel.gridColour' : 'Grid colour',
+    'PlotPanel.bgColour'   : 'Background colour',
     'PlotPanel.smooth'     : 'Smooth',
     'PlotPanel.xAutoScale' : 'Auto-scale (x axis)',
     'PlotPanel.yAutoScale' : 'Auto-scale (y axis)',
@@ -1003,6 +1011,20 @@ tensor = {
     'l1' : 'First eigenvalue image',
     'l2' : 'Second eigenvalue image',
     'l3' : 'Third eigenvalue image',
+}
+
+
+# Key format is "filename.colIndex"
+plotLabels = {
+    'prefiltered_func_data_mcf.par.0' : 'MCFLIRT X rotation (radians)',
+    'prefiltered_func_data_mcf.par.1' : 'MCFLIRT Y rotation (radians)',
+    'prefiltered_func_data_mcf.par.2' : 'MCFLIRT Z rotation (radians)',
+    'prefiltered_func_data_mcf.par.3' : 'MCFLIRT X translation (mm)',
+    'prefiltered_func_data_mcf.par.4' : 'MCFLIRT Y translation (mm)',
+    'prefiltered_func_data_mcf.par.5' : 'MCFLIRT Z translation (mm)',
+
+    'prefiltered_func_data_mcf_abs.rms.0' : 'MCFLIRT absolute mean displacement (mm)',
+    'prefiltered_func_data_mcf_rel.rms.0' : 'MCFLIRT relative mean displacement (mm)',
 }
 
 
