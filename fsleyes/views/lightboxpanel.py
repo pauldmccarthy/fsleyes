@@ -182,6 +182,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         actions = [self.screenshot,
                    self.showCommandLineArgs,
                    self.toggleMovieMode,
+                   self.toggleDisplaySync,
                    None,
                    self.toggleOverlayList,
                    self.toggleLocationPanel,

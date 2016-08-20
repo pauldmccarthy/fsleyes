@@ -92,6 +92,8 @@ class CanvasPanel(viewpanel.ViewPanel):
     
        screenshot
        showCommandLineArgs
+       toggleMovieMode
+       toggleDisplaySync
        toggleOverlayList
        toggleOverlayInfo
        toggleAtlasPanel
@@ -258,7 +260,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.__containerPanel = wx.Panel(self.__centrePanel)
         self.__contentPanel   = wx.Panel(self.__containerPanel)
 
-        self.toggleMovieMode.bindProps('toggled', self, 'movieMode')
+        self.toggleMovieMode  .bindProps('toggled', self, 'movieMode')
+        self.toggleDisplaySync.bindProps('toggled', self, 'syncOverlayDisplay')
 
         self.setCentrePanel(self.__centrePanel)
 
@@ -315,6 +318,14 @@ class CanvasPanel(viewpanel.ViewPanel):
         # The state of this action gets bound to 
         # the movieMode attribute in __init__ 
         pass
+
+
+    @actions.toggleAction
+    def toggleDisplaySync(self):
+        """Toggles the value of :attr:`syncOverlayDisplay`. """
+        # The state of this action gets bound to 
+        # the syncOverlayDisplay attribute in __init__ 
+        pass 
 
         
     @actions.toggleControlAction(overlaylistpanel.OverlayListPanel)

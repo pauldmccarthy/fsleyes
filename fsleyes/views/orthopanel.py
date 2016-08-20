@@ -377,6 +377,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         actions = [self.screenshot,
                    self.showCommandLineArgs,
                    self.toggleMovieMode,
+                   self.toggleDisplaySync,
                    self.toggleEditMode,
                    None,
                    self.resetDisplay,
