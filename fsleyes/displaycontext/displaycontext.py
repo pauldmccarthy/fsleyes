@@ -120,29 +120,24 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
-    displaySpace = props.Choice(('pixdim', 'world'), default='pixdim')
+    displaySpace = props.Choice(('world', ))
     """The *space* in which overlays are displayed. This property globally
     controls the :attr:`.NiftiOpts.transform` property of all :class:`.Nifti`
-    overlays. It has three settings, described below.
+    overlays. It has two settings, described below (options for setting 2
+    are dynamically added):
 
-    
-    1. **Scaled voxel** space (a.k.a. ``pixdim``)
-
-       All :class:`.Nifti` overlays are displayed with scaled voxels - the
-       :attr:`.NiftiOpts.transform` property for every ``Nifti`` overlay is
-       set to ``pixdim``.
-    
-    2. **World** space (a.k.a. ``world``)
+    1. **World** space (a.k.a. ``world``)
 
        All :class:`.Nifti` overlays are displayed in the space defined by
        their affine transformation matrix - the :attr:`.NiftiOpts.transform`
        property for every ``Nifti`` overlay is set to ``affine``.
 
-    3. **Reference image** space
+    2. **Reference image** space
 
        A single :class:`.Nifti` overlay is selected as a *reference* image,
-       and is displayed in scaled voxel space (:attr:`.NiftiOpts.transform` is
-       set to ``pixdim``). All other ``Nifti`` overlays are transformed into
+       and is displayed in scaled voxel space (with a potential L/R flip for
+       neurological images - :attr:`.NiftiOpts.transform` is set to
+       ``pixdim-flip``). All other ``Nifti`` overlays are transformed into
        this reference space - their :attr:`.NiftiOpts.transform` property is
        set to ``custom``, and their :attr:`.NiftiOpts.customXform` matrix is
        set such that it transforms from the image voxel space to the scaled
@@ -602,13 +597,16 @@ class DisplayContext(props.SyncableHasProperties):
         """
 
         choiceProp = self.getProp('displaySpace')
-        choices    = ['pixdim', 'world']
+        choices    = []
         
         for overlay in self.__overlayList:
             if isinstance(overlay, fslimage.Nifti):
                 choices.append(overlay)
+ 
+        choices.append('world')
 
-        choiceProp.setChoices(choices, instance=self)
+        choiceProp.setChoices(choices,    instance=self)
+        choiceProp.setDefault(choices[0], instance=self)
 
 
     def __setTransform(self, image):
@@ -626,14 +624,13 @@ class DisplayContext(props.SyncableHasProperties):
         space = self.displaySpace
         opts  = self.getOpts(image)
             
-        if   space == 'pixdim': opts.transform = 'pixdim'
-        elif space == 'world':  opts.transform = 'affine'
-        elif image is space:    opts.transform = 'pixdim'
+        if   space == 'world':  opts.transform = 'affine'
+        elif image is space:    opts.transform = 'pixdim-flip'
         else:
             refOpts = self.getOpts(space)
             xform   = transform.concat(
                 opts   .getTransform('voxel', 'world'),
-                refOpts.getTransform('world', 'pixdim'))
+                refOpts.getTransform('world', 'pixdim-flip'))
 
             opts.customXform = xform
             opts.transform   = 'custom'

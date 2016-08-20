@@ -704,8 +704,7 @@ properties = TypeDict({
 
 choices = TypeDict({
 
-    'DisplayContext.displaySpace' : {'world'  : 'World coordinates',
-                                     'pixdim' : 'Scaled voxels'},
+    'DisplayContext.displaySpace' : {'world'  : 'World coordinates'},
 
     'SceneOpts.colourBarLocation'  : {'top'          : 'Top',
                                       'bottom'       : 'Bottom',
@@ -766,10 +765,11 @@ choices = TypeDict({
     'TensorOpts.tensorResolution.min' : 'Low',
     'TensorOpts.tensorResolution.max' : 'High',
 
-    'NiftiOpts.transform' : {'affine' : 'World coordinates',
-                             'pixdim' : 'Scaled voxels',
-                             'id'     : 'Voxels',
-                             'custom' : 'Custom transformation'},
+    'NiftiOpts.transform' : {'affine'      : 'World coordinates',
+                             'pixdim'      : 'Scaled voxels',
+                             'pixdim-flip' : 'Radiological scaled voxels',
+                             'id'          : 'Voxels',
+                             'custom'      : 'Custom transformation'},
 
     'VolumeOpts.interpolation' : {'none'   : 'No interpolation', 
                                   'linear' : 'Linear interpolation', 

@@ -543,7 +543,7 @@ class GLImageObject(GLObject):
         if opts.transform == 'id':
             resolution = resolution / min(image.pixdim[:3])
             
-        elif opts.transform == 'pixdim':
+        elif opts.transform in ('pixdim', 'pixdim-flip'):
             resolution = [max(r, p)
                           for r, p
                           in zip(resolution, image.pixdim[:3])]

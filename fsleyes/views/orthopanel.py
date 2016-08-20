@@ -702,7 +702,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # orientation labels, as there's no guarantee
         # that all of the loaded overlays are in the
         # same orientation, and it can get confusing.
-        if opts.transform in ('id', 'pixdim') and \
+        if opts.transform in ('id', 'pixdim', 'pixdim-flip') and \
            self._displayCtx.displaySpace != refImage:
             xlo        = 'Xmin'
             xhi        = 'Xmax'

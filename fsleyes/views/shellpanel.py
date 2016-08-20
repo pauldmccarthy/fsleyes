@@ -9,6 +9,8 @@ which contains an interactive Python shell.
 """
 
 
+import textwrap
+
 import wx.py.shell as wxshell
 
 import fsleyes.actions.runscript as runscript
@@ -45,16 +47,35 @@ class ShellPanel(viewpanel.ViewPanel):
                                                                overlayList,
                                                                displayCtx)
 
+        introText = textwrap.dedent("""
+          FSLEyes python shell
+        
+        Available items:
+        """)
+
+        localVars  = _locals.keys()
+        localDescs = [_locals[k].__doc__ for k in localVars]
+
+        localDescs = [d.split('\n')[0].strip()[:60] for d in localDescs]
+
+        varWidth  = max([len(v) for v in localVars])
+
+        fmtStr = '  - {{:{:d}s}} : {{}}...\n'.format(varWidth)
+
+        for lvar, ldesc in zip(localVars, localDescs):
+            introText = introText + fmtStr.format(lvar, ldesc)
+
+
+        introText = introText + textwrap.dedent("""
+
+        Type help(item) for additional details on a specific item.
+        """)
 
         shell = wxshell.Shell(
             self,
-            introText='   FSLEyes python shell\n\n'
-                      'Available FSLeyes variables are:\n'
-                      '  - overlayList\n' 
-                      '  - displayCtx\n'
-                      '  - frame\n',
+            introText=introText,
             locals=_locals,
-            showInterpIntro=False)
+            showInterpIntro=False) 
 
         # TODO set up environment so that users can
         #

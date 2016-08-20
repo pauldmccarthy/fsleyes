@@ -289,7 +289,7 @@ class OrthoViewProfile(profiles.Profile):
 
             offsets  = [x, y, z]
             opts     = self._displayCtx.getOpts(overlay)
-            vround   = opts.transform in ('id', 'pixdim')
+            vround   = opts.transform in ('id', 'pixdim', 'pixdim-flip')
             vloc     = opts.getVoxel(clip=False, vround=vround)
             voxAxes  = overlay.axisMapping(opts.getTransform('voxel',
                                                              'display'))

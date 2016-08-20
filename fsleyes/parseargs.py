@@ -907,7 +907,6 @@ def _imageTrans(i):
 
     # Special cases for Main.displaySpace
     elif stri == 'world':  return 'world'
-    elif stri == 'pixdim': return 'pixdim'
 
     else:                  return i.dataSource
 

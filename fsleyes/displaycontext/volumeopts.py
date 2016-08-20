@@ -143,7 +143,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
     transform = props.Choice(
         ('affine', 'pixdim', 'pixdim-flip', 'id', 'custom'),
-        default='pixdim')
+        default='pixdim-flip')
     """This property defines how the overlay should be transformd into
     the display coordinate system. See the
     :ref:`note on coordinate systems <volumeopts-coordinate-systems>`

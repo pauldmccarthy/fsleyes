@@ -653,24 +653,24 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__xcanvas.xax,
             self.__xcanvas.yax,
             editor.getSelection(),
-            opts.getTransform('pixdim', 'voxel'),
-            opts.getTransform('voxel',  'pixdim'),
+            opts.getTransform('display', 'voxel'),
+            opts.getTransform('voxel',   'display'),
             colour=self.selectionOverlayColour)
         
         self.__yselAnnotation = annotations.VoxelSelection(
             self.__ycanvas.xax,
             self.__ycanvas.yax,
             editor.getSelection(),
-            opts.getTransform('pixdim', 'voxel'),
-            opts.getTransform('voxel',  'pixdim'),
+            opts.getTransform('display', 'voxel'),
+            opts.getTransform('voxel',   'display'),
             colour=self.selectionOverlayColour)
         
         self.__zselAnnotation = annotations.VoxelSelection(
             self.__zcanvas.xax,
             self.__zcanvas.yax,
             editor.getSelection(),
-            opts.getTransform('pixdim', 'voxel'),
-            opts.getTransform('voxel',  'pixdim'),
+            opts.getTransform('display', 'voxel'),
+            opts.getTransform('voxel',   'display'),
             colour=self.selectionOverlayColour) 
 
         xannot.obj(self.__xselAnnotation, hold=True)

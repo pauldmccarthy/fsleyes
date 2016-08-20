@@ -334,10 +334,10 @@ class GLLineVertices(object):
         # If in id/pixdim space, the display
         # coordinate system axes are parallel
         # to the voxel coordinate system axes
-        if opts.transform in ('id', 'pixdim'):
+        if opts.transform in ('id', 'pixdim', 'pixdim-flip'):
 
             # Turn the z position into a voxel index
-            if opts.transform == 'pixdim':
+            if opts.transform in ('pixdim', 'pixdim-flip'):
                 zpos = zpos / image.pixdim[zax]
 
             zpos = int(np.floor(zpos))

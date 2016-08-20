@@ -252,9 +252,10 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # Otherwise return a spacing
         # appropriate for the current
         # display space
-        if   opts.transform == 'id':     return 1
-        elif opts.transform == 'pixdim': return overlay.pixdim[self.zax]
-        elif opts.transform == 'affine': return min(overlay.pixdim[:3])
+        if   opts.transform == 'id':          return 1
+        elif opts.transform == 'pixdim':      return overlay.pixdim[self.zax]
+        elif opts.transform == 'pixdim-flip': return overlay.pixdim[self.zax]
+        elif opts.transform == 'affine':      return min(overlay.pixdim[:3])
 
         # This overlay is being displayed with a
         # custrom transformation matrix  - check

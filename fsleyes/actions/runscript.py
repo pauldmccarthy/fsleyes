@@ -24,6 +24,7 @@ import __future__          as futures
 import                        os
 import os.path             as op
 import                        logging
+import                        collections
 
 import fsl.utils.settings  as fslsettings
 import fsleyes.strings     as strings
@@ -161,25 +162,65 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         },
     }
     
-    import fsleyes.views     as views
-    import fsleyes.controls  as controls
+    import fsleyes.views         as views
+    import fsleyes.controls      as controls
     import fsl.data.image        as image
     import fsl.data.featimage    as featimage
     import fsl.data.melodicimage as melimage
     import fsl.data.tensorimage  as tensorimage
     import fsl.data.model        as model
-    
-    _locals = {
-        'Image'        : image.Image,
-        'FEATImage'    : featimage.FEATImage,
-        'MelodicImage' : melimage.MelodicImage,
-        'TensorImage'  : tensorimage.TensorImage,
-        'Model'        : model.Model,
-        'views'        : views,
-        'controls'     : controls,
-        'overlayList'  : overlayList,
-        'displayCtx'   : displayCtx,
-        'frame'        : frame,
-    }
+
+
+    def load(filename):
+        """Load the specified file into FSLeyes. """
+        
+        from . import                 loadoverlay
+        import fsleyes.autodisplay as autodisplay
+
+        def onLoad(overlays):
+
+            if len(overlays) == 0:
+                return
+            
+            overlayList.append(overlays[0])
+
+            if displayCtx.autoDisplay:
+                autodisplay.autoDisplay(overlays[0],
+                                        overlayList,
+                                        displayCtx) 
+        
+        loadoverlay.loadOverlays([filename],
+                                 onLoad=onLoad,
+                                 inmem=displayCtx.loadInMemory)
+        
+
+    def trueScaledVoxels():
+        """Display all NIFTI images in true scaled voxels (without
+        any radiological/neurological flip). """
+        for o in overlayList:
+            if isinstance(o, image.Nifti):
+                displayCtx.getOpts(o).transform = 'pixdim'
+                
+    def rawVoxels():
+        """Display all NIFTI images in raw voxels. """
+        for o in overlayList:
+            if isinstance(o, image.Nifti):
+                displayCtx.getOpts(o).transform = 'id'
+                
+    _locals = collections.OrderedDict((
+        ('Image',            image.Image),
+        ('FEATImage',        featimage.FEATImage),
+        ('MelodicImage',     melimage.MelodicImage),
+        ('TensorImage',      tensorimage.TensorImage),
+        ('Model',            model.Model),
+        ('views',            views),
+        ('controls',         controls),
+        ('overlayList',      overlayList),
+        ('displayCtx',       displayCtx),
+        ('frame',            frame),
+        ('trueScaledVoxels', trueScaledVoxels),
+        ('rawVoxels',        rawVoxels),
+        ('load',             load),
+    ))
 
     return _globals, _locals
