@@ -40,11 +40,13 @@ class ImportDataSeriesAction(action.Action):
     def __doImport(self):
 
         import wx
+
+        frame = wx.GetApp().GetTopWindow()
         
         # Ask the user where to get the data
         msg     = strings.messages[self, 'selectFile']
         fromDir = fslsettings.read('loadSaveOverlayDir', os.getcwd())
-        dlg     = wx.FileDialog(self.__plotPanel,
+        dlg     = wx.FileDialog(frame,
                                 message=msg,
                                 defaultDir=fromDir,
                                 style=wx.FD_OPEN | wx.FD_MULTIPLE)
@@ -87,7 +89,7 @@ class ImportDataSeriesAction(action.Action):
 
         title = strings.titles[  self, 'selectXScale']
         msg   = strings.messages[self, 'selectXScale']
-        dlg   = numdlg.NumberDialog(self.__plotPanel,
+        dlg   = numdlg.NumberDialog(frame,
                                     title=title,
                                     message=msg,
                                     initial=xscale,
@@ -95,6 +97,8 @@ class ImportDataSeriesAction(action.Action):
 
         if dlg.ShowModal() != wx.ID_OK:
             return
+
+        xscale = dlg.GetValue()
 
         # Add the data series
         series = []
