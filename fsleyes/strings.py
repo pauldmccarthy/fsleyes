@@ -538,6 +538,7 @@ properties = TypeDict({
     'OrthoOpts.showYCanvas' : 'Show Y canvas',
     'OrthoOpts.showZCanvas' : 'Show Z canvas',
     'OrthoOpts.showLabels'  : 'Show labels',
+    'OrthoOpts.labelSize'   : 'Label size (%)',
     'OrthoOpts.layout'      : 'Layout',
     'OrthoOpts.xzoom'       : 'X zoom',
     'OrthoOpts.yzoom'       : 'Y zoom',

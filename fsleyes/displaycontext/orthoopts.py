@@ -67,6 +67,10 @@ class OrthoOpts(sceneopts.SceneOpts):
     zzoom = copy.copy(sceneopts.SceneOpts.zoom)
     """Controls zoom on the Z canvas. """
 
+
+    labelSize = props.Percentage(minval=50, maxval=500, default=100)
+    """Label font size. The default (100%) is defined by the system. """
+
     
     def __init__(self, *args, **kwargs):
         """Create an ``OrthoOpts`` instance. All arguments are passed

@@ -286,6 +286,7 @@ properties = TypeDict({
     'OrthoOpts.showLabels'  : 'If the currently selected overlay is a NIFTI '
                               'image, show / hide anatomical orientation '
                               'labels.',
+    'OrthoOpts.labelSize'   : 'Scale the label font size.',
     'OrthoOpts.layout'      : 'How to lay out each of the three canvases.',
     'OrthoOpts.zoom'        : 'Zoom level for all three canvases.',
 

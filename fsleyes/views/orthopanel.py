@@ -190,6 +190,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         sceneOpts.addListener('layout',     self._name, self.__refreshLayout)
         sceneOpts.addListener('showLabels', self._name, self.__refreshLabels)
         sceneOpts.addListener('bgColour'  , self._name, self.__bgColourChanged)
+        sceneOpts.addListener('labelSize',  self._name, self.__refreshLabels)
 
         # Individual zoom control for each canvas
         self.__xcanvas.bindProps('zoom', sceneOpts, 'xzoom')
@@ -671,6 +672,17 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__xLabels['right'].SetOrient(vertOrient)
         self.__yLabels['right'].SetOrient(vertOrient)
         self.__zLabels['right'].SetOrient(vertOrient)
+
+
+        fontSize = self.GetFont().GetPointSize()
+        fontSize = round(fontSize * sopts.labelSize / 100)
+
+        for label in self.__xLabels.values() + \
+                     self.__yLabels.values() + \
+                     self.__zLabels.values():
+            font = label.GetFont()
+            font.SetPointSize(fontSize)
+            label.SetFont(font)
 
         self.PostSizeEvent()
 
