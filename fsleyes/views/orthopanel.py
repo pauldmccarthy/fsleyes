@@ -674,7 +674,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__yLabels['right'].SetOrient(vertOrient)
         self.__zLabels['right'].SetOrient(vertOrient)
 
-
         fontSize = self.GetFont().GetPointSize()
         fontSize = round(fontSize * sopts.labelSize / 100)
 
@@ -992,6 +991,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # third angle orthographic projection.
         self.__xcanvas.invertX = layout == 'grid'
 
+        self.__refreshLabels()
         self.Layout()
         self.getContentPanel().Layout()
         self.Refresh()
