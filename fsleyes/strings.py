@@ -470,11 +470,15 @@ labels = TypeDict({
     'OverlayInfoPanel.Nifti.transform'    : 'Transform/space',
     'OverlayInfoPanel.Nifti.orient'       : 'Orientation',
 
-    'OverlayInfoPanel.Nifti.displaySpace.id'     : 'Raw voxels',
-    'OverlayInfoPanel.Nifti.displaySpace.pixdim' : 'Scaled voxels',
-    'OverlayInfoPanel.Nifti.displaySpace.affine' : 'World coordinates',
-    'OverlayInfoPanel.Nifti.displaySpace.world'  : 'World coordinates',
-    'OverlayInfoPanel.Nifti.displaySpace.custom' : 'Scaled voxels ({})',
+    'OverlayInfoPanel.Nifti.displaySpace.id'          : 'Raw voxels',
+    'OverlayInfoPanel.Nifti.displaySpace.pixdim'      : 'True scaled voxels',
+    'OverlayInfoPanel.Nifti.displaySpace.pixdim-flip' : 'Scaled voxels '
+                                                        '(FSL convention)',
+    'OverlayInfoPanel.Nifti.displaySpace.affine'      : 'World coordinates',
+    'OverlayInfoPanel.Nifti.displaySpace.world'       : 'World coordinates',
+    'OverlayInfoPanel.Nifti.displaySpace.custom'      : 'Scaled voxels '
+                                                        '({}; FSL convention)', 
+    
     
     'OverlayInfoPanel.Image'                    : 'NIFTI image',
     'OverlayInfoPanel.FEATImage'                : 'NIFTI image '

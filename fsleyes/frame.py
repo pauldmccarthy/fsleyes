@@ -1194,8 +1194,14 @@ class FSLEyesFrame(wx.Frame):
 
         # Add a menu item to load each built-in perspectives
         for persp in builtIns:
-            menuItem  = perspMenu.Append(
-                wx.ID_ANY, strings.perspectives.get(persp, persp))
+
+            title    = strings.perspectives.get(persp, persp)
+            shortcut = shortcuts.actions.get((self, 'perspectives', persp), None)
+
+            if shortcut is not None:
+                title = '{}\t{}'.format(title, shortcut)
+
+            menuItem = perspMenu.Append(wx.ID_ANY, title)
             
             actionObj = actions.LoadPerspectiveAction(self, persp)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)

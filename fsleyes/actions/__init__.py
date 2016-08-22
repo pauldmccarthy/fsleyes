@@ -200,7 +200,10 @@ class ActionProvider(object):
         Calls the :meth:`Action.destroy` method of all ``Action`` instances.
         """
         for name, action in self.getActions():
-            action.destroy()
+
+            # getActions may return None
+            if action is not None:
+                action.destroy()
 
 
     def getAction(self, name):
@@ -233,9 +236,9 @@ class ActionProvider(object):
         ordering of their actions.
 
         .. note:: The list returned by this method may contain entries equal
-                  to ``None``. This is used as a hint for GUIs which display
-                  action widgets/menu items to indicate that a separator
-                  should be inserted.
+                  to ``(None, None)``. This is used as a hint for GUIs which 
+                  display action widgets/menu items to indicate that a 
+                  separator should be inserted.
         """
     
         acts = []
