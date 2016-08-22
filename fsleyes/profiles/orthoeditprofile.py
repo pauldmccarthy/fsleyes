@@ -655,6 +655,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             editor.getSelection(),
             opts.getTransform('display', 'voxel'),
             opts.getTransform('voxel',   'display'),
+            opts.getTransform('voxel',   'texture'),
             colour=self.selectionOverlayColour)
         
         self.__yselAnnotation = annotations.VoxelSelection(
@@ -663,6 +664,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             editor.getSelection(),
             opts.getTransform('display', 'voxel'),
             opts.getTransform('voxel',   'display'),
+            opts.getTransform('voxel',   'texture'),
             colour=self.selectionOverlayColour)
         
         self.__zselAnnotation = annotations.VoxelSelection(
@@ -671,6 +673,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             editor.getSelection(),
             opts.getTransform('display', 'voxel'),
             opts.getTransform('voxel',   'display'),
+            opts.getTransform('voxel',   'texture'),
             colour=self.selectionOverlayColour) 
 
         xannot.obj(self.__xselAnnotation, hold=True)

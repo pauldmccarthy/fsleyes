@@ -485,6 +485,7 @@ class VoxelSelection(AnnotationObject):
                  selection,
                  displayToVoxMat,
                  voxToDisplayMat,
+                 voxToTexMat,
                  offsets=None,
                  *args,
                  **kwargs):
@@ -503,6 +504,10 @@ class VoxelSelection(AnnotationObject):
 
         :arg voxToDisplayMat: A transformation matrix which transforms from
                               voxel coordinates into display space
+                              coordinates.
+
+        :arg voxToTexMat:     Transformation matrix which transforms from
+                              voxel coordinates to equivalent texture
                               coordinates.
 
         :arg offsets:         If ``None`` (the default), the ``selection``
@@ -525,6 +530,7 @@ class VoxelSelection(AnnotationObject):
         self.selection       = selection
         self.displayToVoxMat = displayToVoxMat
         self.voxToDisplayMat = voxToDisplayMat
+        self.voxToTexMat     = voxToTexMat
         self.offsets         = offsets
 
         texName = '{}_{}'.format(type(self).__name__, id(selection))
@@ -558,7 +564,7 @@ class VoxelSelection(AnnotationObject):
                                          self.voxToDisplayMat,
                                          self.displayToVoxMat)
 
-        texs  = voxs / shape
+        texs  = transform.transform(voxs, self.voxToTexMat)
         verts = np.array(verts, dtype=np.float32).ravel('C')
         texs  = np.array(texs,  dtype=np.float32).ravel('C')
 
