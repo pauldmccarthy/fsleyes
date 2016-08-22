@@ -65,8 +65,8 @@ def show2D(xax, yax, width, height, lo, hi, flipx=False, flipy=False):
 
     projmat = np.eye(4, dtype=np.float32)
 
-    if flipx: projmat[xax, xax] = -1
-    if flipy: projmat[yax, yax] = -1
+    if flipx: projmat[0, 0] = -1
+    if flipy: projmat[1, 1] = -1
 
     gl.glViewport(0, 0, width, height)
     gl.glMatrixMode(gl.GL_PROJECTION)

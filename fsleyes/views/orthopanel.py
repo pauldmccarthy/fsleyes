@@ -22,8 +22,6 @@ import itertools as it
 
 import wx
 
-import numpy.linalg as npla
-
 import pwidgets.textpanel                     as textpanel
 
 import fsl.data.constants                     as constants
