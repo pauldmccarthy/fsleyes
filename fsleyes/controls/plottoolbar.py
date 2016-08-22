@@ -37,22 +37,34 @@ class PlotToolBar(fsltoolbar.FSLEyesToolBar):
 
         self.__plotPanel = plotPanel
 
+        import_     = actions.ActionButton(
+            'importDataSeries',
+            icon=icons.findImageFile('import24'),
+            tooltip=tooltips.actions[plotPanel, 'importDataSeries'])
+        export      = actions.ActionButton(
+            'exportDataSeries',
+            icon=icons.findImageFile('export24'),
+            tooltip=tooltips.actions[plotPanel, 'exportDataSeries']) 
         add        = actions.ActionButton(
             'addDataSeries',
-            icon=icons.findImageFile('add24'))
+            icon=icons.findImageFile('add24'),
+            tooltip=tooltips.actions[plotPanel, 'addDataSeries'])
         remove     = actions.ActionButton(
             'removeDataSeries',
-            icon=icons.findImageFile('remove24'))
+            icon=icons.findImageFile('remove24'),
+            tooltip=tooltips.actions[plotPanel, 'removeDataSeries'])
         screenshot = actions.ActionButton(
             'screenshot',
             icon=icons.findImageFile('camera24'),
             tooltip=tooltips.actions[plotPanel, 'screenshot'])
 
         screenshot = props.buildGUI(self, plotPanel, screenshot)
+        import_    = props.buildGUI(self, plotPanel, import_)
+        export     = props.buildGUI(self, plotPanel, export)
         add        = props.buildGUI(self, plotPanel, add)
         remove     = props.buildGUI(self, plotPanel, remove)
-
-        self.SetTools([screenshot, add, remove])
+        
+        self.SetTools([screenshot, import_, export, add, remove])
 
         
     def getPlotPanel(self):

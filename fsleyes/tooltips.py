@@ -510,7 +510,13 @@ actions = TypeDict({
     'CanvasPanel.toggleOverlayInfo' : 'Show/hide the overlay '
                                       'information panel.',
 
-    'PlotPanel.screenshot' : 'Take a screenshot of the current plot.',
+    'PlotPanel.screenshot'       : 'Take a screenshot of the current plot.',
+    'PlotPanel.importDataSeries' : 'Import data series from a text file.',
+    'PlotPanel.exportDataSeries' : 'Export data series to a text file.',
+    'PlotPanel.addDataSeries'    : 'Add (hold) data series '
+                                   'from the current overlay.',
+    'PlotPanel.removeDataSeries' : 'Remove the most recently '
+                                   'added data series.',
 
     'TimeSeriesPanel.toggleTimeSeriesControl' : 'Show/hide the time '
                                                 'series control panel.',
