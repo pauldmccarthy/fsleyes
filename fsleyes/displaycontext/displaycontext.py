@@ -13,7 +13,8 @@ import sys
 import logging
 import weakref
 
-import numpy as np
+import numpy        as np
+import numpy.linalg as npla
 
 import props
 
@@ -395,6 +396,36 @@ class DisplayContext(props.SyncableHasProperties):
             return None
         
         return self.getOpts(overlay).getReferenceImage()
+
+
+    def displaySpaceIsRadiological(self):
+        """Returns ``True`` if the current :attr:`displaySpace` aligns with
+        a radiological orientation. A radiological orientation is one in
+        which anatomical right is shown on the left of the screen, i.e.:
+        
+          - The X axis corresponds to right -> left
+          - The Y axis corresponds to posterior -> anterior
+          - The Z axis corresponds to inferior -> superior
+        """
+        
+        if len(self.__overlayList) == 0:
+            return True
+
+        space = self.displaySpace
+
+        # Display space is either 'world', or an image.
+        # We assume that 'world' is an RAS coordinate
+        # system which, if transferred directly to a
+        # display coordinate system, would result in a
+        # neurological view (left on left, right on
+        # right).
+        if space == 'world':
+            return False
+        else:
+            opts  = self.getOpts(space)
+            xform = opts.getTransform('pixdim-flip', 'display')
+            
+            return npla.det(xform) > 0
 
         
     def selectOverlay(self, overlay):

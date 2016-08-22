@@ -16,12 +16,14 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
+import fsl.data.image                    as fslimage
+import fsl.utils.transform               as transform
+
 import fsleyes.displaycontext.canvasopts as canvasopts
 import fsleyes.gl.slicecanvas            as slicecanvas
 import fsleyes.gl.resources              as glresources
 import fsleyes.gl.routines               as glroutines
 import fsleyes.gl.textures               as textures
-import fsl.data.image                    as fslimage
 
 
 log = logging.getLogger(__name__)
@@ -170,8 +172,11 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         row = self._totalRows - int(np.floor(sliceno / self.ncols)) - 1
         col =                   int(np.floor(sliceno % self.ncols))
 
-        xpos = xpos + xlen * col
-        ypos = ypos + ylen * row
+        if self.invertX: xpos = (xlen - xpos) + xlen * col
+        else:            xpos =         xpos  + xlen * col
+
+        if self.invertY: ypos = (ylen - ypos) + ylen * row
+        else:            ypos =  ypos         + ylen * row
         
         return xpos, ypos
 
@@ -190,7 +195,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         ncols = self.ncols
 
         screenPos = slicecanvas.SliceCanvas.canvasToWorld(
-            self, xpos, ypos)
+            self, xpos, ypos, invertX=False, invertY=False)
 
         if screenPos is None:
             return None
@@ -218,8 +223,11 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
            sliceno >= self._nslices:
             return None
 
-        xpos = screenx -          col      * xlen
-        ypos = screeny - (nrows - row - 1) * ylen
+        if self.invertX: xpos = (xlen - screenx) -          col      * xlen
+        else:            xpos =         screenx  -          col      * xlen
+        if self.invertY: ypos = (ylen - screeny) - (nrows - row - 1) * ylen
+        else:            ypos =         screeny  - (nrows - row - 1) * ylen
+        
         zpos = self.zrange.xlo + (sliceno + 0.5) * self.sliceSpacing
 
         pos = [0, 0, 0]
@@ -622,6 +630,50 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         return translate
 
 
+    def __prepareSliceTransforms(self, globj, xforms):
+        """Applies the :attr:`.SliceCanvas.invertX` and
+        :attr:`.SliceCanvas.invertY` properties to the given transformation
+        matrices, if necessary.
+        """
+
+        if not self.invertX or self.invertY:
+            return xforms
+
+        invXforms = []
+        lo, hi    = globj.getDisplayBounds()
+        xlen      = hi[self.xax] - lo[self.xax]
+        ylen      = hi[self.yax] - lo[self.yax]
+
+        # We have to translate each slice transformation
+        # to the origin, perform the flip there, then
+        # transform it back to its original location.
+        for xform in xforms:
+
+            invert     = np.eye(4)
+            toOrigin   = np.eye(4)
+            fromOrigin = np.eye(4)
+
+            xoff = xlen / 2.0 + xform[3, self.xax]
+            yoff = ylen / 2.0 + xform[3, self.yax]
+
+            if self.invertX:
+                invert[    self.xax, self.xax] = -1
+                toOrigin[  3,        self.xax] = -xoff
+                fromOrigin[3,        self.xax] =  xoff
+            if self.invertY:
+                invert[    self.yax, self.yax] = -1
+                toOrigin[  3,        self.yax] = -yoff
+                fromOrigin[3,        self.yax] =  yoff
+
+            xform = transform.concat(xform,
+                                     toOrigin,
+                                     invert,
+                                     fromOrigin)
+            invXforms.append(xform)
+
+        return invXforms
+
+
     def _drawGridLines(self):
         """Draws grid lines between all the displayed slices."""
 
@@ -772,7 +824,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             glroutines.clear((0, 0, 0, 0)) 
             
         else:
-            self._setViewport()
+            self._setViewport(invertX=False, invertY=False)
             glroutines.clear(self.bgColour) 
 
 
@@ -800,6 +852,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
             zposes = self._sliceLocs[ overlay][startSlice:endSlice]
             xforms = self._transforms[overlay][startSlice:endSlice]
+            xforms = self.__prepareSliceTransforms(globj, xforms)
 
             if self.renderMode == 'prerender':
                 rt, name = self._prerenderTextures.get(overlay, (None, None))
@@ -825,7 +878,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if self.renderMode == 'offscreen':
             rt.unbindAsRenderTarget()
             rt.restoreViewport()
-            self._setViewport()
+            self._setViewport(invertX=False, invertY=False)
             glroutines.clear(self.bgColour)
             rt.drawOnBounds(
                 0,

@@ -298,17 +298,23 @@ class SliceCanvas(props.HasProperties):
         return self.overlayList is None
 
     
-    def canvasToWorld(self, xpos, ypos):
+    def canvasToWorld(self, xpos, ypos, invertX=None, invertY=None):
         """Given pixel x/y coordinates on this canvas, translates them
         into xyz display coordinates.
+
+        :arg invertX: If ``None``, taken from :attr:`.invertX`.
+        :arg invertY: If ``None``, taken from :attr:`.invertY`.
         """
+
+        if invertX is None: invertX = self.invertX
+        if invertY is None: invertY = self.invertY
 
         realWidth                 = self.displayBounds.xlen
         realHeight                = self.displayBounds.ylen
         canvasWidth, canvasHeight = map(float, self._getSize())
             
-        if self.invertX: xpos = canvasWidth  - xpos
-        if self.invertY: ypos = canvasHeight - ypos
+        if invertX: xpos = canvasWidth  - xpos
+        if invertY: ypos = canvasHeight - ypos
 
         if realWidth    == 0 or \
            canvasWidth  == 0 or \
@@ -1220,7 +1226,9 @@ class SliceCanvas(props.HasProperties):
                      ymax=None,
                      zmin=None,
                      zmax=None,
-                     size=None):
+                     size=None,
+                     invertX=None,
+                     invertY=None):
         """Sets up the GL canvas size, viewport, and projection.
 
         
@@ -1229,12 +1237,18 @@ class SliceCanvas(props.HasProperties):
         :attr:`DisplayContext.bounds` (z).
 
         
-        :arg xmin: Minimum x (horizontal) location
-        :arg xmax: Maximum x location
-        :arg ymin: Minimum y (vertical) location
-        :arg ymax: Maximum y location
-        :arg zmin: Minimum z (depth) location
-        :arg zmax: Maximum z location
+        :arg xmin:    Minimum x (horizontal) location
+        :arg xmax:    Maximum x location
+        :arg ymin:    Minimum y (vertical) location
+        :arg ymax:    Maximum y location
+        :arg zmin:    Minimum z (depth) location
+        :arg zmax:    Maximum z location
+        :arg size:    Canvas size. If not provided, taken from
+                      :meth:`_getSize`.
+        :arg invertX: Invert the X axis. If not provided, taken from
+                      :attr:`invertX`.
+        :arg invertY: Invert the Y axis. If not provided, taken from 
+                      :attr:`invertY`. 
 
         :returns: A sequence of three ``(low, high)`` values, defining the
                   display coordinate system bounding box. Note that this
@@ -1246,20 +1260,20 @@ class SliceCanvas(props.HasProperties):
         yax = self.yax
         zax = self.zax
         
-        if xmin is None: xmin = self.displayBounds.xlo
-        if xmax is None: xmax = self.displayBounds.xhi
-        if ymin is None: ymin = self.displayBounds.ylo
-        if ymax is None: ymax = self.displayBounds.yhi
-        if zmin is None: zmin = self.displayCtx.bounds.getLo(zax)
-        if zmax is None: zmax = self.displayCtx.bounds.getHi(zax)
+        if xmin    is None: xmin    = self.displayBounds.xlo
+        if xmax    is None: xmax    = self.displayBounds.xhi
+        if ymin    is None: ymin    = self.displayBounds.ylo
+        if ymax    is None: ymax    = self.displayBounds.yhi
+        if zmin    is None: zmin    = self.displayCtx.bounds.getLo(zax)
+        if zmax    is None: zmax    = self.displayCtx.bounds.getHi(zax)
+        if size    is None: size    = self._getSize()
+        if invertX is None: invertX = self.invertX
+        if invertY is None: invertY = self.invertY
+            
+        width, height = size
 
         # If there are no images to be displayed,
         # or no space to draw, do nothing
-        if size is None:
-            size = self._getSize()
-            
-        width, height = size
-        
         if (len(self.overlayList) == 0) or \
            (width  == 0)                or \
            (height == 0)                or \
@@ -1291,8 +1305,8 @@ class SliceCanvas(props.HasProperties):
                           height,
                           lo,
                           hi,
-                          self.invertX,
-                          self.invertY)
+                          invertX,
+                          invertY)
 
         return [(lo[0], hi[0]), (lo[1], hi[1]), (lo[2], hi[2])]
 

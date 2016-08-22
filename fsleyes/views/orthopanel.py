@@ -264,10 +264,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         :class:`.SliceCanvas` panels, and calls :meth:`.CanvasPanel.destroy`.
         """
 
-        self._displayCtx .removeListener('location',        self._name)
-        self._displayCtx .removeListener('bounds',          self._name)
-        self._displayCtx .removeListener('selectedOverlay', self._name)
-        self._overlayList.removeListener('overlays',        self._name)
+        self._displayCtx .removeListener('location',         self._name)
+        self._displayCtx .removeListener('bounds',           self._name)
+        self._displayCtx .removeListener('selectedOverlay',  self._name)
+        self._displayCtx .removeListener('displaySpace',     self._name)
+        self._displayCtx .removeListener('radioOrientation', self._name)
+        self._overlayList.removeListener('overlays',         self._name)
 
         self.__xcanvas.destroy()
         self.__ycanvas.destroy()
@@ -546,18 +548,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         if len(self._overlayList) == 0:
             return
 
-        overlay = self._displayCtx.getReferenceImage(
-            self._displayCtx.getSelectedOverlay())
-
-        if overlay is None:
-            return
-
-        opts  = self._displayCtx.getOpts(overlay)
-        xform = opts.getTransform('pixdim-flip', 'display')
-        neuro = npla.det(xform) < 0
-
-        flip  = any(((    self._displayCtx.radioOrientation and     neuro),
-                     (not self._displayCtx.radioOrientation and not neuro)))
+        inRadio = self._displayCtx.displaySpaceIsRadiological()
+        flip    = self._displayCtx.radioOrientation != inRadio
         
         self.__ycanvas.invertX = flip
         self.__zcanvas.invertX = flip

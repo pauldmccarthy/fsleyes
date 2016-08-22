@@ -114,6 +114,12 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         self._displayCtx .addListener('selectedOverlay',
                                       self._name,
                                       self.__selectedOverlayChanged)
+        self._displayCtx .addListener('displaySpace',
+                                      self._name,
+                                      self.__radioOrientationChanged)
+        self._displayCtx .addListener('radioOrientation',
+                                      self._name,
+                                      self.__radioOrientationChanged) 
         self._overlayList.addListener('overlays',
                                       self._name,
                                       self.__selectedOverlayChanged)
@@ -158,9 +164,11 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         and calls :meth:`.CanvasPanel.destroy`.
         """
 
-        self._displayCtx .removeListener('location',        self._name)
-        self._displayCtx .removeListener('selectedOverlay', self._name)
-        self._overlayList.removeListener('overlays',        self._name)
+        self._displayCtx .removeListener('location',         self._name)
+        self._displayCtx .removeListener('selectedOverlay',  self._name)
+        self._displayCtx .removeListener('displaySpace',     self._name)
+        self._displayCtx .removeListener('radioOrientation', self._name)
+        self._overlayList.removeListener('overlays',         self._name)
 
         self.__lbCanvas.destroy()
 
@@ -230,6 +238,19 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         sizer.Add(self.__scrollbar, flag=wx.EXPAND)
 
         self.PostSizeEvent()
+
+
+    def __radioOrientationChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.displaySpace` or
+        :attr:`.DisplayContext.radioOrientation` properties change. Updates the
+        :attr:`.LightBoxCanvas.invertX` property as needed.
+        """
+
+        inRadio = self._displayCtx.displaySpaceIsRadiological()
+        flip    = self._displayCtx.radioOrientation != inRadio
+        flip    = flip and self.__lbCanvas.zax in (1, 2)
+
+        self.__lbCanvas.invertX = flip
 
         
     def __selectedOverlayChanged(self, *a):
