@@ -49,7 +49,7 @@ class ImportDataSeriesAction(action.Action):
         dlg     = wx.FileDialog(frame,
                                 message=msg,
                                 defaultDir=fromDir,
-                                style=wx.FD_OPEN | wx.FD_MULTIPLE)
+                                style=wx.FD_OPEN)
 
         if dlg.ShowModal() != wx.ID_OK:
             return
@@ -74,14 +74,16 @@ class ImportDataSeriesAction(action.Action):
             wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK)
             return
 
+        fslsettings.write('loadSaveOverlayDir', filePath)
+
         # Ask the user the x axis scaling factor.
         # If the currently selected overlay is
         # Nifti and 4D, default to its pixdim[3]
         overlay = self.__displayCtx.getSelectedOverlay()
         
-        if all((overlay is not None,
-                isinstance(overlay, fslimage.Nifti),
-                len(overlay.shape) == 4)):
+        if overlay is not None                 and \
+           isinstance(overlay, fslimage.Nifti) and \
+           len(overlay.shape) == 4:
             xscale = overlay.pixdim[3]
             
         else:
@@ -89,25 +91,42 @@ class ImportDataSeriesAction(action.Action):
 
         title = strings.titles[  self, 'selectXScale']
         msg   = strings.messages[self, 'selectXScale']
-        dlg   = numdlg.NumberDialog(frame,
-                                    title=title,
-                                    message=msg,
-                                    initial=xscale,
-                                    minValue=1e-5)
 
-        if dlg.ShowModal() != wx.ID_OK:
-            return
+        # If the user pushes 'Ok', the entered value
+        # is used as a fixed X axis interval. Otherwise,
+        # it is assumed that the first column in the
+        # file is the x axis data.
+        dlg   = numdlg.NumberDialog(
+            frame,
+            title=title,
+            message=msg,
+            initial=xscale,
+            minValue=1e-5,
+            cancelText=strings.labels[self, 'firstColumnIsX'])
 
-        xscale = dlg.GetValue()
+        firstColumnIsX = dlg.ShowModal() != wx.ID_OK
+        xscale         = dlg.GetValue()
 
         # Add the data series
         series = []
 
-        for i, ydata in enumerate(data):
+        if firstColumnIsX:
+            xdata = data[0,  :]
+            ydata = data[1:, :]
+        else:
+            xdata = np.arange(0, data.shape[1] * xscale, xscale)
+            ydata = data
+            
+        for i, ydata in enumerate(ydata):
 
-            xdata = np.arange(0, len(ydata) * xscale, xscale)
-            ds    = plotting.DataSeries(None)
-            ds.setData(xdata, ydata)
+            x   = np.array(xdata)
+            y   = np.array(ydata)
+            fin = np.isfinite(x) & np.isfinite(y)
+            x   = x[fin]
+            y   = y[fin]
+
+            ds = plotting.DataSeries(None)
+            ds.setData(x, y)
 
             # If we recognise the file name,
             # we can give it a useful label.

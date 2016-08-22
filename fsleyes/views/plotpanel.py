@@ -250,6 +250,17 @@ class PlotPanel(viewpanel.ViewPanel):
         # out-of-date data).
         self.__drawRequests = 0
 
+        # The getDrawnDataSeries method returns
+        # data as it is shown on the plot - some
+        # pre/post-processing may be applied to
+        # the data as retrieved by DataSeries
+        # instances, so this dictionary is used
+        # to keep copies of the data, with all
+        # processing applied, that is currrently
+        # on the plot (and accessible via
+        # getDrawnDataSeries).
+        self.__drawnDataSeries = {}
+
         if interactive:
             
             # Pan/zoom functionality is implemented
@@ -411,15 +422,11 @@ class PlotPanel(viewpanel.ViewPanel):
     def exportDataSeries(self, *args, **kwargs):
         """Exports displayed data series to a text file.
 
-        :arg extraSeries: Passed to the :class:`.ExportDataSeriesAction`.
-
         See the :class:`.ExportDataSeriesAction`.
         """
-
-        extraSeries = kwargs.get('extraSeries', None)
         actions.ExportDataSeriesAction(self.getOverlayList(),
                                        self.getDisplayContext(),
-                                       self)(extraSeries=extraSeries)
+                                       self)()
 
 
     def message(self, msg, clear=True, border=False):
@@ -431,6 +438,7 @@ class PlotPanel(viewpanel.ViewPanel):
         axis = self.getAxis()
 
         if clear:
+            self.__drawnDataSeries = {}
             axis.clear()
             axis.set_xlim((0.0, 1.0))
             axis.set_ylim((0.0, 1.0))
@@ -450,6 +458,15 @@ class PlotPanel(viewpanel.ViewPanel):
         
         self.getCanvas().draw()
         self.Refresh()
+
+
+    def getDrawnDataSeries(self):
+        """Returns a list of tuples, each tuple containing the ``(x, y)`` data
+        for one ``DataSeries`` instance as it is shown on the plot.
+        """
+
+        return [(np.array(x), np.array(y))
+                for x, y in self.__drawnDataSeries.values()]
 
 
     def prepareDataSeries(self, ds):
@@ -505,6 +522,7 @@ class PlotPanel(viewpanel.ViewPanel):
         preprocs = [True] * len(extraSeries) + [False] * len(toPlot)
 
         if len(toPlot) == 0:
+            self.__drawnDataSeries = {}
             axis.clear()
             canvas.draw()
             self.Refresh()
@@ -613,6 +631,8 @@ class PlotPanel(viewpanel.ViewPanel):
         axis          = self.getAxis()
         canvas        = self.getCanvas()
         width, height = canvas.get_width_height()
+
+        self.__drawnDataSeries = {}
         axis.clear()
 
         xlims = []
@@ -762,6 +782,8 @@ class PlotPanel(viewpanel.ViewPanel):
         axis = self.getAxis()
 
         axis.plot(xdata, ydata, **kwargs)
+
+        self.__drawnDataSeries[ds] = xdata, ydata
 
         if self.xLogScale:
             axis.set_xscale('log')
@@ -1463,7 +1485,7 @@ class OverlayPlotPanel(PlotPanel):
         """
 
         for ds in list(self.dataSeries):
-            if ds.overlay not in self._overlayList:
+            if ds.overlay is not None and ds.overlay not in self._overlayList:
                 self.dataSeries.remove(ds)
                 ds.destroy()
 

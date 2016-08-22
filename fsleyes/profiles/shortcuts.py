@@ -70,6 +70,8 @@ actions = td.TypeDict({
 
     'PlotPanel.toggleOverlayList'         : 'Ctrl-Alt-1',
     'PlotPanel.togglePlotList'            : 'Ctrl-Alt-2',
+    'PlotPanel.importDataSeries'          : 'Alt-I',
+    'PlotPanel.exportDataSeries'          : 'Alt-E',
 
     'TimeSeriesPanel.toggleTimeSeriesToolBar'       : 'Ctrl-Alt-3',
     'TimeSeriesPanel.toggleTimeSeriesControl'       : 'Ctrl-Alt-4',

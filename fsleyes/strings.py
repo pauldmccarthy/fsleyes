@@ -188,10 +188,14 @@ messages = TypeDict({
                                     'file {}.\n\nDetails: {} - {}',
 
 
-    'ImportDataSeriesAction.selectFile'   : 'Select a file to import',
+    'ImportDataSeriesAction.selectFile'   : 'Import data series from',
     'ImportDataSeriesAction.error'        : 'Could not load {}! Details:\n\n{}',
     'ImportDataSeriesAction.selectXScale' : 'Set the X axis sampling '
                                             'rate/scaling factor',
+
+    'ExportDataSeriesAction.selectFile'   : 'Export data series to',
+    'ExportDataSeriesAction.saveXColumn'  : 'Export the X axis data '
+                                            'as the first column?',
 })
 
 
@@ -265,6 +269,7 @@ titles = TypeDict({
     'ImportDataSeriesAction.error'        : 'Error loading file',
     'ImportDataSeriesAction.selectXScale' : 'X axis scaling factor',
 
+    'ExportDataSeriesAction.saveXColumn'  : 'Save X data?',
 })
 
 
@@ -522,6 +527,8 @@ labels = TypeDict({
     'SaveOverlayAction.overwrite' : 'Overwrite',
     'SaveOverlayAction.saveNew'   : 'Save to new file',
     'SaveOverlayAction.cancel'    : 'Cancel',
+
+    'ImportDataSeriesAction.firstColumnIsX' : 'First column is X data',
 })
 
 
