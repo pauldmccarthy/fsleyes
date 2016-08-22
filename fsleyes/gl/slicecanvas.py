@@ -1273,10 +1273,6 @@ class SliceCanvas(props.HasProperties):
                   'Z {: 5.1f} - {: 5.1f}'.format(
                       width, height, xmin, xmax, ymin, ymax, zmin, zmax))
 
-        # Flip the viewport if necessary
-        if self.invertX: xmin, xmax = xmax, xmin
-        if self.invertY: ymin, ymax = ymax, ymin
-
         # Add a bit of padding to the depth limits
         zmin -= 1e-3
         zmax += 1e-3
@@ -1289,7 +1285,14 @@ class SliceCanvas(props.HasProperties):
         lo[zax], hi[zax] = zmin, zmax
 
         # set up 2D orthographic drawing
-        glroutines.show2D(xax, yax, width, height, lo, hi)
+        glroutines.show2D(xax,
+                          yax,
+                          width,
+                          height,
+                          lo,
+                          hi,
+                          self.invertX,
+                          self.invertY)
 
         return [(lo[0], hi[0]), (lo[1], hi[1]), (lo[2], hi[2])]
 

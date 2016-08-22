@@ -38,7 +38,7 @@ def clear(bgColour):
     gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
 
-def show2D(xax, yax, width, height, lo, hi):
+def show2D(xax, yax, width, height, lo, hi, flipx=False, flipy=False):
     """Configures the OpenGL viewport for 2D othorgraphic display.
 
     :arg xax:    Index (into ``lo`` and ``hi``) of the axis which
@@ -51,6 +51,10 @@ def show2D(xax, yax, width, height, lo, hi):
                  coordinates.
     :arg hi:     Tuple containing the maxinum ``(x, y, z)`` display
                  coordinates.
+
+    :arg flipx:  If ``True``, the x axis is inverted.
+
+    :arg flipy:  If ``True``, the y axis is inverted.
     """
 
     zax = 3 - xax - yax
@@ -59,9 +63,14 @@ def show2D(xax, yax, width, height, lo, hi):
     ymin, ymax = lo[yax], hi[yax]
     zmin, zmax = lo[zax], hi[zax]
 
+    projmat = np.eye(4, dtype=np.float32)
+
+    if flipx: projmat[xax, xax] = -1
+    if flipy: projmat[yax, yax] = -1
+
     gl.glViewport(0, 0, width, height)
     gl.glMatrixMode(gl.GL_PROJECTION)
-    gl.glLoadIdentity()
+    gl.glLoadMatrixf(projmat)
 
     zdist = max(abs(zmin), abs(zmax))
 
@@ -70,6 +79,7 @@ def show2D(xax, yax, width, height, lo, hi):
                   xmin, xmax, ymin, ymax, -zdist, zdist))
 
     gl.glOrtho(xmin, xmax, ymin, ymax, -zdist, zdist)
+
     gl.glMatrixMode(gl.GL_MODELVIEW)
     gl.glLoadIdentity()
 
@@ -168,7 +178,7 @@ def calculateSamplePoints(shape,
     if bbox is not None:
         xoff   = 0.5 * xres
         yoff   = 0.5 * yres
-        
+
         xmin   = max((xmin, bbox[xax][0] - xoff))
         xmax   = min((xmax, bbox[xax][1] + xoff))
         ymin   = max((ymin, bbox[yax][0] - yoff))
