@@ -307,6 +307,7 @@ OPTIONS = td.TypeDict({
                        'worldLoc',
                        'autoDisplay',
                        'displaySpace',
+                       'neuroOrientation',
                        'standard',
                        'standard1mm',
                        'bigmem',
@@ -328,6 +329,7 @@ OPTIONS = td.TypeDict({
                        'yzoom',
                        'zzoom',
                        'showLabels',
+                       'labelSize',
                        'layout',
                        'showXCanvas',
                        'showYCanvas',
@@ -500,23 +502,24 @@ def groupEpilog(target):
 # Short/long arguments for all of those options
 ARGUMENTS = td.TypeDict({
 
-    'Main.help'            : ('h',      'help'),
-    'Main.fullhelp'        : ('fh',     'fullhelp'),
-    'Main.verbose'         : ('v',      'verbose'),
-    'Main.version'         : ('V',      'version'),
-    'Main.skipfslcheck'    : ('S',      'skipfslcheck'),
-    'Main.noisy'           : ('n',      'noisy'),
-    'Main.memory'          : ('m',      'memory'),
-    'Main.glversion'       : ('gl',     'glversion'),
-    'Main.scene'           : ('s',      'scene'),
-    'Main.voxelLoc'        : ('vl',     'voxelLoc'),
-    'Main.worldLoc'        : ('wl',     'worldLoc'),
-    'Main.autoDisplay'     : ('ad',     'autoDisplay'),
-    'Main.displaySpace'    : ('ds',     'displaySpace'),
-    'Main.standard'        : ('std',    'standard'),
-    'Main.standard1mm'     : ('std1mm', 'standard1mm'),
-    'Main.bigmem'          : ('b',      'bigmem'),
-    'Main.bumMode'         : ('bums',   'bumMode'),
+    'Main.help'             : ('h',      'help'),
+    'Main.fullhelp'         : ('fh',     'fullhelp'),
+    'Main.verbose'          : ('v',      'verbose'),
+    'Main.version'          : ('V',      'version'),
+    'Main.skipfslcheck'     : ('S',      'skipfslcheck'),
+    'Main.noisy'            : ('n',      'noisy'),
+    'Main.memory'           : ('m',      'memory'),
+    'Main.glversion'        : ('gl',     'glversion'),
+    'Main.scene'            : ('s',      'scene'),
+    'Main.voxelLoc'         : ('vl',     'voxelLoc'),
+    'Main.worldLoc'         : ('wl',     'worldLoc'),
+    'Main.autoDisplay'      : ('ad',     'autoDisplay'),
+    'Main.displaySpace'     : ('ds',     'displaySpace'),
+    'Main.neuroOrientation' : ('no',     'neuroOrientation'),
+    'Main.standard'         : ('std',    'standard'),
+    'Main.standard1mm'      : ('std1mm', 'standard1mm'),
+    'Main.bigmem'           : ('b',      'bigmem'),
+    'Main.bumMode'          : ('bums',   'bumMode'),
     
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar'),
     'SceneOpts.bgColour'           : ('bg',  'bgColour'),
@@ -534,6 +537,7 @@ ARGUMENTS = td.TypeDict({
     'OrthoOpts.showYCanvas' : ('yh', 'hidey'),
     'OrthoOpts.showZCanvas' : ('zh', 'hidez'),
     'OrthoOpts.showLabels'  : ('lh', 'hideLabels'),
+    'OrthoOpts.labelSize'   : ('ls', 'labelSize'),
 
     'OrthoOpts.xcentre'     : ('xc', 'xcentre'),
     'OrthoOpts.ycentre'     : ('yc', 'ycentre'),
@@ -647,23 +651,25 @@ HELP = td.TypeDict({
     'Main.glversion'     : 'Desired (major, minor) OpenGL version',
     'Main.scene'         : 'Scene to show',
 
-    'Main.voxelLoc'        : 'Location to show (voxel coordinates of '
-                             'first overlay)',
-    'Main.worldLoc'        : 'Location to show (world coordinates of '
-                             'first overlay, takes precedence over '
-                             '--voxelLoc)', 
-    'Main.autoDisplay'     : 'Automatically configure overlay display '
-                             'settings (unless any display settings are '
-                             'specified)',
-    'Main.displaySpace'    : 'Space in which all overlays are displayed - '
-                             'can be "pixdim", "world", or a NIFTI image.',
-    'Main.standard'        : 'Add the MNI152 2mm standard image as an '
-                             'underlay (only if $FSLDIR is set).',
-    'Main.standard1mm'     : 'Add the MNI152 1mm standard image as an '
-                             'underlay (only if $FSLDIR is set).',
-    'Main.bigmem'          : 'Load all images into memory, '
-                             'regardless of size.',
-    'Main.bumMode'         : 'Make the coronal icon look like a bum',
+    'Main.voxelLoc'         : 'Location to show (voxel coordinates of '
+                              'first overlay)',
+    'Main.worldLoc'         : 'Location to show (world coordinates of '
+                              'first overlay, takes precedence over '
+                              '--voxelLoc)', 
+    'Main.autoDisplay'      : 'Automatically configure overlay display '
+                              'settings (unless any display settings are '
+                              'specified)',
+    'Main.displaySpace'     : 'Space in which all overlays are displayed - '
+                              'can be "pixdim", "world", or a NIFTI image.',
+    'Main.neuroOrientation' : 'Display images in neurological orientation '
+                              '(default: radiological)',
+    'Main.standard'         : 'Add the MNI152 2mm standard image as an '
+                              'underlay (only if $FSLDIR is set).',
+    'Main.standard1mm'      : 'Add the MNI152 1mm standard image as an '
+                              'underlay (only if $FSLDIR is set).',
+    'Main.bigmem'           : 'Load all images into memory, '
+                              'regardless of size.',
+    'Main.bumMode'          : 'Make the coronal icon look like a bum',
 
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
                                      'highlighting the current location',
@@ -683,6 +689,7 @@ HELP = td.TypeDict({
     'OrthoOpts.showYCanvas' : 'Hide the Y canvas',
     'OrthoOpts.showZCanvas' : 'Hide the Z canvas',
     'OrthoOpts.showLabels'  : 'Hide orientation labels',
+    'OrthoOpts.labelSize'   : 'Orientation label font size (percentage)',
 
     'OrthoOpts.xcentre'     : 'X canvas display centre (YZ world coordinates '
                               'of first overlay)',
@@ -1085,6 +1092,9 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['displaySpace'],
                             type=str,
                             help=mainHelp['displaySpace'])
+    mainParser.add_argument(*mainArgs['neuroOrientation'],
+                            action='store_true',
+                            help=mainHelp['neuroOrientation']) 
 
     mainParser.add_argument(*mainArgs['standard'],
                             action='store_true',
@@ -1816,7 +1826,8 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
         # First apply all command line options
         # related to the display context...
 
-        displayCtx.loadInMemory = args.bigmem
+        displayCtx.loadInMemory     = args.bigmem
+        displayCtx.radioOrientation = not args.neuroOrientation
 
         # Display space may be a string,
         # or a path to an image
