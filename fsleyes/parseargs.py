@@ -784,8 +784,10 @@ HELP = td.TypeDict({
     'SHOpts.lighting'        : 'Enable lighting effect',
     'SHOpts.neuroOrientFlip' : 'Do not flip FODs stored in '
                                'neurological orientation',
-    'SHOpts.radiusThreshold' : 'Hide FODs with radius less than this',
-    'SHOpts.colourMode'      : 'Colour by \'direction\' or \'radius\'',
+    'SHOpts.radiusThreshold' : 'Hide FODs with radius less than this '
+                               '(min: 0, max: 1, default: 0.05)',
+    'SHOpts.colourMode'      : 'Colour by \'direction\' or \'radius\' '
+                               '(default: direction)',
     'SHOpts.colourMap'       : 'Colour map, if colouring by \'radius\'',
     'SHOpts.xColour'         : 'X colour, if colouring by \'direction\'',
     'SHOpts.yColour'         : 'Y colour, if colouring by \'direction\'',
