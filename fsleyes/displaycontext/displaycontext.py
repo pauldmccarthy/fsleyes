@@ -124,10 +124,10 @@ class DisplayContext(props.SyncableHasProperties):
     displaySpace = props.Choice(('world', ))
     """The *space* in which overlays are displayed. This property globally
     controls the :attr:`.NiftiOpts.transform` property of all :class:`.Nifti`
-    overlays. It has two settings, described below (options for setting 2
-    are dynamically added):
+    overlays. It has two settings, described below. The options for this
+    property are dynamically added by :meth:`__updateDisplaySpaceOptions`.
 
-    1. **World** space (a.k.a. ``world``)
+    1. **World** space (a.k.a. ``'world'``)
 
        All :class:`.Nifti` overlays are displayed in the space defined by
        their affine transformation matrix - the :attr:`.NiftiOpts.transform`
@@ -656,6 +656,8 @@ class DisplayContext(props.SyncableHasProperties):
 
         space = self.displaySpace
         opts  = self.getOpts(image)
+
+        opts.disableListener('bounds', self.__name)
             
         if   space == 'world':  opts.transform = 'affine'
         elif image is space:    opts.transform = 'pixdim-flip'
@@ -667,6 +669,8 @@ class DisplayContext(props.SyncableHasProperties):
 
             opts.customXform = xform
             opts.transform   = 'custom'
+
+        opts.enableListener('bounds', self.__name)
 
         
     def __displaySpaceChanged(self, *a):
