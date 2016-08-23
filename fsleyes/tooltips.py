@@ -182,9 +182,9 @@ properties = TypeDict({
                                     'modulation image.', 
     'VectorOpts.cmap'             : 'Colour map to use for colouring vector '
                                     'voxels, if a colour image is selected.',
-    'VectorOpts.neuroOrientFlip'  : 'If the image is in neurological '
-                                    'orientation, the vector orientations are '
-                                    'flipped about the x axis.',
+    'VectorOpts.orientFlip'       : 'If checked, direction orientations '
+                                    'within each voxel are flipped about '
+                                    'the x axis.', 
     'LineVectorOpts.lineWidth'    : 'The width of each vector line, in '
                                     'display pixels.',
     'LineVectorOpts.directed'     : 'If unchecked, the vector data is assumed '

@@ -62,10 +62,10 @@ def init(self):
     # the display<->voxel transformation
     # matrices whenever the transform
     # changes.
-    self.displayOpts.addListener('neuroOrientFlip', name, update, weak=False)
-    self.displayOpts.addListener('directed',        name, update, weak=False)
-    self.displayOpts.addListener('unitLength',      name, update, weak=False)
-    self.displayOpts.addListener('lengthScale',     name, update, weak=False)
+    self.displayOpts.addListener('orientFlip',  name, update, weak=False)
+    self.displayOpts.addListener('directed',    name, update, weak=False)
+    self.displayOpts.addListener('unitLength',  name, update, weak=False)
+    self.displayOpts.addListener('lengthScale', name, update, weak=False)
     self.displayOpts.addListener('transform',
                                  name,
                                  update,
@@ -76,11 +76,11 @@ def init(self):
 def destroy(self):
     """Deletes the vertex/fragment shaders. """
 
-    self.displayOpts.removeListener('neuroOrientFlip', self.name)
-    self.displayOpts.removeListener('directed',        self.name)
-    self.displayOpts.removeListener('unitLength',      self.name)
-    self.displayOpts.removeListener('lengthScale',     self.name)
-    self.displayOpts.removeListener('transform',       self.name)
+    self.displayOpts.removeListener('orientFlip',  self.name)
+    self.displayOpts.removeListener('directed',    self.name)
+    self.displayOpts.removeListener('unitLength',  self.name)
+    self.displayOpts.removeListener('lengthScale', self.name)
+    self.displayOpts.removeListener('transform',   self.name)
     
     self.shader.destroy()
  
@@ -113,7 +113,7 @@ def updateShaderState(self):
     imageDims   = image.pixdim[:3]
     d2vMat      = opts.getTransform('display', 'voxel')
     v2dMat      = opts.getTransform('voxel',   'display')
-    xFlip       = opts.neuroOrientFlip and image.isNeurological()
+    xFlip       = opts.orientFlip
 
     changed |= shader.set('vectorTexture',   4)
     changed |= shader.set('displayToVoxMat', d2vMat)

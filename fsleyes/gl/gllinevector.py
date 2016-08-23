@@ -222,11 +222,11 @@ class GLLineVertices(object):
         call to :meth:`refresh`).
         """
         opts = glvec.displayOpts
-        return (hash(opts.transform)       ^
-                hash(opts.resolution)      ^
-                hash(opts.neuroOrientFlip) ^
-                hash(opts.directed)        ^
-                hash(opts.unitLength)      ^
+        return (hash(opts.transform)  ^
+                hash(opts.resolution) ^
+                hash(opts.orientFlip) ^
+                hash(opts.directed)   ^
+                hash(opts.unitLength) ^
                 hash(opts.lengthScale))
 
         
@@ -269,7 +269,7 @@ class GLLineVertices(object):
         lens     = np.sqrt(x ** 2 + y ** 2 + z ** 2)
 
         # Flip vectors about the x axis if necessary
-        if opts.neuroOrientFlip and image.isNeurological():
+        if opts.orientFlip:
             x = -x
 
         if opts.unitLength:

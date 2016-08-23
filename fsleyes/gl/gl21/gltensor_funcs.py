@@ -91,7 +91,7 @@ def updateShaderState(self):
     imageShape    = image.shape[:3]
     resolution    = opts.tensorResolution
     tensorScale   = opts.tensorScale
-    xFlip         = opts.neuroOrientFlip and image.isNeurological()
+    xFlip         = opts.orientFlip
 
 
     l1           = image.L1()

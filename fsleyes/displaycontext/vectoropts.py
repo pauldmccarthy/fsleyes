@@ -53,12 +53,14 @@ class VectorOpts(volumeopts.NiftiOpts):
     """How vector direction colours should be suppressed. """
 
 
-    neuroOrientFlip = props.Boolean(default=True)
-    """If ``True``, and the displayed image looks like it is in neurological
-    orientation, vectors are flipped along the x-axis. This property is only
-    applicable to the :class:`.LineVectorOpts`, :class:`.TensorOpts`, and
-    :class:`.SHOpts` classes. See the :meth:`.NiftiOpts.getTransform` method
-    for more information.
+    orientFlip = props.Boolean(default=True)
+    """If ``True``, individual vectors are flipped along the x-axis. This
+    property is only applicable to the :class:`.LineVectorOpts`,
+    :class:`.TensorOpts`, and :class:`.SHOpts` classes. See the
+    :meth:`.NiftiOpts.getTransform` method for more information.
+
+    This value defaults to ``True`` for images which have a neurological
+    storage order, and ``False`` for radiological images.
     """
 
     
@@ -106,13 +108,21 @@ class VectorOpts(volumeopts.NiftiOpts):
     """
 
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, image, *args, **kwargs):
         """Create a ``VectorOpts`` instance for the given image.  All
         arguments are passed through to the :class:`.NiftiOpts`
         constructor.
         """
+
+        # The orientFlip property defaults to True
+        # for neurologically stored images. We
+        # give it this vale before calling __init__,
+        # because  if this VectorOptse instance has
+        # a parent, we want to inherit the parent's
+        # value.
+        self.orientFlip = image.isNeurological()
         
-        volumeopts.NiftiOpts.__init__(self, *args, **kwargs)
+        volumeopts.NiftiOpts.__init__(self, image, *args, **kwargs)
 
         self.__registered = self.getParent() is not None
 

@@ -377,7 +377,7 @@ OPTIONS = td.TypeDict({
                         'modulateImage',
                         'clipImage',
                         'clippingRange'],
-    'LineVectorOpts' : ['neuroOrientFlip',
+    'LineVectorOpts' : ['orientFlip',
                         'lineWidth',
                         'directed',
                         'unitLength',
@@ -389,13 +389,13 @@ OPTIONS = td.TypeDict({
                         'refImage',
                         'coordSpace'],
     'TensorOpts'     : ['lighting',
-                        'neuroOrientFlip',
+                        'orientFlip',
                         'tensorResolution',
                         'tensorScale'],
     'LabelOpts'      : ['lut',
                         'outline',
                         'outlineWidth'],
-    'SHOpts'         : ['neuroOrientFlip',
+    'SHOpts'         : ['orientFlip',
                         'shResolution',
                         'shOrder',
                         'size',
@@ -589,7 +589,7 @@ ARGUMENTS = td.TypeDict({
     'VectorOpts.modulateImage'   : ('mo', 'modulateImage'),
     'VectorOpts.clipImage'       : ('cl', 'clipImage'),
     'VectorOpts.clippingRange'   : ('cr', 'clippingRange'),
-    'VectorOpts.neuroOrientFlip' : ('df', 'disableNeuroOrientFlip'),
+    'VectorOpts.orientFlip'      : ('of', 'orientFlip'),
 
     'LineVectorOpts.lineWidth'    : ('lw', 'lineWidth'),
     'LineVectorOpts.directed'     : ('ld', 'directed'),
@@ -616,7 +616,7 @@ ARGUMENTS = td.TypeDict({
     'SHOpts.shOrder'         : ('so', 'shOrder'),
     'SHOpts.size'            : ('s',  'size'),
     'SHOpts.lighting'        : ('l',  'lighting'),
-    'SHOpts.neuroOrientFlip' : ('df', 'disableNeuroOrientFlip'),
+    'SHOpts.orientFlip'      : ('of', 'orientFlip'),
     'SHOpts.radiusThreshold' : ('t',  'radiusThreshold'),
     'SHOpts.colourMode'      : ('m',  'colourMode'),
     'SHOpts.colourMap'       : ('cm', 'colourMap'),
@@ -752,8 +752,12 @@ HELP = td.TypeDict({
     'VectorOpts.clipImage'       : 'Image to clip vectors with',
     'VectorOpts.clippingRange'   : 'Clipping range (only used if a '
                                    'clipping image is provided)', 
-    'VectorOpts.neuroOrientFlip' : 'Do not flip vectors stored in '
-                                   'neurological orientation',
+    'VectorOpts.orientFlip'      : 'Flip L/R orientation within each voxel. '
+                                   'Default: true for images with '
+                                   'neurological storage order, false for '
+                                   'images with radiological storage order. '
+                                   'Passing this flag will invert the '
+                                   'default behaviour.',
     
     'LineVectorOpts.lineWidth'    : 'Line width',
     'LineVectorOpts.directed'     : 'Interpret vectors as directed',
@@ -782,8 +786,6 @@ HELP = td.TypeDict({
     'SHOpts.size'            : 'FOD size (percentage, min: 10, max: 500, '
                                'default: 100)', 
     'SHOpts.lighting'        : 'Enable lighting effect',
-    'SHOpts.neuroOrientFlip' : 'Do not flip FODs stored in '
-                               'neurological orientation',
     'SHOpts.radiusThreshold' : 'Hide FODs with radius less than this '
                                '(min: 0, max: 1, default: 0.05)',
     'SHOpts.colourMode'      : 'Colour by \'direction\' or \'radius\' '
@@ -938,12 +940,10 @@ TRANSFORMS = td.TypeDict({
     'OrthoOpts.showLabels'       : lambda b : not b,
     'Display.enabled'            : lambda b : not b,
     'VolumeOpts.linkLowRanges'   : lambda b : not b,
-    'VectorOpts.neuroOrientFlip' : lambda b : not b,
     'LineVectorOpts.unitLength'  : lambda b : not b, 
     'TensorOpts.lighting'        : lambda b : not b, 
     'LabelOpts.lut'              : _lutTrans,
     # 'SHOpts.lighting'            : lambda b : not b,
-    'SHOpts.neuroOrientFlip'     : lambda b : not b, 
 })
 """This dictionary defines any transformations for command line options
 where the value passed on the command line cannot be directly converted
@@ -2111,6 +2111,20 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                         setattr(optArgs, lhr, None)
 
                     setattr(opts, fileOpt, image)
+
+
+            # If the VectorOpts.orientFlip argument is
+            # passed, we need to invert its value -
+            # apply the flip for radiologically stored
+            # images, but not for neurologically stored
+            # images.
+            if isinstance(opts, fsldisplay.VectorOpts):
+
+                orientFlip = getattr(optArgs, 'orientFlip', None)
+
+                if orientFlip is not None:
+                    opts.orientFlip = not opts.orientFlip
+                    setattr(optArgs, 'orientFlip', opts.orientFlip)
 
             # After handling the special cases
             # above, we can apply the CLI

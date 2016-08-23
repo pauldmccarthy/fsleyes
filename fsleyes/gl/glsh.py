@@ -157,7 +157,7 @@ class GLSH(glvector.GLVectorBase):
                          immediate=True) 
         opts.addListener('size',            name, self.updateShaderState)
         opts.addListener('lighting',        name, self.updateShaderState)
-        opts.addListener('neuroOrientFlip', name, self.updateShaderState)
+        opts.addListener('orientFlip',      name, self.updateShaderState)
         opts.addListener('radiusThreshold', name, self.notify)
         opts.addListener('colourMode',      name, self.updateShaderState)
 
@@ -177,7 +177,7 @@ class GLSH(glvector.GLVectorBase):
         opts.removeListener('shOrder',         name)
         opts.removeListener('size',            name)
         opts.removeListener('lighting',        name)
-        opts.removeListener('neuroOrientFlip', name)
+        opts.removeListener('orientFlip',      name)
         opts.removeListener('radiusThreshold', name)
         opts.removeListener('colourMode',      name)
 

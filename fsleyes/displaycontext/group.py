@@ -76,7 +76,7 @@ class OverlayGroup(props.HasProperties):
                             'suppressY',
                             'suppressZ',
                             'suppressMode',
-                            'neuroOrientFlip'],
+                            'orientFlip'],
         'LineVectorOpts' : ['lineWidth',
                             'unitLength',
                             'lengthScale',
