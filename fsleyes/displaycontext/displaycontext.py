@@ -152,12 +152,10 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
-    radioOrientation = props.Boolean(default=False)
-    """If ``True``, the X axis (assumed to correspond to the left-right axis) in
-    2D views of the scene will be inverted. For images which are oriented
-    according to the MNI152 convention, this allows the user to switch between
-    neurological and radiological views. ``True`` corresponds to a
-    radiological display, and ``False`` to a neurological display.
+    radioOrientation = props.Boolean(default=True)
+    """If ``True``, 2D views will show images in radiological convention
+    (i.e.subject left on the right of the display). Otherwise, they will be
+    shown  in neurological convention (subject left on the left).
 
     .. note:: This setting is not enforced by the ``DisplayContext``. It is
               the responsibility of the :class:`.OrthoPanel` and
@@ -657,6 +655,9 @@ class DisplayContext(props.SyncableHasProperties):
         space = self.displaySpace
         opts  = self.getOpts(image)
 
+        # Disable notification of the bounds
+        # property so the __overlayBoundsChanged
+        # method does not get called. 
         opts.disableListener('bounds', self.__name)
             
         if   space == 'world':  opts.transform = 'affine'
@@ -699,14 +700,6 @@ class DisplayContext(props.SyncableHasProperties):
         # location to be preserved with respect to it.
         stdLoc = selectedOpts.displayToStandardCoordinates(self.location.xyz)
 
-        # Disable notification of the bounds property
-        # on all DisplayOpts instances, so the
-        # __overlayBoundsChanged method does not
-        # get called. 
-        for overlay in self.__overlayList:
-            opts = self.getOpts(overlay)
-            opts.disableListener('bounds', self.__name)
-
         # Update the transform property of all
         # Image overlays to put them into the
         # new display space
@@ -715,14 +708,7 @@ class DisplayContext(props.SyncableHasProperties):
             if not isinstance(overlay, fslimage.Nifti):
                 continue
 
-            opts = self.getOpts(overlay)
             self.__setTransform(overlay)
-
-        # Re-enable bounds notification 
-        # on the DisplayOpts instances
-        for overlay in self.__overlayList:
-            opts = self.getOpts(overlay)
-            opts.enableListener('bounds', self.__name)
 
         # Update the display world bounds,
         # and then update the location

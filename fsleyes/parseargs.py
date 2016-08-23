@@ -1842,8 +1842,11 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
         # First apply all command line options
         # related to the display context...
 
-        displayCtx.loadInMemory     = args.bigmem
-        displayCtx.radioOrientation = not args.neuroOrientation
+        if args.bigmem is not None:
+            displayCtx.loadInMemory = args.bigmem
+
+        if args.neuroOrientation is not None:
+            displayCtx.radioOrientation = not args.neuroOrientation
 
         # Display space may be a string,
         # or a path to an image

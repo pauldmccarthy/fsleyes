@@ -246,6 +246,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         contentPanel.Bind(wx.EVT_SIZE, self.__onResize)
 
         # Initialise the panel
+        self.__radioOrientationChanged(refreshLabels=False)
         self.__refreshLayout()
         self.__bgColourChanged()
         self.__overlayListChanged()
@@ -537,11 +538,17 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.PostSizeEvent()
 
 
-    def __radioOrientationChanged(self, *a):
+    def __radioOrientationChanged(self, *a, **kwa):
         """Called when the :attr:`.DisplayContext.radioOrientation` property
         changes. Figures out if the left-right canvas axes need to be flipped,
         and does so if necessary.
+
+        :arg refreshLabels: Must be passed as a keyword argument. If ``True``
+                            (the default), `meth:`__refreshLabels` is called.
+                            This argument is used by :meth:`__init__`.
         """
+
+        refreshLabels = kwa.get('refreshLabels', True)
 
         if len(self._overlayList) == 0:
             return
@@ -552,7 +559,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__ycanvas.invertX = flip
         self.__zcanvas.invertX = flip
 
-        self.__refreshLabels()
+        if refreshLabels:
+            self.__refreshLabels()
 
 
     def __overlayListChanged(self, *a):
