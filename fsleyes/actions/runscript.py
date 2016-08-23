@@ -125,15 +125,24 @@ def runScript(frame, overlayList, displayCtx, script):
              futures.division        .compiler_flag | 
              futures.unicode_literals.compiler_flag)
 
+    # Is the script a file?
+    if op.exists(script):
+        with open(script, 'rt') as f:
+            log.debug('Loading script {}...'.format(script))
+            code = f.read()
+
+    # If not, assume it's
+    # a code snippet
+    else:
+        code = script
+
     # Compile the script
-    with open(script, 'rt') as f:
-        log.debug('Compiling {}...'.format(script))
-        code = f.read()
-        code = compile(code,
-                       script,
-                       mode='exec',
-                       flags=flags,
-                       dont_inherit=True)
+    log.debug('Compiling {}...'.format(script))
+    code = compile(code,
+                   script,
+                   mode='exec',
+                   flags=flags,
+                   dont_inherit=True)
 
     _globals, _locals = fsleyesScriptEnvironment(frame,
                                                  overlayList,
@@ -221,6 +230,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         ('trueScaledVoxels', trueScaledVoxels),
         ('rawVoxels',        rawVoxels),
         ('load',             load),
+        ('print',            print),
     ))
 
     return _globals, _locals

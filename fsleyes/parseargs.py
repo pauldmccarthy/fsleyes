@@ -372,9 +372,11 @@ OPTIONS = td.TypeDict({
                         'suppressX',
                         'suppressY',
                         'suppressZ',
+                        'suppressMode',
                         'cmap',
                         'colourImage',
                         'modulateImage',
+                        'modulateRange',
                         'clipImage',
                         'clippingRange'],
     'LineVectorOpts' : ['orientFlip',
@@ -584,9 +586,11 @@ ARGUMENTS = td.TypeDict({
     'VectorOpts.suppressX'       : ('xs', 'suppressX'),
     'VectorOpts.suppressY'       : ('ys', 'suppressY'),
     'VectorOpts.suppressZ'       : ('zs', 'suppressZ'),
+    'VectorOpts.suppressMode'    : ('sm', 'suppressMode'),
     'VectorOpts.cmap'            : ('cm', 'cmap'),
     'VectorOpts.colourImage'     : ('co', 'colourImage'),
     'VectorOpts.modulateImage'   : ('mo', 'modulateImage'),
+    'VectorOpts.modulateRange'   : ('mr', 'modulateRange'),
     'VectorOpts.clipImage'       : ('cl', 'clipImage'),
     'VectorOpts.clippingRange'   : ('cr', 'clippingRange'),
     'VectorOpts.orientFlip'      : ('of', 'orientFlip'),
@@ -745,13 +749,18 @@ HELP = td.TypeDict({
     'VectorOpts.suppressX'       : 'Suppress X magnitude',
     'VectorOpts.suppressY'       : 'Suppress Y magnitude',
     'VectorOpts.suppressZ'       : 'Suppress Z magnitude',
+    'VectorOpts.suppressMode'    : 'Replace suppressed colours with '
+                                   '\'white\' (default), \'black\', or '
+                                   '\'transparent\'.',
     'VectorOpts.cmap'            : 'Colour map (only used if a '
                                    'colour image is provided)',
     'VectorOpts.colourImage'     : 'Image to colour vectors with',
     'VectorOpts.modulateImage'   : 'Image to modulate vector brightness with',
+    'VectorOpts.modulateRange'   : 'Modulation range (only used if a '
+                                   'modulation image is provided)', 
     'VectorOpts.clipImage'       : 'Image to clip vectors with',
     'VectorOpts.clippingRange'   : 'Clipping range (only used if a '
-                                   'clipping image is provided)', 
+                                   'clipping image is provided)',
     'VectorOpts.orientFlip'      : 'Flip L/R orientation within each voxel. '
                                    'Default: true for images with '
                                    'neurological storage order, false for '
@@ -2148,12 +2157,14 @@ def _findOrLoad(overlayList, overlayFile, overlayType, relatedTo=None):
     appended to the end of the list.
     """
 
-    overlayFile = op.abspath(overlayFile)
-    overlay     = overlayList.find(overlayFile)
-
+    # Is there an overlay in the list with 
+    # a name or data source that matches?
+    overlay = overlayList.find(overlayFile)
+ 
     if overlay is None:
 
-        overlay = overlayType(overlayFile)
+        overlayFile = op.abspath(overlayFile)
+        overlay     = overlayType(overlayFile)
 
         if relatedTo is not None:
             overlayList.insert(overlayList.index(relatedTo), overlay)
