@@ -83,7 +83,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
     
     ``pixdim-flip`` The model coordinates are defined in the reference image
                     voxel coordinate system, scaled by the voxel pixdims. If
-                    the reference image transformation matrix has a positive
+                    the reference image transformation matrix has a negative
                     determinant, the X axis is flipped.
     =============== =========================================================
 

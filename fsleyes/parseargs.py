@@ -395,7 +395,8 @@ OPTIONS = td.TypeDict({
     'LabelOpts'      : ['lut',
                         'outline',
                         'outlineWidth'],
-    'SHOpts'         : ['shResolution',
+    'SHOpts'         : ['neuroOrientFlip',
+                        'shResolution',
                         'shOrder',
                         'size',
                         'lighting',
@@ -773,9 +774,13 @@ HELP = td.TypeDict({
     'LabelOpts.outline'      : 'Show label outlines',
     'LabelOpts.outlineWidth' : 'Label outline width',
 
-    'SHOpts.shResolution'    : 'FOD resolution/quality',
-    'SHOpts.shOrder'         : 'Maximum SH function order (0-16)',
-    'SHOpts.size'            : 'FOD size',
+    'SHOpts.shResolution'    : 'FOD resolution/quality '
+                               '(min: 3, max: 10, default: 5)',
+    'SHOpts.shOrder'         : 'Maximum SH function order (min: 0, max: '
+                               'determined from image (up to 16), default: '
+                               'maximum)', 
+    'SHOpts.size'            : 'FOD size (percentage, min: 10, max: 500, '
+                               'default: 100)', 
     'SHOpts.lighting'        : 'Enable lighting effect',
     'SHOpts.neuroOrientFlip' : 'Do not flip FODs stored in '
                                'neurological orientation',
