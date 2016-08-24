@@ -600,7 +600,7 @@ ARGUMENTS = td.TypeDict({
     'LineVectorOpts.unitLength'   : ('nu', 'notunit'),
     'LineVectorOpts.lengthScale'  : ('ls', 'lengthScale'),
     
-    'RGBVectorOpts.interpolation' : ('i',  'interpolation'),
+    'RGBVectorOpts.interpolation' : ('in', 'interpolation'),
 
     'TensorOpts.lighting'         : ('dl', 'disableLighting'),
     'TensorOpts.tensorResolution' : ('tr', 'tensorResolution'),
