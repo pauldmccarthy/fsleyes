@@ -719,8 +719,8 @@ HELP = td.TypeDict({
     'Display.brightness'    : 'Brightness (0-100, default: 50)',
     'Display.contrast'      : 'Contrast (0-100, default: 50)',
 
-    'NiftiOpts.resolution' : 'Resolution',
-    'NiftiOpts.volume'     : 'Volume',
+    'NiftiOpts.resolution' : 'Voxel resolution (mm)',
+    'NiftiOpts.volume'     : 'Volume (index, starting from 0)',
 
     'VolumeOpts.displayRange'    : 'Display range. Setting this will '
                                    'override brightnes/contrast settings.',
@@ -778,8 +778,10 @@ HELP = td.TypeDict({
 
     'ModelOpts.colour'       : 'Model colour (0-1)',
     'ModelOpts.outline'      : 'Show model outline',
-    'ModelOpts.outlineWidth' : 'Model outline width',
+    'ModelOpts.outlineWidth' : 'Model outline width (0-1, default: 0.25)',
     'ModelOpts.refImage'     : 'Reference image for model',
+    'ModelOpts.coordSpace'   : 'Model vertex coordinate space '
+                               '(relative to reference image)',
 
     'TensorOpts.lighting'         : 'Disable lighting effect',
     'TensorOpts.tensorResolution' : 'Tensor resolution/quality '
@@ -789,7 +791,8 @@ HELP = td.TypeDict({
     
     'LabelOpts.lut'          : 'Label image LUT',
     'LabelOpts.outline'      : 'Show label outlines',
-    'LabelOpts.outlineWidth' : 'Label outline width',
+    'LabelOpts.outlineWidth' : 'Label outline width (proportion of '
+                               'one voxel; 0-1, default: 0.25)',
 
     'SHOpts.shResolution'    : 'FOD resolution/quality '
                                '(3-10, default: 5)',
@@ -1278,6 +1281,14 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
         parsers[target] = parser
         propNames       = list(it.chain(*OPTIONS.get(target, allhits=True)))
         specialOptions  = []
+
+        # These classes are sub-classes of NiftiOpts, and as
+        # such they have a volume property. But that property
+        # is only used for data access (location panel,
+        # histogram, time series etc). So we don't actually
+        # want to expose it to the user.
+        if target in (LineVectorOpts, RGBVectorOpts, TensorOpts, SHOpts):
+            propNames.remove('volume')
         
         # The file options need
         # to be configured manually.
