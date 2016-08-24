@@ -665,7 +665,7 @@ HELP = td.TypeDict({
                               'settings (unless any display settings are '
                               'specified)',
     'Main.displaySpace'     : 'Space in which all overlays are displayed - '
-                              'can be "pixdim", "world", or a NIFTI image.',
+                              'can be "world", or a NIFTI image.',
     'Main.neuroOrientation' : 'Display images in neurological orientation '
                               '(default: radiological)',
     'Main.standard'         : 'Add the MNI152 2mm standard image as an '
