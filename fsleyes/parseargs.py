@@ -678,23 +678,24 @@ HELP = td.TypeDict({
 
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
                                      'highlighting the current location',
-    'SceneOpts.bgColour'           : 'Canvas background colour',
-    'SceneOpts.cursorColour'       : 'Cursor location colour',
+    'SceneOpts.bgColour'           : 'Canvas background colour (0-1)',
+    'SceneOpts.cursorColour'       : 'Cursor location colour (0-1)',
     'SceneOpts.showColourBar'      : 'Show colour bar',
     'SceneOpts.colourBarLocation'  : 'Colour bar location',
     'SceneOpts.colourBarLabelSide' : 'Colour bar label orientation',
     'SceneOpts.performance'        : 'Rendering performance '
                                      '(1=fastest, 4=best looking)',
     
-    'OrthoOpts.xzoom'       : 'X canvas zoom',
-    'OrthoOpts.yzoom'       : 'Y canvas zoom',
-    'OrthoOpts.zzoom'       : 'Z canvas zoom',
+    'OrthoOpts.xzoom'       : 'X canvas zoom (100-5000, default: 100)',
+    'OrthoOpts.yzoom'       : 'Y canvas zoom (100-5000, default: 100)',
+    'OrthoOpts.zzoom'       : 'Z canvas zoom (100-5000, default: 100)',
     'OrthoOpts.layout'      : 'Canvas layout',
     'OrthoOpts.showXCanvas' : 'Hide the X canvas',
     'OrthoOpts.showYCanvas' : 'Hide the Y canvas',
     'OrthoOpts.showZCanvas' : 'Hide the Z canvas',
     'OrthoOpts.showLabels'  : 'Hide orientation labels',
-    'OrthoOpts.labelSize'   : 'Orientation label font size (percentage)',
+    'OrthoOpts.labelSize'   : 'Orientation label font size '
+                              '(50-500, default: 100)',
 
     'OrthoOpts.xcentre'     : 'X canvas display centre (YZ world coordinates '
                               'of first overlay)',
@@ -714,9 +715,9 @@ HELP = td.TypeDict({
     'Display.name'          : 'Overlay name',
     'Display.enabled'       : 'Disable (hide) overlay',
     'Display.overlayType'   : 'Overlay type',
-    'Display.alpha'         : 'Opacity',
-    'Display.brightness'    : 'Brightness',
-    'Display.contrast'      : 'Contrast',
+    'Display.alpha'         : 'Opacity (0-100, default: 100)',
+    'Display.brightness'    : 'Brightness (0-100, default: 50)',
+    'Display.contrast'      : 'Contrast (0-100, default: 50)',
 
     'NiftiOpts.resolution' : 'Resolution',
     'NiftiOpts.volume'     : 'Volume',
@@ -739,13 +740,13 @@ HELP = td.TypeDict({
     'VolumeOpts.linkLowRanges'   : 'Unlink low display/clipping ranges',
     'VolumeOpts.linkHighRanges'  : 'Link high display/clipping ranges',
 
-    'MaskOpts.colour'    : 'Colour',
+    'MaskOpts.colour'    : 'Colour (0-1)',
     'MaskOpts.invert'    : 'Invert',
     'MaskOpts.threshold' : 'Threshold',
 
-    'VectorOpts.xColour'         : 'X colour',
-    'VectorOpts.yColour'         : 'Y colour',
-    'VectorOpts.zColour'         : 'Z colour',
+    'VectorOpts.xColour'         : 'X colour (0-1)',
+    'VectorOpts.yColour'         : 'Y colour (0-1)',
+    'VectorOpts.zColour'         : 'Z colour (0-1)',
     'VectorOpts.suppressX'       : 'Suppress X magnitude',
     'VectorOpts.suppressY'       : 'Suppress Y magnitude',
     'VectorOpts.suppressZ'       : 'Suppress Z magnitude',
@@ -768,32 +769,34 @@ HELP = td.TypeDict({
                                    'Passing this flag will invert the '
                                    'default behaviour.',
     
-    'LineVectorOpts.lineWidth'    : 'Line width',
+    'LineVectorOpts.lineWidth'    : 'Line width (1-10, default: 1)',
     'LineVectorOpts.directed'     : 'Interpret vectors as directed',
     'LineVectorOpts.unitLength'   : 'Do not scale lines to unit length',
-    'LineVectorOpts.lengthScale'  : 'Scale line length by this percentage',
+    'LineVectorOpts.lengthScale'  : 'Scale line length by this '
+                                    'percentage (10-500, default: 100)',
     'RGBVectorOpts.interpolation' : 'Interpolation',
 
-    'ModelOpts.colour'       : 'Model colour',
+    'ModelOpts.colour'       : 'Model colour (0-1)',
     'ModelOpts.outline'      : 'Show model outline',
     'ModelOpts.outlineWidth' : 'Model outline width',
     'ModelOpts.refImage'     : 'Reference image for model',
 
     'TensorOpts.lighting'         : 'Disable lighting effect',
-    'TensorOpts.tensorResolution' : 'Tensor resolution (quality)',
-    'TensorOpts.tensorScale'      : 'Tensor size (percentage of voxel size)',
+    'TensorOpts.tensorResolution' : 'Tensor resolution/quality '
+                                    '(4-20, default: 10)',
+    'TensorOpts.tensorScale'      : 'Tensor size (percentage of '
+                                    'voxel size; 50-600, default: 100)',
     
     'LabelOpts.lut'          : 'Label image LUT',
     'LabelOpts.outline'      : 'Show label outlines',
     'LabelOpts.outlineWidth' : 'Label outline width',
 
     'SHOpts.shResolution'    : 'FOD resolution/quality '
-                               '(min: 3, max: 10, default: 5)',
-    'SHOpts.shOrder'         : 'Maximum SH function order (min: 0, max: '
-                               'determined from image (up to 16), default: '
-                               'maximum)', 
-    'SHOpts.size'            : 'FOD size (percentage, min: 10, max: 500, '
-                               'default: 100)', 
+                               '(3-10, default: 5)',
+    'SHOpts.shOrder'         : 'Maximum SH function order (0-maximum '
+                               'determined from image [up to 16], '
+                               'default: maximum)',
+    'SHOpts.size'            : 'FOD size (10-500, default: 100)', 
     'SHOpts.lighting'        : 'Enable lighting effect',
     'SHOpts.radiusThreshold' : 'Hide FODs with radius less than this '
                                '(min: 0, max: 1, default: 0.05)',
@@ -824,7 +827,7 @@ def getExtra(target, propName, default=None):
     given type and property.
     """
 
-
+    # Overlay type options
     overlayTypeSettings = {
         'choices' : fsldisplay.ALL_OVERLAY_TYPES,
         'default' : fsldisplay.ALL_OVERLAY_TYPES[0],
@@ -852,48 +855,74 @@ def getExtra(target, propName, default=None):
         'parseStr' : True
     }
 
+    # shOrder can be up to a maximum of 16,
+    # but will be limited by the image itselt
     shOrderSettings = {
         'choices' : range(17),
         'metavar' : 'ORDER',
     }
 
-    if target in ('Display', fsldisplay.Display) and \
-       propName == 'overlayType':
-        return overlayTypeSettings
-    
-    elif target in ('LabelOpts', fsldisplay.LabelOpts) \
-         and propName == 'lut':
-        return lutSettings
-    
-    elif target in ('VolumeOpts', fsldisplay.VolumeOpts) \
-         and propName == 'cmap':
-        return cmapSettings
+    # Expect RGB, not RGBA, for colour options
+    colourSettings = {
+        'alpha' : False,
+    }
 
-    elif target in ('VolumeOpts', fsldisplay.VolumeOpts) \
-         and propName == 'negativeCmap':
-        return cmapSettings
 
-    elif target in ('LineVectorOpts', fsldisplay.LineVectorOpts) \
-         and propName == 'cmap':
-        return cmapSettings
+    allSettings = {
+        ('Display',                 'overlayType')  : overlayTypeSettings,
+        (fsldisplay.Display,        'overlayType')  : overlayTypeSettings,
+        ('LabelOpts',               'lut')          : lutSettings,
+        (fsldisplay.LabelOpts,      'lut')          : lutSettings,
+        ('VolumeOpts',              'cmap')         : cmapSettings,
+        (fsldisplay.VolumeOpts,     'cmap')         : cmapSettings,
+        ('VolumeOpts',              'negativeCmap') : cmapSettings,
+        (fsldisplay.VolumeOpts,     'negativeCmap') : cmapSettings,
+        ('LineVectorOpts',          'cmap')         : cmapSettings,
+        (fsldisplay.LineVectorOpts, 'cmap')         : cmapSettings,
+        ('RGBVectorOpts',           'cmap')         : cmapSettings,
+        (fsldisplay.RGBVectorOpts,  'cmap')         : cmapSettings,
+        ('TensorOpts',              'cmap')         : cmapSettings,
+        (fsldisplay.TensorOpts,     'cmap')         : cmapSettings,
+        ('SHOpts',                  'cmap')         : cmapSettings,
+        (fsldisplay.SHOpts,         'cmap')         : cmapSettings,
+        ('SHOpts',                  'shOrder')      : shOrderSettings,
+        (fsldisplay.SHOpts,         'shOrder')      : shOrderSettings,
+        ('SceneOpts',               'bgColour')     : colourSettings,
+        (fsldisplay.SceneOpts,      'bgColour')     : colourSettings,
+        ('SceneOpts',               'cursorColour') : colourSettings,
+        (fsldisplay.SceneOpts,      'cursorColour') : colourSettings,
+        ('MaskOpts',                'colour')       : colourSettings,
+        (fsldisplay.MaskOpts,       'colour')       : colourSettings,
+        ('LineVectorOpts',          'xColour')      : colourSettings,
+        (fsldisplay.LineVectorOpts, 'xColour')      : colourSettings,
+        ('LineVectorOpts',          'yColour')      : colourSettings,
+        (fsldisplay.LineVectorOpts, 'yColour')      : colourSettings,
+        ('LineVectorOpts',          'zColour')      : colourSettings,
+        (fsldisplay.LineVectorOpts, 'zColour')      : colourSettings,
+        ('RGBVectorOpts',           'xColour')      : colourSettings,
+        (fsldisplay.RGBVectorOpts,  'xColour')      : colourSettings,
+        ('RGBVectorOpts',           'yColour')      : colourSettings,
+        (fsldisplay.RGBVectorOpts,  'yColour')      : colourSettings,
+        ('RGBVectorOpts',           'zColour')      : colourSettings,
+        (fsldisplay.RGBVectorOpts,  'zColour')      : colourSettings,
+        ('TensorOpts',              'xColour')      : colourSettings,
+        (fsldisplay.TensorOpts,     'xColour')      : colourSettings,
+        ('TensorOpts',              'yColour')      : colourSettings,
+        (fsldisplay.TensorOpts,     'yColour')      : colourSettings,
+        ('TensorOpts',              'zColour')      : colourSettings,
+        (fsldisplay.TensorOpts,     'zColour')      : colourSettings,
+        ('SHOpts',                  'xColour')      : colourSettings,
+        (fsldisplay.SHOpts,         'xColour')      : colourSettings,
+        ('SHOpts',                  'yColour')      : colourSettings,
+        (fsldisplay.SHOpts,         'yColour')      : colourSettings,
+        ('SHOpts',                  'zColour')      : colourSettings,
+        (fsldisplay.SHOpts,         'zColour')      : colourSettings,
+        ('ModelOpts',               'colour')       : colourSettings,
+        (fsldisplay.ModelOpts,      'colour')       : colourSettings, 
 
-    elif target in ('RGBVectorOpts', fsldisplay.RGBVectorOpts) \
-         and propName == 'cmap':
-        return cmapSettings
+    }
 
-    elif target in ('TensorOpts', fsldisplay.TensorOpts) \
-         and propName == 'cmap':
-        return cmapSettings
-
-    elif target in ('SHOpts', fsldisplay.SHOpts) \
-         and propName == 'cmap':
-        return cmapSettings
-
-    elif target in ('SHOpts', fsldisplay.SHOpts) \
-         and propName == 'shOrder':
-        return shOrderSettings
-
-    return None
+    return allSettings.get((target, propName), None)
 
 
 # File options need special treatment
