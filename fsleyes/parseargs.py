@@ -125,7 +125,7 @@ To make this new propery settable via the command line, you need to:
              # .
              # .
              # .
-             'ModelOpts.rotation' : ('mr', 'modelRotation'),
+             'ModelOpts.rotation' : ('mr', 'modelRotation', True),
              # .
              # .
              # .
@@ -146,7 +146,8 @@ To make this new propery settable via the command line, you need to:
 
   4. If the property specifies a file/path name (e.g.
      :attr:`.VolumeOpts.clipImage`), add an entry in the :attr:`FILE_OPTIONS`
-     dictionary::
+     dictionary. In the present example, this is not necessary, but if it were,
+     the ``FILE_OPTIONS`` entry might look like this::
 
          FILE_OPTIONS = td.TypeDict({
              # .
@@ -505,131 +506,137 @@ def groupEpilog(target):
 # Short/long arguments for all of those options
 ARGUMENTS = td.TypeDict({
 
-    'Main.help'             : ('h',      'help'),
-    'Main.fullhelp'         : ('fh',     'fullhelp'),
-    'Main.verbose'          : ('v',      'verbose'),
-    'Main.version'          : ('V',      'version'),
-    'Main.skipfslcheck'     : ('S',      'skipfslcheck'),
-    'Main.noisy'            : ('n',      'noisy'),
-    'Main.memory'           : ('m',      'memory'),
-    'Main.glversion'        : ('gl',     'glversion'),
-    'Main.scene'            : ('s',      'scene'),
-    'Main.voxelLoc'         : ('vl',     'voxelLoc'),
-    'Main.worldLoc'         : ('wl',     'worldLoc'),
-    'Main.autoDisplay'      : ('ad',     'autoDisplay'),
-    'Main.displaySpace'     : ('ds',     'displaySpace'),
-    'Main.neuroOrientation' : ('no',     'neuroOrientation'),
-    'Main.standard'         : ('std',    'standard'),
-    'Main.standard1mm'      : ('std1mm', 'standard1mm'),
-    'Main.bigmem'           : ('b',      'bigmem'),
-    'Main.bumMode'          : ('bums',   'bumMode'),
+    'Main.help'             : ('h',      'help',             False),
+    'Main.fullhelp'         : ('fh',     'fullhelp',         False),
+    'Main.verbose'          : ('v',      'verbose',          False),
+    'Main.version'          : ('V',      'version',          False),
+    'Main.skipfslcheck'     : ('S',      'skipfslcheck',     False),
+    'Main.noisy'            : ('n',      'noisy',            False),
+    'Main.memory'           : ('m',      'memory',           False),
+    'Main.glversion'        : ('gl',     'glversion',        True),
+    'Main.scene'            : ('s',      'scene',            True),
+    'Main.voxelLoc'         : ('vl',     'voxelLoc',         True),
+    'Main.worldLoc'         : ('wl',     'worldLoc',         True),
+    'Main.autoDisplay'      : ('ad',     'autoDisplay',      False),
+    'Main.displaySpace'     : ('ds',     'displaySpace',     True),
+    'Main.neuroOrientation' : ('no',     'neuroOrientation', False),
+    'Main.standard'         : ('std',    'standard',         False),
+    'Main.standard1mm'      : ('std1mm', 'standard1mm',      False),
+    'Main.bigmem'           : ('b',      'bigmem',           False),
+    'Main.bumMode'          : ('bums',   'bumMode',          False),
     
-    'SceneOpts.showColourBar'      : ('cb',  'showColourBar'),
-    'SceneOpts.bgColour'           : ('bg',  'bgColour'),
-    'SceneOpts.cursorColour'       : ('cc',  'cursorColour'),
-    'SceneOpts.colourBarLocation'  : ('cbl', 'colourBarLocation'),
-    'SceneOpts.colourBarLabelSide' : ('cbs', 'colourBarLabelSide'),
-    'SceneOpts.showCursor'         : ('hc',  'hideCursor'),
-    'SceneOpts.performance'        : ('p',   'performance'),
+    'SceneOpts.showColourBar'      : ('cb',  'showColourBar',      False),
+    'SceneOpts.bgColour'           : ('bg',  'bgColour',           True),
+    'SceneOpts.cursorColour'       : ('cc',  'cursorColour',       True),
+    'SceneOpts.colourBarLocation'  : ('cbl', 'colourBarLocation',  True),
+    'SceneOpts.colourBarLabelSide' : ('cbs', 'colourBarLabelSide', True),
+    'SceneOpts.showCursor'         : ('hc',  'hideCursor',         False),
+    'SceneOpts.performance'        : ('p',   'performance',        True),
     
-    'OrthoOpts.xzoom'       : ('xz', 'xzoom'),
-    'OrthoOpts.yzoom'       : ('yz', 'yzoom'),
-    'OrthoOpts.zzoom'       : ('zz', 'zzoom'),
-    'OrthoOpts.layout'      : ('lo', 'layout'),
-    'OrthoOpts.showXCanvas' : ('xh', 'hidex'),
-    'OrthoOpts.showYCanvas' : ('yh', 'hidey'),
-    'OrthoOpts.showZCanvas' : ('zh', 'hidez'),
-    'OrthoOpts.showLabels'  : ('lh', 'hideLabels'),
-    'OrthoOpts.labelSize'   : ('ls', 'labelSize'),
+    'OrthoOpts.xzoom'       : ('xz', 'xzoom',      True),
+    'OrthoOpts.yzoom'       : ('yz', 'yzoom',      True),
+    'OrthoOpts.zzoom'       : ('zz', 'zzoom',      True),
+    'OrthoOpts.layout'      : ('lo', 'layout',     True),
+    'OrthoOpts.showXCanvas' : ('xh', 'hidex',      False),
+    'OrthoOpts.showYCanvas' : ('yh', 'hidey',      False),
+    'OrthoOpts.showZCanvas' : ('zh', 'hidez',      False),
+    'OrthoOpts.showLabels'  : ('lh', 'hideLabels', False),
+    'OrthoOpts.labelSize'   : ('ls', 'labelSize',  True),
 
-    'OrthoOpts.xcentre'     : ('xc', 'xcentre'),
-    'OrthoOpts.ycentre'     : ('yc', 'ycentre'),
-    'OrthoOpts.zcentre'     : ('zc', 'zcentre'),
+    'OrthoOpts.xcentre'     : ('xc', 'xcentre', True),
+    'OrthoOpts.ycentre'     : ('yc', 'ycentre', True),
+    'OrthoOpts.zcentre'     : ('zc', 'zcentre', True),
 
-    'LightBoxOpts.sliceSpacing'   : ('ss', 'sliceSpacing'),
-    'LightBoxOpts.ncols'          : ('nc', 'ncols'),
-    'LightBoxOpts.nrows'          : ('nr', 'nrows'),
-    'LightBoxOpts.zrange'         : ('zr', 'zrange'),
-    'LightBoxOpts.showGridLines'  : ('sg', 'showGridLines'),
-    'LightBoxOpts.highlightSlice' : ('hs', 'highlightSlice'),
-    'LightBoxOpts.zax'            : ('zx', 'zaxis'),
+    'LightBoxOpts.sliceSpacing'   : ('ss', 'sliceSpacing',   True),
+    'LightBoxOpts.ncols'          : ('nc', 'ncols',          True),
+    'LightBoxOpts.nrows'          : ('nr', 'nrows',          True),
+    'LightBoxOpts.zrange'         : ('zr', 'zrange',         True),
+    'LightBoxOpts.showGridLines'  : ('sg', 'showGridLines',  False),
+    'LightBoxOpts.highlightSlice' : ('hs', 'highlightSlice', False),
+    'LightBoxOpts.zax'            : ('zx', 'zaxis',          True),
 
-    'Display.name'          : ('n',  'name'),
-    'Display.enabled'       : ('d',  'disabled'),
-    'Display.overlayType'   : ('ot', 'overlayType'),
-    'Display.alpha'         : ('a',  'alpha'),
-    'Display.brightness'    : ('b',  'brightness'),
-    'Display.contrast'      : ('c',  'contrast'),
+    'Display.name'          : ('n',  'name',        True),
+    'Display.enabled'       : ('d',  'disabled',    False),
+    'Display.overlayType'   : ('ot', 'overlayType', True),
+    'Display.alpha'         : ('a',  'alpha',       True),
+    'Display.brightness'    : ('b',  'brightness',  True),
+    'Display.contrast'      : ('c',  'contrast',    True),
 
-    'NiftiOpts.resolution'   : ('r',  'resolution'),
-    'NiftiOpts.volume'       : ('v',  'volume'),
+    'NiftiOpts.resolution'   : ('r',  'resolution', True),
+    'NiftiOpts.volume'       : ('v',  'volume',     True),
 
-    'VolumeOpts.displayRange'    : ('dr', 'displayRange'),
-    'VolumeOpts.clippingRange'   : ('cr', 'clippingRange'),
-    'VolumeOpts.invertClipping'  : ('ic', 'invertClipping'),
-    'VolumeOpts.clipImage'       : ('cl', 'clipImage'),
-    'VolumeOpts.cmap'            : ('cm', 'cmap'),
-    'VolumeOpts.negativeCmap'    : ('nc', 'negativeCmap'),
-    'VolumeOpts.useNegativeCmap' : ('un', 'useNegativeCmap'),
-    'VolumeOpts.interpolation'   : ('in', 'interpolation'),
-    'VolumeOpts.invert'          : ('i',  'invert'),
-    'VolumeOpts.linkLowRanges'   : ('ll', 'unlinkLowRanges'),
-    'VolumeOpts.linkHighRanges'  : ('lh', 'linkHighRanges'),
+    'VolumeOpts.displayRange'    : ('dr', 'displayRange',    True),
+    'VolumeOpts.clippingRange'   : ('cr', 'clippingRange',   True),
+    'VolumeOpts.invertClipping'  : ('ic', 'invertClipping',  False),
+    'VolumeOpts.clipImage'       : ('cl', 'clipImage',       True),
+    'VolumeOpts.cmap'            : ('cm', 'cmap',            True),
+    'VolumeOpts.negativeCmap'    : ('nc', 'negativeCmap',    True),
+    'VolumeOpts.useNegativeCmap' : ('un', 'useNegativeCmap', False),
+    'VolumeOpts.interpolation'   : ('in', 'interpolation',   True),
+    'VolumeOpts.invert'          : ('i',  'invert',          False),
+    'VolumeOpts.linkLowRanges'   : ('ll', 'unlinkLowRanges', True),
+    'VolumeOpts.linkHighRanges'  : ('lh', 'linkHighRanges',  True),
 
-    'MaskOpts.colour'    : ('mc', 'maskColour'),
-    'MaskOpts.invert'    : ('i',  'maskInvert'),
-    'MaskOpts.threshold' : ('t',  'threshold'),
+    'MaskOpts.colour'    : ('mc', 'maskColour', False),
+    'MaskOpts.invert'    : ('i',  'maskInvert', False),
+    'MaskOpts.threshold' : ('t',  'threshold',  True),
 
-    'VectorOpts.xColour'         : ('xc', 'xColour'),
-    'VectorOpts.yColour'         : ('yc', 'yColour'),
-    'VectorOpts.zColour'         : ('zc', 'zColour'),
-    'VectorOpts.suppressX'       : ('xs', 'suppressX'),
-    'VectorOpts.suppressY'       : ('ys', 'suppressY'),
-    'VectorOpts.suppressZ'       : ('zs', 'suppressZ'),
-    'VectorOpts.suppressMode'    : ('sm', 'suppressMode'),
-    'VectorOpts.cmap'            : ('cm', 'cmap'),
-    'VectorOpts.colourImage'     : ('co', 'colourImage'),
-    'VectorOpts.modulateImage'   : ('mo', 'modulateImage'),
-    'VectorOpts.modulateRange'   : ('mr', 'modulateRange'),
-    'VectorOpts.clipImage'       : ('cl', 'clipImage'),
-    'VectorOpts.clippingRange'   : ('cr', 'clippingRange'),
-    'VectorOpts.orientFlip'      : ('of', 'orientFlip'),
+    'VectorOpts.xColour'         : ('xc', 'xColour',       True),
+    'VectorOpts.yColour'         : ('yc', 'yColour',       True),
+    'VectorOpts.zColour'         : ('zc', 'zColour',       True),
+    'VectorOpts.suppressX'       : ('xs', 'suppressX',     False),
+    'VectorOpts.suppressY'       : ('ys', 'suppressY',     False),
+    'VectorOpts.suppressZ'       : ('zs', 'suppressZ',     False),
+    'VectorOpts.suppressMode'    : ('sm', 'suppressMode',  True),
+    'VectorOpts.cmap'            : ('cm', 'cmap',          True),
+    'VectorOpts.colourImage'     : ('co', 'colourImage',   True),
+    'VectorOpts.modulateImage'   : ('mo', 'modulateImage', True),
+    'VectorOpts.modulateRange'   : ('mr', 'modulateRange', True),
+    'VectorOpts.clipImage'       : ('cl', 'clipImage',     True),
+    'VectorOpts.clippingRange'   : ('cr', 'clippingRange', True),
+    'VectorOpts.orientFlip'      : ('of', 'orientFlip',    False),
 
-    'LineVectorOpts.lineWidth'    : ('lw', 'lineWidth'),
-    'LineVectorOpts.directed'     : ('ld', 'directed'),
-    'LineVectorOpts.unitLength'   : ('nu', 'notunit'),
-    'LineVectorOpts.lengthScale'  : ('ls', 'lengthScale'),
+    'LineVectorOpts.lineWidth'    : ('lw', 'lineWidth',   True),
+    'LineVectorOpts.directed'     : ('ld', 'directed',    False),
+    'LineVectorOpts.unitLength'   : ('nu', 'notunit',     False),
+    'LineVectorOpts.lengthScale'  : ('ls', 'lengthScale', True),
     
-    'RGBVectorOpts.interpolation' : ('in', 'interpolation'),
+    'RGBVectorOpts.interpolation' : ('in', 'interpolation', True),
 
-    'TensorOpts.lighting'         : ('dl', 'disableLighting'),
-    'TensorOpts.tensorResolution' : ('tr', 'tensorResolution'),
-    'TensorOpts.tensorScale'      : ('s',  'scale'),
+    'TensorOpts.lighting'         : ('dl', 'disableLighting',  False),
+    'TensorOpts.tensorResolution' : ('tr', 'tensorResolution', True),
+    'TensorOpts.tensorScale'      : ('s',  'scale',            True),
 
-    'ModelOpts.colour'       : ('mc', 'colour'),
-    'ModelOpts.outline'      : ('o',  'outline'),
-    'ModelOpts.outlineWidth' : ('w',  'outlineWidth'),
-    'ModelOpts.refImage'     : ('r',  'refImage'),
-    'ModelOpts.coordSpace'   : ('s',  'coordSpace'),
+    'ModelOpts.colour'       : ('mc', 'colour',       True),
+    'ModelOpts.outline'      : ('o',  'outline',      False),
+    'ModelOpts.outlineWidth' : ('w',  'outlineWidth', True),
+    'ModelOpts.refImage'     : ('r',  'refImage',     True),
+    'ModelOpts.coordSpace'   : ('s',  'coordSpace',   True),
 
-    'LabelOpts.lut'          : ('l',  'lut'),
-    'LabelOpts.outline'      : ('o',  'outline'),
-    'LabelOpts.outlineWidth' : ('w',  'outlineWidth'),
+    'LabelOpts.lut'          : ('l',  'lut',          True),
+    'LabelOpts.outline'      : ('o',  'outline',      False),
+    'LabelOpts.outlineWidth' : ('w',  'outlineWidth', True),
 
-    'SHOpts.shResolution'    : ('sr', 'shResolution'),
-    'SHOpts.shOrder'         : ('so', 'shOrder'),
-    'SHOpts.size'            : ('s',  'size'),
-    'SHOpts.lighting'        : ('l',  'lighting'),
-    'SHOpts.orientFlip'      : ('of', 'orientFlip'),
-    'SHOpts.radiusThreshold' : ('t',  'radiusThreshold'),
-    'SHOpts.colourMode'      : ('m',  'colourMode'),
-    'SHOpts.colourMap'       : ('cm', 'colourMap'),
-    'SHOpts.xColour'         : ('xc', 'xColour'),
-    'SHOpts.yColour'         : ('yc', 'yColour'),
-    'SHOpts.zColour'         : ('zc', 'zColour'),
+    'SHOpts.shResolution'    : ('sr', 'shResolution',    True),
+    'SHOpts.shOrder'         : ('so', 'shOrder',         True),
+    'SHOpts.size'            : ('s',  'size',            True),
+    'SHOpts.lighting'        : ('l',  'lighting',        False),
+    'SHOpts.orientFlip'      : ('of', 'orientFlip',      False),
+    'SHOpts.radiusThreshold' : ('t',  'radiusThreshold', True),
+    'SHOpts.colourMode'      : ('m',  'colourMode',      True),
+    'SHOpts.colourMap'       : ('cm', 'colourMap',       True),
+    'SHOpts.xColour'         : ('xc', 'xColour',         True),
+    'SHOpts.yColour'         : ('yc', 'yColour',         True),
+    'SHOpts.zColour'         : ('zc', 'zColour',         True),
 })
 """This dictionary defines the short and long command line flags to be used
-for every option.
+for every option. Each value has the form::
+
+    (shortForm, longForm, expectsArguments)
+
+where ``expectsArguments`` is ``True`` if the flag is to be followed by one
+or more arguments, ``False`` otherwise.
+
 
 .. note:: 1. There cannot be any collisions between the main options, the 
              :class:`.SceneOpts` options, the :class:`.OrthOpts` options,
@@ -937,12 +944,10 @@ FILE_OPTIONS = td.TypeDict({
                     'modulateImage'],
     'ModelOpts'  : ['refImage'],
 })
-"""Arguments which accept file or path names need special treatment.
-This is because the first step in the :func:`parseArgs` function is
-to search through the list of arguments, and identify all arguments
-which look like overlays. This procedure needs to figure out whether
-an argument that looks like an overlay (i.e. a file/directory path)
-is actually an overlay, or is an argument for another overlay.
+"""This dictionary contains all arguments which accept file or path
+names. These arguments need special treatment - for these arguments, the user
+may specify a file which refers to an overlay that may or may not have already
+been loaded, so we need to figure out what to do.
 """ 
 
 
@@ -1056,7 +1061,7 @@ def _configParser(target, parser, propNames=None, shortHelp=False):
 
     for propName in propNames:
 
-        shortArg, longArg = ARGUMENTS[ target, propName]
+        shortArg, longArg = ARGUMENTS[ target, propName][:2]
         propExtra         = getExtra(target, propName)
         helpText          = HELP.get((target, propName), 'no help')
 
@@ -1083,8 +1088,8 @@ def _configMainParser(mainParser):
     """Adds options to the given parser which allow the user to specify
     *main* FSLeyes options.
     """
-    mainArgs = {name: ARGUMENTS['Main', name] for name in OPTIONS['Main']}
-    mainHelp = {name: HELP[     'Main', name] for name in OPTIONS['Main']}
+    mainArgs = {name: ARGUMENTS['Main', name][:2] for name in OPTIONS['Main']}
+    mainHelp = {name: HELP[     'Main', name]     for name in OPTIONS['Main']}
 
     for name, (shortArg, longArg) in mainArgs.items():
         mainArgs[name] = ('-{}'.format(shortArg), '--{}'.format(longArg))
@@ -1180,7 +1185,7 @@ def _configOrthoParser(orthoParser):
     for opt, metavar in zip(['xcentre',  'ycentre',  'zcentre'],
                             [('Y', 'Z'), ('X', 'Z'), ('X', 'Y')]):
         
-        shortArg, longArg = ARGUMENTS[OrthoOpts, opt]
+        shortArg, longArg = ARGUMENTS[OrthoOpts, opt][:2]
         helpText          = HELP[     OrthoOpts, opt]
 
         shortArg =  '-{}'.format(shortArg)
@@ -1304,7 +1309,7 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
         # manually, rather than using the props.cli
         # module - see the handleOverlayArgs function.
         for opt in specialOptions:
-            shortArg, longArg = ARGUMENTS[target, opt]
+            shortArg, longArg = ARGUMENTS[target, opt][:2]
             helpText          = HELP.get((target, opt), 'no help')
 
             shortArg =  '-{}'.format(shortArg)
@@ -1403,22 +1408,25 @@ def parseArgs(mainParser,
     # names as arguments.
     # 
     # Make a list of all the options which
-    # accept filenames, and which we need
-    # to account for when we're searching
-    # for overlay files, flattening the
-    # short/long arguments into a 1D list.
-    for target, propNames in FILE_OPTIONS.items():
-        for propName in propNames:
-            fileOpts.extend(ARGUMENTS[target, propName])
+    # expect an argument - we need to overlook
+    # any arguments which look like file names,
+    # but are actually values associated with
+    # any of these arguments.
+    #
+    # TODO This procedure does not support
+    #      options which may expect multiple
+    #      arguments which look like a file
+    #      name. It also doesn't acknowledge
+    #      the fact that arguments for
+    #      different DisplayOpts types overlap.
+    #      
+    expectsArgs = set()
+    for shortForm, longForm, expects in ARGUMENTS.values():
+        if expects:
+            expectsArgs.add(shortForm)
+            expectsArgs.add(longForm)
 
-    # There is a possibility that the user
-    # may specify an overlay name which is the
-    # same as the overlay file - so we make
-    # sure that such situations don't result
-    # in an overlay file match.
-    fileOpts.extend(ARGUMENTS[fsldisplay.Display, 'name'])
-
-    log.debug('Identifying overlay paths (ignoring: {})'.format(fileOpts))
+    log.debug('Identifying overlay paths (ignoring: {})'.format(expectsArgs))
 
     # Compile a list of arguments which
     # look like overlay file names
@@ -1427,17 +1435,17 @@ def parseArgs(mainParser,
     
     for i in range(len(argv)):
 
+        # Check that this overlay file was 
+        # not a parameter to another argument
+        if i > 0 and argv[i - 1].strip('-') in expectsArgs:
+            continue
+
         # See if the current argument looks like a data source
         dtype, fname = fsloverlay.guessDataSourceType(argv[i])
 
         # If the file name refers to a file that
         # does not exist, assume it is an argument
         if not op.exists(fname):
-            continue
-
-        # Check that this overlay file was 
-        # not a parameter to a file option
-        if i > 0 and argv[i - 1].strip('-') in fileOpts:
             continue
 
         # Unrecognised overlay type -
@@ -1613,33 +1621,33 @@ def _printShortHelp(mainParser, extra=None):
     allLightBox = OPTIONS['LightBoxOpts']
 
     allMainArgs =  \
-        [ARGUMENTS['Main.{}'        .format(o)] for o in allMain]  + \
-        [ARGUMENTS['SceneOpts.{}'   .format(o)] for o in allScene] + \
-        [ARGUMENTS['OrthoOpts.{}'   .format(o)] for o in allOrtho] + \
-        [ARGUMENTS['LightBoxOpts.{}'.format(o)] for o in allLightBox]
+        [ARGUMENTS['Main.{}'        .format(o)][:2] for o in allMain]  + \
+        [ARGUMENTS['SceneOpts.{}'   .format(o)][:2] for o in allScene] + \
+        [ARGUMENTS['OrthoOpts.{}'   .format(o)][:2] for o in allOrtho] + \
+        [ARGUMENTS['LightBoxOpts.{}'.format(o)][:2] for o in allLightBox]
     allMainArgs = ['--{}'.format(a[1]) for a in allMainArgs]
  
     # Now we build a list of all arguments
     # that we want to show help for, in this
     # shortened help page.
-    mainArgs    = ['help', 'fullhelp']
-    displayArgs = ['alpha']
-    volumeArgs  = ['displayRange', 'clippingRange', 'cmap']
+    mainArgs = ['help', 'fullhelp']
+    dispArgs = ['alpha']
+    volArgs  = ['displayRange', 'clippingRange', 'cmap']
 
-    mainArgs    = [ARGUMENTS['Main.{}'      .format(a)] for a in mainArgs]
-    displayArgs = [ARGUMENTS['Display.{}'   .format(a)] for a in displayArgs]
-    volumeArgs  = [ARGUMENTS['VolumeOpts.{}'.format(a)] for a in volumeArgs]
+    mainArgs = [ARGUMENTS['Main.{}'      .format(a)][:2] for a in mainArgs]
+    dispArgs = [ARGUMENTS['Display.{}'   .format(a)][:2] for a in dispArgs]
+    volArgs  = [ARGUMENTS['VolumeOpts.{}'.format(a)][:2] for a in volArgs]
 
-    mainArgs    = ['--{}'.format(a[1]) for a in mainArgs]
-    displayArgs = ['--{}'.format(a[1]) for a in displayArgs]
-    volumeArgs  = ['--{}'.format(a[1]) for a in volumeArgs]
+    mainArgs = ['--{}'.format(a[1]) for a in mainArgs]
+    dispArgs = ['--{}'.format(a[1]) for a in dispArgs]
+    volArgs  = ['--{}'.format(a[1]) for a in volArgs]
     
     mainArgs    = mainArgs + extra
 
     allArgs = td.TypeDict({
         'Main'       : mainArgs,
-        'Display'    : displayArgs,
-        'VolumeOpts' : volumeArgs})
+        'Display'    : dispArgs,
+        'VolumeOpts' : volArgs})
 
     # The public argparse API is quite inflexible
     # with respect to dynamic modification of
