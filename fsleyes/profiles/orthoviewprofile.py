@@ -114,6 +114,10 @@ class OrthoViewProfile(profiles.Profile):
         # see the _zoomModeLeftMouse* handlers
         self.__lastRect = None
 
+        # This attribute is used by the
+        # bricon mode methods
+        self.__briconOrigin = None
+
         overlayList.addListener('overlays',
                                 self.__name,
                                 self.__selectedOverlayChanged) 
@@ -567,6 +571,32 @@ class OrthoViewProfile(profiles.Profile):
     #############
 
 
+    def _briconModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
+        """Handles left mouse down events in ``bricon`` mode. Stores the 
+        current :attr:`.Display.brightness`/:attr:`.Display.contrast` for the
+        currently selected overlay.
+        """
+
+        overlay = self._displayCtx.getSelectedOverlay()
+
+        if overlay is None: 
+            return False
+
+        display = self._displayCtx.getDisplay(overlay)
+
+        self.__briconOrigin = (display.brightness, display.contrast)
+
+        return True
+
+    
+    def _briconModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
+        """Handles left mouse up events in ``bricon`` mode. """
+
+        self.__briconOrigin = None
+
+        return True
+
+
     def _briconModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Handles left mouse drags in ``bricon`` mode.
 
@@ -575,25 +605,53 @@ class OrthoViewProfile(profiles.Profile):
         canvas.
         """
 
+        if self.__briconOrigin is None:
+            return False
+
         overlay = self._displayCtx.getSelectedOverlay()
 
         if overlay is None:
             return False
 
+        # o: original
+        # b: brightness
+        # c: contrast
+        # x: mousex
+        # y: mousey
+        # w: canvas width
+        # h: canvas height
+        
+        (ox, oy), _ = self.getMouseDownLocation()
+        (ob, oc)    = self.__briconOrigin
+
         display = self._displayCtx.getDisplay(overlay)
         w, h    = canvas.GetSize().Get()
         x, y    = mousePos
 
-        brightness = float(x) / w
-        contrast   = float(y) / h
+        # Brightness is mapped to the horizontal
+        # axis, and contrast to the vertical axis.
+        # They are mapped in a piece-wise linear
+        # manner, where the original bricon maps
+        # to the mouse down location, and 0/100
+        # map to the low/high canvas edges
+        # respectively.
+        if x < ox: b = ob * (float(x) / ox)
+        else:      b = ob + (100 - ob) * float(x - ox) / (w - ox)
+
+        if y < oy: c = oc * (float(y) / oy)
+        else:      c = oc + (100 - oc) * float(y - oy) / (h - oy) 
 
         log.debug('Adjusting bricon for {} '
                   '(brightness: {}, contrast: {})'.format(
-                      overlay.name,
-                      brightness,
-                      contrast))
+                      overlay.name, b, c))
 
-        display.brightness = 100 * brightness
-        display.contrast   = 100 * contrast
+        b = np.clip(b, 0, 100)
+        c = np.clip(c, 0, 100)
+
+        # Bricon are disabled when 
+        # VolumeOpts instances are 
+        # using a negative colour map. 
+        if display.propertyIsEnabled('brightness'): display.brightness = b
+        if display.propertyIsEnabled('contrast'):   display.contrast   = c
 
         return True
