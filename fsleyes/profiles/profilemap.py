@@ -137,9 +137,7 @@ altHandlerMap = {
         (('zoom', 'RightMouseDown'),  ('zoom', 'RightMouseDrag')),
         (('zoom', 'LeftMouseDown'),   ('nav',  'LeftMouseDown')),
         (('zoom', 'LeftMouseDrag'),   ('nav',  'LeftMouseDrag')),
-        (('zoom', 'MiddleMouseDrag'), ('pan',  'LeftMouseDrag')),
-
-        (('bricon', 'LeftMouseDown'), ('bricon', 'LeftMouseDrag')))),
+        (('zoom', 'MiddleMouseDrag'), ('pan',  'LeftMouseDrag')))),
 
     OrthoEditProfile : OrderedDict((
 
