@@ -116,7 +116,7 @@ def parseArgs(argv):
                                     prolog=prolog,
                                     desc=description,
                                     usageProlog=optStr,
-                                    fileOpts=['of', 'outfile'],
+                                    argxOpts=['of', 'outfile', 'sz', 'size'],
                                     shortHelpExtra=['--outfile', '--size'])
 
     if namespace.outfile is None:

@@ -1329,7 +1329,7 @@ def parseArgs(mainParser,
               prolog=None,
               desc=None,
               usageProlog=None,
-              fileOpts=None,
+              argOpts=None,
               shortHelpExtra=None):
     """Parses the given command line arguments, returning an
     :class:`argparse.Namespace` object containing all the arguments.
@@ -1358,11 +1358,11 @@ def parseArgs(mainParser,
                          options which are handled by the tool, not by this
                          module).
 
-    :arg fileOpts:       If the ``mainParser`` has already been configured to
-                         accept some arguments, you must pass any arguments
-                         that accept a file name as a list here. Otherwise,
-                         the file name may be incorrectly identified as a
-                         path to an overlay.
+    :arg argOpts:        If the ``mainParser`` has already been configured to
+                         parse arguments which accept one or more parameters,
+                         you must provide a list of their short and long forms
+                         here. Otherwise, the parameters may be incorrectly
+                         identified as a path to an overlay.
 
     :arg shortHelpExtra: If the caller of this function has already added
                          arguments to the ``mainParser``, the long forms of 
@@ -1370,8 +1370,8 @@ def parseArgs(mainParser,
                          have them included in the short help text.
     """
 
-    if fileOpts is None: fileOpts = []
-    else:                fileOpts = list(fileOpts)
+    if argOpts is None: argOpts = []
+    else:               argOpts = list(argOpts)
 
     log.debug('Parsing arguments for {}: {}'.format(name, argv))
 
@@ -1420,7 +1420,7 @@ def parseArgs(mainParser,
     #      the fact that arguments for
     #      different DisplayOpts types overlap.
     #      
-    expectsArgs = set()
+    expectsArgs = set(argOpts)
     for shortForm, longForm, expects in ARGUMENTS.values():
         if expects:
             expectsArgs.add(shortForm)

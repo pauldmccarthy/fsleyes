@@ -367,7 +367,7 @@ def parseArgs(argv):
                                name,
                                prolog=prolog,
                                desc=description,
-                               fileOpts=['r', 'runscript'])
+                               argOpts=['r', 'runscript'])
 
 
 def makeDisplayContext(namespace, splash):
