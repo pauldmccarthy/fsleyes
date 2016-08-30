@@ -17,7 +17,6 @@ import OpenGL.GL as gl
 import fsleyes.gl.routines as glroutines
 import fsleyes.gl.globject as globject
 import fsl.utils.async     as async
-import fsl.utils.status    as status
 from . import                 rendertexture
 
 
@@ -269,8 +268,6 @@ class RenderTextureStack(object):
             name = globj.image.name
         else:
             name = type(globj).__name__
-
-        status.update('Pre-rendering {} slice {}...'.format(name, zpos))
 
         lo, hi = globj.getDisplayBounds()
         res    = globj.getDataResolution(xax, yax)
