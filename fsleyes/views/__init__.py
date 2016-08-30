@@ -7,7 +7,7 @@
 #
 """The ``views`` package is the home of all *FSLeyes views*, as described in
 the :mod:`~fsleyes` package documentation.  It contains a collection of
-:class:`FSLEyesPanel` sub-classes which provide a view of the overlays in an
+:class:`FSLeyesPanel` sub-classes which provide a view of the overlays in an
 :class:`.OverlayList`.  The :class:`.ViewPanel` is the base-class for all
 views.
 """
@@ -26,7 +26,7 @@ from . import histogrampanel
 from . import shellpanel
 
 
-FSLEyesPanel       = fslpanel          .FSLEyesPanel
+FSLeyesPanel       = fslpanel          .FSLeyesPanel
 ViewPanel          = viewpanel         .ViewPanel
 PlotPanel          = plotpanel         .PlotPanel
 CanvasPanel        = canvaspanel       .CanvasPanel

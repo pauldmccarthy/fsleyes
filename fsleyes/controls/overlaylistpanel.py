@@ -33,7 +33,7 @@ from fsl.utils.platform import platform as fslplatform
 log = logging.getLogger(__name__)
 
 
-class OverlayListPanel(fslpanel.FSLEyesPanel):
+class OverlayListPanel(fslpanel.FSLeyesPanel):
     """The ``OverlayListPanel`` displays all overlays in the
     :class:`.OverlayList`, and allows the user to add, remove, and re-order
     overlays. An ``OverlayListPanel`` looks something like this:
@@ -88,7 +88,7 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
         
         """
         
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__showVis         = showVis
         self.__showGroup       = showGroup
@@ -158,7 +158,7 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
     def destroy(self):
         """Must be called when this ``OverlayListPanel`` is no longer needed.
         Removes some property listeners, and calls
-        :meth:`.FSLEyesPanel.destroy`.
+        :meth:`.FSLeyesPanel.destroy`.
         """
         
         self._overlayList.removeListener('overlays',        self._name)
@@ -171,7 +171,7 @@ class OverlayListPanel(fslpanel.FSLEyesPanel):
             display = self._displayCtx.getDisplay(overlay)
             display.removeListener('name', self._name)
             
-        fslpanel.FSLEyesPanel.destroy(self)
+        fslpanel.FSLeyesPanel.destroy(self)
 
         
     def __selectedOverlayChanged(self, *a):

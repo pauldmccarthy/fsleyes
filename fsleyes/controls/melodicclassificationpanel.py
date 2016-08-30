@@ -31,7 +31,7 @@ from . import melodicclassificationgrid as melodicgrid
 log = logging.getLogger(__name__)
 
 
-class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
+class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
     """The ``MelodicClassificationPanel``
     """
 
@@ -45,7 +45,7 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
         
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """ 
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__disabledText = wx.StaticText(
             self,
@@ -127,7 +127,7 @@ class MelodicClassificationPanel(fslpanel.FSLEyesPanel):
         self.__componentGrid.destroy()
         self.__labelGrid    .destroy()
         
-        fslpanel.FSLEyesPanel.destroy(self)
+        fslpanel.FSLeyesPanel.destroy(self)
 
 
     def __enable(self, enable=True, message=''):

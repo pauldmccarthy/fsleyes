@@ -23,7 +23,7 @@ import fsleyes.tooltips  as fsltooltips
 import fsleyes.strings   as strings
 
 
-class PlotListPanel(fslpanel.FSLEyesPanel):
+class PlotListPanel(fslpanel.FSLeyesPanel):
     """The ``PlotListPanel`` is a *FSLeyes control* panel for use with
     :class:`.OverlayPlotPanel` views. It allows the user to add and remove
     :class:`.DataSeries` instances from the :attr:`.PlotPanel.dataSeries`
@@ -53,7 +53,7 @@ class PlotListPanel(fslpanel.FSLEyesPanel):
                           ``PlotListPanel``.
         """
 
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__plotPanel = plotPanel
         self.__dsList    = elistbox.EditableListBox(
@@ -83,11 +83,11 @@ class PlotListPanel(fslpanel.FSLEyesPanel):
     def destroy(self):
         """Must be called when this ``PlotListPanel`` is no longer
         needed. Removes some property listeners, and calls the
-        :meth:`.FSLEyesPanel.destroy` method.
+        :meth:`.FSLeyesPanel.destroy` method.
         """
 
         self.__plotPanel.removeListener('dataSeries', self._name)
-        fslpanel.FSLEyesPanel.destroy(self)
+        fslpanel.FSLeyesPanel.destroy(self)
 
 
     def __dataSeriesChanged(self, *a):

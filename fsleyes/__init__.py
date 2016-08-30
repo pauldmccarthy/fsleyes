@@ -60,7 +60,7 @@ Frames, views, and controls
 ---------------------------
 
 
-The :class:`.FSLEyesFrame` is the top level GUI object. It is a container for
+The :class:`.FSLeyesFrame` is the top level GUI object. It is a container for
 one or more *views*. All views are defined in the :mod:`.views` sub-package,
 and are sub-classes of the :class:`.ViewPanel` class. Currently there are two
 primary view categories - :class:`.CanvasPanel` views, which use :mod:`OpenGL`
@@ -88,7 +88,7 @@ The view/control panel class hierarchy is shown below:
            fontname="sans"];
      
      rankdir="BT";
-     1  [label="panel.FSLEyesPanel"];
+     1  [label="panel.FSLeyesPanel"];
      3  [label="views.viewpanel.ViewPanel"];
      4  [label="views.plotpanel.PlotPanel"];
      5  [label="views.canvaspanel.CanvasPanel"];
@@ -110,7 +110,7 @@ The view/control panel class hierarchy is shown below:
      11 -> 1;
    }
 
-All toolbars inherit from the :class:`.FSLEyesToolBar` base class:
+All toolbars inherit from the :class:`.FSLeyesToolBar` base class:
 
 .. graphviz::
 
@@ -123,7 +123,7 @@ All toolbars inherit from the :class:`.FSLEyesToolBar` base class:
            fontname="sans"];
      
      rankdir="BT";
-     2  [label="toolbar.FSLEyesToolBar"];
+     2  [label="toolbar.FSLeyesToolBar"];
      12 [label="controls.overlaydisplaytoolbar.OverlayDisplayToolBar"];
      13 [label="controls.lightboxtoolbar.LightBoxToolBar"];
      14 [label="<other toolbars>"];
@@ -143,7 +143,7 @@ In order to manage how overlays are displayed, *FSLeyes* uses a
 :class:`.DisplayContext`. Because *FSLeyes* allows multiple views to be opened
 simultaneously, it needs to use multiple ``DisplayContext`` instances.
 Therefore, one master ``DisplayContext`` instance is owned by the
-:class:`FSLEyesFrame`, and a child ``DisplayContext`` is created for every
+:class:`FSLeyesFrame`, and a child ``DisplayContext`` is created for every
 :class:`.ViewPanel`. The display settings managed by each child
 ``DisplayContext`` instance can be linked to those of the master instance;
 this allows display properties to be synchronised across displays.
@@ -170,7 +170,7 @@ In this example, two view panels are open - an :class:`.OrthoPanel`, and a
 with their ``Display`` and ``DisplayOpts`` instances (one of each for every
 overlay in the ``OverlayList``) are linked to the master ``DisplayContext``
 (and its ``Display`` and ``DisplayOpts`` instances), which is managed by the
-``FSLEyesFrame``.  All of this synchronisation functionality is provided by
+``FSLeyesFrame``.  All of this synchronisation functionality is provided by
 the ``props`` package.
 
 

@@ -4,26 +4,26 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`FSLEyesPanel` and
-:class:`FSLEyesSettingsPanel` classes.
+"""This module provides the :class:`FSLeyesPanel` and
+:class:`FSLeyesSettingsPanel` classes.
 
 
-A :class:`FSLEyesPanel` object is a :class:`wx.PyPanel` which provides some
+A :class:`FSLeyesPanel` object is a :class:`wx.PyPanel` which provides some
 sort of view of a collection of overlay objects, contained within an
-:class:`.OverlayList`.  The :class:`FSLEyesSettingsPanel` is a convenience
+:class:`.OverlayList`.  The :class:`FSLeyesSettingsPanel` is a convenience
 class for certain *FSLeyes* control panels (see the ::mod:`fsleyes`
 documentation).
 
 
-``FSLEyesPanel`` instances are also :class:`.ActionProvider` instances - any
+``FSLeyesPanel`` instances are also :class:`.ActionProvider` instances - any
 actions which are specified in the class definitions may (or may not) be
 exposed to the user. Furthermore, any display configuration options which
 should be made available available to the user can be added as
-:class:`.PropertyBase` attributes of the :class:`FSLEyesPanel` subclass.
+:class:`.PropertyBase` attributes of the :class:`FSLeyesPanel` subclass.
 
 
-.. note:: ``FSLEyesPanel`` instances are usually displayed within a
-          :class:`.FSLEyesFrame`, but they can  be used on their own
+.. note:: ``FSLeyesPanel`` instances are usually displayed within a
+          :class:`.FSLeyesFrame`, but they can  be used on their own
           as well. You will need to create, or need references to,
           an :class:`.OverlayList` and a :class:`.DisplayContext`.
           For example::
@@ -59,12 +59,12 @@ from .                  import             displaycontext
 log = logging.getLogger(__name__)
 
 
-class _FSLEyesPanel(actions.ActionProvider, props.SyncableHasProperties):
-    """The ``_FSLEyesPanel`` is the base class for the :class:`.FSLEyesPanel`
-    and the :class:`.FSLEyesToolBar`.
+class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
+    """The ``_FSLeyesPanel`` is the base class for the :class:`.FSLeyesPanel`
+    and the :class:`.FSLeyesToolBar`.
 
     
-    A ``_FSLEyesPanel`` has the following attributes, intended to be used by
+    A ``_FSLeyesPanel`` has the following attributes, intended to be used by
     subclasses:
     
       - :attr:`_overlayList`: A reference to the :class:`.OverlayList`
@@ -74,16 +74,16 @@ class _FSLEyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         instance, which contains display related properties about the
         :attr:`_overlayList`.
     
-      - :attr:`_name`: A unique name for this :class:`_FSLEyesPanel`.
+      - :attr:`_name`: A unique name for this :class:`_FSLeyesPanel`.
 
 
-    .. note:: When a ``_FSLEyesPanel`` is no longer required, the
+    .. note:: When a ``_FSLeyesPanel`` is no longer required, the
               :meth:`destroy` method **must** be called!
     """ 
 
     
     def __init__(self, overlayList, displayCtx):
-        """Create a :class:`_FSLEyesPanel`.
+        """Create a :class:`_FSLeyesPanel`.
 
         :arg overlayList: A :class:`.OverlayList` instance.
         
@@ -107,7 +107,7 @@ class _FSLEyesPanel(actions.ActionProvider, props.SyncableHasProperties):
 
     def getDisplayContext(self):
         """Returns a reference to the :class:`.DisplayContext` that is
-        associated with this ``_FSLEyesPanel``.
+        associated with this ``_FSLeyesPanel``.
         """
         return self._displayCtx
 
@@ -119,7 +119,7 @@ class _FSLEyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         
     def destroy(self):
         """This method must be called by whatever is managing this 
-        ``_FSLEyesPanel`` when it is to be closed/destroyed.
+        ``_FSLeyesPanel`` when it is to be closed/destroyed.
 
         It seems to be impossible to define a single handler (on either the
         :attr:`wx.EVT_CLOSE` and/or :attr:`wx.EVT_WINDOW_DESTROY` events)
@@ -169,13 +169,13 @@ class _FSLEyesPanel(actions.ActionProvider, props.SyncableHasProperties):
                         'this is probably a bug!'.format(type(self).__name__))
 
 
-FSLEyesPanelBase = None
+FSLeyesPanelBase = None
 """Under Python2/wxPython, we need to derive from ``wx.PyPanel``. But
 under Python3/wxPython-Phoenix, we need to derive from ``wx.Panel``.
 """
 
 
-FSLEyesPanelMeta = None
+FSLeyesPanelMeta = None
 """Under Python3/wxPython-Phoenix, we need to specify a custom meta-class
 which derives from ``wx.siplib.wrappertype``, and the
 ``props.SyncablePropertyOwner``. This is not necessary under Python2/wxPython.
@@ -189,42 +189,42 @@ if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
     class PhoenixMeta(props.SyncablePropertyOwner, sip.wrappertype):
         pass
 
-    FSLEyesPanelMeta = PhoenixMeta
-    FSLEyesPanelBase = wx.Panel
+    FSLeyesPanelMeta = PhoenixMeta
+    FSLeyesPanelBase = wx.Panel
 
 # Old wxPython
 else:
-    FSLEyesPanelMeta = props.SyncablePropertyOwner
-    FSLEyesPanelBase = wx.PyPanel
+    FSLeyesPanelMeta = props.SyncablePropertyOwner
+    FSLeyesPanelBase = wx.PyPanel
 
 
-class FSLEyesPanel(six.with_metaclass(FSLEyesPanelMeta,
-                                      _FSLEyesPanel,
-                                      FSLEyesPanelBase)):
-    """The ``FSLEyesPanel`` is the base class for all view and control panels in
+class FSLeyesPanel(six.with_metaclass(FSLeyesPanelMeta,
+                                      _FSLeyesPanel,
+                                      FSLeyesPanelBase)):
+    """The ``FSLeyesPanel`` is the base class for all view and control panels in
     *FSLeyes*. See the :mod:`fsleyes` documentation for more details.
     """
     
     def __init__(self, parent, overlayList, displayCtx):
-        FSLEyesPanelBase.__init__(self, parent)
-        _FSLEyesPanel.__init__(self, overlayList, displayCtx)
+        FSLeyesPanelBase.__init__(self, parent)
+        _FSLeyesPanel.__init__(self, overlayList, displayCtx)
 
 
-class FSLEyesSettingsPanel(FSLEyesPanel):
-    """The ``FSLEyesSettingsPanel`` is a convenience class for *FSLeyes*
+class FSLeyesSettingsPanel(FSLeyesPanel):
+    """The ``FSLeyesSettingsPanel`` is a convenience class for *FSLeyes*
     control panels which use a :class:`pwidgets.WidgetList` to display a
     collection of controls for the user.  When displayed as a dialog/floating
-    frame, the ``FSLEyesSettingsPanel`` will automatically resize itself to
+    frame, the ``FSLeyesSettingsPanel`` will automatically resize itself to
     fit its contents. See the :class:`.CanvasSettingsPanel` for an example.
     """
 
     
     def __init__(self, *args, **kwargs):
-        """Create an ``FSLEyesSettingsPanel``.  All arguments are passed to
-        the :meth:`FSLEyesPanel.__init__` method.
+        """Create an ``FSLeyesSettingsPanel``.  All arguments are passed to
+        the :meth:`FSLeyesPanel.__init__` method.
         """
 
-        FSLEyesPanel.__init__(self, *args, **kwargs)
+        FSLeyesPanel.__init__(self, *args, **kwargs)
 
         self.__widgets = widgetlist.WidgetList(self)
         self.__sizer   = wx.BoxSizer(wx.VERTICAL)

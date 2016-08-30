@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`OrthoEditToolBar`, a
-:class:`.FSLEyesToolBar` which displays controls for editing :class:`.Image`
+:class:`.FSLeyesToolBar` which displays controls for editing :class:`.Image`
 instances in an :class:`.OrthoPanel`.
 """
 
@@ -26,8 +26,8 @@ from fsleyes.profiles.orthoeditprofile import OrthoEditProfile
 log = logging.getLogger(__name__)
 
 
-class OrthoEditToolBar(fsltoolbar.FSLEyesToolBar):
-    """The ``OrthoEditToolBar`` is a :class:`.FSLEyesToolBar` which displays
+class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
+    """The ``OrthoEditToolBar`` is a :class:`.FSLeyesToolBar` which displays
     controls for editing :class:`.Image` instances in an :class:`.OrthoPanel`.
 
     An ``OrthoEditToolBar`` looks something like this:
@@ -78,7 +78,7 @@ class OrthoEditToolBar(fsltoolbar.FSLEyesToolBar):
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """
-        fsltoolbar.FSLEyesToolBar.__init__(self,
+        fsltoolbar.FSLeyesToolBar.__init__(self,
                                            parent,
                                            overlayList,
                                            displayCtx,
@@ -102,10 +102,10 @@ class OrthoEditToolBar(fsltoolbar.FSLEyesToolBar):
     def destroy(self):
         """Must be called when this ``OrthoEditToolBar`` is no longer
         needed. Removes property listeners, and calls the
-        :meth:`.FSLEyesToolBar.destroy` method.
+        :meth:`.FSLeyesToolBar.destroy` method.
         """
         self.__orthoPanel.removeListener('profile', self._name)
-        fsltoolbar.FSLEyesToolBar.destroy(self)
+        fsltoolbar.FSLeyesToolBar.destroy(self)
 
 
     def __selintChanged(self, *a):

@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`OrthoToolBar` class, which is a
-:class:`.FSLEyesToolBar` for use with the :class:`.OrthoPanel`.
+:class:`.FSLeyesToolBar` for use with the :class:`.OrthoPanel`.
 """
 
 
@@ -24,8 +24,8 @@ like a bum.
 """
 
 
-class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
-    """The ``OrthoToolBar`` is a :class:`.FSLEyesToolBar` for use with the
+class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
+    """The ``OrthoToolBar`` is a :class:`.FSLeyesToolBar` for use with the
     :class:`.OrthoPanel`. An ``OrthoToolBar`` looks something like this:
 
     
@@ -60,7 +60,7 @@ class OrthoToolBar(fsltoolbar.FSLEyesToolBar):
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """ 
 
-        fsltoolbar.FSLEyesToolBar.__init__(
+        fsltoolbar.FSLeyesToolBar.__init__(
             self, parent, overlayList, displayCtx, 24)
         
         self.orthoPanel = ortho

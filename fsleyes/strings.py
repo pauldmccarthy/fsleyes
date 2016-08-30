@@ -40,12 +40,12 @@ import fsl.data.constants as constants
 
 messages = TypeDict({
 
-    'FSLEyesSplash.default' : 'Loading ...',
+    'FSLeyesSplash.default' : 'Loading ...',
 
-    'FSLEyesFrame.restoringLayout'     : 'Restoring layout from last '
+    'FSLeyesFrame.restoringLayout'     : 'Restoring layout from last '
                                          'session ...',
-    'FSLEyesFrame.saveLayout'          : 'Save this layout for next time?',
-    'FSLEyesFrame.dontAskToSaveLayout' : 'Never ask me again',
+    'FSLeyesFrame.saveLayout'          : 'Save this layout for next time?',
+    'FSLeyesFrame.dontAskToSaveLayout' : 'Never ask me again',
 
     'perspectives.applyingPerspective' : 'Applying {} perspective ...',
 
@@ -205,7 +205,7 @@ titles = TypeDict({
     
     'loadOverlays.error'  : 'Error loading overlay',
 
-    'FSLEyesFrame.saveLayout' : 'Save layout',
+    'FSLeyesFrame.saveLayout' : 'Save layout',
 
     'OrthoPanel'         : 'Ortho View',
     'LightBoxPanel'      : 'Lightbox View',
@@ -290,18 +290,18 @@ actions = TypeDict({
     'RunScriptAction'          : 'Run script',
     'AboutAction'              : 'About FSLeyes',
 
-    'FSLEyesFrame.removeFocusedViewPanel'  : 'Close',
-    'FSLEyesFrame.addOrthoPanel'           : 'Ortho View',
-    'FSLEyesFrame.addLightBoxPanel'        : 'Lightbox View',
-    'FSLEyesFrame.addTimeSeriesPanel'      : 'Time series',
-    'FSLEyesFrame.addHistogramPanel'       : 'Histogram',
-    'FSLEyesFrame.addPowerSpectrumPanel'   : 'Power spectra',
-    'FSLEyesFrame.addShellPanel'           : 'Python shell',
-    'FSLEyesFrame.openHelp'                : 'Help',
-    'FSLEyesFrame.closeFSLeyes'            : 'Close',
-    'FSLEyesFrame.selectNextOverlay'       : 'Next',
-    'FSLEyesFrame.selectPreviousOverlay'   : 'Previous',
-    'FSLEyesFrame.toggleOverlayVisibility' : 'Show/hide',
+    'FSLeyesFrame.removeFocusedViewPanel'  : 'Close',
+    'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
+    'FSLeyesFrame.addLightBoxPanel'        : 'Lightbox View',
+    'FSLeyesFrame.addTimeSeriesPanel'      : 'Time series',
+    'FSLeyesFrame.addHistogramPanel'       : 'Histogram',
+    'FSLeyesFrame.addPowerSpectrumPanel'   : 'Power spectra',
+    'FSLeyesFrame.addShellPanel'           : 'Python shell',
+    'FSLeyesFrame.openHelp'                : 'Help',
+    'FSLeyesFrame.closeFSLeyes'            : 'Close',
+    'FSLeyesFrame.selectNextOverlay'       : 'Next',
+    'FSLeyesFrame.selectPreviousOverlay'   : 'Previous',
+    'FSLeyesFrame.toggleOverlayVisibility' : 'Show/hide',
 
 
     'CanvasPanel.screenshot'                : 'Take screenshot',
@@ -364,7 +364,7 @@ actions = TypeDict({
 
 labels = TypeDict({
 
-    'FSLEyesFrame.noOverlays'             : 'No overlays loaded',
+    'FSLeyesFrame.noOverlays'             : 'No overlays loaded',
 
     'LocationPanel.worldLocation'         : 'Coordinates: ',
     'LocationPanel.worldLocation.unknown' : 'Unknown',

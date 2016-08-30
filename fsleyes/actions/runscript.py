@@ -46,7 +46,7 @@ class RunScriptAction(action.Action):
 
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The top-level :class:`.DisplayContext`.
-        :arg overlayList: The :class:`.FSLEyesFrame`.
+        :arg overlayList: The :class:`.FSLeyesFrame`.
         """
         action.Action.__init__(self, self.__doAction)
 

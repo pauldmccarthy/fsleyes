@@ -27,8 +27,8 @@ import fsleyes.displaycontext        as displayctx
 log = logging.getLogger(__name__)
 
     
-class OverlayDisplayPanel(fslpanel.FSLEyesSettingsPanel):
-    """The ``OverlayDisplayPanel`` is a :Class:`.FSLEyesPanel` which allows
+class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
+    """The ``OverlayDisplayPanel`` is a :Class:`.FSLeyesPanel` which allows
     the user to change the display settings of the currently selected
     overlay (which is defined by the :attr:`.DisplayContext.selectedOverlay`
     property). The display settings for an overlay are contained in the
@@ -65,7 +65,7 @@ class OverlayDisplayPanel(fslpanel.FSLEyesSettingsPanel):
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """
 
-        fslpanel.FSLEyesSettingsPanel.__init__(self,
+        fslpanel.FSLeyesSettingsPanel.__init__(self,
                                                parent,
                                                overlayList,
                                                displayCtx)
@@ -84,7 +84,7 @@ class OverlayDisplayPanel(fslpanel.FSLEyesSettingsPanel):
     def destroy(self):
         """Must be called when this ``OverlayDisplayPanel`` is no longer
         needed. Removes property listeners, and calls the
-        :meth:`.FSLEyesPanel.destroy` method.
+        :meth:`.FSLeyesPanel.destroy` method.
         """
 
         self._displayCtx .removeListener('selectedOverlay', self._name)
@@ -99,7 +99,7 @@ class OverlayDisplayPanel(fslpanel.FSLEyesSettingsPanel):
 
         self.__currentOverlay = None
         
-        fslpanel.FSLEyesPanel.destroy(self)
+        fslpanel.FSLeyesPanel.destroy(self)
 
 
     def __selectedOverlayChanged(self, *a):

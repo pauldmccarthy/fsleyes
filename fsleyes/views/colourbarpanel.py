@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`ColourBarPanel`, a :class:`.FSLEyesPanel`
+"""This module provides the :class:`ColourBarPanel`, a :class:`.FSLeyesPanel`
 which renders a colour bar.
 """
 
@@ -18,7 +18,7 @@ import fsleyes.displaycontext.volumeopts  as volumeopts
 import fsleyes.gl.wxglcolourbarcanvas     as cbarcanvas
 
 
-class ColourBarPanel(fslpanel.FSLEyesPanel):
+class ColourBarPanel(fslpanel.FSLeyesPanel):
     """The ``ColourBarPanel`` is a panel which shows a colour bar, depicting
     the data range of the currently selected overlay (if applicable). A
     :class:`.ColourBarCanvas` is used to render the colour bar.
@@ -55,7 +55,7 @@ class ColourBarPanel(fslpanel.FSLEyesPanel):
                           default) or ``'vertical'``.
         """
 
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__cbPanel = cbarcanvas.WXGLColourBarCanvas(self)
 
@@ -117,7 +117,7 @@ class ColourBarPanel(fslpanel.FSLEyesPanel):
                 pass
 
         self.__cbPanel       .destroy()
-        fslpanel.FSLEyesPanel.destroy(self)
+        fslpanel.FSLeyesPanel.destroy(self)
  
             
     def __layout(self, *a):

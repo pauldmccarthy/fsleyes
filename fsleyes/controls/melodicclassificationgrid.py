@@ -25,7 +25,7 @@ import fsl.data.melodicimage  as fslmelimage
 log = logging.getLogger(__name__)
 
 
-class ComponentGrid(fslpanel.FSLEyesPanel):
+class ComponentGrid(fslpanel.FSLeyesPanel):
     """The ``ComponentGrid`` uses a :class:`.WidgetGrid`, and a set of
     :class:`.TextTagPanel` widgets, to display the component classifications
     stored in the :class:`.MelodicClassification` object that is associated
@@ -49,7 +49,7 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
                           each label tag.
         """
         
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__lut  = lut
         self.__grid = widgetgrid.WidgetGrid(
@@ -76,7 +76,7 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
     def destroy(self):
         """Must be called when this ``ComponentGrid`` is no longer needed.
         De-registers various property listeners, and calls
-        :meth:`.FSLEyesPanel.destroy`.
+        :meth:`.FSLeyesPanel.destroy`.
         """
         
         self.__lut.removeListener('labels', self._name)
@@ -84,7 +84,7 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
         
         self.__lut = None
 
-        fslpanel.FSLEyesPanel.destroy(self)
+        fslpanel.FSLeyesPanel.destroy(self)
 
         
     def setOverlay(self, overlay):
@@ -371,7 +371,7 @@ class ComponentGrid(fslpanel.FSLEyesPanel):
         self.__refreshTagOptions()
 
 
-class LabelGrid(fslpanel.FSLEyesPanel):
+class LabelGrid(fslpanel.FSLeyesPanel):
     """The ``LabelGrid`` class is the inverse of the :class:`ComponentGrid`.
     It uses a :class:`.WidgetGrid` to display the label-component mappings
     present on the :class:`.MelodicClassification` instance associated with
@@ -395,7 +395,7 @@ class LabelGrid(fslpanel.FSLEyesPanel):
                           component tags.
         """
         
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__lut  = lut
         self.__grid = widgetgrid.WidgetGrid(
@@ -423,7 +423,7 @@ class LabelGrid(fslpanel.FSLEyesPanel):
     def destroy(self):
         """Must be called when this ``LabelGrid`` is no longer needed.
         De-registers various property listeners, and calls
-        :meth:`.FSLEyesPanel.destroy`.
+        :meth:`.FSLeyesPanel.destroy`.
         """
         
         self.__lut.removeListener('labels', self._name)
@@ -431,7 +431,7 @@ class LabelGrid(fslpanel.FSLEyesPanel):
         
         self.__lut = None
 
-        fslpanel.FSLEyesPanel.destroy(self)
+        fslpanel.FSLeyesPanel.destroy(self)
 
 
     def setOverlay(self, overlay):

@@ -26,7 +26,7 @@ import fsl.data.constants                 as constants
 log = logging.getLogger(__name__)
 
 
-class AtlasInfoPanel(fslpanel.FSLEyesPanel):
+class AtlasInfoPanel(fslpanel.FSLeyesPanel):
     """The ``AtlasInfoPanel`` displays region information about the current
     :attr:`.DisplayContext.location` from a set of :mod:`.atlases` chosen
     by the user.
@@ -62,7 +62,7 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
         :arg atlasPanel:  The :class:`.AtlasPanel` instance that has created
                           this ``AtlasInfoPanel``.
         """
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__enabledAtlases = {}
         self.__atlasPanel     = atlasPanel
@@ -117,14 +117,14 @@ class AtlasInfoPanel(fslpanel.FSLEyesPanel):
     def destroy(self):
         """Must be called when this :class:`AtlasInfoPanel` is to be
         destroyed. De-registers various property listeners and calls
-        :meth:`FSLEyesPanel.destroy`.
+        :meth:`FSLeyesPanel.destroy`.
         """
 
         self._overlayList.removeListener('overlays',        self._name)
         self._displayCtx .removeListener('location',        self._name)
         self._displayCtx .removeListener('selectedOverlay', self._name)
         
-        fslpanel.FSLEyesPanel.destroy(self)
+        fslpanel.FSLeyesPanel.destroy(self)
 
 
     def enableAtlasInfo(self, atlasID, refresh=False):

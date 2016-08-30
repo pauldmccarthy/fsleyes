@@ -33,8 +33,8 @@ from . import                atlasinfopanel
 log = logging.getLogger(__name__)
 
 
-class AtlasPanel(fslpanel.FSLEyesPanel):
-    """An ``AtlasPanel`` is a :class:`.FSLEyesPanel` which allows the user to
+class AtlasPanel(fslpanel.FSLeyesPanel):
+    """An ``AtlasPanel`` is a :class:`.FSLeyesPanel` which allows the user to
     view atlas information, and to browse through the atlases that come
     shipped with FSL. The ``AtlasPanel`` interface is provided by two
     sub-panels, which are displayed in a :class:`pwidgets.Notebook` panel. The
@@ -147,7 +147,7 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """
 
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         # Cache of loaded atlases
         # and enabled atlas overlays.
@@ -187,7 +187,7 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
 
         Calls the ``destroy`` methods of the :class:`.AtlasInfoPanel` and
         :class:`.AtlasOverlayPanel`, and then calls
-        :meth:`.FSLEyesPanel.destroy`.
+        :meth:`.FSLeyesPanel.destroy`.
         """
         self.__loadedAtlases   = None
         self.__enabledOverlays = None
@@ -196,7 +196,7 @@ class AtlasPanel(fslpanel.FSLEyesPanel):
         
         self._overlayList.removeListener('overlays', self._name)
         
-        fslpanel.FSLEyesPanel.destroy(self)
+        fslpanel.FSLeyesPanel.destroy(self)
 
 
     def loadAtlas(self,

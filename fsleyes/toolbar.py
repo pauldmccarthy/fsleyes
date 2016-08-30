@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`FSLEyesToolBar` class, the base class
+"""This module provides the :class:`FSLeyesToolBar` class, the base class
 for all toolbars in *FSLeyes*.
 """
 
@@ -22,13 +22,13 @@ import fsleyes.icons as icons
 log = logging.getLogger(__name__)
 
 
-class FSLEyesToolBar(fslpanel.FSLEyesPanel):
+class FSLeyesToolBar(fslpanel.FSLeyesPanel):
     """Base class for all *FSLeyes* toolbars.
 
-    The ``FSLEyesToolBar`` is a regular :class:`wx.PyPanel` which to which a
+    The ``FSLeyesToolBar`` is a regular :class:`wx.PyPanel` which to which a
     group of *tools* can be added, where a tool may be any ``wx`` control.
 
-    Tools can be added to a ``FSLEyesToolBar`` with the following methods:
+    Tools can be added to a ``FSLeyesToolBar`` with the following methods:
 
       .. autosummary::
          :nosignatures:
@@ -40,13 +40,13 @@ class FSLEyesToolBar(fslpanel.FSLEyesPanel):
          MakeLabelledTool
     
     
-    When the horizontal size of a ``FSLEyesToolBar`` becomes too small to
+    When the horizontal size of a ``FSLeyesToolBar`` becomes too small to
     display all of its tools, the toolbar is compressed: some tools are
     hidden, and buttons are displayed on each end of the toolbar, allowing the
     user to scroll through the toolbar, to access the hidden tools. The user
     may also use the mouse wheel to scroll through the toolbar.
 
-    A collapsed ``FSLEyesToolBar`` looks something like this:
+    A collapsed ``FSLeyesToolBar`` looks something like this:
 
     .. image:: images/fsleyestoolbar.png
        :scale: 50%
@@ -59,7 +59,7 @@ class FSLEyesToolBar(fslpanel.FSLEyesPanel):
                  overlayList,
                  displayCtx,
                  height=32):
-        """Create a ``FSLEyesToolBar``.
+        """Create a ``FSLeyesToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
         
@@ -77,7 +77,7 @@ class FSLEyesToolBar(fslpanel.FSLEyesPanel):
                           :meth:`.ActionProvider.__init__`.
         """
         
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__tools      = []
         self.__index      = 0
@@ -110,7 +110,7 @@ class FSLEyesToolBar(fslpanel.FSLEyesPanel):
     def MakeLabelledTool(self, tool, labelText, labelSide=wx.TOP):
         """Creates a panel containing the given tool, and a label for the
         tool. The panel is returned, but is not added to this
-        ``FSLEyesToolBar`` - you will have to do that yourself, e.g.::
+        ``FSLeyesToolBar`` - you will have to do that yourself, e.g.::
 
             labelledTool = toolbar.MakeLabelledTool(tool, 'Label', wx.BOTTOM)
             toolbar.AddTool(labelledTool)
@@ -146,33 +146,33 @@ class FSLEyesToolBar(fslpanel.FSLEyesPanel):
 
 
     def Enable(self, *args, **kwargs):
-        """Enables/disables all tools in this ``FSLEyesToolBar``.
+        """Enables/disables all tools in this ``FSLeyesToolBar``.
 
         :arg args:   Passed to the ``Enable`` method of each tool.
         :arg kwargs: Passed to the ``Enable`` method of each tool.
         """
-        super(FSLEyesToolBar, self).Enable(*args, **kwargs)
+        super(FSLeyesToolBar, self).Enable(*args, **kwargs)
         for t in self.__tools:
             t.Enable(*args, **kwargs)
 
             
     def GetTools(self):
-        """Returns a list containing all tools in this ``FSLEyesToolBar``. """
+        """Returns a list containing all tools in this ``FSLeyesToolBar``. """
         return self.__tools[:]
 
 
     def GetToolCount(self):
-        """Returns the number of tools in this ``FSLEyesToolBar``. """
+        """Returns the number of tools in this ``FSLeyesToolBar``. """
         return len(self.__tools)
 
 
     def AddTool(self, tool):
-        """Adds the given tool to this ``FSLEyesToolBar``. """
+        """Adds the given tool to this ``FSLeyesToolBar``. """
         self.InsertTool(tool)
 
         
     def InsertTools(self, tools, index=None):
-        """Inserts the given sequence of tools into this ``FSLEyesToolBar``,
+        """Inserts the given sequence of tools into this ``FSLeyesToolBar``,
         at the specified index.
 
         :arg tools: A sequence of tools to add.
@@ -187,7 +187,7 @@ class FSLEyesToolBar(fslpanel.FSLEyesPanel):
 
 
     def SetTools(self, tools, destroy=False):
-        """Replaces all of the existing tools in this ``FSLEyesToolBar``
+        """Replaces all of the existing tools in this ``FSLeyesToolBar``
         with the given sequence of tools.
 
         :arg tools:   Sequence of new tools to add.
@@ -204,7 +204,7 @@ class FSLEyesToolBar(fslpanel.FSLEyesPanel):
         
 
     def InsertTool(self, tool, index=None, postevent=True):
-        """Inserts the given tool into this ``FSLEyesToolBar``, at the
+        """Inserts the given tool into this ``FSLeyesToolBar``, at the
         specified index.
 
         :arg tool:      The tool to insert.
@@ -279,7 +279,7 @@ class FSLEyesToolBar(fslpanel.FSLEyesPanel):
             endIdx=None,
             postevent=True):
         """Removes all tools, or a range of tools, from this
-        ``FSLEyesToolBar``.
+        ``FSLeyesToolBar``.
 
         :arg destroy:   If ``True``, the removed tools are destroyed.
         
@@ -317,7 +317,7 @@ class FSLEyesToolBar(fslpanel.FSLEyesPanel):
         
 
     def __onMouseWheel(self, ev):
-        """Called when the mouse wheel is rotated on this ``FSLEyesToolBar``.
+        """Called when the mouse wheel is rotated on this ``FSLeyesToolBar``.
 
         Calls :meth:`__onLeftButton` or :meth:`__onRightButton`, depending
         on the rotation direction.
@@ -363,7 +363,7 @@ class FSLEyesToolBar(fslpanel.FSLEyesPanel):
 
 
     def __drawToolBar(self, *a):
-        """Draws this ``FSLEyesToolBar``.
+        """Draws this ``FSLeyesToolBar``.
 
         If the toolbar is big enough, all tools are drawn. Otherwise, the
         method figures out out how many tools can be drawn, and which tools to
@@ -447,5 +447,5 @@ EVT_TOOLBAR_EVENT = _EVT_TOOLBAR_EVENT
 
 ToolBarEvent = _ToolBarEvent
 """Event emitted when one or more tools is/are added/removed to/from a
-:class:`FSLEyesToolBar`.
+:class:`FSLeyesToolBar`.
 """

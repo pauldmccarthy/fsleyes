@@ -88,7 +88,7 @@ def parseArgs(argv):
 
     mainParser = argparse.ArgumentParser(
         add_help=False,
-        formatter_class=parseargs.FSLEyesHelpFormatter)
+        formatter_class=parseargs.FSLeyesHelpFormatter)
 
     mainParser.add_argument('-of',
                             '--outfile',

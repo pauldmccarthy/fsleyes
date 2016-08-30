@@ -53,8 +53,8 @@ if not USE_HTML2:
     wxhtml.HtmlWindow.SetPage      = SetPage
 
 
-class OverlayInfoPanel(fslpanel.FSLEyesPanel):
-    """An ``OverlayInfoPanel`` is a :class:`.FSLEyesPanel` which displays
+class OverlayInfoPanel(fslpanel.FSLeyesPanel):
+    """An ``OverlayInfoPanel`` is a :class:`.FSLeyesPanel` which displays
     information about the currently selected overlay in a
     ``wx.html.HtmlWindow``. The currently selected overlay is defined by the
     :attr:`.DisplayContext.selectedOverlay` property. An ``OverlayInfoPanel``
@@ -85,7 +85,7 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """
 
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         if USE_HTML2:
             self.__info = wxhtml.WebView.New(self)
@@ -119,7 +119,7 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
     def destroy(self):
         """Must be called when this ``OverlayInfoPanel`` is no longer
         needed. Removes some property listeners, and calls the
-        :meth:`.FSLEyesPanel.destroy` method.
+        :meth:`.FSLeyesPanel.destroy` method.
         """
         
         self._displayCtx .removeListener('selectedOverlay', self._name)
@@ -131,7 +131,7 @@ class OverlayInfoPanel(fslpanel.FSLEyesPanel):
         self.__currentOverlay = None
         self.__currentDisplay = None
 
-        fslpanel.FSLEyesPanel.destroy(self)
+        fslpanel.FSLeyesPanel.destroy(self)
 
         
     def __selectedOverlayChanged(self, *a):

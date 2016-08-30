@@ -17,7 +17,7 @@ import fsleyes.tooltips    as fsltooltips
 import fsleyes.strings     as strings
 
 
-class CanvasSettingsPanel(fslpanel.FSLEyesSettingsPanel):
+class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
     """The ``CanvasSettingsPanel`` is a *FSLeyes control* which displays
     settings for a :class:`.CanvasPanel` instance. A ``CanvasSettingsPanel``
     looks something like this:
@@ -54,7 +54,7 @@ class CanvasSettingsPanel(fslpanel.FSLEyesSettingsPanel):
         :arg canvasPanel: The :class:`.CanvasPanel` instance.
         """
         
-        fslpanel.FSLEyesSettingsPanel.__init__(self,
+        fslpanel.FSLeyesSettingsPanel.__init__(self,
                                                parent,
                                                overlayList,
                                                displayCtx)

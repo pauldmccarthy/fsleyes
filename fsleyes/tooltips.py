@@ -16,7 +16,7 @@ into the following categories:
  ================== ================================================
 
 The :func:`initTooltips` function initialises some parameters controlling
-tooltip display. It is called by the :class:`.FSLEyesFrame` upon creation.
+tooltip display. It is called by the :class:`.FSLeyesFrame` upon creation.
 """
 
 

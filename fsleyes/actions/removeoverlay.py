@@ -23,7 +23,7 @@ class RemoveOverlayAction(action.Action):
 
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
-        :arg frame:       The :class:`.FSLEyesFrame`.
+        :arg frame:       The :class:`.FSLeyesFrame`.
         """ 
 
         action.Action.__init__(self, self.__removeOverlay)

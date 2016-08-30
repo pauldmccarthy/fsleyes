@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# fsleyes_parseargs.py - Parsing FSLEyes command line arguments.
+# parseargs.py - Parsing FSLeyes command line arguments.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -279,7 +279,7 @@ def ArgumentParser(*args, **kwargs):
     return ap
 
 
-class FSLEyesHelpFormatter(argparse.RawDescriptionHelpFormatter):
+class FSLeyesHelpFormatter(argparse.RawDescriptionHelpFormatter):
     """A custom ``argparse.HelpFormatter`` class which customises a few
     annoying things about default ``argparse`` behaviour.
     """
@@ -1020,7 +1020,7 @@ def _setupMainParser(mainParser):
       - *LightBoxOpts*: Options related to setting up a lightbox display
     """
 
-    # FSLEyes application options
+    # FSLeyes application options
 
     # Options defining the overall scene,
     # and separate parser groups for scene

@@ -32,7 +32,7 @@ import fsleyes.strings     as strings
 log = logging.getLogger(__name__)
 
 
-class LocationPanel(fslpanel.FSLEyesPanel):
+class LocationPanel(fslpanel.FSLeyesPanel):
     """The ``LocationPanel`` is a panel which contains controls allowing the
     user to view and modify the :attr:`.DisplayContext.location` property. A
     ``LocationPanel`` is intended to be contained within a
@@ -110,7 +110,7 @@ class LocationPanel(fslpanel.FSLEyesPanel):
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """
 
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         # Whenever the selected overlay changes,
         # a reference to it and its DisplayOpts
@@ -228,7 +228,7 @@ class LocationPanel(fslpanel.FSLEyesPanel):
 
     def destroy(self):
         """Must be called when this ``LocationPanel`` is no longer needed.
-        Removes property listeners and calls :meth:`.FSLEyesPanel.destroy`.
+        Removes property listeners and calls :meth:`.FSLeyesPanel.destroy`.
         """
 
         self._overlayList.removeListener('overlays',        self._name)
@@ -237,7 +237,7 @@ class LocationPanel(fslpanel.FSLEyesPanel):
 
         self.__deregisterOverlay()
 
-        fslpanel.FSLEyesPanel.destroy(self)
+        fslpanel.FSLeyesPanel.destroy(self)
 
         
     def GetMinSize(self):

@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`FSLEyesFrame` which is the top level frame
+"""This module provides the :class:`FSLeyesFrame` which is the top level frame
 for FSLeyes.
 """
 
@@ -34,8 +34,8 @@ from . import displaycontext
 log = logging.getLogger(__name__)
 
 
-class FSLEyesFrame(wx.Frame):
-    """A ``FSLEyesFrame`` is a simple :class:`wx.Frame` which acts as a
+class FSLeyesFrame(wx.Frame):
+    """A ``FSLeyesFrame`` is a simple :class:`wx.Frame` which acts as a
     container for :class:`.ViewPanel` instances.
 
     
@@ -46,7 +46,7 @@ class FSLEyesFrame(wx.Frame):
     **Menus**
 
     
-    The ``FSLEyesFrame`` has the following menus:
+    The ``FSLeyesFrame`` has the following menus:
 
     ========== ==============================================================
     *FSLeyes*  General actions, such as help, quit, about.
@@ -64,8 +64,8 @@ class FSLEyesFrame(wx.Frame):
     **Saving/restoring state**
 
 
-    When a ``FSLEyesFrame`` is closed, it saves some display settings so that
-    they can be restored the next time a ``FSLEyesFrame`` is opened. The
+    When a ``FSLeyesFrame`` is closed, it saves some display settings so that
+    they can be restored the next time a ``FSLeyesFrame`` is opened. The
     settings are saved using the :class:`~fsl.utils.settings` module.
     Currently, the frame position, size, and layout (see the
     :mod:`.perspectives` module) are saved.
@@ -74,7 +74,7 @@ class FSLEyesFrame(wx.Frame):
     **Programming interface**
 
     
-    The ``FSLEyesFrame`` provides the following methods for programmatically
+    The ``FSLeyesFrame`` provides the following methods for programmatically
     configuring the display:
 
     .. autosummary::
@@ -97,14 +97,14 @@ class FSLEyesFrame(wx.Frame):
 
 
     The :mod:`fsleyes.actions.frameactions` module contains some
-    :mod:`.actions` which are monkey-patched into the ``FSLEyesFrame`` class.
+    :mod:`.actions` which are monkey-patched into the ``FSLeyesFrame`` class.
     These actions are made available to the user via menu items and/or keyboard
     shortcuts.
 
 
     .. note:: All of the functions defined in the
               :mod:`fsleyes.actions.frameactions` module are treated as
-              first-class methods of the ``FSLEyesFrame`` class (i.e. they are
+              first-class methods of the ``FSLeyesFrame`` class (i.e. they are
               assumed to be present). They are only in a separate module to
               keep file sizes down.
     """
@@ -116,7 +116,7 @@ class FSLEyesFrame(wx.Frame):
                  displayCtx,
                  restore=False,
                  save=True):
-        """Create a ``FSLEyesFrame``.
+        """Create a ``FSLeyesFrame``.
 
         .. note:: The ``restore`` functionality is not currently implemented.
                   If ``restore=True``, an :class:`.OrthoPanel` is added to
@@ -154,11 +154,11 @@ class FSLEyesFrame(wx.Frame):
         self.__mainPanel   = wx.Panel(self)
         self.__statusBar   = wx.StaticText(self)
 
-        # Even though the FSLEyesFrame does not allow
+        # Even though the FSLeyesFrame does not allow
         # panels to be floated, I am specifying the
         # docking guide style for complicated reasons...
         # 
-        # Each ViewPanel contained in this FSLEyesFrame
+        # Each ViewPanel contained in this FSLeyesFrame
         # has an AuiManager of its own; these child
         # AuiManagers do support floating of their
         # child panels. However, it seems that when
@@ -264,21 +264,21 @@ class FSLEyesFrame(wx.Frame):
         
     def getOverlayList(self):
         """Returns the :class:`.OverlayList` which contains the overlays
-        being displayed by this ``FSLEyesFrame``.
+        being displayed by this ``FSLeyesFrame``.
         """
         return self.__overlayList
 
     
     def getDisplayContext(self):
         """Returns the top-level :class:`.DisplayContext` associated with this
-        ``FSLEyesFrame``.
+        ``FSLeyesFrame``.
         """
         return self.__displayCtx
 
         
     def getViewPanels(self):
         """Returns a list of all :class:`.ViewPanel` instances that are
-        currenlty displayed in this ``FSLEyesFrame``.
+        currenlty displayed in this ``FSLeyesFrame``.
         """
         return list(self.__viewPanels)
 
@@ -292,13 +292,13 @@ class FSLEyesFrame(wx.Frame):
 
     def getAuiManager(self):
         """Returns the ``wx.lib.agw.aui.AuiManager` object which is managing
-        the layout of this ``FSLEyesFrame``.
+        the layout of this ``FSLeyesFrame``.
         """
         return self.__auiManager
 
 
     def removeViewPanel(self, viewPanel):
-        """Removes the given :class:`.ViewPanel` from this ``FSLEyesFrame``.
+        """Removes the given :class:`.ViewPanel` from this ``FSLeyesFrame``.
         """
 
         paneInfo = self.__auiManager.GetPane(viewPanel)
@@ -325,7 +325,7 @@ class FSLEyesFrame(wx.Frame):
 
 
     def removeAllViewPanels(self):
-        """Removes all view panels from this ``FSLEyesFrame``.
+        """Removes all view panels from this ``FSLeyesFrame``.
 
         .. note:: This method should be used to clear the frame, rather than
                   removing each :class:`.ViewPanel` individually via
@@ -704,7 +704,7 @@ class FSLEyesFrame(wx.Frame):
         if menu is not None:
             self.__settingsMenu.Remove(menu.GetId())
 
-        # Calling fslpanel.FSLEyesPanel.destroy()
+        # Calling fslpanel.FSLeyesPanel.destroy()
         # and DisplayContext.destroy() - the
         # AUIManager should do the
         # wx.Window.Destroy side of things ...
@@ -815,7 +815,7 @@ class FSLEyesFrame(wx.Frame):
 
             
     def __onClose(self, ev):
-        """Called when the user closes this ``FSLEyesFrame``.
+        """Called when the user closes this ``FSLeyesFrame``.
 
         Saves the frame position, size, and layout, so it may be preserved the
         next time it is opened. See the :meth:`_restoreState` method.
@@ -880,7 +880,7 @@ class FSLEyesFrame(wx.Frame):
                 fslsettings.delete('fsleyes.frame.layout')
                 
         # It's nice to explicitly clean
-        # up our FSLEyesPanels, otherwise
+        # up our FSLeyesPanels, otherwise
         # they'll probably complain
         for panel in self.__viewPanels:
             panel.destroy()
@@ -1017,7 +1017,7 @@ class FSLEyesFrame(wx.Frame):
 
             
     def __makeMenuBar(self):
-        """Constructs a bunch of menu items for this ``FSLEyesFrame``."""
+        """Constructs a bunch of menu items for this ``FSLeyesFrame``."""
 
         menuBar = wx.MenuBar()
         self.SetMenuBar(menuBar)
@@ -1266,7 +1266,7 @@ class FSLEyesFrame(wx.Frame):
                 menu.AppendSeparator()
                 continue
 
-            # Method on this FSLEyesFrame
+            # Method on this FSLeyesFrame
             if isinstance(action, basestring):
 
                 title     = strings.actions[  self, action]

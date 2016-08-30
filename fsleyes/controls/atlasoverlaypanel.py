@@ -28,7 +28,7 @@ import fsleyes.strings                    as strings
 log = logging.getLogger(__name__)
         
 
-class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
+class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
     """The ``AtlasOverlayPanel`` displays a list of all available FSL atlases
     (see the :mod:`.atlases` module), and allows the user to:
 
@@ -83,7 +83,7 @@ class AtlasOverlayPanel(fslpanel.FSLEyesPanel):
                           this ``AtlasInfoPanel``. 
         """
 
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         # See the enableAtlasPanel method 
         # for info about this attribute.

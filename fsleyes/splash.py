@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`FSLEyesSplash` class, a splash screen for
+"""This module provides the :class:`FSLeyesSplash` class, a splash screen for
 *FSLeyes*.
 """
 
@@ -23,7 +23,7 @@ def getSplashFile():
     return op.join(fsleyes.assetDir, 'assets', 'icons', 'splash', 'splash.png')
 
 
-class FSLEyesSplash(wx.Frame):
+class FSLeyesSplash(wx.Frame):
     """A simple splash screen for *FSLeyes*. An image and a status bar are
     displayed; the status bar can be updated via the :meth:`SetStatus` method.
 
@@ -33,7 +33,7 @@ class FSLEyesSplash(wx.Frame):
     
     Typical usage would be something like the following::
 
-        splash = FSLEyesSplash(None)
+        splash = FSLeyesSplash(None)
         splash.Show()
 
         # Do something, e.g. loading overlays
@@ -44,7 +44,7 @@ class FSLEyesSplash(wx.Frame):
     """
     
     def __init__(self, parent):
-        """Create a ``FSLEyesSplash`` frame.
+        """Create a ``FSLeyesSplash`` frame.
 
         :arg parent: The :mod:`wx` parent object.
         """

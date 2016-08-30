@@ -43,7 +43,7 @@ from . import splash as fslsplash
 log = logging.getLogger(__name__)
 
 
-class FSLEyesApp(wx.App):
+class FSLeyesApp(wx.App):
     """FSLeyes-specific sub-class of ``wx.App``. """
 
     def __init__(self, *args, **kwargs):
@@ -116,14 +116,14 @@ def main(args=None):
     # then make sure the FSLeyes asset
     # directory (containing e.g. icon images)
     # is set. 
-    app = FSLEyesApp()
+    app = FSLeyesApp()
     fsleyes.setAssetDir()
 
     # Show the splash screen as soon as
     # possible, unless it looks like the
     # user is asking for the software
     # version or command line help.
-    splash = fslsplash.FSLEyesSplash(None)
+    splash = fslsplash.FSLeyesSplash(None)
  
     if (len(args) > 0) and (args[0] in ('-V',
                                         '-h',
@@ -138,7 +138,7 @@ def main(args=None):
     # as soon as possible, and because it is 
     # difficult to force immediate GUI
     # refreshes when not running on the main
-    # loop - this is important for FSLEyes,
+    # loop - this is important for FSLeyes,
     # which displays status updates to the
     # user while it is loading overlays and
     # setting up the interface.
@@ -200,7 +200,7 @@ def main(args=None):
 
         # Now the main stuff - create the overlay
         # list and the master display context,
-        # and then create the FSLEyesFrame.
+        # and then create the FSLeyesFrame.
         overlayList, displayCtx = makeDisplayContext(namespace[0], splash)
         app.SetOverlayListAndDisplayContext(overlayList, displayCtx)
         frame = makeFrame(namespace[0], displayCtx, overlayList, splash)
@@ -231,7 +231,7 @@ def initialise(splash, namespace, callback):
     The ``callback`` function is asynchronously called when the initialisation
     is complete.
 
-    :arg splash:    The :class:`.FSLEyesSplash` screen.
+    :arg splash:    The :class:`.FSLeyesSplash` screen.
 
     :arg namespace: The ``argparse.Namespace`` object containing parsed
                     command line arguments.
@@ -337,7 +337,7 @@ def parseArgs(argv):
 
     parser = argparse.ArgumentParser(
         add_help=False,
-        formatter_class=parseargs.FSLEyesHelpFormatter)
+        formatter_class=parseargs.FSLeyesHelpFormatter)
 
     parser.add_argument('-r', '--runscript',
                         metavar='SCRIPTFILE',
@@ -384,7 +384,7 @@ def makeDisplayContext(namespace, splash):
 
     :arg namesace: Parsed command line arguments (see :func:`parseArgs`).
 
-    :arg splash:   The :class:`.FSLEyesSplash` frame, created in :func:`init`.
+    :arg splash:   The :class:`.FSLeyesSplash` frame, created in :func:`init`.
 
     :returns: a tuple containing:
                 - the :class:`.OverlayList`
@@ -409,7 +409,7 @@ def makeDisplayContext(namespace, splash):
     # ever exists) and the master DisplayContext.
     # A new DisplayContext instance will be
     # created for every new view that is opened
-    # in the FSLEyesFrame, but all child
+    # in the FSLeyesFrame, but all child
     # DisplayContext instances will be linked to
     # this master one.
     overlayList = fsloverlay.OverlayList()
@@ -438,7 +438,7 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
 
     This function does the following:
 
-     1. Creates the :class:`.FSLEyesFrame` the top-level frame for ``fsleyes``.
+     1. Creates the :class:`.FSLeyesFrame` the top-level frame for ``fsleyes``.
 
      2. Configures the frame according to the command line arguments (e.g. 
         ortho or lightbox view).
@@ -457,7 +457,7 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
 
     :arg splash:      The :class:`.FSLeyesSplash` frame.
 
-    :returns: the :class:`.FSLEyesFrame` that was created.
+    :returns: the :class:`.FSLeyesFrame` that was created.
     """
 
     import fsl.utils.status             as status
@@ -466,7 +466,7 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
 
     # The fsleyes.actions.frameactions module
     # monkey-patches some things into the
-    # FSLEyesFrame class, so it must be
+    # FSLeyesFrame class, so it must be
     # imported immediately after fsleyes.frame.
     import fsleyes.frame                as fsleyesframe
     import fsleyes.actions.frameactions as frameactions
@@ -494,7 +494,7 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
 
     status.update('Creating FSLeyes interface...')
     
-    frame = fsleyesframe.FSLEyesFrame(
+    frame = fsleyesframe.FSLeyesFrame(
         None, overlayList, displayCtx, restore, True)
 
     # Make sure the new frame is shown

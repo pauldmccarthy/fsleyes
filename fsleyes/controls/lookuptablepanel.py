@@ -41,7 +41,7 @@ import fsl.data.melodicimage  as fslmelimage
 log = logging.getLogger(__name__)
 
 
-class LookupTablePanel(fslpanel.FSLEyesPanel):
+class LookupTablePanel(fslpanel.FSLeyesPanel):
     """A ``LookupTablePanel`` is a :class:`.FLSEyesPanel` which allows users
     to manage ``LookupTable`` instances. A ``LookupTablePanel`` looks
     something like this:
@@ -80,7 +80,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """ 
         
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__controlCol = wx.Panel(self)
         self.__labelList  = elistbox.EditableListBox(
@@ -162,7 +162,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
     def destroy(self):
         """Must be called when this ``LookupTablePanel`` is no longer needed.
         Removes some property listeners, and calls the
-        :meth:`FSLEyesPanel.destroy` method.
+        :meth:`FSLeyesPanel.destroy` method.
         """
 
         self._overlayList.removeListener('overlays',        self._name)
@@ -188,7 +188,7 @@ class LookupTablePanel(fslpanel.FSLEyesPanel):
         self.__selectedOpts    = None
         self.__selectedLut     = None
 
-        fslpanel.FSLEyesPanel.destroy(self)
+        fslpanel.FSLeyesPanel.destroy(self)
 
         
     def __updateLutChoices(self):

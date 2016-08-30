@@ -38,7 +38,7 @@ class ShellPanel(viewpanel.ViewPanel):
         :arg displayCtx:  The :class:`.DisplayContext` of the
                           :class:`.CanvasPanel` that owns this ``ShellPanel``.
         
-        :arg frame:       The :class:`.FSLEyesFrame` that owns this
+        :arg frame:       The :class:`.FSLeyesFrame` that owns this
                           ``ShellPanel``.
         """
         viewpanel.ViewPanel.__init__(self, parent, overlayList, displayCtx)
@@ -48,7 +48,7 @@ class ShellPanel(viewpanel.ViewPanel):
                                                                displayCtx)
 
         introText = textwrap.dedent("""
-          FSLEyes python shell
+          FSLeyes python shell
         
         Available items:
         """)
@@ -97,6 +97,6 @@ class ShellPanel(viewpanel.ViewPanel):
 
     def destroy(self):
         """Must be called when this ``ShellPanel`` is no longer needed.
-        Calls the :meth:`.FSLEyesPanel.destroy` method.
+        Calls the :meth:`.FSLeyesPanel.destroy` method.
         """
         viewpanel.ViewPanel.destroy(self)

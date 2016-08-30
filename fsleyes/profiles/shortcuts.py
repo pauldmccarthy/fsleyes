@@ -20,27 +20,27 @@ actions = td.TypeDict({
     'ReloadOverlayAction'      : 'Ctrl-Alt-R',
     'RemoveOverlayAction'      : 'Ctrl-Alt-W',
 
-    'FSLEyesFrame.closeFSLeyes'           : 'Ctrl-Q',
-    'FSLEyesFrame.openHelp'               : 'Ctrl-H',
-    'FSLEyesFrame.removeFocusedViewPanel' : 'Ctrl-W',
+    'FSLeyesFrame.closeFSLeyes'           : 'Ctrl-Q',
+    'FSLeyesFrame.openHelp'               : 'Ctrl-H',
+    'FSLeyesFrame.removeFocusedViewPanel' : 'Ctrl-W',
     
-    'FSLEyesFrame.perspectives.default'   : 'Ctrl-D',
+    'FSLeyesFrame.perspectives.default'   : 'Ctrl-D',
 
-    'FSLEyesFrame.addOrthoPanel'          : 'Ctrl-1',
-    'FSLEyesFrame.addLightBoxPanel'       : 'Ctrl-2',
-    'FSLEyesFrame.addTimeSeriesPanel'     : 'Ctrl-3',
-    'FSLEyesFrame.addHistogramPanel'      : 'Ctrl-4',
-    'FSLEyesFrame.addPowerSpectrumPanel'  : 'Ctrl-5',
-    'FSLEyesFrame.addShellPanel'          : 'Ctrl-6',
+    'FSLeyesFrame.addOrthoPanel'          : 'Ctrl-1',
+    'FSLeyesFrame.addLightBoxPanel'       : 'Ctrl-2',
+    'FSLeyesFrame.addTimeSeriesPanel'     : 'Ctrl-3',
+    'FSLeyesFrame.addHistogramPanel'      : 'Ctrl-4',
+    'FSLeyesFrame.addPowerSpectrumPanel'  : 'Ctrl-5',
+    'FSLeyesFrame.addShellPanel'          : 'Ctrl-6',
     
-    'FSLEyesFrame.selectNextOverlay'       : 'Ctrl-Up',
-    'FSLEyesFrame.selectPreviousOverlay'   : 'Ctrl-Down',
-    'FSLEyesFrame.toggleOverlayVisibility' : 'Ctrl-Z',
+    'FSLeyesFrame.selectNextOverlay'       : 'Ctrl-Up',
+    'FSLeyesFrame.selectPreviousOverlay'   : 'Ctrl-Down',
+    'FSLeyesFrame.toggleOverlayVisibility' : 'Ctrl-Z',
  
 
     # ViewPanel actions must use one
     # of CTRL, ALT or Shift due to
-    # hacky things in FSLEyesFrame.
+    # hacky things in FSLeyesFrame.
 
     'CanvasPanel.toggleOverlayList'         : 'Ctrl-Alt-1',
     'CanvasPanel.toggleLocationPanel'       : 'Ctrl-Alt-2',

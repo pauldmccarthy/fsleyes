@@ -12,8 +12,8 @@ class, and the :func:`action` and :func:`toggleAction` decorators.
 The :class:`.Action` class represents some sort of action which may be
 performed, enabled and disabled, and may be bound to a GUI menu item or
 button. The :class:`ActionProvider` class represents some entity which can
-perform one or more actions.  As the :class:`.FSLEyesPanel` class derives from
-:class:`ActionProvider` pretty much everything in FSLEyes is an
+perform one or more actions.  As the :class:`.FSLeyesPanel` class derives from
+:class:`ActionProvider` pretty much everything in FSLeyes is an
 :class:`ActionProvider`. 
 
 
@@ -91,7 +91,7 @@ created for, and bound to an ``Action`` or ``ToggleAction`` (through the
     ToggleActionButton
 
 
-Finally, some 'global' actions, and actions used by the :class:`.FSLEyesFrame`
+Finally, some 'global' actions, and actions used by the :class:`.FSLeyesFrame`
 are also defined in this package:
 
  .. autosummary::

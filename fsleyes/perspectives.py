@@ -11,7 +11,7 @@ defined in the :attr:`BUILT_IN_PERSPECTIVES` dictionary.
 
 
 The ``perspectives`` module provides the following functions. These are
-intended for use by the :class:`.FSLEyesFrame`, but can be used in other ways
+intended for use by the :class:`.FSLeyesFrame`, but can be used in other ways
 too:
 
 
@@ -27,7 +27,7 @@ too:
    deserialisePerspective
 
 
-A perspective defines a layout for a :class:`.FSLEyesFrame`. It specifies the
+A perspective defines a layout for a :class:`.FSLeyesFrame`. It specifies the
 type and layout of one or more *views* (defined in the :mod:`.views` module)
 and, within each view, the type and layout of one or more *controls* (defined
 in the :mod:`.controls` module). See the :mod:`fsleyes` documentation for
@@ -74,7 +74,7 @@ def getAllPerspectives():
 
 def loadPerspective(frame, name, **kwargs):
     """Load the named perspective, and apply it to the given
-    :class:`.FSLEyesFrame`. The ``kwargs`` are passed through to the
+    :class:`.FSLeyesFrame`. The ``kwargs`` are passed through to the
     :func:`applyPerspective` function.
     """
 
@@ -96,9 +96,9 @@ def loadPerspective(frame, name, **kwargs):
 
 def applyPerspective(frame, name, perspective, message=None):
     """Applies the given serialised perspective string to the given
-    :class:`.FSLEyesFrame`.
+    :class:`.FSLeyesFrame`.
 
-    :arg frame:       The :class:`.FSLEyesFrame` instance.
+    :arg frame:       The :class:`.FSLeyesFrame` instance.
     :arg name:        The perspective name.
     :arg perspective: The serialised perspective string.
     :arg message:     A message to display (using the :mod:`.status` module).
@@ -171,7 +171,7 @@ def applyPerspective(frame, name, perspective, message=None):
 
             
 def savePerspective(frame, name):
-    """Serialises the layout of the given :class:`.FSLEyesFrame` and saves
+    """Serialises the layout of the given :class:`.FSLeyesFrame` and saves
     it as a perspective with the given name.
     """
 
@@ -198,14 +198,14 @@ def removePerspective(name):
 
     
 def serialisePerspective(frame):
-    """Serialises the layout of the given :class:`.FSLEyesFrame`, and returns
+    """Serialises the layout of the given :class:`.FSLeyesFrame`, and returns
     it as a string.
     
     .. note:: This function was written against wx.lib.agw.aui.AuiManager as
               it exists in wxPython 3.0.2.0.
     
      *FSLeyes* uses a hierarchy of ``wx.lib.agw.aui.AuiManager`` instances for
-     its layout - the :class:`.FSLEyesFrame` uses an ``AuiManager`` to lay out
+     its layout - the :class:`.FSLeyesFrame` uses an ``AuiManager`` to lay out
      :class:`.ViewPanel` instances, and each of these ``ViewPanels`` use their
      own ``AuiManager`` to lay out control panels.
 
@@ -231,7 +231,7 @@ def serialisePerspective(frame):
     
      This function queries each of the AuiManagers, and extracts the following:
      
-        - A layout string for the :class:`.FSLEyesFrame`.
+        - A layout string for the :class:`.FSLeyesFrame`.
     
         - A string containing a comma-separated list of :class:`.ViewPanel`
           class names, in the same order as they are specified in the frame
@@ -259,7 +259,7 @@ def serialisePerspective(frame):
     # If the 'rename' argument is True, this function
     # performs an additional step.
     #
-    # The FSLEyesFrame gives each of its view panels a
+    # The FSLeyesFrame gives each of its view panels a
     # unique name of the form "ClassName index", where
     # the 'index' is a sequentially increasing identifier
     # number (so that multiple views of the same type can
@@ -272,7 +272,7 @@ def serialisePerspective(frame):
     # This name adjustment is required to handle
     # situations where the indices of existing view panels
     # are not sequential, as when a layout is applied, the
-    # view panel names given by the FSLEyesFrame must
+    # view panel names given by the FSLeyesFrame must
     # match the names that are specified in the layout
     # perspective string.
     #
@@ -347,7 +347,7 @@ def serialisePerspective(frame):
         return kvps
                                       
     # Now we can start extracting the layout information.
-    # We start with the FSLEyesFrame layout.
+    # We start with the FSLeyesFrame layout.
     auiMgr     = frame.getAuiManager()
     viewPanels = frame.getViewPanels()
 
@@ -418,9 +418,9 @@ def deserialisePerspective(persp):
     :returns: A tuple containing the following:
 
                 - A list of :class:`.ViewPanel` class types - the
-                  children of the :class:`.FSLEyesFrame`.
+                  children of the :class:`.FSLeyesFrame`.
     
-                - An ``aui`` layout string for the :class:`.FSLEyesFrame`
+                - An ``aui`` layout string for the :class:`.FSLeyesFrame`
    
                 - A list of lists, one for each ``ViewPanel``, with each
                   list containing a collection of control panel class

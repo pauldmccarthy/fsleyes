@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 
 """This module provides the :class:`OverlyDisplyaToolBar`, a
-:class:`.FSLEyesToolBar` containing controls for changing the display settings
+:class:`.FSLeyesToolBar` containing controls for changing the display settings
 of the currently selected overlay.
 """
 
@@ -28,8 +28,8 @@ import fsl.utils.typedict as td
 log = logging.getLogger(__name__)
 
 
-class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
-    """The ``OverlyDisplyaToolBar`` is a :class:`.FSLEyesToolBar` containing
+class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
+    """The ``OverlyDisplyaToolBar`` is a :class:`.FSLeyesToolBar` containing
     controls which allow the user to change the display settings of the
     currently selected overlay (as defined by the
     :attr:`.DisplayContext.selectedOverlay` property). The display settings
@@ -76,7 +76,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
                           ``OverlayDisplayToolBar`` is owned by.
         """
         
-        fsltoolbar.FSLEyesToolBar.__init__(
+        fsltoolbar.FSLeyesToolBar.__init__(
             self, parent, overlayList, displayCtx, 24)
 
         self.__viewPanel      = viewPanel
@@ -97,7 +97,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
     def destroy(self):
         """Must be called when this ``OverlyDisplyaToolBar`` is no longer
         needed. Removes some property listeners, and calls the
-        :meth:`.FSLEyesToolBar.destroy` method.
+        :meth:`.FSLeyesToolBar.destroy` method.
         """
 
         self._overlayList.removeListener('overlays',        self._name)
@@ -113,7 +113,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLEyesToolBar):
         self.__currentOverlay = None
         self.__viewPanel      = None
             
-        fsltoolbar.FSLEyesToolBar.destroy(self)
+        fsltoolbar.FSLeyesToolBar.destroy(self)
 
 
     def __showTools(self, overlay):

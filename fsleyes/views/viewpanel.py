@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# viewpanel.py - Superclass for all FSLEyes view panels.
+# viewpanel.py - Superclass for all FSLeyes view panels.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -28,7 +28,7 @@ import fsl.data.image         as fslimage
 log = logging.getLogger(__name__)
 
 
-class ViewPanel(fslpanel.FSLEyesPanel):
+class ViewPanel(fslpanel.FSLeyesPanel):
     """The ``ViewPanel`` class is the base-class for all *FSLeyes views*.
 
     A ``ViewPanel`` displays some sort of view of the overlays in an
@@ -48,7 +48,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
     state of a secondary panel (i.e. whether one is open or not) can be
     queried with the :meth:`isPanelOpen` method, and existing secondary panels
     can be accessed via the :meth:`getPanel` method.  Secondary panels must be
-    derived from either the :class:`.FSLEyesPanel` or :class:`.FSLEyesToolBar`
+    derived from either the :class:`.FSLeyesPanel` or :class:`.FSLeyesToolBar`
     base-classes.
 
 
@@ -93,10 +93,10 @@ class ViewPanel(fslpanel.FSLEyesPanel):
     
     def __init__(self, parent, overlayList, displayCtx):
         """Create a ``ViewPanel``. All arguments are passed through to the
-        :class:`.FSLEyesPanel` constructor.
+        :class:`.FSLeyesPanel` constructor.
         """
 
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__profileManager = profiles.ProfileManager(
             self, overlayList, displayCtx)
@@ -113,7 +113,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         self.__centrePanel = None
         self.__panels      = {}
 
-        # See note in FSLEyesFrame about
+        # See note in FSLeyesFrame about
         # the user of aero docking guides.
         self.__auiMgr = aui.AuiManager(
             self,
@@ -163,7 +163,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
     def destroy(self):
         """Removes some property listeners, destroys all child panels,
         destroys the :class:`.ProfileManager`, and ``AuiManager``, and
-        calls :meth:`.FSLEyesPanel.destroy`.
+        calls :meth:`.FSLeyesPanel.destroy`.
         """
         
         # Make sure that any control panels are correctly destroyed
@@ -193,7 +193,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         self.__panels         = None
         self.__centrePanel    = None
 
-        fslpanel.FSLEyesPanel.destroy(self)
+        fslpanel.FSLeyesPanel.destroy(self)
         
 
     def initProfile(self):
@@ -245,7 +245,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
                         constructor.
 
         .. note::       The ``panelType`` type must be a sub-class of
-                        :class:`.FSLEyesPanel` or :class:`.FSLEyesToolBar`,
+                        :class:`.FSLeyesPanel` or :class:`.FSLeyesToolBar`,
                         which can be created like so::
         
                             panel = panelType(parent,
@@ -281,7 +281,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         window   = panelType(
             self, self._overlayList, self._displayCtx, *args, **kwargs)
 
-        if isinstance(window, fsltoolbar.FSLEyesToolBar):
+        if isinstance(window, fsltoolbar.FSLeyesToolBar):
 
             # ToolbarPane sets the panel layer to 10
             paneInfo.ToolbarPane()
@@ -297,7 +297,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
             # layers of all other existing toolbars
 
             for p in self.__panels.values():
-                if isinstance(p, fsltoolbar.FSLEyesToolBar):
+                if isinstance(p, fsltoolbar.FSLeyesToolBar):
                     info = self.__auiMgr.GetPane(p)
 
                     # This is nasty - the agw.aui.AuiPaneInfo
@@ -321,7 +321,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         # by the location parameter
         if floatPane is False:
 
-            if isinstance(window, fsltoolbar.FSLEyesToolBar):
+            if isinstance(window, fsltoolbar.FSLeyesToolBar):
                 location = aui.AUI_DOCK_TOP
             else:
                 if   location == wx.TOP:    location = aui.AUI_DOCK_TOP
@@ -508,7 +508,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
         # current minimum and best sizes are for every panel
         for panel in self.__panels.values():
 
-            if isinstance(panel, fsltoolbar.FSLEyesToolBar):
+            if isinstance(panel, fsltoolbar.FSLeyesToolBar):
                 continue
             
             paneInfo = self.__auiMgr.GetPane(panel)
@@ -557,7 +557,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
     def __onPaneClose(self, ev=None, panel=None):
         """Called when the user closes a control (a.k.a. secondary) panel.
         Calls the
-        :class:`.FSLEyesPanel.destroy`/:class:`.FSLEyesToolBar.destroy`
+        :class:`.FSLeyesPanel.destroy`/:class:`.FSLeyesToolBar.destroy`
         method on the panel.
         """
 
@@ -579,8 +579,8 @@ class ViewPanel(fslpanel.FSLEyesPanel):
 
         for panel in list(panels):
 
-            if isinstance(panel, (fslpanel  .FSLEyesPanel,
-                                  fsltoolbar.FSLEyesToolBar)):
+            if isinstance(panel, (fslpanel  .FSLeyesPanel,
+                                  fsltoolbar.FSLeyesToolBar)):
 
                 # WTF AUI. Sometimes this method gets called
                 # twice for a panel, the second time with a
@@ -590,7 +590,7 @@ class ViewPanel(fslpanel.FSLEyesPanel):
                 if self.__panels.pop(type(panel), None) is None:
                     panels.remove(panel)
 
-                # calling fslpanel.FSLEyesPanel.destroy()
+                # calling fslpanel.FSLeyesPanel.destroy()
                 # here -  wx.Destroy is done below 
                 else:
                     log.debug('Panel closed: {}'.format(type(panel).__name__))

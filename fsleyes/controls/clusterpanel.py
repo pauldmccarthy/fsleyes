@@ -27,7 +27,7 @@ import fsl.data.featanalysis as featanalysis
 log = logging.getLogger(__name__)
 
 
-class ClusterPanel(fslpanel.FSLEyesPanel):
+class ClusterPanel(fslpanel.FSLeyesPanel):
     """The ``ClusterPanel`` shows a table of cluster results from the analysis
     associated with a :class:`.FEATImage` overlay. A ``ClusterPanel`` looks
     something like the following:
@@ -78,7 +78,7 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
 
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """
-        fslpanel.FSLEyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__disabledText = wx.StaticText(
             self,
@@ -153,7 +153,7 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
     def destroy(self):
         """Must be called when this ``ClusterPanel`` is no longer needed.
         Removes some property listeners, and calls
-        :meth:`.FSLEyesPanel.destroy`.
+        :meth:`.FSLeyesPanel.destroy`.
         """
         
         for grids in self.__clusterGrids.values():
@@ -167,7 +167,7 @@ class ClusterPanel(fslpanel.FSLEyesPanel):
         self._overlayList.removeListener('overlays',        self._name)
         self._displayCtx .removeListener('selectedOverlay', self._name)
 
-        fslpanel.FSLEyesPanel.destroy(self)
+        fslpanel.FSLeyesPanel.destroy(self)
 
 
     def __calcMinSize(self):

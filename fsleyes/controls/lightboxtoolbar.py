@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`LightBoxToolBar` class, which is a
-:class:`.FSLEyesToolBar` for use with the :class:`.LightBoxPanel`.
+:class:`.FSLeyesToolBar` for use with the :class:`.LightBoxPanel`.
 """
 
 
@@ -26,8 +26,8 @@ like a bum.
 """
 
 
-class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
-    """The ``LightBoxToolBar`` is a :class:`.FSLEyesToolBar` for use with the
+class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
+    """The ``LightBoxToolBar`` is a :class:`.FSLeyesToolBar` for use with the
     :class:`.LightBoxPanel`. A ``LightBoxToolBar`` looks something like this:
 
     
@@ -52,7 +52,7 @@ class LightBoxToolBar(fsltoolbar.FSLEyesToolBar):
         :arg lb:          The :class:`.LightBoxPanel` instance.
         """
 
-        fsltoolbar.FSLEyesToolBar.__init__(
+        fsltoolbar.FSLeyesToolBar.__init__(
             self, parent, overlayList, displayCtx, 24)
         
         self.lightBoxPanel = lb
