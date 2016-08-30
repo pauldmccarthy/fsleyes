@@ -112,13 +112,11 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
-    # First thing's first. Create a wx.App, 
-    # and figure out where all our stuff is.
+    # First thing's first. Create a wx.App,
+    # then make sure the FSLeyes asset
+    # directory (containing e.g. icon images)
+    # is set. 
     app = FSLEyesApp()
-
-    # Make sure the FSLeyes asset
-    # directory (containing e.g.
-    # icon images) is set.
     fsleyes.setAssetDir()
 
     # Show the splash screen as soon as
@@ -148,13 +146,24 @@ def main(args=None):
     # All of the work is defined in a series
     # of functions, which are chained together
     # via ugly callbacks, but which are
-    # ultimately  scheduled and executed on the
+    # ultimately scheduled and executed on the
     # wx main loop.
 
     # This is a container, shared amongst
     # the callbacks, which contains the
     # parsed argparse.Namespace object.
     namespace = [None]
+
+    # The call to init is wrapped with this
+    # function, which simply causes the
+    # application to bomb out if buildGUI
+    # raises an error.
+    def initWrapper(splash):
+        try:
+            init(splash)
+        except:
+            wx.CallAfter(sys.exit, 1)
+            raise
 
     def init(splash):
 
@@ -204,24 +213,13 @@ def main(args=None):
         if not namespace[0].skipfslcheck:
             wx.CallAfter(fslDirWarning, frame)
 
-    # The call to buildGUI is wrapped with
-    # this function, which simply causes
-    # the application to bomb out if buildGUI
-    # raises an error.
-    def buildGUIWrapper(splash):
-        try:
-            init(splash)
-        except:
-            wx.CallAfter(sys.exit, 1)
-            raise
-
     # Note: If no wx.Frame is created, the
     # wx.MainLoop call will exit immediately,
     # even if we have scheduled something via
     # wx.CallAfter. In this case, we have
     # already created the splash screen, so
     # all is well.
-    wx.CallAfter(buildGUIWrapper, splash)
+    wx.CallAfter(initWrapper, splash)
     app.MainLoop()
     shutdown()
 
@@ -327,14 +325,15 @@ def shutdown():
 
 def parseArgs(argv):
     """Parses the given ``fsleyes`` command line arguments. See the
-    :mod:`.fsleyes_parseargs` module for details on the ``fsleyes`` command
+    :mod:`.parseargs` module for details on the ``fsleyes`` command
     line interface.
     
     :arg argv: command line arguments for ``fsleyes``.
     """
 
-    import fsleyes.parseargs as parseargs
-    import fsleyes.version   as version
+    import fsleyes.parseargs    as parseargs
+    import fsleyes.perspectives as perspectives
+    import fsleyes.version      as version
 
     parser = argparse.ArgumentParser(
         add_help=False,
@@ -344,27 +343,25 @@ def parseArgs(argv):
                         metavar='SCRIPTFILE',
                         help='Run custom FSLeyes script')
 
-    # TODO Dynamically generate perspective list
-    # in description. To do this, you will need
-    # to make fsl.utils.settings work without a
-    # wx.App (so we can retrieve the perspective
-    # list before the GUI is created).
+    # We include the list of available 
+    # perspectives in the help description
+    persps      = perspectives.BUILT_IN_PERSPECTIVES.keys() + \
+                  perspectives.getAllPerspectives()
     name        = 'fsleyes'
     prolog      = 'FSLeyes version {}\n'.format(version.__version__)
     description = textwrap.dedent("""\
         FSLeyes - the FSL image viewer.
         
-        Use the '--scene' option to load a saved perspective (e.g. 'default',
-        'melodic', 'feat', 'ortho', or 'lightbox').
+        Use the '--scene' option to load a saved perspective ({persps}).
         
         If no '--scene' is specified, the previous layout is restored, unless
         a script is provided via the '--runscript' argument, in which case
         it is assumed that the script sets up the scene, so the previous
         layout is not restored.
-        """)
+        """.format(persps=', '.join(persps)))
 
     # Options for configuring the scene are
-    # managed by the fsleyes_parseargs module
+    # managed by the parseargs module
     return parseargs.parseArgs(parser,
                                argv,
                                name,
@@ -377,14 +374,13 @@ def makeDisplayContext(namespace, splash):
     """Creates the top-level *FSLeyes* :class:`.DisplayContext` and
     :class:`.OverlayList` .
 
-    This function does a few things:
+    This function does the following:
 
-     1. Initialises OpenGL (see the :mod:`fsleyes.gl` package).
-
-     2. Creates the :class:`.OverlayList` and the top level
+     1. Creates the :class:`.OverlayList` and the top level
         :class:`.DisplayContext`.
 
-     3. Loads all of the overlays which were passed in on the command line.
+     2. Loads and configures all of the overlays which were passed in on the
+        command line.
 
     :arg namesace: Parsed command line arguments (see :func:`parseArgs`).
 
@@ -397,7 +393,6 @@ def makeDisplayContext(namespace, splash):
 
     import fsl.utils.status       as status
     import fsleyes.overlay        as fsloverlay
-
     import fsleyes.parseargs      as parseargs
     import fsleyes.displaycontext as displaycontext
 
@@ -485,8 +480,9 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     # 
     #   - The name of a saved (or built-in) perspective
     # 
-    #   - None, in which case the previous layout is restored,
-    #     unless a custom script has been provided.
+    #   - None, in which case the default or previous
+    #     layout is restored, unless a custom script
+    #     has been provided.
     script = namespace.runscript 
     scene  = namespace.scene
 
@@ -572,8 +568,10 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     # the script. This has to be done on the
     # idle loop, because overlays specified
     # on the command line are loaded on the
-    # idle loop, and the script may assume
-    # that they have already been loaded.
+    # idle loop. Therefore, if we schedule the
+    # script on idle (which is a queue), the
+    # script can assume that all overlays have
+    # already been loaded.
     if script is not None:
         async.idle(frame.runScript, script)
             
@@ -593,7 +591,7 @@ def fslDirWarning(parent):
 
     import fsl.utils.settings as fslsettings
 
-    # Check fslpy settings before
+    # Check settings before
     # prompting the user
     fsldir = fslsettings.read('fsldir')
 

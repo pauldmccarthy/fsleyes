@@ -52,7 +52,10 @@ log = logging.getLogger(__name__)
 
 
 def getAllPerspectives():
-    """Returns a list containing the names of all saved perspectives. """
+    """Returns a list containing the names of all saved perspectives. The
+    returned list does not include built-in perspectives - these are
+    accessible in the :attr:`BUILT_IN_PERSPECTIVES` dictionary.
+    """
     
     # A list of all saved perspective names
     # is saved as a comma-separated string
