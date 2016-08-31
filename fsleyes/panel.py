@@ -127,7 +127,13 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
 
         nav = []
 
-        for w in children:
+        log.debug('Updating nav order for {}'.format(type(self).__name__))
+        for i, w in enumerate(children):
+
+            log.debug('{} nav {:2d}: {}'.format(
+                type(self).__name__,
+                i,
+                type(w).__name__))
 
             # Special cases for some of our custom controls
             if isinstance(w, floatspin.FloatSpinCtrl):
@@ -135,7 +141,17 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
             elif isinstance(w, floatslider.SliderSpinPanel):
                 nav.append(w.spinCtrl.textCtrl)
             elif isinstance(w, rangeslider.RangePanel):
-                nav.extend([w.lowWidget, w.highWidget])
+
+                low  = w.lowWidget
+                high = w.highWidget
+
+                if isinstance(low, floatspin.FloatSpinCtrl):
+                    low = low.textCtrl
+                if isinstance(high, floatspin.FloatSpinCtrl):
+                    high = high.textCtrl 
+
+                nav.extend([low, high])
+
             elif isinstance(w, rangeslider.RangeSliderSpinPanel):
                 nav.extend([w.lowSpin.textCtrl, w.highSpin.textCtrl])
             else:
@@ -157,6 +173,11 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         try:
             focusIdx = self.__navOrder.index(wx.Window.FindFocus())
 
+            log.debug('{} focus nav event ({:2d} [{}] is focused)'.format(
+                type(self).__name__,
+                focusIdx,
+                type(wx.Window.FindFocus()).__name__))
+
         # Some other widget that we 
         # don't care about has focus.
         except:
@@ -177,6 +198,11 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
                 break
 
             nextIdx = (nextIdx + offset) % len(self.__navOrder)
+
+        log.debug('{}: moving focus to {:2d} [{}]'.format(
+            type(self).__name__,
+            nextIdx,
+            type(self.__navOrder[nextIdx]).__name__))
 
         self.__navOrder[nextIdx].SetFocus()
 

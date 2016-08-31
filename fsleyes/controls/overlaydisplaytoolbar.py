@@ -77,7 +77,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         """
         
         fsltoolbar.FSLeyesToolBar.__init__(
-            self, parent, overlayList, displayCtx, 24)
+            self, parent, overlayList, displayCtx, 24, kbFocus=True)
 
         self.__viewPanel      = viewPanel
         self.__currentOverlay = None
@@ -137,18 +137,27 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
 
         display   = self._displayCtx.getDisplay(overlay)
         opts      = display.getDisplayOpts()
+        tools     = []
+        nav       = []
 
         # Display tools
-        tools     = self.__makeDisplayTools(display)
+        dispTools, dispNav = self.__makeDisplayTools(display)
+
+        tools.extend(dispTools)
+        nav  .extend(dispNav)
 
         # DisplayOpts tools
         makeFunc = getattr(self, '_{}__make{}Tools'.format(
             type(self).__name__, type(opts).__name__), None)
 
         if makeFunc is not None:
-            tools.extend(makeFunc(opts))
+            optsTools, optsNav = makeFunc(opts)
 
-        self.SetTools(tools)
+            tools.extend(optsTools)
+            nav  .extend(optsNav)
+
+        self.SetTools(   tools)
+        self.setNavOrder(nav)
         
         # This method may have been called via an
         # event handler an existing tool in the
@@ -211,14 +220,13 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         """
 
         viewPanel = self.__viewPanel
-        dispSpecs = _TOOLBAR_PROPS[display]
 
         # Display settings
-        nameSpec  = dispSpecs['name']
-        typeSpec  = dispSpecs['overlayType']
-        alphaSpec = dispSpecs['alpha']
-        briSpec   = dispSpecs['brightness']
-        conSpec   = dispSpecs['contrast']
+        nameSpec  = _TOOLBAR_PROPS[display, 'name']
+        typeSpec  = _TOOLBAR_PROPS[display, 'overlayType']
+        alphaSpec = _TOOLBAR_PROPS[display, 'alpha']
+        briSpec   = _TOOLBAR_PROPS[display, 'brightness']
+        conSpec   = _TOOLBAR_PROPS[display, 'contrast']
 
         # Buttons which toggle overlay
         # info and display panel
@@ -276,43 +284,57 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         briconSizer.Add(conLabel)
         briconSizer.Add(conWidget)
 
-        return [panelWidget,
-                infoWidget,
-                nameTypePanel,
-                alphaPanel,
-                briconPanel]
+        tools = [panelWidget,
+                 infoWidget,
+                 nameTypePanel,
+                 alphaPanel,
+                 briconPanel]
+        nav   = [panelWidget,
+                 infoWidget,
+                 nameWidget,
+                 typeWidget,
+                 alphaWidget,
+                 briWidget,
+                 conWidget]
+
+        return tools, nav
 
 
     def __makeVolumeOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.VolumeOpts` instance.
         """
-        rangeSpec = _TOOLBAR_PROPS[opts]['displayRange']
-        resetSpec = _TOOLBAR_PROPS[opts]['resetDisplayRange']
-        cmapSpec  = _TOOLBAR_PROPS[opts]['cmap']
+        rangeSpec = _TOOLBAR_PROPS[opts, 'displayRange']
+        resetSpec = _TOOLBAR_PROPS[opts, 'resetDisplayRange']
+        cmapSpec  = _TOOLBAR_PROPS[opts, 'cmap']
 
         rangeWidget = props.buildGUI(self, opts, rangeSpec)
         resetWidget = props.buildGUI(self, opts, resetSpec)
         cmapWidget  = props.buildGUI(self, opts, cmapSpec)
 
-        cmapWidget = self.MakeLabelledTool(
+        lblCmapWidget = self.MakeLabelledTool(
             cmapWidget,
             strings.properties[opts, 'cmap'])
 
-        return [rangeWidget, resetWidget, cmapWidget]
+        tools = [rangeWidget, resetWidget, lblCmapWidget]
+        nav   = [rangeWidget, resetWidget, cmapWidget]
+
+        return tools, nav
 
 
     def __makeMaskOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.MaskOpts` instance.
         """ 
-        thresSpec  = _TOOLBAR_PROPS[opts]['threshold']
-        colourSpec = _TOOLBAR_PROPS[opts]['colour']
+        thresSpec  = _TOOLBAR_PROPS[opts, 'threshold']
+        colourSpec = _TOOLBAR_PROPS[opts, 'colour']
 
         thresWidget  = props.buildGUI(self, opts, thresSpec)
         colourWidget = props.buildGUI(self, opts, colourSpec)
 
-        return [thresWidget, colourWidget]
+        tools = [thresWidget, colourWidget]
+
+        return tools, tools
 
 
     def __makeLabelOptsTools(self, opts):
@@ -320,9 +342,9 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         of the given :class:`.LabelOpts` instance.
         """        
 
-        lutSpec     = _TOOLBAR_PROPS[opts]['lut']
-        outlineSpec = _TOOLBAR_PROPS[opts]['outline']
-        widthSpec   = _TOOLBAR_PROPS[opts]['outlineWidth']
+        lutSpec     = _TOOLBAR_PROPS[opts, 'lut']
+        outlineSpec = _TOOLBAR_PROPS[opts, 'outline']
+        widthSpec   = _TOOLBAR_PROPS[opts, 'outlineWidth']
 
         # lut/outline width widgets
         # are on a single panel
@@ -333,9 +355,6 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         lutWidget     = props.buildGUI(lutWidthPanel, opts, lutSpec)
         widthWidget   = props.buildGUI(lutWidthPanel, opts, widthSpec)
         outlineWidget = props.buildGUI(self,          opts, outlineSpec)
-
-        # lutWidget = self.MakeLabelledTool(
-        #     lutWidget, strings.properties[opts, 'lut'])
 
         lutLabel   = wx.StaticText(lutWidthPanel)
         widthLabel = wx.StaticText(lutWidthPanel)
@@ -348,7 +367,10 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         lutWidthSizer.Add(widthLabel)
         lutWidthSizer.Add(widthWidget, flag=wx.EXPAND)
 
-        return [lutWidthPanel, outlineWidget]
+        tools = [lutWidthPanel, outlineWidget]
+        nav   = [lutWidget, widthWidget, outlineWidget]
+
+        return tools, nav
 
 
     def __makeVectorOptsTools(self, opts):
@@ -356,9 +378,9 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         of the given :class:`.VectorOpts` instance.
         """        
         
-        modSpec   = _TOOLBAR_PROPS[opts]['modulateImage']
-        clipSpec  = _TOOLBAR_PROPS[opts]['clipImage']
-        rangeSpec = _TOOLBAR_PROPS[opts]['clippingRange']
+        modSpec   = _TOOLBAR_PROPS[opts, 'modulateImage']
+        clipSpec  = _TOOLBAR_PROPS[opts, 'clipImage']
+        rangeSpec = _TOOLBAR_PROPS[opts, 'clippingRange']
 
         panel = wx.Panel(self)
         sizer = wx.GridBagSizer()
@@ -379,7 +401,10 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         sizer.Add(clipWidget,  pos=(1, 1), span=(1, 1), flag=wx.EXPAND)
         sizer.Add(rangeWidget, pos=(0, 2), span=(2, 1), flag=wx.EXPAND)
 
-        return [panel]
+        tools = [panel]
+        nav   = [modWidget, clipWidget, rangeWidget]
+
+        return tools, nav
 
     
     def __makeRGBVectorOptsTools(self, opts):
@@ -393,49 +418,57 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.LineVectorOpts` instance.
         """        
-        widthSpec = _TOOLBAR_PROPS[opts]['lineWidth']
+        widthSpec = _TOOLBAR_PROPS[opts, 'lineWidth']
 
-        widget = props.buildGUI(self, opts, widthSpec)
-        widget = self.MakeLabelledTool(widget,
-                                       strings.properties[opts, 'lineWidth'])
+        widget    = props.buildGUI(self, opts, widthSpec)
+        lblWidget = self.MakeLabelledTool(
+            widget, strings.properties[opts, 'lineWidth'])
 
-        return self.__makeVectorOptsTools(opts) + [widget]
+        tools, nav = self.__makeVectorOptsTools(opts) 
+
+        return tools + [lblWidget], nav + [widget]
 
 
     def __makeModelOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.ModelOpts` instance.
         """        
-        colourSpec  = _TOOLBAR_PROPS[opts]['colour']
-        outlineSpec = _TOOLBAR_PROPS[opts]['outline']
-        widthSpec   = _TOOLBAR_PROPS[opts]['outlineWidth']
+        colourSpec  = _TOOLBAR_PROPS[opts, 'colour']
+        outlineSpec = _TOOLBAR_PROPS[opts, 'outline']
+        widthSpec   = _TOOLBAR_PROPS[opts, 'outlineWidth']
 
         colourWidget  = props.buildGUI(self, opts, colourSpec)
         outlineWidget = props.buildGUI(self, opts, outlineSpec)
         widthWidget   = props.buildGUI(self, opts, widthSpec)
 
-        widthWidget  = self.MakeLabelledTool(
+        lblWidthWidget  = self.MakeLabelledTool(
             widthWidget, strings.properties[opts, 'outlineWidth'])
-        return [colourWidget, outlineWidget, widthWidget]
+
+        tools = [colourWidget, outlineWidget, lblWidthWidget]
+        nav   = [colourWidget, outlineWidget, widthWidget]
+        
+        return tools, nav
 
 
     def __makeTensorOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.TensorOpts` instance.
         """
-        lightingSpec   = _TOOLBAR_PROPS[opts]['lighting']
+        lightingSpec   = _TOOLBAR_PROPS[opts, 'lighting']
         lightingWidget = props.buildGUI(self, opts, lightingSpec)
+
+        tools, nav = self.__makeVectorOptsTools(opts)
         
-        return self.__makeVectorOptsTools(opts) + [lightingWidget]
+        return tools + [lightingWidget], nav + [lightingWidget]
 
     
     def __makeSHOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.SHOpts` instance.
         """
-        lightSpec  = _TOOLBAR_PROPS[opts]['lighting']
-        sizeSpec   = _TOOLBAR_PROPS[opts]['size']
-        radSpec    = _TOOLBAR_PROPS[opts]['radiusThreshold']
+        lightSpec  = _TOOLBAR_PROPS[opts, 'lighting']
+        sizeSpec   = _TOOLBAR_PROPS[opts, 'size']
+        radSpec    = _TOOLBAR_PROPS[opts, 'radiusThreshold']
 
 
         panel = wx.Panel(self)
@@ -456,8 +489,13 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         sizer.Add(radLabel)
         sizer.Add(radWidget)
         panel.SetSizer(sizer)
-        
-        return [lightWidget, panel] 
+
+        tools, nav = self.__makeVectorOptsTools(opts)
+
+        tools.extend([lightWidget, panel])
+        nav.extend(  [lightWidget, sizeWidget, radWidget])
+
+        return tools, nav
 
 
 def _imageLabel(img):
@@ -522,186 +560,138 @@ _TOOLTIPS = td.TypeDict({
 
 _TOOLBAR_PROPS = td.TypeDict({
 
-    'Display' : {
-        'name'         : props.Widget(
-            'name',
-            tooltip=_TOOLTIPS['Display.name']),
-        'overlayType'  : props.Widget(
-            'overlayType',
-            tooltip=_TOOLTIPS['Display.overlayType'],
-            labels=strings.choices['Display.overlayType']),
-        'alpha'        : props.Widget(
-            'alpha',
-            spin=False,
-            showLimits=False,
-            tooltip=_TOOLTIPS['Display.alpha']),
-        'brightness'   : props.Widget(
-            'brightness',
-            spin=False,
-            showLimits=False,
-            tooltip=_TOOLTIPS['Display.brightness']),
-        'contrast'     : props.Widget(
-            'contrast',
-            spin=False,
-            showLimits=False,
-            tooltip=_TOOLTIPS['Display.contrast'])},
+    'Display.name'         : props.Widget(
+        'name',
+        tooltip=_TOOLTIPS['Display.name']),
+    'Display.overlayType'  : props.Widget(
+        'overlayType',
+        tooltip=_TOOLTIPS['Display.overlayType'],
+        labels=strings.choices['Display.overlayType']),
+    'Display.alpha'        : props.Widget(
+        'alpha',
+        spin=False,
+        showLimits=False,
+        tooltip=_TOOLTIPS['Display.alpha']),
+    'Display.brightness'   : props.Widget(
+        'brightness',
+        spin=False,
+        showLimits=False,
+        tooltip=_TOOLTIPS['Display.brightness']),
+    'Display.contrast'     : props.Widget(
+        'contrast',
+        spin=False,
+        showLimits=False,
+        tooltip=_TOOLTIPS['Display.contrast']),
 
-    'VolumeOpts' : {
-        'displayRange' : props.Widget(
-            'displayRange',
-            slider=False,
-            showLimits=False,
-            tooltip=_TOOLTIPS['VolumeOpts.displayRange'],
-            labels=[strings.choices['VolumeOpts.displayRange.min'],
-                    strings.choices['VolumeOpts.displayRange.max']]),
-        'resetDisplayRange' : actions.ActionButton(
-            'resetDisplayRange',
-            icon=icons.findImageFile('verticalReset24'),
-            tooltip=_TOOLTIPS['VolumeOpts.resetDisplayRange']), 
-        'cmap' : props.Widget(
-            'cmap',
-            labels=fslcm.getColourMapLabel,
-            tooltip=_TOOLTIPS['VolumeOpts.cmap'])},
+    'VolumeOpts.displayRange' : props.Widget(
+        'displayRange',
+        slider=False,
+        showLimits=False,
+        tooltip=_TOOLTIPS['VolumeOpts.displayRange'],
+        labels=[strings.choices['VolumeOpts.displayRange.min'],
+                strings.choices['VolumeOpts.displayRange.max']]),
+    'VolumeOpts.resetDisplayRange' : actions.ActionButton(
+        'resetDisplayRange',
+        icon=icons.findImageFile('verticalReset24'),
+        tooltip=_TOOLTIPS['VolumeOpts.resetDisplayRange']), 
+    'VolumeOpts.cmap' : props.Widget(
+        'cmap',
+        labels=fslcm.getColourMapLabel,
+        tooltip=_TOOLTIPS['VolumeOpts.cmap']),
 
-    'MaskOpts' : {
-        'threshold' : props.Widget(
-            'threshold',
-            showLimits=False,
-            spin=False,
-            tooltip=_TOOLTIPS['MaskOpts.threshold'],
-            labels=[strings.choices['MaskOpts.threshold.min'],
-                    strings.choices['MaskOpts.threshold.max']]),
-        'colour'    : props.Widget(
-            'colour',
-            size=(24, 24),
-            tooltip=_TOOLTIPS['MaskOpts.colour'])},
+    'MaskOpts.threshold' : props.Widget(
+        'threshold',
+        showLimits=False,
+        spin=False,
+        tooltip=_TOOLTIPS['MaskOpts.threshold'],
+        labels=[strings.choices['MaskOpts.threshold.min'],
+                strings.choices['MaskOpts.threshold.max']]),
+    'MaskOpts.colour'    : props.Widget(
+        'colour',
+        size=(24, 24),
+        tooltip=_TOOLTIPS['MaskOpts.colour']),
 
-    'LabelOpts' : {
-        'lut'     : props.Widget(
-            'lut',
-            tooltip=_TOOLTIPS['LabelOpts.lut'],
-            labels=lambda l: l.name),
-        'outline' : props.Widget(
-            'outline',
-            tooltip=_TOOLTIPS['LabelOpts.outline'],
-            icon=[icons.findImageFile('outline24'),
-                  icons.findImageFile('filled24')],
-            toggle=True),
-        
-        'outlineWidth' : props.Widget(
-            'outlineWidth',
-            tooltip=_TOOLTIPS['LabelOpts.outlineWidth'],
-            showLimits=False,
-            spin=False)},
+    'LabelOpts.lut'     : props.Widget(
+        'lut',
+        tooltip=_TOOLTIPS['LabelOpts.lut'],
+        labels=lambda l: l.name),
+    'LabelOpts.outline' : props.Widget(
+        'outline',
+        tooltip=_TOOLTIPS['LabelOpts.outline'],
+        icon=[icons.findImageFile('outline24'),
+              icons.findImageFile('filled24')],
+        toggle=True),
+    'LabelOpts.outlineWidth' : props.Widget(
+        'outlineWidth',
+        tooltip=_TOOLTIPS['LabelOpts.outlineWidth'],
+        showLimits=False,
+        spin=False),
 
-    'RGBVectorOpts' : {
-        'modulateImage' : props.Widget(
-            'modulateImage',
-            labels=_imageLabel,
-            tooltip=_TOOLTIPS['VectorOpts.modulateImage']),
-        'clipImage' : props.Widget(
-            'clipImage',
-            labels=_imageLabel,
-            tooltip=_TOOLTIPS['VectorOpts.clipImage']), 
-        'clippingRange' : props.Widget(
-            'clippingRange',
-            showLimits=False,
-            slider=True,
-            spin=False,
-            tooltip=_TOOLTIPS['VectorOpts.clippingRange'],
-            labels=[strings.choices['VectorOpts.clippingRange.min'],
-                    strings.choices['VectorOpts.clippingRange.max']],
-            dependencies=['clipImage'],
-            enabledWhen=lambda o, ci: ci is not None)},
+    'ModelOpts.colour'       : props.Widget(
+        'colour',
+        size=(24, 24),
+        tooltip=_TOOLTIPS['ModelOpts.colour']),
+    'ModelOpts.outline'      : props.Widget(
+        'outline',
+        tooltip=_TOOLTIPS['ModelOpts.outline'],
+        icon=[icons.findImageFile('outline24'),
+              icons.findImageFile('filled24')],
+        toggle=True),
+    'ModelOpts.outlineWidth' : props.Widget(
+        'outlineWidth',
+        showLimits=False,
+        spin=False,
+        tooltip=_TOOLTIPS['ModelOpts.outlineWidth'],
+        enabledWhen=lambda i: i.outline),
 
-    'LineVectorOpts' : {
-        'modulateImage' : props.Widget(
-            'modulateImage',
-            labels=_imageLabel,
-            tooltip=_TOOLTIPS['VectorOpts.modulateImage']),
-        'clipImage' : props.Widget(
-            'clipImage',
-            labels=_imageLabel,
-            tooltip=_TOOLTIPS['VectorOpts.clipImage']), 
-        'clippingRange' : props.Widget(
-            'clippingRange',
-            showLimits=False,
-            slider=True,
-            spin=False,
-            tooltip=_TOOLTIPS['VectorOpts.clippingRange'],
-            labels=[strings.choices['VectorOpts.clippingRange.min'],
-                    strings.choices['VectorOpts.clippingRange.max']], 
-            dependencies=['clipImage'],
-            enabledWhen=lambda o, ci: ci is not None),
-        'lineWidth' : props.Widget(
-            'lineWidth',
-            showLimits=False,
-            spin=False,
-            tooltip=_TOOLTIPS['LineVectorOpts.lineWidth'])},
+    'VectorOpts.modulateImage' : props.Widget(
+        'modulateImage',
+        labels=_imageLabel,
+        tooltip=_TOOLTIPS['VectorOpts.modulateImage']),
+    'VectorOpts.clipImage' : props.Widget(
+        'clipImage',
+        labels=_imageLabel,
+        tooltip=_TOOLTIPS['VectorOpts.clipImage']), 
+    'VectorOpts.clippingRange' : props.Widget(
+        'clippingRange',
+        showLimits=False,
+        slider=True,
+        spin=False,
+        tooltip=_TOOLTIPS['VectorOpts.clippingRange'],
+        labels=[strings.choices['VectorOpts.clippingRange.min'],
+                strings.choices['VectorOpts.clippingRange.max']],
+        dependencies=['clipImage'],
+        enabledWhen=lambda o, ci: ci is not None),
 
-    'ModelOpts' : {
-        'colour'       : props.Widget(
-            'colour',
-            size=(24, 24),
-            tooltip=_TOOLTIPS['ModelOpts.colour']),
-        'outline'      : props.Widget(
-            'outline',
-            tooltip=_TOOLTIPS['ModelOpts.outline'],
-            icon=[icons.findImageFile('outline24'),
-                  icons.findImageFile('filled24')],
-            toggle=True),
-        'outlineWidth' : props.Widget(
-            'outlineWidth',
-            showLimits=False,
-            spin=False,
-            tooltip=_TOOLTIPS['ModelOpts.outlineWidth'],
-            enabledWhen=lambda i: i.outline)},
+    'LineVectorOpts.lineWidth' : props.Widget(
+        'lineWidth',
+        showLimits=False,
+        spin=False,
+        tooltip=_TOOLTIPS['LineVectorOpts.lineWidth']),
 
-    'TensorOpts' : {
-        'lighting'      : props.Widget(
-            'lighting',
-            icon=[icons.findImageFile('lightbulbHighlight24'),
-                  icons.findImageFile('lightbulb24')],
-            tooltip=_TOOLTIPS['TensorOpts.lighting']),
-        'modulateImage' : props.Widget(
-            'modulateImage',
-            labels=_imageLabel,
-            tooltip=_TOOLTIPS['VectorOpts.modulateImage']),
-        'clipImage' : props.Widget(
-            'clipImage',
-            labels=_imageLabel,
-            tooltip=_TOOLTIPS['VectorOpts.clipImage']), 
-        'clippingRange' : props.Widget(
-            'clippingRange',
-            showLimits=False,
-            slider=True,
-            spin=False,
-            tooltip=_TOOLTIPS['VectorOpts.clipImage'],
-            labels=[strings.choices['VectorOpts.clippingRange.min'],
-                    strings.choices['VectorOpts.clippingRange.max']],
-            dependencies=['clipImage'],
-            enabledWhen=lambda o, ci: ci is not None)},
+    'TensorOpts.lighting'      : props.Widget(
+        'lighting',
+        icon=[icons.findImageFile('lightbulbHighlight24'),
+              icons.findImageFile('lightbulb24')],
+        tooltip=_TOOLTIPS['TensorOpts.lighting']),
 
-    'SHOpts' : {
-        'lighting'        : props.Widget(
-            'lighting',
-            icon=[icons.findImageFile('lightbulbHighlight24'),
-                  icons.findImageFile('lightbulb24')],
-            tooltip=_TOOLTIPS['SHOpts.lighting']), 
-            
-        'size'            : props.Widget(
-            'size',
-            showLimits=False,
-            slider=True,
-            spin=False,
-            tooltip=_TOOLTIPS['SHOpts.size']),
-        'radiusThreshold' : props.Widget(
-            'radiusThreshold',
-            slider=True,
-            spin=False,
-            showLimits=False,
-            tooltip=_TOOLTIPS['SHOpts.radiusThreshold']),
-    }
+    'SHOpts.lighting'        : props.Widget(
+        'lighting',
+        icon=[icons.findImageFile('lightbulbHighlight24'),
+              icons.findImageFile('lightbulb24')],
+        tooltip=_TOOLTIPS['SHOpts.lighting']), 
+    'SHOpts.size'            : props.Widget(
+        'size',
+        showLimits=False,
+        slider=True,
+        spin=False,
+        tooltip=_TOOLTIPS['SHOpts.size']),
+    'SHOpts.radiusThreshold' : props.Widget(
+        'radiusThreshold',
+        slider=True,
+        spin=False,
+        showLimits=False,
+        tooltip=_TOOLTIPS['SHOpts.radiusThreshold']),
 })
 """This dictionary defines specifications for all controls shown on an
 :class:`OverlayDisplayToolBar`. 

@@ -58,7 +58,9 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
                  parent,
                  overlayList,
                  displayCtx,
-                 height=32):
+                 height=32,
+                 *args,
+                 **kwargs):
         """Create a ``FSLeyesToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
@@ -75,9 +77,17 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
                           
         :arg actionz:     A dictionary of actions passed through to the
                           :meth:`.ActionProvider.__init__`.
+
+        All other arguments are passed through to
+        :meth:`.FSLeyesPanel.__init__`.
         """
         
-        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self,
+                                       parent,
+                                       overlayList,
+                                       displayCtx,
+                                       *args,
+                                       **kwargs)
 
         self.__tools      = []
         self.__index      = 0
