@@ -82,12 +82,19 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
     """ 
 
     
-    def __init__(self, overlayList, displayCtx):
+    def __init__(self, overlayList, displayCtx, focus=False):
         """Create a :class:`_FSLeyesPanel`.
 
         :arg overlayList: A :class:`.OverlayList` instance.
         
         :arg displayCtx:  A :class:`.DisplayContext` instance.
+
+        :arg focus:       If ``True``, a keyboard event handler is configured
+                          to intercept ``Tab`` and ``Shift+Tab`` keyboard
+                          events, to shift focus between a set of child
+                          widgets. The child widgets to be included in the
+                          navigation can be specified with the
+                          :meth:`setNavOrder` method.
         """
         
         actions.ActionProvider     .__init__(self)
@@ -103,6 +110,55 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         self._name        = '{}_{}'.format(self.__class__.__name__, id(self))
         
         self.__destroyed  = False
+        self.__navOrder   = None
+
+        if focus:
+            self.Bind(wx.EVT_CHAR_HOOK, self.__onCharHook)
+
+
+    def setNavOrder(self, children):
+        """Set the keyboard (tab, shift+tab) navigation order to the
+        given list of controls, assumed to be children of this
+        ``_FSLeyesPanel``.
+        """
+        self.__navOrder = list(children)
+
+
+    def __onCharHook(self, ev):
+        """Called on ``EVT_CHAR_HOOK`` events. Intercepts tab key presses,
+        to force an explicit keyboard navigation ordering.
+        """
+
+        if self.__navOrder is None or ev.GetKeyCode() != wx.WXK_TAB:
+            ev.Skip()
+            return
+
+        # Get the widget that has focus
+        try:
+            focusIdx = self.__navOrder.index(wx.Window.FindFocus())
+
+        # Some other widget that we 
+        # don't care about has focus.
+        except:
+            ev.Skip()
+            return
+
+        if ev.ShiftDown(): offset = -1
+        else:              offset =  1
+
+        # Get the next widget in
+        # the tab traversal order
+        nextIdx = (focusIdx + offset) % len(self.__navOrder)
+
+        # Search for the next enabled widget
+        while not self.__navOrder[nextIdx].IsEnabled():
+
+            if nextIdx == focusIdx:
+                break
+
+            nextIdx = (nextIdx + offset) % len(self.__navOrder)
+
+        self.__navOrder[nextIdx].SetFocus()
 
 
     def getDisplayContext(self):
@@ -149,9 +205,10 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         actions.ActionProvider.destroy(self)
         self._displayCtx  = None
         self._overlayList = None
+        self.__navOrder   = None
         self.__destroyed  = True
 
-        
+
     def destroyed(self):
         """Returns ``True`` if a call to :meth:`destroy` has been made,
         ``False`` otherwise.
@@ -205,9 +262,22 @@ class FSLeyesPanel(six.with_metaclass(FSLeyesPanelMeta,
     *FSLeyes*. See the :mod:`fsleyes` documentation for more details.
     """
     
-    def __init__(self, parent, overlayList, displayCtx):
-        FSLeyesPanelBase.__init__(self, parent)
-        _FSLeyesPanel.__init__(self, overlayList, displayCtx)
+    def __init__(self, parent, overlayList, displayCtx, *args, **kwargs):
+
+        # Slightly ugly way of supporting the _FSLeyesPanel
+        # focus argument. In order to catch keyboard events,
+        # we need the WANTS_CHARS style. So we peek in
+        # kwargs to see if it is present. If it is, we add
+        # WANTS_CHARS to the style flag.
+        focus = kwargs.pop('focus', False)
+        if focus:
+
+            # The wx.Panel style defaults to TAB_TRAVERSAL
+            style = kwargs.get('style', wx.TAB_TRAVERSAL)
+            kwargs['style'] = style | wx.WANTS_CHARS
+
+        FSLeyesPanelBase.__init__(self, parent, *args, **kwargs)
+        _FSLeyesPanel.__init__(self, overlayList, displayCtx, focus)
 
 
 class FSLeyesSettingsPanel(FSLeyesPanel):

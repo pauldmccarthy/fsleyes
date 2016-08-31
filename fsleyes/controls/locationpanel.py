@@ -110,7 +110,11 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """
 
-        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(self,
+                                       parent,
+                                       overlayList,
+                                       displayCtx,
+                                       focus=True)
 
         # Whenever the selected overlay changes,
         # a reference to it and its DisplayOpts
@@ -219,6 +223,15 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         self.__column1    .SetMinSize(self.__column1    .GetBestSize())
         self.__column2    .SetMinSize(self.__column2    .GetBestSize())
         self.__info       .SetMinSize((100, 100))
+
+        # Keyboard navigation - see FSLeyesPanel
+        self.setNavOrder((self.__worldX.textCtrl,
+                          self.__worldY.textCtrl,
+                          self.__worldZ.textCtrl,
+                          self.__voxelX.textCtrl,
+                          self.__voxelY.textCtrl,
+                          self.__voxelZ.textCtrl,
+                          self.__volume.textCtrl))
         
         self.Layout()
 
