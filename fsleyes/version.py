@@ -13,7 +13,7 @@ version number and information.
    __vcs_version__
 """
 
-__version__ = '0.9.4'
+__version__ = '0.9.5'
 """Current version number, as a string. """
 
 
