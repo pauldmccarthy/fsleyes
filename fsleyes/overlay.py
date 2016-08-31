@@ -129,6 +129,8 @@ class OverlayList(props.HasProperties):
 
         if name is None:
             return None
+
+        absname = op.abspath(name)
         
         for overlay in self.overlays:
 
@@ -141,10 +143,10 @@ class OverlayList(props.HasProperties):
             # Ignore file extensions for NIFTI images.
             if isinstance(overlay, fslimage.Image):
                 if fslimage.removeExt(overlay.dataSource) == \
-                   fslimage.removeExt(name):
+                   fslimage.removeExt(absname):
                     return overlay
             else:
-                if overlay.dataSource == name:
+                if overlay.dataSource == absname:
                     return overlay
                 
         return None

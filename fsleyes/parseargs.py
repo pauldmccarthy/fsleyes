@@ -1900,12 +1900,19 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
 
         # Display space may be a string,
         # or a path to an image
-        if args.displaySpace is not None and op.exists(args.displaySpace):
-            displaySpace = _findOrLoad(overlayList,
-                                       args.displaySpace,
-                                       fslimage.Image)
-        else:
-            displaySpace = args.displaySpace
+        displaySpace = None
+
+        if args.displaySpace == 'world':
+            displaySpace = 'world'
+
+        elif args.displaySpace is not None:
+            try:
+                displaySpace = _findOrLoad(overlayList,
+                                           args.displaySpace,
+                                           fslimage.Image)
+            except:
+                log.warning('Unrecognised value for display space: {}'.format(
+                    args.displaySpace))
 
         if displaySpace is not None:
             displayCtx.displaySpace = displaySpace
@@ -2148,10 +2155,14 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                 value = getattr(optArgs, fileOpt, None)
                 if value is not None:
 
-                    image = _findOrLoad(overlayList,
-                                        value,
-                                        fslimage.Image,
-                                        overlay)
+                    try:
+                        image = _findOrLoad(overlayList,
+                                            value,
+                                            fslimage.Image,
+                                            overlay)
+                    except:
+                        log.warning('Unrecognised value for {}: {}'.format(
+                            fileOpt, args.displaySpace))
 
                     setattr(optArgs, fileOpt, None)
 
