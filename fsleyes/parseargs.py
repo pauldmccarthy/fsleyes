@@ -540,7 +540,7 @@ ARGUMENTS = td.TypeDict({
     'OrthoOpts.showXCanvas' : ('xh', 'hidex',      False),
     'OrthoOpts.showYCanvas' : ('yh', 'hidey',      False),
     'OrthoOpts.showZCanvas' : ('zh', 'hidez',      False),
-    'OrthoOpts.showLabels'  : ('lh', 'hideLabels', False),
+    'OrthoOpts.showLabels'  : ('hl', 'hideLabels', False),
     'OrthoOpts.labelSize'   : ('ls', 'labelSize',  True),
 
     'OrthoOpts.xcentre'     : ('xc', 'xcentre', True),
