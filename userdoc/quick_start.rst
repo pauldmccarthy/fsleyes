@@ -30,8 +30,8 @@ looks like this:
    :align: center
 
 
-This is slightly boring, so let's load an image. Select the *File
-|right_arrow| Add overlay from file* menu option, and choose a `.nii.gz` image
+This is slightly boring, so let's load an image. Select the *File*
+|right_arrow| *Add overlay from file* menu option, and choose a `.nii.gz` image
 to load.
           
 Now things are a bit more interesting:
@@ -103,10 +103,14 @@ You can interact with an orthographic view in a number of ways:
              documentation, we will use the following symbols to represent
              keyboard modifiers keys:
 
-             - |shift_key|: Shift 
+             - |shift_key|:   Shift 
              - |control_key|: Control
              - |command_key|: Command (on OSX; Control on other platforms)
              - |alt_key|:     Option (on OSX; Alt on other platforms)
+
+             If you are using FSLeyes on OSX, over a SSH/X11 connection, you 
+             may need to play with the XQuartz settings before the |alt_key|
+             will work.
 
 
 The overlay list
