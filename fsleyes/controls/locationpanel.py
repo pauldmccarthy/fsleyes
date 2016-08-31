@@ -114,7 +114,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
                                        parent,
                                        overlayList,
                                        displayCtx,
-                                       focus=True)
+                                       kbFocus=True)
 
         # Whenever the selected overlay changes,
         # a reference to it and its DisplayOpts
@@ -225,13 +225,13 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         self.__info       .SetMinSize((100, 100))
 
         # Keyboard navigation - see FSLeyesPanel
-        self.setNavOrder((self.__worldX.textCtrl,
-                          self.__worldY.textCtrl,
-                          self.__worldZ.textCtrl,
-                          self.__voxelX.textCtrl,
-                          self.__voxelY.textCtrl,
-                          self.__voxelZ.textCtrl,
-                          self.__volume.textCtrl))
+        self.setNavOrder((self.__worldX,
+                          self.__worldY,
+                          self.__worldZ,
+                          self.__voxelX,
+                          self.__voxelY,
+                          self.__voxelZ,
+                          self.__volume))
         
         self.Layout()
 

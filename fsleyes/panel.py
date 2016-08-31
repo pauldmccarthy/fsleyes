@@ -48,8 +48,11 @@ import six
 import                   wx
 import wx.lib.agw.aui as wxaui
 
-import                        props
-import pwidgets.widgetlist as widgetlist
+import                         props
+import pwidgets.widgetlist  as widgetlist
+import pwidgets.floatspin   as floatspin
+import pwidgets.floatslider as floatslider
+import pwidgets.rangeslider as rangeslider
 
 from fsl.utils.platform import platform as fslplatform
 from .                  import             actions
@@ -82,14 +85,14 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
     """ 
 
     
-    def __init__(self, overlayList, displayCtx, focus=False):
+    def __init__(self, overlayList, displayCtx, kbFocus=False):
         """Create a :class:`_FSLeyesPanel`.
 
         :arg overlayList: A :class:`.OverlayList` instance.
         
         :arg displayCtx:  A :class:`.DisplayContext` instance.
 
-        :arg focus:       If ``True``, a keyboard event handler is configured
+        :arg kbFocus:     If ``True``, a keyboard event handler is configured
                           to intercept ``Tab`` and ``Shift+Tab`` keyboard
                           events, to shift focus between a set of child
                           widgets. The child widgets to be included in the
@@ -112,7 +115,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         self.__destroyed  = False
         self.__navOrder   = None
 
-        if focus:
+        if kbFocus:
             self.Bind(wx.EVT_CHAR_HOOK, self.__onCharHook)
 
 
@@ -121,7 +124,24 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         given list of controls, assumed to be children of this
         ``_FSLeyesPanel``.
         """
-        self.__navOrder = list(children)
+
+        nav = []
+
+        for w in children:
+
+            # Special cases for some of our custom controls
+            if isinstance(w, floatspin.FloatSpinCtrl):
+                nav.append(w.textCtrl)
+            elif isinstance(w, floatslider.SliderSpinPanel):
+                nav.append(w.spinCtrl.textCtrl)
+            elif isinstance(w, rangeslider.RangePanel):
+                nav.extend([w.lowWidget, w.highWidget])
+            elif isinstance(w, rangeslider.RangeSliderSpinPanel):
+                nav.extend([w.lowSpin.textCtrl, w.highSpin.textCtrl])
+            else:
+                nav.append(w)
+ 
+        self.__navOrder = nav
 
 
     def __onCharHook(self, ev):
@@ -265,19 +285,19 @@ class FSLeyesPanel(six.with_metaclass(FSLeyesPanelMeta,
     def __init__(self, parent, overlayList, displayCtx, *args, **kwargs):
 
         # Slightly ugly way of supporting the _FSLeyesPanel
-        # focus argument. In order to catch keyboard events,
+        # kbFocus argument. In order to catch keyboard events,
         # we need the WANTS_CHARS style. So we peek in
         # kwargs to see if it is present. If it is, we add
         # WANTS_CHARS to the style flag.
-        focus = kwargs.pop('focus', False)
-        if focus:
+        kbFocus = kwargs.pop('kbFocus', False)
+        if kbFocus:
 
             # The wx.Panel style defaults to TAB_TRAVERSAL
             style = kwargs.get('style', wx.TAB_TRAVERSAL)
             kwargs['style'] = style | wx.WANTS_CHARS
 
         FSLeyesPanelBase.__init__(self, parent, *args, **kwargs)
-        _FSLeyesPanel.__init__(self, overlayList, displayCtx, focus)
+        _FSLeyesPanel.__init__(self, overlayList, displayCtx, kbFocus)
 
 
 class FSLeyesSettingsPanel(FSLeyesPanel):

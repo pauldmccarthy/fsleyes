@@ -57,7 +57,8 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         fslpanel.FSLeyesSettingsPanel.__init__(self,
                                                parent,
                                                overlayList,
-                                               displayCtx)
+                                               displayCtx,
+                                               kbFocus=True)
 
         self.__canvasPanel = canvasPanel
         self.__makeTools()
@@ -143,13 +144,16 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         widgets.AddGroup('scene' ,    strings.labels[self, 'scene'])
         widgets.AddGroup( panelGroup, strings.labels[self,  panelGroup])
 
+        allWidgets = []
+
         for dispProp in canvasPanelProps:
 
             widget = props.buildGUI(widgets,
                                     canvasPanel,
                                     dispProp,
                                     showUnlink=False)
-            
+
+            allWidgets.append(widget)
             widgets.AddWidget(
                 widget,
                 displayName=strings.properties[canvasPanel, dispProp.key],
@@ -164,7 +168,8 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
                                     opts,
                                     dispProp,
                                     showUnlink=False)
-            
+
+            allWidgets.append(widget)
             widgets.AddWidget(
                 widget,
                 displayName=strings.properties[opts, dispProp.key],
@@ -176,7 +181,8 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
                                     displayCtx,
                                     dispProp,
                                     showUnlink=False)
-            
+
+            allWidgets.append(widget)
             widgets.AddWidget(
                 widget,
                 displayName=strings.properties[displayCtx, dispProp.key],
@@ -189,12 +195,15 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
                                     opts,
                                     dispProp,
                                     showUnlink=False)
-            
+
+            allWidgets.append(widget)
             widgets.AddWidget(
                 widget,
                 displayName=strings.properties[opts, dispProp.key],
                 tooltip=fsltooltips.properties[opts, dispProp.key],
                 groupName=panelGroup)
+
+        self.setNavOrder(allWidgets)
 
         widgets.Expand('scene')
         widgets.Expand(panelGroup)

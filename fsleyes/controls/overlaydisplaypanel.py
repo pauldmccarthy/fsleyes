@@ -68,7 +68,8 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         fslpanel.FSLeyesSettingsPanel.__init__(self,
                                                parent,
                                                overlayList,
-                                               displayCtx)
+                                               displayCtx,
+                                               kbFocus=True)
 
         displayCtx .addListener('selectedOverlay',
                                  self._name,
@@ -76,6 +77,9 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         overlayList.addListener('overlays',
                                  self._name,
                                  self.__selectedOverlayChanged)
+
+        self.__dispWidgets = None
+        self.__optsWidgets = None
 
         self.__currentOverlay = None
         self.__selectedOverlayChanged()
@@ -98,6 +102,8 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
             display.removeListener('overlayType', self._name)
 
         self.__currentOverlay = None
+        self.__dispWidgets    = None
+        self.__optsWidgets    = None
         
         fslpanel.FSLeyesPanel.destroy(self)
 
@@ -146,12 +152,13 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         widgetList.AddGroup('display', strings.labels[self, display])
         widgetList.AddGroup('opts',    strings.labels[self, opts]) 
 
-        self.__updateWidgets(display, 'display')
-        self.__updateWidgets(opts,    'opts')
+        self.__dispWidgets = self.__updateWidgets(display, 'display')
+        self.__optsWidgets = self.__updateWidgets(opts,    'opts')
 
         widgetList.Expand('display', displayExpanded)
         widgetList.Expand('opts',    optsExpanded)
-        
+
+        self.setNavOrder(self.__dispWidgets + self.__optsWidgets)
         self.Layout()
 
 
@@ -163,7 +170,9 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         """
 
         opts = self._displayCtx.getOpts(self.__currentOverlay)
-        self.__updateWidgets(opts, 'opts')
+        self.__optsWidgets = self.__updateWidgets(opts, 'opts')
+
+        self.setNavOrder(self.__dispWidgets + self.__optsWidgets)
         self.Layout()
         
 
@@ -179,6 +188,10 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         :arg groupName: Either ``'display'`` or ``'opts'``, corresponding
                         to :class:`.Display` or :class:`.DisplayOpts`
                         properties.
+
+
+        :returns:       A list containing all of the new widgets that
+                        were created.
         """
 
         widgetList = self.getWidgetList()
@@ -194,7 +207,9 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
                     for p in dispProps]
         tooltips = [fsltooltips.properties.get((target, p.key), None)
                     for p in dispProps]
-        widgets  = []
+
+        widgets         = []
+        returnedWidgets = []
 
         for p in dispProps:
 
@@ -202,7 +217,13 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
             # Build a panel for the VolumeOpts colour map controls.
             if isinstance(target, displayctx.VolumeOpts) and p.key == 'cmap':
-                widget = self.__buildColourMapWidget(target, widget)
+
+                cmapWidget    = widget
+                widget, extra = self.__buildColourMapWidget(target, cmapWidget)
+
+                returnedWidgets.extend([cmapWidget] + list(extra))
+            else:
+                returnedWidgets.append(widget)
                 
             widgets.append(widget)
 
@@ -215,11 +236,16 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
         self.Layout()
 
+        return returnedWidgets
+
 
     def __buildColourMapWidget(self, target, cmapWidget):
         """Builds a panel which contains widgets for controlling the
         :attr:`.VolumeOpts.cmap`, :attr:`.VolumeOpts.negativeCmap`, and
         :attr:`.VolumeOpts.useNegativeCmap`.
+
+        :returns: A ``wx.Sizer`` containing all of the widgets, and a list
+                  containing the extra widgets that were added.
         """
 
         widgets = self.getWidgetList()
@@ -254,7 +280,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         sizer.Add(negCmap,    flag=wx.EXPAND)
         sizer.Add(useNegCmap, flag=wx.EXPAND)
         
-        return sizer
+        return sizer, [negCmap, useNegCmap]
 
 
 def _imageName(img):
