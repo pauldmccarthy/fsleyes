@@ -208,12 +208,11 @@ void main(void) {
   voxColour.xyz += colourXform[3].x; 
 
   /* 
-   * Scale the modulation value, and modulate the colour
-   * (but not alpha). Assuming that xyz alphas are identical.
+   * Scale the modulation value, and 
+   * modulate the colour (but not alpha).
    */
   modValue       = (modValue + modLow) / (modHigh - modLow);
   voxColour.xyz *= modValue;
-  voxColour.a    = xColour.a;
 
   gl_FragColor = voxColour * fragColourFactor;
 

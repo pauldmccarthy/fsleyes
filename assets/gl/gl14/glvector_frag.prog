@@ -173,7 +173,8 @@ MOV voxValue.a, fragColour.a;
 # Apply the bri/con scale and offset
 MAD fragColour, fragColour, colourXform.x, colourXform.y;
 
-# Scale the modulation value, and modulate the colour
+# Scale the modulation value, modulate 
+# the colour, and restore the alpha value.
 ADD modValue.x, modValue.x, mod.x;
 MUL modValue.x, modValue.x, mod.z;
 MUL fragColour, fragColour, modValue.x;
