@@ -354,22 +354,32 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         every label on the current LUT.
         """ 
 
-        lut      = self.__selectedLut
+        lut       = self.__selectedLut
         allLabels = [label.value() for label in lut.labels]
+
+        lut.disableListener('labels', self._name)
 
         for label in allLabels:
             lut.set(label, enabled=True)
+
+        lut.enableListener('labels', self._name)
+        self.__lutLabelsChanged()
 
 
     def __onSelectNone(self, ev):
         """Called when the user pushes the *Select none* button. Disables
         every label on the current LUT.
         """
-        lut      = self.__selectedLut
+        lut       = self.__selectedLut
         allLabels = [label.value() for label in lut.labels]
 
+        lut.disableListener('labels', self._name)
+
         for label in allLabels:
-            lut.set(label, enabled=False) 
+            lut.set(label, enabled=False)
+
+        lut.enableListener('labels', self._name)
+        self.__lutLabelsChanged()
 
 
     def __onNewLut(self, ev):
