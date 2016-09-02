@@ -382,6 +382,8 @@ labels = TypeDict({
     'CanvasPanel.screenshot.notSaved.cancel' : 'Cancel screenshot',
 
 
+    'LookupTablePanel.selectAll'   : 'Select all',
+    'LookupTablePanel.selectNone'  : 'Deselect all',
     'LookupTablePanel.addLabel'    : 'Add label',
     'LookupTablePanel.removeLabel' : 'Remove label',
     'LookupTablePanel.newLut'      : 'New LUT',

@@ -90,6 +90,8 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
                          elistbox.ELB_EDITABLE))
 
         self.__lutChoice       = wx.Choice(self.__controlCol)
+        self.__selAllButton    = wx.Button(self.__controlCol)
+        self.__selNoneButton   = wx.Button(self.__controlCol)
         self.__addLabelButton  = wx.Button(self.__controlCol)
         self.__rmLabelButton   = wx.Button(self.__controlCol)
         self.__newLutButton    = wx.Button(self.__controlCol)
@@ -104,8 +106,10 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         self             .SetSizer(self.__sizer)
 
         self.__controlColSizer.Add(self.__lutChoice,      flag=wx.EXPAND)
+        self.__controlColSizer.Add(self.__selAllButton,   flag=wx.EXPAND)
+        self.__controlColSizer.Add(self.__selNoneButton,  flag=wx.EXPAND) 
         self.__controlColSizer.Add(self.__addLabelButton, flag=wx.EXPAND) 
-        self.__controlColSizer.Add(self.__rmLabelButton,  flag=wx.EXPAND) 
+        self.__controlColSizer.Add(self.__rmLabelButton,  flag=wx.EXPAND)
         self.__controlColSizer.Add(self.__newLutButton,   flag=wx.EXPAND)
         self.__controlColSizer.Add(self.__copyLutButton,  flag=wx.EXPAND) 
         self.__controlColSizer.Add(self.__loadLutButton,  flag=wx.EXPAND)
@@ -115,6 +119,8 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         self.__sizer.Add(self.__labelList,  flag=wx.EXPAND, proportion=1)
 
         # Label the buttons
+        self.__selAllButton  .SetLabel(strings.labels[  self, 'selectAll'])
+        self.__selNoneButton .SetLabel(strings.labels[  self, 'selectNone'])
         self.__addLabelButton.SetLabel(strings.labels[  self, 'addLabel'])
         self.__rmLabelButton .SetLabel(strings.labels[  self, 'removeLabel'])
         self.__newLutButton  .SetLabel(strings.labels[  self, 'newLut'])
@@ -125,6 +131,8 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         self.__labelList.Bind(elistbox.EVT_ELB_EDIT_EVENT, self.__onLabelEdit)
 
         self.__lutChoice     .Bind(wx.EVT_CHOICE, self.__onLutChoice)
+        self.__selAllButton  .Bind(wx.EVT_BUTTON, self.__onSelectAll)
+        self.__selNoneButton .Bind(wx.EVT_BUTTON, self.__onSelectNone)
         self.__addLabelButton.Bind(wx.EVT_BUTTON, self.__onLabelAdd)
         self.__rmLabelButton .Bind(wx.EVT_BUTTON, self.__onLabelRemove) 
         self.__newLutButton  .Bind(wx.EVT_BUTTON, self.__onNewLut)
@@ -339,6 +347,29 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         log.debug('Lut choice: {}'.format(lut))
 
         self.__setLut(lut)
+
+
+    def __onSelectAll(self, ev):
+        """Called when the user pushes the *Select all* button. Enables
+        every label on the current LUT.
+        """ 
+
+        lut      = self.__selectedLut
+        allLabels = [label.value() for label in lut.labels]
+
+        for label in allLabels:
+            lut.set(label, enabled=True)
+
+
+    def __onSelectNone(self, ev):
+        """Called when the user pushes the *Select none* button. Disables
+        every label on the current LUT.
+        """
+        lut      = self.__selectedLut
+        allLabels = [label.value() for label in lut.labels]
+
+        for label in allLabels:
+            lut.set(label, enabled=False) 
 
 
     def __onNewLut(self, ev):
