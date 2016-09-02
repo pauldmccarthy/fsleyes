@@ -187,8 +187,11 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
 
         :arg tools: A sequence of tools to add.
 
-        :arg index: Insert the tools before this index.
+        :arg index: Insert the tools before this index (default: end).
         """
+
+        if index is None:
+            index = self.GetToolCount()
 
         for i, tool in enumerate(tools, index):
             self.InsertTool(tool, i, postevent=False)

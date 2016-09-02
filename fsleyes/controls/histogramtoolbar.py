@@ -38,7 +38,6 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
         plottoolbar.PlotToolBar.__init__(
             self, parent, overlayList, displayCtx, histPanel)
 
-
         togControl = actions.ToggleActionButton(
             'toggleHistogramControl',
             actionKwargs={'floatPane' : True},
@@ -61,8 +60,12 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
         togList    = props.buildGUI(self, histPanel, togList)
         mode       = props.buildGUI(self, histPanel, mode)
         
-        mode = self.MakeLabelledTool(mode,
-                                     strings.properties[histPanel, 'histType'])
+        lblMode = self.MakeLabelledTool(
+            mode, strings.properties[histPanel, 'histType'])
 
         self.InsertTools([togControl, togList], 0) 
-        self.AddTool(mode)
+        self.AddTool(lblMode)
+
+        nav = [togControl, togList] + self.getCommonNavOrder() + [mode]
+
+        self.setNavOrder(nav)

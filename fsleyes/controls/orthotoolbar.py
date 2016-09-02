@@ -61,7 +61,7 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
         """ 
 
         fsltoolbar.FSLeyesToolBar.__init__(
-            self, parent, overlayList, displayCtx, 24)
+            self, parent, overlayList, displayCtx, 24, kbFocus=True)
         
         self.orthoPanel = ortho
 
@@ -192,9 +192,12 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
         ]
 
         tools = []
+        nav   = []
         
         for spec in toolSpecs:
-            widget = props.buildGUI(self, targets[spec.key], spec)
+            
+            widget    = props.buildGUI(self, targets[spec.key], spec)
+            navWidget = widget
 
             if spec.key in ('zoom', ):
                 widget = self.MakeLabelledTool(
@@ -202,5 +205,7 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
                     strings.properties[targets[spec.key], spec.key])
             
             tools.append(widget)
+            nav  .append(navWidget)
 
-        self.SetTools(tools, destroy=True) 
+        self.SetTools(tools, destroy=True)
+        self.setNavOrder(nav)

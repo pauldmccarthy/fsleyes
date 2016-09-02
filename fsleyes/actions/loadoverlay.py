@@ -97,10 +97,15 @@ def makeWildcard(allowedExts=None, descs=None):
     import fsl.data.model as fslmodel
     import fsl.data.image as fslimage
 
+    # Hack - the wx wildcard logic doesn't support
+    # files with multiple extensions (e.g. .nii.gz).
+    # So I'm adding support for '.gz' extensions here.
     if allowedExts is None: allowedExts  = fslimage.ALLOWED_EXTENSIONS     + \
-                                           fslmodel.ALLOWED_EXTENSIONS
+                                           fslmodel.ALLOWED_EXTENSIONS     + \
+                                           ['.gz']
     if descs       is None: descs        = fslimage.EXTENSION_DESCRIPTIONS + \
-                                           fslmodel.EXTENSION_DESCRIPTIONS
+                                           fslmodel.EXTENSION_DESCRIPTIONS + \
+                                           ['Compressed images']
 
     exts  = ['*{}'.format(ext) for ext in allowedExts]
     exts  = [';'.join(exts)]        + exts

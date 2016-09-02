@@ -54,4 +54,8 @@ class PowerSpectrumToolBar(plottoolbar.PlotToolBar):
         togControl = props.buildGUI(self, psPanel, togControl)
         togList    = props.buildGUI(self, psPanel, togList)
 
-        self.InsertTools([togControl, togList], 0) 
+        self.InsertTools([togControl, togList], 0)
+
+        nav = [togControl, togList] + self.getCommonNavOrder()
+
+        self.setNavOrder(nav)

@@ -53,7 +53,7 @@ class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
         """
 
         fsltoolbar.FSLeyesToolBar.__init__(
-            self, parent, overlayList, displayCtx, 24)
+            self, parent, overlayList, displayCtx, 24, kbFocus=True)
         
         self.lightBoxPanel = lb
 
@@ -165,5 +165,7 @@ class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
         sizer.Add(spacing, flag=wx.EXPAND)
 
         tools = [more, screenshot, zax, movieMode, zrange, panel]
+        nav   = [more, screenshot, zax, movieMode, zrange, zoom, spacing]
         
-        self.SetTools(tools) 
+        self.SetTools(tools)
+        self.setNavOrder(nav)

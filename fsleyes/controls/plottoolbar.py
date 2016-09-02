@@ -33,7 +33,7 @@ class PlotToolBar(fsltoolbar.FSLeyesToolBar):
         """
         
         fsltoolbar.FSLeyesToolBar.__init__(
-            self, parent, overlayList, displayCtx, 24)
+            self, parent, overlayList, displayCtx, 24, kbFocus=True)
 
         self.__plotPanel = plotPanel
 
@@ -63,10 +63,37 @@ class PlotToolBar(fsltoolbar.FSLeyesToolBar):
         export     = props.buildGUI(self, plotPanel, export)
         add        = props.buildGUI(self, plotPanel, add)
         remove     = props.buildGUI(self, plotPanel, remove)
+
+        self.__commonTools = [screenshot, import_, export, add, remove]
+        self.__commonNav   = [screenshot, import_, export, add, remove]
         
         self.SetTools([screenshot, import_, export, add, remove])
 
-        
+
+    def destroy(self):
+        """Must be called when this ``PlotToolBar`` is no longer needed.
+        Clears some references and calls the base class implementation.
+        """
+        self.__commonTools = None
+        self.__commonNav   = None
+
+        fsltoolbar.FSLeyesToolBar.destroy(self)
+
+
+    def getCommonTools(self):
+        """Returns a list containing the toolbar widgets added by this
+        ``PlotToolBar``.
+        """
+        return list(self.__commonTools)
+
+
+    def getCommonNavOrder(self):
+        """Returns a list containing the navigation order for tools added
+        by this ``PlotToolBar``.
+        """ 
+        return list(self.__commonNav)
+
+
     def getPlotPanel(self):
         """Returns the :class:`.OverlayPlotPanel` bound to this ``PlotToolBar``.
         """

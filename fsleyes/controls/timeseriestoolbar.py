@@ -58,9 +58,12 @@ class TimeSeriesToolBar(plottoolbar.PlotToolBar):
         togControl = props.buildGUI(self, tsPanel, togControl)
         togList    = props.buildGUI(self, tsPanel, togList)
         mode       = props.buildGUI(self, tsPanel, mode)
-        
-        mode = self.MakeLabelledTool(mode,
-                                     strings.properties[tsPanel, 'plotMode'])
+
+        lblMode = self.MakeLabelledTool(
+            mode, strings.properties[tsPanel, 'plotMode'])
 
         self.InsertTools([togControl, togList], 0)
-        self.AddTool(mode)
+        self.AddTool(lblMode)
+
+        nav = [togControl, togList] + self.getCommonNavOrder() + [mode] 
+        self.setNavOrder(nav)

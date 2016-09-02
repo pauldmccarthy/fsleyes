@@ -299,8 +299,8 @@ def guessDataSourceType(path):
             return tensorimage.TensorImage, path
 
     # Assume it's a NIFTI image
-    try:               path = fslimage.addExt(path, mustExist=True)
-    except ValueError: return None, path
+    try:                       path = fslimage.addExt(path, mustExist=True)
+    except fslimage.PathError: return None, path
 
     if   melanalysis .isMelodicImage(path): return melimage.MelodicImage, path
     elif featanalysis.isFEATImage(   path): return featimage.FEATImage,   path

@@ -82,19 +82,13 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
                                            parent,
                                            overlayList,
                                            displayCtx,
-                                           24)
+                                           24,
+                                           kbFocus=True)
 
         self.__orthoPanel = ortho
 
         self .addListener('selint',  self._name, self.__selintChanged)
         ortho.addListener('profile', self._name, self.__profileChanged)
-
-        self.__profileTool = props.buildGUI(
-            self,
-            ortho,
-            _TOOLBAR_SPECS['profile'])
-
-        self.AddTool(self.__profileTool)
 
         self.__profileChanged()
 
@@ -146,21 +140,25 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
             self.enableNotification('selint')
 
         specs = _TOOLBAR_SPECS[profile]
-
         tools = []
+        nav   = []
 
         for spec in specs:
 
             if spec.key == 'selint': target = self
             else:                    target = profileObj
             
-            widget = props.buildGUI(self, target, spec)
+            widget    = props.buildGUI(self, target, spec)
+            navWidget = widget
+
             if spec.label is not None:
                 widget = self.MakeLabelledTool(widget, spec.label)
                 
             tools.append(widget)
+            nav  .append(navWidget)
 
-        self.InsertTools(tools, 1)
+        self.SetTools(tools)
+        self.setNavOrder(nav)
 
 
 _LABELS = {
@@ -184,12 +182,6 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 
 
 _ICONS = {
-    'view'                    :  [
-        fslicons.findImageFile('eyeHighlight24'),
-        fslicons.findImageFile('eye24')],
-    'edit'                    :  [
-        fslicons.findImageFile('pencilHighlight24'),
-        fslicons.findImageFile('pencil24')],
     'selectionIs3D'           : [
         fslicons.findImageFile('selection3DHighlight24'),
         fslicons.findImageFile('selection3D24'),
@@ -220,7 +212,6 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 
 
 _TOOLTIPS = {
-    'profile'                 : fsltooltips.properties['OrthoPanel.profile'],
     'selectionIs3D'           : fsltooltips.properties['OrthoEditProfile.'
                                                        'selectionIs3D'],
     'clearSelection'          : fsltooltips.actions['OrthoEditProfile.'
@@ -263,13 +254,6 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 
 
 _TOOLBAR_SPECS  = {
-
-    'profile' : props.Widget(
-        'profile',
-        tooltip=_TOOLTIPS['profile'],
-        icons={
-            'view' : _ICONS['view'],
-            'edit' : _ICONS['edit']}),
 
     'view' : {},
 
@@ -356,9 +340,6 @@ _TOOLBAR_SPECS  = {
 :class:`OrthoEditToolBar`. The following keys are defined:
 
   =========== ===========================================================
-  ``profile`` Contains a single specification defining the control for
-              switching the :class:`.OrthoPanel` between ``view`` and
-              ``edit`` profiles.
   ``view``    A list of specifications defining controls to be shown when
               the ``view`` profile is active.
   ``edit``    A list of specifications defining controls to be shown when
