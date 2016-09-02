@@ -41,6 +41,13 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         of widgets controlling :class:`.DataSeries` properties.
 
 
+    The first two methods are called by :meth:`__init__`, and the created
+    widgets persist for the lifetime of the ``PlotControlPanel``. The last
+    two methods are called whenever the
+    :class:`.DisplayContext.selectedOverlay` changes, and may also be called
+    at other times. 
+
+
     The following methods are available on a :class:`.PlotControlPanel`:
 
     .. autosummary::
@@ -68,17 +75,18 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         fslpanel.FSLeyesSettingsPanel.__init__(self,
                                                parent,
                                                overlayList,
-                                               displayCtx)
+                                               displayCtx,
+                                               kbFocus=True)
         
         self.__plotPanel = plotPanel
 
-        widgets = self.getWidgetList()
+        widgetList = self.getWidgetList()
 
-        widgets.AddGroup(
+        widgetList.AddGroup(
             'customPlotSettings',
             strings.labels[self, 'customPlotSettings'])
 
-        widgets.AddGroup(
+        widgetList.AddGroup(
             'plotSettings',
             strings.labels[self, 'plotSettings'])
 
@@ -88,14 +96,18 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         # xAutoScale/yAutoScale changes
         self.__xLimitWidgets = None
         self.__yLimitWidgets = None
-        
-        self.generateCustomPlotPanelWidgets('customPlotSettings')
-        self.generatePlotPanelWidgets(      'plotSettings')
+
+        # These lists store the current 
+        # set of plot/data series widgets
+        self.__dsWidgets   = []
+        self.__plotWidgets = \
+            self.generateCustomPlotPanelWidgets('customPlotSettings') + \
+            self.generatePlotPanelWidgets(      'plotSettings')
 
         # Delete the custom group if
         # nothing has been added to it
-        if widgets.GroupSize('customPlotSettings') == 0:
-            widgets.RemoveGroup('customPlotSettings') 
+        if widgetList.GroupSize('customPlotSettings') == 0:
+            widgetList.RemoveGroup('customPlotSettings') 
 
         displayCtx .addListener('selectedOverlay',
                                 self._name,
@@ -115,6 +127,7 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         # selected overlay, so the widget list group
         # names can be updated if the overlay name
         # changes.
+        self.setNavOrder(self.__plotWidgets)
         self.__selectedOverlay = None
         self.__selectedOverlayChanged()
         self.__autoScaleChanged()
@@ -128,6 +141,9 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         self._displayCtx .removeListener('selectedOverlay', self._name)
         self._overlayList.removeListener('overlays',        self._name)
         self.__plotPanel .removeListener('limits',          self._name)
+
+        self.__plotWidgets = None
+        self.__dsWidgets   = None
 
         if self.__selectedOverlay is not None:
             display = self._displayCtx.getDisplay(self.__selectedOverlay)
@@ -149,8 +165,12 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         The default implementation does nothing.
 
         :arg groupName: The :class:`.WidgetList` group name.
+
+        :returns: A list of the widgets that were created, and should be
+                  included in keyboard navigation (see
+                  :meth:`.FSLeyesPanel.setNavOrder`).
         """
-        pass
+        return []
 
 
     def generatePlotPanelWidgets(self, groupName):
@@ -162,10 +182,15 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         list of properties that are added by default.
 
         :arg groupName: The :class:`.WidgetList` group name.
+
+        :returns: A list of the widgets that were created, and should be
+                  included in keyboard navigation (see
+                  :meth:`.FSLeyesPanel.setNavOrder`). 
         """
 
         widgetList = self.getWidgetList()
         plotPanel  = self.__plotPanel
+        allWidgets = []
 
         plotProps = ['xLogScale',
                      'yLogScale',
@@ -179,8 +204,10 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
                      'yAutoScale']
 
         for prop in plotProps:
+            widget = props.makeWidget(widgetList, plotPanel, prop)
+            allWidgets.append(widget)
             widgetList.AddWidget(
-                props.makeWidget(widgetList, plotPanel, prop),
+                widget,
                 displayName=strings.properties[plotPanel, prop],
                 tooltip=fsltooltips.properties[plotPanel, prop],
                 groupName=groupName)
@@ -188,6 +215,8 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         limits = props.makeListWidgets(widgetList, plotPanel, 'limits')
         xlims  = wx.BoxSizer(wx.HORIZONTAL)
         ylims  = wx.BoxSizer(wx.HORIZONTAL)
+
+        allWidgets.extend(limits)
 
         # Store refs to the limit widgets
         # so they can be enabled/disabled
@@ -204,6 +233,8 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         xlabel = props.makeWidget(widgetList, plotPanel, 'xlabel')
         ylabel = props.makeWidget(widgetList, plotPanel, 'ylabel')
         labels = wx.BoxSizer(wx.HORIZONTAL)
+
+        allWidgets.extend([xlabel, ylabel])
 
         labels.Add(wx.StaticText(widgetList,
                                  label=strings.labels[self, 'xlabel']))
@@ -226,7 +257,9 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
             labels,
             displayName=strings.labels[self, 'labels'],
             tooltip=fsltooltips.misc[  self, 'labels'],
-            groupName=groupName) 
+            groupName=groupName)
+
+        return allWidgets
 
 
     def refreshDataSeriesWidgets(self):
@@ -234,7 +267,7 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         current :class:`.DataSeries` instance.
         """
 
-        widgets = self.getWidgetList()
+        widgetList = self.getWidgetList()
         
         if self.__selectedOverlay is not None:
             try:
@@ -248,10 +281,10 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
                 
             self.__selectedOverlay = None
 
-        if widgets.HasGroup('currentDSSettings'):
-            widgets.RemoveGroup('currentDSSettings')
-        if widgets.HasGroup('customDSSettings'):
-            widgets.RemoveGroup('customDSSettings') 
+        if widgetList.HasGroup('currentDSSettings'):
+            widgetList.RemoveGroup('currentDSSettings')
+        if widgetList.HasGroup('customDSSettings'):
+            widgetList.RemoveGroup('customDSSettings') 
 
         overlay = self._displayCtx.getSelectedOverlay()
 
@@ -271,20 +304,25 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
                             self._name,
                             self.__selectedOverlayNameChanged)
 
-        widgets.AddGroup(
+        widgetList.AddGroup(
             'currentDSSettings',
             strings.labels[self, 'currentDSSettings'].format(display.name))
-        widgets.AddGroup(
+        widgetList.AddGroup(
             'customDSSettings',
             strings.labels[self, 'customDSSettings'].format(display.name)) 
         
-        self.generateDataSeriesWidgets(      ds, 'currentDSSettings')
-        self.generateCustomDataSeriesWidgets(ds, 'customDSSettings')
+        dsWidgets = \
+            self.generateDataSeriesWidgets(      ds, 'currentDSSettings') + \
+            self.generateCustomDataSeriesWidgets(ds, 'customDSSettings')
 
         # Delete the custom group if
         # nothing has been added to it
-        if widgets.GroupSize('customDSSettings') == 0:
-            widgets.RemoveGroup('customDSSettings') 
+        if widgetList.GroupSize('customDSSettings') == 0:
+            widgetList.RemoveGroup('customDSSettings')
+
+        self.__dsWidgets = dsWidgets
+
+        self.setNavOrder(self.__plotWidgets + self.__dsWidgets)
  
     
     def generateDataSeriesWidgets(self, ds, groupName):
@@ -295,8 +333,12 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
 
         :arg ds: The :class:`.DataSeries` instance.
         :arg groupName: The :class:`.WidgetList` group name.
+
+        :returns: A list of the widgets that were created, and should be
+                  included in keyboard navigation (see
+                  :meth:`.FSLeyesPanel.setNavOrder`). 
         """
-        
+
         widgetList = self.getWidgetList()
         
         colour    = props.makeWidget(widgetList, ds, 'colour')
@@ -330,6 +372,8 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
             tooltip=fsltooltips.properties[ds, 'lineStyle'],
             groupName=groupName)
 
+        return [colour, alpha, lineWidth, lineStyle]
+
 
     def generateCustomDataSeriesWidgets(self, ds, groupName):
         """May be overridden by sub-classes to create a group of widgets for
@@ -338,8 +382,12 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         
         :arg ds:        The :class:`.DataSeries` instance.
         :arg groupName: The :class:`.WidgetList` group name.
+
+        :returns: A list of the widgets that were created, and should be
+                  included in keyboard navigation (see
+                  :meth:`.FSLeyesPanel.setNavOrder`). 
         """
-        pass
+        return []
             
 
     def __selectedOverlayNameChanged(self, *a):

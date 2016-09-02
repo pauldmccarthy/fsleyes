@@ -83,23 +83,27 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
         :class:`.TimeSeriesPanel`.
         """
 
-        widgets = self.getWidgetList()
-        tsPanel = self.getPlotPanel()
-        tsProps = ['plotMode',
-                   'usePixdim',
-                   'plotMelodicICs']
+        widgetList = self.getWidgetList()
+        allWidgets = []
+        tsPanel    = self.getPlotPanel()
+        tsProps    = ['plotMode',
+                      'usePixdim',
+                      'plotMelodicICs']
 
         for prop in tsProps:
             kwargs = {}
             if prop == 'plotMode':
                 kwargs['labels'] = strings.choices[tsPanel, 'plotMode']
                 
-            widget = props.makeWidget(widgets, tsPanel, prop, **kwargs)
-            widgets.AddWidget(
+            widget = props.makeWidget(widgetList, tsPanel, prop, **kwargs)
+            allWidgets.append(widget)
+            widgetList.AddWidget(
                 widget,
                 displayName=strings.properties[tsPanel, prop],
                 tooltip=fsltooltips.properties[tsPanel, prop],
                 groupName=groupName)
+
+        return allWidgets
 
 
     def generateCustomDataSeriesWidgets(self, ts, groupName):
@@ -110,78 +114,89 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
         FEAT-related settings of the instance.
         """
 
-        overlay = ts.overlay
-        widgets = self.getWidgetList()
+        overlay    = ts.overlay
+        widgetList = self.getWidgetList()
+        allWidgets = []
 
         if not (isinstance(overlay, fslfeatimage.FEATImage)    and
                 isinstance(ts,      timeseries.FEATTimeSeries) and
                 overlay.hasStats()):
-            return
+            return allWidgets
 
-        full    = props.makeWidget(     widgets, ts, 'plotFullModelFit')
-        res     = props.makeWidget(     widgets, ts, 'plotResiduals')
-        evs     = props.makeListWidgets(widgets, ts, 'plotEVs')
-        pes     = props.makeListWidgets(widgets, ts, 'plotPEFits')
-        copes   = props.makeListWidgets(widgets, ts, 'plotCOPEFits')
-        partial = props.makeWidget(     widgets, ts, 'plotPartial')
-        data    = props.makeWidget(     widgets, ts, 'plotData') 
+        full    = props.makeWidget(     widgetList, ts, 'plotFullModelFit')
+        res     = props.makeWidget(     widgetList, ts, 'plotResiduals')
+        evs     = props.makeListWidgets(widgetList, ts, 'plotEVs')
+        pes     = props.makeListWidgets(widgetList, ts, 'plotPEFits')
+        copes   = props.makeListWidgets(widgetList, ts, 'plotCOPEFits')
+        partial = props.makeWidget(     widgetList, ts, 'plotPartial')
+        data    = props.makeWidget(     widgetList, ts, 'plotData')
 
-        widgets.AddWidget(
+        allWidgets.append(full)
+        allWidgets.append(res)
+        allWidgets.extend(evs)
+        allWidgets.extend(pes)
+        allWidgets.extend(copes)
+        allWidgets.append(partial)
+        allWidgets.append(data)
+
+        widgetList.AddWidget(
             data,
             displayName=strings.properties[ts, 'plotData'],
             tooltip=fsltooltips.properties[ts, 'plotData'],
             groupName=groupName)
-        widgets.AddWidget(
+        widgetList.AddWidget(
             full,
             displayName=strings.properties[ts, 'plotFullModelFit'],
             tooltip=fsltooltips.properties[ts, 'plotFullModelFit'],
             groupName=groupName)
         
-        widgets.AddWidget(
+        widgetList.AddWidget(
             res,
             displayName=strings.properties[ts, 'plotResiduals'],
             tooltip=fsltooltips.properties[ts, 'plotResiduals'],
             groupName=groupName)
         
-        widgets.AddWidget(
+        widgetList.AddWidget(
             partial,
             displayName=strings.properties[ts, 'plotPartial'],
             tooltip=fsltooltips.properties[ts, 'plotPartial'],
             groupName=groupName)
 
-        widgets.AddSpace(groupName=groupName)
+        widgetList.AddSpace(groupName=groupName)
 
         for i, ev in enumerate(evs):
 
             evName = overlay.evNames()[i]
-            widgets.AddWidget(
+            widgetList.AddWidget(
                 ev,
                 displayName=strings.properties[ts, 'plotEVs'].format(
                     i + 1, evName),
                 tooltip=fsltooltips.properties[ts, 'plotEVs'],
                 groupName=groupName)
 
-        widgets.AddSpace(groupName=groupName)
+        widgetList.AddSpace(groupName=groupName)
             
         for i, pe in enumerate(pes):
             evName = overlay.evNames()[i]
-            widgets.AddWidget(
+            widgetList.AddWidget(
                 pe,
                 displayName=strings.properties[ts, 'plotPEFits'].format(
                     i + 1, evName),
                 tooltip=fsltooltips.properties[ts, 'plotPEFits'],
                 groupName=groupName)
 
-        widgets.AddSpace(groupName=groupName)
+        widgetList.AddSpace(groupName=groupName)
 
         copeNames = overlay.contrastNames()
         for i, (cope, name) in enumerate(zip(copes, copeNames)):
-            widgets.AddWidget(
+            widgetList.AddWidget(
                 cope,
                 displayName=strings.properties[ts, 'plotCOPEFits'].format(
                     i + 1, name),
                 tooltip=fsltooltips.properties[ts, 'plotCOPEFits'],
-                groupName=groupName) 
+                groupName=groupName)
+
+        return allWidgets
 
 
     def __plotMelodicICsChanged(self, *a):

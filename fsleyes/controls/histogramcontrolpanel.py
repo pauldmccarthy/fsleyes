@@ -41,9 +41,10 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
         :class:`.HistogramPanel`.
         """
 
-        hsPanel   = self.getPlotPanel()
-        widgets   = self.getWidgetList()
-        histProps = ['histType']
+        hsPanel    = self.getPlotPanel()
+        widgetList = self.getWidgetList()
+        allWidgets = []
+        histProps  = ['histType']
 
         for prop in histProps:
 
@@ -52,13 +53,15 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
             if prop == 'histType':
                 kwargs['labels'] = strings.choices[hsPanel, 'histType']
 
-            widget = props.makeWidget(widgets, hsPanel, prop, **kwargs)
-            
-            widgets.AddWidget(
+            widget = props.makeWidget(widgetList, hsPanel, prop, **kwargs)
+            allWidgets.append(widget)
+            widgetList.AddWidget(
                 widget,
                 displayName=strings.properties[hsPanel, prop],
                 tooltip=fsltooltips.properties[hsPanel, prop],
                 groupName=groupName)
+
+        return allWidgets
 
 
     def generateCustomDataSeriesWidgets(self, hs, groupName):
@@ -70,7 +73,7 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
         def is4D(h):
             return len(h.overlay.shape) == 4 and h.overlay.shape[3] > 1
         
-        widgets    = self.getWidgetList()
+        widgetList = self.getWidgetList()
 
         volume     = props.Widget('volume',
                                   showLimits=False,
@@ -80,47 +83,55 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
                                   enabledWhen=lambda i: not i.autoBin,
                                   showLimits=False)
 
-        volume     = props.buildGUI(widgets, hs, volume)
-        autoBin    = props.buildGUI(widgets, hs, autoBin)
-        nbins      = props.buildGUI(widgets, hs, nbins)
+        volume     = props.buildGUI(widgetList, hs, volume)
+        autoBin    = props.buildGUI(widgetList, hs, autoBin)
+        nbins      = props.buildGUI(widgetList, hs, nbins)
         
         dataRange = props.makeWidget(
-            widgets, hs, 'dataRange',
+            widgetList, hs, 'dataRange',
             labels=[strings.choices['HistogramPanel.dataRange.min'],
                     strings.choices['HistogramPanel.dataRange.max']],
             showLimits=False)
         
-        ignoreZeros     = props.makeWidget(widgets, hs, 'ignoreZeros')
-        showOverlay     = props.makeWidget(widgets, hs, 'showOverlay')
-        includeOutliers = props.makeWidget(widgets, hs, 'includeOutliers')
+        ignoreZeros     = props.makeWidget(widgetList, hs, 'ignoreZeros')
+        showOverlay     = props.makeWidget(widgetList, hs, 'showOverlay')
+        includeOutliers = props.makeWidget(widgetList, hs, 'includeOutliers')
 
-        widgets.AddWidget(ignoreZeros,
-                          groupName=groupName,
-                          displayName=strings.properties[hs, 'ignoreZeros'],
-                          tooltip=fsltooltips.properties[hs, 'ignoreZeros'])
-        widgets.AddWidget(showOverlay,
-                          groupName=groupName,
-                          displayName=strings.properties[hs, 'showOverlay'],
-                          tooltip=fsltooltips.properties[hs, 'showOverlay'])
-        widgets.AddWidget(includeOutliers,
-                          groupName=groupName,
-                          displayName=strings.properties[hs,
-                                                         'includeOutliers'],
-                          tooltip=fsltooltips.properties[hs,
-                                                         'includeOutliers'])
-        widgets.AddWidget(autoBin,
-                          groupName=groupName,
-                          displayName=strings.properties[hs, 'autoBin'],
-                          tooltip=fsltooltips.properties[hs, 'autoBin']) 
-        widgets.AddWidget(nbins,
-                          groupName=groupName,
-                          displayName=strings.properties[hs, 'nbins'],
-                          tooltip=fsltooltips.properties[hs, 'nbins'])
-        widgets.AddWidget(volume,
-                          groupName=groupName,
-                          displayName=strings.properties[hs, 'volume'],
-                          tooltip=fsltooltips.properties[hs, 'volume'])
-        widgets.AddWidget(dataRange,
-                          groupName=groupName,
-                          displayName=strings.properties[hs, 'dataRange'],
-                          tooltip=fsltooltips.properties[hs, 'dataRange'])
+        widgetList.AddWidget(ignoreZeros,
+                             groupName=groupName,
+                             displayName=strings.properties[hs, 'ignoreZeros'],
+                             tooltip=fsltooltips.properties[hs, 'ignoreZeros'])
+        widgetList.AddWidget(showOverlay,
+                             groupName=groupName,
+                             displayName=strings.properties[hs, 'showOverlay'],
+                             tooltip=fsltooltips.properties[hs, 'showOverlay'])
+        widgetList.AddWidget(includeOutliers,
+                             groupName=groupName,
+                             displayName=strings.properties[hs,
+                                                            'includeOutliers'],
+                             tooltip=fsltooltips.properties[hs,
+                                                            'includeOutliers'])
+        widgetList.AddWidget(autoBin,
+                             groupName=groupName,
+                             displayName=strings.properties[hs, 'autoBin'],
+                             tooltip=fsltooltips.properties[hs, 'autoBin']) 
+        widgetList.AddWidget(nbins,
+                             groupName=groupName,
+                             displayName=strings.properties[hs, 'nbins'],
+                             tooltip=fsltooltips.properties[hs, 'nbins'])
+        widgetList.AddWidget(volume,
+                             groupName=groupName,
+                             displayName=strings.properties[hs, 'volume'],
+                             tooltip=fsltooltips.properties[hs, 'volume'])
+        widgetList.AddWidget(dataRange,
+                             groupName=groupName,
+                             displayName=strings.properties[hs, 'dataRange'],
+                             tooltip=fsltooltips.properties[hs, 'dataRange'])
+
+        return [ignoreZeros,
+                showOverlay,
+                includeOutliers,
+                autoBin,
+                nbins,
+                volume,
+                dataRange]

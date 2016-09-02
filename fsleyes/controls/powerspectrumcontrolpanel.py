@@ -14,10 +14,10 @@ import                                         props
 import fsleyes.tooltips                     as fsltooltips
 import fsleyes.plotting.powerspectrumseries as powerspectrumseries
 import fsleyes.strings                      as strings
-from . import                                  plotcontrolpanel
+from . import plotcontrolpanel              as plotcontrol
 
 
-class PowerSpectrumControlPanel(plotcontrolpanel.PlotControlPanel):
+class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
     """The ``PowerSpectrumControlPanel`` class is a :class:`.PlotControlPanel`
     which allows the user to control a :class:`.PowerSpectrumPanel`.
     """
@@ -27,7 +27,7 @@ class PowerSpectrumControlPanel(plotcontrolpanel.PlotControlPanel):
         through to the :meth:`.PlotControlPanel.__init__` method.
         """
         
-        plotcontrolpanel.PlotControlPanel.__init__(self, *args, **kwargs)
+        plotcontrol.PlotControlPanel.__init__(self, *args, **kwargs)
 
         psPanel = self.getPlotPanel()
         psPanel.addListener('plotMelodicICs',
@@ -42,7 +42,7 @@ class PowerSpectrumControlPanel(plotcontrolpanel.PlotControlPanel):
         """
         psPanel = self.getPlotPanel()
         psPanel.removeListener('plotMelodicICs', self._name)
-        plotcontrolpanel.PlotControlPanel.destroy(self)
+        plotcontrol.PlotControlPanel.destroy(self)
 
 
     def generateCustomPlotPanelWidgets(self, groupName):
@@ -51,22 +51,25 @@ class PowerSpectrumControlPanel(plotcontrolpanel.PlotControlPanel):
         Adds some widgets for controlling the :class:`.PowerSpectrumPanel`.
         """
         
-        psPanel = self.getPlotPanel()
-        widgets = self.getWidgetList()
-        psProps = ['plotFrequencies',
-                   'plotMelodicICs']
+        psPanel    = self.getPlotPanel()
+        widgetList = self.getWidgetList()
+        allWidgets = []
+        psProps    = ['plotFrequencies',
+                      'plotMelodicICs']
         
         for prop in psProps:
             
             kwargs = {}
                 
-            widget = props.makeWidget(widgets, psPanel, prop, **kwargs)
-            
-            widgets.AddWidget(
+            widget = props.makeWidget(widgetList, psPanel, prop, **kwargs)
+            allWidgets.append(widget)
+            widgetList.AddWidget(
                 widget,
                 displayName=strings.properties[psPanel, prop],
                 tooltip=fsltooltips.properties[psPanel, prop],
                 groupName=groupName)
+
+        return allWidgets
 
 
     def generateDataSeriesWidgets(self, ps, groupName):
@@ -74,19 +77,21 @@ class PowerSpectrumControlPanel(plotcontrolpanel.PlotControlPanel):
         Adds some widgets for controlling :class:`.PowerSpectrumSeries`
         instances.
         """
-        plotcontrolpanel.PlotControlPanel.generateDataSeriesWidgets(
+        allWidgets = plotcontrol.PlotControlPanel.generateDataSeriesWidgets(
             self, ps, groupName)
 
         if not isinstance(ps, powerspectrumseries.PowerSpectrumSeries):
             return
         
-        widgets = self.getWidgetList()
-        varNorm = props.makeWidget(widgets, ps, 'varNorm')
+        widgetList = self.getWidgetList()
+        varNorm    = props.makeWidget(widgetList, ps, 'varNorm')
 
-        widgets.AddWidget(varNorm,
-                          displayName=strings.properties[ps, 'varNorm'],
-                          tooltip=strings.properties[ps, 'varNorm'],
-                          groupName=groupName)
+        widgetList.AddWidget(varNorm,
+                             displayName=strings.properties[ps, 'varNorm'],
+                             tooltip=strings.properties[ps, 'varNorm'],
+                             groupName=groupName)
+
+        return allWidgets + [varNorm]
 
         
     def __plotMelodicICsChanged(self, *a):

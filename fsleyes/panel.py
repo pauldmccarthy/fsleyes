@@ -192,7 +192,8 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         nextIdx = (focusIdx + offset) % len(self.__navOrder)
 
         # Search for the next enabled widget
-        while not self.__navOrder[nextIdx].IsEnabled():
+        while not (self.__navOrder[nextIdx].IsEnabled() and
+                   self.__navOrder[nextIdx].IsShownOnScreen()):
 
             if nextIdx == focusIdx:
                 break
