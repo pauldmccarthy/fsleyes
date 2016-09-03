@@ -923,7 +923,10 @@ class VolumeOpts(NiftiOpts):
         croff  = abs(crmax - crmin) / 100.0
         crmin -= croff
         crmax += croff
- 
+
+        drState = self.getNotificationState('displayRange')
+        crState = self.getNotificationState('clippingRange')
+
         self.disableNotification('displayRange')
         self.disableNotification('clippingRange')
 
@@ -957,8 +960,8 @@ class VolumeOpts(NiftiOpts):
         if absolute and self.displayRange .xlo < 0: self.displayRange.xlo  = 0
         if absolute and self.clippingRange.xlo < 0: self.clippingRange.xlo = 0
         
-        self.enableNotification('displayRange')
-        self.enableNotification('clippingRange')
+        self.setNotificationState('displayRange',  drState)
+        self.setNotificationState('clippingRange', crState)
 
         self.notify('displayRange')
         self.notify('clippingRange')

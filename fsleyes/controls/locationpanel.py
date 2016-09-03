@@ -693,7 +693,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
                 continue
 
             info = None
-            title = '<b>{}</b>'.format(overlay.name)
+            title = '<b>{}</b>'.format(display.name)
 
             if not isinstance(overlay, fslimage.Image):
                 info = '{}'.format(strings.labels[self, 'noData'])

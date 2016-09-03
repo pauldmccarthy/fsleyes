@@ -289,6 +289,7 @@ actions = TypeDict({
     'DiagnosticReportAction'   : 'Diagnostic report',
     'RunScriptAction'          : 'Run script',
     'AboutAction'              : 'About FSLeyes',
+    'CorrelateAction'          : 'Seed correlation',
 
     'FSLeyesFrame.removeFocusedViewPanel'  : 'Close',
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
@@ -365,6 +366,7 @@ actions = TypeDict({
 labels = TypeDict({
 
     'FSLeyesFrame.noOverlays'             : 'No overlays loaded',
+    'FSLeyesFrame.noName'                 : '<unnamed>',
 
     'LocationPanel.worldLocation'         : 'Coordinates: ',
     'LocationPanel.worldLocation.unknown' : 'Unknown',

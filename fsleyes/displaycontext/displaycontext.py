@@ -20,6 +20,7 @@ import props
 
 import fsl.data.image      as fslimage
 import fsl.utils.transform as transform
+import fsl.utils.async     as async
 
 
 log = logging.getLogger(__name__)
@@ -507,6 +508,41 @@ class DisplayContext(props.SyncableHasProperties):
                       overlay.name,
                       self.location.xyz,
                       coords))
+
+
+    def freezeOverlay(self, overlay):
+        parent = self.getParent()
+        if parent is not None:
+            parent.freezeOverlay(overlay)
+            return
+
+        dctxs = [self] + self.getChildren()
+
+        for dctx in dctxs:
+            display = dctx.getDisplay(overlay)
+            opts    = display.getDisplayOpts()
+
+            display.disableAllNotification()
+            opts   .disableAllNotification()
+
+    
+    def thawOverlay(self, overlay):
+
+        parent = self.getParent()
+        if parent is not None:
+            parent.thawOverlay(overlay)
+            return
+        dctxs = [self] + self.getChildren()
+
+        def realThaw():
+            for dctx in dctxs:
+                display = dctx.getDisplay(overlay)
+                opts    = display.getDisplayOpts()
+
+                display.enableAllNotification()
+                opts   .enableAllNotification()
+
+        async.idle(realThaw)
 
 
     def __overlayListChanged(self, *a):

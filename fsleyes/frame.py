@@ -1250,7 +1250,8 @@ class FSLeyesFrame(wx.Frame):
                        actions.SaveOverlayAction,
                        actions.ReloadOverlayAction,
                        actions.RemoveOverlayAction,
-                       'toggleOverlayVisibility']
+                       'toggleOverlayVisibility',
+                       actions.CorrelateAction]
 
         for action in fileActions:
 
@@ -1310,7 +1311,10 @@ class FSLeyesFrame(wx.Frame):
         if haveOverlays:
 
             self.__display = self.__displayCtx.getDisplay(overlay)
-            self.__overlayNameMenuItem.SetText(self.__display.name)
+            name = self.__display.name.strip()
+            if name == '':
+                name = strings.labels[self, 'noName']
+            self.__overlayNameMenuItem.SetText(name)
 
             if not self.__display.hasListener('name', self.__name):
                 self.__display.addListener('name',
