@@ -167,9 +167,8 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         pss = [ps for ps in pss if ps is not None]
 
         for ps in pss:
-            ps.disableNotification('label')
-            ps.label = ps.makeLabel()
-            ps.enableNotification('label')
+            with props.suppress(ps, 'label'):
+                ps.label = ps.makeLabel()
 
         self.drawDataSeries(extraSeries=pss)
 

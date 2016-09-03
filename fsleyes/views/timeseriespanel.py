@@ -241,9 +241,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             # another call to this method, as
             # the PlotPanel might have a listener
             # registered on it.
-            ts.disableNotification('label')
-            ts.label = ts.makeLabel()
-            ts.enableNotification('label')
+            with props.suppress(ts, 'label'):
+                ts.label = ts.makeLabel()
 
         self.drawDataSeries(extraSeries=tss)
 

@@ -184,28 +184,23 @@ class OverlayList(props.HasProperties):
     
     def append(self, item, overlayType=None):
 
-        self.disableNotification('overlays')
-        
-        self.overlays.append(item)
+        with props.suppress(self, 'overlays', notify=True):
 
-        if overlayType is not None:
-            self.__initOverlayType[item] = overlayType
+            self.overlays.append(item)
 
-        self.enableNotification('overlays')
-        self.notify('overlays')
+            if overlayType is not None:
+                self.__initOverlayType[item] = overlayType
+
     
     def extend(self, iterable, overlayTypes=None):
 
-        self.disableNotification('overlays')
+        with props.suppress(self, 'overlays', notify=True):
 
-        result = self.overlays.extend(iterable)
+            result = self.overlays.extend(iterable)
 
-        if overlayTypes is not None:
-            for overlay, overlayType in overlayTypes.items():
-                self.__initOverlayType[overlay] = overlayType
-
-        self.enableNotification('overlays')
-        self.notify('overlays')
+            if overlayTypes is not None:
+                for overlay, overlayType in overlayTypes.items():
+                    self.__initOverlayType[overlay] = overlayType
 
         return result
 
@@ -223,15 +218,13 @@ class OverlayList(props.HasProperties):
     
     def insert(self, index, item, overlayType=None):
 
-        self.disableNotification('overlays')
+        with props.suppress(self, 'overlays', notify=True):
         
-        self.overlays.insert(index, item)
+            self.overlays.insert(index, item)
 
-        if overlayType is not None:
-            self.__initOverlayType[item] = overlayType 
+            if overlayType is not None:
+                self.__initOverlayType[item] = overlayType 
         
-        self.enableNotification('overlays')
-        self.notify('overlays')
     
     def insertAll(self, index, items):
         return self.overlays.insertAll(index, items)

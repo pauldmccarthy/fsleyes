@@ -201,17 +201,15 @@ class HistogramSeries(dataseries.DataSeries):
             nzmin  = nzData.min()
             nzmax  = nzData.max()
 
-            self.disableNotification('dataRange')
-            self.disableNotification('nbins')
-            self.dataRange.xmin = dmin
-            self.dataRange.xmax = dmax  + dist
-            self.dataRange.xlo  = nzmin
-            self.dataRange.xhi  = nzmax + dist
+            with props.suppress(self, 'dataRange'), \
+                 props.suppress(self, 'nbins'):
 
-            self.nbins = self.__autoBin(nzData, self.dataRange.x)
+                self.dataRange.xmin = dmin
+                self.dataRange.xmax = dmax  + dist
+                self.dataRange.xlo  = nzmin
+                self.dataRange.xhi  = nzmax + dist
 
-            self.enableNotification('dataRange')
-            self.enableNotification('nbins') 
+                self.nbins = self.__autoBin(nzData, self.dataRange.x)
 
             if not self.overlay.is4DImage():
 

@@ -13,6 +13,8 @@ import logging
 
 import wx
 
+import props
+
 import pwidgets.widgetgrid    as widgetgrid
 import pwidgets.texttag       as texttag
 
@@ -247,22 +249,17 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         log.debug('Label added to component {} ("{}")'.format(comp, label))
 
         # Add the new label to the melodic component
-        melclass.disableListener(    'labels', self._name)
-        melclass.disableNotification('labels')
+        with props.suppress(melclass, 'labels', notify=True):
         
-        melclass.addLabel(comp, label)
+            melclass.addLabel(comp, label)
 
-        # If the tag panel previously just contained
-        # the 'Unknown' tag, remove that tag
-        if tags.TagCount() == 2   and \
-           tags.HasTag('Unknown') and \
-           label.lower() != 'unknown':
-            melclass.removeLabel(comp, 'Unknown')
-            tags.RemoveTag('Unknown')
-
-        melclass.enableNotification('labels')
-        melclass.notify(            'labels')
-        melclass.enableListener(    'labels', self._name)
+            # If the tag panel previously just contained
+            # the 'Unknown' tag, remove that tag
+            if tags.TagCount() == 2   and \
+               tags.HasTag('Unknown') and \
+               label.lower() != 'unknown':
+                melclass.removeLabel(comp, 'Unknown')
+                tags.RemoveTag('Unknown')
 
         # If the newly added tag is not in
         # the lookup table, add it in
@@ -297,20 +294,15 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
 
         # Remove the label from
         # the melodic component
-        melclass.disableListener(    'labels', self._name)
-        melclass.disableNotification('labels')
+        with props.suppress(melclass, 'labels', notify=True):
         
-        melclass.removeLabel(comp, label)
+            melclass.removeLabel(comp, label)
 
-        # If the tag panel now has no tags,
-        # add the 'Unknown' tag back in.
-        if len(melclass.getLabels(comp)) == 0:
-            melclass.addLabel(comp, 'Unknown')
-            tags.AddTag('Unknown')
-
-        melclass.enableNotification('labels')
-        melclass.notify(            'labels')
-        melclass.enableListener(    'labels', self._name)
+            # If the tag panel now has no tags,
+            # add the 'Unknown' tag back in.
+            if len(melclass.getLabels(comp)) == 0:
+                melclass.addLabel(comp, 'Unknown')
+                tags.AddTag('Unknown')
 
         self.__grid.FitInside()
 
@@ -549,22 +541,17 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
         log.debug('Component added to label {} ({})'.format(label, comp)) 
 
-        melclass.disableListener(    'labels', self._name)
-        melclass.disableNotification('labels')
+        with props.suppress(melclass, 'labels', notify=True):
 
-        # If this component now has two labels, and
-        # the other label is 'Unknown', remove the
-        # 'Unknown' label.
-        if len(melclass.getLabels(comp)) == 1 and \
-           label != 'unknown'                 and \
-           melclass.hasLabel(comp, 'unknown'):
-            melclass.removeLabel(comp, 'unknown')
-        
-        melclass.addComponent(label, comp)
+            # If this component now has two labels, and
+            # the other label is 'Unknown', remove the
+            # 'Unknown' label.
+            if len(melclass.getLabels(comp)) == 1 and \
+               label != 'unknown'                 and \
+               melclass.hasLabel(comp, 'unknown'):
+                melclass.removeLabel(comp, 'unknown')
 
-        melclass.enableNotification('labels')
-        melclass.notify(            'labels')
-        melclass.enableListener(    'labels', self._name)
+            melclass.addComponent(label, comp)
         
         self.__refreshTags()
 
@@ -583,19 +570,15 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
         log.debug('Component removed from label {} ({})'.format(label, comp))
 
-        melclass.disableListener(    'labels', self._name)
-        melclass.disableNotification('labels')
-        
-        melclass.removeComponent(label, comp)
+        with props.suppress(melclass, 'labels', notify=True):
+            
+            melclass.removeComponent(label, comp)
 
-        # If the component has no more labels,
-        # give it an 'Unknown' label
-        if len(melclass.getLabels(comp)) == 0:
-            melclass.addLabel(comp, 'Unknown')
+            # If the component has no more labels,
+            # give it an 'Unknown' label
+            if len(melclass.getLabels(comp)) == 0:
+                melclass.addLabel(comp, 'Unknown')
 
-        melclass.enableNotification('labels')
-        melclass.notify(            'labels')
-        melclass.enableListener(    'labels', self._name) 
         self.__refreshTags()
 
 

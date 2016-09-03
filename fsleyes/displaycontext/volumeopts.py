@@ -924,47 +924,42 @@ class VolumeOpts(NiftiOpts):
         crmin -= croff
         crmax += croff
 
-        drState = self.getNotificationState('displayRange')
-        crState = self.getNotificationState('clippingRange')
+        with props.suppress(self, 'displayRange',  notify=True), \
+             props.suppress(self, 'clippingRange', notify=True):
 
-        self.disableNotification('displayRange')
-        self.disableNotification('clippingRange')
+            # If display/clipping are all 0,
+            # we assume that they haven't
+            # yet been set
+            drUnset = (self.displayRange .xlo == 0 and 
+                       self.displayRange .xhi == 0)
+            crUnset = (self.clippingRange.xlo == 0 and 
+                       self.clippingRange.xhi == 0)
+            crGrow  =  self.clippingRange.xhi == self.clippingRange.xmax
 
-        # If display/clipping are all 0,
-        # we assume that they haven't
-        # yet been set
-        drUnset = self.displayRange .xlo == 0 and self.displayRange .xhi == 0
-        crUnset = self.clippingRange.xlo == 0 and self.clippingRange.xhi == 0
-        crGrow  = self.clippingRange.xhi == self.clippingRange.xmax
+            log.debug('Updating range limits [dr: {} - {}, ''cr: '
+                      '{} - {}]'.format(drmin, drmax, crmin, crmax))
 
-        log.debug('Updating range limits [dr: {} - {}, cr: {} - {}]'.format(
-            drmin, drmax, crmin, crmax))
-        
-        self.displayRange .xmin = drmin
-        self.displayRange .xmax = drmax
-        self.clippingRange.xmin = crmin
-        self.clippingRange.xmax = crmax
+            self.displayRange .xmin = drmin
+            self.displayRange .xmax = drmax
+            self.clippingRange.xmin = crmin
+            self.clippingRange.xmax = crmax
 
-        # If the ranges have not yet been set,
-        # initialise them to the min/max.
-        # Also, if the high clipping range
-        # was previously equal to the max
-        # clipping range, keep that relationship,
-        # otherwise high values will be clipped.
-        if drUnset: self.displayRange .x   = drmin,         drmax
-        if crUnset: self.clippingRange.x   = crmin + croff, crmax
-        if crGrow:  self.clippingRange.xhi = crmax
+            # If the ranges have not yet been set,
+            # initialise them to the min/max.
+            # Also, if the high clipping range
+            # was previously equal to the max
+            # clipping range, keep that relationship,
+            # otherwise high values will be clipped.
+            if drUnset: self.displayRange .x   = drmin,         drmax
+            if crUnset: self.clippingRange.x   = crmin + croff, crmax
+            if crGrow:  self.clippingRange.xhi = crmax
 
-        # If using absolute range values, the low
-        # display/clipping should be set to 0
-        if absolute and self.displayRange .xlo < 0: self.displayRange.xlo  = 0
-        if absolute and self.clippingRange.xlo < 0: self.clippingRange.xlo = 0
-        
-        self.setNotificationState('displayRange',  drState)
-        self.setNotificationState('clippingRange', crState)
-
-        self.notify('displayRange')
-        self.notify('clippingRange')
+            # If using absolute range values, the low
+            # display/clipping should be set to 0
+            if absolute and self.displayRange .xlo < 0:
+                self.displayRange.xlo  = 0
+            if absolute and self.clippingRange.xlo < 0:
+                self.clippingRange.xlo = 0
 
 
     def __dataRangeChanged(self, *a):

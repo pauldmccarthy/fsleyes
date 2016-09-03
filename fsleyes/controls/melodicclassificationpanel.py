@@ -16,6 +16,8 @@ import logging
 
 import wx
 
+import props
+
 import pwidgets.notebook                as notebook
 
 import fsl.utils.settings               as fslsettings
@@ -219,37 +221,30 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
             # Disable notification while applying
             # labels so the component/label grids
-            # don't confuse themselves. We'll
-            # manually refresh them below.
-            melclass.disableNotification('labels')
-            lut     .disableNotification('labels')
+            # don't confuse themselves. But make
+            # sure that lut listeners are notified,
+            # in case any new labels were added.
+            with props.suppress(melclass, 'labels'), \
+                 props.suppress(lut,      'labels', notify=True):
 
-            melclass.clear()
+                melclass.clear()
 
-            for comp, lbls in enumerate(allLabels):
-                for lbl in lbls:
-                    melclass.addLabel(comp, lbl)
+                for comp, lbls in enumerate(allLabels):
+                    for lbl in lbls:
+                        melclass.addLabel(comp, lbl)
 
-            # Make sure a colour in the melodic
-            # lookup table exists for all labels
-            for comp, labels in enumerate(melclass.labels):
-                for label in labels:
+                # Make sure a colour in the melodic
+                # lookup table exists for all labels
+                for comp, labels in enumerate(melclass.labels):
+                    for label in labels:
 
-                    label    = melclass.getDisplayLabel(label)
-                    lutLabel = lut.getByName(label)
+                        label    = melclass.getDisplayLabel(label)
+                        lutLabel = lut.getByName(label)
 
-                    if lutLabel is None:
-                        log.debug('New melodic classification '
-                                  'label: {}'.format(label))
-                        lut.new(label)
-
-            melclass.enableNotification('labels') 
-            lut     .enableNotification('labels')
-
-            # Make sure that lut listeners
-            # are notified, in case any
-            # new labels were added.
-            lut.notify('labels')
+                        if lutLabel is None:
+                            log.debug('New melodic classification '
+                                      'label: {}'.format(label))
+                            lut.new(label)
 
             # If we have just loaded a MelodicImage,
             # make sure it is selected. If we loaded
@@ -451,10 +446,6 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
         melclass.clear()
 
-        melclass.disableNotification('labels')
-        
-        for c in range(overlay.numComponents()):
-            melclass.addLabel(c, 'Unknown')
-            
-        melclass.enableNotification('labels')
-        melclass.notify('labels')
+        with props.suppress(melclass, 'labels', notify=True):
+            for c in range(overlay.numComponents()):
+                melclass.addLabel(c, 'Unknown')

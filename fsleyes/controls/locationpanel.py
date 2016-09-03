@@ -517,21 +517,18 @@ class LocationPanel(fslpanel.FSLeyesPanel):
             wlo     = wbounds[0::2]
             whi     = wbounds[1::2]
 
-        # Update the voxel and world location limits,
-        # but don't trigger a listener callback, as
-        # this would change the display location.
-        self.disableNotification('worldLocation')
-        self.disableNotification('voxelLocation')
-
         log.debug('Setting voxelLocation limits: {} - {}'.format(vlo, vhi))
         log.debug('Setting worldLocation limits: {} - {}'.format(wlo, whi))
 
-        for i in range(3):
-            self.voxelLocation.setLimits(i, vlo[i], vhi[i])
-            self.worldLocation.setLimits(i, wlo[i], whi[i])
-            
-        self.enableNotification('worldLocation')
-        self.enableNotification('voxelLocation')
+        # Update the voxel and world location limits,
+        # but don't trigger a listener callback, as
+        # this would change the display location.
+        with props.suppress(self, 'worldLocation'), \
+             props.suppress(self, 'voxelLocation'):
+
+            for i in range(3):
+                self.voxelLocation.setLimits(i, vlo[i], vhi[i])
+                self.worldLocation.setLimits(i, wlo[i], whi[i])
 
             
     def __displayLocationChanged(self, *a):

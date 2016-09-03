@@ -1020,14 +1020,13 @@ class SliceCanvas(props.HasProperties):
         ovlBounds = self.displayCtx.bounds
         oldPos    = self.pos.xy
 
-        self.disableNotification('pos')
-        self.pos.setMin(0, ovlBounds.getLo(self.xax))
-        self.pos.setMax(0, ovlBounds.getHi(self.xax))
-        self.pos.setMin(1, ovlBounds.getLo(self.yax))
-        self.pos.setMax(1, ovlBounds.getHi(self.yax))
-        self.pos.setMin(2, ovlBounds.getLo(self.zax))
-        self.pos.setMax(2, ovlBounds.getHi(self.zax))
-        self.enableNotification('pos')
+        with props.suppress(self, 'pos'):
+            self.pos.setMin(0, ovlBounds.getLo(self.xax))
+            self.pos.setMax(0, ovlBounds.getHi(self.xax))
+            self.pos.setMin(1, ovlBounds.getLo(self.yax))
+            self.pos.setMax(1, ovlBounds.getHi(self.yax))
+            self.pos.setMin(2, ovlBounds.getLo(self.zax))
+            self.pos.setMax(2, ovlBounds.getHi(self.zax))
 
         self._updateDisplayBounds(oldLoc=oldPos)
 

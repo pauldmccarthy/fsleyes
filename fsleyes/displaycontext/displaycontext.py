@@ -511,6 +511,10 @@ class DisplayContext(props.SyncableHasProperties):
 
 
     def freezeOverlay(self, overlay):
+        """Suppresses notification for all :class:`.Display` and
+        :class:`.DisplayOpts` properties associated with the given ``overlay``.
+        Call :meth:`.thawOverlay` to re-enable notification.
+        """
         parent = self.getParent()
         if parent is not None:
             parent.freezeOverlay(overlay)
@@ -527,6 +531,11 @@ class DisplayContext(props.SyncableHasProperties):
 
     
     def thawOverlay(self, overlay):
+        """Enables notification for all :class:`.Display` and
+        :class:`.DisplayOpts` properties associated with the given ``overlay``.
+        The notification is re-enabled on the :func:`.async.idle` loop, in case
+        any functions which may trigger notification are already queued.
+        """
 
         parent = self.getParent()
         if parent is not None:
@@ -748,9 +757,8 @@ class DisplayContext(props.SyncableHasProperties):
 
         # Update the display world bounds,
         # and then update the location
-        self.disableNotification('location')
-        self.__updateBounds()
-        self.enableNotification('location')
+        with props.suppress(self, 'location'):
+            self.__updateBounds()
 
         # making sure that the location is kept
         # in the same place, relative to the
@@ -855,9 +863,8 @@ class DisplayContext(props.SyncableHasProperties):
         # Inhibit notification on the location
         # property - it will be updated properly
         # below
-        self.disableNotification('location')
-        self.__updateBounds()
-        self.enableNotification('location')
+        with props.suppress(self, 'location'):
+            self.__updateBounds()
 
         # The main purpose of this method is to preserve
         # the current display location in terms of the

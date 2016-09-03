@@ -382,9 +382,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # due to updates to the GL texture buffer. So we disable
         # notification, and then manually refresh the texture
         # afterwards
-        editor.getSelection().disableNotification('selection')
-        editor.undo()
-        editor.getSelection().enableNotification('selection')
+        with props.suppress(editor.getSelection(), 'selection'):
+            editor.undo()
         
         self.__selectionChanged()
         self.__xselAnnotation.texture.refresh()
@@ -404,9 +403,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         # See comment in undo method 
         # about disabling notification
-        editor.getSelection().disableNotification('selection')
-        editor.redo()
-        editor.getSelection().enableNotification('selection')
+        with props.suppress(editor.getSelection(), 'selection'):
+            editor.redo()
         
         self.__selectionChanged()
         self.__xselAnnotation.texture.refresh()
@@ -1055,9 +1053,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # image, or the current slice).
         selection = editor.getSelection()
         if searchRadius is not None:
-            selection.disableNotification('selection')
-            selection.clearSelection(restrict)
-            selection.enableNotification('selection')
+            with props.suppress(selection, 'selection'):
+                selection.clearSelection(restrict)
 
         selection.selectByValue(
             voxel,

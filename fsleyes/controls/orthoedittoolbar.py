@@ -135,9 +135,8 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
         profileObj = ortho.getCurrentProfile()
 
         if profile == 'edit':
-            self.disableNotification('selint')
-            self.selint = profileObj.mode == 'selint'
-            self.enableNotification('selint')
+            with props.suppress(self, 'selint'):
+                self.selint = profileObj.mode == 'selint'
 
         specs = _TOOLBAR_SPECS[profile]
         tools = []
