@@ -12,6 +12,7 @@ general display settings for displaying the overlays in a
 import sys
 import logging
 import weakref
+import contextlib
 
 import numpy        as np
 import numpy.linalg as npla
@@ -510,10 +511,34 @@ class DisplayContext(props.SyncableHasProperties):
                       coords))
 
 
+    @contextlib.contextmanager
+    def freeze(self, overlay):
+        """This method can be used as a context manager to suppress
+        notification for all :class:`.Display` and :class:`.DisplayOpts`
+        properties related to the given ``overlay``::
+
+            with displayCtx.freeze(overlay):
+                # Do stuff which might trigger unwanted
+                # Display/DisplayOpts notifications
+
+        See :meth:`freezeOverlay` and :meth:`thawOverlay`.
+        """
+        self.freezeOverlay(overlay)
+
+        try:
+            yield
+
+        finally:
+            self.thawOverlay(overlay)
+
+
     def freezeOverlay(self, overlay):
         """Suppresses notification for all :class:`.Display` and
         :class:`.DisplayOpts` properties associated with the given ``overlay``.
         Call :meth:`.thawOverlay` to re-enable notification.
+
+        See also the :meth:`freeze` method, which can be used as a context
+        manager to automatically call this method and ``thawOverlay``.
         """
         parent = self.getParent()
         if parent is not None:

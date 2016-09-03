@@ -67,7 +67,10 @@ class ImageTexture(texture3d.Texture3D):
         kwargs['scales'] = image.pixdim[:3]
 
         texture3d.Texture3D.__init__(self, name, **kwargs)
-        self.image.register(self.__name, self.refresh, 'data', runOnIdle=True)
+        self.image.register(self.__name,
+                            self.__imageDataChanged,
+                            'data',
+                            runOnIdle=True)
 
 
     def destroy(self):
@@ -86,6 +89,13 @@ class ImageTexture(texture3d.Texture3D):
         """
         self.set(volume=volume)
 
+
+    def __imageDataChanged(self, *a):
+        """Called when the :class:`.Image` notifies about a data changes.
+        Triggers an image texture refresh via a call to :meth:`set`.
+        """
+        self.set()
+
         
     def set(self, **kwargs):
         """Overrides :meth:`.Texture3D.set`. Set any parameters on this
@@ -101,8 +111,9 @@ class ImageTexture(texture3d.Texture3D):
 
         """
 
-        kwargs         .pop('data',   None)
-        volume = kwargs.pop('volume', self.__volume)
+        kwargs         .pop('data',      None)
+        kwargs         .pop('normalise', None)
+        volume = kwargs.pop('volume',    self.__volume)
 
         is4D   = self.__nvals == 1          and \
                  len(self.image.shape) == 4 and \
@@ -118,5 +129,7 @@ class ImageTexture(texture3d.Texture3D):
             
             self.__volume  = volume
             kwargs['data'] = self.image[..., volume]
+
+        kwargs['normalise'] = self.image.dataRange
 
         return texture3d.Texture3D.set(self, **kwargs)

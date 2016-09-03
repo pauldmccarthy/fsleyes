@@ -196,6 +196,9 @@ messages = TypeDict({
     'ExportDataSeriesAction.selectFile'   : 'Export data series to',
     'ExportDataSeriesAction.saveXColumn'  : 'Export the X axis data '
                                             'as the first column?',
+
+    'CorrelateAction.calculating'         : 'Calculating correlation values '
+                                            'for seed voxel [{}, {}, {}] ...',
 })
 
 
