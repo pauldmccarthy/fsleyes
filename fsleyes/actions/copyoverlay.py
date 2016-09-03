@@ -83,7 +83,7 @@ class CopyOverlayAction(action.Action):
         """
         
         ovl          = self.__displayCtx.getSelectedOverlay()
-        self.enabled = (ovl is not None) and (type(ovl) == fslimage.Image)
+        self.enabled = (ovl is not None) and isinstance(ovl, fslimage.Image)
     
     
     def __copyOverlay(self):

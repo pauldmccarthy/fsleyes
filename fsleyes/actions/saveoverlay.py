@@ -86,7 +86,7 @@ class SaveOverlayAction(action.Action):
 
         for ovl in self.__overlayList:
             
-            if type(ovl) != fslimage.Image:
+            if not isinstance(ovl, fslimage.Image):
                 continue
             
             ovl.deregister(self.__name, 'saveState')

@@ -65,9 +65,9 @@ class ReloadOverlayAction(action.Action):
         this ``Action`` depending on the type of the newly selected overlay.
         """
         ovl          = self.__displayCtx.getSelectedOverlay()
-        self.enabled = (ovl            is not None)  and \
-                       (ovl.dataSource is not None)  and \
-                       (type(ovl) == fslimage.Image) and \
+        self.enabled = (ovl            is not None)    and \
+                       (ovl.dataSource is not None)    and \
+                       isinstance(ovl, fslimage.Image) and \
                        op.exists(ovl.dataSource)
 
     
