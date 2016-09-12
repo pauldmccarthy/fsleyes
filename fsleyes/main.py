@@ -113,11 +113,9 @@ def main(args=None):
         args = sys.argv[1:]
 
     # First thing's first. Create a wx.App,
-    # then make sure the FSLeyes asset
-    # directory (containing e.g. icon images)
-    # is set. 
+    # then initialise the FSLeyes package.
     app = FSLeyesApp()
-    fsleyes.setAssetDir()
+    fsleyes.initialise()
 
     # Show the splash screen as soon as
     # possible, unless it looks like the

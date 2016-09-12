@@ -187,8 +187,9 @@ import os.path as op
 import            logging
 import            warnings
 
-from .                  import             version
-from fsl.utils.platform import platform as fslplatform
+from   .                  import             version
+from   fsl.utils.platform import platform as fslplatform
+import fsl.utils.settings                 as fslsettings
 
 
 # The logger is assigned in 
@@ -208,32 +209,42 @@ files). This is set in the :func:`setAssetDir` function.
 """
 
 
-def setAssetDir():
-    """Sets the :data:`assetDir` attribute. This function *must* be called
-    before most other things in *FSLeyes* are used, but after a ``wx.App``
-    has been created.
+def initialise():
+    """Called when `FSLeyes`` is started as a standalone application.
+
+    Does a few initialisation steps::
+
+      - Adjusts the :attr:`fsl.utils.settings._CONFIG_ID`.
+
+      - Sets the :data:`assetDir` attribute. This function *must* be called
+        before most other things in *FSLeyes* are used, but after a ``wx.App``
+        has been created.
     """
     
     global assetDir
     
     import wx
-    from fsl.utils.platform import platform
+
+    # Adjust the settings ID - the FSLeyes config
+    # file will be automatically named by the OS
+    # (via wx.Config) according to this ID.
+    fslsettings._CONFIG_ID = 'uk.ac.ox.fmrib.fsleyes'
 
     # If we are running from a bundled application,
     # wx will know where the FSLeyes resources are
-    if platform.frozen:
+    if fslplatform.frozen:
 
         # If we have a display, assume 
         # that a wx app has been created
-        if platform.canHaveGui:
+        if fslplatform.canHaveGui:
 
             sp       = wx.StandardPaths.Get()
             assetDir = op.join(sp.GetResourcesDir())
 
         # Otherwise we have to guess at the location
-        elif platform.os == 'Darwin':
+        elif fslplatform.os == 'Darwin':
             assetDir = op.join(op.dirname(__file__), '..', 'Resources')
-        elif platform.os == 'Linux':
+        elif fslplatform.os == 'Linux':
             assetDir = op.join(op.dirname(__file__), '..', 'share', 'FSLeyes')
 
     # Otherwise we are running from a code install;
