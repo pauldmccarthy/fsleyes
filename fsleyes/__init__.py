@@ -205,7 +205,7 @@ module).
 
 assetDir = op.join(op.dirname(__file__), '..')
 """Base directory which contains all *FSLeyes* assets/resources (e.g. icon
-files). This is set in the :func:`setAssetDir` function.
+files). This is set in the :func:`initialise` function.
 """
 
 
