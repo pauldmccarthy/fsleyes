@@ -41,16 +41,31 @@ log = logging.getLogger(__name__)
 
 # The wx.html2.WebView.SetPage method differs from
 # the wx.html.HtmlWindow.SetPage method - it requires
-# two parameters. Here we're monkey-patching the
+# two parameters. Here we're sub-classing the
 # HtmlWindow method so that it also accepts two
 # parameters, but ignores the second.
+#
+# The sub-class also forces links to be opened
+# in the system browser, as opposed to in the
+# same window.
 if not USE_HTML2:
-    
-    def SetPage(self, html, url=None):
-        wxhtml.HtmlWindow._old_SetPage(self, html)
 
-    wxhtml.HtmlWindow._old_SetPage = wxhtml.HtmlWindow.SetPage
-    wxhtml.HtmlWindow.SetPage      = SetPage
+    class HtmlWindow(wxhtml.HtmlWindow):
+
+        def __init__(self, *args, **kwargs):
+            wxhtml.HtmlWindow.__init__(self, *args, **kwargs)
+
+            self.Bind(wxhtml.EVT_HTML_LINK_CLICKED, self.__onLink)
+
+            # wx.html.HtmlWindow defaults
+            # to a slightly bigger font size
+            self.SetStandardFonts(self.GetFont().GetPointSize())
+
+        def __onLink(self, ev):
+            wx.LaunchDefaultBrowser(ev.GetLinkInfo().GetHref())
+            
+        def SetPage(self, html, url=None):
+            wxhtml.HtmlWindow.SetPage(self, html)
 
 
 class OverlayInfoPanel(fslpanel.FSLeyesPanel):
@@ -87,13 +102,8 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
 
         fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
-        if USE_HTML2:
-            self.__info = wxhtml.WebView.New(self)
-        else:
-            self.__info = wxhtml.HtmlWindow(self)
-            # wx.html.HtmlWindow defaults
-            # to a slightly bigger font size
-            self.__info.SetStandardFonts(self.GetFont().GetPointSize())
+        if USE_HTML2: self.__info = wxhtml.WebView.New(self)
+        else:         self.__info = HtmlWindow(        self)
         
         self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.__sizer.Add(self.__info, flag=wx.EXPAND, proportion=1)
@@ -414,20 +424,26 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         :arg overlay: A :class:`.FEATImage` instance.
         :arg display: The :class:`.Display` instance assocated with the
                       ``FEATImage``.
-        """ 
+        """
+
         info = self.__getImageInfo(overlay, display)
 
         featInfo = [
-            ('analysisName', overlay.getAnalysisName()),
-            ('analysisDir',  overlay.getFEATDir()),
-            ('numPoints',    overlay.numPoints()),
-            ('numEVs',       overlay.numEVs()),
-            ('numContrasts', overlay.numContrasts())]
+            ('analysisName',   overlay.getAnalysisName()),
+            ('analysisDir',    overlay.getFEATDir()),
+            ('numPoints',      overlay.numPoints()),
+            ('numEVs',         overlay.numEVs()),
+            ('numContrasts',   overlay.numContrasts())]
 
         topLevel = overlay.getTopLevelAnalysisDir()
+        report   = overlay.getReportFile()
 
         if topLevel is not None:
             featInfo.insert(2, ('partOfAnalysis', topLevel))
+            
+        if report is not None:
+            report = '<a href="file://{}">{}</a>'.format(report, report)
+            featInfo.insert(2, ('report', report)) 
 
         secName = strings.labels[self, overlay, 'featInfo']
         info.addSection(secName)
@@ -456,9 +472,14 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
             ('numComponents',  overlay.numComponents())]
 
         topLevel = overlay.getTopLevelAnalysisDir()
+        report   = overlay.getReportFile()
         
         if topLevel is not None:
             melInfo.insert(2, ('partOfAnalysis', topLevel))
+
+        if report is not None:
+            report = '<a href="file://{}">{}</a>'.format(report, report)
+            melInfo.insert(2, ('report', report)) 
 
         secName = strings.labels[self, overlay, 'melodicInfo']
         info.addSection(secName)
