@@ -336,6 +336,9 @@ class GLLineVertices(object):
         # to the voxel coordinate system axes
         if opts.transform in ('id', 'pixdim', 'pixdim-flip'):
 
+            if zpos < 0:
+                zpos = 0
+
             # Turn the z position into a voxel index
             if opts.transform in ('pixdim', 'pixdim-flip'):
                 zpos = zpos / image.pixdim[zax]
