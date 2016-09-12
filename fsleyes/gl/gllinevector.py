@@ -416,8 +416,12 @@ class GLLineVertices(object):
 
         # pull out the vertex data
         # corresponding to the voxels
-        vertices  = vertices[coords[0], coords[1], coords[2], :, :]
-        vertices  = vertices.reshape(-1, 3)
+        vertices = vertices[coords[0], coords[1], coords[2], :, :]
+        vertices = vertices.reshape(-1, 3)
+
+        if not vertices.flags['C_CONTIGUOUS']:
+            vertices = np.ascontiguousarray(vertices)
+
         voxCoords = voxCoords.repeat(repeats=2, axis=0)
         
         return vertices, voxCoords
