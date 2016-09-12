@@ -96,8 +96,9 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         self.__propagateSelect = propagateSelect
 
         if elistboxStyle is None:
-            elistboxStyle = (elistbox.ELB_REVERSE |
-                             elistbox.ELB_TOOLTIP_DOWN)
+            elistboxStyle = (elistbox.ELB_REVERSE      |
+                             elistbox.ELB_TOOLTIP_DOWN |
+                             elistbox.ELB_SCROLL_BUTTONS)
 
         # list box containing the list of overlays - it 
         # is populated in the _overlayListChanged method
