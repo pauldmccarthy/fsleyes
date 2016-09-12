@@ -17,7 +17,7 @@ actions = td.TypeDict({
     'LoadStandardAction'       : 'Ctrl-S',
     'CopyOverlayAction'        : 'Ctrl-Alt-C',
     'SaveOverlayAction'        : 'Ctrl-Alt-S',
-    'CorrelateAction'          : 'Ctrl-Alt-P',
+    'PearsonCorrelateAction'   : 'Ctrl-Alt-P',
     'ReloadOverlayAction'      : 'Ctrl-Alt-R',
     'RemoveOverlayAction'      : 'Ctrl-Alt-W',
 

@@ -113,7 +113,7 @@ are also defined in this package:
     ~fsleyes.actions.about
     ~fsleyes.actions.importdataseries
     ~fsleyes.actions.exportdataseries
-    ~fsleyes.actions.CorrelateAction
+    ~fsleyes.actions.correlate
 """
 
 
@@ -168,7 +168,8 @@ DiagnosticReportAction   = diagnosticreport  .DiagnosticReportAction
 AboutAction              = about             .AboutAction
 ImportDataSeriesAction   = importdataseries  .ImportDataSeriesAction
 ExportDataSeriesAction   = exportdataseries  .ExportDataSeriesAction
-CorrelateAction          = correlate         .CorrelateAction
+PearsonCorrelateAction   = correlate         .PearsonCorrelateAction
+PCACorrelateAction       = correlate         .PCACorrelateAction
 
 
 log = logging.getLogger(__name__)

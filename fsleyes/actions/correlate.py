@@ -4,9 +4,9 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`.CorrelateAction` class, an
-:class:`.Action` which calculates seed-based correlation on 4D
-:class:`.Image` overlays.
+"""This module provides the :class:`.PearsonCorrelateAction` and
+:class:`PCACorrelateAction` classes, which are :class:`.Action`s that
+calculate seed-based correlation on 4D :class:`.Image` overlays.
 """
 
 
@@ -29,13 +29,27 @@ log = logging.getLogger(__name__)
 
 
 class CorrelateAction(action.Action):
-    """
+    """The ``CorrelateAction`` is a base class for the
+    :class:`PearsonCorrelateAction` and :class:`PCACorrelateAction` classes,
+    which manages adding/removing correlation overlays to/from the
+    :class:`.OverlayList`, and manages execution of the correlation.
+
+
+    When a 4D :class:`.Image` is selected and the ``CorrelateAction`` is
+    invoked, a new 3D :class:`.Image` is created and added to the
+    :class:`.OverlayList` - this image is referred to as a *correlate overlay*,
+    and is used to store and display the correlation values.
     """
 
     def __init__(self, overlayList, displayCtx, frame):
+        """Create a ``CorrelateAction``.
+
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`.
+        :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        """
-        action.Action.__init__(self, self.__correlate)
+
+        action.Action.__init__(self, self.__runCorrelateAction)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
@@ -49,11 +63,15 @@ class CorrelateAction(action.Action):
                                 self.__name,
                                 self.__overlayListChanged)
 
-        # TODO Use a single data structure - using
-        #      two dicts is fragile
+        # TODO Use a single data structure - 
+        #      using two dicts is fragile
         self.__correlateOverlays = {}
         self.__overlayCorrelates = {}
-        
+
+        # The runCorrelateAction cannot be called
+        # more than once at a time - this is used
+        # as a semaphore to ensure that this is
+        # enforced. 
         self.__correlateFlag = threading.Event()
         
         self.__selectedOverlayChanged()
@@ -90,14 +108,17 @@ class CorrelateAction(action.Action):
 
 
     def __overlayListChanged(self, *a):
-        """
+        """Called when the :class:`.OverlayList` changes. Makes sure that
+        there are no obsolete correlate overlays in the list, and calls
+        :meth:`__selectedOverlayChanged`.
         """
         self.__clearCorrelateOverlays()
         self.__selectedOverlayChanged()
 
 
     def __clearCorrelateOverlays(self):
-        """
+        """Called by :meth:`__overlayListChanged`. Clears internal references 
+        to any obsolete correlate overlays.
         """
 
         for overlay, corrOvl in list(self.__correlateOverlays.items()):
@@ -108,6 +129,10 @@ class CorrelateAction(action.Action):
 
 
     def __createCorrelateOverlay(self, overlay, data):
+        """Creates a *correlate* overlay for the given ``overlay``, adds
+        it to the :class:`.OverlayList`, and initialises some display
+        properties.
+        """
 
         display = self.__displayCtx.getDisplay(overlay)
         name    = '{}/correlation'.format(display.name)
@@ -130,7 +155,16 @@ class CorrelateAction(action.Action):
         return corrOvl
 
 
-    def __correlate(self):
+    def __runCorrelateAction(self):
+        """Called when this :class:`.Action` is invoked. Calculates correlation
+        values from the voxel at the current :attr:`.DisplayContext.location`
+        (relative to the currently selected overlay) to all other voxels, and
+        updates the correlate overlay.
+
+        The correlation calculation and overlay update is performed on a
+        separate thread (via :meth:`.async.run`), with a call to
+        :meth:`calculateCorrelation`.
+        """
 
         # Because of the multi-threaded/asynchronous
         # way that this function does its job,
@@ -168,9 +202,7 @@ class CorrelateAction(action.Action):
         if xyz is None:
             return
 
-        x, y, z = xyz
-        data    = ovl.nibImage.get_data()
-        npoints = data.shape[3]
+        data = ovl.nibImage.get_data()
 
         # The correlation calculation is performed
         # on a separate thread. This thread then
@@ -179,18 +211,7 @@ class CorrelateAction(action.Action):
         # main thread.
         def calcCorr():
 
-            # the scipy.spatial.distance.cdist
-            # function can be used to calculate
-            # one-to-many correlation values.
-            with np.errstate(invalid='ignore'):
-                correlations = 1 - spd.cdist(
-                    data[x, y, z, :].reshape( 1, npoints),
-                    data            .reshape(-1, npoints),
-                    metric='correlation')
-
-            # Set any nans to 0
-            correlations[np.isnan(correlations)] = 0
-            correlations = correlations.reshape(data.shape[:3])
+            correlations = self.calculateCorrelation(xyz, data)
 
             # The correlation overlay is updated/
             # created on the main thread.
@@ -220,5 +241,67 @@ class CorrelateAction(action.Action):
         # Protect against more calls 
         # while this job is running.
         self.__correlateFlag.set()
-        fslstatus.update(strings.messages[self, 'calculating'].format(x, y, z))
+        fslstatus.update(strings.messages[self, 'calculating'].format(*xyz))
         async.run(calcCorr)
+
+
+    def calculateCorrelation(self, seed, data):
+        """Calculates correlation values between the given ``seed`` voxel (an
+        ``(x, y, z)`` tuple) and all other voxels. This method must be
+        implemented by sub-classes.
+
+        :arg seed: An ``(x, y, z)`` tuple specifying the seed voxel
+
+        :arg data: A 4D ``numpy`` array containing all of the data.
+
+        :returns:  A 3D ``numpy`` array containing the correlation values.
+        """
+        raise NotImplementedError('calculateCorrelation must be '
+                                  'implemented by sub-classes')
+
+
+class PearsonCorrelateAction(CorrelateAction):
+    """The ``PearsonCorrelateAction`` is a :class:`CorrelateAction` which
+    calculates Pearson correlation coefficient values between the seed voxel
+    and all other voxels.
+    """
+
+    def calculateCorrelation(self, seed, data): 
+        """Calculates Pearson correlation between the data at the specified
+        seed voxel, and all other voxels.
+        """
+
+        x, y, z = seed
+        npoints = data.shape[3]
+        
+        # the scipy.spatial.distance.cdist
+        # function can be used to calculate
+        # one-to-many correlation values.
+        with np.errstate(invalid='ignore'):
+            correlations = 1 - spd.cdist(
+                data[x, y, z, :].reshape( 1, npoints),
+                data            .reshape(-1, npoints),
+                metric='correlation')
+
+        # Set any nans to 0
+        correlations[np.isnan(correlations)] = 0
+        
+        return correlations.reshape(data.shape[:3]) 
+
+
+class PCACorrelateAction(CorrelateAction):
+    """
+    """
+
+    def calculateCorrelation(self, seed, data):
+        """
+        """
+
+        x, y, z = seed
+        nvox    = np.prod(data.shape[:3])
+        npoints =         data.shape[ 3]
+
+        correlations = np.dot(data[x, y, z, :].reshape(1,    npoints),
+                              data            .reshape(nvox, npoints).T)
+
+        return correlations.reshape(data.shape[:3])

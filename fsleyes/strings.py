@@ -292,7 +292,8 @@ actions = TypeDict({
     'DiagnosticReportAction'   : 'Diagnostic report',
     'RunScriptAction'          : 'Run script',
     'AboutAction'              : 'About FSLeyes',
-    'CorrelateAction'          : 'Seed correlation',
+    'PearsonCorrelateAction'   : 'Seed correlation (Pearson)',
+    'PCACorrelateAction'       : 'Seed correlation (PCA)',
 
     'FSLeyesFrame.removeFocusedViewPanel'  : 'Close',
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
