@@ -36,8 +36,8 @@ import wx
 
 from fsl.utils.platform import platform as fslplatform
 
-import                  fsleyes
-from . import splash as fslsplash
+import                   fsleyes
+import fsleyes.splash as fslsplash
 
 
 log = logging.getLogger(__name__)
@@ -70,6 +70,13 @@ class FSLeyesApp(wx.App):
         frame = self.GetTopWindow()
         frame.Iconize(False)
         frame.Raise()
+
+
+    def MacOpenFile(self, filename):
+        """On OSX, support opening files via context menu, and files dropped
+        on the application icon.
+        """
+        self.MacOpenFiles([filename])
 
 
     def MacOpenFiles(self, filenames):
