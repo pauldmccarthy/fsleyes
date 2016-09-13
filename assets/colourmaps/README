@@ -1,7 +1,7 @@
-FSLView Colour maps
+FSLeyes colour maps
 -------------------
 
-All files in this directory ending with '.cmap' will be loaded by FSLView,
+All files in this directory ending with '.cmap' will be loaded by FSLeyes,
 interpreted as a list of RGB colours, and added as a colour map option for
 rendering images.
 
@@ -10,7 +10,7 @@ with each colour specified by three space-separated floating point values in
 the range 0.0 - 1.0.
 
 Feel free to add your own .cmap files, and put them in this directory, making
-sure that the file name does not contain any spaces. When FSLView is
+sure that the file name does not contain any spaces. When FSLeyes is
 restarted, they will be made available under the colour map setting in image
 display options.  
 

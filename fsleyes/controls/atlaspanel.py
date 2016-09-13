@@ -431,11 +431,16 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
             elif overlayType == 'label':
 
                 # The Harvard-Oxford atlases
-                # have special colour maps
+                # have special colour maps.
+                # The Talairach atlas has
+                # loads of labels, so needs
+                # a big lut.
                 if   atlasID == 'HarvardOxford-Cortical':
                     opts.lut = 'harvard-oxford-cortical'
                 elif atlasID == 'HarvardOxford-Subcortical':
                     opts.lut = 'harvard-oxford-subcortical'
+                elif atlasID == 'Talairach':
+                    opts.lut = 'random_big'
                 else:
                     opts.lut = 'random'
 

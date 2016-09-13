@@ -87,6 +87,8 @@ This list of label, colour, and name mappings is used to create a
 :class:`LookupTable` instance, which can be used to access the colours and
 names associated with each label value.
 
+.. note:: The labels specified in a ``.lut`` file must be in ascending order.
+
 
 Once created, ``LookupTable`` instances may be modified - labels can be
 added/removed, and the name/colour of existing labels can be modified.  The
@@ -834,6 +836,10 @@ class LutLabel(object):
               one based on the existing one.
     """
 
+    defaultName    = 'Label'
+    defaultColour  = (0, 0, 0)
+    defaultEnabled = True
+
     
     def __init__(self, value, name, colour, enabled):
         """Create a ``LutLabel``.
@@ -845,9 +851,9 @@ class LutLabel(object):
         """
 
         if value   is None: raise ValueError('LutLabel value cannot be None')
-        if name    is None: name    = 'Label'
-        if colour  is None: colour  = (0, 0, 0)
-        if enabled is None: enabled = True
+        if name    is None: name    = LutLabel.defaultName
+        if colour  is None: colour  = LutLabel.defaultColour
+        if enabled is None: enabled = LutLabel.defaultEnabled
         
         self.__value       = value
         self.__displayName = name
@@ -987,8 +993,9 @@ class LookupTable(props.HasProperties):
                       method.
         """
 
-        self.key  = key
-        self.name = name
+        self.key   = key
+        self.name  = name
+        self.__max = 0
 
         if lutFile is not None:
             self._load(lutFile)
@@ -1011,9 +1018,7 @@ class LookupTable(props.HasProperties):
 
     def max(self):
         """Returns the maximum label value in this lookup table. """
-
-        if len(self.labels) == 0: return 0
-        else:                     return max([l.value() for l in self.labels])
+        return self.__max
 
 
     def __find(self, value):
@@ -1126,6 +1131,9 @@ class LookupTable(props.HasProperties):
         if lutChanged:
             self.saved = False
 
+        if value > self.__max:
+            self.__max = value
+
         return label
 
 
@@ -1143,20 +1151,48 @@ class LookupTable(props.HasProperties):
         
     def _load(self, lutFile):
         """Loads a ``LookupTable`` specification from the given file."""
-        
+
+        # Calling new() or set() to add new labels is
+        # very slow, because the labels are inserted in
+        # ascending order. If we require .lut files to
+        # be sorted, we can create the lookup table
+        # much faster.
+        def parseLabel(line):
+            tkns = line.split()
+
+            label = int(     tkns[0])
+            r     = float(   tkns[1])
+            g     = float(   tkns[2])
+            b     = float(   tkns[3])
+            lName = ' '.join(tkns[4:])
+
+            return LutLabel(label, lName, (r, g, b), True)
+
         with open(lutFile, 'rt') as f:
-            lines = f.readlines()
+
+            last   = 0
+            lines  = [l.strip() for l in f.readlines()]
+            labels = []
 
             for line in lines:
-                tkns = line.split()
 
-                label = int(     tkns[0])
-                r     = float(   tkns[1])
-                g     = float(   tkns[2])
-                b     = float(   tkns[3])
-                lName = ' '.join(tkns[4:])
+                if line == '':
+                    continue
 
-                self.set(label, name=lName, colour=(r, g, b), enabled=True)
+                label = parseLabel(line)
+                lval  = label.value()
+
+                if lval <= last:
+                    raise ValueError('{} file is not in ascending '
+                                     'order!'.format(lutFile))
+
+                labels.append(label)
+                last = lval
+
+            self.labels = labels
+
+        self.__max = self.labels[-1].value()
+        self.saved = True
 
 
     def _save(self, lutFile):
