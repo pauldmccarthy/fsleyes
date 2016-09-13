@@ -100,7 +100,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         self.__loadLutButton   = wx.Button(self.__controlCol)
 
         self.__controlColSizer = wx.BoxSizer(wx.VERTICAL)
-        self.__sizer           = wx.BoxSizer(wx.HORIZONTAL)
+        self.__sizer           = wx.BoxSizer(wx.VERTICAL)
 
         self.__controlCol.SetSizer(self.__controlColSizer)
         self             .SetSizer(self.__sizer)

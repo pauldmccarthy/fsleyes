@@ -1003,7 +1003,7 @@ class LookupTable(props.HasProperties):
         self.__max = 0
 
         if lutFile is not None:
-            self._load(lutFile)
+            self.__load(lutFile)
 
 
     def __str__(self):
@@ -1164,14 +1164,14 @@ class LookupTable(props.HasProperties):
         self.saved = False
 
         
-    def _load(self, lutFile):
+    def __load(self, lutFile):
         """Loads a ``LookupTable`` specification from the given file."""
 
         # Calling new() or set() to add new labels is
         # very slow, because the labels are inserted in
-        # ascending order. If we require .lut files to
-        # be sorted, we can create the lookup table
-        # much faster.
+        # ascending order. But because we require .lut
+        # files to be sorted, we can create the lookup
+        # table much faster.
         def parseLabel(line):
             tkns = line.split()
 
