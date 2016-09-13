@@ -405,7 +405,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         """Toggles a :class:`.LookupTablePanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """ 
-        self.togglePanel(lookuptablepanel.LookupTablePanel, location=wx.TOP)
+        self.togglePanel(lookuptablepanel.LookupTablePanel, location=wx.RIGHT)
 
     @actions.toggleControlAction(melclasspanel.MelodicClassificationPanel)
     def toggleClassificationPanel(self):

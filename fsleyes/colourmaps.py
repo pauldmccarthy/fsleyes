@@ -862,26 +862,31 @@ class LutLabel(object):
         self.__enabled     = enabled
 
 
+    @property
     def value(self):
         """Returns the value of this ``LutLabel``. """ 
         return self.__value
 
-    
+
+    @property
     def name(self):
         """Returns the name of this ``LutLabel``. """ 
         return self.__name
 
 
+    @property
     def displayName(self):
         """Returns the display name of this ``LutLabel``. """
         return self.__displayName
 
-    
+
+    @property
     def colour(self):
         """Returns the colour of this ``LutLabel``. """ 
         return self.__colour
 
-    
+
+    @property
     def enabled(self):
         """Returns the enabled state of this ``LutLabel``. """ 
         return self.__enabled
@@ -1031,7 +1036,7 @@ class LookupTable(props.HasProperties):
         """
 
         for i, label in enumerate(self.labels):
-            if label.value() == value:
+            if label.value == value:
                 return i, label
 
         return (-1, None)
@@ -1052,7 +1057,7 @@ class LookupTable(props.HasProperties):
         name = name.lower()
         
         for i, ll in enumerate(self.labels):
-            if ll.name() == name:
+            if ll.name == name:
                 return ll
             
         return None
@@ -1102,37 +1107,47 @@ class LookupTable(props.HasProperties):
 
         # Create a new LutLabel instance with the
         # new, existing, or default label settings
-        name    = kwargs.get('name',    label.displayName())
-        colour  = kwargs.get('colour',  label.colour())
-        enabled = kwargs.get('enabled', label.enabled())
+        name    = kwargs.get('name',    label.displayName)
+        colour  = kwargs.get('colour',  label.colour)
+        enabled = kwargs.get('enabled', label.enabled)
         label   = LutLabel(value, name, colour, enabled)
 
-        # Use the bisect module to
-        # maintain the list order
-        # when inserting new labels
-        if idx == -1:
-            
-            log.debug('Adding new label to {}: {}'.format(
-                self.name, label))
-            
-            lutChanged = True
-            bisect.insort(self.labels, label)
-        else:
-            lutChanged = not (self.labels[idx].name()   == label.name() and 
-                              self.labels[idx].colour() == label.colour())
+        with props.suppress(self, 'labels', notify=True), \
+             props.suppress(self, 'saved'):
 
-            log.debug('Updating label in {}: {} -> {} (changed: {})'.format(
-                self.name, self.labels[idx], label, lutChanged))
-            
-            self.labels[idx] = label            
+            # Use the bisect module to
+            # maintain the list order
+            # when inserting new labels
+            if idx == -1:
 
-        # Update the saved state if a new label has been added,
-        # or an existing label name/colour has been changed
+                log.debug('Adding new label to {}: {}'.format(
+                    self.name, label))
+
+                lutChanged = True
+                bisect.insort(self.labels, label)
+            else:
+                lutChanged = not (self.labels[idx].name   == label.name and 
+                                  self.labels[idx].colour == label.colour)
+
+                log.debug('Updating label in {}: {} -> '
+                          '{} (changed: {})'.format(
+                              self.name,
+                              self.labels[idx],
+                              label,
+                              lutChanged))
+
+                self.labels[idx] = label
+
+            # Update the saved state if a new label has been added,
+            # or an existing label name/colour has been changed
+            if lutChanged:
+                self.saved = False
+
+            if value > self.__max:
+                self.__max = value
+
         if lutChanged:
-            self.saved = False
-
-        if value > self.__max:
-            self.__max = value
+            self.notify('saved')
 
         return label
 
@@ -1180,7 +1195,7 @@ class LookupTable(props.HasProperties):
                     continue
 
                 label = parseLabel(line)
-                lval  = label.value()
+                lval  = label.value
 
                 if lval <= last:
                     raise ValueError('{} file is not in ascending '
@@ -1191,7 +1206,7 @@ class LookupTable(props.HasProperties):
 
             self.labels = labels
 
-        self.__max = self.labels[-1].value()
+        self.__max = self.labels[-1].value
         self.saved = True
 
 
@@ -1201,9 +1216,9 @@ class LookupTable(props.HasProperties):
 
         with open(lutFile, 'wt') as f:
             for label in self.labels:
-                value  = label.value()
-                colour = label.colour()
-                name   = label.displayName()
+                value  = label.value
+                colour = label.colour
+                name   = label.displayName
 
                 tkns   = [value, colour[0], colour[1], colour[2], name]
                 line   = ' '.join(map(str, tkns))

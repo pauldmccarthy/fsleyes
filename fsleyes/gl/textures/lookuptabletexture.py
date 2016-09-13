@@ -113,12 +113,12 @@ class LookupTableTexture(texture.Texture):
 
         for lbl in lut.labels:
 
-            value  = lbl.value()
-            colour = fslcmaps.applyBricon(lbl.colour(), brightness, contrast)
+            value  = lbl.value
+            colour = fslcmaps.applyBricon(lbl.colour, brightness, contrast)
 
             data[value, :3] = [np.floor(c * 255) for c in colour]
 
-            if not lbl.enabled():   data[value, 3] = 0
+            if not lbl.enabled:     data[value, 3] = 0
             elif alpha is not None: data[value, 3] = 255 * alpha
             else:                   data[value, 3] = 255
 

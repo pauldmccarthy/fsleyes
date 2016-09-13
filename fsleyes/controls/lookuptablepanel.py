@@ -263,9 +263,9 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
                     return
  
                 label  = lut.labels[labelIdx]
-                widget = LabelWidget(self, lut, label.value())
+                widget = LabelWidget(self, lut, label.value)
                 
-                self.__labelList.Append(label.displayName())
+                self.__labelList.Append(label.displayName)
                 self.__labelList.SetItemWidget(labelIdx, widget)
 
                 if labelIdx == nlabels - 1:
@@ -355,7 +355,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         """ 
 
         lut       = self.__selectedLut
-        allLabels = [label.value() for label in lut.labels]
+        allLabels = [label.value for label in lut.labels]
 
         lut.disableListener('labels', self._name)
 
@@ -371,7 +371,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         every label on the current LUT.
         """
         lut       = self.__selectedLut
-        allLabels = [label.value() for label in lut.labels]
+        allLabels = [label.value for label in lut.labels]
 
         lut.disableListener('labels', self._name)
 
@@ -429,10 +429,10 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         lut = fslcmaps.LookupTable(key=newName, name=newName)
 
         for label in self.__selectedLut.labels:
-            lut.set(label.value(),
-                    name=label.displayName(),
-                    colour=label.colour(),
-                    enabled=label.enabled())
+            lut.set(label.value,
+                    name=label.displayName,
+                    colour=label.colour,
+                    enabled=label.enabled)
         
         fslcmaps.registerLookupTable(lut, self._overlayList, self._displayCtx)
 
@@ -532,7 +532,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
 
         idx   = self.__labelList.GetSelection()
         lut   = self.__selectedLut
-        value = lut.labels[idx].value()
+        value = lut.labels[idx].value
 
         lut.disableListener('labels', self._name)
         lut.delete(value)
@@ -547,7 +547,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         """
 
         lut = self.__selectedLut
-        value = lut.labels[ev.idx].value()
+        value = lut.labels[ev.idx].value
 
         lut.disableListener('labels', self._name)
         lut.set(value, name=ev.label)
@@ -671,11 +671,11 @@ class LabelWidget(wx.Panel):
                          proportion=1)
 
         label  = lut.get(value)
-        colour = [np.floor(c * 255.0) for c in label.colour()]
+        colour = [np.floor(c * 255.0) for c in label.colour]
 
         self.__valueLabel  .SetLabel(str(value))
         self.__colourButton.SetColour(colour)
-        self.__enableBox   .SetValue(label.enabled())
+        self.__enableBox   .SetValue(label.enabled)
 
         self.__enableBox   .Bind(wx.EVT_CHECKBOX,             self.__onEnable)
         self.__colourButton.Bind(wx.EVT_COLOURPICKER_CHANGED, self.__onColour)
@@ -764,7 +764,7 @@ class NewLutDialog(wx.Dialog):
 
         self.__sizer.Add(self.__message,  flag=wx.EXPAND | wx.ALL, border=10)
         self.__sizer.Add(self.__name,     flag=wx.EXPAND | wx.ALL, border=10)
-        self.__sizer.Add(self.__btnSizer, flag=wx.EXPAND)
+        self.__sizer.Add(self.__btnSizer, flag=wx.EXPAND | wx.ALL, border=15)
         
         self.__btnSizer.Add(self.__ok,       flag=wx.EXPAND, proportion=1)
         self.__btnSizer.Add(self.__cancel,   flag=wx.EXPAND, proportion=1)
@@ -830,7 +830,7 @@ class LutLabelDialog(wx.Dialog):
 
         wx.Dialog.__init__(self, parent, title=strings.titles[self])
 
-        self.__value  = wx.SpinCtrl(        self)
+        self.__value  = wx.SpinCtrl(        self, min=0, max=65535)
         self.__name   = wx.TextCtrl(        self)
         self.__colour = wx.ColourPickerCtrl(self)
 
@@ -854,14 +854,30 @@ class LutLabelDialog(wx.Dialog):
         self.__sizer = wx.GridSizer(4, 2)
         self.SetSizer(self.__sizer)
 
-        self.__sizer.Add(self.__valueLabel,  flag=wx.EXPAND)
-        self.__sizer.Add(self.__value,       flag=wx.EXPAND)
-        self.__sizer.Add(self.__nameLabel,   flag=wx.EXPAND)
-        self.__sizer.Add(self.__name,        flag=wx.EXPAND)
-        self.__sizer.Add(self.__colourLabel, flag=wx.EXPAND)
-        self.__sizer.Add(self.__colour,      flag=wx.EXPAND)
-        self.__sizer.Add(self.__ok,          flag=wx.EXPAND)
-        self.__sizer.Add(self.__cancel,      flag=wx.EXPAND)
+        self.__sizer.Add(self.__valueLabel,
+                         flag=wx.EXPAND | wx.TOP | wx.LEFT,
+                         border=15)
+        self.__sizer.Add(self.__value,
+                         flag=wx.EXPAND | wx.TOP | wx.RIGHT,
+                         border=15)
+        self.__sizer.Add(self.__nameLabel,
+                         flag=wx.EXPAND | wx.LEFT,
+                         border=15)
+        self.__sizer.Add(self.__name,
+                         flag=wx.EXPAND | wx.RIGHT,
+                         border=15)
+        self.__sizer.Add(self.__colourLabel,
+                         flag=wx.EXPAND | wx.LEFT,
+                         border=15)
+        self.__sizer.Add(self.__colour,
+                         flag=wx.EXPAND | wx.RIGHT,
+                         border=15)
+        self.__sizer.Add(self.__ok,
+                         flag=wx.EXPAND | wx.BOTTOM | wx.LEFT,
+                         border=15)
+        self.__sizer.Add(self.__cancel,
+                         flag=wx.EXPAND | wx.BOTTOM | wx.RIGHT,
+                         border=15)
 
         self.__ok    .Bind(wx.EVT_BUTTON, self.__onOk)
         self.__cancel.Bind(wx.EVT_BUTTON, self.__onCancel)

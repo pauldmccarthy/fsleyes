@@ -202,8 +202,8 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         numComps = overlay.numComponents() 
         
         lut           = self.__lut
-        displayLabels = [l.displayName() for l in lut.labels]
-        colours       = [l.colour()      for l in lut.labels]
+        displayLabels = [l.displayName for l in lut.labels]
+        colours       = [l.colour      for l in lut.labels]
 
         for i in range(len(colours)):
             colours[i] = [int(round(c * 255)) for c in colours[i]] 
@@ -486,9 +486,9 @@ class LabelGrid(fslpanel.FSLeyesPanel):
                                         style=(texttag.TTP_NO_DUPLICATES |
                                                texttag.TTP_KEYBOARD_NAV))
 
-            tags._label = label.name()
+            tags._label = label.name
 
-            self.__grid.SetText(  i, 0, label.displayName())
+            self.__grid.SetText(  i, 0, label.displayName)
             self.__grid.SetWidget(i, 1, tags)
             
             tags.Bind(texttag.EVT_TTP_TAG_ADDED,   self.__onTagAdded)
@@ -512,7 +512,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         for i, label in enumerate(lut.labels):
 
             tags  = grid.GetWidget(i, 1)
-            comps = melclass.getComponents(label.name())
+            comps = melclass.getComponents(label.name)
             
             tags.ClearTags()
 
@@ -520,7 +520,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
             for comp in comps:
 
-                colour = label.colour()
+                colour = label.colour
                 colour = [int(round(c  * 255.0)) for c in colour]
                 tags.AddTag(str(comp + 1), colour)
 
