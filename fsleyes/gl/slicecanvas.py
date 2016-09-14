@@ -915,7 +915,7 @@ class SliceCanvas(props.HasProperties):
         async.idle(create)
 
         
-    def __onGLObjectUpdate(self, globj):
+    def __onGLObjectUpdate(self, globj, *a):
         """Called when a :class:`.GLObject` has been updated, and needs to be
         redrawn.
         """
