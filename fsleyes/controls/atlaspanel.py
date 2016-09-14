@@ -435,11 +435,11 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
                 # The Talairach atlas has
                 # loads of labels, so needs
                 # a big lut.
-                if   atlasID == 'HarvardOxford-Cortical':
+                if   atlasID == 'harvardoxford-cortical':
                     opts.lut = 'harvard-oxford-cortical'
-                elif atlasID == 'HarvardOxford-Subcortical':
+                elif atlasID == 'harvardoxford-subcortical':
                     opts.lut = 'harvard-oxford-subcortical'
-                elif atlasID == 'Talairach':
+                elif atlasID == 'talairach':
                     opts.lut = 'random_big'
                 else:
                     opts.lut = 'random'
