@@ -140,6 +140,12 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         self.__loadLutButton .Bind(wx.EVT_BUTTON, self.__onLoadLut)
         self.__saveLutButton .Bind(wx.EVT_BUTTON, self.__onSaveLut)
 
+
+        # The selected overlay / DisplayOpts
+        # are tracked if they use an LUT
+        # (e.g. LabelOpts). And the currently
+        # selected/displayed LUT is always
+        # tracked.
         self.__selectedOverlay = None
         self.__selectedOpts    = None
         self.__selectedLut     = None
@@ -240,16 +246,23 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         myCreateKey = (self.__labelListCreateKey + 1) % 65536
         self.__labelListCreateKey = myCreateKey
 
-        log   .debug( 'Creating lookup table label list')
-        status.update('Creating lookup table label list...', timeout=None)
-
-        self.Disable()
-        self.__labelList.Clear()
-
         lut     = self.__selectedLut
         nlabels = len(lut.labels)
 
-        def addLabel(labelIdx):
+        self.__labelList.Clear()
+
+        # If this is a new lut, it
+        # won't have any labels
+        if nlabels == 0:
+            return
+
+        # The label widgets are created via consecutive
+        # calls to addLabel, which is scheduled on the
+        # async.idle loop. We create blockSize labels
+        # in each asynchronous call.
+        blockSize = 100
+
+        def addLabel(startIdx):
 
             # If the user closes this panel while the
             # label list is being created, wx will
@@ -257,30 +270,36 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
             # to a widget that has been destroyed.
             try:
 
-                # A new request to re-create the list has
-                # been made - cancel this creation chain.
-                if self.__labelListCreateKey != myCreateKey:
-                    return
- 
-                label  = lut.labels[labelIdx]
-                widget = LabelWidget(self, lut, label.value)
-                
-                self.__labelList.Append(label.displayName)
-                self.__labelList.SetItemWidget(labelIdx, widget)
+                for labelIdx in range(
+                        startIdx, min(startIdx + blockSize, nlabels)):
+
+                    # A new request to re-create the list has
+                    # been made - cancel this creation chain.
+                    if self.__labelListCreateKey != myCreateKey:
+                        return
+
+                    label  = lut.labels[labelIdx]
+                    widget = LabelWidget(self, lut, label.value)
+
+                    self.__labelList.Append(label.displayName,
+                                            extraWidget=widget)
 
                 if labelIdx == nlabels - 1:
                     status.update('Lookup table label list created.')
                     self.Enable()
+                    self.__labelList.Enable()
                 else:
-                    async.idle(addLabel, labelIdx + 1)
+                    async.idle(addLabel, labelIdx) 
                     
             except wx.PyDeadObjectError:
                 pass
 
-        # If this is a new lut, it
-        # won't have any labels
-        if len(lut.labels) == 0: self.Enable()
-        else:                    async.idle(addLabel, 0)
+        log   .debug( 'Creating lookup table label list')
+        status.update('Creating lookup table label list...', timeout=None)
+
+        self.__labelList.Disable()
+        self.Disable()
+        async.idle(addLabel, 0)
 
 
     def __setLut(self, lut):
@@ -618,7 +637,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
     def __lutChanged(self, *a):
         """Called when the :attr:`.LabelOpts.lut` property associated
         with the currently selected overlay changes. Changes the
-        :class:~.LookupTable` displayed  on this ``LookupTablePanel`` (see
+        :class:`.LookupTable` displayed  on this ``LookupTablePanel`` (see
         the  :meth:`__setLut` method).
         """
         self.__setLut(self.__selectedOpts.lut)
@@ -648,9 +667,6 @@ class LabelWidget(wx.Panel):
         self.__lutPanel = lutPanel
         self.__lut      = lut
         self.__value    = value
-
-        # TODO Change the enable box to a toggle
-        #      button with an eye icon
         
         self.__valueLabel   = wx.StaticText(self,
                                             style=wx.ALIGN_CENTRE_VERTICAL |
