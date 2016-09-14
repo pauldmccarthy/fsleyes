@@ -897,7 +897,7 @@ class DisplayContext(props.SyncableHasProperties):
         # bounds have changed. We don't care about changes
         # to the options for other overlays.
         if overlay != self.getSelectedOverlay():
-            self.notify('location')
+            self.propNotify('location')
             return
 
         # Now we want to update the display location
@@ -918,7 +918,7 @@ class DisplayContext(props.SyncableHasProperties):
 
             self.location.xyz = newDispLoc
         else:
-            self.notify('location')
+            self.propNotify('location')
 
 
     def __syncOverlayDisplayChanged(self, *a):

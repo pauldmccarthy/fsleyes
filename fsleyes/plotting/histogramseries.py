@@ -223,7 +223,7 @@ class HistogramSeries(dataseries.DataSeries):
             self.__histPropsChanged()
 
         def onFinish():
-            self.notify('dataRange')
+            self.propNotify('dataRange')
 
         async.run(init, onFinish=onFinish)
 

@@ -1147,7 +1147,7 @@ class LookupTable(props.HasProperties):
                 self.__max = value
 
         if lutChanged:
-            self.notify('saved')
+            self.propNotify('saved')
 
         return label
 

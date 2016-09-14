@@ -394,7 +394,7 @@ class ModelOpts(fsldisplay.DisplayOpts):
         if oldBounds == self.bounds:
             children = self.getChildren()
             for c in [self] + children:
-                c.notify('bounds')
+                c.propNotify('bounds')
             
     
     def __overlayListChanged(self, *a):

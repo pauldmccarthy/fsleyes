@@ -302,7 +302,7 @@ class Selection(props.HasProperties):
         if restrict is None:
             self.__clear = True
 
-        self.notify('selection')
+        self.propNotify('selection')
 
 
     def getLastChange(self):
@@ -691,7 +691,7 @@ class Selection(props.HasProperties):
 
         self.__clear = False
         
-        self.notify('selection') 
+        self.propNotify('selection') 
 
         
     def __getSelectionBlock(self, size, offset):
