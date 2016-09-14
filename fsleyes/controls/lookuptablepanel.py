@@ -27,6 +27,7 @@ import wx
 
 import numpy as np
 
+import                           props
 import pwidgets.elistbox      as elistbox
 
 import fsleyes.panel          as fslpanel
@@ -87,7 +88,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
             self, style=(elistbox.ELB_NO_MOVE   |
                          elistbox.ELB_NO_ADD    |
                          elistbox.ELB_NO_REMOVE |
-                         elistbox.ELB_EDITABLE))
+                         elistbox.ELB_WIDGET_RIGHT))
 
         self.__lutChoice       = wx.Choice(self.__controlCol)
         self.__selAllButton    = wx.Button(self.__controlCol)
@@ -139,7 +140,6 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         self.__copyLutButton .Bind(wx.EVT_BUTTON, self.__onCopyLut)
         self.__loadLutButton .Bind(wx.EVT_BUTTON, self.__onLoadLut)
         self.__saveLutButton .Bind(wx.EVT_BUTTON, self.__onSaveLut)
-
 
         # The selected overlay / DisplayOpts
         # are tracked if they use an LUT
@@ -195,8 +195,9 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
             opts.removeListener('lut', self._name)
 
         if lut is not None:
-            lut.removeListener('labels', self._name)
-            lut.removeListener('saved',  self._name)
+            lut.deregister(self._name, 'saved')
+            lut.deregister(self._name, 'added')
+            lut.deregister(self._name, 'removed')
 
         self.__selectedOverlay = None
         self.__selectedOpts    = None
@@ -231,8 +232,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         
     def __createLabelList(self):
         """Refreshes the contents of the class:`.LookupTable` label list, from
-        the :attr:`.LookupTable.labels` property of the currently selected
-        ``LookupTable``.
+        the currently selected ``LookupTable``.
         """
 
         # The label list is created asynchronously on
@@ -247,7 +247,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         self.__labelListCreateKey = myCreateKey
 
         lut     = self.__selectedLut
-        nlabels = len(lut.labels)
+        nlabels = len(lut)
 
         self.__labelList.Clear()
 
@@ -278,10 +278,10 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
                     if self.__labelListCreateKey != myCreateKey:
                         return
 
-                    label  = lut.labels[labelIdx]
-                    widget = LabelWidget(self, lut, label.value)
+                    label  = lut[labelIdx]
+                    widget = LabelWidget(self, lut, label)
 
-                    self.__labelList.Append(label.displayName,
+                    self.__labelList.Append(str(label.value),
                                             extraWidget=widget)
 
                 if labelIdx == nlabels - 1:
@@ -317,19 +317,20 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         log.debug('Selecting lut: {}'.format(lut))
 
         if self.__selectedLut is not None:
-            self.__selectedLut.removeListener('labels', self._name)
-            self.__selectedLut.removeListener('saved',  self._name)
+            self.__selectedLut.deregister(self._name, 'saved')
+            self.__selectedLut.deregister(self._name, 'added')
+            self.__selectedLut.deregister(self._name, 'removed')
         
         self.__selectedLut = lut
 
         if lut is not None:
-            lut.addListener('labels', self._name, self.__lutLabelsChanged)
-            lut.addListener('saved',  self._name, self.__lutSaveStateChanged)
+            lut.register(self._name, self.__lutSaveStateChanged, 'saved')  
+            lut.register(self._name, self.__lutLabelsChanged,    'added') 
+            lut.register(self._name, self.__lutLabelsChanged,    'removed')
 
         if lut is not None and self.__selectedOpts is not None:
-            self.__selectedOpts.disableListener('lut', self._name)
-            self.__selectedOpts.lut = lut
-            self.__selectedOpts.enableListener('lut', self._name)
+            with props.skip(self.__selectedOpts, 'lut', self._name):
+                self.__selectedOpts.lut = lut
 
         allLuts = fslcmaps.getLookupTables()
         
@@ -348,9 +349,9 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
 
 
     def __lutLabelsChanged(self, *a):
-        """Called when the :attr:`.LookupTable.labels` property of the current
-        :class:`LookupTable` instance changes. Updates the list of displayed
-        labels (see the :meth:`__createLabelList` method).
+        """Called when labels are added/removed to/from the currently displayed
+        :class:`.LookupTable`. Updates the list of displayed labels (see the
+        :meth:`__createLabelList` method).
         """
         self.__createLabelList()
 
@@ -373,32 +374,17 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         every label on the current LUT.
         """ 
 
-        lut       = self.__selectedLut
-        allLabels = [label.value for label in lut.labels]
-
-        lut.disableListener('labels', self._name)
-
-        for label in allLabels:
-            lut.set(label, enabled=True)
-
-        lut.enableListener('labels', self._name)
-        self.__lutLabelsChanged()
+        for label in self.__selectedLut:
+            label.enabled = True
 
 
     def __onSelectNone(self, ev):
         """Called when the user pushes the *Select none* button. Disables
         every label on the current LUT.
         """
-        lut       = self.__selectedLut
-        allLabels = [label.value for label in lut.labels]
 
-        lut.disableListener('labels', self._name)
-
-        for label in allLabels:
-            lut.set(label, enabled=False)
-
-        lut.enableListener('labels', self._name)
-        self.__lutLabelsChanged()
+        for label in self.__selectedLut:
+            label.enabled = False
 
 
     def __onNewLut(self, ev):
@@ -448,10 +434,10 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         lut = fslcmaps.LookupTable(key=newName, name=newName)
 
         for label in self.__selectedLut.labels:
-            lut.set(label.value,
-                    name=label.displayName,
-                    colour=label.colour,
-                    enabled=label.enabled)
+            lut.insert(label.value,
+                       name=label.name,
+                       colour=label.colour,
+                       enabled=label.enabled)
         
         fslcmaps.registerLookupTable(lut, self._overlayList, self._displayCtx)
 
@@ -540,7 +526,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
             name,
             colour))
 
-        lut.set(value, name=name, colour=colour)
+        lut.insert(value, name=name, colour=colour)
 
     
     def __onLabelRemove(self, ev):
@@ -553,10 +539,10 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         lut   = self.__selectedLut
         value = lut.labels[idx].value
 
-        lut.disableListener('labels', self._name)
+        # TODO Need to disable removed notifier callback
+
         lut.delete(value)
         self.__labelList.Delete(idx)
-        lut.enableListener('labels', self._name)
 
 
     def __onLabelEdit(self, ev):
@@ -568,9 +554,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         lut = self.__selectedLut
         value = lut.labels[ev.idx].value
 
-        lut.disableListener('labels', self._name)
         lut.set(value, name=ev.label)
-        lut.enableListener('labels', self._name)
         
     
     def __selectedOverlayChanged(self, *a):
@@ -651,7 +635,7 @@ class LabelWidget(wx.Panel):
     """
 
     
-    def __init__(self, lutPanel, lut, value):
+    def __init__(self, lutPanel, lut, label):
         """Create a ``LabelWidget``.
 
         :arg lutPanel: The :class:`LookupTablePanel` that is displaying this
@@ -659,86 +643,24 @@ class LabelWidget(wx.Panel):
         
         :arg lut:      The :class:`.LookupTable` currently being displayed.
         
-        :arg value:    The label value that this ``LabelWidget`` is associated
-                       with.
+        :arg label:    The :class:`.LutLabel` that this ``LabelWidget`` is 
+                       associated with.
         """
         wx.Panel.__init__(self, lutPanel)
 
         self.__lutPanel = lutPanel
         self.__lut      = lut
-        self.__value    = value
-        
-        self.__valueLabel   = wx.StaticText(self,
-                                            style=wx.ALIGN_CENTRE_VERTICAL |
-                                            wx.ALIGN_RIGHT)
-        self.__enableBox    = wx.CheckBox(self)
-        self.__colourButton = wx.ColourPickerCtrl(self)
+        self.__label    = label
+
+        self.__name   = props.makeWidget(self, label, 'name')
+        self.__enable = props.makeWidget(self, label, 'enabled')
+        self.__colour = props.makeWidget(self, label, 'colour')
 
         self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.SetSizer(self.__sizer)
-        self.__sizer.Add(self.__valueLabel,
-                         flag=wx.ALIGN_CENTRE,
-                         proportion=1)
-        self.__sizer.Add(self.__enableBox,
-                         flag=wx.ALIGN_CENTRE,
-                         proportion=1)
-        self.__sizer.Add(self.__colourButton,
-                         flag=wx.ALIGN_CENTRE,
-                         proportion=1)
-
-        label  = lut.get(value)
-        colour = [np.floor(c * 255.0) for c in label.colour]
-
-        self.__valueLabel  .SetLabel(str(value))
-        self.__colourButton.SetColour(colour)
-        self.__enableBox   .SetValue(label.enabled)
-
-        self.__enableBox   .Bind(wx.EVT_CHECKBOX,             self.__onEnable)
-        self.__colourButton.Bind(wx.EVT_COLOURPICKER_CHANGED, self.__onColour)
-
-        
-    def __onEnable(self, ev):
-        """Called when the user toggles the checkbox controlling label
-        visibility. Updates the label visibility via the
-        :meth:`.LookupTable.set` method.
-        """
-
-        # Disable the LutPanel listener, otherwise
-        # it will recreate the label list (see
-        # LookupTablePanel._createLabelList).
-        # 
-        # We check to see if a listener exists,
-        # because the panel will only register
-        # a listener on label overlays.
-        toggle = self.__lut.hasListener('labels', self.__lutPanel._name)
-
-        if toggle:
-            self.__lut.disableListener('labels', self.__lutPanel._name)
-            
-        self.__lut.set(self.__value, enabled=self.__enableBox.GetValue())
-
-        if toggle:
-            self.__lut.enableListener('labels', self.__lutPanel._name)
-
-        
-    def __onColour(self, ev):
-        """Called when the user changes the colour via the colour button.
-        Updates the label colour via the :meth:`.LookupTable.set` method.
-        """ 
-
-        newColour = self.__colourButton.GetColour()
-        newColour = [c / 255.0 for c in newColour]
-
-        # See comment in __onEnable
-        toggle = self.__lut.hasListener('labels', self.__lutPanel._name)
-
-        if toggle:
-            self.__lut.disableListener('labels', self.__lutPanel._name)
-            
-        self.__lut.set(self.__value, colour=newColour)
-
-        if toggle:
-            self.__lut.enableListener('labels', self.__lutPanel._name)
+        self.__sizer.Add(self.__enable)
+        self.__sizer.Add(self.__colour)
+        self.__sizer.Add(self.__name, flag=wx.EXPAND)
 
         
 class NewLutDialog(wx.Dialog):
