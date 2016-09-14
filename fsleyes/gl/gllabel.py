@@ -132,16 +132,15 @@ class GLLabel(globject.GLImageObject):
         opts    = self.displayOpts
         name    = self.name
 
-        display .addListener('alpha',        name, self.__colourPropChanged)
-        display .addListener('brightness',   name, self.__colourPropChanged)
-        display .addListener('contrast',     name, self.__colourPropChanged)
-        opts    .addListener('outline',      name, self.updateShaderState)
-        opts    .addListener('outlineWidth', name, self.updateShaderState)
-        opts    .addListener('lut',          name, self.__lutChanged)
-        opts    .addListener('volume',       name, self.__imagePropChanged)
-        opts    .addListener('resolution',   name, self.__imagePropChanged)
-        opts    .addListener('transform',    name, self.notify)
-        opts.lut.addListener('labels',       name, self.__colourPropChanged)
+        display.addListener('alpha',        name, self.__colourPropChanged)
+        display.addListener('brightness',   name, self.__colourPropChanged)
+        display.addListener('contrast',     name, self.__colourPropChanged)
+        opts   .addListener('outline',      name, self.updateShaderState)
+        opts   .addListener('outlineWidth', name, self.updateShaderState)
+        opts   .addListener('lut',          name, self.__lutChanged)
+        opts   .addListener('volume',       name, self.__imagePropChanged)
+        opts   .addListener('resolution',   name, self.__imagePropChanged)
+        opts   .addListener('transform',    name, self.notify)
 
         # See comment in GLVolume.addDisplayListeners about this
         self.__syncListenersRegistered = opts.getParent() is not None
@@ -162,16 +161,15 @@ class GLLabel(globject.GLImageObject):
         opts    = self.displayOpts
         name    = self.name
 
-        display .removeListener(          'alpha',        name)
-        display .removeListener(          'brightness',   name)
-        display .removeListener(          'contrast',     name)
-        opts    .removeListener(          'outline',      name)
-        opts    .removeListener(          'outlineWidth', name)
-        opts    .removeListener(          'lut',          name)
-        opts    .removeListener(          'volume',       name)
-        opts    .removeListener(          'resolution',   name)
-        opts    .removeListener(          'transform',    name)
-        opts.lut.removeListener(          'labels',       name)
+        display.removeListener('alpha',        name)
+        display.removeListener('brightness',   name)
+        display.removeListener('contrast',     name)
+        opts   .removeListener('outline',      name)
+        opts   .removeListener('outlineWidth', name)
+        opts   .removeListener('lut',          name)
+        opts   .removeListener('volume',       name)
+        opts   .removeListener('resolution',   name)
+        opts   .removeListener('transform',    name)
 
         if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume',     name)
@@ -241,14 +239,14 @@ class GLLabel(globject.GLImageObject):
         opts = self.displayOpts
         
         if self.__lut is not None:
-            self.__lut.removeListener('labels', self.name)
+            for topic in ['label', 'added', 'removed']:
+                self.__lut.deregister(self.name, topic)
 
         self.__lut = opts.lut
 
         if self.__lut is not None:
-            self.__lut.addListener('labels',
-                                   self.name,
-                                   self.__colourPropChanged) 
+            for topic in ['label', 'added', 'removed']:
+                self.__lut.register(self.name, self.__colourPropChanged, topic)
 
 
     def preDraw(self):

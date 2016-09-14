@@ -143,8 +143,9 @@ from collections import OrderedDict
 import          six
 import numpy as np
 
-import          props
-import          fsleyes
+import                       props
+import                       fsleyes
+import fsl.utils.notifier as notifier
 
 
 log = logging.getLogger(__name__)
@@ -529,11 +530,10 @@ def installLookupTable(lutName):
 
     log.debug('Installing lookup table {} to {}'.format(lutName, destFile))
 
-    lut.mapObj._save(destFile)
+    lut.mapObj.save(destFile)
 
-    lut.mapFile      = destFile
-    lut.installed    = True
-    lut.mapObj.saved = True
+    lut.mapFile   = destFile
+    lut.installed = True
     
 
 ###############
@@ -813,32 +813,27 @@ class _Map(object):
         return self.__str__()
 
 
-class LutLabel(object):
+class LutLabel(props.HasProperties):
     """This class represents a mapping from a value to a colour and name.
     ``LutLabel`` instances are created and managed by :class:`LookupTable`
     instances.
 
-
-    .. note:: When a ``LutLabel`` is created, the specified name is converted
-              to lower case. This is done to make comparisons easier. The
-              original name is still accessible through the :meth:`displayName`
-              method.
-
-
-    .. note:: ``LutLabel`` instances are only intended to be created by
-              :class:`LookupTable` instances. They are intended to be used
-              externally, however.
-
-
-    .. note:: ``LutLabel`` instances are immutable - this makes the logic
-              in the :class:`LookupTable` a bit easier. So instead of
-              modifying an existing ``LutLabel``, you need to create a new
-              one based on the existing one.
+    Listeners may be registered on the :attr:`name`, :attr:`colour`, and
+    :attr:`enabled` properties to be notified when they change.
     """
 
-    defaultName    = 'Label'
-    defaultColour  = (0, 0, 0)
-    defaultEnabled = True
+    name = props.String(default='Label')
+    """The display name for this label. Internally (for comparison), the
+    :meth:`internalName` is used, which is simply this name, converted to
+    lower case.
+    """
+
+    colour = props.Colour(default=(0, 0, 0))
+    """The colour for this label. """
+
+
+    enabled = props.Boolean(default=True)
+    """Whether this label is currently enabled or disabled. """
 
     
     def __init__(self, value, name, colour, enabled):
@@ -850,16 +845,22 @@ class LutLabel(object):
         :arg enabled: Whether the label is enabled/disabled.
         """
 
-        if value   is None: raise ValueError('LutLabel value cannot be None')
-        if name    is None: name    = LutLabel.defaultName
-        if colour  is None: colour  = LutLabel.defaultColour
-        if enabled is None: enabled = LutLabel.defaultEnabled
+        if value is None:
+            raise ValueError('LutLabel value cannot be None')
+
+        if name is None:
+            name = LutLabel.getConstraint('name', 'default')
+
+        if colour is None:
+            colour  = LutLabel.getConstraint('colour', 'default')
+
+        if enabled is None:
+            enabled = LutLabel.getConstraint('enabled', 'default')
         
-        self.__value       = value
-        self.__displayName = name
-        self.__name        = name.lower()
-        self.__colour      = colour
-        self.__enabled     = enabled
+        self.__value = value
+        self.name    = name
+        self.colour  = colour
+        self.enabled = enabled
 
 
     @property
@@ -869,27 +870,13 @@ class LutLabel(object):
 
 
     @property
-    def name(self):
-        """Returns the name of this ``LutLabel``. """ 
-        return self.__name
-
-
-    @property
-    def displayName(self):
-        """Returns the display name of this ``LutLabel``. """
-        return self.__displayName
-
-
-    @property
-    def colour(self):
-        """Returns the colour of this ``LutLabel``. """ 
-        return self.__colour
-
-
-    @property
-    def enabled(self):
-        """Returns the enabled state of this ``LutLabel``. """ 
-        return self.__enabled
+    def internalName(self):
+        """Returns the *internal* name of this ``LutLabel``, which is just
+        its :attr:`name`, converted to lower-case. This is used by 
+        :meth:`__eq__` and :meth:`__hash__`, and by the
+        :class:`LookupTable` class.
+        """
+        return self.name.lower()
 
 
     def __eq__(self, other):
@@ -898,34 +885,34 @@ class LutLabel(object):
         given one.
         """
         
-        return (self.__value   == other.__value  and
-                self.__name    == other.__name   and
-                self.__colour  == other.__colour and
-                self.__enabled == other.__enabled)
+        return (self.value        == other.value        and
+                self.internalName == other.internalName and
+                self.colour       == other.colour       and
+                self.enabled      == other.enabled)
 
 
     def __lt__(self, other):
         """Less-than operator - compares two ``LutLabel`` instances
         based on their value.
         """ 
-        return self.__value < other.__value
+        return self.value < other.value
 
     
     def __hash__(self):
         """The hash of a ``LutLabel`` is a combination of its
         value, name, and colour, but not its enabled state.
         """
-        return (hash(self.__value) ^
-                hash(self.__name)  ^
-                hash(self.__colour))
+        return (hash(self.value)        ^
+                hash(self.internalName) ^
+                hash(self.colour))
 
     
     def __str__(self):
         """Returns a string representation of this ``LutLabel``."""
-        return '{}: {} / {} ({})'.format(self.__value,
-                                         self.__name,
-                                         self.__colour,
-                                         self.__enabled)
+        return '{}: {} / {} ({})'.format(self.value,
+                                         self.internalName,
+                                         self.colour,
+                                         self.enabled)
 
 
     def __repr__(self):
@@ -933,10 +920,11 @@ class LutLabel(object):
         return self.__str__()
     
 
-class LookupTable(props.HasProperties):
+class LookupTable(notifier.Notifier):
     """A ``LookupTable`` encapsulates a list of label values and associated
     colours and names, defining a lookup table to be used for colouring label
     images.
+
 
     A label value typically corresponds to an anatomical region (as in
     e.g. atlas images), or a classification (as in e.g. white/grey matter/csf
@@ -945,43 +933,26 @@ class LookupTable(props.HasProperties):
 
     The label values, and their associated names/colours, in a ``LookupTable``
     are stored in ``LutLabel`` instances. These are accessible via the
-    :meth:`get` method. New label values can be added, and existing label
-    names/colours modified, via the :meth:`set` method. Label values can be
-    removed via the meth:`delete` method.
+    :meth:`get` method. New label values can be added via the :meth:`insert`
+    and :meth:`new` methods. Label values can be removed via the meth:`delete`
+    method.
 
 
-    .. note:: All label names are converted to lower case internally, but the
-              name that is initially specified is still available - see the
-              :class:`LutLabel` class documentation.
-
-    .. warning:: Do not directly modify the :attr:`labels` list. If you do,
-                 it will be your fault when things break. Use the :meth:`set`
-                 and :meth:`delete` methods instead.
-
-                 You can, however, read the :attr:`labels` list, and register
-                 to be notified when it changes. I'm not that unreasonable.
-    """
-
-    
-    name = props.String()
-    """The name of this lut. """
-
-    
-    labels = props.List()
-    """A list of :class:`LutLabel` instances, defining the label ->
-    colour/name mappings. This list is sorted in increasing order
-    by the label value.
-
-    If you modify this list directly, you will probably break things. Use
-    the :meth:`set`/:meth:`delete` methods instead, to add/change/remove
-    labels.
-    """
+    *Notifications*
 
 
-    saved = props.Boolean(default=False)
-    """A read only property which contains the current saved state of this
-    ``LookupTable`` - it is ``True``, if the current state of this
-    ``LookupTable`` has been saved to a file, ``False`` otherwise.
+    The ``LookupTable`` class implements the :class:`.Notifier` interface.
+    If you need to be notified when a ``LookupTable`` changes, you may
+    register to be notified on the following topics:
+
+
+    ==========  ====================================================
+    Topic       Meaning
+    ``label``   The properties of a :class:`.LutLabel` have changed.
+    ``saved``   The saved state of this ``LookupTable`` has changed.
+    ``added``   A new ``LutLabel`` has been added.
+    ``removed`` A ``LutLabel`` has been removed.
+    =========== ====================================================
     """
 
     
@@ -994,13 +965,16 @@ class LookupTable(props.HasProperties):
 
         :arg lutFile: A file to load lookup table label values, names, and
                       colours from. If ``None``, this ``LookupTable`` will
-                      be empty - labels can be added with the :meth:`set`
-                      method.
+                      be empty - labels can be added with the :meth:`new` or
+                      :meth:`insert` methods.
         """
 
-        self.key   = key
-        self.name  = name
-        self.__max = 0
+        self.key      = key
+        self.name     = name
+        self.__labels = []
+        self.__saved  = False
+
+        self.__name   = 'LookupTable({})_{}'.format(self.name, id(self))
 
         if lutFile is not None:
             self.__load(lutFile)
@@ -1018,24 +992,51 @@ class LookupTable(props.HasProperties):
 
     def __len__(self):
         """Returns the number of labels in this ``LookupTable``. """
-        return len(self.labels)
+        return len(self.__labels)
+
+
+    def __getitem__(self, i):
+        """Access the ``LutLabel`` at index ``i``. Use the :meth:`get` method
+        to determine the index of a ``LutLabel`` from its value.
+        """
+        return self.__labels[i]
 
 
     def max(self):
-        """Returns the maximum label value in this lookup table. """
-        return self.__max
+        """Returns the maximum current label value in this ``LookupTable``. """
+        
+        if len(self.__labels) == 0: return 0
+        else:                       return self.__labels[-1].value
+
+
+    @property
+    def saved(self):
+        """Returns ``True`` if this ``LookupTable`` is registered and saved,
+        ``False`` if it is not registered, or has been modified.
+        """
+        return self.__saved
+
+
+    @saved.setter
+    def saved(self, val):
+        """Change the saved state of this ``LookupTable``, and trigger
+        notification on the ``saved`` topic. This property should not
+        be set outside of this module.
+        """
+        self.__saved = val
+        self.notify(topic='saved')
 
 
     def __find(self, value):
         """Finds the :class:`LutLabel` instance associated with the specified
         value.  Returns a tuple containing the index of the ``LutLabel`` in
-        the :attr:`labels` list, and the ``LutLabel`` instance itself.
+        the internal list of labels, and the ``LutLabel`` instance itself.
 
         Otherwise, if there is no label associated with the given value,
         ``(-1, None)`` is returned.
         """
 
-        for i, label in enumerate(self.labels):
+        for i, label in enumerate(self.__labels):
             if label.value == value:
                 return i, label
 
@@ -1056,122 +1057,68 @@ class LookupTable(props.HasProperties):
         """
         name = name.lower()
         
-        for i, ll in enumerate(self.labels):
-            if ll.name == name:
+        for i, ll in enumerate(self.__labels):
+            if ll.internalName == name:
                 return ll
             
         return None
 
 
-    def new(self, name, colour=None, enabled=True):
-        """Create a new label. The new label is given the value ``max() + 1``.
-
-        :arg name:    Label name
-        :arg colour:  Label colour. If not previded, a random colour is used.
-        :arg enabled: Label enabled state .
+    def new(self, name=None, colour=None, enabled=None):
+        """Add a new :class:`LutLabel` with value ``max() + 1``, and add it
+        to this ``LookupTable``.
         """
-        if colour is None:
-            colour = randomBrightColour()
-            
-        return self.set(self.max() + 1,
-                        name=name,
-                        colour=colour,
-                        enabled=enabled)
+        self.insert(self.max() + 1, name, colour, enabled)
 
 
-    def set(self, value, **kwargs):
-        """Create a new label with the given value, or updates the
-        colour/name/enabled states associated with the given value.
-
-        :arg value:   The label value to add/update. Must be an integer.
-        :arg name:    Label name
-        :arg colour:  Label colour
-        :arg enabled: Label enabled state
+    def insert(self, value, name=None, colour=None, enabled=None):
+        """Create a new new :class:`LutLabel` associated with the given
+        ``value`` and insert it into this ``LookupTable``. Internally, the
+        labels are stored in ascending (by value) order.
         """
-
-        # At the moment, we are restricting
-        # lookup tables to be unsigned 16 bit.
-        # See gl/textures/lookuptabletexture.py
         if not isinstance(value, six.integer_types) or \
            value < 0 or value > 65535:
             raise ValueError('Lookup table values must be '
                              '16 bit unsigned integers.')
 
-        idx, label = self.__find(value)
+        if self.__find(value)[0] > -1:
+            raise ValueError('Value {} is already in '
+                             'lookup table'.format(value))
 
-        # No label exists for the given value,
-        # so create a new LutLabel instance
-        # with default values
-        if idx == -1:
-            label = LutLabel(value, None, None, None)
+        label = LutLabel(value, name, colour, enabled)
 
-        # Create a new LutLabel instance with the
-        # new, existing, or default label settings
-        name    = kwargs.get('name',    label.displayName)
-        colour  = kwargs.get('colour',  label.colour)
-        enabled = kwargs.get('enabled', label.enabled)
-        label   = LutLabel(value, name, colour, enabled)
+        bisect.insort(self.__labels, label)
 
-        with props.suppress(self, 'labels', notify=True), \
-             props.suppress(self, 'saved'):
-
-            # Use the bisect module to
-            # maintain the list order
-            # when inserting new labels
-            if idx == -1:
-
-                log.debug('Adding new label to {}: {}'.format(
-                    self.name, label))
-
-                lutChanged = True
-                bisect.insort(self.labels, label)
-            else:
-                lutChanged = not (self.labels[idx].name   == label.name and 
-                                  self.labels[idx].colour == label.colour)
-
-                log.debug('Updating label in {}: {} -> '
-                          '{} (changed: {})'.format(
-                              self.name,
-                              self.labels[idx],
-                              label,
-                              lutChanged))
-
-                self.labels[idx] = label
-
-            # Update the saved state if a new label has been added,
-            # or an existing label name/colour has been changed
-            if lutChanged:
-                self.saved = False
-
-            if value > self.__max:
-                self.__max = value
-
-        if lutChanged:
-            self.propNotify('saved')
-
-        return label
+        self.saved = False
+        self.notify(topic='added', value=label)
 
 
     def delete(self, value):
-        """Removes the given label value from the lookup table."""
+        """Removes the label with the given value from the lookup table."""
 
         idx, label = self.__find(value)
 
         if idx == -1:
             raise ValueError('Value {} is not in lookup table')
 
-        self.labels.pop(idx)
+        label = self.__labels.pop(idx)
+
+        label.removeGlobalListener(self.__name)
+        
+        self.notify(topic='removed', value=label)
         self.saved = False
 
         
     def __load(self, lutFile):
-        """Loads a ``LookupTable`` specification from the given file."""
+        """Called by :meth:`__init__`. Loads a ``LookupTable`` specification
+        from the given file.
+        """
 
-        # Calling new() or set() to add new labels is
-        # very slow, because the labels are inserted in
-        # ascending order. But because we require .lut
-        # files to be sorted, we can create the lookup
-        # table much faster.
+        # Calling insert() to add new labels is very
+        # slow, because the labels are inserted in
+        # ascending order. But because we require
+        # .lut files to be sorted, we can create the
+        # lookup table much faster.
         def parseLabel(line):
             tkns = line.split()
 
@@ -1204,13 +1151,14 @@ class LookupTable(props.HasProperties):
                 labels.append(label)
                 last = lval
 
-            self.labels = labels
+            self.__labels = labels
+            self.saved    = True
 
-        self.__max = self.labels[-1].value
-        self.saved = True
+            for label in labels:
+                label.addGlobalListener(self.__name, self.__labelChanged)
 
 
-    def _save(self, lutFile):
+    def save(self, lutFile):
         """Saves this ``LookupTable`` instance to the specified ``lutFile``.
         """
 
@@ -1218,9 +1166,18 @@ class LookupTable(props.HasProperties):
             for label in self.labels:
                 value  = label.value
                 colour = label.colour
-                name   = label.displayName
+                name   = label.name
 
                 tkns   = [value, colour[0], colour[1], colour[2], name]
                 line   = ' '.join(map(str, tkns))
 
                 f.write('{}\n'.format(line))
+
+        self.saved = True
+
+
+    def __labelChanged(self, label, *a, **kwa):
+        """Called when the properties of any ``LutLabel`` change. Triggers
+        notification on the ``label`` topic.
+        """
+        self.notify(topic='label', value=label)
