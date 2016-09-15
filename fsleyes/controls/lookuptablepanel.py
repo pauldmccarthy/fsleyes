@@ -25,8 +25,6 @@ import logging
 
 import wx
 
-import numpy as np
-
 import                           props
 import pwidgets.elistbox      as elistbox
 
@@ -170,7 +168,17 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
             self.__setLut(fslcmaps.getLookupTables()[0])
             
         self.Layout()
-        self.SetMinSize(self.__sizer.GetMinSize())
+
+        # The label values (used as labels in the
+        # EditableListBox) seem to get squashed
+        # easily. So we're adding a bit of padding
+        # to force this panel to have a minimum
+        # size, to ensure that the labels are
+        # visible.
+        dc      = wx.ClientDC(self.__labelList)
+        w, h    = dc.GetTextExtent('9999')
+        minSize = self.__sizer.GetMinSize()
+        self.SetMinSize((minSize[0] + w, minSize[1]))
 
         
     def destroy(self):
