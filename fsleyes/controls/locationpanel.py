@@ -702,8 +702,21 @@ class LocationPanel(fslpanel.FSLeyesPanel):
                     if overlay.is4DImage():
                         vloc = vloc + [opts.volume]
 
-                    vval = overlay[tuple(vloc)]
-                    info = '[{}]: {}'.format(' '.join(map(str, vloc)), vval)
+                    vval = overlay[tuple(vloc)] 
+                    vloc = ' '.join(map(str, vloc))
+
+                    if not np.isscalar(vval):
+                        vval = np.asscalar(vval)
+
+                    if opts.overlayType == 'label':
+                        lbl = opts.lut.get(int(vval))
+                        if lbl is None: lbl = 'no label'
+                        else:           lbl = lbl.name
+                        info = '[{}]: {} / {}'.format(vloc, vval, lbl)
+
+                    else:
+                        info = '[{}]: {}'.format(vloc, vval)
+
                 else:
                     info = strings.labels[self, 'outOfBounds']
 
