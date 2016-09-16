@@ -1033,8 +1033,14 @@ class LookupTable(notifier.Notifier):
         """Returns the index in this ``LookupTable`` of the ``LutLabel`` with
         the specified value. Raises a :exc:`ValueError` if no ``LutLabel``
         with this value is present.
+
+        .. note:: The ``value`` which is passed in can be either an integer
+                  specifying the label value, or a ``LutLabel`` instance.
         """
-        return self.__labels.index(LutLabel(value))
+        if not isinstance(value, LutLabel):
+            value = LutLabel(value)
+
+        return self.__labels.index(value)
 
 
     def get(self, value):

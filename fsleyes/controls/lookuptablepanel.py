@@ -290,6 +290,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
                     widget = LabelWidget(self, lut, label)
 
                     self.__labelList.Append(str(label.value),
+                                            clientData=label.value,
                                             extraWidget=widget)
 
                 if labelIdx == nlabels - 1:
@@ -356,18 +357,26 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         self.__saveLutButton.Enable(not self.__selectedLut.saved)
 
 
-    def __lutLabelAdded(self, *a):
-        """Called when a label is added to the currently displayed
-        :class:`.LookupTable`. Updates the list of displayed labels.
+    def __lutLabelAdded(self, lut, label):
+        """Called when the current :class:`.LookupTable` sends an ``'added'``
+        notification, indicating that a label has been added. Updates the list
+        of displayed labels.
         """
-        self.__createLabelList()
+        idx    = lut.index(label)
+        widget = LabelWidget(self, lut, label)
+        self.__labelList.Insert(str(label.value),
+                                idx, 
+                                clientData=label.value,
+                                extraWidget=widget)
 
 
-    def __lutLabelRemoved(self, *a):
-        """Called when a label is removed from the currently displayed
-        :class:`.LookupTable`. Updates the list of displayed labels.
+    def __lutLabelRemoved(self, lut, label):
+        """Called when the current :class:`.LookupTable` sends a ``'removed'``
+        notification, indicating that a label has been removed. Updates the
+        list of displayed labels.
         """
-        self.__createLabelList() 
+        idx = self.__labelList.IndexOf(label.value)
+        self.__labelList.Delete(idx)
 
 
     def __onLutChoice(self, ev):
@@ -543,9 +552,10 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         with lut.skip(self._name, 'added'):
             label  = lut.insert(value, name=name, colour=colour)
             widget = LabelWidget(self, lut, label)
-            idx    = lut.index(label.value)
+            idx    = lut.index(label)
             self.__labelList.Insert(str(label.value),
                                     idx,
+                                    clientData=label.value,
                                     extraWidget=widget)
 
     
