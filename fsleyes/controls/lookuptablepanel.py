@@ -333,8 +333,8 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
 
         if lut is not None:
             lut.register(self._name, self.__lutSaveStateChanged, 'saved')  
-            lut.register(self._name, self.__lutLabelsChanged,    'added') 
-            lut.register(self._name, self.__lutLabelsChanged,    'removed')
+            lut.register(self._name, self.__lutLabelAdded,       'added')
+            lut.register(self._name, self.__lutLabelRemoved,     'removed')
 
         if lut is not None and self.__selectedOpts is not None:
             with props.skip(self.__selectedOpts, 'lut', self._name):
@@ -356,12 +356,18 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         self.__saveLutButton.Enable(not self.__selectedLut.saved)
 
 
-    def __lutLabelsChanged(self, *a):
-        """Called when labels are added/removed to/from the currently displayed
-        :class:`.LookupTable`. Updates the list of displayed labels (see the
-        :meth:`__createLabelList` method).
+    def __lutLabelAdded(self, *a):
+        """Called when a label is added to the currently displayed
+        :class:`.LookupTable`. Updates the list of displayed labels.
         """
         self.__createLabelList()
+
+
+    def __lutLabelRemoved(self, *a):
+        """Called when a label is removed from the currently displayed
+        :class:`.LookupTable`. Updates the list of displayed labels.
+        """
+        self.__createLabelList() 
 
 
     def __onLutChoice(self, ev):
@@ -534,7 +540,13 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
             name,
             colour))
 
-        lut.insert(value, name=name, colour=colour)
+        with lut.skip(self._name, 'added'):
+            label  = lut.insert(value, name=name, colour=colour)
+            widget = LabelWidget(self, lut, label)
+            idx    = lut.index(label.value)
+            self.__labelList.Insert(str(label.value),
+                                    idx,
+                                    extraWidget=widget)
 
     
     def __onLabelRemove(self, ev):
@@ -545,11 +557,10 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
 
         idx   = self.__labelList.GetSelection()
         lut   = self.__selectedLut
-        value = lut.labels[idx].value
+        value = lut[idx].value
 
-        # TODO Need to disable removed notifier callback
-
-        lut.delete(value)
+        with lut.skip(self._name, 'removed'):
+            lut.delete(value)
         self.__labelList.Delete(idx)
 
 
@@ -771,7 +782,7 @@ class LutLabelDialog(wx.Dialog):
     def __init__(self, parent, value, name, colour):
         """Create a ``LutLabelDialog``.
 
-        :arg parent: The :mod:`wx` paren object.
+        :arg parent: The :mod:`wx` parent object.
         """
 
         wx.Dialog.__init__(self, parent, title=strings.titles[self])

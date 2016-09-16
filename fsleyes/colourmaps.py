@@ -836,7 +836,11 @@ class LutLabel(props.HasProperties):
     """Whether this label is currently enabled or disabled. """
 
     
-    def __init__(self, value, name, colour, enabled):
+    def __init__(self,
+                 value,
+                 name=None,
+                 colour=None,
+                 enabled=None):
         """Create a ``LutLabel``.
 
         :arg value:   The label value.
@@ -881,14 +885,10 @@ class LutLabel(props.HasProperties):
 
     def __eq__(self, other):
         """Equality operator - returns ``True`` if this ``LutLabel``
-        has the same  value, name, colour, and enabled state as the
-        given one.
+        has the same  value as the given one.
         """
         
-        return (self.value        == other.value        and
-                self.internalName == other.internalName and
-                self.colour       == other.colour       and
-                self.enabled      == other.enabled)
+        return self.value == other.value
 
 
     def __lt__(self, other):
@@ -932,10 +932,12 @@ class LookupTable(notifier.Notifier):
 
 
     The label values, and their associated names/colours, in a ``LookupTable``
-    are stored in ``LutLabel`` instances. These are accessible via the
-    :meth:`get` method. New label values can be added via the :meth:`insert`
-    and :meth:`new` methods. Label values can be removed via the meth:`delete`
-    method.
+    are stored in ``LutLabel`` instances, ordered by their value in ascending
+    order. These are accessible by label value via the :meth:`get` method, by
+    index, by directly indexing the ``LookupTable`` instance, or by name, via
+    the :meth:`getByName` method.  New label values can be added via the
+    :meth:`insert` and :meth:`new` methods. Label values can be removed via
+    the meth:`delete` method.
 
 
     *Notifications*
@@ -947,7 +949,7 @@ class LookupTable(notifier.Notifier):
 
 
     ==========  ====================================================
-    Topic       Meaning
+    *Topic*     *Meaning*
     ``label``   The properties of a :class:`.LutLabel` have changed.
     ``saved``   The saved state of this ``LookupTable`` has changed.
     ``added``   A new ``LutLabel`` has been added.
@@ -1027,27 +1029,20 @@ class LookupTable(notifier.Notifier):
         self.notify(topic='saved')
 
 
-    def __find(self, value):
-        """Finds the :class:`LutLabel` instance associated with the specified
-        value.  Returns a tuple containing the index of the ``LutLabel`` in
-        the internal list of labels, and the ``LutLabel`` instance itself.
-
-        Otherwise, if there is no label associated with the given value,
-        ``(-1, None)`` is returned.
+    def index(self, value):
+        """Returns the index in this ``LookupTable`` of the ``LutLabel`` with
+        the specified value. Raises a :exc:`ValueError` if no ``LutLabel``
+        with this value is present.
         """
-
-        for i, label in enumerate(self.__labels):
-            if label.value == value:
-                return i, label
-
-        return (-1, None)
+        return self.__labels.index(LutLabel(value))
 
 
     def get(self, value):
         """Returns the :class:`LutLabel` instance associated with the given
         ``value``, or ``None`` if there is no label.
         """
-        return self.__find(value)[1]
+        try:               return self.__labels[self.index(value)]
+        except ValueError: return None
 
 
     def getByName(self, name):
@@ -1068,45 +1063,68 @@ class LookupTable(notifier.Notifier):
         """Add a new :class:`LutLabel` with value ``max() + 1``, and add it
         to this ``LookupTable``.
         """
-        self.insert(self.max() + 1, name, colour, enabled)
+        return self.insert(self.max() + 1, name, colour, enabled)
 
 
     def insert(self, value, name=None, colour=None, enabled=None):
-        """Create a new new :class:`LutLabel` associated with the given
+        """Create a new :class:`LutLabel` associated with the given
         ``value`` and insert it into this ``LookupTable``. Internally, the
         labels are stored in ascending (by value) order.
+
+        :returns: The newly created ``LutLabel`` instance.
         """
         if not isinstance(value, six.integer_types) or \
            value < 0 or value > 65535:
             raise ValueError('Lookup table values must be '
                              '16 bit unsigned integers.')
 
-        if self.__find(value)[0] > -1:
+        if self.get(value) is not None:
             raise ValueError('Value {} is already in '
                              'lookup table'.format(value))
 
         label = LutLabel(value, name, colour, enabled)
+        label.addGlobalListener(self.__name, self.__labelChanged)
 
         bisect.insort(self.__labels, label)
 
         self.saved = False
         self.notify(topic='added', value=label)
 
+        return label
+
 
     def delete(self, value):
-        """Removes the label with the given value from the lookup table."""
+        """Removes the label with the given value from the lookup table.
 
-        idx, label = self.__find(value)
+        Raises a :exc:`ValueError` if no label with the given value is
+        present.
+        """
 
-        if idx == -1:
-            raise ValueError('Value {} is not in lookup table')
-
+        idx   = self.index(value)
         label = self.__labels.pop(idx)
 
         label.removeGlobalListener(self.__name)
         
         self.notify(topic='removed', value=label)
         self.saved = False
+
+
+    def save(self, lutFile):
+        """Saves this ``LookupTable`` instance to the specified ``lutFile``.
+        """
+
+        with open(lutFile, 'wt') as f:
+            for label in self:
+                value  = label.value
+                colour = label.colour
+                name   = label.name
+
+                tkns   = [value, colour[0], colour[1], colour[2], name]
+                line   = ' '.join(map(str, tkns))
+
+                f.write('{}\n'.format(line))
+
+        self.saved = True
 
         
     def __load(self, lutFile):
@@ -1158,26 +1176,9 @@ class LookupTable(notifier.Notifier):
                 label.addGlobalListener(self.__name, self.__labelChanged)
 
 
-    def save(self, lutFile):
-        """Saves this ``LookupTable`` instance to the specified ``lutFile``.
-        """
-
-        with open(lutFile, 'wt') as f:
-            for label in self.labels:
-                value  = label.value
-                colour = label.colour
-                name   = label.name
-
-                tkns   = [value, colour[0], colour[1], colour[2], name]
-                line   = ' '.join(map(str, tkns))
-
-                f.write('{}\n'.format(line))
-
-        self.saved = True
-
-
     def __labelChanged(self, label, *a, **kwa):
         """Called when the properties of any ``LutLabel`` change. Triggers
         notification on the ``label`` topic.
         """
+        self.saved = False
         self.notify(topic='label', value=label)
