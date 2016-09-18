@@ -853,13 +853,14 @@ class LutLabel(props.HasProperties):
             raise ValueError('LutLabel value cannot be None')
 
         if name is None:
-            name = LutLabel.getConstraint('name', 'default')
+            name = LutLabel.getProp('name').getConstraint(None, 'default')
 
         if colour is None:
-            colour  = LutLabel.getConstraint('colour', 'default')
+            colour = LutLabel.getProp('colour').getConstraint(None, 'default')
 
         if enabled is None:
-            enabled = LutLabel.getConstraint('enabled', 'default')
+            enabled = LutLabel.getProp('enabled').getConstraint(None,
+                                                                'default')
         
         self.__value = value
         self.name    = name
