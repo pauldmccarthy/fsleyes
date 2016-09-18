@@ -70,7 +70,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         
         self.__grid.Bind(widgetgrid.EVT_WG_SELECT, self.__onGridSelect)
 
-        lut.addListener('labels', self._name, self.__lutChanged)
+        lut.register(self._name, self.__lutChanged)
 
         self.__overlay = None
 
@@ -81,7 +81,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         :meth:`.FSLeyesPanel.destroy`.
         """
         
-        self.__lut.removeListener('labels', self._name)
+        self.__lut.deregister(self._name)
         self.__deregisterCurrentOverlay()
         
         self.__lut = None
@@ -201,16 +201,16 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         overlay  = self.__overlay
         numComps = overlay.numComponents() 
         
-        lut           = self.__lut
-        displayLabels = [l.displayName for l in lut.labels]
-        colours       = [l.colour      for l in lut.labels]
+        lut     = self.__lut
+        labels  = [l.name   for l in lut]
+        colours = [l.colour for l in lut]
 
         for i in range(len(colours)):
             colours[i] = [int(round(c * 255)) for c in colours[i]] 
         
         for comp in range(numComps):
             tags = self.__grid.GetWidget(comp, 1)
-            tags.SetOptions(displayLabels, colours) 
+            tags.SetOptions(labels, colours) 
 
 
     def __refreshTags(self):
@@ -270,9 +270,8 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
             log.debug('Adding new lookup table '
                       'entry for label {}'.format(label))
 
-            lut.disableListener('labels', self._name)
-            lut.new(name=label, colour=colour)
-            lut.enableListener('labels', self._name)
+            with lut.skip(self._name):
+                lut.new(name=label, colour=colour)
 
         self.__refreshTagOptions()
         self.__grid.FitInside()
@@ -318,9 +317,8 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
 
         log.debug('Grid row selected (component {})'.format(component))
 
-        opts.disableListener('volume', self._name)
-        opts.volume = component
-        opts.enableListener('volume', self._name)
+        with props.skip(opts, 'volume', self._name):
+            opts.volume = component
 
         tags = self.__grid.GetWidget(ev.row, 1)
         tags.FocusNewTagCtrl()
@@ -406,7 +404,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
         self.__grid.Bind(widgetgrid.EVT_WG_SELECT, self.__onGridSelect)
 
-        lut.addListener('labels', self._name, self.__lutChanged)
+        lut.register(self._name, self.__lutChanged)
 
         self.__overlay = None
         self.__recreateGrid()
@@ -418,7 +416,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         :meth:`.FSLeyesPanel.destroy`.
         """
         
-        self.__lut.removeListener('labels', self._name)
+        self.__lut.deregister(self._name)
         self.__deregisterCurrentOverlay()
         
         self.__lut = None
@@ -472,23 +470,22 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
         grid   = self.__grid
         lut    = self.__lut
-        labels = lut.labels
         
         grid.ClearGrid()
 
-        grid.SetGridSize(len(labels), 2, growCols=[1])
+        grid.SetGridSize(len(lut), 2, growCols=[1])
 
         grid.SetColLabel(0, strings.labels[self, 'labelColumn'])
         grid.SetColLabel(1, strings.labels[self, 'componentColumn'])
 
-        for i, label in enumerate(labels):
+        for i, label in enumerate(lut):
             tags = texttag.TextTagPanel(self.__grid,
                                         style=(texttag.TTP_NO_DUPLICATES |
                                                texttag.TTP_KEYBOARD_NAV))
 
             tags._label = label.name
 
-            self.__grid.SetText(  i, 0, label.displayName)
+            self.__grid.SetText(  i, 0, label.name)
             self.__grid.SetWidget(i, 1, tags)
             
             tags.Bind(texttag.EVT_TTP_TAG_ADDED,   self.__onTagAdded)
@@ -509,10 +506,10 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         numComps = overlay.numComponents()
         melclass = overlay.getICClassification()
 
-        for i, label in enumerate(lut.labels):
+        for i, label in enumerate(lut):
 
             tags  = grid.GetWidget(i, 1)
-            comps = melclass.getComponents(label.name)
+            comps = melclass.getComponents(label.internalName)
             
             tags.ClearTags()
 

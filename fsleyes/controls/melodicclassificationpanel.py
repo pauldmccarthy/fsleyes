@@ -221,11 +221,8 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
             # Disable notification while applying
             # labels so the component/label grids
-            # don't confuse themselves. But make
-            # sure that lut listeners are notified,
-            # in case any new labels were added.
-            with props.suppress(melclass, 'labels'), \
-                 props.suppress(lut,      'labels', notify=True):
+            # don't confuse themselves.
+            with props.suppress(melclass, 'labels'):
 
                 melclass.clear()
 
@@ -244,15 +241,15 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
                         if lutLabel is None:
                             log.debug('New melodic classification '
                                       'label: {}'.format(label))
-                            lut.new(label)
-
+                            lut.new(label,
+                                    colour=fslcm.randomBrightColour())
+ 
             # If we have just loaded a MelodicImage,
             # make sure it is selected. If we loaded
             # labels for an existing MelodicImage,
             # this will have no effect.
-            self._displayCtx.disableListener('selectedOverlay', self._name)
-            self._displayCtx.selectOverlay(overlay)
-            self._displayCtx.enableListener('selectedOverlay', self._name)
+            with props.skip(self._displayCtx, 'selectedOverlay', self._name):
+                self._displayCtx.selectOverlay(overlay)
             self.__selectedOverlayChanged()
 
         # If the current overlay is a MelodicImage,
@@ -382,11 +379,10 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
             log.debug('Adding {} to overlay list'.format(overlay))
 
-            self._overlayList.disableListener('overlays', self._name)
-            self._displayCtx .disableListener('selectedOverlay', self._name)
-            self._overlayList.append(overlay)
-            self._overlayList.enableListener('overlays', self._name)
-            self._displayCtx .enableListener('selectedOverlay', self._name)
+            with props.skip(self._overlayList, 'overlays',        self._name),\
+                 props.skip(self._displayCtx,  'selectedOverlay', self._name):
+            
+                self._overlayList.append(overlay)
 
             if self._displayCtx.autoDisplay:
                 autodisplay.autoDisplay(overlay,
