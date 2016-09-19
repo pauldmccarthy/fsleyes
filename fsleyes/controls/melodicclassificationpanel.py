@@ -34,7 +34,25 @@ log = logging.getLogger(__name__)
 
 
 class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
-    """The ``MelodicClassificationPanel``
+    """The ``MelodicClassificationPanel`` allows the user to view and modify
+    classification labels associated with the components of a
+    :class:`.MelodicImage`.
+
+    It contains two lists:
+    
+      - The :class:`.ComponentGrid` contains list of components, and the
+        labels associated with each.
+
+      - The :class:`.LabelGrid` contains list of labels, and the
+        components associated with each.
+
+    And a handful of buttons which allow the user to:
+
+     - Load a label file
+
+     - Save the current labels to a file
+
+     - Clear/reset the current labels
     """
 
     
@@ -122,7 +140,8 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
 
     def destroy(self):
-        """
+        """Must be called when this ``MelodicClassificaiionPanel`` is no longer
+        used. Removes listeners, and destroys widgets.
         """
         self._displayCtx .removeListener('selectedOverlay', self._name)
         self._overlayList.removeListener('overlays',        self._name)
@@ -133,7 +152,8 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
 
     def __enable(self, enable=True, message=''):
-        """
+        """Called internally. Enables/disables this
+        ``MelodicClassificationPanel``.
         """
 
         self.__disabledText.SetLabel(message)
@@ -148,7 +168,14 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
 
     def __selectedOverlayChanged(self, *a):
-        """
+        """Called when the :attr:`.DisplayContext.selectedOverlay` or
+        :attr:`.OverlayList.overlays` changes.
+
+        The overlay is passed to the :meth:`.ComponentGrid.setOverlay`
+        and :meth:`.LabelGrid.setOverlay` methods.
+
+        If the newly selected overlay is not a :class:`.MelodicImage`,
+        this panel is disabled (via :meth:`__enable`).
         """
 
         overlay = self._displayCtx.getSelectedOverlay()
@@ -159,9 +186,9 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         if (overlay is None) or \
            not isinstance(overlay, fslmelimage.MelodicImage):
             self.__enable(False, strings.messages[self, 'disabled'])
-            return
 
-        self.__enable(True)
+        else:
+            self.__enable(True)
 
         
     def __onLoadButton(self, ev):
@@ -192,7 +219,8 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         # is to load a set of component labels, and
         # to figure out which overlay they should
         # be added to. When it has done this, it
-        # calls this function.
+        # calls this function, which applies the
+        # loaded labels to the overlay.
         def applyLabels(labelFile, overlay, allLabels):
 
             lut      = self.__lut
@@ -241,8 +269,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
                         if lutLabel is None:
                             log.debug('New melodic classification '
                                       'label: {}'.format(label))
-                            lut.new(label,
-                                    colour=fslcm.randomBrightColour())
+                            lut.new(label, colour=fslcm.randomBrightColour())
  
             # If we have just loaded a MelodicImage,
             # make sure it is selected. If we loaded
@@ -327,7 +354,10 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
             # label file refer to different
             # melodic directories...
 
-            # Ask the user whether they want to
+            # Ask the user whether they want to load
+            # the image specified in the label file,
+            # or apply the labels to the currently
+            # selected meldic image.
             dlg = wx.MessageDialog(
                 self,
                 strings.messages[self, 'diffMelDir'].format(
@@ -406,8 +436,10 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
     
     def __onSaveButton(self, ev):
+        """Called when the user pushe the *Save labels* button. Asks the user
+        where they'd like the label saved, then saves said labels.
         """
-        """
+
         overlay  = self._displayCtx.getSelectedOverlay()
         melclass = overlay.getICClassification()
         dlg      = wx.FileDialog(
@@ -434,7 +466,9 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
     
     def __onClearButton(self, ev):
-        """
+        """Called when the user pushes the *Clear labels* button. Resets
+        all of the labels (sets the label for every component to
+        ``'Unknown'``).
         """
         
         overlay  = self._displayCtx.getSelectedOverlay()
