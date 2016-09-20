@@ -250,7 +250,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
             # Disable notification while applying
             # labels so the component/label grids
             # don't confuse themselves.
-            with props.suppress(melclass, 'labels'):
+            with melclass.skipAll('labels'):
 
                 melclass.clear()
 
@@ -279,6 +279,8 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
                 self._displayCtx.selectOverlay(overlay)
             self.__selectedOverlayChanged()
 
+            # Refresh the component/label grids
+            self.__componentGrid.setOverlay(overlay)
         # If the current overlay is a MelodicImage,
         # the open file dialog starting point will
         # be the melodic directory.
@@ -474,8 +476,9 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         overlay  = self._displayCtx.getSelectedOverlay()
         melclass = overlay.getICClassification()
 
-        melclass.clear()
-
-        with props.suppress(melclass, 'labels', notify=True):
+        with melclass.skipAll():
+            melclass.clear()
             for c in range(overlay.numComponents()):
                 melclass.addLabel(c, 'Unknown')
+
+        self.__componentGrid.refreshTags()
