@@ -123,6 +123,8 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
         self._overlayList.removeListener('overlays',        self._name)
         self._displayCtx .removeListener('location',        self._name)
         self._displayCtx .removeListener('selectedOverlay', self._name)
+
+        fslplatform.deregister(self._name)
         
         fslpanel.FSLeyesPanel.destroy(self)
 

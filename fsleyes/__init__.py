@@ -41,8 +41,8 @@ Amongst other things, *FSLeyes* provides the following features:
   - A comprehensive command line interface (:mod:`.fsleyes_parseargs`)
 
 
-*FSLeyes* makes heavy use of the :mod:`props` project, which provides an
-event related framework.
+*FSLeyes* makes heavy use of the :mod:`props` project, which is an
+event-based framework.
 
 
 ------------
@@ -176,6 +176,13 @@ the ``props`` package.
 
 See the :mod:`~fsleyes.displaycontext` package documentation for more
 details.
+
+
+-----------------------
+Events and notification
+-----------------------
+
+TODO
 
 
 .. note:: The current version of FSLeyes (|version|) lives in the

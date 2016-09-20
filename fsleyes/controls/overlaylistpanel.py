@@ -545,7 +545,7 @@ class ListItemWidget(wx.Panel):
 
             # Notifier.deregister will ignore 
             # non-existent listener de-registration
-            self.__overlay.deregister(self.__name, 'saved')
+            self.__overlay.deregister(self.__name, 'saveState')
 
         
     def __saveStateChanged(self, *a):

@@ -1183,9 +1183,12 @@ class LookupTable(notifier.Notifier):
                 label.addGlobalListener(self.__name, self.__labelChanged)
 
 
-    def __labelChanged(self, label, *a, **kwa):
+    def __labelChanged(self, value, valid, label, propName):
         """Called when the properties of any ``LutLabel`` change. Triggers
         notification on the ``label`` topic.
         """
-        self.saved = False
+
+        if propName in ('name', 'colour'):
+            self.saved = False
+
         self.notify(topic='label', value=label)

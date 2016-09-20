@@ -357,7 +357,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         self.__saveLutButton.Enable(not self.__selectedLut.saved)
 
 
-    def __lutLabelAdded(self, lut, label):
+    def __lutLabelAdded(self, lut, topic, label):
         """Called when the current :class:`.LookupTable` sends an ``'added'``
         notification, indicating that a label has been added. Updates the list
         of displayed labels.
@@ -370,7 +370,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
                                 extraWidget=widget)
 
 
-    def __lutLabelRemoved(self, lut, label):
+    def __lutLabelRemoved(self, lut, topic, label):
         """Called when the current :class:`.LookupTable` sends a ``'removed'``
         notification, indicating that a label has been removed. Updates the
         list of displayed labels.

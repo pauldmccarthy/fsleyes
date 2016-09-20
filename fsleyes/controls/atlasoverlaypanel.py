@@ -140,6 +140,12 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
 
         self.SetMinSize(self.__sizer.GetMinSize())
 
+        
+    def destroy(self):
+        """Performs some clean up operations. """
+        fslplatform.deregister(self._name)
+        fslpanel.FSLeyesPanel.destroy(self)
+
 
     def setOverlayState(self, atlasID, labelIdx, summary, state):
         """Updates the *enabled* state of the specified atlas overlay.

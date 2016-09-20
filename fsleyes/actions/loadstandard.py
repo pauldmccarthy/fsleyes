@@ -34,6 +34,7 @@ class LoadStandardAction(action.Action):
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
+        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
         
         self.__setStandardDir()
 
@@ -41,17 +42,14 @@ class LoadStandardAction(action.Action):
         # disables this action. But we'll listen 
         # for changes to FSLDIR, in case it gets 
         # set later on.
-        fslplatform.platform.register(
-            '{}_{}'.format(type(self).__name__, id(self)),
-            self.__setStandardDir)
+        fslplatform.platform.register(self.__name, self.__setStandardDir)
 
         
     def destroy(self):
         """Must be called when this ``LoadStandardAction`` is no longer
         needed. Performs some clean-up.
         """
-        fslplatform.platform.deregister(
-            '{}_{}'.format(type(self).__name__, id(self)))
+        fslplatform.platform.deregister(self.__name)
 
 
     def __setStandardDir(self, *a):
