@@ -65,6 +65,15 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         self.__grid.ShowRowLabels(False)
         self.__grid.ShowColLabels(True)
 
+        # The LabelGrid displays one TextTagPanel
+        # for each label that is currently displayed,
+        # as:
+        # 
+        #   { label_name : TextTagPanel }
+        # 
+        # mappings
+        self.__tagMap = {}
+
         self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.__sizer.Add(self.__grid, flag=wx.EXPAND, proportion=1)
         
@@ -72,7 +81,9 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
         self.__grid.Bind(widgetgrid.EVT_WG_SELECT, self.__onGridSelect)
 
-        lut.register(self._name, self.__lutChanged)
+        lut.register(self._name, self.__lutChanged, 'added') 
+        lut.register(self._name, self.__lutChanged, 'removed')
+        lut.register(self._name, self.__lutChanged, 'label')
 
         self.__overlay = None
         self.__recreateGrid()
@@ -84,7 +95,9 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         :meth:`.FSLeyesPanel.destroy`.
         """
         
-        self.__lut.deregister(self._name)
+        self.__lut.deregister(self._name, 'added')
+        self.__lut.deregister(self._name, 'removed')
+        self.__lut.deregister(self._name, 'label')
         self.__deregisterCurrentOverlay()
         
         self.__lut = None
@@ -111,7 +124,8 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
         melclass.register(self._name, self.__labelsChanged)
 
-        self.refreshTags()
+        self.__refreshTags()
+        self.__grid.Layout()
 
         
     def __deregisterCurrentOverlay(self):
@@ -137,9 +151,11 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         """
 
         grid   = self.__grid
+        tagMap = self.__tagMap
         lut    = self.__lut
         
         grid.ClearGrid()
+        tagMap.clear()
 
         grid.SetGridSize(len(lut), 2, growCols=[1])
 
@@ -153,9 +169,11 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
             tags._label = label.name
 
-            self.__grid.SetText(  i, 0, label.name)
-            self.__grid.SetWidget(i, 1, tags)
-            
+            grid.SetText(  i, 0, label.name)
+            grid.SetWidget(i, 1, tags)
+
+            tagMap[label.internalName] = tags
+
             tags.Bind(texttag.EVT_TTP_TAG_ADDED,   self.__onTagAdded)
             tags.Bind(texttag.EVT_TTP_TAG_REMOVED, self.__onTagRemoved)
             tags.Bind(texttag.EVT_TTP_TAG_SELECT,  self.__onTagSelect)
@@ -173,23 +191,22 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         overlay  = self.__overlay
         numComps = overlay.numComponents()
         melclass = overlay.getICClassification()
+        compStrs = [str(i) for i in range(1, numComps + 1)]
 
         for i, label in enumerate(lut):
 
-            tags  = grid.GetWidget(i, 1)
-            comps = melclass.getComponents(label.internalName)
+            tags   = grid.GetWidget(i, 1)
+            comps  = melclass.getComponents(label.internalName)
+            
+            colour = label.colour
+            colour = [int(round(c  * 255.0)) for c in colour] 
             
             tags.ClearTags()
 
-            tags.SetOptions([str(i) for i in range(1, numComps + 1)])
+            tags.SetOptions(compStrs, [colour] * len(compStrs))
 
             for comp in comps:
-
-                colour = label.colour
-                colour = [int(round(c  * 255.0)) for c in colour]
-                tags.AddTag(str(comp + 1), colour)
-
-        self.__grid.Layout()
+                tags.AddTag(str(comp + 1))
 
                 
     def __onTagAdded(self, ev):
@@ -214,11 +231,16 @@ class LabelGrid(fslpanel.FSLeyesPanel):
             if len(melclass.getLabels(comp)) == 1 and \
                label != 'unknown'                 and \
                melclass.hasLabel(comp, 'unknown'):
+
                 melclass.removeLabel(comp, 'unknown')
+                self.__tagMap['unknown'].RemoveTag(str(comp + 1))
 
             melclass.addComponent(label, comp)
-        
-        self.__refreshTags()
+
+        # The WidgetGrid doesn't
+        # resize itself when its
+        # contents change size
+        self.__grid.Layout()
 
     
     def __onTagRemoved(self, ev):
@@ -229,6 +251,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         
         tags     = ev.GetEventObject()
         overlay  = self.__overlay
+        lut      = self.__lut
         melclass = overlay.getICClassification()
         comp     = int(ev.tag) - 1
         label    = tags._label
@@ -242,9 +265,20 @@ class LabelGrid(fslpanel.FSLeyesPanel):
             # If the component has no more labels,
             # give it an 'Unknown' label
             if len(melclass.getLabels(comp)) == 0:
-                melclass.addLabel(comp, 'Unknown')
 
-        self.__refreshTags()
+                label = lut.getByName('unknown')
+                
+                melclass.addLabel(comp, label.name)
+                
+                tags   = self.__tagMap['unknown']
+                colour = label.colour
+                colour = [int(round(c  * 255.0)) for c in colour] 
+                tags.AddTag(str(comp + 1), colour)
+
+        # The WidgetGrid doesn't resize
+        # itself when its contents change
+        # size
+        self.__grid.FitInside()
 
 
     def __onGridSelect(self, ev):
@@ -274,19 +308,69 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         opts.volume = comp
        
 
-    def __lutChanged(self, *a):
-        """Called when the :attr:`LookupTable.labels` change. Re-creates and
+    def __lutChanged(self, lut, topic, value):
+        """Called when the :class:`.LookupTable` changes. Re-creates and
         re-populates the :class:`.WidgetGrid`.
         """
+
+        label, idx = value
+        melclass   = self.__overlay.getICClassification()
+        
         log.debug('Lookup table changed - re-creating label grid')
-        self.__recreateGrid()
+
+        # A label has been removed
+        if topic == 'removed':
+
+            # Only delete the corresponding
+            # row if there are no components
+            # with the deleted label.
+            if len(melclass.getComponents(label.internalName)) == 0:
+                self.__grid.DeleteRow(idx)
+                self.__tagMap.pop(label.internalName)
+
+        # A label has been added
+        elif topic == 'added':
+            self.__grid.InsertRow(idx)
+
+            tags = texttag.TextTagPanel(self.__grid,
+                                        style=(texttag.TTP_NO_DUPLICATES |
+                                               texttag.TTP_KEYBOARD_NAV))
+
+            tags._label = label.name
+
+            self.__grid.SetText(  idx, 0, label.name)
+            self.__grid.SetWidget(idx, 1, tags)
+            self.__grid.Refresh()
+
+            self.__tagMap[label.internalName] = tags
+
+            tags.Bind(texttag.EVT_TTP_TAG_ADDED,   self.__onTagAdded)
+            tags.Bind(texttag.EVT_TTP_TAG_REMOVED, self.__onTagRemoved)
+            tags.Bind(texttag.EVT_TTP_TAG_SELECT,  self.__onTagSelect)
+
+        # elif topic == 'label':
         self.__refreshTags()
 
+        self.__grid.Layout()
+
         
-    def __labelsChanged(self, *a):
+    def __labelsChanged(self, melclass, topic, components):
         """Called when the :attr:`.MelodicClassification.labels` change.
         Re-populates the :class:`.WidgetGrid`.
         """
         log.debug('Melodic classification changed - '
                   'refreshing label grid tags')
-        self.__refreshTags()
+
+        added = topic == 'added'
+
+        for comp, label in components:
+            tags = self.__tagMap.get(label, None)
+
+            # Existing label
+            if tags is not None:
+                if added: tags.AddTag(   str(comp + 1))
+                else:     tags.RemoveTag(str(comp + 1))
+
+            # New label
+            else:
+                pass
