@@ -1092,10 +1092,11 @@ class LookupTable(notifier.Notifier):
         label = LutLabel(value, name, colour, enabled)
         label.addGlobalListener(self.__name, self.__labelChanged)
 
-        bisect.insort(self.__labels, label)
+        idx = bisect.bisect(self.__labels, label)
+        self.__labels.insert(idx, label)
 
         self.saved = False
-        self.notify(topic='added', value=label)
+        self.notify(topic='added', value=(label, idx))
 
         return label
 
@@ -1112,7 +1113,7 @@ class LookupTable(notifier.Notifier):
 
         label.removeGlobalListener(self.__name)
         
-        self.notify(topic='removed', value=label)
+        self.notify(topic='removed', value=(label, idx))
         self.saved = False
 
 
@@ -1191,4 +1192,4 @@ class LookupTable(notifier.Notifier):
         if propName in ('name', 'colour'):
             self.saved = False
 
-        self.notify(topic='label', value=label)
+        self.notify(topic='label', value=(label, self.index(label)))

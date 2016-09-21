@@ -362,8 +362,8 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         notification, indicating that a label has been added. Updates the list
         of displayed labels.
         """
-        idx    = lut.index(label)
-        widget = LabelWidget(self, lut, label)
+        label, idx = label
+        widget     = LabelWidget(self, lut, label)
         self.__labelList.Insert(str(label.value),
                                 idx, 
                                 clientData=label.value,
@@ -375,7 +375,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         notification, indicating that a label has been removed. Updates the
         list of displayed labels.
         """
-        idx = self.__labelList.IndexOf(label.value)
+        label, idx = label
         self.__labelList.Delete(idx)
 
 
