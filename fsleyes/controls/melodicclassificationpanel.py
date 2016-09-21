@@ -27,7 +27,8 @@ import fsleyes.colourmaps               as fslcm
 import fsleyes.panel                    as fslpanel
 import fsleyes.autodisplay              as autodisplay
 import fsleyes.strings                  as strings
-from . import melodicclassificationgrid as melodicgrid
+from . import componentgrid             as componentgrid
+from . import labelgrid                 as labelgrid
 
 
 log = logging.getLogger(__name__)
@@ -75,13 +76,13 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
         self.__lut           = fslcm.getLookupTable('melodic-classes')
         self.__notebook      = notebook.Notebook(self)
-        self.__componentGrid = melodicgrid.ComponentGrid(
+        self.__componentGrid = componentgrid.ComponentGrid(
             self.__notebook,
             self._overlayList,
             self._displayCtx,
             self.__lut)
 
-        self.__labelGrid     = melodicgrid.LabelGrid(
+        self.__labelGrid     = labelgrid.LabelGrid(
             self.__notebook,
             self._overlayList,
             self._displayCtx,
