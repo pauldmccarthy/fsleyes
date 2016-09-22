@@ -119,6 +119,13 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
+    # Hack to allow render to
+    # be called via fsleyes.main
+    if len(args) >= 1 and args[0] == 'render':
+        import fsleyes.render as render
+        render.main(args[1:])
+        sys.exit(0)
+
     # First thing's first. Create a wx.App,
     # then initialise the FSLeyes package.
     app = FSLeyesApp()
@@ -620,13 +627,4 @@ def fslDirWarning(parent):
 
 
 if __name__ == '__main__':
-
-    # Hack to allow render to
-    # be called via fsleyes.main
-    if len(sys.argv) > 1 and sys.argv[1] == 'render':
-        import fsleyes.render as render
-        render.main(sys.argv[2:])
-
-    # Normal FSLeyes invocation
-    else:
-        main()
+    main()
