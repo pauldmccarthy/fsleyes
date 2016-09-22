@@ -259,8 +259,8 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
             # Disable notification while applying
             # labels so the component/label grids
             # don't confuse themselves.
-
-            with melclass.skipAll():
+            with melclass.skip(self.__componentGrid._name), \
+                 melclass.skip(self.__labelGrid    ._name):
 
                 melclass.clear()
 
