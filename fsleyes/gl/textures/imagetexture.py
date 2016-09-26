@@ -94,6 +94,8 @@ class ImageTexture(texture3d.Texture3D):
         """Called when the :class:`.Image` notifies about a data changes.
         Triggers an image texture refresh via a call to :meth:`set`.
         """
+        log.debug('{} data changed - refreshing '
+                  'texture'.format(self.image.name))
         self.set()
 
         
@@ -125,7 +127,7 @@ class ImageTexture(texture3d.Texture3D):
         if not is4D:
             kwargs['data'] = self.image[:]
 
-        elif volume != self.__volume:
+        else:
             
             self.__volume  = volume
             kwargs['data'] = self.image[..., volume]
