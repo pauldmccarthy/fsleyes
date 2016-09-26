@@ -108,12 +108,12 @@ class ImageTexture(texture3d.Texture3D):
 
         :returns: ``True`` if any settings have changed and the
                   ``ImageTexture`` is to be refreshed , ``False`` otherwise.
-
         """
 
-        kwargs         .pop('data',      None)
-        kwargs         .pop('normalise', None)
-        volume = kwargs.pop('volume',    self.__volume)
+        kwargs         .pop('data',           None)
+        kwargs         .pop('normalise',      None)
+        kwargs         .pop('normaliseRange', None)
+        volume = kwargs.pop('volume',         self.__volume)
 
         is4D   = self.__nvals == 1          and \
                  len(self.image.shape) == 4 and \
@@ -130,6 +130,6 @@ class ImageTexture(texture3d.Texture3D):
             self.__volume  = volume
             kwargs['data'] = self.image[..., volume]
 
-        kwargs['normalise'] = self.image.dataRange
+        kwargs['normaliseRange'] = self.image.dataRange
 
         return texture3d.Texture3D.set(self, **kwargs)

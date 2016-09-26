@@ -84,14 +84,18 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         :arg threaded: If ``True``, the texture data will be prepared on a
                         separate thread (on calls to
-                        :meth:`refresh`). I ``False``, the texture data is
+                        :meth:`refresh`). If ``False``, the texture data is
                         prepared on the calling thread, and the
                         :meth:`refresh` call will block until it has been
-                        prepared. Defaults to the value of
-                        :attr:`.fsl.utils.platform.Platform.haveGui`.
+                        prepared. 
+
 
         All other keyword arguments are passed through to the :meth:`set`
         method, and thus used as initial texture settings.
+
+
+        .. note:: The default value of the ``threaded`` parameter is set to 
+                  the value of :attr:`.fsl.utils.platform.Platform.haveGui`.
         """
 
         if threaded is None:
@@ -114,11 +118,12 @@ class Texture3D(texture.Texture, notifier.Notifier):
         self.__scales         = None
         self.__interp         = None
         self.__normalise      = None
+        self.__normaliseRange = None
 
         # These attributes are modified
         # in the refresh method (which is
         # called via the set method below). 
-        self.__ready         = True
+        self.__ready          = True
 
         # These attributes are set by the
         # __refresh, __determineTextureType,
@@ -221,17 +226,38 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         
     def setNormalise(self, normalise):
-        """Enable/disable normalisation.
+        """Enable/disable normalisation. 
 
-        If normalisation is desired, the ``normalise`` parameter must be a
-        sequence of two values, containing the ``(min, max)`` normalisation
-        range. The data is then normalised to lie in the range ``[0, 1]`` (or
-        normalised to the full range, if being stored as integers) before
-        being stored.
+        If ``normalise=True``, the data is normalised to lie in the range
+        ``[0, 1]`` (or normalised to the full range, if being stored as
+        integers) before being stored. The data is normalised according to
+        the minimum/maximum of the data, or to a normalise range set via
+        :meth:`setNormaliseRange`.
 
-        Set to ``None`` to disable normalisation.
+        Set to ``False`` to disable normalisation.
+
+        .. note:: If the data is not of a type that can be stored natively 
+                  as a texture, the data is automatically normalised, 
+                  regardless of the value specified here.
         """
         self.set(normalise=normalise)
+
+
+    def setNormaliseRange(self, normaliseRange):
+        """Enable/disable normalisation.
+
+        If normalisation is enabled (see :meth:`setNormalise`), or necessary,
+        the data is normalised according to either its minimum/maximum, or
+        to the range specified via this method.
+
+        This parameter must be a sequence of two values, containing the
+        ``(min, max)`` normalisation range. The data is then normalised to
+        lie in the range ``[0, 1]`` (or normalised to the full range, if being
+        stored as integers) before being stored.
+
+        If ``None``, the data minimum/maximum are calculated and used.
+        """
+        self.set(normaliseRange=normaliseRange) 
 
 
     @property
@@ -268,7 +294,8 @@ class Texture3D(texture.Texture, notifier.Notifier):
         ``prefilterRange`` See :meth:`setPrefilterRange`
         ``resolution``     See :meth:`setResolution`.
         ``scales``         See :meth:`setScales`.
-        ``normalise``      See :meth:`setNormalise`.
+        ``normalise``      See :meth:`setNormalise.`
+        ``normaliseRange`` See :meth:`setNormaliseRange`.
         ``refresh``        If ``True`` (the default), the :meth:`refresh`
                            function is called (but only if a setting has 
                            changed).
@@ -288,6 +315,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         prefilterRange = kwargs.get('prefilterRange', self.__prefilterRange)
         resolution     = kwargs.get('resolution',     self.__resolution)
         scales         = kwargs.get('scales',         self.__scales)
+        normaliseRange = kwargs.get('normaliseRange', self.__normaliseRange)
         normalise      = kwargs.get('normalise',      self.__normalise)
         data           = kwargs.get('data',           None)
         refresh        = kwargs.get('refresh',        True)
@@ -297,6 +325,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         changed = {'interp'         : interp         != self.__interp,
                    'data'           : data           is not None,
                    'normalise'      : normalise      != self.__normalise,
+                   'normaliseRange' : normaliseRange != self.__normaliseRange,
                    'prefilter'      : prefilter      != self.__prefilter,
                    'prefilterRange' : prefilterRange != self.__prefilterRange,
                    'resolution'     : resolution     != self.__resolution,
@@ -307,33 +336,41 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         self.__interp         = interp
         self.__normalise      = normalise
+        self.__normaliseRange = normaliseRange
         self.__prefilter      = prefilter
         self.__prefilterRange = prefilterRange
         self.__resolution     = resolution
         self.__scales         = scales
 
-        # If the data is of a type which cannot be
-        # stored natively as an OpenGL texture, the
-        # data must be normalised. See
-        # __determineTextureType and __prepareTextureData 
         if data is not None:
 
             self.__data = data
 
-            if data.dtype not in (np.uint8, np.int8, np.uint16, np.int16):
+            # If the data is of a type which cannot
+            # be stored natively as an OpenGL texture,
+            # the data must be normalised. See
+            # __determineTextureType and
+            # __prepareTextureData 
+            self.__normalise = self.__normalise or \
+                               data.dtype not in (np.uint8,
+                                                  np.int8,
+                                                  np.uint16,
+                                                  np.int16)
 
-                # If the caller has not provided
-                # a normalisation range, we have
-                # to calculate it.
-                if not changed['normalise']:
-                    self.__normalise = np.nanmin(data), np.nanmax(data)
-                    log.debug('Calculated {} data range for normalisation: '
-                              '[{} - {}]'.format(self.__name,
-                                                 *self.__normalise))
+            # If the caller has not provided
+            # a normalisation range, we have
+            # to calculate it. 
+            if self.__normalise and self.__normaliseRange is None:
+
+                self.__normaliseRange = np.nanmin(data), np.nanmax(data)
+                log.debug('Calculated {} data range for normalisation: '
+                          '[{} - {}]'.format(self.__name,
+                                             *self.__normaliseRange))
 
         refreshData = any((changed['data'],
                            changed['prefilter'],
                            changed['prefilterRange'],
+                           changed['normaliseRange'] and self.__normalise,
                            changed['resolution'],
                            changed['scales'],
                            changed['normalise']))
@@ -582,11 +619,10 @@ class Texture3D(texture.Texture, notifier.Notifier):
         ``__texDtype``       The raw type of the texture data (e.g.
                              ``GL_UNSIGNED_SHORT``)
         ==================== ==============================================
-
         """        
 
         dtype     = self.__data.dtype
-        normalise = self.__normalise is not None
+        normalise = self.__normalise
 
         # Signed data types are a pain in the arse.
         #
@@ -730,9 +766,10 @@ class Texture3D(texture.Texture, notifier.Notifier):
         prefilterRange = self.__prefilterRange
         resolution     = self.__resolution
         scales         = self.__scales
-        normalise      = self.__normalise is not None
+        normalise      = self.__normalise
+        normaliseRange = self.__normaliseRange
 
-        if normalise: dmin, dmax = self.__normalise
+        if normalise: dmin, dmax = self.__normaliseRange
         else:         dmin, dmax = 0, 0
 
 

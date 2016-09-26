@@ -101,7 +101,7 @@ class GLTensor(glvector.GLVector):
                 texName,
                 img,
                 nvals=nvals,
-                normalise=img.dataRange,
+                normaliseRange=img.dataRange,
                 prefilter=texPrefilter)
 
             setattr(self, '{}Texture'.format(name), tex)

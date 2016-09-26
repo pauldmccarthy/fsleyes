@@ -421,7 +421,7 @@ class GLVectorBase(globject.GLImageObject):
             textures.ImageTexture,
             texName,
             image,
-            normalise=norm,
+            normaliseRange=norm,
             volume=volume,
             notify=False)
         
@@ -828,7 +828,7 @@ class GLVector(GLVectorBase):
             vecImage,
             nvals=3,
             interp=interp,
-            normalise=vecImage.dataRange,
+            normaliseRange=vecImage.dataRange,
             prefilter=realPrefilter,
             prefilterRange=prefilterRange,
             notify=False)
