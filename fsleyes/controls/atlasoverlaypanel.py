@@ -321,63 +321,8 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
             atlasDesc  = ev.data
             atlasIdx   = ev.idx
 
-        atlasPanelDisabled = False
         regionList         = self.__regionLists[atlasIdx]
-
-        if regionList is None:
-
-            # The region list for this atlas has not yet been
-            # created. So we create the list, and then create
-            # a widget for every region in the atlas. Some of
-            # the atlases (Juelich and Talairach in particular)
-            # have a large number of regions, so we create the
-            # widgets asynchronously on the wx idle loop.
-            regionList = elistbox.EditableListBox(
-                self.__regionPanel,
-                style=(elistbox.ELB_NO_ADD    |
-                       elistbox.ELB_NO_REMOVE |
-                       elistbox.ELB_NO_MOVE))
-            regionList.Show(False)
-
-            self.__regionLists[atlasIdx] = regionList
-
-            def addToRegionList(label, i):
-
-                # If the user kills this panel while
-                # the region list is being updated,
-                # suppress wx complaints.
-                #
-                # TODO You could make a chain of
-                # async.idle functions. instead of
-                # scheduling them all at once
-                try:
-                    regionList.Append(label.name)
-                    widget = OverlayListWidget(regionList,
-                                               atlasDesc.atlasID,
-                                               i,
-                                               self.__atlasPanel,
-                                               self,
-                                               label.index)
-                    regionList.SetItemWidget(i, widget)
-                    
-                except wx.PyDeadObjectError:
-                    pass
-
-            log.debug('Creating region list for {} ({})'.format(
-                atlasDesc.atlasID, id(regionList)))
-
-            status.update(
-                strings.messages[self, 'loadRegions'].format(atlasDesc.name),
-                timeout=None)
-
-            # Schedule addToRegionList on the
-            # wx idle loop for every region.
-            # Disable the panel while this is
-            # occurring.
-            atlasPanelDisabled = True
-            self.enableAtlasPanel(False)
-            for i, label in enumerate(atlasDesc.labels):
-                async.idle(addToRegionList, label, i)
+        atlasPanelDisabled = regionList is not None
 
         # This function changes the displayed region
         # list. We schedule it on the wx idle loop,
@@ -419,8 +364,76 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
                 
             except wx.PyDeadObjectError:
                 pass
- 
-        async.idle(changeAtlasList)
+
+        if regionList is None:
+
+            # The region list for this atlas has not yet been
+            # created. So we create the list, and then create
+            # a widget for every region in the atlas. Some of
+            # the atlases (Juelich and Talairach in particular)
+            # have a large number of regions, so we create the
+            # widgets asynchronously on the wx idle loop. 
+            regionList = elistbox.EditableListBox(
+                self.__regionPanel,
+                style=(elistbox.ELB_NO_ADD    |
+                       elistbox.ELB_NO_REMOVE |
+                       elistbox.ELB_NO_MOVE))
+            regionList.Show(False)
+
+            self.__regionLists[atlasIdx] = regionList
+
+            # Add blockSize labels, starting from label[i],
+            # to the region list. Then, if necessary,
+            # schedule more labels be added, starting from
+            # label[i + blockSize].
+            blockSize = 20
+            nlabels   = len(atlasDesc.labels)
+            def addToRegionList(start):
+
+                # If the user kills this panel while
+                # the region list is being updated,
+                # suppress wx complaints.
+                try:
+
+                    for i in range(start, min(start + blockSize, nlabels)):
+                        label = atlasDesc.labels[i]
+                        regionList.Append(label.name)
+                        widget = OverlayListWidget(regionList,
+                                                   atlasDesc.atlasID,
+                                                   i,
+                                                   self.__atlasPanel,
+                                                   self,
+                                                   label.index)
+                        regionList.SetItemWidget(i, widget)
+
+                    if i < nlabels - 1: async.idle(addToRegionList, i)
+                    else:               async.idle(changeAtlasList)
+
+                except wx.PyDeadObjectError:
+                    pass
+
+            log.debug('Creating region list for {} ({})'.format(
+                atlasDesc.atlasID, id(regionList)))
+
+            status.update(
+                strings.messages[self, 'loadRegions'].format(atlasDesc.name),
+                timeout=None)
+
+            # Schedule addToRegionList on the
+            # wx idle loop for the first region.
+            # The function will recursively
+            # schedule itself to run for subsequent
+            # regions.
+            # 
+            # Disable the panel while this is
+            # occurring.
+
+            atlasPanelDisabled = True
+
+            self.enableAtlasPanel(False)
+            async.idle(addToRegionList, 0)
+        else:
+            async.idle(changeAtlasList)
 
 
     def selectAtlas(self, atlasIdx, atlasDesc):
@@ -456,6 +469,9 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         re-enabled. This method overcomes this problem.
         """ 
         count = self.__atlasPanelEnableStack
+
+        log.debug('enableAtlasPanel({}, count={})'.format(enable, count))
+
         if enable:
             count -= 1
 
@@ -585,6 +601,9 @@ class OverlayListWidget(wx.Panel):
                     self.__atlasDesc.atlasType == 'label'))
 
         self.__atlasOvlPanel.enableAtlasPanel(False)
+
+        log.debug('Toggling atlas {}'.format(self.__atlasID))
+
         self.__atlasPanel.toggleOverlay(
             self.__atlasID,
             self.__labelIdx,
