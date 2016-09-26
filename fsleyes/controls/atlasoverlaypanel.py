@@ -147,6 +147,19 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         fslpanel.FSLeyesPanel.destroy(self)
 
 
+    def Enable(self, enable=True):
+        """Enables/disables this ``AtlasOverlayPanel``. """
+        self.__atlasList.Enable(enable)
+        regionList = self.__regionSizer.GetItem(1).GetWindow()
+        if regionList is not None:
+            regionList.Enable(enable)
+
+
+    def Disable(self):
+        """Disables this ``AtlasOverlayPanel``. """
+        self.Enable(False)
+
+
     def setOverlayState(self, atlasID, labelIdx, summary, state):
         """Updates the *enabled* state of the specified atlas overlay.
 

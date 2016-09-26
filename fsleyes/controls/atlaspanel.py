@@ -199,6 +199,18 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         fslpanel.FSLeyesPanel.destroy(self)
 
 
+    def Enable(self, enable=True):
+        """Enables/disables this ``AtlasPanel``. """
+
+        self.__infoPanel   .Enable(enable)
+        self.__overlayPanel.Enable(enable)
+
+
+    def Disable(self):
+        """Disables this ``AtlasPanel``. """
+        self.Enable(False)
+
+
     def loadAtlas(self,
                   atlasID,
                   summary,
