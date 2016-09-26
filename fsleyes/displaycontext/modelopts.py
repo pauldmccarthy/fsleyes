@@ -9,6 +9,8 @@ for displaying :class:`.Model` overlays.
 """
 
 
+import logging
+
 import numpy as np
 
 import props
@@ -18,6 +20,9 @@ from . import display       as fsldisplay
 import fsleyes.colourmaps   as colourmaps
 import fsl.data.image       as fslimage
 import fsl.utils.transform  as transform
+
+
+log = logging.getLogger(__name__)
 
 
 class ModelOpts(fsldisplay.DisplayOpts):
@@ -138,6 +143,19 @@ class ModelOpts(fsldisplay.DisplayOpts):
                              self.name,
                              self.__coordSpaceChanged,
                              immediate=True)
+
+            # The master ModelOpts instance also
+            # keeps colour[3] and Display.alpha
+            # consistent w.r.t. each other (see
+            # also MaskOpts)
+            self.display.addListener('alpha',
+                                     self.name,
+                                     self.__alphaChanged,
+                                     immediate=True)
+            self        .addListener('colour',
+                                     self.name,
+                                     self.__colourChanged,
+                                     immediate=True) 
         
             self.__overlayListChanged()
             self.__updateBounds()
@@ -161,6 +179,9 @@ class ModelOpts(fsldisplay.DisplayOpts):
                 opts = self.displayCtx.getOpts(self.refImage)
                 opts.removeListener('transform',   self.name)
                 opts.removeListener('customXform', self.name)
+
+            self.display.removeListener('colour', self.name)
+            self        .removeListener('alpha',  self.name)
 
         fsldisplay.DisplayOpts.destroy(self)
 
@@ -435,3 +456,32 @@ class ModelOpts(fsldisplay.DisplayOpts):
         else:                    self.refImage = None
  
         imgProp.setChoices(imgOptions, instance=self)
+
+
+    def __colourChanged(self, *a):
+        """Called when :attr:`.colour` changes. Updates :attr:`.Display.alpha`
+        from the alpha component.
+        """ 
+
+        alpha = self.colour[3] * 100
+
+        log.debug('Propagating ModelOpts.colour[3] to '
+                  'Display.alpha [{}]'.format(alpha))
+
+        with props.skip(self.display, 'alpha', self.name):
+            self.display.alpha = alpha
+
+
+    def __alphaChanged(self, *a):
+        """Called when :attr:`.Display.alpha` changes. Updates the alpha
+        component of :attr:`.colour`.
+        """
+
+        alpha      = self.display.alpha / 100.0
+        r, g, b, _ = self.colour
+
+        log.debug('Propagating Display.alpha to ModelOpts.'
+                  'colour[3] [{}]'.format(alpha))
+
+        with props.skip(self, 'colour', self.name):
+            self.colour = r, g, b, alpha

@@ -9,10 +9,15 @@ for displaying an :class:`.Image` overlay as a binary mask.
 """
 
 
+import logging
+
 import props
 
 import fsleyes.strings as strings
 from . import             volumeopts
+
+
+log = logging.getLogger(__name__)
 
 
 class MaskOpts(volumeopts.NiftiOpts):
@@ -74,3 +79,58 @@ class MaskOpts(volumeopts.NiftiOpts):
         self.threshold.xhi  = dataMax + dMinDistance 
 
         volumeopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)
+
+        # The master MaskOpts instance makes 
+        # sure that colour[3] and Display.alpha 
+        # are consistent w.r.t. each other.
+        self.__registered = self.getParent() is None
+        if self.__registered:
+            self.display.addListener('alpha',
+                                     self.name,
+                                     self.__alphaChanged,
+                                     immediate=True)
+            self        .addListener('colour',
+                                     self.name,
+                                     self.__colourChanged,
+                                     immediate=True)
+
+
+    def destroy(self):
+        """Removes some property listeners and calls
+        :meth:`.NitfiOpts.destroy`.
+        """
+
+        if self.__registered:
+            self.display.removeListener('alpha',  self.name)
+            self        .removeListener('colour', self.name)
+
+        volumeopts.NiftiOpts.destroy(self)
+
+
+    def __colourChanged(self, *a):
+        """Called when :attr:`.colour` changes. Updates :attr:`.Display.alpha`
+        from the alpha component.
+        """ 
+
+        alpha = self.colour[3] * 100
+
+        log.debug('Propagating MaskOpts.colour[3] to '
+                  'Display.alpha [{}]'.format(alpha))
+
+        with props.skip(self.display, 'alpha', self.name):
+            self.display.alpha = alpha
+
+
+    def __alphaChanged(self, *a):
+        """Called when :attr:`.Display.alpha` changes. Updates the alpha
+        component of :attr:`.colour`.
+        """
+
+        alpha       = self.display.alpha / 100.0
+        r, g, b, _  = self.colour
+
+        log.debug('Propagating Display.alpha to MaskOpts.'
+                  'colour[3] [{}]'.format(alpha))
+
+        with props.skip(self, 'colour', self.name):
+            self.colour = r, g, b, alpha
