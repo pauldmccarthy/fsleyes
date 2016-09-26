@@ -478,12 +478,11 @@ class SliceCanvas(props.HasProperties):
         """Returns the :class:`.GLObject` associated with the given
         ``overlay``, or ``None`` if there isn't one.
         """
-
         globj = self._glObjects.get(overlay, None)
 
         # globjs can be set to False
-        if not globj:
-            return None
+        if not globj: return None
+        else:         return globj
             
 
     def _initGL(self):
