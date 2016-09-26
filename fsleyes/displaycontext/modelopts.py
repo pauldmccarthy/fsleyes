@@ -180,8 +180,8 @@ class ModelOpts(fsldisplay.DisplayOpts):
                 opts.removeListener('transform',   self.name)
                 opts.removeListener('customXform', self.name)
 
-            self.display.removeListener('colour', self.name)
-            self        .removeListener('alpha',  self.name)
+            self.display.removeListener('alpha',  self.name)
+            self        .removeListener('colour', self.name)
 
         fsldisplay.DisplayOpts.destroy(self)
 
