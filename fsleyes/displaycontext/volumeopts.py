@@ -927,14 +927,12 @@ class VolumeOpts(NiftiOpts):
         with props.suppress(self, 'displayRange',  notify=True), \
              props.suppress(self, 'clippingRange', notify=True):
 
-            # If display/clipping are all 0,
-            # we assume that they haven't
+            # If display/clipping limit range
+            # is 0, we assume that they haven't
             # yet been set
-            drUnset = (self.displayRange .xlo == 0 and 
-                       self.displayRange .xhi == 0)
-            crUnset = (self.clippingRange.xlo == 0 and 
-                       self.clippingRange.xhi == 0)
-            crGrow  =  self.clippingRange.xhi == self.clippingRange.xmax
+            drUnset = self.displayRange .xmin == self.displayRange .xmax
+            crUnset = self.clippingRange.xmin == self.clippingRange.xmax
+            crGrow  = self.clippingRange.xhi  == self.clippingRange.xmax
 
             log.debug('Updating range limits [dr: {} - {}, ''cr: '
                       '{} - {}]'.format(drmin, drmax, crmin, crmax))
