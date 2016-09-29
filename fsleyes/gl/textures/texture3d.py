@@ -769,7 +769,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         normalise      = self.__normalise
         normaliseRange = self.__normaliseRange
 
-        if normalise: dmin, dmax = self.__normaliseRange
+        if normalise: dmin, dmax = normaliseRange
         else:         dmin, dmax = 0, 0
 
 

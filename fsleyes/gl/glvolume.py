@@ -648,18 +648,21 @@ class GLVolume(globject.GLImageObject):
         self.updateShaderState()
 
 
-    def _volumeChanged(self, *a):
+    def _volumeChanged(self, *a, **kwa):
         """Called when the :attr:`.NiftiOpts.volume` property changes. """
         opts       = self.displayOpts
         volume     = opts.volume
         resolution = opts.resolution
 
+        volRefresh = kwa.pop('volRefresh', False)
+
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR
-
+        
         self.imageTexture.set(volume=volume,
                               interp=interp,
-                              resolution=resolution)
+                              resolution=resolution,
+                              volRefresh=volRefresh)
 
         if self.clipTexture is not None:
             self.clipTexture.set(interp=interp, resolution=resolution)
@@ -668,13 +671,13 @@ class GLVolume(globject.GLImageObject):
     def _interpolationChanged(self, *a):
         """Called when the :attr:`.NiftiOpts.interpolation` property changes.
         """
-        self._volumeChanged()
+        self._volumeChanged(volRefresh=True)
 
         
     def _resolutionChanged(self, *a):
         """Called when the :attr:`.NiftiOpts.resolution` property changes.
         """ 
-        self._volumeChanged() 
+        self._volumeChanged(volRefresh=True)
 
 
     def _transformChanged(self, *a):

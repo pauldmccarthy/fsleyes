@@ -104,18 +104,24 @@ class ImageTexture(texture3d.Texture3D):
         ``ImageTexture``. This method accepts any parameters that are accepted
         by :meth:`.Texture3D.set`, plus the following:
 
-        ========== ======================
-        ``volume`` See :meth:`setVolume`.
-        ========== ======================
+        =============== ======================================================
+        ``volume``      See :meth:`setVolume`.
+
+        `volRefresh``   If ``True`` (the default), the texture data will be
+                        refreshed even if the ``volume`` parameter hasn't
+                        changed. Otherwise, if ``volume`` hasn't changed,
+                        the texture will not be refreshed.
+        =============== ======================================================
 
         :returns: ``True`` if any settings have changed and the
                   ``ImageTexture`` is to be refreshed , ``False`` otherwise.
         """
 
-        kwargs         .pop('data',           None)
-        kwargs         .pop('normalise',      None)
-        kwargs         .pop('normaliseRange', None)
-        volume = kwargs.pop('volume',         self.__volume)
+        kwargs             .pop('data',           None)
+        kwargs             .pop('normalise',      None)
+        kwargs             .pop('normaliseRange', None)
+        volume     = kwargs.pop('volume',         self.__volume)
+        volRefresh = kwargs.pop('volRefresh',     True)
 
         is4D   = self.__nvals == 1          and \
                  len(self.image.shape) == 4 and \
@@ -123,6 +129,9 @@ class ImageTexture(texture3d.Texture3D):
 
         if volume is None and self.__volume is None:
             volume = 0
+
+        if (not volRefresh) and volume == self.__volume:
+            return
 
         if not is4D:
             kwargs['data'] = self.image[:]
