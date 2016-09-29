@@ -897,5 +897,3 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             if self.highlightSlice: self._drawSliceHighlight()
 
         self._annotations.draw(self.pos.z, skipHold=True)
-                
-        self._postDraw()

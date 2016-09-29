@@ -1556,5 +1556,3 @@ class SliceCanvas(props.HasProperties):
             self._drawCursor()
 
         self._annotations.draw(self.pos.z)
-
-        self._postDraw()

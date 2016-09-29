@@ -163,5 +163,3 @@ class ColourBarCanvas(props.HasProperties):
         gl.glShadeModel(gl.GL_FLAT)
 
         self._tex.drawOnBounds(0, 0, 1, 0, 1, 0, 1)
-        
-        self._postDraw()

@@ -746,12 +746,6 @@ class OffScreenCanvasTarget(object):
         return True
 
         
-    def _postDraw(self):
-        """Does nothing. This canvas is for static (i.e. unchanging) rendering.
-        """
-        pass
-
-
     def _draw(self, *a):
         """Must be provided by subclasses."""
         raise NotImplementedError()
@@ -763,13 +757,24 @@ class OffScreenCanvasTarget(object):
         pass
 
     
-    def Freeze(self):
+    def FreezeDraw(self):
         """Does nothing. This canvas is for static (i.e. unchanging) rendering.
         """
         pass
 
         
-    def Thaw(self):
+    def ThawDraw(self):
+        """Does nothing. This canvas is for static (i.e. unchanging) rendering.
+        """
+        pass
+
+    def FreezeSwapBuffers(self):
+        """Does nothing. This canvas is for static (i.e. unchanging) rendering.
+        """
+        pass
+
+        
+    def ThawSwapBuffers(self):
         """Does nothing. This canvas is for static (i.e. unchanging) rendering.
         """
         pass 
@@ -863,9 +868,10 @@ class WXGLCanvasTarget(object):
 
             context = GLContext(other=context, target=self)
 
-        self.__glReady = False
-        self.__frozen  = False
-        self.__context = context
+        self.__glReady           = False
+        self.__freezeDraw        = False
+        self.__freezeSwapBuffers = False
+        self.__context           = context
 
         self.Bind(wx.EVT_PAINT,            self.__onPaint)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.__onEraseBackground)
@@ -884,7 +890,8 @@ class WXGLCanvasTarget(object):
         # GL canvases do need to be refreshed
         # on EVT_PAINT events. If they are not,
         # the canvas will be corrupted.
-        async.idle(self.Refresh)
+        if not self.__freezeDraw:
+            async.idle(self.Refresh)
  
 
     def _initGL(self):
@@ -912,25 +919,54 @@ class WXGLCanvasTarget(object):
         Otherwise, it calls the subclass :meth:`_draw` method.
         """
 
-        import wx
+        # The only purpose of __realDraw is to
+        # make sure that _initGL has been called
+        # before the first call to _draw.  So 
+        # after initGL has been called, we replace
+        # this method (__realDraw) and _draw
+        # with drawWrapper. This wrapper calls
+        # the original _draw method (provided by
+        # subclasses), and manages GL flushing
+        # and front/back buffer swaps. It also
+        # honours FreezeDraw and FreezeSwapBuffers.
+        subClassDraw = self._draw
+
+        import OpenGL.GL as gl
+        
+        def drawWrapper(*a, **kwa):
+
+            if not self.__freezeDraw:
+                subClassDraw(*a, **kwa)
+
+            if not self.__freezeSwapBuffers:
+
+                # If a draw didn't occur above,
+                # this canvas may not have been
+                # set as the target for the GL
+                # context.
+                if not self.__freezeDraw:
+                    self._setGLContext()
+                self.SwapBuffers()
+
+            # If not swapping the front/back
+            # buffers immediately after a draw,
+            # make sure we flush all recent GL
+            # operations, otherwise we may lose
+            # them.
+            elif not self.__freezeDraw:
+                gl.glFlush()
 
         def doInit(*a):
             self.__glReady = True
             self._initGL()
 
-            # The only purpose of __realDraw is to
-            # make sure that _initGL has been called
-            # before the first call to _draw.  So 
-            # after initGL has been called, we replace
-            # this method (__realDraw) with _draw.
-            self.__realDraw = self._draw
+            self.__realDraw = drawWrapper
+            self.__draw     = drawWrapper
             self._draw()
 
         if not self.__glReady:
+            import wx
             wx.CallAfter(doInit)
-            return
-
-        self._draw()
 
         
     def _getSize(self):
@@ -952,31 +988,43 @@ class WXGLCanvasTarget(object):
         self.__context.setTarget(self)
         return True
 
-        
-    def _postDraw(self):
-        """Called after the scene has been rendered. Swaps the front/back
-        buffers, unless the canvas is currently frozen (see :meth:`Freeze`). 
-        """
-        if not self.__frozen:
-            self.SwapBuffers()
-
 
     def Refresh(self, *a):
         """Triggers a redraw via the :meth:`_draw` method. """
         self.__realDraw()
         
 
-    def Freeze(self):
-        """*Freezes* updates to the canvas. This essentially involves
-        inhibiting front/back buffer swaps. See :meth:`Thaw` and
-        :meth:`_postDraw`.
-        """
-        self.__frozen = True
+    def FreezeDraw(self):
+        """*Freezes* updates to the canvas. See :meth:`ThawDraw`. """
+        self.__freezeDraw = True
 
     
-    def Thaw(self):
-        """Unfreezes canvas updates. """
-        self.__frozen = False
+    def ThawDraw(self):
+        """Unfreezes canvas updates. See :meth:`FreezeDraw`. """
+        self.__freezeDraw = False
+
+
+    def FreezeSwapBuffers(self):
+        """*Freezes* canvas fron/back buffer swaps, but not canvas drawing.
+        See :meth:`ThawSwapBuffers`.
+        """
+        self.__freezeSwapBuffers = True
+
+    
+    def ThawSwapBuffers(self):
+        """Unfreezes canvas fron/back buffer swaps. See
+        :meth:`FreezeSwapBuffers`.
+        """
+        self.__freezeSwapBuffers = False
+
+
+    def SwapBuffers(self):
+        """Overrides ``wx.GLCanvas.SwapBuffers``. Calls that method, but
+        only if ``FreezeSwapBuffers`` is not active.
+        """
+        if not self.__freezeSwapBuffers:
+            if self._setGLContext():
+                super(WXGLCanvasTarget, self).SwapBuffers()
 
         
     def getBitmap(self):
