@@ -24,6 +24,7 @@ import fsl.utils.dialog                            as fsldlg
 import fsl.utils.async                             as async
 import fsl.utils.status                            as status
 import fsl.utils.settings                          as fslsettings
+from   fsl.utils.platform  import platform         as fslplatform
 import fsl.data.image                              as fslimage
 import fsleyes.parseargs                           as parseargs
 import fsleyes.strings                             as strings
@@ -234,6 +235,10 @@ class CanvasPanel(viewpanel.ViewPanel):
         viewpanel.ViewPanel.__init__(self, parent, overlayList, displayCtx)
 
         self.__opts = sceneOpts
+
+        # Use this name for listener registration,
+        # in case subclasses use the FSLeyesPanel._name
+        self.__name = 'CanvasPanel_{}'.format(self._name)
         
         # Bind the sync* properties of this
         # CanvasPanel to the corresponding
@@ -265,22 +270,33 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         self.setCentrePanel(self.__centrePanel)
 
-        self.addListener('movieMode',
-                         self._name,
-                         self.__movieModeChanged)
+        # the __movieModeChanged method is called
+        # when movieMode changes, but also when
+        # the overlay list/selected overlay changes.
+        # This is because, if movie mode is on, but
+        # no overlay, or an incompatible overlay,
+        # is selected, the movie loop stops. So it
+        # needs to be re-started if/when a compatible
+        # overlay is selected.
+        self             .addListener('movieMode',
+                                      self.__name,
+                                      self.__movieModeChanged)
+        self._overlayList.addListener('overlays',
+                                      self.__name,
+                                      self.__movieModeChanged)
+        self._displayCtx .addListener('selectedOverlay',
+                                      self.__name,
+                                      self.__movieModeChanged) 
 
         # Canvas/colour bar layout is managed in
         # the layoutColourBarAndCanvas method
         self.__colourBar = None
 
-        # Use a different listener name so that subclasses
-        # can register on the same properties with self._name
-        lName = 'CanvasPanel_{}'.format(self._name)
         self.__opts.addListener('colourBarLocation',
-                                lName,
+                                self.__name,
                                 self.__colourBarPropsChanged)
         self.__opts.addListener('showColourBar',
-                                lName,
+                                self.__name,
                                 self.__colourBarPropsChanged)
 
 
@@ -291,6 +307,12 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         if self.__colourBar is not None:
             self.__colourBar.destroy()
+
+        self             .removeListener('movieMode',         self.__name)
+        self._overlayList.removeListener('overlays',          self.__name)
+        self._displayCtx .removeListener('selectedOverlay',   self.__name)
+        self.__opts      .removeListener('colourBarLocation', self.__name)
+        self.__opts      .removeListener('showColourBar',     self.__name)
             
         viewpanel.ViewPanel.destroy(self)
 
@@ -544,8 +566,22 @@ class CanvasPanel(viewpanel.ViewPanel):
         enabled, calls :meth:`__movieUpdate`, to start the movie loop.
         """
 
-        if self.movieMode:
-            self.__movieUpdate()
+        # The fsl.utils.async idle loop timeout
+        # defaults to 200 milliseconds, which can
+        # cause delays in frame updates. So when
+        # movie mode is on, we bump up the rate.
+        def startMovie():
+            async.setIdleTimeout(10)
+            if not self.__movieUpdate(): 
+                async.setIdleTimeout(None)
+
+        # The __movieModeChanged method is called
+        # on the props event queue. Here we make
+        # sure that __movieUpdate() is called *off*
+        # the props event queue, by calling it from
+        # the idle loop.
+        if self.movieMode: async.idle(startMovie)
+        else:              async.setIdleTimeout(None)
 
 
     def __colourBarPropsChanged(self, *a):
@@ -554,7 +590,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         """
         self.centrePanelLayout()
 
-        
+
     def __movieUpdate(self):
         """Called when :attr:`movieMode` is enabled.
 
@@ -562,77 +598,130 @@ class CanvasPanel(viewpanel.ViewPanel):
         :attr:`.DisplayContext.selectedOverlay`) is a 4D :class:`.Image` being
         displayed as a ``volume`` (see the :class:`.VolumeOpts` class), the
         :attr:`.NiftiOpts.volume` property is incremented.
+
+        :returns: ``True`` if the movie loop was started, ``False`` otherwise.
         """
 
-
-        if self.destroyed():   return
-        if not self.movieMode: return
+        if self.destroyed():   return False
+        if not self.movieMode: return False
 
         overlay  = self._displayCtx.getSelectedOverlay()
         canvases = self.getGLCanvases()
 
         if overlay is None:
-            self.__nextMovieFrame()
-            return
+            return False
 
         opts = self._displayCtx.getOpts(overlay)
         
         if not isinstance(overlay, fslimage.Nifti) or \
            len(overlay.shape) != 4                 or \
            not isinstance(opts, displayctx.VolumeOpts):
-            self.__nextMovieFrame()
-            return
-
-        limit = overlay.shape[3]
+            return False
 
         # We want the canvas refreshes to be
         # synchronised. So we 'freeze' them
         # while changing the image volume, and
         # then refresh them all afterwards.
         for c in canvases:
-            c.Freeze()
+            pass
+            c.FreezeDraw()
+            c.FreezeSwapBuffers()
+
+        # props event queue (see __movieModeChanged).
+        # Therefore, all listeners on the opts.volume
+        # property should be called immediately, in
+        # this assignment. This means that image
+        # texture refreshes should be triggered and,
+        # after the opts.volume assignment, all
+        # affected GLObjects should return
+        # ready() == False.
+        limit = overlay.shape[3]
+        print
+        print 
+        print 'Tick', 
 
         if opts.volume == limit - 1: opts.volume  = 0
         else:                        opts.volume += 1
 
-        # Unfreeze and refresh
-        for c in canvases: c.Refresh() 
-        for c in canvases: c.Thaw() 
+        print opts.volume
 
-        self.__nextMovieFrame()
-
-
-    def __nextMovieFrame(self):
-        """Called by :meth:`__movieUpdate`. Triggers the next call to
-        ``__movieUpdate``.
-        """
-
-        overlay  = self._displayCtx.getSelectedOverlay()
-        canvases = self.getGLCanvases()
-
-        # We access the GLObjects associated with
-        # the overlay on each canvas, and wait until
-        # they are ready to be drawn.  When they're
-        # ready, we trigger a canvas refresh, and
-        # re-start the movie timer.
-        globjs = [c.getGLObject(overlay) for c in canvases]
+        # Now we get refs to *all* GLObjects managed
+        # by ecah canvas, and wait until they are all
+        # ready to be drawn. When they're ready, we
+        # thaw the canvases, and force a refresh.
+        globjs = [c.getGLObject(o)
+                  for c in canvases
+                  for o in self._overlayList]
         globjs = [g for g in globjs if g is not None]
 
-        def ready():
-            r = all((g.ready() for g in globjs))
-            return r
+        def allReady():
+            return all([g.ready() for g in globjs])
 
-        def whenReady():
-            # Figure out the rate
-            rate    = self.movieRate
-            rateMin = self.getConstraint('movieRate', 'minval')
-            rateMax = self.getConstraint('movieRate', 'maxval')
-            
-            rate = rateMin + (rateMax - rate)
+        # Figure out the movie rate - the
+        # number of milliseconds to wait
+        # until triggering the next frame.
+        rate    = self.movieRate
+        rateMin = self.getConstraint('movieRate', 'minval')
+        rateMax = self.getConstraint('movieRate', 'maxval')
+        rate    = (rateMin + (rateMax - rate)) / 1000.0
 
-            wx.CallLater(rate, self.__movieUpdate)
+        if fslplatform.wxPlatform == fslplatform.WX_GTK:
+            self.__gtkMovieUpdate(rate, canvases, allReady)
 
-        async.idleWhen(whenReady, ready) 
+        elif fslplatform.wxPlatform in (fslplatform.WX_MAC_COCOA,
+                                        fslplatform.WX_MAC_CARBON):
+            self.__macMovieUpdate(rate, canvases, allReady)
+
+        return True
+
+
+    def __gtkMovieUpdate(self, rate, canvases, readyFunc):
+
+        pass
+    
+
+
+    def __macMovieUpdate(self, rate, canvases, readyFunc):
+
+        import wx.glcanvas as wxgl
+
+        def doDraw():
+
+            print 'Trigger draw'
+
+            for c in canvases:
+
+                c.ThawDraw()
+                c.Refresh()
+                c.FreezeDraw()
+
+            for c in canvases:
+                
+                c.ThawSwapBuffers()
+                c.SwapBuffers()
+                c.FreezeSwapBuffers()
+
+            async.idle(doUpdate)
+
+        def doUpdate():
+
+            print 'Trigger refresh'
+
+            for c in canvases:
+                wxgl.GLCanvas.Refresh(c, False)
+                wxgl.GLCanvas.Update( c)
+
+            async.idle(finalise)
+
+        def finalise():
+            for c in canvases:
+                c.ThawDraw()
+                c.ThawSwapBuffers()
+                
+            print 'Tock'
+            async.idle(self.__movieUpdate, after=rate)
+
+        async.idleWhen(doDraw, readyFunc, pollTime=rate / 10)
 
 
 def _showCommandLineArgs(overlayList, displayCtx, canvas):
