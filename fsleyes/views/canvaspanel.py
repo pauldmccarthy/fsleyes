@@ -623,32 +623,28 @@ class CanvasPanel(viewpanel.ViewPanel):
         # while changing the image volume, and
         # then refresh them all afterwards.
         for c in canvases:
-            pass
             c.FreezeDraw()
             c.FreezeSwapBuffers()
 
-        # props event queue (see __movieModeChanged).
+        # This method has been called off the props
+        # event queue (see __movieModeChanged).
         # Therefore, all listeners on the opts.volume
         # property should be called immediately, in
-        # this assignment. This means that image
-        # texture refreshes should be triggered and,
-        # after the opts.volume assignment, all
-        # affected GLObjects should return
-        # ready() == False.
+        # this assignment.
+        #
+        # This means that image texture refreshes
+        # should be triggered and, after the
+        # opts.volume assignment, all affected
+        # GLObjects should return ready() == False.
         limit = overlay.shape[3]
-        print
-        print 
-        print 'Tick', 
 
         if opts.volume == limit - 1: opts.volume  = 0
         else:                        opts.volume += 1
 
-        print opts.volume
-
         # Now we get refs to *all* GLObjects managed
-        # by ecah canvas, and wait until they are all
-        # ready to be drawn. When they're ready, we
-        # thaw the canvases, and force a refresh.
+        # by every canvas - we have to wait until
+        # they are all ready to be drawn before we
+        # can refresh the canvases. 
         globjs = [c.getGLObject(o)
                   for c in canvases
                   for o in self._overlayList]
@@ -665,63 +661,68 @@ class CanvasPanel(viewpanel.ViewPanel):
         rateMax = self.getConstraint('movieRate', 'maxval')
         rate    = (rateMin + (rateMax - rate)) / 1000.0
 
-        if fslplatform.wxPlatform == fslplatform.WX_GTK:
-            self.__gtkMovieUpdate(rate, canvases, allReady)
+        # The canvas refreshes are performed by the
+        # __syncMovieUpdate or __unsyncMovieUpdate
+        # methods. Gallium seems to have a problem
+        # with separate renders/buffer swaps, so we
+        # have to use a shitty unsynchronised update
+        # routine.
+        useSync = 'gallium' not in fslplatform.glRenderer.lower()
 
-        elif fslplatform.wxPlatform in (fslplatform.WX_MAC_COCOA,
-                                        fslplatform.WX_MAC_CARBON):
-            self.__macMovieUpdate(rate, canvases, allReady)
+        if useSync: update = self.__syncMovieUpdate
+        else:       update = self.__unsyncMovieUpdate
+
+        # Refresh the canvases when all
+        # GLObjects are ready to be drawn.
+        async.idleWhen(update, allReady, canvases, rate, pollTime=rate / 10) 
 
         return True
 
 
-    def __gtkMovieUpdate(self, rate, canvases, readyFunc):
+    def __unsyncMovieUpdate(self, canvases, rate):
+        """Called by :meth:`__movieUpdate`. Updates all canvases in an
+        unsynchronised manner.
 
-        pass
-    
+        Ideally all canvases should be drawn off-screen (i.e. rendered to the
+        back buffer), and then all refreshed together (back and front buffers
+        swapped). Unfortunately some OpenGL drivers seem to have trouble with
+        this approach, and require drawing and front/back buffer swaps to be
+        done at the same time. This method is used for those drivers.
+
+        :arg canvases: List of canvases to update. It is assumed that
+                       ``FreezeDraw`` and ``FreezeSwapBuffers`` has been 
+                       called on every canvas.
+        :arg rate:     Delay to trigger the next movie update.
+        """
+
+        for c in canvases:
+            c.ThawDraw()
+            c.ThawSwapBuffers()
+            c.Refresh()
+
+        async.idle(self.__movieUpdate, after=rate)
 
 
-    def __macMovieUpdate(self, rate, canvases, readyFunc):
+    def __syncMovieUpdate(self, canvases, rate):
+        """Updates all canvases in a synchronised manner. All canvases are
+        refreshed, and then the front/back buffers are swapped on each of
+        them.
+        
+        :arg canvases: List of canvases to update. It is assumed that
+                       ``FreezeDraw`` and ``FreezeSwapBuffers`` has been 
+                       called on every canvas.
+        :arg rate:     Delay to trigger the next movie update. 
+        """
 
-        import wx.glcanvas as wxgl
+        for c in canvases:
+            c.ThawDraw()
+            c.Refresh()
 
-        def doDraw():
+        for c in canvases:
+            c.ThawSwapBuffers()
+            c.SwapBuffers()
 
-            print 'Trigger draw'
-
-            for c in canvases:
-
-                c.ThawDraw()
-                c.Refresh()
-                c.FreezeDraw()
-
-            for c in canvases:
-                
-                c.ThawSwapBuffers()
-                c.SwapBuffers()
-                c.FreezeSwapBuffers()
-
-            async.idle(doUpdate)
-
-        def doUpdate():
-
-            print 'Trigger refresh'
-
-            for c in canvases:
-                wxgl.GLCanvas.Refresh(c, False)
-                wxgl.GLCanvas.Update( c)
-
-            async.idle(finalise)
-
-        def finalise():
-            for c in canvases:
-                c.ThawDraw()
-                c.ThawSwapBuffers()
-                
-            print 'Tock'
-            async.idle(self.__movieUpdate, after=rate)
-
-        async.idleWhen(doDraw, readyFunc, pollTime=rate / 10)
+        async.idle(self.__movieUpdate, after=rate)
 
 
 def _showCommandLineArgs(overlayList, displayCtx, canvas):

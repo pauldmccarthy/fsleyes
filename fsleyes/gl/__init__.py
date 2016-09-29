@@ -367,21 +367,9 @@ def bootstrap(glVersion=None):
     log.debug('Using OpenGL {} implementation with renderer {}'.format(
         verstr, renderer))
 
-    # If we're using a software based renderer,
-    # reduce the default performance settings
-    # 
-    # There doesn't seem to be any quantitative
-    # method for determining whether we are using
-    # software-based rendering, so a hack is
-    # necessary. 
-    if 'software' in renderer.lower():
-        
-        log.debug('Software-based rendering detected - '
-                  'lowering default performance settings.')
 
-        import fsleyes.displaycontext as dc
-        dc.SceneOpts.performance.setConstraint(None, 'default', 2)
-
+    # Populate this module, and set
+    # the fsl.utils.platform GL fields
     thismod.GL_VERSION         = verstr
     thismod.GL_RENDERER        = renderer
     thismod.glvolume_funcs     = glpkg.glvolume_funcs
@@ -392,9 +380,23 @@ def bootstrap(glVersion=None):
     thismod.gltensor_funcs     = glpkg.gltensor_funcs
     thismod.glsh_funcs         = glpkg.glsh_funcs
     thismod._bootstrapped      = True
-    
     fslplatform.glVersion      = thismod.GL_VERSION
     fslplatform.glRenderer     = thismod.GL_RENDERER
+
+    # If we're using a software based renderer,
+    # reduce the default performance settings
+    # 
+    # But llvmpipe is super fast, so if we're
+    # using it, pretend that it's hardware
+    if fslplatform.glIsSoftwareRenderer and \
+       'llvmpipe' not in fslplatform.glRenderer.lower():
+
+        log.debug('Software-based rendering detected - '
+                  'lowering default performance settings.')
+
+        import fsleyes.displaycontext as dc
+        dc.SceneOpts.performance.setConstraint(None, 'default', 2)
+
 
 
 def getGLContext(*args, **kwargs):
