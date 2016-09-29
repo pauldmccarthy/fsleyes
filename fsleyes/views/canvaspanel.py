@@ -278,6 +278,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         # is selected, the movie loop stops. So it
         # needs to be re-started if/when a compatible
         # overlay is selected.
+        self.__movieRunning = False
         self             .addListener('movieMode',
                                       self.__name,
                                       self.__movieModeChanged)
@@ -561,6 +562,13 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.__containerPanel.SetSizer(sizer)
 
 
+    def __colourBarPropsChanged(self, *a):
+        """Called when any colour bar display properties are changed (see
+        :class:`.SceneOpts`). Calls :meth:`canvasPanelLayout`.
+        """
+        self.centrePanelLayout()
+
+
     def __movieModeChanged(self, *a):
         """Called when the :attr:`movieMode` property changes. If it has been
         enabled, calls :meth:`__movieUpdate`, to start the movie loop.
@@ -572,32 +580,53 @@ class CanvasPanel(viewpanel.ViewPanel):
         # movie mode is on, we bump up the rate.
         def startMovie():
             async.setIdleTimeout(10)
-            if not self.__movieUpdate(): 
+            if not self.__movieLoop(startLoop=True):
                 async.setIdleTimeout(None)
 
         # The __movieModeChanged method is called
         # on the props event queue. Here we make
-        # sure that __movieUpdate() is called *off*
+        # sure that __movieLoop() is called *off*
         # the props event queue, by calling it from
         # the idle loop.
         if self.movieMode: async.idle(startMovie)
         else:              async.setIdleTimeout(None)
 
 
-    def __colourBarPropsChanged(self, *a):
-        """Called when any colour bar display properties are changed (see
-        :class:`.SceneOpts`). Calls :meth:`canvasPanelLayout`.
+    def __movieLoop(self, startLoop=False):
+        """Manages the triggering of the next movie frame. This method is
+        called by :meth:`__movieModeChanged` when :attr:`movieMode` changes
+        and when the selected overlay changes, and also by
+        :meth:`__syncMovieUpdate` and :meth:`__unsyncMovieUpdate` while
+        the movie loop is running, to trigger the next frame.
+
+        :arg startLoop: This is set to ``True`` when called from
+                        :meth:`__movieModeChanged`. If ``True``, and the movie
+                        loop is already running, this method does nothing.
+
         """
-        self.centrePanelLayout()
+
+        # Movie loop is already running, nothing to do.
+        if startLoop and self.__movieRunning:
+            return True
+
+        # Attempt to show the next frame -
+        # __movieFrame returns True if the
+        # movie is continuing, False if it
+        # has ended.
+        self.__movieRunning = self.__movieFrame()
+
+        return self.__movieRunning
 
 
-    def __movieUpdate(self):
-        """Called when :attr:`movieMode` is enabled.
+
+    def __movieFrame(self):
+        """Called by :meth:`__movieLoop`.
 
         If the currently selected overlay (see
         :attr:`.DisplayContext.selectedOverlay`) is a 4D :class:`.Image` being
         displayed as a ``volume`` (see the :class:`.VolumeOpts` class), the
-        :attr:`.NiftiOpts.volume` property is incremented.
+        :attr:`.NiftiOpts.volume` property is incremented and all
+        GL canvases in this ``CanvasPanel`` are refreshed.
 
         :returns: ``True`` if the movie loop was started, ``False`` otherwise.
         """
@@ -654,8 +683,8 @@ class CanvasPanel(viewpanel.ViewPanel):
             return all([g.ready() for g in globjs])
 
         # Figure out the movie rate - the
-        # number of milliseconds to wait
-        # until triggering the next frame.
+        # number of seconds to wait until
+        # triggering the next frame.
         rate    = self.movieRate
         rateMin = self.getConstraint('movieRate', 'minval')
         rateMax = self.getConstraint('movieRate', 'maxval')
@@ -700,7 +729,7 @@ class CanvasPanel(viewpanel.ViewPanel):
             c.ThawSwapBuffers()
             c.Refresh()
 
-        async.idle(self.__movieUpdate, after=rate)
+        async.idle(self.__movieLoop, after=rate)
 
 
     def __syncMovieUpdate(self, canvases, rate):
@@ -722,7 +751,7 @@ class CanvasPanel(viewpanel.ViewPanel):
             c.ThawSwapBuffers()
             c.SwapBuffers()
 
-        async.idle(self.__movieUpdate, after=rate)
+        async.idle(self.__movieLoop, after=rate)
 
 
 def _showCommandLineArgs(overlayList, displayCtx, canvas):
