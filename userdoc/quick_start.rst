@@ -31,8 +31,8 @@ looks like this:
 
 
 This is slightly boring, so let's load an image. Select the *File*
-|right_arrow| *Add overlay from file* menu option, and choose a `.nii.gz` image
-to load.
+|right_arrow| *Add overlay from file* menu option, and choose a ``.nii.gz``
+image to load.
           
 Now things are a bit more interesting:
 
@@ -86,7 +86,8 @@ You can interact with an orthographic view in a number of ways:
    use your mouse wheel to zoom in and out of a canvas. 
    
  - Hold down the |shift_key| key, and use your mouse wheel to change the
-   current location along the depth axis for that canvas.
+   current location along the depth axis for that canvas (i.e. to scroll
+   through slices).
 
  - When a canvas is zoomed in, you can middle-click and drag, or hold down the
    |alt_key| key and drag with the left mouse button, to pan around.
@@ -95,6 +96,10 @@ You can interact with an orthographic view in a number of ways:
    and drag the mouse to adjust the brightness and contrast of the currently
    selected overlay. Moving the mouse vertically will adjust the contrast, and
    horizontally will adjust the brightness.
+
+ - You can reset the view to its default zoom/pan settings by pressing
+   |alt_key| + r, or selecting the *Settings* |right_arrow| *Ortho view 1*
+   |right_arrow| *Reset display* menu item.
 
    
 .. sidebar:: Modifier keys
@@ -110,7 +115,7 @@ You can interact with an orthographic view in a number of ways:
 
              If you are using FSLeyes on OSX, over a SSH/X11 connection, you 
              may need to play with the XQuartz settings before the |alt_key|
-             will work.
+             key will work.
 
 
 The overlay list
@@ -131,6 +136,16 @@ overlays that you have loaded. With this list you can:
  - Link overlay display properties with the chainlink button
 
 
+The location panel
+^^^^^^^^^^^^^^^^^^
+
+
+The :ref:`location panel <controls-location-panel>` shows the current display
+location, in terms of the currently selected overlay. It also shows the
+overlay data value at the current location, for every loaded overlay.
+
+
+
 The toolbars
 ^^^^^^^^^^^^
 
@@ -147,15 +162,6 @@ and off, and switch between vertical, horizontal, or grid layouts. Pushing the
 spanner icon will open a dialog containing all of the ortho view settings.
 
 
-The location panel
-^^^^^^^^^^^^^^^^^^
-
-
-The :ref:`location panel <controls-location-panel>` shows the current display
-location, in terms of the currently selected overlay. It also shows the
-overlay data value at the current location, for every loaded overlay.
-   
-
 .. _quick-start-how-do-i:
 
 How do I ...
@@ -169,14 +175,14 @@ Load an overlay?
 You can load an overlay by doing one of the following:
 
 1. The *File* |right_arrow| *Add overlay from file* menu option allows you to
-   choose a file to load (e.g. a `.nii`, `.nii.gz`, or `.vtk` file).
+   choose a file to load (e.g. a ``.nii``, ``.nii.gz``, or ``.vtk`` file).
 
 2. The *File* |right_arrow| *Add overlay from directory* menu option allows
-   you to choose a directory to load (e.g. a `.feat`, `.ica`, or `dtifit`
+   you to choose a directory to load (e.g. a ``.feat``, ``.ica``, or ``dtifit``
    directory).
 
 3. The *File* |right_arrow| *Add standard* menu option allows you to choose a
-   file from the `$FSLDIR/data/standard/` directory to load.
+   file from the ``$FSLDIR/data/standard/`` directory to load.
 
 4. The + button on the overlay list allows you to choose a file to load.
 
@@ -199,8 +205,8 @@ Open/close control panels/toolbars?
 
 The *Settings* menu contains a sub-menu for every open view, which allows you
 to toggle the control panels and toolbars for that view, and perform a few
-other tasks. For exmaple, if you want to add an :ref:`edit toolbar
-<controls-edit-toolbar>`, you would select the *Settings* |right_arrow| *Ortho
+other tasks. For exmaple, if you want to add an :ref:`atlas panel
+<controls-atlas-panel>`, you would select the *Settings* |right_arrow| *Ortho
 view 1* |right_arrow| *Edit toolbar* menu option.
 
 .. sidebar:: I don't have an *Ortho view 1* menu!
@@ -241,22 +247,22 @@ menu option), and make sure that the *Sync overlay display settings* box is
 checked or unchecked.
 
 
-Edit a NIFTI1 image?
-^^^^^^^^^^^^^^^^^^^^
+Edit a NIFTI image?
+^^^^^^^^^^^^^^^^^^^
 
 
-You can :ref:`edit NIFTI1 image data <editing-images>` from within an ortho
-view. Open the :ref:`edit toolbar <editing-images-edit-toolbar>` (via the
-*Settings* |right_arrow| *Ortho view* |right_arrow| *Edit toolbar* menu
-option), and click on the pencil button to enter edit mode. See the page on
-:ref:`editing images <editing-images>` for more details.
+You can :ref:`edit NIFTI image data <editing-images>` from within an ortho
+view. Switch to edit mode via the *Settings* |right_arrow| *Ortho view*
+|right_arrow| *Edit mode* menu option). This will open a new toolbar which
+contains editing functionality. See the page on :ref:`editing images
+<editing-images>` for more details.
 
 
 Classify ICA components?
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Load your `.ica` directory (or the `.ica/melodic_IC` image file), then open
+Load your ``.ica`` directory (or the ``.ica/melodic_IC`` image file), then open
 the melodic perspective (the *View* |right_arrow| *Perspectives* |right_arrow|
 *Melodic mode* menu option). Use the :ref:`melodic classification panel
 <controls-melodic-ic-classification>` to label components, and load/save label

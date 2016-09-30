@@ -1,0 +1,4 @@
+.. _atlases:
+
+Atlases
+=======

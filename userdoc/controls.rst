@@ -29,17 +29,22 @@ Location panel
 ^^^^^^^^^^^^^^
 
 
-
 .. _controls-ortho-toolbar:
 
 Ortho toolbar
 ^^^^^^^^^^^^^
 
 
-.. _controls-edit-toolbar:
+.. _controls-atlas-panel:
 
-Edit toolbar
-^^^^^^^^^^^^
+Atlas panel
+^^^^^^^^^^^
+
+
+.. _controls-cluster-panel:
+
+Cluster panel
+^^^^^^^^^^^^^
 
 
 .. _controls-melodic-ic-classification:

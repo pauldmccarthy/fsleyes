@@ -30,7 +30,11 @@ topic from the list below:
    perspectives
    linking_overlays
    multiple_views
+   atlases
+   plot_panels
    editing_images
-   command_line
+   feat_mode
    ic_classification
+   command_line
    offscreen_rendering
+   troubleshooting
