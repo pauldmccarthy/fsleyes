@@ -25,13 +25,13 @@ topic from the list below:
    quick_start
    overview
    overlays
-   views
-   controls
-   perspectives
+   ortho_lightbox_views
+   plot_views
+   ortho_lightbox_controls
+   plot_controls
    linking_overlays
    multiple_views
    atlases
-   plot_panels
    editing_images
    feat_mode
    ic_classification

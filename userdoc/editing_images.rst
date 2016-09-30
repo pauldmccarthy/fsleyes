@@ -5,7 +5,7 @@
 .. |right_arrow| unicode:: U+21D2
 
 
-.. _editing-images:
+.. _editing_images:
 
 
 Editing NIFTI images
@@ -14,9 +14,6 @@ Editing NIFTI images
 
 The ortho view has an *edit mode* which allows you to edit the values of NIFTI
 overlays.
-
-
-.. _editing-images-edit-toolbar:
 
 
 Create a copy!
@@ -169,4 +166,4 @@ Saving your changes
 
 When you have made changes to an image, or created a mask/ROI image, don't
 forget to save them via the *File* |right_arrow| *Save overlay* menu item, or
-the floppy disk button on the :ref:`controls-overlay-list`.
+the floppy disk button on the :ref:`ortho_lightbox_controls_overlay_list`.

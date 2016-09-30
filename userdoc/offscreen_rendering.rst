@@ -1,4 +1,4 @@
-.. _offscreen-rendering:
+.. _offscreen_rendering:
 
 
 Offscreen rendering

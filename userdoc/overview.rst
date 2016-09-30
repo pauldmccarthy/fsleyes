@@ -1,17 +1,191 @@
+.. |right_arrow| unicode:: U+21D2
+
+
+.. _overview:
+
 Overview
 ========
 
+
+FSLeyes is a viewer for 3D and 4D neuroimaging data.
+
+
+.. _overview_overlays:
+
+Overlays
+--------
+
+
+FSLeyes refers to the files that you load as *overlays*. Where `FSLView
+<http://fsl.fmrib.ox.ac.uk/fsl/fslview/>`_ referred to files as *images*,
+FSLeyes uses the term *overlay* because FSLeyes is capable of displaying more
+than just `NIFTI <http://nifti.nimh.nih.gov/>`_ images [*]_.  These files can
+be displayed in a variety of different ways - see the page on :ref:`overlays
+<overlays>` for more information.
+
+
+.. [*] FSLeyes |version| is only able to load NIFTI and VTK files, but future
+       versions of FSLeyes will be able to load more file types.
+
+
+In FSLeyes, only one overlay may be selected at a time. You can tell which
+overlay is selected by looking at the name field on the :ref:`overlay toolbar
+<ortho_lightbox_controls_overlay_toolbar>`, or looking at the highlighted item
+in the :ref:`overlay list <ortho_lightbox_controls_overlay_toolbar>`. Many
+operations in FSLeyes will be applied to the *currently selected overlay*,
+such as adjusting the overlay visibility, brightness and colour map.
+
+
+
+.. _overview_views_and_controls:
 
 Views and controls
 ------------------
 
 
-
-The display space
------------------
+The FSLeyes interface is arranged into *views* and *controls*.
 
 
+Conceptually, a *view* (e.g. an :ref:`orthographic
+<ortho_lightbox_views_ortho>` or :ref:`time series <plot_views_timeseries>`
+panel) displays the data in some way, and a *control* (e.g. an :ref:`overlay
+toolbar <ortho_lightbox_controls_overlay_toolbar>` or :ref:`atlas panel
+<ortho_lightbox_controls_atlas_panel>`) allows you to manipulate that view.
+Views are top-level panels, whereas controls are embedded within a single
+view.
 
-Coordinate systems
-------------------
 
+All available views are listed in the *View* menu:
+
+
+.. image:: images/overview_view_menu.png
+   :align: center
+
+
+When you open a new view, a sub-menu for that view is added to the *Settings*
+menu. This sub-menu contains some actions that can be executed on the view,
+and also contains a list of all the controls which can be added to the
+view. For example, the settings menu for an :ref:`orthographic
+<ortho_lightbox_views_ortho>` view looks like this:
+
+
+.. image:: images/overview_settings_ortho_menu.png
+   :align: center
+
+
+These views are described in more detail in the pages on
+:ref:`orthographic/lightbox views <ortho_lightbox_views>` and :ref:`plotting
+views <plot_views>`.
+
+
+.. _overview_layout_and_perspectives:
+
+Layout and perspectives
+-----------------------
+
+
+FSLeyes allows you to lay out your view and control panels in any way you
+like.
+
+
+Whenever you have more than one view open, you can re-arrange them by clicking
+and dragging their title bars, and dropping them onto the docking icons which
+appear.  You can also re-arrange the control panels within a view in the same
+way. These docking icons, shown below, will appear on the FSLeyes frame
+whenever you click and drag the title bar of a view or control panel:
+
+
+.. image:: images/overview_dock_up.png
+
+.. image:: images/overview_dock_down.png
+
+.. image:: images/overview_dock_centre.png
+
+.. image:: images/overview_dock_left.png
+
+.. image:: images/overview_dock_right_active.png
+
+
+
+FSLeyes refers to a specific view and control panel arrangement as a
+*perspective*.  If you have a layout which you like, or use frequently, you
+can save it as a perspective, and restore it later on.  All of the options for
+managing perspectives can be found in the *View* |right_arrow| *Perspectives*
+sub-menu:
+
+.. image:: images/overview_perspectives_menu.png
+   :align: center
+
+
+Built-in perspectives
+---------------------
+
+
+FSLeyes comes with a few built-in perspectives, outlined below.
+
+
+Default layout
+^^^^^^^^^^^^^^
+
+
+This is the default FSLeyes perspective, which provides a layout inspired by
+`FSLView <http://fsl.fmrib.ox.ac.uk/fsl/fslview/>`_, which is useful for
+general image viewing and editing.
+
+
+.. image:: images/overview_default.png
+   :align: center
+   :width: 75%
+
+
+Melodic mode
+^^^^^^^^^^^^
+
+
+This perspective is designed to assist in manual classification of ICA
+components. It provides functionality similar to that of the `Melview
+<http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Melview>`_ tool, comprising a lightbox
+view and plot panels which display the :ref:`time course
+<plot_views_timeseries>` and :ref:`power spectra
+<plot_views_powerspectrum>` of the currently selected component.  A
+:ref:`classification panel
+<ortho_lightbox_controls_melodic_ic_classification>` allows you to load, save,
+and edit the classification labels for each component. See the page on
+:ref:`IC classification <ic_classification>` for more information.
+
+
+.. image:: images/overview_melodic.png
+   :align: center
+   :width: 75%
+
+
+FEAT node
+^^^^^^^^^
+
+
+This perspective is designed to assist in exploring the results of a `FEAT
+<http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT>`_ analysis. The :ref:`cluster
+panel <ortho_lightbox_controls_cluster_panel>` displays a table of clusters
+for each contrast (for analyses which used cluster thresholding), and the
+:ref:`time series panel <plot_views_timeseries>` allows you to view full
+and partial model fits to the data. See the page on :ref:`viewing FEAT
+analyses <feat_mode>` for more information.
+
+
+.. image:: images/overview_feat.png
+   :align: center
+   :width: 75%
+ 
+
+Plain orthographic/Plain lightbox
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+These perspectives simply display a plain orthographic or lightbox view,
+respectively.
+
+.. image:: images/overview_ortho.png
+   :width: 45%
+
+.. image:: images/overview_lightbox.png
+   :width: 45% 
