@@ -7,8 +7,12 @@ FSLeyes
    :align: center
 
 
-This is the user documentation for *FSLeyes*, the FSL image viewer. Choose a
-topic from the list below:
+This is the user documentation for *FSLeyes*, the FSL image viewer. If you are
+getting started with FSLeyes, check out the :ref:`quick_start` page.
+Otherwise, choose a topic from the list below.
+
+
+.. note:: *FSLeyes* is pronounced as **"fossilise"**.
 
 
 .. warning:: This documentation is a work in progress. There is not much

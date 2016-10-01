@@ -19,7 +19,7 @@ The interface
 -------------
 
 
-When you first start *FSLeyes*, you will be presented with something that
+When you first start FSLeyes, you will be presented with something that
 looks like this:
 
 
@@ -39,7 +39,7 @@ Now things are a bit more interesting:
    :align: center
 
 
-Let's take a closer look at the components of the *FSLeyes* interface...
+Let's take a closer look at the components of the FSLeyes interface...
 
 
 .. image:: images/quick_start_interface_overview.png
@@ -54,11 +54,10 @@ The view
              :subtitle: And why aren't they just called *images* instead?
 
              An :ref:`overlay <overlays>` is an image, or other data file,
-             that you have loaded into *FSLeyes*.  While *FSLeyes* is first
-             and foremost a NIFTI image viewer, the term *overlay* is used,
-             instead of *image*, because *FSLeyes* supports other
-             non-volumetric data types, and will hopefully support more in the
-             future.
+             that you have loaded into FSLeyes.  While FSLeyes is first and
+             foremost a NIFTI image viewer, the term *overlay* is used,
+             instead of *image*, because FSLeyes supports other non-volumetric
+             data types, and will hopefully support more in the future.
 
 
 The view is where your overlays are displayed. By default, an *orthographic*
@@ -102,9 +101,9 @@ You can interact with an orthographic view in a number of ways:
    
 .. sidebar:: Modifier keys
 
-             Throughout this page, and the rest of the *FSLeyes*
-             documentation, we will use the following symbols to represent
-             keyboard modifiers keys:
+             Throughout this page, and the rest of the FSLeyes documentation,
+             we will use the following symbols to represent keyboard modifiers
+             keys:
 
              - |shift_key|:   Shift 
              - |control_key|: Control
@@ -191,15 +190,6 @@ other tasks. For exmaple, if you want to add an :ref:`atlas panel
 <ortho_lightbox_controls_atlas_panel>`, you would select the *Settings*
 |right_arrow| *Ortho view 1* |right_arrow| *Edit toolbar* menu option. See
 :ref:`overview_views_and_controls` for more information.
-
-
-.. sidebar:: I don't have an *Ortho view 1* menu!
-             
-             Every *FSLeyes* view panel is given a name and a number so that
-             it can be uniquely identified. The *Settings* sub-menu for each
-             open view is given the same name and number. If you have more
-             than one view panel open, you will be able to see the name and
-             number for each panel on its title bar.
 
 
 Show/hide the cursor/anatomical labels?

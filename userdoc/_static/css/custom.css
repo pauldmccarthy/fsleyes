@@ -1,0 +1,12 @@
+
+/* Horizontally centre a collection of images side-by-side */
+.image-strip {
+    text-align: center;
+}
+
+.image-strip img{
+    display:      inline-block;
+    margin-left:  auto;
+    margin-right: auto;
+}
+

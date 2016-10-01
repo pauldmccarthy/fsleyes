@@ -1,4 +1,8 @@
 .. |right_arrow| unicode:: U+21D2
+.. |command_key| unicode:: U+2318
+.. |shift_key|   unicode:: U+21E7
+.. |control_key| unicode:: U+2303
+.. |alt_key|     unicode:: U+2325 
 
 
 .. _overview:
@@ -7,7 +11,9 @@ Overview
 ========
 
 
-FSLeyes is a viewer for 3D and 4D neuroimaging data.
+FSLeyes is a viewer for 3D and 4D neuroimaging data. It is intended as a
+replacement for the much loved `FSLView
+<http://fsl.fmrib.ox.ac.uk/fsl/fslview/>`_.
 
 
 .. _overview_overlays:
@@ -16,25 +22,47 @@ Overlays
 --------
 
 
-FSLeyes refers to the files that you load as *overlays*. Where `FSLView
-<http://fsl.fmrib.ox.ac.uk/fsl/fslview/>`_ referred to files as *images*,
-FSLeyes uses the term *overlay* because FSLeyes is capable of displaying more
-than just `NIFTI <http://nifti.nimh.nih.gov/>`_ images [*]_.  These files can
-be displayed in a variety of different ways - see the page on :ref:`overlays
-<overlays>` for more information.
+FSLeyes refers to the files that you load as *overlays*. Where FSLView
+referred to files as *images*, FSLeyes uses the term *overlay* because FSLeyes
+is capable of displaying more than just `NIFTI <http://nifti.nimh.nih.gov/>`_
+images [*]_.  These files can be displayed in a variety of different ways -
+see the page on :ref:`overlays <overlays>` for more information.
 
 
 .. [*] FSLeyes |version| is only able to load NIFTI and VTK files, but future
        versions of FSLeyes will be able to load more file types.
 
 
-In FSLeyes, only one overlay may be selected at a time. You can tell which
+.. sidebar:: Modifier keys
+
+             If you skipped the :ref:`quick_start`, you missed out on a description
+             of the symbols used in FSLeyes for keyboard shortcuts - here they are
+             again:
+
+             - |shift_key|:   Shift 
+             - |control_key|: Control
+             - |command_key|: Command (on OSX; Control on other platforms)
+             - |alt_key|:     Option (on OSX; Alt on other platforms)
+ 
+
+In FSLeyes, **only one overlay** may be selected at a time. You can tell which
 overlay is selected by looking at the name field on the :ref:`overlay toolbar
 <ortho_lightbox_controls_overlay_toolbar>`, or looking at the highlighted item
 in the :ref:`overlay list <ortho_lightbox_controls_overlay_toolbar>`. Many
-operations in FSLeyes will be applied to the *currently selected overlay*,
-such as adjusting the overlay visibility, brightness and colour map.
+operations in FSLeyes will be applied to the currently selected overlay, such
+as adjusting the overlay visibility, brightness and colour map.
 
+
+The *Overlay* menu contains options for changing the selected overlay, and
+performing some operations on the currently selected overlay:
+
+
+.. image:: images/overview_overlay_menu.png
+   :align: center
+           
+
+Overlays can be displayed in a variety of ways - see the :ref:`overlays` page
+for more information.
 
 
 .. _overview_views_and_controls:
@@ -62,6 +90,15 @@ All available views are listed in the *View* menu:
    :align: center
 
 
+.. sidebar:: Which *Settings* menu corresponds to which view?
+             
+             Every FSLeyes view panel is given a name and a number so that
+             it can be uniquely identified. The *Settings* sub-menu for each
+             open view is given the same name and number. If you have more
+             than one view panel open, you will be able to see the name and
+             number for each panel on its title bar.
+
+
 When you open a new view, a sub-menu for that view is added to the *Settings*
 menu. This sub-menu contains some actions that can be executed on the view,
 and also contains a list of all the controls which can be added to the
@@ -75,7 +112,7 @@ view. For example, the settings menu for an :ref:`orthographic
 
 These views are described in more detail in the pages on
 :ref:`orthographic/lightbox views <ortho_lightbox_views>` and :ref:`plotting
-views <plot_views>`.
+views <plot_views>`. 
 
 
 .. _overview_layout_and_perspectives:
@@ -94,16 +131,17 @@ appear.  You can also re-arrange the control panels within a view in the same
 way. These docking icons, shown below, will appear on the FSLeyes frame
 whenever you click and drag the title bar of a view or control panel:
 
+.. container:: image-strip
+               
+   .. image:: images/overview_dock_up.png
 
-.. image:: images/overview_dock_up.png
+   .. image:: images/overview_dock_down.png
 
-.. image:: images/overview_dock_down.png
+   .. image:: images/overview_dock_centre.png
 
-.. image:: images/overview_dock_centre.png
+   .. image:: images/overview_dock_left.png
 
-.. image:: images/overview_dock_left.png
-
-.. image:: images/overview_dock_right_active.png
+   .. image:: images/overview_dock_right_active.png
 
 
 
@@ -121,7 +159,7 @@ Built-in perspectives
 ---------------------
 
 
-FSLeyes comes with a few built-in perspectives, outlined below.
+FSLeyes comes with a few built-in perspectives, described below.
 
 
 Default layout
@@ -129,8 +167,8 @@ Default layout
 
 
 This is the default FSLeyes perspective, which provides a layout inspired by
-`FSLView <http://fsl.fmrib.ox.ac.uk/fsl/fslview/>`_, which is useful for
-general image viewing and editing.
+`FSLView <http://fsl.fmrib.ox.ac.uk/fsl/fslview/>`_, useful for general image
+viewing and editing.
 
 
 .. image:: images/overview_default.png

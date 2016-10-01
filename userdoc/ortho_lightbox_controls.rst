@@ -22,6 +22,12 @@ Location panel
 ^^^^^^^^^^^^^^
 
 
+.. _ortho_lightbox_controls_overlay_display_panel:
+
+Overlay display panel
+^^^^^^^^^^^^^^^^^^^^^
+
+
 .. _ortho_lightbox_controls_ortho_toolbar:
 
 Ortho toolbar
