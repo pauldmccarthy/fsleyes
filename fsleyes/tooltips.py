@@ -82,7 +82,7 @@ properties = TypeDict({
                                    'displayed.',
     'VolumeOpts.invertClipping'  : 'Invert the clipping range, so that voxels '
                                    'inside the range are not displayed, and '
-                                   'voxels outside of the range are displayed.'
+                                   'voxels outside of the range are displayed. '
                                    'This option is useful for displaying '
                                    'statistic images.',
     'VolumeOpts.cmap'            : 'The colour map to use.',
