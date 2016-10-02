@@ -16,6 +16,19 @@ replacement for the much loved `FSLView
 <http://fsl.fmrib.ox.ac.uk/fsl/fslview/>`_.
 
 
+Help!
+-----
+
+
+If you get stuck, search through these help pages to see if your problem is
+discussed anywhere. Additionally, most FSLeyes buttons and controls have a
+tooltip, which will pop up if your hover the mouse over them for a couple of
+seconds:
+
+.. image:: images/overview_tooltip.png
+   :align: center
+
+
 .. _overview_overlays:
 
 Overlays
@@ -222,8 +235,11 @@ Plain orthographic/Plain lightbox
 These perspectives simply display a plain orthographic or lightbox view,
 respectively.
 
-.. image:: images/overview_ortho.png
-   :width: 45%
 
-.. image:: images/overview_lightbox.png
-   :width: 45% 
+.. container:: image-strip
+               
+  .. image:: images/overview_ortho.png
+     :width: 45%
+
+  .. image:: images/overview_lightbox.png
+     :width: 45% 

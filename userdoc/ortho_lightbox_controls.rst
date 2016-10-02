@@ -46,6 +46,13 @@ Cluster panel
 ^^^^^^^^^^^^^
 
 
+.. _ortho_lightbox_controls_lookup_table_panel:
+
+Lookup table panel
+^^^^^^^^^^^^^^^^^^
+
+
+
 .. _ortho_lightbox_controls_melodic_ic_classification:
 
 Melodic IC classification
