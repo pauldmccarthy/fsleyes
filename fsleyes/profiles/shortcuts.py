@@ -25,7 +25,7 @@ actions = td.TypeDict({
     'FSLeyesFrame.openHelp'               : 'Ctrl-H',
     'FSLeyesFrame.removeFocusedViewPanel' : 'Ctrl-W',
     
-    'FSLeyesFrame.perspectives.default'   : 'Ctrl-D',
+    'FSLeyesFrame.perspectives.default'   : 'Ctrl-Shift-D',
 
     'FSLeyesFrame.addOrthoPanel'          : 'Ctrl-1',
     'FSLeyesFrame.addLightBoxPanel'       : 'Ctrl-2',

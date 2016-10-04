@@ -967,7 +967,7 @@ class FSLeyesFrame(wx.Frame):
             # (saved frame position) is 'not decent', then 
             # forget it, and use a default frame position/size
             ratio = intArea / float(frameArea)
-            if ratio < 0.5:
+            if ratio < 0.9:
 
                 log.debug('Intersection of saved frame area with available '
                           'display area is too small ({}) - reverting to '
