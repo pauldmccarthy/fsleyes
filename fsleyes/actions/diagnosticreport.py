@@ -16,10 +16,11 @@ import logging
 import platform
 from collections import OrderedDict
 
-import fsl.utils.status as status
-import fsleyes.strings  as strings
-import fsleyes.state    as fslstate
-from . import              action
+from   fsl.utils.platform import platform as fslplatform
+import fsl.utils.status                   as status
+import fsleyes.strings                    as strings
+import fsleyes.state                      as fslstate
+from . import                                action
 
 
 log = logging.getLogger(__name__)
@@ -165,10 +166,11 @@ class DiagnosticReportAction(action.Action):
 
         report = OrderedDict()
 
-        report['Version']      = gl.glGetString( gl.GL_VERSION)
-        report['Renderer']     = gl.glGetString( gl.GL_RENDERER)
-        report['Texture size'] = str(gl.glGetInteger(gl.GL_MAX_TEXTURE_SIZE))
-        report['Extensions']   = gl.glGetString( gl.GL_EXTENSIONS).split(' ')
+        report['Version']       = gl.glGetString( gl.GL_VERSION)
+        report['Compatibility'] = fslplatform.glVersion
+        report['Renderer']      = gl.glGetString( gl.GL_RENDERER)
+        report['Texture size']  = str(gl.glGetInteger(gl.GL_MAX_TEXTURE_SIZE))
+        report['Extensions']    = gl.glGetString( gl.GL_EXTENSIONS).split(' ')
 
         return report
 

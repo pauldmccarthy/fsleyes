@@ -14,10 +14,11 @@ import os.path   as op
 import              wx
 import OpenGL.GL as gl
 
-import fsl.utils.imagepanel as imagepanel
-import fsleyes.strings      as strings
-import fsleyes.splash       as splash
-import fsleyes.version      as version
+import fsl.utils.imagepanel                 as imagepanel
+from   fsl.utils.platform   import platform as fslplatform
+import fsleyes.strings                      as strings
+import fsleyes.splash                       as splash
+import fsleyes.version                      as version
 
 
 class AboutDialog(wx.Dialog):
@@ -76,6 +77,7 @@ class AboutDialog(wx.Dialog):
         verStr    = strings.about['version']   .format(verStr)
         vcsVerStr = strings.about['vcsVersion'].format(vcsVerStr)
         glVerStr  = strings.about['glVersion'] .format(glVerStr)
+        glCompat  = strings.about['glCompat']  .format(fslplatform.glVersion)
         glRenStr  = strings.about['glRenderer'].format(glRenStr)
         swStr     = strings.about['software']  .format(*swVersions)
 
@@ -99,9 +101,8 @@ class AboutDialog(wx.Dialog):
                              strings.about['email'],
                              vcsVerStr,
                              glVerStr,
+                             glCompat,
                              glRenStr))
-
-        
 
         textPanel  .SetValue(infoStr + '\n\n' + swStr)
         closeButton.SetLabel('Close')

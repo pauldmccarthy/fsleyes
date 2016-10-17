@@ -385,11 +385,13 @@ def bootstrap(glVersion=None):
 
     # If we're using a software based renderer,
     # reduce the default performance settings
-    # 
-    # But llvmpipe is super fast, so if we're
-    # using it, pretend that it's hardware
-    if fslplatform.glIsSoftwareRenderer and \
-       'llvmpipe' not in fslplatform.glRenderer.lower():
+    #
+    # But SVGA3D/llvmpipe are super fast, so if
+    # we're using either of them, pretend that 
+    # we're on hardware
+    if fslplatform.glIsSoftwareRenderer                 and \
+       'llvmpipe' not in fslplatform.glRenderer.lower() and \
+       'svga3d'   not in fslplatform.glRenderer.lower():
 
         log.debug('Software-based rendering detected - '
                   'lowering default performance settings.')

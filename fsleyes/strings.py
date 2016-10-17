@@ -1065,6 +1065,7 @@ about = {
     'version'    : 'FSLeyes version: {}',
     'vcsVersion' : 'Internal version: {}',
     'glVersion'  : 'OpenGL version: {}',
+    'glCompat'   : 'OpenGL compatibility: {}',
     'glRenderer' : 'OpenGL renderer: {}',
     'software'   : textwrap.dedent(
     """
