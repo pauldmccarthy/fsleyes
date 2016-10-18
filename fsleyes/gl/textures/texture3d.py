@@ -455,6 +455,12 @@ class Texture3D(texture.Texture, notifier.Notifier):
         def configTexture():
             data = self.__preparedData
 
+            # If destroy() is called, the
+            # preparedData will be blanked
+            # out.
+            if data is None:
+                return
+
             # It is assumed that, for textures with more than one
             # value per voxel (e.g. RGB textures), the data is
             # arranged accordingly, i.e. with the voxel value
