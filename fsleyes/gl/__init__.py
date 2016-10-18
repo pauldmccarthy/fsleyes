@@ -458,12 +458,12 @@ class GLContext(object):
 
 
     Because ``wx`` contexts may be used even when an off-screen rendering
-    context has been requested, the ``GLContext`` class has the ability
-    to create and run a temporary ``wx.App``, on which the canvas and
-    context creation process is executed. This horrible ability is necessary,
-    because a ``wx.GLContext`` must be rendering created on a ``wx``
-    application loop. We cannot otherwise guarantee that the ``wx.GLCanvas``
-    will be visible before the ``wx.GLContext`` is created.
+    context has been requested, the ``GLContext`` class has the ability to
+    create and run a temporary ``wx.App``, on which the canvas and context
+    creation process is executed. This horrible ability is necessary, because
+    a ``wx.GLContext`` must be created on a ``wx`` application loop. We cannot
+    otherwise guarantee that the ``wx.GLCanvas`` will be visible before the
+    ``wx.GLContext`` is created.
 
 
     The above issue has the effect that the real underlying ``wx.GLContext``

@@ -23,8 +23,6 @@ See the :mod:`fsleyes` package documentation for more details on ``fsleyes``.
 """
 
 
-from __future__ import print_function
-
 import            os
 import os.path as op
 import            sys
@@ -187,15 +185,9 @@ def main(args=None):
         # arguments have been parsed.
         namespace[0] = parseArgs(args)
 
-        # Make sure the splash screen is visible,
-        # and really make sure that it gets drawn.
-        # Without the Refresh, Update, Yield, this
-        # is not a guarantee on GTK.
+        # See FSLeyesSplash.Show
+        # for horribleness.
         splash.Show()
-        splash.CentreOnScreen()
-        splash.Refresh()
-        splash.Update()
-        wx.Yield()
         
         # Configure logging (this has to be done
         # after cli arguments have been parsed,

@@ -9,6 +9,7 @@
 """
 
 
+import            time
 import os.path as op
 
 import wx
@@ -49,7 +50,7 @@ class FSLeyesSplash(wx.Frame):
         :arg parent: The :mod:`wx` parent object.
         """
         
-        wx.Frame.__init__(self, parent, style=0)
+        wx.Frame.__init__(self, parent, style=wx.FULL_REPAINT_ON_RESIZE)
 
         splashbmp  = wx.Bitmap(getSplashFile(), wx.BITMAP_TYPE_PNG)
         splashimg  = splashbmp.ConvertToImage()
@@ -73,7 +74,26 @@ class FSLeyesSplash(wx.Frame):
         self.Layout()
         self.Fit()
 
+
+    def Show(self):
+        """Show this ``FSLeyesSplash`` frame, and centre it on the screen. """
+
+        wx.Frame.Show(self)
+        self.CentreOnScreen()
+        self.Refresh()
+        self.Update()
         
+        # GTK is a piece of shit. Refresh/Update, combined
+        # with a straight call to Yield does not guarantee
+        # that the splash screen will be displayed. It
+        # seems that a short delay is necessary before it
+        # will be drawn, during which time we can't do
+        # anything which would block the application loop.
+        for i in range(10):
+            wx.Yield()
+            time.sleep(0.025)
+
+
     def SetStatus(self, text):
         """Sets the text shown on the status bar to the specified ``text``. """
         self.__statusBar.SetLabel(text)
