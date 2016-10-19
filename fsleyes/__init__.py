@@ -190,6 +190,7 @@ TODO
 """
 
 
+import            os
 import os.path as op
 import            logging
 import            warnings
@@ -261,6 +262,16 @@ def initialise():
         assetDir = op.join(op.dirname(__file__), '..')
 
     assetDir = op.abspath(assetDir)
+
+    # PyInstaller <= 3.2 forces matplotlib to use a
+    # temporary directory for its settings and font
+    # cache, and then deletes the directory on exit.
+    # This is silly, because the font cache can take
+    # a long time to create. So we'll tell matplotlib
+    # to use a settingsd directory located in the
+    # FSLeyes app dir.
+    if fslplatform.frozen:
+        os.environ['MPLCONFIGDIR'] = op.join(assetDir, 'mpl-data')
 
     if not op.exists(assetDir):
         raise RuntimeError('Could not find FSLeyes asset directory! '
