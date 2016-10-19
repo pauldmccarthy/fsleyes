@@ -763,6 +763,35 @@ class VolumeOpts(NiftiOpts):
                            overlayList,
                            displayCtx,
                            **kwargs)
+
+        # Both parent and child VolumeOpts instances
+        # listen for Image dataRange changes. The data
+        # range for large images may be calculated
+        # asynchronously on a separate thread, meaning
+        # that data range updates may occur at random
+        # times.
+        #
+        # If parent instances did not listen for data
+        # range updates and, at startup, the following
+        # sequence of events occurs:
+        #
+        #   1. Parent VolumeOpts instance created
+        # 
+        #   2. Image.dataRange updated
+        #
+        #   3. Child VolumeOpts instance created
+        #
+        # The known parent data range will be 0-0,
+        # the child will not receive any notification
+        # about the data range change, and the child's
+        # data range will be clobbered by the parent's.
+        # This ugly situation is avoided simply by
+        # having the parent track changes to the data
+        # range in addition to all children.
+        overlay.register(self.name,
+                         self.__dataRangeChanged,
+                         'dataRange',
+                         runOnIdle=True)
         
         # The displayRange property of every child VolumeOpts
         # instance is linked to the corresponding 
@@ -779,10 +808,6 @@ class VolumeOpts(NiftiOpts):
         self.__registered = self.getParent() is not None
         if self.__registered:
 
-            overlay    .register(   self.name,
-                                    self.__dataRangeChanged,
-                                    'dataRange',
-                                    runOnIdle=True)
             display    .addListener('brightness',
                                     self.name,
                                     self.__briconChanged)
@@ -857,13 +882,14 @@ class VolumeOpts(NiftiOpts):
         method.
         """
 
+        overlay = self.overlay
+
+        overlay.deregister(self.name, 'dataRange')
+
         if self.__registered:
 
             overlayList = self.overlayList
             display     = self.display
-            overlay     = self.overlay
-
-            overlay    .deregister(    self.name,         'dataRange')
             overlayList.removeListener('overlays',        self.name) 
             display    .removeListener('brightness',      self.name)
             display    .removeListener('contrast',        self.name)

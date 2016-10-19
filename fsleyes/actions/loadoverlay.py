@@ -245,9 +245,8 @@ def loadImage(dtype, path, inmem=False):
     :arg inmem: If ``True``, ``Image`` overlays are loaded into memory.
     """
     
-    memthres   = fslsettings.read('fsleyes.overlay.memthres',   2147483648)
     rangethres = fslsettings.read('fsleyes.overlay.rangethres', 419430400)
-    idxthres   = fslsettings.read('fsleyes.overlay.idxthres',   memthres / 2)
+    idxthres   = fslsettings.read('fsleyes.overlay.idxthres',   1073741824)
 
     # We're going to load the file
     # twice - first to get its
@@ -280,8 +279,8 @@ def loadImage(dtype, path, inmem=False):
                     threaded=indexed)
 
     # If the image is bigger than the
-    # memory threshold, keep it on disk. 
-    if inmem or nbytes < memthres:
+    # index threshold, keep it on disk. 
+    if inmem or (not indexed):
         log.debug('Loading {} into memory'.format(path))
         image.loadData()
     else:
