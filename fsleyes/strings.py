@@ -890,6 +890,7 @@ nifti = TypeDict({
     'vox_units'   : 'XYZ units',
     'time_units'  : 'Time units',
     'descrip'     : 'Description',
+    'aux_file'    : 'Auxillary file',
     'qform_code'  : 'QForm code',
     'sform_code'  : 'SForm code',
     'intent_code' : 'Intent code',

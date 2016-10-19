@@ -68,6 +68,29 @@ if not USE_HTML2:
             wxhtml.HtmlWindow.SetPage(self, html)
 
 
+def terminateString(string):
+    """Given an ASCII string (or a ``numpy`` array containing one),
+    returns that string as a python string, correctly null-terminated.
+
+
+    .. note:: This function is used to sanitise some NIFTI header fields.
+              The default Python behaviour for converting a sequence of
+              bytes to a string is to strip all termination characters
+              (bytes with value of ``0x00``) from the end of the
+              sequence.
+
+    
+              This behaviour does not handle the case where a sequence
+              of bytes which did contain a long string is subsequently
+              overwritten with a shorter string - the short string will
+              be terminated, but that termination character will be
+              followed by the remainder of the original string.
+    """
+
+    try:    return str(string).partition(b'\0')[0]
+    except: return str(string)
+
+
 class OverlayInfoPanel(fslpanel.FSLeyesPanel):
     """An ``OverlayInfoPanel`` is a :class:`.FSLeyesPanel` which displays
     information about the currently selected overlay in a
@@ -331,14 +354,17 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                      dataType,
                      section=generalSect)
         info.addInfo(strings.nifti['descrip'],
-                     hdr['descrip'],
+                     terminateString(hdr['descrip']),
                      section=generalSect)
         info.addInfo(strings.nifti['intent_code'],
                      intent,
                      section=generalSect)
         info.addInfo(strings.nifti['intent_name'],
-                     hdr['intent_name'],
+                     terminateString(hdr['intent_name']),
                      section=generalSect)
+        info.addInfo(strings.nifti['aux_file'],
+                     terminateString(hdr['aux_file']),
+                     section=generalSect) 
 
         info.addInfo(strings.labels[self, 'overlayType'],
                      strings.choices[display, 'overlayType'][
