@@ -315,8 +315,8 @@ class Texture3D(texture.Texture, notifier.Notifier):
         prefilterRange = kwargs.get('prefilterRange', self.__prefilterRange)
         resolution     = kwargs.get('resolution',     self.__resolution)
         scales         = kwargs.get('scales',         self.__scales)
-        normaliseRange = kwargs.get('normaliseRange', self.__normaliseRange)
-        normalise      = kwargs.get('normalise',      self.__normalise)
+        normalise      = kwargs.get('normalise',      None)
+        normaliseRange = kwargs.get('normaliseRange', None)
         data           = kwargs.get('data',           None)
         refresh        = kwargs.get('refresh',        True)
         notify         = kwargs.get('notify',         True)
@@ -324,8 +324,8 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         changed = {'interp'         : interp         != self.__interp,
                    'data'           : data           is not None,
-                   'normalise'      : normalise      != self.__normalise,
-                   'normaliseRange' : normaliseRange != self.__normaliseRange,
+                   'normalise'      : normalise      is not None,
+                   'normaliseRange' : normaliseRange is not None,
                    'prefilter'      : prefilter      != self.__prefilter,
                    'prefilterRange' : prefilterRange != self.__prefilterRange,
                    'resolution'     : resolution     != self.__resolution,
@@ -335,12 +335,12 @@ class Texture3D(texture.Texture, notifier.Notifier):
             return False
 
         self.__interp         = interp
-        self.__normalise      = normalise
-        self.__normaliseRange = normaliseRange
         self.__prefilter      = prefilter
         self.__prefilterRange = prefilterRange
         self.__resolution     = resolution
         self.__scales         = scales
+        self.__normalise      = bool(normalise)
+        self.__normaliseRange = normaliseRange
 
         if data is not None:
 
@@ -777,7 +777,6 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         if normalise: dmin, dmax = normaliseRange
         else:         dmin, dmax = 0, 0
-
 
         if normalise                  and \
            prefilter      is not None and \
