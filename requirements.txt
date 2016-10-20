@@ -11,6 +11,6 @@ PyParsing>=2.1.1
 scipy>=0.17.0
 sphinx>=1.4.1
 sphinx-rtd-theme>=0.1.9
-git+https://github.com/pauldmccarthy/indexed_gzip.git#egg=indexed_gzip
+indexed_gzip>=0.3.1
 git+ssh://git@git.fmrib.ox.ac.uk/paulmc/props.git#egg=props
 git+ssh://git@git.fmrib.ox.ac.uk/paulmc/fslpy.git#egg=fslpy
