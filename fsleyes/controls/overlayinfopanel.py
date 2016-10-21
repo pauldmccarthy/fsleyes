@@ -109,7 +109,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
     :class:`.Image`        :meth:`__getImageInfo`
     :class:`.FEATImage`    :meth:`__getFEATImageInfo`
     :class:`.MelodicImage` :meth:`__getMelodicImageInfo`
-    :class:`.TensorImage`  :meth:`__getTensorImageInfo`
+    :class:`.DTIFitTensor` :meth:`__getDTIFitTensorInfo`
     :class:`.Model`        :meth:`__getModelInfo`
     ====================== =============================
     """
@@ -190,9 +190,9 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
 
 
     _optProps = td.TypeDict({
-        'Image'       : ['transform'],
-        'Model'       : ['refImage', 'coordSpace'],
-        'TensorImage' : ['transform'],
+        'Image'        : ['transform'],
+        'Model'        : ['refImage', 'coordSpace'],
+        'DTIFitTensor' : ['transform'],
     })
     """This dictionary contains a list of :class:`.DisplayOpts` properties
     that, when changed, should result in the information being refreshed.
@@ -567,15 +567,21 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         return info
 
 
-    def __getTensorImageInfo(self, overlay, display):
+    def __getDTIFitTensorInfo(self, overlay, display):
         """Creates and returns an :class:`OverlayInfo` object containing
-        information about the given :class:`.TensorImage` overlay.
+        information about the given :class:`.DTIFitTensor` overlay.
 
-        :arg overlay: A :class:`.TensorImage` instance.
+        :arg overlay: A :class:`.DTIFitTensor` instance.
         :arg display: The :class:`.Display` instance assocated with the
-                      ``TensorImage``. 
+                      ``DTIFitTensor``. 
         """
         info = self.__getImageInfo(overlay.L1(), display)
+
+        generalSect = strings.labels[self, 'general']
+        dataSource  = strings.labels[self, 'dataSource']
+
+        info.title = strings.labels[self, overlay]
+        info.sections[generalSect][dataSource] = overlay.dataSource
 
         tensorInfo = [
             ('v1', overlay.V1().dataSource),
@@ -632,10 +638,10 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         sections = []
 
         if len(info.info) > 0:
-            sections.append((None, info.info))
+            sections.append((None, info.info.items()))
         
         for secName, secInf in info.sections.items():
-            sections.append((secName, secInf))
+            sections.append((secName, secInf.items()))
 
         for i, (secName, secInf) in enumerate(sections):
 
@@ -687,7 +693,7 @@ class OverlayInfo(object):
         """
         
         self.title    = title
-        self.info     = []
+        self.info     = collections.OrderedDict()
         self.sections = collections.OrderedDict()
 
         
@@ -696,7 +702,7 @@ class OverlayInfo(object):
 
         :arg section: The section name.
         """
-        self.sections[section] = []
+        self.sections[section] = collections.OrderedDict()
 
         
     def addInfo(self, name, info, section=None):
@@ -706,5 +712,5 @@ class OverlayInfo(object):
         :arg info:    The information value.
         :arg section: Section to place the information in.
         """ 
-        if section is None: self.info             .append((name, info))
-        else:               self.sections[section].append((name, info))
+        if section is None: self.info[             name] = info
+        else:               self.sections[section][name] = info

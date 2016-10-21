@@ -162,10 +162,10 @@ from .displaycontext import InvalidOverlayError
 
 OVERLAY_TYPES = td.TypeDict({
 
-    'Image'       : ['volume',     'mask',  'rgbvector',
-                     'linevector', 'label', 'sh'],
-    'Model'       : ['model'],
-    'TensorImage' : ['tensor', 'rgbvector', 'linevector'],
+    'Image'        : ['volume',     'mask',  'rgbvector',
+                      'linevector', 'label', 'sh', 'tensor'],
+    'Model'        : ['model'],
+    'DTIFitTensor' : ['tensor', 'rgbvector', 'linevector'],
 })
 """This dictionary provides a mapping between all overlay classes,
 and the possible values that the :attr:`Display.overlayType` property
@@ -218,8 +218,9 @@ def getOverlayTypes(overlay):
     # Could this image be a vector image?
     couldBeVector = len(shape) == 4 and shape[-1] == 3
 
-    # Or could it be a SH image?
-    couldBeSH = len(shape) == 4 and shape[-1] in shopts.SH_COEFFICIENT_TYPE
+    # Or could it be a SH or tensor image?
+    couldBeTensor = len(shape) == 4 and shape[-1] == 6 
+    couldBeSH     = len(shape) == 4 and shape[-1] in shopts.SH_COEFFICIENT_TYPE
 
     # Special cases:
     #
@@ -244,6 +245,10 @@ def getOverlayTypes(overlay):
 
     if not couldBeSH:
         try:               possibleTypes.remove('sh')
+        except ValueError: pass
+
+    if not couldBeTensor:
+        try:               possibleTypes.remove('tensor')
         except ValueError: pass 
 
     return possibleTypes

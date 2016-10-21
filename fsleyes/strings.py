@@ -517,9 +517,8 @@ labels = TypeDict({
     
     'OverlayInfoPanel.dataSource'               : 'Data source',
 
-    'OverlayInfoPanel.TensorImage'              : 'NIFTI diffusion '
-                                                  'tensor images',
-    'OverlayInfoPanel.TensorImage.tensorInfo'   : 'Tensor image paths ',
+    'OverlayInfoPanel.DTIFitTensor'             : 'DTIFit tensor images',
+    'OverlayInfoPanel.DTIFitTensor.tensorInfo'  : 'Tensor image paths ',
     
     'MelodicClassificationPanel.componentTab'   : 'Components',
     'MelodicClassificationPanel.labelTab'       : 'Labels',

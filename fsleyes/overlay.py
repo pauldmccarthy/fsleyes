@@ -51,7 +51,7 @@ Currently (``fsleyes`` version |version|) the only overlay types in existence
    ~fsl.data.image.Image
    ~fsl.data.featimage.FEATImage
    ~fsl.data.melodicimage.MelodicImage
-   ~fsl.data.tensorimage.TensorImage
+   ~fsl.data.dtifit.DTIFitTensor
    ~fsl.data.model.Model
 
 
@@ -270,7 +270,7 @@ def guessDataSourceType(path):
     import fsl.data.model           as fslmodel
     import fsl.data.featimage       as featimage
     import fsl.data.melodicimage    as melimage
-    import fsl.data.tensorimage     as tensorimage
+    import fsl.data.dtifit          as dtifit
     import fsl.data.melodicanalysis as melanalysis
     import fsl.data.featanalysis    as featanalysis
 
@@ -288,8 +288,8 @@ def guessDataSourceType(path):
         elif featanalysis.isFEATDir(path):
             return featimage.FEATImage, path
 
-        elif tensorimage.isPathToTensorData(path):
-            return tensorimage.TensorImage, path
+        elif dtifit.isDTIFitPath(path):
+            return dtifit.DTIFitTensor, path
 
     # Assume it's a NIFTI image
     try:                       path = fslimage.addExt(path, mustExist=True)

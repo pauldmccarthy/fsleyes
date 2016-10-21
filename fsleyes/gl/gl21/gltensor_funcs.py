@@ -5,8 +5,8 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides functions which are used by the :class:`.GLTensor`
-class for rendering :class:`.TensorImage` overlays in an OpenGL 2.1 compatible
-manner.
+class for rendering :class:`.DTIFitTensor` overlays, and compatible
+:class:`.Image` overlays in an OpenGL 2.1 compatible manner.
 
 
 The rendering code makes use of the OpenGL ``ARB_draw_instanced`` extension
@@ -93,8 +93,7 @@ def updateShaderState(self):
     tensorScale   = opts.tensorScale
     xFlip         = opts.orientFlip
 
-
-    l1           = image.L1()
+    l1           = self.l1
     l1min, l1max = l1.dataRange
     eigValNorm   = 0.5 / max((abs(l1min), abs(l1max)))
     eigValNorm  *= tensorScale / 100.0

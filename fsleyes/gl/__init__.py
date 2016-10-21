@@ -358,10 +358,11 @@ def bootstrap(glVersion=None):
                                                     newAlt=['spline']) 
 
         # Tensor/SH overlays are not available in GL14
-        dc.ALL_OVERLAY_TYPES           .remove('tensor')
-        dc.ALL_OVERLAY_TYPES           .remove('sh')
-        dc.OVERLAY_TYPES['TensorImage'].remove('tensor')
-        dc.OVERLAY_TYPES['Image']      .remove('sh') 
+        dc.ALL_OVERLAY_TYPES            .remove('tensor')
+        dc.ALL_OVERLAY_TYPES            .remove('sh')
+        dc.OVERLAY_TYPES['DTIFitTensor'].remove('tensor')
+        dc.OVERLAY_TYPES['Image']       .remove('sh')
+        dc.OVERLAY_TYPES['Image']       .remove('tensor') 
 
     renderer = gl.glGetString(gl.GL_RENDERER).decode('ascii')
     log.debug('Using OpenGL {} implementation with renderer {}'.format(

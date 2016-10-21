@@ -176,7 +176,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
     import fsl.data.image        as image
     import fsl.data.featimage    as featimage
     import fsl.data.melodicimage as melimage
-    import fsl.data.tensorimage  as tensorimage
+    import fsl.data.dtifit       as dtifit
     import fsl.data.model        as model
 
 
@@ -220,7 +220,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         ('Image',            image.Image),
         ('FEATImage',        featimage.FEATImage),
         ('MelodicImage',     melimage.MelodicImage),
-        ('TensorImage',      tensorimage.TensorImage),
+        ('DTIFitTensor',     dtifit.DTIFitTensor),
         ('Model',            model.Model),
         ('views',            views),
         ('controls',         controls),

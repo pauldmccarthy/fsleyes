@@ -19,7 +19,7 @@ import logging
 import numpy                as np
 
 import fsl.utils.transform  as transform
-import fsl.data.tensorimage as tensorimage
+import fsl.data.dtifit      as dtifit
 import fsleyes.gl           as fslgl
 import fsleyes.gl.glvector  as glvector
 import fsleyes.gl.routines  as glroutines
@@ -57,17 +57,17 @@ class GLLineVector(glvector.GLVector):
     def __init__(self, image, display, xax, yax):
         """Create a ``GLLineVector`` instance.
 
-        :arg image:   An :class:`.Image` or :class:`.TensorImage` instance.
+        :arg image:   An :class:`.Image` or :class:`.DTIFitTensor` instance.
         :arg display: The associated :class:`.Display` instance.
         :arg xax:     Initial display X axis
         :arg yax:     Initial display Y axis
         """
         
-        # If the overlay is a TensorImage, use the
+        # If the overlay is a DTIFitTensor, use the
         # V1 image is the vector data. Otherwise,
         # assume that the overlay is the vector image.
-        if isinstance(image, tensorimage.TensorImage): vecImage = image.V1()
-        else:                                          vecImage = image
+        if isinstance(image, dtifit.DTIFitTensor): vecImage = image.V1()
+        else:                                      vecImage = image
 
         glvector.GLVector.__init__(self,
                                    image,

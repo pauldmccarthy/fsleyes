@@ -9,12 +9,12 @@ vector :class:`.Image` overlays in RGB mode.
 """
 
 
-import numpy                as np
-import OpenGL.GL            as gl
+import numpy               as np
+import OpenGL.GL           as gl
 
-import fsl.data.tensorimage as tensorimage
-import fsleyes.gl           as fslgl
-import fsleyes.gl.glvector  as glvector
+import fsl.data.dtifit     as dtifit
+import fsleyes.gl          as fslgl
+import fsleyes.gl.glvector as glvector
 
 
 class GLRGBVector(glvector.GLVector):
@@ -61,17 +61,17 @@ class GLRGBVector(glvector.GLVector):
     def __init__(self, image, display, xax, yax):
         """Create a ``GLRGBVector``.
 
-        :arg image:   An :class:`.Image` or :class:`.TensorImage` instance.
+        :arg image:   An :class:`.Image` or :class:`.DTIFitTensor` instance.
         :arg display: The associated :class:`.Display` instance.
         :arg xax:     Initial display X axis
         :arg yax:     Initial display Y axis        
         """
 
-        # If the overlay is a TensorImage, use the
+        # If the overlay is a DTIFitTensor, use the
         # V1 image is the vector data. Otherwise,
         # assume that the overlay is the vector image.
-        if isinstance(image, tensorimage.TensorImage): vecImage = image.V1()
-        else:                                          vecImage = image
+        if isinstance(image, dtifit.DTIFitTensor): vecImage = image.V1()
+        else:                                      vecImage = image
 
         prefilter = np.abs
         def prefilterRange(dmin, dmax):

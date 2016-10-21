@@ -5,7 +5,8 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`GLTensor` class, for displaying tensor
-ellipsoids in a :class:`.TensorImage` overlay.
+ellipsoids in a :class:`.DTIFitTensor` overlay, or compatible :class:`.Image`
+overlay.
 
 See :mod:`.gl21.gltensor_funcs`.
 """
@@ -15,6 +16,8 @@ import numpy                as np
 
 import OpenGL.GL            as gl
 
+import fsl.data.image       as fslimage
+import fsl.data.dtifit      as dtifit
 import fsleyes.gl           as fslgl
 import fsleyes.gl.resources as glresources
 import fsleyes.gl.textures  as textures
@@ -31,7 +34,7 @@ class GLTensor(glvector.GLVector):
               OpenGL older than 2.1 (and probably never will be).
 
 
-    The eigenvalues and eigenvectors of the ``TensorImage`` are stored as 3D
+    The eigenvalues and eigenvectors of the overlay are stored as 3D
     :class:`.ImageTexture` instances, using the :mod:`.gl.resources`
     module. These textures are added as attributes of a GLTensor instance -
     this is in addition to the textures that are used for :class:`.GLVector`
@@ -54,7 +57,8 @@ class GLTensor(glvector.GLVector):
         """Create a ``GLTensor``. Prepares the eigenvalue and eigenvector
         textures, and calls the :func:`.gl21.gltensor_funcs.init` function.
 
-        :arg image:   A :class:`.TensorImage` overlay.
+        :arg image:   A :class:`.DTIFitTensor` or compatible :class:`.Image`
+                      overlay.
         
         :arg display: The :class:`.Display` instance associated with the
                       ``image``.
@@ -68,16 +72,38 @@ class GLTensor(glvector.GLVector):
         def prefilterRange(dmin, dmax):
             return max((0, dmin)), max((abs(dmin), abs(dmax)))
 
+        # The overlay must either be a DTIFitTensor
+        if isinstance(image, dtifit.DTIFitTensor):
+
+            v1 = image.V1()
+            v2 = image.V2()
+            v3 = image.V3()
+            l1 = image.L1()
+            l2 = image.L2()
+            l3 = image.L3()
+
+        # Or an Image with 6 volumes containing 
+        # the unique tensor matrix elements
+        else:
+            decomp = dtifit.decomposeTensorMatrix(image.nibImage.get_data())
+            v1     = fslimage.Image(decomp[0])
+            v2     = fslimage.Image(decomp[1])
+            v3     = fslimage.Image(decomp[2])
+            l1     = fslimage.Image(decomp[3])
+            l2     = fslimage.Image(decomp[4])
+            l3     = fslimage.Image(decomp[5])
+
+        self.v1 = v1
+        self.v2 = v2
+        self.v3 = v3
+        self.l1 = l1
+        self.l2 = l2
+        self.l3 = l3
+ 
         # Create a texture for each eigenvalue/
         # vector, and add each of them as suitably
         # named attributes on this GLTensor
-        # instance.
-        v1 = image.V1()
-        v2 = image.V2()
-        v3 = image.V3()
-        l1 = image.L1()
-        l2 = image.L2()
-        l3 = image.L3()
+        # instance.        
 
         def vPrefilter(d):
             return d.transpose((3, 0, 1, 2))
@@ -113,7 +139,7 @@ class GLTensor(glvector.GLVector):
                                    yax,
                                    prefilter=prefilter,
                                    prefilterRange=prefilterRange,
-                                   vectorImage=image.V1(),
+                                   vectorImage=v1,
                                    init=lambda: fslgl.gltensor_funcs.init(
                                        self))
 
@@ -157,8 +183,8 @@ class GLTensor(glvector.GLVector):
     def addListeners(self):
         """Overrides :meth:`.GLVector.addListeners`. Calls the base class
         implementation, and adds some property listeners to the
-        :class:`.TensorOpts` instance associated with the 
-        :class:`.TensorImage` being displayed.
+        :class:`.TensorOpts` instance associated with the overlay being
+        displayed.
         """
         glvector.GLVector.addListeners(self)
 
