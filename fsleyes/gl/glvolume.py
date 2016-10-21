@@ -645,7 +645,7 @@ class GLVolume(globject.GLImageObject):
     def _invertChanged(self, *a):
         """Called when the :attr:`.VolumeOpts.invert` property changes. """
         self.refreshColourTextures()
-        self.updateShaderState()
+        self.notify()
 
 
     def _volumeChanged(self, *a, **kwa):
