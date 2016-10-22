@@ -125,9 +125,7 @@ void main(void) {
   vec4 colour;
 
   if (!test_in_bounds(voxCoords, imageShape)) {
-
-    gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-    return;
+    discard;
   }
 
   if (colourMode == 0) {
@@ -177,14 +175,15 @@ void main(void) {
 
   /* Knock out voxels where the clipping value is outside the clipping range */
   if (clipValue <= clipLow || clipValue >= clipHigh) {
-      gl_FragColor.a = 0.0;
-      return;
+      discard;
   }
 
   /* Scale the modulation value, and modulate the colour  */
   modValue    = (modValue + modLow) / (modHigh - modLow);
   colour.xyz *= modValue; 
   
-
   gl_FragColor = colour * fragColourFactor;
+  gl_FragDepth = fragVoxCoord.x / imageShape.x *
+                 fragVoxCoord.y / imageShape.y *
+                 fragVoxCoord.z / imageShape.z; 
 }

@@ -126,9 +126,7 @@ void main(void) {
      * Skip voxels that are out of the image bounds
      */
     if (!test_in_bounds(voxCoord, imageShape)) {
-        
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-        return;
+        discard;
     }
 
     /*
@@ -189,9 +187,7 @@ void main(void) {
     
     if ((!invertClip && (clipValue <= clipLow || clipValue >= clipHigh)) ||
         ( invertClip && (clipValue >= clipLow && clipValue <= clipHigh))) {
-      
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-        return;
+        discard;
     }
 
     /*
@@ -204,4 +200,13 @@ void main(void) {
     else         colour = texture1D(colourTexture,    normVoxValue.x);
 
     gl_FragColor = colour * fragColourFactor;
+
+    /* 
+     * Set the fragment depth on a per-voxel basis 
+     * so that items at adjacent voxels (e.g. 
+     * tensors) overlap, rather than intersect.
+     */
+    gl_FragDepth = fragVoxCoord.x / imageShape.x *
+                   fragVoxCoord.y / imageShape.y *
+                   fragVoxCoord.z / imageShape.z; 
 }

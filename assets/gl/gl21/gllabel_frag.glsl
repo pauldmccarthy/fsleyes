@@ -61,9 +61,7 @@ void main(void) {
     vec3 voxCoord = fragVoxCoord;
 
     if (!test_in_bounds(voxCoord, imageShape)) {
-        
-        gl_FragColor = vec4(0, 0, 0, 0);
-        return;
+        discard;
     }
 
     float voxValue;
@@ -72,8 +70,7 @@ void main(void) {
     float lutCoord = ((voxValXform * vec4(voxValue, 0, 0, 1)).x + 0.5) / numLabels;
 
     if (lutCoord < 0 || lutCoord > 1) {
-        gl_FragColor.a = 0.0;
-        return;
+        discard;
     }
     
     vec4 colour = texture1D(lutTexture, lutCoord);

@@ -118,9 +118,7 @@ void main(void) {
   vec3 voxCoords = fragVoxCoord;
 
   if (!test_in_bounds(voxCoords, imageShape)) {
-
-    gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-    return;
+    discard;
   }
 
   /*
@@ -179,8 +177,7 @@ void main(void) {
 
   /* Knock out voxels where the clipping value is outside the clipping range */
   if (clipValue <= clipLow || clipValue >= clipHigh) {
-      gl_FragColor.a = 0.0;
-      return;
+      discard;
   }
 
   /*
@@ -215,12 +212,7 @@ void main(void) {
   voxColour.xyz *= modValue;
 
   gl_FragColor = voxColour * fragColourFactor;
-
-  /* Set the fragment depth on a per-voxel basis 
-   * so that items at adjacent voxels (e.g. 
-   * tensors) overlap, rather than intersect.
-   */
-  gl_FragDepth =  fragVoxCoord.x / imageShape.x *
-                  fragVoxCoord.y / imageShape.y *
-                  fragVoxCoord.z / imageShape.z;
+  gl_FragDepth = fragVoxCoord.x / imageShape.x *
+                 fragVoxCoord.y / imageShape.y *
+                 fragVoxCoord.z / imageShape.z;
 }
