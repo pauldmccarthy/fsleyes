@@ -12,6 +12,7 @@ by the :class:`.SliceCanvas` class to store a collection of off-screen
 
 import logging
 
+import numpy     as np
 import OpenGL.GL as gl
 
 import fsleyes.gl.routines as glroutines
@@ -318,7 +319,10 @@ class RenderTextureStack(object):
         zmax  = self.__zmax
         ntexs = len(self.__textures)
         step  = (zmax - zmin) / float(ntexs)
-        index = (zpos - zmin) / step
+
+        # Round to avoid floating
+        # point imprecision. 
+        index = np.around((zpos - zmin) / step, 5)
 
         # Be a little bit lenient at the boundaries
         if abs(index)         < 0.01: index = 0
