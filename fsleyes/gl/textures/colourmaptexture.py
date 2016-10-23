@@ -259,7 +259,7 @@ class ColourMapTexture(texture.Texture):
         if imax == imin: scale = 0.000000000001
         else:            scale = imax - imin
         
-        coordXform = np.identity(4, dtype=np.float32)
+        coordXform = np.identity(4, dtype=np.float64)
         coordXform[0, 0] = 1.0 / scale
         coordXform[3, 0] = -imin * coordXform[0, 0]
 

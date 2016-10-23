@@ -13,6 +13,7 @@ import logging
 
 import numpy                              as np
 import OpenGL.GL                          as gl
+import OpenGL.GL.ARB.texture_float        as arbtf
 
 import fsl.utils.notifier                 as notifier
 import fsl.utils.async                    as async
@@ -23,6 +24,11 @@ import fsleyes.gl.routines                as glroutines
 
 
 log = logging.getLogger(__name__)
+
+
+# Check to see if we can store unclamped 
+# float32 values in GL textures.
+FLOAT_TEXTURES = bool(arbtf)
 
 
 class Texture3D(texture.Texture, notifier.Notifier):
@@ -348,14 +354,16 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
             # If the data is of a type which cannot
             # be stored natively as an OpenGL texture,
-            # the data must be normalised. See
-            # __determineTextureType and
-            # __prepareTextureData 
+            # and we don't have support for floating
+            # point textures, the data must be
+            # normalised. See __determineTextureType
+            # and __prepareTextureData 
             self.__normalise = self.__normalise or \
-                               data.dtype not in (np.uint8,
-                                                  np.int8,
-                                                  np.uint16,
-                                                  np.int16)
+                               (not FLOAT_TEXTURES and
+                                (data.dtype not in (np.uint8,
+                                                    np.int8,
+                                                    np.uint16,
+                                                    np.int16)))
 
             # If the caller has not provided
             # a normalisation range, we have
@@ -581,21 +589,29 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
     def __determineTextureType(self):
         """Figures out how the texture data should be stored as an OpenGL 3D
-        texture.
+        texture. This method just figures out the data types which should be
+        used to store the data as a texture. Any necessary data conversion/
+        transformation is performed by the :meth:`__prepareTextureData`
+        method.
 
-        
-        Regardless of its native data type, the texture data is stored in an
-        unsigned integer format. This method figures out the best data type to
-        use - if the data is already in an unsigned integer format, it may be
-        used as-is. Otherwise, the data needs to be cast and potentially
-        normalised before it can be used as texture data.
 
+        The data can be stored as a GL texture as-is if:
         
-        Internally (e.g. in GLSL shader code), the GPU automatically
-        normalises texture data to the range ``[0.0, 1.0]``. This method
-        therefore calculates an appropriate transformation matrix, encoding a
-        scale and offset, which may be used to transform these normalised
-        values back to the raw data values.
+          - it is of type ``uint8`` or ``uint16``
+        
+          - it is of type ``float32``, *and* this GL environment has support
+            for floating point textures. Support for floating point textures
+            is determined by testing for the availability of the
+            ``ARB_texture_float`` extension.
+
+
+        In all other cases, the data needs to be converted to a supported data
+        type, and potentially normalised, before it can be used as texture
+        data.  If floating point textures are available, the data is converted
+        to float32. Otherwise, the data is converted to ``uint16``, and
+        normalised to take the full ``uint16`` data range (``0-65535``), and a
+        transformation matrix is saved, allowing transformation of this
+        normalised data back to its original data range.
 
 
         .. note:: OpenGL does different things to 3D texture data depending on
@@ -603,12 +619,11 @@ class Texture3D(texture.Texture, notifier.Notifier):
                   ``[0, INT_MAX]`` to ``[0, 1]``.
 
                   Floating point texture data types are, by default, *clamped*
-                  (not normalised), to the range ``[0, 1]``! This could be
-                  overcome by using a more recent versions of OpenGL, or by
-                  using the ``ARB.texture_rg.GL_R32F`` data format. Here, we
-                  simply cast floating point data to an unsigned integer type,
-                  normalise it to the appropriate range, and calculate a
-                  transformation matrix to transform back to the data range.
+                  (not normalised), to the range ``[0, 1]``! We can overcome by
+                  this by using a true floating point texture, which is
+                  accomplished by using one of the data types provided by the
+                  ``ARB_texture_float``extension. If this extension is not
+                  available, we have no choice but to normalise the data.
 
         
         This method sets the following attributes on this ``Texture3D``
@@ -633,15 +648,27 @@ class Texture3D(texture.Texture, notifier.Notifier):
         # Signed data types are a pain in the arse.
         #
         # TODO It would be nice if you didn't have
-        # to perform the data conversion/offset
-        # for signed types.
+        #      to perform the data conversion/offset
+        #      for signed types.
 
-        # Texture data type
+        # TODO if normalise and FLOAT_TEXTURES, 
+        #      you should use float32, not uint16
+
+        # Note: Throughout this method, it is assumed
+        #       that if the data type is not supported,
+        #       then the normalise flag will have been 
+        #       set to True. An error will occur if 
+        #       this is not the case (which would
+        #       indicate that the logic in the set()
+        #       method is broken).
+
+        # Texture data type. 
         if   normalise:          texDtype = gl.GL_UNSIGNED_SHORT
         elif dtype == np.uint8:  texDtype = gl.GL_UNSIGNED_BYTE
         elif dtype == np.int8:   texDtype = gl.GL_UNSIGNED_BYTE
         elif dtype == np.uint16: texDtype = gl.GL_UNSIGNED_SHORT
         elif dtype == np.int16:  texDtype = gl.GL_UNSIGNED_SHORT
+        elif FLOAT_TEXTURES:     texDtype = gl.GL_FLOAT
 
         # The texture format
         if   self.__nvals == 1: texFmt = gl.GL_LUMINANCE
@@ -659,6 +686,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
             elif dtype == np.int8:   intFmt = gl.GL_LUMINANCE8
             elif dtype == np.uint16: intFmt = gl.GL_LUMINANCE16
             elif dtype == np.int16:  intFmt = gl.GL_LUMINANCE16
+            elif FLOAT_TEXTURES:     intFmt = arbtf.GL_LUMINANCE32F_ARB
 
         elif self.__nvals == 2:
             if   normalise:          intFmt = gl.GL_LUMINANCE16_ALPHA16
@@ -666,6 +694,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
             elif dtype == np.int8:   intFmt = gl.GL_LUMINANCE8_ALPHA8
             elif dtype == np.uint16: intFmt = gl.GL_LUMINANCE16_ALPHA16
             elif dtype == np.int16:  intFmt = gl.GL_LUMINANCE16_ALPHA16
+            elif FLOAT_TEXTURES:     intFmt = arbtf.GL_LUMINANCE_ALPHA32F_ARB
 
         elif self.__nvals == 3:
             if   normalise:          intFmt = gl.GL_RGB16
@@ -673,13 +702,15 @@ class Texture3D(texture.Texture, notifier.Notifier):
             elif dtype == np.int8:   intFmt = gl.GL_RGB8
             elif dtype == np.uint16: intFmt = gl.GL_RGB16
             elif dtype == np.int16:  intFmt = gl.GL_RGB16
+            elif FLOAT_TEXTURES:     intFmt = arbtf.GL_RGB32F_ARB
             
         elif self.__nvals == 4:
             if   normalise:          intFmt = gl.GL_RGBA16
             elif dtype == np.uint8:  intFmt = gl.GL_RGBA8
             elif dtype == np.int8:   intFmt = gl.GL_RGBA8
             elif dtype == np.uint16: intFmt = gl.GL_RGBA16
-            elif dtype == np.int16:  intFmt = gl.GL_RGBA16 
+            elif dtype == np.int16:  intFmt = gl.GL_RGBA16
+            elif FLOAT_TEXTURES:     intFmt = arbtf.GL_RGBA32F_ARB
 
         # This is all just for logging purposes
         if log.getEffectiveLevel() == logging.DEBUG:
@@ -687,7 +718,9 @@ class Texture3D(texture.Texture, notifier.Notifier):
             if   texDtype == gl.GL_UNSIGNED_BYTE:
                 sTexDtype = 'GL_UNSIGNED_BYTE'
             elif texDtype == gl.GL_UNSIGNED_SHORT:
-                sTexDtype = 'GL_UNSIGNED_SHORT' 
+                sTexDtype = 'GL_UNSIGNED_SHORT'
+            elif texDtype == gl.GL_FLOAT:
+                sTexDtype = 'GL_FLOAT' 
             
             if   texFmt == gl.GL_LUMINANCE:
                 sTexFmt = 'GL_LUMINANCE'
@@ -701,19 +734,27 @@ class Texture3D(texture.Texture, notifier.Notifier):
             if   intFmt == gl.GL_LUMINANCE8:
                 sIntFmt = 'GL_LUMINANCE8'
             elif intFmt == gl.GL_LUMINANCE16:
-                sIntFmt = 'GL_LUMINANCE16' 
+                sIntFmt = 'GL_LUMINANCE16'
+            elif intFmt == arbtf.GL_LUMINANCE32F_ARB:
+                sIntFmt = 'GL_LUMINANCE32F' 
             elif intFmt == gl.GL_LUMINANCE8_ALPHA8:
                 sIntFmt = 'GL_LUMINANCE8_ALPHA8'
             elif intFmt == gl.GL_LUMINANCE16_ALPHA16:
                 sIntFmt = 'GL_LUMINANCE16_ALPHA16'
+            elif intFmt == arbtf.GL_LUMINANCE_ALPHA32F_ARB:
+                sIntFmt = 'GL_LUMINANCE_ALPHA_32F' 
             elif intFmt == gl.GL_RGB8:
                 sIntFmt = 'GL_RGB8'
             elif intFmt == gl.GL_RGB16:
                 sIntFmt = 'GL_RGB16'
+            elif intFmt == arbtf.GL_RGB32F_ARB:
+                sIntFmt = 'GL_RGB32F' 
             elif intFmt == gl.GL_RGBA8:
                 sIntFmt = 'GL_RGBA8'
             elif intFmt == gl.GL_RGBA16:
-                sIntFmt = 'GL_RGBA16' 
+                sIntFmt = 'GL_RGBA16'
+            elif intFmt == arbtf.GL_RGBA32F_ARB:
+                sIntFmt = 'GL_RGBA32F' 
             
             log.debug('Texture ({}) is to be stored as {}/{}/{} '
                       '(normalised: {})'.format(
@@ -791,18 +832,26 @@ class Texture3D(texture.Texture, notifier.Notifier):
         elif dtype == np.int8:   offset = -128
         elif dtype == np.uint16: offset =  0
         elif dtype == np.int16:  offset = -32768
+        elif FLOAT_TEXTURES:     offset = 0
 
         if   normalise:          scale = dmax - dmin
         elif dtype == np.uint8:  scale = 255
         elif dtype == np.int8:   scale = 255
         elif dtype == np.uint16: scale = 65535
         elif dtype == np.int16:  scale = 65535
+        elif FLOAT_TEXTURES:     scale = 1
 
         # If the data range is 0 (min == max)
         # we just set an identity xform
         if scale == 0:
             voxValXform    = np.eye(4)
             invVoxValXform = np.eye(4)
+
+        # Otherwise we save a transformation
+        # from the texture values back to the
+        # original data range. Note that if
+        # storing floating point data, this
+        # will be an identity transform.
         else:
             invScale       = 1.0 / scale
             voxValXform    = transform.scaleOffsetXform(scale, offset)
@@ -815,7 +864,9 @@ class Texture3D(texture.Texture, notifier.Notifier):
         
         if prefilter is not None:
             data = prefilter(data)
-            
+
+        # TODO if FLOAT_TEXTURES, you should
+        #      save normalised values as float32
         if normalise:
 
             if dmax != dmin:
@@ -828,6 +879,8 @@ class Texture3D(texture.Texture, notifier.Notifier):
         elif dtype == np.int8:   data = np.array(data + 128,   dtype=np.uint8)
         elif dtype == np.uint16: pass
         elif dtype == np.int16:  data = np.array(data + 32768, dtype=np.uint16)
+        elif FLOAT_TEXTURES and data.dtype != np.float32:
+            data = np.array(data, dtype=np.float32)
 
         log.debug('Data preparation for {} complete [dtype={}, '
                   'scale={}, offset={}, dmin={}, dmax={}].'.format(
