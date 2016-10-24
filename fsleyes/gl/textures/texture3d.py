@@ -34,7 +34,9 @@ GL_TYPE_NAMES = {
     gl.GL_UNSIGNED_SHORT            : 'GL_UNSIGNED_SHORT',
     gl.GL_FLOAT                     : 'GL_FLOAT',
 
+    gl.GL_RED                       : 'GL_RED',
     gl.GL_LUMINANCE                 : 'GL_LUMINANCE',
+    gl.GL_RG                        : 'GL_RG',
     gl.GL_LUMINANCE_ALPHA           : 'GL_LUMINANCE_ALPHA',
     gl.GL_RGB                       : 'GL_RGB',
     gl.GL_RGBA                      : 'GL_RGBA',
@@ -51,10 +53,10 @@ GL_TYPE_NAMES = {
     
     gl.GL_RGB8                      : 'GL_RGB8',
     gl.GL_RGB16                     : 'GL_RGB16',
-    arbtf.GL_RGB32F_ARB             : 'GL_RGB32F' ,
+    gl.GL_RGB32F                    : 'GL_RGB32F' ,
     gl.GL_RGBA8                     : 'GL_RGBA8',
     gl.GL_RGBA16                    : 'GL_RGBA16',
-    arbtf.GL_RGBA32F_ARB            : 'GL_RGBA32F'
+    gl.GL_RGBA32F                   : 'GL_RGBA32F'
 }
 
 
