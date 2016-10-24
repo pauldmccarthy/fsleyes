@@ -225,12 +225,17 @@ class Texture3D(texture.Texture, notifier.Notifier):
                       floating point textures are not supported) 
         """
 
-        supported = False
-        baseFmt   = None
-        intFmt    = None
-        
-        if glexts.hasExtension('GL_ARB_texture_rg'):
+        # We need the texture_float extension. The
+        # texture_rg extension just provides some
+        # nicer/more modern data types, but is not
+        # necessary.
+        floatSupported = glexts.hasExtension('GL_ARB_texture_float')
+        rgSupported    = glexts.hasExtension('GL_ARB_texture_rg')
 
+        if not floatSupported:
+            return False, None, None
+        
+        if rgSupported:
             if   nvals == 1: baseFmt = gl.GL_RED
             elif nvals == 2: baseFmt = gl.GL_RG
             elif nvals == 3: baseFmt = gl.GL_RGB
@@ -241,9 +246,9 @@ class Texture3D(texture.Texture, notifier.Notifier):
             elif nvals == 3: intFmt  = gl.GL_RGB32F
             elif nvals == 4: intFmt  = gl.GL_RGBA32F
 
-            supported = True
+            return True, baseFmt, intFmt
         
-        elif glexts.hasExtension('GL_ARB_texture_float'):
+        else:
 
             if   nvals == 1: baseFmt = gl.GL_LUMINANCE
             elif nvals == 2: baseFmt = gl.GL_LUMINANCE_ALPHA
@@ -255,10 +260,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
             elif nvals == 3: intFmt  = gl.GL_RGB32F
             elif nvals == 4: intFmt  = gl.GL_RGBA32F
 
-            supported = True
-
-        return supported, baseFmt, intFmt
-
+            return True, baseFmt, intFmt
 
     @classmethod
     @memoize.memoize
