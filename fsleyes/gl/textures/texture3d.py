@@ -27,6 +27,36 @@ import fsleyes.gl.routines                as glroutines
 
 log = logging.getLogger(__name__)
 
+# Used for debugging
+GL_TYPE_NAMES = {
+
+    gl.GL_UNSIGNED_BYTE             : 'GL_UNSIGNED_BYTE',
+    gl.GL_UNSIGNED_SHORT            : 'GL_UNSIGNED_SHORT',
+    gl.GL_FLOAT                     : 'GL_FLOAT',
+
+    gl.GL_LUMINANCE                 : 'GL_LUMINANCE',
+    gl.GL_LUMINANCE_ALPHA           : 'GL_LUMINANCE_ALPHA',
+    gl.GL_RGB                       : 'GL_RGB',
+    gl.GL_RGBA                      : 'GL_RGBA',
+    
+    gl.GL_LUMINANCE8                : 'GL_LUMINANCE8',
+    gl.GL_LUMINANCE16               : 'GL_LUMINANCE16',
+    arbtf.GL_LUMINANCE32F_ARB       : 'GL_LUMINANCE32F',
+    gl.GL_R32F                      : 'GL_R32F',
+    
+    gl.GL_LUMINANCE8_ALPHA8         : 'GL_LUMINANCE8_ALPHA8',
+    gl.GL_LUMINANCE16_ALPHA16       : 'GL_LUMINANCE16_ALPHA16',
+    arbtf.GL_LUMINANCE_ALPHA32F_ARB : 'GL_LUMINANCE_ALPHA_32F',
+    gl.GL_RG32F                     : 'GL_RG32F',
+    
+    gl.GL_RGB8                      : 'GL_RGB8',
+    gl.GL_RGB16                     : 'GL_RGB16',
+    arbtf.GL_RGB32F_ARB             : 'GL_RGB32F' ,
+    gl.GL_RGBA8                     : 'GL_RGBA8',
+    gl.GL_RGBA16                    : 'GL_RGBA16',
+    arbtf.GL_RGBA32F_ARB            : 'GL_RGBA32F'
+}
+
 
 class Texture3D(texture.Texture, notifier.Notifier):
     """The ``Texture3D`` class contains the logic required to create and
@@ -174,13 +204,141 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
     @classmethod
     @memoize.memoize
-    def canUseFloatTextures(cls):
+    def canUseFloatTextures(cls, nvals=1):
         """Returns ``True`` if this GL environment supports floating
         point textures, ``False`` otherwise. The test is based on the
         availability of the ``ARB_texture_float`` extension.
-        """
-        return glexts.hasExtension('GL_ARB_texture_float')
 
+        :arg nvals: Number of values per voxel
+
+        :returns: A tuple containing:
+        
+                    - ``True`` if floating point textures are supported,
+                      ``False`` otherwise
+        
+                    - The base texture format to use (``None`` if floating
+                      point textures are not supported)
+        
+                    - The internal texture format to use  (``None`` if 
+                      floating point textures are not supported) 
+        """
+
+        supported = False
+        baseFmt   = None
+        intFmt    = None
+        
+        if glexts.hasExtension('GL_ARB_texture_rg'):
+
+            if   nvals == 1: baseFmt = gl.GL_RED
+            elif nvals == 2: baseFmt = gl.GL_RG
+            elif nvals == 3: baseFmt = gl.GL_RGB
+            elif nvals == 4: baseFmt = gl.GL_RGBA
+
+            if   nvals == 1: intFmt  = gl.GL_R32F
+            elif nvals == 2: intFmt  = gl.GL_RG32F
+            elif nvals == 3: intFmt  = gl.GL_RGB32F
+            elif nvals == 4: intFmt  = gl.GL_RGBA32F
+
+            supported = True
+        
+        elif glexts.hasExtension('GL_ARB_texture_float'):
+
+            if   nvals == 1: baseFmt = gl.GL_LUMINANCE
+            elif nvals == 2: baseFmt = gl.GL_LUMINANCE_ALPHA
+            elif nvals == 3: baseFmt = gl.GL_RGB
+            elif nvals == 4: baseFmt = gl.GL_RGBA
+            
+            if   nvals == 1: intFmt  = arbtf.GL_LUMINANCE32F_ARB
+            elif nvals == 2: intFmt  = arbtf.GL_LUMINANCE_ALPHA32F_ARB
+            elif nvals == 3: intFmt  = gl.GL_RGB32F
+            elif nvals == 4: intFmt  = gl.GL_RGBA32F
+
+            supported = True
+
+        return supported, baseFmt, intFmt
+
+
+    @classmethod
+    @memoize.memoize
+    def getTextureType(cls, normalise, dtype, nvals):
+        """Figures out the GL data type, and the base/internal texture
+        formats in whihc the specified data should be stored.
+
+        :arg normalise: Whether the data is to be normalised or not
+        :arg dtype:     The original data type (e.g. ``np.uint8``)
+        :arg nvals:     Number of values per voxel
+
+        :returns: A tuple containing:
+        
+                    - The GL data type
+                    - The base texture format
+                    - The internal texture format
+        """
+        floatTextures, fFmt, fIntFmt = cls.canUseFloatTextures(nvals)
+        isFloat                      = isinstance(dtype, np.floating)
+
+        # Signed data types are a pain in the arse.
+        # We have to store them as unsigned, and
+        # apply an offset.
+
+        # Note: Throughout this method, it is assumed
+        #       that if the data type is not supported,
+        #       then the normalise flag will have been 
+        #       set to True. An error will occur if 
+        #       this is not the case (which would
+        #       indicate that the logic in the set()
+        #       method is broken).
+
+        # Data type
+        if   normalise:          texDtype = gl.GL_UNSIGNED_SHORT
+        elif dtype == np.uint8:  texDtype = gl.GL_UNSIGNED_BYTE
+        elif dtype == np.int8:   texDtype = gl.GL_UNSIGNED_BYTE
+        elif dtype == np.uint16: texDtype = gl.GL_UNSIGNED_SHORT
+        elif dtype == np.int16:  texDtype = gl.GL_UNSIGNED_SHORT
+        elif floatTextures:      texDtype = gl.GL_FLOAT
+
+        # Base texture format
+        if floatTextures and isFloat: texFmt = fFmt
+        elif nvals == 1:              texFmt = gl.GL_LUMINANCE
+        elif nvals == 2:              texFmt = gl.GL_LUMINANCE_ALPHA
+        elif nvals == 3:              texFmt = gl.GL_RGB
+        elif nvals == 4:              texFmt = gl.GL_RGBA
+        
+        # Internal texture format
+        if nvals == 1:
+            if   normalise:          intFmt = gl.GL_LUMINANCE16
+            elif dtype == np.uint8:  intFmt = gl.GL_LUMINANCE8
+            elif dtype == np.int8:   intFmt = gl.GL_LUMINANCE8
+            elif dtype == np.uint16: intFmt = gl.GL_LUMINANCE16
+            elif dtype == np.int16:  intFmt = gl.GL_LUMINANCE16
+            elif floatTextures:      intFmt = fIntFmt
+
+        elif nvals == 2:
+            if   normalise:          intFmt = gl.GL_LUMINANCE16_ALPHA16
+            elif dtype == np.uint8:  intFmt = gl.GL_LUMINANCE8_ALPHA8
+            elif dtype == np.int8:   intFmt = gl.GL_LUMINANCE8_ALPHA8
+            elif dtype == np.uint16: intFmt = gl.GL_LUMINANCE16_ALPHA16
+            elif dtype == np.int16:  intFmt = gl.GL_LUMINANCE16_ALPHA16
+            elif floatTextures:      intFmt = fIntFmt
+
+        elif nvals == 3:
+            if   normalise:          intFmt = gl.GL_RGB16
+            elif dtype == np.uint8:  intFmt = gl.GL_RGB8
+            elif dtype == np.int8:   intFmt = gl.GL_RGB8
+            elif dtype == np.uint16: intFmt = gl.GL_RGB16
+            elif dtype == np.int16:  intFmt = gl.GL_RGB16
+            elif floatTextures:      intFmt = fIntFmt
+            
+        elif nvals == 4:
+            if   normalise:          intFmt = gl.GL_RGBA16
+            elif dtype == np.uint8:  intFmt = gl.GL_RGBA8
+            elif dtype == np.int8:   intFmt = gl.GL_RGBA8
+            elif dtype == np.uint16: intFmt = gl.GL_RGBA16
+            elif dtype == np.int16:  intFmt = gl.GL_RGBA16
+            elif floatTextures:      intFmt = fIntFmt
+ 
+        return texDtype, texFmt, intFmt
+    
         
     def ready(self):
         """Returns ``True`` if this ``Texture3D`` is ready to be used,
@@ -366,7 +524,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
             # normalised. See __determineTextureType
             # and __prepareTextureData 
             self.__normalise = self.__normalise or \
-                               (not self.canUseFloatTextures() and
+                               (not self.canUseFloatTextures()[0] and
                                 (data.dtype not in (np.uint8,
                                                     np.int8,
                                                     np.uint16,
@@ -647,130 +805,25 @@ class Texture3D(texture.Texture, notifier.Notifier):
         ``__texDtype``       The raw type of the texture data (e.g.
                              ``GL_UNSIGNED_SHORT``)
         ==================== ==============================================
-        """        
+        """
 
-        dtype         = self.__data.dtype
-        normalise     = self.__normalise
-        floatTextures = self.canUseFloatTextures()
+        if self.__nvals not in range(1, 5):
+            raise ValueError('Cannot create texture representation '
+                             'for {} (nvals: {})'.format(self.__data.dtype,
+                                                         self.__nvals))
 
-        # Signed data types are a pain in the arse.
-        #
-        # TODO It would be nice if you didn't have
-        #      to perform the data conversion/offset
-        #      for signed types.
+        dtype                    = self.__data.dtype
+        normalise                = self.__normalise
+        nvals                    = self.__nvals
+        texDtype, texFmt, intFmt = self.getTextureType(normalise, dtype, nvals)
 
-        # TODO if normalise and FLOAT_TEXTURES, 
-        #      you should use float32, not uint16
-
-        # Note: Throughout this method, it is assumed
-        #       that if the data type is not supported,
-        #       then the normalise flag will have been 
-        #       set to True. An error will occur if 
-        #       this is not the case (which would
-        #       indicate that the logic in the set()
-        #       method is broken).
-
-        # Texture data type.
-        if   normalise:          texDtype = gl.GL_UNSIGNED_SHORT
-        elif dtype == np.uint8:  texDtype = gl.GL_UNSIGNED_BYTE
-        elif dtype == np.int8:   texDtype = gl.GL_UNSIGNED_BYTE
-        elif dtype == np.uint16: texDtype = gl.GL_UNSIGNED_SHORT
-        elif dtype == np.int16:  texDtype = gl.GL_UNSIGNED_SHORT
-        elif floatTextures:      texDtype = gl.GL_FLOAT
-
-        # The texture format
-        if   self.__nvals == 1: texFmt = gl.GL_LUMINANCE
-        elif self.__nvals == 2: texFmt = gl.GL_LUMINANCE_ALPHA
-        elif self.__nvals == 3: texFmt = gl.GL_RGB
-        elif self.__nvals == 4: texFmt = gl.GL_RGBA
-        else:
-            raise ValueError('Cannot create texture representation for '
-                             '{} (nvals: {})'.format(dtype, self.__nvals))
-
-        # Internal texture format
-        if self.__nvals == 1:
-            if   normalise:          intFmt = gl.GL_LUMINANCE16
-            elif dtype == np.uint8:  intFmt = gl.GL_LUMINANCE8
-            elif dtype == np.int8:   intFmt = gl.GL_LUMINANCE8
-            elif dtype == np.uint16: intFmt = gl.GL_LUMINANCE16
-            elif dtype == np.int16:  intFmt = gl.GL_LUMINANCE16
-            elif floatTextures:      intFmt = arbtf.GL_LUMINANCE32F_ARB
-
-        elif self.__nvals == 2:
-            if   normalise:          intFmt = gl.GL_LUMINANCE16_ALPHA16
-            elif dtype == np.uint8:  intFmt = gl.GL_LUMINANCE8_ALPHA8
-            elif dtype == np.int8:   intFmt = gl.GL_LUMINANCE8_ALPHA8
-            elif dtype == np.uint16: intFmt = gl.GL_LUMINANCE16_ALPHA16
-            elif dtype == np.int16:  intFmt = gl.GL_LUMINANCE16_ALPHA16
-            elif floatTextures:      intFmt = arbtf.GL_LUMINANCE_ALPHA32F_ARB
-
-        elif self.__nvals == 3:
-            if   normalise:          intFmt = gl.GL_RGB16
-            elif dtype == np.uint8:  intFmt = gl.GL_RGB8
-            elif dtype == np.int8:   intFmt = gl.GL_RGB8
-            elif dtype == np.uint16: intFmt = gl.GL_RGB16
-            elif dtype == np.int16:  intFmt = gl.GL_RGB16
-            elif floatTextures:      intFmt = arbtf.GL_RGB32F_ARB
-            
-        elif self.__nvals == 4:
-            if   normalise:          intFmt = gl.GL_RGBA16
-            elif dtype == np.uint8:  intFmt = gl.GL_RGBA8
-            elif dtype == np.int8:   intFmt = gl.GL_RGBA8
-            elif dtype == np.uint16: intFmt = gl.GL_RGBA16
-            elif dtype == np.int16:  intFmt = gl.GL_RGBA16
-            elif floatTextures:      intFmt = arbtf.GL_RGBA32F_ARB
-
-        # This is all just for logging purposes
-        if log.getEffectiveLevel() == logging.DEBUG:
-
-            if   texDtype == gl.GL_UNSIGNED_BYTE:
-                sTexDtype = 'GL_UNSIGNED_BYTE'
-            elif texDtype == gl.GL_UNSIGNED_SHORT:
-                sTexDtype = 'GL_UNSIGNED_SHORT'
-            elif texDtype == gl.GL_FLOAT:
-                sTexDtype = 'GL_FLOAT' 
-            
-            if   texFmt == gl.GL_LUMINANCE:
-                sTexFmt = 'GL_LUMINANCE'
-            elif texFmt == gl.GL_LUMINANCE_ALPHA:
-                sTexFmt = 'GL_LUMINANCE_ALPHA'
-            elif texFmt == gl.GL_RGB:
-                sTexFmt = 'GL_RGB'
-            elif texFmt == gl.GL_RGBA:
-                sTexFmt = 'GL_RGBA'
-                
-            if   intFmt == gl.GL_LUMINANCE8:
-                sIntFmt = 'GL_LUMINANCE8'
-            elif intFmt == gl.GL_LUMINANCE16:
-                sIntFmt = 'GL_LUMINANCE16'
-            elif intFmt == arbtf.GL_LUMINANCE32F_ARB:
-                sIntFmt = 'GL_LUMINANCE32F' 
-            elif intFmt == gl.GL_LUMINANCE8_ALPHA8:
-                sIntFmt = 'GL_LUMINANCE8_ALPHA8'
-            elif intFmt == gl.GL_LUMINANCE16_ALPHA16:
-                sIntFmt = 'GL_LUMINANCE16_ALPHA16'
-            elif intFmt == arbtf.GL_LUMINANCE_ALPHA32F_ARB:
-                sIntFmt = 'GL_LUMINANCE_ALPHA_32F' 
-            elif intFmt == gl.GL_RGB8:
-                sIntFmt = 'GL_RGB8'
-            elif intFmt == gl.GL_RGB16:
-                sIntFmt = 'GL_RGB16'
-            elif intFmt == arbtf.GL_RGB32F_ARB:
-                sIntFmt = 'GL_RGB32F' 
-            elif intFmt == gl.GL_RGBA8:
-                sIntFmt = 'GL_RGBA8'
-            elif intFmt == gl.GL_RGBA16:
-                sIntFmt = 'GL_RGBA16'
-            elif intFmt == arbtf.GL_RGBA32F_ARB:
-                sIntFmt = 'GL_RGBA32F' 
-            
-            log.debug('Texture ({}) is to be stored as {}/{}/{} '
-                      '(normalised: {})'.format(
-                          self.getTextureName(),
-                          sTexDtype,
-                          sTexFmt,
-                          sIntFmt,
-                          normalise))
+        log.debug('Texture ({}) is to be stored as {}/{}/{} '
+                  '(normalised: {})'.format(
+                      self.getTextureName(),
+                      GL_TYPE_NAMES[texDtype],
+                      GL_TYPE_NAMES[texFmt],
+                      GL_TYPE_NAMES[intFmt],
+                      normalise))
 
         self.__texFmt    = texFmt
         self.__texIntFmt = intFmt
