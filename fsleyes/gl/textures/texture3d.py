@@ -275,7 +275,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
                     - The internal texture format
         """
         floatTextures, fFmt, fIntFmt = cls.canUseFloatTextures(nvals)
-        isFloat                      = isinstance(dtype, np.floating)
+        isFloat                      = issubclass(dtype.type, np.floating)
 
         # Signed data types are a pain in the arse.
         # We have to store them as unsigned, and
