@@ -649,7 +649,9 @@ class GLVolume(globject.GLImageObject):
 
 
     def _volumeChanged(self, *a, **kwa):
-        """Called when the :attr:`.NiftiOpts.volume` property changes. """
+        """Called when the :attr:`.NiftiOpts.volume` property changes Also
+        called when other properties, which require a texture refresh, change.
+        """
         opts       = self.displayOpts
         volume     = opts.volume
         resolution = opts.resolution

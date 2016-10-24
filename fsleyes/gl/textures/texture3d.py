@@ -938,8 +938,10 @@ class Texture3D(texture.Texture, notifier.Notifier):
         #      save normalised values as float32
         if normalise:
 
+            log.debug('Normalising to range {} - {}'.format(dmin, dmax))
+
             if dmax != dmin:
-                data = (data - dmin) / float(dmax - dmin)
+                data = np.clip((data - dmin) / float(dmax - dmin), 0, 1)
 
             data = np.round(data * 65535)
             data = np.array(data, dtype=np.uint16)

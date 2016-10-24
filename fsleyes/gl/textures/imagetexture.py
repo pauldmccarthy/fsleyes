@@ -107,7 +107,7 @@ class ImageTexture(texture3d.Texture3D):
         =============== ======================================================
         ``volume``      See :meth:`setVolume`.
 
-        `volRefresh``   If ``True`` (the default), the texture data will be
+        ``volRefresh``  If ``True`` (the default), the texture data will be
                         refreshed even if the ``volume`` parameter hasn't
                         changed. Otherwise, if ``volume`` hasn't changed,
                         the texture will not be refreshed.
@@ -118,8 +118,7 @@ class ImageTexture(texture3d.Texture3D):
         """
 
         kwargs             .pop('data',           None)
-        kwargs             .pop('normalise',      None)
-        kwargs             .pop('normaliseRange', None)
+        normRange  = kwargs.pop('normaliseRange', self.image.dataRange)
         volume     = kwargs.pop('volume',         self.__volume)
         volRefresh = kwargs.pop('volRefresh',     True)
 
@@ -141,6 +140,6 @@ class ImageTexture(texture3d.Texture3D):
             self.__volume  = volume
             kwargs['data'] = self.image[..., volume]
 
-        kwargs['normaliseRange'] = self.image.dataRange
+        kwargs['normaliseRange'] = normRange
 
         return texture3d.Texture3D.set(self, **kwargs)
