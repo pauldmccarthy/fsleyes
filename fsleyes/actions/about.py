@@ -11,6 +11,8 @@ displays an about dialog for *FSLeyes*.
 
 from . import action
 
+from fsl.utils.platform import platform as fslplatform
+
 
 class AboutAction(action.Action):
     """The ``AboutAction`` class is an action which displays an
@@ -39,4 +41,8 @@ class AboutAction(action.Action):
 
         dlg = aboutdlg.AboutDialog(self.__frame)
         dlg.Show()
-        dlg.CentreOnParent()
+
+        # When running over X11/SSH, CentreOnParent
+        # causes the dialog to be moved way off.
+        if not fslplatform.inSSHSession:
+            dlg.CentreOnParent()
