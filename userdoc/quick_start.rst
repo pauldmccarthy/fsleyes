@@ -70,33 +70,16 @@ three *canvases*, along the three primary axes. For a NIFTI image which is
 oriented acording to the MNI152 template, these canvases will correspond to
 the sagittal, coronal, and axial planes.
 
+You can interact with an ortho view in a number of ways. Use the mouse to
+click, or click and drag, to change the current location. Hold down the
+|command_key| key (OSX) or |control_key| key (Linux), and use your mouse wheel
+to zoom in and out of a canvas.  You can also middle-click and drag, or hold
+down the |alt_key| key and drag with the left mouse button, to pan around.
 
 
-You can interact with an orthographic view in a number of ways:
-
-
- - Click, or click and drag, to change the current location.
- - Right click and drag to draw a zoom rectangle. When you release the mouse,
-   the view will zoom in to that rectangle.
-
- - Hold down the |command_key| key (OSX) or |control_key| key (Linux), and
-   use your mouse wheel to zoom in and out of a canvas. 
-   
- - Hold down the |shift_key| key, and use your mouse wheel to change the
-   current location along the depth axis for that canvas (i.e. to scroll
-   through slices).
-
- - When a canvas is zoomed in, you can middle-click and drag, or hold down the
-   |alt_key| key and drag with the left mouse button, to pan around.
-   
- - Hold down the Shift key and the |command_key|/|control_key| key, then click
-   and drag the mouse to adjust the brightness and contrast of the currently
-   selected overlay. Moving the mouse vertically will adjust the contrast, and
-   horizontally will adjust the brightness.
-
- - You can reset the view to its default zoom/pan settings by pressing
-   |alt_key| + r, or selecting the *Settings* |right_arrow| *Ortho view 1*
-   |right_arrow| *Reset display* menu item.
+See the section on :ref:`ortho view interaction
+<ortho_lightbox_views_ortho_interaction>` for more hints on working with an
+ortho view.
 
    
 .. sidebar:: Modifier keys
@@ -119,8 +102,8 @@ The overlay list
 ^^^^^^^^^^^^^^^^
 
            
-The :ref:`overlay list <ortho_lightbox_controls_overlay_list>` displays a list
-of all overlays that you have loaded. With this list you can:
+The :ref:`overlay list <todo>` displays a list of all overlays that you have
+loaded. With this list you can:
 
 
  - Change the currently selected overlay, by clicking on the overlay
@@ -137,10 +120,9 @@ The location panel
 ^^^^^^^^^^^^^^^^^^
 
 
-The :ref:`location panel <ortho_lightbox_controls_location_panel>` shows the
-current display location, in terms of the currently selected overlay. It also
-shows the overlay data value at the current location, for every loaded
-overlay.
+The :ref:`location panel <todo>` shows the current display location, in terms
+of the currently selected overlay. It also shows the overlay data value at the
+current location, for every loaded overlay.
 
 
 
@@ -148,18 +130,16 @@ The toolbars
 ^^^^^^^^^^^^
 
 
-The :ref:`overlay toolbar <ortho_lightbox_controls_overlay_toolbar>` allows
-you to adjust display properties of the currently selected overlay. Pushing
-the gear button will open a dialog containing all of the overlay display
-settings. Pushing the information button opens a dialog containing information
-about the overlay.
+The :ref:`overlay toolbar <todo>` allows you to adjust display properties of
+the currently selected overlay. Pushing the gear button will open a dialog
+containing all of the overlay display settings. Pushing the information button
+opens a dialog containing information about the overlay.
 
 
-The :ref:`ortho toolbar <ortho_lightbox_controls_ortho_toolbar>` allows you to
-adjust the layout of the ortho view. For example, you can toggle each of the
-canvases on and off, and switch between vertical, horizontal, or grid
-layouts. Pushing the spanner icon will open a dialog containing all of the
-ortho view settings.
+The :ref:`ortho toolbar <todo>` allows you to adjust the layout of the ortho
+view. For example, you can toggle each of the canvases on and off, and switch
+between vertical, horizontal, or grid layouts. Pushing the spanner icon will
+open a dialog containing all of the ortho view settings.
 
 
 How do I ...
@@ -186,10 +166,10 @@ Open/close control panels/toolbars?
 
 The *Settings* menu contains a sub-menu for every open view, which allows you
 to toggle the control panels and toolbars for that view, and perform a few
-other tasks. For exmaple, if you want to add an :ref:`atlas panel
-<ortho_lightbox_controls_atlas_panel>`, you would select the *Settings*
-|right_arrow| *Ortho view 1* |right_arrow| *Edit toolbar* menu option. See
-:ref:`overview_views_and_controls` for more information.
+other tasks. For exmaple, if you want to add an :ref:`atlas panel <todo>`, you
+would select the *Settings* |right_arrow| *Ortho view 1* |right_arrow| *Edit
+toolbar* menu option. See :ref:`overview_views_and_controls` for more
+information.
 
 
 Show/hide the cursor/anatomical labels?

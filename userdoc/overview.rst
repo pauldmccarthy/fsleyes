@@ -66,10 +66,9 @@ see the page on :ref:`overlays <overlays>` for more information.
 
 In FSLeyes, **only one overlay** may be selected at a time. You can tell which
 overlay is selected by looking at the name field on the :ref:`overlay toolbar
-<ortho_lightbox_controls_overlay_toolbar>`, or looking at the highlighted item
-in the :ref:`overlay list <ortho_lightbox_controls_overlay_toolbar>`. Many
-operations in FSLeyes will be applied to the currently selected overlay, such
-as adjusting the overlay visibility, brightness and colour map.
+<todo>`, or looking at the highlighted item in the :ref:`overlay list
+<todo>`. Many operations in FSLeyes will be applied to the currently selected
+overlay, such as adjusting the overlay visibility, brightness and colour map.
 
 
 The *Overlay* menu contains options for changing the selected overlay, and
@@ -96,10 +95,9 @@ The FSLeyes interface is arranged into *views* and *controls*.
 Conceptually, a *view* (e.g. an :ref:`orthographic
 <ortho_lightbox_views_ortho>` or :ref:`time series <plot_views_timeseries>`
 panel) displays the data in some way, and a *control* (e.g. an :ref:`overlay
-toolbar <ortho_lightbox_controls_overlay_toolbar>` or :ref:`atlas panel
-<ortho_lightbox_controls_atlas_panel>`) allows you to manipulate that view.
-Views are top-level panels, whereas controls are embedded within a single
-view.
+toolbar <todo>` or :ref:`atlas panel <todo>`) allows you to manipulate that
+view.  Views are top-level panels, whereas controls are embedded within a
+single view.
 
 
 All available views are listed in the *View* menu:
@@ -203,12 +201,11 @@ This perspective is designed to assist in manual classification of ICA
 components. It provides functionality similar to that of the `Melview
 <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Melview>`_ tool, comprising a lightbox
 view and plot panels which display the :ref:`time course
-<plot_views_timeseries>` and :ref:`power spectra
-<plot_views_powerspectrum>` of the currently selected component.  A
-:ref:`classification panel
-<ortho_lightbox_controls_melodic_ic_classification>` allows you to load, save,
-and edit the classification labels for each component. See the page on
-:ref:`IC classification <ic_classification>` for more information.
+<plot_views_timeseries>` and :ref:`power spectra <plot_views_powerspectrum>`
+of the currently selected component.  A :ref:`classification panel <todo>`
+allows you to load, save, and edit the classification labels for each
+component. See the page on :ref:`IC classification <ic_classification>` for
+more information.
 
 
 .. image:: images/overview_melodic.png
@@ -222,11 +219,11 @@ FEAT mode
 
 This perspective is designed to assist in exploring the results of a `FEAT
 <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT>`_ analysis. The :ref:`cluster
-panel <ortho_lightbox_controls_cluster_panel>` displays a table of clusters
-for each contrast (for analyses which used cluster thresholding), and the
-:ref:`time series panel <plot_views_timeseries>` allows you to view full
-and partial model fits to the data. See the page on :ref:`viewing FEAT
-analyses <feat_mode>` for more information.
+panel <todo>` displays a table of clusters for each contrast (for analyses
+which used cluster thresholding), and the :ref:`time series panel
+<plot_views_timeseries>` allows you to view full and partial model fits to the
+data. See the page on :ref:`viewing FEAT analyses <feat_mode>` for more
+information.
 
 
 .. image:: images/overview_feat.png

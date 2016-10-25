@@ -63,10 +63,10 @@ overlay is displayed is called the *overlay type* or the *display type*.
 
 
 When you select an overlay, or change the type of an overlay, the contents of
-the :ref:`overlay toolbar <ortho_lightbox_controls_overlay_toolbar>` will
+the :ref:`overlay toolbar <todo>` will
 change to show commonly used display settings for that overlay. All display
 settings for the currently selected overlay are available in the :ref:`overlay
-display panel <ortho_lightbox_controls_overlay_display_panel>`.
+display panel <todo>`.
 
 
 Volume
@@ -77,7 +77,7 @@ This is the default (and most conventional) display type for NIFTI
 images. Image intensity values are coloured according to a colour map. Many
 settings are available to control how an image is displayed - these are
 accessed through the :ref:`overlay display panel
-<ortho_lightbox_controls_overlay_display_panel>`.
+<todo>`.
 
 
 .. container:: image-strip
@@ -101,7 +101,7 @@ values (*labels*), such as atlases and (sub-)cortical segmentation summary
 images. Each label is displayed in a different colour, and the regions can
 either be shown filled, or with just the outline.  Label colours can be
 customised, and invidiual labels toggled on and off, using the :ref:`lookup
-table panel <ortho_lightbox_controls_lookup_table_panel>`.
+table panel <todo>`.
 
 
 .. container:: image-strip
@@ -314,8 +314,7 @@ they have different resolution or orientation. By default, FSLeyes will
 display all overlays in terms of a single reference overlay, typically the
 first one that you load; all other overlays are transformed into the space of
 this reference overlay. You can change the reference overlay via the
-:ref:`display settings panel
-<ortho_lightbox_controls_display_settings_panel>`.
+:ref:`display settings panel <todo>`.
 
 
 .. container:: image-strip

@@ -166,4 +166,4 @@ Saving your changes
 
 When you have made changes to an image, or created a mask/ROI image, don't
 forget to save them via the *File* |right_arrow| *Save overlay* menu item, or
-the floppy disk button on the :ref:`ortho_lightbox_controls_overlay_list`.
+the floppy disk button on the :ref:`overlay list <todo>`.

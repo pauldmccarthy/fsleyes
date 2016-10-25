@@ -1,45 +1,68 @@
-FSLeyes
-=======
+.. _index:
+
+Index
+=====
+
+Refs/links to
 
 
-.. image:: images/fsleyes_icon.png
-   :scale: 25%
-   :align: center
+:ref:`Perspectives <overview_layout_and_perspectives>`
 
 
-This is the user documentation for *FSLeyes*, the FSL image viewer. If you are
-getting started with FSLeyes, check out the :ref:`quick_start` page.
-Otherwise, choose a topic from the list below.
+:ref:`Ortho view <ortho_lightbox_views_ortho>`
 
 
-.. note:: *FSLeyes* is pronounced as **"fossilise"**.
+:ref:`Lightbox view <ortho_lightbox_views_lightbox>`
+
+     
+:ref:`Time series view <plot_views_timeseries>`
 
 
-.. warning:: This documentation is a work in progress. There is not much
-             content, and the content that is present is subject to change
-             without warning..
+:ref:`Histogram view <plot_views_timeseries>`
 
 
-.. toctree::
-   :name: mastertoc
-   :caption: Table of contents
-   :maxdepth: 1
+:ref:`Power spectrum view <plot_views_timeseries>` 
 
-   self
-   quick_start
-   overview
-   overlays
-   ortho_lightbox_views
-   plot_views
-   ortho_lightbox_controls
-   plot_controls
-   linking_overlays
-   multiple_views
-   atlases
-   editing_images
-   feat_mode
-   ic_classification
-   command_line
-   offscreen_rendering
-   display_space
-   troubleshooting
+
+Overlay display toolbar
+
+Ortho toolbar
+
+Ortho edit toolbar
+
+Lightbox toolbar
+
+Overlay list panel
+
+Location panel
+
+View settings panel
+
+Overlay display panel
+
+Overlay info panel
+
+Atlas panel
+
+Lookup table panel
+
+Melodic IC panel
+
+Cluster panel
+
+
+
+
+Overlay list (plot) panel
+
+Plot list panel
+
+Plot toolbar
+
+Plot control panel
+
+
+:ref:`FEAT mode <feat_mode>`
+
+
+:ref:`MELODIC mode <ic_classification>`
