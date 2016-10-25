@@ -5,6 +5,16 @@ Troubleshooting
 ===============
 
 
+Images not overlaid on each other
+
+
+Images with large data range
+
+
+Technical problems
+------------------
+
+
 SSH/X11/XQuartz 2.7.9 OpenGL problem
 
 

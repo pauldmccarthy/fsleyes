@@ -13,7 +13,13 @@ Overview
 
 FSLeyes is a viewer for 3D and 4D neuroimaging data. It is intended as a
 replacement for the much loved `FSLView
-<http://fsl.fmrib.ox.ac.uk/fsl/fslview/>`_.
+<http://fsl.fmrib.ox.ac.uk/fsl/fslview/>`_. FSLeyes offers similar
+functionality to FSLView [*]_, and aims to improve and expand upon this
+functionality in many ways.
+
+
+.. [*] With the exception that FSLeyes |version| does not provide a *3D
+       mode* - this will be added in a future version.
 
 
 Help!
@@ -21,9 +27,9 @@ Help!
 
 
 If you get stuck, search through these help pages to see if your problem is
-discussed anywhere. Additionally, most FSLeyes buttons and controls have a
-tooltip, which will pop up if your hover the mouse over them for a couple of
-seconds:
+discussed anywhere. Most FSLeyes buttons and controls also have tooltips which
+contain useful information, and which will pop up if your hover the mouse over
+the controls for a couple of seconds:
 
 .. image:: images/overview_tooltip.png
    :align: center
@@ -210,7 +216,7 @@ and edit the classification labels for each component. See the page on
    :width: 75%
 
 
-FEAT node
+FEAT mode
 ^^^^^^^^^
 
 

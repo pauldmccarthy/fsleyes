@@ -41,4 +41,5 @@ Otherwise, choose a topic from the list below.
    ic_classification
    command_line
    offscreen_rendering
+   display_space
    troubleshooting

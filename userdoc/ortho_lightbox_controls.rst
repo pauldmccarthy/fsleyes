@@ -28,6 +28,12 @@ Overlay display panel
 ^^^^^^^^^^^^^^^^^^^^^
 
 
+.. _ortho_lightbox_controls_display_settings_panel:
+
+Display settings panel
+^^^^^^^^^^^^^^^^^^^^^^
+
+
 .. _ortho_lightbox_controls_ortho_toolbar:
 
 Ortho toolbar
