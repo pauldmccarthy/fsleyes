@@ -100,6 +100,16 @@ properties = TypeDict({
     'VolumeOpts.invert'          : 'Invert the display range, so that the low '
                                    'value corresponds to the high colour, and '
                                    'vice versa.',
+    'VolumeOpts.enableOverrideDataRange' : 'Override the actual data range of '
+                                           'an image with a user-specified '
+                                           'one. This is useful for images '
+                                           'which have a very large data '
+                                           'range that is driven by outliers.',
+    'VolumeOpts.overrideDataRange'       : 'Override the actual data range of '
+                                           'an image with a user-specified '
+                                           'one. This is useful for images '
+                                           'which have a very large data '
+                                           'range that is driven by outliers.',
 
     'MaskOpts.colour'    : 'The colour of this mask image.',
     'MaskOpts.invert'    : 'Invert the mask threshold range, so that values '

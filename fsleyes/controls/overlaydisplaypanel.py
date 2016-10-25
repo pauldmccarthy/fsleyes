@@ -216,12 +216,20 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
             widget = props.buildGUI(widgetList, target, p)
 
             # Build a panel for the VolumeOpts colour map controls.
-            if isinstance(target, displayctx.VolumeOpts) and p.key == 'cmap':
+            if isinstance(target, displayctx.VolumeOpts):
 
-                cmapWidget    = widget
-                widget, extra = self.__buildColourMapWidget(target, cmapWidget)
+                if p.key == 'cmap':
+                    cmapWidget    = widget
+                    widget, extra = self.__buildColourMapWidget(
+                        target, cmapWidget)
+                    returnedWidgets.extend([cmapWidget] + list(extra))
+                    
+                elif p.key == 'enableOverrideDataRange':
+                    enableWidget  = widget
+                    widget, extra = self.__buildOverrideDataRangeWidget(
+                        target, enableWidget)
+                    returnedWidgets.extend([enableWidget] + list(extra)) 
 
-                returnedWidgets.extend([cmapWidget] + list(extra))
             else:
                 returnedWidgets.append(widget)
                 
@@ -261,11 +269,8 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         loadAction.bindToWidget(self, wx.EVT_BUTTON, loadButton)
 
         # Negative colour map widget
-        negCmap    = props.Widget('negativeCmap',
-                                  labels=fslcm.getColourMapLabel,
-                                  dependencies=['useNegativeCmap'],
-                                  enabledWhen=lambda i, unc : unc)
-        useNegCmap = props.Widget('useNegativeCmap')
+        negCmap    = _DISPLAY_WIDGETS[target, 'negativeCmap']
+        useNegCmap = _DISPLAY_WIDGETS[target, 'useNegativeCmap']
         
         negCmap    = props.buildGUI(widgets, target, negCmap)
         useNegCmap = props.buildGUI(widgets, target, useNegCmap)
@@ -281,6 +286,27 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         sizer.Add(useNegCmap, flag=wx.EXPAND)
         
         return sizer, [negCmap, useNegCmap]
+
+
+    def __buildOverrideDataRangeWidget(self, target, enableWidget):
+        """Builds a panel which contains widgets for enabling and adjusting
+        the :attr:`.VolumeOpts.overrideDataRange`.
+
+        :returns: a ``wx.Sizer`` containing all of the widgets.
+        """
+        
+        widgets = self.getWidgetList()
+
+        # Override data range widget
+        overrideRange = _DISPLAY_WIDGETS[target, 'overrideDataRange']
+        overrideRange = props.buildGUI(widgets, target, overrideRange)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        sizer.Add(enableWidget,  flag=wx.EXPAND)
+        sizer.Add(overrideRange, flag=wx.EXPAND, proportion=1)
+        
+        return sizer, [overrideRange] 
 
 
 def _imageName(img):
@@ -309,7 +335,8 @@ _DISPLAY_PROPS = td.TypeDict({
                         'linkHighRanges',
                         'displayRange',
                         'clippingRange',
-                        'clipImage'],
+                        'clipImage',
+                        'enableOverrideDataRange'],
     'MaskOpts'       : ['resolution',
                         'volume',
                         'colour',
@@ -388,6 +415,13 @@ _DISPLAY_WIDGETS = td.TypeDict({
     'VolumeOpts.cmap'           : props.Widget(
         'cmap',
         labels=fslcm.getColourMapLabel),
+    
+    'VolumeOpts.useNegativeCmap' : props.Widget('useNegativeCmap'),
+    'VolumeOpts.negativeCmap'    : props.Widget(
+        'negativeCmap',
+        labels=fslcm.getColourMapLabel,
+        dependencies=['useNegativeCmap'],
+        enabledWhen=lambda i, unc : unc),
     'VolumeOpts.invert'         : props.Widget('invert'),
     'VolumeOpts.invertClipping' : props.Widget('invertClipping'),
     'VolumeOpts.linkLowRanges'  : props.Widget(
@@ -413,7 +447,16 @@ _DISPLAY_WIDGETS = td.TypeDict({
     'VolumeOpts.clipImage'      : props.Widget(
         'clipImage',
         labels=_imageName),
-
+    'VolumeOpts.enableOverrideDataRange'  : props.Widget(
+        'enableOverrideDataRange'),
+    'VolumeOpts.overrideDataRange' : props.Widget(
+        'overrideDataRange',
+        showLimits=False,
+        spin=True,
+        slider=False,
+        dependencies=['enableOverrideDataRange'],
+        enabledWhen=lambda vo, en: en),
+    
     # MaskOpts
     'MaskOpts.resolution' : props.Widget('resolution', showLimits=False),
     'MaskOpts.volume'     : props.Widget(

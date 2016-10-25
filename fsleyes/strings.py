@@ -662,6 +662,8 @@ properties = TypeDict({
     'VolumeOpts.invert'          : 'Invert colour map',
     'VolumeOpts.invertClipping'  : 'Invert clipping range',
     'VolumeOpts.interpolation'   : 'Interpolation',
+    'VolumeOpts.enableOverrideDataRange' : 'Override image data range',
+    'VolumeOpts.overrideDataRange'       : 'Override image data range',
 
     'MaskOpts.colour'         : 'Colour',
     'MaskOpts.invert'         : 'Invert',
