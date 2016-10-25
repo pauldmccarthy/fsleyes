@@ -290,6 +290,10 @@ class GLVolume(globject.GLImageObject):
                              self._interpolationChanged)
         opts    .addListener('resolution',      name, self._resolutionChanged)
         opts    .addListener('transform',       name, self._transformChanged)
+        opts    .addListener('enableOverrideDataRange',  name,
+                             self._enableOverrideDataRangeChanged)
+        opts    .addListener('overrideDataRange', name,
+                             self._overrideDataRangeChanged)
 
         # Save a flag so the removeDisplayListeners
         # method knows whether it needs to de-register
@@ -322,21 +326,23 @@ class GLVolume(globject.GLImageObject):
         name    = self.name
         crPVs   = opts.getPropVal('clippingRange').getPropertyValueList()
 
-        display .removeListener(          'alpha',           name)
-        opts    .removeListener(          'displayRange',    name)
+        display .removeListener(          'alpha',                   name)
+        opts    .removeListener(          'displayRange',            name)
         crPVs[0].removeListener(name)
         crPVs[1].removeListener(name)
-        opts    .removeListener(          'clipImage',       name)
-        opts    .removeListener(          'invertClipping',  name)
-        opts    .removeListener(          'cmap',            name)
-        opts    .removeListener(          'negativeCmap',    name)
-        opts    .removeListener(          'useNegativeCmap', name)
-        opts    .removeListener(          'cmap',            name)
-        opts    .removeListener(          'invert',          name)
-        opts    .removeListener(          'volume',          name)
-        opts    .removeListener(          'resolution',      name)
-        opts    .removeListener(          'interpolation',   name)
-        opts    .removeListener(          'transform',       name)
+        opts    .removeListener(          'clipImage',               name)
+        opts    .removeListener(          'invertClipping',          name)
+        opts    .removeListener(          'cmap',                    name)
+        opts    .removeListener(          'negativeCmap',            name)
+        opts    .removeListener(          'useNegativeCmap',         name)
+        opts    .removeListener(          'cmap',                    name)
+        opts    .removeListener(          'invert',                  name)
+        opts    .removeListener(          'volume',                  name)
+        opts    .removeListener(          'resolution',              name)
+        opts    .removeListener(          'interpolation',           name)
+        opts    .removeListener(          'transform',               name)
+        opts    .removeListener(          'enableOverrideDataRange', name)
+        opts    .removeListener(          'overrideDataRange',       name)
         
         if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume',        name)
@@ -648,6 +654,22 @@ class GLVolume(globject.GLImageObject):
         self.notify()
 
 
+    def _enableOverrideDataRangeChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.enableOverrideDataRange` property
+        changes. Calls :meth:`_volumeChanged`.
+        """
+        self._volumeChanged()
+
+    
+    def _overrideDataRangeChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.overrideDataRange` property
+        changes. Calls :meth:`_volumeChanged`, but only if
+        :attr:`.VolumeOpts.enableOverrideDataRange` is ``True``.
+        """ 
+        if self.displayOpts.enableOverrideDataRange:
+            self._volumeChanged()
+
+
     def _volumeChanged(self, *a, **kwa):
         """Called when the :attr:`.NiftiOpts.volume` property changes Also
         called when other properties, which require a texture refresh, change.
@@ -655,16 +677,19 @@ class GLVolume(globject.GLImageObject):
         opts       = self.displayOpts
         volume     = opts.volume
         resolution = opts.resolution
-
         volRefresh = kwa.pop('volRefresh', False)
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR
-        
+
+        if opts.enableOverrideDataRange: normRange = opts.overrideDataRange
+        else:                            normRange = None
+
         self.imageTexture.set(volume=volume,
                               interp=interp,
                               resolution=resolution,
-                              volRefresh=volRefresh)
+                              volRefresh=volRefresh,
+                              normaliseRange=normRange)
 
         if self.clipTexture is not None:
             self.clipTexture.set(interp=interp, resolution=resolution)

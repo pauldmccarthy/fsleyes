@@ -160,6 +160,27 @@ class NiftiOpts(fsldisplay.DisplayOpts):
     property is set to ``custom``.
     """
 
+
+    enableOverrideDataRange = props.Boolean(default=False)
+    """By default, the :attr:`.Image.dataRange` property is used to set
+    display and clipping ranges. However, if this property is ``True``,
+    the :attr:`overrideDataRange` is used instead.
+
+    ..note:: The point of this property is to make it easier to display images
+             with a very large data range driven by outliers. On platforms
+             which do not support floating point textures, these images are
+             impossible to display unless they are normalised according to
+             a smaller data range. See the
+             :meth:`.Texture3D.__determineTextureType` method for some more
+             details.
+    """
+
+    
+    overrideDataRange = props.Bounds(ndims=1, clamped=False)
+    """Data range used in place of the :attr:`.Image.dataRange` if the
+    :attr:`enableOverrideDataRange` property is ``True``.
+    """
+
  
     def __init__(self, *args, **kwargs):
         """Create a ``NiftiOpts`` instance.
@@ -753,6 +774,8 @@ class VolumeOpts(NiftiOpts):
         # from the parent VolumeOpts (if any).
         self.overlay = overlay
 
+        self.overrideDataRange.x = overlay.dataRange
+
         self.__dataRangeChanged()
 
         self.displayRange.x = overlay.dataRange
@@ -842,6 +865,14 @@ class VolumeOpts(NiftiOpts):
                                     self.name,
                                     self.__clipImageChanged)
 
+            self       .addListener('enableOverrideDataRange',
+                                    self.name,
+                                    self.__enableOverrideDataRangeChanged)
+            self       .addListener('overrideDataRange',
+                                    self.name,
+                                    self.__overrideDataRangeChanged) 
+                             
+
             # Because displayRange and bri/con are intrinsically
             # linked, it makes no sense to let the user sync/unsync
             # them independently. So here we are binding the boolean
@@ -890,14 +921,16 @@ class VolumeOpts(NiftiOpts):
 
             overlayList = self.overlayList
             display     = self.display
-            overlayList.removeListener('overlays',        self.name) 
-            display    .removeListener('brightness',      self.name)
-            display    .removeListener('contrast',        self.name)
-            self       .removeListener('displayRange',    self.name)
-            self       .removeListener('useNegativeCmap', self.name)
-            self       .removeListener('linkLowRanges',   self.name)
-            self       .removeListener('linkHighRanges',  self.name)
-            self       .removeListener('clipImage',       self.name)
+            overlayList.removeListener('overlays',                self.name) 
+            display    .removeListener('brightness',              self.name)
+            display    .removeListener('contrast',                self.name)
+            self       .removeListener('displayRange',            self.name)
+            self       .removeListener('useNegativeCmap',         self.name)
+            self       .removeListener('linkLowRanges',           self.name)
+            self       .removeListener('linkHighRanges',          self.name)
+            self       .removeListener('clipImage',               self.name)
+            self       .removeListener('enableOverrideDataRange', self.name)
+            self       .removeListener('overrideDataRange',       self.name)
             
             self.unbindProps(self   .getSyncPropertyName('displayRange'),
                              display,
@@ -915,18 +948,48 @@ class VolumeOpts(NiftiOpts):
     @actions.action
     def resetDisplayRange(self):
         """Resets the display range to the data range."""
-        self.displayRange.x = self.overlay.dataRange
+
+        if not self.enableOverrideDataRange: drange = self.overlay.dataRange
+        else:                                drange = self.overrideDataRange
+
+        self.displayRange.x = drange
 
 
-    def __updateDataRange(self, absolute=False):
+    def __dataRangeChanged(self, *a):
+        """Called when the :attr:`.Image.dataRange` property changes.
+        Updates the limits of the :attr:`displayRange` and
+        :attr:`.clippingRange` properties.
+        """
+        self.__updateDataRange()
+
+
+    def __enableOverrideDataRangeChanged(self, *a):
+        """Called when the :attr:`enableOverrideDataRange` property changes.
+        Calls :meth:`__updateDataRange`.
+        """
+        self.__updateDataRange()
+
+        
+    def __overrideDataRangeChanged(self, *a):
+        """Called when the :attr:`overrideDataRange` property changes.
+        Calls :meth:`__updateDataRange`.
+        """ 
+        self.__updateDataRange() 
+
+
+    def __updateDataRange(self):
         """Configures the minimum/maximum bounds of the :attr:`displayRange`
         and :attr:`clippingRange` properties.
         """
 
-        dataMin, dataMax = self.overlay.dataRange
+        if self.enableOverrideDataRange:
+            dataMin, dataMax = self.overrideDataRange
+        else:
+            dataMin, dataMax = self.overlay.dataRange
 
-        drmin = dataMin
-        drmax = dataMax
+        absolute = self.useNegativeCmap
+        drmin    = dataMin
+        drmax    = dataMax
         
         if absolute:
             drmin = min((0,            abs(dataMin)))
@@ -986,14 +1049,6 @@ class VolumeOpts(NiftiOpts):
                 self.clippingRange.xlo = 0
 
 
-    def __dataRangeChanged(self, *a):
-        """Called when the :attr:`.Image.dataRange` property changes.
-        Updates the limits of the :attr:`displayRange` and
-        :attr:`.clippingRange` properties.
-        """
-        self.__updateDataRange(absolute=self.useNegativeCmap)
- 
-
     def __overlayListChanged(self, *a):
         """Called when the :`class:`.OverlayList` changes. Updates the
         options of the :attr:`clipImage` property.
@@ -1024,7 +1079,10 @@ class VolumeOpts(NiftiOpts):
         """
 
         if self.clipImage is None:
-            dataMin, dataMax = self.overlay.dataRange
+            if self.enableOverrideDataRange:
+                dataMin, dataMax = self.overrideDataRange
+            else:
+                dataMin, dataMax = self.overlay.dataRange
             
             self.enableProperty('linkLowRanges')
             self.enableProperty('linkHighRanges') 
@@ -1060,7 +1118,7 @@ class VolumeOpts(NiftiOpts):
                       dataMin,
                       dataMax))
 
-        self.__updateDataRange(absolute=self.useNegativeCmap)
+        self.__updateDataRange()
 
         self.clippingRange.x = dataMin, self.clippingRange.xmax
 
@@ -1126,8 +1184,11 @@ class VolumeOpts(NiftiOpts):
         See :func:`.colourmaps.briconToDisplayRange`.
         """
 
+        if self.enableOverrideDataRange: dataRange = self.overrideDataRange
+        else:                            dataRange = self.overlay.dataRange
+
         dlo, dhi = fslcm.briconToDisplayRange(
-            self.overlay.dataRange,
+            dataRange,
             self.display.brightness / 100.0,
             self.display.contrast   / 100.0)
 
@@ -1148,9 +1209,11 @@ class VolumeOpts(NiftiOpts):
         if self.useNegativeCmap:
             return
 
+        if self.enableOverrideDataRange: dataRange = self.overrideDataRange
+        else:                            dataRange = self.overlay.dataRange 
+
         brightness, contrast = fslcm.displayRangeToBricon(
-            self.overlay.dataRange,
-            self.displayRange.x)
+            dataRange, self.displayRange.x)
         
         self.__toggleListeners(False)
 
@@ -1175,7 +1238,7 @@ class VolumeOpts(NiftiOpts):
             self.display.enableProperty('brightness')
             self.display.enableProperty('contrast')
 
-        self.__updateDataRange(absolute=self.useNegativeCmap)
+        self.__updateDataRange()
             
 
     def __linkLowRangesChanged(self, *a):

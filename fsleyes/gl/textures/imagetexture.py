@@ -118,9 +118,12 @@ class ImageTexture(texture3d.Texture3D):
         """
 
         kwargs             .pop('data',           None)
-        normRange  = kwargs.pop('normaliseRange', self.image.dataRange)
+        normRange  = kwargs.pop('normaliseRange', None)
         volume     = kwargs.pop('volume',         self.__volume)
         volRefresh = kwargs.pop('volRefresh',     True)
+
+        if normRange is None:
+            normRange = self.image.dataRange
 
         is4D   = self.__nvals == 1          and \
                  len(self.image.shape) == 4 and \
