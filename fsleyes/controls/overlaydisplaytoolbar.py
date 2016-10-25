@@ -466,15 +466,13 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.SHOpts` instance.
         """
-        lightSpec  = _TOOLBAR_PROPS[opts, 'lighting']
-        sizeSpec   = _TOOLBAR_PROPS[opts, 'size']
-        radSpec    = _TOOLBAR_PROPS[opts, 'radiusThreshold']
+        sizeSpec = _TOOLBAR_PROPS[opts, 'size']
+        radSpec  = _TOOLBAR_PROPS[opts, 'radiusThreshold']
 
 
         panel = wx.Panel(self)
         sizer = wx.FlexGridSizer(2, 2, 0, 0)
 
-        lightWidget = props.buildGUI(self,  opts, lightSpec)
         sizeWidget  = props.buildGUI(panel, opts, sizeSpec)
         radWidget   = props.buildGUI(panel, opts, radSpec)
 
@@ -492,8 +490,8 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
 
         tools, nav = self.__makeVectorOptsTools(opts)
 
-        tools.extend([lightWidget, panel])
-        nav.extend(  [lightWidget, sizeWidget, radWidget])
+        tools.extend([panel])
+        nav.extend(  [sizeWidget, radWidget])
 
         return tools, nav
 
