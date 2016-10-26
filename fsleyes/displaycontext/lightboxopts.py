@@ -47,8 +47,10 @@ class LightBoxOpts(sceneopts.SceneOpts):
         :class:`OrthoPanel`.
         """
         sceneopts.SceneOpts.__init__(self, *args, **kwargs)
-        self.setConstraint('zoom', 'minval', 10)
-        self.setConstraint('zoom', 'maxval', 1000)
+        self.zax = 2
+        self.setConstraint('zax',  'default', 2)
+        self.setConstraint('zoom', 'minval',  10)
+        self.setConstraint('zoom', 'maxval',  1000)
 
         
     def _onPerformanceChange(self, *a):

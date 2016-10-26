@@ -41,9 +41,13 @@ properties = TypeDict({
                                         'displayed.',
     'DisplayContext.radioOrientation' : 'If checked, images oriented to the '
                                         'MNI152 standard will be displayed in '
-                                        'radiological orientation. Otherwise '
-                                        'they will be displayed in '
-                                        'neurological orientation.',
+                                        'radiological orientation (i.e. with '
+                                        'subject left to the right of the '
+                                        'display, and subject right to the '
+                                        'left). Otherwise they will be '
+                                        'displayed in neurological '
+                                        'orientation (i.e. with subject left '
+                                        'to the left of the display).', 
 
     # Overlay Display
     
