@@ -53,9 +53,9 @@ The view
 .. sidebar:: What is an *overlay*?
              :subtitle: And why aren't they just called *images* instead?
 
-             An :ref:`overlay <overlays>` is an image, or other data file,
-             that you have loaded into FSLeyes.  While FSLeyes is first and
-             foremost a NIFTI image viewer, the term *overlay* is used,
+             An :ref:`overlay <overview_overlays>` is an image, or other data
+             file, that you have loaded into FSLeyes.  While FSLeyes is first
+             and foremost a NIFTI image viewer, the term *overlay* is used,
              instead of *image*, because FSLeyes supports other non-volumetric
              data types, and will hopefully support more in the future.
 
@@ -102,27 +102,20 @@ The overlay list
 ^^^^^^^^^^^^^^^^
 
            
-The :ref:`overlay list <todo>` displays a list of all overlays that you have
-loaded. With this list you can:
-
-
- - Change the currently selected overlay, by clicking on the overlay
-   name.
- - Add/remove overlays with the + and - buttons
- - Change the overlay display order with the |up_arrow| and |down_arrow|
-   buttons
- - Show/hide each overlay with the eye button, or by double clicking on
-   the overlay name
- - Link overlay display properties with the chainlink button
+The :ref:`overlay list <ortho_lightbox_views_overlay_list>` displays a list of
+all overlays that you have loaded. Amongst other things, this list allows you
+to add and remove overlays, toggle overlay visibility, and change the overlay
+display order.
 
 
 The location panel
 ^^^^^^^^^^^^^^^^^^
 
 
-The :ref:`location panel <todo>` shows the current display location, in terms
-of the currently selected overlay. It also shows the overlay data value at the
-current location, for every loaded overlay.
+The :ref:`location panel <ortho_lightbox_views_location_panel>` shows the
+current display location, in terms of the currently selected overlay. It also
+shows the overlay data value at the current location, for every loaded
+overlay.
 
 
 
@@ -172,12 +165,26 @@ toolbar* menu option. See :ref:`overview_views_and_controls` for more
 information.
 
 
+Change the background colour?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+View settings panel
+
+
 Show/hide the cursor/anatomical labels?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Click the spanner button, on the ortho toolbar, to bring up the ortho view
 settings panel.
+
+
+View images in neurological/radiological orientation?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+View settings panel
 
 
 

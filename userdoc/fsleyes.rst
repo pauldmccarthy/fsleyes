@@ -9,7 +9,7 @@ FSLeyes
 
 This is the user documentation for *FSLeyes*, the FSL image viewer. If you are
 getting started with FSLeyes, check out the :ref:`quick_start` page.
-Otherwise, choose a topic from the list below.
+Otherwise, choose a topic from the list below, or refer to the :ref:`index`.
 
 
 .. note:: *FSLeyes* is pronounced as **"fossilise"**.
@@ -31,7 +31,6 @@ Otherwise, choose a topic from the list below.
    overlays
    ortho_lightbox_views
    plot_views
-   linking_overlays_and_views
    atlases
    editing_images
    feat_mode

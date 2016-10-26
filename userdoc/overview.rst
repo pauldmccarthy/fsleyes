@@ -83,6 +83,33 @@ Overlays can be displayed in a variety of ways - see the :ref:`overlays` page
 for more information.
 
 
+The display space
+-----------------
+
+
+FSLeyes works under the assumption that all of the overlays you load are
+defined in the same space. For example, if you load a T1 image and a T2*
+image, FSLeyes will attempt to display them on top of one another, even if
+they have different resolution or orientation. By default, FSLeyes will
+display all overlays in terms of a single reference overlay, typically the
+first one that you load; all other overlays are transformed into the space of
+this reference overlay. You can change the reference overlay via the
+:ref:`display settings panel <todo>`.
+
+
+.. container:: image-strip
+               
+  .. image:: images/overlays_display_space1.png
+     :width: 25%
+             
+  .. image:: images/overlays_display_space2.png
+     :width: 25% 
+
+
+If you are having trouble with mis-aligned images, or are interested in how
+FSLeyes works, refer to the page on :ref:`the display space <display_space>`.
+
+
 .. _overview_views_and_controls:
 
 Views and controls
