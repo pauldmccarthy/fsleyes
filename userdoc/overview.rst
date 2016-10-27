@@ -78,10 +78,11 @@ see the page on :ref:`overlays <overlays>` for more information.
  
 
 In FSLeyes, **only one overlay** may be selected at a time. You can tell which
-overlay is selected by looking at the name field on the :ref:`overlay toolbar
-<todo>`, or looking at the highlighted item in the :ref:`overlay list
-<todo>`. Many operations in FSLeyes will be applied to the currently selected
-overlay, such as adjusting the overlay visibility, brightness and colour map.
+overlay is selected by looking at the name field on the :ref:`overlay display
+toolbar <overlays_overlay_display_toolbar>`, or looking at the highlighted
+item in the :ref:`overlay list <ortho_lightbox_views_overlay_list>`. Many
+operations in FSLeyes will be applied to the currently selected overlay, such
+as adjusting the overlay visibility, brightness and colour map.
 
 
 The *Overlay* menu contains options for changing the selected overlay, and
@@ -107,7 +108,7 @@ they have different resolution or orientation. By default, FSLeyes will
 display all overlays in terms of a single reference overlay, typically the
 first one that you load; all other overlays are transformed into the space of
 this reference overlay. You can change the reference overlay via the
-:ref:`display settings panel <todo>`.
+:ref:`view settings panel <ortho_lightbox_views_view_settings>`.
 
 
 .. container:: image-strip
@@ -135,9 +136,9 @@ The FSLeyes interface is arranged into *views* and *controls*.
 Conceptually, a *view* (e.g. an :ref:`orthographic
 <ortho_lightbox_views_ortho>` or :ref:`time series <plot_views_timeseries>`
 panel) displays the data in some way, and a *control* (e.g. an :ref:`overlay
-toolbar <todo>` or :ref:`atlas panel <todo>`) allows you to manipulate that
-view.  Views are top-level panels, whereas controls are embedded within a
-single view.
+display toolbar <overlays_overlay_display_toolbar>` or :ref:`atlas panel
+<todo>`) allows you to manipulate that view.  Views are top-level panels,
+whereas controls are embedded within a single view.
 
 
 All available views are listed in the *View* menu:

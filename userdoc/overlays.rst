@@ -131,6 +131,17 @@ button on the overlay toolbar):
    :align: center
 
 
+.. _overlays_linking_overlay_properties:
+
+.. sidebar:: Linking overlay properties
+
+             The :ref:`overlay list panel <ortho_lightbox_views_overlay_list>`
+             allows you to link some display properties across a group of
+             overlays, via the chainlink button.  This is useful if, for
+             exmaple, you have two or more 4D NIFTI images, and you want to
+             display the same volume from each of them.
+
+
 The *General display settings* section at the top contains settings common to
 all overlay types. The bottom section (*Volume settings* in this example)
 contain settings which are specific to the type of the currently selected
@@ -148,7 +159,7 @@ Clicking the |information| button on the overlay toolbar brings up the overlay
 information panel:
 
 
-.. image:: images/overlays_overlay_display_panel.png
+.. image:: images/overlays_overlay_information_panel.png
    :width: 50%
    :align: center
 
@@ -169,6 +180,10 @@ Volume
 ^^^^^^
 
 
+This is the default (and most conventional) display type for NIFTI
+images. Image intensity values are coloured according to a colour map. 
+
+
 .. container:: image-strip
 
   .. image:: images/overlays_volume1.png
@@ -178,11 +193,97 @@ Volume
      :width: 25% 
 
   .. image:: images/overlays_volume3.png
-     :width: 25% 
+     :width: 25%
 
 
-This is the default (and most conventional) display type for NIFTI
-images. Image intensity values are coloured according to a colour map. 
+The following settings are available for volume overlays:
+
+
+- **Resolution** This slider allows you to re-sample the image to a lower
+  resolution for display purposes.
+
+  
+- **Volume** If your image is 4D, you can select the displayed volume with
+  this slider.
+
+
+- **Interpolation** You can interpolate the image data (resampled to the
+  resolution of your display). This is useful for generating figures, and to
+  smooth over voxel or slice boundaries for oblique images (images which are
+  not orthogonal to the display coordinate system). You can choose between no
+  interpolation (equivalent to nearest-neighbour), tri-linear, or spline [*]_
+  interpolation.
+
+  .. [*] Spline interpolation may not be available if you are using
+         FSLeyes over a SSH/X11 connection, in a VNC session, on an
+         older computer, or at a reduced performance setting.
+
+
+.. _loading_a_custom_colour_map:
+
+.. sidebar:: Loading a custom colour map
+
+             Blah-di-blah.
+
+         
+- **Colour map** The colour map defines how voxels are coloured on the
+  display. Voxels with an intensity equal to the low display range value will
+  be coloured according to the lowest (left-most) colour in the selected
+  colour map., and voxels with an intensity equal to the high display range
+  will be coloured according to the highest (right-most) colour. You can
+  choose from a pre-defined colour map selection, or load your own via the the
+  **Load colour map** button.
+
+  
+- **-ve (negative) colour map** You can apply a second colour map for images
+  which contain positive and negative values, such as Z-statistic images, or
+  ICA component maps. The first colour map will be applied to positive values,
+  and the second to negative values. When a negative colour map is enabled,
+  the display and clipping range will be applied inversely to both positive
+  and negative values.
+
+
+- **Invert colour map** This setting inverts the colour map, so that low
+  voxel intensities are coloured with the high colour, and vice-versa.
+
+
+- **Invert clipping range** This setting inverts the behaviour of the clipping
+  range, so that voxels with an intensity inside the range are clipped
+  (hidden), and those with an intensity outside of the range are shown.
+
+
+- **Link low display/clipping ranges** This setting (enabled by default) links
+  the low display and clipping ranges, so that voxels with an intensity below
+  the low display range value are also clipped.
+
+  
+- **Link high display/clipping ranges** This setting (disabled by default)
+  links the high display and clipping ranges, so that voxels with an intensity
+  above the high display range value are also clipped.
+
+  
+- **Display range** This setting controls how the colour map relates to voxel
+  intensities.
+
+
+- **Clipping range** This setting allows you to hide voxels which lie outside
+  of the range.
+
+  
+- **Clip by** This setting allows you to clip the selected overlay by the
+  voxel intensities that are in another image. When a *clip by* image is
+  selected, the *clipping range* will be in terms of that image, not of the
+  image being clipped.
+
+  
+- **Override image data range** This setting allows you to effectively
+  override the image data range with a custom range. By default, FSLeyes sets
+  the default display and clipping range according to the minimum and maximum
+  values in the image. While this is suitable for most images, it is
+  inconvenient for images which have a very large data range that is driven by
+  outlier voxels. By overriding the image data range with this setting, you
+  can adjust the display and clipping range limits to a range which is more
+  sensible with respect to the data that you are viewing.
  
 
 .. _overlays_label:
@@ -266,8 +367,8 @@ vector, or as a *line* vector.
 
 .. _overlays_tensor:
 
-Tensor
-^^^^^^
+Tensor [*]_
+^^^^^^^^^^^
 
 
 .. container:: image-strip
@@ -289,10 +390,15 @@ the diffusion magnitude, anisotropy, and orientation within each voxel is
 modelled with a tensor matrix, which can be visualised as an ellipsoid.
 
 
+.. [*] Tensor overlays may not be available if you are using FSLeyes over a
+       SSH/X11 connection, in a VNC session, on an older computer, or at a
+       reduced performance setting.
+
+
 .. _overlays_diffusion_sh:
 
-Diffusion SH
-^^^^^^^^^^^^
+Diffusion SH [*]_
+^^^^^^^^^^^^^^^^^
 
 
 .. container:: image-strip
@@ -310,6 +416,11 @@ Diffusion SH
 Images which appear to contain spherical harmonic (SH) coefficients for
 spherical deconvolution-based diffusion modelling techniques can be displayed
 as spherical harmonic functions.
+
+
+.. [*] Diffusion SH overlays may not be available if you are using FSLeyes
+       over a SSH/X11 connection, in a VNC session, on an older computer, or
+       at a reduced performance setting.
 
 
 .. _overlays_vtk_model:

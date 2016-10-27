@@ -264,7 +264,8 @@ The overlay list allows you to do the following:
  - Show/hide each overlay with the eye button, or by double clicking on the
    overlay name.
    
- - :ref:`Link overlay display properties <todo>` with the chainlink button.
+ - :ref:`Link overlay display properties
+   <overlays_linking_overlay_properties>` with the chainlink button.
 
  - Save an overlay if it has been :ref:`edited <editing_images>`, with the
    floppy disk button. 
@@ -345,10 +346,10 @@ settings panel:
    is further described :ref:`here <display_space>`.
 
 
-.. [*] When radiological orientation is enabled, the subject's left will be
-       displayed on the right, and vice-versa. When radiological orientation
-       is disabled, FSLeyes displays images in neurological orientation, where
-       subject left is displayed on the left.
+ .. [*] When radiological orientation is enabled, the subject's left will be
+        displayed on the right, and vice-versa. When radiological orientation
+        is disabled, FSLeyes displays images in neurological orientation,
+        where subject left is displayed on the left.
 
 
 The remaining options in the view settings panel are described below.
@@ -364,9 +365,10 @@ When you have more than one view open in FSLeyes (e.g. multiple ortho views),
 you can choose to have various properties between them linked or unlinked.
 
 
- - **Link overlay order** When this setting is selected, the overlay order
-   (as controlled through the :ref:`overlay list panel <todo>`) will be the
-   same across linked views. This setting is selected by default.
+ - **Link overlay order** When this setting is selected, the overlay order (as
+   controlled through the :ref:`overlay list panel
+   <ortho_lightbox_views_overlay_list>`) will be the same across linked
+   views. This setting is selected by default.
 
 
  - **Link location** When this setting is selected, the cursor location will
@@ -374,8 +376,14 @@ you can choose to have various properties between them linked or unlinked.
 
 
  - **Link overlay display settings** When this setting is selected, all
-   :ref:`overlay display properties <todo>` (e.g. display range, colour map)
-   will be the same across linked views. This setting is unselected by default.
+ :ref:`overlay display settings <overlays_overlay_display_settings>`
+ (e.g. display range, colour map) will be the same across linked views
+ [*]_. This setting is unselected by default.
+
+ .. [*] The *Link overlay display settings* option is independent of the
+        :ref:`overlay linking <overlays_linking_overlay_properties>` option
+        available through the :ref:`overlay list
+        <ortho_lightbox_views_overlay_list>`.
 
 
 .. _ortho_lightbox_views_view_settings_movie_mode:
@@ -408,7 +416,8 @@ are shown.
    :width: 80%
    :align: center
 
-.. [*] The colour bar feature currently only works for :ref:`volume <todo>`
-       overlays. Future versions of FSLeyes will offer more colour bar
+.. [*] The colour bar feature currently only works for :ref:`volume
+       <overlays_volume>` overlays with the negative colour map
+       disabled. Future versions of FSLeyes will offer more colour bar
        options.
 

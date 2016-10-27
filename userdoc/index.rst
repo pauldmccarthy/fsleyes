@@ -31,7 +31,9 @@ Overlays
 :ref:`Vector <overlays_vector>`
 :ref:`Tensor <overlays_tensor>`
 :ref:`Diffusion SH <overlays_diffusion_sh>`
-:ref:`VTK model <overlays_vtk_model>` 
+:ref:`VTK model <overlays_vtk_model>`
+
+:ref:`Loading a custom colour map <loading_a_custom_colour_map>`
 
 
 Ortho view
