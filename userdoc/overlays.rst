@@ -1,4 +1,5 @@
 .. |right_arrow| unicode:: U+21D2
+.. |information| unicode:: U+2139
 
 
 .. _overlays:
@@ -28,6 +29,14 @@ capable of loading the following types of data:
    tool.
 
 
+NIFTI images can be displayed in a variety of different ways, depending on the
+nature of the image data, and on how you want to display it. The way in which
+an overlay is displayed is called the *overlay type* or the *display type*.
+The most conventionaal overlay/display type for a NIFTI image is the
+:ref:`volume <overlays_volume>`; the other types are described :ref:`below
+<overlays_overlay_type>`.
+   
+
 .. _overlays_loading_an_overlay:
 
 Loading an overlay
@@ -53,28 +62,108 @@ You can load an overlay by doing one of the following:
        if your FSL environment is not configured correctly.
 
 
-.. _overlays_overlay_types:
+.. _overlays_overlay_display_settings:
+
+Overlay display settings
+------------------------
+
+
+When you select an overlay, or change the type of an overlay, the contents of
+the :ref:`overlay display toolbar <overlays_overlay_display_toolbar>` will
+change to show commonly used display settings for that overlay. All display
+settings for the currently selected overlay are available in the :ref:`overlay
+display panel <overlays_overlay_display_panel>`.
+
+
+.. _overlays_overlay_display_toolbar:
+
+The overlay display toolbar
+---------------------------
+
+
+The overlay display toolbar allows you to adjust basic display settings for
+the currently selected overlay. Some settings are available for all overlay
+types, whereas other settings will change depending on the type of the
+selected overlay.
+
+
+.. image:: images/overlays_overlay_toolbar.png
+   :width: 80%
+   :align: center
+
+1. **Overlay display panel** Clicking on the gear button will open the
+   :ref:`overlay display panel <overlays_overlay_display_panel>`.
+
+2. **Overlay information** Clicking on the information button will open the
+   :ref:`overlay information panel <overlays_overlay_information_panel>`.
+   
+3. **Overlay name** You can change the overlay name, as shown in the
+   :ref:`overlay list panel <ortho_lightbox_views_overlay_list>` here.
+
+4. **Overlay type** You can change the overlay type here.
+   
+5. **Opacity** This slider allows you to adjust the overlay
+   opacity/transparency.
+   
+6. **Brightness/contrast** These sliders allow you to adjust the overlay
+   brightness and contrast.
+   
+7. **Type-specific settings** The remaining controls will change depending on
+   the type of the overlay. For :ref:`volume <overlays_volume>` overlays, as
+   shown in the example above, display range and colour map controls are
+   provided.
+
+   
+.. _overlays_overlay_display_panel:
+
+The overlay display panel
+-------------------------
+
+
+The :ref:`overlay toolbar <overlays_overlay_display_toolbar>` allows you to
+adjust basic display settings for the currently selected overlay. Many more
+settings are available in the overlay display panel (accessed via the gear
+button on the overlay toolbar):
+
+
+.. image:: images/overlays_overlay_display_panel.png
+   :width: 50%
+   :align: center
+
+
+The *General display settings* section at the top contains settings common to
+all overlay types. The bottom section (*Volume settings* in this example)
+contain settings which are specific to the type of the currently selected
+overlay. The settings available for each overlay type are covered :ref:`below
+<overlays_overlay_type>`.
+
+
+.. _overlays_overlay_information_panel:
+
+The overlay information panel
+-----------------------------
+
+
+Clicking the |information| button on the overlay toolbar brings up the overlay
+information panel:
+
+
+.. image:: images/overlays_overlay_display_panel.png
+   :width: 50%
+   :align: center
+
+
+This panel contains basic information about the currently selected overlay,
+such as its dimensions, file name, and transformation/orientation information.
+
+
+.. _overlays_overlay_type:
 
 Overlay types
 -------------
 
 
-NIFTI images can be displayed in a variety of different ways, depending on the
-nature of the image, and on how you want to display it. The way in which an
-overlay is displayed is called the *overlay type* or the *display type*.
-
-
-When you select an overlay, or change the type of an overlay, the contents of
-the :ref:`overlay toolbar <todo>` will
-change to show commonly used display settings for that overlay. All display
-settings for the currently selected overlay are available in the :ref:`overlay
-display panel <todo>`.
-
-
-This section gives a brief overview of the different overlay types available
-in FSLeyes. Full details on the available display settings for each overlay
-type are covered :ref:`below <overlays_overlay_display_settings>`.
-
+.. _overlays_volume:
 
 Volume
 ^^^^^^
@@ -96,6 +185,8 @@ This is the default (and most conventional) display type for NIFTI
 images. Image intensity values are coloured according to a colour map. 
  
 
+.. _overlays_label:
+
 Label
 ^^^^^
 
@@ -113,6 +204,8 @@ This type is useful for viewing NIFTI images which contain discrete integer
 values (*labels*), such as atlases and (sub-)cortical segmentation summary
 images. 
 
+
+.. _overlays_mask:
 
 Mask
 ^^^^
@@ -133,6 +226,8 @@ Mask
 This type is useful if you want to display an image as a binary mask. You can
 display any NIFTI image as a mask - not just binary images. 
 
+
+.. _overlays_vector:
 
 Vector
 ^^^^^^
@@ -169,6 +264,8 @@ voxel.  A vector image can be displayed in one of two ways - as a *RGB*
 vector, or as a *line* vector.
 
 
+.. _overlays_tensor:
+
 Tensor
 ^^^^^^
 
@@ -192,8 +289,10 @@ the diffusion magnitude, anisotropy, and orientation within each voxel is
 modelled with a tensor matrix, which can be visualised as an ellipsoid.
 
 
-Spherical harmonic
-^^^^^^^^^^^^^^^^^^
+.. _overlays_diffusion_sh:
+
+Diffusion SH
+^^^^^^^^^^^^
 
 
 .. container:: image-strip
@@ -212,6 +311,8 @@ Images which appear to contain spherical harmonic (SH) coefficients for
 spherical deconvolution-based diffusion modelling techniques can be displayed
 as spherical harmonic functions.
 
+
+.. _overlays_vtk_model:
 
 VTK model
 ^^^^^^^^^
@@ -236,13 +337,6 @@ tool, to represent sub-cortical structures.
              
 .. [*] Future versions of FSLeyes will include support for more VTK data
        formats.
-
-
-.. _overlays_overlay_display_settings:
-
-Overlay display settings
-------------------------
-
 
 .. For example, the `dtifit
 .. <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FDT/UserGuide#DTIFIT>`_ tool outputs

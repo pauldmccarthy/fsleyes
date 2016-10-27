@@ -19,8 +19,19 @@ Views
 :ref:`Histogram view <plot_views_histogram>`
 :ref:`Power spectrum view <plot_views_powerspectrum>`
 
-     
-Overlay display toolbar
+
+Overlays
+
+:ref:`Overlay display toolbar <overlays_overlay_display_toolbar>`
+:ref:`Overlay display panel <overlays_overlay_display_panel>`
+:ref:`Overlay information panel <overlays_overlay_information_panel>`
+:ref:`Volume <overlays_volume>`
+:ref:`Label <overlays_label>`
+:ref:`Mask <overlays_mask>`
+:ref:`Vector <overlays_vector>`
+:ref:`Tensor <overlays_tensor>`
+:ref:`Diffusion SH <overlays_diffusion_sh>`
+:ref:`VTK model <overlays_vtk_model>` 
 
 
 Ortho view
@@ -37,12 +48,14 @@ Lightbox view
 :ref:`Lightbox view settings <ortho_lightbox_views_lightbox_view_settings>`
 
 
-Ortho/lightbox settings
+Ortho/lightbox stuff
 
+:ref:`Overlay list panel <ortho_lightbox_views_overlay_list>`
+:ref:`Location panel <ortho_lightbox_views_location_panel>` 
 :ref:`Colour bar <ortho_lightbox_views_view_settings_colour_bar>`
 :ref:`Movie mode <ortho_lightbox_views_view_settings_movie_mode>`
 :ref:`Linking views <ortho_lightbox_views_view_settings_linking_views>` 
- 
+:ref:`View settings panel <ortho_lightbox_views_view_settings>` 
 
 
 Image editing
@@ -50,13 +63,6 @@ Image editing
 :ref:`Editing NIFTI images <editing_images>`
 Ortho edit toolbar
 
-
-
-Overlay list panel
-Location panel
-Display settings panel
-
-Overlay display panel
 
 Overlay info panel
 

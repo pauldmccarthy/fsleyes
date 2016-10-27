@@ -135,6 +135,8 @@ between vertical, horizontal, or grid layouts. Pushing the spanner icon will
 open a dialog containing all of the ortho view settings.
 
 
+.. _quick_start_how_do_i:
+
 How do I ...
 ------------
 
