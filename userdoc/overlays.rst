@@ -138,7 +138,7 @@ button on the overlay toolbar):
              The :ref:`overlay list panel <ortho_lightbox_views_overlay_list>`
              allows you to link some display properties across a group of
              overlays, via the chainlink button.  This is useful if, for
-             exmaple, you have two or more 4D NIFTI images, and you want to
+             example, you have two or more 4D NIFTI images, and you want to
              display the same volume from each of them.
 
 
@@ -181,7 +181,9 @@ Volume
 
 
 This is the default (and most conventional) display type for NIFTI
-images. Image intensity values are coloured according to a colour map. 
+images. Voxel intensities are coloured according to a colour map. The display
+range used to colour voxels can be adjusted, and voxels can be *clipped*
+(hidden) with an independent clipping range.
 
 
 .. container:: image-strip
@@ -204,7 +206,11 @@ The following settings are available for volume overlays:
 
   
 - **Volume** If your image is 4D, you can select the displayed volume with
-  this slider.
+  this slider [*]_.
+
+
+  .. [*] The **Resolution** and **Volume** settings are available for all
+         NIFTI overlay types.
 
 
 - **Interpolation** You can interpolate the image data (resampled to the
@@ -219,11 +225,27 @@ The following settings are available for volume overlays:
          older computer, or at a reduced performance setting.
 
 
-.. _loading_a_custom_colour_map:
+.. _overlays_loading_a_custom_colour_map:
 
 .. sidebar:: Loading a custom colour map
 
-             Blah-di-blah.
+             Clicking the **Load colour map** button will bring up a file
+             selection dialog, allowing you to choose a file which contains a
+             custom colour map. FSLeyes understands colour map files which
+             contain a list of RGB colours, one per line, with each colour
+             specified by three space-separated floating point values in the
+             range ``0.0 - 1.0``, with each value corresponding to the R, G,
+             and B colour channels respectively. For example::
+
+
+                 1.000000 0.260217 0.000000
+                 0.000000 0.687239 1.000000
+                 0.738949 0.000000 1.000000
+
+
+             You can also modify and customise the FSLeyes colour maps - see
+             the page on :ref:`customising FSLeyes <customising>` for more
+             details.
 
          
 - **Colour map** The colour map defines how voxels are coloured on the
@@ -232,7 +254,7 @@ The following settings are available for volume overlays:
   colour map., and voxels with an intensity equal to the high display range
   will be coloured according to the highest (right-most) colour. You can
   choose from a pre-defined colour map selection, or load your own via the the
-  **Load colour map** button.
+  **Load colour map** button. 
 
   
 - **-ve (negative) colour map** You can apply a second colour map for images
@@ -243,13 +265,14 @@ The following settings are available for volume overlays:
   and negative values.
 
 
-- **Invert colour map** This setting inverts the colour map, so that low
-  voxel intensities are coloured with the high colour, and vice-versa.
+- **Invert colour map** This setting inverts the colour map, so that low voxel
+  intensities are coloured with the high colour from the colour map, and
+  vice-versa.
 
 
 - **Invert clipping range** This setting inverts the behaviour of the clipping
-  range, so that voxels with an intensity inside the range are clipped
-  (hidden), and those with an intensity outside of the range are shown.
+  range, so that voxels with an intensity inside the range are clipped, and
+  those with an intensity outside of the range are shown.
 
 
 - **Link low display/clipping ranges** This setting (enabled by default) links
@@ -292,6 +315,21 @@ Label
 ^^^^^
 
 
+This type is useful for viewing NIFTI images which contain discrete integer
+values (*labels*), such as atlases and (sub-)cortical segmentation summary
+images.  Label overlays are coloured according to a *lookup table*.
+
+
+.. sidebar:: Lookup tables
+
+             FSLeyes treats lookup tables independently from the colour maps
+             used to colour :ref:`volume <overlays_volume>` overlays. FSLeyes
+             provides a handful of pre-defined lookup tables, and allows you
+             to create your own through the :ref:`lookup table panel <todo>`.
+             You can also install your own lookup tables - see the page on
+             :ref:`customising FSLeyes <customising>` for more details.
+
+
 .. container:: image-strip
    
    .. image:: images/overlays_label1.png
@@ -301,15 +339,26 @@ Label
       :width: 25% 
 
 
-This type is useful for viewing NIFTI images which contain discrete integer
-values (*labels*), such as atlases and (sub-)cortical segmentation summary
-images. 
+The following settings are available on label overlays:
 
+
+- **Lookup table** Choose the lookup table which defines the mapping between
+  voxel intensity and colour.
+
+- **Show outline only** You can choose to display label overlays with filled
+  regions, or display region outlines.
+
+- **Outline width** This setting controls the region outline width.
+  
 
 .. _overlays_mask:
 
 Mask
 ^^^^
+
+
+This type is useful if you want to display an image as a binary mask. You can
+display any NIFTI image as a mask - not just binary images. 
 
 
 .. container:: image-strip
@@ -324,14 +373,40 @@ Mask
       :width: 25% 
 
 
-This type is useful if you want to display an image as a binary mask. You can
-display any NIFTI image as a mask - not just binary images. 
+Mask overlays have the following settings:
+
+
+- **Colour** This setting controls the colour used to display the mask.
+
+  
+- **Invert** This setting inverts the behaviour of the *threshold* setting -
+  when enabled, voxels within the range are excluded from the mask, and
+  vice-versa.
+
+
+- **Threshold** This range defines which voxels are included in the
+  mask. Voxels which are within the range are included, and those outside of
+  the range are excluded.
 
 
 .. _overlays_vector:
 
 Vector
 ^^^^^^
+
+
+4D NIFTI images which contain exactly three 3D volumes may be interpreted as a
+*vector* image where, at each voxel, the three volumes respectively contain X,
+Y and Z coordinates specifying the magnitude and direction of a vector at that
+voxel.  For example, the `dtifit
+<http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FDT/UserGuide#DTIFIT>`_ tool outputs
+diffusion tensor eigenvectors, and the `bedpostx
+<http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FDT/UserGuide#BEDPOSTX>`_ tool outputs
+mean principal diffusion directions, as vector images.
+
+
+A vector image can be displayed in one of two ways - as a *RGB* vector, or as
+a *line* vector.
 
 
 .. container:: image-strip
@@ -346,6 +421,14 @@ Vector
      :width: 25%
 
 
+In a RGB vector image, each voxel is coloured according to the magnitude of
+the X, Y, and Z vector components. The default colours are (respectively) red
+green and blue, but these can be customised or individually disabled. If you
+have another image in the same space (e.g. a FA or MD map), you can modulate
+the brightness of the vector colours in each voxel according to the values in
+the other image.
+
+
 .. container:: image-strip
 
   .. image:: images/overlays_linevector1.png
@@ -358,12 +441,48 @@ Vector
      :width: 25% 
 
 
-4D NIFTI images which contain exactly three 3D volumes may be interpreted as a
-*vector* image where, at each voxel, the three volumes respectively contain X,
-Y and Z coordinates specifying the magnitude and direction of a vector at that
-voxel.  A vector image can be displayed in one of two ways - as a *RGB*
-vector, or as a *line* vector.
+In a line vector image, the vector at each voxel is displayed as a line, and
+usually coloured in the same manner as for a RGB vector. Line width and length
+can be scaled by a constant factor, and the vector values can be displayed
+with varying lengths (according to their individual magnitudes), or all scaled
+to have the same length.
 
+
+The following settings are available on vector overlays:
+
+
+- **Colour by**
+- **Modulate by**
+- **Clip by**
+- **Colour map**
+- **Clipping range**
+- **Modulation range**
+- **X Colour**
+- **Y Colour**
+- **Z Colour**
+- **Suppress X value**
+- **Suppress Y value**
+- **Suppress Z value**
+- **Suppresssion mode**
+
+  
+.. sidebar:: Line vector orientation
+
+             Blah di blah line vectors, tensors and diffusion SH.
+
+
+RGB vectors have some additional settings:
+
+- **Interpolation**
+
+And the following settings are available on line vectors:
+
+- **Interpret vectors as directed**
+- **Scale vectors to unit length**
+- **L/R orientation flip**
+- **Line width**
+- **Length scaling factor (%)** 
+ 
 
 .. _overlays_tensor:
 
@@ -449,24 +568,6 @@ tool, to represent sub-cortical structures.
 .. [*] Future versions of FSLeyes will include support for more VTK data
        formats.
 
-.. For example, the `dtifit
-.. <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FDT/UserGuide#DTIFIT>`_ tool outputs
-.. diffusion tensor eigenvectors, and the `bedpostx
-.. <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FDT/UserGuide#BEDPOSTX>`_ tool outputs
-.. mean principal diffusion directions, as vector images.  
-
-.. In a RGB vector image, each voxel is coloured according to
-.. the magnitude of the X, Y, and Z vector components. The default colours are
-.. (respectively) red green and blue, but these can be customised or individually
-.. disabled. If you have another image in the same space (e.g. a FA or MD map),
-.. you can modulate the brightness of the vector colours in each voxel according
-.. to the values in the other image.
-
-.. In a line vector image, the vector at each voxel is displayed as a line, and
-.. usually coloured in the same manner as for a RGB vector. Line width and length
-.. can be scaled by a constant factor, and the vector values can be displayed
-.. with varying lengths (according to their individual magnitudes), or all scaled
-.. to have the same length.
 
 
 

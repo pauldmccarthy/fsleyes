@@ -33,7 +33,8 @@ Overlays
 :ref:`Diffusion SH <overlays_diffusion_sh>`
 :ref:`VTK model <overlays_vtk_model>`
 
-:ref:`Loading a custom colour map <loading_a_custom_colour_map>`
+:ref:`Loading a custom colour map <overlays_loading_a_custom_colour_map>`
+:ref:`Lookup tables <todo>` 
 
 
 Ortho view
@@ -64,9 +65,6 @@ Image editing
 
 :ref:`Editing NIFTI images <editing_images>`
 Ortho edit toolbar
-
-
-Overlay info panel
 
 Atlas panel
 

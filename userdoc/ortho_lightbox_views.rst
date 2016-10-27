@@ -376,10 +376,10 @@ you can choose to have various properties between them linked or unlinked.
 
 
  - **Link overlay display settings** When this setting is selected, all
- :ref:`overlay display settings <overlays_overlay_display_settings>`
- (e.g. display range, colour map) will be the same across linked views
- [*]_. This setting is unselected by default.
-
+   :ref:`overlay display settings <overlays_overlay_display_settings>`
+   (e.g. display range, colour map) will be the same across linked views
+   [*]_. This setting is unselected by default.
+ 
  .. [*] The *Link overlay display settings* option is independent of the
         :ref:`overlay linking <overlays_linking_overlay_properties>` option
         available through the :ref:`overlay list

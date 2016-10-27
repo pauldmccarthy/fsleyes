@@ -39,4 +39,5 @@ Otherwise, choose a topic from the list below, or refer to the :ref:`index`.
    offscreen_rendering
    display_space
    troubleshooting
+   customising
    index
