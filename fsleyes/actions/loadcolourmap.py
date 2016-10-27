@@ -124,6 +124,7 @@ class LoadColourMapAction(action.Action):
         # the colour map for future use
         dlg = wx.MessageDialog(
             app.GetTopWindow(),
+            caption=strings.titles  [self,       'installcmap'],
             message=strings.messages[_stringID + 'installcmap'],
             style=wx.YES_NO)
 

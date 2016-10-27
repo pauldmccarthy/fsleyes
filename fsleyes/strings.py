@@ -273,6 +273,8 @@ titles = TypeDict({
     'ImportDataSeriesAction.selectXScale' : 'X axis scaling factor',
 
     'ExportDataSeriesAction.saveXColumn'  : 'Save X data?',
+
+    'LoadColourMapAction.installcmap'     : 'Install colour map?',
 })
 
 
