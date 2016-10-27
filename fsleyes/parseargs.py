@@ -357,6 +357,7 @@ OPTIONS = td.TypeDict({
                         'linkHighRanges',
                         'displayRange',
                         'clippingRange',
+                        'overrideDataRange',
                         'invertClipping',
                         'clipImage',
                         'cmap',
@@ -565,17 +566,18 @@ ARGUMENTS = td.TypeDict({
     'NiftiOpts.resolution'   : ('r',  'resolution', True),
     'NiftiOpts.volume'       : ('v',  'volume',     True),
 
-    'VolumeOpts.displayRange'    : ('dr', 'displayRange',    True),
-    'VolumeOpts.clippingRange'   : ('cr', 'clippingRange',   True),
-    'VolumeOpts.invertClipping'  : ('ic', 'invertClipping',  False),
-    'VolumeOpts.clipImage'       : ('cl', 'clipImage',       True),
-    'VolumeOpts.cmap'            : ('cm', 'cmap',            True),
-    'VolumeOpts.negativeCmap'    : ('nc', 'negativeCmap',    True),
-    'VolumeOpts.useNegativeCmap' : ('un', 'useNegativeCmap', False),
-    'VolumeOpts.interpolation'   : ('in', 'interpolation',   True),
-    'VolumeOpts.invert'          : ('i',  'invert',          False),
-    'VolumeOpts.linkLowRanges'   : ('ll', 'unlinkLowRanges', True),
-    'VolumeOpts.linkHighRanges'  : ('lh', 'linkHighRanges',  True),
+    'VolumeOpts.displayRange'      : ('dr', 'displayRange',      True),
+    'VolumeOpts.clippingRange'     : ('cr', 'clippingRange',     True),
+    'VolumeOpts.overrideDataRange' : ('or', 'overrideDataRange', True),
+    'VolumeOpts.invertClipping'    : ('ic', 'invertClipping',    False),
+    'VolumeOpts.clipImage'         : ('cl', 'clipImage',         True),
+    'VolumeOpts.cmap'              : ('cm', 'cmap',              True),
+    'VolumeOpts.negativeCmap'      : ('nc', 'negativeCmap',      True),
+    'VolumeOpts.useNegativeCmap'   : ('un', 'useNegativeCmap',   False),
+    'VolumeOpts.interpolation'     : ('in', 'interpolation',     True),
+    'VolumeOpts.invert'            : ('i',  'invert',            False),
+    'VolumeOpts.linkLowRanges'     : ('ll', 'unlinkLowRanges',   True),
+    'VolumeOpts.linkHighRanges'    : ('lh', 'linkHighRanges',    True),
 
     'MaskOpts.colour'    : ('mc', 'maskColour', False),
     'MaskOpts.invert'    : ('i',  'maskInvert', False),
@@ -729,23 +731,29 @@ HELP = td.TypeDict({
     'NiftiOpts.resolution' : 'Voxel resolution (mm)',
     'NiftiOpts.volume'     : 'Volume (index, starting from 0)',
 
-    'VolumeOpts.displayRange'    : 'Display range. Setting this will '
-                                   'override brightnes/contrast settings.',
-    'VolumeOpts.clippingRange'   : 'Clipping range. Setting this will '
-                                   'override the low display range (unless '
-                                   'low ranges are unlinked).', 
-    'VolumeOpts.invertClipping'  : 'Invert clipping',
-    'VolumeOpts.clipImage'       : 'Image containing clipping values '
-                                   '(defaults to the image itself)' ,
-    'VolumeOpts.cmap'            : 'Colour map',
-    'VolumeOpts.negativeCmap'    : 'Colour map for negative values '
-                                   '(only used if the negative '
-                                   'colour map is enabled)', 
-    'VolumeOpts.useNegativeCmap' : 'Use negative colour map',
-    'VolumeOpts.interpolation'   : 'Interpolation',
-    'VolumeOpts.invert'          : 'Invert colour map',
-    'VolumeOpts.linkLowRanges'   : 'Unlink low display/clipping ranges',
-    'VolumeOpts.linkHighRanges'  : 'Link high display/clipping ranges',
+    'VolumeOpts.displayRange'      : 'Display range. Setting this will '
+                                     'override brightnes/contrast settings.',
+    'VolumeOpts.clippingRange'     : 'Clipping range. Setting this will '
+                                     'override the low display range (unless '
+                                     'low ranges are unlinked).',
+    'VolumeOpts.overrideDataRange' : 'Override data range. Setting this '
+                                     'effectively causes FSLeyes to ignore '
+                                     'the actual image data range, and use '
+                                     'this range instead. This is useful for '
+                                     'images with a large data range that is '
+                                     'driven by outliers.' ,
+    'VolumeOpts.invertClipping'    : 'Invert clipping',
+    'VolumeOpts.clipImage'         : 'Image containing clipping values '
+                                     '(defaults to the image itself)' ,
+    'VolumeOpts.cmap'              : 'Colour map',
+    'VolumeOpts.negativeCmap'      : 'Colour map for negative values '
+                                     '(only used if the negative '
+                                     'colour map is enabled)', 
+    'VolumeOpts.useNegativeCmap'   : 'Use negative colour map',
+    'VolumeOpts.interpolation'     : 'Interpolation',
+    'VolumeOpts.invert'            : 'Invert colour map',
+    'VolumeOpts.linkLowRanges'     : 'Unlink low display/clipping ranges',
+    'VolumeOpts.linkHighRanges'    : 'Link high display/clipping ranges',
 
     'MaskOpts.colour'    : 'Colour (0-1)',
     'MaskOpts.invert'    : 'Invert',
@@ -2185,6 +2193,11 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
 
                     setattr(opts, fileOpt, image)
 
+            # If VolumeOpts.overrideDataRange has
+            # been provided, we implicitly enable it.
+            if isinstance(opts, fsldisplay.VolumeOpts) and \
+               optArgs.overrideDataRange is not None:
+                opts.enableOverrideDataRange = True
 
             # If the VectorOpts.orientFlip argument is
             # passed, we need to invert its value -
