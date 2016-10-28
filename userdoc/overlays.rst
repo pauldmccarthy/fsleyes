@@ -198,6 +198,9 @@ range used to colour voxels can be adjusted, and voxels can be *clipped*
      :width: 25%
 
 
+|
+
+
 The following settings are available for volume overlays:
 
 
@@ -344,6 +347,9 @@ images.  Label overlays are coloured according to a *lookup table*.
       :width: 25% 
 
 
+|
+
+
 The following settings are available on label overlays:
 
 
@@ -376,6 +382,9 @@ display any NIFTI image as a mask - not just binary images.
 
    .. image:: images/overlays_mask3.png
       :width: 25% 
+
+
+|
 
 
 Mask overlays have the following settings:
@@ -426,6 +435,9 @@ a *line* vector.
      :width: 25%
 
 
+|
+
+
 In a RGB vector image, each voxel is coloured according to the magnitude of
 the X, Y, and Z vector components. The default colours are (respectively) red
 green and blue, but these can be customised or individually disabled. If you
@@ -444,6 +456,9 @@ colours in each voxel according to the values in the other image.
 
   .. image:: images/overlays_linevector3.png
      :width: 25% 
+
+
+|
 
 
 In a line vector image, the vector at each voxel is displayed as a line, and
@@ -570,6 +585,14 @@ Tensor [*]_
 ^^^^^^^^^^^
 
 
+Directories which contain `dtifit
+<http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FDT/UserGuide#DTIFIT>`_ output, and
+images which contain exactly 6 volumes (assumed to contain the unique elements
+of a tensor matrix at each voxel) can be displayed as *tensors*, where the
+magnitude, anisotropy, and orientation of water diffusion within each voxel is
+modelled by a tensor matrix, which can be visualised as an ellipsoid.
+
+
 .. container:: image-strip
 
   .. image:: images/overlays_tensor1.png
@@ -582,11 +605,7 @@ Tensor [*]_
      :width: 25%
 
 
-Directories which contain `dtifit
-<http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FDT/UserGuide#DTIFIT>`_ output, and
-images which contain exactly 6 volumes can be displayed as *tensors*, where
-the diffusion magnitude, anisotropy, and orientation within each voxel is
-modelled with a tensor matrix, which can be visualised as an ellipsoid.
+|
 
 
 .. [*] Tensor overlays may not be available if you are using FSLeyes over a
@@ -594,10 +613,33 @@ modelled with a tensor matrix, which can be visualised as an ellipsoid.
        reduced performance setting.
 
 
+Most of the settings which can be applied to :ref:`vector <overlays_vector>`
+overlays can also be applied to tensor overlays. Tensor overlays also have the
+following settings:
+
+
+- **Lighting effects** This setting toggles a lighting effect on the tensor
+  ellipsoids.
+  
+- **L/R orientation flip** This setting flips all ellipsoids about the X
+  (left-right) axis - see the :ref:`sidebar on vector orientation
+  <overlays_vector_orientation>`, above.
+  
+- **Ellipsoid quality** This setting allows you to decrease/increase the
+  ellipsoid quality (the number of vertices used to draw the ellipsoids).
+  
+- **Tensor size** This setting scales each ellipsoid by a constant factor.
+
+  
 .. _overlays_diffusion_sh:
 
 Diffusion SH [*]_
 ^^^^^^^^^^^^^^^^^
+
+
+Images which appear to contain spherical harmonic (SH) coefficients for
+spherical deconvolution-based diffusion modelling techniques can be displayed
+as spherical harmonic functions.
 
 
 .. container:: image-strip
@@ -612,14 +654,62 @@ Diffusion SH [*]_
      :width: 25%
 
 
-Images which appear to contain spherical harmonic (SH) coefficients for
-spherical deconvolution-based diffusion modelling techniques can be displayed
-as spherical harmonic functions.
+|
 
 
 .. [*] Diffusion SH overlays may not be available if you are using FSLeyes
        over a SSH/X11 connection, in a VNC session, on an older computer, or
        at a reduced performance setting.
+
+
+.. sidebar:: Fibre Orientation Distributions (FODs)
+
+             Spherical Deconvolution (SD) methods represent the fibre
+             orientation distribution (FOD) within each voxel as a linear
+             combination of Spherical Harmonic (SH) functions.  FSLeyes
+             |version| is capable of displaying FODs described by SH functions
+             up to order 16.  4D images which contain 1, 6, 15, 28, 45, 66,
+             91, 120, or 153 volumes can be displayed as symmetric SH
+             functions (i.e. the file contains coefficients for SH functions
+             of even order only). 4D images which contain 1, 9, 25, 49, 81,
+             121, 169, 225, or 289 volumes can be displayed as asymmetric SH
+             functions (i.e. the file contains coefficients for both SH
+             functions of both odd and even spherical order).
+
+
+Many of the display properties which can be applied to :ref:`vector overlay
+<overlays_vector>` images can also be applied to SH images. The fibre
+orientation distributions (FODs) within each voxel can be coloured according
+to their orientation, or to the magnitude of their radius.  In addition to
+supporting vector overlay settings, the following settings are available
+on diffusion SH overlays:
+
+
+- **FOD quality** This setting controls the FOD quality (the number of
+  vertices used to draw each FOD).
+  
+- **Maximum SH order** This setting allows you to adjust the maxmimum number
+  of SH functions used to represent each FOD.
+  
+- **L/R orientation flip** This setting flips all FODs about the X
+  (left-right) axis - see the :ref:`sidebar on vector orientation
+  <overlays_vector_orientation>`, above.
+  
+- **Lighting effects** This setting toggles an FOD lighting model [*]_.
+  
+- **FOD size** This setting allows you to scale the size of each FOD by a
+  constant factor.
+  
+- **Radious threshold** This setting allows you to clip FODs which have a
+  small maximum radius.
+
+- **Colour mode** You can choose to colour FODs by direction, or by the
+  magnitude of their radii.
+
+
+.. [*] The FOD lighting model in FSLeyes |version| is broken, as I have not
+       yet figured out a way to make a better lighting model work in a
+       computationally efficient manner.
 
 
 .. _overlays_vtk_model:
@@ -651,32 +741,6 @@ tool, to represent sub-cortical structures.
 
 
 
-.. Images which appear to contain [*]_ spherical harmonic (SH) coefficients for
-.. spherical deconvolution-based diffusion modelling techniques [*]_ can be
-.. displayed as spherical harmonic functions. Many of the display properties
-.. which can be applied to vector images can also be applied to SH images. The
-.. fibre orientation distributions (FODs) within each voxel can be coloured
-.. according to their orientation, or to the magnitude of their radius.
-
-
-.. .. [*] 4D images which contain 1, 6, 15, 28, 45, 66, 91, 120, or 153 volumes
-..        can be displayed as symmetric SH functions (i.e. the file contains
-..        coefficients for even spherical functions only). 4D images which
-..        contain 1, 9, 25, 49, 81, 121, 169, 225, or 289 volumes can be
-..        displayed as asymmetric SH functions (i.e. the file contains
-..        coefficients for both odd and even spherical functions).
-..
-.. .. [*] Spherical Deconvolution (SD) and Constrained Spherical Deconvolution
-..        (CSD) methods use spherical harmonic functions to represent the fibre
-..        orientation distribution (FOD), based on diffusion imaging data, within
-..        each voxel. For more details. refer to:
-..
-..        J.-Donald Tournier, Chun-Hung Yeh, Fernando Calamante, Kuan-Hung Cho,
-..        Alan Connelly, Ching-Po Lin, `Resolving crossing fibres using
-..        constrained spherical deconvolution: Validation using
-..        diffusion-weighted imaging phantom data`, NeuroImage, Volume 42, Issue
-..        2, 15 August 2008, Pages 617-625, ISSN 1053-8119,
-..        http://dx.doi.org/10.1016/j.neuroimage.2008.05.002.
 
 
 .. FSLeyes cannot automatically determine the coordinate system that is used in a
