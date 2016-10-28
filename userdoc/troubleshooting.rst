@@ -15,6 +15,8 @@ Images with large data range
 
 Setting/option/feature is missing (GL21 > Gl14)
 
+Line vectors/tensors/FODs are L/R flipped
+
 
 Technical problems
 ------------------

@@ -134,11 +134,12 @@ The FSLeyes interface is arranged into *views* and *controls*.
 
 
 Conceptually, a *view* (e.g. an :ref:`orthographic
-<ortho_lightbox_views_ortho>` or :ref:`time series <plot_views_timeseries>`
-panel) displays the data in some way, and a *control* (e.g. an :ref:`overlay
-display toolbar <overlays_overlay_display_toolbar>` or :ref:`atlas panel
-<todo>`) allows you to manipulate that view.  Views are top-level panels,
-whereas controls are embedded within a single view.
+<ortho_lightbox_views_ortho>` or :ref:`time series
+<plot_views_time_series_view>` panel) displays the data in some way, and a
+*control* (e.g. an :ref:`overlay display toolbar
+<overlays_overlay_display_toolbar>` or :ref:`atlas panel <todo>`) allows you
+to manipulate that view.  Views are top-level panels, whereas controls are
+embedded within a single view.
 
 
 All available views are listed in the *View* menu:
@@ -242,11 +243,11 @@ This perspective is designed to assist in manual classification of ICA
 components. It provides functionality similar to that of the `Melview
 <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Melview>`_ tool, comprising a lightbox
 view and plot panels which display the :ref:`time course
-<plot_views_timeseries>` and :ref:`power spectra <plot_views_powerspectrum>`
-of the currently selected component.  A :ref:`classification panel <todo>`
-allows you to load, save, and edit the classification labels for each
-component. See the page on :ref:`IC classification <ic_classification>` for
-more information.
+<plot_views_time_series_view>` and :ref:`power spectra
+<plot_views_power_spectra_view>` of the currently selected component.  A
+:ref:`classification panel <todo>` allows you to load, save, and edit the
+classification labels for each component. See the page on :ref:`IC
+classification <ic_classification>` for more information.
 
 
 .. image:: images/overview_melodic.png
@@ -262,8 +263,8 @@ This perspective is designed to assist in exploring the results of a `FEAT
 <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT>`_ analysis. The :ref:`cluster
 panel <todo>` displays a table of clusters for each contrast (for analyses
 which used cluster thresholding), and the :ref:`time series panel
-<plot_views_timeseries>` allows you to view full and partial model fits to the
-data. See the page on :ref:`viewing FEAT analyses <feat_mode>` for more
+<plot_views_time_series_view>` allows you to view full and partial model fits
+to the data. See the page on :ref:`viewing FEAT analyses <feat_mode>` for more
 information.
 
 

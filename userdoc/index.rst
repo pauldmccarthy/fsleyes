@@ -15,9 +15,9 @@ Views
      
 :ref:`Ortho view <ortho_lightbox_views_ortho>`
 :ref:`Lightbox view <ortho_lightbox_views_lightbox>`
-:ref:`Time series view <plot_views_timeseries>`
-:ref:`Histogram view <plot_views_histogram>`
-:ref:`Power spectrum view <plot_views_powerspectrum>`
+:ref:`Time series view <plot_views_time_series_view>`
+:ref:`Histogram view <plot_views_histogram_view>`
+:ref:`Power spectra view <plot_views_power_spectra_view>`
 
 
 Overlays
@@ -33,7 +33,9 @@ Overlays
 :ref:`Diffusion SH <overlays_diffusion_sh>`
 :ref:`VTK model <overlays_vtk_model>`
 
+:ref:`Linking overlay properties <overlays_linking_overlay_properties>`
 :ref:`Loading a custom colour map <overlays_loading_a_custom_colour_map>`
+:ref:`Vector orientation <overlays_vector_orientation>`
 :ref:`Lookup tables <todo>` 
 
 
@@ -84,3 +86,5 @@ Plot list panel
 Plot toolbar
 
 Plot control panel
+
+Importing/ exporting plotting data

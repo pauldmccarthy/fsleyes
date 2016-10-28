@@ -66,9 +66,8 @@ You can interact with an ortho view in a number of ways:
 
  - You can reset the view to its default zoom/pan settings by pressing the
    magnifying glass button on the :ref:`ortho toolbar
-   <ortho_lightbox_views_ortho_toolbar>`, pressing |alt_key| + r, or selecting
-   the *Settings* |right_arrow| *Ortho view 1* |right_arrow| *Reset display*
-   menu item.
+   <ortho_lightbox_views_ortho_toolbar>`, or selecting the *Settings*
+   |right_arrow| *Ortho view 1* |right_arrow| *Reset display* menu item.
 
 
 .. _ortho_lightbox_views_ortho_toolbar:
