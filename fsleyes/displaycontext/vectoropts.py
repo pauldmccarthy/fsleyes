@@ -22,6 +22,28 @@ class VectorOpts(volumeopts.NiftiOpts):
     """The ``VectorOpts`` class is the base class for :class:`LineVectorOpts`,
     :class:`RGBVectorOpts`, :class:`.TensorOpts`, and :class:`.SHOpts`. It
     contains display settings which are common to each of them.
+
+
+    *A note on orientation*
+
+    
+    The :attr:`orientFlip` property allows you to flip the left-right
+    orientation of line vectors, tensors, and SH functions. This option is
+    necessary, because different tools may output vector data in different
+    ways, depending on the image orientation.
+
+
+    For images which are stored radiologically (with the X axis increasaing
+    from right to left), the FSL tools (e.g. `dtifit`) will generate vectors
+    which are oriented according to the voxel coordinate system. However, for
+    neurologically stored images (X axis increasing from left to right), FSL
+    tools generate vectors which are radiologically oriented, and thus are
+    inverted with respect to the X axis in the voxel coordinate system.
+    Therefore, in order to correctly display vectors from such an image, we
+    must flip each vector about the X axis.
+
+
+    This issue is also applicable to ``tensor`` and ``sh`` overlays.
     """
 
 
