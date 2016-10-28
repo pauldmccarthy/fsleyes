@@ -5,9 +5,9 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`GLSH` class, a :class:`.GLObject` for
-rendering :class:`.Image` overlays which contain fibre orientation
-distribution (FOD) spherical harmonic (SH) coefficients.  The ``GLSH`` class
-uses functions defined in the :mod:`.gl21.glsh_funcs` module.
+rendering :class:`.Image` overlays which contain spherical harmonic (SH)
+coefficients which represent fibre orientation distributions (FODs).  The
+``GLSH`` class uses functions defined in the :mod:`.gl21.glsh_funcs` module.
 
 :class:`GLSH` instances can only be rendered in OpenGL 2.1 and above.
 """
@@ -30,8 +30,8 @@ log = logging.getLogger(__name__)
 
 class GLSH(glvector.GLVectorBase):
     """The ``GLSH`` class is a :class:`.GLVectorBase` for rendering
-    :class:`.Image` overlays which contain fibre orientation distribution
-    (FOD) spherical harmonic (SH) coefficients.
+    :class:`.Image` overlays which contain spherical harmonic (SH) coefficients
+    that represent fibre orientation distributions (FOD).
 
 
     This class manages listeners on :class:`.Display` and :class:`.SHOpts`
@@ -39,12 +39,13 @@ class GLSH(glvector.GLVectorBase):
     logic is implemented in the :mod:`.gl21.glsh_funcs` module.
 
 
-    Each voxel in a FOD image contains coefficients which describe a spherical
-    function.  The :meth:`SHOpts.getSHParameters` method returns a numpy array
-    which may be used to transform these coefficients into a set of radii
-    which can be applied to the vertices of a sphere to visualise the
-    spherical function. Pre-calculated vertices of tessellated spheres are
-    used, and are retrieved via the :meth:`.SHOpts.getVertices` and
+    Each voxel in a FOD image contains coefficients which describe a linear
+    combination of spherical harmonic functions.  The
+    :meth:`SHOpts.getSHParameters` method returns a numpy array which may be
+    used to transform these coefficients into a set of radii that can be
+    applied to the vertices of a sphere to visualise the spherical
+    function. Pre-calculated vertices of tessellated spheres are used, and are
+    retrieved via the :meth:`.SHOpts.getVertices` and
     :meth:`.SHOpts.getIndices` methods.
 
     
