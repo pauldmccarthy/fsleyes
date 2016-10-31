@@ -172,6 +172,8 @@ histogram view, allowing you to customise the histogram for the currently
 selected image:
 
 
+.. _plot_views_histogram_control:
+
 .. image:: images/plot_views_histogram_control.png
    :width: 60%
    :align: center
@@ -324,7 +326,9 @@ The *Import data series* button on the :ref:`plot toolbar
 to plot alongside the image data.
 
 
-.. sidebar:: Imported/exported data series file format
+.. _plot_views_import_export_data_series_file_format:
+
+.. sidebar:: Import/export data series file format
 
              FSLeyes expects the data series files that you import to consist
              of plain text numeric data organised into columns. One file may
@@ -334,16 +338,12 @@ to plot alongside the image data.
              samples::
                
 
-                 0.00392591  -1.53258e-05  -0.222667
-                 0.00581839  -8.19962e-05  -0.272648
-                 0.00550343   0.000167947  -0.188106
-                 0.00585702   4.19565e-05  -0.252987
-                 0.00583393  -0.000116993  -0.183033
-                 0.00536747   0.000352905  -0.226358
-
-
-             Exporting ....
-
+                 0.39  -1.53  -0.22
+                 0.58  -8.19  -0.27
+                 0.55   0.16  -0.18
+                 0.58   4.19  -0.25
+                 0.58  -0.11  -0.18
+                 0.53   3.5   -0.22
 
 
 For example, `FEAT <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT>`_ and `MELODIC
@@ -354,8 +354,136 @@ useful to plot these estimates alongside the voxel time series, to visually
 check for motion-related correlations and artefacts.
 
 
+When you import data series from a file, FSLeyes will ask you how the data
+series are to be scaled on the X axis: 
+
+
+.. image:: images/plot_views_import_data_x_scale.png
+   :width: 40%
+   :align: center
+
+           
+If the first column in your data file contains the X axis data, click the
+*First column ix X data* button. Otherwise, FSLeyes will set the X axis data
+according to the value that you enter.
+
+
+The *Export data series* button on the :ref:`plot toolbar
+<plot_views_plot_toolbar>` allows you to save the data series that are
+currently plotted to a text file in the format described in the :ref:`sidebar
+<plot_views_import_export_data_series_file_format>`. To export data series of
+different lengths and sample rates out to the same text file, FSLeyes applies
+linear interpolation, and pads shorter data series with ``nan``.
+
 
 .. _plot_views_plot_control_panel_customising_the_plot: 
 
 The plot control panel (customising the plot)
 ---------------------------------------------
+
+
+The plot control panel contains all of the settings available for customising
+how each plotting view behaves, and how it looks. The available settings are
+organised into three groups:
+
+
+.. image:: images/plot_views_plot_control_panel_groups.png
+   :width: 30%
+   :align: center
+
+
+The view-specific settings (*Time series settings* in the above example) have
+been covered above, in the sections on the :ref:`time series
+<plot_views_time_series_view>`, :ref:`power spectrum
+<plot_views_power_spectrum_view>`, and :ref:`histogram
+<plot_views_histogram_view>` views. The *General plot settings* and *Plot
+settings for selected overlay* groups are the same across all plotting views.
+
+
+A fourth group of settings may be present, depending on the plotting view type
+(e.g. the :ref:`histogram settings <plot_views_histogram_control>`), and on
+the overlay type (e.g. :ref:`FEAT images <todo>`).
+
+
+General plot settings
+^^^^^^^^^^^^^^^^^^^^^
+
+
+This group of settings allows you to control how the plot looks and how it
+behaves:
+
+
+.. image:: images/plot_views_plot_control_panel_general_plot_settings.png
+   :width: 50%
+   :align: center
+
+
+.. _plot_views_data_series_smoothing:
+           
+.. sidebar:: Data series smoothing 
+
+             FSLeyes smooths each data series using the `scipy.interpolate
+             <https://docs.scipy.org/doc/scipy/reference/interpolate.html>`_
+             package. First, a B-spline representation, of degree 3, of the
+             data series is calculated using the `splrep
+             <https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.splrep.html>`_
+             function. Then, the data series is interpolated at five times its
+             resolution using the `splev
+             <https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.splev.html>`_
+             function.
+
+
+- **Log scale (x axis)** When selected, the base 10 logarithm of the X axis
+  data will be displayed.
+  
+- **Log scale (y axis)** When selected, the base 10 logarithm of the Y axis
+  data will be displayed.
+  
+- **Smooth** When selected, each data series is upsampled and smoothed (see
+  the :ref:`sidebar <plot_views_data_series_smoothing>`).
+  
+- **Show legend** Toggle the plot legend on and off.
+  
+- **Show ticks** Toggle the plot ticks on and off.
+  
+- **Show grid** Toggle the plot grid on and off.
+  
+- **Grid colour** This setting allows you to change the plot grid colour.
+  
+- **Background colour** This setting allows you to change the plot background
+  colour.
+  
+- **Auto-scale (x axis)** This setting is selected by default. When selected,
+  the X axis limits are automatically scaled to fit the data series that are
+  plotted.
+  
+- **Auto-scale (y axis)** This setting is selected by default. When selected,
+  the Y axis limits are automatically scaled to fit the data series that are
+  plotted.
+  
+- **X limits** If *Auto-scale* is disabled for the X axis, this setting allows
+  you to manually specify the X axis limits.
+  
+- **Y limits** If *Auto-scale* is disabled for the Y axis, this setting allows
+  you to manually specify the Y axis limits.
+  
+- **Labels** Set the X and Y axis labels here.
+
+
+Plot settings for selected overlay
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+This group of settings allows you to control how the data series for the
+current overlay is plotted.
+
+
+.. image:: images/plot_views_plot_control_panel_plot_settings_for_selected_overlay.png
+   :width: 35%
+   :align: center
+
+
+You can customise the data series line colour, transparency, width, and
+style - available styles are *Solid line*, *Dashed line*, *Dash-dot line*, and
+*Dotted line*.
+           

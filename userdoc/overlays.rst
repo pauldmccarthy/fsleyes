@@ -268,6 +268,8 @@ The following settings are available for volume overlays:
   the display and clipping range will be applied inversely to both positive
   and negative values.
 
+- **Colour map resolution**
+
 
 - **Invert colour map** This setting inverts the colour map, so that low voxel
   intensities are coloured with the high colour from the colour map, and
