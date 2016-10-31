@@ -11,15 +11,6 @@ Miscellaneous
 
 
 
-Views
-     
-:ref:`Ortho view <ortho_lightbox_views_ortho>`
-:ref:`Lightbox view <ortho_lightbox_views_lightbox>`
-:ref:`Time series view <plot_views_time_series_view>`
-:ref:`Histogram view <plot_views_histogram_view>`
-:ref:`Power spectra view <plot_views_power_spectra_view>`
-
-
 Overlays
 
 :ref:`Overlay display toolbar <overlays_overlay_display_toolbar>`
@@ -36,31 +27,49 @@ Overlays
 :ref:`Linking overlay properties <overlays_linking_overlay_properties>`
 :ref:`Loading a custom colour map <overlays_loading_a_custom_colour_map>`
 :ref:`Vector orientation <overlays_vector_orientation>`
+:ref:`VTK model reference image <overlays_vtk_model_reference_image>`
 :ref:`Lookup tables <todo>` 
 
 
-Ortho view
+Ortho/lightbox
+
+:ref:`Ortho view <ortho_lightbox_views_ortho>`
+:ref:`Lightbox view <ortho_lightbox_views_lightbox>`
+
 
 :ref:`Ortho toolbar <ortho_lightbox_views_ortho_toolbar>`
 :ref:`Ortho interaction <ortho_lightbox_views_ortho_interaction>`
 :ref:`Ortho view settings <ortho_lightbox_views_ortho_view_settings>`
-
-
-Lightbox view
 
 :ref:`Lightbox toolbar <ortho_lightbox_views_lightbox_toolbar>`
 :ref:`Lightbox interaction <ortho_lightbox_views_lightbox_interaction>`
 :ref:`Lightbox view settings <ortho_lightbox_views_lightbox_view_settings>`
 
 
-Ortho/lightbox stuff
-
 :ref:`Overlay list panel <ortho_lightbox_views_overlay_list>`
 :ref:`Location panel <ortho_lightbox_views_location_panel>` 
 :ref:`Colour bar <ortho_lightbox_views_view_settings_colour_bar>`
 :ref:`Movie mode <ortho_lightbox_views_view_settings_movie_mode>`
 :ref:`Linking views <ortho_lightbox_views_view_settings_linking_views>` 
-:ref:`View settings panel <ortho_lightbox_views_view_settings>` 
+:ref:`View settings panel <ortho_lightbox_views_view_settings>`
+
+
+     
+Plotting
+          
+:ref:`Time series view <plot_views_time_series_view>`
+:ref:`Histogram view <plot_views_histogram_view>`
+:ref:`Power spectrum view <plot_views_power_spectrum_view>`
+
+:ref:`Percent-signal changed calculation <plot_views_percent_signal_changed_calculation>`
+:ref:`Power spectrum calculation <plot_views_power_spectrum_calculation>` 
+:ref:`Overlay list <plot_views_overlay_list>`
+:ref:`Plot list <plot_views_holding_data_series_and_the_plot_list>`
+:ref:`Plot toolbar <plot_views_plot_toolbar>`
+:ref:`Plot control panel <plot_views_plot_control_panel_customising_the_plot>`
+:ref:`Importing/exporting data series <plot_views_importing_exporting_data>`
+
+
 
 
 Image editing
@@ -75,16 +84,3 @@ Lookup table panel
 Melodic IC panel
 
 Cluster panel
-
-
-
-
-Overlay list (plot) panel
-
-Plot list panel
-
-Plot toolbar
-
-Plot control panel
-
-Importing/ exporting plotting data

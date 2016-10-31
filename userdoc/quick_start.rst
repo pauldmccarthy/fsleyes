@@ -207,8 +207,15 @@ If you have more than one view open (e.g. an ortho view and a lightbox view),
 and you want the overlay display settings to be the same across all views,
 open the view settings panel for each view (via the toolbar spanner button, or
 the *Settings* |right_arrow| *<view name>* |right_arrow| *View settings panel*
-menu option), and make sure that the *Sync overlay display settings* box is
+menu option), and make sure that the *Link overlay display settings* box is
 checked or unchecked.
+
+
+Link the volumes on two or more 4D images?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Chainlink on overlay list
 
 
 Edit a NIFTI image?

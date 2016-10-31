@@ -243,8 +243,8 @@ This perspective is designed to assist in manual classification of ICA
 components. It provides functionality similar to that of the `Melview
 <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Melview>`_ tool, comprising a lightbox
 view and plot panels which display the :ref:`time course
-<plot_views_time_series_view>` and :ref:`power spectra
-<plot_views_power_spectra_view>` of the currently selected component.  A
+<plot_views_time_series_view>` and :ref:`power spectrum
+<plot_views_power_spectrum_view>` of the currently selected component.  A
 :ref:`classification panel <todo>` allows you to load, save, and edit the
 classification labels for each component. See the page on :ref:`IC
 classification <ic_classification>` for more information.
