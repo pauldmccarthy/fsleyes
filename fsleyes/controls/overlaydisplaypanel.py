@@ -329,6 +329,7 @@ _DISPLAY_PROPS = td.TypeDict({
                         'volume',
                         'interpolation',
                         'cmap',
+                        'cmapResolution',
                         'invert',
                         'invertClipping',
                         'linkLowRanges',
@@ -422,6 +423,11 @@ _DISPLAY_WIDGETS = td.TypeDict({
         labels=fslcm.getColourMapLabel,
         dependencies=['useNegativeCmap'],
         enabledWhen=lambda i, unc : unc),
+    'VolumeOpts.cmapResolution'  : props.Widget(
+        'cmapResolution',
+        slider=True,
+        spin=True,
+        showLimits=False), 
     'VolumeOpts.invert'         : props.Widget('invert'),
     'VolumeOpts.invertClipping' : props.Widget('invertClipping'),
     'VolumeOpts.linkLowRanges'  : props.Widget(

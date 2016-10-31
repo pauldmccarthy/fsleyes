@@ -707,6 +707,11 @@ class VolumeOpts(NiftiOpts):
     """The colour map, a :class:`matplotlib.colors.Colourmap` instance."""
 
 
+
+    cmapResolution = props.Int(minval=2, maxval=1024, default=256)
+    """Resolution for the colour map, i.e. the number of colours to use. """
+
+
     negativeCmap = props.ColourMap()
     """A second colour map, used if :attr:`useNegativeCmap` is ``True``.
     When active, the :attr:`cmap` is used to colour positive values, and

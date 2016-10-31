@@ -86,7 +86,8 @@ properties = TypeDict({
                                    'displayed.',
     'VolumeOpts.invertClipping'  : 'Invert the clipping range, so that voxels '
                                    'inside the range are not displayed, and '
-                                   'voxels outside of the range are displayed. '
+                                   'voxels outside of the range are '
+                                   'displayed. ' 
                                    'This option is useful for displaying '
                                    'statistic images.',
     'VolumeOpts.cmap'            : 'The colour map to use.',
@@ -95,6 +96,9 @@ properties = TypeDict({
     'VolumeOpts.useNegativeCmap' : 'Enable the negative colour map - '
                                    'this allows positive and negative '
                                    'values to be coloured independently.',
+    'VolumeOpts.cmapResolution'  : 'Colour map resolution - the number of '
+                                   'colours to use in the colour maps.', 
+ 
     'VolumeOpts.interpolation'   : 'Interpolate the image data for display '
                                    'purposes. You can choose no  '
                                    'interpolation (equivalent to nearest '

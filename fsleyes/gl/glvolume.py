@@ -282,6 +282,7 @@ class GLVolume(globject.GLImageObject):
                              self._invertClippingChanged)
         opts    .addListener('cmap',            name, self._cmapChanged)
         opts    .addListener('negativeCmap',    name, self._cmapChanged)
+        opts    .addListener('cmapResolution',  name, self._cmapChanged)
         opts    .addListener('useNegativeCmap', name,
                              self._useNegativeCmapChanged)
         opts    .addListener('invert',          name, self._invertChanged)
@@ -335,7 +336,7 @@ class GLVolume(globject.GLImageObject):
         opts    .removeListener(          'cmap',                    name)
         opts    .removeListener(          'negativeCmap',            name)
         opts    .removeListener(          'useNegativeCmap',         name)
-        opts    .removeListener(          'cmap',                    name)
+        opts    .removeListener(          'cmapResolution',          name)
         opts    .removeListener(          'invert',                  name)
         opts    .removeListener(          'volume',                  name)
         opts    .removeListener(          'resolution',              name)
@@ -511,6 +512,7 @@ class GLVolume(globject.GLImageObject):
         opts    = self.displayOpts
         alpha   = display.alpha / 100.0
         cmap    = opts.cmap
+        res     = opts.cmapResolution
         negCmap = opts.negativeCmap
         invert  = opts.invert
         dmin    = opts.displayRange[0]
@@ -519,11 +521,13 @@ class GLVolume(globject.GLImageObject):
         self.colourTexture.set(cmap=cmap,
                                invert=invert,
                                alpha=alpha,
+                               resolution=res,
                                displayRange=(dmin, dmax))
 
         self.negColourTexture.set(cmap=negCmap,
                                   invert=invert,
                                   alpha=alpha,
+                                  resolution=res,
                                   displayRange=(dmin, dmax)) 
 
         

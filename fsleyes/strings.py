@@ -659,6 +659,7 @@ properties = TypeDict({
     'VolumeOpts.linkLowRanges'   : 'Link low display/clipping ranges',
     'VolumeOpts.linkHighRanges'  : 'Link high display/clipping ranges',
     'VolumeOpts.cmap'            : 'Colour map',
+    'VolumeOpts.cmapResolution'  : 'Colour map resolution',
     'VolumeOpts.negativeCmap'    : '-ve colour map',
     'VolumeOpts.useNegativeCmap' : '-ve colour map',
     'VolumeOpts.invert'          : 'Invert colour map',
