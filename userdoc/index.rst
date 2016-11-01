@@ -72,13 +72,15 @@ Plotting
 :ref:`Data series smoothing <plot_views_data_series_smoothing>`
 
 
+:ref:`Atlas panel <atlases>`
+:ref:`Searching for atlas regions <atlases_searching_for_regions>`
+
 
 Image editing
 
 :ref:`Editing NIFTI images <editing_images>`
-Ortho edit toolbar
-
-Atlas panel
+:ref:`Edit toolbar <editing_images_edit_toolbar>`
+     
 
 Lookup table panel
 

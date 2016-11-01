@@ -724,18 +724,6 @@ VTK model
 ^^^^^^^^^
 
 
-.. container:: image-strip
-
-  .. image:: images/overlays_vtkmodel1.png
-     :width: 25%
-
-  .. image:: images/overlays_vtkmodel2.png
-     :width: 25%
-
-
-|
-
-
 .. _overlays_vtk_model_reference_image:
 
 .. sidebar:: VTK model reference image
@@ -753,6 +741,18 @@ VTK model
              Future versions of FSLeyes will attempt to automatically
              determine the reference image for VTK models when you load in the
              file(s).
+
+
+.. container:: image-strip
+
+  .. image:: images/overlays_vtkmodel1.png
+     :width: 25%
+
+  .. image:: images/overlays_vtkmodel2.png
+     :width: 25%
+
+
+|
 
 
 FSLeyes is able to display `VTK legacy files

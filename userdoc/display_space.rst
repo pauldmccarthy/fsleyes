@@ -37,3 +37,7 @@ reference overlay so they will be aligned on the screen.
        standard space image (e.g. if you have run the `fslreorient2std` tool
        on it), the three display space axes will correpond to the sagittal,
        coronal, and axial axes, respectively.
+
+
+
+Mention neurological flip

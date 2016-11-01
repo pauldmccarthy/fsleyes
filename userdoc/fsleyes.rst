@@ -7,17 +7,14 @@ FSLeyes
    :align: center
 
 
-This is the user documentation for *FSLeyes*, the FSL image viewer. If you are
-getting started with FSLeyes, check out the :ref:`quick_start` page.
-Otherwise, choose a topic from the list below, or refer to the :ref:`index`.
+This is the user documentation for *FSLeyes* [*]_, the `FSL
+<http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_ image viewer. This documentation
+pertains to FSLeyes |version|, which is a part of FSL |fsl_version|.
 
 
-.. note:: *FSLeyes* is pronounced as **"fossilise"**.
-
-
-.. warning:: This documentation is a work in progress. There is not much
-             content, and the content that is present is subject to change
-             without warning..
+If you are getting started with FSLeyes, check out the :ref:`quick_start`
+page.  Otherwise, choose a topic from the list below, or refer to the
+:ref:`index`.
 
 
 .. toctree::
@@ -38,6 +35,11 @@ Otherwise, choose a topic from the list below, or refer to the :ref:`index`.
    command_line
    offscreen_rendering
    display_space
-   troubleshooting
    customising
+   troubleshooting   
    index
+
+
+.. [*] *FSLeyes* is pronounced **"fossilise"**.
+
+   

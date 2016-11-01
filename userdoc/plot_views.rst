@@ -23,10 +23,10 @@ FSLeyes |version| provides three plotting views:
   image).
 
 
-All of these views have a similar interface and functionality. Plotting views
-can plot data series from :ref:`multiple overlays <plot_views_overlay_list>`
-and :ref:`multiple voxels <plot_views_holding_data_series_and_the_plot_list>`,
-and you can also :ref:`import and export data series
+All of these views have a similar interface and functionality - they can plot
+data series from :ref:`multiple overlays <plot_views_overlay_list>` and
+:ref:`multiple voxels <plot_views_holding_data_series_and_the_plot_list>`, and
+you can also :ref:`import and export data series
 <plot_views_importing_exporting_data>`.
 
 
@@ -44,12 +44,12 @@ pages for more details.
 
 When you are viewing a 4D NIFTI image in an :ref:`orthographic or ligthbox
 view <ortho_lightbox_views>`, the time series view will update as you change
-the cursor location, to show the time series from the voxel (or voxels, if you
-have more than one 4D image loaded) at the current location.  You can use the
-:ref:`plot toolbar <plot_views_plot_toolbar>` or :ref:`plot list
+the display location, to show the time series from the voxel (or voxels, if
+you have more than one 4D image loaded) at the current location.  You can use
+the :ref:`plot toolbar <plot_views_plot_toolbar>` or :ref:`plot list
 <plot_views_holding_data_series_and_the_plot_list>` to "hold" the time series
 for one or more voxels, which will keep them on the plot after you change the
-cursor location.
+display location.
 
 
 The plot control panel (described :ref:`below
@@ -364,7 +364,7 @@ series are to be scaled on the X axis:
 
            
 If the first column in your data file contains the X axis data, click the
-*First column ix X data* button. Otherwise, FSLeyes will set the X axis data
+*First column is X data* button. Otherwise, FSLeyes will set the X axis data
 according to the value that you enter.
 
 

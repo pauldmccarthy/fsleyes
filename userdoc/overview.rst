@@ -22,32 +22,6 @@ functionality in many ways.
        mode* - this will be added in a future version.
 
 
-Help!
------
-
-
-If you get stuck:
-
- - Search through these help pages to see if your problem is discussed
-   anywhere (hint: try the :ref:`index` page).
-
- - If you can't figure out how to do something, see if it is covered in the
-   :ref:`How do i ... <quick_start_how_do_i>` section of the :ref:`quick_start`
-   page.
-
- - If something has gone wrong, check the :ref:`troubleshooting` page to
-   see if you problem is covered there.
-
-
-Most FSLeyes buttons and controls also have tooltips which contain useful
-information, and which will pop up if your hover the mouse over a control
-for a couple of seconds:
-
-
-.. image:: images/overview_tooltip.png
-   :align: center
-
-
 .. _overview_overlays:
 
 Overlays

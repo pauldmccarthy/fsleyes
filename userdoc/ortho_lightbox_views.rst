@@ -59,10 +59,10 @@ You can interact with an ortho view in a number of ways:
  - Middle-click and drag, or hold down the |alt_key| key and drag with the
    left mouse button, to pan around.
    
- - Hold down the Shift key and the |command_key|/|control_key| key, then click
-   and drag the mouse to adjust the brightness and contrast of the currently
-   selected overlay. Moving the mouse vertically will adjust the contrast, and
-   horizontally will adjust the brightness.
+ - Hold down the |shift_key| key and the |command_key|/|control_key| key, then
+   click and drag the mouse to adjust the brightness and contrast of the
+   currently selected overlay. Moving the mouse vertically will adjust the
+   contrast, and horizontally will adjust the brightness.
 
  - You can reset the view to its default zoom/pan settings by pressing the
    magnifying glass button on the :ref:`ortho toolbar
@@ -370,7 +370,7 @@ you can choose to have various properties between them linked or unlinked.
    views. This setting is selected by default.
 
 
- - **Link location** When this setting is selected, the cursor location will
+ - **Link location** When this setting is selected, the display location will
    be the same across linked views. This setting is selected by default.
 
 
