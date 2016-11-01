@@ -33,7 +33,6 @@ page.  Otherwise, choose a topic from the list below, or refer to the
    feat_mode
    ic_classification
    command_line
-   offscreen_rendering
    display_space
    customising
    troubleshooting   
