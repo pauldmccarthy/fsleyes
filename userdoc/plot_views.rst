@@ -53,8 +53,8 @@ display location.
 
 
 The plot control panel (described :ref:`below
-<plot_views_plot_control_panel_customising_the_plot>`) contains some settings
-specific to time series plots:
+<plot_views_customising_the_plot_the_plot_control_panel>`) contains some
+settings specific to time series plots:
 
 
 .. image:: images/plot_views_time_series_control.png
@@ -121,7 +121,7 @@ transformed into the frequency domain before being plotted.
 
              
 The :ref:`plot control panel
-<plot_views_plot_control_panel_customising_the_plot>` for a power spectrum
+<plot_views_customising_the_plot_the_plot_control_panel>` for a power spectrum
 view contains the following settings:
 
 
@@ -146,7 +146,7 @@ view contains the following settings:
 One further setting is available for each data series displayed on a power
 spectrum view (in the *Plot settings for selected overlay* section of the plot
 control panel, described :ref:`below
-<plot_views_plot_control_panel_customising_the_plot>`):
+<plot_views_customising_the_plot_the_plot_control_panel>`):
 
 - **Normalise to unit variance** This setting is enabled by default. When
   selected, the time series data is normalised before being transformed into
@@ -163,7 +163,7 @@ Histogram view
 The histogram view plots a histogram of the intensities of all voxels in a 3D
 NIFTI image, or of the current 3D volume in a 4D image. Both the :ref:`plot
 toolbar <plot_views_plot_toolbar>` and :ref:`plot control panel
-<plot_views_plot_control_panel_customising_the_plot>` allow you to choose
+<plot_views_customising_the_plot_the_plot_control_panel>` allow you to choose
 between displaying the histogram data series as probabilities, or as counts.
 
 
@@ -256,8 +256,8 @@ do the following:
 
 
 1. **Plot control panel** This button opens the :ref:`plot control panel
-   <plot_views_plot_control_panel_customising_the_plot>`, which contains all
-   available plot settings.
+   <plot_views_customising_the_plot_the_plot_control_panel>`, which contains
+   all available plot settings.
 
 2. **Plot list** This button opens the :ref:`plot list
    <plot_views_holding_data_series_and_the_plot_list>`, which allows you to
@@ -376,9 +376,9 @@ different lengths and sample rates out to the same text file, FSLeyes applies
 linear interpolation, and pads shorter data series with ``nan``.
 
 
-.. _plot_views_plot_control_panel_customising_the_plot: 
+.. _plot_views_customising_the_plot_the_plot_control_panel:
 
-The plot control panel (customising the plot)
+Customising the plot (the plot control panel)
 ---------------------------------------------
 
 
@@ -422,13 +422,14 @@ behaves:
            
 .. sidebar:: Data series smoothing 
 
-             FSLeyes smooths each data series using the `scipy.interpolate
+             When the *Smooth* setting is selected, FSLeyes smooths each data
+             series using the `scipy.interpolate
              <https://docs.scipy.org/doc/scipy/reference/interpolate.html>`_
-             package. First, a B-spline representation, of degree 3, of the
+             package. First, a B-spline representation of degree 3, of the
              data series is calculated using the `splrep
              <https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.splrep.html>`_
              function. Then, the data series is interpolated at five times its
-             resolution using the `splev
+             original resolution using the `splev
              <https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.splev.html>`_
              function.
 

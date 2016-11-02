@@ -250,6 +250,13 @@ Set up a positive/negative colour map for Z statistics?
 Blurg.
 
 
+My image is tilted/oblique! How do I make oriented and rectangular?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Display space
+
+
 Edit a NIFTI image?
 ^^^^^^^^^^^^^^^^^^^
 

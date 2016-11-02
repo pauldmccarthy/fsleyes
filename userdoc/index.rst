@@ -73,7 +73,7 @@ Plotting
 - :ref:`Overlay list <plot_views_overlay_list>`
 - :ref:`Plot list <plot_views_holding_data_series_and_the_plot_list>`
 - :ref:`Plot toolbar <plot_views_plot_toolbar>`
-- :ref:`Plot control panel <plot_views_plot_control_panel_customising_the_plot>`
+- :ref:`Plot control panel <plot_views_customising_the_plot_the_plot_control_panel>`
 - :ref:`Importing/exporting data series <plot_views_importing_exporting_data>`
 - :ref:`Import/export data series file format <plot_views_import_export_data_series_file_format>`
 - :ref:`Data series smoothing <plot_views_data_series_smoothing>`

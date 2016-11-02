@@ -82,7 +82,7 @@ overlay, you may be presented with a warning:
 
 This message is just informing you that the display space is being changed to
 the image that is being edited (the selected overlay). This is necessary
-because, when editing an image, the image must be presented in an orientation
+because, when editing an image, the image must be shown in an orientation
 which is orthogonal to the display coordinate system. For more details, refer
 to the page on the :ref:`display space <display_space>`.
 
@@ -182,8 +182,8 @@ The selection size can be adjusted via the *Selection size* control in the
 
 
 By default, the selection block is a 2-dimensional rectangle in the current
-slice, but it can be made into a 3-dimensional cuboid by toggling the
-|2D_3D_buttons| buttons on the :ref:`edit toolbar
+slice, but it can be made into a 3-dimensional cuboid by changing to a 3D
+selection, via the |2D_3D_buttons| buttons on the :ref:`edit toolbar
 <editing_images_edit_toolbar>`.
 
 
@@ -223,9 +223,9 @@ intensity search. These sub-modes are accessed through buttons on the
 
 
 - |local_search_button| The search can be restricted to adjacent voxels by
-  pushing the *Local search* button search.  When local search is enabled,
-  voxels which are not adjacent to an already-selected voxel are excluded from
-  the search.
+  pushing the *Local search* button.  When local search is enabled, voxels
+  which are not adjacent to an already-selected voxel (using a 6-neighbour
+  connectivity regime) are excluded from the search.
 
 
 .. _editing_images_changing_voxel_values: 

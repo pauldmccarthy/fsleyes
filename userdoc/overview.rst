@@ -80,9 +80,11 @@ defined in the same space. For example, if you load a T1 image and a T2*
 image, FSLeyes will attempt to display them on top of one another, even if
 they have different resolution or orientation. By default, FSLeyes will
 display all overlays in terms of a single reference overlay, typically the
-first one that you load; all other overlays are transformed into the space of
-this reference overlay. You can change the reference overlay via the
-:ref:`view settings panel <ortho_lightbox_views_view_settings>`.
+first one that you load. The reference overlay is displayed so that it is
+orthogonal to the display coordinate system; all other overlays are
+transformed into the space of this reference overlay.  You can change the
+reference overlay via the :ref:`view settings panel
+<ortho_lightbox_views_view_settings>`.
 
 
 .. container:: image-strip
@@ -188,6 +190,8 @@ sub-menu:
    :align: center
 
 
+.. _overview_built_in_perspectives:           
+
 Built-in perspectives
 ---------------------
 
@@ -195,8 +199,10 @@ Built-in perspectives
 FSLeyes comes with a few built-in perspectives, described below.
 
 
-Default layout
-^^^^^^^^^^^^^^
+.. _overview_default_perspective:
+
+Default perspective
+^^^^^^^^^^^^^^^^^^^
 
 
 This is the default FSLeyes perspective, which provides a layout inspired by
@@ -209,7 +215,7 @@ viewing and editing.
    :width: 75%
 
 
-Melodic mode
+MELODIC mode
 ^^^^^^^^^^^^
 
 
