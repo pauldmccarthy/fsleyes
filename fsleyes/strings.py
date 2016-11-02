@@ -452,7 +452,7 @@ labels = TypeDict({
     'ClusterPanel.logp'          : '-log10(P)',
     'ClusterPanel.zmax'          : 'Z Max',
     'ClusterPanel.zmaxcoords'    : 'Z Max location',
-    'ClusterPanel.zcogcoords'    : 'Z Max COG location',
+    'ClusterPanel.zcogcoords'    : 'COG location',
     'ClusterPanel.copemax'       : 'COPE Max',
     'ClusterPanel.copemaxcoords' : 'COPE Max location',
     'ClusterPanel.copemean'      : 'COPE mean',
@@ -1032,7 +1032,7 @@ melodic = TypeDict({
 
 perspectives = {
     'default'  : 'Default layout',
-    'melodic'  : 'Melodic mode',
+    'melodic'  : 'MELODIC mode',
     'feat'     : 'FEAT mode',
     'ortho'    : 'Plain orthographic',
     'lightbox' : 'Plain lightbox',

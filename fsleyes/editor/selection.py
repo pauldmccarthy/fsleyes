@@ -618,6 +618,10 @@ class Selection(props.HasProperties):
         # adjacent points with the same/similar value
         # (using scipy.ndimage.measurements.label)
         #
+        # The label function defaults to 6 neighbour
+        # connectivity for 3D, or 4 neighbour
+        # connectivity for 2D.
+        #
         # If local is not True, any same or similar 
         # values are part of the selection
         if local:
