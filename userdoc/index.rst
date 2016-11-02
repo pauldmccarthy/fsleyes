@@ -84,10 +84,20 @@ Image editing
 
 - :ref:`Editing NIFTI images <editing_images>`
 - :ref:`Edit toolbar <editing_images_edit_toolbar>`
+
+
+
+FEAT analyses
+-------------
+
+- :ref:`Viewing FEAT analyses <feat_mode>`
+- :ref:`Cluster panel <feat_mode_viewing_clusters_the_cluster_panel>` 
+- :ref:`GLM refresher <feat_mode_glm_refresher>`
+- :ref:`Understanding FEAT time series plots <feat_mode_understanding_feat_time_series_plots>`
+- :ref:`Full and partial model fits <feat_mode_full_and_partial_model_fits>`
+- :ref:`Reduced data plots <feat_mode_reduced_data_plots>`
      
 
 Lookup table panel
 
 Melodic IC panel
-
-Cluster panel
