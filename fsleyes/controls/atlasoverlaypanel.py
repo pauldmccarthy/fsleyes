@@ -401,16 +401,15 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
 
                     for i in range(start, min(start + blockSize, nlabels)):
                         label = atlasDesc.labels[i]
-                        regionList.Append(label.name)
                         widget = OverlayListWidget(regionList,
                                                    atlasDesc.atlasID,
                                                    i,
                                                    self.__atlasPanel,
                                                    self,
                                                    label.index)
-                        regionList.SetItemWidget(i, widget)
+                        regionList.Append(label.name, extraWidget=widget)
 
-                    if i < nlabels - 1: async.idle(addToRegionList, i)
+                    if i < nlabels - 1: async.idle(addToRegionList, i + 1)
                     else:               async.idle(changeAtlasList)
 
                 except wx.PyDeadObjectError:

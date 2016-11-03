@@ -298,7 +298,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
                     self.Enable()
                     self.__labelList.Enable()
                 else:
-                    async.idle(addLabel, labelIdx) 
+                    async.idle(addLabel, labelIdx + 1) 
                     
             except wx.PyDeadObjectError:
                 pass
