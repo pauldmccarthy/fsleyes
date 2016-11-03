@@ -111,6 +111,11 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
         self.__selectedOverlayChanged()
         
         self.Layout()
+
+        # Allow the atlas list
+        # to be minimised
+        self.__atlasList.SetMinSize((50, -1))
+        
         self.SetMinSize(self.__sizer.GetMinSize())
 
         

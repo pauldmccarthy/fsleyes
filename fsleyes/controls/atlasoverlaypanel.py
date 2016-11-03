@@ -112,7 +112,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         self.__contentPanel.SetMinimumPaneSize(50)
         self.__contentPanel.SplitVertically(self.__atlasList,
                                             self.__regionPanel)
-        self.__contentPanel.SetSashGravity(0.5) 
+        self.__contentPanel.SetSashGravity(0.4) 
         
         self.__sizer       = wx.BoxSizer(wx.HORIZONTAL)
         self.__regionSizer = wx.BoxSizer(wx.VERTICAL)
@@ -137,6 +137,10 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
 
         self.__regionSizer.Layout()
         self.__sizer      .Layout()
+
+        # Allow the atlas list
+        # to be minimised
+        self.__atlasList.SetMinSize((50, -1)) 
 
         self.SetMinSize(self.__sizer.GetMinSize())
 
