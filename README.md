@@ -15,7 +15,8 @@ instructions](https://git.fmrib.ox.ac.uk/paulmc/fsleyes/wikis/home) for
 details on getting started.
 
 
-The [Documentation for users](http://users.fmrib.ox.ac.uk/~paulmc/fsleyes/index.html)
+The [Documentation for
+users](http://users.fmrib.ox.ac.uk/~paulmc/fsleyes_userdoc/index.html)
 provides a comprehensive overview of how to use *FSLeyes*.
 
 
