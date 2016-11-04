@@ -269,9 +269,9 @@ The overlay list allows you to do the following:
  - Save an overlay if it has been :ref:`edited <editing_images>`, with the
    floppy disk button. 
 
- - View the overlay source (e.g. its location in the file system) by
-   left-clicking and holding on the overlay name.
-
+ - Left-click and hold the mouse button down on the overlay name to view the
+   overlay source (e.g. its location in the file system).
+   
 
 .. _ortho_lightbox_views_location_panel:
 
@@ -297,7 +297,7 @@ space.
 
 You can use the coordinate controls to change the currently displayed location
 and, for 4D NIFTI images, use the volume control to change the currently
-displayed volume.
+displayed volume. Note that FSLeyes starts counting volumes from 0, not 1.
 
 
 The area on the right of the location panel displays the intensity values at

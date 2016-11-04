@@ -402,7 +402,8 @@ settings for selected overlay* groups are the same across all plotting views.
 
 A fourth group of settings may be present, depending on the plotting view type
 (e.g. the :ref:`histogram settings <plot_views_histogram_control>`), and on
-the overlay type (e.g. :ref:`FEAT images <todo>`).
+the overlay type (e.g. :ref:`FEAT images
+<feat_mode_viewing_model_fits_in_the_time_series_panel>`).
 
 
 General plot settings

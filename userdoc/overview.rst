@@ -113,8 +113,8 @@ Conceptually, a *view* (e.g. an :ref:`orthographic
 <ortho_lightbox_views_ortho>` or :ref:`time series
 <plot_views_time_series_view>` panel) displays the data in some way, and a
 *control* (e.g. an :ref:`overlay display toolbar
-<overlays_overlay_display_toolbar>` or :ref:`atlas panel <todo>`) allows you
-to manipulate that view.  Views are top-level panels, whereas controls are
+<overlays_overlay_display_toolbar>` or :ref:`atlas panel <atlases>`) allows
+you to manipulate that view.  Views are top-level panels, whereas controls are
 embedded within a single view.
 
 
@@ -225,9 +225,11 @@ components. It provides functionality similar to that of the `Melview
 view and plot panels which display the :ref:`time course
 <plot_views_time_series_view>` and :ref:`power spectrum
 <plot_views_power_spectrum_view>` of the currently selected component.  A
-:ref:`classification panel <todo>` allows you to load, save, and edit the
-classification labels for each component. See the page on :ref:`IC
-classification <ic_classification>` for more information.
+:ref:`classification panel
+<ic_classification_classifying_components_with_the_classification_panel>`
+allows you to load, save, and edit the classification labels for each
+component. See the page on :ref:`IC classification <ic_classification>` for
+more information.
 
 
 .. image:: images/overview_melodic.png
@@ -241,11 +243,11 @@ FEAT mode
 
 This perspective is designed to assist in exploring the results of a `FEAT
 <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT>`_ analysis. The :ref:`cluster
-panel <todo>` displays a table of clusters for each contrast (for analyses
-which used cluster thresholding), and the :ref:`time series panel
-<plot_views_time_series_view>` allows you to view full and partial model fits
-to the data. See the page on :ref:`viewing FEAT analyses <feat_mode>` for more
-information.
+panel <feat_mode_viewing_clusters_the_cluster_panel>` displays a table of
+clusters for each contrast (for analyses which used cluster thresholding), and
+the :ref:`time series panel <plot_views_time_series_view>` allows you to view
+full and partial model fits to the data. See the page on :ref:`viewing FEAT
+analyses <feat_mode>` for more information.
 
 
 .. image:: images/overview_feat.png

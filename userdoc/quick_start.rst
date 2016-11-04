@@ -22,7 +22,7 @@ Help!
 If you get stuck:
 
  - Search through these help pages to see if your problem is discussed
-   anywhere (hint: try the :ref:`index` page).
+   anywhere (hint: try the :ref:`userdoc_index` page).
 
  - If you can't figure out how to do something, see if it is covered in the
    :ref:`How do i ... <quick_start_how_do_i>` section, below.

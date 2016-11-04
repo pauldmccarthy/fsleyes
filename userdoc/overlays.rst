@@ -327,7 +327,7 @@ Label
 
 
 This type is useful for viewing NIFTI images which contain discrete integer
-values (*labels*), such as :ref:`atlases <todo>` and (sub-)cortical
+values (*labels*), such as :ref:`atlases <atlases>` and (sub-)cortical
 segmentation summary images.  Label overlays are coloured according to a
 *lookup table*.
 
