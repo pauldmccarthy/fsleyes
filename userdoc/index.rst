@@ -33,6 +33,7 @@ page.  Otherwise, choose a topic from the list below, or refer to the
    feat_mode
    ic_classification
    command_line
+   python_shell
    display_space
    customising
    troubleshooting   

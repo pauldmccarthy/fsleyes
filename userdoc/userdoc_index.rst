@@ -12,6 +12,7 @@ Miscellaneous
   
 - :ref:`Command line interface <command_line>`
 - :ref:`Off-screen rendering <command_line_offscreen_rendering>`
+- :ref:`Auto-display <command_line_auto_display>` 
 
 
 Overlays

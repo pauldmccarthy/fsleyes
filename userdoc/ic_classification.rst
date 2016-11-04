@@ -286,19 +286,19 @@ The file format comprises three sections:
   - One or more labels for the component (multiple labels are separated with a
     comma).
     
-  - ``True`` if the component has been classified as a *bad* component (see
-    below), ``False`` otherwise.
+  - ``True`` if the component has been classified as a *bad* component [*]_,
+    ``False`` otherwise.
     
 - The last line of the file contains the indices (starting from 1) of all
   *bad* components. These indices are separated with commas, and contained
   within square brackets.
 
-A *bad* component is defined as any component which does not have a a label
-of ``Signal`` or ``Unknown``.
+.. [*] A *bad* component is defined as any component which does not have a a
+       label of ``Signal`` or ``Unknown``.
 
 
 FSLeyes is also capable of loading classification files which only contain the
-*bad* component list. Such files contain a single line of comma-separated
+bad component list. Such files contain a single line of comma-separated
 component indices, which may or may not be contained within square
 brackets. For example::
 
