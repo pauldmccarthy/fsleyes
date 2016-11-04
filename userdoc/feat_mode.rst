@@ -305,7 +305,7 @@ at time :math:`t` is calculated as:
 
 .. math::
 
-   F_C^t = \sum_{e=1}^{p}{X_e^t\ \beta_e\ C_e}
+   F_C^t = \sum_{e=1}^{p}{X_e^t\ \beta_e\ |C_e|}
 
 
 where:
@@ -317,7 +317,9 @@ where:
         
 - :math:`\beta_e` is the parameter estimate for EV :math:`e`, and
   
-- :math:`C_e` is the value in the contrast vector for EV :math:`e`.
+- :math:`|C_e|` is the absolute value in the contrast vector for EV :math:`e`.
+  The absolute value is used because the parameter estimate :math:`\beta_e`
+  should already have an appropriate sign.
 
 
 The contrast vector :math:`\boldsymbol{C}` is defined as follows:
@@ -333,18 +335,21 @@ The contrast vector :math:`\boldsymbol{C}` is defined as follows:
   was used in the FEAT analysis.
 
      
-A couple of further steps are applied to the above process:
+A few further steps are applied to the above process:
   
-- For the *Plot PE fit* and *Plot COPE fit* options, the contrast vectors
-  are normalised to unit length before the model fit is calculated:
+- The contrast vectors are normalised before the model fit is calculated:
 
   .. math::
      
-     \boldsymbol{C} = \frac{\boldsymbol{C}}{\sqrt{\sum_{e=1}^{p}{C_e^2}}}
+     \boldsymbol{C} = \frac{\sqrt{n_\boldsymbol{C}}\boldsymbol{C}}{\sqrt{\sum_{e=1}^{p}{C_e^2}}}
 
-- For the *Full model fit* option, after the fit calculation, the model fit
-  is de-meaned, and then the mean of the voxel time course is added to it
-  before it is plotted.
+  where :math:`n_\boldsymbol{C}` is the number of non-zero elements in the
+  contrast vector.  This normalisation is applied purely for display purposes,
+  so that partial model fits are scaled in a sensible manner.
+
+- If the analysis is a first-level analysis (i.e. fitting a model to time
+  series data), the data mean is added to the model fit. This is because FEAT
+  de-means time series data before calculating the model fit.
 
 
 .. _feat_mode_reduced_data_plots:
