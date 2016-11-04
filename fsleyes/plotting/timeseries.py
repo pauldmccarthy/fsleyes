@@ -25,10 +25,11 @@ import numpy as np
 
 import props
 
-import fsl.utils.cache as cache
-import fsl.utils.async as async
-import fsleyes.strings as strings
-from . import             dataseries
+import fsl.utils.cache    as cache
+import fsl.utils.async    as async
+import fsleyes.strings    as strings
+import fsleyes.colourmaps as fslcm
+from . import                dataseries
 
 
 class TimeSeries(dataseries.DataSeries):
@@ -396,16 +397,10 @@ class FEATTimeSeries(VoxelTimeSeries):
         ts.lineStyle = self.lineStyle
         ts.label     = ts.makeLabel()
 
-        if   isinstance(ts, FEATPartialFitTimeSeries):
-            ts.colour = (0, 0.6, 0.6)
-        elif isinstance(ts, FEATResidualTimeSeries):
-            ts.colour = (0.8, 0.4, 0)
-        elif isinstance(ts, FEATEVTimeSeries):
-            ts.colour = (0, 0.7, 0.35)
-        elif isinstance(ts, FEATModelFitTimeSeries):
-            if   ts.fitType == 'full': ts.colour = (0,   0, 1)
-            elif ts.fitType == 'cope': ts.colour = (0,   1, 0)
-            elif ts.fitType == 'pe':   ts.colour = (0.7, 0, 0)
+        if isinstance(ts, FEATModelFitTimeSeries) and ts.fitType == 'full':
+            ts.colour = (0, 0, 0.8)
+        else:
+            ts.colour = fslcm.randomDarkColour()
 
         return ts
 
@@ -576,7 +571,7 @@ class FEATPartialFitTimeSeries(VoxelTimeSeries):
         if coords is None:
             return [], []
         
-        data = self.overlay.partialFit(self.contrast, coords, False)
+        data = self.overlay.partialFit(self.contrast, coords)
         return VoxelTimeSeries.getData(self, ydata=data)
 
     
@@ -748,13 +743,12 @@ class FEATModelFitTimeSeries(VoxelTimeSeries):
 
         opts     = self.displayCtx.getOpts(self.overlay)
         voxel    = opts.getVoxel()
-        fitType  = self.fitType
         contrast = self.contrast 
 
         if voxel is None:
             return [], []
         
-        data = self.overlay.fit(contrast, voxel, fitType == 'full')
+        data = self.overlay.fit(contrast, voxel)
 
         return VoxelTimeSeries.getData(self, ydata=data)
 
