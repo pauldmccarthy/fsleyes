@@ -56,7 +56,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'FSLeyes'
-copyright = u'{}, Paul McCarthy, FMRIB Centre'.format(date.year)
+copyright = u'{}, Paul McCarthy, FMRIB Centre, University of Oxford'.format(
+    date.year)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
