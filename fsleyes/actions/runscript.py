@@ -170,7 +170,11 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
             'False' : False
         },
     }
-    
+
+    import numpy                 as np
+    import scipy                 as sp
+    import matplotlib            as mpl
+    import matplotlib.pyplot     as plt
     import fsleyes.views         as views
     import fsleyes.controls      as controls
     import fsl.data.image        as image
@@ -217,6 +221,10 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
                 displayCtx.getOpts(o).transform = 'id'
                 
     _locals = collections.OrderedDict((
+        ('np',               np),
+        ('sp',               sp),
+        ('mpl',              mpl),
+        ('plt',              plt),
         ('Image',            image.Image),
         ('FEATImage',        featimage.FEATImage),
         ('MelodicImage',     melimage.MelodicImage),

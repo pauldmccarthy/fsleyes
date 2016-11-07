@@ -150,6 +150,13 @@ class OverlayList(props.HasProperties):
                     return overlay
                 
         return None
+
+
+    def __str__(self):
+        return self.overlays.__str__()
+    
+    def __repr__(self):
+        return self.overlays.__str__() 
             
 
     # Wrappers around the overlays list property, allowing this
@@ -170,6 +177,11 @@ class OverlayList(props.HasProperties):
         return self.overlays.__setitem__(key, val)
     
     def __delitem__(self, key):
+
+        if   isinstance(key, slice): pass
+        elif isinstance(key, int):   key = slice(key, key + 1, None)
+        else:                        raise IndexError('Invalid key type')
+
         ovls = self[key]
         for ovl in ovls:
             self.__initOverlayType.pop(ovl, None)

@@ -13,6 +13,7 @@ import textwrap
 
 import wx.py.shell as wxshell
 
+import fsleyes.version           as version
 import fsleyes.actions.runscript as runscript
 from . import                       viewpanel
 
@@ -48,13 +49,23 @@ class ShellPanel(viewpanel.ViewPanel):
                                                                displayCtx)
 
         introText = textwrap.dedent("""
-          FSLeyes python shell
+          FSLeyes {} python shell
         
         Available items:
-        """)
+        """.format(version.__version__))
+
+        overrideDocs = {
+            'np'  : 'numpy',
+            'sp'  : 'scipy',
+            'mpl' : 'matplotlib',
+            'plt' : 'matplotlib.pyplot',
+        }
 
         localVars  = _locals.keys()
-        localDescs = [_locals[k].__doc__ for k in localVars]
+        localDescs = [_locals[k].__doc__
+                      if k not in overrideDocs
+                      else overrideDocs[k]
+                      for k in localVars]
 
         localDescs = [d.split('\n')[0].strip()[:60] for d in localDescs]
 
