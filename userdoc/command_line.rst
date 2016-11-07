@@ -58,13 +58,22 @@ To print the version of FSLeyes you are using::
   fsleyes  -V
 
 
+.. _command_line_examples:
+
+Examples
+--------
+
+
+TODOTODOTDOO
+
+
 Useful command line options
 ---------------------------
 
 
-What follows is a short list highlighting some of the things that you can do
-with the FSLeyes command line interface. For full details, refer to the
-:ref:`command line help <command_line_help>`.
+What follows is a short list highlighting some of the features in FSLeyes that
+you can access through the command line interface. For full details, refer to
+the :ref:`command line help <command_line_help>`.
 
 - :ref:`Auto display <command_line_auto_display>`
 - :ref:`Add standard <command_line_add_standard>`
@@ -192,10 +201,12 @@ Run script
    fsleyes  -r         script.py files ...
 
 
-FSLeyes has a programming API with which you can set up complex scenes. The
-``--runscript`` option allows you to execute a script when FSLeyes starts.
-These scripts have access to the same environment that is available in the
-:ref:`Python shell <python_shell>`.
+FSLeyes has a programming interface which you can use to programmatically set
+up complex scenes. The ``--runscript`` option allows you to execute a Python
+script when FSLeyes starts, which can load overlays and configure their
+display properties, and set up the FSLeyes interface.  These scripts have
+access to the same environment that is available in the :ref:`Python shell
+<python_shell>`.
 
    
 .. _command_line_offscreen_rendering:

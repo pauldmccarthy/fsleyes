@@ -3,17 +3,6 @@
 Index
 =====
 
-Miscellaneous
--------------
-
-- :ref:`Perspectives <overview_layout_and_perspectives>`
-- :ref:`FEAT mode <feat_mode>`
-- :ref:`MELODIC mode <ic_classification>`
-  
-- :ref:`Command line interface <command_line>`
-- :ref:`Off-screen rendering <command_line_offscreen_rendering>`
-- :ref:`Auto-display <command_line_auto_display>` 
-
 
 Overlays
 --------
@@ -108,3 +97,18 @@ MELODIC analyses / IC classification
 - :ref:`Loading a MELODIC analysis <ic_classification_loading_a_melodic_analysis>`
 - :ref:`IC classification panel <ic_classification_classifying_components_with_the_classification_panel>`
 - :ref:`IC classification file format <ic_classification_file_format>`  
+
+
+
+Miscellaneous
+-------------
+
+- :ref:`Perspectives <overview_layout_and_perspectives>`
+- :ref:`FEAT mode <feat_mode>`
+- :ref:`MELODIC mode <ic_classification>`
+  
+- :ref:`Command line interface <command_line>`
+- :ref:`Off-screen rendering <command_line_offscreen_rendering>`
+- :ref:`Auto-display <command_line_auto_display>`
+- :ref:`The python shell <python_shell>`
+- :ref:`The FSLeyes programming interface <python_shell_further_reading>`
