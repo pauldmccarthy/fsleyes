@@ -12,7 +12,7 @@ Documentation
 
 Check out the [Installation
 instructions](https://git.fmrib.ox.ac.uk/paulmc/fsleyes/wikis/home) for
-details on getting started.
+details on installing FSLeyes.
 
 
 The [Documentation for
