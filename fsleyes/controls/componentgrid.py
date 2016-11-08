@@ -43,8 +43,8 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
     corresponding component.
 
 
-    .. see:: The :class:`.LabelGrid` class, which displays the same
-             information, but organised by label.
+    See also the :class:`.LabelGrid` class, which displays the same
+    information, but organised by label.
     """
 
     

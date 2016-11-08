@@ -794,7 +794,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
                   (not normalised), to the range ``[0, 1]``! We can overcome by
                   this by using a true floating point texture, which is
                   accomplished by using one of the data types provided by the
-                  ``ARB_texture_float``extension. If this extension is not
+                  ``ARB_texture_float`` extension. If this extension is not
                   available, we have no choice but to normalise the data.
 
         

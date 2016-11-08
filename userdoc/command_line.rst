@@ -64,7 +64,7 @@ Examples
 --------
 
 
-TODOTODOTDOO
+.. todo:: Add some examples
 
 
 Useful command line options

@@ -949,7 +949,7 @@ class LookupTable(notifier.Notifier):
     register to be notified on the following topics:
 
 
-    ==========  ====================================================
+    =========== ====================================================
     *Topic*     *Meaning*
     ``label``   The properties of a :class:`.LutLabel` have changed.
     ``saved``   The saved state of this ``LookupTable`` has changed.

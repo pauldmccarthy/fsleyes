@@ -4,6 +4,9 @@ Customising FSLeyes
 ===================
 
 
+.. todo:: This page has not yet been written.
+
+
 Colour maps
 
 Remember that you need write permission to /assets/ to install colour

@@ -9,12 +9,13 @@ fsleyes.controls package
    fsleyes.controls.atlaspanel
    fsleyes.controls.canvassettingspanel
    fsleyes.controls.clusterpanel
+   fsleyes.controls.componentgrid
    fsleyes.controls.histogramcontrolpanel
    fsleyes.controls.histogramtoolbar
+   fsleyes.controls.labelgrid
    fsleyes.controls.lightboxtoolbar
    fsleyes.controls.locationpanel
    fsleyes.controls.lookuptablepanel
-   fsleyes.controls.melodicclassificationgrid
    fsleyes.controls.melodicclassificationpanel
    fsleyes.controls.orthoedittoolbar
    fsleyes.controls.orthotoolbar

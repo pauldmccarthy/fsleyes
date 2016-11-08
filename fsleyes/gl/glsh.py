@@ -69,10 +69,10 @@ class GLSH(glvector.GLVectorBase):
     ``radTexture`` :class:`.Texture3D` containing radius values for each
                     vertex to be displayed in the current draw call.
     
-    ``vertices`` ``numpy`` array of shape ``(N, 3)`` which comprise a
-                   tessellated sphere. The vertex shader will apply the radii
-                   to the vertices contained in this array, to form the FODs
-                   at every voxel.
+    ``vertices``   ``numpy`` array of shape ``(N, 3)`` which comprise a
+                   tessellated sphere. The vertex shader will apply 
+                   the radii to the vertices contained in this array, 
+                   to form the FODs at every voxel.
     
     ``indices``    Indices into ``vertices`` defining the faces of the
                    sphere.
