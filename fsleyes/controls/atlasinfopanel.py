@@ -350,7 +350,12 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
             elif isinstance(atlas, atlases.LabelAtlas):
                 
                 labelVal = atlas.label(loc)
-                label    = atlas.desc.labels[int(labelVal)]
+
+                if labelVal is None:
+                    continue
+
+                label = atlas.desc.labels[int(labelVal)]
+
                 lines.append(labelTemplate.format(label.name,
                                                   atlasID,
                                                   label.index,
