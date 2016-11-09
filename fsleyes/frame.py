@@ -1312,7 +1312,11 @@ class FSLeyesFrame(wx.Frame):
         if haveOverlays:
 
             self.__display = self.__displayCtx.getDisplay(overlay)
-            name = self.__display.name.strip()
+            name = self.__display.name
+
+            if name is None: name = ''
+            else:            name = name.strip()
+
             if name == '':
                 name = strings.labels[self, 'noName']
             self.__overlayNameMenuItem.SetText(name)
