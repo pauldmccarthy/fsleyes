@@ -8,21 +8,22 @@
 panel for viewing cluster results from a FEAT analysis.
 """
 
-import                         logging
-import                         wx
+import                                       logging
+import                                       wx
 
-import                          six
+import                                       six
 
-import pwidgets.widgetgrid   as widgetgrid
+import pwidgets.widgetgrid                as widgetgrid
 
-import fsleyes.panel         as fslpanel
-import fsleyes.strings       as strings
-import fsleyes.autodisplay   as autodisplay
-import fsl.utils.async       as async
-import fsl.utils.status      as status
-import fsl.data.image        as fslimage
-import fsl.data.featimage    as featimage
-import fsl.data.featanalysis as featanalysis
+import fsleyes.panel                      as fslpanel
+import fsleyes.strings                    as strings
+import fsleyes.autodisplay                as autodisplay
+import fsl.utils.async                    as async
+import fsl.utils.status                   as status
+from   fsl.utils.platform import platform as fslplatform
+import fsl.data.image                     as fslimage
+import fsl.data.featimage                 as featimage
+import fsl.data.featanalysis              as featanalysis
 
 
 log = logging.getLogger(__name__)
@@ -389,6 +390,9 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
 
         def addCluster(i, clust):
 
+            if not fslplatform.isWidgetAlive(grid):
+                return 
+
             zmaxbtn    = makeCoordButton((clust.zmaxx,
                                           clust.zmaxy,
                                           clust.zmaxz))
@@ -412,17 +416,21 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
             grid.SetText(  i, cols['copemax'],       fmt(clust.copemax))
             grid.SetWidget(i, cols['copemaxcoords'], copemaxbtn)
             grid.SetText(  i, cols['copemean'],      fmt(clust.copemean))
-            
-        for i, clust in enumerate(clusters):
-            async.idle(addCluster, i, clust)
 
         # Refresh the grid widget when all
         # clusters have been added.
         def onFinish():
+
+            if not fslplatform.isWidgetAlive(grid):
+                return
+
             status.update('All clusters loaded.')
             self.Enable()
             grid.Show()
             grid.Refresh()
+
+        for i, clust in enumerate(clusters):
+            async.idle(addCluster, i, clust)
             
         async.idle(onFinish)
 
