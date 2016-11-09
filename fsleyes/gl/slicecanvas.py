@@ -863,9 +863,25 @@ class SliceCanvas(props.HasProperties):
             if not self or self.destroyed():
                 return
 
+            # The overlay has been removed from the
+            # globjects dictionary between the time
+            # the pending flag was set above, and
+            # the time that this create() call was
+            # executed. Possibly because the overlay
+            # was removed between these two events.
+            # All is well, just ignore it.
+            if overlay not in self._glObjects:
+                return
+
             # We need a GL context to create a new GL
-            # object. If we can't get it now, 
+            # object. If we can't get it now, the GL
+            # object creation will be re-scheduled on
+            # the next call to _draw (via _getGLObjects).
             if not self._setGLContext():
+
+                # Clear the pending flag so
+                # this GLObject creation
+                # gets re-scheduled.
                 self._glObjects.pop(overlay)
                 return
 
