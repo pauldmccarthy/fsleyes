@@ -134,26 +134,17 @@ class Action(props.HasProperties):
         """Unbinds the widget at the specified index into the
         ``__boundWidgets`` list. Does not remove it from the list.
         """
-        import wx
         
         parent, evType, widget = self.__boundWidgets[index]
         
         # Only attempt to unbind if the parent
         # and widget have not been destroyed
 
-        # wxPython-Phoenix
-        if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
-            if parent:
-                parent.Unbind(evType, source=widget)
+        if fslplatform.isWidgetAlive(parent) and \
+           fslplatform.isWidgetAlive(widget):
 
-        # old wxPython
-        elif fslplatform.wxFlavour == fslplatform.WX_PYTHON:
-            try:
-                parent.Unbind(evType, source=widget)
-                
-            except wx.PyDeadObjectError:
-                pass
-            
+            parent.Unbind(evType, source=widget)
+
         
     def unbindAllWidgets(self):
         """Unbinds all widgets which have been bound via :meth:`bindToWidget`.
@@ -178,7 +169,11 @@ class Action(props.HasProperties):
         """
 
         for _, _, widget in self.__boundWidgets:
-            widget.Enable(self.enabled)
+
+            # The widget may have been destroyed,
+            # so check before trying to access it
+            if fslplatform.isWidgetAlive(widget): widget.Enable(self.enabled)
+            else:                                 self.unbindWidget(widget)
 
     
 class ToggleAction(Action):
