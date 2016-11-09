@@ -15,9 +15,6 @@ Quick start
 ===========
 
 
-.. todo:: This page is incomplete, and needs updating.
-
-
 Help!
 -----
 
@@ -88,9 +85,10 @@ The view
              data types, and will hopefully support more in the future.
 
 
-The view is where your overlays are displayed. By default, an *orthographic*
-view is shown; you can also select a *lightbox* view, or some plot views, from
-the *View* menu.
+The view is where your overlays are displayed. By default, an
+:ref:`orthographic view <ortho_lightbox_views_ortho>` is shown; you can also
+select a :ref:`lightbox view <ortho_lightbox_views_lightbox>`, or some
+:ref:`plot views <plot_views>`, from the *View* menu.
 
 
 Let's stick with the orthographic view for now. It displays your overlay on
@@ -199,23 +197,27 @@ Change the background colour?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-View settings panel
+You can change the background and cursor colours via he :ref:`view settings
+panel <ortho_lightbox_views_view_settings>` (the spanner button on the ortho
+toolbar).
 
 
 Show/hide the cursor/anatomical labels?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Click the spanner button, on the ortho toolbar, to bring up the ortho view
-settings panel.
+You can toggle the cursor via the + button on the ortho toolbar, and show/hide
+labels via the :ref:`view settings panel <ortho_lightbox_views_view_settings>`
+(the spanner button).
 
 
 View images in neurological/radiological orientation?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-View settings panel
-
+You can switch between a radiological or neurological display, in the
+:ref:`view settings panel <ortho_lightbox_views_view_settings>` (the spanner
+button).
 
 
 Take a screenshot?
@@ -226,38 +228,44 @@ Click the camera icon on the ortho toolbar, or select the *Settings*
 |right_arrow| *Ortho view 1* |right_arrow| *Take screenshot* menu item.
 
 
-
 Link/unlink the display properties across multiple views?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 If you have more than one view open (e.g. an ortho view and a lightbox view),
 and you want the overlay display settings to be the same across all views,
-open the view settings panel for each view (via the toolbar spanner button, or
-the *Settings* |right_arrow| *<view name>* |right_arrow| *View settings panel*
-menu option), and make sure that the *Link overlay display settings* box is
-checked or unchecked.
+open the :ref:`view settings bpanel <ortho_lightbox_views_view_settings>` for
+each view (via the toolbar spanner button, or the *Settings* |right_arrow|
+*<view name>* |right_arrow| *View settings panel* menu option), and make sure
+that the *Link overlay display settings* box is checked or unchecked.
 
 
 Link the volumes on two or more 4D images?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Chainlink on overlay list
+If you want to view the same volumes from two or more 4D NIFTI images, click
+the chain-link buttons, for each image, in the :ref:`overlay list
+<ortho_lightbox_views_overlay_list>`.
 
 
 Set up a positive/negative colour map for Z statistics?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Blurg.
+You can set up a negative colour map through the :ref:`overlay display panel
+<overlays_overlay_display_panel>` (the gear button on the :ref:`overlay
+display toolbar <overlays_overlay_display_toolbar>`). See the section on
+:ref:`volume display settings <overlays_volume>` for more details.
 
 
-My image is tilted/oblique! How do I make oriented and rectangular?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+My image is tilted/oblique! How do I make oriented rectangular?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Display space
+Open the :ref:`view settings panel <ortho_lightbox_views_view_settings>` (the
+spanner button) and set the *Display space* to the image which you want
+oriented.
 
 
 Edit a NIFTI image?
