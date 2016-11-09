@@ -17,6 +17,7 @@ import pwidgets.widgetgrid   as widgetgrid
 
 import fsleyes.panel         as fslpanel
 import fsleyes.strings       as strings
+import fsleyes.autodisplay   as autodisplay
 import fsl.utils.async       as async
 import fsl.utils.status      as status
 import fsl.data.image        as fslimage
@@ -276,21 +277,15 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
         log.debug('Adding Z-statistic {} to overlay list'.format(zstats.name))
         self._overlayList.append(zstats, overlayType='volume')
 
-        opts   = self._displayCtx.getOpts(zstats)
-        zthres = float(featImage.thresholds()['z'])
+        zthres = featImage.thresholds()['z']
 
-        # Set some display parameters if
-        # we have a z value threshold
-        if zthres is not None:
-
-            absmax = max(map(abs, overlay.dataRange))
-
-            opts.useNegativeCmap  = True
-            opts.cmap             = 'Red-Yellow'
-            opts.negativeCmap     = 'Blue-LightBlue'
-            opts.linkLowRanges    = True
-            opts.displayRange.xlo = 2.3
-            opts.displayRange.xhi = absmax
+        autodisplay.autoDisplay(
+            zstats,
+            self.getOverlayList(),
+            self.getDisplayContext(),
+            zthres=zthres,
+            posCmap='red-yellow',
+            negCmap='blue-lightblue')
 
     
     def __addClustMaskClick(self, ev):

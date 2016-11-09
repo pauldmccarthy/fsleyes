@@ -24,13 +24,14 @@ import fsl.data.image as fslimage
 log = logging.getLogger(__name__)
 
 
-def autoDisplay(overlay, overlayList, displayCtx):
+def autoDisplay(overlay, overlayList, displayCtx, **kwargs):
     """Automatically configure display settings for the given overlay.
 
     :arg overlay:     The overlay object (e.g. an :class:`.Image` instance).
     :arg overlayList: The :class:`.OverlayList`.
     :arg displayCtx:  The :class:`.DisplayContext`.
-    """     
+    :arg kwargs:      Passed through to the overlay-type specific function.
+    """
 
     oType = type(overlay).__name__
     func  = getattr(sys.modules[__name__], '_{}Display'.format(oType), None)
@@ -40,18 +41,18 @@ def autoDisplay(overlay, overlayList, displayCtx):
         return
 
     log.debug('Applying default display arguments for {}'.format(overlay))
-    func(overlay, overlayList, displayCtx)
+    func(overlay, overlayList, displayCtx, **kwargs)
 
 
-def _ImageDisplay(overlay, overlayList, displayCtx):
+def _ImageDisplay(overlay, overlayList, displayCtx, **kwargs):
     """Configure default display settings for the given :class:`.Image`
     overlay.
     """
 
     if _isStatImage(overlay):
-        _statImageDisplay(overlay, overlayList, displayCtx)
+        _statImageDisplay(overlay, overlayList, displayCtx, **kwargs)
     elif _isPEImage(overlay):
-        _peImageDisplay(  overlay, overlayList, displayCtx)
+        _peImageDisplay(  overlay, overlayList, displayCtx, **kwargs)
 
     # Automatically configure nice display range?
         
@@ -81,10 +82,15 @@ def _isPEImage(overlay):
     return re.search(pattern, basename) is not None 
 
 
-def _statImageDisplay(overlay, overlayList, displayCtx):
+def _statImageDisplay(overlay,
+                      overlayList,
+                      displayCtx,
+                      zthres=3.0,
+                      posCmap=None,
+                      negCmap=None):
     """Configure default display settings for the given statistic
     :class:`.Image` overlay.
-    """ 
+    """
 
     opts        = displayCtx.getOpts(overlay)
     basename    = op.basename(overlay.dataSource)
@@ -106,11 +112,14 @@ def _statImageDisplay(overlay, overlayList, displayCtx):
     # a different colour map 
     else:
         cmap = _statImageDisplay.cmaps[_statImageDisplay.currentCmap]
+
+        if posCmap is None: posCmap = cmap
+        if negCmap is None: negCmap = cmap
         
         _statImageDisplay.currentCmap += 1
         _statImageDisplay.currentCmap %= len(_statImageDisplay.cmaps)
-        opts.cmap                      = cmap
-        opts.negativeCmap              = cmap
+        opts.cmap                      = posCmap
+        opts.negativeCmap              = negCmap
         
     # The order of these tests is
     # important, due to name overlap
@@ -125,8 +134,8 @@ def _statImageDisplay(overlay, overlayList, displayCtx):
        'rendered' not in basename:
 
         maxVal               = overlay.dataRange[1]
-        opts.clippingRange   = [3.0, maxVal]
-        opts.displayRange    = [3.0, min((7.5, maxVal))]
+        opts.clippingRange   = [zthres, maxVal]
+        opts.displayRange    = [zthres, min((7.5, maxVal))]
         opts.useNegativeCmap = True
 
     # F stat image?
