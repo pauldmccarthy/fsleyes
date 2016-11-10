@@ -599,14 +599,11 @@ properties = TypeDict({
     'TimeSeriesPanel.usePixdim'        : 'Use pixdims',
     'TimeSeriesPanel.plotMelodicICs'   : 'Plot component time courses for '
                                          'Melodic images',
-    'TimeSeriesPanel.showMode'         : 'Time series to plot',
     'TimeSeriesPanel.plotFullModelFit' : 'Plot full model fit',
     'TimeSeriesPanel.plotResiduals'    : 'Plot residuals',
     
     'HistogramPanel.histType'    : 'Histogram type',
-    'HistogramPanel.showMode'    : 'Histogram series to plot',
 
-    'PowerSpectrumPanel.showMode'        : 'Power spectra to plot',
     'PowerSpectrumPanel.plotFrequencies' : 'Show frequencies along x axis ',
     'PowerSpectrumPanel.plotMelodicICs'  : 'Plot component power spectra for '
                                            'Melodic images',
@@ -824,26 +821,6 @@ choices = TypeDict({
                                   'demean'        : 'Demeaned',
                                   'normalise'     : 'Normalised',
                                   'percentChange' : 'Percent changed'},
-    'TimeSeriesPanel.showMode' : {'current' : 'Show the time series for '
-                                              'the currently selected overlay',
-                                  'all'     : 'Show the time series '
-                                              'for all overlays',
-                                  'none'    : 'Only show the time series '
-                                              'in the time series list'},
-    'HistogramPanel.showMode'  : {'current' : 'Show the histogram for '
-                                              'the currently selected overlay',
-                                  'all'     : 'Show the histograms '
-                                              'for all overlays',
-                                  'none'    : 'Only show the histograms '
-                                              'in the histogram list'},
-    
-    'PowerSpectrumPanel.showMode' : {'current' : 'Show the power spectrum for '
-                                                 'the currently selected '
-                                                 'overlay',
-                                     'all'     : 'Show the power spectra '
-                                                 'for all overlays',
-                                     'none'    : 'Only show the power spectra '
-                                                 'in the power spectra list'} 
 })
 
 

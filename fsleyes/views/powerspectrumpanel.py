@@ -156,15 +156,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         if not self or self.destroyed():
             return
 
-        if self.showMode == 'all':
-            overlays = self._overlayList[:]
-        elif self.showMode == 'current':
-            overlays = [self._displayCtx.getSelectedOverlay()]
-        else:
-            overlays = []
-
-        pss = [self.getDataSeries(o) for o in overlays]
-        pss = [ps for ps in pss if ps is not None]
+        pss = self.getDataSeriesToPlot()
 
         for ps in pss:
             with props.suppress(ps, 'label'):

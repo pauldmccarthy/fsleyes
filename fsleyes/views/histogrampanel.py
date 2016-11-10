@@ -146,21 +146,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         if not self or self.destroyed():
             return
 
-        if self.showMode == 'all':
-            overlays = self._overlayList[:]
-            
-        elif self.showMode == 'current':
-            overlays = [self._displayCtx.getSelectedOverlay()]
-            
-        else:
-            overlays = []
-
-        overlays = [o.getBase() if isinstance(o, fsloverlay.ProxyImage)
-                    else o
-                    for o in overlays]
-
-        hss = [self.getDataSeries(o) for o in overlays]
-        hss = [hs for hs in hss if hs is not None]
+        hss = self.getDataSeriesToPlot()
 
         for hs in hss:
             with props.suppress(hs, 'label'):

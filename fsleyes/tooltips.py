@@ -386,13 +386,6 @@ properties = TypeDict({
                                          'images. If not checked, Melodic '
                                          'images are treated as regular 4D '
                                          'images.',
-    'TimeSeriesPanel.showMode'         : 'Choose which time series to plot - '
-                                         'you can choose to plot the time '
-                                         'series for the currently selected '
-                                         'overlay, the time series for all '
-                                         'compatible overlays, or just those '
-                                         'that have been added to the time '
-                                         'series list.',
     'TimeSeriesPanel.plotMode'         : 'Plotting mode. You can choose to: '
                                          '\n  - Display the data as-is.'
                                          '\n  - Remove the temporal mean from '
@@ -409,13 +402,6 @@ properties = TypeDict({
     'TimeSeriesPanel.currentLineStyle' : 'Line style of the current time '
                                          'series.', 
 
-    'HistogramPanel.showMode'    : 'Choose which histograms to plot - '
-                                   'you can choose to plot the histogram '
-                                   'for the currently selected '
-                                   'overlay, the histograms for all '
-                                   'compatible overlays, or just those '
-                                   'that have been added to the histogram '
-                                   'list.',
     'HistogramPanel.histType'    : 'Show histogram data as raw counts, or '
                                    'as probabilities.',
 
@@ -427,14 +413,6 @@ properties = TypeDict({
                                             'images. If not checked, Melodic '
                                             'images are treated as regular 4D '
                                             'images.',
-    'PowerSpectrumPanel.showMode'         : 'Choose which power spectra to '
-                                            'plot -  you can choose to plot '
-                                            'the power spectrum for the '
-                                            'currently selected overlay, the '
-                                            'power spectra for all compatible '
-                                            'overlays, or just those that '
-                                            'have been added to the power '
-                                            'spectra list.', 
 
     # DataSeries
 

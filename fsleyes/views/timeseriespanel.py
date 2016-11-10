@@ -205,17 +205,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         if not self or self.destroyed():
             return
 
-        if self.showMode == 'all':
-            overlays = self._overlayList[:]
-            
-        elif self.showMode == 'current':
-            overlays = [self._displayCtx.getSelectedOverlay()]
-            
-        else:
-            overlays = []
-
-        tss = [self.getDataSeries(o) for o in overlays]
-        tss = [ts for ts in tss if ts is not None]
+        tss = self.getDataSeriesToPlot()
 
         # Include all of the extra model series
         # for all FEATTimeSeries instances

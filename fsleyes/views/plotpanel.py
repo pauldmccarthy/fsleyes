@@ -12,8 +12,8 @@ the currently selected overlay.
 """
 
 
-import os
 import logging
+import collections
 
 import wx
 
@@ -259,7 +259,7 @@ class PlotPanel(viewpanel.ViewPanel):
         # processing applied, that is currrently
         # on the plot (and accessible via
         # getDrawnDataSeries).
-        self.__drawnDataSeries = {}
+        self.__drawnDataSeries = collections.OrderedDict()
 
         if interactive:
             
@@ -438,7 +438,7 @@ class PlotPanel(viewpanel.ViewPanel):
         axis = self.getAxis()
 
         if clear:
-            self.__drawnDataSeries = {}
+            self.__drawnDataSeries.clear()
             axis.clear()
             axis.set_xlim((0.0, 1.0))
             axis.set_ylim((0.0, 1.0))
@@ -515,14 +515,18 @@ class PlotPanel(viewpanel.ViewPanel):
         if extraSeries is None:
             extraSeries = []
 
-        canvas   = self.getCanvas()
-        axis     = self.getAxis()
-        toPlot   = self.dataSeries[:]
-        toPlot   = extraSeries + toPlot
-        preprocs = [True] * len(extraSeries) + [False] * len(toPlot)
+        canvas      = self.getCanvas()
+        axis        = self.getAxis()
+        toPlot      = self.dataSeries[:]
+
+        toPlot      = [ds for ds in toPlot      if ds.enabled]
+        extraSeries = [ds for ds in extraSeries if ds.enabled]
+        
+        toPlot      = extraSeries + toPlot
+        preprocs    = [True] * len(extraSeries) + [False] * len(toPlot)
 
         if len(toPlot) == 0:
-            self.__drawnDataSeries = {}
+            self.__drawnDataSeries.clear()
             axis.clear()
             canvas.draw()
             self.Refresh()
@@ -632,7 +636,7 @@ class PlotPanel(viewpanel.ViewPanel):
         canvas        = self.getCanvas()
         width, height = canvas.get_width_height()
 
-        self.__drawnDataSeries = {}
+        self.__drawnDataSeries.clear()
         axis.clear()
 
         xlims = []
@@ -931,7 +935,7 @@ class PlotPanel(viewpanel.ViewPanel):
 
 class OverlayPlotPanel(PlotPanel):
     """The ``OverlayPlotPanel`` is a :class:`.PlotPanel` which contains
-    some extra logic for creating and storing :class:`.DataSeries`
+    some extra logic for creating, storing, and drawing :class:`.DataSeries`
     instances for each overlay in the :class:`.OverlayList`.
 
 
@@ -942,8 +946,10 @@ class OverlayPlotPanel(PlotPanel):
      1. Implement the :meth:`createDataSeries` method, so it creates a
         :class:`.DataSeries` instance for a specified overlay.
 
-     2. Implement the :meth:`PlotPanel.draw` method so it honours the
-        current value of the :attr:`showMode` property.
+     2. Implement the :meth:`PlotPanel.draw` method so it calls the
+        :meth:`.PlotPanel.drawDataSeries`, passing :class:`.DataSeries`
+        instances for all overlays where :attr:`.Display.enabled` is
+        ``True``.
 
      3. Optionally implement the :meth:`prepareDataSeries` method to
         perform any custom preprocessing.
@@ -965,24 +971,11 @@ class OverlayPlotPanel(PlotPanel):
        :nosignatures:
 
        getDataSeries
+       getDataSeriesToPlot
        clearDataSeries
        updateDataSeries
        addDataSeries
        removeDataSeries
-
-    
-    **The current data series**
-
-    
-    By default, the ``OverlayPlotPanel`` plots the data series associated with
-    the currently selected overlay, which is determined from the
-    :attr:`.DisplayContext.selectedOverlay`. This data series is referred to
-    as the *current* data series. The :attr:`showMode` property allows the
-    user to choose between showing only the current data series, showing the
-    data series for all (compatible) overlays, or only showing the data series
-    that have been added to the :attr:`.PlotPanel.dataSeries` list.  Other
-    data series can be *held* by adding them to the
-    :attr:`.PlotPanel.dataSeries` list.
 
 
     **Proxy images**
@@ -999,11 +992,12 @@ class OverlayPlotPanel(PlotPanel):
     **Control panels**
 
 
-    The :class:`.PlotControlPanel` and :class:`.PlotListPanel` are *FSLeyes
-    control* panels which work with the :class:`.OverlayPlotPanel`. The
-    ``PlotControlPanel`` is not intended to be used directly - plot-specific
-    sub-classes are used instead. The following actions can be used to toggle
-    control panels on an ``OverlayPlotPanel``:
+    The :class:`.PlotControlPanel`, :class:`.PlotListPanel`, and
+    :class:`.OverlayListPanel` are *FSLeyes control* panels which work with
+    the :class:`.OverlayPlotPanel`. The ``PlotControlPanel`` is not intended
+    to be used directly - plot-specific sub-classes are used instead. The
+    following actions can be used to toggle control panels on an
+    ``OverlayPlotPanel``:
 
     .. autosummary::
        :nosignatures:
@@ -1023,21 +1017,6 @@ class OverlayPlotPanel(PlotPanel):
        ~fsleyes.views.timeseriespanel.TimeSeriesPanel
        ~fsleyes.views.histogrampanel.HistogramPanel
        ~fsleyes.views.powerspectrumpanel.PowerSpectrumPanel
-
-    """
-
-    
-    showMode = props.Choice(('all', 'current', 'none'))
-    """Defines which data series to plot.
-
-    =========== =====================================================
-    ``all``     The data series for all compatible overlays in the 
-                :class:`.OverlayList` are plotted.
-    ``current`` The data series for the currently selected overlay is
-                plotted.
-    ``none``    Only the ``DataSeries`` that are in the
-                :attr:`.PlotPanel.dataSeries` list will be plotted.
-    =========== =====================================================
     """
 
     
@@ -1070,11 +1049,11 @@ class OverlayPlotPanel(PlotPanel):
         # 
         # Different DataSeries types need to be re-drawn
         # when different properties change. For example,
-        # a TimeSeries instance needs to be redrawn when
-        # the DisplayContext.location property changes,
-        # whereas a MelodicTimeSeries instance needs to
-        # be redrawn when the VolumeOpts.volume property
-        # changes.
+        # a VoxelTimeSeries instance needs to be redrawn 
+        # when the DisplayContext.location property 
+        # changes, whereas a MelodicTimeSeries instance 
+        # needs to be redrawn when the VolumeOpts.volume 
+        # property changes.
         #
         # Therefore, the refreshProps dictionary contains
         # a set of
@@ -1092,9 +1071,6 @@ class OverlayPlotPanel(PlotPanel):
         self.__dataSeries   = {}
         self.__refreshProps = {}
 
-        self             .addListener('showMode',
-                                      self.__name,
-                                      self.__showModeChanged)
         self             .addListener('dataSeries',
                                       self.__name,
                                       self.__dataSeriesChanged) 
@@ -1113,9 +1089,9 @@ class OverlayPlotPanel(PlotPanel):
         """Must be called when this ``OverlayPlotPanel`` is no longer needed.
         Removes some property listeners, and calls :meth:`PlotPanel.destroy`.
         """
-        self             .removeListener('showMode',        self.__name)
         self._overlayList.removeListener('overlays',        self.__name)
         self._displayCtx .removeListener('selectedOverlay', self.__name)
+        self             .removeListener('dataSeries',      self.__name)
 
         for overlay in list(self.__dataSeries.keys()):
             self.clearDataSeries(overlay)
@@ -1124,6 +1100,34 @@ class OverlayPlotPanel(PlotPanel):
         self.__refreshProps = None
 
         PlotPanel.destroy(self)
+
+
+    def getDataSeriesToPlot(self):
+        """Convenience method which returns a list of overlays which have
+        :class:`.DataSeries` that should be plotted.
+        """
+
+        overlays = self._overlayList[:]
+
+        # Display.enabled
+        overlays = [o for o in overlays
+                    if self._displayCtx.getDisplay(o).enabled]
+
+        # Replace proxy images
+        overlays = [o.getBase() if isinstance(o, fsloverlay.ProxyImage)
+                    else o for o in overlays]
+
+        # Have data series
+        dss = [self.getDataSeries(o) for o in overlays]
+        dss = [ds for ds in dss if ds is not None]
+
+        # Remove duplicates
+        unique = []
+        for ds in dss:
+            if ds not in unique:
+                unique.append(ds)
+                
+        return unique
         
 
     def getDataSeries(self, overlay):
@@ -1267,8 +1271,8 @@ class OverlayPlotPanel(PlotPanel):
 
         
         Different ``DataSeries`` types need to be re-drawn when different
-        properties change. For example, a :class:`.TimeSeries`` instance needs
-        to be redrawn when the :attr:`.DisplayContext.location` property
+        properties change. For example, a :class:`.VoxelTimeSeries`` instance
+        needs to be redrawn when the :attr:`.DisplayContext.location` property
         changes, whereas a :class:`.MelodicTimeSeries` instance needs to be
         redrawn when the :attr:`.VolumeOpts.volume` property changes.
 
@@ -1309,6 +1313,11 @@ class OverlayPlotPanel(PlotPanel):
         targets, propNames = self.__refreshProps.pop(overlay, ([], []))
 
         if ds is not None:
+
+            log.debug('Destroying {} for {}'.format(
+                type(ds).__name__, overlay))
+
+            ds.removeGlobalListener(self.__name)
             ds.destroy()
 
         for t, p in zip(targets, propNames):
@@ -1324,14 +1333,14 @@ class OverlayPlotPanel(PlotPanel):
 
         # Make sure that a DataSeries
         # exists for every compatible overlay
+        newOverlays = []
         for ovl in self._overlayList:
+
             if ovl in self.__dataSeries:
                 continue
 
             if isinstance(ovl, fsloverlay.ProxyImage):
                 continue
-
-            log.debug('Creating a DataSeries for overlay {}'.format(ovl))
 
             ds, refreshTargets, refreshProps = self.createDataSeries(ovl)
             display                         = self._displayCtx.getDisplay(ovl)
@@ -1339,77 +1348,41 @@ class OverlayPlotPanel(PlotPanel):
             if ds is None:
                 continue
 
+            log.debug('Created {} for overlay {}'.format(
+                type(ds).__name__, ovl))
+
+            # Display.enabled == DataSeries.enabled
             ds.bindProps('enabled', display)
+
+            newOverlays.append(ovl)
 
             self.__dataSeries[  ovl] = ds
             self.__refreshProps[ovl] = (refreshTargets, refreshProps)
-
-        # Make sure that property listeners are
-        # registered for every relevant overlay.
-        # We only want to listen for properties
-        # related to the overlays that are defined
-        # by the current value of the showMode
-        # property.
-        selectedOverlay = self._displayCtx.getSelectedOverlay()
-        if   self.showMode == 'all':     targetOverlays = self._overlayList[:]
-        elif self.showMode == 'current': targetOverlays = [selectedOverlay]
-        else:                            targetOverlays = []
-
-        targetOverlays = [o.getBase() if isinstance(o, fsloverlay.ProxyImage)
-                          else o
-                          for o in targetOverlays]
-
-        # Build a list of all overlays, ordered by
-        # those we are not interested in, followed
-        # by those that we are interested in.
-        allOverlays = self.__refreshProps.keys()
-        allOverlays = set(allOverlays) - set(targetOverlays)
-        allOverlays = list(allOverlays) + targetOverlays
         
-        # Make sure that property listeners are not
-        # registered on overlays that we're not
-        # interested in, and are registered on those
-        # that we are interested in. The ordering
-        # above ensures that we inadvertently don't
-        # de-register a listener that we have just
-        # registered, from the same target.
-        for overlay in allOverlays:
+        # Make sure that property listeners are
+        # registered all of these overlays
+        for overlay in newOverlays:
 
             targets, propNames = self.__refreshProps.get(overlay, (None, None))
-            addListener        = overlay in targetOverlays
 
             if targets is None:
                 continue
 
             ds = self.__dataSeries[overlay]
 
-            if addListener:
-                ds.addGlobalListener(self.__name,
-                                     self.asyncDraw,
-                                     overwrite=True)
-            else:
-                try:    ds.removeGlobalListener(self.__name)
-                except: pass
+            ds.addGlobalListener(self.__name, self.asyncDraw, overwrite=True)
         
             for target, propName in zip(targets, propNames):
-                if addListener:
+
+                log.debug('Adding listener on {}.{} for {} data '
+                          'series'.format(type(target).__name__,
+                                          propName,
+                                          overlay))
                     
-                    log.debug('Adding listener on {}.{} for {} data '
-                              'series'.format(type(target).__name__,
-                                              propName,
-                                              overlay))
-                    
-                    target.addListener(propName,
-                                       self.__name,
-                                       self.asyncDraw,
-                                       overwrite=True)
-                else:
-                    log.debug('Removing listener on {}.{} for {} data '
-                              'series'.format(type(target).__name__,
-                                              propName,
-                                              overlay)) 
-                    try:    target.removeListener(propName, self.__name)
-                    except: pass
+                target.addListener(propName,
+                                   self.__name,
+                                   self.asyncDraw,
+                                   overwrite=True)
 
 
     @actions.toggleControlAction(overlaylistpanel.OverlayListPanel)
@@ -1440,15 +1413,6 @@ class OverlayPlotPanel(PlotPanel):
                          floatPane=floatPane)
 
 
-    def __showModeChanged(self, *a):
-        """Called when the :attr:`showMode` changes.  Makes sure that relevant
-        property listeners are registered so the plot can be updated at the
-        appropriate time (see the :meth:`updateDataSeries` method).
-        """ 
-        self.updateDataSeries()
-        self.asyncDraw()
-
-
     def __dataSeriesChanged(self, *a):
         """Called when the :attr:`dataSeries` list changes. Enables/disables
         the :meth:`removeDataSeries` action accordingly.
@@ -1458,12 +1422,10 @@ class OverlayPlotPanel(PlotPanel):
 
     def __selectedOverlayChanged(self, *a):
         """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
-        Makes sure that relevant property listeners are registered so the
-        plot can be updated at the appropriate time (see the
-        :meth:`updateDataSeries` method).
+
+        
         """
 
-        self.updateDataSeries()
         self.asyncDraw()
 
     
@@ -1496,4 +1458,5 @@ class OverlayPlotPanel(PlotPanel):
             # use Display.enabled to toggle on/off overlays.
             display.unsyncFromParent('enabled')
 
-        self.__selectedOverlayChanged()
+        self.updateDataSeries()
+        self.asyncDraw()

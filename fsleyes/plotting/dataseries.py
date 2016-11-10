@@ -80,6 +80,11 @@ class DataSeries(props.HasProperties):
             log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
 
 
+    def __hash__(self):
+        """Returns a hash for this ``DataSeries`` instance."""
+        return hash(id(self))
+
+
     def destroy(self):
         """This method must be called when this ``DataSeries`` instance is no
         longer needed. This implementation does nothing, but it should be
