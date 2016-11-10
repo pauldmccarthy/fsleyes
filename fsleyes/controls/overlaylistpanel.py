@@ -86,10 +86,11 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
                               alongside each overlay, allowing the user to save
                               the overlay (if it is not saved).
         
-        :arg propagateSelect: If ``True`` (the default), when an overlay is
-                              selected in the list, the
-                              :attr:`.DisplayContext.selectedOverlay` is
-                              updated accordingly.
+        :arg propagateSelect: If ``True`` (the default), when the user 
+                              interacts with the :class:`.ListItemWidget` for 
+                              an overlay which is *not* the currently selected 
+                              overlay, that overlay is updated to be the 
+                              selected overlay.
         
         :arg elistboxStyle:   Style flags passed through to the
                               :class:`.EditableListBox`.
@@ -126,8 +127,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
 
         # listeners for when the user does
         # something with the list box
-        if self.__propagateSelect:
-            self.__listBox.Bind(elistbox.EVT_ELB_SELECT_EVENT, self.__lbSelect)
+        self.__listBox.Bind(elistbox.EVT_ELB_SELECT_EVENT, self.__lbSelect)
         self.__listBox.Bind(elistbox.EVT_ELB_MOVE_EVENT,     self.__lbMove)
         self.__listBox.Bind(elistbox.EVT_ELB_REMOVE_EVENT,   self.__lbRemove)
         self.__listBox.Bind(elistbox.EVT_ELB_ADD_EVENT,      self.__lbAdd)
@@ -148,16 +148,14 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
             self._name,
             self.__overlayListChanged) 
 
-        if self.__propagateSelect:
-            self._displayCtx.addListener(
-                'selectedOverlay',
-                self._name,
-                self.__selectedOverlayChanged)
+        self._displayCtx.addListener(
+            'selectedOverlay',
+            self._name,
+            self.__selectedOverlayChanged)
 
         self.__overlayListChanged()
 
-        if self.__propagateSelect:
-            self.__selectedOverlayChanged()
+        self.__selectedOverlayChanged()
 
         self.Layout()
         
@@ -261,7 +259,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
                                 self.__overlayNameChanged,
                                 overwrite=True)
 
-        if self.__propagateSelect and len(self._overlayList) > 0:
+        if len(self._overlayList) > 0:
             self.__listBox.SetSelection(
                 self._displayCtx.getOverlayOrder(
                     self._displayCtx.selectedOverlay))
@@ -283,8 +281,6 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         :attr:`.DisplayContext.selectedOverlay` property.
         """
 
-        if not self.__propagateSelect:
-            return
         
         self._displayCtx.disableListener('selectedOverlay', self._name)
         self._displayCtx.selectedOverlay = \
@@ -303,8 +299,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
 
             self._overlayList.extend(overlays)
 
-            if self.__propagateSelect:
-                self._displayCtx.selectedOverlay = len(self._overlayList) - 1
+            self._displayCtx.selectedOverlay = len(self._overlayList) - 1
 
             if self._displayCtx.autoDisplay:
                 for overlay in overlays:

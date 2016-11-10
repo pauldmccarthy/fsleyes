@@ -1437,6 +1437,7 @@ class OverlayPlotPanel(PlotPanel):
                          showVis=True,
                          showSave=False,
                          showGroup=False,
+                         propagateSelect=False,
                          elistboxStyle=(elistbox.ELB_REVERSE      |
                                         elistbox.ELB_TOOLTIP_DOWN |
                                         elistbox.ELB_NO_ADD       |
@@ -1467,10 +1468,21 @@ class OverlayPlotPanel(PlotPanel):
     def __selectedOverlayChanged(self, *a):
         """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
 
-        
+        If a :class:`.DataSeries` instance for the newly selected overlay
+        exists, and is not currently enabled, it is enabled.
         """
 
-        self.asyncDraw()
+        overlay = self._displayCtx.getSelectedOverlay()
+
+        if overlay is None:
+            return
+
+        ds = self.getDataSeries(overlay)
+
+        if ds is not None and not ds.enabled:
+            ds.enabled = True
+        else:
+            self.asyncDraw()
 
     
     def __overlayListChanged(self, *a, **kwa):
