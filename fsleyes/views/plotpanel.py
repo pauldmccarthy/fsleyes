@@ -1032,9 +1032,18 @@ class OverlayPlotPanel(PlotPanel):
 
 
     def __init__(self, *args, **kwargs):
-        """Create an ``OverlayPlotPanel``. All argumenst are passed through to 
-        :meth:`PlotPanel.__init__`.
+        """Create an ``OverlayPlotPanel``.
+
+        :arg initialState: Must be passed as a keyword argument. Allows you to
+                           specify the initial enabled/disabled state for each
+                           overlay. See :meth:`updateDataSeries`. If not
+                           provided, only the data series for the currently
+                           selected overlay is shown (if possible).
+
+        All other argumenst are passed through to :meth:`PlotPanel.__init__`.
         """
+
+        initialState = kwargs.pop('initialState', None)
 
         PlotPanel.__init__(self, *args, **kwargs)
         
@@ -1081,7 +1090,12 @@ class OverlayPlotPanel(PlotPanel):
                                       self.__name,
                                       self.__overlayListChanged)
 
-        self.__overlayListChanged()
+        # Default to showing the 
+        # currently selected overlay
+        if initialState is None and len(self._overlayList) > 0:
+            initialState = {self._displayCtx.getSelectedOverlay() : True}
+
+        self.__overlayListChanged(initialState=initialState)
         self.__dataSeriesChanged()
 
 
@@ -1325,11 +1339,20 @@ class OverlayPlotPanel(PlotPanel):
             except: pass
 
         
-    def updateDataSeries(self):
+    def updateDataSeries(self, initialState=None):
         """Makes sure that a :class:`.DataSeries` instance has been created
         for every compatible overlay, and that property listeners are
         correctly registered, so the plot can be refreshed when needed.
+
+        :arg initialState: If provided, must be a ``dict`` of ``{ overlay :
+                           bool }`` mappings, specifying the initial value
+                           of the :attr:`.DataSeries.enabled` property for
+                           newly created instances. If not provided, all
+                           newly added overlays are enabled.
         """
+
+        if initialState is None:
+            initialState = {o : True for o in self._overlayList}
 
         # Make sure that a DataSeries
         # exists for every compatible overlay
@@ -1358,6 +1381,8 @@ class OverlayPlotPanel(PlotPanel):
 
             # Display.enabled == DataSeries.enabled
             ds.bindProps('enabled', display)
+
+            ds.enabled = initialState.get(ovl, False)
 
             newOverlays.append(ovl)
 
@@ -1448,16 +1473,18 @@ class OverlayPlotPanel(PlotPanel):
         self.asyncDraw()
 
     
-    def __overlayListChanged(self, *a):
+    def __overlayListChanged(self, *a, **kwa):
         """Called when the :class:`.OverlayList` changes. Makes sure that
         there are no :class:`.DataSeries` instances in the
         :attr:`.PlotPanel.dataSeries` list, or in the internal cache, which
         refer to overlays that no longer exist.
 
-        Also calls :meth:`updateDataSeries`, whic ensures that a
-        :class:`.DataSeries` instance for every compatible overlay is cached
-        internally.
+        :arg initialState: Must be passed as a keyword argument. If provided, 
+                           passed through to the :meth:`updateDataSeries`
+                           method.
         """
+
+        initialState = kwa.get('initialState', None)
 
         for ds in list(self.dataSeries):
             if ds.overlay is not None and ds.overlay not in self._overlayList:
@@ -1477,5 +1504,5 @@ class OverlayPlotPanel(PlotPanel):
             # use Display.enabled to toggle on/off overlays.
             display.unsyncFromParent('enabled')
 
-        self.updateDataSeries()
+        self.updateDataSeries(initialState=initialState)
         self.asyncDraw()
