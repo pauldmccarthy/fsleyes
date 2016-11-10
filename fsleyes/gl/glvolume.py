@@ -182,6 +182,13 @@ class GLVolume(globject.GLImageObject):
         self.negColourTexture = textures.ColourMapTexture(
             '{}_neg'.format(self.texName))
 
+        # This attribute is used by the
+        # updateShaderState method to
+        # make sure that the Notifier.notify()
+        # method gets called when needed.
+        # See that method for details.
+        self.__alwaysNotify = False
+
         # If the VolumeOpts instance has
         # inherited a clipImage value,
         # make sure we're registered with it.
@@ -379,12 +386,40 @@ class GLVolume(globject.GLImageObject):
 
         alwaysNotify = kwargs.pop('alwaysNotify', None)
 
+        # When alwaysNotify is True, we
+        # set a flag on this GLVolume
+        # instance to make sure that the
+        # func() function below (which is
+        # called asynchronously) gets
+        # its value.
+        #
+        # We have to do this because this
+        # updateShaderState method may be
+        # called multiple times for a single
+        # event, with different values of
+        # alwaysNotify, and some of these
+        # calls may be silently dropped
+        # (see below).
+        #
+        # But if one of those calls needs
+        # to force a notification, we want
+        # that notification to happen.
+        if alwaysNotify:
+            self.__alwaysNotify = True
+
         def func():
-            if fslgl.glvolume_funcs.updateShaderState(self) or alwaysNotify:
-                self.notify() 
+            if fslgl.glvolume_funcs.updateShaderState(self) or \
+               self.__alwaysNotify:
+                self.notify()
+                self.__alwaysNotify = False
 
         # Don't re-queue the update if it is
-        # already queued on the idle loop
+        # already queued on the idle loop.
+        # As mentioned above, updateShaderState
+        # may get called several times for a
+        # single event, but in this situation
+        # we only want to actually do the
+        # update once.
         async.idleWhen(func,
                        self.ready,
                        name=self.name,
