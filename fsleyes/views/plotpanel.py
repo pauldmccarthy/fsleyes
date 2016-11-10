@@ -1334,9 +1334,12 @@ class OverlayPlotPanel(PlotPanel):
             log.debug('Creating a DataSeries for overlay {}'.format(ovl))
 
             ds, refreshTargets, refreshProps = self.createDataSeries(ovl)
+            display                         = self._displayCtx.getDisplay(ovl)
 
             if ds is None:
                 continue
+
+            ds.bindProps('enabled', display)
 
             self.__dataSeries[  ovl] = ds
             self.__refreshProps[ovl] = (refreshTargets, refreshProps)
@@ -1373,16 +1376,7 @@ class OverlayPlotPanel(PlotPanel):
         for overlay in allOverlays:
 
             targets, propNames = self.__refreshProps.get(overlay, (None, None))
-            display            = self._displayCtx.getDisplay(overlay)
             addListener        = overlay in targetOverlays
-
-            if addListener:
-                if not display.hasListener('enabled', self._name):
-                    display.addListener('enabled',
-                                        self._name,
-                                        self.__displayEnabledChanged)
-            else:
-                display.removeListener('enabled', self._name)
 
             if targets is None:
                 continue
@@ -1503,16 +1497,3 @@ class OverlayPlotPanel(PlotPanel):
             display.unsyncFromParent('enabled')
 
         self.__selectedOverlayChanged()
-
-
-    def __displayEnabledChanged(self, value, valid, display, name):
-        """Called when the :attr:`.Display.enabled` property for any overlay
-        changes. Propagates the change on to the corresponding
-        :attr:`.DataSeries.enabled` property, and triggers a plot refresh.
-        """
-        
-        ds = self.__dataSeries.get(display.getOverlay())
-
-        if ds is not None:
-            ds.enabled = display.enabled
-            self.asyncDraw()
