@@ -64,29 +64,48 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
                  showGroup=True,
                  showSave=True,
                  propagateSelect=True,
-                 elistboxStyle=None):
+                 elistboxStyle=None,
+                 filterFunc=None):
         """Create an ``OverlayListPanel``.
 
-        :param parent:        The :mod:`wx` parent object.
-        :param overlayList:   An :class:`.OverlayList` instance.
-        :param displayCtx:    A :class:`.DisplayContext` instance.
+        :arg parent:          The :mod:`wx` parent object.
+        
+        :arg overlayList:     An :class:`.OverlayList` instance.
+        
+        :arg displayCtx:      A :class:`.DisplayContext` instance.
+        
         :arg showVis:         If ``True`` (the default), a button will be shown
                               alongside each overlay, allowing the user to
                               toggle the overlay visibility.
+        
         :arg showGroup:       If ``True`` (the default), a button will be shown
                               alongside each overlay, allowing the user to
                               toggle overlay grouping.
+        
         :arg showSave:        If ``True`` (the default), a button will be shown
                               alongside each overlay, allowing the user to save
                               the overlay (if it is not saved).
+        
         :arg propagateSelect: If ``True`` (the default), when an overlay is
                               selected in the list, the
                               :attr:`.DisplayContext.selectedOverlay` is
                               updated accordingly.
+        
         :arg elistboxStyle:   Style flags passed through to the
                               :class:`.EditableListBox`.
         
+        :arg filterFunc:      Function which must accept an overlay as its
+                              sole argument, and return ``True`` or ``False``.
+                              If this function returns ``False`` for an
+                              overlay, the :class:`ListItemWidget` for that
+                              overlay will be disabled.
         """
+
+        def defaultFilter(o):
+            return True
+
+        if filterFunc is None:
+            filterFunc = defaultFilter
         
         fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
 
@@ -94,6 +113,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         self.__showGroup       = showGroup
         self.__showSave        = showSave
         self.__propagateSelect = propagateSelect
+        self.__filterFunc      = filterFunc
 
         if elistboxStyle is None:
             elistboxStyle = (elistbox.ELB_REVERSE      |
@@ -225,6 +245,9 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
                                     showGroup=self.__showGroup,
                                     showSave=self.__showSave,
                                     propagateSelect=self.__propagateSelect)
+
+            if not self.__filterFunc(overlay):
+                widget.Disable()
 
             self.__listBox.SetItemWidget(i, widget)
 

@@ -257,36 +257,10 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         if not isinstance(overlay, fslimage.Image):
             return None, None, None
-
-        if overlay.dataSource is not None:
-            featPath = featanalysis.getAnalysisDir(overlay.dataSource)
-            melPath  = melanalysis .getAnalysisDir(overlay.dataSource)
-        else:
-            featPath = None
-            melPath  = None
-
-        # If this overlay is from an .ica dir
-        # inside a .feat dir or vice versa,
-        # the longer/deeper path takes precedence.
-        if (featPath is not None) and (melPath is not None):
-            if len(melPath) > len(featPath): featPath = None
-            else:                            melPath  = None
             
-        # Is this a FEAT filtered_func_data image,
-        # or an image in a FEAT directory?
-        if isinstance(overlay, fslfeatimage.FEATImage) or featPath is not None:
+        # Is this a FEAT filtered_func_data image?
+        if isinstance(overlay, fslfeatimage.FEATImage):
 
-            dataPath  = featanalysis.getDataFile(featPath)
-            featImage = self._overlayList.find(dataPath)
-
-            # If this is an image in a FEAT directory, but the
-            # filtered_func_data for that FEAT directory has
-            # not been loaded, we show nothing. 
-            if not isinstance(overlay, fslfeatimage.FEATImage):
-                
-                if featImage is None: return None, None, None
-                else:                 overlay = featImage
-            
             # If the filtered_func for this FEAT analysis
             # has been loaded, we show its time series.
             ts        = plotting.FEATTimeSeries(self,

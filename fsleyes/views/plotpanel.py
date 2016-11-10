@@ -1126,7 +1126,7 @@ class OverlayPlotPanel(PlotPanel):
         for ds in dss:
             if ds not in unique:
                 unique.append(ds)
-                
+
         return unique
         
 
@@ -1343,9 +1343,14 @@ class OverlayPlotPanel(PlotPanel):
                 continue
 
             ds, refreshTargets, refreshProps = self.createDataSeries(ovl)
-            display                         = self._displayCtx.getDisplay(ovl)
+            display                          = self._displayCtx.getDisplay(ovl)
 
             if ds is None:
+
+                # "Disable" overlays which don't have any data
+                # to plot. We do this mostly so the overlay
+                # appears greyed out in the OverlayListPanel.
+                self._displayCtx.getDisplay(ovl).enabled = False
                 continue
 
             log.debug('Created {} for overlay {}'.format(
@@ -1389,7 +1394,20 @@ class OverlayPlotPanel(PlotPanel):
     def toggleOverlayList(self):
         """Shows/hides an :class:`.OverlayListPanel`. See
         :meth:`.ViewPanel.togglePanel`.
-        """ 
+        """
+
+        # Tell the overlay list panel to disable
+        # all overlays that aren't being plotted.
+        #
+        # This OverlayPlotPanel will always be
+        # notified about a new overlay before
+        # this OverlayListPanel, so a DataSeries
+        # instance will always have been created
+        # by the time the list panel calls this
+        # filter function.
+        def listFilter(overlay):
+            return self.getDataSeries(overlay) is not None
+        
         self.togglePanel(overlaylistpanel.OverlayListPanel,
                          showVis=True,
                          showSave=False,
@@ -1399,7 +1417,8 @@ class OverlayPlotPanel(PlotPanel):
                                         elistbox.ELB_NO_ADD       |
                                         elistbox.ELB_NO_REMOVE    |
                                         elistbox.ELB_NO_MOVE),
-                         location=wx.LEFT)
+                         location=wx.LEFT,
+                         filterFunc=listFilter)
 
 
     @actions.toggleControlAction(plotlistpanel.PlotListPanel)
