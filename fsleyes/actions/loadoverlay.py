@@ -330,14 +330,14 @@ def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
         if fromDir is None:
             fromDir = os.getcwd()
 
-    msg = strings.titles['interactiveLoadOverlays.dialog']
-
     if dirdlg:
+        msg = strings.titles['interactiveLoadOverlays.dirDialog']
         dlg = wx.DirDialog(app.GetTopWindow(),
                            message=msg,
                            defaultPath=fromDir,
                            style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
     else:
+        msg = strings.titles['interactiveLoadOverlays.fileDialog']
         dlg = wx.FileDialog(app.GetTopWindow(),
                             message=msg,
                             defaultDir=fromDir,

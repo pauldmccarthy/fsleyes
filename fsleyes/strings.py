@@ -204,7 +204,8 @@ messages = TypeDict({
 
 titles = TypeDict({
     
-    'interactiveLoadOverlays.dialog' : 'Open overlay files',
+    'interactiveLoadOverlays.fileDialog' : 'Open overlay files',
+    'interactiveLoadOverlays.dirDialog'  : 'Open overlay directories',
     
     'loadOverlays.error'  : 'Error loading overlay',
 

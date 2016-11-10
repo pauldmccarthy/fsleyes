@@ -15,7 +15,7 @@ actions = td.TypeDict({
     'LoadOverlayAction'        : 'Ctrl-O',
     'LoadOverlayFromDirAction' : 'Ctrl-D',
     'LoadStandardAction'       : 'Ctrl-S',
-    'CopyOverlayAction'        : 'Ctrl-Alt-C',
+    'CopyOverlayAction'        : 'Ctrl-C',
     'SaveOverlayAction'        : 'Ctrl-Alt-S',
     'PearsonCorrelateAction'   : 'Ctrl-Alt-P',
     'ReloadOverlayAction'      : 'Ctrl-Alt-R',
@@ -73,8 +73,8 @@ actions = td.TypeDict({
 
     'PlotPanel.toggleOverlayList'         : 'Ctrl-Alt-1',
     'PlotPanel.togglePlotList'            : 'Ctrl-Alt-2',
-    'PlotPanel.importDataSeries'          : 'Alt-I',
-    'PlotPanel.exportDataSeries'          : 'Alt-E',
+    'PlotPanel.importDataSeries'          : 'Ctrl-I',
+    'PlotPanel.exportDataSeries'          : 'Ctrl-E',
 
     'TimeSeriesPanel.toggleTimeSeriesToolBar'       : 'Ctrl-Alt-3',
     'TimeSeriesPanel.toggleTimeSeriesControl'       : 'Ctrl-Alt-4',

@@ -118,7 +118,7 @@ class Action(props.HasProperties):
         # which does the real work.
         index = -1
         
-        for i, (p, e, w) in self.__boundWidgets:
+        for i, (p, e, w) in enumerate(self.__boundWidgets):
             if w == widget:
                 index = i
                 break
