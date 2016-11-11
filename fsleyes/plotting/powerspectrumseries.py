@@ -197,7 +197,7 @@ class MelodicPowerSpectrumSeries(PowerSpectrumSeries):
         opts      = display.getDisplayOpts()
         component = opts.volume
 
-        return '{} [component {}]'.format(display.name, component) 
+        return '{} [component {}]'.format(display.name, component + 1) 
 
 
     def getData(self):

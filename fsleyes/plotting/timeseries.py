@@ -784,7 +784,8 @@ class MelodicTimeSeries(TimeSeries):
         """Returns a string representation of this ``MelodicTimeSeries``. """
         
         display = self.displayCtx.getDisplay(self.overlay)
-        return '{} [component {}]'.format(display.name, self.getComponent())
+        return '{} [component {}]'.format(display.name,
+                                          self.getComponent() + 1)
 
 
     def getData(self):
