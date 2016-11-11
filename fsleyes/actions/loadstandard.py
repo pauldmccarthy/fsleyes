@@ -79,11 +79,10 @@ class LoadStandardAction(action.Action):
             if len(overlays) == 0:
                 return
 
-            self.__overlayList.insertAll(0, overlays)
+            self.__overlayList.extend(overlays)
 
-            if len(overlays) > 0:
-                self.__displayCtx.selectedOverlay = \
-                    self.__displayCtx.overlayOrder[0]
+            self.__displayCtx.selectedOverlay = \
+                self.__displayCtx.overlayOrder[-1]
         
         loadoverlay.interactiveLoadOverlays(
             fromDir=self.__stddir,

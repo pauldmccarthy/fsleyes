@@ -804,7 +804,7 @@ class DisplayContext(props.SyncableHasProperties):
         #       which modify the overlay list will only do
         #       one of the following:
         #
-        #        - Adding one or more overlays to the list
+        #        - Adding one or more overlays to the end of the list
         #        - Removing one or more overlays from the list
         # 
         # More complex overlay list modifications
