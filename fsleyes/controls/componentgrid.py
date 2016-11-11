@@ -133,14 +133,25 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
                              self._name,
                              self.__overlayTypeChanged)
 
-        if refreshGrid:
+        # We refresh the component grid on idle, in
+        # case multiple calls to setOverlay are made
+        # in quick succession - only the most recent
+        # request will be executed.
+        def doRefreshGrid():
+
             self.__grid.SetGridSize(ncomps, 2, growCols=[1])
 
             self.__grid.SetColLabel(0, strings.labels[self, 'componentColumn'])
             self.__grid.SetColLabel(1, strings.labels[self, 'labelColumn'])
 
-            async.idle(self.__recreateTags)
-            async.idle(self.__volumeChanged)
+            self.__recreateTags()
+            self.__volumeChanged()
+
+        if refreshGrid:
+            async.idle(doRefreshGrid,
+                       name='{}_doRefreshGrid'.format(self._name),
+                       skipIfQueued=True)
+
 
 
     def refreshTags(self, comps=None):

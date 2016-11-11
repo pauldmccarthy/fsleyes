@@ -18,6 +18,7 @@ import pwidgets.widgetgrid    as widgetgrid
 import pwidgets.texttag       as texttag
 
 import fsl.data.melodicimage  as fslmelimage
+import fsl.utils.async        as async
 
 import fsleyes.panel          as fslpanel
 import fsleyes.strings        as strings
@@ -107,10 +108,10 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
         self.__deregisterCurrentOverlay()
         self.__grid.ClearGrid()
+        self.__labelTags.clear()
 
         if not isinstance(overlay, fslmelimage.MelodicImage):
             self.__grid.Refresh()
-            self.__labelTags.clear()
             return
 
         log.debug('Registering new overlay: {}'.format(overlay))
@@ -120,21 +121,31 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
         melclass.register(self._name, self.__labelsChanged)
 
-        # The grid is initialised with length 0.
-        # Rows for each label are are added in
-        # the __createTags method, which is called
-        # here, and as needed when the LUT or
-        # MelodicClassification for the currently
-        # selected overlay change.
-        self.__grid.SetGridSize(0, 2, [1])
-        self.__grid.ShowRowLabels(False)
-        self.__grid.ShowColLabels(True)
-        self.__grid.SetColLabel(0, strings.labels[self, 'labelColumn'])
-        self.__grid.SetColLabel(1, strings.labels[self, 'componentColumn'])
+        # We refresh the label grid on idle, in
+        # case multiple calls to setOverlay are 
+        # made in quick succession - only the most 
+        # recent request will be executed. 
+        def createGrid():
 
-        self.__createTags()
-        self.refreshTags()
-        self.__grid.Refresh()
+            # The grid is initialised with length 0.
+            # Rows for each label are are added in
+            # the __createTags method, which is called
+            # here, and as needed when the LUT or
+            # MelodicClassification for the currently
+            # selected overlay change.
+            self.__grid.SetGridSize(0, 2, [1])
+            self.__grid.ShowRowLabels(False)
+            self.__grid.ShowColLabels(True)
+            self.__grid.SetColLabel(0, strings.labels[self, 'labelColumn'])
+            self.__grid.SetColLabel(1, strings.labels[self, 'componentColumn'])
+
+            self.__createTags()
+            self.refreshTags()
+            self.__grid.Refresh()
+
+        async.idle(createGrid,
+                   name='{}_createGrid'.format(self._name),
+                   skipIfQueued=True)
 
         
     def __deregisterCurrentOverlay(self):
