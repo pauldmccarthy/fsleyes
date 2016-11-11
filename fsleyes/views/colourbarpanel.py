@@ -153,9 +153,10 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
                 display = self._displayCtx.getDisplay(overlay)
                 opts    = display.getDisplayOpts()
 
-                opts   .removeListener('displayRange', self._name)
-                opts   .removeListener('cmap',         self._name)
-                display.removeListener('name',         self._name)
+                opts   .removeListener('displayRange',   self._name)
+                opts   .removeListener('cmap',           self._name)
+                opts   .removeListener('cmapResolution', self._name)
+                display.removeListener('name',           self._name)
 
             # The previously selected overlay
             # has been removed from the list,
@@ -194,6 +195,9 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         opts   .addListener('cmap',
                             self._name,
                             self.__refreshColourBar)
+        opts   .addListener('cmapResolution',
+                            self._name,
+                            self.__refreshColourBar) 
         display.addListener('name',
                             self._name,
                             self.__overlayNameChanged)
@@ -241,9 +245,12 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         overlay = self.__selectedOverlay
 
         if overlay is not None:
-            opts = self._displayCtx.getOpts(overlay)
-            cmap = opts.cmap
+            opts    = self._displayCtx.getOpts(overlay)
+            cmap    = opts.cmap
+            cmapRes = opts.cmapResolution
         else:
-            cmap = None
+            cmap    = None
+            cmapRes = 256
 
-        self.__cbPanel.cmap = cmap
+        self.__cbPanel.cmap           = cmap
+        self.__cbPanel.cmapResolution = cmapRes

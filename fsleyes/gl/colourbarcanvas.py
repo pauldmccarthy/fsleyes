@@ -34,6 +34,10 @@ class ColourBarCanvas(props.HasProperties):
     cmap = props.ColourMap()
     """The :mod:`matplotlib` colour map to use."""
 
+
+    cmapResolution = props.Int(minval=2, maxval=1024, default=256)
+    """Number of discrete colours to use in the colour bar. """
+
     
     vrange = props.Bounds(ndims=1)
     """The minimum/maximum values to display."""
@@ -126,7 +130,8 @@ class ColourBarCanvas(props.HasProperties):
                 label=self.label,
                 orientation=self.orientation,
                 labelside=labelSide,
-                textColour=self.textColour)
+                textColour=self.textColour,
+                cmapResolution=self.cmapResolution)
 
         if self._tex is None:
             self._tex = textures.Texture2D('{}_{}'.format(
