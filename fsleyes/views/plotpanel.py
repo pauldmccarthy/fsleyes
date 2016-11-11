@@ -461,12 +461,13 @@ class PlotPanel(viewpanel.ViewPanel):
 
 
     def getDrawnDataSeries(self):
-        """Returns a list of tuples, each tuple containing the ``(x, y)`` data
-        for one ``DataSeries`` instance as it is shown on the plot.
+        """Returns a list of tuples, each tuple containing the
+        ``(DataSeries, x, y)`` data for one ``DataSeries`` instance
+        as it is shown on the plot.
         """
 
-        return [(np.array(x), np.array(y))
-                for x, y in self.__drawnDataSeries.values()]
+        return [(ds, np.array(x), np.array(y))
+                for ds, (x, y) in self.__drawnDataSeries.items()]
 
 
     def prepareDataSeries(self, ds):
@@ -1171,62 +1172,46 @@ class OverlayPlotPanel(PlotPanel):
 
     @actions.action
     def addDataSeries(self):
-        """Adds the :class:`.DataSeries` associated with the currently
-        selected overlay to the :attr:`PlotPanel.dataSeries` list.
+        """Every :class:`.DataSeries` which is currently plotted, and has not
+        been added to the :attr:`PlotPanel.dataSeries` list, is added to said
+        list.
         """
-        
-        overlay = self._displayCtx.getSelectedOverlay()
 
-        if overlay is None:
+        # Get all the DataSeries objects which
+        # have been drawn, and are not in the
+        # dataSeries list.
+        toAdd = self.getDrawnDataSeries()
+        toAdd = [d[0] for d in toAdd if d[0] not in self.dataSeries]
+
+        if len(toAdd) == 0:
             return
 
-        if isinstance(overlay, fsloverlay.ProxyImage):
-            overlay = overlay.getBase() 
-        
-        ds = self.getDataSeries(overlay)
+        # Replace each DataSeries instance with a copy.
+        # This is necessary because some DataSeries
+        # sub-classes have complicated behaviour (e.g.
+        # changing their data when some properties
+        # change). But we just want to 'freeze' the
+        # data as it is currently shown. So we create
+        # a dumb copy.
+        for i, ds  in enumerate(toAdd):
 
-        if ds is None:
-            return
-
-        opts = self._displayCtx.getOpts(overlay)
-
-        if isinstance(ds, plotting.FEATTimeSeries):
-            toAdd = list(ds.getModelTimeSeries())
-        else:
-            toAdd = [ds]
-
-        copies = []
-
-        for ds in toAdd:
-
-            # Create the DataSeries copy with
-            # the ds.overlay instead of the
-            # selected overlay, because if,
-            # for example, this is a zstat
-            # image in a FEAT directory, these
-            # data series will have been
-            # created with the corresponding
-            # filtered_func_data image, not
-            # the zstat image.
-            copy = plotting.DataSeries(ds.overlay)
-
+            copy           = plotting.DataSeries(ds.overlay)
+            toAdd[i]       = copy
+ 
             copy.alpha     = ds.alpha
             copy.lineWidth = ds.lineWidth
             copy.lineStyle = ds.lineStyle
             copy.label     = ds.label
+            copy.colour    = ds.colour
 
-            # Use a new colour for the added
-            # DataSeries, because otherwise
-            # the added series colour will
-            # clash with the overlay colour
-            # (see the plotColours class
-            # attribute).
-            copy.colour = fslcm.randomDarkColour()
-
+            # We have to re-generate the data,
+            # because the x/y data returned by
+            # the getDrawnDataSeries method
+            # above may have had post-processing
+            # applied to it (e.g. smoothing)
             xdata, ydata = self.prepareDataSeries(ds)
+            
             copy.setData(xdata, ydata)
-
-            copies.append(copy)
 
             # This is disgraceful. It wasn't too bad
             # when this function was defined in the
@@ -1247,6 +1232,7 @@ class OverlayPlotPanel(PlotPanel):
             # each data series instance so that the
             # PlotListPanel.__onListSelect method can
             # update the display properties.
+            opts = self._displayCtx.getOpts(ds.overlay)
             if isinstance(ds, (plotting.MelodicTimeSeries,
                                plotting.MelodicPowerSpectrumSeries)):
                 copy._volume = opts.volume
@@ -1255,9 +1241,7 @@ class OverlayPlotPanel(PlotPanel):
                                  plotting.VoxelPowerSpectrumSeries)):
                 copy._location = opts.getVoxel()
                 
-        self.dataSeries.extend(copies)
-        
-        return copies
+        self.dataSeries.extend(toAdd)
 
 
     @actions.action
