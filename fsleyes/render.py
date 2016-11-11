@@ -223,6 +223,32 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
                                        displayCtx,
                                        sceneOpts)
 
+    # Do we need to do a neuro/radio l/r flip?
+    inRadio = displayCtx.displaySpaceIsRadiological()
+    lrFlip  = displayCtx.radioOrientation != inRadio
+
+    if lrFlip:
+        for c in canvases:
+            if c.zax in (1, 2):
+                c.invertX = True
+
+    # fix orthographic projection if
+    # showing an ortho grid layout.
+    # Note that, if the user chose 'grid',
+    # but also chose to hide one or more
+    # canvases, the createOrthoCanvases
+    # function will have adjusted the
+    # value of sceneOpts.layout. So
+    # if layout == grid, we definitely
+    # have three canvases.
+    #
+    # The createOrthoCanvases also
+    # re-orders the canvases, which
+    # we're assuming knowledge of,
+    # by indexing canvases[1].
+    if namespace.scene == 'ortho' and sceneOpts.layout == 'grid':
+        canvases[1].invertX = True
+
     # Configure each of the canvases (with those
     # properties that are common to both ortho and
     # lightbox canvases) and render them one by one
@@ -242,13 +268,12 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
     if namespace.scene == 'lightbox' or not sceneOpts.showLabels:
         labelBmps = None
     else:
-        canvasAxes = [(c.xax, c.yax) for c in canvases]
-        labelBmps  = buildLabelBitmaps(overlayList,
-                                       displayCtx,
-                                       canvasAxes,
-                                       canvasBmps,
-                                       sceneOpts.bgColour[:3],
-                                       sceneOpts.bgColour[ 3])
+        labelBmps = buildLabelBitmaps(overlayList,
+                                      displayCtx,
+                                      canvases,
+                                      canvasBmps,
+                                      sceneOpts.bgColour[:3],
+                                      sceneOpts.bgColour[ 3])
 
     # layout the bitmaps
     if namespace.scene == 'lightbox':
@@ -401,7 +426,7 @@ def createOrthoCanvases(namespace,
 
 def buildLabelBitmaps(overlayList,
                       displayCtx,
-                      canvasAxes, 
+                      canvases, 
                       canvasBmps,
                       bgColour,
                       alpha):
@@ -411,8 +436,7 @@ def buildLabelBitmaps(overlayList,
     
     :arg displayCtx:  The :class:`.DisplayContext`.
     
-    :arg canvasAxes:  A sequence of ``(xax, yax)`` indices, one for each
-                      bitmap in ``canvasBmps``.
+    :arg canvases:    The :class:`.SliceCanvas` objects which need labels.
     
     :arg canvasBmps:  A sequence of bitmaps, one for each canvas.
     
@@ -463,15 +487,21 @@ def buildLabelBitmaps(overlayList,
 
     labelBmps = []
 
-    for (xax, yax), canvasBmp in zip(canvasAxes, canvasBmps):
+    for canvas, canvasBmp in zip(canvases, canvasBmps):
+
+        xax, yax = canvas.xax,    canvas.yax
+        lox, hix = loLabels[xax], hiLabels[xax]
+        loy, hiy = loLabels[yax], hiLabels[yax]
+
+        if canvas.invertX: lox, hix = hix, lox
+        if canvas.invertY: loy, hiy = hiy, loy
 
         width        = canvasBmp.shape[1]
         height       = canvasBmp.shape[0]
 
         allLabels    = {}
-        labelKeys    = ['left', 'right', 'top', 'bottom']
-        labelTexts   = [loLabels[xax], hiLabels[xax],
-                        loLabels[yax], hiLabels[yax]]
+        labelKeys    = ['left',     'right',    'top',      'bottom']
+        labelTexts   = [lox,        hix,        loy,        hiy]
         labelWidths  = [LABEL_SIZE, LABEL_SIZE, width,      width]
         labelHeights = [height,     height,     LABEL_SIZE, LABEL_SIZE]
 
@@ -551,7 +581,8 @@ def buildColourBarBitmap(overlayList,
         orient,
         labelSide,
         bgColour=bgColour,
-        textColour=fslcm.complementaryColour(bgColour))
+        textColour=fslcm.complementaryColour(bgColour),
+        cmapResolution=opts.cmapResolution)
 
     # The colourBarBitmap function returns a w*h*4
     # array, but the fsl.utils.layout.Bitmap (see
