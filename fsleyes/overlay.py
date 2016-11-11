@@ -55,8 +55,14 @@ Currently (``fsleyes`` version |version|) the only overlay types in existence
    ~fsl.data.model.Model
 
 
-This module also provides the :func:`guessDataSourceType` function, for
-inferring the appropriate overlay type from a path name.
+This module also provides a few convenience fnctions:
+
+
+.. autosummary::
+   :nosignatures:
+
+   guessDataSourceType
+   findFEATImage
 """
 
 import logging
@@ -314,3 +320,27 @@ def guessDataSourceType(path):
     # Otherwise, I don't
     # know what to do
     return None, path
+
+
+def findFEATImage(overlayList, overlay):
+    """Searches the given :class:`.OverlayList` to see if there is a
+    :class:`.FEATImage` associated with the given ``overlay``. Returns the
+    ``FEATImage`` if found, otherwise returns ``None``.
+    """
+    
+    import fsl.data.featanalysis as featanalysis
+    import fsl.data.featimage    as featimage
+    
+    if isinstance(overlay, featimage.FEATImage): return overlay
+    if overlay            is None:               return None
+    if overlay.dataSource is None:               return None 
+
+    featPath = featanalysis.getAnalysisDir(overlay.dataSource)
+
+    if featPath is None:
+        return None
+
+    dataPath  = featanalysis.getDataFile(featPath)
+    featImage = overlayList.find(dataPath)
+
+    return featImage

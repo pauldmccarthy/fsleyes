@@ -1928,11 +1928,6 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
         if displaySpace is not None:
             displayCtx.displaySpace = displaySpace
 
-        # Set the selected overlay 
-        # to the last specified
-        if len(overlayList) > 0:
-            displayCtx.selectedOverlay = len(overlayList) - 1
-
         # Auto display
         displayCtx.autoDisplay = args.autoDisplay
 

@@ -29,6 +29,7 @@ from . import shellpanel
 FSLeyesPanel       = fslpanel          .FSLeyesPanel
 ViewPanel          = viewpanel         .ViewPanel
 PlotPanel          = plotpanel         .PlotPanel
+OverlayPlotPanel   = plotpanel         .OverlayPlotPanel
 CanvasPanel        = canvaspanel       .CanvasPanel
 OrthoPanel         = orthopanel        .OrthoPanel
 LightBoxPanel      = lightboxpanel     .LightBoxPanel

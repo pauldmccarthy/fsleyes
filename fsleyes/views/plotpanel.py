@@ -1090,11 +1090,6 @@ class OverlayPlotPanel(PlotPanel):
                                       self.__name,
                                       self.__overlayListChanged)
 
-        # Default to showing the 
-        # currently selected overlay
-        if initialState is None and len(self._overlayList) > 0:
-            initialState = {self._displayCtx.getSelectedOverlay() : True}
-
         self.__overlayListChanged(initialState=initialState)
         self.__dataSeriesChanged()
 
@@ -1347,12 +1342,19 @@ class OverlayPlotPanel(PlotPanel):
         :arg initialState: If provided, must be a ``dict`` of ``{ overlay :
                            bool }`` mappings, specifying the initial value
                            of the :attr:`.DataSeries.enabled` property for
-                           newly created instances. If not provided, all
-                           newly added overlays are enabled.
+                           newly created instances. If not provided, only
+                           the data series for the currently selected 
+                           overlay (if it has been newly added) is initially
+                           enabled.
         """
 
+        # Default to showing the 
+        # currently selected overlay
         if initialState is None:
-            initialState = {o : True for o in self._overlayList}
+            if len(self._overlayList) > 0:
+                initialState = {self._displayCtx.getSelectedOverlay() : True}
+            else:
+                initialState = {}
 
         # Make sure that a DataSeries
         # exists for every compatible overlay
@@ -1376,13 +1378,13 @@ class OverlayPlotPanel(PlotPanel):
                 self._displayCtx.getDisplay(ovl).enabled = False
                 continue
 
-            log.debug('Created {} for overlay {}'.format(
-                type(ds).__name__, ovl))
-
             # Display.enabled == DataSeries.enabled
             ds.bindProps('enabled', display)
 
             ds.enabled = initialState.get(ovl, False)
+
+            log.debug('Created {} for overlay {} (enabled: {})'.format(
+                type(ds).__name__, ovl, ds.enabled))
 
             newOverlays.append(ovl)
 

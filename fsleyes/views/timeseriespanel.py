@@ -20,8 +20,8 @@ import                                            props
 import fsl.data.featimage                      as fslfeatimage
 import fsl.data.melodicimage                   as fslmelimage
 import fsl.data.featanalysis                   as featanalysis
-import fsl.data.melodicanalysis                as melanalysis
 import fsl.data.image                          as fslimage
+import fsleyes.overlay                         as fsloverlay
 import fsleyes.actions                         as actions
 import fsleyes.plotting                        as plotting
 import fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
@@ -138,8 +138,20 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         :arg displayCtx:  A :class:`.DisplayContext` instance.
         """
 
+        # If the currently selected image is from 
+        # a FEAT analysis, and the corresponding
+        # filtered_func_data is loaded, enable the
+        # initial state of the time course for
+        # that filtered_func_data
+        featImage = fsloverlay.findFEATImage(
+            overlayList,
+            displayCtx.getSelectedOverlay())
+
+        if featImage is None: initialState = None
+        else:                 initialState = {featImage : True}
+
         plotpanel.OverlayPlotPanel.__init__(
-            self, parent, overlayList, displayCtx)
+            self, parent, overlayList, displayCtx, initialState=initialState)
 
         self.addListener('plotMode',  self._name, self.draw)
         self.addListener('usePixdim', self._name, self.draw)

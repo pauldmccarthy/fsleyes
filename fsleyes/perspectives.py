@@ -549,6 +549,7 @@ def _addControlPanel(viewPanel, panelType):
     :arg panelType: A control panel type.
     """
     import fsleyes.controls as controls
+    import fsleyes.views    as views
 
     args = {
         controls.CanvasSettingsPanel       : {'canvasPanel' : viewPanel},
@@ -561,14 +562,24 @@ def _addControlPanel(viewPanel, panelType):
         controls.PlotListPanel             : {'plotPanel'   : viewPanel},
         controls.PlotToolBar               : {'plotPanel'   : viewPanel},
         controls.PowerSpectrumControlPanel : {'plotPanel'   : viewPanel},
-        controls.PowerSpectrumToolBar :      {'psPanel'     : viewPanel},
+        controls.PowerSpectrumToolBar      : {'psPanel'     : viewPanel},
         controls.TimeSeriesControlPanel    : {'plotPanel'   : viewPanel},
         controls.TimeSeriesToolBar         : {'tsPanel'     : viewPanel},
     }
 
     args = args.get(panelType, {})
 
-    viewPanel.togglePanel(panelType, **args)
+    # Slightly hacky ... the PlotPanel customises
+    # its OverlayListPanel quite a bit, so we
+    # call its toggleOverlayList method directly.
+    # No other control panels (to date) are
+    # customised in any way, so I'm accepting
+    # this hack for the time being.
+    if isinstance(viewPanel, views.OverlayPlotPanel) and \
+       panelType == controls.OverlayListPanel:
+        viewPanel.toggleOverlayList()
+    else:
+        viewPanel.togglePanel(panelType, **args)
 
 
 def _getPanelProps(panel):
