@@ -99,6 +99,11 @@ def parseArgs(argv):
                             metavar=('W', 'H'),
                             help='Size in pixels (width, height)',
                             default=(800, 600))
+    mainParser.add_argument('-o',
+                            '--selectedOverlay',
+                            metavar='IDX',
+                            help='Index of selected overlay '
+                                 '(starting from 0)'), 
 
     name        = 'render'
     prolog      = 'FSLeyes render version {}\n'.format(version.__version__)
@@ -176,7 +181,13 @@ def makeDisplayContext(namespace):
                              overlayList,
                              childDisplayCtx,
                              sceneOpts)
-    
+
+    # This has to be applied after applySceneArgs,
+    # in case the user used the '-std'/'-std1mm'
+    # options.
+    if namespace.selectedOverlay is not None:
+        masterDisplayCtx.selectedOverlay = namespace.selectedOverlay
+
     if len(overlayList) == 0:
         raise RuntimeError('At least one overlay must be specified')
 
@@ -571,15 +582,34 @@ def buildColourBarBitmap(overlayList,
         if orient == 'horizontal': labelSide = 'bottom'
         else:                      labelSide = 'right'
 
+
+    if opts.useNegativeCmap:
+        negCmap    = opts.negativeCmap
+        ticks      = [0.0, 0.49, 0.51, 1.0]
+        ticklabels = ['{:0.2f}'.format(-opts.displayRange.xhi),
+                      '{:0.2f}'.format(-opts.displayRange.xlo),
+                      '{:0.2f}'.format( opts.displayRange.xlo),
+                      '{:0.2f}'.format( opts.displayRange.xhi)]
+        tickalign  = ['left', 'right', 'left', 'right']
+    else:
+        negCmap    = None
+        ticks      = [0.0, 1.0]
+        tickalign  = ['left', 'right']
+        ticklabels = ['{:0.2f}'.format(opts.displayRange.xlo),
+                      '{:0.2f}'.format(opts.displayRange.xhi)]
+
     cbarBmp = cbarbitmap.colourBarBitmap(
-        opts.cmap,
-        opts.displayRange.xlo,
-        opts.displayRange.xhi,
-        width,
-        height,
-        display.name,
-        orient,
-        labelSide,
+        cmap=opts.cmap,
+        width=width,
+        height=height, 
+        negCmap=negCmap,
+        invert=opts.invert,
+        ticks=ticks,
+        ticklabels=ticklabels,
+        tickalign=tickalign,
+        label=display.name,
+        orientation=orient,
+        labelside=labelSide,
         bgColour=bgColour,
         textColour=fslcm.complementaryColour(bgColour),
         cmapResolution=opts.cmapResolution)

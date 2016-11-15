@@ -35,8 +35,21 @@ class ColourBarCanvas(props.HasProperties):
     """The :mod:`matplotlib` colour map to use."""
 
 
+    negativeCmap = props.ColourMap()
+    """Negative colour map to use, if :attr:`useNegativeCmap` is ``True``."""
+
+    
+    useNegativeCmap = props.Boolean(default=False)
+    """Whether or not to use the :attr:`negativeCmap`.
+    """
+
+
     cmapResolution = props.Int(minval=2, maxval=1024, default=256)
     """Number of discrete colours to use in the colour bar. """
+
+
+    invert = props.Boolean(default=False)
+    """Invert the colour map(s). """
 
     
     vrange = props.Bounds(ndims=1)
@@ -121,10 +134,29 @@ class ColourBarCanvas(props.HasProperties):
         if self.cmap is None:
             bitmap = np.zeros((w, h, 4), dtype=np.uint8)
         else:
+
+            if self.useNegativeCmap:
+                negCmap    = self.negativeCmap
+                ticks      = [0.0, 0.49, 0.51, 1.0]
+                ticklabels = ['{:0.2f}'.format(-self.vrange.xhi),
+                              '{:0.2f}'.format(-self.vrange.xlo),
+                              '{:0.2f}'.format( self.vrange.xlo),
+                              '{:0.2f}'.format( self.vrange.xhi)]
+                tickalign  = ['left', 'right', 'left', 'right']
+            else:
+                negCmap    = None
+                ticks      = [0.0, 1.0]
+                tickalign  = ['left', 'right']
+                ticklabels = ['{:0.2f}'.format(self.vrange.xlo),
+                              '{:0.2f}'.format(self.vrange.xhi)]
+            
             bitmap = cbarbmp.colourBarBitmap(
                 cmap=self.cmap,
-                vmin=self.vrange.xlo,
-                vmax=self.vrange.xhi,
+                negCmap=negCmap,
+                invert=self.invert,
+                ticks=ticks,
+                ticklabels=ticklabels,
+                tickalign=tickalign,
                 width=w,
                 height=h,
                 label=self.label,
