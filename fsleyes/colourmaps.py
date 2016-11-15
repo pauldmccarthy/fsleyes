@@ -146,6 +146,7 @@ import numpy as np
 import                       props
 import                       fsleyes
 import fsl.utils.notifier as notifier
+import fsl.data.vest      as vest
 
 
 log = logging.getLogger(__name__)
@@ -308,7 +309,14 @@ def registerColourMap(cmapFile,
     if name        is None: name        = key
     if overlayList is None: overlayList = []
 
-    data = np.loadtxt(cmapFile)
+    # The file could be a FSLView style VEST-LUT
+    if vest.looksLikeVestLutFile(cmapFile):
+        data = vest.loadVestLutFile(cmapFile)
+
+    # Or just a plain 2D text array
+    else:
+        data = np.loadtxt(cmapFile)
+
     cmap = colors.ListedColormap(data, key)
 
     log.debug('Loading and registering custom '

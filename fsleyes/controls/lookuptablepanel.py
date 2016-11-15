@@ -28,6 +28,7 @@ import wx
 import                           props
 import pwidgets.elistbox      as elistbox
 
+import fsleyes                as fsleyes
 import fsleyes.panel          as fslpanel
 import fsleyes.displaycontext as displayctx
 import fsleyes.colourmaps     as fslcmaps
@@ -354,7 +355,9 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         current :class:`LookupTable` instance changes. Sets the state
         of the *save* button accordingly.
         """
-        self.__saveLutButton.Enable(not self.__selectedLut.saved)
+
+        self.__saveLutButton.Enable(
+            fsleyes.canWriteToAssetDir() and not self.__selectedLut.saved)
 
 
     def __lutLabelAdded(self, lut, topic, label):

@@ -14,6 +14,7 @@ import os.path as op
 
 import fsl.utils.settings as fslsettings
 
+import fsleyes            as fsleyes
 import fsleyes.strings    as strings
 import fsleyes.colourmaps as fslcmap
 from . import                action
@@ -120,11 +121,19 @@ class LoadColourMapAction(action.Action):
         # Save the directory for next time
         fslsettings.write('fsleyes.loadcolourmap', cmapDir)
 
+        # Does this user have permission to write 
+        # to FSLeyes assets? If not, don't bother 
+        # asking them whether they want to install 
+        # the colour map, because (at this point 
+        # in time) they can't.
+        if not fsleyes.canWriteToAssetDir():
+            return
+
         # ask the user if they want to install
         # the colour map for future use
         dlg = wx.MessageDialog(
             app.GetTopWindow(),
-            caption=strings.titles  [self,       'installcmap'],
+            caption=strings.titles[  self,       'installcmap'],
             message=strings.messages[_stringID + 'installcmap'],
             style=wx.YES_NO)
 

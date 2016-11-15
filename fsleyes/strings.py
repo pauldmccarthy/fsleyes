@@ -83,7 +83,7 @@ messages = TypeDict({
     'actions.loadcolourmap.invalidname'      : 'Please use only letters, '
                                                'numbers, and underscores.',
     'actions.loadcolourmap.installerror'     : 'An error occurred while '
-                                               'installing the colour map',
+                                               'installing the colour map. ',
 
     'actions.copyoverlay.createMask'  : 'Create empty mask image '
                                         'with same dimensions',

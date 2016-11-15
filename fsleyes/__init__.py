@@ -217,6 +217,13 @@ files). This is set in the :func:`initialise` function.
 """
 
 
+def canWriteToAssetDir():
+    """Returns ``True`` if the user can write to the FSLeyes asset directory,
+    ``False`` otherwise.
+    """
+    return os.access(op.join(assetDir, 'assets'), os.W_OK | os.X_OK)
+
+
 def initialise():
     """Called when `FSLeyes`` is started as a standalone application.
 
