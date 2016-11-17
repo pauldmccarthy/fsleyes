@@ -46,6 +46,9 @@ messages = TypeDict({
                                          'session ...',
     'FSLeyesFrame.saveLayout'          : 'Save this layout for next time?',
     'FSLeyesFrame.dontAskToSaveLayout' : 'Never ask me again',
+    'FSLeyesFrame.unsavedOverlays'     : 'You have unsaved images - are '
+                                         'you sure you want to exit?',
+ 
 
     'perspectives.applyingPerspective' : 'Applying {} perspective ...',
 
@@ -199,6 +202,7 @@ messages = TypeDict({
 
     'CorrelateAction.calculating'         : 'Calculating correlation values '
                                             'for seed voxel [{}, {}, {}] ...',
+
 })
 
 
@@ -209,8 +213,10 @@ titles = TypeDict({
     
     'loadOverlays.error'  : 'Error loading overlay',
 
-    'FSLeyesFrame.saveLayout' : 'Save layout',
-
+    'FSLeyesFrame.saveLayout'      : 'Save layout',
+    'FSLeyesFrame.unsavedOverlays' : 'Unsaved images',
+ 
+    
     'OrthoPanel'         : 'Ortho View',
     'LightBoxPanel'      : 'Lightbox View',
     'TimeSeriesPanel'    : 'Time series',

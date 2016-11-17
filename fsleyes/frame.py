@@ -820,8 +820,35 @@ class FSLeyesFrame(wx.Frame):
         Saves the frame position, size, and layout, so it may be preserved the
         next time it is opened. See the :meth:`_restoreState` method.
         """
-
+        
         ev.Skip()
+
+        import fsleyes.actions.saveoverlay as saveoverlay
+
+        # Check to see if there are any unsaved images
+        allSaved = saveoverlay.checkOverlaySaveState(
+            self.__overlayList, self.__displayCtx)
+
+        # If there are, get the
+        # user to confirm quit
+        if not allSaved:
+
+            msg   = strings.messages[self, 'unsavedOverlays']
+            title = strings.titles[  self, 'unsavedOverlays']
+
+            dlg = wx.MessageDialog(self,
+                                   message=msg,
+                                   caption=title,
+                                   style=(wx.YES_NO        |
+                                          wx.NO_DEFAULT    |
+                                          wx.CENTRE        |
+                                          wx.ICON_WARNING))
+
+            dlg.CentreOnParent()
+            if dlg.ShowModal() == wx.ID_NO:
+                ev.Skip(False) 
+                ev.Veto() 
+                return
 
         if self.__saveLayout:
 
@@ -1196,7 +1223,8 @@ class FSLeyesFrame(wx.Frame):
         for persp in builtIns:
 
             title    = strings.perspectives.get(persp, persp)
-            shortcut = shortcuts.actions.get((self, 'perspectives', persp), None)
+            shortcut = shortcuts.actions.get((self, 'perspectives', persp),
+                                             None)
 
             if shortcut is not None:
                 title = '{}\t{}'.format(title, shortcut)

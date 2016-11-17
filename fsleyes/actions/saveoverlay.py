@@ -13,6 +13,7 @@ defined in this module, which do the real work:
 
    saveOverlay
    doSave
+   checkOverlaySaveState
 """
 
 
@@ -195,7 +196,7 @@ def saveOverlay(overlay, display=None):
         filename = overlay.name
 
     # Ask the user where they
-    # want to save the image
+    # want to save the image 
     msg = strings.titles['SaveOverlayAction.saveFile']
     dlg = wx.FileDialog(wx.GetApp().GetTopWindow(),
                         message=msg,
@@ -206,23 +207,25 @@ def saveOverlay(overlay, display=None):
     if dlg.ShowModal() != wx.ID_OK:
         return
 
-    # Remove any extensions that may have been added
-    # (n.b. this does mean that the user is unable to
-    # save the file in any format other than that
-    # added by addExt, which is invariably .nii.gz).
-    savePath = fslimage.removeExt(dlg.GetPath())
-    savePath = fslimage.addExt(   savePath, mustExist=False)
-    oldPath  = overlay.dataSource
+    # Make sure that the user chose a supported
+    # extension. If not, use the default extension.
+    savePath       = dlg.GetPath()
+    prefix, suffix = fslimage.splitExt(savePath)
+
+    if suffix == '':
+        savePath = '{}{}'.format(prefix, fslimage.defaultExt())
 
     if doSave(overlay, savePath):
 
         saveDir = op.dirname(savePath)
+        oldPath = overlay.dataSource
 
+        # Cache the save directory for next time.
         fslsettings.write('loadSaveOverlayDir', saveDir)
 
         # If image was in memory, or its old
         # name equalled the old datasource
-        # base name update its name.
+        # base name, update its name.
         if oldPath is None or \
            fslimage.removeExt(op.basename(oldPath)) == overlay.name:
 
@@ -253,3 +256,21 @@ def doSave(overlay, path=None):
                     exc_info=True)
         wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK) 
         return False
+
+
+def checkOverlaySaveState(overlayList, displayCtx):
+    """Returns ``True`` if all (compatible) overlays are saved to disk,
+    ``False`` if there are any overlays with unsaved changes.
+    """
+
+    unsaved = []
+
+    for ovl in overlayList:
+
+        # Only Image overlays can be edited/saved
+        if not isinstance(ovl, fslimage.Image): continue
+        if ovl.saveState:                       continue
+
+        unsaved.append(ovl)
+
+    return len(unsaved) == 0
