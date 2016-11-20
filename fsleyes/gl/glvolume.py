@@ -162,6 +162,12 @@ class GLVolume(globject.GLImageObject):
         self.addDisplayListeners()
 
         # Create an image texture, clip texture, and a colour map texture
+        #
+        # We use the gl.resources module to manage texture
+        # creation, because ImageTexture instances can
+        # potentially be shared between GLVolumes. So all
+        # GLVolumes use the same name, defined here, to
+        # refer to the ImageTexture for a given image.
         self.texName  = '{}_{}'.format(type(self).__name__, id(self.image))
 
         # Ref to an OpenGL shader program -
@@ -303,6 +309,15 @@ class GLVolume(globject.GLImageObject):
         opts    .addListener('overrideDataRange', name,
                              self._overrideDataRangeChanged)
 
+        # GLVolume instances need to keep track of whether
+        # the volume property of their corresponding
+        # VolumeOpts instance is synced to other VolumeOpts
+        # instances - if it is, there an ImageTexture for
+        # the image may already exist (i.e. have been
+        # created by another GLVolume), and we can just
+        # re-use it. Otherwise we will need to create our
+        # own ImageTexture.
+        # 
         # Save a flag so the removeDisplayListeners
         # method knows whether it needs to de-register
         # sync change listeners - using opts.getParent()
@@ -314,12 +329,6 @@ class GLVolume(globject.GLImageObject):
 
         if self.__syncListenersRegistered:
             opts.addSyncChangeListener('volume',
-                                       name,
-                                       self._imageSyncChanged)
-            opts.addSyncChangeListener('resolution',
-                                       name,
-                                       self._imageSyncChanged)
-            opts.addSyncChangeListener('interpolation',
                                        name,
                                        self._imageSyncChanged)
 
@@ -353,9 +362,7 @@ class GLVolume(globject.GLImageObject):
         opts    .removeListener(          'overrideDataRange',       name)
         
         if self.__syncListenersRegistered:
-            opts.removeSyncChangeListener('volume',        name)
-            opts.removeSyncChangeListener('resolution',    name)
-            opts.removeSyncChangeListener('interpolation', name)
+            opts.removeSyncChangeListener('volume', name)
 
         
     def testUnsynced(self):
@@ -366,10 +373,10 @@ class GLVolume(globject.GLImageObject):
         ``GLVolume`` instance needs to create its own image texture;
         returns ``False`` otherwise.
         """
-        return (self.displayOpts.getParent() is None                or
-                not self.displayOpts.isSyncedToParent('volume')     or
-                not self.displayOpts.isSyncedToParent('resolution') or
-                not self.displayOpts.isSyncedToParent('interpolation'))
+        is4D = len(self.image.shape) >= 4 and self.image.shape[3] > 1
+        
+        return (self.displayOpts.getParent() is None or
+                (is4D and not self.displayOpts.isSyncedToParent('volume')))
 
 
     def updateShaderState(self, *args, **kwargs):

@@ -799,7 +799,6 @@ class GLVector(GLVectorBase):
                      :class:`.GLRGBVector`).
         """
 
-        opts           = self.displayOpts
         prefilter      = self.prefilter
         prefilterRange = self.prefilterRange
         vecImage       = self.vectorImage
@@ -813,13 +812,6 @@ class GLVector(GLVectorBase):
         # must be the fastest changing in the texture data
         def realPrefilter(d):
             return prefilter(d.transpose((3, 0, 1, 2)))
-            
-        unsynced = (opts.getParent() is None                or 
-                    not opts.isSyncedToParent('resolution') or
-                    not opts.isSyncedToParent('volume'))
-
-        if unsynced:
-            texName = '{}_unsync_{}'.format(texName, id(opts))
         
         self.imageTexture = glresources.get(
             texName,

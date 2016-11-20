@@ -321,3 +321,11 @@ class RGBVectorOpts(VectorOpts):
     """
 
     interpolation = copy.copy(volumeopts.VolumeOpts.interpolation)
+
+    def __init__(self, *args, **kwargs):
+        """Create a ``RGBVectorOpts`` instance. All arguments are passed
+        through  to the :class:`VectorOpts` constructor.
+        """        
+
+        kwargs['nounbind'] = ['interpolation']
+        VectorOpts.__init__(self, *args, **kwargs)

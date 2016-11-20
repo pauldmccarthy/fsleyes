@@ -196,6 +196,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         nounbind = kwargs.get('nounbind', [])
         nounbind.append('transform')
         nounbind.append('customXform')
+        nounbind.append('resolution')
 
         kwargs['nounbind'] = nounbind
 
@@ -771,6 +772,18 @@ class VolumeOpts(NiftiOpts):
         All arguments are passed through to the :class:`.DisplayOpts`
         constructor.
         """
+
+        # Interpolation (and resolution - see
+        # NiftiOpts __init__) cannot be unbound
+        # between VolumeOpts instances. This is
+        # primarily to reduce memory requirement
+        # - if interpolation or resolution were
+        # different across different views, we
+        # would have to create multiple 3D image
+        # textures for the same image.
+        nounbind = kwargs.get('nounbind', [])
+        nounbind.append('interpolation')
+        kwargs['nounbind'] = nounbind
 
         # The dataRangeChanged method needs acces to the
         # overlay, but we want to update the display/
