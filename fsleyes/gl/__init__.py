@@ -892,11 +892,15 @@ class WXGLCanvasTarget(object):
         to be called on the idle loop.
         """
 
+        def doRefresh():
+            if fslplatform.isWidgetAlive(self):
+                self.Refresh()
+
         # GL canvases do need to be refreshed
         # on EVT_PAINT events. If they are not,
         # the canvas will be corrupted.
         if not self.__freezeDraw:
-            async.idle(self.Refresh)
+            async.idle(doRefresh)
  
 
     def _initGL(self):
