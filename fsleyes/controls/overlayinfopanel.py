@@ -346,7 +346,10 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                                      'Unknown')
         intent   = strings.nifti.get(('intent_code', int(hdr['intent_code'])),
                                      'Unknown')
-            
+
+        info.addInfo(strings.labels[self, 'niftiVersion'],
+                     'NIFTI{}'.format(overlay.niftiVersion),
+                     section=generalSect)
         info.addInfo(strings.labels[self, 'dataSource'],
                      overlay.dataSource,
                      section=generalSect)

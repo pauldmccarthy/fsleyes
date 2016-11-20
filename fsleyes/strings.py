@@ -525,6 +525,7 @@ labels = TypeDict({
                                                       'system',
     
     'OverlayInfoPanel.dataSource'               : 'Data source',
+    'OverlayInfoPanel.niftiVersion'             : 'NIFTI version',
 
     'OverlayInfoPanel.DTIFitTensor'             : 'DTIFit tensor images',
     'OverlayInfoPanel.DTIFitTensor.tensorInfo'  : 'Tensor image paths ',
