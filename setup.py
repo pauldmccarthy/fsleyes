@@ -75,7 +75,7 @@ class fsl_sdist(sdist):
     def __patch_py_file(self, filename, licence):
 
         licence = licence.split('\n')
-        licence = ['# {}'.format(l) for l in licence]
+        licence = ['# {0}'.format(l) for l in licence]
 
         with open(filename, 'rt') as f:
             lines = f.read().split('\n')
@@ -86,7 +86,7 @@ class fsl_sdist(sdist):
 
         # Insert the fsl hashbang and the licence
         lines = ['#!/usr/bin/env fslpython'] + ['#'] + licence + lines
-        lines = ['{}\n'.format(l) for l in lines]
+        lines = ['{0}\n'.format(l) for l in lines]
 
         with open(filename, 'wt') as f:
             f.writelines(lines)
@@ -95,7 +95,7 @@ class fsl_sdist(sdist):
     def __patch_prog_file(self, filename, licence):
 
         licence = licence.split('\n')
-        licence = ['# {}'.format(l) for l in licence]
+        licence = ['# {0}'.format(l) for l in licence]
 
         with open(filename, 'rt') as f:
             lines = f.read().split('\n')
@@ -108,7 +108,7 @@ class fsl_sdist(sdist):
         else:
             lines = licence + lines
             
-        lines = ['{}\n'.format(l) for l in lines]
+        lines = ['{0}\n'.format(l) for l in lines]
 
         with open(filename, 'wt') as f:
             f.writelines(lines)
@@ -117,13 +117,13 @@ class fsl_sdist(sdist):
     def __patch_glsl_file(self, filename, licence):
 
         licence = licence.split('\n')
-        licence = ['/*'] + [' * {}'.format(l) for l in licence] + [' */']
+        licence = ['/*'] + [' * {0}'.format(l) for l in licence] + [' */']
 
         with open(filename, 'rt') as f:
             lines = f.read().split('\n')
 
         lines = licence + lines
-        lines = ['{}\n'.format(l) for l in lines]
+        lines = ['{0}\n'.format(l) for l in lines]
 
         with open(filename, 'wt') as f:
             f.writelines(lines)        
