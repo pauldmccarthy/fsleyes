@@ -1,4 +1,19 @@
-FSLeyes, (c) 2016, The University of Oxford (the "Software")
+FSLeyes
+
+
+Part of FSL - FMRIB's Software Library
+http://www.fmrib.ox.ac.uk/fsl
+fsl@fmrib.ox.ac.uk
+
+Developed at FMRIB (Oxford Centre for Functional Magnetic Resonance
+Imaging of the Brain), Department of Clinical Neurology, Oxford
+University, Oxford, UK
+
+
+LICENCE
+
+FMRIB Software Library, Release 5.0 (c) 2012, The University of
+Oxford (the "Software")
 
 The Software remains the property of the University of Oxford ("the
 University").
@@ -46,4 +61,4 @@ external organisation for which payment is received. If you are
 interested in using the Software commercially, please contact Isis
 Innovation Limited ("Isis"), the technology transfer company of the
 University, to negotiate a licence. Contact details are:
-innovation@isis.ox.ac.uk quoting reference BS/9564.
+Innovation@innovation.ox.ac.uk quoting reference DE/9564.
