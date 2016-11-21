@@ -87,7 +87,6 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
 
         self.__orthoPanel = ortho
 
-        self .addListener('selint',  self._name, self.__selintChanged)
         ortho.addListener('profile', self._name, self.__profileChanged)
 
         self.__profileChanged()
@@ -102,51 +101,26 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
         fsltoolbar.FSLeyesToolBar.destroy(self)
 
 
-    def __selintChanged(self, *a):
-        """Called when the :attr:`selint` property changes. If the
-        :class:`OrthoPanel` is currently in ``edit`` mode, toggles the
-        associated :class:`.OrthoEditProfile` instance between ``sel``
-        and ``selint`` modes.
-        """
-
-        ortho = self.__orthoPanel
-
-        if ortho.profile != 'edit':
-            return
-        
-        profile = ortho.getCurrentProfile()
-        
-        if self.selint: profile.mode = 'selint'
-        else:           profile.mode = 'nav'
-
-
     def __profileChanged(self, *a):
         """Called when the :attr:`.ViewPanel.profile` property of the
         :class:`.OrthoPanel` changes. Shows/hides edit controls accordingly.
         """
 
-        # We don't want to remove the profile tool
-        # created in __init__, so we skip the first
-        # tool
-        self.ClearTools(startIdx=1, destroy=True, postevent=False)
-                
+        self.ClearTools(destroy=True, postevent=False)
+        
         ortho      = self.__orthoPanel
         profile    = ortho.profile
         profileObj = ortho.getCurrentProfile()
-
-        if profile == 'edit':
-            with props.suppress(self, 'selint'):
-                self.selint = profileObj.mode == 'selint'
-
-        specs = _TOOLBAR_SPECS[profile]
+        
+        if profile != 'edit':
+            return
+                
         tools = []
         nav   = []
 
-        for spec in specs:
+        for spec in _TOOLBAR_SPECS:
 
-            if spec.key == 'selint': target = self
-            else:                    target = profileObj
-            
+            target    = profileObj
             widget    = props.buildGUI(self, target, spec)
             navWidget = widget
 
@@ -181,6 +155,25 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 
 
 _ICONS = {
+
+    'mode'                    : {
+        'nav'    : [
+            fslicons.findImageFile('addHighlight24'),
+            fslicons.findImageFile('add24'),
+        ],
+        'sel'    : [
+            fslicons.findImageFile('pencilHighlight24'),
+            fslicons.findImageFile('pencil24'),
+        ],
+        'desel'  : [
+            fslicons.findImageFile('eraserHighlight24'),
+            fslicons.findImageFile('eraser24'),
+        ], 
+        'selint' : [
+            fslicons.findImageFile('selectByIntensityHighlight24'),
+            fslicons.findImageFile('selectByIntensity24'),
+        ],
+    },
     'selectionIs3D'           : [
         fslicons.findImageFile('selection3DHighlight24'),
         fslicons.findImageFile('selection3D24'),
@@ -211,6 +204,8 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 
 
 _TOOLTIPS = {
+    'mode'                    : fsltooltips.properties['OrthoEditProfile.'
+                                                       'mode'],
     'selectionIs3D'           : fsltooltips.properties['OrthoEditProfile.'
                                                        'selectionIs3D'],
     'clearSelection'          : fsltooltips.actions['OrthoEditProfile.'
@@ -252,89 +247,51 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 """
 
 
-_TOOLBAR_SPECS  = {
 
-    'view' : {},
 
-    'edit' : [
-        props.Widget(
-            'selectionIs3D',
-            icon=_ICONS['selectionIs3D'],
-            tooltip=_TOOLTIPS['selectionIs3D'],
-            toggle=False),
-        actions.ActionButton(
-            'clearSelection',
-            icon=_ICONS['clearSelection'],
-            tooltip=_TOOLTIPS['clearSelection']),
-        actions.ActionButton(
-            'undo',
-            icon=_ICONS['undo'],
-            tooltip=_TOOLTIPS['undo']),
-        actions.ActionButton(
-            'redo',
-            icon=_ICONS['redo'],
-            tooltip=_TOOLTIPS['redo']),
-        actions.ActionButton(
-            'fillSelection',
-            icon=_ICONS['fillSelection'],
-            tooltip=_TOOLTIPS['fillSelection']),
-        actions.ActionButton(
-            'eraseSelection',
-            icon=_ICONS['eraseSelection'],
-            tooltip=_TOOLTIPS['eraseSelection']), 
-        actions.ActionButton(
-            'createMaskFromSelection',
-            icon=_ICONS['createMaskFromSelection'],
-            tooltip=_TOOLTIPS['createMaskFromSelection']),
-        actions.ActionButton(
-            'createROIFromSelection',
-            icon=_ICONS['createROIFromSelection'],
-            tooltip=_TOOLTIPS['createROIFromSelection']),
-        props.Widget(
-            'selint',
-            icon=_ICONS['selint'],
-            tooltip=_TOOLTIPS['selint']),
-        props.Widget(
-            'limitToRadius',
-            icon=_ICONS['limitToRadius'],
-            tooltip=_TOOLTIPS['limitToRadius'],
-            enabledWhen=lambda p: p.mode == 'selint'),
-        props.Widget(
-            'localFill',
-            icon=_ICONS['localFill'],
-            tooltip=_TOOLTIPS['localFill'],
-            enabledWhen=lambda p: p.mode == 'selint'),
-        props.Widget(
-            'selectionCursorColour',
-            label=_LABELS['selectionCursorColour'],
-            tooltip=_TOOLTIPS['selectionCursorColour']),
-        props.Widget(
-            'selectionOverlayColour',
-            label=_LABELS['selectionOverlayColour'],
-            tooltip=_TOOLTIPS['selectionOverlayColour']), 
-        props.Widget(
-            'selectionSize',
-            label=_LABELS['selectionSize'],
-            tooltip=_TOOLTIPS['selectionSize']),
-        props.Widget(
-            'fillValue',
-            label=_LABELS['fillValue'],
-            tooltip=_TOOLTIPS['fillValue'],
-            slider=False,
-            increment=1),
-        props.Widget(
-            'intensityThres',
-            label=_LABELS['intensityThres'],
-            tooltip=_TOOLTIPS['intensityThres'],
-            enabledWhen=lambda p: p.mode == 'selint'),
+_TOOLBAR_SPECS  = [
 
-        props.Widget(
-            'searchRadius',
-            label=_LABELS['searchRadius'],
-            tooltip=_TOOLTIPS['searchRadius'],
-            enabledWhen=lambda p: p.mode == 'selint' and p.limitToRadius)
-    ]
-}
+    props.Widget(
+        'mode',
+        icons=_ICONS['mode'],
+        tooltips=_TOOLTIPS['mode'],
+        fixChoices=['nav', 'sel', 'selint', 'desel']),
+    props.Widget(
+        'selectionIs3D',
+        icon=_ICONS['selectionIs3D'],
+        tooltip=_TOOLTIPS['selectionIs3D'],
+        toggle=False),
+    props.Widget(
+        'limitToRadius',
+        icon=_ICONS['limitToRadius'],
+        tooltip=_TOOLTIPS['limitToRadius'],
+        enabledWhen=lambda p: p.mode == 'selint'),
+    props.Widget(
+        'localFill',
+        icon=_ICONS['localFill'],
+        tooltip=_TOOLTIPS['localFill'],
+        enabledWhen=lambda p: p.mode == 'selint'),
+    props.Widget(
+        'selectionSize',
+        label=_LABELS['selectionSize'],
+        tooltip=_TOOLTIPS['selectionSize']),
+    props.Widget(
+        'fillValue',
+        label=_LABELS['fillValue'],
+        tooltip=_TOOLTIPS['fillValue'],
+        slider=False,
+        increment=1),
+    props.Widget(
+        'intensityThres',
+        label=_LABELS['intensityThres'],
+        tooltip=_TOOLTIPS['intensityThres'],
+        enabledWhen=lambda p: p.mode == 'selint'),
+    props.Widget(
+        'searchRadius',
+        label=_LABELS['searchRadius'],
+        tooltip=_TOOLTIPS['searchRadius'],
+        enabledWhen=lambda p: p.mode == 'selint' and p.limitToRadius)
+]
 """This dictionary contains specifications for all of the tools shown in an
 :class:`OrthoEditToolBar`. The following keys are defined:
 

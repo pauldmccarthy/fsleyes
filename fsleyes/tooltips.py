@@ -466,6 +466,7 @@ properties = TypeDict({
 
     'OrthoPanel.profile'                      : 'Switch between view mode '
                                                 'and edit mode',
+    'OrthoEditProfile.mode'                   : 'Edit action TODO',
     'OrthoEditProfile.selectionSize'          : 'Size (in voxels) of the '
                                                 'selection region.',
     'OrthoEditProfile.selectionIs3D'          : 'Choose between a 2D square '
