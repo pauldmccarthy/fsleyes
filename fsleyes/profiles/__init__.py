@@ -36,7 +36,8 @@ import wx
 
 import props
 
-import fsleyes.actions as actions
+from   fsl.utils.platform import platform as fslplatform
+import fsleyes.actions                    as actions
 
 
 log = logging.getLogger(__name__)
@@ -564,6 +565,17 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         mouseLoc, canvasLoc = self.__getMouseLocation(ev)
         canvas              = ev.GetEventObject()
         wheel               = ev.GetWheelRotation()
+
+        # wx/osx has this really useful feature
+        # whereby if shift is being held down
+        # (typically used for horizontal scrolling),
+        # a mouse wheel direction which would have
+        # produced positive values will now produce
+        # negative values.
+        if ev.ShiftDown() and \
+           fslplatform.wxPlatform in (fslplatform.WX_MAC_COCOA,
+                                      fslplatform.WX_MAC_CARBON):
+            wheel = -wheel
 
         log.debug('Mouse wheel event ({}) on canvas {}'.format(
             wheel, canvas.name))

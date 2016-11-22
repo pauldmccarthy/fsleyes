@@ -74,6 +74,9 @@ class LightBoxViewProfile(profiles.Profile):
         through the slices displayed on the canvas.
         """
 
+        # When we scroll up, we move to lower slices,
+        # so a positive scroll direction corresponds
+        # to negative slice direction, and vice versa.
         if   wheel > 0: wheel = -1
         elif wheel < 0: wheel =  1
         else:           return False

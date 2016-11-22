@@ -375,8 +375,8 @@ class OrthoViewProfile(profiles.Profile):
 
         dirs = [0, 0, 0]
 
-        if   wheel > 0: dirs[canvas.zax] = -1
-        elif wheel < 0: dirs[canvas.zax] =  1
+        if   wheel > 0: dirs[canvas.zax] =  1
+        elif wheel < 0: dirs[canvas.zax] = -1
 
         pos = self.__offsetLocation(*dirs)
 
