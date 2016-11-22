@@ -148,7 +148,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     """
     
 
-    intensityThres = props.Real(minval=0.0, default=10, clamped=True)
+    intensityThres = props.Real(
+        minval=0.0, maxval=1.0, default=10, clamped=False)
     """In ``selint`` mode, the maximum distance, in intensity, that a voxel
     can be from the seed location, in order for it to be selected.
     Passed as the ``precision`` argument to the
@@ -170,7 +171,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     """
 
     
-    searchRadius = props.Real(minval=0.01, default=0.0, clamped=True)
+    searchRadius = props.Real(
+        minval=0.01, maxval=200, default=0.0, clamped=True)
     """In ``selint`` mode, if :attr:`limitToRadius` is true, this property
     specifies the search sphere radius. Passed as the ``searchRadius``
     argument to the :meth:`.Selection.selectByValue` method.
@@ -220,7 +222,19 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                          self.__selectionColoursChanged)
         self.addListener('selectionCursorColour',
                          self._name,
-                         self.__selectionColoursChanged) 
+                         self.__selectionColoursChanged)
+        self.addListener('intensityThres',
+                         self._name,
+                         self.__selintPropertyChanged)
+        self.addListener('searchRadius',
+                         self._name,
+                         self.__selintPropertyChanged)
+        self.addListener('localFill',
+                         self._name,
+                         self.__selintPropertyChanged)
+        self.addListener('limitToRadius',
+                         self._name,
+                         self.__selintPropertyChanged) 
 
         self.__selectedOverlayChanged()
         self.__selectionChanged()
@@ -462,6 +476,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         self.setConstraint('fillValue', 'minval', dmin)
         self.setConstraint('fillValue', 'maxval', dmax)
+        self.setConstraint('intensityThres', 'maxval', (dmax - dmin) / 5.0)
 
 
     def __selectedOverlayChanged(self, *a):
@@ -843,6 +858,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
         perf = self._viewPanel.getSceneOptions().performance
 
+        forceRefresh = (
+            canvasPos is not None and
+            np.all(np.isclose(canvasPos, self._displayCtx.location.xyz)))
+
         # If running in high performance mode, we make
         # the canvas location track the edit cursor
         # location, so that the other two canvases
@@ -852,6 +871,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
            (canvasPos is not None):
             self._navModeLeftMouseDrag(ev, canvas, mousePos, canvasPos)
             
+            if forceRefresh:
+                for c in self.getEventTargets():
+                    canvas.Refresh()
+
         else:
             canvas.Refresh()
 
@@ -1025,6 +1048,36 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         return True
 
+
+    def __selintPropertyChanged(self, *a):
+        """
+        """
+
+        mousePos, canvasPos = self.getLastMouseUpLocation()
+        canvas              = self.getLastCanvas()
+
+        if mousePos is None or canvas is None:
+            return
+
+        print 'Last canvas: {}'.format(canvas.zax)
+
+        voxel = self.__getVoxelLocation(canvasPos)
+
+        def update():
+
+            self.__selintSelect(voxel, canvas)
+
+            # NOTE You are being devious here, relying
+            #      on the knowledge that
+            #      OrthoViewProfile._navModeLeftMouseDrag
+            #      (which is called by __refreshCanvases)
+            #      doesn't use the ev object passed to it.
+            self.__refreshCanvases(None, canvas, mousePos, canvasPos)
+
+        if voxel is not None:
+            async.idle(update, timeout=0.1)
+
+
             
     def __selintSelect(self, voxel, canvas):
         """Selects voxels by intensity, using the specified ``voxel`` as
@@ -1049,7 +1102,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             searchRadius = (self.searchRadius / overlay.pixdim[0],
                             self.searchRadius / overlay.pixdim[1],
                             self.searchRadius / overlay.pixdim[2])
-
 
         if self.selectionIs3D:
             restrict = None
@@ -1113,7 +1165,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if voxel is not None:
             editor.startChangeGroup()
 
-            self.__selecting = True
             self.__selintSelect(voxel, canvas)
             self.__refreshCanvases(ev, canvas, mousePos, canvasPos)
 
@@ -1152,7 +1203,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         
         editor.endChangeGroup()
         
-        self.__selecting = False
         self._viewPanel.Refresh()
 
         return True
@@ -1173,21 +1223,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         elif wheel < 0: offset = -step
         else:           return False
 
-
-        # See comment in OrthoViewProfile._zoomModeMouseWheel
-        # about timeout
-        def update():
-            self.intensityThres += offset
-            if self.__selecting:
-
-                voxel = self.__getVoxelLocation(canvasPos) 
-
-                if voxel is not None:
-                    self.__selintSelect(voxel, canvas)
-                    self.__refreshCanvases(ev, canvas)
-
-        async.idle(update, timeout=0.1)
-
+        self.intensityThres += offset
+        
         return True
 
 
@@ -1218,21 +1255,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         elif wheel < 0: offset = -2.5
         else:           return False
 
-        # See comment in OrthoViewProfile._zoomModeMouseWheel
-        # about timeout
-        def update():
-
-            self.searchRadius += offset
-
-            if self.__selecting:
-
-                voxel = self.__getVoxelLocation(canvasPos) 
-
-                if voxel is not None:
-                    self.__selintSelect(voxel, canvas)
-                    self.__refreshCanvases(ev, canvas) 
-
-        async.idle(update, timeout=0.1)
+        self.searchRadius += offset
 
         return True
 

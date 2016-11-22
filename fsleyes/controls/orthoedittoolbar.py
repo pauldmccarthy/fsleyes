@@ -284,11 +284,15 @@ _TOOLBAR_SPECS  = [
         increment=1),
     props.Widget(
         'intensityThres',
+        slider=True,
+        spin=False,
         label=_LABELS['intensityThres'],
         tooltip=_TOOLTIPS['intensityThres'],
         enabledWhen=lambda p: p.mode == 'selint'),
     props.Widget(
         'searchRadius',
+        slider=True,
+        spin=False,
         label=_LABELS['searchRadius'],
         tooltip=_TOOLTIPS['searchRadius'],
         enabledWhen=lambda p: p.mode == 'selint' and p.limitToRadius)

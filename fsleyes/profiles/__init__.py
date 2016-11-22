@@ -280,11 +280,13 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         
         # some attributes to keep track
         # of mouse/canvas event locations
-        self.__lastCanvas    = None
-        self.__lastMousePos  = None
-        self.__lastCanvasPos = None
-        self.__mouseDownPos  = None
-        self.__canvasDownPos = None
+        self.__lastCanvas       = None
+        self.__lastMousePos     = None
+        self.__lastCanvasPos    = None
+        self.__lastMouseUpPos   = None
+        self.__lastCanvasUpPos  = None 
+        self.__mouseDownPos     = None
+        self.__canvasDownPos    = None
 
         # Add all of the provided modes
         # as options to the mode property
@@ -399,10 +401,17 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         """
         return self.__lastMousePos, self.__lastCanvasPos
 
-    
+
+    def getLastMouseUpLocation(self):
+        """Returns a 2-tuple containing the most recent x/y mouse up event
+        coordinates, and the corresponding 3D display space coordinates. 
+        """
+        return self.__lastMouseUpPos, self.__lastCanvasUpPos
+
+ 
     def getLastCanvas(self):
         """Returns a reference to the canvas which most recently generated
-        an event.
+        a mouse down or up event.
         """
         return self.__lastCanvas
 
@@ -476,7 +485,13 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         if source not in self.getEventTargets(): return
         if handler is None:                      return
 
-        self.__lastCanvas = source
+        if evType in (wx.EVT_LEFT_DOWN  .typeId,
+                      wx.EVT_MIDDLE_DOWN.typeId,
+                      wx.EVT_RIGHT_DOWN .typeId,
+                      wx.EVT_LEFT_UP    .typeId,
+                      wx.EVT_MIDDLE_UP  .typeId,
+                      wx.EVT_RIGHT_UP   .typeId):
+            self.__lastCanvas = source
         handler(ev)
 
     
@@ -716,8 +731,10 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         if not handler(ev, canvas, mouseLoc, canvasLoc):
             ev.Skip()
 
-        self.__mouseDownPos  = None
-        self.__canvasDownPos = None
+        self.__mouseDownPos    = None
+        self.__canvasDownPos   = None
+        self.__lastMouseUpPos  = mouseLoc
+        self.__lastCanvasUpPos = canvasLoc
 
 
     def __onMouseMove(self, ev):
