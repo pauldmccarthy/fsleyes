@@ -84,6 +84,8 @@ class FSLeyesFrame(wx.Frame):
        getDisplayContext
        getViewPanels
        getViewPanelInfo
+       getViewPanelID
+       getViewPanelTitle
        getFocusedViewPanel
        addViewPanel
        viewPanelDefaultLayout
@@ -120,10 +122,6 @@ class FSLeyesFrame(wx.Frame):
                  save=True):
         """Create a ``FSLeyesFrame``.
 
-        .. note:: The ``restore`` functionality is not currently implemented.
-                  If ``restore=True``, an :class:`.OrthoPanel` is added to
-                  the frame.
-        
         :arg parent:      The :mod:`wx` parent object.
         
         :arg overlayList: The :class:`.OverlayList`.
@@ -170,7 +168,7 @@ class FSLeyesFrame(wx.Frame):
         # the wx.lib.agw.aui.framemanager.GetManager
         # function uses the wx event handling system
         # to figure out which AuiManager should be used
-        # to maange the docking (which is a ridiculous
+        # to manage the docking (which is a ridiculous
         # way to do this, in my opinion).
         #
         # Anyway, this means that the docking guides
@@ -231,10 +229,11 @@ class FSLeyesFrame(wx.Frame):
         # The other dicts contain
         # {ViewPanel : something} mappings
         # 
-        self.__viewPanels     = []
-        self.__viewPanelDCs   = {}
-        self.__viewPanelMenus = {}
-        self.__viewPanelIDs   = {}
+        self.__viewPanels      = []
+        self.__viewPanelDCs    = {}
+        self.__viewPanelMenus  = {}
+        self.__viewPanelIDs    = {}
+        self.__viewPanelTitles = {}
 
         self.__menuBar   = None
         self.__perspMenu = None
@@ -283,6 +282,20 @@ class FSLeyesFrame(wx.Frame):
         currenlty displayed in this ``FSLeyesFrame``.
         """
         return list(self.__viewPanels)
+
+
+    def getViewPanelID(self, viewPanel):
+        """Returns the ID that was assigned to the given :class:`.ViewPanel`.
+        This is a sequentially increasing integer, starting from 1.
+        """
+        return self.__viewPanelIDs[viewPanel]
+
+    
+    def getViewPanelTitle(self, viewPanel):
+        """Returns the ID that was assigned to the given :class:`.ViewPanel`.
+        This is a sequentially increasing integer, starting from 1.
+        """
+        return self.__viewPanelTitles[viewPanel] 
 
 
     def getViewPanelInfo(self, viewPanel):
@@ -428,6 +441,7 @@ class FSLeyesFrame(wx.Frame):
         self.__viewPanels.append(panel)
         self.__viewPanelDCs[     panel] = childDC
         self.__viewPanelIDs[     panel] = panelId
+        self.__viewPanelTitles[  panel] = title
         
         self.__auiManager.AddPane(panel, paneInfo)
         self.__addViewPanelMenu(  panel, title)
@@ -516,7 +530,6 @@ class FSLeyesFrame(wx.Frame):
         else:
             actionObjs = [target.getAction(name) for name in actionNames]
             
-
         for actionName, actionObj in zip(actionNames, actionObjs):
 
             # If actionObj is None, this is a
@@ -725,10 +738,11 @@ class FSLeyesFrame(wx.Frame):
         if panel is None or panel not in self.__viewPanels:
             return
 
-        self       .__viewPanels    .remove(panel)
-        self       .__viewPanelIDs  .pop(   panel)
-        dctx = self.__viewPanelDCs  .pop(   panel)
-        menu = self.__viewPanelMenus.pop(   panel, None)
+        self       .__viewPanels     .remove(panel)
+        self       .__viewPanelIDs   .pop(   panel)
+        self       .__viewPanelTitles.pop(   panel)
+        dctx = self.__viewPanelDCs   .pop(   panel)
+        menu = self.__viewPanelMenus .pop(   panel, None)
 
         log.debug('Destroying {} ({}) and '
                   'associated DisplayContext ({})'.format(
@@ -810,8 +824,8 @@ class FSLeyesFrame(wx.Frame):
 
         # If an existing canvas panel is
         # already synced to the master,
-        # 
-        # 
+        # then we set the new panel to
+        # be unsynced
         elif displaySynced and orderSynced:
             if newPanel is not None:
                 childDC = newPanel.getDisplayContext()

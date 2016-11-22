@@ -15,7 +15,6 @@ import logging
 import props
 
 import fsleyes.toolbar  as fsltoolbar
-import fsleyes.actions  as actions
 import fsleyes.icons    as fslicons
 import fsleyes.tooltips as fsltooltips
 import fsleyes.strings  as strings
@@ -83,6 +82,7 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
                                            parent,
                                            overlayList,
                                            displayCtx,
+                                           frame,
                                            height=24,
                                            kbFocus=True)
 
@@ -256,7 +256,7 @@ _TOOLBAR_SPECS  = [
         'mode',
         icons=_ICONS['mode'],
         tooltips=_TOOLTIPS['mode'],
-        fixChoices=['nav', 'sel', 'selint', 'desel']),
+        fixChoices=['nav', 'sel', 'desel', 'selint']),
     props.Widget(
         'selectionIs3D',
         icon=_ICONS['selectionIs3D'],
@@ -293,13 +293,6 @@ _TOOLBAR_SPECS  = [
         tooltip=_TOOLTIPS['searchRadius'],
         enabledWhen=lambda p: p.mode == 'selint' and p.limitToRadius)
 ]
-"""This dictionary contains specifications for all of the tools shown in an
-:class:`OrthoEditToolBar`. The following keys are defined:
-
-  =========== ===========================================================
-  ``view``    A list of specifications defining controls to be shown when
-              the ``view`` profile is active.
-  ``edit``    A list of specifications defining controls to be shown when
-              the ``view`` profile is active.
-  =========== ===========================================================
+"""This list contains specifications for all of the tools shown in an
+:class:`OrthoEditToolBar`, in the order that they are shown.
 """

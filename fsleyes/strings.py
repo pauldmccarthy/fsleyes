@@ -242,6 +242,7 @@ titles = TypeDict({
     'OverlayDisplayPanel'       : 'Display settings',
     'OrthoToolBar'              : 'Ortho view toolbar',
     'OrthoEditToolBar'          : 'Ortho view edit toolbar',
+    'OrthoEditActionToolBar'    : 'Ortho view edit action toolbar',
     'LightBoxToolBar'           : 'Lightbox view toolbar',
     'LookupTablePanel'          : 'Lookup tables',
     'LutLabelDialog'            : 'New LUT label',
@@ -546,6 +547,8 @@ labels = TypeDict({
     'SaveOverlayAction.cancel'    : 'Cancel',
 
     'ImportDataSeriesAction.firstColumnIsX' : 'First column is X data',
+
+    'OrthoPanel.editMenu'  : 'Edit (Ortho View {})',
 })
 
 

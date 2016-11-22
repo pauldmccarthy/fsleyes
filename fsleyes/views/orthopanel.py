@@ -22,19 +22,20 @@ import itertools as it
 
 import wx
 
-import pwidgets.textpanel                     as textpanel
+import pwidgets.textpanel                      as textpanel
 
-import fsl.data.constants                     as constants
-import fsl.utils.layout                       as fsllayout
-import fsleyes.strings                        as strings
-import fsleyes.gl                             as fslgl
-import fsleyes.actions                        as actions
-import fsleyes.colourmaps                     as colourmaps
-import fsleyes.gl.wxglslicecanvas             as slicecanvas
-import fsleyes.controls.orthotoolbar          as orthotoolbar
-import fsleyes.controls.orthoedittoolbar      as orthoedittoolbar
-import fsleyes.displaycontext.orthoopts       as orthoopts
-from . import                                    canvaspanel
+import fsl.data.constants                      as constants
+import fsl.utils.layout                        as fsllayout
+import fsleyes.strings                         as strings
+import fsleyes.gl                              as fslgl
+import fsleyes.actions                         as actions
+import fsleyes.colourmaps                      as colourmaps
+import fsleyes.gl.wxglslicecanvas              as slicecanvas
+import fsleyes.controls.orthotoolbar           as orthotoolbar
+import fsleyes.controls.orthoedittoolbar       as orthoedittoolbar
+import fsleyes.controls.orthoeditactiontoolbar as orthoeditactiontoolbar
+import fsleyes.displaycontext.orthoopts        as orthoopts
+from . import                                     canvaspanel
 
 
 log = logging.getLogger(__name__)
@@ -140,6 +141,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                          frame,
                                          sceneOpts)
 
+        name         = self.getName()
         contentPanel = self.getContentPanel()
 
         # The canvases themselves - each one displays a
@@ -156,6 +158,11 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                                      overlayList,
                                                      displayCtx,
                                                      zax=2)
+
+        # If an edit menu is added when in
+        # 'edit' profile (see __profileChanged),
+        # its name is stored here.
+        self.__editMenuTitle = None
 
         # Labels to show anatomical orientation,
         # stored in a dict for each canvas
@@ -185,10 +192,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__zcanvas.bindProps('cursorColour', sceneOpts)
 
         # Callbacks for ortho panel layout options
-        sceneOpts.addListener('layout',     self._name, self.__refreshLayout)
-        sceneOpts.addListener('showLabels', self._name, self.__refreshLabels)
-        sceneOpts.addListener('bgColour'  , self._name, self.__bgColourChanged)
-        sceneOpts.addListener('labelSize',  self._name, self.__refreshLabels)
+        sceneOpts.addListener('layout',     name, self.__refreshLayout)
+        sceneOpts.addListener('showLabels', name, self.__refreshLabels)
+        sceneOpts.addListener('bgColour'  , name, self.__bgColourChanged)
+        sceneOpts.addListener('labelSize',  name, self.__refreshLabels)
 
         # Individual zoom control for each canvas
         self.__xcanvas.bindProps('zoom', sceneOpts, 'xzoom')
@@ -210,36 +217,32 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.toggleZCanvas.bindProps('toggled', sceneOpts, 'showZCanvas')
 
         # Callbacks for overlay list/selected overlay changes
-        self._overlayList.addListener('overlays',
-                                      self._name,
-                                      self.__overlayListChanged)
-        self._displayCtx .addListener('bounds',
-                                      self._name,
-                                      self.__refreshLayout)
-        self._displayCtx .addListener('displaySpace',
-                                      self._name,
-                                      self.__displaySpaceChanged)
-        self._displayCtx .addListener('radioOrientation',
-                                      self._name,
-                                      self.__radioOrientationChanged) 
-        self._displayCtx .addListener('selectedOverlay',
-                                      self._name,
-                                      self.__overlayListChanged)
+        overlayList.addListener('overlays',
+                                name,
+                                self.__overlayListChanged)
+        displayCtx .addListener('bounds',
+                                name,
+                                self.__refreshLayout)
+        displayCtx .addListener('displaySpace',
+                                name,
+                                self.__displaySpaceChanged)
+        displayCtx .addListener('radioOrientation',
+                                name,
+                                self.__radioOrientationChanged) 
+        displayCtx .addListener('selectedOverlay',
+                                name,
+                                self.__overlayListChanged)
 
         # Callback for the display context location - when it
         # changes, update the displayed canvas locations
-        self._displayCtx.addListener('location',
-                                     self._name,
-                                     self.__locationChanged)
+        displayCtx.addListener('location', name, self.__locationChanged)
 
         # Callbacks for toggling x/y/z canvas display
-        sceneOpts.addListener('showXCanvas', self._name, self.__toggleCanvas)
-        sceneOpts.addListener('showYCanvas', self._name, self.__toggleCanvas)
-        sceneOpts.addListener('showZCanvas', self._name, self.__toggleCanvas)
+        sceneOpts.addListener('showXCanvas', name, self.__toggleCanvas)
+        sceneOpts.addListener('showYCanvas', name, self.__toggleCanvas)
+        sceneOpts.addListener('showZCanvas', name, self.__toggleCanvas)
 
-        self.toggleEditMode.addListener('toggled',
-                                        self._name,
-                                        self.__onToggleEditMode)
+        self.addListener('profile', name, self.__profileChanged)
 
         # Call the __onResize method to refresh
         # the slice canvases when the canvas
@@ -275,6 +278,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__xcanvas.destroy()
         self.__ycanvas.destroy()
         self.__zcanvas.destroy()
+        self.__removeEditMenu()
 
         # The _overlayListChanged method adds
         # listeners to individual overlays,
@@ -296,11 +300,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
     @actions.toggleControlAction(orthoedittoolbar.OrthoEditToolBar)
     def toggleEditMode(self):
-        """Shows/hides an :class:`.OrthoEditToolBar`. This will also cause the
-        :attr:`.ViewPanel.profile` to bechanged - see
-        :meth:`__onToggleEditMode`.  See also :meth:`.ViewPanel.togglePanel`.
-        """ 
-        self.togglePanel(orthoedittoolbar.OrthoEditToolBar, ortho=self)
+        """Toggles the :attr:`.ViewPanel.profile` between ``'view'`` and
+        ``'edit'``. See :meth:`__profileChanged`.  
+        """
+
+        if self.profile == 'view': self.profile = 'edit'
+        else:                      self.profile = 'view'
 
 
     @actions.action
@@ -359,16 +364,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # The state of this action gets bound to 
         # the showZCanvas attribute in __init__
         pass
-
-
-    def __onToggleEditMode(self, *args, **kwargs):
-        """Called when the :meth:`toggleEditMode` action is triggered.
-        Updates the :attr:`.ViewPanel.profile` to either ``'edit'`` or
-        ``'view'`` accordingly.
-        """
-
-        if self.toggleEditMode.toggled: self.profile = 'edit'
-        else:                           self.profile = 'view' 
 
 
     def getActions(self):
@@ -430,8 +425,90 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     def getZCanvas(self):
         """Returns the :class:`.SliceCanvas` instance displaying the Z axis.
         """ 
-        return self.__zcanvas 
+        return self.__zcanvas
+
+
+    def __profileChanged(self, *a):
+        """Called when the :attr:`.ViewPanel.profile` changes. If ``'edit'``
+        mode has been enabled, :class:`.OrthEditToolBar` and
+        :class:`.OrthEditActionToolBar` toolbars are added as control panels,
+        and an "edit" menu is added to the :class:`.FSLeyesFrame` (if there
+        is one).
+        """
+
+        self.togglePanel(orthoedittoolbar      .OrthoEditToolBar,
+                         ortho=self)
+        self.togglePanel(orthoeditactiontoolbar.OrthoEditActionToolBar,
+                         ortho=self,
+                         location=wx.LEFT)
+
+        # It's unlikely, but an OrthoPanel might be
+        # created without a ref to a FSLeyesFrame. 
+        if self.getFrame() is not None:
+            if self.profile == 'view': self.__removeEditMenu()
+            else:                      self.__addEditMenu()
+
+
+    def __addEditMenu(self):
+        """Called by :meth:`__profleChanged` when the
+        :attr:`.ViewPanel.profile` is changed to ``'edit'``. Adds a
+        menu to the :class:`.FSLeyesFrame`.
+        """
+
+        frame    = self.getFrame()
+        menuName = strings.labels[self, 'editMenu']
+        menuName = menuName.format(self.getFrame().getViewPanelID(self))
+        menuBar  = frame.GetMenuBar()
+        profile  = self.getCurrentProfile()
+        idx      = menuBar.FindMenu(menuName)
+
+        if  idx == wx.NOT_FOUND: editMenu = None
+        else:                    editMenu = menuBar.GetMenu(idx)
         
+        if editMenu is not None:
+            return
+
+        self.__editMenuTitle = menuName
+
+        editMenu = wx.Menu()
+
+        menuBar.Append(editMenu, menuName)
+
+        actionz = ['undo',
+                   'redo',
+                   'clearSelection',
+                   'fillSelection',
+                   'eraseSelection',
+                   'createMaskFromSelection',
+                   'createROIFromSelection']
+
+        frame.populateMenu(editMenu, profile, actionz, ignoreFocus=True)        
+
+
+    def __removeEditMenu(self):
+        """Called by :meth:`__profleChanged` when the
+        :attr:`.ViewPanel.profile` is changed from ``'edit'``. If an edit
+        menut has previously been added to the :class:`.FSLeyesFrame`, it
+        is removed.
+        """ 
+
+        if self.__editMenuTitle is None:
+            return
+
+        frame        = self.getFrame()
+        editMenuName = self.__editMenuTitle
+        menuBar      = frame.GetMenuBar()
+        idx          = menuBar.FindMenu(editMenuName)
+
+        if  idx == wx.NOT_FOUND: editMenu = None
+        else:                    editMenu = menuBar.GetMenu(idx)
+
+        self.__editMenuTitle = None
+
+        if editMenu is not None:
+            editMenu = menuBar.Remove(idx)
+            editMenu.Destroy()
+
 
     def __bgColourChanged(self, *a):
         """Called when the :class:`.SceneOpts.bgColour` property changes.
@@ -1060,7 +1137,7 @@ class OrthoFrame(wx.Frame):
         fslgl.getGLContext()
         fslgl.bootstrap()
 
-        self.panel = OrthoPanel(self, overlayList, displayCtx)
+        self.panel = OrthoPanel(self, overlayList, displayCtx, None)
         self.Layout()
 
 
@@ -1097,5 +1174,5 @@ class OrthoDialog(wx.Dialog):
         fslgl.getGLContext()
         fslgl.bootstrap()
         
-        self.panel = OrthoPanel(self, overlayList, displayCtx)
+        self.panel = OrthoPanel(self, overlayList, displayCtx, None)
         self.Layout()
