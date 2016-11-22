@@ -956,6 +956,21 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         return True
 
+    
+    def _chsizeModeChar(self, ev, canvas, key):
+        """Handles keyboard events in ``chsize`` mode. Up/down arrow key
+        presses increase/decrease the :attr:`selectionSize` respectively.
+        """
+
+        if   key == wx.WXK_UP:   wheelDir =  1
+        elif key == wx.WXK_DOWN: wheelDir = -1
+        else:                    return False
+
+        mousePos, canvasPos = self.getLastMouseLocation()
+
+        return self._chsizeModeMouseWheel(
+            ev, canvas, wheelDir, mousePos, canvasPos)
+
         
     def _deselModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse down events in ``desel`` mode.
@@ -1175,6 +1190,21 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         return True
 
+
+    def _chthresModeChar(self, ev, canvas, key):
+        """Handles keyboard events in ``chthres`` mode. Up/down arrow key
+        presses increase/decrease the :attr:`intensityThres` respectively.
+        """
+
+        if   key == wx.WXK_UP:   wheelDir =  1
+        elif key == wx.WXK_DOWN: wheelDir = -1
+        else:                    return False
+
+        mousePos, canvasPos = self.getLastMouseLocation()
+
+        return self._chthresModeMouseWheel(
+            ev, canvas, wheelDir, mousePos, canvasPos)
+
                 
     def _chradModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
         """Handles mouse wheel events in ``chrad`` mode.
@@ -1184,8 +1214,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         select-by-intensity is re-run at the current mouse location.
         """ 
 
-        if   wheel > 0: offset = -5
-        elif wheel < 0: offset =  5
+        if   wheel > 0: offset =  2.5
+        elif wheel < 0: offset = -2.5
         else:           return False
 
         # See comment in OrthoViewProfile._zoomModeMouseWheel
@@ -1205,3 +1235,18 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         async.idle(update, timeout=0.1)
 
         return True
+
+
+    def _chradModeChar(self, ev, canvas, key):
+        """Handles keyboard events in ``chrad`` mode. Up/down arrow key
+        presses increase/decrease the :attr:`searchRadius` respectively.
+        """
+
+        if   key == wx.WXK_UP:   wheelDir =  1
+        elif key == wx.WXK_DOWN: wheelDir = -1
+        else:                    return False
+
+        mousePos, canvasPos = self.getLastMouseLocation()
+
+        return self._chradModeMouseWheel(
+            ev, canvas, wheelDir, mousePos, canvasPos) 

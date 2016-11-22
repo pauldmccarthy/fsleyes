@@ -81,16 +81,16 @@ tempModeMap = {
     # but overrides a few key ones.
     OrthoEditProfile : OrderedDict((
 
-        # CTRL+Shift puts the 
-        # user in select mode
-        (('nav',    (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'sel'),
-        
-        (('selint',  wx.WXK_CONTROL),                'zoom'),
-        (('selint',  wx.WXK_ALT),                    'pan'),
+        (('sel',     wx.WXK_SHIFT),                  'slice'),
+        (('desel',   wx.WXK_SHIFT),                  'slice'),
         (('selint',  wx.WXK_SHIFT),                  'slice'),
-        (('selint', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'sel'),
-        (('selint', (wx.WXK_ALT,     wx.WXK_SHIFT)), 'chrad'),
-    )),
+        (('sel',     wx.WXK_ALT),                    'pan'),
+        (('desel',   wx.WXK_ALT),                    'pan'),
+        (('selint',  wx.WXK_ALT),                    'pan'),
+        (('sel',    (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'chsize'),
+        (('desel',  (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'chsize'),
+        (('selint', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'chthres'),
+        (('selint', (wx.WXK_ALT,     wx.WXK_SHIFT)), 'chrad'))),
 
     LightBoxViewProfile : OrderedDict((
         (('view', wx.WXK_CONTROL), 'zoom'), ))
@@ -143,37 +143,30 @@ altHandlerMap = {
 
         # The OrthoEditProfile is in
         # 'nav' mode by default.
-        # 
-        # Right mouse button allows
-        # the user to select voxels
-        (('nav', 'RightMouseDown'), ('sel', 'LeftMouseDown')),
-        (('nav', 'RightMouseDrag'), ('sel', 'LeftMouseDrag')),
-        (('nav', 'RightMouseUp'),   ('sel', 'LeftMouseUp')),
 
-        # When in select mode (e.g. when the
-        # shift key is held down), the right
-        # mouse button allows the user to
-        # deselect voxels.
+        # When in select mode, the right
+        # mouse button allows the user 
+        # to deselect voxels.
         (('sel',    'RightMouseDown'),  ('desel',  'LeftMouseDown')),
         (('sel',    'RightMouseDrag'),  ('desel',  'LeftMouseDrag')),
         (('sel',    'RightMouseUp'),    ('desel',  'LeftMouseUp')),
+        (('selint', 'RightMouseDown'),  ('desel',  'LeftMouseDown')),
+        (('selint', 'RightMouseDrag'),  ('desel',  'LeftMouseDrag')),
+        (('selint', 'RightMouseUp'),    ('desel',  'LeftMouseUp')), 
+ 
+        # And vice versa
+        (('desel',  'RightMouseDown'),  ('sel',    'LeftMouseDown')),
+        (('desel',  'RightMouseDrag'),  ('sel',    'LeftMouseDrag')),
+        (('desel',  'RightMouseUp'),    ('sel',    'LeftMouseUp')),
+
+        # Make the selection cursor 
+        # visible in desel mode
+        (('desel',  'MouseMove'),       ('sel',    'MouseMove')),
         
         # Middle mouse always pans.
         (('sel',    'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
         (('desel',  'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
         (('selint', 'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
-
-        (('sel',    'MouseWheel'),      ('chsize',  'MouseWheel')),
-        (('desel',  'MouseWheel'),      ('chsize',  'MouseWheel')),
-        (('selint', 'MouseWheel'),      ('chthres', 'MouseWheel')),
-
-        # Keyboard navigation works in the
-        # select modes in the same way that
-        # it works in navigate mode (as
-        # defined in the OrthoViewProfile)
-        (('sel',    'Char'), ('nav', 'Char')),
-        (('desel',  'Char'), ('nav', 'Char')),
-        (('selint', 'Char'), ('nav', 'Char')),
     )),
 
     LightBoxViewProfile : OrderedDict((
