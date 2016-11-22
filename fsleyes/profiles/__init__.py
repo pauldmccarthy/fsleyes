@@ -279,7 +279,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         self.__altHandlerMap = {}
         
         # some attributes to keep track
-        # of mouse event locations
+        # of mouse/canvas event locations
+        self.__lastCanvas    = None
         self.__lastMousePos  = None
         self.__lastCanvasPos = None
         self.__mouseDownPos  = None
@@ -317,6 +318,37 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
             for (mode, handler), (altMode, altHandler) in altHandlers.items():
                 self.addAltHandler(mode, handler, altMode, altHandler)
+
+        # The __onEvent method delegates all
+        # events based on this dictionary
+        # (we start with a tuple, but convert
+        # it to a dict below).
+        # 
+        # The eventMap is a dictionary of
+        #
+        #   { evType : (PyEventBinder, hander) }
+        #
+        # mappings. The __onEvent method needs to
+        # be able to look up the handler by its
+        # event type, but the register/deregister
+        # methods need access to the PyEventBinder
+        # object to perform the binding. Hence
+        # this slightly awkward dictionary and
+        # creation process.
+        self.__eventMap = (
+            (wx.EVT_LEFT_DOWN,    self.__onMouseDown),
+            (wx.EVT_MIDDLE_DOWN,  self.__onMouseDown),
+            (wx.EVT_RIGHT_DOWN,   self.__onMouseDown),
+            (wx.EVT_LEFT_UP,      self.__onMouseUp),
+            (wx.EVT_MIDDLE_UP,    self.__onMouseUp),
+            (wx.EVT_RIGHT_UP,     self.__onMouseUp),
+            (wx.EVT_MOTION,       self.__onMouseMove),
+            (wx.EVT_MOUSEWHEEL,   self.__onMouseWheel),
+            (wx.EVT_ENTER_WINDOW, self.__onMouseEnter),
+            (wx.EVT_LEAVE_WINDOW, self.__onMouseLeave),
+            (wx.EVT_CHAR,         self.__onChar),
+        )
+        self.__eventMap = {t.typeId : (t, f) for t, f in self.__eventMap}
                 
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
@@ -335,6 +367,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         list, and calls :meth:`.ActionProvider.destroy`.
         """
         actions.ActionProvider.destroy(self)
+        self.__lastCanvas = None
         self._viewPanel   = None
         self._overlayList = None
         self._displayCtx  = None
@@ -365,6 +398,13 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         and the corresponding 3D display space coordinates. 
         """
         return self.__lastMousePos, self.__lastCanvasPos
+
+    
+    def getLastCanvas(self):
+        """Returns a reference to the canvas which most recently generated
+        an event.
+        """
+        return self.__lastCanvas
 
 
     def addTempMode(self, mode, modifier, tempMode):
@@ -407,17 +447,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         but must make sure to call this implementation. 
         """
         for t in self.getEventTargets():
-            t.Bind(wx.EVT_LEFT_DOWN,    self.__onMouseDown)
-            t.Bind(wx.EVT_MIDDLE_DOWN,  self.__onMouseDown)
-            t.Bind(wx.EVT_RIGHT_DOWN,   self.__onMouseDown)
-            t.Bind(wx.EVT_LEFT_UP,      self.__onMouseUp)
-            t.Bind(wx.EVT_MIDDLE_UP,    self.__onMouseUp)
-            t.Bind(wx.EVT_RIGHT_UP,     self.__onMouseUp)
-            t.Bind(wx.EVT_MOTION,       self.__onMouseMove)
-            t.Bind(wx.EVT_MOUSEWHEEL,   self.__onMouseWheel)
-            t.Bind(wx.EVT_ENTER_WINDOW, self.__onMouseEnter)
-            t.Bind(wx.EVT_LEAVE_WINDOW, self.__onMouseLeave)
-            t.Bind(wx.EVT_CHAR,         self.__onChar)
+            for binder, handler in self.__eventMap.values():
+                t.Bind(binder, self.__onEvent)
 
     
     def deregister(self):
@@ -429,17 +460,24 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         but must make sure to call this implementation.
         """
         for t in self.getEventTargets():
-            t.Unbind(wx.EVT_LEFT_DOWN)
-            t.Unbind(wx.EVT_MIDDLE_DOWN)
-            t.Unbind(wx.EVT_RIGHT_DOWN)
-            t.Unbind(wx.EVT_LEFT_UP) 
-            t.Unbind(wx.EVT_MIDDLE_UP)
-            t.Unbind(wx.EVT_RIGHT_UP) 
-            t.Unbind(wx.EVT_MOTION)
-            t.Unbind(wx.EVT_MOUSEWHEEL)
-            t.Unbind(wx.EVT_ENTER_WINDOW)
-            t.Unbind(wx.EVT_LEAVE_WINDOW)
-            t.Unbind(wx.EVT_CHAR)
+            for binder, handler in self.__eventMap.values():
+                t.Unbind(binder)
+
+
+    def __onEvent(self, ev):
+        """Called when any event occurs on any of the :class:`.ViewPanel`
+        targets. Delegates the event to one of the handler functions.
+        """
+
+        evType  = ev.GetEventType()
+        source  = ev.GetEventObject()
+        handler = self.__eventMap.get(evType, (None, None))[1]
+
+        if source not in self.getEventTargets(): return
+        if handler is None:                      return
+
+        self.__lastCanvas = source
+        handler(ev)
 
     
     def __getTempMode(self, ev):
