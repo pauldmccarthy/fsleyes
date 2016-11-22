@@ -115,15 +115,17 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx):
+    def __init__(self, parent, overlayList, displayCtx, frame):
         """Create an ``OverlayInfoPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
 
-        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(
+            self, parent, overlayList, displayCtx, frame)
 
         if USE_HTML2: self.__info = wxhtml.WebView.New(self)
         else:         self.__info = HtmlWindow(        self)

@@ -63,7 +63,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
        _OverlayDisplayToolBar__makeSHOptsTools
     """
     
-    def __init__(self, parent, overlayList, displayCtx, viewPanel):
+    def __init__(self, parent, overlayList, displayCtx, frame, viewPanel):
         """Create an ``OverlyDisplyaToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
@@ -71,13 +71,20 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         :arg overlayList: The :class:`.OverlayList` instance.
         
         :arg displayCtx:  The :class:`.DisplayContext` instance.
+
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         
         :arg viewPanel:   The :class:`.ViewPanel` which this
                           ``OverlayDisplayToolBar`` is owned by.
         """
         
-        fsltoolbar.FSLeyesToolBar.__init__(
-            self, parent, overlayList, displayCtx, 24, kbFocus=True)
+        fsltoolbar.FSLeyesToolBar.__init__(self,
+                                           parent,
+                                           overlayList,
+                                           displayCtx,
+                                           frame,
+                                           height=24,
+                                           kbFocus=True)
 
         self.__viewPanel      = viewPanel
         self.__currentOverlay = None

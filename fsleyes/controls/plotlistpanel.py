@@ -40,7 +40,7 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, plotPanel):
+    def __init__(self, parent, overlayList, displayCtx, frame, plotPanel):
         """Create a ``PlotListPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
@@ -48,12 +48,15 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
         :arg overlayList: The :class:`.OverlayList`.
         
         :arg displayCtx:  The :class:`.DisplayContext` instance.
+
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         
         :arg plotPanel:   The :class:`.OverlayPlotPanel` associated with this
                           ``PlotListPanel``.
         """
 
-        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(
+            self, parent, overlayList, displayCtx, frame)
 
         self.__plotPanel = plotPanel
         self.__dsList    = elistbox.EditableListBox(

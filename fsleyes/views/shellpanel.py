@@ -42,7 +42,8 @@ class ShellPanel(viewpanel.ViewPanel):
         :arg frame:       The :class:`.FSLeyesFrame` that owns this
                           ``ShellPanel``.
         """
-        viewpanel.ViewPanel.__init__(self, parent, overlayList, displayCtx)
+        viewpanel.ViewPanel.__init__(
+            self, parent, overlayList, displayCtx, frame)
 
         _globals, _locals = runscript.fsleyesScriptEnvironment(frame,
                                                                overlayList,

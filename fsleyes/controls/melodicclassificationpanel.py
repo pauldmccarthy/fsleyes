@@ -57,7 +57,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
     """
 
     
-    def __init__(self, parent, overlayList, displayCtx):
+    def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``MelodicClassificationPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
@@ -66,26 +66,28 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """ 
-        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(
+            self, parent, overlayList, displayCtx, frame)
 
         self.__disabledText = wx.StaticText(
             self,
             style=(wx.ALIGN_CENTRE_HORIZONTAL |
                    wx.ALIGN_CENTRE_VERTICAL))
 
-
         self.__lut           = fslcm.getLookupTable('melodic-classes')
         self.__notebook      = notebook.Notebook(self)
         self.__componentGrid = componentgrid.ComponentGrid(
             self.__notebook,
-            self._overlayList,
-            self._displayCtx,
+            overlayList,
+            displayCtx,
+            frame,
             self.__lut)
 
         self.__labelGrid     = labelgrid.LabelGrid(
             self.__notebook,
-            self._overlayList,
-            self._displayCtx,
+            overlayList,
+            displayCtx,
+            frame,
             self.__lut)
 
         self.__loadButton  = wx.Button(self)

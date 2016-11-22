@@ -71,7 +71,7 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
 
     """
 
-    def __init__(self, parent, overlayList, displayCtx):
+    def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``ClusterPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
@@ -79,8 +79,11 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
         :arg overlayList: The :class:`.OverlayList` instance.
 
         :arg displayCtx:  The :class:`.DisplayContext` instance.
+
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
-        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(
+            self, parent, overlayList, displayCtx, frame)
 
         self.__disabledText = wx.StaticText(
             self,

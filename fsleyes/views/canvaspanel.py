@@ -218,7 +218,7 @@ class CanvasPanel(viewpanel.ViewPanel):
     """
     
 
-    def __init__(self, parent, overlayList, displayCtx, sceneOpts):
+    def __init__(self, parent, overlayList, displayCtx, frame, sceneOpts):
         """Create a ``CanvasPanel``.
 
         :arg parent:       The :mod:`wx` parent object.
@@ -232,7 +232,8 @@ class CanvasPanel(viewpanel.ViewPanel):
                            sub-classes.
         """
 
-        viewpanel.ViewPanel.__init__(self, parent, overlayList, displayCtx)
+        viewpanel.ViewPanel.__init__(
+            self, parent, overlayList, displayCtx, frame)
 
         self.__opts = sceneOpts
 
@@ -532,7 +533,10 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         if self.__colourBar is None:
             self.__colourBar = colourbarpanel.ColourBarPanel(
-                self.__containerPanel, self._overlayList, self._displayCtx)
+                self.__containerPanel,
+                self.getOverlayList(),
+                self.getDisplayContext(),
+                self.getFrame())
             
             bg = self.getSceneOptions().bgColour
             fg = colourmaps.complementaryColour(bg) 

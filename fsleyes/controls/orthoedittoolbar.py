@@ -70,19 +70,20 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, ortho):
+    def __init__(self, parent, overlayList, displayCtx, frame, ortho):
         """Create an ``OrthoEditToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """
         fsltoolbar.FSLeyesToolBar.__init__(self,
                                            parent,
                                            overlayList,
                                            displayCtx,
-                                           24,
+                                           height=24,
                                            kbFocus=True)
 
         self.__orthoPanel = ortho

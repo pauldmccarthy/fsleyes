@@ -70,7 +70,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         atlases which have matching regions will be highlighted in bold.
     """ 
 
-    def __init__(self, parent, overlayList, displayCtx, atlasPanel):
+    def __init__(self, parent, overlayList, displayCtx, frame, atlasPanel):
         """Create an ``AtlasOverlayPanel``.
 
         :arg parent:      the :mod:`wx` parent object.
@@ -78,12 +78,15 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         :arg overlayList: The :class:`.OverlayList` instance.
         
         :arg displayCtx:  The :class:`.DisplayContext` instance.
+
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         
         :arg atlasPanel:  The :class:`.AtlasPanel` instance that has created
                           this ``AtlasInfoPanel``. 
         """
 
-        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(
+            self, parent, overlayList, displayCtx, frame)
 
         # See the enableAtlasPanel method 
         # for info about this attribute.

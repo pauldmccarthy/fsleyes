@@ -59,7 +59,7 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, plotPanel):
+    def __init__(self, parent, overlayList, displayCtx, frame, plotPanel):
         """Create a ``PlotControlPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
@@ -67,6 +67,8 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         :arg overlayList: The :class:`.OverlayList`.
         
         :arg displayCtx:  The :class:`.DisplayContext` instance.
+
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         
         :arg plotPanel:   The :class:`.PlotPanel` associated with this
                           ``PlotControlPanel``.
@@ -76,6 +78,7 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
                                                parent,
                                                overlayList,
                                                displayCtx,
+                                               frame,
                                                kbFocus=True)
         
         self.__plotPanel = plotPanel

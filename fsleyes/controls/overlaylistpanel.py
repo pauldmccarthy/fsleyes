@@ -60,6 +60,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
                  parent,
                  overlayList,
                  displayCtx,
+                 frame,
                  showVis=True,
                  showGroup=True,
                  showSave=True,
@@ -73,6 +74,8 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         :arg overlayList:     An :class:`.OverlayList` instance.
         
         :arg displayCtx:      A :class:`.DisplayContext` instance.
+
+        :arg frame:           The :class:`.FSLeyesFrame` instance.
         
         :arg showVis:         If ``True`` (the default), a button will be shown
                               alongside each overlay, allowing the user to
@@ -108,7 +111,8 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         if filterFunc is None:
             filterFunc = defaultFilter
         
-        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(
+            self, parent, overlayList, displayCtx, frame)
 
         self.__showVis         = showVis
         self.__showGroup       = showGroup

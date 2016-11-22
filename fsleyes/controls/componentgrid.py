@@ -48,17 +48,19 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
     """
 
     
-    def __init__(self, parent, overlayList, displayCtx, lut):
+    def __init__(self, parent, overlayList, displayCtx, frame, lut):
         """Create a ``ComponentGrid``.
 
         :arg parent:      The ``wx`` parent object.
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg lut:         The :class:`.LookupTable` instance used to colour
                           each label tag.
         """
         
-        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(
+            self, parent, overlayList, displayCtx, frame)
 
         self.__lut  = lut
         self.__grid = widgetgrid.WidgetGrid(

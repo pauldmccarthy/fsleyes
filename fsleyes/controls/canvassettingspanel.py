@@ -45,12 +45,13 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
     """
 
     
-    def __init__(self, parent, overlayList, displayCtx, canvasPanel):
+    def __init__(self, parent, overlayList, displayCtx, frame, canvasPanel):
         """Create a ``CanvasSettingsPanel``.
 
         :arg parent:      The :mod:`wx` parent object
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg canvasPanel: The :class:`.CanvasPanel` instance.
         """
         
@@ -58,6 +59,7 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
                                                parent,
                                                overlayList,
                                                displayCtx,
+                                               frame,
                                                kbFocus=True)
 
         self.__canvasPanel = canvasPanel

@@ -54,12 +54,13 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx):
+    def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``LightBoxPanel``.
 
         :arg parent:      A :mod:`wx` parent object.
         :arg overlayList: A :class:`.OverlayList` instance.
         :arg displayCtx:  A :class:`.DisplayContext` instance.
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
 
         sceneOpts = lightboxopts.LightBoxOpts()
@@ -68,6 +69,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                                          parent,
                                          overlayList,
                                          displayCtx,
+                                         frame,
                                          sceneOpts)
 
         self.__scrollbar = wx.ScrollBar(

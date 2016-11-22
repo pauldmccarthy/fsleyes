@@ -122,12 +122,13 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx):
+    def __init__(self, parent, overlayList, displayCtx, frame):
         """Create an ``OrthoPanel``.
 
         :arg parent:      The :mod:`wx` parent.
         :arg overlayList: An :class:`.OverlayList` instance.
         :arg displayCtx:  A :class:`.DisplayContext` instance.
+        :arg displayCtx:  A :class:`.FSLeyesFrame` instance.
         """
 
         sceneOpts = orthoopts.OrthoOpts()
@@ -136,6 +137,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                          parent,
                                          overlayList,
                                          displayCtx,
+                                         frame,
                                          sceneOpts)
 
         contentPanel = self.getContentPanel()

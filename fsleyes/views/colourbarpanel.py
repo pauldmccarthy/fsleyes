@@ -44,6 +44,7 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
                  parent,
                  overlayList,
                  displayCtx,
+                 frame,
                  orientation='horizontal'):
         """Create a ``ColourBarPanel``.
 
@@ -53,11 +54,14 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         
+        :arg frame:       The :class:`.FSLeyesFrame`.
+        
         :arg orientation: Initial orientation - either ``'horizontal'`` (the
                           default) or ``'vertical'``.
         """
 
-        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(
+            self, parent, overlayList, displayCtx, frame)
 
         self.__cbPanel = cbarcanvas.WXGLColourBarCanvas(self)
 

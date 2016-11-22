@@ -43,17 +43,23 @@ class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
     """
 
     
-    def __init__(self, parent, overlayList, displayCtx, lb):
+    def __init__(self, parent, overlayList, displayCtx, frame, lb):
         """Create a ``LightBoxToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg lb:          The :class:`.LightBoxPanel` instance.
         """
 
-        fsltoolbar.FSLeyesToolBar.__init__(
-            self, parent, overlayList, displayCtx, 24, kbFocus=True)
+        fsltoolbar.FSLeyesToolBar.__init__(self,
+                                           parent,
+                                           overlayList,
+                                           displayCtx,
+                                           frame,
+                                           height=24,
+                                           kbFocus=True)
         
         self.lightBoxPanel = lb
 

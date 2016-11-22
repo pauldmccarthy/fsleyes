@@ -130,12 +130,13 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx):
+    def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``TimeSeriesPanel``.
 
         :arg parent:      A :mod:`wx` parent object.
         :arg overlayList: An :class:`.OverlayList` instance.
         :arg displayCtx:  A :class:`.DisplayContext` instance.
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
 
         # If the currently selected image is from 
@@ -151,7 +152,12 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         else:                 initialState = {featImage : True}
 
         plotpanel.OverlayPlotPanel.__init__(
-            self, parent, overlayList, displayCtx, initialState=initialState)
+            self,
+            parent,
+            overlayList,
+            displayCtx,
+            frame,
+            initialState=initialState)
 
         self.addListener('plotMode',  self._name, self.draw)
         self.addListener('usePixdim', self._name, self.draw)

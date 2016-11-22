@@ -139,15 +139,17 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx):
+    def __init__(self, parent, overlayList, displayCtx, frame):
         """Create an ``AtlasPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg frame:       The :class:`.FSLeyesFrame` instance.        
         """
 
-        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(
+            self, parent, overlayList, displayCtx, frame)
 
         # Cache of loaded atlases
         # and enabled atlas overlays.
@@ -162,12 +164,12 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         self.SetSizer(self.__sizer)
 
         self.__infoPanel = atlasinfopanel.AtlasInfoPanel(
-            self.__notebook, overlayList, displayCtx, self)
+            self.__notebook, overlayList, displayCtx, frame, self)
 
         # Overlay panel, containing a list of regions,
         # allowing the user to add/remove overlays
         self.__overlayPanel = atlasoverlaypanel.AtlasOverlayPanel(
-            self.__notebook, overlayList, displayCtx, self)
+            self.__notebook, overlayList, displayCtx, frame, self)
         
         self.__notebook.AddPage(self.__infoPanel,
                                 strings.titles[self.__infoPanel])

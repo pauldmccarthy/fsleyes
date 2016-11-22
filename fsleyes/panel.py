@@ -36,8 +36,12 @@ should be made available available to the user can be added as
               displayCtx  = dc.DisplayContext(overlayList)
 
               # the parent argument is some wx parent
-              # object such as a wx.Frame or wx.Panel
-              orthoPanel  = op.OrthoPanel(parent, overlayList, displayCtx)
+              # object such as a wx.Frame or wx.Panel.
+              # Pass in None as the FSLeyesFrame
+              orthoPanel  = op.OrthoPanel(parent,
+                                          overlayList,
+                                          displayCtx,
+                                          None)
 """
 
 
@@ -67,17 +71,19 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
     and the :class:`.FSLeyesToolBar`.
 
     
-    A ``_FSLeyesPanel`` has the following attributes, intended to be used by
+    A ``_FSLeyesPanel`` has the following methods, available for use by
     subclasses:
-    
-      - :attr:`_overlayList`: A reference to the :class:`.OverlayList`
-        instance which contains the images to be displayed.
-    
-      - :attr:`_displayCtx`: A reference to the :class:`.DisplayContext`
-        instance, which contains display related properties about the
-        :attr:`_overlayList`.
-    
-      - :attr:`_name`: A unique name for this :class:`_FSLeyesPanel`.
+
+    .. autosummary::
+       :nosignatures:
+
+       getName
+       getFrame
+       getOverlayList
+       getDisplayContext
+       setNavOrder
+       destroy
+       destroyed
 
 
     .. note:: When a ``_FSLeyesPanel`` is no longer required, the
@@ -85,12 +91,15 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
     """ 
 
     
-    def __init__(self, overlayList, displayCtx, kbFocus=False):
+    def __init__(self, overlayList, displayCtx, frame, kbFocus=False):
         """Create a :class:`_FSLeyesPanel`.
 
         :arg overlayList: A :class:`.OverlayList` instance.
         
         :arg displayCtx:  A :class:`.DisplayContext` instance.
+
+        :arg frame:       The :class:`.FSLeyesFrame` that created this
+                          ``_FSLeyesPanel``. May be ``None``.
 
         :arg kbFocus:     If ``True``, a keyboard event handler is configured
                           to intercept ``Tab`` and ``Shift+Tab`` keyboard
@@ -108,9 +117,16 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
                 'displayCtx must be a '
                 '{} instance'.format( displaycontext.DisplayContext.__name__))
 
-        self._overlayList = overlayList
-        self._displayCtx  = displayCtx
-        self._name        = '{}_{}'.format(self.__class__.__name__, id(self))
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
+        self.__frame       = frame
+        self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
+
+        # TODO Remove these attributes. Access 
+        #      should be through the methods.
+        self._overlayList = self.__overlayList
+        self._displayCtx  = self.__displayCtx
+        self._name        = self.__name
         
         self.__destroyed  = False
         self.__navOrder   = None
@@ -208,16 +224,29 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         self.__navOrder[nextIdx].SetFocus()
 
 
+    def getName(self):
+        """Returns a unique name associated with this ``_FSLeyesPanel``. """
+        return self.__name
+
+    
+    def getFrame(self):
+        """Returns the :class:`.FSLeyesFrame` which created this
+        ``_FSLeyesPanel``. May be ``None``, if this panel was not created
+        by a ``FSLeyesFrame``.
+        """
+        return self.__frame
+
+    
     def getDisplayContext(self):
         """Returns a reference to the :class:`.DisplayContext` that is
         associated with this ``_FSLeyesPanel``.
         """
-        return self._displayCtx
+        return self.__displayCtx
 
     
     def getOverlayList(self):
         """Returns a reference to the :class:`.OverlayList`. """
-        return self._overlayList
+        return self.__overlayList
 
         
     def destroy(self):
@@ -250,10 +279,14 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         ``_overlayList`` and ``_displayCtx`` references.
         """
         actions.ActionProvider.destroy(self)
-        self._displayCtx  = None
-        self._overlayList = None
-        self.__navOrder   = None
-        self.__destroyed  = True
+        self.__frame       = None
+        self.__displayCtx  = None
+        self.__overlayList = None
+        self.__navOrder    = None
+        self.__destroyed   = True
+
+        self._displayCtx   = None
+        self._overlayList  = None 
 
 
     def destroyed(self):
@@ -305,11 +338,17 @@ else:
 class FSLeyesPanel(six.with_metaclass(FSLeyesPanelMeta,
                                       _FSLeyesPanel,
                                       FSLeyesPanelBase)):
-    """The ``FSLeyesPanel`` is the base class for all view and control panels in
-    *FSLeyes*. See the :mod:`fsleyes` documentation for more details.
+    """The ``FSLeyesPanel`` is the base class for all view and control panels 
+    in *FSLeyes*. See the :mod:`fsleyes` documentation for more details.
     """
     
-    def __init__(self, parent, overlayList, displayCtx, *args, **kwargs):
+    def __init__(self,
+                 parent,
+                 overlayList,
+                 displayCtx,
+                 frame,
+                 *args,
+                 **kwargs):
 
         # Slightly ugly way of supporting the _FSLeyesPanel
         # kbFocus argument. In order to catch keyboard events,
@@ -324,7 +363,7 @@ class FSLeyesPanel(six.with_metaclass(FSLeyesPanelMeta,
             kwargs['style'] = style | wx.WANTS_CHARS
 
         FSLeyesPanelBase.__init__(self, parent, *args, **kwargs)
-        _FSLeyesPanel.__init__(self, overlayList, displayCtx, kbFocus)
+        _FSLeyesPanel.__init__(self, overlayList, displayCtx, frame, kbFocus)
 
 
 class FSLeyesSettingsPanel(FSLeyesPanel):

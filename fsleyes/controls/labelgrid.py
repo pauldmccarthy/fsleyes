@@ -41,17 +41,19 @@ class LabelGrid(fslpanel.FSLeyesPanel):
     """
 
     
-    def __init__(self, parent, overlayList, displayCtx, lut):
+    def __init__(self, parent, overlayList, displayCtx, frame, lut):
         """Create a ``LabelGrid``.
 
         :arg parent:      The ``wx`` parent object.
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg lut:         The :class:`.LookupTable` to be used to colour
                           component tags.
         """
         
-        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(
+            self, parent, overlayList, displayCtx, frame)
 
         self.__lut  = lut
         self.__grid = widgetgrid.WidgetGrid(

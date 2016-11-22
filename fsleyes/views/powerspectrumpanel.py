@@ -78,19 +78,20 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
     """If ``True``, the x axis is scaled so that it represents frequency. """
 
     
-    def __init__(self, parent, overlayList, displayCtx):
+    def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``PowerSpectrumPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
+        :arg frame:       The :class:`.FSLeyesFrame`.
         """
         
         plotpanel.OverlayPlotPanel.__init__(self,
                                             parent,
                                             overlayList,
-                                            displayCtx)
-
+                                            displayCtx,
+                                            frame)
 
         self.addListener('plotFrequencies', self._name, self.draw)
         self.addListener('plotMelodicICs',

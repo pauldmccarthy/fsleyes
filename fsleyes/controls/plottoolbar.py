@@ -23,17 +23,23 @@ class PlotToolBar(fsltoolbar.FSLeyesToolBar):
     are common to all :class:`.OverlayPlotPanel` types.
     """
 
-    def __init__(self, parent, overlayList, displayCtx, plotPanel):
+    def __init__(self, parent, overlayList, displayCtx, frame, plotPanel):
         """Create a ``PlotToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg plotPanel:   The :class:`.PlotPanel` instance.
         """
         
-        fsltoolbar.FSLeyesToolBar.__init__(
-            self, parent, overlayList, displayCtx, 24, kbFocus=True)
+        fsltoolbar.FSLeyesToolBar.__init__(self,
+                                           parent,
+                                           overlayList,
+                                           displayCtx,
+                                           frame,
+                                           height=24,
+                                           kbFocus=True)
 
         self.__plotPanel = plotPanel
 

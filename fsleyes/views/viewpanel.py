@@ -91,12 +91,13 @@ class ViewPanel(fslpanel.FSLeyesPanel):
     """The current interaction profile for this ``ViewPanel``. """
 
     
-    def __init__(self, parent, overlayList, displayCtx):
+    def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``ViewPanel``. All arguments are passed through to the
         :class:`.FSLeyesPanel` constructor.
         """
 
-        fslpanel.FSLeyesPanel.__init__(self, parent, overlayList, displayCtx)
+        fslpanel.FSLeyesPanel.__init__(
+            self, parent, overlayList, displayCtx, frame)
 
         self.__profileManager = profiles.ProfileManager(
             self, overlayList, displayCtx)
@@ -251,6 +252,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                             panel = panelType(parent,
                                               overlayList,
                                               displayCtx,
+                                              frame,
                                               *args,
                                               **kwargs)
 
@@ -278,8 +280,12 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # The PaneInfo Name is the control panel class name -
         # this is used for saving and restoring perspectives.
         paneInfo  = aui.AuiPaneInfo().Name(panelType.__name__)
-        window    = panelType(
-            self, self._overlayList, self._displayCtx, *args, **kwargs)
+        window    = panelType(self,
+                              self.getOverlayList(),
+                              self.getDisplayContext(),
+                              self.getFrame(),
+                              *args,
+                              **kwargs)
         isToolbar = isinstance(window, fsltoolbar.FSLeyesToolBar)
 
         if isToolbar:

@@ -57,18 +57,20 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
     """
 
     
-    def __init__(self, parent, overlayList, displayCtx):
+    def __init__(self, parent, overlayList, displayCtx, frame):
         """Create an ``OverlayDisplayPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
 
         fslpanel.FSLeyesSettingsPanel.__init__(self,
                                                parent,
                                                overlayList,
                                                displayCtx,
+                                               frame,
                                                kbFocus=True)
 
         displayCtx .addListener('selectedOverlay',

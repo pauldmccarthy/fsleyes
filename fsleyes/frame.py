@@ -375,15 +375,7 @@ class FSLeyesFrame(wx.Frame):
             self.__overlayList,
             parent=self.__displayCtx)
 
-        if panelCls is views.ShellPanel:
-            panel = panelCls(self.__mainPanel,
-                             self.__overlayList,
-                             childDC,
-                             self)
-        else:
-            panel = panelCls(self.__mainPanel,
-                             self.__overlayList,
-                             childDC)
+        panel = panelCls(self.__mainPanel, self.__overlayList, childDC, self)
 
         log.debug('Created new {} ({}) with DisplayContext {}'.format(
             panelCls.__name__,

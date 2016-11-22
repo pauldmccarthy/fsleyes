@@ -102,11 +102,12 @@ class LocationPanel(fslpanel.FSLeyesPanel):
     """ 
 
         
-    def __init__(self, parent, overlayList, displayCtx):
+    def __init__(self, parent, overlayList, displayCtx, frame):
         """Creat a ``LocationPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """
 
@@ -114,6 +115,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
                                        parent,
                                        overlayList,
                                        displayCtx,
+                                       frame,
                                        kbFocus=True)
 
         # Whenever the selected overlay changes,

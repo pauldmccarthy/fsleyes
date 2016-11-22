@@ -76,16 +76,17 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx):
+    def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``HistogramPanel``.
 
         :arg parent:      The :mod:`wx` parent.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
 
         plotpanel.OverlayPlotPanel.__init__(
-            self, parent, overlayList, displayCtx)
+            self, parent, overlayList, displayCtx, frame)
 
         self.addListener('histType', self._name, self.draw)
 

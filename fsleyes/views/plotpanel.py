@@ -189,6 +189,7 @@ class PlotPanel(viewpanel.ViewPanel):
                  parent,
                  overlayList,
                  displayCtx,
+                 frame,
                  interactive=True):
         """Create a ``PlotPanel``.
 
@@ -198,12 +199,14 @@ class PlotPanel(viewpanel.ViewPanel):
         
         :arg displayCtx:  A :class:`.DisplayContext` instance.
         
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
+        
         :arg interactive: If ``True`` (the default), the canvas is configured
                           so the user can pan/zoom the plot with the mouse.
         """
          
         viewpanel.ViewPanel.__init__(
-            self, parent, overlayList, displayCtx)
+            self, parent, overlayList, displayCtx, frame)
 
         figure = plt.Figure()
         axis   = figure.add_subplot(111)
