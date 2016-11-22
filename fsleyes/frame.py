@@ -84,6 +84,7 @@ class FSLeyesFrame(wx.Frame):
        getDisplayContext
        getViewPanels
        getViewPanelInfo
+       getFocusedViewPanel
        addViewPanel
        viewPanelDefaultLayout
        removeViewPanel
@@ -91,6 +92,7 @@ class FSLeyesFrame(wx.Frame):
        getAuiManager
        refreshPerspectiveMenu
        runScript
+       populateMenu
 
 
     **Actions**
@@ -495,45 +497,54 @@ class FSLeyesFrame(wx.Frame):
                                       self)
         rsa(script)
 
-        
-    def __addViewPanelMenu(self, panel, title):
-        """Called by :meth:`addViewPanel`. Adds a menu item for the newly
-        created :class:`.ViewPanel` instance.
 
-        :arg panel: The newly created ``ViewPanel`` instance.
-        :arg title: The name given to the ``panel``.
+    def populateMenu(self, menu, target, actionNames=None, ignoreFocus=False):
+        """Creates menu items for every :class:`.Action` available on the
+        given ``target``, or for every named action in the ``actionNames``
+        list.
+
+        Called by the :meth:`__addViewPanelMenu` method to generate a menu
+        for new :class:`.ViewPanel` instances, but can also be called for
+        other purposes.
+        
+        :arg menu:        The ``wx.Menu`` to be populated.
+
+        :arg target:      The object which has actions to be bound to the 
+                          menu items. 
+        
+        :arg actionNames: If provided, only menu items for the actions named
+                          in this list will be created.
+        
+        :arg ignoreFocus: Passed through to the :meth:`__onViewPanelMenuItem`
+                          method for all created menu items.
         """
 
-        actionz = panel.getActions()
+        if actionNames is None:
+            actionNames, actionObjs = zip(*target.getActions())
+        else:
+            actionObjs = [target.getAction(name) for name in actionNames]
+            
 
-        if len(actionz) == 0:
-            return
-
-        menu    = wx.Menu()
-        submenu = self.__settingsMenu.AppendSubMenu(menu, title)
-
-        self.__viewPanelMenus[panel] = submenu
-
-        for actionName, actionObj in actionz:
+        for actionName, actionObj in zip(actionNames, actionObjs):
 
             # If actionObj is None, this is a
             # hacky hint to insert a separator
             # - see ActionProvider.getActions.
             if actionObj is None:
                 menu.AppendSeparator()
-                continue
+                continue 
+            
+            title    = strings  .actions.get((target, actionName), actionName)
+            shortcut = shortcuts.actions.get((target, actionName))
 
-            title    = strings.actions[panel, actionName]
-            shortcut = shortcuts.actions.get((panel, actionName))
+            if shortcut is not None:
+                title = '{}\t{}'.format(title, shortcut)
 
             if isinstance(actionObj, actions.ToggleAction):
                 itemType = wx.ITEM_CHECK
             else:
                 itemType = wx.ITEM_NORMAL
-
-            if shortcut is not None:
-                title = '{}\t{}'.format(title, shortcut)
-
+ 
             menuItem = menu.Append(wx.ID_ANY, title, kind=itemType)
 
             # If this action can be called from a
@@ -550,17 +561,39 @@ class FSLeyesFrame(wx.Frame):
                 shortcut     = menuItem.GetAccel().ToString()
                 shortcutList = self.__viewPanelShortcuts.get(shortcut, {})
 
-                shortcutList[panel] = actionName
+                shortcutList[target] = actionName
 
                 self.__viewPanelShortcuts[shortcut] = shortcutList
 
             # The __onViewPanelMenuItem method
             # needs to know which view panel/action
             # is associated with each callback.
-            def wrapper(ev, vp=panel, aname=actionName, sc=shortcut):
-                self.__onViewPanelMenuItem(vp, aname, sc)
+            def wrapper(ev, vp=target, aname=actionName, sc=shortcut):
+                self.__onViewPanelMenuItem(vp, aname, sc, ignoreFocus)
 
-            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem, wrapper)
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem, wrapper) 
+
+        
+    def __addViewPanelMenu(self, panel, title):
+        """Called by :meth:`addViewPanel`. Adds a menu item for the newly
+        created :class:`.ViewPanel` instance.
+
+        :arg panel: The newly created ``ViewPanel`` instance.
+        :arg title: The name given to the ``panel``.
+        """
+
+        actionz = panel.getActions()
+
+        if len(actionz) == 0:
+            return
+
+        menu    = wx.Menu()
+        submenu = self.__settingsMenu.AppendSubMenu(menu, title)
+        self.__viewPanelMenus[panel] = submenu
+
+        # Most of the work is
+        # done in populateMenu
+        self.populateMenu(menu, panel)
 
         # We add a 'Close' action to the
         # menu for every panel, but put
@@ -578,19 +611,30 @@ class FSLeyesFrame(wx.Frame):
         self.removeFocusedViewPanel.bindToWidget(self, wx.EVT_MENU, closeItem)
 
 
-    def __onViewPanelMenuItem(self, viewPanel, actionName, shortcut):
-        """Called when a menu item from a :class:`.ViewPanel` menu is selected,
-        either via menu selection, or from a bound keyboard shortcut. This
-        callback is configured in the :meth:`__addViewPanelMenu` method.
+    def __onViewPanelMenuItem(self,
+                              target,
+                              actionName,
+                              shortcut,
+                              ignoreFocus=False):
+        """Called when a menu item from a :class:`.ViewPanel` menu, or a menu
+        otherwise created via :meth:`createMenu`, is selected, either via menu 
+        selection, or from a bound keyboard shortcut. This callback is 
+        configured in the :meth:`createMenu` method.
 
-        :arg viewPanel:  The :class:`.ViewPanel` associated with the menu item.
+        :arg target:      The target instance for the action, most often a
+                          :class:`.ViewPanel`.
         
-        :arg actionName: The name of the :class:`.Action` which is associated
-                         with the menu item.
+        :arg actionName:  The name of the :class:`.Action` which is associated
+                          with the menu item.
         
-        :arg shortcut:   The keyboard shortcut code (see
-                         ``wx.AcceleratorEntry.ToString``) associated with the
-                         menu item, of ``None`` if there is no shortcut.
+        :arg shortcut:    The keyboard shortcut code (see
+                          ``wx.AcceleratorEntry.ToString``) associated with the
+                          menu item, of ``None`` if there is no shortcut.
+
+        :arg ignoreFocus: If ``True``, the action is executed on the 
+                          ``target``. Otherwise (the default), the action 
+                          is executed on the currently focused 
+                          :class:`.ViewPanel`. 
         """
 
         # Hacky way to see if this menu item
@@ -604,10 +648,10 @@ class FSLeyesFrame(wx.Frame):
         # If there is no keyboard shortcut associated
         # with this action, or the menu item was selected
         # directly, we just execute the action directly
-        # on the view panel which is associated with the
+        # on the target which is associated with the
         # menu.
-        if shortcut is None or (not keyDown):
-            viewPanel.getAction(actionName)()
+        if ignoreFocus or shortcut is None or (not keyDown):
+            target.getAction(actionName)()
             return
 
         # Otherwise we assume that the menu item was
