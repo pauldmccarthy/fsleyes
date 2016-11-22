@@ -261,10 +261,10 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                         passed to the constructor.
         """
 
-        location  = kwargs.pop('location',  wx.BOTTOM)
+        location  = kwargs.pop('location',  None)
         floatPane = kwargs.pop('floatPane', False)
         
-        if location not in (wx.TOP, wx.BOTTOM, wx.LEFT, wx.RIGHT):
+        if location not in (None, wx.TOP, wx.BOTTOM, wx.LEFT, wx.RIGHT):
             raise ValueError('Invalid value for location')
 
         window = self.__panels.get(panelType, None)
@@ -277,14 +277,18 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # Otherwise, create a new panel of the specified type.
         # The PaneInfo Name is the control panel class name -
         # this is used for saving and restoring perspectives.
-        paneInfo = aui.AuiPaneInfo().Name(panelType.__name__)
-        window   = panelType(
+        paneInfo  = aui.AuiPaneInfo().Name(panelType.__name__)
+        window    = panelType(
             self, self._overlayList, self._displayCtx, *args, **kwargs)
+        isToolbar = isinstance(window, fsltoolbar.FSLeyesToolBar)
 
-        if isinstance(window, fsltoolbar.FSLeyesToolBar):
+        if isToolbar:
 
             # ToolbarPane sets the panel layer to 10
             paneInfo.ToolbarPane()
+
+            if window.GetOrient() == wx.VERTICAL:
+                paneInfo.GripperTop()
 
             # We are going to put any new toolbars on 
             # the top of the panel, below any existing
@@ -321,13 +325,14 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # by the location parameter
         if floatPane is False:
 
-            if isinstance(window, fsltoolbar.FSLeyesToolBar):
-                location = aui.AUI_DOCK_TOP
-            else:
-                if   location == wx.TOP:    location = aui.AUI_DOCK_TOP
-                elif location == wx.BOTTOM: location = aui.AUI_DOCK_BOTTOM
-                elif location == wx.LEFT:   location = aui.AUI_DOCK_LEFT
-                elif location == wx.RIGHT:  location = aui.AUI_DOCK_RIGHT
+            if location is None:
+                if isToolbar: location = aui.AUI_DOCK_TOP
+                else:         location = aui.AUI_DOCK_BOTTOM
+
+            elif location == wx.TOP:    location = aui.AUI_DOCK_TOP
+            elif location == wx.BOTTOM: location = aui.AUI_DOCK_BOTTOM
+            elif location == wx.LEFT:   location = aui.AUI_DOCK_LEFT
+            elif location == wx.RIGHT:  location = aui.AUI_DOCK_RIGHT
 
             paneInfo.Direction(location)
 

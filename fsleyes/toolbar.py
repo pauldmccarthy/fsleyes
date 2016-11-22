@@ -59,6 +59,7 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
                  overlayList,
                  displayCtx,
                  height=32,
+                 orient=wx.HORIZONTAL,
                  *args,
                  **kwargs):
         """Create a ``FSLeyesToolBar``.
@@ -81,6 +82,9 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         All other arguments are passed through to
         :meth:`.FSLeyesPanel.__init__`.
         """
+
+        if orient not in (wx.HORIZONTAL, wx.VERTICAL):
+            raise ValueError('Invalid orientation: {}'.format(orient))
         
         fslpanel.FSLeyesPanel.__init__(self,
                                        parent,
@@ -92,6 +96,7 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         self.__tools      = []
         self.__index      = 0
         self.__numVisible = None
+        self.__orient     = orient
 
         font = self.GetFont()
         self.SetFont(font.Smaller())
@@ -99,16 +104,20 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         # BU_NOTEXT causes segfault under OSX
         if wx.Platform == '__WXMAC__': style = wx.BU_EXACTFIT 
         else:                          style = wx.BU_EXACTFIT | wx.BU_NOTEXT
-            
-        lBmp = icons.loadBitmap('thinLeftArrow{}' .format(height))
-        rBmp = icons.loadBitmap('thinRightArrow{}'.format(height))
+
+        if orient == wx.HORIZONTAL:
+            lBmp = icons.loadBitmap('thinLeftArrow{}' .format(height))
+            rBmp = icons.loadBitmap('thinRightArrow{}'.format(height))
+        else:
+            lBmp = icons.loadBitmap('thinUpArrow{}'  .format(height))
+            rBmp = icons.loadBitmap('thinDownArrow{}'.format(height)) 
         self.__leftButton  = wx.Button(self, style=style)
         self.__rightButton = wx.Button(self, style=style)
 
         self.__leftButton.SetBitmap(lBmp)
         self.__rightButton.SetBitmap(rBmp)
 
-        self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.__sizer = wx.BoxSizer(orient)
         self.SetSizer(self.__sizer) 
 
         self.__leftButton .Bind(wx.EVT_BUTTON,     self.__onLeftButton)
@@ -116,6 +125,14 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         self              .Bind(wx.EVT_MOUSEWHEEL, self.__onMouseWheel)
         self              .Bind(wx.EVT_SIZE,       self.__drawToolBar)
 
+
+
+    def GetOrient(self):
+        """Returns the orientation of this ``FSLeyesToolBar``, either
+        ``wx.HORIZONTAL`` or ``wx.VERTICAL``.
+        """
+        return self.__orient
+        
 
     def MakeLabelledTool(self, tool, labelText, labelSide=wx.TOP):
         """Creates a panel containing the given tool, and a label for the
@@ -254,35 +271,47 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
 
         # Calculate the minimum/maximum size
         # for this toolbar, given the addition
-        # of the new tool
-        ttlWidth  = 0
+        # of the new tool. If the orientation
+        # of this toolbar (set in __init__) is
+        # HORIZONTAL, the ttlSpace is used to
+        # store total width, otherwise it is
+        # used to store total height.
+        ttlSpace  = 0
         minWidth  = 0
         minHeight = 0
 
         for tool in self.__tools:
+            
             tw, th = tool.GetBestSize().Get()
             if tw > minWidth:  minWidth  = tw
             if th > minHeight: minHeight = th
 
-            ttlWidth += tw
+            if self.__orient == wx.HORIZONTAL: ttlSpace += tw
+            else:                              ttlSpace += th
 
-        leftWidth  = self.__leftButton .GetBestSize().GetWidth()
-        rightWidth = self.__rightButton.GetBestSize().GetWidth()
+        if self.__orient == wx.HORIZONTAL:
+            leftWidth  = self.__leftButton .GetBestSize().GetWidth()
+            rightWidth = self.__rightButton.GetBestSize().GetWidth()
+            minWidth   = minWidth + leftWidth + rightWidth
+        else:
+            topHeight    = self.__leftButton .GetBestSize().GetHeight()
+            bottomHeight = self.__rightButton.GetBestSize().GetHeight()
+            minHeight    = minHeight + topHeight + bottomHeight
 
-        minWidth = minWidth + leftWidth + rightWidth
+        if self.__orient == wx.HORIZONTAL: size = (ttlSpace, minHeight)
+        else:                              size = (minWidth, ttlSpace)
 
         # The agw.AuiManager does not honour the best size when
         # toolbars are floated, but it does honour the minimum
         # size. So I'm just setting the minimum size to the best
         # size.
-        log.debug('Setting toolbar sizes: min {}, best {}'.format(
-            (ttlWidth, minHeight), (ttlWidth, minHeight)))
-        
-        self.SetMinSize((   ttlWidth, minHeight))
-        self.SetMaxSize((   ttlWidth, minHeight))
-        self.CacheBestSize((ttlWidth, minHeight))
-        
-        return (ttlWidth, minHeight)
+        log.debug('Setting toolbar size: {}'.format(size))
+
+        self.SetMinSize(   size)
+        self.SetMaxSize(   size)
+        self.CacheBestSize(size)
+
+        return size
         
     
     def ClearTools(
@@ -383,20 +412,30 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         draw, given the current size.
         """
 
-        sizer = self.__sizer
-        tools = self.__tools
+        sizer  = self.__sizer
+        tools  = self.__tools
+        orient = self.__orient
 
         sizer.Clear()
-        
-        availWidth = self.GetSize().GetWidth()
-        reqdWidths = [tool.GetBestSize().GetWidth() for tool in tools]
-        leftWidth  = self.__leftButton .GetBestSize().GetWidth()
-        rightWidth = self.__rightButton.GetBestSize().GetWidth()
 
-        if availWidth >= sum(reqdWidths):
+        if orient == wx.HORIZONTAL:
+        
+            availSpace = self.GetSize().GetWidth()
+            reqdSpace  = [tool.GetBestSize().GetWidth() for tool in tools]
+            leftSpace  = self.__leftButton .GetBestSize().GetWidth()
+            rightSpace = self.__rightButton.GetBestSize().GetWidth()
+            
+        else:
+        
+            availSpace = self.GetSize().GetHeight()
+            reqdSpace  = [tool.GetBestSize().GetHeight() for tool in tools]
+            leftSpace  = self.__leftButton .GetBestSize().GetHeight()
+            rightSpace = self.__rightButton.GetBestSize().GetHeight() 
+
+        if availSpace >= sum(reqdSpace):
 
             log.debug('{}: All tools fit ({} >= {})'.format(
-                type(self).__name__, availWidth, sum(reqdWidths)))
+                type(self).__name__, availSpace, sum(reqdSpace)))
             
             self.__index      = 0
             self.__numVisible = len(tools)
@@ -411,9 +450,9 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
                 sizer.Add(tool, flag=wx.ALIGN_CENTRE)
 
         else:
-            reqdWidths = reqdWidths[self.__index:]
-            cumWidths  = np.cumsum(reqdWidths) + leftWidth + rightWidth
-            biggerIdxs = np.where(cumWidths > availWidth)[0]
+            reqdSpace  = reqdSpace[self.__index:]
+            cumSpace   = np.cumsum(reqdSpace) + leftSpace + rightSpace
+            biggerIdxs = np.where(cumSpace > availSpace)[0]
 
             if len(biggerIdxs) == 0:
                 lastIdx = len(tools)
