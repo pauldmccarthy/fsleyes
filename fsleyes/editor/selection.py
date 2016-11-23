@@ -248,6 +248,9 @@ class Selection(props.HasProperties):
         Returns a tuple containing the region, as a ``numpy.uint8`` array, and
         the coordinates specifying its location in the full :attr:`selection`
         array.
+
+        .. warning:: This method is slow, and in many cases it may be 
+                     faster simply to access the full selection array.
         """
         
         xs, ys, zs = np.where(self.selection > 0)

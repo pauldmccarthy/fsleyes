@@ -136,9 +136,10 @@ class Editor(props.HasProperties):
         # everything after the doneIndex
         # represents states which have been
         # undone.
-        self.__doneList  = []
-        self.__doneIndex = -1
-        self.__inGroup   = False
+        self.__doneList      = []
+        self.__doneIndex     = -1
+        self.__inGroup       = False
+        self.__recordChanges = True
         
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
@@ -250,9 +251,22 @@ class Editor(props.HasProperties):
             opts.colour = fslcm.randomBrightColour()
             
         else:
-            
-            data           = self.__mask[:]
-            self.__mask[:] = data | self.__selection.selection
+
+            selectBlock, offset = self.__selection.getBoundedSelection()
+
+            xlo, ylo, zlo = offset
+            xhi = xlo + selectBlock.shape[0]
+            yhi = ylo + selectBlock.shape[1]
+            zhi = zlo + selectBlock.shape[2]
+
+            slc = (slice(xlo, xhi), slice(ylo, yhi), slice(zlo, zhi))
+
+            oldVals = np.array(self.__mask[slc])
+            newVals = oldVals | self.__selection.selection[slc]
+            change  = ValueChange(self.__mask, 0, offset, oldVals, newVals)
+
+            self.__applyChange(change)
+            self.__changeMade( change)
 
         
     def removeSelectionFromMask(self):
@@ -313,6 +327,10 @@ class Editor(props.HasProperties):
         together, for :meth:`undo`/:meth:`redo` purposes, until a call to
         :meth:`endChangeGroup`.
         """
+
+        if not self.__recordChanges:
+            return
+        
         del self.__doneList[self.__doneIndex + 1:]
         
         self.__inGroup    = True
@@ -328,11 +346,35 @@ class Editor(props.HasProperties):
         """Ends a change group previously started by a call to
         :meth:`startChangeGroup`.
         """
+        
+        if not self.__recordChanges:
+            return 
+        
         self.__inGroup = False
         log.debug('Ending change group at {} of {}'.format(
-            self.__doneIndex, len(self.__doneList))) 
+            self.__doneIndex, len(self.__doneList)))
+
+        
+    def recordChanges(self, record=True):
+        """Cause this ``Editor`` to either record or ignore any changes that 
+        are made to the selection or the image data until further notice.
+
+        :arg record: If ``True``, changes are recorded. Otherwise they are
+                     ignored.
+        """
+
+        self.__recordChanges = record
+        self.__selection.setListenerState( 'selection', self.__name, record)
 
 
+    def ignoreChanges(self):
+        """Cause this ``Editor`` to ignore any changes that are made to the
+        selection or the image data until further notice. Call the
+        :meth:`recordChanges` method to resume recording changes.
+        """
+        self.recordChanges(False)
+
+        
     def undo(self):
         """Un-does the most recent change. """
         if self.__doneIndex == -1:
@@ -398,6 +440,9 @@ class Editor(props.HasProperties):
         Saves a record of the change with a :class:`SelectionChange` object.
         """
 
+        if not self.__recordChanges:
+            return
+
         old, new, offset = self.__selection.getLastChange()
         
         change = SelectionChange(self.__image, offset, old, new)
@@ -412,6 +457,9 @@ class Editor(props.HasProperties):
         properties.
         """
 
+        if not self.__recordChanges:
+            return
+
         if self.__inGroup:
             self.__doneList[self.__doneIndex].append(change)
         else:
@@ -422,8 +470,9 @@ class Editor(props.HasProperties):
         self.canUndo = True
         self.canRedo = False
 
-        log.debug('New change ({} of {})'.format(self.__doneIndex,
-                                                 len(self.__doneList)))
+        log.debug('New change to {} ({} of {})'.format(change.overlay.name,
+                                                       self.__doneIndex,
+                                                       len(self.__doneList)))
 
 
     def __applyChange(self, change):
@@ -433,16 +482,19 @@ class Editor(props.HasProperties):
         :class:`SelectionChange`).
         """
 
-        image = self.__image
+        image = change.overlay
         opts  = self.__displayCtx.getOpts(image)
 
         if image.is4DImage(): volume = opts.volume
         else:                 volume = None
         
         if isinstance(change, ValueChange):
-            log.debug('Changing image data - offset '
+            log.debug('Changing image {} data - offset '
                       '{}, volume {}, size {}'.format(
-                          change.offset, change.volume, change.oldVals.shape))
+                          change.overlay.name,
+                          change.offset,
+                          change.volume,
+                          change.oldVals.shape))
 
             sliceobj = self.__makeSlice(change.offset,
                                         change.newVals.shape,
@@ -462,16 +514,19 @@ class Editor(props.HasProperties):
         :class:`SelectionChange`)
         """
 
-        image = self.__image
+        image = change.overlay
         opts  = self.__displayCtx.getOpts(image)
         
         if image.is4DImage(): volume = opts.volume
         else:                 volume = None 
 
         if isinstance(change, ValueChange):
-            log.debug('Reverting image data change - offset '
+            log.debug('Reverting image {} data change - offset '
                       '{}, volume {}, size {}'.format(
-                          change.offset, change.volume, change.oldVals.shape))
+                          change.overlay.name,
+                          change.offset,
+                          change.volume,
+                          change.oldVals.shape))
 
             sliceobj = self.__makeSlice(change.offset,
                                         change.oldVals.shape,

@@ -344,9 +344,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             return
 
         editor = self.__editors[self.__currentOverlay]
-                
+
+        editor.startChangeGroup()
         editor.fillSelection(self.fillValue)
         editor.getSelection().clearSelection()
+        editor.endChangeGroup()
 
 
     @actions.action
@@ -358,9 +360,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             return
 
         editor = self.__editors[self.__currentOverlay]
-                
+
+        editor.startChangeGroup()
         editor.fillSelection(0)
-        editor.getSelection().clearSelection() 
+        editor.getSelection().clearSelection()
+        editor.endChangeGroup()
 
 
     @actions.action
@@ -374,8 +378,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         editor = self.__editors[self.__currentOverlay]
 
+        editor.startChangeGroup()
         editor.addSelectionToMask()
         editor.getSelection().clearSelection()
+        editor.endChangeGroup()
 
 
     @actions.action
@@ -388,8 +394,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         editor = self.__editors[self.__currentOverlay]
 
+        editor.startChangeGroup()
         editor.removeSelectionFromMask()
         editor.getSelection().clearSelection()
+        editor.endChangeGroup()
  
 
     @actions.action
@@ -1094,6 +1102,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         the new settings.
         """
 
+        if self.__currentOverlay is None:
+            return
+
         mousePos, canvasPos = self.getLastMouseUpLocation()
         canvas              = self.getLastCanvas()
 
@@ -1104,7 +1115,15 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         def update():
 
+            # If the user is playing with the intensity
+            # threshold slider, the selection could be
+            # updated many times. We don't want to track
+            # every single change, so we tell the editor
+            # to ignore all changes for a bit.
+            editor = self.__editors[self.__currentOverlay]
+            editor.recordChanges(False)
             self.__selintSelect(voxel, canvas)
+            editor.recordChanges(True)
 
             # NOTE You are being devious here, relying
             #      on the knowledge that
