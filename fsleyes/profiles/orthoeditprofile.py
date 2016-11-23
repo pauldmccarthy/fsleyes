@@ -432,7 +432,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # due to updates to the GL texture buffer. So we disable
         # notification, and then manually refresh the texture
         # afterwards
-        with props.suppress(editor.getSelection(), 'selection'):
+        with editor.getSelection().skipAll():
             editor.undo()
         
         self.__selectionChanged()
@@ -453,7 +453,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         # See comment in undo method 
         # about disabling notification
-        with props.suppress(editor.getSelection(), 'selection'):
+        with editor.getSelection().skipAll():
             editor.redo()
         
         self.__selectionChanged()
@@ -594,7 +594,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
             log.debug('De-registering listeners from Editor {} ({})'.format(
                 id(editor), oldOverlay.name))
-            editor.getSelection().removeListener('selection', self._name)
+            editor.getSelection().deregister(self._name)
             editor               .removeListener('canUndo',   self._name)
             editor               .removeListener('canRedo',   self._name)
 
@@ -679,7 +679,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             oldSelection = self.__editors[oldOverlay].getSelection()
             newSelection = editor.getSelection()
 
-            newSelection.setSelection(oldSelection.selection, (0, 0, 0))
+            newSelection.setSelection(oldSelection.getSelection(), (0, 0, 0))
 
         # Register property listeners with the
         # new Editor and Selection instances.
@@ -687,9 +687,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             id(editor),
             self.__currentOverlay.name))
         
-        editor.getSelection().addListener('selection',
-                                          self._name,
-                                          self.__selectionChanged)
+        editor.getSelection().register(self._name, self.__selectionChanged)
         editor.addListener('canUndo', self._name, self.__undoStateChanged)
         editor.addListener('canRedo', self._name, self.__undoStateChanged)
         
@@ -879,7 +877,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         selection     = editor.getSelection()
         block, offset = selection.generateBlock(voxel,
                                                 self.selectionSize,
-                                                selection.selection.shape,
+                                                selection.getSelection().shape,
                                                 axes)
 
         if add: selection.addToSelection(     block, offset)
@@ -1178,7 +1176,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # image, or the current slice).
         selection = editor.getSelection()
         if searchRadius is not None:
-            with props.suppress(selection, 'selection'):
+            with selection.skipAll():
                 selection.clearSelection(restrict)
 
         selection.selectByValue(

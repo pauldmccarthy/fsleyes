@@ -44,7 +44,7 @@ class SelectionTexture(texture.Texture):
 
         self.__selection = selection
 
-        selection.addListener('selection', name, self.__selectionChanged)
+        selection.register(self.getTextureName(), self.__selectionChanged)
 
         self.__init()
         self.refresh()
@@ -76,7 +76,7 @@ class SelectionTexture(texture.Texture):
                            gl.GL_TEXTURE_WRAP_R,
                            gl.GL_CLAMP_TO_BORDER)
 
-        shape = self.__selection.selection.shape
+        shape = self.__selection.getSelection().shape
         gl.glTexImage3D(gl.GL_TEXTURE_3D,
                         0,
                         gl.GL_ALPHA8,
@@ -97,7 +97,7 @@ class SelectionTexture(texture.Texture):
         on the :attr:`.Selection.selection` property.
         """
         texture.Texture.destroy(self)
-        self.__selection.removeListener('selection', self.getTextureName())
+        self.__selection.deregister(self.getTextureName())
         self.__selection = None
 
         
@@ -118,7 +118,7 @@ class SelectionTexture(texture.Texture):
         """
         
         if block is None or offset is None:
-            data   = self.__selection.selection
+            data   = self.__selection.getSelection()
             offset = [0, 0, 0]
         else:
             data = block
@@ -151,7 +151,7 @@ class SelectionTexture(texture.Texture):
         old, new, offset = self.__selection.getLastChange()
 
         if old is None or new is None:
-            data   = self.__selection.selection
+            data   = self.__selection.getSelection()
             offset = [0, 0, 0]
         else:
             data = new

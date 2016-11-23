@@ -120,9 +120,7 @@ class Editor(props.HasProperties):
         self.__selection      = selection.Selection(
             image, displayCtx.getDisplay(image))
 
-        self.__selection.addListener('selection',
-                                     self.__name,
-                                     self.__selectionChanged)
+        self.__selection.register(self.__name, self.__selectionChanged)
 
         overlayList.addListener('overlays',
                                 self.__name,
@@ -155,7 +153,7 @@ class Editor(props.HasProperties):
         to prevent memory leaks.
         """
         
-        self.__selection  .removeListener('selection', self.__name)
+        self.__selection  .deregister(self.__name)
         self.__overlayList.removeListener('overlays',  self.__name)
 
         self.__image          = None
@@ -223,6 +221,8 @@ class Editor(props.HasProperties):
         it (via a logical OR).
         """
 
+        selection = self.__selection
+
         if self.__mask is None:
             
             # This will raise a ValueError if the image
@@ -234,7 +234,7 @@ class Editor(props.HasProperties):
             overlayIdx = self.__overlayList.index(    self.__image)
             display    = self.__displayCtx.getDisplay(self.__image)
 
-            mask       = np.array(self.__selection.selection, dtype=np.uint8)
+            mask       = np.array(selection.getSelection(), dtype=np.uint8)
             header     = self.__image.nibImage.get_header()
 
             name = '{}/mask'.format(display.name)
@@ -252,7 +252,7 @@ class Editor(props.HasProperties):
             
         else:
 
-            selectBlock, offset = self.__selection.getBoundedSelection()
+            selectBlock, offset = selection.getBoundedSelection()
 
             xlo, ylo, zlo = offset
             xhi = xlo + selectBlock.shape[0]
@@ -262,7 +262,7 @@ class Editor(props.HasProperties):
             slc = (slice(xlo, xhi), slice(ylo, yhi), slice(zlo, zhi))
 
             oldVals = np.array(self.__mask[slc])
-            newVals = oldVals | self.__selection.selection[slc]
+            newVals = oldVals | selection.getSelection()[slc]
             change  = ValueChange(self.__mask, 0, offset, oldVals, newVals)
 
             self.__applyChange(change)
@@ -277,7 +277,7 @@ class Editor(props.HasProperties):
             return
         
         data           = self.__mask[:]
-        self.__mask[:] = data & ~self.__selection.selection 
+        self.__mask[:] = data & ~self.__selection.getSelection()
 
 
     def addSelectionToROI(self):
@@ -289,7 +289,7 @@ class Editor(props.HasProperties):
         """
 
         image     = self.__image
-        selection = self.__selection.selection > 0
+        selection = self.__selection.getSelection() > 0
 
         if self.__roi is None:
             
@@ -364,7 +364,7 @@ class Editor(props.HasProperties):
         """
 
         self.__recordChanges = record
-        self.__selection.setListenerState( 'selection', self.__name, record)
+        self.__selection.enable(self.__name, enable=record)
 
 
     def ignoreChanges(self):
@@ -503,9 +503,9 @@ class Editor(props.HasProperties):
             image[sliceobj] = change.newVals
             
         elif isinstance(change, SelectionChange):
-            self.__selection.disableListener('selection', self.__name)
+            self.__selection.disable(self.__name)
             self.__selection.setSelection(change.newSelection, change.offset)
-            self.__selection.enableListener('selection', self.__name)
+            self.__selection.enable(self.__name)
 
         
     def __revertChange(self, change):
@@ -534,9 +534,9 @@ class Editor(props.HasProperties):
             image[sliceobj] = change.oldVals
             
         elif isinstance(change, SelectionChange):
-            self.__selection.disableListener('selection', self.__name)
+            self.__selection.disable(self.__name)
             self.__selection.setSelection(change.oldSelection, change.offset)
-            self.__selection.enableListener('selection', self.__name)
+            self.__selection.enable(self.__name)
 
 
     def __makeSlice(self, offset, shape, volume=None):

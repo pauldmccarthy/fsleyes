@@ -555,7 +555,7 @@ class VoxelSelection(AnnotationObject):
 
         xax   = self.xax
         yax   = self.yax
-        shape = self.selection.selection.shape
+        shape = self.selection.getSelection().shape
 
         verts, voxs = glroutines.slice2D(shape,
                                          xax,

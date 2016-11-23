@@ -14,13 +14,13 @@ import collections
 import numpy                       as np
 import scipy.ndimage.measurements  as ndimeas
 
-import props
+import fsl.utils.notifier          as notifier
 
 
 log = logging.getLogger(__name__)
 
 
-class Selection(props.HasProperties):
+class Selection(notifier.Notifier):
     """The ``Selection`` class represents a selection of voxels in a 3D
     :class:`.Image`. The selection is stored as a ``numpy`` mask array,
     the same shape as the image. Methods are available to query and update
@@ -57,10 +57,13 @@ class Selection(props.HasProperties):
     in a manner similar to a *bucket fill* technique found in any image
     editor.
 
-    A ``Selection`` object keeps track of the most recent change made
-    through any of the above methods. The most recent change can be retrieved
-    through the :meth:`getLastChange` method.
-
+    
+    A ``Selection`` object keeps track of the most recent change made through
+    any of the above methods. The most recent change can be retrieved through
+    the :meth:`getLastChange` method. The ``Selection`` class inherits from
+    the :class:`.Notifier` class - you can be notified whenever the selection
+    changes by registering as a listener.
+    
 
     Finally, the ``Selection`` class offers a few other methods for
     convenience:
@@ -68,6 +71,7 @@ class Selection(props.HasProperties):
     .. autosummary::
        :nosignatures:
 
+       getSelection
        getSelectionSize
        clearSelection
        getBoundedSelection
@@ -75,19 +79,6 @@ class Selection(props.HasProperties):
        generateBlock
     """
     
-
-    selection = props.Object()
-    """The ``numpy`` mask array containing the current selection is stored
-    in a :class:`props.Object`, so that listeners can register to be notified
-    whenever it changes.
-
-    .. warning:: Do not modify the selection directly through this attribute -
-                 use the ``Selection`` instance methods
-                 (e.g. :meth:`setSelection`) instead.  If you modify the
-                 selection directly through this attribute, the
-                 :meth:`getLastChange` method will break.
-    """
-
     
     def __init__(self, image, display, selection=None):
         """Create a ``Selection`` instance.
@@ -118,7 +109,7 @@ class Selection(props.HasProperties):
             raise ValueError('Incompatible selection array: {} ({})'.format(
                 selection.shape, selection.dtype))
 
-        self.selection = selection
+        self.__selection = selection
 
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
@@ -129,6 +120,18 @@ class Selection(props.HasProperties):
             log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
 
 
+    def getSelection(self):
+        """Returns the selection array.
+
+        .. warning:: Do not modify the selection array directly - use the
+                     ``Selection`` instance methods
+                     (e.g. :meth:`setSelection`) instead.  If you modify the
+                     selection directly through this attribute, the
+                     :meth:`getLastChange` method, and selection notification,
+                     will break.
+        """
+        return self.__selection
+    
 
     def selectBlock(self, voxel, blockSize, axes=(0, 1, 2), combine=False):
         """Selects the block (sets all voxels to 1) specified by the given
@@ -146,7 +149,7 @@ class Selection(props.HasProperties):
         
         block, offset = self.generateBlock(voxel,
                                            blockSize,
-                                           self.selection.shape,
+                                           self.__selection.shape,
                                            axes)
         
         self.addToSelection(block, offset, combine)
@@ -168,7 +171,7 @@ class Selection(props.HasProperties):
 
         block, offset = self.generateBlock(voxel,
                                            blockSize,
-                                           self.selection.shape,
+                                           self.__selection.shape,
                                            axes)
         
         self.removeFromSelection(block, offset, combine) 
@@ -238,7 +241,7 @@ class Selection(props.HasProperties):
     
     def getSelectionSize(self):
         """Returns the number of voxels that are currently selected. """
-        return self.selection.sum()
+        return self.__selection.sum()
 
 
     def getBoundedSelection(self):
@@ -253,7 +256,7 @@ class Selection(props.HasProperties):
                      faster simply to access the full selection array.
         """
         
-        xs, ys, zs = np.where(self.selection > 0)
+        xs, ys, zs = np.where(self.__selection > 0)
 
         if len(xs) == 0:
             return np.array([]).reshape(0, 0, 0), (0, 0, 0)
@@ -265,7 +268,7 @@ class Selection(props.HasProperties):
         yhi = ys.max() + 1
         zhi = zs.max() + 1
 
-        selection = self.selection[xlo:xhi, ylo:yhi, zlo:zhi]
+        selection = self.__selection[xlo:xhi, ylo:yhi, zlo:zhi]
 
         return selection, (xlo, ylo, zlo)
 
@@ -290,11 +293,11 @@ class Selection(props.HasProperties):
 
         log.debug('Clearing selection ({}): {}'.format(id(self), fRestrict))
 
-        block                     = np.array(self.selection[fRestrict])
-        self.selection[fRestrict] = False
+        block                       = np.array(self.__selection[fRestrict])
+        self.__selection[fRestrict] = False
 
         self.__storeChange(block,
-                           np.array(self.selection[fRestrict]),
+                           np.array(self.__selection[fRestrict]),
                            offset,
                            combine)
 
@@ -305,7 +308,7 @@ class Selection(props.HasProperties):
         if restrict is None:
             self.__clear = True
 
-        self.propNotify('selection')
+        self.notify()
 
 
     def getLastChange(self):
@@ -413,7 +416,7 @@ class Selection(props.HasProperties):
                       for ((cuLo, cuHi), (cmLo, cmHi))
                       in zip(currIdxs, cmbIdxs)]
 
-        cmbOld    = np.array(self.selection[cmbSlices])
+        cmbOld    = np.array(self.__selection[cmbSlices])
         cmbNew    = np.array(cmbOld)
 
         cmbOld[lastSlices] = lcOld
@@ -455,7 +458,7 @@ class Selection(props.HasProperties):
         """
 
         restrict   = self.__fixSlices(restrict)
-        xs, ys, zs = np.where(self.selection[restrict])
+        xs, ys, zs = np.where(self.__selection[restrict])
         result     = np.vstack((xs, ys, zs)).T
 
         for ax in range(3):
@@ -686,7 +689,7 @@ class Selection(props.HasProperties):
         zhi           = int(zlo + block.shape[2])
 
         self.__storeChange(
-            np.array(self.selection[xlo:xhi, ylo:yhi, zlo:zhi]),
+            np.array(self.__selection[xlo:xhi, ylo:yhi, zlo:zhi]),
             np.array(block),
             offset,
             combine)
@@ -694,11 +697,11 @@ class Selection(props.HasProperties):
         log.debug('Updating selection ({}) block [{}:{}, {}:{}, {}:{}]'.format(
             id(self), xlo, xhi, ylo, yhi, zlo, zhi))
 
-        self.selection[xlo:xhi, ylo:yhi, zlo:zhi] = block
+        self.__selection[xlo:xhi, ylo:yhi, zlo:zhi] = block
 
         self.__clear = False
         
-        self.propNotify('selection') 
+        self.notify() 
 
         
     def __getSelectionBlock(self, size, offset):
@@ -713,7 +716,7 @@ class Selection(props.HasProperties):
         yhi = ylo + size[1]
         zhi = zlo + size[2]
 
-        return np.array(self.selection[xlo:xhi, ylo:yhi, zlo:zhi])
+        return np.array(self.__selection[xlo:xhi, ylo:yhi, zlo:zhi])
 
 
     def __fixSlices(self, slices):
