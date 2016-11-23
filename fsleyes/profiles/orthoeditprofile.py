@@ -679,14 +679,16 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # otherwise be confusing
         if self._displayCtx.displaySpace != overlay:
 
-            msg = strings.messages[self, 'displaySpaceChange']
-            msg = msg.format(overlay.name)
+            msg  = strings.messages[self, 'imageChange']
+            hint = strings.messages[self, 'imageChangeHint']
+            msg  = msg.format(overlay.name)
+            hint = hint.format(overlay.name) 
 
             global _suppressDisplaySpaceWarning
             if not _suppressDisplaySpaceWarning:
 
-                cbMsg = strings.messages[self, 'displaySpaceChange.suppress']
-                title = strings.titles[  self, 'displaySpaceChange']
+                cbMsg = strings.messages[self, 'imageChange.suppress']
+                title = strings.titles[  self, 'imageChange']
                 
                 dlg   = fsldlg.CheckBoxMessageDialog(
                     self._viewPanel,
@@ -694,6 +696,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                     message=msg,
                     cbMessages=[cbMsg],
                     cbStates=[_suppressDisplaySpaceWarning],
+                    hintText=hint,
                     focus='yes',
                     icon=wx.ICON_INFORMATION)
 

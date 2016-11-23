@@ -153,13 +153,14 @@ messages = TypeDict({
                                     'check your cluster_*.txt files.',
     'ClusterPanel.loadingCluster' : 'Loading clusters for COPE{} ({}) ...',
 
-    'OrthoEditProfile.displaySpaceChange' : 'Setting {} as the display '
-                                            'space reference image - the '
+    'OrthoEditProfile.imageChange'        : 'You are now editing {}. ',
+    'OrthoEditProfile.imageChangeHint'    : 'Setting {} as the display '
+                                            'space reference\nimage - the '
                                             'display space must match the '
-                                            'image being edited.',
+                                            'image being edited.', 
     
-    'OrthoEditProfile.displaySpaceChange.suppress' : 'Do not show this '
-                                                     'message again',
+    'OrthoEditProfile.imageChange.suppress' : 'Do not show this '
+                                              'message again',
 
     'MelodicClassificationPanel.disabled'    : 'Choose a melodic image.',
     'MelodicClassificationPanel.loadError'   : 'An error occurred while '
@@ -275,7 +276,7 @@ titles = TypeDict({
     'SaveOverlayAction.saveFile'           : 'Save overlay to file',
     'SaveOverlayAction.saveError'          : 'Error saving file',
 
-    'OrthoEditProfile.displaySpaceChange' : 'Changing display space',
+    'OrthoEditProfile.imageChange'        : 'Changing edited image',
 
     'ImportDataSeriesAction.error'        : 'Error loading file',
     'ImportDataSeriesAction.selectXScale' : 'X axis scaling factor',
