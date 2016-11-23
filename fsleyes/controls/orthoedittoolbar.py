@@ -271,6 +271,7 @@ _TOOLBAR_SPECS  = [
         tooltip=_TOOLTIPS['searchRadius'],
         enabledWhen=lambda p: p.mode == 'selint' and p.limitToRadius),
 
+    props.Widget('targetImage'),
     props.Widget('drawMode'),
 ]
 """This list contains specifications for all of the tools shown in an

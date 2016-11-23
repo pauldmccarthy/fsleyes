@@ -144,7 +144,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     
     selectionIs3D = props.Boolean(default=False)
     """In ``sel`` and ``desel`` mode, toggles the cursor between a 2D square
-    and a 3D cube.
+    and a 3D cube. In ``selint`` mode, toggles the selection space between the
+    current slice, and the full 3D volume.
     """
 
     
@@ -163,6 +164,23 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     This setting is enabled by default, because it causes FSLeyes to behave
     like FSLView. However, all advanced editing/selection capabilities are
     disabled when ``drawMode`` is ``True``.
+    """
+
+
+    targetImage = props.Choice()
+    """By default, all modifications that the user makes will be made on the
+    currently selected overlay (the :attr:`.DisplayContext.selectedOverlay`).
+    However, this property  can be used to select a different image as the
+    target for modifications.
+
+    This proprty is mostly useful when in ``selint`` mode - the selection
+    can be made based on the voxel intensities in the currently selected
+    image, but the selection can be filled in another iamge (e.g. a
+    mask/label image).
+
+    This property is updated whenever the :class:`.OverlayList` or the
+    currently selected overlay changes, so that it contains all other
+    overlays which have the same dimensions as the selected overlay.
     """
     
 
@@ -480,6 +498,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         state of various actions that are irrelevant when in draw mode.
         """
 
+        if self.drawMode: self.disableProperty('targetImage')
+        else:             self.enableProperty( 'targetImage')
+
+        # The targetImage property has to be updated
+        self.__setPropertyLimits()
+
         if self.drawMode: self.getProp('mode').disableChoice('selint', self)
         else:             self.getProp('mode').enableChoice( 'selint', self)
         
@@ -507,11 +531,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__zselAnnotation.colour = self.selectionOverlayColour 
 
 
-    def __setFillValueLimits(self, overlay):
-        """Called by the :meth:`__selectedOverlayChanged` method. Updates the
-        min/max limits of the :attr:`fillValue` property so it can only be
-        set to values within the overlay data range.
+    def __setPropertyLimits(self):
+        """Called by the :meth:`__selectedOverlayChanged` method. 
         """
+
+        overlay = self.__currentOverlay
+        if overlay is None:
+            # TODO 
+            return
         
         if issubclass(overlay.dtype.type, np.integer):
             dmin = np.iinfo(overlay.dtype).min
@@ -525,6 +552,19 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         dmin, dmax = overlay.dataRange
         self.setConstraint('intensityThres', 'maxval', (dmax - dmin) / 2.0)
+
+        # targetImage
+        compatibleOverlays = [overlay]
+        if not self.drawMode:
+            for ovl in self._overlayList:
+                if ovl is not overlay and overlay.sameSpace(ovl):
+                    compatibleOverlays.append(ovl)
+
+
+        print 'Updating: {}'.format([o.name for o in compatibleOverlays])
+                    
+        self.getProp('targetImage').setChoices(compatibleOverlays,
+                                               instance=self)
 
 
     def __selectedOverlayChanged(self, *a):
@@ -568,6 +608,13 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         oldOverlay = self.__currentOverlay
         overlay    = self._displayCtx.getSelectedOverlay()
+
+        # Update the limits/options on all properties. We
+        # always do this, because the selected overlay may
+        # have stayed the same, but overlays may have been
+        # added/removed to/from the overlay list, and we
+        # need to update the targetImage property.
+        self.__setPropertyLimits()
         
         # If the selected overlay hasn't changed,
         # we don't need to do anything
@@ -616,9 +663,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         display = self._displayCtx.getDisplay(overlay)
         opts    = display.getDisplayOpts()
-
-        # Update the fillValue limits
-        self.__setFillValueLimits(overlay)
 
         # Edit mode is only supported on
         # images with the 'volume', 'mask'
