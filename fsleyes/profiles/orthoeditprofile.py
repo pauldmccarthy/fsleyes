@@ -247,8 +247,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                          self.__selintPropertyChanged) 
 
         self.__selectedOverlayChanged()
-        self.__selectionChanged()
-        self.__undoStateChanged()
 
 
     def destroy(self):
@@ -260,8 +258,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self._overlayList.removeListener('overlays',        self._name)
 
         for editor in self.__editors.values():
-            editor.removeListener('canUndo', self._name)
-            editor.removeListener('canRedo', self._name)
             editor.destroy()
 
         xannot = self.__xcanvas.getAnnotations()
@@ -435,7 +431,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         with editor.getSelection().skipAll():
             editor.undo()
         
-        self.__selectionChanged()
         self.__xselAnnotation.texture.refresh()
         self._viewPanel.Refresh()
 
@@ -456,30 +451,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         with editor.getSelection().skipAll():
             editor.redo()
         
-        self.__selectionChanged()
         self.__xselAnnotation.texture.refresh()
         self._viewPanel.Refresh()
  
-
-    def __undoStateChanged(self, *a):
-        """Called when either of the :attr:`.Editor.canUndo` or
-        :attr:`.Editor.canRedo` states change. Updates the state of the
-        ``undo``/``redo`` actions accordingly.
-        """
-        if self.__currentOverlay is None:
-            return
-
-        editor = self.__editors[self.__currentOverlay]
-
-        log.debug('Editor ({}) undo/redo state '
-                  'changed: undo={}, redo={}'.format(
-                      self.__currentOverlay.name,
-                      editor.canUndo,
-                      editor.canRedo))
-        
-        self.undo.enabled = editor.canUndo
-        self.redo.enabled = editor.canRedo
-
 
     def __selectionColoursChanged(self, *a):
         """Called when either of the :attr:`selectionOverlayColour` or
@@ -594,9 +568,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
             log.debug('De-registering listeners from Editor {} ({})'.format(
                 id(editor), oldOverlay.name))
-            editor.getSelection().deregister(self._name)
-            editor               .removeListener('canUndo',   self._name)
-            editor               .removeListener('canRedo',   self._name)
+            self.undo.unbindProps('enabled', editor.undo)
+            self.redo.unbindProps('enabled', editor.redo)
 
         self.__currentOverlay = overlay
 
@@ -686,15 +659,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         log.debug('Registering listeners with Editor {} ({})'.format(
             id(editor),
             self.__currentOverlay.name))
-        
-        editor.getSelection().register(self._name, self.__selectionChanged)
-        editor.addListener('canUndo', self._name, self.__undoStateChanged)
-        editor.addListener('canRedo', self._name, self.__undoStateChanged)
-        
-        # Update undo/redo button states, and
-        # selection action button states
-        self.__undoStateChanged()
-        self.__selectionChanged()
+
+        # Bind undo/redo action enabled states
+        self.undo.bindProps('enabled', editor.undo)
+        self.redo.bindProps('enabled', editor.redo)
     
         # Create a selection annotation and
         # queue it on the canvases for drawing
@@ -732,33 +700,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self._viewPanel.Refresh()
 
 
-    def __selectionChanged(self, *a):
-        """Called when the :attr:`.Selection.selection` is changed.
-        Toggles action enabled states depending on the size of the selection.
-        """
-
-        if self.__currentOverlay is None:
-            return
-
-        editor    = self.__editors[self.__currentOverlay]
-        selection = editor.getSelection()
-
-        # TODO This is a big performance bottleneck, as
-        #      it gets called on every mouse position
-        #      change when mouse-dragging. The Selection
-        #      object could cache its size? Or perhaps
-        #      these actions could be toggled at the
-        #      start/end of a mouse drag?
-        selSize   = selection.getSelectionSize()
-
-        self.addSelectionToMask     .enable = selSize > 0
-        self.removeSelectionFromMask.enable = selSize > 0
-        self.addSelectionToROI      .enable = selSize > 0
-        self.clearSelection         .enable = selSize > 0
-        self.eraseSelection         .enable = selSize > 0
-        self.fillSelection          .enable = selSize > 0
-
-    
     def __getVoxelLocation(self, canvasPos):
         """Returns the voxel location, for the currently selected overlay,
         which corresponds to the specified canvas position. Returns ``None``

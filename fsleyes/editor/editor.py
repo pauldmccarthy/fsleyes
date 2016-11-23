@@ -15,17 +15,16 @@ import collections
 
 import numpy as np
 
-import props
-
 import fsl.data.image     as fslimage
 import fsleyes.colourmaps as fslcm
+import fsleyes.actions    as actions
 from . import                selection
 
 
 log = logging.getLogger(__name__)
 
 
-class Editor(props.HasProperties):
+class Editor(actions.ActionProvider):
     """The ``Editor`` class provides functionality to edit the data of an
     :class:`.Image` overlay. An ``Editor`` instance is associated with a
     specific ``Image`` overlay, passed to :meth:`__init__`.
@@ -69,9 +68,7 @@ class Editor(props.HasProperties):
     selection/data change made is recorded using :class:`SelectionChange` and
     :class:`.ValueChange` instances, which are stored in a list. These changes
     can be undone (and redone), through the :meth:`undo` and :meth:`redo`
-    methods. The ``Editor`` class also has two properties, :attr:`canUndo` and
-    :attr:`canRedo`, which reflect the current state of the ``Editor`` with
-    respect to its ability to undo/redo operations.
+    "action" methods (see the :mod:`.actions` module).
 
     
     Sometimes it is useful to treat many small changes as a single large
@@ -86,18 +83,6 @@ class Editor(props.HasProperties):
     undoing/redoing changes, all of the changes in a change group will be
     undone/redone together.
     """
-
-    
-    canUndo = props.Boolean(default=False)
-    """This property will be ``True`` when the ``Editor`` has changes which
-    can be undone, and ``False`` otherwise.
-    """
-
-    
-    canRedo = props.Boolean(default=False)
-    """This property will be ``True`` when the ``Editor`` has changes which
-    can be redone, and ``False`` otherwise.
-    """    
 
     
     def __init__(self, image, overlayList, displayCtx):
@@ -138,6 +123,8 @@ class Editor(props.HasProperties):
         self.__doneIndex     = -1
         self.__inGroup       = False
         self.__recordChanges = True
+        self.undo.enabled    = False
+        self.redo.enabled    = False
         
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
@@ -374,7 +361,8 @@ class Editor(props.HasProperties):
         """
         self.recordChanges(False)
 
-        
+
+    @actions.action
     def undo(self):
         """Un-does the most recent change. """
         if self.__doneIndex == -1:
@@ -394,11 +382,12 @@ class Editor(props.HasProperties):
         self.__doneIndex -= 1
 
         self.__inGroup = False
-        self.canRedo  = True
+        self.redo.enabled = True
         if self.__doneIndex == -1:
-            self.canUndo = False
+            self.undo.enabled = False
         
 
+    @actions.action
     def redo(self):
         """Re-does the most recent undone change. """
         if self.__doneIndex == len(self.__doneList) - 1:
@@ -418,9 +407,9 @@ class Editor(props.HasProperties):
         self.__doneIndex += 1
 
         self.__inGroup = False
-        self.canUndo  = True
+        self.undo.enabled = True
         if self.__doneIndex == len(self.__doneList) - 1:
-            self.canRedo = False
+            self.redo.enabled = False
 
 
     def __overlayListChanged(self, *a):
@@ -453,8 +442,8 @@ class Editor(props.HasProperties):
         """Called by the :meth:`fillSelection` and :meth:`__selectionChanged`
         methods, whenever a data/selection change is made.
 
-        Saves the change, and updates the :attr:`canUndo`/:attr:`canRedo`
-        properties.
+        Saves the change, and updates the state of the :meth:`undo`/
+        :meth:`redo` methods.
         """
 
         if not self.__recordChanges:
@@ -467,8 +456,8 @@ class Editor(props.HasProperties):
             self.__doneList.append(change)
             self.__doneIndex += 1
             
-        self.canUndo = True
-        self.canRedo = False
+        self.undo.enabled = True
+        self.redo.enabled = False
 
         log.debug('New change to {} ({} of {})'.format(change.overlay.name,
                                                        self.__doneIndex,
