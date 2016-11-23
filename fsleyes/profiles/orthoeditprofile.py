@@ -88,10 +88,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
        undo
        redo
-       fillSelection
        clearSelection
-       createMaskFromSelection
-       createROIFromSelection
+       fillSelection
+       eraseSelection
+       addSelectionToMask
+       removeSelectionFromMask
+       addSelectionToROI
 
     
     **Annotations**
@@ -187,19 +189,27 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """
 
+        # The currently selected overlay - 
+        # the overlay being edited
+        self.__currentOverlay    = None
+
         # An Editor instance is created for each
         # Image overlay (on demand, as they are
         # selected), and kept in this dictionary
         # (which contains {Image : Editor} mappings).
         self.__editors           = {}
+
+        # Ref to each canvas on the ortho panel
         self.__xcanvas           = viewPanel.getXCanvas()
         self.__ycanvas           = viewPanel.getYCanvas()
-        self.__zcanvas           = viewPanel.getZCanvas() 
+        self.__zcanvas           = viewPanel.getZCanvas()
+
+        # The current selection is shown on each
+        # canvas - a ref to the SelectionAnnotation
+        # is kept here
         self.__xselAnnotation    = None
         self.__yselAnnotation    = None
         self.__zselAnnotation    = None
-        self.__selecting         = False
-        self.__currentOverlay    = None
 
         orthoviewprofile.OrthoViewProfile.__init__(
             self,
@@ -354,25 +364,43 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     @actions.action
-    def createMaskFromSelection(self):
-        """Creates a new mask :class:`.Image` from the current selection.
-        See :meth:`.Editor.createMaskFromSelection`.
+    def addSelectionToMask(self):
+        """If the currently selected overlay has a mask associated with 
+        it, the current selection is added to it.
+        """
+
+        if self.__currentOverlay is None:
+            return
+
+        editor = self.__editors[self.__currentOverlay]
+
+        editor.addSelectionToMask()
+        editor.getSelection().clearSelection()
+
+
+    @actions.action
+    def removeSelectionFromMask(self):
+        """If the currently selected overlay has a mask associated with 
+        it, the current selection is removed from it.
         """
         if self.__currentOverlay is None:
             return
 
-        self.__editors[self.__currentOverlay].createMaskFromSelection()
+        editor = self.__editors[self.__currentOverlay]
 
+        editor.removeSelectionFromMask()
+        editor.getSelection().clearSelection()
+ 
 
     @actions.action
-    def createROIFromSelection(self):
+    def addSelectionToROI(self):
         """Creates a new ROI :class:`.Image` from the current selection.
         See :meth:`.Editor.createROIFromSelection`.
         """ 
         if self.__currentOverlay is None:
             return
 
-        self.__editors[self.__currentOverlay].createROIFromSelection() 
+        self.__editors[self.__currentOverlay].addSelectionToROI() 
 
 
     @actions.action
@@ -476,7 +504,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         self.setConstraint('fillValue', 'minval', dmin)
         self.setConstraint('fillValue', 'maxval', dmax)
-        self.setConstraint('intensityThres', 'maxval', (dmax - dmin) / 5.0)
+
+        dmin, dmax = overlay.dataRange
+        self.setConstraint('intensityThres', 'maxval', (dmax - dmin) / 2.0)
 
 
     def __selectedOverlayChanged(self, *a):
@@ -715,9 +745,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         #      start/end of a mouse drag?
         selSize   = selection.getSelectionSize()
 
-        self.createMaskFromSelection.enable = selSize > 0
-        self.createROIFromSelection .enable = selSize > 0
+        self.addSelectionToMask     .enable = selSize > 0
+        self.removeSelectionFromMask.enable = selSize > 0
+        self.addSelectionToROI      .enable = selSize > 0
         self.clearSelection         .enable = selSize > 0
+        self.eraseSelection         .enable = selSize > 0
         self.fillSelection          .enable = selSize > 0
 
     
@@ -858,6 +890,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
         perf = self._viewPanel.getSceneOptions().performance
 
+        # If the given location is already
+        # equal to the display location,
+        # calling _navModeLeftMouseDrag we
+        # will not trigger a refresh, so
+        # we will force the refresh instead.
         forceRefresh = (
             canvasPos is not None and
             np.all(np.isclose(canvasPos, self._displayCtx.location.xyz)))
@@ -869,11 +906,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if perf == 4               and \
            (mousePos  is not None) and \
            (canvasPos is not None):
-            self._navModeLeftMouseDrag(ev, canvas, mousePos, canvasPos)
             
+            self._navModeLeftMouseDrag(ev, canvas, mousePos, canvasPos)
+
             if forceRefresh:
                 for c in self.getEventTargets():
-                    canvas.Refresh()
+                    c.Refresh()
 
         else:
             canvas.Refresh()
@@ -1050,7 +1088,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     def __selintPropertyChanged(self, *a):
-        """
+        """Called when the :attr:`intensityThres`, :attr:`localFill`,
+        :attr:`limitToRadius`, or :attr:`searchRadius` properties change.
+        Re-runs select-by-intensity (via :meth:`__selintSelect`), with
+        the new settings.
         """
 
         mousePos, canvasPos = self.getLastMouseUpLocation()
@@ -1058,8 +1099,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         if mousePos is None or canvas is None:
             return
-
-        print 'Last canvas: {}'.format(canvas.zax)
 
         voxel = self.__getVoxelLocation(canvasPos)
 

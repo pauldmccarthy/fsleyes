@@ -17,8 +17,9 @@ import numpy as np
 
 import props
 
-import fsl.data.image as fslimage
-from . import            selection
+import fsl.data.image     as fslimage
+import fsleyes.colourmaps as fslcm
+from . import                selection
 
 
 log = logging.getLogger(__name__)
@@ -55,10 +56,10 @@ class Editor(props.HasProperties):
 
     .. autosummary::
        :nosignatures:
-    
-       createMaskFromSelection
-       createROIFromSelection
 
+       addSelectionToMask
+       removeSelectionFromMask
+       addSelectionToROI
 
     **Change tracking**
 
@@ -112,6 +113,8 @@ class Editor(props.HasProperties):
         self.__name           = '{}_{}'.format(self.__class__.__name__,
                                                id(self))
         self.__image          = image
+        self.__mask           = None
+        self.__roi            = None
         self.__overlayList    = overlayList
         self.__displayCtx     = displayCtx
         self.__selection      = selection.Selection(
@@ -120,6 +123,10 @@ class Editor(props.HasProperties):
         self.__selection.addListener('selection',
                                      self.__name,
                                      self.__selectionChanged)
+
+        overlayList.addListener('overlays',
+                                self.__name,
+                                self.__overlayListChanged)
  
         # A list of state objects, providing
         # records of what has been done. The
@@ -147,9 +154,12 @@ class Editor(props.HasProperties):
         to prevent memory leaks.
         """
         
-        self.__selection.removeListener('selection', self.__name)
+        self.__selection  .removeListener('selection', self.__name)
+        self.__overlayList.removeListener('overlays',  self.__name)
 
         self.__image          = None
+        self.__mask           = None
+        self.__roi            = None
         self.__overlayList    = None
         self.__displayCtx     = None
         self.__selection      = None
@@ -202,61 +212,100 @@ class Editor(props.HasProperties):
         self.__changeMade( change)
 
             
-    def createMaskFromSelection(self):
-        """Creates a new :class:`.Image` overlay, which represents a mask
-        of the current selection. The new ``Image`` is inserted into the
-        :class:`.OverlayList`.
+
+    def addSelectionToMask(self):
+        """If one has not already been created, creates a new :class:`.Image`
+        overlay, which represents a binary mask of the current selection. The
+        new ``Image`` is inserted into the :class:`.OverlayList`.
+
+        If the mask image already exists, the currrent selection is added to
+        it (via a logical OR).
         """
 
-        # This will raise a ValueError if the image
-        # associated with this Editor has been removed
-        # from the list. This shouldn't happen, and
-        # means that there is a bug in the
-        # OrthoEditProfile (which manages Editor
-        # instances).
-        overlayIdx = self.__overlayList.index(self.__image)
+        if self.__mask is None:
+            
+            # This will raise a ValueError if the image
+            # associated with this Editor has been removed
+            # from the list. This shouldn't happen, and
+            # means that there is a bug in the
+            # OrthoEditProfile (which manages Editor
+            # instances).
+            overlayIdx = self.__overlayList.index(    self.__image)
+            display    = self.__displayCtx.getDisplay(self.__image)
+
+            mask       = np.array(self.__selection.selection, dtype=np.uint8)
+            header     = self.__image.nibImage.get_header()
+
+            name = '{}/mask'.format(display.name)
+
+            maskImage   = fslimage.Image(mask, name=name, header=header)
+            self.__mask = maskImage
+
+            self.__overlayList.insert(overlayIdx + 1, maskImage)
+
+            display = self.__displayCtx.getDisplay(maskImage)
+            display.overlayType = 'mask'
+            
+            opts = self.__displayCtx.getOpts(maskImage)
+            opts.colour = fslcm.randomBrightColour()
+            
+        else:
+            
+            data           = self.__mask[:]
+            self.__mask[:] = data | self.__selection.selection
+
         
-        mask       = np.array(self.__selection.selection, dtype=np.uint8)
-        header     = self.__image.nibImage.get_header()
-        name       = '{}_mask'.format(self.__image.name)
+    def removeSelectionFromMask(self):
+        """If a mask image exists, the current selection is removed from it.
+        """
 
-        roiImage = fslimage.Image(mask, name=name, header=header)
-        self.__overlayList.insert(overlayIdx + 1, roiImage) 
+        if self.__mask is None:
+            return
+        
+        data           = self.__mask[:]
+        self.__mask[:] = data & ~self.__selection.selection 
 
 
-    def createROIFromSelection(self):
+    def addSelectionToROI(self):
         """Creates a new :class:`.Image` overlay, which contains the values
         from the ``Image`` associated with this ``Editor``, where the current
         selection is non-zero, and zeroes everywhere else.
         
         The new ``Image`` is inserted into the :class:`.OverlayList`.
-        """ 
+        """
 
-        image = self.__image
-
-        # ValueError if the image has been 
-        # removed from the overlay list
-        overlayIdx = self.__overlayList.index(image) 
-        opts       = self.__displayCtx.getOpts(image)
-        
-        roi       = np.zeros(image.shape[:3], dtype=image.dtype)
+        image     = self.__image
         selection = self.__selection.selection > 0
 
-        if   len(image.shape) == 3:
-            # The image class can't handle fancy indexing,
-            # so we need to retrieve the whole image, then
-            # we can use the boolean selection mask array.
-            roi[selection] = image[:][selection]
-        elif len(image.shape) == 4:
-            roi[selection] = image[:, :, :, opts.volume][selection]
+        if self.__roi is None:
+            
+            display = self.__displayCtx.getDisplay(image)
+
+            # ValueError if the image has been 
+            # removed from the overlay list
+            overlayIdx = self.__overlayList.index( image) 
+            opts       = self.__displayCtx.getOpts(image)
+            roi        = np.zeros(image.shape[:3], dtype=image.dtype)
+
+            if   len(image.shape) == 3:
+                # The image class can't handle fancy indexing,
+                # so we need to retrieve the whole image, then
+                # we can use the boolean selection mask array.
+                roi[selection] = image[:][selection]
+            elif len(image.shape) == 4:
+                roi[selection] = image[:, :, :, opts.volume][selection]
+            else:
+                raise RuntimeError('Only 3D and 4D images '
+                                   'are currently supported')
+
+            header = image.header
+            name   = '{}/roi'.format(display.name)
+
+            roiImage = fslimage.Image(roi, name=name, header=header)
+            self.__overlayList.insert(overlayIdx + 1, roiImage)
+            
         else:
-            raise RuntimeError('Only 3D and 4D images are currently supported')
-
-        header = image.header
-        name   = '{}_roi'.format(image.name)
-
-        roiImage = fslimage.Image(roi, name=name, header=header)
-        self.__overlayList.insert(overlayIdx + 1, roiImage)
+            self.__roi[selection] = image[:][selection]
 
         
     def startChangeGroup(self):
@@ -330,6 +379,17 @@ class Editor(props.HasProperties):
         self.canUndo  = True
         if self.__doneIndex == len(self.__doneList) - 1:
             self.canRedo = False
+
+
+    def __overlayListChanged(self, *a):
+        """Called when the :class:`.OverlayList` changes. Clears any obsolete
+        references to overlays which may have been removed from the list.
+        """
+        if self.__mask is not None and self.__mask not in self.__overlayList:
+            self.__mask = None
+
+        if self.__roi  is not None and self.__roi  not in self.__overlayList:
+            self.__roi  = None 
 
 
     def __selectionChanged(self, *a):

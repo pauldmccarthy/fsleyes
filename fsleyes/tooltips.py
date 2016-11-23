@@ -543,10 +543,20 @@ actions = TypeDict({
     'OrthoEditProfile.eraseSelection'          : 'Erase the selection (fill '
                                                  'it with 0)', 
     'OrthoEditProfile.clearSelection'          : 'Clear the current selection',
-    'OrthoEditProfile.createMaskFromSelection' : 'Create a new mask overlay '
-                                                 'from the current selection',
-    'OrthoEditProfile.createROIFromSelection'  : 'Create a new ROI overlay '
-                                                 'from the current selection',
+    
+    'OrthoEditProfile.addSelectionToMask'      : 'Add the current selection '
+                                                 'to a binary mask. The mask '
+                                                 'is created if it does not '
+                                                 'already exist.',
+    'OrthoEditProfile.removeSelectionFromMask' : 'Remove the current '
+                                                 'selection from the binary '
+                                                 'mask (if one exists).', 
+    'OrthoEditProfile.addSelectionToROI'       : 'Add the current selection '
+                                                 'to a ROI image - the voxel '
+                                                 'values are copied to the '
+                                                 'ROI image. The ROI image '
+                                                 'is created if it does not '
+                                                 'already exist.', 
 
     'VolumeOpts.resetDisplayRange' : 'Reset the display range '
                                      'to the data range.',

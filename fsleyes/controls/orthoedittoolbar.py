@@ -181,14 +181,6 @@ _ICONS = {
         fslicons.findImageFile('selection2DHighlight24'),
         fslicons.findImageFile('selection2D24')],
     
-    'clearSelection'          :  fslicons.findImageFile('clear24'),
-    'undo'                    :  fslicons.findImageFile('undo24'),
-    'redo'                    :  fslicons.findImageFile('redo24'),
-    'fillSelection'           :  fslicons.findImageFile('fill24'),
-    'eraseSelection'          :  fslicons.findImageFile('erase24'),
-    'createMaskFromSelection' :  fslicons.findImageFile('createMask24'),
-    'createROIFromSelection'  :  fslicons.findImageFile('createROI24'),
-    
     'limitToRadius'           :  [
         fslicons.findImageFile('radiusHighlight24'),
         fslicons.findImageFile('radius24')],
@@ -209,21 +201,7 @@ _TOOLTIPS = {
                                                        'mode'],
     'selectionIs3D'           : fsltooltips.properties['OrthoEditProfile.'
                                                        'selectionIs3D'],
-    'clearSelection'          : fsltooltips.actions['OrthoEditProfile.'
-                                                    'clearSelection'],
-    'eraseSelection'          : fsltooltips.actions['OrthoEditProfile.'
-                                                    'eraseSelection'], 
-    'undo'                    : fsltooltips.actions['OrthoEditProfile.'
-                                                    'undo'],
-    'redo'                    : fsltooltips.actions['OrthoEditProfile.'
-                                                    'redo'],
-    'fillSelection'           : fsltooltips.actions['OrthoEditProfile.'
-                                                    'fillSelection'],
-    'createMaskFromSelection' : fsltooltips.actions['OrthoEditProfile.'
-                                                    'createMaskFromSelection'],
-    'createROIFromSelection'  : fsltooltips.actions['OrthoEditProfile.'
-                                                    'createROIFromSelection'],
-    
+
     'selint'                  : fsltooltips.properties['OrthoEditToolBar.'
                                                        'selint'],
     'limitToRadius'           : fsltooltips.properties['OrthoEditProfile.'
@@ -232,10 +210,6 @@ _TOOLTIPS = {
                                                        'searchRadius'],
     'localFill'               : fsltooltips.properties['OrthoEditProfile.'
                                                        'localFill'],
-    'selectionCursorColour'   : fsltooltips.properties['OrthoEditProfile.sel'
-                                                       'ectionCursorColour'],
-    'selectionOverlayColour'  : fsltooltips.properties['OrthoEditProfile.sel'
-                                                       'ectionOverlayColour'],
     'selectionSize'           : fsltooltips.properties['OrthoEditProfile.'
                                                        'selectionSize'],
     'fillValue'               : fsltooltips.properties['OrthoEditProfile.'

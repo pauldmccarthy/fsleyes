@@ -94,8 +94,9 @@ _ICONS = {
     'redo'                    :  fslicons.findImageFile('redo24'),
     'fillSelection'           :  fslicons.findImageFile('fill24'),
     'eraseSelection'          :  fslicons.findImageFile('eraseSelection24'),
-    'createMaskFromSelection' :  fslicons.findImageFile('createMask24'),
-    'createROIFromSelection'  :  fslicons.findImageFile('createROI24'),
+    'addSelectionToMask'      :  fslicons.findImageFile('createMask24'),
+    'addSelectionToROI'       :  fslicons.findImageFile('createROI24'),
+    'removeSelectionFromMask' :  fslicons.findImageFile('remove24'),
 
 }
         
@@ -112,10 +113,12 @@ _TOOLTIPS = {
                                                     'redo'],
     'fillSelection'           : fsltooltips.actions['OrthoEditProfile.'
                                                     'fillSelection'],
-    'createMaskFromSelection' : fsltooltips.actions['OrthoEditProfile.'
-                                                    'createMaskFromSelection'],
-    'createROIFromSelection'  : fsltooltips.actions['OrthoEditProfile.'
-                                                    'createROIFromSelection'],
+    'addSelectionToROI'       : fsltooltips.actions['OrthoEditProfile.'
+                                                    'addSelectionToROI'],
+    'addSelectionToMask'      : fsltooltips.actions['OrthoEditProfile.'
+                                                    'addSelectionToMask'],
+
+    'removeSelectionFromMask' : 'TODO' ,
 
 }
         
@@ -142,11 +145,15 @@ _TOOLBAR_SPECS = [
         icon=_ICONS['eraseSelection'],
         tooltip=_TOOLTIPS['eraseSelection']), 
     actions.ActionButton(
-        'createMaskFromSelection',
-        icon=_ICONS['createMaskFromSelection'],
-        tooltip=_TOOLTIPS['createMaskFromSelection']),
+        'addSelectionToROI',
+        icon=_ICONS['addSelectionToROI'],
+        tooltip=_TOOLTIPS['addSelectionToROI']),
     actions.ActionButton(
-        'createROIFromSelection',
-        icon=_ICONS['createROIFromSelection'],
-        tooltip=_TOOLTIPS['createROIFromSelection']),
+        'addSelectionToMask',
+        icon=_ICONS['addSelectionToMask'],
+        tooltip=_TOOLTIPS['addSelectionToMask']),
+    actions.ActionButton(
+        'removeSelectionFromMask',
+        icon=_ICONS['removeSelectionFromMask'],
+        tooltip=_TOOLTIPS['removeSelectionFromMask']), 
 ]

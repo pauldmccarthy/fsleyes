@@ -479,8 +479,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    'clearSelection',
                    'fillSelection',
                    'eraseSelection',
-                   'createMaskFromSelection',
-                   'createROIFromSelection']
+                   'addSelectionToMask',
+                   'addSelectionToROI',
+                   'removeSelectionFromMask']
 
         frame.populateMenu(editMenu, profile, actionz, ignoreFocus=True)        
 
