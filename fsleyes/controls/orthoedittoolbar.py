@@ -222,6 +222,12 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 """
 
 
+def _targetImageLabel(image):
+    """Used to generate labels for the :attr:`.OrthoEditProfile.targetImage`
+    options.
+    """
+    if image is None: return 'None'
+    else:             return image.name
 
 
 _TOOLBAR_SPECS  = [
@@ -271,7 +277,8 @@ _TOOLBAR_SPECS  = [
         tooltip=_TOOLTIPS['searchRadius'],
         enabledWhen=lambda p: p.mode == 'selint' and p.limitToRadius),
 
-    props.Widget('targetImage'),
+    props.Widget('targetImage',
+                 labels=_targetImageLabel),
     props.Widget('drawMode'),
 ]
 """This list contains specifications for all of the tools shown in an

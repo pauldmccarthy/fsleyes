@@ -116,7 +116,10 @@ class Display(props.SyncableHasProperties):
             parent=parent,
 
             # These properties cannot be unbound, as
-            # they affect the OpenGL representation 
+            # they affect the OpenGL representation.
+            # The name can't be unbound either,
+            # because it would be silly to allow
+            # different names for the same overlay.
             nounbind=['overlayType', 'name'],
 
             # Initial sync state between this
@@ -452,7 +455,7 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         overlays (i.e. :class:`.Nifti` instances) do not need to override
         this method - in this case, the overlay itself is considered to be
         its own reference image, and is returned by the base-class
-        implementation of this this method.
+        implementation of this method.
 
         .. note:: The reference :class:`.Nifti` instance returned by
                   sub-class implementations of this method must be in
@@ -474,6 +477,14 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         :class:`.Image` overlays can be transformed into the display
         coordinate system in different ways, as defined by the
         :attr:`.NiftiOpts.transform`  property.
+
+        .. note:: The purpose of this method (and the
+                  :meth:`standardToDisplayCoordinates` is so that, when the
+                  currently selected overlay is shifted in the display
+                  coordinate system (e.g. the :attr:`.NiftiOpts.transform`
+                  changes), the current :attr:`.DisplayContext.location`
+                  can be updated so that it stays in the same location
+                  *with respect to* the currently selected overlay.
         """
         return coords
 
