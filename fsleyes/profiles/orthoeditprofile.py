@@ -58,11 +58,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                 selection using a *cursor*. The cursor size can be changed
                 with the :attr:`selectionSize` property, and the cursor can be
                 toggled between a 2D square and a 3D cube via the
-                :attr:`selectionIs3D` property.
+                :attr:`selectionIs3D` property. If the :attr:`drawMode`
+                property is ``True``, selected voxels are immediately filled
+                with the :attr:`fillValue` when the mouse is released.
     
-    ``desel``   Deselect mode. Identical to ``sel`` mode, except that the
-                cursor is used to remove voxels from the selection.
-
+    ``desel``   Deselect mode. Identical to ``sel`` mode, except that the 
+                cursor is used to remove voxels from the selection. If the
+                :attr:`drawMode` property is ``True``, selected voxels are
+                immediately set to 0 when the mouse is released.
 
     ``chsize``  Change-size mode. The use can change the :attr:`selectionSize`
                 attribute via the mouse wheel.
@@ -119,6 +122,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     *scaled voxel* (a.k.a. ``pixdim``) space.  Therefore, when an ``Image``
     overlay is selected, the ``OrthoEditProfile`` instance sets that ``Image``
     as the current :attr:`.DisplayContext.displaySpace` reference image.
+
     """
 
 
@@ -147,6 +151,18 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     fillValue = props.Real(default=0, clamped=True)
     """The value used by the ``fillSelection`` action - all voxels in the
     selection will be filled with this value.
+    """
+
+
+    drawMode = props.Boolean(default=True)
+    """If ``True``, when in ``sel`` or ``desel`` mode, clicks and click+
+    drags cause the image to be immediately modified. Otherwise, editing 
+    is a two stage process (as described in the :class:`.Editor` class
+    documentation).
+
+    This setting is enabled by default, because it causes FSLeyes to behave
+    like FSLView. However, all advanced editing/selection capabilities are
+    disabled when ``drawMode`` is ``True``.
     """
     
 
@@ -226,7 +242,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         overlayList.addListener('overlays',
                                 self._name,
                                 self.__selectedOverlayChanged)
-        
+
+        self.addListener('drawMode',
+                         self._name,
+                         self.__drawModeChanged)
         self.addListener('selectionOverlayColour',
                          self._name,
                          self.__selectionColoursChanged)
@@ -244,9 +263,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                          self.__selintPropertyChanged)
         self.addListener('limitToRadius',
                          self._name,
-                         self.__selintPropertyChanged) 
+                         self.__selintPropertyChanged)
 
         self.__selectedOverlayChanged()
+        self.__drawModeChanged()
 
 
     def destroy(self):
@@ -453,6 +473,22 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         
         self.__xselAnnotation.texture.refresh()
         self._viewPanel.Refresh()
+
+
+    def __drawModeChanged(self, *a):
+        """Called when the :attr:`drawMode` changes. Updates the enabled
+        state of various actions that are irrelevant when in draw mode.
+        """
+
+        if self.drawMode: self.getProp('mode').disableChoice('selint', self)
+        else:             self.getProp('mode').enableChoice( 'selint', self)
+        
+        self.clearSelection         .enabled = not self.drawMode
+        self.fillSelection          .enabled = not self.drawMode
+        self.eraseSelection         .enabled = not self.drawMode
+        self.addSelectionToMask     .enabled = not self.drawMode
+        self.removeSelectionFromMask.enabled = not self.drawMode
+        self.addSelectionToROI      .enabled = not self.drawMode
  
 
     def __selectionColoursChanged(self, *a):
@@ -924,7 +960,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.__currentOverlay is None:
             return False
         
-        editor = self.__editors[self.__currentOverlay] 
+        editor = self.__editors[self.__currentOverlay]
+        
+        if self.drawMode:
+            editor.fillSelection(self.fillValue)
+            editor.getSelection().clearSelection()
+
         editor.endChangeGroup()
         
         self._viewPanel.Refresh()
@@ -994,7 +1035,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         if voxel is not None:
             editor.startChangeGroup()
-            self.__applySelection(      canvas, voxel, False)
+            self.__applySelection(      canvas, voxel, self.drawMode)
             self.__drawCursorAnnotation(canvas, voxel)
             self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
 
@@ -1009,10 +1050,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         voxel = self.__getVoxelLocation(canvasPos)
         
         if voxel is not None:
-            self.__applySelection(      canvas, voxel, False)
+            self.__applySelection(      canvas, voxel, self.drawMode)
             self.__drawCursorAnnotation(canvas, voxel)
             self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
-
 
         return voxel is not None
 
@@ -1027,6 +1067,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             return False
         
         editor = self.__editors[self.__currentOverlay]
+        
+        if self.drawMode:
+            editor.fillSelection(0)
+            editor.getSelection().clearSelection()
         
         editor.endChangeGroup()
         self._viewPanel.Refresh()

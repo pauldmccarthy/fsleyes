@@ -269,7 +269,9 @@ _TOOLBAR_SPECS  = [
         spin=False,
         label=_LABELS['searchRadius'],
         tooltip=_TOOLTIPS['searchRadius'],
-        enabledWhen=lambda p: p.mode == 'selint' and p.limitToRadius)
+        enabledWhen=lambda p: p.mode == 'selint' and p.limitToRadius),
+
+    props.Widget('drawMode'),
 ]
 """This list contains specifications for all of the tools shown in an
 :class:`OrthoEditToolBar`, in the order that they are shown.
