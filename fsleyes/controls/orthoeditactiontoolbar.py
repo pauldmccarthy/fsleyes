@@ -94,8 +94,8 @@ _ICONS = {
     'redo'                    :  fslicons.findImageFile('redo24'),
     'fillSelection'           :  fslicons.findImageFile('fill24'),
     'eraseSelection'          :  fslicons.findImageFile('eraseSelection24'),
-    'addSelectionToMask'      :  fslicons.findImageFile('createMask24'),
-    'addSelectionToROI'       :  fslicons.findImageFile('createROI24'),
+    'addSelectionToMask'      :  fslicons.findImageFile('addtoMask24'),
+    'addSelectionToROI'       :  fslicons.findImageFile('addToROI24'),
     'removeSelectionFromMask' :  fslicons.findImageFile('remove24'),
 
 }
