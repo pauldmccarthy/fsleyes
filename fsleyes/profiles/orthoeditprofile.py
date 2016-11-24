@@ -12,18 +12,19 @@ import logging
 
 import wx
 
-import numpy                    as np
+import numpy                       as np
 
-import                             props
-import fsl.data.image           as fslimage
-import fsl.utils.async          as async
-import fsl.utils.dialog         as fsldlg
-import fsl.utils.status         as status
-import fsleyes.strings          as strings
-import fsleyes.actions          as actions
-import fsleyes.editor.editor    as fsleditor
-import fsleyes.gl.annotations   as annotations
-from . import                      orthoviewprofile
+import                                props
+import fsl.data.image              as fslimage
+import fsl.utils.async             as async
+import fsl.utils.dialog            as fsldlg
+import fsl.utils.status            as status
+import fsleyes.strings             as strings
+import fsleyes.actions             as actions
+import fsleyes.actions.copyoverlay as copyoverlay
+import fsleyes.editor.editor       as fsleditor
+import fsleyes.gl.annotations      as annotations
+from . import                         orthoviewprofile
 
 
 log = logging.getLogger(__name__)
@@ -346,6 +347,22 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__zselAnnotation = None
             
         orthoviewprofile.OrthoViewProfile.deregister(self)
+
+
+    @actions.action
+    def createMask(self):
+        """Create a 3D mask which has the same size as the currently selected
+        overlay, and insert it into the overlay list.
+        """
+        if self.__currentOverlay is None:
+            return
+        
+        copyoverlay.copyImage(self._overlayList,
+                              self._displayCtx,
+                              self.__currentOverlay,
+                              createMask=True,
+                              copy4D=False,
+                              copyDisplay=False)
 
 
     @actions.action

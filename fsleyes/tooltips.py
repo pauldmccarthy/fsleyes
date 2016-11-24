@@ -540,17 +540,40 @@ actions = TypeDict({
     'OrthoViewProfile.resetDisplay' : 'Reset the display on all canvases.',
     'OrthoViewProfile.centreCursor' : 'Reset location to centre of scene',
 
-    'OrthoEditProfile.undo'                    : 'Undo the most recent action',
-    'OrthoEditProfile.redo'                    : 'Redo the most recent '
-                                                 'undone action',
-    'OrthoEditProfile.fillSelection'           : 'Fill the selection with '
-                                                 'the current fill value',
-    'OrthoEditProfile.eraseSelection'          : 'Erase the selection (fill '
-                                                 'it with 0)', 
-    'OrthoEditProfile.clearSelection'          : 'Clear the current selection',
+    'OrthoEditProfile.undo' : 
+    'Undo the most recent action. A history of changes to the selection, '
+    'and to image data, are maintained. separate undo/redo histories are '
+    'maintained for each image.',
+    
+    'OrthoEditProfile.redo' :
+    'Redo the most recent undone action',
+    
+    'OrthoEditProfile.createMask' :
+    'Create an empty 3D mask image which has the same dimensions as the '
+    'currently selected image.',
 
-    'VolumeOpts.resetDisplayRange' : 'Reset the display range '
-                                     'to the data range.',
+    'OrthoEditProfile.clearSelection' :
+    'Clear the current selection - no voxels are selected.',
+    
+    'OrthoEditProfile.fillSelection' :
+    'Fill selected voxels in the currently selected '
+    'image with the current fill value. ',
+    
+    'OrthoEditProfile.eraseSelection' :
+    'Set the value at all selected voxels in the currently selected '
+    'image to zero.',
+
+    'OrthoEditProfile.copySelection' :
+    'Copy the values of all selected voxels in the currently selected image '
+    'and store them in an internal clipboard. The voxel values can then be '
+    'pasted into another image (which has the same dimensions/resolution as '
+    'the source image).',
+
+    'OrthoEditProfile.pasteSelection' :
+    'Paste the contents of the clipboard into the currently selected image.',
+
+    'VolumeOpts.resetDisplayRange' :
+    'Reset the display range to the data range.',
 
     # Items in the OverlayListPanel
     'ListItemWidget.save'  : 'Save this overlay to a file',

@@ -93,8 +93,7 @@ class CopyOverlayAction(action.Action):
         
         import wx
 
-        ovlIdx  = self.__displayCtx.selectedOverlay
-        overlay = self.__overlayList[ovlIdx]
+        overlay = self.__displayCtx.getSelectedOverlay()
 
         if overlay is None:
             return
@@ -105,7 +104,6 @@ class CopyOverlayAction(action.Action):
                                'copied'.format(fslimage.Image.__name__))
 
         display = self.__displayCtx.getDisplay(overlay)
-        opts    = self.__displayCtx.getOpts(   overlay)
 
         # We ask the user questions three:
         #  - Copy data, or create an empty (a.k.a. mask) image?
@@ -149,7 +147,8 @@ class CopyOverlayAction(action.Action):
             cbMessages=options,
             cbStates=states,
             yesText='OK',
-            cancelText='Cancel')
+            cancelText='Cancel',
+            focus='yes')
 
         if dlg.ShowModal() != wx.ID_YES:
             return
@@ -164,54 +163,92 @@ class CopyOverlayAction(action.Action):
         if is4D:
             fslsettings.write(copy4DSetting, copy4D)
 
-        # Extract/create the data for the new image.
-        # Set copy4D to true for 3D images, just to
-        # make the 4th dimension indexing below work.
-        if not is4D:
-            copy4D = True
+        copyImage(self.__overlayList,
+                  self.__displayCtx,
+                  overlay,
+                  createMask,
+                  copy4D,
+                  copyDisplay)
 
-        if createMask:
-            if copy4D: data = np.zeros(overlay.shape)
-            else:      data = np.zeros(overlay.shape[:3])
-        else:
-            if copy4D: data = np.copy(overlay[:])
-            else:      data = np.copy(overlay[:, :, :, opts.volume])
+    
+def copyImage(overlayList,
+              displayCtx,
+              overlay,
+              createMask,
+              copy4D,
+              copyDisplay):
+    """Creates a copy of the given :class:`.Image` overlay, and inserts it
+    into the :class:`.OverlayList`.
 
-        # Create the copy, put it in the list
-        header = overlay.header
-        name   = '{}_copy'.format(overlay.name)
-        copy   = fslimage.Image(data, name=name, header=header)
-        
-        self.__overlayList.insert(ovlIdx + 1, copy)
-        
-        # Copy the Display/DisplayOpts settings
-        if copyDisplay:
+    :arg overlayList: The :class:`.OverlayList`.
+    
+    :arg displayCtx:  The :class:`.DisplayContext`.
+    
+    :arg overlay:     The :class:`.Image` to be copied.
+    
+    :arg createMask:  If ``True``, the copy will be an empty ``Image`` the
+                      same shape as the ``overlay``.
+    
+    :arg copy4D:      If ``True``, and the ``overlay`` is 4D, the copy will
+                      also be 4D. Otherwise, the current 3D voluem is copied.
 
-            srcDisplay  = self.__displayCtx.getDisplay(overlay)
-            destDisplay = self.__displayCtx.getDisplay(copy)
+    :arg copyDisplay: If ``True``, the copy will inherit the display settings
+                      of the ``overlay``. Otherwise, the copy will be 
+                      initialised  with default display settings.
+    """
 
-            for prop in srcDisplay.getAllProperties()[0]:
+    ovlIdx = overlayList.index(overlay)
+    opts   = displayCtx.getOpts(overlay)
+    is4D   = len(overlay.shape) > 3 and overlay.shape[3] > 1
 
-                # Don't override the name
-                # that we set above
-                if prop == 'name':
-                    continue
+    # Extract/create the data for the new image.
+    # Set copy4D to true for 3D images, just to
+    # make the 4th dimension indexing below work.
+    if not is4D:
+        copy4D = True
 
-                val = getattr(srcDisplay, prop)
-                setattr(destDisplay, prop, val)
+    if createMask:
+        if copy4D: data = np.zeros(overlay.shape)
+        else:      data = np.zeros(overlay.shape[:3])
+    else:
+        if copy4D: data = np.copy(overlay[:])
+        else:      data = np.copy(overlay[:, :, :, opts.volume])
 
-            # And after the Display has been configured
-            # copy the DisplayOpts settings.
-            srcOpts  = self.__displayCtx.getOpts(overlay)
-            destOpts = self.__displayCtx.getOpts(copy)
+    # Create the copy, put it in the list
+    header = overlay.header
+    name   = '{}_copy'.format(overlay.name)
+    copy   = fslimage.Image(data, name=name, header=header)
 
-            for prop in srcOpts.getAllProperties()[0]:
+    overlayList.insert(ovlIdx + 1, copy)
 
-                # But don't clobber the transform, and related,
-                # properties, as it is (typically) automatically
-                # controlled via the DisplayContext.displaySpace
-                if prop in ('transform', 'bounds', 'customXform'):
-                    continue
-                
-                val = getattr(srcOpts, prop)
-                setattr(destOpts, prop, val)
+    # Copy the Display/DisplayOpts settings
+    if copyDisplay:
+
+        srcDisplay  = displayCtx.getDisplay(overlay)
+        destDisplay = displayCtx.getDisplay(copy)
+
+        for prop in srcDisplay.getAllProperties()[0]:
+
+            # Don't override the name
+            # that we set above
+            if prop == 'name':
+                continue
+
+            val = getattr(srcDisplay, prop)
+            setattr(destDisplay, prop, val)
+
+        # And after the Display has been configured
+        # copy the DisplayOpts settings.
+        srcOpts  = displayCtx.getOpts(overlay)
+        destOpts = displayCtx.getOpts(copy)
+
+        for prop in srcOpts.getAllProperties()[0]:
+
+            # But don't clobber the transform, and related,
+            # properties, as it is (typically) automatically
+            # controlled via the DisplayContext.displaySpace
+            if prop in ('transform', 'bounds', 'customXform'):
+                continue
+
+            val = getattr(srcOpts, prop)
+            setattr(destOpts, prop, val)

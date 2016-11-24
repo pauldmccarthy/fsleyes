@@ -88,27 +88,35 @@ class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):
 
 
 _ICONS = {
-    'undo'                    :  fslicons.findImageFile('undo24'),
-    'redo'                    :  fslicons.findImageFile('redo24'),
-    'clearSelection'          :  fslicons.findImageFile('clear24'),
+    'undo'           : fslicons.findImageFile('undo24'),
+    'redo'           : fslicons.findImageFile('redo24'),
+    'createMask'     : fslicons.findImageFile('new24'),
+    'clearSelection' : fslicons.findImageFile('clear24'),
+    'fillSelection'  : fslicons.findImageFile('remove24'),
+    'eraseSelection' : fslicons.findImageFile('remove24'),
+    'copySelection'  : fslicons.findImageFile('remove24'),
+    'pasteSelection' : fslicons.findImageFile('remove24'),
 }
         
 
 _TOOLTIPS = {
 
-    'undo'                    : fsltooltips.actions['OrthoEditProfile.'
-                                                    'undo'],
-    'redo'                    : fsltooltips.actions['OrthoEditProfile.'
-                                                    'redo'],
-    'clearSelection'          : fsltooltips.actions['OrthoEditProfile.'
-                                                    'clearSelection'],
-    'fillSelection'           : fsltooltips.actions['OrthoEditProfile.'
-                                                    'fillSelection'],
-    'eraseSelection'          : fsltooltips.actions['OrthoEditProfile.'
-                                                    'eraseSelection'], 
- 
-
-
+    'undo'           : fsltooltips.actions['OrthoEditProfile.'
+                                           'undo'],
+    'redo'           : fsltooltips.actions['OrthoEditProfile.'
+                                           'redo'],
+    'createMask'     : fsltooltips.actions['OrthoEditProfile.'
+                                           'createMask'], 
+    'clearSelection' : fsltooltips.actions['OrthoEditProfile.'
+                                           'clearSelection'],
+    'fillSelection'  : fsltooltips.actions['OrthoEditProfile.'
+                                           'fillSelection'],
+    'eraseSelection' : fsltooltips.actions['OrthoEditProfile.'
+                                           'eraseSelection'],
+    'copySelection'  : fsltooltips.actions['OrthoEditProfile.'
+                                           'copySelection'],
+    'pasteSelection' : fsltooltips.actions['OrthoEditProfile.'
+                                           'pasteSelection'], 
 }
         
 _TOOLBAR_SPECS = [
@@ -122,15 +130,27 @@ _TOOLBAR_SPECS = [
         icon=_ICONS['redo'],
         tooltip=_TOOLTIPS['redo']),
     actions.ActionButton(
+        'createMask',
+        icon=_ICONS['createMask'],
+        tooltip=_TOOLTIPS['createMask']),    
+    actions.ActionButton(
         'clearSelection',
         icon=_ICONS['clearSelection'],
         tooltip=_TOOLTIPS['clearSelection']),
     actions.ActionButton(
-        'fillSelection'),
+        'fillSelection',
+        icon=_ICONS['fillSelection'],
+        tooltip=_TOOLTIPS['fillSelection']),
     actions.ActionButton(
-        'eraseSelection'),
+        'eraseSelection',
+        icon=_ICONS['eraseSelection'],
+        tooltip=_TOOLTIPS['eraseSelection']),
     actions.ActionButton(
-        'copySelection'),
+        'copySelection',
+        icon=_ICONS['copySelection'],
+        tooltip=_TOOLTIPS['copySelection']),
     actions.ActionButton(
-        'pasteSelection'),
+        'pasteSelection',
+        icon=_ICONS['pasteSelection'],
+        tooltip=_TOOLTIPS['pasteSelection']),
 ]
