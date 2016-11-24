@@ -94,9 +94,6 @@ _ICONS = {
     'redo'                    :  fslicons.findImageFile('redo24'),
     'fillSelection'           :  fslicons.findImageFile('fill24'),
     'eraseSelection'          :  fslicons.findImageFile('eraseSelection24'),
-    'addSelectionToMask'      :  fslicons.findImageFile('addtoMask24'),
-    'addSelectionToROI'       :  fslicons.findImageFile('addToROI24'),
-    'removeSelectionFromMask' :  fslicons.findImageFile('remove24'),
 
 }
         
@@ -113,12 +110,7 @@ _TOOLTIPS = {
                                                     'redo'],
     'fillSelection'           : fsltooltips.actions['OrthoEditProfile.'
                                                     'fillSelection'],
-    'addSelectionToROI'       : fsltooltips.actions['OrthoEditProfile.'
-                                                    'addSelectionToROI'],
-    'addSelectionToMask'      : fsltooltips.actions['OrthoEditProfile.'
-                                                    'addSelectionToMask'],
 
-    'removeSelectionFromMask' : 'TODO' ,
 
 }
         
@@ -144,16 +136,4 @@ _TOOLBAR_SPECS = [
         'eraseSelection',
         icon=_ICONS['eraseSelection'],
         tooltip=_TOOLTIPS['eraseSelection']), 
-    actions.ActionButton(
-        'addSelectionToROI',
-        icon=_ICONS['addSelectionToROI'],
-        tooltip=_TOOLTIPS['addSelectionToROI']),
-    actions.ActionButton(
-        'addSelectionToMask',
-        icon=_ICONS['addSelectionToMask'],
-        tooltip=_TOOLTIPS['addSelectionToMask']),
-    actions.ActionButton(
-        'removeSelectionFromMask',
-        icon=_ICONS['removeSelectionFromMask'],
-        tooltip=_TOOLTIPS['removeSelectionFromMask']), 
 ]

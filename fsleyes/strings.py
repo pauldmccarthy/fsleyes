@@ -373,9 +373,6 @@ actions = TypeDict({
     'OrthoEditProfile.fillSelection'           : 'Fill selection',
     'OrthoEditProfile.eraseSelection'          : 'Erase selection',
     'OrthoEditProfile.clearSelection'          : 'Clear selection',
-    'OrthoEditProfile.addSelectionToMask'      : 'Create/add to mask',
-    'OrthoEditProfile.removeSelectionFromMask' : 'Remove from mask',
-    'OrthoEditProfile.addSelectionToROI'       : 'Create/add to ROI',
 })
 
 

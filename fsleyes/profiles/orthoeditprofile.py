@@ -93,10 +93,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
        redo
        clearSelection
        fillSelection
+       copySelection
+       pasteSelection
+       pasteSelectionAsMask
        eraseSelection
-       addSelectionToMask
-       removeSelectionFromMask
-       addSelectionToROI
 
     
     **Annotations**
@@ -149,7 +149,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     """
 
     
-    fillValue = props.Real(default=0, clamped=True)
+    fillValue = props.Real(default=1, clamped=True)
     """The value used by the ``fillSelection`` action - all voxels in the
     selection will be filled with this value.
     """
@@ -168,7 +168,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     intensityThres = props.Real(
-        minval=0.0, maxval=1.0, default=10, clamped=False)
+        minval=0.0, maxval=1.0, default=1, clamped=False)
     """In ``selint`` mode, the maximum distance, in intensity, that a voxel
     can be from the seed location, in order for it to be selected.
     Passed as the ``precision`` argument to the
@@ -385,47 +385,28 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     @actions.action
-    def addSelectionToMask(self):
-        """If the currently selected overlay has a mask associated with 
-        it, the current selection is added to it.
+    def copySelection(self):
+        """
         """
 
         if self.__currentOverlay is None:
             return
-
-        editor = self.__editors[self.__currentOverlay]
-
-        editor.startChangeGroup()
-        editor.addSelectionToMask()
-        editor.getSelection().clearSelection()
-        editor.endChangeGroup()
 
 
     @actions.action
-    def removeSelectionFromMask(self):
-        """If the currently selected overlay has a mask associated with 
-        it, the current selection is removed from it.
+    def pasteSelection(self):
+        """
         """
         if self.__currentOverlay is None:
             return
-
-        editor = self.__editors[self.__currentOverlay]
-
-        editor.startChangeGroup()
-        editor.removeSelectionFromMask()
-        editor.getSelection().clearSelection()
-        editor.endChangeGroup()
  
 
     @actions.action
-    def addSelectionToROI(self):
-        """Creates a new ROI :class:`.Image` from the current selection.
-        See :meth:`.Editor.createROIFromSelection`.
+    def pasteSelectionAsMask(self):
+        """
         """ 
         if self.__currentOverlay is None:
             return
-
-        self.__editors[self.__currentOverlay].addSelectionToROI() 
 
 
     @actions.action
@@ -492,9 +473,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.clearSelection         .enabled = not self.drawMode
         self.fillSelection          .enabled = not self.drawMode
         self.eraseSelection         .enabled = not self.drawMode
-        self.addSelectionToMask     .enabled = not self.drawMode
-        self.removeSelectionFromMask.enabled = not self.drawMode
-        self.addSelectionToROI      .enabled = not self.drawMode
  
 
     def __selectionColoursChanged(self, *a):
@@ -583,9 +561,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if overlay == oldOverlay:
             return
 
-        # Update the limits/options on all properties. 
-        self.__setPropertyLimits()
-
         # Destroy all existing canvas annotations
         xannot = self.__xcanvas.getAnnotations()
         yannot = self.__ycanvas.getAnnotations()
@@ -620,6 +595,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.redo.unbindProps('enabled', editor.redo)
 
         self.__currentOverlay = overlay
+
+        # Update the limits/options on all properties. 
+        self.__setPropertyLimits()
 
         # If there is no selected overlay (the overlay
         # list is empty), don't do anything.
@@ -688,10 +666,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         #
         # Currently we only transfer
         # the selection for images
-        # with the same shape.
-        if oldOverlay is not None                        and \
-           oldOverlay.shape[:3]     == overlay.shape[:3] and \
-           np.allclose(oldOverlay.voxToWorldMat, overlay.voxToWorldMat):
+        # with the same dimensions/space
+        if oldOverlay is not None and oldOverlay.sameSpace(overlay):
 
             log.debug('Transferring selection from {} to {}'.format(
                 oldOverlay.name,
