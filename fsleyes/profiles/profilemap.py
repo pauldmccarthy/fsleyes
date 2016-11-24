@@ -153,14 +153,16 @@ altHandlerMap = {
         (('sel',    'RightMouseDown'),  ('desel',  'LeftMouseDown')),
         (('sel',    'RightMouseDrag'),  ('desel',  'LeftMouseDrag')),
         (('sel',    'RightMouseUp'),    ('desel',  'LeftMouseUp')),
-        (('selint', 'RightMouseDown'),  ('desel',  'LeftMouseDown')),
-        (('selint', 'RightMouseDrag'),  ('desel',  'LeftMouseDrag')),
-        (('selint', 'RightMouseUp'),    ('desel',  'LeftMouseUp')), 
- 
+
         # And vice versa
         (('desel',  'RightMouseDown'),  ('sel',    'LeftMouseDown')),
         (('desel',  'RightMouseDrag'),  ('sel',    'LeftMouseDrag')),
         (('desel',  'RightMouseUp'),    ('sel',    'LeftMouseUp')),
+
+        # TODO Need a way to navigate?
+        (('selint', 'RightMouseDown'),  ('desel',  'LeftMouseDown')),
+        (('selint', 'RightMouseDrag'),  ('desel',  'LeftMouseDrag')),
+        (('selint', 'RightMouseUp'),    ('desel',  'LeftMouseUp')), 
 
         # Make the selection cursor 
         # visible in desel mode

@@ -498,6 +498,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         state of various actions that are irrelevant when in draw mode.
         """
 
+        # The only possible profile modes 
+        # when rawMode==True are sel/desel.
+        if self.drawMode:
+            self.mode = 'sel'
+
         if self.drawMode: self.disableProperty('targetImage')
         else:             self.enableProperty( 'targetImage')
 

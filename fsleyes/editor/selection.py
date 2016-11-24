@@ -507,6 +507,9 @@ class Selection(notifier.Notifier):
                            :meth:`__storeChange`).
         """
 
+        if precision is not None and precision < 0:
+            precision = 0
+
         if   len(self.__image.shape) == 3:
             data = self.__image[:]
         elif len(self.__image.shape) == 4:
@@ -615,7 +618,7 @@ class Selection(notifier.Notifier):
             searchMask   = dists <= 1
 
         if precision is None: hits = searchSpace == value
-        else:                 hits = np.abs(searchSpace - value) < precision
+        else:                 hits = np.abs(searchSpace - value) <= precision
 
         if searchMask is not None:
             hits[~searchMask] = False

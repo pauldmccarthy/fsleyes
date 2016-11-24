@@ -648,9 +648,11 @@ properties = TypeDict({
     'OrthoEditProfile.fillValue'              : 'Fill value',
     'OrthoEditProfile.intensityThres'         : 'Intensity threshold',
     'OrthoEditProfile.localFill'              : 'Only select adjacent voxels',
-    'OrthoEditProfile.searchRadius'           : 'Limit search to radius (mm)',
+    'OrthoEditProfile.searchRadius'           : 'Search radius',
     'OrthoEditProfile.selectionOverlayColour' : 'Selection overlay',
     'OrthoEditProfile.selectionCursorColour'  : 'Selection cursor',
+    'OrthoEditProfile.drawMode'               : 'Draw mode',
+    'OrthoEditProfile.targetImage'            : 'Target image',
     
     'Display.name'              : 'Overlay name',
     'Display.overlayType'       : 'Overlay data type',

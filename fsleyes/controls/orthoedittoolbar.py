@@ -12,6 +12,8 @@ instances in an :class:`.OrthoPanel`.
 
 import logging
 
+import wx
+
 import props
 
 import fsleyes.toolbar  as fsltoolbar
@@ -116,23 +118,52 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
         if profile != 'edit':
             return
                 
-        tools = []
-        nav   = []
+        allTools   = []
+        allWidgets = []
+ 
+        for specGroup in _TOOLBAR_SPECS:
 
-        for spec in _TOOLBAR_SPECS:
+            groupWidgets = [] 
+            isGroup      = isinstance(specGroup, list)
 
-            target    = profileObj
-            widget    = props.buildGUI(self, target, spec)
-            navWidget = widget
-
-            if spec.label is not None:
-                widget = self.MakeLabelledTool(widget, spec.label)
+            if isGroup:
+                parent = wx.Panel(self)
                 
-            tools.append(widget)
-            nav  .append(navWidget)
+            else:
+                parent    = self
+                specGroup = [specGroup]
 
-        self.SetTools(tools)
-        self.setNavOrder(nav)
+            for spec in specGroup:
+                
+                widget = props.buildGUI(parent, profileObj, spec)
+
+                if not isGroup and spec.label is not None:
+                    widget = self.MakeLabelledTool(widget, spec.label)
+
+                allWidgets  .append(widget)
+                groupWidgets.append(widget)
+
+            # Assuming here that all
+            # widgets have labels
+            if isGroup:
+                
+                sizer = wx.FlexGridSizer(2, 2, 0, 0)
+                parent.SetSizer(sizer)
+
+                labels = [s.label for s in specGroup]
+                labels = [wx.StaticText(parent, label=l) for l in labels]
+
+                for w, l in zip(groupWidgets, labels):
+                    sizer.Add(l, flag=wx.EXPAND)
+                    sizer.Add(w, flag=wx.EXPAND)
+                    
+                allTools.append(parent)
+                
+            else:
+                allTools.append(groupWidgets[0])
+
+        self.SetTools(   allTools)
+        self.setNavOrder(allWidgets)
 
 
 _LABELS = {
@@ -148,7 +179,12 @@ _LABELS = {
     'searchRadius'           : strings.properties[OrthoEditProfile,
                                                   'searchRadius'],
     'fillValue'              : strings.properties[OrthoEditProfile,
-                                                  'fillValue'], 
+                                                  'fillValue'],
+
+    'drawMode'               : strings.properties[OrthoEditProfile,
+                                                  'drawMode'],
+    'targetImage'            : strings.properties[OrthoEditProfile,
+                                                  'targetImage'], 
 }
 """This dictionary contains labels for some :class:`OrthoEditToolBar`
 controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
@@ -197,25 +233,23 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 
 
 _TOOLTIPS = {
-    'mode'                    : fsltooltips.properties['OrthoEditProfile.'
-                                                       'mode'],
-    'selectionIs3D'           : fsltooltips.properties['OrthoEditProfile.'
-                                                       'selectionIs3D'],
+    'mode'           : fsltooltips.properties['OrthoEditProfile.mode'],
+    'selectionIs3D'  : fsltooltips.properties['OrthoEditProfile.'
+                                              'selectionIs3D'],
 
-    'selint'                  : fsltooltips.properties['OrthoEditToolBar.'
-                                                       'selint'],
-    'limitToRadius'           : fsltooltips.properties['OrthoEditProfile.'
-                                                       'limitToRadius'],
-    'searchRadius'            : fsltooltips.properties['OrthoEditProfile.'
-                                                       'searchRadius'],
-    'localFill'               : fsltooltips.properties['OrthoEditProfile.'
-                                                       'localFill'],
-    'selectionSize'           : fsltooltips.properties['OrthoEditProfile.'
-                                                       'selectionSize'],
-    'fillValue'               : fsltooltips.properties['OrthoEditProfile.'
-                                                       'fillValue'],
-    'intensityThres'          : fsltooltips.properties['OrthoEditProfile.'
-                                                       'intensityThres'],
+    'limitToRadius'  : fsltooltips.properties['OrthoEditProfile.'
+                                              'limitToRadius'],
+    'searchRadius'   : fsltooltips.properties['OrthoEditProfile.'
+                                              'searchRadius'],
+    'localFill'      : fsltooltips.properties['OrthoEditProfile.localFill'],
+    'selectionSize'  : fsltooltips.properties['OrthoEditProfile.'
+                                              'selectionSize'],
+    'fillValue'      : fsltooltips.properties['OrthoEditProfile.fillValue'],
+    'intensityThres' : fsltooltips.properties['OrthoEditProfile.'
+                                              'intensityThres'],
+
+    'drawMode'       : fsltooltips.properties['OrthoEditProfile.drawMode'],
+    'targetImage'    : fsltooltips.properties['OrthoEditProfile.targetImage'], 
 }
 """This dictionary contains tooltips for some :class:`OrthoEditToolBar`
 controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
@@ -252,35 +286,44 @@ _TOOLBAR_SPECS  = [
         icon=_ICONS['localFill'],
         tooltip=_TOOLTIPS['localFill'],
         enabledWhen=lambda p: p.mode == 'selint'),
-    props.Widget(
+    
+    [props.Widget(
         'selectionSize',
         label=_LABELS['selectionSize'],
         tooltip=_TOOLTIPS['selectionSize']),
-    props.Widget(
-        'fillValue',
-        label=_LABELS['fillValue'],
-        tooltip=_TOOLTIPS['fillValue'],
-        slider=False,
-        increment=1),
-    props.Widget(
+     props.Widget(
+         'fillValue',
+         label=_LABELS['fillValue'],
+         tooltip=_TOOLTIPS['fillValue'],
+         slider=False,
+         increment=1)],
+
+    [props.Widget(
         'intensityThres',
         slider=True,
         spin=False,
         label=_LABELS['intensityThres'],
         tooltip=_TOOLTIPS['intensityThres'],
         enabledWhen=lambda p: p.mode == 'selint'),
-    props.Widget(
-        'searchRadius',
-        slider=True,
-        spin=False,
-        label=_LABELS['searchRadius'],
-        tooltip=_TOOLTIPS['searchRadius'],
-        enabledWhen=lambda p: p.mode == 'selint' and p.limitToRadius),
+     props.Widget(
+         'searchRadius',
+         slider=True,
+         spin=False,
+         label=_LABELS['searchRadius'],
+         tooltip=_TOOLTIPS['searchRadius'],
+         enabledWhen=lambda p: p.mode == 'selint' and p.limitToRadius)],
+     
 
-    props.Widget('targetImage',
-                 labels=_targetImageLabel),
-    props.Widget('drawMode'),
+    [props.Widget('targetImage',
+                  label=_LABELS['targetImage'],
+                  labels=_targetImageLabel),
+     props.Widget('drawMode',
+                  tooltip=_TOOLTIPS['drawMode'],
+                  label=_LABELS['drawMode'])],
 ]
 """This list contains specifications for all of the tools shown in an
 :class:`OrthoEditToolBar`, in the order that they are shown.
+
+Some specs are grouped together into sub-lists - these will be laid out
+vertically on the toolbar.
 """

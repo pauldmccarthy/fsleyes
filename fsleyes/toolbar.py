@@ -156,9 +156,10 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
 
         if   labelSide in (wx.TOP,  wx.BOTTOM): orient = wx.VERTICAL
         elif labelSide in (wx.LEFT, wx.RIGHT):  orient = wx.HORIZONTAL
-        
-        panel = wx.Panel(self)
-        sizer = wx.BoxSizer(orient)
+
+        oldParent = tool.GetParent()
+        panel     = wx.Panel(oldParent)
+        sizer     = wx.BoxSizer(orient)
 
         panel.SetSizer(sizer)
         tool.Reparent(panel)
