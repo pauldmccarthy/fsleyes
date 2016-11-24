@@ -93,10 +93,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
        redo
        clearSelection
        fillSelection
+       eraseSelection
        copySelection
        pasteSelection
-       pasteSelectionAsMask
-       eraseSelection
 
     
     **Annotations**
@@ -207,8 +206,18 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
 
         # The currently selected overlay - 
-        # the overlay being edited
+        # the overlay being edited. 
         self.__currentOverlay    = None
+
+        # The 'clipboard' is created by
+        # the copySelection method - it
+        # contains a numpy array which
+        # was copied from another overlay.
+        # The clipboard source refers to
+        # the overlay that the clipboard
+        # was copied from.
+        self.__clipboard         = None
+        self.__clipboardSource   = None
 
         # An Editor instance is created for each
         # Image overlay (on demand, as they are
@@ -297,14 +306,16 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             zannot.dequeue(self.__zselAnnotation, hold=True)
             self.__zselAnnotaiton.destroy()
             
-        self.__editors        = None
-        self.__xcanvas        = None
-        self.__ycanvas        = None
-        self.__zcanvas        = None
-        self.__xselAnnotation = None
-        self.__yselAnnotation = None
-        self.__zselAnnotation = None
-        self.__currentOverlay = None
+        self.__editors         = None
+        self.__xcanvas         = None
+        self.__ycanvas         = None
+        self.__zcanvas         = None
+        self.__xselAnnotation  = None
+        self.__yselAnnotation  = None
+        self.__zselAnnotation  = None
+        self.__currentOverlay  = None
+        self.__clipboard       = None
+        self.__clipboardSource = None
 
         orthoviewprofile.OrthoViewProfile.destroy(self)
 
@@ -386,28 +397,45 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
     @actions.action
     def copySelection(self):
-        """
+        """Copies the data within the selection from the currently selected
+        overlay, and stores it in an internal "clipboard".
         """
 
-        if self.__currentOverlay is None:
+        overlay = self.__currentOverlay
+
+        if overlay is None:
             return
+
+        editor = self.__editors[overlay]
+
+        self.__clipboard       = editor.copySelection()
+        self.__clipboardSource = overlay
 
 
     @actions.action
     def pasteSelection(self):
+        """Pastes the data currently stored in the clipboard into the currently
+        selected image, if possible.
         """
-        """
+        
         if self.__currentOverlay is None:
             return
+
+        overlay         = self.__currentOverlay
+        clipboard       = self.__clipboard
+        clipboardSource = self.__clipboardSource
+
+        if     overlay   is None:                  return
+        if     clipboard is None:                  return
+        if not clipboardSource.sameSpace(overlay): return
+
+        editor = self.__editors[overlay]
+
+        editor.startChangeGroup()
+        editor.pasteSelection(clipboard)
+        editor.getSelection().clearSelection()
+        editor.endChangeGroup()
  
-
-    @actions.action
-    def pasteSelectionAsMask(self):
-        """
-        """ 
-        if self.__currentOverlay is None:
-            return
-
 
     @actions.action
     def undo(self):
@@ -464,15 +492,37 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         # The only possible profile modes 
         # when rawMode==True are sel/desel.
-        if self.drawMode:
+        if self.drawMode and self.mode not in ('nav', 'sel', 'desel'):
             self.mode = 'sel'
 
         if self.drawMode: self.getProp('mode').disableChoice('selint', self)
         else:             self.getProp('mode').enableChoice( 'selint', self)
-        
-        self.clearSelection         .enabled = not self.drawMode
-        self.fillSelection          .enabled = not self.drawMode
-        self.eraseSelection         .enabled = not self.drawMode
+
+        self.clearSelection.enabled = not self.drawMode
+        self.fillSelection .enabled = not self.drawMode
+        self.eraseSelection.enabled = not self.drawMode
+
+        self.__setCopyPasteState()
+
+
+    def __setCopyPasteState(self):
+        """Enables/disables the :meth:`copySelection`/ :meth:`pasteSelection`
+        actions as needed.
+        """
+
+        overlay   = self.__currentOverlay
+        clipboard = self.__clipboard
+        source    = self.__clipboardSource
+
+        enableCopy  = (not self.drawMode)     and \
+                      (overlay is not None)
+
+        enablePaste =  enableCopy             and \
+                      (clipboard is not None) and \
+                      (overlay.sameSpace(source))
+
+        self.copySelection .enabled = enableCopy
+        self.pasteSelection.enabled = enablePaste
  
 
     def __selectionColoursChanged(self, *a):
@@ -598,6 +648,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         # Update the limits/options on all properties. 
         self.__setPropertyLimits()
+        self.__setCopyPasteState()
 
         # If there is no selected overlay (the overlay
         # list is empty), don't do anything.
@@ -730,6 +781,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if the current canvas position is out of bounds for the current
         overlay.
         """
+
+        if self.__currentOverlay is None:
+            return None
         
         opts = self._displayCtx.getOpts(self.__currentOverlay)
         return opts.getVoxel(canvasPos)

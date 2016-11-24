@@ -80,6 +80,11 @@ class MaskOpts(volumeopts.NiftiOpts):
 
         volumeopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)
 
+        overlay.register(self.name,
+                         self.__dataRangeChanged,
+                         topic='dataRange',
+                         runOnIdle=True)
+
         # The master MaskOpts instance makes 
         # sure that colour[3] and Display.alpha 
         # are consistent w.r.t. each other.
@@ -100,11 +105,30 @@ class MaskOpts(volumeopts.NiftiOpts):
         :meth:`.NitfiOpts.destroy`.
         """
 
+        self.overlay.deregister(self.name, topic='dataRange')
+
         if self.__registered:
             self.display.removeListener('alpha',  self.name)
             self        .removeListener('colour', self.name)
 
         volumeopts.NiftiOpts.destroy(self)
+
+
+    def __dataRangeChanged(self, *a):
+        """Called when the :attr:`~fsl.data.image.Image.dataRange` changes.
+        Updates the :attr:`threshold` limits.
+        """
+        dmin, dmax   = self.overlay.dataRange
+        dRangeLen    = abs(dmax - dmin)
+        dminDistance = dRangeLen / 100.0
+
+        self.threshold.xmin = dmin - dminDistance
+        self.threshold.xmax = dmax + dminDistance
+
+        # If the threshold was 
+        # previously unset, grow it
+        if self.threshold.x == (0, 0):
+            self.threshold.x = (0, dmax + dminDistance)
 
 
     def __colourChanged(self, *a):

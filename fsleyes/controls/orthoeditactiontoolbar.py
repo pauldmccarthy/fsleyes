@@ -88,28 +88,25 @@ class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):
 
 
 _ICONS = {
-
-    'clearSelection'          :  fslicons.findImageFile('clear24'),
     'undo'                    :  fslicons.findImageFile('undo24'),
     'redo'                    :  fslicons.findImageFile('redo24'),
-    'fillSelection'           :  fslicons.findImageFile('fill24'),
-    'eraseSelection'          :  fslicons.findImageFile('eraseSelection24'),
-
+    'clearSelection'          :  fslicons.findImageFile('clear24'),
 }
         
 
 _TOOLTIPS = {
 
-    'clearSelection'          : fsltooltips.actions['OrthoEditProfile.'
-                                                    'clearSelection'],
-    'eraseSelection'          : fsltooltips.actions['OrthoEditProfile.'
-                                                    'eraseSelection'], 
     'undo'                    : fsltooltips.actions['OrthoEditProfile.'
                                                     'undo'],
     'redo'                    : fsltooltips.actions['OrthoEditProfile.'
                                                     'redo'],
+    'clearSelection'          : fsltooltips.actions['OrthoEditProfile.'
+                                                    'clearSelection'],
     'fillSelection'           : fsltooltips.actions['OrthoEditProfile.'
                                                     'fillSelection'],
+    'eraseSelection'          : fsltooltips.actions['OrthoEditProfile.'
+                                                    'eraseSelection'], 
+ 
 
 
 }
@@ -129,11 +126,11 @@ _TOOLBAR_SPECS = [
         icon=_ICONS['clearSelection'],
         tooltip=_TOOLTIPS['clearSelection']),
     actions.ActionButton(
-        'fillSelection',
-        icon=_ICONS['fillSelection'],
-        tooltip=_TOOLTIPS['fillSelection']),
+        'fillSelection'),
     actions.ActionButton(
-        'eraseSelection',
-        icon=_ICONS['eraseSelection'],
-        tooltip=_TOOLTIPS['eraseSelection']), 
+        'eraseSelection'),
+    actions.ActionButton(
+        'copySelection'),
+    actions.ActionButton(
+        'pasteSelection'),
 ]

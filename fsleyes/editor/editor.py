@@ -54,10 +54,10 @@ class Editor(actions.ActionProvider):
     .. autosummary::
        :nosignatures:
 
+       getSelection
+       fillSelection
        copySelection
        pasteSelection
-       pasteSelectionAsMask
-       eraseSelection
 
 
     **Change tracking**
@@ -144,6 +144,13 @@ class Editor(actions.ActionProvider):
         self.__currentOverlay = None
         self.__doneList       = None
 
+
+    def getImage(self):
+        """Returns the :class:`~fsl.dat.image.Image` associated with this
+        ``Editor``.
+        """
+        return self.__image
+    
 
     def getSelection(self):
         """Returns the :class:`.Selection` instance currently in use. """
@@ -291,6 +298,46 @@ class Editor(actions.ActionProvider):
         self.undo.enabled = True
         if self.__doneIndex == len(self.__doneList) - 1:
             self.redo.enabled = False
+
+
+    def copySelection(self):
+        """Copies the ``Image`` data in the current selection. Returns the
+        data in a format that can be passed directly to the
+        :meth:`pasteSelection` method of this, or another, ``Editor`` instance.
+
+        .. note:: The format of the returned data might change, so I haven't
+                  specified it.
+        """
+
+        image     = self.__image
+        opts      = self.__displayCtx.getOpts(image)
+        selection = np.array(self.__selection.getSelection() > 0)
+        data      = np.zeros(image.shape[:3], dtype=image.dtype)
+
+        if   len(image.shape) == 3:
+            data[selection] = image[selection]
+
+        elif len(image.shape) == 4:
+            data[selection] = image[:, :, :, opts.volume][selection]
+        else:
+            raise RuntimeError('Only 3D and 4D images '
+                               'are currently supported')
+
+        return data, selection
+
+
+    def pasteSelection(self, clipboard):
+        """Pastes the data in the given ``clipboard`` into the ``Image`` that
+        is managed by this ``Editor``.
+
+        The ``clipboard`` is assumed to have been created by the
+        :meth:`copySelection` method of another ``Editor`` instance which is
+        managing an ``Image`` that has the same resolution and dimensions as 
+        the ``Image`` managed by this instance.
+        """
+
+        data, selection = clipboard
+        self.__image[selection] = data[selection]
 
 
     def __selectionChanged(self, *a):
