@@ -501,15 +501,6 @@ properties = TypeDict({
     'mouse, the voxel values are replaced with the current fill value (or '
     'erased). When draw mode is disabled, editing an image requires two '
     'steps - you must first select some voxels, and then fill/erase them',
-
-    'OrthoEditProfile.targetImage' : \
-    'Choose the target image for edit operations. By default, when you '
-    'fill/erase voxels, the currently selected image is modified. However, '
-    'you can select a different image (of the same dimensions and resolution '
-    'as the currently selected image) as the target for edit operations. This '
-    'is most useful when selecting voxels by intensity - you can select voxels'
-    'based on the values in the currently selected image, but then fill/erase '
-    'that selection in another image.', 
 })
 
 

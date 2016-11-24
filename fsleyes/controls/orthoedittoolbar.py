@@ -183,8 +183,6 @@ _LABELS = {
 
     'drawMode'               : strings.properties[OrthoEditProfile,
                                                   'drawMode'],
-    'targetImage'            : strings.properties[OrthoEditProfile,
-                                                  'targetImage'], 
 }
 """This dictionary contains labels for some :class:`OrthoEditToolBar`
 controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
@@ -249,19 +247,10 @@ _TOOLTIPS = {
                                               'intensityThres'],
 
     'drawMode'       : fsltooltips.properties['OrthoEditProfile.drawMode'],
-    'targetImage'    : fsltooltips.properties['OrthoEditProfile.targetImage'], 
 }
 """This dictionary contains tooltips for some :class:`OrthoEditToolBar`
 controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 """
-
-
-def _targetImageLabel(image):
-    """Used to generate labels for the :attr:`.OrthoEditProfile.targetImage`
-    options.
-    """
-    if image is None: return 'None'
-    else:             return image.name
 
 
 _TOOLBAR_SPECS  = [
@@ -313,13 +302,9 @@ _TOOLBAR_SPECS  = [
          tooltip=_TOOLTIPS['searchRadius'],
          enabledWhen=lambda p: p.mode == 'selint' and p.limitToRadius)],
      
-
-    [props.Widget('targetImage',
-                  label=_LABELS['targetImage'],
-                  labels=_targetImageLabel),
-     props.Widget('drawMode',
-                  tooltip=_TOOLTIPS['drawMode'],
-                  label=_LABELS['drawMode'])],
+    props.Widget('drawMode',
+                 tooltip=_TOOLTIPS['drawMode'],
+                 label=_LABELS['drawMode']),
 ]
 """This list contains specifications for all of the tools shown in an
 :class:`OrthoEditToolBar`, in the order that they are shown.
