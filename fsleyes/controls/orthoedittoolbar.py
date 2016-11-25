@@ -180,9 +180,6 @@ _LABELS = {
                                                   'searchRadius'],
     'fillValue'              : strings.properties[OrthoEditProfile,
                                                   'fillValue'],
-
-    'drawMode'               : strings.properties[OrthoEditProfile,
-                                                  'drawMode'],
 }
 """This dictionary contains labels for some :class:`OrthoEditToolBar`
 controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
@@ -190,6 +187,11 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 
 
 _ICONS = {
+
+    'drawMode'  : [fslicons.findImageFile('drawModeHighlight24'),
+                   fslicons.findImageFile('drawMode24'),
+                   fslicons.findImageFile('selectModeHighlight24'),
+                   fslicons.findImageFile('selectMode24')],
 
     'mode'                    : {
         'nav'    : [
@@ -256,9 +258,14 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 _TOOLBAR_SPECS  = [
 
     props.Widget(
+        'drawMode',
+        toggle=False,
+        icon=_ICONS['drawMode'],
+        tooltip=_TOOLTIPS['drawMode']),
+    props.Widget(
         'mode',
         icons=_ICONS['mode'],
-        tooltips=_TOOLTIPS['mode'],
+        tooltip=_TOOLTIPS['mode'],
         fixChoices=['nav', 'sel', 'desel', 'selint']),
     props.Widget(
         'selectionIs3D',
@@ -269,12 +276,14 @@ _TOOLBAR_SPECS  = [
         'limitToRadius',
         icon=_ICONS['limitToRadius'],
         tooltip=_TOOLTIPS['limitToRadius'],
-        enabledWhen=lambda p: p.mode == 'selint'),
+        dependencies=['mode'],
+        enabledWhen=lambda p, m: m == 'selint'),
     props.Widget(
         'localFill',
         icon=_ICONS['localFill'],
         tooltip=_TOOLTIPS['localFill'],
-        enabledWhen=lambda p: p.mode == 'selint'),
+        dependencies=['mode'],
+        enabledWhen=lambda p, m: m == 'selint'),
     
     [props.Widget(
         'selectionSize',
@@ -293,18 +302,16 @@ _TOOLBAR_SPECS  = [
         spin=False,
         label=_LABELS['intensityThres'],
         tooltip=_TOOLTIPS['intensityThres'],
-        enabledWhen=lambda p: p.mode == 'selint'),
+        dependencies=['mode'],
+        enabledWhen=lambda p, m: m == 'selint'),
      props.Widget(
          'searchRadius',
          slider=True,
          spin=False,
          label=_LABELS['searchRadius'],
          tooltip=_TOOLTIPS['searchRadius'],
-         enabledWhen=lambda p: p.mode == 'selint' and p.limitToRadius)],
-     
-    props.Widget('drawMode',
-                 tooltip=_TOOLTIPS['drawMode'],
-                 label=_LABELS['drawMode']),
+         dependencies=['mode', 'limitToRadius'],
+         enabledWhen=lambda p, m, r: m == 'selint' and r)],
 ]
 """This list contains specifications for all of the tools shown in an
 :class:`OrthoEditToolBar`, in the order that they are shown.

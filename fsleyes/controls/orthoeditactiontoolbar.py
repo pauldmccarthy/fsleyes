@@ -91,11 +91,11 @@ _ICONS = {
     'undo'           : fslicons.findImageFile('undo24'),
     'redo'           : fslicons.findImageFile('redo24'),
     'createMask'     : fslicons.findImageFile('new24'),
-    'clearSelection' : fslicons.findImageFile('clear24'),
-    'fillSelection'  : fslicons.findImageFile('remove24'),
-    'eraseSelection' : fslicons.findImageFile('remove24'),
-    'copySelection'  : fslicons.findImageFile('remove24'),
-    'pasteSelection' : fslicons.findImageFile('remove24'),
+    'clearSelection' : fslicons.findImageFile('clearSelection24'),
+    'fillSelection'  : fslicons.findImageFile('fillSelection24'),
+    'eraseSelection' : fslicons.findImageFile('eraseSelection24'),
+    'copySelection'  : fslicons.findImageFile('copySelection24'),
+    'pasteSelection' : fslicons.findImageFile('pasteSelection24'),
 }
         
 
