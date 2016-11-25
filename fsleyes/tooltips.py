@@ -501,6 +501,11 @@ properties = TypeDict({
     'in intensity between the seed voxel and another voxel in the search '
     'space is less than or equal to this threshold, the voxel will be '
     'selected.',
+
+    'OrthoEditProfile.intensityThresLimit' :
+    'Upper limit for the intensity threshold. By default the upper intensity '
+    'threshold limit is calculated from he image data range, but you can '
+    'manually adjust it through this setting.',
     
     'OrthoEditProfile.localFill' :
     'When in select by intensity mode, this setting will cause the search '
@@ -532,6 +537,8 @@ actions = TypeDict({
                                               'control settings',
     'CanvasPanel.toggleOverlayInfo' : 'Show/hide the overlay '
                                       'information panel.',
+
+    'OrthoPanel.toggleEditPanel' : 'Show/hide the edit settings panel',
 
     'PlotPanel.screenshot'       : 'Take a screenshot of the current plot.',
     'PlotPanel.importDataSeries' : 'Import data series from a text file.',

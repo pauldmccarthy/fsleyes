@@ -73,7 +73,9 @@ class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):
 
         for spec in _TOOLBAR_SPECS:
 
-            target    = profileObj
+            if spec.key == 'toggleEditPanel': target = ortho
+            else:                             target = profileObj
+            
             widget    = props.buildGUI(self, target, spec)
             navWidget = widget
 
@@ -88,38 +90,49 @@ class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):
 
 
 _ICONS = {
-    'undo'           : fslicons.findImageFile('undo24'),
-    'redo'           : fslicons.findImageFile('redo24'),
-    'createMask'     : fslicons.findImageFile('new24'),
-    'clearSelection' : fslicons.findImageFile('clearSelection24'),
-    'fillSelection'  : fslicons.findImageFile('fillSelection24'),
-    'eraseSelection' : fslicons.findImageFile('eraseSelection24'),
-    'copySelection'  : fslicons.findImageFile('copySelection24'),
-    'pasteSelection' : fslicons.findImageFile('pasteSelection24'),
+    'toggleEditPanel' : [fslicons.findImageFile('editSpannerHighlight24'),
+                         fslicons.findImageFile('editSpanner24'),
+    ],
+    'undo'            : fslicons.findImageFile('undo24'),
+    'redo'            : fslicons.findImageFile('redo24'),
+    'createMask'      : fslicons.findImageFile('new24'),
+    'clearSelection'  : fslicons.findImageFile('clearSelection24'),
+    'fillSelection'   : fslicons.findImageFile('fillSelection24'),
+    'eraseSelection'  : fslicons.findImageFile('eraseSelection24'),
+    'copySelection'   : fslicons.findImageFile('copySelection24'),
+    'pasteSelection'  : fslicons.findImageFile('pasteSelection24'),
 }
         
 
 _TOOLTIPS = {
 
-    'undo'           : fsltooltips.actions['OrthoEditProfile.'
-                                           'undo'],
-    'redo'           : fsltooltips.actions['OrthoEditProfile.'
-                                           'redo'],
-    'createMask'     : fsltooltips.actions['OrthoEditProfile.'
-                                           'createMask'], 
-    'clearSelection' : fsltooltips.actions['OrthoEditProfile.'
-                                           'clearSelection'],
-    'fillSelection'  : fsltooltips.actions['OrthoEditProfile.'
-                                           'fillSelection'],
-    'eraseSelection' : fsltooltips.actions['OrthoEditProfile.'
-                                           'eraseSelection'],
-    'copySelection'  : fsltooltips.actions['OrthoEditProfile.'
-                                           'copySelection'],
-    'pasteSelection' : fsltooltips.actions['OrthoEditProfile.'
-                                           'pasteSelection'], 
+    'toggleEditPanel' : fsltooltips.actions['OrthoPanel.'
+                                            'toggleEditPanel'], 
+    'undo'            : fsltooltips.actions['OrthoEditProfile.'
+                                            'undo'],
+    'redo'            : fsltooltips.actions['OrthoEditProfile.'
+                                            'redo'],
+    'createMask'      : fsltooltips.actions['OrthoEditProfile.'
+                                            'createMask'], 
+    'clearSelection'  : fsltooltips.actions['OrthoEditProfile.'
+                                            'clearSelection'],
+    'fillSelection'   : fsltooltips.actions['OrthoEditProfile.'
+                                            'fillSelection'],
+    'eraseSelection'  : fsltooltips.actions['OrthoEditProfile.'
+                                            'eraseSelection'],
+    'copySelection'   : fsltooltips.actions['OrthoEditProfile.'
+                                            'copySelection'],
+    'pasteSelection'  : fsltooltips.actions['OrthoEditProfile.'
+                                            'pasteSelection'], 
 }
         
 _TOOLBAR_SPECS = [
+
+    actions.ToggleActionButton(
+        'toggleEditPanel',
+        actionKwargs={'floatPane' : True},
+        icon=_ICONS['toggleEditPanel'],
+        tooltip=_TOOLTIPS['toggleEditPanel']),
 
     actions.ActionButton(
         'undo',

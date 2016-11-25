@@ -244,6 +244,7 @@ titles = TypeDict({
     'OrthoToolBar'              : 'Ortho view toolbar',
     'OrthoEditToolBar'          : 'Ortho view edit toolbar',
     'OrthoEditActionToolBar'    : 'Ortho view edit action toolbar',
+    'OrthoEditSettingsPanel'    : 'Ortho view edit settings',
     'LightBoxToolBar'           : 'Lightbox view toolbar',
     'LookupTablePanel'          : 'Lookup tables',
     'LutLabelDialog'            : 'New LUT label',
@@ -338,6 +339,7 @@ actions = TypeDict({
     
     'OrthoPanel.toggleOrthoToolBar'     : 'Ortho toolbar',
     'OrthoPanel.toggleEditMode'         : 'Edit mode',
+    'OrthoPanel.toggleEditPanel'        : 'Edit settings panel',
     'OrthoPanel.resetDisplay'           : 'Reset display',
     'OrthoPanel.centreCursor'           : 'Centre cursor',
     'OrthoPanel.centreCursorWorld'      : 'Centre cursor at (0, 0, 0)',
@@ -551,6 +553,9 @@ labels = TypeDict({
     'ImportDataSeriesAction.firstColumnIsX' : 'First column is X data',
 
     'OrthoPanel.editMenu'  : 'Edit (Ortho View {})',
+
+    'OrthoEditSettingsPanel.general' : 'General settings',
+    'OrthoEditSettingsPanel.selint'  : 'Select by intensity settings',
 })
 
 
@@ -647,7 +652,9 @@ properties = TypeDict({
     'OrthoEditProfile.selectionIs3D'          : '3D selection',
     'OrthoEditProfile.fillValue'              : 'Fill value',
     'OrthoEditProfile.intensityThres'         : 'Intensity threshold',
+    'OrthoEditProfile.intensityThresLimit'    : 'Intensity threshold limit',
     'OrthoEditProfile.localFill'              : 'Only select adjacent voxels',
+    'OrthoEditProfile.limitToRadius'          : 'Only search within radius',
     'OrthoEditProfile.searchRadius'           : 'Search radius',
     'OrthoEditProfile.selectionOverlayColour' : 'Selection overlay',
     'OrthoEditProfile.selectionCursorColour'  : 'Selection cursor',
@@ -758,6 +765,11 @@ choices = TypeDict({
     'OrthoOpts.layout' : {'horizontal' : 'Horizontal',
                           'vertical'   : 'Vertical',
                           'grid'       : 'Grid'},
+
+    'OrthoEditProfile.mode' : {'nav'    : 'Navigate',
+                               'sel'    : 'Draw/select',
+                               'desel'  : 'Erase/deselect',
+                               'selint' : 'Select by intensity'},
 
     'HistogramPanel.dataRange.min' : 'Min.',
     'HistogramPanel.dataRange.max' : 'Max.',

@@ -136,7 +136,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     """
     
     
-    selectionSize = props.Int(minval=1, default=3, clamped=True)
+    selectionSize = props.Int(minval=1, default=3)
     """In ``sel`` and ``desel`` modes, defines the size of the selection
     cursor.
     """
@@ -174,6 +174,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     Passed as the ``precision`` argument to the
     :meth:`.Selection.selectByValue` method.
     """
+
+    intensityThresLimit = props.Real(minval=0.0, clamped=True)
 
     
     localFill = props.Boolean(default=False)

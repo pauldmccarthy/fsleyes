@@ -34,6 +34,7 @@ import fsleyes.gl.wxglslicecanvas              as slicecanvas
 import fsleyes.controls.orthotoolbar           as orthotoolbar
 import fsleyes.controls.orthoedittoolbar       as orthoedittoolbar
 import fsleyes.controls.orthoeditactiontoolbar as orthoeditactiontoolbar
+import fsleyes.controls.orthoeditsettingspanel as orthoeditsettingspanel
 import fsleyes.displaycontext.orthoopts        as orthoopts
 from . import                                     canvaspanel
 
@@ -111,6 +112,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
        :nosignatures:
 
        toggleEditMode
+       toggleEditPanel
        toggleOrthoToolBar
        resetDisplay
        centreCursor
@@ -308,6 +310,16 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         else:                      self.profile = 'view'
 
 
+    @actions.toggleControlAction(orthoeditsettingspanel.OrthoEditSettingsPanel)
+    def toggleEditPanel(self, floatPane=False):
+        """Shows/hides an :class:`.OrthoEditSettingsPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(orthoeditsettingspanel.OrthoEditSettingsPanel,
+                         ortho=self,
+                         floatPane=floatPane) 
+
+
     @actions.action
     def resetDisplay(self):
         """Calls :meth:`.OrthoViewProfile.resetDisplay`. """
@@ -441,6 +453,11 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.togglePanel(orthoeditactiontoolbar.OrthoEditActionToolBar,
                          ortho=self,
                          location=wx.LEFT)
+
+        # Close edit settings panel if one is open
+        if self.profile == 'view' and \
+           self.isPanelOpen(orthoeditsettingspanel.OrthoEditSettingsPanel):
+            self.togglePanel(orthoeditsettingspanel.OrthoEditSettingsPanel)
 
         # It's unlikely, but an OrthoPanel might be
         # created without a ref to a FSLeyesFrame. 
