@@ -200,6 +200,23 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     """
 
     
+    targetImage = props.Choice()
+    """By default, all modifications that the user makes will be made on the
+    currently selected overlay (the :attr:`.DisplayContext.selectedOverlay`).
+    However, this property  can be used to select a different image as the
+    target for modifications.
+    
+    This proprty is mostly useful when in ``selint`` mode - the selection
+    can be made based on the voxel intensities in the currently selected
+    image, but the selection can be filled in another iamge (e.g. a
+    mask/label image).
+    
+    This property is updated whenever the :class:`.OverlayList` or the
+    currently selected overlay changes, so that it contains all other
+    overlays which have the same dimensions as the selected overlay.
+    """ 
+
+    
     def __init__(self, viewPanel, overlayList, displayCtx):
         """Create an ``OrthoEditProfile``.
 
@@ -256,6 +273,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                                 self._name,
                                 self.__selectedOverlayChanged)
 
+        self.addListener('targetImage',
+                         self._name,
+                         self.__targetImageChanged)
         self.addListener('drawMode',
                          self._name,
                          self.__drawModeChanged)
@@ -392,6 +412,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         editor = self.__editors[self.__currentOverlay]
 
+        if self.targetImage is not None:
+            editor = self.__getTargetImageEditor(editor)
+
         editor.startChangeGroup()
         editor.fillSelection(self.fillValue)
         editor.getSelection().clearSelection()
@@ -407,6 +430,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             return
 
         editor = self.__editors[self.__currentOverlay]
+
+        if self.targetImage is not None:
+            editor = self.__getTargetImageEditor(editor) 
 
         editor.startChangeGroup()
         editor.fillSelection(0)
@@ -430,6 +456,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__clipboard       = editor.copySelection()
         self.__clipboardSource = overlay
 
+        self.__setCopyPasteState()
+
 
     @actions.action
     def pasteSelection(self):
@@ -449,6 +477,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if not clipboardSource.sameSpace(overlay): return
 
         editor = self.__editors[overlay]
+
+        if self.targetImage is not None:
+            editor = self.__getTargetImageEditor(editor)
 
         editor.startChangeGroup()
         editor.pasteSelection(clipboard)
@@ -557,7 +588,69 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__yselAnnotation.colour = self.selectionOverlayColour
             
         if self.__zselAnnotation is not None:
-            self.__zselAnnotation.colour = self.selectionOverlayColour 
+            self.__zselAnnotation.colour = self.selectionOverlayColour
+
+
+    def __updateTargetImage(self):
+        """Resets the value and choices on the :attr:`targetImage`.
+        It is populated with all :class:`.Image` instances which are in the
+        same space as the currently selected overlay.
+        """
+
+        with props.skip(self, 'targetImage', self._name):
+            self.targetImage = None
+            
+        overlay = self.__currentOverlay
+
+        if overlay is None:
+            return
+
+        compatibleOverlays = [None]
+        if not self.drawMode:
+            for ovl in self._overlayList:
+                if ovl is not overlay and overlay.sameSpace(ovl):
+                    compatibleOverlays.append(ovl)
+                    
+        self.getProp('targetImage').setChoices(compatibleOverlays,
+                                               instance=self)
+
+
+    def __getTargetImageEditor(self, srcEditor):
+        """If the :attr:`targetImage` is set to an image other than the
+        currently selected one, this method returns an :class:`.Editor`
+        for the target image. 
+        """
+
+        if self.targetImage is None:
+            return srcEditor
+        
+        tgtEditor = self.__editors[self.targetImage]
+        srcSel    = srcEditor.getSelection()
+        tgtSel    = tgtEditor.getSelection()
+        
+        tgtSel.setSelection(srcSel.getSelection(), (0, 0, 0))
+        srcSel.clearSelection()
+        
+        return tgtEditor
+
+
+    def __targetImageChanged(self, *a):
+        """Called every time the :attr:`targetImage` is changed. Makes sure
+        that an :class:`.Editor` instance for the selected target image exists.
+        """
+
+        image = self.targetImage
+
+        if image is None: image = self.__currentOverlay
+        if image is None: return
+        
+        editor = self.__editors.get(image, None)
+
+        if editor is None:
+            editor = fsleditor.Editor(image,
+                                      self._overlayList,
+                                      self._displayCtx)
+            self.__editors[image] = editor 
 
 
     def __setPropertyLimits(self):
@@ -628,6 +721,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # If the selected overlay hasn't changed,
         # we don't need to do anything
         if overlay == oldOverlay:
+            self.__updateTargetImage()
             return
 
         # Destroy all existing canvas annotations
@@ -665,7 +759,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         self.__currentOverlay = overlay
 
-        # Update the limits/options on all properties. 
+        # Update the limits/options on all properties.
+        self.__updateTargetImage()
         self.__setPropertyLimits()
         self.__setCopyPasteState()
 
