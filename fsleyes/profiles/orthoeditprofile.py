@@ -379,7 +379,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         editor.clearSelection()
         
-        self._viewPanel.Refresh()
+        self.__refreshCanvases()
 
 
     @actions.action
@@ -481,7 +481,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             editor.undo()
         
         self.__xselAnnotation.texture.refresh()
-        self._viewPanel.Refresh()
+        self.__refreshCanvases()
 
 
     @actions.action
@@ -501,7 +501,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             editor.redo()
         
         self.__xselAnnotation.texture.refresh()
-        self._viewPanel.Refresh()
+        self.__refreshCanvases()
 
 
     def __drawModeChanged(self, *a):
@@ -791,7 +791,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         yannot.obj(self.__yselAnnotation, hold=True)
         zannot.obj(self.__zselAnnotation, hold=True)
 
-        self._viewPanel.Refresh()
+        self.__refreshCanvases()
 
 
     def __getVoxelLocation(self, canvasPos):
@@ -922,8 +922,24 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         else:   selection.removeFromSelection(block, offset)
 
 
-    def __refreshCanvases(self, ev, canvas, mousePos=None, canvasPos=None):
-        """Called by mouse event handlers.
+    def __refreshCanvases(self):
+        """Short cut to refresh the canvases of the :class:`.OrthoPanel`.
+
+        .. note:: This is done instead of calling ``OrthoPanel.Refresh`
+        because the latter introduces flickering.
+        """
+        self.__xcanvas.Refresh()
+        self.__ycanvas.Refresh()
+        self.__zcanvas.Refresh()
+
+
+    def __dynamicRefreshCanvases(self,
+                                 ev,
+                                 canvas,
+                                 mousePos=None,
+                                 canvasPos=None):
+        """Called by mouse event handlers when the user is interacting with
+        a canvas.
 
         If the current :class:`.ViewPanel` performance setting (see
         :attr:`.SceneOpts.performance`) is at its maximum, all three
@@ -971,7 +987,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         if voxel is not None:
             self.__drawCursorAnnotation(canvas, voxel)
-            self.__refreshCanvases(ev,  canvas)
+            self.__dynamicRefreshCanvases(ev,  canvas)
 
         return voxel is not None
 
@@ -990,7 +1006,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if voxel is not None:
             self.__applySelection(      canvas, voxel)
             self.__drawCursorAnnotation(canvas, voxel)
-            self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
+            self.__dynamicRefreshCanvases(ev,  canvas, mousePos, canvasPos)
 
         return voxel is not None
 
@@ -1005,7 +1021,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if voxel is not None:
             self.__applySelection(      canvas, voxel)
             self.__drawCursorAnnotation(canvas, voxel)
-            self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
+            self.__dynamicRefreshCanvases(ev,  canvas, mousePos, canvasPos)
 
         return voxel is not None
 
@@ -1027,7 +1043,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             editor.clearSelection()
             editor.recordChanges()
         
-        self._viewPanel.Refresh()
+        self.__refreshCanvases()
 
         return True
 
@@ -1037,7 +1053,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         selection cursor annotation is not shown on any canvas.
         """
         
-        self.__refreshCanvases(ev, canvas)
+        self.__dynamicRefreshCanvases(ev, canvas)
 
             
     def _chsizeModeMouseWheel(self, ev, canvas, wheelDir, mousePos, canvasPos):
@@ -1058,7 +1074,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # about timeout
         def update():
             self.__drawCursorAnnotation(canvas, voxel)
-            self.__refreshCanvases(ev, canvas)
+            self.__dynamicRefreshCanvases(ev, canvas)
 
         async.idle(update, timeout=0.1)
 
@@ -1094,7 +1110,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if voxel is not None:
             self.__applySelection(      canvas, voxel, self.drawMode)
             self.__drawCursorAnnotation(canvas, voxel)
-            self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
+            self.__dynamicRefreshCanvases(ev,  canvas, mousePos, canvasPos)
 
         return voxel is not None
 
@@ -1109,7 +1125,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if voxel is not None:
             self.__applySelection(      canvas, voxel, self.drawMode)
             self.__drawCursorAnnotation(canvas, voxel)
-            self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
+            self.__dynamicRefreshCanvases(ev,  canvas, mousePos, canvasPos)
 
         return voxel is not None
 
@@ -1131,7 +1147,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             editor.clearSelection()
             editor.recordChanges()
         
-        self._viewPanel.Refresh()
+        self.__refreshCanvases()
 
         return True
 
@@ -1156,14 +1172,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         def update():
             self.__selintSelect(voxel, canvas)
-
-            # You are being devious here, relying
-            # on the knowledge that
-            # OrthoViewProfile._navModeLeftMouseDrag
-            # (which is called by __refreshCanvases)
-            # doesn't use the wx.Event object passed
-            # to it (the first parameter here).
-            self.__refreshCanvases(None, canvas, mousePos, canvasPos)
+            self.__refreshCanvases()
 
         if voxel is not None:
             
@@ -1244,7 +1253,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         if voxel is not None:
             self.__drawCursorAnnotation(canvas, voxel, 1)
-            self.__refreshCanvases(ev,  canvas)
+            self.__dynamicRefreshCanvases(ev,  canvas)
 
         return voxel is not None
 
@@ -1264,7 +1273,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         if voxel is not None:
             self.__selintSelect(voxel, canvas)
-            self.__refreshCanvases(ev, canvas, mousePos, canvasPos)
+            self.__dynamicRefreshCanvases(ev, canvas, mousePos, canvasPos)
 
         return voxel is not None
 
@@ -1284,7 +1293,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             
             self.__drawCursorAnnotation(canvas, voxel, 1)
             self.__selintSelect(voxel, canvas)
-            self.__refreshCanvases(*refreshArgs)
+            self.__dynamicRefreshCanvases(*refreshArgs)
 
         return voxel is not None
 
@@ -1297,7 +1306,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.__currentOverlay is None:
             return False
         
-        self._viewPanel.Refresh()
+        self.__refreshCanvases()
 
         return True
 
