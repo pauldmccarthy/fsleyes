@@ -552,6 +552,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.fillSelection .enabled = not self.drawMode
         self.eraseSelection.enabled = not self.drawMode
 
+        self.__updateTargetImage()
         self.__setCopyPasteState()
 
 
