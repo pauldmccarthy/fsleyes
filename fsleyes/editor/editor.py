@@ -63,12 +63,15 @@ class Editor(actions.ActionProvider):
     **Change tracking**
 
 
-    An ``Editor`` instance keeps track of all changes made to both the
-    :class:`Selection` object, and to the :class:`Image` data. Every
-    selection/data change made is recorded using :class:`SelectionChange` and
+    An ``Editor`` instance keeps track of all changes made to the
+    :class:`Image` data and to the :class:`.Selection.  Every selection/data
+    change made is recorded using :class:`SelectionChange` and
     :class:`.ValueChange` instances, which are stored in a list. These changes
     can be undone (and redone), through the :meth:`undo` and :meth:`redo`
-    "action" methods (see the :mod:`.actions` module).
+    "action" methods (see the :mod:`.actions` module). Changes to the
+    ``Selection`` object are, by default, only recorded when the selection is
+    cleared. However, you can track *all* selection changes by initialising
+    an ``Editor`` instance with ``recordSelection=True``.
 
     
     Sometimes it is useful to treat many small changes as a single large
@@ -85,14 +88,22 @@ class Editor(actions.ActionProvider):
     """
 
     
-    def __init__(self, image, overlayList, displayCtx):
+    def __init__(self,
+                 image,
+                 overlayList,
+                 displayCtx,
+                 recordSelection=False):
         """Create an ``Editor``.
 
-        :arg image:       The :class:`.Image` instance being edited.
+        :arg image:           The :class:`.Image` instance being edited.
 
-        :arg overlayList: The :class:`.OverlayList` instance.
+        :arg overlayList:     The :class:`.OverlayList` instance.
 
-        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg displayCtx:      The :class:`.DisplayContext` instance.
+
+        :arg recordSelection: Defaults to ``False``. If ``True``, changes
+                              to the :class:`.Selection` are recorded in the
+                              change history.
         """
 
         self.__name           = '{}_{}'.format(self.__class__.__name__,
@@ -103,7 +114,8 @@ class Editor(actions.ActionProvider):
         self.__selection      = selection.Selection(
             image, displayCtx.getDisplay(image))
 
-        self.__selection.register(self.__name, self.__selectionChanged)
+        if recordSelection:
+            self.__selection.register(self.__name, self.__selectionChanged)
  
         # A list of state objects, providing
         # records of what has been done. The
@@ -113,12 +125,13 @@ class Editor(actions.ActionProvider):
         # everything after the doneIndex
         # represents states which have been
         # undone.
-        self.__doneList      = []
-        self.__doneIndex     = -1
-        self.__inGroup       = False
-        self.__recordChanges = True
-        self.undo.enabled    = False
-        self.redo.enabled    = False
+        self.__doneList        = []
+        self.__doneIndex       = -1
+        self.__inGroup         = False
+        self.__recordChanges   = True
+        self.__recordSelection = recordSelection
+        self.undo.enabled      = False
+        self.redo.enabled      = False
         
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
@@ -155,6 +168,21 @@ class Editor(actions.ActionProvider):
     def getSelection(self):
         """Returns the :class:`.Selection` instance currently in use. """
         return self.__selection
+
+
+    def clearSelection(self):
+        """Clears the :class:`.Selection` (see
+        :meth:`.Selection.clearSelection`). If this ``Editor`` is not
+        recording all selection changes (``recordSelection=False`` in
+        :meth:`__init__`), the selection state before being cleared
+        is saved in the change history.
+        """
+        self.__selection.clearSelection()
+
+        if not self.__recordSelection:
+            old, new, offset = self.__selection.getLastChange()
+            change = SelectionChange(self.__image, offset, old, new)
+            self.__changeMade(change) 
 
 
     def fillSelection(self, newVals):
@@ -212,8 +240,9 @@ class Editor(actions.ActionProvider):
         self.__doneIndex += 1
         self.__doneList.append([])
 
-        log.debug('Starting change group - merging subsequent '
-                  'changes at index {} of {}'.format(self.__doneIndex,
+        log.debug('{}: starting change group - merging subsequent '
+                  'changes at index {} of {}'.format(self.__image.name,
+                                                     self.__doneIndex,
                                                      len(self.__doneList)))
 
         
@@ -226,8 +255,10 @@ class Editor(actions.ActionProvider):
             return 
         
         self.__inGroup = False
-        log.debug('Ending change group at {} of {}'.format(
-            self.__doneIndex, len(self.__doneList)))
+        log.debug('{}: ending change group at {} of {}'.format(
+            self.__image.name,
+            self.__doneIndex,
+            len(self.__doneList)))
 
         
     def recordChanges(self, record=True):
@@ -239,7 +270,9 @@ class Editor(actions.ActionProvider):
         """
 
         self.__recordChanges = record
-        self.__selection.enable(self.__name, enable=record)
+
+        if self.__recordSelection:
+            self.__selection.enable(self.__name, enable=record)
 
 
     def ignoreChanges(self):
@@ -256,8 +289,10 @@ class Editor(actions.ActionProvider):
         if self.__doneIndex == -1:
             return
 
-        log.debug('Undo change {} of {}'.format(self.__doneIndex,
-                                                len(self.__doneList)))        
+        log.debug('{}: undo change {} of {}'.format(
+            self.__image.name,
+            self.__doneIndex,
+            len(self.__doneList)))
 
         change = self.__doneList[self.__doneIndex]
 
@@ -281,8 +316,10 @@ class Editor(actions.ActionProvider):
         if self.__doneIndex == len(self.__doneList) - 1:
             return
 
-        log.debug('Redo change {} of {}'.format(self.__doneIndex + 1,
-                                                len(self.__doneList))) 
+        log.debug('{}: redo change {} of {}'.format(
+            self.__image.name,
+            self.__doneIndex + 1,
+            len(self.__doneList))) 
 
         change = self.__doneList[self.__doneIndex + 1]
         
@@ -376,9 +413,11 @@ class Editor(actions.ActionProvider):
         self.undo.enabled = True
         self.redo.enabled = False
 
-        log.debug('New change to {} ({} of {})'.format(change.overlay.name,
-                                                       self.__doneIndex,
-                                                       len(self.__doneList)))
+        log.debug('{}: new change to {} ({} of {})'.format(
+            self.__image.name, 
+            change.overlay.name,
+            self.__doneIndex,
+            len(self.__doneList)))
 
 
     def __applyChange(self, change):
@@ -395,8 +434,9 @@ class Editor(actions.ActionProvider):
         else:                 volume = None
         
         if isinstance(change, ValueChange):
-            log.debug('Changing image {} data - offset '
+            log.debug('{}: changing image {} data - offset '
                       '{}, volume {}, size {}'.format(
+                          self.__image.name, 
                           change.overlay.name,
                           change.offset,
                           change.volume,
@@ -407,11 +447,12 @@ class Editor(actions.ActionProvider):
                                         volume)
             
             image[sliceobj] = change.newVals
-            
+
         elif isinstance(change, SelectionChange):
-            self.__selection.disable(self.__name)
+            recording = self.__recordSelection
+            if recording: self.__selection.disable(self.__name)
             self.__selection.setSelection(change.newSelection, change.offset)
-            self.__selection.enable(self.__name)
+            if recording: self.__selection.enable(self.__name)
 
         
     def __revertChange(self, change):
@@ -427,8 +468,9 @@ class Editor(actions.ActionProvider):
         else:                 volume = None 
 
         if isinstance(change, ValueChange):
-            log.debug('Reverting image {} data change - offset '
+            log.debug('{}: reverting image {} data change - offset '
                       '{}, volume {}, size {}'.format(
+                          self.__image.name, 
                           change.overlay.name,
                           change.offset,
                           change.volume,
@@ -440,9 +482,10 @@ class Editor(actions.ActionProvider):
             image[sliceobj] = change.oldVals
             
         elif isinstance(change, SelectionChange):
-            self.__selection.disable(self.__name)
+            recording = self.__recordSelection
+            if recording: self.__selection.disable(self.__name)
             self.__selection.setSelection(change.oldSelection, change.offset)
-            self.__selection.enable(self.__name)
+            if recording: self.__selection.enable(self.__name)
 
 
     def __makeSlice(self, offset, shape, volume=None):

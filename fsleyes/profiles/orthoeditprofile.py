@@ -377,7 +377,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         editor = self.__editors[self.__currentOverlay]
 
-        editor.getSelection().clearSelection()
+        editor.clearSelection()
         
         self._viewPanel.Refresh()
 
@@ -394,7 +394,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         editor.startChangeGroup()
         editor.fillSelection(self.fillValue)
-        editor.getSelection().clearSelection()
+        editor.clearSelection()
         editor.endChangeGroup()
 
 
@@ -410,7 +410,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         editor.startChangeGroup()
         editor.fillSelection(0)
-        editor.getSelection().clearSelection()
+        editor.clearSelection()
         editor.endChangeGroup()
 
 
@@ -452,7 +452,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         editor.startChangeGroup()
         editor.pasteSelection(clipboard)
-        editor.getSelection().clearSelection()
+        editor.clearSelection()
         editor.endChangeGroup()
  
 
@@ -985,11 +985,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.__currentOverlay is None:
             return False
         
-        editor = self.__editors[self.__currentOverlay]
-        voxel  = self.__getVoxelLocation(canvasPos)
+        voxel = self.__getVoxelLocation(canvasPos)
 
         if voxel is not None:
-            editor.startChangeGroup()
             self.__applySelection(      canvas, voxel)
             self.__drawCursorAnnotation(canvas, voxel)
             self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
@@ -1025,9 +1023,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         
         if self.drawMode:
             editor.fillSelection(self.fillValue)
-            editor.getSelection().clearSelection()
-
-        editor.endChangeGroup()
+            editor.ignoreChanges()
+            editor.clearSelection()
+            editor.recordChanges()
         
         self._viewPanel.Refresh()
 
@@ -1091,11 +1089,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.__currentOverlay is None:
             return False
         
-        editor = self.__editors[self.__currentOverlay]
-        voxel  = self.__getVoxelLocation(canvasPos)
+        voxel = self.__getVoxelLocation(canvasPos)
 
         if voxel is not None:
-            editor.startChangeGroup()
             self.__applySelection(      canvas, voxel, self.drawMode)
             self.__drawCursorAnnotation(canvas, voxel)
             self.__refreshCanvases(ev,  canvas, mousePos, canvasPos)
@@ -1131,9 +1127,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         
         if self.drawMode:
             editor.fillSelection(0)
-            editor.getSelection().clearSelection()
+            editor.ignoreChanges()
+            editor.clearSelection()
+            editor.recordChanges()
         
-        editor.endChangeGroup()
         self._viewPanel.Refresh()
 
         return True
@@ -1158,27 +1155,24 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         voxel = self.__getVoxelLocation(canvasPos)
 
         def update():
-
-            # If the user is playing with the intensity
-            # threshold slider, the selection could be
-            # updated many times. We don't want to track
-            # every single change, so we tell the editor
-            # to ignore all changes for a bit.
-            editor = self.__editors[self.__currentOverlay]
-            editor.recordChanges(False)
             self.__selintSelect(voxel, canvas)
-            editor.recordChanges(True)
 
-            # NOTE You are being devious here, relying
-            #      on the knowledge that
-            #      OrthoViewProfile._navModeLeftMouseDrag
-            #      (which is called by __refreshCanvases)
-            #      doesn't use the ev object passed to it.
+            # You are being devious here, relying
+            # on the knowledge that
+            # OrthoViewProfile._navModeLeftMouseDrag
+            # (which is called by __refreshCanvases)
+            # doesn't use the wx.Event object passed
+            # to it (the first parameter here).
             self.__refreshCanvases(None, canvas, mousePos, canvasPos)
 
         if voxel is not None:
+            
+            # Asynchronously update the select-by-intensity
+            # selection - we do it async, and with a time out,
+            # so we don't queue loads of redundant jobs while
+            # the user is e.g. dragging the intensityThres
+            # slider real fast.
             async.idle(update, timeout=0.1)
-
 
             
     def __selintSelect(self, voxel, canvas):
@@ -1220,12 +1214,17 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # replace the selection in the
         # search region (either the whole
         # image, or the current slice).
-        selection = editor.getSelection()
         if searchRadius is not None:
-            with selection.skipAll():
-                selection.clearSelection(restrict)
 
-        selection.selectByValue(
+            # By default the editor records
+            # selection clears in the change
+            # history. Tell itd not to for
+            # this one.
+            editor.ignoreChanges()
+            editor.clearSelection()
+            editor.recordChanges()
+
+        editor.getSelection().selectByValue(
             voxel,
             precision=self.intensityThres,
             searchRadius=searchRadius,
@@ -1261,12 +1260,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.__currentOverlay is None:
             return False
         
-        editor = self.__editors[self.__currentOverlay]
-        voxel  = self.__getVoxelLocation(canvasPos)
+        voxel = self.__getVoxelLocation(canvasPos)
 
         if voxel is not None:
-            editor.startChangeGroup()
-
             self.__selintSelect(voxel, canvas)
             self.__refreshCanvases(ev, canvas, mousePos, canvasPos)
 
@@ -1300,10 +1296,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
         if self.__currentOverlay is None:
             return False
-        
-        editor = self.__editors[self.__currentOverlay] 
-        
-        editor.endChangeGroup()
         
         self._viewPanel.Refresh()
 
