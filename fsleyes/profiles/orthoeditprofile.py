@@ -263,15 +263,16 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__yselAnnotation    = None
         self.__zselAnnotation    = None
 
-        # The intensityThres/intensityThresLimit
-        # property values are cached on a per-
-        # overlay basis. When an overlay is
-        # re-selected, its values are restored.
+        # The targetImage/intensityThres/
+        # intensityThresLimit property values
+        # are cached on a per-overlay basis.
+        # When an overlay is re-selected, its
+        # values are restored from the cache.
         self.__cache = fsloverlay.PropCache(
             overlayList,
             displayCtx,
             self,
-            ['intensityThres', 'intensityThresLimit'])
+            ['targetImage', 'intensityThres', 'intensityThresLimit'])
 
         orthoviewprofile.OrthoViewProfile.__init__(
             self,
@@ -882,6 +883,13 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                 newSel.setSelection(oldSel.getSelection(), (0, 0, 0))
             else:
                 oldSel.clearSelection()
+
+        # Restore the targetImage for this
+        # overlay, if there is a cached value
+        targetImage = self.__cache.get(overlay, 'targetImage', None)
+        if targetImage is not None and targetImage in self._overlayList:
+            with props.skip(self, 'targetImage', self._name):
+                self.targetImage = targetImage
 
         # Register property listeners with the
         # new Editor and Selection instances.
