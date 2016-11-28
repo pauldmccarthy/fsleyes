@@ -448,15 +448,31 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         is one).
         """
 
-        self.togglePanel(orthoedittoolbar      .OrthoEditToolBar,
-                         ortho=self)
-        self.togglePanel(orthoeditactiontoolbar.OrthoEditActionToolBar,
-                         ortho=self,
-                         location=wx.LEFT)
+        OrthoEditToolBar       = orthoedittoolbar.OrthoEditToolBar
+        OrthoEditActionToolBar = orthoeditactiontoolbar.OrthoEditActionToolBar
+        OrthoEditSettingsPanel = orthoeditsettingspanel.OrthoEditSettingsPanel
 
-        # Close edit settings panel if one is open
-        if self.profile == 'view' and \
-           self.isPanelOpen(orthoeditsettingspanel.OrthoEditSettingsPanel):
+        editToolBarOpen        = self.isPanelOpen(OrthoEditToolBar)
+        editActionToolBarOpen  = self.isPanelOpen(OrthoEditActionToolBar)
+        editPanelOpen          = self.isPanelOpen(OrthoEditSettingsPanel)
+
+        shouldBeOpen           = self.profile == 'edit'
+        
+        # Toggle toolbars if they are open but should 
+        # be closed, or closed but should be open
+        if (not editToolBarOpen) and      shouldBeOpen or \
+                editToolBarOpen  and (not shouldBeOpen):
+            self.togglePanel(orthoedittoolbar.OrthoEditToolBar, ortho=self)
+
+        if (not editActionToolBarOpen) and      shouldBeOpen or \
+                editActionToolBarOpen  and (not shouldBeOpen):
+            self.togglePanel(orthoeditactiontoolbar.OrthoEditActionToolBar,
+                             ortho=self,
+                             location=wx.LEFT)
+            
+        # Don't open edit panel by default,
+        # but close it when we leave edit mode
+        if editPanelOpen and (not shouldBeOpen):
             self.togglePanel(orthoeditsettingspanel.OrthoEditSettingsPanel)
 
         # It's unlikely, but an OrthoPanel might be

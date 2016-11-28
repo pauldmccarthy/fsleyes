@@ -416,7 +416,6 @@ are shown.
    :align: center
 
 .. [*] The colour bar feature currently only works for :ref:`volume
-       <overlays_volume>` overlays with the negative colour map
-       disabled. Future versions of FSLeyes will offer more colour bar
-       options.
+       <overlays_volume>` overlays. Future versions of FSLeyes will offer more
+       colour bar options.
 

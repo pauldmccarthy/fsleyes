@@ -19,6 +19,7 @@ import fsl.data.image              as fslimage
 import fsl.utils.async             as async
 import fsl.utils.dialog            as fsldlg
 import fsl.utils.status            as status
+import fsleyes.overlay             as fsloverlay
 import fsleyes.strings             as strings
 import fsleyes.actions             as actions
 import fsleyes.actions.copyoverlay as copyoverlay
@@ -168,14 +169,19 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     intensityThres = props.Real(
-        minval=0.0, maxval=1.0, default=1, clamped=False)
+        minval=0.0, maxval=1.0, default=0, clamped=False)
     """In ``selint`` mode, the maximum distance, in intensity, that a voxel
     can be from the seed location, in order for it to be selected.
     Passed as the ``precision`` argument to the
     :meth:`.Selection.selectByValue` method.
     """
 
-    intensityThresLimit = props.Real(minval=0.0, clamped=True)
+
+    intensityThresLimit = props.Real(minval=0.0, default=0, clamped=True)
+    """This setting controls the maximum value for the :attr:`itensityThres`
+    property. It is set automatically from the data when an :class:`.Image`
+    is first selected, but can also be manually controlled via this property.
+    """
 
     
     localFill = props.Boolean(default=False)
@@ -257,6 +263,16 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__yselAnnotation    = None
         self.__zselAnnotation    = None
 
+        # The intensityThres/intensityThresLimit
+        # property values are cached on a per-
+        # overlay basis. When an overlay is
+        # re-selected, its values are restored.
+        self.__cache = fsloverlay.PropCache(
+            overlayList,
+            displayCtx,
+            self,
+            ['intensityThres', 'intensityThresLimit'])
+
         orthoviewprofile.OrthoViewProfile.__init__(
             self,
             viewPanel,
@@ -285,6 +301,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.addListener('selectionCursorColour',
                          self._name,
                          self.__selectionColoursChanged)
+        self.addListener('intensityThresLimit',
+                         self._name,
+                         self.__selintThresLimitChanged) 
         self.addListener('intensityThres',
                          self._name,
                          self.__selintPropertyChanged)
@@ -328,7 +347,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.__zselAnnotation is not None:
             zannot.dequeue(self.__zselAnnotation, hold=True)
             self.__zselAnnotaiton.destroy()
-            
+
+        self.__cache.destroy()
+
         self.__editors         = None
         self.__xcanvas         = None
         self.__ycanvas         = None
@@ -339,7 +360,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__currentOverlay  = None
         self.__clipboard       = None
         self.__clipboardSource = None
-
+        self.__cache           = None
+        
         orthoviewprofile.OrthoViewProfile.destroy(self)
 
         
@@ -673,8 +695,22 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.setConstraint('fillValue', 'minval', dmin)
         self.setConstraint('fillValue', 'maxval', dmax)
 
-        dmin, dmax = overlay.dataRange
-        self.setConstraint('intensityThres', 'maxval', (dmax - dmin) / 2.0)
+        thres = self.__cache.get(overlay, 'intensityThres',      None)
+        limit = self.__cache.get(overlay, 'intensityThresLimit', None)
+
+        if limit is None or limit == 0:
+            dmin, dmax = overlay.dataRange
+            limit      = (dmax - dmin) / 2.0
+ 
+        if thres is None: thres = 0
+        else:             thres = min(thres, limit)
+
+        with props.skip(self, 'intensityThres', self._name):
+            self.setConstraint('intensityThres', 'maxval', limit)
+            self.intensityThres = thres
+            
+        with props.skip(self, 'intensityThresLimit', self._name):
+            self.intensityThresLimit = limit
 
 
     def __selectedOverlayChanged(self, *a):
@@ -827,22 +863,25 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                                       self._displayCtx)
             self.__editors[overlay] = editor
 
-        # Transfer the existing selection
-        # to the new overlay, if possible.
-        #
-        # Currently we only transfer
-        # the selection for images
-        # with the same dimensions/space
-        if oldOverlay is not None and oldOverlay.sameSpace(overlay):
+        # Transfer or clear the selection
+        # for the old overlay.
+        if oldOverlay is not None:
 
-            log.debug('Transferring selection from {} to {}'.format(
-                oldOverlay.name,
-                overlay.name))
-            
-            oldSelection = self.__editors[oldOverlay].getSelection()
-            newSelection = editor.getSelection()
+            oldSel = self.__editors[oldOverlay].getSelection()
 
-            newSelection.setSelection(oldSelection.getSelection(), (0, 0, 0))
+            # Currently we only transfer
+            # the selection for images
+            # with the same dimensions/space
+            if oldOverlay.sameSpace(overlay):
+
+                log.debug('Transferring selection from {} to {}'.format(
+                    oldOverlay.name,
+                    overlay.name))
+
+                newSel = editor.getSelection()
+                newSel.setSelection(oldSel.getSelection(), (0, 0, 0))
+            else:
+                oldSel.clearSelection()
 
         # Register property listeners with the
         # new Editor and Selection instances.
@@ -1279,7 +1318,16 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             # slider real fast.
             async.idle(update, timeout=0.1)
 
-            
+
+    def __selintThresLimitChanged(self, *a):
+        """Called when the :attr:`intensityThresLimit` changes. Updates the
+        maximum value on the :attr:`intensityThres` accordingly.
+        """
+        self.setConstraint('intensityThres',
+                           'maxval',
+                           self.intensityThresLimit)
+
+    
     def __selintSelect(self, voxel, canvas):
         """Selects voxels by intensity, using the specified ``voxel`` as
         the seed location.
