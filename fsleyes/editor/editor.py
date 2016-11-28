@@ -179,7 +179,7 @@ class Editor(actions.ActionProvider):
         """
         self.__selection.clearSelection()
 
-        if not self.__recordSelection:
+        if (not self.__recordSelection) and self.__recordChanges:
             old, new, offset = self.__selection.getLastChange()
             change = SelectionChange(self.__image, offset, old, new)
             self.__changeMade(change) 

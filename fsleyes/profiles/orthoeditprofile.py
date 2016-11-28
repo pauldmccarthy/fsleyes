@@ -767,22 +767,25 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                                       self._displayCtx)
             self.__editors[overlay] = editor
 
-        # Transfer the existing selection
-        # to the new overlay, if possible.
-        #
-        # Currently we only transfer
-        # the selection for images
-        # with the same dimensions/space
-        if oldOverlay is not None and oldOverlay.sameSpace(overlay):
+        # Transfer or clear the selection
+        # for the old overlay.
+        if oldOverlay is not None:
 
-            log.debug('Transferring selection from {} to {}'.format(
-                oldOverlay.name,
-                overlay.name))
-            
-            oldSelection = self.__editors[oldOverlay].getSelection()
-            newSelection = editor.getSelection()
+            oldSel = self.__editors[oldOverlay].getSelection()
 
-            newSelection.setSelection(oldSelection.getSelection(), (0, 0, 0))
+            # Currently we only transfer
+            # the selection for images
+            # with the same dimensions/space
+            if oldOverlay.sameSpace(overlay):
+
+                log.debug('Transferring selection from {} to {}'.format(
+                    oldOverlay.name,
+                    overlay.name))
+
+                newSel = editor.getSelection()
+                newSel.setSelection(oldSel.getSelection(), (0, 0, 0))
+            else:
+                oldSel.clearSelection()
 
         # Register property listeners with the
         # new Editor and Selection instances.
