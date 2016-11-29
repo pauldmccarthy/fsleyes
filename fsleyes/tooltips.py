@@ -474,14 +474,14 @@ properties = TypeDict({
     'Colour to use to highlight selected regions.', 
     
     'OrthoEditProfile.mode' :
-    'Switch between editing modes. "Navigate" mode simply allows you to view '
-    'the image and change the display location."Pencil" mode allows you to '
-    'fill voxel values (in draw mode), or to manually select voxels (in '
-    'select mode). "Erase" mode allows you to erase voxel values (in draw '
-    'mode), or to deselect voxels (in select mode). When select mode is '
-    'enabled, "select by intensity" mode allows you to select voxels based on '
-    'their intensity. Click on a "seed" voxel, and all voxels with a similar '
-    'intenstiy to that seed voxel will be selected.',
+    'Switch between editing tools. The "Navigate" tool simply allows you to '
+    'view the image and change the display location. The "Pencil" tool allows '
+    'you to fill voxel values (in draw mode), or to manually select voxels '
+    '(in select mode). The "Erase" tool allows you to erase voxel values (in '
+    'draw mode), or to deselect voxels (in select mode). When select mode is '
+    'enabled, the "select by intensity" tool allows you to select voxels '
+    'based on their intensity. Click on a "seed" voxel, and all voxels with '
+    'a similar intenstiy to that seed voxel will be selected.',
     
     'OrthoEditProfile.selectionSize' :
     'Size (in voxels) of the selection region when in pencil or erase mode.',

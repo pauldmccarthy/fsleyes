@@ -701,10 +701,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         self.__currentOverlay = overlay
 
-        # Update the limits/options on all properties. 
-        self.__setPropertyLimits()
-        self.__setCopyPasteState()
-
         # If there is no selected overlay (the overlay
         # list is empty), don't do anything.
         if overlay is None:
@@ -721,6 +717,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             
             self.__currentOverlay = None
             return
+
+        # Update the limits/options on all properties. 
+        self.__setPropertyLimits()
+        self.__setCopyPasteState()
 
         # Change the display space so that the newly
         # selected image is the reference image -

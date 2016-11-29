@@ -482,9 +482,11 @@ def findModelReferenceImage(overlayList, overlay):
     try:
         prefix = fslmodel.getFIRSTPrefix(overlay.dataSource)
 
-        # Search for an overlay
-        # with the prefix name
-        return overlayList.find(prefix)
-
+        for ovl in overlayList:
+            if prefix.startswith(ovl.name):
+                return ovl
+        
     except:
-        return None
+        pass
+    
+    return None
