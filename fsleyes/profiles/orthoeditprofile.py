@@ -151,9 +151,15 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
     
     fillValue = props.Real(default=1, clamped=True)
-    """The value used by the ``fillSelection`` action - all voxels in the
+    """The value used when drawing/filling voxel values - all voxels in the
     selection will be filled with this value.
     """
+
+
+    eraseValue = props.Real(default=0, clamped=True)
+    """The value used when erasing voxel values - all voxels in the
+    selection will be filled with this value.
+    """ 
 
 
     drawMode = props.Boolean(default=True)
@@ -431,7 +437,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         editor = self.__editors[self.__currentOverlay]
 
         editor.startChangeGroup()
-        editor.fillSelection(0)
+        editor.fillSelection(self.eraseValue)
         editor.clearSelection()
         editor.endChangeGroup()
 
@@ -543,6 +549,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.fillSelection .enabled = not self.drawMode
         self.eraseSelection.enabled = not self.drawMode
 
+        if self.__currentOverlay is not None:
+            self.__editors[self.__currentOverlay].clearSelection()
+            self.__refreshCanvases()
+
         self.__setCopyPasteState()
 
 
@@ -598,8 +608,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             dmin = None
             dmax = None
 
-        self.setConstraint('fillValue', 'minval', dmin)
-        self.setConstraint('fillValue', 'maxval', dmax)
+        self.setConstraint('fillValue',  'minval', dmin)
+        self.setConstraint('fillValue',  'maxval', dmax)
+        self.setConstraint('eraseValue', 'minval', dmin)
+        self.setConstraint('eraseValue', 'maxval', dmax) 
 
         thres = self.__cache.get(overlay, 'intensityThres',      None)
         limit = self.__cache.get(overlay, 'intensityThresLimit', None)
@@ -1181,7 +1193,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         editor = self.__editors[self.__currentOverlay]
         
         if self.drawMode:
-            editor.fillSelection(0)
+            editor.fillSelection(self.eraseValue)
             editor.ignoreChanges()
             editor.clearSelection()
             editor.recordChanges()

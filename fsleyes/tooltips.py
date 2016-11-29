@@ -493,7 +493,10 @@ properties = TypeDict({
     'slice, or extend the search to the full 3D image.',
 
     'OrthoEditProfile.fillValue' :
-    'Value to fill voxels with.' ,
+    'Value to replace voxels with when drawing/filling.',
+
+    'OrthoEditProfile.eraseValue' :
+    'Value to replace voxels with when erasing.' , 
     
     'OrthoEditProfile.intensityThres' :
     'When in select by intensity mode, this is the threshold used to '

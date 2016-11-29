@@ -61,7 +61,8 @@ class OrthoEditSettingsPanel(fslpanel.FSLeyesSettingsPanel):
             props.Widget('drawMode'),
             props.Widget('selectionIs3D'),
             props.Widget('selectionSize'),
-            props.Widget('fillValue', slider=False, spin=True),
+            props.Widget('fillValue',  slider=False, spin=True),
+            props.Widget('eraseValue', slider=False, spin=True),
 
             # 'showSelectionOutline',            
 

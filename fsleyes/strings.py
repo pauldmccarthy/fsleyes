@@ -646,10 +646,11 @@ properties = TypeDict({
     'FEATTimeSeries.plotPartial'      : 'Plot reduced data against',
     'FEATTimeSeries.plotData'         : 'Plot data',
 
-    'OrthoEDitProfile.mode'                   : 'Edit tool',
+    'OrthoEditProfile.mode'                   : 'Edit tool',
     'OrthoEditProfile.selectionSize'          : 'Selection size',
     'OrthoEditProfile.selectionIs3D'          : '3D selection',
     'OrthoEditProfile.fillValue'              : 'Fill value',
+    'OrthoEditProfile.eraseValue'             : 'Erase value',
     'OrthoEditProfile.intensityThres'         : 'Intensity threshold',
     'OrthoEditProfile.intensityThresLimit'    : 'Intensity threshold limit',
     'OrthoEditProfile.localFill'              : 'Only select adjacent voxels',
