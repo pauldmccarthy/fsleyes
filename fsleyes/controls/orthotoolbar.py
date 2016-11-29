@@ -9,6 +9,8 @@
 """
 
 
+import wx
+
 import props
 
 import fsleyes.toolbar  as fsltoolbar
@@ -169,6 +171,7 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
             actions.ActionButton('screenshot',
                                  icon=icons['screenshot'],
                                  tooltip=tooltips['screenshot']),
+            'div',
             props  .Widget(      'showXCanvas',
                                  icon=icons['showXCanvas'],
                                  tooltip=tooltips['showXCanvas']),
@@ -178,9 +181,11 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
             props  .Widget(      'showZCanvas',
                                  icon=icons['showZCanvas'],
                                  tooltip=tooltips['showZCanvas']),
+            'div',
             props  .Widget(      'layout',
                                  icons=icons['layout'],
                                  tooltip=tooltips['layout']),
+            'div',
             props  .Widget(      'movieMode', 
                                  icon=icons['movieMode'],
                                  tooltip=tooltips['movieMode']),
@@ -201,6 +206,12 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
         nav   = []
         
         for spec in toolSpecs:
+
+            if spec == 'div':
+                tools.append(fsltoolbar.ToolBarDivider(self,
+                                                       height=24,
+                                                       orient=wx.VERTICAL))
+                continue
             
             widget    = props.buildGUI(self, targets[spec.key], spec)
             navWidget = widget
