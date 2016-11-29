@@ -6,14 +6,16 @@
 
 
 
+.. |draw_mode_button|            image:: images/editing_images_draw_mode_button.png
+.. |select_mode_button|          image:: images/editing_images_select_mode_button.png
+.. |navigate_button|             image:: images/editing_images_navigate_button.png
+.. |pencil_button|               image:: images/editing_images_pencil_button.png
+.. |eraser_button|               image:: images/editing_images_eraser_button.png
+.. |selint_button|               image:: images/editing_images_selint_button.png 
+                                        
 .. |2D_3D_buttons|              image:: images/editing_images_2D_3D_buttons.png
-.. |select_by_intensity_button| image:: images/editing_images_select_by_intensity_button.png 
 .. |select_radius_button|       image:: images/editing_images_select_radius_button.png
 .. |local_search_button|        image:: images/editing_images_local_search_button.png
-.. |fill_selection_button|      image:: images/editing_images_fill_selection_button.png
-.. |erase_selection_button|     image:: images/editing_images_erase_selection_button.png
-.. |create_roi_button|          image:: images/editing_images_create_roi_button.png
-.. |create_mask_button|         image:: images/editing_images_create_mask_button.png 
 
 
 .. _editing_images:
@@ -32,20 +34,63 @@ Overview
 --------
 
    
-When you enter edit mode, an :ref:`edit toolbar <editing_images_edit_toolbar>`
-is added to the ortho view you are working in.  Editing the data in an image
-is a two-stage process:
+When you enter edit mode, two toolbars are added the ortho view you are
+working in:
 
-1. Select the voxels you wish to change. You can do this in one of two ways:
- 
-   - By :ref:`manually <editing_images_manual_selection>` drawing your
-     selection.
+ - The :ref:`edit toolbar <editing_images_edit_toolbar>` allows you to control
+   how editing/selections are performed.
 
-   - By using :ref:`Select by intensity <editing_images_select_by_intensity>`
-     mode to automatically select voxels.
+ - The :ref:`action toolbar <editing_images_action_toolbar>` allows you to
+   perform various editing actions.
+
+
+Editing modes
+^^^^^^^^^^^^^
+
+You can choose to work in one of two primary editing modes:
+
+ - |draw_mode| *Draw mode* In this mode, clicking, or clicking and dragging on
+   an image, will immediately change the voxel values in the image. This mode
+   will be familiar to you if you are used to editing images in `FSLView
+   <http://fsl.fmrib.ox.ac.uk/fsl/fslview/>`_.
+
+ - |select_mode| *Select mode* In this mode, editing images is a two step
+   process:
+
+   1. Select the voxels you wish to change. You can do this in one of two ways:
  
-2. :ref:`Change <editing_images_changing_voxel_values>` the value of the
-   selected voxels.
+      - By :ref:`manually <editing_images_manual_selection>` drawing your
+        selection.
+
+      - By using the :ref:`Select by intensity
+        <editing_images_select_by_intensity>` option to automatically select
+        voxels.
+ 
+   2. :ref:`Change <editing_images_changing_voxel_values>` the value of the
+      selected voxels.
+
+   This mode is more complicated than *draw mode*, but is much more powerful.
+
+
+Editing options
+^^^^^^^^^^^^^^^
+
+When you are editing an image, you can choose from one of four main
+interaction options which control what the mouse does when you click, or click
+and drag on the image:
+
+ - |navigate_button| *Navigate* This option is identical to using the
+   :ref:`ortho view <ortho_lightbox_views_ortho_view>` outside of edit mode -
+   it simply allows you to view the image, and change the displayed location.
+   
+ - |pencil_button| *Pencil* This option allows you to change voxel values to
+   the current fill value, or to add voxels to the current selection.
+   
+ - |eraser_button| *Eraser* This option allows you to erase voxel values
+   (setting them to zero), or to remove voxels from the current selection.
+   
+ - |selint_button| *Select by intensity* This option (only available in select
+   mode) allows you to automatically select voxels based on their intensity.
 
 
 Create a copy!
@@ -67,34 +112,14 @@ floppy disk button on the :ref:`overlay list
 <ortho_lightbox_views_overlay_list>`.
 
 
-The display space
-^^^^^^^^^^^^^^^^^
-
-
-When you enable edit mode or, whilst in edit mode you change the selected
-overlay, you may be presented with a warning:
-
-
-.. image:: images/editing_images_changing_display_space.png
-   :width: 65%
-   :align: center
-
-
-This message is just informing you that the display space is being changed to
-the image that is being edited (the selected overlay). This is necessary
-because, when editing an image, the image must be shown in an orientation
-which is orthogonal to the display coordinate system. For more details, refer
-to the page on the :ref:`display space <display_space>`.
-
-
 .. _editing_images_edit_toolbar:
 
 The edit toolbar
 ----------------
 
 
-In FSLeyes |version|, all editing-related settings and actions are accessed
-through the edit toolbar.
+The edit toolbar allows you to change the editing mode, and to configure
+options and settings:
 
 
 .. image:: images/editing_images_edit_toolbar_1.png
@@ -157,6 +182,8 @@ through the edit toolbar.
          
 16. **Search radius size** This setting controls the size of the search
     radius, when the *Limit to radius* setting is enabled.
+
+
 
 
 .. _editing_images_manual_selection: 

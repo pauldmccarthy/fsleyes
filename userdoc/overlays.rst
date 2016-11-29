@@ -737,11 +737,6 @@ VTK model
              VTK model files. FSLeyes will then be able to correclty
              position the VTK model on the display.
 
-             
-             Future versions of FSLeyes will attempt to automatically
-             determine the reference image for VTK models when you load in the
-             file(s).
-
 
 .. container:: image-strip
 
