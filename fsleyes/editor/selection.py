@@ -15,6 +15,7 @@ import numpy                       as np
 import scipy.ndimage.measurements  as ndimeas
 
 import fsl.utils.notifier          as notifier
+import fsleyes.gl.routines         as glroutines
 
 
 log = logging.getLogger(__name__)
@@ -76,7 +77,6 @@ class Selection(notifier.Notifier):
        clearSelection
        getBoundedSelection
        getIndices
-       generateBlock
     """
     
     
@@ -133,46 +133,50 @@ class Selection(notifier.Notifier):
         return self.__selection
     
 
-    def selectBlock(self, voxel, blockSize, axes=(0, 1, 2), combine=False):
+    def selectBlock(self,
+                    voxel,
+                    boxSize,
+                    axes=(0, 1, 2),
+                    bias=None,
+                    combine=False):
         """Selects the block (sets all voxels to 1) specified by the given
-        voxel and block size.
-
-        :arg voxel:     Starting voxel coordinates of the block.
-        
-        :arg blockSize: Size of the block along each axis.
-        
-        :arg axes:      Limit the block to the specified axes.
+        voxel and block size. See the :func:`.routines.voxelBlock` function
+        for details on the arguments.
 
         :arg combine:   Combine this change with the previous stored change 
                         (see :meth:`__storeChange`). 
         """
-        
-        block, offset = self.generateBlock(voxel,
-                                           blockSize,
-                                           self.__selection.shape,
-                                           axes)
+
+        block, offset = glroutines.voxelBlock(
+            voxel,
+            self.__selection.shape,
+            boxSize,
+            bias=bias,
+            axes=axes)
         
         self.addToSelection(block, offset, combine)
 
         
-    def deselectBlock(self, voxel, blockSize, axes=(0, 1, 2), combine=False):
+    def deselectBlock(self,
+                      voxel,
+                      boxSize,
+                      axes=(0, 1, 2),
+                      bias=None,
+                      combine=False):
         """De-selects the block (sets all voxels to 0) specified by the given
-        voxel and block size.
-
-        :arg voxel:     Starting voxel coordinates of the block.
-        
-        :arg blockSize: Size of the block along each axis.
-        
-        :arg axes:      Limit the block to the specified axes.
+        voxel and box size. See the :func:`.routines.voxelBlock` function
+        for details on the arguments.
 
         :arg combine:   Combine this change with the previous stored change 
                         (see :meth:`__storeChange`). 
         """
 
-        block, offset = self.generateBlock(voxel,
-                                           blockSize,
-                                           self.__selection.shape,
-                                           axes)
+        block, offset = glroutines.voxelBlock(
+            voxel,
+            self.__selection.shape,
+            boxSize,
+            bias=bias,
+            axes=axes) 
         
         self.removeFromSelection(block, offset, combine) 
 
@@ -739,52 +743,3 @@ class Selection(notifier.Notifier):
                 slices[i] = slice(None)
 
         return slices
-        
-    
-    @classmethod
-    def generateBlock(cls, voxel, blockSize, shape, axes=(0, 1, 2)):
-        """Convenience method to generates a square/cube of ones, with the
-        specified voxel at its centre, to fit in an image of the given shape.
-
-        If the specified voxel would result in part of the block being located
-        outside of the image shape, the block is truncated to fit inside
-        the image bounds.
-
-        :arg voxel:     Coordinates of the voxel around which the block is to
-                        be centred.
-        
-        :arg blockSize: Desired width/height/depth
-        
-        :arg shape:     Shape of the image in which the block is to be located.
-        
-        :arg axes:      Axes along which the block is to be located.
-
-        :returns:       A tuple containing the block - a ``numpy.uint8`` array
-                        filled with ones, and an offset specifying the block
-                        location within an image of the specified ``shape``.
-        """
-
-        if blockSize == 1:
-            return np.array([True], dtype=np.uint8).reshape(1, 1, 1), voxel
-
-        blockLo = [v - int(np.floor((blockSize - 1) / 2.0)) for v in voxel]
-        blockHi = [v + int(np.ceil(( blockSize - 1) / 2.0)) for v in voxel]
-
-        for i in range(3):
-            if i not in axes:
-                blockLo[i] = voxel[i]
-                blockHi[i] = voxel[i] + 1
-            else:
-                blockLo[i] = max(blockLo[i],     0)
-                blockHi[i] = min(blockHi[i] + 1, shape[i])
-
-            if blockHi[i] <= blockLo[i]:
-                return np.ones((0, 0, 0), dtype=np.uint8), voxel
-
-        block = np.ones((blockHi[0] - blockLo[0],
-                         blockHi[1] - blockLo[1],
-                         blockHi[2] - blockLo[2]), dtype=np.uint8)
-
-        offset = blockLo
-
-        return block, offset

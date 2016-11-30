@@ -295,6 +295,9 @@ _TOOLBAR_SPECS  = [
     'div',
     [props.Widget(
         'selectionSize',
+        spin=True,
+        slider=False,
+        showLimits=False,
         label=_LABELS['selectionSize'],
         tooltip=_TOOLTIPS['selectionSize']),
      props.Widget(

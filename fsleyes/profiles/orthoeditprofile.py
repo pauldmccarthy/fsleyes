@@ -24,6 +24,7 @@ import fsleyes.strings             as strings
 import fsleyes.actions             as actions
 import fsleyes.actions.copyoverlay as copyoverlay
 import fsleyes.editor.editor       as fsleditor
+import fsleyes.gl.routines         as glroutines
 import fsleyes.gl.annotations      as annotations
 from . import                         orthoviewprofile
 
@@ -123,7 +124,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     *scaled voxel* (a.k.a. ``pixdim``) space.  Therefore, when an ``Image``
     overlay is selected, the ``OrthoEditProfile`` instance sets that ``Image``
     as the current :attr:`.DisplayContext.displaySpace` reference image.
-
     """
 
 
@@ -137,7 +137,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     """
     
     
-    selectionSize = props.Int(minval=1, default=3)
+    selectionSize = props.Int(minval=1, maxval=100, default=3, clamped=True)
     """In ``sel`` and ``desel`` modes, defines the size of the selection
     cursor.
     """
@@ -873,7 +873,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :arg blockSize: Size of the cursor square/cube.
         """
 
-        opts     = self._displayCtx.getOpts(self.__currentOverlay)
+        overlay  = self.__currentOverlay
+        opts     = self._displayCtx.getOpts(overlay)
         canvases = [self.__xcanvas, self.__ycanvas, self.__zcanvas]
 
         # Create a cursor annotation for each canvas
@@ -894,36 +895,44 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             cursors  = [cursors[canvases.index(canvas)]]
             canvases = [canvas]
 
+        # If a block size was not specified,
+        # it defaults to selectionSize
         if blockSize is None:
             blockSize = self.selectionSize
 
-        # Figure out the selection
-        # boundary coordinates
-        lo = [(v)     - int(np.floor((blockSize - 1) / 2.0)) for v in voxel]
-        hi = [(v + 1) + int(np.ceil(( blockSize - 1) / 2.0)) for v in voxel]
+        # We need to specify the block
+        # size in scaled voxels along
+        # each voxel dimension. So we
+        # scale the block size by the
+        # shortest voxel axis - we're
+        # aiming for a square (if 2D)
+        # or a cube (if 3D) selection.
+        blockSize = np.min(overlay.pixdim) * blockSize
+        blockSize = [blockSize] * 3
 
-        if not self.selectionIs3D:
-            lo[canvas.zax] = voxel[canvas.zax]
-            hi[canvas.zax] = voxel[canvas.zax] + 1
+        # Limit to the current plane
+        # if in 2D selection mode
+        if self.selectionIs3D: axes = (0, 1, 2)
+        else:                  axes = (canvas.xax, canvas.yax)
 
-        corners       = np.zeros((8, 3))
-        corners[0, :] = lo[0], lo[1], lo[2]
-        corners[1, :] = lo[0], lo[1], hi[2]
-        corners[2, :] = lo[0], hi[1], lo[2]
-        corners[3, :] = lo[0], hi[1], hi[2]
-        corners[4, :] = hi[0], lo[1], lo[2]
-        corners[5, :] = hi[0], lo[1], hi[2]
-        corners[6, :] = hi[0], hi[1], lo[2]
-        corners[7, :] = hi[0], hi[1], hi[2]
+        # Calculate a box in the voxel coordinate
+        # system, centred at the current voxel,
+        # and of the specified block size
+        corners = glroutines.voxelBox(voxel,
+                                      overlay.shape,
+                                      overlay.pixdim,
+                                      blockSize,
+                                      axes=axes,
+                                      bias='high')
+ 
+        if corners is None:
+            return
 
         # We want the selection to follow voxel
         # edges, but the transformCoords method
         # will map voxel coordinates to the
         # displayed voxel centre. So we offset
         # by -0.5 to get the corners.
-        # 
-        # (Assuming here that the image is
-        # displayed in id/pixdim space)
         corners = opts.transformCoords(corners - 0.5, 'voxel', 'display')
 
         cmin = corners.min(axis=0)
@@ -962,12 +971,18 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.selectionIs3D: axes = (0, 1, 2)
         else:                  axes = (canvas.xax, canvas.yax)
 
-        editor        = self.__editors[self.__currentOverlay]
-        selection     = editor.getSelection()
-        block, offset = selection.generateBlock(voxel,
-                                                self.selectionSize,
-                                                selection.getSelection().shape,
-                                                axes)
+        overlay   = self.__currentOverlay
+        editor    = self.__editors[overlay]
+        selection = editor.getSelection()
+        blockSize = self.selectionSize * np.min(overlay.pixdim)
+
+        block, offset = glroutines.voxelBlock(
+            voxel,
+            overlay.shape,
+            overlay.pixdim,
+            blockSize,
+            axes=axes,
+            bias='high')
 
         if add: selection.addToSelection(     block, offset)
         else:   selection.removeFromSelection(block, offset)
