@@ -131,7 +131,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     """Colour used for the cursor annotation. """
 
     
-    selectionOverlayColour = props.Colour(default=(1, 0, 1, 0.7))
+    selectionOverlayColour = props.Colour(default=(1, 0.25, 1, 0.4))
     """Colour used for the selection annotation, which displays the voxels
     that are currently selected.
     """
