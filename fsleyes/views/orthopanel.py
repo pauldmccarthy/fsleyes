@@ -25,6 +25,7 @@ import wx
 import pwidgets.textpanel                      as textpanel
 
 import fsl.data.constants                      as constants
+import fsl.data.image                          as fslimage
 import fsl.utils.layout                        as fsllayout
 import fsleyes.strings                         as strings
 import fsleyes.gl                              as fslgl
@@ -702,10 +703,20 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         # Disable actions that need an overlay
         haveOverlays = len(self._overlayList) > 0
+        selOverlay   = self._displayCtx.getSelectedOverlay()
 
+        if selOverlay is not None:
+
+            display = self._displayCtx.getDisplay(selOverlay)
+            isImage = isinstance(selOverlay, fslimage.Image) and \
+                      display.overlayType in ('volume', 'mask', 'label')
+        else:
+            isImage = False
+            
         self.resetDisplay     .enabled = haveOverlays
         self.centreCursor     .enabled = haveOverlays
         self.centreCursorWorld.enabled = haveOverlays
+        self.toggleEditMode   .enabled = isImage
 
         
     def __displaySpaceChanged(self, *a):

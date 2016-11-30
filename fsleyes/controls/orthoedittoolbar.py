@@ -123,6 +123,12 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
  
         for specGroup in _TOOLBAR_SPECS:
 
+            if specGroup == 'div':
+                allTools.append(fsltoolbar.ToolBarDivider(self,
+                                                          height=24,
+                                                          orient=wx.VERTICAL))
+                continue
+
             groupWidgets = [] 
             isGroup      = isinstance(specGroup, list)
 
@@ -271,11 +277,13 @@ _TOOLBAR_SPECS  = [
         toggle=False,
         icon=_ICONS['drawMode'],
         tooltip=_TOOLTIPS['drawMode']),
+    'div',
     props.Widget(
         'mode',
         icons=_ICONS['mode'],
         tooltip=_TOOLTIPS['mode'],
         fixChoices=['nav', 'sel', 'desel', 'selint']),
+    'div',
     props.Widget(
         'selectionIs3D',
         icon=_ICONS['selectionIs3D'],
@@ -293,9 +301,12 @@ _TOOLBAR_SPECS  = [
         tooltip=_TOOLTIPS['localFill'],
         dependencies=['mode'],
         enabledWhen=lambda p, m: m == 'selint'),
-    
+    'div',
     [props.Widget(
         'selectionSize',
+        spin=True,
+        slider=False,
+        showLimits=False,
         label=_LABELS['selectionSize'],
         tooltip=_TOOLTIPS['selectionSize']),
      props.Widget(

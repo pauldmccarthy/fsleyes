@@ -18,6 +18,7 @@ import props
 from . import display       as fsldisplay
 
 import fsleyes.colourmaps   as colourmaps
+import fsleyes.overlay      as fsloverlay
 import fsl.data.image       as fslimage
 import fsl.utils.transform  as transform
 
@@ -159,6 +160,14 @@ class ModelOpts(fsldisplay.DisplayOpts):
         
             self.__overlayListChanged()
             self.__updateBounds()
+
+        # If a reference image has not
+        # been set on the parent ModelOpts
+        # instance, see  if there is a
+        # suitable one in the overlay list. 
+        if self.refImage is None:
+            self.refImage = fsloverlay.findModelReferenceImage(
+                self.overlayList, self.overlay)
 
 
     def destroy(self):

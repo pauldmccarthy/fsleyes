@@ -73,6 +73,12 @@ class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):
 
         for spec in _TOOLBAR_SPECS:
 
+            if spec == 'div':
+                tools.append(fsltoolbar.ToolBarDivider(self,
+                                                       height=24,
+                                                       orient=wx.HORIZONTAL))
+                continue 
+
             if spec.key == 'toggleEditPanel': target = ortho
             else:                             target = profileObj
             
@@ -91,8 +97,7 @@ class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):
 
 _ICONS = {
     'toggleEditPanel' : [fslicons.findImageFile('editSpannerHighlight24'),
-                         fslicons.findImageFile('editSpanner24'),
-    ],
+                         fslicons.findImageFile('editSpanner24')],
     'undo'            : fslicons.findImageFile('undo24'),
     'redo'            : fslicons.findImageFile('redo24'),
     'createMask'      : fslicons.findImageFile('new24'),
@@ -133,6 +138,12 @@ _TOOLBAR_SPECS = [
         actionKwargs={'floatPane' : True},
         icon=_ICONS['toggleEditPanel'],
         tooltip=_TOOLTIPS['toggleEditPanel']),
+    actions.ActionButton(
+        'createMask',
+        icon=_ICONS['createMask'],
+        tooltip=_TOOLTIPS['createMask']),
+ 
+    'div', 
 
     actions.ActionButton(
         'undo',
@@ -142,10 +153,9 @@ _TOOLBAR_SPECS = [
         'redo',
         icon=_ICONS['redo'],
         tooltip=_TOOLTIPS['redo']),
-    actions.ActionButton(
-        'createMask',
-        icon=_ICONS['createMask'],
-        tooltip=_TOOLTIPS['createMask']),    
+
+    'div',
+
     actions.ActionButton(
         'clearSelection',
         icon=_ICONS['clearSelection'],
@@ -158,6 +168,9 @@ _TOOLBAR_SPECS = [
         'eraseSelection',
         icon=_ICONS['eraseSelection'],
         tooltip=_TOOLTIPS['eraseSelection']),
+    
+    'div',
+    
     actions.ActionButton(
         'copySelection',
         icon=_ICONS['copySelection'],

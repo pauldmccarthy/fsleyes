@@ -170,7 +170,18 @@ class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
         sizer.Add(spacingLabel)
         sizer.Add(spacing, flag=wx.EXPAND)
 
-        tools = [more, screenshot, zax, movieMode, zrange, panel]
+        tools = [more,
+                 screenshot,
+                 fsltoolbar.ToolBarDivider(self,
+                                           height=24,
+                                           orient=wx.VERTICAL),
+                 zax,
+                 fsltoolbar.ToolBarDivider(self,
+                                           height=24,
+                                           orient=wx.VERTICAL),
+                 movieMode,
+                 zrange,
+                 panel]
         nav   = [more, screenshot, zax, movieMode, zrange, zoom, spacing]
         
         self.SetTools(tools)

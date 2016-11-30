@@ -471,32 +471,43 @@ properties = TypeDict({
     'Colour to use for the selection cursor.',
     
     'OrthoEditProfile.selectionOverlayColour' :
-    'Colour to use to highlight selected regions.', 
+    'Colour to use to highlight selected regions.',
+
+    'OrthoEditProfile.drawMode' : 
+    'Toggle between "draw" mode and "select" mode. In draw mode, you can '
+    'simply \'draw\' on an image - when you release the mouse, the voxel '
+    'values are replaced with the current fill value (or erased). Select '
+    'mode is more powerful, but requires two steps to edit an image - '
+    'you must first select some voxels, and then fill/erase them.',
     
     'OrthoEditProfile.mode' :
-    'Switch between editing modes. "Navigate" mode simply allows you to view '
-    'the image and change the display location."Pencil" mode allows you to '
-    'fill voxel values (in draw mode), or to manually select voxels (in '
-    'select mode). "Erase" mode allows you to erase voxel values (in draw '
-    'mode), or to deselect voxels (in select mode). When select mode is '
-    'enabled, "select by intensity" mode allows you to select voxels based on '
-    'their intensity. Click on a "seed" voxel, and all voxels with a similar '
-    'intenstiy to that seed voxel will be selected.',
+    'Switch between editing tools. The "Navigate" tool simply allows you to '
+    'view the image and change the display location. The "Pencil" tool allows '
+    'you to fill voxel values (in draw mode), or to manually select voxels '
+    '(in select mode). The "Erase" tool allows you to erase voxel values (in '
+    'draw mode), or to deselect voxels (in select mode). When select mode is '
+    'enabled, the "select by intensity" tool allows you to select voxels '
+    'based on their intensity. Click on a "seed" voxel, and all voxels with '
+    'a similar intenstiy to that seed voxel will be selected.',
     
     'OrthoEditProfile.selectionSize' :
-    'Size (in voxels) of the selection region when in pencil or erase mode.',
+    'Size (in voxels) of the selection region when using the pencil or '
+    'eraser tools.',
     
     'OrthoEditProfile.selectionIs3D' :
-    'When in pencil or erase mode, choose between a 2D square selection in '
-    'the plane of the active canvas, or a 3D cuboid. When in select by '
-    'intensity mode, you can limit the selection search to the current 2D '
-    'slice, or extend the search to the full 3D image.',
+    'When using the pencil or eraser tools, choose between a 2D square '
+    'selection in the plane of the active canvas, or a 3D cuboid. With '
+    'the select by intensity tool, you can limit the selection search to '
+    'the current 2D slice, or extend the search to the full 3D image.',
 
     'OrthoEditProfile.fillValue' :
-    'Value to fill voxels with.' ,
+    'Value to replace voxels with when drawing/filling.',
+
+    'OrthoEditProfile.eraseValue' :
+    'Value to replace voxels with when erasing.' , 
     
     'OrthoEditProfile.intensityThres' :
-    'When in select by intensity mode, this is the threshold used to '
+    'When using the select by intensity tool, this is the threshold used to '
     'determine whether or not a voxel should be selected. If the difference '
     'in intensity between the seed voxel and another voxel in the search '
     'space is less than or equal to this threshold, the voxel will be '
@@ -508,25 +519,18 @@ properties = TypeDict({
     'manually adjust it through this setting.',
     
     'OrthoEditProfile.localFill' :
-    'When in select by intensity mode, this setting will cause the search '
-    'space to be limited to voxels which have a similar intensity to the '
-    'seed voxel, and which are adjacent to another selected voxel.',
+    'When using the select by intensity tool, this setting will cause the '
+    'search space to be limited to voxels which have a similar intensity '
+    'to the seed voxel, and which are adjacent to another selected voxel.',
     
     'OrthoEditProfile.limitToRadius' :
-    'When in select by intensity mode, this setting will cause the search '
-    'limited to a circle or sphere of the specified radius.',
+    'When using the select by intensity tool, this setting will cause the '
+    'search limited to a circle or sphere of the specified radius.',
     
     'OrthoEditProfile.searchRadius' :
-    'When in select by intensity mode, if the search is being limited to '
-    'a radius, this setting allows you to specify the radius of the search '
+    'When using the select by intensity tool, if the search is being limited '
+    'to a radius, this setting allows you to specify the radius of the search '
     'circle/sphere.',
-    
-    'OrthoEditProfile.drawMode' : 
-    'Toggle between "draw" mode and "select" mode. In draw mode, you can '
-    'simply \'draw\' on an image - when you release the mouse, the voxel '
-    'values are replaced with the current fill value (or erased). Select '
-    'mode is more powerful, but requires two steps to edit an image - '
-    'you must first select some voxels, and then fill/erase them.',
 
     'OrthoEditProfile.targetImage' : \
     'Choose the target image for edit operations. By default, when you '

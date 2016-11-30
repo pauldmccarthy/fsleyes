@@ -100,6 +100,7 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         self.__tools      = []
         self.__index      = 0
         self.__numVisible = None
+        self.__height     = height
         self.__orient     = orient
 
         font = self.GetFont()
@@ -196,6 +197,22 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
     def GetToolCount(self):
         """Returns the number of tools in this ``FSLeyesToolBar``. """
         return len(self.__tools)
+
+
+    def AddDivider(self):
+        """Adds a :class:`.ToolBarDivider` to the end of the toolbar. """
+        self.InsertDivider()
+
+
+    def InsertDivider(self, index=None):
+        """Inserts a :class:`.ToolBarDivider` into the toolbar at the
+        specified ``index``.
+        """
+        
+        if   self.__orient == wx.VERTICAL:   orient = wx.HORIZONTAL
+        elif self.__orient == wx.HORIZONTAL: orient = wx.VERTICAL
+        
+        self.InsertTool(ToolBarDivider(self, self.__height, orient), index) 
 
 
     def AddTool(self, tool):
@@ -506,3 +523,23 @@ ToolBarEvent = _ToolBarEvent
 """Event emitted when one or more tools is/are added/removed to/from a
 :class:`FSLeyesToolBar`.
 """
+
+
+class ToolBarDivider(fslpanel.FSLeyesPanelBase):
+    """An empty ``wx.Panel`` intended to be used for dividing space in a
+    :class:`FSLeyesToolBar`.
+    """
+
+    def __init__(self,
+                 parent,
+                 width=10,
+                 height=32,
+                 orient=wx.VERTICAL):
+
+        fslpanel.FSLeyesPanelBase.__init__(self, parent)
+
+        if   orient == wx.VERTICAL:   size = (width,  height)
+        elif orient == wx.HORIZONTAL: size = (height, width)
+
+        self.SetMinSize(size)
+        self.SetMaxSize(size)

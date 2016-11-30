@@ -469,3 +469,24 @@ def findFEATImage(overlayList, overlay):
     featImage = overlayList.find(dataPath)
 
     return featImage
+
+
+def findModelReferenceImage(overlayList, overlay):
+    """Searches the :class:`.OverlayList` and tries to identify a reference
+    image for the given :class:`.Model` overlay. Returns the identified
+    overlay, or ``None`` if one can't be found.
+    """
+
+    import fsl.data.model as fslmodel
+
+    try:
+        prefix = fslmodel.getFIRSTPrefix(overlay.dataSource)
+
+        for ovl in overlayList:
+            if prefix.startswith(ovl.name):
+                return ovl
+        
+    except:
+        pass
+    
+    return None

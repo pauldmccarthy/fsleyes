@@ -4,17 +4,19 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module contains a collection of miscellaneous OpenGL routines. """
+"""This module contains a collection of miscellaneous OpenGL and geometric
+routines.
+"""
 
 
 from __future__ import division
 
-import logging
+import              logging
+import              collections
+import itertools as it
 
-import itertools           as it
-
-import OpenGL.GL           as gl
-import numpy               as np
+import OpenGL.GL as gl
+import numpy     as np
 
 import fsl.utils.transform as transform
 
@@ -411,6 +413,147 @@ def voxelGrid(points, xax, yax, xpixdim, ypixdim):
                np.repeat(np.arange(0, npoints * 4, 4, dtype=np.uint32), 8)).T
     
     return vertices, indices
+
+
+def voxelBlock(*args, **kwargs):
+    """Generates a ``numpy`` array containing all ones, centered at the
+    specified voxel. 
+
+    :arg dtype: The data type of the returned ``numpy`` array. Defaults to
+                ``uint8``.
+
+    All other arguments are passed through to the :func:`voxelBox` function -
+    see that function for details on the arguments.
+
+    :returns: A tuple containing:
+    
+              - The ``numpy`` array
+    
+              - Voxel coordinates specifying the offset of the position of
+                this array in the image.
+    """
+
+    dtype   = kwargs.pop('dtype', np.uint8)
+    corners = voxelBox(*args, **kwargs)
+
+    los  = corners.min(axis=0)
+    his  = corners.max(axis=0)
+
+    lens  = his - los
+    block = np.ones(lens, dtype=dtype)
+
+    return block, los
+
+
+def voxelBox(voxel,
+             shape,
+             dims,
+             boxSize,
+             axes=(0, 1, 2),
+             bias=None,
+             bounded=True):
+    """Generates a 'box', a cuboid region, in a voxel coordinate system,
+    centered at a specific voxel.
+
+    The corners of the box are returnd as a ``numpy`` array of shape
+    ``(8, 3)``.
+
+    :arg voxel:   Coordinates of the voxel around which the block is to
+                  be centred.
+
+    :arg shape:   Shape of the image in which the block is to be located.
+
+    :arg dims:    Size of the image voxels along each dimension.
+ 
+    :arg boxSize: Desired width/height/depth of the box in scaled voxels.
+                  May be either a single value, or a sequence of three
+                  values.
+
+    :arg axes:    Axes along which the block is to be located.
+
+    :arg bias:    ``low``, ``high``, or ``None``. The box can only be
+                  centered on the ``voxel`` if the specified ``boxSize``
+                  results in an odd number of voxels along each voxel axis.
+                  If this is not the case, more voxels must be added to one
+                  side of the box centre. You can specify that these voxels
+                  are added to the ``high`` side (i.e. larger voxel
+                  coordinate) or the ``low`` side  of the voxel. Specifying
+                  ``None`` will force the box to have an odd number of voxels
+                  along each axis, and thus have the ``voxel`` in the true
+                  centre of the box.
+
+    :arg bounded: If ``True`` (the default), and the specified voxel would
+                  result in part of the block being located outside of the
+                  image shape, the block is truncated to fit inside the
+                  image bounds.
+    """
+
+    if not isinstance(boxSize, collections.Iterable):
+        boxSize = [boxSize] * 3
+
+    for i in range(3):
+        if i not in axes:
+            boxSize[i] = dims[i] 
+
+    voxel       = np.array(voxel)
+    dims        = np.array(dims)
+    shape       = np.array(shape)
+    boxSize     = np.array(boxSize)
+
+    # The block size must be at least
+    # one voxel across each dimension
+    boxSize     = np.clip(boxSize, dims, boxSize)
+
+    # Voxel location and box low/
+    # high bounds in scaled voxels.
+    #
+    # Note that we are assuming that
+    # voxel coordinates correspond to
+    # the voxel centre here 
+    # (voxel + 0.5). This has the effect
+    # that the returned box vertices will
+    # be integer voxel coordinates (i.e.
+    # on voxel borders).
+    scaledVoxel = (voxel + 0.5) * dims
+    scaledLo    = scaledVoxel - boxSize / 2.0
+    scaledHi    = scaledVoxel + boxSize / 2.0
+
+    # Scale the low/high bounds back 
+    # into voxel coordinates, and
+    # round them up or down according
+    # to the bias setting.
+    if bias == 'low':
+        lo = np.floor(scaledLo / dims)
+        hi = np.floor(scaledHi / dims)
+        
+    elif bias == 'high':
+        lo = np.ceil(scaledLo / dims)
+        hi = np.ceil(scaledHi / dims)
+        
+    else:
+        lo = np.floor(scaledLo / dims)
+        hi = np.ceil( scaledHi / dims)
+
+    # Crop the box to the
+    # image space if necessary
+    if bounded:
+        lo = np.maximum(lo, 0)
+        hi = np.minimum(hi, shape)
+
+    if np.any(hi <= lo):
+        return None
+
+    box       = np.zeros((8, 3), dtype=np.uint32)
+    box[0, :] = lo[0], lo[1], lo[2]
+    box[1, :] = lo[0], lo[1], hi[2]
+    box[2, :] = lo[0], hi[1], lo[2]
+    box[3, :] = lo[0], hi[1], hi[2]
+    box[4, :] = hi[0], lo[1], lo[2]
+    box[5, :] = hi[0], lo[1], hi[2]
+    box[6, :] = hi[0], hi[1], lo[2]
+    box[7, :] = hi[0], hi[1], hi[2]
+
+    return box
 
 
 def slice2D(dataShape,
