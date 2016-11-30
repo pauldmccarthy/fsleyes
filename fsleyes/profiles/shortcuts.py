@@ -15,11 +15,11 @@ actions = td.TypeDict({
     'LoadOverlayAction'        : 'Ctrl-O',
     'LoadOverlayFromDirAction' : 'Ctrl-D',
     'LoadStandardAction'       : 'Ctrl-S',
-    'CopyOverlayAction'        : 'Ctrl-C',
-    'SaveOverlayAction'        : 'Ctrl-Alt-S',
-    'PearsonCorrelateAction'   : 'Ctrl-Alt-P',
-    'ReloadOverlayAction'      : 'Ctrl-Alt-R',
-    'RemoveOverlayAction'      : 'Ctrl-Alt-W',
+    'CopyOverlayAction'        : 'Ctrl-Shift-C',
+    'SaveOverlayAction'        : 'Ctrl-Shift-S',
+    'PearsonCorrelateAction'   : 'Ctrl-Shift-P',
+    'ReloadOverlayAction'      : 'Ctrl-Shift-R',
+    'RemoveOverlayAction'      : 'Ctrl-Shift-W',
 
     'FSLeyesFrame.closeFSLeyes'           : 'Ctrl-Q',
     'FSLeyesFrame.openHelp'               : 'Ctrl-H',
@@ -36,7 +36,7 @@ actions = td.TypeDict({
     
     'FSLeyesFrame.selectNextOverlay'       : 'Ctrl-Up',
     'FSLeyesFrame.selectPreviousOverlay'   : 'Ctrl-Down',
-    'FSLeyesFrame.toggleOverlayVisibility' : 'Ctrl-Z',
+    'FSLeyesFrame.toggleOverlayVisibility' : 'Ctrl-F',
 
     # Shortcuts for next/prev volume
  
@@ -81,5 +81,14 @@ actions = td.TypeDict({
     'HistogramPanel.toggleHistogramToolBar'         : 'Ctrl-Alt-3',
     'HistogramPanel.toggleHistogramControl'         : 'Ctrl-Alt-4',
     'PowerSpectrumPanel.togglePowerSpectrumToolBar' : 'Ctrl-Alt-3',
-    'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Ctrl-Alt-4', 
+    'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Ctrl-Alt-4',
+
+    'OrthoEditProfile.undo'           : 'Ctrl-Z',
+    'OrthoEditProfile.redo'           : 'Ctrl-Y',
+    'OrthoEditProfile.createMask'     : 'Ctrl-N',
+    'OrthoEditProfile.clearSelection' : 'Ctrl-Shift-A',
+    'OrthoEditProfile.eraseSelection' : 'Ctrl-E',
+    'OrthoEditProfile.fillSelection'  : 'Ctrl-B',
+    'OrthoEditProfile.copySelection'  : 'Ctrl-C',
+    'OrthoEditProfile.pasteSelection' : 'Ctrl-V',
 })
