@@ -345,15 +345,19 @@ properties = TypeDict({
                                        'linked to the display properties '
                                        'on other panels (as long as they '
                                        'also have this setting enabled). ',
-    'CanvasPanel.movieMode'          : 'If checked, the volume of '
-                                       'the currently selected overlay '
-                                       'will automatically change at a rate '
-                                       'determined by the movie rate. If you '
-                                       'want several overlays to be animated, '
-                                       'group them using the overlay list.',
-    'CanvasPanel.movieRate'          : 'The rate at which volumes are changed '
-                                       'when movie mode is enabled. Low = '
-                                       'fast, and high = slow.', 
+    
+    'CanvasPanel.movieMode' :
+    'If checked, the volume of the currently selected overlay '
+    'will automatically change at a rate determined by the movie rate. If you '
+    'want several overlays to be animated, group them using the overlay list.',
+    
+    'CanvasPanel.movieRate' :
+    'The rate at which volumes are changed when movie mode is enabled. Low = '
+    'fast, and high = slow.',
+    
+    'CanvasPanel.movieAxis' :
+    'The axis to loop through. You can choose to run a movie through any '
+    'axis of an image (X, Y, Z, or volume/time).',
 
     'PlotPanel.legend'     : 'Show / hide a legend for series which have '
                              'been added to the plot.',

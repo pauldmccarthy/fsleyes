@@ -77,6 +77,8 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
             props.Widget('syncLocation'),
             props.Widget('syncOverlayDisplay'),
             props.Widget('movieMode'),
+            props.Widget('movieAxis',
+                         labels=strings.choices[canvasPanel, 'movieAxis']),
             props.Widget('movieRate', spin=False, showLimits=False)]
 
         sceneOptsProps = [

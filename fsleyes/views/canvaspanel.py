@@ -216,6 +216,12 @@ class CanvasPanel(viewpanel.ViewPanel):
     inverted so that a high value corresponds to a fast rate, which makes
     more sense when displayed as an option to the user.
     """
+
+    
+    movieAxis = props.Choice((0, 1, 2, 3), default=3)
+    """Axis along which the movie should be played, relative to the
+    currently selected :class:`.Image`.
+    """
     
 
     def __init__(self, parent, overlayList, displayCtx, frame, sceneOpts):
@@ -645,9 +651,10 @@ class CanvasPanel(viewpanel.ViewPanel):
             return False
 
         opts = self._displayCtx.getOpts(overlay)
+        axis = self.movieAxis
         
         if not isinstance(overlay, fslimage.Nifti) or \
-           len(overlay.shape) != 4                 or \
+           len(overlay.shape) <= axis              or \
            not isinstance(opts, displayctx.VolumeOpts):
             return False
 
@@ -659,25 +666,37 @@ class CanvasPanel(viewpanel.ViewPanel):
             c.FreezeDraw()
             c.FreezeSwapBuffers()
 
+        limit = overlay.shape[axis]
+
         # This method has been called off the props
         # event queue (see __movieModeChanged).
         # Therefore, all listeners on the opts.volume
-        # property should be called immediately, in
-        # this assignment.
+        # or DisplayContext.location  properties
+        # should be called immediately, in these
+        # assignments.
         #
-        # This means that image texture refreshes
-        # should be triggered and, after the
-        # opts.volume assignment, all affected
-        # GLObjects should return ready() == False.
-        limit = overlay.shape[3]
+        # When the movie axis == 3 (time), this means
+        # that image texture refreshes should be
+        # triggered and, after the opts.volume
+        # assignment, all affected GLObjects should
+        # return ready() == False.
+        if axis == 3:
+            if opts.volume >= limit - 1: opts.volume  = 0
+            else:                        opts.volume += 1
+            
+        else:
+            voxel = opts.getVoxel()
+            if voxel[axis] >= limit - 1: voxel[axis]  = 0
+            else:                        voxel[axis] += 1
 
-        if opts.volume == limit - 1: opts.volume  = 0
-        else:                        opts.volume += 1
+            self._displayCtx.location = opts.transformCoords(
+                voxel, 'voxel', 'display')
 
         # Now we get refs to *all* GLObjects managed
         # by every canvas - we have to wait until
         # they are all ready to be drawn before we
-        # can refresh the canvases. 
+        # can refresh the canvases.  Note that this
+        # is only necessary when the movie axis == 3
         globjs = [c.getGLObject(o)
                   for c in canvases
                   for o in self._overlayList]
