@@ -966,12 +966,23 @@ class WXGLCanvasTarget(object):
                 gl.glFlush()
 
         def doInit(*a):
-            self.__glReady = True
-            self._initGL()
 
-            self.__realDraw = drawWrapper
-            self.__draw     = drawWrapper
-            self._draw()
+            import wx
+
+            try:
+                self.__glReady = True
+                self._initGL()
+
+                self.__realDraw = drawWrapper
+                self.__draw     = drawWrapper
+                self._draw()
+
+            # Just in case this canvas
+            # was destroyed before it
+            # had a chance to be drawn
+            # on
+            except wx.PyDeadObjectError:
+                pass
 
         if not self.__glReady:
             import wx

@@ -193,10 +193,15 @@ def saveOverlay(overlay, display=None):
         filename = '{}_copy'.format(filename)
     else:
         fromDir  = fslsettings.read('loadSaveOverlayDir', os.getcwd())
-        filename = overlay.name
+
+        if display is not None: filename = display.name
+        else:                   filename = overlay.name
+
+    filename = filename.replace('/',  '_')
+    filename = filename.replace('\\', '_')
 
     # Ask the user where they
-    # want to save the image 
+    # want to save the image
     msg = strings.titles['SaveOverlayAction.saveFile']
     dlg = wx.FileDialog(wx.GetApp().GetTopWindow(),
                         message=msg,
@@ -215,10 +220,10 @@ def saveOverlay(overlay, display=None):
     if suffix == '':
         savePath = '{}{}'.format(prefix, fslimage.defaultExt())
 
+    oldPath = overlay.dataSource
+    saveDir = op.dirname(savePath)
+    
     if doSave(overlay, savePath):
-
-        saveDir = op.dirname(savePath)
-        oldPath = overlay.dataSource
 
         # Cache the save directory for next time.
         fslsettings.write('loadSaveOverlayDir', saveDir)
@@ -230,7 +235,9 @@ def saveOverlay(overlay, display=None):
            fslimage.removeExt(op.basename(oldPath)) == overlay.name:
 
             overlay.name = fslimage.removeExt(op.basename(savePath))
-            display.name = overlay.name
+
+            if display is not None:
+                display.name = overlay.name
 
 
 def doSave(overlay, path=None):

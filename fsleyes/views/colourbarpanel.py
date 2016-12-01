@@ -115,9 +115,13 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
                 opts    = display.getDisplayOpts()
 
                 if isinstance(opts, volumeopts.VolumeOpts):
-                    display.removeListener('name',         self._name)
-                    opts   .removeListener('cmap',         self._name)
-                    opts   .removeListener('displayRange', self._name)
+                    opts   .removeListener('displayRange',    self._name)
+                    opts   .removeListener('cmap',            self._name)
+                    opts   .removeListener('negativeCmap',    self._name)
+                    opts   .removeListener('useNegativeCmap', self._name)
+                    opts   .removeListener('invert',          self._name)
+                    opts   .removeListener('cmapResolution',  self._name)
+                    display.removeListener('name',            self._name) 
                     
             except fsldc.InvalidOverlayError:
                 pass
@@ -159,10 +163,13 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
                 display = self._displayCtx.getDisplay(overlay)
                 opts    = display.getDisplayOpts()
 
-                opts   .removeListener('displayRange',   self._name)
-                opts   .removeListener('cmap',           self._name)
-                opts   .removeListener('cmapResolution', self._name)
-                display.removeListener('name',           self._name)
+                opts   .removeListener('displayRange',    self._name)
+                opts   .removeListener('cmap',            self._name)
+                opts   .removeListener('negativeCmap',    self._name)
+                opts   .removeListener('useNegativeCmap', self._name)
+                opts   .removeListener('invert',          self._name)
+                opts   .removeListener('cmapResolution',  self._name)
+                display.removeListener('name',            self._name)
 
             # The previously selected overlay
             # has been removed from the list,
