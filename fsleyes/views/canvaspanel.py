@@ -279,16 +279,20 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         # the __movieModeChanged method is called
         # when movieMode changes, but also when
-        # the overlay list/selected overlay changes.
-        # This is because, if movie mode is on, but
-        # no overlay, or an incompatible overlay,
-        # is selected, the movie loop stops. So it
-        # needs to be re-started if/when a compatible
-        # overlay is selected.
+        # the movie axis, overlay list, or selected
+        # overlay changes. This is because, if movie
+        # mode is on, but no overlay, or an
+        # incompatible overlay, is selected, the
+        # movie loop stops. So it needs to be
+        # re-started if/when a compatible overlay is
+        # selected.
         self.__movieRunning = False
         self             .addListener('movieMode',
                                       self.__name,
                                       self.__movieModeChanged)
+        self             .addListener('movieAxis',
+                                      self.__name,
+                                      self.__movieModeChanged) 
         self._overlayList.addListener('overlays',
                                       self.__name,
                                       self.__movieModeChanged)
@@ -317,6 +321,7 @@ class CanvasPanel(viewpanel.ViewPanel):
             self.__colourBar.destroy()
 
         self             .removeListener('movieMode',         self.__name)
+        self             .removeListener('movieAxis',         self.__name)
         self._overlayList.removeListener('overlays',          self.__name)
         self._displayCtx .removeListener('selectedOverlay',   self.__name)
         self.__opts      .removeListener('colourBarLocation', self.__name)
