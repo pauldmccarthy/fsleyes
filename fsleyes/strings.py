@@ -569,6 +569,7 @@ properties = TypeDict({
     'CanvasPanel.syncOverlayDisplay' : 'Link overlay display settings',
     'CanvasPanel.movieMode'          : 'Movie mode',
     'CanvasPanel.movieRate'          : 'Movie update rate',
+    'CanvasPanel.movieAxis'          : 'Movie axis',
     'CanvasPanel.profile'            : 'Mode',
 
     'SceneOpts.showCursor'         : 'Show location cursor',
@@ -771,6 +772,11 @@ choices = TypeDict({
                                'sel'    : 'Draw/select',
                                'desel'  : 'Erase/deselect',
                                'selint' : 'Select by intensity'},
+
+    'CanvasPanel.movieAxis' : {0 : 'X',
+                               1 : 'Y',
+                               2 : 'Z',
+                               3 : 'Time/volume'},
 
     'HistogramPanel.dataRange.min' : 'Min.',
     'HistogramPanel.dataRange.max' : 'Max.',
