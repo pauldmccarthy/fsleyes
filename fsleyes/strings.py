@@ -660,6 +660,7 @@ properties = TypeDict({
     'OrthoEditProfile.selectionOverlayColour' : 'Selection overlay',
     'OrthoEditProfile.selectionCursorColour'  : 'Selection cursor',
     'OrthoEditProfile.drawMode'               : 'Draw mode',
+    'OrthoEditProfile.targetImage'            : 'Target image',
     
     'Display.name'              : 'Overlay name',
     'Display.overlayType'       : 'Overlay data type',

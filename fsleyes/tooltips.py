@@ -537,6 +537,15 @@ properties = TypeDict({
     'When using the select by intensity tool, if the search is being limited '
     'to a radius, this setting allows you to specify the radius of the search '
     'circle/sphere.',
+
+    'OrthoEditProfile.targetImage' : \
+    'Choose the target image for edit operations. By default, when you '
+    'fill/erase voxels, the currently selected image is modified. However, '
+    'you can select a different image (of the same dimensions and resolution '
+    'as the currently selected image) as the target for edit operations. This '
+    'is most useful when selecting voxels by intensity - you can select voxels'
+    'based on the values in the currently selected image, but then fill/erase '
+    'that selection in another image.', 
 })
 
 
