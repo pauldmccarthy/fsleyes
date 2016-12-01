@@ -347,9 +347,11 @@ properties = TypeDict({
                                        'also have this setting enabled). ',
     
     'CanvasPanel.movieMode' :
-    'If checked, the volume of the currently selected overlay '
-    'will automatically change at a rate determined by the movie rate. If you '
-    'want several overlays to be animated, group them using the overlay list.',
+    'If checked, the volume will automatically change at a rate determined '
+    'by the movie rate.  You can also loop through the or X, Y, or Z voxel '
+    'coordinates by changing the movie axis  inthe view settings panel.  If '
+    'you are looping through volumes and you want several overlays to be '
+    'animated, group them using the overlay list.',
     
     'CanvasPanel.movieRate' :
     'The rate at which volumes are changed when movie mode is enabled. Low = '

@@ -60,7 +60,10 @@ class OrthoEditSettingsPanel(fslpanel.FSLeyesSettingsPanel):
                          fixChoices=['nav', 'sel', 'desel', 'selint']),
             props.Widget('drawMode'),
             props.Widget('selectionIs3D'),
-            props.Widget('selectionSize'),
+            props.Widget('selectionSize',
+                         slider=False,
+                         spin=True,
+                         showLimits=False),
             props.Widget('fillValue',  slider=False, spin=True),
             props.Widget('eraseValue', slider=False, spin=True),
 
