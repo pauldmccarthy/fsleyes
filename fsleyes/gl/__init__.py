@@ -440,7 +440,7 @@ class GLContext(object):
 
     On-screen rendering is performed via the ``wx.GLCanvas.GLContext``
     context, whereas off-screen rendering is performed  via
-    ``OpenGL.raw.osmesa.mesa as osmesa`` (OSMesa is assumed to be available).
+    ``OpenGL.raw.osmesa.mesa`` (OSMesa is assumed to be available).
 
 
     If it is possible to do so, a ``wx.glcanvas.GLContext`` will be created,
@@ -554,6 +554,8 @@ class GLContext(object):
             # given permission to do so
             # (via the createApp argument)
             if self.__ownApp:
+                log.debug('Creating temporary wx.App')
+ 
                 import fsleyes.main as fm
                 self.__app = fm.FSLeyesApp()
 
@@ -598,6 +600,7 @@ class GLContext(object):
                 # If we've created and started
                 # our own loop, kill it
                 if self.__ownApp:
+                    log.debug('Exiting temporary wx.MainLoop')
                     self.__app.ExitMainLoop()
 
             # If we've created our own wx.App, run its
@@ -611,6 +614,7 @@ class GLContext(object):
             async.idle(create, alwaysQueue=True) 
 
             if self.__ownApp:
+                log.debug('Starting temporary wx.MainLoop')
                 self.__app.MainLoop()
 
 
@@ -626,6 +630,8 @@ class GLContext(object):
         """Create a dummy ``wx.Frame`` to be used as the parent for the
         dummy ``wx.glcanvas.GLCanvas``.
         """
+
+        log.debug('Creating temporary wx.Frame')
         
         import wx
         self.__parent = wx.Frame(None, style=0)
@@ -640,6 +646,8 @@ class GLContext(object):
         """
 
         import wx.glcanvas as wxgl
+
+        log.debug('Creating temporary wx.GLCanvas')
 
         # There's something wrong with wxPython's
         # GLCanvas (on OSX at least) - the pixel
@@ -680,6 +688,8 @@ class GLContext(object):
         import                wx
         import wx.glcanvas as wxgl
 
+        log.debug('Creating wx.GLContext')
+
         if other is not None:
             self.__context = wxgl.GLContext(target, other=other)
 
@@ -703,6 +713,8 @@ class GLContext(object):
         import OpenGL.GL              as gl
         import OpenGL.raw.osmesa.mesa as osmesa
         import OpenGL.arrays          as glarrays
+
+        log.debug('Creating gl.OSMesaContext')
 
         # We have to create a dummy buffer
         # for the off-screen context.

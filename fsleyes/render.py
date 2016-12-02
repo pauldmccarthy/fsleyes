@@ -58,9 +58,7 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
-    # Initialise FSLeyes, colour maps, and OpenGL
-    fslgl.getGLContext(offscreen=True, createApp=True)
-    fslgl.bootstrap() 
+    # Initialise FSLeyes and colour maps
     fsleyes.initialise()
     fslcm.init()
 
@@ -68,6 +66,10 @@ def main(args=None):
     # configure logging/debugging
     namespace = parseArgs(args)
     fsleyes.configLogging(namespace)
+
+    # Initialise OpenGL
+    fslgl.getGLContext(offscreen=True, createApp=True)
+    fslgl.bootstrap() 
 
     # Create a description of the scene
     overlayList, displayCtx, sceneOpts = makeDisplayContext(namespace)
@@ -161,6 +163,7 @@ def makeDisplayContext(namespace):
     # loaded.
     def load(ovl):
         log.info('Loading overlay {} ...'.format(ovl))
+        
     def error(ovl, error):
         log.info('Error loading overlay {}: '.format(ovl, error))
 
@@ -745,6 +748,7 @@ def calculateOrthoCanvasSizes(overlayList,
                                axisLens,
                                width,
                                height)
+
 
 if __name__ == '__main__':
     main()
