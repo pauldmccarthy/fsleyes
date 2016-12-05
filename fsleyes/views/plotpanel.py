@@ -26,10 +26,7 @@ mpl.use('WxAgg')
 
 
 import matplotlib.pyplot as plt
-
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as Canvas
-from matplotlib.backends.backend_wx    import NavigationToolbar2Wx
-
 
 import                                       props
 import pwidgets.elistbox                  as elistbox
@@ -185,12 +182,7 @@ class PlotPanel(viewpanel.ViewPanel):
     """
 
     
-    def __init__(self,
-                 parent,
-                 overlayList,
-                 displayCtx,
-                 frame,
-                 interactive=True):
+    def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``PlotPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
@@ -200,9 +192,6 @@ class PlotPanel(viewpanel.ViewPanel):
         :arg displayCtx:  A :class:`.DisplayContext` instance.
         
         :arg frame:       The :class:`.FSLeyesFrame` instance.
-        
-        :arg interactive: If ``True`` (the default), the canvas is configured
-                          so the user can pan/zoom the plot with the mouse.
         """
          
         viewpanel.ViewPanel.__init__(
@@ -264,20 +253,7 @@ class PlotPanel(viewpanel.ViewPanel):
         # getDrawnDataSeries).
         self.__drawnDataSeries = collections.OrderedDict()
 
-        if interactive:
-            
-            # Pan/zoom functionality is implemented
-            # by the NavigationToolbar2Wx, but the
-            # toolbar is not actually shown.
-            self.__mouseDown = False
-            self.__toolbar = NavigationToolbar2Wx(canvas)
-            self.__toolbar.Show(False)
-            self.__toolbar.pan()
-            
-            canvas.mpl_connect('button_press_event',   self.__onMouseDown)
-            canvas.mpl_connect('motion_notify_event',  self.__onMouseMove)
-            canvas.mpl_connect('button_release_event', self.__onMouseUp)
-            canvas.mpl_connect('axes_leave_event',     self.__onMouseUp)
+        self.initProfile()
 
         # Redraw whenever any property changes, 
         for propName in ['legend',
@@ -809,41 +785,6 @@ class PlotPanel(viewpanel.ViewPanel):
             ylimits = np.nanmin(ydata), np.nanmax(ydata)
             
         return xlimits, ylimits
-
-    
-    def __onMouseDown(self, ev):
-        """Sets a flag so the :meth:`__onMouseMove` method knows that the
-        mouse is down.
-        """
-        self.__mouseDown = True
-
-        
-    def __onMouseUp(self, ev):
-        """Sets a flag so the :meth:`__onMouseMove` method knows that the
-        mouse is up.
-        """ 
-        self.__mouseDown = False
-
-        
-    def __onMouseMove(self, ev):
-        """If this ``PlotPanel`` is interactive (determined by the
-        ``interactive`` parameter to :meth:`__init__`), mouse drags will
-        change the axis limits.
-
-        This behaviour is provided by ``matplotlib`` - this method simply
-        makes sure that the :attr:`limits` property is up to date.
-        """
-
-        if not self.__mouseDown:
-            return
-
-        xlims = list(self.__axis.get_xlim())
-        ylims = list(self.__axis.get_ylim())
-
-        self.disableListener('limits', self.__name)
-        self.limits.x = xlims
-        self.limits.y = ylims
-        self.enableListener( 'limits', self.__name)
 
 
     def __dataSeriesChanged(self, *a):

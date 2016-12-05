@@ -73,10 +73,10 @@ class OrthoViewProfile(profiles.Profile):
         with the given ``viewPanel``.
 
 
-        .. note:: The :class:`.OrthoEditProfile` is a sub-class of the 
-                  ``OrthoViewProfile``. It uses the ``extraModes`` and
-                  ``extraActions`` arguments to set up its edit-related
-                  modes/actions.
+        .. note:: The :class:`.OrthoEditProfile` is a sub-class of the
+                  ``OrthoViewProfile``. It uses the ``extraModes`` argument 
+                  to set up its edit-related modes.
+
 
         :arg viewPanel:    An :class:`.OrthoPanel` instance.
         

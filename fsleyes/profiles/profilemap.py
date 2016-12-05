@@ -26,18 +26,25 @@ import wx
 
 from fsleyes.views.orthopanel             import OrthoPanel
 from fsleyes.views.lightboxpanel          import LightBoxPanel
+from fsleyes.views.timeseriespanel        import TimeSeriesPanel
+from fsleyes.views.histogrampanel         import HistogramPanel
+from fsleyes.views.powerspectrumpanel     import PowerSpectrumPanel
 
 from fsleyes.profiles.orthoviewprofile    import OrthoViewProfile
 from fsleyes.profiles.orthoeditprofile    import OrthoEditProfile
 from fsleyes.profiles.lightboxviewprofile import LightBoxViewProfile
+from fsleyes.profiles.plotprofile         import PlotProfile
 
 
 log = logging.getLogger(__name__)
 
 
 profiles  = {
-    OrthoPanel    : ['view', 'edit'],
-    LightBoxPanel : ['view']
+    OrthoPanel         : ['view', 'edit'],
+    LightBoxPanel      : ['view'],
+    TimeSeriesPanel    : ['view'],
+    HistogramPanel     : ['view'],
+    PowerSpectrumPanel : ['view'],
 }
 """This dictionary is used by the :class:`.ProfileManager` to figure out which
 profiles are available for each :class:`.ViewPanel`. They are added as options
@@ -46,9 +53,12 @@ to the :attr:`.ViewPanel.profile` property.
 
 
 profileHandlers = {
-    (OrthoPanel,    'view') : OrthoViewProfile,
-    (OrthoPanel,    'edit') : OrthoEditProfile,
-    (LightBoxPanel, 'view') : LightBoxViewProfile
+    (OrthoPanel,         'view') : OrthoViewProfile,
+    (OrthoPanel,         'edit') : OrthoEditProfile,
+    (LightBoxPanel,      'view') : LightBoxViewProfile,
+    (TimeSeriesPanel,    'view') : PlotProfile,
+    (HistogramPanel,     'view') : PlotProfile,
+    (PowerSpectrumPanel, 'view') : PlotProfile
 }
 """This dictionary is used by the :class:`.ProfileManager` class to figure out
 which :class:`.Profile` sub-class to create for a given :class:`.ViewPanel`

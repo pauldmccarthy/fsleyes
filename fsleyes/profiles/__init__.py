@@ -7,7 +7,9 @@
 """The :mod:`profiles` package contains logic for mouse/keyboard interaction
 with :class:`.ViewPanel` panels.
 
-This logic is encapsulated in two classes:
+
+This logic is encapsulated in four classes:
+
 
  - The :class:`Profile` class is intended to be subclassed. A :class:`Profile`
    instance contains the mouse/keyboard event handlers for a particular type
@@ -16,6 +18,16 @@ This logic is encapsulated in two classes:
    the user to navigate through the display space in an :class:`.OrthoPanel`
    canvas, whereas the :class:`.OrthoEditProfile` class contains interaction
    logic for selecting and editing :class:`.Image` voxels in an ``OrthoPanel``.
+
+
+ - The :class:`.CanvasPanelEventManager` manages ``wx`` GUI events on the
+   :class:`.SliceCanvas` instances contained in :class:`.CanvasPanel` views.
+
+
+ - The :class:`.PlotPanelEventManager` manages ``matplotlib`` GUI events on 
+   the ``matplotlib Canvas`` instances contained in :class:`.PlotPanel`
+   views.
+
 
  - The :class:`ProfileManager` class is used by ``ViewPanel`` instances to
    create and change the ``Profile`` instance currently in use.
@@ -28,6 +40,7 @@ and their corresponding ``Profile`` types.
 The ``profiles`` package is also home to the :mod:`.shortcuts` module, which
 defines global *FSLeyes* keyboard shortcuts.
 """
+
 
 import logging
 import inspect
@@ -155,9 +168,11 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     interaction.
 
     
-    .. note:: The ``Profile`` class currently assumes that all objects returned
-              by the :meth:`getEventTargets` method are :class:`.SliceCanvas`
-              instances.
+    The ``Profile`` class currently only supports :class:`.CanvasPanel` and
+    :class:`.PlotPanel` views. ``Profile`` instances use a
+    :class:`.CanvasPanelEventManager` instance to manage GUI events on
+    :class:`.CanvasPanel` instances, or a:class:`.PlotPanelEventMAnager`
+    to manage GUI events on ``matplotlib Canvas`` objects.
 
     
     In order to receive mouse or keyboard events, subclasses simply need to
@@ -188,6 +203,10 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
       - ``MouseEnter``
       - ``MouseLeave`` 
       - ``Char``
+
+
+    .. note:: The ``MouseEnter`` and ``MouseLeave`` events are not supported
+              on :class:`.PlotPanel` views due to bugs in ``matplotlib``.
 
     
     For example, if a particular profile has defined a mode called ``nav``,
@@ -223,6 +242,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     the user to configure the profile behaviour, and/or to perform any
     relevant actions.
 
+    
     The following instance attributes are present on a ``Profile`` instance,
     intended to be accessed by sub-classes:
 
@@ -270,6 +290,18 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         self._overlayList = overlayList
         self._displayCtx  = displayCtx
         self._name        = '{}_{}'.format(self.__class__.__name__, id(self))
+
+        import fsleyes.views as views
+
+        if isinstance(viewPanel, views.CanvasPanel):
+            self.__evtManager = CanvasPanelEventManager(self)
+            
+        elif isinstance(viewPanel, views.PlotPanel):
+            self.__evtManager = PlotPanelEventManager(self)
+            
+        else:
+            raise ValueError('Unrecognised view panel type: {}'.format(
+                type(viewPanel).__name__))
 
         # Maps which define temporarymodes/alternate
         # handlers when keyboard modifiers are used,
@@ -323,34 +355,19 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
         # The __onEvent method delegates all
         # events based on this dictionary
-        # (we start with a tuple, but convert
-        # it to a dict below).
-        # 
-        # The eventMap is a dictionary of
-        #
-        #   { evType : (PyEventBinder, hander) }
-        #
-        # mappings. The __onEvent method needs to
-        # be able to look up the handler by its
-        # event type, but the register/deregister
-        # methods need access to the PyEventBinder
-        # object to perform the binding. Hence
-        # this slightly awkward dictionary and
-        # creation process.
-        self.__eventMap = (
-            (wx.EVT_LEFT_DOWN,    self.__onMouseDown),
-            (wx.EVT_MIDDLE_DOWN,  self.__onMouseDown),
-            (wx.EVT_RIGHT_DOWN,   self.__onMouseDown),
-            (wx.EVT_LEFT_UP,      self.__onMouseUp),
-            (wx.EVT_MIDDLE_UP,    self.__onMouseUp),
-            (wx.EVT_RIGHT_UP,     self.__onMouseUp),
-            (wx.EVT_MOTION,       self.__onMouseMove),
-            (wx.EVT_MOUSEWHEEL,   self.__onMouseWheel),
-            (wx.EVT_ENTER_WINDOW, self.__onMouseEnter),
-            (wx.EVT_LEAVE_WINDOW, self.__onMouseLeave),
-            (wx.EVT_CHAR,         self.__onChar),
-        )
-        self.__eventMap = {t.typeId : (t, f) for t, f in self.__eventMap}
+        self.__eventMap = {
+            wx.EVT_LEFT_DOWN.typeId    : self.__onMouseDown,
+            wx.EVT_MIDDLE_DOWN.typeId  : self.__onMouseDown,
+            wx.EVT_RIGHT_DOWN.typeId   : self.__onMouseDown,
+            wx.EVT_LEFT_UP.typeId      : self.__onMouseUp,
+            wx.EVT_MIDDLE_UP.typeId    : self.__onMouseUp,
+            wx.EVT_RIGHT_UP.typeId     : self.__onMouseUp,
+            wx.EVT_MOTION.typeId       : self.__onMouseMove,
+            wx.EVT_MOUSEWHEEL.typeId   : self.__onMouseWheel,
+            wx.EVT_ENTER_WINDOW.typeId : self.__onMouseEnter,
+            wx.EVT_LEAVE_WINDOW.typeId : self.__onMouseLeave,
+            wx.EVT_CHAR.typeId         : self.__onChar,
+        }
                 
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
@@ -416,6 +433,21 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         return self.__lastCanvas
 
 
+    def getMplEvent(self):
+        """If this ``Profile`` object is associated with a :class:`.PlotPanel`,
+        this method will return the last ``matplotlib`` event that was
+        generated. Otherwise, this method returns ``None``.
+
+        This method can be called from within an event handler to retrieve
+        the current ``matplotlib`` event. See the
+        :meth:`PlotPanelEventManager.getMplEvent` method.
+        """
+        if isinstance(self.__evtManager, PlotPanelEventManager):
+            return self.__evtManager.getMplEvent()
+        else:
+            return None
+
+
     def addTempMode(self, mode, modifier, tempMode):
         """Add a temporary mode to this ``Profile``, in addition to those
         defined in the :attr:`.profilemap.tempModeMap` dictionary.
@@ -455,9 +487,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         Subclasses may override this method to performa any initialisation,
         but must make sure to call this implementation. 
         """
-        for t in self.getEventTargets():
-            for binder, handler in self.__eventMap.values():
-                t.Bind(binder, self.__onEvent)
+        self.__evtManager.register()
 
     
     def deregister(self):
@@ -468,19 +498,20 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         Subclasses may override this method to performa any initialisation,
         but must make sure to call this implementation.
         """
-        for t in self.getEventTargets():
-            for binder, handler in self.__eventMap.values():
-                t.Unbind(binder)
+        self.__evtManager.deregister()
 
 
-    def __onEvent(self, ev):
-        """Called when any event occurs on any of the :class:`.ViewPanel`
-        targets. Delegates the event to one of the handler functions.
+    def handleEvent(self, ev):
+        """Called by the event manager when any event occurs on any of
+        the :class:`.ViewPanel` targets. Delegates the event to one of
+        the handler functions.
+
+        :arg ev: The ``wx.Event`` that occurred.
         """
 
         evType  = ev.GetEventType()
         source  = ev.GetEventObject()
-        handler = self.__eventMap.get(evType, (None, None))[1]
+        handler = self.__eventMap.get(evType, None)
 
         if source not in self.getEventTargets(): return
         if handler is None:                      return
@@ -494,7 +525,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
             self.__lastCanvas = source
         handler(ev)
 
-    
+
     def __getTempMode(self, ev):
         """Checks the temporary mode map to see if a temporary mode should
         be applied. Returns the mode identifier, or ``None`` if no temporary
@@ -521,23 +552,20 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
         return self.__tempModeMap.get((mode, keys[alt, ctrl, shift]), None)
 
-    
+
     def __getMouseLocation(self, ev):
         """Returns two tuples; the first contains the x/y coordinates of the
         given :class:`wx.MouseEvent`, and the second contains the
-        corresponding x/y/z display space coordinates.
+        corresponding x/y/z display space coordinates (for
+        :class:`.CanvasPanel` views), or x/y data coordinates (for
+        :class:`.PlotPanel` views).
+
+        See the :meth:`CanvasPanelEventManager.getMouseLocation` and
+        :meth:`PlotPanelEventManager.getMouseLocation` methods.
         """
-
-        mx, my    = ev.GetPosition()
-        canvas    = ev.GetEventObject()
-        w, h      = canvas.GetClientSize()
-        my        = h - my
-
-        canvasPos = canvas.canvasToWorld(mx, my)
-        
-        return (mx, my), canvasPos
-                                
-
+        return self.__evtManager.getMouseLocation(ev)
+    
+    
     def __getMouseButton(self, ev):
         """Returns a string describing the mouse button associated with the
         given :class:`wx.MouseEvent`.
@@ -630,8 +658,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
                                       fslplatform.WX_MAC_CARBON):
             wheel = -wheel
 
-        log.debug('Mouse wheel event ({}) on canvas {}'.format(
-            wheel, canvas.name))
+        log.debug('Mouse wheel event ({}) on {}'.format(
+            wheel, type(canvas).__name__))
 
         handler(ev, canvas, wheel, mouseLoc, canvasLoc)
 
@@ -649,7 +677,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         canvas              = ev.GetEventObject()
         mouseLoc, canvasLoc = self.__getMouseLocation(ev)
 
-        log.debug('Mouse enter event on canvas {}'.format(canvas.name))
+        log.debug('Mouse enter event on {}'.format(
+            type(canvas).__name__))
 
         handler(ev, canvas, mouseLoc, canvasLoc)
 
@@ -667,7 +696,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         canvas              = ev.GetEventObject()
         mouseLoc, canvasLoc = self.__getMouseLocation(ev)
 
-        log.debug('Mouse leave event on canvas {}'.format(canvas.name))
+        log.debug('Mouse leave event on {}'.format(
+            type(canvas).__name__))
 
         handler(ev, canvas, mouseLoc, canvasLoc)        
 
@@ -697,8 +727,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
             ev.Skip()
             return
 
-        log.debug('{} event ({}, {}) on canvas {}'.format(
-            evType, mouseLoc, canvasLoc, canvas.name))
+        log.debug('{} event ({}, {}) on {}'.format(
+            evType, mouseLoc, canvasLoc, type(canvas).__name__))
 
         if not handler(ev, canvas, mouseLoc, canvasLoc):
             ev.Skip()
@@ -725,8 +755,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         canvas              = ev.GetEventObject()
         mouseLoc, canvasLoc = self.__getMouseLocation(ev)
 
-        log.debug('{} event ({}, {}) on canvas {}'.format(
-            evType, mouseLoc, canvasLoc, canvas.name))
+        log.debug('{} event ({}, {}) on {}'.format(
+            evType, mouseLoc, canvasLoc, type(canvas).__name__))
 
         if not handler(ev, canvas, mouseLoc, canvasLoc):
             ev.Skip()
@@ -757,8 +787,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         canvas              = ev.GetEventObject()
         mouseLoc, canvasLoc = self.__getMouseLocation(ev)
 
-        log.debug('Mouse move event ({}, {}) on canvas {}'.format(
-            mouseLoc, canvasLoc, canvas.name))
+        log.debug('Mouse move event ({}, {}) on {}'.format(
+            mouseLoc, canvasLoc, type(canvas).__name__))
 
         if not handler(ev, canvas, mouseLoc, canvasLoc):
             ev.Skip()
@@ -783,8 +813,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
             ev.Skip()
             return 
 
-        log.debug('{} event ({}, {}) on canvas {}'.format(
-            evType, mouseLoc, canvasLoc, canvas.name))
+        log.debug('{} event ({}, {}) on {}'.format(
+            evType, mouseLoc, canvasLoc, type(canvas).__name__))
 
         if not handler(ev, canvas, mouseLoc, canvasLoc):
             ev.Skip()
@@ -807,7 +837,175 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         canvas = ev.GetEventObject()
         key    = ev.GetKeyCode()
 
-        log.debug('Keyboard event ({}) on canvas {}'.format(key, canvas.name))
+        log.debug('Keyboard event ({}) on {}'.format(
+            key, type(canvas).__name__))
 
         if not handler(ev, canvas, key):
             ev.Skip()
+
+
+class CanvasPanelEventManager(object):
+    """This class manages ``wx`` mouse/keyboard events originating from
+    :class:`.SliceCanvas` instances contained within :class:`.CanvasPanel`
+    views.
+    """
+
+    def __init__(self, profile):
+        """Create a ``CanvasPanelEventManager``.
+
+        :arg profile: The :class:`Profile` instance that owns this event
+                      manager.
+        """
+        self.__profile = profile
+        
+
+    def register(self):
+        """This method must be called to register event listeners on mouse/
+        keyboard events. This method is called by meth :`Profile.register`.
+        """
+        for t in self.__profile.getEventTargets():
+            t.Bind(wx.EVT_LEFT_DOWN,    self.__onEvent)
+            t.Bind(wx.EVT_MIDDLE_DOWN,  self.__onEvent)
+            t.Bind(wx.EVT_RIGHT_DOWN,   self.__onEvent)
+            t.Bind(wx.EVT_LEFT_UP,      self.__onEvent)
+            t.Bind(wx.EVT_MIDDLE_UP,    self.__onEvent)
+            t.Bind(wx.EVT_RIGHT_UP,     self.__onEvent)
+            t.Bind(wx.EVT_MOTION,       self.__onEvent)
+            t.Bind(wx.EVT_MOUSEWHEEL,   self.__onEvent)
+            t.Bind(wx.EVT_ENTER_WINDOW, self.__onEvent)
+            t.Bind(wx.EVT_LEAVE_WINDOW, self.__onEvent)
+            t.Bind(wx.EVT_CHAR,         self.__onEvent)
+
+    
+    def deregister(self):
+        """This method de-registers mouse/keybouard event listeners. This
+        method is called by the :meth:`Profile.deregister` method.
+        """
+        for t in self.__profile.getEventTargets():
+            t.Unbind(wx.EVT_LEFT_DOWN)
+            t.Unbind(wx.EVT_MIDDLE_DOWN)
+            t.Unbind(wx.EVT_RIGHT_DOWN)
+            t.Unbind(wx.EVT_LEFT_UP)
+            t.Unbind(wx.EVT_MIDDLE_UP)
+            t.Unbind(wx.EVT_RIGHT_UP)
+            t.Unbind(wx.EVT_MOTION)
+            t.Unbind(wx.EVT_MOUSEWHEEL)
+            t.Unbind(wx.EVT_ENTER_WINDOW)
+            t.Unbind(wx.EVT_LEAVE_WINDOW)
+            t.Unbind(wx.EVT_CHAR) 
+
+    
+    def getMouseLocation(self, ev):
+        """Returns two tuples; the first contains the x/y coordinates of the
+        given :class:`wx.MouseEvent`, and the second contains the
+        corresponding x/y/z display space coordinates.
+        """
+
+        mx, my    = ev.GetPosition()
+        canvas    = ev.GetEventObject()
+        w, h      = canvas.GetClientSize()
+        my        = h - my
+
+        canvasPos = canvas.canvasToWorld(mx, my)
+        
+        return (mx, my), canvasPos    
+
+    
+    def __onEvent(self, ev):
+        """Event handler. Passes the event to :class:`Profile.handleEvent`. """
+        self.__profile.handleEvent(ev)
+
+
+class PlotPanelEventManager(object):
+    """This class manages events originating from ``matplotlib`` ``Canvas``
+    objects contained within :class:`.PlotPanel` views.
+
+    
+    .. note:: This class has no support for ``figure_enter_event``,
+              ``figure_leave_event``, ``axis_enter_event``, or
+              ``axis_leave_event`` events. There appears to be some bugs
+              lurking in the ``matplotlib/backend_bases.py``  file (something
+              to do with the ``LocationEvent.lastevent`` property) which
+              cause FSLeyes to seg-fault on ``figure_enter_event`` events.
+    """
+
+    
+    def __init__(self, profile):
+        """Create a ``PlotPanelEventManager``.
+
+        :arg profile: The :class:`Profile` instance that owns this event
+                      manager.
+        """
+        self.__profile    = profile
+        self.__lastEvent  = None
+        self.__cids       = {}
+        self.__eventTypes = [
+            'button_press_event', 
+            'button_release_event', 
+            'motion_notify_event', 
+            'scroll_event', 
+            'key_press_event', 
+            'key_release_event']
+
+
+    def register(self):
+        """Register listeners on all relevant ``matplotlib`` events. This
+        method is called by :meth:`Profile.register`.
+        """
+
+        for target in self.__profile.getEventTargets():
+            for ev in self.__eventTypes:
+                self.__cids[ev] = target.mpl_connect(ev, self.__onEvent)
+
+
+    def deregister(self):
+        """De-register listeners on all relevant ``matplotlib`` events. This
+        method is called by :meth:`Profile.deregister`.
+        """
+
+        for target in self.__profile.getEventTargets():
+            for ev in self.__eventTypes:
+                target.mpl_disconnect(self.__cids[ev])
+        self.__cids = {}
+
+
+    def getMouseLocation(self, ev=None):
+        """Returns two tuples; the first contains the x/y coordinates of the
+        most recent ``matplotlib`` event, and the second contains the
+        corresponding x/y data coordinates.
+
+        If an event has not yet occurred, this method returns
+        ``(None, None)``.
+
+        :arg ev: Ignored.
+        """ 
+
+        mplev = self.__lastEvent
+
+        if mplev is None:
+            return None, None
+        
+        mousex, mousey = mplev.x,     mplev.y
+        datax,  datay  = mplev.xdata, mplev.ydata
+
+        return (mousex, mousey), (datax, datay)
+
+
+    def getMplEvent(self):
+        """Returns the most recent ``matplotlib`` event that occurred, or
+        ``None`` if no events have occurred yet.
+        """
+        return self.__lastEvent
+
+
+    def __onEvent(self, ev):
+        """Handler for ``matplotlib`` events. Passes the corresponding ``wx``
+        event to the :meth:`Profile.handleEvent` method.
+        """
+
+        if ev.name not in self.__eventTypes:
+            return
+        
+        self.__lastEvent = ev
+
+        self.__profile.handleEvent(ev.guiEvent)

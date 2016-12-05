@@ -1,0 +1,124 @@
+#!/usr/bin/env python
+#
+# plotprofile.py - The PlotProfile class.
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+"""This module contains the :class:`PlotProfile` class, a :class:`.Profile`
+for use with :class:`.PlotPanel` views.
+"""
+
+
+from matplotlib.backends.backend_wx import NavigationToolbar2Wx
+
+import props
+
+import fsleyes.profiles as profiles
+
+
+class PlotProfile(profiles.Profile):
+    """The ``PlotProfile`` class is the default interaction profile for
+    :class:`.PlotPanel` vies. It provides pan and zoom functionality via
+    a single :attr:`.Profile.mode` called ``panzoom``:
+
+     - Left click and drag to pan the plot
+
+     - Right click and drag to zoom the plot.
+    """
+
+    def __init__(self,
+                 viewPanel,
+                 overlayList,
+                 displayCtx,
+                 extraModes=None):
+        """Create a ``PlotProfile``.
+
+        :arg viewPanel:    A :class:`.PlotPanel` instance.
+        
+        :arg overlayList:  The :class:`.OverlayList` instance.
+        
+        :arg displayCtx:   The :class:`.DisplayContext` instance.
+        
+        :arg extraModes:   Extra modes to pass through to the
+                           :class:`.Profile` constructor.        
+        """
+
+        if extraModes is None:
+            extraModes = []
+
+        modes = ['panzoom'] + extraModes
+
+        profiles.Profile.__init__(self,
+                                  viewPanel,
+                                  overlayList,
+                                  displayCtx,
+                                  modes)
+
+        self.__canvas = viewPanel.getCanvas()
+        self.__axis   = viewPanel.getAxis()
+
+        # Pan/zoom functionality is actually
+        # implemented by the NavigationToolbar2Wx
+        # class, but the toolbar is not actually
+        # shown.
+        self.__toolbar = NavigationToolbar2Wx(self.__canvas)
+        self.__toolbar.Show(False)
+
+
+    def getEventTargets(self):
+        """Overrides :meth:`.Profile.getEventTargets`. Returns the
+        ``matplotlib`` ``Canvas`` object displayed in the :class:`.PlotPanel`.
+        """
+        
+        return [self.__canvas]
+
+
+    def __updateAxisLimits(self):
+        """Called by the ``panzoom`` ``MouseDrag`` event handlers. Makes sure
+        that the :attr:`.PlotPanel.limits` property is up to date.
+        """
+
+        xlims = list(self.__axis.get_xlim())
+        ylims = list(self.__axis.get_ylim())
+
+        with props.suppress(self._viewPanel, 'limits'):
+            self._viewPanel.limits.x = xlims
+            self._viewPanel.limits.y = ylims
+
+
+    def _panzoomModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
+        """Called on left mouse clicks. Enables panning. """
+        self.__toolbar.pan()
+        self.__toolbar.press_pan(self.getMplEvent())
+
+
+    def _panzoomModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
+        """Called on left mouse drags. Updates the
+        :attr:`.PlotPanel.limits` property - the panning logic is provided
+        by the ``matplotlib`` ``NavigationToolbar2wx`` class.
+        """
+        self.__updateAxisLimits()
+ 
+    
+    def _panzoomModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
+        """Called on left mouse up events. Disables panning."""
+        self.__toolbar.pan()
+
+
+    def _panzoomModeRightMouseDown(self, ev, canvas, mousePos, canvasPos):
+        """Called on right mouse clicks. Enables zooming. """
+        self.__toolbar.pan()
+        self.__toolbar.press_pan(self.getMplEvent())
+
+    
+    def _panzoomModeRightMouseDrag(self, ev, canvas, mousePos, canvasPos):
+        """Called on right mouse drags. Updates the
+        :attr:`.PlotPanel.limits` property - the zooming logic is provided
+        by the ``matplotlib`` ``NavigationToolbar2wx`` class.
+        """
+        self.__updateAxisLimits()
+        
+    
+    def _panzoomModeRightMouseUp(self, ev, canvas, mousePos, canvasPos):
+        """Called on right mouse up events. Disables panning. """
+        self.__toolbar.pan()
