@@ -233,9 +233,6 @@ class Texture3D(texture.Texture, notifier.Notifier):
         rgSupported    = glexts.hasExtension('GL_ARB_texture_rg')
 
         if not floatSupported:
-            log.warning('Floating point textures are not supported '
-                        'by this GL driver! FSLeyes may have trouble '
-                        'displaying images with large data ranges.')
             return False, None, None
         
         if rgSupported:
@@ -264,6 +261,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
             elif nvals == 4: intFmt  = gl.GL_RGBA32F
 
             return True, baseFmt, intFmt
+
 
     @classmethod
     @memoize.memoize

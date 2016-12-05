@@ -16,8 +16,8 @@ import props
 
 import fsl.utils.status as status
 import fsl.utils.async  as async
-import fsleyes.overlay  as fsloverlay
 from . import              dataseries
+from . import              histogramoverlay
 
 
 log = logging.getLogger(__name__)
@@ -45,13 +45,6 @@ class HistogramSeries(dataseries.DataSeries):
     ignoreZeros = props.Boolean(default=True)
     """If ``True``, zeros are excluded from the calculated histogram. """
 
-    
-    showOverlay = props.Boolean(default=False)
-    """If ``True``, a mask :class:`.ProxyImage` overlay is added to the
-    :class:`.OverlayList`, which highlights the voxels that have been included
-    in the histogram.
-    """
-
 
     includeOutliers = props.Boolean(default=False)
     """If ``True``, values which are outside of the :attr:`dataRange` are
@@ -75,6 +68,18 @@ class HistogramSeries(dataseries.DataSeries):
     """
 
 
+    showOverlay = props.Boolean(default=False)
+    """If ``True``, a mask :class:`.ProxyImage` overlay is added to the
+    :class:`.OverlayList`, which highlights the voxels that have been included
+    in the histogram. The mask image is managed by a :class:`.HistogramOverlay`
+    instance.
+    """
+
+    
+    showOverlayRange = props.Bounds(ndims=1)
+    """Data range to display with the :class:`.HistogramOverlay` mask. """
+
+
     def __init__(self, overlay, displayCtx, overlayList):
         """Create a ``HistogramSeries``.
 
@@ -93,7 +98,6 @@ class HistogramSeries(dataseries.DataSeries):
         self.__name        = '{}_{}'.format(type(self).__name__, id(self))
         self.__displayCtx  = displayCtx
         self.__overlayList = overlayList
-        self.__overlay3D   = None
 
         opts = displayCtx.getOpts(overlay)
         self.bindProps('volume', opts)
@@ -106,52 +110,46 @@ class HistogramSeries(dataseries.DataSeries):
         self.__clippedFiniteData  = np.array([])
         self.__clippedNonZeroData = np.array([])
         self.__initProperties()
+
+        self.__histOverlay = histogramoverlay.HistogramOverlay(
+            self,
+            overlay,
+            displayCtx,
+            overlayList)
             
-        overlayList.addListener('overlays',
-                                self.__name,
-                                self.__overlayListChanged)
-        self       .addListener('volume',
-                                self.__name,
-                                self.__volumeChanged)
-        self       .addListener('dataRange',
-                                self.__name,
-                                self.__dataRangeChanged)
-        self       .addListener('nbins',
-                                self.__name,
-                                self.__histPropsChanged)
-        self       .addListener('autoBin',
-                                self.__name,
-                                self.__histPropsChanged) 
-        self       .addListener('ignoreZeros',
-                                self.__name,
-                                self.__histPropsChanged)
-        self       .addListener('includeOutliers',
-                                self.__name,
-                                self.__histPropsChanged)
-        self       .addListener('showOverlay',
-                                self.__name,
-                                self.__showOverlayChanged)
+        self.addListener('volume',
+                         self.__name,
+                         self.__volumeChanged)
+        self.addListener('dataRange',
+                         self.__name,
+                         self.__dataRangeChanged)
+        self.addListener('nbins',
+                         self.__name,
+                         self.__histPropsChanged)
+        self.addListener('autoBin',
+                         self.__name,
+                         self.__histPropsChanged) 
+        self.addListener('ignoreZeros',
+                         self.__name,
+                         self.__histPropsChanged)
+        self.addListener('includeOutliers',
+                         self.__name,
+                         self.__histPropsChanged)
 
         
     def destroy(self):
         """This needs to be called when this ``HistogramSeries`` instance
         is no longer being used.
-
-        It removes several property listeners and, if the :attr:`overlay3D`
-        property is ``True``, removes the mask overlay from the
-        :class:`.OverlayList`.
         """
-        self              .removeListener('nbins',           self.__name)
-        self              .removeListener('ignoreZeros',     self.__name)
-        self              .removeListener('includeOutliers', self.__name)
-        self              .removeListener('volume',          self.__name)
-        self              .removeListener('dataRange',       self.__name)
-        self              .removeListener('nbins',           self.__name)
-        self.__overlayList.removeListener('overlays',        self.__name)
+
+        self.__histOverlay.destroy()
         
-        if self.__overlay3D is not None:
-            self.__overlayList.remove(self.__overlay3D)
-            self.__overlay3D = None
+        self.removeListener('nbins',           self.__name)
+        self.removeListener('ignoreZeros',     self.__name)
+        self.removeListener('includeOutliers', self.__name)
+        self.removeListener('volume',          self.__name)
+        self.removeListener('dataRange',       self.__name)
+        self.removeListener('nbins',           self.__name)
 
             
     def getData(self):
@@ -201,14 +199,19 @@ class HistogramSeries(dataseries.DataSeries):
             nzmin  = nzData.min()
             nzmax  = nzData.max()
 
-            with props.suppress(self, 'dataRange'), \
+            with props.suppress(self, 'showOverlayRange'), \
+                 props.suppress(self, 'dataRange'), \
                  props.suppress(self, 'nbins'):
 
-                self.dataRange.xmin = dmin
-                self.dataRange.xmax = dmax  + dist
-                self.dataRange.xlo  = nzmin
-                self.dataRange.xhi  = nzmax + dist
-
+                self.dataRange.xmin        = dmin
+                self.dataRange.xmax        = dmax  + dist
+                self.dataRange.xlo         = nzmin
+                self.dataRange.xhi         = nzmax + dist
+                self.showOverlayRange.xmin = dmin  - dist
+                self.showOverlayRange.xmax = dmax  + dist
+                self.showOverlayRange.xlo  = nzmin
+                self.showOverlayRange.xhi  = nzmax + dist 
+                
                 self.nbins = self.__autoBin(nzData, self.dataRange.x)
 
             if not self.overlay.is4DImage():
@@ -352,70 +355,6 @@ class HistogramSeries(dataseries.DataSeries):
                       self.overlay.name,
                       self.__nvals,
                       self.nbins))
-
-
-    def __showOverlayChanged(self, *a):
-        """Called when the :attr:`showOverlay` property changes.
-
-        Adds/removes a 3D mask :class:`.Image` to the :class:`.OverlayList`,
-        which highlights the voxels that have been included in the histogram.
-        The :class:`.MaskOpts.threshold` property is bound to the
-        :attr:`dataRange` property, so the masked voxels are updated whenever
-        the histogram data range changes, and vice versa.
-        """
-
-        if      self.showOverlay  and (self.__overlay3D is not None): return
-        if (not self.showOverlay) and (self.__overlay3D is     None): return 
-
-        if not self.showOverlay:
-
-            log.debug('Removing 3D histogram overlay mask for {}'.format(
-                self.overlay.name))
-
-            if self.__overlay3D in self.__overlayList:
-                self.__overlayList.remove(self.__overlay3D)
-                
-            self.__overlay3D = None
-
-        else:
-
-            log.debug('Creating 3D histogram overlay mask for {}'.format(
-                self.overlay.name))
-            
-            self.__overlay3D = fsloverlay.ProxyImage(
-                self.overlay,
-                name='{}/histogram/mask'.format(self.overlay.name))
-
-            self.__overlayList.append(self.__overlay3D, overlayType='mask')
-
-            opts = self.__displayCtx.getOpts(self.__overlay3D)
-
-            opts.bindProps('volume',    self)
-            opts.bindProps('colour',    self)
-            opts.bindProps('threshold', self, 'dataRange')
-
-
-    def __overlayListChanged(self, *a):
-        """Called when the :class:`.OverlayList` changes.
-
-        If a 3D mask overlay was being shown, and it has been removed from the
-        ``OverlayList``, the :attr:`showOverlay` property is updated
-        accordingly.
-        """
-        
-        if self.__overlay3D is None:
-            return
-
-        # If a 3D overlay was being shown, and it
-        # has been removed from the overlay list
-        # by the user, turn the showOverlay property
-        # off
-        if self.__overlay3D not in self.__overlayList:
-            
-            self.disableListener('showOverlay', self.__name)
-            self.showOverlay = False
-            self.__showOverlayChanged()
-            self.enableListener('showOverlay', self.__name)
 
         
     def __autoBin(self, data, dataRange):
