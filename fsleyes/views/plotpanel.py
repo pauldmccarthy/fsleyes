@@ -118,6 +118,12 @@ class PlotPanel(viewpanel.ViewPanel):
     be added/removed directly to/from this list.
     """
 
+
+    artists = props.List()
+    """This list contains any ``matplotlib.Artist`` instances which are
+    plotted every call to :meth:`drawArtists`. 
+    """
+
     
     legend = props.Boolean(default=True)
     """If ``True``, a legend is added to the plot, with an entry for every
@@ -273,6 +279,9 @@ class PlotPanel(viewpanel.ViewPanel):
         self.addListener('dataSeries',
                          self.__name,
                          self.__dataSeriesChanged)
+        self.addListener('artists',
+                         self.__name,
+                         self.__artistsChanged) 
         self.addListener('limits',
                          self.__name,
                          self.__limitsChanged)
@@ -300,7 +309,7 @@ class PlotPanel(viewpanel.ViewPanel):
         :attr:`dataSeries` list, or when any plot display properties change.
 
         Sub-class implementations should call the :meth:`drawDataSeries`
-        method.
+        and meth:`drawArtists` methods.
         """
         raise NotImplementedError('The draw method must be '
                                   'implemented by PlotPanel subclasses')
@@ -328,6 +337,7 @@ class PlotPanel(viewpanel.ViewPanel):
         self.__drawQueue = None
         
         self.removeListener('dataSeries', self.__name)
+        self.removeListener('artists',    self.__name)
         self.removeListener('limits',     self.__name)
         
         for propName in ['legend',
@@ -351,6 +361,7 @@ class PlotPanel(viewpanel.ViewPanel):
             ds.destroy()
 
         self.dataSeries = []
+        self.artists    = []
             
         viewpanel.ViewPanel.destroy(self)
 
@@ -472,7 +483,29 @@ class PlotPanel(viewpanel.ViewPanel):
         return ds.getData()
 
 
-    def drawDataSeries(self, extraSeries=None, **plotArgs):
+    def drawArtists(self, refresh=True):
+        """Draw all ``matplotlib.Artist`` instances in the :attr:`artists`
+        list, then refresh the canvas.
+
+        :arg refresh: If ``True`` (default), the canvas is refreshed. 
+        """
+
+        axis   = self.getAxis()
+        canvas = self.getCanvas()
+
+        def realDraw():
+            
+            for artist in self.artists:
+                if artist not in axis.findobj(type(artist)):
+                    axis.add_artist(artist)
+
+        self.__drawQueue.enqueue(async.idle, realDraw)
+
+        if refresh:
+            self.__drawQueue.enqueue(async.idle, canvas.draw)
+
+
+    def drawDataSeries(self, extraSeries=None, refresh=False, **plotArgs):
         """Queues a request to plot all of the :class:`.DataSeries` instances
         in the :attr:`dataSeries` list.
 
@@ -493,6 +526,14 @@ class PlotPanel(viewpanel.ViewPanel):
                           plotted. These series are passed through the
                           :meth:`prepareDataSeries` method before being
                           plotted.
+
+        :arg refresh:     If ``True``, the canvas is refreshed. Otherwise,
+                          you must call ``getCanvas().draw()`` manually.
+                          Defaults to ``False`` - the :meth:`drawArtists`
+                          method will refresh the canvas, so if you call
+                          :meth:`drawArtists` immediately after calling
+                          this method (which you should), then you don't
+                          need to manually refresh the canvas.
 
         :arg plotArgs:    Passed through to the :meth:`__drawDataSeries`
                           method.
@@ -581,6 +622,7 @@ class PlotPanel(viewpanel.ViewPanel):
                                  allYdata,
                                  axxlim,
                                  axylim,
+                                 refresh,
                                  taskName='{}.wait'.format(id(self)),
                                  wait_direct=True,
                                  **plotArgs) 
@@ -593,6 +635,7 @@ class PlotPanel(viewpanel.ViewPanel):
             allYdata,
             oldxlim,
             oldylim,
+            refresh,
             **plotArgs):
         """Called by :meth:`__drawDataSeries`. Plots all of the data
         associated with the given ``dataSeries``.
@@ -610,6 +653,8 @@ class PlotPanel(viewpanel.ViewPanel):
         
         :arg oldylim:    Y plot limits from the previous draw. If
                          ``yAutoScale`` is disabled, this limit is preserved.
+
+        :arg refresh:    Refresh the canvas - see :meth:`drawDataSeries`.
         
         :arg plotArgs:   Remaining arguments passed to the
                          :meth:`__drawOneDataSeries` method.
@@ -718,8 +763,8 @@ class PlotPanel(viewpanel.ViewPanel):
         axis.patch.set_facecolor(self.bgColour)
         self.getFigure().patch.set_alpha(0)
 
-        canvas.draw()
-        self.Refresh()
+        if refresh:
+            canvas.draw()
 
         
     def __drawOneDataSeries(self, ds, xdata, ydata, **plotArgs):
@@ -798,7 +843,8 @@ class PlotPanel(viewpanel.ViewPanel):
 
     def __dataSeriesChanged(self, *a):
         """Called when the :attr:`dataSeries` list changes. Adds listeners
-        to any new :class:`.DataSeries` instances, and then calls :meth:`draw`.
+        to any new :class:`.DataSeries` instances, and then calls
+        :meth:`asyncDraw`.
         """
         
         for ds in self.dataSeries:
@@ -807,6 +853,13 @@ class PlotPanel(viewpanel.ViewPanel):
                                self.__name,
                                self.asyncDraw,
                                overwrite=True)
+        self.asyncDraw()
+
+
+    def __artistsChanged(self, *a):
+        """Called when the :attr:`artists` list changes. Calls
+        :meth:`asyncDraw`.
+        """
         self.asyncDraw()
 
 

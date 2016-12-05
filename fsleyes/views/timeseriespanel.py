@@ -254,6 +254,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
                 ts.label = ts.makeLabel()
 
         self.drawDataSeries(extraSeries=tss)
+        self.drawArtists()
 
 
     def createDataSeries(self, overlay):

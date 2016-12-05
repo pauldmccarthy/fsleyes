@@ -166,6 +166,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
                 ps.label = ps.makeLabel()
 
         self.drawDataSeries(extraSeries=pss)
+        self.drawArtists()
 
 
     def createDataSeries(self, overlay):

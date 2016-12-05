@@ -160,6 +160,8 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         else:
             self.drawDataSeries(hss, drawstyle='steps-pre')
 
+        self.drawArtists()
+
 
     def createDataSeries(self, overlay):
         """Creates a :class:`.HistogramSeries` instance for the specified
