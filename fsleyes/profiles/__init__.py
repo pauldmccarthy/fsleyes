@@ -47,6 +47,8 @@ import inspect
 
 import wx
 
+import matplotlib.backend_bases as mplbackend
+
 import props
 
 from   fsl.utils.platform import platform as fslplatform
@@ -200,9 +202,17 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
       - ``MiddleMouseDrag``
       - ``MiddleMouseUp``
       - ``MouseWheel``
-      - ``MouseEnter``
-      - ``MouseLeave`` 
       - ``Char``
+
+    Profiles for :class:`.CanvasPanel` views may also implement handlers
+    for these events:
+    
+      - ``MouseEnter``
+      - ``MouseLeave``
+
+    And :class:`.PlotPanel` views may implement handlers for these events:
+
+      - ``ArtistPick``
 
 
     .. note:: The ``MouseEnter`` and ``MouseLeave`` events are not supported
@@ -526,6 +536,14 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         handler(ev)
 
 
+    def handlePickEvent(self, ev):
+        """Called by the :class:`PlotPanelEventManager` when a ``matplotlib``
+        ``pick_event`` occurs.
+        """
+
+        self.__onPick(ev)
+
+
     def __getTempMode(self, ev):
         """Checks the temporary mode map to see if a temporary mode should
         be applied. Returns the mode identifier, or ``None`` if no temporary
@@ -844,6 +862,27 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
             ev.Skip()
 
 
+    def __onPick(self, ev):
+        """Called by the :meth:`handlePickEvent`. Delegates the event to a
+        suitable handler, if one exists.
+        """
+        
+        handler = self.__getHandler(ev, 'ArtistPick')
+        if handler is None:
+            ev.Skip()
+            return
+
+        canvas              = ev.GetEventObject()
+        artist              = self.__evtManager.getPickedArtist()
+        mouseLoc, canvasLoc = self.__getMouseLocation(ev)
+
+        log.debug('Pick event ({}, {}) on {}'.format(
+            mouseLoc, canvasLoc, type(canvas).__name__))
+
+        if not handler(ev, canvas, artist, mouseLoc, canvasLoc):
+            ev.Skip()
+
+
 class CanvasPanelEventManager(object):
     """This class manages ``wx`` mouse/keyboard events originating from
     :class:`.SliceCanvas` instances contained within :class:`.CanvasPanel`
@@ -936,13 +975,16 @@ class PlotPanelEventManager(object):
         :arg profile: The :class:`Profile` instance that owns this event
                       manager.
         """
-        self.__profile    = profile
-        self.__lastEvent  = None
-        self.__cids       = {}
-        self.__eventTypes = [
+        self.__profile       = profile
+        self.__lastEvent     = None
+        self.__lastLocEvent  = None
+        self.__lastPickEvent = None
+        self.__cids          = {}
+        self.__eventTypes    = [
             'button_press_event', 
             'button_release_event', 
-            'motion_notify_event', 
+            'motion_notify_event',
+            'pick_event',
             'scroll_event', 
             'key_press_event', 
             'key_release_event']
@@ -980,7 +1022,7 @@ class PlotPanelEventManager(object):
         :arg ev: Ignored.
         """ 
 
-        mplev = self.__lastEvent
+        mplev = self.__lastLocEvent
 
         if mplev is None:
             return None, None
@@ -989,6 +1031,17 @@ class PlotPanelEventManager(object):
         datax,  datay  = mplev.xdata, mplev.ydata
 
         return (mousex, mousey), (datax, datay)
+
+
+    def getPickedArtist(self):
+        """Returns the ``matplotlib.Artist`` that was most recently picked
+        (clicked on) by the user.
+        """
+
+        mplev = self.__lastPickEvent
+
+        if mplev is None: return None
+        else:             return mplev.artist
 
 
     def getMplEvent(self):
@@ -1005,7 +1058,14 @@ class PlotPanelEventManager(object):
 
         if ev.name not in self.__eventTypes:
             return
-        
+
         self.__lastEvent = ev
 
-        self.__profile.handleEvent(ev.guiEvent)
+        islocev  = isinstance(ev, mplbackend.LocationEvent)
+        ispickev = isinstance(ev, mplbackend.PickEvent)
+
+        if islocev:  self.__lastLocEvent  = ev
+        if ispickev: self.__lastPickEvent = ev
+
+        if ispickev: self.__profile.handlePickEvent(ev.guiEvent)
+        else:        self.__profile.handleEvent(    ev.guiEvent)

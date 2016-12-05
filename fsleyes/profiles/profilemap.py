@@ -34,6 +34,7 @@ from fsleyes.profiles.orthoviewprofile    import OrthoViewProfile
 from fsleyes.profiles.orthoeditprofile    import OrthoEditProfile
 from fsleyes.profiles.lightboxviewprofile import LightBoxViewProfile
 from fsleyes.profiles.plotprofile         import PlotProfile
+from fsleyes.profiles.timeseriesprofile   import TimeSeriesProfile
 
 
 log = logging.getLogger(__name__)
@@ -56,8 +57,8 @@ profileHandlers = {
     (OrthoPanel,         'view') : OrthoViewProfile,
     (OrthoPanel,         'edit') : OrthoEditProfile,
     (LightBoxPanel,      'view') : LightBoxViewProfile,
-    (TimeSeriesPanel,    'view') : PlotProfile,
     (HistogramPanel,     'view') : PlotProfile,
+    (TimeSeriesPanel,    'view') : TimeSeriesProfile,
     (PowerSpectrumPanel, 'view') : PlotProfile
 }
 """This dictionary is used by the :class:`.ProfileManager` class to figure out
@@ -106,7 +107,11 @@ tempModeMap = {
         (('selint', (wx.WXK_ALT,     wx.WXK_SHIFT)), 'chrad'))),
 
     LightBoxViewProfile : OrderedDict((
-        (('view', wx.WXK_CONTROL), 'zoom'), ))
+        (('view', wx.WXK_CONTROL), 'zoom'), )),
+
+    TimeSeriesProfile : OrderedDict((
+        (('volume', wx.WXK_SHIFT), 'panzoom'),
+    )) 
 }
 """The ``tempModeMap`` dictionary defines temporary modes, for each
 :class:`Profile` sub-class which, when in a given mode, can be accessed with a

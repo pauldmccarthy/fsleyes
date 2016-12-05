@@ -19,7 +19,6 @@ import                                            props
 
 import fsl.data.featimage                      as fslfeatimage
 import fsl.data.melodicimage                   as fslmelimage
-import fsl.data.featanalysis                   as featanalysis
 import fsl.data.image                          as fslimage
 import fsleyes.overlay                         as fsloverlay
 import fsleyes.actions                         as actions
