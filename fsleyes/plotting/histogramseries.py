@@ -151,6 +151,20 @@ class HistogramSeries(dataseries.DataSeries):
         self.removeListener('dataRange',       self.__name)
         self.removeListener('nbins',           self.__name)
 
+
+    def redrawProperties(self):
+        """Overrides :meth:`.DataSeries.redrawProperties`. The
+        ``HistogramSeries`` data does not need to be re-plotted when the
+        :attr:`showOverlay` or :attr:`showOverlayRange` properties change.
+        """
+
+        propNames = dataseries.DataSeries.redrawProperties(self)
+
+        propNames.remove('showOverlay')
+        propNames.remove('showOverlayRange')
+
+        return propNames
+
             
     def getData(self):
         """Overrides :meth:`.DataSeries.getData`.
@@ -159,6 +173,23 @@ class HistogramSeries(dataseries.DataSeries):
         """
 
         return self.__xdata, self.__ydata
+
+
+    def getVertexData(self):
+        """Returns a ``numpy`` array of shape ``(N, 2)``, which contains a
+        set of "vertices" which can be used to display the histogram data
+        as a filled polygon.
+        """
+
+        x, y  = self.getData()
+        verts = np.zeros((len(x) * 2, 2), dtype=x.dtype)
+
+        verts[  :,   0] = x.repeat(2)
+        verts[ 1:-1, 1] = y.repeat(2)
+        verts[ 0,    1] = 0
+        verts[   -1, 1] = 0
+
+        return verts
 
 
     def getNumHistogramValues(self):

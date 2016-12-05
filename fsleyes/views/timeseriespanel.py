@@ -163,6 +163,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         self.addListener('plotMelodicICs',
                          self._name,
                          self.__plotMelodicICsChanged)
+        
+        self.initProfile()
 
 
     def destroy(self):

@@ -90,6 +90,8 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
         self.addListener('histType', self._name, self.draw)
 
+        self.initProfile()
+
 
     def destroy(self):
         """Removes some property listeners, and calls

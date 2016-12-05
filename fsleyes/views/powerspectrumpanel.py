@@ -98,6 +98,8 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
                                 self._name,
                                 self.__plotMelodicICsChanged)
 
+        self.initProfile()
+
 
     def destroy(self):
         """Must be called when this ``PowerSpectrumPanel`` is no longer

@@ -21,10 +21,16 @@ class DataSeries(props.HasProperties):
     a :class:`PlotPanel`, with the data extracted from an overlay in the
     :class:`.OverlayList`. 
 
-    Sub-class implementations must accept an overlay object, pass this
-    overlay to the ``DataSeries`` constructor, and override the
-    :meth:`getData` method. The overlay is accessible as an instance
-    attribute, confusingly called ``overlay``.
+    Sub-class implementations must:
+    
+      - Accept an overlay object in their ``__init__`` method
+      - Pass this overlay to meth:`.DataSeries.__init__`
+      - Override the :meth:`getData` method
+      - Override the :meth:`redrawProperties` method if necessary
+
+    
+    The overlay is accessible as an instance attribute, confusingly called
+    ``overlay``.
     
 
     .. note:: Some ``DataSeries`` instances may not be associated with
@@ -92,6 +98,15 @@ class DataSeries(props.HasProperties):
         operations.
         """
         pass
+
+
+    def redrawProperties(self):
+        """Returns a list of all properties which, when their values change,
+        should result in this ``DataSeries`` being re-plotted. This method
+        may be overridden by sub-classes.
+        """
+
+        return self.getAllProperties()[0]
 
 
     def setData(self, xdata, ydata):

@@ -247,13 +247,12 @@ class PlotPanel(viewpanel.ViewPanel):
         # pre/post-processing may be applied to
         # the data as retrieved by DataSeries
         # instances, so this dictionary is used
-        # to keep copies of the data, with all
+        # to keep copies of the mpl Artist object
+        # which contains the data with all
         # processing applied, that is currrently
         # on the plot (and accessible via
         # getDrawnDataSeries).
         self.__drawnDataSeries = collections.OrderedDict()
-
-        self.initProfile()
 
         # Redraw whenever any property changes, 
         for propName in ['legend',
@@ -346,7 +345,9 @@ class PlotPanel(viewpanel.ViewPanel):
             self.removeListener(propName, self.__name)
             
         for ds in self.dataSeries:
-            ds.removeGlobalListener(self.__name)
+
+            for propName in ds.redrawProperties():
+                ds.removeListener(propName, self.__name)
             ds.destroy()
 
         self.dataSeries = []
@@ -439,14 +440,23 @@ class PlotPanel(viewpanel.ViewPanel):
         self.Refresh()
 
 
+    def getArtist(self, ds):
+        """Returns the ``matplotlib.Artist`` (typically a ``Line2D`` instance)
+        associated with the given :class:`.DataSeries` instance. A
+        ``KeyError`` is raised if there is no such artist.
+        """
+
+        return self.__drawnDataSeries[ds]
+        
+
     def getDrawnDataSeries(self):
         """Returns a list of tuples, each tuple containing the
         ``(DataSeries, x, y)`` data for one ``DataSeries`` instance
         as it is shown on the plot.
         """
 
-        return [(ds, np.array(x), np.array(y))
-                for ds, (x, y) in self.__drawnDataSeries.items()]
+        return [(ds, np.array(l.get_xdata()), np.array(l.get_ydata()))
+                for ds, l in self.__drawnDataSeries.items()]
 
 
     def prepareDataSeries(self, ds):
@@ -764,10 +774,9 @@ class PlotPanel(viewpanel.ViewPanel):
         kwargs['ls']    = kwargs.get('ls',    ds.lineStyle)
 
         axis = self.getAxis()
+        line = axis.plot(xdata, ydata, **kwargs)[0]
 
-        axis.plot(xdata, ydata, **kwargs)
-
-        self.__drawnDataSeries[ds] = xdata, ydata
+        self.__drawnDataSeries[ds] = line
 
         if self.xLogScale:
             axis.set_xscale('log')
@@ -793,7 +802,11 @@ class PlotPanel(viewpanel.ViewPanel):
         """
         
         for ds in self.dataSeries:
-            ds.addGlobalListener(self.__name, self.asyncDraw, overwrite=True)
+            for propName in ds.redrawProperties():
+                ds.addListener(propName,
+                               self.__name,
+                               self.asyncDraw,
+                               overwrite=True)
         self.asyncDraw()
 
 
@@ -1254,7 +1267,8 @@ class OverlayPlotPanel(PlotPanel):
             log.debug('Destroying {} for {}'.format(
                 type(ds).__name__, overlay))
 
-            ds.removeGlobalListener(self.__name)
+            for propName in ds.redrawProperties():
+                ds.removeListener(propName, self.__name)
             ds.destroy()
 
         for t, p in zip(targets, propNames):
@@ -1330,7 +1344,11 @@ class OverlayPlotPanel(PlotPanel):
 
             ds = self.__dataSeries[overlay]
 
-            ds.addGlobalListener(self.__name, self.asyncDraw, overwrite=True)
+            for propName in ds.redrawProperties():
+                ds.addListener(propName,
+                               self.__name,
+                               self.asyncDraw,
+                               overwrite=True)
         
             for target, propName in zip(targets, propNames):
 
