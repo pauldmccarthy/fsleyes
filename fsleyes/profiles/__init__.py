@@ -212,7 +212,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
     And :class:`.PlotPanel` views may implement handlers for these events:
 
-      - ``ArtistPick``
+      - ``LeftMouseArtistPick``
+      - ``RightMouseArtistPick``
 
 
     .. note:: The ``MouseEnter`` and ``MouseLeave`` events are not supported
@@ -866,8 +867,9 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         """Called by the :meth:`handlePickEvent`. Delegates the event to a
         suitable handler, if one exists.
         """
-        
-        handler = self.__getHandler(ev, 'ArtistPick')
+
+        evType  = '{}MouseArtistPick'.format(self.__getMouseButton(ev))
+        handler = self.__getHandler(ev, evType)
         if handler is None:
             ev.Skip()
             return
@@ -1016,16 +1018,17 @@ class PlotPanelEventManager(object):
         most recent ``matplotlib`` event, and the second contains the
         corresponding x/y data coordinates.
 
-        If an event has not yet occurred, this method returns
-        ``(None, None)``.
+        If an event has not yet occurred, or if the mouse position is not on
+        any event target, this method returns ``(None, None)``.
 
         :arg ev: Ignored.
         """ 
 
         mplev = self.__lastLocEvent
 
-        if mplev is None:
-            return None, None
+        if mplev       is None: return None, None
+        if mplev.xdata is None: return None, None
+        if mplev.ydata is None: return None, None
         
         mousex, mousey = mplev.x,     mplev.y
         datax,  datay  = mplev.xdata, mplev.ydata

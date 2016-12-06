@@ -37,8 +37,9 @@ def init(self):
 def destroy(self):
     """Cleans up the shader programs."""
 
-    self.shader.destroy()
-    self.shader = None
+    if self.shader is not None:
+        self.shader.destroy()
+        self.shader = None
 
 
 def compileShaders(self):

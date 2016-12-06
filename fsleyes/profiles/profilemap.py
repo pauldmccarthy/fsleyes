@@ -34,6 +34,7 @@ from fsleyes.profiles.orthoviewprofile    import OrthoViewProfile
 from fsleyes.profiles.orthoeditprofile    import OrthoEditProfile
 from fsleyes.profiles.lightboxviewprofile import LightBoxViewProfile
 from fsleyes.profiles.plotprofile         import PlotProfile
+from fsleyes.profiles.histogramprofile    import HistogramProfile
 from fsleyes.profiles.timeseriesprofile   import TimeSeriesProfile
 
 
@@ -57,8 +58,8 @@ profileHandlers = {
     (OrthoPanel,         'view') : OrthoViewProfile,
     (OrthoPanel,         'edit') : OrthoEditProfile,
     (LightBoxPanel,      'view') : LightBoxViewProfile,
-    (HistogramPanel,     'view') : PlotProfile,
     (TimeSeriesPanel,    'view') : TimeSeriesProfile,
+    (HistogramPanel,     'view') : HistogramProfile,
     (PowerSpectrumPanel, 'view') : PlotProfile
 }
 """This dictionary is used by the :class:`.ProfileManager` class to figure out
@@ -111,6 +112,10 @@ tempModeMap = {
 
     TimeSeriesProfile : OrderedDict((
         (('volume', wx.WXK_SHIFT), 'panzoom'),
+    )),
+
+    HistogramProfile : OrderedDict((
+        (('panzoom', wx.WXK_SHIFT), 'overlayRange'),
     )) 
 }
 """The ``tempModeMap`` dictionary defines temporary modes, for each

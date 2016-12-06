@@ -37,8 +37,9 @@ def init(self):
 def destroy(self):
     """Deletes handles to the vertex/fragment programs."""
 
-    self.shader.destroy()
-    self.shader = None
+    if self.shader is not None:
+        self.shader.destroy()
+        self.shader = None
 
 
 def compileShaders(self):

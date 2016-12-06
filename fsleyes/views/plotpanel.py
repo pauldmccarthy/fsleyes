@@ -483,7 +483,7 @@ class PlotPanel(viewpanel.ViewPanel):
         return ds.getData()
 
 
-    def drawArtists(self, refresh=True):
+    def drawArtists(self, refresh=True, immediate=False):
         """Draw all ``matplotlib.Artist`` instances in the :attr:`artists`
         list, then refresh the canvas.
 
@@ -499,10 +499,13 @@ class PlotPanel(viewpanel.ViewPanel):
                 if artist not in axis.findobj(type(artist)):
                     axis.add_artist(artist)
 
-        self.__drawQueue.enqueue(async.idle, realDraw)
+        if immediate: realDraw()
+        else:
+            self.__drawQueue.enqueue(async.idle, realDraw)
 
         if refresh:
-            self.__drawQueue.enqueue(async.idle, canvas.draw)
+            if immediate: canvas.draw()
+            else:         self.__drawQueue.enqueue(async.idle, canvas.draw)
 
 
     def drawDataSeries(self, extraSeries=None, refresh=False, **plotArgs):

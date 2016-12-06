@@ -54,15 +54,19 @@ class PlotProfile(profiles.Profile):
                                   displayCtx,
                                   modes)
 
-        self.__canvas = viewPanel.getCanvas()
-        self.__axis   = viewPanel.getAxis()
-
+        self.__canvas  = viewPanel.getCanvas()
+        self.__axis    = viewPanel.getAxis()
+        
         # Pan/zoom functionality is actually
         # implemented by the NavigationToolbar2Wx
         # class, but the toolbar is not actually
         # shown.
         self.__toolbar = NavigationToolbar2Wx(self.__canvas)
         self.__toolbar.Show(False)
+
+        # This flag keeps track of
+        # the toolbar pan state
+        self.__panning = False
 
 
     def getEventTargets(self):
@@ -88,8 +92,11 @@ class PlotProfile(profiles.Profile):
 
     def _panzoomModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
         """Called on left mouse clicks. Enables panning. """
-        self.__toolbar.pan()
-        self.__toolbar.press_pan(self.getMplEvent())
+
+        if not self.__panning:
+            self.__toolbar.pan()
+            self.__toolbar.press_pan(self.getMplEvent())
+            self.__panning = True
 
 
     def _panzoomModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -102,13 +109,19 @@ class PlotProfile(profiles.Profile):
     
     def _panzoomModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Called on left mouse up events. Disables panning."""
-        self.__toolbar.pan()
+
+        if self.__panning:
+            self.__toolbar.pan()
+            self.__panning = False
 
 
     def _panzoomModeRightMouseDown(self, ev, canvas, mousePos, canvasPos):
         """Called on right mouse clicks. Enables zooming. """
-        self.__toolbar.pan()
-        self.__toolbar.press_pan(self.getMplEvent())
+
+        if not self.__panning:
+            self.__toolbar.pan()
+            self.__toolbar.press_pan(self.getMplEvent())
+            self.__panning = True
 
     
     def _panzoomModeRightMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -121,4 +134,6 @@ class PlotProfile(profiles.Profile):
     
     def _panzoomModeRightMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Called on right mouse up events. Disables panning. """
-        self.__toolbar.pan()
+        if self.__panning:
+            self.__toolbar.pan()
+            self.__panning = False

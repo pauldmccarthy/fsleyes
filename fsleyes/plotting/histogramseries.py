@@ -17,7 +17,6 @@ import props
 import fsl.utils.status as status
 import fsl.utils.async  as async
 from . import              dataseries
-from . import              histogramoverlay
 
 
 log = logging.getLogger(__name__)
@@ -70,14 +69,15 @@ class HistogramSeries(dataseries.DataSeries):
 
     showOverlay = props.Boolean(default=False)
     """If ``True``, a mask :class:`.ProxyImage` overlay is added to the
-    :class:`.OverlayList`, which highlights the voxels that have been included
-    in the histogram. The mask image is managed by a :class:`.HistogramOverlay`
-    instance.
+    :class:`.OverlayList`, which highlights the voxels that have been
+    included in the histogram. The mask image is managed by the
+    :class:`.HistogramProfile` instance, which manages histogram plot
+    interaction.
     """
 
     
     showOverlayRange = props.Bounds(ndims=1)
-    """Data range to display with the :class:`.HistogramOverlay` mask. """
+    """Data range to display with the :attr:`.showOverlay` mask. """
 
 
     def __init__(self, overlay, displayCtx, overlayList):
@@ -111,12 +111,6 @@ class HistogramSeries(dataseries.DataSeries):
         self.__clippedNonZeroData = np.array([])
         self.__initProperties()
 
-        self.__histOverlay = histogramoverlay.HistogramOverlay(
-            self,
-            overlay,
-            displayCtx,
-            overlayList)
-            
         self.addListener('volume',
                          self.__name,
                          self.__volumeChanged)
@@ -142,8 +136,6 @@ class HistogramSeries(dataseries.DataSeries):
         is no longer being used.
         """
 
-        self.__histOverlay.destroy()
-        
         self.removeListener('nbins',           self.__name)
         self.removeListener('ignoreZeros',     self.__name)
         self.removeListener('includeOutliers', self.__name)
@@ -186,8 +178,6 @@ class HistogramSeries(dataseries.DataSeries):
 
         verts[  :,   0] = x.repeat(2)
         verts[ 1:-1, 1] = y.repeat(2)
-        verts[ 0,    1] = 0
-        verts[   -1, 1] = 0
 
         return verts
 
@@ -322,6 +312,10 @@ class HistogramSeries(dataseries.DataSeries):
                                             (finData <  self.dataRange.xhi)]
         self.__clippedNonZeroData = nzData[ (nzData  >= self.dataRange.xlo) &
                                             (nzData  <  self.dataRange.xhi)]
+
+        self.showOverlayRange = (
+            max(self.showOverlayRange.xlo, self.dataRange.xlo),
+            min(self.showOverlayRange.xhi, self.dataRange.xhi))
 
         if callHistPropsChanged:
             self.__histPropsChanged()
