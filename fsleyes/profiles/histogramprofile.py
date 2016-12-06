@@ -25,9 +25,24 @@ log = logging.getLogger(__name__)
 
 class HistogramProfile(plotprofile.PlotProfile):
     """The ``HistogramProfile`` class is an interaction profile for use with
-    :class:`.HistogramPanel` views. In addition to the behaviour
+    :class:`.HistogramPanel` views. In addition to the behaviour provided by
+    :class:`.PlotProfile`, the ``HistogramProfile`` implements the
+    ``overlayRange`` mode, which allows the user to select the
+    :attr:`.HistogramSeries.showOverlayRange`, for the currently selected
+    overlay, by clicking and dragging on the plot.  This behaviour is only
+    enabled when the :attr:`.HistogramSeries.showOverlay` property ``True``.
+
+
+    For each plotted :class:`.HistogramSeries`, the ``HistogramProfile`` class
+    creates and manages a :class:`HistogramOverlay` (which shows a 3D overlay
+    of the voxels included in the histogram), and a :class:`RangePolygon`
+    (which shows the 3D overlay range on the plot). The user can click and drag
+    on the plot to adjust the extent of the :class:`RangePolygon`, which is
+    linked to the mask :class:`.Image` managed by the
+    :class:`.HistogramOverlay`.
     """
 
+    
     def __init__(self, viewPanel, overlayList, displayCtx):
         """Create a ``HistogramProfile``.
 
@@ -69,6 +84,9 @@ class HistogramProfile(plotprofile.PlotProfile):
 
 
     def destroy(self):
+        """Must be called when this ``HistogramProfile`` is no longer needed.
+        Removes property listeners, and cleans some things up.
+        """
 
         self._overlayList.removeListener('overlays',        self._name)
         self._displayCtx .removeListener('selectedOverlay', self._name)
@@ -83,6 +101,9 @@ class HistogramProfile(plotprofile.PlotProfile):
 
 
     def __overlayListChanged(self, *a):
+        """Called when the :class:`.OverlayList` changes. Cleans up some
+        things related to overlays that are no longer in the list.
+        """
 
         for hs in list(self.__rangePolygons.keys()):
             if hs.overlay not in self._overlayList:
@@ -92,9 +113,13 @@ class HistogramProfile(plotprofile.PlotProfile):
 
 
     def __registerHistogramSeries(self, hs):
+        """Called when a new :class:`.HistogramSeries` is plotted. Creates
+        a :class:`.HistogramOverlay` and a :class:`.RangePolygon` for the
+        series.
+        """
 
-        if hs in self.__rangePolygons:
-            return
+        if hs is None:                 return
+        if hs in self.__rangePolygons: return
 
         rangePolygon = RangePolygon(
             hs,
@@ -114,6 +139,10 @@ class HistogramProfile(plotprofile.PlotProfile):
 
     
     def __deregisterHistogramSeries(self, hs):
+        """Called when a :class:`.HistogramSeries` is no longer to be plotted.
+        Destroys the :class:`.HistogramOverlay` and :class:`.RangePolygon`
+        associated with the series.
+        """
 
         rangePolygon = self.__rangePolygons.pop(hs, None)
         rangeOverlay = self.__rangeOverlays.pop(hs, None)
@@ -123,6 +152,10 @@ class HistogramProfile(plotprofile.PlotProfile):
 
 
     def __selectedOverlayChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
+        Makes sure that a :class:`HistogramOverlay` and :class:`RangePolygon`
+        exist for the newly selected overlay.
+        """
 
         overlay = self._displayCtx.getSelectedOverlay()
         oldHs   = self.__currentHs
@@ -137,7 +170,19 @@ class HistogramProfile(plotprofile.PlotProfile):
         
 
     def __updateShowOverlayRange(self, datax, which=False):
-        """
+        """Called by the ``overlayRange`` mouse event handlers.  Updates the
+        :attr:`.HistogramSeries.showOverlayRange`.
+
+        :arg datax: X data coordinate corresponding to the mouse position.
+
+        :arg which: Used to keep track of which value in the
+                    ``showOverlayRange`` property the user is currently
+                    modifying. On mouse down events, this method figures out
+                    which range should be modified, and returns either
+                    ``'lo'`` or ``'hi'``. On subsequent calls to this method 
+                    (on mouse drag and mouse up events), that return value
+                    should be passed back into this method so that the same
+                    value continues to get modified.
         """
 
         hs           = self.__currentHs
@@ -184,56 +229,80 @@ class HistogramProfile(plotprofile.PlotProfile):
 
         # The range polygon will automatically update itself
         # when any HistogramSeries properties change. But the
-        # canvas draw is faster if we do it ourselves. Hence
+        # canvas draw is faster if we do it manually. Hence
         # the listener skip.
         with props.skip(hs, 'showOverlayRange', rangePolygon._rp_name):
             hs.showOverlayRange = newRange
-            
-        rangePolygon.updatePolygon()
+
+        # Manually refresh the histogram range polygon.
+        # I'm using knowledge of the PlotPanel here
+        with props.suppress(hsPanel, 'artists'):
+            rangePolygon.updatePolygon()
+
         hsPanel.drawArtists(immediate=True)
         
-        return which 
+        return which
 
-    
+
     def _overlayRangeModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
-        """
+        """Called on mouse down events in ``overlayRange`` mode. Calls the
+        :meth:`__updateShowOverlayRange` method.
         """
 
-        if self.__currentHs is None:                     return False
-        if self.__currentHs not in self.__rangePolygons: return False
-        if canvasPos is None:                            return False 
+        if self.__currentHs is None:                     return
+        if not self.__currentHs.showOverlay:             return
+        if self.__currentHs not in self.__rangePolygons: return
+        if canvasPos is None:                            return
 
         self.__draggingRange = self.__updateShowOverlayRange(canvasPos[0])
 
-        return True
-
 
     def _overlayRangeModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
+        """Called on mouse down events in ``overlayRange`` mode. Calls the
+        :meth:`__updateShowOverlayRange` method.
+        """ 
 
-        if not self.__draggingRange: return False
-        if canvasPos is None:        return False
+        if not self.__draggingRange: return
+        if canvasPos is None:        return
 
         self.__updateShowOverlayRange(canvasPos[0], self.__draggingRange) 
 
-        return True
-
-
         
     def _overlayRangeModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
+        """Called on mouse up events in ``overlayRange`` mode. Clears
+        some internal state.
+        """
 
         if not self.__draggingRange:
-            return False
+            return 
 
         self.__draggingRange = False
-        return True
 
 
 class RangePolygon(patches.Polygon):
-    """
+    """The ``RangePolygon`` class is a ``matplotlib.patches.Polygon`` which
+    is used to display a data range over a :class:`.HistogramSeries` plot.
+
+    
+    Whenever any property on the ``HistogramSeries`` changes (and on calls to
+    :meth:`updatePolygon`), the vertices of a polygon spanning the
+    :attr:`.HistogramSeries.showOverlayRange` property are generated.
+
+    
+    The ``RangePolygon`` automatically adds and removes itself to the
+    :attr:`.PlotPanel.artists` list of the owning :class:`.HistogramPanel`
+    according to the values of the :attr:`.HistogramSeries.showOverlay` and
+    :attr:`.DataSeries.enabled` properties.
     """
 
     def __init__(self, hs, hsPanel, *args, **kwargs):
-        """
+        """Create a ``RangePolygon``.
+
+        :arg hs:      The :class:`.HistogramSeries`
+        :arg hsPanel: The :class:`.HistogramPanel`
+
+        All other arguments are passed through to the ``Polygon.__init__``
+        method.
         """
         patches.Polygon.__init__(self, *args, **kwargs)
 
@@ -244,19 +313,25 @@ class RangePolygon(patches.Polygon):
         self._rp_hsPanel = hsPanel
         self._rp_name    = '{}_{}'.format(type(self).__name__, id(self))
 
-        hs.addGlobalListener(self._rp_name, self.updatePolygon)
+        hs.addGlobalListener(           self._rp_name, self.updatePolygon)
+        hsPanel.addListener('smooth',   self._rp_name, self.updatePolygon)
+        hsPanel.addListener('histType', self._rp_name, self.updatePolygon)
 
         self.updatePolygon()
 
 
     def destroy(self):
-        """
+        """Must be called when this ``RangePolygon`` is no longer needed.
+
+        Removes property listeners and cleans up references.
         """
 
         hs      = self._rp_hs
         hsPanel = self._rp_hsPanel
 
-        hs.removeGlobalListener(self._rp_name)
+        hs.removeGlobalListener(           self._rp_name)
+        hsPanel.removeListener('smooth',   self._rp_name)
+        hsPanel.removeListener('histType', self._rp_name)
 
         if self in hsPanel.artists:
             hsPanel.artists.remove(self)
@@ -265,36 +340,58 @@ class RangePolygon(patches.Polygon):
         self._rp_hsPanel = None
 
         
-    def updatePolygon(self, *a):
+    def updatePolygon(self, *a, **kwa):
+        """Called whenever any property changes on the
+        :class:`.HistogramSeries`, and called manually by the
+        :class:`HistogramProfile`.
+
+        Adds/removes this ``RangePolygon`` to the :attr:`.PlotPanel.artists`
+        list and regenerates the polygon vertices as needed.
         """
-        """
 
-        hs       = self._rp_hs
-        hsPanel  = self._rp_hsPanel
+        hs      = self._rp_hs
+        hsPanel = self._rp_hsPanel
 
-        # The HistogramSeries may
-        # not yet have been plotted
-        try:
-            hsArtist = hsPanel.getArtist(hs)
+        # If smoothing is enabled, we get
+        # the histogram data from the plotted
+        # Line2D instance. This is because the
+        # HistogramPanel does the smoothing,
+        # not the HistogramSeries instance.
+        #
+        # Try/except because the HistogramSeries
+        # may not yet have been plotted.
+        if hsPanel.smooth:
+            try:
 
-            if hsPanel.smooth:
+                hsArtist = hsPanel.getArtist(hs)
                 x        = hsArtist.get_xdata()
                 y        = hsArtist.get_ydata()
                 vertices = np.array([x, y]).T
-            else:
-                vertices = hs.getVertexData()
-                
-        except:
-            vertices = np.zeros(0)
 
+            except:
+                vertices = np.zeros(0)
+
+        # Otherwise we can get the data 
+        # directly from the HistogramSeries.
+        # The HS class has a method which
+        # generates histogram vertices for us.
+        else:
+            vertices = hs.getVertexData()
+
+            # HistogramSeries, we need to apply
+            # post-processing normally performed
+            # by the HistogramPanel to the data.
+            if hsPanel.histType == 'probability':
+                vertices[:, 1] /= hs.getNumHistogramValues()
+
+        # Nothing to plot, or we shouldn't
+        # be plotting the range overlay
         if not ((vertices.size > 0) and hs.enabled and hs.showOverlay):
 
             if self in hsPanel.artists:
                 hsPanel.artists.remove(self)
-            return
 
-        if (not hsPanel.smooth) and hsPanel.histType == 'probability':
-            vertices[:, 1] /= hs.getNumHistogramValues()
+            return
 
         lo, hi   = hs.showOverlayRange
         mask     = (vertices[:, 0] >= lo) & (vertices[:, 0] <= hi)
@@ -320,8 +417,8 @@ class RangePolygon(patches.Polygon):
             vertices = np.array([[lo, 0], [lo, yval], [hi, yval], [hi, 0]])
 
         # The showOverlayRange coordinates probably
-        # doesn't align with the histogram bins. So
-        # we add some start/end verices to make the
+        # don't align with the histogram bins. So
+        # we add some start/end vertices to make the
         # histogram polygon all nice and squareish.
         else:
 
@@ -340,13 +437,17 @@ class RangePolygon(patches.Polygon):
 
             vertices = padVerts
 
-        self.set_xy(   vertices)
+        self.set_xy(vertices)
 
+        # Make sure the polygon 
+        # colour is up to date
         colour = list(hs.colour)[:3]
 
         self.set_edgecolor(colour + [1.0])
         self.set_facecolor(colour + [0.3])
-        
+
+        # Add to the artists list if needed,
+        # so the polygon gets shown.
         if self not in hsPanel.artists:
             hsPanel.artists.append(self)
 
@@ -356,8 +457,6 @@ class HistogramOverlay(object):
     display of a :class:`.ProxyImage` overlay which displays the voxels that
     are included in a histogram plot. The user can toggle the display of this
     overlay via the :attr:`.HistogramSeries.showOverlay` property.
-
-    One ``HistogramOverlay`` is created by every :class:`.HistogramSeries``.
     """
     
     def __init__(self, histSeries, overlay, displayCtx, overlayList):
@@ -391,6 +490,7 @@ class HistogramOverlay(object):
 
     def destroy(self):
         """Must be called when this ``HistogramOverlay`` is no longer needed.
+        Removes property listeners and clears references.
         """
 
         self.__overlayList.removeListener('overlays',    self.__name)

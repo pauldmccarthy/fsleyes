@@ -99,6 +99,17 @@ class PlotPanel(viewpanel.ViewPanel):
     :attr:`dataSeries` list.
 
 
+    **The draw queue**
+
+    
+    The ``PlotPanel`` uses a :class:`.async.TaskThread` to asynchronously
+    extract and prepare data for plotting, This is because data preparation
+    may take a long time for large :class:`.Image` overlays, and the main
+    application thread should not be blocked while this is occurring. The
+    ``TaskThread`` instance is accessible through the :meth:`getDrawQueue`
+    method, in case anything needs to be scheduled on it.
+
+
     **Plot panel actions**
 
     A number of :mod:`actions` are also provided by the ``PlotPanel`` class:
@@ -300,6 +311,13 @@ class PlotPanel(viewpanel.ViewPanel):
     def getCanvas(self):
         """Returns the ``matplotlib`` ``Canvas`` instance."""
         return self.__canvas
+
+
+    def getDrawQueue(self):
+        """Returns the :class`.async.DrawQueue` instance used for data
+        preparation.
+        """
+        return self.__drawQueue
 
 
     def draw(self, *a):
