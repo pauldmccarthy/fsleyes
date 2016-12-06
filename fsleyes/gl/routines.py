@@ -496,9 +496,9 @@ def voxelBox(voxel,
             boxSize[i] = dims[i] 
 
     voxel       = np.array(voxel)
-    dims        = np.array(dims)
-    shape       = np.array(shape)
-    boxSize     = np.array(boxSize)
+    dims        = np.array(dims[:3])
+    shape       = np.array(shape[:3])
+    boxSize     = np.array(boxSize[:3])
 
     # The block size must be at least
     # one voxel across each dimension

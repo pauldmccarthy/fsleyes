@@ -987,7 +987,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         # Create a cursor annotation for each canvas
         kwargs  = {'colour' : self.selectionCursorColour,
-                   'width'  : 2}
+                   'width'  : 2,
+                   'expiry' : 0.5}
 
         cursors = []
 

@@ -27,6 +27,7 @@ following annotation types are defined:
 
 
 import logging
+import time
 
 import numpy     as np
 import OpenGL.GL as gl
@@ -72,7 +73,7 @@ class Annotations(object):
                   to the horizontal screen axis.
         
         :arg yax: Index of the display coordinate system axis that corresponds
-                  to the horizontal screen axis.
+                  to the vertical screen axis.
         """
         
         self.__q     = []
@@ -192,9 +193,14 @@ class Annotations(object):
         if xform is not None:
             gl.glMatrixMode(gl.GL_MODELVIEW)
             gl.glPushMatrix()
-            gl.glMultMatrixf(xform.ravel('C')) 
+            gl.glMultMatrixf(xform.ravel('C'))
+
+        drawTime = time.time()
 
         for obj in objs:
+
+            if obj.expired(drawTime):
+                continue
             
             obj.setAxes(self.__xax, self.__yax)
 
@@ -235,17 +241,26 @@ class AnnotationObject(globject.GLSimpleObject):
     by an :class:`Annotations` instance. The ``AnnotationObject`` contains some
     attributes which are common to all annotation types:
 
-    ========== =============================================================
-    ``colour`` Annotation colour
-    ``width``  Annotation line width (if the annotation is made up of lines)
-    ``xform``  Custom transformation matrix to apply to annotation vertices.
-    ========== =============================================================
+    ============ =============================================================
+    ``colour``   Annotation colour
+    ``width``    Annotation line width (if the annotation is made up of lines)
+    ``xform``    Custom transformation matrix to apply to annotation vertices.
+    ``expiry``   Time (in seconds) after which the annotation will expire and
+                 not be drawn.
+    ``creation`` Time of creation.
+    ============ =============================================================
 
     Subclasses must, at the very least, override the
     :meth:`globject.GLObject.draw` method.
     """
     
-    def __init__(self, xax, yax, xform=None, colour=None, width=None):
+    def __init__(self,
+                 xax,
+                 yax,
+                 xform=None,
+                 colour=None,
+                 width=None,
+                 expiry=None):
         """Create an ``AnnotationObject``.
 
         :arg xax:    Initial display X axis
@@ -258,15 +273,32 @@ class AnnotationObject(globject.GLSimpleObject):
         :arg colour: RGB/RGBA tuple specifying the annotation colour.
         
         :arg width:  Line width to use for the annotation.
+
+        :arg expiry: Time (in seconds) after which this annotation should be
+                     expired and not drawn.
         """
         globject.GLSimpleObject.__init__(self, xax, yax)
         
-        self.colour = colour
-        self.width  = width
-        self.xform  = xform
+        self.colour   = colour
+        self.width    = width
+        self.xform    = xform
+        self.expiry   = expiry
+        self.creation = time.time()
 
         if self.xform is not None:
             self.xform = np.array(self.xform, dtype=np.float32)
+
+
+    def expired(self, now):
+        """Returns ``True`` if this ``Annotation`` has expired, ``False``
+        otherwise.
+
+        :arg now: The current time
+        """
+        if self.expiry is None:
+            return False
+
+        return (self.creation + self.expiry) < now
 
             
     def preDraw(self):
