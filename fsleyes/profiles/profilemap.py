@@ -110,12 +110,14 @@ tempModeMap = {
     LightBoxViewProfile : OrderedDict((
         (('view', wx.WXK_CONTROL), 'zoom'), )),
 
+    # Can't use shift on mpl
+    # canvases for some reason.
     TimeSeriesProfile : OrderedDict((
-        (('volume', wx.WXK_SHIFT), 'panzoom'),
+        (('volume', wx.WXK_CONTROL), 'panzoom'),
     )),
 
     HistogramProfile : OrderedDict((
-        (('panzoom', wx.WXK_SHIFT), 'overlayRange'),
+        (('overlayRange', wx.WXK_CONTROL), 'panzoom'),
     )) 
 }
 """The ``tempModeMap`` dictionary defines temporary modes, for each
@@ -195,7 +197,14 @@ altHandlerMap = {
     )),
 
     LightBoxViewProfile : OrderedDict((
-        (('view', 'LeftMouseDown'), ('view', 'LeftMouseDrag')), ))
+        (('view', 'LeftMouseDown'), ('view', 'LeftMouseDrag')), )),
+
+
+    # We cannot remap mouse buttons on the
+    # PlotProfile.panzoom mode, because the
+    # mpl NavigationToolbar2 class has
+    # hard-coded left/right mouse button
+    # behaviours.
 }
 """The ``altHandlerMap`` dictionary defines alternate handlers for a given
 mode and event type. Entries in this dictionary allow a :class:`.Profile`

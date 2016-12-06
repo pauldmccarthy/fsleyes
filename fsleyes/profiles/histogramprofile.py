@@ -24,7 +24,8 @@ log = logging.getLogger(__name__)
 
 
 class HistogramProfile(plotprofile.PlotProfile):
-    """
+    """The ``HistogramProfile`` class is an interaction profile for use with
+    :class:`.HistogramPanel` views. In addition to the behaviour
     """
 
     def __init__(self, viewPanel, overlayList, displayCtx):
@@ -42,9 +43,11 @@ class HistogramProfile(plotprofile.PlotProfile):
                                          displayCtx,
                                          ['overlayRange'])
 
+        self.mode = 'overlayRange'
+
         self.__currentHs     = None
-        self.__rangePolygon  = None
-        self.__rangeOverlay  = None
+        self.__rangePolygons = {}
+        self.__rangeOverlays = {}
 
         # This flag is raised when the user
         # is dragging the showOverlayRange
@@ -57,7 +60,7 @@ class HistogramProfile(plotprofile.PlotProfile):
 
         overlayList.addListener('overlays',
                                 self._name,
-                                self.__selectedOverlayChanged)
+                                self.__overlayListChanged)
         displayCtx .addListener('selectedOverlay',
                                 self._name,
                                 self.__selectedOverlayChanged)
@@ -67,47 +70,56 @@ class HistogramProfile(plotprofile.PlotProfile):
 
     def destroy(self):
 
-        self.__deregisterHistogramSeries()
-        
         self._overlayList.removeListener('overlays',        self._name)
         self._displayCtx .removeListener('selectedOverlay', self._name)
+
+        for hs in self.__rangePolygons.keys():
+            self.__deregisterHistogramSeries(hs)
+
+        self.__rangePolygons = None
+        self.__rangeOverlays = None 
+
         plotprofile.PlotProfile.destroy(self)
+
+
+    def __overlayListChanged(self, *a):
+
+        for hs in list(self.__rangePolygons.keys()):
+            if hs.overlay not in self._overlayList:
+                self.__deregisterHistogramSeries(hs)
+
+        self.__selectedOverlayChanged()
 
 
     def __registerHistogramSeries(self, hs):
 
-        hsPanel = self._viewPanel
+        if hs in self.__rangePolygons:
+            return
 
-        self.__rangePolygon = RangePolygon(
+        rangePolygon = RangePolygon(
             hs,
-            hsPanel,
+            self._viewPanel,
             np.zeros((2, 2)),
             closed=True,
-            edgecolor='black',
-            facecolor=hs.colour,
-            linewidth=3,
-            alpha=0.3)
+            linewidth=2)
 
-        self.__rangeOverlay = HistogramOverlay(
+        rangeOverlay = HistogramOverlay(
             hs,
             hs.overlay,
             self._displayCtx,
             self._overlayList)
 
+        self.__rangePolygons[hs] = rangePolygon
+        self.__rangeOverlays[hs] = rangeOverlay
+
     
-    def __deregisterHistogramSeries(self):
+    def __deregisterHistogramSeries(self, hs):
 
-        if self.__currentHs is None:
-            return
-        
-        if self.__rangePolygon is not None:
-            self.__rangePolygon.destroy()
+        rangePolygon = self.__rangePolygons.pop(hs, None)
+        rangeOverlay = self.__rangeOverlays.pop(hs, None)
 
-        if self.__rangeOverlay is not None:
-            self.__rangeOverlay.destroy()
-
-        self.__rangePolygon = None
-        self.__rangeOverlay = None
+        if rangePolygon is not None: rangePolygon.destroy()
+        if rangeOverlay is not None: rangeOverlay.destroy()
 
 
     def __selectedOverlayChanged(self, *a):
@@ -119,22 +131,23 @@ class HistogramProfile(plotprofile.PlotProfile):
         if oldHs == newHs:
             return
 
-        self.__deregisterHistogramSeries()
-
         self.__currentHs = newHs
 
-        if newHs is None:
-            return
-        
         self.__registerHistogramSeries(newHs)
-
+        
 
     def __updateShowOverlayRange(self, datax, which=False):
         """
         """
 
-        rangelo, rangehi = self.__currentHs.showOverlayRange
+        hs           = self.__currentHs
+        hsPanel      = self._viewPanel
+        rangePolygon = self.__rangePolygons.get(hs, None)
 
+        if hs           is None: return
+        if rangePolygon is None: return
+        
+        rangelo, rangehi = hs.showOverlayRange
         
         if   which == 'lo': newRange = [datax,   rangehi]
         elif which == 'hi': newRange = [rangelo, datax]
@@ -144,6 +157,7 @@ class HistogramProfile(plotprofile.PlotProfile):
             if datax < rangelo:
                 which    = 'lo'
                 newRange =  (datax, rangehi)
+                
             # Less than high range 
             elif datax > rangehi:
                 which    = 'hi'
@@ -172,13 +186,12 @@ class HistogramProfile(plotprofile.PlotProfile):
         # when any HistogramSeries properties change. But the
         # canvas draw is faster if we do it ourselves. Hence
         # the listener skip.
-        with props.skip(self.__currentHs,
-                        'showOverlayRange',
-                        self.__rangePolygon._rp_name):
-            self.__currentHs.showOverlayRange = newRange
+        with props.skip(hs, 'showOverlayRange', rangePolygon._rp_name):
+            hs.showOverlayRange = newRange
             
-        self.__rangePolygon.updatePolygon()
-        self._viewPanel.drawArtists(immediate=True)
+        rangePolygon.updatePolygon()
+        hsPanel.drawArtists(immediate=True)
+        
         return which 
 
     
@@ -186,9 +199,9 @@ class HistogramProfile(plotprofile.PlotProfile):
         """
         """
 
-        if self.__currentHs    is None: return False
-        if self.__rangePolygon is None: return False
-        if canvasPos           is None: return False 
+        if self.__currentHs is None:                     return False
+        if self.__currentHs not in self.__rangePolygons: return False
+        if canvasPos is None:                            return False 
 
         self.__draggingRange = self.__updateShowOverlayRange(canvasPos[0])
 
@@ -213,7 +226,6 @@ class HistogramProfile(plotprofile.PlotProfile):
 
         self.__draggingRange = False
         return True
-
 
 
 class RangePolygon(patches.Polygon):
@@ -262,21 +274,26 @@ class RangePolygon(patches.Polygon):
 
         # The HistogramSeries may
         # not yet have been plotted
-        try:    hsArtist = hsPanel.getArtist(hs)
-        except: return
+        try:
+            hsArtist = hsPanel.getArtist(hs)
 
-        if not hs.showOverlay and self in hsPanel.artists:
-            hsPanel.artists.remove(self)
+            if hsPanel.smooth:
+                x        = hsArtist.get_xdata()
+                y        = hsArtist.get_ydata()
+                vertices = np.array([x, y]).T
+            else:
+                vertices = hs.getVertexData()
+                
+        except:
+            vertices = np.zeros(0)
+
+        if not ((vertices.size > 0) and hs.enabled and hs.showOverlay):
+
+            if self in hsPanel.artists:
+                hsPanel.artists.remove(self)
             return
 
-        if hsPanel.smooth:
-            x        = hsArtist.get_xdata()
-            y        = hsArtist.get_ydata()
-            vertices = np.array([x, y]).T
-        else:
-            vertices = hs.getVertexData()
-
-        if hsPanel.histType == 'probability':
+        if (not hsPanel.smooth) and hsPanel.histType == 'probability':
             vertices[:, 1] /= hs.getNumHistogramValues()
 
         lo, hi   = hs.showOverlayRange
@@ -301,6 +318,11 @@ class RangePolygon(patches.Polygon):
                 yval /= hs.getNumHistogramValues()
 
             vertices = np.array([[lo, 0], [lo, yval], [hi, yval], [hi, 0]])
+
+        # The showOverlayRange coordinates probably
+        # doesn't align with the histogram bins. So
+        # we add some start/end verices to make the
+        # histogram polygon all nice and squareish.
         else:
 
             padVerts          = np.zeros((vertices.shape[0] + 4, 2))
@@ -319,9 +341,13 @@ class RangePolygon(patches.Polygon):
             vertices = padVerts
 
         self.set_xy(   vertices)
-        self.set_color(hs.colour)
 
-        if hs.showOverlay and self not in hsPanel.artists:
+        colour = list(hs.colour)[:3]
+
+        self.set_edgecolor(colour + [1.0])
+        self.set_facecolor(colour + [0.3])
+        
+        if self not in hsPanel.artists:
             hsPanel.artists.append(self)
 
 

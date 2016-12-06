@@ -224,14 +224,10 @@ class HistogramSeries(dataseries.DataSeries):
                  props.suppress(self, 'dataRange'), \
                  props.suppress(self, 'nbins'):
 
-                self.dataRange.xmin        = dmin
-                self.dataRange.xmax        = dmax  + dist
-                self.dataRange.xlo         = nzmin
-                self.dataRange.xhi         = nzmax + dist
-                self.showOverlayRange.xmin = dmin  - dist
-                self.showOverlayRange.xmax = dmax  + dist
-                self.showOverlayRange.xlo  = nzmin
-                self.showOverlayRange.xhi  = nzmax + dist 
+                self.dataRange.xmin = dmin
+                self.dataRange.xmax = dmax  + dist
+                self.dataRange.xlo  = nzmin
+                self.dataRange.xhi  = nzmax + dist
                 
                 self.nbins = self.__autoBin(nzData, self.dataRange.x)
 
@@ -313,9 +309,23 @@ class HistogramSeries(dataseries.DataSeries):
         self.__clippedNonZeroData = nzData[ (nzData  >= self.dataRange.xlo) &
                                             (nzData  <  self.dataRange.xhi)]
 
-        self.showOverlayRange = (
-            max(self.showOverlayRange.xlo, self.dataRange.xlo),
-            min(self.showOverlayRange.xhi, self.dataRange.xhi))
+
+        with props.suppress(self, 'showOverlayRange', notify=True):
+
+            dlo, dhi = self.dataRange.x
+            dist     = (dhi - dlo) / 10000.0
+
+            needsInit = np.all(np.isclose(self.showOverlayRange.x, [0, 0]))
+
+            self.showOverlayRange.xmin = dlo - dist
+            self.showOverlayRange.xmax = dhi + dist
+
+            if needsInit:
+                self.showOverlayRange.xlo = dlo
+                self.showOverlayRange.xhi = dhi
+            else:
+                self.showOverlayRange.xlo = max(dlo, self.showOverlayRange.xlo)
+                self.showOverlayRange.xhi = min(dhi, self.showOverlayRange.xhi)
 
         if callHistPropsChanged:
             self.__histPropsChanged()

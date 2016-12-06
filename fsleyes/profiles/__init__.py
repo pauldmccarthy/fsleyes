@@ -331,6 +331,12 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         self.__mouseDownPos     = None
         self.__canvasDownPos    = None
 
+        # we keep track of the mode we
+        # were in on mosue down events,
+        # so the correct mode is called
+        # on subsequent drag/up events.
+        self.__mouseDownMode    = None 
+
         # Add all of the provided modes
         # as options to the mode property
  
@@ -600,6 +606,18 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         else:                            return  None
 
 
+    def __getMode(self, ev):
+        """Returns the current profile mode - either the value of
+        :attr:`mode`, or a temporary mode if one is active.
+        """
+
+        # Is a temporary mode active?
+        tempMode = self.__getTempMode(ev)
+
+        if tempMode is None: return self.mode
+        else:                return tempMode
+
+
     def __getHandler(self, ev, evType, mode=None):
         """Returns a reference to a method of this ``Profile`` instance
         (defined on the sub-class) which can handle the given
@@ -614,12 +632,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         specified.
         """
 
-        # Is a temporary mode active?
-        tempMode = self.__getTempMode(ev)
-
         if mode is None:
-            if tempMode is None: mode = self.mode
-            else:                mode = tempMode
+            mode = self.__getMode(ev)
 
         # Is an alternate handler active?
         # Alternate handlers take precedence
@@ -734,8 +748,12 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         # focus when it is clicked on.
         canvas.SetFocus()
 
+        # Save information about this mouse 
+        # down event, as it may be needed 
+        # by subesquent drag/up events.
         self.__mouseDownPos  = mouseLoc
         self.__canvasDownPos = canvasLoc
+        self.__mouseDownMode = self.__getMode(ev)
 
         if self.__lastMousePos  is None: self.__lastMousePos  = mouseLoc
         if self.__lastCanvasPos is None: self.__lastCanvasPos = canvasLoc
@@ -749,7 +767,9 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         log.debug('{} event ({}, {}) on {}'.format(
             evType, mouseLoc, canvasLoc, type(canvas).__name__))
 
-        if not handler(ev, canvas, mouseLoc, canvasLoc):
+        # If a handler returns None, we
+        # assume that it means True
+        if handler(ev, canvas, mouseLoc, canvasLoc) is False:
             ev.Skip()
 
         self.__lastMousePos  = mouseLoc
@@ -763,11 +783,12 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         """
 
         evType  = '{}MouseUp'.format(self.__getMouseButton(ev))
-        handler = self.__getHandler(ev, evType)
+        handler = self.__getHandler(ev, evType, mode=self.__mouseDownMode)
 
         if handler is None:
             self.__mouseDownPos  = None
             self.__canvasDownPos = None
+            self.__mouseDownMode = None
             ev.Skip()
             return
 
@@ -777,11 +798,12 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         log.debug('{} event ({}, {}) on {}'.format(
             evType, mouseLoc, canvasLoc, type(canvas).__name__))
 
-        if not handler(ev, canvas, mouseLoc, canvasLoc):
+        if handler(ev, canvas, mouseLoc, canvasLoc) is False:
             ev.Skip()
 
         self.__mouseDownPos    = None
         self.__canvasDownPos   = None
+        self.__mouseDownMode   = None
         self.__lastMouseUpPos  = mouseLoc
         self.__lastCanvasUpPos = canvasLoc
 
@@ -809,7 +831,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         log.debug('Mouse move event ({}, {}) on {}'.format(
             mouseLoc, canvasLoc, type(canvas).__name__))
 
-        if not handler(ev, canvas, mouseLoc, canvasLoc):
+        if handler(ev, canvas, mouseLoc, canvasLoc) is False:
             ev.Skip()
 
         self.__lastMousePos  = mouseLoc
@@ -827,7 +849,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         mouseLoc, canvasLoc = self.__getMouseLocation(ev)
 
         evType  = '{}MouseDrag'.format(self.__getMouseButton(ev))
-        handler = self.__getHandler(ev, evType)
+        handler = self.__getHandler(ev, evType, mode=self.__mouseDownMode)
         if handler is None:
             ev.Skip()
             return 
@@ -835,7 +857,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         log.debug('{} event ({}, {}) on {}'.format(
             evType, mouseLoc, canvasLoc, type(canvas).__name__))
 
-        if not handler(ev, canvas, mouseLoc, canvasLoc):
+        if handler(ev, canvas, mouseLoc, canvasLoc) is False:
             ev.Skip()
 
         self.__lastMousePos  = mouseLoc
@@ -859,7 +881,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         log.debug('Keyboard event ({}) on {}'.format(
             key, type(canvas).__name__))
 
-        if not handler(ev, canvas, key):
+        if handler(ev, canvas, key) is False:
             ev.Skip()
 
 
@@ -881,7 +903,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         log.debug('Pick event ({}, {}) on {}'.format(
             mouseLoc, canvasLoc, type(canvas).__name__))
 
-        if not handler(ev, canvas, artist, mouseLoc, canvasLoc):
+        if handler(ev, canvas, artist, mouseLoc, canvasLoc) is False:
             ev.Skip()
 
 

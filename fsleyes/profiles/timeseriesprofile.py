@@ -118,38 +118,38 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
             self.__volumeLine.remove()
 
         if not self.__volumeModeCompatible():
-            return False
+            return
+
+        if canvasPos is None: xvalue = None
+        else:                 xvalue = canvasPos[0]
 
         tsPanel = self._viewPanel
         axis    = tsPanel.getAxis()
 
         self.__volumeLine = axis.axvline(0, c='#000080', lw=3)
 
-        self.__updateVolume(self.__volumeLine, canvasPos[0])
-        
-        return True
+        self.__updateVolume(self.__volumeLine, xvalue)
         
         
     def _volumeModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Updates the position of the vertical volume line. """
         
         if self.__volumeLine is None:
-            return False
+            return
 
-        self.__updateVolume(self.__volumeLine, canvasPos[0])
+        if canvasPos is None: xvalue = None
+        else:                 xvalue = canvasPos[0]        
 
-        return True
+        self.__updateVolume(self.__volumeLine, xvalue)
 
         
     def _volumeModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Removes the vertical volume line. """
 
         if self.__volumeLine is None:
-            return False
+            return
 
         self.__volumeLine.remove()
         self.__volumeLine = None
 
         self._viewPanel.getCanvas().draw()
-
-        return True
