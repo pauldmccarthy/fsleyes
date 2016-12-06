@@ -1099,8 +1099,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     def __refreshCanvases(self):
         """Short cut to refresh the canvases of the :class:`.OrthoPanel`.
 
-        .. note:: This is done instead of calling ``OrthoPanel.Refresh`
-        because the latter introduces flickering.
+        .. note:: This is done instead of calling ``OrthoPanel.Refresh``
+                  because the latter introduces flickering.
         """
         self.__xcanvas.Refresh()
         self.__ycanvas.Refresh()
