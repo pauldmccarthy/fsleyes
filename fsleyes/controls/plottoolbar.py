@@ -45,11 +45,11 @@ class PlotToolBar(fsltoolbar.FSLeyesToolBar):
 
         import_     = actions.ActionButton(
             'importDataSeries',
-            icon=icons.findImageFile('import24'),
+            icon=icons.findImageFile('importDataSeries24'),
             tooltip=tooltips.actions[plotPanel, 'importDataSeries'])
         export      = actions.ActionButton(
             'exportDataSeries',
-            icon=icons.findImageFile('export24'),
+            icon=icons.findImageFile('exportDataSeries24'),
             tooltip=tooltips.actions[plotPanel, 'exportDataSeries']) 
         add        = actions.ActionButton(
             'addDataSeries',

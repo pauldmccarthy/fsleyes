@@ -51,22 +51,34 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('listHighlight24'),
                   icons.findImageFile('list24')],
-            tooltip=tooltips.actions[histPanel, 'togglePlotList']) 
+            tooltip=tooltips.actions[histPanel, 'togglePlotList'])
+
+        togOverlay = actions.ToggleActionButton(
+            'toggleHistogramOverlay',
+            icon=[icons.findImageFile('histogramOverlayHighlight24'),
+                  icons.findImageFile('histogramOverlay24')]) 
  
-        mode = props.Widget('histType',
-                            labels=strings.choices[     histPanel, 'histType'],
-                            tooltip=tooltips.properties[histPanel, 'histType'])
+        mode    = props.Widget(
+            'histType',
+            labels=strings.choices[     histPanel, 'histType'],
+            tooltip=tooltips.properties[histPanel, 'histType'])
+
 
         togControl = props.buildGUI(self, histPanel, togControl)
         togList    = props.buildGUI(self, histPanel, togList)
+        togOverlay = props.buildGUI(self, histPanel, togOverlay) 
         mode       = props.buildGUI(self, histPanel, mode)
         
         lblMode = self.MakeLabelledTool(
             mode, strings.properties[histPanel, 'histType'])
 
-        self.InsertTools([togControl, togList], 0) 
+        self.InsertTools([togControl, togList], 0)
+        self.AddTool(togOverlay) 
         self.AddTool(lblMode)
 
-        nav = [togControl, togList] + self.getCommonNavOrder() + [mode]
+
+        nav = [togControl, togList]    + \
+              self.getCommonNavOrder() + \
+              [togOverlay, mode]
 
         self.setNavOrder(nav)

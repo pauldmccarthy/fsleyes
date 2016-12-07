@@ -607,7 +607,7 @@ _TOOLBAR_PROPS = td.TypeDict({
     'MaskOpts.threshold' : props.Widget(
         'threshold',
         showLimits=False,
-        spin=False,
+        spin=True,
         tooltip=_TOOLTIPS['MaskOpts.threshold'],
         labels=[strings.choices['MaskOpts.threshold.min'],
                 strings.choices['MaskOpts.threshold.max']]),

@@ -88,17 +88,30 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         plotpanel.OverlayPlotPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
-        self.addListener('histType', self._name, self.draw)
+        self.__currentHs = None
+
+        self       .addListener('histType', self._name, self.draw)
+        overlayList.addListener('overlays',
+                                self._name,
+                                self.__selectedOverlayChanged)
+        displayCtx .addListener('selectedOverlay',
+                                self._name,
+                                self.__selectedOverlayChanged) 
 
         self.initProfile()
+        self.__selectedOverlayChanged()
 
 
     def destroy(self):
         """Removes some property listeners, and calls
         :meth:`.PlotPanel.destroy`.
         """
+
+        self.__currentHs = None
         
-        self.removeListener('histType', self._name)
+        self             .removeListener('histType',        self._name)
+        self._overlayList.removeListener('overlays',        self._name)
+        self._displayCtx .removeListener('selectedOverlay', self._name)
         
         plotpanel.OverlayPlotPanel.destroy(self)
 
@@ -119,7 +132,17 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         """Shows/hides a :class:`.HistogramToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(histogramtoolbar.HistogramToolBar, histPanel=self) 
+        self.togglePanel(histogramtoolbar.HistogramToolBar, histPanel=self)
+
+
+    @actions.toggleAction
+    def toggleHistogramOverlay(self):
+        """Toggles the value of the :attr:`.HistogramSeries.showOverlay`
+        for the currently selected overlay (if possible).
+        """
+        # This action gets configured in the
+        # __selectedOverlayChanged method
+        pass
 
         
     def getActions(self):
@@ -133,7 +156,8 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
                    self.toggleOverlayList, 
                    self.togglePlotList,
                    self.toggleHistogramToolBar,
-                   self.toggleHistogramControl]
+                   self.toggleHistogramControl,
+                   self.toggleHistogramOverlay]
 
         names = [a.__name__ if a is not None else None for a in actions]
 
@@ -229,3 +253,31 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         nvals = hs.getNumHistogramValues()
         if   self.histType == 'count':       return xdata, ydata
         elif self.histType == 'probability': return xdata, ydata / nvals
+
+
+    def __selectedOverlayChanged(self, *a):
+        """Called when the :class:`.OverlayList` or the
+        :attr:`.DisplayContext.selectedOverlay` changes. Configures the
+        :meth:`toggleHistogramOverlay` action.
+        """
+
+        overlay = self._displayCtx.getSelectedOverlay()
+        oldHs   = self.__currentHs
+        newHs   = self.getDataSeries(overlay)
+        enable  = (overlay is not None) and \
+                  (newHs   is not None) and \
+                  isinstance(overlay, fslimage.Image)
+
+        self.toggleHistogramOverlay.enabled = enable
+
+        if not enable or (oldHs is newHs):
+            return
+
+        self.__currentHs = newHs
+
+        if oldHs is not None:
+            self.toggleHistogramOverlay.unbindProps(
+                'toggled', oldHs, 'showOverlay')
+
+        self.toggleHistogramOverlay.bindProps(
+            'toggled', newHs, 'showOverlay') 
