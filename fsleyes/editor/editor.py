@@ -180,9 +180,14 @@ class Editor(actions.ActionProvider):
         self.__selection.clearSelection()
 
         if (not self.__recordSelection) and self.__recordChanges:
+            
             old, new, offset = self.__selection.getLastChange()
-            change = SelectionChange(self.__image, offset, old, new)
-            self.__changeMade(change) 
+
+            # getLastChange will return None
+            # if there is no last change
+            if old is not None:
+                change = SelectionChange(self.__image, offset, old, new)
+                self.__changeMade(change) 
 
 
     def fillSelection(self, newVals):
@@ -387,9 +392,10 @@ class Editor(actions.ActionProvider):
             return
 
         old, new, offset = self.__selection.getLastChange()
-        
-        change = SelectionChange(self.__image, offset, old, new)
-        self.__changeMade(change)
+
+        if old is not None:
+            change = SelectionChange(self.__image, offset, old, new)
+            self.__changeMade(change)
 
         
     def __changeMade(self, change):

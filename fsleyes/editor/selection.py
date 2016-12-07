@@ -281,6 +281,10 @@ class Selection(notifier.Notifier):
         """Clears (sets to 0) the entire selection, or the selection specified
         by the ``restrict`` parameter, if it is given.
 
+        .. note:: Calling this method when the selection is already empty 
+                  will clear the most recently stored change - see
+                  :meth:`getLastChange`.
+
         :arg restrict: An optional sequence of three ``slice`` objects,
                        specifying the portion of the selection to clear.
 
@@ -324,6 +328,9 @@ class Selection(notifier.Notifier):
          - A ``numpy.uint8`` array containing the new block value
          - Voxel coordinates denoting the block location in the full
            :attr:`selection` array.
+
+        If there is no stored change this method will return ``(None, None,
+        None)`` (see also the note in :meth:`clearSelection`).
         """
 
         return (self.__lastChangeOldBlock,

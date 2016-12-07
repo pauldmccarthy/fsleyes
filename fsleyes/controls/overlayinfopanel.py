@@ -19,8 +19,8 @@ now.
 
 
 import logging
-
 import collections
+import string
 
 import wx
 
@@ -68,9 +68,10 @@ if not USE_HTML2:
             wxhtml.HtmlWindow.SetPage(self, html)
 
 
-def terminateString(string):
+def terminateString(s):
     """Given an ASCII string (or a ``numpy`` array containing one),
-    returns that string as a python string, correctly null-terminated.
+    returns that string as a python string, correctly null-terminated,
+    and with non-printable characters removed.
 
 
     .. note:: This function is used to sanitise some NIFTI header fields.
@@ -87,8 +88,10 @@ def terminateString(string):
               followed by the remainder of the original string.
     """
 
-    try:    return str(string).partition(b'\0')[0]
-    except: return str(string)
+    try:    s = str(s).partition(b'\0')[0]
+    except: s = str(s)
+
+    return ''.join([c for c in s if c in string.printable])
 
 
 class OverlayInfoPanel(fslpanel.FSLeyesPanel):
