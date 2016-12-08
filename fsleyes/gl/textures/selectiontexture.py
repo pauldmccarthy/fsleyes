@@ -150,7 +150,7 @@ class SelectionTexture(texture.Texture):
         
         old, new, offset = self.__selection.getLastChange()
 
-        if old is None or new is None:
+        if new is None:
             data   = self.__selection.getSelection()
             offset = [0, 0, 0]
         else:

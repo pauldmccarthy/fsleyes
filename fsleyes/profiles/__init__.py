@@ -219,7 +219,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     .. note:: The ``MouseEnter`` and ``MouseLeave`` events are not supported
               on :class:`.PlotPanel` views due to bugs in ``matplotlib``.
 
-    
+
     For example, if a particular profile has defined a mode called ``nav``,
     and is interested in left clicks, the profile class must provide a method
     called ``_navModeLeftMouseDown``. Then, whenever the profile is in the
@@ -230,6 +230,18 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     handled, or ``False``  if the event was not handled. This is particularly
     important for ``Char`` event handlers - we don't want ``Profile``
     sub-classes to be eating global keyboard shortcuts.
+
+    
+    A couple of other methods may be defined which, if they are present, will
+    be called on all handled events:
+
+     - ``_preEvent``
+     - ``_postEvent``
+
+    The ``_preEvent`` method will get called just before an event is passed
+    to the handler. Likewise, the ``_postEvent`` method will get called
+    just after the handler has been called. If a handler for a particular
+    event is not defined, neither of these methods will be called.
 
     
     The :mod:`.profilemap` module contains a ``tempModeMap`` which, for each
@@ -335,11 +347,25 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         # were in on mosue down events,
         # so the correct mode is called
         # on subsequent drag/up events.
-        self.__mouseDownMode    = None 
+        self.__mouseDownMode    = None
+
+        # This field is used to keep
+        # trackd of the last event for
+        # which a handler was called.
+        # After the first event, it
+        # will be a tuple of strings
+        # containing the (mode, event),
+        # e.g. ('nav', 'LeftMouseMove').
+        # This is set in the __getHandler
+        # method.
+        self.__lastHandler = (None, None)
+
+        # Pre/post event handlers
+        self.__preEventHandler  = getattr(self, '_preEvent',  None)
+        self.__postEventHandler = getattr(self, '_postEvent', None)
 
         # Add all of the provided modes
         # as options to the mode property
- 
         if modes is None:
             modes = []
 
@@ -441,6 +467,14 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         coordinates, and the corresponding 3D display space coordinates. 
         """
         return self.__lastMouseUpPos, self.__lastCanvasUpPos
+
+
+    def getLastHandler(self):
+        """Returns a tuple of two strings specifying the ``(mode, eventType)``
+        of the most recent event that was handled. If no events have been
+        handled, returns ``(None, None)``.
+        """
+        return self.__lastHandler
 
  
     def getLastCanvas(self):
@@ -658,10 +692,27 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
         handler = getattr(self, handlerName, None)
 
+        def handlerWrapper(*args, **kwargs):
+
+            # We want current handlers to be
+            # able to access the last event
+            # which occurred. So we call the
+            # current handler, then update
+            # the lastHandler attribute.
+            if self.__preEventHandler is not None:
+                self.__preEventHandler(mode, evType)
+                
+            handler(*args, **kwargs)
+
+            if self.__postEventHandler is not None:
+                self.__postEventHandler(mode, evType) 
+            
+            self.__lastHandler = (mode, evType)
+
         if handler is not None:
             log.debug('Handler found for mode {}, event {}'.format(
                 mode, evType))
-            return handler
+            return handlerWrapper
 
         return None
 

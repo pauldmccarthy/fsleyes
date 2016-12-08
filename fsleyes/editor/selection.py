@@ -293,7 +293,7 @@ class Selection(notifier.Notifier):
         """
 
         if self.__clear:
-            self.__clearChange()
+            self.setChange(None, None)
             return
 
         fRestrict = self.__fixSlices(restrict)
@@ -338,12 +338,13 @@ class Selection(notifier.Notifier):
                 self.__lastChangeOffset)
 
 
-    def __clearChange(self):
-        """Clears the most recent change that was made to this ``Selection``. 
+    def setChange(self, block, offset, oldBlock=None):
+        """Sets/overwrites the most recently saved change made to this
+        ``Selection``.
         """
-        self.__lastChangeOldBlock = None
-        self.__lastChangeNewBlock = None
-        self.__lastChangeOffset   = None
+        self.__lastChangeOldBlock = oldBlock
+        self.__lastChangeNewBlock = block 
+        self.__lastChangeOffset   = offset
 
 
     def __storeChange(self, old, new, offset, combine=False):
@@ -365,7 +366,7 @@ class Selection(notifier.Notifier):
         # is no previously stored change).
         # We store the change, replacing
         # the previous one.
-        if (not combine) or (self.__lastChangeOldBlock is None):
+        if (not combine) or (self.__lastChangeNewBlock is None):
 
             if log.getEffectiveLevel() == logging.DEBUG:
                 log.debug('Replacing previously stored change with: '
@@ -385,6 +386,11 @@ class Selection(notifier.Notifier):
         lcOld     = self.__lastChangeOldBlock
         lcNew     = self.__lastChangeNewBlock
         lcOffset  = self.__lastChangeOffset
+
+        # The old block might be None, which
+        # implies all zeros
+        if lcOld is None:
+            lcOld = np.zeros(lcNew.shape, dtype=lcNew.dtype)
 
         # Calculate/organise low/high indices
         # for each change set:
@@ -516,6 +522,9 @@ class Selection(notifier.Notifier):
 
         :arg combine:      Combine with the previous stored change (see
                            :meth:`__storeChange`).
+
+        :returns: The generated selection array (a ``numpy`` boolean array),
+                  and offset of this array into the full selection image.
         """
 
         if precision is not None and precision < 0:
@@ -650,6 +659,8 @@ class Selection(notifier.Notifier):
             hits      = hits == seedLabel
 
         self.replaceSelection(hits, searchOffset, combine)
+
+        return hits, searchOffset
 
     
     def transferSelection(self, destImg, destDisplay):
