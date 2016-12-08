@@ -269,6 +269,15 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__yselAnnotation    = None
         self.__zselAnnotation    = None
 
+        # A few performance optimisations are made
+        # when in selint mode and limitToRadius is
+        # active - the __record/__getSelectionMerger
+        # methods populate these fields.
+        self.__mergeMode   = None
+        self.__mergeBlock  = None
+        self.__merge3D     = None
+        self.__mergeRadius = None
+
         # The targetImage/intensityThres/
         # intensityThresLimit property values
         # are cached on a per-overlay basis.
@@ -570,7 +579,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
 
         # The only possible profile modes 
-        # when rawMode==True are sel/desel.
+        # when drawMode==True are sel/desel.
         if self.drawMode and self.mode not in ('nav', 'sel', 'desel'):
             self.mode = 'sel'
 
@@ -1064,37 +1073,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # Queue the cursors
         for cursor, canvas in zip(cursors, canvases):
             canvas.getAnnotations().obj(cursor)
-            
-
-    def __applySelection(self, canvas, voxel, add=True):
-        """Called by ``sel`` mode mouse handlers. Adds/removes a block
-        of voxels, centred at the specified voxel, to/from the current
-        :class:`.Selection`.
-
-        :arg canvas: The source :class:`.SliceCanvas`.
-        :arg voxel:  Coordinates of centre voxel.
-        :arg add:    If ``True`` a block is added to the selection,
-                     otherwise it is removed.
-        """
-
-        if self.selectionIs3D: axes = (0, 1, 2)
-        else:                  axes = (canvas.xax, canvas.yax)
-
-        overlay   = self.__currentOverlay
-        editor    = self.__editors[overlay]
-        selection = editor.getSelection()
-        blockSize = self.selectionSize * np.min(overlay.pixdim)
-
-        block, offset = glroutines.voxelBlock(
-            voxel,
-            overlay.shape,
-            overlay.pixdim,
-            blockSize,
-            axes=axes,
-            bias='high')
-
-        if add: selection.addToSelection(     block, offset)
-        else:   selection.removeFromSelection(block, offset)
 
 
     def __refreshCanvases(self):
@@ -1150,6 +1128,138 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         else:
             canvas.Refresh()
+            
+
+    def __applySelection(self, canvas, voxel, add=True):
+        """Called by ``sel`` mode mouse handlers. Adds/removes a block
+        of voxels, centred at the specified voxel, to/from the current
+        :class:`.Selection`.
+
+        :arg canvas: The source :class:`.SliceCanvas`.
+        :arg voxel:  Coordinates of centre voxel.
+        :arg add:    If ``True`` a block is added to the selection,
+                     otherwise it is removed.
+        """
+
+        if self.selectionIs3D: axes = (0, 1, 2)
+        else:                  axes = (canvas.xax, canvas.yax)
+
+        overlay   = self.__currentOverlay
+        editor    = self.__editors[overlay]
+        selection = editor.getSelection()
+        blockSize = self.selectionSize * np.min(overlay.pixdim)
+
+        block, offset = glroutines.voxelBlock(
+            voxel,
+            overlay.shape,
+            overlay.pixdim,
+            blockSize,
+            axes=axes,
+            bias='high')
+
+        if add: selection.addToSelection(     block, offset)
+        else:   selection.removeFromSelection(block, offset)
+
+        if add: self.__recordSelectionMerger('sel',   offset, block.shape)
+        else:   self.__recordSelectionMerger('desel', offset, block.shape)
+
+
+    def __recordSelectionMerger(self, mode, offset, size):
+        """This method is called whenever a change is made to the
+        :class:`.Selection` object. It stores some information which is used
+        to improve subsequent selection performance when in ``selint`` mode,
+        and when :attr:`limitToRadius` is ``True``.
+
+        
+        Basically, if the current selection is limited by radius, and a new,
+        similarly limited selection is made, we do not need to clear the
+        entire selection before making the new selection - we just need to
+        clear the cuboid region in which the previous selection was located.
+
+
+        This behaviour is referred to as a 'merge' because, ultimately, the
+        region of the first selection is merged with the region of the second
+        selection, and only this part of the ``Selection`` image is refreshed.
+
+        
+        This method (and the :meth:`__getSelectionMerger` method) contains some
+        simple, but awkward, logic which figures out when a merge can happen
+        and, conversely, when the full selection does need to be cleared.
+
+        
+        :arg offset: Offset into the selection array of the change.
+        :arg size:   Shape of the change.
+        """
+
+        # If the user has manually selected anything,
+        # we can't merge 
+        if self.__mergeMode == 'sel':
+            return
+
+        self.__mergeMode   = mode
+        self.__merge3D     = self.selectionIs3D
+        self.__mergeRadius = self.limitToRadius
+
+        # We only care about merging
+        # selint+radius blocks
+        if mode == 'selint' and self.__mergeRadius:
+            self.__mergeBlock  = offset, size
+
+
+    def __getSelectionMerger(self):
+        """This method is called just before a select-by-intensity selection
+        is about to happen. It rteturns one of three values:
+
+          - The string ``'clear'``, indicating that the whole selection (or
+            the whole slice, if :attr:`selectionIs3D` is ``False``) needs to
+            be cleared.
+        
+          - The value ``None`` indicating that the selection does not need to
+            be cleared, and a merge does not need to be made.
+        
+          - A tuple containing the ``(offset, size)`` of a previous change
+            to the selection, specifying the portion of the selection which
+            needs to be cleared, and which can be subsequently merged with
+            a new selection.
+        """
+
+        try:
+            # If not limiting by radius, the new
+            # selectByValue call will clobber the
+            # old selection, so we don't need to
+            # merge or clear it.
+            if not self.limitToRadius:
+                return None
+
+            # If the user was selecting voxels,
+            # we don't know where those selected
+            # voxels are, so we have to clear
+            # the full selection.
+            if self.__mergeMode == 'sel':
+                return 'clear'
+
+            # If the user was just deselecting,
+            # we can merge the old block
+            if self.__mergeMode == 'desel':
+                return self.__mergeBlock
+
+            # If the user was in 2D, but is now
+            # in 3D, we have to clear the whole
+            # selection. Similarly, if the user
+            # was not limiting by radius, but
+            # now is, we have to clear.
+            if (not self.__merge3D)     and self.selectionIs3D: return 'clear'
+            if (not self.__mergeRadius) and self.limitToRadius: return 'clear'
+
+            # Otherwise we can merge the old
+            # selection with the new selection.
+            return self.__mergeBlock
+        
+        finally:
+            self.__mergeMode   = None
+            self.__merge3D     = None
+            self.__mergeRadius = None
+            self.__mergeBlock  = None
 
 
     def _selModeMouseMove(self, ev, canvas, mousePos, canvasPos):
@@ -1167,11 +1277,25 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         return voxel is not None
 
 
-    def _selModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
+    def _selModeLeftMouseDown(self,
+                              ev,
+                              canvas,
+                              mousePos,
+                              canvasPos,
+                              add=True,
+                              mode='sel'):
         """Handles mouse down events in ``sel`` mode.
 
         Starts an :class:`.Editor` change group, and adds to the current
         :class:`Selection`.
+
+        This method is also used by :meth:`_deselModeLeftMouseDown`, which
+        may set the ``add`` parameter to ``False``.
+
+        :arg add:  If ``True`` (default) a block at the cursor is added to the
+                   selection. Otherwise it is removed.
+
+        :arg mode: The current profile mode (defaults to ``'sel'``).
         """
         if self.__currentOverlay is None:
             return False
@@ -1179,41 +1303,68 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         voxel = self.__getVoxelLocation(canvasPos)
 
         if voxel is not None:
-            self.__applySelection(      canvas, voxel)
+            self.__applySelection(      canvas, voxel, add=add)
             self.__drawCursorAnnotation(canvas, voxel)
             self.__dynamicRefreshCanvases(ev,  canvas, mousePos, canvasPos)
+ 
 
         return voxel is not None
 
 
-    def _selModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
+    def _selModeLeftMouseDrag(self,
+                              ev,
+                              canvas,
+                              mousePos,
+                              canvasPos,
+                              add=True,
+                              mode='sel'):
         """Handles mouse drag events in ``sel`` mode.
 
         Adds to the current :class:`Selection`.
-        """        
+
+        This method is also used by :meth:`_deselModeLeftMouseDown`, which
+        may set the ``add`` parameter to ``False``. 
+        
+        :arg add:  If ``True`` (default) a block at the cursor is added to the
+                   selection. Otherwise it is removed.
+
+        :arg mode: The current profile mode (defaults to ``'sel'``).
+        """ 
         voxel = self.__getVoxelLocation(canvasPos)
 
         if voxel is not None:
-            self.__applySelection(      canvas, voxel)
+            self.__applySelection(      canvas, voxel, add=add)
             self.__drawCursorAnnotation(canvas, voxel)
             self.__dynamicRefreshCanvases(ev,  canvas, mousePos, canvasPos)
 
         return voxel is not None
 
 
-    def _selModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
+    def _selModeLeftMouseUp(
+            self, ev, canvas, mousePos, canvasPos, fillValue=None):
         """Handles mouse up events in ``sel`` mode.
 
         Ends the :class:`.Editor` change group that was started in the
         :meth:`_selModeLeftMouseDown` method.
+
+        This method is also used by :meth:`_deselModeLeftMouseUp`, which
+        sets ``fillValue`` to :attr:`eraseValue`.
+
+        :arg fillValue: If :attr:`drawMode` is ``True``, the value to
+                        fill the selection with. If not provided, defaults
+                        to :attr:`fillValue`.
         """
+        
         if self.__currentOverlay is None:
             return False
         
         editor = self.__editors[self.__currentOverlay]
         
         if self.drawMode:
-            editor.fillSelection(self.fillValue)
+            if fillValue is None:
+                fillValue = self.fillValue
+
+            editor.fillSelection(fillValue)
             editor.ignoreChanges()
             editor.clearSelection()
             editor.recordChanges()
@@ -1230,7 +1381,42 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         
         self.__dynamicRefreshCanvases(ev, canvas)
 
-            
+    
+    def _deselModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
+        """Handles mouse down events in ``desel`` mode.
+
+        Calls :meth:`_selModeLeftMouseDown`.
+        """
+        self._selModeLeftMouseDown(ev,
+                                   canvas,
+                                   mousePos,
+                                   canvasPos,
+                                   add=self.drawMode,
+                                   mode='desel')
+
+
+    def _deselModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
+        """Handles mouse drag events in ``desel`` mode.
+
+        Calls :meth:`_selModeLeftMouseDrag`.
+        """
+        self._selModeLeftMouseDrag(ev,
+                                   canvas,
+                                   mousePos,
+                                   canvasPos,
+                                   add=self.drawMode,
+                                   mode='desel')
+
+        
+    def _deselModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
+        """Handles mouse up events in ``desel`` mode.
+
+        Calls :meth:`_selModeLeftMouseUp`.
+        """
+        self._selModeLeftMouseUp(
+            ev, canvas, mousePos, canvasPos, fillValue=self.eraseValue)
+
+
     def _chsizeModeMouseWheel(self, ev, canvas, wheelDir, mousePos, canvasPos):
         """Handles mouse wheel events in ``chsize`` mode.
 
@@ -1252,77 +1438,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__dynamicRefreshCanvases(ev, canvas)
 
         async.idle(update, timeout=0.1)
-
-        return True
-
-    
-    def _chsizeModeChar(self, ev, canvas, key):
-        """Handles keyboard events in ``chsize`` mode. Up/down arrow key
-        presses increase/decrease the :attr:`selectionSize` respectively.
-        """
-
-        if   key == wx.WXK_UP:   wheelDir =  1
-        elif key == wx.WXK_DOWN: wheelDir = -1
-        else:                    return False
-
-        mousePos, canvasPos = self.getLastMouseLocation()
-
-        return self._chsizeModeMouseWheel(
-            ev, canvas, wheelDir, mousePos, canvasPos)
-
-        
-    def _deselModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
-        """Handles mouse down events in ``desel`` mode.
-
-        Starts an :class:`.Editor` change group, and removes from the current
-        :class:`Selection`.        
-        """
-        if self.__currentOverlay is None:
-            return False
-        
-        voxel = self.__getVoxelLocation(canvasPos)
-
-        if voxel is not None:
-            self.__applySelection(      canvas, voxel, self.drawMode)
-            self.__drawCursorAnnotation(canvas, voxel)
-            self.__dynamicRefreshCanvases(ev,  canvas, mousePos, canvasPos)
-
-        return voxel is not None
-
-
-    def _deselModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
-        """Handles mouse drag events in ``desel`` mode.
-
-        Removes from the current :class:`Selection`.        
-        """ 
-        voxel = self.__getVoxelLocation(canvasPos)
-        
-        if voxel is not None:
-            self.__applySelection(      canvas, voxel, self.drawMode)
-            self.__drawCursorAnnotation(canvas, voxel)
-            self.__dynamicRefreshCanvases(ev,  canvas, mousePos, canvasPos)
-
-        return voxel is not None
-
-        
-    def _deselModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
-        """Handles mouse up events in ``desel`` mode.
-
-        Ends the :class:`.Editor` change group that was started in the
-        :meth:`_deselModeLeftMouseDown` method.
-        """
-        if self.__currentOverlay is None:
-            return False
-        
-        editor = self.__editors[self.__currentOverlay]
-        
-        if self.drawMode:
-            editor.fillSelection(self.eraseValue)
-            editor.ignoreChanges()
-            editor.clearSelection()
-            editor.recordChanges()
-        
-        self.__refreshCanvases()
 
         return True
 
@@ -1373,9 +1488,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         the seed location.
 
         Called by the :meth:`_selintModeLeftMouseDown`,
-        :meth:`_selintModeLeftMouseDrag`, and and
-        :meth:`_selintModeLeftMouseWheel` methods.  See
-        :meth:`.Selection.selectByValue`.
+        :meth:`_selintModeLeftMouseDrag`, 
+        :meth:`_selintModeLeftMouseWheel`, and :meth:`__selintPropertyChanged`
+        methods.  See :meth:`.Selection.selectByValue`.
         """
         
         overlay = self.__currentOverlay
@@ -1385,7 +1500,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         editor = self.__editors[self.__currentOverlay]
         
-        if not self.limitToRadius or self.searchRadius == 0:
+        if not self.limitToRadius:
             searchRadius = None
         else:
             searchRadius = (self.searchRadius / overlay.pixdim[0],
@@ -1399,35 +1514,71 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             restrict      = [slice(None, None, None) for i in range(3)]
             restrict[zax] = slice(voxel[zax], voxel[zax] + 1)
 
-        # Clear the whole selection before
-        # selecting voxels. This is not
-        # necessary if we are not limiting
-        # to a search radius, as the
-        # selectByValue method will
-        # replace the selection in the
-        # search region (either the whole
-        # image, or the current slice).
-        if searchRadius is not None:
+        # We may need to manually clear part or all
+        # of the selection before running the select
+        # by value routine. The get/recordSelectionMerger
+        # methods take care of the logic needed to
+        # figure out what we need to do.
+        selection = editor.getSelection()
+        merge     = self.__getSelectionMerger()
 
-            # By default the editor records
-            # selection clears in the change
-            # history. Tell itd not to for
-            # this one.
-            editor.ignoreChanges()
-            editor.clearSelection()
-            editor.recordChanges()
+        # The whole selection/slice needs clearing.
+        # We suppress any notification by the Selection
+        # object at this point - notification will
+        # happen via the selectByValue method call below.
+        if merge == 'clear':
+            with selection.skipAll():
+                selection.clearSelection(restrict=restrict)
 
-        editor.getSelection().selectByValue(
+        # We only need to clear a region 
+        # within the selection
+        elif merge is not None:
+
+            # Note that we are telling the
+            # selectByValuem method below 
+            # 'combine' any previous selection
+            # change with the new one, This
+            # means that the entire selection
+            # image is going to be replaced
+            with selection.skipAll():
+
+                # If we're in 2D mode, we just clear
+                # the whole slice, as it should be fast
+                # enough.
+                if not self.selectionIs3D:
+                     
+                    selection.clearSelection(restrict=restrict)
+
+                # Otherwise we just clear the region
+                else:
+                    off, size  = merge
+                    clearBlock = [slice(o, o + s) for o, s in zip(off, size)]
+
+                    selection.clearSelection(restrict=clearBlock)
+
+        # The 'combine' flag tells the selection object
+        # to merge the last change (the clearSelection
+        # call above) with the new change, so that the
+        # Selection.getLastChange method will return
+        # the union of those two regions.
+        #
+        # This is important, because the SelectionTexture
+        # object, which is listening to changes on the
+        # Selection object, will only need to update that
+        # part of the GL texture.
+        selected, offset = selection.selectByValue(
             voxel,
             precision=self.intensityThres,
             searchRadius=searchRadius,
             local=self.localFill,
             restrict=restrict,
-            combine=True)
+            combine=merge is not None)
+
+        self.__recordSelectionMerger('selint', offset, selected.shape)
 
         return True
 
-        
+
     def _selintModeMouseMove(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse motion events in ``selint`` mode. Draws a selection
         annotation at the current location (see
@@ -1474,7 +1625,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if voxel is not None:
             
             refreshArgs = (ev, canvas, mousePos, canvasPos)
-            
+
             self.__drawCursorAnnotation(canvas, voxel, 1)
             self.__selintSelect(voxel, canvas)
             self.__dynamicRefreshCanvases(*refreshArgs)
@@ -1514,21 +1665,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         
         return True
 
-
-    def _chthresModeChar(self, ev, canvas, key):
-        """Handles keyboard events in ``chthres`` mode. Up/down arrow key
-        presses increase/decrease the :attr:`intensityThres` respectively.
-        """
-
-        if   key == wx.WXK_UP:   wheelDir =  1
-        elif key == wx.WXK_DOWN: wheelDir = -1
-        else:                    return False
-
-        mousePos, canvasPos = self.getLastMouseLocation()
-
-        return self._chthresModeMouseWheel(
-            ev, canvas, wheelDir, mousePos, canvasPos)
-
                 
     def _chradModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
         """Handles mouse wheel events in ``chrad`` mode.
@@ -1545,18 +1681,3 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.searchRadius += offset
 
         return True
-
-
-    def _chradModeChar(self, ev, canvas, key):
-        """Handles keyboard events in ``chrad`` mode. Up/down arrow key
-        presses increase/decrease the :attr:`searchRadius` respectively.
-        """
-
-        if   key == wx.WXK_UP:   wheelDir =  1
-        elif key == wx.WXK_DOWN: wheelDir = -1
-        else:                    return False
-
-        mousePos, canvasPos = self.getLastMouseLocation()
-
-        return self._chradModeMouseWheel(
-            ev, canvas, wheelDir, mousePos, canvasPos) 
