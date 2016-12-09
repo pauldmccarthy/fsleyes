@@ -435,7 +435,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         editor = self.__editors[self.__currentOverlay]
 
-        editor.clearSelection()
+        editor.getSelection().clearSelection()
         
         self.__refreshCanvases()
 
@@ -593,7 +593,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.eraseSelection.enabled = not self.drawMode
 
         if self.__currentOverlay is not None:
-            self.__editors[self.__currentOverlay].clearSelection()
+            editor = self.__editors[self.__currentOverlay]
+            editor.getSelection().clearSelection()
             self.__refreshCanvases()
             
         self.__updateTargetImage()
@@ -1506,6 +1507,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
 
         if self.__currentOverlay is None:
+            return
+
+        # If the last mouse up was not
+        # select-by-intensity, don't
+        # adjust the selection
+        if self.getLastMouseUpHandler()[0] != 'selint':
             return
 
         mousePos, canvasPos = self.getLastMouseUpLocation()

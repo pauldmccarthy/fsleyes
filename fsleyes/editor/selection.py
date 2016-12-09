@@ -619,8 +619,6 @@ class Selection(notifier.Notifier):
                       :meth:`__storeChange`).
         """
 
-        block = np.array(block, dtype=np.uint8)
-
         if block.size == 0:
             return
 
@@ -634,7 +632,7 @@ class Selection(notifier.Notifier):
 
         self.__storeChange(
             np.array(self.__selection[xlo:xhi, ylo:yhi, zlo:zhi]),
-            np.array(block),
+            np.array(block, dtype=np.uint8),
             offset,
             combine)
 

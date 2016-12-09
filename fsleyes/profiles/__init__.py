@@ -350,7 +350,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         self.__mouseDownMode    = None
 
         # This field is used to keep
-        # trackd of the last event for
+        # track of the last event for
         # which a handler was called.
         # After the first event, it
         # will be a tuple of strings
@@ -358,7 +358,13 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         # e.g. ('nav', 'LeftMouseMove').
         # This is set in the __getHandler
         # method.
-        self.__lastHandler = (None, None)
+        #
+        # The lastMouseUpHandler field
+        # is set in __onMouseUp, to
+        # keep track of the last mouse
+        # handler
+        self.__lastHandler        = (None, None)
+        self.__lastMouseUpHandler = (None, None)
 
         # Pre/post event handlers
         self.__preEventHandler  = getattr(self, '_preEvent',  None)
@@ -467,6 +473,14 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         coordinates, and the corresponding 3D display space coordinates. 
         """
         return self.__lastMouseUpPos, self.__lastCanvasUpPos
+
+    
+    def getLastMouseUpHandler(self):
+        """Returns a tuple of two strings specifying the ``(mode, eventType)``
+        of the most recent mouse up event that was handled. If no events have
+        been handled, returns ``(None, None)``.
+        """
+        return self.__lastMouseUpHandler 
 
 
     def getLastHandler(self):
@@ -852,11 +866,12 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         if handler(ev, canvas, mouseLoc, canvasLoc) is False:
             ev.Skip()
 
-        self.__mouseDownPos    = None
-        self.__canvasDownPos   = None
-        self.__mouseDownMode   = None
-        self.__lastMouseUpPos  = mouseLoc
-        self.__lastCanvasUpPos = canvasLoc
+        self.__mouseDownPos       = None
+        self.__canvasDownPos      = None
+        self.__mouseDownMode      = None
+        self.__lastMouseUpPos     = mouseLoc
+        self.__lastCanvasUpPos    = canvasLoc
+        self.__lastMouseUpHandler = (self.__mouseDownMode, evType)
 
 
     def __onMouseMove(self, ev):
