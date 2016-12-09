@@ -290,9 +290,12 @@ class Editor(actions.ActionProvider):
 
     @actions.action
     def undo(self):
-        """Un-does the most recent change. """
+        """Un-does the most recent change.  Returns a list containing all
+        change objects that were undone - either :class:`ValueChange` or 
+        :class:`SelectionChange` objects.
+        """
         if self.__doneIndex == -1:
-            return
+            return []
 
         log.debug('{}: undo change {} of {}'.format(
             self.__image.name,
@@ -313,13 +316,18 @@ class Editor(actions.ActionProvider):
         self.redo.enabled = True
         if self.__doneIndex == -1:
             self.undo.enabled = False
+
+        return change
         
 
     @actions.action
     def redo(self):
-        """Re-does the most recent undone change. """
+        """Re-does the most recent undone change.  Returns a list containing
+        all change objects that were undone - either :class:`ValueChange` or 
+        :class:`SelectionChange` objects.
+        """
         if self.__doneIndex == len(self.__doneList) - 1:
-            return
+            return []
 
         log.debug('{}: redo change {} of {}'.format(
             self.__image.name,
@@ -340,6 +348,8 @@ class Editor(actions.ActionProvider):
         self.undo.enabled = True
         if self.__doneIndex == len(self.__doneList) - 1:
             self.redo.enabled = False
+
+        return change
 
 
     def copySelection(self):
@@ -502,6 +512,9 @@ class Editor(actions.ActionProvider):
         """
 
         sliceobjs = []
+
+        offset = [int(o) for o in offset]
+        shape  = [int(s) for s in shape]
 
         for i in range(len(offset)):
             sliceobjs.append(slice(offset[i], offset[i] + shape[i], 1))

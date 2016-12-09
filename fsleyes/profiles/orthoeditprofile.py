@@ -547,9 +547,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # notification, and then manually refresh the texture
         # afterwards
         with editor.getSelection().skipAll():
-            editor.undo()
-        
-        self.__xselAnnotation.texture.refresh()
+            change = editor.undo()
+
+        if any([isinstance(c, fsleditor.SelectionChange) for c in change]):
+            self.__xselAnnotation.texture.refresh()
+            
         self.__refreshCanvases()
 
 
@@ -564,12 +566,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         editor = self.__editors[self.__currentOverlay]
 
-        # See comment in undo method 
-        # about disabling notification
         with editor.getSelection().skipAll():
-            editor.redo()
+            change = editor.redo()
+
+        if any([isinstance(c, fsleditor.SelectionChange) for c in change]):
+            self.__xselAnnotation.texture.refresh() 
         
-        self.__xselAnnotation.texture.refresh()
         self.__refreshCanvases()
 
 
@@ -1130,15 +1132,29 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             canvas.Refresh()
             
 
-    def __applySelection(self, canvas, voxel, add=True, combine=False):
+    def __applySelection(self,
+                         canvas,
+                         voxel,
+                         add=True,
+                         combine=False,
+                         from_=None):
         """Called by ``sel`` mode mouse handlers. Adds/removes a block
         of voxels, centred at the specified voxel, to/from the current
         :class:`.Selection`.
 
-        :arg canvas: The source :class:`.SliceCanvas`.
-        :arg voxel:  Coordinates of centre voxel.
-        :arg add:    If ``True`` a block is added to the selection,
-                     otherwise it is removed.
+        :arg canvas:  The source :class:`.SliceCanvas`.
+        
+        :arg voxel:   Coordinates of centre voxel.
+        
+        :arg add:     If ``True`` a block is added to the selection,
+                      otherwise it is removed.
+        
+        :arg combine: Tell the :class:`.Selection` object to combine this
+                      change with the most recent one.
+
+        :arg from_:   If provided, use the :meth:`.Selection.selectLine`
+                      or :meth:`.Selection.deselectLine` methods - should
+                      be another voxel coordinate.
         """
 
         if self.selectionIs3D: axes = (0, 1, 2)
@@ -1149,16 +1165,25 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         selection = editor.getSelection()
         blockSize = self.selectionSize * np.min(overlay.pixdim)
 
-        block, offset = glroutines.voxelBlock(
-            voxel,
-            overlay.shape,
-            overlay.pixdim,
-            blockSize,
-            axes=axes,
-            bias='high')
+        if from_ is not None:
+            
+            args = (from_, voxel, blockSize, axes, 'high', combine)
+            
+            if add: block, offset = selection.selectLine(  *args)
+            else:   block, offset = selection.deselectLine(*args)
 
-        if add: selection.addToSelection(     block, offset, combine)
-        else:   selection.removeFromSelection(block, offset, combine)
+        else:
+
+            block, offset = glroutines.voxelBlock(
+                voxel,
+                overlay.shape,
+                overlay.pixdim,
+                blockSize,
+                axes=axes,
+                bias='high')
+            
+            if add: selection.addToSelection(     block, offset, combine)
+            else:   selection.removeFromSelection(block, offset, combine)
 
         if add: self.__recordSelectionMerger('sel',   offset, block.shape)
         else:   self.__recordSelectionMerger('desel', offset, block.shape)
@@ -1299,21 +1324,19 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
         if self.__currentOverlay is None:
             return False
-
-        if self.drawMode:
-
-            # If in immediate draw mode, we clear
-            # the Selection object's most recent
-            # saved change - all additions to the
-            # selection during this click+drag
-            # event are merged together (by using
-            # the combine flag to addToSelection -
-            # see __applySelection). Then, on the
-            # up event, we know what part of the
-            # selection needs to be refreshed.
-            selection = self.__editors[self.__currentOverlay].getSelection()
-            selection.setChange(None, None)
-
+        
+        # We clear the Selection object's most
+        # recent saved change - all additions
+        # to the selection during this click+drag
+        # event are merged together (by using
+        # the combine flag to addToSelection -
+        # see __applySelection). Then, if we are
+        # in immediate draw mode, on the
+        # up event, we know what part of the
+        # selection needs to be refreshed.
+        selection = self.__editors[self.__currentOverlay].getSelection()
+        selection.setChange(None, None)
+            
         voxel = self.__getVoxelLocation(canvasPos)
 
         if voxel is not None:
@@ -1347,7 +1370,15 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         voxel = self.__getVoxelLocation(canvasPos)
 
         if voxel is not None:
-            self.__applySelection(      canvas, voxel, add=add, combine=True)
+
+            lastPos = self.getLastMouseLocation()[1]
+            lastPos = self.__getVoxelLocation(lastPos)
+            
+            self.__applySelection(      canvas,
+                                        voxel,
+                                        add=add,
+                                        combine=True,
+                                        from_=lastPos)
             self.__drawCursorAnnotation(canvas, voxel)
             self.__dynamicRefreshCanvases(ev,  canvas, mousePos, canvasPos)
 
@@ -1376,8 +1407,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         selection = editor.getSelection()
 
         # Immediate draw mode - fill
-        # the selection, and then
-        # clear the selection.
+        # and clear the selection.
         if self.drawMode:
             
             if fillValue is None:

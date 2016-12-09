@@ -704,6 +704,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
                     if overlay.is4DImage():
                         vloc = vloc + [opts.volume]
 
+                    vloc = [int(v) for v in vloc]
                     vval = overlay[tuple(vloc)] 
                     vloc = ' '.join(map(str, vloc))
 

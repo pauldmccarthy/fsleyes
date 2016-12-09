@@ -265,12 +265,12 @@ class Selection(notifier.Notifier):
         if len(xs) == 0:
             return np.array([]).reshape(0, 0, 0), (0, 0, 0)
 
-        xlo = xs.min()
-        ylo = ys.min()
-        zlo = zs.min()
-        xhi = xs.max() + 1
-        yhi = ys.max() + 1
-        zhi = zs.max() + 1
+        xlo = int(xs.min())
+        ylo = int(ys.min())
+        zlo = int(zs.min())
+        xhi = int(xs.max() + 1)
+        yhi = int(ys.max() + 1)
+        zhi = int(zs.max() + 1)
 
         selection = self.__selection[xlo:xhi, ylo:yhi, zlo:zhi]
 
@@ -529,7 +529,7 @@ class Selection(notifier.Notifier):
     def selectLine(self,
                    from_,
                    to,
-                   penSize,
+                   boxSize,
                    axes=(0, 1, 2),
                    bias=None,
                    combine=False):
@@ -541,12 +541,46 @@ class Selection(notifier.Notifier):
         See the :func:`selectLine` function for details on the other arguments.
         """
 
-        block, offset = selectLine(0, from_, to, penSize, axes, bias)
+        block, offset = selectLine(self.__selection.shape,
+                                   self.__image.pixdim[:3],
+                                   from_,
+                                   to,
+                                   boxSize,
+                                   axes,
+                                   bias)
 
         self.addToSelection(block, offset, combine)
 
         return block, offset
 
+
+    def deselectLine(self,
+                     from_,
+                     to,
+                     boxSize,
+                     axes=(0, 1, 2),
+                     bias=None,
+                     combine=False):
+        """Deselects a line from ``from_`` to ``to``.
+
+        :arg combine: Combine with the previous stored change (see
+                      :meth:`__storeChange`).
+
+        See the :func:`selectLine` function for details on the other arguments.
+        """
+
+        block, offset = selectLine(self.__selection.shape,
+                                   self.__image.pixdim[:3],
+                                   from_,
+                                   to,
+                                   boxSize,
+                                   axes,
+                                   bias)
+
+        self.removeFromSelection(block, offset, combine)
+
+        return block, offset
+    
     
     def transferSelection(self, destImg, destDisplay):
         """Re-samples the current selection into the destination image
@@ -619,8 +653,8 @@ class Selection(notifier.Notifier):
         specified ``offset``, and of the specified ``size``.
         """
         
-        xlo, ylo, zlo = offset
-        xhi, yhi, zhi = size
+        xlo, ylo, zlo = map(int, offset)
+        xhi, yhi, zhi = map(int, size)
 
         xhi = xlo + size[0]
         yhi = ylo + size[1]
@@ -810,32 +844,53 @@ def selectByValue(data,
     return hits, searchOffset
 
 
-def selectLine(data,
+def selectLine(shape,
+               dims,
                from_,
                to,
-               penSize,
+               boxSize,
                axes=(0, 1, 2),
                bias=None):
-    """
+    """Selects a continuous "line" in an array of the given ``shape``,
+    between the points ``from_`` and ``to``.
 
-    :arg data:
-    :arg from_:
-    :arg to:
-    :arg penSize:
+    :arg shape:   Shape of the image in which the selection is taking place.
+    
+    :arg dims:    Size of one voxel along each axis (the pixdims).
+    
+    :arg from_:   Start point of the line
+    
+    :arg to:      End point of the line
 
     See the :func:`.routines.voxelBlock` function for details on the other
     arguments.
+    
+    :returns: A tuple containing:
+    
+               - A 3D boolean ``numpy`` array containing the selected line.
+               - An offset of this array according to the ``shape`` of the
+                 full image. If the 
     """
     
     from_   = np.array(from_)
     to      = np.array(to)
-    length  = np.sqrt(np.sum(from_ * from_ + to * to))
-    npoints = round(length / penSize)
+    length  = np.sqrt(np.sum((from_ - to) ** 2))
+    npoints = int(np.ceil(length / boxSize))
 
-    xs = np.linspace(from_[0], to[0], npoints).round()
-    ys = np.linspace(from_[1], to[1], npoints).round()
-    zs = np.linspace(from_[2], to[2], npoints).round()
+    # Create a bunch of interpolated
+    # points between from_ and to
+    if npoints > 0:
+        xs = np.linspace(from_[0], to[0], npoints).round()
+        ys = np.linspace(from_[1], to[1], npoints).round()
+        zs = np.linspace(from_[2], to[2], npoints).round()
+    else:
+        npoints = 1
+        xs      = np.array([from_[0]])
+        ys      = np.array([from_[1]])
+        zs      = np.array([from_[2]])
 
+    # We have the minimums and maximums
+    # of the coordinates to be selected
     xmin = xs.min()
     ymin = ys.min()
     zmin = zs.min()
@@ -843,38 +898,59 @@ def selectLine(data,
     ymax = ys.max()
     zmax = zs.max()
 
+    # But before we can figure out how big
+    # the cuboid region which encompasses
+    # the line is, we need to take into
+    # account the pen size. So we create
+    # blocks at the start and end points.
     minBox = glroutines.voxelBox([xmin, ymin, zmin],
-                                  data.shape,
-                                  [1, 1, 1],
-                                  penSize,
+                                  shape,
+                                  dims,
+                                  boxSize,
                                   axes,
                                   bias)
     maxBox = glroutines.voxelBox([xmax, ymax, zmax],
-                                  data.shape,
-                                  [1, 1, 1],
-                                  penSize,
+                                  shape,
+                                  dims,
+                                  boxSize,
                                   axes,
                                   bias)
-    
-    offset = [min((xmin, minBox[:, 0].min())),
-              min((xmin, minBox[:, 1].min())),
-              min((xmin, minBox[:, 2].min()))]
-    size   = [max((xmax, maxBox[:, 0].max())) - offset[0],
-              max((xmax, maxBox[:, 1].max())) - offset[1],
-              max((xmax, maxBox[:, 1].max())) - offset[2]]
 
-    block  = np.zeros(size, dtype=np.bool)
+    # And then adjust our overall
+    # block offset and size by
+    # these start/end blocks
+    offset = [int(min((xmin, minBox[:, 0].min()))),
+              int(min((ymin, minBox[:, 1].min()))),
+              int(min((zmin, minBox[:, 2].min())))]
+    size   = [int(max((xmax, maxBox[:, 0].max())) - offset[0]),
+              int(max((ymax, maxBox[:, 1].max())) - offset[1]),
+              int(max((zmax, maxBox[:, 2].max())) - offset[2])]
 
+    # Allocate a selection block 
+    # which will contain the line
+    block = np.zeros(size, dtype=np.bool)
+        
+    # Generate a voxel block
+    # at each point
     for i in range(npoints):
 
-        point = (xs[i], ys[i], zs[i])
-
-        block[point] = glroutines.voxelBlock(
+        point                = (xs[i], ys[i], zs[i])
+        pointBlock, pointOff = glroutines.voxelBlock(
             voxel=point,
-            shape=data.shape,
-            dims=[1, 1, 1],
-            boxSize=penSize,
+            shape=shape,
+            dims=dims,
+            boxSize=boxSize,
             axes=axes,
             bias=bias)
+
+        pointOff = [pointOff[0] - offset[0],
+                    pointOff[1] - offset[1],
+                    pointOff[2] - offset[2]]
+
+        # And fill in our line block
+        sz = pointBlock.shape
+        block[pointOff[0]:pointOff[0] + sz[0],
+              pointOff[1]:pointOff[1] + sz[1],
+              pointOff[2]:pointOff[2] + sz[2]] = pointBlock
 
     return block, offset
