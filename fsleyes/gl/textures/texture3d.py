@@ -459,6 +459,47 @@ class Texture3D(texture.Texture, notifier.Notifier):
         return self.__textureShape
 
 
+    def patchData(self, data, offset):
+        """This is a shortcut method which can be used to replace part
+        of the image texture data without having to regenerate the entire
+        texture.
+
+        The :meth:`set` and :meth:`refresh` methods are quite heavyweight, and
+        are written in such a way that partial texture updates are not
+        possible. This method was added as a hacky workaround to allow
+        small parts of the image texture to be quickly updated.
+
+        .. note:: Hopefully, at some stage, I will refactor the ``Texture3D`` 
+                  class to be more flexible. Therefore, this method might
+                  disappear in the future.
+        """
+
+        data  = self.__realPrepareTextureData(data)[0]
+        shape = data.shape
+        data  = data.flatten(order='F')
+
+        bound = self.isBound()
+        if not bound:
+            self.bindTexture()
+
+        gl.glTexSubImage3D(gl.GL_TEXTURE_3D,
+                           0,
+                           offset[0],
+                           offset[1],
+                           offset[2],
+                           shape[0],
+                           shape[1],
+                           shape[2],
+                           self.__texFmt,
+                           self.__texDtype,
+                           data)
+
+        if not bound:
+            self.unbindTexture()
+
+        self.notify()
+
+
     def set(self, **kwargs):
         """Set any parameters on this ``Texture3D``. Valid keyword
         arguments are:
@@ -836,8 +877,38 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
 
     def __prepareTextureData(self):
-        """This method prepares and returns the data, ready to be used as GL
-        texture data.
+        """This method is a wrapper around the
+        :meth:`__realPrepareTextureData` method.
+
+
+        This method passes the stored image data to ``realPrepareTextureData``,
+        and then stores references to its return valuesa as attributes on this
+        ``ImageTexture`` instance:
+
+        ==================== =============================================
+        ``__preparedata``    A ``numpy`` array containing the image data,
+                             ready to be copied to the GPU. 
+
+        ``__voxValXform``    An affine transformation matrix which encodes 
+                             an offset and a scale, which may be used to 
+                             transform the texture data from the range 
+                             ``[0.0, 1.0]`` to its raw data range.
+
+        ``__invVoxValXform`` Inverse of ``voxValXform``.
+        ==================== ============================================= 
+        """
+
+        data, voxValXform, invVoxValXform = self.__realPrepareTextureData(
+            self.__data)
+
+        self.__preparedData   = data
+        self.__voxValXform    = voxValXform
+        self.__invVoxValXform = invVoxValXform
+
+    
+    def __realPrepareTextureData(self, data):
+        """This method prepares and returns the given ``data``, ready to be
+        used as GL texture data.
         
         This process potentially involves:
 
@@ -853,26 +924,22 @@ class Texture3D(texture.Texture, notifier.Notifier):
           - Casting to a different data type (if the data type cannot be used
             as-is).
 
-        This method sets the following attributes on this ``ImageTexture``
-        instance:
+        :returns: A tuple containing:
 
-        ==================== =============================================
-        ``__preparedata``    A ``numpy`` array containing the image data,
-                             ready to be copied to the GPU. 
+                    - A ``numpy`` array containing the image data, ready to be
+                       copied to the GPU.
+        
+                    - An affine transformation matrix which encodes an offset
+                      and a scale, which may be used to transform the texture
+                      data from the range ``[0.0, 1.0]`` to its raw data
+                      range.
 
-        ``__voxValXform``    An affine transformation matrix which encodes 
-                             an offset and a scale, which may be used to 
-                             transform the texture data from the range 
-                             ``[0.0, 1.0]`` to its raw data range.
-
-        ``__invVoxValXform`` Inverse of ``voxValXform``.
-        ==================== =============================================
+                    - Inverse of ``voxValXform``.
         """
 
         log.debug('Preparing data for {}({}) - this may take some time '
                   '...'.format(type(self).__name__, self.getTextureName()))
 
-        data          = self.__data
         dtype         = data.dtype
         floatTextures = self.canUseFloatTextures()
 
@@ -960,6 +1027,4 @@ class Texture3D(texture.Texture, notifier.Notifier):
                       dmin,
                       dmax))
 
-        self.__preparedData   = data
-        self.__voxValXform    = voxValXform
-        self.__invVoxValXform = invVoxValXform
+        return data, voxValXform, invVoxValXform

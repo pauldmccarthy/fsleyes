@@ -11,6 +11,7 @@ for storing a :class:`.Image` instance.
 
 import logging
 
+import numpy as np
 
 from . import texture3d
 
@@ -90,13 +91,41 @@ class ImageTexture(texture3d.Texture3D):
         self.set(volume=volume)
 
 
-    def __imageDataChanged(self, *a):
+    def __imageDataChanged(self, image, topic, sliceobj):
         """Called when the :class:`.Image` notifies about a data changes.
         Triggers an image texture refresh via a call to :meth:`set`.
+
+        :arg image:    The ``Image`` instance
+        
+        :arg topic:    The string ``'data'``
+        
+        :arg sliceobj: Slice object specifying the portion of the image
+                       that was changed.
         """
-        log.debug('{} data changed - refreshing '
-                  'texture'.format(self.image.name))
-        self.set()
+        
+        # If the data change was performed using
+        # normal array indexing, we can just replace
+        # that part of the image texture.
+        if isinstance(sliceobj, tuple): 
+            
+            data   = np.array(self.image[sliceobj])
+            offset = [s.start for s in sliceobj]
+
+            log.debug('{} data changed - refreshing part of '
+                      'texture (offset: {}, size: {})'.format(
+                          self.image.name,
+                          offset, data.shape))
+            
+            self.patchData(data, offset)
+
+        # Otherwise (boolean array indexing) we have
+        # to replace the whole image texture.
+        else:
+
+            log.debug('{} data changed - refreshing full '
+                      'texture'.format(self.image.name))
+
+            self.set()
 
         
     def set(self, **kwargs):

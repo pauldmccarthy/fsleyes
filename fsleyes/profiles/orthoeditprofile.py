@@ -239,7 +239,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         # The currently selected overlay - 
         # the overlay being edited. 
-        self.__currentOverlay    = None
+        self.__currentOverlay = None
 
         # The 'clipboard' is created by
         # the copySelection method - it
@@ -248,26 +248,26 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # The clipboard source refers to
         # the overlay that the clipboard
         # was copied from.
-        self.__clipboard         = None
-        self.__clipboardSource   = None
+        self.__clipboard       = None
+        self.__clipboardSource = None
 
         # An Editor instance is created for each
         # Image overlay (on demand, as they are
         # selected), and kept in this dictionary
         # (which contains {Image : Editor} mappings).
-        self.__editors           = {}
+        self.__editors = {}
 
         # Ref to each canvas on the ortho panel
-        self.__xcanvas           = viewPanel.getXCanvas()
-        self.__ycanvas           = viewPanel.getYCanvas()
-        self.__zcanvas           = viewPanel.getZCanvas()
+        self.__xcanvas = viewPanel.getXCanvas()
+        self.__ycanvas = viewPanel.getYCanvas()
+        self.__zcanvas = viewPanel.getZCanvas()
 
         # The current selection is shown on each
         # canvas - a ref to the SelectionAnnotation
         # is kept here
-        self.__xselAnnotation    = None
-        self.__yselAnnotation    = None
-        self.__zselAnnotation    = None
+        self.__xselAnnotation = None
+        self.__yselAnnotation = None
+        self.__zselAnnotation = None
 
         # A few performance optimisations are made
         # when in selint mode and limitToRadius is
@@ -1130,7 +1130,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             canvas.Refresh()
             
 
-    def __applySelection(self, canvas, voxel, add=True):
+    def __applySelection(self, canvas, voxel, add=True, combine=False):
         """Called by ``sel`` mode mouse handlers. Adds/removes a block
         of voxels, centred at the specified voxel, to/from the current
         :class:`.Selection`.
@@ -1157,8 +1157,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             axes=axes,
             bias='high')
 
-        if add: selection.addToSelection(     block, offset)
-        else:   selection.removeFromSelection(block, offset)
+        if add: selection.addToSelection(     block, offset, combine)
+        else:   selection.removeFromSelection(block, offset, combine)
 
         if add: self.__recordSelectionMerger('sel',   offset, block.shape)
         else:   self.__recordSelectionMerger('desel', offset, block.shape)
@@ -1299,11 +1299,25 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
         if self.__currentOverlay is None:
             return False
-        
+
+        if self.drawMode:
+
+            # If in immediate draw mode, we clear
+            # the Selection object's most recent
+            # saved change - all additions to the
+            # selection during this click+drag
+            # event are merged together (by using
+            # the combine flag to addToSelection -
+            # see __applySelection). Then, on the
+            # up event, we know what part of the
+            # selection needs to be refreshed.
+            selection = self.__editors[self.__currentOverlay].getSelection()
+            selection.setChange(None, None)
+
         voxel = self.__getVoxelLocation(canvasPos)
 
         if voxel is not None:
-            self.__applySelection(      canvas, voxel, add=add)
+            self.__applySelection(      canvas, voxel, add=add, combine=True)
             self.__drawCursorAnnotation(canvas, voxel)
             self.__dynamicRefreshCanvases(ev,  canvas, mousePos, canvasPos)
  
@@ -1333,7 +1347,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         voxel = self.__getVoxelLocation(canvasPos)
 
         if voxel is not None:
-            self.__applySelection(      canvas, voxel, add=add)
+            self.__applySelection(      canvas, voxel, add=add, combine=True)
             self.__drawCursorAnnotation(canvas, voxel)
             self.__dynamicRefreshCanvases(ev,  canvas, mousePos, canvasPos)
 
@@ -1358,16 +1372,28 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.__currentOverlay is None:
             return False
         
-        editor = self.__editors[self.__currentOverlay]
-        
+        editor    = self.__editors[self.__currentOverlay]
+        selection = editor.getSelection()
+
+        # Immediate draw mode - fill
+        # the selection, and then
+        # clear the selection.
         if self.drawMode:
+            
             if fillValue is None:
                 fillValue = self.fillValue
 
             editor.fillSelection(fillValue)
-            editor.ignoreChanges()
-            editor.clearSelection()
-            editor.recordChanges()
+
+            # The Selection object contains the
+            # full extent of the changes that
+            # were made to the selection during
+            # this click+drag event. We only need
+            # to clear this part of the selection.
+            old, new, off = selection.getLastChange()
+            restrict      = [slice(o, o + s) for o, s in zip(off, new.shape)]
+
+            selection.clearSelection(restrict=restrict)
         
         self.__refreshCanvases()
 
