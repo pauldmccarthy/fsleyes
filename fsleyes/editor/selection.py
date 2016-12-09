@@ -296,7 +296,7 @@ class Selection(notifier.Notifier):
             self.setChange(None, None)
             return
 
-        fRestrict = self.__fixSlices(restrict)
+        fRestrict = fixSlices(restrict)
         offset    = [r.start if r.start is not None else 0 for r in fRestrict]
 
         log.debug('Clearing selection ({}): {}'.format(id(self), fRestrict))
@@ -474,7 +474,7 @@ class Selection(notifier.Notifier):
                        full selection to consider.
         """
 
-        restrict   = self.__fixSlices(restrict)
+        restrict   = fixSlices(restrict)
         xs, ys, zs = np.where(self.__selection[restrict])
         result     = np.vstack((xs, ys, zs)).T
 
@@ -495,40 +495,17 @@ class Selection(notifier.Notifier):
                       local=False,
                       restrict=None,
                       combine=False):
-        """A *bucket fill* style selection routine. Given a seed location,
-        finds all voxels which have a value similar to that of that location.
-        The current selection is replaced with all voxels that were found.
-
-        :arg seedLoc:      Voxel coordinates specifying the seed location
-
-        :arg precision:    Voxels which have a value that is less than
-                           ``precision`` from the seed location value will
-                           be selected.
-
-        :arg searchRadius: May be either a single value, or a sequence of
-                           three values - one for each axis. If provided, the
-                           search is limited to a sphere (in the voxel
-                           coordinate system), centred on the seed location,
-                           with the specified ``searchRadius`` (in voxels). If
-                           not provided, the search will cover the entire
-                           image space.
-
-        :arg local:        If ``True``, a voxel will only be selected if it
-                           is adjacent to an already selected voxel (using
-                           8-neighbour connectivity).
-
-        :arg restrict:     An optional sequence of three ``slice`` object,
-                           specifying a sub-set of the image to search.
-
+        """A *bucket fill* style selection routine.
+        
         :arg combine:      Combine with the previous stored change (see
                            :meth:`__storeChange`).
 
+        See the :func:`selectByValue` function for details on the other
+        arguments.
+        
         :returns: The generated selection array (a ``numpy`` boolean array),
                   and offset of this array into the full selection image.
         """
-
-        if precision is not None and precision < 0:
-            precision = 0
 
         if   len(self.__image.shape) == 3:
             data = self.__image[:]
@@ -537,130 +514,38 @@ class Selection(notifier.Notifier):
         else:
             raise RuntimeError('Only 3D and 4D images are currently supported')
 
-        shape   = data.shape
-        seedLoc = np.array(seedLoc)
-        value   = data[seedLoc[0], seedLoc[1], seedLoc[2]]
+        block, offset = selectByValue(data,
+                                      seedLoc,
+                                      precision,
+                                      searchRadius,
+                                      local,
+                                      restrict)
 
-        # Search radius may be either None, a scalar value,
-        # or a sequence of three values (one for each axis).
-        # If it is one of the first two options (None/scalar),
-        # turn it into the third.
-        if searchRadius is None:
-            searchRadius = np.array([0, 0, 0])
-        elif not isinstance(searchRadius, collections.Sequence):
-            searchRadius = np.array([searchRadius] * 3)
-            
-        searchRadius = np.ceil(searchRadius)
-        searchOffset = (0, 0, 0)
+        self.replaceSelection(block, offset, combine)
 
-        # Reduce the data set if
-        # restrictions have been
-        # specified
-        if restrict is not None:
+        return block, offset
 
-            restrict = self.__fixSlices(restrict)
-            xs, xe   = restrict[0].start, restrict[0].step
-            ys, ye   = restrict[1].start, restrict[1].step
-            zs, ze   = restrict[2].start, restrict[2].step
 
-            if xs is None: xs = 0
-            if ys is None: ys = 0
-            if zs is None: zs = 0
-            if xe is None: xe = data.shape[0]
-            if ye is None: ye = data.shape[1]
-            if ze is None: ze = data.shape[2]
+    def selectLine(self,
+                   from_,
+                   to,
+                   penSize,
+                   axes=(0, 1, 2),
+                   bias=None,
+                   combine=False):
+        """Selects a line from ``from_`` to ``to``.
 
-            # The seed location has to be in the sub-set
-            # o the image specified by the restrictions
-            if seedLoc[0] < xs or seedLoc[0] >= xe or \
-               seedLoc[1] < ys or seedLoc[1] >= ye or \
-               seedLoc[2] < zs or seedLoc[2] >= ze:
-                raise ValueError('Seed location ({}) is outside '
-                                 'of restrictions ({})'.format(
-                                     seedLoc, ((xs, xe), (ys, ye), (zs, ze))))
-                
-            data         = data[restrict]
-            shape        = data.shape
-            searchOffset = [start for start in [xs, ys, zs]]
-            seedLoc      = [sl - so for sl, so in zip(seedLoc, searchOffset)]
+        :arg combine: Combine with the previous stored change (see
+                      :meth:`__storeChange`).
 
-        # No search radius - search
-        # through the entire image
-        if np.any(searchRadius == 0):
-            searchSpace  = data
-            searchMask   = None
+        See the :func:`selectLine` function for details on the other arguments.
+        """
 
-        # Search radius specified - limit
-        # the search space, and specify
-        # an ellipsoid mask with the
-        # specified per-axis radii
-        else:            
-            ranges = [None, None, None]
-            slices = [None, None, None]
+        block, offset = selectLine(0, from_, to, penSize, axes, bias)
 
-            # Calculate xyz indices 
-            # of the search space
-            for ax in range(3):
+        self.addToSelection(block, offset, combine)
 
-                idx = seedLoc[     ax]
-                rad = searchRadius[ax]
-
-                lo = int(round(idx - rad))
-                hi = int(round(idx + rad + 1))
-
-                if lo < 0:             lo = 0
-                if hi > shape[ax] - 1: hi = shape[ax]
-
-                ranges[ax] = np.arange(lo, hi)
-                slices[ax] = slice(    lo, hi)
-
-            xs, ys, zs = np.meshgrid(*ranges, indexing='ij')
-
-            # Centre those indices and the
-            # seed location at (0, 0, 0)
-            xs         -= seedLoc[0]
-            ys         -= seedLoc[1]
-            zs         -= seedLoc[2]
-            seedLoc[0] -= ranges[0][0]
-            seedLoc[1] -= ranges[1][0]
-            seedLoc[2] -= ranges[2][0]
-
-            # Distances from each point in the search
-            # space to the centre of the search space
-            dists = ((xs / searchRadius[0]) ** 2 +
-                     (ys / searchRadius[1]) ** 2 +
-                     (zs / searchRadius[2]) ** 2)
-
-            # Extract the search space, and
-            # create the ellipsoid mask
-            searchSpace  = data[slices]
-            searchOffset = [so + r[0] for so, r in zip(searchOffset, ranges)]
-            searchMask   = dists <= 1
-
-        if precision is None: hits = searchSpace == value
-        else:                 hits = np.abs(searchSpace - value) <= precision
-
-        if searchMask is not None:
-            hits[~searchMask] = False
-
-        # If local is true, limit the selection to
-        # adjacent points with the same/similar value
-        # (using scipy.ndimage.measurements.label)
-        #
-        # The label function defaults to 6 neighbour
-        # connectivity for 3D, or 4 neighbour
-        # connectivity for 2D.
-        #
-        # If local is not True, any same or similar 
-        # values are part of the selection
-        if local:
-            hits, _   = ndimeas.label(hits)
-            seedLabel = hits[seedLoc[0], seedLoc[1], seedLoc[2]]
-            hits      = hits == seedLabel
-
-        self.replaceSelection(hits, searchOffset, combine)
-
-        return hits, searchOffset
+        return block, offset
 
     
     def transferSelection(self, destImg, destDisplay):
@@ -744,20 +629,252 @@ class Selection(notifier.Notifier):
         return np.array(self.__selection[xlo:xhi, ylo:yhi, zlo:zhi])
 
 
-    def __fixSlices(self, slices):
-        """A convenience method used by :meth:`selectByValue`,
-        :meth:`clearSelection` and :meth:`getIndices`, to sanitise their
-        ``restrict`` parameter.
-        """
+def fixSlices(slices):
+    """A convenience function used by :meth:`selectByValue`,
+    :meth:`clearSelection` and :meth:`getIndices`, to sanitise their
+    ``restrict`` parameter.
+    """
 
-        if slices is None:
-            slices = [None, None, None]
+    if slices is None:
+        slices = [None, None, None]
 
-        if len(slices) != 3:
-            raise ValueError('Three slice objects are required')
+    if len(slices) != 3:
+        raise ValueError('Three slice objects are required')
 
-        for i, s in enumerate(slices):
-            if s is None:
-                slices[i] = slice(None)
+    for i, s in enumerate(slices):
+        if s is None:
+            slices[i] = slice(None)
 
-        return slices
+    return slices
+
+
+def selectByValue(data,
+                  seedLoc,
+                  precision=None,
+                  searchRadius=None,
+                  local=False,
+                  restrict=None):
+    """A *bucket fill* style selection routine. Given a seed location,
+    finds all voxels which have a value similar to that of that location.
+    The current selection is replaced with all voxels that were found.
+
+    :arg seedLoc:      Voxel coordinates specifying the seed location
+
+    :arg precision:    Voxels which have a value that is less than
+                       ``precision`` from the seed location value will
+                       be selected.
+
+    :arg searchRadius: May be either a single value, or a sequence of
+                       three values - one for each axis. If provided, the
+                       search is limited to a sphere (in the voxel
+                       coordinate system), centred on the seed location,
+                       with the specified ``searchRadius`` (in voxels). If
+                       not provided, the search will cover the entire
+                       image space.
+
+    :arg local:        If ``True``, a voxel will only be selected if it
+                       is adjacent to an already selected voxel (using
+                       8-neighbour connectivity).
+
+    :arg restrict:     An optional sequence of three ``slice`` object,
+                       specifying a sub-set of the image to search.
+
+    :returns: The generated selection array (a ``numpy`` boolean array),
+              and offset of this array into the data.
+    """
+
+    if precision is not None and precision < 0:
+        precision = 0
+
+    shape   = data.shape
+    seedLoc = np.array(seedLoc)
+    value   = data[seedLoc[0], seedLoc[1], seedLoc[2]]
+
+    # Search radius may be either None, a scalar value,
+    # or a sequence of three values (one for each axis).
+    # If it is one of the first two options (None/scalar),
+    # turn it into the third.
+    if searchRadius is None:
+        searchRadius = np.array([0, 0, 0])
+    elif not isinstance(searchRadius, collections.Sequence):
+        searchRadius = np.array([searchRadius] * 3)
+
+    searchRadius = np.ceil(searchRadius)
+    searchOffset = (0, 0, 0)
+
+    # Reduce the data set if
+    # restrictions have been
+    # specified
+    if restrict is not None:
+
+        restrict = fixSlices(restrict)
+        xs, xe   = restrict[0].start, restrict[0].step
+        ys, ye   = restrict[1].start, restrict[1].step
+        zs, ze   = restrict[2].start, restrict[2].step
+
+        if xs is None: xs = 0
+        if ys is None: ys = 0
+        if zs is None: zs = 0
+        if xe is None: xe = data.shape[0]
+        if ye is None: ye = data.shape[1]
+        if ze is None: ze = data.shape[2]
+
+        # The seed location has to be in the sub-set
+        # o the image specified by the restrictions
+        if seedLoc[0] < xs or seedLoc[0] >= xe or \
+           seedLoc[1] < ys or seedLoc[1] >= ye or \
+           seedLoc[2] < zs or seedLoc[2] >= ze:
+            raise ValueError('Seed location ({}) is outside '
+                             'of restrictions ({})'.format(
+                                 seedLoc, ((xs, xe), (ys, ye), (zs, ze))))
+
+        data         = data[restrict]
+        shape        = data.shape
+        searchOffset = [start for start in [xs, ys, zs]]
+        seedLoc      = [sl - so for sl, so in zip(seedLoc, searchOffset)]
+
+    # No search radius - search
+    # through the entire image
+    if np.any(searchRadius == 0):
+        searchSpace  = data
+        searchMask   = None
+
+    # Search radius specified - limit
+    # the search space, and specify
+    # an ellipsoid mask with the
+    # specified per-axis radii
+    else:            
+        ranges = [None, None, None]
+        slices = [None, None, None]
+
+        # Calculate xyz indices 
+        # of the search space
+        for ax in range(3):
+
+            idx = seedLoc[     ax]
+            rad = searchRadius[ax]
+
+            lo = int(round(idx - rad))
+            hi = int(round(idx + rad + 1))
+
+            if lo < 0:             lo = 0
+            if hi > shape[ax] - 1: hi = shape[ax]
+
+            ranges[ax] = np.arange(lo, hi)
+            slices[ax] = slice(    lo, hi)
+
+        xs, ys, zs = np.meshgrid(*ranges, indexing='ij')
+
+        # Centre those indices and the
+        # seed location at (0, 0, 0)
+        xs         -= seedLoc[0]
+        ys         -= seedLoc[1]
+        zs         -= seedLoc[2]
+        seedLoc[0] -= ranges[0][0]
+        seedLoc[1] -= ranges[1][0]
+        seedLoc[2] -= ranges[2][0]
+
+        # Distances from each point in the search
+        # space to the centre of the search space
+        dists = ((xs / searchRadius[0]) ** 2 +
+                 (ys / searchRadius[1]) ** 2 +
+                 (zs / searchRadius[2]) ** 2)
+
+        # Extract the search space, and
+        # create the ellipsoid mask
+        searchSpace  = data[slices]
+        searchOffset = [so + r[0] for so, r in zip(searchOffset, ranges)]
+        searchMask   = dists <= 1
+
+    if precision is None: hits = searchSpace == value
+    else:                 hits = np.abs(searchSpace - value) <= precision
+
+    if searchMask is not None:
+        hits[~searchMask] = False
+
+    # If local is true, limit the selection to
+    # adjacent points with the same/similar value
+    # (using scipy.ndimage.measurements.label)
+    #
+    # The label function defaults to 6 neighbour
+    # connectivity for 3D, or 4 neighbour
+    # connectivity for 2D.
+    #
+    # If local is not True, any same or similar 
+    # values are part of the selection
+    if local:
+        hits, _   = ndimeas.label(hits)
+        seedLabel = hits[seedLoc[0], seedLoc[1], seedLoc[2]]
+        hits      = hits == seedLabel
+
+    return hits, searchOffset
+
+
+def selectLine(data,
+               from_,
+               to,
+               penSize,
+               axes=(0, 1, 2),
+               bias=None):
+    """
+
+    :arg data:
+    :arg from_:
+    :arg to:
+    :arg penSize:
+
+    See the :func:`.routines.voxelBlock` function for details on the other
+    arguments.
+    """
+    
+    from_   = np.array(from_)
+    to      = np.array(to)
+    length  = np.sqrt(np.sum(from_ * from_ + to * to))
+    npoints = round(length / penSize)
+
+    xs = np.linspace(from_[0], to[0], npoints).round()
+    ys = np.linspace(from_[1], to[1], npoints).round()
+    zs = np.linspace(from_[2], to[2], npoints).round()
+
+    xmin = xs.min()
+    ymin = ys.min()
+    zmin = zs.min()
+    xmax = xs.max()
+    ymax = ys.max()
+    zmax = zs.max()
+
+    minBox = glroutines.voxelBox([xmin, ymin, zmin],
+                                  data.shape,
+                                  [1, 1, 1],
+                                  penSize,
+                                  axes,
+                                  bias)
+    maxBox = glroutines.voxelBox([xmax, ymax, zmax],
+                                  data.shape,
+                                  [1, 1, 1],
+                                  penSize,
+                                  axes,
+                                  bias)
+    
+    offset = [min((xmin, minBox[:, 0].min())),
+              min((xmin, minBox[:, 1].min())),
+              min((xmin, minBox[:, 2].min()))]
+    size   = [max((xmax, maxBox[:, 0].max())) - offset[0],
+              max((xmax, maxBox[:, 1].max())) - offset[1],
+              max((xmax, maxBox[:, 1].max())) - offset[2]]
+
+    block  = np.zeros(size, dtype=np.bool)
+
+    for i in range(npoints):
+
+        point = (xs[i], ys[i], zs[i])
+
+        block[point] = glroutines.voxelBlock(
+            voxel=point,
+            shape=data.shape,
+            dims=[1, 1, 1],
+            boxSize=penSize,
+            axes=axes,
+            bias=bias)
+
+    return block, offset
