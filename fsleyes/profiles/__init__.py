@@ -866,13 +866,13 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         if handler(ev, canvas, mouseLoc, canvasLoc) is False:
             ev.Skip()
 
+        self.__lastMouseUpHandler = (self.__mouseDownMode, evType)
+        self.__lastMouseUpPos     = mouseLoc
+        self.__lastCanvasUpPos    = canvasLoc
         self.__mouseDownPos       = None
         self.__canvasDownPos      = None
         self.__mouseDownMode      = None
-        self.__lastMouseUpPos     = mouseLoc
-        self.__lastCanvasUpPos    = canvasLoc
-        self.__lastMouseUpHandler = (self.__mouseDownMode, evType)
-
+        
 
     def __onMouseMove(self, ev):
         """Called on mouse motion. If a mouse button is down, delegates to
