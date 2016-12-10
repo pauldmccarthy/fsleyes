@@ -205,7 +205,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
     
     searchRadius = props.Real(
-        minval=0.01, maxval=200, default=0.0, clamped=True)
+        minval=0.01, maxval=200, default=0.0, clamped=False)
     """In ``selint`` mode, if :attr:`limitToRadius` is true, this property
     specifies the search sphere radius. Passed as the ``searchRadius``
     argument to the :meth:`.Selection.selectByValue` method.
@@ -278,16 +278,18 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__merge3D     = None
         self.__mergeRadius = None
 
-        # The targetImage/intensityThres/
-        # intensityThresLimit property values
-        # are cached on a per-overlay basis.
-        # When an overlay is re-selected, its
-        # values are restored from the cache.
+        # These property values are cached
+        # on a per-overlay basis. When an
+        # overlay is re-selected, its values
+        # are restored from the cache.
         self.__cache = fsloverlay.PropCache(
             overlayList,
             displayCtx,
             self,
-            ['targetImage', 'intensityThres', 'intensityThresLimit'])
+            ['targetImage',
+             'intensityThres',
+             'intensityThresLimit',
+             'searchRadius'])
 
         orthoviewprofile.OrthoViewProfile.__init__(
             self,
@@ -707,7 +709,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if overlay is None:
             # TODO 
             return
-        
+
+        # If the image data is of an integer
+        # type, we set limits on the fill/
+        # erase values, so the user can't
+        # enter an out-of-bounds value.
         if issubclass(overlay.dtype.type, np.integer):
             dmin = np.iinfo(overlay.dtype).min
             dmax = np.iinfo(overlay.dtype).max
@@ -720,16 +726,41 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.setConstraint('eraseValue', 'minval', dmin)
         self.setConstraint('eraseValue', 'maxval', dmax) 
 
-        thres = self.__cache.get(overlay, 'intensityThres',      None)
-        limit = self.__cache.get(overlay, 'intensityThresLimit', None)
+        # Retrieve cached values. The cached
+        # targetImage is set in the
+        # __selecteDOverlayChanged method.
+        thres  = self.__cache.get(overlay, 'intensityThres',      None)
+        limit  = self.__cache.get(overlay, 'intensityThresLimit', None)
+        radius = self.__cache.get(overlay, 'searchRadius',        None)
 
+        # Set sensible initial values
         if limit is None or limit == 0:
             dmin, dmax = overlay.dataRange
             limit      = (dmax - dmin) / 2.0
+
+        if radius is None:
+            radius = 0.01
  
         if thres is None: thres = 0
         else:             thres = min(thres, limit)
 
+        # Set (what I think to be) a sensible
+        # upper limit for the search radius.
+        # This is just for slider widgets -
+        # the seacrhRadius is unclamped, so
+        # the user can manually enter any
+        # value in spin boxes.
+        dimSizes    = np.array(overlay.pixdim[:3]) * overlay.shape[:3]
+        radiusLimit = max(dimSizes) / 4.0
+        if radius is None or radius == 0:
+            radius = radiusLimit / 4.0
+
+        # Initialise property values, or 
+        # restore them from the cache.
+        with props.skip(self, 'searchRadius', self._name):
+            self.setConstraint('searchRadius', 'maxval', radiusLimit)
+            self.searchRadius = radius
+            
         with props.skip(self, 'intensityThres', self._name):
             self.setConstraint('intensityThres', 'maxval', limit)
             self.intensityThres = thres
