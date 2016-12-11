@@ -865,11 +865,11 @@ def _genCommandLineArgs(overlayList, displayCtx, canvas):
                 xc, yc, zc = opts.transformCoords(
                     [xc, yc, zc], 'display', 'world')
                 
-                # And turn back into 2D (horizontal/
-                # vertical) positions
-                xc = xc[1], xc[2]
-                yc = yc[0], yc[2]
-                zc = zc[0], zc[1]
+            # And turn back into 2D (horizontal/
+            # vertical) positions
+            xc = xc[1], xc[2]
+            yc = yc[0], yc[2]
+            zc = zc[0], zc[1]
 
         argv += ['--{}'.format(parseargs.ARGUMENTS[sceneOpts, 'xcentre'][1])]
         argv += ['{:0.8f}'.format(c) for c in xc]

@@ -998,9 +998,25 @@ TRANSFORMS = td.TypeDict({
     'Display.enabled'            : lambda b : not b,
     'VolumeOpts.linkLowRanges'   : lambda b : not b,
     'LineVectorOpts.unitLength'  : lambda b : not b, 
-    'TensorOpts.lighting'        : lambda b : not b, 
+    'TensorOpts.lighting'        : lambda b : not b,
     'LabelOpts.lut'              : _lutTrans,
     # 'SHOpts.lighting'            : lambda b : not b,
+
+    # The props.addParserArguments function allows
+    # us to specify 'extra' parameters (above) to
+    # specify that we expect RGB, not RGBA colours.
+    # But the props.generateArguments does not
+    # accept 'extra' parameters. It accepts
+    # transform functions though, so we hackily
+    # truncate any RGBA colours via these transform
+    # functions.
+    'SceneOpts.bgColour'         : lambda c : c[:3],
+    'SceneOpts.cursorColour'     : lambda c : c[:3],
+    'ModelOpts.colour'           : lambda c : c[:3],
+    'MaskOpts.colour'            : lambda c : c[:3],
+    'VectorOpts.xColour'         : lambda c : c[:3],
+    'VectorOpts.yColour'         : lambda c : c[:3],
+    'VectorOpts.zColour'         : lambda c : c[:3],
 })
 """This dictionary defines any transformations for command line options
 where the value passed on the command line cannot be directly converted
@@ -1806,6 +1822,17 @@ def _generateArgs(source, propNames=None):
 
     if propNames is None:
         propNames = list(it.chain(*OPTIONS.get(source, allhits=True)))
+
+    # See the hack in the _setupOverlayParsers
+    # function - the volume argument is not
+    # exposed for these overlay types.
+    if isinstance(source, (fsldisplay.LineVectorOpts,
+                           fsldisplay.RGBVectorOpts,
+                           fsldisplay.TensorOpts,
+                           fsldisplay.SHOpts)):
+        try:    propNames.remove('volume')
+        except: pass
+    
         
     longArgs  = {name : ARGUMENTS[source, name][1] for name in propNames}
     xforms    = {}
