@@ -720,7 +720,7 @@ def selectByValue(data,
 
     shape   = data.shape
     seedLoc = np.array(seedLoc)
-    value   = data[seedLoc[0], seedLoc[1], seedLoc[2]]
+    value   = float(data[seedLoc[0], seedLoc[1], seedLoc[2]])
 
     # Search radius may be either None, a scalar value,
     # or a sequence of three values (one for each axis).

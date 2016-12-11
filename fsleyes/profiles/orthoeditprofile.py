@@ -455,6 +455,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.targetImage is not None:
             editor = self.__getTargetImageEditor(editor)
 
+        # TODO  You could get the bounded selection from
+        # fillSelection, and pass it to clearSelection
         editor.startChangeGroup()
         editor.fillSelection(self.fillValue)
         editor.clearSelection()
@@ -474,6 +476,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.targetImage is not None:
             editor = self.__getTargetImageEditor(editor) 
 
+        # See TODO in fillSaelection
         editor.startChangeGroup()
         editor.fillSelection(self.eraseValue)
         editor.clearSelection()
@@ -737,9 +740,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if limit is None or limit == 0:
             dmin, dmax = overlay.dataRange
             limit      = (dmax - dmin) / 2.0
-
-        if radius is None:
-            radius = 0.01
  
         if thres is None: thres = 0
         else:             thres = min(thres, limit)
