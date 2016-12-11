@@ -1043,7 +1043,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # performance mode, the cursor
         # is only drawn on the current
         # canvas.
-        if self._viewPanel.getSceneOptions().performance < 4:
+        if self._viewPanel.getSceneOptions().performance < 3:
             cursors  = [cursors[canvases.index(canvas)]]
             canvases = [canvas]
 
@@ -1150,7 +1150,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # the canvas location track the edit cursor
         # location, so that the other two canvases
         # update to display the current cursor location.
-        if perf == 4               and \
+        if perf == 3               and \
            (mousePos  is not None) and \
            (canvasPos is not None):
             

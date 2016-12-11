@@ -695,7 +695,7 @@ HELP = td.TypeDict({
     'SceneOpts.colourBarLocation'  : 'Colour bar location',
     'SceneOpts.colourBarLabelSide' : 'Colour bar label orientation',
     'SceneOpts.performance'        : 'Rendering performance '
-                                     '(1=fastest, 4=best looking)',
+                                     '(1=fastest, 3=best looking)',
     
     'OrthoOpts.xzoom'       : 'X canvas zoom (100-5000, default: 100)',
     'OrthoOpts.yzoom'       : 'Y canvas zoom (100-5000, default: 100)',

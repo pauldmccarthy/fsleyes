@@ -62,7 +62,7 @@ class SceneOpts(props.HasProperties):
     #       performance because, for example, the
     #       OrthoEditProfile does numerical comparisons
     #       to it.
-    performance = props.Choice((1, 2, 3, 4), default=4, allowStr=True)
+    performance = props.Choice((1, 2, 3), default=3, allowStr=True)
     """User controllable performance setting.
 
     This property is linked to the :attr:`renderMode` and

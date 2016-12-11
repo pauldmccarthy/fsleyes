@@ -293,7 +293,7 @@ properties = TypeDict({
     'SceneOpts.performance'        : 'Rendering performance - 1 gives the '
                                      'fastest, but at the cost of lower '
                                      'display quality, and some display '
-                                     'limitations. 5 gives the best '
+                                     'limitations. 3 gives the best '
                                      'display quality, but may be too slow on '
                                      'some older systems.',
 

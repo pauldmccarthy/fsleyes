@@ -757,8 +757,7 @@ choices = TypeDict({
 
     'SceneOpts.performance' : {1 : 'Fastest',
                                2 : 'Faster',
-                               3 : 'Good looking',
-                               4 : 'Best looking'},
+                               3 : 'Best looking'},
 
     'CanvasOpts.zax' : {0 : 'X axis',
                         1 : 'Y axis',

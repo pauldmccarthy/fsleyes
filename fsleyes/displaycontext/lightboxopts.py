@@ -59,12 +59,8 @@ class LightBoxOpts(sceneopts.SceneOpts):
         properties according to the performance setting.
         """        
 
-        if   self.performance == 4:
+        if   self.performance == 3:
             self.renderMode      = 'onscreen'
-            self.resolutionLimit = 0
-
-        elif self.performance == 3:
-            self.renderMode      = 'prerender'
             self.resolutionLimit = 0
 
         elif self.performance == 2:
