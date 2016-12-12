@@ -4,12 +4,15 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`RemoveOverlayAction`, which allows the uesr
-to remove the currently selected overlay.
+"""This module provides the :class:`RemoveOverlayAction` class, and the
+:func:`removeOverlay` function, which provides logic to remove an overlay
+from the :class:`.OverlayList`.
 """
 
 
-from . import action
+import fsl.data.image  as fslimage
+import fsleyes.strings as strings
+from . import             action
 
 
 class RemoveOverlayAction(action.Action):
@@ -57,5 +60,49 @@ class RemoveOverlayAction(action.Action):
         """Removes the currently selected overlay (as defined by the
         :attr:`.DisplayContext.selectedOverlay) from the :class:`.OverlayList`.
         """
-        if len(self.__overlayList) > 0:
-            self.__overlayList.pop(self.__displayCtx.selectedOverlay)
+        removeOverlay(self.__overlayList, self.__displayCtx)
+
+
+def removeOverlay(overlayList, displayCtx, overlay=None, stringKey=None):
+    """Removes the specified overlay (or the currently selected overlay,
+    if ``overlay is None``) from the overlay list. If the overlay is not
+    saved, the user is prompted to confirm the removal.
+
+    :arg overlay:   Overlay to remove. If ``None``, the currently selected
+                    overlay is removed.
+
+    :arg stringKey: Key to use in the :mod:`.strings` module for the
+                    dialog with which the user is prompted if the overlay
+                    has unsaved changes.
+
+    :returns:       ``True`` if the overlay was removed, ``False`` otherise.
+    """
+
+    import wx
+    
+    if overlay is None:
+        overlay = displayCtx.getSelectedOverlay()
+
+    if stringKey is None:
+        stringKey = 'removeoverlay.unsaved'
+
+    if isinstance(overlay, fslimage.Image) and not overlay.saveState:
+            
+        msg    = strings.messages[stringKey]
+        title  = strings.titles[  stringKey]
+        parent = wx.GetApp().GetTopWindow()
+
+        dlg = wx.MessageDialog(parent,
+                               message=msg,
+                               caption=title,
+                               style=(wx.YES_NO        |
+                                      wx.NO_DEFAULT    |
+                                      wx.CENTRE        |
+                                      wx.ICON_WARNING))
+
+        dlg.CentreOnParent()
+        if dlg.ShowModal() == wx.ID_NO:
+            return False
+        
+    overlayList.remove(overlay)
+    return True

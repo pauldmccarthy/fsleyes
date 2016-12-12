@@ -48,7 +48,6 @@ messages = TypeDict({
     'FSLeyesFrame.dontAskToSaveLayout' : 'Never ask me again',
     'FSLeyesFrame.unsavedOverlays'     : 'You have unsaved images - are '
                                          'you sure you want to exit?',
- 
 
     'perspectives.applyingPerspective' : 'Applying {} perspective ...',
 
@@ -187,10 +186,17 @@ messages = TypeDict({
     'MelodicClassificationPanel.diffMelDir.overlay' : 'Apply the labels to '
                                                       'the current overlay',
 
+    'SaveOverlayAction.saveError' :
+    'An error occurred while saving the file {}.\n\nDetails: {} - {}',
 
-    'SaveOverlayAction.saveError' : 'An error occurred while saving the '
-                                    'file {}.\n\nDetails: {} - {}',
+    'removeoverlay.unsaved' :
+    'This image has unsaved changes - are you sure you want to remove it?',
 
+    'reloadoverlay.unsaved' :
+    'This image has unsaved changes - are you sure you want to reload it?', 
+    
+    'RemoveAllOverlaysAction.unsavedOverlays' :
+    'You have unsaved images - are you sure you want to remove them all?', 
 
     'ImportDataSeriesAction.selectFile'   : 'Import data series from',
     'ImportDataSeriesAction.error'        : 'Could not load {}! Details:\n\n{}',
@@ -276,6 +282,11 @@ titles = TypeDict({
     'SaveOverlayAction.overwrite'          : 'Overwrite existing file?',
     'SaveOverlayAction.saveFile'           : 'Save overlay to file',
     'SaveOverlayAction.saveError'          : 'Error saving file',
+
+    'RemoveAllOverlaysAction.unsavedOverlays' : 'Unsaved images',
+    
+    'removeoverlay.unsaved' : 'Remove unsaved image?',
+    'reloadoverlay.unsaved' : 'Reload unsaved image?',
 
     'OrthoEditProfile.imageChange'        : 'Changing edited image',
 

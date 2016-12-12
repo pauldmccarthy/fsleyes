@@ -9,7 +9,9 @@ uesr to remove all overlays from the :class:`.OverlayList`.
 """
 
 
-from . import action
+import fsleyes.strings as strings
+from . import             action
+from . import             saveoverlay
 
 
 class RemoveAllOverlaysAction(action.Action):
@@ -25,7 +27,7 @@ class RemoveAllOverlaysAction(action.Action):
         :arg frame:       The :class:`.FSLeyesFrame`.
         """ 
 
-        action.Action.__init__(self, self.__removeOverlay)
+        action.Action.__init__(self, self.__removeAllOverlays)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
@@ -52,7 +54,33 @@ class RemoveAllOverlaysAction(action.Action):
         self.enabled = len(self.__overlayList) > 0
 
         
-    def __removeOverlay(self):
+    def __removeAllOverlays(self):
         """Removes all overlays from the :class:`.OverlayList`.
         """
+
+        import wx
+
+        allSaved = saveoverlay.checkOverlaySaveState(
+            self.__overlayList, self.__displayCtx)
+
+        # If there are unsaved images,
+        # get the user to confirm
+        if not allSaved:
+            
+            msg    = strings.messages[self, 'unsavedOverlays']
+            title  = strings.titles[  self, 'unsavedOverlays']
+            parent = wx.GetApp().GetTopWindow()
+
+            dlg = wx.MessageDialog(parent,
+                                   message=msg,
+                                   caption=title,
+                                   style=(wx.YES_NO        |
+                                          wx.NO_DEFAULT    |
+                                          wx.CENTRE        |
+                                          wx.ICON_WARNING))
+
+            dlg.CentreOnParent()
+            if dlg.ShowModal() == wx.ID_NO:
+                return
+        
         del self.__overlayList[:]

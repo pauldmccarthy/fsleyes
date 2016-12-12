@@ -12,9 +12,10 @@ which reloads the currently selected overlay from disk.
 import logging
 import os.path as op
 
-import fsl.data.image   as fslimage
-import fsl.utils.status as status
-from . import              action
+import fsl.data.image                as fslimage
+import fsl.utils.status              as status
+from . import                           action
+from . import                           removeoverlay
 
 
 log = logging.getLogger(__name__)
@@ -115,10 +116,16 @@ class ReloadOverlayAction(action.Action):
             displays[i] = {p : getattr(d, p) for p in displayProps}
             opts[    i] = {p : getattr(o, p) for p in optProps}
 
-        # Now that we've got all the settings for
-        # this overlay, we'll remove it from the
-        # list. 
-        self.__overlayList.remove(ovl)
+        # Now that we've got all the settings
+        # for this overlay, we'll remove it
+        # from the list. If removeOverlay
+        # returns False, it probably means
+        # the user cancelled the action.
+        if not removeoverlay.removeOverlay(self.__overlayList,
+                                           self.__displayCtx,
+                                           ovl,
+                                           'reloadoverlay.unsaved'):
+            return
 
         # Now we re-load the overlay, and add it
         # back in to the list at the same location

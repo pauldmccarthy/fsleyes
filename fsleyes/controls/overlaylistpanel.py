@@ -19,6 +19,8 @@ import pwidgets.bitmaptoggle            as bmptoggle
 
 import pwidgets.elistbox                as elistbox
 
+import fsl.data.image                   as fslimage
+import fsl.utils.async                  as async
 import fsleyes.panel                    as fslpanel
 import fsleyes.icons                    as icons
 import fsleyes.autodisplay              as autodisplay
@@ -26,7 +28,7 @@ import fsleyes.strings                  as strings
 import fsleyes.tooltips                 as fsltooltips
 import fsleyes.actions.loadoverlay      as loadoverlay
 import fsleyes.actions.saveoverlay      as saveoverlay
-import fsl.data.image                   as fslimage
+import fsleyes.actions.removeoverlay    as removeoverlay
 from fsl.utils.platform import platform as fslplatform
 
 
@@ -131,7 +133,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
 
         # listeners for when the user does
         # something with the list box
-        self.__listBox.Bind(elistbox.EVT_ELB_SELECT_EVENT, self.__lbSelect)
+        self.__listBox.Bind(elistbox.EVT_ELB_SELECT_EVENT,   self.__lbSelect)
         self.__listBox.Bind(elistbox.EVT_ELB_MOVE_EVENT,     self.__lbMove)
         self.__listBox.Bind(elistbox.EVT_ELB_REMOVE_EVENT,   self.__lbRemove)
         self.__listBox.Bind(elistbox.EVT_ELB_ADD_EVENT,      self.__lbAdd)
@@ -320,7 +322,24 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         """Called when an item is removed from the overlay listbox.
         Removes the corresponding overlay from the :class:`.OverlayList`.
         """
-        self._overlayList.pop(self._displayCtx.overlayOrder[ev.idx])
+
+        overlay = self._displayCtx.overlayOrder[ev.idx]
+        overlay = self._overlayList[overlay]
+
+        with props.skip(self._overlayList, 'overlays',     self._name), \
+             props.skip(self._displayCtx,  'overlayOrder', self._name):
+            
+            if not removeoverlay.removeOverlay(self._overlayList,
+                                               self._displayCtx,
+                                               overlay):
+                ev.Veto()
+
+            # The overlayListChanged method
+            # must be called asynchronously,
+            # otherwise it will corrupt the
+            # EditableListBox state 
+            else:
+                async.idle(self.__overlayListChanged)
 
 
     def __lbDblClick(self, ev):
