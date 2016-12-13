@@ -872,20 +872,29 @@ def selectLine(shape,
     
     from_   = np.array(from_)
     to      = np.array(to)
-    length  = np.sqrt(np.sum((from_ - to) ** 2))
-    npoints = int(np.ceil(length / boxSize))
+
+    # The boxSize is specified in scaled
+    # voxels, so we need to calculate the
+    # distance between the two voxels,
+    # and the required number of points,
+    # in scaled voxels as well.
+    length  = np.sqrt(np.sum((from_ * dims - to * dims) ** 2))
+
+    # box size can either be
+    # a scalar or a sequence.
+    # We add 2 to the number
+    # of points for the from_
+    # and to locations.
+    if isinstance(boxSize, collections.Sequence):
+        npoints = int(np.ceil(length / min(boxSize))) + 2
+    else:
+        npoints = int(np.ceil(length / boxSize)) + 2
 
     # Create a bunch of interpolated
     # points between from_ and to
-    if npoints > 0:
-        xs = np.linspace(from_[0], to[0], npoints).round()
-        ys = np.linspace(from_[1], to[1], npoints).round()
-        zs = np.linspace(from_[2], to[2], npoints).round()
-    else:
-        npoints = 1
-        xs      = np.array([from_[0]])
-        ys      = np.array([from_[1]])
-        zs      = np.array([from_[2]])
+    xs = np.linspace(from_[0], to[0], npoints).round()
+    ys = np.linspace(from_[1], to[1], npoints).round()
+    zs = np.linspace(from_[2], to[2], npoints).round()
 
     # We have the minimums and maximums
     # of the coordinates to be selected
