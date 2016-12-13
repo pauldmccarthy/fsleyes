@@ -196,12 +196,7 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 
 _ICONS = {
 
-    'drawMode'  : [fslicons.findImageFile('drawModeHighlight24'),
-                   fslicons.findImageFile('drawMode24'),
-                   fslicons.findImageFile('selectModeHighlight24'),
-                   fslicons.findImageFile('selectMode24')],
-
-    'mode'                    : {
+    'mode' : {
         'nav'    : [
             fslicons.findImageFile('addHighlight24'),
             fslicons.findImageFile('add24'),
@@ -219,19 +214,19 @@ _ICONS = {
             fslicons.findImageFile('selectByIntensity24'),
         ],
     },
-    'selectionIs3D'           : [
+    'selectionIs3D' : [
         fslicons.findImageFile('selection3DHighlight24'),
         fslicons.findImageFile('selection3D24'),
         fslicons.findImageFile('selection2DHighlight24'),
         fslicons.findImageFile('selection2D24')],
     
-    'limitToRadius'           :  [
+    'limitToRadius' :  [
         fslicons.findImageFile('radiusHighlight24'),
         fslicons.findImageFile('radius24')],
-    'localFill'               :  [
+    'localFill' :  [
         fslicons.findImageFile('localsearchHighlight24'),
         fslicons.findImageFile('localsearch24')],
-    'selint'                  :  [
+    'selint' :  [
         fslicons.findImageFile('selectByIntensityHighlight24'),
         fslicons.findImageFile('selectByIntensity24')],
 }
@@ -255,8 +250,6 @@ _TOOLTIPS = {
     'fillValue'      : fsltooltips.properties['OrthoEditProfile.fillValue'],
     'intensityThres' : fsltooltips.properties['OrthoEditProfile.'
                                               'intensityThres'],
-
-    'drawMode'       : fsltooltips.properties['OrthoEditProfile.drawMode'],
     
     'targetImage'    : fsltooltips.properties['OrthoEditProfile.targetImage'],
 }
@@ -272,12 +265,6 @@ def _targetImageName(image):
 
 _TOOLBAR_SPECS  = [
 
-    props.Widget(
-        'drawMode',
-        toggle=False,
-        icon=_ICONS['drawMode'],
-        tooltip=_TOOLTIPS['drawMode']),
-    'div',
     props.Widget(
         'mode',
         icons=_ICONS['mode'],

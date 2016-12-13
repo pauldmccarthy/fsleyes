@@ -142,6 +142,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     cursor.
     """
 
+    locationFollowsMouse = props.Boolean(deafult=True)
+    """If ``True``, when the user is drawing/erasing/selectiong by clicking and
+    dragging with the mouse, the :attr:`.DisplayContext.location` is updated to
+    track the mouse.
+
+    Users running on a slower machine may wish to disable this option.
+    """
+
     
     selectionIs3D = props.Boolean(default=False)
     """In ``sel`` and ``desel`` mode, toggles the cursor between a 2D square
@@ -277,6 +285,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__mergeBlock  = None
         self.__merge3D     = None
         self.__mergeRadius = None
+
+        # If the view panel performance is not
+        # set to maximum, set the initial
+        # locationFollowsMouse value to False
+        perf = viewPanel.getSceneOptions().performance
+        self.locationFollowsMouse = perf == 3
 
         # These property values are cached
         # on a per-overlay basis. When an
@@ -1039,11 +1053,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             r = annotations.Rect(c.xax, c.yax, (0, 0), 0, 0, **kwargs)
             cursors.append(r)
 
-        # If we are running in a low
-        # performance mode, the cursor
-        # is only drawn on the current
-        # canvas.
-        if self._viewPanel.getSceneOptions().performance < 3:
+        # Only draw the cursor on the current
+        # canvas if locFolMouse is false
+        if not self.locationFollowsMouse:
             cursors  = [cursors[canvases.index(canvas)]]
             canvases = [canvas]
 
@@ -1128,14 +1140,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """Called by mouse event handlers when the user is interacting with
         a canvas.
 
-        If the current :class:`.ViewPanel` performance setting (see
-        :attr:`.SceneOpts.performance`) is at its maximum, all three
-        :class:`.OrthoPanel` :class:`.SliceCanvas` canvases are refreshed
-        on selection updates.
-
-        On all lower performance settings, only the source canvas is updated.
+        If :attr:`locationFollowsMouse` is ``True`, the
+        :attr:`.DisplayContext.location` is set to the current mouse location.
         """
-        perf = self._viewPanel.getSceneOptions().performance
 
         # If the given location is already
         # equal to the display location,
@@ -1146,12 +1153,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             canvasPos is not None and
             np.all(np.isclose(canvasPos, self._displayCtx.location.xyz)))
 
-        # If running in high performance mode, we make
+        # If locationFollowsMouse==True, we make
         # the canvas location track the edit cursor
         # location, so that the other two canvases
         # update to display the current cursor location.
-        if perf == 3               and \
-           (mousePos  is not None) and \
+        if self.locationFollowsMouse and \
+           (mousePos  is not None)   and \
            (canvasPos is not None):
             
             self._navModeLeftMouseDrag(ev, canvas, mousePos, canvasPos)
@@ -1160,6 +1167,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                 for c in self.getEventTargets():
                     c.Refresh()
 
+        # Otherwise just update the canvas 
+        # that triggered the event
         else:
             canvas.Refresh()
             

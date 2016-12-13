@@ -96,6 +96,16 @@ class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):
 
 
 _ICONS = {
+
+    'drawMode'  : [fslicons.findImageFile('drawModeHighlight24'),
+                   fslicons.findImageFile('drawMode24'),
+                   fslicons.findImageFile('selectModeHighlight24'),
+                   fslicons.findImageFile('selectMode24')],
+
+    'locationFollowsMouse' : [
+        fslicons.findImageFile('locationFollowsMouseHighlight24'),
+        fslicons.findImageFile('locationFollowsMouse24')],
+    
     'toggleEditPanel' : [fslicons.findImageFile('editSpannerHighlight24'),
                          fslicons.findImageFile('editSpanner24')],
     'undo'            : fslicons.findImageFile('undo24'),
@@ -110,6 +120,11 @@ _ICONS = {
         
 
 _TOOLTIPS = {
+
+    'drawMode'             : fsltooltips.properties['OrthoEditProfile.'
+                                                    'drawMode'],
+    'locationFollowsMouse' : fsltooltips.properties['OrthoEditProfile.'
+                                                    'locationFollowsMouse'],
 
     'toggleEditPanel' : fsltooltips.actions['OrthoPanel.'
                                             'toggleEditPanel'], 
@@ -132,6 +147,19 @@ _TOOLTIPS = {
 }
         
 _TOOLBAR_SPECS = [
+
+    props.Widget(
+        'drawMode',
+        toggle=False,
+        icon=_ICONS['drawMode'],
+        tooltip=_TOOLTIPS['drawMode'],
+        style=wx.VERTICAL),
+    props.Widget(
+        'locationFollowsMouse',
+        icon=_ICONS['locationFollowsMouse'],
+        tooltip=_TOOLTIPS['locationFollowsMouse']),
+    
+    'div',
 
     actions.ToggleActionButton(
         'toggleEditPanel',

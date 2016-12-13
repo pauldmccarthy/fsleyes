@@ -479,6 +479,11 @@ properties = TypeDict({
     'OrthoEditProfile.selectionOverlayColour' :
     'Colour to use to highlight selected regions.',
 
+    'OrthoEditProfile.locationFollowsMouse' :
+    'Change the cursor location when you click and drag to draw, erase, or '
+    'select voxels. If you are using a slower computer you may wish to '
+    'disable this option.', 
+
     'OrthoEditProfile.drawMode' : 
     'Toggle between "draw" mode and "select" mode. In draw mode, you can '
     'simply \'draw\' on an image - when you release the mouse, the voxel '

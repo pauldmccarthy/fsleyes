@@ -1063,9 +1063,6 @@ class SliceCanvas(props.HasProperties):
         4-tuple containing the updated bound values.
         """
 
-        if self.zoom == 100.0:
-            return (xmin, xmax, ymin, ymax)
-
         # The zoom is specified as a value
         # between 100 and 5000 (the minval/
         # maxaval). To make the zoom smoother
@@ -1096,8 +1093,6 @@ class SliceCanvas(props.HasProperties):
  
         # centre the zoomed-in rectangle on
         # the current displayBounds centre
-        #
-        # TODO Centre on current displayCtx.location
         bounds = self.displayBounds 
         xmid   = bounds.xlo + 0.5 * bounds.xlen
         ymid   = bounds.ylo + 0.5 * bounds.ylen

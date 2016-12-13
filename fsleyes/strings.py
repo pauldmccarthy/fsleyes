@@ -670,6 +670,7 @@ properties = TypeDict({
     'OrthoEditProfile.searchRadius'           : 'Search radius',
     'OrthoEditProfile.selectionOverlayColour' : 'Selection overlay',
     'OrthoEditProfile.selectionCursorColour'  : 'Selection cursor',
+    'OrthoEditProfile.locationFollowsMouse'   : 'Location follows mouse',
     'OrthoEditProfile.drawMode'               : 'Draw mode',
     'OrthoEditProfile.targetImage'            : 'Target image',
     
