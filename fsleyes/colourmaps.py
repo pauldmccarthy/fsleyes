@@ -690,6 +690,7 @@ def randomColour():
     values = [randomColour.random.random() for i in range(3)]
     return np.array(values)
 
+
 # The randomColour function uses a generator
 # with a fixed seed for reproducibility
 randomColour.random = random.Random(x=1)
@@ -984,11 +985,28 @@ class LookupTable(notifier.Notifier):
         self.name     = name
         self.__labels = []
         self.__saved  = False
-
         self.__name   = 'LookupTable({})_{}'.format(self.name, id(self))
 
-        if lutFile is not None:
-            self.__load(lutFile)
+        # The LUT is loaded lazily on first access
+        self.__loaded = False
+        self.__toLoad = lutFile
+
+
+    def lazyload(func):
+        """Decorator which is used to lazy-load the LUT file only when it is
+        first needed.
+        """
+
+        def wrapper(self, *args, **kwargs):
+            
+            if not self.__loaded:
+                self.__load(self.__toLoad)
+                self.__toLoad = None
+                self.__loaded = True
+                
+            return func(self, *args, **kwargs)
+        
+        return wrapper
 
 
     def __str__(self):
@@ -1001,11 +1019,13 @@ class LookupTable(notifier.Notifier):
         return self.name 
         
 
+    @lazyload
     def __len__(self):
         """Returns the number of labels in this ``LookupTable``. """
         return len(self.__labels)
 
 
+    @lazyload
     def __getitem__(self, i):
         """Access the ``LutLabel`` at index ``i``. Use the :meth:`get` method
         to determine the index of a ``LutLabel`` from its value.
@@ -1013,9 +1033,9 @@ class LookupTable(notifier.Notifier):
         return self.__labels[i]
 
 
+    @lazyload
     def max(self):
         """Returns the maximum current label value in this ``LookupTable``. """
-        
         if len(self.__labels) == 0: return 0
         else:                       return self.__labels[-1].value
 
@@ -1038,6 +1058,7 @@ class LookupTable(notifier.Notifier):
         self.notify(topic='saved')
 
 
+    @lazyload
     def index(self, value):
         """Returns the index in this ``LookupTable`` of the ``LutLabel`` with
         the specified value. Raises a :exc:`ValueError` if no ``LutLabel``
@@ -1052,6 +1073,7 @@ class LookupTable(notifier.Notifier):
         return self.__labels.index(value)
 
 
+    @lazyload
     def get(self, value):
         """Returns the :class:`LutLabel` instance associated with the given
         ``value``, or ``None`` if there is no label.
@@ -1060,6 +1082,7 @@ class LookupTable(notifier.Notifier):
         except ValueError: return None
 
 
+    @lazyload
     def getByName(self, name):
         """Returns the :class:`LutLabel` instance associated with the given
         ``name``, or ``None`` if there is no ``LutLabel``. The name comparison
@@ -1074,6 +1097,7 @@ class LookupTable(notifier.Notifier):
         return None
 
 
+    @lazyload
     def new(self, name=None, colour=None, enabled=None):
         """Add a new :class:`LutLabel` with value ``max() + 1``, and add it
         to this ``LookupTable``.
@@ -1081,6 +1105,7 @@ class LookupTable(notifier.Notifier):
         return self.insert(self.max() + 1, name, colour, enabled)
 
 
+    @lazyload
     def insert(self, value, name=None, colour=None, enabled=None):
         """Create a new :class:`LutLabel` associated with the given
         ``value`` and insert it into this ``LookupTable``. Internally, the
@@ -1109,6 +1134,7 @@ class LookupTable(notifier.Notifier):
         return label
 
 
+    @lazyload
     def delete(self, value):
         """Removes the label with the given value from the lookup table.
 
@@ -1125,6 +1151,7 @@ class LookupTable(notifier.Notifier):
         self.saved = False
 
 
+    @lazyload
     def save(self, lutFile):
         """Saves this ``LookupTable`` instance to the specified ``lutFile``.
         """
