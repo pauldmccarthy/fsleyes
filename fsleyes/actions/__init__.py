@@ -101,6 +101,7 @@ are also defined in this package:
     ~fsleyes.actions.loadoverlay
     ~fsleyes.actions.loadoverlayfromdir
     ~fsleyes.actions.loadstandard
+    ~fsleyes.actions.loadatlas
     ~fsleyes.actions.saveoverlay
     ~fsleyes.actions.removeoverlay
     ~fsleyes.actions.removealloverlays
@@ -131,6 +132,7 @@ from . import copyoverlay
 from . import loadoverlay
 from . import loadoverlayfromdir
 from . import loadstandard
+from . import loadatlas
 from . import runscript
 from . import saveoverlay
 from . import reloadoverlay
@@ -154,6 +156,7 @@ CopyOverlayAction        = copyoverlay       .CopyOverlayAction
 LoadOverlayAction        = loadoverlay       .LoadOverlayAction
 LoadOverlayFromDirAction = loadoverlayfromdir.LoadOverlayFromDirAction
 LoadStandardAction       = loadstandard      .LoadStandardAction
+LoadAtlasAction          = loadatlas         .LoadAtlasAction
 RunScriptAction          = runscript         .RunScriptAction
 SaveOverlayAction        = saveoverlay       .SaveOverlayAction
 ReloadOverlayAction      = reloadoverlay     .ReloadOverlayAction

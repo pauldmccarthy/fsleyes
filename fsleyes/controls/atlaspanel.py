@@ -17,6 +17,7 @@ import          logging
 import numpy as np
 import          wx
 
+import                       props
 import pwidgets.notebook  as notebook
 
 import fsl.data.image     as fslimage
@@ -422,9 +423,8 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
                 header=atlas.nibImage.get_header(),
                 name=overlayName)
 
-            self._overlayList.disableListener('overlays', self._name)
-            self._overlayList.append(overlay)
-            self._overlayList.enableListener('overlays', self._name)
+            with props.suppress(self._overlayList, 'overlays', self._name):
+                self._overlayList.append(overlay, overlayType=overlayType)
 
             self.__overlayPanel.setOverlayState(
                 atlasID, labelIdx, summary, True) 

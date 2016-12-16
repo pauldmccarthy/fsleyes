@@ -46,7 +46,7 @@ class LoadOverlayAction(action.Action):
     """
 
     def __init__(self, overlayList, displayCtx, frame):
-        """Create an ``OpenFileAction``.
+        """Create a ``LoadOverlayAction``.
 
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.

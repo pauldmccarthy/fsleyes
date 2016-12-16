@@ -98,7 +98,8 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
         self.__infoPanel.Bind(wxhtml.EVT_HTML_LINK_CLICKED,
                               self.__infoPanelLinkClicked)
 
-        fslplatform.register(self._name, self.__fslDirChanged)
+        fslplatform     .register(self._name, self.__fslDirChanged)
+        atlases.registry.register(self._name, self.__atlasRegistryChanged)
 
         overlayList.addListener('overlays',
                                 self._name,
@@ -132,7 +133,8 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
         self._displayCtx .removeListener('location',        self._name)
         self._displayCtx .removeListener('selectedOverlay', self._name)
 
-        fslplatform.deregister(self._name)
+        atlases.registry.deregister(self._name)
+        fslplatform     .deregister(self._name)
         
         fslpanel.FSLeyesPanel.destroy(self)
 
@@ -204,6 +206,13 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
         self.__locationChanged()
 
 
+    def __atlasRegistryChanged(self, registry, topic, atlasDesc):
+        """Called when a new atlas is added to the :class:`.AtlasRegistry`.
+        """
+        # TODO
+        pass
+
+
     def __buildAtlasList(self):
         """Clears and then builds the list of available atlases. The 
         This is performed asynchronously, via the :func:`.async.run` function,
@@ -225,6 +234,7 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
         def loadAtlases():
             global atlasDescs
             atlasDescs = atlases.listAtlases()
+            atlasDescs = sorted(atlasDescs, key=lambda d: d.name)
 
         # When the atlas descriptions have been
         # loaded, we populate the atlas list control.

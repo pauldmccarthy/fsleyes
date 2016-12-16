@@ -1192,7 +1192,6 @@ class FSLeyesFrame(wx.Frame):
              shortcuts.actions.get((self, 'closeFSLeyes')),
              wx.ID_EXIT)]
 
-
         for action, title, shortcut, wxid in fsleyesActions:
 
             if shortcut is None: shortcut = ''
@@ -1210,6 +1209,7 @@ class FSLeyesFrame(wx.Frame):
         fileActions = [actions.LoadOverlayAction,
                        actions.LoadOverlayFromDirAction,
                        actions.LoadStandardAction,
+                       actions.LoadAtlasAction,
                        actions.RunScriptAction]
  
         for action in fileActions:

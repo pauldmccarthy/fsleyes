@@ -198,18 +198,24 @@ messages = TypeDict({
     'RemoveAllOverlaysAction.unsavedOverlays' :
     'You have unsaved images - are you sure you want to remove them all?', 
 
-    'ImportDataSeriesAction.selectFile'   : 'Import data series from',
-    'ImportDataSeriesAction.error'        : 'Could not load {}! Details:\n\n{}',
-    'ImportDataSeriesAction.selectXScale' : 'Set the X axis sampling '
-                                            'rate/scaling factor',
+    'ImportDataSeriesAction.selectFile'   :
+    'Import data series from',
+    
+    'ImportDataSeriesAction.error'        :
+    'Could not load {}! Details:\n\n{}',
+    
+    'ImportDataSeriesAction.selectXScale' :
+    'Set the X axis sampling rate/scaling factor',
 
     'ExportDataSeriesAction.selectFile'   : 'Export data series to',
     'ExportDataSeriesAction.saveXColumn'  : 'Export the X axis data '
                                             'as the first column?',
 
-    'CorrelateAction.calculating'         : 'Calculating correlation values '
-                                            'for seed voxel [{}, {}, {}] ...',
+    'LoadAtlasAction.error'       :
+    'An error occurred loading the atlas specification {}\n\nDetails: {}', 
 
+    'CorrelateAction.calculating' :
+    'Calculating correlation values for seed voxel [{}, {}, {}] ...',
 })
 
 
@@ -295,6 +301,9 @@ titles = TypeDict({
 
     'ExportDataSeriesAction.saveXColumn'  : 'Save X data?',
 
+    'LoadAtlasAction.fileDialog'  : 'Load XML atlas specification',
+    'LoadAtlasAction.error'       : 'Error loading atlas specification',
+
     'LoadColourMapAction.installcmap'     : 'Install colour map?',
 })
 
@@ -305,6 +314,7 @@ actions = TypeDict({
     'LoadOverlayFromDirAction' : 'Add overlay from directory',
     'LoadStandardAction'       : 'Add standard',
     'CopyOverlayAction'        : 'Copy',
+    'LoadAtlasAction'          : 'Add atlas',
     'SaveOverlayAction'        : 'Save',
     'ReloadOverlayAction'      : 'Reload',
     'RemoveOverlayAction'      : 'Remove',
