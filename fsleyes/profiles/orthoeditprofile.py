@@ -136,11 +136,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     that are currently selected.
     """
     
-    
-    selectionSize = props.Int(minval=1, maxval=100, default=3, clamped=True)
-    """In ``sel`` and ``desel`` modes, defines the size of the selection
-    cursor.
-    """
 
     locationFollowsMouse = props.Boolean(deafult=True)
     """If ``True``, when the user is drawing/erasing/selectiong by clicking and
@@ -148,6 +143,18 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     track the mouse.
 
     Users running on a slower machine may wish to disable this option.
+    """
+
+    
+    showSelection = props.Boolean(default=True)
+    """When :attr:`drawMode` is ``False,` the selection overlay can be hidden
+    by setting this to ``False``.
+    """
+    
+    
+    selectionSize = props.Int(minval=1, maxval=100, default=3, clamped=True)
+    """In ``sel`` and ``desel`` modes, defines the size of the selection
+    cursor.
     """
 
     
@@ -333,6 +340,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.addListener('selectionCursorColour',
                          self._name,
                          self.__selectionColoursChanged)
+        self.addListener('showSelection',
+                         self._name,
+                         self.__showSelectionChanged) 
         self.addListener('intensityThresLimit',
                          self._name,
                          self.__selintThresLimitChanged) 
@@ -611,13 +621,16 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.fillSelection .enabled = not self.drawMode
         self.eraseSelection.enabled = not self.drawMode
 
+        with props.skip(self, 'showSelection', self._name):
+            self.showSelection = True
+        
+        self.__updateTargetImage()
+        self.__setCopyPasteState()
+
         if self.__currentOverlay is not None:
             editor = self.__editors[self.__currentOverlay]
             editor.getSelection().clearSelection()
             self.__refreshCanvases()
-            
-        self.__updateTargetImage()
-        self.__setCopyPasteState()
 
 
     def __setCopyPasteState(self):
@@ -654,6 +667,16 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             
         if self.__zselAnnotation is not None:
             self.__zselAnnotation.colour = self.selectionOverlayColour
+
+
+    def __showSelectionChanged(self, *a):
+        """Called when the :attr:`showSelection` property changes. Shows/
+        hides the :class:`.VoxelSelection` annotations accordingly.
+        """
+        self.__xselAnnotation.enabled = self.showSelection
+        self.__yselAnnotation.enabled = self.showSelection
+        self.__zselAnnotation.enabled = self.showSelection
+        self.__refreshCanvases()
 
 
     def __updateTargetImage(self):

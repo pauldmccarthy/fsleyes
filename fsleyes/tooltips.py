@@ -482,7 +482,10 @@ properties = TypeDict({
     'OrthoEditProfile.locationFollowsMouse' :
     'Change the cursor location when you click and drag to draw, erase, or '
     'select voxels. If you are using a slower computer you may wish to '
-    'disable this option.', 
+    'disable this option.',
+
+    'OrthoEditProfile.showSelection' :
+    'Show/hide the current selection, when in select mode.',
 
     'OrthoEditProfile.drawMode' : 
     'Toggle between "draw" mode and "select" mode. In draw mode, you can '

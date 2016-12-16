@@ -71,7 +71,14 @@ class OrthoEditSettingsPanel(fslpanel.FSLeyesSettingsPanel):
 
             props.Widget('selectionCursorColour'),
             props.Widget('selectionOverlayColour'),
-            props.Widget('locationFollowsMouse')
+            props.Widget(
+                'locationFollowsMouse',
+                dependencies=['drawMode'],
+                enabledWhen=lambda p, m: not m),
+            props.Widget(
+                'showSelection',
+                dependencies=['drawMode'],
+                enabledWhen=lambda p, m: not m)
         ]
 
         selintProps = [

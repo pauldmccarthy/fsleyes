@@ -199,8 +199,8 @@ class Annotations(object):
 
         for obj in objs:
 
-            if obj.expired(drawTime):
-                continue
+            if obj.expired(drawTime): continue
+            if not obj.enabled:       continue 
             
             obj.setAxes(self.__xax, self.__yax)
 
@@ -280,6 +280,7 @@ class AnnotationObject(globject.GLSimpleObject):
         globject.GLSimpleObject.__init__(self, xax, yax)
         
         self.colour   = colour
+        self.enabled  = True
         self.width    = width
         self.xform    = xform
         self.expiry   = expiry

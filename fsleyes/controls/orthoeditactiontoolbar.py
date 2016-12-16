@@ -105,6 +105,10 @@ _ICONS = {
     'locationFollowsMouse' : [
         fslicons.findImageFile('locationFollowsMouseHighlight24'),
         fslicons.findImageFile('locationFollowsMouse24')],
+
+    'showSelection' : [
+        fslicons.findImageFile('showSelectionHighlight24'),
+        fslicons.findImageFile('showSelection24')],
     
     'toggleEditPanel' : [fslicons.findImageFile('editSpannerHighlight24'),
                          fslicons.findImageFile('editSpanner24')],
@@ -125,6 +129,8 @@ _TOOLTIPS = {
                                                     'drawMode'],
     'locationFollowsMouse' : fsltooltips.properties['OrthoEditProfile.'
                                                     'locationFollowsMouse'],
+    'showSelection'        : fsltooltips.properties['OrthoEditProfile.'
+                                                    'showSelection'], 
 
     'toggleEditPanel' : fsltooltips.actions['OrthoPanel.'
                                             'toggleEditPanel'], 
@@ -147,20 +153,7 @@ _TOOLTIPS = {
 }
         
 _TOOLBAR_SPECS = [
-
-    props.Widget(
-        'drawMode',
-        toggle=False,
-        icon=_ICONS['drawMode'],
-        tooltip=_TOOLTIPS['drawMode'],
-        style=wx.VERTICAL),
-    props.Widget(
-        'locationFollowsMouse',
-        icon=_ICONS['locationFollowsMouse'],
-        tooltip=_TOOLTIPS['locationFollowsMouse']),
     
-    'div',
-
     actions.ToggleActionButton(
         'toggleEditPanel',
         actionKwargs={'floatPane' : True},
@@ -171,7 +164,21 @@ _TOOLBAR_SPECS = [
         icon=_ICONS['createMask'],
         tooltip=_TOOLTIPS['createMask']),
  
-    'div', 
+    'div',
+    
+    props.Widget(
+        'drawMode',
+        toggle=False,
+        icon=_ICONS['drawMode'],
+        tooltip=_TOOLTIPS['drawMode'],
+        style=wx.VERTICAL),
+    props.Widget(
+        'locationFollowsMouse',
+        icon=_ICONS['locationFollowsMouse'],
+        tooltip=_TOOLTIPS['locationFollowsMouse']),
+
+    'div',
+
 
     actions.ActionButton(
         'undo',
@@ -183,7 +190,13 @@ _TOOLBAR_SPECS = [
         tooltip=_TOOLTIPS['redo']),
 
     'div',
-
+    
+    props.Widget(
+        'showSelection',
+        icon=_ICONS['showSelection'],
+        tooltip=_TOOLTIPS['showSelection'],
+        dependencies=['drawMode'],
+        enabledWhen=lambda i, m: not m),
     actions.ActionButton(
         'clearSelection',
         icon=_ICONS['clearSelection'],

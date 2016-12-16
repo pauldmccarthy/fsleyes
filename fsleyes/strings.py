@@ -671,6 +671,7 @@ properties = TypeDict({
     'OrthoEditProfile.selectionOverlayColour' : 'Selection overlay',
     'OrthoEditProfile.selectionCursorColour'  : 'Selection cursor',
     'OrthoEditProfile.locationFollowsMouse'   : 'Location follows mouse',
+    'OrthoEditProfile.showSelection'          : 'Show current selection',
     'OrthoEditProfile.drawMode'               : 'Draw mode',
     'OrthoEditProfile.targetImage'            : 'Target image',
     
