@@ -1625,13 +1625,22 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             return False
 
         editor = self.__editors[self.__currentOverlay]
+
+        # The searchRadius/intensityThres
+        # properties are unclamped, so we
+        # have to make sure that they have
+        # valid values.
+        if self.searchRadius   > 0: searchRadius   = self.searchRadius
+        else:                       searchRadius   = 0
+        if self.intensityThres > 0: intensityThres = self.intensityThres
+        else:                       intensityThres = 0 
         
         if not self.limitToRadius:
             searchRadius = None
         else:
-            searchRadius = (self.searchRadius / overlay.pixdim[0],
-                            self.searchRadius / overlay.pixdim[1],
-                            self.searchRadius / overlay.pixdim[2])
+            searchRadius = (searchRadius / overlay.pixdim[0],
+                            searchRadius / overlay.pixdim[1],
+                            searchRadius / overlay.pixdim[2])
 
         if self.selectionIs3D:
             restrict = None
@@ -1694,7 +1703,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # part of the GL texture.
         selected, offset = selection.selectByValue(
             voxel,
-            precision=self.intensityThres,
+            precision=intensityThres,
             searchRadius=searchRadius,
             local=self.localFill,
             restrict=restrict,

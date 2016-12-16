@@ -464,7 +464,18 @@ class SliceCanvas(props.HasProperties):
         self.disableListener('zoom', self.name)
         self.zoom = 100
         self.enableListener('zoom',  self.name)
-        self._updateDisplayBounds()
+
+        xmin = self.displayCtx.bounds.getLo(self.xax)
+        xmax = self.displayCtx.bounds.getHi(self.xax)
+        ymin = self.displayCtx.bounds.getLo(self.yax)
+        ymax = self.displayCtx.bounds.getHi(self.yax)
+        xmid = xmin + (xmax - xmin) / 2.0
+        ymid = ymin + (ymax - ymin) / 2.0
+
+        with props.suppress(self, 'displayBounds'):
+            self.centreDisplayAt(xmid, ymid)
+            self._updateDisplayBounds()
+            self.Refresh()
 
 
     def getAnnotations(self):
