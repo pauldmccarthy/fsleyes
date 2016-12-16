@@ -512,12 +512,14 @@ class LocationPanel(fslpanel.FSLeyesPanel):
             vlo      = [0, 0, 0]
             vhi      = np.array(shape) - 1
             wlo, whi = transform.axisBounds(shape, v2w)
+            wstep    = overlay.pixdim[:3]
         else:
             vlo     = [0, 0, 0]
             vhi     = [0, 0, 0]
             wbounds = self._displayCtx.bounds[:]
             wlo     = wbounds[0::2]
             whi     = wbounds[1::2]
+            wstep   = [1, 1, 1]
 
         log.debug('Setting voxelLocation limits: {} - {}'.format(vlo, vhi))
         log.debug('Setting worldLocation limits: {} - {}'.format(wlo, whi))
@@ -525,12 +527,14 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         # Update the voxel and world location limits,
         # but don't trigger a listener callback, as
         # this would change the display location.
+        widgets = [self.__worldX, self.__worldY, self.__worldZ]
         with props.suppress(self, 'worldLocation'), \
              props.suppress(self, 'voxelLocation'):
 
             for i in range(3):
                 self.voxelLocation.setLimits(i, vlo[i], vhi[i])
                 self.worldLocation.setLimits(i, wlo[i], whi[i])
+                widgets[i].SetIncrement(wstep[i])
 
             
     def __displayLocationChanged(self, *a):
