@@ -142,6 +142,7 @@ from . import loadcolourmap
 from . import saveperspective
 from . import loadperspective
 from . import clearperspective
+from . import clearsettings
 from . import togglecontrolpanel
 from . import diagnosticreport
 from . import about
@@ -166,6 +167,7 @@ LoadColourMapAction      = loadcolourmap     .LoadColourMapAction
 SavePerspectiveAction    = saveperspective   .SavePerspectiveAction
 LoadPerspectiveAction    = loadperspective   .LoadPerspectiveAction
 ClearPerspectiveAction   = clearperspective  .ClearPerspectiveAction
+ClearSettingsAction      = clearsettings     .ClearSettingsAction
 ToggleControlPanelAction = togglecontrolpanel.ToggleControlPanelAction
 DiagnosticReportAction   = diagnosticreport  .DiagnosticReportAction
 AboutAction              = about             .AboutAction

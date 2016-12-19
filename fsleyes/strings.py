@@ -212,7 +212,12 @@ messages = TypeDict({
                                             'as the first column?',
 
     'LoadAtlasAction.error'       :
-    'An error occurred loading the atlas specification {}\n\nDetails: {}', 
+    'An error occurred loading the atlas specification {}\n\nDetails: {}',
+
+    'ClearSettingsAction.confirm'       :
+    'Are you sure you want to clear all FSLeyes settings? All preferences, '
+    'saved perspectives and loaded atlases will be lost!\n\n'
+    'You will need to restart FSLeyes for some changes to take effect.',
 
     'CorrelateAction.calculating' :
     'Calculating correlation values for seed voxel [{}, {}, {}] ...',
@@ -305,6 +310,8 @@ titles = TypeDict({
     'LoadAtlasAction.fileDialog'  : 'Load XML atlas specification',
     'LoadAtlasAction.error'       : 'Error loading atlas specification',
 
+    'ClearSettingsAction.confirm' : 'Clear all settings?',
+
     'LoadColourMapAction.installcmap'     : 'Install colour map?',
 })
 
@@ -316,6 +323,7 @@ actions = TypeDict({
     'LoadStandardAction'       : 'Add standard',
     'CopyOverlayAction'        : 'Copy',
     'LoadAtlasAction'          : 'Add atlas',
+    'ClearSettingsAction'      : 'Clear FSLeyes settings',
     'SaveOverlayAction'        : 'Save',
     'ReloadOverlayAction'      : 'Reload',
     'RemoveOverlayAction'      : 'Remove',
