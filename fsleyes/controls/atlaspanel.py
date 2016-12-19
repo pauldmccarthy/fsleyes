@@ -27,6 +27,7 @@ import fsl.utils.status   as status
 import fsl.utils.async    as async
 import fsleyes.panel      as fslpanel
 import fsleyes.strings    as strings
+from . import                atlasmanagementpanel
 from . import                atlasoverlaypanel
 from . import                atlasinfopanel 
 
@@ -37,20 +38,22 @@ log = logging.getLogger(__name__)
 class AtlasPanel(fslpanel.FSLeyesPanel):
     """An ``AtlasPanel`` is a :class:`.FSLeyesPanel` which allows the user to
     view atlas information, and to browse through the atlases that come
-    shipped with FSL. The ``AtlasPanel`` interface is provided by two
+    shipped with FSL. The ``AtlasPanel`` interface is provided by some
     sub-panels, which are displayed in a :class:`pwidgets.Notebook` panel. The
     ``AtlasPanel`` itself provides a number of convenience methods that are
     used by these sub-panels:
 
 
-    =========================== =============================================
-    :class:`.AtlasInfoPanel`    Displays information for the current
-                                :attr:`.DisplayContext.location` from atlases
-                                selected by the user.
-    :class:`.AtlasOverlayPanel` Allows the user to search through all atlases
-                                for specific regions, and to toggle on/off
-                                overlays for those regions.
-    =========================== =============================================
+    ============================== ===========================================
+    :class:`.AtlasInfoPanel`       Displays information for the current
+                                   :attr:`.DisplayContext.location` from 
+                                   atlases selected by the user.
+    :class:`.AtlasOverlayPanel`    Allows the user to search through all 
+                                   atlases for specific regions, and to toggle 
+                                   on/off overlays for those regions.
+
+    :class:`.AtlasManagementPanel` Allows the user to add/remove atlases.
+    ============================== ===========================================
 
 
     **Loading atlases**
@@ -152,6 +155,14 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         fslpanel.FSLeyesPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
+        # Make sure the atlas 
+        # registry is up to date
+        atlases.rescanAtlases()
+
+        # See the enableAtlasPanel method 
+        # for info about this attribute.
+        self.__atlasPanelEnableStack = 0
+
         # Cache of loaded atlases
         # and enabled atlas overlays.
         self.__enabledOverlays = {}
@@ -171,11 +182,16 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         # allowing the user to add/remove overlays
         self.__overlayPanel = atlasoverlaypanel.AtlasOverlayPanel(
             self.__notebook, overlayList, displayCtx, frame, self)
+
+        self.__managePanel = atlasmanagementpanel.AtlasManagementPanel(
+            self.__notebook, overlayList, displayCtx, frame, self)
         
         self.__notebook.AddPage(self.__infoPanel,
                                 strings.titles[self.__infoPanel])
-        self.__notebook.AddPage(self.__overlayPanel,
+        self.__notebook.AddPage(self.__overlayPanel, 
                                 strings.titles[self.__overlayPanel])
+        self.__notebook.AddPage(self.__managePanel,
+                                strings.titles[self.__managePanel]) 
 
         self._overlayList.addListener('overlays',
                                       self._name,
@@ -196,6 +212,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         self.__enabledOverlays = None
         self.__infoPanel     .destroy()
         self.__overlayPanel  .destroy()
+        self.__managePanel   .destroy()
         
         self._overlayList.removeListener('overlays', self._name)
         
@@ -212,6 +229,42 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
     def Disable(self):
         """Disables this ``AtlasPanel``. """
         self.Enable(False)
+
+
+    def enableAtlasPanel(self, enable=True):
+        """Disables/enables the :class:`.AtlasPanel` which contains this
+        ``AtlasOverlayPanel``. This method is used by
+        :class:`OverlayListWidget` instances.
+
+        This method keeps a count of the number of times that it has been
+        called - the count is increased every time a request is made
+        to disable the ``AtlasPanel``, and decreased on requests to
+        enable it. The ``AtlasPanel`` is only enabled when the count
+        reaches 0.
+
+        This ugly method solves an awkward problem - the ``AtlasOverlayPanel``
+        disables the ``AtlasPanel`` when an atlas overlay is toggled on/off
+        (via an ``OverlayListWidget``), and when an atlas region list is being
+        generated (via the :meth:`__onAtlasSelect` method). If both of these
+        things occur at the same time, the ``AtlasPanel`` could be prematurely
+        re-enabled. This method overcomes this problem.
+        """ 
+        count = self.__atlasPanelEnableStack
+
+        log.debug('enableAtlasPanel({}, count={})'.format(enable, count))
+
+        if enable:
+            count -= 1
+
+            if count <= 0:
+                count = 0
+                self.Enable()
+
+        else:
+            count += 1
+            self.Disable()
+
+        self.__atlasPanelEnableStack = count 
 
 
     def loadAtlas(self,

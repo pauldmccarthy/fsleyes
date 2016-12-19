@@ -33,34 +33,44 @@ class LoadAtlasAction(action.Action):
         action.Action.__init__(self, self.__loadAtlas)
 
         self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx 
+        self.__displayCtx  = displayCtx
+        self.__frame       = frame
 
 
     def __loadAtlas(self):
-        """Prompts the user to select an atlas specification file, and then
-        loads the atlas.
-        """
+        """Calls the :func:`loadAtlas` function. """
 
-        import wx
-        app = wx.GetApp()
+        loadAtlas(self.__frame)
 
-        msg = strings.titles[self, 'fileDialog']
-        dlg = wx.FileDialog(app.GetTopWindow(),
-                            message=msg,
-                            wildcard='XML atlas specification|*.xml',
-                            style=wx.FD_OPEN)
 
-        if dlg.ShowModal() != wx.ID_OK:
-            return
+def loadAtlas(parent=None):
+    """Prompts the user to select an atlas specification file, and then
+    loads the atlas.
+    """
 
-        path = dlg.GetPath()
+    import wx
+    app = wx.GetApp()
 
-        try:
-            atlases.addAtlas(path)
-            
-        except Exception as e:
+    if parent is None:
+        parent = app.GetTopWindow()
 
-            title = strings.titles[  self, 'error']
-            msg   = strings.messages[self, 'error'].format(path, str(e))
+    msg = strings.titles[LoadAtlasAction, 'fileDialog']
+    dlg = wx.FileDialog(parent,
+                        message=msg,
+                        wildcard='XML atlas specification|*.xml',
+                        style=wx.FD_OPEN)
 
-            wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK) 
+    if dlg.ShowModal() != wx.ID_OK:
+        return
+
+    path = dlg.GetPath()
+
+    try:
+        atlases.addAtlas(path)
+
+    except Exception as e:
+
+        title = strings.titles[  LoadAtlasAction, 'error']
+        msg   = strings.messages[LoadAtlasAction, 'error'].format(path, str(e))
+
+        wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK) 

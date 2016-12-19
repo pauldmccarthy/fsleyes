@@ -70,6 +70,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         atlases which have matching regions will be highlighted in bold.
     """ 
 
+
     def __init__(self, parent, overlayList, displayCtx, frame, atlasPanel):
         """Create an ``AtlasOverlayPanel``.
 
@@ -87,10 +88,6 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
 
         fslpanel.FSLeyesPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
-
-        # See the enableAtlasPanel method 
-        # for info about this attribute.
-        self.__atlasPanelEnableStack = 0
 
         # References to an EditableListBox
         # for each atlas, containing a list
@@ -381,7 +378,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
                 self.__regionSizer.Layout()
 
                 if atlasPanelDisabled:
-                    self.enableAtlasPanel()
+                    self.__atlasPanel.enableAtlasPanel()
                 
             except wx.PyDeadObjectError:
                 pass
@@ -450,7 +447,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
 
             atlasPanelDisabled = True
 
-            self.enableAtlasPanel(False)
+            self.__atlasPanel.enableAtlasPanel(False)
             async.idle(addToRegionList, 0)
         else:
             async.idle(changeAtlasList)
@@ -468,42 +465,6 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         
         self.__atlasList.SetSelection(atlasIdx)
         self.__onAtlasSelect(atlasDesc=atlasDesc)
-
-
-    def enableAtlasPanel(self, enable=True):
-        """Disables/enables the :class:`.AtlasPanel` which contains this
-        ``AtlasOverlayPanel``. This method is used by
-        :class:`OverlayListWidget` instances.
-
-        This method keeps a count of the number of times that it has been
-        called - the count is increased every time a request is made
-        to disable the ``AtlasPanel``, and decreased on requests to
-        enable it. The ``AtlasPanel`` is only enabled when the count
-        reaches 0.
-
-        This ugly method solves an awkward problem - the ``AtlasOverlayPanel``
-        disables the ``AtlasPanel`` when an atlas overlay is toggled on/off
-        (via an ``OverlayListWidget``), and when an atlas region list is being
-        generated (via the :meth:`__onAtlasSelect` method). If both of these
-        things occur at the same time, the ``AtlasPanel`` could be prematurely
-        re-enabled. This method overcomes this problem.
-        """ 
-        count = self.__atlasPanelEnableStack
-
-        log.debug('enableAtlasPanel({}, count={})'.format(enable, count))
-
-        if enable:
-            count -= 1
-
-            if count <= 0:
-                count = 0
-                self.__atlasPanel.Enable()
-
-        else:
-            count += 1
-            self.__atlasPanel.Disable()
-
-        self.__atlasPanelEnableStack = count
 
         
 class OverlayListWidget(wx.Panel):
@@ -597,7 +558,7 @@ class OverlayListWidget(wx.Panel):
                self.__atlasOvlPanel .destroyed():
                 return
                 
-            self.__atlasOvlPanel.enableAtlasPanel()
+            self.__atlasPanel.enableAtlasPanel()
 
         def onError(e):
             message = strings.messages[self.__atlasOvlPanel, 'loadAtlasError']
@@ -608,14 +569,14 @@ class OverlayListWidget(wx.Panel):
                 message=message,
                 style=(wx.ICON_EXCLAMATION | wx.OK)).ShowModal()
             
-            self.__atlasOvlPanel.enableAtlasPanel()
+            self.__atlasPanel.enableAtlasPanel()
             self.__enableBox.SetValue(
                 self.__atlasPanel.getOverlayState(
                     self.__atlasID,
                     self.__labelIdx,
                     self.__atlasDesc.atlasType == 'label'))
 
-        self.__atlasOvlPanel.enableAtlasPanel(False)
+        self.__atlasPanel.enableAtlasPanel(False)
 
         log.debug('Toggling atlas {}'.format(self.__atlasID))
 
