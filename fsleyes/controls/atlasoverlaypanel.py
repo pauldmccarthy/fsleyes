@@ -96,12 +96,6 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         # method.  
         self.__regionLists = {}
 
-        # Dict of {atlasID : index} mappings,
-        # which we use to keep track of the
-        # index of each atlas in the atlas
-        # list
-        self.__atlasIndices = {}
-
         self.__atlasPanel      = atlasPanel
         self.__contentPanel    = wx.SplitterWindow(self,
                                                    style=wx.SP_LIVE_UPDATE)
@@ -137,7 +131,9 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         self.__atlasList.Bind(elistbox.EVT_ELB_SELECT_EVENT,
                               self.__onAtlasSelect)
 
-        fslplatform.register(self._name, self.__fslDirChanged)
+        fslplatform.register(     self._name, self.__fslDirChanged)
+        atlases.registry.register(self._name, self.__atlasAdded,   'add')
+        atlases.registry.register(self._name, self.__atlasRemoved, 'remove')
 
         self.__buildAtlasList()
 
@@ -159,9 +155,10 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
 
     def Enable(self, enable=True):
         """Enables/disables this ``AtlasOverlayPanel``. """
+        
         self.__atlasList.Enable(enable)
-        regionList = self.__regionSizer.GetItem(1).GetWindow()
-        if regionList is not None:
+
+        for atlasID, regionList in self.__regionLists.items():
             regionList.Enable(enable)
 
 
@@ -170,7 +167,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         self.Enable(False)
 
 
-    def setOverlayState(self, atlasID, labelIdx, summary, state):
+    def setOverlayState(self, atlasDesc, labelIdx, summary, state):
         """Updates the *enabled* state of the specified atlas overlay.
 
         This method is called by the :class:`.AtlasPanel` when an atlas overlay
@@ -179,17 +176,17 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         are up to date.
         """
 
-        atlasIdx = self.__atlasIndices[atlasID]
+        atlasIdx = self.__atlasList.IndexOf(atlasDesc)
         
         log.debug('Setting {}/{} overlay state to {}'.format(
-            atlasID, labelIdx, state))
+            atlasDesc.atlasID, labelIdx, state))
 
         if labelIdx is None:
             widget = self.__atlasList.GetItemWidget(atlasIdx)
             widget.SetEnableState(state)
         else:
             
-            regionList = self.__regionLists.get(atlasID, None)
+            regionList = self.__regionLists.get(atlasDesc.atlasID, None)
             if regionList is not None:
                 regionList.GetItemWidget(labelIdx).SetEnableState(state)
 
@@ -200,73 +197,68 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         """ 
         self.__buildAtlasList()
 
+
+    def __atlasAdded(self, *a):
+        """Called when a new atlas is added to the :class:`.AtlasRegistry`.
+        Re-generates the atlas list.
+        """ 
+        self.__buildAtlasList()
+
+        
+    def __atlasRemoved(self, *a):
+        """Called when an atlas is removed from the :class:`.AtlasRegistry`.
+        Re-generates the atlas list.
+        """ 
+        self.__buildAtlasList() 
+
     
     def __buildAtlasList(self):
         """Clears and recreates the atlas list. Also clears all existing
         region lists.
         """
 
-        atlasDescs = None
+        atlasDescs = atlases.listAtlases()
 
-        # Don't bother if fsldir is not set
-        if fslplatform.fsldir is None:
-            return 
-
-        # See AtlasInfoPanel.__buildAtlasList
-        # for a more commented version of what
-        # is essentially the same process as
-        # below.
-        #
-        # TL,DR: Loading atlas descriptions might take
-        #        time, so it is performed asynchronously
-        #        on a separate thread.
-        def loadAtlases():
-            global atlasDescs
-            atlasDescs = atlases.listAtlases()
-            atlasDescs = sorted(atlasDescs, key=lambda d: d.name)
-
-        def buildList():
-            global atlasDescs
-
-            # We might have been destroyed
-            # while the atlases were being
-            # loaded.
-            if not self or self.destroyed():
-                return
+        # This method is called whenever any
+        # atlases are added/removed. We want
+        # to preserve any region lists for
+        # atlases that are still in the atlas
+        # registry.
+        regionLists = dict(self.__regionLists)
             
-            # If a region list is currently
-            # being shown, clear it. 
-            regionList = self.__regionSizer.GetItem(1).GetWindow()
-            if regionList is not None:
-                self.__regionSizer.Remove(1)
-                self.__regionSizer.AddStretchSpacer()
+        # If a region list is currently
+        # being shown, clear it. 
+        regionList = self.__regionSizer.GetItem(1).GetWindow()
+        if regionList is not None:
+            regionList.Show(False)
+            self.__regionSizer.Remove(1)
+            self.__regionSizer.AddStretchSpacer()
 
-            # Destroy any existing region lists
-            for regionList in self.__regionLists:
-                if regionList is not None:
-                    regionList.Destroy()
+        self.__regionLists = {}
 
-            self.__regionLists  = {}
-            self.__atlasIndices = {}
+        # Now clear and re-populate the atlas list
+        self.__atlasList.Clear()
+        for i, atlasDesc in enumerate(atlasDescs):
 
-            # Now clear and re-populate the atlas list
-            self.__atlasList.Clear()
-            for i, atlasDesc in enumerate(atlasDescs):
+            self.__atlasList.Append(atlasDesc.name, atlasDesc)
+            self.__updateAtlasState(atlasDesc)
 
-                self.__atlasIndices[atlasDesc.atlasID] = i
-                self.__atlasList.Append(atlasDesc.name, atlasDesc)
-                self.__updateAtlasState(atlasDesc.atlasID)
-                
-                widget = OverlayListWidget(self.__atlasList,
-                                           atlasDesc.atlasID,
-                                           self.__atlasPanel,
-                                           self)
-                
-                self.__atlasList.SetItemWidget(i, widget)
+            widget = OverlayListWidget(self.__atlasList,
+                                       atlasDesc.atlasID,
+                                       self.__atlasPanel,
+                                       self)
 
-            self.__regionSizer.Layout()
+            self.__atlasList.SetItemWidget(i, widget)
 
-        async.run(loadAtlases, onFinish=buildList)
+        # Restore references to region lists 
+        # for atlases that still exist
+        for atlasID, regionList in regionLists.items():
+            if atlases.hasAtlas(atlasID):
+                self.__regionLists[atlasID] = regionList
+            else:
+                regionList.Destroy()
+
+        self.__regionSizer.Layout()
 
 
     def __onRegionFilter(self, ev):
@@ -281,7 +273,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
 
         for atlasDesc in atlases.listAtlases():
 
-            self.__updateAtlasState(atlasDesc.atlasID)
+            self.__updateAtlasState(atlasDesc)
 
             listBox = self.__regionLists.get(atlasDesc.atlasID, None)
 
@@ -289,7 +281,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
                 listBox.ApplyFilter(filterStr, ignoreCase=True)
 
 
-    def __updateAtlasState(self, atlasID):
+    def __updateAtlasState(self, atlasDesc):
         """Updates the state of the atlas list item which corresponds to the
         atlas with the specified identifier.
 
@@ -298,7 +290,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         string is empty), the atlas label font is set to normal.
         """
 
-        atlasIdx  = self.__atlasIndices[atlasID]
+        atlasIdx  = self.__atlasList.IndexOf(atlasDesc)
         filterStr = self.__regionFilter.GetValue().lower().strip()
         atlasDesc = self.__atlasList.GetItemData(atlasIdx)
 
@@ -356,7 +348,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
                 filterStr = self.__regionFilter.GetValue().lower().strip()
                 regionList.ApplyFilter(filterStr, ignoreCase=True)
 
-                self.__updateAtlasState(atlasDesc.atlasID)
+                self.__updateAtlasState(atlasDesc)
 
                 status.update(strings.messages[self, 'regionsLoaded'].format(
                     atlasDesc.name))
@@ -453,15 +445,14 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
             async.idle(changeAtlasList)
 
 
-    def selectAtlas(self, atlasID):
+    def selectAtlas(self, atlasDesc):
         """Selects the specified atlas. This method is used by
         :class:`OverlayListWidget` instances.
 
         :arg atlasID:   The atlas identifier
         """
 
-        atlasIdx  = self.__atlasIndices[atlasID]
-        atlasDesc = atlases.getAtlasDescription(atlasID)
+        atlasIdx = self.__atlasList.IndexOf(atlasDesc)
         
         self.__atlasList.SetSelection(atlasIdx)
         self.__onAtlasSelect(atlasDesc=atlasDesc)
@@ -588,7 +579,7 @@ class OverlayListWidget(wx.Panel):
             onError=onError)
 
         if self.__labelIdx is None:
-            self.__atlasOvlPanel.selectAtlas(self.__atlasID) 
+            self.__atlasOvlPanel.selectAtlas(self.__atlasDesc) 
 
         
     def __onLocate(self, ev):

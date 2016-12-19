@@ -224,6 +224,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
         self.__infoPanel   .Enable(enable)
         self.__overlayPanel.Enable(enable)
+        self.__managePanel .Enable(enable)
 
 
     def Disable(self):
@@ -439,7 +440,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
             self.__enabledOverlays.pop(overlayName, None)
             self.__overlayPanel.setOverlayState(
-                atlasID, labelIdx, summary, False)
+                atlasDesc, labelIdx, summary, False)
             
             log.debug('Removed overlay {}'.format(overlayName))
 
@@ -480,7 +481,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
                 self._overlayList.append(overlay, overlayType=overlayType)
 
             self.__overlayPanel.setOverlayState(
-                atlasID, labelIdx, summary, True) 
+                atlasDesc, labelIdx, summary, True) 
 
             self.__enabledOverlays[overlayName] = (overlay,
                                                    atlasID,
@@ -556,5 +557,6 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
             if overlay not in self._overlayList:
                 
                 self.__enabledOverlays.pop(overlayName)
+                atlasDesc = atlases.getAtlasDescription(atlasID)
                 self.__overlayPanel.setOverlayState(
-                    atlasID, labelIdx, summary, False)
+                    atlasDesc, labelIdx, summary, False)

@@ -40,6 +40,9 @@ class LoadAtlasAction(action.Action):
     def __loadAtlas(self):
         """Calls the :func:`loadAtlas` function. """
 
+        if len(atlases.listAtlases()) == 0:
+            atlases.rescanAtlases()
+
         loadAtlas(self.__frame)
 
 

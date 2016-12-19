@@ -233,7 +233,7 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
 
     
     def __atlasRemoved(self, registry, topic, atlasDesc):
-        """Called when a new atlas is added to the :class:`.AtlasRegistry`.
+        """Called when an atlas is removed from the :class:`.AtlasRegistry`.
         Re-generates the atlas list.
         """
         self.__buildAtlasList()
