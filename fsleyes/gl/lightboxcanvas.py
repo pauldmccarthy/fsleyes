@@ -561,8 +561,11 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # we save them here as an attribute
         self._realBounds = (xmin, xmax, ymin, ymax)
 
+        log.debug('Required lightbox bounds: X: ({}, {}) Y: ({}, {})'.format(
+            xmin, xmax, ymin, ymax))
+
         slicecanvas.SliceCanvas._updateDisplayBounds(
-            self, xmin, xmax, ymin, ymax)
+            self, (xmin, xmax, ymin, ymax))
 
 
     def _genSliceLocations(self):

@@ -1066,12 +1066,18 @@ class SliceCanvas(props.HasProperties):
         self._updateDisplayBounds(oldLoc=loc)
         
 
-    def _applyZoom(self, xmin, xmax, ymin, ymax):
+    def _applyZoom(self, xmin, xmax, ymin, ymax, centreOnBounds=True):
         """*Zooms* in to the given rectangle according to the
         current value of the zoom property, keeping the view
         centre consistent with respect to the current value
         of the :attr:`displayBounds` property. Returns a
         4-tuple containing the updated bound values.
+
+        :arg centreOnBounds: If ``True`` (the default), the zoomed in
+                             rectangle is centered on the current value of
+                             the :attr:`displayBounds`. Otherwise, the
+                             zoomed in rectangle is centered on the specified
+                             limits.
         """
 
         # The zoom is specified as a value
@@ -1104,9 +1110,15 @@ class SliceCanvas(props.HasProperties):
  
         # centre the zoomed-in rectangle on
         # the current displayBounds centre
-        bounds = self.displayBounds 
-        xmid   = bounds.xlo + 0.5 * bounds.xlen
-        ymid   = bounds.ylo + 0.5 * bounds.ylen
+        if centreOnBounds:
+            bounds = self.displayBounds
+            xmid   = bounds.xlo + 0.5 * bounds.xlen
+            ymid   = bounds.ylo + 0.5 * bounds.ylen
+
+        # Or on the provided limits
+        else:
+            xmid = xmin + 0.5 * xlen
+            ymid = ymin + 0.5 * ylen
 
         # new x/y min/max bounds
         xmin = xmid - 0.5 * newxlen
@@ -1117,12 +1129,7 @@ class SliceCanvas(props.HasProperties):
         return (xmin, xmax, ymin, ymax)
 
         
-    def _updateDisplayBounds(self,
-                             xmin=None,
-                             xmax=None,
-                             ymin=None,
-                             ymax=None,
-                             oldLoc=None):
+    def _updateDisplayBounds(self, bbox=None, oldLoc=None):
         """Called on canvas resizes, overlay bound changes, and zoom changes.
         
         Calculates the bounding box, in display coordinates, to be displayed
@@ -1140,20 +1147,35 @@ class SliceCanvas(props.HasProperties):
                      :meth:`.DisplayContext.__displaySpaceChanged` method.
         
         
-        :arg xmin:   Minimum x (horizontal) value to be in the display bounds.
-        :arg xmax:   Maximum x value to be in the display bounds.
-        :arg ymin:   Minimum y (vertical) value to be in the display bounds.
-        :arg ymax:   Maximum y value to be in the display bounds.
+        :arg bbox:   Tuple containing four values:
+                      - Minimum x (horizontal) value to be in the display
+                        bounds.
+                      - Maximum x value to be in the display bounds.
+                      - Minimum y (vertical) value to be in the display bounds.
+                      - Maximum y value to be in the display bounds.
+        
         :arg oldLoc: If provided, should be the ``(x, y)`` location shown on
                      this ``SliceCanvas`` - the new display bounds will be
                      adjusted so that this location remains the same, with
                      respect to the new field of view.
         """
 
-        if xmin is None: xmin = self.displayCtx.bounds.getLo(self.xax)
-        if xmax is None: xmax = self.displayCtx.bounds.getHi(self.xax)
-        if ymin is None: ymin = self.displayCtx.bounds.getLo(self.yax)
-        if ymax is None: ymax = self.displayCtx.bounds.getHi(self.yax)
+        # If a bounding box is provided, we want
+        # to preserve its centre when calling the
+        # _applyZoom method, instead of centering
+        # on the current displayBounds 
+        centreOnBounds = bbox is None
+
+        if bbox is None:
+            bbox = (self.displayCtx.bounds.getLo(self.xax),
+                    self.displayCtx.bounds.getHi(self.xax),
+                    self.displayCtx.bounds.getLo(self.yax),
+                    self.displayCtx.bounds.getHi(self.yax))
+            
+        xmin = bbox[0]
+        xmax = bbox[1]
+        ymin = bbox[2]
+        ymax = bbox[3]
 
         log.debug('Required display bounds: X: ({}, {}) Y: ({}, {})'.format(
             xmin, xmax, ymin, ymax))
@@ -1197,9 +1219,25 @@ class SliceCanvas(props.HasProperties):
         # location.
         oldxmin, oldxmax, oldymin, oldymax = self.displayBounds[:]
 
+        # If the previous display bounds are
+        # blank (all zeros), tell applyZoom
+        # to ignore them
+        centreOnBounds = centreOnBounds and \
+                         not np.all(np.isclose((oldxmin, oldymin),
+                                               (oldxmax, oldymax)))
+
         # Adjust the display bounds according
         # to the current zoom level.
-        xmin, xmax, ymin, ymax = self._applyZoom(xmin, xmax, ymin, ymax)
+        log.debug('Bounds after aspect ratio adjustment: '
+                  'X: ({}, {}) Y: ({}, {})'.format(
+                      xmin, xmax, ymin, ymax))
+
+        xmin, xmax, ymin, ymax = self._applyZoom(
+            xmin, xmax, ymin, ymax, centreOnBounds)
+
+        log.debug('Bounds after zoom adjustment: '
+                  'X: ({}, {}) Y: ({}, {})'.format(
+                      xmin, xmax, ymin, ymax))
 
         # If a location (oldLoc) has been provided,
         # adjust the bounds so they are consistent
