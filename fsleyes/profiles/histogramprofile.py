@@ -186,7 +186,6 @@ class HistogramProfile(plotprofile.PlotProfile):
         """
 
         hs           = self.__currentHs
-        hsPanel      = self._viewPanel
         rangePolygon = self.__rangePolygons.get(hs, None)
 
         if hs           is None: return
@@ -235,11 +234,7 @@ class HistogramProfile(plotprofile.PlotProfile):
             hs.showOverlayRange = newRange
 
         # Manually refresh the histogram range polygon.
-        # I'm using knowledge of the PlotPanel here
-        with props.suppress(hsPanel, 'artists'):
-            rangePolygon.updatePolygon()
-
-        hsPanel.drawArtists(immediate=True)
+        rangePolygon.updatePolygon()
         
         return which
 
@@ -448,8 +443,8 @@ class RangePolygon(patches.Polygon):
 
         # Add to the artists list if needed,
         # so the polygon gets shown.
-        if self not in hsPanel.artists:
-            hsPanel.artists.append(self)
+        if self not in hsPanel.artists: hsPanel.artists.append(self)
+        else:                           hsPanel.drawArtists(immediate=True)
 
 
 class HistogramOverlay(object):
