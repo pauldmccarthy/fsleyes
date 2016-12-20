@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 #
-# frameactions.py -
+# frameactions.py - Top level actions
+# 
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module contains various top-level FSLeyes actions which are
+monkey-patched into the :class:`.FSLeyesFrame` class.
+"""
+
 
 import os.path as op
-
 
 from fsl.utils.platform import platform as fslplatform
 
@@ -16,40 +20,42 @@ import fsleyes.actions as actions
 import fsleyes.views   as views
 
 
+def addViewPanel(self, vpType, *args, **kwargs):
+    """Function shared by the add*Panel functions below. """
+    vp = self.addViewPanel(vpType)
+    self.viewPanelDefaultLayout(vp)
+    vp.SetFocus()
+
+
 def addOrthoPanel(self, *args, **kwargs):
     """Adds a new :class:`.OrthoPanel`."""
-    vp = self.addViewPanel(views.OrthoPanel)
-    self.viewPanelDefaultLayout(vp)
+    addViewPanel(self, views.OrthoPanel, *args, **kwargs)
 
 
 def addLightBoxPanel(self, *args, **kwargs):
     """Adds a new :class:`.LightBoxPanel`."""
-    vp = self.addViewPanel(views.LightBoxPanel)
-    self.viewPanelDefaultLayout(vp) 
+    addViewPanel(self, views.LightBoxPanel, *args, **kwargs)
 
 
 def addTimeSeriesPanel(self, *args, **kwargs):
     """Adds a new :class:`.TimeSeriesPanel`."""
-    vp = self.addViewPanel(views.TimeSeriesPanel)
-    self.viewPanelDefaultLayout(vp)
+    addViewPanel(self, views.TimeSeriesPanel, *args, **kwargs)
 
 
 def addHistogramPanel(self, *args, **kwargs):
     """Adds a new :class:`.HistogramPanel`."""
-    vp = self.addViewPanel(views.HistogramPanel)
-    self.viewPanelDefaultLayout(vp)
+    addViewPanel(self, views.HistogramPanel, *args, **kwargs)
 
 
 def addPowerSpectrumPanel(self, *args, **kwargs):
     """Adds a new :class:`.PowerSpectrumPanel`."""
-    vp = self.addViewPanel(views.PowerSpectrumPanel)
-    self.viewPanelDefaultLayout(vp)
+    addViewPanel(self, views.PowerSpectrumPanel, *args, **kwargs)
 
 
 def addShellPanel(self, *args, **kwargs):
     """Adds a new :class:`.ShellPanel`."""
-    vp = self.addViewPanel(views.ShellPanel)
-    self.viewPanelDefaultLayout(vp)
+    addViewPanel(self, views.ShellPanel, *args, **kwargs)
+
 
 
 def removeFocusedViewPanel(self, *args, **kwargs):

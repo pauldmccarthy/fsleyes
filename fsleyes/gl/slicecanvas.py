@@ -997,6 +997,13 @@ class SliceCanvas(props.HasProperties):
         # same way to make sure it gets called
         # after all the GLObject creations.
         def refresh():
+
+            # This SliceCanvas might get
+            # destroyed before this idle
+            # task is executed
+            if not self or self.destroyed():
+                return
+
             self._updateRenderTextures()
             self.__resolutionLimitChange()
             self.Refresh()
