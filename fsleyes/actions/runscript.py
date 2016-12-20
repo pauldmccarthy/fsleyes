@@ -148,9 +148,19 @@ def runScript(frame, overlayList, displayCtx, script):
                                                  overlayList,
                                                  displayCtx)
 
+    # Workaround http://bugs.python.org/issue991196
+    #
+    # There is a bug/quirk in the exec function which
+    # means that, if you use separate dictionaries for
+    # globals and locals, closures won't work. So we
+    # copy all locals over to globals, and just use
+    # a single dictionary.
+    for k, v in _locals.items():
+        _globals[k] = v
+
     # Run the script
     log.debug('Running {}...'.format(script))
-    eval(code, _globals, _locals)
+    exec(code, _globals)
 
 
 def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
@@ -159,15 +169,17 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
     script.
     """
     
-    # Set up the script environment. It's
-    # quite difficult to truly sand-box an
-    # eval'ed piece of code, but restricting
-    # the things contained in__builtins__
-    # will deter simple attack attempts.
+    # Set up the script environment. I'm
+    # using this sandboxed environment
+    # for no particular reason.
     _globals = {
+        
         '__builtins__' : {
-            'True'  : True,
-            'False' : False
+            'True'       : True,
+            'False'      : False,
+            '__import__' : __import__,
+            'help'       : help,
+            'print'      : print,
         },
     }
 
@@ -205,7 +217,14 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         loadoverlay.loadOverlays([filename],
                                  onLoad=onLoad,
                                  inmem=displayCtx.loadInMemory)
-        
+
+    def scaledVoxels():
+        """Display all NIFTI images in true scaled voxels (but 
+        with a radiological/neurological flip). """
+        for o in overlayList:
+            if isinstance(o, image.Nifti):
+                displayCtx.getOpts(o).transform = 'pixdim-flip'
+                
 
     def trueScaledVoxels():
         """Display all NIFTI images in true scaled voxels (without
@@ -219,7 +238,12 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         for o in overlayList:
             if isinstance(o, image.Nifti):
                 displayCtx.getOpts(o).transform = 'id'
-                
+
+    def run(script):
+        """Run the specified Python script. """
+        runScript(frame, overlayList, displayCtx, script)
+        
+
     _locals = collections.OrderedDict((
         ('np',               np),
         ('sp',               sp),
@@ -235,10 +259,11 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         ('overlayList',      overlayList),
         ('displayCtx',       displayCtx),
         ('frame',            frame),
+        ('scaledVoxels',     scaledVoxels),
         ('trueScaledVoxels', trueScaledVoxels),
         ('rawVoxels',        rawVoxels),
         ('load',             load),
-        ('print',            print),
+        ('run',              run),
     ))
 
     return _globals, _locals
