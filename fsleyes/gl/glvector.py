@@ -367,13 +367,16 @@ class GLVectorBase(globject.GLImageObject):
         setattr(self, optsAttr,  None)
  
             
-    def refreshAuxTexture(self, which):
+    def refreshAuxTexture(self, which, interp=gl.GL_NEAREST):
         """Called when the :attr`.VectorOpts.modulateImage`,
         :attr`.VectorOpts.clipImage`, or :attr`.VectorOpts.colourImage`
         properties changes.  Reconfigures the modulation/clip/colour
         :class:`.ImageTexture`. If no image is selected, a 'dummy' texture is
         creatad, which contains all white values (and which result in the
         auxillary textures having no effect).
+
+        The ``interp`` argument can be used to set the initial interpolation
+        type (``GL_NEAREST`` or ``GL_LINEAR``).
         """
 
         imageAttr = '{}Image'  .format(which)
@@ -423,7 +426,8 @@ class GLVectorBase(globject.GLImageObject):
             image,
             normaliseRange=norm,
             volume=volume,
-            notify=False)
+            notify=False,
+            interp=interp)
         
         tex.register(self.name, self.__textureChanged)
         
@@ -721,6 +725,7 @@ class GLVector(GLVectorBase):
         # image texture is refreshed, then the init hook
         # is called.
         preinit = kwargs.pop('preinit', None)
+        
         def preinitWrapper():
             self.refreshImageTexture()
             if preinit is not None:

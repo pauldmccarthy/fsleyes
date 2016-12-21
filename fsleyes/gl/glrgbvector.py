@@ -74,6 +74,7 @@ class GLRGBVector(glvector.GLVector):
         else:                                      vecImage = image
 
         prefilter = np.abs
+        
         def prefilterRange(dmin, dmax):
             return max((0, dmin)), max((abs(dmin), abs(dmax)))
 
@@ -114,6 +115,18 @@ class GLRGBVector(glvector.GLVector):
         else:                            interp = gl.GL_LINEAR 
         
         glvector.GLVector.refreshImageTexture(self, interp)
+
+
+    def refreshAuxTexture(self, which):
+        """Overrides :meth:`.GLVector.refreshAuxTexture`. Calls the base
+        class implementation.
+        """
+        opts = self.displayOpts
+
+        if opts.interpolation == 'none': interp = gl.GL_NEAREST
+        else:                            interp = gl.GL_LINEAR 
+        
+        glvector.GLVector.refreshAuxTexture(self, which, interp) 
 
 
     def __interpChanged(self, *a):
