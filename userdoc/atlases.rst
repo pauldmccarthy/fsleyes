@@ -10,8 +10,7 @@ Atlases
 FSL comes bundled with a collection of `NIFTI templates and atlases
 <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases>`_. A variety of probabilistic
 and discrete atlases are included, comprising cortical, sub-cortical, and
-regional parcellations. It is also possible to add your own atlases to FSL -
-see the page on :ref:`customising FSLeyes <customising>` for details.
+regional parcellations. It is also possible to add your own atlases to FSL.
 
 
 .. sidebar:: Atlas registration space
@@ -28,9 +27,9 @@ atlases. An atlas panel can be added to a view via its settings menu,
 e.g. *Settings* |right_arrow| *Ortho view 1* |right_arrow| *Atlas panel*.
 
 
-The atlas panel is organised into two main sections - *Atlas information* and
-*Atlas search*. These sections are accessed by clicking on the two tabs at the
-top of the panel.
+The atlas panel is organised into three main sections - *Atlas information*,
+*Atlas search*, and *Atlas management*. These sections are accessed by
+clicking on the tabs at the top of the panel.
 
 
 .. _atlases_atlas_information:
@@ -133,3 +132,30 @@ filtered, so that only those regions with a name that contains the characters
 you entered are displayed. The atlas list on the left will also be updated so
 that any atlases which contain regions matching the search term are
 highlighted in **bold**.
+
+
+.. _atlases_atlas_management:
+
+Atlas management
+----------------
+
+
+.. image:: images/atlases_atlas_management.png
+   :width: 75%
+   :align: center
+
+
+The atlas management tab displays a list of all loaded atlases, and allows you
+to add and remove atlases from FSLeyes. The name of each atlas is shown in the
+list, but you can click and hold on an atlas to display the path to the atlas
+specification file.
+
+
+You can load a new atlas into FSLeyes by clicking the + button, and selecting
+the FSL atlas specification file which describes the atlas - see the page on
+:ref:`customising FSLeyes <customising>` for details.  You can remove an atlas
+from FSLeyes by selecting it in the list and clicking the - button [*]_.
+
+
+.. [*] If you remove an atlas that is located in ``$FSLDIR/data/atlases/`` it
+       will be re-loaded the next time you start FSLeyes.

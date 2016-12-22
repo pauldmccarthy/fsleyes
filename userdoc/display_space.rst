@@ -17,7 +17,7 @@ Overview
 
           
 FSLeyes assumes that all of the overlays you load are defined in the same
-space. If this assumption holds, FSLeyes will align all of your overlays on
+space. If this assumption holds, FSLeyes will align all of your overlays in
 the display, even if they have different resolution or orientation. 
 
 

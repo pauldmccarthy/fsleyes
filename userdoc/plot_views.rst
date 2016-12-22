@@ -45,8 +45,10 @@ pages for more details.
 When you are viewing a 4D NIFTI image in an :ref:`orthographic or ligthbox
 view <ortho_lightbox_views>`, the time series view will update as you change
 the display location, to show the time series from the voxel (or voxels, if
-you have more than one 4D image loaded) at the current location.  You can use
-the :ref:`plot toolbar <plot_views_plot_toolbar>` or :ref:`plot list
+you have more than one 4D image loaded) at the current location. Clicking, or
+clicking and dragging on the time series plot will update the volume that is
+displayed for the currently selected image.  You can use the :ref:`plot
+toolbar <plot_views_plot_toolbar>` or :ref:`plot list
 <plot_views_holding_data_series_and_the_plot_list>` to "hold" the time series
 for one or more voxels, which will keep them on the plot after you change the
 display location.
@@ -179,13 +181,34 @@ selected image:
    :align: center
 
 
+
+.. sidebar:: 3D histogram overlay
+
+             
+             .. image:: images/plot_views_histogram_overlay.png
+                :width: 100%
+                :align: center
+
+             |
+
+             When you enable the *Show 3D histogram overlay* setting, a
+             :ref:`mask <overlays_mask>` is added to the display, allowing you
+             to see the voxels that have been included in the histogram.
+             Clicking and dragging on the histogram plot allows you to
+             interactively adjust the range of voxel intensities that are
+             displayed.
+             
+             
+
+
 - **Ignore zeros** This setting is selected by default. When selected, voxels
   which have an intensity equal to 0 are excluded from the histogram
   calculation.
 
 - **Show 3D histogram overlay** When this setting is selected, a :ref:`mask
   <overlays_mask>` overlay is created, which displays the voxels that have
-  been included in the histogram calculation.
+  been included in the histogram calculation. See the sidebar for more
+  details.
 
 - **Include values out of data range** When this setting is selected, the
   histogram will be updated so that the first and last bins contain voxels

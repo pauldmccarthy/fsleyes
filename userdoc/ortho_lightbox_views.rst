@@ -107,8 +107,8 @@ view. More settings are available in the :ref:`view settings panel
    <ortho_lightbox_views_view_settings_movie_mode>`.
 
    
-6. **Toggle cursor** This button allows you to turn the location cursor on and
-   off.
+6. **Toggle cursor/labels** This button allows you to turn the location cursor
+   and anatomical labels on and off.
 
    
 7. **Reset pan/zoom** This button will reset the pan and zoom settings on the
@@ -396,7 +396,9 @@ will causes FSLeyes to automatically loop through all of the 3D volumes in the
 image. This allows you to quickly scan through 4D images to, for example,
 visually check for motion artefacts in fMRI time series, or check registration
 alignment in a collection of T1 MRI images. The **Movie update rate** setting
-will adjust the speed at which the movie frames change.
+will adjust the speed at which the movie frames change. You can also change
+the image axis (X, Y, Z, or time/volume), to loop through via the **Movie
+axis** setting.
 
 
 .. _ortho_lightbox_views_view_settings_colour_bar:
