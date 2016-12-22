@@ -220,7 +220,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
                 sampleTime = ps.overlay.pixdim[3]
 
             freqStep = 1.0 / (2 * nsamples * sampleTime)
-            xdata    = np.arange(0.0, nsamples * freqStep, freqStep)
+            xdata    = np.linspace(0.0, (nsamples - 1) * freqStep, nsamples)
 
         return xdata, ydata
 

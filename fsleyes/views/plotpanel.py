@@ -804,6 +804,9 @@ class PlotPanel(viewpanel.ViewPanel):
             return (0, 0), (0, 0)
 
         if len(xdata) != len(ydata) or len(xdata) == 0:
+            log.debug('{}: data series length mismatch, or '
+                      'no data points (x: {}, y: {})'.format(
+                          ds.overlay.name, len(xdata), len(ydata)))
             return (0, 0), (0, 0)
 
         log.debug('Drawing {} for {}'.format(type(ds).__name__, ds.overlay))
