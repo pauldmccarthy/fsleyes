@@ -1558,12 +1558,25 @@ def parseArgs(mainParser,
             mainParser.print_usage(file=sys.stderr)
             sys.exit(1)
 
+        # Did the user specify an
+        # overlay type for this file?
+        overlayTypeSet = otArgs.overlayType is not None
+
+        # Check that it is a valid choice.
+        # Note: This won't catch all invalid
+        # choices, e.g. if 'tensor' is
+        # specified for a nifti image that
+        # doesn't have 6 volumes.
+        if overlayTypeSet:
+            if otArgs.overlayType not in fsldisplay.OVERLAY_TYPES[ovlType]:
+                raise RuntimeError('Invalid overlay type "{}" '
+                                   'for data type "{}"'.format(
+                                       otArgs.overlayType, ovlType.__name__))
+        
         # If the user did not specify an overlay type
         # for this overlay, use its default (see the
         # display.OVERLAY_TYPES) dictionary).
-        overlayTypeSet = otArgs.overlayType is not None
-        
-        if not overlayTypeSet:
+        else:
             otArgs.overlayType = fsldisplay.getOverlayTypes(ovlType)[0]
 
         # Now parse the Display/DisplayOpts
