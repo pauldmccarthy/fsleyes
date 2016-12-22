@@ -52,6 +52,13 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
        ~fsleyes.profiles.orthoviewprofile.OrthoViewProfile
     """
 
+
+    showCursorAndLabels = props.Boolean(default=True)
+    """This property is linked to a button on the toolbar which allows the
+    user to simultaneously toggle the :attr:`.SceneOpts.showCursor` and
+    :attr:`.OrthoOpts.showLabels` properties.
+    """
+
     
     def __init__(self, parent, overlayList, displayCtx, frame, ortho):
         """Create an ``OrthoToolBar``.
@@ -81,7 +88,22 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
         # lazy and just re-generating the entire toolbar.
         ortho.addListener('profile', self._name, self.__makeTools)
 
+        self.addListener('showCursorAndLabels',
+                         self._name,
+                         self.__showCursorAndLabelsChanged)
+
         self.__makeTools()
+
+
+    def destroy(self):
+        """Must be called when this ``OrthoToolBar`` is no longer in use.
+        Removes some property listeners, and calls the base class
+        implementation.
+        """
+        self.orthoPanel.removeListener('profile',             self._name)
+        self           .removeListener('showCursorAndLabels', self._name)
+
+        fsltoolbar.FSLeyesToolBar.destroy(self)
 
 
     def __makeTools(self, *a):
@@ -103,7 +125,7 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
         icons = {
             'screenshot'       : fslicons.findImageFile('camera24'),
             'resetDisplay'     : fslicons.findImageFile('resetZoom24'),
-            'showCursor'       : [
+            'showCursorAndLabels' : [
                 fslicons.findImageFile('addHighlight24'),
                 fslicons.findImageFile('add24')], 
             'movieMode'        : [
@@ -138,7 +160,8 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
             'screenshot'   : fsltooltips.actions[   ortho,     'screenshot'],
             'resetDisplay' : fsltooltips.actions[   profile,   'resetDisplay'],
             'movieMode'    : fsltooltips.properties[ortho,     'movieMode'],
-            'showCursor'   : fsltooltips.properties[orthoOpts, 'showCursor'],
+            'showCursorAndLabels' : fsltooltips.properties[
+                self, 'showCursorAndLabels'],
             'zoom'         : fsltooltips.properties[orthoOpts, 'zoom'],
             'layout'       : fsltooltips.properties[orthoOpts, 'layout'],
             'showXCanvas'  : fsltooltips.properties[orthoOpts, 'showXCanvas'],
@@ -151,7 +174,7 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
         
         targets    = {'screenshot'                : ortho,
                       'movieMode'                 : ortho,
-                      'showCursor'                : orthoOpts,
+                      'showCursorAndLabels'       : self,
                       'resetDisplay'              : profile,
                       'zoom'                      : orthoOpts,
                       'layout'                    : orthoOpts,
@@ -189,9 +212,9 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
             props  .Widget(      'movieMode', 
                                  icon=icons['movieMode'],
                                  tooltip=tooltips['movieMode']),
-            props  .Widget(      'showCursor', 
-                                 icon=icons['showCursor'],
-                                 tooltip=tooltips['showCursor']), 
+            props  .Widget(      'showCursorAndLabels', 
+                                 icon=icons['showCursorAndLabels'],
+                                 tooltip=tooltips['showCursorAndLabels']), 
             actions.ActionButton('resetDisplay', 
                                  icon=icons['resetDisplay'],
                                  tooltip=tooltips['resetDisplay']), 
@@ -226,3 +249,14 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
 
         self.SetTools(tools, destroy=True)
         self.setNavOrder(nav)
+
+
+    def __showCursorAndLabelsChanged(self, *a):
+        """Called when the :attr:`showCursorAndLabels` property is changed.
+        Propagates the change on to the :attr:`.SceneOpts.showCursor` and
+        :attr:`.OrthoOpts.showLabels` properties.
+        """
+
+        opts            = self.orthoPanel.getSceneOptions()
+        opts.showCursor = self.showCursorAndLabels
+        opts.showLabels = self.showCursorAndLabels

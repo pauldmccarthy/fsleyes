@@ -311,6 +311,9 @@ properties = TypeDict({
     'OrthoOpts.layout'      : 'How to lay out each of the three canvases.',
     'OrthoOpts.zoom'        : 'Zoom level for all three canvases.',
 
+    'OrthoToolBar.showCursorAndLabels' :
+    'Show/hide the location cursor and anatomical labels',
+
     'LightBoxOpts.zoom'           : 'Zoom level - this controls how many '
                                     'slices to display.',
     'LightBoxOpts.sliceSpacing'   : 'The spacing between adjacent slices. '
