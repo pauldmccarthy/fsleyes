@@ -2195,7 +2195,7 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                                             overlay)
                     except:
                         log.warning('Unrecognised value for {}: {}'.format(
-                            fileOpt, args.displaySpace))
+                            fileOpt, value))
 
                     setattr(optArgs, fileOpt, None)
 
