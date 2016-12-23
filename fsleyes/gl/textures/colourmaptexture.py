@@ -189,6 +189,8 @@ class ColourMapTexture(texture.Texture):
           - The border colour
         """
 
+        import matplotlib.colors as colors
+
         alpha  = self.__alpha
         cmap   = self.__cmap
         drange = self.__displayRange
@@ -202,6 +204,14 @@ class ColourMapTexture(texture.Texture):
         if interp is None: interp = gl.GL_NEAREST
         if cmap   is None: cmap   = np.zeros((4, 4), dtype=np.float32)
         if res    is None: res    = 256
+
+        # The fsleyes.colourmaps module creates
+        # ListedColormap instances. If the given
+        # cmap is one of these, there's no point
+        # in using a resolution greater than the
+        # number of colours in the cmap.
+        if isinstance(cmap, colors.ListedColormap):
+            res = min(res, cmap.colors.shape[0])
 
         # If cmap is a function, assume that it accepts
         # one or more scalar values between 0 and 1,

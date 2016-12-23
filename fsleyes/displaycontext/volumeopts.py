@@ -708,9 +708,14 @@ class VolumeOpts(NiftiOpts):
     """The colour map, a :class:`matplotlib.colors.Colourmap` instance."""
 
 
-
     cmapResolution = props.Int(minval=2, maxval=1024, default=256)
     """Resolution for the colour map, i.e. the number of colours to use. """
+
+    
+    interpolateCmaps = props.Boolean(default=False)
+    """If ``True``, the colour maps are applied using linear interpolation.
+    Otherwise they are applied using nearest neighbour interpolation.
+    """
 
 
     negativeCmap = props.ColourMap()

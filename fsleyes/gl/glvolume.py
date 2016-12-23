@@ -283,27 +283,28 @@ class GLVolume(globject.GLImageObject):
 
         crPVs   = opts.getPropVal('clippingRange').getPropertyValueList()
 
-        display .addListener('alpha',           name, self._alphaChanged)
-        opts    .addListener('displayRange',    name,
+        display .addListener('alpha',            name, self._alphaChanged)
+        opts    .addListener('displayRange',     name,
                              self._displayRangeChanged)
 
         crPVs[0].addListener(name, self._lowClippingRangeChanged)
         crPVs[1].addListener(name, self._highClippingRangeChanged)
         
-        opts    .addListener('clipImage',       name, self._clipImageChanged)
-        opts    .addListener('invertClipping',  name,
+        opts    .addListener('clipImage',        name, self._clipImageChanged)
+        opts    .addListener('invertClipping',   name,
                              self._invertClippingChanged)
-        opts    .addListener('cmap',            name, self._cmapChanged)
-        opts    .addListener('negativeCmap',    name, self._cmapChanged)
-        opts    .addListener('cmapResolution',  name, self._cmapChanged)
-        opts    .addListener('useNegativeCmap', name,
+        opts    .addListener('cmap',             name, self._cmapChanged)
+        opts    .addListener('interpolateCmaps', name, self._cmapChanged)
+        opts    .addListener('negativeCmap',     name, self._cmapChanged)
+        opts    .addListener('cmapResolution',   name, self._cmapChanged)
+        opts    .addListener('useNegativeCmap',  name,
                              self._useNegativeCmapChanged)
-        opts    .addListener('invert',          name, self._invertChanged)
-        opts    .addListener('volume',          name, self._volumeChanged)
-        opts    .addListener('interpolation',   name,
+        opts    .addListener('invert',           name, self._invertChanged)
+        opts    .addListener('volume',           name, self._volumeChanged)
+        opts    .addListener('interpolation',    name,
                              self._interpolationChanged)
-        opts    .addListener('resolution',      name, self._resolutionChanged)
-        opts    .addListener('transform',       name, self._transformChanged)
+        opts    .addListener('resolution',       name, self._resolutionChanged)
+        opts    .addListener('transform',        name, self._transformChanged)
         opts    .addListener('enableOverrideDataRange',  name,
                              self._enableOverrideDataRangeChanged)
         opts    .addListener('overrideDataRange', name,
@@ -350,6 +351,7 @@ class GLVolume(globject.GLImageObject):
         opts    .removeListener(          'clipImage',               name)
         opts    .removeListener(          'invertClipping',          name)
         opts    .removeListener(          'cmap',                    name)
+        opts    .removeListener(          'interpolateCmaps',        name)
         opts    .removeListener(          'negativeCmap',            name)
         opts    .removeListener(          'useNegativeCmap',         name)
         opts    .removeListener(          'cmapResolution',          name)
@@ -554,22 +556,28 @@ class GLVolume(globject.GLImageObject):
         opts    = self.displayOpts
         alpha   = display.alpha / 100.0
         cmap    = opts.cmap
+        interp  = opts.interpolateCmaps
         res     = opts.cmapResolution
         negCmap = opts.negativeCmap
         invert  = opts.invert
         dmin    = opts.displayRange[0]
         dmax    = opts.displayRange[1]
 
+        if interp: interp = gl.GL_LINEAR
+        else:      interp = gl.GL_NEAREST
+
         self.colourTexture.set(cmap=cmap,
                                invert=invert,
                                alpha=alpha,
                                resolution=res,
+                               interp=interp,
                                displayRange=(dmin, dmax))
 
         self.negColourTexture.set(cmap=negCmap,
                                   invert=invert,
                                   alpha=alpha,
                                   resolution=res,
+                                  interp=interp,
                                   displayRange=(dmin, dmax)) 
 
         

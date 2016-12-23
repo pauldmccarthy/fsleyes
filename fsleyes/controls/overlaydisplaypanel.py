@@ -332,6 +332,7 @@ _DISPLAY_PROPS = td.TypeDict({
                         'interpolation',
                         'cmap',
                         'cmapResolution',
+                        'interpolateCmaps',
                         'invert',
                         'invertClipping',
                         'linkLowRanges',
@@ -429,10 +430,11 @@ _DISPLAY_WIDGETS = td.TypeDict({
         'cmapResolution',
         slider=True,
         spin=True,
-        showLimits=False), 
-    'VolumeOpts.invert'         : props.Widget('invert'),
-    'VolumeOpts.invertClipping' : props.Widget('invertClipping'),
-    'VolumeOpts.linkLowRanges'  : props.Widget(
+        showLimits=False),
+    'VolumeOpts.interpolateCmaps' : props.Widget('interpolateCmaps'),
+    'VolumeOpts.invert'           : props.Widget('invert'),
+    'VolumeOpts.invertClipping'   : props.Widget('invertClipping'),
+    'VolumeOpts.linkLowRanges'    : props.Widget(
         'linkLowRanges',
         dependencies=['clipImage'],
         enabledWhen=lambda vo, ci: ci is None),

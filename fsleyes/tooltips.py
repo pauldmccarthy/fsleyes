@@ -76,48 +76,52 @@ properties = TypeDict({
                              'to apply the affine transformation as defined '
                              'in the NIFTI header.',
 
-    'VolumeOpts.displayRange'    : 'Data display range - the low value '
-                                   'corresponds to the low colour, and the '
-                                   'high value to the high colour, in the '
-                                   'selected colour map.',
+    'VolumeOpts.displayRange' :
+    'Data display range - the low value corresponds to the low colour, and '
+    'the high value to the high colour, in the selected colour map.',
      
-    'VolumeOpts.clippingRange'   : 'Data clipping range - voxels with values '
-                                   'outside of this range will not be '
-                                   'displayed.',
-    'VolumeOpts.invertClipping'  : 'Invert the clipping range, so that voxels '
-                                   'inside the range are not displayed, and '
-                                   'voxels outside of the range are '
-                                   'displayed. ' 
-                                   'This option is useful for displaying '
-                                   'statistic images.',
+    'VolumeOpts.clippingRange' :
+    'Data clipping range - voxels with values outside of this range will not '
+    'be displayed.',
+    
+    'VolumeOpts.invertClipping' :
+    'Invert the clipping range, so that voxels inside the range are not '
+    'displayed, and voxels outside of the range are displayed. ' 
+    'This option is useful for displaying statistic images.',
+    
     'VolumeOpts.cmap'            : 'The colour map to use.',
-    'VolumeOpts.negativeCmap'    : 'The colour map to use for negative '
-                                   'values.',
-    'VolumeOpts.useNegativeCmap' : 'Enable the negative colour map - '
-                                   'this allows positive and negative '
-                                   'values to be coloured independently.',
-    'VolumeOpts.cmapResolution'  : 'Colour map resolution - the number of '
-                                   'colours to use in the colour maps.', 
+    
+    'VolumeOpts.negativeCmap' :
+    'The colour map to use for negative values.',
+    
+    'VolumeOpts.useNegativeCmap' :
+    'Enable the negative colour map - this allows positive and negative '
+    'values to be coloured independently.',
+    
+    'VolumeOpts.cmapResolution'  :
+    'Colour map resolution - the number of colours to use in the colour maps.',
+    
+    'VolumeOpts.interpolateCmaps' :
+    'Interpolate between discrete colours in the colour map. If not selected, '
+    'nearest-neighbour interpolation is used. ',
  
-    'VolumeOpts.interpolation'   : 'Interpolate the image data for display '
-                                   'purposes. You can choose no  '
-                                   'interpolation (equivalent to nearest '
-                                   'neighbour interpolation), linear '
-                                   'interpolation, or third-order spline '
-                                   '(cubic) interpolation.',
-    'VolumeOpts.invert'          : 'Invert the display range, so that the low '
-                                   'value corresponds to the high colour, and '
-                                   'vice versa.',
-    'VolumeOpts.enableOverrideDataRange' : 'Override the actual data range of '
-                                           'an image with a user-specified '
-                                           'one. This is useful for images '
-                                           'which have a very large data '
-                                           'range that is driven by outliers.',
-    'VolumeOpts.overrideDataRange'       : 'Override the actual data range of '
-                                           'an image with a user-specified '
-                                           'one. This is useful for images '
-                                           'which have a very large data '
-                                           'range that is driven by outliers.',
+    'VolumeOpts.interpolation' :
+    'Interpolate the image data for display purposes. You can choose no  '
+    'interpolation (equivalent to nearest neighbour interpolation), linear '
+    'interpolation, or third-order spline (cubic) interpolation.',
+    
+    'VolumeOpts.invert' :
+    'Invert the display range, so that the low value corresponds to the high '
+    'colour, and vice versa.',
+    'VolumeOpts.enableOverrideDataRange' :
+    'Override the actual data range of an image with a user-specified '
+    'one. This is useful for images which have a very large data '
+    'range that is driven by outliers.',
+    
+    'VolumeOpts.overrideDataRange' :
+    'Override the actual data range of an image with a user-specified '
+    'one. This is useful for images which have a very large data '
+    'range that is driven by outliers.',
 
     'MaskOpts.colour'    : 'The colour of this mask image.',
     'MaskOpts.invert'    : 'Invert the mask threshold range, so that values '
