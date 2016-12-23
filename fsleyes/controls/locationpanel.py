@@ -512,7 +512,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
             vlo      = [0, 0, 0]
             vhi      = np.array(shape) - 1
             wlo, whi = transform.axisBounds(shape, v2w)
-            wstep    = overlay.pixdim[:3]
+            wstep    = refImage.pixdim[:3]
         else:
             vlo     = [0, 0, 0]
             vhi     = [0, 0, 0]
