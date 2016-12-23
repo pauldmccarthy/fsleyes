@@ -22,7 +22,7 @@ Help!
 If you get stuck:
 
  - Search through these help pages to see if your problem is discussed
-   anywhere (hint: try the :ref:`userdoc_index` page).
+   anywhere.
 
  - If you can't figure out how to do something, see if it is covered in the
    :ref:`How do i ... <quick_start_how_do_i>` section, below.
@@ -149,16 +149,18 @@ The toolbars
 ^^^^^^^^^^^^
 
 
-The :ref:`overlay toolbar <todo>` allows you to adjust display properties of
-the currently selected overlay. Pushing the gear button will open a dialog
-containing all of the overlay display settings. Pushing the information button
-opens a dialog containing information about the overlay.
+The :ref:`overlay toolbar <overlays_overlay_display_toolbar>` allows you to
+adjust display properties of the currently selected overlay. Pushing the gear
+button will open a dialog containing all of the overlay display
+settings. Pushing the information button opens a dialog containing information
+about the overlay.
 
 
-The :ref:`ortho toolbar <todo>` allows you to adjust the layout of the ortho
-view. For example, you can toggle each of the canvases on and off, and switch
-between vertical, horizontal, or grid layouts. Pushing the spanner icon will
-open a dialog containing all of the ortho view settings.
+The :ref:`ortho toolbar <ortho_lightbox_views_ortho_toolbar>` allows you to
+adjust the layout of the ortho view. For example, you can toggle each of the
+canvases on and off, and switch between vertical, horizontal, or grid
+layouts. Pushing the spanner icon will open a dialog containing all of the
+ortho view settings.
 
 
 .. _quick_start_how_do_i:
@@ -187,9 +189,9 @@ Open/close control panels/toolbars?
 
 The *Settings* menu contains a sub-menu for every open view, which allows you
 to toggle the control panels and toolbars for that view, and perform a few
-other tasks. For exmaple, if you want to add an :ref:`atlas panel <todo>`, you
-would select the *Settings* |right_arrow| *Ortho view 1* |right_arrow| *Edit
-toolbar* menu option. See :ref:`overview_views_and_controls` for more
+other tasks. For exmaple, if you want to add an :ref:`atlas panel <atlases>`,
+you would select the *Settings* |right_arrow| *Ortho view 1* |right_arrow|
+*Edit toolbar* menu option. See :ref:`overview_views_and_controls` for more
 information.
 
 
@@ -259,8 +261,8 @@ display toolbar <overlays_overlay_display_toolbar>`). See the section on
 :ref:`volume display settings <overlays_volume>` for more details.
 
 
-My image is tilted/oblique! How do I make oriented rectangular?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+My image is tilted/oblique! How do I make it oriented/rectangular?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Open the :ref:`view settings panel <ortho_lightbox_views_view_settings>` (the

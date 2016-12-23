@@ -228,29 +228,6 @@ The following settings are available for volume overlays:
          FSLeyes over a SSH/X11 connection, in a VNC session, on an
          older computer, or at a reduced performance setting.
 
-
-.. _overlays_loading_a_custom_colour_map:
-
-.. sidebar:: Loading a custom colour map
-
-             Clicking the **Load colour map** button will bring up a file
-             selection dialog, allowing you to choose a file which contains a
-             custom colour map. FSLeyes understands colour map files which
-             contain a list of RGB colours, one per line, with each colour
-             specified by three space-separated floating point values in the
-             range ``0.0 - 1.0``, with each value corresponding to the R, G,
-             and B colour channels respectively. For example::
-
-
-                 1.000000 0.260217 0.000000
-                 0.000000 0.687239 1.000000
-                 0.738949 0.000000 1.000000
-
-
-             You can also modify and customise the FSLeyes colour maps - see
-             the page on :ref:`customising FSLeyes <customising>` for more
-             details.
-
          
 - **Colour map** The colour map defines how voxels are coloured on the
   display. Voxels with an intensity equal to the low display range value will
@@ -258,7 +235,8 @@ The following settings are available for volume overlays:
   colour map., and voxels with an intensity equal to the high display range
   will be coloured according to the highest (right-most) colour. You can
   choose from a pre-defined colour map selection, or load your own via the the
-  **Load colour map** button. 
+  **Load colour map** button. See the page on :ref:`customising FSLeyes
+  <customising_colour_maps>` for more details..
 
   
 - **-ve (negative) colour map** You can apply a second colour map for images
@@ -268,7 +246,18 @@ The following settings are available for volume overlays:
   the display and clipping range will be applied inversely to both positive
   and negative values.
 
-- **Colour map resolution**
+  
+- **Colour map resolution** This setting allows you to reduce the number of
+  colours that are used in the colour map. For example, if the underlying
+  colour map file (see the section on :ref:`colour maps
+  <customising_colour_maps>`) contains 256 colours, and you set the resolution
+  to 128, only half of the colours from the colour map will be used.
+
+
+- **Interpolate colour maps** This setting allows you to enable linear
+  interpolation between colours in the selected colour map. The default
+  behaviour (when this setting is disabled) is to use nearest neighbour
+  interpolation.
 
 
 - **Invert colour map** This setting inverts the colour map, so that low voxel
@@ -318,28 +307,44 @@ The following settings are available for volume overlays:
   .. [*] If you are using FSLeyes over a SSH/X11 connection, in a VNC session,
          or on an older computer, it may be necessary to override the data
          range of such an image before you are able to view it.
+
+
+.. _overlays_the_lookup_table_panel:
+
+.. sidebar:: The lookup table panel
+
+   
+             FSLeyes treats lookup tables independently from the colour maps
+             used to colour :ref:`volume <overlays_volume>` overlays. FSLeyes
+             provides a handful of pre-defined lookup tables, and allows you
+             to create your own through the *lookup table panel*, available as
+             a :ref:`control panel <overview_views_and_controls>` on
+             :ref:`ortho and lightbox views <overview_views_and_controls>`:
+
+             
+             .. image:: images/overlays_lookup_table_panel.png
+                :width: 90%
+                :align: center
+
+
+             |
+
+                        
+             You can also install your own lookup tables - see the page on
+             :ref:`customising FSLeyes <customising_lookup_tables>` for more
+             details.
  
 
 .. _overlays_label:
 
 Label
 ^^^^^
-
-
+             
+             
 This type is useful for viewing NIFTI images which contain discrete integer
 values (*labels*), such as :ref:`atlases <atlases>` and (sub-)cortical
 segmentation summary images.  Label overlays are coloured according to a
 *lookup table*.
-
-
-.. sidebar:: Lookup tables
-
-             FSLeyes treats lookup tables independently from the colour maps
-             used to colour :ref:`volume <overlays_volume>` overlays. FSLeyes
-             provides a handful of pre-defined lookup tables, and allows you
-             to create your own through the :ref:`lookup table panel <todo>`.
-             You can also install your own lookup tables - see the page on
-             :ref:`customising FSLeyes <customising>` for more details.
 
 
 .. container:: image-strip

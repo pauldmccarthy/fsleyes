@@ -5,39 +5,155 @@
 =====================
 
 
-.. todo:: This page has not yet been written.
+This page contains details on customising various aspects of FSLeyes.
 
 
-Various elements of FSLeyes can be customised
-
+.. _customising_colour_maps:
 
 Colour maps
+===========
 
-Remember that you need write permission to /assets/ to install colour
-maps/luts
-
-Luts
-
-Perspectives
+For :ref:`volume <overlays_volume>` overlays, the :ref:`overlay display panel
+<overlays_overlay_display_panel>` has a **Load colour map** button which
+allows you to load new colour maps into FSLeyes.
 
 
-.. _customising_custom_atlases:
+Clicking on this button will bring up a file selection dialog, allowing you to
+choose a file which contains a custom colour map. FSLeyes understands colour
+map files with a name that ends in ``.cmap``, and which contain a list of RGB
+colours, one per line, with each colour specified by three space-separated
+floating point values in the range ``0.0 - 1.0``, with each value
+corresponding to the R, G, and B colour channels respectively. For example::
 
 
-Custom atlases
-==============
+  1.000000 0.260217 0.000000
+  0.000000 0.687239 1.000000
+  0.738949 0.000000 1.000000
+
+
+When you apply a colour map to an image, FSLeyes will map the image display
+range to the colours in the colour map - the low display range value will map
+to the first colour in the colour map (i.e. the first colour in the file), and
+the high display range to the last colour (the last colour in the file). The
+**Interpolate colour maps** setting for :ref:`volume <overlays_volume>` allows
+you to define a continuous colour map by only specifying a few colours. For
+example, you could define the greyscale colour map with just two colours::
+
+  
+  0.0 0.0 0.0
+  1.0 1.0 1.0
+
+
+When the **Interpolate colour maps** setting is enabled, FSLeyes will
+interpolate between these colours.
+ 
+
+When you load a custom colour map, FSLeyes will ask you if you would like to
+install it permanently [*]_. If you choose to do so, FSLeyes will copy the
+colour map file into the FSLeyes ``assets`` directory, renaming the file so it
+ends with ``.cmap``. Under OSX, this directory is located in::
+
+  FSLeyes.app/Contents/Resources/assets/colourmaps/
+
+
+And under Linux, it  is located in::
+
+  FSLeyes/share/FSLeyes/assets/colourmaps/
+
+
+You can also customise colour map display names and order. Inside the
+``colourmaps/`` directoy you will find a file called ``order.txt``. This file
+defines the order in which colour maps are displayed in the FSLeyes interface,
+and also contains the display name for each colour map; it contains a list of
+colour map file names (without the ``.cmap`` suffix), and corresponding
+display names for each::
+
+  
+  greyscale        Greyscale
+  red-yellow       Red-Yellow
+  blue-lightblue   Blue-Light blue
+  red              Red
+  ...
+
+  
+Any colour maps which exist in the ``colourmaps/`` directory, but are not
+listed in ``order.txt`` will still be available in the FSLeyes interface, but
+will be added after all of the colour maps listed in ``order.txt``.
+
+
+.. warning:: When creating your own ``.cmap`` file, make sure that there are
+             no spaces in the file name. This also applies to ``.lut`` files
+             (covered :ref:`below <customising_lookup_tables>`).
+
+   
+.. [*] To permanently install a colour map (and to edit existing colour maps),
+       you will need permission to write to the FSLeyes installation
+       directory.
+
+
+.. _customising_lookup_tables: 
+
+Lookup tables
+=============
+
+
+FSLeyes manages lookup tables for :ref:`overlays_label` overlays in a very
+similar manner as for :ref:`colour maps <customising_colour_maps>`. The
+:ref:`lookup table panel <overlays_the_lookup_table_panel>` allows you to
+create your own lookup tables, and load a lookup table from a file.
+A FSLeyes lookup table file has a name that ends in ``.lut``, and defines a
+lookup table which may be used to display images wherein each voxel has a
+discrete integer label.  The lookup table file defines a name and a colour for
+each of the possible voxel values in such an image.
+
+
+Each line in a ``.lut`` file must specify the label value, RGB colour, and
+associated name.  The first column (where columns are space-separated) defines
+the label value, the second to fourth columns specify the RGB values, and all
+remaining columns give the label name. For example::
+
+  
+        1  0.00000 0.93333 0.00000 Frontal Pole
+        2  0.62745 0.32157 0.17647 Insular Cortex
+        3  1.00000 0.85490 0.72549 Superior Frontal Gyrus
+
+
+.. important:: The labels specified in a ``.lut`` file must be specified
+               in ascending order.
+
+
+Under OSX, FSLeyes stores its lookup table files in::
+
+  FSLeyes.app/Contents/Resources/assets/luts/
+
+
+Under Linux, the lookup tables can be found in::
+
+  FSLeyes/share/FSLeyes/assets/luts/
+
+
+In the same manner as for :ref:`colour maps <customising_colour_maps>` the
+``luts/`` director contains a file called ``order.txt``, which allows you to
+cusomise the display name and order of LUTs as shown in the FSLeyes interface.
+
+               
+.. _customising_atlases:
+
+Atlases
+=======
 
 
 The :ref:`atlas management <atlases_atlas_management>` panel allows you to
-load custom atlases into FSLeyes. FSLeyes |version| supports atlases which are
-described by an ``xml`` file that adheres to the `FSL atlas XML file format
-<https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases-Reference>`_ [*]_.
+load custom atlases into FSLeyes. FSL |fsl_version| and FSLeyes |version|
+supports atlases which are described by an ``xml`` file that adheres to the
+`FSL atlas XML file format
+<https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases-Reference>`_.
 
 
-FSLeyes can understand two types of atlases:
+FSLeyes |version| understands two types of atlases [*]_:
 
 
- - A *label* (or "summary") atlas is a 3D NIFTI image which contains different
+ - A *label* (or *summary*) atlas is a 3D NIFTI image which contains different
    discrete integer values for each region defined in the atlas.
 
    
@@ -51,9 +167,8 @@ Multiple versions of these images, at different resolutions, may exist
 
 
 If you have an atlas image which you would like to use in FSLeyes, you must
-write an ``xml`` file which describes the atlas. This file describes the
-atlas, contains paths to the atlas image(s), and contains a description of
-every region in the atlas.
+write an ``xml`` file which describes the atlas, contains paths to the atlas
+image(s), and contains a description of every region in the atlas.
 
 
 The best way to create one of these files is to look at the atlas files that
@@ -145,5 +260,5 @@ up looking something like the following:
    </atlas>
 
    
-.. [*] The ``xml`` atlas specification format is due to be replaced in a
-       future release of FSL.
+.. [*] Future releases of FSL and FSLeyes will support different types of
+       atlases (e.g. longitudinal, surface-based, etc.).

@@ -13,8 +13,7 @@ pertains to FSLeyes |version|, which is a part of FSL |fsl_version|.
 
 
 If you are getting started with FSLeyes, check out the :ref:`quick_start`
-page.  Otherwise, choose a topic from the list below, or refer to the
-:ref:`userdoc_index`.
+page.  Otherwise, choose a topic from the list below.
 
 
 .. toctree::
@@ -37,7 +36,6 @@ page.  Otherwise, choose a topic from the list below, or refer to the
    display_space
    customising
    troubleshooting   
-   userdoc_index
 
 
 .. [*] *FSLeyes* is pronounced **"fossilise"**.
