@@ -208,9 +208,9 @@ Show/hide the cursor/anatomical labels?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-You can toggle the cursor via the + button on the ortho toolbar, and show/hide
-labels via the :ref:`view settings panel <ortho_lightbox_views_view_settings>`
-(the spanner button).
+You can toggle the cursor and labels simultaneously via the + button on the
+ortho toolbar, or toggle them independently via checkboxesin the :ref:`view
+settings panel <ortho_lightbox_views_view_settings>` (the spanner button).
 
 
 View images in neurological/radiological orientation?
