@@ -64,7 +64,84 @@ Examples
 --------
 
 
-.. todo:: Add some examples
+Volume overlays
+^^^^^^^^^^^^^^^
+
+Set up display/clipping/colourmap/interpolation on an image, and centre
+display at a specific voxel::
+
+  
+  fsleyes -sortho -std1mm -vl 33 20 31 \
+    zstat1.nii.gz -dr 2.5 3.5 -cr 2.5 3.5 -cm hot -in spline 
+
+    
+Set up positive/negative colour map on a PE image::
+
+  
+  fsleyes -std1mm pe1 -un -cm red-yellow \
+    -nc blue-lightblue -dr 10 60 -in spline
+
+
+Vector overlays
+^^^^^^^^^^^^^^^
+
+
+Display ``dtifit`` output as an RGB vector::
+  
+  fsleyes dti_FA dti_V1 -ot rgbvector
+ 
+Display ``bedpostx`` two-fibre output as line vectors::
+  
+  fsleyes mean_f1samples dyads1 -ot linevector dyads2_thr0.05 -ot linevector
+
+
+Display ``dtifit`` output as a tensor (not possible in a SSH/X11 session).
+You can specify the ``dtifit`` output directory::
+ 
+  fsleyes dtifit/dti_FA dtifit/
+
+Or the 6-volume image containing the unique elements of the tensor matrix::
+  
+  fsleyes dtifit/dti_FA dtifit/dti_tensor.nii.gz -ot tensor
+
+  
+Display spherical harmonic coefficients (not possible in a SSH/X11 session)::
+
+  fsleyes asym_fods.nii.gz -ot sh
+    
+    
+Melodic mode
+^^^^^^^^^^^^
+
+Specify the path to your filtered_func_data.ica directory::
+  
+  fsleyes -s melodic path/to/analysis.ica/filtered_func_data.ica
+
+Or the path to your melodic_IC file::
+  
+  fsleyes -s melodic path/to/analysis.ica/filtered_func_data.ica/melodic_IC
+
+Use the -ad flag (--autoDisplay) to automatically set up colour maps::
+  
+  fsleyes -ad -s melodic path/to/analysis.ica/filtered_func_data.ica/melodic_IC
+
+
+Lightbox view
+^^^^^^^^^^^^^
+
+Set Z axis, number of rows, and number of columns::
+  
+  fsleyes -slightbox -zx Z -nr 10 -nc 10 -std1mm 
+
+Set slice spacing (mm)::
+  
+  fsleyes -slightbox -zs Z -ss 10 -std1mm 
+ 
+Set slice range (mm, starting from 0)::
+  
+  fsleyes -slightbox -zs Z -ss 5 -zr  0  91 -std1mm 
+  fsleyes -slightbox -zs Z -ss 5 -zr 91 182 -std1mm 
+  fsleyes -slightbox -zs Z -ss 5 -zr 45 136 -std1mm
 
 
 Useful command line options

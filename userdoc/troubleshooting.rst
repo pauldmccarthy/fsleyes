@@ -63,7 +63,7 @@ This can mean one of two things:
    (the bottom example above).
 
 
-The first scenario is not a problme - you can safely load and view data from
+The first scenario is not a problem - you can safely load and view data from
 different subjects and studies into FSLeyes, but be aware that there will be
 no anatomical correspondence, across the different images, in the world or
 voxel coordinates.
@@ -73,8 +73,8 @@ The second scenario is more serious, as it means that the orientation
 information one or more images has somehow been corrupted.  The :ref:`overlay
 information panel <overlays_overlay_information_panel>` is useful here, as it
 allows you to check the orientation information of each images, including the
-QForm and SForm codes and transformation matrices, and the voxel and world
-coordinate orientations.
+``qform`` and ``sform`` codes and transformation matrices, and the voxel and
+world coordinate orientations.
 
 
 Once you identify the image(s) which is/are causing the problem, you need to
@@ -132,41 +132,93 @@ display the data correctly.
 
 
 
-Running FSLeyes over SSH/X11 connections
-----------------------------------------
-
-
-Setting/option/feature is missing (GL21 > Gl14)
-
-
-
-SSH/X11/XQuartz 2.7.9 OpenGL problem::
-
-  defaults write org.macosforge.xquartz.X11 enable_iglx -bool true
-
-
-SSH/X11/XQuartz settings for getting alt key working
-
-
-Running FSLeyes in VNC sessions
--------------------------------
-
-
-
-
 .. _troubleshooting_keyboard_navigation_doesnt_work_in_the_ic_classification_panel:
 
 Keyboard navigation doesn't work in the IC classification panel
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------------------------------------
+
 
 Under OSX, you may have focus-related issues while navigating around the
 :ref:`IC classification panel
 <ic_classification_classifying_components_with_the_classification_panel>` with
 the keyboard.
 
+
 If this is happening to you, you may need to enable *Full keyboard access* for
 the melodic classification panel to work with keyboard navigation/focus.  This
 setting can be changed through *System Preferences* |right_arrow| *Keyboard*
 |right_arrow| *Shortcuts*, and changing *Full Keyboard Access* to *All
 controls*.
+
+
+
+Running FSLeyes over SSH/X11 connections
+----------------------------------------
+
+
+Options are missing!
+^^^^^^^^^^^^^^^^^^^^
+
+
+FSLeyes is capable of being run remotely over a SSH/X11 connection. However,
+in such an environment, FSLeyes is not able to provide all of the features
+that it can when running locally. When you run FSLeyes over X11, the following
+options are missing:
+
+
+ - Spline interpolation for :ref:`volume <overlays_volume>` and :ref:`RGB
+   vector <overlays_vector>` overlays
+ - :ref:`Tensor <overlays_tensor>` display
+ - :ref:`Diffusion  SH <overlays_diffusion_sh>` display
+
+
+XQuartz - FSLeyes doesn't start, and just shows an error
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Under XQuartz 2.7.9 and newer, FSLeyes may not start, and you may see the
+following error::
+
+  
+  Gdk-ERROR **: The program 'fsleyes' received an X Window System error.
+  This probably reflects a bug in the program.
+  The error was 'BadValue (integer parameter out of range for operation)'.
+    (Details: serial 695 error_code 2 request_code 149 minor_code 24)
+    (Note to programmers: normally, X errors are reported asynchronously;
+     that is, you will receive the error a while after causing it.
+     To debug your program, run it with the --sync command line
+     option to change this behavior. You can then get a meaningful
+     backtrace from your debugger if you break on the gdk_x_error() function.)
+  aborting...
+
+
+This is caused by a configuration issue with XQuartz - you will be unable to
+run any OpenGL application, not just FSLeyes. Fortunately, there is a
+solution: if you are using XQuartz 2.7.10 or newer, run this command (locally,
+not within the SSH session)::
+
+  
+  defaults write org.macosforge.xquartz.X11 enable_iglx -bool true
+
+
+If you are using XQuartz 2.7.9, and you cannot upgrade to 2.7.10 or newer, you
+will need to edit ``/usr/X11R6/bin/startx`` (you will probably need
+administrator privileges). There is a section in this script, around line 100,
+which configures a variable called ``defaultserverargs``. Immediately after
+this section, add the following line::
+
+
+  defaultserverargs="$defaultserverargs +iglx"
+
+  
+After making this change, restart XQuartz - FSLeyes should now start.
+
+
+XQuartz - keyboard shortcuts don't work
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+If you are using XQuartz, you may need to select the *Option keys send Alt_L
+and Alt_R* option in the XQuartz Preferences dialog before keyboard shortcuts
+will work in FSLeyes.
 
