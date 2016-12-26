@@ -64,6 +64,7 @@ performing some operations on the currently selected overlay:
 
 
 .. image:: images/overview_overlay_menu.png
+   :width: 40%
    :align: center
            
 
@@ -187,6 +188,7 @@ managing perspectives can be found in the *View* |right_arrow| *Perspectives*
 sub-menu:
 
 .. image:: images/overview_perspectives_menu.png
+   :width: 50%
    :align: center
 
 

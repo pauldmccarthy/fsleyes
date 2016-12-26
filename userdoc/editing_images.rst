@@ -196,8 +196,9 @@ editing an image is a two-step process:
 
 
 In select mode, you can select voxels in one image, and then apply that
-selection to another image.  This is possible because, when you change the
-currently selected image, the current voxel selection is preserved [*]_.
+selection to another image [*]_ - you can do this simply by selecting the
+image you wish to apply the selection to, or by using the **Target image**
+setting, on the :ref:`edit toolbar <editing_images_edit_toolbar>`.
 
 
 This means that you can, for example, select a lesion in a T\ :sub:`1` image,
@@ -209,8 +210,6 @@ another image - see the section on :ref:`copying and pasting
 
 .. [*] **As long as** the newly selected image has the same dimensions, 
        resolution and orientation as the previous one.
-
-
 
 
 .. _editing_images_manual_selection: 
@@ -333,12 +332,14 @@ selected voxels in one of the following ways:
 
 
 Remember that, once you have made a selection on the currently selected image,
-you can select a different image (with the same
-dimensions/resolution/orientation), and apply that selection to it. This
-feature is most useful with the :ref:`select by intensity
-<editing_images_select_by_intensity>` tool - you can make a selection based on
-the intensities in one image, but then change the values of voxels within that
-selection in another image.
+you can apply that selection to a different image (with the same
+dimensions/resolution/orientation), either via the **Target image** setting on
+the :ref:`edit toolbar <editing_images_edit_toolbar>`, or simply by selecting
+the other image in the :ref:`overlay list
+<ortho_lightbox_views_overlay_list>`. This feature is most useful with the
+:ref:`select by intensity <editing_images_select_by_intensity>` tool - you can
+make a selection based on the intensities in one image, but then change the
+values of voxels within that selection in another image.
 
 
 .. _editing_images_copying_and_pasting:
@@ -428,6 +429,13 @@ tool, and to configure some options and settings:
    <editing_images_select_mode>`) This setting controls the size of the search
    radius, when the *Limit to radius* setting is enabled.
 
+10. **Target image** (only available in :ref:`select mode
+    <editing_images_select_mode>`) This setting allows you to choose a
+    *target*, or *destination* image for fill/paste operations. Voxels will be
+    selected according to the :ref:`currently selected overlay
+    <overview_overlays>`, but the selection will be applied to the current
+    target image.
+
 
 .. _editing_images_action_toolbar:
 
@@ -450,34 +458,43 @@ actions.
    
 2. **Copy image** This button creates an empty 3D copy of the currently
    selected image, and adds it to the overlay list.
+
+3. **Cursor follows mouse** By default, when you draw/select or erase/deselect
+   voxels using the pencil or eraser tools, the currently displayed location
+   will update as you move the mouse. This button allows you to disable this
+   behaviour.
    
-3. **Undo** This button undoes the most recent change to the currently selected
+4. **Undo** This button undoes the most recent change to the currently selected
    image.
    
-4. **Redo** This button re-does the most recently undone change to the
+5. **Redo** This button re-does the most recently undone change to the
    currently selected image.
+
+6. **Show/hide selection** (only available in :ref:`select mode
+   <editing_images_select_mode>`) This button allows you to turn on and off
+   the selection overlay.
    
-5. **Clear selection** (only available in :ref:`select mode
+7. **Clear selection** (only available in :ref:`select mode
    <editing_images_select_mode>`) This button clears the current selection,
    i.e. all voxels are deselected.
    
-6. **Fill selection** (only available in :ref:`select mode
-   <editing_images_select_mode>`) This button fills the current selection - the
-   value of all selected voxels is set to the current fill value.
+8. **Fill selection** (only available in :ref:`select mode
+   <editing_images_select_mode>`) This button fills the current selection -
+   the value of all selected voxels is set to the current fill value.
    
-7. **Erase selection** (only available in :ref:`select mode
+9. **Erase selection** (only available in :ref:`select mode
    <editing_images_select_mode>`) This button erases the current selection -
    the value of all selected voxels is set to zero.
    
-8. **Copy selection** (only available in :ref:`select mode
-   <editing_images_select_mode>`) This button :ref:`copies
-   <editing_images_copying_and_pasting>` the current selection - the values of
-   all selected voxels are copied to an internal clipboard.
+10. **Copy selection** (only available in :ref:`select mode
+    <editing_images_select_mode>`) This button :ref:`copies
+    <editing_images_copying_and_pasting>` the current selection - the values
+    of all selected voxels are copied to an internal clipboard.
    
-9. **Paste selection** (only available in :ref:`select mode
-   <editing_images_select_mode>`) This button :ref:`pastes
-   <editing_images_copying_and_pasting>` the selection on the clipboard into
-   the currently selected image (if it has compatible dimensionality).
+11. **Paste selection** (only available in :ref:`select mode
+    <editing_images_select_mode>`) This button :ref:`pastes
+    <editing_images_copying_and_pasting>` the selection on the clipboard into
+    the currently selected image (if it has compatible dimensionality).
    
 
 .. _editing_images_edit_settings_panel:

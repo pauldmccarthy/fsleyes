@@ -189,7 +189,7 @@ Open/close control panels/toolbars?
 
 The *Settings* menu contains a sub-menu for every open view, which allows you
 to toggle the control panels and toolbars for that view, and perform a few
-other tasks. For exmaple, if you want to add an :ref:`atlas panel <atlases>`,
+other tasks. For example, if you want to add an :ref:`atlas panel <atlases>`,
 you would select the *Settings* |right_arrow| *Ortho view 1* |right_arrow|
 *Edit toolbar* menu option. See :ref:`overview_views_and_controls` for more
 information.
@@ -199,7 +199,7 @@ Change the background colour?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-You can change the background and cursor colours via he :ref:`view settings
+You can change the background and cursor colours via the :ref:`view settings
 panel <ortho_lightbox_views_view_settings>` (the spanner button on the ortho
 toolbar).
 
@@ -209,7 +209,7 @@ Show/hide the cursor/anatomical labels?
 
 
 You can toggle the cursor and labels simultaneously via the + button on the
-ortho toolbar, or toggle them independently via checkboxesin the :ref:`view
+ortho toolbar, or toggle them independently via checkboxes in the :ref:`view
 settings panel <ortho_lightbox_views_view_settings>` (the spanner button).
 
 
@@ -236,7 +236,7 @@ Link/unlink the display properties across multiple views?
 
 If you have more than one view open (e.g. an ortho view and a lightbox view),
 and you want the overlay display settings to be the same across all views,
-open the :ref:`view settings bpanel <ortho_lightbox_views_view_settings>` for
+open the :ref:`view settings panel <ortho_lightbox_views_view_settings>` for
 each view (via the toolbar spanner button, or the *Settings* |right_arrow|
 *<view name>* |right_arrow| *View settings panel* menu option), and make sure
 that the *Link overlay display settings* box is checked or unchecked.
