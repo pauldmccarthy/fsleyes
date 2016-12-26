@@ -62,7 +62,7 @@ And under Linux, it  is located in::
 
 
 You can also customise colour map display names and order. Inside the
-``colourmaps/`` directoy you will find a file called ``order.txt``. This file
+``colourmaps/`` directory you will find a file called ``order.txt``. This file
 defines the order in which colour maps are displayed in the FSLeyes interface,
 and also contains the display name for each colour map; it contains a list of
 colour map file names (without the ``.cmap`` suffix), and corresponding
@@ -97,17 +97,21 @@ Lookup tables
 =============
 
 
-FSLeyes manages lookup tables for :ref:`overlays_label` overlays in a very
-similar manner as for :ref:`colour maps <customising_colour_maps>`. The
-:ref:`lookup table panel <overlays_the_lookup_table_panel>` allows you to
-create your own lookup tables, and load a lookup table from a file.
-A FSLeyes lookup table file has a name that ends in ``.lut``, and defines a
-lookup table which may be used to display images wherein each voxel has a
-discrete integer label.  The lookup table file defines a name and a colour for
-each of the possible voxel values in such an image.
+:ref:`Label <overlays_label>` overlays are coloured according to a lookup
+table, which is distinct from a :ref:`colour map
+<customising_colour_maps>`. The :ref:`lookup table panel
+<overlays_the_lookup_table_panel>` allows you to create your own lookup
+tables, and load a lookup table from a file.
 
 
-Each line in a ``.lut`` file must specify the label value, RGB colour, and
+FSLeyes manages lookup tables for label overlays in a very similar manner as
+for colour maps. A FSLeyes lookup table file has a name that ends in ``.lut``,
+and defines a lookup table which may be used to display images wherein each
+voxel has a discrete integer label.  The lookup table file defines a name and
+a colour for each of the possible voxel values in such an image.
+
+
+Each line in a ``.lut`` file must specify a label value, RGB colour, and
 associated name.  The first column (where columns are space-separated) defines
 the label value, the second to fourth columns specify the RGB values, and all
 remaining columns give the label name. For example::
@@ -133,8 +137,8 @@ Under Linux, the lookup tables can be found in::
 
 
 In the same manner as for :ref:`colour maps <customising_colour_maps>` the
-``luts/`` director contains a file called ``order.txt``, which allows you to
-cusomise the display name and order of LUTs as shown in the FSLeyes interface.
+``luts/`` directory contains a file called ``order.txt``, which allows you to
+customise the LUT display names and order, as shown in the FSLeyes interface.
 
                
 .. _customising_atlases:

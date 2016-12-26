@@ -52,9 +52,15 @@ Overview
 
 
 **Important:** When you are in edit mode, the :ref:`currently selected overlay
-<overview_overlays>` (assuming that it is a NIFTI image) is the target for all
-editing operations. Whenever you draw, erase, fill, select, copy, or paste
-voxels, you will be doing so with respect to the *currently selected image*.
+<overview_overlays>` (assuming that it is a NIFTI image) is the default target
+for all editing operations. Whenever you draw, erase, fill, select, copy, or
+paste voxels, you will be doing so with respect to the *currently selected
+image*.
+
+
+When you use :ref:`select mode <editing_images_select_mode>`, you may use the
+*Target image* setting to specify an alternate target for fill and paste
+operations.
 
 
 Create a copy!
@@ -196,9 +202,10 @@ editing an image is a two-step process:
 
 
 In select mode, you can select voxels in one image, and then apply that
-selection to another image [*]_ - you can do this simply by selecting the
-image you wish to apply the selection to, or by using the **Target image**
-setting, on the :ref:`edit toolbar <editing_images_edit_toolbar>`.
+selection to another image [*]_ - you can do this simply by selecting, in the
+:ref:`overlay list <ortho_lightbox_views_overlay_list>`, the image you wish to
+apply the selection to, or by using the *Target image* setting, on the
+:ref:`edit toolbar <editing_images_edit_toolbar>`.
 
 
 This means that you can, for example, select a lesion in a T\ :sub:`1` image,
@@ -422,8 +429,8 @@ tool, and to configure some options and settings:
          
 8. **Intensity threshold** (only available in :ref:`select mode
    <editing_images_select_mode>`) This setting controls the threshold used
-   when using the :`select by intensity <editing_images_select_by_intensity>`
-   tool.
+   when using the :ref:`select by intensity
+   <editing_images_select_by_intensity>` tool.
          
 9. **Search radius size** (only available in :ref:`select mode
    <editing_images_select_mode>`) This setting controls the size of the search

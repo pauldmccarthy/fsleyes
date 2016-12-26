@@ -119,10 +119,6 @@ ortho view.
              - |command_key|: Command (on OSX; Control on other platforms)
              - |alt_key|:     Option (on OSX; Alt on other platforms)
 
-             If you are using FSLeyes on OSX, over a SSH/X11 connection, you 
-             may need to play with the XQuartz settings before the |alt_key|
-             key will work.
-
 
 The overlay list
 ^^^^^^^^^^^^^^^^
@@ -191,7 +187,7 @@ The *Settings* menu contains a sub-menu for every open view, which allows you
 to toggle the control panels and toolbars for that view, and perform a few
 other tasks. For example, if you want to add an :ref:`atlas panel <atlases>`,
 you would select the *Settings* |right_arrow| *Ortho view 1* |right_arrow|
-*Edit toolbar* menu option. See :ref:`overview_views_and_controls` for more
+*Atlas panel* menu option. See :ref:`overview_views_and_controls` for more
 information.
 
 
@@ -287,7 +283,7 @@ Classify ICA components?
 
 Load your ``.ica`` directory (or the ``.ica/melodic_IC`` image file), then
 open the melodic perspective (the *View* |right_arrow| *Perspectives*
-|right_arrow| *Melodic mode* menu option). See :ref:`ic_classification` for
+|right_arrow| *MELODIC mode* menu option). See :ref:`ic_classification` for
 more information.
 
 

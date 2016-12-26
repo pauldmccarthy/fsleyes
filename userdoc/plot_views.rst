@@ -89,7 +89,8 @@ settings specific to time series plots:
   ``pixdim`` field of the time dimension in the NIFTI header is assumed to
   contain the TR time, and is used to scale the time series data along the X
   axis. Effectively, this means that the X axis will show seconds. When
-  disabled, the X axis corresponds to the volume index in the 4D image.
+  disabled, the X axis corresponds to the volume index (starting from 0) in
+  the 4D image.
   
 - **Plot component time courses for Melodic images** This setting is enabled
   by default. If the currently selected overlay is the ``melodic_IC`` file

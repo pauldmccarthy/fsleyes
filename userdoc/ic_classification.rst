@@ -276,7 +276,8 @@ An IC classificaiton file is a plain text file which looks like this::
 The file format comprises three sections:
 
 - The first line of the file contains the name of the MELODIC directory which
-  the label file corresponds to.
+  the label file corresponds to (specified as a path relative to the location
+  of the label file).
   
 - Then, one line is present for each component. Each component line contains
   the following, separated by commas:
@@ -292,9 +293,6 @@ The file format comprises three sections:
 - The last line of the file contains the indices (starting from 1) of all
   *bad* components. These indices are separated with commas, and contained
   within square brackets.
-
-.. [*] A *bad* component is defined as any component which does not have a a
-       label of ``Signal`` or ``Unknown``.
 
 
 FSLeyes is also capable of loading classification files which only contain the
@@ -313,3 +311,7 @@ This is also valid::
 .. [*] The one exception to this is that files saved with FSLeyes, which
        contain more than one label per component, cannot be loaded into
        Melview.  These files *can* be used with FIX, however.
+
+
+.. [*] A *bad* component is defined as any component which does not have a a
+       label of ``Signal`` or ``Unknown``.

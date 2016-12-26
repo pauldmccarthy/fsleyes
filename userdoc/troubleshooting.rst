@@ -32,7 +32,7 @@ configured. If you see this warning, you can tell FSLeyes where FSL is located
 by clicking on the **Locate $FSLDIR** button, and selecting the FSL
 installation directory (typically ``/usr/local/fsl/``).  Alternately, you can
 click **Skip** to ignore the warning- you can still use FSLeyes, however some
-features (e.g. atlases) may not be available.
+features (e.g. atlases) will not be available.
 
 
 Images are not overlaid on each other correctly
@@ -70,18 +70,18 @@ voxel coordinates.
 
 
 The second scenario is more serious, as it means that the orientation
-information one or more images has somehow been corrupted.  The :ref:`overlay
-information panel <overlays_overlay_information_panel>` is useful here, as it
-allows you to check the orientation information of each images, including the
-``qform`` and ``sform`` codes and transformation matrices, and the voxel and
-world coordinate orientations.
+information for one or more images has somehow been corrupted.  The
+:ref:`overlay information panel <overlays_overlay_information_panel>` is
+useful here, as it allows you to check the orientation information of each
+images, including the ``qform`` and ``sform`` codes and transformation
+matrices, and the voxel and world coordinate orientations.
 
 
 Once you identify the image(s) which is/are causing the problem, you need to
 re-generate the image (if it was generated as part of a processing pipeline),
-or correct the orientation information. In the future, you will be able to do
-this from within FSLeyes, but as of version |version|, you must do this with
-an external program such as ``fsledithd``.
+or correct the orientation information in the NIFTI file header. In the
+future, you will be able to do this from within FSLeyes, but as of version
+|version|, you must do this with an external program such as ``fsledithd``.
 
 
 .. _troubleshooting_vector_orientation:
@@ -145,7 +145,7 @@ the keyboard.
 
 
 If this is happening to you, you may need to enable *Full keyboard access* for
-the melodic classification panel to work with keyboard navigation/focus.  This
+the MELODIC classification panel to work with keyboard navigation/focus.  This
 setting can be changed through *System Preferences* |right_arrow| *Keyboard*
 |right_arrow| *Shortcuts*, and changing *Full Keyboard Access* to *All
 controls*.
@@ -163,7 +163,7 @@ Options are missing!
 FSLeyes is capable of being run remotely over a SSH/X11 connection. However,
 in such an environment, FSLeyes is not able to provide all of the features
 that it can when running locally. When you run FSLeyes over X11, the following
-options are missing:
+options will not be available:
 
 
  - Spline interpolation for :ref:`volume <overlays_volume>` and :ref:`RGB

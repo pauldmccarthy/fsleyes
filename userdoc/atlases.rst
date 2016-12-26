@@ -10,7 +10,8 @@ Atlases
 FSL comes bundled with a collection of `NIFTI templates and atlases
 <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases>`_. A variety of probabilistic
 and discrete atlases are included, comprising cortical, sub-cortical, and
-regional parcellations. It is also possible to add your own atlases to FSL.
+regional parcellations. It is also possible to :ref:`add your own atlases to
+FSL <customising_atlases>`.
 
 
 .. sidebar:: Atlas registration space
@@ -27,9 +28,11 @@ atlases. An atlas panel can be added to a view via its settings menu,
 e.g. *Settings* |right_arrow| *Ortho view 1* |right_arrow| *Atlas panel*.
 
 
-The atlas panel is organised into three main sections - *Atlas information*,
-*Atlas search*, and *Atlas management*. These sections are accessed by
-clicking on the tabs at the top of the panel.
+The atlas panel is organised into three main sections - :ref:`Atlas
+information <atlases_atlas_information>`, :ref:`Atlas search
+<atlases_atlas_search>`, and :ref:`Atlas management
+<atlases_atlas_management>`. These sections are accessed by clicking on the
+tabs at the top of the panel.
 
 
 .. _atlases_atlas_information:

@@ -68,10 +68,6 @@ performing some operations on the currently selected overlay:
    :align: center
            
 
-Overlays can be displayed in a variety of ways - see the :ref:`overlays` page
-for more information.
-
-
 The display space
 -----------------
 
@@ -84,8 +80,8 @@ display all overlays in terms of a single reference overlay, typically the
 first one that you load. The reference overlay is displayed so that it is
 orthogonal to the display coordinate system; all other overlays are
 transformed into the space of this reference overlay.  You can change the
-reference overlay via the :ref:`view settings panel
-<ortho_lightbox_views_view_settings>`.
+reference overlay via the **Display space** option in the :ref:`view settings
+panel <ortho_lightbox_views_view_settings>`.
 
 
 .. container:: image-strip
@@ -119,13 +115,6 @@ you to manipulate that view.  Views are top-level panels, whereas controls are
 embedded within a single view.
 
 
-All available views are listed in the *View* menu:
-
-
-.. image:: images/overview_view_menu.png
-   :align: center
-
-
 .. sidebar:: Which *Settings* menu corresponds to which view?
              
              Every FSLeyes view panel is given a name and a number so that
@@ -133,6 +122,13 @@ All available views are listed in the *View* menu:
              open view is given the same name and number. If you have more
              than one view panel open, you will be able to see the name and
              number for each panel on its title bar.
+
+
+All available views are listed in the *View* menu:
+
+
+.. image:: images/overview_view_menu.png
+   :align: center
 
 
 When you open a new view, a sub-menu for that view is added to the *Settings*
@@ -146,9 +142,9 @@ view. For example, the settings menu for an :ref:`orthographic
    :align: center
 
 
-These views are described in more detail in the pages on
+Views and controls are described in more detail in the pages on
 :ref:`orthographic/lightbox views <ortho_lightbox_views>` and :ref:`plotting
-views <plot_views>`. 
+views <plot_views>`.
 
 
 .. _overview_layout_and_perspectives:

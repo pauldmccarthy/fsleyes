@@ -546,9 +546,9 @@ And the following settings are available on line vectors:
   about the X axis (which typically correpsonds to the left-right axis). This
   setting may be useful if you have vector data with non-standard
   orientation. By default, this setting is disabled for radiologically stored
-  images, and enabled for neuroloigically stored images. See the :ref:`section
-  vector orientation <troubleshooting_vector_orientation>` for more
-  information.
+  images, and enabled for neuroloigically stored images. See the
+  :ref:`troubleshooting section on vector orientation
+  <troubleshooting_vector_orientation>` for more information.
   
 - **Line width** This setting allows you to adjust the line vector width, in
   display pixels.
@@ -600,8 +600,8 @@ following settings:
   ellipsoids.
   
 - **L/R orientation flip** This setting flips all ellipsoids about the X
-  (left-right) axis - see the :ref:`section on vector orientation
-  <troubleshooting_vector_orientation>`, above.
+  (left-right) axis - see the :ref:`troubleshooting section on vector
+  orientation <troubleshooting_vector_orientation>`.
   
 - **Ellipsoid quality** This setting allows you to decrease/increase the
   ellipsoid quality (the number of vertices used to draw the ellipsoids).
@@ -670,8 +670,8 @@ on diffusion SH overlays:
   of SH functions used to represent each FOD.
   
 - **L/R orientation flip** This setting flips all FODs about the X
-  (left-right) axis - see the :ref:`section on vector orientation
-  <troubleshooting_vector_orientation>`, above.
+  (left-right) axis - see the :ref:`troubleshooting section on vector
+  orientation <troubleshooting_vector_orientation>`.
   
 - **Lighting effects** This setting toggles an FOD lighting model [*]_.
   

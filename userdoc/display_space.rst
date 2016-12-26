@@ -103,8 +103,8 @@ typically the first one that you load; this image is referred to as the
 
 The reference image is displayed in *scaled voxels*.  *Scaled voxels* refers
 to a coordinate system whereby the image voxel coordinate system is made
-orthogonal to the display coordinate system, and the the :math:`x`, :math:`y`,
-and :math:`z` voxel coordinates are respectively scaled by the voxel size
+orthogonal to the display coordinate system, and the the X, Y,
+and Z voxel coordinates are respectively scaled by the voxel size
 along each dimension.  The size of one voxel along each voxel dimension is
 stored in the NIFTI header; these sizes are often referred to as the image
 *pixdims* and, for brain images, are typically specified in millimetres.
@@ -131,7 +131,7 @@ segmentation model files output by |FIRST|_.
 
 Furthermore, the vectors in eigenvector images images output by the |FDT|_
 ``dtifit`` tool are oriented according to this space, so if the input data is
-in neurological orientation, these vectors need to be inverted along the x
+in neurological orientation, these vectors need to be inverted along the X
 axis (see the section on :ref:`line vector orientation
 <troubleshooting_vector_orientation>` in the troubleshooting page for more
 information).
@@ -153,10 +153,10 @@ As an alternate to displaying all of your overlays in terms of a
 :ref:`reference image <display_space_reference_image_space>`, you may choose
 to display all of your images in the *world coordinate system*.  In this
 scenario, the :ref:`display coordinate system
-<display_space_display_coordinate_system>` is set to the world coordinate
-system of the images you are viewing - this is where FSLeyes makes the
-critical assumption that all of the overlays you have loaded share the same
-world coordinate system.
+<display_space_display_coordinate_system>` is set to the :ref:`world
+coordinate system <display_space_world_coordinate_system>` of the images you
+are viewing - this is where FSLeyes makes the critical assumption that all of
+the overlays you have loaded share the same world coordinate system.
 
 
 .. _display_space_nifti_image_orientation: 
@@ -227,12 +227,11 @@ coordinates into:
 
 - The coordinate system of a standard template such as MNI152 or Talairach
   space.
-- The coordinate system of the MRI scanner in which the image the image was
-  acquired.
+- The coordinate system of the MRI scanner in which the image was acquired.
 
   
-While, in theory, you can store two independent transformations in a NIFTI
-image header, FSL generally sets both the ``qform`` and ``sform`` to the same
+While it is possible to store two independent transformations in a NIFTI image
+header, FSL generally sets both the ``qform`` and ``sform`` to be the same
 transformation. Therefore, throughout the FSLeyes source code and
 documentation, the terms ``qform`` and ``sform`` are typically
 interchangeable.
@@ -248,9 +247,9 @@ that:
 - The Y axis increases from posterior to anterior
 - The Z axis increases from inferior to superior
 
-This is referred to as a RAS coordinate system (i.e. with the :math:`x`,
-:math:`y`, and :math:`z` coordinates increasing in the **R**\ ight, **A**\
-nterior, **S**\ uperior directions respectively)
+This is referred to as a RAS coordinate system (i.e. with the X, Y, and Z
+coordinates increasing in the **R**\ ight, **A**\ nterior, **S**\ uperior
+directions respectively)
 
 
  .. [*] For the purposes of these voxel to world coordinate transformations,
@@ -270,7 +269,7 @@ three scenarios:
 - **Voxel storage order**: The image :ref:`voxel coordinate system
   <display_space_voxel_coordinate_system>` - how the image voxel intensities
   are stored on disk, e.g.. does the voxel X axis increase from left to right
-  (radiological), or right to left (neurological)?
+  (radiological), or right to left (neurological)? [*]_
 
 
 - **Image world coordinate system** The image :ref:`world coordinate system
@@ -288,6 +287,11 @@ three scenarios:
   <ortho_lightbox_views_view_settings>`.
 
 
+.. [*] The voxel X axis may not even correspond to the anatomical left-right
+       axis - recall the section on the :ref:`NIFTI voxel coordinate system
+       <display_space_voxel_coordinate_system>`.
+
+
 .. _display_space_data_storage_order: 
 
 Data storage order
@@ -299,12 +303,12 @@ NIFTI file header, we would not be able to determine where those numbers
 should be located in the brain.
 
 
-All 3D NIFTI images are stored such that the :math:`x` dimension is the
-*fastest changing*, and the :math:`z` dimension the *slowest changing*. For
-example, if we have an image with dimensions :math:`[d_x=3, d_y=2, d_z=2]\ `,
-the image data, as stored on disk, would correspond to voxel coordinates like
-so (the index :math:`i` refers to the location, in the file, of the intensity
-for each voxel) [*]_:
+All 3D NIFTI images are stored such that the X dimension is the *fastest
+changing*, and the Z dimension the *slowest changing*. For example, if we have
+an image with dimensions :math:`[d_x=3, d_y=2, d_z=2]\ `, the image data, as
+stored on disk, would correspond to voxel coordinates like so (the index
+:math:`i` refers to the location, in the file, of the intensity for each
+voxel) [*]_:
 
              
 =========  =========  =========  ========= 
@@ -344,7 +348,6 @@ And for completeness, the inverse calculation is also straightforward:
 
    
 
-.. [*] In |FSL|_, in C and Python, and hence with |nibabel|_, voxel
-       coordinates and indices begin from 0.  However, if you were to load a
-       NIFTI image into MATLAB, the voxel coordinates and indices would begin
-       from 1.
+.. [*] In |FSL|_, C, Python, and |nibabel|_, voxel coordinates and indices
+       begin from 0.  However, if you were to load a NIFTI image into MATLAB,
+       the voxel coordinates and indices would begin from 1.
