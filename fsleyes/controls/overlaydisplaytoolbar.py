@@ -592,6 +592,7 @@ _TOOLBAR_PROPS = td.TypeDict({
         'displayRange',
         slider=False,
         showLimits=False,
+        spinWidth=10,
         tooltip=_TOOLTIPS['VolumeOpts.displayRange'],
         labels=[strings.choices['VolumeOpts.displayRange.min'],
                 strings.choices['VolumeOpts.displayRange.max']]),

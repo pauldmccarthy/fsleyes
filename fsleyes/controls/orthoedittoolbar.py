@@ -144,7 +144,9 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
                 widget = props.buildGUI(parent, profileObj, spec)
 
                 if not isGroup and spec.label is not None:
-                    widget = self.MakeLabelledTool(widget, spec.label)
+                    widget = self.MakeLabelledTool(widget,
+                                                   spec.label,
+                                                   expand=True)
 
                 allWidgets  .append(widget)
                 groupWidgets.append(widget)
@@ -196,6 +198,12 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 
 _ICONS = {
 
+
+    'drawMode'  : [fslicons.findImageFile('drawModeHighlight24'),
+                   fslicons.findImageFile('drawMode24'),
+                   fslicons.findImageFile('selectModeHighlight24'),
+                   fslicons.findImageFile('selectMode24')],
+
     'mode' : {
         'nav'    : [
             fslicons.findImageFile('addHighlight24'),
@@ -236,6 +244,9 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 
 
 _TOOLTIPS = {
+    'drawMode'       : fsltooltips.properties['OrthoEditProfile.'
+                                              'drawMode'],
+ 
     'mode'           : fsltooltips.properties['OrthoEditProfile.mode'],
     'selectionIs3D'  : fsltooltips.properties['OrthoEditProfile.'
                                               'selectionIs3D'],
@@ -266,6 +277,13 @@ def _targetImageName(image):
 _TOOLBAR_SPECS  = [
 
     props.Widget(
+        'drawMode',
+        toggle=False,
+        icon=_ICONS['drawMode'],
+        tooltip=_TOOLTIPS['drawMode'],
+        style=wx.HORIZONTAL), 
+    'div',
+    props.Widget(
         'mode',
         icons=_ICONS['mode'],
         tooltip=_TOOLTIPS['mode'],
@@ -288,12 +306,12 @@ _TOOLBAR_SPECS  = [
         tooltip=_TOOLTIPS['localFill'],
         dependencies=['mode'],
         enabledWhen=lambda p, m: m == 'selint'),
-    'div',
     [props.Widget(
         'selectionSize',
         spin=True,
         slider=False,
         showLimits=False,
+        spinWidth=3,
         label=_LABELS['selectionSize'],
         tooltip=_TOOLTIPS['selectionSize']),
      props.Widget(
@@ -301,6 +319,7 @@ _TOOLBAR_SPECS  = [
          label=_LABELS['fillValue'],
          tooltip=_TOOLTIPS['fillValue'],
          slider=False,
+         spinWidth=3,
          increment=1)],
 
     [props.Widget(
@@ -308,6 +327,7 @@ _TOOLBAR_SPECS  = [
         slider=True,
         spin=True,
         showLimits=False,
+        spinWidth=6,
         label=_LABELS['intensityThres'],
         tooltip=_TOOLTIPS['intensityThres'],
         dependencies=['mode'],
@@ -317,6 +337,7 @@ _TOOLBAR_SPECS  = [
          slider=True,
          spin=True,
          showLimits=False,
+         spinWidth=6,
          label=_LABELS['searchRadius'],
          tooltip=_TOOLTIPS['searchRadius'],
          dependencies=['mode', 'limitToRadius'],

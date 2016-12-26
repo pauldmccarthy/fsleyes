@@ -270,7 +270,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # to see what display space we're in
         displaySpace = displayCtx.displaySpace
 
-        if isinstance(displaySpace, fslimage.Nifti):
+        if isinstance(displaySpace, fslimage.Nifti) and \
+           overlay is not displaySpace:
             return self.calcSliceSpacing(displaySpace)
         else:
             return min(overlay.pixdim[:3])

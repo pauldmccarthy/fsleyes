@@ -222,6 +222,7 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
                                  spin=True,
                                  slider=True,
                                  showLimits=False,
+                                 spinWidth=5,
                                  tooltip=tooltips['zoom']),
         ]
 

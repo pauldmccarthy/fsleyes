@@ -159,6 +159,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
             'voxelLocation',
             slider=False,
             spin=True,
+            spinWidth=7,
             showLimits=False,
             mousewheel=True) 
 
@@ -170,6 +171,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         self.__voxelZ = voxelZ
         self.__volume = floatspin.FloatSpinCtrl(
             self.__column2,
+            width=7,
             style=floatspin.FSC_MOUSEWHEEL | floatspin.FSC_INTEGER)
 
         self.__column1Sizer = wx.BoxSizer(wx.VERTICAL)

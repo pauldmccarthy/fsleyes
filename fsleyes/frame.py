@@ -431,12 +431,12 @@ class FSLeyesFrame(wx.Frame):
             # initially placed along the
             # bottom
             if isinstance(panel, (views.PlotPanel, views.ShellPanel)):
-                paneInfo.Bottom().BestSize(-1, height // 3)
+                paneInfo.Bottom().BestSize(width // 4, height // 3)
 
             # Other panels (e.g. CanvasPanels)
             # are placed on the right
             else:
-                paneInfo.Right().BestSize(width // 3, -1)
+                paneInfo.Right().BestSize(width // 3, height // 4)
 
         self.__viewPanels.append(panel)
         self.__viewPanelDCs[     panel] = childDC

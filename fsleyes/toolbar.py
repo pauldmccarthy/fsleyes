@@ -139,7 +139,11 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         return self.__orient
         
 
-    def MakeLabelledTool(self, tool, labelText, labelSide=wx.TOP):
+    def MakeLabelledTool(self,
+                         tool,
+                         labelText,
+                         labelSide=wx.TOP,
+                         expand=False):
         """Creates a panel containing the given tool, and a label for the
         tool. The panel is returned, but is not added to this
         ``FSLeyesToolBar`` - you will have to do that yourself, e.g.::
@@ -153,6 +157,10 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         
         :arg labelSide: Which side of the tool to put the label - ``wx.TOP``,
                         ``wx.BOTTOM``, ``wx.LEFT``, or ``wx.RIGHT``.
+
+        :arg expand:    Defaults to ``False``. If ``True``, the widget and
+                        label will be set up so they expand to fit all 
+                        available space
         """
 
         if   labelSide in (wx.TOP,  wx.BOTTOM): orient = wx.VERTICAL
@@ -165,15 +173,25 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         panel.SetSizer(sizer)
         tool.Reparent(panel)
 
-        label = wx.StaticText(panel)
+        label = wx.StaticText(panel, style=wx.ALIGN_CENTRE_HORIZONTAL)
         label.SetLabel(labelText)
 
-        if labelSide in (wx.TOP, wx.LEFT):
-            sizer.Add(label, flag=wx.ALIGN_CENTRE)
-            sizer.Add(tool,  flag=wx.ALIGN_CENTRE)
+        if expand:
+            sizerArgs = {
+                'flag'       : wx.ALIGN_CENTRE | wx.EXPAND,
+                'proportion' : 1
+            }
         else:
-            sizer.Add(tool,  flag=wx.ALIGN_CENTRE)
-            sizer.Add(label, flag=wx.ALIGN_CENTRE) 
+            sizerArgs = {
+                'flag' : wx.ALIGN_CENTRE,
+            } 
+
+        if labelSide in (wx.TOP, wx.LEFT):
+            sizer.Add(label, **sizerArgs)
+            sizer.Add(tool,  **sizerArgs)
+        else:
+            sizer.Add(tool,  **sizerArgs)
+            sizer.Add(label, **sizerArgs)
 
         return panel
 
