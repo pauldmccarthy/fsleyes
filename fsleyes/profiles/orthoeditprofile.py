@@ -284,6 +284,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__yselAnnotation = None
         self.__zselAnnotation = None
 
+        # When in draw/select/deselect/selint
+        # modes, a Rect annotation is shown
+        # on the canvases at the current mouse
+        # location.
+        self.__xcurAnnotation = None
+        self.__ycurAnnotation = None
+        self.__zcurAnnotation = None 
+
         # A few performance optimisations are made
         # when in selint mode and limitToRadius is
         # active - the __record/__getSelectionMerger
@@ -374,22 +382,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         for editor in self.__editors.values():
             editor.destroy()
 
-        xannot = self.__xcanvas.getAnnotations()
-        yannot = self.__ycanvas.getAnnotations()
-        zannot = self.__zcanvas.getAnnotations()
-
-        if self.__xselAnnotation is not None:
-            xannot.dequeue(self.__xselAnnotation, hold=True)
-            self.__xselAnnotaiton.destroy()
-            
-        if self.__yselAnnotation is not None:
-            yannot.dequeue(self.__yselAnnotation, hold=True)
-            self.__yselAnnotaiton.destroy()
-            
-        if self.__zselAnnotation is not None:
-            zannot.dequeue(self.__zselAnnotation, hold=True)
-            self.__zselAnnotaiton.destroy()
-
+        self.__destroyAnnotations()
         self.__cache.destroy()
 
         self.__editors         = None
@@ -399,6 +392,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__xselAnnotation  = None
         self.__yselAnnotation  = None
         self.__zselAnnotation  = None
+        self.__xcurAnnotation  = None
+        self.__ycurAnnotation  = None
+        self.__zcurAnnotation  = None
         self.__currentOverlay  = None
         self.__clipboard       = None
         self.__clipboardSource = None
@@ -412,27 +408,37 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :meth:`.OrthoViewProfile.deregister`.
         """
 
+        self.__destroyAnnotations()
+        orthoviewprofile.OrthoViewProfile.deregister(self)
+
+
+    def __destroyAnnotations(self):
+        """Called by other methods. Destroys the :class:`.SelectionAnnotation`
+        and :class:`.Rect` cursor annotation objects, if they exist.
+        """
+
         xannot = self.__xcanvas.getAnnotations()
         yannot = self.__ycanvas.getAnnotations()
         zannot = self.__zcanvas.getAnnotations()
         
-        if self.__xselAnnotation is not None:
-            xannot.dequeue(self.__xselAnnotation, hold=True)
-            self.__xselAnnotation.destroy()
+        annots = [(self.__xselAnnotation, xannot),
+                  (self.__xcurAnnotation, xannot),
+                  (self.__yselAnnotation, yannot),
+                  (self.__ycurAnnotation, yannot),
+                  (self.__zselAnnotation, zannot),
+                  (self.__zcurAnnotation, zannot)]
 
-        if self.__yselAnnotation is not None:
-            yannot.dequeue(self.__yselAnnotation, hold=True)
-            self.__yselAnnotation.destroy()
-
-        if self.__zselAnnotation is not None:
-            zannot.dequeue(self.__zselAnnotation, hold=True)
-            self.__zselAnnotation.destroy()
+        for annotObj, annotMgr in annots:
+            if annotObj is not None:
+                annotMgr.dequeue(annotObj, hold=True)
+                annotObj.destroy()
 
         self.__xselAnnotation = None
         self.__yselAnnotation = None
         self.__zselAnnotation = None
-            
-        orthoviewprofile.OrthoViewProfile.deregister(self)
+        self.__xcurAnnotation = None
+        self.__ycurAnnotation = None
+        self.__zcurAnnotation = None
 
 
     @actions.action
@@ -747,7 +753,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         overlay = self.__currentOverlay
         if overlay is None:
-            # TODO 
+            # TODO Set to defaults? Probably
+            #      not necessary
             return
 
         # If the image data is of an integer
@@ -855,26 +862,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             return
 
         # Destroy all existing canvas annotations
-        xannot = self.__xcanvas.getAnnotations()
-        yannot = self.__ycanvas.getAnnotations()
-        zannot = self.__zcanvas.getAnnotations()        
-
-        # Clear the selection annotation
-        if self.__xselAnnotation is not None:
-            xannot.dequeue(self.__xselAnnotation, hold=True)
-            self.__xselAnnotation.destroy()
-            
-        if self.__yselAnnotation is not None:
-            yannot.dequeue(self.__yselAnnotation, hold=True)
-            self.__yselAnnotation.destroy()
-            
-        if self.__zselAnnotation is not None:
-            zannot.dequeue(self.__zselAnnotation, hold=True)
-            self.__zselAnnotation.destroy()
-            
-        self.__xselAnnotation = None
-        self.__yselAnnotation = None
-        self.__zselAnnotation = None
+        self.__destroyAnnotations()
 
         # Remove property listeners from the
         # editor/selection instances associated
@@ -998,37 +986,45 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.redo.bindProps('enabled', editor.redo)
     
         # Create a selection annotation and
-        # queue it on the canvases for drawing
-        self.__xselAnnotation = annotations.VoxelSelection(
-            self.__xcanvas.xax,
-            self.__xcanvas.yax,
-            editor.getSelection(),
-            opts.getTransform('display', 'voxel'),
-            opts.getTransform('voxel',   'display'),
-            opts.getTransform('voxel',   'texture'),
-            colour=self.selectionOverlayColour)
-        
-        self.__yselAnnotation = annotations.VoxelSelection(
-            self.__ycanvas.xax,
-            self.__ycanvas.yax,
-            editor.getSelection(),
-            opts.getTransform('display', 'voxel'),
-            opts.getTransform('voxel',   'display'),
-            opts.getTransform('voxel',   'texture'),
-            colour=self.selectionOverlayColour)
-        
-        self.__zselAnnotation = annotations.VoxelSelection(
-            self.__zcanvas.xax,
-            self.__zcanvas.yax,
-            editor.getSelection(),
-            opts.getTransform('display', 'voxel'),
-            opts.getTransform('voxel',   'display'),
-            opts.getTransform('voxel',   'texture'),
-            colour=self.selectionOverlayColour) 
+        # a cursor annotation for each canvas
+        sels         = []
+        curs         = [] 
+        cursorKwargs = {'colour'  : self.selectionCursorColour,
+                        'width'   : 2,
+                        'expiry'  : 0.5,
+                        'enabled' : False}
+
+        for c in [self.__xcanvas, self.__ycanvas, self.__zcanvas]:
+            
+            sels.append(annotations.VoxelSelection(
+                c.xax,
+                c.yax,
+                editor.getSelection(),
+                opts.getTransform('display', 'voxel'),
+                opts.getTransform('voxel',   'display'),
+                opts.getTransform('voxel',   'texture'),
+                colour=self.selectionOverlayColour))
+
+            curs.append(annotations.Rect(
+                c.xax, c.yax, (0, 0), 0, 0, **cursorKwargs))
+
+        self.__xselAnnotation = sels[0]
+        self.__yselAnnotation = sels[1]
+        self.__zselAnnotation = sels[2]
+        self.__xcurAnnotation = curs[0]
+        self.__ycurAnnotation = curs[1]
+        self.__zcurAnnotation = curs[2]
+
+        xannot = self.__xcanvas.getAnnotations()
+        yannot = self.__ycanvas.getAnnotations()
+        zannot = self.__zcanvas.getAnnotations()
 
         xannot.obj(self.__xselAnnotation, hold=True)
+        xannot.obj(self.__xcurAnnotation, hold=True)
         yannot.obj(self.__yselAnnotation, hold=True)
+        yannot.obj(self.__ycurAnnotation, hold=True)
         zannot.obj(self.__zselAnnotation, hold=True)
+        zannot.obj(self.__zcurAnnotation, hold=True) 
 
         self.__refreshCanvases()
 
@@ -1047,6 +1043,19 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         return opts.getVoxel(canvasPos)
 
 
+    def __hideCursorAnnotation(self):
+        """Configures all of the :class:`.Rect` cursor annotations so that
+        they will not be shown on the next canvas refresh.
+        """
+        xcur = self.__xcurAnnotation
+        ycur = self.__ycurAnnotation
+        zcur = self.__zcurAnnotation
+
+        if xcur is not None: xcur.enabled = False
+        if ycur is not None: ycur.enabled = False
+        if zcur is not None: zcur.enabled = False
+
+
     def __drawCursorAnnotation(self, canvas, voxel, blockSize=None):
         """Draws the cursor annotation. Highlights the specified voxel with a
         :class:`~fsleyes.gl.annotations.Rect` annotation.
@@ -1063,24 +1072,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         overlay  = self.__currentOverlay
         opts     = self._displayCtx.getOpts(overlay)
-        canvases = [self.__xcanvas, self.__ycanvas, self.__zcanvas]
-
-        # Create a cursor annotation for each canvas
-        kwargs  = {'colour' : self.selectionCursorColour,
-                   'width'  : 2,
-                   'expiry' : 0.5}
-
-        cursors = []
-
-        for c in canvases:
-            r = annotations.Rect(c.xax, c.yax, (0, 0), 0, 0, **kwargs)
-            cursors.append(r)
-
-        # Only draw the cursor on the current
-        # canvas if locFolMouse is false
-        if not self.locationFollowsMouse:
-            cursors  = [cursors[canvases.index(canvas)]]
-            canvases = [canvas]
+        canvases = [self.__xcanvas,
+                    self.__ycanvas,
+                    self.__zcanvas]
+        cursors  = [self.__xcurAnnotation,
+                    self.__ycurAnnotation,
+                    self.__zcurAnnotation]
 
         # If a block size was not specified,
         # it defaults to selectionSize
@@ -1113,6 +1110,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                                       bias='high')
  
         if corners is None:
+            self.__hideCursorAnnotation()
             return
 
         # We want the selection to follow voxel
@@ -1125,23 +1123,25 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         cmin = corners.min(axis=0)
         cmax = corners.max(axis=0)
 
-        for cursor, canvas in zip(cursors, canvases):
-            xax = canvas.xax
-            yax = canvas.yax
-            zax = canvas.zax
+        for cur, can in zip(cursors, canvases):
+            xax = can.xax
+            yax = can.yax
+            zax = can.zax
 
-            if canvas.pos.z < cmin[zax] or canvas.pos.z > cmax[zax]:
-                cursor.w = 0
-                cursor.h = 0
+            if can.pos.z < cmin[zax] or can.pos.z > cmax[zax]:
+                cur.w = 0
+                cur.h = 0
                 continue
             
-            cursor.xy = cmin[[xax, yax]]
-            cursor.w  = cmax[xax] - cmin[xax]
-            cursor.h  = cmax[yax] - cmin[yax]
+            cur.xy = cmin[[xax, yax]]
+            cur.w  = cmax[xax] - cmin[xax]
+            cur.h  = cmax[yax] - cmin[yax]
 
-        # Queue the cursors
-        for cursor, canvas in zip(cursors, canvases):
-            canvas.getAnnotations().obj(cursor)
+        # Only draw the cursor on the current
+        # canvas if locFolMouse is false 
+        for cur, can in zip(cursors, canvases):
+            cur.resetExpiry()
+            cur.enabled = can is canvas or self.locationFollowsMouse
 
 
     def __refreshCanvases(self):
@@ -1498,7 +1498,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """Handles mouse leave events in ``sel`` mode. Makes sure that the
         selection cursor annotation is not shown on any canvas.
         """
-        
+
+        self.__hideCursorAnnotation()
         self.__dynamicRefreshCanvases(ev, canvas)
 
     
@@ -1779,6 +1780,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__refreshCanvases()
 
         return True
+
+
+    def _selintModeMouseLeave(self, ev, canvas, mousePos, canvasPos):
+        """Handles mouse leave events in ``selint`` mode. Makes sure that 
+        the selection cursor annotation is not shown on any canvas.
+        """ 
+        self.__hideCursorAnnotation()
+        self.__dynamicRefreshCanvases(ev, canvas) 
 
 
     def _chthresModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):

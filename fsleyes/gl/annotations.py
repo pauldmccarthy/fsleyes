@@ -200,7 +200,8 @@ class Annotations(object):
         for obj in objs:
 
             if obj.expired(drawTime): continue
-            if not obj.enabled:       continue 
+            if not obj.enabled:
+                continue 
             
             obj.setAxes(self.__xax, self.__yax)
 
@@ -260,27 +261,30 @@ class AnnotationObject(globject.GLSimpleObject):
                  xform=None,
                  colour=None,
                  width=None,
+                 enabled=True,
                  expiry=None):
         """Create an ``AnnotationObject``.
 
-        :arg xax:    Initial display X axis
+        :arg xax:     Initial display X axis
 
-        :arg yax:    Initial display Y axis        
+        :arg yax:     Initial display Y axis        
 
-        :arg xform:  Transformation matrix which will be applied to all
-                     vertex coordinates.
+        :arg xform:   Transformation matrix which will be applied to all
+                      vertex coordinates.
         
-        :arg colour: RGB/RGBA tuple specifying the annotation colour.
+        :arg colour:  RGB/RGBA tuple specifying the annotation colour.
         
-        :arg width:  Line width to use for the annotation.
+        :arg width:   Line width to use for the annotation.
+        
+        :arg enabled: Initially enabled or disabled.
 
-        :arg expiry: Time (in seconds) after which this annotation should be
-                     expired and not drawn.
+        :arg expiry:  Time (in seconds) after which this annotation should be
+                      expired and not drawn.
         """
         globject.GLSimpleObject.__init__(self, xax, yax)
         
         self.colour   = colour
-        self.enabled  = True
+        self.enabled  = enabled
         self.width    = width
         self.xform    = xform
         self.expiry   = expiry
@@ -288,6 +292,13 @@ class AnnotationObject(globject.GLSimpleObject):
 
         if self.xform is not None:
             self.xform = np.array(self.xform, dtype=np.float32)
+
+
+    def resetExpiry(self):
+        """Resets the expiry for this ``AnnotationObject`` so that it is
+        valid from the current time.
+        """
+        self.creation = time.time()
 
 
     def expired(self, now):
