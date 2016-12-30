@@ -15,20 +15,17 @@ Colour maps
 
 For :ref:`volume <overlays_volume>` overlays, the :ref:`overlay display panel
 <overlays_overlay_display_panel>` has a **Load colour map** button which
-allows you to load new colour maps into FSLeyes.
+allows you to load new colour maps into FSLeyes.  Clicking on this button will
+bring up a file selection dialog, allowing you to choose a file which contains
+a custom colour map.
 
 
-Clicking on this button will bring up a file selection dialog, allowing you to
-choose a file which contains a custom colour map. FSLeyes understands colour
-map files with a name that ends in ``.cmap``, and which contain a list of RGB
-colours, one per line, with each colour specified by three space-separated
-floating point values in the range ``0.0 - 1.0``, with each value
-corresponding to the R, G, and B colour channels respectively. For example::
+FSLeyes can read in two types of colour map files, described below:
 
-
-  1.000000 0.260217 0.000000
-  0.000000 0.687239 1.000000
-  0.738949 0.000000 1.000000
+ - :ref:`RGB files <customising_rgb_colour_map_files>`, which simply contain a
+   list of RGB values
+ - :ref:`VEST files <customising_vest_colour_map_files>`, which are in the
+   format used by `FSLView <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslView/>`_.
 
 
 When you apply a colour map to an image, FSLeyes will map the image display
@@ -49,9 +46,10 @@ interpolate between these colours.
  
 
 When you load a custom colour map, FSLeyes will ask you if you would like to
-install it permanently [*]_. If you choose to do so, FSLeyes will copy the
-colour map file into the FSLeyes ``assets`` directory, renaming the file so it
-ends with ``.cmap``. Under OSX, this directory is located in::
+install it permanently [*]_. If you choose to do so, FSLeyes will save the
+colour map (in the :ref:`RGB file format <customising_rgb_colour_map_files>`)
+under the FSLeyes ``assets`` directory, renaming the file so it ends with
+``.cmap``. Under OSX, this directory is located in::
 
   FSLeyes.app/Contents/Resources/assets/colourmaps/
 
@@ -89,6 +87,60 @@ will be added after all of the colour maps listed in ``order.txt``.
 .. [*] To permanently install a colour map (and to edit existing colour maps),
        you will need permission to write to the FSLeyes installation
        directory.
+
+
+.. _customising_rgb_colour_map_files:
+
+RGB colour map files
+--------------------
+
+
+RGB colour map files simply contain a list of RGB colours, one per line, with
+each colour specified by three space-separated floating point values in the
+range ``0.0 - 1.0``, with each value corresponding to the R, G, and B colour
+channels respectively. For example::
+
+
+  1.000000 0.260217 0.000000
+  0.000000 0.687239 1.000000
+  0.738949 0.000000 1.000000
+
+  
+.. _customising_vest_colour_map_files:
+  
+VEST colour map files
+---------------------
+
+
+VEST colour map files follow the colour map file format supported by
+FSLView. They contain a list of RGB colour tuples, with some additional
+metadata [*]_. A VEST file looks something like this::
+
+  
+  %!VEST-LUT
+  %%BeginInstance
+  <<
+  /SavedInstanceClassName /ClassLUT 
+  /PseudoColorMinimum 0.00 
+  /PseudoColorMaximum 1.00 
+  /PseudoColorMinControl /Low 
+  /PseudoColorMaxControl /High 
+  /PseudoColormap [
+  <-color{0.000000,0.000000,0.000000}->
+  <-color{0.010000,0.010000,0.010000}->
+  .
+  .
+  .
+  <-color{1.000000,1.000000,1.000000}->
+  ]
+  >>
+
+  %%EndInstance
+  %%EOF
+
+
+.. [*] FSLeyes ignores all of the metadata contained in VEST colour map files,
+       and only extracts the RGB colour values.
 
 
 .. _customising_lookup_tables: 
