@@ -36,7 +36,7 @@ information, and which will pop up if your hover the mouse over a control
 for a couple of seconds:
 
 
-.. image:: images/overview_tooltip.png
+.. image:: images/quick_start_tooltip.png
    :align: center
 
 

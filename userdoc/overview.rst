@@ -41,9 +41,9 @@ see the page on :ref:`overlays <overlays>` for more information.
 
 .. sidebar:: Modifier keys
 
-             If you skipped the :ref:`quick_start`, you missed out on a description
-             of the symbols used in FSLeyes for keyboard shortcuts - here they are
-             again:
+             If you skipped the :ref:`Quick start <quick_start>`, you missed
+             out on a description of the symbols used in FSLeyes for keyboard
+             shortcuts - here they are again:
 
              - |shift_key|:   Shift 
              - |control_key|: Control
@@ -86,10 +86,10 @@ panel <ortho_lightbox_views_view_settings>`.
 
 .. container:: image-strip
                
-  .. image:: images/overlays_display_space1.png
+  .. image:: images/overview_display_space1.png
      :width: 25%
              
-  .. image:: images/overlays_display_space2.png
+  .. image:: images/overview_display_space2.png
      :width: 25% 
 
 

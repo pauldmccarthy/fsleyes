@@ -98,7 +98,7 @@ tools may output vector image data in different ways, depending on the image
 orientation.
 
 
-.. image:: images/overlays_line_vector_orientation.png
+.. image:: images/troubleshooting_line_vector_orientation.png
    :width: 40%
    :align: right
 

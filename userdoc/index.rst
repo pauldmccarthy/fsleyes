@@ -12,8 +12,8 @@ This is the user documentation for *FSLeyes* [*]_, the `FSL
 pertains to FSLeyes |version|, which is a part of FSL |fsl_version|.
 
 
-If you are getting started with FSLeyes, check out the :ref:`quick_start`
-page.  Otherwise, choose a topic from the list below.
+If you are getting started with FSLeyes, check out the :ref:`Quick start
+<quick_start>` page.  Otherwise, choose a topic from the list below.
 
 
 .. toctree::
