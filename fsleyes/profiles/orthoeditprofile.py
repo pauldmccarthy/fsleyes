@@ -1163,7 +1163,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """Called by mouse event handlers when the user is interacting with
         a canvas.
 
-        If :attr:`locationFollowsMouse` is ``True`, the
+        If :attr:`locationFollowsMouse` is ``True``, the
         :attr:`.DisplayContext.location` is set to the current mouse location.
         """
 

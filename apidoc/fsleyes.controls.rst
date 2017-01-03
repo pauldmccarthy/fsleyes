@@ -5,6 +5,7 @@ fsleyes.controls package
    :hidden:
 
    fsleyes.controls.atlasinfopanel
+   fsleyes.controls.atlasmanagementpanel
    fsleyes.controls.atlasoverlaypanel
    fsleyes.controls.atlaspanel
    fsleyes.controls.canvassettingspanel
@@ -17,6 +18,8 @@ fsleyes.controls package
    fsleyes.controls.locationpanel
    fsleyes.controls.lookuptablepanel
    fsleyes.controls.melodicclassificationpanel
+   fsleyes.controls.orthoeditactiontoolbar
+   fsleyes.controls.orthoeditsettingspanel
    fsleyes.controls.orthoedittoolbar
    fsleyes.controls.orthotoolbar
    fsleyes.controls.overlaydisplaypanel

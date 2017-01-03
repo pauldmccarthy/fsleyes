@@ -7,8 +7,14 @@ fsleyes.actions package
    fsleyes.actions.about
    fsleyes.actions.action
    fsleyes.actions.clearperspective
+   fsleyes.actions.clearsettings
    fsleyes.actions.copyoverlay
+   fsleyes.actions.correlate
    fsleyes.actions.diagnosticreport
+   fsleyes.actions.exportdataseries
+   fsleyes.actions.frameactions
+   fsleyes.actions.importdataseries
+   fsleyes.actions.loadatlas
    fsleyes.actions.loadcolourmap
    fsleyes.actions.loadperspective
    fsleyes.actions.loadoverlay

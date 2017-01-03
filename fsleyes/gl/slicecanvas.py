@@ -1155,10 +1155,14 @@ class SliceCanvas(props.HasProperties):
         
         
         :arg bbox:   Tuple containing four values:
+        
                       - Minimum x (horizontal) value to be in the display
                         bounds.
+        
                       - Maximum x value to be in the display bounds.
+        
                       - Minimum y (vertical) value to be in the display bounds.
+        
                       - Maximum y value to be in the display bounds.
         
         :arg oldLoc: If provided, should be the ``(x, y)`` location shown on
