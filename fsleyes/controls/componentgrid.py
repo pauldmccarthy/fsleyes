@@ -141,6 +141,12 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         # request will be executed.
         def doRefreshGrid():
 
+            # The overlay might have been cleared
+            # by the time this function gets called
+            if self.__overlay is None:
+                self.__grid.Refresh()
+                return
+            
             self.__grid.SetGridSize(ncomps, 2, growCols=[1])
 
             self.__grid.SetColLabel(0, strings.labels[self, 'componentColumn'])

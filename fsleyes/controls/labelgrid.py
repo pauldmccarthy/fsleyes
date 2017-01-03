@@ -141,6 +141,12 @@ class LabelGrid(fslpanel.FSLeyesPanel):
             self.__grid.SetColLabel(0, strings.labels[self, 'labelColumn'])
             self.__grid.SetColLabel(1, strings.labels[self, 'componentColumn'])
 
+            # The overlay might have been cleared
+            # by the time this function gets called
+            if self.__overlay is None:
+                self.__grid.Refresh()
+                return 
+
             self.__createTags()
             self.refreshTags()
             self.__grid.Refresh()
