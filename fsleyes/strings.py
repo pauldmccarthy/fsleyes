@@ -536,7 +536,8 @@ labels = TypeDict({
     'OverlayInfoPanel.Nifti.displaySpace.custom'      : 'Scaled voxels '
                                                         '({}; FSL convention)', 
     
-    
+
+    'OverlayInfoPanel.Analyze'                  : 'ANALYZE image',
     'OverlayInfoPanel.Image'                    : 'NIFTI image',
     'OverlayInfoPanel.FEATImage'                : 'NIFTI image '
                                                   '(FEAT analysis)',
@@ -925,6 +926,7 @@ anatomy = TypeDict({
                                                                  'anatomical',
     ('Nifti', 'space',     constants.NIFTI_XFORM_TALAIRACH)    : 'Talairach', 
     ('Nifti', 'space',     constants.NIFTI_XFORM_MNI_152)      : 'MNI152',
+    ('Nifti', 'space',     constants.NIFTI_XFORM_ANALYZE)      : 'ANALYZE',
 })
 
 
@@ -953,8 +955,9 @@ nifti = TypeDict({
     'worldOrient.1' : 'Y world orientation',
     'worldOrient.2' : 'Z world orientation',
 
-    'qform' : 'QForm matrix',
-    'sform' : 'SForm matrix',
+    'qform'  : 'QForm matrix',
+    'sform'  : 'SForm matrix',
+    'affine' : 'Pixdim/origin matrix',
 
     'dim1' : 'dim1',
     'dim2' : 'dim2',
@@ -970,7 +973,11 @@ nifti = TypeDict({
     'pixdim4' : 'pixdim4',
     'pixdim5' : 'pixdim5',
     'pixdim6' : 'pixdim6',
-    'pixdim7' : 'pixdim7', 
+    'pixdim7' : 'pixdim7',
+
+    'version.0' : 'ANALYZE',
+    'version.1' : 'NIFTI1',
+    'version.2' : 'NIFTI2',
 
     ('datatype', 0)    : 'UNKNOWN',
     ('datatype', 1)    : 'BINARY',

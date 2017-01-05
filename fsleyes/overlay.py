@@ -269,7 +269,7 @@ class ProxyImage(fslimage.Image):
 
         self.__base = base
 
-        kwargs['header'] = base.nibImage.get_header()
+        kwargs['header'] = base.header
 
         fslimage.Image.__init__(self, base[:], *args, **kwargs)
         

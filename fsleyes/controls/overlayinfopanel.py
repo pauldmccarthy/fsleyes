@@ -308,18 +308,17 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         :arg display: The :class:`.Display` instance assocated with the
                       ``Image``.
         """
-        
-        info = OverlayInfo('{} - {}'.format(
-            display.name, strings.labels[self, overlay]))
-        
-        img  = overlay.nibImage
-        hdr  = img.get_header()
-        opts = display.getDisplayOpts()
 
-        voxUnits, timeUnits = hdr.get_xyzt_units()
-        qformCode           = int(hdr['qform_code'])
-        sformCode           = int(hdr['sform_code'])
+        img     = overlay.nibImage
+        hdr     = overlay.header
+        isNifti = overlay.niftiVersion >= 1
+        opts    = display.getDisplayOpts()
 
+        if isNifti: title = strings.labels[self, overlay]
+        else:       title = strings.labels[self, 'Analyze']
+        
+        info = OverlayInfo('{} - {}'.format(display.name, title))
+        
         generalSect = strings.labels[self,          'general']
         dimSect     = strings.labels[self, overlay, 'dimensions']
         xformSect   = strings.labels[self, overlay, 'transform']
@@ -347,13 +346,11 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                              opts.transform,
                              self._displayCtx.displaySpace))
 
-        dataType = strings.nifti.get(('datatype',    int(hdr['datatype'])),
+        dataType = strings.nifti.get(('datatype', int(hdr['datatype'])),
                                      'Unknown')
-        intent   = strings.nifti.get(('intent_code', int(hdr['intent_code'])),
-                                     'Unknown')
-
+ 
         info.addInfo(strings.labels[self, 'niftiVersion'],
-                     'NIFTI{}'.format(overlay.niftiVersion),
+                     strings.nifti['version.{}'.format(overlay.niftiVersion)],
                      section=generalSect)
         info.addInfo(strings.labels[self, 'dataSource'],
                      overlay.dataSource,
@@ -364,12 +361,19 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         info.addInfo(strings.nifti['descrip'],
                      terminateString(hdr['descrip']),
                      section=generalSect)
-        info.addInfo(strings.nifti['intent_code'],
-                     intent,
-                     section=generalSect)
-        info.addInfo(strings.nifti['intent_name'],
-                     terminateString(hdr['intent_name']),
-                     section=generalSect)
+
+        if isNifti:
+            intent = strings.nifti.get(
+                ('intent_code', int(hdr['intent_code'])),
+                'Unknown')
+        
+            info.addInfo(strings.nifti['intent_code'],
+                         intent,
+                         section=generalSect)
+            info.addInfo(strings.nifti['intent_name'],
+                         terminateString(hdr['intent_name']),
+                         section=generalSect)
+            
         info.addInfo(strings.nifti['aux_file'],
                      terminateString(hdr['aux_file']),
                      section=generalSect) 
@@ -391,6 +395,11 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                          str(overlay.shape[i]),
                          section=dimSect)
 
+        # NIFTI images can specify different units.
+        # Assume mm / seconds for ANALYZE images
+        if isNifti: voxUnits, timeUnits = hdr.get_xyzt_units()
+        else:       voxUnits, timeUnits  = 'mm', 's'
+
         for i in range(len(overlay.shape)):
             
             pixdim = hdr['pixdim'][i + 1]
@@ -403,22 +412,36 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                 pixdim,
                 section=dimSect)
 
-        info.addInfo(strings.nifti['qform_code'],
-                     strings.anatomy['Nifti', 'space', qformCode],
-                     section=xformSect)
-        info.addInfo(strings.nifti['sform_code'],
-                     strings.anatomy['Nifti', 'space', sformCode],
-                     section=xformSect)
-
-        if qformCode != constants.NIFTI_XFORM_UNKNOWN:
-            info.addInfo(strings.nifti['qform'],
-                         self.__formatArray(img.get_qform()),
-                         section=xformSect)
+        # For NIFTI images, we show both
+        # the sform and qform matrices
+        if isNifti:
             
-        if sformCode != constants.NIFTI_XFORM_UNKNOWN:
-            info.addInfo(strings.nifti['sform'],
-                         self.__formatArray(img.get_sform()),
+            qformCode = int(hdr['qform_code'])
+            sformCode = int(hdr['sform_code'])
+
+            info.addInfo(strings.nifti['qform_code'],
+                         strings.anatomy['Nifti', 'space', qformCode],
                          section=xformSect)
+            info.addInfo(strings.nifti['sform_code'],
+                         strings.anatomy['Nifti', 'space', sformCode],
+                         section=xformSect)
+
+            if qformCode != constants.NIFTI_XFORM_UNKNOWN:
+                info.addInfo(strings.nifti['qform'],
+                             self.__formatArray(img.get_qform()),
+                             section=xformSect)
+
+            if sformCode != constants.NIFTI_XFORM_UNKNOWN:
+                info.addInfo(strings.nifti['sform'],
+                             self.__formatArray(img.get_sform()),
+                             section=xformSect)
+
+        # For ANALYZE images, we show 
+        # the scale/offset matrix
+        else:
+            info.addInfo(strings.nifti['affine'],
+                         self.__formatArray(hdr.get_best_affine()),
+                         section=xformSect) 
 
         if overlay.isNeurological(): storageOrder = 'neuro'
         else:                        storageOrder = 'radio'

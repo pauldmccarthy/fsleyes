@@ -299,6 +299,7 @@ def configLogging(namespace):
     warnings.filterwarnings('ignore', module='matplotlib')
     warnings.filterwarnings('ignore', module='mpl_toolkits')
     warnings.filterwarnings('ignore', module='numpy')
+    logging.getLogger('nibabel').setLevel(logging.CRITICAL)
 
     # Set up my own custom logging level
     # for tracing memory related events.

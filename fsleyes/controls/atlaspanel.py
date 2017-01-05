@@ -474,7 +474,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
             overlay = fslimage.Image(
                 data,
-                header=atlas.nibImage.get_header(),
+                header=atlas.header,
                 name=overlayName)
 
             with props.suppress(self._overlayList, 'overlays', self._name):
