@@ -46,10 +46,11 @@ class GLModel(globject.GLObject):
     The ``GLModel`` class has the ability to draw the model with a fill
     colour, or to draw only the model outline. To accomplish this, in step 3
     above, the intersection mask is actually drawn to an off-screen
-    :class:`.GLObjectRenderTexture`. If outline mode (controlled by the
-    :attr:`.ModelOpts.outline` property), an edge-detection shader program is
-    run on this off-screen texture. Then, the texture is rendered to the
-    canvas. If outline mode is disabled, the shader programs are not executed.
+    :class:`.RenderTexture`. If outline mode (controlled by the
+    :attr:`.ModelOpts.outline` property) is enabled, an edge-detection shader
+    program is run on this off-screen texture. Then, the texture is rendered
+    to the canvas. If outline mode is disabled, the shader programs are not
+    executed.
 
 
     The ``GLModel`` class makes use of two OpenGL version-specific modules,
@@ -89,9 +90,7 @@ class GLModel(globject.GLObject):
         self.addListeners()
         self._updateVertices()
 
-        self._renderTexture = textures.GLObjectRenderTexture(
-            self.name, self, 0, 1)
-        self._renderTexture.setInterpolation(gl.GL_LINEAR)
+        self._renderTexture = textures.RenderTexture(self.name, gl.GL_LINEAR)
 
         fslgl.glmodel_funcs.compileShaders(self)
         fslgl.glmodel_funcs.updateShaders( self)
@@ -100,7 +99,7 @@ class GLModel(globject.GLObject):
     def destroy(self):
         """Must be called when this ``GLModel`` is no longer needed. Removes
         some property listeners and destroys the off-screen
-        :class:`.GLObjectRenderTexture`.
+        :class:`.RenderTexture`.
         """
         self._renderTexture.destroy()
         fslgl.glmodel_funcs.destroy(self)
@@ -112,8 +111,7 @@ class GLModel(globject.GLObject):
 
         
     def ready(self):
-        """Overrides :meth:`.GLObject.ready`. Always returns ``True``.
-        """
+        """Overrides :meth:`.GLObject.ready`. Always returns ``True``. """
         return True
 
         
@@ -163,7 +161,6 @@ class GLModel(globject.GLObject):
         on the off-screen texture.
         """
         globject.GLObject.setAxes(self, xax, yax)
-        self._renderTexture.setAxes(xax, yax)
 
 
     def _updateVertices(self, *a):
@@ -245,19 +242,30 @@ class GLModel(globject.GLObject):
         width, height = self._renderTexture.getSize()
         outlineWidth  = self.opts.outlineWidth
 
+        if width in (None, 0) or height in (None, 0):
+            return [0, 0]
+
         # outlineWidth is a value between 0.0 and 1.0 - 
         # we use this value so that it effectly sets the
         # outline to between 0% and 10% of the model
         # width/height (whichever is smaller)
         outlineWidth *= 10
         offsets = 2 * [min(outlineWidth / width, outlineWidth / height)]
-        offsets = np.array(offsets, dtype=np.float32) 
+        offsets = np.array(offsets, dtype=np.float32)
+        
         return offsets
  
 
     def preDraw(self):
-        """Overrides :meth:`.GLObject.preDraw`. This method does nothing. """
-        pass
+        """Overrides :meth:`.GLObject.preDraw`. Sets the size of the backing
+        :class:`.RenderTexture` based on the current viewport size.
+        """
+
+        size   = gl.glGetIntegerv(gl.GL_VIEWPORT)
+        width  = size[2]
+        height = size[3]
+
+        self._renderTexture.setSize(width, height)
 
     
     def draw(self, zpos, xform=None, bbox=None):
@@ -265,27 +273,26 @@ class GLModel(globject.GLObject):
         :class:`.Model`, at the specified Z location.
         """
 
-        display = self.display 
-        opts    = self.opts
+        display  = self.display 
+        opts     = self.opts
 
-        xax = self.xax
-        yax = self.yax
-        zax = self.zax
+        xax      = self.xax
+        yax      = self.yax
+        zax      = self.zax
 
         vertices = self.vertices
         indices  = self.indices
+        lo,  hi  = self.getDisplayBounds()
 
-        lo, hi = self.getDisplayBounds()
-
-        xmin = lo[xax]
-        ymin = lo[yax]
-        zmin = lo[zax]
-        xmax = hi[xax]
-        ymax = hi[yax]
-        zmax = hi[zax]
-
-        if zpos < zmin or zpos > zmax:
+        if zpos < lo[zax] or zpos > hi[zax]:
             return
+
+        self._renderTexture.bindAsRenderTarget()
+        lo, hi = self.__setRenderTextureViewport(lo, hi, bbox)
+        xmin   = lo[xax]
+        ymin   = lo[yax]
+        xmax   = hi[xax]
+        ymax   = hi[yax]
 
         # Figure out the equation of a plane
         # perpendicular to the Z axis, and
@@ -303,9 +310,6 @@ class GLModel(globject.GLObject):
         planeEq  = glroutines.planeEquation(clipPlaneVerts[0, :],
                                             clipPlaneVerts[1, :],
                                             clipPlaneVerts[2, :])
-
-        self._renderTexture.bindAsRenderTarget()
-        self._renderTexture.setRenderViewport(xax, yax, lo, hi)
 
         gl.glClearColor(0, 0, 0, 0)
 
@@ -403,3 +407,53 @@ class GLModel(globject.GLObject):
     def postDraw(self):
         """Overrides :meth:`.GLObject.postDraw`. This method does nothing. """
         pass
+
+
+    def __setRenderTextureViewport(self, lo, hi, bbox=None):
+        """Called by :meth:`draw`. Calculates an appropriate viewport (the
+        horizontal/vertical minimums/maximums in display coordinates) given
+        the ``lo`` and ``hi`` ``GLModel`` display bounds, and a display
+        ``bbox``.
+
+        Sets the viewport on the :class:`.RenderTexture`, and returns the
+        bounds.
+        """
+
+        xax = self.xax
+        yax = self.yax
+
+        if bbox is not None and (lo[xax] < bbox[xax][0] or
+                                 hi[xax] < bbox[xax][1] or
+                                 lo[yax] > bbox[yax][0] or
+                                 hi[yax] > bbox[yax][1]):
+
+            xlen  = float(hi[xax] - lo[xax])
+            ylen  = float(hi[yax] - lo[yax])
+            ratio = xlen / ylen
+            
+            bblo = [ax[0] for ax in bbox]
+            bbhi = [ax[1] for ax in bbox]
+
+            lo   = [max(l, bbl) for l, bbl in zip(lo, bblo)]
+            hi   = [min(h, bbh) for h, bbh in zip(hi, bbhi)]
+
+            dxlen  = float(hi[xax] - lo[xax])
+            dylen  = float(hi[yax] - lo[yax])
+            
+            dratio = dxlen / dylen
+
+            if dratio > ratio:
+
+                ndxlen   = xlen * (dylen / ylen)
+                lo[xax] += 0.5 * (ndxlen - dxlen)
+                hi[xax] -= 0.5 * (ndxlen - dxlen)
+
+            elif dratio < ratio:
+
+                ndylen   = ylen * (dxlen / xlen)
+                lo[yax] += 0.5 * (ndylen - dylen)
+                hi[yax] -= 0.5 * (ndylen - dylen)
+
+        self._renderTexture.setRenderViewport(xax, yax, lo, hi)
+        
+        return lo, hi

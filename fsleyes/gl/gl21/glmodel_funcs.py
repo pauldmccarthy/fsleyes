@@ -42,15 +42,7 @@ def updateShaders(self):
     setting the uniform variable values used by the shaders.
     """
 
-    width, height = self._renderTexture.getSize()
-    outlineWidth  = self.opts.outlineWidth
-
-    # outlineWidth is a value between 0.0 and 1.0 - 
-    # we use this value so that it effectly sets the
-    # outline to between 0% and 10% of the model
-    # width/height (whichever is smaller)
-    outlineWidth *= 10
-    offsets = 2 * [min(outlineWidth / width, outlineWidth / height)]
+    offsets = self.getOutlineOffsets()
 
     self.shader.load()
     self.shader.set('tex',     0)
