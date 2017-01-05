@@ -660,18 +660,16 @@ class VolumeOpts(NiftiOpts):
     """
 
     
-    # The displayRange and clippingRange properties
-    # are not clamped (they can take values outside
-    # of their minimum/maximum values) because the
-    # data range for large images may not be known,
-    # and may change as more data is read from disk.
-
-    
     displayRange = props.Bounds(ndims=1, clamped=False)
     """Image values which map to the minimum and maximum colour map colours.
     The values that this property can take are unbound because of the
     interaction between it and the :attr:`.Display.brightness` and
     :attr:`.Display.contrast` properties.
+
+    .. note:: The :attr:`displayRange` and :attr:`clippingRange` properties
+              are not clamped (they can take values outside of their
+              minimum/maximum values) because the data range for large images
+              may not be known, and may change as more data is read from disk.
     """
 
     
@@ -802,6 +800,19 @@ class VolumeOpts(NiftiOpts):
         self.__dataRangeChanged()
 
         self.displayRange.x = overlay.dataRange
+
+        # Some FSL tools will set the nifti aux_file
+        # field to the name of a colour map - Check
+        # to see if this is the case (again, before
+        # calling __init__, so we don't clobber any
+        # existing values).
+        cmap = str(overlay.header.get('aux_file', 'none')).lower()
+
+        if cmap == 'mgh-subcortical': cmap = 'subcortical'
+        if cmap == 'mgh-cortical':    cmap = 'cortical'
+
+        if cmap in fslcm.getColourMaps():
+            self.cmap = cmap
         
         NiftiOpts.__init__(self,
                            overlay,

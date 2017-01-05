@@ -51,10 +51,25 @@ class LabelOpts(volumeopts.NiftiOpts):
         All arguments are passed through to the :class:`.NiftiOpts`
         constructor.
         """
-        volumeopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)
 
+        # Some FSL tools will set the nifti aux_file
+        # field to the name of a colour map - Check
+        # to see if this is the case (again, before
+        # calling __init__, so we don't clobber any
+        # existing values).
+        lut = str(overlay.header.get('aux_file', 'none')).lower()
+
+        if   lut == 'mgh-subcortical': lut = 'harvard-oxford-subcortical'
+        elif lut == 'mgh-cortical':    lut = 'harvard-oxford-cortical'
+        else:                          lut = 'random'
+
+        # TODO this only needs to be done on
+        #      the first LabelOpts instance
         luts  = fslcm.getLookupTables()
         alts  = [list(set((l.name, l.key))) for l in luts]
 
         lutChoice = self.getProp('lut')
         lutChoice.setChoices(luts, alternates=alts)
+        self.lut  = lut
+
+        volumeopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)
