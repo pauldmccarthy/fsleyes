@@ -33,6 +33,8 @@ TEMP isEdgeBack;
 TEMP isEdgeFront;
 TEMP isEdge;
 
+MOV isEdgeBack,  0;
+MOV isEdgeFront, 0;
 
 # Test along the x axis
 MOV off, offsets;
@@ -41,22 +43,22 @@ MUL off, off, {1, 0, 0, 0};
 # Sample a value behind the coordinate
 MOV tempCoord, coord;
 ADD tempCoord, tempCoord, off;
-TEX back, tempCoord, texture[0], 3D;
+TEX back.x, tempCoord, texture[0], 3D;
 
 # Sample a value in front of the coordinatea
 MOV tempCoord, coord;
 SUB tempCoord, tempCoord, off;
-TEX front, tempCoord, texture[0], 3D;
+TEX front.x, tempCoord, texture[0], 3D;
 
-SUB back,  back,  val;
-SUB front, front, val;
-ABS back,  back;
-ABS front, front;
+SUB back.x,  back.x,  val.x;
+SUB front.x, front.x, val.x;
+ABS back.x,  back.x;
+ABS front.x, front.x;
 
 # Unsafe operation - will only work
 # for single channel textures
-SLT isEdgeBack.x,  tol, back;
-SLT isEdgeFront.x, tol, front; 
+SLT isEdgeBack.x,  tol.x, back.x;
+SLT isEdgeFront.x, tol.x, front.x; 
 
 
 
@@ -67,20 +69,20 @@ MUL off, off, {0, 1, 0, 0};
 # Sample a value behind the coordinate
 MOV tempCoord, coord;
 ADD tempCoord, tempCoord, off;
-TEX back, tempCoord, texture[0], 3D;
+TEX back.x, tempCoord, texture[0], 3D;
 
 # Sample a value in front of the coordinatea
 MOV tempCoord, coord;
 SUB tempCoord, tempCoord, off;
-TEX front, tempCoord, texture[0], 3D;
+TEX front.x, tempCoord, texture[0], 3D;
 
-SUB back,  back,  val;
-SUB front, front, val;
-ABS back,  back;
-ABS front, front;
+SUB back.x,  back.x,  val.x;
+SUB front.x, front.x, val.x;
+ABS back.x,  back.x;
+ABS front.x, front.x;
 
-SLT isEdgeBack.y,  tol, back;
-SLT isEdgeFront.y, tol, front;  
+SLT isEdgeBack.y,  tol.x, back.x;
+SLT isEdgeFront.y, tol.x, front.x;
 
 
 
@@ -91,20 +93,20 @@ MUL off, off, {0, 0, 1, 0};
 # Sample a value behind the coordinate
 MOV tempCoord, coord;
 ADD tempCoord, tempCoord, off;
-TEX back, tempCoord, texture[0], 3D;
+TEX back.x, tempCoord, texture[0], 3D;
 
 # Sample a value in front of the coordinatea
 MOV tempCoord, coord;
 SUB tempCoord, tempCoord, off;
-TEX front, tempCoord, texture[0], 3D;
+TEX front.x, tempCoord, texture[0], 3D;
 
-SUB back,  back,  val;
-SUB front, front, val;
-ABS back,  back;
-ABS front, front;
+SUB back.x,  back.x,  val.x;
+SUB front.x, front.x, val.x;
+ABS back.x,  back.x;
+ABS front.x, front.x;
 
-SLT isEdgeBack.z,  tol, back;
-SLT isEdgeFront.z, tol, front;
+SLT isEdgeBack.z,  tol.x, back.x;
+SLT isEdgeFront.z, tol.x, front.x;
 
 
 # Set isEdge to 1 whereever either
