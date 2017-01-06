@@ -16,7 +16,6 @@ import numpy     as np
 import OpenGL.GL as gl
 
 import fsleyes.gl.routines as glroutines
-import fsleyes.gl.globject as globject
 import fsl.utils.async     as async
 from . import                 rendertexture
 
@@ -265,11 +264,6 @@ class RenderTextureStack(object):
         if not globj.ready():
             return
 
-        if isinstance(globj, globject.GLImageObject):
-            name = globj.image.name
-        else:
-            name = type(globj).__name__
-
         lo, hi = globj.getDisplayBounds()
         res    = globj.getDataResolution(xax, yax)
 
@@ -324,9 +318,15 @@ class RenderTextureStack(object):
         # point imprecision. 
         index = np.around((zpos - zmin) / step, 5)
 
-        # Be a little bit lenient at the boundaries
-        if abs(index)         < 0.01: index = 0
-        if abs(index - ntexs) < 0.01: index = ntexs - 1
+        # Be a little bit lenient at the boundariese
+        if   abs(index)         < 0.01: index =  0
+        elif abs(index - ntexs) < 0.01: index = ntexs - 1
+        
+        # But make sure that negative indices stay
+        # negative, as otherwise, values between
+        # -0.5 and 0 will be rounded to 0 in the
+        # int(index) call below
+        elif index < 0:                 index = -1
 
         return int(index)
 

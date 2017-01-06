@@ -538,7 +538,8 @@ class NiftiOpts(fsldisplay.DisplayOpts):
                 vals                       = np.ceil(vals) 
 
             # Clamp high voxel coordinates
-            closeHigh = np.isclose(vals, shape[vax])
+            closeHigh = ((vals > shape[vax] - 1) &
+                         (vals < shape[vax] - 1))
             vals[closeHigh] = shape[vax] - 1
 
             voxels[:, vax] = vals
