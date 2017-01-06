@@ -371,25 +371,46 @@ class Rect(AnnotationObject):
     2D rectangle.
     """
 
-    def __init__(self, xax, yax, xy, w, h, *args, **kwargs):
+    def __init__(self,
+                 xax,
+                 yax,
+                 xy,
+                 w,
+                 h,
+                 filled=False,
+                 fillColour=None,
+                 *args,
+                 **kwargs):
         """Create a :class:`Rect` annotation.
 
-        :arg xax: Initial display X axis
+        :arg xax:        Initial display X axis
 
-        :arg yax: Initial display Y axis        
+        :arg yax:        Initial display Y axis        
 
-        :arg xy:  Tuple specifying bottom left of the rectangle, in the display
-                  coordinate system.
-        :arg w:   Rectangle width.
-        :arg h:   Rectangle height.
+        :arg xy:         Tuple specifying bottom left of the rectangle, in 
+                         the display coordinate system.
+        
+        :arg w:          Rectangle width.
+        
+        :arg h:          Rectangle height.
+
+        :arg filled:     If ``True``, the rectangle is filled with the 
+                         ``fillColour``.
+
+        :arg fillColour: If ``filled=True``, the colour to fill the rectangle 
+                         with. Defaults to a transparent version of the
+                         ``colour``.
 
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.        
         """
         AnnotationObject.__init__(self, xax, yax, *args, **kwargs)
-        self.xy = xy
-        self.w  = w
-        self.h  = h
+        
+        self.xy         = xy
+        self.w          = w
+        self.h          = h
+        self.filled     = filled
+        self.fillColour = fillColour
 
         
     def draw(self, zpos):
@@ -410,16 +431,51 @@ class Rect(AnnotationObject):
         tl = [xy[0],     xy[1] + h]
         tr = [xy[0] + w, xy[1] + h]
 
-        idxs                 = np.arange(8,     dtype=np.uint32)
-        verts                = np.zeros((8, 3), dtype=np.float32)
+        if self.filled:
+            self.__drawFill(zpos, xax, yax, zax, bl, br, tl, tr)
+            
+        self.__drawRect(zpos, xax, yax, zax, bl, br, tl, tr)
+
+
+    def __drawFill(self, zpos, xax, yax, zax, bl, br, tl, tr):
+        """Draw a filled version of the rectangle. """
+
+        fillColour = self.fillColour
+
+        if fillColour is None:
+            if self.colour is not None:
+                fillColour = list(self.colour[:3])
+            else:
+                fillColour = [1, 1, 1]
+
+        if len(fillColour) == 3:
+            fillColour = list(fillColour) + [0.2]
+
+        idxs  = np.array([0, 1, 2, 2, 1, 3], dtype=np.uint32)
+        verts = np.zeros((4, 3),             dtype=np.float32)
+        
         verts[0, [xax, yax]] = bl
         verts[1, [xax, yax]] = br
         verts[2, [xax, yax]] = tl
         verts[3, [xax, yax]] = tr
-        verts[4, [xax, yax]] = bl
-        verts[5, [xax, yax]] = tl
-        verts[6, [xax, yax]] = br
-        verts[7, [xax, yax]] = tr
+        verts[:,  zax]       = zpos
+
+        # I'm assuming that glPolygonMode
+        # is already set to GL_FILL
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts.ravel('C')) 
+        gl.glDrawElements(gl.GL_TRIANGLES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+
+    
+    def __drawRect(self, zpos, xax, yax, zax, bl, br, tl, tr):
+        """Draw the rectangle outline. """ 
+
+        idxs  = np.array([0, 1, 2, 3, 0, 2, 1, 3], dtype=np.uint32)
+        verts = np.zeros((4, 3),                   dtype=np.float32)
+        
+        verts[0, [xax, yax]] = bl
+        verts[1, [xax, yax]] = br
+        verts[2, [xax, yax]] = tl
+        verts[3, [xax, yax]] = tr
         verts[:,  zax]       = zpos
 
         gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts.ravel('C')) 
