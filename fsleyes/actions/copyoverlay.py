@@ -214,8 +214,8 @@ def copyImage(overlayList,
     isROI  = roi is not None
     is4D   = len(overlay.shape) > 3 and overlay.shape[3] > 1
 
-    if name is not None:
-        name   = '{}_copy'.format(overlay.name)
+    if name is None:
+        name = '{}_copy'.format(overlay.name)
 
     if roi is None:
         roi = [(0, s) for s in overlay.shape]

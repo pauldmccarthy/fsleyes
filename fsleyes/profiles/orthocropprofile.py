@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# orthocropprofile.py -
+# orthocropprofile.py - The OrthoCropProfile class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`OrthoCropProfile` class, an interaction
+:class:`.Profile` for :class:`.OrthoPanel` views.
+""" 
 
 
 import numpy as np
@@ -16,14 +19,55 @@ from . import                    orthoviewprofile
 
 
 class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
+    """The ``OrthoViewProfile`` class is a :class:`.Profile` for the
+    :class:`.OrthoPanel` class, which allows the user to define a cropping
+    region for :class:`.Image` overlays.
 
 
-    # cropBox: voxel coordinates [(xlo, xhi), (ylo, yhi), (zlo, zhi)]
+    Ther ``OrthoCropProfile`` displays a cropping, or ROI, region on the
+    ``OrthoPanel`` canvases, relative to the for the currently selected
+    image, using :class:`.Rect` annotations. Mouse handlers are also
+    defined, allowing the user to adjust the box.
+
+    
+    Once the user has selected a cropping region, the related
+    :class:`.CropImagePanel` allows him/her to create a cropped copy of the
+    image.
+
+    
+    The ``OrthoCropProfile`` class defines one mode, in addition to those
+    inherited from the :class:`.OrthoViewProfile` class:
+
+    
+    ======== ===================================================
+    ``crop`` Clicking and dragging allows the user to change the
+             boundaries of a cropping region.
+    ======== ===================================================
+
+
+    In a similar manner as for the :class:`.OrthoEditProfile`, the
+    ``OrthoCropProfile`` class has been written in a way which requires the
+    :class:`.Image` instance that is being edited to be displayed in *scaled
+    voxel* (a.k.a. ``pixdim``) space.  Therefore, when an ``Image`` overlay is
+    selected, the ``OrthoCropProfile`` instance sets that ``Image`` as the
+    current :attr:`.DisplayContext.displaySpace` reference image.
+    """
+
+
     cropBox = props.Bounds(ndims=3, real=False, minDistance=1)
+    """This property keeps track of the current low/high limits
+    of the cropping region, in the voxel coordinate system of the
+    currently selected overlay.
+    """
 
 
     def __init__(self, viewPanel, overlayList, displayCtx):
+        """Create an ``OrthoCropProfile``.
 
+        :arg viewPanel:    An :class:`.OrthoPanel` instance.
+        :arg overlayList:  The :class:`.OverlayList` instance.
+        :arg displayCtx:   The :class:`.DisplayContext` instance.
+        """
 
         orthoviewprofile.OrthoViewProfile.__init__(
             self,
@@ -33,23 +77,40 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
             ['crop'])
         self.mode = 'crop'
 
+        # The currently selected overlay,
+        # and the one for which the cropping
+        # box is being shown/modified.
         self.__overlay = None
 
-        # { overlay : cropBox }
+        # A cache of { overlay : cropBox }
+        # which stores the last cropping
+        # box for a given overlay. This
+        # is used to cache boxes if the
+        # user selects a different overlay
+        # while the crop profile is active.
         self.__cachedCrops = {}
 
-        # axes:   X / Y / Z
-        # limits: lo / hi
+        # axis:   one of 0, 1, or 2 (X, Y, or Z) -
+        #         the voxel axis of the crop box 
+        #         that is being adjusted
         # 
-        # when the user is dragging
-        # a crop box boundary
-        self.__dragAxes   = None
-        self.__dragLimits = None
+        # limits: one of 0 or 1 (lo or hi) - the
+        #         low/high limit of the crop box
+        #         that is being adjusted
+        # 
+        # These fields are set when the
+        # user is dragging a crop box
+        # boundary
+        self.__dragAxis  = None
+        self.__dragLimit = None
         
         self.__xcanvas = viewPanel.getXCanvas()
         self.__ycanvas = viewPanel.getYCanvas()
         self.__zcanvas = viewPanel.getZCanvas()
 
+        # A rectangle is displayed on
+        # each of the canvases, showing
+        # the current cropping box.
         self.__xrect   = annotations.Rect(1, 2, (0, 0), 0, 0,
                                           colour=(0.3, 0.3, 1.0),
                                           filled=True)
@@ -78,22 +139,24 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
 
 
     def destroy(self):
+        """Must be called when this ``OrthoCropProfile`` is no longer
+        needed. Removes property listeners and does some other clean up.
         """
-        """
-        
-        self.__xcanvas.getAnnotations().dequeue(self.__xrect, hold=True)
-        self.__ycanvas.getAnnotations().dequeue(self.__yrect, hold=True)
-        self.__zcanvas.getAnnotations().dequeue(self.__zrect, hold=True)
         
         self._overlayList.removeListener('overlays',        self._name)
         self._displayCtx .removeListener('selectedOverlay', self._name)
         self             .removeListener('cropBox',         self._name)
+
+        self.__xcanvas.getAnnotations().dequeue(self.__xrect, hold=True)
+        self.__ycanvas.getAnnotations().dequeue(self.__yrect, hold=True)
+        self.__zcanvas.getAnnotations().dequeue(self.__zrect, hold=True)
         
-        orthoviewprofile.OrthoViewProfile.destroy(self) 
+        orthoviewprofile.OrthoViewProfile.destroy(self)
 
 
     def __deregisterOverlay(self):
-        """
+        """Called by :meth:`__selectedOverlayChanged`. Clears references
+        associated with the previously selected overlay, if necessary.
         """
         
         if self.__overlay is None:
@@ -105,13 +168,18 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
 
         
     def __registerOverlay(self, overlay):
-        """
+        """Called by :meth:`__selectedOverlayChanged`. Sets up
+        references associated with the given (newly selected) overlay.
         """ 
         self.__overlay = overlay
 
         
     def __selectedOverlayChanged(self, *a):
-        """
+        """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
+        If the overlay is a :class:`.Image` instance, it is set as the
+        :attr:`.DisplayContext.displaySpace` reference, and the
+        :attr:`cropBox` is configured to be relative to the newly selected
+        overlay.
         """ 
         overlay = self._displayCtx.getSelectedOverlay()
 
@@ -152,7 +220,8 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
 
 
     def __cropBoxChanged(self, *a):
-        """
+        """Called when the :attr:`cropBox` changes. Updates the :class:`.Rect`
+        annotations on the :class:`.OrthoPanel` canvases.
         """
 
         xlo, xhi = self.cropBox.x
@@ -197,93 +266,140 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         self.__xcanvas.Refresh()
         self.__ycanvas.Refresh()
         self.__zcanvas.Refresh()
+
+
+    def __getVoxel(self, overlay, canvasPos):
+        """Called by the mouse down/drag handlers. Figures out the voxel
+        in the currently selected overlay which corresponds to the
+        given canvas position.
+        """
+
+        shape = overlay.shape[:3]
+        vox   = self._displayCtx.getOpts(overlay).getVoxel(
+            canvasPos, clip=False, vround=False)
+
+        vox = np.ceil(vox)
+
+        # The getVoxel method will return out of
+        # bounds voxels (because we asked it to),
+        # so we need to clamp to the image shape
+        for i, (v, s) in enumerate(zip(vox, shape)):
+            if   v <  0: vox[i] = 0
+            elif v >= s: vox[i] = s
+
+        return vox
         
 
     def _cropModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
+        """Called on mouse down events. Calculates the nearest crop box
+        boundary to the mouse click, adjusts the boundary accordingly,
+        and saves the boundary/axis information for subsequent drag
+        events (see :meth:`_cropModeLeftMouseDrag`).
+        """
 
-        if self.__overlay is None:
+        overlay = self.__overlay
+
+        if overlay is None:
             return
-
-        vox = self._displayCtx.getOpts(self.__overlay).getVoxel(
-            canvasPos, vround=True)
-
-        if vox is None:
-            return
-
-        # Figure out what axis (X, Y, or Z) and limit
-        # (lo, hi) the mouse click was closest to
 
         # What canvas was the click on? 
         if   canvas.zax == 0: hax, vax = 1, 2
         elif canvas.zax == 1: hax, vax = 0, 2
         elif canvas.zax == 2: hax, vax = 0, 1
 
-        # Distances from the mouse 
-        # click to each crop box 
-        # boundary on the clicked
+        # Figure out the distances from
+        # the mouse click  to each crop
+        # box boundary on the clicked
         # canvas
-        hlo, hhi = self.cropBox.getLo(hax), self.cropBox.getHi(hax)
-        vlo, vhi = self.cropBox.getLo(vax), self.cropBox.getHi(vax)
+        vox        = self.__getVoxel(overlay, canvasPos) 
+        hlo, hhi   = self.cropBox.getLo(hax), self.cropBox.getHi(hax)
+        vlo, vhi   = self.cropBox.getLo(vax), self.cropBox.getHi(vax)
 
-        if abs(vox[hax] - hlo) < abs(vox[hax] - hhi): hlimit = 0
-        else:                                         hlimit = 1
-        if abs(vox[vax] - vlo) < abs(vox[vax] - vhi): vlimit = 0
-        else:                                         vlimit = 1 
-            
-        # print 'Crop box: x {}'.format(self.cropBox.x)
-        # print '          y {}'.format(self.cropBox.y)
-        # print '          z {}'.format(self.cropBox.z)
-        # print 'Voxel:      {}'.format(vox)
-        # print 'Screen ax:  {}'.format(['horizontal', 'vertical'][scrAx])
-        # print 'Voxel ax:   {}'.format('xyz'[voxAx])
-        # print 'Limit:      {}'.format(['low', 'high'][limit])
+        # We compare the click voxel
+        # coords with each of the x/y
+        # lo/hi crop box boundaries
+        boundaries = np.array([
+            [hlo,      vox[vax]],
+            [hhi,      vox[vax]],
+            [vox[hax], vlo],
+            [vox[hax], vhi]])
 
-        self.__dragAxes   = (hax,    vax)
-        self.__dragLimits = (hlimit, vlimit)
+        # In case the voxel is out of bounds,
+        # make sure that the crop box boundary
+        # coordinates are actually in the crop
+        # box (or on an edge).
+        boundaries[:, 0] = np.clip(boundaries[:, 0], hlo, hhi)
+        boundaries[:, 1] = np.clip(boundaries[:, 1], vlo, vhi)
 
-        # Update the crop box
+        # As the display space is set to
+        # this overlay, the display coordinate
+        # system is equivalent to the scaled
+        # voxel coordinate system of the
+        # overlay. So we can just multiply the
+        # 2D voxel coordinates by the
+        # corresponding pixdims to get the
+        # distances in the display coordinate
+        # system.
+        pixdim           = overlay.pixdim[:3]
+        scVox            = [vox[hax] * pixdim[hax], vox[vax] * pixdim[vax]]
+        boundaries[:, 0] = boundaries[:, 0] * pixdim[hax]
+        boundaries[:, 1] = boundaries[:, 1] * pixdim[vax]
+
+        # Calculate distance from click to
+        # crop boundaries, and figure out
+        # the screen axis (x/y) and limit
+        # (lo/hi) to be dragged.
+        dists       = (boundaries - scVox) ** 2
+        dists       = np.sqrt(np.sum(dists, axis=1))
+        axis, limit = np.unravel_index(np.argmin(dists), (2, 2))
+        voxAxis     = [hax, vax][axis]
+
+        # Save these for the mouse drag handler
+        self.__dragAxis  = voxAxis
+        self.__dragLimit = limit
+
+        # Update the crop box and location
         with props.suppress(self, 'cropBox', notify=True):
-            self.cropBox.setLimit(hax, hlimit, vox[hax])
-            self.cropBox.setLimit(vax, vlimit, vox[vax])
+            self.cropBox.setLimit(voxAxis, limit, vox[voxAxis])
 
         self._displayCtx.location = canvasPos
 
 
     def _cropModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
+        """Called on left mouse drags. Updates the :attr:`cropBox` boudary
+        which was clicked on (see :meth:`_cropModeLeftMouseDown`), so it
+        follows the mouse location.
+        """
         
-        if self.__overlay is None or self.__dragAxes is None:
+        if self.__overlay is None or self.__dragAxis is None:
             return
 
-        hax, vax   = self.__dragAxes
-        hlim, vlim = self.__dragLimits
-        vox        = self._displayCtx.getOpts(self.__overlay).getVoxel(
-            canvasPos, vround=True)
+        box      = self.cropBox
+        axis     = self.__dragAxis
+        limit    = self.__dragLimit
+        oppLimit = 1 - limit
+        vox      = self.__getVoxel(self.__overlay, canvasPos)
+        
 
-        if vox is None:
-            return
+        newval = vox[axis]
+        oppval = box.getLimit(axis, oppLimit)
 
-        hval = vox[hax]
-        vval = vox[vax]
-
-        oldhlo, oldhhi = self.cropBox.getRange(hax)
-        oldvlo, oldvhi = self.cropBox.getRange(vax)
-
-        if   hlim == 0 and hval >= oldhhi: hval = oldhhi - 1
-        elif hlim == 1 and hval <= oldhlo: hval = oldhlo + 1
-        if   vlim == 0 and vval >= oldvhi: vval = oldvhi - 1
-        elif vlim == 1 and vval <= oldvlo: vval = oldvlo + 1
+        if   limit == 0 and newval >= oppval: newval = oppval - 1
+        elif limit == 1 and newval <= oppval: newval = oppval + 1
 
         with props.suppress(self, 'cropBox', notify=True):
-            self.cropBox.setLimit(hax, hlim, hval)
-            self.cropBox.setLimit(vax, vlim, vval)
+            self.cropBox.setLimit(axis, limit, newval)
 
         self._displayCtx.location = canvasPos
 
     
     def _cropModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
+        """Called on left mouse up events. Clears references used by the
+        mouse down/drag handlers.
+        """
         
-        if self.__overlay is None or self.__dragAxes is None:
+        if self.__overlay is None or self.__dragAxis is None:
             return
 
-        self.__dragAxes   = None
-        self.__dragLimits = None
+        self.__dragAxis  = None
+        self.__dragLimit = None
