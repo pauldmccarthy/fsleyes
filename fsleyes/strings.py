@@ -277,9 +277,10 @@ titles = TypeDict({
     'PlotToolBar'               : 'Plot toolbar',
     'TimeSeriesToolBar'         : 'Time series toolbar',
     'HistogramToolBar'          : 'Histogram toolbar',
-    
 
     'MelodicClassificationPanel' : 'Melodic IC classification',
+
+    'CropImagePanel'             : 'Crop image',
 
     'LookupTablePanel.loadLut'     : 'Select a lookup table file',
     'LookupTablePanel.labelExists' : 'Label already exists',
@@ -369,6 +370,7 @@ actions = TypeDict({
     
     'OrthoPanel.toggleOrthoToolBar'     : 'Ortho toolbar',
     'OrthoPanel.toggleEditMode'         : 'Edit mode',
+    'OrthoPanel.toggleCropMode'         : 'Crop tool',
     'OrthoPanel.toggleEditPanel'        : 'Edit settings panel',
     'OrthoPanel.resetDisplay'           : 'Reset display',
     'OrthoPanel.centreCursor'           : 'Centre cursor',
@@ -587,6 +589,11 @@ labels = TypeDict({
 
     'OrthoEditSettingsPanel.general' : 'General settings',
     'OrthoEditSettingsPanel.selint'  : 'Select by intensity settings',
+
+    'CropImagePanel.cropSize'         : 'Cropped shape: {:3d}, {:3d}, {:3d}',
+    'CropImagePanel.cropSize.noImage' : 'Croppsed shape: n/a',
+    'CropImagePanel.image'            : 'Crop {}',
+    'CropImagePanel.image.noImage'    : 'Choose a NIFTI image',
 })
 
 

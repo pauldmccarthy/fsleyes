@@ -32,6 +32,7 @@ import fsleyes.gl                              as fslgl
 import fsleyes.actions                         as actions
 import fsleyes.colourmaps                      as colourmaps
 import fsleyes.gl.wxglslicecanvas              as slicecanvas
+import fsleyes.controls.cropimagepanel         as cropimagepanel
 import fsleyes.controls.orthotoolbar           as orthotoolbar
 import fsleyes.controls.orthoedittoolbar       as orthoedittoolbar
 import fsleyes.controls.orthoeditactiontoolbar as orthoeditactiontoolbar
@@ -100,6 +101,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     ``edit`` Simple editing of :class:`.Image` overlays, using the
              :class:`.OrthoEditProfile` (see also the
              :mod:`~fsleyes.editor` package).
+
+    ``crop`` Allows the user to crop an ``Image`` overlay.
     ======== =========================================================
     
 
@@ -113,6 +116,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
        :nosignatures:
 
        toggleEditMode
+       toggleCropMode
        toggleEditPanel
        toggleOrthoToolBar
        resetDisplay
@@ -311,6 +315,16 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         else:                      self.profile = 'view'
 
 
+    @actions.toggleControlAction(cropimagepanel.CropImagePanel)
+    def toggleCropMode(self):
+        """Toggles the :attr:`.ViewPanel.profile` between ``'view'`` and
+        ``'crop'``. See :meth:`__profileChanged`.  
+        """
+
+        if self.profile == 'view': self.profile = 'crop'
+        else:                      self.profile = 'view'
+
+
     @actions.toggleControlAction(orthoeditsettingspanel.OrthoEditSettingsPanel)
     def toggleEditPanel(self, floatPane=False):
         """Shows/hides an :class:`.OrthoEditSettingsPanel`. See
@@ -388,6 +402,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleMovieMode,
                    self.toggleDisplaySync,
                    self.toggleEditMode,
+                   self.toggleCropMode,
                    None,
                    self.resetDisplay,
                    self.centreCursor,
@@ -448,39 +463,48 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         and an "edit" menu is added to the :class:`.FSLeyesFrame` (if there
         is one).
         """
-
+        
+        CropImagePanel         = cropimagepanel.CropImagePanel
         OrthoEditToolBar       = orthoedittoolbar.OrthoEditToolBar
         OrthoEditActionToolBar = orthoeditactiontoolbar.OrthoEditActionToolBar
         OrthoEditSettingsPanel = orthoeditsettingspanel.OrthoEditSettingsPanel
 
+        cropPanelOpen          = self.isPanelOpen(CropImagePanel)
         editToolBarOpen        = self.isPanelOpen(OrthoEditToolBar)
         editActionToolBarOpen  = self.isPanelOpen(OrthoEditActionToolBar)
         editPanelOpen          = self.isPanelOpen(OrthoEditSettingsPanel)
 
-        shouldBeOpen           = self.profile == 'edit'
+        inEdit                 = self.profile == 'edit'
+        inCrop                 = self.profile == 'crop'
         
         # Toggle toolbars if they are open but should 
         # be closed, or closed but should be open
-        if (not editToolBarOpen) and      shouldBeOpen or \
-                editToolBarOpen  and (not shouldBeOpen):
+        if (not editToolBarOpen) and      inEdit or \
+                editToolBarOpen  and (not inEdit):
             self.togglePanel(orthoedittoolbar.OrthoEditToolBar, ortho=self)
 
-        if (not editActionToolBarOpen) and      shouldBeOpen or \
-                editActionToolBarOpen  and (not shouldBeOpen):
+        if (not editActionToolBarOpen) and      inEdit or \
+                editActionToolBarOpen  and (not inEdit):
             self.togglePanel(orthoeditactiontoolbar.OrthoEditActionToolBar,
                              ortho=self,
                              location=wx.LEFT)
+
+        if (not cropPanelOpen) and      inCrop or \
+                cropPanelOpen  and (not inCrop):
+            self.togglePanel(cropimagepanel.CropImagePanel,
+                             ortho=self,
+                             floatPane=True) 
             
         # Don't open edit panel by default,
         # but close it when we leave edit mode
-        if editPanelOpen and (not shouldBeOpen):
+        if editPanelOpen and (not inEdit):
             self.togglePanel(orthoeditsettingspanel.OrthoEditSettingsPanel)
 
         # It's unlikely, but an OrthoPanel might be
         # created without a ref to a FSLeyesFrame. 
         if self.getFrame() is not None:
-            if self.profile == 'view': self.__removeEditMenu()
-            else:                      self.__addEditMenu()
+            if   self.profile == 'view': self.__removeEditMenu()
+            elif self.profile == 'edit': self.__addEditMenu()
 
 
     def __addEditMenu(self):

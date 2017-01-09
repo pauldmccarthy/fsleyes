@@ -32,6 +32,7 @@ from fsleyes.views.powerspectrumpanel     import PowerSpectrumPanel
 
 from fsleyes.profiles.orthoviewprofile    import OrthoViewProfile
 from fsleyes.profiles.orthoeditprofile    import OrthoEditProfile
+from fsleyes.profiles.orthocropprofile    import OrthoCropProfile
 from fsleyes.profiles.lightboxviewprofile import LightBoxViewProfile
 from fsleyes.profiles.plotprofile         import PlotProfile
 from fsleyes.profiles.histogramprofile    import HistogramProfile
@@ -42,7 +43,7 @@ log = logging.getLogger(__name__)
 
 
 profiles  = {
-    OrthoPanel         : ['view', 'edit'],
+    OrthoPanel         : ['view', 'edit', 'crop'],
     LightBoxPanel      : ['view'],
     TimeSeriesPanel    : ['view'],
     HistogramPanel     : ['view'],
@@ -57,6 +58,7 @@ to the :attr:`.ViewPanel.profile` property.
 profileHandlers = {
     (OrthoPanel,         'view') : OrthoViewProfile,
     (OrthoPanel,         'edit') : OrthoEditProfile,
+    (OrthoPanel,         'crop') : OrthoCropProfile,
     (LightBoxPanel,      'view') : LightBoxViewProfile,
     (TimeSeriesPanel,    'view') : TimeSeriesProfile,
     (HistogramPanel,     'view') : HistogramProfile,
@@ -106,6 +108,14 @@ tempModeMap = {
         (('desel',  (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'chsize'),
         (('selint', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'chthres'),
         (('selint', (wx.WXK_ALT,     wx.WXK_SHIFT)), 'chrad'))),
+
+    OrthoCropProfile : OrderedDict((
+
+        (('crop',  wx.WXK_SHIFT),                  'nav'),
+        (('crop',  wx.WXK_CONTROL),                'zoom'),
+        (('crop',  wx.WXK_ALT),                    'pan'),
+        (('crop', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'slice'), 
+    )),
 
     LightBoxViewProfile : OrderedDict((
         (('view', wx.WXK_CONTROL), 'zoom'), )),
