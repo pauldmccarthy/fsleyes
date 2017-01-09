@@ -9,13 +9,14 @@ which creates a copy of the currently selected overlay.
 """
 
 
-import numpy              as np
+import numpy               as np
 
-import fsl.data.image     as fslimage
-import fsl.utils.dialog   as fsldlg
-import fsl.utils.settings as fslsettings
-import fsleyes.strings    as strings
-from . import                action
+import fsl.data.image      as fslimage
+import fsl.utils.dialog    as fsldlg
+import fsl.utils.transform as transform
+import fsl.utils.settings  as fslsettings
+import fsleyes.strings     as strings
+from . import                 action
 
 
 class CopyOverlayAction(action.Action):
@@ -176,7 +177,9 @@ def copyImage(overlayList,
               overlay,
               createMask,
               copy4D,
-              copyDisplay):
+              copyDisplay,
+              name=None,
+              roi=None):
     """Creates a copy of the given :class:`.Image` overlay, and inserts it
     into the :class:`.OverlayList`.
 
@@ -195,29 +198,60 @@ def copyImage(overlayList,
     :arg copyDisplay: If ``True``, the copy will inherit the display settings
                       of the ``overlay``. Otherwise, the copy will be 
                       initialised  with default display settings.
+
+    :arg name:        If provided, will be used as the :attr:`.Display.name`
+                      of the copy. Otherwise the copy will be given a name.
+
+    :arg roi:         If provided, the copy will be cropped to the low/high
+                      voxel bounds specified in the image. Must be a sequence
+                      of tuples, containing the low/high bounds for each voxel
+                      dimension. For 4D images, the bounds for the fourth
+                      dimension are optional.
     """
 
     ovlIdx = overlayList.index(overlay)
     opts   = displayCtx.getOpts(overlay)
+    isROI  = roi is not None
     is4D   = len(overlay.shape) > 3 and overlay.shape[3] > 1
 
-    # Extract/create the data for the new image.
-    # Set copy4D to true for 3D images, just to
-    # make the 4th dimension indexing below work.
-    if not is4D:
-        copy4D = True
+    if name is not None:
+        name   = '{}_copy'.format(overlay.name)
 
-    if createMask:
-        if copy4D: data = np.zeros(overlay.shape)
-        else:      data = np.zeros(overlay.shape[:3])
+    if roi is None:
+        roi = [(0, s) for s in overlay.shape]
+
+    # If the image is 4D, and an ROI of
+    # length 3 has been given, add some
+    # bounds for the fourth dimension
+    if is4D and copy4D and len(roi) == 3:
+        roi = list(roi) + [(0, overlay.shape[3])]
+
+    # If we are only supposed to copy
+    # the current 3D volume of a 4D
+    # image, adjust the ROI accordingly.
+    if is4D and not copy4D:
+        roi = list(roi[:3]) + [(opts.volume, opts.volume + 1)]
+
+    shape = [hi - lo for hi, lo in roi]
+    slc   = tuple([slice(lo, hi) for lo, hi in roi])
+    
+    if createMask: data = np.zeros(shape)
+    else:          data = np.copy(overlay[slc])
+
+    # If this is an ROI, we need to add
+    # an offset to the image affine
+    if isROI:
+        xform  = overlay.voxToWorldMat
+        offset = [lo for lo, hi in roi[:3]]
+        offset = transform.scaleOffsetXform([1, 1, 1], offset)
+        xform  = transform.concat(xform, offset.T)
+
     else:
-        if copy4D: data = np.copy(overlay[:])
-        else:      data = np.copy(overlay[:, :, :, opts.volume])
+        xform  = None
 
     # Create the copy, put it in the list
-    header = overlay.header
-    name   = '{}_copy'.format(overlay.name)
-    copy   = fslimage.Image(data, name=name, header=header)
+    header = overlay.header.copy()
+    copy   = fslimage.Image(data, name=name, header=header, xform=xform)
 
     overlayList.insert(ovlIdx + 1, copy)
 

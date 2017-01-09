@@ -431,10 +431,11 @@ class Rect(AnnotationObject):
         tl = [xy[0],     xy[1] + h]
         tr = [xy[0] + w, xy[1] + h]
 
+        self.__drawRect(zpos, xax, yax, zax, bl, br, tl, tr) 
+
         if self.filled:
             self.__drawFill(zpos, xax, yax, zax, bl, br, tl, tr)
-            
-        self.__drawRect(zpos, xax, yax, zax, bl, br, tl, tr)
+
 
 
     def __drawFill(self, zpos, xax, yax, zax, bl, br, tl, tr):
@@ -462,6 +463,7 @@ class Rect(AnnotationObject):
 
         # I'm assuming that glPolygonMode
         # is already set to GL_FILL
+        gl.glColor4f(*fillColour)
         gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts.ravel('C')) 
         gl.glDrawElements(gl.GL_TRIANGLES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
 
