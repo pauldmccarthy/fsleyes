@@ -397,12 +397,13 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``OrthoPanel``.
         """
-        actions = [self.screenshot,
+        actionz = [self.screenshot,
                    self.showCommandLineArgs,
                    self.toggleMovieMode,
                    self.toggleDisplaySync,
                    self.toggleEditMode,
-                   self.toggleCropMode,
+                   (strings.titles[self, 'toolMenu'], [
+                       self.toggleCropMode]),
                    None,
                    self.resetDisplay,
                    self.centreCursor,
@@ -424,11 +425,25 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleOrthoToolBar,
                    self.toggleLookupTablePanel,
                    self.toggleClusterPanel,
-                   self.toggleClassificationPanel] 
+                   self.toggleClassificationPanel]
 
-        names = [a.__name__  if a is not None else None for a in actions]
+        def makeTuples(actionz):
 
-        return list(zip(names, actions))
+            tuples = []
+
+            for a in actionz:
+                if isinstance(a, actions.Action):
+                    tuples.append((a.__name__, a))
+                    
+                elif isinstance(a, tuple):
+                    tuples.append((a[0], makeTuples(a[1])))
+                    
+                elif a is None:
+                    tuples.append((None, None))
+
+            return tuples
+            
+        return makeTuples(actionz)
 
             
     def getGLCanvases(self):
@@ -493,7 +508,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                 cropPanelOpen  and (not inCrop):
             self.togglePanel(cropimagepanel.CropImagePanel,
                              ortho=self,
-                             floatPane=True) 
+                             floatPane=True,
+                             floatOnly=True,
+                             closeable=False,
+                             floatPos=(0.85, 0.3)) 
             
         # Don't open edit panel by default,
         # but close it when we leave edit mode
@@ -741,6 +759,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.centreCursor     .enabled = haveOverlays
         self.centreCursorWorld.enabled = haveOverlays
         self.toggleEditMode   .enabled = isImage
+        self.toggleCropMode   .enabled = isImage
 
         
     def __displaySpaceChanged(self, *a):

@@ -310,6 +310,8 @@ titles = TypeDict({
     'removeoverlay.unsaved' : 'Remove unsaved image?',
     'reloadoverlay.unsaved' : 'Reload unsaved image?',
 
+    'OrthoPanel.toolMenu'                 : 'Tools',
+
     'OrthoEditProfile.imageChange'        : 'Changing edited image',
     'OrthoCropProfile.imageChange'        : 'Changing cropped image',
 
@@ -380,7 +382,7 @@ actions = TypeDict({
     
     'OrthoPanel.toggleOrthoToolBar'     : 'Ortho toolbar',
     'OrthoPanel.toggleEditMode'         : 'Edit mode',
-    'OrthoPanel.toggleCropMode'         : 'Crop tool',
+    'OrthoPanel.toggleCropMode'         : 'Crop',
     'OrthoPanel.toggleEditPanel'        : 'Edit settings panel',
     'OrthoPanel.resetDisplay'           : 'Reset display',
     'OrthoPanel.centreCursor'           : 'Centre cursor',

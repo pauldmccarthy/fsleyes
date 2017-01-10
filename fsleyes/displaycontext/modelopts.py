@@ -36,23 +36,23 @@ def genModelColour(overlay):
     Otherwise returns a random colour.
     """
     filename        = str(overlay.dataSource)
-    subcorticalCmap = colourmaps.getColourMap('mgh-subcortical')
+    subcorticalCmap = colourmaps.getLookupTable('mgh-subcortical')
 
-    if   'L_Thal' in filename: return subcorticalCmap(10)
-    elif 'L_Caud' in filename: return subcorticalCmap(11)
-    elif 'L_Puta' in filename: return subcorticalCmap(12)
-    elif 'L_Pall' in filename: return subcorticalCmap(13)
-    elif 'BrStem' in filename: return subcorticalCmap(16)
-    elif 'L_Hipp' in filename: return subcorticalCmap(17)
-    elif 'L_Amyg' in filename: return subcorticalCmap(18)
-    elif 'L_Accu' in filename: return subcorticalCmap(26)
-    elif 'R_Thal' in filename: return subcorticalCmap(49)
-    elif 'R_Caud' in filename: return subcorticalCmap(50)
-    elif 'R_Puta' in filename: return subcorticalCmap(51)
-    elif 'R_Pall' in filename: return subcorticalCmap(52)
-    elif 'R_Hipp' in filename: return subcorticalCmap(53)
-    elif 'R_Amyg' in filename: return subcorticalCmap(54)
-    elif 'R_Accu' in filename: return subcorticalCmap(58)
+    if   'L_Thal' in filename: return subcorticalCmap.get(10).colour
+    elif 'L_Caud' in filename: return subcorticalCmap.get(11).colour
+    elif 'L_Puta' in filename: return subcorticalCmap.get(12).colour
+    elif 'L_Pall' in filename: return subcorticalCmap.get(13).colour
+    elif 'BrStem' in filename: return subcorticalCmap.get(16).colour
+    elif 'L_Hipp' in filename: return subcorticalCmap.get(17).colour
+    elif 'L_Amyg' in filename: return subcorticalCmap.get(18).colour
+    elif 'L_Accu' in filename: return subcorticalCmap.get(26).colour
+    elif 'R_Thal' in filename: return subcorticalCmap.get(49).colour
+    elif 'R_Caud' in filename: return subcorticalCmap.get(50).colour
+    elif 'R_Puta' in filename: return subcorticalCmap.get(51).colour
+    elif 'R_Pall' in filename: return subcorticalCmap.get(52).colour
+    elif 'R_Hipp' in filename: return subcorticalCmap.get(53).colour
+    elif 'R_Amyg' in filename: return subcorticalCmap.get(54).colour
+    elif 'R_Accu' in filename: return subcorticalCmap.get(58).colour
     
     return colourmaps.randomBrightColour()
 

@@ -529,16 +529,8 @@ class FSLeyesFrame(wx.Frame):
             actionNames, actionObjs = zip(*target.getActions())
         else:
             actionObjs = [target.getAction(name) for name in actionNames]
-            
-        for actionName, actionObj in zip(actionNames, actionObjs):
 
-            # If actionObj is None, this is a
-            # hacky hint to insert a separator
-            # - see ActionProvider.getActions.
-            if actionObj is None:
-                menu.AppendSeparator()
-                continue 
-            
+        def configureActionItem(menu, actionName, actionObj):
             title    = strings  .actions.get((target, actionName), actionName)
             shortcut = shortcuts.actions.get((target, actionName))
 
@@ -577,6 +569,32 @@ class FSLeyesFrame(wx.Frame):
                 self.__onViewPanelMenuItem(vp, aname, sc, ignoreFocus)
 
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem, wrapper) 
+            
+        for actionName, actionObj in zip(actionNames, actionObjs):
+
+            # If actionObj is None, this is a
+            # hacky hint to insert a separator
+            # - see ActionProvider.getActions.
+            if actionObj is None:
+                menu.AppendSeparator()
+                continue
+
+            # If actionObj is a list, this is a4
+            # hacky hint to insert a sub-menu.
+            elif isinstance(actionObj, list):
+                names, objs = zip(*actionObj)
+                currentMenu = wx.Menu()
+                menu.AppendSubMenu(currentMenu, actionName)
+
+            else:
+
+                currentMenu = menu
+                names       = [actionName]
+                objs        = [actionObj]
+
+            for name, obj in zip(names, objs):
+                configureActionItem(currentMenu, name, obj)
+
 
         
     def __addViewPanelMenu(self, panel, title):

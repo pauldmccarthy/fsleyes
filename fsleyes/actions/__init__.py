@@ -208,12 +208,23 @@ class ActionProvider(object):
         """Must be called when this ``ActionProvider`` is no longer needed.
         Calls the :meth:`Action.destroy` method of all ``Action`` instances.
         """
-        for name, action in self.getActions():
+        for name, actionz in self.getActions():
 
-            # getActions may return None
-            if action is not None:
-                action.destroy()
+            # Entries in getActions may be (None, None)
+            if actionz is None:
+                continue
+            
+            # Or may be ('groupName', [('actionName', action), ...])
+            elif isinstance(actionz, list):
+                actionz = [a[1] for a in actionz]
 
+            # Or may be ('actionName', action)
+            else:
+                actionz = [actionz]
+
+            for a in actionz:
+                a.destroy()
+                
 
     def getAction(self, name):
         """Return the :class:`Action` instance with the specified name. """
@@ -244,10 +255,16 @@ class ActionProvider(object):
         Sub-classes may wish to override this method to enforce a specific
         ordering of their actions.
 
-        .. note:: The list returned by this method may contain entries equal
-                  to ``(None, None)``. This is used as a hint for GUIs which 
-                  display action widgets/menu items to indicate that a 
-                  separator should be inserted.
+        .. note:: The list returned by this method may contain:
+
+                    - Entries equal to ``(None, None)``. This is used as a
+                      hint for GUIs which display action widgets/menu items to
+                      indicate that a separator should be inserted.
+
+                    - Entries equal to ``(name, [(name, Action), ...])``.
+                      This is used as a hint for GUIs that the nested list
+                      of actions should appear as a sub-menu with the
+                      specified ``name``.
         """
     
         acts = []

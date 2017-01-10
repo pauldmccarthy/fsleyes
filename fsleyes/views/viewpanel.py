@@ -236,6 +236,17 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         :arg floatPane: If ``True``, the secondary panel is initially floated.
                         Defaults to ``False``.
+
+        :arg floatOnly: If ``True``, and ``floatPane=True``, the panel will
+                        be permanently floated (i.e. it will not be dockable).
+
+        :arg floatPos:  If provided, and ``floatPane`` is ``True``, specifies
+                        the location of the floating panel as ``(w, h)`` 
+                        proportions between 0 and 1, relative to this view 
+                        panel.
+
+        :arg closeable: If ``False``, and ``floatPane=True``, the panel will
+                        not have a close button when it is floated.
         
         :arg location:  If ``floatPane=False``, the initial dock position of
                         the panel - either ``wx.TOP``, ``wx.BOTTOM``,
@@ -258,13 +269,17 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         .. warning::    Do not define a control (a.k.a. secondary) panel
                         constructor to accept arguments with the names
-                        ``floatPane`` or ``location``, as arguments with those
-                        names will get eaten by this method before they can be
-                        passed to the constructor.
+                        ``floatPane``, ``floatOnly``, ``floatPos``,
+                        ``closeable``, or ``location``, as arguments with
+                        those names will get eaten by this method before they
+                        can be passed to the constructor.
         """
 
         location  = kwargs.pop('location',  None)
         floatPane = kwargs.pop('floatPane', False)
+        floatOnly = kwargs.pop('floatOnly', False)
+        closeable = kwargs.pop('closeable', True)
+        floatPos  = kwargs.pop('floatPos',  (0.5, 0.5))
         
         if location not in (None, wx.TOP, wx.BOTTOM, wx.LEFT, wx.RIGHT):
             raise ValueError('Invalid value for location')
@@ -329,7 +344,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         # Dock the pane at the position specified
         # by the location parameter
-        if floatPane is False:
+        if not floatPane:
 
             if location is None:
                 if isToolbar: location = aui.AUI_DOCK_TOP
@@ -348,15 +363,18 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
             selfPos    = self.GetScreenPosition().Get()
             selfSize   = self.GetSize().Get()
-            selfCentre = (selfPos[0] + selfSize[0] * 0.5,
-                          selfPos[1] + selfSize[1] * 0.5)
+            selfCentre = (selfPos[0] + selfSize[0] * floatPos[0],
+                          selfPos[1] + selfSize[1] * floatPos[1])
 
             paneSize = window.GetBestSize().Get()
             panePos  = (selfCentre[0] - paneSize[0] * 0.5,
                         selfCentre[1] - paneSize[1] * 0.5)
 
-            paneInfo.Float() \
+            paneInfo.Float()                 \
+                    .Dockable(not floatOnly) \
+                    .CloseButton(closeable)  \
                     .FloatingPosition(panePos)
+                    
 
         self.__auiMgr.AddPane(window, paneInfo)
         self.__panels[panelType] = window
