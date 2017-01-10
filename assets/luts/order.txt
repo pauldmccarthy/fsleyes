@@ -1,5 +1,6 @@
 random                     Random
-harvard-oxford-cortical    MGH Cortical
-harvard-oxford-subcortical MGH Sub-cortical
+harvard-oxford-cortical    Harvard/Oxford cortical
+mgh-subcortical            MGH CMA subcortical
+harvard-oxford-subcortical Harvard/Oxford subcortical
 melodic-classes            Melodic IC classification
 random_big                 Random (big)

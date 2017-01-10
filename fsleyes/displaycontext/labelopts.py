@@ -59,8 +59,9 @@ class LabelOpts(volumeopts.NiftiOpts):
         # existing values).
         lut = str(overlay.header.get('aux_file', 'none')).lower()
 
-        if   lut == 'mgh-subcortical': lut = 'harvard-oxford-subcortical'
-        elif lut == 'mgh-cortical':    lut = 'harvard-oxford-cortical'
+        # FIRST sets its segmentation 
+        # aux_file field to mgh-subcortical
+        if   lut == 'mgh-subcortical': lut = 'mgh-subcortical'
         else:                          lut = 'random'
 
         # TODO this only needs to be done on

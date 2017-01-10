@@ -36,7 +36,7 @@ def genModelColour(overlay):
     Otherwise returns a random colour.
     """
     filename        = str(overlay.dataSource)
-    subcorticalCmap = colourmaps.getColourMap('subcortical')
+    subcorticalCmap = colourmaps.getColourMap('mgh-subcortical')
 
     if   'L_Thal' in filename: return subcorticalCmap(10)
     elif 'L_Caud' in filename: return subcorticalCmap(11)
