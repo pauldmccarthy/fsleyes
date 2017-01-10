@@ -161,6 +161,15 @@ messages = TypeDict({
     'OrthoEditProfile.imageChange.suppress' : 'Do not show this '
                                               'message again',
 
+    'OrthoCropProfile.imageChange'        : 'You are now cropping {}. ',
+    'OrthoCropProfile.imageChangeHint'    : 'Setting {} as the display '
+                                            'space reference\nimage - the '
+                                            'display space must match the '
+                                            'image being cropped.', 
+    
+    'OrthoCropProfile.imageChange.suppress' : 'Do not show this '
+                                              'message again', 
+
     'MelodicClassificationPanel.disabled'    : 'Choose a melodic image.',
     'MelodicClassificationPanel.loadError'   : 'An error occurred while '
                                                'loading the file {}.'
@@ -302,6 +311,7 @@ titles = TypeDict({
     'reloadoverlay.unsaved' : 'Reload unsaved image?',
 
     'OrthoEditProfile.imageChange'        : 'Changing edited image',
+    'OrthoCropProfile.imageChange'        : 'Changing cropped image',
 
     'ImportDataSeriesAction.error'        : 'Error loading file',
     'ImportDataSeriesAction.selectXScale' : 'X axis scaling factor',

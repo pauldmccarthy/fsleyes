@@ -9,13 +9,27 @@
 """ 
 
 
+import wx
+
 import numpy as np
 
 import props
 
 import fsl.data.image         as fslimage
+import fsl.utils.dialog       as fsldlg
+import fsleyes.strings        as strings
 import fsleyes.gl.annotations as annotations
 from . import                    orthoviewprofile
+
+
+_suppressOverlayChangeWarning = False
+"""Whenever an :class:`OrthoCropProfile` is active, and the
+:attr:`.DisplayContext.selectedOverlay` changes, the ``OrthoCropProfile``
+changes the :attr:`.DisplayContext.displaySpace` to the newly selected
+overlay. If this boolean flag is ``True``, a warning message is shown
+to the user. The message dialog has a checkbox which updates this attribute,
+and thus allows the user to suppress the warning in the future.
+"""
 
 
 class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
@@ -199,8 +213,37 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
 
         self.__registerOverlay(overlay)
 
-        # TODO Show a warning (like in OrthoEditProfile)
+        # The display coord system must be
+        # orthogonal to the overlay, so we
+        # may need to change the display space.
         if self._displayCtx.displaySpace != overlay:
+
+            # We show a warning to the
+            # user when this happens
+            global _suppressOverlayChangeWarning
+            if not _suppressOverlayChangeWarning:
+
+                msg   = strings.messages[self, 'imageChange']
+                hint  = strings.messages[self, 'imageChangeHint']
+                msg   = msg.format(overlay.name)
+                hint  = hint.format(overlay.name) 
+                cbMsg = strings.messages[self, 'imageChange.suppress']
+                title = strings.titles[  self, 'imageChange']
+                
+                dlg   = fsldlg.CheckBoxMessageDialog(
+                    self._viewPanel,
+                    title=title,
+                    message=msg,
+                    cbMessages=[cbMsg],
+                    cbStates=[_suppressOverlayChangeWarning],
+                    hintText=hint,
+                    focus='yes',
+                    icon=wx.ICON_INFORMATION)
+
+                dlg.ShowModal()
+
+                _suppressOverlayChangeWarning  = dlg.CheckBoxState() 
+            
             self._displayCtx.displaySpace = overlay
 
         crop = self.__cachedCrops.get(overlay, None)

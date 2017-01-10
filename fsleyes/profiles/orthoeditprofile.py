@@ -33,7 +33,7 @@ log = logging.getLogger(__name__)
 
 
 
-_suppressDisplaySpaceWarning = False
+_suppressOverlayChangeWarning = False
 """Whenever an :class:`OrthoEditProfile` is active, and the
 :attr:`.DisplayContext.selectedOverlay` changes, the ``OrthoEditProfile``
 changes the :attr:`.DisplayContext.displaySpace` to the newly selected
@@ -909,14 +909,13 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # otherwise be confusing
         if self._displayCtx.displaySpace != overlay:
 
-            msg  = strings.messages[self, 'imageChange']
-            hint = strings.messages[self, 'imageChangeHint']
-            msg  = msg.format(overlay.name)
-            hint = hint.format(overlay.name) 
+            global _suppressOverlayChangeWarning
+            if not _suppressOverlayChangeWarning:
 
-            global _suppressDisplaySpaceWarning
-            if not _suppressDisplaySpaceWarning:
-
+                msg   = strings.messages[self, 'imageChange']
+                hint  = strings.messages[self, 'imageChangeHint']
+                msg   = msg.format(overlay.name)
+                hint  = hint.format(overlay.name) 
                 cbMsg = strings.messages[self, 'imageChange.suppress']
                 title = strings.titles[  self, 'imageChange']
                 
@@ -925,14 +924,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                     title=title,
                     message=msg,
                     cbMessages=[cbMsg],
-                    cbStates=[_suppressDisplaySpaceWarning],
+                    cbStates=[_suppressOverlayChangeWarning],
                     hintText=hint,
                     focus='yes',
                     icon=wx.ICON_INFORMATION)
 
                 dlg.ShowModal()
 
-                _suppressDisplaySpaceWarning  = dlg.CheckBoxState()
+                _suppressOverlayChangeWarning  = dlg.CheckBoxState()
 
             status.update(msg) 
             self._displayCtx.displaySpace = overlay
