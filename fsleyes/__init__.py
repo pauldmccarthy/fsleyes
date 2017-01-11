@@ -205,6 +205,10 @@ import fsl.utils.settings                 as fslsettings
 log = None
 
 
+# If set to True, logging will not be configured
+disableLogging = fslplatform.frozen
+
+
 __version__ = version.__version__
 """The current *FSLeyes* version (read from the :mod:`fsleyes.version`
 module).
@@ -330,7 +334,7 @@ def configLogging(namespace):
     # user in frozen versions of FSLeyes, so if we're
     # running as a frozen app, there's nothing else
     # to do.
-    if fslplatform.frozen:
+    if disableLogging:
         return
 
     # Now we can set up logging

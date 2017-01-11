@@ -184,6 +184,7 @@ from   .                  import overlay  as fsloverlay
 from . import displaycontext as fsldisplay
 from . import                   colourmaps 
 from . import                   autodisplay
+import                          fsleyes
 
 
 log = logging.getLogger(__name__)
@@ -1137,7 +1138,7 @@ def _configMainParser(mainParser):
     # Debug messages are stripped from frozen
     # versions of FSLeyes, so there's no point
     # in keeping these arguments.
-    if not fslplatform.frozen:
+    if not fsleyes.disableLogging:
         mainParser.add_argument(*mainArgs['verbose'],
                                 action='count',
                                 help=mainHelp['verbose'])
