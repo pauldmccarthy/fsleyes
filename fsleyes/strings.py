@@ -606,6 +606,9 @@ labels = TypeDict({
     'CropImagePanel.cropSize.noImage' : 'Croppsed shape: n/a',
     'CropImagePanel.image'            : 'Crop {}',
     'CropImagePanel.image.noImage'    : 'Choose a NIFTI image',
+    'CropImagePanel.cropButton'       : 'Crop',
+    'CropImagePanel.cancelButton'     : 'Cancel',
+
 })
 
 
