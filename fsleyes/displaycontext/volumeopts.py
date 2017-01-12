@@ -161,6 +161,27 @@ class NiftiOpts(fsldisplay.DisplayOpts):
     """
 
 
+    displayXform = props.Array(
+        dtype=np.float64,
+        shape=(4, 4),
+        resizable=False,
+        default=[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+    """A custom transformation matrix which is concatenated on to the voxel ->
+    world transformation of the :class:`.Nifti` overlay.
+
+    This transform is intended for temporary changes to the overlay display
+    (when :attr:`.DisplayContext.displaySpace` ``== 'world'``) - changes to it
+    will *not* result in the ::attr:`.DisplayContext.bounds` being updated.
+
+
+    If the :attr:`.DisplayContext.displaySpace` is not equal to ``'world'``,
+    changing the displayXform will not have any immediate effect. 
+
+    If you change the ``displayXform`` to temporarily change the , make sure
+    to change it back to an identity matrix when you are done.
+    """
+
+
     enableOverrideDataRange = props.Boolean(default=False)
     """By default, the :attr:`.Image.dataRange` property is used to set
     display and clipping ranges. However, if this property is ``True``,
@@ -204,6 +225,10 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         overlay = self.overlay
 
+        overlay.register(self.name,
+                         self.__overlayTransformChanged,
+                         topic='transform')
+
         self.addListener('transform',
                          self.name,
                          self.__transformChanged,
@@ -212,6 +237,10 @@ class NiftiOpts(fsldisplay.DisplayOpts):
                          self.name,
                          self.__customXformChanged,
                          immediate=True)
+        self.addListener('displayXform',
+                         self.name,
+                         self.__displayXformChanged,
+                         immediate=True) 
 
         # The display<->* transformation matrices
         # are created in the _setupTransforms method
@@ -230,9 +259,24 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
     def destroy(self):
         """Calls the :meth:`.DisplayOpts.destroy` method. """
-        self.removeListener('transform',   self.name)
-        self.removeListener('customXform', self.name)
+        self.overlay.deregister(self.name, topic='transform')
+        self.removeListener('transform',    self.name)
+        self.removeListener('customXform',  self.name)
+        self.removeListener('displayXform', self.name)
         fsldisplay.DisplayOpts.destroy(self)
+
+
+    def __overlayTransformChanged(self, *a):
+        """Called when the :class:`.Nifti` overlay sends a notification
+        on the ``'transform'`` topic, indicating that its voxel->world
+        transformation matrix has been updated.
+        """
+        stdLoc = self.displayToStandardCoordinates(
+            self.displayCtx.location.xyz)
+
+        self.__setupTransforms()
+        self.__transformChanged()
+        self.displayCtx.cacheStandardCoordinates(self.overlay, stdLoc)
 
         
     def __transformChanged(self, *a):
@@ -283,6 +327,28 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             # transformation matrices were recalculated
             # in __setupTransforms
             self.displayCtx.cacheStandardCoordinates(self.overlay, stdLoc)
+
+
+    def __displayXformChanged(self, *a):
+        """Called when the :attr:`displayXform` property changes. Updates
+        the transformation matrices and :attr:`bounds` accordingly.
+
+        Critically, when the :attr:`displayXform` property changes, the
+        :class:`.DisplayContext` is *not* notified. This is because
+        the ``displayXform`` is intended for temporary changes.
+        """
+
+        # The displayXform is intended as a temporary
+        # transformation for display purposes - the
+        # DisplayOpts.bounds property gets updated when
+        # it changes, but we don't want the
+        # DisplayContext.bounds property to be updated.
+        # So we suppress all notification while
+        # updating the transformation matrices.
+        self.displayCtx.freezeOverlay(self.overlay)
+        self.__setupTransforms()
+        self.__transformChanged()
+        self.displayCtx.thawOverlay(self.overlay)
  
         
     def __setupTransforms(self):
@@ -298,7 +364,8 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         voxToIdMat      = np.eye(4)
         voxToPixdimMat  = np.diag(list(image.pixdim[:3]) + [1.0])
         voxToPixFlipMat = np.array(voxToPixdimMat)
-        voxToAffineMat  = image.voxToWorldMat.T
+        voxToAffineMat  = image.voxToWorldMat
+        voxToAffineMat  = transform.concat(voxToAffineMat, self.displayXform).T
         voxToCustomMat  = self.customXform
 
         # When going from voxels to textures,
@@ -329,7 +396,6 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         pixdimToAffineMat  = transform.concat(pixdimToVoxMat, voxToAffineMat)
         pixdimToCustomMat  = transform.concat(pixdimToVoxMat, voxToCustomMat)
         pixdimToTexMat     = transform.concat(pixdimToVoxMat, voxToTexMat)
-        
 
         pixFlipToVoxMat    = transform.invert(voxToPixFlipMat)
         pixFlipToIdMat     = transform.concat(pixFlipToVoxMat, voxToIdMat)
@@ -338,7 +404,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         pixFlipToCustomMat = transform.concat(pixFlipToVoxMat, voxToCustomMat)
         pixFlipToTexMat    = transform.concat(pixFlipToVoxMat, voxToTexMat)
 
-        affineToVoxMat     = image.worldToVoxMat.T
+        affineToVoxMat     = transform.invert(voxToAffineMat)
         affineToIdMat      = transform.concat(affineToVoxMat, voxToIdMat)
         affineToPixdimMat  = transform.concat(affineToVoxMat, voxToPixdimMat)
         affineToPixFlipMat = transform.concat(affineToVoxMat, voxToPixFlipMat)

@@ -305,6 +305,8 @@ class GLVolume(globject.GLImageObject):
                              self._interpolationChanged)
         opts    .addListener('resolution',       name, self._resolutionChanged)
         opts    .addListener('transform',        name, self._transformChanged)
+        opts    .addListener('displayXform',     name,
+                             self._displayXformChanged)
         opts    .addListener('enableOverrideDataRange',  name,
                              self._enableOverrideDataRangeChanged)
         opts    .addListener('overrideDataRange', name,
@@ -360,6 +362,7 @@ class GLVolume(globject.GLImageObject):
         opts    .removeListener(          'resolution',              name)
         opts    .removeListener(          'interpolation',           name)
         opts    .removeListener(          'transform',               name)
+        opts    .removeListener(          'displayXform',            name)
         opts    .removeListener(          'enableOverrideDataRange', name)
         opts    .removeListener(          'overrideDataRange',       name)
         
@@ -766,6 +769,12 @@ class GLVolume(globject.GLImageObject):
         """ 
         self.notify()
 
+
+    def _displayXformChanged(self, *a):
+        """Called when the :attr:`.NiftiOpts.displayXform` property changes.
+        """
+        self.notify()
+ 
 
     def _imageSyncChanged(self, *a):
         """Called when the synchronisation state of the
