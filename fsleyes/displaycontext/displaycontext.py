@@ -21,7 +21,6 @@ import props
 
 import fsl.data.image      as fslimage
 import fsl.utils.transform as transform
-import fsl.utils.async     as async
 
 
 log = logging.getLogger(__name__)
@@ -558,8 +557,6 @@ class DisplayContext(props.SyncableHasProperties):
     def thawOverlay(self, overlay):
         """Enables notification for all :class:`.Display` and
         :class:`.DisplayOpts` properties associated with the given ``overlay``.
-        The notification is re-enabled on the :func:`.async.idle` loop, in case
-        any functions which may trigger notification are already queued.
         """
 
         parent = self.getParent()
@@ -568,15 +565,12 @@ class DisplayContext(props.SyncableHasProperties):
             return
         dctxs = [self] + self.getChildren()
 
-        def realThaw():
-            for dctx in dctxs:
-                display = dctx.getDisplay(overlay)
-                opts    = display.getDisplayOpts()
+        for dctx in dctxs:
+            display = dctx.getDisplay(overlay)
+            opts    = display.getDisplayOpts()
 
-                display.enableAllNotification()
-                opts   .enableAllNotification()
-
-        async.idle(realThaw)
+            display.enableAllNotification()
+            opts   .enableAllNotification()
 
 
     def __overlayListChanged(self, *a):

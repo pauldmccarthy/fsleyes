@@ -14,6 +14,8 @@ import wx
 
 import numpy as np
 
+import props
+
 import pwidgets.floatslider as fslider
 import fsl.data.image       as fslimage
 import fsl.utils.async      as async
@@ -57,6 +59,14 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
 
         self.__ortho   = ortho
         self.__overlay = None
+
+        # When the selected overlay is changed, the
+        # transform settings for the previously selected
+        # overlay are cached in this dict, so they can be
+        # restored if/when the overlay is re-selected.
+        # 
+        # { overlay : (scales, offsets, rotations) }
+        self.__cachedXforms = {}
 
         scArgs = {
             'value'    : 0,
@@ -205,7 +215,8 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         """
 
         self.__deregisterOverlay()
-        self.__ortho = None
+        self.__ortho        = None
+        self.__cachedXforms = None
 
         displayCtx  = self.getDisplayContext()
         overlayList = self.getOverlayList()
@@ -237,6 +248,10 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
             return
 
         overlay = self.__overlay
+
+        scales, offsets, rotations = self.__getCurrentXformComponents()
+
+        self.__cachedXforms[overlay] = scales, offsets, rotations
 
         self.__overlay = None
 
@@ -278,21 +293,24 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
 
         self.__registerOverlay(overlay)
 
-        xform = overlay.voxToWorldMat
+        xform                      = overlay.voxToWorldMat
+        scales, offsets, rotations = self.__cachedXforms.get(
+            overlay, ((1, 1, 1), (0, 0, 0), (0, 0, 0)))
 
         self.__formatXform(xform, self.__oldXform)
-        self.__formatXform(xform, self.__newXform)
 
         # TODO Set limits based on image size?
-        self.__xscale .SetValue(1)
-        self.__yscale .SetValue(1)
-        self.__zscale .SetValue(1)
-        self.__xoffset.SetValue(0)
-        self.__yoffset.SetValue(0)
-        self.__zoffset.SetValue(0)
-        self.__xrotate.SetValue(0)
-        self.__yrotate.SetValue(0)
-        self.__zrotate.SetValue(0) 
+        self.__xscale .SetValue(scales[   0])
+        self.__yscale .SetValue(scales[   1])
+        self.__zscale .SetValue(scales[   2])
+        self.__xoffset.SetValue(offsets[  0])
+        self.__yoffset.SetValue(offsets[  1])
+        self.__zoffset.SetValue(offsets[  2])
+        self.__xrotate.SetValue(rotations[0])
+        self.__yrotate.SetValue(rotations[1])
+        self.__zrotate.SetValue(rotations[2])
+
+        self.__xformChanged()
 
 
     def __formatXform(self, xform, ctrl):
@@ -312,20 +330,29 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         ctrl.SetLabel(text)
 
 
+    def __getCurrentXformComponents(self):
+        """Returns the components of the transformation matrix defined
+        by the scale, offset and rotation widgets.
+        """
+        scales    = [self.__xscale .GetValue(),
+                     self.__yscale .GetValue(),
+                     self.__zscale .GetValue()]
+        offsets   = [self.__xoffset.GetValue(),
+                     self.__yoffset.GetValue(),
+                     self.__zoffset.GetValue()]
+        rotations = [self.__xrotate.GetValue(),
+                     self.__yrotate.GetValue(),
+                     self.__zrotate.GetValue()]
+        
+        return scales, offsets, rotations
+
+
     def __getCurrentXform(self):
         """Returns the current transformation matrix defined by the scale,
         offset, and rotation widgets.
         """
         
-        offsets   = [self.__xoffset.GetValue(),
-                     self.__yoffset.GetValue(),
-                     self.__zoffset.GetValue()]
-        scales    = [self.__xscale .GetValue(),
-                     self.__yscale .GetValue(),
-                     self.__zscale .GetValue()]
-        rotations = [self.__xrotate.GetValue(),
-                     self.__yrotate.GetValue(),
-                     self.__zrotate.GetValue()]
+        scales, offsets, rotations = self.__getCurrentXformComponents()
 
         rotations = [r * np.pi / 180 for r in rotations]
 
@@ -351,51 +378,72 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         xform    = transform.concat(overlay.voxToWorldMat, newXform)
 
         self.__formatXform(xform, self.__newXform)
+        
         opts.displayXform = newXform
     
     
     def __onApply(self, ev):
         """Called when the *Apply* button is pushed. Sets the
         ``voxToWorldMat`` attribute of the :class:`.Image` instance being
-        transformed, and then calls the :meth:`__onCancel` to close this
-        panel.
+        transformed.
         """
+
+        overlay = self.__overlay
         
-        if self.__overlay is None:
+        if overlay is None:
             return
-        
+
         newXform = self.__getCurrentXform()
+        opts     = self.getDisplayContext().getOpts(overlay)
         xform    = transform.concat(self.__overlay.voxToWorldMat, newXform)
 
-        self.__overlay.voxToWorldMat = xform
-        self.__onCancel()
+        with props.suppress(opts, 'displayXform'):
+            opts.displayXform     = np.eye(4)
+            overlay.voxToWorldMat = xform
+
+        # Reset the interface, and clear any 
+        # cached transform for this overlay
+        self.__deregisterOverlay()
+        self.__cachedXforms.pop(overlay, None)
+        self.__selectedOverlayChanged()
 
 
-    def __onReset(self, ev):
+    def __resetAllOverlays(self):
+        """Resets the :attr:`.NiftiOpts.displayXform` matrix for
+        all overlays that have been modified, and clears the internal
+        transformation matrix cache.
+
+        This method is called by :meth:`__onReset` and :meth:`__onCancel`.
+        """
+
+        reset = list(self.__cachedXforms.keys())
+        
+        if self.__overlay is not None:
+            reset.append(self.__overlay)
+
+        self.__deregisterOverlay()
+        self.__cachedXforms = {}
+        
+        for overlay in reset:
+            opts = self.getDisplayContext().getOpts(overlay)
+            opts.displayXform = np.eye(4)
+
+        
+    def __onReset(self, ev=None):
         """Called when the *Reset* button is pushed. Resets the
         transformation.
         """
         
-        if self.__overlay is None:
-            return
-        
-        opts = self.getDisplayContext().getOpts(self.__overlay)
-        opts.displayXform = np.eye(4)
-        
-        self.__deregisterOverlay()
+        self.__resetAllOverlays()
         self.__selectedOverlayChanged()
 
 
     def __onCancel(self, ev=None):
-        """Called when the *Cancel* button is pushed, and also by the
-        :meth:`__onApply` method. Resets the :attr:`.NiftiOpts.displayXform`
-        attribute of the overlay being transformed, and then calls
+        """Called when the *Cancel* button is pushed. Resets the
+        :attr:`.NiftiOpts.displayXform` attribute of the overlay being
+        transformed, and then calls
         :meth:`.OrthoPanel.toggleEditTransformPanel` to close this panel.
         """
         
-        if self.__overlay is not None:
-            opts = self.getDisplayContext().getOpts(self.__overlay)
-            opts.displayXform = np.eye(4)
-            
-        self.__deregisterOverlay()
+        self.__resetAllOverlays()
         async.idle(self.__ortho.toggleEditTransformPanel)

@@ -217,6 +217,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         nounbind = kwargs.get('nounbind', [])
         nounbind.append('transform')
         nounbind.append('customXform')
+        nounbind.append('displayXform')
         nounbind.append('resolution')
 
         kwargs['nounbind'] = nounbind
@@ -345,10 +346,9 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         # DisplayContext.bounds property to be updated.
         # So we suppress all notification while
         # updating the transformation matrices.
-        self.displayCtx.freezeOverlay(self.overlay)
-        self.__setupTransforms()
-        self.__transformChanged()
-        self.displayCtx.thawOverlay(self.overlay)
+        with self.displayCtx.freeze(self.overlay):
+            self.__setupTransforms()
+            self.__transformChanged()
  
         
     def __setupTransforms(self):
