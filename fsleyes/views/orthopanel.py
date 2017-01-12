@@ -27,12 +27,14 @@ import pwidgets.textpanel                      as textpanel
 import fsl.data.constants                      as constants
 import fsl.data.image                          as fslimage
 import fsl.utils.layout                        as fsllayout
+import fsl.utils.dialog                        as fsldlg
 import fsleyes.strings                         as strings
 import fsleyes.gl                              as fslgl
 import fsleyes.actions                         as actions
 import fsleyes.colourmaps                      as colourmaps
 import fsleyes.gl.wxglslicecanvas              as slicecanvas
 import fsleyes.controls.cropimagepanel         as cropimagepanel
+import fsleyes.controls.edittransformpanel     as edittransformpanel
 import fsleyes.controls.orthotoolbar           as orthotoolbar
 import fsleyes.controls.orthoedittoolbar       as orthoedittoolbar
 import fsleyes.controls.orthoeditactiontoolbar as orthoeditactiontoolbar
@@ -42,6 +44,15 @@ from . import                                     canvaspanel
 
 
 log = logging.getLogger(__name__)
+
+
+_suppressDisplaySpaceWarning = False
+"""Sometimes the :attr:`.DisplayContext.displaySpace` must be changed to
+perform certain operations (e.g. when the :meth:`toggleEditTransformPanel`
+method is called). When this happens a warning message is shown to the user,
+with the option to suppress future warnings. This flag keeps track of
+whether the user has chosen to ignore future warnings.
+"""
 
 
 class OrthoPanel(canvaspanel.CanvasPanel):
@@ -117,6 +128,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
        toggleEditMode
        toggleCropMode
+       toggleEditTransformPanel
        toggleEditPanel
        toggleOrthoToolBar
        resetDisplay
@@ -325,6 +337,60 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         else:                      self.profile = 'view'
 
 
+    @actions.toggleControlAction(edittransformpanel.EditTransformPanel)
+    def toggleEditTransformPanel(self):
+        """Shows/hides an :class:`.EditTransformPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(edittransformpanel.EditTransformPanel,
+                         floatPane=True,
+                         floatOnly=True,
+                         closeable=False,
+                         ortho=self)
+
+        editing    = self.toggleEditTransformPanel.toggled
+        displayCtx = self.getDisplayContext()
+        overlay    = displayCtx.getSelectedOverlay()
+        
+        if editing and displayCtx.displaySpace != 'world':
+
+            global _suppressDisplaySpaceWarning
+            if not _suppressDisplaySpaceWarning and \
+               overlay is not None:
+
+                msg   = strings.messages[self,
+                                         'toggleEditTransformPanel',
+                                         'displaySpaceChange']
+                hint  = strings.messages[self,
+                                         'toggleEditTransformPanel',
+                                         'displaySpaceChange.hint']
+                msg   = msg .format(overlay.name)
+                hint  = hint.format(overlay.name) 
+                cbMsg = strings.messages[self,
+                                         'toggleEditTransformPanel',
+                                         'displaySpaceChange.suppress']
+                title = strings.titles[  self,
+                                         'toggleEditTransformPanel',
+                                         'displaySpaceChange']
+                
+                dlg   = fsldlg.CheckBoxMessageDialog(
+                    self,
+                    title=title,
+                    message=msg,
+                    cbMessages=[cbMsg],
+                    cbStates=[_suppressDisplaySpaceWarning],
+                    hintText=hint,
+                    focus='yes',
+                    icon=wx.ICON_INFORMATION)
+
+                dlg.ShowModal()
+
+                _suppressDisplaySpaceWarning  = dlg.CheckBoxState() 
+
+            displayCtx.displaySpace = 'world'
+        
+
+
     @actions.toggleControlAction(orthoeditsettingspanel.OrthoEditSettingsPanel)
     def toggleEditPanel(self, floatPane=False):
         """Shows/hides an :class:`.OrthoEditSettingsPanel`. See
@@ -403,7 +469,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleDisplaySync,
                    self.toggleEditMode,
                    (strings.titles[self, 'toolMenu'], [
-                       self.toggleCropMode]),
+                       self.toggleCropMode,
+                       self.toggleEditTransformPanel]),
                    None,
                    self.resetDisplay,
                    self.centreCursor,

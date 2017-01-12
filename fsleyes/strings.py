@@ -152,6 +152,16 @@ messages = TypeDict({
                                     'check your cluster_*.txt files.',
     'ClusterPanel.loadingCluster' : 'Loading clusters for COPE{} ({}) ...',
 
+    'OrthoPanel.toggleEditTransformPanel.displaySpaceChange' :
+    'You are now transforming {}. ',
+    
+    'OrthoPanel.toggleEditTransformPanel.displaySpaceChange.hint' :
+    'Setting the display space to world coordinates - \n'
+    'this is required when transforming images.', 
+    
+    'OrthoPanel.toggleEditTransformPanel.displaySpaceChange.suppress' :
+    'Do not show this message again', 
+
     'OrthoEditProfile.imageChange'        : 'You are now editing {}. ',
     'OrthoEditProfile.imageChangeHint'    : 'Setting {} as the display '
                                             'space reference\nimage - the '
@@ -290,6 +300,7 @@ titles = TypeDict({
     'MelodicClassificationPanel' : 'Melodic IC classification',
 
     'CropImagePanel'             : 'Crop image',
+    'EditTransformPanel'         : 'Edit transform',
 
     'LookupTablePanel.loadLut'     : 'Select a lookup table file',
     'LookupTablePanel.labelExists' : 'Label already exists',
@@ -311,6 +322,9 @@ titles = TypeDict({
     'reloadoverlay.unsaved' : 'Reload unsaved image?',
 
     'OrthoPanel.toolMenu'                 : 'Tools',
+
+    'OrthoPanel.toggleEditTransformPanel.displaySpaceChange' :
+    'Changing display space for transform',
 
     'OrthoEditProfile.imageChange'        : 'Changing edited image',
     'OrthoCropProfile.imageChange'        : 'Changing cropped image',
@@ -380,13 +394,14 @@ actions = TypeDict({
     'CanvasPanel.toggleOverlayInfo'         : 'Overlay information',
     'CanvasPanel.toggleClassificationPanel' : 'Melodic IC classification',
     
-    'OrthoPanel.toggleOrthoToolBar'     : 'Ortho toolbar',
-    'OrthoPanel.toggleEditMode'         : 'Edit mode',
-    'OrthoPanel.toggleCropMode'         : 'Crop',
-    'OrthoPanel.toggleEditPanel'        : 'Edit settings panel',
-    'OrthoPanel.resetDisplay'           : 'Reset display',
-    'OrthoPanel.centreCursor'           : 'Centre cursor',
-    'OrthoPanel.centreCursorWorld'      : 'Centre cursor at (0, 0, 0)',
+    'OrthoPanel.toggleOrthoToolBar'       : 'Ortho toolbar',
+    'OrthoPanel.toggleEditMode'           : 'Edit mode',
+    'OrthoPanel.toggleCropMode'           : 'Crop',
+    'OrthoPanel.toggleEditTransformPanel' : 'Edit transform',
+    'OrthoPanel.toggleEditPanel'          : 'Edit settings panel',
+    'OrthoPanel.resetDisplay'             : 'Reset display',
+    'OrthoPanel.centreCursor'             : 'Centre cursor',
+    'OrthoPanel.centreCursorWorld'        : 'Centre cursor at (0, 0, 0)',
 
     'OrthoPanel.toggleCursor'           : 'Show/hide location cursor',
     'OrthoPanel.toggleLabels'           : 'Show/hide labels',
@@ -608,7 +623,17 @@ labels = TypeDict({
     'CropImagePanel.image.noImage'    : 'Choose a NIFTI image',
     'CropImagePanel.cropButton'       : 'Crop',
     'CropImagePanel.cancelButton'     : 'Cancel',
-
+    
+    'EditTransformPanel.noOverlay'   : 'Select a NIFTI image',
+    'EditTransformPanel.overlayName' : 'Transform {}',
+    'EditTransformPanel.oldXform'    : 'Current transform',
+    'EditTransformPanel.newXform'    : 'New transform',
+    'EditTransformPanel.scale'       : 'Scale',
+    'EditTransformPanel.offset'      : 'Translate',
+    'EditTransformPanel.rotate'      : 'Rotate',
+    'EditTransformPanel.apply'       : 'Apply',
+    'EditTransformPanel.reset'       : 'Reset',
+    'EditTransformPanel.cancel'      : 'Cancel',
 })
 
 
@@ -1045,8 +1070,6 @@ nifti = TypeDict({
     ('intent_code',  22)    :  'NIFTI_INTENT_CODE_PVAL',
     ('intent_code',  23)    :  'NIFTI_INTENT_CODE_LOGPVAL',
     ('intent_code',  24)    :  'NIFTI_INTENT_CODE_LOG10)  :PVAL',
-    ('intent_code',  2)     :  'NIFTI_FIRST_STATCODE',
-    ('intent_code',  24)    :  'NIFTI_LAST_STATCODE',
     ('intent_code',  1001)  :  'NIFTI_INTENT_CODE_ESTIMATE',
     ('intent_code',  1002)  :  'NIFTI_INTENT_CODE_LABEL',
     ('intent_code',  1003)  :  'NIFTI_INTENT_CODE_NEURONAME',
@@ -1128,8 +1151,10 @@ plotLabels = {
     'prefiltered_func_data_mcf.par.4' : 'MCFLIRT Y translation (mm)',
     'prefiltered_func_data_mcf.par.5' : 'MCFLIRT Z translation (mm)',
 
-    'prefiltered_func_data_mcf_abs.rms.0' : 'MCFLIRT absolute mean displacement (mm)',
-    'prefiltered_func_data_mcf_rel.rms.0' : 'MCFLIRT relative mean displacement (mm)',
+    'prefiltered_func_data_mcf_abs.rms.0' :
+    'MCFLIRT absolute mean displacement (mm)',
+    'prefiltered_func_data_mcf_rel.rms.0' :
+    'MCFLIRT relative mean displacement (mm)',
 }
 
 
