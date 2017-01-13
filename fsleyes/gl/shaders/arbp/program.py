@@ -222,11 +222,13 @@ class ARBPShader(object):
         """
 
         pos   = self.vertParamPositions[name]
-        value = np.array(value, dtype=np.float32).reshape((-1, 4))
+        value = np.array(value, dtype=np.float32).ravel('F')
+        nrows = len(value) / 4
 
         log.debug('Setting vertex parameter {} = {}'.format(name, value))
         
-        for i, row in enumerate(value):
+        for i in range(nrows):
+            row = value[i * 4: i * 4 + 4]
             arbvp.glProgramLocalParameter4fARB(
                 arbvp.GL_VERTEX_PROGRAM_ARB, pos + i,
                 row[0], row[1], row[2], row[3]) 
@@ -242,11 +244,13 @@ class ARBPShader(object):
                   ``True`` if the value was changed, and ``False`` otherwise.        
         """
         pos   = self.fragParamPositions[name]
-        value = np.array(value, dtype=np.float32).reshape((-1, 4))
+        value = np.array(value, dtype=np.float32).ravel('F')
+        nrows = len(value) / 4
 
         log.debug('Setting fragment parameter {} = {}'.format(name, value))
     
-        for i, row in enumerate(value):
+        for i in range(nrows):
+            row = value[i * 4: i * 4 + 4]
             arbfp.glProgramLocalParameter4fARB(
                 arbfp.GL_FRAGMENT_PROGRAM_ARB, pos + i,
                 row[0], row[1], row[2], row[3]) 

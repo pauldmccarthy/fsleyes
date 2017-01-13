@@ -271,7 +271,7 @@ class ColourMapTexture(texture.Texture):
         
         coordXform = np.identity(4, dtype=np.float64)
         coordXform[0, 0] = 1.0 / scale
-        coordXform[3, 0] = -imin * coordXform[0, 0]
+        coordXform[0, 3] = -imin * coordXform[0, 0]
 
         self.__coordXform = coordXform
 

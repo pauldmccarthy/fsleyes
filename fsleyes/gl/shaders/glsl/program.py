@@ -448,17 +448,17 @@ class GLSLShader(object):
 
 
     def _uniform_mat2(self, pos, val):
-        val = np.array(val, dtype=np.float32).ravel('C')
+        val = np.array(val, dtype=np.float32).ravel('F')
         gl.glUniformMatrix2fv(pos, 1, False, val)
 
 
     def _uniform_mat3(self, pos, val):
-        val = np.array(val, dtype=np.float32).ravel('C')
+        val = np.array(val, dtype=np.float32).ravel('F')
         gl.glUniformMatrix3fv(pos, 1, False, val)
 
 
     def _uniform_mat4(self, pos, val):
-        val = np.array(val, dtype=np.float32).ravel('C')
+        val = np.array(val, dtype=np.float32).ravel('F')
         gl.glUniformMatrix4fv(pos, 1, False, val)
 
 

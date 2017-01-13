@@ -244,7 +244,7 @@ def copyImage(overlayList,
         xform  = overlay.voxToWorldMat
         offset = [lo for lo, hi in roi[:3]]
         offset = transform.scaleOffsetXform([1, 1, 1], offset)
-        xform  = transform.concat(xform, offset.T)
+        xform  = transform.concat(offset, xform)
 
     else:
         xform  = None

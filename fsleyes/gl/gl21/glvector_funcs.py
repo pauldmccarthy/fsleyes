@@ -70,10 +70,10 @@ def updateShaderState(self, useSpline=False):
 
         voxValXform     = self.colourTexture.voxValXform
         invVoxValXform  = self.colourTexture.invVoxValXform
-        texZero         = 0.0 * invVoxValXform[0, 0] + invVoxValXform[3, 0]
+        texZero         = 0.0 * invVoxValXform[0, 0] + invVoxValXform[0, 3]
         img2CmapXform   = transform.concat(
-            voxValXform,
-            self.cmapTexture.getCoordinateTransform())
+            self.cmapTexture.getCoordinateTransform(),
+            voxValXform)
 
         changed |= shader.set('clipTexture',      1)
         changed |= shader.set('imageTexture',     2)

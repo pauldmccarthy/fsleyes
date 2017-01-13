@@ -76,9 +76,9 @@ def updateShaderState(self):
     if imageIsClip: clipXform = imgXform
     else:           clipXform = self.clipTexture.invVoxValXform
 
-    clipLow    = opts.clippingRange[0] * clipXform[0, 0] + clipXform[3, 0]
-    clipHigh   = opts.clippingRange[1] * clipXform[0, 0] + clipXform[3, 0]
-    texZero    = 0.0                   * imgXform[ 0, 0] + imgXform[ 3, 0]
+    clipLow    = opts.clippingRange[0] * clipXform[0, 0] + clipXform[0, 3]
+    clipHigh   = opts.clippingRange[1] * clipXform[0, 0] + clipXform[0, 3]
+    texZero    = 0.0                   * imgXform[ 0, 0] + imgXform[ 0, 3]
     imageShape = self.image.shape[:3]
 
     if imageIsClip: clipImageShape = imageShape
@@ -89,8 +89,8 @@ def updateShaderState(self):
     # to voxel values, and scales said voxel
     # values to colour map texture coordinates.
     img2CmapXform = transform.concat(
-        self.imageTexture.voxValXform,
-        self.colourTexture.getCoordinateTransform())
+        self.colourTexture.getCoordinateTransform(),
+        self.imageTexture.voxValXform)
 
     shader.load()
 
@@ -130,8 +130,8 @@ def preDraw(self):
             clipCoordXform = np.eye(4)
         else:
             clipCoordXform = transform.concat(
-                opts         .getTransform('texture', 'display'),
-                self.clipOpts.getTransform('display', 'texture'))
+                self.clipOpts.getTransform('display', 'texture'),
+                opts         .getTransform('texture', 'display'))
 
         self.shader.set('clipCoordXform', clipCoordXform)
 

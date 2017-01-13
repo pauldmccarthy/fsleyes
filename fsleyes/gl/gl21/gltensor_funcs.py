@@ -151,8 +151,10 @@ def preDraw(self):
     shader.load()
 
     # Calculate a transformation matrix for
-    # normal vectors - T(I(MV matrix)) 
-    mvMat        = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)[:3, :3]
+    # normal vectors - T(I(MV matrix))
+    
+    # We transpose mvMat because OpenGL is column-major
+    mvMat        = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)[:3, :3].T
     v2dMat       = self.displayOpts.getTransform('voxel', 'display')[:3, :3]
     
     normalMatrix = transform.concat(mvMat, v2dMat)

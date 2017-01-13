@@ -122,10 +122,10 @@ def updateShaderState(self):
 
         voxValXform     = self.colourTexture.voxValXform
         invVoxValXform  = self.colourTexture.invVoxValXform
-        texZero         = 0.0 * invVoxValXform[0, 0] + invVoxValXform[3, 0]
+        texZero         = 0.0 * invVoxValXform[0, 0] + invVoxValXform[0, 3]
         img2CmapXform   = transform.concat(
-            voxValXform,
-            self.cmapTexture.getCoordinateTransform()) 
+            self.cmapTexture.getCoordinateTransform(),
+            voxValXform) 
         
         changed |= shader.set('clipTexture',      1)
         changed |= shader.set('imageTexture',     2)
@@ -181,8 +181,9 @@ def preDraw(self):
     shader.load()
 
     # Calculate a transformation matrix for
-    # normal vectors - T(I(MV matrix)) 
-    mvMat        = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)[:3, :3]
+    # normal vectors - T(I(MV matrix))
+    # We transpose mvMat because OpenGL is column-major
+    mvMat        = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)[:3, :3].T
     v2dMat       = self.displayOpts.getTransform('voxel', 'display')[:3, :3]
     
     normalMatrix = transform.concat(mvMat, v2dMat)

@@ -78,8 +78,8 @@ def updateShaderState(self):
     # into a value between 0 and 1, suitable
     # for looking up an appropriate colour
     # in the 1D colour map texture
-    voxValXform = transform.concat(self.imageTexture.voxValXform,
-                                   self.colourTexture.getCoordinateTransform())
+    voxValXform = transform.concat(self.colourTexture.getCoordinateTransform(),
+                                   self.imageTexture.voxValXform)
     
     # The vertex and fragment programs
     # need to know the image shape
@@ -95,9 +95,9 @@ def updateShaderState(self):
     if opts.clipImage is None: clipXform = imgXform
     else:                      clipXform = self.clipTexture.invVoxValXform 
 
-    clipLo  = opts.clippingRange[0] * clipXform[0, 0] + clipXform[3, 0]
-    clipHi  = opts.clippingRange[1] * clipXform[0, 0] + clipXform[3, 0]
-    texZero = 0.0                   * imgXform[ 0, 0] + imgXform[ 3, 0]
+    clipLo  = opts.clippingRange[0] * clipXform[0, 0] + clipXform[0, 3]
+    clipHi  = opts.clippingRange[1] * clipXform[0, 0] + clipXform[0, 3]
+    texZero = 0.0                   * imgXform[ 0, 0] + imgXform[ 0, 3]
 
     shape    = shape + [0]
     clipping = [clipLo, clipHi, invClip, imageIsClip]
@@ -128,10 +128,10 @@ def preDraw(self):
             clipCoordXform = np.eye(4)
         else:
             clipCoordXform = transform.concat(
-                opts         .getTransform('texture', 'display'),
-                self.clipOpts.getTransform('display', 'texture'))
+                self.clipOpts.getTransform('display', 'texture'),
+                opts         .getTransform('texture', 'display'))
 
-        self.shader.setVertParam('clipCoordXform', clipCoordXform.T)
+        self.shader.setVertParam('clipCoordXform', clipCoordXform)
     
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
 

@@ -627,9 +627,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         ylen = self.displayCtx.bounds.getLen(self.yax)
 
         translate              = np.identity(4, dtype=np.float32)
-        translate[3, self.xax] = xlen * col
-        translate[3, self.yax] = ylen * (nrows - row - 1)
-        translate[3, self.zax] = 0
+        translate[self.xax, 3] = xlen * col
+        translate[self.yax, 3] = ylen * (nrows - row - 1)
+        translate[self.zax, 3] = 0
         
         return translate
 
@@ -657,22 +657,22 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             toOrigin   = np.eye(4)
             fromOrigin = np.eye(4)
 
-            xoff = xlen / 2.0 + xform[3, self.xax]
-            yoff = ylen / 2.0 + xform[3, self.yax]
+            xoff = xlen / 2.0 + xform[self.xax, 3]
+            yoff = ylen / 2.0 + xform[self.yax, 3]
 
             if self.invertX:
                 invert[    self.xax, self.xax] = -1
-                toOrigin[  3,        self.xax] = -xoff
-                fromOrigin[3,        self.xax] =  xoff
+                toOrigin[  self.xax, 3]        = -xoff
+                fromOrigin[self.xax, 3]        =  xoff
             if self.invertY:
                 invert[    self.yax, self.yax] = -1
-                toOrigin[  3,        self.yax] = -yoff
-                fromOrigin[3,        self.yax] =  yoff
+                toOrigin[  self.yax, 3]        = -yoff
+                fromOrigin[self.yax, 3]        =  yoff
 
-            xform = transform.concat(xform,
-                                     toOrigin,
+            xform = transform.concat(fromOrigin,
                                      invert,
-                                     fromOrigin)
+                                     toOrigin,
+                                     xform)
             invXforms.append(xform)
 
         return invXforms

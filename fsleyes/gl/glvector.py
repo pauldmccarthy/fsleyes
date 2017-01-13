@@ -503,7 +503,7 @@ class GLVectorBase(globject.GLImageObject):
         
         xform = np.identity(4, dtype=np.float32)
         xform[0, 0] = 1.0 / scale
-        xform[3, 0] = -lo * xform[0, 0]
+        xform[0, 3] = -lo * xform[0, 0]
         
         return colours, xform
 
@@ -521,8 +521,8 @@ class GLVectorBase(globject.GLImageObject):
         xform             = self.clipTexture.invVoxValXform
         
         if opts.clipImage is not None:
-            clipLow  = clipLow  * xform[0, 0] + xform[3, 0]
-            clipHigh = clipHigh * xform[0, 0] + xform[3, 0]
+            clipLow  = clipLow  * xform[0, 0] + xform[0, 3]
+            clipHigh = clipHigh * xform[0, 0] + xform[0, 3]
         else:
             clipLow  = -0.1
             clipHigh =  1.1
@@ -543,8 +543,8 @@ class GLVectorBase(globject.GLImageObject):
         xform           = self.modulateTexture.invVoxValXform
         
         if opts.modulateImage is not None:
-            modLow  = modLow  * xform[0, 0] + xform[3, 0]
-            modHigh = modHigh * xform[0, 0] + xform[3, 0] 
+            modLow  = modLow  * xform[0, 0] + xform[0, 3]
+            modHigh = modHigh * xform[0, 0] + xform[0, 3] 
         else:
             modLow  = 0
             modHigh = 1
@@ -565,8 +565,8 @@ class GLVectorBase(globject.GLImageObject):
             return np.eye(4)
         else:
             return transform.concat(
-                opts   .getTransform('texture', 'display'),
-                auxOpts.getTransform('display', 'texture')) 
+                auxOpts.getTransform('display', 'texture'),
+                opts   .getTransform('texture', 'display')) 
 
         
     def preDraw(self):

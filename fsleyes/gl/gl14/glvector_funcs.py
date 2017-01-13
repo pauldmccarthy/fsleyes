@@ -85,17 +85,17 @@ def updateShaderState(self):
     colourCoordXform = self.getAuxTextureXform('colour')
     modCoordXform    = self.getAuxTextureXform('modulate')
 
-    self.shader.setVertParam('clipCoordXform',   clipCoordXform.T)
-    self.shader.setVertParam('colourCoordXform', colourCoordXform.T)
-    self.shader.setVertParam('modCoordXform',    modCoordXform.T) 
+    self.shader.setVertParam('clipCoordXform',   clipCoordXform)
+    self.shader.setVertParam('colourCoordXform', colourCoordXform)
+    self.shader.setVertParam('modCoordXform',    modCoordXform) 
     
     if useVolumeFragShader:
-        
+
         voxValXform    = self.colourTexture.voxValXform
         invVoxValXform = self.colourTexture.voxValXform
         cmapXform      = self.cmapTexture.getCoordinateTransform()
-        voxValXform    = transform.concat(voxValXform, cmapXform)
-        texZero        = 0.0 * invVoxValXform[0, 0] + invVoxValXform[3, 0]
+        voxValXform    = transform.concat(cmapXform, voxValXform)
+        texZero        = 0.0 * invVoxValXform[0, 0] + invVoxValXform[0, 3]
         
         self.shader.setFragParam('voxValXform', voxValXform)
         self.shader.setFragParam('negCmap',     [0, texZero, 0, 0])
@@ -111,5 +111,5 @@ def updateShaderState(self):
         self.shader.setFragParam('yColour',          colours[1])
         self.shader.setFragParam('zColour',          colours[2])
         self.shader.setFragParam('colourXform',      [colourXform[0, 0],
-                                                      colourXform[3, 0], 0, 0])
+                                                      colourXform[0, 3], 0, 0])
     return True

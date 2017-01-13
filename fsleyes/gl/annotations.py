@@ -193,7 +193,7 @@ class Annotations(object):
         if xform is not None:
             gl.glMatrixMode(gl.GL_MODELVIEW)
             gl.glPushMatrix()
-            gl.glMultMatrixf(xform.ravel('C'))
+            gl.glMultMatrixf(xform.ravel('F'))
 
         drawTime = time.time()
 
@@ -209,7 +209,7 @@ class Annotations(object):
             if obj.xform is not None:
                 gl.glMatrixMode(gl.GL_MODELVIEW)
                 gl.glPushMatrix()
-                gl.glMultMatrixf(obj.xform.ravel('C'))
+                gl.glMultMatrixf(obj.xform.ravel('F'))
 
             if obj.colour is not None:
                 

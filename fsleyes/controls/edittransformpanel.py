@@ -375,7 +375,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         opts     = self.getDisplayContext().getOpts(overlay)
 
         newXform = self.__getCurrentXform()
-        xform    = transform.concat(overlay.voxToWorldMat, newXform)
+        xform    = transform.concat(newXform, overlay.voxToWorldMat)
 
         self.__formatXform(xform, self.__newXform)
         
@@ -395,7 +395,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
 
         newXform = self.__getCurrentXform()
         opts     = self.getDisplayContext().getOpts(overlay)
-        xform    = transform.concat(self.__overlay.voxToWorldMat, newXform)
+        xform    = transform.concat(newXform, self.__overlay.voxToWorldMat)
 
         with props.suppress(opts, 'displayXform'):
             opts.displayXform     = np.eye(4)

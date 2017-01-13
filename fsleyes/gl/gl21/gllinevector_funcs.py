@@ -152,7 +152,7 @@ def draw(self, zpos, xform=None, bbox=None):
     indices = np.arange(voxels.shape[0], dtype=np.uint32)
 
     if xform is None: xform = v2dMat
-    else:             xform = transform.concat(v2dMat, xform)
+    else:             xform = transform.concat(xform, v2dMat)
 
     shader.set(   'voxToDisplayMat', xform)
     shader.setAtt('vertexID',        indices)

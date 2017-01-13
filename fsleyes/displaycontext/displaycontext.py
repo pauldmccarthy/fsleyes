@@ -729,8 +729,8 @@ class DisplayContext(props.SyncableHasProperties):
         else:
             refOpts = self.getOpts(space)
             xform   = transform.concat(
-                opts   .getTransform('voxel', 'world'),
-                refOpts.getTransform('world', 'pixdim-flip'))
+                refOpts.getTransform('world', 'pixdim-flip'),
+                opts   .getTransform('voxel', 'world'))
 
             opts.customXform = xform
             opts.transform   = 'custom'
