@@ -633,7 +633,7 @@ labels = TypeDict({
     'EditTransformPanel.rotate'      : 'Rotate',
     'EditTransformPanel.apply'       : 'Apply',
     'EditTransformPanel.reset'       : 'Reset',
-    'EditTransformPanel.cancel'      : 'Cancel',
+    'EditTransformPanel.cancel'      : 'Close',
 })
 
 

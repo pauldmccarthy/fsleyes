@@ -68,10 +68,8 @@ def updateShaderState(self, useSpline=False):
  
     if self.useVolumeFragShader:
 
-        voxValXform     = self.colourTexture.voxValXform
-        invVoxValXform  = self.colourTexture.invVoxValXform
-        texZero         = 0.0 * invVoxValXform[0, 0] + invVoxValXform[0, 3]
-        img2CmapXform   = transform.concat(
+        voxValXform   = self.colourTexture.voxValXform
+        img2CmapXform = transform.concat(
             self.cmapTexture.getCoordinateTransform(),
             voxValXform)
 
@@ -86,7 +84,6 @@ def updateShaderState(self, useSpline=False):
         changed |= shader.set('useSpline',        useSpline)
         changed |= shader.set('clipLow',          clipLow)
         changed |= shader.set('clipHigh',         clipHigh)
-        changed |= shader.set('texZero',          texZero)
         changed |= shader.set('invertClip',       False)
     
     else:

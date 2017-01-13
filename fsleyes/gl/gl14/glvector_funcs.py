@@ -91,14 +91,11 @@ def updateShaderState(self):
     
     if useVolumeFragShader:
 
-        voxValXform    = self.colourTexture.voxValXform
-        invVoxValXform = self.colourTexture.voxValXform
-        cmapXform      = self.cmapTexture.getCoordinateTransform()
-        voxValXform    = transform.concat(cmapXform, voxValXform)
-        texZero        = 0.0 * invVoxValXform[0, 0] + invVoxValXform[0, 3]
+        voxValXform = self.colourTexture.voxValXform
+        cmapXform   = self.cmapTexture.getCoordinateTransform()
+        voxValXform = transform.concat(cmapXform, voxValXform)
         
         self.shader.setFragParam('voxValXform', voxValXform)
-        self.shader.setFragParam('negCmap',     [0, texZero, 0, 0])
 
     else:
 
