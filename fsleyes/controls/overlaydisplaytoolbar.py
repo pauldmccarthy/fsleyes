@@ -311,20 +311,25 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.VolumeOpts` instance.
         """
-        rangeSpec = _TOOLBAR_PROPS[opts, 'displayRange']
-        resetSpec = _TOOLBAR_PROPS[opts, 'resetDisplayRange']
-        cmapSpec  = _TOOLBAR_PROPS[opts, 'cmap']
+        rangeSpec      = _TOOLBAR_PROPS[opts, 'displayRange']
+        cmapSpec       = _TOOLBAR_PROPS[opts, 'cmap']
+        negCmapSpec    = _TOOLBAR_PROPS[opts, 'negativeCmap']
+        useNegCmapSpec = _TOOLBAR_PROPS[opts, 'useNegativeCmap']
 
-        rangeWidget = props.buildGUI(self, opts, rangeSpec)
-        resetWidget = props.buildGUI(self, opts, resetSpec)
-        cmapWidget  = props.buildGUI(self, opts, cmapSpec)
+        cmapPanel = wx.Panel(self)
 
-        lblCmapWidget = self.MakeLabelledTool(
-            cmapWidget,
-            strings.properties[opts, 'cmap'])
+        rangeWidget      = props.buildGUI(self,      opts, rangeSpec)
+        useNegCmapWidget = props.buildGUI(self,      opts, useNegCmapSpec)
+        cmapWidget       = props.buildGUI(cmapPanel, opts, cmapSpec)
+        negCmapWidget    = props.buildGUI(cmapPanel, opts, negCmapSpec)
+        
+        cmapSizer = wx.BoxSizer(wx.VERTICAL)
+        cmapPanel.SetSizer(cmapSizer)
+        cmapSizer.Add(cmapWidget)
+        cmapSizer.Add(negCmapWidget)
 
-        tools = [rangeWidget, resetWidget, lblCmapWidget]
-        nav   = [rangeWidget, resetWidget, cmapWidget]
+        tools = [rangeWidget, useNegCmapWidget, cmapPanel]
+        nav   = [rangeWidget, useNegCmapWidget, cmapWidget, negCmapWidget]
 
         return tools, nav
 
@@ -522,9 +527,13 @@ _TOOLTIPS = td.TypeDict({
 
     'VolumeOpts.displayRange'      : fsltooltips.properties['VolumeOpts.'
                                                             'displayRange'],
-    'VolumeOpts.resetDisplayRange' : fsltooltips.actions[   'VolumeOpts.reset'
-                                                            'DisplayRange'],
-    'VolumeOpts.cmap'              : fsltooltips.properties['VolumeOpts.cmap'],
+    
+    'VolumeOpts.cmap'              :
+    fsltooltips.properties['VolumeOpts.cmap'],
+    'VolumeOpts.negativeCmap'      :
+    fsltooltips.properties['VolumeOpts.negativeCmap'],
+    'VolumeOpts.useNegativeCmap'   :
+    fsltooltips.properties['VolumeOpts.useNegativeCmap'], 
 
     'MaskOpts.threshold' : fsltooltips.properties['MaskOpts.threshold'],
     'MaskOpts.colour'    : fsltooltips.properties['MaskOpts.colour'],
@@ -596,14 +605,23 @@ _TOOLBAR_PROPS = td.TypeDict({
         tooltip=_TOOLTIPS['VolumeOpts.displayRange'],
         labels=[strings.choices['VolumeOpts.displayRange.min'],
                 strings.choices['VolumeOpts.displayRange.max']]),
-    'VolumeOpts.resetDisplayRange' : actions.ActionButton(
-        'resetDisplayRange',
-        icon=icons.findImageFile('verticalReset24'),
-        tooltip=_TOOLTIPS['VolumeOpts.resetDisplayRange']), 
     'VolumeOpts.cmap' : props.Widget(
         'cmap',
         labels=fslcm.getColourMapLabel,
         tooltip=_TOOLTIPS['VolumeOpts.cmap']),
+    'VolumeOpts.useNegativeCmap' : props.Widget(
+        'useNegativeCmap',
+        icon=[icons.findImageFile('twoCmaps24'),
+              icons.findImageFile('oneCmap24')],
+        toggle=True,
+        tooltip=_TOOLTIPS['VolumeOpts.useNegativeCmap']),
+    
+    'VolumeOpts.negativeCmap' : props.Widget(
+        'negativeCmap',
+        labels=fslcm.getColourMapLabel,
+        tooltip=_TOOLTIPS['VolumeOpts.negativeCmap'],
+        dependencies=['useNegativeCmap'],
+        enabledWhen=lambda i, unc : unc), 
 
     'MaskOpts.threshold' : props.Widget(
         'threshold',
