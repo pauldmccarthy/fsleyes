@@ -42,6 +42,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         
         self.__ortho   = ortho
         self.__profile = profile
+        self.__overlay = None
 
         self.__cropBoxWidget = props.makeWidget(
             self,
@@ -132,6 +133,46 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         
         self.__sizeLabel.SetLabel(label)
 
+
+    def __registerOverlay(self, overlay):
+        """Called by :meth:`__selectedOverlayChanged`. Registers the
+        given overlay.
+        """         
+
+        self.__overlay = overlay
+
+        display = self.getDisplayContext().getDisplay(overlay)
+
+        display.addListener('name', self._name, self.__overlayNameChanged)
+        self.__overlayNameChanged()
+
+
+    def __deregisterOverlay(self):
+        """Called by :meth:`__selectedOverlayChanged`. Deregisters the
+        current overlay.
+        """
+
+        if self.__overlay is None:
+            return
+
+        display = self.getDisplayContext().getDisplay(self.__overlay)
+        display.removeListener('name', self._name)
+
+        self.__cropLabel.SetLabel(strings.labels[self, 'image.noImage'])
+
+        self.__overlay = None
+
+
+    def __overlayNameChanged(self, *a):
+        """Called when the :attr:`.Display.name` of the currently selected
+        overlay changes. Updates the name label.
+        """
+
+        display = self.getDisplayContext().getDisplay(self.__overlay)
+        label   = strings.labels[self, 'image']
+        label   = label.format(display.name)
+        self.__cropLabel.SetLabel(label)
+
     
     def __selectedOverlayChanged(self, *a):
         """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
@@ -141,19 +182,16 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         displayCtx = self.getDisplayContext()
         overlay    = displayCtx.getSelectedOverlay()
 
-        if not isinstance(overlay, fslimage.Image):
-            self.__cropLabel.SetLabel(strings.labels[self, 'image.noImage'])
-            self.__sizeLabel.SetLabel(strings.labels[self, 'cropSize.noImage'])
-            self.Disable()
+        if overlay is self.__overlay:
             return
 
-        # TODO REgiustetr on Display.name
-        display = displayCtx.getDisplay(overlay)
-        label   = strings.labels[self, 'image']
-        label   = label.format(display.name)
-        
-        self.Enable()
-        self.__cropLabel.SetLabel(label)
+        self.__deregisterOverlay()
+
+        if not isinstance(overlay, fslimage.Image):
+            self.Disable()
+        else:
+            self.Enable()
+            self.__registerOverlay(overlay)
 
     
     def __onCancel(self, ev=None):
