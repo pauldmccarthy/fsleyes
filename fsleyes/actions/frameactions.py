@@ -17,7 +17,6 @@ from fsl.utils.platform import platform as fslplatform
 import                    fsleyes
 import fsleyes.frame   as frame
 import fsleyes.actions as actions
-import fsleyes.views   as views
 
 
 def addViewPanel(self, vpType, *args, **kwargs):
@@ -29,32 +28,38 @@ def addViewPanel(self, vpType, *args, **kwargs):
 
 def addOrthoPanel(self, *args, **kwargs):
     """Adds a new :class:`.OrthoPanel`."""
-    addViewPanel(self, views.OrthoPanel, *args, **kwargs)
+    from fsleyes.views.orthopanel import OrthoPanel
+    addViewPanel(self, OrthoPanel, *args, **kwargs)
 
 
 def addLightBoxPanel(self, *args, **kwargs):
     """Adds a new :class:`.LightBoxPanel`."""
-    addViewPanel(self, views.LightBoxPanel, *args, **kwargs)
+    from fsleyes.views.lightboxpanel import LightBoxPanel
+    addViewPanel(self, LightBoxPanel, *args, **kwargs)
 
 
 def addTimeSeriesPanel(self, *args, **kwargs):
     """Adds a new :class:`.TimeSeriesPanel`."""
-    addViewPanel(self, views.TimeSeriesPanel, *args, **kwargs)
+    from fsleyes.views.timeseriespanel import TimeSeriesPanel
+    addViewPanel(self, TimeSeriesPanel, *args, **kwargs)
 
 
 def addHistogramPanel(self, *args, **kwargs):
     """Adds a new :class:`.HistogramPanel`."""
-    addViewPanel(self, views.HistogramPanel, *args, **kwargs)
+    from fsleyes.views.histogrampanel import HistogramPanel
+    addViewPanel(self, HistogramPanel, *args, **kwargs)
 
 
 def addPowerSpectrumPanel(self, *args, **kwargs):
     """Adds a new :class:`.PowerSpectrumPanel`."""
-    addViewPanel(self, views.PowerSpectrumPanel, *args, **kwargs)
+    from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
+    addViewPanel(self, PowerSpectrumPanel, *args, **kwargs)
 
 
 def addShellPanel(self, *args, **kwargs):
     """Adds a new :class:`.ShellPanel`."""
-    addViewPanel(self, views.ShellPanel, *args, **kwargs)
+    from fsleyes.views.shellpanel import ShellPanel
+    addViewPanel(self, ShellPanel, *args, **kwargs)
 
 
 

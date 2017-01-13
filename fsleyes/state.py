@@ -127,7 +127,7 @@ def _viewPanelState(viewPanel):
     :class:`.ViewPanel`.
     """ 
 
-    import fsleyes.views as views
+    import fsleyes.views.canvaspanel as canvaspanel
 
     state     = OrderedDict()
     propNames = viewPanel.getAllProperties()[0]
@@ -137,7 +137,7 @@ def _viewPanelState(viewPanel):
     for propName in propNames:
         state[propName] = props.serialise(viewPanel, propName)
 
-    if isinstance(viewPanel, views.CanvasPanel):
+    if isinstance(viewPanel, canvaspanel.CanvasPanel):
 
         sceneOptsState = OrderedDict()
         sceneOpts      = viewPanel.getSceneOptions()

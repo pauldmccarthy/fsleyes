@@ -477,7 +477,8 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     
     import fsleyes.displaycontext       as fsldisplay
     import fsleyes.perspectives         as perspectives
-    import fsleyes.views                as views
+    import fsleyes.views.canvaspanel    as canvaspanel
+    import fsleyes.views.orthopanel     as orthopanel
     
     # Set up the frame scene (a.k.a. layout, perspective)
     # The scene argument can be:
@@ -547,7 +548,7 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     viewPanels = frame.getViewPanels()
     for viewPanel in viewPanels:
 
-        if not isinstance(viewPanel, views.CanvasPanel):
+        if not isinstance(viewPanel, canvaspanel.CanvasPanel):
             continue
 
         displayCtx = viewPanel.getDisplayContext()
@@ -565,7 +566,7 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
             vp.getYCanvas().centreDisplayAt(*yc)
             vp.getZCanvas().centreDisplayAt(*zc)
 
-        if isinstance(viewPanel, views.OrthoPanel):
+        if isinstance(viewPanel, orthopanel.OrthoPanel):
             async.idle(centre)
 
     # If a script has been specified, we run

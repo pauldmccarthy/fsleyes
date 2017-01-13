@@ -32,6 +32,7 @@ import                                       props
 import pwidgets.elistbox                  as elistbox
 import fsl.utils.async                    as async
 import fsl.utils.settings                 as fslsettings
+from   fsl.utils.platform import platform as fslplatform
 import fsleyes.strings                    as strings
 import fsleyes.actions                    as actions
 import fsleyes.overlay                    as fsloverlay
@@ -512,6 +513,11 @@ class PlotPanel(viewpanel.ViewPanel):
         canvas = self.getCanvas()
 
         def realDraw():
+
+            # Just in case this PlotPanel is destroyed
+            # before this task gets executed
+            if not fslplatform.isWidgetAlive(self):
+                return
             
             for artist in self.artists:
                 if artist not in axis.findobj(type(artist)):

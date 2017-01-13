@@ -104,7 +104,7 @@ def applyPerspective(frame, name, perspective, message=None):
     :arg message:     A message to display (using the :mod:`.status` module).
     """
 
-    import fsleyes.views as views
+    import fsleyes.views.canvaspanel as canvaspanel
               
     persp         = deserialisePerspective(perspective)
     frameChildren = persp[0]
@@ -162,7 +162,7 @@ def applyPerspective(frame, name, perspective, message=None):
 
         # And, if it is a CanvasPanel,
         # to its SceneOpts instance.
-        if isinstance(vp, views.CanvasPanel):
+        if isinstance(vp, canvaspanel.CanvasPanel):
             opts = vp.getSceneOptions()
             for name, val in sceneProps.items():
                 log.debug('Setting {}.{} = {}'.format(
@@ -440,8 +440,76 @@ def deserialisePerspective(persp):
                   :class:`.CanvasPanel`, the dictionary will be empty.
     """
 
-    import fsleyes.views    as views
-    import fsleyes.controls as controls
+    from   fsleyes.views.orthopanel         import OrthoPanel
+    from   fsleyes.views.lightboxpanel      import LightBoxPanel
+    from   fsleyes.views.timeseriespanel    import TimeSeriesPanel
+    from   fsleyes.views.histogrampanel     import HistogramPanel
+    from   fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
+    from   fsleyes.views.shellpanel         import ShellPanel
+
+    from fsleyes.controls.atlaspanel                 import AtlasPanel
+    from fsleyes.controls.canvassettingspanel        import CanvasSettingsPanel
+    from fsleyes.controls.clusterpanel               import ClusterPanel
+    from fsleyes.controls.histogramcontrolpanel      import \
+        HistogramControlPanel
+    from fsleyes.controls.histogramtoolbar           import HistogramToolBar
+    from fsleyes.controls.lightboxtoolbar            import LightBoxToolBar
+    from fsleyes.controls.locationpanel              import LocationPanel
+    from fsleyes.controls.lookuptablepanel           import LookupTablePanel
+    from fsleyes.controls.melodicclassificationpanel import \
+        MelodicClassificationPanel
+    from fsleyes.controls.orthoeditactiontoolbar     import \
+        OrthoEditActionToolBar
+    from fsleyes.controls.orthoedittoolbar           import OrthoEditToolBar
+    from fsleyes.controls.orthotoolbar               import OrthoToolBar
+    from fsleyes.controls.overlaydisplaypanel        import OverlayDisplayPanel
+    from fsleyes.controls.overlaydisplaytoolbar      import \
+        OverlayDisplayToolBar
+    from fsleyes.controls.overlayinfopanel           import OverlayInfoPanel
+    from fsleyes.controls.overlaylistpanel           import OverlayListPanel
+    from fsleyes.controls.plotlistpanel              import PlotListPanel
+    from fsleyes.controls.plottoolbar                import PlotToolBar
+    from fsleyes.controls.powerspectrumcontrolpanel  import \
+        PowerSpectrumControlPanel
+    from fsleyes.controls.powerspectrumtoolbar       import \
+        PowerSpectrumToolBar
+    from fsleyes.controls.timeseriescontrolpanel     import \
+        TimeSeriesControlPanel
+    from fsleyes.controls.timeseriestoolbar          import TimeSeriesToolBar
+
+    views = {
+        'OrthoPanel'         : OrthoPanel,
+        'LightBoxPanel'      : LightBoxPanel,
+        'TimeSeriesPanel'    : TimeSeriesPanel,
+        'HistogramPanel'     : HistogramPanel,
+        'PowerSpectrumPanel' : PowerSpectrumPanel,
+        'ShellPanel'         : ShellPanel
+    }
+
+    controls = {
+        'AtlasPanel'                 : AtlasPanel,
+        'CanvasSettingsPanel'        : CanvasSettingsPanel,
+        'ClusterPanel'               : ClusterPanel,
+        'HistogramControlPanel'      : HistogramControlPanel,
+        'HistogramToolBar'           : HistogramToolBar,
+        'LightboxToolBar'            : LightBoxToolBar,
+        'LocationPanel'              : LocationPanel,
+        'LookupTablePanel'           : LookupTablePanel,
+        'MelodicClassificationPanel' : MelodicClassificationPanel,
+        'OrthoEditActionToolBar'     : OrthoEditActionToolBar,
+        'OrthoEditToolBar'           : OrthoEditToolBar,
+        'OrthoToolBar'               : OrthoToolBar,
+        'OverlayDisplayPanel'        : OverlayDisplayPanel,
+        'OverlayDisplayToolBar'      : OverlayDisplayToolBar,
+        'OverlayInfoPanel'           : OverlayInfoPanel,
+        'OverlayListPanel'           : OverlayListPanel,
+        'PlotListPanel'              : PlotListPanel,
+        'PlotToolBar'                : PlotToolBar,
+        'PowerSpectrumControlPanel'  : PowerSpectrumControlPanel,
+        'PowerSpectrumToolBar'       : PowerSpectrumToolBar,
+        'TimeSeriesControlPanel'     : TimeSeriesControlPanel,
+        'TimeSeriesToolBar'          : TimeSeriesToolBar,
+    }
     
     lines = persp.split('\n')
     lines = [l.strip() for l in lines]
@@ -457,7 +525,7 @@ def deserialisePerspective(persp):
     frameChildren = frameChildren.split(',')
     frameChildren = [fc.strip() for fc in frameChildren]
     frameChildren = [fc         for fc in frameChildren if fc != '']
-    frameChildren = [getattr(views, fc) for fc in frameChildren]
+    frameChildren = [views[fc]  for fc in frameChildren]
 
     # Collate the children/layouts for each view panel
     vpChildren   = []
@@ -485,9 +553,9 @@ def deserialisePerspective(persp):
     for i in range(len(vpChildren)):
 
         children      = vpChildren[i].split(',')
-        children      = [vpc.strip() for vpc in children]
-        children      = [vpc         for vpc in children if vpc != '']
-        children      = [getattr(controls, vpc) for vpc in children]
+        children      = [vpc.strip()   for vpc in children]
+        children      = [vpc           for vpc in children if vpc != '']
+        children      = [controls[vpc] for vpc in children]
         vpChildren[i] = children
 
     # The panel props and scene props strings are
@@ -548,23 +616,45 @@ def _addControlPanel(viewPanel, panelType):
     :arg viewPanel: A :class:`.ViewPanel` instance.
     :arg panelType: A control panel type.
     """
-    import fsleyes.controls as controls
-    import fsleyes.views    as views
+    import fsleyes.views.plotpanel as plotpanel
+
+    from fsleyes.controls.canvassettingspanel        import CanvasSettingsPanel
+    from fsleyes.controls.histogramcontrolpanel      import \
+        HistogramControlPanel
+    from fsleyes.controls.histogramtoolbar           import HistogramToolBar
+    from fsleyes.controls.lightboxtoolbar            import LightBoxToolBar
+    from fsleyes.controls.orthoeditactiontoolbar     import \
+        OrthoEditActionToolBar
+    from fsleyes.controls.orthoedittoolbar           import OrthoEditToolBar
+    from fsleyes.controls.orthotoolbar               import OrthoToolBar
+    from fsleyes.controls.overlaydisplaytoolbar      import \
+        OverlayDisplayToolBar
+    from fsleyes.controls.overlaylistpanel           import OverlayListPanel
+    from fsleyes.controls.plotlistpanel              import PlotListPanel
+    from fsleyes.controls.plottoolbar                import PlotToolBar
+    from fsleyes.controls.powerspectrumcontrolpanel  import \
+        PowerSpectrumControlPanel
+    from fsleyes.controls.powerspectrumtoolbar       import \
+        PowerSpectrumToolBar
+    from fsleyes.controls.timeseriescontrolpanel     import \
+        TimeSeriesControlPanel
+    from fsleyes.controls.timeseriestoolbar          import TimeSeriesToolBar 
 
     args = {
-        controls.CanvasSettingsPanel       : {'canvasPanel' : viewPanel},
-        controls.HistogramControlPanel     : {'plotPanel'   : viewPanel},
-        controls.HistogramToolBar          : {'histPanel'   : viewPanel},
-        controls.LightBoxToolBar           : {'lb'          : viewPanel},
-        controls.OrthoEditToolBar          : {'ortho'       : viewPanel},
-        controls.OrthoToolBar              : {'ortho'       : viewPanel},
-        controls.OverlayDisplayToolBar     : {'viewPanel'   : viewPanel},
-        controls.PlotListPanel             : {'plotPanel'   : viewPanel},
-        controls.PlotToolBar               : {'plotPanel'   : viewPanel},
-        controls.PowerSpectrumControlPanel : {'plotPanel'   : viewPanel},
-        controls.PowerSpectrumToolBar      : {'psPanel'     : viewPanel},
-        controls.TimeSeriesControlPanel    : {'plotPanel'   : viewPanel},
-        controls.TimeSeriesToolBar         : {'tsPanel'     : viewPanel},
+        CanvasSettingsPanel       : {'canvasPanel' : viewPanel},
+        HistogramControlPanel     : {'plotPanel'   : viewPanel},
+        HistogramToolBar          : {'histPanel'   : viewPanel},
+        LightBoxToolBar           : {'lb'          : viewPanel},
+        OrthoEditActionToolBar    : {'ortho'       : viewPanel},
+        OrthoEditToolBar          : {'ortho'       : viewPanel},
+        OrthoToolBar              : {'ortho'       : viewPanel},
+        OverlayDisplayToolBar     : {'viewPanel'   : viewPanel},
+        PlotListPanel             : {'plotPanel'   : viewPanel},
+        PlotToolBar               : {'plotPanel'   : viewPanel},
+        PowerSpectrumControlPanel : {'plotPanel'   : viewPanel},
+        PowerSpectrumToolBar      : {'psPanel'     : viewPanel},
+        TimeSeriesControlPanel    : {'plotPanel'   : viewPanel},
+        TimeSeriesToolBar         : {'tsPanel'     : viewPanel},
     }
 
     args = args.get(panelType, {})
@@ -575,8 +665,8 @@ def _addControlPanel(viewPanel, panelType):
     # No other control panels (to date) are
     # customised in any way, so I'm accepting
     # this hack for the time being.
-    if isinstance(viewPanel, views.OverlayPlotPanel) and \
-       panelType == controls.OverlayListPanel:
+    if isinstance(viewPanel, plotpanel.OverlayPlotPanel) and \
+       panelType == OverlayListPanel:
         viewPanel.toggleOverlayList()
     else:
         viewPanel.togglePanel(panelType, **args)
@@ -590,9 +680,9 @@ def _getPanelProps(panel):
     the :data:`VIEWPANEL_PROPS` dictionary.
     """
 
-    import fsleyes.views as views
+    import fsleyes.views.canvaspanel as canvaspanel
 
-    if not isinstance(panel, views.CanvasPanel):
+    if not isinstance(panel, canvaspanel.CanvasPanel):
         return {}, {}
 
     panelType = type(panel).__name__

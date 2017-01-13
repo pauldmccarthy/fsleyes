@@ -314,12 +314,13 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         self._displayCtx  = displayCtx
         self._name        = '{}_{}'.format(self.__class__.__name__, id(self))
 
-        import fsleyes.views as views
+        import fsleyes.views.canvaspanel as canvaspanel
+        import fsleyes.views.plotpanel   as plotpanel
 
-        if isinstance(viewPanel, views.CanvasPanel):
+        if isinstance(viewPanel, canvaspanel.CanvasPanel):
             self.__evtManager = CanvasPanelEventManager(self)
             
-        elif isinstance(viewPanel, views.PlotPanel):
+        elif isinstance(viewPanel, plotpanel.PlotPanel):
             self.__evtManager = PlotPanelEventManager(self)
             
         else:

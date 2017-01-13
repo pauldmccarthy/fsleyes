@@ -24,7 +24,6 @@ from   fsl.utils.platform import platform as fslplatform
 import fsleyes.strings                    as strings
 import fsleyes.profiles.shortcuts         as shortcuts
 
-from . import views
 from . import actions
 from . import tooltips
 from . import perspectives
@@ -328,11 +327,13 @@ class FSLeyesFrame(wx.Frame):
         """Returns the :class:`.ViewPanel` which currently has focus, or
         ``None`` if no ``ViewPanel`` has focus.
         """
+        import fsleyes.views.viewpanel as viewpanel
+        
         focused = wx.Window.FindFocus()
 
         while focused is not None:
 
-            if isinstance(focused, views.ViewPanel):
+            if isinstance(focused, viewpanel.ViewPanel):
                 return focused
 
             focused = focused.GetParent() 
@@ -372,6 +373,8 @@ class FSLeyesFrame(wx.Frame):
 
         :arg panelCls: The :class:`.ViewPanel` type to be added.
         """
+        import fsleyes.views.plotpanel  as plotpanel
+        import fsleyes.views.shellpanel as shellpanel
 
         if len(self.__viewPanelIDs) == 0:
             panelId = 1
@@ -430,7 +433,7 @@ class FSLeyesFrame(wx.Frame):
             # PlotPanels/ShellPanels are
             # initially placed along the
             # bottom
-            if isinstance(panel, (views.PlotPanel, views.ShellPanel)):
+            if isinstance(panel, (plotpanel.PlotPanel, shellpanel.ShellPanel)):
                 paneInfo.Bottom().BestSize(width // 4, height // 3)
 
             # Other panels (e.g. CanvasPanels)
@@ -460,30 +463,36 @@ class FSLeyesFrame(wx.Frame):
         to adding toolbars.
         """
 
+        from fsleyes.views.orthopanel         import OrthoPanel
+        from fsleyes.views.lightboxpanel      import LightBoxPanel
+        from fsleyes.views.timeseriespanel    import TimeSeriesPanel
+        from fsleyes.views.histogrampanel     import HistogramPanel
+        from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
+
         viewPanel.removeAllPanels()
 
-        if isinstance(viewPanel, views.TimeSeriesPanel):
+        if isinstance(viewPanel, TimeSeriesPanel):
             viewPanel.toggleTimeSeriesToolBar()
             viewPanel.toggleOverlayList()
             viewPanel.togglePlotList()
             
-        elif isinstance(viewPanel, views.HistogramPanel):
+        elif isinstance(viewPanel, HistogramPanel):
             viewPanel.toggleHistogramToolBar()
             viewPanel.toggleOverlayList()
             viewPanel.togglePlotList()
             
-        elif isinstance(viewPanel, views.PowerSpectrumPanel):
+        elif isinstance(viewPanel, PowerSpectrumPanel):
             viewPanel.togglePowerSpectrumToolBar()
             viewPanel.toggleOverlayList()
             viewPanel.togglePlotList()
             
-        elif isinstance(viewPanel, views.OrthoPanel):
+        elif isinstance(viewPanel, OrthoPanel):
             viewPanel.toggleDisplayToolBar()
             viewPanel.toggleOrthoToolBar()
             viewPanel.toggleOverlayList()
             viewPanel.toggleLocationPanel()
             
-        elif isinstance(viewPanel, views.LightBoxPanel):
+        elif isinstance(viewPanel, LightBoxPanel):
             viewPanel.toggleDisplayToolBar()
             viewPanel.toggleLightBoxToolBar()
             viewPanel.toggleOverlayList()
@@ -811,8 +820,10 @@ class FSLeyesFrame(wx.Frame):
                        new panel.
         """
 
+        import fsleyes.views.canvaspanel as canvaspanel
+
         canvasPanels = [vp for vp in self.__viewPanels
-                        if isinstance(vp, views.CanvasPanel)]
+                        if isinstance(vp, canvaspanel.CanvasPanel)]
         canvasCtxs   = [c.getDisplayContext() for c in canvasPanels] 
         numCanvases  = len(canvasPanels)
 

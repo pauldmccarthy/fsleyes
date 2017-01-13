@@ -11,29 +11,3 @@ the :mod:`~fsleyes` package documentation.  It contains a collection of
 :class:`.OverlayList`.  The :class:`.ViewPanel` is the base-class for all
 views.
 """
-
-
-import fsleyes.panel as fslpanel
-
-from . import viewpanel
-from . import plotpanel
-from . import canvaspanel
-from . import orthopanel
-from . import lightboxpanel
-from . import timeseriespanel
-from . import powerspectrumpanel
-from . import histogrampanel
-from . import shellpanel
-
-
-FSLeyesPanel       = fslpanel          .FSLeyesPanel
-ViewPanel          = viewpanel         .ViewPanel
-PlotPanel          = plotpanel         .PlotPanel
-OverlayPlotPanel   = plotpanel         .OverlayPlotPanel
-CanvasPanel        = canvaspanel       .CanvasPanel
-OrthoPanel         = orthopanel        .OrthoPanel
-LightBoxPanel      = lightboxpanel     .LightBoxPanel
-TimeSeriesPanel    = timeseriespanel   .TimeSeriesPanel
-PowerSpectrumPanel = powerspectrumpanel.PowerSpectrumPanel
-HistogramPanel     = histogrampanel    .HistogramPanel
-ShellPanel         = shellpanel        .ShellPanel

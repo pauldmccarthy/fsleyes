@@ -183,17 +183,21 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         },
     }
 
-    import numpy                 as np
-    import scipy                 as sp
-    import matplotlib            as mpl
-    import matplotlib.pyplot     as plt
-    import fsleyes.views         as views
-    import fsleyes.controls      as controls
-    import fsl.data.image        as image
-    import fsl.data.featimage    as featimage
-    import fsl.data.melodicimage as melimage
-    import fsl.data.dtifit       as dtifit
-    import fsl.data.model        as model
+    import numpy                                as np
+    import scipy                                as sp
+    import matplotlib                           as mpl
+    import matplotlib.pyplot                    as plt
+    from   fsleyes.views.orthopanel         import OrthoPanel
+    from   fsleyes.views.lightboxpanel      import LightBoxPanel
+    from   fsleyes.views.timeseriespanel    import TimeSeriesPanel
+    from   fsleyes.views.histogrampanel     import HistogramPanel
+    from   fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
+    from   fsleyes.views.shellpanel         import ShellPanel 
+    import fsl.data.image                       as image
+    import fsl.data.featimage                   as featimage
+    import fsl.data.melodicimage                as melimage
+    import fsl.data.dtifit                      as dtifit
+    import fsl.data.model                       as model
 
 
     def load(filename):
@@ -245,25 +249,29 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         
 
     _locals = collections.OrderedDict((
-        ('np',               np),
-        ('sp',               sp),
-        ('mpl',              mpl),
-        ('plt',              plt),
-        ('Image',            image.Image),
-        ('FEATImage',        featimage.FEATImage),
-        ('MelodicImage',     melimage.MelodicImage),
-        ('DTIFitTensor',     dtifit.DTIFitTensor),
-        ('Model',            model.Model),
-        ('views',            views),
-        ('controls',         controls),
-        ('overlayList',      overlayList),
-        ('displayCtx',       displayCtx),
-        ('frame',            frame),
-        ('scaledVoxels',     scaledVoxels),
-        ('trueScaledVoxels', trueScaledVoxels),
-        ('rawVoxels',        rawVoxels),
-        ('load',             load),
-        ('run',              run),
+        ('np',                 np),
+        ('sp',                 sp),
+        ('mpl',                mpl),
+        ('plt',                plt),
+        ('Image',              image.Image),
+        ('FEATImage',          featimage.FEATImage),
+        ('MelodicImage',       melimage.MelodicImage),
+        ('DTIFitTensor',       dtifit.DTIFitTensor),
+        ('Model',              model.Model),
+        ('OrthoPanel',         OrthoPanel),
+        ('LightBoxPanel',      LightBoxPanel),
+        ('TimeSeriesPanel',    TimeSeriesPanel),
+        ('HistogramPanel',     HistogramPanel),
+        ('PowerSpectrumPanel', PowerSpectrumPanel),
+        ('ShellPanel',         ShellPanel),
+        ('overlayList',        overlayList),
+        ('displayCtx',         displayCtx),
+        ('frame',              frame),
+        ('scaledVoxels',       scaledVoxels),
+        ('trueScaledVoxels',   trueScaledVoxels),
+        ('rawVoxels',          rawVoxels),
+        ('load',               load),
+        ('run',                run),
     ))
 
     return _globals, _locals
