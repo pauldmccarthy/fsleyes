@@ -300,7 +300,7 @@ titles = TypeDict({
     'MelodicClassificationPanel' : 'Melodic IC classification',
 
     'CropImagePanel'             : 'Crop image',
-    'EditTransformPanel'         : 'Edit transform',
+    'EditTransformPanel'         : 'Transform image',
 
     'LookupTablePanel.loadLut'     : 'Select a lookup table file',
     'LookupTablePanel.labelExists' : 'Label already exists',

@@ -292,18 +292,25 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
 
         mins = coords.min(axis=0)
         maxs = coords.max(axis=0)
+        pads = (maxs - mins) * 0.01
 
-        self.__xrect.xy = mins[1],  mins[2]
-        self.__xrect.w  = maxs[1] - mins[1]
-        self.__xrect.h  = maxs[2] - mins[2]
+        self.__xrect.xy   = mins[1],  mins[2]
+        self.__xrect.w    = maxs[1] - mins[1]
+        self.__xrect.h    = maxs[2] - mins[2]
+        self.__xrect.zmin = mins[0] - pads[0]
+        self.__xrect.zmax = maxs[0] + pads[0]
         
-        self.__yrect.xy = mins[0],  mins[2]
-        self.__yrect.w  = maxs[0] - mins[0]
-        self.__yrect.h  = maxs[2] - mins[2]
+        self.__yrect.xy   = mins[0],  mins[2]
+        self.__yrect.w    = maxs[0] - mins[0]
+        self.__yrect.h    = maxs[2] - mins[2]
+        self.__yrect.zmin = mins[1] - pads[1]
+        self.__yrect.zmax = maxs[1] + pads[1]
 
-        self.__zrect.xy = mins[0],  mins[1]
-        self.__zrect.w  = maxs[0] - mins[0]
-        self.__zrect.h  = maxs[1] - mins[1]
+        self.__zrect.xy   = mins[0],  mins[1]
+        self.__zrect.w    = maxs[0] - mins[0]
+        self.__zrect.h    = maxs[1] - mins[1]
+        self.__zrect.zmin = mins[2] - pads[2]
+        self.__zrect.zmax = maxs[2] + pads[2]
 
         # TODO Don't do this if you don't need to 
         self.__xcanvas.Refresh()

@@ -822,11 +822,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         else:
             isImage = False
             
-        self.resetDisplay     .enabled = haveOverlays
-        self.centreCursor     .enabled = haveOverlays
-        self.centreCursorWorld.enabled = haveOverlays
-        self.toggleEditMode   .enabled = isImage
-        self.toggleCropMode   .enabled = isImage
+        self.resetDisplay            .enabled = haveOverlays
+        self.centreCursor            .enabled = haveOverlays
+        self.centreCursorWorld       .enabled = haveOverlays
+        self.toggleEditMode          .enabled = isImage
+        self.toggleEditTransformPanel.enabled = isImage
+        self.toggleCropMode          .enabled = isImage
 
         
     def __displaySpaceChanged(self, *a):

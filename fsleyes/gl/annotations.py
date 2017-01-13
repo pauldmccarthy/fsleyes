@@ -199,9 +199,10 @@ class Annotations(object):
 
         for obj in objs:
 
-            if obj.expired(drawTime): continue
-            if not obj.enabled:
-                continue 
+            if obj.expired(drawTime):                    continue
+            if not obj.enabled:                          continue
+            if obj.zmin is not None and zpos < obj.zmin: continue
+            if obj.zmax is not None and zpos > obj.zmax: continue
             
             obj.setAxes(self.__xax, self.__yax)
 
@@ -248,8 +249,16 @@ class AnnotationObject(globject.GLSimpleObject):
     ``xform``    Custom transformation matrix to apply to annotation vertices.
     ``expiry``   Time (in seconds) after which the annotation will expire and
                  not be drawn.
+    ``zmin``     Minimum z value below which this annotation will not be 
+                 drawn.
+    ``zmax``     Maximum z value above which this annotation will not be 
+                 drawn. 
     ``creation`` Time of creation.
     ============ =============================================================
+
+    All of these attributes can be modified directly, after which you should
+    trigger a draw on the owning ``SliceCanvas`` to refresh the annotation.
+    You shouldn't touch the ``expiry`` or ``creation`` attributes though.
 
     Subclasses must, at the very least, override the
     :meth:`globject.GLObject.draw` method.
@@ -262,7 +271,9 @@ class AnnotationObject(globject.GLSimpleObject):
                  colour=None,
                  width=None,
                  enabled=True,
-                 expiry=None):
+                 expiry=None,
+                 zmin=None,
+                 zmax=None):
         """Create an ``AnnotationObject``.
 
         :arg xax:     Initial display X axis
@@ -280,6 +291,11 @@ class AnnotationObject(globject.GLSimpleObject):
 
         :arg expiry:  Time (in seconds) after which this annotation should be
                       expired and not drawn.
+
+        :arg zmin:    Minimum z value below which this annotation should not 
+                      be drawn. 
+        :arg zmax:    Maximum z value above which this annotation should not 
+                      be drawn. 
         """
         globject.GLSimpleObject.__init__(self, xax, yax)
         
@@ -288,6 +304,8 @@ class AnnotationObject(globject.GLSimpleObject):
         self.width    = width
         self.xform    = xform
         self.expiry   = expiry
+        self.zmin     = zmin
+        self.zmax     = zmax
         self.creation = time.time()
 
         if self.xform is not None:
