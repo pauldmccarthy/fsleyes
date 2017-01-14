@@ -18,6 +18,11 @@ called directly:
    loadOverlays
    loadImage
    interactiveLoadOverlays
+
+
+Finally, this module provides a singleton :class:`RecentPathManager` instance
+called :attr:`recentPathManager`, which can be registered with to be notified
+when new files have been loaded.
 """
 
 
@@ -29,6 +34,7 @@ import numpy   as np
 
 import fsl.utils.async     as async
 import fsl.utils.status    as status
+import fsl.utils.notifier  as notifier
 import fsl.utils.settings  as fslsettings
 
 import fsleyes.autodisplay as autodisplay
@@ -204,6 +210,10 @@ def loadOverlays(paths,
         except Exception as e:
             errorFunc(path, e)
 
+        # Record the path in the
+        # recent files list
+        recentPathManager.recordPath(path)
+
     # This function gets called after 
     # all overlays have been loaded
     def realOnLoad():
@@ -354,3 +364,50 @@ def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
     dlg.Destroy()
      
     loadOverlays(paths, saveDir=saveFromDir, **kwargs)
+
+
+class RecentPathManager(notifier.Notifier):
+    """The ``RecentPathManager`` is a simple class which provides
+    access to a list of recently loaded files, and can notify
+    registered listeners when that list changes. See the 
+    :attr:`recentPathManager` singleton instance.
+    """
+
+
+    def recordPath(self, path):
+        """Adds the given ``path`` to the recent files list. """
+
+        recent = self.listRecentPaths()
+
+        if path in recent:
+            return
+
+        recent.append(path)
+
+        if len(recent) > 10:
+            recent = recent[-10:]
+
+        recent = op.pathsep.join(recent)
+
+        fslsettings.write('fsleyes.recentFiles', recent)
+
+        self.notify()
+
+
+    def listRecentPaths(self):
+        """Returns a list of recently loaded files. """
+
+        recent = fslsettings.read('fsleyes.recentFiles', None)
+
+        if recent is None: recent = []
+        else:              recent = recent.split(op.pathsep)
+
+        return recent
+
+
+recentPathManager = RecentPathManager()
+"""A :class:`RecentPathManager` instance which gets updated by the
+:func:`loadOverlays` function whenever a new path is loaded. Register
+as a listener on this instance if you want to be notified of changes
+to the recent paths list.
+"""

@@ -444,6 +444,7 @@ labels = TypeDict({
 
     'FSLeyesFrame.noOverlays'             : 'No overlays loaded',
     'FSLeyesFrame.noName'                 : '<unnamed>',
+    'FSLeyesFrame.recentPathsMenu'        : 'Recent files',
 
     'LocationPanel.worldLocation'         : 'Coordinates: ',
     'LocationPanel.worldLocation.unknown' : 'Unknown',

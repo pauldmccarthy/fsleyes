@@ -22,6 +22,7 @@ import fsl.utils.status                   as status
 from   fsl.utils.platform import platform as fslplatform
 
 import fsleyes.strings                    as strings
+import fsleyes.autodisplay                as autodisplay
 import fsleyes.profiles.shortcuts         as shortcuts
 
 from . import actions
@@ -234,8 +235,17 @@ class FSLeyesFrame(wx.Frame):
         self.__viewPanelIDs    = {}
         self.__viewPanelTitles = {}
 
-        self.__menuBar   = None
-        self.__perspMenu = None
+        # Refs to menus
+        self.__menuBar        = None
+        self.__perspMenu      = None
+        self.__recentPathMenu = None
+
+        # The recent paths manager notifies us when
+        # they change. See the __makeFileMenu and
+        # __makeRecentPathsMenu methods
+        import fsleyes.actions.loadoverlay as loadoverlay
+        loadoverlay.recentPathManager.register(
+            'FSLeyesFrame', self.__makeRecentPathsMenu)
 
         # This dictionary contains mappings of the form
         #
@@ -1262,8 +1272,69 @@ class FSLeyesFrame(wx.Frame):
             menuItem  = menu.Append(wx.ID_ANY, title)
             actionObj = action(self.__overlayList, self.__displayCtx, self)
 
-            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem) 
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
+        # The last option in the file
+        # menu is a 'Recent files' list.
+        # The list gets populated when
+        # it is clicked.
+        self.__recentPathsMenu = wx.Menu()
+        menu.AppendSubMenu(self.__recentPathsMenu,
+                           strings.labels[self, 'recentPathsMenu'])
+        self.__makeRecentPathsMenu()
+
+
+    def __makeRecentPathsMenu(self, *a):
+        """Populates the "File -> Recent files" menu. This method is called
+        by the :meth:`__makeFileMenu`, and also by the
+        :class:`.RecentPathManager` when paths are added.
+        """
+
+        import fsleyes.actions.loadoverlay as loadoverlay
+
+        for path in self.__recentPathsMenu.GetMenuItems():
+            self.__recentPathsMenu.RemoveItem(path)
+
+        paths = loadoverlay.recentPathManager.listRecentPaths()
+
+        # We give each recent file menu item an identifying
+        # number from 1-(numpaths) - this is used by the
+        # __onRecentPath handler.
+        for i, p in enumerate(paths, start=1):
+            menuItem = self.__recentPathsMenu.Append(i, p)
+            self.Bind(wx.EVT_MENU, self.__onRecentPath, menuItem)
+            
+
+    def __onRecentPath(self, ev):
+        """Called when a recent path is selected from the
+        "File -> Recent files" menu item. Loads the path.
+        See the :meth:`__makeRecentPathsMenu` method.
+        """
+
+        import fsleyes.actions.loadoverlay as loadoverlay
+        
+        path = self.__recentPathsMenu.GetLabel(ev.GetId())
+
+        def onLoad(overlays):
+            
+            if len(overlays) == 0:
+                return
+
+            self.__overlayList.extend(overlays)
+        
+            self.__displayCtx.selectedOverlay = \
+                self.__displayCtx.overlayOrder[-1]
+
+            if self.__displayCtx.autoDisplay:
+                for overlay in overlays:
+                    autodisplay.autoDisplay(overlay,
+                                            self.__overlayList,
+                                            self.__displayCtx)
+        
+        loadoverlay.loadOverlays([path],
+                                 onLoad=onLoad,
+                                 inmem=self.__displayCtx.loadInMemory)
+        
 
     def __makeViewPanelMenu(self, menu):
         """Called by :meth:`__makeMenuBar`. Creates the view panel menu. """
