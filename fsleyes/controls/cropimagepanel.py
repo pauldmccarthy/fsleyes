@@ -13,6 +13,7 @@ import props
 import fsl.utils.async             as async
 import fsl.data.image              as fslimage
 import fsleyes.panel               as fslpanel
+import fsleyes.displaycontext      as displaycontext
 import fsleyes.strings             as strings
 import fsleyes.actions.copyoverlay as copyoverlay
 
@@ -155,8 +156,12 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         if self.__overlay is None:
             return
 
-        display = self.getDisplayContext().getDisplay(self.__overlay)
-        display.removeListener('name', self._name)
+        try:
+            display = self.getDisplayContext().getDisplay(self.__overlay)
+            display.removeListener('name', self._name)
+            
+        except displaycontext.InvalidOverlayError:
+            pass
 
         self.__cropLabel.SetLabel(strings.labels[self, 'image.noImage'])
 

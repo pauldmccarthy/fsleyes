@@ -16,12 +16,13 @@ import numpy as np
 
 import props
 
-import pwidgets.floatslider as fslider
-import fsl.data.image       as fslimage
-import fsl.utils.async      as async
-import fsl.utils.transform  as transform
-import fsleyes.panel        as fslpanel
-import fsleyes.strings      as strings
+import pwidgets.floatslider   as fslider
+import fsl.data.image         as fslimage
+import fsl.utils.async        as async
+import fsl.utils.transform    as transform
+import fsleyes.panel          as fslpanel
+import fsleyes.displaycontext as displaycontext
+import fsleyes.strings        as strings
 
 
 class EditTransformPanel(fslpanel.FSLeyesPanel):
@@ -257,8 +258,15 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
 
         self.__overlayName.SetLabel(strings.labels[self, 'noOverlay'])
 
-        display = self.getDisplayContext().getDisplay(overlay)
-        display.removeListener('name', self._name)
+        # Catch errors in case the
+        # overlay has been removed
+        # from the list
+        try:
+            display = self.getDisplayContext().getDisplay(overlay)
+            display.removeListener('name', self._name)
+            
+        except displaycontext.InvalidOverlayError:
+            pass
 
 
     def __overlayNameChanged(self, *a):
