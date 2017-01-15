@@ -1170,6 +1170,8 @@ about = {
     'glVersion'  : 'OpenGL version: {}',
     'glCompat'   : 'OpenGL compatibility: {}',
     'glRenderer' : 'OpenGL renderer: {}',
+    'fslVersion' : 'FSL version: {}',
+    'fslPath'    : 'FSL directory: {}',
     'software'   : textwrap.dedent(
     """
     FSLeyes was developed at the FMRIB Centre, Nuffield Department of Clinical Neurosciences, Oxford University, United Kingdom.

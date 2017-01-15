@@ -76,6 +76,8 @@ class AboutDialog(wx.Dialog):
 
         verStr    = strings.about['version']   .format(verStr)
         vcsVerStr = strings.about['vcsVersion'].format(vcsVerStr)
+        fslVer    = strings.about['fslVersion'].format(fslplatform.fslVersion)
+        fslDir    = strings.about['fslPath']   .format(fslplatform.fsldir)
         glVerStr  = strings.about['glVersion'] .format(glVerStr)
         glCompat  = strings.about['glCompat']  .format(fslplatform.glVersion)
         glRenStr  = strings.about['glRenderer'].format(glRenStr)
@@ -100,6 +102,8 @@ class AboutDialog(wx.Dialog):
                              strings.about['author'],
                              strings.about['email'],
                              vcsVerStr,
+                             fslVer,
+                             fslDir,
                              glVerStr,
                              glCompat,
                              glRenStr))
