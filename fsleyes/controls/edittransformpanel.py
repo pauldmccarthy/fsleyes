@@ -433,8 +433,13 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         self.__cachedXforms = {}
         
         for overlay in reset:
-            opts = self.getDisplayContext().getOpts(overlay)
-            opts.displayXform = np.eye(4)
+            try:
+                opts = self.getDisplayContext().getOpts(overlay)
+                opts.displayXform = np.eye(4)
+
+            # In cas overlay has been removed
+            except displaycontext.InvalidOverlayError:
+                pass
 
         
     def __onReset(self, ev=None):

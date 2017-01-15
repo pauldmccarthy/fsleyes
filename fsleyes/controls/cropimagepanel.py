@@ -52,13 +52,16 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
             showLimits=False,
             labels=['xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax'])
 
-        self.__cropLabel    = wx.StaticText(self)
-        self.__sizeLabel    = wx.StaticText(self)
-        self.__cropButton   = wx.Button(    self, id=wx.ID_OK)
-        self.__cancelButton = wx.Button(    self, id=wx.ID_CANCEL)
+        self.__cropLabel       = wx.StaticText(self)
+        self.__sizeLabel       = wx.StaticText(self)
+        self.__cropButton      = wx.Button(    self, id=wx.ID_OK)
+        self.__robustFovButton = wx.Button(    self)
+        self.__cancelButton    = wx.Button(    self, id=wx.ID_CANCEL)
 
-        self.__cropButton  .SetLabel(strings.labels[self, 'cropButton'])
-        self.__cancelButton.SetLabel(strings.labels[self, 'cancelButton'])
+        self.__cropButton     .SetLabel(strings.labels[self, 'cropButton'])
+        self.__robustFovButton.SetLabel(strings.labels[self,
+                                                       'robustFovButton'])
+        self.__cancelButton   .SetLabel(strings.labels[self, 'cancelButton'])
 
         self.__sizer    = wx.BoxSizer(wx.VERTICAL)
         self.__btnSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -73,11 +76,15 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         self.__sizer.Add(self.__btnSizer,      flag=wx.CENTRE)
         self.__sizer.Add((1, 10))
 
-        self.__btnSizer.Add((10, 1),             flag=wx.EXPAND, proportion=1)
-        self.__btnSizer.Add(self.__cropButton,   flag=wx.EXPAND)
-        self.__btnSizer.Add((10, 1),             flag=wx.EXPAND)
-        self.__btnSizer.Add(self.__cancelButton, flag=wx.EXPAND)
-        self.__btnSizer.Add((10, 1),             flag=wx.EXPAND, proportion=1)
+        self.__btnSizer.Add((10, 1),                flag=wx.EXPAND,
+                            proportion=1)
+        self.__btnSizer.Add(self.__cropButton,      flag=wx.EXPAND)
+        self.__btnSizer.Add((10, 1),                flag=wx.EXPAND)
+        self.__btnSizer.Add(self.__robustFovButton, flag=wx.EXPAND)
+        self.__btnSizer.Add((10, 1),                flag=wx.EXPAND) 
+        self.__btnSizer.Add(self.__cancelButton,    flag=wx.EXPAND)
+        self.__btnSizer.Add((10, 1),                flag=wx.EXPAND,
+                            proportion=1)
 
         self.SetSizer(self.__sizer)
         self.SetMinSize(self.__sizer.GetMinSize())
@@ -85,6 +92,10 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
 
         self.__cropButton  .Bind(wx.EVT_BUTTON, self.__onCrop)
         self.__cancelButton.Bind(wx.EVT_BUTTON, self.__onCancel)
+
+        profile.robustfov.bindToWidget(self,
+                                       wx.EVT_BUTTON,
+                                       self.__robustFovButton)
 
         displayCtx .addListener('selectedOverlay',
                                 self._name,

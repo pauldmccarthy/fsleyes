@@ -9,17 +9,25 @@
 """ 
 
 
+import logging
+
 import wx
 
 import numpy as np
 
 import props
 
-import fsl.data.image         as fslimage
-import fsl.utils.dialog       as fsldlg
-import fsleyes.strings        as strings
-import fsleyes.gl.annotations as annotations
-from . import                    orthoviewprofile
+import fsl.data.image                     as fslimage
+import fsl.utils.dialog                   as fsldlg
+import fsl.utils.callfsl                  as callfsl
+from   fsl.utils.platform import platform as fslplatform
+import fsleyes.strings                    as strings
+import fsleyes.actions                    as actions
+import fsleyes.gl.annotations             as annotations
+from . import                                orthoviewprofile
+
+
+log = logging.getLogger(__name__)
 
 
 _suppressOverlayChangeWarning = False
@@ -149,6 +157,8 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         self.__ycanvas.getAnnotations().obj(self.__yrect, hold=True)
         self.__zcanvas.getAnnotations().obj(self.__zrect, hold=True)
 
+        self.robustfov.enabled = fslplatform.fsldir is not None
+
         self.__selectedOverlayChanged()
 
 
@@ -168,6 +178,36 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         orthoviewprofile.OrthoViewProfile.destroy(self)
 
 
+    @actions.action
+    def robustfov(self):
+        """Call ``robustfov`` for the current overlay and set the
+        :attr:`cropBox` based on the result.
+        """
+
+        if self.__overlay is None:
+            return
+
+        try:
+            result = callfsl.callFSL(
+                'robustfov', '-i', self.__overlay.dataSource)
+
+            # robustfov returns two lines, the last 
+            # of which contains the limits, as:
+            # 
+            #    xmin xlen ymin ylen zmin zlen
+            limits = list(result.strip().split('\n')[-1].split())
+            limits = [float(l) for l in limits]
+            
+            # Convert the lens to maxes
+            limits[1]      += limits[0]
+            limits[3]      += limits[2]
+            limits[5]      += limits[4]
+            self.cropBox[:] = limits
+            
+        except Exception as e:
+            log.warning('Call to robustfov failed: {}'.format(str(e)))
+
+
     def __deregisterOverlay(self):
         """Called by :meth:`__selectedOverlayChanged`. Clears references
         associated with the previously selected overlay, if necessary.
@@ -176,8 +216,7 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         if self.__overlay is None:
             return
 
-        # TODO put current crop in crop cache
-        
+        self.__cachedCrops[self.__overlay] = list(self.cropBox)
         self.__overlay = None
 
         
@@ -246,11 +285,11 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
             
             self._displayCtx.displaySpace = overlay
 
-        crop = self.__cachedCrops.get(overlay, None)
+        shape = overlay.shape[:3]
+        crop  = self.__cachedCrops.get(overlay, None)
 
         if crop is None:
-            shape = overlay.shape[:3]
-            crop  = [0, shape[0], 0, shape[1], 0, shape[2]]
+            crop = [0, shape[0], 0, shape[1], 0, shape[2]]
 
         with props.suppress(self, 'cropBox', notify=True):
             self.cropBox.xmin = 0
