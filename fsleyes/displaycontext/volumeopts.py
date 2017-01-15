@@ -365,7 +365,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         voxToPixdimMat  = np.diag(list(image.pixdim[:3]) + [1.0])
         voxToPixFlipMat = np.array(voxToPixdimMat)
         voxToAffineMat  = image.voxToWorldMat
-        voxToAffineMat  = transform.concat(voxToAffineMat, self.displayXform)
+        voxToAffineMat  = transform.concat(self.displayXform, voxToAffineMat)
         voxToCustomMat  = self.customXform
 
         # When going from voxels to textures,

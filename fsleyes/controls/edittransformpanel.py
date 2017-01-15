@@ -39,9 +39,12 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
     attribute.
 
     
-    .. note:: The :attr:`.DisplayContext.displaySpace` attribute must be
-              set to ``'world'`` for the :attr:`.NiftiOpts.displayXform`
-              updates to be seen immediately.
+    .. note:: The transformation that the user defines with this panel is
+              applied to the image coordinates after its voxel-to-world
+              transformation has been applied. Furthermore, the
+              :attr:`.DisplayContext.displaySpace` attribute must be set to
+              ``'world'`` for the :attr:`.NiftiOpts.displayXform` updates to
+              be seen immediately.
     """
 
 
@@ -364,8 +367,12 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
 
         rotations = [r * np.pi / 180 for r in rotations]
 
-        shape     = self.__overlay.shape[:3]
-        origin    = [sc * sh / 2.0 for sc, sh in zip(scales, shape)]
+        # We need to figure out the centre
+        # of the image in world coordinates
+        # to define the origin of rotation.
+        shape  = self.__overlay.shape
+        lo, hi = transform.axisBounds(shape, self.__overlay.voxToWorldMat)
+        origin = [l + (h - l) / 2.0 for h, l in zip(hi, lo)]
 
         return transform.compose(scales, offsets, rotations, origin)
 
