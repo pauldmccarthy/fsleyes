@@ -144,6 +144,8 @@ def promptForFlirtFiles(parent, overlay, overlayList, displayCtx):
 
     if overlay.dataSource is not None:
         matFile, refFile = guessFlirtFiles(overlay.dataSource)
+    else:
+        matFile, refFile = None, None
 
     dlg = FlirtFileDialog(parent, overlay.name, matFile, refFile)
         
