@@ -115,6 +115,7 @@ are also defined in this package:
     ~fsleyes.actions.importdataseries
     ~fsleyes.actions.exportdataseries
     ~fsleyes.actions.correlate
+    ~fsleyes.actions.applyflirtxfm
 """
 
 
@@ -149,6 +150,7 @@ from . import about
 from . import importdataseries
 from . import exportdataseries
 from . import correlate
+from . import applyflirtxfm
 
 
 Action                   = action            .Action
@@ -175,6 +177,7 @@ ImportDataSeriesAction   = importdataseries  .ImportDataSeriesAction
 ExportDataSeriesAction   = exportdataseries  .ExportDataSeriesAction
 PearsonCorrelateAction   = correlate         .PearsonCorrelateAction
 PCACorrelateAction       = correlate         .PCACorrelateAction
+ApplyFlirtXfmAction      = applyflirtxfm     .ApplyFlirtXfmAction
 
 
 log = logging.getLogger(__name__)

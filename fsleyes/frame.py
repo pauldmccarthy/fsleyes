@@ -1435,8 +1435,9 @@ class FSLeyesFrame(wx.Frame):
                        actions.ReloadOverlayAction,
                        actions.RemoveOverlayAction,
                        'toggleOverlayVisibility',
-                       actions.PearsonCorrelateAction]
-        # actions.PCACorrelateAction]
+                       'sep',
+                       actions.PearsonCorrelateAction,
+                       actions.ApplyFlirtXfmAction]
 
         for action in fileActions:
 

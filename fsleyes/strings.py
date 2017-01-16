@@ -240,6 +240,9 @@ messages = TypeDict({
 
     'CorrelateAction.calculating' :
     'Calculating correlation values for seed voxel [{}, {}, {}] ...',
+
+    'FlirtFileDialog.matFile'    : 'Select FLIRT transformation matrix file',
+    'FlirtFileDialog.refFile'    : 'Select FLIRT reference image', 
 })
 
 
@@ -362,6 +365,7 @@ actions = TypeDict({
     'RunScriptAction'          : 'Run script',
     'AboutAction'              : 'About FSLeyes',
     'PearsonCorrelateAction'   : 'Seed correlation (Pearson)',
+    'ApplyFlirtXfmAction'      : 'Load FLIRT transformation',
     'PCACorrelateAction'       : 'Seed correlation (PCA)',
 
     'FSLeyesFrame.removeFocusedViewPanel'  : 'Close',
@@ -631,14 +635,27 @@ labels = TypeDict({
     
     'EditTransformPanel.noOverlay'   : 'Select a NIFTI image',
     'EditTransformPanel.overlayName' : 'Transform {}',
-    'EditTransformPanel.oldXform'    : 'Current transform',
+    'EditTransformPanel.oldXform'    : 'Original transform',
     'EditTransformPanel.newXform'    : 'New transform',
     'EditTransformPanel.scale'       : 'Scale',
     'EditTransformPanel.offset'      : 'Translate',
     'EditTransformPanel.rotate'      : 'Rotate',
     'EditTransformPanel.apply'       : 'Apply',
     'EditTransformPanel.reset'       : 'Reset',
+    'EditTransformPanel.loadFlirt'   : 'Load FLIRT transform',
     'EditTransformPanel.cancel'      : 'Close',
+
+
+    'FlirtFileDialog.message' :
+    'Select a FLIRT transformation matrix\n'
+    'and the corresponding reference image',
+
+    'FlirtFileDialog.source'     : 'Source image: {}',
+    'FlirtFileDialog.matFile'    : 'Matrix file',
+    'FlirtFileDialog.refFile'    : 'Reference image',
+    'FlirtFileDialog.selectFile' : 'Choose',
+    'FlirtFileDialog.ok'         : 'Ok',
+    'FlirtFileDialog.cancel'     : 'Cancel',
 })
 
 
