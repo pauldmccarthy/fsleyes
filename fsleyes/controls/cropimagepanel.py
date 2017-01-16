@@ -10,6 +10,8 @@ import wx
 
 import props
 
+import pwidgets.rangeslider        as rslider
+
 import fsl.utils.async             as async
 import fsl.data.image              as fslimage
 import fsleyes.panel               as fslpanel
@@ -52,6 +54,15 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
             showLimits=False,
             labels=['xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax'])
 
+        self.__volumeWidget = rslider.RangeSliderSpinPanel(
+            self,
+            minValue=0,
+            maxValue=1,
+            minDistance=1,
+            lowLabel='tmin',
+            highLabel='tmax',
+            style=rslider.RSSP_INTEGER)
+
         self.__cropLabel       = wx.StaticText(self)
         self.__sizeLabel       = wx.StaticText(self)
         self.__cropButton      = wx.Button(    self, id=wx.ID_OK)
@@ -70,7 +81,8 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         self.__sizer.Add(self.__cropLabel,     flag=wx.CENTRE, proportion=1)
         self.__sizer.Add((1, 10))
         self.__sizer.Add(self.__cropBoxWidget, flag=wx.EXPAND)
-        self.__sizer.Add((1, 10))
+        self.__sizer.Add(self.__volumeWidget,  flag=wx.EXPAND)
+        self.__sizer.Add((1, 10)) 
         self.__sizer.Add(self.__sizeLabel,     flag=wx.CENTRE, proportion=1)
         self.__sizer.Add((1, 10))
         self.__sizer.Add(self.__btnSizer,      flag=wx.CENTRE)
@@ -90,8 +102,11 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         self.SetMinSize(self.__sizer.GetMinSize())
         self.__cropButton.SetDefault()
 
-        self.__cropButton  .Bind(wx.EVT_BUTTON, self.__onCrop)
-        self.__cancelButton.Bind(wx.EVT_BUTTON, self.__onCancel)
+        self.__cropButton  .Bind(wx.EVT_BUTTON,          self.__onCrop)
+        self.__cancelButton.Bind(wx.EVT_BUTTON,          self.__onCancel)
+        self.__volumeWidget.Bind(rslider.EVT_RANGE,      self.__onVolume)
+        self.__volumeWidget.Bind(rslider.EVT_LOW_RANGE,  self.__onVolume)
+        self.__volumeWidget.Bind(rslider.EVT_HIGH_RANGE, self.__onVolume)
 
         profile.robustfov.bindToWidget(self,
                                        wx.EVT_BUTTON,
@@ -130,22 +145,6 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         fslpanel.FSLeyesPanel.destroy(self)
 
 
-    def __cropBoxChanged(self, *a):
-        """Called when the :attr:`.OrthoCropProfile.cropBox` changes.
-        Updates labels appropriately.
-        """
-
-        profile = self.__profile
-        xlen    = profile.cropBox.xlen
-        ylen    = profile.cropBox.ylen
-        zlen    = profile.cropBox.zlen
-        
-        label   = strings.labels[self, 'cropSize']
-        label   = label.format(xlen, ylen, zlen)
-        
-        self.__sizeLabel.SetLabel(label)
-
-
     def __registerOverlay(self, overlay):
         """Called by :meth:`__selectedOverlayChanged`. Registers the
         given overlay.
@@ -154,6 +153,14 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         self.__overlay = overlay
 
         display = self.getDisplayContext().getDisplay(overlay)
+
+        is4D = len(overlay.shape) == 4 and overlay.shape[3] > 1
+
+        if is4D:
+            self.__volumeWidget.SetLimits(0, overlay.shape[3])
+            self.__volumeWidget.SetRange( 0, overlay.shape[3])
+
+        self.__volumeWidget.Enable(is4D)
 
         display.addListener('name', self._name, self.__overlayNameChanged)
         self.__overlayNameChanged()
@@ -209,6 +216,45 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
             self.Enable()
             self.__registerOverlay(overlay)
 
+
+    def __updateSizeLabel(self):
+        """Called by the crop region and volume widget event handlers. Updates
+        a label which displays the current crop region size.
+        """
+
+        overlay = self.__overlay
+        profile = self.__profile
+        is4D    = len(overlay.shape) == 4 and overlay.shape[3] > 1
+        xlen    = profile.cropBox.xlen
+        ylen    = profile.cropBox.ylen
+        zlen    = profile.cropBox.zlen
+        tlo     = self.__volumeWidget.GetLow()
+        thi     = self.__volumeWidget.GetHigh()
+        tlen    = thi - tlo
+
+        if is4D:
+            label = strings.labels[self, 'cropSize4d']
+            label = label.format(xlen, ylen, zlen, tlen)
+        else:
+            label = strings.labels[self, 'cropSize3d']
+            label = label.format(xlen, ylen, zlen)
+        
+        self.__sizeLabel.SetLabel(label) 
+
+
+    def __cropBoxChanged(self, *a):
+        """Called when the :attr:`.OrthoCropProfile.cropBox` changes.
+        Updates labels appropriately.
+        """
+        self.__updateSizeLabel()
+
+
+    def __onVolume(self, ev):
+        """Called when the user changes the volume limit, for 4D images.
+        Updates the label which displays the crop region size.
+        """
+        self.__updateSizeLabel()
+
     
     def __onCancel(self, ev=None):
         """Called when the Cancel button is pushed. Calls
@@ -234,12 +280,16 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         overlayList = self.getOverlayList()
         displayCtx  = self.getDisplayContext()
         overlay     = displayCtx.getSelectedOverlay()
+        is4D        = len(overlay.shape) == 4 and overlay.shape[3] > 1
         display     = displayCtx.getDisplay(overlay)
         name        = '{}_roi'.format(display.name)
         cropBox     = self.__profile.cropBox
         roi         = [cropBox.x,
                        cropBox.y,
                        cropBox.z]
+
+        if is4D:
+            roi.append(self.__volumeWidget.GetRange())
 
         copyoverlay.copyImage(
             overlayList,

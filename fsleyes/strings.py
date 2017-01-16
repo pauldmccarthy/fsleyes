@@ -618,7 +618,10 @@ labels = TypeDict({
     'OrthoEditSettingsPanel.general' : 'General settings',
     'OrthoEditSettingsPanel.selint'  : 'Select by intensity settings',
 
-    'CropImagePanel.cropSize'         : 'Cropped shape: {:3d}, {:3d}, {:3d}',
+    'CropImagePanel.cropSize3d'       :
+    'Cropped shape: {:3d}, {:3d}, {:3d}',
+    'CropImagePanel.cropSize4d'       :
+    'Cropped shape: {:3d}, {:3d}, {:3d}, {:3d}',
     'CropImagePanel.cropSize.noImage' : 'Croppsed shape: n/a',
     'CropImagePanel.image'            : 'Crop {}',
     'CropImagePanel.image.noImage'    : 'Choose a NIFTI image',
