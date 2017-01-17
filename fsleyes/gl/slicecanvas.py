@@ -1288,34 +1288,12 @@ class SliceCanvas(props.HasProperties):
         self.displayBounds[:] = (xmin, xmax, ymin, ymax)
 
         
-    def _setViewport(self,
-                     xmin=None,
-                     xmax=None,
-                     ymin=None,
-                     ymax=None,
-                     zmin=None,
-                     zmax=None,
-                     size=None,
-                     invertX=None,
-                     invertY=None):
+    def _setViewport(self, invertX=None, invertY=None):
         """Sets up the GL canvas size, viewport, and projection.
 
-        
-        If any of the min/max parameters are not provided, they are
-        taken from the :attr:`displayBounds` (x/y), and the 
-        :attr:`DisplayContext.bounds` (z).
-
-        
-        :arg xmin:    Minimum x (horizontal) location
-        :arg xmax:    Maximum x location
-        :arg ymin:    Minimum y (vertical) location
-        :arg ymax:    Maximum y location
-        :arg zmin:    Minimum z (depth) location
-        :arg zmax:    Maximum z location
-        :arg size:    Canvas size. If not provided, taken from
-                      :meth:`_getSize`.
         :arg invertX: Invert the X axis. If not provided, taken from
                       :attr:`invertX`.
+        
         :arg invertY: Invert the Y axis. If not provided, taken from 
                       :attr:`invertY`. 
 
@@ -1325,17 +1303,17 @@ class SliceCanvas(props.HasProperties):
                   the orientation of this ``SliceCanvas``.
         """
 
-        xax = self.xax
-        yax = self.yax
-        zax = self.zax
+        xax  = self.xax
+        yax  = self.yax
+        zax  = self.zax
+        xmin = self.displayBounds.xlo
+        xmax = self.displayBounds.xhi
+        ymin = self.displayBounds.ylo
+        ymax = self.displayBounds.yhi
+        zmin = self.displayCtx.bounds.getLo(zax)
+        zmax = self.displayCtx.bounds.getHi(zax)
+        size = self._getSize()
         
-        if xmin    is None: xmin    = self.displayBounds.xlo
-        if xmax    is None: xmax    = self.displayBounds.xhi
-        if ymin    is None: ymin    = self.displayBounds.ylo
-        if ymax    is None: ymax    = self.displayBounds.yhi
-        if zmin    is None: zmin    = self.displayCtx.bounds.getLo(zax)
-        if zmax    is None: zmax    = self.displayCtx.bounds.getHi(zax)
-        if size    is None: size    = self._getSize()
         if invertX is None: invertX = self.invertX
         if invertY is None: invertY = self.invertY
             

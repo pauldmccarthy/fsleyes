@@ -1941,6 +1941,31 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
 
     def apply():
 
+
+        # Load standard underlays first,
+        # as they will affect the display
+        # space/location stuff below.
+        fsldir = fslplatform.fsldir
+        if any((args.standard, args.standard1mm)) and fsldir is None:
+            log.warning('$FSLDIR not set: -std/-std1mm '
+                        'arguments will be ignored')
+        
+        if args.standard and fslplatform.fsldir is not None:
+            filename = op.join(fslplatform.fsldir,
+                               'data',
+                               'standard',
+                               'MNI152_T1_2mm')
+            std = fslimage.Image(filename)
+            overlayList.insert(0, std)
+        
+        if args.standard1mm and fslplatform.fsldir is not None:
+            filename = op.join(fslplatform.fsldir,
+                               'data',
+                               'standard',
+                               'MNI152_T1_1mm')
+            std = fslimage.Image(filename)
+            overlayList.insert(0, std) 
+
         # First apply all command line options
         # related to the display context...
 
@@ -2001,28 +2026,6 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
                     displayLoc = defaultLoc
 
             displayCtx.location.xyz = displayLoc
-
-        # Standard underlays
-        fsldir = fslplatform.fsldir
-        if any((args.standard, args.standard1mm)) and fsldir is None:
-            log.warning('$FSLDIR not set: -std/-std1mm '
-                        'arguments will be ignored')
-        
-        if args.standard and fslplatform.fsldir is not None:
-            filename = op.join(fslplatform.fsldir,
-                               'data',
-                               'standard',
-                               'MNI152_T1_2mm')
-            std = fslimage.Image(filename)
-            overlayList.insert(0, std)
-        
-        if args.standard1mm and fslplatform.fsldir is not None:
-            filename = op.join(fslplatform.fsldir,
-                               'data',
-                               'standard',
-                               'MNI152_T1_1mm')
-            std = fslimage.Image(filename)
-            overlayList.insert(0, std) 
 
         # Now, apply arguments to the SceneOpts instance
         _applyArgs(args, sceneOpts)
