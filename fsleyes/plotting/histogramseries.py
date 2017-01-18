@@ -209,25 +209,22 @@ class HistogramSeries(dataseries.DataSeries):
 
         def init():
 
-            data  = self.overlay[:]
-
+            data    = self.overlay[:]
             finData = data[np.isfinite(data)]
+            nzData  = finData[finData != 0]
+ 
             dmin    = finData.min()
             dmax    = finData.max()
             dist    = (dmax - dmin) / 10000.0
-
-            nzData = finData[finData != 0]
-            nzmin  = nzData.min()
-            nzmax  = nzData.max()
 
             with props.suppress(self, 'showOverlayRange'), \
                  props.suppress(self, 'dataRange'), \
                  props.suppress(self, 'nbins'):
 
                 self.dataRange.xmin = dmin
-                self.dataRange.xmax = dmax  + dist
-                self.dataRange.xlo  = nzmin
-                self.dataRange.xhi  = nzmax + dist
+                self.dataRange.xmax = dmax + dist
+                self.dataRange.xlo  = dmin
+                self.dataRange.xhi  = dmax + dist
                 
                 self.nbins = self.__autoBin(nzData, self.dataRange.x)
 
@@ -342,7 +339,7 @@ class HistogramSeries(dataseries.DataSeries):
         status.update('Calculating histogram for '
                       'overlay {}'.format(self.overlay.name))
 
-        if self.dataRange.xhi - self.dataRange.xlo < 0.00000001:
+        if np.isclose(self.dataRange.xhi, self.dataRange.xlo):
             self.__xdata = np.array([])
             self.__ydata = np.array([])
             self.__nvals = 0
