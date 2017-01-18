@@ -14,6 +14,8 @@ import six
 import wx
 import wx.glcanvas as wxgl
 
+import props
+
 from   fsl.utils.platform import platform 
 import fsleyes.gl         as     fslgl
 from   .                  import slicecanvas
@@ -49,8 +51,12 @@ class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
         the canvas is resized, we have to update the display bounds to preserve
         the aspect ratio.
         """
-        self._updateDisplayBounds()
         ev.Skip()
+
+        with props.skip(self, 'displayBounds', self.name):
+            centre = self.getDisplayCentre()
+            self._updateDisplayBounds()
+            self.centreDisplayAt(*centre)
 
 
     def Show(self, show):

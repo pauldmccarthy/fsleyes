@@ -97,6 +97,67 @@ def show2D(xax, yax, width, height, lo, hi, flipx=False, flipy=False):
     elif zax == 1:
         gl.glRotatef(270, 1, 0, 0)
 
+        
+def preserveAspectRatio(width, height, xmin, xmax, ymin, ymax, grow=True):
+    """Adjusts the given x/y limits so that they can be displayed on a
+    display of the given ``width`` and ``height``, while preserving the
+    aspect ratio.
+
+    :arg width:  Display width
+    
+    :arg height: Display height
+    
+    :arg xmin:   Low x limit
+    
+    :arg xmax:   High x limit
+    
+    :arg ymin:   Low y limit
+    
+    :arg ymax:   High y limit
+    
+    :arg grow:   If ``True`` (the default), the x/y limits are expanded to 
+                 preserve the aspect ratio. Otherwise, they are shrunken.
+    """
+
+    xlen = xmax - xmin
+    ylen = ymax - ymin
+
+    if np.any(np.isclose((width, height, xlen, ylen), 0)):
+        return xmin, xmax, ymin, ymax
+
+    # These ratios are used to determine whether
+    # we need to expand the display range to
+    # preserve the image aspect ratio.
+    dispRatio   =        xlen  / ylen
+    canvasRatio = float(width) / height
+
+    # the canvas is too wide - we need
+    # to grow/shrink the display width,
+    # thus effectively shrinking/growing
+    # the display along the horizontal
+    # axis
+    if canvasRatio > dispRatio:
+        newxlen  = width * (ylen / height)
+
+        if grow: offset =  0.5 * (newxlen - xlen)
+        else:    offset = -0.5 * (newxlen - xlen)
+
+        xmin = xmin - offset
+        xmax = xmax + offset
+
+    # the canvas is too high - we need
+    # to expand/shrink the display height
+    elif canvasRatio < dispRatio:
+        newylen  = height * (xlen / width)
+
+        if grow: offset =  0.5 * (newylen - ylen)
+        else:    offset = -0.5 * (newylen - ylen)
+        
+        ymin = ymin - offset
+        ymax = ymax + offset
+
+    return xmin, xmax, ymin, ymax
+
 
 def calculateSamplePoints(shape,
                           resolution,

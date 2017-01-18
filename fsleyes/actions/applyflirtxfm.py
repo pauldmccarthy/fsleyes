@@ -179,7 +179,7 @@ def guessFlirtFiles(path):
     filename  = op.basename(path)
     dirname   = op.dirname( path)
     regDir    = None
-    srcRefMap = []
+    srcRefMap = {}
 
     func2struc = 'example_func2highres.mat'
     struc2std  = 'highres2standard.mat'
