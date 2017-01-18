@@ -996,6 +996,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         for c in [self.__xcanvas, self.__ycanvas, self.__zcanvas]:
             
             sels.append(annotations.VoxelSelection(
+                c.getAnnotations(),
                 c.xax,
                 c.yax,
                 editor.getSelection(),
@@ -1005,7 +1006,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                 colour=self.selectionOverlayColour))
 
             curs.append(annotations.Rect(
-                c.xax, c.yax, (0, 0), 0, 0, **cursorKwargs))
+                c.getAnnotations(),
+                c.xax,
+                c.yax,
+                (0, 0), 0, 0,
+                **cursorKwargs))
 
         self.__xselAnnotation = sels[0]
         self.__yselAnnotation = sels[1]

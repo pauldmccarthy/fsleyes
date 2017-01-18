@@ -29,8 +29,9 @@ following annotation types are defined:
 import logging
 import time
 
-import numpy     as np
-import OpenGL.GL as gl
+import numpy       as np
+import OpenGL.GL   as gl
+import OpenGL.GLUT as glut
 
 import fsleyes.gl.globject  as globject
 import fsleyes.gl.routines  as glroutines
@@ -66,20 +67,24 @@ class Annotations(object):
     """
 
     
-    def __init__(self, xax, yax):
+    def __init__(self, canvas, xax, yax):
         """Creates an :class:`Annotations` object.
 
-        :arg xax: Index of the display coordinate system axis that corresponds
-                  to the horizontal screen axis.
+        :arg canvas: The :class:`.SliceCanvas` that owns this 
+                     ``Annotations`` object.
+ 
+        :arg xax:    Index of the display coordinate system axis that 
+                     corresponds to the horizontal screen axis.
         
-        :arg yax: Index of the display coordinate system axis that corresponds
-                  to the vertical screen axis.
+        :arg yax:    Index of the display coordinate system axis that 
+                     corresponds to the vertical screen axis.
         """
         
-        self.__q     = []
-        self.__holdq = []
-        self.__xax   = xax
-        self.__yax   = yax
+        self.__q      = []
+        self.__holdq  = []
+        self.__xax    = xax
+        self.__yax    = yax
+        self.__canvas = canvas
 
         
     def setAxes(self, xax, yax):
@@ -93,11 +98,25 @@ class Annotations(object):
         for obj in self.__q:     obj.setAxes(xax, yax)
         for obj in self.__holdq: obj.setAxes(xax, yax)
 
+
+    def getDisplayBounds(self):
+        """Returns a tuple containing the ``(xmin, xmax, ymin, ymax)`` display
+        bounds of the ``SliceCanvas`` that owns this ``Annotations`` object.
+        """
+        return self.__canvas.displayBounds
+
+
+    def getCanvasSize(self):
+        """Returns a tuple containing the ``(width, height)``, in pixels, of
+        the ``SliceCanvas`` that owns this ``Annotations`` object.
+        """ 
+        return self.__canvas._getSize()
+
         
     def line(self, *args, **kwargs):
         """Queues a line for drawing - see the :class:`Line` class. """
         hold = kwargs.pop('hold', False)
-        obj  = Line(self.__xax, self.__yax, *args, **kwargs)
+        obj  = Line(self, self.__xax, self.__yax, *args, **kwargs)
         
         return self.obj(obj, hold)
 
@@ -106,7 +125,7 @@ class Annotations(object):
         """Queues a rectangle for drawing - see the :class:`Rectangle` class.
         """
         hold = kwargs.pop('hold', False)
-        obj  = Rect(self.__xax, self.__yax, *args, **kwargs)
+        obj  = Rect(self, self.__xax, self.__yax, *args, **kwargs)
         
         return self.obj(obj, hold)
 
@@ -115,7 +134,7 @@ class Annotations(object):
         """Queues a voxel grid for drawing - see the :class:`VoxelGrid` class.
         """ 
         hold = kwargs.pop('hold', False)
-        obj  = VoxelGrid(self.__xax, self.__yax, *args, **kwargs)
+        obj  = VoxelGrid(self, self.__xax, self.__yax, *args, **kwargs)
         
         return self.obj(obj, hold)
 
@@ -125,7 +144,17 @@ class Annotations(object):
         class.
         """ 
         hold = kwargs.pop('hold', False)
-        obj  = VoxelSelection(self.__xax, self.__yax, *args, **kwargs)
+        obj  = VoxelSelection(self, self.__xax, self.__yax, *args, **kwargs)
+        
+        return self.obj(obj, hold)
+
+
+    def text(self, *args, **kwargs):
+        """Queues a text annotation for drawing - see the :class:`Text`
+        class. 
+        """ 
+        hold = kwargs.pop('hold', False)
+        obj  = Text(self, self.__xax, self.__yax, *args, **kwargs)
         
         return self.obj(obj, hold) 
     
@@ -265,6 +294,7 @@ class AnnotationObject(globject.GLSimpleObject):
     """
     
     def __init__(self,
+                 annot,
                  xax,
                  yax,
                  xform=None,
@@ -276,9 +306,12 @@ class AnnotationObject(globject.GLSimpleObject):
                  zmax=None):
         """Create an ``AnnotationObject``.
 
+        :arg annot:   The :class:`Annotations` object that created this 
+                      ``AnnotationObject``.
+
         :arg xax:     Initial display X axis
 
-        :arg yax:     Initial display Y axis        
+        :arg yax:     Initial display Y axis
 
         :arg xform:   Transformation matrix which will be applied to all
                       vertex coordinates.
@@ -298,7 +331,8 @@ class AnnotationObject(globject.GLSimpleObject):
                       be drawn. 
         """
         globject.GLSimpleObject.__init__(self, xax, yax)
-        
+
+        self.annot    = annot
         self.colour   = colour
         self.enabled  = enabled
         self.width    = width
@@ -344,26 +378,28 @@ class Line(AnnotationObject):
     2D line.
     """
 
-    def __init__(self, xax, yax, xy1, xy2, *args, **kwargs):
+    def __init__(self, annot, xax, yax, xy1, xy2, *args, **kwargs):
         """Create a ``Line`` annotation.
 
         The ``xy1`` and ``xy2`` coordinate tuples should be in relation to the
         axes which map to the horizontal/vertical screen axes on the target
         canvas.
 
-        :arg xax: Initial display X axis
+        :arg annot: The :class:`Annotations` object that owns this ``Line``.
 
-        :arg yax: Initial display Y axis        
+        :arg xax:   Initial display X axis
 
-        :arg xy1: Tuple containing the (x, y) coordinates of one endpoint.
+        :arg yax:   Initial display Y axis        
+
+        :arg xy1:   Tuple containing the (x, y) coordinates of one endpoint.
         
-        :arg xy2: Tuple containing the (x, y) coordinates of the second
-                  endpoint.
+        :arg xy2:   Tuple containing the (x, y) coordinates of the second
+                    endpoint.
 
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.
         """
-        AnnotationObject.__init__(self, xax, yax, *args, **kwargs)
+        AnnotationObject.__init__(self, annot, xax, yax, *args, **kwargs)
         self.xy1 = xy1
         self.xy2 = xy2
 
@@ -390,6 +426,7 @@ class Rect(AnnotationObject):
     """
 
     def __init__(self,
+                 annot,
                  xax,
                  yax,
                  xy,
@@ -400,6 +437,9 @@ class Rect(AnnotationObject):
                  *args,
                  **kwargs):
         """Create a :class:`Rect` annotation.
+
+        :arg annot:      The :class:`Annotations` object that owns this
+                         ``Rect``.
 
         :arg xax:        Initial display X axis
 
@@ -422,7 +462,7 @@ class Rect(AnnotationObject):
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.        
         """
-        AnnotationObject.__init__(self, xax, yax, *args, **kwargs)
+        AnnotationObject.__init__(self, annot, xax, yax, *args, **kwargs)
         
         self.xy         = xy
         self.w          = w
@@ -512,6 +552,7 @@ class VoxelGrid(AnnotationObject):
 
     
     def __init__(self,
+                 annot, 
                  xax,
                  yax,
                  selectMask,
@@ -521,6 +562,9 @@ class VoxelGrid(AnnotationObject):
                  *args,
                  **kwargs):
         """Create a ``VoxelGrid`` annotation.
+
+        :arg annot:           The :class:`Annotations` object that owns this
+                              ``VoxelGrid``.
 
         :arg xax:             Initial display X axis
 
@@ -550,7 +594,7 @@ class VoxelGrid(AnnotationObject):
         """
         
         kwargs['xform'] = voxToDisplayMat
-        AnnotationObject.__init__(self, xax, yax, *args, **kwargs)
+        AnnotationObject.__init__(self, annot, xax, yax, *args, **kwargs)
         
         if offsets is None:
             offsets = [0, 0, 0]
@@ -600,6 +644,7 @@ class VoxelSelection(AnnotationObject):
 
     
     def __init__(self,
+                 annot,
                  xax,
                  yax,
                  selection,
@@ -610,6 +655,9 @@ class VoxelSelection(AnnotationObject):
                  *args,
                  **kwargs):
         """Create a ``VoxelSelection`` annotation.
+
+        :arg annot:           The :class:`Annotations` object that owns this
+                              ``VoxelSelection``.
 
         :arg xax:             Initial display X axis
 
@@ -642,7 +690,7 @@ class VoxelSelection(AnnotationObject):
         :meth:`AnnotationObject.__init__` method.
         """
         
-        AnnotationObject.__init__(self, xax, yax, *args, **kwargs)
+        AnnotationObject.__init__(self, annot, xax, yax, *args, **kwargs)
 
         if offsets is None:
             offsets = [0, 0, 0]
@@ -703,3 +751,66 @@ class VoxelSelection(AnnotationObject):
         gl.glDisable(gl.GL_TEXTURE_3D)
 
         self.texture.unbindTexture()
+
+
+class Text(AnnotationObject):
+    """A ``Text`` is an :class:`AnnotationObject` which draws a string of
+    text on the display.
+    """
+
+    
+    def __init__(self,
+                 annot,
+                 xax,
+                 yax,
+                 text,
+                 xpos,
+                 ypos,
+                 fontsize=10,
+                 *args,
+                 **kwargs):
+        """Create a ``Text`` annotation.
+
+        :arg annot:    The :class:`Annotations` object that owns this
+                       `Text``.
+
+        :arg xax:      Initial display X axis.
+
+        :arg yax:      Initial display Y axis.
+
+        :arg text:     The tet to draw.
+
+        :arg xpos:     Position along the x axis
+        
+        :arg ypos:     Position along the y axis
+
+        :arg fontSize: Font size
+ 
+        """
+
+        AnnotationObject.__init__(self, annot, xax, yax, *args, **kwargs)
+
+        self.text     = text
+        self.xpos     = xpos
+        self.ypos     = ypos
+        self.fontsize = fontsize
+
+
+    def draw(self, zpos):
+        """Draws this ``Text`` annotation. """
+
+        pos           = [0] * 3
+        pos[self.xax] = self.xpos
+        pos[self.yax] = self.ypos
+        pos[self.zax] =      zpos
+
+        bbox       = self.annot.getDisplayBounds()
+        canvasSize = self.annot.getCanvasSize()
+
+        glroutines.text2D(self.text,
+                          self.xax,
+                          self.yax,
+                          pos,
+                          self.fontsize,
+                          bbox,
+                          canvasSize)

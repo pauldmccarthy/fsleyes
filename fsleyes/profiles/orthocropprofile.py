@@ -133,13 +133,16 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         # A rectangle is displayed on
         # each of the canvases, showing
         # the current cropping box.
-        self.__xrect   = annotations.Rect(1, 2, (0, 0), 0, 0,
+        self.__xrect   = annotations.Rect(self.__xcanvas.getAnnotations(),
+                                          1, 2, (0, 0), 0, 0,
                                           colour=(0.3, 0.3, 1.0),
                                           filled=True)
-        self.__yrect   = annotations.Rect(0, 2, (0, 0), 0, 0,
+        self.__yrect   = annotations.Rect(self.__ycanvas.getAnnotations(),
+                                          0, 2, (0, 0), 0, 0,
                                           colour=(0.3, 0.3, 1.0),
                                           filled=True)
-        self.__zrect   = annotations.Rect(0, 1, (0, 0), 0, 0,
+        self.__zrect   = annotations.Rect(self.__zcanvas.getAnnotations(),
+                                          0, 1, (0, 0), 0, 0,
                                           colour=(0.3, 0.3, 1.0),
                                           filled=True)
 

@@ -207,7 +207,7 @@ class SliceCanvas(props.HasProperties):
         self.xax = (zax + 1) % 3
         self.yax = (zax + 2) % 3
 
-        self._annotations = annotations.Annotations(self.xax, self.yax)
+        self._annotations = annotations.Annotations(self, self.xax, self.yax)
 
         # when any of the properties of this
         # canvas change, we need to redraw
