@@ -38,7 +38,7 @@ class SliceCanvasOpts(props.HasProperties):
     zoom = props.Percentage(minval=100.0,
                             maxval=5000.0,
                             default=100.0,
-                            clamped=True)
+                            clamped=False)
     """The :attr:`.DisplayContext.bounds` are divided by this zoom
     factor to produce the canvas display bounds.
     """

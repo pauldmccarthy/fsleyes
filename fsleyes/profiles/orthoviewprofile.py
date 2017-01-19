@@ -477,6 +477,7 @@ class OrthoViewProfile(profiles.Profile):
         self.__lastRect = canvas.getAnnotations().rect(corner,
                                                        width,
                                                        height,
+                                                       width=1,
                                                        colour=(1, 1, 0))
         canvas.Refresh()
 

@@ -438,7 +438,7 @@ class SliceCanvas(props.HasProperties):
         # this is the inverse of the zoom->canvas
         # bounds calculation, as implemented in
         # _applyZoom.
-        zoom  = 100.0 / ratio
+        zoom  = zoommin / ratio
         zoom  = ((zoom - zoommin) / zoomlen) ** (1.0 / 3.0)
         zoom  = zoommin + zoom * zoomlen
 
@@ -1075,28 +1075,48 @@ class SliceCanvas(props.HasProperties):
         values.
         """
 
-        # The zoom is specified as a value
-        # between 100 and 5000 (the minval/
-        # maxaval). To make the zoom smoother
-        # at low levels, we re-scale this
+        # Zoom is specified as a percentage.
+        # At 100% the full scene takes up the
+        # full display.
+        # 
+        # In order to make the zoom smoother
+        # at low levels, we re-scale the zoom
         # value to be exponential across the
         # range.
         # 
         # This is done by transforming the zoom
-        # from [100 - 5000] into [0.0 - 1.0], then
+        # from [100 - zmax] into [0.0 - 1.0], then
         # turning it from linear [0.0 - 1.0] to
         # exponential [0.0 - 1.0], and then finally
-        # transforming it back to [100 - 5000].
+        # transforming it back to [100 - zmax].
+        #
+        # HOWEVER there is a slight hack in that,
+        # if the zoom value is less than 100%, it
+        # will be applied linearly (i.e. 50% will
+        # cause the scene to take up 50% of the
+        # screen)
+
+        # Assuming that minval == 100.0
+        zoom    = self.zoom
         minzoom = self.getConstraint('zoom', 'minval')
         maxzoom = self.getConstraint('zoom', 'maxval')
-        zoom    = (self.zoom - minzoom) / (maxzoom - minzoom)
-        zoom    = minzoom + (zoom ** 3) * (maxzoom - minzoom)
 
-        # Then we transform the zoom from
-        # [100 - 5000] to [1.0 - 0.0] - this
-        # value is used to scale the given
-        # bounds. 
-        zoomFactor = 100.0 / zoom
+        # Normal behaviour
+        if zoom >= 100:
+
+            # [100 - zmax] -> [0.0 - 1.0] -> exponentify -> [100 - zmax]
+            zoom       = (self.zoom - minzoom) / (maxzoom - minzoom)
+            zoom       = minzoom + (zoom ** 3) * (maxzoom - minzoom)
+            
+            # Then we transform the zoom from
+            # [100 - zmax] to [1.0 - 0.0] -
+            # this value is used to scale the
+            # bounds. 
+            zoomFactor = minzoom / zoom
+            
+        # Hack for zoom < 100
+        else:
+            zoomFactor = 100.0 / zoom
 
         xlen    = xmax - xmin
         ylen    = ymax - ymin
