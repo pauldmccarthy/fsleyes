@@ -161,34 +161,23 @@ def preserveAspectRatio(width, height, xmin, xmax, ymin, ymax, grow=True):
 
 
 def text2D(text,
-           xax,
-           yax,
            pos,
-           size,
-           bbox,
+           fontSize,
            displaySize,
+           angle=None,
            fixedWidth=False):
     """Renders a 2D string using ``glutStrokeCharacter``.
 
     :arg text:        The text to render. Only ASCII characters 32-127 (and 
                       newlines) are supported.
 
-    :arg xax:         Display coordinate system that maps to the horizontal 
-                      axis.
-    
-    :arg yax:         Display coordinate system that maps to the vertical 
-                      axis. 
+    :arg pos:         2D text position in pixels.
 
-    :arg pos:         Text position in display coordinates (the z axis 
-                      position has no effect).
-
-    :arg size:        Font size (not sure what units they're in)
-
-    :arg bbox:        2D bounding box limits, defining the display coordinate 
-                      bounds that are displayed, as ``(xmin, xmax, ymin,
-                      ymax)``.
+    :arg fontSize:    Font size in pixels
 
     :arg displaySize: ``(width, height)`` of the canvas in pixels.
+
+    :arg angle:       Angle (in degrees) by which to rotate the text.
 
     :arg fixedWidth:  If ``True``, a fixed-width font is used. Otherwise a
                       variable-width font is used.
@@ -197,42 +186,55 @@ def text2D(text,
     if fixedWidth: font = glut.GLUT_STROKE_MONO_ROMAN
     else:          font = glut.GLUT_STROKE_ROMAN
 
-    zax                    = 3 - xax - yax 
-    pos                    = list(pos)
-    width, height          = displaySize
-    xmin, xmax, ymin, ymax = bbox
+    pos           = list(pos)
+    width, height = displaySize
 
-    # Figure out the height of one pixel in 
-    # units. Then scale it by 152.38 (the
-    # default stroke character height),
-    # and scale again by the requested size.
-    scale = (ymax - ymin) / height
-    scale = size * scale / 152.38
+    # The glut characters have a default
+    # height (in display coordinates) of
+    # 152.38. Scale this to the requested
+    # pixel font size.
+    fontSize = fontSize / 152.38
 
-    lines = text.split('\n')
+    # Get the current matrix mode,
+    # and restore it when we're done
+    mm = gl.glGetInteger(gl.GL_MATRIX_MODE)
+
+    # Set up an ortho view where the
+    # display coordinates correspond
+    # to the canvas pixel coordinates.
+    gl.glMatrixMode(gl.GL_PROJECTION)
+    gl.glPushMatrix()
+    gl.glLoadIdentity()
+    gl.glOrtho(0, width, 0, height, -1, 1)
 
     gl.glMatrixMode(gl.GL_MODELVIEW)
-    
+    gl.glPushMatrix()
+    gl.glLoadIdentity()
+
+    gl.glEnable(gl.GL_LINE_SMOOTH)
+
+    # Draw each line one at a time
+    lines = text.split('\n')
     for i, line in enumerate(lines):
 
-        pos[yax] -= scale * 152.38
+        pos[1] -= i * fontSize * 152.38
 
         gl.glPushMatrix()
-        gl.glTranslatef(*pos)
-
-        if zax == 0:
-            gl.glRotatef(90, 1, 0, 0)
-            gl.glRotatef(90, 0, 1, 0)
-
-        elif zax == 1:
-            gl.glRotatef(90, 1, 0, 0)
-
-        gl.glScalef(scale, scale, scale)
+        gl.glTranslatef(pos[0], pos[1], 0)
+        gl.glScalef(fontSize, fontSize, fontSize)
 
         for char in line:
             glut.glutStrokeCharacter(font, ord(char))
 
         gl.glPopMatrix()
+
+    gl.glMatrixMode(gl.GL_PROJECTION)
+    gl.glPopMatrix()
+
+    gl.glMatrixMode(gl.GL_MODELVIEW)
+    gl.glPopMatrix()
+
+    gl.glMatrixMode(mm)
 
 
 def calculateSamplePoints(shape,

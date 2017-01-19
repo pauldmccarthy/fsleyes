@@ -64,6 +64,12 @@ class ImportDataSeriesAction(action.Action):
             # Assuming that the data series 
             # to plot are stored as columns
             data = np.loadtxt(filePath).T
+
+            # Make sure the data is 2D, to
+            # make code below easier and
+            # happier.
+            if len(data.shape) == 1:
+                data = data.reshape((1, -1))
             
         except Exception as e:
             title = strings.titles[  self, 'error']

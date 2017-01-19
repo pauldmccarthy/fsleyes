@@ -766,26 +766,32 @@ class Text(AnnotationObject):
                  text,
                  xpos,
                  ypos,
-                 fontsize=10,
+                 fontSize=10,
+                 bgColour=None,
+                 angle=None,
                  *args,
                  **kwargs):
         """Create a ``Text`` annotation.
 
         :arg annot:    The :class:`Annotations` object that owns this
-                       `Text``.
+                       ``Text``.
 
         :arg xax:      Initial display X axis.
 
         :arg yax:      Initial display Y axis.
 
-        :arg text:     The tet to draw.
+        :arg text:     The text to draw.
 
-        :arg xpos:     Position along the x axis
+        :arg xpos:     Position along the x axis in pixels.
         
-        :arg ypos:     Position along the y axis
+        :arg ypos:     Position along the y axis in pixels.
 
-        :arg fontSize: Font size
- 
+        :arg fontSize: Font size.
+
+        :arg bcColour: If not ``None``, a border will be drawn around the
+                       text.
+
+        :arg angle:    Angle, in degrees, by which to rotate the text.
         """
 
         AnnotationObject.__init__(self, annot, xax, yax, *args, **kwargs)
@@ -793,24 +799,40 @@ class Text(AnnotationObject):
         self.text     = text
         self.xpos     = xpos
         self.ypos     = ypos
-        self.fontsize = fontsize
+        self.fontSize = fontSize
+        self.bgColour = bgColour
+        self.angle    = angle
 
 
     def draw(self, zpos):
         """Draws this ``Text`` annotation. """
 
-        pos           = [0] * 3
-        pos[self.xax] = self.xpos
-        pos[self.yax] = self.ypos
-        pos[self.zax] =      zpos
-
-        bbox       = self.annot.getDisplayBounds()
         canvasSize = self.annot.getCanvasSize()
+        
+        colours = [self.colour]
+        widths  = [self.width]
+        
+        if self.text is None or len(self.text) == 0:
+            return
 
-        glroutines.text2D(self.text,
-                          self.xax,
-                          self.yax,
-                          pos,
-                          self.fontsize,
-                          bbox,
-                          canvasSize)
+        if self.bgColour is not None:
+            colours.insert(0, self.bgColour)
+
+            if self.width is not None: widths.insert(0, self.width + 3)
+            else:                      widths.insert(0, 3)
+
+        for i, (colour, width) in enumerate(zip(colours, widths)):
+
+            if colour is not None:
+                colour = list(colour)
+                if len(colour) == 3: 
+                    colour += [1.0]
+
+                gl.glColor4f(*colour)
+                
+            if width is not None:
+                gl.glLineWidth(width)
+
+            pos = (self.xpos * canvasSize[0], self.ypos * canvasSize[1])
+
+            glroutines.text2D(self.text, pos, self.fontSize, canvasSize)
