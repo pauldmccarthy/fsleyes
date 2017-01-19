@@ -18,13 +18,9 @@ A couple of other classes are provided for convenience:
 
 
 import logging
-import itertools as it
 
 import wx
 
-import pwidgets.textpanel                      as textpanel
-
-import fsl.data.constants                      as constants
 import fsl.data.image                          as fslimage
 import fsl.utils.layout                        as fsllayout
 import fsl.utils.dialog                        as fsldlg
@@ -82,8 +78,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     **Anatomical labels**
     
 
-    In addition to the three ``SliceCanvas`` panels, the ``OrthoPanel`` is
-    capable of displaying labels around each panel, showing the user the
+    By default, the ``OrthoPanel`` will use :class:`.Text` annotations to
+    display labels on each :class:`.SliceCanvas`, showing the user the
     anatomical orientation of the display on each panel. These labels are only
     shown if the currently selected overlay (as dicated by the
     :attr:`.DisplayContext.selectedOverlay` property) is a :class:`.Image`
@@ -103,8 +99,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     **Interaction**
 
 
-    Two interaction profiles are defined for use with the ``OrthoPanel`` (see
-    the :class:`.ViewPanel` for an overview of *profiles*):
+    The following interaction profiles are defined for use with the
+    ``OrthoPanel`` (see the :class:`.ViewPanel` for an overview of
+    *profiles*):
 
     ======== =========================================================
     ``view`` Viewing/navigation, using the :class:`.OrthoViewProfile`.
@@ -183,16 +180,21 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # its name is stored here.
         self.__editMenuTitle = None
 
-        # Labels to show anatomical orientation,
-        # stored in a dict for each canvas
-        self.__xLabels = {}
-        self.__yLabels = {}
-        self.__zLabels = {}
-        
+        # Labels (Text annotations) to show
+        # anatomical orientation, stored in
+        # a dict for each canvas
+        self.__xlabels = {}
+        self.__ylabels = {}
+        self.__zlabels = {}
+
+        xannot = self.__xcanvas.getAnnotations()
+        yannot = self.__ycanvas.getAnnotations()
+        zannot = self.__zcanvas.getAnnotations()
+
         for side in ('left', 'right', 'top', 'bottom'):
-            self.__xLabels[side] = textpanel.TextPanel(contentPanel)
-            self.__yLabels[side] = textpanel.TextPanel(contentPanel)
-            self.__zLabels[side] = textpanel.TextPanel(contentPanel)
+            self.__xlabels[side] = xannot.text("", 0, 0, width=3, hold=True)
+            self.__ylabels[side] = yannot.text("", 0, 0, width=3, hold=True)
+            self.__zlabels[side] = zannot.text("", 0, 0, width=3, hold=True)
 
         self.__xcanvas.bindProps('showCursor',   sceneOpts)
         self.__ycanvas.bindProps('showCursor',   sceneOpts)
@@ -213,8 +215,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # Callbacks for ortho panel layout options
         sceneOpts.addListener('layout',     name, self.__refreshLayout)
         sceneOpts.addListener('showLabels', name, self.__refreshLabels)
-        sceneOpts.addListener('bgColour'  , name, self.__bgColourChanged)
         sceneOpts.addListener('labelSize',  name, self.__refreshLabels)
+        sceneOpts.addListener('bgColour'  , name, self.__bgColourChanged)
 
         # Individual zoom control for each canvas
         self.__xcanvas.bindProps('zoom', sceneOpts, 'xzoom')
@@ -683,52 +685,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__ycanvas.SetBackgroundColour(intbg)
         self.__zcanvas.SetBackgroundColour(intbg)
 
-        self.__setLabelColours(intbg, intfg)
+        self.__refreshLabels(refresh=False)
 
         self.Refresh()
         self.Update()
-
-
-    def __setLabelColours(self, bgColour, fgColour):
-        """Used by the :meth:`__bgColourChanged` and :meth:`__refreshLabels`
-        methods.
-
-        Sets the background and foreground label colours to the given
-        ``bgColour`` and ``fgColour``, which should be ``(r, g, b, a)``
-        tuples with each value in the range  ``[0, 255]``.
-        """
-
-        bgColour = tuple(bgColour)
-        fgColour = tuple(fgColour)
-
-        overlay = self._displayCtx.getReferenceImage(
-            self._displayCtx.getSelectedOverlay())
-
-        allLabels = it.chain(self.__xLabels.values(),
-                             self.__yLabels.values(),
-                             self.__zLabels.values())
-
-        if overlay is not None:
-            opts  = self._displayCtx.getOpts(overlay)
-            xform = opts.getTransform('world', 'display')
-            
-            xorient = overlay.getOrientation(0, xform)
-            yorient = overlay.getOrientation(1, xform)
-            zorient = overlay.getOrientation(2, xform)
-
-            if constants.ORIENT_UNKNOWN in (xorient, yorient, zorient):
-
-                # If the background colour is black or white,
-                # make the foreground colour red, to highlight
-                # the unknown orientation. It's too difficult
-                # to do this for any background colour.
-                if bgColour == (  0,   0,   0, 255) or \
-                   bgColour == (255, 255, 255, 255):
-                    fgColour = (255,   0,   0, 255)
-        
-        for lbl in allLabels:
-            lbl.SetForegroundColour(fgColour)
-            lbl.SetBackgroundColour(bgColour)
 
         
     def __toggleCanvas(self, *a):
@@ -736,25 +696,23 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         :attr:`.OrthoOpts.showYCanvas`, or :attr:`.OrthoOpts.showZCanvas`
         properties are changed.
 
-        Shows/hides each of the :class:`.SliceCanvas` panels and anatomical
-        label panels accordingly.
+        Shows/hides each of the :class:`.SliceCanvas` panels accordingly.
         """
 
-        opts      = self.getSceneOptions()
-        canvases  = [self.__xcanvas,   self.__ycanvas,   self.__zcanvas]
-        allLabels = [self.__xLabels,   self.__yLabels,   self.__zLabels]
-        shows     = [opts.showXCanvas, opts.showYCanvas, opts.showZCanvas]
+        opts     = self.getSceneOptions()
+        canvases = [self.__xcanvas,   self.__ycanvas,   self.__zcanvas]
+        shows    = [opts.showXCanvas, opts.showYCanvas, opts.showZCanvas]
 
-        for canvas, labels, show in zip(canvases, allLabels, shows):
+        for canvas, show in zip(canvases, shows):
 
             # See WXGLSliceCanvas.Show for
             # details of a horrible bug, and
             # equally horrible workaround..
             canvas.Show(show)
 
-            for label in labels.values():
-                self.__canvasSizer.Show(label, show and opts.showLabels)
-
+        # If layout == grid, then the actual
+        # layout may be different depending
+        # on how many canvases are displayed
         if opts.layout == 'grid':
             self.__refreshLayout()
 
@@ -808,7 +766,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                              overwrite=True)
                 
         # anatomical orientation may have changed with an image change
-        self.__refreshLabels()
+        self.__refreshLabels(refresh=False)
 
         # Disable actions that need an overlay
         haveOverlays = len(self._overlayList) > 0
@@ -835,67 +793,59 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         Refreshes the anatomical orientation labels.
         """
         self.__radioOrientationChanged()
-        self.__refreshLabels()
 
             
     def __onResize(self, ev):
         """Called whenever the panel is resized. Makes sure that the
-        :class:`.SliceCanvas` panels are laid out nicely.
+        :class:`.SliceCanvas` panels  and :class:`.Text` annotations
+        are drawn correctly.
         """
         ev.Skip()
         self.__calcCanvasSizes()
 
 
-    def __refreshLabels(self, *a):
-        """Shows/hides labels depicting anatomical orientation on each
-        :class:`.SliceCanvas`.
+    def __refreshLabels(self, *a, **kwa):
+        """Updates the attributes of the :class:`.Text` anatomical orientation
+        annotations on each :class:`.SliceCanvas`.
+
+        :arg refresh: 
         """
 
-        sopts = self.getSceneOptions()
+        refresh = kwa.pop('refresh', True)
         
-        # Are we showing or hiding the labels?
-        if len(self._overlayList) == 0:
-            show = False
+        displayCtx = self.getDisplayContext()
+        overlay    = displayCtx.getSelectedOverlay()
+        overlay    = displayCtx.getReferenceImage(overlay)
+        sopts      = self.getSceneOptions()
 
-        overlay = self._displayCtx.getReferenceImage(
-            self._displayCtx.getSelectedOverlay())
+        xcanvas = self.__xcanvas
+        ycanvas = self.__ycanvas
+        zcanvas = self.__zcanvas
+        xlabels = self.__xlabels
+        ylabels = self.__ylabels
+        zlabels = self.__zlabels
 
-        # Labels are only supported if we
-        # have a volumetric reference image 
-        if   overlay is None:  showLabels = False
-        elif sopts.showLabels: showLabels = True
-        else:                  showLabels = False
+        for lbls in [xlabels, ylabels, zlabels]:
+            for text in lbls.values():
+                text.enabled = sopts.showLabels
 
-        canvases  = [self.__xcanvas,    self.__ycanvas,    self.__zcanvas]
-        allLabels = [self.__xLabels,    self.__yLabels,    self.__zLabels]
-        shows     = [sopts.showXCanvas, sopts.showYCanvas, sopts.showZCanvas]
-
-        for canvas, labels, show in zip(canvases, allLabels, shows):
-            for lbl in labels.values():
-                self.__canvasSizer.Show(lbl, show and showLabels)
-
-        # If we're hiding the labels, do no more
-        if not showLabels:
-            self.PostSizeEvent()
+        if overlay is None:
             return
 
-        log.debug('Refreshing orientation labels '
-                  'according to {}'.format(overlay.name))
+        if not sopts.showLabels:
+            if refresh:
+                self.Refresh()
+                self.Update() 
+            return
 
-        # Figure out the orientation of the
-        # image in the display coordinate system
-        (xlo, ylo, zlo, xhi, yhi, zhi), vertOrient = self.__getLabels(overlay)
-        
-        log.debug('X orientation: {} - {}'.format(xlo, xhi))
-        log.debug('Y orientation: {} - {}'.format(ylo, yhi))
-        log.debug('Z orientation: {} - {}'.format(zlo, zhi))
-
-        bg = sopts.bgColour
-        fg = colourmaps.complementaryColour(bg)
-        bg = [int(round(c * 255)) for c in bg]
-        fg = [int(round(c * 255)) for c in fg]        
-
-        self.__setLabelColours(bg, fg)
+        fontSize = sopts.labelSize
+        bgColour = sopts.bgColour
+        fgColour = colourmaps.complementaryColour(bgColour)
+        bgColour = [int(round(c * 255)) for c in bgColour]
+        fgColour = [int(round(c * 255)) for c in fgColour]        
+ 
+        labels, vertOrient           = self.__getLabels(overlay)
+        xlo, ylo, zlo, xhi, yhi, zhi = labels
 
         xcxlo, xcxhi = ylo, yhi
         xcylo, xcyhi = zlo, zhi
@@ -904,47 +854,67 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         zcxlo, zcxhi = xlo, xhi
         zcylo, zcyhi = ylo, yhi
 
-        if self.__xcanvas.invertX: xcxlo, xcxhi = xcxhi, xcxlo
-        if self.__xcanvas.invertY: xcylo, xcyhi = xcyhi, xcylo
-        if self.__ycanvas.invertX: ycxlo, ycxhi = ycxhi, ycxlo
-        if self.__ycanvas.invertY: ycylo, ycyhi = ycyhi, ycylo
-        if self.__zcanvas.invertX: zcxlo, zcxhi = zcxhi, zcxlo
-        if self.__zcanvas.invertY: zcylo, zcyhi = zcyhi, zcylo
+        if xcanvas.invertX: xcxlo, xcxhi = xcxhi, xcxlo
+        if xcanvas.invertY: xcylo, xcyhi = xcyhi, xcylo
+        if ycanvas.invertX: ycxlo, ycxhi = ycxhi, ycxlo
+        if ycanvas.invertY: ycylo, ycyhi = ycyhi, ycylo
+        if zcanvas.invertX: zcxlo, zcxhi = zcxhi, zcxlo
+        if zcanvas.invertY: zcylo, zcyhi = zcyhi, zcylo
 
-        self.__xLabels['left']  .SetLabel(xcxlo)
-        self.__xLabels['right'] .SetLabel(xcxhi)
-        self.__xLabels['bottom'].SetLabel(xcylo)
-        self.__xLabels['top']   .SetLabel(xcyhi)
-        self.__yLabels['left']  .SetLabel(ycxlo)
-        self.__yLabels['right'] .SetLabel(ycxhi)
-        self.__yLabels['bottom'].SetLabel(ycylo)
-        self.__yLabels['top']   .SetLabel(ycyhi)
-        self.__zLabels['left']  .SetLabel(zcxlo)
-        self.__zLabels['right'] .SetLabel(zcxhi)
-        self.__zLabels['bottom'].SetLabel(zcylo)
-        self.__zLabels['top']   .SetLabel(zcyhi)
+        xlabels['left']  .text = xcxlo
+        xlabels['right'] .text = xcxhi
+        xlabels['bottom'].text = xcylo
+        xlabels['top']   .text = xcyhi
+        ylabels['left']  .text = ycxlo
+        ylabels['right'] .text = ycxhi
+        ylabels['bottom'].text = ycylo
+        ylabels['top']   .text = ycyhi
+        zlabels['left']  .text = zcxlo
+        zlabels['right'] .text = zcxhi
+        zlabels['bottom'].text = zcylo
+        zlabels['top']   .text = zcyhi 
 
-        if vertOrient: vertOrient = wx.VERTICAL
-        else:          vertOrient = wx.HORIZONTAL
+        shows  = [sopts.showXCanvas, sopts.showYCanvas, sopts.showZCanvas] 
+        labels = [xlabels,           ylabels,           zlabels]
 
-        self.__xLabels['left'] .SetOrient(vertOrient)
-        self.__yLabels['left'] .SetOrient(vertOrient)
-        self.__zLabels['left'] .SetOrient(vertOrient)
-        self.__xLabels['right'].SetOrient(vertOrient)
-        self.__yLabels['right'].SetOrient(vertOrient)
-        self.__zLabels['right'].SetOrient(vertOrient)
+        for show, lbls in zip(shows, labels):
+            
+            lbls['left']  .enabled = show
+            lbls['right'] .enabled = show
+            lbls['bottom'].enabled = show
+            lbls['top']   .enabled = show
+            
+            if not show:
+                continue
 
-        fontSize = self.GetFont().GetPointSize()
-        fontSize = round(fontSize * sopts.labelSize / 100)
+            # TODO Adjust position for
+            #      font size/label content
 
-        for label in self.__xLabels.values() + \
-                     self.__yLabels.values() + \
-                     self.__zLabels.values():
-            font = label.GetFont()
-            font.SetPointSize(fontSize)
-            label.SetFont(font)
+            lbls['left']  .xpos     = 0
+            lbls['left']  .ypos     = 0.5
+            lbls['right'] .xpos     = 0.95
+            lbls['right'] .ypos     = 0.5
+            lbls['bottom'].xpos     = 0.5
+            lbls['bottom'].ypos     = 0           
+            lbls['top']   .xpos     = 0.5
+            lbls['top']   .ypos     = 0.95
+            
+            lbls['left']  .fontSize = fontSize
+            lbls['right'] .fontSize = fontSize
+            lbls['bottom'].fontSize = fontSize
+            lbls['top']   .fontSize = fontSize
+            lbls['left']  .colour   = fgColour
+            lbls['right'] .colour   = fgColour
+            lbls['bottom'].colour   = fgColour
+            lbls['top']   .colour   = fgColour
 
-        self.PostSizeEvent()
+            if vertOrient:
+                lbls['left'] .angle = 90
+                lbls['right'].angle = 90
+
+        if refresh:
+            self.Refresh()
+            self.Update()
 
         
     def __getLabels(self, refImage):
@@ -1010,90 +980,17 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         show     = [opts.showXCanvas,  opts.showYCanvas,  opts.showZCanvas]
         canvases = [self.__xcanvas,    self.__ycanvas,    self.__zcanvas]
-        labels   = [self.__xLabels,    self.__yLabels,    self.__zLabels]
 
         if width == 0 or height == 0:   return
         if len(self._overlayList) == 0: return
         if not any(show):               return
 
-        canvases, labels = zip(*[(c, l)
-                                 for (c, l, s)
-                                 in zip(canvases, labels, show)
-                                 if s])
-
-        canvases = list(canvases)
-        labels   = list(labels)
+        canvases = [c for (c, s) in zip(canvases, show) if s]
 
         # Grid layout with 2 or less canvases displayed
         # is identical to horizontal layout
         if layout == 'grid' and len(canvases) <= 2:
             layout = 'horizontal'
-
-        # Calculate the width/height (in pixels) which
-        # is available to lay out all of the canvases
-        # (taking into account anatomical orientation
-        # labels).
-        if layout == 'horizontal':
-            maxh = 0
-            sumw = 0
-            for l in labels:
-
-                if opts.showLabels:
-                    lw, lh = l['left']  .GetClientSize().Get()
-                    rw, rh = l['right'] .GetClientSize().Get()
-                    tw, th = l['top']   .GetClientSize().Get()
-                    bw, bh = l['bottom'].GetClientSize().Get()
-                else:
-                    lw = rw = th = bh = 0
-
-                sumw = sumw + lw + rw
-                if th > maxh: maxh = th
-                if bh > maxh: maxh = bh
-            width  = width  -     sumw
-            height = height - 2 * maxh
-            
-        elif layout == 'vertical':
-            maxw = 0
-            sumh = 0
-            for l in labels:
-                if opts.showLabels:
-                    lw, lh = l['left']  .GetClientSize().Get()
-                    rw, rh = l['right'] .GetClientSize().Get()
-                    tw, th = l['top']   .GetClientSize().Get()
-                    bw, bh = l['bottom'].GetClientSize().Get()
-                else:
-                    lw = rw = th = bh = 0
-                    
-                sumh = sumh + th + bh
-                if lw > maxw: maxw = lw
-                if rw > maxw: maxw = rw
-                
-            width  = width  - 2 * maxw
-            height = height -     sumh
-            
-        else:
-            canvases = [self.__ycanvas, self.__xcanvas, self.__zcanvas]
-
-            if opts.showLabels:
-                xlw = self.__xLabels['left']  .GetClientSize().GetWidth()
-                xrw = self.__xLabels['right'] .GetClientSize().GetWidth()
-                ylw = self.__yLabels['left']  .GetClientSize().GetWidth()
-                yrw = self.__yLabels['right'] .GetClientSize().GetWidth()
-                zlw = self.__zLabels['left']  .GetClientSize().GetWidth()
-                zrw = self.__zLabels['right'] .GetClientSize().GetWidth()             
-                xth = self.__xLabels['top']   .GetClientSize().GetHeight()
-                xbh = self.__xLabels['bottom'].GetClientSize().GetHeight()
-                yth = self.__yLabels['top']   .GetClientSize().GetHeight()
-                ybh = self.__yLabels['bottom'].GetClientSize().GetHeight()
-                zth = self.__zLabels['top']   .GetClientSize().GetHeight()
-                zbh = self.__zLabels['bottom'].GetClientSize().GetHeight()
-            else:
-                xlw = xrw = xth = xbh = 0
-                ylw = yrw = yth = ybh = 0
-                zlw = zrw = zth = zbh = 0
-
-            width  = width  - max(xlw, zlw) - max(xrw, zrw) - ylw - yrw
-            height = height - max(xth, yth) - max(xbh, ybh) - zth - zbh
 
         # Distribute the available width/height
         # to each of the displayed canvases -
@@ -1123,119 +1020,42 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         opts   = self.getSceneOptions()
         layout = opts.layout
 
+        # We lay out all canvases, even 
+        # the ones that are not shown.
+        canvases  = [self.__xcanvas,   self.__ycanvas,   self.__zcanvas]
+        shows     = [opts.showXCanvas, opts.showYCanvas, opts.showZCanvas]
+        nCanvases = sum(shows)
+
         # For the grid layout if only one or two
         # canvases are being displayed, the layout
-        # is equivalent to a horizontal layout
-        nCanvases = 3
-        nDisplayedCanvases = sum([opts.showXCanvas,
-                                  opts.showYCanvas,
-                                  opts.showZCanvas])
-         
-        if layout == 'grid' and nDisplayedCanvases <= 2:
+        # is equivalent to a horizontal layout. 
+        if layout == 'grid' and nCanvases <= 2:
             layout = 'horizontal'
 
         # Regardless of the layout, we use a
         # FlexGridSizer with varying numbers
         # of rows/columns, depending upon the
         # layout strategy
-        if   layout == 'horizontal':
-            nrows = 3
-            ncols = nCanvases * 3
-        elif layout == 'vertical':
-            nrows = nCanvases * 3
-            ncols = 3
-        elif layout == 'grid': 
-            nrows = nCanvases * 2
-            ncols = nCanvases * 2
-        # if layout is something other than the above three,
-        # then something's gone wrong and I'm going to crash
+        if   layout == 'horizontal': nrows, ncols = 1, 3
+        elif layout == 'vertical':   nrows, ncols = 3, 1
+        elif layout == 'grid':       nrows, ncols = 2, 2
 
         self.__canvasSizer = wx.FlexGridSizer(nrows, ncols, 0, 0)
 
         # The rows/columns that contain
         # canvases must also be growable
-        if layout == 'horizontal':
-            self.__canvasSizer.AddGrowableRow(1)
-            for i in range(nCanvases):
-                self.__canvasSizer.AddGrowableCol(i * 3 + 1)
-                
-        elif layout == 'vertical':
-            self.__canvasSizer.AddGrowableCol(1)
-            for i in range(nCanvases):
-                self.__canvasSizer.AddGrowableRow(i * 3 + 1)
-                
-        elif layout == 'grid':
-            self.__canvasSizer.AddGrowableRow(1)
-            self.__canvasSizer.AddGrowableRow(4)
-            self.__canvasSizer.AddGrowableCol(1)
-            self.__canvasSizer.AddGrowableCol(4) 
-
-        # Make a list of widgets - the canvases,
-        # anatomical labels (if displayed), and
-        # spacers for the empty cells
-        space = (0, 0)
-        xlbls = self.__xLabels
-        ylbls = self.__yLabels
-        zlbls = self.__zLabels
-        
-        if layout == 'horizontal':
-            widgets = [space,         xlbls['top'],     space,
-                       space,         ylbls['top'],     space,
-                       space,         zlbls['top'],     space,
-                       xlbls['left'], self.__xcanvas,   xlbls['right'],
-                       ylbls['left'], self.__ycanvas,   ylbls['right'],
-                       zlbls['left'], self.__zcanvas,   zlbls['right'],
-                       space,         xlbls['bottom'],  space,
-                       space,         ylbls['bottom'],  space,
-                       space,         zlbls['bottom'],  space] 
-                
-        elif layout == 'vertical':
-            widgets = [space,         xlbls['top'],     space,
-                       xlbls['left'], self.__xcanvas,   xlbls['right'],
-                       space,         xlbls['bottom'],  space,
-                       space,         ylbls['top'],     space,
-                       ylbls['left'], self.__ycanvas,   ylbls['right'],
-                       space,         ylbls['bottom'],  space,
-                       space,         zlbls['top'],     space,
-                       zlbls['left'], self.__zcanvas,   zlbls['right'],
-                       space,         zlbls['bottom'],  space]
-
-        # The canvases are laid out in a different order
-        # for orthographic, or 'grid' layout.  Assuming
-        # that world axis X is left<->right, Y is
-        # posterior<->anterior, and Z is inferior<->superior,
-        # in order to achieve first angle orthographic
-        # layout, we're laying out the canvases in the
-        # following manner (the letter denotes the depth
-        # axis for the respective canvas):
-        #
-        # TODO You need to horizonatlly flip the x canvas
-        #      to achieve true orthographic display.
-        #
-        #    Y  X
-        #    Z  - 
-        elif layout == 'grid':
-            widgets = [space,         ylbls['top'],     space,
-                       space,         xlbls['top'],     space,
-                       ylbls['left'], self.__ycanvas,   ylbls['right'],
-                       xlbls['left'], self.__xcanvas,   xlbls['right'],
-                       space,         ylbls['bottom'],  space,
-                       space,         xlbls['bottom'],  space,
-                       space,         zlbls['top'],     space,
-                       space,         space,            space,
-                       zlbls['left'], self.__zcanvas,   zlbls['right'],
-                       space,         space,            space,
-                       space,         zlbls['bottom'],  space,
-                       space,         space,            space]
+        for row in range(nrows): self.__canvasSizer.AddGrowableRow(row)
+        for col in range(ncols): self.__canvasSizer.AddGrowableCol(col)
+            
+        # For grid layout, the last cell is filled with empty space
+        if layout == 'grid':
+            canvases.append((0, 0))
 
         # Add all those widgets to the grid sizer
-        flag     = wx.ALIGN_CENTRE_HORIZONTAL | wx.ALIGN_CENTRE_VERTICAL
-        canvases = [self.__xcanvas, self.__ycanvas, self.__zcanvas]
+        flag = wx.ALIGN_CENTRE_HORIZONTAL | wx.ALIGN_CENTRE_VERTICAL
         
-        for w in widgets:
-            
-            if w in canvases: self.__canvasSizer.Add(w, flag=flag | wx.EXPAND)
-            else:             self.__canvasSizer.Add(w, flag=flag)
+        for c in canvases:
+            self.__canvasSizer.Add(c, flag=flag | wx.EXPAND)
             
         self.getContentPanel().SetSizer(self.__canvasSizer)
 
@@ -1244,14 +1064,13 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # appropriately relative to each other, and
         # the displayed world space aspect ratio is
         # maintained
-        self.__calcCanvasSizes()
+        self.__calcCanvasSizes()        
 
         # When in grid layout, flip the horizontal axis
         # of the X canvas (assumed to be A/P), to force
         # third angle orthographic projection.
         self.__xcanvas.invertX = layout == 'grid'
 
-        self.__refreshLabels()
         self.Layout()
         self.getContentPanel().Layout()
         self.Refresh()
