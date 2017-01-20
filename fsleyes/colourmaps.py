@@ -722,10 +722,11 @@ def complementaryColour(rgb):
     """
 
     if len(rgb) >= 4:
-        a   = rgb[3:]
-        rgb = rgb[:3]
+        a   = list(rgb[3:])
+        rgb = list(rgb[:3])
     else:
         a   = []
+        rgb = list(rgb)
 
     h, l, s = colorsys.rgb_to_hls(*rgb)
 

@@ -31,7 +31,6 @@ import time
 
 import numpy       as np
 import OpenGL.GL   as gl
-import OpenGL.GLUT as glut
 
 import fsleyes.gl.globject  as globject
 import fsleyes.gl.routines  as glroutines
@@ -244,6 +243,7 @@ class Annotations(object):
                 
                 if len(obj.colour) == 3: colour = list(obj.colour) + [1.0]
                 else:                    colour = list(obj.colour)
+
                 gl.glColor4f(*colour)
 
             if obj.width is not None:
@@ -767,6 +767,10 @@ class Text(AnnotationObject):
                  xpos,
                  ypos,
                  fontSize=10,
+                 xoff=None,
+                 yoff=None,
+                 halign=None,
+                 valign=None,
                  bgColour=None,
                  angle=None,
                  *args,
@@ -782,11 +786,23 @@ class Text(AnnotationObject):
 
         :arg text:     The text to draw.
 
-        :arg xpos:     Position along the x axis in pixels.
+        :arg xpos:     Position along the horizontal axis as a proportion 
+                       between 0  (left) and 1 (right).
+
+        :arg xpos:     Position along the vertial axis as a proportion 
+                       between 0 (bottom) and 1 (top).
         
-        :arg ypos:     Position along the y axis in pixels.
+        :arg xoff:     Fixed horizontal offset in pixels
+        
+        :arg yoff:     Fixed vertical offset in pixels
 
         :arg fontSize: Font size.
+
+        :arg halign:   Horizontal alignemnt - ``'left'``, ``'centre'``, or
+                       ``right``.
+        
+        :arg valign:   Vertical alignemnt - ``'bottom'``, ``'centre'``, or
+                       ``top``. 
 
         :arg bcColour: If not ``None``, a border will be drawn around the
                        text.
@@ -799,40 +815,40 @@ class Text(AnnotationObject):
         self.text     = text
         self.xpos     = xpos
         self.ypos     = ypos
+        self.xoff     = xoff
+        self.yoff     = yoff 
         self.fontSize = fontSize
         self.bgColour = bgColour
+        self.halign   = halign
+        self.valign   = valign
         self.angle    = angle
+
+        # TODO Pre-calculate the text size in pixels so you don't
+        #      have to do it on every draw. And build in attribute
+        #      access control so you know when atts have changed
+        #      and text size needs to be recalculated.
 
 
     def draw(self, zpos):
         """Draws this ``Text`` annotation. """
 
         canvasSize = self.annot.getCanvasSize()
+        pos        = [self.xpos * canvasSize[0], self.ypos * canvasSize[1]]
+
+        # if need text size recalculating
+        textSize = glroutines.text2D(self.text,
+                                     pos,
+                                     self.fontSize,
+                                     canvasSize,
+                                     calcSize=True)
+
+        if   self.halign == 'centre': pos[0] -= textSize[0] / 2.0
+        elif self.halign == 'right':  pos[0] -= textSize[0]
         
-        colours = [self.colour]
-        widths  = [self.width]
-        
-        if self.text is None or len(self.text) == 0:
-            return
+        if   self.valign == 'centre': pos[1] -= textSize[1] / 2.0
+        elif self.valign == 'top':    pos[1] -= textSize[1]
 
-        if self.bgColour is not None:
-            colours.insert(0, self.bgColour)
-
-            if self.width is not None: widths.insert(0, self.width + 3)
-            else:                      widths.insert(0, 3)
-
-        for i, (colour, width) in enumerate(zip(colours, widths)):
-
-            if colour is not None:
-                colour = list(colour)
-                if len(colour) == 3: 
-                    colour += [1.0]
-
-                gl.glColor4f(*colour)
+        if self.xoff is not None: pos[0] += self.xoff
+        if self.yoff is not None: pos[1] += self.yoff
                 
-            if width is not None:
-                gl.glLineWidth(width)
-
-            pos = (self.xpos * canvasSize[0], self.ypos * canvasSize[1])
-
-            glroutines.text2D(self.text, pos, self.fontSize, canvasSize)
+        glroutines.text2D(self.text, pos, self.fontSize, canvasSize)

@@ -117,7 +117,7 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
             props.Widget('zoom', showLimits=False),
             props.Widget('showLabels'),
             props.Widget('labelSize',
-                         spin=False,
+                         spin=True,
                          showLimits=False,
                          dependencies=['showLabels'],
                          enabledWhen=lambda i, s: s),

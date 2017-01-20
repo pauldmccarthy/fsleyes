@@ -68,7 +68,7 @@ class OrthoOpts(sceneopts.SceneOpts):
     """Controls zoom on the Z canvas. """
 
 
-    labelSize = props.Int(minval=4, maxval=96, default=24, clamped=True)
+    labelSize = props.Int(minval=4, maxval=96, default=14, clamped=True)
     """Label font size."""
 
     

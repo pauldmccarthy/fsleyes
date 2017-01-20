@@ -165,7 +165,8 @@ def text2D(text,
            fontSize,
            displaySize,
            angle=None,
-           fixedWidth=False):
+           fixedWidth=False,
+           calcSize=False):
     """Renders a 2D string using ``glutStrokeCharacter``.
 
     :arg text:        The text to render. Only ASCII characters 32-127 (and 
@@ -181,6 +182,10 @@ def text2D(text,
 
     :arg fixedWidth:  If ``True``, a fixed-width font is used. Otherwise a
                       variable-width font is used.
+
+    :arg calcSize:    If ``True``, the text is not rendered. Instead, the
+                      size of the text, in pixels, is calculated and returned
+                      (before any rotation by the ``angle``).
     """
 
     if fixedWidth: font = glut.GLUT_STROKE_MONO_ROMAN
@@ -193,7 +198,7 @@ def text2D(text,
     # height (in display coordinates) of
     # 152.38. Scale this to the requested
     # pixel font size.
-    fontSize = fontSize / 152.38
+    scale = fontSize / 152.38
 
     # Get the current matrix mode,
     # and restore it when we're done
@@ -214,17 +219,35 @@ def text2D(text,
     gl.glEnable(gl.GL_LINE_SMOOTH)
 
     # Draw each line one at a time
-    lines = text.split('\n')
+    width  = 0
+    height = 0
+    lines  = text.split('\n')
+    
     for i, line in enumerate(lines):
 
-        pos[1] -= i * fontSize * 152.38
+        height += scale * 152.38
+        pos[1] -= scale * 152.38 * i
 
         gl.glPushMatrix()
         gl.glTranslatef(pos[0], pos[1], 0)
-        gl.glScalef(fontSize, fontSize, fontSize)
+        gl.glScalef(scale, scale, scale)
 
+        lineWidth = 0
         for char in line:
-            glut.glutStrokeCharacter(font, ord(char))
+
+            # We either calculate the
+            # character size, or draw
+            # the character, but not
+            # both
+            if calcSize:
+                charWidth  = glut.glutStrokeWidth(font, ord(char))
+                lineWidth += charWidth * (fontSize / 152.38)
+                
+            else:
+                glut.glutStrokeCharacter(font, ord(char))
+
+        if lineWidth > width:
+            width = lineWidth
 
         gl.glPopMatrix()
 
@@ -235,6 +258,9 @@ def text2D(text,
     gl.glPopMatrix()
 
     gl.glMatrixMode(mm)
+
+    if calcSize: return width, height
+    else:        return 0,     0
 
 
 def calculateSamplePoints(shape,

@@ -22,6 +22,7 @@ import logging
 import wx
 
 import fsl.data.image                          as fslimage
+import fsl.data.constants                      as constants
 import fsl.utils.layout                        as fsllayout
 import fsl.utils.dialog                        as fsldlg
 import fsleyes.strings                         as strings
@@ -192,9 +193,36 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         zannot = self.__zcanvas.getAnnotations()
 
         for side in ('left', 'right', 'top', 'bottom'):
-            self.__xlabels[side] = xannot.text("", 0, 0, width=3, hold=True)
-            self.__ylabels[side] = yannot.text("", 0, 0, width=3, hold=True)
-            self.__zlabels[side] = zannot.text("", 0, 0, width=3, hold=True)
+            self.__xlabels[side] = xannot.text("", 0, 0, width=2, hold=True)
+            self.__ylabels[side] = yannot.text("", 0, 0, width=2, hold=True)
+            self.__zlabels[side] = zannot.text("", 0, 0, width=2, hold=True)
+
+        for labels in [self.__xlabels, self.__ylabels, self.__zlabels]:
+            labels['left']  .hAlign = 'left'
+            labels['right'] .hAlign = 'right'
+            labels['top']   .hAlign = 'centre'
+            labels['bottom'].hAlign = 'centre'
+
+            labels['left']  .vAlign = 'centre'
+            labels['right'] .vAlign = 'centre'
+            labels['top']   .vAlign = 'top'
+            labels['bottom'].vAlign = 'bottom'
+
+            labels['left']  .xpos = 0
+            labels['left']  .ypos = 0.5
+            labels['right'] .xpos = 1.0
+            labels['right'] .ypos = 0.5
+            labels['bottom'].xpos = 0.5
+            labels['bottom'].ypos = 0
+            labels['top']   .xpos = 0.5
+            labels['top']   .ypos = 1.0
+
+            # Keep labels 5 pixels away
+            # from the canvas edges
+            labels['left']  .xoff =  5
+            labels['right'] .xoff = -5
+            labels['top']   .yoff = -5
+            labels['bottom'].yoff =  5
 
         self.__xcanvas.bindProps('showCursor',   sceneOpts)
         self.__ycanvas.bindProps('showCursor',   sceneOpts)
@@ -837,15 +865,22 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                 self.Refresh()
                 self.Update() 
             return
+ 
+        labels, orients, vertOrient  = self.__getLabels(overlay)
+        xlo, ylo, zlo, xhi, yhi, zhi = labels
 
         fontSize = sopts.labelSize
-        bgColour = sopts.bgColour
-        fgColour = colourmaps.complementaryColour(bgColour)
-        bgColour = [int(round(c * 255)) for c in bgColour]
-        fgColour = [int(round(c * 255)) for c in fgColour]        
- 
-        labels, vertOrient           = self.__getLabels(overlay)
-        xlo, ylo, zlo, xhi, yhi, zhi = labels
+        bgColour = tuple(sopts.bgColour)
+        fgColour = tuple(colourmaps.complementaryColour(bgColour))
+
+        # If any axis orientation is unknown, and the
+        # the background colour is black or white,
+        # make the foreground colour red, to highlight
+        # the unknown orientation. It's too difficult
+        # to do this for any background colour.
+        if constants.ORIENT_UNKNOWN in orients and \
+           bgColour in ((0, 0, 0, 1), (1, 1, 1, 1)):
+            fgColour = (1, 0, 0, 1) 
 
         xcxlo, xcxhi = ylo, yhi
         xcylo, xcyhi = zlo, zhi
@@ -887,18 +922,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             if not show:
                 continue
 
-            # TODO Adjust position for
-            #      font size/label content
-
-            lbls['left']  .xpos     = 0
-            lbls['left']  .ypos     = 0.5
-            lbls['right'] .xpos     = 0.95
-            lbls['right'] .ypos     = 0.5
-            lbls['bottom'].xpos     = 0.5
-            lbls['bottom'].ypos     = 0           
-            lbls['top']   .xpos     = 0.5
-            lbls['top']   .ypos     = 0.95
-            
             lbls['left']  .fontSize = fontSize
             lbls['right'] .fontSize = fontSize
             lbls['bottom'].fontSize = fontSize
@@ -920,6 +943,14 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     def __getLabels(self, refImage):
         """Generates some orientation labels to use for the given reference
         image (assumed to be a :class:`.Nifti` overlay).
+
+        Returns a tuple containing:
+
+          - The ``(xlo, ylo, zlo, xhi, yhi, zhi)`` bounds
+          - The ``(xorient, yorient, zorient)`` orientations (see
+            :meth:`.Image.getOrientation`)
+          - A boolean flag which indicates whether the label should be oriented
+            vertically (``True``), or horizontally (``False``).
         """
         
         opts = self._displayCtx.getOpts(refImage)
@@ -961,7 +992,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             yhi        = strings.anatomy['Nifti', 'highshort', yorient]
             zhi        = strings.anatomy['Nifti', 'highshort', zorient]
 
-        return (xlo, ylo, zlo, xhi, yhi, zhi), vertOrient
+        return ((xlo, ylo, zlo, xhi, yhi, zhi), 
+                (xorient, yorient, zorient),
+                vertOrient)
 
 
     def __calcCanvasSizes(self, *a):
