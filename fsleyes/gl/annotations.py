@@ -812,21 +812,54 @@ class Text(AnnotationObject):
 
         AnnotationObject.__init__(self, annot, xax, yax, *args, **kwargs)
 
-        self.text     = text
-        self.xpos     = xpos
-        self.ypos     = ypos
-        self.xoff     = xoff
-        self.yoff     = yoff 
-        self.fontSize = fontSize
-        self.bgColour = bgColour
-        self.halign   = halign
-        self.valign   = valign
-        self.angle    = angle
+        # We need to know the text size in pixels
+        # in order to correctly align/offset the
+        # text on the display. But we don't want
+        # to have to calculate the size on every
+        # draw. Therefore, updates to the text and
+        # font size attributes are protected,
+        # because they affect the final pixel text
+        # size. When they are changed, we clear the
+        # __textSize attribute to indicate that the
+        # text size needs to be re-calculated.
+        self.__text     = text
+        self.__fontSize = fontSize
+        self.__textSize = None
+        
+        self.xpos       = xpos
+        self.ypos       = ypos
+        self.xoff       = xoff
+        self.yoff       = yoff 
+        self.bgColour   = bgColour
+        self.halign     = halign
+        self.valign     = valign
+        self.angle      = angle
 
-        # TODO Pre-calculate the text size in pixels so you don't
-        #      have to do it on every draw. And build in attribute
-        #      access control so you know when atts have changed
-        #      and text size needs to be recalculated.
+
+    @property
+    def text(self):
+        """Returns the current text value."""
+        return self.__text
+
+
+    @text.setter
+    def text(self, value):
+        """Update the text."""
+        self.__text     = value
+        self.__textSize = None
+
+
+    @property
+    def fontSize(self):
+        """Returns the current font size."""
+        return self.__fontSize
+
+    
+    @fontSize.setter
+    def fontSize(self, value):
+        """Update the font size."""
+        self.__fontSize = value
+        self.__textSize = None
 
 
     def draw(self, zpos):
@@ -835,12 +868,14 @@ class Text(AnnotationObject):
         canvasSize = self.annot.getCanvasSize()
         pos        = [self.xpos * canvasSize[0], self.ypos * canvasSize[1]]
 
-        # if need text size recalculating
-        textSize = glroutines.text2D(self.text,
-                                     pos,
-                                     self.fontSize,
-                                     canvasSize,
-                                     calcSize=True)
+        if self.__textSize is None:
+            self.__textSize = glroutines.text2D(self.text,
+                                                pos,
+                                                self.fontSize,
+                                                canvasSize,
+                                                calcSize=True)
+
+        textSize = self.__textSize
 
         if   self.halign == 'centre': pos[0] -= textSize[0] / 2.0
         elif self.halign == 'right':  pos[0] -= textSize[0]

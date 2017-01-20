@@ -198,15 +198,15 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             self.__zlabels[side] = zannot.text("", 0, 0, width=2, hold=True)
 
         for labels in [self.__xlabels, self.__ylabels, self.__zlabels]:
-            labels['left']  .hAlign = 'left'
-            labels['right'] .hAlign = 'right'
-            labels['top']   .hAlign = 'centre'
-            labels['bottom'].hAlign = 'centre'
+            labels['left']  .halign = 'left'
+            labels['right'] .halign = 'right'
+            labels['top']   .halign = 'centre'
+            labels['bottom'].halign = 'centre'
 
-            labels['left']  .vAlign = 'centre'
-            labels['right'] .vAlign = 'centre'
-            labels['top']   .vAlign = 'top'
-            labels['bottom'].vAlign = 'bottom'
+            labels['left']  .valign = 'centre'
+            labels['right'] .valign = 'centre'
+            labels['top']   .valign = 'top'
+            labels['bottom'].valign = 'bottom'
 
             labels['left']  .xpos = 0
             labels['left']  .ypos = 0.5
