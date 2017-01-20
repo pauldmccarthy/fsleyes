@@ -23,6 +23,7 @@ import pwidgets.notebook                as notebook
 import fsl.utils.settings               as fslsettings
 import fsl.data.melodiclabels           as fslmellabels
 import fsl.data.melodicimage            as fslmelimage
+import fsleyes.displaycontext           as displaycontext
 import fsleyes.colourmaps               as fslcm
 import fsleyes.panel                    as fslpanel
 import fsleyes.autodisplay              as autodisplay
@@ -57,7 +58,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
     """
 
     
-    def __init__(self, parent, overlayList, displayCtx, frame):
+    def __init__(self, parent, overlayList, displayCtx, frame, canvasPanel):
         """Create a ``MelodicClassificationPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
@@ -65,6 +66,9 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         :arg overlayList: The :class:`.OverlayList`.
         
         :arg displayCtx:  The :class:`.DisplayContext` instance.
+
+        :arg canvasPanel: The :class:`.CanvasPanel` that owns this
+                          classification panel.
         """ 
         fslpanel.FSLeyesPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
@@ -74,7 +78,29 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
             style=(wx.ALIGN_CENTRE_HORIZONTAL |
                    wx.ALIGN_CENTRE_VERTICAL))
 
+        self.__overlay       = None
+        self.__canvasPanel   = canvasPanel
         self.__lut           = fslcm.getLookupTable('melodic-classes')
+
+        # If this classification panel has been
+        # added to a LightBoxPanel, we add a text
+        # annotation to said lightbox panel, to
+        # display the labels associated with the
+        # currently displayed component.
+        self.__textAnnotation = None
+        from fsleyes.views.lightboxpanel import LightBoxPanel
+
+        if isinstance(canvasPanel, LightBoxPanel):
+            annot = canvasPanel.getCanvas().getAnnotations()
+            self.__textAnnotation = annot.text(
+                '',
+                0.5, 1.0,
+                fontSize=30,
+                halign='centre',
+                valign='top',
+                width=2,
+                hold=True)
+        
         self.__notebook      = notebook.Notebook(self)
         self.__componentGrid = componentgrid.ComponentGrid(
             self.__notebook,
@@ -146,11 +172,23 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         """Must be called when this ``MelodicClassificaiionPanel`` is no longer
         used. Removes listeners, and destroys widgets.
         """
+
+
+        if self.__textAnnotation is not None:
+            annot = self.__canvasPanel.getCanvas().getAnnotations()
+            annot.dequeue(self.__textAnnotation, hold=True)
+        
         self._displayCtx .removeListener('selectedOverlay', self._name)
         self._overlayList.removeListener('overlays',        self._name)
         self.__componentGrid.destroy()
         self.__labelGrid    .destroy()
         
+        self.__deregisterOverlay()
+        self.__canvasPanel    = None
+        self.__textAnnotation = None
+        self.__overlay        = None
+        self.__lut            = None
+ 
         fslpanel.FSLeyesPanel.destroy(self)
 
 
@@ -167,9 +205,59 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         self.__saveButton .Enable(enable)
         self.__clearButton.Enable(enable)
 
+        if self.__textAnnotation is not None:
+            self.__textAnnotation.enabled = enable
+
         self.Layout()
 
 
+    def __deregisterOverlay(self):
+        """Called by :meth:`__selectedOverlayChanged`. Deregisters from
+        the currently selected overlay.
+        """
+
+        from fsleyes.views.lightboxpanel import LightBoxPanel
+
+        overlay        = self.__overlay
+        self.__overlay = None
+        
+        if overlay is None or \
+           not isinstance(self.__canvasPanel, LightBoxPanel):
+            return
+
+        melclass = overlay.getICClassification()
+        melclass.deregister(self._name)
+
+        try:
+            opts = self.getDisplayContext().getOpts(overlay)
+            opts.removeListener('volume', self._name)
+            
+        except displaycontext.InvalidOverlayError:
+            pass
+
+        
+    def __registerOverlay(self, overlay):
+        """Called by :meth:`__selectedOverlayChanged`. Registers with
+        the given overlay.
+        """ 
+
+        from fsleyes.views.lightboxpanel import LightBoxPanel
+
+        self.__overlay = overlay
+
+        if not isinstance(self.__canvasPanel, LightBoxPanel):
+            return
+
+        opts     = self.getDisplayContext().getOpts(overlay)
+        melclass = overlay.getICClassification()
+
+        opts.addListener('volume', self._name, self.__volumeChanged)
+        melclass.register(self._name, self.__labelsChanged, topic='added')
+        melclass.register(self._name, self.__labelsChanged, topic='removed')
+        
+        self.__updateTextAnnotation()
+
+    
     def __selectedOverlayChanged(self, *a):
         """Called when the :attr:`.DisplayContext.selectedOverlay` or
         :attr:`.OverlayList.overlays` changes.
@@ -183,15 +271,67 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
         overlay = self._displayCtx.getSelectedOverlay()
 
+        if self.__overlay is overlay:
+            return
+
         self.__componentGrid.setOverlay(overlay)
         self.__labelGrid    .setOverlay(overlay)
+
+        self.__deregisterOverlay()
 
         if (overlay is None) or \
            not isinstance(overlay, fslmelimage.MelodicImage):
             self.__enable(False, strings.messages[self, 'disabled'])
 
         else:
+            self.__registerOverlay(overlay)
             self.__enable(True)
+
+
+    def __volumeChanged(self, *a):
+        """Called when the :attr:`.NiftiOpts.volume` property of the
+        currently selected overlay changes. Calls
+        :meth:`__updateTextAnnotation`
+        
+        .. note:: This method is only called if the view panel that
+                  owns this ``MelodicClassificationPanel`` is a
+                  :class:`.LightBoxPanel`.
+        """
+        self.__updateTextAnnotation()
+
+        
+    def __labelsChanged(self, *a):
+        """Called when the :class:`.MelodicClassification` object associated
+        with the currently selected overlay changes. Calls
+        :meth:`__updateTextAnnotation`
+        
+        .. note:: This method is only called if the view panel that
+                  owns this ``MelodicClassificationPanel`` is a
+                  :class:`.LightBoxPanel`.
+        """
+        self.__updateTextAnnotation()
+
+        # Label change will not necessarily trigger a
+        # canvas refresh, so we manually trigger one
+        self.__canvasPanel.Refresh()
+
+
+    def __updateTextAnnotation(self):
+        """Updates a text annotation on the :class:`.LightBoxPanel` canvas to
+        display the labels associated with the volume (i.e. the current
+        component).
+        """
+        
+        opts     = self.getDisplayContext().getOpts(self.__overlay)
+        melclass = self.__overlay.getICClassification()
+
+        labels   = melclass.getLabels(opts.volume)
+        labels   = [melclass.getDisplayLabel(l) for l in labels]
+
+        colour   = self.__lut.getByName(labels[0]).colour
+
+        self.__textAnnotation.text   = ', '.join(labels)
+        self.__textAnnotation.colour = colour
 
         
     def __onLoadButton(self, ev):

@@ -492,7 +492,7 @@ def deserialisePerspective(persp):
         'ClusterPanel'               : ClusterPanel,
         'HistogramControlPanel'      : HistogramControlPanel,
         'HistogramToolBar'           : HistogramToolBar,
-        'LightboxToolBar'            : LightBoxToolBar,
+        'LightBoxToolBar'            : LightBoxToolBar,
         'LocationPanel'              : LocationPanel,
         'LookupTablePanel'           : LookupTablePanel,
         'MelodicClassificationPanel' : MelodicClassificationPanel,
@@ -623,6 +623,8 @@ def _addControlPanel(viewPanel, panelType):
         HistogramControlPanel
     from fsleyes.controls.histogramtoolbar           import HistogramToolBar
     from fsleyes.controls.lightboxtoolbar            import LightBoxToolBar
+    from fsleyes.controls.melodicclassificationpanel import \
+        MelodicClassificationPanel
     from fsleyes.controls.orthoeditactiontoolbar     import \
         OrthoEditActionToolBar
     from fsleyes.controls.orthoedittoolbar           import OrthoEditToolBar
@@ -641,20 +643,21 @@ def _addControlPanel(viewPanel, panelType):
     from fsleyes.controls.timeseriestoolbar          import TimeSeriesToolBar 
 
     args = {
-        CanvasSettingsPanel       : {'canvasPanel' : viewPanel},
-        HistogramControlPanel     : {'plotPanel'   : viewPanel},
-        HistogramToolBar          : {'histPanel'   : viewPanel},
-        LightBoxToolBar           : {'lb'          : viewPanel},
-        OrthoEditActionToolBar    : {'ortho'       : viewPanel},
-        OrthoEditToolBar          : {'ortho'       : viewPanel},
-        OrthoToolBar              : {'ortho'       : viewPanel},
-        OverlayDisplayToolBar     : {'viewPanel'   : viewPanel},
-        PlotListPanel             : {'plotPanel'   : viewPanel},
-        PlotToolBar               : {'plotPanel'   : viewPanel},
-        PowerSpectrumControlPanel : {'plotPanel'   : viewPanel},
-        PowerSpectrumToolBar      : {'psPanel'     : viewPanel},
-        TimeSeriesControlPanel    : {'plotPanel'   : viewPanel},
-        TimeSeriesToolBar         : {'tsPanel'     : viewPanel},
+        CanvasSettingsPanel        : {'canvasPanel' : viewPanel},
+        MelodicClassificationPanel : {'canvasPanel' : viewPanel},
+        HistogramControlPanel      : {'plotPanel'   : viewPanel},
+        HistogramToolBar           : {'histPanel'   : viewPanel},
+        LightBoxToolBar            : {'lb'          : viewPanel},
+        OrthoEditActionToolBar     : {'ortho'       : viewPanel},
+        OrthoEditToolBar           : {'ortho'       : viewPanel},
+        OrthoToolBar               : {'ortho'       : viewPanel},
+        OverlayDisplayToolBar      : {'viewPanel'   : viewPanel},
+        PlotListPanel              : {'plotPanel'   : viewPanel},
+        PlotToolBar                : {'plotPanel'   : viewPanel},
+        PowerSpectrumControlPanel  : {'plotPanel'   : viewPanel},
+        PowerSpectrumToolBar       : {'psPanel'     : viewPanel},
+        TimeSeriesControlPanel     : {'plotPanel'   : viewPanel},
+        TimeSeriesToolBar          : {'tsPanel'     : viewPanel},
     }
 
     args = args.get(panelType, {})

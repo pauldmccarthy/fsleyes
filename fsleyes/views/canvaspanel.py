@@ -448,7 +448,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         :meth:`.ViewPanel.togglePanel`.
         """ 
         self.togglePanel(melclasspanel.MelodicClassificationPanel,
-                         location=wx.RIGHT)
+                         location=wx.RIGHT,
+                         canvasPanel=self)
 
 
     def getSceneOptions(self):
