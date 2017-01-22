@@ -368,6 +368,11 @@ def bootstrap(glVersion=None):
     log.debug('Using OpenGL {} implementation with renderer {}'.format(
         verstr, renderer))
 
+    # If on linux, we need to call glutInit.
+    # If on OSX, we don't need to bother.
+    if fslplatform.os == 'Linux':
+        import OpenGL.GLUT as GLUT
+        GLUT.glutInit()
 
     # Populate this module, and set
     # the fsl.utils.platform GL fields
