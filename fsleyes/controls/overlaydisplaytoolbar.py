@@ -611,8 +611,8 @@ _TOOLBAR_PROPS = td.TypeDict({
         tooltip=_TOOLTIPS['VolumeOpts.cmap']),
     'VolumeOpts.useNegativeCmap' : props.Widget(
         'useNegativeCmap',
-        icon=[icons.findImageFile('twoCmaps24'),
-              icons.findImageFile('oneCmap24')],
+        icon=[icons.findImageFile('twocmaps24'),
+              icons.findImageFile('onecmap24')],
         toggle=True,
         tooltip=_TOOLTIPS['VolumeOpts.useNegativeCmap']),
     
