@@ -77,7 +77,7 @@ class ReloadOverlayAction(action.Action):
         """
         ovl = self.__displayCtx.getSelectedOverlay()
 
-        if ovl is None or not type(ovl) != fslimage.Image:
+        if ovl is None or type(ovl) != fslimage.Image:
             raise RuntimeError('Only Image overlays can be reloaded')
 
         index      = self.__overlayList.index(ovl)
