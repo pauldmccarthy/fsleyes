@@ -1065,6 +1065,20 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         if layout == 'grid' and nCanvases <= 2:
             layout = 'horizontal'
 
+        # For horizontal/vertical layout, 
+        # the canvas layout is:
+        #
+        #   | X/sagittal | Y/coronal | Z/axial |
+        #
+        # But for grid layout, the canvas
+        # layout is:
+        #
+        #   | Y/coronal | X/sagittal |
+        #   | Z/axial   |            |
+        # 
+        if layout == 'grid':
+            canvases = [self.__ycanvas, self.__xcanvas, self.__zcanvas]
+
         # Regardless of the layout, we use a
         # FlexGridSizer with varying numbers
         # of rows/columns, depending upon the
