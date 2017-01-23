@@ -73,7 +73,7 @@ The second scenario is more serious, as it means that the orientation
 information for one or more images has somehow been corrupted.  The
 :ref:`overlay information panel <overlays_overlay_information_panel>` is
 useful here, as it allows you to check the orientation information of each
-images, including the ``qform`` and ``sform`` codes and transformation
+images, including the ``sform`` and ``qform`` codes and transformation
 matrices, and the voxel and world coordinate orientations.
 
 

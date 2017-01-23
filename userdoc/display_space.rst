@@ -56,7 +56,7 @@ the display, even if they have different resolution or orientation.
 
 
 For NIFTI images, FSLeyes accomplishes this by using the transformation
-matrices (the ``qform`` and/or ``sform`` fields) defined in the NIFTI file
+matrices (the ``sform`` and/or ``qform`` fields) defined in the NIFTI file
 header. These transformation matrices are used to convert voxel, or data,
 coordinates into display, or "world", coordinates.  For VTK models, FSLeyes
 uses the the transformation matrix of that model's reference image to position
@@ -220,28 +220,47 @@ World coordinate system
 The |nifti|_ specification allows you to store two affine transformation
 matrices in the header of a NIFTI image. These matrices, referred to as the
 ``qform`` and ``sform``, are intended to be used for encoding a transformation
-from voxel coordinates into some other coordinate system [*]_. The ``qform``
-and ``sform`` are commonly used to encode a transformation from voxel
-coordinates into:
+from voxel coordinates into some other coordinate system [*]_. The ``sform``
+and ``qform`` are respectively intended to be used for encoding a
+transformation from voxel coordinates into:
 
 
 - The coordinate system of a standard template such as MNI152 or Talairach
   space.
 - The coordinate system of the MRI scanner in which the image was acquired.
 
-  
-While it is possible to store two independent transformations in a NIFTI image
-header, FSL generally sets both the ``qform`` and ``sform`` to be the same
-transformation. Therefore, throughout the FSLeyes source code and
-documentation, the terms ``qform`` and ``sform`` are typically
-interchangeable.
+
+The |nifti|_ header also stores a code for both the ``sform`` and ``qform``
+which specifies the target space of the transformation.
 
 
-In FSLeyes, the target space of this transformation (i.e.  the space into
+In FSLeyes, the target space of this transformation (i.e. the space into
 which voxel coordinates are transformed) is referred to as the *world
-coordinate system* of that image.  The |nifti|_ specification requires that
-the world coordiate system of all images are (approximately) oriented such
-that:
+coordinate system* of that image.  FSLeyes follows the same process as
+``nibabel`` in choosing which voxel to world transformation matrix should be
+used for an image (see
+http://nipy.org/nibabel/nifti_images.html#the-nifti-affines):
+
+
+  1. If the ``sform`` code is not ``NIFTI_XFORM_UNKNOWN``, use the
+     sform matrix; else
+     
+  2. If the ``qform`` code is not ``NIFTI_XFORM_UNKNOWN``, use the qform
+     matrix; else
+     
+  3. Use the *fall-back* matrix.
+
+
+The *fall-back* matrix is a simple scaling matrix in which the size of a voxel
+along each dimension is scaled by the ``pixdim`` fields in the |nifti|_
+header.  The fall-back matrix used by FSLeyes differs to that used by
+``nibabel``. In ``nibabel``, the origin (world coordinates (0, 0, 0)) is set
+to the centre of the image. In FSLeyes, we set the world coordinate orign to
+be the corner of the image, i.e. the corner of voxel (0, 0, 0).
+
+
+The |nifti|_ specification requires that the world coordiate system of all
+images are (approximately) oriented such that:
 
 - The X axis increases from left ro right
 - The Y axis increases from posterior to anterior
@@ -346,8 +365,32 @@ And for completeness, the inverse calculation is also straightforward:
 
 
 
-   
-
 .. [*] In |FSL|_, C, Python, and |nibabel|_, voxel coordinates and indices
        begin from 0.  However, if you were to load a NIFTI image into MATLAB,
        the voxel coordinates and indices would begin from 1.
+
+
+ANALYZE images
+--------------
+
+
+FSLeyes can load and display ANALYZE images (see the `SPM99 ANALYZE format
+specification
+<http://www.fil.ion.ucl.ac.uk/spm/software/spm99/#AzeFmt>`_). For these
+images, FSLeyes uses a scaling matrix using the ``pixdim`` fields, with an
+additional translation defined by the contents of the ``origin`` field . The
+creation of this matrix is handled by ``nibabel`` (see
+http://nipy.org/nibabel/reference/nibabel.analyze.html).
+
+FSLeyes (and ``nibabel``) requires that all ANALYZE images have a voxel
+coordinate system where:
+
+ - The X axis increases from right to left
+ - The Y axis increases from posterior to anterior
+ - The Z axis increases from inferior to superior
+
+In order to force the world coordinate system of ANALYZE images to be in RAS
+orientation (and thus compliant with the `NIFTI specification
+<display_space_world_coordinate_system>`_), negative ``pixdim`` values are
+ignored by FSLeyes, and a left-right flip (on the X axis) is encoded into the
+transformation.
