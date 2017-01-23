@@ -308,6 +308,7 @@ def configLogging(namespace):
     # Set up my own custom logging level
     # for tracing memory related events.
     logging.MEMORY = 15
+    
     def _logmemory(self, message, *args, **kwargs):
         """Log function for my custom ``logging.MEMORY`` logging level. """
         if self.isEnabledFor(logging.MEMORY):
