@@ -37,9 +37,10 @@ overlays can potentially be displayed in one of four coordinate systems:
 
 
  **world**                      (a.k.a. ``affine``) The image data voxel 
-                                coordinates are transformed by the ``qform``/
-                                ``sform`` transformation matrix stored in the
-                                NIFTI header.
+                                coordinates are transformed by the
+                                transformation matrix stored in the NIFTI
+                                header - see the :class:`.Nifti` class for more
+                                details.
  ============================== ===============================================
 
 

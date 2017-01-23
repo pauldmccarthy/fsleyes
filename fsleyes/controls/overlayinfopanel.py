@@ -413,27 +413,33 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                 section=dimSect)
 
         # For NIFTI images, we show both
-        # the sform and qform matrices
+        # the sform and qform matrices,
+        # in addition to the effective
+        # transformation
         if isNifti:
             
             qformCode = int(hdr['qform_code'])
             sformCode = int(hdr['sform_code'])
 
-            info.addInfo(strings.nifti['qform_code'],
-                         strings.anatomy['Nifti', 'space', qformCode],
+            info.addInfo(strings.nifti['transform'],
+                         self.__formatArray(overlay.voxToWorldMat),
                          section=xformSect)
+
             info.addInfo(strings.nifti['sform_code'],
                          strings.anatomy['Nifti', 'space', sformCode],
                          section=xformSect)
-
-            if qformCode != constants.NIFTI_XFORM_UNKNOWN:
-                info.addInfo(strings.nifti['qform'],
-                             self.__formatArray(img.get_qform()),
-                             section=xformSect)
+            info.addInfo(strings.nifti['qform_code'],
+                         strings.anatomy['Nifti', 'space', qformCode],
+                         section=xformSect)
 
             if sformCode != constants.NIFTI_XFORM_UNKNOWN:
                 info.addInfo(strings.nifti['sform'],
                              self.__formatArray(img.get_sform()),
+                             section=xformSect)
+
+            if qformCode != constants.NIFTI_XFORM_UNKNOWN:
+                info.addInfo(strings.nifti['qform'],
+                             self.__formatArray(img.get_qform()),
                              section=xformSect)
 
         # For ANALYZE images, we show 

@@ -401,7 +401,7 @@ actions = TypeDict({
     'OrthoPanel.toggleOrthoToolBar'       : 'Ortho toolbar',
     'OrthoPanel.toggleEditMode'           : 'Edit mode',
     'OrthoPanel.toggleCropMode'           : 'Crop',
-    'OrthoPanel.toggleEditTransformPanel' : 'Edit transform',
+    'OrthoPanel.toggleEditTransformPanel' : 'Nudge',
     'OrthoPanel.toggleEditPanel'          : 'Edit settings panel',
     'OrthoPanel.resetDisplay'             : 'Reset display',
     'OrthoPanel.centreCursor'             : 'Centre cursor',
@@ -1024,9 +1024,10 @@ nifti = TypeDict({
     'worldOrient.1' : 'Y world orientation',
     'worldOrient.2' : 'Z world orientation',
 
-    'qform'  : 'QForm matrix',
-    'sform'  : 'SForm matrix',
-    'affine' : 'Pixdim/origin matrix',
+    'transform' : 'Transformation matrix',
+    'qform'     : 'QForm matrix',
+    'sform'     : 'SForm matrix',
+    'affine'    : 'Pixdim/origin matrix',
 
     'dim1' : 'dim1',
     'dim2' : 'dim2',

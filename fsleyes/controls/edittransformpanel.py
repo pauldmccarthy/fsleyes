@@ -44,7 +44,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
     transformation matrix - it uses functions in the :mod:`.applyflirtxfm`
     module to load and calculate a FLIRT transformation matrix and reference 
     image. When the user loads a FLIRT matrix, it is used in place of the
-    :attr:`.Image.voxToWorldMat` transformation (the image sform/qform).
+    :attr:`.Image.voxToWorldMat` transformation.
 
     
     .. note:: The transformation that the user defines with this panel is
