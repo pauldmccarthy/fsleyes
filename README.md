@@ -51,6 +51,8 @@ following versions:
    - `ARB_instanced_arrays`
    - `ARB_draw_instanced`
 
+*FSLeyes* also requires the presence of GLUT, or FreeGLUT.
+
 
 Credits
 -------
