@@ -232,7 +232,7 @@ def copyImage(overlayList,
     if is4D and not copy4D:
         roi = list(roi[:3]) + [(opts.volume, opts.volume + 1)]
 
-    shape = [hi - lo for hi, lo in roi]
+    shape = [hi - lo for lo, hi in roi]
     slc   = tuple([slice(lo, hi) for lo, hi in roi])
     
     if createMask: data = np.zeros(shape)
