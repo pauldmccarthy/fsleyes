@@ -90,7 +90,7 @@ class ApplyFlirtXfmAction(action.Action):
         matFile, refFile = promptForFlirtFiles(
             self.__frame, overlay, overlayList, displayCtx)
 
-        if matFile is None:
+        if matFile is None or refFile is None:
             return
 
         xform = calculateTransform(
@@ -129,7 +129,7 @@ def calculateTransform(overlay, overlayList, displayCtx, matFile, refFile):
     return transform.flirtMatrixToSform(flirtMat, overlay, refImg)
         
 
-def promptForFlirtFiles(parent, overlay, overlayList, displayCtx):
+def promptForFlirtFiles(parent, overlay, overlayList, displayCtx, save=False):
     """Displays a dialog prompting the user to select a FLIRT
     transformation matrix file and associated reference image for
     the given overlay.
@@ -137,7 +137,8 @@ def promptForFlirtFiles(parent, overlay, overlayList, displayCtx):
     :arg parent:      The :mod:`wx` parent object.
     :arg overlay:     The overlay to load a FLIRT matrix for.
     :arg overlayList: The :class:`.OverlayList` instance.
-    :arg displayCtx:  The :class:`.DisplayContext` instance.     
+    :arg displayCtx:  The :class:`.DisplayContext` instance.
+    :arg save:        Prompt the user to save a transformation matrix instead.
     """
 
     import wx
@@ -147,7 +148,33 @@ def promptForFlirtFiles(parent, overlay, overlayList, displayCtx):
     else:
         matFile, refFile = None, None
 
-    dlg = FlirtFileDialog(parent, overlay.name, matFile, refFile)
+    refOptFiles = []
+    refOpts     = []
+    selectedRef = None
+    
+    for ovl in reversed(overlayList):
+
+        if ovl is overlay:                      continue
+        if not isinstance(ovl, fslimage.Image): continue
+
+        refOptFiles.append(ovl.dataSource)
+        refOpts    .append(displayCtx.getDisplay(ovl).name)
+
+        if refFile is not None and ovl.dataSource == refFile:
+            selectedRef = len(refOpts) - 1
+
+    if len(refOpts) == 0:
+        refOpts     = None
+        refOptFiles = None
+
+    dlg = FlirtFileDialog(parent,
+                          overlay.name,
+                          refOpts=refOpts,
+                          refOptFiles=refOptFiles,
+                          selectedRef=selectedRef,
+                          matFile=matFile,
+                          refFile=refFile,
+                          save=save)
         
     dlg.Layout()
     dlg.Fit()
@@ -254,57 +281,103 @@ class FlirtFileDialog(wx.Dialog):
     """The ``FlirtFileDialog`` class is a ``wx.Dialog`` which prompts the
     user to select a FLIRT transformation matrix and reference image associated
     with a source image.
+
+    The user can select a reference image either from a drop down box, or
+    by selecting a file in the file system.
     """
 
 
-    def __init__(self, parent, srcFile, matFile=None, refFile=None):
+    def __init__(self,
+                 parent,
+                 srcFile,
+                 refOpts=None,
+                 refOptFiles=None,
+                 selectedRef=None,
+                 matFile=None,
+                 refFile=None,
+                 save=False):
         """Create a ``FlirtFileDialog``.
 
-        :arg parent:  The ``wx`` parent object.
-        :arg srcFile: Path to the FLIRT source image file
-        :arg matFile: Initial path to a FLIRT transformation matrix file
-        :arg refFile: Initial Path to a FLIRT reference image file
+        :arg parent:      The ``wx`` parent object.
+        
+        :arg srcFile:     Path to the FLIRT source image file
+
+        :arg refOpts:     Options to use in the reference image drop down box.
+
+        :arg refOptFiles: File paths which correspond to the ``refOpts``.
+
+        :arg selectedRef: Index of initially selected ``refOpt``.
+        
+        :arg matFile:     Initial path to a FLIRT transformation matrix file
+        
+        :arg refFile:     Initial Path to a FLIRT reference image file
+        
+        :arg save:        If ``True``, the user will be prompted to save a
+                          FLIRT matrix. Otherwise (the default), the user will
+                          be prompted to load an existing FLIRT matrix.
         """
 
         wx.Dialog.__init__(self,
                            parent,
                            style=(wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP))
 
-        self.__srcFile = srcFile
-        self.__matFile = None
-        self.__refFile = None
-        
-        overlayName   = wx.StaticText(self, style=wx.ALIGN_CENTRE_HORIZONTAL)
-        label         = wx.StaticText(self, style=wx.ALIGN_CENTRE_HORIZONTAL)
-        matFileLabel  = wx.StaticText(self)
-        refFileLabel  = wx.StaticText(self)
-        matFileText   = wx.TextCtrl(self)
-        refFileText   = wx.TextCtrl(self) 
-        matFileButton = wx.Button(self)
-        refFileButton = wx.Button(self)
-        okButton      = wx.Button(self, wx.ID_OK)
-        cancelButton  = wx.Button(self, wx.ID_CANCEL)
+        if refOpts     is None: refOpts     = []
+        if refOptFiles is None: refOptFiles = []
+        if selectedRef is None: selectedRef = 0
+            
+        self.__srcFile     = srcFile
+        self.__refOpts     = list(refOpts)
+        self.__refOptFiles = list(refOptFiles)
+        self.__matFile     = None
+        self.__refFile     = None
+        self.__save        = save
 
-        self.__matFileText = matFileText
-        self.__refFileText = refFileText
+        refOpts = list(refOpts) + [strings.labels[self, 'refChoiceSelectFile']]
+        
+        overlayName    = wx.StaticText(self, style=wx.ALIGN_CENTRE_HORIZONTAL)
+        label          = wx.StaticText(self, style=wx.ALIGN_CENTRE_HORIZONTAL)
+        refChoiceLabel = wx.StaticText(self) 
+        matFileLabel   = wx.StaticText(self)
+        refFileLabel   = wx.StaticText(self)
+        refChoice      = wx.Choice(self, choices=refOpts)
+        matFileText    = wx.TextCtrl(self)
+        refFileText    = wx.TextCtrl(self) 
+        matFileButton  = wx.Button(self)
+        refFileButton  = wx.Button(self)
+        okButton       = wx.Button(self, wx.ID_OK)
+        cancelButton   = wx.Button(self, wx.ID_CANCEL)
+        
+        self.__matFileText   = matFileText
+        self.__refFileText   = refFileText
+        self.__refFileLabel  = refFileLabel
+        self.__refFileButton = refFileButton
+        self.__refChoice     = refChoice
 
         srcName = op.basename(srcFile)
         srcName = fslimage.removeExt(srcFile)
 
-        overlayName  .SetLabel(strings.labels[self, 'source'].format(srcName))
-        matFileLabel .SetLabel(strings.labels[self, 'matFile'])
-        refFileLabel .SetLabel(strings.labels[self, 'refFile'])
-        matFileButton.SetLabel(strings.labels[self, 'selectFile'])
-        refFileButton.SetLabel(strings.labels[self, 'selectFile'])
-        label        .SetLabel(strings.labels[self, 'message'])
-        okButton     .SetLabel(strings.labels[self, 'ok'])
-        cancelButton .SetLabel(strings.labels[self, 'cancel'])
+        overlayName   .SetLabel(strings.labels[self, 'source'].format(srcName))
+        refChoiceLabel.SetLabel(strings.labels[self, 'refFile'])
+        matFileLabel  .SetLabel(strings.labels[self, 'matFile'])
+        refFileLabel  .SetLabel(strings.labels[self, 'refFile'])
+        matFileButton .SetLabel(strings.labels[self, 'selectFile'])
+        refFileButton .SetLabel(strings.labels[self, 'selectFile'])
+        okButton      .SetLabel(strings.labels[self, 'ok'])
+        cancelButton  .SetLabel(strings.labels[self, 'cancel'])
+        refChoice     .SetSelection(selectedRef) 
 
-        if matFile is not None: matFileText.SetValue(matFile)
-        if refFile is not None: refFileText.SetValue(refFile)
+        if save: label.SetLabel(strings.labels[self, 'save.message'])
+        else:    label.SetLabel(strings.labels[self, 'load.message'])
+
+        if matFile is not None:
+            matFileText.SetValue(matFile)
+            matFileText.SetInsertionPointEnd()
+        if refFile is not None:
+            refFileText.SetValue(refFile)
+            refFileText.SetInsertionPointEnd()
 
         sizer       = wx.BoxSizer(wx.VERTICAL)
-        widgetSizer = wx.FlexGridSizer(2, 3, 0, 0)
+        widgetSizer = wx.FlexGridSizer(3, 3, 0, 0)
         btnSizer    = wx.BoxSizer(wx.HORIZONTAL)
 
         widgetSizer.AddGrowableCol(1)
@@ -319,12 +392,21 @@ class FlirtFileDialog(wx.Dialog):
         sizer.Add(btnSizer,    flag=wx.EXPAND | wx.LEFT | wx.RIGHT, border=10)
         sizer.Add((1, 10),     flag=wx.EXPAND)
 
-        widgetSizer.Add(matFileLabel,  flag=wx.ALL, border=3)
-        widgetSizer.Add(matFileText,   flag=wx.EXPAND | wx.ALL, proportion=1)
-        widgetSizer.Add(matFileButton, flag=wx.EXPAND)
-        widgetSizer.Add(refFileLabel,  flag=wx.ALL, border=3)
-        widgetSizer.Add(refFileText,   flag=wx.EXPAND | wx.ALL, proportion=1)
+        if refOpts is not None:
+            widgetSizer.Add(refChoiceLabel, flag=wx.ALL,    border=3)
+            widgetSizer.Add(refChoice,      flag=wx.EXPAND, proportion=1)
+            widgetSizer.Add((-1, -1))
+        else:
+            widgetSizer.Add((-1, -1))
+            widgetSizer.Add((-1, -1))
+            widgetSizer.Add((-1, -1))
+
+        widgetSizer.Add(refFileLabel,  flag=wx.ALL,    border=3)
+        widgetSizer.Add(refFileText,   flag=wx.EXPAND, proportion=1)
         widgetSizer.Add(refFileButton, flag=wx.EXPAND)
+        widgetSizer.Add(matFileLabel,  flag=wx.ALL,    border=3)
+        widgetSizer.Add(matFileText,   flag=wx.EXPAND, proportion=1)
+        widgetSizer.Add(matFileButton, flag=wx.EXPAND)
 
         btnSizer.Add((10, 1),      flag=wx.EXPAND, proportion=1)
         btnSizer.Add(okButton,     flag=wx.EXPAND)
@@ -342,6 +424,13 @@ class FlirtFileDialog(wx.Dialog):
         cancelButton .Bind(wx.EVT_BUTTON, self.__onCancelButton)
         matFileButton.Bind(wx.EVT_BUTTON, self.__onMatFileButton)
         refFileButton.Bind(wx.EVT_BUTTON, self.__onRefFileButton)
+        refChoice    .Bind(wx.EVT_CHOICE, self.__onRefChoice)
+
+        if len(refOpts) == 1:
+            refChoice     .Disable()
+            refChoiceLabel.Disable()
+        else:
+            self.__onRefChoice(None)
 
         
     def GetMatFile(self):
@@ -351,16 +440,21 @@ class FlirtFileDialog(wx.Dialog):
         
         matFile = self.__matFileText.GetValue()
 
-        if op.exists(matFile): return op.abspath(matFile)
-        else:                  return None
+        if self.__save or op.exists(matFile): return op.abspath(matFile)
+        else:                                 return None
 
     
     def GetRefFile(self):
         """Returns the current value of the reference file, as a string, or
         ``None``, if the file path is not valid.
         """
-        
-        refFile = self.__refFileText.GetValue()
+
+        choice = self.__refChoice.GetSelection()
+
+        if choice < len(self.__refOpts):
+            refFile = self.__refOptFiles[choice]
+        else:
+            refFile = self.__refFileText.GetValue()
 
         if op.exists(refFile): return op.abspath(refFile)
         else:                  return None    
@@ -377,19 +471,36 @@ class FlirtFileDialog(wx.Dialog):
         """
         self.__matFileText.SetValue('')
         self.__refFileText.SetValue('')
-        self.EndModal(wx.ID_CANCEL) 
+        self.EndModal(wx.ID_CANCEL)
+
+
+    def __onRefChoice(self, ev):
+        """Called when the user changes the selection in the reference image
+        drop down box. Enables/disables the reference image file selection
+        widgets as necessary.
+        """
+
+        choice     = self.__refChoice.GetSelection()
+        selectFile = choice >= len(self.__refOpts)
+
+        self.__refFileLabel .Enable(selectFile)
+        self.__refFileText  .Enable(selectFile)
+        self.__refFileButton.Enable(selectFile)
 
         
     def __onMatFileButton(self, ev):
         """Called when the user clicks the matrix file select button.
         Displays a file dialog prompting the user to select a matrix file.
-        """ 
+        """
+
+        if self.__save: style = wx.FD_SAVE
+        else:           style = wx.FD_OPEN
 
         dlg = wx.FileDialog(
             self,
             defaultDir=op.dirname(self.__srcFile),
             message=strings.messages[self, 'matFile'],
-            style=wx.FD_OPEN)
+            style=style)
 
         if dlg.ShowModal() == wx.ID_OK:
             self.__matFileText.SetValue(dlg.GetPath())

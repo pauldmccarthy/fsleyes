@@ -241,6 +241,12 @@ messages = TypeDict({
     'CorrelateAction.calculating' :
     'Calculating correlation values for seed voxel [{}, {}, {}] ...',
 
+    'EditTransformPanel.saveFlirt.error' :
+    'An error occurred saving the FLIRT matrix.\n\nDetails: {}',
+
+    'SaveFlirtXfmAction.error' :
+    'An error occurred saving the FLIRT matrix.\n\nDetails: {}', 
+
     'FlirtFileDialog.matFile'    : 'Select FLIRT transformation matrix file',
     'FlirtFileDialog.refFile'    : 'Select FLIRT reference image', 
 })
@@ -302,8 +308,8 @@ titles = TypeDict({
 
     'MelodicClassificationPanel' : 'Melodic IC classification',
 
-    'CropImagePanel'             : 'Crop image',
-    'EditTransformPanel'         : 'Transform image',
+    'CropImagePanel'             : 'Crop',
+    'EditTransformPanel'         : 'Nudge',
 
     'LookupTablePanel.loadLut'     : 'Select a lookup table file',
     'LookupTablePanel.labelExists' : 'Label already exists',
@@ -366,6 +372,7 @@ actions = TypeDict({
     'AboutAction'              : 'About FSLeyes',
     'PearsonCorrelateAction'   : 'Seed correlation (Pearson)',
     'ApplyFlirtXfmAction'      : 'Load FLIRT transformation',
+    'SaveFlirtXfmAction'       : 'Export FLIRT transformation',
     'PCACorrelateAction'       : 'Seed correlation (PCA)',
 
     'FSLeyesFrame.removeFocusedViewPanel'  : 'Close',
@@ -642,20 +649,26 @@ labels = TypeDict({
     'EditTransformPanel.rotate'      : 'Rotate',
     'EditTransformPanel.apply'       : 'Apply',
     'EditTransformPanel.reset'       : 'Reset',
-    'EditTransformPanel.loadFlirt'   : 'Load FLIRT transform',
+    'EditTransformPanel.loadFlirt'   : 'Load FLIRT',
+    'EditTransformPanel.saveFlirt'   : 'Save FLIRT',
     'EditTransformPanel.cancel'      : 'Close',
 
 
-    'FlirtFileDialog.message' :
+    'FlirtFileDialog.load.message' :
     'Select a FLIRT transformation matrix\n'
-    'and the corresponding reference image',
+    'and the corresponding reference image.',
+    
+    'FlirtFileDialog.save.message' :
+    'Specify a file name for the FLIRT transformation\n'
+    'matrix, and choose the corresponding reference image.',
 
-    'FlirtFileDialog.source'     : 'Source image: {}',
-    'FlirtFileDialog.matFile'    : 'Matrix file',
-    'FlirtFileDialog.refFile'    : 'Reference image',
-    'FlirtFileDialog.selectFile' : 'Choose',
-    'FlirtFileDialog.ok'         : 'Ok',
-    'FlirtFileDialog.cancel'     : 'Cancel',
+    'FlirtFileDialog.source'              : 'Source image: {}',
+    'FlirtFileDialog.refChoiceSelectFile' : 'Select file manually',
+    'FlirtFileDialog.matFile'             : 'Matrix file',
+    'FlirtFileDialog.refFile'             : 'Reference image',
+    'FlirtFileDialog.selectFile'          : 'Choose',
+    'FlirtFileDialog.ok'                  : 'Ok',
+    'FlirtFileDialog.cancel'              : 'Cancel',
 })
 
 

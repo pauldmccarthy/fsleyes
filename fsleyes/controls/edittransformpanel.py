@@ -10,6 +10,8 @@ control panel which allows the user to adjust the ``voxToWorldMat`` of an
 """
 
 
+import logging
+
 import wx
 
 import numpy as np
@@ -24,6 +26,10 @@ import fsleyes.panel                 as fslpanel
 import fsleyes.displaycontext        as displaycontext
 import fsleyes.strings               as strings
 import fsleyes.actions.applyflirtxfm as applyflirtxfm
+import fsleyes.actions.saveflirtxfm  as saveflirtxfm
+
+
+log = logging.getLogger(__name__)
 
 
 class EditTransformPanel(fslpanel.FSLeyesPanel):
@@ -40,11 +46,11 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
     attribute.
 
     
-    This panel also has a button which allows the user to load a FLIRT
-    transformation matrix - it uses functions in the :mod:`.applyflirtxfm`
-    module to load and calculate a FLIRT transformation matrix and reference 
-    image. When the user loads a FLIRT matrix, it is used in place of the
-    :attr:`.Image.voxToWorldMat` transformation.
+    This panel also has buttons which allow the user to load/save a FLIRT
+    transformation matrix - they use functions in the :mod:`.applyflirtxfm`
+    and :mod:`.saveflirtxfm` modules to load, save, and calculate FLIRT
+    transformation matrices. When the user loads a FLIRT matrix, it is used in
+    place of the :attr:`.Image.voxToWorldMat` transformation.
 
     
     .. note:: The transformation that the user defines with this panel is
@@ -99,7 +105,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         scArgs = {
             'value'    : 0,
             'minValue' : 0.001,
-            'maxValue' : 10,
+            'maxValue' : 3,
             'style'    : fslider.SSP_NO_LIMITS
         }        
 
@@ -143,6 +149,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         self.__apply     = wx.Button(self)
         self.__reset     = wx.Button(self)
         self.__loadFlirt = wx.Button(self)
+        self.__saveFlirt = wx.Button(self)
         self.__cancel    = wx.Button(self)
 
         self.__overlayName  .SetLabel(strings.labels[self, 'noOverlay'])
@@ -152,6 +159,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         self.__apply        .SetLabel(strings.labels[self, 'apply'])
         self.__reset        .SetLabel(strings.labels[self, 'reset'])
         self.__loadFlirt    .SetLabel(strings.labels[self, 'loadFlirt'])
+        self.__saveFlirt    .SetLabel(strings.labels[self, 'saveFlirt'])
         self.__cancel       .SetLabel(strings.labels[self, 'cancel'])
         self.__oldXformLabel.SetLabel(strings.labels[self, 'oldXform'])
         self.__newXformLabel.SetLabel(strings.labels[self, 'newXform'])
@@ -210,6 +218,8 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         self.__buttonSizer.Add(self.__reset,     flag=wx.EXPAND)
         self.__buttonSizer.Add((10, 1),          flag=wx.EXPAND)
         self.__buttonSizer.Add(self.__loadFlirt, flag=wx.EXPAND)
+        self.__buttonSizer.Add((10, 1),          flag=wx.EXPAND)
+        self.__buttonSizer.Add(self.__saveFlirt, flag=wx.EXPAND)
         self.__buttonSizer.Add((10, 1),          flag=wx.EXPAND) 
         self.__buttonSizer.Add(self.__cancel,    flag=wx.EXPAND)
         self.__buttonSizer.Add((10, 1),          flag=wx.EXPAND, proportion=1) 
@@ -230,6 +240,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         self.__apply    .Bind(wx.EVT_BUTTON, self.__onApply)
         self.__reset    .Bind(wx.EVT_BUTTON, self.__onReset)
         self.__loadFlirt.Bind(wx.EVT_BUTTON, self.__onLoadFlirt)
+        self.__saveFlirt.Bind(wx.EVT_BUTTON, self.__onSaveFlirt)
         self.__cancel   .Bind(wx.EVT_BUTTON, self.__onCancel)
         
         displayCtx .addListener('selectedOverlay',
@@ -523,18 +534,66 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
             overlayList,
             displayCtx)
 
-        if matFile is None:
+        if matFile is None or refFile is None:
             return
 
-        sform = applyflirtxfm.calculateTransform(
+        xform = applyflirtxfm.calculateTransform(
             overlay,
             overlayList,
             displayCtx,
             matFile,
             refFile)
         
-        self.__extraXform = sform
+        self.__extraXform = xform
         self.__xformChanged()
+
+
+    def __onSaveFlirt(self, ev):
+        """Called when the user clicks the *Save FLIRT* button. Saves the
+        current transformation to a FLIRT matrix file.
+        """
+        
+        overlay = self.__overlay
+
+        if overlay is None:
+            return
+
+        overlayList      = self.getOverlayList()
+        displayCtx       = self.getDisplayContext()
+        matFile, refFile = applyflirtxfm.promptForFlirtFiles(
+            self,
+            overlay,
+            overlayList,
+            displayCtx,
+            save=True)
+
+        if matFile is None or refFile is None:
+            return
+
+        if self.__extraXform is None: v2wXform = overlay.voxToWorldMat
+        else:                         v2wXform = self.__extraXform
+
+        newXform = self.__getCurrentXform()
+        v2wXform = transform.concat(newXform, v2wXform)
+
+        xform = saveflirtxfm.calculateTransform(
+            overlay,
+            overlayList,
+            displayCtx,
+            refFile,
+            srcXform=v2wXform)
+
+        try:
+            np.savetxt(matFile, xform, fmt='%0.10f')
+            
+        except Exception as e:
+            
+            log.warn('Error saving FLIRT matrix: {}'.format(e))
+            
+            wx.MessageDialog(
+                self,
+                strings.messages[self, 'saveFlirt.error'].format(str(e)),
+                style=wx.ICON_ERROR).ShowModal() 
 
 
     def __onCancel(self, ev=None):
