@@ -476,7 +476,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
             e     = str(e)
             msg   = strings.messages[self, 'loadError'].format(filename, e)
             title = strings.titles[  self, 'loadError']
-            log.debug('Error loading classification file '
+            log.warning('Error loading classification file '
                       '({}), ({})'.format(filename, e), exc_info=True)
             wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK)
 
