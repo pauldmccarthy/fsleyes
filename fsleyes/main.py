@@ -106,8 +106,6 @@ class FSLeyesApp(wx.App):
             onLoad=onLoad,
             inmem=self.__displayCtx.loadInMemory) 
 
- 
-
 
 def main(args=None):
     """*FSLeyes* entry point. Shows a :class:`.FSLeyesSplash` screen, parses
@@ -128,6 +126,9 @@ def main(args=None):
     # then initialise the FSLeyes package.
     app = FSLeyesApp()
     fsleyes.initialise()
+
+    # Implement various hacks and workarounds
+    hacksAndWorkarounds()
 
     # Show the splash screen as soon as
     # possible, unless it looks like the
@@ -226,6 +227,35 @@ def main(args=None):
     wx.CallAfter(initWrapper, splash)
     app.MainLoop()
     shutdown()
+
+
+def hacksAndWorkarounds():
+    """Called by :func:`main`. Implements hacks and workarounds for
+    various things.
+
+    Must be called after :func:`fsleyes.initialise`.
+    """
+
+    # PyInstaller <= 3.2 forces matplotlib to use a
+    # temporary directory for its settings and font
+    # cache, and then deletes the directory on exit.
+    # This is silly, because the font cache can take
+    # a long time to create. So we'll tell matplotlib
+    # to use a settingsd directory located in the
+    # FSLeyes app dir.
+    if fslplatform.frozen:
+        os.environ['MPLCONFIGDIR'] = op.join(fsleyes.assetDir, 'mpl-data')
+
+    # OSX sometimes sets the local environment
+    # variables to non-standard values, which
+    # breaks the python locale module.
+    #
+    # http://bugs.python.org/issue18378
+    try:
+        import locale
+        locale.getdefaultlocale()
+    except:
+        os.environ['LC_ALL'] = 'C.UTF-8'
 
 
 def initialise(splash, namespace, callback):

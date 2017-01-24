@@ -14,8 +14,6 @@ import logging
 import textwrap
 import argparse
 
-import matplotlib.image as mplimg
-
 import props
 
 import fsl.utils.layout                    as fsllayout
@@ -23,6 +21,7 @@ import fsl.utils.colourbarbitmap           as cbarbitmap
 import fsl.utils.textbitmap                as textbitmap
 import fsl.data.constants                  as constants
 import                                        fsleyes
+import fsleyes.main                        as fsleyesmain
 import fsleyes.version                     as version
 import fsleyes.strings                     as strings
 import fsleyes.overlay                     as fsloverlay
@@ -62,8 +61,11 @@ def main(args=None):
     fslgl.getGLContext(offscreen=True, createApp=True)
     fslgl.bootstrap() 
 
-    # Initialise FSLeyes and colour maps
+    # Initialise FSLeyes and colour 
+    # maps, and implement hacks
     fsleyes.initialise()
+    fsleyesmain.hacksAndWorkarounds()
+    
     fslcm.init()
 
     # Parse arguments, and
@@ -73,6 +75,8 @@ def main(args=None):
 
     # Create a description of the scene
     overlayList, displayCtx, sceneOpts = makeDisplayContext(namespace)
+
+    import matplotlib.image as mplimg
 
     # Render that scene, and save it to file
     bitmap = render(namespace, overlayList, displayCtx, sceneOpts)
