@@ -1,12 +1,12 @@
 !!ARBfp1.0
 #
-# Fragment program used for rendering GLModel instances.
+# Fragment program used for rendering GLMesh instances.
 #
 # Input parameters:
 #   offsets - Offsets (used as edge widths - see edge2D.prog)
 #
 # Input textures:
-#   renderTexture - 2D texture containing the rendered model.
+#   renderTexture - 2D texture containing the rendered mesh.
 #
 # Input varyings:
 #   texCoord  - Texture coordinates

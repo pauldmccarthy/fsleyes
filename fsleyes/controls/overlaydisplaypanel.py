@@ -314,7 +314,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 def _imageName(img):
     """Used to generate choice labels for the :attr`.VectorOpts.modulateImage`,
     :attr`.VectorOpts.clipImage`, :attr`.VectorOpts.colourImage` and
-    :attr:`.ModelOpts.refImage` properties.
+    :attr:`.MeshOpts.refImage` properties.
     """
     if img is None: return 'None'
     else:           return img.name
@@ -367,7 +367,7 @@ _DISPLAY_PROPS = td.TypeDict({
                         'resolution',
                         'lineWidth',
                         'lengthScale'],
-    'ModelOpts'      : ['colour',
+    'MeshOpts'       : ['colour',
                         'outline',
                         'outlineWidth',
                         'quality',
@@ -559,16 +559,16 @@ _DISPLAY_WIDGETS = td.TypeDict({
     'LineVectorOpts.lengthScale' : props.Widget('lengthScale',
                                                 showLimits=False),
 
-    # ModelOpts
-    'ModelOpts.colour'       : props.Widget('colour'),
-    'ModelOpts.outline'      : props.Widget('outline'),
-    'ModelOpts.outlineWidth' : props.Widget('outlineWidth', showLimits=False),
-    'ModelOpts.quality'      : props.Widget('quality',      showLimits=False),
-    'ModelOpts.refImage'     : props.Widget('refImage', labels=_imageName),
-    'ModelOpts.coordSpace'   : props.Widget(
+    # MeshOpts
+    'MeshOpts.colour'       : props.Widget('colour'),
+    'MeshOpts.outline'      : props.Widget('outline'),
+    'MeshOpts.outlineWidth' : props.Widget('outlineWidth', showLimits=False),
+    'MeshOpts.quality'      : props.Widget('quality',      showLimits=False),
+    'MeshOpts.refImage'     : props.Widget('refImage', labels=_imageName),
+    'MeshOpts.coordSpace'   : props.Widget(
         'coordSpace',
         enabledWhen=lambda o, ri: ri != 'none',
-        labels=strings.choices['ModelOpts.coordSpace'],
+        labels=strings.choices['MeshOpts.coordSpace'],
         dependencies=['refImage']),
 
         

@@ -46,7 +46,7 @@ def getGLObjectType(overlayType):
     from . import glmask
     from . import glrgbvector
     from . import gllinevector
-    from . import glmodel
+    from . import glmesh
     from . import gllabel
     from . import gltensor
     from . import glsh
@@ -56,7 +56,7 @@ def getGLObjectType(overlayType):
         'mask'       : glmask      .GLMask,
         'rgbvector'  : glrgbvector .GLRGBVector,
         'linevector' : gllinevector.GLLineVector,
-        'model'      : glmodel     .GLModel,
+        'mesh'       : glmesh      .GLMesh,
         'label'      : gllabel     .GLLabel,
         'tensor'     : gltensor    .GLTensor,
         'sh'         : glsh        .GLSH

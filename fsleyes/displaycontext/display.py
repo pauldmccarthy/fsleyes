@@ -443,8 +443,8 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         """Return the reference image associated with this ``DisplayOpts``
         instance.
 
-        Some non-volumetric overlay types (e.g. the :class:`.Model` - see
-        :class:`.ModelOpts`) may have a *reference* :class:`.Nifti` instance
+        Some non-volumetric overlay types (e.g. the :class:`.TriangleMesh` -
+        see :class:`.MeshOpts`) may have a *reference* :class:`.Nifti` instance
         associated with them, allowing the overlay to be localised in the
         coordinate space defined by the :class:`.Nifti`. The
         :class:`.DisplayOpts` sub-class which corresponds to

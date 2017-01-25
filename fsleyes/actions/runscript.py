@@ -193,11 +193,12 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
     from   fsleyes.views.histogrampanel     import HistogramPanel
     from   fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
     from   fsleyes.views.shellpanel         import ShellPanel 
-    import fsl.data.image                       as image
+    import fsl.data.image                       as fslimage
     import fsl.data.featimage                   as featimage
     import fsl.data.melodicimage                as melimage
     import fsl.data.dtifit                      as dtifit
-    import fsl.data.model                       as model
+    import fsl.data.mesh                        as fslmesh
+    import fsl.data.gifti                       as fslgifti
 
 
     def load(filename):
@@ -226,7 +227,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         """Display all NIFTI images in true scaled voxels (but 
         with a radiological/neurological flip). """
         for o in overlayList:
-            if isinstance(o, image.Nifti):
+            if isinstance(o, fslimage.Nifti):
                 displayCtx.getOpts(o).transform = 'pixdim-flip'
                 
 
@@ -234,13 +235,13 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         """Display all NIFTI images in true scaled voxels (without
         any radiological/neurological flip). """
         for o in overlayList:
-            if isinstance(o, image.Nifti):
+            if isinstance(o, fslimage.Nifti):
                 displayCtx.getOpts(o).transform = 'pixdim'
                 
     def rawVoxels():
         """Display all NIFTI images in raw voxels. """
         for o in overlayList:
-            if isinstance(o, image.Nifti):
+            if isinstance(o, fslimage.Nifti):
                 displayCtx.getOpts(o).transform = 'id'
 
     def run(script):
@@ -283,11 +284,12 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         ('sp',                 sp),
         ('mpl',                mpl),
         ('plt',                plt),
-        ('Image',              image.Image),
+        ('Image',              fslimage.Image),
         ('FEATImage',          featimage.FEATImage),
         ('MelodicImage',       melimage.MelodicImage),
         ('DTIFitTensor',       dtifit.DTIFitTensor),
-        ('Model',              model.Model),
+        ('TriangleMesh',       fslmesh.TriangleMesh),
+        ('GiftiSurface',       fslgifti.GiftiSurface),
         ('OrthoPanel',         OrthoPanel),
         ('LightBoxPanel',      LightBoxPanel),
         ('TimeSeriesPanel',    TimeSeriesPanel),

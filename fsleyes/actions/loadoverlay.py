@@ -100,17 +100,20 @@ def makeWildcard(allowedExts=None, descs=None):
     the the displayed file types to supported overlay file types.
     """
 
-    import fsl.data.model as fslmodel
+    import fsl.data.mesh  as fslmesh
     import fsl.data.image as fslimage
+    import fsl.data.gifti as fslgifti
 
     # Hack - the wx wildcard logic doesn't support
     # files with multiple extensions (e.g. .nii.gz).
     # So I'm adding support for '.gz' extensions here.
     if allowedExts is None: allowedExts  = fslimage.ALLOWED_EXTENSIONS     + \
-                                           fslmodel.ALLOWED_EXTENSIONS     + \
+                                           fslmesh .ALLOWED_EXTENSIONS     + \
+                                           fslgifti.ALLOWED_EXTENSIONS     + \
                                            ['.gz']
     if descs       is None: descs        = fslimage.EXTENSION_DESCRIPTIONS + \
-                                           fslmodel.EXTENSION_DESCRIPTIONS + \
+                                           fslmesh .EXTENSION_DESCRIPTIONS + \
+                                           fslgifti.EXTENSION_DESCRIPTIONS + \
                                            ['Compressed images']
 
     exts  = ['*{}'.format(ext) for ext in allowedExts]

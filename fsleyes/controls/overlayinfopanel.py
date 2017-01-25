@@ -113,7 +113,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
     :class:`.FEATImage`    :meth:`__getFEATImageInfo`
     :class:`.MelodicImage` :meth:`__getMelodicImageInfo`
     :class:`.DTIFitTensor` :meth:`__getDTIFitTensorInfo`
-    :class:`.Model`        :meth:`__getModelInfo`
+    :class:`.TriangleMesh` :meth:`__getTriangleMeshInfo`
     ====================== =============================
     """
 
@@ -196,7 +196,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
 
     _optProps = td.TypeDict({
         'Image'        : ['transform'],
-        'Model'        : ['refImage', 'coordSpace'],
+        'TriangleMesh' : ['refImage', 'coordSpace'],
         'DTIFitTensor' : ['transform'],
     })
     """This dictionary contains a list of :class:`.DisplayOpts` properties
@@ -553,21 +553,21 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         return info
 
     
-    def __getModelInfo(self, overlay, display):
+    def __getTriangleMeshInfo(self, overlay, display):
         """Creates and returns an :class:`OverlayInfo` object containing
-        information about the given :class:`.Model` overlay.
+        information about the given :class:`.TriangleMesh` overlay.
 
-        :arg overlay: A :class:`.Model` instance.
+        :arg overlay: A :class:`.TriangleMesh` instance.
         :arg display: The :class:`.Display` instance assocated with the
-                      ``Model``.
+                      ``TriangleMesh``.
         """ 
 
         opts   = display.getDisplayOpts()
         refImg = opts.refImage
 
         modelInfo = [
-            ('numVertices', overlay.vertices.shape[0]),
-            ('numIndices',  overlay.indices .shape[0]),
+            ('numVertices',  overlay.vertices.shape[0]),
+            ('numTriangles', overlay.indices .shape[0]),
         ]
 
         if refImg is None:

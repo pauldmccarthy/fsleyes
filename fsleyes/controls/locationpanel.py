@@ -749,7 +749,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
 
 DISPLAYOPTS_BOUNDS = td.TypeDict({
     'DisplayOpts' : ['bounds'],
-    'ModelOpts'   : ['refImage'],
+    'MeshOpts'    : ['refImage'],
 })
 """Different :class:`.DisplayOpts` types have different properties which
 affect the current overlay bounds.  Therefore, when the current overlay

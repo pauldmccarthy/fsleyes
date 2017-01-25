@@ -78,7 +78,7 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
    ~fsleyes.displaycontext.vectoropts.VectorOpts
    ~fsleyes.displaycontext.vectoropts.RGBVectorOpts
    ~fsleyes.displaycontext.vectoropts.LineVectorOpts
-   ~fsleyes.displaycontext.modelopts.ModelOpts
+   ~fsleyes.displaycontext.meshopts.MeshOpts
    ~fsleyes.displaycontext.labelopts.LabelOpts
    ~fsleyes.displaycontext.tensoropts.TensorOpts
    ~fsleyes.displaycontext.shopts.SHOpts
@@ -152,7 +152,7 @@ from .maskopts       import MaskOpts
 from .vectoropts     import VectorOpts
 from .vectoropts     import RGBVectorOpts
 from .vectoropts     import LineVectorOpts
-from .modelopts      import ModelOpts
+from .meshopts       import MeshOpts
 from .labelopts      import LabelOpts
 from .tensoropts     import TensorOpts
 from .shopts         import SHOpts
@@ -164,7 +164,8 @@ OVERLAY_TYPES = td.TypeDict({
 
     'Image'        : ['volume',     'mask',  'rgbvector',
                       'linevector', 'label', 'sh', 'tensor'],
-    'Model'        : ['model'],
+    'TriangleMesh' : ['mesh'],
+    'GiftiSurface' : ['mesh'],
     'DTIFitTensor' : ['tensor', 'rgbvector', 'linevector'],
 })
 """This dictionary provides a mapping between all overlay classes,
@@ -188,7 +189,7 @@ DISPLAY_OPTS_MAP = {
     'rgbvector'  : RGBVectorOpts,
     'linevector' : LineVectorOpts,
     'mask'       : MaskOpts,
-    'model'      : ModelOpts,
+    'mesh'       : MeshOpts,
     'label'      : LabelOpts,
     'tensor'     : TensorOpts,
     'sh'         : SHOpts,

@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 #
-# glmodel_funcs.py - OpenGL 1.4 functions used by the GLModel class.
+# glmesh_funcs.py - OpenGL 1.4 functions used by the GLMesh class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides functions which are used by the :class:`.GLModel`
-class to render :class:`.Model` overlays in an OpenGL 1.4 compatible manner.
+"""This module provides functions which are used by the :class:`.GLMesh`
+class to render :class:`.TriangleMesh` overlays in an OpenGL 1.4 compatible
+manner.
 
-An :class:`.ARBPShader` is used to manage the ``glmodel`` vertex/fragment
+An :class:`.ARBPShader` is used to manage the ``glmesh`` vertex/fragment
 programs.
 """
 
@@ -16,12 +17,12 @@ import fsleyes.gl.shaders as shaders
 
 
 def compileShaders(self):
-    """Loads the ``glmodel`` vertex and fragment shader program source,
+    """Loads the ``glmesh`` vertex and fragment shader program source,
     and creates a :class:`.ARBPShader` instance.
     """
     
-    vertSrc  = shaders.getVertexShader(  'glmodel')
-    fragSrc  = shaders.getFragmentShader('glmodel')
+    vertSrc  = shaders.getVertexShader(  'glmesh')
+    fragSrc  = shaders.getFragmentShader('glmesh')
 
     textures = {'renderTexture' : 0}
 
@@ -48,10 +49,10 @@ def updateShaders(self):
 
 
 def loadShaders(self):
-    """Loads the :class:`.GLModel` vertex/fragment shader programs. """
+    """Loads the :class:`.GLMesh` vertex/fragment shader programs. """
     self.shader.load()
 
     
 def unloadShaders(self):
-    """Un-loads the :class:`.GLModel` vertex/fragment shader programs. """
+    """Un-loads the :class:`.GLMesh` vertex/fragment shader programs. """
     self.shader.unload() 

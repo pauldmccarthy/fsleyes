@@ -437,10 +437,10 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
             # Add a listener to the bounds property for
             # the selected overlay. Bounds is used as a
             # proxy for the overlay referene image (e.g.
-            # Model overlays) - if the reference image
-            # changes, the overlay may have been moved
-            # into MNI152 space, so we can display atlas
-            # info.
+            # TriangleMesh overlays) - if the reference
+            # image changes, the overlay may have been
+            # moved into MNI152 space, so we can display
+            # atlas info.
             if ovl == selOverlay:
                 opts.addListener('bounds',
                                  self._name,

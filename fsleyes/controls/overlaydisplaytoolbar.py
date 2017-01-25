@@ -58,7 +58,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
        _OverlayDisplayToolBar__makeVectorOptsTools
        _OverlayDisplayToolBar__makeRGBVectorOptsTools
        _OverlayDisplayToolBar__makeLineVectorOptsTools
-       _OverlayDisplayToolBar__makeModelOptsTools
+       _OverlayDisplayToolBar__makeMeshOptsTools
        _OverlayDisplayToolBar__makeTensorOptsTools
        _OverlayDisplayToolBar__makeSHOptsTools
     """
@@ -441,9 +441,9 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         return tools + [lblWidget], nav + [widget]
 
 
-    def __makeModelOptsTools(self, opts):
+    def __makeMeshOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
-        of the given :class:`.ModelOpts` instance.
+        of the given :class:`.MeshOpts` instance.
         """        
         colourSpec  = _TOOLBAR_PROPS[opts, 'colour']
         outlineSpec = _TOOLBAR_PROPS[opts, 'outline']
@@ -553,10 +553,10 @@ _TOOLTIPS = td.TypeDict({
     'LineVectorOpts.lineWidth' : fsltooltips.properties['LineVectorOpts.'
                                                         'lineWidth'],
 
-    'ModelOpts.colour'       : fsltooltips.properties['ModelOpts.colour'],
-    'ModelOpts.outline'      : fsltooltips.properties['ModelOpts.outline'],
-    'ModelOpts.outlineWidth' : fsltooltips.properties['ModelOpts.'
-                                                      'outlineWidth'],
+    'MeshOpts.colour'       : fsltooltips.properties['MeshOpts.colour'],
+    'MeshOpts.outline'      : fsltooltips.properties['MeshOpts.outline'],
+    'MeshOpts.outlineWidth' : fsltooltips.properties['MeshOpts.'
+                                                     'outlineWidth'],
 
     'TensorOpts.lighting' : fsltooltips.properties['TensorOpts.'
                                                    'lighting'],
@@ -651,21 +651,21 @@ _TOOLBAR_PROPS = td.TypeDict({
         showLimits=False,
         spin=False),
 
-    'ModelOpts.colour'       : props.Widget(
+    'MeshOpts.colour'       : props.Widget(
         'colour',
         size=(24, 24),
-        tooltip=_TOOLTIPS['ModelOpts.colour']),
-    'ModelOpts.outline'      : props.Widget(
+        tooltip=_TOOLTIPS['MeshOpts.colour']),
+    'MeshOpts.outline'      : props.Widget(
         'outline',
-        tooltip=_TOOLTIPS['ModelOpts.outline'],
+        tooltip=_TOOLTIPS['MeshOpts.outline'],
         icon=[icons.findImageFile('outline24'),
               icons.findImageFile('filled24')],
         toggle=True),
-    'ModelOpts.outlineWidth' : props.Widget(
+    'MeshOpts.outlineWidth' : props.Widget(
         'outlineWidth',
         showLimits=False,
         spin=False,
-        tooltip=_TOOLTIPS['ModelOpts.outlineWidth'],
+        tooltip=_TOOLTIPS['MeshOpts.outlineWidth'],
         enabledWhen=lambda i: i.outline),
 
     'VectorOpts.modulateImage' : props.Widget(

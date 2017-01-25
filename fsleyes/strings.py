@@ -550,7 +550,7 @@ labels = TypeDict({
     'OverlayDisplayPanel.LabelOpts'      : 'Label settings',
     'OverlayDisplayPanel.RGBVectorOpts'  : 'RGB vector settings',
     'OverlayDisplayPanel.LineVectorOpts' : 'Line vector settings',
-    'OverlayDisplayPanel.ModelOpts'      : 'Model settings',
+    'OverlayDisplayPanel.MeshOpts'       : 'Mesh settings',
     'OverlayDisplayPanel.TensorOpts'     : 'Diffusion tensor settings',
     'OverlayDisplayPanel.SHOpts'         : 'Diffusion SH settings',
     
@@ -587,19 +587,28 @@ labels = TypeDict({
                                                   '(MELODIC analysis)', 
     'OverlayInfoPanel.MelodicImage.melodicInfo' : 'MELODIC information',
     
-    'OverlayInfoPanel.Model'                        : 'VTK model',
-    'OverlayInfoPanel.Model.numVertices'            : 'Number of vertices',
-    'OverlayInfoPanel.Model.numIndices'             : 'Number of indices',
-    'OverlayInfoPanel.Model.displaySpace'           : 'Display space',
-    'OverlayInfoPanel.Model.refImage'               : 'Reference image',
-    'OverlayInfoPanel.Model.coordSpace'             : 'Vertices defined in',
-    'OverlayInfoPanel.Model.coordSpace.id'          : 'Voxels ({})',
-    'OverlayInfoPanel.Model.coordSpace.pixdim'      : 'Scaled voxels ({})',
-    'OverlayInfoPanel.Model.coordSpace.pixdim-flip' : 'Scaled voxels [FSL '
-                                                      'convention] ({})',
-    'OverlayInfoPanel.Model.coordSpace.affine'      : 'World coordinates ({})',
-    'OverlayInfoPanel.Model.coordSpace.display'     : 'Display coordinate '
-                                                      'system',
+    'OverlayInfoPanel.TriangleMesh'                        :
+    'VTK model',
+    'OverlayInfoPanel.TriangleMesh.numVertices'            :
+    'Number of vertices',
+    'OverlayInfoPanel.TriangleMesh.numTriangles'           :
+    'Number of triangles',
+    'OverlayInfoPanel.TriangleMesh.displaySpace'           :
+    'Display space',
+    'OverlayInfoPanel.TriangleMesh.refImage'               :
+    'Reference image',
+    'OverlayInfoPanel.TriangleMesh.coordSpace'             :
+    'Vertices defined in',
+    'OverlayInfoPanel.TriangleMesh.coordSpace.id'          :
+    'Voxels ({})',
+    'OverlayInfoPanel.TriangleMesh.coordSpace.pixdim'      :
+    'Scaled voxels ({})',
+    'OverlayInfoPanel.TriangleMesh.coordSpace.pixdim-flip' :
+    'Scaled voxels [FSL convention] ({})',
+    'OverlayInfoPanel.TriangleMesh.coordSpace.affine'      :
+    'World coordinates ({})',
+    'OverlayInfoPanel.TriangleMesh.coordSpace.display'     :
+    'Display coordinate system',
     
     'OverlayInfoPanel.dataSource'               : 'Data source',
     'OverlayInfoPanel.niftiVersion'             : 'NIFTI version',
@@ -831,13 +840,13 @@ properties = TypeDict({
     'LineVectorOpts.unitLength'  : 'Scale vectors to unit length',
     'LineVectorOpts.lengthScale' : 'Length scaling factor (%)',
 
-    'ModelOpts.colour'       : 'Colour',
-    'ModelOpts.outline'      : 'Show outline only',
-    'ModelOpts.outlineWidth' : 'Outline width',
-    'ModelOpts.quality'      : 'Display quality',
-    'ModelOpts.refImage'     : 'Reference image',
-    'ModelOpts.coordSpace'   : 'Model coordinate space',
-    'ModelOpts.showName'     : 'Show model name',
+    'MeshOpts.colour'       : 'Colour',
+    'MeshOpts.outline'      : 'Show outline only',
+    'MeshOpts.outlineWidth' : 'Outline width',
+    'MeshOpts.quality'      : 'Display quality',
+    'MeshOpts.refImage'     : 'Reference image',
+    'MeshOpts.coordSpace'   : 'Mesh coordinate space',
+    'MeshOpts.showName'     : 'Show model name',
 
     'LabelOpts.lut'          : 'Look-up table',
     'LabelOpts.outline'      : 'Show outline only',
@@ -922,13 +931,13 @@ choices = TypeDict({
                                  'black'       : 'Black',
                                  'transparent' : 'Transparent'},
 
-    'ModelOpts.refImage.none'     : 'No reference image',
+    'MeshOpts.refImage.none'     : 'No reference image',
 
-    'ModelOpts.coordSpace' : {'affine'      : 'World coordinates',
-                              'pixdim'      : 'Scaled voxels',
-                              'pixdim-flip' : 'Scaled voxels forced to '
-                                              'radiological orientation',
-                              'id'          : 'Voxels'}, 
+    'MeshOpts.coordSpace' : {'affine'      : 'World coordinates',
+                             'pixdim'      : 'Scaled voxels',
+                             'pixdim-flip' : 'Scaled voxels forced to '
+                                             'radiological orientation',
+                             'id'          : 'Voxels'}, 
 
     'TensorOpts.tensorResolution.min' : 'Low',
     'TensorOpts.tensorResolution.max' : 'High',
@@ -952,7 +961,7 @@ choices = TypeDict({
                              'label'      : 'Label image',
                              'rgbvector'  : '3-direction vector image (RGB)',
                              'linevector' : '3-direction vector image (Line)',
-                             'model'      : '3D model',
+                             'mesh'       : '3D mesh',
                              'tensor'     : 'Diffusion tensor',
                              'sh'         : 'Diffusion SH'},
 

@@ -1,5 +1,5 @@
 /*
- * Vertex shader used for drawing GLModel instances.
+ * Vertex shader used for drawing GLMesh instances.
  *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com> 
  */

@@ -68,7 +68,7 @@ class OverlayGroup(props.HasProperties):
         'VolumeOpts'     : ['interpolation'],
         'LabelOpts'      : ['outline',
                             'outlineWidth'],
-        'ModelOpts'      : ['outline',
+        'MeshOpts'       : ['outline',
                             'quality',
                             'outlineWidth',
                             'refImage',
@@ -119,7 +119,7 @@ class OverlayGroup(props.HasProperties):
             VectorOpts,     \
             RGBVectorOpts,  \
             LineVectorOpts, \
-            ModelOpts,      \
+            MeshOpts,       \
             LabelOpts,      \
             TensorOpts
 

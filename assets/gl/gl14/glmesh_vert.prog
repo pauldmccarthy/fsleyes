@@ -1,6 +1,6 @@
 !!ARBvp1.0
 #
-# Vertex program for rendering GLModel instances.
+# Vertex program for rendering GLMesh instances.
 #
 # Input attributes:
 #    texCoord - Texture coordinates

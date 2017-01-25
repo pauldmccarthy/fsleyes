@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 #
-# glmodel.py - The GLModel class.
+# glmesh.py - The GLMesh class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`GLModel` class, a :class:`.GLObject` used
-to render :class:`.Model` overlays.
+"""This module provides the :class:`GLMesh` class, a :class:`.GLObject` used
+to render :class:`.TriangleMesh` overlays.
 """
 
 
@@ -21,56 +21,57 @@ import fsleyes.gl.textures as textures
 import fsleyes.colourmaps  as fslcmaps
 
 
-class GLModel(globject.GLObject):
-    """The ``GLModel`` class is a :class:`.GLObject` which encapsulates the
-    logic required to render 2D slices of a :class:`.Model` overlay. The
-    ``GLModel`` class assumes that the :class:`.Display` instance associated
-    with the ``Model`` overlay holds a reference to a :class:`.ModelOpts`
-    instance, which contains ``GLModel`` specific display settings.
+class GLMesh(globject.GLObject):
+    """The ``GLMesh`` class is a :class:`.GLObject` which encapsulates the
+    logic required to render 2D slices of a :class:`.TriangleMesh` overlay.
+    The ``GLMesh`` class assumes that the :class:`.Display` instance
+    associated with the ``TriangleMesh`` overlay holds a reference to a
+    :class:`.MeshOpts` instance, which contains ``GLMesh`` specific
+    display settings.
 
     
-    The ``GLModel`` renders cross-sections of a ``Model`` overlay using a
-    three-pass technique, roughly following that described at 
+    The ``GLMesh`` renders cross-sections of a ``TriangleMesh`` overlay using
+    a three-pass technique, roughly following that described at 
     http://glbook.gamedev.net/GLBOOK/glbook.gamedev.net/moglgp/advclip.html:
 
     
-    1. The front face of the model is rendered to the stencil buffer.
+    1. The front face of the mesh is rendered to the stencil buffer.
 
     2. The back face is rendered to the stencil buffer,  and subtracted
        from the front face.
 
-    3. This intersection (of the model with a plane at the slice Z location)
+    3. This intersection (of the mesh with a plane at the slice Z location)
        is then rendered to the canvas.
 
 
-    The ``GLModel`` class has the ability to draw the model with a fill
-    colour, or to draw only the model outline. To accomplish this, in step 3
+    The ``GLMesh`` class has the ability to draw the mesh with a fill
+    colour, or to draw only the mesh outline. To accomplish this, in step 3
     above, the intersection mask is actually drawn to an off-screen
     :class:`.RenderTexture`. If outline mode (controlled by the
-    :attr:`.ModelOpts.outline` property) is enabled, an edge-detection shader
+    :attr:`.MeshOpts.outline` property) is enabled, an edge-detection shader
     program is run on this off-screen texture. Then, the texture is rendered
     to the canvas. If outline mode is disabled, the shader programs are not
     executed.
 
 
-    The ``GLModel`` class makes use of two OpenGL version-specific modules,
-    :mod:`.gl14.glmodel_funcs`, and :mod:`.gl21.glmodel_funcs`. These version
+    The ``GLMesh`` class makes use of two OpenGL version-specific modules,
+    :mod:`.gl14.glmesh_funcs`, and :mod:`.gl21.glmesh_funcs`. These version
     specific modules must provide the following functions:
 
-    =========================== ======================================
-    ``destroy(GLModel)``        Performs any necessary clean up.
-    ``compileShaders(GLModel)`` Compiles vertex/fragment shaders.
-    ``updateShaders(GLModel)``  Updates vertex/fragment shader states.
-    ``loadShaders(GLModel)``    Loads vertex/fragment shaders.
-    ``unloadShaders(GLModel)``  Unloads vertex/fragment shaders.
-    =========================== ======================================
+    ========================== ======================================
+    ``destroy(GLMesh)``        Performs any necessary clean up.
+    ``compileShaders(GLMesh)`` Compiles vertex/fragment shaders.
+    ``updateShaders(GLMesh)``  Updates vertex/fragment shader states.
+    ``loadShaders(GLMesh)``    Loads vertex/fragment shaders.
+    ``unloadShaders(GLMesh)``  Unloads vertex/fragment shaders.
+    ========================== ======================================
     """
 
     
     def __init__(self, overlay, display, xax, yax):
-        """Create a ``GLModel``.
+        """Create a ``GLMesh``.
 
-        :arg overlay: A :class:`.Model` overlay.
+        :arg overlay: A :class:`.TriangleMesh` overlay.
 
         :arg display: A :class:`.Display` instance defining how the
                       ``overlay`` is to be displayed.
@@ -92,16 +93,16 @@ class GLModel(globject.GLObject):
 
         self._renderTexture = textures.RenderTexture(self.name, gl.GL_NEAREST)
 
-        fslgl.glmodel_funcs.compileShaders(self)
+        fslgl.glmesh_funcs.compileShaders(self)
 
         
     def destroy(self):
-        """Must be called when this ``GLModel`` is no longer needed. Removes
+        """Must be called when this ``GLMesh`` is no longer needed. Removes
         some property listeners and destroys the off-screen
         :class:`.RenderTexture`.
         """
         self._renderTexture.destroy()
-        fslgl.glmodel_funcs.destroy(self)
+        fslgl.glmesh_funcs.destroy(self)
         self.removeListeners()
         
         self.overlay = None
@@ -116,7 +117,7 @@ class GLModel(globject.GLObject):
         
     def addListeners(self):
         """Called by :meth:`__init__`. Adds some property listeners to the
-        :class:`.Display` and :class:`.ModelOpts` instances so the OpenGL
+        :class:`.Display` and :class:`.MeshOpts` instances so the OpenGL
         representation can be updated when the display properties are changed..
         """
 
@@ -162,7 +163,7 @@ class GLModel(globject.GLObject):
 
     def _updateVertices(self, *a):
         """Called by :meth:`__init__`, and when certain display properties
-        change. (Re-)generates the model vertices and indices. They are stored
+        change. (Re-)generates the mesh vertices and indices. They are stored
         as attributes called ``vertices`` and ``indices`` respectively.
         """
 
@@ -173,14 +174,14 @@ class GLModel(globject.GLObject):
         if not np.all(xform == np.eye(4)):
             vertices = transform.transform(vertices, xform)
 
-        self.vertices = np.array(vertices, dtype=np.float32)
-        self.indices  = np.array(indices,  dtype=np.uint32)
+        self.vertices = np.array(vertices,          dtype=np.float32)
+        self.indices  = np.array(indices.flatten(), dtype=np.uint32)
         self.notify()
 
         
     def getDisplayBounds(self):
         """Overrides :meth:`.GLObject.getDisplayBounds`. Returns a bounding
-        box which contains the model vertices. 
+        box which contains the mesh vertices. 
         """
         return (self.opts.bounds.getLo(),
                 self.opts.bounds.getHi()) 
@@ -189,7 +190,7 @@ class GLModel(globject.GLObject):
     def getDataResolution(self, xax, yax):
         """Overrides :meth:`.GLObject.getDataResolution`. Returns a 
         resolution (in pixels), along each display coordinate system axis,
-        suitable for drawing this ``GLModel``.
+        suitable for drawing this ``GLMesh``.
         """
 
         # TODO How can I have this resolution tied
@@ -216,14 +217,14 @@ class GLModel(globject.GLObject):
 
         lo, hi = self.getDisplayBounds()
 
-        xModelLen = abs(hi[xax] - lo[xax])
-        yModelLen = abs(hi[yax] - lo[yax])
-        zModelLen = abs(hi[zax] - lo[zax])
+        xMeshLen = abs(hi[xax] - lo[xax])
+        yMeshLen = abs(hi[yax] - lo[yax])
+        zMeshLen = abs(hi[zax] - lo[zax])
 
         resolution      = [1, 1, 1]
-        resolution[xax] = int(round(2048.0 * xModelLen / xDisplayLen))
-        resolution[yax] = int(round(2048.0 * yModelLen / yDisplayLen))
-        resolution[zax] = int(round(2048.0 * zModelLen / zDisplayLen))
+        resolution[xax] = int(round(2048.0 * xMeshLen / xDisplayLen))
+        resolution[yax] = int(round(2048.0 * yMeshLen / yDisplayLen))
+        resolution[zax] = int(round(2048.0 * zMeshLen / zDisplayLen))
         
         return resolution
         
@@ -233,8 +234,8 @@ class GLModel(globject.GLObject):
         outline widths along the horizontal/vertical screen axes (if outline
         mode is being used). The values are in display coordinate system units.
 
-        .. note:: This method is used by the :mod:`.gl14.glmodel_funcs` and
-                  :mod:`.gl21.glmodel_funcs` modules.
+        .. note:: This method is used by the :mod:`.gl14.glmesh_funcs` and
+                  :mod:`.gl21.glmesh_funcs` modules.
         """
         opts          = self.opts
         width, height = self._renderTexture.getSize()
@@ -245,7 +246,7 @@ class GLModel(globject.GLObject):
 
         # outlineWidth is a value between 0.0 and 1.0 - 
         # we use this value so that it effectly sets the
-        # outline to between 0% and 10% of the model
+        # outline to between 0% and 10% of the mesh
         # width/height (whichever is smaller)
         offsets = [outlineWidth / width, outlineWidth / height]
         offsets = np.array(offsets, dtype=np.float32)
@@ -264,12 +265,12 @@ class GLModel(globject.GLObject):
         height  = int(round(size[3] * quality))
 
         self._renderTexture.setSize(width, height)
-        fslgl.glmodel_funcs.updateShaders(self)
+        fslgl.glmesh_funcs.updateShaders(self)
 
     
     def draw(self, zpos, xform=None, bbox=None):
         """Overrids :meth:`.GLObject.draw`. Draws a 2D slice of the
-        :class:`.Model`, at the specified Z location.
+        :class:`.TriangleMesh`, at the specified Z location.
         """
 
         display  = self.display 
@@ -297,7 +298,7 @@ class GLModel(globject.GLObject):
         # perpendicular to the Z axis, and
         # located at the z position. This is
         # used as a clipping plane to draw 
-        # the model intersection.
+        # the mesh intersection.
         clipPlaneVerts                = np.zeros((4, 3), dtype=np.float32)
         clipPlaneVerts[0, [xax, yax]] = [xmin, ymin]
         clipPlaneVerts[1, [xax, yax]] = [xmin, ymax]
@@ -329,11 +330,11 @@ class GLModel(globject.GLObject):
         # subtract the mask created by the second
         # render from the mask created by the first -
         # this gives us a mask which shows the
-        # intersection of the model with the clipping
+        # intersection of the mesh with the clipping
         # plane.
         gl.glStencilFunc(gl.GL_ALWAYS, 0, 0)
 
-        # If the model coordinate transformation
+        # If the mesh coordinate transformation
         # has a positive determinant, we need to
         # render the back faces first, otherwise
         # the cross-section mask will not be
@@ -389,18 +390,18 @@ class GLModel(globject.GLObject):
         self._renderTexture.unbindAsRenderTarget()
         self._renderTexture.restoreViewport()
 
-        # If drawing the model outline, run the
+        # If drawing the mesh outline, run the
         # render texture through the shader
         # programs. Otherwise, the render texture
         # is just drawn directly to the canvas.
         if opts.outline:
-            fslgl.glmodel_funcs.loadShaders(self)
+            fslgl.glmesh_funcs.loadShaders(self)
 
         self._renderTexture.drawOnBounds(
             zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
         
         if opts.outline:
-            fslgl.glmodel_funcs.unloadShaders(self)
+            fslgl.glmesh_funcs.unloadShaders(self)
 
     
     def postDraw(self):
@@ -411,7 +412,7 @@ class GLModel(globject.GLObject):
     def __setRenderTextureViewport(self, lo, hi, bbox=None):
         """Called by :meth:`draw`. Calculates an appropriate viewport (the
         horizontal/vertical minimums/maximums in display coordinates) given
-        the ``lo`` and ``hi`` ``GLModel`` display bounds, and a display
+        the ``lo`` and ``hi`` ``GLMesh`` display bounds, and a display
         ``bbox``.
 
         Sets the viewport on the :class:`.RenderTexture`, and returns the

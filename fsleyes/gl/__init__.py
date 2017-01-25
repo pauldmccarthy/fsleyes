@@ -120,7 +120,7 @@ as:
    ~fsleyes.gl.gllabel.GLLabel
    ~fsleyes.gl.gllinevector.GLLineVector
    ~fsleyes.gl.glrgbvector.GLRGBVector
-   ~fsleyes.gl.glmodel.GLModel
+   ~fsleyes.gl.glmesh.GLMesh
    ~fsleyes.gl.gltensor.GLTensor
    ~fsleyes.gl.glsh.GLSH
 
@@ -259,8 +259,8 @@ def bootstrap(glVersion=None):
     ``gllinevector_funcs`` The version-specific module containing functions for
                            rendering :class:`.GLLineVector` instances.
 
-    ``glmodel_funcs``      The version-specific module containing functions for
-                           rendering :class:`.GLModel` instances.
+    ``glmesh_funcs``       The version-specific module containing functions for
+                           rendering :class:`.GLMesh` instances.
     
     ``gllabel_funcs``      The version-specific module containing functions for
                            rendering :class:`.GLLabel` instances.
@@ -381,7 +381,7 @@ def bootstrap(glVersion=None):
     thismod.glvolume_funcs     = glpkg.glvolume_funcs
     thismod.glrgbvector_funcs  = glpkg.glrgbvector_funcs
     thismod.gllinevector_funcs = glpkg.gllinevector_funcs
-    thismod.glmodel_funcs      = glpkg.glmodel_funcs
+    thismod.glmesh_funcs       = glpkg.glmesh_funcs
     thismod.gllabel_funcs      = glpkg.gllabel_funcs
     thismod.gltensor_funcs     = glpkg.gltensor_funcs
     thismod.glsh_funcs         = glpkg.glsh_funcs

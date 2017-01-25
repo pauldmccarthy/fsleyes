@@ -231,24 +231,24 @@ properties = TypeDict({
                                     '(equivalent to nearest-neighbour), '
                                     'linear, or spline interpolation.',
 
-    'ModelOpts.colour'       : 'The colour of the model.',
-    'ModelOpts.outline'      : 'If checked, only the outline of the model is '
-                               'displayed. Otherwise the model is filled. ',
-    'ModelOpts.outlineWidth' : 'If the model outline is being displayed, this '
-                               'setting controls the outline width.',
-    'ModelOpts.quality'      : 'Use this setting to control the resolution '
-                               'at which the model is displayed.',
-    'ModelOpts.showName'     : 'Annotate the display wiuh the model name.',
-    'ModelOpts.refImage'     : 'If this model was derived from a volumetric '
-                               'image, you can choose that image as a '
-                               'reference. The displayed model will then be '
-                               'transformed according to the '
-                               'transformation/orientation settings of the '
-                               'reference.',
-    'ModelOpts.coordSpace'   : 'If a reference image is selected, this '
-                               'setting defines the space, relative to the '
-                               'reference image, in which the model '
-                               'coordinates are defined.',
+    'MeshOpts.colour'       : 'The colour of the model.',
+    'MeshOpts.outline'      : 'If checked, only the outline of the model is '
+                              'displayed. Otherwise the model is filled. ',
+    'MeshOpts.outlineWidth' : 'If the model outline is being displayed, this '
+                              'setting controls the outline width.',
+    'MeshOpts.quality'      : 'Use this setting to control the resolution '
+                              'at which the model is displayed.',
+    'MeshOpts.showName'     : 'Annotate the display wiuh the model name.',
+    'MeshOpts.refImage'     : 'If this model was derived from a volumetric '
+                              'image, you can choose that image as a '
+                              'reference. The displayed model will then be '
+                              'transformed according to the '
+                              'transformation/orientation settings of the '
+                              'reference.',
+    'MeshOpts.coordSpace'   : 'If a reference image is selected, this '
+                              'setting defines the space, relative to the '
+                              'reference image, in which the model '
+                              'coordinates are defined.',
 
     'TensorOpts.lighting'         : 'If enabled, a simple lighting model is '
                                     'used to highlight the tensor '

@@ -1,5 +1,5 @@
 /*
- * Fragment shader used for drawing GLModel instances.
+ * Fragment shader used for drawing GLMesh instances.
  *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com> 
  */

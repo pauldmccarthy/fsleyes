@@ -88,10 +88,10 @@ processing of nearly all *FSLeyes* command line arguments is completely
 automatic.
 
 Therefore, adding a new command line option is fairly easy.  For example,
-let's say you have added a new property on the :class:`.ModelOpts` class,
+let's say you have added a new property on the :class:`.MeshOpts` class,
 called ``rotation``::
 
-    class ModelOpts(fsldisplay.DisplayOpts):
+    class MeshOpts(fsldisplay.DisplayOpts):
         # .
         # .
         # .
@@ -108,11 +108,11 @@ To make this new propery settable via the command line, you need to:
              # .
              # .
              # .
-             'ModelOpts'      : ['colour',
-                                 'outline',
-                                 'outlineWidth',
-                                 'refImage',
-                                 'rotation'],
+             'MeshOpts'      : ['colour',
+                                'outline',
+                                'outlineWidth',
+                                'refImage',
+                                'rotation'],
              # .
              # .
              # .
@@ -125,7 +125,7 @@ To make this new propery settable via the command line, you need to:
              # .
              # .
              # .
-             'ModelOpts.rotation' : ('mr', 'modelRotation', True),
+             'MeshOpts.rotation' : ('mr', 'meshRotation', True),
              # .
              # .
              # .
@@ -137,7 +137,7 @@ To make this new propery settable via the command line, you need to:
              # .
              # .
              # .
-             'ModelOpts.rotation' : 'Rotate the model by this much',
+             'MeshOpts.rotation' : 'Rotate the mesh by this much',
              # .
              # .
              # .
@@ -153,7 +153,7 @@ To make this new propery settable via the command line, you need to:
              # .
              # .
              # .
-             'ModelOpts' : ['refImage', 'rotation'],
+             'MeshOpts' : ['refImage', 'rotation'],
              # .
              # .
              # .
@@ -389,7 +389,7 @@ OPTIONS = td.TypeDict({
                         'unitLength',
                         'lengthScale'],
     'RGBVectorOpts'  : ['interpolation'],
-    'ModelOpts'      : ['colour',
+    'MeshOpts'       : ['colour',
                         'outline',
                         'outlineWidth',
                         'refImage',
@@ -429,7 +429,7 @@ GROUPNAMES = td.TypeDict({
     'MaskOpts'       : 'Mask options',
     'LineVectorOpts' : 'Line vector options',
     'RGBVectorOpts'  : 'RGB vector options',
-    'ModelOpts'      : 'Model options',
+    'MeshOpts'       : 'Mesh options',
     'LabelOpts'      : 'Label options',
     'TensorOpts'     : 'Tensor options',
     'SHOpts'         : 'SH options',
@@ -463,7 +463,7 @@ GROUPDESCS = td.TypeDict({
     'LabelOpts'      : 'These options are applied to \'label\' overlays.',
     'LineVectorOpts' : 'These options are applied to \'linevector\' overlays.',
     'RGBVectorOpts'  : 'These options are applied to \'rgbvector\' overlays.',
-    'ModelOpts'      : 'These options are applied to \'model\' overlays.',
+    'MeshOpts'       : 'These options are applied to \'mesh\' overlays.',
     'TensorOpts'     : 'These options are applied to \'tensor\' overlays.',
     'SHOpts'         : 'These options are applied to \'sh\' overlays.',
 })
@@ -612,11 +612,11 @@ ARGUMENTS = td.TypeDict({
     'TensorOpts.tensorResolution' : ('tr', 'tensorResolution', True),
     'TensorOpts.tensorScale'      : ('s',  'scale',            True),
 
-    'ModelOpts.colour'       : ('mc', 'colour',       True),
-    'ModelOpts.outline'      : ('o',  'outline',      False),
-    'ModelOpts.outlineWidth' : ('w',  'outlineWidth', True),
-    'ModelOpts.refImage'     : ('r',  'refImage',     True),
-    'ModelOpts.coordSpace'   : ('s',  'coordSpace',   True),
+    'MeshOpts.colour'       : ('mc', 'colour',       True),
+    'MeshOpts.outline'      : ('o',  'outline',      False),
+    'MeshOpts.outlineWidth' : ('w',  'outlineWidth', True),
+    'MeshOpts.refImage'     : ('r',  'refImage',     True),
+    'MeshOpts.coordSpace'   : ('s',  'coordSpace',   True),
 
     'LabelOpts.lut'          : ('l',  'lut',          True),
     'LabelOpts.outline'      : ('o',  'outline',      False),
@@ -795,12 +795,12 @@ HELP = td.TypeDict({
                                     'percentage (10-500, default: 100)',
     'RGBVectorOpts.interpolation' : 'Interpolation',
 
-    'ModelOpts.colour'       : 'Model colour (0-1)',
-    'ModelOpts.outline'      : 'Show model outline',
-    'ModelOpts.outlineWidth' : 'Model outline width (0-1, default: 0.25)',
-    'ModelOpts.refImage'     : 'Reference image for model',
-    'ModelOpts.coordSpace'   : 'Model vertex coordinate space '
-                               '(relative to reference image)',
+    'MeshOpts.colour'       : 'Mesh colour (0-1)',
+    'MeshOpts.outline'      : 'Show mesh outline',
+    'MeshOpts.outlineWidth' : 'Mesh outline width (0-20, default: 2)',
+    'MeshOpts.refImage'     : 'Reference image for mesh',
+    'MeshOpts.coordSpace'   : 'Mesh vertex coordinate space '
+                              '(relative to reference image)',
 
     'TensorOpts.lighting'         : 'Disable lighting effect',
     'TensorOpts.tensorResolution' : 'Tensor resolution/quality '
@@ -939,8 +939,8 @@ def getExtra(target, propName, default=None):
         (fsldisplay.SHOpts,         'yColour')      : colourSettings,
         ('SHOpts',                  'zColour')      : colourSettings,
         (fsldisplay.SHOpts,         'zColour')      : colourSettings,
-        ('ModelOpts',               'colour')       : colourSettings,
-        (fsldisplay.ModelOpts,      'colour')       : colourSettings, 
+        ('MeshOpts',                'colour')       : colourSettings,
+        (fsldisplay.MeshOpts,       'colour')       : colourSettings, 
 
     }
 
@@ -954,7 +954,7 @@ FILE_OPTIONS = td.TypeDict({
     'VectorOpts' : ['clipImage',
                     'colourImage',
                     'modulateImage'],
-    'ModelOpts'  : ['refImage'],
+    'MeshOpts'   : ['refImage'],
 })
 """This dictionary contains all arguments which accept file or path
 names. These arguments need special treatment - for these arguments, the user
@@ -1013,7 +1013,7 @@ TRANSFORMS = td.TypeDict({
     # functions.
     'SceneOpts.bgColour'         : lambda c : c[:3],
     'SceneOpts.cursorColour'     : lambda c : c[:3],
-    'ModelOpts.colour'           : lambda c : c[:3],
+    'MeshOpts.colour'            : lambda c : c[:3],
     'MaskOpts.colour'            : lambda c : c[:3],
     'VectorOpts.xColour'         : lambda c : c[:3],
     'VectorOpts.yColour'         : lambda c : c[:3],
@@ -1271,14 +1271,14 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
     LineVectorOpts = fsldisplay.LineVectorOpts
     TensorOpts     = fsldisplay.TensorOpts
     MaskOpts       = fsldisplay.MaskOpts
-    ModelOpts      = fsldisplay.ModelOpts
+    MeshOpts       = fsldisplay.MeshOpts
     LabelOpts      = fsldisplay.LabelOpts
     SHOpts         = fsldisplay.SHOpts
 
     # A parser is created and returned
     # for each one of these types.
     parserTypes = [VolumeOpts, MaskOpts, LabelOpts,
-                   ModelOpts, LineVectorOpts,
+                   MeshOpts, LineVectorOpts,
                    RGBVectorOpts, TensorOpts, SHOpts]
 
     # Dictionary containing the Display parser,

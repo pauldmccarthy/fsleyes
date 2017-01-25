@@ -52,7 +52,8 @@ Currently (``fsleyes`` version |version|) the only overlay types in existence
    ~fsl.data.featimage.FEATImage
    ~fsl.data.melodicimage.MelodicImage
    ~fsl.data.dtifit.DTIFitTensor
-   ~fsl.data.model.Model
+   ~fsl.data.mesh.TriangleMesh
+   ~fsl.data.gifti.GiftiSurface
 
 
 This module also provides a few convenience classes and functions:
@@ -84,7 +85,7 @@ class OverlayList(props.HasProperties):
 
     Contains a :class:`props.properties_types.List` property called
     :attr:`overlays`, containing overlay objects (e.g. :class:`.Image`
-    or :class:`.Model`objects). Listeners can be registered on the
+    or :class:`.TriangleMesh`objects). Listeners can be registered on the
     ``overlays`` property, so they are notified when the overlay list changes.
 
     An :class:`OverlayList` object has a few wrapper methods around the
@@ -410,7 +411,8 @@ def guessDataSourceType(path):
     is unrecognised, the first tuple value will be ``None``.
     """
 
-    import fsl.data.model           as fslmodel
+    import fsl.data.mesh            as fslmesh
+    import fsl.data.gifti           as fslgifti
     import fsl.data.featimage       as featimage
     import fsl.data.melodicimage    as melimage
     import fsl.data.dtifit          as dtifit
@@ -421,7 +423,11 @@ def guessDataSourceType(path):
 
     # VTK files are easy
     if path.endswith('.vtk'):
-        return fslmodel.Model, path
+        return fslmesh.TriangleMesh, path
+
+    # So are GIFTIS
+    if path.endswith('.gii'):
+        return fslgifti.GiftiSurface, path 
 
     # Analysis directory?
     if op.isdir(path):
@@ -471,16 +477,16 @@ def findFEATImage(overlayList, overlay):
     return featImage
 
 
-def findModelReferenceImage(overlayList, overlay):
+def findMeshReferenceImage(overlayList, overlay):
     """Searches the :class:`.OverlayList` and tries to identify a reference
-    image for the given :class:`.Model` overlay. Returns the identified
+    image for the given :class:`.TriangleMesh` overlay. Returns the identified
     overlay, or ``None`` if one can't be found.
     """
 
-    import fsl.data.model as fslmodel
+    import fsl.data.mesh as fslmesh
 
     try:
-        prefix = fslmodel.getFIRSTPrefix(overlay.dataSource)
+        prefix = fslmesh.getFIRSTPrefix(overlay.dataSource)
 
         for ovl in overlayList:
             if prefix.startswith(ovl.name):
