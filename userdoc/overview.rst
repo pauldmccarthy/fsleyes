@@ -35,8 +35,8 @@ images [*]_.  These files can be displayed in a variety of different ways -
 see the page on :ref:`overlays <overlays>` for more information.
 
 
-.. [*] FSLeyes |version| is only able to load NIFTI and VTK files, but future
-       versions of FSLeyes will be able to load more file types.
+.. [*] FSLeyes |version| is able to load NIFTI, GIFTI, and VTK files. 
+       Future versions of FSLeyes will be able to load more file types.
 
 
 .. sidebar:: Modifier keys
