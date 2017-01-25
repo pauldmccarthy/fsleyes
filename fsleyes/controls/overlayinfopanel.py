@@ -114,6 +114,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
     :class:`.MelodicImage` :meth:`__getMelodicImageInfo`
     :class:`.DTIFitTensor` :meth:`__getDTIFitTensorInfo`
     :class:`.TriangleMesh` :meth:`__getTriangleMeshInfo`
+    :class:`.GiftiSurface` :meth:`__getGiftiSurfaceInfo`
     ====================== =============================
     """
 
@@ -201,7 +202,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
     })
     """This dictionary contains a list of :class:`.DisplayOpts` properties
     that, when changed, should result in the information being refreshed.
-    It is used by th e:meth:`__registerOverlay` and :meth:`__deregisterOverlay`
+    It is used by the :meth:`__registerOverlay` and :meth:`__deregisterOverlay`
     methods.
     """
     
@@ -600,6 +601,21 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
 
         for name, value in modelInfo:
             info.addInfo(strings.labels[self, overlay, name], value) 
+
+        return info
+
+
+    def __getGiftiSurfaceInfo(self, overlay, display):
+        """Creates and returns an :class:`OverlayInfo` object containing
+        information about the given :class:`.GiftiSurface` overlay.
+
+        :arg overlay: A :class:`.GiftiSurface` instance.
+        :arg display: The :class:`.Display` instance assocated with the
+                      ``DTIFitTensor``. 
+        """
+
+        info       = self.__getTriangleMeshInfo(overlay, display)
+        info.title = strings.labels[self, overlay]
 
         return info
 

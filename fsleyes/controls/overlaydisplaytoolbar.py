@@ -59,6 +59,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
        _OverlayDisplayToolBar__makeRGBVectorOptsTools
        _OverlayDisplayToolBar__makeLineVectorOptsTools
        _OverlayDisplayToolBar__makeMeshOptsTools
+       _OverlayDisplayToolBar__makeGiftiOptsTools
        _OverlayDisplayToolBar__makeTensorOptsTools
        _OverlayDisplayToolBar__makeSHOptsTools
     """
@@ -444,7 +445,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
     def __makeMeshOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.MeshOpts` instance.
-        """        
+        """
         colourSpec  = _TOOLBAR_PROPS[opts, 'colour']
         outlineSpec = _TOOLBAR_PROPS[opts, 'outline']
         widthSpec   = _TOOLBAR_PROPS[opts, 'outlineWidth']
@@ -460,6 +461,13 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         nav   = [colourWidget, outlineWidget, widthWidget]
         
         return tools, nav
+
+
+    def __makeGiftiOptsTools(self, opts):
+        """Creates and returns a collection of controls for editing properties
+        of the given :class:`.GiftiOpts` instance.
+        """ 
+        return self.__makeMeshOptsTools(opts)
 
 
     def __makeTensorOptsTools(self, opts):

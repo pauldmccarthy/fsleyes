@@ -609,6 +609,8 @@ labels = TypeDict({
     'World coordinates ({})',
     'OverlayInfoPanel.TriangleMesh.coordSpace.display'     :
     'Display coordinate system',
+
+    'OverlayInfoPanel.GiftiSurface' : 'GIFTI surface',
     
     'OverlayInfoPanel.dataSource'               : 'Data source',
     'OverlayInfoPanel.niftiVersion'             : 'NIFTI version',
@@ -962,6 +964,7 @@ choices = TypeDict({
                              'rgbvector'  : '3-direction vector image (RGB)',
                              'linevector' : '3-direction vector image (Line)',
                              'mesh'       : '3D mesh',
+                             'giftimesh'  : 'GIFTI surface',
                              'tensor'     : 'Diffusion tensor',
                              'sh'         : 'Diffusion SH'},
 

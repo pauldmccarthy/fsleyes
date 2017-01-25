@@ -79,6 +79,7 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
    ~fsleyes.displaycontext.vectoropts.RGBVectorOpts
    ~fsleyes.displaycontext.vectoropts.LineVectorOpts
    ~fsleyes.displaycontext.meshopts.MeshOpts
+   ~fsleyes.displaycontext.giftiopts.GiftiOpts
    ~fsleyes.displaycontext.labelopts.LabelOpts
    ~fsleyes.displaycontext.tensoropts.TensorOpts
    ~fsleyes.displaycontext.shopts.SHOpts
@@ -153,6 +154,7 @@ from .vectoropts     import VectorOpts
 from .vectoropts     import RGBVectorOpts
 from .vectoropts     import LineVectorOpts
 from .meshopts       import MeshOpts
+from .giftiopts      import GiftiOpts
 from .labelopts      import LabelOpts
 from .tensoropts     import TensorOpts
 from .shopts         import SHOpts
@@ -165,7 +167,7 @@ OVERLAY_TYPES = td.TypeDict({
     'Image'        : ['volume',     'mask',  'rgbvector',
                       'linevector', 'label', 'sh', 'tensor'],
     'TriangleMesh' : ['mesh'],
-    'GiftiSurface' : ['mesh'],
+    'GiftiSurface' : ['giftimesh'],
     'DTIFitTensor' : ['tensor', 'rgbvector', 'linevector'],
 })
 """This dictionary provides a mapping between all overlay classes,
@@ -190,6 +192,7 @@ DISPLAY_OPTS_MAP = {
     'linevector' : LineVectorOpts,
     'mask'       : MaskOpts,
     'mesh'       : MeshOpts,
+    'giftimesh'  : GiftiOpts,
     'label'      : LabelOpts,
     'tensor'     : TensorOpts,
     'sh'         : SHOpts,

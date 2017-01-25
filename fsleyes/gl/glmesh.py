@@ -167,11 +167,12 @@ class GLMesh(globject.GLObject):
         as attributes called ``vertices`` and ``indices`` respectively.
         """
 
-        vertices = self.overlay.vertices
-        indices  = self.overlay.indices
+        overlay  = self.overlay
+        vertices = overlay.vertices
+        indices  = overlay.indices
         xform    = self.opts.getCoordSpaceTransform()
 
-        if not np.all(xform == np.eye(4)):
+        if not np.all(np.isclose(xform, np.eye(4))):
             vertices = transform.transform(vertices, xform)
 
         self.vertices = np.array(vertices,          dtype=np.float32)

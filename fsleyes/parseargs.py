@@ -392,8 +392,10 @@ OPTIONS = td.TypeDict({
     'MeshOpts'       : ['colour',
                         'outline',
                         'outlineWidth',
+                        'quality',
                         'refImage',
                         'coordSpace'],
+    'GiftiOpts'      : [],
     'TensorOpts'     : ['lighting',
                         'orientFlip',
                         'tensorResolution',
@@ -430,6 +432,7 @@ GROUPNAMES = td.TypeDict({
     'LineVectorOpts' : 'Line vector options',
     'RGBVectorOpts'  : 'RGB vector options',
     'MeshOpts'       : 'Mesh options',
+    'GiftiOpts'      : 'GIFTI surface options',
     'LabelOpts'      : 'Label options',
     'TensorOpts'     : 'Tensor options',
     'SHOpts'         : 'SH options',
@@ -464,6 +467,7 @@ GROUPDESCS = td.TypeDict({
     'LineVectorOpts' : 'These options are applied to \'linevector\' overlays.',
     'RGBVectorOpts'  : 'These options are applied to \'rgbvector\' overlays.',
     'MeshOpts'       : 'These options are applied to \'mesh\' overlays.',
+    'GiftiOpts'      : 'These options are applied to \'giftimesh\' overlays.',
     'TensorOpts'     : 'These options are applied to \'tensor\' overlays.',
     'SHOpts'         : 'These options are applied to \'sh\' overlays.',
 })
@@ -615,6 +619,7 @@ ARGUMENTS = td.TypeDict({
     'MeshOpts.colour'       : ('mc', 'colour',       True),
     'MeshOpts.outline'      : ('o',  'outline',      False),
     'MeshOpts.outlineWidth' : ('w',  'outlineWidth', True),
+    'MeshOpts.quality'      : ('q',  'quality',      True),
     'MeshOpts.refImage'     : ('r',  'refImage',     True),
     'MeshOpts.coordSpace'   : ('s',  'coordSpace',   True),
 
@@ -798,6 +803,8 @@ HELP = td.TypeDict({
     'MeshOpts.colour'       : 'Mesh colour (0-1)',
     'MeshOpts.outline'      : 'Show mesh outline',
     'MeshOpts.outlineWidth' : 'Mesh outline width (0-20, default: 2)',
+    'MeshOpts.quality'      : 'Rendering quality (percentage of display '
+                              'size; 25-500, default: 100)',
     'MeshOpts.refImage'     : 'Reference image for mesh',
     'MeshOpts.coordSpace'   : 'Mesh vertex coordinate space '
                               '(relative to reference image)',
@@ -1272,13 +1279,14 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
     TensorOpts     = fsldisplay.TensorOpts
     MaskOpts       = fsldisplay.MaskOpts
     MeshOpts       = fsldisplay.MeshOpts
+    GiftiOpts      = fsldisplay.GiftiOpts
     LabelOpts      = fsldisplay.LabelOpts
     SHOpts         = fsldisplay.SHOpts
 
     # A parser is created and returned
     # for each one of these types.
     parserTypes = [VolumeOpts, MaskOpts, LabelOpts,
-                   MeshOpts, LineVectorOpts,
+                   MeshOpts, GiftiOpts, LineVectorOpts,
                    RGBVectorOpts, TensorOpts, SHOpts]
 
     # Dictionary containing the Display parser,
