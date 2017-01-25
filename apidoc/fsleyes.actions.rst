@@ -6,6 +6,7 @@ fsleyes.actions package
 
    fsleyes.actions.about
    fsleyes.actions.action
+   fsleyes.actions.applyflirtxfm
    fsleyes.actions.clearperspective
    fsleyes.actions.clearsettings
    fsleyes.actions.copyoverlay
@@ -24,6 +25,7 @@ fsleyes.actions package
    fsleyes.actions.removealloverlays
    fsleyes.actions.removeoverlay
    fsleyes.actions.runscript
+   fsleyes.actions.saveflirtxfm
    fsleyes.actions.saveoverlay
    fsleyes.actions.saveperspective
    fsleyes.actions.togglecontrolpanel

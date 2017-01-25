@@ -9,7 +9,8 @@ fsleyes.gl package
    fsleyes.gl.gllabel
    fsleyes.gl.gllinevector
    fsleyes.gl.glmask
-   fsleyes.gl.glmodel
+   fsleyes.gl.glmesh
+   fsleyes.gl.glgiftimesh
    fsleyes.gl.globject
    fsleyes.gl.glsh
    fsleyes.gl.glrgbvector

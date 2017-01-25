@@ -1,7 +1,7 @@
-fsleyes.gl.gl21.glmodel_funcs module
+fsleyes.actions.applyflirtxfm module
 ====================================
 
-.. automodule:: fsleyes.gl.gl21.glmodel_funcs
+.. automodule:: fsleyes.actions.applyflirtxfm
     :members:
     :undoc-members:
     :show-inheritance:

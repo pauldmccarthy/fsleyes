@@ -6,7 +6,7 @@ fsleyes.gl.gl14 package
 
    fsleyes.gl.gl14.gllabel_funcs
    fsleyes.gl.gl14.gllinevector_funcs
-   fsleyes.gl.gl14.glmodel_funcs
+   fsleyes.gl.gl14.glmesh_funcs
    fsleyes.gl.gl14.glrgbvector_funcs
    fsleyes.gl.gl14.glvector_funcs
    fsleyes.gl.gl14.glvolume_funcs

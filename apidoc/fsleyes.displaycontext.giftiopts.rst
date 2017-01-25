@@ -1,7 +1,7 @@
-fsleyes.displaycontext.modelopts module
+fsleyes.displaycontext.giftiopts module
 =======================================
 
-.. automodule:: fsleyes.displaycontext.modelopts
+.. automodule:: fsleyes.displaycontext.giftiopts
     :members:
     :undoc-members:
     :show-inheritance:

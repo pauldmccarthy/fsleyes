@@ -11,6 +11,8 @@ fsleyes.controls package
    fsleyes.controls.canvassettingspanel
    fsleyes.controls.clusterpanel
    fsleyes.controls.componentgrid
+   fsleyes.controls.cropimagepanel
+   fsleyes.controls.edittransformpanel
    fsleyes.controls.histogramcontrolpanel
    fsleyes.controls.histogramtoolbar
    fsleyes.controls.labelgrid

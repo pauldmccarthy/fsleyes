@@ -8,16 +8,18 @@ fsleyes.displaycontext package
    fsleyes.displaycontext.display
    fsleyes.displaycontext.displaycontext
    fsleyes.displaycontext.group
-   fsleyes.displaycontext.labelopts
    fsleyes.displaycontext.lightboxopts
-   fsleyes.displaycontext.maskopts
-   fsleyes.displaycontext.modelopts
    fsleyes.displaycontext.orthoopts
    fsleyes.displaycontext.sceneopts
+   fsleyes.displaycontext.volumeopts
+   fsleyes.displaycontext.labelopts
+   fsleyes.displaycontext.maskopts
+   fsleyes.displaycontext.vectoropts 
    fsleyes.displaycontext.shopts
    fsleyes.displaycontext.tensoropts
-   fsleyes.displaycontext.vectoropts
-   fsleyes.displaycontext.volumeopts
+   fsleyes.displaycontext.meshopts
+   fsleyes.displaycontext.giftiopts
+
 
 .. automodule:: fsleyes.displaycontext
     :members:

@@ -6,6 +6,7 @@ fsleyes.profiles package
 
    fsleyes.profiles.histogramprofile 
    fsleyes.profiles.lightboxviewprofile
+   fsleyes.profiles.orthocropprofile
    fsleyes.profiles.orthoeditprofile
    fsleyes.profiles.orthoviewprofile
    fsleyes.profiles.plotprofile
