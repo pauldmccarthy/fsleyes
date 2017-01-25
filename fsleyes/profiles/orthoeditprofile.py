@@ -448,13 +448,22 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
         if self.__currentOverlay is None:
             return
+
+        overlay = self.__currentOverlay
+        editor  = self.__editors[overlay]
+        display = self._displayCtx.getDisplay(overlay)
+        name    = '{}_mask'.format(display.name)
+        data    = editor.getSelection().getSelection()
+        data    = np.array(data, dtype=overlay.dtype)
         
         copyoverlay.copyImage(self._overlayList,
                               self._displayCtx,
                               self.__currentOverlay,
                               createMask=True,
                               copy4D=False,
-                              copyDisplay=False)
+                              copyDisplay=False,
+                              name=name,
+                              data=data)
 
 
     @actions.action
@@ -1082,6 +1091,17 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         cursors  = [self.__xcurAnnotation,
                     self.__ycurAnnotation,
                     self.__zcurAnnotation]
+
+        # If the selected overlay is changed, this
+        # method might get called during the overlay
+        # changeover (in __selectedOverlayChanged,
+        # when the display space warning dialog gets
+        # shown). At this point in time, the cursor
+        # annotations for the new overlay will not
+        # yet have been created, so we can't draw
+        # them.
+        if any([c is None for c in cursors]):
+            return
 
         # If a block size was not specified,
         # it defaults to selectionSize

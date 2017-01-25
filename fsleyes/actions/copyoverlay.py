@@ -167,19 +167,20 @@ class CopyOverlayAction(action.Action):
         copyImage(self.__overlayList,
                   self.__displayCtx,
                   overlay,
-                  createMask,
-                  copy4D,
-                  copyDisplay)
+                  createMask=createMask,
+                  copy4D=copy4D,
+                  copyDisplay=copyDisplay)
 
     
 def copyImage(overlayList,
               displayCtx,
               overlay,
-              createMask,
-              copy4D,
-              copyDisplay,
+              createMask=False,
+              copy4D=True,
+              copyDisplay=True,
               name=None,
-              roi=None):
+              roi=None,
+              data=None):
     """Creates a copy of the given :class:`.Image` overlay, and inserts it
     into the :class:`.OverlayList`.
 
@@ -207,6 +208,11 @@ def copyImage(overlayList,
                       of tuples, containing the low/high bounds for each voxel
                       dimension. For 4D images, the bounds for the fourth
                       dimension are optional.
+
+    :arg data:        If provided, is used as the image data for the new copy.
+                      Must match the shape dictated by the other arguments
+                      (i.e. ``copy4D`` and ``roi``). If ``data`` is provided,
+                      the ``createMask`` argument is ignored.
     """
 
     ovlIdx = overlayList.index(overlay)
@@ -234,9 +240,10 @@ def copyImage(overlayList,
 
     shape = [hi - lo for lo, hi in roi]
     slc   = tuple([slice(lo, hi) for lo, hi in roi])
-    
-    if createMask: data = np.zeros(shape)
-    else:          data = np.copy(overlay[slc])
+
+    if data is not None: pass
+    elif createMask:     data = np.zeros(shape)
+    else:                data = np.copy(overlay[slc])
 
     # If this is an ROI, we need to add
     # an offset to the image affine
