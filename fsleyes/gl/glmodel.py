@@ -90,10 +90,9 @@ class GLModel(globject.GLObject):
         self.addListeners()
         self._updateVertices()
 
-        self._renderTexture = textures.RenderTexture(self.name, gl.GL_LINEAR)
+        self._renderTexture = textures.RenderTexture(self.name, gl.GL_NEAREST)
 
         fslgl.glmodel_funcs.compileShaders(self)
-        fslgl.glmodel_funcs.updateShaders( self)
 
         
     def destroy(self):
@@ -136,10 +135,12 @@ class GLModel(globject.GLObject):
         opts   .addListener('colour',       name, refresh,      weak=False)
         opts   .addListener('outline',      name, refresh,      weak=False)
         opts   .addListener('showName',     name, refresh,      weak=False)
+        opts   .addListener('outlineWidth', name, shaderUpdate, weak=False)
+        opts   .addListener('quality',      name, shaderUpdate, weak=False) 
         display.addListener('brightness',   name, refresh,      weak=False)
         display.addListener('contrast',     name, refresh,      weak=False)
         display.addListener('alpha',        name, refresh,      weak=False)
-        opts   .addListener('outlineWidth', name, shaderUpdate, weak=False)
+        
 
         
     def removeListeners(self):
@@ -150,6 +151,7 @@ class GLModel(globject.GLObject):
         self.opts   .removeListener('colour',       self.name)
         self.opts   .removeListener('outline',      self.name)
         self.opts   .removeListener('outlineWidth', self.name)
+        self.opts   .removeListener('quality',      self.name)
         self.display.removeListener('brightness',   self.name)
         self.display.removeListener('contrast',     self.name)
         self.display.removeListener('alpha',        self.name)
@@ -239,8 +241,9 @@ class GLModel(globject.GLObject):
         .. note:: This method is used by the :mod:`.gl14.glmodel_funcs` and
                   :mod:`.gl21.glmodel_funcs` modules.
         """
+        opts          = self.opts
         width, height = self._renderTexture.getSize()
-        outlineWidth  = self.opts.outlineWidth
+        outlineWidth  = opts.outlineWidth * opts.quality / 100.0
 
         if width in (None, 0) or height in (None, 0):
             return [0, 0]
@@ -261,11 +264,19 @@ class GLModel(globject.GLObject):
         :class:`.RenderTexture` based on the current viewport size.
         """
 
-        size   = gl.glGetIntegerv(gl.GL_VIEWPORT)
-        width  = size[2]
-        height = size[3]
+        width, height = self._renderTexture.getSize()
+        needUpdate = width in (None, 0) or height in (None, 0)
+
+        quality = self.opts.quality / 100.0
+        size    = gl.glGetIntegerv(gl.GL_VIEWPORT)
+        width   = int(round(size[2] * quality))
+        height  = int(round(size[3] * quality))
 
         self._renderTexture.setSize(width, height)
+
+        if needUpdate:
+            fslgl.glmodel_funcs.updateShaders(self)
+
 
     
     def draw(self, zpos, xform=None, bbox=None):

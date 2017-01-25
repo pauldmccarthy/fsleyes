@@ -370,6 +370,7 @@ _DISPLAY_PROPS = td.TypeDict({
     'ModelOpts'      : ['colour',
                         'outline',
                         'outlineWidth',
+                        'quality',
                         'refImage',
                         'coordSpace'],
     'TensorOpts'     : ['lighting',
@@ -562,6 +563,7 @@ _DISPLAY_WIDGETS = td.TypeDict({
     'ModelOpts.colour'       : props.Widget('colour'),
     'ModelOpts.outline'      : props.Widget('outline'),
     'ModelOpts.outlineWidth' : props.Widget('outlineWidth', showLimits=False),
+    'ModelOpts.quality'      : props.Widget('quality',      showLimits=False),
     'ModelOpts.refImage'     : props.Widget('refImage', labels=_imageName),
     'ModelOpts.coordSpace'   : props.Widget(
         'coordSpace',

@@ -236,6 +236,8 @@ properties = TypeDict({
                                'displayed. Otherwise the model is filled. ',
     'ModelOpts.outlineWidth' : 'If the model outline is being displayed, this '
                                'setting controls the outline width.',
+    'ModelOpts.quality'      : 'Use this setting to control the resolution '
+                               'at which the model is displayed.',
     'ModelOpts.showName'     : 'Annotate the display wiuh the model name.',
     'ModelOpts.refImage'     : 'If this model was derived from a volumetric '
                                'image, you can choose that image as a '

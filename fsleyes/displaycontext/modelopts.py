@@ -76,6 +76,10 @@ class ModelOpts(fsldisplay.DisplayOpts):
     """If :attr:`outline` is ``True``, this property defines the width of the
     outline.
     """
+
+    
+    quality = props.Percentage(minval=25, maxval=500, default=100)
+    """Model rendering quality. """
     
 
     showName = props.Boolean(default=False)

@@ -834,6 +834,7 @@ properties = TypeDict({
     'ModelOpts.colour'       : 'Colour',
     'ModelOpts.outline'      : 'Show outline only',
     'ModelOpts.outlineWidth' : 'Outline width',
+    'ModelOpts.quality'      : 'Display quality',
     'ModelOpts.refImage'     : 'Reference image',
     'ModelOpts.coordSpace'   : 'Model coordinate space',
     'ModelOpts.showName'     : 'Show model name',

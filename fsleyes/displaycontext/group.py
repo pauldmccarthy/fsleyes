@@ -69,6 +69,7 @@ class OverlayGroup(props.HasProperties):
         'LabelOpts'      : ['outline',
                             'outlineWidth'],
         'ModelOpts'      : ['outline',
+                            'quality',
                             'outlineWidth',
                             'refImage',
                             'coordSpace'],
