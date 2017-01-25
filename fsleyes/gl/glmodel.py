@@ -127,20 +127,15 @@ class GLModel(globject.GLObject):
         def refresh(*a):
             self.notify()
 
-        def shaderUpdate(*a):
-            fslgl.glmodel_funcs.updateShaders(self)
-            self.notify()
-        
         opts   .addListener('bounds',       name, self._updateVertices)
-        opts   .addListener('colour',       name, refresh,      weak=False)
-        opts   .addListener('outline',      name, refresh,      weak=False)
-        opts   .addListener('showName',     name, refresh,      weak=False)
-        opts   .addListener('outlineWidth', name, shaderUpdate, weak=False)
-        opts   .addListener('quality',      name, shaderUpdate, weak=False) 
-        display.addListener('brightness',   name, refresh,      weak=False)
-        display.addListener('contrast',     name, refresh,      weak=False)
-        display.addListener('alpha',        name, refresh,      weak=False)
-        
+        opts   .addListener('colour',       name, refresh, weak=False)
+        opts   .addListener('outline',      name, refresh, weak=False)
+        opts   .addListener('showName',     name, refresh, weak=False)
+        opts   .addListener('outlineWidth', name, refresh, weak=False)
+        opts   .addListener('quality',      name, refresh, weak=False) 
+        display.addListener('brightness',   name, refresh, weak=False)
+        display.addListener('contrast',     name, refresh, weak=False)
+        display.addListener('alpha',        name, refresh, weak=False)
 
         
     def removeListeners(self):
@@ -243,7 +238,7 @@ class GLModel(globject.GLObject):
         """
         opts          = self.opts
         width, height = self._renderTexture.getSize()
-        outlineWidth  = opts.outlineWidth * opts.quality / 100.0
+        outlineWidth  = opts.outlineWidth * (opts.quality / 100.0)
 
         if width in (None, 0) or height in (None, 0):
             return [0, 0]
@@ -252,10 +247,9 @@ class GLModel(globject.GLObject):
         # we use this value so that it effectly sets the
         # outline to between 0% and 10% of the model
         # width/height (whichever is smaller)
-        outlineWidth *= 10
-        offsets = 2 * [min(outlineWidth / width, outlineWidth / height)]
+        offsets = [outlineWidth / width, outlineWidth / height]
         offsets = np.array(offsets, dtype=np.float32)
-        
+
         return offsets
  
 
@@ -264,19 +258,13 @@ class GLModel(globject.GLObject):
         :class:`.RenderTexture` based on the current viewport size.
         """
 
-        width, height = self._renderTexture.getSize()
-        needUpdate = width in (None, 0) or height in (None, 0)
-
         quality = self.opts.quality / 100.0
         size    = gl.glGetIntegerv(gl.GL_VIEWPORT)
         width   = int(round(size[2] * quality))
         height  = int(round(size[3] * quality))
 
         self._renderTexture.setSize(width, height)
-
-        if needUpdate:
-            fslgl.glmodel_funcs.updateShaders(self)
-
+        fslgl.glmodel_funcs.updateShaders(self)
 
     
     def draw(self, zpos, xform=None, bbox=None):

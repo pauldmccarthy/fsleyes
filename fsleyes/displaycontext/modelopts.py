@@ -72,9 +72,9 @@ class ModelOpts(fsldisplay.DisplayOpts):
     """
 
     
-    outlineWidth = props.Real(minval=0, maxval=1, default=0.25, clamped=True)
+    outlineWidth = props.Real(minval=0, maxval=20, default=2, clamped=False)
     """If :attr:`outline` is ``True``, this property defines the width of the
-    outline.
+    outline in pixels.
     """
 
     
