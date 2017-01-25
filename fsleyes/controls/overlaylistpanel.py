@@ -16,7 +16,6 @@ import wx
 import props
 
 import pwidgets.bitmaptoggle            as bmptoggle
-
 import pwidgets.elistbox                as elistbox
 
 import fsl.data.image                   as fslimage
@@ -509,13 +508,13 @@ class ListItemWidget(wx.Panel):
             self.__lockButton.Bind(wx.EVT_TOGGLEBUTTON, self.__onLockButton)
             self.__overlayGroupChanged()
 
+        # Set up the show/hide button if needed
         if showVis:
-            self.__visibility = props.makeWidget(
+            self.__visibility = bmptoggle.BitmapToggleButton(
                 self,
-                display,
-                'enabled',
-                icon=[icons.findImageFile('eyeHighlight16'),
-                      icons.findImageFile('eye16')])
+                trueBmp=icons.loadBitmap('eyeHighlight16'),
+                falseBmp=icons.loadBitmap('eye16'),
+                style=btnStyle)
 
             self.__visibility.SetToolTipString(
                 fsltooltips.properties[display, 'enabled'])
@@ -524,9 +523,12 @@ class ListItemWidget(wx.Panel):
 
             display.addListener('enabled',
                                 self.__name,
-                                self.__vizChanged)
+                                self.__displayVisChanged)
+
+            self.__visibility.Bind(bmptoggle.EVT_BITMAP_TOGGLE,
+                                   self.__onVisButton)
                     
-            self.__vizChanged(selectOverlay=False)
+            self.__displayVisChanged()
 
 
     def __overlayGroupChanged(self, *a):
@@ -562,7 +564,44 @@ class ListItemWidget(wx.Panel):
         if self.__lockButton.GetValue(): group.addOverlay(   self.__overlay)
         else:                            group.removeOverlay(self.__overlay)
 
-        
+
+    def __onVisButton(self, ev):
+        """Called when the *visibility* button is pushed. Toggles the overlay
+        visibility.
+        """
+
+        if self.__propagateSelect:
+            self.__displayCtx.selectOverlay(self.__overlay)
+
+        idx     = self.__listBox.IndexOf(self.__overlay)
+        enabled = self.__visibility.GetValue()
+
+        with props.suppress(self.__display, 'enabled', self.__name):
+            self.__display.enabled = enabled
+
+        if enabled: fgColour = ListItemWidget.enabledFG
+        else:       fgColour = ListItemWidget.disabledFG
+
+        self.__listBox.SetItemForegroundColour(idx, fgColour)
+
+            
+    def __displayVisChanged(self, *a):
+        """Called when the :attr:`.Display.enabled` property of the overlay
+        changes. Updates the state of the *enabled* buton, and changes the
+        item foreground colour.
+        """
+
+        idx = self.__listBox.IndexOf(self.__overlay)
+
+        enabled = self.__display.enabled
+
+        if enabled: fgColour = ListItemWidget.enabledFG
+        else:       fgColour = ListItemWidget.disabledFG
+
+        self.__visibility.SetValue(enabled)
+        self.__listBox.SetItemForegroundColour(idx, fgColour)
+
+    
     def __onDestroy(self, ev):
         """Called when this ``ListItemWidget`` is destroyed (i.e. when the
         associated overlay is removed from the :class:`OverlayListPanel`).
@@ -615,27 +654,3 @@ class ListItemWidget(wx.Panel):
         if tooltip is None:
             tooltip = strings.labels['OverlayListPanel.noDataSource'] 
         self.__listBox.SetItemTooltip(idx, tooltip)
-
-            
-    def __vizChanged(self, *args, **kwargs):
-        """Called when the :attr:`.Display.enabled` property of the overlay
-        changes. Updates the state of the *enabled* buton, and changes the
-        item foreground colour.
-
-        :arg selectOverlay: If ``True`` (the default), the overlay is set to
-                            the :attr:`.DisplayContext.selectedOverlay`.
-
-        All other arguments are ignored.
-        """
-
-        selectOverlay = kwargs.get('selectOverlay', True)
-
-        if selectOverlay and self.__propagateSelect:
-            self.__displayCtx.selectOverlay(self.__overlay)
-
-        idx = self.__listBox.IndexOf(self.__overlay)
-
-        if self.__display.enabled: fgColour = ListItemWidget.enabledFG
-        else:                      fgColour = ListItemWidget.disabledFG
-
-        self.__listBox.SetItemForegroundColour(idx, fgColour)

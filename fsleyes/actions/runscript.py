@@ -246,6 +246,36 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
     def run(script):
         """Run the specified Python script. """
         runScript(frame, overlayList, displayCtx, script)
+
+
+    def setprop(substr, propName, value, testName=False):
+        """Set the given property value for all overlays which have the
+        given ``substr`` in their file path.
+
+        :arg substr:   File path substring.
+
+        :arg propName: Name of the property to change, e.g. ``'cmap'``,
+                       ``'alpha'``, etc.
+
+        :arg value:    New property value.
+
+        :arg testName: Defaults to ``False``. If ``True``, the ``substr``
+                       is tested against the overlay display name, instead
+                       of its file path.
+        """
+
+        for ovl in overlayList:
+
+            if ovl.dataSource is not None and substr not in ovl.dataSource:
+                continue
+            
+            display   = displayCtx.getDisplay(ovl)
+            opts      = displayCtx.getOpts(   ovl)
+            dispProps = display.getAllProperties()[0]
+            optProps  = opts   .getAllProperties()[0]
+
+            if   propName in dispProps: setattr(display, propName, value)
+            elif propName in optProps:  setattr(opts,    propName, value)
         
 
     _locals = collections.OrderedDict((
@@ -270,6 +300,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         ('scaledVoxels',       scaledVoxels),
         ('trueScaledVoxels',   trueScaledVoxels),
         ('rawVoxels',          rawVoxels),
+        ('setprop',            setprop),
         ('load',               load),
         ('run',                run),
     ))
