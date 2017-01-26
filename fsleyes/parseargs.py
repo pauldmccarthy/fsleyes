@@ -714,7 +714,7 @@ HELP = td.TypeDict({
     'OrthoOpts.showZCanvas' : 'Hide the Z canvas',
     'OrthoOpts.showLabels'  : 'Hide orientation labels',
     'OrthoOpts.labelSize'   : 'Orientation label font size '
-                              '(50-500, default: 100)',
+                              '(4-96, default: 14)',
 
     'OrthoOpts.xcentre'     : 'X canvas display centre (YZ world coordinates '
                               'of first overlay)',

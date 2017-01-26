@@ -836,7 +836,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Updates the attributes of the :class:`.Text` anatomical orientation
         annotations on each :class:`.SliceCanvas`.
 
-        :arg refresh: 
+        :arg refresh:  Must be passed as a keyword argument. If ``True`` (the
+                       default), the panel is refreshed.
         """
 
         refresh = kwa.pop('refresh', True)
@@ -1116,7 +1117,13 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # When in grid layout, flip the horizontal axis
         # of the X canvas (assumed to be A/P), to force
         # third angle orthographic projection.
+        xinv = self.__xcanvas.invertX
         self.__xcanvas.invertX = layout == 'grid'
+
+        # If we just inverted the x canvs,
+        # make sure labels are up to date
+        if xinv != self.__xcanvas.invertX:
+            self.__refreshLabels(refresh=False)
 
         self.Layout()
         self.getContentPanel().Layout()
