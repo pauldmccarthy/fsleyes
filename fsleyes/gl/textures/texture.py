@@ -209,7 +209,8 @@ class Texture2D(Texture):
         self.__width     = None
         self.__height    = None
         self.__oldWidth  = None
-        self.__oldHeight = None 
+        self.__oldHeight = None
+        self.__border    = None
         self.__interp    = interp
 
         
@@ -219,6 +220,15 @@ class Texture2D(Texture):
         """
         self.__interp = interp
         self.refresh()
+
+        
+    def setBorder(self, border):
+        """Change the border colour - set to a tuple of four values in the 
+        range 0 to 1, or ``None`` for no border (in which case the texture
+        coordinates will be clamped to edges).
+        """
+        self.__border = border
+        self.refresh() 
 
 
     def setSize(self, width, height):
@@ -318,12 +328,24 @@ class Texture2D(Texture):
         gl.glTexParameteri(gl.GL_TEXTURE_2D,
                            gl.GL_TEXTURE_MIN_FILTER,
                            self.__interp)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                           gl.GL_TEXTURE_WRAP_S,
-                           gl.GL_CLAMP_TO_BORDER)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                           gl.GL_TEXTURE_WRAP_T,
-                           gl.GL_CLAMP_TO_BORDER)
+
+        if self.__border is not None:
+            gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                               gl.GL_TEXTURE_WRAP_S,
+                               gl.GL_CLAMP_TO_BORDER)
+            gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                               gl.GL_TEXTURE_WRAP_T,
+                               gl.GL_CLAMP_TO_BORDER)
+            gl.glTexParameterfv(gl.GL_TEXTURE_2D,
+                                gl.GL_TEXTURE_BORDER_COLOR,
+                                self.__border)
+        else:
+            gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                               gl.GL_TEXTURE_WRAP_S,
+                               gl.GL_CLAMP_TO_EDGE)
+            gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                               gl.GL_TEXTURE_WRAP_T,
+                               gl.GL_CLAMP_TO_EDGE) 
 
         log.debug('Configuring {} ({}) with size {}x{}'.format(
             type(self).__name__,
