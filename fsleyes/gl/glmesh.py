@@ -260,12 +260,17 @@ class GLMesh(globject.GLObject):
         :class:`.RenderTexture` based on the current viewport size.
         """
 
+        tex     = self._renderTexture
         quality = self.opts.quality / 100.0
         size    = gl.glGetIntegerv(gl.GL_VIEWPORT)
         width   = int(round(size[2] * quality))
         height  = int(round(size[3] * quality))
+        
+        # We only need to resize the texture when
+        # the viewport size/quality changes.
+        if tex.getSize() != (width, height):
+            self._renderTexture.setSize(width, height)
 
-        self._renderTexture.setSize(width, height)
         fslgl.glmesh_funcs.updateShaders(self)
 
     

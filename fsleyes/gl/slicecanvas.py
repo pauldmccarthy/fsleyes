@@ -1101,6 +1101,10 @@ class SliceCanvas(props.HasProperties):
         minzoom = self.getConstraint('zoom', 'minval')
         maxzoom = self.getConstraint('zoom', 'maxval')
 
+        # Don't break the maths below
+        if zoom <= 0:
+            zoom = 1
+
         # Normal behaviour
         if zoom >= 100:
 
