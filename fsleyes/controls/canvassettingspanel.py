@@ -116,6 +116,7 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
             props.Widget('layout', labels=strings.choices['OrthoOpts.layout']), 
             props.Widget('zoom', showLimits=False),
             props.Widget('showLabels'),
+            props.Widget('labelColour'),
             props.Widget('labelSize',
                          spin=True,
                          showLimits=False,

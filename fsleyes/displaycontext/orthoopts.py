@@ -50,6 +50,17 @@ class OrthoOpts(sceneopts.SceneOpts):
     """If ``True``, labels showing anatomical orientation are displayed on
     each of the canvases.
     """
+
+
+    labelSize = props.Int(minval=4, maxval=96, default=14, clamped=True)
+    """Label font size."""
+
+
+    labelColour = props.Colour(default=(1, 1, 1))
+    """Label colour. Note that the :class:`.OrthoPanel` will automatically
+    update this value when the :attr:`.SceneOpts.bgColour` is changed. But
+    the user can independently modify this property without any side-effects.
+    """
     
 
     layout = props.Choice(('horizontal', 'vertical', 'grid'))
@@ -66,10 +77,6 @@ class OrthoOpts(sceneopts.SceneOpts):
     
     zzoom = copy.copy(sceneopts.SceneOpts.zoom)
     """Controls zoom on the Z canvas. """
-
-
-    labelSize = props.Int(minval=4, maxval=96, default=14, clamped=True)
-    """Label font size."""
 
     
     def __init__(self, *args, **kwargs):

@@ -21,6 +21,8 @@ import logging
 
 import wx
 
+import props
+
 import fsl.data.image                          as fslimage
 import fsl.data.constants                      as constants
 import fsl.utils.layout                        as fsllayout
@@ -241,10 +243,11 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__zcanvas.bindProps('cursorColour', sceneOpts)
 
         # Callbacks for ortho panel layout options
-        sceneOpts.addListener('layout',     name, self.__refreshLayout)
-        sceneOpts.addListener('showLabels', name, self.__refreshLabels)
-        sceneOpts.addListener('labelSize',  name, self.__refreshLabels)
-        sceneOpts.addListener('bgColour'  , name, self.__bgColourChanged)
+        sceneOpts.addListener('layout',      name, self.__refreshLayout)
+        sceneOpts.addListener('showLabels',  name, self.__refreshLabels)
+        sceneOpts.addListener('labelSize',   name, self.__refreshLabels)
+        sceneOpts.addListener('labelColour', name, self.__refreshLabels)
+        sceneOpts.addListener('bgColour'  ,  name, self.__bgColourChanged)
 
         # Individual zoom control for each canvas
         self.__xcanvas.bindProps('zoom', sceneOpts, 'xzoom')
@@ -693,9 +696,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         ``SceneOpts.bgColour``,(see :meth:`.HasProperties.bindProps`), so we
         don't need to manually update them.
         """
-        
-        bg = self.getSceneOptions().bgColour
-        fg = colourmaps.complementaryColour(bg)
+
+        sceneOpts = self.getSceneOptions()
+        bg        = sceneOpts.bgColour
+        fg        = colourmaps.complementaryColour(bg)
 
         # All wxwidgets things need colours
         # to be specified between 0 and 255
@@ -704,6 +708,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         self.getContentPanel().SetBackgroundColour(intbg)
         self.getContentPanel().SetForegroundColour(intfg)
+
+        with props.suppress(sceneOpts, 'labelColour', self.getName()):
+            sceneOpts.labelColour = fg
 
         cbCanvas = self.getColourBarCanvas()
         if cbCanvas is not None:
@@ -872,7 +879,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         fontSize = sopts.labelSize
         bgColour = tuple(sopts.bgColour)
-        fgColour = tuple(colourmaps.complementaryColour(bgColour))
+        fgColour = tuple(sopts.labelColour)
 
         # If any axis orientation is unknown, and the
         # the background colour is black or white,
