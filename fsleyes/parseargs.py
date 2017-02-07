@@ -951,7 +951,9 @@ def getExtra(target, propName, default=None):
         ('SHOpts',                  'zColour')      : colourSettings,
         (fsldisplay.SHOpts,         'zColour')      : colourSettings,
         ('MeshOpts',                'colour')       : colourSettings,
-        (fsldisplay.MeshOpts,       'colour')       : colourSettings, 
+        (fsldisplay.MeshOpts,       'colour')       : colourSettings,
+        ('GiftiOpts',               'colour')       : colourSettings,
+        (fsldisplay.GiftiOpts,      'colour')       : colourSettings,
 
     }
 
