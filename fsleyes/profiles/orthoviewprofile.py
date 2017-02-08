@@ -422,6 +422,9 @@ class OrthoViewProfile(profiles.Profile):
         if   wheel > 0: wheel =  50
         elif wheel < 0: wheel = -50
 
+        minzoom = canvas.getConstraint('zoom', 'minval')
+        maxzoom = canvas.getConstraint('zoom', 'maxval')
+
         # Over SSH/X11, mouse wheel events seem to get queued,
         # and continue to get processed after the user has
         # stopped spinning the mouse wheel, which is super
@@ -429,7 +432,8 @@ class OrthoViewProfile(profiles.Profile):
         # set a time out to drop the event, and prevent the
         # horribleness from happening.
         def update():
-            canvas.zoom += wheel
+            newZoom     = np.clip(canvas.zoom + wheel, minzoom, maxzoom)
+            canvas.zoom = newZoom
         
         async.idle(update, timeout=0.1)
 
