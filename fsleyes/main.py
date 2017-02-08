@@ -461,7 +461,17 @@ def makeDisplayContext(namespace, splash):
         id(displayCtx)))
     
     # Load the images - the splash screen status will 
-    # be updated with the currently loading overlay name
+    # be updated with the currently loading overlay name.
+    #
+    # The applyOverlayArgs function gets called before
+    # the applySceneArgs function, so we'll manually
+    # apply some important settings to the DC here so
+    # they get used when any overlays are loaded.
+    if namespace.bigmem is not None:
+        displayCtx.loadInMemory = namespace.bigmem
+    if namespace.autoDisplay is not None:
+        displayCtx.autoDisplay = namespace.autoDisplay
+    
     parseargs.applyOverlayArgs(namespace, overlayList, displayCtx) 
 
     return overlayList, displayCtx
