@@ -83,12 +83,6 @@ class ShellPanel(viewpanel.ViewPanel):
         for lvar, ldesc in zip(localVars, localDescs):
             introText = introText + fmtStr.format(lvar, ldesc)
 
-
-        introText = introText + textwrap.dedent("""
-
-        Type help(item) for additional details on a specific item.
-        """)
-
         shell = wxshell.Shell(
             self,
             introText=introText,

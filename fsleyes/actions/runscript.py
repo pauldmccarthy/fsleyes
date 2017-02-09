@@ -178,7 +178,6 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
             'True'       : True,
             'False'      : False,
             '__import__' : __import__,
-            'help'       : help,
             'print'      : print,
         },
     }
