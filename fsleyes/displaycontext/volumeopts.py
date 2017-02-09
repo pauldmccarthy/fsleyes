@@ -588,6 +588,12 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         shape = self.overlay.shape[:3]
         ornts = self.overlay.axisMapping(self.getTransform('voxel', 'display'))
 
+        # We start by truncating the precision
+        # of the coordinates, so that values
+        # which are very close to voxel midpoints
+        # (e.g. 0.49999), get rounded to 0.5.
+        voxels = np.round(voxels, decimals=3)
+
         for dax in daxes:
 
             ornt = ornts[dax]
