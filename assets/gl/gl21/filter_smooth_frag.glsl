@@ -16,12 +16,18 @@ void main(void) {
   float yoff = offset.y;
 
   vec4 rgba  = texture2D(texture, vec2(x,        y));
-  vec3 left  = texture2D(texture, vec2(x - xoff, y)).rgb;
-  vec3 right = texture2D(texture, vec2(x + xoff, y)).rgb;
-  vec3 above = texture2D(texture, vec2(x,        y + yoff)).rgb;
-  vec3 below = texture2D(texture, vec2(x,        y - yoff)).rgb;
+  vec4 left  = texture2D(texture, vec2(x - xoff, y));
+  vec4 right = texture2D(texture, vec2(x + xoff, y));
+  vec4 above = texture2D(texture, vec2(x,        y + yoff));
+  vec4 below = texture2D(texture, vec2(x,        y - yoff));
 
-  rgba.rgb = (rgba.rgb + 0.5 * (left + right + above + below)) / 3.0;
+  if (left.a  == 0) left  = rgba;
+  if (right.a == 0) right = rgba;
+  if (above.a == 0) above = rgba;
+  if (below.a == 0) below = rgba;
+
+  rgba.rgb += 0.5 * (left.rgb + right.rgb + above.rgb + below.rgb);
+  rgba.rgb /= 3;
 
   gl_FragColor = rgba;
 }
