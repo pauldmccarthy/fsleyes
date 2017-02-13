@@ -23,21 +23,23 @@ Some package-level functions are defined here, for finding and loading
 shader source code:
 
 
- - :func:`getVertexShader`:   Locate and load the source code for a specific
-                              vertex shader.
+  .. autosummary::
+     :nosignatures:
 
- - :func:`getFragmentShader`: Locate and load the source code for a specific
-                              fragment shader.
+     getShaderDir
+     getVertexShader
+     getFragmentShader
 
 
-Each of these functions locate shader source files, load the source code, and
-run them through the :func:`preprocess` function, which performs some simple
-preprocessing on the source. This applies to both GLSL and ARB assembly
-shader programs.
+The :class:`Filter` class also gives a simple interface to loading and
+running simple filter shader programs, which require a 2D
+:class:`.RenderTexture` as their input.
 """
 
 
 import os.path              as op
+
+import OpenGL.GL            as gl
 
 import                         fsleyes
 import fsleyes.gl           as fslgl
@@ -131,3 +133,62 @@ def preprocess(src):
             lines[linei] = f.read()
 
     return '\n'.join(lines)
+
+
+class Filter(object):
+    """
+    """
+
+    def __init__(self, filterName):
+
+        filterName = 'filter_{}'.format(filterName)
+        
+        vertSrc = getVertexShader( 'filter')
+        fragSrc = getFragmentShader(filterName)
+
+        # TODO gl14
+        self.__shader = GLSLShader(vertSrc, fragSrc)
+        
+
+    def destroy(self):
+        self.__shader.destroy()
+        self.__shader = None
+
+
+    def apply(self,
+              source,
+              zpos,
+              xmin,
+              xmax,
+              ymin,
+              ymax,
+              xax,
+              yax,
+              xform=None,
+              **kwargs):
+        
+        self.__shader.load()
+        self.__shader.set('texture', 0)
+
+        for name, value in kwargs.items():
+            self.__shader.set(name, value)
+
+        source.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
+        
+        self.__shader.unload()
+        
+
+    def osApply(self, source, dest, clearDest=True, **kwargs):
+
+        dest.bindAsRenderTarget()
+        dest.setRenderViewport(0, 1, (0, 0, 0), (1, 1, 1))
+
+        if clearDest:
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT |
+                       gl.GL_DEPTH_BUFFER_BIT |
+                       gl.GL_STENCIL_BUFFER_BIT)
+
+        self.apply(source, 0.5, 0, 1, 0, 1, 0, 1, **kwargs)
+
+        dest.unbindAsRenderTarget()
+        dest.restoreViewport()
