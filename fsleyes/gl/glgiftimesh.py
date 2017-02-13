@@ -31,8 +31,8 @@ class GLGiftiMesh(glmesh.GLMesh):
         glmesh.GLMesh.__init__(self, *a, **k)
 
 
-    def _updateVertices(self, *a):
-        """Overrides the :meth:`.GLMesh._updateVertices` method. The
+    def updateVertices(self, *a):
+        """Overrides the :meth:`.GLMesh.updateVertices` method. The
         vertex order of the ``GiftiSurface`` indices needs to be adjusted
         to make them displayable in OpenGL.
         """

@@ -88,6 +88,24 @@ class MeshOpts(fsldisplay.DisplayOpts):
     .. note:: Not implemented yet.
     """
 
+
+    vertexData = props.FilePath(exists=True)
+    """Path to a file which contains scalar data associated with each
+    vertex in the mesh, that can be used to colour the mesh.
+    """
+
+
+    cmap = props.ColourMap()
+    """If some :attr:`vertexData` has been specified, this colour map
+    is used to colour the vertices.
+    """
+
+
+    displayRange = props.Bounds()
+    """If some :attr:`vertexData` has been specified, this range is used
+    to map the vertex data to the :attr:`cmap`.
+    """
+
     
     refImage = props.Choice()
     """A reference :class:`.Image` instance which the mesh coordinates are
@@ -226,6 +244,14 @@ class MeshOpts(fsldisplay.DisplayOpts):
             self        .removeListener('colour', self.name)
 
         fsldisplay.DisplayOpts.destroy(self)
+
+
+    def getVertexData(self):
+        """May be overridden by sub-classes. If some :attr:`vertexData` has
+        been specified, this method should return a 1D ``numpy`` array which
+        contains a scalar value for every vertex in the mesh.
+        """
+        return None
 
 
     def getReferenceImage(self):

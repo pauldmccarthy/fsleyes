@@ -1115,3 +1115,28 @@ def fullUnitSphere(res):
     vertices.T[:, 3::4] = [cucv1,  cusv1,  su]
 
     return vertices
+
+
+def unitCircle(res, triangles=False):
+    """Generates ``res`` vertices which form a 2D circle, centered at (0, 0),
+    and with radius 1.
+
+    Returns the vertices as a ``numpy.float32`` array of shape ``(res, 2)``
+
+    If the ``triangles`` argument is ``True``, the vertices are generated
+    with the assumption that they will be drawn as a ``GL_TRIANGLE_FAN``.
+    """
+
+    step = (2 * np.pi) / res
+
+    u = np.linspace(-np.pi, np.pi - step, res, dtype=np.float32)
+
+    cosu  = np.cos(u)
+    sinu  = np.sin(u)
+    verts = np.vstack((sinu, cosu)).T
+
+    if triangles:
+        origin = np.zeros((1, 3), dtyp=np.float32)
+        verts  = np.concatenate((origin, verts))
+
+    return verts

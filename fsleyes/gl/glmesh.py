@@ -20,6 +20,8 @@ import fsleyes.gl.routines as glroutines
 import fsleyes.gl.textures as textures
 import fsleyes.colourmaps  as fslcmaps
 
+import OpenGL.GL.ARB.draw_instanced as arbdi
+
 
 class GLMesh(globject.GLObject):
     """The ``GLMesh`` class is a :class:`.GLObject` which encapsulates the
@@ -61,7 +63,6 @@ class GLMesh(globject.GLObject):
     ========================== ======================================
     ``destroy(GLMesh)``        Performs any necessary clean up.
     ``compileShaders(GLMesh)`` Compiles vertex/fragment shaders.
-    ``updateShaders(GLMesh)``  Updates vertex/fragment shader states.
     ``loadShaders(GLMesh)``    Loads vertex/fragment shaders.
     ``unloadShaders(GLMesh)``  Unloads vertex/fragment shaders.
     ========================== ======================================
@@ -89,9 +90,25 @@ class GLMesh(globject.GLObject):
         self.opts    = display.getDisplayOpts()
 
         self.addListeners()
-        self._updateVertices()
+        self.updateVertices()
 
-        self._renderTexture = textures.RenderTexture(self.name, gl.GL_NEAREST)
+        # We use two render textures
+        # for generating a model cross
+        # section/outline mask. These
+        # textures are kept at display/
+        # screen resolution
+        self.renderTextures = [
+            textures.RenderTexture(self.name, gl.GL_NEAREST),
+            textures.RenderTexture(self.name, gl.GL_NEAREST)]
+
+        # We also use two lower resolution
+        # render textures for post-processing
+        # in the data view (smoothing). These
+        # are kept at half the display
+        # resolution.
+        self.lowResRenderTextures = [
+            textures.RenderTexture(self.name, gl.GL_LINEAR),
+            textures.RenderTexture(self.name, gl.GL_LINEAR)]
 
         fslgl.glmesh_funcs.compileShaders(self)
 
@@ -101,13 +118,17 @@ class GLMesh(globject.GLObject):
         some property listeners and destroys the off-screen
         :class:`.RenderTexture`.
         """
-        self._renderTexture.destroy()
+        for t in self.renderTextures + self.lowResRenderTextures:
+            t.destroy()
+        
         fslgl.glmesh_funcs.destroy(self)
         self.removeListeners()
-        
-        self.overlay = None
-        self.display = None
-        self.opts    = None
+
+        self.lowResRenderTextures = None
+        self.renderTextures       = None
+        self.overlay              = None
+        self.display              = None
+        self.opts                 = None
 
         
     def ready(self):
@@ -128,12 +149,15 @@ class GLMesh(globject.GLObject):
         def refresh(*a):
             self.notify()
 
-        opts   .addListener('bounds',       name, self._updateVertices)
+        opts   .addListener('bounds',       name, self.updateVertices)
         opts   .addListener('colour',       name, refresh, weak=False)
         opts   .addListener('outline',      name, refresh, weak=False)
         opts   .addListener('showName',     name, refresh, weak=False)
         opts   .addListener('outlineWidth', name, refresh, weak=False)
-        opts   .addListener('quality',      name, refresh, weak=False) 
+        opts   .addListener('quality',      name, refresh, weak=False)
+        opts   .addListener('vertexData',   name, refresh, weak=False)
+        opts   .addListener('cmap',         name, refresh, weak=False)
+        opts   .addListener('displayRange', name, refresh, weak=False) 
         display.addListener('brightness',   name, refresh, weak=False)
         display.addListener('contrast',     name, refresh, weak=False)
         display.addListener('alpha',        name, refresh, weak=False)
@@ -148,6 +172,9 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('outline',      self.name)
         self.opts   .removeListener('outlineWidth', self.name)
         self.opts   .removeListener('quality',      self.name)
+        self.opts   .removeListener('vertexData',   self.name)
+        self.opts   .removeListener('cmap',         self.name)
+        self.opts   .removeListener('displayRange', self.name)
         self.display.removeListener('brightness',   self.name)
         self.display.removeListener('contrast',     self.name)
         self.display.removeListener('alpha',        self.name)
@@ -161,7 +188,7 @@ class GLMesh(globject.GLObject):
         globject.GLObject.setAxes(self, xax, yax)
 
 
-    def _updateVertices(self, *a):
+    def updateVertices(self, *a):
         """Called by :meth:`__init__`, and when certain display properties
         change. (Re-)generates the mesh vertices and indices. They are stored
         as attributes called ``vertices`` and ``indices`` respectively.
@@ -234,12 +261,15 @@ class GLMesh(globject.GLObject):
         """Returns an array containing two values, which are to be used as the
         outline widths along the horizontal/vertical screen axes (if outline
         mode is being used). The values are in display coordinate system units.
+        
+        These values are passed to the edge filter shader, used to generate
+        an outline of the mesh cross section with the viewing plane.
 
         .. note:: This method is used by the :mod:`.gl14.glmesh_funcs` and
                   :mod:`.gl21.glmesh_funcs` modules.
         """
         opts          = self.opts
-        width, height = self._renderTexture.getSize()
+        width, height = self.renderTextures[0].getSize()
         outlineWidth  = opts.outlineWidth * (opts.quality / 100.0)
 
         if width in (None, 0) or height in (None, 0):
@@ -257,21 +287,24 @@ class GLMesh(globject.GLObject):
 
     def preDraw(self):
         """Overrides :meth:`.GLObject.preDraw`. Sets the size of the backing
-        :class:`.RenderTexture` based on the current viewport size.
+        :class:`.RenderTexture`instances based on the current viewport size.
         """
 
-        tex     = self._renderTexture
-        quality = self.opts.quality / 100.0
-        size    = gl.glGetIntegerv(gl.GL_VIEWPORT)
-        width   = int(round(size[2] * quality))
-        height  = int(round(size[3] * quality))
+        tex      = self.renderTextures[0]
+        quality  = self.opts.quality / 100.0
+        size     = gl.glGetIntegerv(gl.GL_VIEWPORT)
+        width    = int(round(size[2] * quality))
+        height   = int(round(size[3] * quality))
+
+        # TODO Make low res factor configurable?
+        loWidth  = width  / 2
+        loHeight = height / 2
         
         # We only need to resize the texture when
         # the viewport size/quality changes.
         if tex.getSize() != (width, height):
-            self._renderTexture.setSize(width, height)
-
-        fslgl.glmesh_funcs.updateShaders(self)
+            for t in self.renderTextures:       t.setSize(width,   height)
+            for t in self.lowResRenderTextures: t.setSize(loWidth, loHeight)
 
     
     def draw(self, zpos, xform=None, bbox=None):
@@ -279,27 +312,56 @@ class GLMesh(globject.GLObject):
         :class:`.TriangleMesh`, at the specified Z location.
         """
 
-        display  = self.display 
-        opts     = self.opts
-
-        xax      = self.xax
-        yax      = self.yax
-        zax      = self.zax
-
-        vertices = self.vertices
-        indices  = self.indices
-        lo,  hi  = self.getDisplayBounds()
+        opts             = self.opts
+        xax              = self.xax
+        yax              = self.yax
+        zax              = self.zax
+        lo,  hi          = self.getDisplayBounds()
+        vdata            = opts.getVertexData()
+        needCrossSection = opts.outline or (vdata is None)
 
         if zpos < lo[zax] or zpos > hi[zax]:
             return
 
-        self._renderTexture.bindAsRenderTarget()
-        lo, hi = self.__setRenderTextureViewport(lo, hi, bbox)
+        lo, hi = self.__calculateViewport(lo, hi, bbox)
         xmin   = lo[xax]
-        ymin   = lo[yax]
         xmax   = hi[xax]
+        ymin   = lo[yax]
         ymax   = hi[yax]
+        
+        if needCrossSection:
+            mask, spare = self.renderCrossSection(zpos, lo, hi)
+        else:
+            mask, spare = self.renderTextures
 
+        if vdata is None:
+            mask.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
+        else:
+            self.renderData(zpos, lo, hi, vdata, mask, xform)
+
+
+    def renderCrossSection(self, zpos, lo, hi):
+        """
+        """
+        
+        display    = self.display 
+        opts       = self.opts
+
+        xax        = self.xax
+        yax        = self.yax
+        zax        = self.zax
+        xmin       = lo[xax]
+        ymin       = lo[yax]
+        xmax       = hi[xax]
+        ymax       = hi[yax]
+ 
+        vertices   = self.vertices
+        indices    = self.indices
+        tex1, tex2 = self.renderTextures
+
+        tex1.bindAsRenderTarget()
+        tex1.setRenderViewport(xax, yax, lo, hi)
+        
         # Figure out the equation of a plane
         # perpendicular to the Z axis, and
         # located at the z position. This is
@@ -312,16 +374,15 @@ class GLMesh(globject.GLObject):
         clipPlaneVerts[3, [xax, yax]] = [xmax, ymin]
         clipPlaneVerts[:,  zax]       =  zpos
 
-        vertices = vertices.ravel('C')
         planeEq  = glroutines.planeEquation(clipPlaneVerts[0, :],
                                             clipPlaneVerts[1, :],
                                             clipPlaneVerts[2, :])
 
         gl.glClearColor(0, 0, 0, 0)
 
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-        gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
-        gl.glClear(gl.GL_STENCIL_BUFFER_BIT)
+        gl.glClear(gl.GL_COLOR_BUFFER_BIT |
+                   gl.GL_DEPTH_BUFFER_BIT |
+                   gl.GL_STENCIL_BUFFER_BIT)
 
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         gl.glEnable(gl.GL_CLIP_PLANE0)
@@ -358,7 +419,7 @@ class GLMesh(globject.GLObject):
             gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, direction)
             gl.glCullFace(face)
 
-            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
             gl.glDrawElements(gl.GL_TRIANGLES,
                               len(indices),
                               gl.GL_UNSIGNED_INT,
@@ -393,21 +454,127 @@ class GLMesh(globject.GLObject):
 
         gl.glDisable(gl.GL_STENCIL_TEST)
 
-        self._renderTexture.unbindAsRenderTarget()
-        self._renderTexture.restoreViewport()
+        tex1.unbindAsRenderTarget()
+        tex1.restoreViewport()
 
         # If drawing the mesh outline, run the
-        # render texture through the shader
-        # programs. Otherwise, the render texture
-        # is just drawn directly to the canvas.
+        # render texture through the edge shader
+        # program. Otherwise, we use the full 
+        # mesh cross-section as calculated above.
         if opts.outline:
-            fslgl.glmesh_funcs.loadShaders(self)
 
-        self._renderTexture.drawOnBounds(
-            zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
-        
+            self.edgeFilter.osApply(
+                tex1, tex2, offsets=self.getOutlineOffsets())
+
+            crossSection, spare = tex2, tex1
+        else:
+            crossSection, spare = tex1, tex2
+
+        return crossSection, spare
+            
+
+    def renderData(self, zpos, lo, hi, vdata, maskTexture, xform=None):
+
+        mask  = maskTexture
+        opts  = self.opts
+        xax   = self.xax
+        yax   = self.yax
+        zax   = self.zax
+        xmin  = lo[xax]
+        xmax  = hi[xax]
+        ymin  = lo[yax]
+        ymax  = hi[yax] 
+
+        # TODO Make z threshold configurable
+        vertices = self.vertices
+        vertIdxs = np.where((vertices[:, zax] > zpos - 5) &
+                            (vertices[:, zax] < zpos + 5))[0]
+
+        vertices         = vertices[vertIdxs, :]
+        vertices[:, zax] = zpos
+
+        cmap     = opts.cmap
+        dlo, dhi = opts.displayRange
+        colours  = vdata[vertIdxs]
+
+        colours  = (colours - dlo) / (dhi - dlo)
+        colours  = np.array(cmap(colours), dtype=np.float32)[:, :3]
+
+        # TODO Make radius configurable 
+        #      (but use a default based 
+        #      on average edge length)
+        # TODO Make circle resolution
+        #      configurable
+        circle      = glroutines.unitCircle(10)
+        circle     *= 2.1
+        circleVerts = np.zeros((circle.shape[0], 3), dtype=np.float32)
+
+        circleVerts[:, xax] = circle[:, 0]
+        circleVerts[:, yax] = circle[:, 1]
+
+        shader = self.pointShader
+        shader.load()
+        shader.setAtt('vertex', circleVerts)
+        shader.setAtt('offset', vertices, divisor=1)
+        shader.setAtt('colour', colours,  divisor=1)
+
+        shader.loadAtts()
+
+        # TODO If outline mode, this
+        #      texture should be low-res,
+        #      so it can be smoothed
+        smoothTex1, smoothTex2 = self.lowResRenderTextures
+        smoothTex1.bindAsRenderTarget()
+        smoothTex1.setRenderViewport(xax, yax, lo, hi)
+
+        gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
+        gl.glBlendFunc(gl.GL_CONSTANT_COLOR, gl.GL_CONSTANT_COLOR)
+        gl.glBlendColor(0.5, 0.5, 0.5, 1.0)
+
+        arbdi.glDrawArraysInstancedARB(
+            gl.GL_TRIANGLE_FAN,
+            0,
+            circleVerts.shape[0],
+            vertices.shape[0])
+
+        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+
+        smoothTex1.unbindAsRenderTarget()
+        smoothTex1.restoreViewport()
+
+        shader.unloadAtts()
+        shader.unload()
+
         if opts.outline:
-            fslgl.glmesh_funcs.unloadShaders(self)
+
+            mask.bindTexture(gl.GL_TEXTURE1)
+
+            self.maskFilter.apply(
+                smoothTex1,
+                zpos,
+                xmin,
+                xmax,
+                ymin,
+                ymax,
+                xax,
+                yax,
+                xform,
+                mask=1)
+
+            mask.unbindTexture()
+        else:
+
+            w, h      = smoothTex1.getSize()
+            src, dest = smoothTex2, smoothTex1
+
+            # TODO make smoothing iterations
+            #      configurable
+            for i in range(10):
+
+                src, dest = dest, src
+                self.smoothFilter.osApply(src, dest, offset=(1.0 / w, 1.0 / h))
+
+            src.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
 
     
     def postDraw(self):
@@ -415,14 +582,11 @@ class GLMesh(globject.GLObject):
         pass
 
 
-    def __setRenderTextureViewport(self, lo, hi, bbox=None):
+    def __calculateViewport(self, lo, hi, bbox=None):
         """Called by :meth:`draw`. Calculates an appropriate viewport (the
         horizontal/vertical minimums/maximums in display coordinates) given
         the ``lo`` and ``hi`` ``GLMesh`` display bounds, and a display
         ``bbox``.
-
-        Sets the viewport on the :class:`.RenderTexture`, and returns the
-        bounds.
         """
 
         xax = self.xax
@@ -459,7 +623,5 @@ class GLMesh(globject.GLObject):
                 ndylen   = ylen * (dxlen / xlen)
                 lo[yax] += 0.5 * (ndylen - dylen)
                 hi[yax] -= 0.5 * (ndylen - dylen)
-
-        self._renderTexture.setRenderViewport(xax, yax, lo, hi)
         
         return lo, hi

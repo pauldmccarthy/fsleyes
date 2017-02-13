@@ -5,11 +5,15 @@
  */
 #version 120
 
-varying vec2 texCoord;
+attribute vec3  vertex;
+attribute vec3  offset;
+attribute vec3  colour;
+
+varying   vec3 fragColour;
 
 void main(void) {
 
-  texCoord = gl_MultiTexCoord0.xy;
-
-  gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+  vec3 pos    = vertex + offset;
+  fragColour  = colour;
+  gl_Position = gl_ModelViewProjectionMatrix * vec4(pos, 1);
 }

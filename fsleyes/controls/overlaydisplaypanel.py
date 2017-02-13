@@ -371,6 +371,9 @@ _DISPLAY_PROPS = td.TypeDict({
                         'outline',
                         'outlineWidth',
                         'quality',
+                        'vertexData',
+                        'cmap',
+                        'displayRange',
                         'refImage',
                         'coordSpace'],
     'TensorOpts'     : ['lighting',
@@ -570,7 +573,18 @@ _DISPLAY_WIDGETS = td.TypeDict({
         enabledWhen=lambda o, ri: ri != 'none',
         labels=strings.choices['MeshOpts.coordSpace'],
         dependencies=['refImage']),
-
+    'MeshOpts.vertexData'   : props.Widget(
+        'vertexData'
+    ),
+    'MeshOpts.cmap'         : props.Widget(
+        'cmap',
+        dependencies=['vertexData'],
+        enabledWhen=lambda o, vd: vd is not None),
+    'MeshOpts.displayRange' : props.Widget(
+        'displayRange',
+        showLimits=False,
+        dependencies=['vertexData'],
+        enabledWhen=lambda o, vd: vd is not None),
         
     # TensorOpts
     'TensorOpts.lighting'         : props.Widget('lighting'),
