@@ -21,38 +21,27 @@ def compileShaders(self):
     and creates a :class:`.ARBPShader` instance.
     """
     
-    vertSrc  = shaders.getVertexShader(  'glmesh')
-    fragSrc  = shaders.getFragmentShader('glmesh')
-
-    textures = {'renderTexture' : 0}
-
-    self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)
-
+    pass
 
 def destroy(self):
     """Deletes the vertex/fragment shader programs that were compiled by
     :func:`compileShaders`.
     """
-    self.shader.destroy()
-    self.shader = None
+    pass
 
 
 def updateShaders(self):
     """Updates the state of the vertex/fragment shaders. This involves
     setting the parameter values used by the shaders.
     """ 
-    offsets = self.getOutlineOffsets()
-    
-    loadShaders(self)
-    self.shader.setFragParam('offsets', list(offsets) + [0, 0])
-    unloadShaders(self)
+    pass
 
 
 def loadShaders(self):
     """Loads the :class:`.GLMesh` vertex/fragment shader programs. """
-    self.shader.load()
+    pass
 
     
 def unloadShaders(self):
     """Un-loads the :class:`.GLMesh` vertex/fragment shader programs. """
-    self.shader.unload() 
+    pass

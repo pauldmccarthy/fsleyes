@@ -24,36 +24,20 @@ def compileShaders(self):
     if self.shader is not None:
         self.shader.destroy()
 
-    vertSrc = shaders.getVertexShader(  'glmesh')
-    fragSrc = shaders.getFragmentShader('glmesh')
-
-    self.pointShader  = shaders.GLSLShader(vertSrc, fragSrc)
-    self.edgeFilter   = shaders.Filter('edge')
-    self.maskFilter   = shaders.Filter('mask')
-    self.smoothFilter = shaders.Filter('smooth')
-
 
 def destroy(self):
     """Deletes the vertex/fragment shaders that were compiled by
     :func:`compileShaders`.
     """
-    self.pointShader .destroy()
-    self.edgeFilter  .destroy()
-    self.maskFilter  .destroy()
-    self.smoothFilter.destroy()
-
-    self.shader       = None 
-    self.edgeFilter   = None
-    self.maskFilter   = None
-    self.smoothFilter = None 
+    pass
     
     
 def loadShaders(self):
     """Loads the :class:`.GLMesh` vertex/fragment shaders. """
 
-    self.shader.load()
+    pass
 
 
 def unloadShaders(self):
     """Un-loads the :class:`.GLMesh` vertex/fragment shaders. """
-    self.shader.unload()
+    pass

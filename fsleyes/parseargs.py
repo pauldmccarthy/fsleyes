@@ -393,7 +393,6 @@ OPTIONS = td.TypeDict({
     'MeshOpts'       : ['colour',
                         'outline',
                         'outlineWidth',
-                        'quality',
                         'refImage',
                         'coordSpace'],
     'GiftiOpts'      : [],
@@ -621,7 +620,6 @@ ARGUMENTS = td.TypeDict({
     'MeshOpts.colour'       : ('mc', 'colour',       True),
     'MeshOpts.outline'      : ('o',  'outline',      False),
     'MeshOpts.outlineWidth' : ('w',  'outlineWidth', True),
-    'MeshOpts.quality'      : ('q',  'quality',      True),
     'MeshOpts.refImage'     : ('r',  'refImage',     True),
     'MeshOpts.coordSpace'   : ('s',  'coordSpace',   True),
 
@@ -807,8 +805,6 @@ HELP = td.TypeDict({
     'MeshOpts.colour'       : 'Mesh colour (0-1)',
     'MeshOpts.outline'      : 'Show mesh outline',
     'MeshOpts.outlineWidth' : 'Mesh outline width (0-20, default: 2)',
-    'MeshOpts.quality'      : 'Rendering quality (percentage of display '
-                              'size; 25-500, default: 100)',
     'MeshOpts.refImage'     : 'Reference image for mesh',
     'MeshOpts.coordSpace'   : 'Mesh vertex coordinate space '
                               '(relative to reference image)',

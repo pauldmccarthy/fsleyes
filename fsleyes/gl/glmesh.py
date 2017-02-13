@@ -16,6 +16,7 @@ import OpenGL.GL    as gl
 from . import                 globject
 import fsl.utils.transform as transform
 import fsleyes.gl          as fslgl
+import fsleyes.gl.trimesh  as trimesh
 import fsleyes.gl.routines as glroutines
 import fsleyes.gl.textures as textures
 import fsleyes.colourmaps  as fslcmaps
@@ -92,23 +93,11 @@ class GLMesh(globject.GLObject):
         self.addListeners()
         self.updateVertices()
 
-        # We use two render textures
-        # for generating a model cross
-        # section/outline mask. These
-        # textures are kept at display/
+        # We use a render texture when
+        # rendering model cross sections.
+        # This texture is kept at display/
         # screen resolution
-        self.renderTextures = [
-            textures.RenderTexture(self.name, gl.GL_NEAREST),
-            textures.RenderTexture(self.name, gl.GL_NEAREST)]
-
-        # We also use two lower resolution
-        # render textures for post-processing
-        # in the data view (smoothing). These
-        # are kept at half the display
-        # resolution.
-        self.lowResRenderTextures = [
-            textures.RenderTexture(self.name, gl.GL_LINEAR),
-            textures.RenderTexture(self.name, gl.GL_LINEAR)]
+        self.renderTexture = textures.RenderTexture(self.name, gl.GL_NEAREST)
 
         fslgl.glmesh_funcs.compileShaders(self)
 
@@ -118,17 +107,15 @@ class GLMesh(globject.GLObject):
         some property listeners and destroys the off-screen
         :class:`.RenderTexture`.
         """
-        for t in self.renderTextures + self.lowResRenderTextures:
-            t.destroy()
-        
+
+        self.renderTexture.destroy()
         fslgl.glmesh_funcs.destroy(self)
         self.removeListeners()
 
-        self.lowResRenderTextures = None
-        self.renderTextures       = None
-        self.overlay              = None
-        self.display              = None
-        self.opts                 = None
+        self.renderTexture = None
+        self.overlay       = None
+        self.display       = None
+        self.opts          = None
 
         
     def ready(self):
@@ -154,10 +141,9 @@ class GLMesh(globject.GLObject):
         opts   .addListener('outline',      name, refresh, weak=False)
         opts   .addListener('showName',     name, refresh, weak=False)
         opts   .addListener('outlineWidth', name, refresh, weak=False)
-        opts   .addListener('quality',      name, refresh, weak=False)
         opts   .addListener('vertexData',   name, refresh, weak=False)
         opts   .addListener('cmap',         name, refresh, weak=False)
-        opts   .addListener('displayRange', name, refresh, weak=False) 
+        opts   .addListener('displayRange', name, refresh, weak=False)
         display.addListener('brightness',   name, refresh, weak=False)
         display.addListener('contrast',     name, refresh, weak=False)
         display.addListener('alpha',        name, refresh, weak=False)
@@ -171,7 +157,6 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('colour',       self.name)
         self.opts   .removeListener('outline',      self.name)
         self.opts   .removeListener('outlineWidth', self.name)
-        self.opts   .removeListener('quality',      self.name)
         self.opts   .removeListener('vertexData',   self.name)
         self.opts   .removeListener('cmap',         self.name)
         self.opts   .removeListener('displayRange', self.name)
@@ -221,68 +206,9 @@ class GLMesh(globject.GLObject):
         suitable for drawing this ``GLMesh``.
         """
 
-        # TODO How can I have this resolution tied
-        # to the rendering target resolution (i.e.
-        # the screen), instead of being fixed?
-        # 
-        # Perhaps the DisplayContext class should 
-        # have a method which returns the current
-        # rendering resolution for a given display
-        # space axis/length ..
-        #
-        # Also, isn't it a bit dodgy to be accessing
-        # the DisplayContext instance through the
-        # DisplayOpts instance? Why not just pass
-        # the displayCtx instance to the GLObject
-        # constructor, and have it directly accessible
-        # by all GLobjects?
+        # TODO Base this on the current render texture size?
 
-        zax = 3 - xax - yax
-
-        xDisplayLen = self.opts.displayCtx.bounds.getLen(xax)
-        yDisplayLen = self.opts.displayCtx.bounds.getLen(yax)
-        zDisplayLen = self.opts.displayCtx.bounds.getLen(zax)
-
-        lo, hi = self.getDisplayBounds()
-
-        xMeshLen = abs(hi[xax] - lo[xax])
-        yMeshLen = abs(hi[yax] - lo[yax])
-        zMeshLen = abs(hi[zax] - lo[zax])
-
-        resolution      = [1, 1, 1]
-        resolution[xax] = int(round(2048.0 * xMeshLen / xDisplayLen))
-        resolution[yax] = int(round(2048.0 * yMeshLen / yDisplayLen))
-        resolution[zax] = int(round(2048.0 * zMeshLen / zDisplayLen))
-        
-        return resolution
-        
-        
-    def getOutlineOffsets(self):
-        """Returns an array containing two values, which are to be used as the
-        outline widths along the horizontal/vertical screen axes (if outline
-        mode is being used). The values are in display coordinate system units.
-        
-        These values are passed to the edge filter shader, used to generate
-        an outline of the mesh cross section with the viewing plane.
-
-        .. note:: This method is used by the :mod:`.gl14.glmesh_funcs` and
-                  :mod:`.gl21.glmesh_funcs` modules.
-        """
-        opts          = self.opts
-        width, height = self.renderTextures[0].getSize()
-        outlineWidth  = opts.outlineWidth * (opts.quality / 100.0)
-
-        if width in (None, 0) or height in (None, 0):
-            return [0, 0]
-
-        # outlineWidth is a value between 0.0 and 1.0 - 
-        # we use this value so that it effectly sets the
-        # outline to between 0% and 10% of the mesh
-        # width/height (whichever is smaller)
-        offsets = [outlineWidth / width, outlineWidth / height]
-        offsets = np.array(offsets, dtype=np.float32)
-
-        return offsets
+        raise NotImplementedError()
  
 
     def preDraw(self):
@@ -290,21 +216,14 @@ class GLMesh(globject.GLObject):
         :class:`.RenderTexture`instances based on the current viewport size.
         """
 
-        tex      = self.renderTextures[0]
-        quality  = self.opts.quality / 100.0
-        size     = gl.glGetIntegerv(gl.GL_VIEWPORT)
-        width    = int(round(size[2] * quality))
-        height   = int(round(size[3] * quality))
+        size   = gl.glGetIntegerv(gl.GL_VIEWPORT)
+        width  = size[2]
+        height = size[3]
 
-        # TODO Make low res factor configurable?
-        loWidth  = width  / 2
-        loHeight = height / 2
-        
         # We only need to resize the texture when
         # the viewport size/quality changes.
-        if tex.getSize() != (width, height):
-            for t in self.renderTextures:       t.setSize(width,   height)
-            for t in self.lowResRenderTextures: t.setSize(loWidth, loHeight)
+        if self.renderTexture.getSize() != (width, height):
+            self.renderTexture.setSize(width, height)
 
     
     def draw(self, zpos, xform=None, bbox=None):
@@ -312,55 +231,92 @@ class GLMesh(globject.GLObject):
         :class:`.TriangleMesh`, at the specified Z location.
         """
 
-        opts             = self.opts
-        xax              = self.xax
-        yax              = self.yax
-        zax              = self.zax
-        lo,  hi          = self.getDisplayBounds()
-        vdata            = opts.getVertexData()
-        needCrossSection = opts.outline or (vdata is None)
+        opts    = self.opts
+        xax     = self.xax
+        yax     = self.yax
+        zax     = self.zax
+        lo,  hi = self.getDisplayBounds()
 
         if zpos < lo[zax] or zpos > hi[zax]:
             return
-
-        lo, hi = self.__calculateViewport(lo, hi, bbox)
-        xmin   = lo[xax]
-        xmax   = hi[xax]
-        ymin   = lo[yax]
-        ymax   = hi[yax]
         
-        if needCrossSection:
-            mask, spare = self.renderCrossSection(zpos, lo, hi)
+        if opts.outline:
+            self.drawOutline(zpos)
+            
         else:
-            mask, spare = self.renderTextures
+            lo, hi = self.__calculateViewport(lo, hi, bbox)
+            xmin   = lo[xax]
+            xmax   = hi[xax]
+            ymin   = lo[yax]
+            ymax   = hi[yax]
+            tex    = self.renderTexture
+            self.renderCrossSection(zpos, lo, hi, tex)
+            tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
 
-        if vdata is None:
-            mask.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
-        else:
-            self.renderData(zpos, lo, hi, vdata, mask, xform)
+
+    def drawOutline(self, zpos):
+        """
+        """
+
+        overlay = self.overlay
+        opts    = self.opts
+        zax     = self.zax
+
+        origin      = [0] * 3
+        normal      = [0] * 3
+        origin[zax] = zpos
+        normal[zax] = 1
+
+        ropts = opts.displayCtx.getOpts(opts.refImage)
+        origin = ropts.transformCoords(origin,
+                                       ropts.transform,
+                                       opts.coordSpace)
+
+        lines, faces = trimesh.mesh_plane(
+            overlay.vertices,
+            overlay.indices,
+            plane_normal=normal,
+            plane_origin=origin)
+
+        # TODO Data for each vertex
+
+        lines = np.array(lines.reshape((-1, 3)), dtype=np.float32)
+
+        xform = ropts.getTransform(opts.coordSpace, ropts.transform)
+        xform = np.array(xform, dtype=np.float32)
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glPushMatrix()
+        gl.glMultMatrixf(xform.ravel('F'))
+        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+        
+        gl.glColor(*opts.colour)
+        gl.glLineWidth(opts.outlineWidth)
+
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, lines.ravel('C'))
+        gl.glDrawArrays(gl.GL_LINES, 0, lines.shape[0])
+
+        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glPopMatrix()
 
 
-    def renderCrossSection(self, zpos, lo, hi):
+    def renderCrossSection(self, zpos, lo, hi, dest):
         """
         """
         
-        display    = self.display 
-        opts       = self.opts
+        display  = self.display 
+        opts     = self.opts
+        xax      = self.xax
+        yax      = self.yax
+        zax      = self.zax
+        xmin     = lo[xax]
+        ymin     = lo[yax]
+        xmax     = hi[xax]
+        ymax     = hi[yax]
+        vertices = self.vertices
+        indices  = self.indices
 
-        xax        = self.xax
-        yax        = self.yax
-        zax        = self.zax
-        xmin       = lo[xax]
-        ymin       = lo[yax]
-        xmax       = hi[xax]
-        ymax       = hi[yax]
- 
-        vertices   = self.vertices
-        indices    = self.indices
-        tex1, tex2 = self.renderTextures
-
-        tex1.bindAsRenderTarget()
-        tex1.setRenderViewport(xax, yax, lo, hi)
+        dest.bindAsRenderTarget()
+        dest.setRenderViewport(xax, yax, lo, hi)
         
         # Figure out the equation of a plane
         # perpendicular to the Z axis, and
@@ -454,128 +410,9 @@ class GLMesh(globject.GLObject):
 
         gl.glDisable(gl.GL_STENCIL_TEST)
 
-        tex1.unbindAsRenderTarget()
-        tex1.restoreViewport()
-
-        # If drawing the mesh outline, run the
-        # render texture through the edge shader
-        # program. Otherwise, we use the full 
-        # mesh cross-section as calculated above.
-        if opts.outline:
-
-            self.edgeFilter.osApply(
-                tex1, tex2, offsets=self.getOutlineOffsets())
-
-            crossSection, spare = tex2, tex1
-        else:
-            crossSection, spare = tex1, tex2
-
-        return crossSection, spare
+        dest.unbindAsRenderTarget()
+        dest.restoreViewport()
             
-
-    def renderData(self, zpos, lo, hi, vdata, maskTexture, xform=None):
-
-        mask  = maskTexture
-        opts  = self.opts
-        xax   = self.xax
-        yax   = self.yax
-        zax   = self.zax
-        xmin  = lo[xax]
-        xmax  = hi[xax]
-        ymin  = lo[yax]
-        ymax  = hi[yax] 
-
-        # TODO Make z threshold configurable
-        vertices = self.vertices
-        vertIdxs = np.where((vertices[:, zax] > zpos - 5) &
-                            (vertices[:, zax] < zpos + 5))[0]
-
-        vertices         = vertices[vertIdxs, :]
-        vertices[:, zax] = zpos
-
-        cmap     = opts.cmap
-        dlo, dhi = opts.displayRange
-        colours  = vdata[vertIdxs]
-
-        colours  = (colours - dlo) / (dhi - dlo)
-        colours  = np.array(cmap(colours), dtype=np.float32)[:, :3]
-
-        # TODO Make radius configurable 
-        #      (but use a default based 
-        #      on average edge length)
-        # TODO Make circle resolution
-        #      configurable
-        circle      = glroutines.unitCircle(10)
-        circle     *= 2.1
-        circleVerts = np.zeros((circle.shape[0], 3), dtype=np.float32)
-
-        circleVerts[:, xax] = circle[:, 0]
-        circleVerts[:, yax] = circle[:, 1]
-
-        shader = self.pointShader
-        shader.load()
-        shader.setAtt('vertex', circleVerts)
-        shader.setAtt('offset', vertices, divisor=1)
-        shader.setAtt('colour', colours,  divisor=1)
-
-        shader.loadAtts()
-
-        # TODO If outline mode, this
-        #      texture should be low-res,
-        #      so it can be smoothed
-        smoothTex1, smoothTex2 = self.lowResRenderTextures
-        smoothTex1.bindAsRenderTarget()
-        smoothTex1.setRenderViewport(xax, yax, lo, hi)
-
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
-        gl.glBlendFunc(gl.GL_CONSTANT_COLOR, gl.GL_CONSTANT_COLOR)
-        gl.glBlendColor(0.5, 0.5, 0.5, 1.0)
-
-        arbdi.glDrawArraysInstancedARB(
-            gl.GL_TRIANGLE_FAN,
-            0,
-            circleVerts.shape[0],
-            vertices.shape[0])
-
-        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-
-        smoothTex1.unbindAsRenderTarget()
-        smoothTex1.restoreViewport()
-
-        shader.unloadAtts()
-        shader.unload()
-
-        if opts.outline:
-
-            mask.bindTexture(gl.GL_TEXTURE1)
-
-            self.maskFilter.apply(
-                smoothTex1,
-                zpos,
-                xmin,
-                xmax,
-                ymin,
-                ymax,
-                xax,
-                yax,
-                xform,
-                mask=1)
-
-            mask.unbindTexture()
-        else:
-
-            w, h      = smoothTex1.getSize()
-            src, dest = smoothTex2, smoothTex1
-
-            # TODO make smoothing iterations
-            #      configurable
-            for i in range(10):
-
-                src, dest = dest, src
-                self.smoothFilter.osApply(src, dest, offset=(1.0 / w, 1.0 / h))
-
-            src.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
-
     
     def postDraw(self):
         """Overrides :meth:`.GLObject.postDraw`. This method does nothing. """

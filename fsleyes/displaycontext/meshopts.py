@@ -72,15 +72,11 @@ class MeshOpts(fsldisplay.DisplayOpts):
     """
 
     
-    outlineWidth = props.Real(minval=0, maxval=20, default=2, clamped=False)
+    outlineWidth = props.Real(minval=0.1, maxval=10, default=2, clamped=False)
     """If :attr:`outline` is ``True``, this property defines the width of the
     outline in pixels.
     """
 
-    
-    quality = props.Percentage(minval=25, maxval=500, default=100)
-    """Mesh rendering quality. """
-    
 
     showName = props.Boolean(default=False)
     """If ``True``, the mesh name is shown alongside it.
@@ -182,6 +178,7 @@ class MeshOpts(fsldisplay.DisplayOpts):
         # listeners.
         self.__registered = self.getParent() is None
         if self.__registered:
+             
             self.overlayList.addListener('overlays',
                                          self.name,
                                          self.__overlayListChanged,

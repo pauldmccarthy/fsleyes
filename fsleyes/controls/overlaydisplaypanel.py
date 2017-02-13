@@ -370,7 +370,6 @@ _DISPLAY_PROPS = td.TypeDict({
     'MeshOpts'       : ['colour',
                         'outline',
                         'outlineWidth',
-                        'quality',
                         'vertexData',
                         'cmap',
                         'displayRange',
@@ -566,7 +565,6 @@ _DISPLAY_WIDGETS = td.TypeDict({
     'MeshOpts.colour'       : props.Widget('colour'),
     'MeshOpts.outline'      : props.Widget('outline'),
     'MeshOpts.outlineWidth' : props.Widget('outlineWidth', showLimits=False),
-    'MeshOpts.quality'      : props.Widget('quality',      showLimits=False),
     'MeshOpts.refImage'     : props.Widget('refImage', labels=_imageName),
     'MeshOpts.coordSpace'   : props.Widget(
         'coordSpace',

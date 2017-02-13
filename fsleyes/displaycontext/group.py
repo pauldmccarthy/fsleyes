@@ -69,7 +69,6 @@ class OverlayGroup(props.HasProperties):
         'LabelOpts'      : ['outline',
                             'outlineWidth'],
         'MeshOpts'       : ['outline',
-                            'quality',
                             'outlineWidth',
                             'refImage',
                             'coordSpace'],
