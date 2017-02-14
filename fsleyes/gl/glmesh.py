@@ -258,32 +258,13 @@ class GLMesh(globject.GLObject):
         """
         """
 
-        overlay = self.overlay
-        opts    = self.opts
-        zax     = self.zax
+        opts = self.opts
 
-        origin      = [0] * 3
-        normal      = [0] * 3
-        origin[zax] = zpos
-        normal[zax] = 1
+        # TODO Data for each vertex, and use
+        #      a shader with a colour map
+        
+        vertices, indices, xform = self.__calculateCrossSection(zpos)
 
-        ropts = opts.displayCtx.getOpts(opts.refImage)
-        origin = ropts.transformCoords(origin,
-                                       ropts.transform,
-                                       opts.coordSpace)
-
-        lines, faces = trimesh.mesh_plane(
-            overlay.vertices,
-            overlay.indices,
-            plane_normal=normal,
-            plane_origin=origin)
-
-        # TODO Data for each vertex
-
-        lines = np.array(lines.reshape((-1, 3)), dtype=np.float32)
-
-        xform = ropts.getTransform(opts.coordSpace, ropts.transform)
-        xform = np.array(xform, dtype=np.float32)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPushMatrix()
         gl.glMultMatrixf(xform.ravel('F'))
@@ -292,8 +273,8 @@ class GLMesh(globject.GLObject):
         gl.glColor(*opts.colour)
         gl.glLineWidth(opts.outlineWidth)
 
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, lines.ravel('C'))
-        gl.glDrawArrays(gl.GL_LINES, 0, lines.shape[0])
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
+        gl.glDrawArrays(gl.GL_LINES, 0, vertices.shape[0])
 
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         gl.glPopMatrix()
@@ -462,3 +443,44 @@ class GLMesh(globject.GLObject):
                 hi[yax] -= 0.5 * (ndylen - dylen)
         
         return lo, hi
+
+
+    def __calculateCrossSection(self, zpos):
+        """
+        """
+
+        overlay     = self.overlay
+        zax         = self.zax
+        opts        = self.opts
+        origin      = [0] * 3
+        normal      = [0] * 3
+        origin[zax] = zpos
+        normal[zax] = 1
+
+        if opts.refImage is not None:
+
+            ropts  = opts.displayCtx.getOpts(opts.refImage)
+            origin = ropts.transformCoords(origin,
+                                           ropts.transform,
+                                           opts.coordSpace)
+
+            xform = ropts.getTransform(opts.coordSpace, ropts.transform)
+            xform = np.array(xform, dtype=np.float32)
+            
+        else:
+            xform = np.eye(4, dtype=np.float32)
+
+
+        lines, faces = trimesh.mesh_plane(
+            overlay.vertices,
+            overlay.indices,
+            plane_normal=normal,
+            plane_origin=origin)
+
+        # TODO Figure out indices of the
+        #      original vertices associated
+        #      with every line vertex
+
+        lines = np.array(lines.reshape((-1, 3)), dtype=np.float32)
+
+        return lines, None, xform
