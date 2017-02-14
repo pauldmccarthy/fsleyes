@@ -263,16 +263,22 @@ class GLMesh(globject.GLObject):
         # TODO Data for each vertex, and use
         #      a shader with a colour map
         
-        vertices, indices, xform = self.__calculateCrossSection(zpos)
+        vertices, faces, contribs, xform = self.__calculateCrossSection(zpos)
 
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPushMatrix()
         gl.glMultMatrixf(xform.ravel('F'))
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-        
-        gl.glColor(*opts.colour)
-        gl.glLineWidth(opts.outlineWidth)
 
+        vdata = opts.getVertexData()
+
+        if vdata is None:
+            gl.glColor(*opts.colour)
+            gl.glLineWidth(opts.outlineWidth)
+            
+        else:
+            pass
+        
         gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
         gl.glDrawArrays(gl.GL_LINES, 0, vertices.shape[0])
 
@@ -471,16 +477,13 @@ class GLMesh(globject.GLObject):
             xform = np.eye(4, dtype=np.float32)
 
 
-        lines, faces = trimesh.mesh_plane(
+        lines, faces, contribs = trimesh.mesh_plane(
             overlay.vertices,
             overlay.indices,
             plane_normal=normal,
             plane_origin=origin)
 
-        # TODO Figure out indices of the
-        #      original vertices associated
-        #      with every line vertex
-
-        lines = np.array(lines.reshape((-1, 3)), dtype=np.float32)
-
-        return lines, None, xform
+        lines    = lines   .reshape(-1, 3)
+        contribs = contribs.reshape(-1, 3)
+ 
+        return lines, faces, contribs, xform
