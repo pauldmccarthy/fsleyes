@@ -367,12 +367,14 @@ _DISPLAY_PROPS = td.TypeDict({
                         'resolution',
                         'lineWidth',
                         'lengthScale'],
-    'MeshOpts'       : ['colour',
-                        'outline',
+    'MeshOpts'       : ['outline',
                         'outlineWidth',
+                        'colour',
                         'vertexData',
                         'cmap',
+                        'invert',
                         'displayRange',
+                        'clippingRange',
                         'refImage',
                         'coordSpace'],
     'TensorOpts'     : ['lighting',
@@ -562,24 +564,38 @@ _DISPLAY_WIDGETS = td.TypeDict({
                                                 showLimits=False),
 
     # MeshOpts
-    'MeshOpts.colour'       : props.Widget('colour'),
     'MeshOpts.outline'      : props.Widget('outline'),
-    'MeshOpts.outlineWidth' : props.Widget('outlineWidth', showLimits=False),
+    'MeshOpts.outlineWidth' : props.Widget(
+        'outlineWidth',
+        showLimits=False,
+        dependencies=['outline'],
+        enabledWhen=lambda o, outline: outline),
     'MeshOpts.refImage'     : props.Widget('refImage', labels=_imageName),
     'MeshOpts.coordSpace'   : props.Widget(
         'coordSpace',
         enabledWhen=lambda o, ri: ri != 'none',
         labels=strings.choices['MeshOpts.coordSpace'],
         dependencies=['refImage']),
-    'MeshOpts.vertexData'   : props.Widget(
-        'vertexData'
-    ),
+    'MeshOpts.colour'       : props.Widget(
+        'colour',
+        dependencies=['vertexData'],
+        enabledWhen=lambda o, vd: vd is None),
+    'MeshOpts.vertexData'   : props.Widget('vertexData'),
     'MeshOpts.cmap'         : props.Widget(
         'cmap',
         dependencies=['vertexData'],
         enabledWhen=lambda o, vd: vd is not None),
+    'MeshOpts.invert' : props.Widget(
+        'invert',
+        dependencies=['vertexData'],
+        enabledWhen=lambda o, vd: vd is not None), 
     'MeshOpts.displayRange' : props.Widget(
         'displayRange',
+        showLimits=False,
+        dependencies=['vertexData'],
+        enabledWhen=lambda o, vd: vd is not None),
+    'MeshOpts.clippingRange' : props.Widget(
+        'clippingRange',
         showLimits=False,
         dependencies=['vertexData'],
         enabledWhen=lambda o, vd: vd is not None),

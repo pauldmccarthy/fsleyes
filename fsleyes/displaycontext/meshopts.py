@@ -62,6 +62,7 @@ class MeshOpts(fsldisplay.DisplayOpts):
     :class:`.TriangleMesh` overlays.
     """
 
+
     colour = props.Colour()
     """The mesh colour. """
 
@@ -87,13 +88,25 @@ class MeshOpts(fsldisplay.DisplayOpts):
 
     vertexData = props.FilePath(exists=True)
     """Path to a file which contains scalar data associated with each
-    vertex in the mesh, that can be used to colour the mesh.
+    vertex in the mesh, that can be used to colour the mesh. When
+    some vertex data has been succsessfully loaded, it can be accessed
+    via the :meth:`getVertexData` method.
     """
 
 
     cmap = props.ColourMap()
     """If some :attr:`vertexData` has been specified, this colour map
     is used to colour the vertices.
+    """
+
+    invert = props.Boolean(default=False)
+    """Invert the :attr:`cmap`, if some :attr:`vertexData` has been
+    specified.
+    """
+
+    clippingRange = props.Bounds()
+    """If some :attr:`vertexData` has been specified, hide parts of the
+    surface outline which have a value outside of this range.
     """
 
 
@@ -169,7 +182,23 @@ class MeshOpts(fsldisplay.DisplayOpts):
         # one we generated above.
         fsldisplay.DisplayOpts.__init__(self, overlay, *args, **kwargs)
 
+        # A copy of the refImage property
+        # value is kept here so, when it
+        # changes, we can de-register from
+        # the previous one.
         self.__oldRefImage = None
+
+        # When the vertexData property is
+        # changed, the data is loaded
+        # and stored in this attribute.
+        # See the __vertexDataChanged
+        # method.
+        self.__vertexData = None
+
+        self.addListener('vertexData',
+                         self.name,
+                         self.__vertexDataChanged,
+                         immediate=True) 
 
         # A number of callback functions are used to
         # keep the refImage, coordSpace and transform
@@ -240,15 +269,17 @@ class MeshOpts(fsldisplay.DisplayOpts):
             self.display.removeListener('alpha',  self.name)
             self        .removeListener('colour', self.name)
 
+        self.__oldRefImage = None
+        self.__vertexData  = None
+
         fsldisplay.DisplayOpts.destroy(self)
 
 
     def getVertexData(self):
-        """May be overridden by sub-classes. If some :attr:`vertexData` has
-        been specified, this method should return a 1D ``numpy`` array which
-        contains a scalar value for every vertex in the mesh.
+        """Returns the :attr:`.MeshOpts.vertexData`, if some is loaded.
+        Returns ``None`` otherwise.
         """
-        return None
+        return self.__vertexData
 
 
     def getReferenceImage(self):
@@ -521,6 +552,52 @@ class MeshOpts(fsldisplay.DisplayOpts):
         else:                    self.refImage = None
  
         imgProp.setChoices(imgOptions, instance=self)
+
+
+    def __vertexDataChanged(self, *a):
+        """Called when the :attr:`vertexData` property changes. Attempts to
+        load the data if possible. The data may subsequently be retrieved
+        via the :meth:`getVertexData` method.
+        """
+        try:
+            vdata = self.overlay.loadVertexData(self.vertexData)
+        except Exception as e:
+
+            # TODO show a warning
+            log.warning('Unable to load vertex data from {}: {}'.format(
+                self.vertexData, e))
+            
+            vdata = None
+
+        self.__vertexData = vdata
+
+        if vdata is None:
+            self.display.enableProperty('brightness')
+            self.display.enableProperty('contrast')
+        else:
+            self.display.disableProperty('brightness')
+            self.display.disableProperty('contrast')
+
+        if vdata is not None:
+            vmin, vmax = vdata.min(), vdata.max()
+            delta = (vmax - vmin) / 100.0
+            self.displayRange .xmin = vmin
+            self.displayRange .xmax = vmax
+            self.clippingRange.xmin = vmin - delta
+            self.clippingRange.xmax = vmax + delta
+            
+            if np.all(np.isclose(self.displayRange, (0, 0))):
+                self.displayRange = vmin, vmax
+            if np.all(np.isclose(self.clippingRange, (0, 0))):
+                self.clippingRange = vmin - delta, vmax + delta
+        else:
+            self.displayRange .xmin = 0
+            self.displayRange .xmax = 0
+            self.clippingRange.xmin = 0
+            self.clippingRange.xmax = 0
+            self.displayRange       = (0, 0)
+            self.clippingRange      = (0, 0)
+                
 
 
     def __colourChanged(self, *a):

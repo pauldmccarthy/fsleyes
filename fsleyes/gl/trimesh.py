@@ -110,7 +110,8 @@ def mesh_plane(vertices,
     (m, 2, 3) float, list of 3D line segments
     (m, 3)    int, faces that were intersected
     (m, 2, 3) float, contribution of the vertices on each
-              intersected triangle to the line vertices
+              intersected triangle to the vertices of the
+              intersection line.
     '''
 
     def triangle_cases(signs):
@@ -251,7 +252,31 @@ def mesh_plane(vertices,
 
 
 def vertex_contribution(allSigns, allFaces, allLines, allVertices):
+    '''Called by mesh_plane. Calculates the contribution of each triangle
+    vertex to the intersection line vertices.
 
+    Arguments
+    ---------
+    allSigns:    List of four (n, 3) arrays, one for each intersection
+                 case (see the triangle_cases function inside mesh_plane).
+                 Each array contains the signs of the dot product of
+                 each triangle vertex with the intersection plane.
+    
+    allFaces:    List of four (n, 3) arrays, one for each intersection
+                 case, with each containing the intersected triangles.
+    
+    allLines:    List of four (n, 2, 3) ararys, one for each intersection
+                 case, containing the interesection line vertices for each
+                 triangle.
+    
+    allVertices: (m, 3) All vertices in the surface
+
+    Returns
+    -------
+    (n, 2, 3) For each line vertex, the contribution of each of the
+              intersected triangle vertices to that vertex.
+    '''
+    
     def distance(v1, v2):
         '''
         Returns the euclidean distance between the two
@@ -259,9 +284,13 @@ def vertex_contribution(allSigns, allFaces, allLines, allVertices):
         '''
         return np.sqrt(np.sum((v1 - v2) ** 2, axis=1))
 
+    # Note: The functions below are very tightly coupled 
+    #       to the inner functions of mesh_plane.
+
     
     def on_vertex_contrib(signs, lines, faces, vertices):
         '''
+        Calculate the contribution for the on_vertex intersection case.
         '''
         
         contrib = np.zeros((faces.shape[0], 2, 3), dtype=np.float32)
@@ -285,19 +314,20 @@ def vertex_contribution(allSigns, allFaces, allLines, allVertices):
 
         # For a triangle with code [-1, 0, 1] (i.e.
         # the second vertex intersects the plane),
-        # contribution of the triangle vertices to 
-        # the intersection line vertices are as
+        # contribution of the triangle vertices
+        # to the intersection line vertices are as
         # follows...
 
-        # [0, 1, 0] for the pivot vertex
+        # [0, 1, 0] for the first line vertex
+        # (== the pivot vertex)
         contrib[faceIdxs, 0, pivotFaceVert] = 1
 
-        # [d, 0, 1-d] for the second line vertex,
+        # [1-d, 0, d] for the second line vertex,
         # (the one intersecting the edge between 
         # the other two triangle vertices), where 
         # 'd' is the normalised distance between 
-        # the first triangle vertex, and the point 
-        # of intersection.
+        # the first triangle vertex (p1), and the
+        # line vertex.
         p1 = vertices[faces[faceIdxs, p1FaceVert]]
         p2 = vertices[faces[faceIdxs, p2FaceVert]]
 
@@ -313,7 +343,9 @@ def vertex_contribution(allSigns, allFaces, allLines, allVertices):
 
     def on_edge_contrib(signs, lines, faces, vertices):
         '''
+        Calculate the contribution for the on_edge intersection case.
         '''
+        
         # The signs for triangles in the on_edge case
         # (code 16) is of the form [0, 0, 1], where the
         # vertices on the plane have sign == 0.
@@ -326,9 +358,14 @@ def vertex_contribution(allSigns, allFaces, allLines, allVertices):
 
         # In this case, the two on-plane vertices
         # are identical to the intersection line
-        # vertices. So the contribution for each
-        # is just [1, 0, 0] (with the one in the
-        # correct location).
+        # vertices. So, given an intersection
+        # of [0, 0, 1], the contribution for each
+        # line vertex would be:
+        #
+        #   - [1, 0, 0] for the first line vertex
+        #     (== the first triangle vertex)
+        #   - [0, 1, 0] for the second line vertex
+        #     (== the second triangle vertex) 
         contrib   = np.zeros((faces.shape[0], 2, 3), dtype=np.float32)
         faceVerts = np.arange(faces.shape[0])
 
@@ -339,19 +376,26 @@ def vertex_contribution(allSigns, allFaces, allLines, allVertices):
         
     
     def basic1_contrib(signs, lines, faces, vertices):
-        '''
+        '''Calculate the contribution for the first basic intersection
+        case (intersection code 4).
         '''
         return basic_contrib(signs, lines, faces, vertices, 1)
 
     
     def basic2_contrib(signs, lines, faces, vertices):
-        '''
+        '''Calculate the contribution for the second basic intersection
+        case (intersection code 12). 
         '''
         return basic_contrib(signs, lines, faces, vertices, -1) 
 
     
     def basic_contrib(signs, lines, faces, vertices, intType):
         '''
+        Calculate the contribution for the basic intersection case. This
+        function is shared by basic1_contrib and basic2_contrib,
+
+        The intType argument gives the sign value of the vertex which
+        is alone on one side of the intersection plane (1 or -1).
         '''
     
         # Signs for the basic intersection case
@@ -366,6 +410,11 @@ def vertex_contribution(allSigns, allFaces, allLines, allVertices):
         # vertices. The plane intersects the
         # triangle on the (pivot, p1) edge and the
         # (pivot, p2) edge.
+        #
+        # The handle_basic function (inside mesh_plane)
+        # uses np.roll to identify which triangle
+        # vertices correspond to p1 and p2. Here
+        # we do an equivalent thing using modulus.
         pivotFaceVert = np.where(signs == intType)[1]
         p1FaceVert    = (pivotFaceVert + 1) % 3
         p2FaceVert    = (pivotFaceVert + 2) % 3
@@ -398,6 +447,18 @@ def vertex_contribution(allSigns, allFaces, allLines, allVertices):
         pivot1Contrib = pivotInt1dist / pivotp1dist
         pivot2Contrib = pivotInt2dist / pivotp2dist
 
+        # So, given the intersection case [-1, 1, 1],
+        # the contribution for each line vertex would be:
+        #
+        #  - [1 - d01, d01, 0]
+        #  - [1 - d02, 0,   d02]
+        #
+        # where d01 is the normalised distance from
+        # the pivot vertex to first line vertex 
+        # (the one on the [pivot, p1] edge), and
+        # d02 is the normalised distance from the
+        # pivot to the second line vertex (on the
+        # [pivot, p2] edge)
         contrib = np.zeros((faces.shape[0], 2, 3), dtype=np.float32)
         contrib[faceIdxs, 0, pivotFaceVert] = 1 - pivot1Contrib
         contrib[faceIdxs, 0, p1FaceVert]    =     pivot1Contrib

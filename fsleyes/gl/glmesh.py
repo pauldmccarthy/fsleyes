@@ -90,14 +90,16 @@ class GLMesh(globject.GLObject):
         self.display = display
         self.opts    = display.getDisplayOpts()
 
-        self.addListeners()
-        self.updateVertices()
-
         # We use a render texture when
         # rendering model cross sections.
         # This texture is kept at display/
         # screen resolution
         self.renderTexture = textures.RenderTexture(self.name, gl.GL_NEAREST)
+        self.cmapTexture   = textures.ColourMapTexture(self.name)
+
+        self.addListeners()
+        self.updateVertices()
+        self.refreshCmapTexture()
 
         fslgl.glmesh_funcs.compileShaders(self)
 
@@ -109,10 +111,13 @@ class GLMesh(globject.GLObject):
         """
 
         self.renderTexture.destroy()
+        self.cmapTexture  .destroy()
+        
         fslgl.glmesh_funcs.destroy(self)
         self.removeListeners()
 
         self.renderTexture = None
+        self.cmapTexture   = None
         self.overlay       = None
         self.display       = None
         self.opts          = None
@@ -133,36 +138,44 @@ class GLMesh(globject.GLObject):
         display = self.display
         opts    = self.opts
 
+        def refreshCmap(*a):
+            self.refreshCmapTexture()
+            self.notify() 
+
         def refresh(*a):
             self.notify()
 
-        opts   .addListener('bounds',       name, self.updateVertices)
-        opts   .addListener('colour',       name, refresh, weak=False)
-        opts   .addListener('outline',      name, refresh, weak=False)
-        opts   .addListener('showName',     name, refresh, weak=False)
-        opts   .addListener('outlineWidth', name, refresh, weak=False)
-        opts   .addListener('vertexData',   name, refresh, weak=False)
-        opts   .addListener('cmap',         name, refresh, weak=False)
-        opts   .addListener('displayRange', name, refresh, weak=False)
-        display.addListener('brightness',   name, refresh, weak=False)
-        display.addListener('contrast',     name, refresh, weak=False)
-        display.addListener('alpha',        name, refresh, weak=False)
+        opts   .addListener('bounds',        name, self.updateVertices)
+        opts   .addListener('colour',        name, refresh,     weak=False)
+        opts   .addListener('outline',       name, refresh,     weak=False)
+        opts   .addListener('showName',      name, refresh,     weak=False)
+        opts   .addListener('outlineWidth',  name, refresh,     weak=False)
+        opts   .addListener('vertexData',    name, refresh,     weak=False)
+        opts   .addListener('cmap',          name, refreshCmap, weak=False)
+        opts   .addListener('displayRange',  name, refreshCmap, weak=False)
+        opts   .addListener('invert',        name, refreshCmap, weak=False)
+        opts   .addListener('clippingRange', name, refresh,     weak=False)
+        display.addListener('brightness',    name, refresh,     weak=False)
+        display.addListener('contrast',      name, refresh,     weak=False)
+        display.addListener('alpha',         name, refreshCmap, weak=False)
 
         
     def removeListeners(self):
         """Called by :meth:`destroy`. Removes all of the listeners added by
         the :meth:`addListeners` method.
         """
-        self.opts   .removeListener('bounds',       self.name)
-        self.opts   .removeListener('colour',       self.name)
-        self.opts   .removeListener('outline',      self.name)
-        self.opts   .removeListener('outlineWidth', self.name)
-        self.opts   .removeListener('vertexData',   self.name)
-        self.opts   .removeListener('cmap',         self.name)
-        self.opts   .removeListener('displayRange', self.name)
-        self.display.removeListener('brightness',   self.name)
-        self.display.removeListener('contrast',     self.name)
-        self.display.removeListener('alpha',        self.name)
+        self.opts   .removeListener('bounds',        self.name)
+        self.opts   .removeListener('colour',        self.name)
+        self.opts   .removeListener('outline',       self.name)
+        self.opts   .removeListener('outlineWidth',  self.name)
+        self.opts   .removeListener('vertexData',    self.name)
+        self.opts   .removeListener('cmap',          self.name)
+        self.opts   .removeListener('displayRange',  self.name)
+        self.opts   .removeListener('clippingRange', self.name)
+        self.opts   .removeListener('invert',        self.name)
+        self.display.removeListener('brightness',    self.name)
+        self.display.removeListener('contrast',      self.name)
+        self.display.removeListener('alpha',         self.name)
 
  
     def setAxes(self, xax, yax):
@@ -241,10 +254,10 @@ class GLMesh(globject.GLObject):
             return
         
         if opts.outline:
-            self.drawOutline(zpos)
+            self.drawOutline(zpos, xform, bbox)
             
         else:
-            lo, hi = self.__calculateViewport(lo, hi, bbox)
+            lo, hi = self.calculateViewport(lo, hi, bbox)
             xmin   = lo[xax]
             xmax   = hi[xax]
             ymin   = lo[yax]
@@ -254,43 +267,48 @@ class GLMesh(globject.GLObject):
             tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
 
 
-    def drawOutline(self, zpos):
+    def drawOutline(self, zpos, xform=None, bbox=None):
         """
         """
 
         opts = self.opts
 
-        # TODO Data for each vertex, and use
-        #      a shader with a colour map
+        vertices, faces, contribs, xform = self.calculateCrossSection(
+            zpos, xform, bbox)
+
+        if xform is not None:
+            gl.glMatrixMode(gl.GL_MODELVIEW)
+            gl.glPushMatrix()
+            gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
+
+        vdata = self.getVertexData(faces, contribs)
+
+        gl.glLineWidth(opts.outlineWidth)
+
+        useShader = vdata is not None
+
+        vertices = vertices.reshape(-1, 3)
         
-        vertices, faces, contribs, xform = self.__calculateCrossSection(zpos)
+        # Constant colour
+        if not useShader:
+            gl.glColor(*self.getConstantColour())
+            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
+            gl.glDrawArrays(gl.GL_LINES, 0, vertices.shape[0])
+            gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
 
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glPushMatrix()
-        gl.glMultMatrixf(xform.ravel('F'))
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-
-        vdata = opts.getVertexData()
-
-        if vdata is None:
-            gl.glColor(*opts.colour)
-            gl.glLineWidth(opts.outlineWidth)
-            
+        # Coloured from vertex data
         else:
-            pass
-        
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
-        gl.glDrawArrays(gl.GL_LINES, 0, vertices.shape[0])
+            fslgl.glmesh_funcs.drawColouredOutline(self, vertices, vdata)
 
-        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glPopMatrix()
+        if xform is not None:
+            gl.glPopMatrix()
 
 
     def renderCrossSection(self, zpos, lo, hi, dest):
         """
         """
         
-        display  = self.display 
         opts     = self.opts
         xax      = self.xax
         yax      = self.yax
@@ -379,14 +397,7 @@ class GLMesh(globject.GLObject):
 
         gl.glStencilFunc(gl.GL_NOTEQUAL, 0, 255)
 
-        colour = list(fslcmaps.applyBricon(
-            opts.colour[:3],
-            display.brightness / 100.0,
-            display.contrast   / 100.0))
-        
-        colour.append(display.alpha / 100.0)
-
-        gl.glColor(*colour)
+        gl.glColor(*self.getConstantColour())
         gl.glBegin(gl.GL_QUADS)
 
         gl.glVertex3f(*clipPlaneVerts[0, :])
@@ -405,8 +416,25 @@ class GLMesh(globject.GLObject):
         """Overrides :meth:`.GLObject.postDraw`. This method does nothing. """
         pass
 
+    
+    def getConstantColour(self):
+        """
+        """
 
-    def __calculateViewport(self, lo, hi, bbox=None):
+        opts    = self.opts
+        display = self.display
+
+        colour = list(fslcmaps.applyBricon(
+            opts.colour[:3],
+            display.brightness / 100.0,
+            display.contrast   / 100.0))
+        
+        colour.append(display.alpha / 100.0)
+
+        return colour
+
+
+    def calculateViewport(self, lo, hi, bbox=None):
         """Called by :meth:`draw`. Calculates an appropriate viewport (the
         horizontal/vertical minimums/maximums in display coordinates) given
         the ``lo`` and ``hi`` ``GLMesh`` display bounds, and a display
@@ -451,7 +479,7 @@ class GLMesh(globject.GLObject):
         return lo, hi
 
 
-    def __calculateCrossSection(self, zpos):
+    def calculateCrossSection(self, zpos, xform=None, bbox=None):
         """
         """
 
@@ -463,6 +491,8 @@ class GLMesh(globject.GLObject):
         origin[zax] = zpos
         normal[zax] = 1
 
+        # TODO use bbox to constrain?
+
         if opts.refImage is not None:
 
             ropts  = opts.displayCtx.getOpts(opts.refImage)
@@ -470,20 +500,49 @@ class GLMesh(globject.GLObject):
                                            ropts.transform,
                                            opts.coordSpace)
 
-            xform = ropts.getTransform(opts.coordSpace, ropts.transform)
-            xform = np.array(xform, dtype=np.float32)
-            
-        else:
-            xform = np.eye(4, dtype=np.float32)
+            vertXform = ropts.getTransform(opts.coordSpace, ropts.transform)
 
+            if xform is not None: xform = transform.concat(xform, vertXform)
+            else:                 xform = vertXform
 
         lines, faces, contribs = trimesh.mesh_plane(
             overlay.vertices,
             overlay.indices,
             plane_normal=normal,
             plane_origin=origin)
-
-        lines    = lines   .reshape(-1, 3)
-        contribs = contribs.reshape(-1, 3)
  
         return lines, faces, contribs, xform
+
+
+    def getVertexData(self, faces, contribs):
+        """
+        """
+
+        vdata = self.opts.getVertexData()
+
+        if vdata is None:
+            return None
+
+        vdata = vdata[faces].repeat(2, axis=0).reshape(-1, 2, 3)
+        vdata = (vdata * contribs).reshape(-1, 3).sum(axis=1)
+        
+        return vdata
+
+
+    def refreshCmapTexture(self):
+        """
+        """
+        
+        display = self.display
+        opts    = self.opts
+        
+        alpha   = display.alpha / 100.0
+        cmap    = opts.cmap
+        invert  = opts.invert
+        dmin    = opts.displayRange[0]
+        dmax    = opts.displayRange[1]
+
+        self.cmapTexture.set(cmap=cmap,
+                             invert=invert,
+                             alpha=alpha,
+                             displayRange=(dmin, dmax)) 
