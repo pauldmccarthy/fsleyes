@@ -9,8 +9,9 @@ control* panel which allows the user to change overlay display settings.
 """
 
 
-import logging
-import functools
+import            logging
+import            functools
+import os.path as op
 
 import wx
 import props
@@ -320,6 +321,14 @@ def _imageName(img):
     else:           return img.name
 
 
+def _meshVertexDataName(vdata):
+    """Used to generate choice labels for the :attr`.MeshOpts.vertexData`
+    property.
+    """ 
+    if vdata is None: return 'None'
+    else:             return op.basename(vdata)
+
+
 _DISPLAY_PROPS = td.TypeDict({
     'Display'        : ['name',
                         'overlayType',
@@ -580,7 +589,9 @@ _DISPLAY_WIDGETS = td.TypeDict({
         'colour',
         dependencies=['vertexData'],
         enabledWhen=lambda o, vd: vd is None),
-    'MeshOpts.vertexData'   : props.Widget('vertexData'),
+    'MeshOpts.vertexData'   : props.Widget(
+        'vertexData',
+        labels=_meshVertexDataName),
     'MeshOpts.cmap'         : props.Widget(
         'cmap',
         dependencies=['vertexData'],

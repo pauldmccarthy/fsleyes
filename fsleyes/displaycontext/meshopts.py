@@ -86,11 +86,14 @@ class MeshOpts(fsldisplay.DisplayOpts):
     """
 
 
-    vertexData = props.FilePath(exists=True)
-    """Path to a file which contains scalar data associated with each
-    vertex in the mesh, that can be used to colour the mesh. When
-    some vertex data has been succsessfully loaded, it can be accessed
-    via the :meth:`getVertexData` method.
+    vertexData = props.Choice((None, ))
+    """May be populated with the names of files which contain data associated
+    with each vertex in the mesh, that can be used to colour the mesh. When
+    some vertex data has been succsessfully loaded, it can be accessed via
+    the :meth:`getVertexData` method.
+
+    This property is not currently populated by the ``MeshOpts`` class, but
+    is used by sub-classes (e.g. :class:`.GiftiOpts`).
     """
 
 
@@ -559,8 +562,13 @@ class MeshOpts(fsldisplay.DisplayOpts):
         load the data if possible. The data may subsequently be retrieved
         via the :meth:`getVertexData` method.
         """
+
         try:
-            vdata = self.overlay.loadVertexData(self.vertexData)
+            if self.vertexData is not None:
+                vdata = self.overlay.loadVertexData(self.vertexData)
+            else:
+                vdata = None
+                
         except Exception as e:
 
             # TODO show a warning
@@ -580,16 +588,14 @@ class MeshOpts(fsldisplay.DisplayOpts):
 
         if vdata is not None:
             vmin, vmax = vdata.min(), vdata.max()
-            delta = (vmax - vmin) / 100.0
+            delta      = (vmax - vmin) / 100.0
+            
             self.displayRange .xmin = vmin
             self.displayRange .xmax = vmax
             self.clippingRange.xmin = vmin - delta
             self.clippingRange.xmax = vmax + delta
-            
-            if np.all(np.isclose(self.displayRange, (0, 0))):
-                self.displayRange = vmin, vmax
-            if np.all(np.isclose(self.clippingRange, (0, 0))):
-                self.clippingRange = vmin - delta, vmax + delta
+            self.displayRange       = vmin, vmax
+            self.clippingRange      = vmin - delta, vmax + delta
         else:
             self.displayRange .xmin = 0
             self.displayRange .xmax = 0
@@ -598,7 +604,6 @@ class MeshOpts(fsldisplay.DisplayOpts):
             self.displayRange       = (0, 0)
             self.clippingRange      = (0, 0)
                 
-
 
     def __colourChanged(self, *a):
         """Called when :attr:`.colour` changes. Updates :attr:`.Display.alpha`
