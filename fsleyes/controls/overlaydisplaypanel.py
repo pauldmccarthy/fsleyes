@@ -665,10 +665,7 @@ _DISPLAY_WIDGETS = td.TypeDict({
         enabledWhen=lambda o, ri: ri != 'none',
         labels=strings.choices['MeshOpts.coordSpace'],
         dependencies=['refImage']),
-    'MeshOpts.colour'       : props.Widget(
-        'colour',
-        dependencies=['vertexData', 'outline'],
-        enabledWhen=lambda opts, vd, o: (not o) or (vd is None)),
+    'MeshOpts.colour'       : props.Widget('colour'),
     'MeshOpts.vertexData'   : props.Widget(
         'vertexData',
         labels=_meshVertexDataName),
