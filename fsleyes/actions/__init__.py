@@ -153,6 +153,7 @@ from . import exportdataseries
 from . import correlate
 from . import applyflirtxfm
 from . import saveflirtxfm
+from . import loadvertexdata
 
 
 Action                   = action            .Action
@@ -181,6 +182,7 @@ PearsonCorrelateAction   = correlate         .PearsonCorrelateAction
 PCACorrelateAction       = correlate         .PCACorrelateAction
 ApplyFlirtXfmAction      = applyflirtxfm     .ApplyFlirtXfmAction
 SaveFlirtXfmAction       = saveflirtxfm      .SaveFlirtXfmAction
+LoadVertexDataAction     = loadvertexdata    .LoadVertexDataAction
 
 
 log = logging.getLogger(__name__)

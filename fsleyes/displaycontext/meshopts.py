@@ -285,6 +285,19 @@ class MeshOpts(fsldisplay.DisplayOpts):
         return self.__vertexData
 
 
+    def addVertexDataOptions(self, paths):
+        """Adds the given sequence of paths as options to the
+        :attr:`vertexData` property. It is assumed that the paths refer
+        to valid vertex data files for the overlay associated with this
+        ``MeshOpts`` instance.
+        """
+
+        vdataProp = self.getProp('vertexData')
+        paths     = vdataProp.getChoices(instance=self) + paths
+        
+        vdataProp.setChoices(paths, instance=self)
+
+
     def getReferenceImage(self):
         """Overrides :meth:`.DisplayOpts.getReferenceIamge`.
 
@@ -565,7 +578,7 @@ class MeshOpts(fsldisplay.DisplayOpts):
 
         try:
             if self.vertexData is not None:
-                vdata = self.overlay.loadVertexData(self.vertexData)
+                vdata = self.overlay.getVertexData(self.vertexData)
             else:
                 vdata = None
                 

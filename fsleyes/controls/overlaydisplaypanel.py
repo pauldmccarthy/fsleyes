@@ -16,13 +16,14 @@ import os.path as op
 import wx
 import props
 
-import fsl.utils.typedict            as td
-import fsleyes.strings               as strings
-import fsleyes.tooltips              as fsltooltips
-import fsleyes.panel                 as fslpanel
-import fsleyes.colourmaps            as fslcm
-import fsleyes.actions.loadcolourmap as loadcmap
-import fsleyes.displaycontext        as displayctx
+import fsl.utils.typedict             as td
+import fsleyes.strings                as strings
+import fsleyes.tooltips               as fsltooltips
+import fsleyes.panel                  as fslpanel
+import fsleyes.colourmaps             as fslcm
+import fsleyes.actions.loadcolourmap  as loadcmap
+import fsleyes.actions.loadvertexdata as loadvdata
+import fsleyes.displaycontext         as displayctx
 
 
 log = logging.getLogger(__name__)
@@ -231,7 +232,16 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
                     enableWidget  = widget
                     widget, extra = self.__buildOverrideDataRangeWidget(
                         target, enableWidget)
-                    returnedWidgets.extend([enableWidget] + list(extra)) 
+                    returnedWidgets.extend([enableWidget] + list(extra))
+
+            # More special cases for MeshOpts
+            elif isinstance(target, displayctx.MeshOpts):
+                
+                if p.key == 'vertexData':
+                    vdataWidget   = widget
+                    widget, extra = self.__buildVertexDataWidget(
+                        target, vdataWidget)
+                    returnedWidgets.extend([vdataWidget] + list(extra))
 
             else:
                 returnedWidgets.append(widget)
@@ -289,6 +299,32 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         sizer.Add(useNegCmap, flag=wx.EXPAND)
         
         return sizer, [negCmap, useNegCmap]
+
+
+    def __buildVertexDataWidget(self, target, vdataWidget):
+        """Builds a panel which contains a widget for controlling the
+        :attr:`.MeshOpts.vertexData` property, and also has a button
+        which opens a file dialog, allowing the user to select other
+        data.
+        """
+        widgets = self.getWidgetList()
+
+        loadAction = loadvdata.LoadVertexDataAction(self._overlayList,
+                                                    self._displayCtx)
+        loadButton = wx.Button(widgets)
+        loadButton.SetLabel(strings.labels[self, 'loadVertexData'])
+
+        loadAction.bindToWidget(self, wx.EVT_BUTTON, loadButton)
+
+        vertexData = _DISPLAY_WIDGETS[target, 'vertexData']
+        vertexData = props.buildGUI(widgets, target, vertexData)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        sizer.Add(vertexData, flag=wx.EXPAND, proportion=1)
+        sizer.Add(loadButton, flag=wx.EXPAND)
+
+        return sizer, [vertexData]
 
 
     def __buildOverrideDataRangeWidget(self, target, enableWidget):
@@ -587,8 +623,8 @@ _DISPLAY_WIDGETS = td.TypeDict({
         dependencies=['refImage']),
     'MeshOpts.colour'       : props.Widget(
         'colour',
-        dependencies=['vertexData'],
-        enabledWhen=lambda o, vd: vd is None),
+        dependencies=['vertexData', 'outline'],
+        enabledWhen=lambda opts, vd, o: (not o) or (vd is None)),
     'MeshOpts.vertexData'   : props.Widget(
         'vertexData',
         labels=_meshVertexDataName),

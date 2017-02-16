@@ -248,7 +248,13 @@ messages = TypeDict({
     'An error occurred saving the FLIRT matrix.\n\nDetails: {}', 
 
     'FlirtFileDialog.matFile'    : 'Select FLIRT transformation matrix file',
-    'FlirtFileDialog.refFile'    : 'Select FLIRT reference image', 
+    'FlirtFileDialog.refFile'    : 'Select FLIRT reference image',
+
+
+    'LoadVertexDataAction.loadVertexData' :
+    'Select a vertex data file for {}',
+    'LoadVertexDataAction.error' :
+    'An error occurred while loading the vertex data for {}\n\nDetails: {}',
 })
 
 
@@ -555,6 +561,7 @@ labels = TypeDict({
     'OverlayDisplayPanel.SHOpts'         : 'Diffusion SH settings',
     
     'OverlayDisplayPanel.loadCmap'       : 'Load colour map',
+    'OverlayDisplayPanel.loadVertexData' : 'Load data',
 
     'CanvasSettingsPanel.scene'    : 'Scene settings',
     'CanvasSettingsPanel.ortho'    : 'Ortho view settings',
@@ -843,13 +850,17 @@ properties = TypeDict({
     'LineVectorOpts.unitLength'  : 'Scale vectors to unit length',
     'LineVectorOpts.lengthScale' : 'Length scaling factor (%)',
 
-    'MeshOpts.colour'       : 'Colour',
-    'MeshOpts.outline'      : 'Show outline only',
-    'MeshOpts.outlineWidth' : 'Outline width',
-    'MeshOpts.quality'      : 'Display quality',
-    'MeshOpts.refImage'     : 'Reference image',
-    'MeshOpts.coordSpace'   : 'Mesh coordinate space',
-    'MeshOpts.showName'     : 'Show model name',
+    'MeshOpts.colour'        : 'Colour',
+    'MeshOpts.outline'       : 'Show outline only',
+    'MeshOpts.outlineWidth'  : 'Outline width',
+    'MeshOpts.refImage'      : 'Reference image',
+    'MeshOpts.coordSpace'    : 'Mesh coordinate space',
+    'MeshOpts.vertexData'    : 'Vertex data',
+    'MeshOpts.displayRange'  : 'Display range',
+    'MeshOpts.clippingRange' : 'Clipping range',
+    'MeshOpts.cmap'          : 'Colour map',
+    'MeshOpts.invert'        : 'Invert colour map',
+    'MeshOpts.showName'      : 'Show model name',
 
     'LabelOpts.lut'          : 'Look-up table',
     'LabelOpts.outline'      : 'Show outline only',

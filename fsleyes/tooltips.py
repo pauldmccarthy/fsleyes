@@ -231,25 +231,42 @@ properties = TypeDict({
                                     '(equivalent to nearest-neighbour), '
                                     'linear, or spline interpolation.',
 
-    'MeshOpts.colour'       : 'The colour of the model.',
-    'MeshOpts.outline'      : 'If checked, only the outline of the model is '
-                              'displayed. Otherwise the model is filled. ',
-    'MeshOpts.outlineWidth' : 'If the model outline is being displayed, this '
-                              'setting controls the outline width.',
-    'MeshOpts.quality'      : 'Use this setting to control the resolution '
-                              'at which the model is displayed.',
-    'MeshOpts.showName'     : 'Annotate the display wiuh the model name.',
-    'MeshOpts.refImage'     : 'If this model was derived from a volumetric '
-                              'image, you can choose that image as a '
-                              'reference. The displayed model will then be '
-                              'transformed according to the '
-                              'transformation/orientation settings of the '
-                              'reference.',
-    'MeshOpts.coordSpace'   : 'If a reference image is selected, this '
-                              'setting defines the space, relative to the '
-                              'reference image, in which the model '
-                              'coordinates are defined.',
-
+    'MeshOpts.colour' :
+    'The colour of the mesh, when not colouring by vertex data.',
+    'MeshOpts.outline' :
+    'If checked, only the outline of the mesh is displayed. Otherwise the '
+    'mesh cross-section is shown. ',
+    'MeshOpts.outlineWidth' :
+    'If the mesh outline is being displayed, this setting controls the '
+    'outline width.',
+    'MeshOpts.showName' :
+    'Annotate the display wiuh the model name.',
+    'MeshOpts.refImage' :
+    'If this model was derived from a volumetric image, you can choose that '
+    'image as a reference. The displayed model will then be transformed '
+    'according to the transformation/orientation settings of the reference.',
+    'MeshOpts.coordSpace'   :
+    'If a reference image is selected, this setting defines the space, '
+    'relative to the reference image, in which the model coordinates are '
+    'defined.',
+    'MeshOpts.vertexData'   :
+    'Choose a file which contains data for each vertex - you can colour the '
+    'mesh outline according to the values in the file. This only applies '
+    'when the mesh outline, and not its cross-section is displayed.',
+    'MeshOpts.cmap'         :
+    'The colour map to use when colouring the mesh outline according to '
+    'vertex data.',
+    'MeshOpts.displayRange' :
+    'Vertex data display range - the low value corresponds to the low '
+    'colour, and the high value to the high colour, in the selected colour '
+    'map.',
+    'MeshOpts.clippingRange' :
+    'Vertex data clipping range - vertices with values outside of this '
+    'range will not be displayed.',
+    'MeshOpts.invert' :
+    'Invert the vertex data display range, so that the low value corresponds '
+    'to the high colour, and vice versa.', 
+    
     'TensorOpts.lighting'         : 'If enabled, a simple lighting model is '
                                     'used to highlight the tensor '
                                     'orientations.', 

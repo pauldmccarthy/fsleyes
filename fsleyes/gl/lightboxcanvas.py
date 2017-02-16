@@ -249,13 +249,18 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         """
         displayCtx = self.displayCtx
         opts       = displayCtx.getOpts(overlay)
-        overlay    = displayCtx.getReferenceImage(overlay)
         zmin, zmax = opts.bounds.getRange(self.zax)
+        overlay    = displayCtx.getReferenceImage(overlay)
 
         # If the overlay does not have a
         # reference NIFTI image, choose
         # an arbitrary slice spacing. 
-        if   overlay is None:            return (zmax - zmin) / 50.0
+        if overlay is None:
+            return (zmax - zmin) / 50.0
+
+        # Get the DisplayOpts instance 
+        # for the reference image
+        opts = displayCtx.getOpts(overlay)
 
         # Otherwise return a spacing
         # appropriate for the current
