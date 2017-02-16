@@ -211,7 +211,7 @@ class CanvasPanel(viewpanel.ViewPanel):
     """
 
     
-    movieRate = props.Int(minval=10, maxval=1000, default=750, clamped=True)
+    movieRate = props.Int(minval=10, maxval=500, default=250, clamped=True)
     """The movie update rate in milliseconds. The value of this property is
     inverted so that a high value corresponds to a fast rate, which makes
     more sense when displayed as an option to the user.
