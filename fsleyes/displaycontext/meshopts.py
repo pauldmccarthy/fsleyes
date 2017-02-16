@@ -16,6 +16,7 @@ import numpy as np
 import props
 
 from . import display       as fsldisplay
+from . import colourmapopts as cmapopts
 
 import fsleyes.colourmaps   as colourmaps
 import fsleyes.overlay      as fsloverlay
@@ -57,9 +58,10 @@ def genMeshColour(overlay):
     return colourmaps.randomBrightColour()
 
 
-class MeshOpts(fsldisplay.DisplayOpts):
+class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     """The ``MeshOpts`` class defines settings for displaying
-    :class:`.TriangleMesh` overlays.
+    :class:`.TriangleMesh` overlays. See also the :class:`.GiftiOpts`
+    sub-class.
     """
 
 
@@ -94,28 +96,6 @@ class MeshOpts(fsldisplay.DisplayOpts):
 
     This property is not currently populated by the ``MeshOpts`` class, but
     is used by sub-classes (e.g. :class:`.GiftiOpts`).
-    """
-
-
-    cmap = props.ColourMap()
-    """If some :attr:`vertexData` has been specified, this colour map
-    is used to colour the vertices.
-    """
-
-    invert = props.Boolean(default=False)
-    """Invert the :attr:`cmap`, if some :attr:`vertexData` has been
-    specified.
-    """
-
-    clippingRange = props.Bounds()
-    """If some :attr:`vertexData` has been specified, hide parts of the
-    surface outline which have a value outside of this range.
-    """
-
-
-    displayRange = props.Bounds()
-    """If some :attr:`vertexData` has been specified, this range is used
-    to map the vertex data to the :attr:`cmap`.
     """
 
     
@@ -178,12 +158,8 @@ class MeshOpts(fsldisplay.DisplayOpts):
         nounbind.extend(['refImage', 'coordSpace', 'transform'])
         kwargs['nounbind'] = nounbind
  
-        # But create that colour before
-        # base class initialisation, as
-        # there may be a parent colour
-        # value which will override the
-        # one we generated above.
-        fsldisplay.DisplayOpts.__init__(self, overlay, *args, **kwargs)
+        fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
+        cmapopts  .ColourMapOpts.__init__(self)
 
         # A copy of the refImage property
         # value is kept here so, when it
@@ -192,11 +168,12 @@ class MeshOpts(fsldisplay.DisplayOpts):
         self.__oldRefImage = None
 
         # When the vertexData property is
-        # changed, the data is loaded
-        # and stored in this attribute.
-        # See the __vertexDataChanged
+        # changed, the data (and its min/max)
+        # is loaded and stored in these 
+        # attributes. See the __vertexDataChanged
         # method.
-        self.__vertexData = None
+        self.__vertexData      = None
+        self.__vertexDataRange = None
 
         self.addListener('vertexData',
                          self.name,
@@ -275,8 +252,18 @@ class MeshOpts(fsldisplay.DisplayOpts):
         self.__oldRefImage = None
         self.__vertexData  = None
 
-        fsldisplay.DisplayOpts.destroy(self)
+        fsldisplay.DisplayOpts  .destroy(self)
+        fsldisplay.ColourMapOpts.destroy(self)
 
+
+    def getDataRange(self):
+        """Overrides the :meth:`.ColourMapOpts.getDisplayRange` method.
+        Returns the display range of the currently selected
+        :attr:`vertexData`, or ``(0, 0)`` if none is selected.
+        """
+        if self.__vertexDataRange is None: return (0, 0)
+        else:                              return self.__vertexDataRange
+            
 
     def getVertexData(self):
         """Returns the :attr:`.MeshOpts.vertexData`, if some is loaded.
@@ -576,47 +563,28 @@ class MeshOpts(fsldisplay.DisplayOpts):
         via the :meth:`getVertexData` method.
         """
 
+        vdata      = None
+        vdataRange = None
+
         try:
             if self.vertexData is not None:
-                vdata = self.overlay.getVertexData(self.vertexData)
-            else:
-                vdata = None
+                vdata      = self.overlay.getVertexData(self.vertexData)
+                vdataRange = np.nanmin(vdata), np.nanmax(vdata)
                 
         except Exception as e:
 
             # TODO show a warning
             log.warning('Unable to load vertex data from {}: {}'.format(
                 self.vertexData, e))
-            
-            vdata = None
 
-        self.__vertexData = vdata
+            vdata      = None
+            vdataRange = None
 
-        if vdata is None:
-            self.display.enableProperty('brightness')
-            self.display.enableProperty('contrast')
-        else:
-            self.display.disableProperty('brightness')
-            self.display.disableProperty('contrast')
+        self.__vertexData      = vdata
+        self.__vertexDataRange = vdataRange
 
-        if vdata is not None:
-            vmin, vmax = vdata.min(), vdata.max()
-            delta      = (vmax - vmin) / 100.0
-            
-            self.displayRange .xmin = vmin
-            self.displayRange .xmax = vmax
-            self.clippingRange.xmin = vmin - delta
-            self.clippingRange.xmax = vmax + delta
-            self.displayRange       = vmin, vmax
-            self.clippingRange      = vmin - delta, vmax + delta
-        else:
-            self.displayRange .xmin = 0
-            self.displayRange .xmax = 0
-            self.clippingRange.xmin = 0
-            self.clippingRange.xmax = 0
-            self.displayRange       = (0, 0)
-            self.clippingRange      = (0, 0)
-                
+        self.updateDataRange()
+
 
     def __colourChanged(self, *a):
         """Called when :attr:`.colour` changes. Updates :attr:`.Display.alpha`

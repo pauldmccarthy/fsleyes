@@ -1,0 +1,507 @@
+#!/usr/bin/env python
+#
+# colourmapopts.py - The ColourMapOpts class
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+"""This module provides the :class:`ColourMapOpts` class, a mixin for use with
+:class:`.DisplayOpts` sub-classes.
+"""
+
+
+import logging
+
+import props
+
+import fsleyes.colourmaps as fslcm
+import fsleyes.actions    as actions
+
+
+log = logging.getLogger(__name__)
+
+
+class ColourMapOpts(object):
+    """The ``ColourMapOpts`` class is a mixin for use
+    with :class:`.DisplayOpts` sub-classes. It provides properties and logic
+    for displaying overlays which are coloured according to some data values.
+    See the :class:`.MeshOpts` and :class:`.VolumeOpts` classes for examples
+    of classes which inherit from this class.
+
+    
+    To use the ``ColourMapOpts`` class, you must:
+
+      1. Define your class to inherit from both :class:`.DisplayOpts` and
+         ``ColourMapOpts``::
+
+             class MyOpts(DisplayOpts, ColourMapOpts):
+                 ...
+
+      2. Call the ``ColourMapOpts.__init__`` method *after*
+         :meth:`.DisplayOpts.__init__`::
+
+             def __init__(self, *args, **kwargs):
+                 DisplayOpts.__init__(self, *args, **kwargs)
+                 ColourMapOpts.__init__(self)
+
+      3. Implement the :meth:`getDataRange` and (if necessary)
+         :meth:`getClippingRange` methods.
+
+      4. Call :meth:`updateDataRange` whenever the data driving the colouring
+         changes.
+
+
+    The ``ColourMapOpts`` class links the :attr:`.Display.brightness` and
+    :attr:`.Display.contrast` properties to its own :attr:`displayRange`
+    property, so changes in either of the former will result in a change to
+    the latter, and vice versa. This relationship is defined by the
+    :func:`~.colourmaps.displayRangeToBricon` and
+    :func:`~.colourmaps.briconToDisplayRange` functions, in the
+    :mod:`.colourmaps` module.
+
+
+    ``ColourMapOpts`` instances provide the following methods:
+
+    .. autosummary::
+       :nosignatures:
+
+       resetDisplayRange
+       updateDataRange
+       getDataRange
+       getClippingRange
+    """
+    
+
+    displayRange = props.Bounds(ndims=1, clamped=False)
+    """Values which map to the minimum and maximum colour map colours.
+
+    .. note:: The values that this property can take are unbound because of
+              the interaction between it and the :attr:`.Display.brightness`
+              and :attr:`.Display.contrast` properties.  The
+              :attr:`displayRange` and :attr:`clippingRange` properties are
+              not clamped (they can take values outside of their
+              minimum/maximum values) because the data range for large NIFTI
+              images may not be known, and may change as more data is read
+              from disk.
+    """
+
+    
+    clippingRange = props.Bounds(ndims=1, clamped=False)
+    """Values outside of this range are not shown.  Clipping works as follows:
+    
+     - Values less than or equal to the minimum clipping value are
+       clipped.
+
+     - Values greater than or equal to the maximum clipping value are
+       clipped.
+
+    Because of this, a small amount of padding is added to the low and high
+    clipping range limits, to make it possible for all values to be
+    displayed.
+    """
+
+    
+    invertClipping = props.Boolean(default=False)
+    """If ``True``, the behaviour of :attr:`clippingRange` is inverted, i.e.
+    values inside the clipping range are clipped, instead of those outside
+    the clipping range.
+    """
+
+    
+    cmap = props.ColourMap()
+    """The colour map, a :class:`matplotlib.colors.Colourmap` instance."""
+
+
+    cmapResolution = props.Int(minval=2, maxval=1024, default=256)
+    """Resolution for the colour map, i.e. the number of colours to use. """
+
+    
+    interpolateCmaps = props.Boolean(default=False)
+    """If ``True``, the colour maps are applied using linear interpolation.
+    Otherwise they are applied using nearest neighbour interpolation.
+    """
+
+
+    negativeCmap = props.ColourMap()
+    """A second colour map, used if :attr:`useNegativeCmap` is ``True``.
+    When active, the :attr:`cmap` is used to colour positive values, and
+    the :attr:`negativeCmap` is used to colour negative values.
+    """
+
+    
+    useNegativeCmap = props.Boolean(default=False)
+    """When ``True``, the :attr:`cmap` is used to colour positive values,
+    and the :attr:`negativeCmap` is used to colour negative values.
+    When this property is enabled, the minimum value for both the
+    :attr:`displayRange` and :attr:`clippingRange` is set to zero. Both
+    ranges are applied to positive values, and negated/inverted for negative
+    values.
+
+    .. note:: When this property is set to ``True``, the
+              :attr:`.Display.brightness` and :attr:`.Display.contrast`
+              properties are disabled, as managing the interaction between
+              them would be far too complicated.
+    """
+
+
+    invert = props.Boolean(default=False)
+    """Use an inverted version of the current colour map (see the :attr:`cmap`
+    property).
+    """
+
+
+    linkLowRanges = props.Boolean(default=True)
+    """If ``True``, the low bounds on both the :attr:`displayRange` and
+    :attr:`clippingRange` ranges will be linked together.
+    """
+
+    
+    linkHighRanges = props.Boolean(default=False)
+    """If ``True``, the high bounds on both the :attr:`displayRange` and
+    :attr:`clippingRange` ranges will be linked together.
+    """
+
+
+    def __init__(self):
+        """Create a ``ColourMapOpts` instance. This must be called
+        *after* the :meth:`.DisplayOpts.__init__` method.
+        """
+
+        self.__name = '{}_ColourMapOpts_{}'.format(type(self).__name__,
+                                                   id(self))
+
+        # The displayRange property of every child ColourMapOpts
+        # instance is linked to the corresponding 
+        # Display.brightness/contrast properties, so changes
+        # in one are reflected in the other. This interaction
+        # complicates the relationship between parent and child
+        # ColourMapOpts instances, so we only implement it on
+        # children.
+        #
+        # NOTE: This means that if we use a parent-less
+        #       DisplayContext for display, this bricon-display
+        #       range relationship will break.
+        #
+        self.__registered = self.getParent() is not None
+        if self.__registered:
+
+            display = self.display
+
+            display    .addListener('brightness',
+                                    self.__name,
+                                    self.__briconChanged)
+            display    .addListener('contrast',
+                                    self.__name,
+                                    self.__briconChanged)
+            self       .addListener('displayRange',
+                                    self.__name,
+                                    self.__displayRangeChanged) 
+            self       .addListener('useNegativeCmap',
+                                    self.__name,
+                                    self.__useNegativeCmapChanged)
+            self       .addListener('linkLowRanges',
+                                    self.__name,
+                                    self.__linkLowRangesChanged)
+            self       .addListener('linkHighRanges',
+                                    self.__name,
+                                    self.__linkHighRangesChanged)
+
+            # Because displayRange and bri/con are intrinsically
+            # linked, it makes no sense to let the user sync/unsync
+            # them independently. So here we are binding the boolean
+            # sync properties which control whether the dRange/bricon
+            # properties are synced with their parent. So when one
+            # property is synced/unsynced, the other ones are too.
+            self.bindProps(self   .getSyncPropertyName('displayRange'),
+                           display,
+                           display.getSyncPropertyName('brightness'))
+            self.bindProps(self   .getSyncPropertyName('displayRange'), 
+                           display,
+                           display.getSyncPropertyName('contrast'))
+
+            # If useNegativeCmap, linkLowRanges or linkHighRanges
+            # have been set to True (this will happen if they
+            # are true on the parent VolumeOpts instance), make
+            # sure the property / listener states are up to date.
+            if self.useNegativeCmap: self.__useNegativeCmapChanged()
+            if self.linkLowRanges:   self.__linkLowRangesChanged()
+            if self.linkHighRanges:  self.__linkHighRangesChanged()
+
+
+    def destroy(self):
+        """Must be called when this ``ColourMapOpts`` is no longer needed.
+        Removes property listeners.
+        """
+        if not self.__registered:
+            return
+
+        display = self.display
+
+        display.removeListener('brightness',              self.name)
+        display.removeListener('contrast',                self.name)
+        self   .removeListener('displayRange',            self.name)
+        self   .removeListener('useNegativeCmap',         self.name)
+        self   .removeListener('linkLowRanges',           self.name)
+        self   .removeListener('linkHighRanges',          self.name)
+
+        self.unbindProps(self   .getSyncPropertyName('displayRange'),
+                         display,
+                         display.getSyncPropertyName('brightness'))
+        self.unbindProps(self   .getSyncPropertyName('displayRange'), 
+                         display,
+                         display.getSyncPropertyName('contrast'))
+
+        self.__linkRangesChanged(False, 0)
+        self.__linkRangesChanged(False, 1)
+ 
+
+    def getDataRange(self):
+        """Must be overridden by sub-classes. Must return the range of the
+        data used for colouring as a ``(min, max)`` tuple.
+        """
+        
+        raise NotImplementedError('ColourMapOpts.getDataRange must be '
+                                  'implemented by sub-classes.')
+
+
+    def getClippingRange(self):
+        """Can be overridden by sub-classes if necessary. If the clipping
+        range is always the same as the data range, this method does not
+        need to be overridden.
+
+        Otherwise, if the clipping range may differ from the data range
+        (see e.g. the :attr:`.VolumeOpts.clipImage` property), this method
+        must return the clipping range as a ``(min, max)`` tuple.
+        """ 
+        return None
+
+
+    @actions.action
+    def resetDisplayRange(self):
+        """Resets the display range to the data range."""
+
+        if not self.enableOverrideDataRange: drange = self.overlay.dataRange
+        else:                                drange = self.overrideDataRange
+
+        self.displayRange.x = drange
+
+
+    def updateDataRange(self):
+        """Must be called by sub-classes whenever the ranges of the underlying
+        data or clipping values change.  Configures the minimum/maximum bounds
+        of the :attr:`displayRange` and :attr:`clippingRange` properties.
+        """
+
+        dataMin, dataMax = self.getDataRange()
+        clipRange        = self.getClippingRange()
+
+        absolute = self.useNegativeCmap
+        drmin    = dataMin
+        drmax    = dataMax
+        
+        if absolute:
+            drmin = min((0,            abs(dataMin)))
+            drmax = max((abs(dataMin), abs(dataMax)))
+
+        if clipRange is not None: crmin, crmax = clipRange
+        else:                     crmin, crmax = drmin, drmax
+
+        # Clipping works on >= and <=, so we add
+        # a small offset to the clipping limits
+        # so the user can configure the scene such
+        # that no values are clipped.
+        croff  = abs(crmax - crmin) / 100.0
+        crmin -= croff
+        crmax += croff
+
+        with props.suppress(self, 'displayRange',  notify=True), \
+             props.suppress(self, 'clippingRange', notify=True):
+
+            # If display/clipping limit range
+            # is 0, we assume that they haven't
+            # yet been set
+            drUnset = self.displayRange .xmin == self.displayRange .xmax
+            crUnset = self.clippingRange.xmin == self.clippingRange.xmax
+            crGrow  = self.clippingRange.xhi  == self.clippingRange.xmax
+
+            log.debug('Updating range limits [dr: {} - {}, ''cr: '
+                      '{} - {}]'.format(drmin, drmax, crmin, crmax))
+
+            self.displayRange .xmin = drmin
+            self.displayRange .xmax = drmax
+            self.clippingRange.xmin = crmin
+            self.clippingRange.xmax = crmax
+
+            # If the ranges have not yet been set,
+            # initialise them to the min/max.
+            # Also, if the high clipping range
+            # was previously equal to the max
+            # clipping range, keep that relationship,
+            # otherwise high values will be clipped.
+            if drUnset: self.displayRange .x   = drmin,         drmax
+            if crUnset: self.clippingRange.x   = crmin + croff, crmax
+            if crGrow:  self.clippingRange.xhi = crmax
+
+            # If using absolute range values, the low
+            # display/clipping should be set to 0
+            if absolute and self.displayRange .xlo < 0:
+                self.displayRange.xlo  = 0
+            if absolute and self.clippingRange.xlo < 0:
+                self.clippingRange.xlo = 0
+
+
+    def __toggleListeners(self, enable=True):
+        """This method enables/disables the property listeners which
+        are registered on the :attr:`displayRange` and
+        :attr:`.Display.brightness`/:attr:`.Display.contrast`/properties.
+        
+        Because these properties are linked via the
+        :meth:`__displayRangeChanged` and :meth:`__briconChanged` methods,
+        we need to be careful about avoiding recursive callbacks.
+
+        Furthermore, because the properties of both :class:`ColourMapOpts` and
+        :class:`.Display` instances are possibly synchronised to a parent
+        instance (which in turn is synchronised to other children), we need to
+        make sure that the property listeners on these other sibling instances
+        are not called when our own property values change. So this method
+        disables/enables the property listeners on all sibling
+        ``ColourMapOpts`` and ``Display`` instances.
+        """
+
+        parent = self.getParent()
+
+        # this is the parent instance
+        if parent is None:
+            return
+
+        # The parent.getChildren() method will
+        # contain this ColourMapOpts instance,
+        # so the below loop toggles listeners
+        # for this instance and all of the other
+        # children of the parent
+        peers  = parent.getChildren()
+
+        for peer in peers:
+
+            if not any((peer.display.isSyncedToParent('brightness'),
+                        peer.display.isSyncedToParent('contrast'),
+                        peer.        isSyncedToParent('displayRange'))):
+                continue
+
+            bri = peer.display.hasListener('brightness',   peer.name)
+            con = peer.display.hasListener('contrast',     peer.name)
+            dr  = peer        .hasListener('displayRange', peer.name)
+
+            if enable:
+                if bri: peer.display.enableListener('brightness',   peer.name)
+                if con: peer.display.enableListener('contrast',     peer.name)
+                if dr:  peer        .enableListener('displayRange', peer.name)
+            else:
+                if bri: peer.display.disableListener('brightness',   peer.name)
+                if con: peer.display.disableListener('contrast',     peer.name)
+                if dr:  peer        .disableListener('displayRange', peer.name)
+                
+
+    def __briconChanged(self, *a):
+        """Called when the ``brightness``/``contrast`` properties of the
+        :class:`.Display` instance change.
+        
+        Updates the :attr:`displayRange` property accordingly.
+
+        See :func:`.colourmaps.briconToDisplayRange`.
+        """
+
+        dataRange = self.getDataRange()
+
+        dlo, dhi = fslcm.briconToDisplayRange(
+            dataRange,
+            self.display.brightness / 100.0,
+            self.display.contrast   / 100.0)
+
+        self.__toggleListeners(False)
+        self.displayRange.x = [dlo, dhi]
+        self.__toggleListeners(True)
+
+        
+    def __displayRangeChanged(self, *a):
+        """Called when the `attr:`displayRange` property changes.
+
+        Updates the :attr:`.Display.brightness` and :attr:`.Display.contrast`
+        properties accordingly.
+
+        See :func:`.colourmaps.displayRangeToBricon`.
+        """
+
+        if self.useNegativeCmap:
+            return
+
+        dataRange = self.getDataRange()
+
+        brightness, contrast = fslcm.displayRangeToBricon(
+            dataRange, self.displayRange.x)
+        
+        self.__toggleListeners(False)
+
+        # update bricon
+        self.display.brightness = brightness * 100
+        self.display.contrast   = contrast   * 100
+
+        self.__toggleListeners(True)
+
+
+    def __useNegativeCmapChanged(self, *a):
+        """Called when the :attr:`useNegativeCmap` property changes.
+        Enables/disables the :attr:`.Display.brightness` and
+        :attr:`.Display.contrast` properties, and configures limits
+        on the :attr:`clippingRange` and :attr:`displayRange` properties.
+        """
+
+        if self.useNegativeCmap:
+            self.display.disableProperty('brightness')
+            self.display.disableProperty('contrast')
+        else:
+            self.display.enableProperty('brightness')
+            self.display.enableProperty('contrast')
+
+        self.updateDataRange()
+            
+
+    def __linkLowRangesChanged(self, *a):
+        """Called when the :attr:`linkLowRanges` property changes. Calls the
+        :meth:`__linkRangesChanged` method.
+        """
+        self.__linkRangesChanged(self.linkLowRanges, 0)
+
+        
+    def __linkHighRangesChanged(self, *a):
+        """Called when the :attr:`linkHighRanges` property changes. Calls the
+        :meth:`__linkRangesChanged` method.
+        """ 
+        self.__linkRangesChanged(self.linkHighRanges, 1) 
+
+        
+    def __linkRangesChanged(self, val, idx):
+        """Called when either the :attr:`linkLowRanges` or
+        :attr:`linkHighRanges` properties change. Binds/unbinds the specified
+        range properties together.
+
+        :arg val: Boolean indicating whether the range values should be
+                  linked or unlinked.
+        
+        :arg idx: Range value index - 0 corresponds to the low range value,
+                  and 1 to the high range value.
+        """
+
+        dRangePV = self.displayRange .getPropertyValueList()[idx]
+        cRangePV = self.clippingRange.getPropertyValueList()[idx]
+
+        if props.propValsAreBound(dRangePV, cRangePV) == val:
+            return
+
+        props.bindPropVals(dRangePV,
+                           cRangePV,
+                           bindval=True,
+                           bindatt=False,
+                           unbind=not val)
+
+        if val:
+            cRangePV.set(dRangePV.get())

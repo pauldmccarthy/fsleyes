@@ -147,6 +147,7 @@ from .group          import OverlayGroup
 from .sceneopts      import SceneOpts
 from .orthoopts      import OrthoOpts
 from .lightboxopts   import LightBoxOpts
+from .colourmapopts  import ColourMapOpts
 from .volumeopts     import NiftiOpts
 from .volumeopts     import VolumeOpts
 from .maskopts       import MaskOpts

@@ -219,24 +219,30 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
             widget = props.buildGUI(widgetList, target, p)
 
-            # Build a panel for the VolumeOpts colour map controls.
-            if isinstance(target, displayctx.VolumeOpts):
-
+            # Build a panel for the ColourMapOpts
+            # colour map controls.
+            if isinstance(target, displayctx.ColourMapOpts):
                 if p.key == 'cmap':
                     cmapWidget    = widget
                     widget, extra = self.__buildColourMapWidget(
                         target, cmapWidget)
                     returnedWidgets.extend([cmapWidget] + list(extra))
-                    
-                elif p.key == 'enableOverrideDataRange':
+
+            # Special case for VolumeOpts props
+            if isinstance(target, displayctx.VolumeOpts):
+                if p.key == 'cmap':
+                    cmapWidget    = widget
+                    widget, extra = self.__buildColourMapWidget(
+                        target, cmapWidget)
+                    returnedWidgets.extend([cmapWidget] + list(extra))                
+                if p.key == 'enableOverrideDataRange':
                     enableWidget  = widget
                     widget, extra = self.__buildOverrideDataRangeWidget(
                         target, enableWidget)
                     returnedWidgets.extend([enableWidget] + list(extra))
 
             # More special cases for MeshOpts
-            elif isinstance(target, displayctx.MeshOpts):
-                
+            if isinstance(target, displayctx.MeshOpts):
                 if p.key == 'vertexData':
                     vdataWidget   = widget
                     widget, extra = self.__buildVertexDataWidget(
@@ -412,16 +418,21 @@ _DISPLAY_PROPS = td.TypeDict({
                         'resolution',
                         'lineWidth',
                         'lengthScale'],
-    'MeshOpts'       : ['outline',
+    'MeshOpts'       : ['refImage',
+                        'coordSpace',
+                        'outline',
                         'outlineWidth',
                         'colour',
                         'vertexData',
                         'cmap',
+                        'cmapResolution',
+                        'interpolateCmaps',
                         'invert',
+                        'invertClipping',
+                        'linkLowRanges',
+                        'linkHighRanges',
                         'displayRange',
-                        'clippingRange',
-                        'refImage',
-                        'coordSpace'],
+                        'clippingRange'],
     'TensorOpts'     : ['lighting',
                         'orientFlip',
                         'tensorResolution',
@@ -456,6 +467,39 @@ _DISPLAY_WIDGETS = td.TypeDict({
     'Display.alpha'       : props.Widget('alpha',      showLimits=False),
     'Display.brightness'  : props.Widget('brightness', showLimits=False),
     'Display.contrast'    : props.Widget('contrast',   showLimits=False),
+
+    'ColourMapOpts.cmap'           : props.Widget(
+        'cmap',
+        labels=fslcm.getColourMapLabel),
+    
+    'ColourMapOpts.useNegativeCmap' : props.Widget('useNegativeCmap'),
+    'ColourMapOpts.negativeCmap'    : props.Widget(
+        'negativeCmap',
+        labels=fslcm.getColourMapLabel,
+        dependencies=['useNegativeCmap'],
+        enabledWhen=lambda i, unc : unc),
+    'ColourMapOpts.cmapResolution'  : props.Widget(
+        'cmapResolution',
+        slider=True,
+        spin=True,
+        showLimits=False),
+    'ColourMapOpts.interpolateCmaps' : props.Widget('interpolateCmaps'),
+    'ColourMapOpts.invert'           : props.Widget('invert'),
+    'ColourMapOpts.invertClipping'   : props.Widget('invertClipping'),
+    'ColourMapOpts.linkLowRanges'    : props.Widget('linkLowRanges'),
+    'ColourMapOpts.linkHighRanges' : props.Widget(  'linkHighRanges'),
+    'ColourMapOpts.displayRange'   : props.Widget(
+        'displayRange',
+        showLimits=False,
+        slider=True,
+        labels=[strings.choices['ColourMapOpts.displayRange.min'],
+                strings.choices['ColourMapOpts.displayRange.max']]),
+    'ColourMapOpts.clippingRange'  : props.Widget(
+        'clippingRange',
+        showLimits=False,
+        slider=True,
+        labels=[strings.choices['ColourMapOpts.displayRange.min'],
+                strings.choices['ColourMapOpts.displayRange.max']]), 
 
     # VolumeOpts
     'VolumeOpts.resolution'     : props.Widget('resolution', showLimits=False),
@@ -628,24 +672,6 @@ _DISPLAY_WIDGETS = td.TypeDict({
     'MeshOpts.vertexData'   : props.Widget(
         'vertexData',
         labels=_meshVertexDataName),
-    'MeshOpts.cmap'         : props.Widget(
-        'cmap',
-        dependencies=['vertexData'],
-        enabledWhen=lambda o, vd: vd is not None),
-    'MeshOpts.invert' : props.Widget(
-        'invert',
-        dependencies=['vertexData'],
-        enabledWhen=lambda o, vd: vd is not None), 
-    'MeshOpts.displayRange' : props.Widget(
-        'displayRange',
-        showLimits=False,
-        dependencies=['vertexData'],
-        enabledWhen=lambda o, vd: vd is not None),
-    'MeshOpts.clippingRange' : props.Widget(
-        'clippingRange',
-        showLimits=False,
-        dependencies=['vertexData'],
-        enabledWhen=lambda o, vd: vd is not None),
         
     # TensorOpts
     'TensorOpts.lighting'         : props.Widget('lighting'),

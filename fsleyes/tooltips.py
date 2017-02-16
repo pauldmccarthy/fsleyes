@@ -76,6 +76,40 @@ properties = TypeDict({
                              'to apply the affine transformation as defined '
                              'in the NIFTI header.',
 
+
+    'ColourMapOpts.displayRange' :
+    'Data display range - the low value corresponds to the low colour, and '
+    'the high value to the high colour, in the selected colour map.',
+     
+    'ColourMapOpts.clippingRange' :
+    'Data clipping range - voxels with values outside of this range will not '
+    'be displayed.',
+    
+    'ColourMapOpts.invertClipping' :
+    'Invert the clipping range, so that voxels inside the range are not '
+    'displayed, and voxels outside of the range are displayed. ' 
+    'This option is useful for displaying statistic images.',
+    
+    'ColourMapOpts.cmap'            : 'The colour map to use.',
+    
+    'ColourMapOpts.negativeCmap' :
+    'The colour map to use for negative values.',
+    
+    'ColourMapOpts.useNegativeCmap' :
+    'Enable the negative colour map - this allows positive and negative '
+    'values to be coloured independently.',
+    
+    'ColourMapOpts.cmapResolution'  :
+    'Colour map resolution - the number of colours to use in the colour maps.',
+    
+    'ColourMapOpts.interpolateCmaps' :
+    'Interpolate between discrete colours in the colour map. If not selected, '
+    'nearest-neighbour interpolation is used. ',
+ 
+    'ColourMapOpts.invert' :
+    'Invert the display range, so that the low value corresponds to the high '
+    'colour, and vice versa.',
+
     'VolumeOpts.displayRange' :
     'Data display range - the low value corresponds to the low colour, and '
     'the high value to the high colour, in the selected colour map.',
@@ -253,19 +287,6 @@ properties = TypeDict({
     'Choose a file which contains data for each vertex - you can colour the '
     'mesh outline according to the values in the file. This only applies '
     'when the mesh outline, and not its cross-section is displayed.',
-    'MeshOpts.cmap'         :
-    'The colour map to use when colouring the mesh outline according to '
-    'vertex data.',
-    'MeshOpts.displayRange' :
-    'Vertex data display range - the low value corresponds to the low '
-    'colour, and the high value to the high colour, in the selected colour '
-    'map.',
-    'MeshOpts.clippingRange' :
-    'Vertex data clipping range - vertices with values outside of this '
-    'range will not be displayed.',
-    'MeshOpts.invert' :
-    'Invert the vertex data display range, so that the low value corresponds '
-    'to the high colour, and vice versa.', 
     
     'TensorOpts.lighting'         : 'If enabled, a simple lighting model is '
                                     'used to highlight the tensor '
@@ -656,8 +677,11 @@ actions = TypeDict({
     'OrthoEditProfile.pasteSelection' :
     'Paste the contents of the clipboard into the currently selected image.',
 
-    'VolumeOpts.resetDisplayRange' :
+    'ColourMapOpts.resetDisplayRange' :
     'Reset the display range to the data range.',
+
+    'VolumeOpts.resetDisplayRange' :
+    'Reset the display range to the data range.', 
 
     # Items in the OverlayListPanel
     'ListItemWidget.save'  : 'Save this overlay to a file',

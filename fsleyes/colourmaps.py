@@ -340,6 +340,7 @@ def registerColourMap(cmapFile,
     cmapProps.append((fsldisplay.VolumeOpts, 'negativeCmap'))
     cmapProps.append((fsldisplay.VectorOpts, 'cmap'))
     cmapProps.append((fsldisplay.MeshOpts,   'cmap'))
+    cmapProps.append((fsldisplay.MeshOpts,   'negativeCmap'))
 
     # Update the colour map properties
     # for any existing instances 

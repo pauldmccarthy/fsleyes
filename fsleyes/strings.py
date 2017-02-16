@@ -806,6 +806,18 @@ properties = TypeDict({
     'NiftiOpts.resolution' : 'Resolution',
     'NiftiOpts.transform'  : 'Image transform',
     'NiftiOpts.volume'     : 'Volume',
+
+    'ColourMapOpts.displayRange'     : 'Display range',
+    'ColourMapOpts.clippingRange'    : 'Clipping range',
+    'ColourMapOpts.linkLowRanges'    : 'Link low display/clipping ranges',
+    'ColourMapOpts.linkHighRanges'   : 'Link high display/clipping ranges',
+    'ColourMapOpts.cmap'             : 'Colour map',
+    'ColourMapOpts.cmapResolution'   : 'Colour map resolution',
+    'ColourMapOpts.interpolateCmaps' : 'Interpolate colour maps',
+    'ColourMapOpts.negativeCmap'     : '-ve colour map',
+    'ColourMapOpts.useNegativeCmap'  : '-ve colour map',
+    'ColourMapOpts.invert'           : 'Invert colour map',
+    'ColourMapOpts.invertClipping'   : 'Invert clipping range',
     
     'VolumeOpts.displayRange'     : 'Display range',
     'VolumeOpts.clippingRange'    : 'Clipping range',
@@ -856,10 +868,6 @@ properties = TypeDict({
     'MeshOpts.refImage'      : 'Reference image',
     'MeshOpts.coordSpace'    : 'Mesh coordinate space',
     'MeshOpts.vertexData'    : 'Vertex data',
-    'MeshOpts.displayRange'  : 'Display range',
-    'MeshOpts.clippingRange' : 'Clipping range',
-    'MeshOpts.cmap'          : 'Colour map',
-    'MeshOpts.invert'        : 'Invert colour map',
     'MeshOpts.showName'      : 'Show model name',
 
     'LabelOpts.lut'          : 'Look-up table',
@@ -921,7 +929,10 @@ choices = TypeDict({
     'HistogramPanel.dataRange.max' : 'Max.',
 
     'LightBoxOpts.zrange.min' : 'Min.',
-    'LightBoxOpts.zrange.max' : 'Max.',    
+    'LightBoxOpts.zrange.max' : 'Max.',
+
+    'ColourMapOpts.displayRange.min' : 'Min.',
+    'ColourMapOpts.displayRange.max' : 'Max.', 
 
     'VolumeOpts.displayRange.min' : 'Min.',
     'VolumeOpts.displayRange.max' : 'Max.',
