@@ -13,8 +13,7 @@ import logging
 
 import props
 
-import fsleyes.strings as strings
-from . import             volumeopts
+from . import volumeopts
 
 
 log = logging.getLogger(__name__)
@@ -25,10 +24,7 @@ class MaskOpts(volumeopts.NiftiOpts):
     :class:`.Image` overlay as a binary mask.
     """
 
-    threshold = props.Bounds(
-        ndims=1,
-        labels=[strings.choices['VolumeOpts.displayRange.min'],
-                strings.choices['VolumeOpts.displayRange.max']]) 
+    threshold = props.Bounds(ndims=1) 
     """The mask threshold range - values outside of this range are not
     displayed.
     """

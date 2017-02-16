@@ -230,11 +230,6 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
             # Special case for VolumeOpts props
             if isinstance(target, displayctx.VolumeOpts):
-                if p.key == 'cmap':
-                    cmapWidget    = widget
-                    widget, extra = self.__buildColourMapWidget(
-                        target, cmapWidget)
-                    returnedWidgets.extend([cmapWidget] + list(extra))                
                 if p.key == 'enableOverrideDataRange':
                     enableWidget  = widget
                     widget, extra = self.__buildOverrideDataRangeWidget(
@@ -242,7 +237,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
                     returnedWidgets.extend([enableWidget] + list(extra))
 
             # More special cases for MeshOpts
-            if isinstance(target, displayctx.MeshOpts):
+            elif isinstance(target, displayctx.MeshOpts):
                 if p.key == 'vertexData':
                     vdataWidget   = widget
                     widget, extra = self.__buildVertexDataWidget(
@@ -322,15 +317,12 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
         loadAction.bindToWidget(self, wx.EVT_BUTTON, loadButton)
 
-        vertexData = _DISPLAY_WIDGETS[target, 'vertexData']
-        vertexData = props.buildGUI(widgets, target, vertexData)
-
         sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        sizer.Add(vertexData, flag=wx.EXPAND, proportion=1)
-        sizer.Add(loadButton, flag=wx.EXPAND)
+        sizer.Add(vdataWidget, flag=wx.EXPAND, proportion=1)
+        sizer.Add(loadButton,  flag=wx.EXPAND)
 
-        return sizer, [vertexData]
+        return sizer, []
 
 
     def __buildOverrideDataRangeWidget(self, target, enableWidget):
@@ -510,44 +502,6 @@ _DISPLAY_WIDGETS = td.TypeDict({
     'VolumeOpts.interpolation'  : props.Widget(
         'interpolation',
         labels=strings.choices['VolumeOpts.interpolation']),
-    'VolumeOpts.cmap'           : props.Widget(
-        'cmap',
-        labels=fslcm.getColourMapLabel),
-    
-    'VolumeOpts.useNegativeCmap' : props.Widget('useNegativeCmap'),
-    'VolumeOpts.negativeCmap'    : props.Widget(
-        'negativeCmap',
-        labels=fslcm.getColourMapLabel,
-        dependencies=['useNegativeCmap'],
-        enabledWhen=lambda i, unc : unc),
-    'VolumeOpts.cmapResolution'  : props.Widget(
-        'cmapResolution',
-        slider=True,
-        spin=True,
-        showLimits=False),
-    'VolumeOpts.interpolateCmaps' : props.Widget('interpolateCmaps'),
-    'VolumeOpts.invert'           : props.Widget('invert'),
-    'VolumeOpts.invertClipping'   : props.Widget('invertClipping'),
-    'VolumeOpts.linkLowRanges'    : props.Widget(
-        'linkLowRanges',
-        dependencies=['clipImage'],
-        enabledWhen=lambda vo, ci: ci is None),
-    'VolumeOpts.linkHighRanges' : props.Widget(
-        'linkHighRanges',
-        dependencies=['clipImage'],
-        enabledWhen=lambda vo, ci: ci is None),
-    'VolumeOpts.displayRange'   : props.Widget(
-        'displayRange',
-        showLimits=False,
-        slider=True,
-        labels=[strings.choices['VolumeOpts.displayRange.min'],
-                strings.choices['VolumeOpts.displayRange.max']]),
-    'VolumeOpts.clippingRange'  : props.Widget(
-        'clippingRange',
-        showLimits=False,
-        slider=True,
-        labels=[strings.choices['VolumeOpts.displayRange.min'],
-                strings.choices['VolumeOpts.displayRange.max']]),
     'VolumeOpts.clipImage'      : props.Widget(
         'clipImage',
         labels=_imageName),

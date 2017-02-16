@@ -251,9 +251,9 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         self.__oldRefImage = None
         self.__vertexData  = None
-
+        
+        cmapopts  .ColourMapOpts.destroy(self)
         fsldisplay.DisplayOpts  .destroy(self)
-        fsldisplay.ColourMapOpts.destroy(self)
 
 
     def getDataRange(self):

@@ -819,19 +819,8 @@ properties = TypeDict({
     'ColourMapOpts.invert'           : 'Invert colour map',
     'ColourMapOpts.invertClipping'   : 'Invert clipping range',
     
-    'VolumeOpts.displayRange'     : 'Display range',
-    'VolumeOpts.clippingRange'    : 'Clipping range',
-    'VolumeOpts.clipImage'        : 'Clip by',
-    'VolumeOpts.linkLowRanges'    : 'Link low display/clipping ranges',
-    'VolumeOpts.linkHighRanges'   : 'Link high display/clipping ranges',
-    'VolumeOpts.cmap'             : 'Colour map',
-    'VolumeOpts.cmapResolution'   : 'Colour map resolution',
-    'VolumeOpts.interpolateCmaps' : 'Interpolate colour maps',
-    'VolumeOpts.negativeCmap'     : '-ve colour map',
-    'VolumeOpts.useNegativeCmap'  : '-ve colour map',
-    'VolumeOpts.invert'           : 'Invert colour map',
-    'VolumeOpts.invertClipping'   : 'Invert clipping range',
-    'VolumeOpts.interpolation'   : 'Interpolation',
+    'VolumeOpts.clipImage'               : 'Clip by',
+    'VolumeOpts.interpolation'           : 'Interpolation',
     'VolumeOpts.enableOverrideDataRange' : 'Override image data range',
     'VolumeOpts.overrideDataRange'       : 'Override image data range',
 
@@ -933,9 +922,6 @@ choices = TypeDict({
 
     'ColourMapOpts.displayRange.min' : 'Min.',
     'ColourMapOpts.displayRange.max' : 'Max.', 
-
-    'VolumeOpts.displayRange.min' : 'Min.',
-    'VolumeOpts.displayRange.max' : 'Max.',
 
     'MaskOpts.threshold.min' : 'Min.',
     'MaskOpts.threshold.max' : 'Max.', 

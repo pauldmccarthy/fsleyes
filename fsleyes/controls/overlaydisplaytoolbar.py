@@ -533,15 +533,14 @@ _TOOLTIPS = td.TypeDict({
     'Display.brightness'  : fsltooltips.properties['Display.brightness'],
     'Display.contrast'    : fsltooltips.properties['Display.contrast'],
 
-    'VolumeOpts.displayRange'      : fsltooltips.properties['VolumeOpts.'
-                                                            'displayRange'],
-    
+    'ColourMapOpts.displayRange' :
+    fsltooltips.properties['ColourMapOpts.displayRange'],
     'VolumeOpts.cmap'              :
-    fsltooltips.properties['VolumeOpts.cmap'],
+    fsltooltips.properties['ColourMapOpts.cmap'],
     'VolumeOpts.negativeCmap'      :
-    fsltooltips.properties['VolumeOpts.negativeCmap'],
+    fsltooltips.properties['ColourMapOpts.negativeCmap'],
     'VolumeOpts.useNegativeCmap'   :
-    fsltooltips.properties['VolumeOpts.useNegativeCmap'], 
+    fsltooltips.properties['ColourMapOpts.useNegativeCmap'], 
 
     'MaskOpts.threshold' : fsltooltips.properties['MaskOpts.threshold'],
     'MaskOpts.colour'    : fsltooltips.properties['MaskOpts.colour'],
@@ -610,9 +609,9 @@ _TOOLBAR_PROPS = td.TypeDict({
         slider=False,
         showLimits=False,
         spinWidth=10,
-        tooltip=_TOOLTIPS['VolumeOpts.displayRange'],
-        labels=[strings.choices['VolumeOpts.displayRange.min'],
-                strings.choices['VolumeOpts.displayRange.max']]),
+        tooltip=_TOOLTIPS['ColourMapOpts.displayRange'],
+        labels=[strings.choices['ColourMapOpts.displayRange.min'],
+                strings.choices['ColourMapOpts.displayRange.max']]),
     'VolumeOpts.cmap' : props.Widget(
         'cmap',
         labels=fslcm.getColourMapLabel,

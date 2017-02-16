@@ -21,8 +21,8 @@ log = logging.getLogger(__name__)
 
 
 class ColourMapOpts(object):
-    """The ``ColourMapOpts`` class is a mixin for use
-    with :class:`.DisplayOpts` sub-classes. It provides properties and logic
+    """The ``ColourMapOpts`` class is a mixin for use with
+    :class:`.DisplayOpts` sub-classes. It provides properties and logic
     for displaying overlays which are coloured according to some data values.
     See the :class:`.MeshOpts` and :class:`.VolumeOpts` classes for examples
     of classes which inherit from this class.
@@ -222,26 +222,31 @@ class ColourMapOpts(object):
             # have been set to True (this will happen if they
             # are true on the parent VolumeOpts instance), make
             # sure the property / listener states are up to date.
-            if self.useNegativeCmap: self.__useNegativeCmapChanged()
             if self.linkLowRanges:   self.__linkLowRangesChanged()
             if self.linkHighRanges:  self.__linkHighRangesChanged()
+            if self.useNegativeCmap:
+                self.__useNegativeCmapChanged(updateDataRange=False)
+ 
+        self.updateDataRange()
 
 
     def destroy(self):
-        """Must be called when this ``ColourMapOpts`` is no longer needed.
-        Removes property listeners.
+        """Must be called when this ``ColourMapOpts`` is no longer needed,
+        and before :meth:`.DisplayOpts.destroy` is called. Removes property
+        listeners.
         """
+        
         if not self.__registered:
             return
 
         display = self.display
 
-        display.removeListener('brightness',              self.name)
-        display.removeListener('contrast',                self.name)
-        self   .removeListener('displayRange',            self.name)
-        self   .removeListener('useNegativeCmap',         self.name)
-        self   .removeListener('linkLowRanges',           self.name)
-        self   .removeListener('linkHighRanges',          self.name)
+        display.removeListener('brightness',      self.name)
+        display.removeListener('contrast',        self.name)
+        self   .removeListener('displayRange',    self.name)
+        self   .removeListener('useNegativeCmap', self.name)
+        self   .removeListener('linkLowRanges',   self.name)
+        self   .removeListener('linkHighRanges',  self.name)
 
         self.unbindProps(self   .getSyncPropertyName('displayRange'),
                          display,
@@ -268,9 +273,13 @@ class ColourMapOpts(object):
         range is always the same as the data range, this method does not
         need to be overridden.
 
-        Otherwise, if the clipping range may differ from the data range
+        Otherwise, if the clipping range differs from the data range
         (see e.g. the :attr:`.VolumeOpts.clipImage` property), this method
         must return the clipping range as a ``(min, max)`` tuple.
+
+        When a sub-class implementation wishes to use the default clipping
+        range/behaviour, it should return the value returned by this
+        base-class implementation.
         """ 
         return None
 
@@ -448,11 +457,15 @@ class ColourMapOpts(object):
         self.__toggleListeners(True)
 
 
-    def __useNegativeCmapChanged(self, *a):
+    def __useNegativeCmapChanged(self, *a, **kwa):
         """Called when the :attr:`useNegativeCmap` property changes.
         Enables/disables the :attr:`.Display.brightness` and
-        :attr:`.Display.contrast` properties, and configures limits
-        on the :attr:`clippingRange` and :attr:`displayRange` properties.
+        :attr:`.Display.contrast` properties, and calls
+        :meth:`updateDataRange`.
+
+        :arg updateDatRange: Must be passed as a keyword argument.
+                             If ``True`` (the default), calls
+                             :meth:`updateDataRange`.
         """
 
         if self.useNegativeCmap:
@@ -462,7 +475,8 @@ class ColourMapOpts(object):
             self.display.enableProperty('brightness')
             self.display.enableProperty('contrast')
 
-        self.updateDataRange()
+        if kwa.pop('updateDataRange', True):
+            self.updateDataRange()
             
 
     def __linkLowRangesChanged(self, *a):
