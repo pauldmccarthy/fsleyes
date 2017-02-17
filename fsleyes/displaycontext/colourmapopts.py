@@ -164,9 +164,6 @@ class ColourMapOpts(object):
         *after* the :meth:`.DisplayOpts.__init__` method.
         """
 
-        self.__name = '{}_ColourMapOpts_{}'.format(type(self).__name__,
-                                                   id(self))
-
         # The displayRange property of every child ColourMapOpts
         # instance is linked to the corresponding 
         # Display.brightness/contrast properties, so changes
@@ -182,30 +179,31 @@ class ColourMapOpts(object):
         self.__registered = self.getParent() is not None
         if self.__registered:
 
+            name    = self.getColourMapOptsListenerName()
             display = self.display
 
             display    .addListener('brightness',
-                                    self.__name,
+                                    name,
                                     self.__briconChanged,
                                     immediate=True)
             display    .addListener('contrast',
-                                    self.__name,
+                                    name,
                                     self.__briconChanged,
                                     immediate=True)
             self       .addListener('displayRange',
-                                    self.__name,
+                                    name,
                                     self.__displayRangeChanged,
                                     immediate=True) 
             self       .addListener('useNegativeCmap',
-                                    self.__name,
+                                    name,
                                     self.__useNegativeCmapChanged,
                                     immediate=True)
             self       .addListener('linkLowRanges',
-                                    self.__name,
+                                    name,
                                     self.__linkLowRangesChanged,
                                     immediate=True)
             self       .addListener('linkHighRanges',
-                                    self.__name,
+                                    name,
                                     self.__linkHighRangesChanged,
                                     immediate=True)
 
@@ -230,8 +228,26 @@ class ColourMapOpts(object):
             if self.linkHighRanges:  self.__linkHighRangesChanged()
             if self.useNegativeCmap:
                 self.__useNegativeCmapChanged(updateDataRange=False)
- 
-        self.updateDataRange()
+
+        # If this is the parent ColourMapOpts
+        # instance, its properties need to be
+        # updated. Child instance properties
+        # should inherit the current parent
+        # values.
+        else:
+            self.updateDataRange()
+
+
+    def getColourMapOptsListenerName(self):
+        """Returns the name used by this ``ColourMapOpts`` instance for
+        registering internal property listeners.
+
+        Sibling ``ColourMapOpts``
+        instances need to toggle each other's property listeners (see the
+        :meth:`__toggleListeners` method), so they use this method to
+        retrieve each other's listener names.
+        """
+        return 'ColourMapOpts_{}'.format(id(self))
 
 
     def destroy(self):
@@ -244,13 +260,14 @@ class ColourMapOpts(object):
             return
 
         display = self.display
+        name    = self.getColourMapOptsListenerName()
 
-        display.removeListener('brightness',      self.name)
-        display.removeListener('contrast',        self.name)
-        self   .removeListener('displayRange',    self.name)
-        self   .removeListener('useNegativeCmap', self.name)
-        self   .removeListener('linkLowRanges',   self.name)
-        self   .removeListener('linkHighRanges',  self.name)
+        display.removeListener('brightness',      name)
+        display.removeListener('contrast',        name)
+        self   .removeListener('displayRange',    name)
+        self   .removeListener('useNegativeCmap', name)
+        self   .removeListener('linkLowRanges',   name)
+        self   .removeListener('linkHighRanges',  name)
 
         self.unbindProps(self   .getSyncPropertyName('displayRange'),
                          display,
@@ -403,23 +420,25 @@ class ColourMapOpts(object):
 
         for peer in peers:
 
+            name = peer.getColourMapOptsListenerName()
+
             if not any((peer.display.isSyncedToParent('brightness'),
                         peer.display.isSyncedToParent('contrast'),
                         peer.        isSyncedToParent('displayRange'))):
                 continue
 
-            bri = peer.display.hasListener('brightness',   peer.name)
-            con = peer.display.hasListener('contrast',     peer.name)
-            dr  = peer        .hasListener('displayRange', peer.name)
+            bri = peer.display.hasListener('brightness',   name)
+            con = peer.display.hasListener('contrast',     name)
+            dr  = peer        .hasListener('displayRange', name)
 
             if enable:
-                if bri: peer.display.enableListener('brightness',   peer.name)
-                if con: peer.display.enableListener('contrast',     peer.name)
-                if dr:  peer        .enableListener('displayRange', peer.name)
+                if bri: peer.display.enableListener('brightness',   name)
+                if con: peer.display.enableListener('contrast',     name)
+                if dr:  peer        .enableListener('displayRange', name)
             else:
-                if bri: peer.display.disableListener('brightness',   peer.name)
-                if con: peer.display.disableListener('contrast',     peer.name)
-                if dr:  peer        .disableListener('displayRange', peer.name)
+                if bri: peer.display.disableListener('brightness',   name)
+                if con: peer.display.disableListener('contrast',     name)
+                if dr:  peer        .disableListener('displayRange', name)
                 
 
     def __briconChanged(self, *a):
