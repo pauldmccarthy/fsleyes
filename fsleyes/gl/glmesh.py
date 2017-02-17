@@ -19,7 +19,6 @@ import fsleyes.gl          as fslgl
 import fsleyes.gl.trimesh  as trimesh
 import fsleyes.gl.routines as glroutines
 import fsleyes.gl.textures as textures
-import fsleyes.colourmaps  as fslcmaps
 
 
 class GLMesh(globject.GLObject):
@@ -316,7 +315,7 @@ class GLMesh(globject.GLObject):
         
         # Constant colour
         if not useShader:
-            gl.glColor(*self.getConstantColour())
+            gl.glColor(*opts.getConstantColour())
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
             gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
             gl.glDrawArrays(gl.GL_LINES, 0, vertices.shape[0])
@@ -427,7 +426,7 @@ class GLMesh(globject.GLObject):
 
         gl.glStencilFunc(gl.GL_NOTEQUAL, 0, 255)
 
-        gl.glColor(*self.getConstantColour())
+        gl.glColor(*opts.getConstantColour())
         gl.glBegin(gl.GL_QUADS)
 
         gl.glVertex3f(*clipPlaneVerts[0, :])
@@ -445,25 +444,6 @@ class GLMesh(globject.GLObject):
     def postDraw(self):
         """Overrides :meth:`.GLObject.postDraw`. This method does nothing. """
         pass
-
-    
-    def getConstantColour(self):
-        """Returns the current :attr::`.MeshOpts.colour`, adjusted according
-        to the current :attr:`.Display.brightness`, :attr:`.Display.contrast`,
-        and :attr:`.Display.alpha`.
-        """
-
-        opts    = self.opts
-        display = self.display
-
-        colour = list(fslcmaps.applyBricon(
-            opts.colour[:3],
-            display.brightness / 100.0,
-            display.contrast   / 100.0))
-        
-        colour.append(display.alpha / 100.0)
-
-        return colour
 
 
     def calculateViewport(self, lo, hi, bbox=None):

@@ -899,22 +899,21 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
 
     def __dataRangeChanged(self, *a):
         """Called when the :attr:`.Image.dataRange` property changes.
-        Updates the limits of the :attr:`displayRange` and
-        :attr:`.clippingRange` properties.
+        Calls :meth:`.ColourMapOpts.updateDataRange`.
         """
-        self.updateDataRange()
+        self.updateDataRange(resetDR=False, resetCR=False)
 
 
     def __enableOverrideDataRangeChanged(self, *a):
         """Called when the :attr:`enableOverrideDataRange` property changes.
-        Calls :meth:`__updateDataRange`.
+        Calls :meth:`.ColourMapOpts.updateDataRange`.
         """
         self.updateDataRange()
 
         
     def __overrideDataRangeChanged(self, *a):
         """Called when the :attr:`overrideDataRange` property changes.
-        Calls :meth:`__updateDataRange`.
+        Calls :meth:`.ColourMapOpts.updateDataRange`.
         """ 
         self.updateDataRange() 
 
@@ -972,9 +971,4 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
             self.overlay,
             self.clipImage))
 
-        self.updateDataRange()
-
-        if haveClipImage: clo = self.getClippingRange()[0]
-        else:             clo = self.getDataRange()[    0]
-            
-        self.clippingRange.x = clo, self.clippingRange.xmax
+        self.updateDataRange(resetDR=False)

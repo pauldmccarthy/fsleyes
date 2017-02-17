@@ -645,9 +645,6 @@ actions = TypeDict({
     'OrthoEditProfile.pasteSelection' :
     'Paste the contents of the clipboard into the currently selected image.',
 
-    'ColourMapOpts.resetDisplayRange' :
-    'Reset the display range to the data range.',
-
     # Items in the OverlayListPanel
     'ListItemWidget.save'  : 'Save this overlay to a file',
     'ListItemWidget.group' : 'Link some properties of this overlay '

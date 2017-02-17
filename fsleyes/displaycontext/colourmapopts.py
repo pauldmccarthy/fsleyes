@@ -14,7 +14,6 @@ import logging
 import props
 
 import fsleyes.colourmaps as fslcm
-import fsleyes.actions    as actions
 
 
 log = logging.getLogger(__name__)
@@ -64,7 +63,6 @@ class ColourMapOpts(object):
     .. autosummary::
        :nosignatures:
 
-       resetDisplayRange
        updateDataRange
        getDataRange
        getClippingRange
@@ -267,7 +265,13 @@ class ColourMapOpts(object):
 
     def getDataRange(self):
         """Must be overridden by sub-classes. Must return the range of the
-        data used for colouring as a ``(min, max)`` tuple.
+        data used for colouring as a ``(min, max)`` tuple.  Note that, even
+        
+        if there is no effective data range, you should return two different
+        values for ``min`` and ``max`` (e.g. ``(0, 1)``), because otherwise
+        the relationship between the :attr:`displayRange` and the
+        :attr:`.Display.brightness` and :attr:`.Display.contrast` properties
+        will be corrupted.
         """
         
         raise NotImplementedError('ColourMapOpts.getDataRange must be '
@@ -290,20 +294,19 @@ class ColourMapOpts(object):
         return None
 
 
-    @actions.action
-    def resetDisplayRange(self):
-        """Resets the display range to the data range."""
-
-        if not self.enableOverrideDataRange: drange = self.overlay.dataRange
-        else:                                drange = self.overrideDataRange
-
-        self.displayRange.x = drange
-
-
-    def updateDataRange(self):
+    def updateDataRange(self, resetDR=True, resetCR=True):
         """Must be called by sub-classes whenever the ranges of the underlying
         data or clipping values change.  Configures the minimum/maximum bounds
         of the :attr:`displayRange` and :attr:`clippingRange` properties.
+
+        :arg resetDR: If ``True`` (the default), the :attr:`displayRange`
+                      property will be reset to the data range returned
+                      by :meth:`getDataRange`. Otherwise the existing
+                      value will be preserved.
+        :arg resetCR: If ``True`` (the default), the :attr:`clippingRange` 
+                      property will be reset to the clipping range returned 
+                      by :meth:`getClippingRange`. Otherwise the existing
+                      value will be preserved.
         """
 
         dataMin, dataMax = self.getDataRange()
@@ -329,7 +332,8 @@ class ColourMapOpts(object):
         if clipRange is not None: crmin, crmax = clipRange
         else:                     crmin, crmax = drmin, drmax
 
-        with props.suppress(self, 'displayRange', notify=True):
+        with props.suppress(self, 'displayRange',  notify=True), \
+             props.suppress(self, 'clippingRange', notify=True):
 
             # If display/clipping limit range
             # is 0, we assume that they haven't
@@ -337,6 +341,8 @@ class ColourMapOpts(object):
             drUnset = self.displayRange .xmin == self.displayRange .xmax
             crUnset = self.clippingRange.xmin == self.clippingRange.xmax
             crGrow  = self.clippingRange.xhi  == self.clippingRange.xmax
+            drUnset = resetDR or drUnset
+            crUnset = resetCR or crUnset
 
             log.debug('Updating range limits [dr: {} - {}, ''cr: '
                       '{} - {}]'.format(drmin, drmax, crmin, crmax))

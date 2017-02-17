@@ -15,13 +15,14 @@ import numpy as np
 
 import props
 
-from . import display       as fsldisplay
-from . import colourmapopts as cmapopts
+import fsl.data.image       as fslimage
+import fsl.utils.transform  as transform
 
 import fsleyes.colourmaps   as colourmaps
 import fsleyes.overlay      as fsloverlay
-import fsl.data.image       as fslimage
-import fsl.utils.transform  as transform
+import fsleyes.colourmaps   as fslcmaps
+from . import display       as fsldisplay
+from . import colourmapopts as cmapopts
 
 
 log = logging.getLogger(__name__)
@@ -151,15 +152,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         to the :class:`.DisplayOpts` constructor.
         """
 
+        # Set a default colour 
         colour      = genMeshColour(overlay)
         self.colour = np.concatenate((colour, [1.0]))
 
-        nounbind = kwargs.get('nounbind', [])
-        nounbind.extend(['refImage', 'coordSpace', 'transform'])
-        kwargs['nounbind'] = nounbind
- 
-        fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
-        cmapopts  .ColourMapOpts.__init__(self)
+        # ColourMapOpts.linkLowRanges defaults to
+        # True, which is annoying for surfaces.
+        self.linkLowRanges = False
 
         # A copy of the refImage property
         # value is kept here so, when it
@@ -174,6 +173,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         # method.
         self.__vertexData      = None
         self.__vertexDataRange = None
+
+        nounbind = kwargs.get('nounbind', [])
+        nounbind.extend(['refImage', 'coordSpace', 'transform'])
+        kwargs['nounbind'] = nounbind
+ 
+        fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
+        cmapopts  .ColourMapOpts.__init__(self)
 
         self.addListener('vertexData',
                          self.name,
@@ -259,9 +265,9 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     def getDataRange(self):
         """Overrides the :meth:`.ColourMapOpts.getDisplayRange` method.
         Returns the display range of the currently selected
-        :attr:`vertexData`, or ``(0, 0)`` if none is selected.
+        :attr:`vertexData`, or ``(0, 1)`` if none is selected.
         """
-        if self.__vertexDataRange is None: return (0, 0)
+        if self.__vertexDataRange is None: return (0, 1)
         else:                              return self.__vertexDataRange
             
 
@@ -283,6 +289,24 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         paths     = vdataProp.getChoices(instance=self) + paths
         
         vdataProp.setChoices(paths, instance=self)
+
+    
+    def getConstantColour(self):
+        """Returns the current :attr::`colour`, adjusted according to the
+        current :attr:`.Display.brightness`, :attr:`.Display.contrast`, and
+        :attr:`.Display.alpha`.
+        """
+
+        display = self.display
+
+        colour = list(fslcmaps.applyBricon(
+            self.colour[:3],
+            display.brightness / 100.0,
+            display.contrast   / 100.0))
+        
+        colour.append(display.alpha / 100.0)
+
+        return colour
 
 
     def getReferenceImage(self):
