@@ -346,6 +346,12 @@ OPTIONS = td.TypeDict({
 
     # The order in which properties are listed
     # here is the order in which they are applied.
+    # This is very important - for example,
+    # changing the VolumeOpts.useNegativeCmap
+    # property will result in its display range
+    # being reset. So we need to apply
+    # useNegativeCmap first, and then displayRange
+    # second.
     'Display'        : ['name',
                         'enabled',
                         'overlayType',
@@ -356,14 +362,14 @@ OPTIONS = td.TypeDict({
                         'volume'],
     'VolumeOpts'     : ['linkLowRanges',
                         'linkHighRanges',
+                        'overrideDataRange',
+                        'clipImage',
+                        'useNegativeCmap',
                         'displayRange',
                         'clippingRange',
-                        'overrideDataRange',
                         'invertClipping',
-                        'clipImage',
                         'cmap',
                         'negativeCmap',
-                        'useNegativeCmap',
                         'cmapResolution',
                         'interpolation',
                         'interpolateCmaps',
