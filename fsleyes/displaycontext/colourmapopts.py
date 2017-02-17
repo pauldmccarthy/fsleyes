@@ -188,22 +188,28 @@ class ColourMapOpts(object):
 
             display    .addListener('brightness',
                                     self.__name,
-                                    self.__briconChanged)
+                                    self.__briconChanged,
+                                    immediate=True)
             display    .addListener('contrast',
                                     self.__name,
-                                    self.__briconChanged)
+                                    self.__briconChanged,
+                                    immediate=True)
             self       .addListener('displayRange',
                                     self.__name,
-                                    self.__displayRangeChanged) 
+                                    self.__displayRangeChanged,
+                                    immediate=True) 
             self       .addListener('useNegativeCmap',
                                     self.__name,
-                                    self.__useNegativeCmapChanged)
+                                    self.__useNegativeCmapChanged,
+                                    immediate=True)
             self       .addListener('linkLowRanges',
                                     self.__name,
-                                    self.__linkLowRangesChanged)
+                                    self.__linkLowRangesChanged,
+                                    immediate=True)
             self       .addListener('linkHighRanges',
                                     self.__name,
-                                    self.__linkHighRangesChanged)
+                                    self.__linkHighRangesChanged,
+                                    immediate=True)
 
             # Because displayRange and bri/con are intrinsically
             # linked, it makes no sense to let the user sync/unsync
@@ -311,19 +317,19 @@ class ColourMapOpts(object):
             drmin = min((0,            abs(dataMin)))
             drmax = max((abs(dataMin), abs(dataMax)))
 
+        # Clipping works on >= and <=, so we add
+        # a small offset to the display range limits
+        # (which are equal to the clipping limiits)
+        # so the user can configure the scene such
+        # that no values are clipped.
+        droff  = abs(drmax - drmin) / 100.0
+        drmin -= droff
+        drmax += droff 
+
         if clipRange is not None: crmin, crmax = clipRange
         else:                     crmin, crmax = drmin, drmax
 
-        # Clipping works on >= and <=, so we add
-        # a small offset to the clipping limits
-        # so the user can configure the scene such
-        # that no values are clipped.
-        croff  = abs(crmax - crmin) / 100.0
-        crmin -= croff
-        crmax += croff
-
-        with props.suppress(self, 'displayRange',  notify=True), \
-             props.suppress(self, 'clippingRange', notify=True):
+        with props.suppress(self, 'displayRange', notify=True):
 
             # If display/clipping limit range
             # is 0, we assume that they haven't
@@ -346,8 +352,8 @@ class ColourMapOpts(object):
             # was previously equal to the max
             # clipping range, keep that relationship,
             # otherwise high values will be clipped.
-            if drUnset: self.displayRange .x   = drmin,         drmax
-            if crUnset: self.clippingRange.x   = crmin + croff, crmax
+            if drUnset: self.displayRange .x   = drmin + droff, drmax
+            if crUnset: self.clippingRange.x   = crmin + droff, crmax
             if crGrow:  self.clippingRange.xhi = crmax
 
             # If using absolute range values, the low

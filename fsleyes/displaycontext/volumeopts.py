@@ -832,9 +832,10 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
                          runOnIdle=True)
 
         # We need to listen for changes to clipImage
-        # and to [enable]overrideDataRange. These cannot
-        # be unbound between parent/children, so only the
-        # parent needs to listen.
+        # and to [enable]overrideDataRange, as they
+        # will change the display data range. These
+        # cannot be unbound between parent/children,
+        # so only the parent needs to listen.
         self.__registered = self.getParent() is None
         if self.__registered:
             overlayList.addListener('overlays',
