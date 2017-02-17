@@ -85,7 +85,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     showName = props.Boolean(default=False)
     """If ``True``, the mesh name is shown alongside it.
 
-    .. note:: Not implemented yet.
+    .. note:: Not implemented yet, and maybe never will be.
     """
 
 
@@ -97,6 +97,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
     This property is not currently populated by the ``MeshOpts`` class, but
     is used by sub-classes (e.g. :class:`.GiftiOpts`).
+    """
+
+
+    vertexDataIndex = props.Int(minval=0, maxval=0, default=0, clamped=True)
+    """If :attr:`vertexData` is loaded, and has multiple data points per
+    vertex (e.g. time series), this property controls the index into the
+    data.
     """
 
     
@@ -181,6 +188,9 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
 
+        # TODO Only child instances should
+        #      listen. Alternately, vertexData
+        #      should be in nounbind.
         self.addListener('vertexData',
                          self.name,
                          self.__vertexDataChanged,
@@ -276,6 +286,21 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         Returns ``None`` otherwise.
         """
         return self.__vertexData
+
+    def vertexDataLen(self):
+        """Returns the length (number of data points per vertex) of the
+        currently selected :attr:`vertexData`, or ``0`` if no vertex data is
+        selected.
+        """
+        
+        if self.__vertexData is None:
+            return 0
+        
+        elif len(self.__vertexData.shape) == 1:
+            return 1
+        
+        else:
+            return self.__vertexData.shape[1]
 
 
     def addVertexDataOptions(self, paths):
@@ -594,18 +619,27 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
             if self.vertexData is not None:
                 vdata      = self.overlay.getVertexData(self.vertexData)
                 vdataRange = np.nanmin(vdata), np.nanmax(vdata)
+
+                if len(vdata.shape) == 1:
+                    vdata = vdata.reshape(-1, 1)
                 
         except Exception as e:
 
             # TODO show a warning
             log.warning('Unable to load vertex data from {}: {}'.format(
-                self.vertexData, e))
+                self.vertexData, e, exc_info=True))
 
             vdata      = None
             vdataRange = None
 
         self.__vertexData      = vdata
         self.__vertexDataRange = vdataRange
+        
+        if vdata is not None: npoints = vdata.shape[1]
+        else:                 npoints = 1    
+
+        self.vertexDataIndex = 0 
+        self.setConstraint('vertexDataIndex', 'maxval', npoints - 1)
 
         self.updateDataRange()
 

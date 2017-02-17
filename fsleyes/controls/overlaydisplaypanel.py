@@ -416,6 +416,7 @@ _DISPLAY_PROPS = td.TypeDict({
                         'outlineWidth',
                         'colour',
                         'vertexData',
+                        'vertexDataIndex',
                         'cmap',
                         'cmapResolution',
                         'interpolateCmaps',
@@ -623,7 +624,12 @@ _DISPLAY_WIDGETS = td.TypeDict({
     'MeshOpts.vertexData'   : props.Widget(
         'vertexData',
         labels=_meshVertexDataName),
-        
+    'MeshOpts.vertexDataIndex' : props.Widget(
+        'vertexDataIndex',
+        showLimits=False,
+        dependencies=['vertexData'],
+        enabledWhen=lambda o, vd: vd is not None),
+    
     # TensorOpts
     'TensorOpts.lighting'         : props.Widget('lighting'),
     'TensorOpts.orientFlip'       : props.Widget('orientFlip'),

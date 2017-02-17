@@ -255,6 +255,10 @@ properties = TypeDict({
     'Choose a file which contains data for each vertex - you can colour the '
     'mesh outline according to the values in the file. This only applies '
     'when the mesh outline, and not its cross-section is displayed.',
+    'MeshOpts.vertexDataIndex' :
+    'If you have loaded vertex data with multiple data points for each '
+    'vertex, this control allows you to control the data point that is '
+    'displayed.',
     
     'TensorOpts.lighting'         : 'If enabled, a simple lighting model is '
                                     'used to highlight the tensor '

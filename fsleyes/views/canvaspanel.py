@@ -25,7 +25,6 @@ import fsl.utils.async                             as async
 import fsl.utils.status                            as status
 import fsl.utils.settings                          as fslsettings
 from   fsl.utils.platform  import platform         as fslplatform
-import fsl.data.image                              as fslimage
 import fsleyes.parseargs                           as parseargs
 import fsleyes.strings                             as strings
 import fsleyes.actions                             as actions
@@ -612,7 +611,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         """Manages the triggering of the next movie frame. This method is
         called by :meth:`__movieModeChanged` when :attr:`movieMode` changes
         and when the selected overlay changes, and also by
-        :meth:`__syncMovieUpdate` and :meth:`__unsyncMovieUpdate` while
+        :meth:`__syncMovieRefresh` and :meth:`__unsyncMovieRefresh` while
         the movie loop is running, to trigger the next frame.
 
         :arg startLoop: This is set to ``True`` when called from
@@ -633,6 +632,104 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         return self.__movieRunning
 
+
+    def __canRunMovie(self, overlay, opts):
+        """Returns ``True`` or ``False``, depending on whether movie mode
+        is possible with the given z`overlay`` and ``opts``.
+        """
+
+        import fsl.data.image as fslimage
+        import fsl.data.mesh  as fslmesh
+
+        axis = self.movieAxis
+
+        # 3D movies are good for all overlays
+        if axis < 3:
+            return True
+
+        # 4D Nifti images are all good
+        if isinstance(overlay, fslimage.Nifti) and \
+           len(overlay.shape) > 3              and \
+           overlay.shape[3] > 1                and \
+           isinstance(opts, displayctx.VolumeOpts):
+            return True
+
+        # Mesh surfaces with N-D
+        # vertex data are all good
+        if isinstance(overlay, fslmesh.TriangleMesh) and \
+           opts.vertexDataLen() > 1:
+            return True
+ 
+        return False
+
+
+    def __doMovieUpdate(self, overlay, opts):
+        """Called by :meth:`__movieFrame`. Updates the properties on the
+        given ``opts`` instance to move forward one frame in the movie.
+        """
+
+        axis = self.movieAxis
+
+        def nifti():
+
+            limit = overlay.shape[axis]
+
+            # This method has been called off the props
+            # event queue (see __movieModeChanged).
+            # Therefore, all listeners on the opts.volume
+            # or DisplayContext.location  properties
+            # should be called immediately, in these
+            # assignments.
+            #
+            # When the movie axis == 3 (time), this means
+            # that image texture refreshes should be
+            # triggered and, after the opts.volume
+            # assignment, all affected GLObjects should
+            # return ready() == False.
+            if axis == 3:
+                if opts.volume >= limit - 1: opts.volume  = 0
+                else:                        opts.volume += 1
+
+            else:
+                voxel = opts.getVoxel()
+                if voxel[axis] >= limit - 1: voxel[axis]  = 0
+                else:                        voxel[axis] += 1
+
+                self._displayCtx.location = opts.transformCoords(
+                    voxel, 'voxel', 'display')
+
+        def mesh():
+
+            if axis == 3:
+                limit = opts.vertexDataLen()
+                val   = opts.vertexDataIndex
+
+                if val >= limit - 1: val  = 0
+                else:                val += 1
+
+                opts.vertexDataIndex = val
+
+            else:
+                other()
+
+        def other():
+            
+            bmin, bmax = opts.bounds.getRangea(axis)
+            delta      = (bmax - bmin) / 75.0
+
+            pos = self._displayCtx.location.getPos(axis)
+
+            if pos >= bmax: pos = bmin
+            else:           pos = pos + delta
+
+            self._displayCtx.location.setPos(axis, pos)
+
+        import fsl.data.image as fslimage
+        import fsl.data.mesh  as fslmesh
+
+        if   isinstance(overlay, fslimage.Nifti):       nifti()
+        elif isinstance(overlay, fslmesh.TriangleMesh): mesh()
+        else:                                           other()
 
 
     def __movieFrame(self):
@@ -657,11 +754,8 @@ class CanvasPanel(viewpanel.ViewPanel):
             return False
 
         opts = self._displayCtx.getOpts(overlay)
-        axis = self.movieAxis
-        
-        if not isinstance(overlay, fslimage.Nifti) or \
-           len(overlay.shape) <= axis              or \
-           not isinstance(opts, displayctx.VolumeOpts):
+
+        if not self.__canRunMovie(overlay, opts):
             return False
 
         # We want the canvas refreshes to be
@@ -672,31 +766,7 @@ class CanvasPanel(viewpanel.ViewPanel):
             c.FreezeDraw()
             c.FreezeSwapBuffers()
 
-        limit = overlay.shape[axis]
-
-        # This method has been called off the props
-        # event queue (see __movieModeChanged).
-        # Therefore, all listeners on the opts.volume
-        # or DisplayContext.location  properties
-        # should be called immediately, in these
-        # assignments.
-        #
-        # When the movie axis == 3 (time), this means
-        # that image texture refreshes should be
-        # triggered and, after the opts.volume
-        # assignment, all affected GLObjects should
-        # return ready() == False.
-        if axis == 3:
-            if opts.volume >= limit - 1: opts.volume  = 0
-            else:                        opts.volume += 1
-            
-        else:
-            voxel = opts.getVoxel()
-            if voxel[axis] >= limit - 1: voxel[axis]  = 0
-            else:                        voxel[axis] += 1
-
-            self._displayCtx.location = opts.transformCoords(
-                voxel, 'voxel', 'display')
+        self.__doMovieUpdate(overlay, opts)
 
         # Now we get refs to *all* GLObjects managed
         # by every canvas - we have to wait until
@@ -720,15 +790,15 @@ class CanvasPanel(viewpanel.ViewPanel):
         rate    = (rateMin + (rateMax - rate)) / 1000.0
 
         # The canvas refreshes are performed by the
-        # __syncMovieUpdate or __unsyncMovieUpdate
+        # __syncMovieRefresh or __unsyncMovieRefresh
         # methods. Gallium seems to have a problem
         # with separate renders/buffer swaps, so we
         # have to use a shitty unsynchronised update
         # routine.
         useSync = 'gallium' not in fslplatform.glRenderer.lower()
 
-        if useSync: update = self.__syncMovieUpdate
-        else:       update = self.__unsyncMovieUpdate
+        if useSync: update = self.__syncMovieRefresh
+        else:       update = self.__unsyncMovieRefresh
 
         # Refresh the canvases when all
         # GLObjects are ready to be drawn.
@@ -737,7 +807,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         return True
 
 
-    def __unsyncMovieUpdate(self, canvases, rate):
+    def __unsyncMovieRefresh(self, canvases, rate):
         """Called by :meth:`__movieUpdate`. Updates all canvases in an
         unsynchronised manner.
 
@@ -761,7 +831,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         async.idle(self.__movieLoop, after=rate)
 
 
-    def __syncMovieUpdate(self, canvases, rate):
+    def __syncMovieRefresh(self, canvases, rate):
         """Updates all canvases in a synchronised manner. All canvases are
         refreshed, and then the front/back buffers are swapped on each of
         them.

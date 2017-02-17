@@ -162,6 +162,7 @@ class GLMesh(globject.GLObject):
         opts   .addListener('outline',          name, refresh,     weak=False)
         opts   .addListener('outlineWidth',     name, refresh,     weak=False)
         opts   .addListener('vertexData',       name, refresh,     weak=False)
+        opts   .addListener('vertexDataIndex',  name, refresh,     weak=False)
         opts   .addListener('clippingRange',    name, shader,      weak=False)
         opts   .addListener('invertClipping',   name, shader,      weak=False)
         opts   .addListener('cmap',             name, refreshCmap, weak=False)
@@ -186,6 +187,7 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('outline',          self.name)
         self.opts   .removeListener('outlineWidth',     self.name)
         self.opts   .removeListener('vertexData',       self.name)
+        self.opts   .removeListener('vertexDataIndex',  self.name)
         self.opts   .removeListener('clippingRange',    self.name)
         self.opts   .removeListener('invertClipping',   self.name)
         self.opts   .removeListener('cmap',             self.name)
@@ -563,10 +565,13 @@ class GLMesh(globject.GLObject):
         If ``MeshOpts.vertexData is None``, this method returns ``None``.
         """
 
-        vdata = self.opts.getVertexData()
+        opts  = self.opts
+        vdata = opts.getVertexData()
 
         if vdata is None:
             return None
+
+        vdata = vdata[:, opts.vertexDataIndex]
 
         vdata = vdata[faces].repeat(2, axis=0).reshape(-1, 2, 3)
         vdata = (vdata * contribs).reshape(-1, 3).sum(axis=1)
