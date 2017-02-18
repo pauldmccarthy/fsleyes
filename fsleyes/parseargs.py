@@ -360,6 +360,16 @@ OPTIONS = td.TypeDict({
                         'contrast'],
     'NiftiOpts'      : ['resolution',
                         'volume'],
+    
+    # n.b. I could list the ColourMapOpts
+    # properties separately here, and
+    # eliminate duplication  across e.g.
+    # the VolumeOpts and MeshOpts lists.
+    # But I'm a bit wary of the interaction
+    # between the CMOpts and the clipImage/
+    # overrideDataRange properties, so am
+    # listing them separately until I can
+    # be bothered to test.
     'VolumeOpts'     : ['linkLowRanges',
                         'linkHighRanges',
                         'overrideDataRange',
@@ -396,11 +406,24 @@ OPTIONS = td.TypeDict({
                         'unitLength',
                         'lengthScale'],
     'RGBVectorOpts'  : ['interpolation'],
-    'MeshOpts'       : ['colour',
+    'MeshOpts'       : ['vertexData',
+                        'vertexDataIndex',
+                        'colour',
                         'outline',
                         'outlineWidth',
                         'refImage',
-                        'coordSpace'],
+                        'coordSpace',
+                        'linkLowRanges',
+                        'linkHighRanges',
+                        'useNegativeCmap',
+                        'displayRange',
+                        'clippingRange',
+                        'invertClipping',
+                        'cmap',
+                        'negativeCmap',
+                        'cmapResolution',
+                        'interpolateCmaps',
+                        'invert'],
     'GiftiOpts'      : [],
     'TensorOpts'     : ['lighting',
                         'orientFlip',
@@ -578,20 +601,21 @@ ARGUMENTS = td.TypeDict({
     'NiftiOpts.resolution'   : ('r',  'resolution', True),
     'NiftiOpts.volume'       : ('v',  'volume',     True),
 
-    'VolumeOpts.displayRange'      : ('dr',  'displayRange',      True),
-    'VolumeOpts.clippingRange'     : ('cr',  'clippingRange',     True),
+    'ColourMapOpts.displayRange'     : ('dr',  'displayRange',     True),
+    'ColourMapOpts.clippingRange'    : ('cr',  'clippingRange',    True),
+    'ColourMapOpts.invertClipping'   : ('ic',  'invertClipping',   False),
+    'ColourMapOpts.cmap'             : ('cm',  'cmap',             True),
+    'ColourMapOpts.negativeCmap'     : ('nc',  'negativeCmap',     True),
+    'ColourMapOpts.useNegativeCmap'  : ('un',  'useNegativeCmap',  False),
+    'ColourMapOpts.cmapResolution'   : ('cmr', 'cmapResolution',   True),
+    'ColourMapOpts.interpolateCmaps' : ('inc', 'interpolateCmaps', False),
+    'ColourMapOpts.invert'           : ('i',   'invert',           False),
+    'ColourMapOpts.linkLowRanges'    : ('ll',  'unlinkLowRanges',  True),
+    'ColourMapOpts.linkHighRanges'   : ('lh',  'linkHighRanges',   True),
+
     'VolumeOpts.overrideDataRange' : ('or',  'overrideDataRange', True),
-    'VolumeOpts.invertClipping'    : ('ic',  'invertClipping',    False),
     'VolumeOpts.clipImage'         : ('cl',  'clipImage',         True),
-    'VolumeOpts.cmap'              : ('cm',  'cmap',              True),
-    'VolumeOpts.negativeCmap'      : ('nc',  'negativeCmap',      True),
-    'VolumeOpts.useNegativeCmap'   : ('un',  'useNegativeCmap',   False),
-    'VolumeOpts.cmapResolution'    : ('cmr', 'cmapResolution',    True),
     'VolumeOpts.interpolation'     : ('in',  'interpolation',     True),
-    'VolumeOpts.interpolateCmaps'  : ('inc', 'interpolateCmaps',  False),
-    'VolumeOpts.invert'            : ('i',   'invert',            False),
-    'VolumeOpts.linkLowRanges'     : ('ll',  'unlinkLowRanges',   True),
-    'VolumeOpts.linkHighRanges'    : ('lh',  'linkHighRanges',    True),
 
     'MaskOpts.colour'    : ('mc', 'maskColour', False),
     'MaskOpts.invert'    : ('i',  'maskInvert', False),
@@ -623,11 +647,13 @@ ARGUMENTS = td.TypeDict({
     'TensorOpts.tensorResolution' : ('tr', 'tensorResolution', True),
     'TensorOpts.tensorScale'      : ('s',  'scale',            True),
 
-    'MeshOpts.colour'       : ('mc', 'colour',       True),
-    'MeshOpts.outline'      : ('o',  'outline',      False),
-    'MeshOpts.outlineWidth' : ('w',  'outlineWidth', True),
-    'MeshOpts.refImage'     : ('r',  'refImage',     True),
-    'MeshOpts.coordSpace'   : ('s',  'coordSpace',   True),
+    'MeshOpts.colour'          : ('mc',  'colour',          True),
+    'MeshOpts.outline'         : ('o',   'outline',         False),
+    'MeshOpts.outlineWidth'    : ('w',   'outlineWidth',    True),
+    'MeshOpts.refImage'        : ('r',   'refImage',        True),
+    'MeshOpts.coordSpace'      : ('s',   'coordSpace',      True),
+    'MeshOpts.vertexData'      : ('vd',  'vertexData',      True),
+    'MeshOpts.vertexDataIndex' : ('vdi', 'vertexDataIndex', True),
 
     'LabelOpts.lut'          : ('l',  'lut',          True),
     'LabelOpts.outline'      : ('o',  'outline',      False),
@@ -745,32 +771,34 @@ HELP = td.TypeDict({
     'NiftiOpts.resolution' : 'Voxel resolution (mm)',
     'NiftiOpts.volume'     : 'Volume (index, starting from 0)',
 
-    'VolumeOpts.displayRange'      : 'Display range. Setting this will '
-                                     'override brightnes/contrast settings.',
-    'VolumeOpts.clippingRange'     : 'Clipping range. Setting this will '
-                                     'override the low display range (unless '
-                                     'low ranges are unlinked).',
+    'ColourMapOpts.displayRange'      : 'Display range. Setting this will '
+                                        'override brightnes/contrast '
+                                        'settings.',
+    'ColourMapOpts.clippingRange'     : 'Clipping range. Setting this will '
+                                        'override the low display range '
+                                        '(unless low ranges are unlinked).',
+    'ColourMapOpts.invertClipping'    : 'Invert clipping',
+    'ColourMapOpts.cmap'              : 'Colour map',
+    'ColourMapOpts.negativeCmap'      : 'Colour map for negative values '
+                                        '(only used if the negative '
+                                        'colour map is enabled)',
+    'ColourMapOpts.cmapResolution'    : 'Colour map resolution',
+    'ColourMapOpts.useNegativeCmap'   : 'Use negative colour map',
+    'ColourMapOpts.interpolateCmaps'  : 'Interpolate between colours '
+                                        'in colour maps',
+    'ColourMapOpts.invert'            : 'Invert colour map',
+    'ColourMapOpts.linkLowRanges'     : 'Unlink low display/clipping ranges',
+    'ColourMapOpts.linkHighRanges'    : 'Link high display/clipping ranges',
+    
     'VolumeOpts.overrideDataRange' : 'Override data range. Setting this '
                                      'effectively causes FSLeyes to ignore '
                                      'the actual image data range, and use '
                                      'this range instead. This is useful for '
                                      'images with a large data range that is '
-                                     'driven by outliers.' ,
-    'VolumeOpts.invertClipping'    : 'Invert clipping',
+                                     'driven by outliers.' , 
     'VolumeOpts.clipImage'         : 'Image containing clipping values '
-                                     '(defaults to the image itself)' ,
-    'VolumeOpts.cmap'              : 'Colour map',
-    'VolumeOpts.negativeCmap'      : 'Colour map for negative values '
-                                     '(only used if the negative '
-                                     'colour map is enabled)',
-    'VolumeOpts.cmapResolution'    : 'Colour map resolution',
-    'VolumeOpts.useNegativeCmap'   : 'Use negative colour map',
+                                     '(defaults to the image itself)' , 
     'VolumeOpts.interpolation'     : 'Interpolation',
-    'VolumeOpts.interpolateCmaps'  : 'Interpolate between colours '
-                                     'in colour maps',
-    'VolumeOpts.invert'            : 'Invert colour map',
-    'VolumeOpts.linkLowRanges'     : 'Unlink low display/clipping ranges',
-    'VolumeOpts.linkHighRanges'    : 'Link high display/clipping ranges',
 
     'MaskOpts.colour'    : 'Colour (0-1)',
     'MaskOpts.invert'    : 'Invert',
@@ -814,7 +842,15 @@ HELP = td.TypeDict({
     'MeshOpts.refImage'     : 'Reference image for mesh',
     'MeshOpts.coordSpace'   : 'Mesh vertex coordinate space '
                               '(relative to reference image)',
-
+    'MeshOpts.vertexData' :
+    'A file (GIFTI functional, shape, label, or time series file, or '
+    'a plain text file) containing one or more values for each vertex '
+    'in the mesh.',
+    'MeshOpts.vertexDataIndex' :
+    'If the vertex data (-vd/--vertexData) file contains more than '
+    'one value per vertex, specify the the index of the data to '
+    'display.',
+    
     'TensorOpts.lighting'         : 'Disable lighting effect',
     'TensorOpts.tensorResolution' : 'Tensor resolution/quality '
                                     '(4-20, default: 10)',
@@ -832,7 +868,7 @@ HELP = td.TypeDict({
                                'determined from image [up to 16], '
                                'default: maximum)',
     'SHOpts.size'            : 'FOD size (10-500, default: 100)', 
-    'SHOpts.lighting'        : 'Enable lighting effect',
+    'SHOpts.lighting'        : 'Enable dodgy lighting effect',
     'SHOpts.radiusThreshold' : 'Hide FODs with radius less than this '
                                '(min: 0, max: 1, default: 0.05)',
     'SHOpts.colourMode'      : 'Colour by \'direction\' or \'radius\' '
@@ -902,12 +938,34 @@ def getExtra(target, propName, default=None):
         'alpha' : False,
     }
 
+    # MeshOpts.vertexData is a Choice
+    # property, but needs to accept
+    # any value on the command line
+    vertexDataSettings = {
+        
+        'metavar' : 'FILE',
+        'choices' : None,
+        'useAlts' : False,
+    }
+
 
     allSettings = {
         ('Display',                 'overlayType')  : overlayTypeSettings,
         (fsldisplay.Display,        'overlayType')  : overlayTypeSettings,
         ('LabelOpts',               'lut')          : lutSettings,
         (fsldisplay.LabelOpts,      'lut')          : lutSettings,
+        ('ColourMapOpts',           'cmap')         : cmapSettings,
+        (fsldisplay.ColourMapOpts,  'cmap')         : cmapSettings,
+        ('ColourMapOpts',           'negativeCmap') : cmapSettings,
+        (fsldisplay.ColourMapOpts,  'negativeCmap') : cmapSettings,
+        ('MeshOpts',                'cmap')         : cmapSettings,
+        (fsldisplay.MeshOpts,       'cmap')         : cmapSettings,
+        ('GiftiOpts',               'negativeCmap') : cmapSettings,
+        (fsldisplay.GiftiOpts,      'negativeCmap') : cmapSettings,
+        ('GiftiOpts',               'cmap')         : cmapSettings,
+        (fsldisplay.GiftiOpts,      'cmap')         : cmapSettings,
+        ('MeshOpts',                'negativeCmap') : cmapSettings,
+        (fsldisplay.MeshOpts,       'negativeCmap') : cmapSettings, 
         ('VolumeOpts',              'cmap')         : cmapSettings,
         (fsldisplay.VolumeOpts,     'cmap')         : cmapSettings,
         ('VolumeOpts',              'negativeCmap') : cmapSettings,
@@ -956,13 +1014,19 @@ def getExtra(target, propName, default=None):
         (fsldisplay.MeshOpts,       'colour')       : colourSettings,
         ('GiftiOpts',               'colour')       : colourSettings,
         (fsldisplay.GiftiOpts,      'colour')       : colourSettings,
+        ('MeshOpts',                'vertexData')   : vertexDataSettings,
+        (fsldisplay.MeshOpts,       'vertexData')   : vertexDataSettings,
+        ('GiftiOpts',               'vertexData')   : vertexDataSettings,
+        (fsldisplay.GiftiOpts,      'vertexData')   : vertexDataSettings,
 
     }
 
     return allSettings.get((target, propName), None)
 
 
-# File options need special treatment
+# Options which expect a file that
+# needs to be loaded as an overlay
+# need special treatment.
 FILE_OPTIONS = td.TypeDict({
     'Main'       : ['displaySpace'],
     'VolumeOpts' : ['clipImage'],
@@ -1828,7 +1892,12 @@ def _printFullHelp(mainParser):
 
         groupDesc = '\n  '.join(textwrap.wrap(groupDesc, 60))
 
-        helpText += '\n' + groupName + ':\n'
+        nchars    = len(groupName)
+        groupName = '#' * nchars + '\n' + \
+                    groupName    + '\n' + \
+                    '#' * nchars + '\n'
+
+        helpText += '\n' + groupName + '\n'
         if groupDesc is not None:
             helpText += '  ' + groupDesc + '\n'
 
@@ -2165,7 +2234,8 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
 
     """
 
-    import fsleyes.actions.loadoverlay as loadoverlay
+    import fsleyes.actions.loadoverlay    as loadoverlay
+    import fsleyes.actions.loadvertexdata as loadvertexdata
 
     # The fsleyes.overlay.loadOverlay function
     # works asynchronously - this function will
@@ -2294,6 +2364,14 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                 if orientFlip is not None:
                     opts.orientFlip = not opts.orientFlip
                     setattr(optArgs, 'orientFlip', opts.orientFlip)
+
+            # 
+            if isinstance(opts, fsldisplay.MeshOpts) and \
+               optArgs.vertexData is not None:
+                
+                loadvertexdata.loadVertexData(overlay,
+                                              displayCtx,
+                                              optArgs.vertexData)
 
             # After handling the special cases
             # above, we can apply the CLI

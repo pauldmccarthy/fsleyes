@@ -107,6 +107,7 @@ class GLMesh(globject.GLObject):
         self.refreshCmapTextures()
 
         fslgl.glmesh_funcs.compileShaders(self)
+        fslgl.glmesh_funcs.updateShaderState(self)
 
         
     def destroy(self):

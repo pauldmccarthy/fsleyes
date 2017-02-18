@@ -5,7 +5,8 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`LoadVertexDataAction`, which allows
-the user to load vertex data for a :class:`.TriangleMesh` overlay.
+the user to load vertex data for a :class:`.TriangleMesh` overlay. A
+standalone function, :func:`loadVertexData` is also provided.
 """
 
 
@@ -78,7 +79,6 @@ class LoadVertexDataAction(action.Action):
 
         app     = wx.GetApp()
         overlay = self.__displayCtx.getSelectedOverlay()
-        opts    = self.__displayCtx.getOpts(overlay)
         fromDir = op.dirname(overlay.dataSource)
 
         msg = strings.messages[self, 'loadVertexData'].format(overlay.name)
@@ -94,12 +94,7 @@ class LoadVertexDataAction(action.Action):
         path = dlg.GetPath()
 
         try:
-
-            # Force the overlay to
-            # load the vertex data
-            overlay.getVertexData(path)
-            opts.addVertexDataOptions([path])
-            opts.vertexData = path
+            loadVertexData(overlay, self.__displayCtx, path)
             
         except Exception as e:
 
@@ -110,3 +105,35 @@ class LoadVertexDataAction(action.Action):
                 app.GetTopWindow(),
                 message=msg,
                 style=wx.ICON_ERROR).ShowModal() 
+
+
+def loadVertexData(overlay, displayCtx, filename):
+    """Attempt to load the specified vertex data for the given overlay.
+
+    :arg overlay:    The overlay (assumed to be a :class:`.TriangleMesh`
+                     instance)
+
+    :arg displayCtx: The :class:`.DisplayContext`
+
+    :arg filename:   Path to the vertex data file that is to be loaded.
+    """
+
+    opts = displayCtx.getOpts(overlay)
+
+    # The sole reason that this function exists is because
+    # MeshOpts.vertexData is a props.Choice property, which
+    # can only take one of a fixed set of values. So when
+    # we want to load some data from a file that is not in
+    # the possible values, we need to add the file as an
+    # option before selecting it. A bit silly.
+
+    # Force the overlay to load
+    # the vertex data. This will
+    # throw an error if the file
+    # is unrecognised.
+    overlay.getVertexData(filename)
+
+    # Add the file as an
+    # option, then select it.
+    opts.addVertexDataOptions([filename])
+    opts.vertexData = filename
