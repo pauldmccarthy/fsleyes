@@ -72,7 +72,6 @@ def drawColouredOutline(self, vertices, vdata):
 
     self.shader.load()
 
-
     self.shader.setAtt('vertexData', vdata)
     self.shader.setAtt('vertex',     vertices)
 
