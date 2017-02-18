@@ -119,6 +119,19 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     as the reference image.
     """
 
+    
+    useLut = props.Boolean(default=False)
+    """If ``True``, and if some :attr:`vertexData` is loaded, the :attr:`lut`
+    is used to colour vertex values instead of the :attr:`cmap` and
+    :attr:`negativeCmap`.
+    """
+
+
+    lut = props.Choice()
+    """If :attr:`useLut` is ``True``, a :class:`.LookupTable` is used to
+    colour vertex data instead of the :attr:`cmap`/:attr:`negativeCmap`.
+    """
+
 
     # This property is implicitly tightly-coupled to
     # the NiftiOpts.getTransform method - the choices
@@ -286,6 +299,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         Returns ``None`` otherwise.
         """
         return self.__vertexData
+
 
     def vertexDataLen(self):
         """Returns the length (number of data points per vertex) of the

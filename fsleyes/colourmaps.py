@@ -331,7 +331,10 @@ def registerColourMap(cmapFile,
 
     import fsleyes.displaycontext as fsldisplay
     
-    # A list of all DisplayOpts colour map properties
+    # A list of all DisplayOpts colour map properties.
+    # n.b. We can't simply list the ColourMapOpts class
+    # here, because it is a mixin, and does not actually
+    # derive from props.HasProperties.
     # 
     # TODO Any new DisplayOpts sub-types which have a 
     #      colour map will need to be patched here
@@ -423,23 +426,30 @@ def registerLookupTable(lut,
 
     import fsleyes.displaycontext as fsldisplay
 
+    # See similar situation in the registerColourMap
+    # function above. All DisplayOpts classes which
+    # have a lut property (assumed to be a props.Choice)
+    # must have the new LUT added as an option.
+    lutProps = []
+    lutProps.append((fsldisplay.LabelOpts, 'lut'))
+    lutProps.append((fsldisplay.MeshOpts,  'lut'))
+
     # Update the lut property for
     # any existing label overlays
     for overlay in overlayList:
         opts = displayCtx.getOpts(overlay)
 
-        if not isinstance(opts, fsldisplay.LabelOpts):
-            continue
-
-        lutChoice = opts.getProp('lut')
-        lutChoice.addChoice(lut,
-                            alternate=list(set((lut.name, key))),
-                            instance=opts)
+        for cls, propName in lutProps:
+            if isinstance(opts, cls):
+                prop = opts.getProp(propName)
+                prop.addChoice(lut,
+                               alternate=list(set((lut.name, key))),
+                               instance=opts)
 
     # and for any future label overlays
-    fsldisplay.LabelOpts.lut.addChoice(
-        lut,
-        alternate=list(set((lut.name, key))))
+    for cls, propName in lutProps:
+        prop = cls.getProp(propName)
+        prop.addChoice(lut, alternate=list(set((lut.name, key))))
     
     return lut
 

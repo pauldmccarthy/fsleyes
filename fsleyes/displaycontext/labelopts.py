@@ -11,8 +11,7 @@ atlas images, tissue segmentation images, and so on.
 
 import props
 
-import fsleyes.colourmaps as fslcm
-from . import                volumeopts
+from . import volumeopts
 
 
 class LabelOpts(volumeopts.NiftiOpts):
@@ -64,13 +63,6 @@ class LabelOpts(volumeopts.NiftiOpts):
         if   lut == 'mgh-subcortical': lut = 'mgh-subcortical'
         else:                          lut = 'random'
 
-        # TODO this only needs to be done on
-        #      the first LabelOpts instance
-        luts  = fslcm.getLookupTables()
-        alts  = [list(set((l.name, l.key))) for l in luts]
-
-        lutChoice = self.getProp('lut')
-        lutChoice.setChoices(luts, alternates=alts)
         self.lut  = lut
 
         volumeopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)

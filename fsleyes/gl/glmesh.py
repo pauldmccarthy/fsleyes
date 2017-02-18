@@ -33,6 +33,7 @@ class GLMesh(globject.GLObject):
     A ``GLMesh`` is rendered in one of two different ways, depending upon
     the  value of the :attr:`.MeshOpts.outline`  property.
 
+
     If ``MeshOpts.outline is False``, a filled cross-section of the mesh is
     drawn. This is accomplished using a three-pass technique, roughly
     following that described at
@@ -46,16 +47,21 @@ class GLMesh(globject.GLObject):
      3. This intersection (of the mesh with a plane at the slice Z location)
         is then rendered to the canvas.
 
+
     This cross-section is filled with the :attr:`.MeshOpts.colour` property.
+
 
     If ``MeshOpts.outline is True``, the :func:`.trimesh.mesh_plane` function
     is used to calculate the intersection of the mesh triangles with the
     viewing plane. Theese lines are then rendered as ``GL_LINES`` primitives.
-    
+
+
     These lines will either be coloured with the ``MeshOpts.colour``, or
     will be coloured according to the :attr:`.MeshOpts.vertexData`, in which
     case the properties of the :class:`.ColourMapOpts` class (from which the
-    :class:`.MeshOpts` class derives) come into effect.
+    :class:`.MeshOpts` class derives) come into effect. Or, if the
+    :attr:`.MeshOpts.useLut` property is ``True``, the :attr:`.MeshOpts.lut`
+    is used.
 
     
     When ``MeshOpts.outline is True``, and ``MeshOpts.vertexData is not
