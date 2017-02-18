@@ -366,17 +366,26 @@ class GLObjectRenderTexture(RenderTexture):
         """Updates the size of this ``GLObjectRenderTexture``, basing it
         on the resolution returned by the :meth:`.GLObject.getDataResolution`
         method. If that method returns ``None``, a default resolution is used.
-        
         """
         globj  = self.__globj
         maxRes = self.__maxResolution
 
         resolution = globj.getDataResolution(self.__xax, self.__yax)
 
+        # Default resolution is based on the canvas size
         if resolution is None:
-            resolution = [256, 256, 256]
+
+            size                   = gl.glGetIntegerv(gl.GL_VIEWPORT)
+            width                  = size[2]
+            height                 = size[3] 
+            resolution             = [100] * 3
+            resolution[self.__xax] = width
+            resolution[self.__yax] = height
+            
             log.debug('Using default resolution '
-                      'for GLObject {}'.format(type(globj).__name__))
+                      'for GLObject {}: {}'.format(
+                          type(globj).__name__,
+                          resolution))
 
         width  = resolution[self.__xax]
         height = resolution[self.__yax]

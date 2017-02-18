@@ -228,16 +228,6 @@ class GLMesh(globject.GLObject):
         return (self.opts.bounds.getLo(),
                 self.opts.bounds.getHi()) 
 
-    
-    def getDataResolution(self, xax, yax):
-        """Overrides :meth:`.GLObject.getDataResolution`. Returns a 
-        resolution (in pixels), along each display coordinate system axis,
-        suitable for drawing this ``GLMesh``.
-        """
-        # TODO Base this on the current screen
-        #      size (adjusted for aspect ratio)
-        raise NotImplementedError()
- 
 
     def preDraw(self):
         """Overrides :meth:`.GLObject.preDraw`. Sets the size of the backing
@@ -457,6 +447,7 @@ class GLMesh(globject.GLObject):
 
         xax = self.xax
         yax = self.yax
+        # TODO Does not support flattened surfaces (with z bounds of [0, 0])
 
         if bbox is not None and (lo[xax] < bbox[xax][0] or
                                  hi[xax] < bbox[xax][1] or
