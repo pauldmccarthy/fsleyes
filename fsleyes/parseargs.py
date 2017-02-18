@@ -1455,23 +1455,40 @@ def parseArgs(mainParser,
     # expect an argument - we need to overlook
     # any arguments which look like file names,
     # but are actually values associated with
-    # any of these arguments.
+    # any of these arguments. We separate out
+    # the main arguments, and overlay arguments,
+    # because there might be overlap between
+    # them.
     #
     # TODO This procedure does not support
-    #      options which may expect multiple
-    #      arguments which look like a file
-    #      name. It also doesn't acknowledge
-    #      the fact that general options, and
-    #      options for different DisplayOpts
-    #      types may overlap.
-    #      
-    expectsArgs = set(argOpts)
-    for shortForm, longForm, expects in ARGUMENTS.values():
-        if expects:
-            expectsArgs.add(shortForm)
-            expectsArgs.add(longForm)
+    #      options which may expect more than
+    #      one which may look like a file.
+    #      You could fix this by changing
+    #      the boolean expects flag in the
+    #      ARGUMENTS dict to be the number
+    #      of expected arguments (and then
+    #      skipping over arguments as needed
+    #      in the loop below). But this
+    #      approach would not be able to
+    #      handle options which accept a
+    #      variable number of arguments.
+    #      This is probably an acceptable
+    #      limitation, to be honest.
 
-    log.debug('Identifying overlay paths (ignoring: {})'.format(expectsArgs))
+    mainExpectsArgs = set(argOpts)
+    ovlExpectsArgs  = set()
+    mainGroups      = ['Main', 'SceneOpts', 'OrthoOpts', 'LightBoxOpts']
+    for key, (shortForm, longForm, expects) in ARGUMENTS.items():
+
+        if key[0] in mainGroups: appendTo = mainExpectsArgs
+        else:                    appendTo = ovlExpectsArgs
+        
+        if expects:
+            appendTo.add(shortForm)
+            appendTo.add(longForm)
+
+    log.debug('Identifying overlay paths (ignoring: {})'.format(
+        list(mainExpectsArgs) + list(ovlExpectsArgs)))
 
     # Compile a list of arguments which
     # look like overlay file names
@@ -1479,6 +1496,14 @@ def parseArgs(mainParser,
     ovlTypes = []
     
     for i in range(len(argv)):
+
+        # If we have not yet identified 
+        # any overlays, we are still looking
+        # through the main arguments.
+        # Otherwise we are looking through
+        # overlay arguments.
+        if len(ovlIdxs) == 0: expectsArgs = mainExpectsArgs
+        else:                 expectsArgs = ovlExpectsArgs
 
         # Check that this overlay file was 
         # not a parameter to another argument
