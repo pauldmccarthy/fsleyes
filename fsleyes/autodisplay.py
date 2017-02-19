@@ -134,9 +134,9 @@ def _statImageDisplay(overlay,
        'rendered' not in basename:
 
         maxVal               = overlay.dataRange[1]
+        opts.useNegativeCmap = True
         opts.clippingRange   = [zthres, maxVal]
         opts.displayRange    = [zthres, min((7.5, maxVal))]
-        opts.useNegativeCmap = True
 
     # F stat image?
     elif any([token in basename for token in fStatTokens]):
@@ -169,9 +169,9 @@ def _peImageDisplay(overlay, overlayList, displayCtx):
 
     opts.cmap            = 'Red-Yellow'
     opts.negativeCmap    = 'Blue-LightBlue'
+    opts.useNegativeCmap = True 
     opts.displayRange    = [1.0, 100.0]
     opts.clippingRange   = [1.0, overlay.dataRange[1]]
-    opts.useNegativeCmap = True 
 
 
 def _FEATImageDisplay(overlay, overlayList, displayCtx):
@@ -191,9 +191,9 @@ def _MelodicImageDisplay(overlay, overlayList, displayCtx):
 
     opts.cmap            = 'Red-Yellow'
     opts.negativeCmap    = 'Blue-LightBlue'
+    opts.useNegativeCmap = True
     opts.displayRange    = [3.0, min((10, maxVal))]
     opts.clippingRange   = [3.0, maxVal]
-    opts.useNegativeCmap = True
 
     # Add the mean as an underlay
     idx      = overlayList.index(overlay)
