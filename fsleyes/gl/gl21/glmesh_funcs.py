@@ -12,9 +12,11 @@ A :class:`.GLSLShader` is used to manage the ``glmesh`` vertex/fragment
 shader programs.
 """
 
+
 import OpenGL.GL as gl
 
-import fsleyes.gl.shaders as shaders
+import fsl.utils.transform as transform
+import fsleyes.gl.shaders  as shaders
 
 
 def compileShaders(self):
@@ -48,12 +50,19 @@ def updateShaderState(self):
     """
     self.shader.load()
 
-    opts = self.opts
+    opts       = self.opts
+    useNegCmap = (not opts.useLut) and opts.useNegativeCmap
+
+    if opts.useLut:
+        delta     = 1.0 / (opts.lut.max() + 1)
+        cmapXform = transform.scaleOffsetXform(delta, 0.5 * delta)
+    else:
+        cmapXform = self.cmapTexture.getCoordinateTransform()
     
     self.shader.set('cmap',          0)
     self.shader.set('negCmap',       1)
-    self.shader.set('useNegCmap',    opts.useNegativeCmap)
-    self.shader.set('cmapXform',     self.cmapTexture.getCoordinateTransform())
+    self.shader.set('useNegCmap',    useNegCmap)
+    self.shader.set('cmapXform',     cmapXform)
     self.shader.set('invertClip',    opts.invertClipping)
     self.shader.set('clipLow',       self.opts.clippingRange.xlo)
     self.shader.set('clipHigh',      self.opts.clippingRange.xhi)
@@ -77,13 +86,19 @@ def drawColouredOutline(self, vertices, vdata):
 
     self.shader.loadAtts()
 
-    self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
-    self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
+    if self.opts.useLut:
+        self.lutTexture.bindTexture(gl.GL_TEXTURE0)
+    else:
+        self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
+        self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
 
     gl.glDrawArrays(gl.GL_LINES, 0, vertices.shape[0])
     
     self.shader.unloadAtts()
     self.shader.unload()
-    
-    self.cmapTexture   .unbindTexture()
-    self.negCmapTexture.unbindTexture() 
+
+    if self.opts.useLut:
+        self.lutTexture.unbindTexture()
+    else:
+        self.cmapTexture   .unbindTexture()
+        self.negCmapTexture.unbindTexture() 

@@ -259,6 +259,13 @@ properties = TypeDict({
     'If you have loaded vertex data with multiple data points for each '
     'vertex, this control allows you to control the data point that is '
     'displayed.',
+    'MeshOpts.useLut' :
+    'When selected, a lookup table, instead of the colour maps, is used to '
+    'colour the mesh according to its vertex data. This is useful for '
+    'discrete label data',
+    'MeshOpts.lut' :
+    'The lookup table to use when colouring the mesh with a lookup table '
+    'instead of with the colour maps.',
     
     'TensorOpts.lighting'         : 'If enabled, a simple lighting model is '
                                     'used to highlight the tensor '

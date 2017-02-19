@@ -243,6 +243,11 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
                     widget, extra = self.__buildVertexDataWidget(
                         target, vdataWidget)
                     returnedWidgets.extend([vdataWidget] + list(extra))
+                if p.key == 'lut':
+                    lutWidget   = widget
+                    widget, extra = self.__buildMeshOptsLutWidget(
+                        target, lutWidget)
+                    returnedWidgets.extend([lutWidget] + list(extra)) 
 
             else:
                 returnedWidgets.append(widget)
@@ -323,6 +328,24 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         sizer.Add(loadButton,  flag=wx.EXPAND)
 
         return sizer, []
+
+    
+    def __buildMeshOptsLutWidget(self, target, lutWidget):
+        """Builds a panel which contains the provided :attr:`.MeshOpts.lut`
+        widget, and also a widget for :attr:`.MeshOpts.useLut`.
+        """
+        widgets = self.getWidgetList()
+        
+        # enable lut widget
+        enableWidget = _DISPLAY_WIDGETS[target, 'useLut']
+        enableWidget = props.buildGUI(widgets, target, enableWidget)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        sizer.Add(enableWidget,  flag=wx.EXPAND)
+        sizer.Add(lutWidget, flag=wx.EXPAND, proportion=1)
+        
+        return sizer, [enableWidget] 
 
 
     def __buildOverrideDataRangeWidget(self, target, enableWidget):
@@ -417,6 +440,7 @@ _DISPLAY_PROPS = td.TypeDict({
                         'colour',
                         'vertexData',
                         'vertexDataIndex',
+                        'lut',
                         'cmap',
                         'cmapResolution',
                         'interpolateCmaps',
@@ -446,6 +470,21 @@ _DISPLAY_PROPS = td.TypeDict({
 })
 """This dictionary contains lists of all the properties which are to be
 displayed on an ``OverlayDisplayPanel``.
+"""
+
+
+def meshOptsColourEnabledWhen(opts, vdata, outline, useLut):
+    """Use to enable/disable :class:`.MeshOpts` colour properties.
+    """
+    return outline and (vdata is not None) and (not useLut)
+
+
+meshOptsColourKwargs = {
+    'dependencies' : ['vertexData', 'outline', 'useLut'],
+    'enabledWhen'  : meshOptsColourEnabledWhen
+}
+"""Passed to the widget definitions for various :class:`.MeshOpts`
+properties.
 """
 
 
@@ -629,6 +668,66 @@ _DISPLAY_WIDGETS = td.TypeDict({
         showLimits=False,
         dependencies=['vertexData'],
         enabledWhen=lambda o, vd: vd is not None),
+    'MeshOpts.useLut' : props.Widget(
+        'useLut',
+        dependencies=['outline'],
+        enabledWhen=lambda opts, o: o),
+    'MeshOpts.lut'    : props.Widget(
+        'lut',
+        labels=lambda l: l.name,
+        dependencies=['outline'],
+        enabledWhen=lambda opts, o: o),
+
+    # We override the ColourMapOpts definitions 
+    # above, for custom enabledWhen behaviour.
+    'MeshOpts.cmap'           : props.Widget(
+        'cmap',
+        labels=fslcm.getColourMapLabel,
+        **meshOptsColourKwargs),
+    
+    'MeshOpts.useNegativeCmap' : props.Widget(
+        'useNegativeCmap',
+        **meshOptsColourKwargs),
+    'MeshOpts.negativeCmap'    : props.Widget(
+        'negativeCmap',
+        labels=fslcm.getColourMapLabel,
+        **meshOptsColourKwargs),
+    'MeshOpts.cmapResolution'  : props.Widget(
+        'cmapResolution',
+        slider=True,
+        spin=True,
+        showLimits=False,
+        **meshOptsColourKwargs),
+    'MeshOpts.interpolateCmaps' : props.Widget(
+        'interpolateCmaps',
+        **meshOptsColourKwargs),
+    'MeshOpts.invert'           : props.Widget(
+        'invert',
+        **meshOptsColourKwargs),
+    'MeshOpts.invertClipping'   : props.Widget(
+        'invertClipping',
+        **meshOptsColourKwargs),
+    'MeshOpts.linkLowRanges'    : props.Widget(
+        'linkLowRanges',
+        **meshOptsColourKwargs),
+    'MeshOpts.linkHighRanges' : props.Widget(
+        'linkHighRanges',
+        **meshOptsColourKwargs),
+    'MeshOpts.displayRange'   : props.Widget(
+        'displayRange',
+        showLimits=False,
+        slider=True,
+        labels=[strings.choices['ColourMapOpts.displayRange.min'],
+                strings.choices['ColourMapOpts.displayRange.max']],
+        **meshOptsColourKwargs),
+    'MeshOpts.clippingRange'  : props.Widget(
+        'clippingRange',
+        showLimits=False,
+        slider=True,
+        labels=[strings.choices['ColourMapOpts.displayRange.min'],
+                strings.choices['ColourMapOpts.displayRange.max']],
+        dependencies=['vertexData', 'outline'],
+        enabledWhen=lambda opts, vd, o: (vd is not None) and o),
     
     # TensorOpts
     'TensorOpts.lighting'         : props.Widget('lighting'),

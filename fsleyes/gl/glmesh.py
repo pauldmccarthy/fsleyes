@@ -56,12 +56,16 @@ class GLMesh(globject.GLObject):
     viewing plane. Theese lines are then rendered as ``GL_LINES`` primitives.
 
 
-    These lines will either be coloured with the ``MeshOpts.colour``, or
-    will be coloured according to the :attr:`.MeshOpts.vertexData`, in which
-    case the properties of the :class:`.ColourMapOpts` class (from which the
-    :class:`.MeshOpts` class derives) come into effect. Or, if the
-    :attr:`.MeshOpts.useLut` property is ``True``, the :attr:`.MeshOpts.lut`
-    is used.
+    These lines will be coloured in one of the following ways:
+
+       - With the ``MeshOpts.colour``.
+    
+       - According to the :attr:`.MeshOpts.vertexData` if it is set, in which
+         case the properties of the :class:`.ColourMapOpts` class (from which
+         the :class:`.MeshOpts` class derives) come into effect. 
+
+       - Or, if :attr:`vertexData` is set, and the :attr:`.MeshOpts.useLut`
+         property is ``True``, the :attr:`.MeshOpts.lut` is used.
 
     
     When ``MeshOpts.outline is True``, and ``MeshOpts.vertexData is not
@@ -104,13 +108,26 @@ class GLMesh(globject.GLObject):
         # This texture is kept at display/
         # screen resolution
         self.renderTexture = textures.RenderTexture(self.name, gl.GL_NEAREST)
-        
-        self.cmapTexture    = textures.ColourMapTexture(self.name)
-        self.negCmapTexture = textures.ColourMapTexture(self.name)
 
+        # Mesh overlays are coloured:
+        #
+        #  - with a costant colour (opts.outline == False), or
+        #
+        #  - with a +/- colour map, (opts.outline == True and opts.vertexData
+        #    is not None), or
+        #
+        #  - with a lookup table (opts.outline == True and opts.useLut == True
+        #    and opts.vertexData is not None)
+        self.cmapTexture    = textures.ColourMapTexture(  self.name)
+        self.negCmapTexture = textures.ColourMapTexture(  self.name)
+        self.lutTexture     = textures.LookupTableTexture(self.name)
+
+        self.lut = None
+
+        self.registerLut()
         self.addListeners()
         self.updateVertices()
-        self.refreshCmapTextures()
+        self.refreshCmapTextures(notify=False)
 
         fslgl.glmesh_funcs.compileShaders(self)
         fslgl.glmesh_funcs.updateShaderState(self)
@@ -125,13 +142,17 @@ class GLMesh(globject.GLObject):
         self.renderTexture .destroy()
         self.cmapTexture   .destroy()
         self.negCmapTexture.destroy()
+        self.lutTexture    .destroy()
         
         fslgl.glmesh_funcs.destroy(self)
         self.removeListeners()
+        self.deregisterLut()
 
+        self.lut            = None
         self.renderTexture  = None
         self.cmapTexture    = None
         self.negCmapTexture = None
+        self.lutTexture     = None
         self.overlay        = None
         self.display        = None
         self.opts           = None
@@ -157,10 +178,15 @@ class GLMesh(globject.GLObject):
             self.notify() 
 
         def refreshCmap(*a):
-            self.refreshCmapTextures()
+            self.refreshCmapTextures(notify=False)
             fslgl.glmesh_funcs.updateShaderState(self)
-            self.notify() 
+            self.notify()
 
+        def registerLut(*a):
+            self.deregisterLut()
+            self.registerLut()
+            self.refreshCmapTextures()
+            
         def refresh(*a):
             self.notify()
 
@@ -179,11 +205,13 @@ class GLMesh(globject.GLObject):
         opts   .addListener('interpolateCmaps', name, refreshCmap, weak=False)
         opts   .addListener('invert',           name, refreshCmap, weak=False)
         opts   .addListener('displayRange',     name, refreshCmap, weak=False)
+        opts   .addListener('useLut',           name, shader,      weak=False)
+        opts   .addListener('lut',              name, registerLut, weak=False)
         display.addListener('alpha',            name, refreshCmap, weak=False)
-        display.addListener('brightness',       name, refresh,     weak=False)
-        display.addListener('contrast',         name, refresh,     weak=False)
+        # We don't need to listen for
+        # brightness or contrast, because
+        # they are linked to displayRange.
         
-
         
     def removeListeners(self):
         """Called by :meth:`destroy`. Removes all of the listeners added by
@@ -204,9 +232,33 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('interpolateCmaps', self.name)
         self.opts   .removeListener('invert',           self.name)
         self.opts   .removeListener('displayRange',     self.name)
+        self.opts   .removeListener('useLut',           self.name)
+        self.opts   .removeListener('lut',              self.name)
         self.display.removeListener('alpha',            self.name)
-        self.display.removeListener('brightness',       self.name)
-        self.display.removeListener('contrast',         self.name)
+
+        
+    def registerLut(self):
+        """Registers property listeners with the currently registered
+        :class:`.LookupTable` (the :attr:`.MeshOpts.lut` property).
+        """
+
+        self.lut = self.opts.lut
+
+        if self.lut is not None:
+            for topic in ['label', 'added', 'removed']:
+                self.lut.register(self.name, self.refreshCmapTextures, topic) 
+
+    
+    def deregisterLut(self):
+        """De-registers property listeners from the currently registered
+        :class:`.LookupTable`.
+        """
+
+        if self.lut is not None:
+            for topic in ['label', 'added', 'removed']:
+                self.lut.deregister(self.name, topic)
+
+        self.lut = None
 
 
     def updateVertices(self, *a):
@@ -577,10 +629,20 @@ class GLMesh(globject.GLObject):
         return vdata
 
 
-    def refreshCmapTextures(self):
+    def refreshCmapTextures(self, *a, **kwa):
         """Called when various :class:`.Display` or :class:`.MeshOpts``
-        properties change. Refreshes the :class:`.ColourMapTextures`.
+        properties change. Refreshes the :class:`.ColourMapTexture` instances
+        corresponding to the :attr:`.MeshOpts.cmap` and
+        :attr:`.MeshOpts.negativeCmap` properties, and the
+        :class:`.LookupTableTexture` corresponding to the :attr:`.MeshOpts.lut`
+        property.
+
+        :arg notify: Must be passed as a keyword argument. If ``True`` (the
+                     default) :meth:`.GLObject.notify` is called after the
+                     textures have been updated.
         """
+
+        notify = kwa.pop('notify', True)
 
         display = self.display
         opts    = self.opts
@@ -608,4 +670,12 @@ class GLMesh(globject.GLObject):
                                 alpha=alpha,
                                 resolution=res,
                                 interp=interp,
-                                displayRange=(dmin, dmax))         
+                                displayRange=(dmin, dmax))
+
+        self.lutTexture.set(alpha=display.alpha           / 100.0,
+                            brightness=display.brightness / 100.0,
+                            contrast=display.contrast     / 100.0,
+                            lut=opts.lut) 
+ 
+        if notify:
+            self.notify()

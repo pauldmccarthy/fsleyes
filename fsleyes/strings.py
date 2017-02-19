@@ -859,6 +859,7 @@ properties = TypeDict({
     'MeshOpts.vertexData'      : 'Vertex data',
     'MeshOpts.vertexDataIndex' : 'Vertex data index',
     'MeshOpts.showName'        : 'Show model name',
+    'MeshOpts.lut'             : 'Lookup table',
 
     'LabelOpts.lut'          : 'Look-up table',
     'LabelOpts.outline'      : 'Show outline only',
