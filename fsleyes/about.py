@@ -65,6 +65,11 @@ class AboutDialog(wx.Dialog):
 
             try:
                 mod = __import__(lib)
+
+                # Retrieve the sub-module if necessary
+                for n in lib.split(".")[1:]:
+                    mod = getattr(mod, n)
+
                 if lib == 'PIL':
                     swVer = str(mod.PILLOW_VERSION)
                 else:
