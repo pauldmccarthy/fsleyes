@@ -636,7 +636,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
 
         opts = self._displayCtx.getOpts(overlay)
 
-        if not isinstance(opts, displayctx.LabelOpts):
+        if not isinstance(opts, (displayctx.LabelOpts, displayctx.MeshOpts)):
 
             # If the image is a Melodic image, show
             # the melodic classification lut

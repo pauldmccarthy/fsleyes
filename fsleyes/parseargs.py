@@ -413,6 +413,8 @@ OPTIONS = td.TypeDict({
                         'outlineWidth',
                         'refImage',
                         'coordSpace',
+                        'useLut',
+                        'lut',
                         'linkLowRanges',
                         'linkHighRanges',
                         'useNegativeCmap',
@@ -654,6 +656,8 @@ ARGUMENTS = td.TypeDict({
     'MeshOpts.coordSpace'      : ('s',   'coordSpace',      True),
     'MeshOpts.vertexData'      : ('vd',  'vertexData',      True),
     'MeshOpts.vertexDataIndex' : ('vdi', 'vertexDataIndex', True),
+    'MeshOpts.useLut'          : ('ul',  'useLut',          False),
+    'MeshOpts.lut'             : ('l',   'lut',             True),
 
     'LabelOpts.lut'          : ('l',  'lut',          True),
     'LabelOpts.outline'      : ('o',  'outline',      False),
@@ -850,6 +854,10 @@ HELP = td.TypeDict({
     'If the vertex data (-vd/--vertexData) file contains more than '
     'one value per vertex, specify the the index of the data to '
     'display.',
+    'MeshOpts.useLut' :
+    'Use a lookup table instead of colour map(S) when colouring the mesh '
+    'with vertex data.',
+    'MeshOpts.lut' : 'Lookup table to use  (see -ul/--useLut).', 
     
     'TensorOpts.lighting'         : 'Disable lighting effect',
     'TensorOpts.tensorResolution' : 'Tensor resolution/quality '
@@ -906,10 +914,10 @@ def getExtra(target, propName, default=None):
     } 
 
 
-    # Settings for the LabelOpts.lut property - we don't
-    # want to pre-load all LUTs as it takes too long,
-    # so we're using the scanLookupTables function to
-    # grab the names of all existing LUTs, and then
+    # Settings for the LabelOpts/MeshOpts.lut property -
+    # we don't want to pre-load all LUTs as it takes too
+    # long, so we're using the scanLookupTables function
+    # to grab the names of all existing LUTs, and then
     # using them as the CLI options.
     lutSettings = {
 
@@ -954,6 +962,10 @@ def getExtra(target, propName, default=None):
         (fsldisplay.Display,        'overlayType')  : overlayTypeSettings,
         ('LabelOpts',               'lut')          : lutSettings,
         (fsldisplay.LabelOpts,      'lut')          : lutSettings,
+        ('MeshOpts',                'lut')          : lutSettings,
+        (fsldisplay.MeshOpts,       'lut')          : lutSettings,
+        ('GiftiOpts',               'lut')          : lutSettings,
+        (fsldisplay.GiftiOpts,      'lut')          : lutSettings, 
         ('ColourMapOpts',           'cmap')         : cmapSettings,
         (fsldisplay.ColourMapOpts,  'cmap')         : cmapSettings,
         ('ColourMapOpts',           'negativeCmap') : cmapSettings,
@@ -1080,6 +1092,7 @@ TRANSFORMS = td.TypeDict({
     'LineVectorOpts.unitLength'  : lambda b : not b, 
     'TensorOpts.lighting'        : lambda b : not b,
     'LabelOpts.lut'              : _lutTrans,
+    'MeshOpts.lut'               : _lutTrans,
     # 'SHOpts.lighting'            : lambda b : not b,
 
     # The props.addParserArguments function allows

@@ -56,13 +56,6 @@ class LabelOpts(volumeopts.NiftiOpts):
         # to see if this is the case (again, before
         # calling __init__, so we don't clobber any
         # existing values).
-        lut = str(overlay.header.get('aux_file', 'none')).lower()
-
-        # FIRST sets its segmentation 
-        # aux_file field to mgh-subcortical
-        if   lut == 'mgh-subcortical': lut = 'mgh-subcortical'
-        else:                          lut = 'random'
-
-        self.lut  = lut
+        self.lut = str(overlay.header.get('aux_file', 'random')).lower()
 
         volumeopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)
