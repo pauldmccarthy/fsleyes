@@ -70,14 +70,21 @@ def updateShaderState(self):
     self.shader.unload()
 
     
-def drawColouredOutline(self, vertices, vdata):
+def drawColouredOutline(self, vertices, vdata, indices=None, glType=None):
     """Called when :attr:`.MeshOpts.outline` is ``True``, and
     :attr:`.MeshOpts.vertexData` is not ``None``. Loads and runs the
     shader program.
 
     :arg vertices: ``(n, 3)`` array containing the line vertices to draw.
     :arg vdata:    ``(n, )`` array containing data for each vertex.
+    :arg indices:  Indices into the ``vertices`` array. If not provided,
+                   ``glDrawArrays`` is used.
+    :arg glType:   The OpenGL primitive type. If not provided, ``GL_LINES``
+                   is assumed.
     """
+
+    if glType is None:
+        glType = gl.GL_LINES
 
     self.shader.load()
 
@@ -92,8 +99,14 @@ def drawColouredOutline(self, vertices, vdata):
         self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
         self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
 
-    gl.glDrawArrays(gl.GL_LINES, 0, vertices.shape[0])
-    
+    if indices is None:
+        gl.glDrawArrays(glType, 0, vertices.shape[0])
+    else:
+        gl.glDrawElements(glType,
+                          indices.shape[0],
+                          gl.GL_UNSIGNED_INT,
+                          indices.ravel('C'))
+        
     self.shader.unloadAtts()
     self.shader.unload()
 

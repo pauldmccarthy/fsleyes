@@ -314,10 +314,23 @@ class GLMesh(globject.GLObject):
         zax     = self.zax
         lo,  hi = self.getDisplayBounds()
 
-        if zpos < lo[zax] or zpos > hi[zax]:
+        # Mesh is 2D, and is
+        # perpendicular to
+        # the viewing plane
+        if np.any(np.isclose([lo[xax], lo[yax]], [hi[xax], hi[yax]])):
             return
-        
-        if opts.outline:
+
+        is2D = np.isclose(lo[zax], hi[zax])
+
+        # 2D meshes are always drawn,
+        # regardless of the zpos
+        if not is2D and (zpos < lo[zax] or zpos > hi[zax]):
+            return
+
+        if is2D:
+            self.draw2D(xform, bbox)
+
+        elif opts.outline:
             self.drawOutline(zpos, xform, bbox)
             
         else:
@@ -327,7 +340,10 @@ class GLMesh(globject.GLObject):
             ymin   = lo[yax]
             ymax   = hi[yax]
             tex    = self.renderTexture
-            self.renderCrossSection(zpos, lo, hi, tex)
+
+            if is2D: self.renderCrossSection2D(    lo, hi, tex)
+            else:    self.renderCrossSection(zpos, lo, hi, tex)
+
             tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
 
 
@@ -377,6 +393,48 @@ class GLMesh(globject.GLObject):
             fslgl.glmesh_funcs.drawColouredOutline(self, vertices, vdata)
 
         gl.glPopMatrix()
+
+
+    def draw2D(self, xform=None, bbox=None):
+        """Called by :meth:`draw` for :class:`.TriangleMesh` overlays
+        which are actually 2D (with a flat third dimension).
+        """
+
+        opts      = self.opts
+        vdata     = opts.getVertexData()
+        useShader = vdata is not None
+        vertices  = self.vertices
+        faces     = self.indices
+
+        if opts.outline:
+            gl.glLineWidth(opts.outlineWidth)
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+        else:
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+
+        # Constant colour
+        if not useShader:
+
+            gl.glColor(*opts.getConstantColour())
+            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+
+            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
+            gl.glDrawElements(gl.GL_TRIANGLES,
+                              faces.shape[0],
+                              gl.GL_UNSIGNED_INT,
+                              faces.ravel('C'))
+
+            gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+
+        # Coloured from vertex data
+        else:
+            vdata = vdata[:, opts.vertexDataIndex]
+            fslgl.glmesh_funcs.drawColouredOutline(
+                self, vertices, vdata, faces, gl.GL_TRIANGLES)
+
+        # Reset the polygon mode back to fill
+        if opts.outline:
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
 
     def renderCrossSection(self, zpos, lo, hi, dest):
@@ -506,7 +564,6 @@ class GLMesh(globject.GLObject):
 
         xax = self.xax
         yax = self.yax
-        # TODO Does not support flattened surfaces (with z bounds of [0, 0])
 
         if bbox is not None and (lo[xax] < bbox[xax][0] or
                                  hi[xax] < bbox[xax][1] or
