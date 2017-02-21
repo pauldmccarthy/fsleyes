@@ -154,12 +154,14 @@ def promptForFlirtFiles(parent, overlay, overlayList, displayCtx, save=False):
     
     for ovl in reversed(overlayList):
 
-        if ovl is overlay:                      continue
         if not isinstance(ovl, fslimage.Image): continue
 
         refOptFiles.append(ovl.dataSource)
         refOpts    .append(displayCtx.getDisplay(ovl).name)
 
+        # If a reference file has been
+        # guesed, make sure it is
+        # selected in the drop down box
         if refFile is not None and ovl.dataSource == refFile:
             selectedRef = len(refOpts) - 1
 

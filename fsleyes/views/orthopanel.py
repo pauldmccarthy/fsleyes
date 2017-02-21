@@ -964,6 +964,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         opts = self._displayCtx.getOpts(refImage)
 
         vertOrient = False
+        xorient    = None
+        yorient    = None
+        zorient    = None
         
         # If we are displaying in voxels/scaled voxels,
         # and this image is not the current display
@@ -987,7 +990,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # in the display coordinate system
         else:
 
-            vertOrient = False
             xform      = opts.getTransform('world', 'display')
             xorient    = refImage.getOrientation(0, xform)
             yorient    = refImage.getOrientation(1, xform)
