@@ -405,7 +405,7 @@ class RecentPathManager(notifier.Notifier):
         if recent is None: recent = []
         else:              recent = recent.split(op.pathsep)
 
-        return recent
+        return [f for f in recent if op.exists(f)]
 
 
 recentPathManager = RecentPathManager()
