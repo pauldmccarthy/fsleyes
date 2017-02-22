@@ -170,7 +170,7 @@ def promptForFlirtFiles(parent, overlay, overlayList, displayCtx, save=False):
         refOptFiles = None
 
     dlg = FlirtFileDialog(parent,
-                          overlay.name,
+                          overlay.dataSource,
                           refOpts=refOpts,
                           refOptFiles=refOptFiles,
                           selectedRef=selectedRef,
@@ -498,9 +498,17 @@ class FlirtFileDialog(wx.Dialog):
         if self.__save: style = wx.FD_SAVE
         else:           style = wx.FD_OPEN
 
+        matFile = self.__matFileText.GetValue().strip()
+        if matFile == '':
+            dirName  = op.dirname(self.__srcFile)
+            fileName = 'xform.mat'
+        else:
+            dirName, fileName = op.split(matFile)
+
         dlg = wx.FileDialog(
             self,
-            defaultDir=op.dirname(self.__srcFile),
+            defaultDir=dirName,
+            defaultFile=fileName,
             message=strings.messages[self, 'matFile'],
             style=style)
 
@@ -512,10 +520,14 @@ class FlirtFileDialog(wx.Dialog):
         """Called when the user clicks the reference file select button.
         Displays a file dialog prompting the user to select a reference file.
         """
+
+        refFile = self.__refFileText.GetValue()
+        if refFile == '':
+            refFile = self.__srcFile
         
         dlg = wx.FileDialog(
             self,
-            defaultDir=op.dirname(self.__srcFile),
+            defaultFile=refFile,
             message=strings.messages[self, 'refFile'],
             style=wx.FD_OPEN)
 

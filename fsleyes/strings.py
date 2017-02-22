@@ -680,7 +680,7 @@ labels = TypeDict({
     'Specify a file name for the FLIRT transformation\n'
     'matrix, and choose the corresponding reference image.',
 
-    'FlirtFileDialog.source'              : 'Source image: {}',
+    'FlirtFileDialog.source'              : 'Source image:\n{}',
     'FlirtFileDialog.refChoiceSelectFile' : 'Select file manually',
     'FlirtFileDialog.matFile'             : 'Matrix file',
     'FlirtFileDialog.refFile'             : 'Reference image',
