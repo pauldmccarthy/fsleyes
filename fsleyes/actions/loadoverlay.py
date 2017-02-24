@@ -179,13 +179,10 @@ def loadOverlays(paths,
     # The default error function
     # shows an error dialog
     def defaultErrorFunc(s, e):
-        import wx
-        msg   = strings.messages['loadOverlays.error'].format(
-            s, type(e).__name__, str(e))
-        title = strings.titles[  'loadOverlays.error']
-        log.warning('Error loading overlay ({}), ({})'.format(s, str(e)),
-                    exc_info=True)
-        wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK) 
+        status.reportError(
+            strings.titles[  'loadOverlays.error'],
+            strings.messages['loadOverlays.error'].format(s),
+            e)
 
     # A function which loads a single overlay
     def loadPath(path):
@@ -195,8 +192,7 @@ def loadOverlays(paths,
         dtype, path = fsloverlay.guessDataSourceType(path)
 
         if dtype is None:
-            errorFunc(
-                path, strings.messages['loadOverlays.unknownType'])
+            errorFunc(path, strings.messages['loadOverlays.unknownType'])
             return
         
         log.debug('Loading overlay {} (guessed data type: {})'.format(

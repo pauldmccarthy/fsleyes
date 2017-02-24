@@ -18,6 +18,8 @@ import props
 
 import fsl.data.image                     as fslimage
 import fsl.utils.async                    as async
+import fsl.utils.status                   as status
+import fsleyes.strings                    as strings
 import fsleyes.displaycontext             as fsldisplay
 import fsleyes.displaycontext.canvasopts  as canvasopts
 import fsleyes.gl.routines                as glroutines
@@ -934,6 +936,11 @@ class SliceCanvas(props.HasProperties):
 
             if refresh:
                 self.Refresh()
+
+        create = status.reportErrorDecorator(
+            strings.titles[  self, 'globjectError'],
+            strings.messages[self, 'globjectError'].format(overlay.name))(
+                create)
 
         async.idle(create)
 

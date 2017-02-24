@@ -64,12 +64,17 @@ messages = TypeDict({
                                             'cleared! Are you sure you want '
                                             'to continue?',
 
+    'SliceCanvas.globjectError'  :
+    'An error occurred initialising the display for {}',
+
+    'Texture3D.dataError'  :
+    'An error occurred updating the texture data', 
+
     'SaveOverlayAction.overwrite'      : 'Do you want to overwrite {}, or '
                                          'save the image to a new file?',
 
     'loadOverlays.loading'     : 'Loading {} ...',
-    'loadOverlays.error'       : 'An error occurred loading the image '
-                                         '{}\n\nDetails: {} - {}',
+    'loadOverlays.error'       : 'An error occurred loading the image {}',
 
     'loadOverlays.unknownType' : 'Unknown data type',
 
@@ -275,7 +280,9 @@ titles = TypeDict({
     'PowerSpectrumPanel' : 'Power spectra',
     'HistogramPanel'     : 'Histogram',
     'ShellPanel'         : 'Python shell',
- 
+
+    'SliceCanvas.globjectError'  : 'Error initialising display',
+    'Texture3D.dataError'        : 'Error updating data',
 
     'CanvasPanel.screenshot'          : 'Save screenshot',
     'CanvasPanel.screenshot.notSaved' : 'Save overlay before continuing',
