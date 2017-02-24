@@ -1206,7 +1206,7 @@ class LookupTable(notifier.Notifier):
 
         with open(lutFile, 'rt') as f:
 
-            last   = 0
+            last   = None
             lines  = [l.strip() for l in f.readlines()]
             labels = []
 
@@ -1218,7 +1218,7 @@ class LookupTable(notifier.Notifier):
                 label = parseLabel(line)
                 lval  = label.value
 
-                if lval <= last:
+                if (last is not None) and (lval <= last):
                     raise ValueError('{} file is not in ascending '
                                      'order!'.format(lutFile))
 

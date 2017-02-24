@@ -38,6 +38,13 @@ class LookupTableTexture(texture.Texture):
     As OpenGL textures are indexed by coordinates in the range ``[0.0, 1.0]``,
     you will need to divide label values by :math:`max(labels)` to convert
     them into texture coordinates.
+
+    .. note:: Currently, the maximum label value in a lookup table cannot be
+              greater than the maximum size of an OpenGL texture - this limit
+              differs between platforms. In the future, if this class needs
+              to be modified to support larger lookup tables, it will need to
+              be changed to use a 2D texture, and users will need to
+              ravel/unravel texture indices between 1D and 2D coordinates.
     """
 
     def __init__(self, name):
@@ -55,7 +62,7 @@ class LookupTableTexture(texture.Texture):
 
 
     def set(self, **kwargs):
-        """Set any parameters on this ``ColourMapTexture``. Valid
+        """Set any parameters on this ``LookupTableTexture``. Valid
         keyword arguments are:
 
         ============== ======================================================

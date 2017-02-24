@@ -56,6 +56,11 @@ class LabelOpts(volumeopts.NiftiOpts):
         # to see if this is the case (again, before
         # calling __init__, so we don't clobber any
         # existing values).
-        self.lut = str(overlay.header.get('aux_file', 'random')).lower()
+        aux_file = str(overlay.header.get('aux_file', 'random')).lower()
+
+        if aux_file.startswith('mgh'):
+            aux_file = 'mgh-cma-freesurfer'
+
+        self.lut = aux_file
 
         volumeopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)
