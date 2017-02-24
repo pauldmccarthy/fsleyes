@@ -252,8 +252,18 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         melclass = overlay.getICClassification()
 
         opts.addListener('volume', self._name, self.__volumeChanged)
-        melclass.register(self._name, self.__labelsChanged, topic='added')
-        melclass.register(self._name, self.__labelsChanged, topic='removed')
+
+        # Whenever the classification labels change,
+        # update the text annotation on the canvas.
+        # We do this on the idle loop because otherwise,
+        # when a new label is added, the LookupTable
+        # instance may not have been updated to contain
+        # the new label - see ComponentGrid.__onTagAdded.
+        for topic in ['added', 'removed']:
+            melclass.register(self._name,
+                              self.__labelsChanged,
+                              topic=topic,
+                              runOnIdle=True)
         
         self.__updateTextAnnotation()
 
@@ -326,9 +336,24 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         melclass = self.__overlay.getICClassification()
 
         labels   = melclass.getLabels(opts.volume)
-        labels   = [melclass.getDisplayLabel(l) for l in labels]
+        
+        if len(labels) == 0:
+            return
 
-        colour   = self.__lut.getByName(labels[0]).colour
+        # TODO Currently we're colouring all
+        #      labels according to the first
+        #      one. You should colour each
+        #      label independently, but to do
+        #      so, you would need multiple
+        #      text annotations (and be able
+        #      position them relative to each
+        #      other), or the TextAnnotation
+        #      class would need to provide the
+        #      ability to colour different
+        #      portions of the text
+        #      independently.
+        labels = [melclass.getDisplayLabel(l) for l in labels]
+        colour = self.__lut.getByName(labels[0]).colour
 
         self.__textAnnotation.text   = ', '.join(labels)
         self.__textAnnotation.colour = colour
@@ -477,7 +502,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
             msg   = strings.messages[self, 'loadError'].format(filename, e)
             title = strings.titles[  self, 'loadError']
             log.warning('Error loading classification file '
-                      '({}), ({})'.format(filename, e), exc_info=True)
+                        '({}), ({})'.format(filename, e), exc_info=True)
             wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK)
 
             return
