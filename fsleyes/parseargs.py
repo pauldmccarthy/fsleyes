@@ -891,9 +891,9 @@ HELP = td.TypeDict({
 
 # Help text for some properties, when user requests short (abbreviated) help.
 SHORT_HELP = td.TypeDict({
-    'VolumeOpts.displayRange'  : 'Display range',
-    'VolumeOpts.clippingRange' : 'Clipping range. Setting this will '
-                                 'override the display range.',
+    'ColourMapOpts.displayRange'  : 'Display range',
+    'ColourMapOpts.clippingRange' : 'Clipping range. Setting this will '
+                                    'override the display range.',
 })
 """This dictionary defines the help text for some properties, used when the
 user requests a short (abbreviated) version of the command line help.
@@ -1082,17 +1082,17 @@ def _lutTrans(l):
 
     
 TRANSFORMS = td.TypeDict({
-    'SceneOpts.showCursor'       : lambda b : not b,
-    'OrthoOpts.showXCanvas'      : lambda b : not b,
-    'OrthoOpts.showYCanvas'      : lambda b : not b,
-    'OrthoOpts.showZCanvas'      : lambda b : not b,
-    'OrthoOpts.showLabels'       : lambda b : not b,
-    'Display.enabled'            : lambda b : not b,
-    'VolumeOpts.linkLowRanges'   : lambda b : not b,
-    'LineVectorOpts.unitLength'  : lambda b : not b, 
-    'TensorOpts.lighting'        : lambda b : not b,
-    'LabelOpts.lut'              : _lutTrans,
-    'MeshOpts.lut'               : _lutTrans,
+    'SceneOpts.showCursor'        : lambda b : not b,
+    'OrthoOpts.showXCanvas'       : lambda b : not b,
+    'OrthoOpts.showYCanvas'       : lambda b : not b,
+    'OrthoOpts.showZCanvas'       : lambda b : not b,
+    'OrthoOpts.showLabels'        : lambda b : not b,
+    'Display.enabled'             : lambda b : not b,
+    'ColourMapOpts.linkLowRanges' : lambda b : not b,
+    'LineVectorOpts.unitLength'   : lambda b : not b, 
+    'TensorOpts.lighting'         : lambda b : not b,
+    'LabelOpts.lut'               : _lutTrans,
+    'MeshOpts.lut'                : _lutTrans,
     # 'SHOpts.lighting'            : lambda b : not b,
 
     # The props.addParserArguments function allows
@@ -1795,9 +1795,9 @@ def _printShortHelp(mainParser, extra=None):
     dispArgs = ['alpha']
     volArgs  = ['displayRange', 'clippingRange', 'cmap']
 
-    mainArgs = [ARGUMENTS['Main.{}'      .format(a)][:2] for a in mainArgs]
-    dispArgs = [ARGUMENTS['Display.{}'   .format(a)][:2] for a in dispArgs]
-    volArgs  = [ARGUMENTS['VolumeOpts.{}'.format(a)][:2] for a in volArgs]
+    mainArgs = [ARGUMENTS['Main.{}'         .format(a)][:2] for a in mainArgs]
+    dispArgs = [ARGUMENTS['Display.{}'      .format(a)][:2] for a in dispArgs]
+    volArgs  = [ARGUMENTS['ColourMapOpts.{}'.format(a)][:2] for a in volArgs]
 
     mainArgs = ['--{}'.format(a[1]) for a in mainArgs]
     dispArgs = ['--{}'.format(a[1]) for a in dispArgs]
@@ -2351,8 +2351,8 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                     if fileOpt == 'clipImage' and \
                        isinstance(opts, fsldisplay.VolumeOpts):
 
-                        llr = ARGUMENTS['VolumeOpts.linkLowRanges'][ 1]
-                        lhr = ARGUMENTS['VolumeOpts.linkHighRanges'][1]
+                        llr = ARGUMENTS['ColourMapOpts.linkLowRanges'][ 1]
+                        lhr = ARGUMENTS['ColourMapOpts.linkHighRanges'][1]
 
                         setattr(optArgs, llr, None)
                         setattr(optArgs, lhr, None)
