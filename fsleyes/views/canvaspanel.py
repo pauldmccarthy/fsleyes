@@ -991,22 +991,76 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
     dlg.Destroy()
     wx.Yield()
 
-    def doScreenshot():
+    # We do the screenshot asynchronously,
+    # to make sure it is performed on
+    # the main thread, during idle time
+    def doScreenshot(panel):
 
-        # The typical way to get a screen grab of a wx
-        # Window is to use a wx.WindowDC, and a wx.MemoryDC,
-        # and to 'blit' a region from the window DC into
-        # the memory DC.
+        # Make a H*W*4 bitmap array (h*w because
+        # that's how matplotlib want it). We
+        # initialise the bitmap to the current
+        # background colour, due to some sizing
+        # issues that are discussed in the
+        # osxPatch function below.
+        opts          = canvasPanel.getSceneOptions()
+        bgColour      = np.array(opts.bgColour) * 255
+
+        width, height = panel.GetClientSize().Get()
+        data          = np.zeros((height, width, 4), dtype=np.uint8)
+        data[:, :, :] = bgColour
+
+        log.debug('Creating bitmap {} * {} for {} screenshot'.format(
+            width, height, type(canvasPanel).__name__))
+
+        # The typical way to get a screen grab of a
+        # wx Window is to use a wx.WindowDC, and a
+        # wx.MemoryDC, and to 'blit' a region from
+        # the window DC into the memory DC. Then we
+        # extract the bitmap data and copy it into
+        # our array.
+        windowDC = wx.WindowDC(panel)
+        memoryDC = wx.MemoryDC()
+        bmp      = wx.EmptyBitmap(width, height)
+        
+        # Copy the contents of the canvas
+        # container to the bitmap
+        memoryDC.SelectObject(bmp)
+        memoryDC.Blit(
+            0,
+            0,
+            width,
+            height,
+            windowDC,
+            0,
+            0)
+        memoryDC.SelectObject(wx.NullBitmap)
+ 
+        rgb = bmp.ConvertToImage().GetData()
+        rgb = np.fromstring(rgb, dtype=np.uint8)
+
+        data[:, :, :3] = rgb.reshape(height, width, 3)
+
+        # OSX has complications 
+        if fslplatform.os == 'Darwin':
+            data = osxPatch(panel, data, bgColour)
+        
+        data[:, :,  3] = 255
+
+        mplimg.imsave(filename, data)
+
+
+    def osxPatch(panel, data, bgColour):
+
+        # For some unknown reason, under OSX the
+        # contents of wx.glcanvas.GLCanvas instances
+        # are not captured by the WindowDC/MemoryDC
+        # blitting process described above - they come
+        # out all black.
         #
-        # This is precisely what we're doing here, but
-        # the process is complicated by the fact that,
-        # under OSX, the contents of wx.glcanvas.GLCanvas
-        # instances are not captured by WindowDCs.
-        #
-        # So I'm grabbing a screenshot of the canvas
-        # panel in the standard wxWidgets way, and then
-        # manually patching in bitmaps of each GLCanvas
-        # that is displayed in the canvas panel.
+        # So here, I'm manually patching in bitmaps
+        # (read from the GL front buffer) of each
+        # GLCanvas that is displayed in the canvas
+        # panel.
 
         # Get all the wx GLCanvas instances
         # which are displayed in the panel,
@@ -1014,49 +1068,8 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
         glCanvases = canvasPanel.getGLCanvases()
         glCanvases.append(canvasPanel.getColourBarCanvas())
 
-        # The canvas panel container is the
-        # direct parent of the colour bar
-        # canvas, and an ancestor of the
-        # other GL canvases
-        parent                  = canvasPanel.getContainerPanel()
-        totalWidth, totalHeight = parent.GetClientSize().Get()
-        absPosx,    absPosy     = parent.GetScreenPosition()
-        windowDC                = wx.WindowDC(parent)
-        memoryDC                = wx.MemoryDC()
-        bmp                     = wx.EmptyBitmap(totalWidth, totalHeight)
-
-        # Copy the contents of the canvas
-        # container to the bitmap
-        memoryDC.SelectObject(bmp)
-        memoryDC.Blit(
-            0,
-            0,
-            totalWidth,
-            totalHeight,
-            windowDC,
-            0,
-            0)
-        memoryDC.SelectObject(wx.NullBitmap)
-
-        # Make a H*W*4 bitmap array, and copy
-        # the container screen grab into it.
-        # We initialise the bitmap to the
-        # current background colour, due to
-        # some sizing issues that will be
-        # revealed below.
-        opts     = canvasPanel.getSceneOptions()
-        bgColour = np.array(opts.bgColour) * 255
-        
-        data          = np.zeros((totalHeight, totalWidth, 4), dtype=np.uint8)
-        data[:, :, :] = bgColour
- 
-        rgb  = bmp.ConvertToImage().GetData()
-        rgb  = np.fromstring(rgb, dtype=np.uint8)
-
-        log.debug('Creating bitmap {} * {} for {} screenshot'.format(
-            totalWidth, totalHeight, type(canvasPanel).__name__))
-        
-        data[:, :, :3] = rgb.reshape(totalHeight, totalWidth, 3)
+        totalWidth, totalHeight = panel.GetClientSize().Get()
+        absPosx,    absPosy     = panel.GetScreenPosition()
 
         # Patch in bitmaps for every GL canvas
         for glCanvas in glCanvases:
@@ -1129,11 +1142,16 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
             
             data[ystart:yend, xstart:xend] = bmp
 
-        data[:, :,  3] = 255
+        return data
 
-        mplimg.imsave(filename, data)
-
-    async.idle(doScreenshot)
+    # The canvas panel container is the
+    # direct parent of the colour bar
+    # canvas, and an ancestor of the
+    # other GL canvases. So that's the
+    # one that we want to take a screenshot
+    # of.
+    async.idle(doScreenshot, canvasPanel.getContainerPanel())
+    
     status.update(
         strings.messages['CanvasPanel.screenshot.pleaseWait'].format(filename))
 
