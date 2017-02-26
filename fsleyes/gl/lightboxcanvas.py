@@ -168,15 +168,17 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         xlen = self.displayCtx.bounds.getLen(self.xax)
         ylen = self.displayCtx.bounds.getLen(self.yax)
+        xmin = self.displayCtx.bounds.getLo( self.xax)
+        ymin = self.displayCtx.bounds.getLo( self.yax)
         
         row = self._totalRows - int(np.floor(sliceno / self.ncols)) - 1
         col =                   int(np.floor(sliceno % self.ncols))
 
-        if self.invertX: xpos = (xlen - xpos) + xlen * col
-        else:            xpos =         xpos  + xlen * col
+        if self.invertX: xpos = xmin + xlen - (xpos - xmin)
+        if self.invertY: ypos = ymin + ylen - (ypos - ymin)
 
-        if self.invertY: ypos = (ylen - ypos) + ylen * row
-        else:            ypos =  ypos         + ylen * row
+        xpos = xpos + xlen * col
+        ypos = ypos + ylen * row
         
         return xpos, ypos
 
@@ -223,14 +225,15 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
            sliceno >= self._nslices:
             return None
 
-        if self.invertX: xpos = (xlen - screenx) -          col      * xlen
-        else:            xpos =         screenx  -          col      * xlen
-        if self.invertY: ypos = (ylen - screeny) - (nrows - row - 1) * ylen
-        else:            ypos =         screeny  - (nrows - row - 1) * ylen
+        xpos = screenx  -          col      * xlen
+        ypos = screeny  - (nrows - row - 1) * ylen
+
+        if self.invertX: xpos = xlen - (xpos - xmin) + xmin
+        if self.invertY: ypos = ylen - (ypos - ymin) + ymin
         
         zpos = self.zrange.xlo + (sliceno + 0.5) * self.sliceSpacing
 
-        pos = [0, 0, 0]
+        pos           = [0, 0, 0]
         pos[self.xax] = xpos
         pos[self.yax] = ypos
         pos[self.zax] = zpos
@@ -650,8 +653,12 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         invXforms = []
         lo, hi    = globj.getDisplayBounds()
-        xlen      = hi[self.xax] - lo[self.xax]
-        ylen      = hi[self.yax] - lo[self.yax]
+        xmin      = lo[self.xax]
+        xmax      = hi[self.xax]
+        ymin      = lo[self.yax]
+        ymax      = hi[self.yax]
+        xlen      = xmax - xmin
+        ylen      = ymax - ymin
 
         # We have to translate each slice transformation
         # to the origin, perform the flip there, then
@@ -662,8 +669,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             toOrigin   = np.eye(4)
             fromOrigin = np.eye(4)
 
-            xoff = xlen / 2.0 + xform[self.xax, 3]
-            yoff = ylen / 2.0 + xform[self.yax, 3]
+            xoff = xlen / 2.0 + xform[self.xax, 3] + xmin
+            yoff = ylen / 2.0 + xform[self.yax, 3] + ymin
 
             if self.invertX:
                 invert[    self.xax, self.xax] = -1
