@@ -218,6 +218,12 @@ def main(args=None):
         if not namespace[0].skipfslcheck:
             wx.CallAfter(fslDirWarning, frame)
 
+        # Check for updates
+        if not namespace[0].skipupdatecheck:
+            import fsleyes.actions.updatecheck as updatecheck
+            wx.CallAfter(updatecheck.UpdateCheckAction(),
+                         showUpToDateMessage=False)
+
     # Note: If no wx.Frame is created, the
     # wx.MainLoop call will exit immediately,
     # even if we have scheduled something via

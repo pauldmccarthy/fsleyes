@@ -260,6 +260,16 @@ messages = TypeDict({
     'Select a vertex data file for {}',
     'LoadVertexDataAction.error' :
     'An error occurred while loading the vertex data for {}\n\nDetails: {}',
+
+    'UpdateCheckAction.newVersionAvailable' :
+    'A new version of FSLeyes is available. This version of FSLeyes is {}, '
+    'and the latest is {}.\n\nVisit {} to upgrade!',
+
+    'UpdateCheckAction.upToDate' :
+    'Your version of FSLeyes ({}) is up to date.',
+
+    'UpdateCheckAction.newVersionError' :
+    'An error occurred while checking for FSLeyes updates. Try again later.',
 })
 
 
@@ -362,6 +372,10 @@ titles = TypeDict({
     'ClearSettingsAction.confirm' : 'Clear all settings?',
 
     'LoadColourMapAction.installcmap'     : 'Install colour map?',
+
+    'UpdateCheckAction.upToDate'            : 'FSLeyes is up to date',
+    'UpdateCheckAction.newVersionAvailable' : 'New version available',
+    'UpdateCheckAction.newVersionError'     : 'Error checking for updates', 
 })
 
 
@@ -373,6 +387,7 @@ actions = TypeDict({
     'CopyOverlayAction'        : 'Copy',
     'LoadAtlasAction'          : 'Add atlas',
     'ClearSettingsAction'      : 'Clear FSLeyes settings',
+    'UpdateCheckAction'        : 'Check for updates',
     'SaveOverlayAction'        : 'Save',
     'ReloadOverlayAction'      : 'Reload',
     'RemoveOverlayAction'      : 'Remove',

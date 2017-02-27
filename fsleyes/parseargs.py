@@ -301,6 +301,7 @@ OPTIONS = td.TypeDict({
                        'verbose',
                        'version',
                        'skipfslcheck',
+                       'skipupdatecheck',
                        'noisy',
                        'memory',
                        'glversion',
@@ -549,6 +550,7 @@ ARGUMENTS = td.TypeDict({
     'Main.verbose'          : ('v',      'verbose',          False),
     'Main.version'          : ('V',      'version',          False),
     'Main.skipfslcheck'     : ('S',      'skipfslcheck',     False),
+    'Main.skipupdatecheck'  : ('U',      'skipupdatecheck',  False),
     'Main.noisy'            : ('n',      'noisy',            False),
     'Main.memory'           : ('m',      'memory',           False),
     'Main.glversion'        : ('gl',     'glversion',        True),
@@ -699,15 +701,16 @@ or more arguments, ``False`` otherwise.
 # Help text for all of the options
 HELP = td.TypeDict({
 
-    'Main.help'          : 'Display basic FSLeyes options and exit',
-    'Main.fullhelp'      : 'Display all FSLeyes options and exit',
-    'Main.verbose'       : 'Verbose output (can be used up to 3 times)',
-    'Main.version'       : 'Print the current version and exit',
-    'Main.skipfslcheck'  : 'Skip $FSLDIR check/warning',
-    'Main.noisy'         : 'Make the specified module noisy',
-    'Main.memory'        : 'Output memory events (implied if -v is set)',
-    'Main.glversion'     : 'Desired (major, minor) OpenGL version',
-    'Main.scene'         : 'Scene to show',
+    'Main.help'            : 'Display basic FSLeyes options and exit',
+    'Main.fullhelp'        : 'Display all FSLeyes options and exit',
+    'Main.verbose'         : 'Verbose output (can be used up to 3 times)',
+    'Main.version'         : 'Print the current version and exit',
+    'Main.skipfslcheck'    : 'Skip $FSLDIR check/warning',
+    'Main.skipupdatecheck' : 'Do not check for FSLeyes updates on startup',
+    'Main.noisy'           : 'Make the specified module noisy',
+    'Main.memory'          : 'Output memory events (implied if -v is set)',
+    'Main.glversion'       : 'Desired (major, minor) OpenGL version',
+    'Main.scene'           : 'Scene to show',
 
     'Main.voxelLoc'         : 'Location to show (voxel coordinates of '
                               'first overlay)',
@@ -1226,6 +1229,9 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['skipfslcheck'],
                             action='store_true',
                             help=mainHelp['skipfslcheck'])
+    mainParser.add_argument(*mainArgs['skipupdatecheck'],
+                            action='store_true',
+                            help=mainHelp['skipupdatecheck']) 
 
     # Debug messages are stripped from frozen
     # versions of FSLeyes, so there's no point

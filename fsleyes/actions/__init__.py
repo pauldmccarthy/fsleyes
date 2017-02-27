@@ -117,6 +117,7 @@ are also defined in this package:
     ~fsleyes.actions.correlate
     ~fsleyes.actions.applyflirtxfm
     ~fsleyes.actions.saveflirtxfm
+    ~fsleyes.actions.updatecheck
 """
 
 
@@ -154,6 +155,7 @@ from . import correlate
 from . import applyflirtxfm
 from . import saveflirtxfm
 from . import loadvertexdata
+from . import updatecheck
 
 
 Action                   = action            .Action
@@ -183,6 +185,7 @@ PCACorrelateAction       = correlate         .PCACorrelateAction
 ApplyFlirtXfmAction      = applyflirtxfm     .ApplyFlirtXfmAction
 SaveFlirtXfmAction       = saveflirtxfm      .SaveFlirtXfmAction
 LoadVertexDataAction     = loadvertexdata    .LoadVertexDataAction
+UpdateCheckAction        = updatecheck       .UpdateCheckAction
 
 
 log = logging.getLogger(__name__)
