@@ -1202,7 +1202,7 @@ class LookupTable(notifier.Notifier):
             b     = float(   tkns[3])
             lName = ' '.join(tkns[4:])
 
-            return LutLabel(label, lName, (r, g, b), True)
+            return LutLabel(label, lName, (r, g, b), label > 0)
 
         with open(lutFile, 'rt') as f:
 
