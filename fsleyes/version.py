@@ -5,12 +5,16 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """The sole purpose of this module is as a container for the *FSLeyes*
-version number and information.
+version number and information. A couple of convenience functions are
+also defined here, for working with FSLeyes version numbers.
 
 .. autosummary::
+   :nosignatures:
 
    __version__
    __vcs_version__
+   parseVersionString
+   compareVersions
 """
 
 

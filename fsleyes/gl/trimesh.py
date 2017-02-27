@@ -36,10 +36,10 @@ lifted from Michael Dawson-Haggerty's excellent ``trimesh`` project:
   - https://github.com/mikedh/trimesh
 
 
-FSLeyes uses the :func:`mesh_plane` function when rendering :class:`.GLMesh`
-instances. No other features of ``trimesh`` are needed (nor any features
-provided by its dependenceies), so I didn't see the point in adding the
-entire ``trimesh`` project as a dependency.
+FSLeyes uses the :func:`mesh_plane` and :func:`points_to_barycentric`
+functions when rendering :class:`.GLMesh` instances. No other features of
+``trimesh`` are needed (nor any features provided by its dependenceies), so I
+didn't see the point in adding the entire ``trimesh`` project as a dependency.
 """
 
 
@@ -51,7 +51,7 @@ import numpy as np
 ######################
 
 
-__version__ = '2.5.36'
+__version__ = '2.7.15'
 
 
 ########################
@@ -95,23 +95,24 @@ tol = NumericalToleranceMesh()
 def mesh_plane(vertices,
                faces,
                plane_normal,
-               plane_origin):
+               plane_origin,
+               return_faces=False):
     '''
     Find a the intersections between a mesh and a plane,
     returning a set of line segments on that plane.
+
     Arguments
     ---------
     vertices:      (n, 3) float, the vertices in the mesh
     faces:         (m, 3) int, triangles of vertex indices
     plane_normal:  (3,) float, plane normal
     plane_origin:  (3,) float, plane origin
+    return_faces:  bool, if True return face index line is from
+
     Returns
     ----------
-    (m, 2, 3) float, list of 3D line segments
-    (m, 3)    int, faces that were intersected
-    (m, 2, 3) float, contribution of the vertices on each
-              intersected triangle to the vertices of the
-              intersection line.
+    lines:      (m, 2, 3) float, list of 3D line segments
+    face_index: (m,) int, index of mesh.faces for each line
     '''
 
     def triangle_cases(signs):
@@ -119,6 +120,7 @@ def mesh_plane(vertices,
         Figure out which faces correspond to which intersection case from
         the signs of the dot product of each vertex.
         Does this by bitbang each row of signs into an 8 bit integer.
+
         code : signs      : intersects
         0    : [-1 -1 -1] : No
         2    : [-1 -1  0] : No
@@ -130,17 +132,16 @@ def mesh_plane(vertices,
         16   : [0 0 1]    : Yes; one edge fully on plane
         20   : [0 1 1]    : No
         28   : [1 1 1]    : No
+
         Arguments
         ----------
         signs: (n,3) int, all values are -1,0, or 1
                Each row contains the dot product of all three vertices
                in a face with respect to the plane
+
         Returns
         ---------
-        basic1:     (n,) bool, which faces are in the basic intersection case
-                    (code 4)
-        basic2:     (n,) bool, which faces are in the basic intersection case
-                    (code 12)
+        basic:      (n,) bool, which faces are in the basic intersection case
         one_vertex: (n,) bool, which faces are in the one vertex case
         one_edge:   (n,) bool, which faces are in the one edge case
         '''
@@ -154,8 +155,8 @@ def mesh_plane(vertices,
         # note that we are only accepting *one* of the on- edge cases,
         # where the other vertex has a positive dot product (16) instead
         # of both on- edge cases ([6,16])
-        # this is so that for regions that are co-planar with the the section 
-        # plane we don't end up with an invalid boundary
+        # this is so that for regions that are co-planar with the the section plane
+        # we don't end up with an invalid boundary
         key = np.zeros(29, dtype=np.bool)
         key[16] = True
         one_edge = key[coded]
@@ -167,13 +168,10 @@ def mesh_plane(vertices,
 
         # one vertex on one side of the plane, two on the other
         key[:] = False
-        key[4] = True
-        basic1 = key[coded]
-        key[:] = False
-        key[12] = True
-        basic2 = key[coded]
+        key[[4, 12]] = True
+        basic = key[coded]
 
-        return basic1, basic2, one_vertex, one_edge
+        return basic, one_vertex, one_edge
 
     def handle_on_vertex(signs, faces, vertices):
         # case where one vertex is on plane, two are on different sides
@@ -185,24 +183,21 @@ def mesh_plane(vertices,
                                              line_segments=False)
         lines = np.column_stack((vertices[vertex_plane[valid]],
                                  point_intersect)).reshape((-1, 2, 3))
-
         return lines
 
     def handle_on_edge(signs, faces, vertices):
         # case where two vertices are on the plane and one is off
         edges = faces[signs == 0].reshape((-1, 2))
         points = vertices[edges]
-
         return points
 
     def handle_basic(signs, faces, vertices):
         # case where one vertex is on one side and two are on the other
         unique_element = unique_value_in_row(signs, unique=[-1, 1])
-        edges = np.column_stack((
-            faces[unique_element],
-            faces[np.roll(unique_element, 1, axis=1)],
-            faces[unique_element],
-            faces[np.roll(unique_element, 2, axis=1)])).reshape((-1, 2))
+        edges = np.column_stack((faces[unique_element],
+                                 faces[np.roll(unique_element, 1, axis=1)],
+                                 faces[unique_element],
+                                 faces[np.roll(unique_element, 2, axis=1)])).reshape((-1, 2))
         intersections, valid = plane_lines(plane_origin,
                                            plane_normal,
                                            vertices[edges.T],
@@ -227,255 +222,24 @@ def mesh_plane(vertices,
     # shape is the same as mesh.faces (n,3)
     signs = np.zeros(faces.shape, dtype=np.int8)
     signs[dots < -tol.merge] = -1
-    signs[dots >  tol.merge] = 1
+    signs[dots > tol.merge] = 1
 
     # figure out which triangles are in the cross section,
     # and which of the three intersection cases they are in
     cases = triangle_cases(signs)
-    
     # handlers for each case
     handlers = (handle_basic,
-                handle_basic,
                 handle_on_vertex,
                 handle_on_edge)
 
-    signs   = [signs[c] for c in cases]
-    faces   = [faces[c] for c in cases]
-    lines   = [h(s, f, vertices) for h, s, f in zip(handlers, signs, faces)]
-    contrib = vertex_contribution(signs, faces, lines, vertices)
+    lines = np.vstack([h(signs[c],
+                         faces[c],
+                         vertices) for c, h in zip(cases, handlers)])
 
-    lines   = np.vstack(lines)
-    faces   = np.vstack(faces)
-    contrib = np.vstack(contrib)
-
-    return lines, faces, contrib
-
-
-def vertex_contribution(allSigns, allFaces, allLines, allVertices):
-    '''Called by mesh_plane. Calculates the contribution of each triangle
-    vertex to the intersection line vertices.
-
-    Arguments
-    ---------
-    allSigns:    List of four (n, 3) arrays, one for each intersection
-                 case (see the triangle_cases function inside mesh_plane).
-                 Each array contains the signs of the dot product of
-                 each triangle vertex with the intersection plane.
-    
-    allFaces:    List of four (n, 3) arrays, one for each intersection
-                 case, with each containing the intersected triangles.
-    
-    allLines:    List of four (n, 2, 3) ararys, one for each intersection
-                 case, containing the interesection line vertices for each
-                 triangle.
-    
-    allVertices: (m, 3) All vertices in the surface
-
-    Returns
-    -------
-    (n, 2, 3) For each line vertex, the contribution of each of the
-              intersected triangle vertices to that vertex.
-    '''
-    
-    def distance(v1, v2):
-        '''
-        Returns the euclidean distance between the two
-        sets of vertices.
-        '''
-        return np.sqrt(np.sum((v1 - v2) ** 2, axis=1))
-
-    # Note: The functions below are very tightly coupled 
-    #       to the inner functions of mesh_plane.
-
-    
-    def on_vertex_contrib(signs, lines, faces, vertices):
-        '''
-        Calculate the contribution for the on_vertex intersection case.
-        '''
-        
-        contrib = np.zeros((faces.shape[0], 2, 3), dtype=np.float32)
-        
-        # The signs for each triangle in the on_vertex
-        # case (code 8) are of the form [-1, 0, 1],
-        # where the vertex on the plane has sign == 0,
-        # and the other vertices are to either side
-        # of the plane.
-        #
-        # The 'pivot' is the vertex which intersects
-        # with the plane. 'p1' and 'p2' are the other
-        # two vertices - the plane intersects the
-        # triangle at the pivot vertex, and on the
-        # edge between p1 and p2.
-        pivotFaceVert = np.where(signs == 0)[1]
-        pFaceVerts    = np.where(signs != 0)[1].reshape(-1, 2)
-        p1FaceVert    = pFaceVerts[:, 0]
-        p2FaceVert    = pFaceVerts[:, 1]
-        faceIdxs      = np.arange(faces.shape[0])
-
-        # For a triangle with code [-1, 0, 1] (i.e.
-        # the second vertex intersects the plane),
-        # contribution of the triangle vertices
-        # to the intersection line vertices are as
-        # follows...
-
-        # [0, 1, 0] for the first line vertex
-        # (== the pivot vertex)
-        contrib[faceIdxs, 0, pivotFaceVert] = 1
-
-        # [1-d, 0, d] for the second line vertex,
-        # (the one intersecting the edge between 
-        # the other two triangle vertices), where 
-        # 'd' is the normalised distance between 
-        # the first triangle vertex (p1), and the
-        # line vertex.
-        p1 = vertices[faces[faceIdxs, p1FaceVert]]
-        p2 = vertices[faces[faceIdxs, p2FaceVert]]
-
-        p1p2Dist  = distance(p1, p2)
-        p1IntDist = distance(p1, lines[:, 1, :])
-        p1Contrib = p1IntDist / p1p2Dist
-        
-        contrib[faceIdxs, 1, p1FaceVert] =     p1Contrib
-        contrib[faceIdxs, 1, p2FaceVert] = 1 - p1Contrib
-
-        return contrib
-
-
-    def on_edge_contrib(signs, lines, faces, vertices):
-        '''
-        Calculate the contribution for the on_edge intersection case.
-        '''
-        
-        # The signs for triangles in the on_edge case
-        # (code 16) is of the form [0, 0, 1], where the
-        # vertices on the plane have sign == 0.
-        #
-        # The two vertices on the plane are referred
-        # to as p1 and p2.
-        pFaceVerts = np.where(signs == 0)[1].reshape(-1, 2)
-        p1FaceVert = pFaceVerts[:, 0]
-        p2FaceVert = pFaceVerts[:, 1]
-
-        # In this case, the two on-plane vertices
-        # are identical to the intersection line
-        # vertices. So, given an intersection
-        # of [0, 0, 1], the contribution for each
-        # line vertex would be:
-        #
-        #   - [1, 0, 0] for the first line vertex
-        #     (== the first triangle vertex)
-        #   - [0, 1, 0] for the second line vertex
-        #     (== the second triangle vertex) 
-        contrib   = np.zeros((faces.shape[0], 2, 3), dtype=np.float32)
-        faceVerts = np.arange(faces.shape[0])
-
-        contrib[faceVerts, 0, p1FaceVert] = 1
-        contrib[faceVerts, 1, p2FaceVert] = 1
-
-        return contrib
-        
-    
-    def basic1_contrib(signs, lines, faces, vertices):
-        '''Calculate the contribution for the first basic intersection
-        case (intersection code 4).
-        '''
-        return basic_contrib(signs, lines, faces, vertices, 1)
-
-    
-    def basic2_contrib(signs, lines, faces, vertices):
-        '''Calculate the contribution for the second basic intersection
-        case (intersection code 12). 
-        '''
-        return basic_contrib(signs, lines, faces, vertices, -1) 
-
-    
-    def basic_contrib(signs, lines, faces, vertices, intType):
-        '''
-        Calculate the contribution for the basic intersection case. This
-        function is shared by basic1_contrib and basic2_contrib,
-
-        The intType argument gives the sign value of the vertex which
-        is alone on one side of the intersection plane (1 or -1).
-        '''
-    
-        # Signs for the basic intersection case
-        # (one vertex on one side of the plane,
-        # and the other two on the other side)
-        # are of the form [-1, -1, 1] (code 4)
-        # or [-1,  1, 1] (code 12). 
-        #
-        # The 'pivot' is the vertex which is alone
-        # on one side of the intersection plane.
-        # 'p1' and 'p2' are the remaining two
-        # vertices. The plane intersects the
-        # triangle on the (pivot, p1) edge and the
-        # (pivot, p2) edge.
-        #
-        # The handle_basic function (inside mesh_plane)
-        # uses np.roll to identify which triangle
-        # vertices correspond to p1 and p2. Here
-        # we do an equivalent thing using modulus.
-        pivotFaceVert = np.where(signs == intType)[1]
-        p1FaceVert    = (pivotFaceVert + 1) % 3
-        p2FaceVert    = (pivotFaceVert + 2) % 3
-
-        faceIdxs = np.arange(faces.shape[0])
-        pivot    = vertices[faces[faceIdxs, pivotFaceVert]]
-        p1       = vertices[faces[faceIdxs, p1FaceVert]]
-        p2       = vertices[faces[faceIdxs, p2FaceVert]]
-
-        # Distances from the pivot
-        # vertex to p1 and p2
-        pivotp1dist = distance(pivot, p1)
-        pivotp2dist = distance(pivot, p2)
-
-        # Distance from the pivot to the
-        # intersection on the (pivot, p1)
-        # and (pivot, p2) edges.
-        pivotInt1dist = distance(pivot, lines[:, 0, :])
-        pivotInt2dist = distance(pivot, lines[:, 1, :])
-
-        # For the line vertex which lies on the
-        # (pivot, p1) edge, the contribution of
-        # the pivot vertex is the normalised
-        # distance from the pivot to the
-        # intersection. The ccvontribution of p1
-        # is 1-minus the pivot contribution.
-        #
-        # The same logic is applied to the
-        # (pivot, p2) intersection.
-        pivot1Contrib = pivotInt1dist / pivotp1dist
-        pivot2Contrib = pivotInt2dist / pivotp2dist
-
-        # So, given the intersection case [-1, 1, 1],
-        # the contribution for each line vertex would be:
-        #
-        #  - [1 - d01, d01, 0]
-        #  - [1 - d02, 0,   d02]
-        #
-        # where d01 is the normalised distance from
-        # the pivot vertex to first line vertex 
-        # (the one on the [pivot, p1] edge), and
-        # d02 is the normalised distance from the
-        # pivot to the second line vertex (on the
-        # [pivot, p2] edge)
-        contrib = np.zeros((faces.shape[0], 2, 3), dtype=np.float32)
-        contrib[faceIdxs, 0, pivotFaceVert] = 1 - pivot1Contrib
-        contrib[faceIdxs, 0, p1FaceVert]    =     pivot1Contrib
-        contrib[faceIdxs, 1, pivotFaceVert] = 1 - pivot2Contrib
-        contrib[faceIdxs, 1, p2FaceVert]    =     pivot2Contrib
-
-        return contrib
-
-    handlers = [basic1_contrib,
-                basic2_contrib,
-                on_vertex_contrib,
-                on_edge_contrib]
-
-    contribs = [h(s, l, f, allVertices)
-                for h, s, l, f in zip(handlers, allSigns, allLines, allFaces)]
-    
-    return contribs
+    if return_faces:
+        face_index = np.hstack([np.nonzero(c)[0] for c in cases])
+        return lines, face_index
+    return lines
 
 
 def plane_lines(plane_origin,
@@ -484,6 +248,7 @@ def plane_lines(plane_origin,
                 line_segments=True):
     '''
     Calculate plane-line intersections
+
     Arguments
     ---------
     plane_origin:  plane origin, (3) list
@@ -492,6 +257,7 @@ def plane_lines(plane_origin,
     line_segments: if True, only returns intersections as valid if
                    vertices from endpoints are on different sides
                    of the plane.
+
     Returns
     ---------
     intersections: (m, 3) list of cartesian intersection points
@@ -523,6 +289,81 @@ def plane_lines(plane_origin,
     intersection += np.reshape(d, (-1, 1)) * line_dir[valid]
 
     return intersection, valid
+
+
+########################
+# From trimesh.triangles
+########################
+
+
+def points_to_barycentric(triangles, points, method='cramer'):
+    '''
+    Find the barycentric coordinates of points relative to triangles.
+
+    The Cramer's rule solution implements:
+        http://blackpawn.com/texts/pointinpoly
+
+    The cross product solution implements:
+        https://www.cs.ubc.ca/~heidrich/Papers/JGT.05.pdf
+
+
+    Arguments
+    -----------
+    triangles: (n,3,3) float, triangles in space
+    points:    (n,3) float, point in space associated with a triangle
+    method:    str, which method to compute the barycentric coordinates with. Options:
+               -'cross': uses a method using cross products, roughly 2x slower but
+                         different numerical robustness properties
+               -anything else: uses a cramer's rule solution
+
+    Returns
+    -----------
+    barycentric: (n,3) float, barycentric
+    '''
+
+    def method_cross():
+        n = np.cross(edge_vectors[:, 0], edge_vectors[:, 1])
+        denominator = diagonal_dot(n, n)
+
+        barycentric = np.zeros((len(triangles), 3), dtype=np.float64)
+        barycentric[:, 2] = diagonal_dot(
+            np.cross(edge_vectors[:, 0], w), n) / denominator
+        barycentric[:, 1] = diagonal_dot(
+            np.cross(w, edge_vectors[:, 1]), n) / denominator
+        barycentric[:, 0] = 1 - barycentric[:, 1] - barycentric[:, 2]
+        return barycentric
+
+    def method_cramer():
+        dot00 = diagonal_dot(edge_vectors[:, 0], edge_vectors[:, 0])
+        dot01 = diagonal_dot(edge_vectors[:, 0], edge_vectors[:, 1])
+        dot02 = diagonal_dot(edge_vectors[:, 0], w)
+        dot11 = diagonal_dot(edge_vectors[:, 1], edge_vectors[:, 1])
+        dot12 = diagonal_dot(edge_vectors[:, 1], w)
+
+        inverse_denominator = 1.0 / (dot00 * dot11 - dot01 * dot01)
+
+        barycentric = np.zeros((len(triangles), 3), dtype=np.float64)
+        barycentric[:, 2] = (dot00 * dot12 - dot01 *
+                             dot02) * inverse_denominator
+        barycentric[:, 1] = (dot11 * dot02 - dot01 *
+                             dot12) * inverse_denominator
+        barycentric[:, 0] = 1 - barycentric[:, 1] - barycentric[:, 2]
+        return barycentric
+
+    # establish that input triangles and points are sane
+    triangles = np.asanyarray(triangles, dtype=np.float64)
+    points = np.asanyarray(points, dtype=np.float64)
+    if not is_shape(triangles, (-1, 3, 3)):
+        raise ValueError('triangles shape incorrect')
+    if not is_shape(points, (len(triangles), 3)):
+        raise ValueError('triangles and points must correspond')
+
+    edge_vectors = triangles[:, 1:] - triangles[:, :1]
+    w = points - triangles[:, 0].reshape((-1, 3))
+
+    if method == 'cross':
+        return method_cross()
+    return method_cramer()
 
 
 #######################
@@ -631,3 +472,83 @@ def is_sequence(obj):
     if hasattr(obj, 'shape'):
         seq = seq and obj.shape != ()
     return seq
+
+
+def diagonal_dot(a, b):
+    '''
+    Dot product by row of a and b.
+
+    Same as np.diag(np.dot(a, b.T)) but without the monstrous
+    intermediate matrix.
+    '''
+    result = (np.asanyarray(a) *
+              np.asanyarray(b)).sum(axis=1)
+    return result
+
+
+def is_shape(obj, shape):
+    '''
+    Compare the shape of a numpy.ndarray to a target shape,
+    with any value less than zero being considered a wildcard
+
+    Note that if a list- like object is passed that is not a numpy
+    array, this function will not convert it and will return False.
+
+    Arguments
+    ---------
+    obj: np.ndarray to check the shape of
+    shape: list or tuple of shape.
+           Any negative term will be considered a wildcard
+           Any tuple term will be evaluated as an OR
+
+    Returns
+    ---------
+    shape_ok: bool, True if shape of obj matches query shape
+
+    Examples
+    ------------------------
+    In [1]: a = np.random.random((100,3))
+
+    In [2]: a.shape
+    Out[2]: (100, 3)
+
+    In [3]: trimesh.util.is_shape(a, (-1,3))
+    Out[3]: True
+
+    In [4]: trimesh.util.is_shape(a, (-1,3,5))
+    Out[4]: False
+
+    In [5]: trimesh.util.is_shape(a, (100,-1))
+    Out[5]: True
+
+    In [6]: trimesh.util.is_shape(a, (-1,(3,4)))
+    Out[6]: True
+
+    In [7]: trimesh.util.is_shape(a, (-1,(4,5)))
+    Out[7]: False
+    '''
+
+    if (not hasattr(obj, 'shape') or
+            len(obj.shape) != len(shape)):
+        return False
+
+    for i, target in zip(obj.shape, shape):
+        # check if current field has multiple acceptable values
+        if is_sequence(target):
+            if i in target:
+                continue
+            else:
+                return False
+        # check if current field is a wildcard
+        if target < 0:
+            if i == 0:
+                return False
+            else:
+                continue
+        # since we have a single target and a single value,
+        # if they are not equal we have an answer
+        if target != i:
+            return False
+
+    # since none of the checks failed, the two shapes are the same
+    return True

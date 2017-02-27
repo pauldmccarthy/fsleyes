@@ -364,13 +364,13 @@ class GLMesh(globject.GLObject):
         if xform is None:
             xform = np.eye(4)
 
-        vertices, faces, contribs, vertXform = self.calculateIntersection(
+        vertices, faces, dists, vertXform = self.calculateIntersection(
             zpos, bbox)
 
         if vertXform is not None:
             xform = transform.concat(xform, vertXform)
 
-        vdata     = self.getVertexData(faces, contribs)
+        vdata     = self.getVertexData(faces, dists)
         useShader = vdata is not None
         vertices  = vertices.reshape(-1, 3)
 
@@ -601,9 +601,9 @@ class GLMesh(globject.GLObject):
 
 
     def calculateIntersection(self, zpos, bbox=None):
-        """Uses the :func:`.trimesh.mesh_plane` function to calculate
-        the intersection of the mesh with the viewing plane at the given
-        ``zpos``.
+        """Uses the :func:`.trimesh.mesh_plane` and
+        :func:`.trimesh.points_to_barycentric` functions to calculate the
+        intersection of the mesh with the viewing plane at the given ``zpos``.
 
         :arg zpos:  Z axis coordinate at which the intersection is to be
                     calculated
@@ -619,10 +619,8 @@ class GLMesh(globject.GLObject):
                    - A ``(n, 3)`` array containing the intersected faces
                      (indices into the :attr:`.TriangleMesh.vertices` array).
         
-                   - A ``(n, 2, 3)`` array containing the contribution of
-                     the vertices from each intersected triangle to the
-                     intersection line vertices. See the
-                     :func:`.trimesh.vertex_contributions` function.
+                   - A ``(n, 2, 3)`` array containing the barycentric
+                     coordinates of the intersection line vertices.
         
                    - A ``(4, 4)`` array containing a transformation matrix
                      for transforming the line vertices into the display
@@ -651,23 +649,37 @@ class GLMesh(globject.GLObject):
             vertXform = None
 
         # TODO use bbox to constrain?
-        lines, faces, contribs = trimesh.mesh_plane(
+        lines, faces = trimesh.mesh_plane(
             overlay.vertices,
             overlay.indices,
             plane_normal=normal,
-            plane_origin=origin)
+            plane_origin=origin,
+            return_faces=True)
+
+        faces = overlay.indices[faces]
+
+        # Calculate the barycentric coordinates
+        # (distance from triangle vertices) for
+        # each intersection line - this is used
+        # for interpolating vertex colours.
+
+        triangles = overlay.vertices[faces].repeat(2, axis=0)
+        points    = lines.reshape((-1, 3))
+        
+        dists = trimesh.points_to_barycentric(triangles, points)
+        dists = dists.reshape((-1, 2, 3)) 
  
-        return lines, faces, contribs, vertXform
+        return lines, faces, dists, vertXform
 
 
-    def getVertexData(self, faces, contribs):
+    def getVertexData(self, faces, dists):
         """If :attr:`.MeshOpts.vertexData` is not ``None``, this method
         returns the vertex data to use for the line segments calculated
         in the :meth:`calculateIntersection` method.
 
-        The ``contribs`` array (see :func:`.trimesh.vertex_contributions`) is
-        used to linearly interpolate between the values of the vertices
-        of the intersected triangles (defined in ``faces``).
+        The ``dists`` array contains barycentric coordinates for each line
+        vertex, and is used to linearly interpolate between the values of the
+        vertices of the intersected triangles (defined in ``faces``).
 
         If ``MeshOpts.vertexData is None``, this method returns ``None``.
         """
@@ -681,7 +693,7 @@ class GLMesh(globject.GLObject):
         vdata = vdata[:, opts.vertexDataIndex]
 
         vdata = vdata[faces].repeat(2, axis=0).reshape(-1, 2, 3)
-        vdata = (vdata * contribs).reshape(-1, 3).sum(axis=1)
+        vdata = (vdata * dists).reshape(-1, 3).sum(axis=1)
         
         return vdata
 
