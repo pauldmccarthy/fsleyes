@@ -28,13 +28,13 @@ import                        collections
 
 import fsl.utils.settings  as fslsettings
 import fsleyes.strings     as strings
-from . import                 action
+from . import                 base
 
 
 log = logging.getLogger(__name__)
 
 
-class RunScriptAction(action.Action):
+class RunScriptAction(base.Action):
     """The ``RunScriptAction`` class is an :class:`.Actuion` which allows the
     user to run a custom Python script to control *FSLeyes*. The user is
     prompted to select a script, and then the script is compiled and exceuted.
@@ -48,7 +48,7 @@ class RunScriptAction(action.Action):
         :arg displayCtx:  The top-level :class:`.DisplayContext`.
         :arg overlayList: The :class:`.FSLeyesFrame`.
         """
-        action.Action.__init__(self, self.__doAction)
+        base.Action.__init__(self, self.__doAction)
 
         self.__frame       = frame
         self.__overlayList = overlayList

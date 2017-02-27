@@ -17,14 +17,14 @@ import numpy as np
 import fsl.data.image      as fslimage
 import fsl.utils.transform as transform
 import fsleyes.strings     as strings
-from . import                 action
+from . import                 base
 from . import                 applyflirtxfm
 
 
 log = logging.getLogger(__name__)
 
 
-class SaveFlirtXfmAction(action.Action):
+class SaveFlirtXfmAction(base.Action):
     """The :class:`SaveFlirtXfmAction` class is an :class:`.Action` which
     allows the user to save an :class:`.Image` transformation to disk for
     use with FLIRT.
@@ -38,7 +38,7 @@ class SaveFlirtXfmAction(action.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        action.Action.__init__(self, self.__saveFlirtXfm)
+        base.Action.__init__(self, self.__saveFlirtXfm)
 
         self.__name        = '{}_{}'.format(type(self).__name__, id(self))
         self.__frame       = frame
@@ -50,7 +50,19 @@ class SaveFlirtXfmAction(action.Action):
                                 self.__selectedOverlayChanged)
         displayCtx .addListener('selectedOverlay',
                                 self.__name,
-                                self.__selectedOverlayChanged) 
+                                self.__selectedOverlayChanged)
+
+        
+    def destroy(self):
+        """Must be called when this ``SaveFlirtXfmAction`` is no longer needed.
+        """
+        self.__overlayList.removeListener('overlays')
+        self.__displayCtx .removeListener('selectedOverlay')
+        self.__overlayList = None
+        self.__displayCtx  = None
+        self.__frame       = None
+        
+        base.Action.destroy(self)
 
 
     def __selectedOverlayChanged(self, *a):

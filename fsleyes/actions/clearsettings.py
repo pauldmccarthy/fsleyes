@@ -11,10 +11,10 @@ which clears all settings from the :mod:`fsl.utils.settings` module.
 
 import fsl.utils.settings as fslsettings
 import fsleyes.strings    as strings
-from . import                action
+from . import                base
 
 
-class ClearSettingsAction(action.Action):
+class ClearSettingsAction(base.Action):
     """The ``ClearSettingsAction`` class is an action which clears all
     settings from the :mod:`fsl.utils.settings` module.
     """
@@ -27,7 +27,7 @@ class ClearSettingsAction(action.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        action.Action.__init__(self, self.__clearSettings)
+        base.Action.__init__(self, self.__clearSettings)
 
         self.__frame = frame
 

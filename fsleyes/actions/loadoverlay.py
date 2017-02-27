@@ -40,13 +40,13 @@ import fsl.utils.settings  as fslsettings
 import fsleyes.autodisplay as autodisplay
 import fsleyes.strings     as strings
 import fsleyes.overlay     as fsloverlay
-from . import                 action
+from . import                 base
 
 
 log = logging.getLogger(__name__)
 
 
-class LoadOverlayAction(action.Action):
+class LoadOverlayAction(base.Action):
     """The ``LoadOverlayAction`` allows the user to add files to the
     :class:`.OverlayList`.
     """
@@ -58,7 +58,7 @@ class LoadOverlayAction(action.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        action.Action.__init__(self, self.__loadOverlay)
+        base.Action.__init__(self, self.__loadOverlay)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx

@@ -11,17 +11,17 @@ the user to clear/delete all saved perspectives.
 
 import fsleyes.strings      as strings
 import fsleyes.perspectives as perspectives
-from . import                  action
+from . import                  base
 
 
-class ClearPerspectiveAction(action.Action):
+class ClearPerspectiveAction(base.Action):
     """The ``ClearPerspectiveAction`` allows the user to delete all saved
     perspectives. 
     """
     
     def __init__(self, frame):
         """Create a ``ClearPerspectiveAction``. """
-        action.Action.__init__(self, func=self.__clearPerspectives)
+        base.Action.__init__(self, func=self.__clearPerspectives)
 
         self.__frame = frame
 

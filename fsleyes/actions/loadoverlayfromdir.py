@@ -13,10 +13,10 @@ the user to load overlay files, specified with a directory, into the
 
 import fsleyes.autodisplay as autodisplay
 from . import                 loadoverlay
-from . import                 action
+from . import                 base
 
 
-class LoadOverlayFromDirAction(action.Action):
+class LoadOverlayFromDirAction(base.Action):
     """The ``LoadOverlayFromDirAction`` allows the user to add overlays
     to the :class:`.OverlayList`. This functionality is provided by functions
     in the :mod:`.loadoverlay` module.
@@ -29,7 +29,7 @@ class LoadOverlayFromDirAction(action.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        action.Action.__init__(self, self.__openDir)
+        base.Action.__init__(self, self.__openDir)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx

@@ -11,10 +11,10 @@ which allows the user to save the current perspective.
 
 import fsleyes.strings      as strings
 import fsleyes.perspectives as perspectives
-from . import                  action
+from . import                  base
 
 
-class SavePerspectiveAction(action.Action):
+class SavePerspectiveAction(base.Action):
     """The ``SavePerspectiveAction`` allows the user to save the current
     :class:`.FSLeyesFrame` layout as a perspective, so it can be restored
     at a later time. See the :mod:`.perspectives` module.
@@ -28,7 +28,7 @@ class SavePerspectiveAction(action.Action):
 
         self.__frame = frame
          
-        action.Action.__init__(self, self.__savePerspective)
+        base.Action.__init__(self, self.__savePerspective)
 
         
     def __savePerspective(self):

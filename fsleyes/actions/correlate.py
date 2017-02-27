@@ -22,13 +22,13 @@ import fsl.data.image     as fslimage
 import fsl.utils.async    as async
 import fsl.utils.status   as fslstatus
 import fsleyes.strings    as strings
-from . import                action
+from . import                base
 
 
 log = logging.getLogger(__name__)
 
 
-class CorrelateAction(action.Action):
+class CorrelateAction(base.Action):
     """The ``CorrelateAction`` is a base class for the
     :class:`PearsonCorrelateAction` and :class:`PCACorrelateAction` classes,
     which manages adding/removing correlation overlays to/from the
@@ -49,7 +49,7 @@ class CorrelateAction(action.Action):
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
 
-        action.Action.__init__(self, self.__runCorrelateAction)
+        base.Action.__init__(self, self.__runCorrelateAction)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
@@ -84,7 +84,7 @@ class CorrelateAction(action.Action):
 
         self.__displayCtx .removeListener('selectedOverlay', self.__name)
         self.__overlayList.removeListener('overlays',        self.__name)
-        action.Action.destroy(self)
+        base.Action.destroy(self)
 
         self.__correlateOverlays = None
         self.__overlayCorrelates = None

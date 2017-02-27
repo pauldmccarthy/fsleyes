@@ -10,10 +10,10 @@ the addition/removal of control panels.
 """
 
 
-from . import action
+from . import base
 
 
-class ToggleControlPanelAction(action.ToggleAction):
+class ToggleControlPanelAction(base.ToggleAction):
     """The ``ToggleControlPanelAction`` class is an action which is
     intended to augment :class:`.ViewPanel` actions which add/remove
     a control panel.
@@ -38,7 +38,7 @@ class ToggleControlPanelAction(action.ToggleAction):
 
         import wx.lib.agw.aui as aui
 
-        action.ToggleAction.__init__(self, func, instance)
+        base.ToggleAction.__init__(self, func, instance)
 
         self.__viewPanel = instance
         self.__cpType    = cpType

@@ -9,12 +9,12 @@ displays an about dialog for *FSLeyes*.
 """
 
 
-from . import action
+from . import base
 
 from fsl.utils.platform import platform as fslplatform
 
 
-class AboutAction(action.Action):
+class AboutAction(base.Action):
     """The ``AboutAction`` class is an action which displays an
     :class:`.AboutDialog`, containing information about *FSLeyes*.
     """
@@ -27,7 +27,7 @@ class AboutAction(action.Action):
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
 
-        action.Action.__init__(self, self.__showDialog)
+        base.Action.__init__(self, self.__showDialog)
 
         self.__frame       = frame
         self.__overlayList = overlayList

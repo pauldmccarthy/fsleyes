@@ -10,11 +10,11 @@ uesr to remove all overlays from the :class:`.OverlayList`.
 
 
 import fsleyes.strings as strings
-from . import             action
+from . import             base
 from . import             saveoverlay
 
 
-class RemoveAllOverlaysAction(action.Action):
+class RemoveAllOverlaysAction(base.Action):
     """The ``RemoveAllOverlaysAction`` allows the uesr to remove all
     overlays from the :class:`.OverlayList`.
     """
@@ -27,7 +27,7 @@ class RemoveAllOverlaysAction(action.Action):
         :arg frame:       The :class:`.FSLeyesFrame`.
         """ 
 
-        action.Action.__init__(self, self.__removeAllOverlays)
+        base.Action.__init__(self, self.__removeAllOverlays)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
@@ -44,7 +44,7 @@ class RemoveAllOverlaysAction(action.Action):
         :meth:`.Action.destroy`.
         """
         self.__overlayList.removeListener('overlays', self.__name)
-        action.Action.destroy(self)
+        base.Action.destroy(self)
 
         
     def __overlayListChanged(self, *a):

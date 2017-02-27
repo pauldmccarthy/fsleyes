@@ -14,14 +14,14 @@ import os.path as op
 
 import fsl.data.image                as fslimage
 import fsl.utils.status              as status
-from . import                           action
+from . import                           base
 from . import                           removeoverlay
 
 
 log = logging.getLogger(__name__)
 
 
-class ReloadOverlayAction(action.Action):
+class ReloadOverlayAction(base.Action):
     """The ``ReloadOverlayAction`` reloads the currently selected overlay
     from disk. Currently only :class:`.Image` overlays are supported.
     """
@@ -33,7 +33,7 @@ class ReloadOverlayAction(action.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """ 
-        action.Action.__init__(self, self.__reloadOverlay)
+        base.Action.__init__(self, self.__reloadOverlay)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
@@ -58,7 +58,7 @@ class ReloadOverlayAction(action.Action):
         self.__overlayList.removeListener('overlays',        self.__name)
         self.__displayCtx .removeListener('selectedOverlay', self.__name)
 
-        action.Action.destroy(self)
+        base.Action.destroy(self)
 
 
     def __selectedOverlayChanged(self, *a):

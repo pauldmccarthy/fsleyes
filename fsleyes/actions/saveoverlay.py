@@ -25,13 +25,13 @@ import os.path            as op
 import fsl.utils.settings as fslsettings
 import fsl.data.image     as fslimage
 import fsleyes.strings    as strings
-from . import                action
+from . import                base
 
 
 log = logging.getLogger(__name__)
 
 
-class SaveOverlayAction(action.Action):
+class SaveOverlayAction(base.Action):
     """The ``SaveOverlayAction`` allows the user to save the currently
     selected overlay, if it has been edited, or only exists in memory.
     """
@@ -44,7 +44,7 @@ class SaveOverlayAction(action.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        action.Action.__init__(self, self.__saveOverlay)
+        base.Action.__init__(self, self.__saveOverlay)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
@@ -67,7 +67,10 @@ class SaveOverlayAction(action.Action):
 
         self.__displayCtx .removeListener('selectedOverlay', self.__name)
         self.__overlayList.removeListener('overlays',        self.__name)
-        action.Action.destroy(self)
+        self.__displayCtx  = None
+        self.__overlayList = None
+        
+        base.Action.destroy(self)
 
         
     def __selectedOverlayChanged(self, *a):

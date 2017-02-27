@@ -31,10 +31,10 @@ import wx
 import fsl.data.image      as fslimage
 import fsl.utils.transform as transform
 import fsleyes.strings     as strings
-from . import                 action
+from . import                 base
 
 
-class ApplyFlirtXfmAction(action.Action):
+class ApplyFlirtXfmAction(base.Action):
     """The ``ApplyFlirtXfmAction`` class is an action which allows the user to
     load a FLIRT transformation matrix and apply it to the currently selected
     overlay, if it is an :class:`.Image` instance.
@@ -55,7 +55,7 @@ class ApplyFlirtXfmAction(action.Action):
             :arg displayCtx:  The :class:`.DisplayContext`.
             :arg frame:       The :class:`.FSLeyesFrame`.
             """
-            action.Action.__init__(self, self.__applyFlirtXfm)
+            base.Action.__init__(self, self.__applyFlirtXfm)
 
             self.__name        = '{}_{}'.format(type(self).__name__, id(self))
             self.__frame       = frame

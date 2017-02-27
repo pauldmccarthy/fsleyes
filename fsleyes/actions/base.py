@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# action.py - The Action and ToggleAction classes.
+# base.py - The Action and ToggleAction classes.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #

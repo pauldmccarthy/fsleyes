@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This package provides a collection of actions, classes - the
-:class:`~fsleyes.actions.action.Action` class and the :class:`.ActionProvider`
+:class:`~fsleyes.actions.base.Action` class and the :class:`.ActionProvider`
 class, and the :func:`action` and :func:`toggleAction` decorators.
 
 
@@ -89,35 +89,6 @@ created for, and bound to an ``Action`` or ``ToggleAction`` (through the
 
     ActionButton
     ToggleActionButton
-
-
-Finally, some 'global' actions, and actions used by the :class:`.FSLeyesFrame`
-are also defined in this package:
-
- .. autosummary::
-
-    ~fsleyes.actions.frameactions
-    ~fsleyes.actions.copyoverlay
-    ~fsleyes.actions.loadoverlay
-    ~fsleyes.actions.loadoverlayfromdir
-    ~fsleyes.actions.loadstandard
-    ~fsleyes.actions.loadatlas
-    ~fsleyes.actions.saveoverlay
-    ~fsleyes.actions.removeoverlay
-    ~fsleyes.actions.removealloverlays
-    ~fsleyes.actions.loadcolourmap
-    ~fsleyes.actions.saveperspective
-    ~fsleyes.actions.loadperspective
-    ~fsleyes.actions.clearperspective
-    ~fsleyes.actions.togglecontrolpanel
-    ~fsleyes.actions.diagnosticreport
-    ~fsleyes.actions.about
-    ~fsleyes.actions.importdataseries
-    ~fsleyes.actions.exportdataseries
-    ~fsleyes.actions.correlate
-    ~fsleyes.actions.applyflirtxfm
-    ~fsleyes.actions.saveflirtxfm
-    ~fsleyes.actions.updatecheck
 """
 
 
@@ -130,62 +101,14 @@ import props
 
 import fsleyes.strings as strings
 
-from . import action
-from . import copyoverlay
-from . import loadoverlay
-from . import loadoverlayfromdir
-from . import loadstandard
-from . import loadatlas
-from . import runscript
-from . import saveoverlay
-from . import reloadoverlay
-from . import removeoverlay
-from . import removealloverlays
-from . import loadcolourmap
-from . import saveperspective
-from . import loadperspective
-from . import clearperspective
-from . import clearsettings
+from . import base
 from . import togglecontrolpanel
-from . import diagnosticreport
-from . import about
-from . import importdataseries
-from . import exportdataseries
-from . import correlate
-from . import applyflirtxfm
-from . import saveflirtxfm
-from . import loadvertexdata
-from . import updatecheck
 
 
-Action                   = action            .Action
-ToggleAction             = action            .ToggleAction
-CopyOverlayAction        = copyoverlay       .CopyOverlayAction
-LoadOverlayAction        = loadoverlay       .LoadOverlayAction
-LoadOverlayFromDirAction = loadoverlayfromdir.LoadOverlayFromDirAction
-LoadStandardAction       = loadstandard      .LoadStandardAction
-LoadAtlasAction          = loadatlas         .LoadAtlasAction
-RunScriptAction          = runscript         .RunScriptAction
-SaveOverlayAction        = saveoverlay       .SaveOverlayAction
-ReloadOverlayAction      = reloadoverlay     .ReloadOverlayAction
-RemoveOverlayAction      = removeoverlay     .RemoveOverlayAction
-RemoveAllOverlaysAction  = removealloverlays .RemoveAllOverlaysAction
-LoadColourMapAction      = loadcolourmap     .LoadColourMapAction
-SavePerspectiveAction    = saveperspective   .SavePerspectiveAction
-LoadPerspectiveAction    = loadperspective   .LoadPerspectiveAction
-ClearPerspectiveAction   = clearperspective  .ClearPerspectiveAction
-ClearSettingsAction      = clearsettings     .ClearSettingsAction
+Action                   = base.Action
+ActionDisabledError      = base.ActionDisabledError
+ToggleAction             = base.ToggleAction
 ToggleControlPanelAction = togglecontrolpanel.ToggleControlPanelAction
-DiagnosticReportAction   = diagnosticreport  .DiagnosticReportAction
-AboutAction              = about             .AboutAction
-ImportDataSeriesAction   = importdataseries  .ImportDataSeriesAction
-ExportDataSeriesAction   = exportdataseries  .ExportDataSeriesAction
-PearsonCorrelateAction   = correlate         .PearsonCorrelateAction
-PCACorrelateAction       = correlate         .PCACorrelateAction
-ApplyFlirtXfmAction      = applyflirtxfm     .ApplyFlirtXfmAction
-SaveFlirtXfmAction       = saveflirtxfm      .SaveFlirtXfmAction
-LoadVertexDataAction     = loadvertexdata    .LoadVertexDataAction
-UpdateCheckAction        = updatecheck       .UpdateCheckAction
 
 
 log = logging.getLogger(__name__)

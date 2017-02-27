@@ -13,10 +13,10 @@ import os.path as op
 
 import fsl.utils.platform as fslplatform
 from . import                loadoverlay
-from . import                action
+from . import                base
 
 
-class LoadStandardAction(action.Action):
+class LoadStandardAction(base.Action):
     """The ``LoadStandardAction`` prompts the user to open one or more
     overlays, using ``$FSLDIR/data/standard/`` as the default directory.
     This functionality is provided in the :mod:`.loadoverlay` module.
@@ -30,7 +30,7 @@ class LoadStandardAction(action.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """ 
-        action.Action.__init__(self, self.__loadStandard)
+        base.Action.__init__(self, self.__loadStandard)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
@@ -50,6 +50,7 @@ class LoadStandardAction(action.Action):
         needed. Performs some clean-up.
         """
         fslplatform.platform.deregister(self.__name)
+        base.Action.destroy(self)
 
 
     def __setStandardDir(self, *a):

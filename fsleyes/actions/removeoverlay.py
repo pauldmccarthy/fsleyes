@@ -12,10 +12,10 @@ from the :class:`.OverlayList`.
 
 import fsl.data.image  as fslimage
 import fsleyes.strings as strings
-from . import             action
+from . import             base
 
 
-class RemoveOverlayAction(action.Action):
+class RemoveOverlayAction(base.Action):
     """The ``RemoveOverlayAction`` allows the uesr to remove the currently
     selected overlay.
     """
@@ -29,7 +29,7 @@ class RemoveOverlayAction(action.Action):
         :arg frame:       The :class:`.FSLeyesFrame`.
         """ 
 
-        action.Action.__init__(self, self.__removeOverlay)
+        base.Action.__init__(self, self.__removeOverlay)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
@@ -46,7 +46,7 @@ class RemoveOverlayAction(action.Action):
         :meth:`.Action.destroy`.
         """
         self.__overlayList.removeListener('overlays', self.__name)
-        action.Action.destroy(self)
+        base.Action.destroy(self)
 
         
     def __overlayListChanged(self, *a):

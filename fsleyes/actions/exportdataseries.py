@@ -14,14 +14,14 @@ import numpy                 as np
 
 import fsl.utils.settings    as fslsettings
 import fsleyes.strings       as strings
-from . import                   action
+from . import                   base
 
 
-class ExportDataSeriesAction(action.Action):
+class ExportDataSeriesAction(base.Action):
 
     def __init__(self, overlayList, displayCtx, plotPanel):
 
-        action.Action.__init__(self, self.__doExport)
+        base.Action.__init__(self, self.__doExport)
         
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx

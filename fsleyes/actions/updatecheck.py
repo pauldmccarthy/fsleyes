@@ -16,7 +16,7 @@ from six.moves.urllib import request
 import fsl.utils.status as status
 import fsleyes.version  as version
 import fsleyes.strings  as strings
-from . import              action
+from . import              base
 
 
 log = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ FSLeyes version number.
 """
 
 
-class UpdateCheckAction(action.Action):
+class UpdateCheckAction(base.Action):
     """The :class:`.UpdateCheckAction` is an :class:`.Action` which checks to
     see if a new version of FSLeyes is available, and tells the user if there
     is.
@@ -41,7 +41,7 @@ class UpdateCheckAction(action.Action):
     
     def __init__(self):
         """Create an ``UpdateCheckAction``. """
-        action.Action.__init__(self, self.__checkForUpdates)
+        base.Action.__init__(self, self.__checkForUpdates)
 
 
     def __checkForUpdates(self, showUpToDateMessage=True):

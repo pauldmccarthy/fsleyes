@@ -423,9 +423,11 @@ class PlotPanel(viewpanel.ViewPanel):
         See the :class:`.ImportDataSeriesAction`.
         """
 
-        actions.ImportDataSeriesAction(self.getOverlayList(),
-                                       self.getDisplayContext(),
-                                       self)()
+        from fsleyes.actions.importdataseries import ImportDataSeriesAction
+
+        ImportDataSeriesAction(self.getOverlayList(),
+                               self.getDisplayContext(),
+                               self)()
 
 
     @actions.action
@@ -434,9 +436,12 @@ class PlotPanel(viewpanel.ViewPanel):
 
         See the :class:`.ExportDataSeriesAction`.
         """
-        actions.ExportDataSeriesAction(self.getOverlayList(),
-                                       self.getDisplayContext(),
-                                       self)()
+        
+        from fsleyes.actions.exportdataseries import ExportDataSeriesAction
+        
+        ExportDataSeriesAction(self.getOverlayList(),
+                               self.getDisplayContext(),
+                               self)()
 
 
     def message(self, msg, clear=True, border=False):

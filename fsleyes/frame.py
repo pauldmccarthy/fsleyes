@@ -516,10 +516,11 @@ class FSLeyesFrame(wx.Frame):
 
     def runScript(self, script=None):
         """Runs a custom python script, via a :class:`.RunScriptAction`. """
+
+        from fsleyes.actions.runscript import RunScriptAction
+
+        rsa = RunScriptAction(self.__overlayList, self.__displayCtx, self)
         
-        rsa = actions.RunScriptAction(self.__overlayList,
-                                      self.__displayCtx,
-                                      self)
         rsa(script)
 
 
@@ -1209,28 +1210,30 @@ class FSLeyesFrame(wx.Frame):
     def __makeFSLeyesMenu(self, menu):
         """Called by :meth:`__makeMenuBar`. Creates the *FSLeyes* menu. """
 
+        overlayList = self.__overlayList
+        displayCtx  = self.__displayCtx
+
+        from fsleyes.actions.about            import AboutAction
+        from fsleyes.actions.diagnosticreport import DiagnosticReportAction
+        from fsleyes.actions.clearsettings    import ClearSettingsAction
+        from fsleyes.actions.updatecheck      import UpdateCheckAction
+
         fsleyesActions = [
-            (actions.AboutAction(self.__overlayList,
-                                 self.__displayCtx,
-                                 self),
-             strings.actions[      actions.AboutAction],
-             shortcuts.actions.get(actions.AboutAction),
+            (AboutAction(overlayList, displayCtx, self),
+             strings.actions[      AboutAction],
+             shortcuts.actions.get(AboutAction),
              wx.ID_ABOUT),
-            (actions.DiagnosticReportAction(self.__overlayList,
-                                            self.__displayCtx,
-                                            self),
-             strings.actions[      actions.DiagnosticReportAction],
-             shortcuts.actions.get(actions.DiagnosticReportAction),
+            (DiagnosticReportAction(overlayList, displayCtx, self),
+             strings.actions[      DiagnosticReportAction],
+             shortcuts.actions.get(DiagnosticReportAction),
              wx.ID_ANY),
-            (actions.ClearSettingsAction(self.__overlayList,
-                                         self.__displayCtx,
-                                         self),
-             strings.actions[actions.ClearSettingsAction],
+            (ClearSettingsAction(overlayList, displayCtx, self),
+             strings.actions[ClearSettingsAction],
              None,
              wx.ID_ANY),
-            (actions.UpdateCheckAction(),
-             strings.actions[      actions.UpdateCheckAction],
-             shortcuts.actions.get(actions.UpdateCheckAction),
+            (UpdateCheckAction(),
+             strings.actions[      UpdateCheckAction],
+             shortcuts.actions.get(UpdateCheckAction),
              wx.ID_ANY),
             (self.openHelp,
              strings.actions[       self, 'openHelp'],
@@ -1255,11 +1258,17 @@ class FSLeyesFrame(wx.Frame):
     def __makeFileMenu(self, menu):
         """Called by :meth:`__makeMenuBar`. Creates the *File* menu. """
 
-        fileActions = [actions.LoadOverlayAction,
-                       actions.LoadOverlayFromDirAction,
-                       actions.LoadStandardAction,
-                       actions.LoadAtlasAction,
-                       actions.RunScriptAction]
+        from fsleyes.actions.loadoverlay        import LoadOverlayAction
+        from fsleyes.actions.loadoverlayfromdir import LoadOverlayFromDirAction
+        from fsleyes.actions.loadstandard       import LoadStandardAction
+        from fsleyes.actions.loadatlas          import LoadAtlasAction
+        from fsleyes.actions.runscript          import RunScriptAction
+
+        fileActions = [LoadOverlayAction,
+                       LoadOverlayFromDirAction,
+                       LoadStandardAction,
+                       LoadAtlasAction,
+                       RunScriptAction]
  
         for action in fileActions:
 
@@ -1370,6 +1379,10 @@ class FSLeyesFrame(wx.Frame):
         Re-creates the *View->Perspectives* menu.
         """
 
+        from fsleyes.actions.loadperspective  import LoadPerspectiveAction
+        from fsleyes.actions.saveperspective  import SavePerspectiveAction
+        from fsleyes.actions.clearperspective import ClearPerspectiveAction
+
         perspMenu = self.__perspMenu
 
         # Remove any existing menu items
@@ -1391,7 +1404,7 @@ class FSLeyesFrame(wx.Frame):
 
             menuItem = perspMenu.Append(wx.ID_ANY, title)
             
-            actionObj = actions.LoadPerspectiveAction(self, persp)
+            actionObj = LoadPerspectiveAction(self, persp)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
         if len(builtIns) > 0:
@@ -1402,7 +1415,7 @@ class FSLeyesFrame(wx.Frame):
             
             menuItem  = perspMenu.Append(
                 wx.ID_ANY, strings.perspectives.get(persp, persp))
-            actionObj = actions.LoadPerspectiveAction(self, persp)
+            actionObj = LoadPerspectiveAction(self, persp)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
         # Add menu items for other perspective
@@ -1413,8 +1426,8 @@ class FSLeyesFrame(wx.Frame):
 
         # TODO: Delete a single perspective?
         #       Save to/load from file? 
-        perspActions = [actions.SavePerspectiveAction,
-                        actions.ClearPerspectiveAction]
+        perspActions = [SavePerspectiveAction,
+                        ClearPerspectiveAction]
 
         for pa in perspActions:
 
@@ -1429,20 +1442,29 @@ class FSLeyesFrame(wx.Frame):
         menu.
         """
 
+        from fsleyes.actions.removealloverlays import RemoveAllOverlaysAction
+        from fsleyes.actions.copyoverlay       import CopyOverlayAction
+        from fsleyes.actions.saveoverlay       import SaveOverlayAction
+        from fsleyes.actions.reloadoverlay     import ReloadOverlayAction
+        from fsleyes.actions.removeoverlay     import RemoveOverlayAction
+        from fsleyes.actions.correlate         import PearsonCorrelateAction
+        from fsleyes.actions.applyflirtxfm     import ApplyFlirtXfmAction
+        from fsleyes.actions.saveflirtxfm      import SaveFlirtXfmAction
+
         fileActions = ['selectNextOverlay',
                        'selectPreviousOverlay',
-                       actions.RemoveAllOverlaysAction,
+                       RemoveAllOverlaysAction,
                        'sep',
                        'name',
-                       actions.CopyOverlayAction,
-                       actions.SaveOverlayAction,
-                       actions.ReloadOverlayAction,
-                       actions.RemoveOverlayAction,
+                       CopyOverlayAction,
+                       SaveOverlayAction,
+                       ReloadOverlayAction,
+                       RemoveOverlayAction,
                        'toggleOverlayVisibility',
                        'sep',
-                       actions.PearsonCorrelateAction,
-                       actions.ApplyFlirtXfmAction,
-                       actions.SaveFlirtXfmAction]
+                       PearsonCorrelateAction,
+                       ApplyFlirtXfmAction,
+                       SaveFlirtXfmAction]
 
         for action in fileActions:
 

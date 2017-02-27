@@ -20,13 +20,13 @@ from   fsl.utils.platform import platform as fslplatform
 import fsl.utils.status                   as status
 import fsleyes.strings                    as strings
 import fsleyes.state                      as fslstate
-from . import                                action
+from . import                                base
 
 
 log = logging.getLogger(__name__)
 
 
-class DiagnosticReportAction(action.Action):
+class DiagnosticReportAction(base.Action):
     """The ``DiagnosticReportAction`` generates a JSON-formatted report file
     containing information about the current state of *FSLeyes*. When the this
     :class:`.Action` is run, the user is prompted to select a location to save
@@ -43,7 +43,7 @@ class DiagnosticReportAction(action.Action):
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
 
-        action.Action.__init__(self, self.__action)
+        base.Action.__init__(self, self.__action)
 
         self.__frame       = frame
         self.__overlayList = overlayList

@@ -16,10 +16,10 @@ import fsl.utils.dialog    as fsldlg
 import fsl.utils.transform as transform
 import fsl.utils.settings  as fslsettings
 import fsleyes.strings     as strings
-from . import                 action
+from . import                 base
 
 
-class CopyOverlayAction(action.Action):
+class CopyOverlayAction(base.Action):
     """The ``CopyOverlayAction`` does as its name suggests - it creates a
     copy of the currently selected overlay.
 
@@ -49,7 +49,7 @@ class CopyOverlayAction(action.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        action.Action.__init__(self, self.__copyOverlay)
+        base.Action.__init__(self, self.__copyOverlay)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
@@ -73,7 +73,7 @@ class CopyOverlayAction(action.Action):
 
         self.__displayCtx .removeListener('selectedOverlay', self.__name)
         self.__overlayList.removeListener('overlays',        self.__name)
-        action.Action.destroy(self)
+        base.Action.destroy(self)
 
         
     def __selectedOverlayChanged(self, *a):

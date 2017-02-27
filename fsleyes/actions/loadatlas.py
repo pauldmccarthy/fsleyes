@@ -13,10 +13,10 @@ allows the user to load an atlas specification into FSLeyes. See the
 import fsl.data.atlases as atlases
 
 import fsleyes.strings as  strings
-from . import              action
+from . import              base
 
 
-class LoadAtlasAction(action.Action):
+class LoadAtlasAction(base.Action):
     """The ``LoadAtlasAction`` prompts the user to select a FSL atlas
     specification file. This file is then passed to the
     :func:`.fsl.data.atlases.addAtlas` function, to add the atlas
@@ -30,7 +30,7 @@ class LoadAtlasAction(action.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        action.Action.__init__(self, self.__loadAtlas)
+        base.Action.__init__(self, self.__loadAtlas)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx

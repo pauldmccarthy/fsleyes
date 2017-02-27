@@ -15,10 +15,10 @@ import os.path         as op
 import fsl.data.mesh   as fslmesh
 
 import fsleyes.strings as strings
-from . import             action
+from . import             base
 
 
-class LoadVertexDataAction(action.Action):
+class LoadVertexDataAction(base.Action):
     """The ``LoadVertexDataAction`` prompts the user to load a file
     containing vertex data for a :class:`.TriangleMesh` overlay.
     See the :attr:`.MeshOpts.vertexData` property.
@@ -31,7 +31,7 @@ class LoadVertexDataAction(action.Action):
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
         """ 
-        action.Action.__init__(self, self.__loadVertexData)
+        base.Action.__init__(self, self.__loadVertexData)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
@@ -52,7 +52,7 @@ class LoadVertexDataAction(action.Action):
         self.__displayCtx .removeListener('selectedOverlay', self.__name)
         self.__overlayList.removeListener('overlays',        self.__name)
 
-        action.Action.destroy(self)
+        base.Action.destroy(self)
 
 
     def __selectedOverlayChanged(self, *a):
