@@ -21,16 +21,14 @@ import logging
 
 import wx
 
-import props
-
 import fsl.data.image                          as fslimage
-import fsl.data.constants                      as constants
 import fsl.utils.layout                        as fsllayout
 import fsl.utils.dialog                        as fsldlg
 import fsleyes.strings                         as strings
 import fsleyes.gl                              as fslgl
 import fsleyes.actions                         as actions
 import fsleyes.colourmaps                      as colourmaps
+import fsleyes.gl.ortholabels                  as ortholabels
 import fsleyes.gl.wxglslicecanvas              as slicecanvas
 import fsleyes.controls.cropimagepanel         as cropimagepanel
 import fsleyes.controls.edittransformpanel     as edittransformpanel
@@ -81,15 +79,11 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     **Anatomical labels**
     
 
-    By default, the ``OrthoPanel`` will use :class:`.Text` annotations to
-    display labels on each :class:`.SliceCanvas`, showing the user the
-    anatomical orientation of the display on each panel. These labels are only
-    shown if the currently selected overlay (as dicated by the
-    :attr:`.DisplayContext.selectedOverlay` property) is a :class:`.Image`
-    instance, **or** the :meth:`.DisplayOpts.getReferenceImage` method for the
-    currently selected overlay returns an :class:`.Image` instance.
+    The ``OrthoPanel`` creates an :class:`.OrthoLabels` instance, which
+    manages the display of anatomical orientation labels on each of the
+    three :class:`.SliceCanvas` instances.
 
-
+    
     **Display**
 
 
@@ -178,53 +172,18 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                                      displayCtx,
                                                      zax=2)
 
+        self.__labelMgr = ortholabels.OrthoLabels(
+            overlayList,
+            displayCtx,
+            sceneOpts,
+            self.__xcanvas,
+            self.__ycanvas,
+            self.__zcanvas)
+            
         # If an edit menu is added when in
         # 'edit' profile (see __profileChanged),
         # its name is stored here.
         self.__editMenuTitle = None
-
-        # Labels (Text annotations) to show
-        # anatomical orientation, stored in
-        # a dict for each canvas
-        self.__xlabels = {}
-        self.__ylabels = {}
-        self.__zlabels = {}
-
-        xannot = self.__xcanvas.getAnnotations()
-        yannot = self.__ycanvas.getAnnotations()
-        zannot = self.__zcanvas.getAnnotations()
-
-        for side in ('left', 'right', 'top', 'bottom'):
-            self.__xlabels[side] = xannot.text("", 0, 0, width=2, hold=True)
-            self.__ylabels[side] = yannot.text("", 0, 0, width=2, hold=True)
-            self.__zlabels[side] = zannot.text("", 0, 0, width=2, hold=True)
-
-        for labels in [self.__xlabels, self.__ylabels, self.__zlabels]:
-            labels['left']  .halign = 'left'
-            labels['right'] .halign = 'right'
-            labels['top']   .halign = 'centre'
-            labels['bottom'].halign = 'centre'
-
-            labels['left']  .valign = 'centre'
-            labels['right'] .valign = 'centre'
-            labels['top']   .valign = 'top'
-            labels['bottom'].valign = 'bottom'
-
-            labels['left']  .xpos = 0
-            labels['left']  .ypos = 0.5
-            labels['right'] .xpos = 1.0
-            labels['right'] .ypos = 0.5
-            labels['bottom'].xpos = 0.5
-            labels['bottom'].ypos = 0
-            labels['top']   .xpos = 0.5
-            labels['top']   .ypos = 1.0
-
-            # Keep labels 5 pixels away
-            # from the canvas edges
-            labels['left']  .xoff =  5
-            labels['right'] .xoff = -5
-            labels['top']   .yoff = -5
-            labels['bottom'].yoff =  5
 
         self.__xcanvas.bindProps('showCursor',   sceneOpts)
         self.__ycanvas.bindProps('showCursor',   sceneOpts)
@@ -243,11 +202,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__zcanvas.bindProps('cursorColour', sceneOpts)
 
         # Callbacks for ortho panel layout options
-        sceneOpts.addListener('layout',      name, self.__refreshLayout)
-        sceneOpts.addListener('showLabels',  name, self.__refreshLabels)
-        sceneOpts.addListener('labelSize',   name, self.__refreshLabels)
-        sceneOpts.addListener('labelColour', name, self.__refreshLabels)
-        sceneOpts.addListener('bgColour'  ,  name, self.__bgColourChanged)
+        sceneOpts.addListener('layout',   name, self.__refreshLayout)
+        sceneOpts.addListener('bgColour', name, self.__bgColourChanged)
 
         # Individual zoom control for each canvas
         self.__xcanvas.bindProps('zoom', sceneOpts, 'xzoom')
@@ -277,7 +233,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                 self.__refreshLayout)
         displayCtx .addListener('displaySpace',
                                 name,
-                                self.__displaySpaceChanged)
+                                self.__radioOrientationChanged)
         displayCtx .addListener('radioOrientation',
                                 name,
                                 self.__radioOrientationChanged) 
@@ -294,6 +250,14 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         sceneOpts.addListener('showYCanvas', name, self.__toggleCanvas)
         sceneOpts.addListener('showZCanvas', name, self.__toggleCanvas)
 
+        # Callbacks which just need to refresh
+        def refresh(*a):
+            self.Refresh()
+            
+        sceneOpts.addListener('labelSize',   name, refresh, weak=False)
+        sceneOpts.addListener('labelColour', name, refresh, weak=False)
+        sceneOpts.addListener('showLabels',  name, refresh, weak=False)
+
         self.addListener('profile', name, self.__profileChanged)
 
         # Call the __onResize method to refresh
@@ -303,9 +267,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         contentPanel.Bind(wx.EVT_SIZE, self.__onResize)
 
         # Initialise the panel
-        self.__radioOrientationChanged(refreshLabels=False)
-        self.__refreshLayout()
-        self.__bgColourChanged()
+        self.__radioOrientationChanged()
+        self.__refreshLayout(refresh=False)
+        self.__bgColourChanged(refresh=False)
         self.__overlayListChanged()
         self.__locationChanged()
         self.centrePanelLayout()
@@ -330,14 +294,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__xcanvas.destroy()
         self.__ycanvas.destroy()
         self.__zcanvas.destroy()
+        self.__orthoLabels.destroy()
         self.__removeEditMenu()
-
-        # The _overlayListChanged method adds
-        # listeners to individual overlays,
-        # so we have to remove them too
-        for ovl in self._overlayList:
-            opts = self._displayCtx.getOpts(ovl)
-            opts.removeListener('bounds', self._name)
 
         canvaspanel.CanvasPanel.destroy(self)
 
@@ -687,7 +645,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             editMenu.Destroy()
 
 
-    def __bgColourChanged(self, *a):
+    def __bgColourChanged(self, *a, **kwa):
         """Called when the :class:`.SceneOpts.bgColour` property changes.
         Updates the panel and anatomical label background/foreground
         colours.
@@ -695,7 +653,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         The :attr:`.SliceCanvasOpts.bgColour` properties are bound to
         ``SceneOpts.bgColour``,(see :meth:`.HasProperties.bindProps`), so we
         don't need to manually update them.
+
+        :arg refresh: Must be passed as a keyword argument. If ``True`` (the
+                      default), this ``OrthoPanel`` is refreshed. 
         """
+
+        refresh = kwa.pop('refresh', True)
 
         sceneOpts = self.getSceneOptions()
         bg        = sceneOpts.bgColour
@@ -709,8 +672,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.getContentPanel().SetBackgroundColour(intbg)
         self.getContentPanel().SetForegroundColour(intfg)
 
-        with props.suppress(sceneOpts, 'labelColour', self.getName()):
-            sceneOpts.labelColour = fg
+        sceneOpts.labelColour = fg
 
         cbCanvas = self.getColourBarCanvas()
         if cbCanvas is not None:
@@ -720,10 +682,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__ycanvas.SetBackgroundColour(intbg)
         self.__zcanvas.SetBackgroundColour(intbg)
 
-        self.__refreshLabels(refresh=False)
-
-        self.Refresh()
-        self.Update()
+        if refresh:
+            self.Refresh()
+            self.Update()
 
         
     def __toggleCanvas(self, *a):
@@ -754,17 +715,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.PostSizeEvent()
 
 
-    def __radioOrientationChanged(self, *a, **kwa):
-        """Called when the :attr:`.DisplayContext.radioOrientation` property
-        changes. Figures out if the left-right canvas axes need to be flipped,
-        and does so if necessary.
-
-        :arg refreshLabels: Must be passed as a keyword argument. If ``True``
-                            (the default), `meth:`__refreshLabels` is called.
-                            This argument is used by :meth:`__init__`.
+    def __radioOrientationChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.radioOrientation` or
+        :attr:`.DisplayContext.displaySpace` property changes. Figures out if
+        the left-right canvas axes need to be flipped, and does so if
+        necessary.
         """
-
-        refreshLabels = kwa.get('refreshLabels', True)
 
         if len(self._overlayList) == 0:
             return
@@ -775,34 +731,13 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__ycanvas.invertX = flip
         self.__zcanvas.invertX = flip
 
-        if refreshLabels:
-            self.__refreshLabels()
-
 
     def __overlayListChanged(self, *a):
         """Called when the :class:`.OverlayList` or
-        :attr:`.DisplayContext.selectedOverlay` is changed.
-
-        Adds a listener to the :attr:`.DisplayOpts.bounds` property for the
-        currently selected overlay, to listen for changes to its bounds, which
-        will trigger an update to the anatomical labels (see
-        :meth:`__refreshLabels`).
+        :attr:`.DisplayContext.selectedOverlay` is changed. Enables/disables
+        various action methods based on the currently selected overlay.
         """
         
-        for i, ovl in enumerate(self._overlayList):
-
-            opts = self._displayCtx.getOpts(ovl)
-
-            # Update anatomy labels when 
-            # overlay bounds change
-            opts.addListener('bounds',
-                             self._name,
-                             self.__refreshLabels,
-                             overwrite=True)
-                
-        # anatomical orientation may have changed with an image change
-        self.__refreshLabels(refresh=False)
-
         # Disable actions that need an overlay
         haveOverlays = len(self._overlayList) > 0
         selOverlay   = self._displayCtx.getSelectedOverlay()
@@ -822,13 +757,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.toggleEditTransformPanel.enabled = isImage
         self.toggleCropMode          .enabled = isImage
 
-        
-    def __displaySpaceChanged(self, *a):
-        """Called when the :attr:`.DisplayContext.displaySpace` changes.
-        Refreshes the anatomical orientation labels.
-        """
-        self.__radioOrientationChanged()
-
             
     def __onResize(self, ev):
         """Called whenever the panel is resized. Makes sure that the
@@ -837,174 +765,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """
         ev.Skip()
         self.__calcCanvasSizes()
-
-
-    def __refreshLabels(self, *a, **kwa):
-        """Updates the attributes of the :class:`.Text` anatomical orientation
-        annotations on each :class:`.SliceCanvas`.
-
-        :arg refresh:  Must be passed as a keyword argument. If ``True`` (the
-                       default), the panel is refreshed.
-        """
-
-        refresh = kwa.pop('refresh', True)
-        
-        displayCtx = self.getDisplayContext()
-        overlay    = displayCtx.getSelectedOverlay()
-        overlay    = displayCtx.getReferenceImage(overlay)
-        sopts      = self.getSceneOptions()
-
-        xcanvas = self.__xcanvas
-        ycanvas = self.__ycanvas
-        zcanvas = self.__zcanvas
-        xlabels = self.__xlabels
-        ylabels = self.__ylabels
-        zlabels = self.__zlabels
-
-        for lbls in [xlabels, ylabels, zlabels]:
-            for text in lbls.values():
-                text.enabled = sopts.showLabels
-
-        if overlay is None:
-            return
-
-        if not sopts.showLabels:
-            if refresh:
-                self.Refresh()
-                self.Update() 
-            return
- 
-        labels, orients, vertOrient  = self.__getLabels(overlay)
-        xlo, ylo, zlo, xhi, yhi, zhi = labels
-
-        fontSize = sopts.labelSize
-        bgColour = tuple(sopts.bgColour)
-        fgColour = tuple(sopts.labelColour)
-
-        # If any axis orientation is unknown, and the
-        # the background colour is black or white,
-        # make the foreground colour red, to highlight
-        # the unknown orientation. It's too difficult
-        # to do this for any background colour.
-        if constants.ORIENT_UNKNOWN in orients and \
-           bgColour in ((0, 0, 0, 1), (1, 1, 1, 1)):
-            fgColour = (1, 0, 0, 1) 
-
-        xcxlo, xcxhi = ylo, yhi
-        xcylo, xcyhi = zlo, zhi
-        ycxlo, ycxhi = xlo, xhi
-        ycylo, ycyhi = zlo, zhi
-        zcxlo, zcxhi = xlo, xhi
-        zcylo, zcyhi = ylo, yhi
-
-        if xcanvas.invertX: xcxlo, xcxhi = xcxhi, xcxlo
-        if xcanvas.invertY: xcylo, xcyhi = xcyhi, xcylo
-        if ycanvas.invertX: ycxlo, ycxhi = ycxhi, ycxlo
-        if ycanvas.invertY: ycylo, ycyhi = ycyhi, ycylo
-        if zcanvas.invertX: zcxlo, zcxhi = zcxhi, zcxlo
-        if zcanvas.invertY: zcylo, zcyhi = zcyhi, zcylo
-
-        xlabels['left']  .text = xcxlo
-        xlabels['right'] .text = xcxhi
-        xlabels['bottom'].text = xcylo
-        xlabels['top']   .text = xcyhi
-        ylabels['left']  .text = ycxlo
-        ylabels['right'] .text = ycxhi
-        ylabels['bottom'].text = ycylo
-        ylabels['top']   .text = ycyhi
-        zlabels['left']  .text = zcxlo
-        zlabels['right'] .text = zcxhi
-        zlabels['bottom'].text = zcylo
-        zlabels['top']   .text = zcyhi 
-
-        shows  = [sopts.showXCanvas, sopts.showYCanvas, sopts.showZCanvas] 
-        labels = [xlabels,           ylabels,           zlabels]
-
-        for show, lbls in zip(shows, labels):
-            
-            lbls['left']  .enabled = show
-            lbls['right'] .enabled = show
-            lbls['bottom'].enabled = show
-            lbls['top']   .enabled = show
-            
-            if not show:
-                continue
-
-            lbls['left']  .fontSize = fontSize
-            lbls['right'] .fontSize = fontSize
-            lbls['bottom'].fontSize = fontSize
-            lbls['top']   .fontSize = fontSize
-            lbls['left']  .colour   = fgColour
-            lbls['right'] .colour   = fgColour
-            lbls['bottom'].colour   = fgColour
-            lbls['top']   .colour   = fgColour
-
-            if vertOrient:
-                lbls['left'] .angle = 90
-                lbls['right'].angle = 90
-
-        if refresh:
-            self.Refresh()
-            self.Update()
-
-        
-    def __getLabels(self, refImage):
-        """Generates some orientation labels to use for the given reference
-        image (assumed to be a :class:`.Nifti` overlay).
-
-        Returns a tuple containing:
-
-          - The ``(xlo, ylo, zlo, xhi, yhi, zhi)`` bounds
-          - The ``(xorient, yorient, zorient)`` orientations (see
-            :meth:`.Image.getOrientation`)
-          - A boolean flag which indicates whether the label should be oriented
-            vertically (``True``), or horizontally (``False``).
-        """
-        
-        opts = self._displayCtx.getOpts(refImage)
-
-        vertOrient = False
-        xorient    = None
-        yorient    = None
-        zorient    = None
-        
-        # If we are displaying in voxels/scaled voxels,
-        # and this image is not the current display
-        # image, then we do not show anatomical
-        # orientation labels, as there's no guarantee
-        # that all of the loaded overlays are in the
-        # same orientation, and it can get confusing.
-        if opts.transform in ('id', 'pixdim', 'pixdim-flip') and \
-           self._displayCtx.displaySpace != refImage:
-            xlo        = 'Xmin'
-            xhi        = 'Xmax'
-            ylo        = 'Ymin'
-            yhi        = 'Ymax'
-            zlo        = 'Zmin'
-            zhi        = 'Zmax'
-            vertOrient = True
-
-        # Otherwise we assume that all images
-        # are aligned to each other, so we
-        # estimate the current image's orientation
-        # in the display coordinate system
-        else:
-
-            xform      = opts.getTransform('world', 'display')
-            xorient    = refImage.getOrientation(0, xform)
-            yorient    = refImage.getOrientation(1, xform)
-            zorient    = refImage.getOrientation(2, xform)
-
-            xlo        = strings.anatomy['Nifti', 'lowshort',  xorient]
-            ylo        = strings.anatomy['Nifti', 'lowshort',  yorient]
-            zlo        = strings.anatomy['Nifti', 'lowshort',  zorient]
-            xhi        = strings.anatomy['Nifti', 'highshort', xorient]
-            yhi        = strings.anatomy['Nifti', 'highshort', yorient]
-            zhi        = strings.anatomy['Nifti', 'highshort', zorient]
-
-        return ((xlo, ylo, zlo, xhi, yhi, zhi), 
-                (xorient, yorient, zorient),
-                vertOrient)
 
 
     def __calcCanvasSizes(self, *a):
@@ -1055,10 +815,15 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             canvas.SetMaxSize(size)
 
         
-    def __refreshLayout(self, *a):
+    def __refreshLayout(self, *a, **kwa):
         """Called when the :attr:`.OrthoOpts.layout` property changes, or the
         canvas layout needs to be refreshed. Updates the layout accordingly.
+
+        :arg refresh: Must be passed as a keyword argument. If ``True`` (the
+                      default), this ``OrthoPanel`` is refreshed.
         """
+
+        refresh = kwa.pop('refresh', True)
 
         opts   = self.getSceneOptions()
         layout = opts.layout
@@ -1126,17 +891,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # When in grid layout, flip the horizontal axis
         # of the X canvas (assumed to be A/P), to force
         # third angle orthographic projection.
-        xinv = self.__xcanvas.invertX
         self.__xcanvas.invertX = layout == 'grid'
 
-        # If we just inverted the x canvs,
-        # make sure labels are up to date
-        if xinv != self.__xcanvas.invertX:
-            self.__refreshLabels(refresh=False)
-
-        self.Layout()
-        self.getContentPanel().Layout()
-        self.Refresh()
+        if refresh:
+            self.Layout()
+            self.getContentPanel().Layout()
+            self.Refresh()
 
 
     def __locationChanged(self, *a):
