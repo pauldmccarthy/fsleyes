@@ -161,6 +161,7 @@ ABS voxValue, voxValue;
 
 # Cumulatively combine the rgb
 # channels of those three colours
+MOV fragColour, 0;
 MAD fragColour, voxValue.x, xColour, fragColour;
 MAD fragColour, voxValue.y, yColour, fragColour;
 MAD fragColour, voxValue.z, zColour, fragColour;
