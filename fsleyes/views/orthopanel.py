@@ -294,7 +294,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__xcanvas.destroy()
         self.__ycanvas.destroy()
         self.__zcanvas.destroy()
-        self.__orthoLabels.destroy()
+        self.__labelMgr.destroy()
         self.__removeEditMenu()
 
         canvaspanel.CanvasPanel.destroy(self)

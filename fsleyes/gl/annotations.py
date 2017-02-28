@@ -808,6 +808,7 @@ class Text(AnnotationObject):
                        text.
 
         :arg angle:    Angle, in degrees, by which to rotate the text.
+                       NOT IMPLEMENTED YET
         """
 
         AnnotationObject.__init__(self, annot, xax, yax, *args, **kwargs)

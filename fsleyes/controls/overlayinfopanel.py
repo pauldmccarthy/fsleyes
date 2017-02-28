@@ -459,7 +459,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                      section=orientSect)
 
         for i in range(3):
-            xform  = opts.getTransform('world', 'id')
+            xform  = opts.getTransform('voxel', 'world')
             orient = overlay.getOrientation(i, xform)
             orient = '{} - {}'.format(
                 strings.anatomy['Nifti', 'lowlong',  orient],

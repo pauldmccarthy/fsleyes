@@ -44,65 +44,72 @@ class OrthoLabels(object):
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg orthoOpts:   :class:`.OrthoOpts` instance which contains
-                           display settings.
-        :arg xcanvas:     :class:`.SliceCanvas` for the X plane. 
-        :arg ycanvas:     :class:`.SliceCanvas` for the Y plane. 
-        :arg zcanvas:     :class:`.SliceCanvas` for the Z plane.
+                          display settings.
+        :arg xcanvas:     :class:`.SliceCanvas` for the X plane, or ``None``.
+        :arg ycanvas:     :class:`.SliceCanvas` for the Y plane, or ``None``.
+        :arg zcanvas:     :class:`.SliceCanvas` for the Z plane, or ``None``.
         """
 
         self.__name        = '{}_{}'.format(type(self).__name__, id(self))
         self.__orthoOpts   = orthoOpts
         self.__displayCtx  = displayCtx
         self.__overlayList = overlayList
-        self.__xcanvas     = xcanvas
-        self.__ycanvas     = ycanvas
-        self.__zcanvas     = zcanvas
 
-        # Labels (Text annotations) to show
-        # anatomical orientation, stored in
-        # a dict for each canvas
-        self.__xlabels = {}
-        self.__ylabels = {}
-        self.__zlabels = {}
+        # Any of the canvases may be None,
+        # so we store a list of the ones
+        # that are not None.
+        # 
+        # labels is a list of dicts, one
+        # for each canvas, containing Text
+        # annotations to show anatomical
+        # orientation
+        canvases  = [xcanvas, ycanvas, zcanvas]
+        canvases  = [c  for c in canvases if c is not None]
+        annots    = [{} for c in canvases]
 
-        xannot = self.__xcanvas.getAnnotations()
-        yannot = self.__ycanvas.getAnnotations()
-        zannot = self.__zcanvas.getAnnotations()
+        self.__canvases = canvases
+        self.__annots   = annots
 
+        # Create the Text annotations
         for side in ('left', 'right', 'top', 'bottom'):
-            self.__xlabels[side] = xannot.text("", 0, 0, width=2, hold=True)
-            self.__ylabels[side] = yannot.text("", 0, 0, width=2, hold=True)
-            self.__zlabels[side] = zannot.text("", 0, 0, width=2, hold=True)
+            for canvas, cannots in zip(canvases, annots):
+                annot         = canvas.getAnnotations()
+                cannots[side] = annot.text('', 0, 0, width=2, hold=True)
 
-        for labels in [self.__xlabels, self.__ylabels, self.__zlabels]:
-            labels['left']  .halign = 'left'
-            labels['right'] .halign = 'right'
-            labels['top']   .halign = 'centre'
-            labels['bottom'].halign = 'centre'
+        # Initialise the display properties 
+        # of each Text annotation
+        for cannots in annots:
+            cannots['left']  .halign = 'left'
+            cannots['right'] .halign = 'right'
+            cannots['top']   .halign = 'centre'
+            cannots['bottom'].halign = 'centre'
 
-            labels['left']  .valign = 'centre'
-            labels['right'] .valign = 'centre'
-            labels['top']   .valign = 'top'
-            labels['bottom'].valign = 'bottom'
+            cannots['left']  .valign = 'centre'
+            cannots['right'] .valign = 'centre'
+            cannots['top']   .valign = 'top'
+            cannots['bottom'].valign = 'bottom'
 
-            labels['left']  .xpos = 0
-            labels['left']  .ypos = 0.5
-            labels['right'] .xpos = 1.0
-            labels['right'] .ypos = 0.5
-            labels['bottom'].xpos = 0.5
-            labels['bottom'].ypos = 0
-            labels['top']   .xpos = 0.5
-            labels['top']   .ypos = 1.0
+            cannots['left']  .xpos = 0
+            cannots['left']  .ypos = 0.5
+            cannots['right'] .xpos = 1.0
+            cannots['right'] .ypos = 0.5
+            cannots['bottom'].xpos = 0.5
+            cannots['bottom'].ypos = 0
+            cannots['top']   .xpos = 0.5
+            cannots['top']   .ypos = 1.0
 
-            # Keep labels 5 pixels away
+            # Keep cannots 5 pixels away
             # from the canvas edges
-            labels['left']  .xoff =  5
-            labels['right'] .xoff = -5
-            labels['top']   .yoff = -5
-            labels['bottom'].yoff =  5
+            cannots['left']  .xoff =  5
+            cannots['right'] .xoff = -5
+            cannots['top']   .yoff = -5
+            cannots['bottom'].yoff =  5
 
+        # Add listeners to properties
+        # that need to trigger a label
+        # refresh.
         name = self.__name
-
+ 
         # Make immediate so the label
         # annotations get updated before
         # a panel refresh occurs (where
@@ -114,18 +121,16 @@ class OrthoLabels(object):
             'immediate' : True
         }
 
+        for c in canvases:
+            c.addListener('invertX', **refreshArgs)
+            c.addListener('invertY', **refreshArgs)
+
         orthoOpts  .addListener('showLabels',       **refreshArgs)
         orthoOpts  .addListener('labelSize',        **refreshArgs)
         orthoOpts  .addListener('labelColour',      **refreshArgs)
         displayCtx .addListener('selectedOverlay',  **refreshArgs)
         displayCtx .addListener('displaySpace',     **refreshArgs)
         displayCtx .addListener('radioOrientation', **refreshArgs)
-        xcanvas    .addListener('invertX',          **refreshArgs)
-        xcanvas    .addListener('invertY',          **refreshArgs)
-        ycanvas    .addListener('invertX',          **refreshArgs)
-        ycanvas    .addListener('invertY',          **refreshArgs)
-        zcanvas    .addListener('invertX',          **refreshArgs)
-        zcanvas    .addListener('invertY',          **refreshArgs)
         overlayList.addListener('overlays', name, self.__overlayListChanged)
 
         
@@ -138,9 +143,14 @@ class OrthoLabels(object):
         overlayList = self.__overlayList
         displayCtx  = self.__displayCtx
         orthoOpts   = self.__orthoOpts
-        xcanvas     = self.__xcanvas
-        ycanvas     = self.__ycanvas
-        zcanvas     = self.__zcanvas
+        canvases    = self.__canvases
+        annots      = self.__annots
+
+        self.__overlayList = None
+        self.__displayCtx  = None
+        self.__orthoOpts   = None
+        self.__canvases    = None
+        self.__annots      = None
         
         orthoOpts  .removeListener('showLabels',       name)
         orthoOpts  .removeListener('labelSize',        name)
@@ -148,20 +158,23 @@ class OrthoLabels(object):
         displayCtx .removeListener('selectedOverlay',  name)
         displayCtx .removeListener('displaySpace',     name)
         displayCtx .removeListener('radioOrientation', name)
-        xcanvas    .removeListener('invertX',          name)
-        xcanvas    .removeListener('invertY',          name)
-        ycanvas    .removeListener('invertX',          name)
-        ycanvas    .removeListener('invertY',          name)
-        zcanvas    .removeListener('invertX',          name)
-        zcanvas    .removeListener('invertY',          name)
         overlayList.removeListener('overlays',         name)
+
+        for c in canvases:
+            c.removeListener('invertX', name)
+            c.removeListener('invertY', name)
 
         # The _overlayListChanged method adds
         # listeners to individual overlays,
         # so we have to remove them too
-        for ovl in self._overlayList:
-            opts = self._displayCtx.getOpts(ovl)
-            opts.removeListener('bounds', self._name)
+        for ovl in overlayList:
+            opts = displayCtx.getOpts(ovl)
+            opts.removeListener('bounds', name)
+
+        # Destroy the Text annotations
+        for a in annots:
+            for side, text in a.items():
+                text.destroy()
 
 
     def __overlayListChanged(self, *a):
@@ -200,21 +213,19 @@ class OrthoLabels(object):
         sopts      = self.__orthoOpts
         overlay    = displayCtx.getSelectedOverlay()
         ref        = displayCtx.getReferenceImage(overlay)
-        
-        xcanvas = self.__xcanvas
-        ycanvas = self.__ycanvas
-        zcanvas = self.__zcanvas
-        xlabels = self.__xlabels
-        ylabels = self.__ylabels
-        zlabels = self.__zlabels
 
-        for lbls in [xlabels, ylabels, zlabels]:
-            for text in lbls.values():
+        canvases = self.__canvases
+        annots   = self.__annots
+
+        for cannots in annots:
+            for text in cannots.values():
                 text.enabled = sopts.showLabels and (overlay is not None)
 
         if not sopts.showLabels or overlay is None:
             return
 
+        # Calculate all of the xyz
+        # labels for this overlay
         labels, orients, vertOrient  = self.__getLabels(ref)
         xlo, ylo, zlo, xhi, yhi, zhi = labels
 
@@ -231,58 +242,51 @@ class OrthoLabels(object):
            bgColour in ((0, 0, 0, 1), (1, 1, 1, 1)):
             fgColour = (1, 0, 0, 1) 
 
-        xcxlo, xcxhi = ylo, yhi
-        xcylo, xcyhi = zlo, zhi
-        ycxlo, ycxhi = xlo, xhi
-        ycylo, ycyhi = zlo, zhi
-        zcxlo, zcxhi = xlo, xhi
-        zcylo, zcyhi = ylo, yhi
+        # A list, with one entry for each canvas,
+        # and with each entry of the form:
+        #
+        #   [[xlo, xhi], [ylo, yhi]]
+        # 
+        # containing the low/high labels for the
+        # horizontal (x) and vertical (y) canvas
+        # axes.
+        canvasLabels = []
+        for canvas in canvases:
 
-        if xcanvas.invertX: xcxlo, xcxhi = xcxhi, xcxlo
-        if xcanvas.invertY: xcylo, xcyhi = xcyhi, xcylo
-        if ycanvas.invertX: ycxlo, ycxhi = ycxhi, ycxlo
-        if ycanvas.invertY: ycylo, ycyhi = ycyhi, ycylo
-        if zcanvas.invertX: zcxlo, zcxhi = zcxhi, zcxlo
-        if zcanvas.invertY: zcylo, zcyhi = zcyhi, zcylo
-
-        xlabels['left']  .text = xcxlo
-        xlabels['right'] .text = xcxhi
-        xlabels['bottom'].text = xcylo
-        xlabels['top']   .text = xcyhi
-        ylabels['left']  .text = ycxlo
-        ylabels['right'] .text = ycxhi
-        ylabels['bottom'].text = ycylo
-        ylabels['top']   .text = ycyhi
-        zlabels['left']  .text = zcxlo
-        zlabels['right'] .text = zcxhi
-        zlabels['bottom'].text = zcylo
-        zlabels['top']   .text = zcyhi 
-
-        shows  = [sopts.showXCanvas, sopts.showYCanvas, sopts.showZCanvas] 
-        labels = [xlabels,           ylabels,           zlabels]
-
-        for show, lbls in zip(shows, labels):
+            cax = 'xyz'[canvas.zax]
             
-            lbls['left']  .enabled = show
-            lbls['right'] .enabled = show
-            lbls['bottom'].enabled = show
-            lbls['top']   .enabled = show
-            
-            if not show:
-                continue
+            if   cax == 'x': clabels = [[ylo, yhi], [zlo, zhi]]
+            elif cax == 'y': clabels = [[xlo, xhi], [zlo, zhi]]
+            elif cax == 'z': clabels = [[xlo, xhi], [ylo, yhi]]
 
-            lbls['left']  .fontSize = fontSize
-            lbls['right'] .fontSize = fontSize
-            lbls['bottom'].fontSize = fontSize
-            lbls['top']   .fontSize = fontSize
-            lbls['left']  .colour   = fgColour
-            lbls['right'] .colour   = fgColour
-            lbls['bottom'].colour   = fgColour
-            lbls['top']   .colour   = fgColour
+            if canvas.invertX: clabels[0] = [clabels[0][1], clabels[0][0]]
+            if canvas.invertY: clabels[1] = [clabels[1][1], clabels[1][0]]
+
+            canvasLabels.append(clabels)
+
+        # Update the text annotation properties
+        for canvas, cannots, clabels in zip(canvases, annots, canvasLabels):
+
+            cax = 'xyz'[canvas.zax]
+
+            cannots['left']  .text = clabels[0][0]
+            cannots['right'] .text = clabels[0][1]
+            cannots['bottom'].text = clabels[1][0]
+            cannots['top']   .text = clabels[1][1]
+
+            if   cax == 'x': show = sopts.showXCanvas
+            elif cax == 'y': show = sopts.showYCanvas
+            elif cax == 'z': show = sopts.showZCanvas
+
+            for side in ['left', 'right', 'bottom', 'top']:
+                
+                cannots[side].enabled  = show
+                cannots[side].fontSize = fontSize
+                cannots[side].colour   = fgColour
 
             if vertOrient:
-                lbls['left'] .angle = 90
-                lbls['right'].angle = 90
+                cannots['left'] .angle = 90
+                cannots['right'].angle = 90
 
         
     def __getLabels(self, refImage):
@@ -330,7 +334,7 @@ class OrthoLabels(object):
         # in the display coordinate system
         else:
 
-            xform      = opts.getTransform('world', 'display')
+            xform      = opts.getTransform('display', 'world')
             xorient    = refImage.getOrientation(0, xform)
             yorient    = refImage.getOrientation(1, xform)
             zorient    = refImage.getOrientation(2, xform)
