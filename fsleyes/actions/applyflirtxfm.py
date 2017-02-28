@@ -49,25 +49,25 @@ class ApplyFlirtXfmAction(base.Action):
 
 
     def __init__(self, overlayList, displayCtx, frame):
-            """Create an ``ApplyFlirtXfmAction``.
+        """Create an ``ApplyFlirtXfmAction``.
 
-            :arg overlayList: The :class:`.OverlayList`.
-            :arg displayCtx:  The :class:`.DisplayContext`.
-            :arg frame:       The :class:`.FSLeyesFrame`.
-            """
-            base.Action.__init__(self, self.__applyFlirtXfm)
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`.
+        :arg frame:       The :class:`.FSLeyesFrame`.
+        """
+        base.Action.__init__(self, self.__applyFlirtXfm)
 
-            self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-            self.__frame       = frame
-            self.__overlayList = overlayList
-            self.__displayCtx  = displayCtx
+        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+        self.__frame       = frame
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
 
-            overlayList.addListener('overlays',
-                                    self.__name,
-                                    self.__selectedOverlayChanged)
-            displayCtx .addListener('selectedOverlay',
-                                    self.__name,
-                                    self.__selectedOverlayChanged)
+        overlayList.addListener('overlays',
+                                self.__name,
+                                self.__selectedOverlayChanged)
+        displayCtx .addListener('selectedOverlay',
+                                self.__name,
+                                self.__selectedOverlayChanged)
 
 
     def __selectedOverlayChanged(self, *a):
