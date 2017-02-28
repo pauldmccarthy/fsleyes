@@ -43,7 +43,10 @@ actions = td.TypeDict({
 
     # ViewPanel actions must use one
     # of CTRL, ALT or Shift due to
-    # hacky things in FSLeyesFrame.
+    # hacky things in FSLeyesFrame
+    # (see __onViewPanelMenuItem)
+
+    'ViewPanel.removeAllPanels'             : 'Ctrl-Alt-X',
 
     'CanvasPanel.toggleOverlayList'         : 'Ctrl-Alt-1',
     'CanvasPanel.toggleLocationPanel'       : 'Ctrl-Alt-2',

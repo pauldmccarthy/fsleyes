@@ -22,6 +22,7 @@ import fsleyes.toolbar        as fsltoolbar
 import fsleyes.profiles       as profiles
 import fsleyes.displaycontext as fsldisplay
 import fsleyes.strings        as strings
+import fsleyes.actions        as actions
 import fsl.data.image         as fslimage
 
 
@@ -396,6 +397,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         else:                          return None
 
 
+    @actions.action
     def removeAllPanels(self):
         """Remove all control panels from this ``ViewPanel``."""
 

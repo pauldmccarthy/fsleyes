@@ -204,7 +204,8 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                    self.toggleLightBoxToolBar, 
                    self.toggleLookupTablePanel,
                    self.toggleClusterPanel,
-                   self.toggleClassificationPanel]
+                   self.toggleClassificationPanel,
+                   self.removeAllPanels]
 
         names = [a.__name__ if a is not None else None for a in actions]
 

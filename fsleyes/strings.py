@@ -416,6 +416,7 @@ actions = TypeDict({
     'FSLeyesFrame.selectPreviousOverlay'   : 'Previous',
     'FSLeyesFrame.toggleOverlayVisibility' : 'Show/hide',
 
+    'ViewPanel.removeAllPanels'             : 'Remove all panels',
 
     'CanvasPanel.screenshot'                : 'Take screenshot',
     'CanvasPanel.showCommandLineArgs'       : 'Show command line for scene',
