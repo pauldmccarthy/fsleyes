@@ -177,6 +177,11 @@ class OrthoLabels(object):
                 text.destroy()
 
 
+    def refreshLabels(self):
+        """Forces the label annotations to be refreshed."""
+        self.__refreshLabels()
+
+
     def __overlayListChanged(self, *a):
         """Called when the :class:`.OverlayList` changes. Registers a listener
         on the attr:.DisplayOpts.bounds` property of every overlay in the list,

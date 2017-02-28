@@ -18,12 +18,9 @@ import props
 
 import fsl.utils.layout                    as fsllayout
 import fsl.utils.colourbarbitmap           as cbarbitmap
-import fsl.utils.textbitmap                as textbitmap
-import fsl.data.constants                  as constants
 import                                        fsleyes
 import fsleyes.main                        as fsleyesmain
 import fsleyes.version                     as version
-import fsleyes.strings                     as strings
 import fsleyes.overlay                     as fsloverlay
 import fsleyes.colourmaps                  as fslcm
 import fsleyes.parseargs                   as parseargs
@@ -31,6 +28,7 @@ import fsleyes.displaycontext              as displaycontext
 import fsleyes.displaycontext.orthoopts    as orthoopts
 import fsleyes.displaycontext.lightboxopts as lightboxopts
 import fsleyes.gl                          as fslgl
+import fsleyes.gl.ortholabels              as ortholabels
 import fsleyes.gl.offscreenslicecanvas     as slicecanvas
 import fsleyes.gl.offscreenlightboxcanvas  as lightboxcanvas
 
@@ -40,10 +38,6 @@ log = logging.getLogger(__name__)
 
 CBAR_SIZE  = 75
 """Height/width, in pixels, of a colour bar. """
-
-
-LABEL_SIZE = 20
-"""Height/width, in pixels, of an orientation label. """
 
 
 def main(args=None):
@@ -240,6 +234,11 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
                                        overlayList,
                                        displayCtx,
                                        sceneOpts)
+        labelMgr = ortholabels.OrthoLabels(overlayList,
+                                           displayCtx,
+                                           sceneOpts,
+                                           *canvases)
+        labelMgr.refreshLabels()
 
     # Do we need to do a neuro/radio l/r flip?
     inRadio = displayCtx.displaySpaceIsRadiological()
@@ -281,27 +280,15 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
 
         canvasBmps.append(c.getBitmap())
 
-    # Show/hide orientation labels -
-    # not supported on lightbox view
-    if namespace.scene == 'lightbox' or not sceneOpts.showLabels:
-        labelBmps = None
-    else:
-        labelBmps = buildLabelBitmaps(overlayList,
-                                      displayCtx,
-                                      canvases,
-                                      canvasBmps,
-                                      sceneOpts.bgColour[:3],
-                                      sceneOpts.bgColour[ 3])
-
     # layout the bitmaps
     if namespace.scene == 'lightbox':
         layout = fsllayout.Bitmap(canvasBmps[0])
     else:
         layout = fsllayout.buildOrthoLayout(canvasBmps,
-                                            labelBmps,
+                                            None,
                                             sceneOpts.layout,
-                                            sceneOpts.showLabels,
-                                            LABEL_SIZE)
+                                            False,
+                                            0)
 
     # Render a colour bar if required
     if sceneOpts.showColourBar:
@@ -408,7 +395,6 @@ def createOrthoCanvases(namespace,
                                       width,
                                       height,
                                       canvasAxes,
-                                      sceneOpts.showLabels,
                                       sceneOpts.layout)
 
     # Configure the properties on each canvas
@@ -440,107 +426,6 @@ def createOrthoCanvases(namespace,
         canvases.append(c)
 
     return canvases
-
-
-def buildLabelBitmaps(overlayList,
-                      displayCtx,
-                      canvases, 
-                      canvasBmps,
-                      bgColour,
-                      alpha):
-    """Creates bitmaps containing anatomical orientation labels.
-
-    :arg overlayList: The :class:`.OverlayList`.
-    
-    :arg displayCtx:  The :class:`.DisplayContext`.
-    
-    :arg canvases:    The :class:`.SliceCanvas` objects which need labels.
-    
-    :arg canvasBmps:  A sequence of bitmaps, one for each canvas.
-    
-    :arg bgColour:    RGB background colour (values between ``0`` and ``1``).
-    
-    :arg alpha:       Transparency.(between ``0`` and ``1``).
-
-    :returns:         A list of dictionaries, one dictionary for each canvas.  
-                      Each dictionary contains ``{label -> bitmap}`` mappings,
-                      where ``label`` is either ``top``, ``bottom``, ``left``
-                      or ``right``.
-    """
-    
-    # Default label colour is determined from the background
-    # colour. If the orientation labels cannot be determined
-    # though, the foreground colour will be changed to red.
-    fgColour = fslcm.complementaryColour(bgColour)
-
-    overlay = displayCtx.getReferenceImage(displayCtx.getSelectedOverlay())
-
-    # There's no reference image for the selected overlay,
-    # so we cannot calculate orientation labels
-    if overlay is None:
-        xorient = constants.ORIENT_UNKNOWN
-        yorient = constants.ORIENT_UNKNOWN
-        zorient = constants.ORIENT_UNKNOWN
-    else:
-
-        display = displayCtx.getDisplay(overlay)
-        opts    = display.getDisplayOpts()
-        xform   = opts.getTransform('world', 'display')
-        xorient = overlay.getOrientation(0, xform)
-        yorient = overlay.getOrientation(1, xform)
-        zorient = overlay.getOrientation(2, xform)
-
-    if constants.ORIENT_UNKNOWN in [xorient, yorient, zorient]:
-        fgColour = 'red'
-
-    xlo = strings.anatomy['Nifti', 'lowshort',  xorient]
-    ylo = strings.anatomy['Nifti', 'lowshort',  yorient]
-    zlo = strings.anatomy['Nifti', 'lowshort',  zorient]
-    xhi = strings.anatomy['Nifti', 'highshort', xorient]
-    yhi = strings.anatomy['Nifti', 'highshort', yorient]
-    zhi = strings.anatomy['Nifti', 'highshort', zorient]
-
-    loLabels = [xlo, ylo, zlo]
-    hiLabels = [xhi, yhi, zhi]
-
-    labelBmps = []
-
-    for canvas, canvasBmp in zip(canvases, canvasBmps):
-
-        xax, yax = canvas.xax,    canvas.yax
-        lox, hix = loLabels[xax], hiLabels[xax]
-        loy, hiy = loLabels[yax], hiLabels[yax]
-
-        if canvas.invertX: lox, hix = hix, lox
-        if canvas.invertY: loy, hiy = hiy, loy
-
-        width        = canvasBmp.shape[1]
-        height       = canvasBmp.shape[0]
-
-        allLabels    = {}
-        labelKeys    = ['left',     'right',    'top',      'bottom']
-        labelTexts   = [lox,        hix,        loy,        hiy]
-        labelWidths  = [LABEL_SIZE, LABEL_SIZE, width,      width]
-        labelHeights = [height,     height,     LABEL_SIZE, LABEL_SIZE]
-
-
-        for key, text, width, height in zip(labelKeys,
-                                            labelTexts,
-                                            labelWidths,
-                                            labelHeights):
-
-            allLabels[key] = textbitmap.textBitmap(
-                text=text,
-                width=width,
-                height=height,
-                fontSize=12,
-                fgColour=fgColour,
-                bgColour=bgColour,
-                alpha=alpha)
-
-        labelBmps.append(allLabels)
-            
-    return labelBmps
 
 
 def buildColourBarBitmap(overlayList,
@@ -698,7 +583,6 @@ def calculateOrthoCanvasSizes(overlayList,
                               width,
                               height,
                               canvasAxes,
-                              showLabels,
                               layout):
     """Calculates the sizes, in pixels, for each canvas to be displayed in an
     orthographic layout.
@@ -713,8 +597,6 @@ def calculateOrthoCanvasSizes(overlayList,
     
     :arg canvasAxes:  A sequence of ``(xax, yax)`` indices, one for each
                       bitmap in ``canvasBmps``.
-    
-    :arg showLabels:  ``True`` if orientation labels are to be shown.
     
     :arg layout:      Either ``'horizontal'``, ``'vertical'``, or ``'grid'``,
                       describing the canvas layout.
@@ -731,20 +613,6 @@ def calculateOrthoCanvasSizes(overlayList,
     # displaying all three canvases
     if layout == 'grid' and len(canvasAxes) <= 2:
         raise ValueError('Grid layout only supports 3 canvases')
-
-    # If we're displaying orientation labels,
-    # reduce the available width and height
-    # by a fixed amount
-    if showLabels:
-        if layout == 'horizontal':
-            width  -= 2 * LABEL_SIZE * len(canvasAxes)
-            height -= 2 * LABEL_SIZE
-        elif layout == 'vertical':
-            width  -= 2 * LABEL_SIZE
-            height -= 2 * LABEL_SIZE * len(canvasAxes)
-        elif layout == 'grid':
-            width  -= 4 * LABEL_SIZE
-            height -= 4 * LABEL_SIZE
 
     # Distribute the height across canvas heights
     return fsllayout.calcSizes(layout,
