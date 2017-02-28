@@ -214,13 +214,24 @@ class OrthoLabels(object):
         annotations on each :class:`.SliceCanvas`.
         """
 
-        displayCtx = self.__displayCtx
-        sopts      = self.__orthoOpts
-        overlay    = displayCtx.getSelectedOverlay()
-        ref        = displayCtx.getReferenceImage(overlay)
+        displayCtx  = self.__displayCtx
+        overlayList = self.__overlayList
+        sopts       = self.__orthoOpts
+        overlay     = displayCtx.getSelectedOverlay()
+        ref         = displayCtx.getReferenceImage(overlay)
 
         canvases = self.__canvases
         annots   = self.__annots
+
+        # This method is called immediately
+        # on property changes, so there is
+        # the danger that it will be called
+        # when an overlay gets removed from
+        # the list, but before the rest of
+        # FSLeyes has had a chance to catch
+        # up with the fact.
+        if ref is not None and ref not in overlayList:
+            ref = None
 
         for cannots in annots:
             for text in cannots.values():

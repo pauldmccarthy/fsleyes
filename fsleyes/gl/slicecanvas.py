@@ -12,6 +12,8 @@ functionality to display a 2D slice from a collection of 3D overlays.
 import copy
 import logging
 
+import OpenGL.GL as gl
+
 import numpy as np
 
 import props
@@ -1532,9 +1534,10 @@ class SliceCanvas(props.HasProperties):
                 
                 glroutines.clear((0, 0, 0, 0))
 
-                globj.preDraw()
-                globj.draw(self.pos.z)
-                globj.postDraw()
+                with glroutines.disabled(gl.GL_BLEND):
+                    globj.preDraw()
+                    globj.draw(self.pos.z)
+                    globj.postDraw()
 
                 rt.unbindAsRenderTarget()
                 rt.restoreViewport()

@@ -16,6 +16,7 @@ import numpy     as np
 import OpenGL.GL as gl
 
 import fsl.utils.transform as transform
+import fsleyes.gl.routines as glroutines
 
 
 log = logging.getLogger(__name__)
@@ -423,23 +424,20 @@ class Texture2D(Texture):
         self.bindTexture(gl.GL_TEXTURE0)
 
         gl.glClientActiveTexture(gl.GL_TEXTURE0)
-        gl.glEnable(             gl.GL_TEXTURE_2D)
-        gl.glEnableClientState(  gl.GL_TEXTURE_COORD_ARRAY)
-
+        
         gl.glTexEnvf(gl.GL_TEXTURE_ENV,
                      gl.GL_TEXTURE_ENV_MODE,
                      gl.GL_REPLACE)
+        
+        with glroutines.enabled((gl.GL_TEXTURE_2D,
+                                 gl.GL_TEXTURE_COORD_ARRAY,
+                                 gl.GL_VERTEX_ARRAY)):
 
-        gl.glVertexPointer(  3, gl.GL_FLOAT, 0, vertices)
-        gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, texCoords)
-
-        gl.glDrawElements(gl.GL_TRIANGLES, 6, gl.GL_UNSIGNED_INT, indices) 
+            gl.glVertexPointer(  3, gl.GL_FLOAT, 0, vertices)
+            gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, texCoords)
+            gl.glDrawElements(gl.GL_TRIANGLES, 6, gl.GL_UNSIGNED_INT, indices) 
 
         self.unbindTexture()
-
-        gl.glDisable(           gl.GL_TEXTURE_2D)
-        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY) 
  
         
     def drawOnBounds(self, zpos, xmin, xmax, ymin, ymax, xax, yax, xform=None):

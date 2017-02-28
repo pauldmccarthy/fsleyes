@@ -536,14 +536,18 @@ class GLMesh(globject.GLObject):
         gl.glStencilFunc(gl.GL_NOTEQUAL, 0, 255)
 
         gl.glColor(*opts.getConstantColour())
-        gl.glBegin(gl.GL_QUADS)
 
-        gl.glVertex3f(*clipPlaneVerts[0, :])
-        gl.glVertex3f(*clipPlaneVerts[1, :])
-        gl.glVertex3f(*clipPlaneVerts[2, :])
-        gl.glVertex3f(*clipPlaneVerts[3, :])
-        gl.glEnd()
-
+        # Disable alpha blending - we
+        # just want the colour copied
+        # into the texture as-is.
+        with glroutines.disabled(gl.GL_BLEND):
+            gl.glBegin(gl.GL_QUADS)
+            gl.glVertex3f(*clipPlaneVerts[0, :])
+            gl.glVertex3f(*clipPlaneVerts[1, :])
+            gl.glVertex3f(*clipPlaneVerts[2, :])
+            gl.glVertex3f(*clipPlaneVerts[3, :])
+            gl.glEnd()
+        
         gl.glDisable(gl.GL_STENCIL_TEST)
 
         dest.unbindAsRenderTarget()

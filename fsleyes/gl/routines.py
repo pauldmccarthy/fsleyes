@@ -12,6 +12,7 @@ routines.
 from __future__ import division
 
 import                logging
+import                contextlib
 import                collections
 import itertools   as it
 
@@ -39,6 +40,90 @@ def clear(bgColour):
     # enable transparency
     gl.glEnable(gl.GL_BLEND) 
     gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+
+
+@contextlib.contextmanager
+def enabled(capabilities, enable=True):
+    """This function can be used as a context manager to temporarily
+    enable/disable one or more GL capabilities (i.e. something that you pass
+    to ``glEnable`` and ``glDisable``, or ``glEnableClientState`` and
+    ``glDisableClientState``), for a piece of code, and restore their previous
+    state afterwards.
+
+    :arg capabilities: One or more OpenGL capabilities to be
+                       temporarily enabled/disabled, e.g. ``GL_BLEND``,
+                       ``GL_TEXTURE_2D``, etc.
+    
+    :arg enable:       Whether the capabilities are to be enabled (the
+                       default) or disabled.
+    """
+
+    # Capabilities which are used via
+    # glEnableClientState/glDisableClientState,
+    # rather than glEnable/glDisable
+    clientCapabilities = [
+        gl.GL_VERTEX_ARRAY,
+        gl.GL_NORMAL_ARRAY,
+        gl.GL_COLOR_ARRAY,
+        gl.GL_SECONDARY_COLOR_ARRAY,
+        gl.GL_EDGE_FLAG_ARRAY,
+        gl.GL_INDEX_ARRAY,
+        gl.GL_FOG_COORD_ARRAY,
+        gl.GL_TEXTURE_COORD_ARRAY]
+
+    if not isinstance(capabilities, collections.Sequence):
+        capabilities = [capabilities]
+
+    # Build lists of pre/post-yield
+    # functions, one pre and post
+    # for each capability, being
+    # one of:
+    # 
+    #   - glEnable
+    #   - glDisable
+    #   - glEnableClientState
+    #   - glDisableClientState
+    #   - noop (if the capability's
+    #     current state is already
+    #     in the requested state)
+
+    def noop(*a):
+        pass
+    
+    pres  = []
+    posts = []
+
+    for c in capabilities:
+        
+        if gl.glIsEnabled(c) == enable:
+            pre  = noop
+            post = noop
+        else:
+            if c in clientCapabilities:
+                pre  = gl.glEnableClientState
+                post = gl.glDisableClientState
+            else:
+                pre  = gl.glEnable
+                post = gl.glDisable
+
+        if not enable:
+            pre, post = post, pre
+
+        pres .append(pre)
+        posts.append(post)
+
+    [p(c) for p, c in zip(pres,  capabilities)]
+    yield
+    [p(c) for p, c in zip(posts, capabilities)]
+
+
+@contextlib.contextmanager
+def disabled(capabilities):
+    """Can be used as a context manager to temporarily disable the
+    given GL capabilities - see :func:`enabled`.
+    """
+    with enabled(capabilities, False):
+        yield
 
 
 def show2D(xax, yax, width, height, lo, hi, flipx=False, flipy=False):

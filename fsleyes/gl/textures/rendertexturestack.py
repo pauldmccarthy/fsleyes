@@ -291,9 +291,11 @@ class RenderTextureStack(object):
         glroutines.show2D(xax, yax, width, height, lo, hi)
         glroutines.clear((0, 0, 0, 0))
 
-        globj.preDraw()
-        globj.draw(zpos)
-        globj.postDraw()
+        with glroutines.disabled(gl.GL_BLEND):
+            globj.preDraw()
+            globj.draw(zpos)
+            globj.postDraw()
+
         tex.unbindAsRenderTarget()
         
         gl.glViewport(*oldSize)
