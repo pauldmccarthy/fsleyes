@@ -18,7 +18,6 @@ import logging
 
 import numpy                as np
 
-import fsl.utils.transform  as transform
 import fsl.data.dtifit      as dtifit
 import fsleyes.gl           as fslgl
 import fsleyes.gl.glvector  as glvector
@@ -320,102 +319,31 @@ class GLLineVertices(object):
         called.
         """
 
-        opts  = glvec.displayOpts
         image = glvec.image
         shape = image.shape[:3]
-        xax   = glvec.xax
-        yax   = glvec.yax
-        zax   = glvec.zax
 
-        vertices = self.vertices
-        starts   = self.starts
-        steps    = self.steps
-        
-        # If in id/pixdim space, the display
-        # coordinate system axes are parallel
-        # to the voxel coordinate system axes
-        if opts.transform in ('id', 'pixdim', 'pixdim-flip'):
+        vertices  = self.vertices
+        starts    = self.starts
+        steps     = self.steps
+        voxCoords = glvec.generateVoxelCoordinates(zpos, bbox)
 
-            if zpos < 0:
-                zpos = 0
+        # Turn the voxel coordinates into
+        # indices suitable for looking up
+        # the corresponding vertices - the
+        # voxel vertex matrix may have been
+        # sub-sampled (see the refresh
+        # method), so we need to transform
+        # the image data voxel coordinates
+        # to the sub-sampled data voxel
+        # coordinates. 
+        coords = (voxCoords - starts) / steps
 
-            # Turn the z position into a voxel index
-            if opts.transform in ('pixdim', 'pixdim-flip'):
-                zpos = zpos / image.pixdim[zax]
-
-            zpos = int(np.floor(zpos))
-
-            # Return no vertices if the requested z
-            # position is out of the image bounds
-            if zpos < 0 or zpos >= image.shape[zax]:
-                return (np.array([], dtype=np.float32),
-                        np.array([], dtype=np.float32))
-
-            # Extract a slice at the requested
-            # z position from the vertex matrix
-            coords      = [slice(None)] * 3
-            coords[zax] = int(np.floor((zpos - starts[zax]) / steps[zax]))
-
-            # Generate voxel coordinates for every vertex
-            voxCoords      = [None] * 3
-            voxCoords[xax] = np.arange(starts[xax], shape[xax], steps[xax])
-            voxCoords[yax] = np.arange(starts[yax], shape[yax], steps[yax])
-            voxCoords[zax] = [zpos]
-
-            voxCoords = np.meshgrid(*voxCoords, indexing='ij')
-            voxCoords = np.array(voxCoords).transpose(1, 2, 3, 0)
-            voxCoords = voxCoords.reshape((-1, 3))
-            
-            # This is broken - fix it
-            # if bbox is not None:
-            #     xmin, xmax = opts.bounds.getRange(xax)
-            #     ymin, ymax = opts.bounds.getRange(yax)
-
-            #     coords[xax] = slice(max((xmin, bbox[xax][0])),
-            #                         min((xmax, bbox[xax][1])))
-            #     coords[yax] = slice(max((ymin, bbox[yax][0])),
-            #                         min((ymax, bbox[yax][1])))
-
-        # If in affine space, the display
-        # coordinate system axes may not
-        # be parallel to the voxel
-        # coordinate system axes
-        else:
-            # Create a coordinate grid through
-            # a plane at the requested z pos 
-            # in the display coordinate system
-            voxCoords = glroutines.calculateSamplePoints(
-                image.shape[ :3],
-                [opts.resolution] * 3,
-                opts.getTransform('voxel', 'display'),
-                xax,
-                yax,
-                bbox=bbox)[0]
-            
-            voxCoords[:, zax] = zpos
-
-            # transform that plane of display
-            # coordinates into voxel coordinates
-            voxCoords = transform.transform(
-                voxCoords, opts.getTransform('display', 'voxel'))
-
-            # Turn the voxel coordinates into
-            # indices suitable for looking up
-            # the corresponding vertices - the
-            # voxel vertex matrix may have been
-            # sub-sampled (see the refresh
-            # method), so we need to transform
-            # the image data voxel coordinates
-            # to the sub-sampled data voxel
-            # coordinates. 
-            coords = (voxCoords - starts) / steps
-            
-            # remove any out-of-bounds voxel coordinates
-            shape     = vertices.shape[:3]
-            coords    = np.array(coords.round(), dtype=np.int32)
-            inBounds  = ((coords >= [0, 0, 0]) & (coords < shape)).all(1)
-            coords    = coords[   inBounds, :].T
-            voxCoords = voxCoords[inBounds, :]
+        # remove any out-of-bounds voxel coordinates
+        shape     = vertices.shape[:3]
+        coords    = np.array(coords.round(), dtype=np.int32)
+        inBounds  = ((coords >= [0, 0, 0]) & (coords < shape)).all(1)
+        coords    = coords[   inBounds, :].T
+        voxCoords = voxCoords[inBounds, :]
 
         # pull out the vertex data
         # corresponding to the voxels
