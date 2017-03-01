@@ -18,7 +18,7 @@ also defined here, for working with FSLeyes version numbers.
 """
 
 
-__version__ = '0.9.13'
+__version__ = '0.9.14'
 """Current version number, as a string. The FSLeyes version number consists
 of three numbers, separated by a period:
 
