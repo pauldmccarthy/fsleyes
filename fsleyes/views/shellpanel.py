@@ -114,6 +114,13 @@ class ShellPanel(viewpanel.ViewPanel):
         viewpanel.ViewPanel.destroy(self)
 
 
+    def getActions(self):
+        """Overrides :meth:`.ActionProvider.getActions`. Currently returns
+        an empty list.
+        """
+        return []
+
+
 # The wx.Shell code was written many years ago,
 # and there are loads of things wrong with it.
 
