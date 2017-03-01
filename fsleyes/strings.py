@@ -270,6 +270,12 @@ messages = TypeDict({
 
     'UpdateCheckAction.newVersionError' :
     'An error occurred while checking for FSLeyes updates. Try again later.',
+
+    'ApplyCommandLineAction.apply' :
+    'Type/paste FSLeyes command line arguments into the field below.',
+
+    'ApplyCommandLineAction.error' :
+    'An error occurred while applying the command line arguments.',
 })
 
 
@@ -375,7 +381,10 @@ titles = TypeDict({
 
     'UpdateCheckAction.upToDate'            : 'FSLeyes is up to date',
     'UpdateCheckAction.newVersionAvailable' : 'New version available',
-    'UpdateCheckAction.newVersionError'     : 'Error checking for updates', 
+    'UpdateCheckAction.newVersionError'     : 'Error checking for updates',
+
+    'ApplyCommandLineAction.title' : 'Apply FSLeyes command line',
+    'ApplyCommandLineAction.error' : 'Error applying command line',
 })
 
 
@@ -420,6 +429,7 @@ actions = TypeDict({
 
     'CanvasPanel.screenshot'                : 'Take screenshot',
     'CanvasPanel.showCommandLineArgs'       : 'Show command line for scene',
+    'CanvasPanel.applyCommandLineArgs'      : 'Apply command line arguments',
     'CanvasPanel.toggleMovieMode'           : 'Movie mode',
     'CanvasPanel.toggleDisplaySync'         : 'Link display settings',
     'CanvasPanel.toggleColourBar'           : 'Colour bar',

@@ -1457,7 +1457,8 @@ def parseArgs(mainParser,
               desc=None,
               usageProlog=None,
               argOpts=None,
-              shortHelpExtra=None):
+              shortHelpExtra=None,
+              exitFunc=None):
     """Parses the given command line arguments, returning an
     :class:`argparse.Namespace` object containing all the arguments.
 
@@ -1495,10 +1496,18 @@ def parseArgs(mainParser,
                          arguments to the ``mainParser``, the long forms of 
                          those arguemnts may be passed here as a list to
                          have them included in the short help text.
+    
+    :arg exitFunc:       Defaults to ``sys.exit``. Function to call when
+                         the normal behaviour would be to exit (e.g. if the
+                         user requests help, or makes a mistake). Must accept
+                         one parameter, an exit code.
     """
 
     if argOpts is None: argOpts = []
     else:               argOpts = list(argOpts)
+
+    if exitFunc is None:
+        exitFunc = sys.exit
 
     log.debug('Parsing arguments for {}: {}'.format(name, argv))
 
@@ -1630,19 +1639,23 @@ def parseArgs(mainParser,
         print(e.message)
         print() 
         mainParser.print_usage()
-        sys.exit(1)
+        exitFunc(1)
+        return
 
     if namespace.help:
         _printShortHelp(mainParser, shortHelpExtra)
-        sys.exit(0)
+        exitFunc(0)
+        return
 
     if namespace.fullhelp:
         _printFullHelp(mainParser)
-        sys.exit(0)
+        exitFunc(0)
+        return
 
     if namespace.version:
         _printVersion(name)
-        sys.exit(0)
+        exitFunc(0)
+        return
 
     # Now, we'll create additiona parsers to handle
     # the Display and DisplayOpts options for each
@@ -1681,7 +1694,8 @@ def parseArgs(mainParser,
             print(e.message,       file=sys.stderr)
             print(                 file=sys.stderr)
             mainParser.print_usage(file=sys.stderr)
-            sys.exit(1)
+            exitFunc(1)
+            return
 
         # Did the user specify an
         # overlay type for this file?
@@ -1725,7 +1739,8 @@ def parseArgs(mainParser,
             optUsage = '      ' + optUsage[6:]
             
             print(optUsage, file=sys.stderr)
-            sys.exit(1)
+            exitFunc(1)
+            return
  
         # Attach the path and the overlay type
         # to the opts namespace object. If an
@@ -2279,7 +2294,7 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
         # overlay.
         overlayList.extend(overlays, overlayTypes=overlayTypes)
 
-        for i, overlay in enumerate(overlayList):
+        for i, overlay in enumerate(overlays):
 
             status.update('Applying display settings '
                           'to {}...'.format(overlay.name))

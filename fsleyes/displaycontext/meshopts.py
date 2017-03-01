@@ -325,7 +325,9 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         """
 
         vdataProp = self.getProp('vertexData')
-        paths     = vdataProp.getChoices(instance=self) + paths
+        newPaths  = paths
+        paths     = vdataProp.getChoices(instance=self)
+        paths     = paths + [p for p in newPaths if p not in paths]
         
         vdataProp.setChoices(paths, instance=self)
 
