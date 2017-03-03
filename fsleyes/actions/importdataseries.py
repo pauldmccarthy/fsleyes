@@ -22,14 +22,14 @@ import fsleyes.plotting      as plotting
 import fsleyes.colourmaps    as fslcm
 
 
-from . import action
+from . import base
 
 
-class ImportDataSeriesAction(action.Action):
+class ImportDataSeriesAction(base.Action):
 
     def __init__(self, overlayList, displayCtx, plotPanel):
 
-        action.Action.__init__(self, self.__doImport)
+        base.Action.__init__(self, self.__doImport)
         
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
