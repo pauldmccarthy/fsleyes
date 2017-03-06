@@ -335,12 +335,12 @@ class GLLineVertices(object):
         # method), so we need to transform
         # the image data voxel coordinates
         # to the sub-sampled data voxel
-        # coordinates. 
-        coords = (voxCoords - starts) / steps
+        # coordinates.
+        coords = (np.floor(voxCoords + 0.5) - starts) / steps
 
         # remove any out-of-bounds voxel coordinates
-        shape     = vertices.shape[:3]
-        coords    = np.array(coords.round(), dtype=np.int32)
+        shape     = np.array(vertices.shape[:3])
+        coords    = np.array(np.floor(coords), dtype=np.int32)
         inBounds  = ((coords >= [0, 0, 0]) & (coords < shape)).all(1)
         coords    = coords[   inBounds, :].T
         voxCoords = voxCoords[inBounds, :]

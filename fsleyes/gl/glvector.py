@@ -804,6 +804,7 @@ class GLVector(GLVectorBase):
                      :class:`.GLRGBVector`).
         """
 
+        opts           = self.displayOpts
         prefilter      = self.prefilter
         prefilterRange = self.prefilterRange
         vecImage       = self.vectorImage
@@ -828,6 +829,7 @@ class GLVector(GLVectorBase):
             normaliseRange=vecImage.dataRange,
             prefilter=realPrefilter,
             prefilterRange=prefilterRange,
+            resolution=opts.resolution,
             notify=False)
         
         self.imageTexture.register(self.name, self.__textureChanged)

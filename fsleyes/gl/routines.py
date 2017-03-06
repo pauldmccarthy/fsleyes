@@ -991,9 +991,9 @@ def subsample(data, resolution, pixdim=None, volume=None):
     if ystep < 1: ystep = 1
     if zstep < 1: zstep = 1
 
-    xstart = int(np.floor(xstep / 2))
-    ystart = int(np.floor(ystep / 2))
-    zstart = int(np.floor(zstep / 2))
+    xstart = int(np.floor((xstep - 1) / 2))
+    ystart = int(np.floor((ystep - 1) / 2))
+    zstart = int(np.floor((zstep - 1) / 2))
 
     if xstart >= data.shape[0]: xstart = data.shape[0] - 1
     if ystart >= data.shape[1]: ystart = data.shape[1] - 1
