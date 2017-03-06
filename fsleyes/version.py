@@ -20,11 +20,16 @@ also defined here, for working with FSLeyes version numbers.
 
 __version__ = '0.9.14'
 """Current version number, as a string. The FSLeyes version number consists
-of three numbers, separated by a period:
+of three numbers, separated by a period, which roughly obeys the Semantic
+Versioning conventions (http://semver.org/):
 
- 1. The major release number. This gets updated for major releases.
- 2. The minor release number. This gets updated for minor releases.
- 3. The point release number. This gets updated for all other changes.
+ 1. The major release number. This gets updated for major/external releases.
+
+ 2. The minor release number. This gets updated for minor/internal releases,
+    which involve new features, bug-fixes, and other updates.
+
+ 3. The point release number. This gets updated for minor/internal releases,
+    which primarily involve bug-fixes and minor changes.
 
 The point release number may optionally end with a single lower-case
 alphabetical character (e.g. 'a'), whcih implies that the version is a
