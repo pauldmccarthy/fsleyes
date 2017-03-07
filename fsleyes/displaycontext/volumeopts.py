@@ -548,7 +548,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         return self.__xforms[from_, to]
 
 
-    def roundVoxels(self, voxels, daxes=None):
+    def roundVoxels(self, voxels, daxes=None, roundOther=False):
         """Round the given voxel coordinates to integers. This is a
         surprisingly complicated operation.
         
@@ -593,11 +593,15 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         low or high boundaries will be rounded so as to be valid voxel
         coordinates.
 
-        :arg voxels: A ``(N, 3)`` ``numpy`` array containing the voxel
-                     coordinates to be rounded.
+        :arg voxels:     A ``(N, 3)`` ``numpy`` array containing the voxel
+                         coordinates to be rounded.
 
-        :arg daxes:  Display coordinate system axes along which to round the
-                     coordinates.
+        :arg daxes:      Display coordinate system axes along which to round 
+                         the coordinates (defaults to all axes).
+
+        :arg roundOther: If ``True``, any voxel axes which are not in 
+                         ``daxes`` will still be rounded, but not with an
+                         orientation-specific rounding convention.
 
         :returns:    The ``voxels``, rounded appropriately.
         """
@@ -614,28 +618,51 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         # (e.g. 0.49999), get rounded to 0.5.
         voxels = np.round(voxels, decimals=3)
 
+        # Keep track of the voxel axes that
+        # have had the rounding treatment
+        roundedAxes = []
+
         for dax in daxes:
 
             ornt = ornts[dax]
             vax  = abs(ornt) - 1
             vals = voxels[:, vax]
 
-            if ornt < 0:
-                vals                       = vals + 0.5
-                vals[np.isclose(vals,  0)] = 0
-                vals                       = np.floor(vals)
-                
-            else:
-                vals                       = vals - 0.5
-                vals[np.isclose(vals, -1)] = 0
-                vals                       = np.ceil(vals) 
+            roundedAxes.append(vax)
 
-            # Clamp high voxel coordinates
-            closeHigh = ((vals > shape[vax] - 1) &
-                         (vals < shape[vax] - 1))
+            # Identify values which are close
+            # to the low or high bounds - we
+            # will clamp them after rounding.
+            # 
+            # This is a third rounding problem
+            # which is not documented above -
+            # we clamp low/high values to avoid
+            # them under/overflowing in the
+            # floor/ceil operations below
+            closeLow  = np.isclose(vals, -0.5)
+            closeHigh = np.isclose(vals, shape[vax] - 0.5)
+
+            # Round in a direction which is
+            # dictated by the image orientation
+            if ornt < 0: vals = np.floor(vals + 0.5)
+            else:        vals = np.ceil( vals - 0.5) 
+
+            # Clamp low/high voxel coordinates
+            vals[closeLow]  = 0
             vals[closeHigh] = shape[vax] - 1
+            
+            voxels[:, vax]  = vals
 
-            voxels[:, vax] = vals
+        # If the roundOther flag is true,
+        # we round all other voxel axes
+        # in a more conventional manner
+        # (but still using floor(v + 0.5)
+        # rather than round to avoid
+        # annoying numpy even/odd behaviour).
+        if roundOther:
+            for vax in range(3):
+                if vax not in roundedAxes:
+                    voxels[:, vax] = np.floor(voxels[:, vax] + 0.5)
 
         return voxels
 

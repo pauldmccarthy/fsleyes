@@ -49,8 +49,9 @@ def init(self):
 
 def destroy(self):
     """Deletes the :class:`.GLSLShader`. """
-    
-    self.shader.destroy()
+
+    if self.shader is not None:
+        self.shader.destroy()
     self.shader = None
 
 

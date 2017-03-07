@@ -562,6 +562,8 @@ class GLImageObject(GLObject):
 
         if space == 'voxel':
             voxels = transform.transform(voxels, d2vMat)
-            voxels = opts.roundVoxels(voxels)
+            voxels = opts.roundVoxels(voxels,
+                                      daxes=[self.zax],
+                                      roundOther=False)
 
         return voxels
