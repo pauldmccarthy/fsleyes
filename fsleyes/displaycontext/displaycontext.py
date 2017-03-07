@@ -203,7 +203,8 @@ class DisplayContext(props.SyncableHasProperties):
         props.SyncableHasProperties.__init__(
             self,
             parent=parent,
-            nounbind=['overlayGroups',
+            nounbind=['selectedOverlay',
+                      'overlayGroups',
                       'displaySpace',
                       'radioOrientation',
                       'bounds',
@@ -662,7 +663,7 @@ class DisplayContext(props.SyncableHasProperties):
                 if isinstance(overlay, fslimage.Nifti):
                     self.displaySpace = overlay
                     break
-            
+
             # Centre the currently selected
             # location (but see the comments
             # in __init__ about this).
@@ -673,7 +674,7 @@ class DisplayContext(props.SyncableHasProperties):
                 b.zlo + b.zlen / 2.0]
             
         self.__prevOverlayListLen = len(self.__overlayList)
- 
+
         # Limit the selectedOverlay property
         # so it cannot take a value greater
         # than len(overlayList)-1

@@ -2291,6 +2291,9 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
         # overlay.
         overlayList.extend(overlays, overlayTypes=overlayTypes)
 
+        # Select the last image in the list
+        displayCtx.selectedOverlay = len(overlayList) - 1
+
         for i, overlay in enumerate(overlays):
 
             status.update('Applying display settings '
@@ -2333,14 +2336,6 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
             # the user specifies one of these images,
             # we need to do an explicit check to see
             # if the specified image is valid.
-            # 
-            # Here, I'm loading the image, and checking
-            # to see if it can be used to modulate the
-            # vector image (just with a dimension check).
-            # If it can, I add it to the image list - the
-            # applyArguments function will apply the
-            # value. If the modulate file is not valid,
-            # an error is raised.
             fileOpts = FILE_OPTIONS.get(opts, [])
 
             for fileOpt in fileOpts:
