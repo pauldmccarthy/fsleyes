@@ -405,13 +405,12 @@ class GLVectorBase(globject.GLImageObject):
             type(self).__name__, id(self.image), id(image), which)
 
         if opts is not None:
-            unsynced = (opts.getParent() is None                or
-                        not opts.isSyncedToParent('resolution') or
+            unsynced = (opts.getParent() is None or
                         not opts.isSyncedToParent('volume'))
 
             # TODO If unsynced, this GLVectorBase needs to 
             # update the mod/clip/colour textures whenever
-            # their volume/resolution properties change.
+            # their volume property changes.
             # Right?
             if unsynced:
                 texName = '{}_unsync_{}'.format(texName, id(opts))
@@ -761,38 +760,6 @@ class GLVector(GLVectorBase):
                 GLVectorBase.texturesReady(self))
 
 
-    def addListeners(self):
-        """Overrides :meth:`GLVectorBase.addListeners`. Calls the base
-        implementation, and adds some extra listeners.
-        """
-
-        GLVectorBase.addListeners(self)
-
-        opts = self.displayOpts
-        name = self.name
-
-        opts.addListener('resolution', name, self.__resolutionChanged)
-
-        # See comment in GLVolume.addDisplayListeners about this
-        self.__syncListenersRegistered = opts.getParent() is not None 
-
-        if self.__syncListenersRegistered:
-            opts.addSyncChangeListener(
-                'resolution', name, self.__syncChanged)
-
-
-    def removeListeners(self):
-        """Overrides :meth:`GLVectorBase. Calls the base implementation,
-        and removes the listeners added by :meth:`addListeners`.
-        """
-        GLVectorBase.removeListeners(self)
-
-        self.displayOpts.removeListener('resolution', self.name)
-
-        if self.__syncListenersRegistered:
-            self.displayOpts.removeSyncChangeListener('resolution', self.name)
-
-
     def refreshImageTexture(self, interp=gl.GL_NEAREST):
         """Called by :meth:`__init__`, and when the :class:`.ImageTexture`
         needs to be updated. (Re-)creates the ``ImageTexture``, using the
@@ -804,7 +771,6 @@ class GLVector(GLVectorBase):
                      :class:`.GLRGBVector`).
         """
 
-        opts           = self.displayOpts
         prefilter      = self.prefilter
         prefilterRange = self.prefilterRange
         vecImage       = self.vectorImage
@@ -829,7 +795,6 @@ class GLVector(GLVectorBase):
             normaliseRange=vecImage.dataRange,
             prefilter=realPrefilter,
             prefilterRange=prefilterRange,
-            resolution=opts.resolution,
             notify=False)
         
         self.imageTexture.register(self.name, self.__textureChanged)
@@ -847,23 +812,6 @@ class GLVector(GLVectorBase):
         """
         GLVectorBase.postDraw(self)
         self.imageTexture.unbindTexture()
-
-
-    def __resolutionChanged(self, *a):
-        """Called when the :attr:`.NiftiOpts.resolution` property changes.
-        Refreshes the image texture.
-        """
-        self.imageTexture.set(resolution=self.displayOpts.resolution)
-        self.asyncUpdateShaderState(alwaysNotify=True)
-
-
-    def __syncChanged(self, *a):
-        """Called when the synchronisation state of the
-        :attr:`.NiftiOpts.resolution` property changes. Refreshes the image
-        texture.
-        """
-        self.refreshImageTexture()
-        self.asyncUpdateShaderState(alwaysNotify=True)
 
 
     def __textureChanged(self, *a):

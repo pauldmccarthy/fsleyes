@@ -193,8 +193,6 @@ class GLLineVertices(object):
         """
         self.vertices  = None
         self.voxCoords = None
-        self.starts    = None
-        self.steps     = None
 
         
     def __hash__(self):
@@ -222,7 +220,6 @@ class GLLineVertices(object):
         """
         opts = glvec.displayOpts
         return (hash(opts.transform)  ^
-                hash(opts.resolution) ^
                 hash(opts.orientFlip) ^
                 hash(opts.directed)   ^
                 hash(opts.unitLength) ^
@@ -240,28 +237,15 @@ class GLLineVertices(object):
         The vertices are stored as a :math:`X\\times Y\\times Z\\times
         2\\times 3` ``numpy`` array, as an attribute of this instance,
         called ``vertices``. 
-
-        .. note:: The vertexcoordinate generation takes into account the
-                  current value of the :attr:`.NiftiOpts.resolution` property
-                  of the :class:`.LineVectorOpts` instance; if this is set to
-                  something other than the image resolution, the sub-sampled
-                  starting indices and steps are stored as attributes
-                  ``starts`` and ``steps`` respectively.  See the
-                  :func:`.routines.subsample` function for more details.
         """
 
         opts  = glvec.displayOpts
         image = glvec.vectorImage
-
-        # Extract a sub-sample of the vector image
-        # at the current display resolution
-        data, starts, steps = glroutines.subsample(image[:],
-                                                   opts.resolution,
-                                                   image.pixdim)
+        shape = image.shape
 
         # Pull out the xyz components of the 
         # vectors, and calculate vector lengths
-        vertices = np.array(data, dtype=np.float32)
+        vertices = np.array(image[:], dtype=np.float32)
         x        = vertices[:, :, :, 0]
         y        = vertices[:, :, :, 1]
         z        = vertices[:, :, :, 2]
@@ -298,15 +282,13 @@ class GLLineVertices(object):
         else:
             vertices = np.concatenate((-vertices, vertices), axis=3)
 
-        vertices = vertices.reshape((data.shape[0],
-                                     data.shape[1],
-                                     data.shape[2],
+        vertices = vertices.reshape((shape[0],
+                                     shape[1],
+                                     shape[2],
                                      2,
                                      3))
 
         self.vertices = vertices
-        self.starts   = starts
-        self.steps    = steps
         self.__hash   = self.calculateHash(glvec)
  
 
@@ -323,24 +305,15 @@ class GLLineVertices(object):
         shape = image.shape[:3]
 
         vertices  = self.vertices
-        starts    = self.starts
-        steps     = self.steps
         voxCoords = glvec.generateVoxelCoordinates(zpos, bbox)
 
         # Turn the voxel coordinates into
         # indices suitable for looking up
-        # the corresponding vertices - the
-        # voxel vertex matrix may have been
-        # sub-sampled (see the refresh
-        # method), so we need to transform
-        # the image data voxel coordinates
-        # to the sub-sampled data voxel
-        # coordinates.
-        coords = (np.floor(voxCoords + 0.5) - starts) / steps
+        # the corresponding vertices
+        coords = np.array(np.floor(voxCoords + 0.5), dtype=np.int32)
 
         # remove any out-of-bounds voxel coordinates
         shape     = np.array(vertices.shape[:3])
-        coords    = np.array(np.floor(coords), dtype=np.int32)
         inBounds  = ((coords >= [0, 0, 0]) & (coords < shape)).all(1)
         coords    = coords[   inBounds, :].T
         voxCoords = voxCoords[inBounds, :]

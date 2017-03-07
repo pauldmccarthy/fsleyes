@@ -393,8 +393,7 @@ _DISPLAY_PROPS = td.TypeDict({
                         'alpha',
                         'brightness',
                         'contrast'],
-    'VolumeOpts'     : ['resolution',
-                        'volume',
+    'VolumeOpts'     : ['volume',
                         'interpolation',
                         'cmap',
                         'cmapResolution',
@@ -407,8 +406,7 @@ _DISPLAY_PROPS = td.TypeDict({
                         'clippingRange',
                         'clipImage',
                         'enableOverrideDataRange'],
-    'MaskOpts'       : ['resolution',
-                        'volume',
+    'MaskOpts'       : ['volume',
                         'colour',
                         'invert',
                         'threshold'],
@@ -425,12 +423,10 @@ _DISPLAY_PROPS = td.TypeDict({
                         'suppressY',
                         'suppressZ',
                         'suppressMode'],
-    'RGBVectorOpts'  : ['resolution',
-                        'interpolation'],
+    'RGBVectorOpts'  : ['interpolation'],
     'LineVectorOpts' : ['directed',
                         'unitLength',
                         'orientFlip',
-                        'resolution',
                         'lineWidth',
                         'lengthScale'],
     'MeshOpts'       : ['refImage',
@@ -457,10 +453,8 @@ _DISPLAY_PROPS = td.TypeDict({
     'LabelOpts'      : ['lut',
                         'outline',
                         'outlineWidth',
-                        'resolution',
                         'volume'],
-    'SHOpts'         : ['resolution',
-                        'shResolution',
+    'SHOpts'         : ['shResolution',
                         'shOrder',
                         'orientFlip',
                         'lighting',
@@ -534,7 +528,6 @@ _DISPLAY_WIDGETS = td.TypeDict({
                 strings.choices['ColourMapOpts.displayRange.max']]), 
 
     # VolumeOpts
-    'VolumeOpts.resolution'     : props.Widget('resolution', showLimits=False),
     'VolumeOpts.volume'         : props.Widget(
         'volume',
         showLimits=False,
@@ -556,7 +549,6 @@ _DISPLAY_WIDGETS = td.TypeDict({
         enabledWhen=lambda vo, en: en),
     
     # MaskOpts
-    'MaskOpts.resolution' : props.Widget('resolution', showLimits=False),
     'MaskOpts.volume'     : props.Widget(
         'volume',
         showLimits=False,
@@ -628,9 +620,6 @@ _DISPLAY_WIDGETS = td.TypeDict({
         enabledWhen=lambda o, ci: ci is None),
 
     # RGBVectorOpts
-    'RGBVectorOpts.resolution'    : props.Widget(
-        'resolution',
-        showLimits=False),
     'RGBVectorOpts.interpolation' : props.Widget(
         'interpolation',
         labels=strings.choices['VolumeOpts.interpolation']),
@@ -639,8 +628,6 @@ _DISPLAY_WIDGETS = td.TypeDict({
     'LineVectorOpts.directed'    : props.Widget('directed'),
     'LineVectorOpts.unitLength'  : props.Widget('unitLength'),
     'LineVectorOpts.orientFlip'  : props.Widget('orientFlip'),
-    'LineVectorOpts.resolution'  : props.Widget('resolution',
-                                                showLimits=False),
     'LineVectorOpts.lineWidth'   : props.Widget('lineWidth',
                                                 showLimits=False),
     'LineVectorOpts.lengthScale' : props.Widget('lengthScale',
@@ -747,14 +734,12 @@ _DISPLAY_WIDGETS = td.TypeDict({
     'LabelOpts.lut'          : props.Widget('lut', labels=lambda l: l.name),
     'LabelOpts.outline'      : props.Widget('outline'),
     'LabelOpts.outlineWidth' : props.Widget('outlineWidth', showLimits=False),
-    'LabelOpts.resolution'   : props.Widget('resolution',   showLimits=False),
     'LabelOpts.volume'       : props.Widget(
         'volume',
         showLimits=False,
         enabledWhen=lambda o: o.overlay.is4DImage()),
 
     # SHOpts
-    'SHOpts.resolution'      : props.Widget('resolution',   showLimits=False),
     'SHOpts.shResolution'    : props.Widget(
         'shResolution',
         spin=False,
