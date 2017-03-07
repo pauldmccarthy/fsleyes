@@ -139,7 +139,6 @@ class GLLabel(globject.GLImageObject):
         opts   .addListener('outlineWidth', name, self.updateShaderState)
         opts   .addListener('lut',          name, self.__lutChanged)
         opts   .addListener('volume',       name, self.__imagePropChanged)
-        opts   .addListener('resolution',   name, self.__imagePropChanged)
         opts   .addListener('transform',    name, self.notify)
 
         # See comment in GLVolume.addDisplayListeners about this
@@ -148,8 +147,6 @@ class GLLabel(globject.GLImageObject):
         if self.__syncListenersRegistered: 
             opts.addSyncChangeListener(
                 'volume',     name, self.__imageSyncChanged)
-            opts.addSyncChangeListener(
-                'resolution', name, self.__imageSyncChanged)
 
 
     def removeListeners(self):
@@ -168,12 +165,10 @@ class GLLabel(globject.GLImageObject):
         opts   .removeListener('outlineWidth', name)
         opts   .removeListener('lut',          name)
         opts   .removeListener('volume',       name)
-        opts   .removeListener('resolution',   name)
         opts   .removeListener('transform',    name)
 
         if self.__syncListenersRegistered:
-            opts.removeSyncChangeListener('volume',     name)
-            opts.removeSyncChangeListener('resolution', name)
+            opts.removeSyncChangeListener('volume', name)
 
 
     def setAxes(self, xax, yax):
@@ -192,9 +187,8 @@ class GLLabel(globject.GLImageObject):
         opts     = self.displayOpts
         texName  = '{}_{}' .format(type(self).__name__, id(self.image))
 
-        unsynced = (opts.getParent() is None            or
-                    not opts.isSyncedToParent('volume') or
-                    not opts.isSyncedToParent('resolution'))
+        unsynced = (opts.getParent() is None or 
+                    not opts.isSyncedToParent('volume'))
 
         if unsynced:
             texName = '{}_unsync_{}'.format(texName, id(opts))
@@ -213,8 +207,7 @@ class GLLabel(globject.GLImageObject):
             texName,
             self.image,
             notify=False,
-            volume=opts.volume,
-            resolution=opts.resolution)
+            volume=opts.volume)
         
         self.imageTexture.register(self.name, self.__imageTextureChanged)
 
@@ -297,20 +290,18 @@ class GLLabel(globject.GLImageObject):
 
 
     def __imagePropChanged(self, *a):
-        """Called when the :attr:`.NiftiOpts.volume` or
-        :attr:`.NiftiOpts.resolution` properties change. Updates the
-        ``imageTexture`` and calls :meth:`updateShaderState`.
+        """Called when the :attr:`.NiftiOpts.volume` property changes. Updates
+        the ``imageTexture`` and calls :meth:`updateShaderState`.
         """
         opts = self.displayOpts
         
-        self.imageTexture.set(volume=opts.volume, resolution=opts.resolution)
+        self.imageTexture.set(volume=opts.volume)
         self.updateShaderState(alwaysNotify=True)
  
     
     def __imageSyncChanged(self, *a):
-        """Called when the :attr:`.NiftiOpts.volume` or
-        :attr:`.NiftiOpts.resolution` properties are synchronised or
-        un-synchronised. Calls :meth:`refreshImageTexture` and
+        """Called when the :attr:`.NiftiOpts.volume` property is synchronised
+        or un-synchronised. Calls :meth:`refreshImageTexture` and
         :meth:`updateShaderState`.
         """
         self.refreshImageTexture()

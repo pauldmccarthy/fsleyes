@@ -419,7 +419,6 @@ def createOrthoCanvases(namespace,
         c.cursorColour    = sceneOpts.cursorColour
         c.bgColour        = sceneOpts.bgColour
         c.renderMode      = sceneOpts.renderMode
-        c.resolutionLimit = sceneOpts.resolutionLimit
 
         if zoom is not None: c.zoom = zoom
         c.centreDisplayAt(*centre)

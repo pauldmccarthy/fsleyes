@@ -836,7 +836,6 @@ properties = TypeDict({
     'Display.brightness'        : 'Brightness',
     'Display.contrast'          : 'Contrast',
 
-    'NiftiOpts.resolution' : 'Resolution',
     'NiftiOpts.transform'  : 'Image transform',
     'NiftiOpts.volume'     : 'Volume',
 

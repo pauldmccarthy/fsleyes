@@ -303,7 +303,6 @@ class GLVolume(globject.GLImageObject):
         opts    .addListener('volume',           name, self._volumeChanged)
         opts    .addListener('interpolation',    name,
                              self._interpolationChanged)
-        opts    .addListener('resolution',       name, self._resolutionChanged)
         opts    .addListener('transform',        name, self._transformChanged)
         opts    .addListener('displayXform',     name,
                              self._displayXformChanged)
@@ -359,7 +358,6 @@ class GLVolume(globject.GLImageObject):
         opts    .removeListener(          'cmapResolution',          name)
         opts    .removeListener(          'invert',                  name)
         opts    .removeListener(          'volume',                  name)
-        opts    .removeListener(          'resolution',              name)
         opts    .removeListener(          'interpolation',           name)
         opts    .removeListener(          'transform',               name)
         opts    .removeListener(          'displayXform',            name)
@@ -469,7 +467,6 @@ class GLVolume(globject.GLImageObject):
             texName,
             self.image,
             interp=interp,
-            resolution=opts.resolution,
             volume=opts.volume,
             notify=False)
 
@@ -543,7 +540,6 @@ class GLVolume(globject.GLImageObject):
             texName,
             clipImage,
             interp=interp,
-            resolution=clipOpts.resolution,
             volume=clipOpts.volume,
             notify=False)
         
@@ -733,7 +729,6 @@ class GLVolume(globject.GLImageObject):
         """
         opts       = self.displayOpts
         volume     = opts.volume
-        resolution = opts.resolution
         volRefresh = kwa.pop('volRefresh', False)
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
@@ -744,23 +739,16 @@ class GLVolume(globject.GLImageObject):
 
         self.imageTexture.set(volume=volume,
                               interp=interp,
-                              resolution=resolution,
                               volRefresh=volRefresh,
                               normaliseRange=normRange)
 
         if self.clipTexture is not None:
-            self.clipTexture.set(interp=interp, resolution=resolution)
+            self.clipTexture.set(interp=interp)
 
 
     def _interpolationChanged(self, *a):
         """Called when the :attr:`.NiftiOpts.interpolation` property changes.
         """
-        self._volumeChanged(volRefresh=True)
-
-        
-    def _resolutionChanged(self, *a):
-        """Called when the :attr:`.NiftiOpts.resolution` property changes.
-        """ 
         self._volumeChanged(volRefresh=True)
 
 
@@ -778,8 +766,8 @@ class GLVolume(globject.GLImageObject):
 
     def _imageSyncChanged(self, *a):
         """Called when the synchronisation state of the
-        :attr:`.NiftiOpts.volume`, :attr:`.NiftiOpts.resolution`, or
-        :attr:`.VolumeOpts.interpolation` properties change.
+        :attr:`.NiftiOpts.volume` or :attr:`.VolumeOpts.interpolation`
+        properties change.
         """
         
         self.refreshImageTexture()

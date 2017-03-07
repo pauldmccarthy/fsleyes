@@ -106,25 +106,14 @@ class OrthoOpts(sceneopts.SceneOpts):
 
         
     def _onPerformanceChange(self, *a):
-        """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the
-        values of the :attr:`renderMode` and :attr:`resolutionLimit`
-        properties according to the performance setting.
+        """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the 
+        value of the :attr:`renderMode` property according to the
+        performance setting.
         """        
 
-        if   self.performance == 3:
-            self.renderMode      = 'onscreen'
-            self.resolutionLimit = 0
-
-        elif self.performance == 2:
-            self.renderMode      = 'offscreen'
-            self.resolutionLimit = 0 
-            
-        elif self.performance == 1:
-            self.renderMode      = 'prerender'
-            self.resolutionLimit = 0
+        if   self.performance == 3: self.renderMode = 'onscreen'
+        elif self.performance == 2: self.renderMode = 'offscreen'
+        elif self.performance == 1: self.renderMode = 'prerender'
 
         log.debug('Performance settings changed: '
-                  'renderMode={}, '
-                  'resolutionLimit={}'.format(
-                      self.renderMode,
-                      self.resolutionLimit))
+                  'renderMode={}'.format(self.renderMode))

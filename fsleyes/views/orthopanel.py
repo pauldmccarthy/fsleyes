@@ -214,10 +214,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__ycanvas.bindProps('renderMode',      sceneOpts)
         self.__zcanvas.bindProps('renderMode',      sceneOpts)
 
-        self.__xcanvas.bindProps('resolutionLimit', sceneOpts)
-        self.__ycanvas.bindProps('resolutionLimit', sceneOpts)
-        self.__zcanvas.bindProps('resolutionLimit', sceneOpts)
-
         self.toggleCursor .bindProps('toggled', sceneOpts, 'showCursor')
         self.toggleLabels .bindProps('toggled', sceneOpts, 'showLabels')
         self.toggleXCanvas.bindProps('toggled', sceneOpts, 'showXCanvas')

@@ -65,10 +65,9 @@ class SceneOpts(props.HasProperties):
     performance = props.Choice((1, 2, 3), default=3, allowStr=True)
     """User controllable performance setting.
 
-    This property is linked to the :attr:`renderMode` and
-    :attr:`resolutionLimit` properties. Setting this property to a low value
-    will result in faster rendering time, at the cost of increased memory
-    usage and poorer rendering quality.
+    This property is linked to the :attr:`renderMode` property. Setting this
+    property to a low value will result in faster rendering time, at the cost
+    of increased memory usage and poorer rendering quality.
 
     See the :meth:`__onPerformanceChange` method.
     """
@@ -78,7 +77,7 @@ class SceneOpts(props.HasProperties):
         """Create a ``SceneOpts`` instance.
 
         This method simply links the :attr:`performance` property to the
-        :attr:`renderMode` and :attr:`resolutionLimit` properties.
+        :attr:`renderMode` property.
         """
         
         name = '{}_{}'.format(type(self).__name__, id(self))
@@ -91,8 +90,8 @@ class SceneOpts(props.HasProperties):
         """Called when the :attr:`performance` property changes.
 
         This method must be overridden by sub-classes to change the values of
-        the :attr:`renderMode` and :attr:`resolutionLimit` properties
-        according to the new performance setting.
+        the :attr:`renderMode` property according to the new performance
+        setting.
         """        
         raise NotImplementedError('The _onPerformanceChange method must'
                                   'be implemented by sub-classes')

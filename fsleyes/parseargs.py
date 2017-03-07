@@ -359,8 +359,7 @@ OPTIONS = td.TypeDict({
                         'alpha',
                         'brightness',
                         'contrast'],
-    'NiftiOpts'      : ['resolution',
-                        'volume'],
+    'NiftiOpts'      : ['volume'],
     
     # n.b. I could list the ColourMapOpts
     # properties separately here, and
@@ -602,7 +601,6 @@ ARGUMENTS = td.TypeDict({
     'Display.brightness'    : ('b',  'brightness',  True),
     'Display.contrast'      : ('c',  'contrast',    True),
 
-    'NiftiOpts.resolution'   : ('r',  'resolution', True),
     'NiftiOpts.volume'       : ('v',  'volume',     True),
 
     'ColourMapOpts.displayRange'     : ('dr',  'displayRange',     True),
@@ -775,7 +773,6 @@ HELP = td.TypeDict({
     'Display.brightness'    : 'Brightness (0-100, default: 50)',
     'Display.contrast'      : 'Contrast (0-100, default: 50)',
 
-    'NiftiOpts.resolution' : 'Voxel resolution (mm)',
     'NiftiOpts.volume'     : 'Volume (index, starting from 0)',
 
     'ColourMapOpts.displayRange'      : 'Display range. Setting this will '

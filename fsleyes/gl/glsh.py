@@ -151,7 +151,6 @@ class GLSH(glvector.GLVectorBase):
         opts = self.displayOpts
         name = self.name
 
-        opts.addListener('resolution',      name, self.notify)
         opts.addListener('shResolution' ,   name, self.__shStateChanged,
                          immediate=True)
         opts.addListener('shOrder'      ,   name, self.__shStateChanged,
@@ -173,7 +172,6 @@ class GLSH(glvector.GLVectorBase):
         opts = self.displayOpts
         name = self.name
 
-        opts.removeListener('resolution',      name)
         opts.removeListener('shResolution',    name)
         opts.removeListener('shOrder',         name)
         opts.removeListener('size',            name)

@@ -88,7 +88,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         self.__lbCanvas.bindProps('showGridLines',   sceneOpts)
         self.__lbCanvas.bindProps('highlightSlice',  sceneOpts)
         self.__lbCanvas.bindProps('renderMode',      sceneOpts)
-        self.__lbCanvas.bindProps('resolutionLimit', sceneOpts)
 
         # Bind these properties the other way around,
         # so that the sensible values calcualted by

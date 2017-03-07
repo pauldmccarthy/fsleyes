@@ -53,7 +53,6 @@ class GLMask(glvolume.GLVolume):
         opts   .addListener('threshold',     name, self.__updateColourTextures)
         opts   .addListener('invert',        name, self.__updateColourTextures)
         opts   .addListener('volume',        name, self.__updateImageTexture)
-        opts   .addListener('resolution',    name, self.__updateImageTexture)
         opts   .addListener('transform',     name, self.notify)
 
         # See comment in GLVolume.addDisplayListeners about this
@@ -61,9 +60,7 @@ class GLMask(glvolume.GLVolume):
 
         if self.__syncListenersRegistered:
             opts.addSyncChangeListener(
-                'volume',     name, self.__refreshImageTexture)
-            opts.addSyncChangeListener(
-                'resolution', name, self.__refreshImageTexture)
+                'volume', name, self.__refreshImageTexture)
 
 
     def removeDisplayListeners(self):
@@ -83,20 +80,17 @@ class GLMask(glvolume.GLVolume):
         opts   .removeListener(          'threshold',     name)
         opts   .removeListener(          'invert',        name)
         opts   .removeListener(          'volume',        name)
-        opts   .removeListener(          'resolution',    name)
         opts   .removeListener(          'transform',     name)
 
         if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume',     name)
-            opts.removeSyncChangeListener('resolution', name)
 
 
     def testUnsynced(self):
         """Overrides :meth:`.GLVolume.testUnsynced`.
         """
-        return (self.displayOpts.getParent() is None            or
-                not self.displayOpts.isSyncedToParent('volume') or
-                not self.displayOpts.isSyncedToParent('resolution'))
+        return (self.displayOpts.getParent() is None or
+                not self.displayOpts.isSyncedToParent('volume'))
 
         
     def refreshColourTextures(self, *a):
@@ -146,9 +140,8 @@ class GLMask(glvolume.GLVolume):
 
         opts       = self.displayOpts
         volume     = opts.volume
-        resolution = opts.resolution
 
-        self.imageTexture.set(volume=volume, resolution=resolution) 
+        self.imageTexture.set(volume=volume) 
 
 
     def __refreshImageTexture(self, *a):

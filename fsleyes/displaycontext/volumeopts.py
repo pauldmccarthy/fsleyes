@@ -135,12 +135,6 @@ class NiftiOpts(fsldisplay.DisplayOpts):
     volume = props.Int(minval=0, maxval=0, default=0, clamped=True)
     """If the ``Image`` is 4D, the current volume to display.""" 
 
-    
-    resolution = props.Real(maxval=10, default=1, clamped=True)
-    """Data resolution in the image world coordinate system. The minimum
-    value is configured in :meth:`__init__`.
-    """ 
-
 
     transform = props.Choice(
         ('affine', 'pixdim', 'pixdim-flip', 'id', 'custom'),
@@ -219,7 +213,6 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         nounbind.append('transform')
         nounbind.append('customXform')
         nounbind.append('displayXform')
-        nounbind.append('resolution')
         nounbind.append('overrideDataRange')
         nounbind.append('enableOverrideDataRange')
 
@@ -264,10 +257,6 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             self.__xforms = {}
             self.__setupTransforms()
             self.__transformChanged()
-
-            # limit resolution to the image dimensions
-            self.resolution = min(overlay.pixdim[:3])
-            self.setConstraint('resolution', 'minval', self.resolution) 
 
 
     def destroy(self):
@@ -795,14 +784,13 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
         constructor.
         """
 
-        # Interpolation (and resolution - see
-        # NiftiOpts __init__) cannot be unbound
+        # Interpolation cannot be unbound
         # between VolumeOpts instances. This is
         # primarily to reduce memory requirement
-        # - if interpolation or resolution were
-        # different across different views, we
-        # would have to create multiple 3D image
-        # textures for the same image.
+        # - if interpolation were different
+        # across different views, we would have
+        # to create multiple 3D image textures
+        # for the same image.
         nounbind = kwargs.get('nounbind', [])
         nounbind.append('interpolation')
         nounbind.append('clipImage')

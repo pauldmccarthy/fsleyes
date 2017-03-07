@@ -432,18 +432,10 @@ class GLImageObject(GLObject):
 
         image = self.image
         opts  = self.displayOpts
-        res   = opts.resolution
 
         # Figure out a good display resolution
         # along each voxel dimension
-        pixdim = np.array(image.pixdim[:3])
-        steps  = [res, res, res] / pixdim
-        steps  = np.maximum(steps, [1, 1, 1])
-        res    = image.shape[:3] / steps
-
-        # Make sure the pixel
-        # resolutions are integers
-        res = np.array(res.round(), dtype=np.uint32)
+        shape = np.array(image.shape[:3])
 
         # Figure out an approximate 
         # correspondence between the
@@ -455,7 +447,7 @@ class GLImageObject(GLObject):
 
         # Re-order the voxel resolutions
         # in the display space
-        res = [res[axes[0]], res[axes[1]], res[axes[2]]]
+        res = [shape[axes[0]], shape[axes[1]], shape[axes[2]]]
 
         return res
 
@@ -514,9 +506,7 @@ class GLImageObject(GLObject):
     
     def generateVoxelCoordinates(self, zpos, bbox=None, space='voxel'):
         """Generates a grid of voxel coordinates along the
-        XY display coordinate system plane, at the given ``zpos``. The
-        coordinates honour the current :attr:`.NiftiOpts.resolution` 
-        property.
+        XY display coordinate system plane, at the given ``zpos``.
 
         :arg zpos:  Position along the display coordinate system Z axis.
         
@@ -540,15 +530,13 @@ class GLImageObject(GLObject):
         opts       = self.displayOpts
         v2dMat     = opts.getTransform('voxel',   'display')
         d2vMat     = opts.getTransform('display', 'voxel')
-        resolution = np.array([opts.resolution] * 3)
 
         if opts.transform == 'id':
-            resolution = resolution / min(image.pixdim[:3])
-            
+            resolution = 1
         elif opts.transform in ('pixdim', 'pixdim-flip'):
-            resolution = [max(r, p)
-                          for r, p
-                          in zip(resolution, image.pixdim[:3])]
+            resolution = image.pixdim[:3]
+        else:
+            resolution = min(image.pixdim[:3])
 
         voxels = glroutines.calculateSamplePoints(
             image.shape,

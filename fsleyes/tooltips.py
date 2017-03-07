@@ -66,7 +66,6 @@ properties = TypeDict({
     # Overlay DisplayOpts
 
     'NiftiOpts.volume'     : 'The volume number (for 4D images).',
-    'NiftiOpts.resolution' : 'Spatial display resolution, in mm.',
     'NiftiOpts.transform'  : 'The affine transformation matrix to apply '
                              'to this image. You can choose to display '
                              'the image without any transformation (as if '
