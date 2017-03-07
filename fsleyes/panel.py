@@ -143,6 +143,13 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
 
         nav = []
 
+        allChildren = []
+        for c in children:
+            if type(c) == wx.Panel: allChildren.extend(c.GetChildren())
+            else:                   allChildren.append(c)
+
+        children = allChildren
+
         log.debug('Updating nav order for {}'.format(type(self).__name__))
         for i, w in enumerate(children):
 
@@ -216,12 +223,20 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
 
             nextIdx = (nextIdx + offset) % len(self.__navOrder)
 
+        toFocus = self.__navOrder[nextIdx]
+
         log.debug('{}: moving focus to {:2d} [{}]'.format(
             type(self).__name__,
             nextIdx,
-            type(self.__navOrder[nextIdx]).__name__))
+            type(toFocus).__name__))
 
-        self.__navOrder[nextIdx].SetFocus()
+        toFocus.SetFocus()
+
+        # If the next widget to receive
+        # focus is a TextCtrl, select
+        # all of its text
+        if isinstance(toFocus, wx.TextCtrl):
+            toFocus.SelectAll()
 
 
     def getName(self):

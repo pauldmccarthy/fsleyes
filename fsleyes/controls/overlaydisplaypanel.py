@@ -217,7 +217,8 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
         for p in dispProps:
 
-            widget = props.buildGUI(widgetList, target, p)
+            widget   = props.buildGUI(widgetList, target, p)
+            toReturn = [widget]
 
             # Build a panel for the ColourMapOpts
             # colour map controls.
@@ -226,7 +227,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
                     cmapWidget    = widget
                     widget, extra = self.__buildColourMapWidget(
                         target, cmapWidget)
-                    returnedWidgets.extend([cmapWidget] + list(extra))
+                    toReturn = [cmapWidget] + list(extra)
 
             # Special case for VolumeOpts props
             if isinstance(target, displayctx.VolumeOpts):
@@ -234,7 +235,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
                     enableWidget  = widget
                     widget, extra = self.__buildOverrideDataRangeWidget(
                         target, enableWidget)
-                    returnedWidgets.extend([enableWidget] + list(extra))
+                    toReturn = [enableWidget] + list(extra)
 
             # More special cases for MeshOpts
             elif isinstance(target, displayctx.MeshOpts):
@@ -242,17 +243,16 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
                     vdataWidget   = widget
                     widget, extra = self.__buildVertexDataWidget(
                         target, vdataWidget)
-                    returnedWidgets.extend([vdataWidget] + list(extra))
+                    toReturn = [vdataWidget] + list(extra)
+
                 if p.key == 'lut':
                     lutWidget   = widget
                     widget, extra = self.__buildMeshOptsLutWidget(
                         target, lutWidget)
-                    returnedWidgets.extend([lutWidget] + list(extra)) 
+                    toReturn = [lutWidget] + list(extra)
 
-            else:
-                returnedWidgets.append(widget)
-                
-            widgets.append(widget)
+            returnedWidgets.extend(toReturn)
+            widgets        .append(widget)
 
         for label, tooltip, widget in zip(labels, tooltips, widgets):
             widgetList.AddWidget(
