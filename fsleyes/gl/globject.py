@@ -532,11 +532,11 @@ class GLImageObject(GLObject):
         d2vMat     = opts.getTransform('display', 'voxel')
 
         if opts.transform == 'id':
-            resolution = 1
+            resolution = [1, 1, 1]
         elif opts.transform in ('pixdim', 'pixdim-flip'):
             resolution = image.pixdim[:3]
         else:
-            resolution = min(image.pixdim[:3])
+            resolution = [min(image.pixdim[:3])] * 3
 
         voxels = glroutines.calculateSamplePoints(
             image.shape,

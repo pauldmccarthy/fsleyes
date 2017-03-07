@@ -35,7 +35,6 @@ class SceneOpts(props.HasProperties):
     zoom            = copy.copy(canvasopts.SliceCanvasOpts.zoom)
     bgColour        = copy.copy(canvasopts.SliceCanvasOpts.bgColour)
     cursorColour    = copy.copy(canvasopts.SliceCanvasOpts.cursorColour)
-    resolutionLimit = copy.copy(canvasopts.SliceCanvasOpts.resolutionLimit)
     renderMode      = copy.copy(canvasopts.SliceCanvasOpts.renderMode)
 
     

@@ -99,12 +99,6 @@ class SliceCanvasOpts(props.HasProperties):
     See the :class:`.SliceCanvas` for more details.
     """
     
-    
-    resolutionLimit = props.Real(default=0, minval=0, maxval=5, clamped=True)
-    """The minimum resolution at which overlays should be drawn. A higher
-    value will result in better performance.
-    """
-
 
     def __init__(self):
         pass

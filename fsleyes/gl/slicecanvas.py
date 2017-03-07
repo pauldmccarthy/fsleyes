@@ -22,7 +22,6 @@ import fsl.data.image                     as fslimage
 import fsl.utils.async                    as async
 import fsl.utils.status                   as status
 import fsleyes.strings                    as strings
-import fsleyes.displaycontext             as fsldisplay
 import fsleyes.displaycontext.canvasopts  as canvasopts
 import fsleyes.gl.routines                as glroutines
 import fsleyes.gl.resources               as glresources
@@ -77,20 +76,6 @@ class SliceCanvas(props.HasProperties):
     **Performance optimisations**
 
     
-    The :attr:`renderMode` and :attr:`resolutionLimit` properties control
-    various ``SliceCanvas`` performance settings, which can be useful when
-    running in a low performance environment (e.g. when only a software based
-    GL driver is available). See also the :attr:`.SceneOpts.performance`
-    setting.
-
-    
-    The :attr:`resolutionLimit` property controls the highest resolution at
-    which :class:`.Image` overlays are displayed on the ``SliceCanvas``. A
-    higher value will result in faster rendering performance. When this
-    property is changed, the :attr:`.NiftiOpts.resolution` property for every
-    :class:`.Image` overlay is updated.
-
-
     The :attr:`renderMode` property controls the way in which the
     ``SliceCanvas`` renders :class:`.GLObject` instances. It has three
     settings:
@@ -156,7 +141,6 @@ class SliceCanvas(props.HasProperties):
     cursorColour    = copy.copy(canvasopts.SliceCanvasOpts.cursorColour)
     bgColour        = copy.copy(canvasopts.SliceCanvasOpts.bgColour)
     renderMode      = copy.copy(canvasopts.SliceCanvasOpts.renderMode)
-    resolutionLimit = copy.copy(canvasopts.SliceCanvasOpts.resolutionLimit)
     
         
     def __init__(self, overlayList, displayCtx, zax=0):
@@ -194,16 +178,6 @@ class SliceCanvas(props.HasProperties):
         self._offscreenTextures = {}
         self._prerenderTextures = {}
 
-        # When the render mode is changed,
-        # overlay resolutions are potentially
-        # modified. When this happens, this
-        # is used to store the old overlay
-        # resolution, so it can be restored
-        # if the render mode is changed back.
-        # See the __resolutionLimitChanged
-        # method.
-        self.__overlayResolutions = {}
-
         # The zax property is the image axis which maps to the
         # 'depth' axis of this canvas. The _zAxisChanged method
         # also fixes the values of 'xax' and 'yax'.
@@ -226,9 +200,6 @@ class SliceCanvas(props.HasProperties):
         self.addListener('invertY',       self.name, self.Refresh)
         self.addListener('zoom',          self.name, self._zoomChanged)
         self.addListener('renderMode',    self.name, self._renderModeChange)
-        self.addListener('resolutionLimit',
-                         self.name,
-                         self.__resolutionLimitChange) 
         
         # When the overlay list changes, refresh the
         # display, and update the display bounds
@@ -266,7 +237,6 @@ class SliceCanvas(props.HasProperties):
         self.removeListener('invertY',         self.name)
         self.removeListener('zoom',            self.name)
         self.removeListener('renderMode',      self.name)
-        self.removeListener('resolutionLimit', self.name)
 
         self.overlayList.removeListener('overlays',     self.name)
         self.displayCtx .removeListener('bounds',       self.name)
@@ -667,84 +637,6 @@ class SliceCanvas(props.HasProperties):
             self._renderModeChange(self)
     
 
-    def __resolutionLimitChange(self, *a):
-        """Called when the :attr:`resolutionLimit` property changes.
-
-        Updates the :attr:`.NiftiOpts.resolution` of all :class:`.Nifti`
-        overlays in the overlay list.  Whenever the resolution of an
-        overlay is changed, its old value is saved, so it can be restored
-        later on when possible.
-        """
-
-        limit = self.resolutionLimit
-
-        for ovl in self.overlayList:
-
-            opts = self.displayCtx.getOpts(ovl)
-
-            # No support for non-volumetric overlay 
-            # types yet (or maybe ever?)
-            if not isinstance(opts, fsldisplay.NiftiOpts):
-                continue
-            
-            currRes = opts.resolution
-            lastRes = self.__overlayResolutions.get(ovl)
-
-            listening = opts.hasListener('resolution', self.name)
-
-            if listening:
-                opts.disableListener('resolution', self.name)
-
-            # The overlay resolution is below
-            # the limit - set it to the limit
-            if currRes < limit:
-
-                log.debug('Limiting overlay {} resolution to {}'.format(
-                    ovl, limit))
-
-                opts.resolution = limit
-
-                # Save the old resolution so we
-                # can restore it later if needed
-                if ovl not in self.__overlayResolutions:
-                    log.debug('Caching overlay {} resolution: {}'.format(
-                        ovl, limit))
-                    
-                    self.__overlayResolutions[ovl] = currRes
-
-            # We have previously modified the
-            # resolution of this overlay - restore
-            # it
-            elif ovl in self.__overlayResolutions:
-
-                # but only if the old resolution
-                # is within the new limits. 
-                if lastRes >= limit:
-
-                    log.debug('Restoring overlay {} resolution to {}, '
-                              'and clearing cache'.format(ovl, lastRes))
-                    opts.resolution = lastRes
-
-                    # We've restored the modified overlay
-                    # resolution - clear it from the cache
-                    self.__overlayResolutions.pop(ovl)
-                else:
-                    log.debug('Limiting overlay {} resolution to {}'.format(
-                        ovl, limit))
-                    opts.resolution = limit
-
-            if listening:
-                opts.enableListener('resolution', self.name)
-                        
-
-    def __overlayResolutionChanged(self, value, valid, opts, name):
-        """Called when the :attr:`.NiftiOpts.resolution` property for any
-        :class:`.Image` overlay changes. Clears the saved resolution for
-        the overlay if necessary (see :meth:`__resolutionLimitChange`).
-        """
-        self.__overlayResolutions.pop(opts.overlay, None)
-
-
     def _zAxisChanged(self, *a):
         """Called when the :attr:`zax` property is changed. Calculates
         the corresponding X and Y axes, and saves them as attributes of
@@ -926,16 +818,6 @@ class SliceCanvas(props.HasProperties):
                                 self.Refresh,
                                 overwrite=True)
 
-            # Listen for resolution changes on Image
-            # overlays - see __overlayResolutionChanged,
-            # and __resolutionLimitChanged
-            if isinstance(overlay, fslimage.Nifti): 
-                opts = display.getDisplayOpts()
-                opts.addListener('resolution',
-                                 self.name,
-                                 self.__overlayResolutionChanged,
-                                 overwrite=True)
-
             if refresh:
                 self.Refresh()
 
@@ -1011,7 +893,6 @@ class SliceCanvas(props.HasProperties):
                 return
 
             self._updateRenderTextures()
-            self.__resolutionLimitChange()
             self.Refresh()
 
         async.idle(refresh)
