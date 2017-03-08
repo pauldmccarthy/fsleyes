@@ -1118,6 +1118,18 @@ nifti = TypeDict({
     'version.1' : 'NIFTI1',
     'version.2' : 'NIFTI2',
 
+    ('xyz_unit', 0)  : '[unknown units]',
+    ('xyz_unit', 1)  : 'metres',
+    ('xyz_unit', 2)  : 'mm',
+    ('xyz_unit', 3)  : 'microns',
+    ('t_unit',   0)  : '[unknown units]',
+    ('t_unit',   8)  : 'seconds',
+    ('t_unit',   16) : 'milliseconds',
+    ('t_unit',   24) : 'microseconds',
+    ('t_unit',   32) : 'hertz',
+    ('t_unit',   40) : 'ppm',
+    ('t_unit',   48) : 'radians/second', 
+
     ('datatype', 0)    : 'UNKNOWN',
     ('datatype', 1)    : 'BINARY',
     ('datatype', 2)    : 'UINT8',

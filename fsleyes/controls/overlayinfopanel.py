@@ -397,9 +397,19 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                          section=dimSect)
 
         # NIFTI images can specify different units.
+        if isNifti:
+            voxUnits  = overlay.xyzUnits
+            timeUnits = overlay.timeUnits
+
         # Assume mm / seconds for ANALYZE images
-        if isNifti: voxUnits, timeUnits = hdr.get_xyzt_units()
-        else:       voxUnits, timeUnits  = 'mm', 's'
+        # We are using nifti xyzt_unit code values
+        # here
+        else:
+            voxUnits, timeUnits = 2, 8
+
+        # Convert the unit codes into labels
+        voxUnits  = strings.nifti.get(('xyz_unit', voxUnits),  'INVALID CODE')
+        timeUnits = strings.nifti.get(('t_unit',   timeUnits), 'INVALID CODE')
 
         for i in range(len(overlay.shape)):
             
