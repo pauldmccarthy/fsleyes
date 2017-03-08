@@ -1128,7 +1128,8 @@ nifti = TypeDict({
     ('t_unit',   24) : 'microseconds',
     ('t_unit',   32) : 'hertz',
     ('t_unit',   40) : 'ppm',
-    ('t_unit',   48) : 'radians/second', 
+    ('t_unit',   48) : 'radians/second',
+    ('t_unit',  -1)  : 'volume',
 
     ('datatype', 0)    : 'UNKNOWN',
     ('datatype', 1)    : 'BINARY',

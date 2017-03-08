@@ -10,6 +10,7 @@ view* for displaying time series data from :class:`.Image` overlays.
 
 
 import logging
+import itertools as it
 
 import numpy as np
 
@@ -22,6 +23,7 @@ import fsl.data.melodicimage                   as fslmelimage
 import fsl.data.image                          as fslimage
 import fsleyes.overlay                         as fsloverlay
 import fsleyes.actions                         as actions
+import fsleyes.strings                         as strings
 import fsleyes.plotting                        as plotting
 import fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
 import fsleyes.controls.timeseriestoolbar      as timeseriestoolbar
@@ -249,11 +251,13 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             # Changing the label might trigger
             # another call to this method, as
             # the PlotPanel might have a listener
-            # registered on it.
+            # registered on it. Hence the suppress
             with props.suppress(ts, 'label'):
                 ts.label = ts.makeLabel()
 
-        self.drawDataSeries(extraSeries=tss)
+        xlabel, ylabel = self.__generatedefaultLabels(tss)
+
+        self.drawDataSeries(extraSeries=tss, xlabel=xlabel, ylabel=ylabel)
         self.drawArtists()
 
 
@@ -365,3 +369,52 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         self.updateDataSeries()
         self.draw()
+
+
+    def __generatedefaultLabels(self, timeSeries):
+        """Called by :meth:`draw`. If the :attr:`.PlotPanel.xlabel` or
+        :attr:`.PlotPanel.ylabel` properties are unset, an attempt is made
+        to generate default labels.
+        """
+
+        xlabel = self.xlabel
+        ylabel = self.ylabel
+
+        if xlabel is not None:
+            return xlabel, ylabel
+
+        if not self.usePixdim:
+            xlabel = strings.nifti['t_unit', -1]
+            return xlabel, ylabel
+
+        # If all of the overlays related to the data series being
+        # plotted:
+        # 
+        #   - are Images
+        #   - have the same time unit (as specified in the nifti header)
+        #  
+        # Then a default label is specified   
+        # 
+        # n.b. this is not foolproof, as many
+        # non-time 4D images will still set
+        # the time units to seconds.
+        #
+        #
+        # TODO Non-Image overlays with associated
+        #      time series (e.g. MeshOpts)
+
+        # Get all the unique overlays
+        overlays = [ts.overlay for ts in it.chain(timeSeries, self.dataSeries)]
+        overlays = set(overlays)
+
+        if not all([isinstance(o, fslimage.Image) for o in overlays]):
+            return xlabel, ylabel
+
+        # And all of their time units
+        units = [o.timeUnits for o in overlays]
+
+        if len(set(units)) == 1:
+            xlabel = strings.nifti.get(('t_unit', units[0]),
+                                       'INVALID TIME UNITS')
+
+        return xlabel, ylabel

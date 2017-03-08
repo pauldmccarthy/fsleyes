@@ -668,6 +668,8 @@ class PlotPanel(viewpanel.ViewPanel):
             oldxlim,
             oldylim,
             refresh,
+            xlabel=None,
+            ylabel=None,
             **plotArgs):
         """Called by :meth:`__drawDataSeries`. Plots all of the data
         associated with the given ``dataSeries``.
@@ -687,6 +689,12 @@ class PlotPanel(viewpanel.ViewPanel):
                          ``yAutoScale`` is disabled, this limit is preserved.
 
         :arg refresh:    Refresh the canvas - see :meth:`drawDataSeries`.
+
+        :arg xlabel:     If provided, overrides the value of the :attr:`xlabel`
+                         property.
+        
+        :arg ylabel:     If provided, overrides the value of the :attr:`ylabel`
+                         property. 
         
         :arg plotArgs:   Remaining arguments passed to the
                          :meth:`__drawOneDataSeries` method.
@@ -736,9 +744,8 @@ class PlotPanel(viewpanel.ViewPanel):
                 xlims, ylims, oldxlim, oldylim, width, height)
 
         # x/y axis labels
-        xlabel = self.xlabel 
-        ylabel = self.ylabel
-
+        if xlabel is None: xlabel = self.xlabel
+        if ylabel is None: ylabel = self.ylabel
         if xlabel is None: xlabel = ''
         if ylabel is None: ylabel = ''
 
@@ -746,11 +753,11 @@ class PlotPanel(viewpanel.ViewPanel):
         ylabel = ylabel.strip()
 
         if xlabel != '':
-            axis.set_xlabel(self.xlabel, va='bottom')
+            axis.set_xlabel(xlabel, va='bottom')
             axis.xaxis.set_label_coords(0.5, 10.0 / height)
             
         if ylabel != '':
-            axis.set_ylabel(self.ylabel, va='top')
+            axis.set_ylabel(ylabel, va='top')
             axis.yaxis.set_label_coords(10.0 / width, 0.5)
 
         # Ticks
