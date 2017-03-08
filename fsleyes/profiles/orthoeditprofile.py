@@ -674,20 +674,21 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         
         Updates the  :mod:`.annotations` colours accordingly.
         """
-        if self.__xselAnnotation is not None:
-            self.__xselAnnotation.colour = self.selectionOverlayColour
-            
-        if self.__yselAnnotation is not None:
-            self.__yselAnnotation.colour = self.selectionOverlayColour
-            
-        if self.__zselAnnotation is not None:
-            self.__zselAnnotation.colour = self.selectionOverlayColour
+        if self.__xselAnnotation is None:
+            return
+
+        self.__xselAnnotation.colour = self.selectionOverlayColour
+        self.__yselAnnotation.colour = self.selectionOverlayColour
+        self.__zselAnnotation.colour = self.selectionOverlayColour
 
 
     def __showSelectionChanged(self, *a):
         """Called when the :attr:`showSelection` property changes. Shows/
         hides the :class:`.VoxelSelection` annotations accordingly.
         """
+        if self.__xselAnnotation is None:
+            return
+
         self.__xselAnnotation.enabled = self.showSelection
         self.__yselAnnotation.enabled = self.showSelection
         self.__zselAnnotation.enabled = self.showSelection
@@ -918,13 +919,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # otherwise be confusing
         if self._displayCtx.displaySpace != overlay:
 
+            msg   = strings.messages[self, 'imageChange']
+            hint  = strings.messages[self, 'imageChangeHint']
+            msg   = msg.format(overlay.name)
+            hint  = hint.format(overlay.name) 
+
             global _suppressOverlayChangeWarning
             if not _suppressOverlayChangeWarning:
 
-                msg   = strings.messages[self, 'imageChange']
-                hint  = strings.messages[self, 'imageChangeHint']
-                msg   = msg.format(overlay.name)
-                hint  = hint.format(overlay.name) 
                 cbMsg = strings.messages[self, 'imageChange.suppress']
                 title = strings.titles[  self, 'imageChange']
                 
