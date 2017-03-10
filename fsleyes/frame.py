@@ -95,6 +95,7 @@ class FSLeyesFrame(wx.Frame):
        refreshPerspectiveMenu
        runScript
        populateMenu
+       Close
 
 
     **Actions**
@@ -257,7 +258,11 @@ class FSLeyesFrame(wx.Frame):
         self.__makeMenuBar()
         self.__restoreState(restore)
 
+        # These flags control whether the user is
+        # prompted before FSLeyes closes - they are
+        # used in the Close and __onClose methods
         self.__saveLayout = save
+        self.__askUnsaved = True
 
         self.__auiManager.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onViewPanelClose)
         self             .Bind(wx.EVT_CLOSE,           self.__onClose)
@@ -903,6 +908,26 @@ class FSLeyesFrame(wx.Frame):
                 display.setBindingDirection(True)
                 opts   .setBindingDirection(True)
 
+
+    def Close(self, **kwargs):
+        """Closes this ``FSLeyesFrame``. See :meth:`__onClose`.
+
+        :arg askUnsaved: Defaults to ``True``. If ``False``, the user is not
+                         asked whether they want to save any unsaved overlays.
+
+        :arg askLayout:  Defaults to the ``save`` value passed to
+                         :meth:`__init__`. Controls whether the user is asked
+                         if they want to save the current layout.
+        """
+
+        askUnsaved = kwargs.pop('askUnsaved', True)
+        askLayout  = kwargs.pop('askLayout',  self.__saveLayout)
+        
+        self.__askUnsaved = askUnsaved
+        self.__saveLayout = askLayout
+
+        super(FSLeyesFrame, self).Close()
+
             
     def __onClose(self, ev):
         """Called when the user closes this ``FSLeyesFrame``.
@@ -921,7 +946,7 @@ class FSLeyesFrame(wx.Frame):
 
         # If there are, get the
         # user to confirm quit
-        if not allSaved:
+        if not allSaved and self.__askUnsaved:
 
             msg   = strings.messages[self, 'unsavedOverlays']
             title = strings.titles[  self, 'unsavedOverlays']

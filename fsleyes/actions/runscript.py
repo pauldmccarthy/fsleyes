@@ -169,19 +169,6 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
     script.
     """
     
-    # Set up the script environment. I'm
-    # using this sandboxed environment
-    # for no particular reason.
-    _globals = {
-        
-        '__builtins__' : {
-            'True'       : True,
-            'False'      : False,
-            '__import__' : __import__,
-            'print'      : print,
-        },
-    }
-
     import numpy                                as np
     import scipy                                as sp
     import matplotlib                           as mpl
@@ -306,4 +293,4 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         ('run',                run),
     ))
 
-    return _globals, _locals
+    return globals(), _locals
