@@ -165,26 +165,27 @@ def main(args=None):
     # parsed argparse.Namespace object.
     namespace = [None]
 
-    # The call to init is wrapped with this
-    # function, which simply causes the
-    # application to bomb out if buildGUI
-    # raises an error.
-    def initWrapper(splash):
-        try:
-            init(splash)
-        except:
-            wx.CallAfter(sys.exit, 1)
-            raise
-
     def init(splash):
 
         # Parse command line arguments. If the
         # user has asked for help (see above),
-        # this will cause the application to
-        # print help and exit. Hence we make
-        # sure the splash screen is shown after
+        # the parseargs module will raise
+        # SystemExit. Hence we make sure the
+        # splash screen is shown only after
         # arguments have been parsed.
-        namespace[0] = parseArgs(args)
+        try:
+            namespace[0] = parseArgs(args)
+
+        # But the wx.App.MainLoop eats SystemExit
+        # exceptions for unknown reasons, and 
+        # and causes the application to exit
+        # immediately. This makes testing FSLeyes
+        # (e.g. code coverage) impossible. So I'm
+        # catching SystemExit here, and then
+        # telling the wx.App to exit gracefully.
+        except SystemExit:
+            app.ExitMainLoop()
+            return
 
         # See FSLeyesSplash.Show
         # for horribleness.
@@ -230,7 +231,7 @@ def main(args=None):
     # wx.CallAfter. In this case, we have
     # already created the splash screen, so
     # all is well.
-    wx.CallAfter(initWrapper, splash)
+    wx.CallAfter(init, splash)
     app.MainLoop()
     shutdown()
 

@@ -1454,8 +1454,7 @@ def parseArgs(mainParser,
               desc=None,
               usageProlog=None,
               argOpts=None,
-              shortHelpExtra=None,
-              exitFunc=None):
+              shortHelpExtra=None):
     """Parses the given command line arguments, returning an
     :class:`argparse.Namespace` object containing all the arguments.
 
@@ -1465,6 +1464,9 @@ def parseArgs(mainParser,
     top-level ``Namespace`` instance. Each of the overlay ``Namespace``
     instances also has an attribute, called ``overlay``, which contains the
     full path of the overlay file that was speciied.
+
+    A ``SystemExit`` exception is raised if invalid arguments have been passed
+    in or, for example, the user simply requested command line help.
 
     :arg mainParser:     A :class:`argparse.ArgumentParser` which should be
                          used as the top level parser.
@@ -1493,18 +1495,10 @@ def parseArgs(mainParser,
                          arguments to the ``mainParser``, the long forms of 
                          those arguemnts may be passed here as a list to
                          have them included in the short help text.
-    
-    :arg exitFunc:       Defaults to ``sys.exit``. Function to call when
-                         the normal behaviour would be to exit (e.g. if the
-                         user requests help, or makes a mistake). Must accept
-                         one parameter, an exit code.
     """
 
     if argOpts is None: argOpts = []
     else:               argOpts = list(argOpts)
-
-    if exitFunc is None:
-        exitFunc = sys.exit
 
     log.debug('Parsing arguments for {}: {}'.format(name, argv))
 
@@ -1634,25 +1628,21 @@ def parseArgs(mainParser,
         
     except ArgumentError as e:
         print(e.message)
-        print() 
+        print()
         mainParser.print_usage()
-        exitFunc(1)
-        return
+        raise SystemExit(1)
 
     if namespace.help:
         _printShortHelp(mainParser, shortHelpExtra)
-        exitFunc(0)
-        return
+        raise SystemExit(0)
 
     if namespace.fullhelp:
         _printFullHelp(mainParser)
-        exitFunc(0)
-        return
+        raise SystemExit(0)
 
     if namespace.version:
         _printVersion(name)
-        exitFunc(0)
-        return
+        raise SystemExit(0)
 
     # Now, we'll create additiona parsers to handle
     # the Display and DisplayOpts options for each
@@ -1691,8 +1681,7 @@ def parseArgs(mainParser,
             print(e.message,       file=sys.stderr)
             print(                 file=sys.stderr)
             mainParser.print_usage(file=sys.stderr)
-            exitFunc(1)
-            return
+            raise SystemExit(1)
 
         # Did the user specify an
         # overlay type for this file?
@@ -1736,8 +1725,7 @@ def parseArgs(mainParser,
             optUsage = '      ' + optUsage[6:]
             
             print(optUsage, file=sys.stderr)
-            exitFunc(1)
-            return
+            raise SystemExit(1)
  
         # Attach the path and the overlay type
         # to the opts namespace object. If an

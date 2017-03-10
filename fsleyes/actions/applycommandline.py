@@ -107,12 +107,6 @@ def applyCommandLineArgs(overlayList, displayCtx, panel, argv):
     stdout = StringIO.StringIO()
     stderr = StringIO.StringIO()
 
-    # Custom parseArgs exit function -
-    # if this gets called, it means
-    # that something has gone wrong
-    def exit(code):
-        raise ApplyCLIExit(code, stdout.getvalue(), stderr.getvalue())
-
     if argv[0] == 'fsleyes':
         argv = argv[1:]
 
@@ -124,10 +118,11 @@ def applyCommandLineArgs(overlayList, displayCtx, panel, argv):
         real_stderr = sys.stderr
         sys.stdout  = stdout
         sys.stderr  = stderr
-        namespace   = parseargs.parseArgs(parser,
-                                          argv,
-                                          'fsleyes',
-                                          exitFunc=exit)
+        namespace   = parseargs.parseArgs(parser, argv, 'fsleyes')
+
+    except SystemExit as e:
+        raise ApplyCLIExit(e.code, stdout.getvalue(), stderr.getvalue())
+
     finally:
         sys.stdout = real_stdout
         sys.stderr = real_stderr
