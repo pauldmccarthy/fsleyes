@@ -295,7 +295,7 @@ three scenarios:
   <display_space_world_coordinate_system>` - how the image is oriented in
   world coordinates (i.e. the image voxel coordinates, transformed via the
   image ``qform``/ ``sform`` transformation matrix). For all NIFTI images,
-  this coordinate system is required to be neurological (as described
+  this coordinate system is required to be neurological (RAS, as described
   :ref:`above <display_space_world_coordinate_system>`) [*]_.
 
 
@@ -312,7 +312,7 @@ three scenarios:
 
 .. [*] But what makes things really confusing is the face that the MNI152
        standard brain image (and thus all images stored with the same voxel
-       orientation) has a *radiological* voxel storage order!
+       orientation) has a *radiological* (LAS) voxel storage order!
 
 
 .. _display_space_data_storage_order: 
