@@ -469,10 +469,10 @@ class OrthoViewProfile(profiles.Profile):
         the canvas will be zoomed in to the drawn rectangle.
         """
 
-        if canvasPos is None:
-            return False
-
         mouseDownPos, canvasDownPos = self.getMouseDownLocation()
+
+        if canvasPos is None or canvasDownPos is None:
+            return False
 
         corner = [canvasDownPos[canvas.xax], canvasDownPos[canvas.yax]]
         width  = canvasPos[canvas.xax] - corner[0]
@@ -496,12 +496,10 @@ class OrthoViewProfile(profiles.Profile):
         user.
         """
 
-        if canvasPos is None:
-            return False
-
         mouseDownPos, canvasDownPos = self.getMouseDownLocation()
         
-        if mouseDownPos  is None or \
+        if canvasPos     is None or \
+           mouseDownPos  is None or \
            canvasDownPos is None:
             return False
 
