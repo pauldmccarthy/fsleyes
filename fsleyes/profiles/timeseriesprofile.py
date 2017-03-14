@@ -116,6 +116,7 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
         
         if self.__volumeLine is not None:
             self.__volumeLine.remove()
+            self.__volumeLine = None
 
         if not self.__volumeModeCompatible():
             return
