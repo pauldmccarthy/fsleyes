@@ -11,6 +11,7 @@ atlas images, tissue segmentation images, and so on.
 
 import props
 
+import fsleyes.colourmaps as colourmaps
 from . import volumeopts
 
 
@@ -61,6 +62,7 @@ class LabelOpts(volumeopts.NiftiOpts):
         if aux_file.startswith('mgh'):
             aux_file = 'mgh-cma-freesurfer'
 
-        self.lut = aux_file
+        if colourmaps.isLookupTableRegistered(aux_file):
+            self.lut = aux_file
 
         volumeopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)
