@@ -460,8 +460,10 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                          self.__formatArray(hdr.get_best_affine()),
                          section=xformSect) 
 
-        if overlay.isNeurological(): storageOrder = 'neuro'
-        else:                        storageOrder = 'radio'
+        if overlay.getXFormCode() == constants.NIFTI_XFORM_UNKNOWN:
+            storageOrder = 'unknown'
+        elif overlay.isNeurological(): storageOrder = 'neuro'
+        else:                          storageOrder = 'radio'
         storageOrder = strings.nifti['storageOrder.{}'.format(storageOrder)]
 
         info.addInfo(strings.nifti['storageOrder'],
