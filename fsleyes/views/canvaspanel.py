@@ -950,8 +950,8 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
 
         data[:, :, :3] = rgb.reshape(height, width, 3)
 
-        # OSX has complications 
-        if fslplatform.os == 'Darwin':
+        # OSX and SSh/X11 both have complications
+        if fslplatform.inSSHSession or fslplatform.os == 'Darwin':
             data = osxPatch(panel, data, bgColour)
         
         data[:, :,  3] = 255
@@ -1060,6 +1060,10 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
     # other GL canvases. So that's the
     # one that we want to take a screenshot
     # of.
+    doScreenshot = status.reportErrorDecorator(
+        strings.titles[  'CanvasPanel.screenshot.error'],
+        strings.messages['CanvasPanel.screenshot.error'])(doScreenshot)
+
     async.idle(doScreenshot, canvasPanel.getContainerPanel())
     
     status.update(
