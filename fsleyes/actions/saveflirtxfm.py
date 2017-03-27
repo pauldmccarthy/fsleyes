@@ -16,6 +16,7 @@ import numpy as np
 
 import fsl.data.image      as fslimage
 import fsl.utils.transform as transform
+import fsl.utils.status    as status
 import fsleyes.strings     as strings
 from . import                 base
 from . import                 applyflirtxfm
@@ -79,8 +80,6 @@ class SaveFlirtXfmAction(base.Action):
         a FLIRT transform for the currently selected image.
         """
 
-        import wx
-
         displayCtx  = self.__displayCtx
         overlayList = self.__overlayList
         overlay     = displayCtx.getSelectedOverlay()
@@ -94,17 +93,11 @@ class SaveFlirtXfmAction(base.Action):
         xform = calculateTransform(
             overlay, overlayList, displayCtx, refFile)
 
-        try:
+        errtitle = strings.titles[  self, 'error']
+        errmsg   = strings.messages[self, 'error']
+
+        with status.reportIfError(errtitle, errmsg):
             np.savetxt(matFile, xform, fmt='%0.10f')
-            
-        except Exception as e:
-            
-            log.warn('Error saving FLIRT matrix: {}'.format(e))
-            
-            wx.MessageDialog(
-                self.__frame,
-                strings.messages[self, 'error'].format(str(e)),
-                style=wx.ICON_ERROR).ShowModal()
 
 
 def calculateTransform(overlay,

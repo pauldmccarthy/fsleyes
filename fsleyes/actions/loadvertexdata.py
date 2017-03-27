@@ -10,12 +10,13 @@ standalone function, :func:`loadVertexData` is also provided.
 """
 
 
-import os.path         as op
+import os.path          as op
 
-import fsl.data.mesh   as fslmesh
+import fsl.data.mesh    as fslmesh
+import fsl.utils.status as status
 
-import fsleyes.strings as strings
-from . import             base
+import fsleyes.strings  as strings
+from . import              base
 
 
 class LoadVertexDataAction(base.Action):
@@ -91,20 +92,12 @@ class LoadVertexDataAction(base.Action):
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        path = dlg.GetPath()
+        path     = dlg.GetPath()
+        errtitle = strings.titles[  self, 'error']
+        errmsg   = strings.messages[self, 'error'].format(overlay.name)
 
-        try:
+        with status.reportIfError(errtitle, errmsg):
             loadVertexData(overlay, self.__displayCtx, path)
-            
-        except Exception as e:
-
-            msg = strings.messages[self, 'error']
-            msg = msg.format(overlay.name, str(e))
-
-            wx.MessageDialog(
-                app.GetTopWindow(),
-                message=msg,
-                style=wx.ICON_ERROR).ShowModal() 
 
 
 def loadVertexData(overlay, displayCtx, filename):

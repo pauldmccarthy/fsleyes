@@ -75,7 +75,7 @@ class ApplyCommandLineAction(base.Action):
         errMsg   = strings.messages[self, 'error']
 
         # apply said arguments
-        with status.reportIfError(errTitle, errMsg, raiseError=False):
+        with status.reportIfError(errTitle, errMsg):
             applyCommandLineArgs(self.__overlayList,
                                  self.__displayCtx,
                                  self.__panel,

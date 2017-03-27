@@ -124,10 +124,8 @@ messages = TypeDict({
     'CanvasPanel.screenshot.notSaved'   : 'Overlay {} needs saving before a '
                                           'screenshot can be taken.',
     'CanvasPanel.screenshot.pleaseWait' : 'Saving screenshot to {}...',
-    'CanvasPanel.screenshot.error'      : 'Sorry, there was an error '
-                                          'saving the screenshot. Try '
-                                          'calling render directly with '
-                                          'this command: \n{}',
+    'CanvasPanel.screenshot.error'      : 'An error occurred saving the '
+                                          'screenshot.',
 
     'CanvasPanel.showCommandLineArgs.title'   : 'Scene parameters',
     'CanvasPanel.showCommandLineArgs.message' : 'Use these parameters on the '
@@ -236,7 +234,7 @@ messages = TypeDict({
                                             'as the first column?',
 
     'LoadAtlasAction.error'       :
-    'An error occurred loading the atlas specification {}\n\nDetails: {}',
+    'An error occurred loading the atlas specification {}.',
 
     'ClearSettingsAction.confirm'       :
     'Are you sure you want to clear all FSLeyes settings? All preferences, '
@@ -247,10 +245,10 @@ messages = TypeDict({
     'Calculating correlation values for seed voxel [{}, {}, {}] ...',
 
     'EditTransformPanel.saveFlirt.error' :
-    'An error occurred saving the FLIRT matrix.\n\nDetails: {}',
+    'An error occurred saving the FLIRT matrix.',
 
     'SaveFlirtXfmAction.error' :
-    'An error occurred saving the FLIRT matrix.\n\nDetails: {}', 
+    'An error occurred saving the FLIRT matrix.', 
 
     'FlirtFileDialog.matFile'    : 'Select FLIRT transformation matrix file',
     'FlirtFileDialog.refFile'    : 'Select FLIRT reference image',
@@ -259,7 +257,7 @@ messages = TypeDict({
     'LoadVertexDataAction.loadVertexData' :
     'Select a vertex data file for {}',
     'LoadVertexDataAction.error' :
-    'An error occurred while loading the vertex data for {}\n\nDetails: {}',
+    'An error occurred while loading the vertex data for {}',
 
     'UpdateCheckAction.newVersionAvailable' :
     'A new version of FSLeyes is available. This version of FSLeyes is {}, '
@@ -374,6 +372,10 @@ titles = TypeDict({
 
     'LoadAtlasAction.fileDialog'  : 'Load XML atlas specification',
     'LoadAtlasAction.error'       : 'Error loading atlas specification',
+
+    'LoadVertexDataAction.error' : 'Error loading vertex data',
+
+    'SaveFlirtXfmAction.error' : 'Error saving theFLIRT matrix', 
 
     'ClearSettingsAction.confirm' : 'Clear all settings?',
 

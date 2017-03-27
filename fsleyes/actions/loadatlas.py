@@ -11,6 +11,7 @@ allows the user to load an atlas specification into FSLeyes. See the
 
 
 import fsl.data.atlases as atlases
+import fsl.utils.status as status
 
 import fsleyes.strings as  strings
 from . import              base
@@ -66,14 +67,9 @@ def loadAtlas(parent=None):
     if dlg.ShowModal() != wx.ID_OK:
         return
 
-    path = dlg.GetPath()
+    path     = dlg.GetPath()
+    errtitle = strings.titles[  LoadAtlasAction, 'error']
+    errmsg   = strings.messages[LoadAtlasAction, 'error'].format(path)
 
-    try:
+    with status.reportIfError(errtitle, errmsg):
         atlases.addAtlas(path)
-
-    except Exception as e:
-
-        title = strings.titles[  LoadAtlasAction, 'error']
-        msg   = strings.messages[LoadAtlasAction, 'error'].format(path, str(e))
-
-        wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK) 
