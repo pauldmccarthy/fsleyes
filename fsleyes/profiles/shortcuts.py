@@ -22,7 +22,7 @@ actions = td.TypeDict({
     'RemoveOverlayAction'      : 'Ctrl-Shift-W',
 
     'FSLeyesFrame.closeFSLeyes'           : 'Ctrl-Q',
-    'FSLeyesFrame.openHelp'               : 'Ctrl-H',
+    'FSLeyesFrame.openHelp'               : 'Ctrl-?',
     'FSLeyesFrame.removeFocusedViewPanel' : 'Ctrl-W',
     
     'FSLeyesFrame.perspectives.default'   : 'Ctrl-Shift-D',
