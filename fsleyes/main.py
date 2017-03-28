@@ -77,6 +77,11 @@ class FSLeyesApp(wx.App):
         self.MacOpenFiles([filename])
 
 
+    def MacOpenURL(self, filename):
+        """On OSX, support opening files via a ``fsleyes://`` url. """
+        self.MacOpenFiles([filename]) 
+
+
     def MacOpenFiles(self, filenames):
         """On OSX, support opening files via context menu, and files dropped
         on the application icon.
