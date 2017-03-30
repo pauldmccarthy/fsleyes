@@ -269,7 +269,7 @@ class patch_code(Command):
 
                 logstrip = op.join(basedir, 'assets', 'build', 'logstrip.py')
 
-                sp_call(['python', logstrip, '-M', 'INFO', filename])
+                sp_call(['python', logstrip, '-f', '-M', 'INFO', filename])
 
         def enable_logging():
 
