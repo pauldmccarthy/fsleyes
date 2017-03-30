@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>CFBundleInfoDictionaryVersion</key> <string>6.0</string>
+    <key>CFBundleDevelopmentRegion</key>     <string>en-UK</string>
+      
+    <key>CFBundleName</key>                  <string>FSLeyes</string> 
+    <key>CFBundleDisplayName</key>           <string>FSLeyes</string>
+    <key>CFBundleExecutable</key>            <string>fsleyes</string>
+    <key>CFBundleIconFile</key>              <string>fsleyes.icns</string>
+    <key>CFBundleIdentifier</key>            <string>uk.ac.ox.fmrib.fsleyes</string>
+    <key>CFBundlePackageType</key>           <string>APPL</string>
+    <key>CFBundleShortVersionString</key>    <string>fill</string>
+    <key>CFBundleVersion</key>               <string>fill</string>
+    <key>NSHumanReadableCopyright</key>      <string>fill</string>
+
+    <key>LSMinimumSystemVersion</key>        <string>10.7.5</string>
+    <key>LSBackgroundOnly</key>              <string>0</string>
+    <key>NSHighResolutionCapable</key>       <true/>
+    
+    <key>CFBundleURLTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleTypeRole</key>
+        <string>Viewer</string>
+        <key>CFBundleURLName</key>
+        <string>FSLeyes file</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>fsleyes</string>
+        </array>
+      </dict>
+    </array>
+
+    <key>CFBundleDocumentTypes</key>
+    <array>
+
+      <dict>
+        <key>CFBundleTypeExtensions</key>
+        <array>
+          <string>gz</string>
+        </array>
+        <key>CFBundleTypeName</key>
+        <string>NIFTI</string>
+        <key>CFBundleTypeRole</key>
+        <string>Viewer</string>
+      </dict> 
+
+      <dict>
+        <key>CFBundleTypeExtensions</key>
+        <array>
+          <string>nii.gz</string>
+        </array>
+        <key>CFBundleTypeName</key>
+        <string>NIFTI</string>
+        <key>CFBundleTypeRole</key>
+        <string>Viewer</string>
+      </dict>
+      
+      <dict>
+        <key>CFBundleTypeExtensions</key>
+        <array>
+          <string>nii</string>
+        </array>
+        <key>CFBundleTypeName</key>
+        <string>NIFTI</string>
+        <key>CFBundleTypeRole</key>
+        <string>Viewer</string>
+      </dict>
+
+      <dict>
+        <key>CFBundleTypeExtensions</key>
+        <array>
+          <string>img</string>
+        </array>
+        <key>CFBundleTypeName</key>
+        <string>NIFTI</string>
+        <key>CFBundleTypeRole</key>
+        <string>Viewer</string>
+      </dict>
+
+      <dict>
+        <key>CFBundleTypeExtensions</key>
+        <array>
+          <string>hdr</string>
+        </array>
+        <key>CFBundleTypeName</key>
+        <string>NIFTI</string>
+        <key>CFBundleTypeRole</key>
+        <string>Viewer</string>
+      </dict> 
+      
+      <dict>
+        <key>CFBundleTypeExtensions</key>
+        <array>
+          <string>vtk</string>
+        </array>
+        <key>CFBundleTypeName</key>
+        <string>FAST vtk file</string>
+        <key>CFBundleTypeRole</key>
+        <string>Viewer</string>
+      </dict>
+
+      <dict>
+        <key>CFBundleTypeExtensions</key>
+        <array>
+          <string>gii</string>
+        </array>
+        <key>CFBundleTypeName</key>
+        <string>GIFTI surface file</string>
+        <key>CFBundleTypeRole</key>
+        <string>Viewer</string>
+      </dict> 
+    </array>
+  </dict>
+</plist>
