@@ -2,30 +2,7 @@ FSLeyes
 =======
 
 
-This is the home of *FSLeyes*, the
- [FSL](http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/) image viewer. 
-
-
-Documentation
--------------
-
-
-Check out the [Installation
-instructions](https://git.fmrib.ox.ac.uk/paulmc/fsleyes/wikis/home) for
-details on installing FSLeyes.
-
-
-The [Documentation for
-users](http://users.fmrib.ox.ac.uk/~paulmc/fsleyes_userdoc/index.html)
-provides a comprehensive overview of how to use *FSLeyes*.
-
-
-Take a look at the `fsleyes`, `fslpy` and `props` API documentation if you
-want to program with *FSLeyes*.
-
- - [FSLeyes](http://users.fmrib.ox.ac.uk/~paulmc/fsleyes_apidoc/index.html)
- - [fslpy](http://users.fmrib.ox.ac.uk/~paulmc/fslpy/index.html)
- - [props](http://users.fmrib.ox.ac.uk/~paulmc/props/index.html) 
+ *FSLeyes* is the [FSL](http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/) image viewer.
 
 
 Dependencies
@@ -40,6 +17,7 @@ Being an OpenGL application, *FSLeyes* can only be used on computers with
 graphics hardware (or a software GL renderer) that supports one of the
 following versions:
 
+
  - OpenGL 1.4, with the following extensions:
    - `ARB_vertex_program`
    - `ARB_fragment_program`
@@ -52,6 +30,17 @@ following versions:
    - `ARB_draw_instanced`
 
 *FSLeyes* also requires the presence of GLUT, or FreeGLUT.
+
+
+Documentation
+-------------
+
+The FSLeyes user and API documentation is written in ReStructuredText, and
+can be built using [sphinx](http://www.sphinx-doc.org/). Install `sphinx`
+and `sphinx-rtd-theme`, and then run:
+
+    python setup.py userdoc
+    python setup.py apidoc
 
 
 Credits
