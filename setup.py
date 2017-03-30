@@ -55,7 +55,8 @@ class build_standalone(Command):
         ('version=',        'v', 'FSLeyes version'),
         ('props-version=',  'p', 'props version'),
         ('fslpy-version=',  'f', 'fslpy version'),
-        ('skip-patch-code', 'p',  'Skip code patch step'),
+        ('skip-patch-code', 'p', 'Skip code patch step'),
+        ('skip-build',      'b', 'Skip build'),
         ('enable-logging',  'l', 'Enable logging'),
     ]
 
@@ -69,6 +70,7 @@ class build_standalone(Command):
         self.props_version   = None
         self.fslpy_version   = None
         self.skip_patch_code = False
+        self.skip_build      = False
         self.enable_logging  = False
 
     def finalize_options(self):
@@ -101,8 +103,9 @@ class build_standalone(Command):
 
         self.run_command('userdoc')
 
-        if platform == 'darwin': self.run_command('py2app')
-        else:                    self.run_command('pyinstaller')
+        if not self.skip_build:
+            if platform == 'darwin': self.run_command('py2app')
+            else:                    self.run_command('pyinstaller')
         
 
 class checkout_subprojects(Command):
@@ -462,7 +465,6 @@ def get_git_version():
     Warning: This will fix the paths to the props/fslpy packages, so make
              sure the PYTHONPATH/sys.path is set before calling this function.
     """
-
     propsdir   = pkgutil.get_loader('props')  .filename
     fslpydir   = pkgutil.get_loader('fsl')    .filename
     fsleyesdir = pkgutil.get_loader('fsleyes').filename
