@@ -172,9 +172,13 @@ class docbuilder(Command):
         if op.exists(destdir):
             shutil.rmtree(destdir)
 
-        env               = dict(os.environ)
-        ppath             = env.get('PYTHONPATH', '')
-        env['PYTHONPATH'] = op.pathsep.join((ppath, basedir))
+        env   = dict(os.environ)
+        ppath = [
+            op.join(pkgutil.get_loader('fsleyes').filename, '..'),
+            op.join(pkgutil.get_loader('fsl')    .filename, '..'),
+            op.join(pkgutil.get_loader('props')  .filename, '..')]
+        
+        env['PYTHONPATH'] = op.pathsep.join(ppath)
 
         sp_call(['sphinx-build', docdir, destdir], env=env)
 
@@ -230,7 +234,6 @@ class patch_code(Command):
             filename   = op.join(basedir, 'fsleyes', 'version.py')
             version    = get_fsleyes_version()
             gitVersion = get_git_version()
-            gitVersion = '.'.join([h[:7] for h in gitVersion])
 
             def linepatch(line):
                 if line.startswith('__version__'):

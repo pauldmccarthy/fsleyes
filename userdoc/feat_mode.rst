@@ -288,6 +288,8 @@ options are straightforward to interpret:
              pre-whitening. Therefore plots shown in FSLeyes |version| may not
              exactly match the corresponding plots in the FEAT report.
 
+             Inverted for negative contrast vectors
+
 
 .. _feat_mode_full_and_partial_model_fits:
 
