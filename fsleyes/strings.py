@@ -1270,7 +1270,7 @@ about = {
     'title'      : 'About FSLeyes',
     'author'     : 'Paul McCarthy',
     'email'      : 'paulmc@fmrib.ox.ac.uk',
-    'company'    : u'\u00A9 FMRIB Centre, Oxford, UK',
+    'company'    : 'FMRIB Centre, Oxford, UK',
     'version'    : 'FSLeyes version: {}',
     'vcsVersion' : 'Internal version: {}',
     'glVersion'  : 'OpenGL version: {}',
@@ -1300,6 +1300,10 @@ about = {
      - wxPython [{}] (http://www.wxpython.org)
     
     Some of the icons used in FSLeyes are derived from the Freeline icon set, by Enes Dal, available at https://www.iconfinder.com/Enesdal, and released under the Creative Commons (Attribution 3.0 Unported) license.
+
+    FSLeyes is released under Version 2.0 of the Apache Software License.
+
+    Copyright 2016-2017 University of Oxford, Oxford, UK.
     """).strip(),
 
     # This is a list of all the libraries listed
