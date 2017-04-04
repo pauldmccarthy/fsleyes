@@ -419,6 +419,10 @@ def guessDataSourceType(path):
     import fsl.data.melodicanalysis as melanalysis
     import fsl.data.featanalysis    as featanalysis
 
+    # Support files opened via fsleyes:// URL
+    if path.startswith('fsleyes://'):
+        path = path[10:]
+
     path = op.abspath(path)
 
     # VTK files are easy
