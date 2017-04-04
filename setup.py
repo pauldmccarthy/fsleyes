@@ -4,6 +4,107 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""
+
+Currently using py2app 0.12 for OSX builds. There is an issue with
+this version of py2app which we need to work around:
+
+https://bitbucket.org/ronaldoussoren/py2app/issues/222/argv-emulation-only-works-when-redirect):
+
+The following patch must be applied to the py2app source::
+
+    --- orig/py2app/apptemplate/src/main.c	2017-02-22 10:32:57.000000000 +0000
+    +++ patch/py2app/apptemplate/src/main.c	2017-04-04 15:52:20.000000000 +0100
+    @@ -1147,7 +1147,6 @@
+        do_asl_log_descriptor(cl, msg, 4 /* ASL_LEVEL_NOTICE */, 2, 2 /* ASL_LOG_DESCRIPTOR_WRITE */);
+     }
+
+    -#ifndef PY2APP_SECONDARY
+     static int
+     have_psn_arg(int argc, char* const * argv)
+     {
+    @@ -1162,7 +1161,6 @@
+        }
+        return 0;
+     }
+    -#endif /* !PY2APP_SECONDARY */
+
+
+     int
+    @@ -1170,7 +1168,6 @@
+     {
+         int rval;
+
+    -#ifndef PY2APP_SECONDARY
+         /* Running as a GUI app started by launch
+          * services, try to redirect stdout/stderr
+          * to ASL.
+    @@ -1217,9 +1214,10 @@
+            bname++;
+             }
+
+    +#ifndef PY2APP_SECONDARY
+             setup_asl(bname);
+    -    }
+     #endif /* !PY2APP_SECONDARY */
+    +  }
+
+         if (bind_CoreFoundation()) {
+             fprintf(stderr, "CoreFoundation not found or functions missing\n");
+    --- orig/py2app/bootstrap/argv_emulation.py	2017-02-22 10:32:57.000000000 +0000
+    +++ patch/py2app/bootstrap/argv_emulation.py	2017-04-04 17:16:54.000000000 +0100
+    @@ -88,7 +88,7 @@
+
+         return carbon
+
+    -def _run_argvemulator(timeout = 60):
+    +def _run_argvemulator(timeout = 5):
+
+         # Configure ctypes
+         carbon = _ctypes_setup()
+    @@ -113,6 +113,7 @@
+         FALSE               = b'\0'
+         TRUE                = b'\1'
+         eventLoopTimedOutErr = -9875
+    +    eventParameterNotFoundErr = -9870
+
+         kEventClassAppleEvent, = struct.unpack('>i', b'eppc')
+         kEventAppleEvent = 1
+    @@ -242,7 +243,7 @@
+             event = ctypes.c_void_p()
+
+             sts = carbon.ReceiveNextEvent(1, ctypes.byref(eventType),
+    -                start + timeout[0] - now, TRUE, ctypes.byref(event))
+    +                start + timeout[0] - now, FALSE, ctypes.byref(event))
+
+             if sts == eventLoopTimedOutErr:
+                 break
+    @@ -252,10 +253,17 @@
+                 break
+
+             sts = carbon.AEProcessEvent(event)
+    -        if sts != 0:
+    +
+    +        # No events
+    +        if sts == eventParameterNotFoundErr:
+    +            break
+    +
+    +        elif sts != 0:
+                 print("argvemulator warning: processing events failed")
+                 break
+
+    +        now = time.time()
+    +
+
+         carbon.AERemoveEventHandler(kCoreEventClass, kAEOpenApplication,
+                 open_app_handler, FALSE)
+
+
+Then the py2app bootloader needs to be recompiled::
+
+    cd py2app/apptemplate/
+    python setup.py
+"""
 
 
 from __future__ import print_function
@@ -31,10 +132,13 @@ platform = platform.system().lower()
 # setup.py file is contained.
 basedir = op.dirname(op.abspath(__file__))
 
-
-if platform == 'darwin':
+try:
     from py2app.build_app import py2app as orig_py2app
-else:
+
+# A dummy orig_py2app class, so my
+# py2app class definition won't
+# break if py2app is not present
+except:
     class orig_py2app(Command):
         user_options = []
 
@@ -55,7 +159,7 @@ class build_standalone(Command):
         ('version=',        'v', 'FSLeyes version'),
         ('props-version=',  'p', 'props version'),
         ('fslpy-version=',  'f', 'fslpy version'),
-        ('skip-patch-code', 'p', 'Skip code patch step'),
+        ('skip-patch-code', 'c', 'Skip code patch step'),
         ('skip-build',      'b', 'Skip build'),
         ('enable-logging',  'l', 'Enable logging'),
     ]
@@ -77,35 +181,52 @@ class build_standalone(Command):
         pass
 
     def run(self):
+
+        if op.exists(op.join(basedir, 'build')):
+            shutil.rmtree(op.join(basedir, 'build'))
         
         # Check out props/fslpy
-        # Patch code
-        # Build user documentation
-        # run py2app or pyinstaller
-
         checkout = self.distribution.get_command_obj('checkout_subprojects')
         checkout.props_version = self.props_version
         checkout.fslpy_version = self.fslpy_version
 
         self.run_command('checkout_subprojects')
 
+        # Make a copy of the fsleyes source,
+        # because patch_code makes changes to
+        # it, and we restore these changes
+        # after the build
+        shutil.copytree(op.join(basedir, 'fsleyes'),
+                        op.join(basedir, '.fsleyes.backup'))
+
         sys.path.insert(0, basedir)
         sys.path.insert(0, op.join(basedir, 'build', 'fslpy'))
         sys.path.insert(0, op.join(basedir, 'build', 'props'))
 
-        if not self.skip_patch_code:
+        try:
 
-            pc                = self.distribution.get_command_obj('patch_code')
-            pc.enable_logging = self.enable_logging
-            pc.version        = self.version
+            # Patch code (remove log calls, and set
+            # up fsleyes logging/GL initialisation)
+            if not self.skip_patch_code:
 
-            self.run_command('patch_code')
+                pc                = self.distribution.get_command_obj('patch_code')
+                pc.enable_logging = self.enable_logging
+                pc.version        = self.version
 
-        self.run_command('userdoc')
+                self.run_command('patch_code')
 
-        if not self.skip_build:
-            if platform == 'darwin': self.run_command('py2app')
-            else:                    self.run_command('pyinstaller')
+            # Build user documentation
+            self.run_command('userdoc')
+
+            # run py2app or pyinstaller
+            if not self.skip_build:
+                if platform == 'darwin': self.run_command('py2app')
+                else:                    self.run_command('pyinstaller')
+
+        finally:
+            shutil.rmtree(op.join(basedir, 'fsleyes'))
+            shutil.move(  op.join(basedir, '.fsleyes.backup'),
+                          op.join(basedir, 'fsleyes'))
         
 
 class checkout_subprojects(Command):
@@ -141,18 +262,29 @@ class checkout_subprojects(Command):
         if     op.exists(fslpydest): shutil.rmtree(fslpydest)
 
         if self.props_version == 'local':
+            
+            print('Copying props [local] to {}'.format(propsdest))
             propsdir = pkgutil.get_loader('props').filename
+            propsdir = op.abspath(op.join(propsdir, '..'))
             shutil.copytree(propsdir, propsdest)
             sys.path_importer_cache.pop(propsdir)
+            
         else:
+            print('Checking out props [{}] to {}'.format(
+                self.props_version, propsdest)) 
             checkout('props', self.props_version, propsdest)
 
         if self.fslpy_version == 'local':
+            
+            print('Copying fslpy [local] to {}'.format(fslpydest)) 
             fslpydir = pkgutil.get_loader('fsl').filename
+            fslpydir = op.abspath(op.join(fslpydir, '..'))
             shutil.copytree(fslpydir, fslpydest)
             sys.path_importer_cache.pop(fslpydir)
             
         else:
+            print('Checking out fslpy [{}] to {}'.format(
+                self.fslpy_version, fslpydest)) 
             checkout('fslpy', self.fslpy_version, fslpydest)
             
 
@@ -182,6 +314,8 @@ class docbuilder(Command):
             op.join(pkgutil.get_loader('props')  .filename, '..')]
         
         env['PYTHONPATH'] = op.pathsep.join(ppath)
+
+        print('Building documentation [{}]'.format(destdir))
 
         sp_call(['sphinx-build', docdir, destdir], env=env)
 
@@ -219,6 +353,10 @@ class patch_code(Command):
 
     def run(self):
 
+        propsdir   = op.join(pkgutil.get_loader('props')  .filename, '..')
+        fslpydir   = op.join(pkgutil.get_loader('fsl')    .filename, '..')
+        fsleyesdir = op.join(pkgutil.get_loader('fsleyes').filename, '..')
+
         def patch_file(filename, linepatch):
 
             old = filename
@@ -234,7 +372,7 @@ class patch_code(Command):
 
         def patch_version():
 
-            filename   = op.join(basedir, 'fsleyes', 'version.py')
+            filename   = op.join(fsleyesdir, 'fsleyes', 'version.py')
             version    = get_fsleyes_version()
             gitVersion = get_git_version()
 
@@ -244,6 +382,9 @@ class patch_code(Command):
                 elif line.startswith('__vcs_version__'):
                     line = '__vcs_version__ = \'{}\'\n'.format(gitVersion)
                 return line
+
+            print('Patching FSLeyes version [{} / {}]: {}'.format(
+                version, gitVersion, filename))
             
             patch_file(filename, linepatch)
 
@@ -256,18 +397,21 @@ class patch_code(Command):
                     line = 'OpenGL.ERROR_LOGGING = False\n'
                 return line
 
-            filename = op.join(basedir, 'fsleyes', 'gl', '__init__.py')
+            filename = op.join(fsleyesdir, 'fsleyes', 'gl', '__init__.py')
 
+            print('Setting up OpenGL initialisation: {}'.format(filename))
+            
             patch_file(filename, linepatch)
 
         def remove_logging():
-            propsdir   = op.join(pkgutil.get_loader('props')  .filename, '..')
-            fslpydir   = op.join(pkgutil.get_loader('fsl')    .filename, '..')
-            fsleyesdir = op.join(pkgutil.get_loader('fsleyes').filename, '..')
 
             propsfiles   = list_all_files(propsdir)
             fslpyfiles   = list_all_files(fslpydir)
             fsleyesfiles = list_all_files(fsleyesdir)
+
+            print('Removing logging: {}'.format(propsdir))
+            print('Removing logging: {}'.format(fslpydir))
+            print('Removing logging: {}'.format(fsleyesdir))
 
             for filename in it.chain(propsfiles, fslpyfiles, fsleyesfiles):
                 if not filename.endswith('.py'):
@@ -275,16 +419,19 @@ class patch_code(Command):
 
                 logstrip = op.join(basedir, 'assets', 'build', 'logstrip.py')
 
-                sp_call(['python', logstrip, '-f', '-M', 'INFO', filename])
+                sp_call(['python', logstrip, '-f', '-M', 'INFO', filename],
+                        quiet=True)
 
         def enable_logging():
 
             def linepatch(line):
                 if line.startswith('disableLogging'):
-                    line = 'disableLogging = True\n'
+                    line = 'disableLogging = False\n'
                 return line
                 
-            filename = op.join(basedir, 'fsleyes', '__init__.py')
+            filename = op.join(fsleyesdir, 'fsleyes', '__init__.py')
+
+            print('Enabling logging: {}'.format(filename))
 
             patch_file(filename, linepatch)
 
@@ -299,12 +446,16 @@ class py2app(orig_py2app):
 
     def finalize_options(self):
 
+        entrypt  = op.join(basedir, 'fsleyes', '__main__.py')
         assetdir = op.join(basedir, 'assets')
         iconfile = op.join(assetdir, 'icons', 'app_icon', 'fsleyes.icns')
         plist    = op.join(assetdir, 'build', 'Info.plist')
         assets   = build_asset_list()
 
+        self.quiet               = True
         self.argv_emulation      = True
+        self.no_chdir            = True
+        self.app                 = [entrypt]
         self.iconfile            = iconfile
         self.plist               = plist
         self.resources           = assets
@@ -316,6 +467,7 @@ class py2app(orig_py2app):
 
 
     def run(self):
+
         orig_py2app.run(self)
 
         version    = get_fsleyes_version()
@@ -334,6 +486,13 @@ class py2app(orig_py2app):
 
         for c in commands:
             sp_call(['defaults'] + [c[0]] + [plist] + c[1:])
+
+        dylib_remove = ['libpng16.16.dylib']
+        
+        for dr in dylib_remove:
+            name = op.join('dist', 'FSLeyes.app', 'Contents', 'Frameworks', dr)
+            if op.exists(name):
+                os.remove(name)
 
 
 class pyinstaller(Command):
@@ -354,7 +513,10 @@ class pyinstaller(Command):
 
 def sp_call(command, *args, **kwargs):
     """Prints the given command, then calls ``subprocess.call``. """
-    print(' '.join(command))
+
+    if not kwargs.pop('quiet', False):
+        print(' '.join(command))
+        
     return sp.call(command, *args, **kwargs)
 
 
@@ -548,7 +710,6 @@ def main():
             'apidoc'               : apidoc,
         },
 
-        app=['fsleyes/__main__.py'],
         setup_requires=setup_requires,
     )
 
