@@ -9,10 +9,11 @@ capability for scenes which can otherwise be displayed via *FSLeyes*.
 """
 
 
-import sys
-import logging
-import textwrap
-import argparse
+import os.path as op
+import            sys
+import            logging
+import            textwrap
+import            argparse
 
 import props
 
@@ -128,6 +129,8 @@ def parseArgs(argv):
         log.error('outfile is required')
         mainParser.print_usage()
         sys.exit(1)
+
+    namespace.outfile = op.abspath(namespace.outfile)
 
     if namespace.scene not in ('ortho', 'lightbox'):
         log.info('Unknown scene specified  ("{}") - defaulting '
