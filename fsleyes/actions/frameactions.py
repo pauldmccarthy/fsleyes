@@ -125,12 +125,8 @@ def toggleOverlayVisibility(self, *args, **kwargs):
 def openHelp(self, *args, **kwargs):
     """Opens FSLeyes help in a web browser. """
 
-    if fslplatform.frozen:
-        url = op.join(
-            fsleyes.assetDir, 'userdoc', 'index.html')
-    else:
-        url = op.join(
-            fsleyes.assetDir, 'userdoc', 'html', 'index.html')
+    url = op.join(
+        fsleyes.assetDir, 'userdoc', 'html', 'index.html')
 
     import fsl.utils.webpage as webpage
 
@@ -138,7 +134,7 @@ def openHelp(self, *args, **kwargs):
     if op.exists(url):
         webpage.openFile(url)
     else:
-        url = 'http://users.fmrib.ox.ac.uk/~paulmc/fsleyes/'
+        url = 'http://users.fmrib.ox.ac.uk/~paulmc/fsleyes_userdoc/'
         webpage.openPage(url)
 
 
