@@ -244,7 +244,8 @@ def main(args=None):
         if not namespace[0].skipupdatecheck:
             import fsleyes.actions.updatecheck as updatecheck
             wx.CallAfter(updatecheck.UpdateCheckAction(),
-                         showUpToDateMessage=False)
+                         showUpToDateMessage=False,
+                         showErrorMessage=False)
 
     # Note: If no wx.Frame is created, the
     # wx.MainLoop call will exit immediately,

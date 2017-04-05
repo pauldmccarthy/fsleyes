@@ -44,7 +44,9 @@ class UpdateCheckAction(base.Action):
         base.Action.__init__(self, self.__checkForUpdates)
 
 
-    def __checkForUpdates(self, showUpToDateMessage=True):
+    def __checkForUpdates(self,
+                          showUpToDateMessage=True,
+                          showErrorMessage=True):
         """Run this action. Downloads a text file from a URL which contains
         the latest available version of FSLeyes. Compares that version with
         the running version. Displays a message to the user.
@@ -52,6 +54,10 @@ class UpdateCheckAction(base.Action):
         :arg showUpToDateMessage: Defaults to ``True``. If ``False``, and
                                   the current version of FSLeyes is up to
                                   date, the user is not informed.
+
+        :arg showErrorMessage:    Defaults to ``True``. If ``False``, and
+                                  some error occurs while checking for
+                                  updates, the user is not informed. 
         """
 
         import wx
@@ -59,7 +65,7 @@ class UpdateCheckAction(base.Action):
         errMsg   = strings.messages[self, 'newVersionError']
         errTitle = strings.titles[  self, 'newVersionError']
         
-        with status.reportIfError(errTitle, errMsg):
+        with status.reportIfError(errTitle, errMsg, report=showErrorMessage):
 
             log.debug('Checking for FSLeyes updates ({})'.format(
                 _FSLEYES_VERSION_URL))
