@@ -496,7 +496,6 @@ class py2app(orig_py2app):
 
 
 class pyinstaller(Command):
-
     description  = 'Builds a standalone FSLeyes Linux ' \
                    'application using pyinstaller'
     user_options = []
@@ -508,7 +507,76 @@ class pyinstaller(Command):
         pass
     
     def run(self):
-        pass
+
+        builddir = op.join(basedir, 'build')
+        distdir  = op.join(basedir, 'dist')
+        assetdir = op.join(basedir, 'dist', 'FSLeyes', 'share', 'FSLeyes')
+        iconfile = op.join(assetdir, 'icons', 'app_icon', 'fsleyes.ico')
+        assets   = build_asset_list()
+        entrypt  = op.join(basedir, 'fsleyes', '__main__.py')
+        
+        hidden = [
+            'scipy.special._ufuncs_cxx',
+            'scipy.linalg.cython_blas',
+            'scipy.linalg.cython_lapack',
+            'scipy.integrate',
+            'OpenGL.platform.osmesa',
+            'OpenGL_accelerate'
+        ]
+
+        excludes = [
+            'matplotlib.backends.backend_agg',
+            'matplotlib.backends.backend_pdf',
+            'matplotlib.backends.backend_pgf',
+            'matplotlib.backends.backend_ps',
+            'matplotlib.backends.backend_svg',
+            'matplotlib.backends.backend_template',
+            'IPython',
+        ]
+        
+        cmd = [
+            'pyinstaller',
+            '--name=FSLeyes',
+            '--icon={}'.format(iconfile),
+            '--windowed',
+            '--workpath={}'.format(builddir),
+            '--distpath={}'.format(distdir),
+            entrypt,
+        ]
+
+        env   = dict(os.environ)
+        ppath = [
+            op.join(pkgutil.get_loader('fsleyes').filename, '..'),
+            op.join(pkgutil.get_loader('fsl')    .filename, '..'),
+            op.join(pkgutil.get_loader('props')  .filename, '..')]
+        
+        env['PYTHONPATH'] = op.pathsep.join(ppath) 
+
+        sp_call(cmd, env=env)
+
+        # Move the spec file into the build directory
+        shutil.move(op.join(basedir, 'FSLeyes.spec'), builddir)
+        
+        # Make the executable lowercase
+        try:
+            os.rename(op.join(distdir, 'FSLeyes', 'FSLeyes'),
+                      op.join(distdir, 'FSLeyes', 'fsleyes'))
+
+        # Case insensitive file system?
+        except:
+            pass
+
+        # Copy assets
+        os.makedirs(assetdir)
+        for dirname, files in assets:
+
+            dirname = op.join(assetdir, dirname)
+
+            if not op.exists(dirname):
+                os.makedirs(dirname)
+
+            for src in files:
+                shutil.copy(src, dirname)
 
 
 def sp_call(command, *args, **kwargs):
