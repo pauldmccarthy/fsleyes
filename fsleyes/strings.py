@@ -64,6 +64,8 @@ messages = TypeDict({
                                             'cleared! Are you sure you want '
                                             'to continue?',
 
+    'FSLeyesApp.openURLError' : 'An error occurred loading the URL.',
+
     'SliceCanvas.globjectError'  :
     'An error occurred initialising the display for {}',
 
@@ -286,7 +288,8 @@ titles = TypeDict({
 
     'FSLeyesFrame.saveLayout'      : 'Save layout',
     'FSLeyesFrame.unsavedOverlays' : 'Unsaved images',
- 
+
+    'FSLeyesApp.openURLError' : 'Error loading URL',
     
     'OrthoPanel'         : 'Ortho View',
     'LightBoxPanel'      : 'Lightbox View',

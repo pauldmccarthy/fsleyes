@@ -78,8 +78,8 @@ class ApplyCommandLineAction(base.Action):
         with status.reportIfError(errTitle, errMsg):
             applyCommandLineArgs(self.__overlayList,
                                  self.__displayCtx,
-                                 self.__panel,
-                                 argv)
+                                 argv,
+                                 self.__panel)
 
 
 class ApplyCLIExit(Exception):
@@ -96,9 +96,10 @@ class ApplyCLIExit(Exception):
         return '\n'.join((self.stderr, self.stdout))
 
 
-def applyCommandLineArgs(overlayList, displayCtx, panel, argv):
+def applyCommandLineArgs(overlayList, displayCtx, argv, panel=None):
     """Applies the command line arguments stored in ``argv`` to the
-    :class:`.CanvasPanel` ``panel``.
+    :class:`.CanvasPanel` ``panel``. If ``panel is None``, it is assumed
+    that ``argv`` only contains overlay arguments.
     """
 
     import fsleyes.views.orthopanel as orthopanel 
@@ -113,8 +114,7 @@ def applyCommandLineArgs(overlayList, displayCtx, panel, argv):
     if argv[0] == 'fsleyes':
         argv = argv[1:]
 
-    sceneOpts = panel.getSceneOptions()
-    parser    = argparse.ArgumentParser(add_help=False)
+    parser = argparse.ArgumentParser(add_help=False)
 
     try:
         real_stdout = sys.stdout
@@ -131,7 +131,13 @@ def applyCommandLineArgs(overlayList, displayCtx, panel, argv):
         sys.stderr = real_stderr
 
     parseargs.applyOverlayArgs(namespace, overlayList, displayCtx)
-    parseargs.applySceneArgs(  namespace, overlayList, displayCtx, sceneOpts)
+
+    # No panel, no need to do anything else
+    if panel is None:
+        return
+
+    sceneOpts = panel.getSceneOptions()
+    parseargs.applySceneArgs(namespace, overlayList, displayCtx, sceneOpts)
 
     # applySceneArgs does not apply the x/y/zcentre arguments
     def centre(vp=panel):

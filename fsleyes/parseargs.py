@@ -163,14 +163,15 @@ To make this new propery settable via the command line, you need to:
 
 from __future__ import print_function
 
-import os.path   as op
-import itertools as it
-import              sys
-import              types
-import              logging
-import              textwrap
-import              argparse
-import              collections
+import os.path          as op
+import itertools        as it
+import                     sys
+import                     types
+import                     logging
+import                     textwrap
+import                     argparse
+import                     collections
+import six.moves.urllib as urllib
 
 import props
 
@@ -1573,6 +1574,14 @@ def parseArgs(mainParser,
     log.debug('Identifying overlay paths (ignoring: {})'.format(
         list(mainExpectsArgs) + list(ovlExpectsArgs)))
 
+    # Expand any fsleyes:// arguments
+    copy = []
+    for i, arg in enumerate(argv):
+        if arg.startswith('fsleyes://'): copy.extend(fsleyesUrlToArgs(arg))
+        else:                            copy.append(arg)
+
+    argv = copy
+
     # Compile a list of arguments which
     # look like overlay file names
     ovlIdxs  = []
@@ -2424,3 +2433,17 @@ def _findOrLoad(overlayList, overlayFile, overlayType, relatedTo=None):
             overlayList.append(overlay)
 
     return overlay
+
+
+def fsleyesUrlToArgs(url):
+    """Parses a ``fsleyes://`` url and returns a list of equivalent command
+    line arguments.
+    """
+
+    if not url.startswith('fsleyes://'):
+        raise ValueError('Not a fsleyes url: {}'.format(url))
+
+    url = url[10:]
+    url = str(urllib.parse.unquote(url))
+
+    return url.split()

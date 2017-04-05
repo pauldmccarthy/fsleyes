@@ -77,9 +77,25 @@ class FSLeyesApp(wx.App):
         self.MacOpenFiles([filename])
 
 
-    def MacOpenURL(self, filename):
+    def MacOpenURL(self, url):
         """On OSX, support opening files via a ``fsleyes://`` url. """
-        self.MacOpenFiles([filename])
+
+        if self.__overlayList is None:
+            return
+
+        import fsl.utils.status                 as status
+        import fsleyes.strings                  as strings
+        import fsleyes.parseargs                as parseargs
+        import fsleyes.actions.applycommandline as applycommandline
+
+        errTitle = strings.titles[  self, 'openURLError']
+        errMsg   = strings.messages[self, 'openURLError']
+
+        with status.reportIfError(errTitle, errMsg):
+            applycommandline.applyCommandLineArgs(
+                self.__overlayList,
+                self.__displayCtx,
+                parseargs.fsleyesUrlToArgs(url))
 
 
     def MacOpenFiles(self, filenames):
