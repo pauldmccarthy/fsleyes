@@ -1353,6 +1353,12 @@ class SliceCanvas(props.HasProperties):
 
         bbox = None
 
+        # Set the viewport to match the current 
+        # display bounds and canvas size
+        if self.renderMode is not 'offscreen':
+            bbox = self._setViewport()
+            glroutines.clear(self.bgColour)
+
         # Do not draw anything if some globjects
         # are not ready. This is because, if a
         # GLObject was drawn, but is now temporarily
@@ -1360,15 +1366,9 @@ class SliceCanvas(props.HasProperties):
         # that is being asynchronously refreshed),
         # drawing the scene now would cause
         # flickering of that GLObject.
-        if any([not g.ready() for g in globjs]):
+        if len(globjs) == 0 or any([not g.ready() for g in globjs]):
             return
 
-        # Set the viewport to match the current 
-        # display bounds and canvas size
-        if self.renderMode is not 'offscreen':
-            bbox = self._setViewport()
-            glroutines.clear(self.bgColour)
-            
         for overlay, globj in zip(overlays, globjs):
 
             display = self.displayCtx.getDisplay(overlay)
