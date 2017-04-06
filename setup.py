@@ -317,7 +317,13 @@ class docbuilder(Command):
 
         print('Building documentation [{}]'.format(destdir))
 
-        sp_call(['sphinx-build', docdir, destdir], env=env)
+        sphinx = sp.check_output(['which', 'sphinx-build']).strip()
+
+        # Framwork python needs to be used on osx
+        if platform == 'darwin':
+            sp_call(['pythonw', sphinx, docdir, destdir], env=env)
+        else:
+            sp_call(['python',  sphinx, docdir, destdir], env=env)
 
 
 class userdoc(docbuilder):
