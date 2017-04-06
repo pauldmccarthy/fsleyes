@@ -33,7 +33,7 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
     .. autosummary::
        :nosignatures:
 
-       ~fsleyes.views.CanvasPanel
+       ~fsleyes.views.canvaspanel.CanvasPanel
        ~fsleyes.displaycontext.SceneOpts
        ~fsleyes.displaycontext.OrthoOpts
        ~fsleyes.displaycontext.LightBoxOpts

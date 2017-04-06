@@ -354,8 +354,9 @@ class GLMesh(globject.GLObject):
         :attr:`.MeshOpts.vertexData` is ``None``, the draw is performed
         using immediate mode OpenGL.
 
-        Otherwise, the :func:`.glmesh_funcs.drawColouredOutline` function is
-        used, which performs shader-based rendering.
+        Otherwise, the :func:`.gl14.glmesh_funcs.drawColouredOutline` or
+        :func:`.gl21.glmesh_funcs.drawColouredOutline` function is used, which
+        performs shader-based rendering.
         """
 
         opts = self.opts
