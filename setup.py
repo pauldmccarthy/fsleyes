@@ -4,12 +4,12 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""
-
-Currently using py2app 0.12 for OSX builds. There is an issue with
-this version of py2app which we need to work around:
+"""Currently using py2app 0.12 for OSX builds. There are a couple of issues
+with this version of py2app which we need to work around:
 
 https://bitbucket.org/ronaldoussoren/py2app/issues/222/argv-emulation-only-works-when-redirect):
+https://bitbucket.org/ronaldoussoren/py2app/issues/140/app-starts-minimized
+
 
 The following patch must be applied to the py2app source::
 

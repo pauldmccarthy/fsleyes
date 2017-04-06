@@ -9,11 +9,11 @@ Dependencies
 ------------
 
 
-*FSLeyes* depends on [wxPython 3.0.2.0](http://wxpython.org/), and
-the libraries listed in [requirements.txt](requirements.txt).
+All of the dependencies of FSLeyes are listed in
+[requirements.txt](requirements.txt).
 
 
-Being an OpenGL application, *FSLeyes* can only be used on computers with
+Being an OpenGL application, FSLeyes can only be used on computers with
 graphics hardware (or a software GL renderer) that supports one of the
 following versions:
 
@@ -29,11 +29,13 @@ following versions:
    - `ARB_instanced_arrays`
    - `ARB_draw_instanced`
 
-*FSLeyes* also requires the presence of GLUT, or FreeGLUT.
+
+FSLeyes also requires the presence of GLUT, or FreeGLUT.
 
 
 Documentation
 -------------
+
 
 The FSLeyes user and API documentation is written in ReStructuredText, and
 can be built using [sphinx](http://www.sphinx-doc.org/). Install `sphinx`
@@ -42,11 +44,30 @@ and `sphinx-rtd-theme`, and then run:
     python setup.py userdoc
     python setup.py apidoc
 
+The documentation will be generated and saved in `userdoc/html/` and
+`apidoc/html/`.
+
+
+Buildling
+---------
+
+
+You can build standalone versions of FSLeyes for OSX and Linux.  For OSX,
+install `py2app>=0.12`. For Linux, install `pyinstaller>=3.2.0`. Then, on
+either platform, run the following:
+
+    python setup.py build_standalone
+
 
 Credits
 -------
 
 
-Some of the icons are derived from the Freeline icon set, by Enes Dal,
+Some of the FSLeyes icons are derived from the Freeline icon set, by Enes Dal,
 available at https://www.iconfinder.com/Enesdal, and released under the
 Creative Commons (Attribution 3.0 Unported) license.
+
+
+The file [fsleyes.gl.trimesh](fsleyes/gl/trimesh.py) module includes code from
+Michael Dawson-Haggerty's [trimesh](https://github.com/mikedh/trimesh)
+project, which is released under the MIT license.

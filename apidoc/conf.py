@@ -53,7 +53,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'fsleyes'
-copyright = u'{}, Paul McCarthy, FMRIB Centre, University of Oxford'.format(
+copyright = u'{}, Paul McCarthy, University of Oxford, Oxford, UK'.format(
     date.year)
 
 # The version info for the project you're documenting, acts as replacement for
