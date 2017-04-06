@@ -863,6 +863,12 @@ class DisplayContext(props.SyncableHasProperties):
         if self.getParent() is not None and self.isSyncedToParent('location'):
             return
 
+        # This method might get called 
+        # after DisplayOpts instance 
+        # has been destroyed
+        if opts.display is None:
+            return
+
         overlay = opts.display.getOverlay()
 
         # If the bounds of an overlay have changed, the
