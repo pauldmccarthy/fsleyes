@@ -5,6 +5,7 @@ fsleyes.displaycontext package
    :hidden:
 
    fsleyes.displaycontext.canvasopts
+   fsleyes.displaycontext.colourmapopts
    fsleyes.displaycontext.display
    fsleyes.displaycontext.displaycontext
    fsleyes.displaycontext.group

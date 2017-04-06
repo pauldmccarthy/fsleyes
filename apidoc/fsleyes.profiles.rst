@@ -11,6 +11,7 @@ fsleyes.profiles package
    fsleyes.profiles.orthoviewprofile
    fsleyes.profiles.plotprofile
    fsleyes.profiles.profilemap
+   fsleyes.profiles.shortcuts
    fsleyes.profiles.timeseriesprofile
 
 .. automodule:: fsleyes.profiles

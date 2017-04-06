@@ -1,7 +1,7 @@
-fsleyes.actions.action module
+fsleyes.gl.ortholabels module
 =============================
 
-.. automodule:: fsleyes.actions.action
+.. automodule:: fsleyes.gl.ortholabels
     :members:
     :undoc-members:
     :show-inheritance:

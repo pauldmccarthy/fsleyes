@@ -4,8 +4,9 @@ fsleyes.actions package
 .. toctree::
    :hidden:
 
+   fsleyes.actions.base
    fsleyes.actions.about
-   fsleyes.actions.action
+   fsleyes.actions.applycommandline
    fsleyes.actions.applyflirtxfm
    fsleyes.actions.clearperspective
    fsleyes.actions.clearsettings
@@ -28,7 +29,9 @@ fsleyes.actions package
    fsleyes.actions.saveflirtxfm
    fsleyes.actions.saveoverlay
    fsleyes.actions.saveperspective
+   fsleyes.actions.showcommandline
    fsleyes.actions.togglecontrolpanel
+   fsleyes.actions.updatecheck
 
 .. automodule:: fsleyes.actions
     :members:

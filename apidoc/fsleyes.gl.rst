@@ -21,9 +21,11 @@ fsleyes.gl package
    fsleyes.gl.offscreencolourbarcanvas
    fsleyes.gl.offscreenlightboxcanvas
    fsleyes.gl.offscreenslicecanvas
+   fsleyes.gl.ortholabels
    fsleyes.gl.resources
    fsleyes.gl.routines
    fsleyes.gl.slicecanvas
+   fsleyes.gl.trimesh
    fsleyes.gl.wxglcolourbarcanvas
    fsleyes.gl.wxgllightboxcanvas
    fsleyes.gl.wxglslicecanvas
