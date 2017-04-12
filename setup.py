@@ -461,6 +461,7 @@ class py2app(orig_py2app):
         self.quiet               = True
         self.argv_emulation      = True
         self.no_chdir            = True
+        self.optimize            = True
         self.app                 = [entrypt]
         self.iconfile            = iconfile
         self.plist               = plist
