@@ -2,7 +2,7 @@ FSLeyes
 =======
 
 
- *FSLeyes* is the [FSL](http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/) image viewer.
+*FSLeyes* is the [FSL](http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/) image viewer.
 
 
 Dependencies

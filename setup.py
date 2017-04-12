@@ -4,7 +4,21 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""Currently using py2app 0.12 for OSX builds. There are a couple of issues
+"""Setup script for FSLeyes.
+
+The following commands are available:
+
+ - sdist            - Build a source distribution
+ - userdoc          - Build the user documentation
+ - apidoc           - Build the source documentation
+ - build_standalone - Build a standalone version of FSLeyes ising py2app (OSX)
+                      or pyinstaller (Linux).
+
+============
+Py2App notes
+============
+
+I am currently using py2app 0.12 for OSX builds. There are a couple of issues
 with this version of py2app which we need to work around:
 
 https://bitbucket.org/ronaldoussoren/py2app/issues/222/argv-emulation-only-works-when-redirect):
@@ -746,6 +760,9 @@ def main():
     packages  = find_packages(
         exclude=('userdoc', 'apidoc', 'assets', 'build', 'dist'))
 
+    with open(op.join(basedir, 'README.md'), 'rt') as f:
+        readme = f.read()
+
     deps             = get_fsleyes_deps()
     install_requires = deps[0]
     dependency_links = deps[1]
@@ -758,6 +775,7 @@ def main():
         name='fsleyes',
         version=version,
         description='FSLeyes, the FSL image viewer',
+        long_description=readme,
         url='https://git.fmrib.ox.ac.uk/paulmc/fsleyes',
         author='Paul McCarthy',
         author_email='pauldmccarthy@gmail.com',
