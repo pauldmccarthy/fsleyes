@@ -237,6 +237,21 @@ class build_standalone(Command):
                 if platform == 'darwin': self.run_command('py2app')
                 else:                    self.run_command('pyinstaller')
 
+            # create a zip file
+            archivefile = op.join(basedir, 'dist', 'FSLeyes-{}'.format(
+                get_fsleyes_version()))
+
+            distdir = op.join(basedir, 'dist')
+
+            if platform == 'darwin': archivedir = 'FSLeyes.app'
+            else:                    archivedir = 'FSLeyes'
+
+            print('Creating {}.zip...'.format(archivefile))
+            shutil.make_archive(archivefile,
+                                'zip',
+                                root_dir=distdir,
+                                base_dir=archivedir)
+
         finally:
             shutil.rmtree(op.join(basedir, 'fsleyes'))
             shutil.move(  op.join(basedir, 'build', 'fsleyes.backup'),
@@ -507,13 +522,6 @@ class py2app(orig_py2app):
 
         for c in commands:
             sp_call(['defaults'] + [c[0]] + [plist] + c[1:])
-
-        dylib_remove = ['libpng16.16.dylib']
-        
-        for dr in dylib_remove:
-            name = op.join('dist', 'FSLeyes.app', 'Contents', 'Frameworks', dr)
-            if op.exists(name):
-                os.remove(name)
 
 
 class pyinstaller(Command):
