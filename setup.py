@@ -197,7 +197,7 @@ class build_standalone(Command):
         # it, and we restore these changes
         # after the build
         shutil.copytree(op.join(basedir, 'fsleyes'),
-                        op.join(basedir, '.fsleyes.backup'))
+                        op.join(basedir, 'build', 'fsleyes.backup'))
 
         sys.path.insert(0, basedir)
         sys.path.insert(0, op.join(basedir, 'build', 'fslpy'))
@@ -225,7 +225,7 @@ class build_standalone(Command):
 
         finally:
             shutil.rmtree(op.join(basedir, 'fsleyes'))
-            shutil.move(  op.join(basedir, '.fsleyes.backup'),
+            shutil.move(  op.join(basedir, 'build', 'fsleyes.backup'),
                           op.join(basedir, 'fsleyes'))
         
 
@@ -359,9 +359,9 @@ class patch_code(Command):
 
     def run(self):
 
-        propsdir   = op.join(pkgutil.get_loader('props')  .filename, '..')
-        fslpydir   = op.join(pkgutil.get_loader('fsl')    .filename, '..')
-        fsleyesdir = op.join(pkgutil.get_loader('fsleyes').filename, '..')
+        propsdir   = op.join(pkgutil.get_loader('props')  .filename)
+        fslpydir   = op.join(pkgutil.get_loader('fsl')    .filename)
+        fsleyesdir = op.join(pkgutil.get_loader('fsleyes').filename)
 
         def patch_file(filename, linepatch):
 
@@ -378,7 +378,7 @@ class patch_code(Command):
 
         def patch_version():
 
-            filename   = op.join(fsleyesdir, 'fsleyes', 'version.py')
+            filename   = op.join(fsleyesdir, 'version.py')
             version    = get_fsleyes_version()
             gitVersion = get_git_version()
 
@@ -403,7 +403,7 @@ class patch_code(Command):
                     line = 'OpenGL.ERROR_LOGGING = False\n'
                 return line
 
-            filename = op.join(fsleyesdir, 'fsleyes', 'gl', '__init__.py')
+            filename = op.join(fsleyesdir, 'gl', '__init__.py')
 
             print('Setting up OpenGL initialisation: {}'.format(filename))
             
@@ -435,7 +435,7 @@ class patch_code(Command):
                     line = 'disableLogging = False\n'
                 return line
                 
-            filename = op.join(fsleyesdir, 'fsleyes', '__init__.py')
+            filename = op.join(fsleyesdir, '__init__.py')
 
             print('Enabling logging: {}'.format(filename))
 
