@@ -45,6 +45,8 @@
         <string>NIFTI</string>
         <key>CFBundleTypeRole</key>
         <string>Viewer</string>
+        <key>CFBundleTypeIconFile</key>
+        <string>fsleyes_doc.icns</string> 
       </dict> 
 
       <dict>
@@ -56,6 +58,8 @@
         <string>NIFTI</string>
         <key>CFBundleTypeRole</key>
         <string>Viewer</string>
+        <key>CFBundleTypeIconFile</key>
+        <string>fsleyes_doc.icns</string> 
       </dict>
       
       <dict>
@@ -67,6 +71,8 @@
         <string>NIFTI</string>
         <key>CFBundleTypeRole</key>
         <string>Viewer</string>
+        <key>CFBundleTypeIconFile</key>
+        <string>fsleyes_doc.icns</string> 
       </dict>
 
       <dict>
@@ -78,6 +84,8 @@
         <string>NIFTI</string>
         <key>CFBundleTypeRole</key>
         <string>Viewer</string>
+        <key>CFBundleTypeIconFile</key>
+        <string>fsleyes_doc.icns</string> 
       </dict>
 
       <dict>
@@ -89,6 +97,8 @@
         <string>NIFTI</string>
         <key>CFBundleTypeRole</key>
         <string>Viewer</string>
+        <key>CFBundleTypeIconFile</key>
+        <string>fsleyes_doc.icns</string> 
       </dict> 
       
       <dict>
@@ -100,6 +110,8 @@
         <string>FAST vtk file</string>
         <key>CFBundleTypeRole</key>
         <string>Viewer</string>
+        <key>CFBundleTypeIconFile</key>
+        <string>fsleyes_doc.icns</string>
       </dict>
 
       <dict>
@@ -111,6 +123,8 @@
         <string>GIFTI surface file</string>
         <key>CFBundleTypeRole</key>
         <string>Viewer</string>
+        <key>CFBundleTypeIconFile</key>
+        <string>fsleyes_doc.icns</string> 
       </dict> 
     </array>
   </dict>

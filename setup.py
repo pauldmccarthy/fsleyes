@@ -481,11 +481,12 @@ class py2app(orig_py2app):
 
     def finalize_options(self):
 
-        entrypt  = op.join(basedir, 'fsleyes', '__main__.py')
-        assetdir = op.join(basedir, 'assets')
-        iconfile = op.join(assetdir, 'icons', 'app_icon', 'fsleyes.icns')
-        plist    = op.join(assetdir, 'build', 'Info.plist')
-        assets   = build_asset_list()
+        entrypt     = op.join(basedir, 'fsleyes', '__main__.py')
+        assetdir    = op.join(basedir, 'assets')
+        iconfile    = op.join(assetdir, 'icons', 'app_icon', 'fsleyes.icns')
+        dociconfile = op.join(assetdir, 'icons', 'app_icon', 'fsleyes_doc.icns')
+        plist       = op.join(assetdir, 'build', 'Info.plist')
+        assets      = build_asset_list()
 
         self.quiet               = True
         self.argv_emulation      = True
@@ -493,6 +494,7 @@ class py2app(orig_py2app):
         self.optimize            = True
         self.app                 = [entrypt]
         self.iconfile            = iconfile
+        self.dociconfile         = dociconfile
         self.plist               = plist
         self.resources           = assets
         self.packages            = ['OpenGL_accelerate']
@@ -512,7 +514,13 @@ class py2app(orig_py2app):
 
         plist = op.join(
             basedir, 'dist', 'FSLeyes.app', 'Contents', 'Info.plist')
-        
+        resourcedir = op.join(
+            basedir, 'dist', 'FSLeyes.app', 'Contents', 'Resources')
+
+        # copy the application document iconset
+        shutil.copy(self.dociconfile, resourcedir)
+
+        # Patch Info.plist
         commands = [
             ['delete', 'PythonInfoDict'],
             ['write',  'CFBundleShortVersionString', version],
