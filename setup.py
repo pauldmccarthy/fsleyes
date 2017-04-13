@@ -519,9 +519,10 @@ class py2app(orig_py2app):
         # py2app (and pyinstaller) seem to
         # get the wrong version of libpng,
         # which causes render to segfault
-        pildir = pkgutil.get_loader('PIL')
+        pildir = pkgutil.get_loader('PIL').filename
         dylib  = op.join(pildir, '.dylibs', 'libpng16.16.dylib')
-        shutil.copy(dylib, op.join(contentsdir, 'Frameworks'))
+        if op.exists(dylib):
+            shutil.copy(dylib, op.join(contentsdir, 'Frameworks'))
 
         # copy the application document iconset
         shutil.copy(self.dociconfile, resourcedir)
