@@ -512,10 +512,16 @@ class py2app(orig_py2app):
         gitVersion = get_git_version()
         copyright  = get_fsleyes_copyright()
 
-        plist = op.join(
-            basedir, 'dist', 'FSLeyes.app', 'Contents', 'Info.plist')
-        resourcedir = op.join(
-            basedir, 'dist', 'FSLeyes.app', 'Contents', 'Resources')
+        contentsdir = op.join(basedir, 'dist', 'FSLeyes.app', 'Contents')
+        plist       = op.join(contentsdir, 'Info.plist')
+        resourcedir = op.join(contentsdir, 'Resources')
+
+        # py2app (and pyinstaller) seem to
+        # get the wrong version of libpng,
+        # which causes render to segfault
+        pildir = pkgutil.get_loader('PIL')
+        dylib  = op.join(pildir, '.dylibs', 'libpng16.16.dylib')
+        shutil.copy(dylib, op.join(contentsdir, 'Frameworks'))
 
         # copy the application document iconset
         shutil.copy(self.dociconfile, resourcedir)
