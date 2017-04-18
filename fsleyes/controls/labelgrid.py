@@ -17,7 +17,7 @@ import wx
 import pwidgets.widgetgrid    as widgetgrid
 import pwidgets.texttag       as texttag
 
-import fsl.data.melodicimage  as fslmelimage
+import fsl.data.image         as fslimage
 import fsl.utils.async        as async
 
 import fsleyes.panel          as fslpanel
@@ -30,9 +30,9 @@ log = logging.getLogger(__name__)
 class LabelGrid(fslpanel.FSLeyesPanel):
     """The ``LabelGrid`` class is the inverse of the :class:`ComponentGrid`.
     It uses a :class:`.WidgetGrid` to display the label-component mappings
-    present on the :class:`.MelodicClassification` instance associated with
-    a :class:`.MelodicImage`. The ``MelodicImage`` is specified via
-    the :meth:`setOverlay` method.
+    present on the :class:`.VolumeLabels` instance associated with
+    an :class:`.Image`. The ``Image`` and ``VolumeLabels`` instances are
+    specified via the :meth:`setOverlay` method.
 
     The grid contains one row for each label, and a :class:`.TextTagPanel` is
     used to display the components associated with each label. Each
@@ -101,27 +101,27 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         fslpanel.FSLeyesPanel.destroy(self)
 
 
-    def setOverlay(self, overlay):
-        """Set the :class:`.MelodicImage` shown on this ``LabelGrid``. A
-        listener is registered with its :class:`.MelodicClassification`,
-        and its component-label mappings displayed on the
-        :class:`.WidgetGrid`.
+    def setOverlay(self, overlay, volLabels):
+        """Set the :class:`.Image` shown on this ``LabelGrid``. A listener is
+        registered with its :class:`.VolumeLabels`, and its component-label
+        mappings displayed on the :class:`.WidgetGrid`.
         """
 
         self.__deregisterCurrentOverlay()
         self.__grid.ClearGrid()
         self.__labelTags.clear()
 
-        if not isinstance(overlay, fslmelimage.MelodicImage):
+        if not (isinstance(overlay, fslimage.Image) and
+                len(overlay.shape) == 4):
             self.__grid.Refresh()
             return
 
         log.debug('Registering new overlay: {}'.format(overlay))
 
-        self.__overlay = overlay
-        melclass       = overlay.getICClassification()
+        self.__overlay   = overlay
+        self.__volLabels = volLabels
 
-        melclass.register(self._name, self.__labelsChanged)
+        volLabels.register(self._name, self.__labelsChanged)
 
         # We refresh the label grid on idle, in
         # case multiple calls to setOverlay are 
@@ -165,16 +165,16 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         if self.__overlay is None:
             return
 
-        overlay        = self.__overlay
-        self.__overlay = None
+        volLabels        = self.__volLabels
+        self.__overlay   = None
+        self.__volLabels = None
         
-        melclass = overlay.getICClassification()
-        melclass.deregister(self._name)
+        volLabels.deregister(self._name)
 
 
     def __createTags(self, labels=None):
         """Makes sure that a :class:`.TextTagPanel` exists for every label
-        in the :class:`.LookupTable` and in the :class:`.MelodicClassification`
+        in the :class:`.LookupTable` and in the :class:`.VolumeLabels`
         for the current overlay.
 
         :arg labels: If ``None``, this method does what is described above.
@@ -195,8 +195,8 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
         if labels is None:
 
-            melclass  = self.__overlay.getICClassification()
-            melLabels = melclass.getAllLabels()
+            volLabels = self.__volLabels
+            allLabels = volLabels.getAllLabels()
 
             # We need to display a row for all
             # the labels from the lut, and all
@@ -204,11 +204,11 @@ class LabelGrid(fslpanel.FSLeyesPanel):
             # not in the lut.
             lutLabels = [(l.internalName, l.name)
                          for l in self.__lut]
-            melLabels = [(l, melclass.getDisplayLabel(l))
-                         for l in melLabels
+            allLabels = [(l, volLabels.getDisplayLabel(l))
+                         for l in allLabels
                          if l not in lutLabels]
 
-            labels = lutLabels + melLabels
+            labels = lutLabels + allLabels
 
         newCreated = False
 
@@ -255,7 +255,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
     def refreshTags(self, labels=None):
         """Makes sure that the tags shown on each :class:`.TextTagPanel`
         are consistent with respect to the current state of the
-        :class:`.MelodicClassification`.
+        :class:`.VolumeLabels`.
 
         :arg labels: Labels to refresh. If ``None``, the tags for every
                      displayed label is refreshed.
@@ -268,17 +268,17 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
         # This method should never be called
         # if the current overlay is not set. 
-        lut      = self.__lut
-        numComps = self.__overlay.numComponents()
-        melclass = self.__overlay.getICClassification()
-        compStrs = [str(i) for i in range(1, numComps + 1)]
+        lut       = self.__lut
+        volLabels = self.__volLabels
+        numComps  = volLabels.numComponents()
+        compStrs  = [str(i) for i in range(1, numComps + 1)]
 
         for label in labels:
             
             tags     = self.__labelTags[label]
             lutLabel = lut.getByName(label)
 
-            comps = melclass.getComponents(label)
+            comps = volLabels.getComponents(label)
 
             # This is a label which is not in the
             # LUT. If we set colour to None, the
@@ -314,34 +314,34 @@ class LabelGrid(fslpanel.FSLeyesPanel):
     def __onTagAdded(self, ev):
         """Called when a tag is added to a :class:`.TextTagPanel`. Adds
         the corresponding label-component mapping to the
-        :class:`.MelodicClassification` instance.
+        :class:`.VolumeLabels` instance.
         """ 
 
-        tags     = ev.GetEventObject()
-        overlay  = self.__overlay
-        melclass = overlay.getICClassification()
-        comp     = int(ev.tag) - 1
-        label    = tags._label
+        tags      = ev.GetEventObject()
+        overlay   = self.__overlay
+        volLabels = self.__volLabels
+        comp      = int(ev.tag) - 1
+        label     = tags._label
 
         log.debug('Component {} added to label {}'.format(comp, label)) 
 
-        with melclass.skip(self._name):
+        with volLabels.skip(self._name):
 
             # If this component now has two 
             # labels, and the other label is 
             # 'Unknown', remove the 'Unknown'
             # label.
-            if len(melclass.getLabels(comp)) == 1 and \
-               label != 'unknown'                 and \
-               melclass.hasLabel(comp, 'unknown'):
+            if len(volLabels.getLabels(comp)) == 1 and \
+               label != 'unknown'                  and \
+               volLabels.hasLabel(comp, 'unknown'):
 
                 log.debug('Removing component {} from '
                           '"unknown" tag'.format(comp)) 
 
-                melclass.removeLabel(comp, 'unknown')
+                volLabels.removeLabel(comp, 'unknown')
                 self.__labelTags['unknown'].RemoveTag(str(comp + 1))
 
-            melclass.addComponent(label, comp)
+            volLabels.addComponent(label, comp)
 
         # The WidgetGrid doesn't
         # resize itself when its
@@ -352,32 +352,32 @@ class LabelGrid(fslpanel.FSLeyesPanel):
     def __onTagRemoved(self, ev):
         """Called when a tag is removed from a :class:`.TextTagPanel`. Removes
         the corresponding label-component mapping from the
-        :class:`.MelodicClassification` instance.
+        :class:`.VolumeLabels` instance.
         """
         
-        tags     = ev.GetEventObject()
-        overlay  = self.__overlay
-        lut      = self.__lut
-        melclass = overlay.getICClassification()
-        comp     = int(ev.tag) - 1
-        label    = tags._label
+        tags      = ev.GetEventObject()
+        overlay   = self.__overlay
+        volLabels = self.__volLabels
+        lut       = self.__lut
+        comp      = int(ev.tag) - 1
+        label     = tags._label
 
         log.debug('Component {} removed from label {}'.format(comp, label))
 
-        with melclass.skip(self._name):
+        with volLabels.skip(self._name):
             
-            melclass.removeComponent(label, comp)
+            volLabels.removeComponent(label, comp)
 
             # If the component has no more labels,
             # give it an 'Unknown' label
-            if len(melclass.getLabels(comp)) == 0:
+            if len(volLabels.getLabels(comp)) == 0:
 
                 # What if there is no 'unknown'
                 # entry in labelTags? Add it?
                 label = lut.getByName('unknown')
                 tags  = self.__labelTags['unknown']
 
-                if label is None: name = melclass.getDisplayLabel('unknown')
+                if label is None: name = volLabels.getDisplayLabel('unknown')
                 else:             name = label.name
 
                 # There should always be an 'unknown'
@@ -390,7 +390,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
                 log.debug('Adding component {} to '
                           '"unknown" tag'.format(comp)) 
 
-                melclass.addLabel(comp, name)
+                volLabels.addLabel(comp, name)
                 tags.AddTag(str(comp + 1), colour)
 
         # The WidgetGrid doesn't
@@ -426,7 +426,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         # The LookupTable passes us the LutLabel 
         # object and its index in the LUT
         label, idx = value
-        melclass   = self.__overlay.getICClassification()
+        volLabels  = self.__volLabels
         
         # A label has been removed
         if topic == 'removed':
@@ -438,7 +438,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
             tags = self.__labelTags.get(label.internalName, None)
             
             if tags is not None and \
-               len(melclass.getComponents(label.internalName)) == 0:
+               len(volLabels.getComponents(label.internalName)) == 0:
 
                 row = self.__grid.GetRow(tags)
 
@@ -490,14 +490,13 @@ class LabelGrid(fslpanel.FSLeyesPanel):
                     tags.SetTagColour(tag, colour)
 
 
-    def __labelsChanged(self, melclass, topic, components):
-        """Called when the labels in the :class:`.MelodicClassification`
+    def __labelsChanged(self, volLabels, topic, components):
+        """Called when the labels in the :class:`.VolumeLabels`
         associated with the current overlay change. Updates the displayed
         tags.
         """
 
-        log.debug('Melodic classification changed - '
-                  'refreshing label grid tags')
+        log.debug('Volume label changed - refreshing label grid tags')
 
         added = topic == 'added'
 
@@ -511,7 +510,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
             # New label
             else:
-                displayName = melclass.getDisplayLabel(label)
+                displayName = volLabels.getDisplayLabel(label)
                 self.__createTags([(label, displayName)])
                 self.refreshTags(  [label])
                 self.__grid.Refresh() 

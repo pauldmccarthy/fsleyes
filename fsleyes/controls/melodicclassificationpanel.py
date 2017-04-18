@@ -18,18 +18,20 @@ import wx
 
 import props
 
-import pwidgets.notebook                as notebook
+import pwidgets.notebook      as notebook
 
-import fsl.utils.settings               as fslsettings
-import fsl.data.melodiclabels           as fslmellabels
-import fsl.data.melodicimage            as fslmelimage
-import fsleyes.displaycontext           as displaycontext
-import fsleyes.colourmaps               as fslcm
-import fsleyes.panel                    as fslpanel
-import fsleyes.autodisplay              as autodisplay
-import fsleyes.strings                  as strings
-from . import componentgrid             as componentgrid
-from . import labelgrid                 as labelgrid
+import fsl.utils.settings     as fslsettings
+import fsl.data.volumelabels  as vollabels
+import fsl.data.fixlabels     as fixlabels
+import fsl.data.image         as fslimage
+import fsl.data.melodicimage  as fslmelimage
+import fsleyes.displaycontext as displaycontext
+import fsleyes.colourmaps     as fslcm
+import fsleyes.panel          as fslpanel
+import fsleyes.autodisplay    as autodisplay
+import fsleyes.strings        as strings
+from . import componentgrid   as componentgrid
+from . import labelgrid       as labelgrid
 
 
 log = logging.getLogger(__name__)
@@ -37,10 +39,11 @@ log = logging.getLogger(__name__)
 
 class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
     """The ``MelodicClassificationPanel`` allows the user to view and modify
-    classification labels associated with the components of a
-    :class:`.MelodicImage`.
+    classification labels associated with the volumes of an :class:`.Image`,
+    most typically the components of a :class:`.MelodicImage` (but any 4D
+    image will work).
 
-    It contains two lists:
+    A ``MelodicClassificationPanel`` displays two lists:
     
       - The :class:`.ComponentGrid` contains list of components, and the
         labels associated with each.
@@ -55,6 +58,11 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
      - Save the current labels to a file
 
      - Clear/reset the current labels
+
+    Internally, a :class:`.VolumeLabels` object is used to keep track of the
+    component - label mappings. The ``VolumeLabels`` instance associated with
+    each overlay is stored in the :class:`.OverlayList` via its
+    :meth:`.OverlayList.setData` method.
     """
 
     
@@ -173,7 +181,6 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         used. Removes listeners, and destroys widgets.
         """
 
-
         if self.__textAnnotation is not None:
             annot = self.__canvasPanel.getCanvas().getAnnotations()
             annot.dequeue(self.__textAnnotation, hold=True)
@@ -225,8 +232,9 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
            not isinstance(self.__canvasPanel, LightBoxPanel):
             return
 
-        melclass = overlay.getICClassification()
-        melclass.deregister(self._name)
+        volLabels = self.getOverlayList().getData(overlay, 'VolumeLabels')
+        volLabels.deregister(self._name, topic='added')
+        volLabels.deregister(self._name, topic='removed')
 
         try:
             opts = self.getDisplayContext().getOpts(overlay)
@@ -239,17 +247,31 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
     def __registerOverlay(self, overlay):
         """Called by :meth:`__selectedOverlayChanged`. Registers with
         the given overlay.
+
+        Returns the :class:`.VolumeLabels` instance associated with the
+        overlay (creating it if necessary).
         """ 
 
         from fsleyes.views.lightboxpanel import LightBoxPanel
 
         self.__overlay = overlay
 
-        if not isinstance(self.__canvasPanel, LightBoxPanel):
-            return
+        opts      = self.getDisplayContext().getOpts(overlay)
+        volLabels = self.getOverlayList().getData(
+            overlay, 'VolumeLabels', None)
 
-        opts     = self.getDisplayContext().getOpts(overlay)
-        melclass = overlay.getICClassification()
+        if volLabels is None:
+            volLabels = vollabels.VolumeLabels(overlay.shape[3])
+            self.getOverlayList().setData(overlay, 'VolumeLabels', volLabels)
+
+            # Initialse component with an 'Unknown' label
+            for i in range(overlay.shape[3]):
+                volLabels.addLabel(i, 'Unknown')
+
+        # We only need to listen for volume/label 
+        # changes if we are in a LightBoxPanel
+        if not isinstance(self.__canvasPanel, LightBoxPanel):
+            return volLabels
 
         opts.addListener('volume', self._name, self.__volumeChanged)
 
@@ -260,12 +282,14 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         # instance may not have been updated to contain
         # the new label - see ComponentGrid.__onTagAdded.
         for topic in ['added', 'removed']:
-            melclass.register(self._name,
-                              self.__labelsChanged,
-                              topic=topic,
-                              runOnIdle=True)
+            volLabels.register(self._name,
+                               self.__labelsChanged,
+                               topic=topic,
+                               runOnIdle=True)
         
         self.__updateTextAnnotation()
+        
+        return volLabels
 
     
     def __selectedOverlayChanged(self, *a):
@@ -284,18 +308,20 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         if self.__overlay is overlay:
             return
 
-        self.__componentGrid.setOverlay(overlay)
-        self.__labelGrid    .setOverlay(overlay)
-
         self.__deregisterOverlay()
 
-        if (overlay is None) or \
-           not isinstance(overlay, fslmelimage.MelodicImage):
+        if (overlay is None)                       or \
+           not isinstance(overlay, fslimage.Image) or \
+           len(overlay.shape) != 4:
             self.__enable(False, strings.messages[self, 'disabled'])
+            volLabels = None
 
         else:
-            self.__registerOverlay(overlay)
+            volLabels = self.__registerOverlay(overlay)
             self.__enable(True)
+
+        self.__componentGrid.setOverlay(overlay, volLabels)
+        self.__labelGrid    .setOverlay(overlay, volLabels)
 
 
     def __volumeChanged(self, *a):
@@ -311,7 +337,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
         
     def __labelsChanged(self, *a):
-        """Called when the :class:`.MelodicClassification` object associated
+        """Called when the :class:`.VolumeLabels` object associated
         with the currently selected overlay changes. Calls
         :meth:`__updateTextAnnotation`
         
@@ -331,11 +357,11 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         display the labels associated with the volume (i.e. the current
         component).
         """
-        
-        opts     = self.getDisplayContext().getOpts(self.__overlay)
-        melclass = self.__overlay.getICClassification()
 
-        labels   = melclass.getLabels(opts.volume)
+        overlay   = self.__overlay
+        opts      = self.getDisplayContext().getOpts(overlay)
+        volLabels = self.getOverlayList().getData(overlay, 'VolumeLabels')
+        labels    = volLabels.getLabels(opts.volume)
         
         if len(labels) == 0:
             return
@@ -352,7 +378,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         #      ability to colour different
         #      portions of the text
         #      independently.
-        labels = [melclass.getDisplayLabel(l) for l in labels]
+        labels = [volLabels.getDisplayLabel(l) for l in labels]
         colour = self.__lut.getByName(labels[0]).colour
 
         self.__textAnnotation.text   = ', '.join(labels)
@@ -399,10 +425,10 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
             # newOverlay: True if the selected overlay has changed, False
             #             otherwise
 
-            lut      = self.__lut
-            melclass = overlay.getICClassification()
+            lut       = self.__lut
+            volLabels = self.getOverlayList().getData(overlay, 'VolumeLabels')
 
-            ncomps  = overlay.numComponents()
+            ncomps  = volLabels.numComponents()
             nlabels = len(allLabels)
 
             # Error: number of labels in the
@@ -426,20 +452,20 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
             # Disable notification while applying
             # labels so the component/label grids
             # don't confuse themselves.
-            with melclass.skip(self.__componentGrid._name), \
-                 melclass.skip(self.__labelGrid    ._name):
+            with volLabels.skip(self.__componentGrid._name), \
+                 volLabels.skip(self.__labelGrid    ._name):
 
-                melclass.clear()
+                volLabels.clear()
 
                 for comp, lbls in enumerate(allLabels):
                     for lbl in lbls:
-                        melclass.addLabel(comp, lbl)
+                        volLabels.addLabel(comp, lbl)
 
                 # Make sure a colour in the melodic
                 # lookup table exists for all labels
-                for label in melclass.getAllLabels():
+                for label in volLabels.getAllLabels():
 
-                    label    = melclass.getDisplayLabel(label)
+                    label    = volLabels.getDisplayLabel(label)
                     lutLabel = lut.getByName(label)
 
                     if lutLabel is None:
@@ -465,14 +491,14 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
                 self.__componentGrid.refreshTags()
                 self.__labelGrid    .refreshTags()
 
-        # If the current overlay is a MelodicImage,
-        # the open file dialog starting point will
-        # be the melodic directory.
-        overlay           = self._displayCtx.getSelectedOverlay()
-        selectedIsMelodic = isinstance(overlay, fslmelimage.MelodicImage)
+        # If the current overlay is a compatible
+        # Image, the open file dialog starting
+        # point will be its directory.
+        overlay          = self._displayCtx.getSelectedOverlay()
+        selectedIsCompat = isinstance(overlay, fslimage.Image)
         
-        if selectedIsMelodic:
-            loadDir = overlay.getMelodicDir()
+        if selectedIsCompat and overlay.dataSource is not None:
+            loadDir = op.dirname(overlay.dataSource)
 
         # Otherwise it will be the most
         # recent overlay load directory.
@@ -493,7 +519,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         # Load the specified label file
         filename = dlg.GetPath()
         try:
-            melDir, allLabels = fslmellabels.loadLabelFile(filename)
+            melDir, allLabels = fixlabels.loadLabelFile(filename)
 
         # Problem loading the file
         except Exception as e:
@@ -513,24 +539,30 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
         # If the label file does not refer
         # to a Melodic directory, and the
-        # current overlay is a melodic
-        # image, apply the labels to the image.
-        if selectedIsMelodic and (melDir is None):
+        # current overlay is a compatible
+        # image, apply the labels to the
+        # image.
+        if selectedIsCompat and (melDir is None):
             applyLabels(filename, overlay, allLabels, False)
             return
 
         # If the label file refers to a
         # Melodic directory, and the
-        # current overlay is a melodic
+        # current overlay is a compatible
         # image.
-        if selectedIsMelodic and (melDir is not None):
+        if selectedIsCompat and (melDir is not None):
 
-            overlayDir = overlay.getMelodicDir()
+            if isinstance(overlay, fslmelimage.MelodicImage):
+                overlayDir = overlay.getMelodicDir()
+            elif overlay.dataSource is not None:
+                overlayDir = op.dirname(overlay.dataSource)
+            else:
+                overlayDir = 'none'
 
             # And both the current overlay and
             # the label file refer to the same
-            # melodic directory, then we apply
-            # the labels to the curent overlay.
+            # directory, then we apply the
+            # labels to the curent overlay.
             if op.abspath(melDir) == op.abspath(overlayDir):
 
                 applyLabels(filename, overlay, allLabels, False)
@@ -538,12 +570,12 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
             
             # Otherwise, if the overlay and the
             # label file refer to different
-            # melodic directories...
+            # directories...
 
             # Ask the user whether they want to load
             # the image specified in the label file,
             # or apply the labels to the currently
-            # selected meldic image.
+            # selected image.
             dlg = wx.MessageDialog(
                 self,
                 strings.messages[self, 'diffMelDir'].format(
@@ -575,9 +607,9 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
         # If we've reached this far, we are
         # going to attempt to identify the
-        # melodic image associated with the
-        # label file, load that image, and
-        # then apply the labels.
+        # image associated with the label
+        # file, load that image, and then
+        # apply the labels.
         
         # The label file does not
         # specify a melodic directory
@@ -591,7 +623,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         # Try loading the melodic_IC image
         # specified in the label file. 
         try:
-            overlay = fslmelimage.MelodicImage( melDir)
+            overlay = fslmelimage.MelodicImage(melDir)
 
             log.debug('Adding {} to overlay list'.format(overlay))
 
@@ -626,12 +658,20 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         where they'd like the label saved, then saves said labels.
         """
 
-        overlay  = self._displayCtx.getSelectedOverlay()
-        melclass = overlay.getICClassification()
-        dlg      = wx.FileDialog(
+        overlay   = self._displayCtx.getSelectedOverlay()
+        volLabels = self.getOverlayList().getData(overlay, 'VolumeLabels')
+
+        if isinstance(overlay, fslmelimage.MelodicImage):
+            defaultDir = overlay.getMelodicDir()
+        elif overlay.dataSource is not None:
+            defaultDir = op.dirname(overlay.dataSource)
+        else:
+            defaultDir = None
+            
+        dlg = wx.FileDialog(
             self,
             message=strings.titles[self, 'saveDialog'],
-            defaultDir=overlay.getMelodicDir(),
+            defaultDir=defaultDir,
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
         
         if dlg.ShowModal() != wx.ID_OK:
@@ -640,7 +680,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         filename = dlg.GetPath()
 
         try:
-            melclass.save(filename)
+            volLabels.save(filename, dirname=defaultDir)
             
         except Exception as e:
             e     = str(e)
@@ -658,14 +698,14 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         """
         
         overlay  = self._displayCtx.getSelectedOverlay()
-        melclass = overlay.getICClassification()
+        volLabels = self.getOverlayList().getData(overlay, 'VolumeLabels')
 
-        for c in range(overlay.numComponents()):
+        for c in range(volLabels.numComponents()):
 
-            labels = melclass.getLabels(c)
+            labels = volLabels.getLabels(c)
 
             if len(labels) == 1 and labels[0] == 'unknown':
                 continue
 
-            melclass.clearLabels(c)
-            melclass.addLabel(c, 'Unknown')
+            volLabels.clearLabels(c)
+            volLabels.addLabel(c, 'Unknown')
