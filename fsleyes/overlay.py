@@ -28,6 +28,8 @@ an overlay type are:
   - Must have an attribute called ``dataSource``, which is used to identify
     the source of the overlay data.
 
+  - Must be hashable (i.e. usable as a dictionary key).
+
   - Must be supported by the :mod:`~fsleyes.gl` package .. ok, this is a
     pretty big requirement .. See the :mod:`.globject` and the
     :data:`.displaycontext.OVERLAY_TYPES` documentation for details on how to
@@ -70,6 +72,7 @@ This module also provides a few convenience classes and functions:
 
 
 import logging
+import weakref
 import os.path as op
 
 import props
@@ -94,6 +97,9 @@ class OverlayList(props.HasProperties):
 
     The :mod:`.loadoverlay` module contains some convenience functions for
     loading and adding overlays.
+
+    The :meth:`getData` and :meth:`setData` methods allow arbitrary bits
+    of data associated with an overlay to be stored and retrieved.
     """
 
 
@@ -123,6 +129,23 @@ class OverlayList(props.HasProperties):
         # by DisplayContext instances).
         self.__initOverlayType = {}
 
+        # This dictionary may be used throughout FSLeyes,
+        # via the getData/setData methods, to store
+        # any sort of data associated with an overlay.
+        # It is a dict of dicts:
+        #
+        #   {
+        #      overlay : {
+        #        key : value,
+        #        key : value,
+        #      },
+        #      overlay : {
+        #        key : value,
+        #        key : value,
+        #      }
+        #   }
+        self.__overlayData = weakref.WeakKeyDictionary()
+
 
     def initOverlayType(self, overlay):
         """Returns the initial type for the given ``overlay``, if it was
@@ -130,6 +153,36 @@ class OverlayList(props.HasProperties):
         ``None`` otherwise.
         """
         return self.__initOverlayType.get(overlay, None)
+
+
+    def getData(self, overlay, key, *args):
+        """Returns any stored value associated with the specified ``overlay``
+        and ``key``.
+
+        :arg default: Default value if there is no value associated with the
+                      given ``key``. If not specified, and an unknown key is
+                      given, a ``KeyError`` is raised.
+        """
+        if len(args) not in (0, 1):
+            raise RuntimeError('Invalid arguments: {}'.format(args))
+
+        ovlDict = self.__overlayData.get(overlay, {})
+
+        if len(args) == 1:
+            return ovlDict.get(key, args[0])
+        else:
+            return ovlDict[key]
+
+
+    def setData(self, overlay, key, value):
+        """Stores the given value via the specified ``overlay`` and ``key``.
+        """
+        ovlDict = self.__overlayData.get(overlay, None)
+
+        if ovlDict is not None:
+            ovlDict[key] = value
+        else:
+            self.__overlayData[overlay] = {key : value}
 
 
     def find(self, name):
