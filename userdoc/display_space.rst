@@ -58,9 +58,10 @@ the display, even if they have different resolution or orientation.
 For NIFTI images, FSLeyes accomplishes this by using the transformation
 matrices (the ``sform`` and/or ``qform`` fields) defined in the NIFTI file
 header. These transformation matrices are used to convert voxel, or data,
-coordinates into display, or "world", coordinates.  For VTK models, FSLeyes
-uses the the transformation matrix of that model's reference image to position
-the VTK model in the display coordinate system.
+coordinates into display, or "world", coordinates.  For other overlay types
+(e.g. GIFTI and VTK meshes), FSLeyes uses the the transformation matrix of
+that model's reference image to position the mesh in the display coordinate
+system.
 
 
 FSLeyes allows you to choose between displaying your overlays in terms of one

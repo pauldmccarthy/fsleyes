@@ -208,10 +208,6 @@ range used to colour voxels can be adjusted, and voxels can be *clipped*
 The following settings are available for volume overlays:
 
 
-- **Resolution** This slider allows you to re-sample the image to a lower
-  resolution for display purposes. The resolution is specified in millimetres.
-
-  
 - **Volume** If your image is 4D, you can select the displayed volume with
   this slider [*]_.
 
@@ -759,17 +755,6 @@ X, Y, and Z axes.
 The following display settings are available for mesh overlays:
 
 
-- **Colour** The colour to use for the mesh.
-  
-- **Show outline only** You can choose between showing the filled mesh, or
-  showing just its outline.
-  
-- **Outline width** If the *Show outline only* setting is enabled, this slider
-  controls the outline width.
-
-- **Display quality** This setting allows you to adjust the mesh display
-  quality.
-  
 - **Reference image** This setting allows you to choose the NIFTI reference
   image associated with the model (see the :ref:`sidebar
   <overlays_mesh_reference_image>`).
@@ -777,3 +762,22 @@ The following display settings are available for mesh overlays:
 - **Model coordinate space** This is an advanced setting which allows you to
   specify how the VTK model coordinates are defined, relative to its reference
   image.
+  
+- **Show outline only** You can choose between showing the filled mesh, or
+  showing just its outline.
+
+- **Outline width** If the *Show outline only* setting is enabled, this slider
+  controls the outline width.
+
+- **Colour** The colour to use for the mesh.
+
+- **Vertex data** You can use this setting to select some data associated with
+  the mesh vertices (either plain `.txt` files, or `.func.gii`, `.shape.gii`,
+  `.label.gii`, or `.time.gii` files for GIFTI overlays). You may then colour
+  and clip the mesh according to this data (only when showing the mesh
+  outline), using the same properties that are described for :ref:`volume
+  overlays <overlays_volume>`.
+
+- **Lookup table** If you have selected some categorical vertex data, you may
+  use this setting to colour the mesh according to a lookup table instead of a
+  colour map.

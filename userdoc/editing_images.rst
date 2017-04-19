@@ -63,8 +63,8 @@ When you use :ref:`select mode <editing_images_select_mode>`, you may use the
 operations.
 
 
-Create a copy!
---------------
+Create a mask/copy!
+-------------------
 
 
 If you are worried about destroying your data, you may wish to create a copy

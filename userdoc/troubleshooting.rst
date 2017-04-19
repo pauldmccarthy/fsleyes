@@ -81,7 +81,8 @@ Once you identify the image(s) which is/are causing the problem, you need to
 re-generate the image (if it was generated as part of a processing pipeline),
 or correct the orientation information in the NIFTI file header. In the
 future, you will be able to do this from within FSLeyes, but as of version
-|version|, you must do this with an external program such as ``fsledithd``.
+|version|, you must do this with an external program such as ``fslcpgeom`` or
+``fsledithd``.
 
 
 .. _troubleshooting_vector_orientation:
