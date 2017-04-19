@@ -14,6 +14,7 @@ import logging
 import numpy as np
 
 from . import texture3d
+import fsl.data.imagewrapper as imagewrapper 
 
 
 log = logging.getLogger(__name__)
@@ -106,14 +107,18 @@ class ImageTexture(texture3d.Texture3D):
         # If the data change was performed using
         # normal array indexing, we can just replace
         # that part of the image texture.
-        if isinstance(sliceobj, tuple): 
-            
-            data   = np.array(self.image[sliceobj])
-            offset = [s.start for s in sliceobj]
+        if isinstance(sliceobj, tuple):
+
+            # Get the new data, and calculate an
+            # offset into the full image from the
+            # slice object
+            data   = np.array(image[sliceobj])
+            offset = imagewrapper.sliceObjToSliceTuple(sliceobj, image.shape)
+            offset = [o[0] for o in offset]
 
             log.debug('{} data changed - refreshing part of '
                       'texture (offset: {}, size: {})'.format(
-                          self.image.name,
+                          image.name,
                           offset, data.shape))
             
             self.patchData(data, offset)
@@ -123,7 +128,7 @@ class ImageTexture(texture3d.Texture3D):
         else:
 
             log.debug('{} data changed - refreshing full '
-                      'texture'.format(self.image.name))
+                      'texture'.format(image.name))
 
             self.set()
 
