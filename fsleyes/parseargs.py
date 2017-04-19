@@ -205,7 +205,7 @@ def _get_option_tuples(self, option_string):
 
     
     .. note:: This is unnecessary in python 3.5 and above, due to the addition
-              of tge ``allow_abbrev`` option.
+              of the ``allow_abbrev`` option.
 
 
     See http://stackoverflow.com/questions/33900846/\
@@ -472,7 +472,7 @@ GROUPNAMES = td.TypeDict({
 })
 """Command line arguments are grouped according to the class to which
 they are applied (see the :data:`ARGUMENTS` dictionary). This dictionary
-defines descriptions for ecah command line group.
+defines descriptions for each command line group.
 """
 
 
@@ -925,7 +925,6 @@ def getExtra(target, propName, default=None):
     # to grab the names of all existing LUTs, and then
     # using them as the CLI options.
     lutSettings = {
-
         'choices'       : colourmaps.scanLookupTables(),
         'useAlts'       : False,
         'metavar'       : 'LUT',
@@ -940,7 +939,7 @@ def getExtra(target, propName, default=None):
     }
 
     # shOrder can be up to a maximum of 16,
-    # but will be limited by the image itselt
+    # but will be limited by the image itself
     shOrderSettings = {
         'choices' : range(17),
         'metavar' : 'ORDER',
@@ -955,7 +954,6 @@ def getExtra(target, propName, default=None):
     # property, but needs to accept
     # any value on the command line
     vertexDataSettings = {
-        
         'metavar' : 'FILE',
         'choices' : None,
         'useAlts' : False,
@@ -1008,6 +1006,9 @@ def getExtra(target, propName, default=None):
         (fsldisplay.GiftiOpts,      'vertexData')    : vertexDataSettings,
     }
 
+    # Add (str, propname) versions 
+    # of all keys so both class and
+    # string lookups work
     strSettings = {(type(k[0]).__name__, k[1]) : v
                    for k, v in allSettings.items()}
     
@@ -1048,7 +1049,7 @@ been loaded, so we need to figure out what to do.
 # TODO All of these functions are called both
 #      when parsing command line arguments, and
 #      when generating them from an in-memory
-#      object. f/when you have a need for more
+#      object. If/when you have a need for more
 #      complicated property transformations (i.e.
 #      non-reversible ones), you'll need to have
 #      an inverse transforms dictionary.
@@ -1057,6 +1058,10 @@ been loaded, so we need to figure out what to do.
 #      functions can tell the direction by
 #      checking whether overlay == None - if this
 #      is True, we are generating arguments.
+
+# When generating CLI arguments, turn Image
+# instances into their file names. And a few
+# other special cases.
 def _imageTrans(i, overlay=None):
     
     stri = str(i).lower()
@@ -1070,6 +1075,8 @@ def _imageTrans(i, overlay=None):
     else:                  return i.dataSource
 
 
+# When generating CLI arguments, turn a
+# LookupTable instance into its name
 def _lutTrans(l, overlay=None):
     if isinstance(l, colourmaps.LookupTable): return l.key
     else:                                     return l
@@ -1096,10 +1103,22 @@ def _clippingRangeTrans(crange, overlay=None):
     return crange
 
 
+# The command line interface
+# for some boolean properties
+# need the property value to be
+# inverted.
 def _boolTrans(b, overlay=None):
     return not b
 
 
+# The props.addParserArguments function allows
+# us to specify 'extra' parameters (above) to
+# specify that we expect RGB, not RGBA colours.
+# But the props.generateArguments does not
+# accept 'extra' parameters. It accepts
+# transform functions though, so we hackily
+# truncate any RGBA colours via these transform
+# functions.
 def _colourTrans(c, overlay=None):
     return c[:3]
 
@@ -1120,14 +1139,6 @@ TRANSFORMS = td.TypeDict({
 
     'VolumeOpts.clippingRange'    : _clippingRangeTrans,
 
-    # The props.addParserArguments function allows
-    # us to specify 'extra' parameters (above) to
-    # specify that we expect RGB, not RGBA colours.
-    # But the props.generateArguments does not
-    # accept 'extra' parameters. It accepts
-    # transform functions though, so we hackily
-    # truncate any RGBA colours via these transform
-    # functions.
     'SceneOpts.bgColour'         : _colourTrans,
     'SceneOpts.cursorColour'     : _colourTrans,
     'MeshOpts.colour'            : _colourTrans,
@@ -1138,7 +1149,9 @@ TRANSFORMS = td.TypeDict({
 })
 """This dictionary defines any transformations for command line options
 where the value passed on the command line cannot be directly converted
-into the corresponding property value.
+into the corresponding property value. See the
+:func:`props.applyArguments` and :func:`props.generateArguments`
+functions.
 """
 
 # All of the file options need special treatment
@@ -1570,14 +1583,14 @@ def parseArgs(mainParser,
     #
     # TODO This procedure does not support
     #      options which may expect more than
-    #      one which may look like a file.
-    #      You could fix this by changing
-    #      the boolean expects flag in the
-    #      ARGUMENTS dict to be the number
-    #      of expected arguments (and then
-    #      skipping over arguments as needed
-    #      in the loop below). But this
-    #      approach would not be able to
+    #      one argument which may look like a 
+    #      file. You could fix this by 
+    #      changing the boolean expects flag 
+    #      in the ARGUMENTS dict to be the 
+    #      number of expected arguments (and 
+    #      then skipping over arguments as 
+    #      needed in the loop below). But 
+    #      this approach would not be able to
     #      handle options which accept a
     #      variable number of arguments.
     #      This is probably an acceptable
