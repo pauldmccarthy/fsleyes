@@ -143,7 +143,7 @@ Classifying components with the classification panel
 
 
 The IC classification panel allows you to view and modify classification
-labels for each component in a ``melodic_IC`` file. The IC classification
+labels for each component in a ``melodic_IC`` file [*]_. The IC classification
 panel displays a list of components, and one or more classification labels for
 each component:
 
@@ -183,6 +183,10 @@ are using the :ref:`MELODIC perspective
 component list, the lightbox, time series, and power spectrum views will
 update to display the volume, time course, and power spectrum corresponding to
 the selected component.
+
+
+.. [*] The classification panel can actually be used to label the volumes of
+       any 4D NIFTI image, not just ``melodic_IC`` images.
 
 
 .. [*] **Important**: In FSLeyes |version|, component indices start at 1, but
