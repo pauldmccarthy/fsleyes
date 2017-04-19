@@ -265,13 +265,24 @@ def hacksAndWorkarounds():
     Must be called after :func:`fsleyes.initialise`.
     """
 
-    # If we are running from frozen, we don't want 
-    # matplotlib to use the application directory
-    # for its cache. Clearing the environment variable
-    # should cause matplotlib to use $HOME/.matplotlib
+    # PyInstaller 3.2.1 forces matplotlib to use a
+    # temporary directory for its settings and font
+    # cache, and then deletes the directory on exit.
+    # This is silly, because the font cache can take
+    # a long time to create.  Clearing the environment
+    # variable should cause matplotlib to use
+    # $HOME/.matplotlib (or, failing that, a temporary
+    # directory).
     #
     # https://matplotlib.org/faq/environment_variables_faq.html#\
     #   envvar-MPLCONFIGDIR
+    #
+    # https://github.com/pyinstaller/pyinstaller/blob/v3.2.1/\
+    #   PyInstaller/loader/rthooks/pyi_rth_mplconfig.py
+    #
+    # n.b. This will cause issues if building FSLeyes
+    #      with the pyinstaller '--onefile' option, as
+    #      discussed in the above pyinstaller file.
     if fslplatform.frozen:
        os.environ.pop('MPLCONFIGDIR', None)
 
