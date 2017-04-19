@@ -134,8 +134,8 @@ display the data correctly.
 
 .. _troubleshooting_keyboard_navigation_doesnt_work_in_the_ic_classification_panel:
 
-Keyboard navigation doesn't work in the IC classification panel
----------------------------------------------------------------
+OSX - Keyboard navigation doesn't work in the IC classification panel
+---------------------------------------------------------------------
 
 
 Under OSX, you may have focus-related issues while navigating around the
@@ -150,6 +150,32 @@ setting can be changed through *System Preferences* |right_arrow| *Keyboard*
 |right_arrow| *Shortcuts*, and changing *Full Keyboard Access* to *All
 controls*.
 
+
+OSX - FSLeyes breaks after updating
+-----------------------------------
+
+
+Under OSX, you may encounter the following error after overwriting an old
+version of FSLeyes with a new version:
+
+
+.. image:: images/troubleshooting_fsleyes_update_error.png
+   :width: 50%
+   :align: center
+
+
+This is happening because OSX is caching the old version of the FSLeyes
+application specification file (found in ``FSLeyes.app/Contents/Info.plist``),
+and ignoring the new version. You can fix this problem by temporarily moving
+this file to a different location, and then moving it back again, for example::
+
+  cd /Applications/FSLeyes.app
+  mv Contents/Info.plist ./Info.plist.backup
+  # This command will fail
+  ./Contents/MacOS/fsleyes
+  mv ./Info.plist.backup Contents/Info.plist
+  # FSLeyes should now work
+  ./Contents/MacOS/fsleyes
 
 
 Running FSLeyes over SSH/X11 connections
