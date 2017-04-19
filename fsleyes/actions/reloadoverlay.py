@@ -12,10 +12,12 @@ which reloads the currently selected overlay from disk.
 import logging
 import os.path as op
 
-import fsl.data.image                as fslimage
-import fsl.utils.status              as status
-from . import                           base
-from . import                           removeoverlay
+import props
+
+import fsl.data.image   as fslimage
+import fsl.utils.status as status
+from . import              base
+from . import              removeoverlay
 
 
 log = logging.getLogger(__name__)
@@ -148,7 +150,11 @@ class ReloadOverlayAction(base.Action):
             d            = dctx.getDisplay(ovl)
 
             for prop, val in displayProps.items():
-                setattr(d, prop, val)
+
+                try:
+                    setattr(d, prop, val)
+                except props.DisabledError:
+                    continue
 
             # Get a ref to the DisplayOpts instance
             # after we have configured the Display,
