@@ -125,34 +125,15 @@ class DiagnosticReportAction(base.Action):
         """Creates and returns a dictionary containing:
 
          - *FSLeyes* settings stored via the :mod:`.settings` module
-         - Saved perspectives stored via the :mod:`.perspectives` module.
         """
 
-        import fsleyes.perspectives as perspectives
-        import fsl.utils.settings   as fslsettings
+        import fsl.utils.settings as fslsettings
         
         report   = OrderedDict()
-
-        # TODO When you update the fsl.utils.settings module,
-        #      use its functionality to read out *all* saved
-        #      settings, instead of hard coding them here.
-        settings = ['fsldir',
-                    'fsleyes.frame.layout',
-                    'fsleyes.frame.position',
-                    'fsleyes.frame.size']
-        settings = {s : fslsettings.read(s) for s in settings}
-
-        persps   = perspectives.getAllPerspectives()
-        persps   = {p : fslsettings.read('fsleyes.perspectives.{}'.format(p))
-                    for p in persps}
+        settings = fslsettings.readAll()
 
         for k, v in settings.items():
-            report[k] = str(v)
-
-        report['perspectives'] = ','.join(persps)
-
-        for k, v in persps:
-            report['perspectives.{}'.format(k)] = str(v)
+            report[k] = v
 
         return report
 
