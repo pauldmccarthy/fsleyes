@@ -1,4 +1,7 @@
 *.pyc
+.dir-locals.el
+.projectile
+.eggs
 apidoc/html
 userdoc/html
 dist
