@@ -881,8 +881,7 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
 
     # Ask the user where they want 
     # the screenshot to be saved
-    fromDir = fslsettings.read('canvasPanelScreenshotLastDir',
-                               default=os.getcwd())
+    fromDir = fslsettings.read('canvasPanelScreenshotLastDir', os.getcwd())
     
     dlg = wx.FileDialog(
         canvasPanel,

@@ -233,7 +233,8 @@ def initialise():
 
     Does a few initialisation steps::
 
-      - Adjusts the :attr:`fsl.utils.settings._CONFIG_ID`.
+      - Initialises the :mod:`fsl.utils.settings` module, for persistent
+        storage  of application settings.
 
       - Sets the :data:`assetDir` attribute. This function *must* be called
         before most other things in *FSLeyes* are used, but after a ``wx.App``
@@ -243,11 +244,15 @@ def initialise():
     global assetDir
     
     import wx
+    import matplotlib as mpl
 
-    # Adjust the settings ID - the FSLeyes config
-    # file will be automatically named by the OS
-    # (via wx.Config) according to this ID.
-    fslsettings._CONFIG_ID = 'uk.ac.ox.fmrib.fsleyes'
+    # Initialise the fsl.utils.settings module
+    fslsettings.initialise('fsleyes')
+
+    # Tell matplotlib what backend to use. 
+    # n.b. this must be called before
+    # matplotlib.pyplot is imported.
+    mpl.use('WxAgg')
 
     # If we are running from a bundled application,
     # wx will know where the FSLeyes resources are

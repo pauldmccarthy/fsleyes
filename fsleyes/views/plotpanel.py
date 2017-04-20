@@ -17,13 +17,8 @@ import collections
 
 import wx
 
-import matplotlib        as mpl
 import numpy             as np
 import scipy.interpolate as interp
-
-
-mpl.use('WxAgg')
-
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as Canvas
@@ -31,7 +26,6 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as Canvas
 import                                       props
 import pwidgets.elistbox                  as elistbox
 import fsl.utils.async                    as async
-import fsl.utils.settings                 as fslsettings
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes.strings                    as strings
 import fsleyes.actions                    as actions

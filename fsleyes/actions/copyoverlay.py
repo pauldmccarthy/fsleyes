@@ -125,11 +125,6 @@ class CopyOverlayAction(base.Action):
         copy4D      = fslsettings.read(copy4DSetting,      False)
         is4D        = len(overlay.shape) > 3 and overlay.shape[3] > 1
 
-        # the settings module is not yet type-aware
-        createMask  = fslsettings.strToBool(createMask)
-        copyDisplay = fslsettings.strToBool(copyDisplay)
-        copy4D      = fslsettings.strToBool(copy4D)
-
         options.append(strings.messages['actions.copyoverlay.createMask'])
         states .append(createMask)
 

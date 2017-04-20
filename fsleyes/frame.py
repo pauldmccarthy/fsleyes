@@ -972,8 +972,6 @@ class FSLeyesFrame(wx.Frame):
             # layout being restored on startup.
             save      = fslsettings.read('fsleyes.frame.saveLayout',      True)
             askToSave = fslsettings.read('fsleyes.frame.askToSaveLayout', True)
-            save      = fslsettings.strToBool(save)
-            askToSave = fslsettings.strToBool(askToSave)
 
             if askToSave:
 
@@ -1013,8 +1011,8 @@ class FSLeyesFrame(wx.Frame):
                 log.debug('Saving position: {}'.format(position))
                 log.debug('Saving layout: {}'  .format(layout))
 
-                fslsettings.write('fsleyes.frame.size',     str(size))
-                fslsettings.write('fsleyes.frame.position', str(position))
+                fslsettings.write('fsleyes.frame.size',     size)
+                fslsettings.write('fsleyes.frame.position', position)
                 fslsettings.write('fsleyes.frame.layout',   layout)
             else:
                 fslsettings.delete('fsleyes.frame.size')
@@ -1027,20 +1025,7 @@ class FSLeyesFrame(wx.Frame):
         for panel in self.__viewPanels:
             panel.destroy()
 
-        
-    def __parseSavedSize(self, size):
-        """Parses the given string, which is assumed to contain a size tuple.
-        """
-        
-        try:    return tuple(map(int, size[1:-1].split(',')))
-        except: return None
 
-        
-    def __parseSavedPoint(self, size):
-        """A proxy for the :meth:`__parseSavedSize` method.""" 
-        return self.__parseSavedSize(size)
-
-    
     def __restoreState(self, restore):
         """Called by :meth:`__init__`.
 
@@ -1057,8 +1042,6 @@ class FSLeyesFrame(wx.Frame):
         size     = fslsettings.read('fsleyes.frame.size')
         position = fslsettings.read('fsleyes.frame.position')
         layout   = fslsettings.read('fsleyes.frame.layout')
-        size     = self.__parseSavedSize(size)
-        position = self.__parseSavedPoint(position)
 
         if (size is not None) and (position is not None):
 

@@ -57,12 +57,7 @@ def getAllPerspectives():
     accessible in the :attr:`BUILT_IN_PERSPECTIVES` dictionary.
     """
     
-    # A list of all saved perspective names
-    # is saved as a comma-separated string
-    perspectives = fslsettings.read('fsleyes.perspectives', '')
-    perspectives = perspectives.split(',')
-    perspectives = [p.strip() for p in perspectives]
-    perspectives = [p         for p in perspectives if p != '']
+    perspectives = fslsettings.read('fsleyes.perspectives', [])
 
     uniq = []
     for p in perspectives:
@@ -584,12 +579,12 @@ def deserialisePerspective(persp):
 
 def _addToPerspectivesList(persp):
     """Adds the given perspective name to the list of saved perspectives. """
+    
+    persp        = persp.strip()
     perspectives = getAllPerspectives()
 
     if persp not in perspectives:
         perspectives.append(persp)
-
-    perspectives = ','.join(perspectives)
 
     log.debug('Updating stored perspective list: {}'.format(perspectives))
     fslsettings.write('fsleyes.perspectives', perspectives)
@@ -603,8 +598,6 @@ def _removeFromPerspectivesList(persp):
 
     try:               perspectives.remove(persp)
     except ValueError: return
-
-    perspectives = ','.join(perspectives)
 
     log.debug('Updating stored perspective list: {}'.format(perspectives))
     fslsettings.write('fsleyes.perspectives', perspectives) 
