@@ -9,13 +9,32 @@ rendering in *FSLeyes*.
 
 
 The :func:`init` function must be called before any colour maps or lookup
-tables can be accessed. When :func:`init` is called, it searches in the
-``fsleyes/colourmaps/`` and ``fsleyes/luts/`` directories, and attempts to
-load all files within which have the suffix ``.cmap`` or ``.lut``
+tables can be accessed [*]_.
+
+
+FSLeyes colour maps and lookup tables are stored in the following locations:
+
+   - ``[assetsbase]/assets/colourmaps/``
+   - ``[assetsbase]/assets/luts/``
+   - ``[settingsbase]/colourmaps/``
+   - ``[settingsbase]/luts/``
+
+
+where ``[fsleyesbase]`` is the location of the FSLeyes assets directory (see
+the :attr:`fsleyes.assetDir` attribute), and ``[settingsbase]`` is the base
+directory use by the :mod:`fsl.utils.settings` module for storing FSLeyes
+application settings and data. "Built-in" colour maps and lookup tables are
+stored underneath ``[fsleyesbase]``, and user-added ones are stored under
+``[settingsbase]``.
+
+
+When :func:`init` is called, it searches in the above locations, and attempts
+to load all files within which have the suffix ``.cmap`` or ``.lut``
 respectively.
 
-.. note:: Only the :func:`scanColourMaps` and :func:`scanLookupTables`
-          functions may be called before :func:`init` is called.
+
+.. [*] Only the :func:`scanColourMaps` and :func:`scanLookupTables` functions
+       may be called before :func:`init` is called.
 
 
 -----------
@@ -41,14 +60,6 @@ name prefix as the colour map name), and thus made available for rendering
 purposes.
 
 
-If a file named ``order.txt`` exists in the ``fsleyes/colourmaps/`` directory,
-it is assumed to contain a list of colour map names, and colour map
-identifiers, defining the order in which the colour maps should be displayed
-to the user. Any colour maps which are not listed in the ``order.txt`` file
-will be appended to the end of the list, and their name will be derived from
-the file name.
-
-
 The following functions are available for managing and accessing colour maps:
 
 .. autosummary::
@@ -62,6 +73,45 @@ The following functions are available for managing and accessing colour maps:
    installColourMap
    isColourMapRegistered
    isColourMapInstalled
+
+
+Display name and ordering
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+For built-in colour maps, a file named ``[assetsbase]/colourmaps/order.txt``
+is assumed to contain a list of colour map names, and colour map identifiers,
+defining the order in which the colour maps should be displayed to the
+user. Any colour maps which are present in ``[assetsbase/colourmaps/``, but
+are not listed in the ``order.txt``, file will be appended to the end of the
+list, and their name will be derived from the file name.
+
+
+User-added colour maps
+^^^^^^^^^^^^^^^^^^^^^^
+
+
+An identifier and display name for all user-added colour maps are added to a
+persistent setting called ``fsleyes.colourmaps``, which is a dictionary of ``{
+cmapid : displayName }`` mappings. The ``cmapid`` is typically the display
+name, converted to lower case, with spaces replaced with underscores. A
+user-added colour map with id ``cmapid`` will be saved as
+``[settingsbase]/colourmaps/cmapid.cmap``.  All user-added colour maps wll be
+displayed after all built-in colour maps, and their order cannot be
+customised. Any user-added colour map files which are not present in the
+``fsleyes.colourmaps`` dictionary will be given a display name the same as
+the colour map ID (which is taken from the file name).
+
+
+Installing a user-added colour map is a two-step process:
+
+ 1. First, the colour map must be *registered*, via the
+    :func:`registerColourMap` function. This adds the colour map to the
+    register, but does not persist it beyond the current execution
+    environment. 
+
+ 2. Calling the :func:`installColourMap` function will add the colour map
+    permanently.
 
 
 -------------
@@ -95,15 +145,16 @@ added/removed, and the name/colour of existing labels can be modified.  The
 :func:`.installLookupTable` method will install a new lookup table, or save
 any changes made to an existing one.
 
-
-The following functions are available to access and manage
-:class:`LookupTable` instances:
+Built-in and user-added lookup tables are managed in the same manner as
+described for colour maps above.  The following functions are available to
+access and manage :class:`LookupTable` instances:
 
 .. autosummary::
    :nosignatures:
 
    scanLookupTables
    getLookupTables
+   getLookupTable
    registerLookupTable
    installLookupTable
    isLookupTableRegistered
@@ -128,6 +179,7 @@ and generating/manipulating colours.:
    randomColour
    randomBrightColour
    randomDarkColour
+   complementaryColour
 """
 
 
@@ -145,6 +197,7 @@ import numpy as np
 
 import                       props
 import                       fsleyes
+import fsl.utils.settings as fslsettings
 import fsl.utils.notifier as notifier
 import fsl.data.vest      as vest
 
@@ -153,13 +206,69 @@ log = logging.getLogger(__name__)
 
 
 def getCmapDir():
-    """Returns the directory in which all colour map files are stored."""
+    """Returns the directory in which all built-in colour map files are stored.
+    """
     return op.join(fsleyes.assetDir, 'assets', 'colourmaps')
 
 
 def getLutDir():
-    """Returns the directory in which all lookup table files are stored. """
+    """Returns the directory in which all built-in lookup table files are stored.
+    """
     return op.join(fsleyes.assetDir, 'assets', 'luts')
+
+
+def scanBuiltInCmaps():
+    """Returns a list of IDs for all built-in colour maps. """
+
+    cmapIDs  = glob.glob(op.join(getCmapDir(), '*.cmap'))
+    cmapIDs  = [op.splitext(op.basename(f))[0] for f in cmapIDs]
+
+    return cmapIDs
+
+
+def scanBuiltInLuts():
+    """Returns a list of IDs for all built-in lookup tables. """
+
+    lutIDs = glob.glob(op.join(getLutDir(), '*.lut'))
+    lutIDs = [op.splitext(op.basename(f))[0] for f in lutIDs] 
+
+    return lutIDs
+
+
+def scanUserAddedCmaps():
+    """Returns a list of IDs for all user-added colour maps. """
+    
+    cmapFiles = fslsettings.listFiles('colourmaps/*.cmap')
+    cmapFiles = [op.basename(f)    for f in cmapFiles]
+    cmapIDs   = [op.splitext(f)[0] for f in cmapFiles]
+
+    return cmapIDs
+
+
+def scanUserAddedLuts():
+    """Returns a list of IDs for all user-added lookup tables. """
+    
+    lutFiles = fslsettings.listFiles('luts/*.lut')
+    lutFiles = [op.basename(f)    for f in lutFiles]
+    lutIDs   = [op.splitext(f)[0] for f in lutFiles]
+
+    return lutIDs 
+
+
+def scanColourMaps():
+    """Scans the colour maps directories, and returns a list containing the
+    names of all colour maps contained within. This function may be called
+    before :func:`init`.
+    """
+    return scanBuiltInCmaps() + scanUserAddedCmaps()
+
+
+def scanLookupTables():
+    """Scans the lookup tables directories, and returns a list containing the
+    names of all lookup tables contained within. This function may be called
+    before :func:`init`.
+    """
+    return scanBuiltInLuts() + scanUserAddedLuts()
 
 
 _cmaps = None
@@ -174,102 +283,123 @@ _luts = None
 """
 
 
-def scanColourMaps():
-    """Scans the colour maps directory, and returns a list containing the
-    names of all colour maps contained within. This function may be called
-    before :func:`init`.
-    """
-    cmapFiles = glob.glob(op.join(getCmapDir(), '*cmap'))
-    return [op.splitext(op.basename(f))[0] for f in cmapFiles]
-
-
-def scanLookupTables():
-    """Scans the lookup tables directory, and returns a list containing the
-    names of all lookup tables contained within. This function may be called
-    before :func:`init`.
-    """
-    lutFiles = glob.glob(op.join(getLutDir(), '*lut'))
-    return [op.splitext(op.basename(f))[0] for f in lutFiles] 
-
-
-def init():
+def init(force=False):
     """This function must be called before any of the other functions in this
     module can be used.
 
     It initialises the colour map and lookup table registers, loading all
-    colour map and lookup table files that exist.
+    built-in and user-added colour map and lookup table files that exist.
+
+    :arg force: Forces the registers to be re-initialised, even if they
+                have already been initialised.
     """
 
     global _cmaps
     global _luts
 
-    registers = []
-
-    if _cmaps is None:
-        _cmaps = OrderedDict()
-        registers.append((_cmaps, getCmapDir(), 'cmap'))
-
-    if _luts is None:
-        _luts = OrderedDict()
-        registers.append((_luts, getLutDir(), 'lut'))
-
-    if len(registers) == 0:
+    # Already initialised
+    if not force and (_cmaps is not None) and (_luts is not None):
         return
 
-    for register, rdir, suffix in registers:
+    _cmaps = OrderedDict()
+    _luts  = OrderedDict()
 
-        # Build up a list of key -> name mappings,
-        # from the order.txt file, and any other
-        # colour map/lookup table  files in the
-        # cmap/lut directory
-        allmaps   = OrderedDict()
-        orderFile = op.join(rdir, 'order.txt')
+    # Reads the order.txt file from the built-in
+    # /colourmaps/ or /luts/ directory. This file
+    # contains display names and defines the order
+    # in which built-in maps should be displayed.
+    def readOrderTxt(filename):
+        maps = OrderedDict()
 
-        if op.exists(orderFile):
-            with open(orderFile, 'rt') as f:
-                lines = f.read().split('\n')
+        if not op.exists(filename):
+            return maps
 
-                for line in lines:
-                    if line.strip() == '':
-                        continue
-                    
-                    # The order.txt file is assumed to
-                    # contain one row per cmap/lut,
-                    # where the first word is the key
-                    # (the cmap/lut file name prefix),
-                    # and the remainder of the line is
-                    # the cmap/lut name
-                    key, name = line.split(' ', 1)
+        with open(filename, 'rt') as f:
+            lines = f.read().split('\n')
 
-                    allmaps[key.strip()] = name.strip()
+            for line in lines:
+                if line.strip() == '':
+                    continue
 
-        # Search through all cmap/lut files that exist -
-        # any which were not specified in order.txt
-        # are added to the end of the list, and their
-        # name is just set to the file name prefix
-        for mapFile in sorted(glob.glob(op.join(rdir, '*.{}'.format(suffix)))):
+                # The order.txt file is assumed to
+                # contain one row per cmap/lut,
+                # where the first word is the key
+                # (the cmap/lut file name prefix),
+                # and the remainder of the line is
+                # the cmap/lut name
+                key, name         = line.split(' ', 1)
+                maps[key.strip()] = name.strip()
+        return maps
 
-            name = op.basename(mapFile).split('.')[0]
+    # Reads any display names that have been
+    # defined for user-added colourmaps/luts
+    # (mapType is either 'cmap' or 'lut').
+    def readDisplayNames(mapType):
+        if   mapType == 'cmap': key = 'fsleyes.colourmaps'
+        elif mapType == 'lut':  key = 'fsleyes.luts'
+        return fslsettings.read(key, OrderedDict())
 
-            if name not in allmaps:
-                allmaps[name] = name
+    # Get all colour map/lut IDs and 
+    # paths to the cmap/lut files. We
+    # process cmaps/luts in the same
+    # way, so we loop over all of
+    # these lists, doing colour maps
+    # first, then luts second.
+    mapTypes    = ['cmap',               'lut']
+    builtinDirs = [getCmapDir(),         getLutDir()]
+    userDirs    = ['colourmaps',         'luts']
+    allBuiltins = [scanBuiltInCmaps(),   scanBuiltInLuts()]
+    allUsers    = [scanUserAddedCmaps(), scanUserAddedLuts()]
+    registers   = [_cmaps,               _luts]
 
-        # Now load all of the cmaps/luts
-        for key, name in allmaps.items():
-            mapFile = op.join(rdir, '{}.{}'.format(key, suffix))
+    for mapType, builtinDir, userDir, builtinIDs, userIDs, register in zip(
+            mapTypes, builtinDirs, userDirs, allBuiltins, allUsers, registers):
+
+        builtinFiles = ['{}.{}'.format(m, mapType) for m in builtinIDs]
+        builtinFiles = [op.join(builtinDir, m)     for m in builtinFiles]
+        userFiles    = ['{}.{}'.format(m, mapType) for m in userIDs]
+        userFiles    = [op.join(userDir, m)        for m in userFiles]
+        userFiles    = [fslsettings.filePath(m)    for m in userFiles]
+
+        allIDs   = builtinIDs   + userIDs
+        allFiles = builtinFiles + userFiles
+        allFiles = {mid : mfile for mid, mfile in zip(allIDs, allFiles)}
+
+        # Read order/display names from order.txt
+        # (for builtins), and from fslsettings
+        # (for user-added)
+        names = readOrderTxt(op.join(builtinDir, 'order.txt'))
+        names.update(readDisplayNames(mapType))
+        
+        # any maps which did not have a name
+        # specified in order.txt (or, for
+        # user-added maps, in fslsettings)
+        # are added to the end of the list,
+        # and their name is just set to the
+        # ID (which is equal to the file name
+        # prefix).
+        for mid in allIDs:
+            if mid not in names:
+                names[mid] = mid
+
+        # Now register all of those maps, 
+        # in the order defined by order.txt
+        for mapID, mapName in names.items():
+
+            mapFile = allFiles[mapID]
 
             try:
-                kwargs = {'key' : key, 'name' : name}
+                kwargs = {'key' : mapID, 'name' : mapName}
                 
-                if   suffix == 'cmap': registerColourMap(  mapFile, **kwargs)
-                elif suffix == 'lut':  registerLookupTable(mapFile, **kwargs)
-                
-                register[key].installed    = True
-                register[key].mapObj.saved = True
+                if   mapType == 'cmap': registerColourMap(  mapFile, **kwargs)
+                elif mapType == 'lut':  registerLookupTable(mapFile, **kwargs)
+
+                register[mapID].installed    = True
+                register[mapID].mapObj.saved = True
 
             except Exception as e:
                 log.warn('Error processing custom {} '
-                         'file {}: {}'.format(suffix, mapFile, str(e)),
+                         'file {}: {}'.format(mapType, mapFile, str(e)),
                          exc_info=True)
 
 
