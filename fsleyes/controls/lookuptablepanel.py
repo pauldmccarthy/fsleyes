@@ -8,33 +8,34 @@
 panel which allows the user to manage lookup tables. See the
 :mod:`.colourmaps` module for more details on lookup tables.
 
-A few other class are defined in this module, all for use by the
-``LookupTablePanel``:
+A few other classes and functions are defined in this module, all for use by
+the ``LookupTablePanel``:
 
 .. autosummary::
    :nosignatures:
 
+   promptForLutName
    LabelWidget
-   NewLutDialog
    LutLabelDialog
 """
 
 
-import os
-import logging
+import            os
+import os.path as op
+import            logging
 
 import wx
 
 import                           props
 import pwidgets.elistbox      as elistbox
 
-import fsleyes                as fsleyes
 import fsleyes.panel          as fslpanel
 import fsleyes.displaycontext as displayctx
 import fsleyes.colourmaps     as fslcmaps
 import fsleyes.strings        as strings
 import fsl.utils.async        as async
 import fsl.utils.status       as status
+import fsl.utils.settings     as fslsettings
 import fsl.data.melodicimage  as fslmelimage
 
 
@@ -129,8 +130,6 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         self.__copyLutButton .SetLabel(strings.labels[  self, 'copyLut'])
         self.__loadLutButton .SetLabel(strings.labels[  self, 'loadLut'])
         self.__saveLutButton .SetLabel(strings.labels[  self, 'saveLut'])
-
-        self.__labelList.Bind(elistbox.EVT_ELB_EDIT_EVENT, self.__onLabelEdit)
 
         self.__lutChoice     .Bind(wx.EVT_CHOICE, self.__onLutChoice)
         self.__selAllButton  .Bind(wx.EVT_BUTTON, self.__onSelectAll)
@@ -357,9 +356,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         current :class:`LookupTable` instance changes. Sets the state
         of the *save* button accordingly.
         """
-
-        self.__saveLutButton.Enable(
-            fsleyes.canWriteToAssetDir() and not self.__selectedLut.saved)
+        self.__saveLutButton.Enable(not self.__selectedLut.saved)
 
 
     def __lutLabelAdded(self, lut, topic, label):
@@ -416,23 +413,23 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
 
 
     def __onNewLut(self, ev):
-        """Called when the user presses the *New LUT* button. Displays a
-        :class:`NewLutDialog`, prompting the user to enter a name, and then
-        creates and registers a new :class:`.LookupTable` instance. Updates
-        this ``LookupTablePanel`` via the :meth:`__updateLutChoices` and
-        :meth:`__setLut` methods.
+        """Called when the user presses the *New LUT* button.
+
+        Prompts the user to enter a name (via :func:`promptForLutName`), and
+        then creates and registers a new :class:`.LookupTable`
+        instance. Updates this ``LookupTablePanel`` via the
+        :meth:`__updateLutChoices` and :meth:`__setLut` methods.
         """
 
-        dlg = NewLutDialog(self.GetTopLevelParent())
-        if dlg.ShowModal() != wx.ID_OK:
+        key, name = promptForLutName()
+
+        if key is None:
             return
 
-        name = dlg.GetName()
-
         log.debug('Creating and registering new '
-                  'LookupTable: {}'.format(name))
+                  'LookupTable: {}'.format(key))
 
-        lut = fslcmaps.LookupTable(key=name, name=name)
+        lut = fslcmaps.LookupTable(key=key, name=name)
         fslcmaps.registerLookupTable(lut, self._overlayList, self._displayCtx)
 
         self.__updateLutChoices()
@@ -440,28 +437,29 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
 
 
     def __onCopyLut(self, ev):
-        """Called when the user presses the *Copy LUT* button.  Displays a
-        :class:`NewLutDialog`, prompting the user to enter a name, and then
-        creates and registers a new :class:`.LookupTable` instance which is
-        initialised with the same label as the previously selected
+        """Called when the user presses the *Copy LUT* button.
+
+        Prompts the user to enter a name (via :func:`promptForLutName`), and
+        then creates and registers a new :class:`.LookupTable` instance which
+        is initialised with the same labels as the previously selected
         ``LookupTable``. Updates this ``LookupTablePanel`` via the
         :meth:`__updateLutChoices` and :meth:`__setLut` methods.
         """
 
+        oldKey  = self.__selectedLut.key
         oldName = self.__selectedLut.name
-        dlg     = NewLutDialog(self.GetTopLevelParent(), oldName)
+
+        newKey, newName = promptForLutName('{} copy'.format(oldName))
         
-        if dlg.ShowModal() != wx.ID_OK:
+        if newKey is None:
             return
 
-        newName = dlg.GetName()
-
         log.debug('Creating and registering new '
-                  'LookupTable {} (copied from {})'.format(newName, oldName))
+                  'LookupTable {} (copied from {})'.format(newKey, oldKey))
 
-        lut = fslcmaps.LookupTable(key=newName, name=newName)
+        lut = fslcmaps.LookupTable(key=newKey, name=newName)
 
-        for label in self.__selectedLut.labels:
+        for label in self.__selectedLut.labels():
             lut.insert(label.value,
                        name=label.name,
                        colour=label.colour,
@@ -474,38 +472,54 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
 
         
     def __onLoadLut(self, ev):
-        """Called when the user presses the *Load LUT* button.  Displays a
-        :class:`NewLutDialog`, prompting the user to enter a name, and then a
-        ``wx.FileDialog`, prompting the user to select a file containing
-        lookup table information.  Then creates and registers a new
-        :class:`.LookupTable` instance, initialising it with the selected
-        file. Updates this ``LookupTablePanel`` via the
-        :meth:`__updateLutChoices` and :meth:`__setLut` methods.
-
-        See the :mod:`.colourmaps` module for more details on the file format.
-        """ 
-
-        nameDlg = NewLutDialog(self.GetTopLevelParent())
+        """Called when the user presses the *Load LUT* button.  Does the
+        following:
         
-        if nameDlg.ShowModal() != wx.ID_OK:
-            return
+          - Prompts the user to select a LUT file with a ``wx.FileDialog``
         
-        fileDlg = wx.FileDialog(wx.GetApp().GetTopWindow(),
-                                message=strings.titles[self, 'loadLut'],
-                                defaultDir=os.getcwd(),
-                                style=wx.FD_OPEN)
+          - Prompts the user to enter a name for the LUT via the
+            :func:`promptForLutName` function.
+        
+          - Creates and registers a new :class:`.LookupTable` instance,
+            initialising it with the selected file.
+        
+          - Updates this ``LookupTablePanel`` via the
+            :meth:`__updateLutChoices` and :meth:`__setLut` methods.
+        """
+
+        parent  = wx.GetApp().GetTopWindow()
+        loadDir = fslsettings.read('fsleyes.loadlutdir', os.getcwd())
+
+        # Prompt the user to select a lut file
+        fileDlg = wx.FileDialog(
+            parent,
+            defaultDir=loadDir,
+            message=strings.titles[self, 'loadLut'],
+            style=wx.FD_OPEN)
 
         if fileDlg.ShowModal() != wx.ID_OK:
             return
 
-        name = nameDlg.GetName()
-        path = fileDlg.GetPath()
+        lutFile = fileDlg.GetPath()
+        lutDir  = op.dirname(lutFile)
+        lutName = op.splitext(op.basename(lutFile))[0]
 
-        lut = fslcmaps.registerLookupTable(path,
+        # Prompt the user to enter a name
+        lutKey, lutName = promptForLutName(lutName)
+        if lutKey is None:
+            return
+
+        # Register the lut
+        lut = fslcmaps.registerLookupTable(lutFile,
                                            self._overlayList,
                                            self._displayCtx,
-                                           name)
+                                           key=lutKey,
+                                           name=lutName)
 
+        # Save the directory for next time
+        fslsettings.write('fsleyes.loadlutdir', lutDir)
+
+        # Select the lut in the panel
         self.__updateLutChoices()
         self.__setLut(lut)
         
@@ -515,7 +529,10 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         that the current :class:`LookupTable` is saved (see the
         :func:`.colourmaps.installLookupTable` function).
         """
-        fslcmaps.installLookupTable(self.__selectedLut.key)
+        etitle = strings.titles[  self, 'installerror']
+        emsg   = strings.messages[self, 'installerror']
+        with status.reportIfError(title=etitle, msg=emsg, raiseError=False):
+            fslcmaps.installLookupTable(self.__selectedLut.key)
 
     
     def __onLabelAdd(self, ev):
@@ -578,18 +595,6 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
             lut.delete(value)
         self.__labelList.Delete(idx)
 
-
-    def __onLabelEdit(self, ev):
-        """Called when the user edits the name of a label in the lookup
-        table label list. Updates the corresponding lookup table label via
-        the :meth:`.LookupTable.set` method.
-        """
-
-        lut = self.__selectedLut
-        value = lut.labels[ev.idx].value
-
-        lut.set(value, name=ev.label)
-        
     
     def __selectedOverlayChanged(self, *a):
         """Called when the :class:`OverlayList` or
@@ -659,6 +664,37 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         the  :meth:`__setLut` method).
         """
         self.__setLut(self.__selectedOpts.lut)
+
+
+def promptForLutName(initial=None):
+    """Prompts the user to enter a name for a newly created
+    :class:`.LookupTable`.
+    """
+
+    if initial is None:
+        initial = strings.labels[LookupTablePanel, 'newLutDefault']
+    
+    nameMsg = strings.messages[LookupTablePanel, 'newlut']
+    while True:
+        dlg = wx.TextEntryDialog(
+            wx.GetApp().GetTopWindow(),
+            message=nameMsg,
+            defaultValue=initial)
+
+        if dlg.ShowModal() != wx.ID_OK:
+            return None, None
+
+        lutName = dlg.GetValue()
+        lutKey  = fslcmaps.makeValidMapKey(lutName)
+
+        # a lut with the specified name already exists
+        if fslcmaps.isLookupTableRegistered(lutKey):
+            nameMsg = strings.messages[LookupTablePanel, 'alreadyinstalled']
+            continue
+
+        break
+
+    return lutKey, lutName
             
 
 class LabelWidget(wx.Panel):
@@ -696,85 +732,6 @@ class LabelWidget(wx.Panel):
         self.__sizer.Add(self.__colour)
         self.__sizer.Add(self.__name, flag=wx.EXPAND)
 
-        
-class NewLutDialog(wx.Dialog):
-    """A dialog which is displayed when the user chooses to create a new
-    :class:`.LookupTable`.
-
-    Prompts the user to enter a name for the new ``LookupTable``. The entered
-    name will be accessible via the :meth:`GetName` method after the user
-    dismisses the dialog.
-    """
-    
-    def __init__(self, parent, name=None):
-        """Create a ``NewLutDialog``.
-
-        :arg parent: The :mod:`wx` parent object.
-
-        :arg name:   Initial name to display.
-        """
-
-        if name is None:
-            name = strings.labels[self, 'newLut']
-
-        wx.Dialog.__init__(self, parent, title=strings.titles[self])
-
-        self.__message = wx.StaticText(self)
-        self.__name    = wx.TextCtrl(  self)
-        self.__ok      = wx.Button(    self, id=wx.ID_OK)
-        self.__cancel  = wx.Button(    self, id=wx.ID_CANCEL)
-
-        self.__message.SetLabel(strings.messages[self, 'newLut'])
-        self.__ok     .SetLabel(strings.labels[  self, 'ok'])
-        self.__cancel .SetLabel(strings.labels[  self, 'cancel'])
-        self.__name   .SetValue(name)
-
-        self.__sizer    = wx.BoxSizer(wx.VERTICAL)
-        self.__btnSizer = wx.BoxSizer(wx.HORIZONTAL)
-        
-        self.SetSizer(self.__sizer)
-
-        self.__sizer.Add(self.__message,  flag=wx.EXPAND | wx.ALL, border=10)
-        self.__sizer.Add(self.__name,     flag=wx.EXPAND | wx.ALL, border=10)
-        self.__sizer.Add(self.__btnSizer, flag=wx.EXPAND | wx.ALL, border=15)
-        
-        self.__btnSizer.Add(self.__ok,       flag=wx.EXPAND, proportion=1)
-        self.__btnSizer.Add(self.__cancel,   flag=wx.EXPAND, proportion=1)
-
-        self.__ok    .Bind(wx.EVT_BUTTON, self.__onOk)
-        self.__cancel.Bind(wx.EVT_BUTTON, self.__onCancel)
-
-        self.__ok.SetDefault()
-        
-        self.Fit()
-        self.Layout()
-
-        self.CentreOnParent()
-
-        self.__enteredName = None
-
-
-    def GetName(self):
-        """Returns the name that the user entered. Returns ``None`` if the
-        user dismissed this ``NewLutDialog``, or this method has been called
-        before the dialog is dismissed.
-        """
-        return self.__enteredName
-
-    
-    def __onOk(self, ev):
-        """Called when the user confirms the dialog. Saves the name that the 
-        user entered, and closes the dialog.
-        """
-        self.__enteredName = self.__name.GetValue()
-        self.EndModal(wx.ID_OK)
-
-
-    def __onCancel(self, ev):
-        """Called when the user cancels the dialog. Closes the dialog.
-        """ 
-        self.EndModal(wx.ID_CANCEL)
- 
 
 class LutLabelDialog(wx.Dialog):
     """A dialog which is displayed when the user adds a new label to the

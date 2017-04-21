@@ -14,6 +14,7 @@ tables can be accessed [*]_.
 
 FSLeyes colour maps and lookup tables are stored in the following locations:
 
+
    - ``[assetsbase]/assets/colourmaps/``
    - ``[assetsbase]/assets/luts/``
    - ``[settingsbase]/colourmaps/``
@@ -30,7 +31,8 @@ stored underneath ``[fsleyesbase]``, and user-added ones are stored under
 
 When :func:`init` is called, it searches in the above locations, and attempts
 to load all files within which have the suffix ``.cmap`` or ``.lut``
-respectively.
+respectively. If a user-added map file has the same name as a built-in map
+file, the user-added one will override the built-in.
 
 
 .. [*] Only the :func:`scanColourMaps` and :func:`scanLookupTables` functions
@@ -166,9 +168,25 @@ Miscellaneous
 -------------
 
 
-Some utility functions are also kept in this module, related to calculating
-the relationship between a data display range and brightness/contrast scales,
-and generating/manipulating colours.:
+Some utility functions are also kept in this module.  These functions are used
+for querying installed colour maps and lookup tables,
+
+.. autosummary::
+   :nosignatures:
+
+   getCmapDir
+   getLutDir
+   scanBuiltInCmaps
+   scanBuiltInLuts
+   scanUserAddedCmaps
+   scanUserAddedLuts
+   makeValidMapKey
+   isValidMapKey
+
+The following functions may be used for calculating the relationship between a
+data display range and brightness/contrast scales, and generating/manipulating
+colours:
+
 
 .. autosummary::
    :nosignatures:
@@ -183,12 +201,14 @@ and generating/manipulating colours.:
 """
 
 
-import logging
-import glob
-import bisect
-import colorsys
-import random
 import os.path as op
+import            os
+import            glob
+import            bisect
+import            string
+import            random
+import            logging
+import            colorsys
 
 from collections import OrderedDict
 
@@ -241,6 +261,7 @@ def scanUserAddedCmaps():
     cmapFiles = fslsettings.listFiles('colourmaps/*.cmap')
     cmapFiles = [op.basename(f)    for f in cmapFiles]
     cmapIDs   = [op.splitext(f)[0] for f in cmapFiles]
+    cmapIDs   = [m.lower()         for m in cmapIDs]
 
     return cmapIDs
 
@@ -251,8 +272,31 @@ def scanUserAddedLuts():
     lutFiles = fslsettings.listFiles('luts/*.lut')
     lutFiles = [op.basename(f)    for f in lutFiles]
     lutIDs   = [op.splitext(f)[0] for f in lutFiles]
+    lutIDs   = [m.lower()         for m in lutIDs]
 
-    return lutIDs 
+    return lutIDs
+
+
+def makeValidMapKey(name):
+    """Turns the given string into a valid key for use as a colour map
+    or lookup table identifier.
+    """
+
+    valid = string.lowercase + string.digits + '_-'
+    key   = name.lower().replace(' ', '_')
+    key   = ''.join([c for c in key if c in valid])
+
+    return key
+
+
+def isValidMapKey(key):
+    """Returns ``True`` if the given string is a valid key for use as a colour
+    map or lookup table identifier, ``False`` otherwise. A valid key comprises
+    lower case letters, numbers, underscores and hyphens.
+    """ 
+
+    valid = string.lowercase + string.digits + '_-'
+    return all([c in valid for c in key])
 
 
 def scanColourMaps():
@@ -367,7 +411,9 @@ def init(force=False):
 
         # Read order/display names from order.txt
         # (for builtins), and from fslsettings
-        # (for user-added)
+        # (for user-added). Any user-added maps
+        # with the same as a builtin will override
+        # the builtin.
         names = readOrderTxt(op.join(builtinDir, 'order.txt'))
         names.update(readDisplayNames(mapType))
         
@@ -386,7 +432,13 @@ def init(force=False):
         # in the order defined by order.txt
         for mapID, mapName in names.items():
 
-            mapFile = allFiles[mapID]
+            # The user-added {id:name} dict
+            # might contain obsolete/invalid
+            # names, so we ignore keyerrors
+            try:
+                mapFile = allFiles[mapID]
+            except KeyError:
+                continue
 
             try:
                 kwargs = {'key' : mapID, 'name' : mapName}
@@ -434,8 +486,14 @@ def registerColourMap(cmapFile,
 
     import matplotlib.cm     as mplcm
     import matplotlib.colors as colors
+
+    if key is not None and not isValidMapKey(key):
+        raise ValueError('{} is not a valid colour map identifier'.format(key))
     
-    if key         is None: key         = op.basename(cmapFile).split('.')[0]
+    if key is None:
+        key = op.basename(cmapFile).split('.')[0]
+        key = makeValidMapKey(key)
+
     if name        is None: name        = key
     if overlayList is None: overlayList = []
 
@@ -531,16 +589,21 @@ def registerLookupTable(lut,
     # or a LookupTable instance
     if lutFile is not None:
 
-        if key  is None: key  = op.basename(lutFile).split('.')[0]
-        if name is None: name = key
+        if key is None:
+            key = op.basename(lutFile).split('.')[0]
+            key = makeValidMapKey(key)
+
+        if name is None:
+            name = key
 
         log.debug('Loading and registering custom '
                   'lookup table: {}'.format(lutFile)) 
         
         lut = LookupTable(key, name, lutFile)
+
     else:
-        if key  is None: key  = lut.name
-        if name is None: name = key
+        if key  is None: key  = lut.key
+        if name is None: name = lut.name
 
         lut.key  = key
         lut.name = name
@@ -589,9 +652,9 @@ def getLookupTables():
     return [_luts[lutName].mapObj for lutName in _luts.keys()]
 
 
-def getLookupTable(lutName):
-    """Returns the :class:`LookupTable` instance of the specified name."""
-    return _caseInsensitiveLookup(_luts, lutName).mapObj
+def getLookupTable(key):
+    """Returns the :class:`LookupTable` instance of the specified key/ID."""
+    return _caseInsensitiveLookup(_luts, key).mapObj
 
         
 def getColourMaps():
@@ -599,88 +662,98 @@ def getColourMaps():
     return list(_cmaps.keys())
 
 
-def getColourMap(cmapName):
-    """Returns the colour map instance of the specified name."""
-    return _caseInsensitiveLookup(_cmaps, cmapName).mapObj
+def getColourMap(key):
+    """Returns the colour map instance of the specified key."""
+    return _caseInsensitiveLookup(_cmaps, key).mapObj
 
 
-def getColourMapLabel(cmapName):
+def getColourMapLabel(key):
     """Returns a label/display name for the specified colour map. """
-    return _caseInsensitiveLookup(_cmaps, cmapName).name
+    return _caseInsensitiveLookup(_cmaps, key).name
 
 
-def isColourMapRegistered(cmapName):
+def isColourMapRegistered(key):
     """Returns ``True`` if the specified colourmap is registered, ``False``
     otherwise. 
     """ 
-    return cmapName in _cmaps
+    return key in _cmaps
 
 
-def isLookupTableRegistered(lutName):
+def isLookupTableRegistered(key):
     """Returns ``True`` if the specified lookup table is registered, ``False``
     otherwise. 
     """ 
-    return lutName in _luts
+    return key in _luts
 
 
-def isColourMapInstalled(cmapName):
+def isColourMapInstalled(key):
     """Returns ``True`` if the specified colourmap is installed, ``False``
     otherwise.  A :exc:`KeyError` is raised if the colourmap is not registered.
     """
-    return _cmaps[cmapName].installed
+    return _cmaps[key].installed
 
 
-def isLookupTableInstalled(lutName):
+def isLookupTableInstalled(key):
     """Returns ``True`` if the specified loolup table is installed, ``False``
     otherwise.  A :exc:`KeyError` is raised if the lookup tabler is not
     registered.
     """
-    return _luts[lutName].installed 
+    return _luts[key].installed 
 
 
-def installColourMap(cmapName):
+def installColourMap(key):
     """Attempts to install a previously registered colourmap into the
-    ``fsleyes/colourmaps`` directory.
+    ``[settingsbase]/colourmaps/`` directory.
     """
 
     # keyerror if not registered
-    cmap = _cmaps[cmapName]
+    cmap = _cmaps[key]
 
-    if cmap.mapFile is not None:
-        destFile = cmap.mapFile
-    else:
-        destFile = op.join(
-            getCmapDir(),
-            '{}.cmap'.format(cmapName.lower().replace(' ', '_')))
-
-    log.debug('Installing colour map {} to {}'.format(cmapName, destFile))
-
-    # I think the colors attribute is only
-    # available on ListedColormap instances ...
+    # TODO I think the colors attribute is only
+    #      available on ListedColormap instances,
+    #      so if you ever start using different
+    #      mpl types, you might need to revisit
+    #      this.
     data = cmap.mapObj.colors
-    np.savetxt(destFile, data, '%0.6f')
-    
+
+    destFile = op.join('colourmaps', '{}.cmap'.format(key))
+
+    log.debug('Installing colour map {} to {}'.format(key, destFile))
+
+    with fslsettings.writeFile(destFile) as f:
+        np.savetxt(f, data, '%0.6f')
+
+    # Update user-added settings
+    cmapNames      = fslsettings.read('fsleyes.colourmaps', OrderedDict())
+    cmapNames[key] = cmap.name
+
+    fslsettings.write('fsleyes.colourmaps', cmapNames)
+
     cmap.installed = True
 
 
-def installLookupTable(lutName):
+def installLookupTable(key):
     """Attempts to install/save a previously registered lookup table into
-    the ``fsleyes/luts`` directory.
+    the ``[settingsbase]/luts`` directory.
     """
     
     # keyerror if not registered
-    lut = _luts[lutName]
+    lut      = _luts[key]
+    destFile = op.join('luts', '{}.lut'.format(key))
+    destFile = fslsettings.filePath(destFile)
+    destDir  = op.dirname(destFile)    
 
-    if lut.mapFile is not None:
-        destFile = lut.mapFile
-    else:
-        destFile = op.join(
-            getLutDir(),
-            '{}.lut'.format(lutName.lower().replace(' ', '_')))
+    log.debug('Installing lookup table {} to {}'.format(key, destFile))
 
-    log.debug('Installing lookup table {} to {}'.format(lutName, destFile))
+    if not op.exists(destDir):
+        os.makedirs(destDir)
 
     lut.mapObj.save(destFile)
+
+    # Update user-added settings
+    lutNames      = fslsettings.read('fsleyes.luts', OrderedDict())
+    lutNames[key] = lut.name
+    fslsettings.write('fsleyes.luts', lutNames)
 
     lut.mapFile   = destFile
     lut.installed = True
@@ -1114,7 +1187,8 @@ class LookupTable(notifier.Notifier):
     def __init__(self, key, name, lutFile=None):
         """Create a ``LookupTable``.
 
-        :arg key:     The identifier for this ``LookupTable``.
+        :arg key:     The identifier for this ``LookupTable``. Must be
+                      a valid key (see :func:`isValidMapKey`).
 
         :arg name:    The display name for this ``LookupTable``.
 
@@ -1123,6 +1197,9 @@ class LookupTable(notifier.Notifier):
                       be empty - labels can be added with the :meth:`new` or
                       :meth:`insert` methods.
         """
+
+        if not isValidMapKey(key):
+            raise ValueError('{} is not a valid lut identifier'.format(key))
 
         self.key      = key
         self.name     = name
@@ -1142,7 +1219,7 @@ class LookupTable(notifier.Notifier):
 
         def wrapper(self, *args, **kwargs):
             
-            if not self.__loaded:
+            if not self.__loaded and self.__toLoad is not None:
                 self.__load(self.__toLoad)
                 self.__toLoad = None
                 self.__loaded = True
@@ -1215,6 +1292,14 @@ class LookupTable(notifier.Notifier):
 
         return self.__labels.index(value)
 
+
+    @lazyload
+    def labels(self):
+        """Returns an iterator over all :class:`LutLabel` instances in this
+        ``LookupTable``.
+        """
+        return iter(self.__labels)
+    
 
     @lazyload
     def get(self, value):

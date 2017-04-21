@@ -13,17 +13,14 @@ import            os
 import os.path as op
 
 import fsl.utils.settings as fslsettings
+import fsl.utils.status   as status
 
-import fsleyes            as fsleyes
 import fsleyes.strings    as strings
 import fsleyes.colourmaps as fslcmap
 from . import                base
 
 
 log = logging.getLogger(__name__)
-
-
-_stringID = 'actions.loadcolourmap.'
 
 
 class LoadColourMapAction(base.Action):
@@ -67,13 +64,13 @@ class LoadColourMapAction(base.Action):
 
         # Get the most recent colour map
         # directory if there is one
-        loadDir = fslsettings.read('fsleyes.loadcolourmap', os.getcwd())
+        loadDir = fslsettings.read('fsleyes.loadcolourmapdir', os.getcwd())
 
         # prompt the user to choose a colour map file
         dlg = wx.FileDialog(
             app.GetTopWindow(),
             defaultDir=loadDir,
-            message=strings.messages[_stringID + 'loadcmap'],
+            message=strings.messages[self, 'loadcmap'],
             style=wx.FD_OPEN)
 
         if dlg.ShowModal() != wx.ID_OK:
@@ -85,7 +82,7 @@ class LoadColourMapAction(base.Action):
         cmapDir  = op.dirname(cmapFile)
         cmapName = op.splitext(op.basename(cmapFile))[0]
 
-        cmapNameMsg = strings.messages[_stringID + 'namecmap']
+        cmapNameMsg = strings.messages[self, 'namecmap']
 
         while True:
 
@@ -98,16 +95,11 @@ class LoadColourMapAction(base.Action):
                 return
 
             cmapName = dlg.GetValue()
+            cmapKey  = fslcmap.makeValidMapKey(cmapName)
 
             # a colour map with the specified name already exists
-            if fslcmap.isColourMapRegistered(cmapName):
-                cmapNameMsg = strings.messages[_stringID + 'alreadyinstalled']
-                continue
-
-            # colour map names must only contain 
-            # letters, numbers, and underscores
-            if not cmapName.replace('_', '').isalnum():
-                cmapNameMsg = strings.messages[_stringID + 'invalidname']
+            if fslcmap.isColourMapRegistered(cmapKey):
+                cmapNameMsg = strings.messages[self, 'alreadyinstalled']
                 continue
 
             break
@@ -116,38 +108,26 @@ class LoadColourMapAction(base.Action):
         fslcmap.registerColourMap(cmapFile,
                                   self.__overlayList,
                                   self.__displayCtx,
-                                  cmapName)
+                                  key=cmapKey,
+                                  name=cmapName)
 
         # Save the directory for next time
-        fslsettings.write('fsleyes.loadcolourmap', cmapDir)
-
-        # Does this user have permission to write 
-        # to FSLeyes assets? If not, don't bother 
-        # asking them whether they want to install 
-        # the colour map, because (at this point 
-        # in time) they can't.
-        if not fsleyes.canWriteToAssetDir():
-            return
+        fslsettings.write('fsleyes.loadcolourmapdir', cmapDir)
 
         # ask the user if they want to install
         # the colour map for future use
         dlg = wx.MessageDialog(
             app.GetTopWindow(),
-            caption=strings.titles[  self,       'installcmap'],
-            message=strings.messages[_stringID + 'installcmap'],
+            caption=strings.titles[  self, 'installcmap'],
+            message=strings.messages[self, 'installcmap'],
             style=wx.YES_NO)
 
         if dlg.ShowModal() != wx.ID_YES:
             return
 
         # install the colour map
-        try:
-            fslcmap.installColourMap(cmapName)
-            
-        except Exception as e:
-            log.warn('Error installing colour map: {}'.format(e))
-            wx.MessageDialog(
-                app.GetTopWindow(),
-                message='{}: {}'.format(
-                    strings.messages[_stringID + 'installerror'], str(e)),
-                style=wx.ICON_ERROR).ShowModal()
+        etitle = strings.titles[  self, 'installerror']
+        emsg   = strings.messages[self, 'installerror']
+
+        with status.reportIfError(title=etitle, msg=emsg, raiseError=False):
+            fslcmap.installColourMap(cmapKey)

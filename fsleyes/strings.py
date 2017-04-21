@@ -80,19 +80,24 @@ messages = TypeDict({
 
     'loadOverlays.unknownType' : 'Unknown data type',
 
-    'actions.loadcolourmap.loadcmap'    : 'Open colour map file',
-    'actions.loadcolourmap.namecmap'    : 'Enter a name for the colour map - '
-                                          'please use only letters, numbers, '
-                                          'and underscores.',
-    'actions.loadcolourmap.installcmap' : 'Do you want to install '
-                                          'this colour map permanently?',
-    'actions.loadcolourmap.alreadyinstalled' : 'A colour map with that name '
-                                               'already exists - choose a '
-                                               'different name.',
-    'actions.loadcolourmap.invalidname'      : 'Please use only letters, '
-                                               'numbers, and underscores.',
-    'actions.loadcolourmap.installerror'     : 'An error occurred while '
-                                               'installing the colour map. ',
+    'LoadColourMapAction.loadcmap'    : 'Open colour map file',
+    'LoadColourMapAction.namecmap'    : 'Enter a name for the colour map.',
+    
+    'LoadColourMapAction.installcmap' :
+    'Do you want to install this colour map permanently?',
+    
+    'LoadColourMapAction.alreadyinstalled' :
+    'A colour map with that name already exists - choose a different name.',
+    
+    'LoadColourMapAction.installerror'     :
+    'An error occurred while installing the colour map. ',
+
+    'LookupTablePanel.newlut' :
+    'Enter a name for the lookup table.',
+    'LookupTablePanel.alreadyinstalled' :
+    'A lookup table with that name already exists - choose a different name.',
+    'LookupTablePanel.installerror' :
+    'An error occurred while installing the lookup table.',
 
     'actions.copyoverlay.createMask'  : 'Create empty mask image '
                                         'with same dimensions',
@@ -146,8 +151,6 @@ messages = TypeDict({
 
     'LookupTablePanel.labelExists' : 'The {} LUT already contains a '
                                      'label with value {}',
-
-    'NewLutDialog.newLut' : 'Enter a name for the new LUT',
 
     'ClusterPanel.noOverlays'     : 'Add a FEAT overlay',
     'ClusterPanel.notFEAT'        : 'Choose a FEAT overlay',
@@ -232,10 +235,11 @@ messages = TypeDict({
     'LoadAtlasAction.error'       :
     'An error occurred loading the atlas specification {}.',
 
-    'ClearSettingsAction.confirm'       :
+    'ClearSettingsAction.confirm' :
     'Are you sure you want to clear all FSLeyes settings? All preferences, '
-    'saved perspectives and loaded atlases will be lost!\n\n'
-    'You will need to restart FSLeyes for some changes to take effect.',
+    'saved perspectives, colour maps, lookup tables, and loaded atlases will '
+    'be lost!\n\nYou will need to restart FSLeyes for some changes to take '
+    'effect.',
 
     'CorrelateAction.calculating' :
     'Calculating correlation values for seed voxel [{}, {}, {}] ...',
@@ -318,7 +322,6 @@ titles = TypeDict({
     'LightBoxToolBar'           : 'Lightbox view toolbar',
     'LookupTablePanel'          : 'Lookup tables',
     'LutLabelDialog'            : 'New LUT label',
-    'NewLutDialog'              : 'New LUT',
 
     'PlotListPanel'             : 'Plot list',
     'TimeSeriesControlPanel'    : 'Time series control',
@@ -335,8 +338,9 @@ titles = TypeDict({
     'CropImagePanel'             : 'Crop',
     'EditTransformPanel'         : 'Nudge',
 
-    'LookupTablePanel.loadLut'     : 'Select a lookup table file',
-    'LookupTablePanel.labelExists' : 'Label already exists',
+    'LookupTablePanel.loadLut'      : 'Select a lookup table file',
+    'LookupTablePanel.labelExists'  : 'Label already exists',
+    'LookupTablePanel.installerror' : 'Error installing lookup table',
 
     'MelodicClassificationPanel.loadDialog' : 'Load FIX/Melview file...',
     'MelodicClassificationPanel.saveDialog' : 'Save FIX/Melview file...',
@@ -377,6 +381,8 @@ titles = TypeDict({
     'ClearSettingsAction.confirm' : 'Clear all settings?',
 
     'LoadColourMapAction.installcmap'     : 'Install colour map?',
+    'LoadColourMapAction.installerror'    : 'Error installing colour map',
+    
 
     'UpdateCheckAction.upToDate'            : 'FSLeyes is up to date',
     'UpdateCheckAction.newVersionAvailable' : 'New version available',
@@ -519,6 +525,7 @@ labels = TypeDict({
     'LookupTablePanel.copyLut'     : 'Copy LUT',
     'LookupTablePanel.saveLut'     : 'Save LUT',
     'LookupTablePanel.loadLut'     : 'Load LUT',
+    'LookupTablePanel.newLutDefault' : 'New LUT',
 
     'LutLabelDialog.value'    : 'Value',
     'LutLabelDialog.name'     : 'Name',
@@ -526,10 +533,6 @@ labels = TypeDict({
     'LutLabelDialog.ok'       : 'Ok',
     'LutLabelDialog.cancel'   : 'Cancel',
     'LutLabelDialog.newLabel' : 'New label',
-
-    'NewLutDialog.ok'     : 'Ok',
-    'NewLutDialog.cancel' : 'Cancel',
-    'NewLutDialog.newLut' : 'New LUT',
 
 
     'PlotControlPanel.plotSettings'       : 'General plot settings',
