@@ -22,6 +22,7 @@ import logging
 import                       os
 import os.path            as op
 
+import fsl.utils.status   as status
 import fsl.utils.settings as fslsettings
 import fsl.data.image     as fslimage
 import fsleyes.strings    as strings
@@ -249,23 +250,14 @@ def doSave(overlay, path=None):
     Returns ``True`` if the save was successful, ``False`` otherwise.
     """
 
-    try:
+    emsg   = strings.messages['SaveOverlayAction.saveError'].format(path)
+    etitle = strings.titles[  'SaveOverlayAction.saveError']
+
+    with status.reportIfError(msg=emsg, title=etitle, raiseError=False):
         overlay.save(path)
         return True
-
-    except Exception as e:
-        import wx
-
-        msg   = strings.messages['SaveOverlayAction.saveError'].format(
-            path,
-            type(e).__name__,
-            str(e))
-        title = strings.titles[  'SaveOverlayAction.saveError']
-
-        log.warning('Error saving overlay ({})'.format(str(e)),
-                    exc_info=True)
-        wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK) 
-        return False
+    
+    return False
 
 
 def checkOverlaySaveState(overlayList, displayCtx):

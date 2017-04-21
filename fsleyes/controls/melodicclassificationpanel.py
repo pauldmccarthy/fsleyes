@@ -20,6 +20,7 @@ import props
 
 import pwidgets.notebook      as notebook
 
+import fsl.utils.status       as status
 import fsl.utils.settings     as fslsettings
 import fsl.data.volumelabels  as vollabels
 import fsl.data.fixlabels     as fixlabels
@@ -518,19 +519,12 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
         # Load the specified label file
         filename = dlg.GetPath()
+        emsg     = strings.messages[self, 'loadError'].format(filename)
+        etitle   = strings.titles[  self, 'loadError']
         try:
-            melDir, allLabels = fixlabels.loadLabelFile(filename)
-
-        # Problem loading the file
-        except Exception as e:
-            
-            e     = str(e)
-            msg   = strings.messages[self, 'loadError'].format(filename, e)
-            title = strings.titles[  self, 'loadError']
-            log.warning('Error loading classification file '
-                        '({}), ({})'.format(filename, e), exc_info=True)
-            wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK)
-
+            with status.reportIfError(msg=emsg, title=etitle):
+                melDir, allLabels = fixlabels.loadLabelFile(filename)
+        except:
             return
 
         # Ok we've got the labels, now
@@ -678,17 +672,11 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
             return
 
         filename = dlg.GetPath()
+        emsg     = strings.messages[self, 'saveError'].format(filename)
+        etitle   = strings.titles[  self, 'saveError']
 
-        try:
+        with status.reportIfError(msg=emsg, title=etitle, raiseError=False):
             volLabels.save(filename, dirname=defaultDir)
-            
-        except Exception as e:
-            e     = str(e)
-            msg   = strings.messages[self, 'saveError'].format(filename, e)
-            title = strings.titles[  self, 'saveError']
-            log.debug('Error saving classification file '
-                      '({}), ({})'.format(filename, e), exc_info=True)
-            wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK) 
 
     
     def __onClearButton(self, ev):

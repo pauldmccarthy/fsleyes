@@ -191,11 +191,11 @@ messages = TypeDict({
     'MelodicClassificationPanel.disabled' :
     'Choose a melodic or other 4D image.',
     'MelodicClassificationPanel.loadError' :
-    'An error occurred while loading the file {}.\n\nDetails: {}',
+    'An error occurred while loading the file {}.',
     'MelodicClassificationPanel.noMelDir' :
     'The label file {} does not specify a path to a Melodic directory!',
     'MelodicClassificationPanel.saveError' :
-    'An error occurred while saving the file {}.\n\nDetails: {}', 
+    'An error occurred while saving the file {}.', 
     'MelodicClassificationPanel.wrongNComps' :
     'The mumber of components in the label file {} is greater than the number '
     'of components in the overlay {}!',
@@ -208,7 +208,7 @@ messages = TypeDict({
     'Apply the labels to the current overlay',
 
     'SaveOverlayAction.saveError' :
-    'An error occurred while saving the file {}.\n\nDetails: {} - {}',
+    'An error occurred while saving the file {}.',
 
     'removeoverlay.unsaved' :
     'This image has unsaved changes - are you sure you want to remove it?',
