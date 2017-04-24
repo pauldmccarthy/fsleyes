@@ -18,8 +18,7 @@ are also defined here:
 
 import wx
 
-import fsl.utils.dialog       as fsldlg
-
+import fsleyes_widgets.dialog as fsldlg
 import fsleyes.strings        as strings
 import fsleyes.parseargs      as parseargs
 import fsleyes.displaycontext as displaycontext

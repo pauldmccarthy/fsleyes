@@ -12,25 +12,25 @@ import logging
 
 import wx
 
-import numpy                       as np
+import numpy                        as np
 
-import                                props
-import fsl.data.image              as fslimage
-import fsl.utils.async             as async
-import fsl.utils.dialog            as fsldlg
-import fsl.utils.status            as status
-import fsleyes.overlay             as fsloverlay
-import fsleyes.strings             as strings
-import fsleyes.actions             as actions
-import fsleyes.actions.copyoverlay as copyoverlay
-import fsleyes.editor.editor       as fsleditor
-import fsleyes.gl.routines         as glroutines
-import fsleyes.gl.annotations      as annotations
+
+import fsl.data.image               as fslimage
+import fsl.utils.async              as async
+import fsleyes_props                as props
+import fsleyes_widgets.dialog       as fsldlg
+import fsleyes_widgets.utils.status as status
+import fsleyes.overlay              as fsloverlay
+import fsleyes.strings              as strings
+import fsleyes.actions              as actions
+import fsleyes.actions.copyoverlay  as copyoverlay
+import fsleyes.editor.editor        as fsleditor
+import fsleyes.gl.routines          as glroutines
+import fsleyes.gl.annotations       as annotations
 from . import                         orthoviewprofile
 
 
 log = logging.getLogger(__name__)
-
 
 
 _suppressOverlayChangeWarning = False

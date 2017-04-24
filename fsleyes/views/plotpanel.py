@@ -23,10 +23,11 @@ import scipy.interpolate as interp
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as Canvas
 
-import                                       props
-import pwidgets.elistbox                  as elistbox
 import fsl.utils.async                    as async
 from   fsl.utils.platform import platform as fslplatform
+import fsleyes_props                      as props
+import fsleyes_widgets.elistbox           as elistbox
+
 import fsleyes.strings                    as strings
 import fsleyes.actions                    as actions
 import fsleyes.overlay                    as fsloverlay

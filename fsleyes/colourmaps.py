@@ -215,7 +215,7 @@ from collections import OrderedDict
 import          six
 import numpy as np
 
-import                       props
+import fsleyes_props      as props
 import                       fsleyes
 import fsl.utils.settings as fslsettings
 import fsl.utils.notifier as notifier

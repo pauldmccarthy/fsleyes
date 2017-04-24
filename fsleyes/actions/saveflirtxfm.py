@@ -14,12 +14,12 @@ import logging
 
 import numpy as np
 
-import fsl.data.image      as fslimage
-import fsl.utils.transform as transform
-import fsl.utils.status    as status
-import fsleyes.strings     as strings
-from . import                 base
-from . import                 applyflirtxfm
+import fsl.data.image               as fslimage
+import fsl.utils.transform          as transform
+import fsleyes_widgets.utils.status as status
+import fsleyes.strings              as strings
+from . import                          base
+from . import                          applyflirtxfm
 
 
 log = logging.getLogger(__name__)

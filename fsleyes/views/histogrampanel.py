@@ -15,9 +15,8 @@ import wx
 
 import numpy as np
 
-import props
-
 import fsl.data.image                         as fslimage
+import fsleyes_props                          as props
 
 import fsleyes.actions                        as actions
 import fsleyes.overlay                        as fsloverlay

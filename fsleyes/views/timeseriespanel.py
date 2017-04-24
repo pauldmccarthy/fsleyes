@@ -16,11 +16,11 @@ import numpy as np
 
 import wx
 
-import                                            props
-
 import fsl.data.featimage                      as fslfeatimage
 import fsl.data.melodicimage                   as fslmelimage
 import fsl.data.image                          as fslimage
+import fsleyes_props                           as props
+
 import fsleyes.overlay                         as fsloverlay
 import fsleyes.actions                         as actions
 import fsleyes.strings                         as strings

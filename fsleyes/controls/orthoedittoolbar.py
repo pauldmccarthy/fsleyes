@@ -14,8 +14,7 @@ import logging
 
 import wx
 
-import props
-
+import fsleyes_props    as props
 import fsleyes.toolbar  as fsltoolbar
 import fsleyes.icons    as fslicons
 import fsleyes.tooltips as fsltooltips

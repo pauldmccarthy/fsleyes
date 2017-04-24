@@ -11,8 +11,7 @@
 
 import logging
 
-import props
-
+import fsleyes_props      as props
 import fsleyes.colourmaps as fslcm
 
 

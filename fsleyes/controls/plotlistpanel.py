@@ -14,13 +14,12 @@ import numpy as np
 
 import wx
 
-import props
+import fsleyes_props            as props
+import fsleyes_widgets.elistbox as elistbox
 
-import pwidgets.elistbox as elistbox
-
-import fsleyes.panel     as fslpanel
-import fsleyes.tooltips  as fsltooltips
-import fsleyes.strings   as strings
+import fsleyes.panel            as fslpanel
+import fsleyes.tooltips         as fsltooltips
+import fsleyes.strings          as strings
 
 
 class PlotListPanel(fslpanel.FSLeyesPanel):

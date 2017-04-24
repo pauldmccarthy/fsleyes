@@ -11,7 +11,7 @@ for displaying an :class:`.Image` overlay as a binary mask.
 
 import logging
 
-import props
+import fsleyes_props as props
 
 from . import volumeopts
 

@@ -12,7 +12,7 @@ settings used by the :class:`.OrthoPanel` class.
 import logging
 import copy
 
-import props
+import fsleyes_props as props
 
 from . import sceneopts
 

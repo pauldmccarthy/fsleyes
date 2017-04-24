@@ -10,16 +10,15 @@
 
 import            os 
 import os.path as op
+import numpy   as np
 
-import numpy                 as np
+import fsleyes_widgets.numberdialog as numdlg
+import fsl.data.image               as fslimage
+import fsl.utils.settings           as fslsettings
 
-import pwidgets.numberdialog as numdlg
-
-import fsl.data.image        as fslimage
-import fsl.utils.settings    as fslsettings
-import fsleyes.strings       as strings
-import fsleyes.plotting      as plotting
-import fsleyes.colourmaps    as fslcm
+import fsleyes.strings              as strings
+import fsleyes.plotting             as plotting
+import fsleyes.colourmaps           as fslcm
 
 
 from . import base

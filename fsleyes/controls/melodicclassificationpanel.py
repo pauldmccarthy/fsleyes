@@ -16,23 +16,23 @@ import logging
 
 import wx
 
-import props
+import fsl.utils.settings           as fslsettings
+import fsl.data.volumelabels        as vollabels
+import fsl.data.fixlabels           as fixlabels
+import fsl.data.image               as fslimage
+import fsl.data.melodicimage        as fslmelimage
 
-import pwidgets.notebook      as notebook
+import fsleyes_props                as props
+import fsleyes_widgets.notebook     as notebook
+import fsleyes_widgets.utils.status as status
 
-import fsl.utils.status       as status
-import fsl.utils.settings     as fslsettings
-import fsl.data.volumelabels  as vollabels
-import fsl.data.fixlabels     as fixlabels
-import fsl.data.image         as fslimage
-import fsl.data.melodicimage  as fslmelimage
-import fsleyes.displaycontext as displaycontext
-import fsleyes.colourmaps     as fslcm
-import fsleyes.panel          as fslpanel
-import fsleyes.autodisplay    as autodisplay
-import fsleyes.strings        as strings
-from . import componentgrid   as componentgrid
-from . import labelgrid       as labelgrid
+import fsleyes.displaycontext       as displaycontext
+import fsleyes.colourmaps           as fslcm
+import fsleyes.panel                as fslpanel
+import fsleyes.autodisplay          as autodisplay
+import fsleyes.strings              as strings
+from . import componentgrid         as componentgrid
+from . import labelgrid             as labelgrid
 
 
 log = logging.getLogger(__name__)

@@ -8,12 +8,12 @@
 
 import wx
 
-import props
-
-import pwidgets.rangeslider        as rslider
-
 import fsl.utils.async             as async
 import fsl.data.image              as fslimage
+
+import fsleyes_props               as props
+import fsleyes_widgets.rangeslider as rslider
+
 import fsleyes.panel               as fslpanel
 import fsleyes.displaycontext      as displaycontext
 import fsleyes.strings             as strings

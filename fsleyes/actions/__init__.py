@@ -97,8 +97,7 @@ import types
 import inspect
 import functools
 
-import props
-
+import fsleyes_props   as props
 import fsleyes.strings as strings
 
 from . import base
@@ -479,7 +478,7 @@ class ToggleActionButton(props.Toggle):
         ``ToggleAction`` instance.
         """ 
         import wx
-        import pwidgets.bitmaptoggle as bmptoggle
+        import fsleyes_widgets.bitmaptoggle as bmptoggle
         
         if isinstance(widget, wx.CheckBox):
             ev = wx.EVT_BUTTON

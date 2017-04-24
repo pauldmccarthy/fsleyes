@@ -11,8 +11,7 @@ for use with :class:`.PlotPanel` views.
 
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx
 
-import props
-
+import fsleyes_props    as props
 import fsleyes.profiles as profiles
 
 

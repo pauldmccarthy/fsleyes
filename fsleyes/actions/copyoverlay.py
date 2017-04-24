@@ -9,14 +9,14 @@ which creates a copy of the currently selected overlay.
 """
 
 
-import numpy               as np
+import numpy                  as np
 
-import fsl.data.image      as fslimage
-import fsl.utils.dialog    as fsldlg
-import fsl.utils.transform as transform
-import fsl.utils.settings  as fslsettings
-import fsleyes.strings     as strings
-from . import                 base
+import fsl.data.image         as fslimage
+import fsl.utils.transform    as transform
+import fsl.utils.settings     as fslsettings
+import fsleyes_widgets.dialog as fsldlg
+import fsleyes.strings        as strings
+from . import                    base
 
 
 class CopyOverlayAction(base.Action):

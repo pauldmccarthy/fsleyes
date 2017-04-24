@@ -10,14 +10,14 @@ distributions (FODs) in the form of spherical harmonic (SH) coefficients.
 """
 
 
-import os.path as op
+import os.path       as op
 
-import numpy   as np
+import numpy         as np
 
-import            props
+import fsleyes_props as props
 
-import            fsleyes
-from . import     vectoropts
+import                  fsleyes
+from . import           vectoropts
 
 
 SH_COEFFICIENT_TYPE = {

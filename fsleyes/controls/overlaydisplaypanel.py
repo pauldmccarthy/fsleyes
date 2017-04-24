@@ -14,9 +14,10 @@ import            functools
 import os.path as op
 
 import wx
-import props
 
-import fsl.utils.typedict             as td
+import fsleyes_props                  as props
+import fsleyes_widgets.utils.typedict as td
+
 import fsleyes.strings                as strings
 import fsleyes.tooltips               as fsltooltips
 import fsleyes.panel                  as fslpanel

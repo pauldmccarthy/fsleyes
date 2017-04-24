@@ -15,7 +15,8 @@ import logging
 import                   wx
 import wx.lib.agw.aui as aui
 
-import props
+import fsl.data.image         as fslimage
+import fsleyes_props          as props
 
 import fsleyes.panel          as fslpanel
 import fsleyes.toolbar        as fsltoolbar
@@ -23,7 +24,7 @@ import fsleyes.profiles       as profiles
 import fsleyes.displaycontext as fsldisplay
 import fsleyes.strings        as strings
 import fsleyes.actions        as actions
-import fsl.data.image         as fslimage
+
 
 
 log = logging.getLogger(__name__)

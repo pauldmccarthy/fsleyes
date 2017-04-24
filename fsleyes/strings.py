@@ -34,8 +34,8 @@ into the following categories:
 
 import textwrap
 
-from fsl.utils.typedict import TypeDict
-import fsl.data.constants as constants
+from   fsleyes_widgets.utils.typedict import TypeDict
+import fsl.data.constants                 as constants
 
 
 messages = TypeDict({

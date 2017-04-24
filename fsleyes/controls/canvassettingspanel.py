@@ -9,9 +9,8 @@ control* panel which displays settings for a :class:`.CanvasPanel`.
 """
 
 
-import props
-
 import fsl.data.image      as fslimage
+import fsleyes_props       as props
 import fsleyes.panel       as fslpanel
 import fsleyes.tooltips    as fsltooltips
 import fsleyes.strings     as strings

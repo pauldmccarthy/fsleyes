@@ -10,20 +10,19 @@ panel for viewing cluster results from a FEAT analysis.
 
 import                                       logging
 import                                       wx
-
 import                                       six
 
-import pwidgets.widgetgrid                as widgetgrid
-
-import fsleyes.panel                      as fslpanel
-import fsleyes.strings                    as strings
-import fsleyes.autodisplay                as autodisplay
 import fsl.utils.async                    as async
-import fsl.utils.status                   as status
 from   fsl.utils.platform import platform as fslplatform
 import fsl.data.image                     as fslimage
 import fsl.data.featimage                 as featimage
 import fsl.data.featanalysis              as featanalysis
+
+import fsleyes_widgets.utils.status       as status
+import fsleyes_widgets.widgetgrid         as widgetgrid
+import fsleyes.panel                      as fslpanel
+import fsleyes.strings                    as strings
+import fsleyes.autodisplay                as autodisplay
 
 
 log = logging.getLogger(__name__)

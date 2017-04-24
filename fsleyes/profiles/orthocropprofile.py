@@ -15,12 +15,11 @@ import wx
 
 import numpy as np
 
-import props
-
 import fsl.data.image                     as fslimage
-import fsl.utils.dialog                   as fsldlg
 import fsl.utils.callfsl                  as callfsl
 from   fsl.utils.platform import platform as fslplatform
+import fsleyes_props                      as props
+import fsleyes_widgets.dialog             as fsldlg
 import fsleyes.strings                    as strings
 import fsleyes.actions                    as actions
 import fsleyes.gl.annotations             as annotations

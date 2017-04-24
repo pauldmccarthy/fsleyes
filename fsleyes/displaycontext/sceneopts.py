@@ -12,7 +12,7 @@ settings used by :class:`.CanvasPanel` instances.
 import copy
 import logging
 
-import props
+import fsleyes_props as props
 
 from . import canvasopts
 

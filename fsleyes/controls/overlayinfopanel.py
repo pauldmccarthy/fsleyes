@@ -9,6 +9,22 @@ panel which displays information about the currently selected overlay.
 """
 
 
+import logging
+import collections
+import string
+
+import wx
+
+import numpy as np
+
+import fsl.data.image                 as fslimage
+import fsl.data.constants             as constants
+import fsleyes_widgets.utils.typedict as td
+
+import fsleyes.panel                  as fslpanel
+import fsleyes.strings                as strings
+
+
 USE_HTML2 = False
 """Toggle this flag to switch between the simple wx.html renderer,
 and the webkit-backed wx.html2 renderer. Webkit is not necessarily
@@ -18,22 +34,8 @@ now.
 """
 
 
-import logging
-import collections
-import string
-
-import wx
-
 if USE_HTML2: import wx.html2 as wxhtml
 else:         import wx.html  as wxhtml
-
-import numpy as np
-
-import fsl.data.image     as fslimage
-import fsl.data.constants as constants
-import fsl.utils.typedict as td
-import fsleyes.panel      as fslpanel
-import fsleyes.strings    as strings
 
 
 log = logging.getLogger(__name__)

@@ -15,7 +15,8 @@ import wx
 
 import numpy as np
 
-import fsl.utils.layout                    as fsllayout
+import fsleyes_widgets.utils.layout        as fsllayout
+
 import fsleyes.actions                     as actions
 import fsleyes.gl.wxgllightboxcanvas       as lightboxcanvas
 import fsleyes.controls.lightboxtoolbar    as lightboxtoolbar

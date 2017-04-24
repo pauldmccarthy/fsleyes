@@ -9,7 +9,7 @@ with a :class:`.PowerSpectrumPanel`.
 """
 
 
-import props
+import fsleyes_props    as props
 
 import fsleyes.icons    as icons
 import fsleyes.tooltips as tooltips

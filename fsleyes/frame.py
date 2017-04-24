@@ -17,9 +17,9 @@ import wx
 import wx.lib.agw.aui                     as aui
 
 import fsl.utils.settings                 as fslsettings
-import fsl.utils.dialog                   as fsldlg
-import fsl.utils.status                   as status
 from   fsl.utils.platform import platform as fslplatform
+import fsleyes_widgets.dialog             as fsldlg
+import fsleyes_widgets.utils.status       as status
 
 import fsleyes.strings                    as strings
 import fsleyes.autodisplay                as autodisplay

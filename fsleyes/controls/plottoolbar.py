@@ -9,7 +9,7 @@ an :class:`.OverlayPlotPanel`.
 """
 
 
-import props
+import fsleyes_props    as props
 
 import fsleyes.icons    as icons
 import fsleyes.actions  as actions

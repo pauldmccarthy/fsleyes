@@ -176,10 +176,9 @@ import os
 import logging
 import platform
 
-import props
-
 import fsl.utils.async                    as async
 from   fsl.utils.platform import platform as fslplatform
+import fsleyes_props                      as props
 
 
 log = logging.getLogger(__name__)

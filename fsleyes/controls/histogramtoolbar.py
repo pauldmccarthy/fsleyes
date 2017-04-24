@@ -9,7 +9,7 @@ a :class:`.HistogramPanel`.
 """
 
 
-import props
+import fsleyes_props    as props
 
 import fsleyes.icons    as icons
 import fsleyes.strings  as strings

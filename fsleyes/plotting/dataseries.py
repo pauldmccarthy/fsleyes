@@ -10,7 +10,7 @@ classes used by :class:`.PlotPanel` views for plotting data.
 
 import logging
 
-import props
+import fsleyes_props as props
 
 
 log = logging.getLogger(__name__)

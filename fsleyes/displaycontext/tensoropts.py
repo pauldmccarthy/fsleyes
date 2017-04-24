@@ -9,9 +9,8 @@ options for displaying :class:`.GLTensor` instances.
 """
 
 
-import props
-
-from . import vectoropts
+import fsleyes_props as props
+from . import           vectoropts
 
 
 class TensorOpts(vectoropts.VectorOpts):

@@ -49,9 +49,8 @@ import wx
 
 import matplotlib.backend_bases as mplbackend
 
-import props
-
 from   fsl.utils.platform import platform as fslplatform
+import fsleyes_props                      as props
 import fsleyes.actions                    as actions
 
 

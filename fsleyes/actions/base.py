@@ -11,9 +11,8 @@ See the :mod:`.actions` package documentation for more details.
 
 import logging
 
-import props
-
-from fsl.utils.platform import platform as fslplatform
+import fsleyes_props                      as props
+from   fsl.utils.platform import platform as fslplatform
 
 
 log = logging.getLogger(__name__)
@@ -222,7 +221,7 @@ class ToggleAction(Action):
         """
 
         import wx
-        import pwidgets.bitmaptoggle as bmptoggle
+        import fsleyes_widgets.bitmaptoggle as bmptoggle
         
         Action.bindToWidget(self, parent, evType, widget, wrapper)
 
@@ -240,7 +239,7 @@ class ToggleAction(Action):
         """
         
         import wx
-        import pwidgets.bitmaptoggle as bmptoggle
+        import fsleyes_widgets.bitmaptoggle as bmptoggle
         
         for widget in list(self.getBoundWidgets()):
 

@@ -9,10 +9,9 @@ for displaying :class:`.Image` overlays as label images., such as anatomical
 atlas images, tissue segmentation images, and so on.
 """
 
-import props
-
+import fsleyes_props      as props
 import fsleyes.colourmaps as colourmaps
-from . import volumeopts
+from . import                volumeopts
 
 
 class LabelOpts(volumeopts.NiftiOpts):

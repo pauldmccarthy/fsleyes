@@ -83,7 +83,7 @@ class FSLeyesApp(wx.App):
         if self.__overlayList is None:
             return
 
-        import fsl.utils.status                 as status
+        import fsleyes_widgets.utils.status     as status
         import fsleyes.strings                  as strings
         import fsleyes.parseargs                as parseargs
         import fsleyes.actions.applycommandline as applycommandline
@@ -313,8 +313,8 @@ def initialise(splash, namespace, callback):
     :arg callback:  Function which is called when initialisation is done.
     """
 
-    import                       props
     import fsl.utils.settings as fslsettings
+    import fsleyes_props      as props
     import fsleyes.gl         as fslgl
     import fsleyes.colourmaps as colourmaps
 
@@ -465,10 +465,10 @@ def makeDisplayContext(namespace, splash):
                 - the master :class:`.DisplayContext`
     """
 
-    import fsl.utils.status       as status
-    import fsleyes.overlay        as fsloverlay
-    import fsleyes.parseargs      as parseargs
-    import fsleyes.displaycontext as displaycontext
+    import fsleyes_widgets.utils.status as status
+    import fsleyes.overlay              as fsloverlay
+    import fsleyes.parseargs            as parseargs
+    import fsleyes.displaycontext       as displaycontext
 
     # Splash status update must be
     # performed on the main thread.
@@ -544,8 +544,8 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     :returns: the :class:`.FSLeyesFrame` that was created.
     """
 
-    import fsl.utils.status             as status
     import fsl.utils.async              as async
+    import fsleyes_widgets.utils.status as status
     import fsleyes.parseargs            as parseargs
 
     # The fsleyes.actions.frameactions module
@@ -684,7 +684,7 @@ def fslDirWarning(parent):
         fslplatform.fsldir = fsldir
         return
 
-    from fsl.utils.dialog import FSLDirDialog
+    from fsleyes_widgets.dialog import FSLDirDialog
 
     dlg = FSLDirDialog(parent, 'FSLeyes')
         

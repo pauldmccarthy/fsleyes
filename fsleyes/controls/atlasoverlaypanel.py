@@ -13,15 +13,15 @@ import logging
 
 import wx
 
-import pwidgets.elistbox                  as elistbox
-import pwidgets.placeholder_textctrl      as plctext
+import fsl.data.atlases                     as atlases
+import fsl.utils.async                      as async
+from   fsl.utils.platform import platform   as fslplatform
 
-import fsl.data.atlases                   as atlases
-import fsl.utils.status                   as status
-import fsl.utils.async                    as async
-from   fsl.utils.platform import platform as fslplatform
-import fsleyes.panel                      as fslpanel
-import fsleyes.strings                    as strings
+import fsleyes_widgets.elistbox             as elistbox
+import fsleyes_widgets.placeholder_textctrl as plctext
+import fsleyes_widgets.utils.status         as status
+import fsleyes.panel                        as fslpanel
+import fsleyes.strings                      as strings
 
 
 
@@ -50,11 +50,11 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
 
     The ``AtlasOverlayPanel`` has three main sections:
 
-      - The *atlas list* - a :class:`pwidgets.elistbox.EditableListBox` with
-        an entry, and an :class:`OverlayListWidget` for every available atlas.
-        The ``OverlayListWidget`` allows the user to turn on/off a summary
-        overlay image for the atlas (see the section on
-        :ref:`atlas panel overlays <atlas-panel-atlas-overlays>`).
+      - The *atlas list* - a :class:`fsleyes_widgets.elistbox.EditableListBox`
+        with an entry, and an :class:`OverlayListWidget` for every available
+        atlas.  The ``OverlayListWidget`` allows the user to turn on/off a
+        summary overlay image for the atlas (see the section on :ref:`atlas
+        panel overlays <atlas-panel-atlas-overlays>`).
 
       - The *region list* - an ``EditableListBox`` which contains one entry
         for every region in the atlas that is currently selected in the atlas

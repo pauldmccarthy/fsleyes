@@ -13,17 +13,15 @@ import logging
 
 import wx
 
-import props
+import fsl.data.image             as fslimage
+import fsl.utils.async            as async
 
-import pwidgets.widgetgrid    as widgetgrid
-import pwidgets.texttag       as texttag
-
-import fsl.data.image         as fslimage
-import fsl.utils.async        as async
-
-import fsleyes.panel          as fslpanel
-import fsleyes.strings        as strings
-import fsleyes.displaycontext as fsldisplay
+import fsleyes_props              as props
+import fsleyes_widgets.widgetgrid as widgetgrid
+import fsleyes_widgets.texttag    as texttag
+import fsleyes.panel              as fslpanel
+import fsleyes.strings            as strings
+import fsleyes.displaycontext     as fsldisplay
 
 
 log = logging.getLogger(__name__)

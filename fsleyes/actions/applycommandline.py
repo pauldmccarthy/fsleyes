@@ -18,13 +18,13 @@ import StringIO
 
 import wx
 
-import fsl.utils.dialog       as fsldlg
-import fsl.utils.status       as status
-import fsl.utils.async        as async
+import fsleyes_widgets.dialog       as fsldlg
+import fsleyes_widgets.utils.status as status
+import fsl.utils.async              as async
 
-import fsleyes.strings        as strings
-import fsleyes.parseargs      as parseargs
-from . import                    base
+import fsleyes.strings              as strings
+import fsleyes.parseargs            as parseargs
+from . import                          base
 
 
 class ApplyCommandLineAction(base.Action):

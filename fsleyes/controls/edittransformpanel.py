@@ -16,12 +16,13 @@ import wx
 
 import numpy as np
 
-import props
-
-import pwidgets.floatslider          as fslider
 import fsl.data.image                as fslimage
 import fsl.utils.async               as async
 import fsl.utils.transform           as transform
+
+import fsleyes_props                 as props
+import fsleyes_widgets.floatslider   as fslider
+
 import fsleyes.panel                 as fslpanel
 import fsleyes.displaycontext        as displaycontext
 import fsleyes.strings               as strings

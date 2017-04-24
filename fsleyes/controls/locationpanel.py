@@ -17,16 +17,16 @@ import wx.html as wxhtml
 
 import numpy as np
 
-import props
+import fsl.utils.transform            as transform
+import fsl.data.image                 as fslimage
+import fsl.data.constants             as constants
 
-import pwidgets.floatspin  as floatspin
+import fsleyes_props                  as props
+import fsleyes_widgets.floatspin      as floatspin
+import fsleyes_widgets.utils.typedict as td
 
-import fsl.utils.typedict  as td
-import fsl.utils.transform as transform
-import fsl.data.image      as fslimage
-import fsl.data.constants  as constants
-import fsleyes.panel       as fslpanel
-import fsleyes.strings     as strings
+import fsleyes.panel                  as fslpanel
+import fsleyes.strings                as strings
 
 
 log = logging.getLogger(__name__)

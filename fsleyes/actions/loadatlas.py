@@ -10,11 +10,11 @@ allows the user to load an atlas specification into FSLeyes. See the
 """
 
 
-import fsl.data.atlases as atlases
-import fsl.utils.status as status
+import fsl.data.atlases             as atlases
+import fsleyes_widgets.utils.status as status
 
-import fsleyes.strings as  strings
-from . import              base
+import fsleyes.strings as strings
+from . import             base
 
 
 class LoadAtlasAction(base.Action):

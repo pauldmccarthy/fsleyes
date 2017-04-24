@@ -15,10 +15,10 @@ import            logging
 import            textwrap
 import            argparse
 
-import props
+import fsleyes_props                       as props
+import fsleyes_widgets.utils.layout        as fsllayout
+import fsleyes_widgets.colourbarbitmap     as cbarbitmap
 
-import fsl.utils.layout                    as fsllayout
-import fsl.utils.colourbarbitmap           as cbarbitmap
 import                                        fsleyes
 import fsleyes.main                        as fsleyesmain
 import fsleyes.version                     as version
@@ -509,8 +509,8 @@ def buildColourBarBitmap(overlayList,
         cmapResolution=opts.cmapResolution)
 
     # The colourBarBitmap function returns a w*h*4
-    # array, but the fsl.utils.layout.Bitmap (see
-    # the next function) assumes a h*w*4 array
+    # array, but the fsleyes_widgets.utils.layout.Bitmap
+    # (see the next function) assumes a h*w*4 array
     cbarBmp = cbarBmp.transpose((1, 0, 2))
     
     return cbarBmp
@@ -524,7 +524,7 @@ def buildColourBarLayout(canvasLayout,
     creates a new layout which incorporates the given colour bar bitmap.
 
     :arg canvasLayout:  An object describing the canvas layout (see
-                        :mod:`fsl.utils.layout`)
+                        :mod:`fsleyes_widgets.utils.layout`)
     
     :arg cbarBmp:       A bitmap containing a rendered colour bar.
     

@@ -9,7 +9,7 @@
 slice/lightbox canvas display options.
 """
 
-import props
+import fsleyes_props as props
 
 
 class SliceCanvasOpts(props.HasProperties):

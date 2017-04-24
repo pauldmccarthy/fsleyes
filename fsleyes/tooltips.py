@@ -20,7 +20,7 @@ tooltip display. It is called by the :class:`.FSLeyesFrame` upon creation.
 """
 
 
-from fsl.utils.typedict import TypeDict
+from fsleyes_widgets.utils.typedict import TypeDict
 
 
 def initTooltips():

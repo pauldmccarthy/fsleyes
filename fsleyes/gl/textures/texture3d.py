@@ -19,9 +19,10 @@ import OpenGL.GL.ARB.texture_float        as arbtf
 import fsl.utils.notifier                 as notifier
 import fsl.utils.memoize                  as memoize
 import fsl.utils.async                    as async
-import fsl.utils.status                   as status
 import fsl.utils.transform                as transform
 from   fsl.utils.platform import platform as fslplatform
+import fsleyes_widgets.utils.status       as status
+
 from . import                                texture
 import fsleyes.strings                    as strings
 import fsleyes.gl.routines                as glroutines

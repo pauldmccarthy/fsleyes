@@ -16,11 +16,11 @@ import OpenGL.GL as gl
 
 import numpy as np
 
-import props
-
 import fsl.data.image                     as fslimage
 import fsl.utils.async                    as async
-import fsl.utils.status                   as status
+import fsleyes_widgets.utils.status       as status
+import fsleyes_props                      as props
+
 import fsleyes.strings                    as strings
 import fsleyes.displaycontext.canvasopts  as canvasopts
 import fsleyes.gl.routines                as glroutines

@@ -14,15 +14,15 @@ import logging
 
 import wx
 
-import props
+import fsleyes_props                  as props
+import fsleyes_widgets.utils.typedict as td
 
-import fsleyes.toolbar    as fsltoolbar
-import fsleyes.icons      as icons
-import fsleyes.tooltips   as fsltooltips
-import fsleyes.actions    as actions
-import fsleyes.colourmaps as fslcm
-import fsleyes.strings    as strings
-import fsl.utils.typedict as td
+import fsleyes.toolbar                as fsltoolbar
+import fsleyes.icons                  as icons
+import fsleyes.tooltips               as fsltooltips
+import fsleyes.actions                as actions
+import fsleyes.colourmaps             as fslcm
+import fsleyes.strings                as strings
 
 
 log = logging.getLogger(__name__)

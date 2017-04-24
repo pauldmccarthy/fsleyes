@@ -26,17 +26,19 @@ import            logging
 
 import wx
 
-import                           props
-import pwidgets.elistbox      as elistbox
+import fsl.utils.async              as async
+import fsl.utils.settings           as fslsettings
+import fsl.data.melodicimage        as fslmelimage
 
-import fsleyes.panel          as fslpanel
-import fsleyes.displaycontext as displayctx
-import fsleyes.colourmaps     as fslcmaps
-import fsleyes.strings        as strings
-import fsl.utils.async        as async
-import fsl.utils.status       as status
-import fsl.utils.settings     as fslsettings
-import fsl.data.melodicimage  as fslmelimage
+import fsleyes_props                as props
+import fsleyes_widgets.elistbox     as elistbox
+import fsleyes_widgets.utils.status as status
+
+import fsleyes.panel                as fslpanel
+import fsleyes.displaycontext       as displayctx
+import fsleyes.colourmaps           as fslcmaps
+import fsleyes.strings              as strings
+
 
 
 log = logging.getLogger(__name__)

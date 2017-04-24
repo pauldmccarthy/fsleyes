@@ -9,6 +9,7 @@ general display settings for displaying the overlays in a
 :class:`.OverlayList`.
 """
 
+
 import sys
 import logging
 import weakref
@@ -17,10 +18,9 @@ import contextlib
 import numpy        as np
 import numpy.linalg as npla
 
-import props
-
 import fsl.data.image      as fslimage
 import fsl.utils.transform as transform
+import fsleyes_props       as props
 
 
 log = logging.getLogger(__name__)

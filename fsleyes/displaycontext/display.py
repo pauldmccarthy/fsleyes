@@ -8,14 +8,15 @@
 which encapsulate overlay display settings.
 """
 
+
 import logging
 import inspect
 
-import props
+import fsl.data.image                 as fslimage
+import fsleyes_props                  as props
+import fsleyes_widgets.utils.typedict as td
 
-import fsl.utils.typedict as td
-import fsl.data.image     as fslimage
-import fsleyes.actions    as actions
+import fsleyes.actions                as actions
 
 
 log = logging.getLogger(__name__)

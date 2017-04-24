@@ -12,7 +12,7 @@ views.
 
 import wx
 
-import props
+import fsleyes_props          as props
 
 import fsleyes.panel          as fslpanel
 import fsleyes.tooltips       as fsltooltips

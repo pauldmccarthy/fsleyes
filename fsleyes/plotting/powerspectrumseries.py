@@ -23,11 +23,10 @@ import logging
 import numpy     as np
 import numpy.fft as fft
 
-import props
-
 import fsl.utils.async       as async
 import fsl.utils.cache       as cache
 import fsl.data.melodicimage as fslmelimage
+import fsleyes_props         as props
 from . import                   dataseries
 
 

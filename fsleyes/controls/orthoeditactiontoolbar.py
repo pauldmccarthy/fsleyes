@@ -9,12 +9,12 @@
 
 import wx
 
-import props
+import fsleyes_props    as props
 
-import fsleyes.actions     as actions
-import fsleyes.icons       as fslicons
-import fsleyes.toolbar     as fsltoolbar
-import fsleyes.tooltips    as fsltooltips
+import fsleyes.actions  as actions
+import fsleyes.icons    as fslicons
+import fsleyes.toolbar  as fsltoolbar
+import fsleyes.tooltips as fsltooltips
 
 
 class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):

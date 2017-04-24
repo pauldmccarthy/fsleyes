@@ -128,7 +128,7 @@ def openHelp(self, *args, **kwargs):
     url = op.join(
         fsleyes.assetDir, 'userdoc', 'html', 'index.html')
 
-    import fsl.utils.webpage as webpage
+    import fsleyes_widgets.utils.webpage as webpage
 
     # Show locally stored help files
     if op.exists(url):

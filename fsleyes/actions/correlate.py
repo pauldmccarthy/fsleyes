@@ -16,13 +16,12 @@ import logging
 import numpy                  as np
 import scipy.spatial.distance as spd
 
-import props
-
-import fsl.data.image     as fslimage
-import fsl.utils.async    as async
-import fsl.utils.status   as fslstatus
-import fsleyes.strings    as strings
-from . import                base
+import fsl.data.image               as fslimage
+import fsl.utils.async              as async
+import fsleyes_props                as props
+import fsleyes_widgets.utils.status as fslstatus
+import fsleyes.strings              as strings
+from . import                          base
 
 
 log = logging.getLogger(__name__)

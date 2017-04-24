@@ -32,15 +32,14 @@ import os.path as op
 
 import numpy   as np
 
-import fsl.utils.async     as async
-import fsl.utils.status    as status
-import fsl.utils.notifier  as notifier
-import fsl.utils.settings  as fslsettings
-
-import fsleyes.autodisplay as autodisplay
-import fsleyes.strings     as strings
-import fsleyes.overlay     as fsloverlay
-from . import                 base
+import fsl.utils.async              as async
+import fsl.utils.notifier           as notifier
+import fsl.utils.settings           as fslsettings
+import fsleyes_widgets.utils.status as status
+import fsleyes.autodisplay          as autodisplay
+import fsleyes.strings              as strings
+import fsleyes.overlay              as fsloverlay
+from . import                          base
 
 
 log = logging.getLogger(__name__)

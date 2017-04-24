@@ -7,7 +7,8 @@
 """This module defines keyboard shortcuts used throughout FSLeyes.
 """
 
-import fsl.utils.typedict as td
+
+import fsleyes_widgets.utils.typedict as td
 
 
 actions = td.TypeDict({

@@ -11,9 +11,9 @@ which renders a colour bar.
 
 import wx
 
-import props
-
 import fsl.data.image                     as fslimage
+import fsleyes_props                      as props
+
 import fsleyes.panel                      as fslpanel
 import fsleyes.displaycontext             as fsldc
 import fsleyes.displaycontext.volumeopts  as volumeopts

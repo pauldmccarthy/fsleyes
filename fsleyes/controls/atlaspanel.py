@@ -17,19 +17,20 @@ import          logging
 import numpy as np
 import          wx
 
-import                       props
-import pwidgets.notebook  as notebook
+import fsl.data.image               as fslimage
+import fsl.data.atlases             as atlases
+import fsl.data.constants           as constants
+import fsl.utils.async              as async
 
-import fsl.data.image     as fslimage
-import fsl.data.atlases   as atlases
-import fsl.data.constants as constants
-import fsl.utils.status   as status
-import fsl.utils.async    as async
-import fsleyes.panel      as fslpanel
-import fsleyes.strings    as strings
-from . import                atlasmanagementpanel
-from . import                atlasoverlaypanel
-from . import                atlasinfopanel 
+import fsleyes_props                as props
+import fsleyes_widgets.notebook     as notebook
+import fsleyes_widgets.utils.status as status
+
+import fsleyes.panel                as fslpanel
+import fsleyes.strings              as strings
+from . import                          atlasmanagementpanel
+from . import                          atlasoverlaypanel
+from . import                          atlasinfopanel 
 
 
 log = logging.getLogger(__name__)
@@ -37,9 +38,9 @@ log = logging.getLogger(__name__)
 
 class AtlasPanel(fslpanel.FSLeyesPanel):
     """An ``AtlasPanel`` is a :class:`.FSLeyesPanel` which allows the user to
-    view atlas information, and to browse through the atlases that come
-    shipped with FSL. The ``AtlasPanel`` interface is provided by some
-    sub-panels, which are displayed in a :class:`pwidgets.Notebook` panel. The
+    view atlas information, and to browse through the atlases that come shipped
+    with FSL. The ``AtlasPanel`` interface is provided by some sub-panels,
+    which are displayed in a :class:`fsleyes_widgets.Notebook` panel. The
     ``AtlasPanel`` itself provides a number of convenience methods that are
     used by these sub-panels:
 

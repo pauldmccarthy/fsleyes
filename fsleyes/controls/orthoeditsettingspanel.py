@@ -9,7 +9,7 @@ control panel which contains settings to manage an
 :class:`.OrthoEditProfile`. 
 """
 
-import                     props
+import fsleyes_props    as props
 import fsleyes.strings  as strings
 import fsleyes.tooltips as fsltooltips
 import fsleyes.panel    as fslpanel

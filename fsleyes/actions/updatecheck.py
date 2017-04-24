@@ -13,10 +13,10 @@ import logging
 
 from six.moves.urllib import request
 
-import fsl.utils.status as status
-import fsleyes.version  as version
-import fsleyes.strings  as strings
-from . import              base
+import fsleyes_widgets.utils.status as status
+import fsleyes.version              as version
+import fsleyes.strings              as strings
+from . import                          base
 
 
 log = logging.getLogger(__name__)

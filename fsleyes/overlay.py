@@ -75,9 +75,8 @@ import logging
 import weakref
 import os.path as op
 
-import props
-
 import fsl.data.image as fslimage
+import fsleyes_props  as props
 
 
 log = logging.getLogger(__name__)

@@ -349,25 +349,25 @@ def configLogging(namespace):
             log.setLevel(logging.MEMORY)
             log.handlers[0].addFilter(MemFilter())
             log.memory('Added filter for MEMORY messages')
-            logging.getLogger('props')   .setLevel(logging.WARNING)
-            logging.getLogger('pwidgets').setLevel(logging.WARNING)            
+            logging.getLogger('fsleyes_props')  .setLevel(logging.WARNING)
+            logging.getLogger('fsleyes_widgets').setLevel(logging.WARNING)
         
     if namespace.verbose == 1:
         log.setLevel(logging.DEBUG)
 
         # make some noisy things quiet
-        logging.getLogger('fsleyes.gl')   .setLevel(logging.MEMORY)
-        logging.getLogger('fsleyes.views').setLevel(logging.MEMORY)
-        logging.getLogger('props')        .setLevel(logging.WARNING)
-        logging.getLogger('pwidgets')     .setLevel(logging.WARNING)
+        logging.getLogger('fsleyes.gl')     .setLevel(logging.MEMORY)
+        logging.getLogger('fsleyes.views')  .setLevel(logging.MEMORY)
+        logging.getLogger('fsleyes_props')  .setLevel(logging.WARNING)
+        logging.getLogger('fsleyes_widgets').setLevel(logging.WARNING)
     elif namespace.verbose == 2:
         log.setLevel(logging.DEBUG)
-        logging.getLogger('props')   .setLevel(logging.WARNING)
-        logging.getLogger('pwidgets').setLevel(logging.WARNING)
+        logging.getLogger('fsleyes_props')  .setLevel(logging.WARNING)
+        logging.getLogger('fsleyes_widgets').setLevel(logging.WARNING)
     elif namespace.verbose == 3:
         log.setLevel(logging.DEBUG)
-        logging.getLogger('props')   .setLevel(logging.DEBUG)
-        logging.getLogger('pwidgets').setLevel(logging.DEBUG)
+        logging.getLogger('fsleyes_props')  .setLevel(logging.DEBUG)
+        logging.getLogger('fsleyes_widgets').setLevel(logging.DEBUG)
 
     for mod in namespace.noisy:
         logging.getLogger(mod).setLevel(logging.DEBUG)
@@ -376,6 +376,6 @@ def configLogging(namespace):
     # things if its logging level has been
     # set to DEBUG, so we import it now so
     # it can set itself up.
-    traceLogger = logging.getLogger('props.trace')
+    traceLogger = logging.getLogger('fsleyes_props.trace')
     if traceLogger.getEffectiveLevel() <= logging.DEBUG:
-        import props.trace
+        import fsleyes_props.trace

@@ -13,7 +13,7 @@ These functions may be used to save/restore the state of *FSLeyes*.
 import                  importlib
 from collections import OrderedDict
 
-import                  props
+import fsleyes_props as props
 
 from .           import perspectives
 

@@ -15,14 +15,14 @@ import wx
 
 import numpy as np
 
-import props
+import fsl.data.image                             as fslimage
+import fsl.data.melodicimage                      as fslmelimage
+import fsleyes_props                              as props
 
 import fsleyes.actions                            as actions
 import fsleyes.plotting.powerspectrumseries       as psseries
 import fsleyes.controls.powerspectrumcontrolpanel as pscontrol
 import fsleyes.controls.powerspectrumtoolbar      as powerspectrumtoolbar
-import fsl.data.image                             as fslimage
-import fsl.data.melodicimage                      as fslmelimage
 from . import                                        plotpanel
 
 

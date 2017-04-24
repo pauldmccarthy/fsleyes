@@ -13,8 +13,7 @@ import logging
 
 import wx
 
-import pwidgets.elistbox        as elistbox
-
+import fsleyes_widgets.elistbox  as elistbox
 import fsl.data.atlases          as atlases
 import fsleyes.panel             as fslpanel
 import fsleyes.actions.loadatlas as loadatlas

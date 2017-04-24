@@ -23,10 +23,10 @@ are use by the :class:`.TimeSeriesPanel`. The following classes are provided:
 
 import numpy as np
 
-import props
 
 import fsl.utils.cache    as cache
 import fsl.utils.async    as async
+import fsleyes_props      as props
 import fsleyes.strings    as strings
 import fsleyes.colourmaps as fslcm
 from . import                dataseries

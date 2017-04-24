@@ -109,10 +109,10 @@ import logging
 
 import numpy as np
 
-import props
-
 import fsl.data.image       as fslimage
 import fsl.utils.transform  as transform
+import fsleyes_props        as props
+
 import fsleyes.colourmaps   as fslcm
 from . import display       as fsldisplay
 from . import colourmapopts as cmapopts

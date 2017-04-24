@@ -18,12 +18,12 @@ import wx
 import numpy            as np
 import matplotlib.image as mplimg
 
-import props
-
 import fsl.utils.async                             as async
-import fsl.utils.status                            as status
 import fsl.utils.settings                          as fslsettings
 from   fsl.utils.platform  import platform         as fslplatform
+import fsleyes_props                               as props
+import fsleyes_widgets.utils.status                as status
+
 import fsleyes.strings                             as strings
 import fsleyes.actions                             as actions
 import fsleyes.colourmaps                          as colourmaps

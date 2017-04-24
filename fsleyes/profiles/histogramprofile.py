@@ -14,7 +14,7 @@ import logging
 import numpy              as np
 import matplotlib.patches as patches
 
-import                       props
+import fsleyes_props      as props
 
 import fsleyes.overlay    as fsloverlay
 from . import                plotprofile

@@ -14,11 +14,11 @@ import os.path   as op
 import              wx
 import OpenGL.GL as gl
 
-import fsl.utils.imagepanel                 as imagepanel
-from   fsl.utils.platform   import platform as fslplatform
-import fsleyes.strings                      as strings
-import fsleyes.splash                       as splash
-import fsleyes.version                      as version
+import fsleyes_widgets.imagepanel         as imagepanel
+from   fsl.utils.platform import platform as fslplatform
+import fsleyes.strings                    as strings
+import fsleyes.splash                     as splash
+import fsleyes.version                    as version
 
 
 class AboutDialog(wx.Dialog):

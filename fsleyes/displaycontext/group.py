@@ -8,14 +8,14 @@
 the display properties of one or more overlays to be linked.
 """
 
+
 import logging
 import copy
 
 import six
 
-import props
-
-import fsl.utils.typedict as td
+import fsleyes_props                  as props
+import fsleyes_widgets.utils.typedict as td
 
 
 log = logging.getLogger(__name__)

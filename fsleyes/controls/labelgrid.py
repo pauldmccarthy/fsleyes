@@ -14,14 +14,14 @@ import collections
 
 import wx
 
-import pwidgets.widgetgrid    as widgetgrid
-import pwidgets.texttag       as texttag
+import fsl.data.image             as fslimage
+import fsl.utils.async            as async
 
-import fsl.data.image         as fslimage
-import fsl.utils.async        as async
+import fsleyes_widgets.widgetgrid as widgetgrid
+import fsleyes_widgets.texttag    as texttag
 
-import fsleyes.panel          as fslpanel
-import fsleyes.strings        as strings
+import fsleyes.panel              as fslpanel
+import fsleyes.strings            as strings
 
 
 log = logging.getLogger(__name__)

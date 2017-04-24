@@ -9,7 +9,7 @@
 The :class:`ColourBarCanvas` contains logic to draw a colour bar (with
 labels), and then renders said colour bar as a texture using OpenGL.
 
-See the :mod:`~fsl.utils.colourbarbitmap` module for details on how
+See the :mod:`~fsleyes_widgets.colourbarbitmap` module for details on how
 the colour bar is created.
 """
 
@@ -18,10 +18,9 @@ import logging
 import OpenGL.GL as gl
 import numpy     as np
 
-import props
-
-import fsl.utils.colourbarbitmap as cbarbmp
-import fsleyes.gl.textures       as textures
+import fsleyes_props                         as props
+import fsleyes_widgets.utils.colourbarbitmap as cbarbmp
+import fsleyes.gl.textures                   as textures
 
 
 log = logging.getLogger(__name__)

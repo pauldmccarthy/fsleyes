@@ -12,12 +12,11 @@ import            logging
 import            os
 import os.path as op
 
-import fsl.utils.settings as fslsettings
-import fsl.utils.status   as status
-
-import fsleyes.strings    as strings
-import fsleyes.colourmaps as fslcmap
-from . import                base
+import fsl.utils.settings           as fslsettings
+import fsleyes_widgets.utils.status as status
+import fsleyes.strings              as strings
+import fsleyes.colourmaps           as fslcmap
+from . import                          base
 
 
 log = logging.getLogger(__name__)

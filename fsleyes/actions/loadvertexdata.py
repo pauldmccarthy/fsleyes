@@ -12,11 +12,10 @@ standalone function, :func:`loadVertexData` is also provided.
 
 import os.path          as op
 
-import fsl.data.mesh    as fslmesh
-import fsl.utils.status as status
-
-import fsleyes.strings  as strings
-from . import              base
+import fsl.data.mesh                as fslmesh
+import fsleyes_widgets.utils.status as status
+import fsleyes.strings              as strings
+from . import                          base
 
 
 class LoadVertexDataAction(base.Action):

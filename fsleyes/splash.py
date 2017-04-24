@@ -14,9 +14,9 @@ import os.path as op
 
 import wx
 
-import                         fsleyes
-import fsl.utils.imagepanel as imagepanel
-import fsleyes.strings      as strings
+import                               fsleyes
+import fsleyes_widgets.imagepanel as imagepanel
+import fsleyes.strings            as strings
 
 
 def getSplashFile():

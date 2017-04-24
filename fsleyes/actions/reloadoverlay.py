@@ -12,12 +12,13 @@ which reloads the currently selected overlay from disk.
 import logging
 import os.path as op
 
-import props
 
-import fsl.data.image   as fslimage
-import fsl.utils.status as status
-from . import              base
-from . import              removeoverlay
+
+import fsl.data.image               as fslimage
+import fsleyes_widgets.utils.status as status
+import fsleyes_props                as props
+from . import                          base
+from . import                          removeoverlay
 
 
 log = logging.getLogger(__name__)

@@ -17,7 +17,7 @@ import platform
 from collections import OrderedDict
 
 from   fsl.utils.platform import platform as fslplatform
-import fsl.utils.status                   as status
+import fsleyes_widgets.utils.status       as status
 import fsleyes.strings                    as strings
 import fsleyes.state                      as fslstate
 from . import                                base

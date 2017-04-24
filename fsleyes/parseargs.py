@@ -174,15 +174,15 @@ import                     collections
 import six.moves.urllib as urllib
 import numpy            as np
 
-import props
-
 import fsl.data.image                     as fslimage
-import fsl.utils.typedict                 as td
 import fsl.utils.async                    as async
-import fsl.utils.status                   as status
 from   fsl.utils.platform import platform as fslplatform
-from   .                  import overlay  as fsloverlay
 
+import fsleyes_props                      as props
+import fsleyes_widgets.utils.typedict     as td
+import fsleyes_widgets.utils.status       as status
+
+from . import overlay        as fsloverlay
 from . import displaycontext as fsldisplay
 from . import                   colourmaps 
 from . import                   autodisplay

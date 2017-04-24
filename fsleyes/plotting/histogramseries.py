@@ -12,11 +12,10 @@ import logging
 
 import numpy as np
 
-import props
-
-import fsl.utils.status as status
-import fsl.utils.async  as async
-from . import              dataseries
+import fsleyes_widgets.utils.status as status
+import fsl.utils.async              as async
+import fsleyes_props                as props
+from . import                          dataseries
 
 
 log = logging.getLogger(__name__)

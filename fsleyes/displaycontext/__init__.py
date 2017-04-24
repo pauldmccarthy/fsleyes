@@ -136,9 +136,10 @@ define *scene* options:
 """
 
 
-import itertools          as it
-import fsl.utils.typedict as td
-import fsl.data.constants as constants
+import itertools as it
+
+import fsleyes_widgets.utils.typedict as td
+import fsl.data.constants             as constants
 
 from .               import display
 from .displaycontext import DisplayContext

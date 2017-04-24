@@ -9,7 +9,7 @@ control* panel which allows a :class:`.HistogramPanel` to be configured.
 """
 
 
-import                     props
+import fsleyes_props    as props
 
 import fsleyes.tooltips as fsltooltips
 import fsleyes.strings  as strings

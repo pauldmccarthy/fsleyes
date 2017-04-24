@@ -12,9 +12,9 @@ vector images.
 
 import copy
 
-import props
-
+import fsleyes_props  as props
 import fsl.data.image as fslimage
+
 from . import            volumeopts
 
 

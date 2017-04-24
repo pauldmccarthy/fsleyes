@@ -52,15 +52,15 @@ import six
 import                   wx
 import wx.lib.agw.aui as wxaui
 
-import                         props
-import pwidgets.widgetlist  as widgetlist
-import pwidgets.floatspin   as floatspin
-import pwidgets.floatslider as floatslider
-import pwidgets.rangeslider as rangeslider
+from   fsl.utils.platform import platform as fslplatform
+import fsleyes_props                      as props
+import fsleyes_widgets.widgetlist         as widgetlist
+import fsleyes_widgets.floatspin          as floatspin
+import fsleyes_widgets.floatslider        as floatslider
+import fsleyes_widgets.rangeslider        as rangeslider
 
-from fsl.utils.platform import platform as fslplatform
-from .                  import             actions
-from .                  import             displaycontext
+from . import                                actions
+from . import                                displaycontext
 
 
 log = logging.getLogger(__name__)
@@ -383,7 +383,7 @@ class FSLeyesPanel(six.with_metaclass(FSLeyesPanelMeta,
 
 class FSLeyesSettingsPanel(FSLeyesPanel):
     """The ``FSLeyesSettingsPanel`` is a convenience class for *FSLeyes*
-    control panels which use a :class:`pwidgets.WidgetList` to display a
+    control panels which use a :class:`fsleyes_widgets.WidgetList` to display a
     collection of controls for the user.  When displayed as a dialog/floating
     frame, the ``FSLeyesSettingsPanel`` will automatically resize itself to
     fit its contents. See the :class:`.CanvasSettingsPanel` for an example.
@@ -411,8 +411,8 @@ class FSLeyesSettingsPanel(FSLeyesPanel):
 
 
     def getWidgetList(self):
-        """Returns the :class:`pwidgets.WidgetList` which should be used by
-        sub-classes to display content to the user.
+        """Returns the :class:`fsleyes_widgets.WidgetList` which should be used
+        by sub-classes to display content to the user.
         """
         return self.__widgets
 

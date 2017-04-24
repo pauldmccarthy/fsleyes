@@ -19,14 +19,14 @@ defined in this module, which do the real work:
 
 import logging
 
-import                       os
-import os.path            as op
+import                                 os
+import os.path                      as op
 
-import fsl.utils.status   as status
-import fsl.utils.settings as fslsettings
-import fsl.data.image     as fslimage
-import fsleyes.strings    as strings
-from . import                base
+import fsl.utils.settings           as fslsettings
+import fsl.data.image               as fslimage
+import fsleyes_widgets.utils.status as status
+import fsleyes.strings              as strings
+from . import                          base
 
 
 log = logging.getLogger(__name__)

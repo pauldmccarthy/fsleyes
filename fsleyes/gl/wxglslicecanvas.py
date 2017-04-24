@@ -14,9 +14,9 @@ import six
 import wx
 import wx.glcanvas as wxgl
 
-import props
+from   fsl.utils.platform import platform
+import fsleyes_props      as     props
 
-from   fsl.utils.platform import platform 
 import fsleyes.gl         as     fslgl
 from   .                  import slicecanvas
 

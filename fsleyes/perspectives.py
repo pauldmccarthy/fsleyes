@@ -43,9 +43,9 @@ import logging
 import textwrap
 import collections
 
-import fsl.utils.settings as fslsettings
-import fsl.utils.status   as status
-import fsleyes.strings    as strings
+import fsl.utils.settings           as fslsettings
+import fsleyes_widgets.utils.status as status
+import fsleyes.strings              as strings
 
 
 log = logging.getLogger(__name__)

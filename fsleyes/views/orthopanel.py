@@ -22,8 +22,9 @@ import logging
 import wx
 
 import fsl.data.image                          as fslimage
-import fsl.utils.layout                        as fsllayout
-import fsl.utils.dialog                        as fsldlg
+import fsleyes_widgets.dialog                  as fsldlg
+import fsleyes_widgets.utils.layout            as fsllayout
+
 import fsleyes.strings                         as strings
 import fsleyes.gl                              as fslgl
 import fsleyes.actions                         as actions
@@ -796,8 +797,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         # Distribute the available width/height
         # to each of the displayed canvases -
-        # fsl.utils.layout (a.k.a. fsllayout)
-        # provides functions to do this for us
+        # fsleyes_widgets.utils.layout (a.k.a.
+        # fsllayout) provides functions to do
+        # this for us
         canvasaxes = [(c.xax, c.yax) for c in canvases]
         axisLens   = [self._displayCtx.bounds.xlen,
                       self._displayCtx.bounds.ylen,

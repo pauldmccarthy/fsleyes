@@ -13,8 +13,7 @@ import logging
 import wx
 import wx.html                            as wxhtml
 
-import pwidgets.elistbox                  as elistbox
-
+import fsleyes_widgets.elistbox           as elistbox
 import fsleyes.panel                      as fslpanel
 import fsleyes.strings                    as strings
 import fsl.utils.async                    as async
@@ -39,7 +38,7 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
     
     The ``AtlasInfoPanel`` contains two main sections:
 
-      - A :class:`pwidgets.elistbox.EditableListBox` filled with
+      - A :class:`fsleyes_widgets.elistbox.EditableListBox` filled with
         :class:`AtlasListWidget` controls, one for each available atlas.
         The user is able to choose which atlases to show information for. 
 
