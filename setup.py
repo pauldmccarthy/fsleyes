@@ -218,8 +218,8 @@ class build_standalone(Command):
 
         sys.path.insert(0, basedir)
         sys.path.insert(0, op.join(basedir, 'build', 'fslpy'))
-        sys.path.insert(0, op.join(basedir, 'build', 'fsleyes_props'))
-        sys.path.insert(0, op.join(basedir, 'build', 'fsleyes_widgets'))
+        sys.path.insert(0, op.join(basedir, 'build', 'fsleyes-props'))
+        sys.path.insert(0, op.join(basedir, 'build', 'fsleyes-widgets'))
 
         try:
 
@@ -810,6 +810,11 @@ def get_fsleyes_deps():
                         if     i.startswith('git')]
     install_requires = [i.strip() for i in install_requires
                         if not i.startswith('git')]
+
+    # When fslpy, fsleyes-props and fsleyes-widgets
+    # are on pypi, we can remove this (and all of the
+    # git checkout logic as well)
+    install_requires = [r for r in install_requires if not r.startswith('fsl')]
 
     return install_requires, dependency_links
 
