@@ -170,7 +170,7 @@ class build_standalone(Command):
     description = 'Build a standalone FSLeyes application ' \
                   'using py2app or pyinstaller.'
     user_options = [
-        ('version=',        'v', 'FSLeyes version'),
+        ('version=',        'F', 'FSLeyes version'),
         ('props-version=',  'p', 'props version'),
         ('fslpy-version=',  'f', 'fslpy version'),
         ('skip-patch-code', 'c', 'Skip code patch step'),
@@ -372,7 +372,7 @@ class patch_code(Command):
     
     user_options = [
         ('enable-logging', 'l', 'Enable logging'),
-        ('version=',       'v', 'FSLeyes version number (overwrites '
+        ('version=',       'F', 'FSLeyes version number (overwrites '
                                  'that listed in source code)'),
     ]
 
@@ -408,8 +408,8 @@ class patch_code(Command):
         def patch_version():
 
             filename   = op.join(fsleyesdir, 'version.py')
-            version    = get_fsleyes_version()
             gitVersion = get_git_version()
+            version    = self.version
 
             def linepatch(line):
                 if line.startswith('__version__'):
@@ -644,9 +644,9 @@ def checkout(project, rev, todir):
     project_repos = {
         'fsleyes'      : 'git@git.fmrib.ox.ac.uk:paulmc/fsleyes.git',
         'fslpy'        : 'git@git.fmrib.ox.ac.uk:paulmc/fslpy.git',
-        'props'        : 'git@git.fmrib.ox.ac.uk:paulmc/props.git',
+        'props'        : 'git@git.fmrib.ox.ac.uk:paulmc/fsleyes-props.git',
         'indexed_gzip' : 'git@github.com:pauldmccarthy/indexed_gzip.git',
-    } 
+    }
 
     repo    = project_repos[project]
 
@@ -657,7 +657,9 @@ def checkout(project, rev, todir):
 
     commands = [
         'git init .',
-        'git pull {} {}'.format(repo, rev)
+        'git remote add origin {}'.format(repo),
+        'git fetch origin',
+        'git checkout {}'.format(rev)
     ]
 
     # indexed_gzip needs to be compiled
