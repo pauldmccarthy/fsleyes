@@ -170,7 +170,7 @@ class build_standalone(Command):
     description = 'Build a standalone FSLeyes application ' \
                   'using py2app or pyinstaller.'
     user_options = [
-        ('version=',                  'v', 'FSLeyes version'),
+        ('version=',                  'F', 'FSLeyes version'),
         ('fsleyes-props-version=',    'p', 'fsleyes-props version'),
         ('fsleyes-widgets-version=',  'w', 'fsleyes-widgets version'),
         ('fslpy-version=',            'f', 'fslpy version'),
@@ -401,7 +401,7 @@ class patch_code(Command):
 
     user_options = [
         ('enable-logging', 'l', 'Enable logging'),
-        ('version=',       'v', 'FSLeyes version number (overwrites '
+        ('version=',       'F', 'FSLeyes version number (overwrites '
                                  'that listed in source code)'),
     ]
 
@@ -438,8 +438,8 @@ class patch_code(Command):
         def patch_version():
 
             filename   = op.join(fsleyesdir, 'version.py')
-            version    = get_fsleyes_version()
             gitVersion = get_git_version()
+            version    = self.version
 
             def linepatch(line):
                 if line.startswith('__version__'):
@@ -694,9 +694,12 @@ def checkout(project, rev, todir):
 
     os.mkdir(todir)
 
+    # This should work with branches, tags, and revisions
     commands = [
         'git init .',
-        'git pull {} {}'.format(repo, rev)
+        'git remote add origin {}'.format(repo),
+        'git fetch origin',
+        'git checkout {}'.format(rev)
     ]
 
     # indexed_gzip needs to be compiled
