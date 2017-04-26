@@ -538,6 +538,10 @@ class py2app(orig_py2app):
         for c in commands:
             sp_call(['defaults'] + [c[0]] + [plist] + c[1:])
 
+        # The defaults command screws with Info.plist
+        # so make sure it has rw-r--r-- permissions
+        sp_call(['chmod', '644', plist])
+
 
 class pyinstaller(Command):
     description  = 'Builds a standalone FSLeyes Linux ' \
