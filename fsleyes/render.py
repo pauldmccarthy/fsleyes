@@ -15,23 +15,23 @@ import            logging
 import            textwrap
 import            argparse
 
-import fsleyes_props                       as props
-import fsleyes_widgets.utils.layout        as fsllayout
-import fsleyes_widgets.colourbarbitmap     as cbarbitmap
+import fsleyes_props                         as props
+import fsleyes_widgets.utils.layout          as fsllayout
+import fsleyes_widgets.utils.colourbarbitmap as cbarbitmap
 
-import                                        fsleyes
-import fsleyes.main                        as fsleyesmain
-import fsleyes.version                     as version
-import fsleyes.overlay                     as fsloverlay
-import fsleyes.colourmaps                  as fslcm
-import fsleyes.parseargs                   as parseargs
-import fsleyes.displaycontext              as displaycontext
-import fsleyes.displaycontext.orthoopts    as orthoopts
-import fsleyes.displaycontext.lightboxopts as lightboxopts
-import fsleyes.gl                          as fslgl
-import fsleyes.gl.ortholabels              as ortholabels
-import fsleyes.gl.offscreenslicecanvas     as slicecanvas
-import fsleyes.gl.offscreenlightboxcanvas  as lightboxcanvas
+import                                          fsleyes
+import fsleyes.main                          as fsleyesmain
+import fsleyes.version                       as version
+import fsleyes.overlay                       as fsloverlay
+import fsleyes.colourmaps                    as fslcm
+import fsleyes.parseargs                     as parseargs
+import fsleyes.displaycontext                as displaycontext
+import fsleyes.displaycontext.orthoopts      as orthoopts
+import fsleyes.displaycontext.lightboxopts   as lightboxopts
+import fsleyes.gl                            as fslgl
+import fsleyes.gl.ortholabels                as ortholabels
+import fsleyes.gl.offscreenslicecanvas       as slicecanvas
+import fsleyes.gl.offscreenlightboxcanvas    as lightboxcanvas
 
 
 log = logging.getLogger(__name__)
@@ -54,13 +54,13 @@ def main(args=None):
 
     # Initialise OpenGL
     fslgl.getGLContext(offscreen=True, createApp=True)
-    fslgl.bootstrap() 
+    fslgl.bootstrap()
 
-    # Initialise FSLeyes and colour 
+    # Initialise FSLeyes and colour
     # maps, and implement hacks
     fsleyes.initialise()
     fsleyesmain.hacksAndWorkarounds()
-    
+
     fslcm.init()
 
     # Parse arguments, and
@@ -77,7 +77,7 @@ def main(args=None):
     bitmap = render(namespace, overlayList, displayCtx, sceneOpts)
     mplimg.imsave(namespace.outfile, bitmap)
 
-    
+
 def parseArgs(argv):
     """Creates an argument parser which accepts options for off-screen
     rendering. Uses the :mod:`fsleyes.parseargs` module to peform the
@@ -104,7 +104,7 @@ def parseArgs(argv):
                             '--selectedOverlay',
                             metavar='IDX',
                             help='Index of selected overlay '
-                                 '(starting from 0)'), 
+                                 '(starting from 0)'),
 
     name        = 'render'
     prolog      = 'FSLeyes render version {}\n'.format(version.__version__)
@@ -115,7 +115,7 @@ def parseArgs(argv):
         Use the '--scene' option to choose between orthographic
         ('ortho') or lightbox ('lightbox') view.
         """)
-    
+
     namespace = parseargs.parseArgs(mainParser,
                                     argv,
                                     name,
@@ -136,7 +136,7 @@ def parseArgs(argv):
         log.info('Unknown scene specified  ("{}") - defaulting '
                  'to ortho'.format(namespace.scene))
         namespace.scene = 'ortho'
- 
+
     return namespace
 
 
@@ -164,7 +164,7 @@ def makeDisplayContext(namespace):
     # loaded.
     def load(ovl):
         log.info('Loading overlay {} ...'.format(ovl))
-        
+
     def error(ovl, error):
         log.info('Error loading overlay {}: '.format(ovl, error))
 
@@ -208,7 +208,7 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
     :arg displayCtx:  The :class:`.DisplayContext` instance.
     :arg sceneOpts:   The :class:`.SceneOpts` instance.
     """
-    
+
     # Calculate canvas and colour bar sizes
     # so that the entire scene will fit in
     # the width/height specified by the user
@@ -315,7 +315,7 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
 
 def createLightBoxCanvas(namespace,
                          width,
-                         height, 
+                         height,
                          overlayList,
                          displayCtx,
                          sceneOpts):
@@ -324,11 +324,11 @@ def createLightBoxCanvas(namespace,
     :arg namespace:   ``argparse.Namespace`` object.
     :arg width:       Available width in pixels.
     :arg height:      Available height in pixels.
-    :arg overlayList: The :class:`.OverlayList` instance. 
+    :arg overlayList: The :class:`.OverlayList` instance.
     :arg displayCtx:  The :class:`.DisplayContext` instance.
     :arg sceneOpts:   The :class:`.SceneOpts` instance.
     """
-    
+
     canvas = lightboxcanvas.OffScreenLightBoxCanvas(
         overlayList,
         displayCtx,
@@ -337,13 +337,13 @@ def createLightBoxCanvas(namespace,
         height=height)
 
     props.applyArguments(canvas, namespace)
-    
+
     return canvas
 
 
 def createOrthoCanvases(namespace,
                         width,
-                        height, 
+                        height,
                         overlayList,
                         displayCtx,
                         sceneOpts):
@@ -353,18 +353,18 @@ def createOrthoCanvases(namespace,
     :arg namespace:   ``argparse.Namespace`` object.
     :arg width:       Available width in pixels.
     :arg height:      Available height in pixels.
-    :arg overlayList: The :class:`.OverlayList` instance. 
+    :arg overlayList: The :class:`.OverlayList` instance.
     :arg displayCtx:  The :class:`.DisplayContext` instance.
-    :arg sceneOpts:   The :class:`.SceneOpts` instance. 
+    :arg sceneOpts:   The :class:`.SceneOpts` instance.
     """
 
     canvases = []
-    
+
     xc, yc, zc = parseargs.calcCanvasCentres(namespace,
                                              overlayList,
-                                             displayCtx) 
+                                             displayCtx)
 
-    # Build a list containing the horizontal 
+    # Build a list containing the horizontal
     # and vertical axes for each canvas
     canvasAxes = []
     zooms      = []
@@ -442,18 +442,18 @@ def buildColourBarBitmap(overlayList,
     ``None`` otherwise.
 
     :arg overlayList:   The :class:`.OverlayList`.
-    
+
     :arg displayCtx:    The :class:`.DisplayContext`.
-    
+
     :arg width:         Colour bar width in pixels.
-    
+
     :arg height:        Colour bar height in pixels.
-    
+
     :arg cbarLocation:  One of  ``'top'``, ``'bottom'``, ``'left'``, or
                         ``'right'``.
-    
+
     :arg cbarLabelSide: One of ``'top-left'`` or ``'bottom-right'``.
-    
+
     :arg bgColour:      RGBA background colour.
     """
 
@@ -465,10 +465,10 @@ def buildColourBarBitmap(overlayList,
     # have a display range (when they exist).
     if not isinstance(opts, displaycontext.VolumeOpts):
         return None
-    
+
     if   cbarLocation in ('top', 'bottom'): orient = 'horizontal'
     elif cbarLocation in ('left', 'right'): orient = 'vertical'
-    
+
     if   cbarLabelSide == 'top-left':
         if orient == 'horizontal': labelSide = 'top'
         else:                      labelSide = 'left'
@@ -495,7 +495,7 @@ def buildColourBarBitmap(overlayList,
     cbarBmp = cbarbitmap.colourBarBitmap(
         cmap=opts.cmap,
         width=width,
-        height=height, 
+        height=height,
         negCmap=negCmap,
         invert=opts.invert,
         ticks=ticks,
@@ -512,10 +512,10 @@ def buildColourBarBitmap(overlayList,
     # array, but the fsleyes_widgets.utils.layout.Bitmap
     # (see the next function) assumes a h*w*4 array
     cbarBmp = cbarBmp.transpose((1, 0, 2))
-    
+
     return cbarBmp
 
- 
+
 def buildColourBarLayout(canvasLayout,
                          cbarBmp,
                          cbarLocation,
@@ -525,11 +525,11 @@ def buildColourBarLayout(canvasLayout,
 
     :arg canvasLayout:  An object describing the canvas layout (see
                         :mod:`fsleyes_widgets.utils.layout`)
-    
+
     :arg cbarBmp:       A bitmap containing a rendered colour bar.
-    
+
     :arg cbarLocation:  Colour bar location (see :func:`buildColourBarBitmap`).
-    
+
     :arg cbarLabelSide: Colour bar label side (see
                         :func:`buildColourBarBitmap`).
     """
@@ -548,18 +548,18 @@ def adjustSizeForColourBar(width, height, showColourBar, colourBarLocation):
     colour bar if it is enabled.
 
     :arg width:             Desired width in pixels
-    
+
     :arg height:            Desired height in pixels
-    
+
     :arg showColourBar:     ``True`` if a colour bar is to be shown, ``False``
                             otherwise.
-    
+
     :arg colourBarLocation: Colour bar location (see
                             :func:`buildColourBarBitmap`).
-    
+
     :returns:               Two tuples - the first tuple contains the
-                            ``(width, height)`` of the available canvas space, 
-                            and the second contains the ``(width, height)`` of 
+                            ``(width, height)`` of the available canvas space,
+                            and the second contains the ``(width, height)`` of
                             the colour bar.
     """
 
@@ -590,22 +590,22 @@ def calculateOrthoCanvasSizes(overlayList,
     orthographic layout.
 
     :arg overlayList: The :class:`.OverlayList`.
-    
+
     :arg displayCtx:  The :class:`.DisplayContext`.
-    
+
     :arg width:       Available width in pixels.
-    
+
     :arg height:      Available height in pixels.
-    
+
     :arg canvasAxes:  A sequence of ``(xax, yax)`` indices, one for each
                       bitmap in ``canvasBmps``.
-    
+
     :arg layout:      Either ``'horizontal'``, ``'vertical'``, or ``'grid'``,
                       describing the canvas layout.
 
-    :returns:         A list of ``(width, height)`` tuples, one for each 
-                      canvas, each specifying the canvas width and height in 
-                      pixels. 
+    :returns:         A list of ``(width, height)`` tuples, one for each
+                      canvas, each specifying the canvas width and height in
+                      pixels.
     """
 
     bounds   = displayCtx.bounds

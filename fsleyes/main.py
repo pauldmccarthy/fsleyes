@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the entry point to *FSLeyes*, the FSL image viewer.  
+"""This module provides the entry point to *FSLeyes*, the FSL image viewer.
 
 See the :mod:`fsleyes` package documentation for more details on ``fsleyes``.
 
@@ -51,7 +51,7 @@ class FSLeyesApp(wx.App):
         self.__displayCtx  = None
 
         wx.App.__init__(self, *args, **kwargs)
-        
+
         self.SetAppName('FSLeyes')
 
 
@@ -125,14 +125,14 @@ class FSLeyesApp(wx.App):
         loadoverlay.loadOverlays(
             filenames,
             onLoad=onLoad,
-            inmem=self.__displayCtx.loadInMemory) 
+            inmem=self.__displayCtx.loadInMemory)
 
 
 def main(args=None):
     """*FSLeyes* entry point. Shows a :class:`.FSLeyesSplash` screen, parses
     command line arguments, and shows a :class:`.FSLeyesFrame`.
     """
-    
+
     if args is None:
         args = sys.argv[1:]
 
@@ -156,7 +156,7 @@ def main(args=None):
     # user is asking for the software
     # version or command line help.
     splash = fslsplash.FSLeyesSplash(None)
- 
+
     if (len(args) > 0) and (args[0] in ('-V',
                                         '-h',
                                         '-fh',
@@ -167,14 +167,14 @@ def main(args=None):
 
     # We are going do all processing on the
     # wx.MainLoop, so the GUI can be shown
-    # as soon as possible, and because it is 
+    # as soon as possible, and because it is
     # difficult to force immediate GUI
     # refreshes when not running on the main
     # loop - this is important for FSLeyes,
     # which displays status updates to the
     # user while it is loading overlays and
     # setting up the interface.
-    # 
+    #
     # All of the work is defined in a series
     # of functions, which are chained together
     # via ugly callbacks, but which are
@@ -198,7 +198,7 @@ def main(args=None):
             namespace[0] = parseArgs(args)
 
         # But the wx.App.MainLoop eats SystemExit
-        # exceptions for unknown reasons, and 
+        # exceptions for unknown reasons, and
         # and causes the application to exit
         # immediately. This makes testing FSLeyes
         # (e.g. code coverage) impossible. So I'm
@@ -211,7 +211,7 @@ def main(args=None):
         # See FSLeyesSplash.Show
         # for horribleness.
         splash.Show()
-        
+
         # Configure logging (this has to be done
         # after cli arguments have been parsed,
         # but before initialise is called).
@@ -235,7 +235,7 @@ def main(args=None):
         app.SetTopWindow(frame)
         frame.Show()
 
-        # Check that $FSLDIR is set, complain 
+        # Check that $FSLDIR is set, complain
         # to the user if it isn't
         if not namespace[0].skipfslcheck:
             wx.CallAfter(fslDirWarning, frame)
@@ -284,7 +284,7 @@ def hacksAndWorkarounds():
     #      with the pyinstaller '--onefile' option, as
     #      discussed in the above pyinstaller file.
     if fslplatform.frozen:
-       os.environ.pop('MPLCONFIGDIR', None)
+        os.environ.pop('MPLCONFIGDIR', None)
 
     # OSX sometimes sets the local environment
     # variables to non-standard values, which
@@ -343,7 +343,7 @@ def initialise(splash, namespace, callback):
         #
         # Because the cwd will default to:
         #   [install_dir/
-        
+
         if fslplatform.os == 'Darwin':
 
             fsleyesDir = op.normpath(op.join(fsleyesDir,
@@ -351,7 +351,7 @@ def initialise(splash, namespace, callback):
 
         # TODO does this work in linux?
         elif fslplatform.os == 'Linux':
-            fsleyesDir = op.normpath(op.join(fsleyesDir, '..')) 
+            fsleyesDir = op.normpath(op.join(fsleyesDir, '..'))
 
         if curDir == fsleyesDir:
             curDir = op.expanduser('~')
@@ -370,14 +370,14 @@ def initialise(splash, namespace, callback):
     def realCallback():
         fslgl.bootstrap(namespace.glversion)
         callback()
-        
+
     try:
         # Force the creation of a wx.glcanvas.GLContext object,
         # and initialise OpenGL version-specific module loads.
         # The splash screen is used as the parent of the dummy
         # canvas created by the gl.getWXGLContext function.
         fslgl.getGLContext(parent=splash, ready=realCallback)
-        
+
     except:
         log.error('Unable to initialise OpenGL!', exc_info=True)
         splash.Destroy()
@@ -390,18 +390,18 @@ def shutdown():
     """
 
     import fsl.utils.settings as fslsettings
-    
+
     # Clear the cached directory for loading/saving
     # files - when FSLeyes starts up, we want it to
     # default to the current directory.
     fslsettings.delete('loadSaveOverlayDir')
-    
+
 
 def parseArgs(argv):
     """Parses the given ``fsleyes`` command line arguments. See the
     :mod:`.parseargs` module for details on the ``fsleyes`` command
     line interface.
-    
+
     :arg argv: command line arguments for ``fsleyes``.
     """
 
@@ -417,7 +417,7 @@ def parseArgs(argv):
                         metavar='SCRIPTFILE',
                         help='Run custom FSLeyes script')
 
-    # We include the list of available 
+    # We include the list of available
     # perspectives in the help description
     persps      = perspectives.BUILT_IN_PERSPECTIVES.keys() + \
                   perspectives.getAllPerspectives()
@@ -425,9 +425,9 @@ def parseArgs(argv):
     prolog      = 'FSLeyes version {}\n'.format(version.__version__)
     description = textwrap.dedent("""\
         FSLeyes - the FSL image viewer.
-        
+
         Use the '--scene' option to load a saved perspective ({persps}).
-        
+
         If no '--scene' is specified, the previous layout is restored, unless
         a script is provided via the '--runscript' argument, in which case
         it is assumed that the script sets up the scene, so the previous
@@ -474,7 +474,7 @@ def makeDisplayContext(namespace, splash):
     # performed on the main thread.
     def splashStatus(msg):
         wx.CallAfter(splash.SetStatus, msg)
-        
+
     # Redirect status updates
     # to the splash frame
     status.setTarget(splashStatus)
@@ -489,7 +489,7 @@ def makeDisplayContext(namespace, splash):
     overlayList = fsloverlay.OverlayList()
     displayCtx  = displaycontext.DisplayContext(overlayList)
 
-    # While the DisplayContext may refer to 
+    # While the DisplayContext may refer to
     # multiple overlay groups, we are currently
     # using just one, allowing the user to specify
     # a set of overlays for which their display
@@ -499,8 +499,8 @@ def makeDisplayContext(namespace, splash):
 
     log.debug('Created overlay list and master DisplayContext ({})'.format(
         id(displayCtx)))
-    
-    # Load the images - the splash screen status will 
+
+    # Load the images - the splash screen status will
     # be updated with the currently loading overlay name.
     #
     # The applyOverlayArgs function gets called before
@@ -511,8 +511,8 @@ def makeDisplayContext(namespace, splash):
         displayCtx.loadInMemory = namespace.bigmem
     if namespace.autoDisplay is not None:
         displayCtx.autoDisplay = namespace.autoDisplay
-    
-    parseargs.applyOverlayArgs(namespace, overlayList, displayCtx) 
+
+    parseargs.applyOverlayArgs(namespace, overlayList, displayCtx)
 
     return overlayList, displayCtx
 
@@ -524,7 +524,7 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
 
      1. Creates the :class:`.FSLeyesFrame` the top-level frame for ``fsleyes``.
 
-     2. Configures the frame according to the command line arguments (e.g. 
+     2. Configures the frame according to the command line arguments (e.g.
         ortho or lightbox view).
 
      3. Destroys the splash screen that was created by the :func:`context`
@@ -533,9 +533,9 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     :arg namespace:   Parsed command line arguments, as returned by
                       :func:`parseArgs`.
 
-    :arg displayCtx:  The  :class:`.DisplayContext`, as created and returned 
+    :arg displayCtx:  The  :class:`.DisplayContext`, as created and returned
                       by :func:`makeDisplayContext`.
-    
+
     :arg overlayList: The :class:`.OverlayList`, as created and returned by
                       :func:`makeDisplayContext`.
 
@@ -554,31 +554,31 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     # imported immediately after fsleyes.frame.
     import fsleyes.frame                as fsleyesframe
     import fsleyes.actions.frameactions as frameactions
-    
+
     import fsleyes.displaycontext       as fsldisplay
     import fsleyes.perspectives         as perspectives
     import fsleyes.views.canvaspanel    as canvaspanel
     import fsleyes.views.orthopanel     as orthopanel
-    
+
     # Set up the frame scene (a.k.a. layout, perspective)
     # The scene argument can be:
-    # 
+    #
     #   - The name of a saved (or built-in) perspective
-    # 
+    #
     #   - None, in which case the default or previous
     #     layout is restored, unless a custom script
     #     has been provided.
-    script = namespace.runscript 
+    script = namespace.runscript
     scene  = namespace.scene
 
     # If a scene/perspective or custom script
     # has not been specified, the default
     # behaviour is to restore the previous
-    # frame layout. 
+    # frame layout.
     restore = (scene is None) and (script is None)
 
     status.update('Creating FSLeyes interface...')
-    
+
     frame = fsleyesframe.FSLeyesFrame(
         None, overlayList, displayCtx, restore, True)
 
@@ -659,7 +659,7 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     # already been loaded.
     if script is not None:
         async.idle(frame.runScript, script)
-            
+
     return frame
 
 
@@ -687,11 +687,11 @@ def fslDirWarning(parent):
     from fsleyes_widgets.dialog import FSLDirDialog
 
     dlg = FSLDirDialog(parent, 'FSLeyes')
-        
+
     if dlg.ShowModal() == wx.ID_OK:
-            
+
         fsldir = dlg.GetFSLDir()
-            
+
         log.debug('Setting $FSLDIR to {} (specified '
                   'by user)'.format(fsldir))
 

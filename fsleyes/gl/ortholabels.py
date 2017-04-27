@@ -17,8 +17,8 @@ import fsleyes.strings    as strings
 
 
 class OrthoLabels(object):
-    """The ``OrthoLabels`` class manages anatomical orientation labels which 
-    are displayed on a set of three :class:`.SliceCanvas` instances, one for 
+    """The ``OrthoLabels`` class manages anatomical orientation labels which
+    are displayed on a set of three :class:`.SliceCanvas` instances, one for
     each plane in the display coordinate system, typically within an
     :class:`.OrthoPanel`.
 
@@ -36,18 +36,14 @@ class OrthoLabels(object):
                  overlayList,
                  displayCtx,
                  orthoOpts,
-                 xcanvas,
-                 ycanvas,
-                 zcanvas):
+                 *canvases):
         """Create an ``OrthoLabels`` instance.
 
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg orthoOpts:   :class:`.OrthoOpts` instance which contains
                           display settings.
-        :arg xcanvas:     :class:`.SliceCanvas` for the X plane, or ``None``.
-        :arg ycanvas:     :class:`.SliceCanvas` for the Y plane, or ``None``.
-        :arg zcanvas:     :class:`.SliceCanvas` for the Z plane, or ``None``.
+        :arg canvases:    The :class:`.SliceCanvas` instances to be labelled.
         """
 
         self.__name        = '{}_{}'.format(type(self).__name__, id(self))
@@ -55,17 +51,11 @@ class OrthoLabels(object):
         self.__displayCtx  = displayCtx
         self.__overlayList = overlayList
 
-        # Any of the canvases may be None,
-        # so we store a list of the ones
-        # that are not None.
-        # 
         # labels is a list of dicts, one
         # for each canvas, containing Text
         # annotations to show anatomical
         # orientation
-        canvases  = [xcanvas, ycanvas, zcanvas]
-        canvases  = [c  for c in canvases if c is not None]
-        annots    = [{} for c in canvases]
+        annots = [{} for c in canvases]
 
         self.__canvases = canvases
         self.__annots   = annots
@@ -76,7 +66,7 @@ class OrthoLabels(object):
                 annot         = canvas.getAnnotations()
                 cannots[side] = annot.text('', 0, 0, width=2, hold=True)
 
-        # Initialise the display properties 
+        # Initialise the display properties
         # of each Text annotation
         for cannots in annots:
             cannots['left']  .halign = 'left'
@@ -109,7 +99,7 @@ class OrthoLabels(object):
         # that need to trigger a label
         # refresh.
         name = self.__name
- 
+
         # Make immediate so the label
         # annotations get updated before
         # a panel refresh occurs (where
@@ -133,7 +123,7 @@ class OrthoLabels(object):
         displayCtx .addListener('radioOrientation', **refreshArgs)
         overlayList.addListener('overlays', name, self.__overlayListChanged)
 
-        
+
     def destroy(self):
         """Must be called when this ``OrthoLabels`` instance is no longer
         needed.
@@ -151,7 +141,7 @@ class OrthoLabels(object):
         self.__orthoOpts   = None
         self.__canvases    = None
         self.__annots      = None
-        
+
         orthoOpts  .removeListener('showLabels',       name)
         orthoOpts  .removeListener('labelSize',        name)
         orthoOpts  .removeListener('labelColour',      name)
@@ -187,12 +177,12 @@ class OrthoLabels(object):
         on the attr:.DisplayOpts.bounds` property of every overlay in the list,
         so the labels are refreshed when any overlay bounds change.
         """
-        
+
         for i, ovl in enumerate(self.__overlayList):
 
             opts = self.__displayCtx.getOpts(ovl)
 
-            # Update anatomy labels when 
+            # Update anatomy labels when
             # overlay bounds change
             opts.addListener('bounds',
                              self.__name,
@@ -256,13 +246,13 @@ class OrthoLabels(object):
         # to do this for any background colour.
         if constants.ORIENT_UNKNOWN in orients and \
            bgColour in ((0, 0, 0, 1), (1, 1, 1, 1)):
-            fgColour = (1, 0, 0, 1) 
+            fgColour = (1, 0, 0, 1)
 
         # A list, with one entry for each canvas,
         # and with each entry of the form:
         #
         #   [[xlo, xhi], [ylo, yhi]]
-        # 
+        #
         # containing the low/high labels for the
         # horizontal (x) and vertical (y) canvas
         # axes.
@@ -270,7 +260,7 @@ class OrthoLabels(object):
         for canvas in canvases:
 
             cax = 'xyz'[canvas.zax]
-            
+
             if   cax == 'x': clabels = [[ylo, yhi], [zlo, zhi]]
             elif cax == 'y': clabels = [[xlo, xhi], [zlo, zhi]]
             elif cax == 'z': clabels = [[xlo, xhi], [ylo, yhi]]
@@ -295,7 +285,7 @@ class OrthoLabels(object):
             elif cax == 'z': show = sopts.showZCanvas
 
             for side in ['left', 'right', 'bottom', 'top']:
-                
+
                 cannots[side].enabled  = show
                 cannots[side].fontSize = fontSize
                 cannots[side].colour   = fgColour
@@ -304,7 +294,7 @@ class OrthoLabels(object):
                 cannots['left'] .angle = 90
                 cannots['right'].angle = 90
 
-        
+
     def __getLabels(self, refImage):
         """Generates some orientation labels to use for the given reference
         image (assumed to be a :class:`.Nifti` overlay, or ``None``).
@@ -319,15 +309,15 @@ class OrthoLabels(object):
         """
 
         if refImage is None:
-            return ('??????', [constants.ORIENT_UNKNOWN] * 3, False) 
-        
+            return ('??????', [constants.ORIENT_UNKNOWN] * 3, False)
+
         opts = self.__displayCtx.getOpts(refImage)
 
         vertOrient = False
         xorient    = None
         yorient    = None
         zorient    = None
-        
+
         # If we are displaying in voxels/scaled voxels,
         # and this image is not the current display
         # image, then we do not show anatomical
@@ -362,6 +352,6 @@ class OrthoLabels(object):
             yhi        = strings.anatomy['Nifti', 'highshort', yorient]
             zhi        = strings.anatomy['Nifti', 'highshort', zorient]
 
-        return ((xlo, ylo, zlo, xhi, yhi, zhi), 
+        return ((xlo, ylo, zlo, xhi, yhi, zhi),
                 (xorient, yorient, zorient),
                 vertOrient)
