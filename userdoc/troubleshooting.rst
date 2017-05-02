@@ -45,7 +45,7 @@ incorrectly - either badly oriented, or mis-aligned:
 
 .. image:: images/troubleshooting_misaligned.png
    :width: 80%
-   :align: center 
+   :align: center
 
 .. image:: images/troubleshooting_bad_orientation.png
    :width: 80%
@@ -179,6 +179,31 @@ this file to a different location, and then moving it back again, for example::
   ./Contents/MacOS/fsleyes
 
 
+Linux - FSLeyes does not start
+------------------------------
+
+
+Under linux, you might be presented with the following error when you try to
+start FSLeyes::
+
+
+  WARNING          __init__.py  596: create          - GLContext callback function raised NullFunctionError: Attempt to call an undefined function glutInit, check for bool(glutInit) before calling
+  Traceback (most recent call last):
+    File "fsleyes/gl/__init__.py", line 590, in create
+    File "fsleyes/main.py", line 371, in realCallback
+    File "fsleyes/gl/__init__.py", line 377, in bootstrap
+    File "site-packages/OpenGL/GLUT/special.py", line 333, in glutInit
+    File "site-packages/OpenGL/platform/baseplatform.py", line 407, in __call__
+  NullFunctionError: Attempt to call an undefined function glutInit, check for bool(glutInit) before calling
+
+
+This error is occurring because FSLeyes depends on some features provided by
+[GLUT](https://www.opengl.org/resources/libraries/glut/), which is not
+necessarily present on linux systems. You can avoid this error simply by
+installing [FreeGLUT](http://freeglut.sourceforge.net/), which should be
+available through your package manager.
+
+
 Running FSLeyes over SSH/X11 connections
 ----------------------------------------
 
@@ -206,7 +231,7 @@ XQuartz - FSLeyes doesn't start, and just shows an error
 Under XQuartz 2.7.9 and newer, FSLeyes may not start, and you may see the
 following error::
 
-  
+
   Gdk-ERROR **: The program 'fsleyes' received an X Window System error.
   This probably reflects a bug in the program.
   The error was 'BadValue (integer parameter out of range for operation)'.
@@ -224,7 +249,7 @@ run any OpenGL application, not just FSLeyes. Fortunately, there is a
 solution: if you are using XQuartz 2.7.10 or newer, run this command (locally,
 not within the SSH session)::
 
-  
+
   defaults write org.macosforge.xquartz.X11 enable_iglx -bool true
 
 
@@ -237,7 +262,7 @@ this section, add the following line::
 
   defaultserverargs="$defaultserverargs +iglx"
 
-  
+
 After making this change, restart XQuartz - FSLeyes should now start.
 
 
@@ -248,4 +273,3 @@ XQuartz - keyboard shortcuts don't work
 If you are using XQuartz, you may need to select the *Option keys send Alt_L
 and Alt_R* option in the XQuartz Preferences dialog before keyboard shortcuts
 will work in FSLeyes.
-
