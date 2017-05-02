@@ -684,7 +684,6 @@ def checkout(project, rev, todir):
         'fslpy'           : 'git@git.fmrib.ox.ac.uk:paulmc/fslpy.git',
         'fsleyes-props'   : 'git@git.fmrib.ox.ac.uk:paulmc/fsleyes-props.git',
         'fsleyes-widgets' : 'git@git.fmrib.ox.ac.uk:paulmc/fsleyes-widgets.git',
-        'indexed_gzip'    : 'git@github.com:pauldmccarthy/indexed_gzip.git',
     }
 
     repo    = project_repos[project]
@@ -701,10 +700,6 @@ def checkout(project, rev, todir):
         'git fetch origin',
         'git checkout {}'.format(rev)
     ]
-
-    # indexed_gzip needs to be compiled
-    if project == 'indexed_gzip':
-        commands.append('python setup.py  build_ext --inplace')
 
     for cmd in commands:
         if sp_call(cmd.split(), cwd=todir):
