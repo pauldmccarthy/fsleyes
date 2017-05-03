@@ -27,7 +27,7 @@ class OrthoViewProfile(profiles.Profile):
     :class:`.OrthoPanel` class.  It defines mouse/keyboard handlers which
     allow the user to navigate through the ``OrthoPanel`` display of the
     overlays in the :class:`.OverlayList`.
-    
+
     ``OrthoViewProfile`` defines the following *modes* (see the
     :class:`.Profile` class documentation):
 
@@ -38,13 +38,13 @@ class OrthoViewProfile(profiles.Profile):
 
     ``slice``  The user can change the current slice shown on a single
                canvas.
-    
+
     ``zoom``   The user can zoom in/out of a canvas with the mouse wheel, and
                draw a rectangle on a canvas in which to zoom. This is
                accomplished by updating the :attr:`.SliceCanvasOpts.zoom`
                property on mouse wheel changes, and displaying a
                :class:`~.annotations.Rect` annotation on left mouse drags.
-    
+
     ``pan``    The user can pan around a canvas (if the canvas is zoomed in).
                This is accomplished by calling the
                :meth:`.SliceCanvas.panDisplayBy` on left mouse drags.
@@ -63,7 +63,7 @@ class OrthoViewProfile(profiles.Profile):
        centreCursor
     """
 
-    
+
     def __init__(self,
                  viewPanel,
                  overlayList,
@@ -74,16 +74,16 @@ class OrthoViewProfile(profiles.Profile):
 
 
         .. note:: The :class:`.OrthoEditProfile` is a sub-class of the
-                  ``OrthoViewProfile``. It uses the ``extraModes`` argument 
+                  ``OrthoViewProfile``. It uses the ``extraModes`` argument
                   to set up its edit-related modes.
 
 
         :arg viewPanel:    An :class:`.OrthoPanel` instance.
-        
+
         :arg overlayList:  The :class:`.OverlayList` instance.
-        
+
         :arg displayCtx:   The :class:`.DisplayContext` instance.
-        
+
         :arg extraModes:   Extra modes to pass through to the
                            :class:`.Profile` constructor.
         """
@@ -120,7 +120,7 @@ class OrthoViewProfile(profiles.Profile):
 
         overlayList.addListener('overlays',
                                 self.__name,
-                                self.__selectedOverlayChanged) 
+                                self.__selectedOverlayChanged)
         displayCtx .addListener('selectedOverlay',
                                 self.__name,
                                 self.__selectedOverlayChanged)
@@ -149,7 +149,7 @@ class OrthoViewProfile(profiles.Profile):
         :attr:`.DisplayContext.selectedOverlay` changes. Enables/disables
         the action methods based on the newly selected overlay.
         """
-        
+
         ovl = self._displayCtx.getSelectedOverlay()
 
         self.resetDisplay     .enabled = ovl is not None
@@ -217,7 +217,7 @@ class OrthoViewProfile(profiles.Profile):
     # Navigate mode handlers
     ########################
 
-    
+
     def __offsetLocation(self, x, y, z):
         """Used by some ``nav`` mode handlers. Returns a sequence of three
         values, one per display space axis, which specify the amount by
@@ -239,7 +239,7 @@ class OrthoViewProfile(profiles.Profile):
         corresponding axis, and zero indicates that the location should stay
         the same along an axis.
         """
-        
+
         overlay = self._displayCtx.getReferenceImage(
             self._displayCtx.getSelectedOverlay())
 
@@ -271,16 +271,16 @@ class OrthoViewProfile(profiles.Profile):
             # code so that the adjusted location
             # is centered within the next/previous
             # voxel on the depth axis.
-            # 
+            #
             # The procedure is as follows:
-            # 
+            #
             #   1. Calculate the current display
             #      location in voxels. If we are
             #      displaying in id/pixdim space,
             #      we round the voxels to integers,
             #      otherwise we use floating point
             #      voxel coordinates.
-            #       
+            #
             #   2. Offset the voxel coordinates
             #      according to the x/y/z parameters. To
             #      do this we use the Image.axisMapping
@@ -310,7 +310,7 @@ class OrthoViewProfile(profiles.Profile):
 
     def _navModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Handles left mouse drags in ``nav`` mode.
-        
+
         Left mouse drags in ``nav`` mode update the
         :attr:`.DisplayContext.location` to follow the mouse location.
         """
@@ -322,7 +322,7 @@ class OrthoViewProfile(profiles.Profile):
 
         return True
 
-        
+
     def _navModeChar(self, ev, canvas, key):
         """Handles key presses in ``nav`` mode.
 
@@ -356,12 +356,12 @@ class OrthoViewProfile(profiles.Profile):
 
         return True
 
-        
+
     #####################
     # Slice mode handlers
     #####################
 
-    
+
     def _sliceModeMouseWheel(
             self, ev, canvas, wheel, mousePos=None, canvasPos=None):
         """Handles mouse wheel movement in ``slice`` mode.
@@ -402,14 +402,14 @@ class OrthoViewProfile(profiles.Profile):
 
         return self._sliceModeMouseWheel(ev, canvas, off)
 
-        
+
     ####################
     # Zoom mode handlers
     ####################
 
-        
+
     def _zoomModeMouseWheel(self,
-                            ev, 
+                            ev,
                             canvas,
                             wheel,
                             mousePos=None,
@@ -434,12 +434,12 @@ class OrthoViewProfile(profiles.Profile):
         def update():
             newZoom     = np.clip(canvas.zoom + wheel, minzoom, maxzoom)
             canvas.zoom = newZoom
-        
+
         async.idle(update, timeout=0.1)
 
         return True
 
-        
+
     def _zoomModeChar(self, ev, canvas, key):
         """Handles key presses in ``zoom`` mode.
 
@@ -458,7 +458,7 @@ class OrthoViewProfile(profiles.Profile):
 
         return self._zoomModeMouseWheel(None, canvas, zoom)
 
-        
+
     def _zoomModeRightMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Handles right mouse drags in ``zoom`` mode.
 
@@ -487,7 +487,7 @@ class OrthoViewProfile(profiles.Profile):
 
         return True
 
-        
+
     def _zoomModeRightMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Handles right mouse up events in ``zoom`` mode.
 
@@ -497,7 +497,7 @@ class OrthoViewProfile(profiles.Profile):
         """
 
         mouseDownPos, canvasDownPos = self.getMouseDownLocation()
-        
+
         if canvasPos     is None or \
            mouseDownPos  is None or \
            canvasDownPos is None:
@@ -515,13 +515,13 @@ class OrthoViewProfile(profiles.Profile):
         canvas.zoomTo(xlo, xhi, ylo, yhi)
 
         return True
-        
-        
+
+
     ###################
     # Pan mode handlers
     ###################
-    
-        
+
+
     def _panModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Handles left mouse drags in ``pan`` mode.
 
@@ -530,7 +530,7 @@ class OrthoViewProfile(profiles.Profile):
 
         If the target canvas is not zoomed in, this has no effect.
         """
-        
+
         mouseDownPos, canvasDownPos = self.getMouseDownLocation()
 
         if canvasPos     is None: return False
@@ -543,7 +543,7 @@ class OrthoViewProfile(profiles.Profile):
 
         return True
 
-    
+
     def _panModeChar(self, ev, canvas, key):
         """Handles key presses in ``pan`` mode.
 
@@ -553,7 +553,7 @@ class OrthoViewProfile(profiles.Profile):
 
         xoff = 0
         yoff = 0
-        
+
         if   key == wx.WXK_DOWN:  yoff = -2
         elif key == wx.WXK_UP:    yoff =  2
         elif key == wx.WXK_LEFT:  xoff = -2
@@ -575,14 +575,14 @@ class OrthoViewProfile(profiles.Profile):
 
 
     def _briconModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
-        """Handles left mouse down events in ``bricon`` mode. Stores the 
+        """Handles left mouse down events in ``bricon`` mode. Stores the
         current :attr:`.Display.brightness`/:attr:`.Display.contrast` for the
         currently selected overlay.
         """
 
         overlay = self._displayCtx.getSelectedOverlay()
 
-        if overlay is None: 
+        if overlay is None:
             return False
 
         display = self._displayCtx.getDisplay(overlay)
@@ -591,7 +591,7 @@ class OrthoViewProfile(profiles.Profile):
 
         return True
 
-    
+
     def _briconModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Handles left mouse up events in ``bricon`` mode. """
 
@@ -623,7 +623,7 @@ class OrthoViewProfile(profiles.Profile):
         # y: mousey
         # w: canvas width
         # h: canvas height
-        
+
         (ox, oy), _ = self.getMouseDownLocation()
         (ob, oc)    = self.__briconOrigin
 
@@ -642,7 +642,7 @@ class OrthoViewProfile(profiles.Profile):
         else:      b = ob + (100 - ob) * float(x - ox) / (w - ox)
 
         if y < oy: c = oc * (float(y) / oy)
-        else:      c = oc + (100 - oc) * float(y - oy) / (h - oy) 
+        else:      c = oc + (100 - oc) * float(y - oy) / (h - oy)
 
         log.debug('Adjusting bricon for {} '
                   '(brightness: {}, contrast: {})'.format(
@@ -651,9 +651,9 @@ class OrthoViewProfile(profiles.Profile):
         b = np.clip(b, 0, 100)
         c = np.clip(c, 0, 100)
 
-        # Bricon are disabled when 
-        # VolumeOpts instances are 
-        # using a negative colour map. 
+        # Bricon are disabled when
+        # VolumeOpts instances are
+        # using a negative colour map.
         if display.propertyIsEnabled('brightness'): display.brightness = b
         if display.propertyIsEnabled('contrast'):   display.contrast   = c
 

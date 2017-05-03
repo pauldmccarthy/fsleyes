@@ -40,14 +40,14 @@ class FSLeyesFrame(wx.Frame):
     """A ``FSLeyesFrame`` is a simple :class:`wx.Frame` which acts as a
     container for :class:`.ViewPanel` instances.
 
-    
+
     A :class:`wx.lib.agw.aui.AuiManager` is used so that ``ViewPanel`` panels
     can be dynamically laid out and reconfigured by the user.
 
-    
+
     **Menus**
 
-    
+
     The ``FSLeyesFrame`` has the following menus:
 
     ========== ==============================================================
@@ -62,7 +62,7 @@ class FSLeyesFrame(wx.Frame):
                that have been defined are added as menu items here.
     ========== ==============================================================
 
-    
+
     **Saving/restoring state**
 
 
@@ -75,7 +75,7 @@ class FSLeyesFrame(wx.Frame):
 
     **Programming interface**
 
-    
+
     The ``FSLeyesFrame`` provides the following methods for programmatically
     configuring the display:
 
@@ -116,7 +116,7 @@ class FSLeyesFrame(wx.Frame):
               keep file sizes down.
     """
 
-    
+
     def __init__(self,
                  parent,
                  overlayList,
@@ -126,17 +126,17 @@ class FSLeyesFrame(wx.Frame):
         """Create a ``FSLeyesFrame``.
 
         :arg parent:      The :mod:`wx` parent object.
-        
+
         :arg overlayList: The :class:`.OverlayList`.
-        
+
         :arg displayCtx:  The master :class:`.DisplayContext`.
-        
-        :arg restore:     Restores previous saved layout. If ``False``, no 
+
+        :arg restore:     Restores previous saved layout. If ``False``, no
                           view panels will be displayed.
 
-        :arg save:        Save current layout when closed. 
+        :arg save:        Save current layout when closed.
         """
-        
+
         wx.Frame.__init__(self, parent, title='FSLeyes')
 
         tooltips.initTooltips()
@@ -147,10 +147,10 @@ class FSLeyesFrame(wx.Frame):
 
         if fslplatform.wxPlatform == fslplatform.WX_GTK: font.SetPointSize(8)
         else:                                            font.SetPointSize(10)
-        
+
         font.SetWeight(wx.FONTWEIGHT_LIGHT)
         self.SetFont(font)
-        
+
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
         self.__name        = '{}_{}'.format(type(self).__name__, id(self))
@@ -160,7 +160,7 @@ class FSLeyesFrame(wx.Frame):
         # Even though the FSLeyesFrame does not allow
         # panels to be floated, I am specifying the
         # docking guide style for complicated reasons...
-        # 
+        #
         # Each ViewPanel contained in this FSLeyesFrame
         # has an AuiManager of its own; these child
         # AuiManagers do support floating of their
@@ -186,7 +186,7 @@ class FSLeyesFrame(wx.Frame):
         # and look terrible (probably related to the
         # AuiDockingGuide monkey-patch at the bottom of
         # viewpanel.py).
-        # 
+        #
         # This problem does not occur with the aero/
         # whidbey guides.
         self.__auiManager  = aui.AuiManager(
@@ -203,14 +203,14 @@ class FSLeyesFrame(wx.Frame):
         self.SetSizer(self.__sizer)
 
         # Re-direct status updates
-        # to the status bar. 
+        # to the status bar.
         def update(msg):
 
             # Do the update via wx.CallAfter to
             # make sure that the status bar is
             # updated on the main loop.
             def realUpdate():
-                
+
                 # This function might get called after
                 # the status bar has been destroyed,
                 # so we'll absorb any errors.
@@ -220,18 +220,18 @@ class FSLeyesFrame(wx.Frame):
                     self.__statusBar.Update()
                 except:
                     pass
-                
+
             wx.CallAfter(realUpdate)
         status.setTarget(update)
 
         # Keeping track of all open view panels
-        # 
+        #
         # The __viewPanels list contains all
         # [ViewPanel] instances
         #
         # The other dicts contain
         # {ViewPanel : something} mappings
-        # 
+        #
         self.__viewPanels      = []
         self.__viewPanelDCs    = {}
         self.__viewPanelMenus  = {}
@@ -256,7 +256,7 @@ class FSLeyesFrame(wx.Frame):
         #
         # See the __onViewPanelMenuItem method for details.
         self.__viewPanelShortcuts = {}
-        
+
         self.__makeMenuBar()
         self.__restoreState(restore)
 
@@ -278,21 +278,21 @@ class FSLeyesFrame(wx.Frame):
 
         self.Layout()
 
-        
+
     def getOverlayList(self):
         """Returns the :class:`.OverlayList` which contains the overlays
         being displayed by this ``FSLeyesFrame``.
         """
         return self.__overlayList
 
-    
+
     def getDisplayContext(self):
         """Returns the top-level :class:`.DisplayContext` associated with this
         ``FSLeyesFrame``.
         """
         return self.__displayCtx
 
-        
+
     def getViewPanels(self):
         """Returns a list of all :class:`.ViewPanel` instances that are
         currenlty displayed in this ``FSLeyesFrame``.
@@ -306,12 +306,12 @@ class FSLeyesFrame(wx.Frame):
         """
         return self.__viewPanelIDs[viewPanel]
 
-    
+
     def getViewPanelTitle(self, viewPanel):
         """Returns the ID that was assigned to the given :class:`.ViewPanel`.
         This is a sequentially increasing integer, starting from 1.
         """
-        return self.__viewPanelTitles[viewPanel] 
+        return self.__viewPanelTitles[viewPanel]
 
 
     def getViewPanelInfo(self, viewPanel):
@@ -333,9 +333,9 @@ class FSLeyesFrame(wx.Frame):
         """
 
         paneInfo = self.__auiManager.GetPane(viewPanel)
-        
+
         self.__onViewPanelClose(panel=viewPanel)
-        
+
         self.__auiManager.ClosePane(paneInfo)
         self.__auiManager.Update()
 
@@ -345,7 +345,7 @@ class FSLeyesFrame(wx.Frame):
         ``None`` if no ``ViewPanel`` has focus.
         """
         import fsleyes.views.viewpanel as viewpanel
-        
+
         focused = wx.Window.FindFocus()
 
         while focused is not None:
@@ -353,7 +353,7 @@ class FSLeyesFrame(wx.Frame):
             if isinstance(focused, viewpanel.ViewPanel):
                 return focused
 
-            focused = focused.GetParent() 
+            focused = focused.GetParent()
         return None
 
 
@@ -376,11 +376,11 @@ class FSLeyesFrame(wx.Frame):
                   So just use this method instead.
         """
         for vp in list(self.__viewPanels):
-            
+
             paneInfo = self.__auiManager.GetPane(vp)
             self.__onViewPanelClose(panel=vp, displaySync=False)
             self.__auiManager.ClosePane(paneInfo)
-            
+
         self.__auiManager.Update()
 
 
@@ -432,7 +432,7 @@ class FSLeyesFrame(wx.Frame):
         # hide the caption bar
         if panelId == 1:
             paneInfo.Centre().Dockable(False).CaptionVisible(False)
-            
+
         # But then re-show it when another
         # panel is added. The __viewPanels
         # dict is an OrderedDict, so the
@@ -462,7 +462,7 @@ class FSLeyesFrame(wx.Frame):
         self.__viewPanelDCs[     panel] = childDC
         self.__viewPanelIDs[     panel] = panelId
         self.__viewPanelTitles[  panel] = title
-        
+
         self.__auiManager.AddPane(panel, paneInfo)
         self.__addViewPanelMenu(  panel, title)
 
@@ -492,23 +492,23 @@ class FSLeyesFrame(wx.Frame):
             viewPanel.toggleTimeSeriesToolBar()
             viewPanel.toggleOverlayList()
             viewPanel.togglePlotList()
-            
+
         elif isinstance(viewPanel, HistogramPanel):
             viewPanel.toggleHistogramToolBar()
             viewPanel.toggleOverlayList()
             viewPanel.togglePlotList()
-            
+
         elif isinstance(viewPanel, PowerSpectrumPanel):
             viewPanel.togglePowerSpectrumToolBar()
             viewPanel.toggleOverlayList()
             viewPanel.togglePlotList()
-            
+
         elif isinstance(viewPanel, OrthoPanel):
             viewPanel.toggleDisplayToolBar()
             viewPanel.toggleOrthoToolBar()
             viewPanel.toggleOverlayList()
             viewPanel.toggleLocationPanel()
-            
+
         elif isinstance(viewPanel, LightBoxPanel):
             viewPanel.toggleDisplayToolBar()
             viewPanel.toggleLightBoxToolBar()
@@ -527,7 +527,7 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.actions.runscript import RunScriptAction
 
         rsa = RunScriptAction(self.__overlayList, self.__displayCtx, self)
-        
+
         rsa(script)
 
 
@@ -539,15 +539,15 @@ class FSLeyesFrame(wx.Frame):
         Called by the :meth:`__addViewPanelMenu` method to generate a menu
         for new :class:`.ViewPanel` instances, but can also be called for
         other purposes.
-        
+
         :arg menu:        The ``wx.Menu`` to be populated.
 
-        :arg target:      The object which has actions to be bound to the 
-                          menu items. 
-        
+        :arg target:      The object which has actions to be bound to the
+                          menu items.
+
         :arg actionNames: If provided, only menu items for the actions named
                           in this list will be created.
-        
+
         :arg ignoreFocus: Passed through to the :meth:`__onViewPanelMenuItem`
                           method for all created menu items.
         """
@@ -568,20 +568,20 @@ class FSLeyesFrame(wx.Frame):
                 itemType = wx.ITEM_CHECK
             else:
                 itemType = wx.ITEM_NORMAL
- 
+
             menuItem = menu.Append(wx.ID_ANY, title, kind=itemType)
 
             # If this action can be called from a
             # keyboard shortcut, we save it in a
             # dictionary for reasons explained
             # in the __onViewPanelMenuItem method.
-            # 
-            # We formalise the shortcut string to the 
+            #
+            # We formalise the shortcut string to the
             # wx representation, so it is consistent
             # regardless of whatever we have put in
             # the fsleyes.profiles.shortcuts module.
             if shortcut is not None:
-                
+
                 shortcut     = menuItem.GetAccel().ToString()
                 shortcutList = self.__viewPanelShortcuts.get(shortcut, {})
 
@@ -595,8 +595,8 @@ class FSLeyesFrame(wx.Frame):
             def wrapper(ev, vp=target, aname=actionName, sc=shortcut):
                 self.__onViewPanelMenuItem(vp, aname, sc, ignoreFocus)
 
-            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem, wrapper) 
-            
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem, wrapper)
+
         for actionName, actionObj in zip(actionNames, actionObjs):
 
             # If actionObj is None, this is a
@@ -623,7 +623,7 @@ class FSLeyesFrame(wx.Frame):
                 configureActionItem(currentMenu, name, obj)
 
 
-        
+
     def __addViewPanelMenu(self, panel, title):
         """Called by :meth:`addViewPanel`. Adds a menu item for the newly
         created :class:`.ViewPanel` instance.
@@ -667,24 +667,24 @@ class FSLeyesFrame(wx.Frame):
                               shortcut,
                               ignoreFocus=False):
         """Called when a menu item from a :class:`.ViewPanel` menu, or a menu
-        otherwise created via :meth:`createMenu`, is selected, either via menu 
-        selection, or from a bound keyboard shortcut. This callback is 
+        otherwise created via :meth:`createMenu`, is selected, either via menu
+        selection, or from a bound keyboard shortcut. This callback is
         configured in the :meth:`createMenu` method.
 
         :arg target:      The target instance for the action, most often a
                           :class:`.ViewPanel`.
-        
+
         :arg actionName:  The name of the :class:`.Action` which is associated
                           with the menu item.
-        
+
         :arg shortcut:    The keyboard shortcut code (see
                           ``wx.AcceleratorEntry.ToString``) associated with the
                           menu item, of ``None`` if there is no shortcut.
 
-        :arg ignoreFocus: If ``True``, the action is executed on the 
-                          ``target``. Otherwise (the default), the action 
-                          is executed on the currently focused 
-                          :class:`.ViewPanel`. 
+        :arg ignoreFocus: If ``True``, the action is executed on the
+                          ``target``. Otherwise (the default), the action
+                          is executed on the currently focused
+                          :class:`.ViewPanel`.
         """
 
         # Hacky way to see if this menu item
@@ -726,13 +726,13 @@ class FSLeyesFrame(wx.Frame):
         # actions, so we can easily figure out which
         # ViewPanel/action to execute based on the
         # keyboard shortcut.
-        
+
         viewPanel  = self.getFocusedViewPanel()
         actionName = self.__viewPanelShortcuts[shortcut].get(viewPanel, None)
 
         if actionName is not None:
             viewPanel.getAction(actionName)()
-    
+
 
     def __onViewPanelClose(self, ev=None, panel=None, displaySync=True):
         """Called when the user closes a :class:`.ViewPanel`. May also
@@ -751,7 +751,7 @@ class FSLeyesFrame(wx.Frame):
          4. If the ``displaySync`` parameter is ``True``, calls
             :meth:`__configDisplaySync`.
 
-        :arg ev:          ``wx`` event, passed when a :class:`.ViewPanel` is 
+        :arg ev:          ``wx`` event, passed when a :class:`.ViewPanel` is
                           closed by the user:
 
         :arg panel:       If called programmatically, the :class:`.ViewPanel`
@@ -765,7 +765,7 @@ class FSLeyesFrame(wx.Frame):
 
         if ev is not None:
             ev.Skip()
-            
+
             # Undocumented - the window associated with an
             # AuiPaneInfo is available as an attribute called
             # 'window'. Honestly, I don't know why there is
@@ -774,7 +774,7 @@ class FSLeyesFrame(wx.Frame):
             # the associated AuiPaneInfo object.
             paneInfo = ev.GetPane()
             panel    = paneInfo.window
-            
+
         elif panel is not None:
             paneInfo = self.__auiManager.GetPane(panel)
 
@@ -810,7 +810,7 @@ class FSLeyesFrame(wx.Frame):
         # pane, move another panel to the centre
         numPanels = len(self.__viewPanels)
         wasCentre = paneInfo.dock_direction_get() == aui.AUI_DOCK_CENTRE
-        
+
         if numPanels >= 1 and wasCentre:
             paneInfo = self.__auiManager.GetPane(self.__viewPanels[0])
             paneInfo.Centre()
@@ -842,7 +842,7 @@ class FSLeyesFrame(wx.Frame):
 
         canvasPanels = [vp for vp in self.__viewPanels
                         if isinstance(vp, canvaspanel.CanvasPanel)]
-        canvasCtxs   = [c.getDisplayContext() for c in canvasPanels] 
+        canvasCtxs   = [c.getDisplayContext() for c in canvasPanels]
         numCanvases  = len(canvasPanels)
 
         # We only care about
@@ -897,9 +897,9 @@ class FSLeyesFrame(wx.Frame):
             for display in displays:
                 opts = display.getDisplayOpts()
                 display.setBindingDirection(False)
-                opts   .setBindingDirection(False) 
-            
-            childDC.syncOverlayDisplay = True 
+                opts   .setBindingDirection(False)
+
+            childDC.syncOverlayDisplay = True
             childDC.syncToParent('overlayOrder')
 
             # Reset the binding directiona
@@ -924,20 +924,20 @@ class FSLeyesFrame(wx.Frame):
 
         askUnsaved = kwargs.pop('askUnsaved', True)
         askLayout  = kwargs.pop('askLayout',  self.__saveLayout)
-        
+
         self.__askUnsaved = askUnsaved
         self.__saveLayout = askLayout
 
         super(FSLeyesFrame, self).Close()
 
-            
+
     def __onClose(self, ev):
         """Called when the user closes this ``FSLeyesFrame``.
 
         Saves the frame position, size, and layout, so it may be preserved the
         next time it is opened. See the :meth:`_restoreState` method.
         """
-        
+
         ev.Skip()
 
         import fsleyes.actions.saveoverlay as saveoverlay
@@ -963,8 +963,8 @@ class FSLeyesFrame(wx.Frame):
 
             dlg.CentreOnParent()
             if dlg.ShowModal() == wx.ID_NO:
-                ev.Skip(False) 
-                ev.Veto() 
+                ev.Skip(False)
+                ev.Veto()
                 return
 
         if self.__saveLayout:
@@ -1000,7 +1000,7 @@ class FSLeyesFrame(wx.Frame):
 
                 save = result == wx.ID_YES
 
-                fslsettings.write('fsleyes.frame.saveLayout', save) 
+                fslsettings.write('fsleyes.frame.saveLayout', save)
                 fslsettings.write('fsleyes.frame.askToSaveLayout',
                                   not dlg.CheckBoxState())
 
@@ -1020,7 +1020,7 @@ class FSLeyesFrame(wx.Frame):
                 fslsettings.delete('fsleyes.frame.size')
                 fslsettings.delete('fsleyes.frame.position')
                 fslsettings.delete('fsleyes.frame.layout')
-                
+
         # It's nice to explicitly clean
         # up our FSLeyesPanels, otherwise
         # they'll probably complain
@@ -1056,7 +1056,7 @@ class FSLeyesFrame(wx.Frame):
 
             # Now make a bounding box containing the
             # space made up of all available displays.
-            # Get the bounding rectangles of each 
+            # Get the bounding rectangles of each
             # display, and change them from
             # (x, y, w, h) into (tlx, tly, brx, bry).
             displays  = [wx.Display(i)   for i in range(wx.Display.GetCount())]
@@ -1091,7 +1091,7 @@ class FSLeyesFrame(wx.Frame):
                          (frameRect[3] - frameRect[1]))
 
             # If the ratio of (frame-display intersection) to
-            # (saved frame position) is 'not decent', then 
+            # (saved frame position) is 'not decent', then
             # forget it, and use a default frame position/size
             ratio = intArea / float(frameArea)
             if ratio < 0.9:
@@ -1099,16 +1099,16 @@ class FSLeyesFrame(wx.Frame):
                 log.debug('Intersection of saved frame area with available '
                           'display area is too small ({}) - reverting to '
                           'default frame size/position'.format(ratio))
-                
+
                 size     = None
                 position = None
 
         if size is not None:
             log.debug('Restoring previous size: {}'.format(size))
             self.SetSize(size)
-            
+
         else:
-            
+
             # Default size is 90% of
             # the first display size
             size     = list(wx.Display(0).GetGeometry().GetSize())
@@ -1142,7 +1142,7 @@ class FSLeyesFrame(wx.Frame):
             if layout is None:
                 perspectives.loadPerspective(self, 'default')
 
-            
+
     def __makeMenuBar(self):
         """Constructs a bunch of menu items for this ``FSLeyesFrame``."""
 
@@ -1155,15 +1155,15 @@ class FSLeyesFrame(wx.Frame):
         # access to the built-in application menu.
         onOSX       = fslplatform.wxPlatform in (fslplatform.WX_MAC_CARBON,
                                                  fslplatform.WX_MAC_COCOA)
-        haveAppMenu = (onOSX and 
+        haveAppMenu = (onOSX and
                        fslplatform.wxFlavour == fslplatform.WX_PHOENIX)
 
         # On linux, we create a FSLeyes menu
-        if not onOSX: 
+        if not onOSX:
             fsleyesMenu = wx.Menu()
             menuBar.Append(fsleyesMenu, 'FSLeyes')
 
-        # On OSX/wxPhoenix, we can 
+        # On OSX/wxPhoenix, we can
         # get the built-in app menu
         elif haveAppMenu:
             fsleyesMenu = menuBar.OSXGetAppleMenu()
@@ -1176,7 +1176,7 @@ class FSLeyesFrame(wx.Frame):
         fileMenu        = wx.Menu()
         overlayMenu     = wx.Menu()
         viewMenu        = wx.Menu()
-        perspectiveMenu = wx.Menu() 
+        perspectiveMenu = wx.Menu()
         settingsMenu    = wx.Menu()
 
         self.__menuBar   = menuBar
@@ -1185,7 +1185,7 @@ class FSLeyesFrame(wx.Frame):
         menuBar.Append(fileMenu,     'File')
         menuBar.Append(overlayMenu,  'Overlay')
         menuBar.Append(viewMenu,     'View')
-        menuBar.Append(settingsMenu, 'Settings') 
+        menuBar.Append(settingsMenu, 'Settings')
 
         self.__fsleyesMenu  = fsleyesMenu
         self.__overlayMenu  = overlayMenu
@@ -1208,10 +1208,10 @@ class FSLeyesFrame(wx.Frame):
             self.__makeFSLeyesMenu(fileMenu)
 
         self.__makeOverlayMenu(overlayMenu)
-            
+
         self.__makeViewPanelMenu(viewMenu)
 
-        # Perspectives 
+        # Perspectives
         viewMenu.AppendSeparator()
         viewMenu.AppendSubMenu(perspectiveMenu, 'Perspectives')
         self.__makePerspectiveMenu()
@@ -1264,7 +1264,7 @@ class FSLeyesFrame(wx.Frame):
             item = menu.Append(wxid, title)
             action.bindToWidget(self, wx.EVT_MENU, item)
 
-        
+
     def __makeFileMenu(self, menu):
         """Called by :meth:`__makeMenuBar`. Creates the *File* menu. """
 
@@ -1279,7 +1279,7 @@ class FSLeyesFrame(wx.Frame):
                        LoadStandardAction,
                        LoadAtlasAction,
                        RunScriptAction]
- 
+
         for action in fileActions:
 
             if action == 'sep':
@@ -1291,7 +1291,7 @@ class FSLeyesFrame(wx.Frame):
 
             if shortcut is not None:
                 title = '{}\t{}'.format(title, shortcut)
-            
+
             menuItem  = menu.Append(wx.ID_ANY, title)
             actionObj = action(self.__overlayList, self.__displayCtx, self)
 
@@ -1326,7 +1326,7 @@ class FSLeyesFrame(wx.Frame):
         for i, p in enumerate(paths, start=1):
             menuItem = self.__recentPathsMenu.Append(i, p)
             self.Bind(wx.EVT_MENU, self.__onRecentPath, menuItem)
-            
+
 
     def __onRecentPath(self, ev):
         """Called when a recent path is selected from the
@@ -1335,16 +1335,16 @@ class FSLeyesFrame(wx.Frame):
         """
 
         import fsleyes.actions.loadoverlay as loadoverlay
-        
+
         path = self.__recentPathsMenu.GetLabel(ev.GetId())
 
         def onLoad(overlays):
-            
+
             if len(overlays) == 0:
                 return
 
             self.__overlayList.extend(overlays)
-        
+
             self.__displayCtx.selectedOverlay = \
                 self.__displayCtx.overlayOrder[-1]
 
@@ -1353,15 +1353,15 @@ class FSLeyesFrame(wx.Frame):
                     autodisplay.autoDisplay(overlay,
                                             self.__overlayList,
                                             self.__displayCtx)
-        
+
         loadoverlay.loadOverlays([path],
                                  onLoad=onLoad,
                                  inmem=self.__displayCtx.loadInMemory)
-        
+
 
     def __makeViewPanelMenu(self, menu):
         """Called by :meth:`__makeMenuBar`. Creates the view panel menu. """
-        
+
         # Shortcuts to open a new view panel
         vpActions = [self.addOrthoPanel,
                      self.addLightBoxPanel,
@@ -1369,7 +1369,7 @@ class FSLeyesFrame(wx.Frame):
                      self.addHistogramPanel,
                      self.addPowerSpectrumPanel,
                      self.addShellPanel]
-        
+
         for action in vpActions:
 
             shortcut = shortcuts.actions.get((self, action.__name__))
@@ -1413,7 +1413,7 @@ class FSLeyesFrame(wx.Frame):
                 title = '{}\t{}'.format(title, shortcut)
 
             menuItem = perspMenu.Append(wx.ID_ANY, title)
-            
+
             actionObj = LoadPerspectiveAction(self, persp)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
@@ -1422,7 +1422,7 @@ class FSLeyesFrame(wx.Frame):
 
         # Add a menu item to load each saved perspective
         for persp in saved:
-            
+
             menuItem  = perspMenu.Append(
                 wx.ID_ANY, strings.perspectives.get(persp, persp))
             actionObj = LoadPerspectiveAction(self, persp)
@@ -1435,7 +1435,7 @@ class FSLeyesFrame(wx.Frame):
             perspMenu.AppendSeparator()
 
         # TODO: Delete a single perspective?
-        #       Save to/load from file? 
+        #       Save to/load from file?
         perspActions = [SavePerspectiveAction,
                         ClearPerspectiveAction]
 
@@ -1443,7 +1443,7 @@ class FSLeyesFrame(wx.Frame):
 
             actionObj     = pa(self)
             perspMenuItem = perspMenu.Append(wx.ID_ANY, strings.actions[pa])
-            
+
             actionObj.bindToWidget(self, wx.EVT_MENU, perspMenuItem)
 
 
@@ -1497,7 +1497,7 @@ class FSLeyesFrame(wx.Frame):
                 shortcut  = shortcuts.actions.get((self, action))
                 actionObj = getattr(self, action)
 
-            # Action class 
+            # Action class
             else:
                 title     = strings.actions[  action]
                 shortcut  = shortcuts.actions.get(action)
@@ -1505,9 +1505,9 @@ class FSLeyesFrame(wx.Frame):
 
             if shortcut is not None:
                 title = '{}\t{}'.format(title, shortcut)
- 
+
             menuItem = menu.Append(wx.ID_ANY, title)
-            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem) 
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
 
     def __selectedOverlayChanged(self, *a):

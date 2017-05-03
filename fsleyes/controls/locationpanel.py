@@ -44,7 +44,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
 
 
     The ``LocationPanel`` contains two main sections:
-    
+
       - A collection of controls which show the current
         :attr:`.DisplayContext.location`
 
@@ -54,7 +54,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
 
 
     **NIFTI overlays**
-    
+
 
     The ``LocationPanel`` is primarily designed to work with :class:`.Image`
     overlays. If the :attr:`.DisplayContext.selectedOverlay` is an
@@ -62,7 +62,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
     :meth:`.DisplayOpts.getReferenceImage` method), the ``LocationPanel``
     will display the current :class:`.DisplayContext.location` in both the
     the voxel coordinates and world coordinates of the ``Image`` instance.
-    
+
 
     **Other overlays**
 
@@ -76,7 +76,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
 
     **Location updates**
 
-    
+
     The :data:`DISPLAYOPTS_BOUNDS` and :data:`DISPLAYOPTS_INFO` dictionaries
     contain lists of property names that the :class:`.LocationPanel` listens
     on for changes, so it knows when the location widgets, and information
@@ -86,22 +86,22 @@ class LocationPanel(fslpanel.FSLeyesPanel):
     updated.
     """
 
-    
+
     voxelLocation = props.Point(ndims=3, real=False)
     """If the currently selected overlay is a :class:`.Image` instance , this
     property tracks the current :attr:`.DisplayContext.location` in voxel
     coordinates.
     """
-    
-    
+
+
     worldLocation = props.Point(ndims=3, real=True)
     """For :class:`.Image` overlays, this property tracks the current
     :attr:`.DisplayContext.location` in the image world coordinates. For other
     overlay types, this property tracks the current location in display
     coordinates.
-    """ 
+    """
 
-        
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Creat a ``LocationPanel``.
 
@@ -140,7 +140,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         self.__worldLabel = wx.StaticText(
             self.__column1, label=strings.labels[self, 'worldLocation'])
         self.__volumeLabel = wx.StaticText(
-            self.__column1, label=strings.labels[self, 'volume']) 
+            self.__column1, label=strings.labels[self, 'volume'])
         self.__voxelLabel = wx.StaticText(
             self.__column2, label=strings.labels[self, 'voxelLocation'])
 
@@ -161,7 +161,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
             spin=True,
             spinWidth=7,
             showLimits=False,
-            mousewheel=True) 
+            mousewheel=True)
 
         self.__worldX = worldX
         self.__worldY = worldY
@@ -189,7 +189,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         self.__column2Sizer.Add(self.__voxelY,     flag=wx.EXPAND)
         self.__column2Sizer.Add(self.__voxelZ,     flag=wx.EXPAND)
         self.__column2Sizer.Add(self.__volume,     flag=wx.EXPAND)
-        
+
         self.__sizer.Add(self.__column1, flag=wx.EXPAND)
         self.__sizer.Add((5, -1))
         self.__sizer.Add(self.__column2, flag=wx.EXPAND)
@@ -199,7 +199,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         self.__column1.SetSizer(self.__column1Sizer)
         self.__column2.SetSizer(self.__column2Sizer)
         self          .SetSizer(self.__sizer)
-        
+
         self._overlayList.addListener('overlays',
                                       self._name,
                                       self.__selectedOverlayChanged)
@@ -208,7 +208,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
                                       self.__selectedOverlayChanged)
         self._displayCtx .addListener('overlayOrder',
                                       self._name,
-                                      self.__overlayOrderChanged) 
+                                      self.__overlayOrderChanged)
         self._displayCtx .addListener('location',
                                       self._name,
                                       self.__displayLocationChanged)
@@ -236,7 +236,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
                           self.__voxelY,
                           self.__voxelZ,
                           self.__volume))
-        
+
         self.Layout()
 
         self.__minSize = self.__sizer.GetMinSize()
@@ -256,7 +256,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
 
         fslpanel.FSLeyesPanel.destroy(self)
 
-        
+
     def GetMinSize(self):
         """Returns the minimum size for this ``LocationPanel``.
 
@@ -278,7 +278,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         """Calculates the minimum size that the world label (the label which
         shows the coordinate space of the currently selected overlay) needs.
         Called by the :meth:`__init__` method.
-        
+
         The world label displays different things depending on the currently
         selected overlay. But we want it to be a fixed size. So this method
         calculates the size of all possible values that the world label will
@@ -319,7 +319,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
 
         return width + 5, height + 5
 
-        
+
     def __selectedOverlayChanged(self, *a):
         """Called when the :attr:`.DisplayContext.selectedOverlay` or
         :class:`.OverlayList` is changed. Registered with the new overlay,
@@ -331,13 +331,13 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         if len(self._overlayList) == 0:
             self.__updateWidgets()
             self.__updateLocationInfo()
-            
+
         else:
             self.__registerOverlay()
             self.__updateWidgets()
             self.__displayLocationChanged()
 
-        
+
     def __registerOverlay(self):
         """Registers property listeners with the :class:`.Display` and
         :class:`.DisplayOpts` instances associated with the currently
@@ -375,7 +375,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         for n in boundPropNames:
             opts.addListener(n, self._name, self.__boundsOptsChanged)
         for n in infoPropNames:
-            opts.addListener(n, self._name, self.__infoOptsChanged) 
+            opts.addListener(n, self._name, self.__infoOptsChanged)
 
         # Enable the volume widget if the
         # overlay is a 4D image, and bind
@@ -384,7 +384,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         # instance
         is4D = isinstance(overlay, fslimage.Nifti) and \
                len(overlay.shape) >= 4             and \
-               overlay.shape[3] > 1 
+               overlay.shape[3] > 1
 
         if is4D:
             props.bindWidget(
@@ -398,15 +398,15 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         else:
             self.__volume.SetRange(0, 0)
             self.__volume.SetValue(0)
-            self.__volume.Disable() 
+            self.__volume.Disable()
 
-    
+
     def __deregisterOverlay(self):
         """De-registers property listeners with the :class:`.Display` and
         :class:`.DisplayOpts` instances associated with the previously
         registered overlay.
         """
-        
+
         opts    = self.__registeredOpts
         display = self.__registeredDisplay
         overlay = self.__registeredOverlay
@@ -427,12 +427,12 @@ class LocationPanel(fslpanel.FSLeyesPanel):
             display.removeListener('overlayType', self._name)
 
         for p in boundPropNames: opts.removeListener(p, self._name)
-        for p in infoPropNames:  opts.removeListener(p, self._name) 
+        for p in infoPropNames:  opts.removeListener(p, self._name)
 
         is4D      = isinstance(overlay, fslimage.Nifti) and \
                     len(overlay.shape) >= 4             and \
-                    overlay.shape[3] > 1 
- 
+                    overlay.shape[3] > 1
+
         if is4D:
             props.unbindWidget(self.__volume,
                                opts,
@@ -445,11 +445,11 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         with the currently selected overlay, and listed in the
         :data:`DISPLAYOPTS_BOUNDS` dictionary, changes. Refreshes the
         ``LocationPanel`` interface accordingly.
-        """ 
+        """
         self.__updateWidgets()
-        self.__displayLocationChanged() 
+        self.__displayLocationChanged()
 
-        
+
     def __infoOptsChanged(self, *a):
         """Called when a :class:`.DisplayOpts` property associated
         with the currently selected overlay, and listed in the
@@ -458,14 +458,14 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         """
         self.__displayLocationChanged()
 
-        
+
     def __overlayOrderChanged(self, *a):
         """Called when the :attr:`.DisplayContext.overlayOrder` changes,
         Refreshes the information panel.
         """
-        self.__displayLocationChanged() 
+        self.__displayLocationChanged()
 
-        
+
     def __updateWidgets(self):
         """Called by the :meth:`__selectedOverlayChanged` and
         :meth:`__displayOptsChanged` methods.  Enables/disables the
@@ -491,7 +491,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         ######################
 
         label = strings.labels[self, 'worldLocation']
-        
+
         if haveRef: label += strings.anatomy[refImage,
                                              'space',
                                              refImage.getXFormCode()]
@@ -538,7 +538,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
                 self.worldLocation.setLimits(i, wlo[i], whi[i])
                 widgets[i].SetIncrement(wstep[i])
 
-            
+
     def __displayLocationChanged(self, *a):
         """Called when the :attr:`.DisplayContext.location` changes.
         Propagates the change on to the :attr:`voxelLocation`
@@ -575,7 +575,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         change on to the :attr:`voxelLocation` and
         :attr:`.DisplayContext.location` properties.
         """
-        
+
         if len(self._overlayList) == 0:      return
         if self.__registeredOverlay is None: return
 
@@ -585,13 +585,13 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         self.__postPropagate()
         self.__updateLocationInfo()
 
-        
+
     def __voxelLocationChanged(self, *a):
         """Called when the :attr:`voxelLocation` changes.  Propagates the
         change on to the :attr:`worldLocation` and
         :attr:`.DisplayContext.location` properties.
-        """ 
-        
+        """
+
         if len(self._overlayList) == 0:      return
         if self.__registeredOverlay is None: return
 
@@ -601,7 +601,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         self.__postPropagate()
         self.__updateLocationInfo()
 
-            
+
     def __prePropagate(self):
         """Called by the :meth:`__displayLocationChanged`,
         :meth:`__worldLocationChanged` and :meth:`__voxelLocationChanged`
@@ -617,7 +617,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
 
         self.Freeze()
 
-        
+
     def __propagate(self, source, target):
         """Called by the :meth:`__displayLocationChanged`,
         :meth:`__worldLocationChanged` and :meth:`__voxelLocationChanged`
@@ -630,7 +630,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         ``voxel``   The :attr:`voxelLocation` property.
         ``world``   The :attr:`worldLocation` property.
         =========== ==============================================
-        """ 
+        """
 
         if   source == 'display': coords = self._displayCtx.location.xyz
         elif source == 'voxel':   coords = self.voxelLocation.xyz
@@ -653,8 +653,8 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         if   target == 'display': self._displayCtx.location.xyz = xformed
         elif target == 'voxel':   self.voxelLocation       .xyz = xformed
         elif target == 'world':   self.worldLocation       .xyz = xformed
-        
-    
+
+
     def __postPropagate(self):
         """Called by the :meth:`__displayLocationChanged`,
         :meth:`__worldLocationChanged` and :meth:`__voxelLocationChanged`
@@ -662,7 +662,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
 
         Re-enables the property listeners that were disabled by the
         :meth:`__postPropagate` method.
-        """ 
+        """
         self            .enableNotification('voxelLocation')
         self            .enableNotification('worldLocation')
         self._displayCtx.enableListener(    'location', self._name)
@@ -679,7 +679,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         """
 
         if len(self._overlayList) == 0 or \
-           self.__registeredOverlay is None: 
+           self.__registeredOverlay is None:
             self.__info.SetPage('')
             return
 
@@ -689,11 +689,11 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         overlays = reversed(self._displayCtx.getOrderedOverlays())
         selOvl   = self._displayCtx.getSelectedOverlay()
         lines    = []
-        
+
         for overlay in overlays:
 
             display = self._displayCtx.getDisplay(overlay)
-            
+
             if not display.enabled:
                 continue
 
@@ -711,7 +711,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
                         vloc = vloc + [opts.volume]
 
                     vloc = [int(v) for v in vloc]
-                    vval = overlay[tuple(vloc)] 
+                    vval = overlay[tuple(vloc)]
                     vloc = ' '.join(map(str, vloc))
 
                     if not np.isscalar(vval):
@@ -739,10 +739,10 @@ class LocationPanel(fslpanel.FSLeyesPanel):
                     info = colourFmt.format(info)
 
             lines.append(title)
-            
+
             if info is not None:
                 lines.append(info)
-                
+
         self.__info.SetPage('<br>'.join(lines))
         self.__info.Refresh()
 
@@ -761,7 +761,7 @@ listeners on the properties specified in this dictionary.
 
 DISPLAYOPTS_INFO = td.TypeDict({
     'NiftiOpts'  : ['volume'],
-}) 
+})
 """Different :class:`.DisplayOpts` types have different properties which
 affect the current overlay location information.  Therefore, when the current
 overlay changes the :meth:`__registerOverlay` method registers property
