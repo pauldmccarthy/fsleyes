@@ -8,8 +8,8 @@ PyOpenGL>=3.1.0,<4.0
 PyOpenGL-accelerate>=3.1.0,<4.0
 PyParsing>=2.1.1,<3.0
 scipy>=0.17.0,<1.0
-indexed_gzip>=0.3.2,<0.4
-wxPython==3.0.2.0
+indexed_gzip>=0.3.3,<0.4
+wxPython>=3.0.2.0,<=4.0.0a1
 fslpy>=1.0.0,<2.0
 fsleyes-props>=1.0.0,<2.0
 fsleyes-widgets>=0.0.1,<1.0
