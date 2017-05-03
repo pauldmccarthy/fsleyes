@@ -295,7 +295,7 @@ def isValidMapKey(key):
     lower case letters, numbers, underscores and hyphens.
     """ 
 
-    valid = string.lowercase + string.digits + '_-'
+    valid = string.ascii_lowercase + string.digits + '_-'
     return all([c in valid for c in key])
 
 

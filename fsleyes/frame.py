@@ -13,6 +13,8 @@ from __future__ import division
 
 import logging
 
+import six
+
 import wx
 import wx.lib.agw.aui                     as aui
 
@@ -1489,7 +1491,7 @@ class FSLeyesFrame(wx.Frame):
                 continue
 
             # Method on this FSLeyesFrame
-            if isinstance(action, basestring):
+            if isinstance(action, six.string_types):
 
                 title     = strings.actions[  self, action]
                 shortcut  = shortcuts.actions.get((self, action))

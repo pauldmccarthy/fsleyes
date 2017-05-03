@@ -419,8 +419,8 @@ def parseArgs(argv):
 
     # We include the list of available
     # perspectives in the help description
-    persps      = perspectives.BUILT_IN_PERSPECTIVES.keys() + \
-                  perspectives.getAllPerspectives()
+    persps      = list(perspectives.BUILT_IN_PERSPECTIVES.keys()) + \
+                  list(perspectives.getAllPerspectives())
     name        = 'fsleyes'
     prolog      = 'FSLeyes version {}\n'.format(version.__version__)
     description = textwrap.dedent("""\
