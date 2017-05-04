@@ -296,9 +296,12 @@ FSLeyes is capable of generating screenshots from the command line. This is
 useful, for example, if you need to generate a large number of PNG images for
 quality control purposes. Simply build a FSLeyes command line which generates
 the scene that you wish to view, and then tell FSLeyes to render the scene to
-a file. FSLeyes should also work on systems which do not have a display
-(e.g. cluster nodes), although in these environments FSLeyes assumes that
-the off-screen `MESA <http://mesa3d.org/>`_ OpenGL driver is installed.
+a file.
+
+
+FSLeyes should also work on systems which do not have a display (e.g. cluster
+nodes), via a tool such as `Xvfb
+<https://www.x.org/archive/X11R7.6/doc/man/man1/Xvfb.1.xhtml>`_..
 
 
 You can access the FSLeyes off-screen renderer by passing the word ``render``

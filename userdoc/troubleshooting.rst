@@ -204,8 +204,28 @@ installing [FreeGLUT](http://freeglut.sourceforge.net/), which should be
 available through your package manager.
 
 
-Running FSLeyes over SSH/X11 connections
-----------------------------------------
+Running FSLeyes remotely
+------------------------
+
+
+FSLeyes is capable of running on remote servers, over SSH/X11 connections, or
+from within VNC or other remote desktop tools. However, you may need to
+configure your environment before FSLeyes will work correctly.
+
+
+OpenGL 1.4 or newer is required (detected version: 1.2)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+FSLeyes requires OpenGL 1.4 or newer. In some remote desktop environments, the
+OpenGL version may be restricted. If you receive this error when trying to
+start FSLeyes, try the following:
+
+
+```
+unset LIBGL_ALWAYS_INDIRECT
+fsleyes
+```
 
 
 Options are missing!
