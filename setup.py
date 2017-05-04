@@ -509,6 +509,35 @@ class patch_code(Command):
         else:                   remove_logging()
 
 
+def find_library(name):
+
+    import ctypes.util as cutil
+
+    path = cutil.find_library(name)
+
+    if path is None:
+        raise RuntimeError('Library {} not found'.format(name))
+
+    # Under mac, find_library
+    # returns the full path
+    if platform == 'darwin':
+        return path
+
+    # Under linux, find_library
+    # just returns a file name.
+    searchDirs = ['/lib64/',
+                  '/lib/',
+                  '/usr/lib64/',
+                  '/usr/lib/']
+
+    for sd in searchDirs:
+        searchPath = op.join(sd, path)
+        if op.exists(searchPath):
+            return searchPath
+
+    raise RuntimeError('Library {} not found'.format(name))
+
+
 class py2app(orig_py2app):
     description = 'Builds a standalone FSLeyes OSX application using py2app'
 
@@ -601,19 +630,18 @@ class pyinstaller(Command):
             'scipy.linalg.cython_blas',
             'scipy.linalg.cython_lapack',
             'scipy.integrate',
+            'OpenGL_accelerate',
             'OpenGL.platform.osmesa',
-            'OpenGL_accelerate'
+            'OpenGL.GLUT'
         ]
 
         excludes = [
-            'matplotlib.backends.backend_agg',
-            'matplotlib.backends.backend_pdf',
-            'matplotlib.backends.backend_pgf',
-            'matplotlib.backends.backend_ps',
-            'matplotlib.backends.backend_svg',
-            'matplotlib.backends.backend_template',
             'IPython',
         ]
+
+        extrabins = ['glut', 'OSMesa']
+        extrabins = [find_library(b)  for b in extrabins]
+        extrabins = ['{}:.'.format(b) for b in extrabins]
 
         cmd = [
             'pyinstaller',
@@ -621,9 +649,14 @@ class pyinstaller(Command):
             '--icon={}'.format(iconfile),
             '--windowed',
             '--workpath={}'.format(builddir),
-            '--distpath={}'.format(distdir),
-            entrypt,
+            '--distpath={}'.format(distdir)
         ]
+
+        for h in hidden:    cmd += ['--hidden-import',  h]
+        for e in excludes:  cmd += ['--exclude-module', e]
+        for e in extrabins: cmd += ['--add-binary',     e]
+
+        cmd += [entrypt]
 
         env   = dict(os.environ)
         ppath = [
