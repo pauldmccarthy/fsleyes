@@ -525,10 +525,13 @@ def find_library(name):
 
     # Under linux, find_library
     # just returns a file name.
+    # Let's look for it in some
+    # likely locations.
     searchDirs = ['/lib64/',
                   '/lib/',
                   '/usr/lib64/',
-                  '/usr/lib/']
+                  '/usr/lib/',
+                  '/usr/lib/x86_64-linux-gnu']
 
     for sd in searchDirs:
         searchPath = op.join(sd, path)
