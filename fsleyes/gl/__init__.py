@@ -675,6 +675,7 @@ class GLContext(object):
         # remote desktop session. No idea why.
         try:
             self.__canvas = wxgl.GLCanvas(self.__parent, attribList=attribs)
+            self.__canvas.SetSize((0, 0))
 
         # Creating without attribute list works ok
         # though. This does mean that we don't have
@@ -682,8 +683,8 @@ class GLContext(object):
         # under these remote desktop environments.
         except:
             self.__canvas = wxgl.GLCanvas(self.__parent)
+            self.__canvas.SetSize((0, 0))
 
-        self.__canvas.SetSize((0, 0))
         self.__canvas.Show(True)
 
 

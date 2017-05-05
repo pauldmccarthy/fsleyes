@@ -950,7 +950,8 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
         data[:, :, :3] = rgb.reshape(height, width, 3)
 
         # OSX and SSh/X11 both have complications
-        if fslplatform.inSSHSession or fslplatform.os == 'Darwin':
+        inSSH = fslplatform.inSSHSession and not fslplatform.inVNCSession
+        if inSSH or fslplatform.os == 'Darwin':
             data = osxPatch(panel, data, bgColour)
         
         data[:, :,  3] = 255
