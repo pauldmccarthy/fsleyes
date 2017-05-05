@@ -259,10 +259,9 @@ Options are missing!
 ^^^^^^^^^^^^^^^^^^^^
 
 
-FSLeyes is capable of being run remotely over a SSH/X11 connection. However,
-in such an environment, FSLeyes is not able to provide all of the features
-that it can when running locally. When you run FSLeyes over X11, the following
-options will not be available:
+Sometimes, in a remote desktop environment, FSLeyes is not able to provide all
+of the features that it can when running locally. When you run FSLeyes over
+X11, the following options will not be available:
 
 
  - Spline interpolation for :ref:`volume <overlays_volume>` and :ref:`RGB
