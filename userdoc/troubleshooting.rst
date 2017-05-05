@@ -45,7 +45,7 @@ incorrectly - either badly oriented, or mis-aligned:
 
 .. image:: images/troubleshooting_misaligned.png
    :width: 80%
-   :align: center 
+   :align: center
 
 .. image:: images/troubleshooting_bad_orientation.png
    :width: 80%
@@ -179,8 +179,80 @@ this file to a different location, and then moving it back again, for example::
   ./Contents/MacOS/fsleyes
 
 
-Running FSLeyes over SSH/X11 connections
-----------------------------------------
+Linux - FSLeyes does not start
+------------------------------
+
+
+``glutInit``
+^^^^^^^^^^^^
+
+
+Under linux, you might be presented with the following error when you try to
+start FSLeyes::
+
+
+  WARNING          __init__.py  596: create          - GLContext callback function raised NullFunctionError: Attempt to call an undefined function glutInit, check for bool(glutInit) before calling
+  Traceback (most recent call last):
+    File "fsleyes/gl/__init__.py", line 590, in create
+    File "fsleyes/main.py", line 371, in realCallback
+    File "fsleyes/gl/__init__.py", line 377, in bootstrap
+    File "site-packages/OpenGL/GLUT/special.py", line 333, in glutInit
+    File "site-packages/OpenGL/platform/baseplatform.py", line 407, in __call__
+  NullFunctionError: Attempt to call an undefined function glutInit, check for bool(glutInit) before calling
+
+
+This error is occurring because FSLeyes depends on some features provided by
+[GLUT](https://www.opengl.org/resources/libraries/glut/), which is not
+necessarily present on linux systems. You can avoid this error simply by
+installing [FreeGLUT](http://freeglut.sourceforge.net/), which should be
+available through your package manager.
+
+
+
+``libxcb``
+^^^^^^^^^^
+
+
+Another possible error which you may encounter when running on older Linux
+platforms::
+
+
+  Traceback (most recent call last):
+    File "fsleyes/__main__.py", line 4, in <module>
+    File "fsleyes/main.py", line 33, in <module>
+    File "site-packages/wx-3.0-gtk2/wx/__init__.py", line 45, in <module>
+    File "site-packages/wx-3.0-gtk2/wx/_core.py", line 4, in <module>
+  ImportError: libX11.so.6: undefined symbol: xcb_wait_for_reply64
+  Failed to execute script __main__
+
+
+This error is occurring because FSLeyes requires a more up-to-date version of
+the ``libxcb`` library. You can solve this problem simply by upgrading
+``libxcb``. Under CentOS, simply run ``yum update libxcb`` (with administrator
+privileges).
+
+
+
+Running FSLeyes remotely
+------------------------
+
+
+FSLeyes is capable of running on remote servers, over SSH/X11 connections, or
+from within VNC or other remote desktop tools. However, you may need to
+configure your environment before FSLeyes will work correctly.
+
+
+OpenGL 1.4 or newer is required (detected version: 1.2)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+FSLeyes requires OpenGL 1.4 or newer. In some remote desktop environments, the
+OpenGL version may be restricted. If you receive this error when trying to
+start FSLeyes, try the following::
+
+
+  unset LIBGL_ALWAYS_INDIRECT
+  fsleyes
 
 
 Options are missing!
@@ -206,7 +278,7 @@ XQuartz - FSLeyes doesn't start, and just shows an error
 Under XQuartz 2.7.9 and newer, FSLeyes may not start, and you may see the
 following error::
 
-  
+
   Gdk-ERROR **: The program 'fsleyes' received an X Window System error.
   This probably reflects a bug in the program.
   The error was 'BadValue (integer parameter out of range for operation)'.
@@ -224,7 +296,7 @@ run any OpenGL application, not just FSLeyes. Fortunately, there is a
 solution: if you are using XQuartz 2.7.10 or newer, run this command (locally,
 not within the SSH session)::
 
-  
+
   defaults write org.macosforge.xquartz.X11 enable_iglx -bool true
 
 
@@ -237,7 +309,7 @@ this section, add the following line::
 
   defaultserverargs="$defaultserverargs +iglx"
 
-  
+
 After making this change, restart XQuartz - FSLeyes should now start.
 
 
@@ -248,4 +320,3 @@ XQuartz - keyboard shortcuts don't work
 If you are using XQuartz, you may need to select the *Option keys send Alt_L
 and Alt_R* option in the XQuartz Preferences dialog before keyboard shortcuts
 will work in FSLeyes.
-

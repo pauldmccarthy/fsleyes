@@ -671,8 +671,21 @@ class GLContext(object):
                    0,
                    0]
 
-        self.__canvas = wxgl.GLCanvas(self.__parent, attribList=attribs)
-        self.__canvas.SetSize((0, 0))
+        # GLCanvas initialisation with an attribute
+        # list fails when running in a nomachine-like
+        # remote desktop session. No idea why.
+        try:
+            self.__canvas = wxgl.GLCanvas(self.__parent, attribList=attribs)
+            self.__canvas.SetSize((0, 0))
+
+        # Creating without attribute list works ok
+        # though. This does mean that we don't have
+        # control over depth/stencil buffer sizes,
+        # under these remote desktop environments.
+        except:
+            self.__canvas = wxgl.GLCanvas(self.__parent)
+            self.__canvas.SetSize((0, 0))
+
         self.__canvas.Show(True)
 
 
