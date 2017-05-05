@@ -183,6 +183,10 @@ Linux - FSLeyes does not start
 ------------------------------
 
 
+``glutInit``
+^^^^^^^^^^^^
+
+
 Under linux, you might be presented with the following error when you try to
 start FSLeyes::
 
@@ -204,6 +208,31 @@ installing [FreeGLUT](http://freeglut.sourceforge.net/), which should be
 available through your package manager.
 
 
+
+``libxcb``
+^^^^^^^^^^
+
+
+Another possible error which you may encounter when running on older Linux
+platforms::
+
+
+  Traceback (most recent call last):
+    File "fsleyes/__main__.py", line 4, in <module>
+    File "fsleyes/main.py", line 33, in <module>
+    File "site-packages/wx-3.0-gtk2/wx/__init__.py", line 45, in <module>
+    File "site-packages/wx-3.0-gtk2/wx/_core.py", line 4, in <module>
+  ImportError: libX11.so.6: undefined symbol: xcb_wait_for_reply64
+  Failed to execute script __main__
+
+
+This error is occurring because FSLeyes requires a more up-to-date version of
+the ``libxcb`` library. You can solve this problem simply by upgrading
+``libxcb``. Under CentOS, simply run ``yum update libxcb`` (with administrator
+privileges).
+
+
+
 Running FSLeyes remotely
 ------------------------
 
@@ -219,13 +248,11 @@ OpenGL 1.4 or newer is required (detected version: 1.2)
 
 FSLeyes requires OpenGL 1.4 or newer. In some remote desktop environments, the
 OpenGL version may be restricted. If you receive this error when trying to
-start FSLeyes, try the following:
+start FSLeyes, try the following::
 
 
-```
-unset LIBGL_ALWAYS_INDIRECT
-fsleyes
-```
+  unset LIBGL_ALWAYS_INDIRECT
+  fsleyes
 
 
 Options are missing!
