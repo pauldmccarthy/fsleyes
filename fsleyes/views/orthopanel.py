@@ -795,6 +795,11 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         if layout == 'grid' and len(canvases) <= 2:
             layout = 'horizontal'
 
+        # Grid layout canvas
+        # order is YXZ
+        if layout == 'grid':
+            canvases = [c[1], c[0], c[2]]
+
         # Distribute the available width/height
         # to each of the displayed canvases -
         # fsleyes_widgets.utils.layout (a.k.a.
