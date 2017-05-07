@@ -468,8 +468,8 @@ class ListItemWidget(wx.Panel):
             if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
                 self.__saveButton.SetLabel(" ")
 
-            self.__saveButton.SetToolTipString(
-                fsltooltips.actions[self, 'save'])
+            self.__saveButton.SetToolTip(
+                wx.ToolTip(fsltooltips.actions[self, 'save']))
 
             self.__sizer.Add(self.__saveButton, flag=wx.EXPAND, proportion=1)
 
@@ -491,8 +491,8 @@ class ListItemWidget(wx.Panel):
                 icons.loadBitmap('chainlinkHighlight16'),
                 icons.loadBitmap('chainlink16'))
 
-            self.__lockButton.SetToolTipString(
-                fsltooltips.actions[self, 'group'])
+            self.__lockButton.SetToolTip(
+                wx.ToolTip(fsltooltips.actions[self, 'group']))
 
             self.__sizer.Add(self.__lockButton, flag=wx.EXPAND, proportion=1)
 
@@ -516,8 +516,8 @@ class ListItemWidget(wx.Panel):
                 falseBmp=icons.loadBitmap('eye16'),
                 style=btnStyle)
 
-            self.__visibility.SetToolTipString(
-                fsltooltips.properties[display, 'enabled'])
+            self.__visibility.SetToolTip(
+                wx.ToolTip(fsltooltips.properties[display, 'enabled']))
 
             self.__sizer.Add(self.__visibility, flag=wx.EXPAND, proportion=1)
 
