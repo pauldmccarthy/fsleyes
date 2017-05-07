@@ -9,10 +9,9 @@ displays information about *FSLeyes*.
 """
 
 
-import os.path   as op
+import os.path as op
 
-import              wx
-import OpenGL.GL as gl
+import wx
 
 import fsleyes_widgets.imagepanel         as imagepanel
 from   fsl.utils.platform import platform as fslplatform
@@ -56,8 +55,8 @@ class AboutDialog(wx.Dialog):
         # Create / retrieve all the content
         verStr    = version.__version__
         vcsVerStr = version.__vcs_version__
-        glVerStr  = gl.glGetString(gl.GL_VERSION)
-        glRenStr  = gl.glGetString(gl.GL_RENDERER)
+        glVerStr  = fslplatform.glVersion
+        glRenStr  = fslplatform.glRenderer
         swlibs    = strings.about['libs']
 
         swVersions = []
