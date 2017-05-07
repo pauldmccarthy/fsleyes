@@ -143,13 +143,13 @@ def main(args=None):
         render.main(args[1:])
         sys.exit(0)
 
-    # First thing's first. Create a wx.App,
-    # then initialise the FSLeyes package.
-    app = FSLeyesApp()
-    fsleyes.initialise()
-
     # Implement various hacks and workarounds
     hacksAndWorkarounds()
+
+    # Then, first thing's first. Create a wx.App,
+    # and initialise the FSLeyes package.
+    app = FSLeyesApp()
+    fsleyes.initialise()
 
     # Show the splash screen as soon as
     # possible, unless it looks like the
@@ -261,9 +261,12 @@ def main(args=None):
 def hacksAndWorkarounds():
     """Called by :func:`main`. Implements hacks and workarounds for
     various things.
-
-    Must be called after :func:`fsleyes.initialise`.
     """
+
+    # Under wxPython/Phoenix, the
+    # wx.html package must be imported
+    # before a wx.App has been created
+    import wx.html
 
     # PyInstaller 3.2.1 forces matplotlib to use a
     # temporary directory for its settings and font
@@ -349,7 +352,7 @@ def initialise(splash, namespace, callback):
             fsleyesDir = op.normpath(op.join(fsleyesDir,
                                              '..', '..', '..', '..'))
 
-        # TODO does this work in linux?
+        # Similar adjustment for linux
         elif fslplatform.os == 'Linux':
             fsleyesDir = op.normpath(op.join(fsleyesDir, '..'))
 
