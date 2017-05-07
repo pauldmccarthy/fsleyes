@@ -13,22 +13,21 @@ import logging
 
 import wx
 
-import fsl.data.image                     as fslimage
-import fsl.utils.async                    as async
-from   fsl.utils.platform import platform as fslplatform
+import fsl.data.image                as fslimage
+import fsl.utils.async               as async
 
-import fsleyes_props                      as props
-import fsleyes_widgets.bitmaptoggle       as bmptoggle
-import fsleyes_widgets.elistbox           as elistbox
+import fsleyes_props                 as props
+import fsleyes_widgets.bitmaptoggle  as bmptoggle
+import fsleyes_widgets.elistbox      as elistbox
 
-import fsleyes.panel                      as fslpanel
-import fsleyes.icons                      as icons
-import fsleyes.autodisplay                as autodisplay
-import fsleyes.strings                    as strings
-import fsleyes.tooltips                   as fsltooltips
-import fsleyes.actions.loadoverlay        as loadoverlay
-import fsleyes.actions.saveoverlay        as saveoverlay
-import fsleyes.actions.removeoverlay      as removeoverlay
+import fsleyes.panel                 as fslpanel
+import fsleyes.icons                 as icons
+import fsleyes.autodisplay           as autodisplay
+import fsleyes.strings               as strings
+import fsleyes.tooltips              as fsltooltips
+import fsleyes.actions.loadoverlay   as loadoverlay
+import fsleyes.actions.saveoverlay   as saveoverlay
+import fsleyes.actions.removeoverlay as removeoverlay
 
 
 log = logging.getLogger(__name__)
@@ -454,20 +453,11 @@ class ListItemWidget(wx.Panel):
         self.SetSizer(self.__sizer)
         self.Bind(wx.EVT_WINDOW_DESTROY, self.__onDestroy)
 
-        # BU_NOTEXT causes a segmentation fault under OSX
-        if wx.Platform == '__WXMAC__': btnStyle = wx.BU_EXACTFIT
-        else:                          btnStyle = wx.BU_EXACTFIT | wx.BU_NOTEXT
+        btnStyle = wx.BU_EXACTFIT | wx.BU_NOTEXT
 
         if showSave:
             self.__saveButton = wx.Button(self, style=btnStyle)
-            self.__saveButton.SetBitmap(icons.loadBitmap('floppydisk16'))
-
-            # Under wxPython/Phoenix, button
-            # labels default to "Button", and
-            # BU_NOTEXT has no effect.
-            if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
-                self.__saveButton.SetLabel(" ")
-
+            self.__saveButton.SetBitmapLabel(icons.loadBitmap('floppydisk16'))
             self.__saveButton.SetToolTip(
                 wx.ToolTip(fsltooltips.actions[self, 'save']))
 

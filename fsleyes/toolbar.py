@@ -106,9 +106,7 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         font = self.GetFont()
         self.SetFont(font.Smaller())
 
-        # BU_NOTEXT causes segfault under OSX
-        if wx.Platform == '__WXMAC__': style = wx.BU_EXACTFIT
-        else:                          style = wx.BU_EXACTFIT | wx.BU_NOTEXT
+        style = wx.BU_EXACTFIT | wx.BU_NOTEXT
 
         if orient == wx.HORIZONTAL:
             lBmp = icons.loadBitmap('thinLeftArrow{}' .format(height))
@@ -116,11 +114,12 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         else:
             lBmp = icons.loadBitmap('thinUpArrow{}'  .format(height))
             rBmp = icons.loadBitmap('thinDownArrow{}'.format(height))
+
         self.__leftButton  = wx.Button(self, style=style)
         self.__rightButton = wx.Button(self, style=style)
 
-        self.__leftButton.SetBitmap(lBmp)
-        self.__rightButton.SetBitmap(rBmp)
+        self.__leftButton .SetBitmapLabel(lBmp)
+        self.__rightButton.SetBitmapLabel(rBmp)
 
         self.__sizer = wx.BoxSizer(orient)
         self.SetSizer(self.__sizer)
