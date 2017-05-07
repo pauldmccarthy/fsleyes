@@ -313,13 +313,16 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         of the given :class:`.VolumeOpts` instance.
         """
         rangeSpec      = _TOOLBAR_PROPS[opts, 'displayRange']
+        resetSpec      = _TOOLBAR_PROPS[opts, 'resetDisplayRange']
         cmapSpec       = _TOOLBAR_PROPS[opts, 'cmap']
         negCmapSpec    = _TOOLBAR_PROPS[opts, 'negativeCmap']
         useNegCmapSpec = _TOOLBAR_PROPS[opts, 'useNegativeCmap']
 
+
         cmapPanel = wx.Panel(self)
 
         rangeWidget      = props.buildGUI(self,      opts, rangeSpec)
+        resetWidget      = props.buildGUI(self,      opts, resetSpec)
         useNegCmapWidget = props.buildGUI(self,      opts, useNegCmapSpec)
         cmapWidget       = props.buildGUI(cmapPanel, opts, cmapSpec)
         negCmapWidget    = props.buildGUI(cmapPanel, opts, negCmapSpec)
@@ -329,8 +332,9 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         cmapSizer.Add(cmapWidget)
         cmapSizer.Add(negCmapWidget)
 
-        tools = [rangeWidget, useNegCmapWidget, cmapPanel]
-        nav   = [rangeWidget, useNegCmapWidget, cmapWidget, negCmapWidget]
+        tools = [resetWidget, rangeWidget, useNegCmapWidget, cmapPanel]
+        nav   = [resetWidget, rangeWidget, useNegCmapWidget, cmapWidget,
+                 negCmapWidget]
 
         return tools, nav
 
@@ -603,6 +607,11 @@ _TOOLBAR_PROPS = td.TypeDict({
         spin=False,
         showLimits=False,
         tooltip=_TOOLTIPS['Display.contrast']),
+
+    'VolumeOpts.resetDisplayRange' : actions.ActionButton(
+        'resetDisplayRange',
+        icon=icons.findImageFile('verticalReset32')
+    ),
 
     'VolumeOpts.displayRange' : props.Widget(
         'displayRange',

@@ -12,6 +12,7 @@
 import logging
 
 import fsleyes_props      as props
+import fsleyes.actions    as actions
 import fsleyes.colourmaps as fslcm
 
 
@@ -308,6 +309,14 @@ class ColourMapOpts(object):
         base-class implementation.
         """
         return None
+
+
+    @actions.action
+    def resetDisplayRange(self):
+        """Resets the :attr:`displayRange` and :attr:`clippingRange` to their
+        initial values.
+        """
+        self.updateDataRange(True, True)
 
 
     def updateDataRange(self, resetDR=True, resetCR=True):
