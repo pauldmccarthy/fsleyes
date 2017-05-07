@@ -132,6 +132,7 @@ import               fnmatch
 import itertools  as it
 import subprocess as sp
 import os.path    as op
+import               six
 
 from setuptools import setup
 from setuptools import find_packages
@@ -308,8 +309,7 @@ class checkout_subprojects(Command):
         if self.fsleyes_props_version == 'local':
 
             print('Copying fsleyes-props [local] to {}'.format(propsdest))
-            propsdir = pkgutil.get_loader('fsleyes_props').filename
-            propsdir = op.abspath(op.join(propsdir, '..'))
+            propsdir = package_path('fsleyes_props')
             shutil.copytree(propsdir, propsdest)
             sys.path_importer_cache.pop(propsdir)
 
@@ -321,8 +321,7 @@ class checkout_subprojects(Command):
         if self.fsleyes_widgets_version == 'local':
 
             print('Copying fsleyes-widgets [local] to {}'.format(widgetsdest))
-            widgetsdir = pkgutil.get_loader('fsleyes_widgets').filename
-            widgetsdir = op.abspath(op.join(widgetsdir, '..'))
+            widgetsdir = package_path('fsleyes_widgets')
             shutil.copytree(widgetsdir, widgetsdest)
             sys.path_importer_cache.pop(widgetsdir)
 
@@ -334,8 +333,7 @@ class checkout_subprojects(Command):
         if self.fslpy_version == 'local':
 
             print('Copying fslpy [local] to {}'.format(fslpydest))
-            fslpydir = pkgutil.get_loader('fsl').filename
-            fslpydir = op.abspath(op.join(fslpydir, '..'))
+            fslpydir = package_path('fsl')
             shutil.copytree(fslpydir, fslpydest)
             sys.path_importer_cache.pop(fslpydir)
 
@@ -366,19 +364,19 @@ class docbuilder(Command):
 
         env   = dict(os.environ)
         ppath = [
-            op.join(pkgutil.get_loader('fsleyes')        .filename, '..'),
-            op.join(pkgutil.get_loader('fsl')            .filename, '..'),
-            op.join(pkgutil.get_loader('fsleyes_props')  .filename, '..'),
-            op.join(pkgutil.get_loader('fsleyes_widgets').filename, '..')]
+            package_path('fsleyes'),
+            package_path('fsl'),
+            package_path('fsleyes_props'),
+            package_path('fsleyes_widgets')]
 
         env['PYTHONPATH'] = op.pathsep.join(ppath)
 
         print('Building documentation [{}]'.format(destdir))
 
-        sphinx = sp.check_output(['which', 'sphinx-build']).strip()
+        sphinx = sp.check_output(['which', 'sphinx-build']).decode('ascii').strip()
 
         # Framwork python needs to be used on osx
-        if platform == 'darwin':
+        if six.PY2 and platform == 'darwin':
             sp_call(['pythonw', sphinx, docdir, destdir], env=env)
         else:
             sp_call(['python',  sphinx, docdir, destdir], env=env)
@@ -417,10 +415,10 @@ class patch_code(Command):
 
     def run(self):
 
-        propsdir   = op.join(pkgutil.get_loader('fsleyes_props')  .filename)
-        widgetsdir = op.join(pkgutil.get_loader('fsleyes_widgets').filename)
-        fslpydir   = op.join(pkgutil.get_loader('fsl')            .filename)
-        fsleyesdir = op.join(pkgutil.get_loader('fsleyes')        .filename)
+        propsdir   = package_path('fsleyes_props')
+        widgetsdir = package_path('fsleyes_widgets')
+        fslpydir   = package_path('fsl')
+        fsleyesdir = package_path('fsleyes')
 
         def patch_file(filename, linepatch):
 
@@ -509,38 +507,6 @@ class patch_code(Command):
         else:                   remove_logging()
 
 
-def find_library(name):
-
-    import ctypes.util as cutil
-
-    path = cutil.find_library(name)
-
-    if path is None:
-        raise RuntimeError('Library {} not found'.format(name))
-
-    # Under mac, find_library
-    # returns the full path
-    if platform == 'darwin':
-        return path
-
-    # Under linux, find_library
-    # just returns a file name.
-    # Let's look for it in some
-    # likely locations.
-    searchDirs = ['/lib64/',
-                  '/lib/',
-                  '/usr/lib64/',
-                  '/usr/lib/',
-                  '/usr/lib/x86_64-linux-gnu']
-
-    for sd in searchDirs:
-        searchPath = op.join(sd, path)
-        if op.exists(searchPath):
-            return searchPath
-
-    raise RuntimeError('Library {} not found'.format(name))
-
-
 class py2app(orig_py2app):
     description = 'Builds a standalone FSLeyes OSX application using py2app'
 
@@ -584,7 +550,7 @@ class py2app(orig_py2app):
         # py2app (and pyinstaller) seem to
         # get the wrong version of libpng,
         # which causes render to segfault
-        pildir = pkgutil.get_loader('PIL').filename
+        pildir = package_path('PIL')
         dylib  = op.join(pildir, '.dylibs', 'libpng16.16.dylib')
         if op.exists(dylib):
             shutil.copy(dylib, op.join(contentsdir, 'Frameworks'))
@@ -663,10 +629,10 @@ class pyinstaller(Command):
 
         env   = dict(os.environ)
         ppath = [
-            op.join(pkgutil.get_loader('fsleyes')        .filename, '..'),
-            op.join(pkgutil.get_loader('fsl')            .filename, '..'),
-            op.join(pkgutil.get_loader('fsleyes_props')  .filename, '..'),
-            op.join(pkgutil.get_loader('fsleyes_widgets').filename, '..')]
+            package_path('fsleyes'),
+            package_path('fsl'),
+            package_path('fsleyes_props'),
+            package_path('fsleyes_widgets')]
 
         env['PYTHONPATH'] = op.pathsep.join(ppath)
 
@@ -695,6 +661,48 @@ class pyinstaller(Command):
 
             for src in files:
                 shutil.copy(src, dirname)
+
+
+def find_library(name):
+    """Returns the path o the given shared library. """
+
+    import ctypes.util as cutil
+
+    path = cutil.find_library(name)
+
+    if path is None:
+        raise RuntimeError('Library {} not found'.format(name))
+
+    # Under mac, find_library
+    # returns the full path
+    if platform == 'darwin':
+        return path
+
+    # Under linux, find_library
+    # just returns a file name.
+    # Let's look for it in some
+    # likely locations.
+    searchDirs = ['/lib64/',
+                  '/lib/',
+                  '/usr/lib64/',
+                  '/usr/lib/',
+                  '/usr/lib/x86_64-linux-gnu']
+
+    for sd in searchDirs:
+        searchPath = op.join(sd, path)
+        if op.exists(searchPath):
+            return searchPath
+
+    raise RuntimeError('Library {} not found'.format(name))
+
+
+def package_path(pkg):
+    """Returns the directory path to the given python package. """
+    fname   = pkgutil.get_loader(pkg).get_filename()
+    dirname = op.dirname(fname)
+    dirname = op.abspath(op.join(dirname, '..'))
+    return dirname
+
 
 
 def sp_call(command, *args, **kwargs):
@@ -812,10 +820,10 @@ def get_git_version():
     Warning: This will fix the paths to the props/fslpy packages, so make
              sure the PYTHONPATH/sys.path is set before calling this function.
     """
-    propsdir   = pkgutil.get_loader('fsleyes_props')  .filename
-    widgetsdir = pkgutil.get_loader('fsleyes_widgets').filename
-    fslpydir   = pkgutil.get_loader('fsl')            .filename
-    fsleyesdir = pkgutil.get_loader('fsleyes')        .filename
+    propsdir   = package_path('fsleyes_props')
+    widgetsdir = package_path('fsleyes_widgets')
+    fslpydir   = package_path('fsl')
+    fsleyesdir = package_path('fsleyes')
 
     cmd = 'git rev-parse HEAD'.split()
 
