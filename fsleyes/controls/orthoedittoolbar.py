@@ -32,12 +32,12 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
 
     An ``OrthoEditToolBar`` looks something like this:
 
-    
+
     .. image:: images/orthoedittoolbar.png
        :scale: 50%
        :align: center
 
-    
+
     The ``OrthoEditToolBar`` exposes properties and actions which are defined
     on the :class:`.OrthoEditProfile` class, and allows the user to:
 
@@ -58,12 +58,12 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
      - Switch between regular *select* mode, and *select by intensity* mode,
        and adjust the select by intensity mode settings.
 
-    
+
     All of the controls shown on an ``OrthoEditToolBar`` instance are defined
     in the :attr:`_TOOLBAR_SPECS` dictionary.
     """
 
-    
+
     selint = props.Boolean(default=False)
     """This property allows the user to change the :class:`.OrthoEditProfile`
     between ``sel`` mode, and ``selint`` mode.
@@ -109,17 +109,17 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
         """
 
         self.ClearTools(destroy=True, postevent=False)
-        
+
         ortho      = self.__orthoPanel
         profile    = ortho.profile
         profileObj = ortho.getCurrentProfile()
-        
+
         if profile != 'edit':
             return
-                
+
         allTools   = []
         allWidgets = []
- 
+
         for specGroup in _TOOLBAR_SPECS:
 
             if specGroup == 'div':
@@ -128,18 +128,18 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
                                                           orient=wx.VERTICAL))
                 continue
 
-            groupWidgets = [] 
+            groupWidgets = []
             isGroup      = isinstance(specGroup, list)
 
             if isGroup:
                 parent = wx.Panel(self)
-                
+
             else:
                 parent    = self
                 specGroup = [specGroup]
 
             for spec in specGroup:
-                
+
                 widget = props.buildGUI(parent, profileObj, spec)
 
                 if not isGroup and spec.label is not None:
@@ -153,7 +153,7 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
             # Assuming here that all
             # widgets have labels
             if isGroup:
-                
+
                 sizer = wx.FlexGridSizer(2, 2, 0, 0)
                 parent.SetSizer(sizer)
 
@@ -163,9 +163,9 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
                 for w, l in zip(groupWidgets, labels):
                     sizer.Add(l, flag=wx.EXPAND)
                     sizer.Add(w, flag=wx.EXPAND)
-                    
+
                 allTools.append(parent)
-                
+
             else:
                 allTools.append(groupWidgets[0])
 
@@ -188,7 +188,7 @@ _LABELS = {
     'fillValue'              : strings.properties[OrthoEditProfile,
                                                   'fillValue'],
     'targetImage'            : strings.properties[OrthoEditProfile,
-                                                  'targetImage'], 
+                                                  'targetImage'],
 }
 """This dictionary contains labels for some :class:`OrthoEditToolBar`
 controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
@@ -215,7 +215,7 @@ _ICONS = {
         'desel'  : [
             fslicons.findImageFile('eraserHighlight24'),
             fslicons.findImageFile('eraser24'),
-        ], 
+        ],
         'selint' : [
             fslicons.findImageFile('selectByIntensityHighlight24'),
             fslicons.findImageFile('selectByIntensity24'),
@@ -226,7 +226,7 @@ _ICONS = {
         fslicons.findImageFile('selection3D24'),
         fslicons.findImageFile('selection2DHighlight24'),
         fslicons.findImageFile('selection2D24')],
-    
+
     'limitToRadius' :  [
         fslicons.findImageFile('radiusHighlight24'),
         fslicons.findImageFile('radius24')],
@@ -245,7 +245,7 @@ controls. It is referenced in the :attr:`_TOOLBAR_SPECS` dictionary.
 _TOOLTIPS = {
     'drawMode'       : fsltooltips.properties['OrthoEditProfile.'
                                               'drawMode'],
- 
+
     'mode'           : fsltooltips.properties['OrthoEditProfile.mode'],
     'selectionIs3D'  : fsltooltips.properties['OrthoEditProfile.'
                                               'selectionIs3D'],
@@ -260,7 +260,7 @@ _TOOLTIPS = {
     'fillValue'      : fsltooltips.properties['OrthoEditProfile.fillValue'],
     'intensityThres' : fsltooltips.properties['OrthoEditProfile.'
                                               'intensityThres'],
-    
+
     'targetImage'    : fsltooltips.properties['OrthoEditProfile.targetImage'],
 }
 """This dictionary contains tooltips for some :class:`OrthoEditToolBar`
@@ -280,7 +280,7 @@ _TOOLBAR_SPECS  = [
         toggle=False,
         icon=_ICONS['drawMode'],
         tooltip=_TOOLTIPS['drawMode'],
-        style=wx.HORIZONTAL), 
+        style=wx.HORIZONTAL),
     'div',
     props.Widget(
         'mode',

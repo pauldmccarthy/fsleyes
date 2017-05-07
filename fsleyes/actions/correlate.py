@@ -62,7 +62,7 @@ class CorrelateAction(base.Action):
                                 self.__name,
                                 self.__overlayListChanged)
 
-        # TODO Use a single data structure - 
+        # TODO Use a single data structure -
         #      using two dicts is fragile
         self.__correlateOverlays = {}
         self.__overlayCorrelates = {}
@@ -70,9 +70,9 @@ class CorrelateAction(base.Action):
         # The runCorrelateAction cannot be called
         # more than once at a time - this is used
         # as a semaphore to ensure that this is
-        # enforced. 
+        # enforced.
         self.__correlateFlag = threading.Event()
-        
+
         self.__selectedOverlayChanged()
 
 
@@ -88,17 +88,17 @@ class CorrelateAction(base.Action):
         self.__correlateOverlays = None
         self.__overlayCorrelates = None
 
-        
+
     def __selectedOverlayChanged(self, *a):
         """Called when the selected overlay, or overlay list, changes.
-        
+
         Enables/disables this action depending on the nature of the selected
         overlay.
         """
-        
+
         ovl          = self.__displayCtx.getSelectedOverlay()
         isCorrOvl    = ovl in self.__overlayCorrelates
-        
+
         self.enabled = isCorrOvl or  \
                        ((ovl is not None)               and
                         isinstance(ovl, fslimage.Image) and
@@ -116,7 +116,7 @@ class CorrelateAction(base.Action):
 
 
     def __clearCorrelateOverlays(self):
-        """Called by :meth:`__overlayListChanged`. Clears internal references 
+        """Called by :meth:`__overlayListChanged`. Clears internal references
         to any obsolete correlate overlays.
         """
 
@@ -169,7 +169,7 @@ class CorrelateAction(base.Action):
         # way that this function does its job,
         # allowing it to be called multiple times
         # before prior calls have completed would be
-        # very dangerous indeed. 
+        # very dangerous indeed.
         if self.__correlateFlag.is_set():
             log.debug('Correlate action is already '
                       'running - ignoring request')
@@ -225,7 +225,7 @@ class CorrelateAction(base.Action):
                         corrOvl[:] = correlations
 
                     # The correlation overlay hasn't
-                    # been created yet - create a 
+                    # been created yet - create a
                     # new overlay with the correlation
                     # values.
                     else:
@@ -237,7 +237,7 @@ class CorrelateAction(base.Action):
 
             async.idle(update)
 
-        # Protect against more calls 
+        # Protect against more calls
         # while this job is running.
         self.__correlateFlag.set()
         fslstatus.update(strings.messages[self, 'calculating'].format(*xyz))
@@ -265,14 +265,14 @@ class PearsonCorrelateAction(CorrelateAction):
     and all other voxels.
     """
 
-    def calculateCorrelation(self, seed, data): 
+    def calculateCorrelation(self, seed, data):
         """Calculates Pearson correlation between the data at the specified
         seed voxel, and all other voxels.
         """
 
         x, y, z = seed
         npoints = data.shape[3]
-        
+
         # the scipy.spatial.distance.cdist
         # function can be used to calculate
         # one-to-many correlation values.
@@ -284,8 +284,8 @@ class PearsonCorrelateAction(CorrelateAction):
 
         # Set any nans to 0
         correlations[np.isnan(correlations)] = 0
-        
-        return correlations.reshape(data.shape[:3]) 
+
+        return correlations.reshape(data.shape[:3])
 
 
 class PCACorrelateAction(CorrelateAction):

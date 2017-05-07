@@ -37,7 +37,7 @@ class ColourBarCanvas(props.HasProperties):
     negativeCmap = props.ColourMap()
     """Negative colour map to use, if :attr:`useNegativeCmap` is ``True``."""
 
-    
+
     useNegativeCmap = props.Boolean(default=False)
     """Whether or not to use the :attr:`negativeCmap`.
     """
@@ -50,30 +50,30 @@ class ColourBarCanvas(props.HasProperties):
     invert = props.Boolean(default=False)
     """Invert the colour map(s). """
 
-    
+
     vrange = props.Bounds(ndims=1)
     """The minimum/maximum values to display."""
 
-    
+
     label = props.String()
     """A label to display under the centre of the colour bar."""
 
-    
+
     orientation = props.Choice(('horizontal', 'vertical'))
     """Whether the colour bar should be vertical or horizontal. """
 
-    
+
     labelSide = props.Choice(('top-left', 'bottom-right'))
     """Whether the colour bar labels should be on the top/left, or bottom/right
     of the colour bar (depending upon whether the colour bar orientation is
     horizontal/vertical).
     """
 
-    
+
     textColour = props.Colour(default=(1, 1, 1, 1))
     """Colour to use for the colour bar label. """
 
-    
+
     def __init__(self):
         """Adds a few listeners to the properties of this object, to update
         the colour bar when they change.
@@ -84,11 +84,11 @@ class ColourBarCanvas(props.HasProperties):
 
         self.addGlobalListener(self._name, self.__updateTexture)
 
-            
+
     def __updateTexture(self, *a):
         self._genColourBarTexture()
         self.Refresh()
-        
+
 
     def _initGL(self):
         """Called automatically by the OpenGL canvas target superclass (see the
@@ -148,7 +148,7 @@ class ColourBarCanvas(props.HasProperties):
                 tickalign  = ['left', 'right']
                 ticklabels = ['{:0.2f}'.format(self.vrange.xlo),
                               '{:0.2f}'.format(self.vrange.xhi)]
-            
+
             bitmap = cbarbmp.colourBarBitmap(
                 cmap=self.cmap,
                 negCmap=negCmap,
@@ -172,7 +172,7 @@ class ColourBarCanvas(props.HasProperties):
         # Texture2D instance needs it in shape
         # 4*W*H
         bitmap = np.fliplr(bitmap).transpose([2, 0, 1])
-            
+
         self._tex.setData(bitmap)
         self._tex.refresh()
 
@@ -182,7 +182,7 @@ class ColourBarCanvas(props.HasProperties):
 
         if not self._setGLContext():
             return
-        
+
         width, height = self._getSize()
 
         # viewport

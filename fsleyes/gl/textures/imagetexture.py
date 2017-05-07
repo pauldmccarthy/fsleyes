@@ -14,7 +14,7 @@ import logging
 import numpy as np
 
 from . import texture3d
-import fsl.data.imagewrapper as imagewrapper 
+import fsl.data.imagewrapper as imagewrapper
 
 
 log = logging.getLogger(__name__)
@@ -30,9 +30,9 @@ class ImageTexture(texture3d.Texture3D):
     documentation for more details.
     """
 
-    
+
     def __init__(self,
-                 name,                 
+                 name,
                  image,
                  **kwargs):
         """Create an ``ImageTexture``. A listener is added to the
@@ -41,7 +41,7 @@ class ImageTexture(texture3d.Texture3D):
         :meth:`__imageDataChanged` method.
 
         :arg name:   A name for this ``imageTexure``.
-        
+
         :arg image:  The :class:`.Image` instance.
 
         :arg volume: Initial volume, for 4D images.
@@ -61,7 +61,7 @@ class ImageTexture(texture3d.Texture3D):
                                'size {} requested for '
                                'image shape {}'.format(nvals, image.shape))
 
-        self.__name       = '{}_{}'.format(type(self).__name__, id(self)) 
+        self.__name       = '{}_{}'.format(type(self).__name__, id(self))
         self.image        = image
         self.__nvals      = nvals
         self.__volume     = None
@@ -84,7 +84,7 @@ class ImageTexture(texture3d.Texture3D):
         texture3d.Texture3D.destroy(self)
         self.image.deregister(self.__name, 'data')
 
-        
+
     def setVolume(self, volume):
         """For 4D :class:`.Image` instances, specifies the volume to use
         as the 3D texture data.
@@ -97,13 +97,13 @@ class ImageTexture(texture3d.Texture3D):
         Triggers an image texture refresh via a call to :meth:`set`.
 
         :arg image:    The ``Image`` instance
-        
+
         :arg topic:    The string ``'data'``
-        
+
         :arg sliceobj: Slice object specifying the portion of the image
                        that was changed.
         """
-        
+
         # If the data change was performed using
         # normal array indexing, we can just replace
         # that part of the image texture.
@@ -120,7 +120,7 @@ class ImageTexture(texture3d.Texture3D):
                       'texture (offset: {}, size: {})'.format(
                           image.name,
                           offset, data.shape))
-            
+
             self.patchData(data, offset)
 
         # Otherwise (boolean array indexing) we have
@@ -132,7 +132,7 @@ class ImageTexture(texture3d.Texture3D):
 
             self.set()
 
-        
+
     def set(self, **kwargs):
         """Overrides :meth:`.Texture3D.set`. Set any parameters on this
         ``ImageTexture``. This method accepts any parameters that are accepted
@@ -173,7 +173,7 @@ class ImageTexture(texture3d.Texture3D):
             kwargs['data'] = self.image[:]
 
         else:
-            
+
             self.__volume  = volume
             kwargs['data'] = self.image[..., volume]
 

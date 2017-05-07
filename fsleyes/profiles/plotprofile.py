@@ -33,13 +33,13 @@ class PlotProfile(profiles.Profile):
         """Create a ``PlotProfile``.
 
         :arg viewPanel:    A :class:`.PlotPanel` instance.
-        
+
         :arg overlayList:  The :class:`.OverlayList` instance.
-        
+
         :arg displayCtx:   The :class:`.DisplayContext` instance.
-        
+
         :arg extraModes:   Extra modes to pass through to the
-                           :class:`.Profile` constructor.        
+                           :class:`.Profile` constructor.
         """
 
         if extraModes is None:
@@ -55,7 +55,7 @@ class PlotProfile(profiles.Profile):
 
         self.__canvas  = viewPanel.getCanvas()
         self.__axis    = viewPanel.getAxis()
-        
+
         # Pan/zoom functionality is actually
         # implemented by the NavigationToolbar2Wx
         # class, but the toolbar is not actually
@@ -72,7 +72,7 @@ class PlotProfile(profiles.Profile):
         """Overrides :meth:`.Profile.getEventTargets`. Returns the
         ``matplotlib`` ``Canvas`` object displayed in the :class:`.PlotPanel`.
         """
-        
+
         return [self.__canvas]
 
 
@@ -104,8 +104,8 @@ class PlotProfile(profiles.Profile):
         by the ``matplotlib`` ``NavigationToolbar2wx`` class.
         """
         self.__updateAxisLimits()
- 
-    
+
+
     def _panzoomModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Called on left mouse up events. Disables panning."""
 
@@ -122,15 +122,15 @@ class PlotProfile(profiles.Profile):
             self.__toolbar.press_pan(self.getMplEvent())
             self.__panning = True
 
-    
+
     def _panzoomModeRightMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Called on right mouse drags. Updates the
         :attr:`.PlotPanel.limits` property - the zooming logic is provided
         by the ``matplotlib`` ``NavigationToolbar2wx`` class.
         """
         self.__updateAxisLimits()
-        
-    
+
+
     def _panzoomModeRightMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Called on right mouse up events. Disables panning. """
         if self.__panning:

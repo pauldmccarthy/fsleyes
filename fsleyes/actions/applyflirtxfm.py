@@ -78,7 +78,7 @@ class ApplyFlirtXfmAction(base.Action):
         overlay      = self.__displayCtx.getSelectedOverlay()
         self.enabled = isinstance(overlay, fslimage.Image)
 
-            
+
     def __applyFlirtXfm(self):
         """Called when this action is executed.
         """
@@ -107,27 +107,27 @@ def calculateTransform(overlay, overlayList, displayCtx, matFile, refFile):
 
     :arg overlay:     The :class:`.Image` overlay - the source image of the
                       FLIRT transformation.
-    
+
     :arg overlayList: The :class:`.OverlayList`.
-    
+
     :arg displayCtx:  The :class:`.DisplayContext`.
-    
+
     :arg matFile:     Path to the FLIRT transformation matrix file.
-    
+
     :arg refFile:     Path to the FLIRT reference image file.
     """
 
     # The reference image might
     # already be in the overlay list.
     refImg = overlayList.find(refFile)
-    
+
     if refImg is None:
         refImg = fslimage.Image(refFile, loadData=False)
 
     flirtMat = np.loadtxt(matFile)
 
     return transform.flirtMatrixToSform(flirtMat, overlay, refImg)
-        
+
 
 def promptForFlirtFiles(parent, overlay, overlayList, displayCtx, save=False):
     """Displays a dialog prompting the user to select a FLIRT
@@ -151,7 +151,7 @@ def promptForFlirtFiles(parent, overlay, overlayList, displayCtx, save=False):
     refOptFiles = []
     refOpts     = []
     selectedRef = None
-    
+
     for ovl in reversed(overlayList):
 
         if not isinstance(ovl, fslimage.Image): continue
@@ -177,12 +177,12 @@ def promptForFlirtFiles(parent, overlay, overlayList, displayCtx, save=False):
                           matFile=matFile,
                           refFile=refFile,
                           save=save)
-        
+
     dlg.Layout()
     dlg.Fit()
     dlg.CentreOnParent()
 
-    # TODO A checkbox/dropdown box allowing 
+    # TODO A checkbox/dropdown box allowing
     #      the user to load a 'raw' transform,
     #      instead of a FLIRT one?
 
@@ -243,7 +243,7 @@ def guessFlirtFiles(path):
             regDir = op.join(melDir, '..', 'reg')
         else:
             regDir = op.join(melDir, 'reg')
-            
+
         srcRefMap = {
             'filtered_func_data' : ('highres',  func2struc),
             'melodic_IC'         : ('highres',  func2struc),
@@ -254,8 +254,8 @@ def guessFlirtFiles(path):
             'struc'              : ('standard', struc2std),
             'struct'             : ('standard', struc2std),
             'struct_brain'       : ('standard', struc2std),
-            'struc_brain'        : ('standard', struc2std), 
-        } 
+            'struc_brain'        : ('standard', struc2std),
+        }
 
     matFile = None
     refFile = None
@@ -301,7 +301,7 @@ class FlirtFileDialog(wx.Dialog):
         """Create a ``FlirtFileDialog``.
 
         :arg parent:      The ``wx`` parent object.
-        
+
         :arg srcFile:     Path to the FLIRT source image file
 
         :arg refOpts:     Options to use in the reference image drop down box.
@@ -309,11 +309,11 @@ class FlirtFileDialog(wx.Dialog):
         :arg refOptFiles: File paths which correspond to the ``refOpts``.
 
         :arg selectedRef: Index of initially selected ``refOpt``.
-        
+
         :arg matFile:     Initial path to a FLIRT transformation matrix file
-        
+
         :arg refFile:     Initial Path to a FLIRT reference image file
-        
+
         :arg save:        If ``True``, the user will be prompted to save a
                           FLIRT matrix. Otherwise (the default), the user will
                           be prompted to load an existing FLIRT matrix.
@@ -326,7 +326,7 @@ class FlirtFileDialog(wx.Dialog):
         if refOpts     is None: refOpts     = []
         if refOptFiles is None: refOptFiles = []
         if selectedRef is None: selectedRef = 0
-            
+
         self.__srcFile     = srcFile
         self.__refOpts     = list(refOpts)
         self.__refOptFiles = list(refOptFiles)
@@ -335,20 +335,20 @@ class FlirtFileDialog(wx.Dialog):
         self.__save        = save
 
         refOpts = list(refOpts) + [strings.labels[self, 'refChoiceSelectFile']]
-        
+
         overlayName    = wx.StaticText(self, style=wx.ALIGN_CENTRE_HORIZONTAL)
         label          = wx.StaticText(self, style=wx.ALIGN_CENTRE_HORIZONTAL)
-        refChoiceLabel = wx.StaticText(self) 
+        refChoiceLabel = wx.StaticText(self)
         matFileLabel   = wx.StaticText(self)
         refFileLabel   = wx.StaticText(self)
         refChoice      = wx.Choice(self, choices=refOpts)
         matFileText    = wx.TextCtrl(self)
-        refFileText    = wx.TextCtrl(self) 
+        refFileText    = wx.TextCtrl(self)
         matFileButton  = wx.Button(self)
         refFileButton  = wx.Button(self)
         okButton       = wx.Button(self, wx.ID_OK)
         cancelButton   = wx.Button(self, wx.ID_CANCEL)
-        
+
         self.__matFileText   = matFileText
         self.__refFileText   = refFileText
         self.__refFileLabel  = refFileLabel
@@ -366,7 +366,7 @@ class FlirtFileDialog(wx.Dialog):
         refFileButton .SetLabel(strings.labels[self, 'selectFile'])
         okButton      .SetLabel(strings.labels[self, 'ok'])
         cancelButton  .SetLabel(strings.labels[self, 'cancel'])
-        refChoice     .SetSelection(selectedRef) 
+        refChoice     .SetSelection(selectedRef)
 
         if save: label.SetLabel(strings.labels[self, 'save.message'])
         else:    label.SetLabel(strings.labels[self, 'load.message'])
@@ -434,18 +434,18 @@ class FlirtFileDialog(wx.Dialog):
         else:
             self.__onRefChoice(None)
 
-        
+
     def GetMatFile(self):
         """Returns the current value of the matrix file as a string, or
         ``None``, if the file path is not valid.
-        """ 
-        
+        """
+
         matFile = self.__matFileText.GetValue()
 
         if self.__save or op.exists(matFile): return op.abspath(matFile)
         else:                                 return None
 
-    
+
     def GetRefFile(self):
         """Returns the current value of the reference file, as a string, or
         ``None``, if the file path is not valid.
@@ -459,15 +459,15 @@ class FlirtFileDialog(wx.Dialog):
             refFile = self.__refFileText.GetValue()
 
         if op.exists(refFile): return op.abspath(refFile)
-        else:                  return None    
+        else:                  return None
 
 
     def __onOkButton(self, ev):
         """Called when the user clicks the ok button. Closes the dialog.
-        """ 
+        """
         self.EndModal(wx.ID_OK)
 
-        
+
     def __onCancelButton(self, ev):
         """Called when the user clicks the cancel button. Closes the dialog.
         """
@@ -489,7 +489,7 @@ class FlirtFileDialog(wx.Dialog):
         self.__refFileText  .Enable(selectFile)
         self.__refFileButton.Enable(selectFile)
 
-        
+
     def __onMatFileButton(self, ev):
         """Called when the user clicks the matrix file select button.
         Displays a file dialog prompting the user to select a matrix file.
@@ -515,7 +515,7 @@ class FlirtFileDialog(wx.Dialog):
         if dlg.ShowModal() == wx.ID_OK:
             self.__matFileText.SetValue(dlg.GetPath())
 
-    
+
     def __onRefFileButton(self, ev):
         """Called when the user clicks the reference file select button.
         Displays a file dialog prompting the user to select a reference file.
@@ -524,7 +524,7 @@ class FlirtFileDialog(wx.Dialog):
         refFile = self.__refFileText.GetValue()
         if refFile == '':
             refFile = self.__srcFile
-        
+
         dlg = wx.FileDialog(
             self,
             defaultFile=refFile,

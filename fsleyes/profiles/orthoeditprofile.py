@@ -51,7 +51,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     **Modes**
-    
+
 
     The ``OrthoEditProfile`` has the following modes, in addition to those
     already defined by the :class:`.OrthoViewProfile`:
@@ -64,27 +64,27 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                 :attr:`selectionIs3D` property. If the :attr:`drawMode`
                 property is ``True``, selected voxels are immediately filled
                 with the :attr:`fillValue` when the mouse is released.
-    
-    ``desel``   Deselect mode. Identical to ``sel`` mode, except that the 
+
+    ``desel``   Deselect mode. Identical to ``sel`` mode, except that the
                 cursor is used to remove voxels from the selection. If the
                 :attr:`drawMode` property is ``True``, selected voxels are
                 immediately set to 0 when the mouse is released.
 
     ``chsize``  Change-size mode. The use can change the :attr:`selectionSize`
                 attribute via the mouse wheel.
-    
+
     ``selint``  Select by intensity mode.
 
     ``chthres`` Change-threshold mode. The user can change the
                 :attr:`intensityThres` via the mouse wheel.
 
     ``chrad``   Change-radius mode. The user can change the
-                :attr:`searchRadius` via the mouse wheel. 
+                :attr:`searchRadius` via the mouse wheel.
     =========== ===============================================================
 
 
     **Actions**
-    
+
 
     The ``OrthoEditProfile`` defines the following actions, on top of those
     already defined by the :class:`.OrthoViewProfile`:
@@ -100,7 +100,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
        copySelection
        pasteSelection
 
-    
+
     **Annotations**
 
 
@@ -111,14 +111,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
      - The *cursor* annotation. This is a :class:`.Rect` annotation
        representing a cursor at the voxel, or voxels, underneath the
        current mouse location.
-    
+
      - The *selection* annotation. This is a :class:`.VoxelSelection`
        annotation which displays the :class:`.Selection`.
 
 
     **The display space**
 
-    
+
     The ``OrthoEditProfile`` class has been written in a way which requires
     the :class:`.Image` instance that is being edited to be displayed in
     *scaled voxel* (a.k.a. ``pixdim``) space.  Therefore, when an ``Image``
@@ -130,12 +130,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     selectionCursorColour = props.Colour(default=(1, 1, 0, 0.7))
     """Colour used for the cursor annotation. """
 
-    
+
     selectionOverlayColour = props.Colour(default=(1, 0.25, 1, 0.4))
     """Colour used for the selection annotation, which displays the voxels
     that are currently selected.
     """
-    
+
 
     locationFollowsMouse = props.Boolean(deafult=True)
     """If ``True``, when the user is drawing/erasing/selectiong by clicking and
@@ -145,26 +145,26 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     Users running on a slower machine may wish to disable this option.
     """
 
-    
+
     showSelection = props.Boolean(default=True)
     """When :attr:`drawMode` is ``False,` the selection overlay can be hidden
     by setting this to ``False``.
     """
-    
-    
+
+
     selectionSize = props.Int(minval=1, maxval=100, default=3, clamped=True)
     """In ``sel`` and ``desel`` modes, defines the size of the selection
     cursor.
     """
 
-    
+
     selectionIs3D = props.Boolean(default=False)
     """In ``sel`` and ``desel`` mode, toggles the cursor between a 2D square
     and a 3D cube. In ``selint`` mode, toggles the selection space between the
     current slice, and the full 3D volume.
     """
 
-    
+
     fillValue = props.Real(default=1, clamped=True)
     """The value used when drawing/filling voxel values - all voxels in the
     selection will be filled with this value.
@@ -174,12 +174,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     eraseValue = props.Real(default=0, clamped=True)
     """The value used when erasing voxel values - all voxels in the
     selection will be filled with this value.
-    """ 
+    """
 
 
     drawMode = props.Boolean(default=True)
     """If ``True``, when in ``sel`` or ``desel`` mode, clicks and click+
-    drags cause the image to be immediately modified. Otherwise, editing 
+    drags cause the image to be immediately modified. Otherwise, editing
     is a two stage process (as described in the :class:`.Editor` class
     documentation).
 
@@ -204,13 +204,13 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     is first selected, but can also be manually controlled via this property.
     """
 
-    
+
     localFill = props.Boolean(default=False)
     """In ``selint`` mode, if this property is ``True``, voxels can only be
     selected if they are adjacent to an already selected voxel. Passed as the
     ``local`` argument to the :meth:`.Selection.selectByValue` method.
     """
-    
+
 
     limitToRadius = props.Boolean(default=False)
     """In ``selint`` mode, if this property is ``True``, the search region
@@ -218,7 +218,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     radius specified by the :attr:`searchRadius` property.
     """
 
-    
+
     searchRadius = props.Real(
         minval=0.01, maxval=200, default=0.0, clamped=False)
     """In ``selint`` mode, if :attr:`limitToRadius` is true, this property
@@ -226,24 +226,24 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     argument to the :meth:`.Selection.selectByValue` method.
     """
 
-    
+
     targetImage = props.Choice()
     """By default, all modifications that the user makes will be made on the
     currently selected overlay (the :attr:`.DisplayContext.selectedOverlay`).
     However, this property  can be used to select a different image as the
     target for modifications.
-    
+
     This proprty is mostly useful when in ``selint`` mode - the selection
     can be made based on the voxel intensities in the currently selected
     image, but the selection can be filled in another iamge (e.g. a
     mask/label image).
-    
+
     This property is updated whenever the :class:`.OverlayList` or the
     currently selected overlay changes, so that it contains all other
     overlays which have the same dimensions as the selected overlay.
-    """ 
+    """
 
-    
+
     def __init__(self, viewPanel, overlayList, displayCtx):
         """Create an ``OrthoEditProfile``.
 
@@ -252,8 +252,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         """
 
-        # The currently selected overlay - 
-        # the overlay being edited. 
+        # The currently selected overlay -
+        # the overlay being edited.
         self.__currentOverlay = None
 
         # The 'clipboard' is created by
@@ -290,7 +290,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # location.
         self.__xcurAnnotation = None
         self.__ycurAnnotation = None
-        self.__zcurAnnotation = None 
+        self.__zcurAnnotation = None
 
         # A few performance optimisations are made
         # when in selint mode and limitToRadius is
@@ -350,10 +350,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                          self.__selectionColoursChanged)
         self.addListener('showSelection',
                          self._name,
-                         self.__showSelectionChanged) 
+                         self.__showSelectionChanged)
         self.addListener('intensityThresLimit',
                          self._name,
-                         self.__selintThresLimitChanged) 
+                         self.__selintThresLimitChanged)
         self.addListener('intensityThres',
                          self._name,
                          self.__selintPropertyChanged)
@@ -399,10 +399,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__clipboard       = None
         self.__clipboardSource = None
         self.__cache           = None
-        
+
         orthoviewprofile.OrthoViewProfile.destroy(self)
 
-        
+
     def deregister(self):
         """Destroys all :mod:`.annotations`, and calls
         :meth:`.OrthoViewProfile.deregister`.
@@ -420,7 +420,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         xannot = self.__xcanvas.getAnnotations()
         yannot = self.__ycanvas.getAnnotations()
         zannot = self.__zcanvas.getAnnotations()
-        
+
         annots = [(self.__xselAnnotation, xannot),
                   (self.__xcurAnnotation, xannot),
                   (self.__yselAnnotation, yannot),
@@ -455,7 +455,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         name    = '{}_mask'.format(display.name)
         data    = editor.getSelection().getSelection()
         data    = np.array(data, dtype=overlay.dtype)
-        
+
         copyoverlay.copyImage(self._overlayList,
                               self._displayCtx,
                               self.__currentOverlay,
@@ -470,14 +470,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     def clearSelection(self):
         """Clears the current selection. See :meth:`.Editor.clearSelection`.
         """
-        
+
         if self.__currentOverlay is None:
             return
 
         editor = self.__editors[self.__currentOverlay]
 
         editor.getSelection().clearSelection()
-        
+
         self.__refreshCanvases()
 
 
@@ -513,7 +513,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         editor = self.__editors[self.__currentOverlay]
 
         if self.targetImage is not None:
-            editor = self.__getTargetImageEditor(editor) 
+            editor = self.__getTargetImageEditor(editor)
 
         # See TODO in fillSaelection
         editor.startChangeGroup()
@@ -546,7 +546,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """Pastes the data currently stored in the clipboard into the currently
         selected image, if possible.
         """
-        
+
         if self.__currentOverlay is None:
             return
 
@@ -567,7 +567,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         editor.pasteSelection(clipboard)
         editor.clearSelection()
         editor.endChangeGroup()
- 
+
 
     @actions.action
     def undo(self):
@@ -577,7 +577,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         if self.__currentOverlay is None:
             return
-        
+
         editor = self.__editors[self.__currentOverlay]
 
         # We're disabling notification of changes to the selection
@@ -595,7 +595,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         if any([isinstance(c, fsleditor.SelectionChange) for c in change]):
             self.__xselAnnotation.texture.refresh()
-            
+
         self.__refreshCanvases()
 
 
@@ -614,8 +614,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             change = editor.redo()
 
         if any([isinstance(c, fsleditor.SelectionChange) for c in change]):
-            self.__xselAnnotation.texture.refresh() 
-        
+            self.__xselAnnotation.texture.refresh()
+
         self.__refreshCanvases()
 
 
@@ -624,7 +624,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         state of various actions that are irrelevant when in draw mode.
         """
 
-        # The only possible profile modes 
+        # The only possible profile modes
         # when drawMode==True are sel/desel.
         if self.drawMode and self.mode not in ('nav', 'sel', 'desel'):
             self.mode = 'sel'
@@ -638,7 +638,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         with props.skip(self, 'showSelection', self._name):
             self.showSelection = True
-        
+
         self.__updateTargetImage()
         self.__setCopyPasteState()
 
@@ -666,12 +666,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         self.copySelection .enabled = enableCopy
         self.pasteSelection.enabled = enablePaste
- 
+
 
     def __selectionColoursChanged(self, *a):
         """Called when either of the :attr:`selectionOverlayColour` or
         :attr:`selectionCursorColour` properties change.
-        
+
         Updates the  :mod:`.annotations` colours accordingly.
         """
         if self.__xselAnnotation is None:
@@ -703,7 +703,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         with props.skip(self, 'targetImage', self._name):
             self.targetImage = None
-            
+
         overlay = self.__currentOverlay
 
         if overlay is None:
@@ -714,7 +714,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             for ovl in self._overlayList:
                 if ovl is not overlay and overlay.sameSpace(ovl):
                     compatibleOverlays.append(ovl)
-                    
+
         self.getProp('targetImage').setChoices(compatibleOverlays,
                                                instance=self)
 
@@ -722,19 +722,19 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     def __getTargetImageEditor(self, srcEditor):
         """If the :attr:`targetImage` is set to an image other than the
         currently selected one, this method returns an :class:`.Editor`
-        for the target image. 
+        for the target image.
         """
 
         if self.targetImage is None:
             return srcEditor
-        
+
         tgtEditor = self.__editors[self.targetImage]
         srcSel    = srcEditor.getSelection()
         tgtSel    = tgtEditor.getSelection()
-        
+
         tgtSel.setSelection(srcSel.getSelection(), (0, 0, 0))
         srcSel.clearSelection()
-        
+
         return tgtEditor
 
 
@@ -747,18 +747,18 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         if image is None: image = self.__currentOverlay
         if image is None: return
-        
+
         editor = self.__editors.get(image, None)
 
         if editor is None:
             editor = fsleditor.Editor(image,
                                       self._overlayList,
                                       self._displayCtx)
-            self.__editors[image] = editor 
+            self.__editors[image] = editor
 
 
     def __setPropertyLimits(self):
-        """Called by the :meth:`__selectedOverlayChanged` method. 
+        """Called by the :meth:`__selectedOverlayChanged` method.
         """
 
         overlay = self.__currentOverlay
@@ -781,7 +781,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.setConstraint('fillValue',  'minval', dmin)
         self.setConstraint('fillValue',  'maxval', dmax)
         self.setConstraint('eraseValue', 'minval', dmin)
-        self.setConstraint('eraseValue', 'maxval', dmax) 
+        self.setConstraint('eraseValue', 'maxval', dmax)
 
         # Retrieve cached values. The cached
         # targetImage is set in the
@@ -794,7 +794,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if limit is None or limit == 0:
             dmin, dmax = overlay.dataRange
             limit      = (dmax - dmin) / 2.0
- 
+
         if thres is None: thres = 0
         else:             thres = min(thres, limit)
 
@@ -809,16 +809,16 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if radius is None or radius == 0:
             radius = radiusLimit / 4.0
 
-        # Initialise property values, or 
+        # Initialise property values, or
         # restore them from the cache.
         with props.skip(self, 'searchRadius', self._name):
             self.setConstraint('searchRadius', 'maxval', radiusLimit)
             self.searchRadius = radius
-            
+
         with props.skip(self, 'intensityThres', self._name):
             self.setConstraint('intensityThres', 'maxval', limit)
             self.intensityThres = thres
-            
+
         with props.skip(self, 'intensityThresLimit', self._name):
             self.intensityThresLimit = limit
 
@@ -856,7 +856,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # TODO - If the current overlay has been removed,
         #        this will cause an error later on. You
         #        need to handle this scenario here.
-        # 
+        #
         # for overlay, editor in self.__editors:
         #     if overlay not in self._overlayList:
         #         self.__editors.pop(overlay)
@@ -891,7 +891,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__updateTargetImage()
         self.__setPropertyLimits()
         self.__setCopyPasteState()
-        
+
         # If there is no selected overlay (the overlay
         # list is empty), don't do anything.
         if overlay is None:
@@ -905,11 +905,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # or 'label' types
         if not isinstance(overlay, fslimage.Image) or \
            display.overlayType not in ('volume', 'mask', 'label'):
-            
+
             self.__currentOverlay = None
             return
 
-        # Update the limits/options on all properties. 
+        # Update the limits/options on all properties.
         self.__setPropertyLimits()
         self.__setCopyPasteState()
 
@@ -922,14 +922,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             msg   = strings.messages[self, 'imageChange']
             hint  = strings.messages[self, 'imageChangeHint']
             msg   = msg.format(overlay.name)
-            hint  = hint.format(overlay.name) 
+            hint  = hint.format(overlay.name)
 
             global _suppressOverlayChangeWarning
             if not _suppressOverlayChangeWarning:
 
                 cbMsg = strings.messages[self, 'imageChange.suppress']
                 title = strings.titles[  self, 'imageChange']
-                
+
                 dlg   = fsldlg.CheckBoxMessageDialog(
                     self._viewPanel,
                     title=title,
@@ -944,14 +944,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
                 _suppressOverlayChangeWarning  = dlg.CheckBoxState()
 
-            status.update(msg) 
+            status.update(msg)
             self._displayCtx.displaySpace = overlay
 
         # Load the editor for the overlay (create
         # one if necessary), and add listeners to
         # some editor/selection properties
         editor = self.__editors.get(overlay, None)
-        
+
         if editor is None:
             editor = fsleditor.Editor(overlay,
                                       self._overlayList,
@@ -994,18 +994,18 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # Bind undo/redo action enabled states
         self.undo.bindProps('enabled', editor.undo)
         self.redo.bindProps('enabled', editor.redo)
-    
+
         # Create a selection annotation and
         # a cursor annotation for each canvas
         sels         = []
-        curs         = [] 
+        curs         = []
         cursorKwargs = {'colour'  : self.selectionCursorColour,
                         'width'   : 2,
                         'expiry'  : 0.5,
                         'enabled' : False}
 
         for c in [self.__xcanvas, self.__ycanvas, self.__zcanvas]:
-            
+
             sels.append(annotations.VoxelSelection(
                 c.getAnnotations(),
                 c.xax,
@@ -1039,7 +1039,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         yannot.obj(self.__yselAnnotation, hold=True)
         yannot.obj(self.__ycurAnnotation, hold=True)
         zannot.obj(self.__zselAnnotation, hold=True)
-        zannot.obj(self.__zcurAnnotation, hold=True) 
+        zannot.obj(self.__zcurAnnotation, hold=True)
 
         self.__refreshCanvases()
 
@@ -1053,7 +1053,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         if self.__currentOverlay is None:
             return None
-        
+
         opts = self._displayCtx.getOpts(self.__currentOverlay)
         return opts.getVoxel(canvasPos)
 
@@ -1074,7 +1074,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     def __drawCursorAnnotation(self, canvas, voxel, blockSize=None):
         """Draws the cursor annotation. Highlights the specified voxel with a
         :class:`~fsleyes.gl.annotations.Rect` annotation.
-        
+
         This is used by mouse motion event handlers, so the user can
         see the possible selection, and thus what would happen if they
         were to click.
@@ -1134,7 +1134,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                                       blockSize,
                                       axes=axes,
                                       bias='high')
- 
+
         if corners is None:
             self.__hideCursorAnnotation()
             return
@@ -1158,13 +1158,13 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                 cur.w = 0
                 cur.h = 0
                 continue
-            
+
             cur.xy = cmin[[xax, yax]]
             cur.w  = cmax[xax] - cmin[xax]
             cur.h  = cmax[yax] - cmin[yax]
 
         # Only draw the cursor on the current
-        # canvas if locFolMouse is false 
+        # canvas if locFolMouse is false
         for cur, can in zip(cursors, canvases):
             cur.resetExpiry()
             cur.enabled = can is canvas or self.locationFollowsMouse
@@ -1209,18 +1209,18 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.locationFollowsMouse and \
            (mousePos  is not None)   and \
            (canvasPos is not None):
-            
+
             self._navModeLeftMouseDrag(ev, canvas, mousePos, canvasPos)
 
             if forceRefresh:
                 for c in self.getEventTargets():
                     c.Refresh()
 
-        # Otherwise just update the canvas 
+        # Otherwise just update the canvas
         # that triggered the event
         else:
             canvas.Refresh()
-            
+
 
     def __applySelection(self,
                          canvas,
@@ -1233,12 +1233,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :class:`.Selection`.
 
         :arg canvas:  The source :class:`.SliceCanvas`.
-        
+
         :arg voxel:   Coordinates of centre voxel.
-        
+
         :arg add:     If ``True`` a block is added to the selection,
                       otherwise it is removed.
-        
+
         :arg combine: Tell the :class:`.Selection` object to combine this
                       change with the most recent one.
 
@@ -1256,9 +1256,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         blockSize = self.selectionSize * np.min(overlay.pixdim)
 
         if from_ is not None:
-            
+
             args = (from_, voxel, blockSize, axes, 'high', combine)
-            
+
             if add: block, offset = selection.selectLine(  *args)
             else:   block, offset = selection.deselectLine(*args)
 
@@ -1271,7 +1271,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                 blockSize,
                 axes=axes,
                 bias='high')
-            
+
             if add: selection.addToSelection(     block, offset, combine)
             else:   selection.removeFromSelection(block, offset, combine)
 
@@ -1285,7 +1285,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         to improve subsequent selection performance when in ``selint`` mode,
         and when :attr:`limitToRadius` is ``True``.
 
-        
+
         Basically, if the current selection is limited by radius, and a new,
         similarly limited selection is made, we do not need to clear the
         entire selection before making the new selection - we just need to
@@ -1296,18 +1296,18 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         region of the first selection is merged with the region of the second
         selection, and only this part of the ``Selection`` image is refreshed.
 
-        
+
         This method (and the :meth:`__getSelectionMerger` method) contains some
         simple, but awkward, logic which figures out when a merge can happen
         and, conversely, when the full selection does need to be cleared.
 
-        
+
         :arg offset: Offset into the selection array of the change.
         :arg size:   Shape of the change.
         """
 
         # If the user has manually selected anything,
-        # we can't merge 
+        # we can't merge
         if self.__mergeMode == 'sel':
             return
 
@@ -1328,10 +1328,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
           - The string ``'clear'``, indicating that the whole selection (or
             the whole slice, if :attr:`selectionIs3D` is ``False``) needs to
             be cleared.
-        
+
           - The value ``None`` indicating that the selection does not need to
             be cleared, and a merge does not need to be made.
-        
+
           - A tuple containing the ``(offset, size)`` of a previous change
             to the selection, specifying the portion of the selection which
             needs to be cleared, and which can be subsequently merged with
@@ -1369,7 +1369,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             # Otherwise we can merge the old
             # selection with the new selection.
             return self.__mergeBlock
-        
+
         finally:
             self.__mergeMode   = None
             self.__merge3D     = None
@@ -1414,7 +1414,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
         if self.__currentOverlay is None:
             return False
-        
+
         # We clear the Selection object's most
         # recent saved change - all additions
         # to the selection during this click+drag
@@ -1426,14 +1426,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # selection needs to be refreshed.
         selection = self.__editors[self.__currentOverlay].getSelection()
         selection.setChange(None, None)
-            
+
         voxel = self.__getVoxelLocation(canvasPos)
 
         if voxel is not None:
             self.__applySelection(      canvas, voxel, add=add, combine=True)
             self.__drawCursorAnnotation(canvas, voxel)
             self.__dynamicRefreshCanvases(ev,  canvas, mousePos, canvasPos)
- 
+
 
         return voxel is not None
 
@@ -1450,20 +1450,20 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         Adds to the current :class:`Selection`.
 
         This method is also used by :meth:`_deselModeLeftMouseDown`, which
-        may set the ``add`` parameter to ``False``. 
-        
+        may set the ``add`` parameter to ``False``.
+
         :arg add:  If ``True`` (default) a block at the cursor is added to the
                    selection. Otherwise it is removed.
 
         :arg mode: The current profile mode (defaults to ``'sel'``).
-        """ 
+        """
         voxel = self.__getVoxelLocation(canvasPos)
 
         if voxel is not None:
 
             lastPos = self.getLastMouseLocation()[1]
             lastPos = self.__getVoxelLocation(lastPos)
-            
+
             self.__applySelection(      canvas,
                                         voxel,
                                         add=add,
@@ -1489,17 +1489,17 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                         fill the selection with. If not provided, defaults
                         to :attr:`fillValue`.
         """
-        
+
         if self.__currentOverlay is None:
             return False
-        
+
         editor    = self.__editors[self.__currentOverlay]
         selection = editor.getSelection()
 
         # Immediate draw mode - fill
         # and clear the selection.
         if self.drawMode:
-            
+
             if fillValue is None:
                 fillValue = self.fillValue
 
@@ -1514,7 +1514,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             restrict      = [slice(o, o + s) for o, s in zip(off, new.shape)]
 
             selection.clearSelection(restrict=restrict)
-        
+
         self.__refreshCanvases()
 
         return True
@@ -1528,7 +1528,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__hideCursorAnnotation()
         self.__dynamicRefreshCanvases(ev, canvas)
 
-    
+
     def _deselModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse down events in ``desel`` mode.
 
@@ -1554,7 +1554,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                                    add=self.drawMode,
                                    mode='desel')
 
-        
+
     def _deselModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse up events in ``desel`` mode.
 
@@ -1618,7 +1618,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__refreshCanvases()
 
         if voxel is not None:
-            
+
             # Asynchronously update the select-by-intensity
             # selection - we do it async, and with a time out,
             # so we don't queue loads of redundant jobs while
@@ -1635,17 +1635,17 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                            'maxval',
                            self.intensityThresLimit)
 
-    
+
     def __selintSelect(self, voxel, canvas):
         """Selects voxels by intensity, using the specified ``voxel`` as
         the seed location.
 
         Called by the :meth:`_selintModeLeftMouseDown`,
-        :meth:`_selintModeLeftMouseDrag`, 
+        :meth:`_selintModeLeftMouseDrag`,
         :meth:`_selintModeLeftMouseWheel`, and :meth:`__selintPropertyChanged`
         methods.  See :meth:`.Selection.selectByValue`.
         """
-        
+
         overlay = self.__currentOverlay
 
         if overlay is None:
@@ -1660,8 +1660,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.searchRadius   > 0: searchRadius   = self.searchRadius
         else:                       searchRadius   = 0
         if self.intensityThres > 0: intensityThres = self.intensityThres
-        else:                       intensityThres = 0 
-        
+        else:                       intensityThres = 0
+
         if not self.limitToRadius:
             searchRadius = None
         else:
@@ -1692,12 +1692,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             with selection.skipAll():
                 selection.clearSelection(restrict=restrict)
 
-        # We only need to clear a region 
+        # We only need to clear a region
         # within the selection
         elif merge is not None:
 
             # Note that we are telling the
-            # selectByValuem method below 
+            # selectByValuem method below
             # 'combine' any previous selection
             # change with the new one, This
             # means that the entire selection
@@ -1708,7 +1708,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                 # the whole slice, as it should be fast
                 # enough.
                 if not self.selectionIs3D:
-                     
+
                     selection.clearSelection(restrict=restrict)
 
                 # Otherwise we just clear the region
@@ -1754,7 +1754,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         return voxel is not None
 
-        
+
     def _selintModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse down events in ``selint`` mode.
 
@@ -1765,7 +1765,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         if self.__currentOverlay is None:
             return False
-        
+
         voxel = self.__getVoxelLocation(canvasPos)
 
         if voxel is not None:
@@ -1774,18 +1774,18 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         return voxel is not None
 
-        
+
     def _selintModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse drag events in ``selint`` mode.
 
         A select-by-intensity is re-run with the current mouse location.  See
         the :meth:`__selintSelect` method.
-        """ 
+        """
 
         voxel = self.__getVoxelLocation(canvasPos)
 
         if voxel is not None:
-            
+
             refreshArgs = (ev, canvas, mousePos, canvasPos)
 
             self.__drawCursorAnnotation(canvas, voxel, 1)
@@ -1794,7 +1794,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         return voxel is not None
 
-        
+
     def _selintModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse up events in ``selint`` mode. Ends the :class:`.Editor`
         change group that was started in the :meth:`_selintModeLeftMouseDown`
@@ -1802,18 +1802,18 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
         if self.__currentOverlay is None:
             return False
-        
+
         self.__refreshCanvases()
 
         return True
 
 
     def _selintModeMouseLeave(self, ev, canvas, mousePos, canvasPos):
-        """Handles mouse leave events in ``selint`` mode. Makes sure that 
+        """Handles mouse leave events in ``selint`` mode. Makes sure that
         the selection cursor annotation is not shown on any canvas.
-        """ 
+        """
         self.__hideCursorAnnotation()
-        self.__dynamicRefreshCanvases(ev, canvas) 
+        self.__dynamicRefreshCanvases(ev, canvas)
 
 
     def _chthresModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
@@ -1822,7 +1822,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         The :attr:`intensityThres` value is decreased/increased according to
         the mouse wheel direction. If the mouse button is down,
         select-by-intensity is re-run at the current mouse location.
-        """ 
+        """
         overlay   = self._displayCtx.getSelectedOverlay()
         dataRange = overlay.dataRange[1] - overlay.dataRange[0]
         step      = 0.01 * dataRange
@@ -1832,17 +1832,17 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         else:           return False
 
         self.intensityThres += offset
-        
+
         return True
 
-                
+
     def _chradModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
         """Handles mouse wheel events in ``chrad`` mode.
 
         The :attr:`searchRadius` value is decreased/increased according
         to the mouse wheel direction. If the mouse button is down,
         select-by-intensity is re-run at the current mouse location.
-        """ 
+        """
 
         if   wheel > 0: offset =  2.5
         elif wheel < 0: offset = -2.5

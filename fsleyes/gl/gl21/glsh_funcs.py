@@ -50,17 +50,17 @@ def init(self):
 
 def destroy(self):
     """Destroys the shader program """
-    
+
     if self.shader is not None:
         self.shader.destroy()
         self.shader = None
-        
+
 
 def compileShaders(self):
     """Creates a :class:`.GLSLShader`, and attaches it to this :class:`.GLSH`
     instance as an attribute called ``shader``.
     """
-    
+
     if self.shader is not None:
         self.shader.destroy()
 
@@ -72,17 +72,17 @@ def compileShaders(self):
         fragShader = 'glvolume'
     else:
         vertShader = 'glsh'
-        fragShader = 'glsh' 
+        fragShader = 'glsh'
 
     vertSrc = shaders.getVertexShader(  vertShader)
     fragSrc = shaders.getFragmentShader(fragShader)
-    
+
     self.shader = shaders.GLSLShader(vertSrc, fragSrc, indexed=True)
 
 
 def updateShaderState(self):
     """Updates the state of the vertex and fragment shaders. """
-    
+
     shader  = self.shader
     image   = self.image
     opts    = self.displayOpts
@@ -125,8 +125,8 @@ def updateShaderState(self):
         texZero         = 0.0 * invVoxValXform[0, 0] + invVoxValXform[0, 3]
         img2CmapXform   = transform.concat(
             self.cmapTexture.getCoordinateTransform(),
-            voxValXform) 
-        
+            voxValXform)
+
         changed |= shader.set('clipTexture',      1)
         changed |= shader.set('imageTexture',     2)
         changed |= shader.set('colourTexture',    3)
@@ -140,8 +140,8 @@ def updateShaderState(self):
         changed |= shader.set('texZero',          texZero)
         changed |= shader.set('invertClip',       False)
         changed |= shader.set('colourCoordXform', colourXform)
-        changed |= shader.set('clipCoordXform',   clipXform) 
-    
+        changed |= shader.set('clipCoordXform',   clipXform)
+
     else:
 
         cmapXform            = self.cmapTexture.getCoordinateTransform()
@@ -164,7 +164,7 @@ def updateShaderState(self):
         changed |= shader.set('modCoordXform',    modXform)
 
     shader.setAtt('vertex',   self.vertices)
-    shader.setAtt('vertexID', self.vertIdxs) 
+    shader.setAtt('vertexID', self.vertIdxs)
     shader.setIndices(        self.indices)
 
     shader.unload()
@@ -185,7 +185,7 @@ def preDraw(self):
     # We transpose mvMat because OpenGL is column-major
     mvMat        = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)[:3, :3].T
     v2dMat       = self.displayOpts.getTransform('voxel', 'display')[:3, :3]
-    
+
     normalMatrix = transform.concat(mvMat, v2dMat)
     normalMatrix = npla.inv(normalMatrix).T
 
@@ -194,7 +194,7 @@ def preDraw(self):
     gl.glEnable(gl.GL_CULL_FACE)
     gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
     gl.glEnable(gl.GL_DEPTH_TEST)
-    gl.glCullFace(gl.GL_BACK) 
+    gl.glCullFace(gl.GL_BACK)
 
 
 def draw(self, zpos, xform=None, bbox=None):
@@ -212,7 +212,7 @@ def draw(self, zpos, xform=None, bbox=None):
 
     if len(voxels) == 0:
         return
-    
+
     voxIdxs = np.arange(voxels.shape[0], dtype=np.float32)
 
     shader.setAtt('voxel',           voxels,  divisor=1)
@@ -222,7 +222,7 @@ def draw(self, zpos, xform=None, bbox=None):
     shader.set(   'radXform',        self.radTexture.voxValXform)
 
     shader.loadAtts()
-    
+
     arbdi.glDrawElementsInstancedARB(
         gl.GL_TRIANGLES, self.nVertices, gl.GL_UNSIGNED_INT, None, len(voxels))
 
@@ -231,7 +231,7 @@ def postDraw(self):
     """Called by :meth:`.GLSH.draw`. Cleans up the shader program and GL
     state.
     """
-    
+
     self.shader.unloadAtts()
     self.shader.unload()
     gl.glDisable(gl.GL_CULL_FACE)

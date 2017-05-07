@@ -29,10 +29,10 @@ def init(self):
     """Calls :func:`compileShaders` and :func:`updateShaderState`. """
 
     self.shader = None
-    
+
     compileShaders(   self)
     updateShaderState(self)
-                    
+
 
 def destroy(self):
     """Cleans up the shader programs."""
@@ -69,7 +69,7 @@ def updateShaderState(self):
 
     # The clipping range options are in the voxel value
     # range, but the shader needs them to be in image
-    # texture value range (0.0 - 1.0). So let's scale 
+    # texture value range (0.0 - 1.0). So let's scale
     # them.
     imageIsClip = opts.clipImage is None
     imgXform    = self.imageTexture.invVoxValXform
@@ -95,7 +95,7 @@ def updateShaderState(self):
     shader.load()
 
     changed = False
-    
+
     changed |= shader.set('useSpline',        opts.interpolation == 'spline')
     changed |= shader.set('imageShape',       imageShape)
     changed |= shader.set('clipLow',          clipLow)
@@ -139,11 +139,11 @@ def preDraw(self):
 def draw(self, zpos, xform=None, bbox=None):
     """Draws the specified slice from the specified image on the canvas.
 
-    :arg self:    The :class:`.GLVolume` object which is managing the image 
+    :arg self:    The :class:`.GLVolume` object which is managing the image
                   to be drawn.
-    
+
     :arg zpos:    World Z position of slice to be drawn.
-    
+
     :arg xform:   A 4*4 transformation matrix to be applied to the vertex
                   data.
 
@@ -170,7 +170,7 @@ def drawAll(self, zposes, xforms):
     texCoords = np.zeros((nslices * 6, 3), dtype=np.float32)
 
     for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
-        
+
         v, vc, tc = self.generateVertices(zpos, xform)
         vertices[ i * 6: i * 6 + 6, :] = v
         voxCoords[i * 6: i * 6 + 6, :] = vc

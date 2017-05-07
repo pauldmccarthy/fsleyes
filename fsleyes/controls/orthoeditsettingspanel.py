@@ -5,8 +5,8 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`OrthoEditSettingsPanel`, a *FSLeyes*
-control panel which contains settings to manage an 
-:class:`.OrthoEditProfile`. 
+control panel which contains settings to manage an
+:class:`.OrthoEditProfile`.
 """
 
 import fsleyes_props    as props
@@ -16,12 +16,12 @@ import fsleyes.panel    as fslpanel
 
 
 class OrthoEditSettingsPanel(fslpanel.FSLeyesSettingsPanel):
-    """The ``OrthoEditSettingsPanel`` is a *FSLeyes* control panel which 
+    """The ``OrthoEditSettingsPanel`` is a *FSLeyes* control panel which
     displays widgets allowing the user to adjust properties of an
     :class:`.OrthoEditProfile`.
     """
 
-    
+
     def __init__(self, parent, overlayList, displayCtx, frame, ortho):
         """Create an ``OrthoEditSettingsPanel``.
 
@@ -29,7 +29,7 @@ class OrthoEditSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         :arg frame:       The :class:`.FSLeyesFrame` instance.
-        :arg ortho:       The :class:`.OrthoPanel` instance. 
+        :arg ortho:       The :class:`.OrthoPanel` instance.
         """
         fslpanel.FSLeyesSettingsPanel.__init__(self,
                                                parent,
@@ -39,9 +39,9 @@ class OrthoEditSettingsPanel(fslpanel.FSLeyesSettingsPanel):
                                                kbFocus=True)
 
         self.__ortho = ortho
-        self.__makeTools() 
+        self.__makeTools()
 
-    
+
     def __makeTools(self):
         """Generates all of the tools and adds them to the :class:`.WidgetList`
         (see :class:`.FSLeyesSettingsPanel`),
@@ -67,7 +67,7 @@ class OrthoEditSettingsPanel(fslpanel.FSLeyesSettingsPanel):
             props.Widget('fillValue',  slider=False, spin=True),
             props.Widget('eraseValue', slider=False, spin=True),
 
-            # 'showSelectionOutline',            
+            # 'showSelectionOutline',
 
             props.Widget('selectionCursorColour'),
             props.Widget('selectionOverlayColour'),
@@ -82,7 +82,7 @@ class OrthoEditSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         ]
 
         selintProps = [
-            
+
             props.Widget(
                 'localFill',
                 dependencies=['mode'],
@@ -99,7 +99,7 @@ class OrthoEditSettingsPanel(fslpanel.FSLeyesSettingsPanel):
                 showLimits=False,
                 dependencies=['mode'],
                 enabledWhen=lambda p, m: m == 'selint'),
-            
+
             props.Widget(
                 'intensityThres',
                 spin=True,
@@ -107,7 +107,7 @@ class OrthoEditSettingsPanel(fslpanel.FSLeyesSettingsPanel):
                 showLimits=False,
                 dependencies=['mode'],
                 enabledWhen=lambda p, m: m == 'selint'),
-            
+
             props.Widget(
                 'searchRadius',
                 spin=True,

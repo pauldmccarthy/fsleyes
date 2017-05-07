@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """The ``displaycontext`` package contains classes which define the display
-options for pretty much everything in *FSLeyes*.  
+options for pretty much everything in *FSLeyes*.
 
 
 .. note:: Before perusing this package, you should read the high level
@@ -46,7 +46,7 @@ namespace. For example::
 
     # The VolumeOpts class is defined in the
     # fsleyes.displaycontext.volumeopts
-    # module, but is available in the 
+    # module, but is available in the
     # fsleyes.displaycontext namespace.
     volopts = fsldc.VolumeOpts(overlay, display, overlayList, displayCtx)
 
@@ -174,7 +174,7 @@ OVERLAY_TYPES = td.TypeDict({
 })
 """This dictionary provides a mapping between all overlay classes,
 and the possible values that the :attr:`Display.overlayType` property
-may take for each of them. 
+may take for each of them.
 
 For each overlay class, the first entry in the corresponding overlay type
 list is used as the default overlay type.
@@ -213,7 +213,7 @@ def getOverlayTypes(overlay):
 
     import fsl.data.image as fslimage
     from . import            shopts
-    
+
     possibleTypes = list(OVERLAY_TYPES[overlay])
 
     if not isinstance(overlay, fslimage.Image):
@@ -225,7 +225,7 @@ def getOverlayTypes(overlay):
     couldBeVector = len(shape) == 4 and shape[-1] == 3
 
     # Or could it be a SH or tensor image?
-    couldBeTensor = len(shape) == 4 and shape[-1] == 6 
+    couldBeTensor = len(shape) == 4 and shape[-1] == 6
     couldBeSH     = len(shape) == 4 and shape[-1] in shopts.SH_COEFFICIENT_TYPE
 
     # Special cases:
@@ -239,10 +239,10 @@ def getOverlayTypes(overlay):
             possibleTypes.remove(   'linevector')
             possibleTypes.insert(0, 'linevector')
             possibleTypes.insert(0, 'rgbvector')
-        
+
     # Otherwise, remove the vector options
     else:
-        
+
         try:               possibleTypes.remove('rgbvector')
         except ValueError: pass
 
@@ -255,6 +255,6 @@ def getOverlayTypes(overlay):
 
     if not couldBeTensor:
         try:               possibleTypes.remove('tensor')
-        except ValueError: pass 
+        except ValueError: pass
 
     return possibleTypes

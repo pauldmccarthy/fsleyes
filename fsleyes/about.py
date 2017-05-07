@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`.AboutDialog` class, a dialog which 
+"""This module provides the :class:`.AboutDialog` class, a dialog which
 displays information about *FSLeyes*.
 """
 
@@ -42,7 +42,7 @@ class AboutDialog(wx.Dialog):
         textPanel   = wx.TextCtrl(self,
                                   size=(-1, 200),
                                   style=(wx.TE_LEFT      |
-                                         wx.TE_RICH      | 
+                                         wx.TE_RICH      |
                                          wx.TE_MULTILINE |
                                          wx.TE_READONLY  |
                                          wx.TE_AUTO_URL))
@@ -76,7 +76,7 @@ class AboutDialog(wx.Dialog):
                     swVer = str(mod.__version__)
             except:
                 swVer = ''
-            
+
             swVersions.append(swVer)
 
         verStr    = strings.about['version']   .format(verStr)

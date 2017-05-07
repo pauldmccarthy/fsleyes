@@ -36,13 +36,13 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         :arg frame:       The :class:`.FSLeyesFrame` instance.
-        :arg ortho:       The :class:`.OrthoPanel` instance. 
+        :arg ortho:       The :class:`.OrthoPanel` instance.
         """
         fslpanel.FSLeyesPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
         profile = ortho.getCurrentProfile()
-        
+
         self.__ortho   = ortho
         self.__profile = profile
         self.__overlay = None
@@ -82,7 +82,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         self.__sizer.Add((1, 10))
         self.__sizer.Add(self.__cropBoxWidget, flag=wx.EXPAND)
         self.__sizer.Add(self.__volumeWidget,  flag=wx.EXPAND)
-        self.__sizer.Add((1, 10)) 
+        self.__sizer.Add((1, 10))
         self.__sizer.Add(self.__sizeLabel,     flag=wx.CENTRE, proportion=1)
         self.__sizer.Add((1, 10))
         self.__sizer.Add(self.__btnSizer,      flag=wx.CENTRE)
@@ -93,7 +93,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         self.__btnSizer.Add(self.__cropButton,      flag=wx.EXPAND)
         self.__btnSizer.Add((10, 1),                flag=wx.EXPAND)
         self.__btnSizer.Add(self.__robustFovButton, flag=wx.EXPAND)
-        self.__btnSizer.Add((10, 1),                flag=wx.EXPAND) 
+        self.__btnSizer.Add((10, 1),                flag=wx.EXPAND)
         self.__btnSizer.Add(self.__cancelButton,    flag=wx.EXPAND)
         self.__btnSizer.Add((10, 1),                flag=wx.EXPAND,
                             proportion=1)
@@ -117,7 +117,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
                                 self.__selectedOverlayChanged)
         overlayList.addListener('overlays',
                                 self._name,
-                                self.__selectedOverlayChanged) 
+                                self.__selectedOverlayChanged)
         profile    .addListener('cropBox',
                                 self._name,
                                 self.__cropBoxChanged)
@@ -141,14 +141,14 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
 
         self.__ortho   = None
         self.__profile = None
-        
+
         fslpanel.FSLeyesPanel.destroy(self)
 
 
     def __registerOverlay(self, overlay):
         """Called by :meth:`__selectedOverlayChanged`. Registers the
         given overlay.
-        """         
+        """
 
         self.__overlay = overlay
 
@@ -177,7 +177,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         try:
             display = self.getDisplayContext().getDisplay(self.__overlay)
             display.removeListener('name', self._name)
-            
+
         except displaycontext.InvalidOverlayError:
             pass
 
@@ -196,7 +196,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         label   = label.format(display.name)
         self.__cropLabel.SetLabel(label)
 
-    
+
     def __selectedOverlayChanged(self, *a):
         """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
         Updates labels appropriately.
@@ -238,8 +238,8 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         else:
             label = strings.labels[self, 'cropSize3d']
             label = label.format(xlen, ylen, zlen)
-        
-        self.__sizeLabel.SetLabel(label) 
+
+        self.__sizeLabel.SetLabel(label)
 
 
     def __cropBoxChanged(self, *a):
@@ -255,7 +255,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         """
         self.__updateSizeLabel()
 
-    
+
     def __onCancel(self, ev=None):
         """Called when the Cancel button is pushed. Calls
         :meth:`.OrthoPanel.toggleCropMode` - this will result in

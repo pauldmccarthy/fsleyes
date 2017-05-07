@@ -30,12 +30,12 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
     """The ``OrthoToolBar`` is a :class:`.FSLeyesToolBar` for use with the
     :class:`.OrthoPanel`. An ``OrthoToolBar`` looks something like this:
 
-    
+
     .. image:: images/orthotoolbar.png
        :scale: 50%
        :align: center
 
-    
+
     The ``OrthoToolBar`` allows the user to control important parts of the
     :class:`.OrthoPanel` display, and also to display a
     :class:`.CanvasSettingsPanel`, which allows control over all aspects of
@@ -59,7 +59,7 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
     :attr:`.OrthoOpts.showLabels` properties.
     """
 
-    
+
     def __init__(self, parent, overlayList, displayCtx, frame, ortho):
         """Create an ``OrthoToolBar``.
 
@@ -68,7 +68,7 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg ortho:       The :class:`.OrthoPanel` instance.
-        """ 
+        """
 
         fsltoolbar.FSLeyesToolBar.__init__(self,
                                            parent,
@@ -77,7 +77,7 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
                                            frame,
                                            height=24,
                                            kbFocus=True)
-        
+
         self.orthoPanel = ortho
 
         # The toolbar has buttons bound to some actions
@@ -127,7 +127,7 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
             'resetDisplay'     : fslicons.findImageFile('resetZoom24'),
             'showCursorAndLabels' : [
                 fslicons.findImageFile('addHighlight24'),
-                fslicons.findImageFile('add24')], 
+                fslicons.findImageFile('add24')],
             'movieMode'        : [
                 fslicons.findImageFile('movieHighlight24'),
                 fslicons.findImageFile('movie24')],
@@ -169,9 +169,9 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
             'showZCanvas'  : fsltooltips.properties[orthoOpts, 'showZCanvas'],
             'toggleCanvasSettingsPanel' : fsltooltips.actions[
                 ortho, 'toggleCanvasSettingsPanel'],
-            
+
         }
-        
+
         targets    = {'screenshot'                : ortho,
                       'movieMode'                 : ortho,
                       'showCursorAndLabels'       : self,
@@ -209,15 +209,15 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
                                  icons=icons['layout'],
                                  tooltip=tooltips['layout']),
             'div',
-            props  .Widget(      'movieMode', 
+            props  .Widget(      'movieMode',
                                  icon=icons['movieMode'],
                                  tooltip=tooltips['movieMode']),
-            props  .Widget(      'showCursorAndLabels', 
+            props  .Widget(      'showCursorAndLabels',
                                  icon=icons['showCursorAndLabels'],
-                                 tooltip=tooltips['showCursorAndLabels']), 
-            actions.ActionButton('resetDisplay', 
+                                 tooltip=tooltips['showCursorAndLabels']),
+            actions.ActionButton('resetDisplay',
                                  icon=icons['resetDisplay'],
-                                 tooltip=tooltips['resetDisplay']), 
+                                 tooltip=tooltips['resetDisplay']),
             props.Widget(        'zoom',
                                  spin=True,
                                  slider=True,
@@ -228,7 +228,7 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
 
         tools = []
         nav   = []
-        
+
         for spec in toolSpecs:
 
             if spec == 'div':
@@ -236,7 +236,7 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
                                                        height=24,
                                                        orient=wx.VERTICAL))
                 continue
-            
+
             widget    = props.buildGUI(self, targets[spec.key], spec)
             navWidget = widget
 
@@ -244,7 +244,7 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
                 widget = self.MakeLabelledTool(
                     widget,
                     strings.properties[targets[spec.key], spec.key])
-            
+
             tools.append(widget)
             nav  .append(navWidget)
 

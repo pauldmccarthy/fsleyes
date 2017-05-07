@@ -25,7 +25,7 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
     (which include properties defined on the :class:`.PlotPanel` base class),
     and the :class:`.TimeSeries` class.
 
-    
+
     A ``TimeSeriesControlPanel`` looks something like this:
 
     .. image:: images/timeseriescontrolpanel.png
@@ -38,21 +38,21 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
 
      - The *Time series plot settings* section has controls which are linked to
        properties of the :class:`.TimeSeriesPanel` class.
-    
+
      - The *General plot settings* section has controls which are linked to
        properties of the :class:`.PlotPanel` base class.
-    
+
      - The *Settings for the current time course* section has controls which
        are linked to properties of the :class:`.TimeSeries` class. These
        properties define how the *current* time course is displayed (see the
        :class:`.TimeSeriesPanel` class documentation).
-    
+
      - The *FEAT plot settings* is only shown if the currently selected overlay
        is a :class:`.FEATImage`. It has controls which are linked to properties
        of the :class:`.FEATTimeSeries` class.
     """
 
-    
+
     def __init__(self, *args, **kwargs):
         """Create a ``TimeSeriesControlPanel``. All arguments are passed
         through to the :meth:`.PlotControlPanel.__init__` method.
@@ -65,7 +65,7 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
                             self._name,
                             self.__plotMelodicICsChanged)
 
-        
+
     def destroy(self):
         """Must be called when this ``TimeSeriesControlPanel`` is no longer
         needed. Removes some property listeners, and calls
@@ -73,7 +73,7 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
         """
         psPanel = self.getPlotPanel()
         psPanel.removeListener('plotMelodicICs', self._name)
-        plotcontrolpanel.PlotControlPanel.destroy(self) 
+        plotcontrolpanel.PlotControlPanel.destroy(self)
 
 
     def generateCustomPlotPanelWidgets(self, groupName):
@@ -94,7 +94,7 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
             kwargs = {}
             if prop == 'plotMode':
                 kwargs['labels'] = strings.choices[tsPanel, 'plotMode']
-                
+
             widget = props.makeWidget(widgetList, tsPanel, prop, **kwargs)
             allWidgets.append(widget)
             widgetList.AddWidget(
@@ -149,13 +149,13 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
             displayName=strings.properties[ts, 'plotFullModelFit'],
             tooltip=fsltooltips.properties[ts, 'plotFullModelFit'],
             groupName=groupName)
-        
+
         widgetList.AddWidget(
             res,
             displayName=strings.properties[ts, 'plotResiduals'],
             tooltip=fsltooltips.properties[ts, 'plotResiduals'],
             groupName=groupName)
-        
+
         widgetList.AddWidget(
             partial,
             displayName=strings.properties[ts, 'plotPartial'],
@@ -175,7 +175,7 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
                 groupName=groupName)
 
         widgetList.AddSpace(groupName=groupName)
-            
+
         for i, pe in enumerate(pes):
             evName = overlay.evNames()[i]
             widgetList.AddWidget(

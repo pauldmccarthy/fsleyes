@@ -30,19 +30,19 @@ class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
     """The ``LightBoxToolBar`` is a :class:`.FSLeyesToolBar` for use with the
     :class:`.LightBoxPanel`. A ``LightBoxToolBar`` looks something like this:
 
-    
+
     .. image:: images/lightboxtoolbar.png
        :scale: 50%
        :align: center
 
-    
+
     The ``LightBoxToolBar`` allows the user to control important parts of the
     :class:`.LightBoxPanel` display, and also to display a
     :class:`.CanvasSettingsPanel`, which allows control over all aspects of a
     ``LightBoxPanel``.
     """
 
-    
+
     def __init__(self, parent, overlayList, displayCtx, frame, lb):
         """Create a ``LightBoxToolBar``.
 
@@ -60,7 +60,7 @@ class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
                                            frame,
                                            height=24,
                                            kbFocus=True)
-        
+
         self.lightBoxPanel = lb
 
         lbOpts = lb.getSceneOptions()
@@ -68,8 +68,8 @@ class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
         if BUM_MODE: coronalIcon          = 'coronalBumSlice24'
         else:        coronalIcon          = 'coronalSlice24'
         if BUM_MODE: coronalHighlightIcon = 'coronalBumSliceHighlight24'
-        else:        coronalHighlightIcon = 'coronalSliceHighlight24' 
-        
+        else:        coronalHighlightIcon = 'coronalSliceHighlight24'
+
         icons = {
             'screenshot'                : fslicons.findImageFile('camera24'),
             'movieMode'                 : [
@@ -90,7 +90,7 @@ class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
         }
 
         tooltips = {
-            
+
             'screenshot'   : fsltooltips.actions[   lb,      'screenshot'],
             'movieMode'    : fsltooltips.properties[lb,      'movieMode'],
             'zax'          : fsltooltips.properties[lbOpts,  'zax'],
@@ -102,13 +102,13 @@ class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
         }
 
         specs = {
-            
+
             'toggleCanvasSettingsPanel' : actions.ToggleActionButton(
                 'toggleCanvasSettingsPanel',
                 actionKwargs={'floatPane' : True},
                 icon=icons['toggleCanvasSettingsPanel'],
                 tooltip=tooltips['toggleCanvasSettingsPanel']),
-            
+
             'screenshot' : actions.ActionButton(
                 'screenshot',
                 icon=icons['screenshot'],
@@ -117,19 +117,19 @@ class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
             'movieMode'    : props.Widget(
                 'movieMode',
                 icon=icons['movieMode'],
-                tooltip=tooltips['movieMode']), 
-            
+                tooltip=tooltips['movieMode']),
+
             'zax'          : props.Widget(
                 'zax',
                 icons=icons['zax'],
                 tooltip=tooltips['zax']),
-            
+
             'sliceSpacing' : props.Widget(
                 'sliceSpacing',
                 spin=False,
                 showLimits=False,
                 tooltip=tooltips['sliceSpacing']),
-            
+
             'zrange'       : props.Widget(
                 'zrange',
                 spin=False,
@@ -137,7 +137,7 @@ class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
                 tooltip=tooltips['zrange'],
                 labels=[strings.choices[lbOpts, 'zrange', 'min'],
                         strings.choices[lbOpts, 'zrange', 'max']]),
-            
+
             'zoom'         : props.Widget(
                 'zoom',
                 spin=False,
@@ -183,6 +183,6 @@ class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
                  zrange,
                  panel]
         nav   = [more, screenshot, zax, movieMode, zrange, zoom, spacing]
-        
+
         self.SetTools(tools)
         self.setNavOrder(nav)

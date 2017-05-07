@@ -28,14 +28,14 @@ class GLRGBVector(glvector.GLVector):
     sub-class of the :class:`.GLVector` class, and uses the functionality
     provided by ``GLVector``.
 
-    
+
     A ``GLRGBVector`` can only show the magnitude of a vector, not its
     orientation. Therefore, the absolute values of the :class:`.Image`
     instance are stored in the :class:`.ImageTexture`. This is accomplished
     by passing a ``prefilter`` function to :meth:`.GLVector.__init__`, which
     forces the image values to be unsigned.
 
-    
+
     The ``GLRGBVector`` uses two OpenGL version-specific modules, the
     :mod:`.gl14.glrgbvector_funcs` and :mod:`.gl21.glrgbvector_funcs` modules,
     to manage the vertex/fragment shader programs that are used in rendering.
@@ -64,7 +64,7 @@ class GLRGBVector(glvector.GLVector):
         :arg image:   An :class:`.Image` or :class:`.DTIFitTensor` instance.
         :arg display: The associated :class:`.Display` instance.
         :arg xax:     Initial display X axis
-        :arg yax:     Initial display Y axis        
+        :arg yax:     Initial display Y axis
         """
 
         # If the overlay is a DTIFitTensor, use the
@@ -74,7 +74,7 @@ class GLRGBVector(glvector.GLVector):
         else:                                      vecImage = image
 
         prefilter = np.abs
-        
+
         def prefilterRange(dmin, dmax):
             return max((0, dmin)), max((abs(dmin), abs(dmax)))
 
@@ -92,7 +92,7 @@ class GLRGBVector(glvector.GLVector):
         self.displayOpts.addListener('interpolation',
                                      self.name,
                                      self.__interpChanged)
-                          
+
 
     def destroy(self):
         """Must be called when this ``GLRGBVector`` is no longer needed.
@@ -112,8 +112,8 @@ class GLRGBVector(glvector.GLVector):
         opts = self.displayOpts
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                            interp = gl.GL_LINEAR 
-        
+        else:                            interp = gl.GL_LINEAR
+
         glvector.GLVector.refreshImageTexture(self, interp)
 
 
@@ -124,9 +124,9 @@ class GLRGBVector(glvector.GLVector):
         opts = self.displayOpts
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                            interp = gl.GL_LINEAR 
-        
-        glvector.GLVector.refreshAuxTexture(self, which, interp) 
+        else:                            interp = gl.GL_LINEAR
+
+        glvector.GLVector.refreshAuxTexture(self, which, interp)
 
 
     def __interpChanged(self, *a):
@@ -136,13 +136,13 @@ class GLRGBVector(glvector.GLVector):
         opts = self.displayOpts
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                            interp = gl.GL_LINEAR 
-        
+        else:                            interp = gl.GL_LINEAR
+
         self.imageTexture   .set(interp=interp)
         self.modulateTexture.set(interp=interp)
         self.clipTexture    .set(interp=interp)
         self.colourTexture  .set(interp=interp)
-        self.asyncUpdateShaderState(alwaysNotify=True) 
+        self.asyncUpdateShaderState(alwaysNotify=True)
 
 
     def compileShaders(self):
@@ -150,12 +150,12 @@ class GLRGBVector(glvector.GLVector):
         version-specific ``compileShaders`` function.
         """
         fslgl.glrgbvector_funcs.compileShaders(self)
-        
+
 
     def updateShaderState(self):
         """Overrides :meth:`.GLVector.compileShaders`. Calls the OpenGL
         version-specific ``updateShaderState`` function.
-        """ 
+        """
         return fslgl.glrgbvector_funcs.updateShaderState(self)
 
 
@@ -170,21 +170,21 @@ class GLRGBVector(glvector.GLVector):
     def draw(self, zpos, xform=None, bbox=None):
         """Overrides :meth:`.GLVector.draw`. Calls the OpenGL version-specific
         ``draw`` function.
-        """ 
+        """
         fslgl.glrgbvector_funcs.draw(self, zpos, xform, bbox)
 
-    
+
     def drawAll(self, zposes, xforms):
         """Overrides :meth:`.GLVector.drawAll`. Calls the OpenGL
         version-specific ``drawAll`` function.
-        """ 
-        fslgl.glrgbvector_funcs.drawAll(self, zposes, xforms) 
+        """
+        fslgl.glrgbvector_funcs.drawAll(self, zposes, xforms)
 
-    
+
     def postDraw(self):
         """Overrides :meth:`.GLVector.postDraw`. Calls the base class
         implementation, and the OpenGL version-specific ``postDraw``
         function.
-        """ 
+        """
         glvector.GLVector.postDraw(self)
-        fslgl.glrgbvector_funcs.postDraw(self) 
+        fslgl.glrgbvector_funcs.postDraw(self)

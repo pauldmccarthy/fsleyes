@@ -16,9 +16,9 @@ from . import                  base
 
 class ClearPerspectiveAction(base.Action):
     """The ``ClearPerspectiveAction`` allows the user to delete all saved
-    perspectives. 
+    perspectives.
     """
-    
+
     def __init__(self, frame):
         """Create a ``ClearPerspectiveAction``. """
         base.Action.__init__(self, func=self.__clearPerspectives)

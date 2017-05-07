@@ -29,7 +29,7 @@ import fsleyes.displaycontext         as displayctx
 
 log = logging.getLogger(__name__)
 
-    
+
 class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
     """The ``OverlayDisplayPanel`` is a :Class:`.FSLeyesPanel` which allows
     the user to change the display settings of the currently selected
@@ -48,18 +48,18 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
       - Settings which are common across all overlays - these are defined
         in the :class:`.Display` class.
-    
+
       - Settings which are specific to the current
         :attr:`.Display.overlayType` - these are defined in the
         :class:`.DisplayOpts` sub-classes.
 
-    
+
     The settings that are displayed on an ``OverlayDisplayPanel`` are
     defined in the :attr:`_DISPLAY_PROPS` and :attr:`_DISPLAY_WIDGETS`
     dictionaries.
     """
 
-    
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create an ``OverlayDisplayPanel``.
 
@@ -89,7 +89,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         self.__currentOverlay = None
         self.__selectedOverlayChanged()
 
-        
+
     def destroy(self):
         """Must be called when this ``OverlayDisplayPanel`` is no longer
         needed. Removes property listeners, and calls the
@@ -101,15 +101,15 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
         if self.__currentOverlay is not None and \
            self.__currentOverlay in self._overlayList:
-            
+
             display = self._displayCtx.getDisplay(self.__currentOverlay)
-            
+
             display.removeListener('overlayType', self._name)
 
         self.__currentOverlay = None
         self.__dispWidgets    = None
         self.__optsWidgets    = None
-        
+
         fslpanel.FSLeyesPanel.destroy(self)
 
 
@@ -137,7 +137,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
         if lastOverlay is not None and \
            lastOverlay in self._overlayList:
-            
+
             lastDisplay = self._displayCtx.getDisplay(lastOverlay)
             lastDisplay.removeListener('overlayType', self._name)
 
@@ -150,12 +150,12 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
         display = self._displayCtx.getDisplay(overlay)
         opts    = display.getDisplayOpts()
-            
+
         display.addListener('overlayType', self._name, self.__ovlTypeChanged)
-        
+
         widgetList.Clear()
         widgetList.AddGroup('display', strings.labels[self, display])
-        widgetList.AddGroup('opts',    strings.labels[self, opts]) 
+        widgetList.AddGroup('opts',    strings.labels[self, opts])
 
         self.__dispWidgets = self.__updateWidgets(display, 'display')
         self.__optsWidgets = self.__updateWidgets(opts,    'opts')
@@ -179,7 +179,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
         self.setNavOrder(self.__dispWidgets + self.__optsWidgets)
         self.Layout()
-        
+
 
     def __updateWidgets(self, target, groupName):
         """Called by the :meth:`__selectedOverlayChanged` and
@@ -200,14 +200,14 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         """
 
         widgetList = self.getWidgetList()
-        
+
         widgetList.ClearGroup( groupName)
         widgetList.RenameGroup(groupName, strings.labels[self, target])
 
         dispProps = _DISPLAY_PROPS.get(target, [], allhits=True)
         dispProps = functools.reduce(lambda a, b: a + b, dispProps)
         dispProps = [_DISPLAY_WIDGETS[target, dp] for dp in dispProps]
- 
+
         labels   = [strings.properties.get((target, p.key), p.key)
                     for p in dispProps]
         tooltips = [fsltooltips.properties.get((target, p.key), None)
@@ -259,7 +259,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
             widgetList.AddWidget(
                 widget,
                 label,
-                tooltip=tooltip, 
+                tooltip=tooltip,
                 groupName=groupName)
 
         self.Layout()
@@ -291,7 +291,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         # Negative colour map widget
         negCmap    = _DISPLAY_WIDGETS[target, 'negativeCmap']
         useNegCmap = _DISPLAY_WIDGETS[target, 'useNegativeCmap']
-        
+
         negCmap    = props.buildGUI(widgets, target, negCmap)
         useNegCmap = props.buildGUI(widgets, target, useNegCmap)
 
@@ -304,7 +304,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         sizer.Add(loadButton, flag=wx.EXPAND)
         sizer.Add(negCmap,    flag=wx.EXPAND)
         sizer.Add(useNegCmap, flag=wx.EXPAND)
-        
+
         return sizer, [negCmap, useNegCmap]
 
 
@@ -330,13 +330,13 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
         return sizer, []
 
-    
+
     def __buildMeshOptsLutWidget(self, target, lutWidget):
         """Builds a panel which contains the provided :attr:`.MeshOpts.lut`
         widget, and also a widget for :attr:`.MeshOpts.useLut`.
         """
         widgets = self.getWidgetList()
-        
+
         # enable lut widget
         enableWidget = _DISPLAY_WIDGETS[target, 'useLut']
         enableWidget = props.buildGUI(widgets, target, enableWidget)
@@ -345,8 +345,8 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
         sizer.Add(enableWidget,  flag=wx.EXPAND)
         sizer.Add(lutWidget, flag=wx.EXPAND, proportion=1)
-        
-        return sizer, [enableWidget] 
+
+        return sizer, [enableWidget]
 
 
     def __buildOverrideDataRangeWidget(self, target, enableWidget):
@@ -355,7 +355,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
         :returns: a ``wx.Sizer`` containing all of the widgets.
         """
-        
+
         widgets = self.getWidgetList()
 
         # Override data range widget
@@ -366,8 +366,8 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
         sizer.Add(enableWidget,  flag=wx.EXPAND)
         sizer.Add(overrideRange, flag=wx.EXPAND, proportion=1)
-        
-        return sizer, [overrideRange] 
+
+        return sizer, [overrideRange]
 
 
 def _imageName(img):
@@ -382,7 +382,7 @@ def _imageName(img):
 def _meshVertexDataName(vdata):
     """Used to generate choice labels for the :attr`.MeshOpts.vertexData`
     property.
-    """ 
+    """
     if vdata is None: return 'None'
     else:             return op.basename(vdata)
 
@@ -498,7 +498,7 @@ _DISPLAY_WIDGETS = td.TypeDict({
     'ColourMapOpts.cmap'           : props.Widget(
         'cmap',
         labels=fslcm.getColourMapLabel),
-    
+
     'ColourMapOpts.useNegativeCmap' : props.Widget('useNegativeCmap'),
     'ColourMapOpts.negativeCmap'    : props.Widget(
         'negativeCmap',
@@ -526,7 +526,7 @@ _DISPLAY_WIDGETS = td.TypeDict({
         showLimits=False,
         slider=True,
         labels=[strings.choices['ColourMapOpts.displayRange.min'],
-                strings.choices['ColourMapOpts.displayRange.max']]), 
+                strings.choices['ColourMapOpts.displayRange.max']]),
 
     # VolumeOpts
     'VolumeOpts.volume'         : props.Widget(
@@ -548,7 +548,7 @@ _DISPLAY_WIDGETS = td.TypeDict({
         slider=False,
         dependencies=['enableOverrideDataRange'],
         enabledWhen=lambda vo, en: en),
-    
+
     # MaskOpts
     'MaskOpts.volume'     : props.Widget(
         'volume',
@@ -573,7 +573,7 @@ _DISPLAY_WIDGETS = td.TypeDict({
         'cmap',
         labels=fslcm.getColourMapLabel,
         dependencies=['colourImage'],
-        enabledWhen=lambda o, ci: ci is not None), 
+        enabledWhen=lambda o, ci: ci is not None),
     'VectorOpts.clippingRange' : props.Widget(
         'clippingRange',
         showLimits=False,
@@ -589,19 +589,19 @@ _DISPLAY_WIDGETS = td.TypeDict({
         labels=[strings.choices['VectorOpts.modulateRange.min'],
                 strings.choices['VectorOpts.modulateRange.max']],
         dependencies=['colourImage', 'modulateImage'],
-        enabledWhen=lambda o, ci, mi: ci is None and mi is not None), 
+        enabledWhen=lambda o, ci, mi: ci is None and mi is not None),
     'VectorOpts.xColour'       : props.Widget(
         'xColour',
         dependencies=['colourImage'],
-        enabledWhen=lambda o, ci: ci is None), 
+        enabledWhen=lambda o, ci: ci is None),
     'VectorOpts.yColour'       : props.Widget(
         'yColour',
         dependencies=['colourImage'],
-        enabledWhen=lambda o, ci: ci is None), 
+        enabledWhen=lambda o, ci: ci is None),
     'VectorOpts.zColour'       : props.Widget(
         'zColour',
         dependencies=['colourImage'],
-        enabledWhen=lambda o, ci: ci is None), 
+        enabledWhen=lambda o, ci: ci is None),
     'VectorOpts.suppressX'     : props.Widget(
         'suppressX',
         dependencies=['colourImage'],
@@ -666,13 +666,13 @@ _DISPLAY_WIDGETS = td.TypeDict({
         dependencies=['outline'],
         enabledWhen=lambda opts, o: o),
 
-    # We override the ColourMapOpts definitions 
+    # We override the ColourMapOpts definitions
     # above, for custom enabledWhen behaviour.
     'MeshOpts.cmap'           : props.Widget(
         'cmap',
         labels=fslcm.getColourMapLabel,
         **meshOptsColourKwargs),
-    
+
     'MeshOpts.useNegativeCmap' : props.Widget(
         'useNegativeCmap',
         **meshOptsColourKwargs),
@@ -716,7 +716,7 @@ _DISPLAY_WIDGETS = td.TypeDict({
                 strings.choices['ColourMapOpts.displayRange.max']],
         dependencies=['vertexData', 'outline'],
         enabledWhen=lambda opts, vd, o: (vd is not None) and o),
-    
+
     # TensorOpts
     'TensorOpts.lighting'         : props.Widget('lighting'),
     'TensorOpts.orientFlip'       : props.Widget('orientFlip'),
@@ -730,7 +730,7 @@ _DISPLAY_WIDGETS = td.TypeDict({
         'tensorScale',
         showLimits=False,
         spin=False),
-        
+
     # LabelOpts
     'LabelOpts.lut'          : props.Widget('lut', labels=lambda l: l.name),
     'LabelOpts.outline'      : props.Widget('outline'),
@@ -745,9 +745,9 @@ _DISPLAY_WIDGETS = td.TypeDict({
         'shResolution',
         spin=False,
         showLimits=False),
-    'SHOpts.shOrder'    : props.Widget('shOrder'), 
-    'SHOpts.orientFlip' : props.Widget('orientFlip'), 
-    'SHOpts.lighting'   : props.Widget('lighting'), 
+    'SHOpts.shOrder'    : props.Widget('shOrder'),
+    'SHOpts.orientFlip' : props.Widget('orientFlip'),
+    'SHOpts.lighting'   : props.Widget('lighting'),
     'SHOpts.size'       : props.Widget(
         'size',
         spin=False,
@@ -757,7 +757,7 @@ _DISPLAY_WIDGETS = td.TypeDict({
         spin=False,
         showLimits=False),
     'SHOpts.colourMode'      : props.Widget(
-        'colourMode', 
+        'colourMode',
         labels=strings.choices['SHOpts.colourMode'],
         dependencies=['colourImage'],
         enabledWhen=lambda o, ci: ci is None),
@@ -793,7 +793,7 @@ _DISPLAY_WIDGETS = td.TypeDict({
     'SHOpts.suppressMode'         : props.Widget(
         'suppressMode',
         dependencies=['colourImage', 'colourMode'],
-        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),    
+        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),
 })
 """This dictionary contains specifications for all controls that are shown on
 an ``OverlayDisplayPanel``.

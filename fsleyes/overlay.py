@@ -7,7 +7,7 @@
 """This module defines the :class:`OverlayList` class, which is a simple but
 fundamental class in *FSLeyes* - it is a container for all loaded overlays.
 Only one ``OverlayList`` ever exists, and it is shared throughout the entire
-application. 
+application.
 
 
 **What is an overlay?**
@@ -42,7 +42,7 @@ One further requirement is imposed on overlay types which derive from the
  -  The ``__init__`` method fo ll sub-classes of the ``Image`` class must
     accept the ``loadData``, ``calcRange``, ``indexed`` , and ``threaded``
     parameters, and pass them through to the base class ``__init__`` method.
- 
+
 
 Currently (``fsleyes`` version |version|) the only overlay types in existence
 (and able to be rendered) are:
@@ -104,20 +104,20 @@ class OverlayList(props.HasProperties):
 
     def __validateOverlay(self, atts, overlay):
         """Makes sure that the given overlay object is valid."""
-        return (hasattr(overlay, 'name')      and 
+        return (hasattr(overlay, 'name')      and
                 hasattr(overlay, 'dataSource'))
 
-        
+
     overlays = props.List(
         listType=props.Object(allowInvalid=False,
                               validateFunc=__validateOverlay))
     """A list of overlay objects to be displayed."""
 
-    
+
     def __init__(self, overlays=None):
         """Create an ``OverlayList`` object from the given sequence of
         overlays."""
-        
+
         if overlays is None: overlays = []
         self.overlays.extend(overlays)
 
@@ -193,7 +193,7 @@ class OverlayList(props.HasProperties):
             return None
 
         absname = op.abspath(name)
-        
+
         for overlay in self.overlays:
 
             if overlay.name == name:
@@ -210,34 +210,34 @@ class OverlayList(props.HasProperties):
             else:
                 if overlay.dataSource == absname:
                     return overlay
-                
+
         return None
 
 
     def __str__(self):
         return self.overlays.__str__()
-    
+
     def __repr__(self):
-        return self.overlays.__str__() 
-            
+        return self.overlays.__str__()
+
 
     # Wrappers around the overlays list property, allowing this
     # OverlayList object to be used as if it is actually a list.
     def __len__(self):
         return self.overlays.__len__()
-    
+
     def __getitem__(self, key):
         return self.overlays.__getitem__(key)
-    
+
     def __iter__(self):
         return self.overlays.__iter__()
-    
+
     def __contains__(self, item):
         return self.overlays.__contains__(item)
-    
+
     def __setitem__(self, key, val):
         return self.overlays.__setitem__(key, val)
-    
+
     def __delitem__(self, key):
 
         if   isinstance(key, slice): pass
@@ -247,15 +247,15 @@ class OverlayList(props.HasProperties):
         ovls = self[key]
         for ovl in ovls:
             self.__initOverlayType.pop(ovl, None)
-            
+
         return self.overlays.__delitem__(key)
-    
+
     def index(self, item):
         return self.overlays.index(item)
-    
+
     def count(self, item):
         return self.overlays.count(item)
-    
+
     def append(self, item, overlayType=None):
 
         with props.suppress(self, 'overlays', notify=True):
@@ -265,7 +265,7 @@ class OverlayList(props.HasProperties):
             if overlayType is not None:
                 self.__initOverlayType[item] = overlayType
 
-    
+
     def extend(self, iterable, overlayTypes=None):
 
         with props.suppress(self, 'overlays', notify=True):
@@ -282,24 +282,24 @@ class OverlayList(props.HasProperties):
         ovl = self.overlays.pop(index)
         self.__initOverlayType.pop(ovl, None)
         return ovl
-    
+
     def move(self, from_, to):
         return self.overlays.move(from_, to)
-    
+
     def remove(self, item):
         self.__initOverlayType.pop(item, None)
         self.overlays.remove(item)
-    
+
     def insert(self, index, item, overlayType=None):
 
         with props.suppress(self, 'overlays', notify=True):
-        
+
             self.overlays.insert(index, item)
 
             if overlayType is not None:
-                self.__initOverlayType[item] = overlayType 
-        
-    
+                self.__initOverlayType[item] = overlayType
+
+
     def insertAll(self, index, items):
         return self.overlays.insertAll(index, items)
 
@@ -325,7 +325,7 @@ class ProxyImage(fslimage.Image):
         kwargs['header'] = base.header
 
         fslimage.Image.__init__(self, base[:], *args, **kwargs)
-        
+
 
     def getBase(self):
         """Returns the base :class:`Image` of this ``ProxyImage``. """
@@ -344,17 +344,17 @@ class PropCache(object):
     the :meth:`get` method.
     """
 
-    
+
     def __init__(self, overlayList, displayCtx, target, propNames):
         """Create a ``PropCache``.
 
         :arg overlayList: The :class:`.OverlayList`.
-        
+
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        
+
         :arg target:      The :class:`.HasProperties` instance containing
                           the properties that are to be cached.
-        
+
         :arg propNames:   List containing the names of ``target`` properties
                           to be cached.
         """
@@ -390,18 +390,18 @@ class PropCache(object):
         self.__displayCtx     = None
         self.__currentOverlay = None
         self.__cache          = None
-        
+
 
     def get(self, overlay, propName, *args):
         """Returns the cached property value for the specified ``overlay``.
         If there is no cached property value for the overlay, the specified
-        ``default`` value is returned. If a ``default`` value is not 
+        ``default`` value is returned. If a ``default`` value is not
         provided, the current property value is returned.
 
         :arg overlay:  Overlay to retrieve the property value for
-        
+
         :arg propName: Name of the property to return a value for
-        
+
         :arg default:  Value to return if a value for the the
                        overlay/property is not cached
         """
@@ -410,7 +410,7 @@ class PropCache(object):
             raise ValueError('Invalid arguments passed to PropCache.get')
 
         defaultProvided = len(args) == 1
-        
+
         val = self.__cache.get((overlay, propName), None)
 
         if val is None:
@@ -421,7 +421,7 @@ class PropCache(object):
 
 
     def __selectedOverlayChanged(self, *a):
-        """Called when either the :attr:`.DisplayContext.selectedOverlay`, 
+        """Called when either the :attr:`.DisplayContext.selectedOverlay`,
         or the :attr:`.OverlayList.overlays` change. Caches property values
         pertaining to the previously selected overlay.
         """
@@ -483,7 +483,7 @@ def guessDataSourceType(path):
 
     # So are GIFTIS
     if path.endswith('.gii'):
-        return fslgifti.GiftiSurface, path 
+        return fslgifti.GiftiSurface, path
 
     # Analysis directory?
     if op.isdir(path):
@@ -503,7 +503,7 @@ def guessDataSourceType(path):
     if   melanalysis .isMelodicImage(path): return melimage.MelodicImage, path
     elif featanalysis.isFEATImage(   path): return featimage.FEATImage,   path
     else:                                   return fslimage.Image,        path
-        
+
     # Otherwise, I don't
     # know what to do
     return None, path
@@ -514,13 +514,13 @@ def findFEATImage(overlayList, overlay):
     :class:`.FEATImage` associated with the given ``overlay``. Returns the
     ``FEATImage`` if found, otherwise returns ``None``.
     """
-    
+
     import fsl.data.featanalysis as featanalysis
     import fsl.data.featimage    as featimage
-    
+
     if isinstance(overlay, featimage.FEATImage): return overlay
     if overlay            is None:               return None
-    if overlay.dataSource is None:               return None 
+    if overlay.dataSource is None:               return None
 
     featPath = featanalysis.getAnalysisDir(overlay.dataSource)
 
@@ -547,8 +547,8 @@ def findMeshReferenceImage(overlayList, overlay):
         for ovl in overlayList:
             if prefix.startswith(ovl.name):
                 return ovl
-        
+
     except:
         pass
-    
+
     return None

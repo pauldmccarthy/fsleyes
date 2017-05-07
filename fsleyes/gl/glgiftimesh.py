@@ -27,7 +27,7 @@ class GLGiftiMesh(glmesh.GLMesh):
         """Create a ``GLGiftiMesh`` instance.
 
         All arguments are passed to the :class:`.GLMesh` constructor.
-        """ 
+        """
         glmesh.GLMesh.__init__(self, *a, **k)
 
 
@@ -38,7 +38,7 @@ class GLGiftiMesh(glmesh.GLMesh):
         """
 
         import fsl.data.gifti as fslgifti
-        
+
         overlay  = self.overlay
         vertices = overlay.vertices
         indices  = overlay.indices
@@ -55,4 +55,4 @@ class GLGiftiMesh(glmesh.GLMesh):
 
         self.vertices = np.array(vertices,          dtype=np.float32)
         self.indices  = np.array(indices.flatten(), dtype=np.uint32)
-        self.notify() 
+        self.notify()

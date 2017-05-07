@@ -15,11 +15,11 @@ from . import colourbarcanvas as cbarcanvas
 
 class OffScreenColourBarCanvas(cbarcanvas.ColourBarCanvas,
                                fslgl.OffScreenCanvasTarget):
-    """The ``OffScreenColourBarCanvas`` is a :class:`.ColourBarCanvas` which 
+    """The ``OffScreenColourBarCanvas`` is a :class:`.ColourBarCanvas` which
     uses a :class:`.RenderTexture` for static off-screen OpenGL rendering.
-    """ 
+    """
 
-    
+
     def __init__(self, *args, **kwargs):
         """Create an ``OffScreenColourBarCanvas``.
 

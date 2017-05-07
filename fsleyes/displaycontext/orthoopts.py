@@ -24,7 +24,7 @@ class OrthoOpts(sceneopts.SceneOpts):
     """The ``OrthoOpts`` class is used by :class:`.OrthoPanel` instances to
     manage their display settings.
 
-    
+
     .. note:: While the ``OrthoOpts`` class has :attr:`xzoom`, :attr:`yzoom`,
               and :attr:`zzoom`, properties which control the zoom levels on
               each canvas independently, ``OrthoOpts`` class also inherits a
@@ -33,19 +33,19 @@ class OrthoOpts(sceneopts.SceneOpts):
               levels simultaneously.
     """
 
-    
+
     showXCanvas = props.Boolean(default=True)
     """Toggles display of the X canvas."""
 
-    
+
     showYCanvas = props.Boolean(default=True)
     """Toggles display of the Y canvas."""
 
-    
+
     showZCanvas = props.Boolean(default=True)
     """Toggles display of the Z canvas."""
 
-    
+
     showLabels = props.Boolean(default=True)
     """If ``True``, labels showing anatomical orientation are displayed on
     each of the canvases.
@@ -61,7 +61,7 @@ class OrthoOpts(sceneopts.SceneOpts):
     update this value when the :attr:`.SceneOpts.bgColour` is changed. But
     the user can independently modify this property without any side-effects.
     """
-    
+
 
     layout = props.Choice(('horizontal', 'vertical', 'grid'))
     """How should we lay out each of the three canvases?"""
@@ -70,15 +70,15 @@ class OrthoOpts(sceneopts.SceneOpts):
     xzoom = copy.copy(sceneopts.SceneOpts.zoom)
     """Controls zoom on the X canvas."""
 
-    
+
     yzoom = copy.copy(sceneopts.SceneOpts.zoom)
     """Controls zoom on the Y canvas."""
 
-    
+
     zzoom = copy.copy(sceneopts.SceneOpts.zoom)
     """Controls zoom on the Z canvas. """
 
-    
+
     def __init__(self, *args, **kwargs):
         """Create an ``OrthoOpts`` instance. All arguments are passed
         through to the :class:`.SceneOpts` constructor.
@@ -93,7 +93,7 @@ class OrthoOpts(sceneopts.SceneOpts):
 
         self.addListener('zoom', name, self.__onZoom)
 
-        
+
     def __onZoom(self, *a):
         """Called when the :attr:`.SceneOpts.zoom` property changes.
 
@@ -104,12 +104,12 @@ class OrthoOpts(sceneopts.SceneOpts):
         self.yzoom = self.zoom
         self.zzoom = self.zoom
 
-        
+
     def _onPerformanceChange(self, *a):
-        """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the 
+        """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the
         value of the :attr:`renderMode` property according to the
         performance setting.
-        """        
+        """
 
         if   self.performance == 3: self.renderMode = 'onscreen'
         elif self.performance == 2: self.renderMode = 'offscreen'

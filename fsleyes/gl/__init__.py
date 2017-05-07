@@ -168,7 +168,7 @@ sub-packages.
 
 Because of this, the package-level :func:`bootstrap` function must be called
 before any ``GLObject`` instances are created, but *after* a GL context has
-been created. 
+been created.
 """
 
 
@@ -245,7 +245,7 @@ def bootstrap(glVersion=None):
 
 
     ====================== ====================================================
-    ``GL_VERSION``         A string containing the target OpenGL version, in 
+    ``GL_VERSION``         A string containing the target OpenGL version, in
                            the format ``major.minor``, e.g. ``2.1``.
 
     ``GL_RENDERER``        A string containing the name of the OpenGL renderer.
@@ -261,22 +261,22 @@ def bootstrap(glVersion=None):
 
     ``glmesh_funcs``       The version-specific module containing functions for
                            rendering :class:`.GLMesh` instances.
-    
+
     ``gllabel_funcs``      The version-specific module containing functions for
                            rendering :class:`.GLLabel` instances.
-    
+
     ``gltensor_funcs``     The version-specific module containing functions for
                            rendering :class:`.GLTensor` instances.
-    
+
     ``glsh_funcs``         The version-specific module containing functions for
-                           rendering :class:`.GLSH` instances. 
+                           rendering :class:`.GLSH` instances.
     ====================== ====================================================
 
 
     This function also sets the :attr:`.Platform.glVersion` and
     :attr:`.Platform.glRenderer` properties of the
     :attr:`fsl.utils.platform.platform` instance.
-    
+
 
     :arg glVersion: A tuple containing the desired (major, minor) OpenGL API
                     version to use. If ``None``, the best possible API
@@ -322,12 +322,12 @@ def bootstrap(glVersion=None):
         exts = ['GL_EXT_framebuffer_object',
                 'GL_ARB_instanced_arrays',
                 'GL_ARB_draw_instanced']
-        
+
         if not all(map(glexts.hasExtension, exts)):
             log.warning('One of these OpenGL extensions is '
                         'not available: [{}]. Falling back '
                         'to an older OpenGL implementation.'
-                        .format(', '.join(exts))) 
+                        .format(', '.join(exts)))
             verstr = '1.4'
             glpkg = gl14
 
@@ -335,12 +335,12 @@ def bootstrap(glVersion=None):
     # and ARB_fragment_program extensions are
     # not present, we're screwed.
     if glpkg == gl14:
-        
+
         exts = ['GL_EXT_framebuffer_object',
                 'GL_ARB_vertex_program',
                 'GL_ARB_fragment_program',
                 'GL_ARB_texture_non_power_of_two']
-        
+
         if not all(map(glexts.hasExtension, exts)):
             raise RuntimeError('One of these OpenGL extensions is '
                                'not available: [{}]. This software '
@@ -355,14 +355,14 @@ def bootstrap(glVersion=None):
         dc.VolumeOpts   .interpolation.updateChoice('linear',
                                                     newAlt=['spline'])
         dc.RGBVectorOpts.interpolation.updateChoice('linear',
-                                                    newAlt=['spline']) 
+                                                    newAlt=['spline'])
 
         # Tensor/SH overlays are not available in GL14
         dc.ALL_OVERLAY_TYPES            .remove('tensor')
         dc.ALL_OVERLAY_TYPES            .remove('sh')
         dc.OVERLAY_TYPES['DTIFitTensor'].remove('tensor')
         dc.OVERLAY_TYPES['Image']       .remove('sh')
-        dc.OVERLAY_TYPES['Image']       .remove('tensor') 
+        dc.OVERLAY_TYPES['Image']       .remove('tensor')
 
     renderer = gl.glGetString(gl.GL_RENDERER).decode('ascii')
     log.debug('Using OpenGL {} implementation with renderer {}'.format(
@@ -393,7 +393,7 @@ def bootstrap(glVersion=None):
     # reduce the default performance settings
     #
     # But SVGA3D/llvmpipe are super fast, so if
-    # we're using either of them, pretend that 
+    # we're using either of them, pretend that
     # we're on hardware
     if fslplatform.glIsSoftwareRenderer                 and \
        'llvmpipe' not in fslplatform.glRenderer.lower() and \
@@ -412,7 +412,7 @@ def getGLContext(*args, **kwargs):
     rendering.
 
     If a context object has already been created, it is returned.
-    Otherwise, one is created and returned. 
+    Otherwise, one is created and returned.
 
     See the :class:`GLContext` class for details on the arguments.
 
@@ -456,10 +456,10 @@ class GLContext(object):
 
     *Creating an on-screen GL context*
 
-    
+
     A ``wx.glcanvas.GLContext`` may only be created once a
     ``wx.glcanvas.GLCanvas`` has been created, and is visible on screen.
-    The ``GLContext`` class therefore creates a dummy ``GLCanvas``, and 
+    The ``GLContext`` class therefore creates a dummy ``GLCanvas``, and
     displays it, before creating the ``wx`` GL context.
 
 
@@ -498,22 +498,22 @@ class GLContext(object):
         """Create a ``GLContext``.
 
         :arg offscreen: On-screen or off-screen context?
-        
-        :arg parent:    Parent ``wx`` GUI object 
-        
+
+        :arg parent:    Parent ``wx`` GUI object
+
         :arg other:     Another ``GLContext`` instance with which GL state
                         should be shared.
 
         :arg target:    If ``other`` is not ``None``, this must be a reference
                         to a ``WXGLCanvasTarget``, the rendering target for the
                         new context.
-        
+
         :arg createApp: If ``True``, and if possible, this ``GLContext`` will
                         create and run a ``wx.App`` so that it can create a
                         ``wx.glcanvas.GLContext``.
 
         :arg ready:     Function which will be called when the context has
-                        been created and is ready to use.  
+                        been created and is ready to use.
         """
 
         def defaultReady():
@@ -539,7 +539,7 @@ class GLContext(object):
             raise ValueError('On-screen GL contexts must be '
                              'created on the wx.MainLoop')
 
-        # For off-screen, only use 
+        # For off-screen, only use
         # OSMesa if we have no cnoice
         if offscreen and not canHaveGui:
             self.__createOSMesaContext()
@@ -560,7 +560,7 @@ class GLContext(object):
             # (via the createApp argument)
             if self.__ownApp:
                 log.debug('Creating temporary wx.App')
- 
+
                 import fsleyes.main as fm
                 self.__app = fm.FSLeyesApp()
 
@@ -581,10 +581,10 @@ class GLContext(object):
                 self.__createWXGLContext()
 
                 if ready is not None:
-                    
+
                     try:
                         ready()
-                        
+
                     except Exception as e:
                         log.warning('GLContext callback function raised '
                                     '{}: {}'.format(type(e).__name__,
@@ -616,7 +616,7 @@ class GLContext(object):
             # above).  If an existing wx.App is running,
             # we just schedule the context creation
             # routine on it.
-            async.idle(create, alwaysQueue=True) 
+            async.idle(create, alwaysQueue=True)
 
             if self.__ownApp:
                 log.debug('Starting temporary wx.MainLoop')
@@ -630,19 +630,19 @@ class GLContext(object):
         if not self.__offscreen:
             self.__context.SetCurrent(target)
 
-    
+
     def __createWXGLParent(self):
         """Create a dummy ``wx.Frame`` to be used as the parent for the
         dummy ``wx.glcanvas.GLCanvas``.
         """
 
         log.debug('Creating temporary wx.Frame')
-        
+
         import wx
         self.__parent = wx.Frame(None, style=0)
         self.__parent.SetSize((0, 0))
         self.__parent.Show(True)
-        
+
 
     def __createWXGLCanvas(self):
         """Create a dummy ``wx.glcanvas.GLCanvas`` instance which is to
@@ -714,7 +714,7 @@ class GLContext(object):
         else:
             self.__context = wxgl.GLContext(self.__canvas)
 
-            # We can't set the context target 
+            # We can't set the context target
             # until the dummy canvas is
             # physically shown on the screen.
             while not self.__canvas.IsShownOnScreen():
@@ -727,7 +727,7 @@ class GLContext(object):
         """Creates an OSMesa context, assigning it to an attribute called
         ``__context``.
         """
-        
+
         import OpenGL.GL              as gl
         import OpenGL.raw.osmesa.mesa as osmesa
         import OpenGL.arrays          as glarrays
@@ -747,11 +747,11 @@ class GLContext(object):
 
         self.__buffer  = buffer
         self.__context = context
-    
-    
+
+
 class OffScreenCanvasTarget(object):
     """Base class for canvas objects which support off-screen rendering. """
-    
+
     def __init__(self, width, height):
         """Create an ``OffScreenCanvasTarget``. A :class:`.RenderTexture` is
         created, to be used as the rendering target.
@@ -761,43 +761,43 @@ class OffScreenCanvasTarget(object):
         """
 
         from fsleyes.gl.textures import RenderTexture
-        
+
         self.__width  = width
         self.__height = height
         self.__target = RenderTexture(
             '{}({})_RenderTexture'.format(
                 type(self).__name__,
                 id(self)))
-        
-        
+
+
     def _getSize(self):
         """Returns a tuple containing the canvas width and height."""
         return self.__width, self.__height
 
-        
+
     def _setGLContext(self):
         """Configures the GL context to render to this canvas. """
         getGLContext().setTarget(self)
         return True
 
-        
+
     def _draw(self, *a):
         """Must be provided by subclasses."""
         raise NotImplementedError()
 
-        
+
     def Refresh(self, *a):
         """Does nothing. This canvas is for static (i.e. unchanging) rendering.
         """
         pass
 
-    
+
     def FreezeDraw(self):
         """Does nothing. This canvas is for static (i.e. unchanging) rendering.
         """
         pass
 
-        
+
     def ThawDraw(self):
         """Does nothing. This canvas is for static (i.e. unchanging) rendering.
         """
@@ -808,11 +808,11 @@ class OffScreenCanvasTarget(object):
         """
         pass
 
-        
+
     def ThawSwapBuffers(self):
         """Does nothing. This canvas is for static (i.e. unchanging) rendering.
         """
-        pass 
+        pass
 
 
     def draw(self):
@@ -828,7 +828,7 @@ class OffScreenCanvasTarget(object):
         self._draw()
         self.__target.unbindAsRenderTarget()
 
-        
+
     def getBitmap(self):
         """Return a (height*width*4) shaped numpy array containing the
         rendered scene as an RGBA bitmap. The bitmap will be full of
@@ -845,7 +845,7 @@ class OffScreenCanvasTarget(object):
         file.
         """
         import matplotlib.image as mplimg
-        mplimg.imsave(filename, self.getBitmap()) 
+        mplimg.imsave(filename, self.getBitmap())
 
 
 WXGLMetaClass = None
@@ -863,7 +863,7 @@ if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
         pass
 
     WXGLMetaClass = PhoenixMeta
-    
+
 else:
     WXGLMetaClass = props.PropertyOwner
 
@@ -897,7 +897,7 @@ class WXGLCanvasTarget(object):
         # refresh problems will occur.
         if platform.system() == 'Darwin' and \
            'software' in fslplatform.glRenderer.lower():
-            
+
             log.debug('Creating separate GL context for '
                       'WXGLCanvasTarget {}'.format(id(self)))
 
@@ -911,12 +911,12 @@ class WXGLCanvasTarget(object):
         self.Bind(wx.EVT_PAINT,            self.__onPaint)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.__onEraseBackground)
 
-        
+
     def __onEraseBackground(self, ev):
         """Called on ``wx.EVT_ERASE_BACKGROUND`` events. Does nothing. """
         pass
 
-    
+
     def __onPaint(self, ev):
         """Called on ``wx.EVT_PAINT`` events. Schedules :meth:`Refresh`
         to be called on the idle loop.
@@ -931,7 +931,7 @@ class WXGLCanvasTarget(object):
         # the canvas will be corrupted.
         if not self.__freezeDraw:
             async.idle(doRefresh)
- 
+
 
     def _initGL(self):
         """This method should perform any OpenGL data initialisation required
@@ -949,8 +949,8 @@ class WXGLCanvasTarget(object):
                   instead.
         """
         raise NotImplementedError()
- 
-        
+
+
     def __realDraw(self, *a):
         """Called when the canvas needs to be refreshed.
 
@@ -960,7 +960,7 @@ class WXGLCanvasTarget(object):
 
         # The only purpose of __realDraw is to
         # make sure that _initGL has been called
-        # before the first call to _draw.  So 
+        # before the first call to _draw.  So
         # after initGL has been called, we replace
         # this method (__realDraw) and _draw
         # with drawWrapper. This wrapper calls
@@ -971,7 +971,7 @@ class WXGLCanvasTarget(object):
         subClassDraw = self._draw
 
         import OpenGL.GL as gl
-        
+
         def drawWrapper(*a, **kwa):
 
             if not self.__freezeDraw:
@@ -1018,12 +1018,12 @@ class WXGLCanvasTarget(object):
             import wx
             wx.CallAfter(doInit)
 
-        
+
     def _getSize(self):
         """Returns the current canvas size. """
         return self.GetClientSize().Get()
 
-        
+
     def _setGLContext(self):
         """Configures the GL context for drawing to this canvas.
 
@@ -1034,7 +1034,7 @@ class WXGLCanvasTarget(object):
 
         log.debug('Setting context target to {} ({})'.format(
             type(self).__name__, id(self)))
-        
+
         self.__context.setTarget(self)
         return True
 
@@ -1042,13 +1042,13 @@ class WXGLCanvasTarget(object):
     def Refresh(self, *a):
         """Triggers a redraw via the :meth:`_draw` method. """
         self.__realDraw()
-        
+
 
     def FreezeDraw(self):
         """*Freezes* updates to the canvas. See :meth:`ThawDraw`. """
         self.__freezeDraw = True
 
-    
+
     def ThawDraw(self):
         """Unfreezes canvas updates. See :meth:`FreezeDraw`. """
         self.__freezeDraw = False
@@ -1060,7 +1060,7 @@ class WXGLCanvasTarget(object):
         """
         self.__freezeSwapBuffers = True
 
-    
+
     def ThawSwapBuffers(self):
         """Unfreezes canvas fron/back buffer swaps. See
         :meth:`FreezeSwapBuffers`.
@@ -1076,10 +1076,10 @@ class WXGLCanvasTarget(object):
             if self._setGLContext():
                 super(WXGLCanvasTarget, self).SwapBuffers()
 
-        
+
     def getBitmap(self):
         """Return a (width*height*4) shaped numpy array containing the
-        rendered scene as an RGBA bitmap. 
+        rendered scene as an RGBA bitmap.
         """
         import OpenGL.GL        as gl
         import numpy            as np
@@ -1091,15 +1091,15 @@ class WXGLCanvasTarget(object):
         # Make sure we're reading
         # from the front buffer
         gl.glReadBuffer(gl.GL_FRONT_LEFT)
-        
+
         bmp = gl.glReadPixels(
             0, 0,
             width, height,
             gl.GL_RGBA,
             gl.GL_UNSIGNED_BYTE)
-        
+
         bmp = np.fromstring(bmp, dtype=np.uint8)
         bmp = bmp.reshape((height, width, 4))
         bmp = np.flipud(bmp)
 
-        return bmp        
+        return bmp

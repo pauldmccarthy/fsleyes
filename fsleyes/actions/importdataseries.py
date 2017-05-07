@@ -8,7 +8,7 @@
 :class:`.PlotPanel` views to import data series from a text file.
 """
 
-import            os 
+import            os
 import os.path as op
 import numpy   as np
 
@@ -29,19 +29,19 @@ class ImportDataSeriesAction(base.Action):
     def __init__(self, overlayList, displayCtx, plotPanel):
 
         base.Action.__init__(self, self.__doImport)
-        
+
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
         self.__plotPanel   = plotPanel
 
-        
+
 
     def __doImport(self):
 
         import wx
 
         frame = wx.GetApp().GetTopWindow()
-        
+
         # Ask the user where to get the data
         msg     = strings.messages[self, 'selectFile']
         fromDir = fslsettings.read('loadSaveOverlayDir', os.getcwd())
@@ -59,8 +59,8 @@ class ImportDataSeriesAction(base.Action):
         # Load the file, show an
         # error if it fails
         try:
-            
-            # Assuming that the data series 
+
+            # Assuming that the data series
             # to plot are stored as columns
             data = np.loadtxt(filePath).T
 
@@ -69,13 +69,13 @@ class ImportDataSeriesAction(base.Action):
             # happier.
             if len(data.shape) == 1:
                 data = data.reshape((1, -1))
-            
+
         except Exception as e:
             title = strings.titles[  self, 'error']
             msg   = strings.messages[self, 'error'].format(
                 filePath,
                 '{}: {}'.format(type(e).__name__, str(e)))
-            
+
             wx.MessageBox(msg, title, wx.ICON_ERROR | wx.OK)
             return
 
@@ -85,12 +85,12 @@ class ImportDataSeriesAction(base.Action):
         # If the currently selected overlay is
         # Nifti and 4D, default to its pixdim[3]
         overlay = self.__displayCtx.getSelectedOverlay()
-        
+
         if overlay is not None                 and \
            isinstance(overlay, fslimage.Nifti) and \
            len(overlay.shape) == 4:
             xscale = overlay.pixdim[3]
-            
+
         else:
             xscale = 1
 
@@ -121,7 +121,7 @@ class ImportDataSeriesAction(base.Action):
         else:
             xdata = np.arange(0, data.shape[1] * xscale, xscale)
             ydata = data
-            
+
         for i, ydata in enumerate(ydata):
 
             x   = np.array(xdata)
@@ -142,7 +142,7 @@ class ImportDataSeriesAction(base.Action):
             ds.label     = label
             ds.lineWidth = 1
             ds.colour    = fslcm.randomDarkColour()
-            
+
             series.append(ds)
 
         self.__plotPanel.dataSeries.extend(series)

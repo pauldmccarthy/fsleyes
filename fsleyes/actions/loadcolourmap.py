@@ -31,19 +31,19 @@ class LoadColourMapAction(base.Action):
     loaded colour map in *FSLeyes*.
     """
 
-    
+
     def __init__(self, overlayList, displayCtx):
         """Create a ``LoadColourMapAction``.
-        
+
         :arg overlayList: The :class:`.OverlayList`.
-        :arg displayCtx:  The :class:`.DisplayContext`. 
+        :arg displayCtx:  The :class:`.DisplayContext`.
         """
         base.Action.__init__(self, self.__loadColourMap)
 
         self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx 
+        self.__displayCtx  = displayCtx
 
-        
+
     def __loadColourMap(self):
         """This method does the following:
 

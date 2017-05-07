@@ -25,7 +25,7 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
     :attr:`.VolumeOpts.volume` for the currently selected overlay.
     """
 
-    
+
     def __init__(self, viewPanel, overlayList, displayCtx):
         """Create a ``TimeSeriesProfile``.
 
@@ -34,7 +34,7 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
         :arg overlayList:  The :class:`.OverlayList` instance.
 
         :arg displayCtx:   The :class:`.DisplayContext` instance.
-        """ 
+        """
         plotprofile.PlotProfile.__init__(self,
                                          viewPanel,
                                          overlayList,
@@ -60,11 +60,11 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
 
         if display.overlayType not in ('volume', 'label', 'mask'):
             return False
-        
+
         if isinstance(overlay, fslmelimage.MelodicImage) and \
            tsPanel.plotMelodicICs:
             return False
- 
+
         if len(overlay.shape) < 4 or overlay.shape[3] == 1:
             return False
 
@@ -78,7 +78,7 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
         updates  the :attr:`.VolumeOpts.volume` property  of the
         currently selected overlay accordingly.
         """
-        
+
         tsPanel = self._viewPanel
         canvas  = tsPanel.getCanvas()
         overlay = self._displayCtx.getSelectedOverlay()
@@ -94,7 +94,7 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
         if volume >= overlay.shape[3]: volume = overlay.shape[3] - 1
 
         if tsPanel.usePixdim: xvalue = volume * overlay.pixdim[3]
-        else:                 xvalue = volume 
+        else:                 xvalue = volume
 
         volumeLine.set_xdata(xvalue)
         canvas.draw()
@@ -104,7 +104,7 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
         # updates.
         def update():
             opts.volume = volume
-        
+
         async.idle(
             update,
             name='{}_{}_volume'.format(self._name, id(overlay)),
@@ -113,7 +113,7 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
 
     def _volumeModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
         """Adds a vertical line to the plot at the current volume. """
-        
+
         if self.__volumeLine is not None:
             self.__volumeLine.remove()
             self.__volumeLine = None
@@ -130,20 +130,20 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
         self.__volumeLine = axis.axvline(0, c='#000080', lw=3)
 
         self.__updateVolume(self.__volumeLine, xvalue)
-        
-        
+
+
     def _volumeModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Updates the position of the vertical volume line. """
-        
+
         if self.__volumeLine is None:
             return
 
         if canvasPos is None: xvalue = None
-        else:                 xvalue = canvasPos[0]        
+        else:                 xvalue = canvasPos[0]
 
         self.__updateVolume(self.__volumeLine, xvalue)
 
-        
+
     def _volumeModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Removes the vertical volume line. """
 

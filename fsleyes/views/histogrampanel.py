@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`HistogramPanel`, which is a *FSLeyes view*
-that plots the histogram of data from :class:`.Image` overlays.  
+that plots the histogram of data from :class:`.Image` overlays.
 """
 
 
@@ -33,7 +33,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
     """An :class:`.OverlayPlotPanel` which plots histograms from
     :class:`.Image`     overlay data. A ``HistogramPanel`` looks something
     like this:
-    
+
     .. image:: images/histogrampanel.png
        :scale: 50%
        :align: center
@@ -42,7 +42,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
     A ``HistogramPanel`` plots one or more :class:`HistogramSeries` instances,
     each of which encapsulate histogram data from an :class:`.Image` overlay.
 
-    
+
     A couple of control panels may be shown on a ``HistogramPanel``:
 
     .. autosummary::
@@ -51,24 +51,24 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
        ~fsleyes.controls.plotlistpanel.PlotListPanel
        ~fsleyes.controls.histogramcontrolpanel.HistogramControlPanel
 
-    
+
     The following :mod:`actions` are provided, in addition to those already
     provided by the :class:`.PlotPanel`:
 
     .. autosummary::
        :nosignatures:
-   
+
        toggleHistogramToolBar
        toggleHistogramControl
     """
 
-    
+
     histType = props.Choice(('probability', 'count'))
     """The histogram type:
 
     =============== ==========================================================
     ``count``       The y axis represents the absolute number of values within
-                    each bin 
+                    each bin
     ``probability`` The y axis represents the number of values within each
                     bin, divided by the total number of values.
     =============== ==========================================================
@@ -95,7 +95,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
                                 self.__selectedOverlayChanged)
         displayCtx .addListener('selectedOverlay',
                                 self._name,
-                                self.__selectedOverlayChanged) 
+                                self.__selectedOverlayChanged)
 
         self.initProfile()
         self.__selectedOverlayChanged()
@@ -107,11 +107,11 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         """
 
         self.__currentHs = None
-        
+
         self             .removeListener('histType',        self._name)
         self._overlayList.removeListener('overlays',        self._name)
         self._displayCtx .removeListener('selectedOverlay', self._name)
-        
+
         plotpanel.OverlayPlotPanel.destroy(self)
 
 
@@ -125,7 +125,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
                          location=wx.RIGHT,
                          floatPane=floatPane)
 
-        
+
     @actions.toggleControlAction(histogramtoolbar.HistogramToolBar)
     def toggleHistogramToolBar(self):
         """Shows/hides a :class:`.HistogramToolBar`. See
@@ -143,7 +143,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         # __selectedOverlayChanged method
         pass
 
-        
+
     def getActions(self):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``HistogramPanel``.
@@ -152,7 +152,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
                    self.importDataSeries,
                    self.exportDataSeries,
                    None,
-                   self.toggleOverlayList, 
+                   self.toggleOverlayList,
                    self.togglePlotList,
                    self.toggleHistogramToolBar,
                    self.toggleHistogramControl,
@@ -162,7 +162,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
         return list(zip(names, actions))
 
-        
+
     def draw(self, *a):
         """Overrides :meth:`.PlotPanel.draw`. Passes some
         :class:`.HistogramSeries` instances to the
@@ -200,7 +200,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         hs = histogramseries.HistogramSeries(overlay,
                                              self._displayCtx,
                                              self._overlayList)
-        
+
         hs.colour      = self.getOverlayPlotColour(overlay)
         hs.alpha       = 1
         hs.lineWidth   = 1
@@ -213,7 +213,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         """Overrides :meth:`.PlotPanel.prepareDataSeries`.
 
         Performs some pre-processing on the data contained in the given
-        :class:`.HistogramSeries` instance. 
+        :class:`.HistogramSeries` instance.
         """
 
         xdata, ydata = hs.getData()
@@ -237,7 +237,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
         # If smoothing is enabled, the above munge
         # is not necessary, and will probably cause
-        # the spline interpolation (performed by 
+        # the spline interpolation (performed by
         # the PlotPanel) to fail.
         else:
             xdata = np.array(xdata[:-1], dtype=np.float32)
@@ -279,4 +279,4 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
                 'toggled', oldHs, 'showOverlay')
 
         self.toggleHistogramOverlay.bindProps(
-            'toggled', newHs, 'showOverlay') 
+            'toggled', newHs, 'showOverlay')

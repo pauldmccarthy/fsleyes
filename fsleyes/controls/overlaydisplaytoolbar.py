@@ -35,7 +35,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
     :attr:`.DisplayContext.selectedOverlay` property). The display settings
     for an overlay are contained in the :class:`.Display` and
     :class:`.DisplayOpts` instances that are associated with that overlay.
-    
+
 
     An ``OverlyDisplyaToolBar`` looks something like the following:
 
@@ -63,22 +63,22 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
        _OverlayDisplayToolBar__makeTensorOptsTools
        _OverlayDisplayToolBar__makeSHOptsTools
     """
-    
+
     def __init__(self, parent, overlayList, displayCtx, frame, viewPanel):
         """Create an ``OverlyDisplyaToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
-        
+
         :arg overlayList: The :class:`.OverlayList` instance.
-        
+
         :arg displayCtx:  The :class:`.DisplayContext` instance.
 
         :arg frame:       The :class:`.FSLeyesFrame` instance.
-        
+
         :arg viewPanel:   The :class:`.ViewPanel` which this
                           ``OverlayDisplayToolBar`` is owned by.
         """
-        
+
         fsltoolbar.FSLeyesToolBar.__init__(self,
                                            parent,
                                            overlayList,
@@ -97,7 +97,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         self._overlayList.addListener(
             'overlays',
             self._name,
-            self.__selectedOverlayChanged) 
+            self.__selectedOverlayChanged)
 
         self.__selectedOverlayChanged()
 
@@ -120,7 +120,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
 
         self.__currentOverlay = None
         self.__viewPanel      = None
-            
+
         fsltoolbar.FSLeyesToolBar.destroy(self)
 
 
@@ -166,7 +166,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
 
         self.SetTools(   tools)
         self.setNavOrder(nav)
-        
+
         # This method may have been called via an
         # event handler an existing tool in the
         # toolbar - in this situation, destroying
@@ -179,7 +179,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         # returned.
         wx.CallLater(1000, destroyOldTools)
 
-        
+
     def __overlayEnableChanged(self, *a):
         """Called when the :attr:`.Display.enabled` property for the currently
         selected overlay changes. Enables/disables this
@@ -244,7 +244,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
             icon=[icons.findImageFile('gearHighlight24'),
                   icons.findImageFile('gear24')],
             tooltip=fsltooltips.actions[viewPanel, 'toggleDisplayPanel'])
- 
+
         infoSpec = actions.ToggleActionButton(
             'toggleOverlayInfo',
             actionKwargs={'floatPane' : True},
@@ -258,12 +258,12 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         briconPanel   = wx.Panel(self)
         nameTypeSizer = wx.BoxSizer(wx.VERTICAL)
         briconSizer   = wx.FlexGridSizer(2, 2, 0, 0)
-        
+
         briconSizer.AddGrowableCol(1)
 
         nameTypePanel.SetSizer(nameTypeSizer)
         briconPanel  .SetSizer(briconSizer)
-        
+
         panelWidget = props.buildGUI(self,          viewPanel, panelSpec)
         infoWidget  = props.buildGUI(self,          viewPanel, infoSpec)
         nameWidget  = props.buildGUI(nameTypePanel, display,   nameSpec)
@@ -323,7 +323,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         useNegCmapWidget = props.buildGUI(self,      opts, useNegCmapSpec)
         cmapWidget       = props.buildGUI(cmapPanel, opts, cmapSpec)
         negCmapWidget    = props.buildGUI(cmapPanel, opts, negCmapSpec)
-        
+
         cmapSizer = wx.BoxSizer(wx.VERTICAL)
         cmapPanel.SetSizer(cmapSizer)
         cmapSizer.Add(cmapWidget)
@@ -338,7 +338,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
     def __makeMaskOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.MaskOpts` instance.
-        """ 
+        """
         thresSpec  = _TOOLBAR_PROPS[opts, 'threshold']
         colourSpec = _TOOLBAR_PROPS[opts, 'colour']
 
@@ -353,7 +353,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
     def __makeLabelOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.LabelOpts` instance.
-        """        
+        """
 
         lutSpec     = _TOOLBAR_PROPS[opts, 'lut']
         outlineSpec = _TOOLBAR_PROPS[opts, 'outline']
@@ -364,7 +364,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         lutWidthPanel = wx.Panel(self)
         lutWidthSizer = wx.FlexGridSizer(2, 2, 0, 0)
         lutWidthPanel.SetSizer(lutWidthSizer)
-        
+
         lutWidget     = props.buildGUI(lutWidthPanel, opts, lutSpec)
         widthWidget   = props.buildGUI(lutWidthPanel, opts, widthSpec)
         outlineWidget = props.buildGUI(self,          opts, outlineSpec)
@@ -389,8 +389,8 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
     def __makeVectorOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.VectorOpts` instance.
-        """        
-        
+        """
+
         modSpec   = _TOOLBAR_PROPS[opts, 'modulateImage']
         clipSpec  = _TOOLBAR_PROPS[opts, 'clipImage']
         rangeSpec = _TOOLBAR_PROPS[opts, 'clippingRange']
@@ -419,25 +419,25 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
 
         return tools, nav
 
-    
+
     def __makeRGBVectorOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.RGBVectorOpts` instance.
-        """        
+        """
         return self.__makeVectorOptsTools(opts)
 
-    
+
     def __makeLineVectorOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.LineVectorOpts` instance.
-        """        
+        """
         widthSpec = _TOOLBAR_PROPS[opts, 'lineWidth']
 
         widget    = props.buildGUI(self, opts, widthSpec)
         lblWidget = self.MakeLabelledTool(
             widget, strings.properties[opts, 'lineWidth'])
 
-        tools, nav = self.__makeVectorOptsTools(opts) 
+        tools, nav = self.__makeVectorOptsTools(opts)
 
         return tools + [lblWidget], nav + [widget]
 
@@ -459,14 +459,14 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
 
         tools = [colourWidget, outlineWidget, lblWidthWidget]
         nav   = [colourWidget, outlineWidget, widthWidget]
-        
+
         return tools, nav
 
 
     def __makeGiftiOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.GiftiOpts` instance.
-        """ 
+        """
         return self.__makeMeshOptsTools(opts)
 
 
@@ -478,10 +478,10 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         lightingWidget = props.buildGUI(self, opts, lightingSpec)
 
         tools, nav = self.__makeVectorOptsTools(opts)
-        
+
         return tools + [lightingWidget], nav + [lightingWidget]
 
-    
+
     def __makeSHOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.SHOpts` instance.
@@ -498,8 +498,8 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
 
         sizeLabel = wx.StaticText(panel)
         radLabel  = wx.StaticText(panel)
-        
-        sizeLabel.SetLabel(strings.properties[opts, 'size']) 
+
+        sizeLabel.SetLabel(strings.properties[opts, 'size'])
         radLabel .SetLabel(strings.properties[opts, 'radiusThreshold'])
 
         sizer.Add(sizeLabel)
@@ -518,13 +518,13 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
 
 def _imageLabel(img):
     """Used to generate labels for the :attr:`.VectorOpts.modulateImage`,
-    :attr:`.VectorOpts.clipImage`, and other :class:`.Image`-based 
+    :attr:`.VectorOpts.clipImage`, and other :class:`.Image`-based
     choice properties.
     """
     if img is None: return 'None'
     else:           return img.name
 
-    
+
 _TOOLTIPS = td.TypeDict({
 
     'Display.name'        : fsltooltips.properties['Display.name'],
@@ -540,7 +540,7 @@ _TOOLTIPS = td.TypeDict({
     'VolumeOpts.negativeCmap'      :
     fsltooltips.properties['ColourMapOpts.negativeCmap'],
     'VolumeOpts.useNegativeCmap'   :
-    fsltooltips.properties['ColourMapOpts.useNegativeCmap'], 
+    fsltooltips.properties['ColourMapOpts.useNegativeCmap'],
 
     'MaskOpts.threshold' : fsltooltips.properties['MaskOpts.threshold'],
     'MaskOpts.colour'    : fsltooltips.properties['MaskOpts.colour'],
@@ -553,7 +553,7 @@ _TOOLTIPS = td.TypeDict({
     'VectorOpts.modulateImage' : fsltooltips.properties['VectorOpts.'
                                                         'modulateImage'],
     'VectorOpts.clipImage'     : fsltooltips.properties['VectorOpts.'
-                                                        'clipImage'], 
+                                                        'clipImage'],
     'VectorOpts.clippingRange' : fsltooltips.properties['VectorOpts.'
                                                         'clippingRange'],
 
@@ -567,11 +567,11 @@ _TOOLTIPS = td.TypeDict({
 
     'TensorOpts.lighting' : fsltooltips.properties['TensorOpts.'
                                                    'lighting'],
-    
+
     'SHOpts.lighting'        : fsltooltips.properties['SHOpts.lighting'],
     'SHOpts.size'            : fsltooltips.properties['SHOpts.size'],
     'SHOpts.radiusThreshold' : fsltooltips.properties['SHOpts.'
-                                                      'radiusThreshold'], 
+                                                      'radiusThreshold'],
 })
 """This dictionary contains tooltips for :class:`.Display` and
 :class:`.DisplayOpts` properties. It is referenced in the
@@ -622,13 +622,13 @@ _TOOLBAR_PROPS = td.TypeDict({
               icons.findImageFile('onecmap24')],
         toggle=True,
         tooltip=_TOOLTIPS['VolumeOpts.useNegativeCmap']),
-    
+
     'VolumeOpts.negativeCmap' : props.Widget(
         'negativeCmap',
         labels=fslcm.getColourMapLabel,
         tooltip=_TOOLTIPS['VolumeOpts.negativeCmap'],
         dependencies=['useNegativeCmap'],
-        enabledWhen=lambda i, unc : unc), 
+        enabledWhen=lambda i, unc : unc),
 
     'MaskOpts.threshold' : props.Widget(
         'threshold',
@@ -682,7 +682,7 @@ _TOOLBAR_PROPS = td.TypeDict({
     'VectorOpts.clipImage' : props.Widget(
         'clipImage',
         labels=_imageLabel,
-        tooltip=_TOOLTIPS['VectorOpts.clipImage']), 
+        tooltip=_TOOLTIPS['VectorOpts.clipImage']),
     'VectorOpts.clippingRange' : props.Widget(
         'clippingRange',
         showLimits=False,
@@ -710,7 +710,7 @@ _TOOLBAR_PROPS = td.TypeDict({
         'lighting',
         icon=[icons.findImageFile('lightbulbHighlight24'),
               icons.findImageFile('lightbulb24')],
-        tooltip=_TOOLTIPS['SHOpts.lighting']), 
+        tooltip=_TOOLTIPS['SHOpts.lighting']),
     'SHOpts.size'            : props.Widget(
         'size',
         showLimits=False,
@@ -725,5 +725,5 @@ _TOOLBAR_PROPS = td.TypeDict({
         tooltip=_TOOLTIPS['SHOpts.radiusThreshold']),
 })
 """This dictionary defines specifications for all controls shown on an
-:class:`OverlayDisplayToolBar`. 
+:class:`OverlayDisplayToolBar`.
 """

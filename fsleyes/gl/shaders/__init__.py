@@ -56,7 +56,7 @@ def getShaderDir():
     can be found.  ``ARB`` files are assumed to be in a sub-directory called
     ``gl14``, and ``glsl`` files in a sub-directory called ``gl21``.
     """
-    return op.join(fsleyes.assetDir, 'assets', 'gl')    
+    return op.join(fsleyes.assetDir, 'assets', 'gl')
 
 
 def getVertexShader(prefix):
@@ -67,7 +67,7 @@ def getVertexShader(prefix):
 
 
 def getFragmentShader(prefix):
-    """Returns the fragment shader source for the given GL type.""" 
+    """Returns the fragment shader source for the given GL type."""
     return _getShader(prefix, 'frag')
 
 
@@ -77,7 +77,7 @@ def _getShader(prefix, shaderType):
     """
     fname = _getFileName(prefix, shaderType)
     with open(fname, 'rt') as f: src = f.read()
-    return preprocess(src)    
+    return preprocess(src)
 
 
 def _getFileName(prefix, shaderType):
@@ -97,7 +97,7 @@ def _getFileName(prefix, shaderType):
 
     return op.join(getShaderDir(), subdir, '{}_{}.{}'.format(
         prefix, shaderType, suffix))
- 
+
 
 def preprocess(src):
     """'Preprocess' the given shader source.
@@ -121,7 +121,7 @@ def preprocess(src):
     for linei in pragmas:
 
         line = lines[linei].split()
-        
+
         if len(line) != 3:       continue
         if line[1] != 'include': continue
 
@@ -142,13 +142,13 @@ class Filter(object):
     def __init__(self, filterName):
 
         filterName = 'filter_{}'.format(filterName)
-        
+
         vertSrc = getVertexShader( 'filter')
         fragSrc = getFragmentShader(filterName)
 
         # TODO gl14
         self.__shader = GLSLShader(vertSrc, fragSrc)
-        
+
 
     def destroy(self):
         self.__shader.destroy()
@@ -166,7 +166,7 @@ class Filter(object):
               yax,
               xform=None,
               **kwargs):
-        
+
         self.__shader.load()
         self.__shader.set('texture', 0)
 
@@ -174,9 +174,9 @@ class Filter(object):
             self.__shader.set(name, value)
 
         source.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
-        
+
         self.__shader.unload()
-        
+
 
     def osApply(self, source, dest, clearDest=True, **kwargs):
 

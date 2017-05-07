@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # frameactions.py - Top level actions
-# 
+#
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -90,7 +90,7 @@ def _changeOverlay(self, offset):
     cur = displayCtx.overlayOrder.index(displayCtx.selectedOverlay)
     new = displayCtx.overlayOrder[(cur + offset) % len(overlayList)]
 
-    displayCtx.selectedOverlay = new 
+    displayCtx.selectedOverlay = new
 
 
 def selectNextOverlay(self, *args, **kwargs):

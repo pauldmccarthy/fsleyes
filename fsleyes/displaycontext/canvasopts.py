@@ -20,7 +20,7 @@ class SliceCanvasOpts(props.HasProperties):
     and uses it to manage its display settings.
     """
 
-    
+
     pos = props.Point(ndims=3)
     """The currently displayed position.
 
@@ -34,7 +34,7 @@ class SliceCanvasOpts(props.HasProperties):
     horizontal and vertical screen axes, and the z dimension to *depth*.
     """
 
-    
+
     zoom = props.Percentage(minval=100.0,
                             maxval=5000.0,
                             default=100.0,
@@ -43,7 +43,7 @@ class SliceCanvasOpts(props.HasProperties):
     factor to produce the canvas display bounds.
     """
 
-    
+
     displayBounds = props.Bounds(ndims=2, clamped=False)
     """The display bound x/y values specify the horizontal/vertical display
     range of the canvas, in display coordinates. This may be a larger area
@@ -51,19 +51,19 @@ class SliceCanvasOpts(props.HasProperties):
     the aspect ratio.
     """
 
-    
+
     showCursor = props.Boolean(default=True)
     """If ``False``, the crosshairs which show the current cursor location
     will not be drawn.
     """
 
-    
+
     cursorGap = props.Boolean(default=False)
     """If ``True``, and the currently selected overlay is a :class:`.Nifti`
     instance, a gap will be shown at the cursor centre (i.e. the current
     voxel).
     """
- 
+
 
     zax = props.Choice((0, 1, 2),
                        alternates=[['x', 'X'], ['y', 'Y'], ['z', 'Z']],
@@ -72,13 +72,13 @@ class SliceCanvasOpts(props.HasProperties):
     axis.
     """
 
-    
+
     invertX = props.Boolean(default=False)
     """If ``True``, the display is inverted along the X (horizontal screen)
     axis.
     """
 
-    
+
     invertY = props.Boolean(default=False)
     """If ``True``, the display is inverted along the Y (vertical screen)
     axis.
@@ -92,13 +92,13 @@ class SliceCanvasOpts(props.HasProperties):
     bgColour = props.Colour(default=(0, 0, 0))
     """Canvas background colour."""
 
-    
+
     renderMode = props.Choice(('onscreen', 'offscreen', 'prerender'))
     """How the :class:`.GLObject` instances are rendered to the canvas.
 
     See the :class:`.SliceCanvas` for more details.
     """
-    
+
 
     def __init__(self):
         pass
@@ -109,7 +109,7 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     instances to manage light box display settings.
     """
 
-    
+
     sliceSpacing = props.Real(clamped=True,
                               minval=0.1,
                               maxval=30.0,
@@ -118,25 +118,25 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     coordinate system.
     """
 
-    
+
     ncols = props.Int(clamped=True, minval=1, maxval=100, default=5)
     """This property controls the number of slices to be displayed on a
     single row.
     """
 
-    
+
     nrows = props.Int(clamped=True, minval=1, maxval=100, default=4)
     """This property controls the number of rows to be displayed on the
     canvas.
-    """ 
+    """
 
-    
+
     topRow = props.Int(clamped=True, minval=0, maxval=20, default=0)
     """This property controls the (0-indexed) row to be displayed at the top
     of the canvas, thus providing the ability to scroll through the slices.
     """
 
-    
+
     zrange = props.Bounds(ndims=1)
     """This property controls the range, in display coordinates, of the slices
     to be displayed.
@@ -150,4 +150,4 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     highlightSlice = props.Boolean(default=False)
     """If ``True``, a box will be drawn around the slice containing the current
     location.
-    """    
+    """

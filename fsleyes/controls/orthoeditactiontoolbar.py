@@ -28,7 +28,7 @@ class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """
-        
+
         fsltoolbar.FSLeyesToolBar.__init__(self,
                                            parent,
                                            overlayList,
@@ -36,7 +36,7 @@ class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):
                                            frame,
                                            height=24,
                                            orient=wx.VERTICAL,
-                                           kbFocus=True) 
+                                           kbFocus=True)
 
         self.__ortho = ortho
 
@@ -60,14 +60,14 @@ class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):
         """
 
         self.ClearTools(destroy=True, postevent=False)
-        
+
         ortho      = self.__ortho
         profile    = ortho.profile
         profileObj = ortho.getCurrentProfile()
-        
+
         if profile != 'edit':
             return
-                
+
         tools = []
         nav   = []
 
@@ -77,17 +77,17 @@ class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):
                 tools.append(fsltoolbar.ToolBarDivider(self,
                                                        height=24,
                                                        orient=wx.HORIZONTAL))
-                continue 
+                continue
 
             if spec.key == 'toggleEditPanel': target = ortho
             else:                             target = profileObj
-            
+
             widget    = props.buildGUI(self, target, spec)
             navWidget = widget
 
             if spec.label is not None:
                 widget = self.MakeLabelledTool(widget, spec.label)
-                
+
             tools.append(widget)
             nav  .append(navWidget)
 
@@ -104,7 +104,7 @@ _ICONS = {
     'showSelection' : [
         fslicons.findImageFile('showSelectionHighlight24'),
         fslicons.findImageFile('showSelection24')],
-    
+
     'toggleEditPanel' : [fslicons.findImageFile('editSpannerHighlight24'),
                          fslicons.findImageFile('editSpanner24')],
     'undo'            : fslicons.findImageFile('undo24'),
@@ -116,23 +116,23 @@ _ICONS = {
     'copySelection'   : fslicons.findImageFile('copySelection24'),
     'pasteSelection'  : fslicons.findImageFile('pasteSelection24'),
 }
-        
+
 
 _TOOLTIPS = {
 
     'locationFollowsMouse' : fsltooltips.properties['OrthoEditProfile.'
                                                     'locationFollowsMouse'],
     'showSelection'        : fsltooltips.properties['OrthoEditProfile.'
-                                                    'showSelection'], 
+                                                    'showSelection'],
 
     'toggleEditPanel' : fsltooltips.actions['OrthoPanel.'
-                                            'toggleEditPanel'], 
+                                            'toggleEditPanel'],
     'undo'            : fsltooltips.actions['OrthoEditProfile.'
                                             'undo'],
     'redo'            : fsltooltips.actions['OrthoEditProfile.'
                                             'redo'],
     'createMask'      : fsltooltips.actions['OrthoEditProfile.'
-                                            'createMask'], 
+                                            'createMask'],
     'clearSelection'  : fsltooltips.actions['OrthoEditProfile.'
                                             'clearSelection'],
     'fillSelection'   : fsltooltips.actions['OrthoEditProfile.'
@@ -142,11 +142,11 @@ _TOOLTIPS = {
     'copySelection'   : fsltooltips.actions['OrthoEditProfile.'
                                             'copySelection'],
     'pasteSelection'  : fsltooltips.actions['OrthoEditProfile.'
-                                            'pasteSelection'], 
+                                            'pasteSelection'],
 }
-        
+
 _TOOLBAR_SPECS = [
-    
+
     actions.ToggleActionButton(
         'toggleEditPanel',
         actionKwargs={'floatPane' : True},
@@ -156,9 +156,9 @@ _TOOLBAR_SPECS = [
         'createMask',
         icon=_ICONS['createMask'],
         tooltip=_TOOLTIPS['createMask']),
- 
+
     'div',
-    
+
     props.Widget(
         'locationFollowsMouse',
         icon=_ICONS['locationFollowsMouse'],
@@ -177,7 +177,7 @@ _TOOLBAR_SPECS = [
         tooltip=_TOOLTIPS['redo']),
 
     'div',
-    
+
     props.Widget(
         'showSelection',
         icon=_ICONS['showSelection'],
@@ -196,9 +196,9 @@ _TOOLBAR_SPECS = [
         'eraseSelection',
         icon=_ICONS['eraseSelection'],
         tooltip=_TOOLTIPS['eraseSelection']),
-    
+
     'div',
-    
+
     actions.ActionButton(
         'copySelection',
         icon=_ICONS['copySelection'],

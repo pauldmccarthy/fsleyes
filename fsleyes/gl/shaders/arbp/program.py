@@ -33,10 +33,10 @@ class ARBPShader(object):
     the program, and to set vertex/fragment program parameters and vertex
     attributes.
 
-    
+
     The ``ARBPShader`` class assumes that vertex/fragment program source
-    has been written to work with the functions defined in the 
-    :mod:`.arbp.parse` module, which allows programs to be written so that 
+    has been written to work with the functions defined in the
+    :mod:`.arbp.parse` module, which allows programs to be written so that
     parameter, vertex attribute and texture locations do not have to be hard
     coded in the source.  Texture locations may be specified in
     :meth:`__init__`, and parameter/vertex attribute locations are
@@ -66,7 +66,7 @@ class ARBPShader(object):
         textures = {
             'colourMapTexture' : 0,
             'dataTexture'      : 1
-        } 
+        }
 
         program = GLSLShader(vertSrc, fragSrc, textures)
 
@@ -81,7 +81,7 @@ class ARBPShader(object):
         program.setFragParam('clipping',  [0, 1, 0, 0])
 
         # Create and set vertex attributes
-        vertices, normals = createVertices() 
+        vertices, normals = createVertices()
 
         program.setAttr('normals', normals)
 
@@ -105,14 +105,14 @@ class ARBPShader(object):
     See also the :class:`.GLSLShader`, which provides similar functionality for
     GLSL shader programs.
     """
-    
+
     def __init__(self, vertSrc, fragSrc, textureMap=None):
         """Create an ``ARBPShader``.
 
         :arg vertSrc:    Vertex program source.
-        
+
         :arg fragSrc:    Fragment program source.
-        
+
         :arg textureMap: A dictionary of ``{name : int}`` mappings, specifying
                          the texture unit assignments.
         """
@@ -155,7 +155,7 @@ class ARBPShader(object):
                                           self.attrPositions)
 
         vp, fp = self.__compile(vertSrc, fragSrc)
-        
+
         self.vertexProgram   = vp
         self.fragmentProgram = fp
 
@@ -165,8 +165,8 @@ class ARBPShader(object):
     def __del__(self):
         """Prints a log message. """
         if log:
-            log.memory('{}.del({})'.format(type(self).__name__, id(self))) 
-        
+            log.memory('{}.del({})'.format(type(self).__name__, id(self)))
+
 
     def destroy(self):
         """Deletes all GL resources managed by this ``ARBPShader``. """
@@ -176,7 +176,7 @@ class ARBPShader(object):
 
     def load(self):
         """Loads the shader program. """
-        gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
+        gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB)
         gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
 
         arbvp.glBindProgramARB(arbvp.GL_VERTEX_PROGRAM_ARB,
@@ -190,7 +190,7 @@ class ARBPShader(object):
             texUnit = self.__getAttrTexUnit(attr)
 
             gl.glClientActiveTexture(texUnit)
-            gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY) 
+            gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
 
 
     def unload(self):
@@ -198,7 +198,7 @@ class ARBPShader(object):
         gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
         gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB)
 
-        
+
     def unloadAtts(self):
         """Disables texture coordinates on all texture units. """
         for attr in self.attrs:
@@ -213,7 +213,7 @@ class ARBPShader(object):
         """Sets the value of the specified vertex program parameter.
 
         .. note:: It is assumed that the value is either a sequence of length
-                  4 (for vector parameters), or a ``numpy`` array of shape 
+                  4 (for vector parameters), or a ``numpy`` array of shape
                   ``(n, 4)`` (for matrix parameters).
 
         .. note:: This method is decorated by the
@@ -226,34 +226,34 @@ class ARBPShader(object):
         nrows = len(value) / 4
 
         log.debug('Setting vertex parameter {} = {}'.format(name, value))
-        
+
         for i in range(nrows):
             row = value[i * 4: i * 4 + 4]
             arbvp.glProgramLocalParameter4fARB(
                 arbvp.GL_VERTEX_PROGRAM_ARB, pos + i,
-                row[0], row[1], row[2], row[3]) 
+                row[0], row[1], row[2], row[3])
 
 
     @memoize.Instanceify(memoize.skipUnchanged)
     def setFragParam(self, name, value):
-        """Sets the value of the specified vertex program parameter. See 
+        """Sets the value of the specified vertex program parameter. See
         :meth:`setVertParam` for infomration about possible values.
 
         .. note:: This method is decorated by the
                   :func:`.memoize.skipUnchanged` decorator, which returns
-                  ``True`` if the value was changed, and ``False`` otherwise.        
+                  ``True`` if the value was changed, and ``False`` otherwise.
         """
         pos   = self.fragParamPositions[name]
         value = np.array(value, dtype=np.float32).ravel('F')
         nrows = len(value) / 4
 
         log.debug('Setting fragment parameter {} = {}'.format(name, value))
-    
+
         for i in range(nrows):
             row = value[i * 4: i * 4 + 4]
             arbfp.glProgramLocalParameter4fARB(
                 arbfp.GL_FRAGMENT_PROGRAM_ARB, pos + i,
-                row[0], row[1], row[2], row[3]) 
+                row[0], row[1], row[2], row[3])
 
 
     def setAttr(self, name, value):
@@ -269,7 +269,7 @@ class ARBPShader(object):
 
         log.debug('Setting vertex attribute {} = [{} * {}]'.format(
             name, value.shape[0], size))
-        
+
         value = value.ravel('C')
 
         gl.glClientActiveTexture(texUnit)
@@ -324,7 +324,7 @@ class ARBPShader(object):
         # Vertex attributes
         for i, name in enumerate(self.attrs):
             attrPoses[name]  = i
-            
+
         # Texture positions. If the caller did
         # not provide a texture map in __init__,
         # we'll generate some positions.
@@ -335,7 +335,7 @@ class ARBPShader(object):
             texPoses = {n : p for n, p in zip(names, poses)}
         else:
             texPoses = dict(textureMap)
-        
+
         return vpPoses, fpPoses, texPoses, attrPoses
 
 
@@ -345,7 +345,7 @@ class ARBPShader(object):
 
         """
 
-        gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB) 
+        gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB)
         gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
 
         fragProg = arbfp.glGenProgramsARB(1)
@@ -370,7 +370,7 @@ class ARBPShader(object):
             message  = gl.glGetString(  arbvp.GL_PROGRAM_ERROR_STRING_ARB)
 
             raise RuntimeError('Error compiling vertex program '
-                               '({}): {}'.format(position, message)) 
+                               '({}): {}'.format(position, message))
 
         # fragment program
         try:

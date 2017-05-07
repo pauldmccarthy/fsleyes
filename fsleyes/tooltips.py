@@ -47,10 +47,10 @@ properties = TypeDict({
                                         'left). Otherwise they will be '
                                         'displayed in neurological '
                                         'orientation (i.e. with subject left '
-                                        'to the left of the display).', 
+                                        'to the left of the display).',
 
     # Overlay Display
-    
+
     'Display.name'        : 'The name of this overlay.',
     'Display.overlayType' : 'The overlay type - how this overlay should be '
                             'displayed.',
@@ -79,32 +79,32 @@ properties = TypeDict({
     'ColourMapOpts.displayRange' :
     'Data display range - the low value corresponds to the low colour, and '
     'the high value to the high colour, in the selected colour map.',
-     
+
     'ColourMapOpts.clippingRange' :
     'Data clipping range - voxels with values outside of this range will not '
     'be displayed.',
-    
+
     'ColourMapOpts.invertClipping' :
     'Invert the clipping range, so that voxels inside the range are not '
-    'displayed, and voxels outside of the range are displayed. ' 
+    'displayed, and voxels outside of the range are displayed. '
     'This option is useful for displaying statistic images.',
-    
+
     'ColourMapOpts.cmap'            : 'The colour map to use.',
-    
+
     'ColourMapOpts.negativeCmap' :
     'The colour map to use for negative values.',
-    
+
     'ColourMapOpts.useNegativeCmap' :
     'Enable the negative colour map - this allows positive and negative '
     'values to be coloured independently.',
-    
+
     'ColourMapOpts.cmapResolution'  :
     'Colour map resolution - the number of colours to use in the colour maps.',
-    
+
     'ColourMapOpts.interpolateCmaps' :
     'Interpolate between discrete colours in the colour map. If not selected, '
     'nearest-neighbour interpolation is used. ',
- 
+
     'ColourMapOpts.invert' :
     'Invert the display range, so that the low value corresponds to the high '
     'colour, and vice versa.',
@@ -113,12 +113,12 @@ properties = TypeDict({
     'Interpolate the image data for display purposes. You can choose no  '
     'interpolation (equivalent to nearest neighbour interpolation), linear '
     'interpolation, or third-order spline (cubic) interpolation.',
-    
+
     'VolumeOpts.enableOverrideDataRange' :
     'Override the actual data range of an image with a user-specified '
     'one. This is useful for images which have a very large data '
     'range that is driven by outliers.',
-    
+
     'VolumeOpts.overrideDataRange' :
     'Override the actual data range of an image with a user-specified '
     'one. This is useful for images which have a very large data '
@@ -150,13 +150,13 @@ properties = TypeDict({
                                     'of the colour corresponds to the '
                                     'magnitude of the X component. This '
                                     'option has no effect if a colour image '
-                                    'is selected.', 
+                                    'is selected.',
     'VectorOpts.yColour'          : 'The colour corresponding to the Y '
                                     'component of the vector - the brightness '
                                     'of the colour corresponds to the '
                                     'magnitude of the Y component. This '
                                     'option has no effect if a colour image '
-                                    'is selected.', 
+                                    'is selected.',
     'VectorOpts.zColour'          : 'The colour corresponding to the Z '
                                     'component of the vector - the brightness '
                                     'of the colour corresponds to the '
@@ -165,17 +165,17 @@ properties = TypeDict({
                                     'is selected.',
     'VectorOpts.suppressX'        : 'Ignore the X vector component when '
                                     'colouring voxels. This option has no '
-                                    'effect if a colour image is selected.', 
+                                    'effect if a colour image is selected.',
     'VectorOpts.suppressY'        : 'Ignore the Y vector component when '
                                     'colouring voxels. This option has no '
-                                    'effect if a colour image is selected.', 
+                                    'effect if a colour image is selected.',
     'VectorOpts.suppressZ'        : 'Ignore the Z vector component when '
                                     'colouring voxels. This option has no '
                                     'effect if a colour image is selected.',
     'VectorOpts.suppressMode'     : 'When a vector direction is suppressed,'
                                     'it\'s contribution to the resulting '
                                     'will be replaced according to this '
-                                    'setting.', 
+                                    'setting.',
     'VectorOpts.modulateImage'    : 'Modulate the vector colour brightness by '
                                     'another image. The image selected here '
                                     'is normalised to lie in the range (0, '
@@ -202,12 +202,12 @@ properties = TypeDict({
                                     'this range are not displayed. ',
     'VectorOpts.modulateRange'    : 'The data range that is used when '
                                     'modulating vector brightness by a '
-                                    'modulation image.', 
+                                    'modulation image.',
     'VectorOpts.cmap'             : 'Colour map to use for colouring vector '
                                     'voxels, if a colour image is selected.',
     'VectorOpts.orientFlip'       : 'If checked, direction orientations '
                                     'within each voxel are flipped about '
-                                    'the x axis.', 
+                                    'the x axis.',
     'LineVectorOpts.lineWidth'    : 'The width of each vector line, in '
                                     'display pixels.',
     'LineVectorOpts.directed'     : 'If unchecked, the vector data is assumed '
@@ -226,7 +226,7 @@ properties = TypeDict({
                                     'unmodified.',
     'LineVectorOpts.lengthScale'  : 'Scale the vector line length by this '
                                     'scaling factor (expressed as a '
-                                    'percentage).', 
+                                    'percentage).',
     'RGBVectorOpts.interpolation' : 'Interpolate the vector data for display '
                                     'purposes. You can choose none '
                                     '(equivalent to nearest-neighbour), '
@@ -265,14 +265,14 @@ properties = TypeDict({
     'MeshOpts.lut' :
     'The lookup table to use when colouring the mesh with a lookup table '
     'instead of with the colour maps.',
-    
+
     'TensorOpts.lighting'         : 'If enabled, a simple lighting model is '
                                     'used to highlight the tensor '
-                                    'orientations.', 
+                                    'orientations.',
     'TensorOpts.tensorResolution' : 'This setting controls the number of '
                                     'vertices used to render each tensor. '
                                     'A higher value will result in better '
-                                    'looking tensors, but may reduce ' 
+                                    'looking tensors, but may reduce '
                                     'performance.' ,
     'TensorOpts.tensorScale'      : 'By default, the tensor radii are scaled '
                                     'the largest eigenvalue of the tensor '
@@ -297,7 +297,7 @@ properties = TypeDict({
                                 'orientation/direction. This setting is '
                                 'disabled when you choose to colour the FODs '
                                 'by another image (e.g. a FA map).',
-    
+
     # SceneOpts
 
     'SceneOpts.showCursor'         : 'Show/hide the cursor which highlights '
@@ -373,18 +373,18 @@ properties = TypeDict({
                                        'linked to the display properties '
                                        'on other panels (as long as they '
                                        'also have this setting enabled). ',
-    
+
     'CanvasPanel.movieMode' :
     'If checked, the volume will automatically change at a rate determined '
     'by the movie rate.  You can also loop through the or X, Y, or Z voxel '
     'coordinates by changing the movie axis  inthe view settings panel.  If '
     'you are looping through volumes and you want several overlays to be '
     'animated, group them using the overlay list.',
-    
+
     'CanvasPanel.movieRate' :
     'The rate at which volumes are changed when movie mode is enabled. Low = '
     'fast, and high = slow.',
-    
+
     'CanvasPanel.movieAxis' :
     'The axis to loop through. You can choose to run a movie through any '
     'axis of an image (X, Y, Z, or volume/time).',
@@ -396,7 +396,7 @@ properties = TypeDict({
                              'contents change.',
     'PlotPanel.yAutoScale' : 'If checked, the plot Y axis limits are '
                              'automatically adjusted whenever the plot '
-                             'contents change.', 
+                             'contents change.',
     'PlotPanel.xLogScale'  : 'If checked, a log (base 10) scale is used for '
                              'the x axis.',
     'PlotPanel.yLogScale'  : 'If checked, a log (base 10) scale is used for '
@@ -434,7 +434,7 @@ properties = TypeDict({
     'TimeSeriesPanel.currentLineWidth' : 'Line width of the current time '
                                          'series.',
     'TimeSeriesPanel.currentLineStyle' : 'Line style of the current time '
-                                         'series.', 
+                                         'series.',
 
     'HistogramPanel.histType'    : 'Show histogram data as raw counts, or '
                                    'as probabilities.',
@@ -460,7 +460,7 @@ properties = TypeDict({
     'FEATTimeSeries.plotData'         : 'Plot the input data.',
     'FEATTimeSeries.plotFullModelFit' : 'Plot the full model fit.',
     'FEATTimeSeries.plotResiduals'    : 'Plot the residuals of the full '
-                                        'model fit.', 
+                                        'model fit.',
     'FEATTimeSeries.plotEVs'          : 'Plot the EV (explanatory variable) '
                                         'time courses.',
     'FEATTimeSeries.plotPEFits'       : 'Plot the model fit to each PE '
@@ -472,13 +472,13 @@ properties = TypeDict({
 
     'HistogramSeries.autoBin'         : 'If checked, automatically calculate '
                                         'the number of bins to use in the '
-                                        'histogram calculation.', 
+                                        'histogram calculation.',
     'HistogramSeries.nbins'           : 'Number of bins to use in the '
                                         'histogram calculation (not '
                                         'applicable  if auto-binning is '
                                         'enabled).',
     'HistogramSeries.ignoreZeros'     : 'Ignore zeros in the histogram '
-                                        'calculation.', 
+                                        'calculation.',
     'HistogramSeries.showOverlay'     : 'Show a 3D mask overlay highlighting '
                                         'voxels which have been included in '
                                         'the histogram.',
@@ -494,7 +494,7 @@ properties = TypeDict({
     'PowerSpectrumSeries.varNorm'     : 'If checked, the data is demeaned and '
                                         'normalised by its standard deviation '
                                         'before its power spectrum is '
-                                        'calculated via a fourier transform.', 
+                                        'calculated via a fourier transform.',
 
     # Profiles
 
@@ -503,7 +503,7 @@ properties = TypeDict({
 
     'OrthoEditProfile.selectionCursorColour'  :
     'Colour to use for the selection cursor.',
-    
+
     'OrthoEditProfile.selectionOverlayColour' :
     'Colour to use to highlight selected regions.',
 
@@ -515,13 +515,13 @@ properties = TypeDict({
     'OrthoEditProfile.showSelection' :
     'Show/hide the current selection, when in select mode.',
 
-    'OrthoEditProfile.drawMode' : 
+    'OrthoEditProfile.drawMode' :
     'Toggle between "draw" mode and "select" mode. In draw mode, you can '
     'simply \'draw\' on an image - when you release the mouse, the voxel '
     'values are replaced with the current fill value (or erased). Select '
     'mode is more powerful, but requires two steps to edit an image - '
     'you must first select some voxels, and then fill/erase them.',
-    
+
     'OrthoEditProfile.mode' :
     'Switch between editing tools. The "Navigate" tool simply allows you to '
     'view the image and change the display location. The "Pencil" tool allows '
@@ -531,11 +531,11 @@ properties = TypeDict({
     'enabled, the "select by intensity" tool allows you to select voxels '
     'based on their intensity. Click on a "seed" voxel, and all voxels with '
     'a similar intenstiy to that seed voxel will be selected.',
-    
+
     'OrthoEditProfile.selectionSize' :
     'Size (in voxels) of the selection region when using the pencil or '
     'eraser tools.',
-    
+
     'OrthoEditProfile.selectionIs3D' :
     'When using the pencil or eraser tools, choose between a 2D square '
     'selection in the plane of the active canvas, or a 3D cuboid. With '
@@ -546,8 +546,8 @@ properties = TypeDict({
     'Value to replace voxels with when drawing/filling.',
 
     'OrthoEditProfile.eraseValue' :
-    'Value to replace voxels with when erasing.' , 
-    
+    'Value to replace voxels with when erasing.' ,
+
     'OrthoEditProfile.intensityThres' :
     'When using the select by intensity tool, this is the threshold used to '
     'determine whether or not a voxel should be selected. If the difference '
@@ -559,16 +559,16 @@ properties = TypeDict({
     'Upper limit for the intensity threshold. By default the upper intensity '
     'threshold limit is calculated from he image data range, but you can '
     'manually adjust it through this setting.',
-    
+
     'OrthoEditProfile.localFill' :
     'When using the select by intensity tool, this setting will cause the '
     'search space to be limited to voxels which have a similar intensity '
     'to the seed voxel, and which are adjacent to another selected voxel.',
-    
+
     'OrthoEditProfile.limitToRadius' :
     'When using the select by intensity tool, this setting will cause the '
     'search limited to a circle or sphere of the specified radius.',
-    
+
     'OrthoEditProfile.searchRadius' :
     'When using the select by intensity tool, if the search is being limited '
     'to a radius, this setting allows you to specify the radius of the search '
@@ -581,7 +581,7 @@ properties = TypeDict({
     'as the currently selected image) as the target for edit operations. This '
     'is most useful when selecting voxels by intensity - you can select voxels'
     'based on the values in the currently selected image, but then fill/erase '
-    'that selection in another image.', 
+    'that selection in another image.',
 })
 
 
@@ -611,37 +611,37 @@ actions = TypeDict({
                                                 'control panel.',
     'HistogramPanel.togglePlotList'           : 'Show/hide the histogram '
                                                 'list panel.',
-    
+
     'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Show/hide the power '
                                                       'spectrum control '
                                                       'panel.',
     'PowerSpectrumPanel.togglePlotList'             : 'Show/hide the power '
                                                       'spectrum list '
-                                                      'panel.', 
- 
+                                                      'panel.',
+
 
     'OrthoViewProfile.resetDisplay' : 'Reset the display on all canvases.',
     'OrthoViewProfile.centreCursor' : 'Reset location to centre of scene',
 
-    'OrthoEditProfile.undo' : 
+    'OrthoEditProfile.undo' :
     'Undo the most recent action. A history of changes to the selection, '
     'and to image data, are maintained. separate undo/redo histories are '
     'maintained for each image.',
-    
+
     'OrthoEditProfile.redo' :
     'Redo the most recent undone action.',
-    
+
     'OrthoEditProfile.createMask' :
     'Create an empty 3D mask image which has the same dimensions as the '
     'currently selected image.',
 
     'OrthoEditProfile.clearSelection' :
     'Clear the current selection - no voxels are selected.',
-    
+
     'OrthoEditProfile.fillSelection' :
     'Fill selected voxels in the currently selected '
     'image with the current fill value. ',
-    
+
     'OrthoEditProfile.eraseSelection' :
     'Set the value at all selected voxels in the currently selected '
     'image to zero.',

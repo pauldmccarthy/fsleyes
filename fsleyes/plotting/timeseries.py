@@ -40,7 +40,7 @@ class TimeSeries(dataseries.DataSeries):
 
     The following methods are intended to be overridden and/or called by
     sub-class implementations:
-    
+
     .. autosummary::
        :nosignatures:
 
@@ -48,7 +48,7 @@ class TimeSeries(dataseries.DataSeries):
        getData
     """
 
-    
+
     def __init__(self, tsPanel, overlay, displayCtx):
         """Create a ``TimeSeries`` instance.
 
@@ -64,13 +64,13 @@ class TimeSeries(dataseries.DataSeries):
         self.tsPanel     = tsPanel
         self.displayCtx  = displayCtx
 
-        
+
     def makeLabel(self):
         """Return a label for this ``TimeSeries``. """
         display = self.displayCtx.getDisplay(self.overlay)
         return display.name
-    
-        
+
+
     def getData(self, xdata=None, ydata=None):
         """Overrides :meth:`.DataSeries.getData`. Returns the data associated
         with this ``TimeSeries`` instance.
@@ -89,7 +89,7 @@ class TimeSeries(dataseries.DataSeries):
 
         xdata = np.array(xdata, dtype=np.float32)
         ydata = np.array(ydata, dtype=np.float32)
-        
+
         return xdata, ydata
 
 
@@ -102,7 +102,7 @@ class VoxelTimeSeries(TimeSeries):
     :attr:`.DisplayContext.location` property (transformed into the image
     voxel coordinate system).
     """
-    
+
     def __init__(self, tsPanel, overlay, displayCtx):
         """Create a ``VoxelTimeSeries`` instance.
 
@@ -111,7 +111,7 @@ class VoxelTimeSeries(TimeSeries):
 
         :arg overlay:    The :class:`.Image` instance to extract the data from.
 
-        :arg displayCtx: The :class:`.DisplayContext`. 
+        :arg displayCtx: The :class:`.DisplayContext`.
         """
         TimeSeries.__init__(self, tsPanel, overlay, displayCtx)
 
@@ -125,7 +125,7 @@ class VoxelTimeSeries(TimeSeries):
         #      when the image data changes.
         self.__cache = cache.Cache(maxsize=1000)
 
-        
+
     def makeLabel(self):
         """Returns a string representation of this ``VoxelTimeSeries``
         instance.
@@ -141,7 +141,7 @@ class VoxelTimeSeries(TimeSeries):
                                           coords[1],
                                           coords[2])
         else:
-            return '{} [out of bounds]'.format(display.name) 
+            return '{} [out of bounds]'.format(display.name)
 
 
     # The PlotPanel uses a new thread to access
@@ -178,28 +178,28 @@ class VoxelTimeSeries(TimeSeries):
 
         if xdata is None:
             xdata = np.arange(len(ydata))
-        
+
         return TimeSeries.getData(self, xdata=xdata, ydata=ydata)
 
- 
+
 class FEATTimeSeries(VoxelTimeSeries):
     """A :class:`VoxelTimeSeries` class for use with :class:`FEATImage`
     instances, containing some extra FEAT specific options.
 
-    
+
     The ``FEATTimeSeries`` class acts as a container for several
     ``TimeSeries`` instances, each of which represent some part of a FEAT
     analysis. Therefore, the data returned by a call to
     :meth:`.TimeSeries.getData` on a ``FEATTimeSeries`` instance should not
     be plotted.
 
-    
+
     Instead, the :meth:`getModelTimeSeries` method should be used to retrieve
     a list of all the ``TimeSeries`` instances which are associated with the
     ``FEATTimeSeries`` instance - all of these ``TimeSeries`` instances should
     be plotted instead.
 
-    
+
     For example, if the :attr:`plotData` and :attr:`plotFullModelFit` settings
     are ``True``, the :meth:`getModelTimeSeries` method will return a list
     containing two ``TimeSeries`` instances - one which will return the FEAT
@@ -212,13 +212,13 @@ class FEATTimeSeries(VoxelTimeSeries):
               ``True``, the ``FEATTimeSeries`` instance will itself be included
               in the list returned by :meth:`getModelTimeSeries`.
 
-    
+
     The following classes are used to represent the various parts of a FEAT
     analysis:
 
     .. autosummary::
        :nosignatures:
-    
+
        FEATEVTimeSeries
        FEATResidualTimeSeries
        FEATPartialFitTimeSeries
@@ -229,41 +229,41 @@ class FEATTimeSeries(VoxelTimeSeries):
     plotData = props.Boolean(default=True)
     """If ``True``, the FEAT input data is plotted. """
 
-    
+
     plotFullModelFit = props.Boolean(default=True)
     """If ``True``, the FEAT full model fit is plotted. """
 
-    
+
     plotResiduals = props.Boolean(default=False)
     """If ``True``, the FEAT model residuals are plotted. """
 
-    
+
     plotEVs = props.List(props.Boolean(default=False))
     """A list of ``Boolean`` properties, one for each EV in the FEAT analysis.
     For elements that are ``True``, the corresponding FEAT EV time course is
     plotted.
     """
 
-    
+
     plotPEFits = props.List(props.Boolean(default=False))
     """A list of ``Boolean`` properties, one for each EV in the FEAT analysis.
     For elements that are ``True``, the model fit for the corresponding FEAT
-    EV is plotted.    
+    EV is plotted.
     """
 
-    
+
     plotCOPEFits = props.List(props.Boolean(default=False))
     """A list of ``Boolean`` properties, one for each EV in the FEAT analysis.
     For elements that are ``True``, the model fit for the corresponding FEAT
-    contrast is plotted.    
-    """ 
+    contrast is plotted.
+    """
 
-    
+
     plotPartial = props.Choice()
     """Plot the raw data, after regression against a chosen EV or contrast.
     The options are populated in the :meth:`__init__` method.
     """
-    
+
 
     def __init__(self, *args, **kwargs):
         """Create a ``FEATTimeSeries``.
@@ -271,14 +271,14 @@ class FEATTimeSeries(VoxelTimeSeries):
         All arguments are passed through to the :class:`VoxelTimeSeries`
         constructor.
         """
-        
+
         VoxelTimeSeries.__init__(self, *args, **kwargs)
         self.name = '{}_{}'.format(type(self).__name__, id(self))
 
         numEVs    = self.overlay.numEVs()
         numCOPEs  = self.overlay.numContrasts()
         copeNames = self.overlay.contrastNames()
-        
+
         reduceOpts = ['none'] + \
                      ['PE{}'.format(i + 1) for i in range(numEVs)]
 
@@ -293,7 +293,7 @@ class FEATTimeSeries(VoxelTimeSeries):
             self.plotEVs   .append(False)
 
         for i in range(numCOPEs):
-            self.plotCOPEFits.append(False) 
+            self.plotCOPEFits.append(False)
 
         self.__fullModelTs =  None
         self.__partialTs   =  None
@@ -304,7 +304,7 @@ class FEATTimeSeries(VoxelTimeSeries):
 
         if not self.overlay.hasStats():
             self.plotFullModelFit = False
-        
+
         self.addListener('plotFullModelFit',
                          self.name,
                          self.__plotFullModelFitChanged)
@@ -328,21 +328,21 @@ class FEATTimeSeries(VoxelTimeSeries):
         """Returns a list containing all of the ``TimeSeries`` instances
         which should be plotted in place of this ``FEATTimeSeries``.
         """
-        
+
         modelts = []
 
         if self.plotData:              modelts.append(self)
         if self.plotFullModelFit:      modelts.append(self.__fullModelTs)
         if self.plotResiduals:         modelts.append(self.__resTs)
         if self.plotPartial != 'none': modelts.append(self.__partialTs)
-        
+
         for i in range(self.overlay.numEVs()):
             if self.plotPEFits[i]:
                 modelts.append(self.__peTs[i])
 
         for i in range(self.overlay.numEVs()):
             if self.plotEVs[i]:
-                modelts.append(self.__evTs[i]) 
+                modelts.append(self.__evTs[i])
 
         for i in range(self.overlay.numContrasts()):
             if self.plotCOPEFits[i]:
@@ -370,7 +370,7 @@ class FEATTimeSeries(VoxelTimeSeries):
         elif fitType == 'cope':
             return self.overlay.contrasts()[idx]
 
-        
+
     def __createModelTs(self, tsType, *args, **kwargs):
         """Creates a ``TimeSeries`` instance of the given ``tsType``, and
         sets its display settings  according to those of this
@@ -411,7 +411,7 @@ class FEATTimeSeries(VoxelTimeSeries):
         If necessary, creates and caches a :class:`FEATPartialFitTimeSeries`
         instance.
         """
-            
+
         partial = self.plotPartial
 
         if partial == 'none' and self.__partialTs is not None:
@@ -428,7 +428,7 @@ class FEATTimeSeries(VoxelTimeSeries):
             FEATPartialFitTimeSeries,
             self.__getContrast(fitType, idx),
             fitType,
-            idx) 
+            idx)
 
 
     def __plotResidualsChanged(self, *a):
@@ -436,8 +436,8 @@ class FEATTimeSeries(VoxelTimeSeries):
 
         If necessary, creates and caches a :class:`FEATResidualTimeSeries`
         instance.
-        """ 
-        
+        """
+
         if not self.plotResiduals:
             self.__resTs = None
             return
@@ -450,30 +450,30 @@ class FEATTimeSeries(VoxelTimeSeries):
 
         If necessary, creates and caches one or more :class:`FEATEVTimeSeries`
         instances.
-        """ 
+        """
 
         for evnum, plotEV in enumerate(self.plotEVs):
 
             if not self.plotEVs[evnum]:
                 self.__evTs[evnum] = None
-                
+
             elif self.__evTs[evnum] is None:
                 self.__evTs[evnum] = self.__createModelTs(
                     FEATEVTimeSeries, evnum)
-            
-    
+
+
     def __plotCOPEFitChanged(self, *a):
         """Called when the :attr:`plotCOPEFits` setting changes.
 
         If necessary, creates and caches one or more
         :class:`FEATModelFitTimeSeries` instances.
-        """ 
+        """
 
         for copenum, plotCOPE in enumerate(self.plotCOPEFits):
 
             if not self.plotCOPEFits[copenum]:
                 self.__copeTs[copenum] = None
-            
+
             elif self.__copeTs[copenum] is None:
                 self.__copeTs[copenum] = self.__createModelTs(
                     FEATModelFitTimeSeries,
@@ -487,7 +487,7 @@ class FEATTimeSeries(VoxelTimeSeries):
 
         If necessary, creates and caches one or more
         :class:`FEATModelFitTimeSeries` instances.
-        """         
+        """
 
         for evnum, plotPE in enumerate(self.plotPEFits):
 
@@ -508,7 +508,7 @@ class FEATTimeSeries(VoxelTimeSeries):
         If necessary, creates and caches a
         :class:`FEATModelFitTimeSeries` instance.
         """
-        
+
         if not self.plotFullModelFit:
             self.__fullModelTs = None
             return
@@ -516,7 +516,7 @@ class FEATTimeSeries(VoxelTimeSeries):
         self.__fullModelTs = self.__createModelTs(
             FEATModelFitTimeSeries, self.__getContrast('full', -1), 'full', -1)
 
-        
+
 class FEATPartialFitTimeSeries(VoxelTimeSeries):
     """A :class:`VoxelTimeSeries` class which represents the partial model
     fit of an EV or contrast from a FEAT analysis at a specific voxel.
@@ -534,20 +534,20 @@ class FEATPartialFitTimeSeries(VoxelTimeSeries):
 
         :arg tsPanel:    The :class:`TimeSeriesPanel` that owns this
                          ``FEATPartialFitTimeSeries`` instance.
-        
+
         :arg overlay:    A :class:`.FEATImage` overlay.
-        
+
         :arg displayCtx: The :class:`.DisplayContext`.
 
         :arg parentTs:   The :class:`.FEATTimeSeries` instance that has
                          created this ``FEATPartialFitTimeSeries``.
-        
+
         :arg contrast:   The contrast vector to calculate the partial model
                          fit for.
-        
+
         :arg fitType:    The model fit type, either ``'full'``, ``'pe'`` or
                          ``'cope'``.
-        
+
         :arg idx:        If the model fit type is ``'pe'`` or ``'cope'``,
                          the EV/contrast index.
         """
@@ -558,7 +558,7 @@ class FEATPartialFitTimeSeries(VoxelTimeSeries):
         self.fitType  = fitType
         self.idx      = idx
 
-        
+
     def getData(self):
         """Returns the partial model fit for the voxel and model fit type
         specified in the constructop.
@@ -567,54 +567,54 @@ class FEATPartialFitTimeSeries(VoxelTimeSeries):
         """
         opts   = self.displayCtx.getOpts(self.overlay)
         coords = opts.getVoxel()
-        
+
         if coords is None:
             return [], []
-        
+
         data = self.overlay.partialFit(self.contrast, coords)
         return VoxelTimeSeries.getData(self, ydata=data)
 
-    
+
 class FEATEVTimeSeries(TimeSeries):
     """A :class:`TimeSeries` class which represents the time course of an
     EV from a FEAT analysis. Instances of this class are created by the
     :class:`FEATTimeSeries` class.
     """
-    
+
     def __init__(self, tsPanel, overlay, displayCtx, parentTs, idx):
         """Create a ``FEATEVTimeSeries``.
 
         :arg tsPanel:    The :class:`TimeSeriesPanel` that owns this
                          ``FEATEVTimeSeries`` instance.
-        
+
         :arg overlay:    A :class:`.FEATImage` overlay.
 
         :arg displayCtx: The :class:`.DisplayContext`.
 
         :arg parentTs:   The :class:`.FEATTimeSeries` instance that has
-                         created this ``FEATEVTimeSeries``. 
-        
+                         created this ``FEATEVTimeSeries``.
+
         :arg idx:        The EV index.
         """
         TimeSeries.__init__(self, tsPanel, overlay, displayCtx)
-        
+
         self.parentTs = parentTs
         self.idx      = idx
 
-        
+
     def makeLabel(self):
         """Returns a string representation of this ``FEATEVTimeSeries``
         instance.
         """
 
         display = self.displayCtx.getDisplay(self.overlay)
-        
-        return '{} EV{} ({})'.format(
-            display.name, 
-            self.idx + 1,
-            self.overlay.evNames()[self.idx]) 
 
-        
+        return '{} EV{} ({})'.format(
+            display.name,
+            self.idx + 1,
+            self.overlay.evNames()[self.idx])
+
+
     def getData(self):
         """Returns the time course of the EV specified in the constructor. """
 
@@ -622,9 +622,9 @@ class FEATEVTimeSeries(TimeSeries):
         coords = opts.getVoxel()
         design = self.overlay.getDesign(coords)
         data   = design[:, self.idx]
-        
+
         return TimeSeries.getData(self, ydata=data)
-    
+
 
 class FEATResidualTimeSeries(VoxelTimeSeries):
     """A :class:`VoxelTimeSeries` class which represents the time course of
@@ -637,13 +637,13 @@ class FEATResidualTimeSeries(VoxelTimeSeries):
 
         :arg tsPanel:    The :class:`TimeSeriesPanel` that owns this
                          ``FEATResidualTimeSeries`` instance.
-        
+
         :arg overlay:    A :class:`.FEATImage` overlay.
 
         :arg displayCtx: The :class:`.DisplayContext`.
 
         :arg parentTs:   The :class:`.FEATTimeSeries` instance that has
-                         created this ``FEATResidualTimeSeries``. 
+                         created this ``FEATResidualTimeSeries``.
         """
         VoxelTimeSeries.__init__(self, tsPanel, overlay, displayCtx)
         self.parentTs = parentTs
@@ -654,29 +654,29 @@ class FEATResidualTimeSeries(VoxelTimeSeries):
         instance.
         """
         return '{} ({})'.format(self.parentTs.makeLabel(),
-                                strings.labels[self]) 
+                                strings.labels[self])
 
-    
+
     def getData(self):
         """Returns the residuals for the current voxel. """
 
         opts  = self.displayCtx.getOpts(self.overlay)
         voxel = opts.getVoxel()
-        
+
         if voxel is None:
             return [], []
 
         x, y, z = voxel
         data    = self.overlay.getResiduals()[x, y, z, :]
-        
+
         return VoxelTimeSeries.getData(self, ydata=data)
-            
+
 
 class FEATModelFitTimeSeries(VoxelTimeSeries):
-    """A :class:`TimeSeries` class which represents the time course for 
+    """A :class:`TimeSeries` class which represents the time course for
     a model fit from a FEAT analysis at a specific voxel. Instances of this
     class are created by the :class:`FEATTimeSeries` class.
-    """ 
+    """
 
     def __init__(self,
                  tsPanel,
@@ -687,30 +687,30 @@ class FEATModelFitTimeSeries(VoxelTimeSeries):
                  fitType,
                  idx):
         """Create a ``FEATModelFitTimeSeries``.
-        
+
         :arg tsPanel:    The :class:`TimeSeriesPanel` that owns this
                          ``FEATModelFitTimeSeries`` instance.
-        
+
         :arg overlay:    A :class:`.FEATImage` overlay.
-        
+
         :arg displayCtx: The :class:`.DisplayContext`.
 
         :arg parentTs:   The :class:`.FEATTimeSeries` instance that has
-                         created this ``FEATModelFitTimeSeries``. 
-        
+                         created this ``FEATModelFitTimeSeries``.
+
         :arg contrast:   The contrast vector to calculate the partial model
                          fit for.
-        
+
         :arg fitType:    The model fit type, either ``'full'``, ``'pe'`` or
                          ``'cope'``.
-        
+
         :arg idx:        If the model fit type is ``'pe'`` or ``'cope'``,
                          the EV/contrast index.
         """
-        
+
         if fitType not in ('full', 'cope', 'pe'):
             raise ValueError('Unknown model fit type {}'.format(fitType))
-        
+
         VoxelTimeSeries.__init__(self, tsPanel, overlay, displayCtx)
         self.parentTs = parentTs
         self.fitType  = fitType
@@ -721,20 +721,20 @@ class FEATModelFitTimeSeries(VoxelTimeSeries):
     def makeLabel(self):
         """Returns a string representation of this ``FEATModelFitTimeSeries``
         instance.
-        """ 
-        
+        """
+
         label = '{} ({})'.format(
             self.parentTs.makeLabel(),
             strings.labels[self, self.fitType])
 
         if self.fitType == 'full':
             return label
-        
+
         elif self.fitType == 'cope':
             return label.format(
                 self.idx + 1,
                 self.overlay.contrastNames()[self.idx])
-        
+
         elif self.fitType == 'pe':
             return label.format(self.idx + 1)
 
@@ -743,11 +743,11 @@ class FEATModelFitTimeSeries(VoxelTimeSeries):
 
         opts     = self.displayCtx.getOpts(self.overlay)
         voxel    = opts.getVoxel()
-        contrast = self.contrast 
+        contrast = self.contrast
 
         if voxel is None:
             return [], []
-        
+
         data = self.overlay.fit(contrast, voxel)
 
         return VoxelTimeSeries.getData(self, ydata=data)
@@ -777,12 +777,12 @@ class MelodicTimeSeries(TimeSeries):
         component, as dictated by the :class:`.NiftiOpts.volume` property.
         """
         opts = self.displayCtx.getOpts(self.overlay)
-        return opts.volume 
+        return opts.volume
 
 
     def makeLabel(self):
         """Returns a string representation of this ``MelodicTimeSeries``. """
-        
+
         display = self.displayCtx.getDisplay(self.overlay)
         return '{} [component {}]'.format(display.name,
                                           self.getComponent() + 1)
@@ -790,7 +790,7 @@ class MelodicTimeSeries(TimeSeries):
 
     def getData(self):
         """Returns the time course of the current Melodic component. """
-        
+
         component = self.getComponent()
         ydata     = self.overlay.getComponentTimeSeries(component)
         return TimeSeries.getData(self, ydata=ydata)

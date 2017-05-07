@@ -72,13 +72,13 @@ def createGLObject(overlay, display, xax, yax):
     by the :attr:`.Display.overlayType` property.
 
     :arg overlay: An overlay object (e.g. a :class:`.Image` instance).
-    
+
     :arg display: A :class:`.Display` instance describing how the overlay
                   should be displayed.
 
     :arg xax:     Initial display X axis
 
-    :arg yax:     Initial display Y axis    
+    :arg yax:     Initial display Y axis
     """
     ctr = getGLObjectType(display.overlayType)
 
@@ -90,10 +90,10 @@ class GLObject(notifier.Notifier):
     """The :class:`GLObject` class is a base class for all 2D OpenGL
     objects displayed in *FSLeyes*.
 
-    
+
     **Instance attributes**
 
-    
+
     The following attributes will always be available on ``GLObject``
     instances:
 
@@ -101,16 +101,16 @@ class GLObject(notifier.Notifier):
 
       - ``xax``:  Index of the display coordinate system axis that
                   corresponds to the horizontal screen axis.
-    
-      - ``yax``:  Index of the display coordinate system axis that 
+
+      - ``yax``:  Index of the display coordinate system axis that
                   corresponds to the vertical screen axis.
-    
-      - ``zax``:  Index of the display coordinate system axis that 
+
+      - ``zax``:  Index of the display coordinate system axis that
                   corresponds to the depth screen axis.
 
 
     **Update listeners**
-    
+
 
     Entities which are interested in changes to a ``GLObject`` representation
     may register as *update listeners*, via the :meth:`.Notifier.register`
@@ -122,19 +122,19 @@ class GLObject(notifier.Notifier):
 
     **Sub-class resposibilities***
 
-    
+
     Sub-class implementations must do the following:
-    
+
      - Call :meth:`__init__`. A ``GLObject.__init__`` sub-class method must
        have the following signature::
-    
+
            def __init__(self, overlay, display, xax, yax)
-    
+
 
      - Call :meth:`notify` whenever its OpenGL representation changes.
 
      - Override the following methods:
-    
+
        .. autosummary::
           :nosignatures:
 
@@ -157,9 +157,9 @@ class GLObject(notifier.Notifier):
        GLImageObject
     """
 
-    
+
     def __init__(self, xax, yax):
-        """Create a :class:`GLObject`.  The constructor adds one attribute 
+        """Create a :class:`GLObject`.  The constructor adds one attribute
         to this instance, ``name``, which is simply a unique name for this
         instance, and gives values to the ``xax``, ``yax``, and ``zax``
         attributes.
@@ -172,7 +172,7 @@ class GLObject(notifier.Notifier):
         :arg yax: Initial display Y axis
         """
 
-        # Give this instance a name, and set 
+        # Give this instance a name, and set
         # initial values for the display axes
         self.name = '{}_{}'.format(type(self).__name__, id(self))
         self.xax  = xax
@@ -195,17 +195,17 @@ class GLObject(notifier.Notifier):
         are ready to be used.
         """
         raise NotImplementedError('The ready method must be '
-                                  'implemented by GLObject subclasses') 
+                                  'implemented by GLObject subclasses')
 
-    
+
     def getDisplayBounds(self):
         """This method must calculate and return a bounding box, in the
         display coordinate system, which contains the entire ``GLObject``.
         The bounds must be returned as a tuple with the following structure::
 
             ((xlo, ylo, zlo), (xhi, yhi, zhi))
-        
-        This method must be implemented by sub-classes. 
+
+        This method must be implemented by sub-classes.
         """
 
         raise NotImplementedError('The getDisplayBounds method must be '
@@ -223,13 +223,13 @@ class GLObject(notifier.Notifier):
         environment where off-screen rendering to a
         :class:`.GLObjectRenderTexture` is used - see the
         :class:`.SliceCanvas` documentation for more details.
-        
+
         :arg xax: Axis to be used as the horizontal screen axis.
         :arg yax: Axis to be used as the vertical screen axis.
         """
         return None
 
-    
+
     def setAxes(self, xax, yax):
         """This method is called when the display orientation for this
         :class:`GLObject` changes. It sets :attr:`xax`, :attr:`yax`,
@@ -243,11 +243,11 @@ class GLObject(notifier.Notifier):
         self.yax = yax
         self.zax = 3 - xax - yax
 
-    
+
     def destroy(self):
         """This method is called when this :class:`GLObject` is no longer
         needed.
-        
+
         It should perform any necessary cleaning up, such as deleting texture
         objects.
         """
@@ -257,13 +257,13 @@ class GLObject(notifier.Notifier):
     def destroyed(self):
         """This method is called to test whether a call has been made to
         :meth:`destroy`.
-        
+
         It should return ``True`` if this ``GLObject`` has been destroyed,
         ``False`` otherwise.
         """
         raise NotImplementedError()
 
-    
+
     def preDraw(self):
         """This method is called at the start of a draw routine.
 
@@ -273,7 +273,7 @@ class GLObject(notifier.Notifier):
         """
         raise NotImplementedError()
 
-    
+
     def draw(self, zpos, xform=None, bbox=None):
         """This method should draw a view of this ``GLObject`` - a 2D slice
         at the given Z location, which specifies the position along the screen
@@ -339,7 +339,7 @@ class GLSimpleObject(GLObject):
         """Overrides :meth:`GLObject.ready`. Returns ``True``. """
         return True
 
-        
+
     def destroy( self):
         """Overrides :meth:`GLObject.destroy`. Does nothing. """
         self.__destroyed = True
@@ -348,16 +348,16 @@ class GLSimpleObject(GLObject):
     def destroyed(self):
         """Overrides :meth:`GLObject.destroy`. Returns ``True`` if
         :meth:`destroy` hs been called, ``False`` otherwise.
-        
+
         """
         return self.__destroyed
 
-    
+
     def preDraw(self):
         """Overrides :meth:`GLObject.preDraw`. Does nothing. """
         pass
 
-    
+
     def postDraw(self):
         """Overrides :meth:`GLObject.postDraw`. Does nothing. """
         pass
@@ -365,9 +365,9 @@ class GLSimpleObject(GLObject):
 
 class GLImageObject(GLObject):
     """The ``GLImageObject`` class is the base class for all GL representations
-    of :class:`.Nifti` instances. 
+    of :class:`.Nifti` instances.
     """
-    
+
     def __init__(self, image, display, xax, yax):
         """Create a ``GLImageObject``.
 
@@ -384,14 +384,14 @@ class GLImageObject(GLObject):
         =============== =======================================================
 
         :arg image:   The :class:`.Nifti` instance
-        
+
         :arg display: An associated :class:`.Display` instance.
 
         :arg xax:     Initial display X axis
 
         :arg yax:     Initial display Y axis
         """
-        
+
         GLObject.__init__(self, xax, yax)
         self.image       = image
         self.display     = display
@@ -437,10 +437,10 @@ class GLImageObject(GLObject):
         # along each voxel dimension
         shape = np.array(image.shape[:3])
 
-        # Figure out an approximate 
+        # Figure out an approximate
         # correspondence between the
         # voxel axes and the display
-        # coordinate system axes. 
+        # coordinate system axes.
         xform = opts.getTransform('id', 'display')
         axes  = nib.orientations.aff2axcodes(
             xform, ((0, 0), (1, 1), (2, 2)))
@@ -451,24 +451,24 @@ class GLImageObject(GLObject):
 
         return res
 
-        
+
     def generateVertices(self, zpos, xform=None, bbox=None):
         """Generates vertex coordinates for a 2D slice of the :class:`.Image`,
         through the given ``zpos``, with the optional ``xform`` and ``bbox``
         applied to the coordinates.
-        
+
         This is a convenience method for generating vertices which can be used
         to render a slice through a 3D texture. It is used by the
         :mod:`.gl14.glvolume_funcs` and :mod:`.gl21.glvolume_funcs` (and other)
         modules.
 
         A tuple of three values is returned, containing:
-        
+
           - A ``6*3 numpy.float32`` array containing the vertex coordinates
-        
+
           - A ``6*3 numpy.float32`` array containing the voxel coordinates
             corresponding to each vertex
-        
+
           - A ``6*3 numpy.float32`` array containing the texture coordinates
             corresponding to each vertex
         """
@@ -482,12 +482,12 @@ class GLImageObject(GLObject):
             self.image.shape[:3],
             self.xax,
             self.yax,
-            zpos, 
+            zpos,
             v2dMat,
             d2vMat,
             bbox=bbox)
 
-        if xform is not None: 
+        if xform is not None:
             vertices = transform.transform(vertices, xform)
 
         # If not interpolating, centre the
@@ -501,18 +501,18 @@ class GLImageObject(GLObject):
 
         texCoords = transform.transform(voxCoords, v2tMat)
 
-        return vertices, voxCoords, texCoords 
+        return vertices, voxCoords, texCoords
 
-    
+
     def generateVoxelCoordinates(self, zpos, bbox=None, space='voxel'):
         """Generates a grid of voxel coordinates along the
         XY display coordinate system plane, at the given ``zpos``.
 
         :arg zpos:  Position along the display coordinate system Z axis.
-        
+
         :arg bbox:  Limiting bounding box.
-        
-        :arg space: Either ``'voxel'`` (the default) or ``'display'``. 
+
+        :arg space: Either ``'voxel'`` (the default) or ``'display'``.
                     If the latter, the returned coordinates are in terms
                     of the display coordinate system. Otherwise, the
                     returned coordinates are integer voxel coordinates.

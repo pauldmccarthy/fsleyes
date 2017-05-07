@@ -26,7 +26,7 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
        :align: center
     """
 
-    
+
     def __init__(self, *args, **kwargs):
         """Create a ``HistogramControlPanel``. All arguments are passed
         through to the :meth:`.PlotControlPanel.__init__` method.
@@ -72,7 +72,7 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
 
         def is4D(h):
             return len(h.overlay.shape) == 4 and h.overlay.shape[3] > 1
-        
+
         widgetList = self.getWidgetList()
 
         volume     = props.Widget('volume',
@@ -86,13 +86,13 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
         volume     = props.buildGUI(widgetList, hs, volume)
         autoBin    = props.buildGUI(widgetList, hs, autoBin)
         nbins      = props.buildGUI(widgetList, hs, nbins)
-        
+
         dataRange = props.makeWidget(
             widgetList, hs, 'dataRange',
             labels=[strings.choices['HistogramPanel.dataRange.min'],
                     strings.choices['HistogramPanel.dataRange.max']],
             showLimits=False)
-        
+
         ignoreZeros     = props.makeWidget(widgetList, hs, 'ignoreZeros')
         showOverlay     = props.makeWidget(widgetList, hs, 'showOverlay')
         includeOutliers = props.makeWidget(widgetList, hs, 'includeOutliers')
@@ -114,7 +114,7 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
         widgetList.AddWidget(autoBin,
                              groupName=groupName,
                              displayName=strings.properties[hs, 'autoBin'],
-                             tooltip=fsltooltips.properties[hs, 'autoBin']) 
+                             tooltip=fsltooltips.properties[hs, 'autoBin'])
         widgetList.AddWidget(nbins,
                              groupName=groupName,
                              displayName=strings.properties[hs, 'nbins'],

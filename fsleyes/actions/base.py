@@ -27,18 +27,18 @@ class ActionDisabledError(Exception):
 
 class Action(props.HasProperties):
     """Represents an action of some sort. """
-    
-    
+
+
     enabled = props.Boolean(default=True)
     """Controls whether the action is currently enabled or disabled.
     When this property is ``False`` calls to the action will
     result in a :exc:`ActionDisabledError`.
     """
 
-    
+
     def __init__(self, func, instance=None):
         """Create an ``Action``.
-        
+
         :arg func:     The action function.
 
         :arg instance: Object associated with the function, if this ``Action``
@@ -46,24 +46,24 @@ class Action(props.HasProperties):
         """
         self.__instance     = instance
         self.__func         = func
-        self.__name         = func.__name__ 
+        self.__name         = func.__name__
         self.__boundWidgets = []
 
         self.addListener('enabled',
                          'Action_{}_internal'.format(id(self)),
                          self.__enabledChanged)
 
-        
+
     def __str__(self):
         """Returns a string representation of this ``Action``. """
         return '{}({})'.format(type(self).__name__, self.__name)
 
-    
+
     def __repr__(self):
         """Returns a string representation of this ``Action``. """
         return self.__str__()
 
-    
+
     def __call__(self, *args, **kwargs):
         """Calls this action. An :exc:`ActionDisabledError` will be raised
         if :attr:`enabled` is ``False``.
@@ -79,17 +79,17 @@ class Action(props.HasProperties):
 
         if self.__instance is not None:
             args = [self.__instance] + list(args)
-            
+
         return self.__func(*args, **kwargs)
 
-    
+
     def destroy(self):
         """Must be called when this ``Action`` is no longer needed. """
         self.unbindAllWidgets()
         self.__func     = None
         self.__instance = None
 
-        
+
     def bindToWidget(self, parent, evType, widget, wrapper=None):
         """Binds this action to the given :mod:`wx` widget.
 
@@ -103,12 +103,12 @@ class Action(props.HasProperties):
         if wrapper is None:
             def wrapper(ev):
                 self()
-            
+
         parent.Bind(evType, wrapper, widget)
         widget.Enable(self.enabled)
         self.__boundWidgets.append((parent, evType, widget))
 
-        
+
     def unbindWidget(self, widget):
         """Unbinds the given widget from this ``Action``. """
 
@@ -116,7 +116,7 @@ class Action(props.HasProperties):
         # as we need this to pass to __unbindWidget,
         # which does the real work.
         index = -1
-        
+
         for i, (p, e, w) in enumerate(self.__boundWidgets):
             if w == widget:
                 index = i
@@ -133,9 +133,9 @@ class Action(props.HasProperties):
         """Unbinds the widget at the specified index into the
         ``__boundWidgets`` list. Does not remove it from the list.
         """
-        
+
         parent, evType, widget = self.__boundWidgets[index]
-        
+
         # Only attempt to unbind if the parent
         # and widget have not been destroyed
 
@@ -144,7 +144,7 @@ class Action(props.HasProperties):
 
             parent.Unbind(evType, source=widget)
 
-        
+
     def unbindAllWidgets(self):
         """Unbinds all widgets which have been bound via :meth:`bindToWidget`.
         """
@@ -154,7 +154,7 @@ class Action(props.HasProperties):
 
         self.__boundWidgets = []
 
-        
+
     def getBoundWidgets(self):
         """Returns a list containing all widgets which have been bound to
         this ``Action``.
@@ -174,7 +174,7 @@ class Action(props.HasProperties):
             if fslplatform.isWidgetAlive(widget): widget.Enable(self.enabled)
             else:                                 self.unbindWidget(widget)
 
-    
+
 class ToggleAction(Action):
     """A ``ToggleAction`` an ``Action`` which is intended to encapsulate
     actions that toggle some sort of state. For example, a ``ToggleAction``
@@ -191,14 +191,14 @@ class ToggleAction(Action):
         """Create a ``ToggleAction``. All arguments are passed to
         :meth:`Action.__init__`.
         """
-        
+
         Action.__init__(self, *args, **kwargs)
-        
+
         self.addListener('toggled',
                          'ToggleAction_{}_internal'.format(id(self)),
                          self.__toggledChanged)
 
-        
+
     def __call__(self, *args, **kwargs):
         """Call this ``ToggleAction``. The value of the :attr:`toggled` property
         is flipped.
@@ -210,7 +210,7 @@ class ToggleAction(Action):
         toggled      = self.toggled
         result       = Action.__call__(self, *args, **kwargs)
         self.toggled = not toggled
-            
+
         return result
 
 
@@ -222,7 +222,7 @@ class ToggleAction(Action):
 
         import wx
         import fsleyes_widgets.bitmaptoggle as bmptoggle
-        
+
         Action.bindToWidget(self, parent, evType, widget, wrapper)
 
         if isinstance(widget, wx.MenuItem):
@@ -232,15 +232,15 @@ class ToggleAction(Action):
                                  bmptoggle.BitmapToggleButton)):
             widget.SetValue(self.toggled)
 
-        
+
     def __toggledChanged(self, *a):
         """Internal method called when :attr:`toggled` changes. Updates the
         state of any bound widgets.
         """
-        
+
         import wx
         import fsleyes_widgets.bitmaptoggle as bmptoggle
-        
+
         for widget in list(self.getBoundWidgets()):
 
             # An error will be raised if a widget
@@ -254,6 +254,6 @@ class ToggleAction(Action):
                                          wx.ToggleButton,
                                          bmptoggle.BitmapToggleButton)):
                     widget.SetValue(self.toggled)
-                    
+
             except:
                 self.unbindWidget(widget)

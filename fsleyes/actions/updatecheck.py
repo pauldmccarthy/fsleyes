@@ -38,7 +38,7 @@ class UpdateCheckAction(base.Action):
     is.
     """
 
-    
+
     def __init__(self):
         """Create an ``UpdateCheckAction``. """
         base.Action.__init__(self, self.__checkForUpdates)
@@ -57,19 +57,19 @@ class UpdateCheckAction(base.Action):
 
         :arg showErrorMessage:    Defaults to ``True``. If ``False``, and
                                   some error occurs while checking for
-                                  updates, the user is not informed. 
+                                  updates, the user is not informed.
         """
 
         import wx
 
         errMsg   = strings.messages[self, 'newVersionError']
         errTitle = strings.titles[  self, 'newVersionError']
-        
+
         with status.reportIfError(errTitle, errMsg, report=showErrorMessage):
 
             log.debug('Checking for FSLeyes updates ({})'.format(
                 _FSLEYES_VERSION_URL))
-            
+
             f        = request.urlopen(_FSLEYES_VERSION_URL)
             latest   = f.read().decode('utf-8').strip()
             current  = version.__version__

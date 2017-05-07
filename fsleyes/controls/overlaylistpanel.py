@@ -43,7 +43,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
        :scale: 50%
        :align: center
 
-    
+
     A :class:`ListItemWidget` is displayed alongside every overlay in the
     list - this allows the user to enable/disable, group, and save each
     overlay.
@@ -56,7 +56,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
     property is updated when the user changes the order of items in the list.
     """
 
-    
+
     def __init__(self,
                  parent,
                  overlayList,
@@ -71,34 +71,34 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         """Create an ``OverlayListPanel``.
 
         :arg parent:          The :mod:`wx` parent object.
-        
+
         :arg overlayList:     An :class:`.OverlayList` instance.
-        
+
         :arg displayCtx:      A :class:`.DisplayContext` instance.
 
         :arg frame:           The :class:`.FSLeyesFrame` instance.
-        
+
         :arg showVis:         If ``True`` (the default), a button will be shown
                               alongside each overlay, allowing the user to
                               toggle the overlay visibility.
-        
+
         :arg showGroup:       If ``True`` (the default), a button will be shown
                               alongside each overlay, allowing the user to
                               toggle overlay grouping.
-        
+
         :arg showSave:        If ``True`` (the default), a button will be shown
                               alongside each overlay, allowing the user to save
                               the overlay (if it is not saved).
-        
-        :arg propagateSelect: If ``True`` (the default), when the user 
-                              interacts with the :class:`.ListItemWidget` for 
-                              an overlay which is *not* the currently selected 
-                              overlay, that overlay is updated to be the 
+
+        :arg propagateSelect: If ``True`` (the default), when the user
+                              interacts with the :class:`.ListItemWidget` for
+                              an overlay which is *not* the currently selected
+                              overlay, that overlay is updated to be the
                               selected overlay.
-        
+
         :arg elistboxStyle:   Style flags passed through to the
                               :class:`.EditableListBox`.
-        
+
         :arg filterFunc:      Function which must accept an overlay as its
                               sole argument, and return ``True`` or ``False``.
                               If this function returns ``False`` for an
@@ -111,7 +111,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
 
         if filterFunc is None:
             filterFunc = defaultFilter
-        
+
         fslpanel.FSLeyesPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
@@ -126,7 +126,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
                              elistbox.ELB_TOOLTIP_DOWN |
                              elistbox.ELB_SCROLL_BUTTONS)
 
-        # list box containing the list of overlays - it 
+        # list box containing the list of overlays - it
         # is populated in the _overlayListChanged method
         self.__listBox = elistbox.EditableListBox(self, style=elistboxStyle)
 
@@ -147,11 +147,11 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
             'overlays',
             self._name,
             self.__overlayListChanged)
-        
+
         self._displayCtx.addListener(
             'overlayOrder',
             self._name,
-            self.__overlayListChanged) 
+            self.__overlayListChanged)
 
         self._displayCtx.addListener(
             'selectedOverlay',
@@ -163,11 +163,11 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         self.__selectedOverlayChanged()
 
         self.Layout()
-        
+
         self.__minSize = self.__sizer.GetMinSize()
         self.SetMinSize(self.__minSize)
 
-        
+
     def GetMinSize(self):
         """Returns the minimum size for this ``OverlayListPanel``.
 
@@ -175,7 +175,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         arbitrarily adjust the minimum sizes of some panels. Therefore, The
         minimum size of the ``OverlayListPanel`` is calculated in
         :meth:`__init__`, and is fixed.
-        """ 
+        """
         return self.__minSize
 
 
@@ -184,20 +184,20 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         Removes some property listeners, and calls
         :meth:`.FSLeyesPanel.destroy`.
         """
-        
+
         self._overlayList.removeListener('overlays',        self._name)
         self._displayCtx .removeListener('selectedOverlay', self._name)
         self._displayCtx .removeListener('overlayOrder',    self._name)
 
-        # A listener on name was added 
+        # A listener on name was added
         # in the _overlayListChanged method
         for overlay in self._overlayList:
             display = self._displayCtx.getDisplay(overlay)
             display.removeListener('name', self._name)
-            
+
         fslpanel.FSLeyesPanel.destroy(self)
 
-        
+
     def __selectedOverlayChanged(self, *a):
         """Called when the :attr:`.DisplayContext.selectedOverlay` property
         changes. Updates the selected item in the list box.
@@ -217,18 +217,18 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         overlay = display.getOverlay()
         idx     = self._displayCtx.getOverlayOrder(overlay)
         name    = display.name
-        
+
         if name is None:
             name = ''
-            
-        self.__listBox.SetItemLabel(idx, name) 
 
-        
+        self.__listBox.SetItemLabel(idx, name)
+
+
     def __overlayListChanged(self, *a):
         """Called when the :class:`.OverlayList` changes.  All of the items
         in the overlay list are re-created.
         """
-        
+
         self.__listBox.Clear()
 
         for i, overlay in enumerate(self._displayCtx.getOrderedOverlays()):
@@ -256,7 +256,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
 
             tooltip = overlay.dataSource
             if tooltip is None:
-                tooltip = strings.labels['OverlayListPanel.noDataSource'] 
+                tooltip = strings.labels['OverlayListPanel.noDataSource']
             self.__listBox.SetItemTooltip(i, tooltip)
 
             display.addListener('name',
@@ -268,8 +268,8 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
             self.__listBox.SetSelection(
                 self._displayCtx.getOverlayOrder(
                     self._displayCtx.selectedOverlay))
-        
-        
+
+
     def __lbMove(self, ev):
         """Called when an overlay is moved in the :class:`.EditableListBox`.
         Reorders the :attr:`.DisplayContext.overlayOrder` to reflect the
@@ -279,20 +279,20 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         self._displayCtx.overlayOrder.move(ev.oldIdx, ev.newIdx)
         self._displayCtx.enableListener('overlayOrder', self._name)
 
-        
+
     def __lbSelect(self, ev):
         """Called when an overlay is selected in the
         :class:`.EditableListBox`. Updates the
         :attr:`.DisplayContext.selectedOverlay` property.
         """
 
-        
+
         self._displayCtx.disableListener('selectedOverlay', self._name)
         self._displayCtx.selectedOverlay = \
             self._displayCtx.overlayOrder[ev.idx]
         self._displayCtx.enableListener('selectedOverlay', self._name)
 
-        
+
     def __lbAdd(self, ev):
         """Called when the *add* button on the list box is pressed.
         Calls the :func:`.loadoverlay.interactiveLoadOverlays` method.
@@ -327,7 +327,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
 
         with props.skip(self._overlayList, 'overlays',     self._name), \
              props.skip(self._displayCtx,  'overlayOrder', self._name):
-            
+
             if not removeoverlay.removeOverlay(self._overlayList,
                                                self._displayCtx,
                                                overlay):
@@ -336,7 +336,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
             # The overlayListChanged method
             # must be called asynchronously,
             # otherwise it will corrupt the
-            # EditableListBox state 
+            # EditableListBox state
             else:
                 async.idle(self.__overlayListChanged)
 
@@ -380,33 +380,33 @@ class ListItemWidget(wx.Panel):
               button is disabled for all other overlay types.
     """
 
-    
+
     enabledFG  = '#000000'
     """This colour is used as the foreground (text) colour for overlays
     where their :attr:`.Display.enabled` property is ``True``.
     """
 
-    
+
     disabledFG = '#888888'
     """This colour is used as the foreground (text) colour for overlays
     where their :attr:`.Display.enabled` property is ``False``.
-    """ 
+    """
 
-    
+
     unsavedDefaultBG = '#ffeeee'
     """This colour is used as the default background colour for
     :class:`.Image` overlays with an :attr:`.Image.saved` property
     of ``False``.
     """
 
-    
+
     unsavedSelectedBG = '#ffcdcd'
     """This colour is used as the background colour for :class:`.Image`
     overlays with an :attr:`.Image.saved` property of ``False``, when
     they are selected in the :class:`OverlayListPanel`.
-    """ 
+    """
 
-    
+
     def __init__(self,
                  parent,
                  overlay,
@@ -438,7 +438,7 @@ class ListItemWidget(wx.Panel):
         :arg propagateSelect: If ``True`` (the default), when an overlay is
                               selected in the list, the
                               :attr:`.DisplayContext.selectedOverlay` is
-                              updated accordingly. 
+                              updated accordingly.
         """
         wx.Panel.__init__(self, parent)
 
@@ -461,7 +461,7 @@ class ListItemWidget(wx.Panel):
         if showSave:
             self.__saveButton = wx.Button(self, style=btnStyle)
             self.__saveButton.SetBitmap(icons.loadBitmap('floppydisk16'))
-            
+
             # Under wxPython/Phoenix, button
             # labels default to "Button", and
             # BU_NOTEXT has no effect.
@@ -481,7 +481,7 @@ class ListItemWidget(wx.Panel):
             else:
                 self.__saveButton.Enable(False)
 
-            self.__saveStateChanged() 
+            self.__saveStateChanged()
 
         if showGroup:
             self.__lockButton = bmptoggle.BitmapToggleButton(
@@ -527,7 +527,7 @@ class ListItemWidget(wx.Panel):
 
             self.__visibility.Bind(bmptoggle.EVT_BITMAP_TOGGLE,
                                    self.__onVisButton)
-                    
+
             self.__displayVisChanged()
 
 
@@ -539,7 +539,7 @@ class ListItemWidget(wx.Panel):
         group = self.__displayCtx.overlayGroups[0]
         self.__lockButton.SetValue(self.__overlay in group.overlays)
 
-        
+
     def __onSaveButton(self, ev):
         """Called when the *save* button is pushed. Calls the
         :meth:`.Image.save` method.
@@ -558,9 +558,9 @@ class ListItemWidget(wx.Panel):
         """
         if self.__propagateSelect:
             self.__displayCtx.selectOverlay(self.__overlay)
-            
+
         group = self.__displayCtx.overlayGroups[0]
-        
+
         if self.__lockButton.GetValue(): group.addOverlay(   self.__overlay)
         else:                            group.removeOverlay(self.__overlay)
 
@@ -584,7 +584,7 @@ class ListItemWidget(wx.Panel):
 
         self.__listBox.SetItemForegroundColour(idx, fgColour)
 
-            
+
     def __displayVisChanged(self, *a):
         """Called when the :attr:`.Display.enabled` property of the overlay
         changes. Updates the state of the *enabled* buton, and changes the
@@ -601,7 +601,7 @@ class ListItemWidget(wx.Panel):
         self.__visibility.SetValue(enabled)
         self.__listBox.SetItemForegroundColour(idx, fgColour)
 
-    
+
     def __onDestroy(self, ev):
         """Called when this ``ListItemWidget`` is destroyed (i.e. when the
         associated overlay is removed from the :class:`OverlayListPanel`).
@@ -623,11 +623,11 @@ class ListItemWidget(wx.Panel):
 
         if isinstance(self.__overlay, fslimage.Image):
 
-            # Notifier.deregister will ignore 
+            # Notifier.deregister will ignore
             # non-existent listener de-registration
             self.__overlay.deregister(self.__name, 'saveState')
 
-        
+
     def __saveStateChanged(self, *a):
         """If the overlay is an :class:`.Image` instance, this method is
         called when its :attr:`.Image.saved` property changes. Updates the
@@ -636,14 +636,14 @@ class ListItemWidget(wx.Panel):
 
         if not isinstance(self.__overlay, fslimage.Image):
             return
-        
+
         idx = self.__listBox.IndexOf(self.__overlay)
-        
+
         self.__saveButton.Enable(not self.__overlay.saveState)
 
         if self.__overlay.saveState:
             self.__listBox.SetItemBackgroundColour(idx)
-            
+
         else:
             self.__listBox.SetItemBackgroundColour(
                 idx,
@@ -652,5 +652,5 @@ class ListItemWidget(wx.Panel):
 
         tooltip = self.__overlay.dataSource
         if tooltip is None:
-            tooltip = strings.labels['OverlayListPanel.noDataSource'] 
+            tooltip = strings.labels['OverlayListPanel.noDataSource']
         self.__listBox.SetItemTooltip(idx, tooltip)

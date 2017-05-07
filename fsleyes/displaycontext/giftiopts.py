@@ -36,5 +36,5 @@ class GiftiOpts(meshopts.MeshOpts):
 
         vdataFiles = [None] + fslgifti.relatedFiles(overlay.dataSource)
         self.getProp('vertexData').setChoices(vdataFiles, instance=self)
-        
+
         meshopts.MeshOpts.__init__(self, overlay, *args, **kwargs)

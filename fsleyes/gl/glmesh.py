@@ -40,7 +40,7 @@ class GLMesh(globject.GLObject):
     http://glbook.gamedev.net/GLBOOK/glbook.gamedev.net/moglgp/advclip.html:
 
      1. The front face of the mesh is rendered to the stencil buffer.
-  
+
      2. The back face is rendered to the stencil buffer, and subtracted
         from the front face.
 
@@ -59,15 +59,15 @@ class GLMesh(globject.GLObject):
     These lines will be coloured in one of the following ways:
 
        - With the ``MeshOpts.colour``.
-    
+
        - According to the :attr:`.MeshOpts.vertexData` if it is set, in which
          case the properties of the :class:`.ColourMapOpts` class (from which
-         the :class:`.MeshOpts` class derives) come into effect. 
+         the :class:`.MeshOpts` class derives) come into effect.
 
        - Or, if :attr:`vertexData` is set, and the :attr:`.MeshOpts.useLut`
          property is ``True``, the :attr:`.MeshOpts.lut` is used.
 
-    
+
     When ``MeshOpts.outline is True``, and ``MeshOpts.vertexData is not
     None``, the ``GLMesh`` class makes use of the ``glmesh`` vertex and
     fragment shaders. These shaders are managed by two OpenGL version-specific
@@ -82,7 +82,7 @@ class GLMesh(globject.GLObject):
     ======================= =================================
     """
 
-    
+
     def __init__(self, overlay, display, xax, yax):
         """Create a ``GLMesh``.
 
@@ -90,10 +90,10 @@ class GLMesh(globject.GLObject):
 
         :arg display: A :class:`.Display` instance defining how the
                       ``overlay`` is to be displayed.
-        
+
         :arg xax:     Initial display X axis
 
-        :arg yax:     Initial display Y axis        
+        :arg yax:     Initial display Y axis
         """
 
         globject.GLObject.__init__(self, xax, yax)
@@ -132,7 +132,7 @@ class GLMesh(globject.GLObject):
         fslgl.glmesh_funcs.compileShaders(self)
         fslgl.glmesh_funcs.updateShaderState(self)
 
-        
+
     def destroy(self):
         """Must be called when this ``GLMesh`` is no longer needed. Removes
         some property listeners and destroys the colour map texturtes and
@@ -143,7 +143,7 @@ class GLMesh(globject.GLObject):
         self.cmapTexture   .destroy()
         self.negCmapTexture.destroy()
         self.lutTexture    .destroy()
-        
+
         fslgl.glmesh_funcs.destroy(self)
         self.removeListeners()
         self.deregisterLut()
@@ -157,12 +157,12 @@ class GLMesh(globject.GLObject):
         self.display        = None
         self.opts           = None
 
-        
+
     def ready(self):
         """Overrides :meth:`.GLObject.ready`. Always returns ``True``. """
         return True
 
-        
+
     def addListeners(self):
         """Called by :meth:`__init__`. Adds some property listeners to the
         :class:`.Display` and :class:`.MeshOpts` instances so the OpenGL
@@ -175,7 +175,7 @@ class GLMesh(globject.GLObject):
 
         def shader(*a):
             fslgl.glmesh_funcs.updateShaderState(self)
-            self.notify() 
+            self.notify()
 
         def refreshCmap(*a):
             self.refreshCmapTextures(notify=False)
@@ -186,7 +186,7 @@ class GLMesh(globject.GLObject):
             self.deregisterLut()
             self.registerLut()
             self.refreshCmapTextures()
-            
+
         def refresh(*a):
             self.notify()
 
@@ -211,8 +211,8 @@ class GLMesh(globject.GLObject):
         # We don't need to listen for
         # brightness or contrast, because
         # they are linked to displayRange.
-        
-        
+
+
     def removeListeners(self):
         """Called by :meth:`destroy`. Removes all of the listeners added by
         the :meth:`addListeners` method.
@@ -236,7 +236,7 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('lut',              self.name)
         self.display.removeListener('alpha',            self.name)
 
-        
+
     def registerLut(self):
         """Registers property listeners with the currently registered
         :class:`.LookupTable` (the :attr:`.MeshOpts.lut` property).
@@ -246,9 +246,9 @@ class GLMesh(globject.GLObject):
 
         if self.lut is not None:
             for topic in ['label', 'added', 'removed']:
-                self.lut.register(self.name, self.refreshCmapTextures, topic) 
+                self.lut.register(self.name, self.refreshCmapTextures, topic)
 
-    
+
     def deregisterLut(self):
         """De-registers property listeners from the currently registered
         :class:`.LookupTable`.
@@ -279,13 +279,13 @@ class GLMesh(globject.GLObject):
         self.indices  = np.array(indices.flatten(), dtype=np.uint32)
         self.notify()
 
-        
+
     def getDisplayBounds(self):
         """Overrides :meth:`.GLObject.getDisplayBounds`. Returns a bounding
-        box which contains the mesh vertices. 
+        box which contains the mesh vertices.
         """
         return (self.opts.bounds.getLo(),
-                self.opts.bounds.getHi()) 
+                self.opts.bounds.getHi())
 
 
     def preDraw(self):
@@ -302,7 +302,7 @@ class GLMesh(globject.GLObject):
         if self.renderTexture.getSize() != (width, height):
             self.renderTexture.setSize(width, height)
 
-    
+
     def draw(self, zpos, xform=None, bbox=None):
         """Overrids :meth:`.GLObject.draw`. Draws a 2D slice of the
         :class:`.TriangleMesh`, at the specified Z location.
@@ -332,7 +332,7 @@ class GLMesh(globject.GLObject):
 
         elif opts.outline:
             self.drawOutline(zpos, xform, bbox)
-            
+
         else:
             lo, hi = self.calculateViewport(lo, hi, bbox)
             xmin   = lo[xax]
@@ -360,7 +360,7 @@ class GLMesh(globject.GLObject):
         """
 
         opts = self.opts
-        
+
         # Makes code below a bit nicer
         if xform is None:
             xform = np.eye(4)
@@ -378,9 +378,9 @@ class GLMesh(globject.GLObject):
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPushMatrix()
         gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
-        
+
         gl.glLineWidth(opts.outlineWidth)
-        
+
         # Constant colour
         if not useShader:
             gl.glColor(*opts.getConstantColour())
@@ -447,7 +447,7 @@ class GLMesh(globject.GLObject):
         :arg hi:   Tuple containing the high bounds on each axis.
         :arg dest: The :class:`.RenderTexture` to render to.
         """
-        
+
         opts     = self.opts
         xax      = self.xax
         yax      = self.yax
@@ -461,11 +461,11 @@ class GLMesh(globject.GLObject):
 
         dest.bindAsRenderTarget()
         dest.setRenderViewport(xax, yax, lo, hi)
-        
+
         # Figure out the equation of a plane
         # perpendicular to the Z axis, and
         # located at the z position. This is
-        # used as a clipping plane to draw 
+        # used as a clipping plane to draw
         # the mesh intersection.
         clipPlaneVerts                = np.zeros((4, 3), dtype=np.float32)
         clipPlaneVerts[0, [xax, yax]] = [xmin, ymin]
@@ -508,14 +508,14 @@ class GLMesh(globject.GLObject):
         # created correctly. Something to do with
         # the vertex unwinding order, I guess.
         direction = [gl.GL_INCR, gl.GL_DECR]
-        
+
         if npla.det(opts.getCoordSpaceTransform()) > 0:
             faceOrder = [gl.GL_BACK,  gl.GL_FRONT]
         else:
             faceOrder = [gl.GL_FRONT, gl.GL_BACK]
 
         for face, direction in zip(faceOrder, direction):
-            
+
             gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, direction)
             gl.glCullFace(face)
 
@@ -548,13 +548,13 @@ class GLMesh(globject.GLObject):
             gl.glVertex3f(*clipPlaneVerts[2, :])
             gl.glVertex3f(*clipPlaneVerts[3, :])
             gl.glEnd()
-        
+
         gl.glDisable(gl.GL_STENCIL_TEST)
 
         dest.unbindAsRenderTarget()
         dest.restoreViewport()
-            
-    
+
+
     def postDraw(self):
         """Overrides :meth:`.GLObject.postDraw`. This method does nothing. """
         pass
@@ -578,7 +578,7 @@ class GLMesh(globject.GLObject):
             xlen  = float(hi[xax] - lo[xax])
             ylen  = float(hi[yax] - lo[yax])
             ratio = xlen / ylen
-            
+
             bblo = [ax[0] for ax in bbox]
             bbhi = [ax[1] for ax in bbox]
 
@@ -587,7 +587,7 @@ class GLMesh(globject.GLObject):
 
             dxlen  = float(hi[xax] - lo[xax])
             dylen  = float(hi[yax] - lo[yax])
-            
+
             dratio = dxlen / dylen
 
             if dratio > ratio:
@@ -601,7 +601,7 @@ class GLMesh(globject.GLObject):
                 ndylen   = ylen * (dxlen / xlen)
                 lo[yax] += 0.5 * (ndylen - dylen)
                 hi[yax] -= 0.5 * (ndylen - dylen)
-        
+
         return lo, hi
 
 
@@ -612,21 +612,21 @@ class GLMesh(globject.GLObject):
 
         :arg zpos:  Z axis coordinate at which the intersection is to be
                     calculated
-        
+
         :arg bbox:  A tuple containing a ``([xlo, ylo, zlo], [xhi, yhi, zhi])``
                     bounding box to which the calculation can be restricted.
-        
+
         :returns: A tuple containing:
-        
+
                    - A ``(n, 2, 3)`` array which contains the two vertices of
                      a line for every intersected face (triangle) in the mesh.
-        
+
                    - A ``(n, 3)`` array containing the intersected faces
                      (indices into the :attr:`.TriangleMesh.vertices` array).
-        
+
                    - A ``(n, 2, 3)`` array containing the barycentric
                      coordinates of the intersection line vertices.
-        
+
                    - A ``(4, 4)`` array containing a transformation matrix
                      for transforming the line vertices into the display
                      coordinate system. May be ``None``, indicating that
@@ -670,10 +670,10 @@ class GLMesh(globject.GLObject):
 
         triangles = overlay.vertices[faces].repeat(2, axis=0)
         points    = lines.reshape((-1, 3))
-        
+
         dists = trimesh.points_to_barycentric(triangles, points)
-        dists = dists.reshape((-1, 2, 3)) 
- 
+        dists = dists.reshape((-1, 2, 3))
+
         return lines, faces, dists, vertXform
 
 
@@ -699,7 +699,7 @@ class GLMesh(globject.GLObject):
 
         vdata = vdata[faces].repeat(2, axis=0).reshape(-1, 2, 3)
         vdata = (vdata * dists).reshape(-1, 3).sum(axis=1)
-        
+
         return vdata
 
 
@@ -749,7 +749,7 @@ class GLMesh(globject.GLObject):
         self.lutTexture.set(alpha=display.alpha           / 100.0,
                             brightness=display.brightness / 100.0,
                             contrast=display.contrast     / 100.0,
-                            lut=opts.lut) 
- 
+                            lut=opts.lut)
+
         if notify:
             self.notify()

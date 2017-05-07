@@ -25,7 +25,7 @@ class LookupTableTexture(texture.Texture):
     """The ``LookupTableTexture`` class is a 1D :class:`.Texture` which stores
     the colours of a :class:`.LookupTable` as an OpenGL texture.
 
-    
+
     A :class:`.LookupTable` stores a collection of label values (assumed to be
     unsigned 16 bit integers), and colours associated with each label. This
     mapping of ``{label : colour}`` is converted into a ``numpy`` array
@@ -34,7 +34,7 @@ class LookupTableTexture(texture.Texture):
     colour. All aspects of a ``LookupTableTexture`` can be configured via the
     :meth:`set` method.
 
-    
+
     As OpenGL textures are indexed by coordinates in the range ``[0.0, 1.0]``,
     you will need to divide label values by :math:`max(labels)` to convert
     them into texture coordinates.
@@ -52,9 +52,9 @@ class LookupTableTexture(texture.Texture):
 
         :arg name: A uniqe name for this ``LookupTableTexture``.
         """
-        
+
         texture.Texture.__init__(self, name, 1)
-        
+
         self.__lut        = None
         self.__alpha      = None
         self.__brightness = None
@@ -96,7 +96,7 @@ class LookupTableTexture(texture.Texture):
         """
         self.__refresh()
 
-        
+
     def __refresh(self, *a):
         """Configures the underlying OpenGL texture. """
 
@@ -108,7 +108,7 @@ class LookupTableTexture(texture.Texture):
         if lut is None:
             raise RuntimeError('Lookup table has not been defined')
 
-        if brightness is None: brightness = 0.5 
+        if brightness is None: brightness = 0.5
         if contrast   is None: contrast   = 0.5
 
         # Enough memory is allocated for the lut texture
@@ -139,7 +139,7 @@ class LookupTableTexture(texture.Texture):
                             np.array([0, 0, 0, 0], dtype=np.float32))
         gl.glTexParameteri( gl.GL_TEXTURE_1D,
                             gl.GL_TEXTURE_WRAP_S,
-                            gl.GL_CLAMP_TO_BORDER) 
+                            gl.GL_CLAMP_TO_BORDER)
 
         # Nearest neighbour interpolation
         gl.glTexParameteri(gl.GL_TEXTURE_1D,
@@ -147,7 +147,7 @@ class LookupTableTexture(texture.Texture):
                            gl.GL_NEAREST)
         gl.glTexParameteri(gl.GL_TEXTURE_1D,
                            gl.GL_TEXTURE_MIN_FILTER,
-                           gl.GL_NEAREST) 
+                           gl.GL_NEAREST)
 
         gl.glTexImage1D(gl.GL_TEXTURE_1D,
                         0,

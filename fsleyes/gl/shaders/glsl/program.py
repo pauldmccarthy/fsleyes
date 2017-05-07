@@ -45,7 +45,7 @@ class GLSLShader(object):
     are converted to the appropriate type. The following methods are available
     on a ``GLSLShader``:
 
-    
+
     .. autosummary::
        :nosignatures:
 
@@ -76,7 +76,7 @@ class GLSLShader(object):
 
         # Create and set vertex attributes
         vertices, normals = createVertices()
-    
+
         program.setAtt('vertex', vertices)
         program.setAtt('normal', normals)
 
@@ -95,15 +95,15 @@ class GLSLShader(object):
         # we no longer need it
         program.destroy()
     """
-    
+
 
     def __init__(self, vertSrc, fragSrc, indexed=False):
         """Create a ``GLSLShader``.
 
         :arg vertSrc: String containing vertex shader source code.
-        
+
         :arg fragSrc: String containing fragment shader source code.
-        
+
         :arg indexed: If ``True``, it is assumed that the vertices processed
                       by this shader program will be drawn using an index
                       array.  A vertex buffer object is created to store
@@ -112,7 +112,7 @@ class GLSLShader(object):
         """
 
         self.program     = self.__compile(vertSrc, fragSrc)
-        
+
         vertDecs         = parse.parseGLSL(vertSrc)
         fragDecs         = parse.parseGLSL(fragSrc)
 
@@ -161,13 +161,13 @@ class GLSLShader(object):
 
         log.memory('{}.init({})'.format(type(self).__name__, id(self)))
 
-        
+
     def __del__(self):
         """Prints a log message. """
         if log:
             log.memory('{}.del({})'.format(type(self).__name__, id(self)))
 
-            
+
     def load(self):
         """Loads this ``GLSLShader`` into the GL state.
         """
@@ -198,11 +198,11 @@ class GLSLShader(object):
 
             if aDivisor is not None:
                 arbia.glVertexAttribDivisorARB(aPos, aDivisor)
-            
-        if self.indexBuffer is not None:
-            gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.indexBuffer) 
 
-            
+        if self.indexBuffer is not None:
+            gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.indexBuffer)
+
+
     def unloadAtts(self):
         """Disables all vertex attributes, and unbinds associated vertex buffers.
         """
@@ -211,16 +211,16 @@ class GLSLShader(object):
 
             pos     = self.positions[          att]
             divisor = self.vertAttDivisors.get(att)
-            
+
             if divisor is not None:
                 arbia.glVertexAttribDivisorARB(pos, 0)
-                
+
         if self.indexBuffer is not None:
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
-            
+
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
-        
+
     def unload(self):
         """Unloads the GL shader program. """
         gl.glUseProgram(0)
@@ -233,7 +233,7 @@ class GLSLShader(object):
         for buf in self.buffers.values():
             gl.glDeleteBuffers(1, gltypes.GLuint(buf))
         self.program = None
-        
+
 
     @memoize.Instanceify(memoize.skipUnchanged)
     def set(self, name, value):
@@ -242,7 +242,7 @@ class GLSLShader(object):
         The ``GLSLShader`` keeps a copy of the value of every uniform, to
         avoid unnecessary GL calls.
 
-        
+
         .. note:: This method is decorated by the
                   :func:`.memoize.skipUnchanged` decorator, which returns
                   ``True`` if the value was changed, ``False`` otherwise.
@@ -272,7 +272,7 @@ class GLSLShader(object):
         .. note:: If a ``divisor`` is specified, the OpenGL
                   ``ARB_instanced_arrays`` extension must be
                   available.
-        """ 
+        """
 
         aType    = self.types[  name]
         aBuf     = self.buffers[name]
@@ -286,7 +286,7 @@ class GLSLShader(object):
         value = castfunc(value)
 
         log.debug('Setting shader attribute: {}({}): {}'.format(
-            aType, name, value.shape)) 
+            aType, name, value.shape))
 
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, aBuf)
         gl.glBufferData(gl.GL_ARRAY_BUFFER,
@@ -310,16 +310,16 @@ class GLSLShader(object):
                                'configured with index support')
 
         indices = np.array(indices, dtype=np.uint32)
-        
+
         gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER,
                         self.indexBuffer)
         gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER,
                         indices.nbytes,
                         indices,
                         gl.GL_STATIC_DRAW)
-        gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0) 
+        gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
 
-        
+
     def __getPositions(self, shaders, vertAtts, vertUniforms, fragUniforms):
         """Gets the position indices for all vertex shader attributes,
         uniforms, and fragment shader uniforms for the given shader
@@ -398,35 +398,35 @@ class GLSLShader(object):
 
         return program
 
-    
+
     def _attribute_bool(self, val):
         return np.array(val, dtype=np.bool)
 
-    
+
     def _attribute_int(self, val):
         return np.array(val, dtype=np.int32)
 
-    
+
     def _attribute_float(self, val):
         return np.array(val, dtype=np.float32)
 
-    
+
     def _attribute_vec2(self, val):
         return np.array(val, dtype=np.float32).ravel('C')
 
-    
+
     def _attribute_vec3(self, val):
         return np.array(val, dtype=np.float32).ravel('C')
 
-    
+
     def _attribute_vec4(self, val):
         return np.array(val, dtype=np.float32).ravel('C')
-    
+
 
     def _uniform_bool(self, pos, val):
         gl.glUniform1i(pos, bool(val))
 
-        
+
     def _uniform_int(self, pos, val):
         gl.glUniform1i(pos, int(val))
 

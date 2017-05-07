@@ -42,14 +42,14 @@ class GLLabel(globject.GLImageObject):
     same set of functions that are required by the ``GLVolume`` class.
     """
 
-    
+
     def __init__(self, image, display, xax, yax):
         """Create a ``GLLabel``.
 
         :arg image:   The :class:`.Image` instance.
         :arg display: The associated :class:`.Display` instance.
         :arg xax:     Initial display X axis
-        :arg yax:     Initial display Y axis        
+        :arg yax:     Initial display Y axis
         """
 
         globject.GLImageObject.__init__(self, image, display, xax, yax)
@@ -58,24 +58,24 @@ class GLLabel(globject.GLImageObject):
         self.lutTexture   = textures.LookupTableTexture(lutTexName)
         self.imageTexture = None
 
-        # The shader attribute will be created 
+        # The shader attribute will be created
         # by the gllabel_funcs module
         self.shader       = None
 
         self.__lut = self.displayOpts.lut
-        
+
         self.addListeners()
         self.registerLut()
         self.refreshLutTexture()
         self.refreshImageTexture()
-        
+
         def init():
             fslgl.gllabel_funcs.init(self)
             self.notify()
 
         async.idleWhen(init, self.textureReady)
 
-        
+
     def destroy(self):
         """Must be called when this ``GLLabel`` is no longer needed. Destroys
         the :class:`.ImageTexture` and :class:`.LookupTableTexture`.
@@ -89,7 +89,7 @@ class GLLabel(globject.GLImageObject):
         fslgl.gllabel_funcs.destroy(self)
         globject.GLImageObject.destroy(self)
 
-        
+
     def ready(self):
         """Returns ``True`` if this ``GLLabel`` is ready to be drawn, ``False``
         otherwise.
@@ -114,12 +114,12 @@ class GLLabel(globject.GLImageObject):
 
         def func():
             if fslgl.gllabel_funcs.updateShaderState(self) or alwaysNotify:
-                self.notify() 
+                self.notify()
 
         async.idleWhen(func,
                        self.ready,
                        name=self.name,
-                       skipIfQueued=True) 
+                       skipIfQueued=True)
 
 
     def addListeners(self):
@@ -144,7 +144,7 @@ class GLLabel(globject.GLImageObject):
         # See comment in GLVolume.addDisplayListeners about this
         self.__syncListenersRegistered = opts.getParent() is not None
 
-        if self.__syncListenersRegistered: 
+        if self.__syncListenersRegistered:
             opts.addSyncChangeListener(
                 'volume',     name, self.__imageSyncChanged)
 
@@ -183,32 +183,32 @@ class GLLabel(globject.GLImageObject):
         """Makes sure that the :class:`.ImageTexture`, used to store the
         :class:`.Image` data, is up to date.
         """
-        
+
         opts     = self.displayOpts
         texName  = '{}_{}' .format(type(self).__name__, id(self.image))
 
-        unsynced = (opts.getParent() is None or 
+        unsynced = (opts.getParent() is None or
                     not opts.isSyncedToParent('volume'))
 
         if unsynced:
             texName = '{}_unsync_{}'.format(texName, id(opts))
 
         if self.imageTexture is not None:
-            
+
             if self.imageTexture.getTextureName() == texName:
                 return None
-            
+
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.getTextureName())
-            
+
         self.imageTexture = glresources.get(
-            texName, 
+            texName,
             textures.ImageTexture,
             texName,
             self.image,
             notify=False,
             volume=opts.volume)
-        
+
         self.imageTexture.register(self.name, self.__imageTextureChanged)
 
 
@@ -230,7 +230,7 @@ class GLLabel(globject.GLImageObject):
         """Registers a listener on the current :class:`.LookupTable` instance.
         """
         opts = self.displayOpts
-        
+
         if self.__lut is not None:
             for topic in ['label', 'added', 'removed']:
                 self.__lut.deregister(self.name, topic)
@@ -251,15 +251,15 @@ class GLLabel(globject.GLImageObject):
         self.lutTexture  .bindTexture(gl.GL_TEXTURE1)
         fslgl.gllabel_funcs.preDraw(self)
 
-    
+
     def draw(self, zpos, xform=None, bbox=None):
         """Calls the version-dependent ``draw`` function. """
         fslgl.gllabel_funcs.draw(self, zpos, xform, bbox)
 
-        
+
     def drawAll(self, zpos, xform=None):
         """Calls the version-dependent ``drawAll`` function. """
-        fslgl.gllabel_funcs.drawAll(self, zpos, xform) 
+        fslgl.gllabel_funcs.drawAll(self, zpos, xform)
 
 
     def postDraw(self):
@@ -294,11 +294,11 @@ class GLLabel(globject.GLImageObject):
         the ``imageTexture`` and calls :meth:`updateShaderState`.
         """
         opts = self.displayOpts
-        
+
         self.imageTexture.set(volume=opts.volume)
         self.updateShaderState(alwaysNotify=True)
- 
-    
+
+
     def __imageSyncChanged(self, *a):
         """Called when the :attr:`.NiftiOpts.volume` property is synchronised
         or un-synchronised. Calls :meth:`refreshImageTexture` and
@@ -306,8 +306,8 @@ class GLLabel(globject.GLImageObject):
         """
         self.refreshImageTexture()
         self.updateShaderState(alwaysNotify=True)
-        
-        
+
+
     def __imageTextureChanged(self, *a):
         """Called when the :class:`.ImageTexture` containing the image data
         changes. Calls :meth:`updateShaderState`.

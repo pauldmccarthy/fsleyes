@@ -30,7 +30,7 @@ import fsleyes.panel                as fslpanel
 import fsleyes.strings              as strings
 from . import                          atlasmanagementpanel
 from . import                          atlasoverlaypanel
-from . import                          atlasinfopanel 
+from . import                          atlasinfopanel
 
 
 log = logging.getLogger(__name__)
@@ -47,10 +47,10 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
     ============================== ===========================================
     :class:`.AtlasInfoPanel`       Displays information for the current
-                                   :attr:`.DisplayContext.location` from 
+                                   :attr:`.DisplayContext.location` from
                                    atlases selected by the user.
-    :class:`.AtlasOverlayPanel`    Allows the user to search through all 
-                                   atlases for specific regions, and to toggle 
+    :class:`.AtlasOverlayPanel`    Allows the user to search through all
+                                   atlases for specific regions, and to toggle
                                    on/off overlays for those regions.
 
     :class:`.AtlasManagementPanel` Allows the user to add/remove atlases.
@@ -63,9 +63,9 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
     The :class:`AtlasPanel` class provides the :meth:`loadAtlas` method, which
     is used by sub-panels to load atlas images.
 
-    
+
     .. _atlas-panel-atlas-overlays:
-    
+
     **Toggling atlas overlays**
 
 
@@ -97,7 +97,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
 
     .. _atlas-panel-overlay-names:
-    
+
     **Atlas overlay names**
 
 
@@ -110,10 +110,10 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
     where:
 
       - ``atlasID`` is the atlas identifier (see the :mod:`.atlases` module).
-    
+
       - ``overlayType`` is either ``label`` or ``prob``, depending on whether
         the overlay is a discrete label image, or a probaility image.
-    
+
       - ``regionName`` is the name of the region, or ``all`` if the overlay
         is a complete :class:`.LabelAtlas`.
 
@@ -121,13 +121,13 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
     .. image:: images/atlaspanel_overlay_names.png
        :scale: 50%
        :align: center
-    
 
-    
+
+
     This name is used by the ``AtlasPanel`` to identify the overlay in the
     :class:`.OverlayList`.
 
-    
+
     .. warning:: If the name of these overlays is changed, the ``AtlasPanel``
                  will not be able to find them in the :class:`.OverlayList`,
                  and the :meth:`toggleOverlay` and :meth:`getOverlayState`
@@ -150,17 +150,17 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.        
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
 
         fslpanel.FSLeyesPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
-        # Make sure the atlas 
+        # Make sure the atlas
         # registry is up to date
         atlases.rescanAtlases()
 
-        # See the enableAtlasPanel method 
+        # See the enableAtlasPanel method
         # for info about this attribute.
         self.__atlasPanelEnableStack = 0
 
@@ -173,7 +173,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
         self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.__sizer.Add(self.__notebook, flag=wx.EXPAND, proportion=1)
- 
+
         self.SetSizer(self.__sizer)
 
         self.__infoPanel = atlasinfopanel.AtlasInfoPanel(
@@ -186,13 +186,13 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
         self.__managePanel = atlasmanagementpanel.AtlasManagementPanel(
             self.__notebook, overlayList, displayCtx, frame, self)
-        
+
         self.__notebook.AddPage(self.__infoPanel,
                                 strings.titles[self.__infoPanel])
-        self.__notebook.AddPage(self.__overlayPanel, 
+        self.__notebook.AddPage(self.__overlayPanel,
                                 strings.titles[self.__overlayPanel])
         self.__notebook.AddPage(self.__managePanel,
-                                strings.titles[self.__managePanel]) 
+                                strings.titles[self.__managePanel])
 
         self._overlayList.addListener('overlays',
                                       self._name,
@@ -214,9 +214,9 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         self.__infoPanel     .destroy()
         self.__overlayPanel  .destroy()
         self.__managePanel   .destroy()
-        
+
         self._overlayList.removeListener('overlays', self._name)
-        
+
         fslpanel.FSLeyesPanel.destroy(self)
 
 
@@ -250,7 +250,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         generated (via the :meth:`__onAtlasSelect` method). If both of these
         things occur at the same time, the ``AtlasPanel`` could be prematurely
         re-enabled. This method overcomes this problem.
-        """ 
+        """
         count = self.__atlasPanelEnableStack
 
         log.debug('enableAtlasPanel({}, count={})'.format(enable, count))
@@ -266,7 +266,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
             count += 1
             self.Disable()
 
-        self.__atlasPanelEnableStack = count 
+        self.__atlasPanelEnableStack = count
 
 
     def loadAtlas(self,
@@ -280,7 +280,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         time. Use the `onLoad` argument if you need to do something when the
         atlas has been loaded.
 
-        :arg onLoad:          Optional. A function which is called when the 
+        :arg onLoad:          Optional. A function which is called when the
                               atlas has been loaded, and which is passed the
                               loaded :class:`.Atlas` image.
 
@@ -290,7 +290,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
         :arg matchResolution: If ``True`` (the default), the version of the
                               atlas with the most suitable resolution, based
-                              on the current contents of the 
+                              on the current contents of the
                               :class:`.OverlayList`, is loaded.
 
         See the :func:`.atlases.loadAtlas` function for details on the other
@@ -308,7 +308,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         atlas = self.__loadedAtlases.get((atlasID, summary, res), None)
 
         if atlas is None:
-            
+
             log.debug('Loading atlas {}/{}'.format(
                 atlasID, 'label' if summary else 'prob'))
 
@@ -322,7 +322,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
                 # before the atlas is loaded.
                 if not self or self.destroyed():
                     return
-                    
+
                 self.__loadedAtlases[atlasID, summary, res] = atlas
 
                 status.update('Atlas {} loaded.'.format(atlasID))
@@ -336,7 +336,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         # pass it straight to the onload function
         elif onLoad is not None:
             onLoad(atlas)
-                    
+
 
     def __getSuitableResolution(self, desc, matchResolution=True):
         """Used by the :meth:`loadAtlas` method. Determines a suitable
@@ -377,9 +377,9 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         on :ref:`atlas names <atlas-panel-overlay-names>`).
 
         :arg atlasID:  Atlas identifier
-        
+
         :arg labelIdx: Label index, or ``None`` for a complete atlas.
-        
+
         :arg summary:  ``True`` corresponds to a label atlas, ``False`` to a
                        probabilistic atlas.
         """
@@ -397,10 +397,10 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
             overlayName = '{}/{}/{}' .format(atlasID,
                                              overlayType,
                                              atlasDesc.labels[labelIdx].name)
- 
+
         return overlayName, summary
 
-    
+
     def getOverlayState(self, atlasID, labelIdx, summary):
         """Returns ``True`` if the specified atlas overlay is in the
         :class:`.OverlayList`, ``False`` otherwise.  See
@@ -409,7 +409,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
         name, _ = self.getOverlayName(atlasID, labelIdx, summary)
         return self._overlayList.find(name) is not None
-    
+
 
     def toggleOverlay(self,
                       atlasID,
@@ -422,9 +422,9 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
         :arg onLoad:  Optional function to be called when the overlay has been
                       added/removed.
-        
+
         :arg onError: Optional function to be called if an error occurs while
-                      loading an overlay.  
+                      loading an overlay.
 
         See :meth:`getOverlayName` for details on the other arguments.
         """
@@ -432,9 +432,9 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         atlasDesc            = atlases.getAtlasDescription(atlasID)
         overlayName, summary = self.getOverlayName(atlasID, labelIdx, summary)
         overlay              = self._overlayList.find(overlayName)
- 
+
         if overlay is not None:
-            
+
             self._overlayList.disableListener('overlays', self._name)
             self._overlayList.remove(overlay)
             self._overlayList.enableListener('overlays', self._name)
@@ -442,7 +442,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
             self.__enabledOverlays.pop(overlayName, None)
             self.__overlayPanel.setOverlayState(
                 atlasDesc, labelIdx, summary, False)
-            
+
             log.debug('Removed overlay {}'.format(overlayName))
 
             if onLoad is not None:
@@ -464,13 +464,13 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
                     elif atlasDesc.atlasType == 'label':
                         labelVal = labelIdx
 
-                    overlayType = 'mask' 
+                    overlayType = 'mask'
                     data        = np.zeros(atlas.shape, dtype=np.uint16)
                     data[atlas[:] == labelIdx] = labelVal
 
                 # regional probability image
                 else:
-                    overlayType = 'volume' 
+                    overlayType = 'volume'
                     data        = atlas[:, :, :, labelIdx]
 
             overlay = fslimage.Image(
@@ -482,7 +482,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
                 self._overlayList.append(overlay, overlayType=overlayType)
 
             self.__overlayPanel.setOverlayState(
-                atlasDesc, labelIdx, summary, True) 
+                atlasDesc, labelIdx, summary, True)
 
             self.__enabledOverlays[overlayName] = (overlay,
                                                    atlasID,
@@ -527,7 +527,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         :arg atlasID:  Atlas identifier
         :arg labelIdx: Label index
         """
-        
+
         atlasDesc = atlases.getAtlasDescription(atlasID)
         label     = atlasDesc.labels[labelIdx]
         overlay   = self._displayCtx.getReferenceImage(
@@ -535,7 +535,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
         if overlay is None:
             log.warn('No reference image available - cannot locate region')
-        
+
         opts     = self._displayCtx.getOpts(overlay)
         worldLoc = (label.x, label.y, label.z)
         dispLoc  = opts.transformCoords([worldLoc], 'world', 'display')[0]
@@ -556,7 +556,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
                 self.__enabledOverlays[overlayName]
 
             if overlay not in self._overlayList:
-                
+
                 self.__enabledOverlays.pop(overlayName)
                 atlasDesc = atlases.getAtlasDescription(atlasID)
                 self.__overlayPanel.setOverlayState(

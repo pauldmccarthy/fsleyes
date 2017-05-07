@@ -53,7 +53,7 @@ def genMeshColour(overlay):
     elif 'R_Hipp' in filename: return subcorticalCmap.get(53).colour
     elif 'R_Amyg' in filename: return subcorticalCmap.get(54).colour
     elif 'R_Accu' in filename: return subcorticalCmap.get(58).colour
-    
+
     return colourmaps.randomBrightColour()
 
 
@@ -67,13 +67,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     colour = props.Colour()
     """The mesh colour. """
 
-    
+
     outline = props.Boolean(default=False)
     """If ``True``, an outline of the mesh is shown. Otherwise a
     cross- section of the mesh is filled.
     """
 
-    
+
     outlineWidth = props.Real(minval=0.1, maxval=10, default=2, clamped=False)
     """If :attr:`outline` is ``True``, this property defines the width of the
     outline in pixels.
@@ -104,7 +104,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     data.
     """
 
-    
+
     refImage = props.Choice()
     """A reference :class:`.Image` instance which the mesh coordinates are
     in terms of.
@@ -117,7 +117,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     as the reference image.
     """
 
-    
+
     useLut = props.Boolean(default=False)
     """If ``True``, and if some :attr:`vertexData` is loaded, the :attr:`lut`
     is used to colour vertex values instead of the :attr:`cmap` and
@@ -144,13 +144,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     =============== =========================================================
     ``affine``      The mesh coordinates are defined in the reference image
                     world coordinate system.
-    
+
     ``id``          The mesh coordinates are defined in the reference image
                     voxel coordinate system.
-    
+
     ``pixdim``      The mesh coordinates are defined in the reference image
                     voxel coordinate system, scaled by the voxel pixdims.
-    
+
     ``pixdim-flip`` The mesh coordinates are defined in the reference image
                     voxel coordinate system, scaled by the voxel pixdims. If
                     the reference image transformation matrix has a positive
@@ -170,7 +170,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         to the :class:`.DisplayOpts` constructor.
         """
 
-        # Set a default colour 
+        # Set a default colour
         colour      = genMeshColour(overlay)
         self.colour = np.concatenate((colour, [1.0]))
 
@@ -186,7 +186,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         # When the vertexData property is
         # changed, the data (and its min/max)
-        # is loaded and stored in these 
+        # is loaded and stored in these
         # attributes. See the __vertexDataChanged
         # method.
         self.__vertexData      = None
@@ -195,7 +195,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         nounbind = kwargs.get('nounbind', [])
         nounbind.extend(['refImage', 'coordSpace', 'transform'])
         kwargs['nounbind'] = nounbind
- 
+
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
 
@@ -205,7 +205,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         self.addListener('vertexData',
                          self.name,
                          self.__vertexDataChanged,
-                         immediate=True) 
+                         immediate=True)
 
         # A number of callback functions are used to
         # keep the refImage, coordSpace and transform
@@ -214,7 +214,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         # listeners.
         self.__registered = self.getParent() is None
         if self.__registered:
-             
+
             self.overlayList.addListener('overlays',
                                          self.name,
                                          self.__overlayListChanged,
@@ -240,15 +240,15 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
             self        .addListener('colour',
                                      self.name,
                                      self.__colourChanged,
-                                     immediate=True) 
-        
+                                     immediate=True)
+
             self.__overlayListChanged()
             self.__updateBounds()
 
         # If a reference image has not
         # been set on the parent MeshOpts
         # instance, see  if there is a
-        # suitable one in the overlay list. 
+        # suitable one in the overlay list.
         if self.refImage is None:
             self.refImage = fsloverlay.findMeshReferenceImage(
                 self.overlayList, self.overlay)
@@ -278,7 +278,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         self.__oldRefImage = None
         self.__vertexData  = None
-        
+
         cmapopts  .ColourMapOpts.destroy(self)
         fsldisplay.DisplayOpts  .destroy(self)
 
@@ -290,7 +290,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         """
         if self.__vertexDataRange is None: return (0, 1)
         else:                              return self.__vertexDataRange
-            
+
 
     def getVertexData(self):
         """Returns the :attr:`.MeshOpts.vertexData`, if some is loaded.
@@ -304,13 +304,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         currently selected :attr:`vertexData`, or ``0`` if no vertex data is
         selected.
         """
-        
+
         if self.__vertexData is None:
             return 0
-        
+
         elif len(self.__vertexData.shape) == 1:
             return 1
-        
+
         else:
             return self.__vertexData.shape[1]
 
@@ -326,10 +326,10 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         newPaths  = paths
         paths     = vdataProp.getChoices(instance=self)
         paths     = paths + [p for p in newPaths if p not in paths]
-        
+
         vdataProp.setChoices(paths, instance=self)
 
-    
+
     def getConstantColour(self):
         """Returns the current :attr::`colour`, adjusted according to the
         current :attr:`.Display.brightness`, :attr:`.Display.contrast`, and
@@ -342,7 +342,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
             self.colour[:3],
             display.brightness / 100.0,
             display.contrast   / 100.0))
-        
+
         colour.append(display.alpha / 100.0)
 
         return colour
@@ -356,7 +356,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         """
         return self.refImage
 
-    
+
     def getCoordSpaceTransform(self):
         """Returns a transformation matrix which can be used to transform
         the :class:`.TriangleMesh` vertex coordinates into the display
@@ -372,7 +372,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         opts = self.displayCtx.getOpts(self.refImage)
 
         return opts.getTransform(self.coordSpace, opts.transform)
-    
+
 
     def displayToStandardCoordinates(self, coords):
         """Transforms the given coordinates into a standardised coordinate
@@ -386,10 +386,10 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
             return coords
 
         opts = self.displayCtx.getOpts(self.refImage)
-        
+
         return opts.transformCoords(coords, opts.transform, self.coordSpace)
 
-    
+
     def standardToDisplayCoordinates(self, coords):
         """Transforms the given coordinates from standardised coordinates
         into the display coordinate system - see
@@ -399,10 +399,10 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
             return coords
 
         opts = self.displayCtx.getOpts(self.refImage)
-        
+
         return opts.transformCoords(coords, self.coordSpace, opts.transform)
 
-    
+
     def __cacheCoords(self,
                       refImage=-1,
                       coordSpace=None,
@@ -421,14 +421,14 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
                           If ``-1`` the :attr:`refImage` is used (``-1`` is
                           used as the default value instead of ``None`` because
                           the latter is a valid value for ``refImage``).
-        
+
         :arg coordSpace:  Coordinate space value to use - if ``None``, the
                           :attr:`coordSpace` is used.
-        
+
         :arg transform:   Transform to use - if ``None``, and a ``refImage`` is
                           defined, the :attr:`.NiftiOpts.transform` value is
                           used.
-        
+
         :arg customXform: Custom transform to use (if
                           ``transform=custom``). If ``None``, and a
                           ``refImage`` is defined, the
@@ -440,20 +440,20 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         if refImage is None:
             coords = self.displayCtx.location.xyz
-            
+
         else:
             refOpts = self.displayCtx.getOpts(refImage)
 
             if transform   is None: transform   = refOpts.transform
             if customXform is None: customXform = refOpts.customXform
 
-            # TODO if transform == custom, we 
+            # TODO if transform == custom, we
             # have to use the old custom xform
-            
+
             coords  = refOpts.transformCoords(self.displayCtx.location.xyz,
                                               transform,
                                               coordSpace)
-        
+
         self.displayCtx.cacheStandardCoordinates(self.overlay, coords)
 
 
@@ -468,7 +468,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         if   name == 'transform':
             transform   = refOpts.getLastValue('transform')
             customXform = refOpts.customXform
-        elif name == 'customXform': 
+        elif name == 'customXform':
             transform   = refOpts.transform
             customXform = refOpts.getLastValue('customXform')
 
@@ -499,7 +499,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         properties associated with the new image. Calls
         :meth:`__updateBounds`.
         """
-        
+
         oldValue = self.getLastValue('refImage')
 
         # The reference image may have been
@@ -507,7 +507,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         if oldValue not in self.overlayList:
             oldValue = None
 
-        self.__cacheCoords(refImage=oldValue) 
+        self.__cacheCoords(refImage=oldValue)
 
         # TODO You are not tracking changes to the
         # refImage overlay type -  if this changes,
@@ -516,7 +516,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         if self.__oldRefImage is not None and \
            self.__oldRefImage in self.overlayList:
-            
+
             opts = self.displayCtx.getOpts(self.__oldRefImage)
             opts.removeListener('transform',   self.name)
             opts.removeListener('customXform', self.name)
@@ -538,7 +538,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
 
     def __updateBounds(self):
-        """Called whenever any of the :attr:`refImage`, :attr:`coordSpace`, 
+        """Called whenever any of the :attr:`refImage`, :attr:`coordSpace`,
         or :attr:`transform` properties change.
 
         Updates the :attr:`.DisplayOpts.bounds` property accordingly.
@@ -564,7 +564,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         # have just been flipped along an axis).
         # For example, the OrthoPanel needs to refresh
         # its orientation labels.
-        # 
+        #
         # This method is only called on the 'master'
         # MeshOpts instance - the bounds on child
         # instances are synced automatically. So we
@@ -578,14 +578,14 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
             children = self.getChildren()
             for c in [self] + children:
                 c.propNotify('bounds')
-            
-    
+
+
     def __overlayListChanged(self, *a):
         """Called when the overlay list changes. Updates the :attr:`refImage`
         property so that it contains a list of overlays which can be
         associated with the mesh.
         """
-        
+
         imgProp  = self.getProp('refImage')
         imgVal   = self.refImage
         overlays = self.displayCtx.getOrderedOverlays()
@@ -616,7 +616,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         # been removed from the overlay list
         if imgVal in imgOptions: self.refImage = imgVal
         else:                    self.refImage = None
- 
+
         imgProp.setChoices(imgOptions, instance=self)
 
 
@@ -636,7 +636,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
                 if len(vdata.shape) == 1:
                     vdata = vdata.reshape(-1, 1)
-                
+
         except Exception as e:
 
             # TODO show a warning
@@ -648,11 +648,11 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         self.__vertexData      = vdata
         self.__vertexDataRange = vdataRange
-        
-        if vdata is not None: npoints = vdata.shape[1]
-        else:                 npoints = 1    
 
-        self.vertexDataIndex = 0 
+        if vdata is not None: npoints = vdata.shape[1]
+        else:                 npoints = 1
+
+        self.vertexDataIndex = 0
         self.setConstraint('vertexDataIndex', 'maxval', npoints - 1)
 
         self.updateDataRange()
@@ -661,7 +661,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     def __colourChanged(self, *a):
         """Called when :attr:`.colour` changes. Updates :attr:`.Display.alpha`
         from the alpha component.
-        """ 
+        """
 
         alpha = self.colour[3] * 100
 

@@ -26,11 +26,11 @@ class ToggleControlPanelAction(base.ToggleAction):
     widgets (most likely menu items) are updated whenever the control panel
     managed by a ``ToggleControlPanelAction`` is added/removed.
     """
-    
+
     def __init__(self, func, instance, cpType):
         """Create a ``ToggleControlPanelAction``.
 
-        :arg func:     The function which toggles the 
+        :arg func:     The function which toggles the
         :arg instance: The :class:`.ViewPanel` instance.
         :arg cpType:   The type of the control panel being managed by this
                        ``ToggleControlPanelAction``.

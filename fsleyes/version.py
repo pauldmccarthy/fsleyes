@@ -52,7 +52,7 @@ def parseVersionString(versionString):
     components = versionString.split('.')
 
     # Major and minor version are always numeric,
-    # but the point release might contain an 
+    # but the point release might contain an
     # alphabetical character implying a hotfix
     # release.
     major, minor = map(int, components[:2])

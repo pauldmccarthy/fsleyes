@@ -29,7 +29,7 @@ class WXGLColourBarCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
 
     .. note:: The ``WXGLColourBarCanvas`` assumes the existence of the
               :meth:`.ColourBarCanvas._genColourBarTexture` method.
-    """ 
+    """
     def __init__(self, parent):
 
         wxgl.GLCanvas             .__init__(self, parent)

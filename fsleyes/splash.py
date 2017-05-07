@@ -28,10 +28,10 @@ class FSLeyesSplash(wx.Frame):
     """A simple splash screen for *FSLeyes*. An image and a status bar are
     displayed; the status bar can be updated via the :meth:`SetStatus` method.
 
-    
+
     The :class:`.ImagePanel` class is used to display the image.
 
-    
+
     Typical usage would be something like the following::
 
         splash = FSLeyesSplash(None)
@@ -43,27 +43,27 @@ class FSLeyesSplash(wx.Frame):
         # Finished initialising, the application is ready
         splash.Close()
     """
-    
+
     def __init__(self, parent):
         """Create a ``FSLeyesSplash`` frame.
 
         :arg parent: The :mod:`wx` parent object.
         """
-        
+
         wx.Frame.__init__(self, parent, style=wx.FULL_REPAINT_ON_RESIZE)
 
         splashbmp  = wx.Bitmap(getSplashFile(), wx.BITMAP_TYPE_PNG)
         splashimg  = splashbmp.ConvertToImage()
-    
+
         self.__splashPanel = imagepanel.ImagePanel(self, splashimg)
         self.__statusBar   = wx.StaticText(self, style=wx.ST_ELLIPSIZE_MIDDLE)
-        
+
         self.__statusBar.SetLabel(strings.messages[self, 'default'])
 
         self.__statusBar.SetBackgroundColour('#000000')
         self.__statusBar.SetForegroundColour('#ffffff')
         self            .SetBackgroundColour('#000000')
-        
+
         self.__sizer = wx.BoxSizer(wx.VERTICAL)
 
         self.__sizer.Add(self.__splashPanel, flag=wx.EXPAND, proportion=1)
@@ -82,7 +82,7 @@ class FSLeyesSplash(wx.Frame):
         self.CentreOnScreen()
         self.Refresh()
         self.Update()
-        
+
         # GTK is a piece of shit. Refresh/Update, combined
         # with a straight call to Yield does not guarantee
         # that the splash screen will be displayed. It

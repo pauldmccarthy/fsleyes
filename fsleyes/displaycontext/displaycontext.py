@@ -39,7 +39,7 @@ class DisplayContext(props.SyncableHasProperties):
     how the overlays in an :class:`.OverlayList` are to be displayed, and
     related contextual information.
 
-    
+
     A ``DisplayContext`` instance is responsible for creating and destroying
     :class:`.Display` instances for every overlay in the
     ``OverlayList``. These ``Display`` instances, and the corresponding
@@ -64,7 +64,7 @@ class DisplayContext(props.SyncableHasProperties):
         cacheStandardCoordinates
     """
 
-    
+
     selectedOverlay = props.Int(minval=0, default=0, clamped=True)
     """Index of the currently 'selected' overlay.
 
@@ -84,7 +84,7 @@ class DisplayContext(props.SyncableHasProperties):
     in the display coordinate system.
     """
 
-    
+
     bounds = props.Bounds(ndims=3)
     """This property contains the min/max values of a bounding box (in display
     coordinates) which is big enough to contain all of the overlays in the
@@ -179,7 +179,7 @@ class DisplayContext(props.SyncableHasProperties):
     regardless of their size. Otherwise (the default), large compressed
     ``Image`` overlays may be kept on disk.
 
-    
+
     .. note:: Changing the value of this property will not affect existing
               ``Image`` overlays.
 
@@ -275,7 +275,7 @@ class DisplayContext(props.SyncableHasProperties):
         # methods do important things - check them out
         self.__overlayListChanged()
         self.__displaySpaceChanged()
-        
+
         overlayList.addListener('overlays',
                                 self.__name,
                                 self.__overlayListChanged,
@@ -291,13 +291,13 @@ class DisplayContext(props.SyncableHasProperties):
 
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
-        
+
     def __del__(self):
         """Prints a log message."""
         if log:
             log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
 
-        
+
     def destroy(self):
         """This method must be called when this ``DisplayContext`` is no
         longer needed.
@@ -317,7 +317,7 @@ class DisplayContext(props.SyncableHasProperties):
 
         self.__displays = None
 
-        
+
     def getDisplay(self, overlay, overlayType=None):
         """Returns the :class:`.Display` instance for the specified overlay
         (or overlay index).
@@ -327,7 +327,7 @@ class DisplayContext(props.SyncableHasProperties):
         :class:`Display` object does not exist for the given overlay, one is
         created.
 
-        :arg overlay:     The overlay to retrieve a ``Display`` instance for, 
+        :arg overlay:     The overlay to retrieve a ``Display`` instance for,
                           or an index into the ``OverlayList``.
 
         :arg overlayType: If a ``Display`` instance for the specified
@@ -348,9 +348,9 @@ class DisplayContext(props.SyncableHasProperties):
 
         try:
             display = self.__displays[overlay]
-                
+
         except KeyError:
-                
+
             if self.getParent() is None:
                 dParent = None
             else:
@@ -359,14 +359,14 @@ class DisplayContext(props.SyncableHasProperties):
                     overlayType = dParent.overlayType
 
             from .display import Display
-                
+
             display = Display(overlay,
                               self.__overlayList,
                               self,
                               parent=dParent,
                               overlayType=overlayType)
             self.__displays[overlay] = display
-        
+
         return display
 
 
@@ -381,7 +381,7 @@ class DisplayContext(props.SyncableHasProperties):
 
         if overlay not in self.__overlayList:
             raise InvalidOverlayError('Overlay {} is not in '
-                                      'list'.format(overlay.name)) 
+                                      'list'.format(overlay.name))
 
         return self.getDisplay(overlay, overlayType).getDisplayOpts()
 
@@ -394,7 +394,7 @@ class DisplayContext(props.SyncableHasProperties):
         """
         if overlay is None:
             return None
-        
+
         return self.getOpts(overlay).getReferenceImage()
 
 
@@ -402,12 +402,12 @@ class DisplayContext(props.SyncableHasProperties):
         """Returns ``True`` if the current :attr:`displaySpace` aligns with
         a radiological orientation. A radiological orientation is one in
         which anatomical right is shown on the left of the screen, i.e.:
-        
+
           - The X axis corresponds to right -> left
           - The Y axis corresponds to posterior -> anterior
           - The Z axis corresponds to inferior -> superior
         """
-        
+
         if len(self.__overlayList) == 0:
             return True
 
@@ -424,10 +424,10 @@ class DisplayContext(props.SyncableHasProperties):
         else:
             opts  = self.getOpts(space)
             xform = opts.getTransform('pixdim-flip', 'display')
-            
+
             return npla.det(xform) > 0
 
-        
+
     def selectOverlay(self, overlay):
         """Selects the specified ``overlay``. Raises an :exc:`IndexError` if
         the overlay is not in the list.
@@ -437,17 +437,17 @@ class DisplayContext(props.SyncableHasProperties):
         """
         self.selectedOverlay = self.__overlayList.index(overlay)
 
-    
+
     def getSelectedOverlay(self):
         """Returns the currently selected overlay object,
         or ``None`` if there are no overlays.
         """
         if len(self.__overlayList) == 0:                    return None
         if self.selectedOverlay >= len(self.__overlayList): return None
-        
+
         return self.__overlayList[self.selectedOverlay]
 
-    
+
     def getOverlayOrder(self, overlay):
         """Returns the order in which the given overlay (or an index into
         the :class:`.OverlayList` list) should be displayed
@@ -456,20 +456,20 @@ class DisplayContext(props.SyncableHasProperties):
         Raises an :exc:`IndexError` if the overlay is not in the list.
         """
         self.__syncOverlayOrder()
-        
+
         if not isinstance(overlay, int):
             overlay = self.__overlayList.index(overlay)
-            
+
         return self.overlayOrder.index(overlay)
 
-    
+
     def getOrderedOverlays(self):
         """Returns a list of overlay objects from the :class:`.OverlayList`
         list, sorted into the order that they should be displayed, as defined
         by the :attr:`overlayOrder` property.
         """
         self.__syncOverlayOrder()
-        
+
         return [self.__overlayList[idx] for idx in self.overlayOrder]
 
 
@@ -477,7 +477,7 @@ class DisplayContext(props.SyncableHasProperties):
         """Stores the given _standard_ coordinates for the given overlay.
 
         This method must be called by :class:`.DisplayOpts` sub-classes
-        whenever the spatial representation of their overlay changes - 
+        whenever the spatial representation of their overlay changes -
         ``DisplayOpts`` instances need to transform the current display
         :attr:`location` into a consistent coordinate system, relative to
         their overlay.
@@ -499,9 +499,9 @@ class DisplayContext(props.SyncableHasProperties):
         locPropVal     = self.getPropVal('location')
         standardCoords = weakref.WeakKeyDictionary(
             locPropVal.getAttribute('standardCoords'))
-        
+
         standardCoords[overlay] = np.array(coords).tolist()
-        
+
         locPropVal.setAttribute('standardCoords', standardCoords)
 
         log.debug('Standard coordinates cached '
@@ -554,7 +554,7 @@ class DisplayContext(props.SyncableHasProperties):
             display.disableAllNotification()
             opts   .disableAllNotification()
 
-    
+
     def thawOverlay(self, overlay):
         """Enables notification for all :class:`.Display` and
         :class:`.DisplayOpts` properties associated with the given ``overlay``.
@@ -589,17 +589,17 @@ class DisplayContext(props.SyncableHasProperties):
         # are no longer in the list
         for overlay in list(self.__displays.keys()):
             if overlay not in self.__overlayList:
-                
+
                 display = self.__displays.pop(overlay)
                 opts    = display.getDisplayOpts()
 
                 display.removeListener('overlayType', self.__name)
                 opts   .removeListener('bounds',      self.__name)
-                
+
                 # The display instance will destroy the
                 # opts instance, so we don't do it here
                 display.destroy()
- 
+
         # Ensure that a Display object exists
         # for every overlay in the list
         for overlay in self.__overlayList:
@@ -644,8 +644,8 @@ class DisplayContext(props.SyncableHasProperties):
         # with the overlay list
         self.__updateDisplaySpaceOptions()
 
-        # Initliase the transform property 
-        # of any Image overlays which have 
+        # Initliase the transform property
+        # of any Image overlays which have
         # just been added to the list,
         oldList  = self.__overlayList.getLastValue('overlays')[:]
         for overlay in self.__overlayList:
@@ -653,7 +653,7 @@ class DisplayContext(props.SyncableHasProperties):
                (overlay not in oldList):
                 self.__setTransform(overlay)
 
-        # If the overlay list was empty, 
+        # If the overlay list was empty,
         # and is now non-empty ...
         if (self.__prevOverlayListLen == 0) and (len(self.__overlayList) > 0):
 
@@ -672,7 +672,7 @@ class DisplayContext(props.SyncableHasProperties):
                 b.xlo + b.xlen / 2.0,
                 b.ylo + b.ylen / 2.0,
                 b.zlo + b.zlen / 2.0]
-            
+
         self.__prevOverlayListLen = len(self.__overlayList)
 
         # Limit the selectedOverlay property
@@ -688,17 +688,17 @@ class DisplayContext(props.SyncableHasProperties):
     def __updateDisplaySpaceOptions(self):
         """Updates the :attr:`displaySpace` property so it is synchronised with
         the current contents of the :class:`.OverlayList`
-        
+
         This method is called by the :meth:`__overlayListChanged` method.
         """
 
         choiceProp = self.getProp('displaySpace')
         choices    = []
-        
+
         for overlay in self.__overlayList:
             if isinstance(overlay, fslimage.Nifti):
                 choices.append(overlay)
- 
+
         choices.append('world')
 
         choiceProp.setChoices(choices,    instance=self)
@@ -722,9 +722,9 @@ class DisplayContext(props.SyncableHasProperties):
 
         # Disable notification of the bounds
         # property so the __overlayBoundsChanged
-        # method does not get called. 
+        # method does not get called.
         opts.disableListener('bounds', self.__name)
-            
+
         if   space == 'world':  opts.transform = 'affine'
         elif image is space:    opts.transform = 'pixdim-flip'
         else:
@@ -738,7 +738,7 @@ class DisplayContext(props.SyncableHasProperties):
 
         opts.enableListener('bounds', self.__name)
 
-        
+
     def __displaySpaceChanged(self, *a):
         """Called when the :attr:`displaySpace` property changes. Updates the
         :attr:`.NiftiOpts.transform` property for all :class:`.Nifti`
@@ -769,7 +769,7 @@ class DisplayContext(props.SyncableHasProperties):
         # Image overlays to put them into the
         # new display space
         for overlay in self.__overlayList:
-            
+
             if not isinstance(overlay, fslimage.Nifti):
                 continue
 
@@ -785,7 +785,7 @@ class DisplayContext(props.SyncableHasProperties):
         # currently selected overlay
         self.location.xyz = selectedOpts.standardToDisplayCoordinates(stdLoc)
 
-            
+
     def __syncOverlayOrder(self):
         """Ensures that the :attr:`overlayOrder` property is up to date
         with respect to the :class:`.OverlayList`.
@@ -801,7 +801,7 @@ class DisplayContext(props.SyncableHasProperties):
         #
         #        - Adding one or more overlays to the end of the list
         #        - Removing one or more overlays from the list
-        # 
+        #
         # More complex overlay list modifications
         # will cause this code to break.
 
@@ -812,18 +812,18 @@ class DisplayContext(props.SyncableHasProperties):
         # list order, preserve that ordering
         if self.overlayOrder[:] == range(len(oldList)):
             self.overlayOrder[:] = range(len(self.__overlayList))
-        
+
         # If overlays have been added to
         # the overlay list, add indices
         # for them to the overlayOrder list
         elif len(self.overlayOrder) < len(self.__overlayList):
-            
+
             newOrder      = []
             newOverlayIdx = len(oldList)
 
             # The order of existing overlays is preserved,
             # and all new overlays added to the end of the
-            # overlay order. 
+            # overlay order.
             for overlay in self.__overlayList:
 
                 if overlay in oldList:
@@ -834,7 +834,7 @@ class DisplayContext(props.SyncableHasProperties):
 
             self.overlayOrder[:] = newOrder
 
-        # Otherwise, if overlays have been 
+        # Otherwise, if overlays have been
         # removed from the overlay list ...
         elif len(self.overlayOrder) > len(self.__overlayList):
 
@@ -850,7 +850,7 @@ class DisplayContext(props.SyncableHasProperties):
             newOrder = [sorted(oldOrder).index(idx) for idx in oldOrder]
             self.overlayOrder[:] = newOrder
 
-            
+
     def __overlayBoundsChanged(self, value, valid, opts, name):
         """Called when the :attr:`.DisplayOpts.bounds` property of any
         overlay changes. Updates the :attr:`bounds` property and preserves
@@ -863,8 +863,8 @@ class DisplayContext(props.SyncableHasProperties):
         if self.getParent() is not None and self.isSyncedToParent('location'):
             return
 
-        # This method might get called 
-        # after DisplayOpts instance 
+        # This method might get called
+        # after DisplayOpts instance
         # has been destroyed
         if opts.display is None:
             return
@@ -882,9 +882,9 @@ class DisplayContext(props.SyncableHasProperties):
         # below to restore the location
         locPropVal = self.getPropVal('location')
         stdLoc     = locPropVal.getAttribute('standardCoords')[overlay]
-        
+
         # Update the display context bounds
-        # to take into account any changes 
+        # to take into account any changes
         # to individual overlay bounds.
         # Inhibit notification on the location
         # property - it will be updated properly
@@ -935,7 +935,7 @@ class DisplayContext(props.SyncableHasProperties):
             return
 
         for display in self.__displays.values():
-            
+
             opts = display.getDisplayOpts()
 
             if self.syncOverlayDisplay:
@@ -945,7 +945,7 @@ class DisplayContext(props.SyncableHasProperties):
                 display.unsyncAllFromParent()
                 opts   .unsyncAllFromParent()
 
-                
+
     def __updateBounds(self, *a):
         """Called when the overlay list changes, or when any overlay display
         transform is changed. Updates the :attr:`bounds` property so that it
@@ -956,7 +956,7 @@ class DisplayContext(props.SyncableHasProperties):
         if len(self.__overlayList) == 0:
             minBounds = [0.0, 0.0, 0.0]
             maxBounds = [0.0, 0.0, 0.0]
-            
+
         else:
             minBounds = 3 * [ sys.float_info.max]
             maxBounds = 3 * [-sys.float_info.max]
@@ -976,8 +976,8 @@ class DisplayContext(props.SyncableHasProperties):
         self.bounds[:] = [minBounds[0], maxBounds[0],
                           minBounds[1], maxBounds[1],
                           minBounds[2], maxBounds[2]]
-        
-        # Update the constraints on the :attr:`location` 
+
+        # Update the constraints on the :attr:`location`
         # property to be aligned with the new bounds
         self.location.setLimits(0, self.bounds.xlo, self.bounds.xhi)
         self.location.setLimits(1, self.bounds.ylo, self.bounds.yhi)

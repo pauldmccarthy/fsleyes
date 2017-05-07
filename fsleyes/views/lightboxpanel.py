@@ -37,7 +37,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
        :scale: 50%
        :align: center
 
-    
+
     The ``LightBoxPanel`` uses a :class:`.LightBoxCanvas` panel to display
     the slices, and a :class:`.LightBoxOpts` instance to manage the display
     settings. The canvas is accessed through the :meth:`getCanvas` and
@@ -76,7 +76,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         self.__scrollbar = wx.ScrollBar(
             self.getCentrePanel(),
             style=wx.SB_VERTICAL)
-        
+
         self.__lbCanvas  = lightboxcanvas.WXGLLightBoxCanvas(
             self.getContentPanel(),
             overlayList,
@@ -121,7 +121,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                                       self.__radioOrientationChanged)
         self._displayCtx .addListener('radioOrientation',
                                       self._name,
-                                      self.__radioOrientationChanged) 
+                                      self.__radioOrientationChanged)
         self._overlayList.addListener('overlays',
                                       self._name,
                                       self.__selectedOverlayChanged)
@@ -153,7 +153,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         self.__onLightBoxChange()
         self.__onZoom()
-        
+
         self.__selectedOverlayChanged()
         self.centrePanelLayout()
         self.initProfile()
@@ -181,10 +181,10 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
     def toggleLightBoxToolBar(self):
         """Shows/hides a :class:`.LightBoxToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
-        """        
+        """
         self.togglePanel(lightboxtoolbar.LightBoxToolBar, lb=self)
 
-        
+
     def getActions(self):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``LightBoxPanel``.
@@ -203,7 +203,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                    self.toggleCanvasSettingsPanel,
                    self.toggleAtlasPanel,
                    self.toggleDisplayToolBar,
-                   self.toggleLightBoxToolBar, 
+                   self.toggleLightBoxToolBar,
                    self.toggleLookupTablePanel,
                    self.toggleClusterPanel,
                    self.toggleClassificationPanel,
@@ -219,20 +219,20 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         within this ``LightBoxPanel``.
         """
         return [self.__lbCanvas]
-        
+
 
     def getCanvas(self):
         """Returns a reference to the :class:`.LightBoxCanvas` instance. """
         return self.__lbCanvas
 
-    
+
     def centrePanelLayout(self):
         """Overrides :meth:`.CanvasPanel.centrePanelLayout`. Adds the
         scrollbar to the centre panel.
         """
 
         self.layoutContainerPanel()
-        
+
         centrePanel    = self.getCentrePanel()
         containerPanel = self.getContainerPanel()
         sizer          = wx.BoxSizer(wx.HORIZONTAL)
@@ -257,7 +257,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         self.__lbCanvas.invertX = flip
 
-        
+
     def __selectedOverlayChanged(self, *a):
         """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
 
@@ -294,9 +294,9 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # zrange need to be initialised.
         lbCanvas = self.__lbCanvas
         opts     = self.getSceneOptions()
-        
+
         if opts.zrange == [0.0, 0.0]:
-            
+
             opts.sliceSpacing = lbCanvas.calcSliceSpacing(selectedOverlay)
             opts.zrange       = self._displayCtx.bounds.getRange(opts.zax)
 
@@ -316,7 +316,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         if overlay is None:
             return
-        
+
         opts     = self._displayCtx.getOpts(overlay)
         loBounds = opts.bounds.getLo()
         hiBounds = opts.bounds.getHi()
@@ -330,7 +330,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         self.__onResize()
 
-        
+
     def __onZoom(self, *a):
         """Called when the :attr:`.SceneOpts.zoom` property changes. Updates
         the number of slice columns shown.
@@ -364,7 +364,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         sliceWidth  = width / float(self.__lbCanvas.ncols)
         sliceHeight = fsllayout.calcPixHeight(xlen, ylen, sliceWidth)
 
-        if sliceHeight > 0: 
+        if sliceHeight > 0:
             self.__lbCanvas.nrows = int(height / sliceHeight)
 
 
@@ -373,7 +373,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         Updates the location shown on the :class:`.LightBoxCanvas`.
         """
-        
+
         xpos = self._displayCtx.location.getPos(self.__lbCanvas.xax)
         ypos = self._displayCtx.location.getPos(self.__lbCanvas.yax)
         zpos = self._displayCtx.location.getPos(self.__lbCanvas.zax)
@@ -400,7 +400,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                                       self.__lbCanvas.nrows,
                                       True)
 
-        
+
     def __onScroll(self, *a):
         """Called when the scrollbar is moved.
 

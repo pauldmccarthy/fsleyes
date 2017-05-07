@@ -24,7 +24,7 @@ def compileShaders(self, vertShader, indexed=False):
     fragment shader is used. Otherwise, the ``glvector`` fragment shader
     is used.
     """
-    
+
     if self.shader is not None:
         self.shader.destroy()
 
@@ -38,10 +38,10 @@ def compileShaders(self, vertShader, indexed=False):
 
     vertSrc = shaders.getVertexShader(  vertShader)
     fragSrc = shaders.getFragmentShader(fragShader)
-    
+
     return shaders.GLSLShader(vertSrc, fragSrc, indexed)
 
-    
+
 def updateShaderState(self, useSpline=False):
     """Updates the state of the vector vertex fragment shader. The fragment
     shader may be either the ``glvolume`` or the ``glvector`` shader.
@@ -65,7 +65,7 @@ def updateShaderState(self, useSpline=False):
     changed |= self.shader.set('clipCoordXform',   clipXform)
     changed |= self.shader.set('colourCoordXform', colourXform)
     changed |= self.shader.set('modCoordXform',    modXform)
- 
+
     if self.useVolumeFragShader:
 
         voxValXform   = self.colourTexture.voxValXform
@@ -85,12 +85,12 @@ def updateShaderState(self, useSpline=False):
         changed |= shader.set('clipLow',          clipLow)
         changed |= shader.set('clipHigh',         clipHigh)
         changed |= shader.set('invertClip',       False)
-    
+
     else:
 
         voxValXform          = self.imageTexture.voxValXform
         colours, colourXform = self.getVectorColours()
- 
+
         changed |= shader.set('modulateTexture', 0)
         changed |= shader.set('clipTexture',     1)
         changed |= shader.set('vectorTexture',   4)
@@ -105,7 +105,7 @@ def updateShaderState(self, useSpline=False):
         changed |= shader.set('clipLow',         clipLow)
         changed |= shader.set('clipHigh',        clipHigh)
         changed |= shader.set('modLow',          modLow)
-        changed |= shader.set('modHigh',         modHigh) 
+        changed |= shader.set('modHigh',         modHigh)
         changed |= shader.set('useSpline',       useSpline)
 
     return changed

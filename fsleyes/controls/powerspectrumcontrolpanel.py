@@ -21,12 +21,12 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
     """The ``PowerSpectrumControlPanel`` class is a :class:`.PlotControlPanel`
     which allows the user to control a :class:`.PowerSpectrumPanel`.
     """
-    
+
     def __init__(self, *args, **kwargs):
         """Create a ``PowerSpectrumControlPanel``. All arguments are passed
         through to the :meth:`.PlotControlPanel.__init__` method.
         """
-        
+
         plotcontrol.PlotControlPanel.__init__(self, *args, **kwargs)
 
         psPanel = self.getPlotPanel()
@@ -34,7 +34,7 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
                             self._name,
                             self.__plotMelodicICsChanged)
 
-        
+
     def destroy(self):
         """Must be called when this ``PowerSpectrumControlPanel`` is no
         longer needed. Removes some property listeners and calls the
@@ -50,17 +50,17 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
 
         Adds some widgets for controlling the :class:`.PowerSpectrumPanel`.
         """
-        
+
         psPanel    = self.getPlotPanel()
         widgetList = self.getWidgetList()
         allWidgets = []
         psProps    = ['plotFrequencies',
                       'plotMelodicICs']
-        
+
         for prop in psProps:
-            
+
             kwargs = {}
-                
+
             widget = props.makeWidget(widgetList, psPanel, prop, **kwargs)
             allWidgets.append(widget)
             widgetList.AddWidget(
@@ -82,7 +82,7 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
 
         if not isinstance(ps, powerspectrumseries.PowerSpectrumSeries):
             return
-        
+
         widgetList = self.getWidgetList()
         varNorm    = props.makeWidget(widgetList, ps, 'varNorm')
 
@@ -93,7 +93,7 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
 
         return allWidgets + [varNorm]
 
-        
+
     def __plotMelodicICsChanged(self, *a):
         """Called when the :attr:`.PowerSpectrumPanel.plotMelodicICs` property
         changes. Calls :meth:`.PlotControlPanel.refreshDataSeriesWidgets` to

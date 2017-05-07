@@ -104,7 +104,7 @@ def genCommandLineArgs(overlayList, displayCtx, canvas):
         sceneOpts,
         exclude=['performance'])
 
-    # Add ortho specific options, if it's 
+    # Add ortho specific options, if it's
     # an orthopanel we're dealing with
     if isinstance(sceneOpts, displaycontext.OrthoOpts):
 
@@ -131,12 +131,12 @@ def genCommandLineArgs(overlayList, displayCtx, canvas):
         if len(overlayList) > 0:
             opts   = displayCtx.getOpts(overlayList[0])
             refimg = opts.getReferenceImage()
-            
+
             if refimg is not None:
                 opts       = displayCtx.getOpts(refimg)
                 xc, yc, zc = opts.transformCoords(
                     [xc, yc, zc], 'display', 'world')
-                
+
             # And turn back into 2D (horizontal/
             # vertical) positions
             xc = xc[1], xc[2]

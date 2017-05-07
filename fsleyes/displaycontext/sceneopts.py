@@ -29,7 +29,7 @@ class SceneOpts(props.HasProperties):
     details.
     """
 
-    
+
     showCursor      = copy.copy(canvasopts.SliceCanvasOpts.showCursor)
     cursorGap       = copy.copy(canvasopts.SliceCanvasOpts.cursorGap)
     zoom            = copy.copy(canvasopts.SliceCanvasOpts.zoom)
@@ -37,23 +37,23 @@ class SceneOpts(props.HasProperties):
     cursorColour    = copy.copy(canvasopts.SliceCanvasOpts.cursorColour)
     renderMode      = copy.copy(canvasopts.SliceCanvasOpts.renderMode)
 
-    
+
     showColourBar = props.Boolean(default=False)
     """If ``True``, and it is possible to do so, a colour bar is shown on
     the scene.
     """
 
-    
+
     colourBarLocation  = props.Choice(('top', 'bottom', 'left', 'right'))
     """This property controls the location of the colour bar, if it is being
     shown.
     """
 
-    
+
     colourBarLabelSide = props.Choice(('top-left', 'bottom-right'))
     """This property controls the location of the colour bar labels, relative
     to the colour bar, if it is being shown.
-    """ 
+    """
 
 
     # NOTE: If you change the maximum performance value,
@@ -78,19 +78,19 @@ class SceneOpts(props.HasProperties):
         This method simply links the :attr:`performance` property to the
         :attr:`renderMode` property.
         """
-        
+
         name = '{}_{}'.format(type(self).__name__, id(self))
         self.addListener('performance', name, self._onPerformanceChange)
-        
+
         self._onPerformanceChange()
 
-        
+
     def _onPerformanceChange(self, *a):
         """Called when the :attr:`performance` property changes.
 
         This method must be overridden by sub-classes to change the values of
         the :attr:`renderMode` property according to the new performance
         setting.
-        """        
+        """
         raise NotImplementedError('The _onPerformanceChange method must'
                                   'be implemented by sub-classes')

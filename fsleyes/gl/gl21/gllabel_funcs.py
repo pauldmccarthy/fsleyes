@@ -23,12 +23,12 @@ from . import                glvolume_funcs
 def init(self):
     """Calls the :func:`compileShaders` and :func:`updateShaderState`
     functions.
-    """    
+    """
     self.shader = None
 
     compileShaders(   self)
     updateShaderState(self)
-    
+
 
 def destroy(self):
     """Destroys the shader programs. """
@@ -54,7 +54,7 @@ def updateShaderState(self):
     """Updates all shader program variables. """
 
     if not self.ready():
-        return 
+        return
 
     opts   = self.displayOpts
     shader = self.shader
@@ -62,12 +62,12 @@ def updateShaderState(self):
     imageShape      = np.array(self.image.shape[:3])
     vvx             = self.imageTexture.voxValXform
     outlineOffsets  = opts.outlineWidth / imageShape
-    
+
     if opts.transform == 'affine':
         minOffset = outlineOffsets.min()
         outlineOffsets = np.array([minOffset] * 3)
     else:
-        outlineOffsets[self.zax] = -1 
+        outlineOffsets[self.zax] = -1
 
     shader.load()
 

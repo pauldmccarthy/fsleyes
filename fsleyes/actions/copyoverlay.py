@@ -32,7 +32,7 @@ class CopyOverlayAction(base.Action):
 
      - If the overlay is a 4D ``Image``, should we copy the entire 4D image,
        or extract the current 3D volume?
-    
+
      - Should we copy all of the ``Image`` data, or create a blank
        (i.e. filled with zeros) ``Image`` of the same dimensions?
 
@@ -41,7 +41,7 @@ class CopyOverlayAction(base.Action):
        of the copy to defaults?
     """
 
-    
+
     def __init__(self, overlayList, displayCtx, frame):
         """Create a ``CopyOverlayAction``.
 
@@ -75,23 +75,23 @@ class CopyOverlayAction(base.Action):
         self.__overlayList.removeListener('overlays',        self.__name)
         base.Action.destroy(self)
 
-        
+
     def __selectedOverlayChanged(self, *a):
         """Called when the selected overlay, or overlay list, changes.
-        
+
         Enables/disables this action depending on the nature of the selected
         overlay.
         """
-        
+
         ovl          = self.__displayCtx.getSelectedOverlay()
         self.enabled = (ovl is not None) and isinstance(ovl, fslimage.Image)
-    
-    
+
+
     def __copyOverlay(self):
         """Creates a copy of the currently selected overlay, and inserts it
         into the :class:`.OverlayList`.
         """
-        
+
         import wx
 
         overlay = self.__displayCtx.getSelectedOverlay()
@@ -166,7 +166,7 @@ class CopyOverlayAction(base.Action):
                   copy4D=copy4D,
                   copyDisplay=copyDisplay)
 
-    
+
 def copyImage(overlayList,
               displayCtx,
               overlay,
@@ -180,19 +180,19 @@ def copyImage(overlayList,
     into the :class:`.OverlayList`.
 
     :arg overlayList: The :class:`.OverlayList`.
-    
+
     :arg displayCtx:  The :class:`.DisplayContext`.
-    
+
     :arg overlay:     The :class:`.Image` to be copied.
-    
+
     :arg createMask:  If ``True``, the copy will be an empty ``Image`` the
                       same shape as the ``overlay``.
-    
+
     :arg copy4D:      If ``True``, and the ``overlay`` is 4D, the copy will
                       also be 4D. Otherwise, the current 3D voluem is copied.
 
     :arg copyDisplay: If ``True``, the copy will inherit the display settings
-                      of the ``overlay``. Otherwise, the copy will be 
+                      of the ``overlay``. Otherwise, the copy will be
                       initialised  with default display settings.
 
     :arg name:        If provided, will be used as the :attr:`.Display.name`

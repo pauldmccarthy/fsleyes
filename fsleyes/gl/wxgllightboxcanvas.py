@@ -32,13 +32,13 @@ class WXGLLightBoxCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
 
     .. note:: The ``WXGLLightBoxCanvas`` assumes the existence of the
               :meth:`.LightBoxCanvas._updateDisplayBounds` method.
-    """    
+    """
 
 
     def __init__(self, parent, overlayList, displayCtx, zax=0):
         """Create a ``WXGLLightBoxCanvas``. See
         :meth:`.LightBoxCanvas.__init__` for details on the arguments.
-        """ 
+        """
 
         wxgl.GLCanvas                .__init__(self, parent)
         fslgl.WXGLCanvasTarget       .__init__(self)

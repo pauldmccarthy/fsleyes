@@ -28,7 +28,7 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
     :class:`.DataSeries` instances from the :attr:`.PlotPanel.dataSeries`
     list.
 
-    
+
     For every :class:`.DataSeries` instance in the
     :attr:`.PlotPanel.dataSeries` list of the :class:`.OverlayPlotPanel`, the
     ``PlotListPanel`` creates a :class:`.DataSeriesWidget`, which allows the
@@ -43,13 +43,13 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
         """Create a ``PlotListPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
-        
+
         :arg overlayList: The :class:`.OverlayList`.
-        
+
         :arg displayCtx:  The :class:`.DisplayContext` instance.
 
         :arg frame:       The :class:`.FSLeyesFrame` instance.
-        
+
         :arg plotPanel:   The :class:`.OverlayPlotPanel` associated with this
                           ``PlotListPanel``.
         """
@@ -72,7 +72,7 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
         self.__dsList.Bind(elistbox.EVT_ELB_REMOVE_EVENT, self.__onListRemove)
         self.__dsList.Bind(elistbox.EVT_ELB_EDIT_EVENT,   self.__onListEdit)
         self.__dsList.Bind(elistbox.EVT_ELB_SELECT_EVENT, self.__onListSelect)
-        
+
         self.__plotPanel.addListener('dataSeries',
                                      self._name,
                                      self.__dataSeriesChanged)
@@ -80,8 +80,8 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
         self.__dataSeriesChanged()
         self.Layout()
         self.SetMinSize(self.__sizer.GetMinSize())
- 
-        
+
+
     def destroy(self):
         """Must be called when this ``PlotListPanel`` is no longer
         needed. Removes some property listeners, and calls the
@@ -108,7 +108,7 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
                 tooltip=fsltooltips.properties[ds, 'label'],
                 extraWidget=widg)
 
-    
+
     def __onListAdd(self, ev):
         """Called when the user pushes the *add* button on the
         :class:`.EditableListBox`.  Adds the :class:`.DataSeries` associated
@@ -118,7 +118,7 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
 
         self.__plotPanel.addDataSeries()
 
-        
+
     def __onListEdit(self, ev):
         """Called when the user edits a label on the
         :class:`.EditableListBox`. Updates the :attr:`.DataSeries.label`
@@ -126,7 +126,7 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
         """
         ev.data.label = ev.label
 
-        
+
     def __onListSelect(self, ev):
         """Called when the user selects an item in the
         :class:`.EditableListBox`. Sets the
@@ -147,13 +147,13 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
         # See hacky things in __onListAdd
         if hasattr(ds, '_volume'):
             opts.volume = ds._volume
-            
+
         elif hasattr(ds, '_location'):
             voxLoc = np.array(ds._location)
             disLoc = opts.transformCoords([voxLoc], 'voxel', 'display')[0]
             self._displayCtx.location = disLoc
 
-        
+
     def __onListRemove(self, ev):
         """Called when the user removes an item from the
         :class:`.EditableListBox`. Removes the corresponding
@@ -162,7 +162,7 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
         """
         self.__plotPanel.dataSeries.remove(ev.data)
 
-        
+
 class DataSeriesWidget(wx.Panel):
     """The ``DataSeriesWidget`` class is a panel which contains controls
     that modify the properties of a :class:`.DataSeries` instance. A
@@ -170,18 +170,18 @@ class DataSeriesWidget(wx.Panel):
     every ``DataSeries`` in the :attr:`.PlotPanel.dataSeries` list.
     """
 
-    
+
     def __init__(self, parent, dataSeries):
         """Create a ``DataSeriesWidget``.
 
         :arg parent:     The :mod:`wx` parent object.
-        
+
         :arg dataSeries: The :class:`.DataSeries` instance.
         """
 
         wx.Panel.__init__(self, parent)
 
-        self.__enabled   = props.makeWidget(self, dataSeries, 'enabled') 
+        self.__enabled   = props.makeWidget(self, dataSeries, 'enabled')
         self.__colour    = props.makeWidget(self, dataSeries, 'colour')
         self.__lineWidth = props.makeWidget(self, dataSeries, 'lineWidth')
         self.__lineStyle = props.makeWidget(
@@ -202,7 +202,7 @@ class DataSeriesWidget(wx.Panel):
         self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.SetSizer(self.__sizer)
 
-        self.__sizer.Add(self.__enabled) 
+        self.__sizer.Add(self.__enabled)
         self.__sizer.Add(self.__colour)
         self.__sizer.Add(self.__lineWidth)
         self.__sizer.Add(self.__lineStyle)

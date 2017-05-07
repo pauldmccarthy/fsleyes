@@ -24,13 +24,13 @@ class LoadVertexDataAction(base.Action):
     See the :attr:`.MeshOpts.vertexData` property.
     """
 
-    
+
     def __init__(self, overlayList, displayCtx):
         """Create a ``LoadVertexDataAction``.
 
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
-        """ 
+        """
         base.Action.__init__(self, self.__loadVertexData)
 
         self.__overlayList = overlayList

@@ -34,7 +34,7 @@ class PowerSpectrumToolBar(plottoolbar.PlotToolBar):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg psPanel:     The :class:`.PowerSpectrumPanel` instance.
         """
-        
+
         plottoolbar.PlotToolBar.__init__(
             self, parent, overlayList, displayCtx, frame, psPanel)
 
@@ -44,13 +44,13 @@ class PowerSpectrumToolBar(plottoolbar.PlotToolBar):
             icon=[icons.findImageFile('spannerHighlight24'),
                   icons.findImageFile('spanner24')],
             tooltip=tooltips.actions[psPanel, 'togglePowerSpectrumControl'])
- 
+
         togList = actions.ToggleActionButton(
             'togglePlotList',
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('listHighlight24'),
                   icons.findImageFile('list24')],
-            tooltip=tooltips.actions[psPanel, 'togglePlotList']) 
+            tooltip=tooltips.actions[psPanel, 'togglePlotList'])
 
         togControl = props.buildGUI(self, psPanel, togControl)
         togList    = props.buildGUI(self, psPanel, togList)

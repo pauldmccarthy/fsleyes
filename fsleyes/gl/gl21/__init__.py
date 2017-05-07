@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This package contains modules for rendering various :class:`.GLObject`
-types in an OpenGL 2.1 compatible manner. 
+types in an OpenGL 2.1 compatible manner.
 """
 
 

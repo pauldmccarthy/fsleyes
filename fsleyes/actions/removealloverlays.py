@@ -25,7 +25,7 @@ class RemoveAllOverlaysAction(base.Action):
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
-        """ 
+        """
 
         base.Action.__init__(self, self.__removeAllOverlays)
 
@@ -37,7 +37,7 @@ class RemoveAllOverlaysAction(base.Action):
                                 self.__name,
                                 self.__overlayListChanged)
 
-        
+
     def destroy(self):
         """Must be called when this ``RemoveAllOverlaysAction`` is no longer
         needed. Removes property listeners, and then calls
@@ -46,14 +46,14 @@ class RemoveAllOverlaysAction(base.Action):
         self.__overlayList.removeListener('overlays', self.__name)
         base.Action.destroy(self)
 
-        
+
     def __overlayListChanged(self, *a):
         """Called when the :class:`.OverlayList` changes. Updates the
         :attr:`.Action.enabled` flag
         """
         self.enabled = len(self.__overlayList) > 0
 
-        
+
     def __removeAllOverlays(self):
         """Removes all overlays from the :class:`.OverlayList`.
         """
@@ -66,7 +66,7 @@ class RemoveAllOverlaysAction(base.Action):
         # If there are unsaved images,
         # get the user to confirm
         if not allSaved:
-            
+
             msg    = strings.messages[self, 'unsavedOverlays']
             title  = strings.titles[  self, 'unsavedOverlays']
             parent = wx.GetApp().GetTopWindow()
@@ -82,5 +82,5 @@ class RemoveAllOverlaysAction(base.Action):
             dlg.CentreOnParent()
             if dlg.ShowModal() == wx.ID_NO:
                 return
-        
+
         del self.__overlayList[:]

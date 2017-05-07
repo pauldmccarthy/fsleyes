@@ -45,7 +45,7 @@ class GLLineVector(glvector.GLVector):
     modules define the same functions that are defined by the
     :class:`.GLRGBVector` version specific modules.
 
-    
+
     A ``GLLineVector`` instance is rendered in different ways depending upon
     the rendering environment (GL 1.4 vs GL 2.1), so most of the rendering fb
     unctionality is implemented in the version-specific modules mentioned
@@ -61,7 +61,7 @@ class GLLineVector(glvector.GLVector):
         :arg xax:     Initial display X axis
         :arg yax:     Initial display Y axis
         """
-        
+
         # If the overlay is a DTIFitTensor, use the
         # V1 image is the vector data. Otherwise,
         # assume that the overlay is the vector image.
@@ -79,13 +79,13 @@ class GLLineVector(glvector.GLVector):
 
         self.displayOpts.addListener('lineWidth', self.name, self.notify)
 
-        
+
     def destroy(self):
         """Must be called when this ``GLLineVector`` is no longer needed.
         Removes some property listeners from the :class:`.LineVectorOpts`
         instance, calls the OpenGL version-specific ``destroy``
         function, and calls the :meth:`.GLVector.destroy` method.
-        """ 
+        """
         self.displayOpts.removeListener('lineWidth', self.name)
         fslgl.gllinevector_funcs.destroy(self)
         glvector.GLVector.destroy(self)
@@ -99,7 +99,7 @@ class GLLineVector(glvector.GLVector):
         res       = list(glvector.GLVector.getDataResolution(self, xax, yax))
         res[xax] *= 20
         res[yax] *= 20
-        
+
         return res
 
 
@@ -108,20 +108,20 @@ class GLLineVector(glvector.GLVector):
         version-specific ``compileShaders`` function.
         """
         fslgl.gllinevector_funcs.compileShaders(self)
-        
+
 
     def updateShaderState(self):
         """Overrides :meth:`.GLVector.updateShaderState`. Calls the OpenGL
         version-specific ``updateShaderState`` function.
-        """ 
+        """
         return fslgl.gllinevector_funcs.updateShaderState(self)
- 
+
 
     def preDraw(self):
         """Overrides :meth:`.GLVector.preDraw`. Calls the base class
         implementation, and then calls the OpenGL version-specific ``preDraw``
-        function. 
-        """ 
+        function.
+        """
         glvector.GLVector.preDraw(self)
         fslgl.gllinevector_funcs.preDraw(self)
 
@@ -129,24 +129,24 @@ class GLLineVector(glvector.GLVector):
     def draw(self, zpos, xform=None, bbox=None):
         """Overrides :meth:`.GLObject.draw`. Calls the OpenGL version-specific
         ``draw`` function.
-        """         
+        """
         fslgl.gllinevector_funcs.draw(self, zpos, xform, bbox)
 
-    
+
     def drawAll(self, zposes, xforms):
         """Overrides :meth:`.GLObject.drawAll`. Calls the OpenGL
         version-specific ``drawAll`` function.
-        """         
-        fslgl.gllinevector_funcs.drawAll(self, zposes, xforms) 
+        """
+        fslgl.gllinevector_funcs.drawAll(self, zposes, xforms)
 
-    
+
     def postDraw(self):
         """Overrides :meth:`.GLVector.postDraw`. Calls the base class
         implementation, and then calls the OpenGL version-specific ``postDraw``
-        function. 
-        """         
+        function.
+        """
         glvector.GLVector.postDraw(self)
-        fslgl.gllinevector_funcs.postDraw(self) 
+        fslgl.gllinevector_funcs.postDraw(self)
 
 
 class GLLineVertices(object):
@@ -155,7 +155,7 @@ class GLLineVertices(object):
     vector in the vector :class:`.Image` that is being displayed by a
     ``GLLineVector`` instance.
 
-    
+
     After a ``GLLineVertices`` instance has been created, the :meth:`refresh`
     method can be used to generate line vector vertices and voxel
     coordinates for every voxel in the :class:`Image`. These vertices and
@@ -174,7 +174,7 @@ class GLLineVertices(object):
     coordinates. This means that a ``GLLineVector`` instance needs to be
     passed to most of the methods of a ``GLLineVertices`` instance.
     """
-    
+
     def __init__(self, glvec):
         """Create a ``GLLineVertices``. Vertices are calculated for the
         given :class:`.GLLineVector` instance.
@@ -194,7 +194,7 @@ class GLLineVertices(object):
         self.vertices  = None
         self.voxCoords = None
 
-        
+
     def __hash__(self):
         """Returns a hash of this ``GLLineVertices`` instance. The hash value
         is calculated and cached on every call to :meth:`refresh`, using the
@@ -225,7 +225,7 @@ class GLLineVertices(object):
                 hash(opts.unitLength) ^
                 hash(opts.lengthScale))
 
-        
+
     def refresh(self, glvec):
         """(Re-)calculates the vertices  of this ``GLLineVertices`` instance.
 
@@ -236,14 +236,14 @@ class GLLineVertices(object):
 
         The vertices are stored as a :math:`X\\times Y\\times Z\\times
         2\\times 3` ``numpy`` array, as an attribute of this instance,
-        called ``vertices``. 
+        called ``vertices``.
         """
 
         opts  = glvec.displayOpts
         image = glvec.vectorImage
         shape = image.shape
 
-        # Pull out the xyz components of the 
+        # Pull out the xyz components of the
         # vectors, and calculate vector lengths
         vertices = np.array(image[:], dtype=np.float32)
         x        = vertices[:, :, :, 0]
@@ -256,7 +256,7 @@ class GLLineVertices(object):
             x = -x
 
         if opts.unitLength:
-            
+
             # scale the vector lengths to 0.5
             with np.errstate(invalid='ignore'):
                 vertices[:, :, :, 0] = 0.5 * x / lens
@@ -290,7 +290,7 @@ class GLLineVertices(object):
 
         self.vertices = vertices
         self.__hash   = self.calculateHash(glvec)
- 
+
 
     def getVertices(self, zpos, glvec, bbox=None):
         """Extracts and returns a slice of line vertices, and the associated
@@ -327,5 +327,5 @@ class GLLineVertices(object):
             vertices = np.ascontiguousarray(vertices)
 
         voxCoords = voxCoords.repeat(repeats=2, axis=0)
-        
+
         return vertices, voxCoords

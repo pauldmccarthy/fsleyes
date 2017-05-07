@@ -22,7 +22,7 @@ def destroy(self):
     self.shader.destroy()
     self.shader = None
 
-    
+
 def compileShaders(self, vertShader):
     """Compiles the vertex/fragment shader programs (by creating a
     :class:`.GLSLShader` instance).
@@ -39,7 +39,7 @@ def compileShaders(self, vertShader):
 
     if useVolumeFragShader: fragShader = 'glvolume'
     else:                   fragShader = 'glvector'
-    
+
     vertSrc  = shaders.getVertexShader(  vertShader)
     fragSrc  = shaders.getFragmentShader(fragShader)
 
@@ -55,9 +55,9 @@ def compileShaders(self, vertShader):
         textures = {
             'modulateTexture' : 0,
             'clipTexture'     : 1,
-            'vectorTexture'   : 4, 
-        } 
-        
+            'vectorTexture'   : 4,
+        }
+
     self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)
 
 
@@ -66,12 +66,12 @@ def updateShaderState(self):
     fragment shader may may be either the ``glvolume`` or the ``glvector``
     shader.
     """
-    
+
     opts                = self.displayOpts
-    useVolumeFragShader = opts.colourImage is not None 
+    useVolumeFragShader = opts.colourImage is not None
     shape               = list(self.vectorImage.shape[:3])
     modLow,  modHigh    = self.getModulateRange()
-    clipLow, clipHigh   = self.getClippingRange() 
+    clipLow, clipHigh   = self.getClippingRange()
 
     clipping = [clipLow, clipHigh, -1,                        -1]
     mod      = [modLow,  modHigh,   1.0 / (modHigh - modLow), -1]
@@ -87,14 +87,14 @@ def updateShaderState(self):
 
     self.shader.setVertParam('clipCoordXform',   clipCoordXform)
     self.shader.setVertParam('colourCoordXform', colourCoordXform)
-    self.shader.setVertParam('modCoordXform',    modCoordXform) 
-    
+    self.shader.setVertParam('modCoordXform',    modCoordXform)
+
     if useVolumeFragShader:
 
         voxValXform = self.colourTexture.voxValXform
         cmapXform   = self.cmapTexture.getCoordinateTransform()
         voxValXform = transform.concat(cmapXform, voxValXform)
-        
+
         self.shader.setFragParam('voxValXform', voxValXform)
 
     else:

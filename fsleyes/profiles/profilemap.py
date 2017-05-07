@@ -103,7 +103,7 @@ tempModeMap = {
         (('selint',  wx.WXK_ALT),                    'pan'),
         (('sel',     wx.WXK_CONTROL),                'zoom'),
         (('desel',   wx.WXK_CONTROL),                'zoom'),
-        (('selint',  wx.WXK_CONTROL),                'zoom'), 
+        (('selint',  wx.WXK_CONTROL),                'zoom'),
         (('sel',    (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'chsize'),
         (('desel',  (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'chsize'),
         (('selint', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'chthres'),
@@ -114,7 +114,7 @@ tempModeMap = {
         (('crop',  wx.WXK_SHIFT),                  'nav'),
         (('crop',  wx.WXK_CONTROL),                'zoom'),
         (('crop',  wx.WXK_ALT),                    'pan'),
-        (('crop', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'slice'), 
+        (('crop', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'slice'),
     )),
 
     LightBoxViewProfile : OrderedDict((
@@ -128,7 +128,7 @@ tempModeMap = {
 
     HistogramProfile : OrderedDict((
         (('overlayRange', wx.WXK_CONTROL), 'panzoom'),
-    )) 
+    ))
 }
 """The ``tempModeMap`` dictionary defines temporary modes, for each
 :class:`Profile` sub-class which, when in a given mode, can be accessed with a
@@ -145,7 +145,7 @@ held down, the ``Profile`` should temporarily switch to ``'zoom'`` mode.
 altHandlerMap = {
 
     OrthoViewProfile : OrderedDict((
-        
+
         # in navigate, slice, and zoom mode, the
         # left mouse button navigates, the right
         # mouse button draws a zoom rectangle,
@@ -168,7 +168,7 @@ altHandlerMap = {
         # In zoom mode, the left mouse button
         # navigates, the right mouse button
         # draws a zoom rectangle, and the
-        # middle mouse button pans 
+        # middle mouse button pans
         (('zoom', 'RightMouseDown'),  ('zoom', 'RightMouseDrag')),
         (('zoom', 'LeftMouseDown'),   ('nav',  'LeftMouseDown')),
         (('zoom', 'LeftMouseDrag'),   ('nav',  'LeftMouseDrag')),
@@ -180,7 +180,7 @@ altHandlerMap = {
         # 'nav' mode by default.
 
         # When in select mode, the right
-        # mouse button allows the user 
+        # mouse button allows the user
         # to deselect voxels.
         (('sel',    'RightMouseDown'),  ('desel',  'LeftMouseDown')),
         (('sel',    'RightMouseDrag'),  ('desel',  'LeftMouseDrag')),
@@ -194,12 +194,12 @@ altHandlerMap = {
         # TODO Need a way to navigate?
         (('selint', 'RightMouseDown'),  ('desel',  'LeftMouseDown')),
         (('selint', 'RightMouseDrag'),  ('desel',  'LeftMouseDrag')),
-        (('selint', 'RightMouseUp'),    ('desel',  'LeftMouseUp')), 
+        (('selint', 'RightMouseUp'),    ('desel',  'LeftMouseUp')),
 
-        # Make the selection cursor 
+        # Make the selection cursor
         # visible in desel mode
         (('desel',  'MouseMove'),       ('sel',    'MouseMove')),
-        
+
         # Middle mouse always pans.
         (('sel',    'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
         (('desel',  'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),

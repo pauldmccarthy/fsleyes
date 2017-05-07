@@ -48,7 +48,7 @@ class ApplyCommandLineAction(base.Action):
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
 
-        
+
     def __applyCommandLineArgs(self):
         """Called when this action is executed. Prompts the user to enter
         some command line arguments, and then passes them to the
@@ -102,7 +102,7 @@ def applyCommandLineArgs(overlayList, displayCtx, argv, panel=None):
     that ``argv`` only contains overlay arguments.
     """
 
-    import fsleyes.views.orthopanel as orthopanel 
+    import fsleyes.views.orthopanel as orthopanel
 
     # We patch sys.stdout/stderr
     # while parseargs.parseArgs is

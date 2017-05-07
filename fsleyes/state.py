@@ -33,7 +33,7 @@ def save(frame):
     overlays = [(type(o).__name__, o.dataSource) for o in overlayList]
 
     overlays = []
-        
+
     for i, ovl in enumerate(overlayList):
         overlays.append(OrderedDict([
             ('type',   '{}.{}'.format(ovl.__module__, type(ovl).__name__)),
@@ -109,11 +109,11 @@ def _displayState(display):
 def _displayOptsState(opts):
     """Creates and returns a dictionary containing the state of the given
     :class:`.DisplayOpts` instance.
-    """ 
+    """
 
     state     = OrderedDict()
     propNames = opts.getAllProperties()[0]
-    
+
     state['type'] = type(opts).__name__
 
     for propName in propNames:
@@ -125,7 +125,7 @@ def _displayOptsState(opts):
 def _viewPanelState(viewPanel):
     """Creates and returns a dictionary containing the state of the given
     :class:`.ViewPanel`.
-    """ 
+    """
 
     import fsleyes.views.canvaspanel as canvaspanel
 
@@ -189,13 +189,13 @@ def restore(frame, state):
             continue
 
         # Split the (fully-qualified)
-        # class name into the containing 
+        # class name into the containing
         # module and the class name.
         klass  = klass.split('.')
         module = '.'.join(klass[:-1])
         klass  = klass[-1]
 
-        # Import the module, and 
+        # Import the module, and
         # look up the class object
         module = importlib.import_module(module)
         klass  = getattr(module, klass)
@@ -210,7 +210,7 @@ def restore(frame, state):
 
     # Apply the frame perspective
     perspectives.applyPerspective(frame, None, layout)
-    
+
     # Restore view panel settings
     viewPanels = frame.getViewPanels()
     for vp, vpState in zip(viewPanels, vpStates):
@@ -241,7 +241,7 @@ def _restoreDisplayContext(displayCtx, overlayList, state):
                'syncOverlayDisplay',
                'displaySpace',
                'autoDisplay']
-    
+
     _applyProps(displayCtx, state, dcProps)
 
     for overlay, ovlState in zip(overlayList, state['Overlays']):
@@ -262,10 +262,10 @@ def _applyProps(target, values, propNames=None):
 
     if propNames is None:
         propNames = values.keys()
-    
+
     for propName in propNames:
 
         val = values[propName]
         val = props.deserialise(target, propName, val)
-        
-        setattr(target, propName, val) 
+
+        setattr(target, propName, val)

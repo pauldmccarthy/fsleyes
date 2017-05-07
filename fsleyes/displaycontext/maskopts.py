@@ -24,17 +24,17 @@ class MaskOpts(volumeopts.NiftiOpts):
     :class:`.Image` overlay as a binary mask.
     """
 
-    threshold = props.Bounds(ndims=1) 
+    threshold = props.Bounds(ndims=1)
     """The mask threshold range - values outside of this range are not
     displayed.
     """
-    
+
     invert = props.Boolean(default=False)
     """If ``True``, the :attr:`threshold` range is inverted - values
     inside the range are not shown, and values outside of the range are shown.
     """
 
-    
+
     colour = props.Colour()
     """The mask colour."""
 
@@ -57,12 +57,12 @@ class MaskOpts(volumeopts.NiftiOpts):
         # code happy.
         #
         # TODO Write independent GLMask rendering routines
-        # instead of using the GLVolume implementations 
+        # instead of using the GLVolume implementations
 
         dataMin, dataMax = overlay.dataRange
         dRangeLen        = abs(dataMax - dataMin)
         dMinDistance     = dRangeLen / 100.0
- 
+
         self.clippingRange   = (dataMin - 1, dataMax + 1)
         self.interpolation   = 'none'
         self.invertClipping  = False
@@ -72,7 +72,7 @@ class MaskOpts(volumeopts.NiftiOpts):
         self.threshold.xmin = dataMin - dMinDistance
         self.threshold.xmax = dataMax + dMinDistance
         self.threshold.xlo  = dataMin + dMinDistance
-        self.threshold.xhi  = dataMax + dMinDistance 
+        self.threshold.xhi  = dataMax + dMinDistance
 
         volumeopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)
 
@@ -81,8 +81,8 @@ class MaskOpts(volumeopts.NiftiOpts):
                          topic='dataRange',
                          runOnIdle=True)
 
-        # The master MaskOpts instance makes 
-        # sure that colour[3] and Display.alpha 
+        # The master MaskOpts instance makes
+        # sure that colour[3] and Display.alpha
         # are consistent w.r.t. each other.
         self.__registered = self.getParent() is None
         if self.__registered:
@@ -121,7 +121,7 @@ class MaskOpts(volumeopts.NiftiOpts):
         self.threshold.xmin = dmin - dminDistance
         self.threshold.xmax = dmax + dminDistance
 
-        # If the threshold was 
+        # If the threshold was
         # previously unset, grow it
         if self.threshold.x == (0, 0):
             self.threshold.x = (0, dmax + dminDistance)
@@ -130,7 +130,7 @@ class MaskOpts(volumeopts.NiftiOpts):
     def __colourChanged(self, *a):
         """Called when :attr:`.colour` changes. Updates :attr:`.Display.alpha`
         from the alpha component.
-        """ 
+        """
 
         alpha = self.colour[3] * 100
 

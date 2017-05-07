@@ -34,7 +34,7 @@ class TimeSeriesToolBar(plottoolbar.PlotToolBar):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg tsPanel:     The :class:`.TimeSeriesPanel` instance.
         """
-        
+
         plottoolbar.PlotToolBar.__init__(
             self, parent, overlayList, displayCtx, frame, tsPanel)
 
@@ -44,13 +44,13 @@ class TimeSeriesToolBar(plottoolbar.PlotToolBar):
             icon=[icons.findImageFile('spannerHighlight24'),
                   icons.findImageFile('spanner24')],
             tooltip=tooltips.actions[tsPanel, 'toggleTimeSeriesControl'])
- 
+
         togList = actions.ToggleActionButton(
             'togglePlotList',
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('listHighlight24'),
                   icons.findImageFile('list24')],
-            tooltip=tooltips.actions[tsPanel, 'togglePlotList']) 
+            tooltip=tooltips.actions[tsPanel, 'togglePlotList'])
 
         mode = props.Widget('plotMode',
                             labels=strings.choices[     tsPanel, 'plotMode'],
@@ -66,5 +66,5 @@ class TimeSeriesToolBar(plottoolbar.PlotToolBar):
         self.InsertTools([togControl, togList], 0)
         self.AddTool(lblMode)
 
-        nav = [togControl, togList] + self.getCommonNavOrder() + [mode] 
+        nav = [togControl, togList] + self.getCommonNavOrder() + [mode]
         self.setNavOrder(nav)

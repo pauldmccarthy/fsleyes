@@ -12,7 +12,7 @@ import fsleyes_widgets.utils.typedict as td
 
 
 actions = td.TypeDict({
-    
+
     'LoadOverlayAction'        : 'Ctrl-O',
     'LoadOverlayFromDirAction' : 'Ctrl-D',
     'LoadStandardAction'       : 'Ctrl-S',
@@ -25,7 +25,7 @@ actions = td.TypeDict({
     'FSLeyesFrame.closeFSLeyes'           : 'Ctrl-Q',
     'FSLeyesFrame.openHelp'               : 'Ctrl-?',
     'FSLeyesFrame.removeFocusedViewPanel' : 'Ctrl-W',
-    
+
     'FSLeyesFrame.perspectives.default'   : 'Ctrl-Shift-D',
 
     'FSLeyesFrame.addOrthoPanel'          : 'Ctrl-1',
@@ -34,13 +34,13 @@ actions = td.TypeDict({
     'FSLeyesFrame.addHistogramPanel'      : 'Ctrl-4',
     'FSLeyesFrame.addPowerSpectrumPanel'  : 'Ctrl-5',
     'FSLeyesFrame.addShellPanel'          : 'Ctrl-6',
-    
+
     'FSLeyesFrame.selectNextOverlay'       : 'Ctrl-Up',
     'FSLeyesFrame.selectPreviousOverlay'   : 'Ctrl-Down',
     'FSLeyesFrame.toggleOverlayVisibility' : 'Ctrl-F',
 
     # Shortcuts for next/prev volume
- 
+
 
     # ViewPanel actions must use one
     # of CTRL, ALT or Shift due to
@@ -57,12 +57,12 @@ actions = td.TypeDict({
     'CanvasPanel.toggleAtlasPanel'          : 'Ctrl-Alt-6',
 
     'CanvasPanel.toggleDisplayToolBar'      : 'Ctrl-Alt-7',
-    
+
     'OrthoPanel.toggleOrthoToolBar'         : 'Ctrl-Alt-8',
 
     'CanvasPanel.toggleMovieMode'           : 'Alt-M',
     'CanvasPanel.toggleDisplaySync'         : 'Alt-S',
-    
+
     'OrthoPanel.toggleEditMode'             : 'Alt-E',
     'OrthoPanel.resetDisplay'               : 'Alt-R',
     'OrthoPanel.centreCursor'               : 'Alt-P',

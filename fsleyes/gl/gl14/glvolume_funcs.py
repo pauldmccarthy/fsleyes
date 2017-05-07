@@ -29,11 +29,11 @@ def init(self):
     """Calls :func:`compileShaders` and :func:`updateShaderState`."""
 
     self.shader = None
-    
+
     compileShaders(   self)
     updateShaderState(self)
 
-    
+
 def destroy(self):
     """Deletes handles to the vertex/fragment programs."""
 
@@ -59,13 +59,13 @@ def compileShaders(self):
 
     self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)
 
-    
+
 def updateShaderState(self):
     """Sets all variables required by the vertex and fragment programs. """
 
     if not self.ready():
         return
-    
+
     opts = self.displayOpts
 
     # enable the vertex and fragment programs
@@ -80,7 +80,7 @@ def updateShaderState(self):
     # in the 1D colour map texture
     voxValXform = transform.concat(self.colourTexture.getCoordinateTransform(),
                                    self.imageTexture.voxValXform)
-    
+
     # The vertex and fragment programs
     # need to know the image shape
     shape = list(self.image.shape[:3])
@@ -93,7 +93,7 @@ def updateShaderState(self):
 
     imgXform = self.imageTexture.invVoxValXform
     if opts.clipImage is None: clipXform = imgXform
-    else:                      clipXform = self.clipTexture.invVoxValXform 
+    else:                      clipXform = self.clipTexture.invVoxValXform
 
     clipLo  = opts.clippingRange[0] * clipXform[0, 0] + clipXform[0, 3]
     clipHi  = opts.clippingRange[1] * clipXform[0, 0] + clipXform[0, 3]
@@ -109,7 +109,7 @@ def updateShaderState(self):
     changed |= self.shader.setFragParam('voxValXform',    voxValXform)
     changed |= self.shader.setFragParam('clipping',       clipping)
     changed |= self.shader.setFragParam('negCmap',        negCmap)
-    
+
     self.shader.unload()
 
     return changed
@@ -120,7 +120,7 @@ def preDraw(self):
 
     self.shader.load()
     self.shader.loadAtts()
-    
+
     opts = self.displayOpts
 
     if isinstance(self, glvolume.GLVolume):
@@ -132,7 +132,7 @@ def preDraw(self):
                 opts         .getTransform('texture', 'display'))
 
         self.shader.setVertParam('clipCoordXform', clipCoordXform)
-    
+
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
 
 
@@ -146,10 +146,10 @@ def draw(self, zpos, xform=None, bbox=None):
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
 
     self.shader.setAttr('texCoord', texCoords)
-    
+
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
-    
+
 def drawAll(self, zposes, xforms):
     """Draws mutltiple slices of the given image at the given Z position,
     applying the corresponding transformation to each of the slices.
@@ -161,9 +161,9 @@ def drawAll(self, zposes, xforms):
     indices   = np.arange(nslices * 6,     dtype=np.uint32)
 
     for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
-        
+
         v, vc, tc = self.generateVertices(zpos, xform)
-        
+
         vertices[ i * 6: i * 6 + 6, :] = v
         texCoords[i * 6: i * 6 + 6, :] = tc
 
@@ -172,7 +172,7 @@ def drawAll(self, zposes, xforms):
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
 
     self.shader.setAttr('texCoord', texCoords)
-    
+
     gl.glDrawElements(gl.GL_TRIANGLES,
                       nslices * 6,
                       gl.GL_UNSIGNED_INT,

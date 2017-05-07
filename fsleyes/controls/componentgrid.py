@@ -46,7 +46,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
     information, but organised by label.
     """
 
-    
+
     def __init__(self, parent, overlayList, displayCtx, frame, lut):
         """Create a ``ComponentGrid``.
 
@@ -57,7 +57,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         :arg lut:         The :class:`.LookupTable` instance used to colour
                           each label tag.
         """
-        
+
         fslpanel.FSLeyesPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
@@ -73,9 +73,9 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
 
         self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.__sizer.Add(self.__grid, flag=wx.EXPAND, proportion=1)
-        
+
         self.SetSizer(self.__sizer)
-        
+
         self.__grid.Bind(widgetgrid.EVT_WG_SELECT, self.__onGridSelect)
 
         lut.register(self._name, self.__lutChanged, 'added')
@@ -85,23 +85,23 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         self.__overlay   = None
         self.__volLabels = None
 
-        
+
     def destroy(self):
         """Must be called when this ``ComponentGrid`` is no longer needed.
         De-registers various property listeners, and calls
         :meth:`.FSLeyesPanel.destroy`.
         """
-        
+
         self.__lut.deregister(self._name, 'added')
         self.__lut.deregister(self._name, 'removed')
         self.__lut.deregister(self._name, 'label')
         self.__deregisterCurrentOverlay()
-        
+
         self.__lut = None
 
         fslpanel.FSLeyesPanel.destroy(self)
 
-        
+
     def setOverlay(self, overlay, volLabels, refreshGrid=True):
         """Sets the :class:`.Image` to display component labels for.
         The :class:`.WidgetGrid` is re-populated to display the
@@ -117,8 +117,8 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         self.__deregisterCurrentOverlay()
         self.__grid.ClearGrid()
 
-        if not (isinstance(overlay, fslimage.Image) and 
-                len(overlay.shape) == 4): 
+        if not (isinstance(overlay, fslimage.Image) and
+                len(overlay.shape) == 4):
             self.__grid.Refresh()
             return
 
@@ -147,7 +147,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
             if self.__overlay is None:
                 self.__grid.Refresh()
                 return
-            
+
             self.__grid.SetGridSize(ncomps, 2, growCols=[1])
 
             self.__grid.SetColLabel(0, strings.labels[self, 'componentColumn'])
@@ -168,8 +168,8 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
 
         :arg comps: Components to refresh. If ``None``, the tags for all
                     components are refreshed.
-        """ 
-        
+        """
+
         overlay   = self.__overlay
         volLabels = self.__volLabels
         numComps  = volLabels.numComponents()
@@ -207,19 +207,19 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         volLabels        = self.__volLabels
         self.__overlay   = None
         self.__volLabels = None
-        
+
         volLabels.deregister(self._name)
-            
+
         try:
             display = self._displayCtx.getDisplay(overlay)
             opts    = display.getDisplayOpts()
             opts   .removeListener('volume',      self._name)
             display.removeListener('overlayType', self._name)
-            
+
         except fsldisplay.InvalidOverlayError:
             pass
 
-        
+
     def __overlayTypeChanged(self, *a):
         """Called when the :attr:`.Display.overlayType` of the currently
         displayed overlay changes. When the type of an overlay changes,
@@ -229,7 +229,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         """
         self.setOverlay(self.__overlay, refreshGrid=False)
 
-        
+
     def __recreateTags(self):
         """Called by :meth:`setOverlay`. Re-creates a :class:`.TextTagPanel`
         for every component in the :class:`.Image`.
@@ -273,14 +273,14 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         numComps  = volLabels.numComponents()
 
         log.debug('Updating component tag options for {}'.format(overlay))
-        
+
         lut     = self.__lut
         labels  = [l.name   for l in lut]
         colours = [l.colour for l in lut]
 
         for i in range(len(colours)):
-            colours[i] = [int(round(c * 255)) for c in colours[i]] 
-        
+            colours[i] = [int(round(c * 255)) for c in colours[i]]
+
         for comp in range(numComps):
             tags = self.__grid.GetWidget(comp, 1)
             tags.SetOptions(labels, colours)
@@ -295,14 +295,14 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         tags      = ev.GetEventObject()
         label     = ev.tag
         comp      = tags._componentIndex
-        lut       = self.__lut 
+        lut       = self.__lut
         volLabels = self.__volLabels
 
         log.debug('Label added to component {} ("{}")'.format(comp, label))
 
         # Add the new label to the component
         with volLabels.skip(self._name):
-        
+
             volLabels.addLabel(comp, label)
 
             # If the tag panel previously just contained
@@ -332,13 +332,13 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
             self.__refreshTagOptions()
         self.__grid.Layout()
 
-        
+
     def __onTagRemoved(self, ev):
         """Called when a tag is removed from a :class:`.TextTagPanel`.
         Removes the corresponding component-label mapping from the
         :class:`.VolumeLabels` instance.
-        """ 
-        
+        """
+
         tags      = ev.GetEventObject()
         label     = ev.tag
         comp      = tags._componentIndex
@@ -349,7 +349,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         # Remove the label from
         # the melodic component
         with volLabels.skip(self._name):
-        
+
             volLabels.removeLabel(comp, label)
 
             # If the tag panel now has no tags,
@@ -358,7 +358,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
 
                 log.debug('Adding "unknown" tag to '
                           'component {}'.format(comp))
-                
+
                 volLabels.addLabel(comp, 'Unknown')
                 tags.AddTag('Unknown')
 
@@ -400,7 +400,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
 
         log.debug('Overlay volume changed ({}) - updating '
                   'selected component'.format(opts.volume))
- 
+
         grid.SetSelection(opts.volume, -1)
 
 
@@ -411,7 +411,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
 
         log.debug('Volume labels changed - '
                   'refreshing component grid tags')
- 
+
         # The MelodicClassification
         # passes (component, label)
         # tuples, but we only care

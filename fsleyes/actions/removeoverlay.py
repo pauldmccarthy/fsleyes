@@ -20,14 +20,14 @@ class RemoveOverlayAction(base.Action):
     selected overlay.
     """
 
-    
+
     def __init__(self, overlayList, displayCtx, frame):
         """Create a ``RemoveOverlayAction``.
 
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
-        """ 
+        """
 
         base.Action.__init__(self, self.__removeOverlay)
 
@@ -39,7 +39,7 @@ class RemoveOverlayAction(base.Action):
                                 self.__name,
                                 self.__overlayListChanged)
 
-        
+
     def destroy(self):
         """Must be called when this ``RemoveOverlayAction`` is no longer
         needed. Removes property listeners, and then calls
@@ -48,14 +48,14 @@ class RemoveOverlayAction(base.Action):
         self.__overlayList.removeListener('overlays', self.__name)
         base.Action.destroy(self)
 
-        
+
     def __overlayListChanged(self, *a):
         """Called when the :class:`.OverlayList` changes. Updates the
         :attr:`.Action.enabled` flag
         """
         self.enabled = len(self.__overlayList) > 0
 
-        
+
     def __removeOverlay(self):
         """Removes the currently selected overlay (as defined by the
         :attr:`.DisplayContext.selectedOverlay) from the :class:`.OverlayList`.
@@ -79,7 +79,7 @@ def removeOverlay(overlayList, displayCtx, overlay=None, stringKey=None):
     """
 
     import wx
-    
+
     if overlay is None:
         overlay = displayCtx.getSelectedOverlay()
 
@@ -87,7 +87,7 @@ def removeOverlay(overlayList, displayCtx, overlay=None, stringKey=None):
         stringKey = 'removeoverlay.unsaved'
 
     if isinstance(overlay, fslimage.Image) and not overlay.saveState:
-            
+
         msg    = strings.messages[stringKey]
         title  = strings.titles[  stringKey]
         parent = wx.GetApp().GetTopWindow()
@@ -103,6 +103,6 @@ def removeOverlay(overlayList, displayCtx, overlay=None, stringKey=None):
         dlg.CentreOnParent()
         if dlg.ShowModal() == wx.ID_NO:
             return False
-        
+
     overlayList.remove(overlay)
     return True

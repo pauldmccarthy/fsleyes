@@ -61,7 +61,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
     **Overview**
 
-    
+
     An ``OrthoPanel`` contains three :class:`.SliceCanvas` panels, each of
     which provide a 2D view of the overlays in the :class:`.OverlayList` along
     one axis. These ``SliceCanvas`` instances can be accessed through the
@@ -78,13 +78,13 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
 
     **Anatomical labels**
-    
+
 
     The ``OrthoPanel`` creates an :class:`.OrthoLabels` instance, which
     manages the display of anatomical orientation labels on each of the
     three :class:`.SliceCanvas` instances.
 
-    
+
     **Display**
 
 
@@ -103,19 +103,19 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
     ======== =========================================================
     ``view`` Viewing/navigation, using the :class:`.OrthoViewProfile`.
-    
+
     ``edit`` Simple editing of :class:`.Image` overlays, using the
              :class:`.OrthoEditProfile` (see also the
              :mod:`~fsleyes.editor` package).
 
     ``crop`` Allows the user to crop an ``Image`` overlay.
     ======== =========================================================
-    
+
 
     **Actions and control panels**
 
 
-    The ``OrthoPanel`` adds a few extra actions to those provided by the 
+    The ``OrthoPanel`` adds a few extra actions to those provided by the
     :class:`.CanvasPanel` class:
 
     .. autosummary::
@@ -180,7 +180,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             self.__xcanvas,
             self.__ycanvas,
             self.__zcanvas)
-            
+
         # If an edit menu is added when in
         # 'edit' profile (see __profileChanged),
         # its name is stored here.
@@ -192,7 +192,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         self.__xcanvas.bindProps('cursorGap',   sceneOpts)
         self.__ycanvas.bindProps('cursorGap',   sceneOpts)
-        self.__zcanvas.bindProps('cursorGap',   sceneOpts) 
+        self.__zcanvas.bindProps('cursorGap',   sceneOpts)
 
         self.__xcanvas.bindProps('bgColour',     sceneOpts)
         self.__ycanvas.bindProps('bgColour',     sceneOpts)
@@ -233,7 +233,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                 self.__radioOrientationChanged)
         displayCtx .addListener('radioOrientation',
                                 name,
-                                self.__radioOrientationChanged) 
+                                self.__radioOrientationChanged)
         displayCtx .addListener('selectedOverlay',
                                 name,
                                 self.__overlayListChanged)
@@ -250,7 +250,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # Callbacks which just need to refresh
         def refresh(*a):
             self.Refresh()
-            
+
         sceneOpts.addListener('labelSize',   name, refresh, weak=False)
         sceneOpts.addListener('labelColour', name, refresh, weak=False)
         sceneOpts.addListener('showLabels',  name, refresh, weak=False)
@@ -308,7 +308,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     @actions.toggleControlAction(orthoedittoolbar.OrthoEditToolBar)
     def toggleEditMode(self):
         """Toggles the :attr:`.ViewPanel.profile` between ``'view'`` and
-        ``'edit'``. See :meth:`__profileChanged`.  
+        ``'edit'``. See :meth:`__profileChanged`.
         """
 
         if self.profile == 'view': self.profile = 'edit'
@@ -318,7 +318,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     @actions.toggleControlAction(cropimagepanel.CropImagePanel)
     def toggleCropMode(self):
         """Toggles the :attr:`.ViewPanel.profile` between ``'view'`` and
-        ``'crop'``. See :meth:`__profileChanged`.  
+        ``'crop'``. See :meth:`__profileChanged`.
         """
 
         if self.profile == 'view': self.profile = 'crop'
@@ -339,7 +339,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         editing    = self.toggleEditTransformPanel.toggled
         displayCtx = self.getDisplayContext()
         overlay    = displayCtx.getSelectedOverlay()
-        
+
         if editing and displayCtx.displaySpace != 'world':
 
             global _suppressDisplaySpaceWarning
@@ -353,14 +353,14 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                          'toggleEditTransformPanel',
                                          'displaySpaceChange.hint']
                 msg   = msg .format(overlay.name)
-                hint  = hint.format(overlay.name) 
+                hint  = hint.format(overlay.name)
                 cbMsg = strings.messages[self,
                                          'toggleEditTransformPanel',
                                          'displaySpaceChange.suppress']
                 title = strings.titles[  self,
                                          'toggleEditTransformPanel',
                                          'displaySpaceChange']
-                
+
                 dlg   = fsldlg.CheckBoxMessageDialog(
                     self,
                     title=title,
@@ -373,10 +373,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
                 dlg.ShowModal()
 
-                _suppressDisplaySpaceWarning  = dlg.CheckBoxState() 
+                _suppressDisplaySpaceWarning  = dlg.CheckBoxState()
 
             displayCtx.displaySpace = 'world'
-        
+
 
 
     @actions.toggleControlAction(orthoeditsettingspanel.OrthoEditSettingsPanel)
@@ -386,7 +386,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """
         self.togglePanel(orthoeditsettingspanel.OrthoEditSettingsPanel,
                          ortho=self,
-                         floatPane=floatPane) 
+                         floatPane=floatPane)
 
 
     @actions.action
@@ -410,7 +410,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     @actions.toggleAction
     def toggleCursor(self):
         """Toggles the value of :attr:`.SceneOpts.showCursor`. """
-        # The state of this action gets bound to 
+        # The state of this action gets bound to
         # the showCursor attribute in __init__
         pass
 
@@ -418,7 +418,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     @actions.toggleAction
     def toggleLabels(self):
         """Toggles the value of :attr:`.OrthoOpts.showLabels`. """
-        # The state of this action gets bound to 
+        # The state of this action gets bound to
         # the showLabels attribute in __init__
         pass
 
@@ -426,7 +426,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     @actions.toggleAction
     def toggleXCanvas(self):
         """Toggles the value of :attr:`.OrthoOpts.showXCanvas`. """
-        # The state of this action gets bound to 
+        # The state of this action gets bound to
         # the showXCanvas attribute in __init__
         pass
 
@@ -434,7 +434,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     @actions.toggleAction
     def toggleYCanvas(self):
         """Toggles the value of :attr:`.OrthoOpts.showYCanvas`. """
-        # The state of this action gets bound to 
+        # The state of this action gets bound to
         # the showYCanvas attribute in __init__
         pass
 
@@ -442,7 +442,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     @actions.toggleAction
     def toggleZCanvas(self):
         """Toggles the value of :attr:`.OrthoOpts.showZCanvas`. """
-        # The state of this action gets bound to 
+        # The state of this action gets bound to
         # the showZCanvas attribute in __init__
         pass
 
@@ -464,7 +464,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    None,
                    self.resetDisplay,
                    self.centreCursor,
-                   self.centreCursorWorld, 
+                   self.centreCursorWorld,
                    None,
                    self.toggleLabels,
                    self.toggleCursor,
@@ -478,7 +478,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleDisplayPanel,
                    self.toggleCanvasSettingsPanel,
                    self.toggleAtlasPanel,
-                   self.toggleDisplayToolBar, 
+                   self.toggleDisplayToolBar,
                    self.toggleOrthoToolBar,
                    self.toggleLookupTablePanel,
                    self.toggleClusterPanel,
@@ -492,40 +492,40 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             for a in actionz:
                 if isinstance(a, actions.Action):
                     tuples.append((a.__name__, a))
-                    
+
                 elif isinstance(a, tuple):
                     tuples.append((a[0], makeTuples(a[1])))
-                    
+
                 elif a is None:
                     tuples.append((None, None))
 
             return tuples
-            
+
         return makeTuples(actionz)
 
-            
+
     def getGLCanvases(self):
         """Returns all of the :class:`.SliceCanvas` instances contained
         within this ``OrthoPanel``.
         """
         return [self.__xcanvas, self.__ycanvas, self.__zcanvas]
-    
+
 
     def getXCanvas(self):
         """Returns the :class:`.SliceCanvas` instance displaying the X axis.
         """
         return self.__xcanvas
 
-    
+
     def getYCanvas(self):
         """Returns the :class:`.SliceCanvas` instance displaying the Y axis.
-        """ 
+        """
         return self.__ycanvas
 
-    
+
     def getZCanvas(self):
         """Returns the :class:`.SliceCanvas` instance displaying the Z axis.
-        """ 
+        """
         return self.__zcanvas
 
 
@@ -536,7 +536,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         and an "edit" menu is added to the :class:`.FSLeyesFrame` (if there
         is one).
         """
-        
+
         CropImagePanel         = cropimagepanel.CropImagePanel
         OrthoEditToolBar       = orthoedittoolbar.OrthoEditToolBar
         OrthoEditActionToolBar = orthoeditactiontoolbar.OrthoEditActionToolBar
@@ -549,8 +549,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         inEdit                 = self.profile == 'edit'
         inCrop                 = self.profile == 'crop'
-        
-        # Toggle toolbars if they are open but should 
+
+        # Toggle toolbars if they are open but should
         # be closed, or closed but should be open
         if (not editToolBarOpen) and      inEdit or \
                 editToolBarOpen  and (not inEdit):
@@ -569,15 +569,15 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                              floatPane=True,
                              floatOnly=True,
                              closeable=False,
-                             floatPos=(0.85, 0.3)) 
-            
+                             floatPos=(0.85, 0.3))
+
         # Don't open edit panel by default,
         # but close it when we leave edit mode
         if editPanelOpen and (not inEdit):
             self.togglePanel(orthoeditsettingspanel.OrthoEditSettingsPanel)
 
         # It's unlikely, but an OrthoPanel might be
-        # created without a ref to a FSLeyesFrame. 
+        # created without a ref to a FSLeyesFrame.
         if self.getFrame() is not None:
             if   self.profile == 'view': self.__removeEditMenu()
             elif self.profile == 'edit': self.__addEditMenu()
@@ -598,7 +598,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         if  idx == wx.NOT_FOUND: editMenu = None
         else:                    editMenu = menuBar.GetMenu(idx)
-        
+
         if editMenu is not None:
             return
 
@@ -617,7 +617,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    'copySelection',
                    'pasteSelection']
 
-        frame.populateMenu(editMenu, profile, actionz, ignoreFocus=True)        
+        frame.populateMenu(editMenu, profile, actionz, ignoreFocus=True)
 
 
     def __removeEditMenu(self):
@@ -625,7 +625,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         :attr:`.ViewPanel.profile` is changed from ``'edit'``. If an edit
         menut has previously been added to the :class:`.FSLeyesFrame`, it
         is removed.
-        """ 
+        """
 
         if self.__editMenuTitle is None:
             return
@@ -649,13 +649,13 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Called when the :class:`.SceneOpts.bgColour` property changes.
         Updates the panel and anatomical label background/foreground
         colours.
-        
+
         The :attr:`.SliceCanvasOpts.bgColour` properties are bound to
         ``SceneOpts.bgColour``,(see :meth:`.HasProperties.bindProps`), so we
         don't need to manually update them.
 
         :arg refresh: Must be passed as a keyword argument. If ``True`` (the
-                      default), this ``OrthoPanel`` is refreshed. 
+                      default), this ``OrthoPanel`` is refreshed.
         """
 
         refresh = kwa.pop('refresh', True)
@@ -686,7 +686,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             self.Refresh()
             self.Update()
 
-        
+
     def __toggleCanvas(self, *a):
         """Called when any of the :attr:`.OrthoOpts.showXCanvas`,
         :attr:`.OrthoOpts.showYCanvas`, or :attr:`.OrthoOpts.showZCanvas`
@@ -727,7 +727,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         inRadio = self._displayCtx.displaySpaceIsRadiological()
         flip    = self._displayCtx.radioOrientation != inRadio
-        
+
         self.__ycanvas.invertX = flip
         self.__zcanvas.invertX = flip
 
@@ -737,7 +737,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         :attr:`.DisplayContext.selectedOverlay` is changed. Enables/disables
         various action methods based on the currently selected overlay.
         """
-        
+
         # Disable actions that need an overlay
         haveOverlays = len(self._overlayList) > 0
         selOverlay   = self._displayCtx.getSelectedOverlay()
@@ -749,7 +749,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                       display.overlayType in ('volume', 'mask', 'label')
         else:
             isImage = False
-            
+
         self.resetDisplay            .enabled = haveOverlays
         self.centreCursor            .enabled = haveOverlays
         self.centreCursorWorld       .enabled = haveOverlays
@@ -757,7 +757,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.toggleEditTransformPanel.enabled = isImage
         self.toggleCropMode          .enabled = isImage
 
-            
+
     def __onResize(self, ev):
         """Called whenever the panel is resized. Makes sure that the
         :class:`.SliceCanvas` panels  and :class:`.Text` annotations
@@ -775,7 +775,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         The :mod:~fsl.utils.layout` module is used to perform the canvas size
         calculation.
         """
-        
+
         opts   = self.getSceneOptions()
         layout = opts.layout
 
@@ -804,7 +804,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         axisLens   = [self._displayCtx.bounds.xlen,
                       self._displayCtx.bounds.ylen,
                       self._displayCtx.bounds.zlen]
-        
+
         sizes = fsllayout.calcSizes(layout,
                                     canvasaxes,
                                     axisLens,
@@ -815,7 +815,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             canvas.SetMinSize(size)
             canvas.SetMaxSize(size)
 
-        
+
     def __refreshLayout(self, *a, **kwa):
         """Called when the :attr:`.OrthoOpts.layout` property changes, or the
         canvas layout needs to be refreshed. Updates the layout accordingly.
@@ -829,7 +829,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         opts   = self.getSceneOptions()
         layout = opts.layout
 
-        # We lay out all canvases, even 
+        # We lay out all canvases, even
         # the ones that are not shown.
         canvases  = [self.__xcanvas,   self.__ycanvas,   self.__zcanvas]
         shows     = [opts.showXCanvas, opts.showYCanvas, opts.showZCanvas]
@@ -837,11 +837,11 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         # For the grid layout if only one or two
         # canvases are being displayed, the layout
-        # is equivalent to a horizontal layout. 
+        # is equivalent to a horizontal layout.
         if layout == 'grid' and nCanvases <= 2:
             layout = 'horizontal'
 
-        # For horizontal/vertical layout, 
+        # For horizontal/vertical layout,
         # the canvas layout is:
         #
         #   | X/sagittal | Y/coronal | Z/axial |
@@ -851,7 +851,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         #
         #   | Y/coronal | X/sagittal |
         #   | Z/axial   |            |
-        # 
+        #
         if layout == 'grid':
             canvases = [self.__ycanvas, self.__xcanvas, self.__zcanvas]
 
@@ -869,17 +869,17 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # canvases must also be growable
         for row in range(nrows): self.__canvasSizer.AddGrowableRow(row)
         for col in range(ncols): self.__canvasSizer.AddGrowableCol(col)
-            
+
         # For grid layout, the last cell is filled with empty space
         if layout == 'grid':
             canvases.append((0, 0))
 
         # Add all those widgets to the grid sizer
         flag = wx.ALIGN_CENTRE_HORIZONTAL | wx.ALIGN_CENTRE_VERTICAL
-        
+
         for c in canvases:
             self.__canvasSizer.Add(c, flag=flag | wx.EXPAND)
-            
+
         self.getContentPanel().SetSizer(self.__canvasSizer)
 
         # Calculate/ adjust the appropriate sizes
@@ -887,7 +887,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # appropriately relative to each other, and
         # the displayed world space aspect ratio is
         # maintained
-        self.__calcCanvasSizes()        
+        self.__calcCanvasSizes()
 
         # When in grid layout, flip the horizontal axis
         # of the X canvas (assumed to be A/P), to force
@@ -923,14 +923,14 @@ class OrthoFrame(wx.Frame):
         """Create an ``OrthoFrame``.
 
         :arg parent:      A :mod:`wx` parent object.
-        
+
         :arg overlayList: An :class:`.OverlayList` instance.
-        
+
         :arg displayCtx:  A :class:`.DisplayContext` instance.
-        
+
         :arg title:       Dialog title.
         """
-        
+
         wx.Frame.__init__(self, parent, title=title)
 
         fslgl.getGLContext()
@@ -954,13 +954,13 @@ class OrthoDialog(wx.Dialog):
         """Create an ``OrthoDialog``.
 
         :arg parent:      A :mod:`wx` parent object.
-        
+
         :arg overlayList: An :class:`.OverlayList` instance.
-        
+
         :arg displayCtx:  A :class:`.DisplayContext` instance.
-        
+
         :arg title:       Dialog title.
-        
+
         :arg style:       Dialog style - defaults to
                           ``wx.DEFAULT_DIALOG_STYLE``.
         """
@@ -972,6 +972,6 @@ class OrthoDialog(wx.Dialog):
 
         fslgl.getGLContext()
         fslgl.bootstrap()
-        
+
         self.panel = OrthoPanel(self, overlayList, displayCtx, None)
         self.Layout()

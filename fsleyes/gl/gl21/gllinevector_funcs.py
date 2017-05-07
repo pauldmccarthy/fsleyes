@@ -44,7 +44,7 @@ def init(self):
     ``GLLineVector`` via calls to :func:`compileShaders` and
     :func:`updateShaderState`.
     """
-    
+
     self.shader = None
 
     name = self.name
@@ -72,7 +72,7 @@ def init(self):
                                  overwrite=True,
                                  weak=False)
 
-    
+
 def destroy(self):
     """Deletes the vertex/fragment shaders. """
 
@@ -81,9 +81,9 @@ def destroy(self):
     self.displayOpts.removeListener('unitLength',  self.name)
     self.displayOpts.removeListener('lengthScale', self.name)
     self.displayOpts.removeListener('transform',   self.name)
-    
+
     self.shader.destroy()
- 
+
 
 def compileShaders(self):
     """Compiles the vertex/fragment shaders via the
@@ -92,7 +92,7 @@ def compileShaders(self):
 
     self.shader = glvector_funcs.compileShaders(self, 'gllinevector')
 
-    
+
 def updateShaderState(self):
     """Updates all variables used by the vertex/fragment shaders. The fragment
     shader is configured by the
@@ -101,7 +101,7 @@ def updateShaderState(self):
 
     shader = self.shader
     shader.load()
-    
+
     changed     = glvector_funcs.updateShaderState(self)
     image       = self.vectorImage
     opts        = self.displayOpts
@@ -141,7 +141,7 @@ def draw(self, zpos, xform=None, bbox=None):
     """Draws the line vectors at a plane at the specified Z location.
     Voxel coordinates are passed to the vertex shader, which calculates
     the corresponding line vertex locations.
-    """ 
+    """
 
     opts   = self.displayOpts
     shader = self.shader
@@ -158,7 +158,7 @@ def draw(self, zpos, xform=None, bbox=None):
     shader.setAtt('vertexID',        indices)
     shader.setAtt('voxel',           voxels)
     shader.loadAtts()
-    
+
     gl.glLineWidth(opts.lineWidth)
     gl.glDrawArrays(gl.GL_LINES, 0, voxels.size // 3)
 

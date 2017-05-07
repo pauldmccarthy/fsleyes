@@ -27,28 +27,28 @@ class Editor(actions.ActionProvider):
     :class:`.Image` overlay. An ``Editor`` instance is associated with a
     specific ``Image`` overlay, passed to :meth:`__init__`.
 
-    
+
     An ``Editor`` instance uses a :class:`.Selection` object which allows
     voxel selections to be made, and keeps track of all changes to both the
     selection and image data.
 
-    
+
     **The editing process**
 
-    
+
     Making changes to the data in an :class:`.Image` involves two steps:
 
      1. Create a selection
 
      2. Change the value of voxels in that selection
 
-    
+
     The first step can be peformed by working directly with the
     :class:`.Selection` object - this is accessible via the
     :meth:`getSelection` method. The :meth:`fillSelection` method can be used
     to perform the second step.
 
-    
+
     Some convenience methods are also provided for working with selections:
 
     .. autosummary::
@@ -73,7 +73,7 @@ class Editor(actions.ActionProvider):
     cleared. However, you can track *all* selection changes by initialising
     an ``Editor`` instance with ``recordSelection=True``.
 
-    
+
     Sometimes it is useful to treat many small changes as a single large
     change.  For example, if a selection is being updated by dragging the
     mouse across a canvas, storing a separate change for every change in mouse
@@ -87,7 +87,7 @@ class Editor(actions.ActionProvider):
     undone/redone together.
     """
 
-    
+
     def __init__(self,
                  image,
                  overlayList,
@@ -116,7 +116,7 @@ class Editor(actions.ActionProvider):
 
         if recordSelection:
             self.__selection.register(self.__name, self.__selectionChanged)
- 
+
         # A list of state objects, providing
         # records of what has been done. The
         # doneIndex points to the current
@@ -132,7 +132,7 @@ class Editor(actions.ActionProvider):
         self.__recordSelection = recordSelection
         self.undo.enabled      = False
         self.redo.enabled      = False
-        
+
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
 
@@ -141,12 +141,12 @@ class Editor(actions.ActionProvider):
         if log:
             log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
 
-        
+
     def destroy(self):
         """Removes some property listeners, and clears references to objects
         to prevent memory leaks.
         """
-        
+
         self.__selection  .deregister(self.__name)
         self.__overlayList.removeListener('overlays',  self.__name)
 
@@ -163,7 +163,7 @@ class Editor(actions.ActionProvider):
         ``Editor``.
         """
         return self.__image
-    
+
 
     def getSelection(self):
         """Returns the :class:`.Selection` instance currently in use. """
@@ -180,14 +180,14 @@ class Editor(actions.ActionProvider):
         self.__selection.clearSelection()
 
         if (not self.__recordSelection) and self.__recordChanges:
-            
+
             old, new, offset = self.__selection.getLastChange()
 
             # getLastChange will return None
             # if there is no last change
             if old is not None:
                 change = SelectionChange(self.__image, offset, old, new)
-                self.__changeMade(change) 
+                self.__changeMade(change)
 
 
     def fillSelection(self, newVals):
@@ -225,11 +225,11 @@ class Editor(actions.ActionProvider):
 
         oldVals = np.array(oldVals)
         change  = ValueChange(image, opts.volume, offset, oldVals, newVals)
-        
+
         self.__applyChange(change)
         self.__changeMade( change)
 
-        
+
     def startChangeGroup(self):
         """Starts a change group. All subsequent changes will be grouped
         together, for :meth:`undo`/:meth:`redo` purposes, until a call to
@@ -238,9 +238,9 @@ class Editor(actions.ActionProvider):
 
         if not self.__recordChanges:
             return
-        
+
         del self.__doneList[self.__doneIndex + 1:]
-        
+
         self.__inGroup    = True
         self.__doneIndex += 1
         self.__doneList.append([])
@@ -250,24 +250,24 @@ class Editor(actions.ActionProvider):
                                                      self.__doneIndex,
                                                      len(self.__doneList)))
 
-        
+
     def endChangeGroup(self):
         """Ends a change group previously started by a call to
         :meth:`startChangeGroup`.
         """
-        
+
         if not self.__recordChanges:
-            return 
-        
+            return
+
         self.__inGroup = False
         log.debug('{}: ending change group at {} of {}'.format(
             self.__image.name,
             self.__doneIndex,
             len(self.__doneList)))
 
-        
+
     def recordChanges(self, record=True):
-        """Cause this ``Editor`` to either record or ignore any changes that 
+        """Cause this ``Editor`` to either record or ignore any changes that
         are made to the selection or the image data until further notice.
 
         :arg record: If ``True``, changes are recorded. Otherwise they are
@@ -291,7 +291,7 @@ class Editor(actions.ActionProvider):
     @actions.action
     def undo(self):
         """Un-does the most recent change.  Returns a list containing all
-        change objects that were undone - either :class:`ValueChange` or 
+        change objects that were undone - either :class:`ValueChange` or
         :class:`SelectionChange` objects.
         """
         if self.__doneIndex == -1:
@@ -318,12 +318,12 @@ class Editor(actions.ActionProvider):
             self.undo.enabled = False
 
         return change
-        
+
 
     @actions.action
     def redo(self):
         """Re-does the most recent undone change.  Returns a list containing
-        all change objects that were undone - either :class:`ValueChange` or 
+        all change objects that were undone - either :class:`ValueChange` or
         :class:`SelectionChange` objects.
         """
         if self.__doneIndex == len(self.__doneList) - 1:
@@ -332,12 +332,12 @@ class Editor(actions.ActionProvider):
         log.debug('{}: redo change {} of {}'.format(
             self.__image.name,
             self.__doneIndex + 1,
-            len(self.__doneList))) 
+            len(self.__doneList)))
 
         change = self.__doneList[self.__doneIndex + 1]
-        
+
         if not isinstance(change, collections.Sequence):
-            change = [change] 
+            change = [change]
 
         for c in change:
             self.__applyChange(c)
@@ -384,7 +384,7 @@ class Editor(actions.ActionProvider):
 
         The ``clipboard`` is assumed to have been created by the
         :meth:`copySelection` method of another ``Editor`` instance which is
-        managing an ``Image`` that has the same resolution and dimensions as 
+        managing an ``Image`` that has the same resolution and dimensions as
         the ``Image`` managed by this instance.
         """
 
@@ -407,7 +407,7 @@ class Editor(actions.ActionProvider):
             change = SelectionChange(self.__image, offset, old, new)
             self.__changeMade(change)
 
-        
+
     def __changeMade(self, change):
         """Called by the :meth:`fillSelection` and :meth:`__selectionChanged`
         methods, whenever a data/selection change is made.
@@ -425,12 +425,12 @@ class Editor(actions.ActionProvider):
             del self.__doneList[self.__doneIndex + 1:]
             self.__doneList.append(change)
             self.__doneIndex += 1
-            
+
         self.undo.enabled = True
         self.redo.enabled = False
 
         log.debug('{}: new change to {} ({} of {})'.format(
-            self.__image.name, 
+            self.__image.name,
             change.overlay.name,
             self.__doneIndex,
             len(self.__doneList)))
@@ -448,11 +448,11 @@ class Editor(actions.ActionProvider):
 
         if image.is4DImage(): volume = opts.volume
         else:                 volume = None
-        
+
         if isinstance(change, ValueChange):
             log.debug('{}: changing image {} data - offset '
                       '{}, volume {}, size {}'.format(
-                          self.__image.name, 
+                          self.__image.name,
                           change.overlay.name,
                           change.offset,
                           change.volume,
@@ -461,7 +461,7 @@ class Editor(actions.ActionProvider):
             sliceobj = self.__makeSlice(change.offset,
                                         change.newVals.shape,
                                         volume)
-            
+
             image[sliceobj] = change.newVals
 
         elif isinstance(change, SelectionChange):
@@ -470,7 +470,7 @@ class Editor(actions.ActionProvider):
             self.__selection.setSelection(change.newSelection, change.offset)
             if recording: self.__selection.enable(self.__name)
 
-        
+
     def __revertChange(self, change):
         """Called by the :meth:`undo` method. Reverses the change made by the
         given ``change`` object, (either a :class:`ValueChange` or a
@@ -479,14 +479,14 @@ class Editor(actions.ActionProvider):
 
         image = change.overlay
         opts  = self.__displayCtx.getOpts(image)
-        
+
         if image.is4DImage(): volume = opts.volume
-        else:                 volume = None 
+        else:                 volume = None
 
         if isinstance(change, ValueChange):
             log.debug('{}: reverting image {} data change - offset '
                       '{}, volume {}, size {}'.format(
-                          self.__image.name, 
+                          self.__image.name,
                           change.overlay.name,
                           change.offset,
                           change.volume,
@@ -496,7 +496,7 @@ class Editor(actions.ActionProvider):
                                         change.oldVals.shape,
                                         volume)
             image[sliceobj] = change.oldVals
-            
+
         elif isinstance(change, SelectionChange):
             recording = self.__recordSelection
             if recording: self.__selection.disable(self.__name)
@@ -531,7 +531,7 @@ class ValueChange(object):
     and the new values.
     """
 
-    
+
     def __init__(self, overlay, volume, offset, oldVals, newVals):
         """Create a ``ValueChange``.
 
@@ -541,7 +541,7 @@ class ValueChange(object):
         :arg oldVals: A ``numpy`` array containing the old image values.
         :arg newVals: A ``numpy`` array containing the new image values.
         """
-        
+
         self.overlay = overlay
         self.volume  = volume
         self.offset  = offset
@@ -554,16 +554,16 @@ class SelectionChange(object):
     instance. Stores the location, the old selection, and the new selection.
     """
 
-    
+
     def __init__(self, overlay, offset, oldSelection, newSelection):
         """Create a ``SelectionChange``.
-        
+
         :arg overlay:      The :class:`.Image` instance.
         :arg offset:       Location (voxel coordinates) of the change.
         :arg oldSelection: A ``numpy`` array containing the old selection.
         :arg newSelection: A ``numpy`` array containing the new selection.
         """
-        
+
         self.overlay      = overlay
         self.offset       = offset
         self.oldSelection = oldSelection

@@ -26,20 +26,20 @@ class HistogramSeries(dataseries.DataSeries):
     overlay.
     """
 
-    
+
     nbins = props.Int(minval=10, maxval=500, default=100, clamped=True)
     """Number of bins to use in the histogram. This value is overridden
     by the :attr:`autoBin` setting.
     """
 
-    
+
     autoBin = props.Boolean(default=True)
     """If ``True``, the number of bins used for each :class:`HistogramSeries`
     is calculated automatically. Otherwise, :attr:`HistogramSeries.nbins` bins
     are used.
     """
 
-    
+
     ignoreZeros = props.Boolean(default=True)
     """If ``True``, zeros are excluded from the calculated histogram. """
 
@@ -49,9 +49,9 @@ class HistogramSeries(dataseries.DataSeries):
     included in the histogram end bins.
     """
 
-    
+
     volume = props.Int(minval=0, maxval=0, clamped=True)
-    """If the :class:`.Image` overlay associated with this ``HistogramSeries`` 
+    """If the :class:`.Image` overlay associated with this ``HistogramSeries``
     is 4D, this settings specifies the index of the volume that the histogram
     is calculated upon.
 
@@ -59,7 +59,7 @@ class HistogramSeries(dataseries.DataSeries):
               not yet supported.
     """
 
-    
+
     dataRange = props.Bounds(ndims=1)
     """Specifies the range of data which should be included in the histogram.
     See the :attr:`includeOutliers` property.
@@ -74,7 +74,7 @@ class HistogramSeries(dataseries.DataSeries):
     interaction.
     """
 
-    
+
     showOverlayRange = props.Bounds(ndims=1)
     """Data range to display with the :attr:`.showOverlay` mask. """
 
@@ -84,13 +84,13 @@ class HistogramSeries(dataseries.DataSeries):
 
         :arg overlay:     The :class:`.Image` overlay to calculate a histogram
                           for.
-        
+
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        
+
         :arg overlayList: The :class:`.OverlayList` instance.
         """
 
-        log.debug('New HistogramSeries instance for {} '.format(overlay.name)) 
+        log.debug('New HistogramSeries instance for {} '.format(overlay.name))
 
         dataseries.DataSeries.__init__(self, overlay)
 
@@ -121,7 +121,7 @@ class HistogramSeries(dataseries.DataSeries):
                          self.__histPropsChanged)
         self.addListener('autoBin',
                          self.__name,
-                         self.__histPropsChanged) 
+                         self.__histPropsChanged)
         self.addListener('ignoreZeros',
                          self.__name,
                          self.__histPropsChanged)
@@ -129,7 +129,7 @@ class HistogramSeries(dataseries.DataSeries):
                          self.__name,
                          self.__histPropsChanged)
 
-        
+
     def destroy(self):
         """This needs to be called when this ``HistogramSeries`` instance
         is no longer being used.
@@ -156,7 +156,7 @@ class HistogramSeries(dataseries.DataSeries):
 
         return propNames
 
-            
+
     def getData(self):
         """Overrides :meth:`.DataSeries.getData`.
 
@@ -187,7 +187,7 @@ class HistogramSeries(dataseries.DataSeries):
         """
         return self.__nvals
 
-        
+
     def __initProperties(self):
         """Called by :meth:`__init__`. Calculates and caches some things which
         are needed for the histogram calculation.
@@ -204,14 +204,14 @@ class HistogramSeries(dataseries.DataSeries):
                       self.overlay.name))
 
         status.update('Performing initial histogram calculation '
-                      'for overlay {}...'.format(self.overlay.name)) 
+                      'for overlay {}...'.format(self.overlay.name))
 
         def init():
 
             data    = self.overlay[:]
             finData = data[np.isfinite(data)]
             nzData  = finData[finData != 0]
- 
+
             dmin    = finData.min()
             dmax    = finData.max()
             dist    = (dmax - dmin) / 10000.0
@@ -224,7 +224,7 @@ class HistogramSeries(dataseries.DataSeries):
                 self.dataRange.xmax = dmax + dist
                 self.dataRange.xlo  = dmin
                 self.dataRange.xhi  = dmax + dist
-                
+
                 self.nbins = self.__autoBin(nzData, self.dataRange.x)
 
             if not self.overlay.is4DImage():
@@ -243,7 +243,7 @@ class HistogramSeries(dataseries.DataSeries):
 
         async.run(init, onFinish=onFinish)
 
-        
+
     def __volumeChanged(
             self,
             ctx=None,
@@ -262,7 +262,7 @@ class HistogramSeries(dataseries.DataSeries):
 
         All other arguments are ignored, but are passed in when this method is
         called due to a property change (see the
-        :meth:`.HasProperties.addListener` method).        
+        :meth:`.HasProperties.addListener` method).
         """
 
         if self.overlay.is4DImage(): data = self.overlay[..., self.volume]
@@ -326,7 +326,7 @@ class HistogramSeries(dataseries.DataSeries):
         if callHistPropsChanged:
             self.__histPropsChanged()
 
-            
+
     def __histPropsChanged(self, *a):
         """Called internally, and when any histogram settings change.
         Re-calculates the histogram data.
@@ -349,8 +349,8 @@ class HistogramSeries(dataseries.DataSeries):
             else:                    data = self.__clippedNonZeroData
         else:
             if self.includeOutliers: data = self.__finiteData
-            else:                    data = self.__clippedFiniteData 
-        
+            else:                    data = self.__clippedFiniteData
+
         if self.autoBin:
             nbins = self.__autoBin(data, self.dataRange.x)
 
@@ -368,11 +368,11 @@ class HistogramSeries(dataseries.DataSeries):
         if self.includeOutliers:
             bins[ 0] = self.dataRange.xmin
             bins[-1] = self.dataRange.xmax
-            
+
         # Calculate the histogram
         histX    = bins
         histY, _ = np.histogram(data.flat, bins=bins)
-            
+
         self.__xdata = histX
         self.__ydata = histY
         self.__nvals = histY.sum()
@@ -387,7 +387,7 @@ class HistogramSeries(dataseries.DataSeries):
                       self.__nvals,
                       self.nbins))
 
-        
+
     def __autoBin(self, data, dataRange):
         """Calculates the number of bins which should be used for a histogram
         of the given data. The calculation is identical to that implemented

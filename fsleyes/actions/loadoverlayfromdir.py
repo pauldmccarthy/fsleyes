@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 #
-# loadoverlayfromdir.py - Action which allows the user to load overlays 
+# loadoverlayfromdir.py - Action which allows the user to load overlays
 #                         specified with a directory.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`LoadOverlayFromDirAction`, which allows 
+"""This module provides the :class:`LoadOverlayFromDirAction`, which allows
 the user to load overlay files, specified with a directory, into the
 :class:`.OverlayList`.
 """
@@ -33,7 +33,7 @@ class LoadOverlayFromDirAction(base.Action):
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
-        
+
 
     def __openDir(self):
         """Calls the :func:`.loadoverlay.interactiveLoadOverlays` method.
@@ -52,7 +52,7 @@ class LoadOverlayFromDirAction(base.Action):
                 return
 
             self.__overlayList.extend(overlays)
-        
+
             self.__displayCtx.selectedOverlay = \
                 self.__displayCtx.overlayOrder[-1]
 

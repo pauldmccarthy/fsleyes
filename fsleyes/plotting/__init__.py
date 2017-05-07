@@ -17,7 +17,7 @@ from . import powerspectrumseries
 
 DataSeries                 = dataseries         .DataSeries
 TimeSeries                 = timeseries         .TimeSeries
-VoxelTimeSeries            = timeseries         .VoxelTimeSeries 
+VoxelTimeSeries            = timeseries         .VoxelTimeSeries
 FEATTimeSeries             = timeseries         .FEATTimeSeries
 FEATPartialFitTimeSeries   = timeseries         .FEATPartialFitTimeSeries
 FEATEVTimeSeries           = timeseries         .FEATEVTimeSeries

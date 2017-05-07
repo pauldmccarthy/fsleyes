@@ -30,25 +30,25 @@ class ColourMapTexture(texture.Texture):
     colour map by the :meth:`setColourMap` method. Alternately, both can
     be specified with the :meth:`set` method.
 
-    
+
     In OpenGL, textures are indexed with a number between 0.0 and 1.0. So
     in order to map the data range to texture coordinates, an offset/scale
     transformation must be applied to data values. The ``ColourMapTexture``
     calculates this transformation, and makes it available via the
     :meth:`getCoordinateTransform` method.
 
-    
+
     The colour map itself can be specified in a number of ways:
 
       - A ``numpy`` array of size :math:`N\\times 3` or :math:`N\\times 4`,
         containing RGB or RGBA colour values, with colour values in the range
-        ``[0, 1]``. 
+        ``[0, 1]``.
 
       - A function which accepts an array of values in the range ``[0, 1]``,
         and returns an array of size :math:`N\\times 3` or :math:`N\\times 4`,
         specifying the RGB/RGBA colours that correspond to the input values.
 
-    
+
     Some other methods are provided, for configuring the colour map:
 
     .. autosummary::
@@ -67,9 +67,9 @@ class ColourMapTexture(texture.Texture):
 
         :arg name: A unique name for this ``ColourMapTexture``.
         """
-        
+
         texture.Texture.__init__(self, name, 1)
-        
+
         self.__resolution   = None
         self.__cmap         = None
         self.__invert       = False
@@ -91,7 +91,7 @@ class ColourMapTexture(texture.Texture):
         """
         self.set(cmap=cmap)
 
-        
+
     def setResolution(self, res):
         """Set the resolution (number of colours) of this ``ColourMapTexture``.
         This setting is only applicable when the colour map is specified as a
@@ -99,26 +99,26 @@ class ColourMapTexture(texture.Texture):
         """
         self.set(resolution=res)
 
-        
+
     def setAlpha(self, alpha):
         """Set the transparency of all colours in the colour map. This setting
         is only applicable when the colour map is specified as RGB values.
         """
         self.set(alpha=alpha)
 
-        
+
     def setInvert(self, invert):
         """Invert the values in the colour map. """
         self.set(invert=invert)
 
-        
+
     def setInterp(self, interp):
         """Set the interpolation used by this ``ColourMapTexture`` - either
         ``GL_NEAREST`` or ``GL_LINEAR``.
         """
         self.set(interp=interp)
 
-        
+
     def setDisplayRange(self, drange):
         """Set the data range which corresponds to the colours stored in this
         ``ColourMapTexture``. A matrix which transforms values from from this
@@ -127,7 +127,7 @@ class ColourMapTexture(texture.Texture):
         """
         self.set(displayRange=drange)
 
-        
+
     def setBorder(self, border):
         """Set the texture border colour. If ``None``, the edge colours of the
         colour map are used as the border.
@@ -141,7 +141,7 @@ class ColourMapTexture(texture.Texture):
         """
         return self.__coordXform
 
-    
+
     def set(self, **kwargs):
         """Set any parameters on this ``ColourMapTexture``. Valid keyword
         arguments are:
@@ -249,8 +249,8 @@ class ColourMapTexture(texture.Texture):
             border = newBorder
 
         return cmap, drange, interp, border
-            
-    
+
+
     def __refresh(self):
         """Called when any settings of this ``ColourMapTexture`` are changed.
         Re-configures the texture.
@@ -268,7 +268,7 @@ class ColourMapTexture(texture.Texture):
         # than 1.0 respectively.
         if imax == imin: scale = 0.000000000001
         else:            scale = imax - imin
-        
+
         coordXform = np.identity(4, dtype=np.float64)
         coordXform[0, 0] = 1.0 / scale
         coordXform[0, 3] = -imin * coordXform[0, 0]
@@ -296,7 +296,7 @@ class ColourMapTexture(texture.Texture):
             gl.glTexParameteri(gl.GL_TEXTURE_1D,
                                gl.GL_TEXTURE_WRAP_S,
                                gl.GL_CLAMP_TO_EDGE)
- 
+
         gl.glTexParameteri(gl.GL_TEXTURE_1D,
                            gl.GL_TEXTURE_MAG_FILTER,
                            interp)

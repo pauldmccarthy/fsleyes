@@ -73,7 +73,7 @@ and colours the fragment accordingly::
     # Get the voxel value
     TEX voxValue.x, fragment.texcoord[0], texture[0], 3D;
 
-    # Transform the voxel value 
+    # Transform the voxel value
     MAD voxValue, voxValue, voxValXform[0].x, voxValXform[3].x;
 
     # Get the colour that corresponds to the voxel value
@@ -112,7 +112,7 @@ the vertex program as follows::
 
     # Transform the texture coordinates (which are
     # between 0 and 1) into voxel coordinates (which
-    # are within the image voxel dimensions). 
+    # are within the image voxel dimensions).
     MOV voxCoord, {{ attr_texCoord }};
     MUL voxCoord, voxCoord, imageShape;
 
@@ -136,12 +136,12 @@ And the fragment program::
     # offset/scale) which transforms a voxel value
     # from the image texture data range to the
     # colour map texture input coordinate range.
-    PARAM voxValXform[4] = {{ param4_voxValXform }}; 
+    PARAM voxValXform[4] = {{ param4_voxValXform }};
 
     # Get the voxel value
     TEX voxValue.x, {{ varying_texCoord }}, {{ texture_imageTexture }}, 3D;
 
-    # Transform the voxel value 
+    # Transform the voxel value
     MAD voxValue, voxValue, voxValXform[0].x, voxValXform[3].x;
 
     # Get the colour that corresponds to the voxel value
@@ -328,7 +328,7 @@ import jinja2.meta as j2meta
 
 def parseARBP(vertSrc, fragSrc):
     """Parses the given ``ARB_vertex_program`` and ``ARB_fragment_program``
-    code, and returns information about all declared variables. 
+    code, and returns information about all declared variables.
     """
 
     vParams, vTextures, vAttrs, vVaryings = _findDeclaredVariables(vertSrc)
@@ -357,60 +357,60 @@ def fillARBP(vertSrc,
     with the values specified by the various arguments.
 
     :arg vertSrc:       Vertex program source.
-    
+
     :arg fragSrc:       Fragment program source.
-    
-    :arg vertParams:    Dictionary of ``{name : position}`` mappings, 
+
+    :arg vertParams:    Dictionary of ``{name : position}`` mappings,
                         specifying the position indices of all vertex
                         program parameters.
-    
-    :arg vertParamLens: Dictionary ``{name : length}`` mappings, 
+
+    :arg vertParamLens: Dictionary ``{name : length}`` mappings,
                         specifying the lengths of all vertex program
                         parameters.
-    
-    :arg fragParams:    Dictionary of ``{name : position}`` mappings, 
+
+    :arg fragParams:    Dictionary of ``{name : position}`` mappings,
                         specifying the position indices of all fragment
                         program parameters.
-    
-    :arg fragParamLens: Dictionary ``{name : length}`` mappings, 
+
+    :arg fragParamLens: Dictionary ``{name : length}`` mappings,
                         specifying the lengths of all fragment program
                         parameters.
-    
+
     :arg textures:      Dictionary of `{name : textureUnit}`` mappings,
                         specifying the texture unit to use for each texture.
-    
+
     :arg attrs:         Dictionary of `{name : textureUnit}`` mappings,
                         specifying the texture unit to use for each vertex
                         attribute.
     """
-    
+
     vertVars = _findDeclaredVariables(vertSrc)
     fragVars = _findDeclaredVariables(fragSrc)
-    
+
     _checkVariableValidity(
         vertVars, fragVars, vertParams, fragParams, textures, attrs)
 
     for name, number in vertParams.items():
-        
+
         length = vertParamLens[name]
-        
+
         if length == 1: name = 'param_{}'  .format(name)
         else:           name = 'param{}_{}'.format(length, name)
-        
+
         vertParams[name] = _param(number, length)
-        
+
     for name, number in fragParams.items():
 
         length = fragParamLens[name]
-        
+
         if length == 1: name = 'param_{}'  .format(name)
         else:           name = 'param{}_{}'.format(length, name)
 
         fragParams[name] = _param(number, length)
-    
+
     textures = {'texture_{}'.format(n) : _texture(v)
                 for n, v in textures.items()}
-    
+
     attrs = {'attr_{}'.format(n) : _attr(v) for n, v in attrs.items()}
     varyings     = _makeVaryingMap(vertVars[3], fragVars[3])
     vertVaryings = {}
@@ -419,22 +419,22 @@ def fillARBP(vertSrc,
     for name, num in varyings.items():
         vertVaryings['varying_{}'.format(name)] = _varying(num, True)
         fragVaryings['varying_{}'.format(name)] = _varying(num, False)
-        
+
     vertTemplate  = j2.Template(vertSrc)
     fragTemplate  = j2.Template(fragSrc)
-    
+
     vertVars = dict(vertParams  .items() +
                     textures    .items() +
                     attrs       .items() +
                     vertVaryings.items())
     fragVars = dict(fragParams  .items() +
                     textures    .items() +
-                    fragVaryings.items()) 
-    
+                    fragVaryings.items())
+
     vertSrc = vertTemplate.render(**vertVars)
     fragSrc = fragTemplate.render(**fragVars)
 
-    return vertSrc, fragSrc 
+    return vertSrc, fragSrc
 
 
 def _findDeclaredVariables(source):
@@ -459,9 +459,9 @@ def _findDeclaredVariables(source):
     for v in svars:
         for expr, namelist in zip([pExpr,  tExpr,    aExpr, vExpr],
                                   [params, textures, attrs, varyings]):
-            
+
             match = expr.match(v)
-            
+
             if match is None:
                 continue
 
@@ -506,16 +506,16 @@ def _checkVariableValidity(vertVars,
 
     if any([n not in vParams for n in vertParamMap]):
         raise ValueError('Unknown variable in vertex parameter map.')
-    
+
     if any([n not in fParams for n in fragParamMap]):
         raise ValueError('Unknown variable in fragment parameter map.')
-    
+
     if any([n not in fTextures for n in textureMap]):
         raise ValueError('Unknown variable in texture parameter map.')
-    
+
     if any([n not in vAttrs for n in attrMap]):
         raise ValueError('Unknown variable in attribute parameter map.')
-    
+
 
 def _makeVaryingMap(vertVaryings, fragVaryings):
     """Generates texture unit indices for all varying attributes. """
@@ -524,12 +524,12 @@ def _makeVaryingMap(vertVaryings, fragVaryings):
     varyingMap = dict(zip(vertVaryings, indices))
     return varyingMap
 
-                                    
+
 def _param(number, length):
     """Generates ARB assembly for the named vertex/fragment program parameter.
     """
 
-    if length == 1: 
+    if length == 1:
         return 'program.local[{}]'.format(number)
     else:
         bits = ['program.local[{}]'.format(n) for n in range(number,
@@ -539,16 +539,16 @@ def _param(number, length):
 
 
 def _texture(number):
-    """Generates ARB assembly for a texture.""" 
+    """Generates ARB assembly for a texture."""
     return 'texture[{}]'.format(number)
 
 
 def _attr(number):
-    """Generates ARB assembly for a vertex attribute. """ 
+    """Generates ARB assembly for a vertex attribute. """
     return 'vertex.texcoord[{}]'.format(number)
 
 
 def _varying(number, vert):
-    """Generates ARB assembly for a varying attribute. """ 
+    """Generates ARB assembly for a varying attribute. """
     if vert: return 'result.texcoord[{}]'  .format(number)
     else:    return 'fragment.texcoord[{}]'.format(number)

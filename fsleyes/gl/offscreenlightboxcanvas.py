@@ -19,7 +19,7 @@ class OffScreenLightBoxCanvas(lightboxcanvas.LightBoxCanvas,
     a :class:`.RenderTexture` as its target, for static off-screen Open GL
     rendering.
     """
-    
+
     def __init__(self,
                  overlayList,
                  displayCtx,
@@ -27,9 +27,9 @@ class OffScreenLightBoxCanvas(lightboxcanvas.LightBoxCanvas,
                  *args,
                  **kwargs):
         """Create an ``OffScreenLightBoxCanvas``.
-        
-        See the :class:`.SliceCanvas` and :class:`.OffscreenCanvasTarget` 
-        classes for details on the other arguments.         
+
+        See the :class:`.SliceCanvas` and :class:`.OffscreenCanvasTarget`
+        classes for details on the other arguments.
         """
 
         fslgl.OffScreenCanvasTarget  .__init__(self, *args, **kwargs)

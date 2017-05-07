@@ -106,16 +106,16 @@ def updateVertices(self):
     instance exists and is up to date (see the
     :meth:`.GLLineVertices.calculateHash` method), this function does nothing.
     """
-    
+
     if self.lineVertices is None:
         self.lineVertices = glresources.get(
-            self._vertexResourceName, gllinevector.GLLineVertices, self) 
+            self._vertexResourceName, gllinevector.GLLineVertices, self)
 
     if hash(self.lineVertices) != self.lineVertices.calculateHash(self):
 
         log.debug('Re-generating line vertices '
                   'for {}'.format(self.vectorImage))
-        
+
         self.lineVertices.refresh(self)
         glresources.set(self._vertexResourceName,
                         self.lineVertices,
@@ -137,14 +137,14 @@ def updateShaderState(self):
     offset   = [0.5, 0.5, 0.5, 0.0]
 
     self.shader.load()
- 
+
     self.shader.setVertParam('invImageShape', invShape)
     self.shader.setVertParam('voxelOffsets',  offset)
 
     self.shader.unload()
 
     return True
-    
+
 
 def preDraw(self):
     """Initialises the GL state ready for drawing the :class:`.GLLineVector`.
@@ -171,12 +171,12 @@ def draw(self, zpos, xform=None, bbox=None):
 
     if xform is None: xform = v2d
     else:             xform = transform.concat(xform, v2d)
- 
+
     gl.glPushMatrix()
     gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
 
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-    
+
     gl.glLineWidth(opts.lineWidth)
     gl.glDrawArrays(gl.GL_LINES, 0, vertices.size // 3)
 
@@ -190,6 +190,6 @@ def drawAll(self, zposes, xforms):
 
 
 def postDraw(self):
-    """Clears the GL state after drawing the :class:`.GLLineVector`. """    
+    """Clears the GL state after drawing the :class:`.GLLineVector`. """
     self.shader.unload()
     gl.glDisableClientState(gl.GL_VERTEX_ARRAY)

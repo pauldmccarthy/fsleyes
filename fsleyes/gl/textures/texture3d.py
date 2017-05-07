@@ -43,17 +43,17 @@ GL_TYPE_NAMES = {
     gl.GL_LUMINANCE_ALPHA           : 'GL_LUMINANCE_ALPHA',
     gl.GL_RGB                       : 'GL_RGB',
     gl.GL_RGBA                      : 'GL_RGBA',
-    
+
     gl.GL_LUMINANCE8                : 'GL_LUMINANCE8',
     gl.GL_LUMINANCE16               : 'GL_LUMINANCE16',
     arbtf.GL_LUMINANCE32F_ARB       : 'GL_LUMINANCE32F',
     gl.GL_R32F                      : 'GL_R32F',
-    
+
     gl.GL_LUMINANCE8_ALPHA8         : 'GL_LUMINANCE8_ALPHA8',
     gl.GL_LUMINANCE16_ALPHA16       : 'GL_LUMINANCE16_ALPHA16',
     arbtf.GL_LUMINANCE_ALPHA32F_ARB : 'GL_LUMINANCE_ALPHA_32F',
     gl.GL_RG32F                     : 'GL_RG32F',
-    
+
     gl.GL_RGB8                      : 'GL_RGB8',
     gl.GL_RGB16                     : 'GL_RGB16',
     gl.GL_RGB32F                    : 'GL_RGB32F' ,
@@ -85,7 +85,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
 
     .. autosummary::
-       :nosignatures: 
+       :nosignatures:
 
        ready
        textureShape
@@ -105,19 +105,19 @@ class Texture3D(texture.Texture, notifier.Notifier):
     be used.
     """
 
-    
+
     def __init__(self,
-                 name,                 
+                 name,
                  nvals=1,
                  notify=True,
                  threaded=None,
                  **kwargs):
         """Create a ``Texture3D``.
-        
+
         :arg name:      A unique name for the texture.
-        
-        :arg nvals:     Number of values per voxel. 
- 
+
+        :arg nvals:     Number of values per voxel.
+
         :arg notify:    Passed to the initial call to :meth:`refresh`.
 
         :arg threaded: If ``True``, the texture data will be prepared on a
@@ -125,14 +125,14 @@ class Texture3D(texture.Texture, notifier.Notifier):
                         :meth:`refresh`). If ``False``, the texture data is
                         prepared on the calling thread, and the
                         :meth:`refresh` call will block until it has been
-                        prepared. 
+                        prepared.
 
 
         All other keyword arguments are passed through to the :meth:`set`
         method, and thus used as initial texture settings.
 
 
-        .. note:: The default value of the ``threaded`` parameter is set to 
+        .. note:: The default value of the ``threaded`` parameter is set to
                   the value of :attr:`.fsl.utils.platform.Platform.haveGui`.
         """
 
@@ -141,7 +141,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         texture.Texture.__init__(self, name, 3)
 
-        self.__name       = '{}_{}'.format(type(self).__name__, id(self)) 
+        self.__name       = '{}_{}'.format(type(self).__name__, id(self))
         self.__nvals      = nvals
         self.__threaded   = threaded
 
@@ -160,7 +160,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         # These attributes are modified
         # in the refresh method (which is
-        # called via the set method below). 
+        # called via the set method below).
         self.__ready          = True
 
         # These attributes are set by the
@@ -190,7 +190,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         self.set(refresh=False, **kwargs)
 
         callback = kwargs.get('callback', None)
-        
+
         self.__refresh(notify=notify, callback=callback)
 
 
@@ -217,15 +217,15 @@ class Texture3D(texture.Texture, notifier.Notifier):
         :arg nvals: Number of values per voxel
 
         :returns: A tuple containing:
-        
+
                     - ``True`` if floating point textures are supported,
                       ``False`` otherwise
-        
+
                     - The base texture format to use (``None`` if floating
                       point textures are not supported)
-        
-                    - The internal texture format to use  (``None`` if 
-                      floating point textures are not supported) 
+
+                    - The internal texture format to use  (``None`` if
+                      floating point textures are not supported)
         """
 
         # We need the texture_float extension. The
@@ -237,7 +237,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         if not floatSupported:
             return False, None, None
-        
+
         if rgSupported:
             if   nvals == 1: baseFmt = gl.GL_RED
             elif nvals == 2: baseFmt = gl.GL_RG
@@ -250,14 +250,14 @@ class Texture3D(texture.Texture, notifier.Notifier):
             elif nvals == 4: intFmt  = gl.GL_RGBA32F
 
             return True, baseFmt, intFmt
-        
+
         else:
 
             if   nvals == 1: baseFmt = gl.GL_LUMINANCE
             elif nvals == 2: baseFmt = gl.GL_LUMINANCE_ALPHA
             elif nvals == 3: baseFmt = gl.GL_RGB
             elif nvals == 4: baseFmt = gl.GL_RGBA
-            
+
             if   nvals == 1: intFmt  = arbtf.GL_LUMINANCE32F_ARB
             elif nvals == 2: intFmt  = arbtf.GL_LUMINANCE_ALPHA32F_ARB
             elif nvals == 3: intFmt  = gl.GL_RGB32F
@@ -277,7 +277,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         :arg nvals:     Number of values per voxel
 
         :returns: A tuple containing:
-        
+
                     - The GL data type
                     - The base texture format
                     - The internal texture format
@@ -291,8 +291,8 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         # Note: Throughout this method, it is assumed
         #       that if the data type is not supported,
-        #       then the normalise flag will have been 
-        #       set to True. An error will occur if 
+        #       then the normalise flag will have been
+        #       set to True. An error will occur if
         #       this is not the case (which would
         #       indicate that the logic in the set()
         #       method is broken).
@@ -311,7 +311,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         elif nvals == 2:              texFmt = gl.GL_LUMINANCE_ALPHA
         elif nvals == 3:              texFmt = gl.GL_RGB
         elif nvals == 4:              texFmt = gl.GL_RGBA
-        
+
         # Internal texture format
         if nvals == 1:
             if   normalise:          intFmt = gl.GL_LUMINANCE16
@@ -336,7 +336,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
             elif dtype == np.uint16: intFmt = gl.GL_RGB16
             elif dtype == np.int16:  intFmt = gl.GL_RGB16
             elif floatTextures:      intFmt = fIntFmt
-            
+
         elif nvals == 4:
             if   normalise:          intFmt = gl.GL_RGBA16
             elif dtype == np.uint8:  intFmt = gl.GL_RGBA8
@@ -344,10 +344,10 @@ class Texture3D(texture.Texture, notifier.Notifier):
             elif dtype == np.uint16: intFmt = gl.GL_RGBA16
             elif dtype == np.int16:  intFmt = gl.GL_RGBA16
             elif floatTextures:      intFmt = fIntFmt
- 
+
         return texDtype, texFmt, intFmt
-    
-        
+
+
     def ready(self):
         """Returns ``True`` if this ``Texture3D`` is ready to be used,
         ``False`` otherwise.
@@ -361,12 +361,12 @@ class Texture3D(texture.Texture, notifier.Notifier):
         """
         self.set(interp=interp)
 
-        
+
     def setData(self, data):
         """Sets the texture data - assumed to be a ``numpy`` array. """
-        self.set(data=data) 
+        self.set(data=data)
 
-        
+
     def setPrefilter(self, prefilter):
         """Sets the prefilter function - texture data is passed through
         this function before being uploaded to the GPU.
@@ -376,7 +376,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         """
         self.set(prefilter=prefilter)
 
-        
+
     def setPrefilterRange(self, prefilterRange):
         """Sets the prefilter range function - if the ``prefilter`` function
         changes the data range, this function must be provided. It is passed
@@ -384,9 +384,9 @@ class Texture3D(texture.Texture, notifier.Notifier):
         these values so that they reflect the adjusted range of the data that
         was passed to the ``prefilter`` function.
         """
-        self.set(prefilterRange=prefilterRange) 
+        self.set(prefilterRange=prefilterRange)
 
-        
+
     def setResolution(self, resolution):
         """Sets the texture data resolution - this value is passed to the
         :func:`.routines.subsample` function, in the
@@ -403,9 +403,9 @@ class Texture3D(texture.Texture, notifier.Notifier):
         """
         self.set(scales=scales)
 
-        
+
     def setNormalise(self, normalise):
-        """Enable/disable normalisation. 
+        """Enable/disable normalisation.
 
         If ``normalise=True``, the data is normalised to lie in the range
         ``[0, 1]`` (or normalised to the full range, if being stored as
@@ -415,8 +415,8 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         Set to ``False`` to disable normalisation.
 
-        .. note:: If the data is not of a type that can be stored natively 
-                  as a texture, the data is automatically normalised, 
+        .. note:: If the data is not of a type that can be stored natively
+                  as a texture, the data is automatically normalised,
                   regardless of the value specified here.
         """
         self.set(normalise=normalise)
@@ -436,7 +436,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         If ``None``, the data minimum/maximum are calculated and used.
         """
-        self.set(normaliseRange=normaliseRange) 
+        self.set(normaliseRange=normaliseRange)
 
 
     @property
@@ -446,19 +446,19 @@ class Texture3D(texture.Texture, notifier.Notifier):
         """
         return self.__voxValXform
 
-    
+
     @property
     def invVoxValXform(self):
         """Return a transformation matrix that can be used to transform
         values in the original data range to values as read from the texture.
-        """ 
+        """
         return self.__invVoxValXform
 
-    
+
     @property
     def textureShape(self):
         """Return a tuple containing the texture data shape.
-        """ 
+        """
         return self.__textureShape
 
 
@@ -472,7 +472,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         possible. This method was added as a hacky workaround to allow
         small parts of the image texture to be quickly updated.
 
-        .. note:: Hopefully, at some stage, I will refactor the ``Texture3D`` 
+        .. note:: Hopefully, at some stage, I will refactor the ``Texture3D``
                   class to be more flexible. Therefore, this method might
                   disappear in the future.
         """
@@ -517,7 +517,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         ``normalise``      See :meth:`setNormalise.`
         ``normaliseRange`` See :meth:`setNormaliseRange`.
         ``refresh``        If ``True`` (the default), the :meth:`refresh`
-                           function is called (but only if a setting has 
+                           function is called (but only if a setting has
                            changed).
         ``callback``       Optional function which will be called (via
                            :func:`.async.idle`) when the texture has been
@@ -571,7 +571,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
             # and we don't have support for floating
             # point textures, the data must be
             # normalised. See __determineTextureType
-            # and __prepareTextureData 
+            # and __prepareTextureData
             self.__normalise = self.__normalise or \
                                (not self.canUseFloatTextures()[0] and
                                 (data.dtype not in (np.uint8,
@@ -581,7 +581,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
             # If the caller has not provided
             # a normalisation range, we have
-            # to calculate it. 
+            # to calculate it.
             if self.__normalise and self.__normaliseRange is None:
 
                 self.__normaliseRange = np.nanmin(data), np.nanmax(data)
@@ -601,42 +601,42 @@ class Texture3D(texture.Texture, notifier.Notifier):
             self.refresh(refreshData=refreshData,
                          notify=notify,
                          callback=callback)
-            
+
         return True
 
-        
+
     def refresh(self, *args, **kwargs):
-        """(Re-)configures the OpenGL texture. 
+        """(Re-)configures the OpenGL texture.
 
         .. note:: This method is a wrapper around the :meth:`__refresh` method,
                   which does the real work, and which is not intended to be
                   called from outside the ``Texture3D`` class.
         """
         self.__refresh(*args, **kwargs)
-        
+
 
     def __refresh(self, *args, **kwargs):
         """(Re-)configures the OpenGL texture.
-        
+
         :arg refreshData:  If ``True`` (the default), the texture data is
                            refreshed.
 
         :arg notify:       If ``True`` (the default), a notification is
                            triggered via the :class:`.Notifier` base-class,
-                           when this ``Texture3D`` has been refreshed, and 
+                           when this ``Texture3D`` has been refreshed, and
                            is ready to use. Otherwise, the notification is
                            suppressed.
 
         :arg callback:     Optional function which will be called (via
                            :func:`.async.idle`) when the texture has been
                            refreshed. Only called if ``refresh`` is
-                           ``True``, and a setting has changed. 
+                           ``True``, and a setting has changed.
 
         This method sets an attribute ``__textureShape`` on this ``Texture3D``
         instance, containing the shape of the texture data.
 
         .. note:: The texture data is generated on a separate thread, using
-                  the :func:`.async.run` function. 
+                  the :func:`.async.run` function.
         """
 
         # Don't bother if data
@@ -713,7 +713,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
             interp = self.__interp
             if interp is None:
                 interp = gl.GL_NEAREST
-                
+
             gl.glTexParameteri(gl.GL_TEXTURE_3D,
                                gl.GL_TEXTURE_MAG_FILTER,
                                interp)
@@ -770,10 +770,10 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
             if not bound:
                 self.unbindTexture()
-                
+
             log.debug('{}({}) is ready to use'.format(
                 type(self).__name__, self.getTextureName()))
-            
+
             self.__ready = True
 
             if notify:
@@ -783,7 +783,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
                 callback()
 
 
-        # Wrap the above functions in a report 
+        # Wrap the above functions in a report
         # decorator in case an error occurs
         title = strings.messages[self, 'dataError']
         msg   = strings.messages[self, 'dataError']
@@ -791,7 +791,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         configTexture = status.reportErrorDecorator(title, msg)(configTexture)
 
         if self.__threaded:
-            
+
             # Don't queue the texture
             # refresh task twice
             if not self.__taskThread.isQueued(self.__taskName):
@@ -803,7 +803,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
             #      but a callback function has been
             #      specified, should you queue the
             #      callback function?
-            
+
         else:
             genData()
             configTexture()
@@ -818,9 +818,9 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
 
         The data can be stored as a GL texture as-is if:
-        
+
           - it is of type ``uint8`` or ``uint16``
-        
+
           - it is of type ``float32``, *and* this GL environment has support
             for floating point textures. Support for floating point textures
             is determined by testing for the availability of the
@@ -847,7 +847,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
                   ``ARB_texture_float`` extension. If this extension is not
                   available, we have no choice but to normalise the data.
 
-        
+
         This method sets the following attributes on this ``Texture3D``
         instance:
 
@@ -898,15 +898,15 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         ==================== =============================================
         ``__preparedata``    A ``numpy`` array containing the image data,
-                             ready to be copied to the GPU. 
+                             ready to be copied to the GPU.
 
-        ``__voxValXform``    An affine transformation matrix which encodes 
-                             an offset and a scale, which may be used to 
-                             transform the texture data from the range 
+        ``__voxValXform``    An affine transformation matrix which encodes
+                             an offset and a scale, which may be used to
+                             transform the texture data from the range
                              ``[0.0, 1.0]`` to its raw data range.
 
         ``__invVoxValXform`` Inverse of ``voxValXform``.
-        ==================== ============================================= 
+        ==================== =============================================
         """
 
         data, voxValXform, invVoxValXform = self.__realPrepareTextureData(
@@ -916,22 +916,22 @@ class Texture3D(texture.Texture, notifier.Notifier):
         self.__voxValXform    = voxValXform
         self.__invVoxValXform = invVoxValXform
 
-    
+
     def __realPrepareTextureData(self, data):
         """This method prepares and returns the given ``data``, ready to be
         used as GL texture data.
-        
+
         This process potentially involves:
 
           - Resampling to a different resolution (see the
-            :func:`.routines.subsample` function). 
-        
+            :func:`.routines.subsample` function).
+
           - Pre-filtering (see the ``prefilter`` parameter to
             :meth:`__init__`).
-        
+
           - Normalising (if the ``normalise`` parameter to :meth:`__init__`
             was ``True``, or if the data type cannot be used as-is).
-        
+
           - Casting to a different data type (if the data type cannot be used
             as-is).
 
@@ -939,7 +939,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
                     - A ``numpy`` array containing the image data, ready to be
                        copied to the GPU.
-        
+
                     - An affine transformation matrix which encodes an offset
                       and a scale, which may be used to transform the texture
                       data from the range ``[0.0, 1.0]`` to its raw data
@@ -1006,7 +1006,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         if resolution is not None:
             data = glroutines.subsample(data, resolution, pixdim=scales)[0]
-        
+
         if prefilter is not None:
             data = prefilter(data)
 

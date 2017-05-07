@@ -8,13 +8,13 @@
 classes. The ``GLVectorBase`` class encapsulate the logic for rendering
 overlays which contain directional data, and the ``GLVector`` class
 specifically conatins logic for displaying ``X*Y*Z*3`` :class:`.Image`
-overlays. 
+overlays.
 """
 
 
 import numpy               as np
 import OpenGL.GL           as gl
- 
+
 import fsl.data.image      as fslimage
 import fsl.utils.async     as async
 import fsl.utils.transform as transform
@@ -57,7 +57,7 @@ class GLVectorBase(globject.GLImageObject):
        and colour map are respectively specified by the
        :attr:`.VectorOpts.colourImage` and :attr:`.VectorOpts.cmap` properties.
 
-    
+
     In either case, the brightness of each vector colour may be modulated by
     another image, specified by the :attr:`.VectorOpts.modulateImage`
     property.  This modulation image is stored as a 3D single-channel
@@ -70,12 +70,12 @@ class GLVectorBase(globject.GLImageObject):
     the clipping thresholds specified by the :attr:`.VectorOpts.clippingRange`
     property.
 
-    
+
     *Textures*
 
     The ``GLVectorBase`` class configures its textures in the following manner:
 
-    =================== ================== 
+    =================== ==================
     ``modulateTexture`` ``gl.GL_TEXTURE0``
     ``clipTexture``     ``gl.GL_TEXTURE1``
     ``colourTexture``   ``gl.GL_TEXTURE2``
@@ -83,14 +83,14 @@ class GLVectorBase(globject.GLImageObject):
     =================== ==================
     """
 
-    
+
     def __init__(self, overlay, display, xax, yax, init=None, preinit=None):
         """Create a ``GLVectorBase`` object bound to the given overlay and
         display.
 
         Initialises the OpenGL data required to render the given vector
         overlay. This method does the following:
-        
+
           - Creates the modulate, clipping and colour image textures.
 
           - Adds listeners to the :class:`.Display` and :class:`.VectorOpts`
@@ -98,13 +98,13 @@ class GLVectorBase(globject.GLImageObject):
             necessary.
 
         :arg overlay:        A :class:`.Nifti` object.
-        
+
         :arg display:        A :class:`.Display` object which describes how the
                              overlay is to be displayed.
 
         :arg xax:            Initial display X axis
 
-        :arg yax:            Initial display Y axis        
+        :arg yax:            Initial display Y axis
 
         :arg init:           An optional function to be called when all of the
                              :class:`.ImageTexture` instances associated with
@@ -136,10 +136,10 @@ class GLVectorBase(globject.GLImageObject):
         # Make sure we are registered with the
         # auxillary images if any of them are set.
         opts = self.displayOpts
-        
+
         if opts.colourImage   is not None: self.registerAuxImage('colour')
         if opts.modulateImage is not None: self.registerAuxImage('modulate')
-        if opts.clipImage     is not None: self.registerAuxImage('clip') 
+        if opts.clipImage     is not None: self.registerAuxImage('clip')
 
         self.addListeners()
 
@@ -158,9 +158,9 @@ class GLVectorBase(globject.GLImageObject):
 
         async.idleWhen(initWrapper, self.texturesReady)
 
-        
+
     def destroy(self):
-        """Must be called when this ``GLVectorBase`` is no longer needed. 
+        """Must be called when this ``GLVectorBase`` is no longer needed.
         Deletes the GL textures, and deregisters the listeners configured in
         :meth:`__init__`.
         """
@@ -204,9 +204,9 @@ class GLVectorBase(globject.GLImageObject):
         """
         return (self.modulateTexture is not None and
                 self.clipTexture     is not None and
-                self.colourTexture   is not None and 
-                self.modulateTexture.ready()     and 
-                self.clipTexture    .ready()     and 
+                self.colourTexture   is not None and
+                self.modulateTexture.ready()     and
+                self.clipTexture    .ready()     and
                 self.colourTexture  .ready())
 
 
@@ -272,9 +272,9 @@ class GLVectorBase(globject.GLImageObject):
         :class:`.GLRGBVector` and :class:`.GLLineVector` classes), and must
         compile the vertex/fragment shaders used to render this
         ``GLVectorBase``.
-        .""" 
+        ."""
         raise NotImplementedError('compileShaders must be implemented by '
-                                  '{} subclasses'.format(type(self).__name__)) 
+                                  '{} subclasses'.format(type(self).__name__))
 
 
     def updateShaderState(self):
@@ -302,8 +302,8 @@ class GLVectorBase(globject.GLImageObject):
         async.idleWhen(func,
                        self.ready,
                        name=self.name,
-                       skipIfQueued=True) 
-        
+                       skipIfQueued=True)
+
 
     def registerAuxImage(self, which):
         """Called when the :attr:`.VectorOpts.modulateImage`,
@@ -317,7 +317,7 @@ class GLVectorBase(globject.GLImageObject):
         imageAttr = '{}Image'  .format(which)
         optsAttr  = '{}Opts'   .format(which)
         texAttr   = '{}Texture'.format(which)
-        
+
         image = getattr(self.displayOpts, imageAttr)
         tex   = getattr(self,             texAttr)
 
@@ -326,7 +326,7 @@ class GLVectorBase(globject.GLImageObject):
 
         setattr(self, optsAttr,  None)
         setattr(self, imageAttr, image)
-        
+
         if image is None:
             return
 
@@ -345,9 +345,9 @@ class GLVectorBase(globject.GLImageObject):
                          self.name,
                          volumeChange,
                          overwrite=True,
-                         weak=False) 
+                         weak=False)
 
-    
+
     def deregisterAuxImage(self, which):
         """Called when the :attr:`.VectorOpts.modulateImage`,
         :attr:`.VectorOpts.clipImage` or :attr:`.VectorOpts.colourImage`
@@ -365,8 +365,8 @@ class GLVectorBase(globject.GLImageObject):
 
         setattr(self, imageAttr, None)
         setattr(self, optsAttr,  None)
- 
-            
+
+
     def refreshAuxTexture(self, which, interp=gl.GL_NEAREST):
         """Called when the :attr`.VectorOpts.modulateImage`,
         :attr`.VectorOpts.clipImage`, or :attr`.VectorOpts.colourImage`
@@ -397,7 +397,7 @@ class GLVectorBase(globject.GLImageObject):
             textureData[:] = 255
             image          = fslimage.Image(textureData)
             norm           = None
-            
+
         else:
             norm = image.dataRange
 
@@ -408,7 +408,7 @@ class GLVectorBase(globject.GLImageObject):
             unsynced = (opts.getParent() is None or
                         not opts.isSyncedToParent('volume'))
 
-            # TODO If unsynced, this GLVectorBase needs to 
+            # TODO If unsynced, this GLVectorBase needs to
             # update the mod/clip/colour textures whenever
             # their volume property changes.
             # Right?
@@ -417,7 +417,7 @@ class GLVectorBase(globject.GLImageObject):
 
         if opts is not None: volume = opts.volume
         else:                volume = 0
- 
+
         tex = glresources.get(
             texName,
             textures.ImageTexture,
@@ -427,9 +427,9 @@ class GLVectorBase(globject.GLImageObject):
             volume=volume,
             notify=False,
             interp=interp)
-        
+
         tex.register(self.name, self.__textureChanged)
-        
+
         setattr(self, texAttr, tex)
 
 
@@ -449,12 +449,12 @@ class GLVectorBase(globject.GLImageObject):
 
         else:
             dmin, dmax = 0.0, 1.0
-            
+
         dmin, dmax = fslcm.briconToDisplayRange(
             (dmin, dmax),
             display.brightness / 100.0,
             display.contrast   / 100.0)
-            
+
         self.cmapTexture.set(cmap=opts.cmap,
                              alpha=display.alpha / 100.0,
                              displayRange=(dmin, dmax))
@@ -466,9 +466,9 @@ class GLVectorBase(globject.GLImageObject):
 
         Returns:
           - a ``numpy`` array of size ``(3, 4)`` containing the
-            RGBA colours that correspond to the ``x``, ``y``, and ``z`` 
+            RGBA colours that correspond to the ``x``, ``y``, and ``z``
             vector directions.
-        
+
           - A ``numpy`` array of shape ``(4, 4)`` which encodes a scale
             and offset to be applied to the vector value before it
             is combined with the colours, encoding the current
@@ -477,9 +477,9 @@ class GLVectorBase(globject.GLImageObject):
         display = self.display
         opts    = self.displayOpts
         bri     = display.brightness / 100.0
-        con     = display.contrast   / 100.0 
-        alpha   = display.alpha      / 100.0 
-        
+        con     = display.contrast   / 100.0
+        alpha   = display.alpha      / 100.0
+
         colours       = np.array([opts.xColour, opts.yColour, opts.zColour])
         colours[:, 3] = alpha
 
@@ -499,18 +499,18 @@ class GLVectorBase(globject.GLImageObject):
 
         if hi == lo: scale = 0.0000000000001
         else:        scale = hi - lo
-        
+
         xform = np.identity(4, dtype=np.float32)
         xform[0, 0] = 1.0 / scale
         xform[0, 3] = -lo * xform[0, 0]
-        
+
         return colours, xform
 
 
     def getClippingRange(self):
         """Returns the :attr:`clippingRange`, suitable for use in the fragment
         shader. The returned values are transformed into the clip image
-        texture value range, so the fragment shader can compare texture 
+        texture value range, so the fragment shader can compare texture
         values directly to it.
         """
 
@@ -518,7 +518,7 @@ class GLVectorBase(globject.GLImageObject):
 
         clipLow, clipHigh = opts.clippingRange
         xform             = self.clipTexture.invVoxValXform
-        
+
         if opts.clipImage is not None:
             clipLow  = clipLow  * xform[0, 0] + xform[0, 3]
             clipHigh = clipHigh * xform[0, 0] + xform[0, 3]
@@ -526,7 +526,7 @@ class GLVectorBase(globject.GLImageObject):
             clipLow  = -0.1
             clipHigh =  1.1
 
-        return clipLow, clipHigh 
+        return clipLow, clipHigh
 
 
     def getModulateRange(self):
@@ -534,16 +534,16 @@ class GLVectorBase(globject.GLImageObject):
         shader. The returned values are transformed into the modulate image
         texture value range, so the fragment shader can compare texture values
         directly to it.
-        """ 
+        """
 
         opts = self.displayOpts
 
         modLow, modHigh = opts.modulateRange
         xform           = self.modulateTexture.invVoxValXform
-        
+
         if opts.modulateImage is not None:
             modLow  = modLow  * xform[0, 0] + xform[0, 3]
-            modHigh = modHigh * xform[0, 0] + xform[0, 3] 
+            modHigh = modHigh * xform[0, 0] + xform[0, 3]
         else:
             modLow  = 0
             modHigh = 1
@@ -565,22 +565,22 @@ class GLVectorBase(globject.GLImageObject):
         else:
             return transform.concat(
                 auxOpts.getTransform('display', 'texture'),
-                opts   .getTransform('texture', 'display')) 
+                opts   .getTransform('texture', 'display'))
 
-        
+
     def preDraw(self):
         """Must be called by subclass implementations.
 
         Ensures that all of the textures managed by this ``GLVectorBase`` are
         bound to their corresponding texture units.
         """
-        
+
         self.modulateTexture.bindTexture(gl.GL_TEXTURE0)
         self.clipTexture    .bindTexture(gl.GL_TEXTURE1)
         self.colourTexture  .bindTexture(gl.GL_TEXTURE2)
         self.cmapTexture    .bindTexture(gl.GL_TEXTURE3)
 
-        
+
     def postDraw(self):
         """Must be called by subclass implementations.
 
@@ -613,7 +613,7 @@ class GLVectorBase(globject.GLImageObject):
             self.compileShaders()
             self.refreshColourMapTexture()
             self.asyncUpdateShaderState(alwaysNotify=True)
-                
+
         self.refreshAuxTexture('colour')
         async.idleWhen(onRefresh, self.texturesReady)
 
@@ -621,17 +621,17 @@ class GLVectorBase(globject.GLImageObject):
     def __modImageChanged(self, *a):
         """Called when the :attr:`.VectorOpts.modulateImage` changes.
         Registers with the new image, and refreshes textures as needed.
-        """ 
+        """
         self.deregisterAuxImage('modulate')
         self.registerAuxImage(  'modulate')
         self.refreshAuxTexture( 'modulate')
         self.asyncUpdateShaderState(alwaysNotify=True)
 
-        
+
     def __clipImageChanged(self, *a):
         """Called when the :attr:`.VectorOpts.clipImage` changes.
         Registers with the new image, and refreshes textures as needed.
-        """ 
+        """
         self.deregisterAuxImage('clip')
         self.registerAuxImage(  'clip')
         self.refreshAuxTexture( 'clip')
@@ -662,7 +662,7 @@ class GLVector(GLVectorBase):
     This vector image is stored on the GPU as a 3D RGB :class:`.ImageTexture`,
     where the ``R`` channel contains the ``x`` vector values, the ``G``
     channel the ``y`` values, and the ``B`` channel the ``z`` values.
-    
+
     This texture is bound to texture unit  ``gl.GL_TEXTURE4`` in the
     :meth:`preDraw` method.
     """
@@ -672,7 +672,7 @@ class GLVector(GLVectorBase):
         optional, but if provided, must be passed as keyword arguments. All
         other arguments are passed through to :meth:`GLVectorBase.__init__`.
 
-        
+
         :arg vectorImage:    If ``None``, the ``image`` is assumed to be a 4D
                              :class:`.Image` instance which contains the
                              vector data. If this is not the case, the
@@ -682,14 +682,14 @@ class GLVector(GLVectorBase):
 
         :arg prefilter:      An optional function which filters the data before
                              it is stored as a 3D texture. See
-                             :class:`.Texture3D`. Regardless of whether this 
+                             :class:`.Texture3D`. Regardless of whether this
                              function is provided, the data is always
                              transposed so that the fourth dimension is the
                              fastest changing, before being transferred to the
                              GPU.
 
         :arg prefilterRange: If the provided ``prefilter`` function will cause
-                             the range of the data to change, this function 
+                             the range of the data to change, this function
                              must be provided, and must, given the original
                              data range, return a suitably adjusted adjust data
                              range.
@@ -712,19 +712,19 @@ class GLVector(GLVectorBase):
         self.prefilter       = prefilter
         self.prefilterRange  = prefilterRange
 
-        # Using the preinit hook to overcome a slight 
+        # Using the preinit hook to overcome a slight
         # chicken-and-egg problem. We need to create
         # the image texture before shaders are created
         # (which are done via the init hook, as defined
         # in sub-classes, e.g. GLRGBVector). But we
         # need access to the display/displayopts objects
         # in order to configure the image texture.
-        # So pre-init ensures that the GLObject refs 
+        # So pre-init ensures that the GLObject refs
         # (display/displayOpts) are set up, then the
         # image texture is refreshed, then the init hook
         # is called.
         preinit = kwargs.pop('preinit', None)
-        
+
         def preinitWrapper():
             self.refreshImageTexture()
             if preinit is not None:
@@ -756,7 +756,7 @@ class GLVector(GLVectorBase):
         ``False`` otherwise.
         """
         return (self.imageTexture is not None and
-                self.imageTexture.ready()     and 
+                self.imageTexture.ready()     and
                 GLVectorBase.texturesReady(self))
 
 
@@ -765,7 +765,7 @@ class GLVector(GLVectorBase):
         needs to be updated. (Re-)creates the ``ImageTexture``, using the
         :mod:`.resources` module so that the texture can be shared by other
         users.
-        
+
         :arg interp: Interpolation method (``GL_NEAREST`` or ``GL_LINEAR``).
                      Used by sub-class implementations (see
                      :class:`.GLRGBVector`).
@@ -775,16 +775,16 @@ class GLVector(GLVectorBase):
         prefilterRange = self.prefilterRange
         vecImage       = self.vectorImage
         texName        = '{}_{}'.format(type(self).__name__, id(vecImage))
-        
+
         if self.imageTexture is not None:
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.getTextureName())
 
-        # the fourth dimension (the vector directions) 
+        # the fourth dimension (the vector directions)
         # must be the fastest changing in the texture data
         def realPrefilter(d):
             return prefilter(d.transpose((3, 0, 1, 2)))
-        
+
         self.imageTexture = glresources.get(
             texName,
             textures.ImageTexture,
@@ -796,7 +796,7 @@ class GLVector(GLVectorBase):
             prefilter=realPrefilter,
             prefilterRange=prefilterRange,
             notify=False)
-        
+
         self.imageTexture.register(self.name, self.__textureChanged)
 
 

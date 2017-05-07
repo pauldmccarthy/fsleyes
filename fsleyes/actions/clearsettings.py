@@ -19,7 +19,7 @@ class ClearSettingsAction(base.Action):
     settings from the :mod:`fsl.utils.settings` module.
     """
 
-    
+
     def __init__(self, overlayList, displayCtx, frame):
         """Create a ``ClearSettingsAction``.
 
@@ -31,18 +31,18 @@ class ClearSettingsAction(base.Action):
 
         self.__frame = frame
 
-        
+
     def __clearSettings(self):
         """Ask the user to confirm, then clear  all settings stored by the
         :mod:`fsl.utils.settings` module.
         """
 
         import wx
-            
+
         msg    = strings.messages[self, 'confirm']
         title  = strings.titles[  self, 'confirm']
 
-        dlg = wx.MessageDialog(self.__frame, 
+        dlg = wx.MessageDialog(self.__frame,
                                message=msg,
                                caption=title,
                                style=(wx.YES_NO        |

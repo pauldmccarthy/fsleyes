@@ -8,7 +8,7 @@
 """This module provides the :func:`audoDisplay` function, which is used
 for automatically configuring overlay display settings.
 
-The :autoDisplay` function is called when *FSLeyes* is started, and when 
+The :autoDisplay` function is called when *FSLeyes* is started, and when
 new overlays are loaded.
 """
 
@@ -55,13 +55,13 @@ def _ImageDisplay(overlay, overlayList, displayCtx, **kwargs):
         _peImageDisplay(  overlay, overlayList, displayCtx, **kwargs)
 
     # Automatically configure nice display range?
-        
+
 
 def _isStatImage(overlay):
     """Returns ``True`` if the given :class:`.Image` overlay looks like a
     statistic image, ``False`` otherwise.
     """
-    
+
     basename = op.basename(overlay.dataSource)
     basename = fslimage.removeExt(basename)
     tokens   = ['zstat', 'tstat', 'fstat', 'zfstat']
@@ -73,13 +73,13 @@ def _isStatImage(overlay):
 def _isPEImage(overlay):
     """Returns ``True`` if the given :class:`.Image` overlay looks like a
     statistic image, ``False`` otherwise.
-    """ 
+    """
     basename = op.basename(overlay.dataSource)
     basename = fslimage.removeExt(basename)
     tokens   = ['cope', 'pe']
     pattern  = '^({})\d+'.format('|'.join(tokens))
 
-    return re.search(pattern, basename) is not None 
+    return re.search(pattern, basename) is not None
 
 
 def _statImageDisplay(overlay,
@@ -95,7 +95,7 @@ def _statImageDisplay(overlay,
     opts        = displayCtx.getOpts(overlay)
     basename    = op.basename(overlay.dataSource)
     basename    = fslimage.removeExt(basename)
-    
+
     pTokens     = ['p', 'corrp']
     statTokens  = ['zstat', 'tstat', 'zfstat']
     fStatTokens = ['fstat']
@@ -107,20 +107,20 @@ def _statImageDisplay(overlay,
     # map.
     if 'rendered' in basename:
         opts.cmap = 'Render1'
-    
+
     # Give each normal stat image
-    # a different colour map 
+    # a different colour map
     else:
         cmap = _statImageDisplay.cmaps[_statImageDisplay.currentCmap]
 
         if posCmap is None: posCmap = cmap
         if negCmap is None: negCmap = cmap
-        
+
         _statImageDisplay.currentCmap += 1
         _statImageDisplay.currentCmap %= len(_statImageDisplay.cmaps)
         opts.cmap                      = posCmap
         opts.negativeCmap              = negCmap
-        
+
     # The order of these tests is
     # important, due to name overlap
 
@@ -156,7 +156,7 @@ _statImageDisplay.cmaps = ['red-yellow',
                            'copper']
 
 
-# Index into the cmaps list, pointing to the 
+# Index into the cmaps list, pointing to the
 # next colour map to use for statistic images.
 _statImageDisplay.currentCmap = 0
 
@@ -164,12 +164,12 @@ _statImageDisplay.currentCmap = 0
 def _peImageDisplay(overlay, overlayList, displayCtx):
     """Automatically configure display settings for the given PE/COPE
     :class:`.Image` overlay.
-    """ 
+    """
     opts = displayCtx.getOpts(overlay)
 
     opts.cmap            = 'Red-Yellow'
     opts.negativeCmap    = 'Blue-LightBlue'
-    opts.useNegativeCmap = True 
+    opts.useNegativeCmap = True
     opts.displayRange    = [1.0, 100.0]
     opts.clippingRange   = [1.0, overlay.dataRange[1]]
 
@@ -184,7 +184,7 @@ def _FEATImageDisplay(overlay, overlayList, displayCtx):
 def _MelodicImageDisplay(overlay, overlayList, displayCtx):
     """Automatically configure display settings for the given
     :class:`.MelodicImage` overlay.
-    """ 
+    """
 
     opts   = displayCtx.getOpts(overlay)
     maxVal = overlay.dataRange[1]
@@ -203,7 +203,7 @@ def _MelodicImageDisplay(overlay, overlayList, displayCtx):
     # But only if it's not
     # already in the list
     if meanFile not in existing:
-        
+
         log.debug('Inserting mean melodic image into '
                   'overlay list: {}'.format(meanFile))
 

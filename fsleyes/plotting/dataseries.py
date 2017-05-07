@@ -19,24 +19,24 @@ log = logging.getLogger(__name__)
 class DataSeries(props.HasProperties):
     """A ``DataSeries`` instance encapsulates some data to be plotted by
     a :class:`PlotPanel`, with the data extracted from an overlay in the
-    :class:`.OverlayList`. 
+    :class:`.OverlayList`.
 
     Sub-class implementations must:
-    
+
       - Accept an overlay object in their ``__init__`` method
       - Pass this overlay to meth:`.DataSeries.__init__`
       - Override the :meth:`getData` method
       - Override the :meth:`redrawProperties` method if necessary
 
-    
+
     The overlay is accessible as an instance attribute, confusingly called
     ``overlay``.
-    
+
 
     .. note:: Some ``DataSeries`` instances may not be associated with
               an overlay (e.g. series imported loaded a text file). In
               this case, the ``overlay`` attribute will be ``None``.
-    
+
 
     Each``DataSeries`` instance is plotted as a line, with the line
     style defined by properties on the ``DataSeries`` instance,
@@ -50,36 +50,36 @@ class DataSeries(props.HasProperties):
     enabled = props.Boolean(default=True)
     """Draw or not draw?"""
 
-    
+
     alpha = props.Real(minval=0.0, maxval=1.0, default=1.0, clamped=True)
     """Line transparency."""
 
-    
+
     label = props.String()
     """Line label (used in the plot legend)."""
 
-    
+
     lineWidth = props.Choice((0.5, 1, 2, 3, 4, 5))
     """Line width. """
 
-    
+
     lineStyle = props.Choice(('-', '--', '-.', ':'))
     """Line style. """
 
-    
+
     def __init__(self, overlay):
         """Create a ``DataSeries``.
 
         :arg overlay: The overlay from which the data to be plotted is
                       retrieved.  May be ``None``.
         """
-        
+
         self.overlay = overlay
         self.setData([], [])
 
         log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
 
-                   
+
     def __del__(self):
         """Prints a log message. """
         if log:
@@ -114,13 +114,13 @@ class DataSeries(props.HasProperties):
         ``DataSeries`` sub-class has overridden :meth:`getData`.
         """
         self.__xdata = xdata
-        self.__ydata = ydata 
+        self.__ydata = ydata
 
 
     def getData(self):
         """This method should be overridden by sub-classes. It must return
         the data to be plotted, as a tuple of the form:
-        
+
             ``(xdata, ydata)``
 
         where ``xdata`` and ``ydata`` are sequences containing the x/y data

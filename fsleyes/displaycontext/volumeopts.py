@@ -21,22 +21,22 @@ overlays can potentially be displayed in one of four coordinate systems:
 
 
  ============================== ===============================================
- **voxels**                     (a.k.a. ``id``) The image data voxel 
+ **voxels**                     (a.k.a. ``id``) The image data voxel
                                 coordinates map to the display coordinates.
 
- **scaled voxels**              (a.k.a. ``pixdim``) The image data voxel 
+ **scaled voxels**              (a.k.a. ``pixdim``) The image data voxel
                                 coordinates are scaled by the ``pixdim`` values
                                 stored in the NIFTI header.
 
 
- **radioloigcal scaled voxels** (a.k.a. ``pixdim-flip``) The image data voxel 
+ **radioloigcal scaled voxels** (a.k.a. ``pixdim-flip``) The image data voxel
                                 coordinates are scaled by the ``pixdim`` values
                                 stored in the NIFTI header and, if the image
                                 appears to be stored in neurological order,
-                                the X (left-right) axis is inverted. 
+                                the X (left-right) axis is inverted.
 
 
- **world**                      (a.k.a. ``affine``) The image data voxel 
+ **world**                      (a.k.a. ``affine``) The image data voxel
                                 coordinates are transformed by the
                                 transformation matrix stored in the NIFTI
                                 header - see the :class:`.Nifti` class for more
@@ -125,15 +125,15 @@ class NiftiOpts(fsldisplay.DisplayOpts):
     """The ``NiftiOpts`` class describes how a :class:`.Nifti` overlay
     should be displayed.
 
-    
+
     ``NiftiOpts`` is the base class for a number of :class:`.DisplayOpts`
     sub-classes - it contains display options which are common to all overlay
     types that represent a NIFTI image.
     """
 
-    
+
     volume = props.Int(minval=0, maxval=0, default=0, clamped=True)
-    """If the ``Image`` is 4D, the current volume to display.""" 
+    """If the ``Image`` is 4D, the current volume to display."""
 
 
     transform = props.Choice(
@@ -145,7 +145,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
     for important information regarding this property.
     """
 
-    
+
     customXform = props.Array(
         dtype=np.float64,
         shape=(4, 4),
@@ -170,7 +170,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
 
     If the :attr:`.DisplayContext.displaySpace` is not equal to ``'world'``,
-    changing the displayXform will not have any immediate effect. 
+    changing the displayXform will not have any immediate effect.
 
     If you change the ``displayXform`` to temporarily change the , make sure
     to change it back to an identity matrix when you are done.
@@ -191,13 +191,13 @@ class NiftiOpts(fsldisplay.DisplayOpts):
              details.
     """
 
-    
+
     overrideDataRange = props.Bounds(ndims=1, clamped=False)
     """Data range used in place of the :attr:`.Image.dataRange` if the
     :attr:`enableOverrideDataRange` property is ``True``.
     """
 
- 
+
     def __init__(self, *args, **kwargs):
         """Create a ``NiftiOpts`` instance.
 
@@ -225,7 +225,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         # is this a 4D volume?
         if len(self.overlay.shape) == 4:
             self.setConstraint('volume', 'maxval', overlay.shape[3] - 1)
- 
+
         # Because the transform properties cannot
         # be unbound between parents/children, all
         # NiftiOpts instances for a single overlay
@@ -250,7 +250,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             self.addListener('displayXform',
                              self.name,
                              self.__displayXformChanged,
-                             immediate=True) 
+                             immediate=True)
 
             # The display<->* transformation matrices
             # are created in the _setupTransforms method
@@ -267,7 +267,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             self.removeListener('transform',    self.name)
             self.removeListener('customXform',  self.name)
             self.removeListener('displayXform', self.name)
-            
+
         fsldisplay.DisplayOpts.destroy(self)
 
 
@@ -283,10 +283,10 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         self.__transformChanged()
         self.displayCtx.cacheStandardCoordinates(self.overlay, stdLoc)
 
-        
+
     def __transformChanged(self, *a):
         """Called when the :attr:`transform` property changes.
-        
+
         Calculates the min/max values of a 3D bounding box, in the display
         coordinate system, which is big enough to contain the image. Sets the
         :attr:`.DisplayOpts.bounds` property accordingly.
@@ -306,7 +306,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         lo, hi = transform.axisBounds(
             self.overlay.shape[:3],
             self.getTransform('voxel', 'display'))
-        
+
         self.bounds[:] = [lo[0], hi[0], lo[1], hi[1], lo[2], hi[2]]
 
 
@@ -319,7 +319,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         stdLoc = self.displayToStandardCoordinates(
             self.displayCtx.location.xyz)
-        
+
         self.__setupTransforms()
         if self.transform == 'custom':
             self.__transformChanged()
@@ -353,8 +353,8 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         with self.displayCtx.freeze(self.overlay):
             self.__setupTransforms()
             self.__transformChanged()
- 
-        
+
+
     def __setupTransforms(self):
         """Calculates transformation matrices between all of the possible
         spaces in which the overlay may be displayed.
@@ -374,7 +374,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         # When going from voxels to textures,
         # we add 0.5 to centre the voxel (see
-        # the note on coordinate systems at 
+        # the note on coordinate systems at
         # the top of this file).
         voxToTexMat     = transform.scaleOffsetXform(tuple(1.0 / shape),
                                                      tuple(0.5 / shape))
@@ -431,7 +431,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         self.__xforms['id',  'id']          = np.eye(4)
         self.__xforms['id',  'pixdim']      = idToPixdimMat
-        self.__xforms['id',  'pixdim-flip'] = idToPixFlipMat 
+        self.__xforms['id',  'pixdim-flip'] = idToPixFlipMat
         self.__xforms['id',  'affine']      = idToAffineMat
         self.__xforms['id',  'custom']      = idToCustomMat
         self.__xforms['id',  'texture']     = idToTexMat
@@ -448,8 +448,8 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         self.__xforms['pixdim-flip', 'pixdim']      = pixFlipToPixdimMat
         self.__xforms['pixdim-flip', 'affine']      = pixFlipToAffineMat
         self.__xforms['pixdim-flip', 'custom']      = pixFlipToCustomMat
-        self.__xforms['pixdim-flip', 'texture']     = pixFlipToTexMat 
- 
+        self.__xforms['pixdim-flip', 'texture']     = pixFlipToTexMat
+
         self.__xforms['affine', 'affine']      = np.eye(4)
         self.__xforms['affine', 'id']          = affineToIdMat
         self.__xforms['affine', 'pixdim']      = affineToPixdimMat
@@ -477,12 +477,12 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         from ``from_`` to ``to``. Valid values for ``from_`` and ``to``
         are:
 
-        
+
         =============== ======================================================
         ``id``          Voxel coordinates
-        
+
         ``voxel``       Equivalent to ``id``.
-        
+
         ``pixdim``      Voxel coordinates, scaled by voxel dimensions
 
         ``pixdim-flip`` Voxel coordinates, scaled by voxel dimensions, and
@@ -492,7 +492,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
                         ``pixdim``.
 
         ``pixflip``     Equivalent to ``pixdim-flip``.
-        
+
         ``affine``      World coordinates, as defined by the NIFTI
                         ``qform``/``sform``. See :attr:`.Image.voxToWorldMat`.
 
@@ -501,7 +501,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         ``custom``      Coordinates in the space defined by the custom
                         transformation matrix, as specified via the
                         :attr:`customXform` property.
-        
+
         ``display``     Equivalent to the current value of :attr:`transform`.
 
         ``texture``     Voxel coordinates scaled to lie between 0.0 and 1.0,
@@ -509,7 +509,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
                         an OpenGL texture.
         =============== ======================================================
 
-        
+
         If the ``xform`` parameter is provided, and one of ``from_`` or ``to``
         is ``display``, the value of ``xform`` is used instead of the current
         value of :attr:`transform`.
@@ -528,7 +528,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         elif from_ == 'world':   from_ = 'affine'
         elif from_ == 'voxel':   from_ = 'id'
         elif from_ == 'pixflip': from_ = 'pixdim-flip'
-        
+
         if   to    == 'display': to    = xform
         elif to    == 'world':   to    = 'affine'
         elif to    == 'voxel':   to    = 'id'
@@ -540,23 +540,23 @@ class NiftiOpts(fsldisplay.DisplayOpts):
     def roundVoxels(self, voxels, daxes=None, roundOther=False):
         """Round the given voxel coordinates to integers. This is a
         surprisingly complicated operation.
-        
+
         FSLeyes and the NIFTI standard map integer voxel coordinates to the
         voxel centre. For example, a voxel [3, 4, 5] fills the space::
-        
+
             [2.5-3.5, 3.5-4.5, 4.5-5.5].
 
-        
+
         So all we need to do is round to the nearest integer. But there are a
         few problems with breaking ties when rounding...
 
-        
+
         The numpy.round function breaks ties (e.g. 7.5) by rounding to the
         nearest *even* integer, which can cause funky behaviour.  So instead
         of using numpy.round, we take floor(x+0.5), to force consistent
         behaviour (i.e. always rounding central values up).
 
-        
+
         The next problem is that we have to round the voxel coordaintes
         carefully, depending on the orientation of the voxel axis w.r.t. the
         display axis. We want to round in the same direction in the display
@@ -564,7 +564,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         check the orientation of the voxel axis, and round down or up
         accordingly.
 
-        
+
         This is to handle scenarios where we have two anatomically aligned
         images, but with opposing storage orders (e.g. one stored
         neurologically, and one stored radiologically). If we have such
@@ -585,10 +585,10 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         :arg voxels:     A ``(N, 3)`` ``numpy`` array containing the voxel
                          coordinates to be rounded.
 
-        :arg daxes:      Display coordinate system axes along which to round 
+        :arg daxes:      Display coordinate system axes along which to round
                          the coordinates (defaults to all axes).
 
-        :arg roundOther: If ``True``, any voxel axes which are not in 
+        :arg roundOther: If ``True``, any voxel axes which are not in
                          ``daxes`` will still be rounded, but not with an
                          orientation-specific rounding convention.
 
@@ -622,7 +622,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             # Identify values which are close
             # to the low or high bounds - we
             # will clamp them after rounding.
-            # 
+            #
             # This is a third rounding problem
             # which is not documented above -
             # we clamp low/high values to avoid
@@ -634,12 +634,12 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             # Round in a direction which is
             # dictated by the image orientation
             if ornt < 0: vals = np.floor(vals + 0.5)
-            else:        vals = np.ceil( vals - 0.5) 
+            else:        vals = np.ceil( vals - 0.5)
 
             # Clamp low/high voxel coordinates
             vals[closeLow]  = 0
             vals[closeHigh] = shape[vax] - 1
-            
+
             voxels[:, vax]  = vals
 
         # If the roundOther flag is true,
@@ -660,7 +660,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         """Transforms the given coordinates from ``from_`` to ``to_``.
 
         The ``from_`` and ``to_`` parameters must both be one of:
-        
+
            - ``display``: The display coordinate system
            - ``voxel``:   The image voxel coordinate system
            - ``world``:   The image world coordinate system
@@ -677,14 +677,14 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         xform  = self.getTransform(from_, to_)
         coords = np.array(coords)
         coords = transform.transform(coords, xform)
-        
+
         # Round to integer voxel coordinates?
         if to_ == 'voxel' and vround:
             coords = self.roundVoxels(coords)
 
         return coords
 
-    
+
     def getVoxel(self, xyz=None, clip=True, vround=True):
         """Calculates and returns the voxel coordinates corresponding to the
         given location (assumed to be in the display coordinate system) for
@@ -701,7 +701,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         :arg vround: If ``True``, the returned voxel coordinates are rounded
                      to the nearest integer. Otherwise they may be fractional.
-                    
+
 
         :returns:    ``None`` if the location is outside of the image bounds,
                      unless ``clip=False``.
@@ -737,13 +737,13 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         """
         return self.transformCoords(coords, 'display', 'world')
 
-    
+
     def standardToDisplayCoordinates(self, coords):
         """Overrides :meth:`.DisplayOpts.standardToDisplayCoordinates`.
         Transforms the given coordinates (assumed to be in the world
         coordinate system of the ``Nifti`` associated with this ``NiftiOpts``
         instance) into the display coordinate system.
-        """ 
+        """
         return self.transformCoords(coords, 'world', 'display')
 
 
@@ -752,7 +752,7 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
     instances as regular 3D volumes.
     """
 
-    
+
     clipImage = props.Choice()
     """Clip voxels according to the values in another image. By default, voxels
     are clipped by the values in the image itself - this property allows the
@@ -761,9 +761,9 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
     dimensions as the primary image can be selected for clipping. The
     :attr:`.ColourMapOpts.clippingRange` property dictates the values outside
     of which voxels are clipped.
-    """ 
+    """
 
-    
+
     interpolation = props.Choice(('none', 'linear', 'spline'))
     """How the value shown at a real world location is derived from the
     corresponding data value(s). ``none`` is equivalent to nearest neighbour
@@ -808,7 +808,7 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
 
         if cmap in fslcm.getColourMaps():
             self.cmap = cmap
-        
+
         NiftiOpts.__init__(self,
                            overlay,
                            display,
@@ -829,7 +829,7 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
         # sequence of events occurs:
         #
         #   1. Parent VolumeOpts instance created
-        # 
+        #
         #   2. Image.dataRange updated
         #
         #   3. Child VolumeOpts instance created
@@ -876,18 +876,18 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
         """
 
         overlay     = self.overlay
-        overlayList = self.overlayList 
+        overlayList = self.overlayList
 
         overlay.deregister(self.name, 'dataRange')
 
         if self.__registered:
 
-            overlayList.removeListener('overlays',                self.name) 
+            overlayList.removeListener('overlays',                self.name)
             self       .removeListener('clipImage',               self.name)
             self       .removeListener('enableOverrideDataRange', self.name)
             self       .removeListener('overrideDataRange',       self.name)
 
-        cmapopts.ColourMapOpts.destroy(self) 
+        cmapopts.ColourMapOpts.destroy(self)
         NiftiOpts             .destroy(self)
 
 
@@ -897,15 +897,15 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
         :attr:`overrideDataRange` if it is active.
         """
         if self.enableOverrideDataRange: return self.overrideDataRange
-        else:                            return self.overlay.dataRange 
+        else:                            return self.overlay.dataRange
 
-    
+
     def getClippingRange(self):
         """Overrides :meth:`.ColourMapOpts.getClippingRange`.
         If a :attr:`.clipImage` is set, returns its data range. Otherwise
         returns ``None``.
-        """ 
-        
+        """
+
         if self.clipImage is None:
             return cmapopts.ColourMapOpts.getClippingRange(self)
         else:
@@ -925,27 +925,27 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
         """
         self.updateDataRange()
 
-        
+
     def __overrideDataRangeChanged(self, *a):
         """Called when the :attr:`overrideDataRange` property changes.
         Calls :meth:`.ColourMapOpts.updateDataRange`.
-        """ 
-        self.updateDataRange() 
+        """
+        self.updateDataRange()
 
 
     def __overlayListChanged(self, *a):
         """Called when the :`class:`.OverlayList` changes. Updates the
         options of the :attr:`clipImage` property.
         """
-        
+
         clipProp = self.getProp('clipImage')
         clipVal  = self.clipImage
         overlays = self.displayCtx.getOrderedOverlays()
-        
+
         options  = [None]
 
         for overlay in overlays:
-            
+
             if overlay is self.overlay:                 continue
             if not isinstance(overlay, fslimage.Image): continue
 
@@ -954,9 +954,9 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
         clipProp.setChoices(options, instance=self)
 
         if clipVal in options: self.clipImage = clipVal
-        else:                  self.clipImage = None 
-    
-        
+        else:                  self.clipImage = None
+
+
     def __clipImageChanged(self, *a):
         """Called when the :attr:`clipImage` property is changed. Updates
          the range of the :attr:`clippingRange` property.
@@ -973,15 +973,15 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
         # high display/clipping ranges, as they are
         # probably different. So if a clip image is
         # selected, we disable the link range
-        # properties. 
+        # properties.
         elif self.propertyIsEnabled('linkLowRanges'):
 
             self.linkLowRanges  = False
             self.linkHighRanges = False
-            
+
             self.disableProperty('linkLowRanges')
             self.disableProperty('linkHighRanges')
-            
+
         log.debug('Clip image changed for {}: {}'.format(
             self.overlay,
             self.clipImage))

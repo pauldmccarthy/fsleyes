@@ -37,7 +37,7 @@ class LightBoxOpts(sceneopts.SceneOpts):
     showGridLines  = copy.copy(canvasopts.LightBoxCanvasOpts.showGridLines)
     highlightSlice = copy.copy(canvasopts.LightBoxCanvasOpts.highlightSlice)
 
-    
+
     def __init__(self, *args, **kwargs):
         """Create a ``LightBoxOpts`` instance. All arguments are passed
         through to the :class:`.SceneOpts` constructor.
@@ -52,12 +52,12 @@ class LightBoxOpts(sceneopts.SceneOpts):
         self.setConstraint('zoom', 'minval',  10)
         self.setConstraint('zoom', 'maxval',  1000)
 
-        
+
     def _onPerformanceChange(self, *a):
-        """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the 
+        """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the
         value of the :attr:`renderMode` property according to the performance
         setting.
-        """        
+        """
 
         if   self.performance == 3: self.renderMode = 'onscreen'
         elif self.performance == 2: self.renderMode = 'prerender'

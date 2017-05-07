@@ -18,7 +18,7 @@ class OffScreenSliceCanvas(sc.SliceCanvas, fslgl.OffScreenCanvasTarget):
     a :class:`.RenderTexture` as its target, for static off-screen OpenGL
     rendering.
     """
-    
+
     def __init__(self,
                  overlayList,
                  displayCtx,
@@ -26,8 +26,8 @@ class OffScreenSliceCanvas(sc.SliceCanvas, fslgl.OffScreenCanvasTarget):
                  *args,
                  **kwargs):
         """Create an ``OffScreenSliceCanvas``.
-        
-        See the :class:`.SliceCanvas` and :class:`.OffscreenCanvasTarget` 
+
+        See the :class:`.SliceCanvas` and :class:`.OffscreenCanvasTarget`
         classes for details on the other arguments.
         """
 

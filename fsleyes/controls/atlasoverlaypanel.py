@@ -26,7 +26,7 @@ import fsleyes.strings                      as strings
 
 
 log = logging.getLogger(__name__)
-        
+
 
 class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
     """The ``AtlasOverlayPanel`` displays a list of all available FSL atlases
@@ -40,7 +40,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
       3. Move the :attr:`.DisplayContext.location` to any region from any
          atlas.
 
-    
+
     An ``AtlasOverlayPanel`` looks something like this:
 
     .. image:: images/atlasoverlaypanel.png
@@ -68,22 +68,22 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         to show only regions that match the entered string (via a simple
         substring match), and the atlas list will be updated such that all
         atlases which have matching regions will be highlighted in bold.
-    """ 
+    """
 
 
     def __init__(self, parent, overlayList, displayCtx, frame, atlasPanel):
         """Create an ``AtlasOverlayPanel``.
 
         :arg parent:      the :mod:`wx` parent object.
-        
+
         :arg overlayList: The :class:`.OverlayList` instance.
-        
+
         :arg displayCtx:  The :class:`.DisplayContext` instance.
 
         :arg frame:       The :class:`.FSLeyesFrame` instance.
-        
+
         :arg atlasPanel:  The :class:`.AtlasPanel` instance that has created
-                          this ``AtlasInfoPanel``. 
+                          this ``AtlasInfoPanel``.
         """
 
         fslpanel.FSLeyesPanel.__init__(
@@ -93,7 +93,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         # for each atlas, containing a list
         # of its regions. These are created
         # on-demand in the __onAtlasSelect
-        # method.  
+        # method.
         self.__regionLists = {}
 
         self.__atlasPanel      = atlasPanel
@@ -112,19 +112,19 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         self.__contentPanel.SetMinimumPaneSize(50)
         self.__contentPanel.SplitVertically(self.__atlasList,
                                             self.__regionPanel)
-        self.__contentPanel.SetSashGravity(0.4) 
-        
+        self.__contentPanel.SetSashGravity(0.4)
+
         self.__sizer       = wx.BoxSizer(wx.HORIZONTAL)
         self.__regionSizer = wx.BoxSizer(wx.VERTICAL)
-        
+
         self.__regionSizer.Add(self.__regionFilter, flag=wx.EXPAND)
         self.__regionSizer.AddStretchSpacer()
-        
+
         self.__sizer      .Add(self.__contentPanel,
                                flag=wx.EXPAND,
                                proportion=1)
-        
-        self.__regionPanel.SetSizer(self.__regionSizer) 
+
+        self.__regionPanel.SetSizer(self.__regionSizer)
         self              .SetSizer(self.__sizer)
 
         self.__regionFilter.Bind(wx.EVT_TEXT, self.__onRegionFilter)
@@ -142,11 +142,11 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
 
         # Allow the atlas list
         # to be minimised
-        self.__atlasList.SetMinSize((50, -1)) 
+        self.__atlasList.SetMinSize((50, -1))
 
         self.SetMinSize(self.__sizer.GetMinSize())
 
-        
+
     def destroy(self):
         """Performs some clean up operations. """
         fslplatform.deregister(self._name)
@@ -155,7 +155,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
 
     def Enable(self, enable=True):
         """Enables/disables this ``AtlasOverlayPanel``. """
-        
+
         self.__atlasList.Enable(enable)
 
         for atlasID, regionList in self.__regionLists.items():
@@ -177,7 +177,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         """
 
         atlasIdx = self.__atlasList.IndexOf(atlasDesc)
-        
+
         log.debug('Setting {}/{} overlay state to {}'.format(
             atlasDesc.atlasID, labelIdx, state))
 
@@ -185,33 +185,33 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
             widget = self.__atlasList.GetItemWidget(atlasIdx)
             widget.SetEnableState(state)
         else:
-            
+
             regionList = self.__regionLists.get(atlasDesc.atlasID, None)
             if regionList is not None:
                 regionList.GetItemWidget(labelIdx).SetEnableState(state)
 
-                
+
     def __fslDirChanged(self, *a):
         """Called when the :attr:`.Platform.fsldir` changes. Refreshes
         the atlas list.
-        """ 
+        """
         self.__buildAtlasList()
 
 
     def __atlasAdded(self, *a):
         """Called when a new atlas is added to the :class:`.AtlasRegistry`.
         Re-generates the atlas list.
-        """ 
+        """
         self.__buildAtlasList()
 
-        
+
     def __atlasRemoved(self, *a):
         """Called when an atlas is removed from the :class:`.AtlasRegistry`.
         Re-generates the atlas list.
-        """ 
-        self.__buildAtlasList() 
+        """
+        self.__buildAtlasList()
 
-    
+
     def __buildAtlasList(self):
         """Clears and recreates the atlas list. Also clears all existing
         region lists.
@@ -225,9 +225,9 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         # atlases that are still in the atlas
         # registry.
         regionLists = dict(self.__regionLists)
-            
+
         # If a region list is currently
-        # being shown, clear it. 
+        # being shown, clear it.
         regionList = self.__regionSizer.GetItem(1).GetWindow()
         if regionList is not None:
             regionList.Show(False)
@@ -250,7 +250,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
 
             self.__atlasList.SetItemWidget(i, widget)
 
-        # Restore references to region lists 
+        # Restore references to region lists
         # for atlases that still exist
         for atlasID, regionList in regionLists.items():
             if atlases.hasAtlas(atlasID):
@@ -268,7 +268,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         method), and updates all items in the atlas list (see the
         :meth:`__updateAtlasState` method).
         """
-        
+
         filterStr = self.__regionFilter.GetValue().lower().strip()
 
         for atlasDesc in atlases.listAtlases():
@@ -309,11 +309,11 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
 
         font = self.__atlasList.GetItemFont(atlasIdx)
         font.SetWeight(weight)
-        
+
         self.__atlasList.SetItemFont(atlasIdx, font)
-        self.__atlasList.SetItemForegroundColour(atlasIdx, colour, colour) 
- 
-            
+        self.__atlasList.SetItemForegroundColour(atlasIdx, colour, colour)
+
+
     def __onAtlasSelect(self, ev=None, atlasDesc=None):
         """Called when the user selects an atlas in the atlas list, or
         the :meth:`selectAtlas` method is called.
@@ -356,7 +356,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
                     atlasDesc.atlasID, id(regionList)))
 
                 # Hide the currently
-                # shown region list 
+                # shown region list
                 old = self.__regionSizer.GetItem(1).GetWindow()
                 if old is not None:
                     old.Show(False)
@@ -371,7 +371,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
 
                 if atlasPanelDisabled:
                     self.__atlasPanel.enableAtlasPanel()
-                
+
             except wx.PyDeadObjectError:
                 pass
 
@@ -382,7 +382,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
             # a widget for every region in the atlas. Some of
             # the atlases (Juelich and Talairach in particular)
             # have a large number of regions, so we create the
-            # widgets asynchronously on the wx idle loop. 
+            # widgets asynchronously on the wx idle loop.
             regionList = elistbox.EditableListBox(
                 self.__regionPanel,
                 style=(elistbox.ELB_NO_ADD    |
@@ -398,7 +398,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
             # label[i + blockSize].
             blockSize = 20
             nlabels   = len(atlasDesc.labels)
-            
+
             def addToRegionList(start):
 
                 # If the user kills this panel while
@@ -433,7 +433,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
             # The function will recursively
             # schedule itself to run for subsequent
             # regions.
-            # 
+            #
             # Disable the panel while this is
             # occurring.
 
@@ -453,11 +453,11 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         """
 
         atlasIdx = self.__atlasList.IndexOf(atlasDesc)
-        
+
         self.__atlasList.SetSelection(atlasIdx)
         self.__onAtlasSelect(atlasDesc=atlasDesc)
 
-        
+
 class OverlayListWidget(wx.Panel):
     """``OverlayListWidget`` items are used by the :class:`AtlasOverlayPanel`
     in both the atlas list and the region list.
@@ -475,7 +475,7 @@ class OverlayListWidget(wx.Panel):
     module for more details
     """
 
-    
+
     def __init__(self,
                  parent,
                  atlasID,
@@ -484,14 +484,14 @@ class OverlayListWidget(wx.Panel):
                  labelIdx=None):
         """Create an ``OverlayListWidget``.
 
-        :arg parent:        The :mod:`wx` parent object - this is assumed to 
+        :arg parent:        The :mod:`wx` parent object - this is assumed to
                             be an :class:`.EditableListBox`.
-        
+
         :arg atlasID:       The atlas identifier.
 
         :arg atlasOvlPanel: The :class:`AtlasOverlayPanel` which created this
                             ``OverlayListWidget``.
-        
+
         :arg atlasPanel:    The :class:`.AtlasPanel` which owns the
                             :class:`AtlasOverlayPanel` that created this
                             ``OverlayListWidget``.
@@ -502,7 +502,7 @@ class OverlayListWidget(wx.Panel):
         """
 
         wx.Panel.__init__(self, parent)
-        
+
         self.__atlasID       = atlasID
         self.__atlasDesc     = atlases.getAtlasDescription(atlasID)
         self.__atlasPanel    = atlasPanel
@@ -519,7 +519,7 @@ class OverlayListWidget(wx.Panel):
         self.__sizer.Add(self.__enableBox, flag=wx.EXPAND)
 
         self.__enableBox.Bind(wx.EVT_CHECKBOX, self.__onEnable)
-        
+
         if labelIdx is not None:
             self.__locateButton = wx.Button(self,
                                             label='+',
@@ -528,14 +528,14 @@ class OverlayListWidget(wx.Panel):
 
             self.__locateButton.Bind(wx.EVT_BUTTON, self.__onLocate)
 
-            
+
     def SetEnableState(self, state):
         """Sets the enable overlay checkbox state to the specified state
         (``True`` or ``False``).
         """
         self.__enableBox.SetValue(state)
 
-        
+
     def __onEnable(self, ev):
         """Called when the enable overlay checkbox is clicked. Calls the
         :meth:`.AtlasPanel.toggleOverlay` method, to toggle the overlay
@@ -548,7 +548,7 @@ class OverlayListWidget(wx.Panel):
                not self.__atlasOvlPanel or \
                self.__atlasOvlPanel .destroyed():
                 return
-                
+
             self.__atlasPanel.enableAtlasPanel()
 
         def onError(e):
@@ -559,7 +559,7 @@ class OverlayListWidget(wx.Panel):
                 self.GetTopLevelParent(),
                 message=message,
                 style=(wx.ICON_EXCLAMATION | wx.OK)).ShowModal()
-            
+
             self.__atlasPanel.enableAtlasPanel()
             self.__enableBox.SetValue(
                 self.__atlasPanel.getOverlayState(
@@ -579,9 +579,9 @@ class OverlayListWidget(wx.Panel):
             onError=onError)
 
         if self.__labelIdx is None:
-            self.__atlasOvlPanel.selectAtlas(self.__atlasDesc) 
+            self.__atlasOvlPanel.selectAtlas(self.__atlasDesc)
 
-        
+
     def __onLocate(self, ev):
         """Called when the locate region button is clicked only on
         ``OverlayListWidget`` items which are associated with an atlas

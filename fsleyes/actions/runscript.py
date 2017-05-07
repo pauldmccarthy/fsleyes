@@ -53,7 +53,7 @@ class RunScriptAction(base.Action):
         self.__frame       = frame
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
-        
+
 
     def __doAction(self, script=None):
         """Called when this :class:`.Action` is invoked. If the ``script``
@@ -86,7 +86,7 @@ class RunScriptAction(base.Action):
             script = dlg.GetPath()
 
             # Save the script directory for the
-            # next time the user is prompted 
+            # next time the user is prompted
             fslsettings.write('runScriptLastDir', op.dirname(script))
 
         # Run the script, show an
@@ -96,7 +96,7 @@ class RunScriptAction(base.Action):
                       self.__overlayList,
                       self.__displayCtx,
                       script)
-            
+
         except Exception as e:
             log.warning('Script ({}) could not be executed: {}'.format(
                         script,
@@ -110,10 +110,10 @@ class RunScriptAction(base.Action):
             wx.MessageDialog(self.__frame,
                              message=msg,
                              style=wx.OK | wx.ICON_ERROR).ShowModal()
-            
+
             return
 
-        
+
 def runScript(frame, overlayList, displayCtx, script):
     """Compiles and executes the given file, assumed to be a Python script.
     An ``Error`` is raised if the script cannot be compiled or executed.
@@ -122,7 +122,7 @@ def runScript(frame, overlayList, displayCtx, script):
     # We want scripts to be Python3-like
     flags = (futures.print_function  .compiler_flag |
              futures.absolute_import .compiler_flag |
-             futures.division        .compiler_flag | 
+             futures.division        .compiler_flag |
              futures.unicode_literals.compiler_flag)
 
     # Is the script a file?
@@ -168,7 +168,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
     and ``locals`` dictionaries when executing a custom FSLeyes python
     script.
     """
-    
+
     import numpy                                as np
     import scipy                                as sp
     import matplotlib                           as mpl
@@ -178,7 +178,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
     from   fsleyes.views.timeseriespanel    import TimeSeriesPanel
     from   fsleyes.views.histogrampanel     import HistogramPanel
     from   fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
-    from   fsleyes.views.shellpanel         import ShellPanel 
+    from   fsleyes.views.shellpanel         import ShellPanel
     import fsl.data.image                       as fslimage
     import fsl.data.featimage                   as featimage
     import fsl.data.melodicimage                as melimage
@@ -189,7 +189,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
 
     def load(filename):
         """Load the specified file into FSLeyes. """
-        
+
         from . import                 loadoverlay
         import fsleyes.autodisplay as autodisplay
 
@@ -197,25 +197,25 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
 
             if len(overlays) == 0:
                 return
-            
+
             overlayList.append(overlays[0])
 
             if displayCtx.autoDisplay:
                 autodisplay.autoDisplay(overlays[0],
                                         overlayList,
-                                        displayCtx) 
-        
+                                        displayCtx)
+
         loadoverlay.loadOverlays([filename],
                                  onLoad=onLoad,
                                  inmem=displayCtx.loadInMemory)
 
     def scaledVoxels():
-        """Display all NIFTI images in true scaled voxels (but 
+        """Display all NIFTI images in true scaled voxels (but
         with a radiological/neurological flip). """
         for o in overlayList:
             if isinstance(o, fslimage.Nifti):
                 displayCtx.getOpts(o).transform = 'pixdim-flip'
-                
+
 
     def trueScaledVoxels():
         """Display all NIFTI images in true scaled voxels (without
@@ -223,7 +223,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         for o in overlayList:
             if isinstance(o, fslimage.Nifti):
                 displayCtx.getOpts(o).transform = 'pixdim'
-                
+
     def rawVoxels():
         """Display all NIFTI images in raw voxels. """
         for o in overlayList:
@@ -255,7 +255,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
 
             if ovl.dataSource is not None and substr not in ovl.dataSource:
                 continue
-            
+
             display   = displayCtx.getDisplay(ovl)
             opts      = displayCtx.getOpts(   ovl)
             dispProps = display.getAllProperties()[0]
@@ -263,7 +263,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
 
             if   propName in dispProps: setattr(display, propName, value)
             elif propName in optProps:  setattr(opts,    propName, value)
-        
+
 
     _locals = collections.OrderedDict((
         ('np',                 np),

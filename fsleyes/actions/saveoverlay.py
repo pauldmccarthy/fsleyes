@@ -37,10 +37,10 @@ class SaveOverlayAction(base.Action):
     selected overlay, if it has been edited, or only exists in memory.
     """
 
-    
+
     def __init__(self, overlayList, displayCtx, frame):
-        """Create a ``SaveOverlayAction``. 
-        
+        """Create a ``SaveOverlayAction``.
+
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
@@ -70,30 +70,30 @@ class SaveOverlayAction(base.Action):
         self.__overlayList.removeListener('overlays',        self.__name)
         self.__displayCtx  = None
         self.__overlayList = None
-        
+
         base.Action.destroy(self)
 
-        
+
     def __selectedOverlayChanged(self, *a):
         """Called when the selected overlay, or overlay list changes.
 
         If the overlay is a :class:`.Image`, and it has unsaved changes,
         this action is enabled; otherwise it is disabled.
         """
-        
+
         overlay = self.__displayCtx.getSelectedOverlay()
 
         # TODO  Support for other overlay types
 
         self.enabled = ((overlay is not None)               and
-                        isinstance(overlay, fslimage.Image) and 
+                        isinstance(overlay, fslimage.Image) and
                         (not overlay.saveState))
 
         for ovl in self.__overlayList:
-            
+
             if not isinstance(ovl, fslimage.Image):
                 continue
-            
+
             ovl.deregister(self.__name, 'saveState')
 
             # Register a listener on the saved property
@@ -114,12 +114,12 @@ class SaveOverlayAction(base.Action):
         This is only applicable if the current overlay is a :class:`.Image` -
         see the :meth:`__selectedOverlayChanged` method.
         """
-        
+
         overlay = self.__displayCtx.getSelectedOverlay()
-        
+
         if overlay is None:
             self.enabled = False
-            
+
         elif not isinstance(overlay, fslimage.Image):
             self.enabled = False
         else:
@@ -149,7 +149,7 @@ def saveOverlay(overlay, display=None):
     :arg overlay: The :class:`.Image` overlay to save
     :arg display: The :class:`.Display` instance associated with the overlay.
     """
-    
+
 
     import wx
 
@@ -211,7 +211,7 @@ def saveOverlay(overlay, display=None):
                         message=msg,
                         defaultDir=fromDir,
                         defaultFile=filename,
-                        style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) 
+                        style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 
     if dlg.ShowModal() != wx.ID_OK:
         return
@@ -226,7 +226,7 @@ def saveOverlay(overlay, display=None):
 
     oldPath = overlay.dataSource
     saveDir = op.dirname(savePath)
-    
+
     if doSave(overlay, savePath):
 
         # Cache the save directory for next time.
@@ -245,7 +245,7 @@ def saveOverlay(overlay, display=None):
 
 
 def doSave(overlay, path=None):
-    """Called by :func:`saveOverlay`.  Tries to save the given ``overlay`` to 
+    """Called by :func:`saveOverlay`.  Tries to save the given ``overlay`` to
     the given ``path``, and shows an error message if something goes wrong.
     Returns ``True`` if the save was successful, ``False`` otherwise.
     """
@@ -256,7 +256,7 @@ def doSave(overlay, path=None):
     with status.reportIfError(msg=emsg, title=etitle, raiseError=False):
         overlay.save(path)
         return True
-    
+
     return False
 
 

@@ -32,7 +32,7 @@ class PlotToolBar(fsltoolbar.FSLeyesToolBar):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg plotPanel:   The :class:`.PlotPanel` instance.
         """
-        
+
         fsltoolbar.FSLeyesToolBar.__init__(self,
                                            parent,
                                            overlayList,
@@ -50,7 +50,7 @@ class PlotToolBar(fsltoolbar.FSLeyesToolBar):
         export      = actions.ActionButton(
             'exportDataSeries',
             icon=icons.findImageFile('exportDataSeries24'),
-            tooltip=tooltips.actions[plotPanel, 'exportDataSeries']) 
+            tooltip=tooltips.actions[plotPanel, 'exportDataSeries'])
         add        = actions.ActionButton(
             'addDataSeries',
             icon=icons.findImageFile('add24'),
@@ -72,7 +72,7 @@ class PlotToolBar(fsltoolbar.FSLeyesToolBar):
 
         self.__commonTools = [screenshot, import_, export, add, remove]
         self.__commonNav   = [screenshot, import_, export, add, remove]
-        
+
         self.SetTools([screenshot, import_, export, add, remove])
 
 
@@ -96,7 +96,7 @@ class PlotToolBar(fsltoolbar.FSLeyesToolBar):
     def getCommonNavOrder(self):
         """Returns a list containing the navigation order for tools added
         by this ``PlotToolBar``.
-        """ 
+        """
         return list(self.__commonNav)
 
 

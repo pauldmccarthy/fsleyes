@@ -35,7 +35,7 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg histPanel:   The :class:`.HistogramPanel` instance.
         """
-        
+
         plottoolbar.PlotToolBar.__init__(
             self, parent, overlayList, displayCtx, frame, histPanel)
 
@@ -45,7 +45,7 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
             icon=[icons.findImageFile('spannerHighlight24'),
                   icons.findImageFile('spanner24')],
             tooltip=tooltips.actions[histPanel, 'toggleHistogramControl'])
- 
+
         togList = actions.ToggleActionButton(
             'togglePlotList',
             actionKwargs={'floatPane' : True},
@@ -56,8 +56,8 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
         togOverlay = actions.ToggleActionButton(
             'toggleHistogramOverlay',
             icon=[icons.findImageFile('histogramOverlayHighlight24'),
-                  icons.findImageFile('histogramOverlay24')]) 
- 
+                  icons.findImageFile('histogramOverlay24')])
+
         mode    = props.Widget(
             'histType',
             labels=strings.choices[     histPanel, 'histType'],
@@ -66,14 +66,14 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
 
         togControl = props.buildGUI(self, histPanel, togControl)
         togList    = props.buildGUI(self, histPanel, togList)
-        togOverlay = props.buildGUI(self, histPanel, togOverlay) 
+        togOverlay = props.buildGUI(self, histPanel, togOverlay)
         mode       = props.buildGUI(self, histPanel, mode)
-        
+
         lblMode = self.MakeLabelledTool(
             mode, strings.properties[histPanel, 'histType'])
 
         self.InsertTools([togControl, togList], 0)
-        self.AddTool(togOverlay) 
+        self.AddTool(togOverlay)
         self.AddTool(lblMode)
 
 

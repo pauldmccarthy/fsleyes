@@ -38,12 +38,12 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     time series data from overlays. A ``TimeSeriesPanel`` looks something like
     the following:
 
-    
+
     .. image:: images/timeseriespanel.png
        :scale: 50%
        :align: center
 
-    
+
     A ``TimeSeriesPanel`` plots one or more :class:`.TimeSeries` instances,
     which encapsulate time series data from an overlay. All ``TimeSeries``
     classes are defined in the :mod:`.plotting.timeseries` module; these are
@@ -61,7 +61,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
     **Control panels**
 
-    
+
     Some *FSLeyes control* panels are associated with the
     :class:`.TimeSeriesPanel`:
 
@@ -71,7 +71,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
        ~fsleyes.controls.plotlistpanel.PlotListPanel
        ~fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
 
-    
+
     The ``TimeSeriesPanel`` defines some :mod:`.actions`, allowing the user
     to show/hide these control panels:
 
@@ -93,24 +93,24 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     various aspects of the FEAT model fit. See the :class:`.FEATTimeSeries`
     and the :class:`.TimeSeriesControlPanel` classes for more details.
 
-    
+
     **Melodic features**
 
-    
+
     The ``TimeSeriesPanel`` also has some functionality for
     :class:`.MelodicImage` overlays - a :class:`.MelodicTimeSeries` instance
     is used to plot the component time courses for the current component (as
     defined by the :attr:`.NiftiOpts.volume` property).
     """
 
-    
+
     usePixdim = props.Boolean(default=True)
     """If ``True``, the X axis data is scaled by the pixdim value of the
     selected overlay (which, for FMRI time series data is typically set
     to the TR time).
     """
 
-    
+
     plotMode = props.Choice(('normal', 'demean', 'normalise', 'percentChange'))
     """Options to scale/offset the plotted time courses.
 
@@ -140,7 +140,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
 
-        # If the currently selected image is from 
+        # If the currently selected image is from
         # a FEAT analysis, and the corresponding
         # filtered_func_data is loaded, enable the
         # initial state of the time course for
@@ -165,7 +165,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         self.addListener('plotMelodicICs',
                          self._name,
                          self.__plotMelodicICsChanged)
-        
+
         self.initProfile()
 
 
@@ -173,11 +173,11 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         """Removes some listeners, and calls the :meth:`.PlotPanel.destroy`
         method.
         """
-        
+
         self.removeListener('plotMode',       self._name)
         self.removeListener('usePixdim',      self._name)
         self.removeListener('plotMelodicICs', self._name)
-        
+
         plotpanel.OverlayPlotPanel.destroy(self)
 
 
@@ -197,9 +197,9 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         """Shows/hides a :class:`.TimeSeriesToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(timeseriestoolbar.TimeSeriesToolBar, tsPanel=self) 
+        self.togglePanel(timeseriestoolbar.TimeSeriesToolBar, tsPanel=self)
 
-        
+
     def getActions(self):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``TimeSeriesPanel``.
@@ -267,12 +267,12 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         :class:`.TimeSeries` sub-classes) for the specified overlay.
 
         Returns a tuple containing the following:
-        
+
           - A :class:`.TimeSeries` instance for the given overlay
-        
+
           - A list of *targets* - objects which have properties that
             influence the state of the ``TimeSeries`` instance.
-        
+
           - A list of *property names*, one for each target.
 
         If the given overlay is not compatible (i.e. it has no time series
@@ -281,7 +281,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         if not isinstance(overlay, fslimage.Image):
             return None, None, None
-            
+
         # Is this a FEAT filtered_func_data image?
         if isinstance(overlay, fslfeatimage.FEATImage):
 
@@ -308,7 +308,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             ts = plotting.VoxelTimeSeries(self, overlay, self._displayCtx)
             targets   = [self._displayCtx]
             propNames = ['location']
-            
+
         else:
             return None, None, None
 
@@ -317,7 +317,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         ts.lineWidth = 1
         ts.lineStyle = '-'
         ts.label     = ts.makeLabel()
-                
+
         return ts, targets, propNames
 
 
@@ -338,7 +338,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
                 xdata = xdata * ts.overlay.tr
             else:
                 xdata = xdata * ts.overlay.pixdim[3]
-        
+
         if self.plotMode == 'demean':
             ydata = ydata - ydata.mean()
 
@@ -349,12 +349,12 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
                 ydata = 2 * (ydata - ymin) / (ymax - ymin) - 1
             else:
                 ydata = np.zeros(len(ydata))
-            
+
         elif self.plotMode == 'percentChange':
             mean  = ydata.mean()
             ydata = 100 * (ydata / mean) - 100
-            
-        return xdata, ydata 
+
+        return xdata, ydata
 
 
     def __plotMelodicICsChanged(self, *a):
@@ -389,12 +389,12 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         # If all of the overlays related to the data series being
         # plotted:
-        # 
+        #
         #   - are Images
         #   - have the same time unit (as specified in the nifti header)
-        #  
-        # Then a default label is specified   
-        # 
+        #
+        # Then a default label is specified
+        #
         # n.b. this is not foolproof, as many
         # non-time 4D images will still set
         # the time units to seconds.

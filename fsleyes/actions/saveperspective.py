@@ -27,10 +27,10 @@ class SavePerspectiveAction(base.Action):
         """
 
         self.__frame = frame
-         
+
         base.Action.__init__(self, self.__savePerspective)
 
-        
+
     def __savePerspective(self):
         """Save the current :class:`.FSLeyesFrame` layout as a perspective.
         The user is prompted to enter a name, and the current frame layout
@@ -41,7 +41,7 @@ class SavePerspectiveAction(base.Action):
 
         builtIns = perspectives.BUILT_IN_PERSPECTIVES.keys()
         saved    = perspectives.getAllPerspectives()
-        
+
         while True:
             dlg = wx.TextEntryDialog(
                 self.__frame,
@@ -75,9 +75,9 @@ class SavePerspectiveAction(base.Action):
 
                 if dlg.ShowModal() == wx.ID_NO:
                     continue
-                
+
             break
-                    
+
         perspectives.savePerspective(self.__frame, name)
 
         self.__frame.refreshPerspectiveMenu()

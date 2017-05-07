@@ -34,7 +34,7 @@ class DiagnosticReportAction(base.Action):
     location.
     """
 
-    
+
     def __init__(self, overlayList, displayCtx, frame):
         """Create a ``DiagnosticReportAction``.
 
@@ -65,7 +65,7 @@ class DiagnosticReportAction(base.Action):
 
         import wx
 
-        dlg = wx.FileDialog( 
+        dlg = wx.FileDialog(
             self.__frame,
             message=strings.titles[self, 'saveReport'],
             defaultDir=os.getcwd(),
@@ -98,7 +98,7 @@ class DiagnosticReportAction(base.Action):
 
         report   = OrderedDict()
         overlays = []
-        
+
         for i, ovl in enumerate(self.__overlayList):
             overlays.append(OrderedDict([
                 ('type',   type(ovl).__name__),
@@ -128,7 +128,7 @@ class DiagnosticReportAction(base.Action):
         """
 
         import fsl.utils.settings as fslsettings
-        
+
         report   = OrderedDict()
         settings = fslsettings.readAll()
 
@@ -155,7 +155,7 @@ class DiagnosticReportAction(base.Action):
 
         return report
 
-    
+
     def __formatReport(self, reportDict):
         """Converts the given hierarchical dictionary to a JSON-formatted
         string.

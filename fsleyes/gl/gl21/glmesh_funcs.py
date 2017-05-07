@@ -43,7 +43,7 @@ def destroy(self):
 
     self.shader = None
 
-    
+
 def updateShaderState(self):
     """Updates the shader program according to the current :class:`.MeshOpts``
     configuration.
@@ -58,7 +58,7 @@ def updateShaderState(self):
         cmapXform = transform.scaleOffsetXform(delta, 0.5 * delta)
     else:
         cmapXform = self.cmapTexture.getCoordinateTransform()
-    
+
     self.shader.set('cmap',          0)
     self.shader.set('negCmap',       1)
     self.shader.set('useNegCmap',    useNegCmap)
@@ -69,7 +69,7 @@ def updateShaderState(self):
 
     self.shader.unload()
 
-    
+
 def drawColouredOutline(self, vertices, vdata, indices=None, glType=None):
     """Called when :attr:`.MeshOpts.outline` is ``True``, and
     :attr:`.MeshOpts.vertexData` is not ``None``. Loads and runs the
@@ -106,7 +106,7 @@ def drawColouredOutline(self, vertices, vdata, indices=None, glType=None):
                           indices.shape[0],
                           gl.GL_UNSIGNED_INT,
                           indices.ravel('C'))
-        
+
     self.shader.unloadAtts()
     self.shader.unload()
 
@@ -114,4 +114,4 @@ def drawColouredOutline(self, vertices, vdata, indices=None, glType=None):
         self.lutTexture.unbindTexture()
     else:
         self.cmapTexture   .unbindTexture()
-        self.negCmapTexture.unbindTexture() 
+        self.negCmapTexture.unbindTexture()

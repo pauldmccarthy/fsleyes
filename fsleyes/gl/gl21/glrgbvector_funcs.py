@@ -44,7 +44,7 @@ def destroy(self):
     self.shader.destroy()
     self.shader = None
 
-    
+
 def compileShaders(self):
     """Calls :func:`.gl21.glvector_funcs.compileShaders`. """
     self.shader = glvector_funcs.compileShaders(self, 'glrgbvector')

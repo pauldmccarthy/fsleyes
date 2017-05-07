@@ -8,7 +8,7 @@
 :class:`.PlotPanel` views to export data series to a text file.
 """
 
-import os 
+import os
 
 import numpy                 as np
 
@@ -22,14 +22,14 @@ class ExportDataSeriesAction(base.Action):
     def __init__(self, overlayList, displayCtx, plotPanel):
 
         base.Action.__init__(self, self.__doExport)
-        
+
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
         self.__plotPanel   = plotPanel
 
 
     def __doExport(self):
-        
+
         import wx
 
         # Ask the user if they want to save the
@@ -49,7 +49,7 @@ class ExportDataSeriesAction(base.Action):
             return
 
         savex = result == wx.ID_YES
- 
+
         # Ask the user where they want to save the data
         msg     = strings.messages[self, 'selectFile']
         fromDir = fslsettings.read('loadSaveOverlayDir', os.getcwd())
@@ -64,12 +64,12 @@ class ExportDataSeriesAction(base.Action):
 
         filePath    = dlg.GetPath()
         dss, xs, ys = zip(*self.__plotPanel.getDrawnDataSeries())
-        
+
         # Create some x data, unified
         # across all data series
         xdata = np.unique(np.concatenate(xs))
 
-        # Linearly interpolate each data series 
+        # Linearly interpolate each data series
         # according to the merged x data
         ydata = [np.interp(xdata, x, y, left=np.nan, right=np.nan)
                  for x, y in zip(xs, ys)]

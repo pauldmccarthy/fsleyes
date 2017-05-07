@@ -22,10 +22,10 @@ class LoadPerspectiveAction(base.Action):
 
         self.__frame       = frame
         self.__perspective = perspective
-         
+
         base.Action.__init__(self, self.__loadPerspective)
 
-        
+
     def __loadPerspective(self):
         """
         """

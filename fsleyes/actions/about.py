@@ -31,7 +31,7 @@ class AboutAction(base.Action):
 
         self.__frame       = frame
         self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx 
+        self.__displayCtx  = displayCtx
 
 
     def __showDialog(self):

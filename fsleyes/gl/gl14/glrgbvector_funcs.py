@@ -32,7 +32,7 @@ def init(self):
     """
 
     self.shader = None
-    
+
     compileShaders(   self)
     updateShaderState(self)
 
@@ -42,7 +42,7 @@ def destroy(self):
     """
     glvector_funcs.destroy(self)
 
-    
+
 def compileShaders(self):
     """Calls the :mod:`.gl14.glvector_funcs.compileShaders` function.
     """

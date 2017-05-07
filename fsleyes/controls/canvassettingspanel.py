@@ -40,10 +40,10 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
     The ``CanvasSettingsPanel`` divides the displayed settings into those
     which are common to all :class:`.CanvasPanel` instances, and those which
     are specific to the :class:`.CanvasPanel` sub-class (i.e.
-    :class:`.OrthoPanel` or :class:`.LightBoxPanel`).  
+    :class:`.OrthoPanel` or :class:`.LightBoxPanel`).
     """
 
-    
+
     def __init__(self, parent, overlayList, displayCtx, frame, canvasPanel):
         """Create a ``CanvasSettingsPanel``.
 
@@ -53,7 +53,7 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg canvasPanel: The :class:`.CanvasPanel` instance.
         """
-        
+
         fslpanel.FSLeyesSettingsPanel.__init__(self,
                                                parent,
                                                overlayList,
@@ -64,7 +64,7 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         self.__canvasPanel = canvasPanel
         self.__makeTools()
 
-        
+
     def __makeTools(self):
 
         displayCtx  = self._displayCtx
@@ -112,7 +112,7 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
             props.Widget('radioOrientation')]
 
         orthoOptsProps = [
-            props.Widget('layout', labels=strings.choices['OrthoOpts.layout']), 
+            props.Widget('layout', labels=strings.choices['OrthoOpts.layout']),
             props.Widget('zoom', showLimits=False),
             props.Widget('showLabels'),
             props.Widget('labelColour'),
@@ -140,7 +140,7 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         if isinstance(canvasPanel, orthopanel.OrthoPanel):
             panelGroup = 'ortho'
             panelProps = orthoOptsProps
-            
+
         elif isinstance(canvasPanel, lightboxpanel.LightBoxPanel):
             panelGroup = 'lightbox'
             panelProps = lightBoxOptsProps
@@ -191,7 +191,7 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
                 widget,
                 displayName=strings.properties[displayCtx, dispProp.key],
                 tooltip=fsltooltips.properties[displayCtx, dispProp.key],
-                groupName='scene')                
+                groupName='scene')
 
         for dispProp in panelProps:
 

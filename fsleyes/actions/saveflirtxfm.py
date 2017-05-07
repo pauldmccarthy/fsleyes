@@ -53,7 +53,7 @@ class SaveFlirtXfmAction(base.Action):
                                 self.__name,
                                 self.__selectedOverlayChanged)
 
-        
+
     def destroy(self):
         """Must be called when this ``SaveFlirtXfmAction`` is no longer needed.
         """
@@ -62,7 +62,7 @@ class SaveFlirtXfmAction(base.Action):
         self.__overlayList = None
         self.__displayCtx  = None
         self.__frame       = None
-        
+
         base.Action.destroy(self)
 
 
@@ -108,11 +108,11 @@ def calculateTransform(overlay,
     """Calculates and returns FLIRT transformation from the given ``overlay``
     to the image specified by the given ``refFile``.
     """
-    
+
     # The reference image might
     # already be in the overlay list.
     refImg = overlayList.find(refFile)
-    
+
     if refImg is None:
         refImg = fslimage.Image(refFile, loadData=False)
 

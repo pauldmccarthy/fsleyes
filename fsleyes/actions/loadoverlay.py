@@ -61,7 +61,7 @@ class LoadOverlayAction(base.Action):
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
-        
+
 
     def __loadOverlay(self):
         """Calls :func:`interactiveLoadOverlays`.
@@ -75,12 +75,12 @@ class LoadOverlayAction(base.Action):
         """
 
         def onLoad(overlays):
-            
+
             if len(overlays) == 0:
                 return
 
             self.__overlayList.extend(overlays)
-        
+
             self.__displayCtx.selectedOverlay = \
                 self.__displayCtx.overlayOrder[-1]
 
@@ -89,7 +89,7 @@ class LoadOverlayAction(base.Action):
                     autodisplay.autoDisplay(overlay,
                                             self.__overlayList,
                                             self.__displayCtx)
-        
+
         interactiveLoadOverlays(onLoad=onLoad,
                                 inmem=self.__displayCtx.loadInMemory)
 
@@ -145,7 +145,7 @@ def loadOverlays(paths,
 
     :arg errorFunc: A function which is called if an error occurs while
                     loading an overlay, being passed the name of the
-                    overlay, and either the :class:`Exception` which 
+                    overlay, and either the :class:`Exception` which
                     occurred, or a string containing an error message.  The
                     default function pops up a :class:`wx.MessageBox` with
                     an error message. Pass in ``None`` to disable this
@@ -159,11 +159,11 @@ def loadOverlays(paths,
                     loaded. Must accept one parameter - a list containing
                     the overlays that were loaded.
 
-    :arg inmem:     If ``True``, all :class:`.Image` overlays are 
+    :arg inmem:     If ``True``, all :class:`.Image` overlays are
                     force-loaded into memory. Otherwise, large compressed
                     files may be kept on disk. Defaults to ``False``.
 
-    :returns:       A list of overlay objects - just a regular ``list``, 
+    :returns:       A list of overlay objects - just a regular ``list``,
                     not an :class:`OverlayList`.
     """
 
@@ -193,10 +193,10 @@ def loadOverlays(paths,
         if dtype is None:
             errorFunc(path, strings.messages['loadOverlays.unknownType'])
             return
-        
+
         log.debug('Loading overlay {} (guessed data type: {})'.format(
             path, dtype.__name__))
-        
+
         try:
             if issubclass(dtype, fslimage.Image):
                 overlay = loadImage(dtype, path, inmem=inmem)
@@ -212,7 +212,7 @@ def loadOverlays(paths,
         # recent files list
         recentPathManager.recordPath(path)
 
-    # This function gets called after 
+    # This function gets called after
     # all overlays have been loaded
     def realOnLoad():
 
@@ -227,17 +227,17 @@ def loadOverlays(paths,
     if loadFunc  is None: loadFunc  = lambda s:    None
     if errorFunc is None: errorFunc = lambda s, e: None
 
-    # Or if not provided, use the 
+    # Or if not provided, use the
     # default functions defined above
     if loadFunc  == 'default': loadFunc  = defaultLoadFunc
     if errorFunc == 'default': errorFunc = defaultErrorFunc
 
     overlays = []
-            
+
     # Load the images
     for path in paths:
         async.idle(loadPath, path)
-        
+
     async.idle(realOnLoad)
 
 
@@ -252,7 +252,7 @@ def loadImage(dtype, path, inmem=False):
     :arg path:  Path to the overlay file.
     :arg inmem: If ``True``, ``Image`` overlays are loaded into memory.
     """
-    
+
     rangethres = fslsettings.read('fsleyes.overlay.rangethres', 419430400)
     idxthres   = fslsettings.read('fsleyes.overlay.idxthres',   1073741824)
 
@@ -287,7 +287,7 @@ def loadImage(dtype, path, inmem=False):
                     threaded=indexed)
 
     # If the image is bigger than the
-    # index threshold, keep it on disk. 
+    # index threshold, keep it on disk.
     if inmem or (not indexed):
         log.debug('Loading {} into memory'.format(path))
         image.loadData()
@@ -306,7 +306,7 @@ def loadImage(dtype, path, inmem=False):
 
 def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
     """Convenience function for interactively loading one or more overlays.
-    
+
     Pops up a file dialog prompting the user to select one or more overlays
     to load.
 
@@ -314,7 +314,7 @@ def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
                   ``None``, the most recently visited directory (via this
                   function) is used, or a directory from An already loaded
                   overlay, or the current working directory.
-    
+
     :arg dirdlg:  Use a directory chooser instead of a file dialog.
 
     :arg kwargs:  Passed  through to the :func:`loadOverlays` function.
@@ -331,10 +331,10 @@ def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
 
     saveFromDir = False
     if fromDir is None:
-        
+
         saveFromDir = True
         fromDir     = fslsettings.read('loadSaveOverlayDir')
-        
+
         if fromDir is None:
             fromDir = os.getcwd()
 
@@ -360,14 +360,14 @@ def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
 
     dlg.Close()
     dlg.Destroy()
-     
+
     loadOverlays(paths, saveDir=saveFromDir, **kwargs)
 
 
 class RecentPathManager(notifier.Notifier):
     """The ``RecentPathManager`` is a simple class which provides
     access to a list of recently loaded files, and can notify
-    registered listeners when that list changes. See the 
+    registered listeners when that list changes. See the
     :attr:`recentPathManager` singleton instance.
     """
 

@@ -70,7 +70,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
     """The ``_FSLeyesPanel`` is the base class for the :class:`.FSLeyesPanel`
     and the :class:`.FSLeyesToolBar`.
 
-    
+
     A ``_FSLeyesPanel`` has the following methods, available for use by
     subclasses:
 
@@ -88,14 +88,14 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
 
     .. note:: When a ``_FSLeyesPanel`` is no longer required, the
               :meth:`destroy` method **must** be called!
-    """ 
+    """
 
-    
+
     def __init__(self, overlayList, displayCtx, frame, kbFocus=False):
         """Create a :class:`_FSLeyesPanel`.
 
         :arg overlayList: A :class:`.OverlayList` instance.
-        
+
         :arg displayCtx:  A :class:`.DisplayContext` instance.
 
         :arg frame:       The :class:`.FSLeyesFrame` that created this
@@ -108,7 +108,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
                           navigation can be specified with the
                           :meth:`setNavOrder` method.
         """
-        
+
         actions.ActionProvider     .__init__(self)
         props.SyncableHasProperties.__init__(self)
 
@@ -122,12 +122,12 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         self.__frame       = frame
         self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
 
-        # TODO Remove these attributes. Access 
+        # TODO Remove these attributes. Access
         #      should be through the methods.
         self._overlayList = self.__overlayList
         self._displayCtx  = self.__displayCtx
         self._name        = self.__name
-        
+
         self.__destroyed  = False
         self.__navOrder   = None
 
@@ -171,7 +171,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
                 if isinstance(low, floatspin.FloatSpinCtrl):
                     low = low.textCtrl
                 if isinstance(high, floatspin.FloatSpinCtrl):
-                    high = high.textCtrl 
+                    high = high.textCtrl
 
                 nav.extend([low, high])
 
@@ -179,7 +179,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
                 nav.extend([w.lowSpin.textCtrl, w.highSpin.textCtrl])
             else:
                 nav.append(w)
- 
+
         self.__navOrder = nav
 
 
@@ -201,7 +201,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
                 focusIdx,
                 type(wx.Window.FindFocus()).__name__))
 
-        # Some other widget that we 
+        # Some other widget that we
         # don't care about has focus.
         except:
             ev.Skip()
@@ -243,7 +243,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         """Returns a unique name associated with this ``_FSLeyesPanel``. """
         return self.__name
 
-    
+
     def getFrame(self):
         """Returns the :class:`.FSLeyesFrame` which created this
         ``_FSLeyesPanel``. May be ``None``, if this panel was not created
@@ -251,21 +251,21 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         """
         return self.__frame
 
-    
+
     def getDisplayContext(self):
         """Returns a reference to the :class:`.DisplayContext` that is
         associated with this ``_FSLeyesPanel``.
         """
         return self.__displayCtx
 
-    
+
     def getOverlayList(self):
         """Returns a reference to the :class:`.OverlayList`. """
         return self.__overlayList
 
-        
+
     def destroy(self):
-        """This method must be called by whatever is managing this 
+        """This method must be called by whatever is managing this
         ``_FSLeyesPanel`` when it is to be closed/destroyed.
 
         It seems to be impossible to define a single handler (on either the
@@ -301,7 +301,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         self.__destroyed   = True
 
         self._displayCtx   = None
-        self._overlayList  = None 
+        self._overlayList  = None
 
 
     def destroyed(self):
@@ -310,7 +310,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         """
         return self.__destroyed
 
-    
+
     def __del__(self):
         """If the :meth:`destroy` method has not been called, a warning message
         logged.
@@ -353,10 +353,10 @@ else:
 class FSLeyesPanel(six.with_metaclass(FSLeyesPanelMeta,
                                       _FSLeyesPanel,
                                       FSLeyesPanelBase)):
-    """The ``FSLeyesPanel`` is the base class for all view and control panels 
+    """The ``FSLeyesPanel`` is the base class for all view and control panels
     in *FSLeyes*. See the :mod:`fsleyes` documentation for more details.
     """
-    
+
     def __init__(self,
                  parent,
                  overlayList,
@@ -389,7 +389,7 @@ class FSLeyesSettingsPanel(FSLeyesPanel):
     fit its contents. See the :class:`.CanvasSettingsPanel` for an example.
     """
 
-    
+
     def __init__(self, *args, **kwargs):
         """Create an ``FSLeyesSettingsPanel``.  All arguments are passed to
         the :meth:`FSLeyesPanel.__init__` method.

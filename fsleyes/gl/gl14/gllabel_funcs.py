@@ -27,9 +27,9 @@ def init(self):
     """
 
     self.shader = None
-    
+
     compileShaders(   self)
-    updateShaderState(self) 
+    updateShaderState(self)
 
 
 def destroy(self):
@@ -44,7 +44,7 @@ def compileShaders(self):
     """
     if self.shader is not None:
         self.shader.destroy()
-        
+
     vertSrc  = shaders.getVertexShader(  'glvolume')
     fragSrc  = shaders.getFragmentShader('gllabel')
     textures = {
@@ -52,7 +52,7 @@ def compileShaders(self):
         'lutTexture'   : 1,
     }
 
-    self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures) 
+    self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)
 
 
 def updateShaderState(self):
@@ -60,9 +60,9 @@ def updateShaderState(self):
 
     if not self.ready():
         return
-    
+
     opts = self.displayOpts
-    
+
     self.shader.load()
 
     voxValXform  = self.imageTexture.voxValXform

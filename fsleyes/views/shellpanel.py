@@ -16,7 +16,7 @@ import textwrap
 
 import                      wx
 import wx.py.shell       as wxshell
-import wx.py.interpreter as wxinterpreter 
+import wx.py.interpreter as wxinterpreter
 
 import fsleyes.version           as version
 import fsleyes.actions.runscript as runscript
@@ -39,12 +39,12 @@ class ShellPanel(viewpanel.ViewPanel):
 
         :arg parent:      The :mod:`wx` parent object, assumed to be the
                           :class:`.CanvasPanel` that owns this ``ShellPanel``.
-        
+
         :arg overlayList: The :class:`.OverlayList`.
-        
+
         :arg displayCtx:  The :class:`.DisplayContext` of the
                           :class:`.CanvasPanel` that owns this ``ShellPanel``.
-        
+
         :arg frame:       The :class:`.FSLeyesFrame` that owns this
                           ``ShellPanel``.
         """
@@ -57,7 +57,7 @@ class ShellPanel(viewpanel.ViewPanel):
 
         introText = textwrap.dedent("""
           FSLeyes {} python shell
-        
+
         Available items:
         """.format(version.__version__))
 
@@ -87,7 +87,7 @@ class ShellPanel(viewpanel.ViewPanel):
             self,
             introText=introText,
             locals=_locals,
-            showInterpIntro=False) 
+            showInterpIntro=False)
 
         # TODO set up environment so that users can
         #
@@ -100,7 +100,7 @@ class ShellPanel(viewpanel.ViewPanel):
         #   - run scripts (add a 'load/run' button)
         #
         #   - open/close view panels, and manipulate existing view panels
-        #   
+        #
 
         font = shell.GetFont()
         shell.SetFont(font.Larger())
@@ -180,13 +180,13 @@ def Interpreter_runsource(self, source):
     # otherwise compile it as 'single'
     if source.find('\n') > -1: symbol = 'exec'
     else:                      symbol = 'single'
-    
+
     stdin, stdout, stderr = sys.stdin, sys.stdout, sys.stderr
     sys.stdin, sys.stdout, sys.stderr = \
                self.stdin, self.stdout, self.stderr
-    
+
     more = InteractiveInterpreter.runsource(self, source, symbol=symbol)
-    
+
     # this was a cute idea, but didn't work...
     # more = self.runcode(compile(source,'',
     #               ('exec' if self.useExecMode else 'single')))

@@ -45,7 +45,7 @@ class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
 
         self.Bind(wx.EVT_SIZE, self.__onResize)
 
-    
+
     def __onResize(self, ev):
         """Called on ``wx.EVT_SIZE`` events, when the canvas is resized. When
         the canvas is resized, we have to update the display bounds to preserve
@@ -78,7 +78,7 @@ class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
         # show/hide normally.
         if not platform.inSSHSession:
             wxgl.GLCanvas.Show(self, show)
-            
+
         elif not show:
             self.SetMinSize((0, 0))
             self.SetMaxSize((0, 0))

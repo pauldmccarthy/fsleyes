@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`TensorOpts` class, which defines 
+"""This module provides the :class:`TensorOpts` class, which defines
 options for displaying :class:`.GLTensor` instances.
 """
 
@@ -29,17 +29,17 @@ class TensorOpts(vectoropts.VectorOpts):
     :func:`.routines.unitSphere` function.
     """
 
-    
+
     tensorScale = props.Percentage(minval=50, maxval=600, default=100)
     """Scaling factor - by default, the tensor ellipsoids are scaled such that
     the biggest tensor (as defined by the first principal eigenvalue) fits
     inside a voxel. This parameter can be used to adjust this scale.
     """
 
-    
+
     def __init__(self, *args, **kwargs):
         """Create a ``TensorOpts`` instance. All arguments are passed through
         to :meth:`.VectorOpts.__init__`.
         """
-        
+
         vectoropts.VectorOpts.__init__(self, *args, **kwargs)

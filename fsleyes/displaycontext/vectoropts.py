@@ -26,7 +26,7 @@ class VectorOpts(volumeopts.NiftiOpts):
 
     *A note on orientation*
 
-    
+
     The :attr:`orientFlip` property allows you to flip the left-right
     orientation of line vectors, tensors, and SH functions. This option is
     necessary, because different tools may output vector data in different
@@ -50,11 +50,11 @@ class VectorOpts(volumeopts.NiftiOpts):
     xColour = props.Colour(default=(1.0, 0.0, 0.0))
     """Colour used to represent the X vector magnitude."""
 
-    
+
     yColour = props.Colour(default=(0.0, 1.0, 0.0))
     """Colour used to represent the Y vector magnitude."""
 
-    
+
     zColour = props.Colour(default=(0.0, 0.0, 1.0))
     """Colour used to represent the Z vector magnitude."""
 
@@ -62,11 +62,11 @@ class VectorOpts(volumeopts.NiftiOpts):
     suppressX = props.Boolean(default=False)
     """Do not use the X vector magnitude to colour vectors."""
 
-    
+
     suppressY = props.Boolean(default=False)
     """Do not use the Y vector magnitude to colour vectors."""
 
-    
+
     suppressZ = props.Boolean(default=False)
     """Do not use the Z vector magnitude to colour vectors."""
 
@@ -85,13 +85,13 @@ class VectorOpts(volumeopts.NiftiOpts):
     storage order, and ``False`` for radiological images.
     """
 
-    
+
     cmap = props.ColourMap()
     """If an image is selected as the :attr:`colourImage`, this colour map
     is used to colour the vector voxels.
     """
 
-    
+
     colourImage = props.Choice()
     """Colour vector voxels by the values contained in this image. Any image which
     is in the :class:`.OverlayList`, and which has the same voxel dimensions as
@@ -108,16 +108,16 @@ class VectorOpts(volumeopts.NiftiOpts):
     the vector image can be selected for modulation.
     """
 
-    
+
     clipImage = props.Choice()
     """Clip voxels from the vector image according to another image. Any image
     which is in the :class:`.OverlayList`, and which has the same voxel
     dimensions as the vector image can be selected for clipping. The
     :attr:`clippingRange` dictates the value below which vector voxels are
     clipped.
-    """ 
+    """
 
-    
+
     clippingRange = props.Bounds(ndims=1)
     """Hide voxels for which the :attr:`clipImage` value is outside of this
     range.
@@ -129,7 +129,7 @@ class VectorOpts(volumeopts.NiftiOpts):
     is in use.
     """
 
-    
+
     def __init__(self, image, *args, **kwargs):
         """Create a ``VectorOpts`` instance for the given image.  All
         arguments are passed through to the :class:`.NiftiOpts`
@@ -143,13 +143,13 @@ class VectorOpts(volumeopts.NiftiOpts):
         # a parent, we want to inherit the parent's
         # value.
         self.orientFlip = image.isNeurological()
-        
+
         volumeopts.NiftiOpts.__init__(self, image, *args, **kwargs)
 
         self.__registered = self.getParent() is not None
 
         if self.__registered:
-            
+
             self.overlayList.addListener('overlays',
                                          self.name,
                                          self.__overlayListChanged)
@@ -158,14 +158,14 @@ class VectorOpts(volumeopts.NiftiOpts):
                                          self.__clipImageChanged)
             self            .addListener('modulateImage',
                                          self.name,
-                                         self.__modulateImageChanged) 
+                                         self.__modulateImageChanged)
 
             if not self.isSyncedToParent('modulateImage'):
                 self.__refreshAuxImage('modulateImage')
             if not self.isSyncedToParent('clipImage'):
                 self.__refreshAuxImage('clipImage')
             if not self.isSyncedToParent('colourImage'):
-                self.__refreshAuxImage('colourImage') 
+                self.__refreshAuxImage('colourImage')
 
         else:
             self.__overlayListChanged()
@@ -184,7 +184,7 @@ class VectorOpts(volumeopts.NiftiOpts):
 
         volumeopts.NiftiOpts.destroy(self)
 
-        
+
     def __clipImageChanged(self, *a):
         """Called when the :attr:`clipImage` property changes. Updates
         the range of the :attr:`clippingRange` property.
@@ -223,23 +223,23 @@ class VectorOpts(volumeopts.NiftiOpts):
 
         self.modulateRange.xmin = minval
         self.modulateRange.xmax = maxval
-        self.modulateRange.x    = [minval, maxval] 
+        self.modulateRange.x    = [minval, maxval]
 
-        
+
     def __overlayListChanged(self, *a):
         """Called when the overlay list changes. Updates the :attr:`modulateImage`,
         :attr:`colourImage` and :attr:`clipImage` properties so that they
         contain a list of overlays which could be used to modulate the vector
         image.
         """
-        
+
         overlays = self.displayCtx.getOrderedOverlays()
 
         # the image for this VectorOpts
         # instance has been removed
         if self.overlay not in overlays:
             return
-        
+
         self.__refreshAuxImage('modulateImage')
         self.__refreshAuxImage('clipImage')
         self.__refreshAuxImage('colourImage')
@@ -250,7 +250,7 @@ class VectorOpts(volumeopts.NiftiOpts):
         :attr:`colourImage` or :attr:`clipImage`) so that it contains a list
         of overlays which could be used to modulate the vector image.
         """
-        
+
         prop     = self.getProp(imageName)
         val      = getattr(self, imageName)
         overlays = self.displayCtx.getOrderedOverlays()
@@ -258,7 +258,7 @@ class VectorOpts(volumeopts.NiftiOpts):
         options = [None]
 
         for overlay in overlays:
-            
+
             # It doesn't make sense to
             # modulate/clip/colour the
             # image by itself.
@@ -266,12 +266,12 @@ class VectorOpts(volumeopts.NiftiOpts):
                 continue
 
             # The modulate/clip/colour
-            # images must be images. 
+            # images must be images.
             if not isinstance(overlay, fslimage.Image):
                 continue
 
             options.append(overlay)
-            
+
         prop.setChoices(options, instance=self)
 
         if val in options: setattr(self, imageName, val)
@@ -283,7 +283,7 @@ class LineVectorOpts(VectorOpts):
     images, using a line to represent the vector value at each voxel.
     """
 
-    
+
     lineWidth = props.Int(minval=1, maxval=10, default=1)
     """Width of the line in pixels.
     """
@@ -293,7 +293,7 @@ class LineVectorOpts(VectorOpts):
     the vector data is assumed to be undirected.
     """
 
-    
+
     unitLength = props.Boolean(default=True)
     """If ``True``, each vector is scaled so that it has a length of
     ``1 * lengthScale`` (or 0.5 if ``directed`` is ``True``).
@@ -303,7 +303,7 @@ class LineVectorOpts(VectorOpts):
     lengthScale = props.Percentage(minval=10, maxval=500, default=100)
     """Length scaling factor. """
 
-    
+
     def __init__(self, *args, **kwargs):
         """Create a ``LineVectorOpts`` instance. All arguments are passed
         through  to the :class:`VectorOpts` constructor.
@@ -325,7 +325,7 @@ class RGBVectorOpts(VectorOpts):
     def __init__(self, *args, **kwargs):
         """Create a ``RGBVectorOpts`` instance. All arguments are passed
         through  to the :class:`VectorOpts` constructor.
-        """        
+        """
 
         kwargs['nounbind'] = ['interpolation']
         VectorOpts.__init__(self, *args, **kwargs)

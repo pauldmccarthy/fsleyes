@@ -56,14 +56,14 @@ def getAllPerspectives():
     returned list does not include built-in perspectives - these are
     accessible in the :attr:`BUILT_IN_PERSPECTIVES` dictionary.
     """
-    
+
     perspectives = fslsettings.read('fsleyes.perspectives', [])
 
     uniq = []
     for p in perspectives:
         if p not in uniq:
             uniq.append(p)
-    
+
     return uniq
 
 
@@ -74,10 +74,10 @@ def loadPerspective(frame, name, **kwargs):
     """
 
     if name in BUILT_IN_PERSPECTIVES.keys():
-        
+
         log.debug('Loading built-in perspective {}'.format(name))
         persp = BUILT_IN_PERSPECTIVES[name]
-        
+
     else:
         log.debug('Loading saved perspective {}'.format(name))
         persp = fslsettings.read('fsleyes.perspectives.{}'.format(name), None)
@@ -100,7 +100,7 @@ def applyPerspective(frame, name, perspective, message=None):
     """
 
     import fsleyes.views.canvaspanel as canvaspanel
-              
+
     persp         = deserialisePerspective(perspective)
     frameChildren = persp[0]
     frameLayout   = persp[1]
@@ -114,7 +114,7 @@ def applyPerspective(frame, name, perspective, message=None):
         message = strings.messages[
             'perspectives.applyingPerspective'].format(
                 strings.perspectives.get(name, name))
-            
+
     status.update(message)
 
     # Clear all existing view
@@ -140,12 +140,12 @@ def applyPerspective(frame, name, perspective, message=None):
         layout     = vpLayouts[   i]
         panelProps = vpPanelProps[i]
         sceneProps = vpSceneProps[i]
-        
+
         for child in children:
             log.debug('Adding control panel {} to {}'.format(
                 child.__name__, type(vp).__name__))
             _addControlPanel(vp, child)
-            
+
         vp.getAuiManager().LoadPerspective(layout)
 
         # Apply saved property values
@@ -164,7 +164,7 @@ def applyPerspective(frame, name, perspective, message=None):
                     type(opts).__name__, name, val))
                 opts.deserialise(name, val)
 
-            
+
 def savePerspective(frame, name):
     """Serialises the layout of the given :class:`.FSLeyesFrame` and saves
     it as a perspective with the given name.
@@ -173,9 +173,9 @@ def savePerspective(frame, name):
     if name in BUILT_IN_PERSPECTIVES.keys():
         raise ValueError('A built-in perspective named "{}" '
                          'already exists'.format(name))
-    
+
     log.debug('Saving current perspective with name {}'.format(name))
-    
+
     persp = serialisePerspective(frame)
     fslsettings.write('fsleyes.perspectives.{}'.format(name), persp)
 
@@ -183,22 +183,22 @@ def savePerspective(frame, name):
 
     log.debug('Serialised perspective:\n{}'.format(persp))
 
-    
+
 def removePerspective(name):
     """Deletes the named perspective. """
-    
+
     log.debug('Deleting perspective with name {}'.format(name))
     fslsettings.delete('fsleyes.perspectives.{}'.format(name))
     _removeFromPerspectivesList(name)
 
-    
+
 def serialisePerspective(frame):
     """Serialises the layout of the given :class:`.FSLeyesFrame`, and returns
     it as a string.
-    
+
     .. note:: This function was written against wx.lib.agw.aui.AuiManager as
               it exists in wxPython 3.0.2.0.
-    
+
      *FSLeyes* uses a hierarchy of ``wx.lib.agw.aui.AuiManager`` instances for
      its layout - the :class:`.FSLeyesFrame` uses an ``AuiManager`` to lay out
      :class:`.ViewPanel` instances, and each of these ``ViewPanels`` use their
@@ -207,35 +207,35 @@ def serialisePerspective(frame):
      The layout for a single ``AuiManager`` can be serialised to a string via
      the ``AuiManager.SavePerspective`` and ``AuiManager.SavePaneInfo``
      methods. One of these strings consists of:
-    
-       - A name, `'layout1'` or `'layout2'`, specifying the AUI version 
+
+       - A name, `'layout1'` or `'layout2'`, specifying the AUI version
          (this will always be at least `'layout2'` for *FSLeyes*).
-    
+
        - A set of key-value set of key-value pairs defining the top level
          panel layout.
-    
+
        - A set of key-value pairs for each pane, defining its layout. the
          ``AuiManager.SavePaneInfo`` method returns this for a single pane.
-     
+
      These are all encoded in a single string, with the above components
      separated with '|' characters, and the pane-level key-value pairs
      separated with a ';' character. For example:
-    
+
      layout2|key1=value1|name=Pane1;caption=Pane 1|\
      name=Pane2;caption=Pane 2|doc_size(5,0,0)=22|
-    
+
      This function queries each of the AuiManagers, and extracts the following:
-     
+
         - A layout string for the :class:`.FSLeyesFrame`.
-    
+
         - A string containing a comma-separated list of :class:`.ViewPanel`
           class names, in the same order as they are specified in the frame
           layout string.
-    
+
         - For each ``ViewPanel``:
-    
+
            - A layout string for the ``ViewPanel``
-    
+
            - A string containing a comma-separated list of control panel class
              names, in the same order as specified in the ``ViewPanel`` layout
              string.
@@ -340,7 +340,7 @@ def serialisePerspective(frame):
         kvps = ';'.join(kvps)
 
         return kvps
-                                      
+
     # Now we can start extracting the layout information.
     # We start with the FSLeyesFrame layout.
     auiMgr     = frame.getAuiManager()
@@ -355,7 +355,7 @@ def serialisePerspective(frame):
     # We are going to build a list of layout strings,
     # one for each ViewPanel, and a corresponding list
     # of control panels displayed on each ViewPanel.
-    vpLayouts = [] 
+    vpLayouts = []
     vpConfigs = []
 
     for vp in viewPanels:
@@ -384,7 +384,7 @@ def serialisePerspective(frame):
         # And turn them into comma-separated key-value pairs.
         panelProps = ['{}={}'.format(k, v) for k, v in panelProps.items()]
         sceneProps = ['{}={}'.format(k, v) for k, v in sceneProps.items()]
-        
+
         panelProps = ','.join(panelProps)
         sceneProps = ','.join(sceneProps)
 
@@ -414,13 +414,13 @@ def deserialisePerspective(persp):
 
                 - A list of :class:`.ViewPanel` class types - the
                   children of the :class:`.FSLeyesFrame`.
-    
+
                 - An ``aui`` layout string for the :class:`.FSLeyesFrame`
-   
+
                 - A list of lists, one for each ``ViewPanel``, with each
                   list containing a collection of control panel class
                   types - the children of the corresponding ``ViewPanel``.
-    
+
                 - A list of strings, one ``aui`` layout string for each
                   ``ViewPanel``.
 
@@ -505,7 +505,7 @@ def deserialisePerspective(persp):
         'TimeSeriesControlPanel'     : TimeSeriesControlPanel,
         'TimeSeriesToolBar'          : TimeSeriesToolBar,
     }
-    
+
     lines = persp.split('\n')
     lines = [l.strip() for l in lines]
     lines = [l         for l in lines if l != '']
@@ -527,7 +527,7 @@ def deserialisePerspective(persp):
     vpLayouts    = []
     vpPanelProps = []
     vpSceneProps = []
- 
+
     for i in range(len(frameChildren)):
 
         linei = (i * 2) + 2
@@ -537,7 +537,7 @@ def deserialisePerspective(persp):
 
         children, panelProps, sceneProps = config.split(';')
 
-        vpChildren   .append(children) 
+        vpChildren   .append(children)
         vpLayouts    .append(layout)
         vpPanelProps .append(panelProps)
         vpSceneProps .append(sceneProps)
@@ -567,7 +567,7 @@ def deserialisePerspective(persp):
         props           = [p for p in props if p != '']
         props           = [p.split('=') for p in props]
         vpSceneProps[i] = dict(props)
-        
+
 
     return (frameChildren,
             frameLayout,
@@ -579,7 +579,7 @@ def deserialisePerspective(persp):
 
 def _addToPerspectivesList(persp):
     """Adds the given perspective name to the list of saved perspectives. """
-    
+
     persp        = persp.strip()
     perspectives = getAllPerspectives()
 
@@ -593,14 +593,14 @@ def _addToPerspectivesList(persp):
 def _removeFromPerspectivesList(persp):
     """Removes the given perspective name from the list of saved perspectives.
     """
-    
+
     perspectives = getAllPerspectives()
 
     try:               perspectives.remove(persp)
     except ValueError: return
 
     log.debug('Updating stored perspective list: {}'.format(perspectives))
-    fslsettings.write('fsleyes.perspectives', perspectives) 
+    fslsettings.write('fsleyes.perspectives', perspectives)
 
 
 def _addControlPanel(viewPanel, panelType):
@@ -633,7 +633,7 @@ def _addControlPanel(viewPanel, panelType):
         PowerSpectrumToolBar
     from fsleyes.controls.timeseriescontrolpanel     import \
         TimeSeriesControlPanel
-    from fsleyes.controls.timeseriestoolbar          import TimeSeriesToolBar 
+    from fsleyes.controls.timeseriestoolbar          import TimeSeriesToolBar
 
     args = {
         CanvasSettingsPanel        : {'canvasPanel' : viewPanel},
@@ -683,14 +683,14 @@ def _getPanelProps(panel):
 
     panelType = type(panel).__name__
     opts      = panel.getSceneOptions()
-    
+
     panelProps, sceneProps = VIEWPANEL_PROPS[panelType]
 
     panelProps = {name : panel.serialise(name) for name in panelProps}
     sceneProps = {name : opts .serialise(name) for name in sceneProps}
 
     return panelProps, sceneProps
-    
+
 
 VIEWPANEL_PROPS = {
     'OrthoPanel'    : [['syncLocation',
@@ -721,7 +721,7 @@ VIEWPANEL_PROPS = {
                         'showGridLines',
                         'highlightSlice']]}
 
-    
+
 BUILT_IN_PERSPECTIVES = collections.OrderedDict((
     ('default',
      textwrap.dedent("""
@@ -750,7 +750,7 @@ BUILT_IN_PERSPECTIVES = collections.OrderedDict((
                      OverlayListPanel,OverlayDisplayToolBar,OrthoToolBar,LocationPanel,ClusterPanel;syncLocation=True,syncOverlayOrder=True,movieRate=750,syncOverlayDisplay=True;layout=horizontal,showLabels=True,bgColour=#000000ff,showCursor=True,showZCanvas=True,cursorColour=#00ff00ff,showColourBar=False,showYCanvas=True,showXCanvas=True,colourBarLocation=top
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=2;row=0;pos=0;prop=87792;bestw=204;besth=80;minw=197;minh=80;maxw=-1;maxh=-1;floatx=2608;floaty=1116;floatw=204;floath=96;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=899;besth=49;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=1;pos=0;prop=100000;bestw=590;besth=34;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=2072;floaty=80;floatw=824;floath=50;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=2;row=0;pos=1;prop=98544;bestw=440;besth=111;minw=440;minh=109;maxw=-1;maxh=-1;floatx=2730;floaty=1104;floatw=440;floath=127;notebookid=-1;transparent=255|name=ClusterPanel;caption=Cluster browser;state=67373052;dir=2;layer=1;row=0;pos=0;prop=114760;bestw=396;besth=96;minw=390;minh=96;maxw=-1;maxh=-1;floatx=3516;floaty=636;floatw=396;floath=112;notebookid=-1;transparent=255|dock_size(5,0,0)=10|dock_size(2,1,0)=566|dock_size(1,10,0)=51|dock_size(1,10,1)=36|dock_size(3,2,0)=130|
                      OverlayListPanel,TimeSeriesToolBar;;
-                     layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=640;besth=480;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=4;layer=0;row=0;pos=0;prop=100000;bestw=204;besth=60;minw=204;minh=60;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=204;floath=76;notebookid=-1;transparent=255|name=TimeSeriesToolBar;caption=Time series toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=456;besth=34;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=642|dock_size(1,10,0)=36|dock_size(4,0,0)=206| 
+                     layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=640;besth=480;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=4;layer=0;row=0;pos=0;prop=100000;bestw=204;besth=60;minw=204;minh=60;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=204;floath=76;notebookid=-1;transparent=255|name=TimeSeriesToolBar;caption=Time series toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=456;besth=34;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=642|dock_size(1,10,0)=36|dock_size(4,0,0)=206|
                      """)),
 
     ('ortho',

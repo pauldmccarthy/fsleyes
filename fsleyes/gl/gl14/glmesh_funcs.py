@@ -35,7 +35,7 @@ def compileShaders(self):
         'negCmap' : 1
     }
 
-    self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures) 
+    self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)
 
 
 def destroy(self):
@@ -45,12 +45,12 @@ def destroy(self):
     if self.shader is not None:
         self.shader.destroy()
 
-    self.shader = None 
+    self.shader = None
 
 
 def updateShaderState(self):
-    """Updates the state of the vertex/fragment shaders according to the 
-    current :class:`.MeshOpts` configuration. This involves setting the 
+    """Updates the state of the vertex/fragment shaders according to the
+    current :class:`.MeshOpts` configuration. This involves setting the
     parameter values used by the shaders.
     """
     self.shader.load()
@@ -62,7 +62,7 @@ def updateShaderState(self):
         delta     = 1.0 / (opts.lut.max() + 1)
         cmapXform = transform.scaleOffsetXform(delta, 0.5 * delta)
     else:
-        cmapXform = self.cmapTexture.getCoordinateTransform() 
+        cmapXform = self.cmapTexture.getCoordinateTransform()
 
     settings = [-1 if useNegCmap          else 1,
                 -1 if opts.invertClipping else 1,
@@ -72,7 +72,7 @@ def updateShaderState(self):
     self.shader.setFragParam('settings',  settings)
     self.shader.setFragParam('cmapXform', cmapXform)
 
-    self.shader.unload() 
+    self.shader.unload()
 
 
 def drawColouredOutline(self, vertices, vdata, indices=None, glType=None):
@@ -85,7 +85,7 @@ def drawColouredOutline(self, vertices, vdata, indices=None, glType=None):
     :arg indices:  Indices into the ``vertices`` array. If not provided,
                    ``glDrawArrays`` is used.
     :arg glType:   The OpenGL primitive type. If not provided, ``GL_LINES``
-                   is assumed. 
+                   is assumed.
     """
 
     if glType is None:
@@ -104,7 +104,7 @@ def drawColouredOutline(self, vertices, vdata, indices=None, glType=None):
         self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
 
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-    gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C')) 
+    gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
 
     if indices is None:
         gl.glDrawArrays(glType, 0, vertices.shape[0])
@@ -112,10 +112,10 @@ def drawColouredOutline(self, vertices, vdata, indices=None, glType=None):
         gl.glDrawElements(glType,
                           indices.shape[0],
                           gl.GL_UNSIGNED_INT,
-                          indices.ravel('C')) 
+                          indices.ravel('C'))
 
     gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-    
+
     self.shader.unloadAtts()
     self.shader.unload()
 
@@ -123,4 +123,4 @@ def drawColouredOutline(self, vertices, vdata, indices=None, glType=None):
         self.lutTexture.unbindTexture()
     else:
         self.cmapTexture   .unbindTexture()
-        self.negCmapTexture.unbindTexture() 
+        self.negCmapTexture.unbindTexture()

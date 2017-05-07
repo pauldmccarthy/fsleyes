@@ -27,7 +27,7 @@ class Selection(notifier.Notifier):
     the same shape as the image. Methods are available to query and update
     the selection.
 
-    
+
     Changes to a ``Selection`` can be made through *blocks*, which are 3D
     cuboid regions. The following methods allow a block to be
     selected/deselected, where the block is specified by a voxel coordinate,
@@ -52,23 +52,23 @@ class Selection(notifier.Notifier):
        addToSelection
        removeFromSelection
 
-    
+
     A third approach to making a selection is provided by the
     :meth:`selectByValue` method, which allows a selection to be made
     in a manner similar to a *bucket fill* technique found in any image
     editor.
 
-    
+
     A ``Selection`` object keeps track of the most recent change made through
     any of the above methods. The most recent change can be retrieved through
     the :meth:`getLastChange` method. The ``Selection`` class inherits from
     the :class:`.Notifier` class - you can be notified whenever the selection
     changes by registering as a listener.
-    
+
 
     Finally, the ``Selection`` class offers a few other methods for
     convenience:
-    
+
     .. autosummary::
        :nosignatures:
 
@@ -78,21 +78,21 @@ class Selection(notifier.Notifier):
        getBoundedSelection
        getIndices
     """
-    
-    
+
+
     def __init__(self, image, display, selection=None):
         """Create a ``Selection`` instance.
 
         :arg image:     The :class:`.Image` instance  associated with this
                         ``Selection``.
-        
+
         :arg display:   The :class:`.Display` instance for the ``image``.
-        
+
         :arg selection: Selection array. If not provided, one is created.
                         Must be a ``numpy.uint8`` array with the same shape
                         as ``image``. This array is *not* copied.
         """
-    
+
         self.__image              = image
         self.__display            = display
         self.__opts               = display.getDisplayOpts()
@@ -103,7 +103,7 @@ class Selection(notifier.Notifier):
 
         if selection is None:
             selection = np.zeros(image.shape[:3], dtype=np.uint8)
-            
+
         elif selection.shape != image.shape[:3] or \
              selection.dtype != np.uint8:
             raise ValueError('Incompatible selection array: {} ({})'.format(
@@ -131,7 +131,7 @@ class Selection(notifier.Notifier):
                      will break.
         """
         return self.__selection
-    
+
 
     def selectBlock(self,
                     voxel,
@@ -143,8 +143,8 @@ class Selection(notifier.Notifier):
         voxel and block size. See the :func:`.routines.voxelBlock` function
         for details on the arguments.
 
-        :arg combine:   Combine this change with the previous stored change 
-                        (see :meth:`__storeChange`). 
+        :arg combine:   Combine this change with the previous stored change
+                        (see :meth:`__storeChange`).
         """
 
         block, offset = glroutines.voxelBlock(
@@ -153,10 +153,10 @@ class Selection(notifier.Notifier):
             boxSize,
             bias=bias,
             axes=axes)
-        
+
         self.addToSelection(block, offset, combine)
 
-        
+
     def deselectBlock(self,
                       voxel,
                       boxSize,
@@ -167,8 +167,8 @@ class Selection(notifier.Notifier):
         voxel and box size. See the :func:`.routines.voxelBlock` function
         for details on the arguments.
 
-        :arg combine:   Combine this change with the previous stored change 
-                        (see :meth:`__storeChange`). 
+        :arg combine:   Combine this change with the previous stored change
+                        (see :meth:`__storeChange`).
         """
 
         block, offset = glroutines.voxelBlock(
@@ -176,73 +176,73 @@ class Selection(notifier.Notifier):
             self.__selection.shape,
             boxSize,
             bias=bias,
-            axes=axes) 
-        
-        self.removeFromSelection(block, offset, combine) 
+            axes=axes)
 
-        
+        self.removeFromSelection(block, offset, combine)
+
+
     def setSelection(self, block, offset, combine=False):
         """Copies the given ``block`` into the selection, starting at
         ``offset``.
 
         :arg block:   A ``numpy.uint8`` array containing a selection.
-        
+
         :arg offset:  Voxel coordinates specifying the block location.
 
         :arg combine: Combine this change with the previous stored change (see
-                      :meth:`__storeChange`). 
+                      :meth:`__storeChange`).
         """
-        self.__updateSelectionBlock(block, offset, combine) 
-        
-    
+        self.__updateSelectionBlock(block, offset, combine)
+
+
     def replaceSelection(self, block, offset, combine=False):
         """Copies the given ``block`` into the selection, starting at
         ``offset``.
-        
+
         :arg block:   A ``numpy.uint8`` array containing a selection.
-        
+
         :arg offset:  Voxel coordinates specifying the block location.
-        
+
         :arg combine: Combine this change with the previous stored change (see
-                      :meth:`__storeChange`). 
+                      :meth:`__storeChange`).
         """
 
         self.__updateSelectionBlock(block, offset, combine)
 
-        
+
     def addToSelection(self, block, offset, combine=False):
         """Adds the selection (via a boolean OR operation) in the given
         ``block`` to the current selection, starting at ``offset``.
 
         :arg block:   A ``numpy.uint8`` array containing a selection.
-        
+
         :arg offset:  Voxel coordinates specifying the block location.
-                
+
         :arg combine: Combine this change with the previous stored change (see
-                      :meth:`__storeChange`). 
+                      :meth:`__storeChange`).
         """
         existing = self.__getSelectionBlock(block.shape, offset)
         block    = np.logical_or(block, existing)
-        
+
         self.__updateSelectionBlock(block, offset, combine)
 
 
     def removeFromSelection(self, block, offset, combine=False):
         """Clears all voxels in the selection where the values in ``block``
         are non-zero.
-        
+
         :arg block:   A ``numpy.uint8`` array containing a selection.
-        
+
         :arg offset:  Voxel coordinates specifying the block location.
-        
+
         :arg combine: Combine this change with the previous stored change (see
-                      :meth:`__storeChange`).         
+                      :meth:`__storeChange`).
         """
         existing             = self.__getSelectionBlock(block.shape, offset)
         existing[block != 0] = False
         self.__updateSelectionBlock(existing, offset, combine)
 
-    
+
     def getSelectionSize(self):
         """Returns the number of voxels that are currently selected. """
         return self.__selection.sum()
@@ -256,10 +256,10 @@ class Selection(notifier.Notifier):
         the coordinates specifying its location in the full :attr:`selection`
         array.
 
-        .. warning:: This method is slow, and in many cases it may be 
+        .. warning:: This method is slow, and in many cases it may be
                      faster simply to access the full selection array.
         """
-        
+
         xs, ys, zs = np.where(self.__selection > 0)
 
         if len(xs) == 0:
@@ -276,12 +276,12 @@ class Selection(notifier.Notifier):
 
         return selection, (xlo, ylo, zlo)
 
-        
+
     def clearSelection(self, restrict=None, combine=False):
         """Clears (sets to 0) the entire selection, or the selection specified
         by the ``restrict`` parameter, if it is given.
 
-        .. note:: Calling this method when the selection is already empty 
+        .. note:: Calling this method when the selection is already empty
                   will clear the most recently stored change - see
                   :meth:`getLastChange`.
 
@@ -343,20 +343,20 @@ class Selection(notifier.Notifier):
         ``Selection``.
         """
         self.__lastChangeOldBlock = oldBlock
-        self.__lastChangeNewBlock = block 
+        self.__lastChangeNewBlock = block
         self.__lastChangeOffset   = offset
 
 
     def __storeChange(self, old, new, offset, combine=False):
         """Stores the given selection change.
 
-        :arg old:     A copy of the portion of the :attr:`selection` that 
+        :arg old:     A copy of the portion of the :attr:`selection` that
                       has changed,
-        
+
         :arg new:     The new selection values.
-        
+
         :arg offset:  Offset into the full :attr:`selection` array
-        
+
         :arg combine: If ``False`` (the default), the previously stored change
                       will be replaced by the current change. Otherwise the
                       previous and current changes will be combined.
@@ -375,7 +375,7 @@ class Selection(notifier.Notifier):
                                   offset[1], offset[1] + old.shape[1],
                                   offset[2], offset[2] + old.shape[2],
                                   new.sum()))
-            
+
             self.__lastChangeOldBlock = old
             self.__lastChangeNewBlock = new
             self.__lastChangeOffset   = offset
@@ -394,7 +394,7 @@ class Selection(notifier.Notifier):
 
         # Calculate/organise low/high indices
         # for each change set:
-        # 
+        #
         #  - one for the current change (passed
         #    in to this method call)
         #
@@ -424,11 +424,11 @@ class Selection(notifier.Notifier):
         # slice objects are defined relative to the
         # combined space of both.
         cmbSlices  = [slice(lo, hi) for lo, hi in cmbIdxs]
-        
+
         lastSlices = [slice(lLo - cmLo, lHi - cmLo)
                       for ((lLo, lHi), (cmLo, cmHi))
                       in zip(lastIdxs, cmbIdxs)]
-        
+
         currSlices = [slice(cuLo - cmLo, cuHi - cmLo)
                       for ((cuLo, cuHi), (cmLo, cmHi))
                       in zip(currIdxs, cmbIdxs)]
@@ -457,7 +457,7 @@ class Selection(notifier.Notifier):
                           cmbIdxs[1][0], cmbIdxs[1][1],
                           cmbIdxs[2][0], cmbIdxs[2][1],
                           cmbNew.sum()))
-        
+
         self.__lastChangeOldBlock = cmbOld
         self.__lastChangeNewBlock = cmbNew
         self.__lastChangeOffset   = cmbIdxs[0][0], cmbIdxs[1][0], cmbIdxs[2][0]
@@ -479,9 +479,9 @@ class Selection(notifier.Notifier):
         result     = np.vstack((xs, ys, zs)).T
 
         for ax in range(3):
-            
+
             off = restrict[ax].start
-            
+
             if off is not None:
                 result[:, ax] += off
 
@@ -496,13 +496,13 @@ class Selection(notifier.Notifier):
                       restrict=None,
                       combine=False):
         """A *bucket fill* style selection routine.
-        
+
         :arg combine:      Combine with the previous stored change (see
                            :meth:`__storeChange`).
 
         See the :func:`selectByValue` function for details on the other
         arguments.
-        
+
         :returns: The generated selection array (a ``numpy`` boolean array),
                   and offset of this array into the full selection image.
         """
@@ -580,17 +580,17 @@ class Selection(notifier.Notifier):
         self.removeFromSelection(block, offset, combine)
 
         return block, offset
-    
-    
+
+
     def transferSelection(self, destImg, destDisplay):
         """Re-samples the current selection into the destination image
-        space. 
+        space.
 
         Each ``Selection`` instance is in terms of a specific :class:`.Image`
         instance, which has a specific dimensionality. In order to apply
         a ``Selection`` which is in terms of one ``Image``, the selection
         array needs to be re-sampled.
-        
+
         :arg destImg:     The :class:`.Image` that the selection is to be
                           transferred to.
 
@@ -601,7 +601,7 @@ class Selection(notifier.Notifier):
                  ``Selection`` object for use with the given ``destImg``.
         """
         raise NotImplementedError('todo')
-        
+
 
     def __updateSelectionBlock(self, block, offset, combine=False):
         """Replaces the current selection at the specified ``offset`` with the
@@ -642,15 +642,15 @@ class Selection(notifier.Notifier):
         self.__selection[xlo:xhi, ylo:yhi, zlo:zhi] = block
 
         self.__clear = False
-        
-        self.notify() 
 
-        
+        self.notify()
+
+
     def __getSelectionBlock(self, size, offset):
         """Extracts a block from the selection image starting from the
         specified ``offset``, and of the specified ``size``.
         """
-        
+
         xlo, ylo, zlo = map(int, offset)
         xhi, yhi, zhi = map(int, size)
 
@@ -775,11 +775,11 @@ def selectByValue(data,
     # the search space, and specify
     # an ellipsoid mask with the
     # specified per-axis radii
-    else:            
+    else:
         ranges = [None, None, None]
         slices = [None, None, None]
 
-        # Calculate xyz indices 
+        # Calculate xyz indices
         # of the search space
         for ax in range(3):
 
@@ -832,7 +832,7 @@ def selectByValue(data,
     # connectivity for 3D, or 4 neighbour
     # connectivity for 2D.
     #
-    # If local is not True, any same or similar 
+    # If local is not True, any same or similar
     # values are part of the selection
     if local:
         hits, _   = ndimeas.label(hits)
@@ -853,23 +853,23 @@ def selectLine(shape,
     between the points ``from_`` and ``to``.
 
     :arg shape:   Shape of the image in which the selection is taking place.
-    
+
     :arg dims:    Size of one voxel along each axis (the pixdims).
-    
+
     :arg from_:   Start point of the line
-    
+
     :arg to:      End point of the line
 
     See the :func:`.routines.voxelBlock` function for details on the other
     arguments.
-    
+
     :returns: A tuple containing:
-    
+
                - A 3D boolean ``numpy`` array containing the selected line.
                - An offset of this array according to the ``shape`` of the
-                 full image. If the 
+                 full image. If the
     """
-    
+
     from_   = np.array(from_)
     to      = np.array(to)
 
@@ -933,10 +933,10 @@ def selectLine(shape,
               int(max((ymax, maxBox[:, 1].max())) - offset[1]),
               int(max((zmax, maxBox[:, 2].max())) - offset[2])]
 
-    # Allocate a selection block 
+    # Allocate a selection block
     # which will contain the line
     block = np.zeros(size, dtype=np.bool)
-        
+
     # Generate a voxel block
     # at each point
     for i in range(npoints):

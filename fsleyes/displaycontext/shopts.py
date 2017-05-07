@@ -65,7 +65,7 @@ class SHOpts(vectoropts.VectorOpts):
     set of parameters.
     """
 
-    
+
     shResolution = props.Int(minval=3, maxval=10, default=5)
     """Resolution of the sphere used to display the FODs at each voxel. The
     value is equal to the number of iterations that an isocahedron, starting
@@ -92,24 +92,24 @@ class SHOpts(vectoropts.VectorOpts):
     :meth:`__init__`.
     """
 
-    
+
     size = props.Percentage(minval=10, maxval=500, default=100)
     """Display size - this is simply a linear scaling factor. """
-    
+
 
     lighting = props.Boolean(default=False)
     """Apply a simple directional lighting model to the FODs. """
 
-    
+
     radiusThreshold = props.Real(minval=0.0, maxval=1.0, default=0.05)
     """FODs with a maximum radius that is below this threshold are not shown.
     """
 
-    
+
     colourMode = props.Choice(('direction', 'radius'))
     """How to colour each FOD. This property is overridden if the
     :attr:`.VectorOpts.colourImage` is set.
-    
+
       - ``'direction'`` The vertices of an FOD are coloured according to their
                         x/y/z location (see :attr:`xColour`, :attr:`yColour`,
                         and :attr:`zColour`).
@@ -133,13 +133,13 @@ class SHOpts(vectoropts.VectorOpts):
         self.__maxOrder = maxOrder
         self.__shType   = shType
 
-        # If this Opts instance has a parent, 
+        # If this Opts instance has a parent,
         # the shOrder choices will be inherited
         if self.getParent() is None:
 
             if   shType == 'sym':  vizOrders = range(0, self.__maxOrder + 1, 2)
             elif shType == 'asym': vizOrders = range(0, self.__maxOrder + 1)
-            
+
             self.getProp('shOrder').setChoices(vizOrders, instance=self)
             self.shOrder = vizOrders[-1]
 
@@ -169,7 +169,7 @@ class SHOpts(vectoropts.VectorOpts):
         """
 
         # TODO Adjust matrix if shOrder is
-        #      less than its maximum possible 
+        #      less than its maximum possible
         #      value for this image.
         #
         #      Also, calculate the normal vectors.
@@ -190,7 +190,7 @@ class SHOpts(vectoropts.VectorOpts):
             params = params.reshape((-1, 1))
 
         return params
- 
+
 
     def getVertices(self):
         """Loads and returns a ``numpy`` array of shape ``(N, 3)``, containing

@@ -25,7 +25,7 @@ On creation, resources must be given a unique name, referred to as a
 key. As an example, let's say that we have a :class:`.Image` called
 ``myImage``::
 
- 
+
     import fsleyes.gl.resources as glresources
     import fsleyes.gl.textures  as gltextures
     import fsl.data.image       as fslimage
@@ -39,7 +39,7 @@ created, whereas subsequent calls will return a reference to the existing
 texture, and will increase its reference count::
 
     texture = glresources.get(
-        'myTexture', 
+        'myTexture',
          gltextures.ImageTexture,
          'myTexture',
          image,
@@ -112,12 +112,12 @@ def get(key, createFunc=None, *args, **kwargs):
 
 
 def set(key, resource, overwrite=False):
-    """Create a new resource, or update an existing one. 
+    """Create a new resource, or update an existing one.
 
     :arg key:       Unique resource identifier.
-    
+
     :arg resource:  The resource itself.
-    
+
     :arg overwrite: If ``False`` (the default), and a resource with
                     the specified ``key`` already exists, a :exc:`KeyError`
                     is raised. Otherwise, it is assumed that a resource with
@@ -136,8 +136,8 @@ def set(key, resource, overwrite=False):
         _resources[key] = r
 
         log.debug('Resource {} reference count '
-                  'increased to {}'.format(str(key), r.refcount)) 
-        
+                  'increased to {}'.format(str(key), r.refcount))
+
     else:
         log.debug('Updating resource {}'.format(str(key)))
 
@@ -145,7 +145,7 @@ def set(key, resource, overwrite=False):
 
     return resource
 
-    
+
 def delete(key):
     """Decrements the reference count of the resource with the specified key.
     When the resource reference count reaches ``0``, the ``destroy`` method
@@ -189,7 +189,7 @@ class _Resource(object):
         self.key      = key
         self.resource = resource
         self.refcount = 0
-        
+
 
 _resources = {}
 """A dictionary containing ``{key : _Resource}`` mappings for all resources

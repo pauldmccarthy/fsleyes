@@ -14,7 +14,7 @@ performed, enabled and disabled, and may be bound to a GUI menu item or
 button. The :class:`ActionProvider` class represents some entity which can
 perform one or more actions.  As the :class:`.FSLeyesPanel` class derives from
 :class:`ActionProvider` pretty much everything in FSLeyes is an
-:class:`ActionProvider`. 
+:class:`ActionProvider`.
 
 
 The :func:`action` and :func:`toggleAction` functions are intended to be used
@@ -146,7 +146,7 @@ class ActionProvider(object):
             # Entries in getActions may be (None, None)
             if actionz is None:
                 continue
-            
+
             # Or may be ('groupName', [('actionName', action), ...])
             elif isinstance(actionz, list):
                 actionz = [a[1] for a in actionz]
@@ -157,13 +157,13 @@ class ActionProvider(object):
 
             for a in actionz:
                 a.destroy()
-                
+
 
     def getAction(self, name):
         """Return the :class:`Action` instance with the specified name. """
         return getattr(self, name)
 
-    
+
     def hasAction(self, name):
         """Return ``True`` if this ``ActionProvider`` has an action with the
         given name, ``False`` otherwise
@@ -175,16 +175,16 @@ class ActionProvider(object):
         """Enable/disable the named :class:`Action`. """
         self.getAction(name).enabled = enable
 
-        
+
     def disableAction(self, name):
         """Disable the named :class:`Action`. """
         self.enableAction(name, False)
 
-    
+
     def getActions(self):
         """Return a list containing the ``(name, Action)`` of all
         :class:`Action` instances in this ``ActionProvider``.
-        
+
         Sub-classes may wish to override this method to enforce a specific
         ordering of their actions.
 
@@ -199,13 +199,13 @@ class ActionProvider(object):
                       of actions should appear as a sub-menu with the
                       specified ``name``.
         """
-    
+
         acts = []
-        
+
         for name, attr in inspect.getmembers(self):
             if isinstance(attr, Action):
                 acts.append((name, attr))
-                
+
         return acts
 
 
@@ -214,7 +214,7 @@ class ActionFactory(object):
     :func:`toggleAction` decorators. Its job is to create :class:`Action`
     instances for :class:`ActionProvider` instances.
 
-    
+
     .. warning:: This class contains difficult-to-understand code. Read up
                  on decorators and descriptors before proceeding.
 
@@ -226,13 +226,13 @@ class ActionFactory(object):
               to return ``ActionFactory(CustomActionClass, *args, **kwargs)``,
               where the ``*args`` and ``**kwargs`` are the arguments passed to
               the :class:`Action` sub-class.
-    
+
               See the :func:`toggleControlAction` decorator for an example.
 
-    
+
     *Boring technical details*
-    
-    
+
+
     Consider the following class::
 
         class MyThing(ActionProvider):
@@ -241,7 +241,7 @@ class ActionFactory(object):
             def myAction(self):
                 # do things here
 
-                
+
     The ``MyClass.myAction`` method has been marked as an action, using the
     :func:`action` decorator. However, the :func:`action` decorator cannot
     create an :class:`Action` instance at the point of class definition,
@@ -255,7 +255,7 @@ class ActionFactory(object):
     definition, an ``ActionFactory`` is created, and used as the decorator
     of the unbound class method.
 
-    
+
     Later on, when the ``ActionFactory`` detects that it being is accessed
     through an instance of the class (a ``MyThing`` instance in the example
     above), it creates an :class:`Action` instance, and then replaces itself
@@ -265,7 +265,7 @@ class ActionFactory(object):
     so it can differentiate between class-level and instance-level accesses
     of the decorated method.
 
-    
+
     The ``ActionFactory`` supports class-method decorators both with and
     without arguments. While neither the :class:`.Action`, nor the
     :class:`.ToggleAction` classes accept any optional arguments, this may be
@@ -290,7 +290,7 @@ class ActionFactory(object):
               decorator.
     """
 
-    
+
     def __init__(self, actionType, *args, **kwargs):
         """Create an ``ActionFactory``.
 
@@ -302,7 +302,7 @@ class ActionFactory(object):
         passed to the decorator (an ``@action(...)`` style decorator was
         used).
         """
-        
+
         self.__actionType  = actionType
         self.__args        = args
         self.__kwargs      = kwargs
@@ -314,11 +314,11 @@ class ActionFactory(object):
            len(args)   == 1 and \
            isinstance(args[0], (types.FunctionType,
                                 types.MethodType)):
-            
+
             self.__func = args[0]
             self.__args = self.__args[1:]
 
-        
+
     def __call__(self, func=None):
         """If this ``ActionFactory`` was instantiated through a brackets-style
         decorator (e.g. ``@action(arg1=1, arg2=2)``), this method is called
@@ -331,11 +331,11 @@ class ActionFactory(object):
             log.warn('ActionFactory.__call__ was called, but function is '
                      'alreday set ({})! I\'m really confused.'.format(
                          self.__func.__name__))
-        
+
         self.__func = func
         return self
-    
-    
+
+
     def __get__(self, instance, cls):
         """When this ``ActionFactory`` is accessed through an instance,
         an :class:`Action` instance is created. This ``ActionFactory`` is
@@ -344,13 +344,13 @@ class ActionFactory(object):
         If this ``ActionFactory`` is accessed through a class, the
         encapsulated function is returned.
         """
-        
+
         # Class-level access
         if instance is None:
             return self.__func
-        
+
         else:
-            
+
             # Create an Action for the instance
             action = self.__actionType(
                 self.__func,
@@ -363,7 +363,7 @@ class ActionFactory(object):
             setattr(instance, self.__func.__name__, action)
             return functools.update_wrapper(action, self.__func)
 
-    
+
 class ActionButton(props.Button):
     """Extends the :class:`props.Button` class to encapsulate an
     :class:`Action` instance.
@@ -372,12 +372,12 @@ class ActionButton(props.Button):
     :func:`toggleAction` decorator are supported.
     """
 
-    
+
     def __init__(self,
                  actionName,
                  classType=None,
                  actionArgs=None,
-                 actionKwargs=None, 
+                 actionKwargs=None,
                  **kwargs):
         """Create an ``ActionButton``.
 
@@ -389,11 +389,11 @@ class ActionButton(props.Button):
         """
 
         if actionArgs   is None: actionArgs   = []
-        if actionKwargs is None: actionKwargs = {} 
+        if actionKwargs is None: actionKwargs = {}
 
         self.__name         = actionName
         self.__actionArgs   = actionArgs
-        self.__actionKwargs = actionKwargs 
+        self.__actionKwargs = actionKwargs
 
         text = kwargs.pop('text', None)
 
@@ -420,7 +420,7 @@ class ActionButton(props.Button):
         instance.getAction(self.__name).bindToWidget(
             parent, wx.EVT_BUTTON, widget)
 
-        
+
     def __onButton(self, instance, widget):
         """Called when the button is pushed. Runs the action."""
         instance.getAction(self.__name)(*self.__actionArgs,
@@ -435,7 +435,7 @@ class ToggleActionButton(props.Toggle):
     :func:`toggleAction` decorator are supported.
     """
 
-    
+
     def __init__(self,
                  actionName,
                  icon,
@@ -472,28 +472,28 @@ class ToggleActionButton(props.Toggle):
             callback=self.__onToggle,
             **kwargs)
 
-    
+
     def __setup(self, instance, parent, widget):
         """Called when the toggle widget is created. Binds the widget to the
         ``ToggleAction`` instance.
-        """ 
+        """
         import wx
         import fsleyes_widgets.bitmaptoggle as bmptoggle
-        
+
         if isinstance(widget, wx.CheckBox):
             ev = wx.EVT_BUTTON
         elif isinstance(widget, wx.ToggleButton):
             ev = wx.EVT_TOGGLEBUTTON
         elif isinstance(widget, bmptoggle.BitmapToggleButton):
             ev = bmptoggle.EVT_BITMAP_TOGGLE
-            
+
         else:
             raise RuntimeError(
                 'Unknown widget {}'.format(type(widget).__name__))
 
         instance.getAction(self.__name).bindToWidget(parent, ev, widget)
 
-    
+
     def __onToggle(self, instance, widget):
         """Called when the widget is toggled. Runs the action."""
         instance.getAction(self.__name)(*self.__actionArgs,

@@ -72,7 +72,7 @@ class GLMask(glvolume.GLVolume):
         display = self.display
         opts    = self.displayOpts
         name    = self.name
-        
+
         display.removeListener(          'alpha',         name)
         display.removeListener(          'brightness',    name)
         display.removeListener(          'contrast',      name)
@@ -92,7 +92,7 @@ class GLMask(glvolume.GLVolume):
         return (self.displayOpts.getParent() is None or
                 not self.displayOpts.isSyncedToParent('volume'))
 
-        
+
     def refreshColourTextures(self, *a):
         """Overrides :meth:`.GLVolume.refreshColourTexture`.
 
@@ -110,7 +110,7 @@ class GLMask(glvolume.GLVolume):
         colour  = opts.colour
         dmin    = opts.threshold[0]
         dmax    = opts.threshold[1]
-        
+
         colour = colour[:3]
         colour = colourmaps.applyBricon(colour,
                                         display.brightness / 100.0,
@@ -141,7 +141,7 @@ class GLMask(glvolume.GLVolume):
         opts       = self.displayOpts
         volume     = opts.volume
 
-        self.imageTexture.set(volume=volume) 
+        self.imageTexture.set(volume=volume)
 
 
     def __refreshImageTexture(self, *a):

@@ -65,7 +65,7 @@ one or more *views*. All views are defined in the :mod:`.views` sub-package,
 and are sub-classes of the :class:`.ViewPanel` class. Currently there are two
 primary view categories - :class:`.CanvasPanel` views, which use :mod:`OpenGL`
 to display overlays, and :class:`.PlotPanel` views, which use
-:mod:`matplotlib` to plot data related to the overlays. 
+:mod:`matplotlib` to plot data related to the overlays.
 
 
 View panels may contain one or more *control* panels which provide an
@@ -86,7 +86,7 @@ The view/control panel class hierarchy is shown below:
      node [style="filled",
            fillcolor="#ffffdd",
            fontname="sans"];
-     
+
      rankdir="BT";
      1  [label="panel.FSLeyesPanel"];
      3  [label="views.viewpanel.ViewPanel"];
@@ -121,7 +121,7 @@ All toolbars inherit from the :class:`.FSLeyesToolBar` base class:
      node [style="filled",
            fillcolor="#ffffdd",
            fontname="sans"];
-     
+
      rankdir="BT";
      2  [label="toolbar.FSLeyesToolBar"];
      12 [label="controls.overlaydisplaytoolbar.OverlayDisplayToolBar"];
@@ -200,7 +200,7 @@ from   fsl.utils.platform import platform as fslplatform
 import fsl.utils.settings                 as fslsettings
 
 
-# The logger is assigned in 
+# The logger is assigned in
 # the configLogging function
 log = None
 
@@ -240,16 +240,16 @@ def initialise():
         before most other things in *FSLeyes* are used, but after a ``wx.App``
         has been created.
     """
-    
+
     global assetDir
-    
+
     import wx
     import matplotlib as mpl
 
     # Initialise the fsl.utils.settings module
     fslsettings.initialise('fsleyes')
 
-    # Tell matplotlib what backend to use. 
+    # Tell matplotlib what backend to use.
     # n.b. this must be called before
     # matplotlib.pyplot is imported.
     mpl.use('WxAgg')
@@ -258,7 +258,7 @@ def initialise():
     # wx will know where the FSLeyes resources are
     if fslplatform.frozen:
 
-        # If we have a display, assume 
+        # If we have a display, assume
         # that a wx app has been created
         if fslplatform.canHaveGui:
 
@@ -293,7 +293,7 @@ def configLogging(namespace):
     """
 
     global log
-    
+
     # make numpy/matplotlib quiet
     warnings.filterwarnings('ignore', module='matplotlib')
     warnings.filterwarnings('ignore', module='mpl_toolkits')
@@ -303,14 +303,14 @@ def configLogging(namespace):
     # Set up my own custom logging level
     # for tracing memory related events.
     logging.MEMORY = 15
-    
+
     def _logmemory(self, message, *args, **kwargs):
         """Log function for my custom ``logging.MEMORY`` logging level. """
         if self.isEnabledFor(logging.MEMORY):
             self._log(logging.MEMORY, message, args, **kwargs)
 
     logging.Logger.memory = _logmemory
-    logging.addLevelName(logging.MEMORY, 'MEMORY') 
+    logging.addLevelName(logging.MEMORY, 'MEMORY')
 
     # Set up the root logger
     logFormatter = logging.Formatter('%(levelname)8.8s '
@@ -320,7 +320,7 @@ def configLogging(namespace):
                                      '%(message)s')
     logHandler  = logging.StreamHandler()
     logHandler.setFormatter(logFormatter)
-    
+
     log = logging.getLogger()
     log.addHandler(logHandler)
 
@@ -351,7 +351,7 @@ def configLogging(namespace):
             log.memory('Added filter for MEMORY messages')
             logging.getLogger('fsleyes_props')  .setLevel(logging.WARNING)
             logging.getLogger('fsleyes_widgets').setLevel(logging.WARNING)
-        
+
     if namespace.verbose == 1:
         log.setLevel(logging.DEBUG)
 

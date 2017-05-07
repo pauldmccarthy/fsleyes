@@ -31,7 +31,7 @@ class SelectionTexture(texture.Texture):
     :meth:`refresh` method is called.
     """
 
-    
+
     def __init__(self, name, selection):
         """Create a ``SelectionTexture``.
 
@@ -54,7 +54,7 @@ class SelectionTexture(texture.Texture):
         """Called by :meth:`__init__`. Configures the GL texture. """
 
         self.bindTexture()
-        
+
         gl.glTexParameteri(gl.GL_TEXTURE_3D,
                            gl.GL_TEXTURE_MAG_FILTER,
                            gl.GL_NEAREST)
@@ -65,7 +65,7 @@ class SelectionTexture(texture.Texture):
         gl.glTexParameterfv(gl.GL_TEXTURE_3D,
                             gl.GL_TEXTURE_BORDER_COLOR,
                             np.array([0, 0, 0, 0], dtype=np.float32))
-        
+
         gl.glTexParameteri(gl.GL_TEXTURE_3D,
                            gl.GL_TEXTURE_WRAP_S,
                            gl.GL_CLAMP_TO_BORDER)
@@ -87,7 +87,7 @@ class SelectionTexture(texture.Texture):
                         gl.GL_ALPHA,
                         gl.GL_UNSIGNED_BYTE,
                         None)
-        
+
         self.unbindTexture()
 
 
@@ -100,7 +100,7 @@ class SelectionTexture(texture.Texture):
         self.__selection.deregister(self.getTextureName())
         self.__selection = None
 
-        
+
     def refresh(self, block=None, offset=None):
         """Refreshes the texture data from the :class:`.Selection` image
         data.
@@ -112,11 +112,11 @@ class SelectionTexture(texture.Texture):
         (which will be faster than a full : refresh).
 
         :arg block:  A 3D ``numpy`` array containing the new selection data.
-        
+
         :arg offset: A tuple specifying the ``(x, y, z)`` offset of the
                      ``block`` into the selection array.
         """
-        
+
         if block is None or offset is None:
             data   = self.__selection.getSelection()
             offset = [0, 0, 0]
@@ -127,7 +127,7 @@ class SelectionTexture(texture.Texture):
 
         log.debug('Updating selection texture (offset {}, size {})'.format(
             offset, data.shape))
-        
+
         self.bindTexture()
         gl.glTexSubImage3D(gl.GL_TEXTURE_3D,
                            0,
@@ -141,13 +141,13 @@ class SelectionTexture(texture.Texture):
                            gl.GL_UNSIGNED_BYTE,
                            data.ravel('F'))
         self.unbindTexture()
- 
-    
+
+
     def __selectionChanged(self, *a):
         """Called when the :attr:`.Selection.selection` changes. Updates
         the texture data via the :meth:`refresh` method.
         """
-        
+
         old, new, offset = self.__selection.getLastChange()
 
         if new is None:
