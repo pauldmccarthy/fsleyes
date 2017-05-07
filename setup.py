@@ -784,7 +784,7 @@ def build_asset_list():
             flist.append(filename)
             resources[destdir] = flist
 
-    return resources.items()
+    return list(resources.items())
 
 
 def get_fsleyes_version():
