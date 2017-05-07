@@ -386,7 +386,7 @@ class PlotPanel(viewpanel.ViewPanel):
         of the current plot.
         """
 
-        formats  = self.__canvas.get_supported_filetypes().items()
+        formats  = list(self.__canvas.get_supported_filetypes().items())
 
         wildcard = ['{}|*.{}'.format(desc, fmt) for fmt, desc in formats]
         wildcard = '|'.join(wildcard)

@@ -978,8 +978,8 @@ def _caseInsensitiveLookup(d, k, default=None):
     if v is not None:
         return v
 
-    keys  = d.keys()
-    lKeys = map(str.lower, keys)
+    keys  = list(d.keys())
+    lKeys = [k.lower() for k in keys]
 
     try:
         idx = lKeys.index(k.lower())

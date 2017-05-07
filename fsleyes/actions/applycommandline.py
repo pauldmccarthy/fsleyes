@@ -14,7 +14,7 @@ implemented.
 
 import sys
 import argparse
-import StringIO
+import six
 
 import wx
 
@@ -108,8 +108,8 @@ def applyCommandLineArgs(overlayList, displayCtx, argv, panel=None):
     # while parseargs.parseArgs is
     # called so we can capture its
     # output.
-    stdout = StringIO.StringIO()
-    stderr = StringIO.StringIO()
+    stdout = six.StringIO()
+    stderr = six.StringIO()
 
     if argv[0] == 'fsleyes':
         argv = argv[1:]

@@ -651,8 +651,8 @@ class Selection(notifier.Notifier):
         specified ``offset``, and of the specified ``size``.
         """
 
-        xlo, ylo, zlo = map(int, offset)
-        xhi, yhi, zhi = map(int, size)
+        xlo, ylo, zlo = [int(o) for o in offset]
+        xhi, yhi, zhi = [int(s) for s in size]
 
         xhi = xlo + size[0]
         yhi = ylo + size[1]

@@ -331,7 +331,7 @@ class ARBPShader(object):
         if textureMap is None:
 
             names    = self.textures
-            poses    = range(len(names))
+            poses    = list(range(len(names)))
             texPoses = {n : p for n, p in zip(names, poses)}
         else:
             texPoses = dict(textureMap)

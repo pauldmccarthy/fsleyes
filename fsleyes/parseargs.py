@@ -941,7 +941,7 @@ def getExtra(target, propName, default=None):
     # shOrder can be up to a maximum of 16,
     # but will be limited by the image itself
     shOrderSettings = {
-        'choices' : range(17),
+        'choices' : list(range(17)),
         'metavar' : 'ORDER',
     }
 

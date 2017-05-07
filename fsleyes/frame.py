@@ -553,7 +553,7 @@ class FSLeyesFrame(wx.Frame):
         """
 
         if actionNames is None:
-            actionNames, actionObjs = zip(*target.getActions())
+            actionNames, actionObjs = list(zip(*target.getActions()))
         else:
             actionObjs = [target.getAction(name) for name in actionNames]
 
@@ -609,7 +609,7 @@ class FSLeyesFrame(wx.Frame):
             # If actionObj is a list, this is a4
             # hacky hint to insert a sub-menu.
             elif isinstance(actionObj, list):
-                names, objs = zip(*actionObj)
+                names, objs = list(zip(*actionObj))
                 currentMenu = wx.Menu()
                 menu.AppendSubMenu(currentMenu, actionName)
 
@@ -1399,7 +1399,7 @@ class FSLeyesFrame(wx.Frame):
         for item in perspMenu.GetMenuItems():
             perspMenu.DeleteItem(item)
 
-        builtIns = perspectives.BUILT_IN_PERSPECTIVES.keys()
+        builtIns = list(perspectives.BUILT_IN_PERSPECTIVES.keys())
         saved    = perspectives.getAllPerspectives()
 
         # Add a menu item to load each built-in perspectives

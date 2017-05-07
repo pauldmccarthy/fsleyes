@@ -61,6 +61,6 @@ class ToggleControlPanelAction(base.ToggleAction):
         ev.Skip()
 
         controlPanels = self.__viewPanel.getPanels()
-        controlPanels = map(type, controlPanels)
+        controlPanels = [type(cp) for cp in controlPanels]
 
         self.toggled = self.__cpType in controlPanels

@@ -342,10 +342,9 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
                 if len(proportions) == 0:
                     continue
 
-                props, labels = zip(*reversed(sorted(
-                    zip(proportions, atlas.desc.labels))))
+                propslabels = zip(proportions, atlas.desc.labels)
 
-                for label, prop in zip(labels, props):
+                for prop, label in reversed(sorted(propslabels)):
                     if prop == 0.0:
                         continue
                     lines.append(probTemplate.format(prop,

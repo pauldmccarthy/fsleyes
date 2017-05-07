@@ -62,8 +62,12 @@ class ExportDataSeriesAction(base.Action):
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        filePath    = dlg.GetPath()
-        dss, xs, ys = zip(*self.__plotPanel.getDrawnDataSeries())
+        filePath = dlg.GetPath()
+
+        dss = self.__plotPanel.getDrawnDataSeries()
+        xs  = [ds[1] for ds in dss]
+        ys  = [ds[2] for ds in dss]
+        dss = [ds[0] for ds in dss]
 
         # Create some x data, unified
         # across all data series

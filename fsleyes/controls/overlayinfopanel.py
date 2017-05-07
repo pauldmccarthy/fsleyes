@@ -705,10 +705,10 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         sections = []
 
         if len(info.info) > 0:
-            sections.append((None, info.info.items()))
+            sections.append((None, list(info.info.items())))
 
         for secName, secInf in info.sections.items():
-            sections.append((secName, secInf.items()))
+            sections.append((secName, list(secInf.items())))
 
         for i, (secName, secInf) in enumerate(sections):
 

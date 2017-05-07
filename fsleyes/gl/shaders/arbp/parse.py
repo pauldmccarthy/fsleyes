@@ -476,7 +476,7 @@ def _findDeclaredVariables(source):
                 name = match.group(1)
                 namelist.append(name)
 
-    return map(sorted, (params, textures, attrs, varyings))
+    return [sorted(v) for v in [params, textures, attrs, varyings]]
 
 
 def _checkVariableValidity(vertVars,

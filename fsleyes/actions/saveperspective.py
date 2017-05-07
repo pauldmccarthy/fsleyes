@@ -39,7 +39,7 @@ class SavePerspectiveAction(base.Action):
 
         import wx
 
-        builtIns = perspectives.BUILT_IN_PERSPECTIVES.keys()
+        builtIns = list(perspectives.BUILT_IN_PERSPECTIVES.keys())
         saved    = perspectives.getAllPerspectives()
 
         while True:

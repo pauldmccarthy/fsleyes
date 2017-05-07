@@ -140,7 +140,7 @@ class SHOpts(vectoropts.VectorOpts):
             if   shType == 'sym':  vizOrders = range(0, self.__maxOrder + 1, 2)
             elif shType == 'asym': vizOrders = range(0, self.__maxOrder + 1)
 
-            self.getProp('shOrder').setChoices(vizOrders, instance=self)
+            self.getProp('shOrder').setChoices(list(vizOrders), instance=self)
             self.shOrder = vizOrders[-1]
 
 

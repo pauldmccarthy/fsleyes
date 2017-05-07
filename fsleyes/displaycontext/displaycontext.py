@@ -810,8 +810,8 @@ class DisplayContext(props.SyncableHasProperties):
 
         # If the overlay order was just the
         # list order, preserve that ordering
-        if self.overlayOrder[:] == range(len(oldList)):
-            self.overlayOrder[:] = range(len(self.__overlayList))
+        if self.overlayOrder[:] == list(range(len(oldList))):
+            self.overlayOrder[:] = list(range(len(self.__overlayList)))
 
         # If overlays have been added to
         # the overlay list, add indices

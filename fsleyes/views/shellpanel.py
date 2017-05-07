@@ -68,7 +68,7 @@ class ShellPanel(viewpanel.ViewPanel):
             'plt' : 'matplotlib.pyplot',
         }
 
-        localVars  = _locals.keys()
+        localVars  = list(_locals.keys())
         localDescs = [_locals[k].__doc__
                       if k not in overrideDocs
                       else overrideDocs[k]
@@ -147,7 +147,7 @@ def Shell_Paste(self):
                 self.ReplaceSelection('')
                 command = data.GetText()
                 command = command.encode('unicode_internal')
-                command = filter(lambda x: x in string.printable, command)
+                command = [x for x in command if x in string.printable]
                 command = command.rstrip()
                 command = self.fixLineEndings(command)
                 command = self.lstripPrompt(text=command)
@@ -166,7 +166,7 @@ def Shell_PasteAndRun(self):
             if wx.TheClipboard.GetData(data):
                 text = data.GetText()
                 text = text.encode('unicode_internal')
-                text = filter(lambda x: x in string.printable, text)
+                text = [x for x in text if x in string.printable]
         wx.TheClipboard.Close()
     if text:
         self.Execute(text)

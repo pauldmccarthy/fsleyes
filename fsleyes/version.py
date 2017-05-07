@@ -55,7 +55,7 @@ def parseVersionString(versionString):
     # but the point release might contain an
     # alphabetical character implying a hotfix
     # release.
-    major, minor = map(int, components[:2])
+    major, minor = [int(c) for c in components[:2]]
     point        = components[2]
 
     # The final component is a number which

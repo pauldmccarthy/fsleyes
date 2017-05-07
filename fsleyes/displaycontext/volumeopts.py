@@ -596,7 +596,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         """
 
         if daxes is None:
-            daxes = range(3)
+            daxes = list(range(3))
 
         shape = self.overlay.shape[:3]
         ornts = self.overlay.axisMapping(self.getTransform('voxel', 'display'))

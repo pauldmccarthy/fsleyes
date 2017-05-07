@@ -288,7 +288,7 @@ class SliceCanvas(props.HasProperties):
 
         realWidth                 = self.displayBounds.xlen
         realHeight                = self.displayBounds.ylen
-        canvasWidth, canvasHeight = map(float, self._getSize())
+        canvasWidth, canvasHeight = [float(s) for s in self._getSize()]
 
         if invertX: xpos = canvasWidth  - xpos
         if invertY: ypos = canvasHeight - ypos

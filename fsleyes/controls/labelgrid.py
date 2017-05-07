@@ -262,7 +262,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         """
 
         if labels is None:
-            labels = self.__labelTags.keys()
+            labels = list(self.__labelTags.keys())
 
         log.debug('Refreshing tags for {}'.format(labels))
 

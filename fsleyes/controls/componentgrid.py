@@ -175,7 +175,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         numComps  = volLabels.numComponents()
 
         if comps is None:
-            comps = range(numComps)
+            comps = list(range(numComps))
 
         if len(comps) == 0:
             return

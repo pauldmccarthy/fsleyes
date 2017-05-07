@@ -200,8 +200,8 @@ class RenderTextureStack(object):
         else:
             lastIdx = len(self.__textures) / 2
 
-        aboveIdxs = range(lastIdx, len(self.__textures))
-        belowIdxs = range(lastIdx - 1, -1, -1)
+        aboveIdxs = list(range(lastIdx, len(self.__textures)))
+        belowIdxs = list(range(lastIdx - 1, -1, -1))
 
         idxs = [0] * len(self.__textures)
 
