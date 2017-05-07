@@ -686,7 +686,7 @@ def fslDirWarning(parent):
 
     from fsleyes_widgets.dialog import FSLDirDialog
 
-    dlg = FSLDirDialog(parent, 'FSLeyes')
+    dlg = FSLDirDialog(parent, 'FSLeyes', fslplatform.os == 'Darwin')
 
     if dlg.ShowModal() == wx.ID_OK:
 
