@@ -74,6 +74,9 @@ rst_epilog = """
 
 .. |fsl_version|     replace:: 5.0.10
 
+.. |fsleyes_homepage| replace:: FSLeyes
+.. _fsleyes_homepage: https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLeyes
+
 .. |fsleyes_apidoc| replace:: FSLeyes
 .. _fsleyes_apidoc: http://git.fmrib.ox.ac.uk/paulmc/fsleyes/
 

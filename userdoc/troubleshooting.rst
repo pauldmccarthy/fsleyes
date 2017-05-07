@@ -233,6 +233,23 @@ privileges).
 
 
 
+``GLib version too old (micro mismatch)``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+If you see an error that looks like this::
+
+  (fsleyes:15552): Gtk-WARNING **: GModule (/usr/lib64/gtk-2.0/2.10.0/immodules/im-ibus.so) initialization check failed: GLib version too old (micro mismatch)
+
+
+Then you are probably using a version of FSLeyes which has been built for a
+different operating system (e.g. using a version of FSLeyes that has been
+built for CentOS6 on a CentOS7 machine). Head to the |fsleyes_homepage|_ home
+page and follow the instructions to download the correct version for your
+platform.
+
+
+
 Running FSLeyes remotely
 ------------------------
 
