@@ -268,12 +268,12 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         self.ClearTools(destroy, postevent=False)
 
         for tool in tools:
-            self.InsertTool(tool, postevent=False)
+            self.InsertTool(tool, postevent=False, redraw=False)
 
         wx.PostEvent(self, ToolBarEvent())
 
 
-    def InsertTool(self, tool, index=None, postevent=True):
+    def InsertTool(self, tool, index=None, postevent=True, redraw=True):
         """Inserts the given tool into this ``FSLeyesToolBar``, at the
         specified index.
 
@@ -283,6 +283,9 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
 
         :arg postevent: If ``True``, a :data:`ToolBarEvent` will be generated.
                         Pass ``False`` to suppress this event.
+
+        :arg redraw:    If ``True``, the toolbar is redrawn. Pass ``False``
+                        to suppress this behaviour.
         """
 
         if index is None:
@@ -296,7 +299,9 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         self.__tools.insert(index, tool)
 
         self.InvalidateBestSize()
-        self.__drawToolBar()
+
+        if redraw:
+            self.__drawToolBar()
 
         if postevent:
             wx.PostEvent(self, ToolBarEvent())
@@ -517,15 +522,9 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
                     tools[i].Show(False)
 
         if self.__numVisible > 0:
-            sizer.Insert(self.__numVisible, (0, 0),
-                         flag=wx.EXPAND,
-                         proportion=1)
-            sizer.Insert(self.__numVisible + 1,
-                         self.__rightButton,
-                         flag=wx.EXPAND)
-            sizer.Insert(0,
-                         self.__leftButton,
-                         flag=wx.EXPAND)
+            sizer.Add(      (0, 0),             flag=wx.EXPAND, proportion=1)
+            sizer.Add(      self.__rightButton, flag=wx.EXPAND)
+            sizer.Insert(0, self.__leftButton,  flag=wx.EXPAND)
 
         self.Layout()
 

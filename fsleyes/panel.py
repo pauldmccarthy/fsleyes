@@ -422,5 +422,5 @@ class FSLeyesSettingsPanel(FSLeyesPanel):
         is floating, its parent is autmatically resized.
         """
         if isinstance(self.GetTopLevelParent(), wxaui.AuiFloatingFrame):
-            self.SetBestSize(self.__widgets.GetBestSize())
+            self.SetInitialSize(self.__widgets.GetBestSize())
             self.GetTopLevelParent().Fit()
