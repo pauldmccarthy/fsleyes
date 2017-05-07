@@ -31,7 +31,7 @@ date = datetime.date.today()
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary', 
+    'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'sphinx.ext.graphviz',
     'sphinx.ext.todo',
@@ -359,7 +359,7 @@ def autodoc_skip_member(app, what, name, obj, skip, options):
     if what == 'class':
         attName = name.split('.')[-1]
         return skip or attName.startswith('_sync_')
-    
+
     return skip or False
 
 
