@@ -1316,7 +1316,11 @@ class FSLeyesFrame(wx.Frame):
         import fsleyes.actions.loadoverlay as loadoverlay
 
         for path in self.__recentPathsMenu.GetMenuItems():
-            self.__recentPathsMenu.RemoveItem(path)
+            # RemoveItem is deprecated in phoenix
+            if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
+                self.__recentPathsMenu.Remove(path)
+            else:
+                self.__recentPathsMenu.RemoveItem(path)
 
         paths = loadoverlay.recentPathManager.listRecentPaths()
 
