@@ -357,8 +357,10 @@ class ColourMapOpts(object):
         if clipRange is not None: crmin, crmax = clipRange
         else:                     crmin, crmax = drmin, drmax
 
-        with props.suppress(self, 'displayRange',  notify=True), \
-             props.suppress(self, 'clippingRange', notify=True):
+        # Execute on the PV call queue,
+        # so that property updates occur
+        # in the correct order.
+        def doUpdate():
 
             # If display/clipping limit range
             # is 0, we assume that they haven't
@@ -372,10 +374,8 @@ class ColourMapOpts(object):
             log.debug('Updating range limits [dr: {} - {}, ''cr: '
                       '{} - {}]'.format(drmin, drmax, crmin, crmax))
 
-            self.displayRange .xmin = drmin
-            self.displayRange .xmax = drmax
-            self.clippingRange.xmin = crmin
-            self.clippingRange.xmax = crmax
+            self.displayRange .xlim = drmin, drmax
+            self.clippingRange.xlim = crmin, crmax
 
             # If the ranges have not yet been set,
             # initialise them to the min/max.
@@ -393,6 +393,8 @@ class ColourMapOpts(object):
                 self.displayRange.xlo  = 0
             if absolute and self.clippingRange.xlo < 0:
                 self.clippingRange.xlo = 0
+
+        props.safeCall(doUpdate)
 
 
     def __toggleListeners(self, enable=True):
