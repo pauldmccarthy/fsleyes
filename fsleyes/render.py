@@ -286,12 +286,14 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
     # layout the bitmaps
     if namespace.scene == 'lightbox':
         layout = fsllayout.Bitmap(canvasBmps[0])
-    else:
+    elif len(canvasBmps) > 0:
         layout = fsllayout.buildOrthoLayout(canvasBmps,
                                             None,
                                             sceneOpts.layout,
                                             False,
                                             0)
+    else:
+        layout = fsllayout.Space(width, height)
 
     # Render a colour bar if required
     if sceneOpts.showColourBar:
