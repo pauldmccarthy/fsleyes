@@ -23,8 +23,8 @@ capable of loading the following types of data:
    directories (``.melodic``).
 
  - `dtifit <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FDT/UserGuide#DTIFIT>`_
-   output directories. 
-   
+   output directories.
+
  - `VTK legacy files
    <http://www.vtk.org/wp-content/uploads/2015/04/file-formats.pdf>`_
    (``.vtk``) which are in a format similar to that produced by the `FIRST
@@ -38,7 +38,7 @@ an overlay is displayed is called the *overlay type* or the *display type*.
 The most conventional overlay/display type for a NIFTI image is the
 :ref:`volume <overlays_volume>`; the other types are described :ref:`below
 <overlays_overlay_type>`.
-   
+
 
 .. _overlays_loading_an_overlay:
 
@@ -100,24 +100,24 @@ selected overlay.
 
 2. **Overlay information** Clicking on the information button will open the
    :ref:`overlay information panel <overlays_overlay_information_panel>`.
-   
+
 3. **Overlay name** You can change the overlay name, as shown in the
    :ref:`overlay list panel <ortho_lightbox_views_overlay_list>`, here.
 
 4. **Overlay type** You can change the overlay type here.
-   
+
 5. **Opacity** This slider allows you to adjust the overlay
    opacity/transparency.
-   
+
 6. **Brightness/contrast** These sliders allow you to adjust the overlay
    brightness and contrast.
-   
+
 7. **Type-specific settings** The remaining controls will change depending on
    the type of the overlay. For :ref:`volume <overlays_volume>` overlays, as
    shown in the example above, display range and colour map controls are
    provided.
 
-   
+
 .. _overlays_overlay_display_panel:
 
 The overlay display panel
@@ -196,7 +196,7 @@ range used to colour voxels can be adjusted, and voxels can be *clipped*
      :width: 25%
 
   .. image:: images/overlays_volume2.png
-     :width: 25% 
+     :width: 25%
 
   .. image:: images/overlays_volume3.png
      :width: 25%
@@ -227,7 +227,7 @@ The following settings are available for volume overlays:
          FSLeyes over a SSH/X11 connection, in a VNC session, on an
          older computer, or at a reduced performance setting.
 
-         
+
 - **Colour map** The colour map defines how voxels are coloured on the
   display. Voxels with an intensity equal to the low display range value will
   be coloured according to the lowest (left-most) colour in the selected
@@ -237,7 +237,7 @@ The following settings are available for volume overlays:
   **Load colour map** button. See the page on :ref:`customising FSLeyes
   <customising_colour_maps>` for more details..
 
-  
+
 - **-ve (negative) colour map** You can apply a second colour map for images
   which contain positive and negative values, such as Z-statistic images, or
   ICA component maps. The first colour map will be applied to positive values,
@@ -245,7 +245,7 @@ The following settings are available for volume overlays:
   the display and clipping range will be applied inversely to both positive
   and negative values.
 
-  
+
 - **Colour map resolution** This setting allows you to reduce the number of
   colours that are used in the colour map. For example, if the underlying
   colour map file (see the section on :ref:`colour maps
@@ -273,12 +273,12 @@ The following settings are available for volume overlays:
   the low display and clipping ranges, so that voxels with an intensity below
   the low display range value are also clipped.
 
-  
+
 - **Link high display/clipping ranges** This setting (disabled by default)
   links the high display and clipping ranges, so that voxels with an intensity
   above the high display range value are also clipped.
 
-  
+
 - **Display range** This setting controls how the colour map relates to voxel
   intensities.
 
@@ -286,13 +286,13 @@ The following settings are available for volume overlays:
 - **Clipping range** This setting allows you to hide voxels which lie outside
   of the range.
 
-  
+
 - **Clip by** This setting allows you to clip the selected overlay by the
   voxel intensities that are in another image. When a *clip by* image is
   selected, the *clipping range* will be in terms of that image, not of the
   image being clipped.
 
-  
+
 - **Override image data range** This setting allows you to effectively
   override the image data range with a custom range. By default, FSLeyes sets
   the default display and clipping range according to the minimum and maximum
@@ -312,7 +312,7 @@ The following settings are available for volume overlays:
 
 .. sidebar:: The lookup table panel
 
-   
+
              FSLeyes treats lookup tables independently from the colour maps
              used to colour :ref:`volume <overlays_volume>` overlays. FSLeyes
              provides a handful of pre-defined lookup tables, and allows you
@@ -320,7 +320,7 @@ The following settings are available for volume overlays:
              a :ref:`control panel <overview_views_and_controls>` on
              :ref:`ortho and lightbox views <overview_views_and_controls>`:
 
-             
+
              .. image:: images/overlays_lookup_table_panel.png
                 :width: 90%
                 :align: center
@@ -328,18 +328,18 @@ The following settings are available for volume overlays:
 
              |
 
-                        
+
              You can also install your own lookup tables - see the page on
              :ref:`customising FSLeyes <customising_lookup_tables>` for more
              details.
- 
+
 
 .. _overlays_label:
 
 Label
 ^^^^^
-             
-             
+
+
 This type is useful for viewing NIFTI images which contain discrete integer
 values (*labels*), such as :ref:`atlases <atlases>` and (sub-)cortical
 segmentation summary images.  Label overlays are coloured according to a
@@ -347,12 +347,12 @@ segmentation summary images.  Label overlays are coloured according to a
 
 
 .. container:: image-strip
-   
+
    .. image:: images/overlays_label1.png
       :width: 25%
 
    .. image:: images/overlays_label2.png
-      :width: 25% 
+      :width: 25%
 
 
 |
@@ -368,7 +368,7 @@ The following settings are available on label overlays:
   regions, or display region outlines.
 
 - **Outline width** This setting controls the region outline width.
-  
+
 
 .. _overlays_mask:
 
@@ -377,11 +377,11 @@ Mask
 
 
 This type is useful if you want to display an image as a binary mask. You can
-display any NIFTI image as a mask - not just binary images. 
+display any NIFTI image as a mask - not just binary images.
 
 
 .. container:: image-strip
-   
+
    .. image:: images/overlays_mask1.png
       :width: 25%
 
@@ -389,7 +389,7 @@ display any NIFTI image as a mask - not just binary images.
       :width: 25%
 
    .. image:: images/overlays_mask3.png
-      :width: 25% 
+      :width: 25%
 
 
 |
@@ -400,7 +400,7 @@ Mask overlays have the following settings:
 
 - **Colour** This setting controls the colour used to display the mask.
 
-  
+
 - **Invert** This setting inverts the behaviour of the *threshold* setting -
   when enabled, voxels within the range are excluded from the mask, and
   vice-versa.
@@ -464,7 +464,7 @@ image.
      :width: 25%
 
   .. image:: images/overlays_linevector3.png
-     :width: 25% 
+     :width: 25%
 
 
 |
@@ -484,38 +484,38 @@ The following settings are available on vector overlays:
   scheme, allowing you to colour the vector data in each voxel according to
   the voxel intensities in another image. This is not very useful for RGB
   vector overlays, but can be useful for line vectors.
-  
+
 - **Modulate by** This setting allows you to modulate the brightness of
   the vector overlay according to the voxel intensities in another image.
-  
+
 - **Clip by** This setting allows you to clip the voxels in the vector overlay
   according to the voxel intensities in another image.
-  
+
 - **Colour map** If you have selected a *Colour by* image, this setting allows
   you to choose the colour map to use.
-  
+
 - **Clipping range** If you have selected a *Clip by* image, this setting
   allows you to adjust the clipping range. The range limits are relative to
   the selected *Clip by* image.
-  
+
 - **Modulation range** If you have selected a *Modulate by* image, this
   setting allows you to adjust the modulation range. The range limits are
   relative to the selected *Modulate by* image.
-  
+
 - **X Colour** The colour to be used for the X vector component.
-  
+
 - **Y Colour** The colour to be used for the Y vector component.
-  
+
 - **Z Colour** The colour to be used for the Z vector component.
-  
+
 - **Suppress X value** Suppress the X vector component - its contribution to
   the overall colour will be replaced according to the current *suppression
   mode*.
-  
+
 - **Suppress Y value** Suppress the Y vector component.
-  
+
 - **Suppress Z value** Suppress the Z vector component.
-  
+
 - **Suppression mode** What to do when a component is suppressed - you can
   choose to replace vector components with white, black, or transparent.
 
@@ -526,7 +526,7 @@ RGB vectors have some additional settings:
 - **Interpolation** You can interpolate RGB vector overlays using linear or
   spline interpolation.
 
-  
+
 And the following settings are available on line vectors:
 
 
@@ -540,7 +540,7 @@ And the following settings are available on line vectors:
   length of 1mm (or 0.5mm if the *Interpret vectors as directed* setting is
   also enabled). Otherwise, FSLeyes will not scale vector lengths. See
   also the *Length scaling factor* setting below.
-  
+
 - **L/R orientation flip** If selected, line vector orientations are flipped
   about the X axis (which typically correpsonds to the left-right axis). This
   setting may be useful if you have vector data with non-standard
@@ -548,26 +548,18 @@ And the following settings are available on line vectors:
   images, and enabled for neuroloigically stored images. See the
   :ref:`troubleshooting section on vector orientation
   <troubleshooting_vector_orientation>` for more information.
-  
+
 - **Line width** This setting allows you to adjust the line vector width, in
   display pixels.
-  
+
 - **Length scaling factor (%)** This setting applies a constant scaling factor
   to the length of all line vectors.
- 
+
 
 .. _overlays_tensor:
 
 Tensor [*]_
 ^^^^^^^^^^^
-
-
-Directories which contain `dtifit
-<http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FDT/UserGuide#DTIFIT>`_ output, and
-images which contain exactly 6 volumes (assumed to contain the unique elements
-of a tensor matrix at each voxel) can be displayed as *tensors*, where the
-magnitude, anisotropy, and orientation of water diffusion within each voxel is
-modelled by a tensor matrix, which can be visualised as an ellipsoid.
 
 
 .. container:: image-strip
@@ -585,6 +577,29 @@ modelled by a tensor matrix, which can be visualised as an ellipsoid.
 |
 
 
+.. sidebar:: Loading diffusion tensor data
+
+             FSLeyes accepts tensor image data in one of the following forms:
+
+             - A ``dtifit`` directory with NIFTI images containing the
+               eigenvectors and eigenvalues of the tensor matrix
+               decomposition - open such a directory via the *File*
+               |right_arrow| *Add overlay from directory* menu option.
+
+             - A 4D NIFTI image containing six volumes which comprise the
+               unique elements of the tensor matrix. ``dtifit`` (in FSL
+               |fsl_version|) can output these images via its
+               ``--save_tensor`` flag.
+
+
+Directories which contain `dtifit
+<http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FDT/UserGuide#DTIFIT>`_ output, and
+images which contain exactly 6 volumes (assumed to contain the unique elements
+of a tensor matrix at each voxel) can be displayed as *tensors*, where the
+magnitude, anisotropy, and orientation of water diffusion within each voxel is
+modelled by a tensor matrix, which can be visualised as an ellipsoid.
+
+
 .. [*] Tensor overlays may not be available if you are using FSLeyes over a
        SSH/X11 connection, in a VNC session, on an older computer, or at a
        reduced performance setting.
@@ -597,17 +612,17 @@ following settings:
 
 - **Lighting effects** This setting toggles a lighting effect on the tensor
   ellipsoids.
-  
+
 - **L/R orientation flip** This setting flips all ellipsoids about the X
   (left-right) axis - see the :ref:`troubleshooting section on vector
   orientation <troubleshooting_vector_orientation>`.
-  
+
 - **Ellipsoid quality** This setting allows you to decrease/increase the
   ellipsoid quality (the number of vertices used to draw the ellipsoids).
-  
+
 - **Tensor size** This setting scales each ellipsoid by a constant factor.
 
-  
+
 .. _overlays_diffusion_sh:
 
 Diffusion SH [*]_
@@ -664,19 +679,19 @@ on diffusion SH overlays:
 
 - **FOD quality** This setting controls the FOD quality (the number of
   vertices used to draw each FOD).
-  
+
 - **Maximum SH order** This setting allows you to adjust the maxmimum number
   of SH functions used to represent each FOD.
-  
+
 - **L/R orientation flip** This setting flips all FODs about the X
   (left-right) axis - see the :ref:`troubleshooting section on vector
   orientation <troubleshooting_vector_orientation>`.
-  
+
 - **Lighting effects** This setting toggles an FOD lighting model [*]_.
-  
+
 - **FOD size** This setting allows you to scale the size of each FOD by a
   constant factor.
-  
+
 - **Radious threshold** This setting allows you to clip FODs which have a
   small maximum radius.
 
@@ -707,7 +722,7 @@ FSLeyes is able to display 2D cross sections of 3D triangle meshes.
      :width: 25%
 
   .. image:: images/overlays_gifti.png
-     :width: 25% 
+     :width: 25%
 
 
 |
@@ -742,7 +757,7 @@ FSLeyes can display 3D triangle mesh data loaded from:
 
 .. [*] Future versions of FSLeyes will include more comprehensive GIFTI
        support.
-             
+
 .. [*] Future versions of FSLeyes will include support for more VTK data
        formats.
 
@@ -758,11 +773,11 @@ The following display settings are available for mesh overlays:
 - **Reference image** This setting allows you to choose the NIFTI reference
   image associated with the model (see the :ref:`sidebar
   <overlays_mesh_reference_image>`).
-  
+
 - **Model coordinate space** This is an advanced setting which allows you to
   specify how the VTK model coordinates are defined, relative to its reference
   image.
-  
+
 - **Show outline only** You can choose between showing the filled mesh, or
   showing just its outline.
 
