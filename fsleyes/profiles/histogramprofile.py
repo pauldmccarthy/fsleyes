@@ -91,7 +91,7 @@ class HistogramProfile(plotprofile.PlotProfile):
         self._overlayList.removeListener('overlays',        self._name)
         self._displayCtx .removeListener('selectedOverlay', self._name)
 
-        for hs in self.__rangePolygons.keys():
+        for hs in list(self.__rangePolygons.keys()):
             self.__deregisterHistogramSeries(hs)
 
         self.__rangePolygons = None
