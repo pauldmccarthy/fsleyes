@@ -798,7 +798,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # Grid layout canvas
         # order is YXZ
         if layout == 'grid':
-            canvases = [c[1], c[0], c[2]]
+            canvases = [canvases[1], canvases[0], canvases[2]]
 
         # Distribute the available width/height
         # to each of the displayed canvases -
