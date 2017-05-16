@@ -38,16 +38,6 @@ import fsl.utils.transform          as transform
 import fsleyes.gl.shaders           as shaders
 
 
-def init(self):
-    """Called by :meth:`.GLSH.__init__`. Calls :func:`compileShaders` and
-    :func:`updateShaderState`.
-    """
-
-    self.shader = None
-    compileShaders(self)
-    updateShaderState(self)
-
-
 def destroy(self):
     """Destroys the shader program """
 

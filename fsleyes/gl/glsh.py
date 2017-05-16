@@ -92,7 +92,7 @@ class GLSH(glvector.GLVectorBase):
 
         Creates a :class:`.Texture3D` instance to store vertex radii, adds
         property listeners to the :class:`.Display` and :class:`.SHOpts`
-        instances, and calls :func:`.glsh_funcs.init`.
+        instances, and sets up shaders.
 
 
         :arg image:   The :class:`.Image` instance
@@ -104,21 +104,25 @@ class GLSH(glvector.GLVectorBase):
         self.shader     = None
         self.radTexture = None
 
+        # This texture gets updated on
+        # draw calls, so we want it to
+        # run on the main thread.
+        self.radTexture = textures.Texture3D('{}_radTexture'.format('fuck'),
+                                             threaded=False)
+
+        # Usin preinit here (see GLVectorBase)
+        # because the GLObject init has to be
+        # called before compileShaders can be
+        # called, and shStateChanged has to be
+        # called after everything else is called.
         glvector.GLVectorBase.__init__(
             self,
             image,
             display,
             xax,
             yax,
-            init=lambda: fslgl.glsh_funcs.init(self))
-
-        self.__shStateChanged()
-
-        # This texture gets updated on
-        # draw calls, so we want it to
-        # run on the main thread.
-        self.radTexture = textures.Texture3D('{}_radTexture'.format(self.name),
-                                             threaded=False)
+            preinit=self.compileShaders,
+            init=self.__shStateChanged)
 
 
     def destroy(self):
