@@ -56,10 +56,10 @@ class ShellPanel(viewpanel.ViewPanel):
                                                                displayCtx)
 
         introText = textwrap.dedent("""
-          FSLeyes {} python shell
+          FSLeyes {} python shell (Python {})
 
         Available items:
-        """.format(version.__version__))
+        """.format(version.__version__, sys.version.split()[0]))
 
         overrideDocs = {
             'np'  : 'numpy',
