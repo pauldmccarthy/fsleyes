@@ -693,6 +693,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
     def _drawGridLines(self):
         """Draws grid lines between all the displayed slices."""
 
+        if self._totalRows == 0 or self.ncols == 0:
+            return
+
         xlen = self.displayCtx.bounds.getLen(self.xax)
         ylen = self.displayCtx.bounds.getLen(self.yax)
         xmin = self.displayCtx.bounds.getLo( self.xax)
