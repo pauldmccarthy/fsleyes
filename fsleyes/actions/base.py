@@ -25,6 +25,46 @@ class ActionDisabledError(Exception):
     pass
 
 
+class BoundWidget(object):
+    """Container class used by :class:`Action` instances to store references
+    to widgets that are currently bound to them.
+    """
+
+
+    def __init__(self, parent, evType, widget):
+        import wx
+        self.parent = parent
+        self.evType = evType
+        self.widget = widget
+
+        # Under OSX, if a wx.Menu is destroyed,
+        # and then the GetMenu method of a
+        # contained wx.MenuItem is called, a
+        # segfault will occur. So let's get a
+        # reference now.
+        if isinstance(widget, wx.MenuItem):
+            self.menu = widget.GetMenu()
+        else:
+            self.menu = None
+
+
+    def isAlive(self):
+        """Returns ``True`` if the widget contained by this ``BoundWidget`` is
+        still alive, ``False`` otherwise.
+        """
+
+        import wx
+
+        if not fslplatform.isWidgetAlive(self.parent):
+            return False
+
+        if isinstance(self.widget, wx.MenuItem):
+            return fslplatform.isWidgetAlive(self.menu)
+
+        else:
+            return fslplatform.isWidgetAlive(self.widget)
+
+
 class Action(props.HasProperties):
     """Represents an action of some sort. """
 
@@ -106,7 +146,7 @@ class Action(props.HasProperties):
 
         parent.Bind(evType, wrapper, widget)
         widget.Enable(self.enabled)
-        self.__boundWidgets.append((parent, evType, widget))
+        self.__boundWidgets.append(BoundWidget(parent, evType, widget))
 
 
     def unbindWidget(self, widget):
@@ -117,8 +157,8 @@ class Action(props.HasProperties):
         # which does the real work.
         index = -1
 
-        for i, (p, e, w) in enumerate(self.__boundWidgets):
-            if w == widget:
+        for i, bw in enumerate(self.__boundWidgets):
+            if bw.widget == widget:
                 index = i
                 break
 
@@ -134,15 +174,12 @@ class Action(props.HasProperties):
         ``__boundWidgets`` list. Does not remove it from the list.
         """
 
-        parent, evType, widget = self.__boundWidgets[index]
+        bw = self.__boundWidgets[index]
 
         # Only attempt to unbind if the parent
         # and widget have not been destroyed
-
-        if fslplatform.isWidgetAlive(parent) and \
-           fslplatform.isWidgetAlive(widget):
-
-            parent.Unbind(evType, source=widget)
+        if bw.isAlive():
+            bw.parent.Unbind(bw.evType, source=bw.widget)
 
 
     def unbindAllWidgets(self):
@@ -156,10 +193,10 @@ class Action(props.HasProperties):
 
 
     def getBoundWidgets(self):
-        """Returns a list containing all widgets which have been bound to
-        this ``Action``.
+        """Returns a list of :class:`BoundWidget` instances, containing all
+        widgets which have been bound to this ``Action``.
         """
-        return [w for _, _, w in self.__boundWidgets]
+        return list(self.__boundWidgets)
 
 
     def __enabledChanged(self, *args):
@@ -167,12 +204,12 @@ class Action(props.HasProperties):
         changes. Enables/disables any bound widgets.
         """
 
-        for _, _, widget in self.__boundWidgets:
+        for bw in self.__boundWidgets:
 
             # The widget may have been destroyed,
             # so check before trying to access it
-            if fslplatform.isWidgetAlive(widget): widget.Enable(self.enabled)
-            else:                                 self.unbindWidget(widget)
+            if bw.isAlive(): bw.widget.Enable(self.enabled)
+            else:            self.unbindWidget(bw.widget)
 
 
 class ToggleAction(Action):
@@ -220,10 +257,17 @@ class ToggleAction(Action):
         state changes.
         """
 
+        Action.bindToWidget(self, parent, evType, widget, wrapper)
+        self.__setState(widget)
+
+
+    def __setState(self, widget):
+        """Sets the toggled state of the given widget to the current value of
+        :attr:`toggled`.
+        """
+
         import wx
         import fsleyes_widgets.bitmaptoggle as bmptoggle
-
-        Action.bindToWidget(self, parent, evType, widget, wrapper)
 
         if isinstance(widget, wx.MenuItem):
             widget.Check(self.toggled)
@@ -238,22 +282,17 @@ class ToggleAction(Action):
         state of any bound widgets.
         """
 
-        import wx
-        import fsleyes_widgets.bitmaptoggle as bmptoggle
-
-        for widget in list(self.getBoundWidgets()):
+        for bw in list(self.getBoundWidgets()):
 
             # An error will be raised if a widget
             # has been destroyed, so we'll unbind
             # any widgets which no longer exist.
             try:
-                if isinstance(widget, wx.MenuItem):
-                    widget.Check(self.toggled)
 
-                elif isinstance(widget, (wx.CheckBox,
-                                         wx.ToggleButton,
-                                         bmptoggle.BitmapToggleButton)):
-                    widget.SetValue(self.toggled)
+                if not bw.isAlive():
+                    raise Exception()
+
+                self.__setState(bw.widget)
 
             except:
-                self.unbindWidget(widget)
+                self.unbindWidget(bw.widget)

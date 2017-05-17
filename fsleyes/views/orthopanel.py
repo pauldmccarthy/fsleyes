@@ -579,8 +579,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # It's unlikely, but an OrthoPanel might be
         # created without a ref to a FSLeyesFrame.
         if self.getFrame() is not None:
-            if   self.profile == 'view': self.__removeEditMenu()
-            elif self.profile == 'edit': self.__addEditMenu()
+            if inEdit: self.__addEditMenu()
+            else:      self.__removeEditMenu()
 
 
     def __addEditMenu(self):
@@ -617,7 +617,20 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    'copySelection',
                    'pasteSelection']
 
-        frame.populateMenu(editMenu, profile, actionz, ignoreFocus=True)
+        frame.populateMenu(editMenu,
+                           profile,
+                           actionz,
+                           ignoreFocus=True)
+
+        # Add a 'close' option too, but run it
+        # on the idle loop, as its execution will
+        # cause the owning menu to be destroyed.
+        frame.populateMenu(editMenu,
+                           self,
+                           [None, 'toggleEditMode'],
+                           ignoreFocus=True,
+                           runOnIdle=True)
+
 
 
     def __removeEditMenu(self):
@@ -635,14 +648,15 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         menuBar      = frame.GetMenuBar()
         idx          = menuBar.FindMenu(editMenuName)
 
-        if  idx == wx.NOT_FOUND: editMenu = None
-        else:                    editMenu = menuBar.GetMenu(idx)
-
         self.__editMenuTitle = None
 
-        if editMenu is not None:
-            editMenu = menuBar.Remove(idx)
-            editMenu.Destroy()
+        if  idx == wx.NOT_FOUND:
+            return
+
+        editMenu = menuBar.GetMenu(idx)
+
+        menuBar.Remove(idx)
+        wx.CallAfter(editMenu.Destroy)
 
 
     def __bgColourChanged(self, *a, **kwa):

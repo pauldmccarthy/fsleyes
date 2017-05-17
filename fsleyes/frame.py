@@ -18,6 +18,7 @@ import six
 import wx
 import wx.lib.agw.aui                     as aui
 
+import fsl.utils.async                    as async
 import fsl.utils.settings                 as fslsettings
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_widgets.dialog             as fsldlg
@@ -531,7 +532,7 @@ class FSLeyesFrame(wx.Frame):
         rsa(script)
 
 
-    def populateMenu(self, menu, target, actionNames=None, ignoreFocus=False):
+    def populateMenu(self, menu, target, actionNames=None, **kwargs):
         """Creates menu items for every :class:`.Action` available on the
         given ``target``, or for every named action in the ``actionNames``
         list.
@@ -546,16 +547,20 @@ class FSLeyesFrame(wx.Frame):
                           menu items.
 
         :arg actionNames: If provided, only menu items for the actions named
-                          in this list will be created.
+                          in this list will be created. May contain ``None``,
+                          which indicates that a menu separator should be
+                          added at that point.
 
-        :arg ignoreFocus: Passed through to the :meth:`__onViewPanelMenuItem`
-                          method for all created menu items.
+        All other keyword arguments are passed through to the
+        :meth:`__onViewPanelMenuItem` method.
         """
 
         if actionNames is None:
             actionNames, actionObjs = list(zip(*target.getActions()))
         else:
-            actionObjs = [target.getAction(name) for name in actionNames]
+            actionObjs = [target.getAction(name)
+                          if name is not None else None
+                          for name in actionNames]
 
         def configureActionItem(menu, actionName, actionObj):
             title    = strings  .actions.get((target, actionName), actionName)
@@ -593,7 +598,7 @@ class FSLeyesFrame(wx.Frame):
             # needs to know which view panel/action
             # is associated with each callback.
             def wrapper(ev, vp=target, aname=actionName, sc=shortcut):
-                self.__onViewPanelMenuItem(vp, aname, sc, ignoreFocus)
+                self.__onViewPanelMenuItem(vp, aname, sc, **kwargs)
 
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem, wrapper)
 
@@ -665,7 +670,8 @@ class FSLeyesFrame(wx.Frame):
                               target,
                               actionName,
                               shortcut,
-                              ignoreFocus=False):
+                              ignoreFocus=False,
+                              runOnIdle=False):
         """Called when a menu item from a :class:`.ViewPanel` menu, or a menu
         otherwise created via :meth:`createMenu`, is selected, either via menu
         selection, or from a bound keyboard shortcut. This callback is
@@ -685,6 +691,10 @@ class FSLeyesFrame(wx.Frame):
                           ``target``. Otherwise (the default), the action
                           is executed on the currently focused
                           :class:`.ViewPanel`.
+
+        :arg runOnIdle:   If ``True``, the action is executed on the
+                          ``async.idle`` loop. Otherwise (the default),
+                          the action is executed on the calling thread.
         """
 
         # Hacky way to see if this menu item
@@ -701,7 +711,11 @@ class FSLeyesFrame(wx.Frame):
         # on the target which is associated with the
         # menu.
         if ignoreFocus or shortcut is None or (not keyDown):
-            target.getAction(actionName)()
+            func = target.getAction(actionName)
+            if runOnIdle:
+                async.idle(func)
+            else:
+                func()
             return
 
         # Otherwise we assume that the menu item was
@@ -730,8 +744,15 @@ class FSLeyesFrame(wx.Frame):
         viewPanel  = self.getFocusedViewPanel()
         actionName = self.__viewPanelShortcuts[shortcut].get(viewPanel, None)
 
-        if actionName is not None:
-            viewPanel.getAction(actionName)()
+        if actionName is None:
+            return
+
+        func = viewPanel.getAction(actionName)
+
+        if runOnIdle:
+            async.idle(func)
+        else:
+            func()
 
 
     def __onViewPanelClose(self, ev=None, panel=None, displaySync=True):
