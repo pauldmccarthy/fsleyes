@@ -21,13 +21,14 @@ import fsleyes_props                as props
 import fsleyes_widgets.dialog       as fsldlg
 import fsleyes_widgets.utils.status as status
 import fsleyes.overlay              as fsloverlay
+import fsleyes.displaycontext       as fsldisplay
 import fsleyes.strings              as strings
 import fsleyes.actions              as actions
 import fsleyes.actions.copyoverlay  as copyoverlay
 import fsleyes.editor.editor        as fsleditor
 import fsleyes.gl.routines          as glroutines
 import fsleyes.gl.annotations       as annotations
-from . import                         orthoviewprofile
+from . import                          orthoviewprofile
 
 
 log = logging.getLogger(__name__)
@@ -619,6 +620,26 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__refreshCanvases()
 
 
+    def isEditable(self, overlay):
+        """Returns ``True`` if the given overlay is editable, ``False``
+        otherwise.
+        """
+
+        # will raise if overlay is
+        # None, or has been removed
+        try:
+            display = self._displayCtx.getDisplay(overlay)
+        except (ValueError, fsldisplay.InvalidOverlayError) as e:
+            display = None
+
+        # Edit mode is only supported on
+        # images with the 'volume', 'mask'
+        # or 'label' types
+        return overlay is not None                 and \
+               isinstance(overlay, fslimage.Image) and \
+               display.overlayType in ('volume', 'mask', 'label')
+
+
     def __drawModeChanged(self, *a):
         """Called when the :attr:`drawMode` changes. Updates the enabled
         state of various actions that are irrelevant when in draw mode.
@@ -701,7 +722,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         same space as the currently selected overlay.
         """
 
-        with props.skip(self, 'targetImage', self._name):
+        with props.suppress(self, 'targetImage'):
             self.targetImage = None
 
         overlay = self.__currentOverlay
@@ -712,7 +733,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         compatibleOverlays = [None]
         if not self.drawMode:
             for ovl in self._overlayList:
-                if ovl is not overlay and overlay.sameSpace(ovl):
+
+                if all((ovl is not overlay,
+                        self.isEditable(ovl),
+                        overlay.sameSpace(ovl))):
                     compatibleOverlays.append(ovl)
 
         self.getProp('targetImage').setChoices(compatibleOverlays,
@@ -850,18 +874,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         #
         # Here we go....
 
-        # Destroy any Editor instances which are associated
-        # with overlays that are no longer in the overlay list
-        #
-        # TODO - If the current overlay has been removed,
-        #        this will cause an error later on. You
-        #        need to handle this scenario here.
-        #
-        # for overlay, editor in self.__editors:
-        #     if overlay not in self._overlayList:
-        #         self.__editors.pop(overlay)
-        #         editor.destroy()
-
         oldOverlay = self.__currentOverlay
         overlay    = self._displayCtx.getSelectedOverlay()
 
@@ -885,28 +897,22 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.undo.unbindProps('enabled', editor.undo)
             self.redo.unbindProps('enabled', editor.redo)
 
-        self.__currentOverlay = overlay
+        # Make sure that the newly
+        # selected overlay is editable
+        if self.isEditable(overlay):
+            self.__currentOverlay = overlay
+        else:
+            self.__currentOverlay = None
 
-        # Update the limits/options on all properties.
+        # Update the limits/options
+        # on all properties.
         self.__updateTargetImage()
         self.__setPropertyLimits()
         self.__setCopyPasteState()
 
-        # If there is no selected overlay (the overlay
-        # list is empty), don't do anything.
-        if overlay is None:
-            return
-
-        display = self._displayCtx.getDisplay(overlay)
-        opts    = display.getDisplayOpts()
-
-        # Edit mode is only supported on
-        # images with the 'volume', 'mask'
-        # or 'label' types
-        if not isinstance(overlay, fslimage.Image) or \
-           display.overlayType not in ('volume', 'mask', 'label'):
-
-            self.__currentOverlay = None
+        # If there is no selected overlay,
+        # don't do anything more.
+        if self.__currentOverlay is None:
             return
 
         # Update the limits/options on all properties.
@@ -981,9 +987,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # Restore the targetImage for this
         # overlay, if there is a cached value
         targetImage = self.__cache.get(overlay, 'targetImage', None)
-        if targetImage is not None and targetImage in self._overlayList:
-            with props.skip(self, 'targetImage', self._name):
-                self.targetImage = targetImage
+        if targetImage not in self._overlayList:
+            targetImage = None
+
+        with props.skip(self, 'targetImage', self._name):
+            self.targetImage = targetImage
 
         # Register property listeners with the
         # new Editor and Selection instances.
@@ -1003,6 +1011,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                         'width'   : 2,
                         'expiry'  : 0.5,
                         'enabled' : False}
+
+        opts = self._displayCtx.getOpts(overlay)
 
         for c in [self.__xcanvas, self.__ycanvas, self.__zcanvas]:
 
