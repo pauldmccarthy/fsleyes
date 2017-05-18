@@ -1758,7 +1758,7 @@ def parseArgs(mainParser,
         try: optArgs = optParser.parse_args(remaining)
 
         except ArgumentError as e:
-            print(e.message,       file=sys.stderr)
+            print(str(e),          file=sys.stderr)
             print(                 file=sys.stderr)
             mainParser.print_usage(file=sys.stderr)
             print(                 file=sys.stderr)
