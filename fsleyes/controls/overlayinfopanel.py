@@ -11,7 +11,6 @@ panel which displays information about the currently selected overlay.
 
 import logging
 import collections
-import string
 
 import wx
 
@@ -68,32 +67,6 @@ if not USE_HTML2:
 
         def SetPage(self, html, url=None):
             wxhtml.HtmlWindow.SetPage(self, html)
-
-
-def terminateString(s):
-    """Given an ASCII string (or a ``numpy`` array containing one),
-    returns that string as a python string, correctly null-terminated,
-    and with non-printable characters removed.
-
-
-    .. note:: This function is used to sanitise some NIFTI header fields.
-              The default Python behaviour for converting a sequence of
-              bytes to a string is to strip all termination characters
-              (bytes with value of ``0x00``) from the end of the
-              sequence.
-
-
-              This behaviour does not handle the case where a sequence
-              of bytes which did contain a long string is subsequently
-              overwritten with a shorter string - the short string will
-              be terminated, but that termination character will be
-              followed by the remainder of the original string.
-    """
-
-    try:    s = str(s).partition(b'\0')[0]
-    except: s = str(s)
-
-    return ''.join([c for c in s if c in string.printable])
 
 
 class OverlayInfoPanel(fslpanel.FSLeyesPanel):
@@ -362,7 +335,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                      dataType,
                      section=generalSect)
         info.addInfo(strings.nifti['descrip'],
-                     terminateString(hdr['descrip']),
+                     overlay.strval('descrip'),
                      section=generalSect)
 
         if isNifti:
@@ -374,11 +347,11 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                          intent,
                          section=generalSect)
             info.addInfo(strings.nifti['intent_name'],
-                         terminateString(hdr['intent_name']),
+                         overlay.strval('intent_name'),
                          section=generalSect)
 
         info.addInfo(strings.nifti['aux_file'],
-                     terminateString(hdr['aux_file']),
+                     overlay.strval('aux_file'),
                      section=generalSect)
 
         info.addInfo(strings.labels[self, 'overlayType'],
