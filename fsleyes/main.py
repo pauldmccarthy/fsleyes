@@ -591,27 +591,21 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     frame.Refresh()
     frame.Update()
 
-    # Closing the splash screen immediately
-    # can cause a crash under linux/GTK, so
-    # we'll hide it now, and destroy it later.
+    # In certain instances under Linux/GTK,
+    # closing the splash screen will crash
+    # the application. No idea why. So we
+    # leave the splash screen hidden, but
+    # not closed, and close it when the main
+    # frame is closed. This also works under
+    # OSX.
     splash.Hide()
     splash.Refresh()
     splash.Update()
 
-    # In certain instances under Linux/GTK,
-    # closing the splash screen will crash
-    # the application. No idea why. So if
-    # running GTK, we leave the splash
-    # screen hidden, but not closed, and
-    # close it when the main frame is
-    # closed.
-    if fslplatform.wxPlatform == fslplatform.WX_GTK:
-        def onFrameDestroy(ev):
-            ev.Skip()
-            splash.Close()
-        frame.Bind(wx.EVT_WINDOW_DESTROY, onFrameDestroy)
-    else:
-        wx.CallLater(250, splash.Close)
+    def onFrameDestroy(ev):
+        ev.Skip()
+        splash.Close()
+    frame.Bind(wx.EVT_WINDOW_DESTROY, onFrameDestroy)
 
     status.update('Setting up scene...')
 
