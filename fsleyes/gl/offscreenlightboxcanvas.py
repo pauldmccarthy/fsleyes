@@ -37,3 +37,9 @@ class OffScreenLightBoxCanvas(lightboxcanvas.LightBoxCanvas,
                                                overlayList,
                                                displayCtx,
                                                zax)
+
+        # LightBoxCanvas only updates itself
+        # when a slice property changes. So
+        # we force an initialisation just
+        # in case.
+        self._slicePropsChanged()
