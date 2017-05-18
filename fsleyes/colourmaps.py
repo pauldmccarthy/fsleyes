@@ -206,7 +206,6 @@ import            os
 import            glob
 import            bisect
 import            string
-import            random
 import            logging
 import            colorsys
 
@@ -902,13 +901,13 @@ def applyBricon(rgb, brightness, contrast):
 
 def randomColour():
     """Generates a random RGB colour. """
-    values = [randomColour.random.random() for i in range(3)]
+    values = [randomColour.random.rand() for i in range(3)]
     return np.array(values)
 
 
 # The randomColour function uses a generator
 # with a fixed seed for reproducibility
-randomColour.random = random.Random(x=1)
+randomColour.random = np.random.RandomState(seed=1)
 
 
 def randomBrightColour():
