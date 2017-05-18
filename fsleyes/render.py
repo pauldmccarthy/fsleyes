@@ -157,6 +157,13 @@ def makeDisplayContext(namespace):
     childDisplayCtx  = displaycontext.DisplayContext(overlayList,
                                                      parent=masterDisplayCtx)
 
+    # We have to artificially create a ref to the
+    # master display context, otherwise it may get
+    # gc'd arbitrarily. The parent reference in the
+    # child creation above is ultimately stored as
+    # a weakref, so we need to create a real one.
+    childDisplayCtx.masterDisplayCtx = masterDisplayCtx
+
     # The handleOverlayArgs function uses the
     # fsleyes.overlay.loadOverlays function,
     # which will call these functions as it

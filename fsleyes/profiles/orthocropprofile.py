@@ -445,6 +445,9 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         axis, limit = np.unravel_index(np.argmin(dists), (2, 2))
         voxAxis     = [hax, vax][axis]
 
+        axis  = int(axis)
+        limit = int(limit)
+
         # Save these for the mouse drag handler
         self.__dragAxis  = voxAxis
         self.__dragLimit = limit
