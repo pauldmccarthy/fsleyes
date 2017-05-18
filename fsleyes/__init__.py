@@ -306,7 +306,7 @@ def configLogging(namespace):
 
     def _logmemory(self, message, *args, **kwargs):
         """Log function for my custom ``logging.MEMORY`` logging level. """
-        if self.isEnabledFor(logging.MEMORY):
+        if logging and self.isEnabledFor(logging.MEMORY):
             self._log(logging.MEMORY, message, args, **kwargs)
 
     logging.Logger.memory = _logmemory
