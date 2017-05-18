@@ -320,6 +320,7 @@ The assembly code can thus be re-written as follows::
 """
 
 
+import itertools   as it
 import                re
 
 import jinja2      as j2
@@ -390,7 +391,7 @@ def fillARBP(vertSrc,
     _checkVariableValidity(
         vertVars, fragVars, vertParams, fragParams, textures, attrs)
 
-    for name, number in vertParams.items():
+    for name, number in list(vertParams.items()):
 
         length = vertParamLens[name]
 
@@ -399,7 +400,7 @@ def fillARBP(vertSrc,
 
         vertParams[name] = _param(number, length)
 
-    for name, number in fragParams.items():
+    for name, number in list(fragParams.items()):
 
         length = fragParamLens[name]
 
@@ -423,13 +424,13 @@ def fillARBP(vertSrc,
     vertTemplate  = j2.Template(vertSrc)
     fragTemplate  = j2.Template(fragSrc)
 
-    vertVars = dict(vertParams  .items() +
-                    textures    .items() +
-                    attrs       .items() +
-                    vertVaryings.items())
-    fragVars = dict(fragParams  .items() +
-                    textures    .items() +
-                    fragVaryings.items())
+    vertVars = dict(it.chain(vertParams  .items(),
+                             textures    .items(),
+                             attrs       .items(),
+                             vertVaryings.items()))
+    fragVars = dict(it.chain(fragParams  .items(),
+                             textures    .items(),
+                             fragVaryings.items()))
 
     vertSrc = vertTemplate.render(**vertVars)
     fragSrc = fragTemplate.render(**fragVars)

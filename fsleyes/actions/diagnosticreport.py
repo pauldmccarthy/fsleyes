@@ -147,11 +147,15 @@ class DiagnosticReportAction(base.Action):
 
         report = OrderedDict()
 
-        report['Version']       = gl.glGetString( gl.GL_VERSION)
+        version    = gl.glGetString( gl.GL_VERSION)   .decode('ascii')
+        renderer   = gl.glGetString( gl.GL_RENDERER)  .decode('ascii')
+        extensions = gl.glGetString( gl.GL_EXTENSIONS).decode('ascii')
+
+        report['Version']       = version
         report['Compatibility'] = fslplatform.glVersion
-        report['Renderer']      = gl.glGetString( gl.GL_RENDERER)
+        report['Renderer']      = renderer
         report['Texture size']  = str(gl.glGetInteger(gl.GL_MAX_TEXTURE_SIZE))
-        report['Extensions']    = gl.glGetString( gl.GL_EXTENSIONS).split(' ')
+        report['Extensions']    = extensions.split(' ')
 
         return report
 

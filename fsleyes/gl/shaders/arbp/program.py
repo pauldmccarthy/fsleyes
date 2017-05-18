@@ -9,6 +9,9 @@ an OpenGL shader program written according to the ``ARB_vertex_program``
 and ``ARB_fragment_program`` extensions.
 """
 
+
+from __future__ import division
+
 import logging
 
 import numpy                          as np
@@ -223,7 +226,7 @@ class ARBPShader(object):
 
         pos   = self.vertParamPositions[name]
         value = np.array(value, dtype=np.float32).ravel('F')
-        nrows = len(value) / 4
+        nrows = len(value) // 4
 
         log.debug('Setting vertex parameter {} = {}'.format(name, value))
 
@@ -245,7 +248,7 @@ class ARBPShader(object):
         """
         pos   = self.fragParamPositions[name]
         value = np.array(value, dtype=np.float32).ravel('F')
-        nrows = len(value) / 4
+        nrows = len(value) // 4
 
         log.debug('Setting fragment parameter {} = {}'.format(name, value))
 
@@ -353,8 +356,8 @@ class ARBPShader(object):
 
         # Make sure the source is plain
         # ASCII - not unicode
-        vertSrc = str(vertSrc)
-        fragSrc = str(fragSrc)
+        vertSrc = vertSrc.encode('ascii')
+        fragSrc = fragSrc.encode('ascii')
 
         # vertex program
         try:
@@ -368,6 +371,7 @@ class ARBPShader(object):
 
             position = gl.glGetIntegerv(arbvp.GL_PROGRAM_ERROR_POSITION_ARB)
             message  = gl.glGetString(  arbvp.GL_PROGRAM_ERROR_STRING_ARB)
+            message  = message.decode('ascii')
 
             raise RuntimeError('Error compiling vertex program '
                                '({}): {}'.format(position, message))
@@ -384,6 +388,7 @@ class ARBPShader(object):
         except:
             position = gl.glGetIntegerv(arbfp.GL_PROGRAM_ERROR_POSITION_ARB)
             message  = gl.glGetString(  arbfp.GL_PROGRAM_ERROR_STRING_ARB)
+            message  = message.decode('ascii')
 
             raise RuntimeError('Error compiling fragment program '
                                '({}): {}'.format(position, message))
