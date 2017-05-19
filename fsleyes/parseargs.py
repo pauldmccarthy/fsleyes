@@ -529,16 +529,20 @@ def groupEpilog(target):
     if epilog is not None:
 
         if issubclass(target, fsldisplay.Display):
-            epilog = epilog.format(', '.join(fsldisplay.ALL_OVERLAY_TYPES))
+            epilog = epilog.format(', '.join(
+                sorted(fsldisplay.ALL_OVERLAY_TYPES)))
 
         elif issubclass(target, fsldisplay.LabelOpts):
-            epilog = epilog.format(', '.join(colourmaps.scanLookupTables()))
+            epilog = epilog.format(', '.join(
+                sorted(colourmaps.scanLookupTables())))
 
         elif issubclass(target, fsldisplay.VolumeOpts):
-            epilog = epilog.format(', '.join(colourmaps.scanColourMaps()))
+            epilog = epilog.format(', '.join(
+                sorted(colourmaps.scanColourMaps())))
 
         elif issubclass(target, fsldisplay.SHOpts):
-            epilog = epilog.format(', '.join(colourmaps.scanColourMaps()))
+            epilog = epilog.format(', '.join(
+                sorted(colourmaps.scanColourMaps())))
 
     return epilog
 
