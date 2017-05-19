@@ -815,6 +815,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
     def _draw(self, *a):
         """Draws the current scene to the canvas. """
 
+
+        if self.destroyed():
+            return
+
+        width, height = self._getSize()
+        if width == 0 or height == 0:
+            return
+
         if not self._setGLContext():
             return
 
