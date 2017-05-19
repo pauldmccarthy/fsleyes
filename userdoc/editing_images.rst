@@ -1,7 +1,7 @@
 .. |command_key| unicode:: U+2318
 .. |shift_key|   unicode:: U+21E7
 .. |control_key| unicode:: U+2303
-.. |alt_key|     unicode:: U+2325 
+.. |alt_key|     unicode:: U+2325
 .. |right_arrow| unicode:: U+21D2
 
 
@@ -15,8 +15,8 @@
 .. |copy_button|                 image:: images/editing_images_copy_button.png
 .. |undo_button|                 image:: images/editing_images_undo_button.png
 .. |redo_button|                 image:: images/editing_images_redo_button.png
-.. |edit_spanner_button|         image:: images/editing_images_edit_spanner_button.png 
-                                        
+.. |edit_spanner_button|         image:: images/editing_images_edit_spanner_button.png
+
 .. |2D_3D_buttons|              image:: images/editing_images_2D_3D_buttons.png
 .. |select_radius_button|       image:: images/editing_images_select_radius_button.png
 .. |local_search_button|        image:: images/editing_images_local_search_button.png
@@ -24,9 +24,9 @@
 .. |erase_selection_button|     image:: images/editing_images_erase_selection_button.png
 .. |clear_selection_button|     image:: images/editing_images_clear_selection_button.png
 .. |copy_selection_button|      image:: images/editing_images_copy_selection_button.png
-.. |paste_selection_button|     image:: images/editing_images_paste_selection_button.png 
+.. |paste_selection_button|     image:: images/editing_images_paste_selection_button.png
 
-.. |floppy_disk_button|          image:: images/editing_images_floppy_disk_button.png
+.. |floppy_disk_button|          image:: images/floppy_icon.png
 
 
 .. _editing_images:
@@ -73,7 +73,7 @@ of your image, and edit that copy:
  - |copy_button| Create an empty 3D copy of the currently selected image
    (useful for creating mask images) through the :ref:`action toolbar
    <editing_images_action_toolbar>`.
- 
+
  - Create a full copy of the currently selected image via the *Overlay*
    |right_arrow| *Copy* menu option.
 
@@ -102,8 +102,8 @@ You can choose to work in one of two primary editing modes:
  - |select_mode_button| **Select mode** In :ref:`this mode
    <editing_images_select_mode>`, editing images is a two-step process:
 
-   1. Select the voxels you wish to change. 
- 
+   1. Select the voxels you wish to change.
+
    2. Change the value of the selected voxels.
 
 
@@ -118,17 +118,17 @@ and drag on the image:
  - |navigate_button| **Navigate** This tool is identical to using the
    :ref:`ortho view <ortho_lightbox_views_ortho>` outside of edit mode - it
    simply allows you to view the image, and change the displayed location.
-   
+
  - |pencil_button| **Pencil** In :ref:`draw mode <editing_images_draw_mode>`,
    this tool allows you to change voxel values to the current fill value. In
    :ref:`select mode <editing_images_select_mode>`, this tool allows you to
    add voxels to the current selection.
-   
+
  - |eraser_button| **Eraser** In :ref:`draw mode <editing_images_draw_mode>`,
    this tool allows you to erase voxels (set their value to zero). In
    :ref:`select mode <editing_images_select_mode>` this tool allows you to
    remove voxels from the current selection.
-   
+
  - |selint_button| **Select by intensity** This tool (only available in
    :ref:`select mode <editing_images_select_mode>`) allows you to
    automatically select voxels based on their intensity.
@@ -144,9 +144,9 @@ Draw mode
 mode*. In draw mode, you can:
 
  - |navigate_button| Use the *navigate* tool to change the display location.
-   
+
  - |pencil_button| Use the *pencil* tool to change voxel values.
-   
+
  - |eraser_button| Use the *eraser* tool to erase voxels.
 
  - |undo_button| |redo_button| Use the *undo* and *redo* buttons to undo/redo
@@ -186,9 +186,9 @@ Select mode
 |select_mode_button| Select mode offers more flexibility than :ref:`draw mode
 <editing_images_draw_mode>`, but is slightly more involved. In select mode,
 editing an image is a two-step process:
-   
+
    1. Select the voxels you wish to change. You can do this in one of two ways:
- 
+
       - By :ref:`manually drawing <editing_images_manual_selection>` your
         selection with the pencil |pencil_button| and eraser |eraser_button|
         tools.
@@ -196,7 +196,7 @@ editing an image is a two-step process:
       - By using the :ref:`select by intensity
         <editing_images_select_by_intensity>` tool |selint_button| to
         automatically select voxels based on their intensity.
- 
+
    2. :ref:`Change <editing_images_changing_voxel_values>` the value of the
       selected voxels by filling or erasing.
 
@@ -215,18 +215,18 @@ another image - see the section on :ref:`copying and pasting
 <editing_images_copying_and_pasting>` for details.
 
 
-.. [*] **As long as** the newly selected image has the same dimensions, 
+.. [*] **As long as** the newly selected image has the same dimensions,
        resolution and orientation as the previous one.
 
 
-.. _editing_images_manual_selection: 
+.. _editing_images_manual_selection:
 
 Manual selection
 ----------------
 
 
 In select mode, the pencil |pencil_button| and eraser |eraser_button|
-tools are respectively used to select and deselect voxels. 
+tools are respectively used to select and deselect voxels.
 
 
 Using the pencil tool, left-clicking will select voxels under the selection
@@ -235,7 +235,7 @@ colour in the :ref:`edit settings panel
 <editing_images_edit_settings_panel>`).  Left clicking with the eraser tool
 will remove voxels from the selection [*]_.
 
-       
+
 You can adjust the selection cursor size via the *Selection size* control in
 the :ref:`edit toolbar <editing_images_edit_toolbar>`, or by holding down the
 |command_key|/|control_key| and |shift_key| keys and spinning the mouse wheel.
@@ -319,7 +319,7 @@ will be selected when you use the select by intensity tool:
        and |shift_key| keys, and spinning the mouse wheel.
 
 
-.. _editing_images_changing_voxel_values: 
+.. _editing_images_changing_voxel_values:
 
 Changing voxel values
 ---------------------
@@ -330,7 +330,7 @@ selected voxels in one of the following ways:
 
 
 - |fill_selection_button| The values of all selected voxels can be replaced
-  with the current fill value, by clicking the *Fill selection* button.               
+  with the current fill value, by clicking the *Fill selection* button.
   The current fill value can be modified via the *Fill value* control on the
   :ref:`edit toolbar <editing_images_edit_toolbar>`.
 
@@ -375,7 +375,7 @@ voxel values from one image, and paste them into another image:
 Edit mode toolbars and panels
 =============================
 
-   
+
 When you enter edit mode, two toolbars are added the ortho view you are
 working in:
 
@@ -410,7 +410,7 @@ tool, and to configure some options and settings:
 
 3. **2D/3D mode** You can toggle between selecting voxels in the current
    slice (2D), or selecting voxels across multiple slices (3D).
-    
+
 4. **Limit to radius** (only available in :ref:`select mode
    <editing_images_select_mode>`) This button allows you to limit the *select
    by intensity* search to a specific radius (specified via the *Search
@@ -421,17 +421,17 @@ tool, and to configure some options and settings:
    by intensity* search to adjacent voxels only.
 
 6. **Selection size** This setting controls the selection cursor size, when
-   :ref:`drawing <editing_images_draw_mode>`, or :ref:`manually selecting 
+   :ref:`drawing <editing_images_draw_mode>`, or :ref:`manually selecting
    voxels <editing_images_manual_selection>`.
-    
+
 7. **Fill value** This setting controls the fill value used when editing
    voxel values.
-         
+
 8. **Intensity threshold** (only available in :ref:`select mode
    <editing_images_select_mode>`) This setting controls the threshold used
    when using the :ref:`select by intensity
    <editing_images_select_by_intensity>` tool.
-         
+
 9. **Search radius size** (only available in :ref:`select mode
    <editing_images_select_mode>`) This setting controls the size of the search
    radius, when the *Limit to radius* setting is enabled.
@@ -462,7 +462,7 @@ actions.
 1. **Edit settings panel** This button opens the :ref:`edit settings panel
    <editing_images_edit_settings_panel>`, which contains all options related
    to editing.
-   
+
 2. **Copy image** This button creates an empty 3D copy of the currently
    selected image, and adds it to the overlay list.
 
@@ -470,39 +470,53 @@ actions.
    voxels using the pencil or eraser tools, the currently displayed location
    will update as you move the mouse. This button allows you to disable this
    behaviour.
-   
+
 4. **Undo** This button undoes the most recent change to the currently selected
    image.
-   
+
 5. **Redo** This button re-does the most recently undone change to the
    currently selected image.
 
 6. **Show/hide selection** (only available in :ref:`select mode
    <editing_images_select_mode>`) This button allows you to turn on and off
    the selection overlay.
-   
+
 7. **Clear selection** (only available in :ref:`select mode
    <editing_images_select_mode>`) This button clears the current selection,
    i.e. all voxels are deselected.
-   
+
 8. **Fill selection** (only available in :ref:`select mode
    <editing_images_select_mode>`) This button fills the current selection -
    the value of all selected voxels is set to the current fill value.
-   
+
 9. **Erase selection** (only available in :ref:`select mode
    <editing_images_select_mode>`) This button erases the current selection -
    the value of all selected voxels is set to zero.
-   
+
 10. **Copy selection** (only available in :ref:`select mode
     <editing_images_select_mode>`) This button :ref:`copies
     <editing_images_copying_and_pasting>` the current selection - the values
     of all selected voxels are copied to an internal clipboard.
-   
+
 11. **Paste selection** (only available in :ref:`select mode
     <editing_images_select_mode>`) This button :ref:`pastes
     <editing_images_copying_and_pasting>` the selection on the clipboard into
     the currently selected image (if it has compatible dimensionality).
-   
+
+
+.. _editing_images_edit_menu:
+
+The edit menu
+-------------
+
+Several of the options in the :ref:`action toolbar
+<editing_images_action_toolbar>` are also available in the edit menu, which
+appears when you enter edit mode:
+
+.. image:: images/editing_images_edit_menu.png
+   :align: center
+   :width: 30%
+
 
 .. _editing_images_edit_settings_panel:
 
@@ -529,12 +543,12 @@ addition to those that can be accessed via the :ref:`edit toolbar
 
  - **Selection cursor colour** This setting allows you to change the colour
    of the selection cursor.
-   
+
  - **Selection overlay colour** This setting allows you to change the colour
    of the selection overlay (only visible in :ref:`select mode
    <editing_images_select_mode>`).
-   
+
  - **Intensity threshold limit** By default, the maximum value that the
    intensity threshold can be set to is determined from the image data range.
    If your image has an unusual data range or distribution, you may wish to
-   use this setting to manually set the maximum intensity threshold. 
+   use this setting to manually set the maximum intensity threshold.

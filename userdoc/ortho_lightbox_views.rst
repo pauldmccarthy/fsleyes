@@ -8,6 +8,12 @@
 
 .. |right_arrow| unicode:: U+21D2
 
+.. |chainlink_icon|   image:: images/chainlink_icon.png
+.. |eye_icon|         image:: images/eye_icon.png
+.. |reset_zoom_icon|  image:: images/reset_zoom_icon.png
+.. |spanner_icon|     image:: images/spanner_icon.png
+.. |floppy_icon|      image:: images/floppy_icon.png
+.. |camera_icon|      image:: images/camera_icon.png
 
 .. _ortho_lightbox_views:
 
@@ -50,22 +56,22 @@ You can interact with an ortho view in a number of ways:
    the view will zoom in to that rectangle.
 
  - Hold down the |command_key| key (OSX) or |control_key| key (Linux), and
-   use your mouse wheel to zoom in and out of a canvas. 
-   
+   use your mouse wheel to zoom in and out of a canvas.
+
  - Hold down the |shift_key| key, and use your mouse wheel to change the
    current location along the depth axis for that canvas (i.e. to scroll
    through slices).
 
  - Middle-click and drag, or hold down the |alt_key| key and drag with the
    left mouse button, to pan around.
-   
+
  - Hold down the |shift_key| key and the |command_key|/|control_key| key, then
    click and drag the mouse to adjust the brightness and contrast of the
    currently selected overlay. Moving the mouse vertically will adjust the
    contrast, and horizontally will adjust the brightness.
 
  - You can reset the view to its default zoom/pan settings by pressing the
-   magnifying glass button on the :ref:`ortho toolbar
+   |reset_zoom_icon| button on the :ref:`ortho toolbar
    <ortho_lightbox_views_ortho_toolbar>`, or selecting the *Settings*
    |right_arrow| *Ortho view 1* |right_arrow| *Reset display* menu item.
 
@@ -86,15 +92,15 @@ view. More settings are available in the :ref:`view settings panel
    :align: center
 
 
-1. **View settings panel** Clicking the spanner button will open the
-   :ref:`view settings panel <ortho_lightbox_views_view_settings>`, 
+1. **View settings panel** Clicking the |spanner_icon| button will open the
+   :ref:`view settings panel <ortho_lightbox_views_view_settings>`,
    which contains more options for configuring the ortho view.
 
-   
-2. **Take screenshot**: Clicking the camera button allows you to save the
-   current ortho scene as a screenshot.
 
-   
+2. **Take screenshot**: Clicking the |camera_icon| button allows you to save
+   the current ortho scene as a screenshot.
+
+
 3. **Toggle canvases** These buttons allow you to individually toggle each of
    the canvases on and off.
 
@@ -106,11 +112,11 @@ view. More settings are available in the :ref:`view settings panel
 5. **Movie mode** Clicking this button will enable :ref:`movie mode
    <ortho_lightbox_views_view_settings_movie_mode>`.
 
-   
+
 6. **Toggle cursor/labels** This button allows you to turn the location cursor
    and anatomical labels on and off.
 
-   
+
 7. **Reset pan/zoom** This button will reset the pan and zoom settings on the
    three canvases.
 
@@ -127,7 +133,8 @@ Ortho view settings
 
 All of the settings which are available on the :ref:`ortho toolbar
 <ortho_lightbox_views_ortho_toolbar>`, along with some more options, are
-available in the view settings panel [*]_:
+available in the view settings panel (accessed via the |spanner_icon| button)
+[*]_:
 
 
 .. image:: images/ortho_lightbox_views_ortho_view_settings.png
@@ -189,18 +196,18 @@ overlay.
 .. image:: images/ortho_lightbox_views_lightbox_toolbar.png
    :width: 75%
    :align: center
-   
 
-1. **View settings panel** Clicking the spanner button will open the
+
+1. **View settings panel** Clicking the |spanner_icon| button will open the
    :ref:`view settings panel <ortho_lightbox_views_view_settings>`, allowing you
    to further configure the lightbox view.
 
 
-2. **Take screenshot** Clicking the camera button allows you to save the current
-   lightbox scene as a screenshot.
+2. **Take screenshot** Clicking the |camera_icon| button allows you to save
+   the current lightbox scene as a screenshot.
 
 
-3. **Z axis** These three buttons allow you to switch between displaying slices 
+3. **Z axis** These three buttons allow you to switch between displaying slices
    along the three orthogonal planes.
 
 
@@ -241,7 +248,7 @@ The overlay list
 ----------------
 
 
-The overlay list displays a list of all overlays that you have loaded. 
+The overlay list displays a list of all overlays that you have loaded.
 
 
 .. image:: images/ortho_lightbox_views_overlay_list.png
@@ -254,24 +261,24 @@ The overlay list allows you to do the following:
  - Change the currently selected overlay, by clicking on the overlay name.
 
  - Identify the currently selected overlay (highlighted in blue).
-   
+
  - Add/remove overlays with the + and - buttons.
-   
+
  - Change the overlay display order with the |up_arrow| and |down_arrow|
    buttons.
-   
- - Show/hide each overlay with the eye button, or by double clicking on the
-   overlay name.
-   
+
+ - Show/hide each overlay with the |eye_icon| button, or by double clicking
+   on the overlay name.
+
  - :ref:`Link overlay display properties
-   <overlays_linking_overlay_properties>` with the chainlink button.
+   <overlays_linking_overlay_properties>` with the |chainlink_icon| button.
 
  - Save an overlay if it has been :ref:`edited <editing_images>`, with the
-   floppy disk button. 
+   |floppy_icon| button.
 
  - Left-click and hold the mouse button down on the overlay name to view the
    overlay source (e.g. its location in the file system).
-   
+
 
 .. _ortho_lightbox_views_location_panel:
 
@@ -280,14 +287,14 @@ The location panel
 
 
 The location panel shows the currently displayed location, relative to the
-currently selected overlay. 
+currently selected overlay.
 
 
 .. image:: images/ortho_lightbox_views_location_panel.png
    :width: 50%
    :align: center
 
-           
+
 For NIFTI images, the location is displayed in both voxel coordinates and
 world coordinates [*]_, along with a label which defines the world coordinates
 for the currently selected overlay - in the example above, the world
@@ -310,7 +317,7 @@ corresponding voxel location (and volume index, for 4D images) is also shown.
 
 
 .. _ortho_lightbox_views_view_settings:
-           
+
 Ortho/lightbox view settings
 ----------------------------
 
@@ -331,7 +338,7 @@ settings panel:
  - **Show location cursor** The location cursor can be toggled on/off.
 
  - The **Location cursor colour** can be changed.
-   
+
  - The canvas **Background colour** can be changed.
 
  - **Display in radiological orientation** The view orientation can be toggled
@@ -354,7 +361,7 @@ settings panel:
 The remaining options in the view settings panel are described below.
 
 
-.. _ortho_lightbox_views_view_settings_linking_views: 
+.. _ortho_lightbox_views_view_settings_linking_views:
 
 Linking views
 ^^^^^^^^^^^^^
@@ -378,7 +385,7 @@ you can choose to have various properties between them linked or unlinked.
    :ref:`overlay display settings <overlays_overlay_display_settings>`
    (e.g. display range, colour map) will be the same across linked views
    [*]_. This setting is unselected by default.
- 
+
  .. [*] The *Link overlay display settings* option is independent of the
         :ref:`overlay linking <overlays_linking_overlay_properties>` option
         available through the :ref:`overlay list
@@ -420,4 +427,3 @@ are shown.
 .. [*] The colour bar feature currently only works for :ref:`volume
        <overlays_volume>` overlays. Future versions of FSLeyes will offer more
        colour bar options.
-

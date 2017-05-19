@@ -1,3 +1,8 @@
+.. |eye_icon|                image:: images/eye_icon.png
+.. |import_data_series_icon| image:: images/import_data_series_icon.png
+.. |export_data_series_icon| image:: images/export_data_series_icon.png
+
+
 .. _plot_views:
 
 Plotting views
@@ -12,7 +17,7 @@ Plotting views
 FSLeyes |version| provides three plotting views:
 
 - The :ref:`Time series <plot_views_time_series_view>` view plots voxel
-  intensities from 4D NIFTI images. 
+  intensities from 4D NIFTI images.
 
 - The :ref:`Power spectrum <plot_views_power_spectrum_view>` view is similar
   to the time series view, but it plots time series transformed into the
@@ -64,7 +69,7 @@ settings specific to time series plots:
    :align: center
 
 
-.. _plot_views_percent_signal_changed_calculation: 
+.. _plot_views_percent_signal_changed_calculation:
 
 .. sidebar:: Percent-signal changed calculation
 
@@ -74,24 +79,24 @@ settings specific to time series plots:
              follows:
 
              .. math::
-                
+
                 i_t = 100 \times \frac{i_t}{\bar{i}} - 100
 
              where :math:`\bar{i}` is the mean voxel intensity across time.
-             
+
 
 - **Plotting mode** This setting allows you to scale or normalise the time
   series which are displayed. You can plot the "raw" data, demean it,
   normalise it to the range ``[-1, 1]``, or scale it to
   percent-signal-changed (suitable for FMRI BOLD data).
-  
+
 - **Use pixdims** This setting is enabled by default. When enabled, the
   ``pixdim`` field of the time dimension in the NIFTI header is assumed to
   contain the TR time, and is used to scale the time series data along the X
   axis. Effectively, this means that the X axis will show seconds. When
   disabled, the X axis corresponds to the volume index (starting from 0) in
   the 4D image.
-  
+
 - **Plot component time courses for Melodic images** This setting is enabled
   by default. If the currently selected overlay is the ``melodic_IC`` file
   from a `MELODIC <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/MELODIC>`_ analysis,
@@ -112,7 +117,7 @@ series view <plot_views_time_series_view>`, but the time series are
 transformed into the frequency domain before being plotted.
 
 
-.. _plot_views_power_spectrum_calculation: 
+.. _plot_views_power_spectrum_calculation:
 
 .. sidebar:: Power spectrum calculation
 
@@ -122,7 +127,7 @@ transformed into the frequency domain before being plotted.
              function. FSLeyes then converts the result into a magnitude by
              summing the squares of the real and imaginary components.
 
-             
+
 The :ref:`plot control panel
 <plot_views_customising_the_plot_the_plot_control_panel>` for a power spectrum
 view contains the following settings:
@@ -137,7 +142,7 @@ view contains the following settings:
   default. When selected, the X axis values are transformed into frequencies,
   using the TR time specified in the NIFTI file header. Otherwise, the X axis
   values are simply plotted as indices.
-  
+
 - **Plot component power spectra for Melodic images** In the same manner as
   the :ref:`time series view <plot_views_time_series_view>`, if the currently
   selected overlay is a ``melodic_IC`` image, the power spectrum
@@ -155,8 +160,8 @@ control panel, described :ref:`below
   selected, the time series data is normalised before being transformed into
   the frequency domain, by subtracting its mean, and dividing by its standard
   deviation.
-  
-  
+
+
 .. _plot_views_histogram_view:
 
 Histogram view
@@ -185,7 +190,7 @@ selected image:
 
 .. sidebar:: 3D histogram overlay
 
-             
+
              .. image:: images/plot_views_histogram_overlay.png
                 :width: 100%
                 :align: center
@@ -198,8 +203,8 @@ selected image:
              Clicking and dragging on the histogram plot allows you to
              interactively adjust the range of voxel intensities that are
              displayed.
-             
-             
+
+
 
 
 - **Ignore zeros** This setting is selected by default. When selected, voxels
@@ -214,24 +219,24 @@ selected image:
 - **Include values out of data range** When this setting is selected, the
   histogram will be updated so that the first and last bins contain voxels
   that are outside of the *Data range*.
-  
+
 - **Automatic histogram binning** This setting is selected by default. When
   selected, the *Number of bins* is automatically set according to the data
   range.
-  
+
 - **Number of bins** When *Automatic histogram binning* is disabled, this
   setting allows you to adjust the number of bins used in the histogram
   calculation.
-  
+
 - **Volume** If the currently selected overlay is a 4D NIFTI image, this
   slider allows you to choose the 3D volume used in the histogram calculation.
-  
+
 - **Data range** This setting allows you to control the data range that is
   included in the histogram calculation.
 
 
 .. _plot_views_controlling_what_gets_plotted:
-  
+
 Controlling what gets plotted
 -----------------------------
 
@@ -261,7 +266,7 @@ The overlay list which is available on plotting views slightly different to
 the :ref:`one available in orthographic/lightbox views
 <ortho_lightbox_views_overlay_list>`. It simply displays a list of all loaded
 overlays, and allows you to toggle on and off the data series associated with
-each overlay, by clicking the eye button next to each overlay's name.
+each overlay, by clicking the |eye_icon| button next to each overlay's name.
 
 
 .. _plot_views_plot_toolbar:
@@ -307,7 +312,7 @@ do the following:
    <plot_views_holding_data_series_and_the_plot_list>` data series from the
    plot.
 
-   
+
 .. _plot_views_holding_data_series_and_the_plot_list:
 
 Holding data series and the plot list
@@ -345,9 +350,9 @@ Importing/exporting data
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-The *Import data series* button on the :ref:`plot toolbar
-<plot_views_plot_toolbar>` allows you to import data series from a text file
-to plot alongside the image data.
+The *Import data series* button |import_data_series_icon| on the :ref:`plot
+toolbar <plot_views_plot_toolbar>` allows you to import data series from a
+text file to plot alongside the image data.
 
 
 .. _plot_views_import_export_data_series_file_format:
@@ -360,7 +365,7 @@ to plot alongside the image data.
              separated by white space. For example, FSLeyes will interpret
              this data as containing three three data series, each with six
              samples::
-               
+
 
                  0.39  -1.53  -0.22
                  0.58  -8.19  -0.27
@@ -379,21 +384,21 @@ check for motion-related correlations and artefacts.
 
 
 When you import data series from a file, FSLeyes will ask you how the data
-series are to be scaled on the X axis: 
+series are to be scaled on the X axis:
 
 
 .. image:: images/plot_views_import_data_x_scale.png
    :width: 40%
    :align: center
 
-           
+
 If the first column in your data file contains the X axis data, click the
 *First column is X data* button. Otherwise, FSLeyes will set the X axis data
 according to the value that you enter.
 
 
-The *Export data series* button on the :ref:`plot toolbar
-<plot_views_plot_toolbar>` allows you to save the data series that are
+The *Export data series* button |export_data_series_icon| on the :ref:`plot
+toolbar <plot_views_plot_toolbar>` allows you to save the data series that are
 currently plotted to a text file in the format described in the :ref:`sidebar
 <plot_views_import_export_data_series_file_format>`. To export data series of
 different lengths and sample rates out to the same text file, FSLeyes applies
@@ -444,8 +449,8 @@ behaves:
 
 
 .. _plot_views_data_series_smoothing:
-           
-.. sidebar:: Data series smoothing 
+
+.. sidebar:: Data series smoothing
 
              When the *Smooth* setting is selected, FSLeyes smooths each data
              series using the `scipy.interpolate
@@ -461,38 +466,38 @@ behaves:
 
 - **Log scale (x axis)** When selected, the base 10 logarithm of the X axis
   data will be displayed.
-  
+
 - **Log scale (y axis)** When selected, the base 10 logarithm of the Y axis
   data will be displayed.
-  
+
 - **Smooth** When selected, each data series is upsampled and smoothed (see
   the :ref:`sidebar <plot_views_data_series_smoothing>`).
-  
+
 - **Show legend** Toggle the plot legend on and off.
-  
+
 - **Show ticks** Toggle the plot ticks on and off.
-  
+
 - **Show grid** Toggle the plot grid on and off.
-  
+
 - **Grid colour** This setting allows you to change the plot grid colour.
-  
+
 - **Background colour** This setting allows you to change the plot background
   colour.
-  
+
 - **Auto-scale (x axis)** This setting is selected by default. When selected,
   the X axis limits are automatically scaled to fit the data series that are
   plotted.
-  
+
 - **Auto-scale (y axis)** This setting is selected by default. When selected,
   the Y axis limits are automatically scaled to fit the data series that are
   plotted.
-  
+
 - **X limits** If *Auto-scale* is disabled for the X axis, this setting allows
   you to manually specify the X axis limits.
-  
+
 - **Y limits** If *Auto-scale* is disabled for the Y axis, this setting allows
   you to manually specify the Y axis limits.
-  
+
 - **Labels** Set the X and Y axis labels here.
 
 
@@ -512,4 +517,3 @@ current overlay is plotted.
 You can customise the data series line colour, transparency, width, and
 style - available styles are *Solid line*, *Dashed line*, *Dash-dot line*, and
 *Dotted line*.
-           

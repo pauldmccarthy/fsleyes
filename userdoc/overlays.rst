@@ -1,5 +1,8 @@
 .. |right_arrow| unicode:: U+21D2
-.. |information| unicode:: U+2139
+
+.. |information_icon| image:: images/information_icon.png
+.. |gear_icon|        image:: images/gear_icon.png
+.. |chainlink_icon|   image:: images/chainlink_icon.png
 
 
 .. _overlays:
@@ -95,11 +98,15 @@ selected overlay.
    :width: 80%
    :align: center
 
-1. **Overlay display panel** Clicking on the gear button will open the
+
+The following settings are available for all overlay types:
+
+
+1. **Overlay display panel** Clicking on the |gear_icon| button will open the
    :ref:`overlay display panel <overlays_overlay_display_panel>`.
 
-2. **Overlay information** Clicking on the information button will open the
-   :ref:`overlay information panel <overlays_overlay_information_panel>`.
+2. **Overlay information** Clicking on the |information_icon| button will open
+   the :ref:`overlay information panel <overlays_overlay_information_panel>`.
 
 3. **Overlay name** You can change the overlay name, as shown in the
    :ref:`overlay list panel <ortho_lightbox_views_overlay_list>`, here.
@@ -112,10 +119,27 @@ selected overlay.
 6. **Brightness/contrast** These sliders allow you to adjust the overlay
    brightness and contrast.
 
-7. **Type-specific settings** The remaining controls will change depending on
-   the type of the overlay. For :ref:`volume <overlays_volume>` overlays, as
-   shown in the example above, display range and colour map controls are
-   provided.
+The remaining settings will differ depending on the overlay type. For
+:ref:`volume <overlays_volume>` overlays, the following settings are
+available:
+
+
+7. **Reset display range** This button will reset the **display range** to
+   the range of the image data.
+
+8. **Display range** These fields control the way that the image data is
+   coloured.
+
+9. **Colour map** You can select a range of different colour maps for
+   colouring the image data.
+
+10. **-ve colour map** If the negative colour map is enabled, this control
+    allows you to choose the colour map for negative valued voxels.
+
+11. **Enable -ve colour map** This button toggles the use of the negative
+    colour map - for images which have both positive and negative values,
+    positive voxels will be coloured with the standard colour map,
+    and negative voxels will be coloured with the negative colour map.
 
 
 .. _overlays_overlay_display_panel:
@@ -126,8 +150,8 @@ The overlay display panel
 
 The :ref:`overlay toolbar <overlays_overlay_display_toolbar>` allows you to
 adjust basic display settings for the currently selected overlay. Many more
-settings are available in the overlay display panel (accessed via the gear
-button on the overlay toolbar):
+settings are available in the overlay display panel (accessed via the
+|gear_icon| button on the overlay toolbar):
 
 
 .. image:: images/overlays_overlay_display_panel.png
@@ -141,9 +165,9 @@ button on the overlay toolbar):
 
              The :ref:`overlay list panel <ortho_lightbox_views_overlay_list>`
              allows you to link some display properties across a group of
-             overlays, via the chainlink button.  This is useful if, for
-             example, you have two or more 4D NIFTI images, and you want to
-             display the same volume from each of them.
+             overlays, via the |chainlink_icon| button.  This is useful if,
+             for example, you have two or more 4D NIFTI images, and you want
+             to display the same volume from each of them.
 
 
 The *General display settings* section at the top contains settings common to
@@ -159,8 +183,8 @@ The overlay information panel
 -----------------------------
 
 
-Clicking the |information| button on the overlay toolbar brings up the overlay
-information panel:
+Clicking the |information_icon| button on the overlay toolbar brings up the
+overlay information panel:
 
 
 .. image:: images/overlays_overlay_information_panel.png
@@ -212,8 +236,8 @@ The following settings are available for volume overlays:
   this slider [*]_.
 
 
-  .. [*] The **Resolution** and **Volume** settings are available for all
-         NIFTI overlay types.
+  .. [*] The **Volume** setting is also available on :ref:`label
+         <overlays_label>` and :ref:`mask <overlays_mask>` overlays.
 
 
 - **Interpolation** You can interpolate the image data (resampled to the

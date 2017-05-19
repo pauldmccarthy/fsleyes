@@ -2,7 +2,7 @@
 .. |command_key| unicode:: U+2318
 .. |shift_key|   unicode:: U+21E7
 .. |control_key| unicode:: U+2303
-.. |alt_key|     unicode:: U+2325 
+.. |alt_key|     unicode:: U+2325
 
 
 .. _overview:
@@ -35,7 +35,7 @@ images [*]_.  These files can be displayed in a variety of different ways -
 see the page on :ref:`overlays <overlays>` for more information.
 
 
-.. [*] FSLeyes |version| is able to load NIFTI, GIFTI, and VTK files. 
+.. [*] FSLeyes |version| is able to load NIFTI, GIFTI, and VTK files.
        Future versions of FSLeyes will be able to load more file types.
 
 
@@ -45,11 +45,11 @@ see the page on :ref:`overlays <overlays>` for more information.
              out on a description of the symbols used in FSLeyes for keyboard
              shortcuts - here they are again:
 
-             - |shift_key|:   Shift 
+             - |shift_key|:   Shift
              - |control_key|: Control
              - |command_key|: Command (on OSX; Control on other platforms)
              - |alt_key|:     Option (on OSX; Alt on other platforms)
- 
+
 
 In FSLeyes, **only one overlay** may be selected at a time. You can tell which
 overlay is selected by looking at the name field on the :ref:`overlay display
@@ -66,7 +66,7 @@ performing some operations on the currently selected overlay:
 .. image:: images/overview_overlay_menu.png
    :width: 40%
    :align: center
-           
+
 
 The display space
 -----------------
@@ -85,12 +85,12 @@ panel <ortho_lightbox_views_view_settings>`.
 
 
 .. container:: image-strip
-               
+
   .. image:: images/overview_display_space1.png
      :width: 25%
-             
+
   .. image:: images/overview_display_space2.png
-     :width: 25% 
+     :width: 25%
 
 
 If you are having trouble with mis-aligned images, or are interested in how
@@ -116,7 +116,7 @@ embedded within a single view.
 
 
 .. sidebar:: Which *Settings* menu corresponds to which view?
-             
+
              Every FSLeyes view panel is given a name and a number so that
              it can be uniquely identified. The *Settings* sub-menu for each
              open view is given the same name and number. If you have more
@@ -140,6 +140,7 @@ view. For example, the settings menu for an :ref:`orthographic
 
 .. image:: images/overview_settings_ortho_menu.png
    :align: center
+   :width: 50%
 
 
 Views and controls are described in more detail in the pages on
@@ -164,7 +165,7 @@ way. These docking icons, shown below, will appear on the FSLeyes frame
 whenever you click and drag the title bar of a view or control panel:
 
 .. container:: image-strip
-               
+
    .. image:: images/overview_dock_up.png
 
    .. image:: images/overview_dock_down.png
@@ -188,7 +189,7 @@ sub-menu:
    :align: center
 
 
-.. _overview_built_in_perspectives:           
+.. _overview_built_in_perspectives:
 
 Built-in perspectives
 ---------------------
@@ -251,7 +252,7 @@ analyses <feat_mode>` for more information.
 .. image:: images/overview_feat.png
    :align: center
    :width: 75%
- 
+
 
 Plain orthographic/Plain lightbox
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -262,9 +263,9 @@ respectively.
 
 
 .. container:: image-strip
-               
+
   .. image:: images/overview_ortho.png
      :width: 45%
 
   .. image:: images/overview_lightbox.png
-     :width: 45% 
+     :width: 45%

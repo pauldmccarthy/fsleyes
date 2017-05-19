@@ -1,12 +1,18 @@
 .. |command_key| unicode:: U+2318
 .. |shift_key|   unicode:: U+21E7
 .. |control_key| unicode:: U+2303
-.. |alt_key|     unicode:: U+2325 
+.. |alt_key|     unicode:: U+2325
 
 .. |up_arrow|    unicode:: U+25B2
 .. |down_arrow|  unicode:: U+25BC
 
 .. |right_arrow| unicode:: U+21D2
+
+.. |information_icon| image:: images/information_icon.png
+.. |chainlink_icon|   image:: images/chainlink_icon.png
+.. |camera_icon|      image:: images/camera_icon.png
+.. |gear_icon|        image:: images/gear_icon.png
+.. |spanner_icon|     image:: images/spanner_icon.png
 
 
 .. _quick_start:
@@ -107,14 +113,14 @@ See the section on :ref:`ortho view interaction
 <ortho_lightbox_views_ortho_interaction>` for more hints on working with an
 ortho view.
 
-   
+
 .. sidebar:: Modifier keys
 
              Throughout this page, and the rest of the FSLeyes documentation,
              we will use the following symbols to represent keyboard modifiers
              keys:
 
-             - |shift_key|:   Shift 
+             - |shift_key|:   Shift
              - |control_key|: Control
              - |command_key|: Command (on OSX; Control on other platforms)
              - |alt_key|:     Option (on OSX; Alt on other platforms)
@@ -123,7 +129,7 @@ ortho view.
 The overlay list
 ^^^^^^^^^^^^^^^^
 
-           
+
 The :ref:`overlay list <ortho_lightbox_views_overlay_list>` displays a list of
 all overlays that you have loaded. Amongst other things, this list allows you
 to add and remove overlays, toggle overlay visibility, and change the overlay
@@ -146,17 +152,17 @@ The toolbars
 
 
 The :ref:`overlay toolbar <overlays_overlay_display_toolbar>` allows you to
-adjust display properties of the currently selected overlay. Pushing the gear
-button will open a dialog containing all of the overlay display
-settings. Pushing the information button opens a dialog containing information
-about the overlay.
+adjust display properties of the currently selected overlay. Pushing the
+|gear_icon| button will open a dialog containing all of the overlay display
+settings. Pushing the |information_icon| button opens a dialog containing
+information about the overlay.
 
 
 The :ref:`ortho toolbar <ortho_lightbox_views_ortho_toolbar>` allows you to
 adjust the layout of the ortho view. For example, you can toggle each of the
 canvases on and off, and switch between vertical, horizontal, or grid
-layouts. Pushing the spanner icon will open a dialog containing all of the
-ortho view settings.
+layouts. Pushing the |spanner_icon| button will open a dialog containing all
+of the ortho view settings.
 
 
 .. _quick_start_how_do_i:
@@ -196,8 +202,8 @@ Change the background colour?
 
 
 You can change the background and cursor colours via the :ref:`view settings
-panel <ortho_lightbox_views_view_settings>` (the spanner button on the ortho
-toolbar).
+panel <ortho_lightbox_views_view_settings>` (the |spanner_icon| button on the
+ortho toolbar).
 
 
 Show/hide the cursor/anatomical labels?
@@ -206,7 +212,8 @@ Show/hide the cursor/anatomical labels?
 
 You can toggle the cursor and labels simultaneously via the + button on the
 ortho toolbar, or toggle them independently via checkboxes in the :ref:`view
-settings panel <ortho_lightbox_views_view_settings>` (the spanner button).
+settings panel <ortho_lightbox_views_view_settings>` (the |spanner_icon|
+button).
 
 
 View images in neurological/radiological orientation?
@@ -214,15 +221,15 @@ View images in neurological/radiological orientation?
 
 
 You can switch between a radiological or neurological display, in the
-:ref:`view settings panel <ortho_lightbox_views_view_settings>` (the spanner
-button).
+:ref:`view settings panel <ortho_lightbox_views_view_settings>` (the
+|spanner_icon| button).
 
 
 Take a screenshot?
 ^^^^^^^^^^^^^^^^^^
 
 
-Click the camera icon on the ortho toolbar, or select the *Settings*
+Click the |camera_icon| button on the ortho toolbar, or select the *Settings*
 |right_arrow| *Ortho view 1* |right_arrow| *Take screenshot* menu item.
 
 
@@ -233,9 +240,10 @@ Link/unlink the display properties across multiple views?
 If you have more than one view open (e.g. an ortho view and a lightbox view),
 and you want the overlay display settings to be the same across all views,
 open the :ref:`view settings panel <ortho_lightbox_views_view_settings>` for
-each view (via the toolbar spanner button, or the *Settings* |right_arrow|
-*<view name>* |right_arrow| *View settings panel* menu option), and make sure
-that the *Link overlay display settings* box is checked or unchecked.
+each view (via the toolbar |spanner_icon| button, or the *Settings*
+|right_arrow| *<view name>* |right_arrow| *View settings panel* menu option),
+and make sure that the *Link overlay display settings* box is checked or
+unchecked.
 
 
 Link the volumes on two or more 4D images?
@@ -243,7 +251,7 @@ Link the volumes on two or more 4D images?
 
 
 If you want to view the same volumes from two or more 4D NIFTI images, click
-the chain-link buttons, for each image, in the :ref:`overlay list
+the |chainlink_icon| buttons, for each image, in the :ref:`overlay list
 <ortho_lightbox_views_overlay_list>`.
 
 
@@ -252,7 +260,7 @@ Set up a positive/negative colour map for Z statistics?
 
 
 You can set up a negative colour map through the :ref:`overlay display panel
-<overlays_overlay_display_panel>` (the gear button on the :ref:`overlay
+<overlays_overlay_display_panel>` (the |gear_icon| button on the :ref:`overlay
 display toolbar <overlays_overlay_display_toolbar>`). See the section on
 :ref:`volume display settings <overlays_volume>` for more details.
 
@@ -262,7 +270,7 @@ My image is tilted/oblique! How do I make it oriented/rectangular?
 
 
 Open the :ref:`view settings panel <ortho_lightbox_views_view_settings>` (the
-spanner button) and set the *Display space* to the image which you want
+|spanner_icon| button) and set the *Display space* to the image which you want
 oriented.
 
 

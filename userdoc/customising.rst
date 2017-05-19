@@ -8,6 +8,27 @@
 This page contains details on customising various aspects of FSLeyes.
 
 
+.. _customising_fsleyes_settings_directory:
+
+FSLeyes settings directory
+==========================
+
+
+FSLeyes stores all of its user-specific settings, and user-added colour maps
+and lookup tables in a directory which, under macOS, will be located at::
+
+  $HOME/.fsleyes/
+
+
+Under Linux, the FSLeyes directory will be found in either::
+
+  $XDG_CONFIG_HOME/fsleyes/
+
+or::
+
+  $HOME/.config/fsleyes/
+
+
 .. _customising_colour_maps:
 
 Colour maps
@@ -20,7 +41,7 @@ bring up a file selection dialog, allowing you to choose a file which contains
 a custom colour map.
 
 
-FSLeyes can read in two types of colour map files, described below:
+FSLeyes can read in two types of colour map files, both described below:
 
  - :ref:`RGB files <customising_rgb_colour_map_files>`, which simply contain a
    list of RGB values
@@ -36,44 +57,45 @@ the high display range to the last colour (the last colour in the file). The
 you to define a continuous colour map by only specifying a few colours. For
 example, you could define the greyscale colour map with just two colours::
 
-  
+
   0.0 0.0 0.0
   1.0 1.0 1.0
 
 
 When the **Interpolate colour maps** setting is enabled, FSLeyes will
 interpolate between these colours.
- 
 
-When you load a custom colour map, FSLeyes will ask you if you would like to
-install it permanently [*]_. If you choose to do so, FSLeyes will save the
-colour map (in the :ref:`RGB file format <customising_rgb_colour_map_files>`)
-under the FSLeyes ``assets`` directory, renaming the file so it ends with
-``.cmap``. Under OSX, this directory is located in::
+
+Built-in colour maps
+--------------------
+
+
+FSLeyes comes with a set of built-in colour maps. Under macOS, the built-in
+colour map files (as :ref:`RGB files <customising_rgb_colour_map_files>`) can
+be found at::
 
   FSLeyes.app/Contents/Resources/assets/colourmaps/
 
-
-And under Linux, it  is located in::
+And under Linux, they are located in::
 
   FSLeyes/share/FSLeyes/assets/colourmaps/
 
 
-You can also customise colour map display names and order. Inside the
-``colourmaps/`` directory you will find a file called ``order.txt``. This file
-defines the order in which colour maps are displayed in the FSLeyes interface,
-and also contains the display name for each colour map; it contains a list of
-colour map file names (without the ``.cmap`` suffix), and corresponding
-display names for each::
+You can customise the display names and order of the built-in colour
+maps. Inside the ``colourmaps/`` directory you will find a file called
+``order.txt``. This file defines the order in which colour maps are displayed
+in the FSLeyes interface, and also contains the display name for each colour
+map; it contains a list of colour map file names (without the ``.cmap``
+suffix), and corresponding display names for each::
 
-  
+
   greyscale        Greyscale
   red-yellow       Red-Yellow
   blue-lightblue   Blue-Light blue
   red              Red
   ...
 
-  
+
 Any colour maps which exist in the ``colourmaps/`` directory, but are not
 listed in ``order.txt`` will still be available in the FSLeyes interface, but
 will be added after all of the colour maps listed in ``order.txt``.
@@ -83,10 +105,19 @@ will be added after all of the colour maps listed in ``order.txt``.
              no spaces in the file name. This also applies to ``.lut`` files
              (covered :ref:`below <customising_lookup_tables>`).
 
-   
-.. [*] To permanently install a colour map (and to edit existing colour maps),
-       you will need permission to write to the FSLeyes installation
-       directory.
+
+User-added colour maps
+----------------------
+
+
+When you load a custom colour map through the :ref:`overlay display panel
+<overlays_overlay_display_panel>`, FSLeyes will ask you if you would like to
+install it permanently. If you choose to do so, FSLeyes will save the colour
+map (as a :ref:`RGB file <customising_rgb_colour_map_files>`) under the
+:ref:`FSLeyes settings directory <customising_fsleyes_settings_directory>` (in
+a sub-directory called ``colourmaps/``), renaming the file so it ends with
+``.cmap``. In the FSLeyes interface, all user-added colour maps will appear
+after the built-in colour maps.
 
 
 .. _customising_rgb_colour_map_files:
@@ -105,9 +136,9 @@ channels respectively. For example::
   0.000000 0.687239 1.000000
   0.738949 0.000000 1.000000
 
-  
+
 .. _customising_vest_colour_map_files:
-  
+
 VEST colour map files
 ---------------------
 
@@ -116,15 +147,15 @@ VEST colour map files follow the colour map file format supported by
 FSLView. They contain a list of RGB colour tuples, with some additional
 metadata [*]_. A VEST file looks something like this::
 
-  
+
   %!VEST-LUT
   %%BeginInstance
   <<
-  /SavedInstanceClassName /ClassLUT 
-  /PseudoColorMinimum 0.00 
-  /PseudoColorMaximum 1.00 
-  /PseudoColorMinControl /Low 
-  /PseudoColorMaxControl /High 
+  /SavedInstanceClassName /ClassLUT
+  /PseudoColorMinimum 0.00
+  /PseudoColorMaximum 1.00
+  /PseudoColorMinControl /Low
+  /PseudoColorMaxControl /High
   /PseudoColormap [
   <-color{0.000000,0.000000,0.000000}->
   <-color{0.010000,0.010000,0.010000}->
@@ -143,7 +174,7 @@ metadata [*]_. A VEST file looks something like this::
        and only extracts the RGB colour values.
 
 
-.. _customising_lookup_tables: 
+.. _customising_lookup_tables:
 
 Lookup tables
 =============
@@ -168,7 +199,7 @@ associated name.  The first column (where columns are space-separated) defines
 the label value, the second to fourth columns specify the RGB values, and all
 remaining columns give the label name. For example::
 
-  
+
         1  0.00000 0.93333 0.00000 Frontal Pole
         2  0.62745 0.32157 0.17647 Insular Cortex
         3  1.00000 0.85490 0.72549 Superior Frontal Gyrus
@@ -178,21 +209,16 @@ remaining columns give the label name. For example::
                in ascending order.
 
 
-Under OSX, FSLeyes stores its lookup table files in::
+FSLeyes manages lookup table files in the same manner as described for
+:ref:`colour maps <customising_colour_maps>`. Built-in lookup table files can
+be located under the FSLeyes ``assets/luts/`` directory. A file called
+``order.txt`` allows you to customise the display names and order of built-in
+lookup tables.  Custom lookup tables which are added via the :ref:`lookup
+table panel <overlays_the_lookup_table_panel>` are saved into the
+:ref:`FSLeyes settings directory <customising_fsleyes_settings_directory>`, in
+a sub-directory called ``luts``.
 
-  FSLeyes.app/Contents/Resources/assets/luts/
 
-
-Under Linux, the lookup tables can be found in::
-
-  FSLeyes/share/FSLeyes/assets/luts/
-
-
-In the same manner as for :ref:`colour maps <customising_colour_maps>` the
-``luts/`` directory contains a file called ``order.txt``, which allows you to
-customise the LUT display names and order, as shown in the FSLeyes interface.
-
-               
 .. _customising_atlases:
 
 Atlases
@@ -212,12 +238,12 @@ FSLeyes |version| understands two types of atlases [*]_:
  - A *label* (or *summary*) atlas is a 3D NIFTI image which contains different
    discrete integer values for each region defined in the atlas.
 
-   
+
  - A *probabilistic* atlas is a 4D NIFTI image, where each volume contains a
    probability map for one region in the atlas.  This probabilistic image may
    also be accompanied by a corresponding label image.
 
-   
+
 Multiple versions of these images, at different resolutions, may exist
 (e.g. 1mm and 2mm versions of the same image may be present).
 
@@ -239,7 +265,7 @@ up looking something like the following:
 
    <atlas>
 
-     <!-- The header defines the atlas name, type, 
+     <!-- The header defines the atlas name, type,
           and paths to the atlas image files. -->
      <header>
 
@@ -252,7 +278,7 @@ up looking something like the following:
        <!-- Atlas type - "Probabilistic" or "Label" -->
        <type>Probabilistic</type>
 
-       <!-- Paths (defined relative to the location 
+       <!-- Paths (defined relative to the location
             of this XML file) to the atlas images.
             Multiple <images> elements may be present
             - one for each resolution in which the
@@ -302,7 +328,7 @@ up looking something like the following:
               list, above.
 
             - The name of the region. -->
-       
+
        <label index="0" x="48" y="94" z="35">Frontal Pole</label>
        <label index="1" x="25" y="70" z="32">Insular Cortex</label>
        <label index="2" x="33" y="73" z="63">Superior Frontal Gyrus</label>
@@ -311,10 +337,10 @@ up looking something like the following:
 
        <label index="45" x="74" y="53" z="40">Planum Temporale</label>
        <label index="46" x="44" y="21" z="42">Supracalcarine Cortex</label>
-       <label index="47" x="37" y="15" z="34">Occipital Pole</label> 
+       <label index="47" x="37" y="15" z="34">Occipital Pole</label>
      </data>
    </atlas>
 
-   
+
 .. [*] Future releases of FSL and FSLeyes will support different types of
        atlases (e.g. longitudinal, surface-based, etc.).
