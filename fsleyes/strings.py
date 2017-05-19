@@ -380,9 +380,9 @@ titles = TypeDict({
 
     'ClearSettingsAction.confirm' : 'Clear all settings?',
 
+    'LoadColourMapAction.namecmap'        : 'Name colour map.',
     'LoadColourMapAction.installcmap'     : 'Install colour map?',
     'LoadColourMapAction.installerror'    : 'Error installing colour map',
-
 
     'UpdateCheckAction.upToDate'            : 'FSLeyes is up to date',
     'UpdateCheckAction.newVersionAvailable' : 'New version available',

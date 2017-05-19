@@ -81,14 +81,16 @@ class LoadColourMapAction(base.Action):
         cmapDir  = op.dirname(cmapFile)
         cmapName = op.splitext(op.basename(cmapFile))[0]
 
-        cmapNameMsg = strings.messages[self, 'namecmap']
+        cmapNameMsg   = strings.messages[self, 'namecmap']
+        cmapNameTitle = strings.titles[  self, 'namecmap']
 
         while True:
 
             dlg = wx.TextEntryDialog(
                 app.GetTopWindow(),
-                message=cmapNameMsg,
-                defaultValue=cmapName)
+                cmapNameMsg,
+                cmapNameTitle,
+                cmapName)
 
             if dlg.ShowModal() != wx.ID_OK:
                 return
