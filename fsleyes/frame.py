@@ -1422,7 +1422,7 @@ class FSLeyesFrame(wx.Frame):
 
         # Remove any existing menu items
         for item in perspMenu.GetMenuItems():
-            perspMenu.DeleteItem(item)
+            perspMenu.Delete(item.GetId())
 
         builtIns = list(perspectives.BUILT_IN_PERSPECTIVES.keys())
         saved    = perspectives.getAllPerspectives()

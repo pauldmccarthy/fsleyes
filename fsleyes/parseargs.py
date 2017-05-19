@@ -1268,7 +1268,7 @@ def _configMainParser(mainParser):
     mainArgs = {name: ARGUMENTS['Main', name][:2] for name in OPTIONS['Main']}
     mainHelp = {name: HELP[     'Main', name]     for name in OPTIONS['Main']}
 
-    for name, (shortArg, longArg) in mainArgs.items():
+    for name, (shortArg, longArg) in list(mainArgs.items()):
         mainArgs[name] = ('-{}'.format(shortArg), '--{}'.format(longArg))
 
     mainParser.add_argument(*mainArgs['help'],

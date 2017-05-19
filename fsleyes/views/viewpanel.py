@@ -402,7 +402,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
     def removeAllPanels(self):
         """Remove all control panels from this ``ViewPanel``."""
 
-        for panelType, instance in self.__panels.items():
+        for panelType, instance in list(self.__panels.items()):
             self.togglePanel(panelType)
 
 
