@@ -960,10 +960,25 @@ def getExtra(target, propName, default=None):
     }
 
     # VolumeOpts.clippingRange is manually
-    # parsed (see TRANSFORMS[VolumeOpts, 'clippingRange'])
-    # so we keep it as a string
+    # parsed (see TRANSFORMS[VolumeOpts, 'clippingRange']),
+    # but if an invalid value is passed in, we want the
+    # error to occur during argument parsing. So we define
+    # a custom 'type' which validates the value, raises
+    # an error if it is bad, but in the end returns the
+    # argument unmodified.
+    def crType(val):
+
+        orig = val
+
+        if val.endswith('%'):
+            val = val[:-1]
+
+        float(val)
+
+        return orig
+
     clippingRangeSettings = {
-        'atype' : str,
+        'atype' : crType
     }
 
     allSettings = {
@@ -1673,7 +1688,7 @@ def parseArgs(mainParser,
         namespace = mainParser.parse_args(progArgv)
 
     except ArgumentError as e:
-        print(e.message)
+        print(str(e))
         print()
         mainParser.print_usage()
         raise SystemExit(1)
@@ -1724,7 +1739,7 @@ def parseArgs(mainParser,
             otArgs, remaining = otParser.parse_known_args(ovlArgv)
 
         except ArgumentError as e:
-            print(e.message,       file=sys.stderr)
+            print(str(e),          file=sys.stderr)
             print(                 file=sys.stderr)
             mainParser.print_usage(file=sys.stderr)
             raise SystemExit(1)
