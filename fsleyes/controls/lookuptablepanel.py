@@ -676,12 +676,15 @@ def promptForLutName(initial=None):
     if initial is None:
         initial = strings.labels[LookupTablePanel, 'newLutDefault']
 
-    nameMsg = strings.messages[LookupTablePanel, 'newlut']
+    nameMsg   = strings.messages[LookupTablePanel, 'newlut']
+    nameTitle = strings.titles[  LookupTablePanel, 'newlut']
+
     while True:
         dlg = wx.TextEntryDialog(
             wx.GetApp().GetTopWindow(),
-            message=nameMsg,
-            defaultValue=initial)
+            nameMsg,
+            nameTitle,
+            initial)
 
         if dlg.ShowModal() != wx.ID_OK:
             return None, None

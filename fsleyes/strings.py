@@ -338,6 +338,7 @@ titles = TypeDict({
     'CropImagePanel'             : 'Crop',
     'EditTransformPanel'         : 'Nudge',
 
+    'LookupTablePanel.newlut'       : 'Name lookup table',
     'LookupTablePanel.loadLut'      : 'Select a lookup table file',
     'LookupTablePanel.labelExists'  : 'Label already exists',
     'LookupTablePanel.installerror' : 'Error installing lookup table',
@@ -379,6 +380,7 @@ titles = TypeDict({
     'SaveFlirtXfmAction.error' : 'Error saving theFLIRT matrix',
 
     'ClearSettingsAction.confirm' : 'Clear all settings?',
+
 
     'LoadColourMapAction.namecmap'        : 'Name colour map.',
     'LoadColourMapAction.installcmap'     : 'Install colour map?',
