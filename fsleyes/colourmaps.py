@@ -281,7 +281,7 @@ def makeValidMapKey(name):
     or lookup table identifier.
     """
 
-    valid = string.lowercase + string.digits + '_-'
+    valid = string.ascii_lowercase + string.digits + '_-'
     key   = name.lower().replace(' ', '_')
     key   = ''.join([c for c in key if c in valid])
 
@@ -719,7 +719,9 @@ def installColourMap(key):
 
     log.debug('Installing colour map {} to {}'.format(key, destFile))
 
-    with fslsettings.writeFile(destFile) as f:
+    # Numpy under python 3 will break if
+    # we give it a file opened with mode='wt'.
+    with fslsettings.writeFile(destFile, mode='b') as f:
         np.savetxt(f, data, '%0.6f')
 
     # Update user-added settings
