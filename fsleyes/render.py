@@ -347,6 +347,11 @@ def createLightBoxCanvas(namespace,
 
     props.applyArguments(canvas, namespace)
 
+    # showCursor is called hideCursor
+    # in the namespace, so the above
+    # applyArguments will not apply it.
+    canvas.showCursor = sceneOpts.showCursor
+
     return canvas
 
 
