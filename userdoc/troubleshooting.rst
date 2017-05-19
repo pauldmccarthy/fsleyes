@@ -35,6 +35,16 @@ click **Skip** to ignore the warning- you can still use FSLeyes, however some
 features (e.g. atlases) will not be available.
 
 
+FSLeyes has saved the wrong ``$FSLDIR``
+---------------------------------------
+
+
+FSLeyes keeps track of the location that it thinks FSL is installed in.  If
+you move or re-install FSL, or have multiple versions of FSL installed, and
+need to update FSLeyes, you can force FSLeyes to forget its settings via the
+*FSLeyes* |right_arrow| *Clear FSLeyes settings* menu option.
+
+
 Images are not overlaid on each other correctly
 -----------------------------------------------
 

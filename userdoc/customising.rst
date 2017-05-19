@@ -29,6 +29,13 @@ or::
   $HOME/.config/fsleyes/
 
 
+Most FSLeyes settings are stored in a Python `pickle
+<https://docs.python.org/3/library/pickle.html>`_ file called ``config.pkl``.
+The *FSLeyes* |right_arrow| *Clear FSLeyes settings* menu option simply
+deletes this directory, which causes FSLeyes to forget all settings (and
+user-added colour maps and lookup tables).
+
+
 .. _customising_colour_maps:
 
 Colour maps
