@@ -811,7 +811,14 @@ class CanvasPanel(viewpanel.ViewPanel):
         # with separate renders/buffer swaps, so we
         # have to use a shitty unsynchronised update
         # routine.
-        useSync = 'gallium' not in fslplatform.glRenderer.lower()
+        #
+        # TODO Ideally, figure out a refresh
+        #      regime that works across all
+        #      drivers. Failing this, make
+        #      this switch user controllable.
+        renderer = fslplatform.glRenderer.lower()
+        unsyncRenderers = ['gallium', 'mesa dri intel(r)']
+        useSync = not any([r in renderer for r in unsyncRenderers])
 
         if useSync: update = self.__syncMovieRefresh
         else:       update = self.__unsyncMovieRefresh
