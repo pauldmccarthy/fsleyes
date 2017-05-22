@@ -160,7 +160,8 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
         :class:`.DataSeries` instance from the :attr:`.PlotPanel.dataSeries`
         list of the :class:`.OverlayPlotPanel`.
         """
-        self.__plotPanel.dataSeries.remove(ev.data)
+        with props.skip(self.__plotPanel, 'dataSeries', self._name):
+            self.__plotPanel.dataSeries.remove(ev.data)
 
 
 class DataSeriesWidget(wx.Panel):
