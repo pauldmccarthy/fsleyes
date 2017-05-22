@@ -785,7 +785,7 @@ class LutLabelDialog(wx.Dialog):
         self.__name       .SetValue( name)
         self.__colour     .SetColour(colour)
 
-        self.__sizer = wx.GridSizer(4, 2)
+        self.__sizer = wx.GridSizer(4, 2, 0, 0)
         self.SetSizer(self.__sizer)
 
         self.__sizer.Add(self.__valueLabel,

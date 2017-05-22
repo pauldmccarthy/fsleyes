@@ -190,14 +190,14 @@ class DataSeriesWidget(wx.Panel):
             'lineStyle',
             labels=strings.choices['DataSeries.lineStyle'])
 
-        self.__enabled.SetToolTipString(
-            fsltooltips.properties[dataSeries, 'enabled'])
-        self.__colour.SetToolTipString(
-            fsltooltips.properties[dataSeries, 'colour'])
-        self.__lineWidth.SetToolTipString(
-            fsltooltips.properties[dataSeries, 'lineWidth'])
-        self.__lineStyle.SetToolTipString(
-            fsltooltips.properties[dataSeries, 'lineStyle'])
+        self.__enabled.SetToolTip(
+            wx.ToolTip(fsltooltips.properties[dataSeries, 'enabled']))
+        self.__colour.SetToolTip(
+            wx.ToolTip(fsltooltips.properties[dataSeries, 'colour']))
+        self.__lineWidth.SetToolTip(
+            wx.ToolTip(fsltooltips.properties[dataSeries, 'lineWidth']))
+        self.__lineStyle.SetToolTip(
+            wx.ToolTip(fsltooltips.properties[dataSeries, 'lineStyle']))
 
         self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.SetSizer(self.__sizer)
