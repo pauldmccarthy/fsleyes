@@ -119,9 +119,8 @@ class ColourBarCanvas(props.HasProperties):
 
         w, h = self._getSize()
 
-        if w == 0 or h == 0:
-            if self.orientation == 'horizontal': w, h = 600, 200
-            else:                                w, h = 200, 600
+        if w < 50 or h < 50:
+            return
 
         if self.orientation == 'horizontal':
             if  self.labelSide == 'top-left': labelSide = 'top'

@@ -137,9 +137,9 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
 
         # Fix the minor axis of the colour bar to 75 pixels
         if self.orientation == 'horizontal':
-            self.__cbPanel.SetSizeHints(-1, 75, -1, 75, -1, -1)
+            self.__cbPanel.SetSizeHints(-1, 60, -1, 60, -1, -1)
         else:
-            self.__cbPanel.SetSizeHints(75, -1, 75, -1, -1, -1)
+            self.__cbPanel.SetSizeHints(60, -1, 60, -1, -1, -1)
 
         self.Layout()
         self.__refreshColourBar()
