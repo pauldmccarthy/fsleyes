@@ -765,8 +765,11 @@ class PlotPanel(viewpanel.ViewPanel):
             for xtl in axis.xaxis.get_ticklabels():
                 xtl.set_verticalalignment('bottom')
         else:
-            axis.set_xticks([])
-            axis.set_yticks([])
+            xlabels = ['' for i in range(len(axis.xaxis.get_ticklabels()))]
+            ylabels = ['' for i in range(len(axis.yaxis.get_ticklabels()))]
+
+            axis.set_xticklabels(xlabels)
+            axis.set_yticklabels(ylabels)
 
         # Limits
         if xmin != xmax:
@@ -788,7 +791,7 @@ class PlotPanel(viewpanel.ViewPanel):
         if self.grid:
             axis.grid(linestyle='-',
                       color=self.gridColour,
-                      linewidth=2,
+                      linewidth=0.5,
                       zorder=0)
         else:
             axis.grid(False)
