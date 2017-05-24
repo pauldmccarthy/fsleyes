@@ -139,11 +139,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         self._displayCtx .removeListener('selectedOverlay', self._name)
         self._overlayList.removeListener('overlays',        self._name)
 
-        if self.__currentDisplay is not None:
-            self.__currentDisplay.removeListener('name', self._name)
-
-        self.__currentOverlay = None
-        self.__currentDisplay = None
+        self.__deregisterOverlay()
 
         fslpanel.FSLeyesPanel.destroy(self)
 
