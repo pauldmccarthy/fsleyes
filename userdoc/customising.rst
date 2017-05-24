@@ -1,3 +1,5 @@
+.. |right_arrow| unicode:: U+21D2
+
 .. _customising:
 
 =====================
