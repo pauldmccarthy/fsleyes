@@ -671,8 +671,11 @@ class GLMesh(globject.GLObject):
         triangles = overlay.vertices[faces].repeat(2, axis=0)
         points    = lines.reshape((-1, 3))
 
-        dists = trimesh.points_to_barycentric(triangles, points)
-        dists = dists.reshape((-1, 2, 3))
+        if triangles.size > 0:
+            dists = trimesh.points_to_barycentric(triangles, points)
+            dists = dists.reshape((-1, 2, 3))
+        else:
+            dists = np.zeros((0, 2, 3))
 
         return lines, faces, dists, vertXform
 
