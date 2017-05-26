@@ -48,8 +48,8 @@ The documentation will be generated and saved in `userdoc/html/` and
 `apidoc/html/`.
 
 
-Buildling
----------
+Building
+--------
 
 
 You can build standalone versions of FSLeyes for OSX and Linux.  For OSX,
@@ -57,6 +57,14 @@ install `py2app>=0.12`. For Linux, install `pyinstaller>=3.2.0`. Then, on
 either platform, run the following:
 
     python setup.py build_standalone
+
+
+Contributing
+------------
+
+If you would like to contribute to `fsleyes`, take a look at the `fslpy`
+[contributing
+guide](https://git.fmrib.ox.ac.uk/fsl/fslpy/blob/master/doc/contributing.rst).
 
 
 Credits

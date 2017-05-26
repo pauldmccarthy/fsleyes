@@ -19,7 +19,7 @@ This page conatins a very brief overview of the FSLeyes programming
 interface. Refer to the :ref:`links below <python_shell_further_reading>` for
 more comprehensive documentation.
 
-           
+
 .. [*] See also the ``--runscript`` :ref:`command line option
        <command_line_run_script>`.
 
@@ -47,7 +47,7 @@ Overlays
 The ``overlayList`` is a list which contains all of the overlays that have
 been loaded into FSLeyes::
 
-  
+
   >>> overlayList
   >>> [Image(MNI152_T1_1mm, /.../MNI152_T1_1mm.nii.gz),
        Image(MNI152_T1_2mm, /.../MNI152_T1_2mm.nii.gz)]
@@ -58,7 +58,7 @@ list. Or, you can use the built-in ``load`` function::
 
   >>> load('path/to/my_image.nii.gz')
 
-  
+
 You can remove an overlay in the same way that you would remove an item from a
 python ``list``::
 
@@ -78,35 +78,35 @@ overlay. Display settings for an overlay are divided between two objects:
  - A ``DisplayOpts`` object, which contains display settings specific to the
    overlay type
 
- 
+
 You can access these objects like so::
 
   >>> overlay = overlayList[0]
   >>> display = displayCtx.getDisplay(overlay)
   >>> opts    = displayCtx.getOpts(   overlay)
 
-  
+
 Adjusting the overlay display settings is easy::
 
   >>> display.brightness = 75
   >>> opts.cmap          = 'hot'
 
-  
+
 You can get help on the ``Display`` and ``DisplayOpts`` instances via the
 ``help`` function::
 
   >>> help(display)
   Help on Display in module fsleyes.displaycontext.display object:
-  
+
   class Display(props.syncable.SyncableHasProperties)
    |  The ``Display`` class contains display settings which are common to
    |  all overlay types.
-   |  
+   |
    |  A ``Display`` instance is also responsible for managing a single
    |  :class:`DisplayOpts` instance, which contains overlay type specific
    |  display options. Whenever the :attr:`overlayType` property of a
    |  ``Display`` instance changes, the old ``DisplayOpts`` instance (if any)
-   |  is destroyed, and a new one, of the correct type, created. 
+   |  is destroyed, and a new one, of the correct type, created.
   .
   .
   .
@@ -128,18 +128,18 @@ the ``frame``::
   >>> frame.getViewPanels()
   [<fsleyes.views.shellpanel.ShellPanel; proxy of <Swig Object of type 'wxPyPanel *' at 0x11b4b4c90> >,
    <fsleyes.views.orthopanel.OrthoPanel; proxy of <Swig Object of type 'wxPyPanel *' at 0x11593dba0> >]
-   
+
   >>> ortho = frame.getViewPanels()[1]
   >>> frame.removeViewPanel(ortho)
 
 
 You can also access the view settings for a specific view::
-  
+
   >>> frame.addViewPanel(views.OrthoPanel)
   >>> frame.getViewPanels()
   [<fsleyes.views.shellpanel.ShellPanel; proxy of <Swig Object of type 'wxPyPanel *' at 0x11b4b4c90> >,
    <fsleyes.views.orthopanel.OrthoPanel; proxy of <Swig Object of type 'wxPyPanel *' at 0x11593dba0> >]
-   
+
   >>> ortho                = frame.getViewPanels()[1]
   >>> orthoOpts            = ortho.getSceneOptions()
   >>> orthoOpts.layout     = 'grid'
@@ -147,7 +147,7 @@ You can also access the view settings for a specific view::
 
 
 .. _python_shell_further_reading:
-  
+
 Further reading
 ---------------
 
@@ -157,3 +157,4 @@ For more information on the FSLeyes programming interface, refer to:
 - |fsleyes_apidoc|_ developer documentation
 - |fslpy_doc|_ developer documentation
 - |props_doc|_ developer documentation
+- |widgets_doc|_ developer documentation
