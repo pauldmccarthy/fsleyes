@@ -724,10 +724,10 @@ def checkout(project, rev, todir):
     """Checks out the given project from the FMRIB gitlab repository. """
 
     project_repos = {
-        'fsleyes'         : 'git@git.fmrib.ox.ac.uk:paulmc/fsleyes.git',
-        'fslpy'           : 'git@git.fmrib.ox.ac.uk:paulmc/fslpy.git',
-        'fsleyes-props'   : 'git@git.fmrib.ox.ac.uk:paulmc/fsleyes-props.git',
-        'fsleyes-widgets' : 'git@git.fmrib.ox.ac.uk:paulmc/fsleyes-widgets.git',
+        'fsleyes'         : 'git@git.fmrib.ox.ac.uk:fsl/fsleyes/fsleyes.git',
+        'fslpy'           : 'git@git.fmrib.ox.ac.uk:fsl/fslpy.git',
+        'fsleyes-props'   : 'git@git.fmrib.ox.ac.uk:fsl/fsleyes/props.git',
+        'fsleyes-widgets' : 'git@git.fmrib.ox.ac.uk:fsl/fsleyes/widgets.git',
     }
 
     repo    = project_repos[project]
@@ -887,7 +887,7 @@ def main():
         version=version,
         description='FSLeyes, the FSL image viewer',
         long_description=readme,
-        url='https://git.fmrib.ox.ac.uk/paulmc/fsleyes',
+        url='https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes',
         author='Paul McCarthy',
         author_email='pauldmccarthy@gmail.com',
         license='Apache License Version 2.0',
@@ -897,7 +897,7 @@ def main():
             'Intended Audience :: Developers',
             'License :: OSI Approved :: Apache Software License',
             'Programming Language :: Python :: 2.7',
-            # 'Programming Language :: Python :: 3.5',
+            'Programming Language :: Python :: 3.6',
             'Topic :: Software Development :: Libraries :: Python Modules'],
 
         packages=packages,
