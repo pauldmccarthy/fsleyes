@@ -606,6 +606,8 @@ class pyinstaller(Command):
 
         excludes = [
             'IPython',
+            'jinja2.asyncfilters',
+            'jinja2.asyncsupport',
         ]
 
         extrabins = ['glut', 'OSMesa']
