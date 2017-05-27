@@ -435,7 +435,7 @@ class patch_code(Command):
 
         def patch_version():
 
-            filename   = op.join(fsleyesdir, 'version.py')
+            filename   = op.join(fsleyesdir, 'fsleyes', 'version.py')
             gitVersion = get_git_version()
             version    = self.version
 
@@ -460,7 +460,7 @@ class patch_code(Command):
                     line = 'OpenGL.ERROR_LOGGING = False\n'
                 return line
 
-            filename = op.join(fsleyesdir, 'gl', '__init__.py')
+            filename = op.join(fsleyesdir, 'fsleyes', 'gl', '__init__.py')
 
             print('Setting up OpenGL initialisation: {}'.format(filename))
 
@@ -495,7 +495,7 @@ class patch_code(Command):
                     line = 'disableLogging = False\n'
                 return line
 
-            filename = op.join(fsleyesdir, '__init__.py')
+            filename = op.join(fsleyesdir, 'fsleyes', '__init__.py')
 
             print('Enabling logging: {}'.format(filename))
 
@@ -717,7 +717,7 @@ def sp_call(command, *args, **kwargs):
 def sp_check_output(command, *args, **kwargs):
     """Prints the given command, then calls ``subprocess.check_output``. """
     print(' '.join(command))
-    return sp.check_output(command, *args, **kwargs)
+    return sp.check_output(command, *args, **kwargs).decode('utf-8')
 
 
 def checkout(project, rev, todir):
@@ -897,7 +897,7 @@ def main():
             'Intended Audience :: Developers',
             'License :: OSI Approved :: Apache Software License',
             'Programming Language :: Python :: 2.7',
-            'Programming Language :: Python :: 3.6',
+            'Programming Language :: Python :: 3.5',
             'Topic :: Software Development :: Libraries :: Python Modules'],
 
         packages=packages,
