@@ -952,7 +952,7 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
         memoryDC.SelectObject(wx.NullBitmap)
 
         rgb = bmp.ConvertToImage().GetData()
-        rgb = np.fromstring(rgb, dtype=np.uint8)
+        rgb = np.frombuffer(rgb, dtype=np.uint8)
 
         data[:, :, :3] = rgb.reshape(height, width, 3)
 
