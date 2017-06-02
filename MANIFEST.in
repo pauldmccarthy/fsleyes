@@ -2,6 +2,15 @@ include           LICENSE
 include           COPYRIGHT
 include           README.md
 include           requirements.txt
-recursive-include userdoc *
-recursive-include apidoc  *
-recursive-include assets  *
+recursive-include userdoc                     *
+recursive-include apidoc                      *
+recursive-include assets                      *
+recursive-exclude userdoc/html                *
+recursive-exclude userdoc/html                *
+recursive-exclude assets/build                *
+recursive-exclude assets/icons/app_icon       *
+recursive-exclude assets/icons/sources        *
+recursive-exclude assets/icons/splash/sources *
+global-exclude    *.py[cod]
+global-exclude    __pycache__
+global-exclude    *.xcf

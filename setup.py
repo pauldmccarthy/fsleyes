@@ -187,11 +187,30 @@ class apidoc(docbuilder):
 
 
 class custom_build(build):
-    description = 'Custom build command. Also builds the '\
+    description = 'Custom build command which builds the '\
                   'user documentation.'
 
     def run(self):
+
         self.run_command('userdoc')
+
+        # In its source form, the FSLeyes asset files
+        # and documentation live outside the FSLeyes
+        # package directroy hierarchy. But setuptools
+        # does not like this arrangement. So here I am
+        # linking the assets and userdocs into the
+        # fsleyes package directory, to trick setuptools
+        # into including them in bdists and installations.
+        linkins = ['assets', 'userdoc']
+
+        for l in linkins:
+
+            target = op.join(basedir, l)
+            link   = op.join(basedir, 'fsleyes', l)
+
+            if not op.exists(link):
+                os.symlink(target, link)
+
         build.run(self)
 
 
@@ -204,8 +223,9 @@ def list_all_files(in_dir):
 
 
 def build_asset_list():
-    """Build a list of all the FSLeyes non-source-code files that should
-    be included in a distribution.
+    """Build and return a list of all the FSLeyes non-source-code files that
+    should be included in a distribution. The file paths are made relative
+    to the FSLeyes base directory.
     """
 
     assetdir = op.join(basedir, 'assets')
@@ -219,25 +239,18 @@ def build_asset_list():
         op.join('*', '.DS_Store'),
     ]
 
-    # A dict containing { dest_directory : [files_to_put_in_dest_directory] }
-    resources = {}
-
+    flist      = []
     docfiles   = list_all_files(docdir)
     assetfiles = list_all_files(assetdir)
 
     for filename in it.chain(docfiles, assetfiles):
 
-        dirname = op.dirname(filename)
-        destdir = op.join(op.relpath(dirname, basedir))
         exclude = any([fnmatch.fnmatch(filename, p) for p in excludePatterns])
 
         if not exclude:
+            flist.append(op.relpath(filename, basedir))
 
-            flist = resources.get(destdir, [])
-            flist.append(filename)
-            resources[destdir] = flist
-
-    return list(resources.items())
+    return flist
 
 
 def get_fsleyes_version():
@@ -288,7 +301,14 @@ def main():
     version          = get_fsleyes_version()
     readme           = get_fsleyes_readme()
     install_requires = get_fsleyes_deps()
+    assets           = build_asset_list()
     setup_requires   = ['sphinx', 'sphinx-rtd-theme', 'mock']
+
+    # When building/installing, all asset files
+    # are placed within the fsleyes package
+    # directory. Some related ugliness is present
+    # in the custom_build command.
+    assets = {'fsleyes' : assets}
 
     setup(
 
@@ -315,6 +335,7 @@ def main():
         install_requires=install_requires,
         setup_requires=setup_requires,
         include_package_data=True,
+        package_data=assets,
 
         cmdclass={
             'build'   : custom_build,
