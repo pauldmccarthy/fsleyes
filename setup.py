@@ -132,7 +132,6 @@ import               fnmatch
 import itertools  as it
 import subprocess as sp
 import os.path    as op
-import               six
 
 from setuptools import setup
 from setuptools import find_packages
@@ -265,7 +264,8 @@ class build_standalone(Command):
 
 class checkout_subprojects(Command):
     description = 'Checks out the fsleyes-props, fsleyes-widgets, '\
-                  'and fslpy projects into [fsleyesdir]/build/'
+                  'and fslpy projects into [fsleyesdir]/build/. Not intended '\
+                  'to be called directly.'
 
     user_options = [
         ('fsleyes-props-version=', 'p',
@@ -383,19 +383,20 @@ class docbuilder(Command):
 
 
 class userdoc(docbuilder):
-    description = """Builds the FSLeyes user documentation. """
+    description = 'Builds the FSLeyes user documentation. '
     docdir      = op.join(basedir, 'userdoc')
 
 
 class apidoc(docbuilder):
-    description = """Builds the FSLeyes API documentation. """
+    description = 'Builds the FSLeyes API documentation. '
     docdir      = op.join(basedir, 'apidoc')
 
 
 class patch_code(Command):
 
     description  = 'Patches the FSLeyes source code in preparation ' \
-                   'for building a standalone distribution'
+                   'for building a standalone distribution. Not intended '\
+                   'to be called directly.'
 
     user_options = [
         ('enable-logging', 'l', 'Enable logging'),
@@ -508,7 +509,8 @@ class patch_code(Command):
 
 
 class py2app(orig_py2app):
-    description = 'Builds a standalone FSLeyes OSX application using py2app'
+    description = 'Builds a standalone FSLeyes OSX application using '\
+                  'py2app. Not intended to be called directly.'
 
     def finalize_options(self):
 
@@ -576,7 +578,8 @@ class py2app(orig_py2app):
 
 class pyinstaller(Command):
     description  = 'Builds a standalone FSLeyes Linux ' \
-                   'application using pyinstaller'
+                   'application using pyinstaller. Not intended to be '\
+                   'called directly.'
     user_options = []
 
     def initialize_options(self):
