@@ -342,6 +342,12 @@ def main():
             'userdoc' : userdoc,
             'apidoc'  : apidoc,
         },
+
+        entry_points={
+            'console_scripts' : [
+                'fsleyes = fsleyes.main:main',
+            ]
+        }
     )
 
 
