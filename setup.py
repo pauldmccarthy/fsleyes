@@ -364,22 +364,141 @@ class docbuilder(Command):
 
         env   = dict(os.environ)
         ppath = [
-            package_path('fsleyes'),
-            package_path('fsl'),
-            package_path('fsleyes_props'),
-            package_path('fsleyes_widgets')]
+            package_path('fsleyes')]
 
         env['PYTHONPATH'] = op.pathsep.join(ppath)
 
         print('Building documentation [{}]'.format(destdir))
 
-        sphinx = sp.check_output(['which', 'sphinx-build']).decode('ascii').strip()
+        import sphinx
 
-        # Framwork python needs to be used on osx
-        if six.PY2 and platform == 'darwin':
-            sp_call(['pythonw', sphinx, docdir, destdir], env=env)
-        else:
-            sp_call(['python',  sphinx, docdir, destdir], env=env)
+        try:
+            import unittest.mock as mock
+        except:
+            import mock
+
+        # Sigh. Why can't I mock a package?
+        mockobj       = mock.MagicMock()
+        mockedModules = [
+            'OpenGL',
+            'OpenGL.GL',
+            'OpenGL.GL.ARB',
+            'OpenGL.GL.ARB.draw_instanced',
+            'OpenGL.GL.ARB.fragment_program',
+            'OpenGL.GL.ARB.instanced_arrays',
+            'OpenGL.GL.ARB.texture_float',
+            'OpenGL.GL.ARB.vertex_program',
+            'OpenGL.GL.EXT',
+            'OpenGL.GL.EXT.framebuffer_object',
+            'OpenGL.GLUT',
+            'OpenGL.extensions',
+            'OpenGL.raw',
+            'OpenGL.raw.GL',
+            'OpenGL.raw.GL._types',
+            'fsl',
+            'fsl.data',
+            'fsl.data.atlases',
+            'fsl.data.constants',
+            'fsl.data.dtifit',
+            'fsl.data.featanalysis',
+            'fsl.data.featimage',
+            'fsl.data.fixlabels',
+            'fsl.data.gifti',
+            'fsl.data.image',
+            'fsl.data.imagewrapper',
+            'fsl.data.melodicimage',
+            'fsl.data.mesh',
+            'fsl.data.vest',
+            'fsl.data.volumelabels',
+            'fsl.utils',
+            'fsl.utils.async',
+            'fsl.utils.cache',
+            'fsl.utils.callfsl',
+            'fsl.utils.memoize',
+            'fsl.utils.notifier',
+            'fsl.utils.platform',
+            'fsl.utils.settings',
+            'fsl.utils.transform',
+            'fsleyes_props',
+            'fsleyes_widgets',
+            'fsleyes_widgets.bitmaptoggle',
+            'fsleyes_widgets.dialog',
+            'fsleyes_widgets.elistbox',
+            'fsleyes_widgets.floatslider',
+            'fsleyes_widgets.floatspin',
+            'fsleyes_widgets.imagepanel',
+            'fsleyes_widgets.notebook',
+            'fsleyes_widgets.numberdialog',
+            'fsleyes_widgets.placeholder_textctrl',
+            'fsleyes_widgets.rangeslider',
+            'fsleyes_widgets.texttag',
+            'fsleyes_widgets.utils',
+            'fsleyes_widgets.utils.colourbarbitmap',
+            'fsleyes_widgets.utils.layout',
+            'fsleyes_widgets.utils.status',
+            'fsleyes_widgets.utils.typedict',
+            'fsleyes_widgets.widgetgrid',
+            'fsleyes_widgets.widgetlist',
+            'matplotlib',
+            'matplotlib.backend_bases',
+            'matplotlib.backends',
+            'matplotlib.backends.backend_wx',
+            'matplotlib.backends.backend_wxagg',
+            'matplotlib.image',
+            'matplotlib.patches',
+            'matplotlib.pyplot',
+            'numpy',
+            'numpy.fft',
+            'numpy.linalg',
+            'pyparsing',
+            'scipy',
+            'scipy.interpolate',
+            'scipy.ndimage',
+            'scipy.ndimage.measurements',
+            'scipy.spatial',
+            'scipy.spatial.distance',
+            'wx',
+            'wx.glcanvas',
+            'wx.html',
+            'wx.lib',
+            'wx.lib.agw',
+            'wx.lib.agw.aui',
+            'wx.lib.newevent',
+            'wx.py',
+            'wx.py.interpreter',
+            'wx.py.shell',
+        ]
+
+        mockedModules = {m : mockobj for m in mockedModules}
+
+        # Various classes and types have
+        # to be mocked, otherwise we get
+        # all sorts of errors in cases
+        # of inheritance and monkey
+        # patching.
+        class MockClass(object):
+            def __init__(self, *args, **kwargs):
+                pass
+
+        class MockType(type):
+            pass
+
+
+        with mock.patch.dict('sys.modules', **mockedModules), \
+             mock.patch('fsl.utils.notifier.Notifier',         MockClass), \
+             mock.patch('fsleyes_props.HasProperties',         MockClass), \
+             mock.patch('fsleyes_props.SyncableHasProperties', MockClass), \
+             mock.patch('fsleyes_props.PropertyOwner',         MockType),  \
+             mock.patch('fsleyes_props.Toggle',                MockClass),  \
+             mock.patch('fsleyes_props.Button',                MockClass),  \
+             mock.patch('wx.Panel',                            MockClass), \
+             mock.patch('wx.glcanvas.GLCanvas',                MockClass), \
+             mock.patch('wx.PyPanel',                          MockClass), \
+             mock.patch('wx.lib.agw.aui.AuiFloatingFrame',     MockClass), \
+             mock.patch('wx.lib.agw.aui.AuiDockingGuide',      MockClass), \
+             mock.patch('wx.lib.newevent.NewEvent',    return_value=(0, 0)):
+                sphinx.main(['sphinx-build', docdir, destdir])
+
 
 
 class userdoc(docbuilder):
@@ -883,8 +1002,12 @@ def main():
     install_requires = deps[0]
     dependency_links = deps[1]
 
-    if platform == 'darwin': setup_requires = ['py2app']
-    else:                    setup_requires = ['pyinstaller']
+    setup_requires = ['sphinx', 'sphinx-rtd-theme', 'mock']
+
+    if platform == 'darwin':
+        setup_requires.append('py2app')
+    else:
+        setup_requires.append('pyinstaller')
 
     setup(
 
@@ -907,7 +1030,9 @@ def main():
 
         packages=packages,
         install_requires=install_requires,
+        setup_requires=setup_requires,
         dependency_links=dependency_links,
+        include_package_data=True,
 
         cmdclass={
             'patch_code'           : patch_code,
@@ -918,8 +1043,6 @@ def main():
             'userdoc'              : userdoc,
             'apidoc'               : apidoc,
         },
-
-        setup_requires=setup_requires,
     )
 
 

@@ -63,8 +63,11 @@ copyright = u'{}, Paul McCarthy, University of Oxford, Oxford, UK'.format(
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-import fsleyes
-version = fsleyes.__version__
+# The fsleyes setup.py file contains a function called get_fsleyes_version(),
+# so we'll use that instead of importing fsleyes.
+#
+import setup
+version = setup.get_fsleyes_version()
 release = version
 
 
