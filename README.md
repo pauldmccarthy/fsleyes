@@ -48,25 +48,6 @@ The documentation will be generated and saved in `userdoc/html/` and
 `apidoc/html/`.
 
 
-Building
---------
-
-
-You can build standalone versions of FSLeyes for OSX and Linux.  For OSX,
-install `py2app>=0.12`. For Linux, install `pyinstaller>=3.2.0`. Then, on
-either platform, run the following:
-
-    python setup.py build_standalone
-
-
-Contributing
-------------
-
-If you would like to contribute to `fsleyes`, take a look at the `fslpy`
-[contributing
-guide](https://git.fmrib.ox.ac.uk/fsl/fslpy/blob/master/doc/contributing.rst).
-
-
 Credits
 -------
 
@@ -79,3 +60,11 @@ Creative Commons (Attribution 3.0 Unported) license.
 The file [fsleyes.gl.trimesh](fsleyes/gl/trimesh.py) module includes code from
 Michael Dawson-Haggerty's [trimesh](https://github.com/mikedh/trimesh)
 project, which is released under the MIT license.
+
+
+The volumetric spline interpolation routine uses code from:
+
+Daniel Ruijters and Philippe Thévenaz,
+GPU Prefilter for Accurate Cubic B-Spline Interpolation,
+The Computer Journal, vol. 55, no. 1, pp. 15-20, January 2012.
+http://dannyruijters.nl/docs/cudaPrefilter3.pdf
