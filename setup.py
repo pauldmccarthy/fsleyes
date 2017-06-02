@@ -4,343 +4,27 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""Setup script for FSLeyes.
-
-The following commands are available:
-
- - sdist            - Build a source distribution
- - userdoc          - Build the user documentation
- - apidoc           - Build the source documentation
- - build_standalone - Build a standalone version of FSLeyes ising py2app (OSX)
-                      or pyinstaller (Linux).
-
-============
-Py2App notes
-============
-
-I am currently using py2app 0.12 for OSX builds. There are a couple of issues
-with this version of py2app which we need to work around:
-
-https://bitbucket.org/ronaldoussoren/py2app/issues/222/argv-emulation-only-works-when-redirect):
-https://bitbucket.org/ronaldoussoren/py2app/issues/140/app-starts-minimized
-
-
-The following patch must be applied to the py2app source::
-
-    --- orig/py2app/apptemplate/src/main.c	2017-02-22 10:32:57.000000000 +0000
-    +++ patch/py2app/apptemplate/src/main.c	2017-04-04 15:52:20.000000000 +0100
-    @@ -1147,7 +1147,6 @@
-        do_asl_log_descriptor(cl, msg, 4 /* ASL_LEVEL_NOTICE */, 2, 2 /* ASL_LOG_DESCRIPTOR_WRITE */);
-     }
-
-    -#ifndef PY2APP_SECONDARY
-     static int
-     have_psn_arg(int argc, char* const * argv)
-     {
-    @@ -1162,7 +1161,6 @@
-        }
-        return 0;
-     }
-    -#endif /* !PY2APP_SECONDARY */
-
-
-     int
-    @@ -1170,7 +1168,6 @@
-     {
-         int rval;
-
-    -#ifndef PY2APP_SECONDARY
-         /* Running as a GUI app started by launch
-          * services, try to redirect stdout/stderr
-          * to ASL.
-    @@ -1217,9 +1214,10 @@
-            bname++;
-             }
-
-    +#ifndef PY2APP_SECONDARY
-             setup_asl(bname);
-    -    }
-     #endif /* !PY2APP_SECONDARY */
-    +  }
-
-         if (bind_CoreFoundation()) {
-             fprintf(stderr, "CoreFoundation not found or functions missing\n");
-    --- orig/py2app/bootstrap/argv_emulation.py	2017-02-22 10:32:57.000000000 +0000
-    +++ patch/py2app/bootstrap/argv_emulation.py	2017-04-04 17:16:54.000000000 +0100
-    @@ -88,7 +88,7 @@
-
-         return carbon
-
-    -def _run_argvemulator(timeout = 60):
-    +def _run_argvemulator(timeout = 5):
-
-         # Configure ctypes
-         carbon = _ctypes_setup()
-    @@ -113,6 +113,7 @@
-         FALSE               = b'\0'
-         TRUE                = b'\1'
-         eventLoopTimedOutErr = -9875
-    +    eventParameterNotFoundErr = -9870
-
-         kEventClassAppleEvent, = struct.unpack('>i', b'eppc')
-         kEventAppleEvent = 1
-    @@ -242,7 +243,7 @@
-             event = ctypes.c_void_p()
-
-             sts = carbon.ReceiveNextEvent(1, ctypes.byref(eventType),
-    -                start + timeout[0] - now, TRUE, ctypes.byref(event))
-    +                start + timeout[0] - now, FALSE, ctypes.byref(event))
-
-             if sts == eventLoopTimedOutErr:
-                 break
-    @@ -252,10 +253,17 @@
-                 break
-
-             sts = carbon.AEProcessEvent(event)
-    -        if sts != 0:
-    +
-    +        # No events
-    +        if sts == eventParameterNotFoundErr:
-    +            break
-    +
-    +        elif sts != 0:
-                 print("argvemulator warning: processing events failed")
-                 break
-
-    +        now = time.time()
-    +
-
-         carbon.AERemoveEventHandler(kCoreEventClass, kAEOpenApplication,
-                 open_app_handler, FALSE)
-
-
-Then the py2app bootloader needs to be recompiled::
-
-    cd py2app/apptemplate/
-    python setup.py
-"""
+"""Setup script for FSLeyes. """
 
 
 from __future__ import print_function
 
-import               platform
-import               pkgutil
 import               os
-import               sys
 import               shutil
 import               fnmatch
 import itertools  as it
-import subprocess as sp
 import os.path    as op
-import               six
 
 from setuptools import setup
 from setuptools import find_packages
 from setuptools import Command
 
-
-# "darwin" or "linux"
-platform = platform.system().lower()
+from distutils.command.build import build
 
 
 # The directory in which this
 # setup.py file is contained.
 basedir = op.dirname(op.abspath(__file__))
-
-try:
-    from py2app.build_app import py2app as orig_py2app
-
-# A dummy orig_py2app class, so my
-# py2app class definition won't
-# break if py2app is not present
-except:
-    class orig_py2app(Command):
-        user_options = []
-
-        def initialize_options(self):
-            pass
-
-        def finalize_options(self):
-            pass
-
-        def run(self):
-            pass
-
-
-class build_standalone(Command):
-    description = 'Build a standalone FSLeyes application ' \
-                  'using py2app or pyinstaller.'
-    user_options = [
-        ('version=',                  'F', 'FSLeyes version'),
-        ('fsleyes-props-version=',    'p', 'fsleyes-props version'),
-        ('fsleyes-widgets-version=',  'w', 'fsleyes-widgets version'),
-        ('fslpy-version=',            'f', 'fslpy version'),
-        ('skip-patch-code',           'c', 'Skip code patch step'),
-        ('skip-build',                'b', 'Skip build'),
-        ('enable-logging',            'l', 'Enable logging'),
-    ]
-
-    boolean_options = [
-        'skip-patch-code',
-        'enable-logging'
-    ]
-
-    def initialize_options(self):
-        self.version                 = None
-        self.fsleyes_props_version   = None
-        self.fsleyes_widgets_version = None
-        self.fslpy_version           = None
-        self.skip_patch_code         = False
-        self.skip_build              = False
-        self.enable_logging          = False
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-
-        if op.exists(op.join(basedir, 'build')):
-            shutil.rmtree(op.join(basedir, 'build'))
-
-        # Check out props/fslpy
-        checkout = self.distribution.get_command_obj('checkout_subprojects')
-        checkout.fsleyes_props_version   = self.fsleyes_props_version
-        checkout.fsleyes_widgets_version = self.fsleyes_widgets_version
-        checkout.fslpy_version           = self.fslpy_version
-
-        self.run_command('checkout_subprojects')
-
-        # Make a copy of the fsleyes source,
-        # because patch_code makes changes to
-        # it, and we restore these changes
-        # after the build
-        shutil.copytree(op.join(basedir, 'fsleyes'),
-                        op.join(basedir, 'build', 'fsleyes.backup'))
-
-        sys.path.insert(0, basedir)
-        sys.path.insert(0, op.join(basedir, 'build', 'fslpy'))
-        sys.path.insert(0, op.join(basedir, 'build', 'fsleyes-props'))
-        sys.path.insert(0, op.join(basedir, 'build', 'fsleyes-widgets'))
-
-        try:
-
-            # Patch code (remove log calls, and set
-            # up fsleyes logging/GL initialisation)
-            if not self.skip_patch_code:
-
-                pc                = self.distribution.get_command_obj('patch_code')
-                pc.enable_logging = self.enable_logging
-                pc.version        = self.version
-
-                self.run_command('patch_code')
-
-            # Build user documentation
-            self.run_command('userdoc')
-
-            # run py2app or pyinstaller
-            if not self.skip_build:
-                if platform == 'darwin': self.run_command('py2app')
-                else:                    self.run_command('pyinstaller')
-
-            # create a zip file
-            archivefile = op.join(basedir, 'dist', 'FSLeyes-{}'.format(
-                get_fsleyes_version()))
-
-            distdir = op.join(basedir, 'dist')
-
-            if platform == 'darwin': archivedir = 'FSLeyes.app'
-            else:                    archivedir = 'FSLeyes'
-
-            print('Creating {}.zip...'.format(archivefile))
-            shutil.make_archive(archivefile,
-                                'zip',
-                                root_dir=distdir,
-                                base_dir=archivedir)
-
-        finally:
-            shutil.rmtree(op.join(basedir, 'fsleyes'))
-            shutil.move(  op.join(basedir, 'build', 'fsleyes.backup'),
-                          op.join(basedir, 'fsleyes'))
-
-
-class checkout_subprojects(Command):
-    description = 'Checks out the fsleyes-props, fsleyes-widgets, '\
-                  'and fslpy projects into [fsleyesdir]/build/'
-
-    user_options = [
-        ('fsleyes-props-version=', 'p',
-         'fsleyes-props version (default: master; set to \'local\' '
-         'to use from PYTHONPATH)'),
-        ('fsleyes-widgets-version=', 'w',
-         'fsleyes-widgets version (default: master; set to \'local\' '
-         'to use from PYTHONPATH)'),
-        ('fslpy-version=', 'f',
-         'fslpy version (default: master; set to \'local\' to use '
-         'from PYTHONPATH)'),
-    ]
-
-    def initialize_options(self):
-        self.fsleyes_props_version   = None
-        self.fsleyes_widgets_version = None
-        self.fslpy_version           = None
-
-    def finalize_options(self):
-        if self.fsleyes_props_version is None:
-            self.fsleyes_props_version = 'master'
-
-        if self.fsleyes_widgets_version is None:
-            self.fsleyes_widgets_version = 'master'
-
-        if self.fslpy_version is None:
-            self.fslpy_version = 'master'
-
-    def run(self):
-
-        builddir    = op.join(basedir,  'build')
-        propsdest   = op.join(builddir, 'fsleyes-props')
-        widgetsdest = op.join(builddir, 'fsleyes-widgets')
-        fslpydest   = op.join(builddir, 'fslpy')
-
-        if not op.exists(builddir):    os.makedirs(builddir)
-        if     op.exists(propsdest):   shutil.rmtree(propsdest)
-        if     op.exists(widgetsdest): shutil.rmtree(widgetsdest)
-        if     op.exists(fslpydest):   shutil.rmtree(fslpydest)
-
-        if self.fsleyes_props_version == 'local':
-
-            print('Copying fsleyes-props [local] to {}'.format(propsdest))
-            propsdir = package_path('fsleyes_props')
-            shutil.copytree(propsdir, propsdest)
-            sys.path_importer_cache.pop(propsdir)
-
-        else:
-            print('Checking out fsleyes-props [{}] to {}'.format(
-                self.fsleyes_props_version, propsdest))
-            checkout('fsleyes-props', self.fsleyes_props_version, propsdest)
-
-        if self.fsleyes_widgets_version == 'local':
-
-            print('Copying fsleyes-widgets [local] to {}'.format(widgetsdest))
-            widgetsdir = package_path('fsleyes_widgets')
-            shutil.copytree(widgetsdir, widgetsdest)
-            sys.path_importer_cache.pop(widgetsdir)
-
-        else:
-            print('Checking out fsleyes-widgets [{}] to {}'.format(
-                self.fsleyes_widgets_version, widgetsdest))
-            checkout('fsleyes-widgets', self.fsleyes_widgets_version, widgetsdest)
-
-        if self.fslpy_version == 'local':
-
-            print('Copying fslpy [local] to {}'.format(fslpydest))
-            fslpydir = package_path('fsl')
-            shutil.copytree(fslpydir, fslpydest)
-            sys.path_importer_cache.pop(fslpydir)
-
-        else:
-            print('Checking out fslpy [{}] to {}'.format(
-                self.fslpy_version, fslpydest))
-            checkout('fslpy', self.fslpy_version, fslpydest)
 
 
 class docbuilder(Command):
@@ -362,394 +46,173 @@ class docbuilder(Command):
         if op.exists(destdir):
             shutil.rmtree(destdir)
 
-        env   = dict(os.environ)
-        ppath = [
-            package_path('fsleyes'),
-            package_path('fsl'),
-            package_path('fsleyes_props'),
-            package_path('fsleyes_widgets')]
+        import sphinx
 
-        env['PYTHONPATH'] = op.pathsep.join(ppath)
+        try:
+            import unittest.mock as mock
+        except:
+            import mock
 
-        print('Building documentation [{}]'.format(destdir))
+        # Sigh. Why can't I mock a package?
+        mockobj       = mock.MagicMock()
+        mockedModules = [
+            'OpenGL',
+            'OpenGL.GL',
+            'OpenGL.GL.ARB',
+            'OpenGL.GL.ARB.draw_instanced',
+            'OpenGL.GL.ARB.fragment_program',
+            'OpenGL.GL.ARB.instanced_arrays',
+            'OpenGL.GL.ARB.texture_float',
+            'OpenGL.GL.ARB.vertex_program',
+            'OpenGL.GL.EXT',
+            'OpenGL.GL.EXT.framebuffer_object',
+            'OpenGL.GLUT',
+            'OpenGL.extensions',
+            'OpenGL.raw',
+            'OpenGL.raw.GL',
+            'OpenGL.raw.GL._types',
+            'fsl',
+            'fsl.data',
+            'fsl.data.atlases',
+            'fsl.data.constants',
+            'fsl.data.dtifit',
+            'fsl.data.featanalysis',
+            'fsl.data.featimage',
+            'fsl.data.fixlabels',
+            'fsl.data.gifti',
+            'fsl.data.image',
+            'fsl.data.imagewrapper',
+            'fsl.data.melodicimage',
+            'fsl.data.mesh',
+            'fsl.data.vest',
+            'fsl.data.volumelabels',
+            'fsl.utils',
+            'fsl.utils.async',
+            'fsl.utils.cache',
+            'fsl.utils.callfsl',
+            'fsl.utils.memoize',
+            'fsl.utils.notifier',
+            'fsl.utils.platform',
+            'fsl.utils.settings',
+            'fsl.utils.transform',
+            'fsl.version',
+            'fsleyes_props',
+            'fsleyes_widgets',
+            'fsleyes_widgets.bitmaptoggle',
+            'fsleyes_widgets.dialog',
+            'fsleyes_widgets.elistbox',
+            'fsleyes_widgets.floatslider',
+            'fsleyes_widgets.floatspin',
+            'fsleyes_widgets.imagepanel',
+            'fsleyes_widgets.notebook',
+            'fsleyes_widgets.numberdialog',
+            'fsleyes_widgets.placeholder_textctrl',
+            'fsleyes_widgets.rangeslider',
+            'fsleyes_widgets.texttag',
+            'fsleyes_widgets.utils',
+            'fsleyes_widgets.utils.colourbarbitmap',
+            'fsleyes_widgets.utils.layout',
+            'fsleyes_widgets.utils.status',
+            'fsleyes_widgets.utils.typedict',
+            'fsleyes_widgets.widgetgrid',
+            'fsleyes_widgets.widgetlist',
+            'matplotlib',
+            'matplotlib.backend_bases',
+            'matplotlib.backends',
+            'matplotlib.backends.backend_wx',
+            'matplotlib.backends.backend_wxagg',
+            'matplotlib.image',
+            'matplotlib.patches',
+            'matplotlib.pyplot',
+            'numpy',
+            'numpy.fft',
+            'numpy.linalg',
+            'pyparsing',
+            'scipy',
+            'scipy.interpolate',
+            'scipy.ndimage',
+            'scipy.ndimage.measurements',
+            'scipy.spatial',
+            'scipy.spatial.distance',
+            'wx',
+            'wx.glcanvas',
+            'wx.html',
+            'wx.lib',
+            'wx.lib.agw',
+            'wx.lib.agw.aui',
+            'wx.lib.newevent',
+            'wx.py',
+            'wx.py.interpreter',
+            'wx.py.shell',
+        ]
 
-        sphinx = sp.check_output(['which', 'sphinx-build']).decode('ascii').strip()
+        mockedModules = {m : mockobj for m in mockedModules}
 
-        # Framwork python needs to be used on osx
-        if six.PY2 and platform == 'darwin':
-            sp_call(['pythonw', sphinx, docdir, destdir], env=env)
-        else:
-            sp_call(['python',  sphinx, docdir, destdir], env=env)
+        # Various classes and types have
+        # to be mocked, otherwise we get
+        # all sorts of errors in cases
+        # of inheritance and monkey
+        # patching.
+        class MockClass(object):
+            def __init__(self, *args, **kwargs):
+                pass
+
+        class MockType(type):
+            pass
+
+        with mock.patch.dict('sys.modules', **mockedModules), \
+             mock.patch('fsl.utils.notifier.Notifier',         MockClass), \
+             mock.patch('fsleyes_props.HasProperties',         MockClass), \
+             mock.patch('fsleyes_props.SyncableHasProperties', MockClass), \
+             mock.patch('fsleyes_props.PropertyOwner',         MockType),  \
+             mock.patch('fsleyes_props.Toggle',                MockClass), \
+             mock.patch('fsleyes_props.Button',                MockClass), \
+             mock.patch('wx.Panel',                            MockClass), \
+             mock.patch('wx.glcanvas.GLCanvas',                MockClass), \
+             mock.patch('wx.PyPanel',                          MockClass), \
+             mock.patch('wx.lib.agw.aui.AuiFloatingFrame',     MockClass), \
+             mock.patch('wx.lib.agw.aui.AuiDockingGuide',      MockClass), \
+             mock.patch('wx.lib.newevent.NewEvent',    return_value=(0, 0)):
+                sphinx.main(['sphinx-build', docdir, destdir])
+
 
 
 class userdoc(docbuilder):
-    description = """Builds the FSLeyes user documentation. """
+    description = 'Builds the FSLeyes user documentation. '
     docdir      = op.join(basedir, 'userdoc')
 
 
 class apidoc(docbuilder):
-    description = """Builds the FSLeyes API documentation. """
+    description = 'Builds the FSLeyes API documentation. '
     docdir      = op.join(basedir, 'apidoc')
 
 
-class patch_code(Command):
-
-    description  = 'Patches the FSLeyes source code in preparation ' \
-                   'for building a standalone distribution'
-
-    user_options = [
-        ('enable-logging', 'l', 'Enable logging'),
-        ('version=',       'F', 'FSLeyes version number (overwrites '
-                                 'that listed in source code)'),
-    ]
-
-    boolean_options = ['enable-logging']
-
-    def initialize_options(self):
-        self.enable_logging = False
-        self.version        = None
-
-    def finalize_options(self):
-        if self.version is None:
-            self.version = get_fsleyes_version()
+class custom_build(build):
+    description = 'Custom build command which builds the '\
+                  'user documentation.'
 
     def run(self):
 
-        propsdir   = package_path('fsleyes_props')
-        widgetsdir = package_path('fsleyes_widgets')
-        fslpydir   = package_path('fsl')
-        fsleyesdir = package_path('fsleyes')
+        self.run_command('userdoc')
 
-        def patch_file(filename, linepatch):
+        # In its source form, the FSLeyes asset files
+        # and documentation live outside the FSLeyes
+        # package directroy hierarchy. But setuptools
+        # does not like this arrangement. So here I am
+        # linking the assets and userdocs into the
+        # fsleyes package directory, to trick setuptools
+        # into including them in bdists and installations.
+        linkins = ['assets', 'userdoc']
 
-            old = filename
-            new = '{}.patch'.format(filename)
+        for l in linkins:
 
-            with open(old, 'rt') as inf, \
-                 open(new, 'wt') as outf:
+            target = op.join(basedir, l)
+            link   = op.join(basedir, 'fsleyes', l)
 
-                for line in inf:
-                    outf.write(linepatch(line))
+            if not op.exists(link):
+                os.symlink(target, link)
 
-            os.rename(new, old)
-
-        def patch_version():
-
-            filename   = op.join(fsleyesdir, 'fsleyes', 'version.py')
-            gitVersion = get_git_version()
-            version    = self.version
-
-            def linepatch(line):
-                if line.startswith('__version__'):
-                    line = '__version__ = \'{}\'\n'.format(version)
-                elif line.startswith('__vcs_version__'):
-                    line = '__vcs_version__ = \'{}\'\n'.format(gitVersion)
-                return line
-
-            print('Patching FSLeyes version [{} / {}]: {}'.format(
-                version, gitVersion, filename))
-
-            patch_file(filename, linepatch)
-
-        def patch_gl():
-
-            def linepatch(line):
-                if line.startswith('OpenGL.ERROR_CHECKING'):
-                    line = 'OpenGL.ERROR_CHECKING = False\n'
-                elif line.startswith('OpenGL.ERROR_LOGGING'):
-                    line = 'OpenGL.ERROR_LOGGING = False\n'
-                return line
-
-            filename = op.join(fsleyesdir, 'fsleyes', 'gl', '__init__.py')
-
-            print('Setting up OpenGL initialisation: {}'.format(filename))
-
-            patch_file(filename, linepatch)
-
-        def remove_logging():
-
-            propsfiles   = list_all_files(propsdir)
-            widgetsfiles = list_all_files(widgetsdir)
-            fslpyfiles   = list_all_files(fslpydir)
-            fsleyesfiles = list_all_files(fsleyesdir)
-
-            print('Removing logging: {}'.format(propsdir))
-            print('Removing logging: {}'.format(widgetsdir))
-            print('Removing logging: {}'.format(fslpydir))
-            print('Removing logging: {}'.format(fsleyesdir))
-
-            for filename in it.chain(
-                    propsfiles, widgetsfiles, fslpyfiles, fsleyesfiles):
-                if not filename.endswith('.py'):
-                    continue
-
-                logstrip = op.join(basedir, 'assets', 'build', 'logstrip.py')
-
-                sp_call(['python', logstrip, '-f', '-M', 'INFO', filename],
-                        quiet=True)
-
-        def enable_logging():
-
-            def linepatch(line):
-                if line.startswith('disableLogging'):
-                    line = 'disableLogging = False\n'
-                return line
-
-            filename = op.join(fsleyesdir, 'fsleyes', '__init__.py')
-
-            print('Enabling logging: {}'.format(filename))
-
-            patch_file(filename, linepatch)
-
-        patch_version()
-        patch_gl()
-        if self.enable_logging: enable_logging()
-        else:                   remove_logging()
-
-
-class py2app(orig_py2app):
-    description = 'Builds a standalone FSLeyes OSX application using py2app'
-
-    def finalize_options(self):
-
-        entrypt     = op.join(basedir, 'fsleyes', '__main__.py')
-        assetdir    = op.join(basedir, 'assets')
-        iconfile    = op.join(assetdir, 'icons', 'app_icon', 'fsleyes.icns')
-        dociconfile = op.join(assetdir, 'icons', 'app_icon', 'fsleyes_doc.icns')
-        plist       = op.join(assetdir, 'build', 'Info.plist')
-        assets      = build_asset_list()
-
-        self.quiet               = True
-        self.argv_emulation      = True
-        self.no_chdir            = True
-        self.optimize            = True
-        self.app                 = [entrypt]
-        self.iconfile            = iconfile
-        self.dociconfile         = dociconfile
-        self.plist               = plist
-        self.resources           = assets
-        self.packages            = ['OpenGL_accelerate']
-        self.matplotlib_backends = ['wx_agg']
-        self.excludes            = ['IPython', 'ipykernel', 'Cython']
-
-        orig_py2app.finalize_options(self)
-
-
-    def run(self):
-
-        orig_py2app.run(self)
-
-        version    = get_fsleyes_version()
-        gitVersion = get_git_version()
-        copyright  = get_fsleyes_copyright()
-
-        contentsdir = op.join(basedir, 'dist', 'FSLeyes.app', 'Contents')
-        plist       = op.join(contentsdir, 'Info.plist')
-        resourcedir = op.join(contentsdir, 'Resources')
-
-        # py2app (and pyinstaller) seem to
-        # get the wrong version of libpng,
-        # which causes render to segfault
-        pildir = package_path('PIL')
-        dylib  = op.join(pildir, '.dylibs', 'libpng16.16.dylib')
-        if op.exists(dylib):
-            shutil.copy(dylib, op.join(contentsdir, 'Frameworks'))
-
-        # copy the application document iconset
-        shutil.copy(self.dociconfile, resourcedir)
-
-        # Patch Info.plist
-        commands = [
-            ['delete', 'PythonInfoDict'],
-            ['write',  'CFBundleShortVersionString', version],
-            ['write',  'CFBundleVersion',            gitVersion],
-            ['write',  'NSHumanReadableCopyright',   copyright],
-        ]
-
-        for c in commands:
-            sp_call(['defaults'] + [c[0]] + [plist] + c[1:])
-
-        # The defaults command screws with Info.plist
-        # so make sure it has rw-r--r-- permissions
-        sp_call(['chmod', '644', plist])
-
-
-class pyinstaller(Command):
-    description  = 'Builds a standalone FSLeyes Linux ' \
-                   'application using pyinstaller'
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-
-        builddir = op.join(basedir, 'build')
-        distdir  = op.join(basedir, 'dist')
-        assetdir = op.join(basedir, 'dist', 'FSLeyes', 'share', 'FSLeyes')
-        iconfile = op.join(assetdir, 'icons', 'app_icon', 'fsleyes.ico')
-        assets   = build_asset_list()
-        entrypt  = op.join(basedir, 'fsleyes', '__main__.py')
-
-        hidden = [
-            'scipy.special._ufuncs_cxx',
-            'scipy.linalg.cython_blas',
-            'scipy.linalg.cython_lapack',
-            'scipy.integrate',
-            'OpenGL_accelerate',
-            'OpenGL.platform.osmesa',
-            'OpenGL.GLUT'
-        ]
-
-        excludes = [
-            'IPython',
-            'jinja2.asyncfilters',
-            'jinja2.asyncsupport',
-        ]
-
-        extrabins = ['glut', 'OSMesa']
-        extrabins = [find_library(b)  for b in extrabins]
-        extrabins = ['{}:.'.format(b) for b in extrabins]
-
-        cmd = [
-            'pyinstaller',
-            '--name=FSLeyes',
-            '--icon={}'.format(iconfile),
-            '--windowed',
-            '--workpath={}'.format(builddir),
-            '--distpath={}'.format(distdir)
-        ]
-
-        for h in hidden:    cmd += ['--hidden-import',  h]
-        for e in excludes:  cmd += ['--exclude-module', e]
-        for e in extrabins: cmd += ['--add-binary',     e]
-
-        cmd += [entrypt]
-
-        env   = dict(os.environ)
-        ppath = [
-            package_path('fsleyes'),
-            package_path('fsl'),
-            package_path('fsleyes_props'),
-            package_path('fsleyes_widgets')]
-
-        env['PYTHONPATH'] = op.pathsep.join(ppath)
-
-        sp_call(cmd, env=env)
-
-        # Move the spec file into the build directory
-        shutil.move(op.join(basedir, 'FSLeyes.spec'), builddir)
-
-        # Make the executable lowercase
-        try:
-            os.rename(op.join(distdir, 'FSLeyes', 'FSLeyes'),
-                      op.join(distdir, 'FSLeyes', 'fsleyes'))
-
-        # Case insensitive file system?
-        except:
-            pass
-
-        # Copy assets
-        os.makedirs(assetdir)
-        for dirname, files in assets:
-
-            dirname = op.join(assetdir, dirname)
-
-            if not op.exists(dirname):
-                os.makedirs(dirname)
-
-            for src in files:
-                shutil.copy(src, dirname)
-
-
-def find_library(name):
-    """Returns the path o the given shared library. """
-
-    import ctypes.util as cutil
-
-    path = cutil.find_library(name)
-
-    if path is None:
-        raise RuntimeError('Library {} not found'.format(name))
-
-    # Under mac, find_library
-    # returns the full path
-    if platform == 'darwin':
-        return path
-
-    # Under linux, find_library
-    # just returns a file name.
-    # Let's look for it in some
-    # likely locations.
-    searchDirs = ['/lib64/',
-                  '/lib/',
-                  '/usr/lib64/',
-                  '/usr/lib/',
-                  '/usr/lib/x86_64-linux-gnu']
-
-    for sd in searchDirs:
-        searchPath = op.join(sd, path)
-        if op.exists(searchPath):
-            return searchPath
-
-    raise RuntimeError('Library {} not found'.format(name))
-
-
-def package_path(pkg):
-    """Returns the directory path to the given python package. """
-    fname   = pkgutil.get_loader(pkg).get_filename()
-    dirname = op.dirname(fname)
-    dirname = op.abspath(op.join(dirname, '..'))
-    return dirname
-
-
-
-def sp_call(command, *args, **kwargs):
-    """Prints the given command, then calls ``subprocess.call``. """
-
-    if not kwargs.pop('quiet', False):
-        print(' '.join(command))
-
-    return sp.call(command, *args, **kwargs)
-
-
-def sp_check_output(command, *args, **kwargs):
-    """Prints the given command, then calls ``subprocess.check_output``. """
-    print(' '.join(command))
-    return sp.check_output(command, *args, **kwargs).decode('utf-8')
-
-
-def checkout(project, rev, todir):
-    """Checks out the given project from the FMRIB gitlab repository. """
-
-    project_repos = {
-        'fsleyes'         : 'git@git.fmrib.ox.ac.uk:fsl/fsleyes/fsleyes.git',
-        'fslpy'           : 'git@git.fmrib.ox.ac.uk:fsl/fslpy.git',
-        'fsleyes-props'   : 'git@git.fmrib.ox.ac.uk:fsl/fsleyes/props.git',
-        'fsleyes-widgets' : 'git@git.fmrib.ox.ac.uk:fsl/fsleyes/widgets.git',
-    }
-
-    repo    = project_repos[project]
-
-    if op.exists(todir):
-        shutil.rmtree(todir)
-
-    os.mkdir(todir)
-
-    # This should work with branches, tags, and revisions
-    commands = [
-        'git init .',
-        'git remote add origin {}'.format(repo),
-        'git fetch origin',
-        'git checkout {}'.format(rev)
-    ]
-
-    for cmd in commands:
-        if sp_call(cmd.split(), cwd=todir):
-            raise RuntimeError('Command failed: "{}"'.format(cmd))
+        build.run(self)
 
 
 def list_all_files(in_dir):
@@ -761,8 +224,9 @@ def list_all_files(in_dir):
 
 
 def build_asset_list():
-    """Build a list of all the FSLeyes non-source-code files that should
-    be included in a distribution built by py2app.
+    """Build and return a list of all the FSLeyes non-source-code files that
+    should be included in a distribution. The file paths are made relative
+    to the FSLeyes base directory.
     """
 
     assetdir = op.join(basedir, 'assets')
@@ -776,25 +240,18 @@ def build_asset_list():
         op.join('*', '.DS_Store'),
     ]
 
-    # A dict containing { dest_directory : [files_to_put_in_dest_directory] }
-    resources = {}
-
+    flist      = []
     docfiles   = list_all_files(docdir)
     assetfiles = list_all_files(assetdir)
 
     for filename in it.chain(docfiles, assetfiles):
 
-        dirname = op.dirname(filename)
-        destdir = op.join(op.relpath(dirname, basedir))
         exclude = any([fnmatch.fnmatch(filename, p) for p in excludePatterns])
 
         if not exclude:
+            flist.append(op.relpath(filename, basedir))
 
-            flist = resources.get(destdir, [])
-            flist.append(filename)
-            resources[destdir] = flist
-
-    return list(resources.items())
+    return flist
 
 
 def get_fsleyes_version():
@@ -815,73 +272,44 @@ def get_fsleyes_version():
     return version.get('__version__')
 
 
-def get_git_version():
-    """Returns a string containing the git hashes of fsleyes, fslpy, and
-    props.
-
-    Warning: This will fix the paths to the props/fslpy packages, so make
-             sure the PYTHONPATH/sys.path is set before calling this function.
-    """
-    propsdir   = package_path('fsleyes_props')
-    widgetsdir = package_path('fsleyes_widgets')
-    fslpydir   = package_path('fsl')
-    fsleyesdir = package_path('fsleyes')
-
-    cmd = 'git rev-parse HEAD'.split()
-
-    propshash   = sp_check_output(cmd, cwd=propsdir)  .strip()
-    widgetshash = sp_check_output(cmd, cwd=widgetsdir).strip()
-    fslpyhash   = sp_check_output(cmd, cwd=fslpydir)  .strip()
-    fsleyeshash = sp_check_output(cmd, cwd=fsleyesdir).strip()
-    hashes      = [fsleyeshash, propshash, widgetshash, fslpyhash]
-
-    return '.'.join([h[:7] for h in hashes])
-
-
 def get_fsleyes_copyright():
     """Returns the FSLeyes copyright text. """
     with open(op.join(basedir, 'COPYRIGHT')) as f:
         return f.read().strip()
 
 
+def get_fsleyes_readme():
+    """Returns the FSLeyes README text. """
+    with open(op.join(basedir, 'README.md'), 'rt') as f:
+        return f.read().strip()
+
+
 def get_fsleyes_deps():
-    """Returns two lists containing the FSLeyes dependencies:
-        - Packages to be installed via pip
-        - Packages to be installed from git repositories
-    """
+    """Returns a list containing the FSLeyes dependencies. """
 
     # The dependency list is stored in requirements.txt
     with open(op.join(basedir, 'requirements.txt'), 'rt') as f:
         install_requires = f.readlines()
 
-    dependency_links = [i.strip() for i in install_requires
-                        if     i.startswith('git')]
-    install_requires = [i.strip() for i in install_requires
-                        if not i.startswith('git')]
-
-    # When fslpy, fsleyes-props and fsleyes-widgets
-    # are on pypi, we can remove this (and all of the
-    # git checkout logic as well)
-    install_requires = [r for r in install_requires if not r.startswith('fsl')]
-
-    return install_requires, dependency_links
+    return [i.strip() for i in install_requires]
 
 
 def main():
 
-    version   = get_fsleyes_version()
     packages  = find_packages(
         exclude=('userdoc', 'apidoc', 'assets', 'build', 'dist'))
 
-    with open(op.join(basedir, 'README.md'), 'rt') as f:
-        readme = f.read()
+    version          = get_fsleyes_version()
+    readme           = get_fsleyes_readme()
+    install_requires = get_fsleyes_deps()
+    assets           = build_asset_list()
+    setup_requires   = ['sphinx', 'sphinx-rtd-theme', 'mock']
 
-    deps             = get_fsleyes_deps()
-    install_requires = deps[0]
-    dependency_links = deps[1]
-
-    if platform == 'darwin': setup_requires = ['py2app']
-    else:                    setup_requires = ['pyinstaller']
+    # When building/installing, all asset files
+    # are placed within the fsleyes package
+    # directory. Some related ugliness is present
+    # in the custom_build command.
+    assets = {'fsleyes' : assets}
 
     setup(
 
@@ -897,26 +325,30 @@ def main():
         classifiers=[
             'Development Status :: 3 - Alpha',
             'Intended Audience :: Developers',
+            'Intended Audience :: Science/Research',
             'License :: OSI Approved :: Apache Software License',
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3.5',
-            'Topic :: Software Development :: Libraries :: Python Modules'],
+            'Topic :: Software Development :: Libraries :: Python Modules',
+            'Topic :: Scientific/Engineering :: Visualization'],
 
         packages=packages,
         install_requires=install_requires,
-        dependency_links=dependency_links,
+        setup_requires=setup_requires,
+        include_package_data=True,
+        package_data=assets,
 
         cmdclass={
-            'patch_code'           : patch_code,
-            'build_standalone'     : build_standalone,
-            'checkout_subprojects' : checkout_subprojects,
-            'py2app'               : py2app,
-            'pyinstaller'          : pyinstaller,
-            'userdoc'              : userdoc,
-            'apidoc'               : apidoc,
+            'build'   : custom_build,
+            'userdoc' : userdoc,
+            'apidoc'  : apidoc,
         },
 
-        setup_requires=setup_requires,
+        entry_points={
+            'console_scripts' : [
+                'fsleyes = fsleyes.main:main',
+            ]
+        }
     )
 
 

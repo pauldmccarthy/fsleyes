@@ -229,16 +229,16 @@ def canWriteToAssetDir():
 
 
 def initialise():
-    """Called when `FSLeyes`` is started as a standalone application.
+    """Called when `FSLeyes`` is started as a standalone application.  This
+    function *must* be called before most other things in *FSLeyes* are used,
+    but after a ``wx.App`` has been created.
 
     Does a few initialisation steps::
 
       - Initialises the :mod:`fsl.utils.settings` module, for persistent
         storage  of application settings.
 
-      - Sets the :data:`assetDir` attribute. This function *must* be called
-        before most other things in *FSLeyes* are used, but after a ``wx.App``
-        has been created.
+      - Sets the :data:`assetDir` attribute.
     """
 
     global assetDir
@@ -254,6 +254,8 @@ def initialise():
     # matplotlib.pyplot is imported.
     mpl.use('WxAgg')
 
+    fsleyesDir = op.dirname(__file__)
+
     # If we are running from a bundled application,
     # wx will know where the FSLeyes resources are
     if fslplatform.frozen:
@@ -267,15 +269,22 @@ def initialise():
 
         # Otherwise we have to guess at the location
         elif fslplatform.os == 'Darwin':
-            assetDir = op.join(op.dirname(__file__), '..', 'Resources')
+            assetDir = op.join(fsleyesDir, '..', 'Resources')
         elif fslplatform.os == 'Linux':
-            assetDir = op.join(op.dirname(__file__), '..', 'share', 'FSLeyes')
+            assetDir = op.join(fsleyesDir, '..', 'share', 'FSLeyes')
 
-    # Otherwise we are running from a code install;
-    # assume that the resources are living alongside
-    # the fsleyes package directory.
+    # Otherwise we are running from a code install,
+    # or from a source distribution. The assets
+    # directory is either inside, or alongside, the
+    # FSLeyes package directory.
     else:
-        assetDir = op.join(op.dirname(__file__), '..')
+
+        options = [op.join(fsleyesDir, '..'), fsleyesDir]
+
+        for opt in options:
+            if op.exists(op.join(opt, 'assets')):
+                assetDir = opt
+                break
 
     assetDir = op.abspath(assetDir)
 

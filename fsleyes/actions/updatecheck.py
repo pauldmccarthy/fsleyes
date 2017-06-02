@@ -13,6 +13,8 @@ import logging
 
 from six.moves.urllib import request
 
+import fsl.version                  as fslversion
+
 import fsleyes_widgets.utils.status as status
 import fsleyes.version              as version
 import fsleyes.strings              as strings
@@ -46,7 +48,8 @@ class UpdateCheckAction(base.Action):
 
     def __checkForUpdates(self,
                           showUpToDateMessage=True,
-                          showErrorMessage=True):
+                          showErrorMessage=True,
+                          ignorePoint=False):
         """Run this action. Downloads a text file from a URL which contains
         the latest available version of FSLeyes. Compares that version with
         the running version. Displays a message to the user.
@@ -58,6 +61,10 @@ class UpdateCheckAction(base.Action):
         :arg showErrorMessage:    Defaults to ``True``. If ``False``, and
                                   some error occurs while checking for
                                   updates, the user is not informed.
+
+        :arg ignorePoint:         Defaults to ``False``. If ``True``, the
+                                  point release number is ignored in the
+                                  comparison.
         """
 
         import wx
@@ -73,7 +80,9 @@ class UpdateCheckAction(base.Action):
             f        = request.urlopen(_FSLEYES_VERSION_URL)
             latest   = f.read().decode('utf-8').strip()
             current  = version.__version__
-            upToDate = version.compareVersions(latest, current) <= 0
+            upToDate = fslversion.compareVersions(latest,
+                                                  current,
+                                                  ignorePoint) <= 0
 
             log.debug('This version of FSLeyes ({}) is '
                       '{} date (latest: {})'.format(
