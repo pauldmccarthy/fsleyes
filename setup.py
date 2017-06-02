@@ -95,6 +95,7 @@ class docbuilder(Command):
             'fsl.utils.platform',
             'fsl.utils.settings',
             'fsl.utils.transform',
+            'fsl.version',
             'fsleyes_props',
             'fsleyes_widgets',
             'fsleyes_widgets.bitmaptoggle',

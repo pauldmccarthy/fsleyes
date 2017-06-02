@@ -38,8 +38,7 @@ Documentation
 
 
 The FSLeyes user and API documentation is written in ReStructuredText, and
-can be built using [sphinx](http://www.sphinx-doc.org/). Install `sphinx`
-and `sphinx-rtd-theme`, and then run:
+can be built using [sphinx](http://www.sphinx-doc.org/):
 
     python setup.py userdoc
     python setup.py apidoc

@@ -6,7 +6,7 @@ recursive-include userdoc                     *
 recursive-include apidoc                      *
 recursive-include assets                      *
 recursive-exclude userdoc/html                *
-recursive-exclude userdoc/html                *
+recursive-exclude apidoc/html                 *
 recursive-exclude assets/build                *
 recursive-exclude assets/icons/app_icon       *
 recursive-exclude assets/icons/sources        *
