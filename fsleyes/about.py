@@ -54,7 +54,6 @@ class AboutDialog(wx.Dialog):
 
         # Create / retrieve all the content
         verStr    = version.__version__
-        vcsVerStr = version.__vcs_version__
         glVerStr  = fslplatform.glVersion
         glRenStr  = fslplatform.glRenderer
         swlibs    = strings.about['libs']
@@ -79,7 +78,6 @@ class AboutDialog(wx.Dialog):
             swVersions.append(swVer)
 
         verStr    = strings.about['version']   .format(verStr)
-        vcsVerStr = strings.about['vcsVersion'].format(vcsVerStr)
         fslVer    = strings.about['fslVersion'].format(fslplatform.fslVersion)
         fslDir    = strings.about['fslPath']   .format(fslplatform.fsldir)
         glVerStr  = strings.about['glVersion'] .format(glVerStr)
@@ -105,7 +103,6 @@ class AboutDialog(wx.Dialog):
                              strings.about['company'],
                              strings.about['author'],
                              strings.about['email'],
-                             vcsVerStr,
                              fslVer,
                              fslDir,
                              glVerStr,

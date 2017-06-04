@@ -109,7 +109,6 @@ class DiagnosticReportAction(base.Action):
         report['Python']      = '{}  {}'.format(platform.python_version(),
                                                 platform.python_compiler())
         report['Version']     = version.__version__
-        report['VCS Version'] = version.__vcs_version__
         report['OpenGL']      = self.__openGLReport()
         report['Settings']    = self.__settingsReport()
 
