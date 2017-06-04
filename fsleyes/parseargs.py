@@ -1820,10 +1820,7 @@ def _printVersion(name):
 
     from . import version
 
-    print('{}/FSLeyes version {} (internal version: {})'.format(
-        name,
-        version.__version__,
-        version.__vcs_version__))
+    print('{}/FSLeyes version {}'.format(name, version.__version__))
 
 
 def _printShortHelp(mainParser, extra=None):

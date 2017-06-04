@@ -11,7 +11,6 @@ version number. See also the :mod:`fsl.version` module.
    :nosignatures:
 
    __version__
-   __vcs_version__
 """
 
 
@@ -20,7 +19,3 @@ __version__ = 'dev'
 of three numbers, separated by a period, which roughly obeys the Semantic
 Versioning conventions (http://semver.org/).
 """
-
-
-__vcs_version__ = 'dev'
-"""VCS (Version Control System) version number, for internal use. """
