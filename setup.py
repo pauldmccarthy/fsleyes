@@ -280,7 +280,7 @@ def get_fsleyes_copyright():
 
 def get_fsleyes_readme():
     """Returns the FSLeyes README text. """
-    with open(op.join(basedir, 'README.md'), 'rt') as f:
+    with open(op.join(basedir, 'README.rst'), 'rt') as f:
         return f.read().strip()
 
 
