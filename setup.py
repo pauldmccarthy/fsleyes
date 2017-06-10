@@ -48,16 +48,12 @@ https://bitbucket.org/ronaldoussoren/py2app/issues/140/app-starts-minimized
 
 
 The patch found in ``assets/build/py2app.patch`` must be applied to the py2app
-source::
+source, and the py2app bootloader needs to be recompiled::
 
     cd path/to/py2app/
-    patch -p2 < "$BUILDDIR"/assets/build/py2app.patch
-
-Then the py2app bootloader needs to be recompiled::
-
-    cd py2app/apptemplate/
+    patch -p2 < path/to/fsleyes/assets/build/py2app.patch
+    cd apptemplate/
     python setup.py
-
 """
 
 

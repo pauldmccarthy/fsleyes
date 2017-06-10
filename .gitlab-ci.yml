@@ -61,6 +61,9 @@ stages:
 #   - SSH_PRIVATE_KEY_USERDOC_DEPLOY - private key for rsyncing documentation
 #                                      to remote host (USERDOC_HOST)
 #
+#   - SSH_PRIVATE_KEY_BUILD_DEPLOY   - private key for standalone builds
+#                                      to remote host (BUILD_HOST)
+#
 #   - SSH_PRIVATE_KEY_LINUX_INSTALL  - private key for rsyncing standalone
 #                                      linux build to remote host
 #                                      LINUX_INSTALL_HOST.
@@ -78,6 +81,10 @@ stages:
 #   - USERDOC_HOST:                  - Username@host to upload user
 #                                      documentation to (e.g.
 #                                      "paulmc@jalapeno.fmrib.ox.ac.uk")
+#
+#   - BUILD_HOST                     - Username@host to upload release
+#                                      standalone builds to
+#                                      (e.g. "paulmc@jalapeno.fmrib.ox.ac.uk")
 #
 #   - LINUX_INSTALL_HOST             - Username@host to upload linux build to
 #                                      (e.g. "paulmc@jalapeno.fmrib.ox.ac.uk")
@@ -117,11 +124,6 @@ variables:
 .only_releases: &only_releases
   only:
     - tags@fsl/fsleyes/fsleyes
-
-
-.except_releases: &except_releases
-  except:
-    - tags
 
 
 .standalone_install: &standalone_install
@@ -164,6 +166,7 @@ variables:
         echo "$SSH_PRIVATE_KEY_GIT"            > $HOME/.ssh/id_git;
         echo "$SSH_PRIVATE_KEY_APIDOC_DEPLOY"  > $HOME/.ssh/id_apidoc_deploy;
         echo "$SSH_PRIVATE_KEY_USERDOC_DEPLOY" > $HOME/.ssh/id_userdoc_deploy;
+        echo "$SSH_PRIVATE_KEY_BUILD_DEPLOY"   > $HOME/.ssh/id_build_deploy;
         echo "$SSH_PRIVATE_KEY_LINUX_INSTALL"  > $HOME/.ssh/id_linux_install;
         echo "$SSH_PRIVATE_KEY_MAC_INSTALL"    > $HOME/.ssh/id_mac_install;
 
@@ -172,6 +175,7 @@ variables:
         ssh-add $HOME/.ssh/id_git;
         ssh-add $HOME/.ssh/id_apidoc_deploy;
         ssh-add $HOME/.ssh/id_userdoc_deploy;
+        ssh-add $HOME/.ssh/id_build_deploy;
         ssh-add $HOME/.ssh/id_linux_install;
         ssh-add $HOME/.ssh/id_mac_install;
 
@@ -193,12 +197,17 @@ variables:
         echo "    User ${APIDOC_HOST%@*}"                    >> $HOME/.ssh/config;
         echo "    IdentityFile $HOME/.ssh/id_apidoc_deploy"  >> $HOME/.ssh/config;
 
-        echo "Host linuxinstalldeploy"                       >> $HOME/.ssh/config;
+        echo "Host builddeploy"                              >> $HOME/.ssh/config;
+        echo "    HostName ${BUILD_HOST##*@}"                >> $HOME/.ssh/config;
+        echo "    User ${BUILD_HOST%@*}"                     >> $HOME/.ssh/config;
+        echo "    IdentityFile $HOME/.ssh/id_build_deploy"   >> $HOME/.ssh/config;
+
+        echo "Host linuxinstall"                             >> $HOME/.ssh/config;
         echo "    HostName ${LINUX_INSTALL_HOST##*@}"        >> $HOME/.ssh/config;
         echo "    User ${LINUX_INSTALL_HOST%@*}"             >> $HOME/.ssh/config;
         echo "    IdentityFile $HOME/.ssh/id_linux_install"  >> $HOME/.ssh/config;
 
-        echo "Host macinstalldeploy"                         >> $HOME/.ssh/config;
+        echo "Host macinstall"                               >> $HOME/.ssh/config;
         echo "    HostName ${MAC_INSTALL_HOST##*@}"          >> $HOME/.ssh/config;
         echo "    User ${MAC_INSTALL_HOST%@*}"               >> $HOME/.ssh/config;
         echo "    IdentityFile $HOME/.ssh/id_mac_install"    >> $HOME/.ssh/config;
@@ -296,7 +305,8 @@ build-pypi-dist:
 
   artifacts:
     paths:
-      - dist/*
+      - dist/*tar.gz
+      - dist/*whl
 
 
 .linux_build_template: &linux_build_template
@@ -394,9 +404,9 @@ build-pypi-dist:
     # for ubuntu, but not for centos, where it needs
     # to be compiled from source.
     - if   [[ -f /etc/lsb-release && `grep "Ubuntu 14" /etc/lsb-release` ]]; then
-        pip install -f https://wxpython.org/Phoenix/release-extras/linux/gtk3/ubuntu-14.04/ wxpython
+        pip install -f https://wxpython.org/Phoenix/release-extras/linux/gtk3/ubuntu-14.04/ wxpython;
       elif [[ -f /etc/lsb-release && `grep "Ubuntu 16" /etc/lsb-release` ]]; then
-        pip install -f https://wxpython.org/Phoenix/release-extras/linux/gtk3/ubuntu-16.04/ wxpython
+        pip install -f https://wxpython.org/Phoenix/release-extras/linux/gtk3/ubuntu-16.04/ wxpython;
       else
         pip install --pre "wxpython>=3.0.2.0,<4.1";
       fi
@@ -490,6 +500,7 @@ build-macos:
     paths:
       - dist/FSLeyes*zip
 
+
 ##############
 # Deploy stage
 ##############
@@ -506,10 +517,12 @@ deploy-doc:
     - docker
 
   dependencies:
-    - build-doc
+    - build-userdoc
+    - build-apidoc
 
   script:
-    - rsync -rv doc/"$CI_COMMIT_REF_NAME" "docdeploy:"
+    - rsync -rv userdoc/"$CI_COMMIT_REF_NAME" "userdocdeploy:"
+    - rsync -rv apidoc/"$CI_COMMIT_REF_NAME" "apidocdeploy:"
 
 
 deploy-pypi:
@@ -523,10 +536,56 @@ deploy-pypi:
     - docker
 
   dependencies:
-    - build-dist
+    - build-pypi-dist
 
   script:
     - pip install setuptools wheel twine
     - twine register dist/*whl
     - twine register dist/*tar.gz
-    - twine upload dist/*
+    - twine upload dist/*whl dist/*tar.gz
+
+
+deploy-builds:
+  <<: *only_releases
+  <<: *setup_ssh
+  stage: deploy
+  when:  manual
+  image: python3.5
+  tags:
+    - docker
+
+  dependencies:
+    - build-centos6
+    - build-centos7
+    - build-ubuntu1404
+    - build-ubuntu1604
+    - build-macos
+
+  script:
+    - rsync -rv dist/FSLeyes*zip "builddeploy:"
+
+
+deploy-install:
+  <<: *standalone_install
+  stage: deploy
+  when:  manual
+  image: python3.5
+  tags:
+    - docker
+
+  dependencies:
+    - build-centos6
+    - build-macos
+
+  script:
+    - mkdir mac-install
+    - mkdir centos6-install
+    - pushd mac-install
+    - unzip ../dist/FSLeyes*macos.zip
+    - rsync -rv FSLeyes.app "macinstall:"
+    - popd
+    - pushd centos6-install
+    - unzip ../dist/FSLeyes*centos6.zip
+    - rsync -rv FSLeyes "linuxinstall:"
+    - popd
+    - rm -r mac-install linux-install
