@@ -157,16 +157,13 @@ import itertools  as it
 import os.path    as op
 
 from collections import defaultdict
+from io          import open
 
 from setuptools import setup
 from setuptools import find_packages
 from setuptools import Command
 
 from distutils.command.build import build
-
-
-logging.basicConfig()
-logging.getLogger('logstrip').setLevel(logging.CRITICAL)
 
 
 # Expected to be "darwin" or "linux"
@@ -483,6 +480,8 @@ class build_standalone(Command):
             sys.path.append(logstripdir)
             import logstrip
 
+            logging.getLogger('logstrip').setLevel(logging.CRITICAL)
+
             propsfiles   = list_all_files(propsdir)
             widgetsfiles = list_all_files(widgetsdir)
             fslpyfiles   = list_all_files(fslpydir)
@@ -623,7 +622,7 @@ class pyinstaller(Command):
             'jinja2.asyncsupport',
         ]
 
-        extrabins = ['glut', 'OSMesa', 'libxcb']
+        extrabins = ['glut', 'OSMesa', 'xcb', 'SDL-1.2']
         extrabins = [find_library(b)  for b in extrabins]
         extrabins = ['{}:.'.format(b) for b in extrabins]
 
@@ -684,6 +683,8 @@ def find_library(name):
     if platform == 'darwin':
         return path
 
+    print('Searching for: {}'.format(path))
+
     # Under linux, find_library
     # just returns a file name.
     # Let's look for it in some
@@ -699,7 +700,7 @@ def find_library(name):
         if op.exists(searchPath):
             return searchPath
 
-    raise RuntimeError('Library {} not found'.format(name))
+    raise RuntimeError('Could not find location for library {}'.format(name))
 
 
 def package_path(pkg):
@@ -787,7 +788,7 @@ def get_fsleyes_copyright():
 
 def get_fsleyes_readme():
     """Returns the FSLeyes README text. """
-    with open(op.join(basedir, 'README.rst'), 'rt') as f:
+    with open(op.join(basedir, 'README.rst'), 'rt', encoding='utf-8') as f:
         return f.read().strip()
 
 
@@ -865,4 +866,6 @@ def main():
 
 
 if __name__ == '__main__':
+
+    logging.basicConfig()
     main()
