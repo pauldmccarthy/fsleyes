@@ -936,7 +936,11 @@ def _screenshot(overlayList, displayCtx, canvasPanel):
         # our array.
         windowDC = wx.WindowDC(panel)
         memoryDC = wx.MemoryDC()
-        bmp      = wx.EmptyBitmap(width, height)
+
+        if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
+            bmp = wx.Bitmap(width, height)
+        else:
+            bmp = wx.EmptyBitmap(width, height)
 
         # Copy the contents of the canvas
         # container to the bitmap
