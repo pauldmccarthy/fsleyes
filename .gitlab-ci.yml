@@ -299,15 +299,16 @@ build-pypi-dist:
       - dist/*
 
 
-.build_template: &build_template
+.linux_build_template: &linux_build_template
 
   stage: build
 
   tags:
     - docker
 
-  after_script:
-    - python setup.py build_standalone
+  artifacts:
+    paths:
+      - dist/FSLeyes*.zip
 
 
 .centos_pre_build: &centos_pre_build
@@ -351,7 +352,7 @@ build-pypi-dist:
     - apt-get install -y libgtk2.0-0 libgtk-3-0
 
 
-.linux_pre_build: &linux_pre_build
+.linux_do_build: &linux_do_build
   script:
     # Download, compile, and install python
     - pushd /
@@ -367,7 +368,7 @@ build-pypi-dist:
     # Make  sure that a command called "python" exists
     - pushd install/bin
     - if [ ! -f python ]; then
-        ln -s python3 python;
+        ln -s python3.5 python;
       fi
 
     # get pip
@@ -376,7 +377,7 @@ build-pypi-dist:
 
     # Make sure that a command called "pip" exists
     - if  [ ! -f pip ]; then
-        ln -s pip3 pip;
+        ln -s pip3.5 pip;
       fi
     - popd
     - popd
@@ -409,42 +410,85 @@ build-pypi-dist:
     # packages, otherwise they will be built from
     # source distributions
     - pip install sphinx sphinx-rtd-theme mock
+    - python setup.py build_standalone
 
 
 build-centos6:
-  <<: *build_template
-  <<: *centos_pre_build
-  <<: *linux_pre_build
   image: centos:6
+  <<: *standalone_install
+  <<: *linux_build_template
+  <<: *centos_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos6.zip
 
 
 build-centos7:
-  <<: *build_template
-  <<: *centos_pre_build
-  <<: *linux_pre_build
   image: centos:7
+  <<: *only_releases
+  <<: *linux_build_template
+  <<: *centos_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos7.zip
 
 
 build-ubuntu1404:
-  <<: *build_template
-  <<: *ubuntu_pre_build
-  <<: *linux_pre_build
   image: ubuntu:14.04
+  <<: *only_releases
+  <<: *linux_build_template
+  <<: *ubuntu_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1404.zip
 
 
 build-ubuntu1604:
-  <<: *build_template
-  <<: *ubuntu_pre_build
-  <<: *linux_pre_build
   image: ubuntu:16.04
+  <<: *only_releases
+  <<: *linux_build_template
+  <<: *ubuntu_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1604.zip
 
 
 build-macos:
   <<: *standalone_install
   stage: build
 
-  # TODO Install and patch py2app 0.12
+  tags:
+    - macOS
 
+  script:
+    - pwd
+    - python -V
+    - python3.5 -m venv fsleyes-build-venv
+    - . fsleyes-build-venv/bin/activate
+    - which python
+    - which pip
+    - pip install --pre wxpython
+    - pip install -r requirements.txt
+    - pip install "py2app==0.12"
+    - pip install sphinx sphinx-rtd-theme mock
+
+    # Patch/recompile py2app (see setup.py docstring)
+    - PY2APP=`python -c "import py2app; print(py2app.__file__)"`
+    - BUILDDIR=`pwd`
+    - pushd `dirname $PY2APP`
+    - patch -p2 < "$BUILDDIR"/assets/build/py2app.patch
+    - pushd apptemplate
+    - python setup.py
+    - popd
+    - popd
+    - python setup.py build_standalone
+    - deactivate
+    - rm -r fsleyes-build-venv
+    - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-macos.zip
+
+  artifacts:
+    paths:
+      - dist/FSLeyes*zip
 
 ##############
 # Deploy stage
