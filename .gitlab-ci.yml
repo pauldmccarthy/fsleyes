@@ -312,6 +312,7 @@ build-pypi-dist:
 
 .centos_pre_build: &centos_pre_build
   before_script:
+    - yum check-update -y
     # Install compilers and dependencies
     # for compiling Python
     - yum groupinstall -y "Development tools"
@@ -340,6 +341,7 @@ build-pypi-dist:
   before_script:
 
     # Install python compile-time dependencies
+    - apt-get update -y
     - apt-get install -y wget
     - apt-get install -y build-essential
     - apt-get install -y zlib1g-dev libbz2-dev libssl-dev libncursesw5-dev libsqlite3-dev libreadline-gplv2-dev libgdbm-dev libc6-dev libpcap-dev libexpat1-dev
@@ -379,10 +381,6 @@ build-pypi-dist:
     - popd
     - popd
 
-    - ls -l /Python-3.5.3/install/bin
-    - which python
-    - which pip
-
     # Installing pyopengl-accelerete the
     # standard way doesn't seem to work -
     # the numpy module doesn't get installed.
@@ -395,9 +393,9 @@ build-pypi-dist:
     # for ubuntu, but not for centos, where it needs
     # to be compiled from source.
     - if   [[ -f /etc/lsb-release && `grep "Ubuntu 14" /etc/lsb-release` ]]; then
-        pip install -f https://wxpython.org/Phoenix/release-extras/linux/gtk3/ubuntu-14.04/ "wxpython>=3.0.2.0,<4.1";
+        pip install -f https://wxpython.org/Phoenix/release-extras/linux/gtk3/ubuntu-14.04/ wxpython
       elif [[ -f /etc/lsb-release && `grep "Ubuntu 16" /etc/lsb-release` ]]; then
-        pip install -f https://wxpython.org/Phoenix/release-extras/linux/gtk3/ubuntu-16.04/ "wxpython>=3.0.2.0,<4.1";
+        pip install -f https://wxpython.org/Phoenix/release-extras/linux/gtk3/ubuntu-16.04/ wxpython
       else
         pip install --pre "wxpython>=3.0.2.0,<4.1";
       fi
@@ -407,26 +405,35 @@ build-pypi-dist:
     - pip install -r requirements.txt
     - pip install "pyinstaller==3.2.1"
 
+    # We also manually install the setup_requires
+    # packages, otherwise they will be built from
+    # source distributions
+    - pip install sphinx sphinx-rtd-theme mock
+
 
 build-centos6:
+  <<: *build_template
   <<: *centos_pre_build
   <<: *linux_pre_build
   image: centos:6
 
 
 build-centos7:
+  <<: *build_template
   <<: *centos_pre_build
   <<: *linux_pre_build
   image: centos:7
 
 
 build-ubuntu1404:
+  <<: *build_template
   <<: *ubuntu_pre_build
   <<: *linux_pre_build
   image: ubuntu:14.04
 
 
 build-ubuntu1604:
+  <<: *build_template
   <<: *ubuntu_pre_build
   <<: *linux_pre_build
   image: ubuntu:16.04
@@ -437,7 +444,6 @@ build-macos:
   stage: build
 
   # TODO Install and patch py2app 0.12
-
 
 
 ##############
