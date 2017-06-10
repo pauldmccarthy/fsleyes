@@ -147,6 +147,7 @@ from __future__ import print_function
 
 import               os
 import               sys
+import               glob
 import               shutil
 import               pkgutil
 import               fnmatch
@@ -655,6 +656,17 @@ class pyinstaller(Command):
         except:
             pass
 
+        # Something is wrong with the way
+        # that PyOpenGL tries to find
+        # the libglut library. If we make
+        # a symlink, called 'glut', to the
+        # .so file, things work fine.
+        libglut = glob.glob(op.join(distdir, 'FSLeyes', 'libglut*'))
+        if len(libglut) != 1:
+            raise RuntimeError('Cannot identify libglut')
+
+        os.symlink(libglut[0], op.join(distdir, 'FSLeyes', 'glut'))
+
         # Copy assets
         os.makedirs(assetdir)
         for dirname, files in assets:
@@ -694,7 +706,6 @@ def find_library(name):
                   '/usr/lib64/',
                   '/usr/lib/',
                   '/usr/lib/x86_64-linux-gnu']
-
     for sd in searchDirs:
         searchPath = op.join(sd, path)
         if op.exists(searchPath):
