@@ -254,6 +254,7 @@ build-userdoc:
     - python setup.py userdoc
     - mv userdoc/html userdoc/"$CI_COMMIT_REF_NAME"
   artifacts:
+    expire_in: 1 day
     paths:
       - userdoc/$CI_COMMIT_REF_NAME
 
@@ -273,6 +274,7 @@ build-apidoc:
     - python setup.py apidoc
     - mv apidoc/html apidoc/"$CI_COMMIT_REF_NAME"
   artifacts:
+    expire_in: 1 day
     paths:
       - apidoc/$CI_COMMIT_REF_NAME
 
@@ -298,6 +300,7 @@ build-pypi-dist:
    - python setup.py bdist_wheel
 
   artifacts:
+    expire_in: 1 day
     paths:
       - dist/*tar.gz
       - dist/*whl
@@ -311,6 +314,7 @@ build-pypi-dist:
     - docker
 
   artifacts:
+    expire_in: 1 day
     paths:
       - dist/FSLeyes*.zip
 
@@ -465,12 +469,8 @@ build-macos:
     - macOS
 
   script:
-    - pwd
-    - python -V
     - python3.5 -m venv fsleyes-build-venv
     - . fsleyes-build-venv/bin/activate
-    - which python
-    - which pip
     - pip install --pre wxpython
     - pip install -r requirements.txt
     - pip install "py2app==0.12"
@@ -491,6 +491,7 @@ build-macos:
     - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-macos.zip
 
   artifacts:
+    expire_in: 1 day
     paths:
       - dist/FSLeyes*zip
 
