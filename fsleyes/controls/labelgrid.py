@@ -318,7 +318,6 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         """
 
         tags      = ev.GetEventObject()
-        overlay   = self.__overlay
         volLabels = self.__volLabels
         comp      = int(ev.tag) - 1
         label     = tags._label
@@ -356,7 +355,6 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         """
 
         tags      = ev.GetEventObject()
-        overlay   = self.__overlay
         volLabels = self.__volLabels
         lut       = self.__lut
         comp      = int(ev.tag) - 1
