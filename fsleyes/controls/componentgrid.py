@@ -128,7 +128,6 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         self.__volLabels = volLabels
         display          = self._displayCtx.getDisplay(overlay)
         opts             = display.getDisplayOpts()
-        ncomps           = volLabels.numComponents()
 
         volLabels.register(             self._name, self.__labelsChanged)
         opts     .addListener('volume', self._name, self.__volumeChanged)
@@ -147,6 +146,8 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
             if self.__overlay is None:
                 self.__grid.Refresh()
                 return
+
+            ncomps = self.__volLabels.numComponents()
 
             self.__grid.SetGridSize(ncomps, 2, growCols=[1])
 
@@ -401,7 +402,18 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         log.debug('Overlay volume changed ({}) - updating '
                   'selected component'.format(opts.volume))
 
-        grid.SetSelection(opts.volume, -1)
+        # The setOverlay method updates the grid size on
+        # the idle loop when the selected overlay changes,
+        # so we have to update the selection on idle too,
+        # otherwise the following sequence of events:
+        #
+        #  1. Overlay change (asynchronously schedules 3)
+        #  2. Volume change (directly calls SetSelection on
+        #     wrongly-sized grid)
+        #  3. Grid refresh
+        #
+        # may raise an error
+        async.idle(grid.SetSelection, opts.volume, -1)
 
 
     def __labelsChanged(self, volLabels, topic, components):
