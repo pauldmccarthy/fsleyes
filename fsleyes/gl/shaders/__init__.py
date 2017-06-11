@@ -37,8 +37,13 @@ running simple filter shader programs, which require a 2D
 """
 
 
+# Import open from the io module, because it gives
+# us an interface compatible across python 2 and 3
+# (i.e. it allows us to specify the file encoding,
+# and thus allows shader files to contain non-ascii
+# characters).
+from io import                 open
 import os.path              as op
-
 import OpenGL.GL            as gl
 
 import                         fsleyes
@@ -76,7 +81,9 @@ def _getShader(prefix, shaderType):
     shader type ('vert' or 'frag').
     """
     fname = _getFileName(prefix, shaderType)
-    with open(fname, 'rt') as f: src = f.read()
+    with open(fname, 'rt', encoding='utf-8') as f:
+        src = f.read()
+
     return preprocess(src)
 
 
@@ -129,7 +136,7 @@ def preprocess(src):
 
     for linei, fname in includes:
         fname = op.join(getShaderDir(), subdir, fname)
-        with open(fname, 'rt') as f:
+        with open(fname, 'rt', encoding='utf-8') as f:
             lines[linei] = f.read()
 
     return '\n'.join(lines)

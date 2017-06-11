@@ -10,6 +10,9 @@ by the :class:`.SliceCanvas` class to store a collection of off-screen
 :class:`.GLObject` instances.
 """
 
+
+from __future__ import division
+
 import logging
 
 import numpy     as np
@@ -198,7 +201,7 @@ class RenderTextureStack(object):
         if self.__lastDrawnTexture is not None:
             lastIdx = self.__lastDrawnTexture
         else:
-            lastIdx = len(self.__textures) / 2
+            lastIdx = len(self.__textures) // 2
 
         aboveIdxs = list(range(lastIdx, len(self.__textures)))
         belowIdxs = list(range(lastIdx - 1, -1, -1))

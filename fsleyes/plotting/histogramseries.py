@@ -401,6 +401,9 @@ class HistogramSeries(dataseries.DataSeries):
         dMin, dMax = dataRange
         dRange     = dMax - dMin
 
+        if np.isclose(dRange, 0):
+            return 1
+
         binSize = np.power(10, np.ceil(np.log10(dRange) - 1) - 1)
 
         nbins = dRange / binSize
