@@ -10,7 +10,7 @@
 #    2. build:  Building source distributions, wheels, and standalone
 #               distributions.
 #
-#    3. deploy: Uploading the source and wheel distributions  to pypi,
+#    3. deploy: Uploading the source and wheel distributions to pypi,
 #               and the documentation and standalone distributions to a
 #               hosting server.
 #
@@ -24,15 +24,15 @@
 # Source distributions and wheels are built for release tags.
 #
 # Standalons distributions (py2app/pyinstaller) are built for several
-# platforms for release tags, and for the master branch for CentOS6 and
-# macOS.
+# platforms for release tags.
 #
-# Source and wheel distributions are deployedd to pypi for release tags.
+# Source and wheel distributions are deployed to pypi for release tags.
 #
-# User and API documentation is deployed for all branches.
+# User and API documentation is deployed to a hosting server for all
+# branches.
 #
-# Standalone distributions are deployed for release tags, and installed
-# internally for the master branch.
+# Standalone distributions are deployed to a hosting server for release
+# tags, and installed internally for CentOS6 and macOS.
 ###########################################################################
 
 
@@ -124,12 +124,6 @@ variables:
 .only_releases: &only_releases
   only:
     - tags@fsl/fsleyes/fsleyes
-
-
-.standalone_install: &standalone_install
-  only:
-    - tags@fsl/fsleyes/fsleyes
-    - master@fsl/fsleyes/fsleyes
 
 
 ##########################################################
@@ -425,7 +419,7 @@ build-pypi-dist:
 
 build-centos6:
   image: centos:6
-  <<: *standalone_install
+  <<: *only_releases
   <<: *linux_build_template
   <<: *centos_pre_build
   <<: *linux_do_build
@@ -464,7 +458,7 @@ build-ubuntu1604:
 
 
 build-macos:
-  <<: *standalone_install
+  <<: *only_releases
   stage: build
 
   tags:
@@ -566,7 +560,7 @@ deploy-builds:
 
 
 deploy-install:
-  <<: *standalone_install
+  <<: *only_releases
   stage: deploy
   when:  manual
   image: python3.5
