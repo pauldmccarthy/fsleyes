@@ -1,0 +1,585 @@
+###########################################################################
+# This file defines the build process for fsleyes, as hosted at:
+#
+#    https://git.fmrib.ox.ac.uk/fsl/fsleyes
+#
+# The build pipeline currently comprises three stages:
+#
+#    1. doc:    Building user and API documentation
+#
+#    2. build:  Building source distributions, wheels, and standalone
+#               distributions.
+#
+#    3. deploy: Uploading the source and wheel distributions to pypi,
+#               and the documentation and standalone distributions to a
+#               hosting server.
+#
+# Unit and integration tests will hopefully be added soon!
+#
+# This pipeline is only executed on the upstream repository, not on forks.
+#
+#
+# The doc stage executed on all branches (master and release branches).
+#
+# Source distributions and wheels are built for release tags.
+#
+# Standalons distributions (py2app/pyinstaller) are built for several
+# platforms for release tags.
+#
+# Source and wheel distributions are deployed to pypi for release tags.
+#
+# User and API documentation is deployed to a hosting server for all
+# branches.
+#
+# Standalone distributions are deployed to a hosting server for release
+# tags, and installed internally for CentOS6 and macOS.
+###########################################################################
+
+
+stages:
+ - doc
+ - build
+ - deploy
+
+
+#################################################################################
+# A number of variables must be set for the jobs to work. The following
+# variables are implicitly defined in any gitlab CI job:
+#
+#   - CI_PROJECT_PATH    - gitlab namespace/project
+#   - CI_COMMIT_REF_NAME - branch name, provided by gitlab
+#   - CI_COMMIT_TAG      - present if build is running on a tag
+#
+# These variables must be explicitly set as "secret" variables:
+#
+#   - SSH_PRIVATE_KEY_GIT            - private key for git login to remote host
+#                                      (UPSTREAM_URL)
+#
+#   - SSH_PRIVATE_KEY_APIDOC_DEPLOY  - private key for rsyncing documentation
+#                                      to remote host (APIDOC_HOST)
+#
+#   - SSH_PRIVATE_KEY_USERDOC_DEPLOY - private key for rsyncing documentation
+#                                      to remote host (USERDOC_HOST)
+#
+#   - SSH_PRIVATE_KEY_BUILD_DEPLOY   - private key for standalone builds
+#                                      to remote host (BUILD_HOST)
+#
+#   - SSH_PRIVATE_KEY_LINUX_INSTALL  - private key for rsyncing standalone
+#                                      linux build to remote host
+#                                      LINUX_INSTALL_HOST.
+#
+#   - SSH_PRIVATE_KEY_MAC_INSTALL    - private key for rsyncing standalone
+#                                      mac build to remote host
+#                                      MAC_INSTALL_HOST.
+#
+#   - SSH_SERVER_HOSTKEYS            - List of trusted SSH hosts
+#
+#   - APIDOC_HOST:                   - Username@host to upload API
+#                                      documentation to (e.g.
+#                                      "paulmc@jalapeno.fmrib.ox.ac.uk")
+#
+#   - USERDOC_HOST:                  - Username@host to upload user
+#                                      documentation to (e.g.
+#                                      "paulmc@jalapeno.fmrib.ox.ac.uk")
+#
+#   - BUILD_HOST                     - Username@host to upload release
+#                                      standalone builds to
+#                                      (e.g. "paulmc@jalapeno.fmrib.ox.ac.uk")
+#
+#   - LINUX_INSTALL_HOST             - Username@host to upload linux build to
+#                                      (e.g. "paulmc@jalapeno.fmrib.ox.ac.uk")
+#
+#   - MAC_INSTALL_HOST:              - Username@host to upload mac build to
+#                                      (e.g. "paulmc@jalapeno.fmrib.ox.ac.uk")
+#
+#   - TWINE_USERNAME:                - Username to use when uploading to pypi
+#
+#   - TWINE_PASSWORD:                - Password to use when uploading to pypi
+#
+#   - TWINE_REPOSITORY_URL:          - Pypi repository to upload to
+###############################################################################
+
+
+variables:
+  UPSTREAM_PROJECT:     "fsl/fsleyes/fsleyes"
+  UPSTREAM_URL:         "git@git.fmrib.ox.ac.uk"
+
+
+####################################
+# These anchors are used to restrict
+# when and where jobs are executed.
+####################################
+
+
+.only_upstream: &only_upstream
+  only:
+    - branches@fsl/fsleyes/fsleyes
+
+
+.only_master: &only_master
+  only:
+    - master@fsl/fsleyes/fsleyes
+
+
+.only_releases: &only_releases
+  only:
+    - tags@fsl/fsleyes/fsleyes
+
+
+##########################################################
+# The setup_ssh anchor contains a before_script section
+# which does the following:
+#
+#  - Sets up key-based SSH login, and
+#    installs the private keys, so
+#    we can connect to servers.
+#
+#  - Configures git, and adds the
+#    upstream repo as a remote
+#
+# (see https://docs.gitlab.com/ce/ci/ssh_keys/README.html)
+#
+# NOTE: It is assumed that non-docker
+#       executors are already configured
+#       (or don't need any configuration).
+##########################################################
+
+
+.setup_ssh: &setup_ssh
+  before_script:
+
+    - if [[ -f /.dockerenv ]]; then
+
+        apt-get update -y                 || yum -y check-update           || true;
+        apt-get install -y openssh-client || yum install -y openssh-client || true;
+        apt-get install -y rsync          || yum install -y rsync          || true;
+
+        eval $(ssh-agent -s);
+        mkdir -p $HOME/.ssh;
+
+        echo "$SSH_PRIVATE_KEY_GIT"            > $HOME/.ssh/id_git;
+        echo "$SSH_PRIVATE_KEY_APIDOC_DEPLOY"  > $HOME/.ssh/id_apidoc_deploy;
+        echo "$SSH_PRIVATE_KEY_USERDOC_DEPLOY" > $HOME/.ssh/id_userdoc_deploy;
+        echo "$SSH_PRIVATE_KEY_BUILD_DEPLOY"   > $HOME/.ssh/id_build_deploy;
+        echo "$SSH_PRIVATE_KEY_LINUX_INSTALL"  > $HOME/.ssh/id_linux_install;
+        echo "$SSH_PRIVATE_KEY_MAC_INSTALL"    > $HOME/.ssh/id_mac_install;
+
+        chmod go-rwx $HOME/.ssh/id_*;
+
+        ssh-add $HOME/.ssh/id_git;
+        ssh-add $HOME/.ssh/id_apidoc_deploy;
+        ssh-add $HOME/.ssh/id_userdoc_deploy;
+        ssh-add $HOME/.ssh/id_build_deploy;
+        ssh-add $HOME/.ssh/id_linux_install;
+        ssh-add $HOME/.ssh/id_mac_install;
+
+        echo "$SSH_SERVER_HOSTKEYS" > $HOME/.ssh/known_hosts;
+
+        touch $HOME/.ssh/config;
+
+        echo "Host ${UPSTREAM_URL##*@}"                      >> $HOME/.ssh/config;
+        echo "    User ${UPSTREAM_URL%@*}"                   >> $HOME/.ssh/config;
+        echo "    IdentityFile $HOME/.ssh/id_git"            >> $HOME/.ssh/config;
+
+        echo "Host userdocdeploy"                            >> $HOME/.ssh/config;
+        echo "    HostName ${USERDOC_HOST##*@}"              >> $HOME/.ssh/config;
+        echo "    User ${USERDOC_HOST%@*}"                   >> $HOME/.ssh/config;
+        echo "    IdentityFile $HOME/.ssh/id_userdoc_deploy" >> $HOME/.ssh/config;
+
+        echo "Host apidocdeploy"                             >> $HOME/.ssh/config;
+        echo "    HostName ${APIDOC_HOST##*@}"               >> $HOME/.ssh/config;
+        echo "    User ${APIDOC_HOST%@*}"                    >> $HOME/.ssh/config;
+        echo "    IdentityFile $HOME/.ssh/id_apidoc_deploy"  >> $HOME/.ssh/config;
+
+        echo "Host builddeploy"                              >> $HOME/.ssh/config;
+        echo "    HostName ${BUILD_HOST##*@}"                >> $HOME/.ssh/config;
+        echo "    User ${BUILD_HOST%@*}"                     >> $HOME/.ssh/config;
+        echo "    IdentityFile $HOME/.ssh/id_build_deploy"   >> $HOME/.ssh/config;
+
+        echo "Host linuxinstall"                             >> $HOME/.ssh/config;
+        echo "    HostName ${LINUX_INSTALL_HOST##*@}"        >> $HOME/.ssh/config;
+        echo "    User ${LINUX_INSTALL_HOST%@*}"             >> $HOME/.ssh/config;
+        echo "    IdentityFile $HOME/.ssh/id_linux_install"  >> $HOME/.ssh/config;
+
+        echo "Host macinstall"                               >> $HOME/.ssh/config;
+        echo "    HostName ${MAC_INSTALL_HOST##*@}"          >> $HOME/.ssh/config;
+        echo "    User ${MAC_INSTALL_HOST%@*}"               >> $HOME/.ssh/config;
+        echo "    IdentityFile $HOME/.ssh/id_mac_install"    >> $HOME/.ssh/config;
+
+        echo "Host *"                                        >> $HOME/.ssh/config;
+        echo "    IdentitiesOnly yes"                        >> $HOME/.ssh/config;
+
+        git config --global user.name  "Gitlab CI";
+        git config --global user.email "gitlabci@localhost";
+
+        if [[ `git remote -v` == *"upstream"* ]]; then
+            git remote remove upstream;
+        fi;
+        git remote add upstream "$UPSTREAM_URL:$UPSTREAM_PROJECT";
+      fi
+
+
+###################################################
+# The patch_version anchor contains a before_script
+# section which is run on release builds, and makes
+# sure that the version in the code is up to date
+# (i.e. equal to the tag name).
+###################################################
+
+
+.patch_version: &patch_version
+  before_script:
+
+    - if [[ "x$CI_COMMIT_TAG" != "x" ]]; then
+        echo "Release detected - patching version - $CI_COMMIT_REF_NAME";
+        sed -ie "s/^__version__ = .*$/__version__ = '$CI_COMMIT_REF_NAME'/g" fsleyes/version.py;
+      fi
+
+
+###########
+# Doc stage
+###########
+
+build-userdoc:
+  <<: *only_upstream
+  <<: *patch_version
+
+  tags:
+   - docker
+
+  stage: doc
+  image: python:3.5
+
+  script:
+    - python setup.py userdoc
+    - mv userdoc/html userdoc/"$CI_COMMIT_REF_NAME"
+  artifacts:
+    paths:
+      - userdoc/$CI_COMMIT_REF_NAME
+
+
+
+build-apidoc:
+  <<: *only_upstream
+  <<: *patch_version
+
+  tags:
+   - docker
+
+  stage: doc
+  image: python:3.5
+
+  script:
+    - python setup.py apidoc
+    - mv apidoc/html apidoc/"$CI_COMMIT_REF_NAME"
+  artifacts:
+    paths:
+      - apidoc/$CI_COMMIT_REF_NAME
+
+
+#############
+# Build stage
+#############
+
+
+build-pypi-dist:
+  <<: *only_releases
+  <<: *patch_version
+
+  stage: build
+  image: python:3.5
+
+  tags:
+    - docker
+
+  script:
+   - pip install wheel
+   - python setup.py sdist
+   - python setup.py bdist_wheel
+
+  artifacts:
+    paths:
+      - dist/*tar.gz
+      - dist/*whl
+
+
+.linux_build_template: &linux_build_template
+
+  stage: build
+
+  tags:
+    - docker
+
+  artifacts:
+    paths:
+      - dist/FSLeyes*.zip
+
+
+.centos_pre_build: &centos_pre_build
+  before_script:
+    - yum check-update -y
+    # Install compilers and dependencies
+    # for compiling Python
+    - yum groupinstall -y "Development tools"
+    - yum install -y wget zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel gdbm-devel libpcap-devel xz-devel expat-devel
+
+    # install fsleyes/wxpython runtime dependencies
+    - yum install -y freeglut mesa-libOSMesa SDL
+
+    # install wxpython compile-time dependencies.
+    # We currently have to compile wx from source
+    # because, on centos6, there is no
+    # python 3.5/wxpython binary wheel available
+    # for download
+
+    # CentOS6 -> gtk2, CentOS7 -> gtk3
+    - yum install -y epel-release
+    - if [[ `cat /etc/centos-release` == *" 6."* ]]; then
+        yum install -y  gtk2-devel webkitgtk-devel;
+      else
+        yum install -y  gtk2-devel gtk3-devel webkitgtk-devel webkitgtk3-devel;
+      fi;
+    - yum install -y libjpeg-turbo-devel libtiff-devel SDL-devel gstreamer-plugins-base-devel libnotify-devel freeglut-devel
+
+
+.ubuntu_pre_build: &ubuntu_pre_build
+  before_script:
+
+    # Install python compile-time dependencies
+    - apt-get update -y
+    - apt-get install -y wget
+    - apt-get install -y build-essential
+    - apt-get install -y zlib1g-dev libbz2-dev libssl-dev libncursesw5-dev libsqlite3-dev libreadline-gplv2-dev libgdbm-dev libc6-dev libpcap-dev libexpat1-dev
+
+    # install fsleyes/wxpython runtime dependencies
+    - apt-get install -y freeglut3 libosmesa6 libsdl1.2debian
+    - apt-get install -y libgtk2.0-0 libgtk-3-0
+
+
+.linux_do_build: &linux_do_build
+  script:
+    # Download, compile, and install python
+    - pushd /
+    - wget http://python.org/ftp/python/3.5.3/Python-3.5.3.tar.xz
+    - tar xf Python-3.5.3.tar.xz
+    - cd Python-3.5.3
+    - ./configure --prefix=`pwd`/install/ --enable-shared
+    - make
+    - make install
+    - export PATH=`pwd`/install/bin:$PATH
+    - export LD_LIBRARY_PATH=`pwd`/install/lib
+
+    # Make  sure that a command called "python" exists
+    - pushd install/bin
+    - if [ ! -f python ]; then
+        ln -s python3.5 python;
+      fi
+
+    # get pip
+    - wget https://bootstrap.pypa.io/get-pip.py
+    - python get-pip.py
+
+    # Make sure that a command called "pip" exists
+    - if  [ ! -f pip ]; then
+        ln -s pip3.5 pip;
+      fi
+    - popd
+    - popd
+
+    # Installing pyopengl-accelerete the
+    # standard way doesn't seem to work -
+    # the numpy module doesn't get installed.
+    # Force-installing from source works
+    # though.
+    - pip install numpy
+    - pip install --no-binary ":all:" "pyopengl>=3.1.0,<4.0" "pyopengl-accelerate>=3.1.0,<4.0"
+
+    # pre-built binaries for wxpython are available
+    # for ubuntu, but not for centos, where it needs
+    # to be compiled from source.
+    - if   [[ -f /etc/lsb-release && `grep "Ubuntu 14" /etc/lsb-release` ]]; then
+        pip install -f https://wxpython.org/Phoenix/release-extras/linux/gtk3/ubuntu-14.04/ wxpython;
+      elif [[ -f /etc/lsb-release && `grep "Ubuntu 16" /etc/lsb-release` ]]; then
+        pip install -f https://wxpython.org/Phoenix/release-extras/linux/gtk3/ubuntu-16.04/ wxpython;
+      else
+        pip install --pre "wxpython>=3.0.2.0,<4.1";
+      fi
+
+    # Everything else can be installed
+    # in the normal manner
+    - pip install -r requirements.txt
+    - pip install "pyinstaller==3.2.1"
+
+    # We also manually install the setup_requires
+    # packages, otherwise they will be built from
+    # source distributions
+    - pip install sphinx sphinx-rtd-theme mock
+    - python setup.py build_standalone
+
+
+build-centos6:
+  image: centos:6
+  <<: *only_releases
+  <<: *linux_build_template
+  <<: *centos_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos6.zip
+
+
+build-centos7:
+  image: centos:7
+  <<: *only_releases
+  <<: *linux_build_template
+  <<: *centos_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos7.zip
+
+
+build-ubuntu1404:
+  image: ubuntu:14.04
+  <<: *only_releases
+  <<: *linux_build_template
+  <<: *ubuntu_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1404.zip
+
+
+build-ubuntu1604:
+  image: ubuntu:16.04
+  <<: *only_releases
+  <<: *linux_build_template
+  <<: *ubuntu_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1604.zip
+
+
+build-macos:
+  <<: *only_releases
+  stage: build
+
+  tags:
+    - macOS
+
+  script:
+    - pwd
+    - python -V
+    - python3.5 -m venv fsleyes-build-venv
+    - . fsleyes-build-venv/bin/activate
+    - which python
+    - which pip
+    - pip install --pre wxpython
+    - pip install -r requirements.txt
+    - pip install "py2app==0.12"
+    - pip install sphinx sphinx-rtd-theme mock
+
+    # Patch/recompile py2app (see setup.py docstring)
+    - PY2APP=`python -c "import py2app; print(py2app.__file__)"`
+    - BUILDDIR=`pwd`
+    - pushd `dirname $PY2APP`
+    - patch -p2 < "$BUILDDIR"/assets/build/py2app.patch
+    - pushd apptemplate
+    - python setup.py
+    - popd
+    - popd
+    - python setup.py build_standalone
+    - deactivate
+    - rm -r fsleyes-build-venv
+    - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-macos.zip
+
+  artifacts:
+    paths:
+      - dist/FSLeyes*zip
+
+
+##############
+# Deploy stage
+##############
+
+
+deploy-doc:
+  <<: *only_upstream
+  <<: *setup_ssh
+  stage: deploy
+  when:  manual
+  image: python:3.5
+
+  tags:
+    - docker
+
+  dependencies:
+    - build-userdoc
+    - build-apidoc
+
+  script:
+    - rsync -rv userdoc/"$CI_COMMIT_REF_NAME" "userdocdeploy:"
+    - rsync -rv apidoc/"$CI_COMMIT_REF_NAME" "apidocdeploy:"
+
+
+deploy-pypi:
+  <<: *only_releases
+  <<: *setup_ssh
+  stage: deploy
+  when:  manual
+  image: python:3.5
+
+  tags:
+    - docker
+
+  dependencies:
+    - build-pypi-dist
+
+  script:
+    - pip install setuptools wheel twine
+    - twine register dist/*whl
+    - twine register dist/*tar.gz
+    - twine upload dist/*whl dist/*tar.gz
+
+
+deploy-builds:
+  <<: *only_releases
+  <<: *setup_ssh
+  stage: deploy
+  when:  manual
+  image: python3.5
+  tags:
+    - docker
+
+  dependencies:
+    - build-centos6
+    - build-centos7
+    - build-ubuntu1404
+    - build-ubuntu1604
+    - build-macos
+
+  script:
+    - rsync -rv dist/FSLeyes*zip "builddeploy:"
+
+
+deploy-install:
+  <<: *only_releases
+  stage: deploy
+  when:  manual
+  image: python3.5
+  tags:
+    - docker
+
+  dependencies:
+    - build-centos6
+    - build-macos
+
+  script:
+    - mkdir mac-install
+    - mkdir centos6-install
+    - pushd mac-install
+    - unzip ../dist/FSLeyes*macos.zip
+    - rsync -rv FSLeyes.app "macinstall:"
+    - popd
+    - pushd centos6-install
+    - unzip ../dist/FSLeyes*centos6.zip
+    - rsync -rv FSLeyes "linuxinstall:"
+    - popd
+    - rm -r mac-install linux-install
