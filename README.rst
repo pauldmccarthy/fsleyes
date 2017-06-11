@@ -19,12 +19,14 @@ following versions:
 
 
 - OpenGL 1.4, with the following extensions:
+
   - ``ARB_vertex_program``
   - ``ARB_fragment_program``
   - ``EXT_framebuffer_object``
   - ``GL_ARB_texture_non_power_of_two``
 
 - OpenGL 2.1, with the following extensions:
+
   - ``EXT_framebuffer_object``
   - ``ARB_instanced_arrays``
   - ``ARB_draw_instanced``
