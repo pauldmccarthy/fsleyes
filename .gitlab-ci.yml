@@ -475,17 +475,14 @@ build-macos:
     - pip install --pre wxpython
     - pip install --no-binary ":all:" "pyopengl>=3.1.0,<4.0" "pyopengl-accelerate>=3.1.0,<4.0"
     - pip install -r requirements.txt
-    - pip install "py2app==0.12"
+    - pip install "py2app==0.14"
     - pip install sphinx sphinx-rtd-theme mock
 
-    # Patch/recompile py2app (see setup.py docstring)
+    # Patch py2app (see setup.py docstring)
     - PY2APP=`python -c "import py2app; print(py2app.__file__)"`
     - BUILDDIR=`pwd`
     - pushd `dirname $PY2APP`
     - patch -p2 < "$BUILDDIR"/assets/build/py2app.patch
-    - pushd apptemplate
-    - python setup.py
-    - popd
     - popd
     - python setup.py build_standalone
     - deactivate
