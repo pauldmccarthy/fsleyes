@@ -424,6 +424,7 @@ build-pypi-dist:
 build-centos6:
   image: centos:6
   <<: *only_releases
+  <<: *patch_version
   <<: *linux_build_template
   <<: *centos_pre_build
   <<: *linux_do_build
@@ -434,6 +435,7 @@ build-centos6:
 build-centos7:
   image: centos:7
   <<: *only_releases
+  <<: *patch_version
   <<: *linux_build_template
   <<: *centos_pre_build
   <<: *linux_do_build
@@ -444,6 +446,7 @@ build-centos7:
 build-ubuntu1404:
   image: ubuntu:14.04
   <<: *only_releases
+  <<: *patch_version
   <<: *linux_build_template
   <<: *ubuntu_pre_build
   <<: *linux_do_build
@@ -454,6 +457,7 @@ build-ubuntu1404:
 build-ubuntu1604:
   image: ubuntu:16.04
   <<: *only_releases
+  <<: *patch_version
   <<: *linux_build_template
   <<: *ubuntu_pre_build
   <<: *linux_do_build
@@ -463,6 +467,7 @@ build-ubuntu1604:
 
 build-macos:
   <<: *only_releases
+  <<: *patch_version
   stage: build
 
   tags:
