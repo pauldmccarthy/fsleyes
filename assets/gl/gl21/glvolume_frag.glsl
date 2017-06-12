@@ -29,8 +29,8 @@ uniform sampler1D colourTexture;
 uniform sampler1D negColourTexture;
 
 /*
- * Matrix which can be used to transform a texture value 
- * from the imageTexture into a texture coordinate for 
+ * Matrix which can be used to transform a texture value
+ * from the imageTexture into a texture coordinate for
  * the colourTexture.
  */
 uniform mat4 img2CmapXform;
@@ -46,7 +46,7 @@ uniform vec3 imageShape;
 uniform vec3 clipImageShape;
 
 /*
- * Flag which tells the shader whether 
+ * Flag which tells the shader whether
  * the image and clip textures are actually
  * the same - if they are, set this to true
  * to avoid an extra texture lookup.
@@ -54,7 +54,7 @@ uniform vec3 clipImageShape;
 uniform bool imageIsClip;
 
 /*
- * Flag which determines whether to 
+ * Flag which determines whether to
  * use the negative colour map.
  */
 uniform bool useNegCmap;
@@ -78,7 +78,7 @@ uniform float clipHigh;
 
 /*
  * Value in the image texture data range which corresponds
- * to zero - this is used to determine whether to use the 
+ * to zero - this is used to determine whether to use the
  * regular, or the negative colour texture (if useNegCmap
  * is true).
  */
@@ -101,13 +101,13 @@ varying vec3 fragVoxCoord;
 varying vec3 fragTexCoord;
 
 
-/* 
+/*
  * Texture coordinates for clipping image.
  */
 varying vec3 fragClipTexCoord;
 
 /*
- * Multiplicative factor to apply to the colour - can 
+ * Multiplicative factor to apply to the colour - can
  * be used for vertex-based lighting.
  */
 varying vec4 fragColourFactor;
@@ -130,7 +130,7 @@ void main(void) {
     }
 
     /*
-     * Look up the voxel value 
+     * Look up the voxel value
      */
     if (useSpline) voxValue = spline_interp(imageTexture,
                                             fragTexCoord,
@@ -138,6 +138,11 @@ void main(void) {
                                             0);
     else           voxValue = texture3D(    imageTexture,
                                             fragTexCoord).r;
+
+    /* Skip nan values */
+    if (voxValue != voxValue) {
+      discard;
+    }
 
 
     /*
@@ -154,18 +159,18 @@ void main(void) {
              any(greaterThan(fragClipTexCoord, vec3(1)))) {
       clipValue = clipLow + 0.5 * (clipHigh - clipLow);
     }
-    
+
     else if (useSpline)   clipValue = spline_interp(clipTexture,
                                                     fragClipTexCoord,
                                                     clipImageShape,
                                                     0);
     else                  clipValue = texture3D(    clipTexture,
-                                                    fragClipTexCoord).r; 
+                                                    fragClipTexCoord).r;
 
     /*
-     * If we are using a negative colour map, 
-     * and the voxel value is below the negative 
-     * threshold (texZero) invert the voxel 
+     * If we are using a negative colour map,
+     * and the voxel value is below the negative
+     * threshold (texZero) invert the voxel
      * value, and set a flag telling the code
      * below to use the neagtive colour map.
      */
@@ -184,7 +189,7 @@ void main(void) {
     /*
      * Clip out of range voxel values
      */
-    
+
     if ((!invertClip && (clipValue <= clipLow || clipValue >= clipHigh)) ||
         ( invertClip && (clipValue >= clipLow && clipValue <= clipHigh))) {
         discard;
@@ -193,7 +198,7 @@ void main(void) {
     /*
      * Transform the voxel value to a colour map texture
      * coordinate, and look up the colour for the voxel value
-     */ 
+     */
     normVoxValue = img2CmapXform * vec4(voxValue, 0, 0, 1);
 
     if (negCmap) colour = texture1D(negColourTexture, normVoxValue.x);
@@ -201,12 +206,12 @@ void main(void) {
 
     gl_FragColor = colour * fragColourFactor;
 
-    /* 
-     * Set the fragment depth on a per-voxel basis 
-     * so that items at adjacent voxels (e.g. 
+    /*
+     * Set the fragment depth on a per-voxel basis
+     * so that items at adjacent voxels (e.g.
      * tensors) overlap, rather than intersect.
      */
     gl_FragDepth = fragVoxCoord.x / imageShape.x *
                    fragVoxCoord.y / imageShape.y *
-                   fragVoxCoord.z / imageShape.z; 
+                   fragVoxCoord.z / imageShape.z;
 }
