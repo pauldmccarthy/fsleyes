@@ -1,70 +1,32 @@
---- orig/py2app/apptemplate/src/main.c	2017-02-22 10:32:57.000000000 +0000
-+++ patch/py2app/apptemplate/src/main.c	2017-04-04 15:52:20.000000000 +0100
-@@ -1147,7 +1147,6 @@
-    do_asl_log_descriptor(cl, msg, 4 /* ASL_LEVEL_NOTICE */, 2, 2 /* ASL_LOG_DESCRIPTOR_WRITE */);
- }
-
--#ifndef PY2APP_SECONDARY
- static int
- have_psn_arg(int argc, char* const * argv)
- {
-@@ -1162,7 +1161,6 @@
-    }
-    return 0;
- }
--#endif /* !PY2APP_SECONDARY */
-
-
- int
-@@ -1170,7 +1168,6 @@
- {
-     int rval;
-
--#ifndef PY2APP_SECONDARY
-     /* Running as a GUI app started by launch
-      * services, try to redirect stdout/stderr
-      * to ASL.
-@@ -1217,9 +1214,10 @@
-        bname++;
-         }
-
-+#ifndef PY2APP_SECONDARY
-         setup_asl(bname);
--    }
- #endif /* !PY2APP_SECONDARY */
-+  }
-
-     if (bind_CoreFoundation()) {
-         fprintf(stderr, "CoreFoundation not found or functions missing\n");
---- orig/py2app/bootstrap/argv_emulation.py	2017-02-22 10:32:57.000000000 +0000
-+++ patch/py2app/bootstrap/argv_emulation.py	2017-04-04 17:16:54.000000000 +0100
-@@ -88,7 +88,7 @@
-
+--- orig/py2app/bootstrap/argv_emulation.py	2017-06-12 17:21:32.000000000 +0100
++++ patch/py2app/bootstrap/argv_emulation.py	2017-06-12 17:22:44.000000000 +0100
+@@ -93,7 +93,7 @@
      return carbon
 
--def _run_argvemulator(timeout = 60):
-+def _run_argvemulator(timeout = 5):
+
+-def _run_argvemulator(timeout=60):
++def _run_argvemulator(timeout=5):
 
      # Configure ctypes
      carbon = _ctypes_setup()
-@@ -113,6 +113,7 @@
-     FALSE               = b'\0'
-     TRUE                = b'\1'
+@@ -118,6 +118,7 @@
+     FALSE = b'\0'
+     TRUE = b'\1'
      eventLoopTimedOutErr = -9875
 +    eventParameterNotFoundErr = -9870
 
      kEventClassAppleEvent, = struct.unpack('>i', b'eppc')
      kEventAppleEvent = 1
-@@ -242,7 +243,7 @@
-         event = ctypes.c_void_p()
+@@ -254,7 +255,7 @@
 
-         sts = carbon.ReceiveNextEvent(1, ctypes.byref(eventType),
--                start + timeout[0] - now, TRUE, ctypes.byref(event))
-+                start + timeout[0] - now, FALSE, ctypes.byref(event))
+         sts = carbon.ReceiveNextEvent(
+             1, ctypes.byref(eventType),
+-            start + timeout[0] - now, TRUE, ctypes.byref(event))
++            start + timeout[0] - now, FALSE, ctypes.byref(event))
 
          if sts == eventLoopTimedOutErr:
              break
-@@ -252,10 +253,17 @@
+@@ -264,10 +265,17 @@
              break
 
          sts = carbon.AEProcessEvent(event)
@@ -80,6 +42,6 @@
 
 +        now = time.time()
 +
-
-     carbon.AERemoveEventHandler(kCoreEventClass, kAEOpenApplication,
-             open_app_handler, FALSE)
+     carbon.AERemoveEventHandler(
+         kCoreEventClass, kAEOpenApplication, open_app_handler, FALSE)
+     carbon.AERemoveEventHandler(
