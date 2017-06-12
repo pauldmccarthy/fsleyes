@@ -477,7 +477,7 @@ class py2app(orig_py2app):
         # get the wrong version of libpng,
         # which causes render to segfault
         pildir = package_path('PIL')
-        dylib  = op.join(pildir, '.dylibs', 'libpng16.16.dylib')
+        dylib  = op.join(pildir, 'PIL', '.dylibs', 'libpng16.16.dylib')
         if op.exists(dylib):
             shutil.copy(dylib, op.join(contentsdir, 'Frameworks'))
 
