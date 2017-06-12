@@ -39,21 +39,18 @@ Py2App notes
 ============
 
 
-I am currently using py2app 0.12 for macOS builds. There are a couple of
-issues with this version of py2app which we need to work around:
+I am currently using py2app 0.14 for macOS builds. There is one issue with
+this version of py2app which we need to work around:
 
-https://bitbucket.org/ronaldoussoren/py2app/issues/222/argv-emulation-only-works-when-redirect):
 
 https://bitbucket.org/ronaldoussoren/py2app/issues/140/app-starts-minimized
 
 
 The patch found in ``assets/build/py2app.patch`` must be applied to the py2app
-source, and the py2app bootloader needs to be recompiled::
+source::
 
     cd path/to/py2app/
     patch -p2 < path/to/fsleyes/assets/build/py2app.patch
-    cd apptemplate/
-    python setup.py
 """
 
 
@@ -477,7 +474,7 @@ class py2app(orig_py2app):
         # get the wrong version of libpng,
         # which causes render to segfault
         pildir = package_path('PIL')
-        dylib  = op.join(pildir, '.dylibs', 'libpng16.16.dylib')
+        dylib  = op.join(pildir, 'PIL', '.dylibs', 'libpng16.16.dylib')
         if op.exists(dylib):
             shutil.copy(dylib, op.join(contentsdir, 'Frameworks'))
 
