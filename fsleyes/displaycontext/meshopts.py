@@ -366,7 +366,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         transformation.
         """
 
-        if self.refImage is None:
+        if self.refImage is None or self.refImage not in self.overlayList:
             return np.eye(4)
 
         opts = self.displayCtx.getOpts(self.refImage)
@@ -382,7 +382,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         The coordinate system used is the coordinate system in which the
         :class:`.TriangleMesh` vertices are defined.
         """
-        if self.refImage is None:
+        if self.refImage is None or self.refImage not in self.overlayList:
             return coords
 
         opts = self.displayCtx.getOpts(self.refImage)
@@ -395,7 +395,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         into the display coordinate system - see
         :meth:`displayToStandardCoordinates`.
         """
-        if self.refImage is None:
+        if self.refImage is None or self.refImage not in self.overlayList:
             return coords
 
         opts = self.displayCtx.getOpts(self.refImage)
