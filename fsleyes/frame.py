@@ -1348,7 +1348,7 @@ class FSLeyesFrame(wx.Frame):
         # We give each recent file menu item an identifying
         # number from 1-(numpaths) - this is used by the
         # __onRecentPath handler.
-        for i, p in enumerate(paths, start=1):
+        for i, p in enumerate(reversed(paths), start=1):
             menuItem = self.__recentPathsMenu.Append(i, p)
             self.Bind(wx.EVT_MENU, self.__onRecentPath, menuItem)
 
