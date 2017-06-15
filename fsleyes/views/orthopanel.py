@@ -330,13 +330,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Shows/hides an :class:`.EditTransformPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(edittransformpanel.EditTransformPanel,
-                         floatPane=True,
-                         floatOnly=True,
-                         closeable=False,
-                         ortho=self)
 
-        editing    = self.toggleEditTransformPanel.toggled
+        editing    = not self.toggleEditTransformPanel.toggled
         displayCtx = self.getDisplayContext()
         overlay    = displayCtx.getSelectedOverlay()
 
@@ -377,6 +372,11 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
             displayCtx.displaySpace = 'world'
 
+        self.togglePanel(edittransformpanel.EditTransformPanel,
+                         floatPane=True,
+                         floatOnly=True,
+                         closeable=False,
+                         ortho=self)
 
 
     @actions.toggleControlAction(orthoeditsettingspanel.OrthoEditSettingsPanel)
