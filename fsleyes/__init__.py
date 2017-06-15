@@ -309,18 +309,6 @@ def configLogging(namespace):
     warnings.filterwarnings('ignore', module='numpy')
     logging.getLogger('nibabel').setLevel(logging.CRITICAL)
 
-    # Set up my own custom logging level
-    # for tracing memory related events.
-    logging.MEMORY = 15
-
-    def _logmemory(self, message, *args, **kwargs):
-        """Log function for my custom ``logging.MEMORY`` logging level. """
-        if logging and self.isEnabledFor(logging.MEMORY):
-            self._log(logging.MEMORY, message, args, **kwargs)
-
-    logging.Logger.memory = _logmemory
-    logging.addLevelName(logging.MEMORY, 'MEMORY')
-
     # Set up the root logger
     logFormatter = logging.Formatter('%(levelname)8.8s '
                                      '%(filename)20.20s '
@@ -347,26 +335,12 @@ def configLogging(namespace):
     if namespace.noisy is None:
         namespace.noisy = []
 
-    if namespace.verbose is None:
-        if namespace.memory:
-            class MemFilter(object):
-                def filter(self, record):
-                    if   record.name in namespace.noisy:   return 1
-                    elif record.levelno == logging.MEMORY: return 1
-                    else:                                  return 0
-
-            log.setLevel(logging.MEMORY)
-            log.handlers[0].addFilter(MemFilter())
-            log.memory('Added filter for MEMORY messages')
-            logging.getLogger('fsleyes_props')  .setLevel(logging.WARNING)
-            logging.getLogger('fsleyes_widgets').setLevel(logging.WARNING)
-
     if namespace.verbose == 1:
         log.setLevel(logging.DEBUG)
 
         # make some noisy things quiet
-        logging.getLogger('fsleyes.gl')     .setLevel(logging.MEMORY)
-        logging.getLogger('fsleyes.views')  .setLevel(logging.MEMORY)
+        logging.getLogger('fsleyes.gl')     .setLevel(logging.WARNING)
+        logging.getLogger('fsleyes.views')  .setLevel(logging.WARNING)
         logging.getLogger('fsleyes_props')  .setLevel(logging.WARNING)
         logging.getLogger('fsleyes_widgets').setLevel(logging.WARNING)
     elif namespace.verbose == 2:

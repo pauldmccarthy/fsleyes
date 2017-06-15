@@ -106,7 +106,7 @@ class Texture(object):
 
         else:            raise ValueError('Invalid number of dimensions')
 
-        log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
+        log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
         log.debug('Created {} ({}) for {}: {}'.format(type(self).__name__,
                                                       id(self),
                                                       self.__name,
@@ -116,7 +116,7 @@ class Texture(object):
     def __del__(self):
         """Prints a log message."""
         if log:
-            log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
+            log.debug('{}.del ({})'.format(type(self).__name__, id(self)))
 
 
     def destroy(self):

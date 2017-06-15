@@ -305,7 +305,6 @@ OPTIONS = td.TypeDict({
                        'skipfslcheck',
                        'skipupdatecheck',
                        'noisy',
-                       'memory',
                        'glversion',
                        'scene',
                        'voxelLoc',
@@ -557,7 +556,6 @@ ARGUMENTS = td.TypeDict({
     'Main.skipfslcheck'     : ('S',      'skipfslcheck',     False),
     'Main.skipupdatecheck'  : ('U',      'skipupdatecheck',  False),
     'Main.noisy'            : ('n',      'noisy',            False),
-    'Main.memory'           : ('m',      'memory',           False),
     'Main.glversion'        : ('gl',     'glversion',        True),
     'Main.scene'            : ('s',      'scene',            True),
     'Main.voxelLoc'         : ('vl',     'voxelLoc',         True),
@@ -712,7 +710,6 @@ HELP = td.TypeDict({
     'Main.skipfslcheck'    : 'Skip $FSLDIR check/warning',
     'Main.skipupdatecheck' : 'Do not check for FSLeyes updates on startup',
     'Main.noisy'           : 'Make the specified module noisy',
-    'Main.memory'          : 'Output memory events (implied if -v is set)',
     'Main.glversion'       : 'Desired (major, minor) OpenGL version',
     'Main.scene'           : 'Scene to show',
 
@@ -1298,9 +1295,6 @@ def _configMainParser(mainParser):
                                 metavar='MODULE',
                                 action='append',
                                 help=mainHelp['noisy'])
-        mainParser.add_argument(*mainArgs['memory'],
-                                action='store_true',
-                                help=mainHelp['memory'])
 
     mainParser.add_argument(*mainArgs['glversion'],
                             metavar=('MAJOR', 'MINOR'),
