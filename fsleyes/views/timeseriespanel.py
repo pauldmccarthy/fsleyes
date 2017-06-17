@@ -23,6 +23,7 @@ import fsleyes_props                           as props
 
 import fsleyes.overlay                         as fsloverlay
 import fsleyes.actions                         as actions
+import fsleyes.actions.addmaskdataseries       as addmaskdataseries
 import fsleyes.strings                         as strings
 import fsleyes.plotting                        as plotting
 import fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
@@ -166,6 +167,13 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
                          self._name,
                          self.__plotMelodicICsChanged)
 
+        self.__addMaskAction = addmaskdataseries.AddMaskDataSeriesAction(
+            overlayList,
+            displayCtx,
+            self)
+
+        self.addMaskDataSeries.bindProps('enabled', self.__addMaskAction)
+
         self.initProfile()
 
 
@@ -177,6 +185,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         self.removeListener('plotMode',       self._name)
         self.removeListener('usePixdim',      self._name)
         self.removeListener('plotMelodicICs', self._name)
+
+        self.__addMaskAction.destroy()
 
         plotpanel.OverlayPlotPanel.destroy(self)
 
@@ -200,22 +210,30 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         self.togglePanel(timeseriestoolbar.TimeSeriesToolBar, tsPanel=self)
 
 
+    @actions.action
+    def addMaskDataSeries(self):
+        """Executes the :class:`AddMaskDataSeriesAction`. """
+        self.__addMaskAction()
+
+
     def getActions(self):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``TimeSeriesPanel``.
         """
-        actions = [self.screenshot,
+        actionz = [self.screenshot,
                    self.importDataSeries,
                    self.exportDataSeries,
                    None,
                    self.toggleOverlayList,
                    self.togglePlotList,
                    self.toggleTimeSeriesToolBar,
-                   self.toggleTimeSeriesControl]
+                   self.toggleTimeSeriesControl,
+                   None,
+                   self.addMaskDataSeries]
 
-        names = [a.__name__ if a is not None else None for a in actions]
+        names = [a.__name__ if a is not None else None for a in actionz]
 
-        return list(zip(names, actions))
+        return list(zip(names, actionz))
 
 
     def draw(self, *a):
@@ -255,7 +273,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             with props.suppress(ts, 'label'):
                 ts.label = ts.makeLabel()
 
-        xlabel, ylabel = self.__generatedefaultLabels(tss)
+        xlabel, ylabel = self.__generateDefaultLabels(tss)
 
         self.drawDataSeries(extraSeries=tss, xlabel=xlabel, ylabel=ylabel)
         self.drawArtists()
@@ -371,7 +389,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         self.draw()
 
 
-    def __generatedefaultLabels(self, timeSeries):
+    def __generateDefaultLabels(self, timeSeries):
         """Called by :meth:`draw`. If the :attr:`.PlotPanel.xlabel` or
         :attr:`.PlotPanel.ylabel` properties are unset, an attempt is made
         to generate default labels.
