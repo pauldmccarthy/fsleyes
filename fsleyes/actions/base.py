@@ -104,6 +104,11 @@ class Action(props.HasProperties):
         return self.__str__()
 
 
+    def name(self):
+        """Returns the name of this ``Action``. """
+        return self.__name
+
+
     def __call__(self, *args, **kwargs):
         """Calls this action. An :exc:`ActionDisabledError` will be raised
         if :attr:`enabled` is ``False``.

@@ -228,12 +228,18 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
                    self.togglePlotList,
                    self.toggleTimeSeriesToolBar,
                    self.toggleTimeSeriesControl,
-                   None,
-                   self.addMaskDataSeries]
+                   None]
 
         names = [a.__name__ if a is not None else None for a in actionz]
 
         return list(zip(names, actionz))
+
+
+    def getTools(self):
+        """Returns a list of tools to be added to the ``FSLeyesFrame`` for
+        ``TimeSeriesPanel`` views.
+        """
+        return [self.addMaskDataSeries]
 
 
     def draw(self, *a):
