@@ -29,6 +29,7 @@ from fsleyes.views.lightboxpanel          import LightBoxPanel
 from fsleyes.views.timeseriespanel        import TimeSeriesPanel
 from fsleyes.views.histogrampanel         import HistogramPanel
 from fsleyes.views.powerspectrumpanel     import PowerSpectrumPanel
+from fsleyes.views.scene3dpanel           import Scene3DPanel
 
 from fsleyes.profiles.orthoviewprofile    import OrthoViewProfile
 from fsleyes.profiles.orthoeditprofile    import OrthoEditProfile
@@ -37,6 +38,7 @@ from fsleyes.profiles.lightboxviewprofile import LightBoxViewProfile
 from fsleyes.profiles.plotprofile         import PlotProfile
 from fsleyes.profiles.histogramprofile    import HistogramProfile
 from fsleyes.profiles.timeseriesprofile   import TimeSeriesProfile
+from fsleyes.profiles.scene3dviewprofile  import Scene3DViewProfile
 
 
 log = logging.getLogger(__name__)
@@ -48,6 +50,7 @@ profiles  = {
     TimeSeriesPanel    : ['view'],
     HistogramPanel     : ['view'],
     PowerSpectrumPanel : ['view'],
+    Scene3DPanel       : ['view'],
 }
 """This dictionary is used by the :class:`.ProfileManager` to figure out which
 profiles are available for each :class:`.ViewPanel`. They are added as options
@@ -62,7 +65,8 @@ profileHandlers = {
     (LightBoxPanel,      'view') : LightBoxViewProfile,
     (TimeSeriesPanel,    'view') : TimeSeriesProfile,
     (HistogramPanel,     'view') : HistogramProfile,
-    (PowerSpectrumPanel, 'view') : PlotProfile
+    (PowerSpectrumPanel, 'view') : PlotProfile,
+    (Scene3DPanel,       'view') : Scene3DViewProfile,
 }
 """This dictionary is used by the :class:`.ProfileManager` class to figure out
 which :class:`.Profile` sub-class to create for a given :class:`.ViewPanel`
@@ -128,7 +132,11 @@ tempModeMap = {
 
     HistogramProfile : OrderedDict((
         (('overlayRange', wx.WXK_CONTROL), 'panzoom'),
-    ))
+    )),
+
+    Scene3DViewProfile : OrderedDict((
+        (('rotate', wx.WXK_CONTROL), 'zoom'),
+    )),
 }
 """The ``tempModeMap`` dictionary defines temporary modes, for each
 :class:`Profile` sub-class which, when in a given mode, can be accessed with a

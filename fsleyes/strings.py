@@ -298,6 +298,7 @@ titles = TypeDict({
 
     'OrthoPanel'         : 'Ortho View',
     'LightBoxPanel'      : 'Lightbox View',
+    'Scene3DPanel'       : '3D View',
     'TimeSeriesPanel'    : 'Time series',
     'PowerSpectrumPanel' : 'Power spectra',
     'HistogramPanel'     : 'Histogram',
@@ -433,6 +434,7 @@ actions = TypeDict({
     'FSLeyesFrame.removeFocusedViewPanel'  : 'Close',
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
     'FSLeyesFrame.addLightBoxPanel'        : 'Lightbox View',
+    'FSLeyesFrame.addScene3DPanel'         : '3D view',
     'FSLeyesFrame.addTimeSeriesPanel'      : 'Time series',
     'FSLeyesFrame.addHistogramPanel'       : 'Histogram',
     'FSLeyesFrame.addPowerSpectrumPanel'   : 'Power spectra',

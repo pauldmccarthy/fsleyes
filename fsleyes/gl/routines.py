@@ -17,6 +17,7 @@ import                collections
 import itertools   as it
 
 import OpenGL.GL   as gl
+import OpenGL.GLU  as glu
 import OpenGL.GLUT as glut
 import numpy       as np
 
@@ -183,6 +184,28 @@ def show2D(xax, yax, width, height, lo, hi, flipx=False, flipy=False):
     elif zax == 1:
         gl.glRotatef(270, 1, 0, 0)
 
+
+
+def show3D(width, height, lo, hi, eye, centre, up):
+
+    xmin, xmax = lo[0], hi[0]
+    ymin, ymax = lo[1], hi[1]
+    zmin, zmax = lo[2], hi[2]
+
+    gl.glViewport(0, 0, width, height)
+    gl.glMatrixMode(gl.GL_PROJECTION)
+    gl.glLoadIdentity()
+
+    # gl.glFrustum(xmin, xmax, ymin, ymax, 0.1, 1000)
+
+    glu.gluPerspective(60,
+                       width / float(height),
+                       0.01,
+                       1000)
+
+    gl.glMatrixMode(gl.GL_MODELVIEW)
+    gl.glLoadIdentity()
+    glu.gluLookAt(*eye, *centre, *up)
 
 def preserveAspectRatio(width, height, xmin, xmax, ymin, ymax, grow=True):
     """Adjusts the given x/y limits so that they can be displayed on a

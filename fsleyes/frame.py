@@ -1409,6 +1409,7 @@ class FSLeyesFrame(wx.Frame):
         # Shortcuts to open a new view panel
         vpActions = [self.addOrthoPanel,
                      self.addLightBoxPanel,
+                     self.addScene3DPanel,
                      self.addTimeSeriesPanel,
                      self.addHistogramPanel,
                      self.addPowerSpectrumPanel,
@@ -1582,6 +1583,7 @@ class FSLeyesFrame(wx.Frame):
 
         from fsleyes.views.orthopanel         import OrthoPanel
         from fsleyes.views.lightboxpanel      import LightBoxPanel
+        from fsleyes.views.scene3dpanel       import Scene3DPanel
         from fsleyes.views.timeseriespanel    import TimeSeriesPanel
         from fsleyes.views.histogrampanel     import HistogramPanel
         from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
@@ -1603,6 +1605,7 @@ class FSLeyesFrame(wx.Frame):
         panels  = self.getViewPanels()
         vpOrder = [OrthoPanel,
                    LightBoxPanel,
+                   Scene3DPanel,
                    TimeSeriesPanel,
                    HistogramPanel,
                    PowerSpectrumPanel,
