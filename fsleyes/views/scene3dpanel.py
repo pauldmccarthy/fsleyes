@@ -43,6 +43,11 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
 
         self.centrePanelLayout()
         self.initProfile()
+        self.syncLocation = True
+
+
+    def destroy(self):
+        self.__canvas.destroy()
 
 
     def getGLCanvases(self):

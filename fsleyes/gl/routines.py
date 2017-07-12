@@ -185,27 +185,62 @@ def show2D(xax, yax, width, height, lo, hi, flipx=False, flipy=False):
         gl.glRotatef(270, 1, 0, 0)
 
 
-
-def show3D(width, height, lo, hi, eye, centre, up):
-
-    xmin, xmax = lo[0], hi[0]
-    ymin, ymax = lo[1], hi[1]
-    zmin, zmax = lo[2], hi[2]
+def show3D(width, height, lo, hi, xform=None): # , eye, centre, up):
 
     gl.glViewport(0, 0, width, height)
     gl.glMatrixMode(gl.GL_PROJECTION)
     gl.glLoadIdentity()
 
-    # gl.glFrustum(xmin, xmax, ymin, ymax, 0.1, 1000)
+    xmin, ymin, zmin = lo
+    xmax, ymax, zmax = hi
+    xlen = xmax - xmin
+    ylen = ymax - ymin
+    zlen = zmax - zmin
+    xmid = xmin + 0.5 * xlen
+    ymid = ymin + 0.5 * ylen
+    zmid = zmin + 0.5 * zlen
+    zdist = max((abs(zmin), abs(zmax)))
 
-    glu.gluPerspective(60,
-                       width / float(height),
-                       0.01,
-                       1000)
+    wrat = float(width) / height
+
+    if   wrat > 1: xlen *= wrat
+    elif wrat < 1: ylen /= wrat
+
+    gl.glOrtho(-xlen, xlen, -ylen, ylen,  -10000, 10000)
 
     gl.glMatrixMode(gl.GL_MODELVIEW)
     gl.glLoadIdentity()
-    glu.gluLookAt(*eye, *centre, *up)
+
+    glu.gluLookAt(xmid, ymid - 3 * ylen, zmid,
+                  xmid, ymid,            zmid,
+                  0,    0,               1)
+
+    if xform is not None:
+        gl.glMultMatrixd(xform.ravel('F'))
+
+
+def lookAt(eye, centre, up):
+    """
+    """
+    eye    = np.array(eye)
+    centre = np.array(centre)
+    up     = np.array(up)
+    proj   = np.zeros(4)
+
+    forward = centre - eye
+
+    side = np.dot(forward, up)
+    up   = np.dot(side, forward)
+
+    proj[:3, 0] =  side
+    proj[:3, 1] =  up
+    proj[:3, 2] = -forward
+
+    offset = transform.scaleOffsetXform(0, -eye)
+    proj   = transform.concat(proj, offset)
+
+    return proj
+
 
 def preserveAspectRatio(width, height, xmin, xmax, ymin, ymax, grow=True):
     """Adjusts the given x/y limits so that they can be displayed on a

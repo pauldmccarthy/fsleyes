@@ -488,6 +488,7 @@ class GLMesh(globject.GLObject):
         gl.glEnable(gl.GL_CLIP_PLANE0)
         gl.glEnable(gl.GL_CULL_FACE)
         gl.glEnable(gl.GL_STENCIL_TEST)
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
         gl.glClipPlane(gl.GL_CLIP_PLANE0, planeEq)
         gl.glColorMask(gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE)

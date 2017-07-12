@@ -34,6 +34,7 @@ actions = td.TypeDict({
     'FSLeyesFrame.addHistogramPanel'      : 'Ctrl-4',
     'FSLeyesFrame.addPowerSpectrumPanel'  : 'Ctrl-5',
     'FSLeyesFrame.addShellPanel'          : 'Ctrl-6',
+    'FSLeyesFrame.addScene3DPanel'        : 'Ctrl-7',
 
     'FSLeyesFrame.selectNextOverlay'       : 'Ctrl-Up',
     'FSLeyesFrame.selectPreviousOverlay'   : 'Ctrl-Down',
