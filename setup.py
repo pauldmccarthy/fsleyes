@@ -24,7 +24,7 @@ For standalone Linux builds, you must install pyinstaller prior to calling
 ``setup..py``. Version 3.2.1 is known to work.
 
 
-For standalone macOS builds, you must install py2app 0.12 prior to calling
+For standalone macOS builds, you must install py2app 0.14 prior to calling
 ``setup.py``, and patch and recompile it as described below.
 
 
@@ -35,7 +35,7 @@ For standalone macOS builds, you must install py2app 0.12 prior to calling
 
 
 ============
-Py2App notes
+py2app notes
 ============
 
 
@@ -253,8 +253,8 @@ class docbuilder(Command):
              mock.patch('wx.lib.agw.aui.AuiFloatingFrame',     MockClass), \
              mock.patch('wx.lib.agw.aui.AuiDockingGuide',      MockClass), \
              mock.patch('wx.lib.newevent.NewEvent',    return_value=(0, 0)):
-                sphinx.main(['sphinx-build', docdir, destdir])
 
+            sphinx.build_main(['sphinx-build', docdir, destdir])
 
 
 class userdoc(docbuilder):
@@ -459,6 +459,14 @@ class py2app(orig_py2app):
 
 
     def run(self):
+
+        # Some combination of typing, jinja2, and possibly sphinx
+        # causes errors to be raised when jinja2 is imported during
+        # the py2app build process. Importing here seems to work
+        # fine. I suspect that the problem lies with the python
+        # typing module.
+        import jinja2.utils
+        import jinja2.runtime
 
         orig_py2app.run(self)
 
