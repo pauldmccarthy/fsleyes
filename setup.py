@@ -39,11 +39,12 @@ py2app notes
 ============
 
 
-I am currently using py2app 0.14 for macOS builds. There is one issue with
+I am currently using py2app 0.14 for macOS builds. There are some issues with
 this version of py2app which we need to work around:
 
 
-https://bitbucket.org/ronaldoussoren/py2app/issues/140/app-starts-minimized
+https://bitbucket.org/ronaldoussoren/py2app/issues/140/
+https://bitbucket.org/ronaldoussoren/py2app/issues/229/
 
 
 The patch found in ``assets/build/py2app.patch`` must be applied to the py2app
@@ -51,6 +52,11 @@ source::
 
     cd path/to/py2app/
     patch -p2 < path/to/fsleyes/assets/build/py2app.patch
+
+And then the py2app bootstrap application needs to be recompiled::
+
+    cd apptemplate
+    python setup.py
 """
 
 

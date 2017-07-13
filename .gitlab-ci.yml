@@ -483,11 +483,14 @@ build-macos:
     - pip install "py2app==0.14"
     - pip install sphinx sphinx-rtd-theme mock
 
-    # Patch py2app (see setup.py docstring)
+    # Patch/rebuild py2app (see setup.py docstring)
     - PY2APP=`python -c "import py2app; print(py2app.__file__)"`
     - BUILDDIR=`pwd`
     - pushd `dirname $PY2APP`
     - patch -p2 < "$BUILDDIR"/assets/build/py2app.patch
+    - pushd apptemplate
+    - python setup.py
+    - popd
     - popd
     - python setup.py build_standalone
     - deactivate
