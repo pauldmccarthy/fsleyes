@@ -437,6 +437,7 @@ def deserialisePerspective(persp):
 
     from   fsleyes.views.orthopanel         import OrthoPanel
     from   fsleyes.views.lightboxpanel      import LightBoxPanel
+    from   fsleyes.views.scene3dpanel       import Scene3DPanel
     from   fsleyes.views.timeseriespanel    import TimeSeriesPanel
     from   fsleyes.views.histogrampanel     import HistogramPanel
     from   fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
@@ -475,6 +476,7 @@ def deserialisePerspective(persp):
     views = {
         'OrthoPanel'         : OrthoPanel,
         'LightBoxPanel'      : LightBoxPanel,
+        'Scene3DPanel'       : Scene3DPanel,
         'TimeSeriesPanel'    : TimeSeriesPanel,
         'HistogramPanel'     : HistogramPanel,
         'PowerSpectrumPanel' : PowerSpectrumPanel,
@@ -700,8 +702,10 @@ VIEWPANEL_PROPS = {
                        ['showCursor',
                         'bgColour',
                         'cursorColour',
+                        'cursorGap',
                         'showColourBar',
                         'colourBarLocation',
+                        'colourBarLabelSide',
                         'showXCanvas',
                         'showYCanvas',
                         'showZCanvas',
@@ -717,9 +721,20 @@ VIEWPANEL_PROPS = {
                         'cursorColour',
                         'showColourBar',
                         'colourBarLocation',
+                        'colourBarLabelSide',
                         'zax',
                         'showGridLines',
-                        'highlightSlice']]}
+                        'highlightSlice']],
+    'Scene3DPanel'  : [['syncLocation',
+                        'syncOverlayOrder',
+                        'syncOverlayDisplay'],
+                       ['showCursor',
+                        'bgColour',
+                        'cursorColour',
+                        'showColourBar',
+                        'colourBarLocation',
+                        'colourBarLabelSide',
+                        'showLegend']]}
 
 
 BUILT_IN_PERSPECTIVES = collections.OrderedDict((
@@ -760,6 +775,14 @@ BUILT_IN_PERSPECTIVES = collections.OrderedDict((
                      ;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True;layout=horizontal,showLabels=True,bgColour=#000000ff,showCursor=True,showZCanvas=True,cursorColour=#00ff00ff,showColourBar=False,showYCanvas=True,showXCanvas=True,colourBarLocation=top
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
                      """)),
+    ('3d',
+     textwrap.dedent("""
+                     Scene3DPanel
+                     layout2|name=Scene3DPanel 1;caption=3D View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=22;besth=3;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=24|
+                     ;syncOverlayOrder=True,syncOverlayDisplay=True,syncLocation=True;showColourBar=False,showLegend=True,cursorColour=#00ff00ff,colourBarLocation=top,showCursor=True,colourBarLabelSide=top-left,bgColour=#000000ff
+                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
+                     """)),
+
     ('lightbox',
      textwrap.dedent("""
                      LightBoxPanel
