@@ -4,20 +4,32 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`SliceCanvasOpts` and
-:class:`LightBoxCanvasOpts` classes, which respectively define
-slice/lightbox canvas display options.
+"""This module provides the following classes:
+
+  - :class:`SliceCanvasOpts` (for the :class:`.SliceCanvas`)
+  - :class:`LightBoxCanvasOpts` (for the :class:`.LightBoxCanvas`)
+  - :class:`Scene3DCanvasOpts` (for the :class:`.Scene3DCanvas`)
+
+These classes contain the definitions of properties which are available on the
+corresponding canvas class.
+
+These classes are never invoked. They are defined independently of the
+:class:`.SliceCanvas` (and other) classes so they can be inspected without
+having to import the :mod:`.slicecanvas` (and other) modules, e.g. during
+command line argument parsing.
 """
+
+
+import copy
+
+import numpy as np
 
 import fsleyes_props as props
 
 
 class SliceCanvasOpts(props.HasProperties):
-    """The ``SliceCanvasOpts`` class hosts all of the display settings
+    """The ``SliceCanvasOpts`` class defines all of the display settings
     for a :class:`.SliceCanvas`.
-
-    Every ``SliceCanvas`` creats a single ``SliceCanvasOpts`` instance,
-    and uses it to manage its display settings.
     """
 
 
@@ -100,13 +112,9 @@ class SliceCanvasOpts(props.HasProperties):
     """
 
 
-    def __init__(self):
-        pass
-
-
 class LightBoxCanvasOpts(SliceCanvasOpts):
-    """The ``LightBoxCanvasOpts`` class is used by :class:`.LightBoxCanvas`
-    instances to manage light box display settings.
+    """The ``LightBoxCanvasOpts`` class defines the display settings
+    available on :class:`.LightBoxCanvas` instances.
     """
 
 
@@ -150,4 +158,44 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     highlightSlice = props.Boolean(default=False)
     """If ``True``, a box will be drawn around the slice containing the current
     location.
+    """
+
+
+class Scene3DCanvasOpts(props.HasProperties):
+    """The ``Scene3DCanvasOpts`` class defines the display settings
+    available on :class:`.Scene3DCanvas` instances.
+    """
+
+    pos = copy.copy(SliceCanvasOpts.pos)
+    """Current cursor position in the display coordinate system. The dimensions
+    are in the same ordering as the display coordinate system, in contrast
+    to the :attr:`SliceCanvasOpts.pos` property.
+    """
+
+
+    showCursor   = copy.copy(SliceCanvasOpts.showCursor)
+    cursorGap    = copy.copy(SliceCanvasOpts.cursorGap)
+    cursorColour = copy.copy(SliceCanvasOpts.cursorColour)
+    bgColour     = copy.copy(SliceCanvasOpts.bgColour)
+    zoom         = copy.copy(SliceCanvasOpts.zoom)
+
+
+    showLegend = props.Boolean(default=True)
+    """If ``True``, an orientation guide will be shown on the canvas. """
+
+
+    centre = props.Point(ndims=3)
+    """A point in the display coordinate system which defines the
+    centre-of-view for the ``Scene3DCanvas``.
+    """
+
+    rotation = props.Array(
+        dtype=np.float64,
+        shape=(3, 3),
+        resizable=False,
+        default=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    """A rotation matrix which defines the current ``Scene3DCanvas`` view
+    orientation. This rotation is defined in terms of the display coordinate
+    system (defined by the :class:`.DisplayContext.bounds`), and applied to
+    the scene that is being displayed.
     """

@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 #
-# scene3dpanel.py -
+# scene3dpanel.py - The Scene3DPanel class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-
+"""
+"""
 
 import logging
 
@@ -31,11 +32,21 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                                          frame,
                                          sceneOpts)
 
+        name         = self.getName()
         contentPanel = self.getContentPanel()
 
         self.__canvas = scene3dcanvas.WXGLScene3DCanvas(contentPanel,
                                                         overlayList,
                                                         displayCtx)
+
+        self.__canvas.bindProps('pos',          displayCtx, 'location')
+        self.__canvas.bindProps('showCursor',   sceneOpts)
+        self.__canvas.bindProps('cursorColour', sceneOpts)
+        self.__canvas.bindProps('bgColour',     sceneOpts)
+        self.__canvas.bindProps('zoom',         sceneOpts)
+        self.__canvas.bindProps('showLegend',   sceneOpts)
+        self.__canvas.bindProps('centre',       sceneOpts)
+        self.__canvas.bindProps('rotation',     sceneOpts)
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.__canvas, flag=wx.EXPAND, proportion=1)
@@ -47,7 +58,12 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
 
 
     def destroy(self):
+
+        dctx = self.getDisplayContext()
+        name = self.getName()
+
         self.__canvas.destroy()
+
 
 
     def getGLCanvases(self):

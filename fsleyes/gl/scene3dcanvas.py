@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 #
-# scene3dcanvas.py -
+# scene3dcanvas.py - The Scene3DCanvas class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""
+"""
 
 
 import logging
+
+import copy
 
 import numpy     as np
 import OpenGL.GL as gl
@@ -16,14 +20,23 @@ import fsleyes_props as props
 import fsl.data.mesh       as fslmesh
 
 import fsleyes.gl.routines as glroutines
+import fsleyes.displaycontext.canvasopts as canvasopts
 
 
 log = logging.getLogger(__name__)
 
 class Scene3DCanvas(props.HasProperties):
 
-    centre = props.Point(ndims=3)
-    zoom   = props.Percentage(minval=1, maxval=5000, default=75, clamped=True)
+
+    pos           = copy.copy(canvasopts.Scene3DCanvasOpts.pos)
+    showCursor    = copy.copy(canvasopts.Scene3DCanvasOpts.showCursor)
+    cursorColour  = copy.copy(canvasopts.Scene3DCanvasOpts.cursorColour)
+    bgColour      = copy.copy(canvasopts.Scene3DCanvasOpts.bgColour)
+    zoom          = copy.copy(canvasopts.Scene3DCanvasOpts.zoom)
+    showLegend    = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
+    centre        = copy.copy(canvasopts.Scene3DCanvasOpts.centre)
+    rotation      = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
+
 
     def __init__(self, overlayList, displayCtx):
 
@@ -37,11 +50,11 @@ class Scene3DCanvas(props.HasProperties):
         displayCtx.addListener('bounds',
                                self.__name,
                                self.__displayBoundsChanged)
-
-        displayCtx.addListener('location',
+        displayCtx.addListener('overlayOrder',
                                self.__name,
                                self.Refresh)
 
+        self.addListener('pos',    self.__name, self.Refresh)
         self.addListener('centre', self.__name, self.Refresh)
         self.addListener('zoom',   self.__name, self.Refresh)
 
@@ -49,9 +62,9 @@ class Scene3DCanvas(props.HasProperties):
 
 
     def destroy(self):
-        self.__overlayList.removeListener('overlays', self.__name)
-        self.__displayCtx .removeListener('bounds',   self.__name)
-        self.__displayCtx .removeListener('location', self.__name)
+        self.__overlayList.removeListener('overlays',     self.__name)
+        self.__displayCtx .removeListener('bounds',       self.__name)
+        self.__displayCtx .removeListener('overlayOrder', self.__name)
 
 
     def _initGL(self):
@@ -97,6 +110,9 @@ class Scene3DCanvas(props.HasProperties):
         blo    = bmid - 0.5 * blen
         bhi    = bmid + 0.5 * blen
 
+        if np.any(np.isclose(blen, 0)):
+            return
+
         glroutines.show3D(width,
                           height,
                           blo,
@@ -137,11 +153,10 @@ class Scene3DCanvas(props.HasProperties):
                 gl.glDrawElements(gl.GL_TRIANGLES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
 
 
-        loc = self.__displayCtx.location
         gl.glPointSize(10)
         gl.glColor3f(1, 0, 0)
         gl.glBegin(gl.GL_POINTS)
-        gl.glVertex3f(*loc)
+        gl.glVertex3f(*self.pos[:])
         gl.glEnd()
 
         b = self.__displayCtx.bounds
