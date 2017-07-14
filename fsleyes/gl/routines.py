@@ -185,59 +185,76 @@ def show2D(xax, yax, width, height, lo, hi, flipx=False, flipy=False):
         gl.glRotatef(270, 1, 0, 0)
 
 
-def show3D(width, height, lo, hi, xform=None): # , eye, centre, up):
+def show3D(width, height, lo, hi, xform=None):
+    """Sets up a 3D orthographic projection. By default, the
+    horizontal/vertical canvas axes are mapped to the first and second
+    dimensions in ``lo`` and ``hi``, with the aspect ratio set
+    appropriately. Use the ``xform`` if you want  a different orientation.
+
+    :arg width:  Canvas width in pixels
+    :arg height: Canvas height in pixels
+    :arg lo:     Sequence of three values, the low ``[x, y, z]`` display
+                 bounds
+    :arg hi:     Sequence of three values, the high ``[x, y, z]`` display
+                 bounds
+    :arg xform:  If provided, is set as the the ``GL_MODELVIEW`` matrix.
+    """
 
     gl.glViewport(0, 0, width, height)
     gl.glMatrixMode(gl.GL_PROJECTION)
     gl.glLoadIdentity()
 
-    xmin, ymin, zmin = lo
-    xmax, ymax, zmax = hi
-    xlen = xmax - xmin
-    ylen = ymax - ymin
-    zlen = zmax - zmin
-    xmid = xmin + 0.5 * xlen
-    ymid = ymin + 0.5 * ylen
-    zmid = zmin + 0.5 * zlen
-    zdist = max((abs(zmin), abs(zmax)))
-
-    wrat = float(width) / height
+    xmin, ymin = lo[:2]
+    xmax, ymax = hi[:2]
+    xlen       = xmax - xmin
+    ylen       = ymax - ymin
+    wrat       = float(width) / height
 
     if   wrat > 1: xlen *= wrat
     elif wrat < 1: ylen /= wrat
 
-    gl.glOrtho(-xlen, xlen, -ylen, ylen,  -10000, 10000)
+    xhalf = xlen / 2.0
+    yhalf = ylen / 2.0
+
+    gl.glOrtho(-xhalf, xhalf, -yhalf, yhalf,  -10000, 10000)
 
     gl.glMatrixMode(gl.GL_MODELVIEW)
     gl.glLoadIdentity()
-
-    glu.gluLookAt(xmid, ymid - 3 * ylen, zmid,
-                  xmid, ymid,            zmid,
-                  0,    0,               1)
 
     if xform is not None:
         gl.glMultMatrixd(xform.ravel('F'))
 
 
 def lookAt(eye, centre, up):
+    """Replacement for ``gluLookAt`. Creates a transformation matrix which
+    transforms the display coordinate system such that a camera at position
+    (0, 0, 0), and looking towards (0, 0, -1), will see a scene as if from
+    position ``eye``, oriented ``up``, and looking towards ``centre``.
     """
-    """
+
     eye    = np.array(eye)
     centre = np.array(centre)
     up     = np.array(up)
-    proj   = np.zeros(4)
+    proj   = np.eye(4)
 
-    forward = centre - eye
+    forward  = centre - eye
+    forward /= np.sqrt(np.dot(forward, forward))
 
-    side = np.dot(forward, up)
-    up   = np.dot(side, forward)
+    right  = np.cross(forward, up)
+    right /= np.sqrt(np.dot(right, right))
 
-    proj[:3, 0] =  side
-    proj[:3, 1] =  up
-    proj[:3, 2] = -forward
+    up     = np.cross(right, forward)
+    up    /= np.sqrt(np.dot(up, up))
 
-    offset = transform.scaleOffsetXform(0, -eye)
-    proj   = transform.concat(proj, offset)
+    proj[0, :3] =  right
+    proj[1, :3] =  up
+    proj[2, :3] = -forward
+
+    offset = [-np.dot(right,   eye),
+              -np.dot(up,      eye),
+              -np.dot(forward, eye)]
+
+    proj[:3, 3] = offset
 
     return proj
 
