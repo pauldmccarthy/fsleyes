@@ -83,6 +83,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
        isPanelOpen
        getPanel
        getPanels
+       getTools
        removeAllPanels
        getPanelInfo
        getAuiManager
@@ -431,6 +432,14 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         layout of this ``ViewPanel``.
         """
         return self.__auiMgr
+
+
+    def getTools(self):
+        """This method should be overridden by sub-classes (if necessary), and
+        should return any ``action`` methods which should be added to the
+        :class:`.FSLeyesFrame` *Tools* menu.
+        """
+        return []
 
 
     def __selectedOverlayChanged(self, *a):

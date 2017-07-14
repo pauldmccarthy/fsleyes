@@ -24,7 +24,7 @@ For standalone Linux builds, you must install pyinstaller prior to calling
 ``setup..py``. Version 3.2.1 is known to work.
 
 
-For standalone macOS builds, you must install py2app 0.12 prior to calling
+For standalone macOS builds, you must install py2app 0.14 prior to calling
 ``setup.py``, and patch and recompile it as described below.
 
 
@@ -35,15 +35,16 @@ For standalone macOS builds, you must install py2app 0.12 prior to calling
 
 
 ============
-Py2App notes
+py2app notes
 ============
 
 
-I am currently using py2app 0.14 for macOS builds. There is one issue with
+I am currently using py2app 0.14 for macOS builds. There are some issues with
 this version of py2app which we need to work around:
 
 
-https://bitbucket.org/ronaldoussoren/py2app/issues/140/app-starts-minimized
+https://bitbucket.org/ronaldoussoren/py2app/issues/140/
+https://bitbucket.org/ronaldoussoren/py2app/issues/229/
 
 
 The patch found in ``assets/build/py2app.patch`` must be applied to the py2app
@@ -51,6 +52,11 @@ source::
 
     cd path/to/py2app/
     patch -p2 < path/to/fsleyes/assets/build/py2app.patch
+
+And then the py2app bootstrap application needs to be recompiled::
+
+    cd apptemplate
+    python setup.py
 """
 
 
@@ -253,8 +259,8 @@ class docbuilder(Command):
              mock.patch('wx.lib.agw.aui.AuiFloatingFrame',     MockClass), \
              mock.patch('wx.lib.agw.aui.AuiDockingGuide',      MockClass), \
              mock.patch('wx.lib.newevent.NewEvent',    return_value=(0, 0)):
-                sphinx.main(['sphinx-build', docdir, destdir])
 
+            sphinx.build_main(['sphinx-build', docdir, destdir])
 
 
 class userdoc(docbuilder):
@@ -459,6 +465,14 @@ class py2app(orig_py2app):
 
 
     def run(self):
+
+        # Some combination of typing, jinja2, and possibly sphinx
+        # causes errors to be raised when jinja2 is imported during
+        # the py2app build process. Importing here seems to work
+        # fine. I suspect that the problem lies with the python
+        # typing module.
+        import jinja2.utils
+        import jinja2.runtime
 
         orig_py2app.run(self)
 

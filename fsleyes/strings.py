@@ -232,6 +232,13 @@ messages = TypeDict({
     'ExportDataSeriesAction.saveXColumn'  : 'Export the X axis data '
                                             'as the first column?',
 
+    'AddMaskDataSeriesAction.selectMask'  :
+    'Choose a mask to extract the time series data (mean across\n'
+    'voxels, weighted by mask values) from {}:',
+
+    'AddMaskDataSeriesAction.weighted'  :
+    'Calculate weighted mean using the mask voxel values as weights',
+
     'LoadAtlasAction.error'       :
     'An error occurred loading the atlas specification {}.',
 
@@ -372,6 +379,10 @@ titles = TypeDict({
 
     'ExportDataSeriesAction.saveXColumn'  : 'Save X data?',
 
+
+    'AddMaskDataSeriesAction.selectMask'  :
+    'Mask time series from {}',
+
     'LoadAtlasAction.fileDialog'  : 'Load XML atlas specification',
     'LoadAtlasAction.error'       : 'Error loading atlas specification',
 
@@ -475,9 +486,11 @@ actions = TypeDict({
     'TimeSeriesPanel.togglePlotList'                : 'Time series list',
     'TimeSeriesPanel.toggleTimeSeriesControl'       : 'Time series control',
     'TimeSeriesPanel.toggleTimeSeriesToolBar'       : 'Time series toolbar',
+    'TimeSeriesPanel.addMaskDataSeries'             : 'Add masked time series',
     'HistogramPanel.togglePlotList'                 : 'Histogram list',
     'HistogramPanel.toggleHistogramControl'         : 'Histogram control',
     'HistogramPanel.toggleHistogramToolBar'         : 'Histogram toolbar',
+    'HistogramPanel.toggleHistogramOverlay'         : 'Histogram overlay',
     'PowerSpectrumPanel.togglePlotList'             : 'Power spectrum list',
     'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Power spectrum control',
     'PowerSpectrumPanel.togglePowerSpectrumToolBar' : 'Power spectrum toolbar',
@@ -1274,7 +1287,6 @@ about = {
     'email'      : 'paulmc@fmrib.ox.ac.uk',
     'company'    : 'FMRIB Centre, Oxford, UK',
     'version'    : 'FSLeyes version: {}',
-    'vcsVersion' : 'Internal version: {}',
     'glVersion'  : 'OpenGL version: {}',
     'glCompat'   : 'OpenGL compatibility: {}',
     'glRenderer' : 'OpenGL renderer: {}',
@@ -1292,8 +1304,8 @@ about = {
      - nibabel [{}] (http://nipy.org/nibabel)
      - numpy [{}] (http://www.numpy.org)
      - pillow [{}]  (http://python-pillow.org/)
-     - fsleyes-props [{}] (https://git.fmrib.ox.ac.uk/paulmc/fsleyes-props)
-     - fsleyes-widgets [{}] (https://git.fmrib.ox.ac.uk/paulmc/fsleyes-widgets)
+     - fsleyes-props [{}] (https://git.fmrib.ox.ac.uk/fsl/fsleyes/props)
+     - fsleyes-widgets [{}] (https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets)
      - fslpy [{}] (https://git.fmrib.ox.ac.uk/paulmc/fslpy)
      - pyopengl [{}] (http://pyopengl.sourceforge.net)
      - pyparsing [{}] (http://pyparsing.wikispaces.com/)
@@ -1306,7 +1318,7 @@ about = {
 
     Some of the icons used in FSLeyes are derived from the Freeline icon set, by Enes Dal, available at https://www.iconfinder.com/Enesdal, and released under the Creative Commons (Attribution 3.0 Unported) license.
 
-    FSLeyes is released under Version 2.0 of the Apache Software License.
+    FSLeyes is released under Version 2.0 of the Apache Software License. Source code for FSLeyes is available at https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes
 
     Copyright 2016-2017 University of Oxford, Oxford, UK.
     """).strip(),

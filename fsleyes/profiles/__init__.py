@@ -418,13 +418,13 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
             wx.EVT_CHAR.typeId         : self.__onChar,
         }
 
-        log.memory('{}.init ({})'.format(type(self).__name__, id(self)))
+        log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
 
 
     def __del__(self):
         """Prints a log message. """
         if log:
-            log.memory('{}.del ({})'.format(type(self).__name__, id(self)))
+            log.debug('{}.del ({})'.format(type(self).__name__, id(self)))
 
 
     def destroy(self):

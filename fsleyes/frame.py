@@ -238,6 +238,7 @@ class FSLeyesFrame(wx.Frame):
         self.__viewPanelMenus  = {}
         self.__viewPanelIDs    = {}
         self.__viewPanelTitles = {}
+        self.__viewPanelTools  = {}
 
         # Refs to menus
         self.__menuBar        = None
@@ -553,6 +554,9 @@ class FSLeyesFrame(wx.Frame):
 
         All other keyword arguments are passed through to the
         :meth:`__onViewPanelMenuItem` method.
+
+        :returns: A list containing the ``wx.MenuItem`` objects that were
+                  added to the menu.
         """
 
         if actionNames is None:
@@ -602,13 +606,16 @@ class FSLeyesFrame(wx.Frame):
 
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem, wrapper)
 
+            return menuItem
+
+        items = []
         for actionName, actionObj in zip(actionNames, actionObjs):
 
             # If actionObj is None, this is a
             # hacky hint to insert a separator
             # - see ActionProvider.getActions.
             if actionObj is None:
-                menu.AppendSeparator()
+                items.append(menu.AppendSeparator())
                 continue
 
             # If actionObj is a list, this is a4
@@ -616,7 +623,7 @@ class FSLeyesFrame(wx.Frame):
             elif isinstance(actionObj, list):
                 names, objs = list(zip(*actionObj))
                 currentMenu = wx.Menu()
-                menu.AppendSubMenu(currentMenu, actionName)
+                items.append(menu.AppendSubMenu(currentMenu, actionName))
 
             else:
 
@@ -625,13 +632,15 @@ class FSLeyesFrame(wx.Frame):
                 objs        = [actionObj]
 
             for name, obj in zip(names, objs):
-                configureActionItem(currentMenu, name, obj)
+                items.append(configureActionItem(currentMenu, name, obj))
 
+        return items
 
 
     def __addViewPanelMenu(self, panel, title):
         """Called by :meth:`addViewPanel`. Adds a menu item for the newly
-        created :class:`.ViewPanel` instance.
+        created :class:`.ViewPanel` instance, and adds any tools
+        for the view panel to the tools menu.
 
         :arg panel: The newly created ``ViewPanel`` instance.
         :arg title: The name given to the ``panel``.
@@ -664,6 +673,8 @@ class FSLeyesFrame(wx.Frame):
 
         closeItem = menu.Append(wx.ID_ANY, title)
         self.removeFocusedViewPanel.bindToWidget(self, wx.EVT_MENU, closeItem)
+
+        self.__refreshToolsMenu()
 
 
     def __onViewPanelMenuItem(self,
@@ -816,9 +827,13 @@ class FSLeyesFrame(wx.Frame):
                       id(panel),
                       id(dctx)))
 
-        # Remove the view panel menu
+        # Remove the view panel menu,
+        # and make sure that the tools
+        # menu is consistent
         if menu is not None:
             self.__settingsMenu.Remove(menu.GetId())
+
+        self.__refreshToolsMenu()
 
         # Calling fslpanel.FSLeyesPanel.destroy()
         # and DisplayContext.destroy() - the
@@ -1199,6 +1214,7 @@ class FSLeyesFrame(wx.Frame):
         viewMenu        = wx.Menu()
         perspectiveMenu = wx.Menu()
         settingsMenu    = wx.Menu()
+        toolsMenu       = wx.Menu()
 
         self.__menuBar   = menuBar
         self.__perspMenu = perspectiveMenu
@@ -1207,12 +1223,14 @@ class FSLeyesFrame(wx.Frame):
         menuBar.Append(overlayMenu,  'Overlay')
         menuBar.Append(viewMenu,     'View')
         menuBar.Append(settingsMenu, 'Settings')
+        menuBar.Append(toolsMenu,    'Tools')
 
         self.__fsleyesMenu  = fsleyesMenu
         self.__overlayMenu  = overlayMenu
         self.__fileMenu     = fileMenu
         self.__viewMenu     = viewMenu
         self.__settingsMenu = settingsMenu
+        self.__toolsMenu    = toolsMenu
 
         self.__makeFileMenu(fileMenu)
 
@@ -1229,6 +1247,7 @@ class FSLeyesFrame(wx.Frame):
             self.__makeFSLeyesMenu(fileMenu)
 
         self.__makeOverlayMenu(overlayMenu)
+        self.__makeToolsMenu(toolsMenu)
 
         self.__makeViewPanelMenu(viewMenu)
 
@@ -1348,7 +1367,7 @@ class FSLeyesFrame(wx.Frame):
         # We give each recent file menu item an identifying
         # number from 1-(numpaths) - this is used by the
         # __onRecentPath handler.
-        for i, p in enumerate(paths, start=1):
+        for i, p in enumerate(reversed(paths), start=1):
             menuItem = self.__recentPathsMenu.Append(i, p)
             self.Bind(wx.EVT_MENU, self.__onRecentPath, menuItem)
 
@@ -1482,9 +1501,6 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.actions.saveoverlay       import SaveOverlayAction
         from fsleyes.actions.reloadoverlay     import ReloadOverlayAction
         from fsleyes.actions.removeoverlay     import RemoveOverlayAction
-        from fsleyes.actions.correlate         import PearsonCorrelateAction
-        from fsleyes.actions.applyflirtxfm     import ApplyFlirtXfmAction
-        from fsleyes.actions.saveflirtxfm      import SaveFlirtXfmAction
 
         fileActions = ['selectNextOverlay',
                        'selectPreviousOverlay',
@@ -1495,11 +1511,7 @@ class FSLeyesFrame(wx.Frame):
                        SaveOverlayAction,
                        ReloadOverlayAction,
                        RemoveOverlayAction,
-                       'toggleOverlayVisibility',
-                       'sep',
-                       PearsonCorrelateAction,
-                       ApplyFlirtXfmAction,
-                       SaveFlirtXfmAction]
+                       'toggleOverlayVisibility']
 
         for action in fileActions:
 
@@ -1533,6 +1545,91 @@ class FSLeyesFrame(wx.Frame):
 
             menuItem = menu.Append(wx.ID_ANY, title)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
+
+
+    def __makeToolsMenu(self, menu):
+        """Called by :meth:`__init__`. Populates the *Tools* menu with tools
+        that are not bound to a specific ``ViewPanel`` (and which are always
+        present).
+        """
+        from fsleyes.actions.correlate     import PearsonCorrelateAction
+        from fsleyes.actions.applyflirtxfm import ApplyFlirtXfmAction
+        from fsleyes.actions.saveflirtxfm  import SaveFlirtXfmAction
+
+        actionz = [
+            PearsonCorrelateAction,
+            ApplyFlirtXfmAction,
+            SaveFlirtXfmAction,
+        ]
+
+        for action in actionz:
+
+            title     = strings.actions[action]
+            shortcut  = shortcuts.actions.get(action)
+            actionObj = action(self.__overlayList, self.__displayCtx, self)
+
+            if shortcut is not None:
+                title = '{}\t{}'.format(title, shortcut)
+
+            menuItem = menu.Append(wx.ID_ANY, title)
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
+
+
+    def __refreshToolsMenu(self):
+        """Called when a view panel is added or removed. Refreshes the *Tools*
+        menu.
+        """
+
+        from fsleyes.views.orthopanel         import OrthoPanel
+        from fsleyes.views.lightboxpanel      import LightBoxPanel
+        from fsleyes.views.timeseriespanel    import TimeSeriesPanel
+        from fsleyes.views.histogrampanel     import HistogramPanel
+        from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
+        from fsleyes.views.shellpanel         import ShellPanel
+
+        menu = self.__toolsMenu
+
+        # Remove all old tools
+        for vpType, items in list(self.__viewPanelTools.items()):
+            for item in items:
+                menu.Remove(item)
+
+            self.__viewPanelTools.pop(vpType)
+
+        # Recreate tools for each view panel. We
+        # ensure that the tools for different view
+        # panel types are always in a consistent
+        # order (i.e. ortho first, shell last)
+        panels  = self.getViewPanels()
+        vpOrder = [OrthoPanel,
+                   LightBoxPanel,
+                   TimeSeriesPanel,
+                   HistogramPanel,
+                   PowerSpectrumPanel,
+                   ShellPanel]
+        panels  = sorted(panels, key=lambda p: vpOrder.index(type(p)))
+
+        for panel in panels:
+
+            vpType = type(panel)
+            tools  = [t.name() for t in panel.getTools()]
+            items  = []
+
+            # Only the first panel for each type
+            # has its tools added to the menu.
+            if len(tools) == 0 or vpType in self.__viewPanelTools:
+                continue
+
+            # Each view panel added to the tools list
+            # gets its own section, starting with a
+            # separator, and the view panel title.
+            items.append(menu.AppendSeparator())
+            items.append(menu.Append(wx.ID_ANY, self.__viewPanelTitles[panel]))
+            items[-1].Enable(False)
+
+            items.extend(self.populateMenu(menu, panel, tools))
+
+            self.__viewPanelTools[vpType] = items
 
 
     def __selectedOverlayChanged(self, *a):

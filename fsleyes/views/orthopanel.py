@@ -330,13 +330,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Shows/hides an :class:`.EditTransformPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(edittransformpanel.EditTransformPanel,
-                         floatPane=True,
-                         floatOnly=True,
-                         closeable=False,
-                         ortho=self)
 
-        editing    = self.toggleEditTransformPanel.toggled
+        editing    = not self.toggleEditTransformPanel.toggled
         displayCtx = self.getDisplayContext()
         overlay    = displayCtx.getSelectedOverlay()
 
@@ -377,6 +372,11 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
             displayCtx.displaySpace = 'world'
 
+        self.togglePanel(edittransformpanel.EditTransformPanel,
+                         floatPane=True,
+                         floatOnly=True,
+                         closeable=False,
+                         ortho=self)
 
 
     @actions.toggleControlAction(orthoeditsettingspanel.OrthoEditSettingsPanel)
@@ -457,10 +457,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    None,
                    self.toggleMovieMode,
                    self.toggleDisplaySync,
-                   self.toggleEditMode,
-                   (strings.titles[self, 'toolMenu'], [
-                       self.toggleCropMode,
-                       self.toggleEditTransformPanel]),
                    None,
                    self.resetDisplay,
                    self.centreCursor,
@@ -502,6 +498,15 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             return tuples
 
         return makeTuples(actionz)
+
+
+    def getTools(self):
+        """Returns a list of methods to be added to the ``FSLeyesFrame`` Tools menu
+        for ``OrthoPanel`` views.
+        """
+        return [self.toggleEditMode,
+                self.toggleCropMode,
+                self.toggleEditTransformPanel]
 
 
     def getGLCanvases(self):
