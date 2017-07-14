@@ -321,7 +321,8 @@ build-pypi-dist:
 
 .centos_pre_build: &centos_pre_build
   before_script:
-    - yum check-update -y
+    - yum check-update -y || true
+
     # Install compilers and dependencies
     # for compiling Python
     - yum groupinstall -y "Development tools"
