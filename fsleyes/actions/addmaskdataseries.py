@@ -84,6 +84,11 @@ class AddMaskDataSeriesAction(base.Action):
 
 
     def __addMaskDataSeries(self):
+        """Run the ``AddMaskDataSeriesAction``. Prompt the user to select
+        a mask, using a :class:`MaskDialog`, then calculates the mean time
+        series in that mask, then adds that time series to the
+        :class:`.TimeSeriesPanel` that owns this action instance.
+        """
 
         import wx
 
