@@ -402,9 +402,9 @@ build-pypi-dist:
     # for ubuntu, but not for centos, where it needs
     # to be compiled from source.
     - if   [[ -f /etc/lsb-release && `grep "Ubuntu 14" /etc/lsb-release` ]]; then
-        pip install -f https://wxpython.org/Phoenix/release-extras/linux/gtk3/ubuntu-14.04/ wxpython;
+        pip install --only-binary wxpython -f https://wxpython.org/Phoenix/snapshot-builds/linux/gtk3/ubuntu-14.04/ wxpython;
       elif [[ -f /etc/lsb-release && `grep "Ubuntu 16" /etc/lsb-release` ]]; then
-        pip install -f https://wxpython.org/Phoenix/release-extras/linux/gtk3/ubuntu-16.04/ wxpython;
+        pip install --only-binary wxpython -f https://wxpython.org/Phoenix/snapshot-builds/linux/gtk3/ubuntu-16.04/ wxpython;
       else
         pip install --pre "wxpython>=3.0.2.0,<4.1";
       fi
@@ -542,8 +542,6 @@ deploy-pypi:
 
   script:
     - pip install setuptools wheel twine
-    - twine register dist/*whl
-    - twine register dist/*tar.gz
     - twine upload dist/*whl dist/*tar.gz
 
 
