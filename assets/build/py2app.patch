@@ -1,5 +1,58 @@
---- orig/py2app/bootstrap/argv_emulation.py	2017-06-12 17:21:32.000000000 +0100
-+++ patch/py2app/bootstrap/argv_emulation.py	2017-06-12 17:22:44.000000000 +0100
+diff -r -u orig/py2app/apptemplate/src/main.c patch/py2app/apptemplate/src/main.c
+--- orig/py2app/apptemplate/src/main.c	2017-06-05 12:43:02.000000000 +0100
++++ patch/py2app/apptemplate/src/main.c	2017-07-13 17:58:01.000000000 +0100
+@@ -25,9 +25,9 @@
+ typedef int (*PyRun_SimpleFilePtr)(FILE *, const char *);
+ typedef void (*Py_FinalizePtr)(void);
+ typedef PyObject *(*PySys_GetObjectPtr)(const char *);
+-typedef int *(*PySys_SetArgvPtr)(int argc, char **argv);
++typedef int *(*PySys_SetArgvPtr)(int argc, wchar_t **argv);
+ typedef PyObject *(*PyObject_GetAttrStringPtr)(PyObject *, const char *);
+-typedef wchar_t* (*_Py_DecodeUTF8_surrogateescapePtr)(const char *s, ssize_t size);
++typedef wchar_t *(*Py_DecodeLocalePtr)(const char* arg, size_t *size);
+ 
+ 
+ typedef CFTypeRef id;
+@@ -858,7 +858,7 @@
+     char buf[PATH_MAX];
+     char c_pythonInterpreter[PATH_MAX];
+     char c_mainScript[PATH_MAX];
+-    char **argv_new;
++    wchar_t **argv_new;
+     struct stat sb;
+     void *py_dylib;
+     int rval;
+@@ -968,10 +968,10 @@
+     LOOKUP(PySys_SetArgv);
+     LOOKUP(PyObject_GetAttrString);
+     LOOKUP(Py_BuildValue);
++    LOOKUP(Py_DecodeLocale);
+ #if 0
+     OPT_LOOKUP(Py_SetPath);
+ #endif
+-    OPT_LOOKUP(_Py_DecodeUTF8_surrogateescape);
+     LOOKUP(PySys_SetObject);
+ 
+ 
+@@ -1037,12 +1037,12 @@
+     if (isPy3K) {
+        int i;
+ 
+-       argv_new = alloca((argc+1) * sizeof(wchar_t));
++       argv_new = alloca((argc+1) * sizeof(wchar_t*));
+        argv_new[argc] = NULL;
+-       argv_new[0] = (char*)py2app__Py_DecodeUTF8_surrogateescape(c_mainScript, strlen(c_mainScript));
++       argv_new[0] = py2app_Py_DecodeLocale(c_mainScript, NULL);
+ 
+        for (i = 1; i < argc; i++) {
+-	  argv_new[i] = (char*)py2app__Py_DecodeUTF8_surrogateescape(argv[i], strlen(argv[i]));
++         argv_new[i] = py2app_Py_DecodeLocale(argv[i], NULL);
+        }
+ 
+     } else {
+diff -r -u orig/py2app/bootstrap/argv_emulation.py patch/py2app/bootstrap/argv_emulation.py
+--- orig/py2app/bootstrap/argv_emulation.py	2017-06-05 12:43:02.000000000 +0100
++++ patch/py2app/bootstrap/argv_emulation.py	2017-07-13 18:00:03.000000000 +0100
 @@ -93,7 +93,7 @@
      return carbon
 

@@ -415,13 +415,20 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                          section=xformSect)
 
             if sformCode != constants.NIFTI_XFORM_UNKNOWN:
+                sform = img.get_sform()
                 info.addInfo(strings.nifti['sform'],
-                             self.__formatArray(img.get_sform()),
+                             self.__formatArray(sform),
                              section=xformSect)
 
             if qformCode != constants.NIFTI_XFORM_UNKNOWN:
+                try:
+                    qform = img.get_qform()
+                except Exception as e:
+                    log.warning('Could not read qform from {}: {}'.format(
+                        overlay.name, str(e)))
+                    qform = np.eye(4) * np.nan
                 info.addInfo(strings.nifti['qform'],
-                             self.__formatArray(img.get_qform()),
+                             self.__formatArray(qform),
                              section=xformSect)
 
         # For ANALYZE images, we show

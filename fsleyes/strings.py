@@ -232,6 +232,13 @@ messages = TypeDict({
     'ExportDataSeriesAction.saveXColumn'  : 'Export the X axis data '
                                             'as the first column?',
 
+    'AddMaskDataSeriesAction.selectMask'  :
+    'Choose a mask to extract the time series data (mean across\n'
+    'voxels, weighted by mask values) from {}:',
+
+    'AddMaskDataSeriesAction.weighted'  :
+    'Calculate weighted mean using the mask voxel values as weights',
+
     'LoadAtlasAction.error'       :
     'An error occurred loading the atlas specification {}.',
 
@@ -372,6 +379,10 @@ titles = TypeDict({
 
     'ExportDataSeriesAction.saveXColumn'  : 'Save X data?',
 
+
+    'AddMaskDataSeriesAction.selectMask'  :
+    'Mask time series from {}',
+
     'LoadAtlasAction.fileDialog'  : 'Load XML atlas specification',
     'LoadAtlasAction.error'       : 'Error loading atlas specification',
 
@@ -475,9 +486,11 @@ actions = TypeDict({
     'TimeSeriesPanel.togglePlotList'                : 'Time series list',
     'TimeSeriesPanel.toggleTimeSeriesControl'       : 'Time series control',
     'TimeSeriesPanel.toggleTimeSeriesToolBar'       : 'Time series toolbar',
+    'TimeSeriesPanel.addMaskDataSeries'             : 'Add masked time series',
     'HistogramPanel.togglePlotList'                 : 'Histogram list',
     'HistogramPanel.toggleHistogramControl'         : 'Histogram control',
     'HistogramPanel.toggleHistogramToolBar'         : 'Histogram toolbar',
+    'HistogramPanel.toggleHistogramOverlay'         : 'Histogram overlay',
     'PowerSpectrumPanel.togglePlotList'             : 'Power spectrum list',
     'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Power spectrum control',
     'PowerSpectrumPanel.togglePowerSpectrumToolBar' : 'Power spectrum toolbar',

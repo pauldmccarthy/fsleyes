@@ -268,6 +268,8 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
                 self._displayCtx.getOverlayOrder(
                     self._displayCtx.selectedOverlay))
 
+        self.__listBox.Layout()
+
 
     def __lbMove(self, ev):
         """Called when an overlay is moved in the :class:`.EditableListBox`.

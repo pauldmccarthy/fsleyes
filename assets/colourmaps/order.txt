@@ -9,6 +9,8 @@ pink             Pink
 hot              Hot
 cool             Cool
 copper           Copper
+hsv              HSV
+retino           Freesurfer HSV
 render1          Render1
 render1t         Render1t
 render2          Render2

@@ -180,13 +180,25 @@ application specification file (found in ``FSLeyes.app/Contents/Info.plist``),
 and ignoring the new version. You can fix this problem by temporarily moving
 this file to a different location, and then moving it back again, for example::
 
-  cd /Applications/FSLeyes.app
+
+  cd /Path/to/FSLeyes.app
   mv Contents/Info.plist ./Info.plist.backup
   # This command will fail
   ./Contents/MacOS/fsleyes
   mv ./Info.plist.backup Contents/Info.plist
   # FSLeyes should now work
   ./Contents/MacOS/fsleyes
+
+
+If, after the above, the problem is still occurring, it may be that you are
+using a symbolic link to call FSLeyes (e.g. a link called
+``$FSLDIR/bin/fsleyes`` which points to
+``/Applications/FSLeyes.app/Contents/MacOS/fsleyes``. If this is the case,
+try replacing the symlink with a wrapper script that contains the following::
+
+
+  #!/bin/bash
+  /path/to/FSLeyes.app/Contents/MacOS/fsleyes $@
 
 
 Linux - FSLeyes does not start

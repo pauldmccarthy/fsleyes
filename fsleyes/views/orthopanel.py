@@ -457,10 +457,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    None,
                    self.toggleMovieMode,
                    self.toggleDisplaySync,
-                   self.toggleEditMode,
-                   (strings.titles[self, 'toolMenu'], [
-                       self.toggleCropMode,
-                       self.toggleEditTransformPanel]),
                    None,
                    self.resetDisplay,
                    self.centreCursor,
@@ -502,6 +498,15 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             return tuples
 
         return makeTuples(actionz)
+
+
+    def getTools(self):
+        """Returns a list of methods to be added to the ``FSLeyesFrame`` Tools menu
+        for ``OrthoPanel`` views.
+        """
+        return [self.toggleEditMode,
+                self.toggleCropMode,
+                self.toggleEditTransformPanel]
 
 
     def getGLCanvases(self):
