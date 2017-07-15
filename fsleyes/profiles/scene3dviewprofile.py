@@ -72,8 +72,7 @@ class Scene3DViewProfile(profiles.Profile):
         xrot = x1 - x0
         yrot = y0 - y1
 
-        rot   = transform.axisAnglesToRotMat(yrot, 0, xrot)
-        rot   = transform.invert(rot)
+        rot = transform.axisAnglesToRotMat(yrot, 0, xrot)
 
         self.__lastRot        = rot
         self.__rotateMousePos = mousePos
