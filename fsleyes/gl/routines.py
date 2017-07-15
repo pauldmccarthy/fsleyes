@@ -274,7 +274,7 @@ def lookAt(eye, centre, up):
     proj[1, :3] =  up
     proj[2, :3] = -forward
 
-    eye  = transform.scaleOffsetXform(1, tuple(-eye))
+    eye  = transform.scaleOffsetXform(1, -eye)
     proj = transform.concat(proj, eye)
 
     return proj

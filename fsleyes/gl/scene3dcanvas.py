@@ -126,58 +126,74 @@ class Scene3DCanvas(props.HasProperties):
 
         b      = self.__displayCtx.bounds
         w, h   = self._getSize()
+        centre = [b.xlo + 0.5 * b.xlen,
+                  b.ylo + 0.5 * b.ylen,
+                  b.zlo + 0.5 * b.zlen]
 
+        # The MV matrix comprises (in this order):
+        #
+        #    - A rotation (the rotation property)
+        #
+        #    - Camera configuration. With no rotation, the
+        #      camera will be looking towards the positive
+        #      Y axis (i.e. +y is forwards), and oriented
+        #      towards the positive Z axis (i.e. +z is up)
+        #
+        #    - A translation (the offset property)
+        #    - A scaling (the zoom property)
+
+        # Scaling and rotation matrices. Rotation
+        # is always around the centre of the
+        # displaycontext bounds (the bounding
+        # box which contains all loaded overlays).
         scale  = self.zoom / 100.0
+        scale  = transform.scaleOffsetXform([scale] * 3, 0)
+        rotate = transform.rotMatToAffine(self.rotation, centre)
 
-        # The centre of the model world is
-        # the centre of rotation
-        centre = np.array([b.xlo + 0.5 * b.xlen,
-                           b.ylo + 0.5 * b.ylen,
-                           b.zlo + 0.5 * b.zlen])
-
-        offset  = np.array(self.offset[:] + [0])
-        scentre = centre * scale
-
-        rotscale = transform.compose([scale] * 3,
-                                     centre - scentre,
-                                     self.rotation,
-                                     scentre)
-
+        # The offset property is defined in x/y
+        # pixels. We need to conver them into
+        # viewport space, where the horizontal
+        # axis maps to (-xhalf, xhalf), and the
+        # vertical axis maps to (-yhalf, yhalf).
+        # See gl.routines.show3D.
+        offset     = np.array(self.offset[:] + [0])
         xlen, ylen = glroutines.adjust(b.xlen, b.ylen, w, h)
+        offset[0]  = xlen * offset[0] / w
+        offset[1]  = ylen * offset[1] / h
+        offset     = transform.scaleOffsetXform(1, offset)
 
-        offset[0] = xlen * offset[0] / w
-        offset[1] = ylen * offset[1] / h
+        # And finally the camera.
+        eye     = list(centre)
+        eye[1] -= 1
+        up      = [0, 0, 1]
+        camera  = glroutines.lookAt(eye, centre, up)
 
-        trans = transform.scaleOffsetXform(1, tuple(offset))
-
-        xmid  = b.xlo + 0.5 * b.xlen
-        ymid  = b.ylo + 0.5 * b.ylen
-        zmid  = b.zlo + 0.5 * b.zlen
-
-        centre = (xmid, ymid,     zmid)
-        eye    = (xmid, ymid - 1, zmid)
-        up     = (0,    0,        1)
-
-        camera = glroutines.lookAt(eye, centre, up)
-
-        return transform.concat(trans, camera, rotscale)
-
+        # Order is very important!
+        return transform.concat(offset, scale, camera, rotate)
 
 
     def __setViewport(self):
+        """Called by :meth:`_draw`. Configures the viewport and model-view
+        trasformatiobn matrix.
+
+        :returns: ``True`` if the viewport was successfully configured,
+                  ``False`` otherwise.
+        """
 
         width, height = self._getSize()
 
         if width == 0 or height == 0:
             return False
 
-        b     = self.__displayCtx.bounds
-        blo   = [b.xlo, b.ylo, b.zlo]
-        bhi   = [b.xhi, b.yhi, b.zhi]
+        b   = self.__displayCtx.bounds
+        blo = [b.xlo, b.ylo, b.zlo]
+        bhi = [b.xhi, b.yhi, b.zhi]
 
         if np.any(np.isclose(blo, bhi)):
             return False
 
+        # We save the transform so it
+        # can be used by canvasToWorld
         self.__xform = self.__genModelViewMatrix()
 
         glroutines.show3D(width, height, blo, bhi, self.__xform)
@@ -186,6 +202,8 @@ class Scene3DCanvas(props.HasProperties):
 
 
     def _draw(self):
+        """
+        """
 
         if not self._setGLContext():
             return
