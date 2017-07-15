@@ -347,6 +347,38 @@ class GLMesh(globject.GLObject):
             tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
 
 
+    def draw3D(self, bbox=None):
+        """
+        """
+        opts      = self.opts
+        verts     = self.vertices
+        idxs      = self.indices
+        normals   = np.array(self.overlay.vnormals, dtype=np.float32)
+        vdata     = opts.getVertexData()
+        useShader = vdata is not None
+
+        if not useShader:
+            with glroutines.enabled((gl.GL_VERTEX_ARRAY, gl.GL_NORMAL_ARRAY)):
+
+                gl.glNormalPointer(gl.GL_FLOAT, 0, normals.ravel('C'))
+
+                gl.glColor(*opts.getConstantColour())
+                gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts  .ravel('C'))
+
+                gl.glDrawElements(gl.GL_TRIANGLES,
+                                  len(idxs),
+                                  gl.GL_UNSIGNED_INT,
+                                  idxs)
+        else:
+
+            fslgl.glmesh_funcs.drawColouredOutline(
+                self,
+                verts,
+                vdata,
+                indices=idxs,
+                glType=gl.GL_TRIANGLES)
+
+
     def drawOutline(self, zpos, xform=None, bbox=None):
         """Called by :meth:`draw` when :attr:`.MeshOpts.outline` is ``True``.
         Calculates the intersection of the mesh with the viewing plane,

@@ -21,6 +21,7 @@ import fsl.data.mesh       as fslmesh
 import fsl.utils.transform as transform
 
 import fsleyes.gl.routines as glroutines
+import fsleyes.gl.globject as globject
 import fsleyes.displaycontext.canvasopts as canvasopts
 
 
@@ -35,6 +36,7 @@ class Scene3DCanvas(props.HasProperties):
     bgColour      = copy.copy(canvasopts.Scene3DCanvasOpts.bgColour)
     showLegend    = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
     zoom          = copy.copy(canvasopts.Scene3DCanvasOpts.zoom)
+    wireFrame     = copy.copy(canvasopts.Scene3DCanvasOpts.wireFrame)
     offset        = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
     rotation      = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
 
@@ -46,34 +48,68 @@ class Scene3DCanvas(props.HasProperties):
         self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
         self.__xform       = None
 
+
+        self.__glObjects   = {}
+
         overlayList.addListener('overlays',
                                 self.__name,
                                 self.__overlayListChanged)
         displayCtx.addListener('bounds',
                                self.__name,
                                self.__displayBoundsChanged)
-        displayCtx.addListener('overlayOrder',
-                               self.__name,
-                               self.Refresh)
 
-        self.addListener('pos',      self.__name, self.Refresh)
-        self.addListener('offset',   self.__name, self.Refresh)
-        self.addListener('zoom',     self.__name, self.Refresh)
-        self.addListener('rotation', self.__name, self.Refresh)
+        self.addListener('pos',          self.__name, self.Refresh)
+        self.addListener('showCursor',   self.__name, self.Refresh)
+        self.addListener('cursorColour', self.__name, self.Refresh)
+        self.addListener('bgColour',     self.__name, self.Refresh)
+        self.addListener('showLegend',   self.__name, self.Refresh)
+        self.addListener('zoom',         self.__name, self.Refresh)
+        self.addListener('wireFrame',    self.__name, self.Refresh)
+        self.addListener('offset',       self.__name, self.Refresh)
+        self.addListener('rotation',     self.__name, self.Refresh)
 
 
     def destroy(self):
-        self.__overlayList.removeListener('overlays',     self.__name)
-        self.__displayCtx .removeListener('bounds',       self.__name)
-        self.__displayCtx .removeListener('overlayOrder', self.__name)
+        self.__overlayList.removeListener('overlays', self.__name)
+        self.__displayCtx .removeListener('bounds',   self.__name)
 
 
     def _initGL(self):
-        self.__displayBoundsChanged()
+        self.__overlayListChanged()
 
 
     def __overlayListChanged(self, *a):
-        pass
+
+        # Destroy any GL objects for overlays
+        # which are no longer in the list
+        for ovl, globj in list(self.__glObjects.items()):
+            if ovl not in self.__overlayList:
+                self.__glObjects.pop(ovl)
+                if globj:
+                    globj.deregister(self.__name)
+                    globj.destroy()
+
+        # Create a GL object for any new overlays,
+        # and attach a listener to their display
+        # properties so we know when to refresh
+        # the canvas.
+        for overlay in self.__overlayList:
+
+            # A GLObject already exists
+            # for this overlay
+            if overlay in self.__glObjects:
+                continue
+
+            if not isinstance(overlay, fslmesh.TriangleMesh):
+                continue
+
+            display = self.__displayCtx.getDisplay(overlay)
+            globj   = globject.createGLObject(overlay,
+                                              display,
+                                              0,
+                                              1)
+            globj.register(self.__name, self.Refresh)
+            self.__glObjects[overlay] = globj
 
 
     def __displayBoundsChanged(self, *a):
@@ -211,42 +247,31 @@ class Scene3DCanvas(props.HasProperties):
         if not self.__setViewport():
             return
 
-        glroutines.clear((0, 0, 0, 1))
+        glroutines.clear(self.bgColour)
 
-        for ovl in self.__overlayList:
-            if not isinstance(ovl, fslmesh.TriangleMesh):
-                continue
+        with glroutines.enabled((gl.GL_DEPTH_TEST)):
 
-            verts = np.array(ovl.vertices, dtype=np.float32)
-            idxs  = np.array(ovl.indices, dtype=np.uint32)
+            if self.wireFrame:
+                print('Wireframe')
+                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+            else:
+                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
-            xs = verts[:, 0]
-            ys = verts[:, 1]
-            zs = verts[:, 2]
+            for ovl in self.__overlayList:
+                if not isinstance(ovl, fslmesh.TriangleMesh):
+                    continue
 
-            xs = 0.25 + 0.75 * (xs - xs.min()) / (xs.max() - xs.min())
-            ys = 0.25 + 0.75 * (ys - ys.min()) / (ys.max() - ys.min())
-            zs = 0.25 + 0.75 * (zs - zs.min()) / (zs.max() - zs.min())
+                globj   = self.__glObjects.get(ovl, None)
+                display = self.__displayCtx.getDisplay(ovl)
 
-            colours = np.vstack((xs, ys, zs)).T
+                if globj is None:
+                    continue
+                if not display.enabled:
+                    continue
 
-            opts = self.__displayCtx.getOpts(ovl)
+                globj.draw3D()
 
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
-            gl.glLineWidth(2)
-            gl.glColor3f(*opts.colour[:3])
-
-            with glroutines.enabled((gl.GL_VERTEX_ARRAY,
-                                     gl.GL_DEPTH_TEST)):
-
-                idxs = idxs.ravel('C')
-
-                gl.glColorPointer( 3, gl.GL_FLOAT, 0, colours.ravel('C'))
-                gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts  .ravel('C'))
-                gl.glDrawElements(gl.GL_TRIANGLES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
-
-        if self.showCursor:
-            with glroutines.enabled(gl.GL_DEPTH_TEST):
+            if self.showCursor:
                 self.__drawCursor()
 
 
