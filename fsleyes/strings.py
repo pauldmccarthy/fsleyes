@@ -618,6 +618,7 @@ labels = TypeDict({
     'CanvasSettingsPanel.scene'    : 'Scene settings',
     'CanvasSettingsPanel.ortho'    : 'Ortho view settings',
     'CanvasSettingsPanel.lightbox' : 'Lightbox settings',
+    'CanvasSettingsPanel.3d'       : '3D view settings',
 
     'OverlayInfoPanel.general'             : 'General information',
     'OverlayInfoPanel.overlayType'         : 'Displayed as',
@@ -781,6 +782,9 @@ properties = TypeDict({
     'OrthoOpts.xzoom'       : 'X zoom',
     'OrthoOpts.yzoom'       : 'Y zoom',
     'OrthoOpts.zzoom'       : 'Z zoom',
+
+    'Scene3DOpts.wireFrame'  : 'Wire frame',
+    'Scene3DOpts.showLegend' : 'Show orientation',
 
     'PlotPanel.legend'     : 'Show legend',
     'PlotPanel.ticks'      : 'Show ticks',

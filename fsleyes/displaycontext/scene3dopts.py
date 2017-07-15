@@ -27,6 +27,7 @@ class Scene3DOpts(sceneopts.SceneOpts):
 
 
     showLegend = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
+    wireFrame  = copy.copy(canvasopts.Scene3DCanvasOpts.wireFrame)
     offset     = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
     rotation   = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
 

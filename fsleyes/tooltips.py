@@ -356,6 +356,17 @@ properties = TypeDict({
     'LightBoxOpts.highlightSlice' : 'If checked, a box will be drawn around '
                                     'the currently selected slice.',
 
+    'Scene3DOpts.wireFrame' :
+    'When selected, all mesh overlays will be shown as wire frames, rather '
+    'than being filled.',
+
+    'Scene3DOpts.showLegend' :
+    'When selected, a legend will be displayed in the bottom right, showing '
+    'orientation information.',
+
+    'Scene3DOpts.zoom' :
+    'Zoom level - distance from the camera to the model space.',
+
     # ViewPanels
 
     'CanvasPanel.syncLocation'       : 'If checked, the location shown on '

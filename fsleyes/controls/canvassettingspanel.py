@@ -36,11 +36,12 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
        ~fsleyes.displaycontext.SceneOpts
        ~fsleyes.displaycontext.OrthoOpts
        ~fsleyes.displaycontext.LightBoxOpts
+       ~fsleyes.displaycontext.Scene3DOpts
 
     The ``CanvasSettingsPanel`` divides the displayed settings into those
     which are common to all :class:`.CanvasPanel` instances, and those which
     are specific to the :class:`.CanvasPanel` sub-class (i.e.
-    :class:`.OrthoPanel` or :class:`.LightBoxPanel`).
+    :class:`.OrthoPanel`,  :class:`.LightBoxPanel`, or :class:`.Scene3DPanel`).
     """
 
 
@@ -133,9 +134,15 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
             props.Widget('zrange',       showLimits=False),
             props.Widget('highlightSlice'),
             props.Widget('showGridLines')]
+        scene3dOptsProps = [
+            props.Widget('wireFrame'),
+            props.Widget('zoom', showLimits=False),
+            props.Widget('showLegend'),
+        ]
 
         import fsleyes.views.orthopanel    as orthopanel
         import fsleyes.views.lightboxpanel as lightboxpanel
+        import fsleyes.views.scene3dpanel  as scene3dpanel
 
         if isinstance(canvasPanel, orthopanel.OrthoPanel):
             panelGroup = 'ortho'
@@ -144,6 +151,9 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         elif isinstance(canvasPanel, lightboxpanel.LightBoxPanel):
             panelGroup = 'lightbox'
             panelProps = lightBoxOptsProps
+        elif isinstance(canvasPanel, scene3dpanel.Scene3DPanel):
+            panelGroup = '3d'
+            panelProps = scene3dOptsProps
 
         widgets.AddGroup('scene' ,    strings.labels[self, 'scene'])
         widgets.AddGroup( panelGroup, strings.labels[self,  panelGroup])

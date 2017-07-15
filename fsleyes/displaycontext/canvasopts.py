@@ -179,6 +179,8 @@ class Scene3DCanvasOpts(props.HasProperties):
     bgColour     = copy.copy(SliceCanvasOpts.bgColour)
     zoom         = copy.copy(SliceCanvasOpts.zoom)
 
+    wireFrame = props.Boolean(default=False)
+    """If ``True``, mesh objects will be drawn as wireframes. """
 
     showLegend = props.Boolean(default=True)
     """If ``True``, an orientation guide will be shown on the canvas. """
