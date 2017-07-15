@@ -126,6 +126,19 @@ def disabled(capabilities):
         yield
 
 
+def adjust(x, y, w, h):
+    """Adjust the given ``x`` and ``y`` values by the aspect ratio
+    defined by the given ``w`` and ``h`` values.
+    """
+
+    ratio = w / float(h)
+
+    if   ratio > 1: x *= ratio
+    elif ratio < 1: y /= ratio
+
+    return x, y
+
+
 def show2D(xax, yax, width, height, lo, hi, flipx=False, flipy=False):
     """Configures the OpenGL viewport for 2D othorgraphic display.
 

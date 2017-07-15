@@ -33,9 +33,9 @@ class Scene3DCanvas(props.HasProperties):
     showCursor    = copy.copy(canvasopts.Scene3DCanvasOpts.showCursor)
     cursorColour  = copy.copy(canvasopts.Scene3DCanvasOpts.cursorColour)
     bgColour      = copy.copy(canvasopts.Scene3DCanvasOpts.bgColour)
-    zoom          = copy.copy(canvasopts.Scene3DCanvasOpts.zoom)
     showLegend    = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
-    centre        = copy.copy(canvasopts.Scene3DCanvasOpts.centre)
+    zoom          = copy.copy(canvasopts.Scene3DCanvasOpts.zoom)
+    offset        = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
     rotation      = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
 
 
@@ -44,7 +44,7 @@ class Scene3DCanvas(props.HasProperties):
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
         self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
-        self.__initXform   = None
+        self.__xform       = None
 
         overlayList.addListener('overlays',
                                 self.__name,
@@ -57,7 +57,7 @@ class Scene3DCanvas(props.HasProperties):
                                self.Refresh)
 
         self.addListener('pos',      self.__name, self.Refresh)
-        self.addListener('centre',   self.__name, self.Refresh)
+        self.addListener('offset',   self.__name, self.Refresh)
         self.addListener('zoom',     self.__name, self.Refresh)
         self.addListener('rotation', self.__name, self.Refresh)
 
@@ -77,77 +77,91 @@ class Scene3DCanvas(props.HasProperties):
 
 
     def __displayBoundsChanged(self, *a):
-        b      = self.__displayCtx.bounds
-        centre = [
-            b.xlo + b.xlen / 2.0,
-            b.ylo + b.ylen / 2.0,
-            b.zlo + b.zlen / 2.0]
-
-        self.centre = centre
+        pass
 
 
     def canvasToWorld(self, xpos, ypos):
-
-        xba, yba = xpos, ypos
+        """Transform the given x/y canvas coordinates into the display
+        coordinate system.
+        """
 
         b             = self.__displayCtx.bounds
         width, height = self._getSize()
-        ratio         = width / float(height)
 
-        xlo, xhi = b.x
-        ylo, yhi = b.y
-        xlen     = b.xlen
-        ylen     = b.ylen
-
-        if   ratio > 1: xlen *= ratio
-        elif ratio < 1: ylen /= ratio
-
-        xhalf = 0.5 * xlen
-        yhalf = 0.5 * ylen
-
-        # Transform the mouse coordinates into
-        # projected viewport coordinates - canvas x
-        # corresponds to (-xhalf, xhalf), and
-        # canvas y corresponds to (-yhalf, yhalf) -
+        # The first step is to invert the mouse
+        # coordinates w.r.t. the viewport.
+        #
+        # The canvas x axis corresponds to
+        # (-xhalf, xhalf), and the canvas y
+        # corresponds to (-yhalf, yhalf) -
         # see routines.show3D.
+        xlen, ylen = glroutines.adjust(b.xlen, b.ylen, width, height)
+        xhalf      = 0.5 * xlen
+        yhalf      = 0.5 * ylen
+
+        # Pixels to viewport coordinates
         xpos = xlen * (xpos / float(width))  - xhalf
         ypos = ylen * (ypos / float(height)) - yhalf
 
-        # The camera is offset by 1 on
-        # the depth axis (see __setViewport)
-        pos  = np.array([xpos, ypos, -1])
-
-        # The __initXform contains the initial
-        # orientation code, and the
-        # makeViewTransform method generates
-        # the current rotate/scale/pan matrix
-        xform = transform.concat(
-            self.__initXform,
-            self.__makeViewTransform())
-
-        xform = transform.invert(xform)
-
+        # The second step is to transform from
+        # viewport coords into model-view coords.
+        # This is easy - transform by the inverse
+        # MV matrix.
+        #
+        # z=-1 because the camera is offset by 1
+        # on the depth axis (see __setViewport).
+        pos   = np.array([xpos, ypos, -1])
+        xform = transform.invert(self.__xform)
         pos   = transform.transform(pos, xform)
 
         return pos
 
 
-    def __makeViewTransform(self):
+    def __genModelViewMatrix(self):
+        """Generate and return a transformation matrix to be used as the
+        model-view matrix. This includes applying the current :attr:`zoom`,
+        :attr:`rotation` and :attr:`offset` settings, and configuring
+        the camera. This method is called by :meth:`__setViewport`.
+        """
 
         b      = self.__displayCtx.bounds
+        w, h   = self._getSize()
+
         scale  = self.zoom / 100.0
 
-        oldmid = np.array([b.xlo + 0.5 * b.xlen,
+        # The centre of the model world is
+        # the centre of rotation
+        centre = np.array([b.xlo + 0.5 * b.xlen,
                            b.ylo + 0.5 * b.ylen,
                            b.zlo + 0.5 * b.zlen])
 
-        newmid = oldmid * scale
-        offset = (oldmid - newmid)
+        offset  = np.array(self.offset[:] + [0])
+        scentre = centre * scale
 
-        return transform.compose([scale] * 3,
-                                 offset,
-                                 self.rotation,
-                                 newmid)
+        rotscale = transform.compose([scale] * 3,
+                                     centre - scentre,
+                                     self.rotation,
+                                     scentre)
+
+        xlen, ylen = glroutines.adjust(b.xlen, b.ylen, w, h)
+
+        offset[0] = xlen * offset[0] / w
+        offset[1] = ylen * offset[1] / h
+
+        trans = transform.scaleOffsetXform(1, tuple(offset))
+
+        xmid  = b.xlo + 0.5 * b.xlen
+        ymid  = b.ylo + 0.5 * b.ylen
+        zmid  = b.zlo + 0.5 * b.zlen
+
+        centre = (xmid, ymid,     zmid)
+        eye    = (xmid, ymid - 1, zmid)
+        up     = (0,    0,        1)
+
+        camera = glroutines.lookAt(eye, centre, up)
+
+        return transform.concat(trans, camera, rotscale)
+
 
 
     def __setViewport(self):
@@ -164,25 +178,10 @@ class Scene3DCanvas(props.HasProperties):
         if np.any(np.isclose(blo, bhi)):
             return False
 
-        xmid  = b.xlo + 0.5 * b.xlen
-        ymid  = b.ylo + 0.5 * b.ylen
-        zmid  = b.zlo + 0.5 * b.zlen
+        self.__xform = self.__genModelViewMatrix()
 
-        centre = (xmid, ymid,     zmid)
-        eye    = (xmid, ymid - 1, zmid)
-        up     = (0,    0,        1)
+        glroutines.show3D(width, height, blo, bhi, self.__xform)
 
-        np.set_printoptions(precision=7, suppress=True)
-
-        self.__initXform = glroutines.lookAt(eye, centre, up)
-        xform            = self.__makeViewTransform()
-        xform            = transform.concat(self.__initXform, xform)
-
-        glroutines.show3D(width,
-                          height,
-                          blo,
-                          bhi,
-                          xform)
         return True
 
 

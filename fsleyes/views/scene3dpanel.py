@@ -45,7 +45,7 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         self.__canvas.bindProps('bgColour',     sceneOpts)
         self.__canvas.bindProps('zoom',         sceneOpts)
         self.__canvas.bindProps('showLegend',   sceneOpts)
-        self.__canvas.bindProps('centre',       sceneOpts)
+        self.__canvas.bindProps('offset',       sceneOpts)
         self.__canvas.bindProps('rotation',     sceneOpts)
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)

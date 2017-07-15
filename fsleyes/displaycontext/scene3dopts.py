@@ -27,9 +27,8 @@ class Scene3DOpts(sceneopts.SceneOpts):
 
 
     showLegend = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
-    centre     = copy.copy(canvasopts.Scene3DCanvasOpts.centre)
+    offset     = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
     rotation   = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
-
 
 
     def __init__(self, *args, **kwargs):

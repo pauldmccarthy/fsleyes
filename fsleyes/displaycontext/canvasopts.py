@@ -184,9 +184,10 @@ class Scene3DCanvasOpts(props.HasProperties):
     """If ``True``, an orientation guide will be shown on the canvas. """
 
 
-    centre = props.Point(ndims=3)
-    """A point in the display coordinate system which defines the
-    centre-of-view for the ``Scene3DCanvas``.
+    offset = props.Point(ndims=2)
+    """An offset, in pixels, from the centre of the
+    :attr:`.DisplayContext.bounds`. The defines the centre-of-view for the
+    ``Scene3DCanvas``.
     """
 
     rotation = props.Array(

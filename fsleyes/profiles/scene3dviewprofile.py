@@ -97,16 +97,20 @@ class Scene3DViewProfile(profiles.Profile):
 
 
     def _panModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
-        self.__panMousePos  = mousePos
-        self.__panCanvasPos = canvasPos
+        self.__panMousePos    = mousePos
+        self.__panStartOffset = canvas.offset[:]
 
 
     def _panModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         if self.__panMousePos is None:
             return
 
+        sx, sy = self.__panMousePos
+        ox, oy = self.__panStartOffset
+        ex, ey = mousePos
+
+        canvas.offset = [ox + ex - sx, oy + ey - sy]
 
 
     def _panModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
         self.__panMousePos  = None
-        self.__panCanvasPos = None
