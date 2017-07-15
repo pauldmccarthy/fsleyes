@@ -136,6 +136,7 @@ tempModeMap = {
 
     Scene3DViewProfile : OrderedDict((
         (('rotate', wx.WXK_CONTROL), 'zoom'),
+        (('rotate', wx.WXK_ALT),     'pan'),
     )),
 }
 """The ``tempModeMap`` dictionary defines temporary modes, for each
