@@ -17,7 +17,6 @@ import                collections
 import itertools   as it
 
 import OpenGL.GL   as gl
-import OpenGL.GLU  as glu
 import OpenGL.GLUT as glut
 import numpy       as np
 
@@ -186,10 +185,19 @@ def show2D(xax, yax, width, height, lo, hi, flipx=False, flipy=False):
 
 
 def show3D(width, height, lo, hi, xform=None):
-    """Sets up a 3D orthographic projection. By default, the
-    horizontal/vertical canvas axes are mapped to the first and second
-    dimensions in ``lo`` and ``hi``, with the aspect ratio set
-    appropriately. Use the ``xform`` if you want  a different orientation.
+    """Sets up a 3D orthographic projection. The
+
+        - The horizontal axis is scaled to::
+
+              [-(hi[0] - lo[0]) / 2, (hi[0] - lo[0]) / 2]
+
+        - The vertical axis is scaled to::
+
+              [-(hi[1] - lo[1]) / 2, (hi[1] - lo[1]) / 2]
+
+    with the aspect ratio taken into account.
+
+    Use the ``xform`` if you want a different orientation.
 
     :arg width:  Canvas width in pixels
     :arg height: Canvas height in pixels
@@ -230,6 +238,9 @@ def lookAt(eye, centre, up):
     transforms the display coordinate system such that a camera at position
     (0, 0, 0), and looking towards (0, 0, -1), will see a scene as if from
     position ``eye``, oriented ``up``, and looking towards ``centre``.
+
+    See:
+    https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/gluLookAt.xml
     """
 
     eye    = np.array(eye)
@@ -250,11 +261,8 @@ def lookAt(eye, centre, up):
     proj[1, :3] =  up
     proj[2, :3] = -forward
 
-    offset = [-np.dot(right,   eye),
-              -np.dot(up,      eye),
-              -np.dot(forward, eye)]
-
-    proj[:3, 3] = offset
+    eye  = transform.scaleOffsetXform(1, tuple(-eye))
+    proj = transform.concat(proj, eye)
 
     return proj
 

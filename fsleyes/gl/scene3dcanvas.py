@@ -18,6 +18,7 @@ import OpenGL.GL as gl
 import fsleyes_props as props
 
 import fsl.data.mesh       as fslmesh
+import fsl.utils.transform as transform
 
 import fsleyes.gl.routines as glroutines
 import fsleyes.displaycontext.canvasopts as canvasopts
@@ -43,6 +44,7 @@ class Scene3DCanvas(props.HasProperties):
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
         self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
+        self.__initXform   = None
 
         overlayList.addListener('overlays',
                                 self.__name,
@@ -54,11 +56,10 @@ class Scene3DCanvas(props.HasProperties):
                                self.__name,
                                self.Refresh)
 
-        self.addListener('pos',    self.__name, self.Refresh)
-        self.addListener('centre', self.__name, self.Refresh)
-        self.addListener('zoom',   self.__name, self.Refresh)
-
-        self.xform = np.eye(4)
+        self.addListener('pos',      self.__name, self.Refresh)
+        self.addListener('centre',   self.__name, self.Refresh)
+        self.addListener('zoom',     self.__name, self.Refresh)
+        self.addListener('rotation', self.__name, self.Refresh)
 
 
     def destroy(self):
@@ -69,12 +70,6 @@ class Scene3DCanvas(props.HasProperties):
 
     def _initGL(self):
         self.__displayBoundsChanged()
-
-
-    def canvasToWorld(self, xpos, ypos):
-
-        # TODO
-        return [0, 0, 0]
 
 
     def __overlayListChanged(self, *a):
@@ -91,33 +86,114 @@ class Scene3DCanvas(props.HasProperties):
         self.centre = centre
 
 
-    def _draw(self):
+    def canvasToWorld(self, xpos, ypos):
 
+        xba, yba = xpos, ypos
+
+        b             = self.__displayCtx.bounds
         width, height = self._getSize()
-        if width == 0 or height == 0:
-            return
+        ratio         = width / float(height)
 
-        if not self._setGLContext():
-            return
+        xlo, xhi = b.x
+        ylo, yhi = b.y
+        xlen     = b.xlen
+        ylen     = b.ylen
+
+        if   ratio > 1: xlen *= ratio
+        elif ratio < 1: ylen /= ratio
+
+        xhalf = 0.5 * xlen
+        yhalf = 0.5 * ylen
+
+        # Transform the mouse coordinates into
+        # projected viewport coordinates - canvas x
+        # corresponds to (-xhalf, xhalf), and
+        # canvas y corresponds to (-yhalf, yhalf) -
+        # see routines.show3D.
+        xpos = xlen * (xpos / float(width))  - xhalf
+        ypos = ylen * (ypos / float(height)) - yhalf
+
+        # The camera is offset by 1 on
+        # the depth axis (see __setViewport)
+        pos  = np.array([xpos, ypos, -1])
+
+        # The __initXform contains the initial
+        # orientation code, and the
+        # makeViewTransform method generates
+        # the current rotate/scale/pan matrix
+        xform = transform.concat(
+            self.__initXform,
+            self.__makeViewTransform())
+
+        xform = transform.invert(xform)
+
+        pos   = transform.transform(pos, xform)
+
+        return pos
+
+
+    def __makeViewTransform(self):
 
         b      = self.__displayCtx.bounds
-        blo    = np.array([b.xlo, b.ylo, b.zlo])
-        bhi    = np.array([b.xhi, b.yhi, b.zhi])
-        blen   = bhi - blo
-        bmid   = blo + 0.5 * blen
-        blen  *= (self.zoom / 100.0)
+        scale  = self.zoom / 100.0
 
-        blo    = bmid - 0.5 * blen
-        bhi    = bmid + 0.5 * blen
+        oldmid = np.array([b.xlo + 0.5 * b.xlen,
+                           b.ylo + 0.5 * b.ylen,
+                           b.zlo + 0.5 * b.zlen])
 
-        if np.any(np.isclose(blen, 0)):
-            return
+        newmid = oldmid * scale
+        offset = (oldmid - newmid)
+
+        return transform.compose([scale] * 3,
+                                 offset,
+                                 self.rotation,
+                                 newmid)
+
+
+    def __setViewport(self):
+
+        width, height = self._getSize()
+
+        if width == 0 or height == 0:
+            return False
+
+        b     = self.__displayCtx.bounds
+        blo   = [b.xlo, b.ylo, b.zlo]
+        bhi   = [b.xhi, b.yhi, b.zhi]
+
+        if np.any(np.isclose(blo, bhi)):
+            return False
+
+        xmid  = b.xlo + 0.5 * b.xlen
+        ymid  = b.ylo + 0.5 * b.ylen
+        zmid  = b.zlo + 0.5 * b.zlen
+
+        centre = (xmid, ymid,     zmid)
+        eye    = (xmid, ymid - 1, zmid)
+        up     = (0,    0,        1)
+
+        np.set_printoptions(precision=7, suppress=True)
+
+        self.__initXform = glroutines.lookAt(eye, centre, up)
+        xform            = self.__makeViewTransform()
+        xform            = transform.concat(self.__initXform, xform)
 
         glroutines.show3D(width,
                           height,
                           blo,
                           bhi,
-                          self.xform)
+                          xform)
+        return True
+
+
+    def _draw(self):
+
+        if not self._setGLContext():
+            return
+
+        if not self.__setViewport():
+            return
+
         glroutines.clear((0, 0, 0, 1))
 
         for ovl in self.__overlayList:
@@ -152,41 +228,63 @@ class Scene3DCanvas(props.HasProperties):
                 gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts  .ravel('C'))
                 gl.glDrawElements(gl.GL_TRIANGLES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
 
+        if self.showCursor:
+            with glroutines.enabled(gl.GL_DEPTH_TEST):
+                self.__drawCursor()
 
-        gl.glPointSize(10)
-        gl.glColor3f(1, 0, 0)
-        gl.glBegin(gl.GL_POINTS)
-        gl.glVertex3f(*self.pos[:])
-        gl.glEnd()
 
-        b = self.__displayCtx.bounds
+    def __drawCursor(self):
+
+        b   = self.__displayCtx.bounds
+        pos = self.pos
+
         gl.glLineWidth(1)
-        gl.glColor3f(0, 1, 0)
+
+        points = [
+            (pos.x, pos.y, b.zlo),
+            (pos.x, pos.y, b.zhi),
+            (pos.x, b.ylo, pos.z),
+            (pos.x, b.yhi, pos.z),
+            (b.xlo, pos.y, pos.z),
+            (b.xhi, pos.y, pos.z),
+        ]
+
+        gl.glColor3f(*self.cursorColour[:3])
         gl.glBegin(gl.GL_LINES)
-        gl.glVertex3f(b.xlo, b.ylo, b.zlo)
-        gl.glVertex3f(b.xlo, b.ylo, b.zhi)
-        gl.glVertex3f(b.xlo, b.yhi, b.zlo)
-        gl.glVertex3f(b.xlo, b.yhi, b.zhi)
-        gl.glVertex3f(b.xhi, b.ylo, b.zlo)
-        gl.glVertex3f(b.xhi, b.ylo, b.zhi)
-        gl.glVertex3f(b.xhi, b.yhi, b.zlo)
-        gl.glVertex3f(b.xhi, b.yhi, b.zhi)
-
-        gl.glVertex3f(b.xlo, b.ylo, b.zlo)
-        gl.glVertex3f(b.xlo, b.yhi, b.zlo)
-        gl.glVertex3f(b.xhi, b.ylo, b.zlo)
-        gl.glVertex3f(b.xhi, b.yhi, b.zlo)
-        gl.glVertex3f(b.xlo, b.ylo, b.zhi)
-        gl.glVertex3f(b.xlo, b.yhi, b.zhi)
-        gl.glVertex3f(b.xhi, b.ylo, b.zhi)
-        gl.glVertex3f(b.xhi, b.yhi, b.zhi)
-
-        gl.glVertex3f(b.xlo, b.ylo, b.zlo)
-        gl.glVertex3f(b.xhi, b.ylo, b.zlo)
-        gl.glVertex3f(b.xlo, b.ylo, b.zhi)
-        gl.glVertex3f(b.xhi, b.ylo, b.zhi)
-        gl.glVertex3f(b.xlo, b.yhi, b.zlo)
-        gl.glVertex3f(b.xhi, b.yhi, b.zlo)
-        gl.glVertex3f(b.xlo, b.yhi, b.zhi)
-        gl.glVertex3f(b.xhi, b.yhi, b.zhi)
+        for p in points:
+            gl.glVertex3f(*p)
         gl.glEnd()
+        return
+
+        # this code draws a bounding box
+        # b = self.__displayCtx.bounds
+        # gl.glLineWidth(1)
+        # gl.glColor3f(0, 1, 0)
+        # gl.glBegin(gl.GL_LINES)
+        # gl.glVertex3f(b.xlo, b.ylo, b.zlo)
+        # gl.glVertex3f(b.xlo, b.ylo, b.zhi)
+        # gl.glVertex3f(b.xlo, b.yhi, b.zlo)
+        # gl.glVertex3f(b.xlo, b.yhi, b.zhi)
+        # gl.glVertex3f(b.xhi, b.ylo, b.zlo)
+        # gl.glVertex3f(b.xhi, b.ylo, b.zhi)
+        # gl.glVertex3f(b.xhi, b.yhi, b.zlo)
+        # gl.glVertex3f(b.xhi, b.yhi, b.zhi)
+
+        # gl.glVertex3f(b.xlo, b.ylo, b.zlo)
+        # gl.glVertex3f(b.xlo, b.yhi, b.zlo)
+        # gl.glVertex3f(b.xhi, b.ylo, b.zlo)
+        # gl.glVertex3f(b.xhi, b.yhi, b.zlo)
+        # gl.glVertex3f(b.xlo, b.ylo, b.zhi)
+        # gl.glVertex3f(b.xlo, b.yhi, b.zhi)
+        # gl.glVertex3f(b.xhi, b.ylo, b.zhi)
+        # gl.glVertex3f(b.xhi, b.yhi, b.zhi)
+
+        # gl.glVertex3f(b.xlo, b.ylo, b.zlo)
+        # gl.glVertex3f(b.xhi, b.ylo, b.zlo)
+        # gl.glVertex3f(b.xlo, b.ylo, b.zhi)
+        # gl.glVertex3f(b.xhi, b.ylo, b.zhi)
+        # gl.glVertex3f(b.xlo, b.yhi, b.zlo)
+        # gl.glVertex3f(b.xhi, b.yhi, b.zlo)
+        # gl.glVertex3f(b.xlo, b.yhi, b.zhi)
+        # gl.glVertex3f(b.xhi, b.yhi, b.zhi)
+        # gl.glEnd()
