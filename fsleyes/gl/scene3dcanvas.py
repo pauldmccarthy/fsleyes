@@ -105,10 +105,8 @@ class Scene3DCanvas(props.HasProperties):
                 continue
 
             display = self.__displayCtx.getDisplay(overlay)
-            globj   = globject.createGLObject(overlay,
-                                              display,
-                                              0,
-                                              1)
+            globj   = globject.createGLObject(overlay, display, True)
+
             globj.register(self.__name, self.Refresh)
             self.__glObjects[overlay] = globj
 

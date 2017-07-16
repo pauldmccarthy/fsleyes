@@ -296,7 +296,7 @@ class RenderTextureStack(object):
 
         with glroutines.disabled(gl.GL_BLEND):
             globj.preDraw()
-            globj.draw(zpos)
+            globj.draw2D(zpos)
             globj.postDraw()
 
         tex.unbindAsRenderTarget()

@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`Annotations` class, which implements
-functionality to draw 2D OpenGL annotations on a canvas
+functionality to draw 2D OpenGL annotations on a :class:`.SliceCanvas`.
 
 
 The :class:`Annotations` class is used by the :class:`.SliceCanvas` and
@@ -330,7 +330,8 @@ class AnnotationObject(globject.GLSimpleObject):
         :arg zmax:    Maximum z value above which this annotation should not
                       be drawn.
         """
-        globject.GLSimpleObject.__init__(self, xax, yax)
+        globject.GLSimpleObject.__init__(self, False)
+        self.setAxes(xax, yax)
 
         self.annot    = annot
         self.colour   = colour

@@ -310,9 +310,17 @@ class GLObject(notifier.Notifier):
         changes. It updates :attr:`xax`, :attr:`yax`, and :attr:`zax`
         properties on this ``GLObject`` instance.
 
+
         Sub-classes may override this method, but must still call this
         implementation.
+
+
+        An :exc:`AttributeError` will be raised if this method is called on
+        a ``GLObject`` that has been configured for 3D rendering.
         """
+        if self.__threedee:
+            raise AttributeError('setAxes called on a 3D '
+                                 '{}'.format(type(self).__name__))
         self.__xax = xax
         self.__yax = yax
         self.__zax = 3 - xax - yax

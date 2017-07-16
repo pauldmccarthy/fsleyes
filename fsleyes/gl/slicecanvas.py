@@ -789,10 +789,8 @@ class SliceCanvas(props.HasProperties):
                 self._glObjects.pop(overlay)
                 return
 
-            globj = globject.createGLObject(overlay,
-                                            display,
-                                            self.xax,
-                                            self.yax)
+            globj = globject.createGLObject(overlay, display, False)
+            globj.setAxes(self.xax, self.yax)
 
             if globj is not None:
                 globj.register(self.name, self.__onGLObjectUpdate)
@@ -1385,7 +1383,7 @@ class SliceCanvas(props.HasProperties):
                               self.zax, display.name))
 
                 globj.preDraw()
-                globj.draw(self.pos.z, bbox=bbox)
+                globj.draw2D(self.pos.z, bbox=bbox)
                 globj.postDraw()
 
             # Off-screen rendering - each overlay is
@@ -1417,7 +1415,7 @@ class SliceCanvas(props.HasProperties):
 
                 with glroutines.disabled(gl.GL_BLEND):
                     globj.preDraw()
-                    globj.draw(self.pos.z)
+                    globj.draw2D(self.pos.z)
                     globj.postDraw()
 
                 rt.unbindAsRenderTarget()

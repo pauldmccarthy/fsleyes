@@ -58,6 +58,7 @@ canvases are defined in the ``gl`` package:
 
    ~fsleyes.gl.slicecanvas.SliceCanvas
    ~fsleyes.gl.lightboxcanvas.LightBoxCanvas
+   ~fsleyes.gl.scene3dcanvas.Scene3DCanvas
    ~fsleyes.gl.colourbarcanvas.ColourBarCanvas
 
 
@@ -90,9 +91,11 @@ implementations for each of the available canvases:
 
    ~fsleyes.gl.wxglslicecanvas.WXGLSliceCanvas
    ~fsleyes.gl.wxgllightboxcanvas.WXGLLightBoxCanvas
+   ~fsleyes.gl.wxglscene3dcanvas.WXGLScene3DCanvas
    ~fsleyes.gl.wxglcolourbarcanvas.WXGLColourBarCanvas
    ~fsleyes.gl.offscreenslicecanvas.OffScreenSliceCanvas
    ~fsleyes.gl.offscreenlightboxcanvas.OffScreenLightBoxCanvas
+   ~fsleyes.gl.offscreenscene3dcanvas.OffScreenScene3DCanvas
    ~fsleyes.gl.offscreencolourbarcanvas.OffScreenColourBarCanvas
 
 
@@ -108,10 +111,10 @@ and used by application code.
 With the exception of the :class:`.ColourBarCanvas`, everything that is drawn
 on a canvas derives from the :class:`.GLObject` base class. A ``GLObject``
 manages the underlying data structures, GL resources (e.g. shaders and
-textures), and rendering routines required to draw an object to a canvas.  The
-following ``GLObject`` sub-classes correspond to each of the possible types
-(the :attr:`.Display.overlayType` property) that an overlay can be displayed
-as:
+textures), and rendering routines required to draw an object, in 2D or 3D, to a
+canvas.  The following ``GLObject`` sub-classes correspond to each of the
+possible types (the :attr:`.Display.overlayType` property) that an overlay can
+be displayed as:
 
 .. autosummary::
 
@@ -125,7 +128,8 @@ as:
    ~fsleyes.gl.gltensor.GLTensor
    ~fsleyes.gl.glsh.GLSH
 
-These objects are created and destroyed automatically by :class:`.SliceCanvas`
+
+These objects are created and destroyed automatically by the canvas classes
 instances, so application code does not need to worry about them too much.
 
 
@@ -134,12 +138,11 @@ Annotations
 ===========
 
 
-:class:`.SliceCanvas` canvases can be *annotated* in a few ways, by use of the
-:class:`.Annotations` class. An ``Annotations`` object allows lines,
-rectangles, and other simple shapes to be rendered on top of the ``GLObject``
-renderings which represent the overlays in the :class:`.OverlayList`.  The
-``Annotations`` object for a ``SliceCanvas`` instance can be accessed through
-its :meth:`.SliceCanvas.getAnnotations` method.
+Canvases can be *annotated* in a few ways, by use of the :class:`.Annotations`
+class. An ``Annotations`` object allows lines, rectangles, and other simple
+shapes to be rendered on top of the ``GLObject`` renderings which represent
+the overlays in the :class:`.OverlayList`.  The ``Annotations`` object for a
+canvas instance can be accessed through its ``getAnnotations`` method.
 
 
 ---------------------------------
@@ -370,6 +373,16 @@ def bootstrap(glVersion=None):
 
     # If on linux, we need to call glutInit.
     # If on OSX, we don't need to bother.
+    #
+    # note: GLUT is only required for text
+    #       rendering. The GLUT requirement
+    #       means that true off-screen (i.e.
+    #       headless) rendering is not
+    #       currently possible, although
+    #       would be if we removed GLUT
+    #       as a requirement. Off-screen
+    #       rendering is possible via other
+    #       means (e.g. xvfb-run).
     if fslplatform.os == 'Linux':
         import OpenGL.GLUT as GLUT
         GLUT.glutInit()
@@ -404,7 +417,6 @@ def bootstrap(glVersion=None):
 
         import fsleyes.displaycontext as dc
         dc.SceneOpts.performance.setConstraint(None, 'default', 1)
-
 
 
 def getGLContext(*args, **kwargs):
@@ -786,6 +798,11 @@ class OffScreenCanvasTarget(object):
         raise NotImplementedError()
 
 
+    def getAnnotations(self):
+        """Must be provided by subclasses."""
+        raise NotImplementedError()
+
+
     def Refresh(self, *a):
         """Does nothing. This canvas is for static (i.e. unchanging) rendering.
         """
@@ -937,6 +954,11 @@ class WXGLCanvasTarget(object):
         """This method should perform any OpenGL data initialisation required
         for rendering. Must be implemented by subclasses.
         """
+        raise NotImplementedError()
+
+
+    def getAnnotations(self):
+        """Must be provided by subclasses."""
         raise NotImplementedError()
 
 
