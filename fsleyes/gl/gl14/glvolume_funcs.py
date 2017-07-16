@@ -145,6 +145,8 @@ def draw(self, zpos, xform=None, bbox=None):
 
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
 
+    # Voxel coordinates are calculated
+    # in the vertex program
     self.shader.setAttr('texCoord', texCoords)
 
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
@@ -177,6 +179,33 @@ def drawAll(self, zposes, xforms):
                       nslices * 6,
                       gl.GL_UNSIGNED_INT,
                       indices)
+
+
+def draw3D(self, xform=None, bbox=None):
+    """Draws the image in 3D on the canvas.
+
+    :arg self:    The :class:`.GLVolume` object which is managing the image
+                  to be drawn.
+
+    :arg xform:   A 4*4 transformation matrix to be applied to the vertex
+                  data.
+
+    :arg bbox:    An optional bounding box.
+    """
+
+    vertices, voxCoords, texCoords = self.generateVertices3D(xform, bbox)
+
+    vertices = np.array(vertices, dtype=np.float32).ravel('C')
+
+    gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+
+    # Voxel coordinates are calculated
+    # in the vertex program
+    self.shader.setAttr('texCoord', texCoords)
+
+    self.shader.loadAtts()
+
+    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
 
 
 def postDraw(self):

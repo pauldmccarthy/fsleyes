@@ -504,6 +504,40 @@ class GLImageObject(GLObject):
         return vertices, voxCoords, texCoords
 
 
+    def generateVertices3D(self, xform=None, bbox=None):
+        """Generates vertex coordinates defining the 3D bounding box of the
+        :class:`.Image`, with the optional ``xform`` and ``bbox`` applied to
+        the coordinates. See the :func:`.routines.boundingBox` function.
+
+        A tuple of three values is returned, containing:
+
+          - A ``36*3 numpy.float32`` array containing the vertex coordinates
+
+          - A ``36*3 numpy.float32`` array containing the voxel coordinates
+            corresponding to each vertex
+
+          - A ``36*3 numpy.float32`` array containing the texture coordinates
+            corresponding to each vertex
+        """
+        opts   = self.displayOpts
+        v2dMat = opts.getTransform('voxel',   'display')
+        d2vMat = opts.getTransform('display', 'voxel')
+        v2tMat = opts.getTransform('voxel',   'texture')
+
+        vertices, voxCoords = glroutines.boundingBox(
+            self.image.shape[:3],
+            v2dMat,
+            d2vMat,
+            bbox=bbox)
+
+        if xform is not None:
+            vertices = transform.transform(vertices, xform)
+
+        texCoords = transform.transform(voxCoords, v2tMat)
+
+        return vertices, voxCoords, texCoords
+
+
     def generateVoxelCoordinates(self, zpos, bbox=None, space='voxel'):
         """Generates a grid of voxel coordinates along the
         XY display coordinate system plane, at the given ``zpos``.

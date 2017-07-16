@@ -1049,6 +1049,125 @@ def slice2D(dataShape,
     return vertices, voxCoords
 
 
+def boundingBox(dataShape,
+                voxToDisplayMat,
+                displayToVoxMat,
+                geometry='triangles',
+                origin='centre',
+                bbox=None):
+    """Generates a bounding box to represent a 3D image of the given shape,
+    in the coordinate system defined by the ``voxToDisplayMat`` affine.
+
+    See the :func:`slice2D` function for details on the arguments.
+
+    Returns a tuple containing:
+
+      - A ``N*3`` ``numpy.float32`` array containing the vertex locations
+        of a bounding box ``N=36`` if ``geometry=triangles``,
+        or ``N=24`` if ``geometry=square``,
+
+      - A ``N*3`` ``numpy.float32`` array containing the voxel coordinates
+        that correspond to the vertex locations.
+    """
+
+    (xlo, ylo, zlo), (xhi, yhi, zhi) = transform.axisBounds(
+        dataShape, voxToDisplayMat, origin=origin, boundary=None)
+
+    if bbox is not None:
+
+        xlo = max((xlo, bbox[0][0]))
+        xhi = min((xhi, bbox[0][1]))
+        ylo = max((ylo, bbox[1][0]))
+        yhi = min((yhi, bbox[1][1]))
+        zlo = max((zlo, bbox[2][0]))
+        zhi = min((zhi, bbox[2][1]))
+
+    if geometry == 'triangles':
+        vertices = np.zeros((36, 3), dtype=np.float32)
+
+        vertices[ 0, :] = (xlo, ylo, zlo)
+        vertices[ 1, :] = (xhi, ylo, zlo)
+        vertices[ 2, :] = (xlo, yhi, zlo)
+        vertices[ 3, :] = (xlo, yhi, zlo)
+        vertices[ 4, :] = (xhi, ylo, zlo)
+        vertices[ 5, :] = (xhi, yhi, zlo)
+
+        vertices[ 6, :] = (xlo, ylo, zhi)
+        vertices[ 7, :] = (xhi, ylo, zhi)
+        vertices[ 8, :] = (xlo, yhi, zhi)
+        vertices[ 9, :] = (xlo, yhi, zhi)
+        vertices[10, :] = (xhi, ylo, zhi)
+        vertices[11, :] = (xhi, yhi, zhi)
+
+        vertices[12, :] = (xlo, ylo, zlo)
+        vertices[13, :] = (xhi, ylo, zlo)
+        vertices[14, :] = (xlo, ylo, zhi)
+        vertices[15, :] = (xlo, ylo, zhi)
+        vertices[16, :] = (xhi, ylo, zlo)
+        vertices[17, :] = (xhi, ylo, zhi)
+
+        vertices[18, :] = (xlo, yhi, zlo)
+        vertices[19, :] = (xhi, yhi, zlo)
+        vertices[20, :] = (xlo, yhi, zhi)
+        vertices[21, :] = (xlo, yhi, zhi)
+        vertices[22, :] = (xhi, yhi, zlo)
+        vertices[23, :] = (xhi, yhi, zhi)
+
+        vertices[24, :] = (xlo, ylo, zlo)
+        vertices[25, :] = (xlo, yhi, zlo)
+        vertices[26, :] = (xlo, ylo, zhi)
+        vertices[27, :] = (xlo, ylo, zhi)
+        vertices[28, :] = (xlo, yhi, zlo)
+        vertices[29, :] = (xlo, yhi, zhi)
+
+        vertices[30, :] = (xhi, ylo, zlo)
+        vertices[31, :] = (xhi, yhi, zlo)
+        vertices[32, :] = (xhi, ylo, zhi)
+        vertices[33, :] = (xhi, ylo, zhi)
+        vertices[34, :] = (xhi, yhi, zlo)
+        vertices[35, :] = (xhi, yhi, zhi)
+
+    elif geometry == 'square':
+        vertices = np.zeros((24, 3), dtype=np.float32)
+
+        vertices[ 0, :] = (xlo, ylo, zlo)
+        vertices[ 1, :] = (xhi, ylo, zlo)
+        vertices[ 2, :] = (xhi, yhi, zlo)
+        vertices[ 3, :] = (xlo, yhi, zlo)
+
+        vertices[ 4, :] = (xlo, ylo, zhi)
+        vertices[ 5, :] = (xhi, ylo, zhi)
+        vertices[ 6, :] = (xhi, yhi, zhi)
+        vertices[ 7, :] = (xlo, yhi, zhi)
+
+        vertices[ 8, :] = (xlo, ylo, zlo)
+        vertices[ 9, :] = (xhi, ylo, zlo)
+        vertices[10, :] = (xhi, ylo, zhi)
+        vertices[11, :] = (xlo, ylo, zhi)
+
+        vertices[12, :] = (xlo, yhi, zlo)
+        vertices[13, :] = (xhi, yhi, zlo)
+        vertices[14, :] = (xhi, yhi, zhi)
+        vertices[15, :] = (xlo, yhi, zhi)
+
+        vertices[16, :] = (xlo, ylo, zlo)
+        vertices[17, :] = (xlo, yhi, zlo)
+        vertices[18, :] = (xlo, yhi, zhi)
+        vertices[19, :] = (xlo, ylo, zhi)
+
+        vertices[20, :] = (xhi, ylo, zlo)
+        vertices[21, :] = (xhi, yhi, zlo)
+        vertices[22, :] = (xhi, yhi, zhi)
+        vertices[23, :] = (xhi, ylo, zhi)
+
+    else:
+        raise ValueError('Unrecognised geometry type: {}'.format(geometry))
+
+    voxCoords = transform.transform(vertices, displayToVoxMat)
+
+    return vertices, voxCoords
+
+
 def subsample(data, resolution, pixdim=None, volume=None):
     """Samples the given 3D data according to the given resolution.
 

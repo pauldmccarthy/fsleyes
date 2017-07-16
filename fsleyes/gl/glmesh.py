@@ -349,7 +349,7 @@ class GLMesh(globject.GLObject):
             tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
 
 
-    def draw3D(self, bbox=None):
+    def draw3D(self, xform=None, bbox=None):
         """
         """
         opts      = self.opts

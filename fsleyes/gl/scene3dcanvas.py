@@ -18,6 +18,7 @@ import OpenGL.GL as gl
 import fsleyes_props as props
 
 import fsl.data.mesh       as fslmesh
+import fsl.data.image      as fslimage
 import fsl.utils.transform as transform
 
 import fsleyes.gl.routines as glroutines
@@ -100,7 +101,7 @@ class Scene3DCanvas(props.HasProperties):
             if overlay in self.__glObjects:
                 continue
 
-            if not isinstance(overlay, fslmesh.TriangleMesh):
+            if not isinstance(overlay, (fslmesh.TriangleMesh, fslimage.Image)):
                 continue
 
             display = self.__displayCtx.getDisplay(overlay)
@@ -257,18 +258,20 @@ class Scene3DCanvas(props.HasProperties):
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
             for ovl in self.__overlayList:
-                if not isinstance(ovl, fslmesh.TriangleMesh):
-                    continue
 
                 globj   = self.__glObjects.get(ovl, None)
                 display = self.__displayCtx.getDisplay(ovl)
 
                 if globj is None:
                     continue
+                if not globj.ready():
+                    continue
                 if not display.enabled:
                     continue
 
+                globj.preDraw()
                 globj.draw3D()
+                globj.postDraw()
 
             if self.showCursor:
                 self.__drawCursor()

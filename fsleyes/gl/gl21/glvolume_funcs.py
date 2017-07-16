@@ -161,6 +161,29 @@ def draw(self, zpos, xform=None, bbox=None):
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
 
+def draw3D(self, xform=None, bbox=None):
+    """Draws the image in 3D on the canvas.
+
+    :arg self:    The :class:`.GLVolume` object which is managing the image
+                  to be drawn.
+
+    :arg xform:   A 4*4 transformation matrix to be applied to the vertex
+                  data.
+
+    :arg bbox:    An optional bounding box.
+    """
+
+    vertices, voxCoords, texCoords = self.generateVertices3D(xform, bbox)
+
+    self.shader.setAtt('vertex',   vertices)
+    self.shader.setAtt('voxCoord', voxCoords)
+    self.shader.setAtt('texCoord', texCoords)
+
+    self.shader.loadAtts()
+
+    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
+
+
 def drawAll(self, zposes, xforms):
     """Draws all of the specified slices. """
 

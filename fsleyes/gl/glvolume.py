@@ -621,6 +621,12 @@ class GLVolume(globject.GLImageObject):
         fslgl.glvolume_funcs.drawAll(self, zposes, xforms)
 
 
+    def draw3D(self, xform=None, bbox=None):
+        """Calls the version dependent ``draw3D`` function. """
+
+        fslgl.glvolume_funcs.draw3D(self, xform, bbox)
+
+
     def postDraw(self):
         """Unbinds the ``ImageTexture`` and ``ColourMapTexture``, and calls the
         version-dependent ``postDraw`` function.
