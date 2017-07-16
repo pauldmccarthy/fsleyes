@@ -219,6 +219,13 @@ altHandlerMap = {
         (('view', 'LeftMouseDown'), ('view', 'LeftMouseDrag')), )),
 
 
+    Scene3DViewProfile : OrderedDict((
+        (('rotate', 'MiddleMouseDown'), ('pan', 'LeftMouseDown')),
+        (('rotate', 'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('rotate', 'MiddleMouseUp'),   ('pan', 'LeftMouseUp')),
+    )),
+
+
     # We cannot remap mouse buttons on the
     # PlotProfile.panzoom mode, because the
     # mpl NavigationToolbar2 class has
