@@ -197,7 +197,7 @@ def draw(self, zpos, xform=None, bbox=None):
     if xform is None: xform = v2dMat
     else:             xform = transform.concat(v2dMat, xform)
 
-    voxels              = self.generateVoxelCoordinates(zpos, bbox)
+    voxels              = self.generateVoxelCoordinates2D(zpos, bbox)
     voxels, radTexShape = self.updateRadTexture(voxels)
 
     if len(voxels) == 0:

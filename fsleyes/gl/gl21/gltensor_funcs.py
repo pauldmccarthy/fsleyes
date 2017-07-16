@@ -181,7 +181,7 @@ def draw(self, zpos, xform=None, bbox=None):
     if xform is None: xform = v2dMat
     else:             xform = transform.concat(v2dMat, xform)
 
-    voxels  = self.generateVoxelCoordinates(zpos, bbox)
+    voxels  = self.generateVoxelCoordinates2D(zpos, bbox)
     nVoxels = len(voxels)
 
     # Set divisor to 1, so we use one set of

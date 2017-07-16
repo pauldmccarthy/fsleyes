@@ -56,7 +56,7 @@ def init(self):
     updateShaderState(self)
     updateVertices(   self)
 
-    opts = self.displayOpts
+    opts = self.opts
 
     def vertexUpdate(*a):
         updateVertices(self)
@@ -82,11 +82,11 @@ def destroy(self):
 
     name = '{}_vertices'.format(self.name)
 
-    self.displayOpts.removeListener('transform',   name)
-    self.displayOpts.removeListener('directed',    name)
-    self.displayOpts.removeListener('unitLength',  name)
-    self.displayOpts.removeListener('lengthScale', name)
-    self.displayOpts.removeListener('orientFlip',  name)
+    self.opts.removeListener('transform',   name)
+    self.opts.removeListener('directed',    name)
+    self.opts.removeListener('unitLength',  name)
+    self.opts.removeListener('lengthScale', name)
+    self.opts.removeListener('orientFlip',  name)
 
     glresources.delete(self._vertexResourceName)
 
@@ -153,13 +153,15 @@ def preDraw(self):
     self.shader.load()
 
 
-def draw(self, zpos, xform=None, bbox=None):
+def draw2D(self, zpos, xform=None, bbox=None):
     """Draws the line vertices corresponding to a 2D plane located
     at the specified Z location.
     """
 
-    opts                = self.displayOpts
-    vertices, voxCoords = self.lineVertices.getVertices(zpos, self, bbox=bbox)
+    opts                = self.opts
+    vertices, voxCoords = self.lineVertices.getVertices2D(zpos,
+                                                          self,
+                                                          bbox=bbox)
 
     if vertices.size == 0:
         return
@@ -183,10 +185,14 @@ def draw(self, zpos, xform=None, bbox=None):
     gl.glPopMatrix()
 
 
+def draw3D(self, xform, bbox):
+    pass
+
+
 def drawAll(self, zposes, xforms):
     """Draws line vertices corresponding to each Z location. """
     for zpos, xform in zip(zposes, xforms):
-        draw(self, zpos, xform)
+        draw2D(self, zpos, xform)
 
 
 def postDraw(self):

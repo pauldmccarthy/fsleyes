@@ -206,7 +206,7 @@ class GLObject(notifier.Notifier):
         self.__name     = '{}_{}'.format(type(self).__name__, id(self))
         self.__threedee = threedee
 
-        if threedee:
+        if not threedee:
             self.__xax  = 0
             self.__yax  = 1
             self.__zax  = 2
@@ -677,7 +677,7 @@ class GLImageObject(GLObject):
         This method will raise an :exc:`AttributeError` if called on a
         ``GLImageObject`` configured for 3D rendering.
 
-        See the :func:`.calculateSamplePoints` function.
+        See the :func:`.pointGrid` function.
         """
 
         if space not in ('voxel', 'display'):
@@ -695,7 +695,7 @@ class GLImageObject(GLObject):
         else:
             resolution = [min(image.pixdim[:3])] * 3
 
-        voxels = glroutines.calculateSamplePoints(
+        voxels = glroutines.pointGrid(
             image.shape,
             resolution,
             v2dMat,
@@ -710,5 +710,33 @@ class GLImageObject(GLObject):
             voxels = opts.roundVoxels(voxels,
                                       daxes=[self.zax],
                                       roundOther=False)
+
+        return voxels
+
+
+    def generateVoxelCoordinates3D(self, bbox, space='voxel'):
+        """
+
+
+        See the :func:`.pointGrid3D` function.
+
+        note: Not implemented properly yet.
+        """
+
+        if space not in ('voxel', 'display'):
+            raise ValueError('Unknown value for space ("{}")'.format(space))
+
+
+        image      = self.image
+        opts       = self.opts
+        v2dMat     = opts.getTransform('voxel',   'display')
+        d2vMat     = opts.getTransform('display', 'voxel')
+
+        voxels = glroutines.pointGrid3D(image.shape[:3])
+
+        if space == 'voxel':
+            pass
+            # voxels = transform.transform(voxels, d2vMat)
+            # voxels = opts.roundVoxels(voxels)
 
         return voxels
