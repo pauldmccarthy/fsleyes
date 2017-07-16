@@ -66,7 +66,7 @@ def updateShaderState(self):
     if not self.ready():
         return
 
-    opts = self.displayOpts
+    opts = self.opts
 
     # enable the vertex and fragment programs
     self.shader.load()
@@ -121,7 +121,7 @@ def preDraw(self):
     self.shader.load()
     self.shader.loadAtts()
 
-    opts = self.displayOpts
+    opts = self.opts
 
     if isinstance(self, glvolume.GLVolume):
         if opts.clipImage is None:
@@ -136,10 +136,10 @@ def preDraw(self):
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
 
 
-def draw(self, zpos, xform=None, bbox=None):
-    """Draws a slice of the image at the given Z location. """
+def draw2D(self, zpos, xform=None, bbox=None):
+    """Draws a 2D slice of the image at the given Z location. """
 
-    vertices, voxCoords, texCoords = self.generateVertices(zpos, xform, bbox)
+    vertices, voxCoords, texCoords = self.generateVertices2D(zpos, xform, bbox)
 
     vertices = np.array(vertices, dtype=np.float32).ravel('C')
 
@@ -150,35 +150,6 @@ def draw(self, zpos, xform=None, bbox=None):
     self.shader.setAttr('texCoord', texCoords)
 
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
-
-
-def drawAll(self, zposes, xforms):
-    """Draws mutltiple slices of the given image at the given Z position,
-    applying the corresponding transformation to each of the slices.
-    """
-
-    nslices   = len(zposes)
-    vertices  = np.zeros((nslices * 6, 3), dtype=np.float32)
-    texCoords = np.zeros((nslices * 6, 3), dtype=np.float32)
-    indices   = np.arange(nslices * 6,     dtype=np.uint32)
-
-    for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
-
-        v, vc, tc = self.generateVertices(zpos, xform)
-
-        vertices[ i * 6: i * 6 + 6, :] = v
-        texCoords[i * 6: i * 6 + 6, :] = tc
-
-    vertices = vertices.ravel('C')
-
-    gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-
-    self.shader.setAttr('texCoord', texCoords)
-
-    gl.glDrawElements(gl.GL_TRIANGLES,
-                      nslices * 6,
-                      gl.GL_UNSIGNED_INT,
-                      indices)
 
 
 def draw3D(self, xform=None, bbox=None):
@@ -206,6 +177,35 @@ def draw3D(self, xform=None, bbox=None):
     self.shader.loadAtts()
 
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
+
+
+def drawAll(self, zposes, xforms):
+    """Draws mutltiple slices of the given image at the given Z position,
+    applying the corresponding transformation to each of the slices.
+    """
+
+    nslices   = len(zposes)
+    vertices  = np.zeros((nslices * 6, 3), dtype=np.float32)
+    texCoords = np.zeros((nslices * 6, 3), dtype=np.float32)
+    indices   = np.arange(nslices * 6,     dtype=np.uint32)
+
+    for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
+
+        v, vc, tc = self.generateVertices2D(zpos, xform)
+
+        vertices[ i * 6: i * 6 + 6, :] = v
+        texCoords[i * 6: i * 6 + 6, :] = tc
+
+    vertices = vertices.ravel('C')
+
+    gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+
+    self.shader.setAttr('texCoord', texCoords)
+
+    gl.glDrawElements(gl.GL_TRIANGLES,
+                      nslices * 6,
+                      gl.GL_UNSIGNED_INT,
+                      indices)
 
 
 def postDraw(self):

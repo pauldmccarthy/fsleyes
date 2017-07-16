@@ -519,9 +519,9 @@ class GLImageObject(GLObject):
         implementation. It clears references to the :class:`.Image`,
         :class:`.Display`, and :class:`.DisplayOpts` instances.
         """
-        self.__image       = None
-        self.__display     = None
-        self.__displayOpts = None
+        self.__image   = None
+        self.__display = None
+        self.__opts    = None
 
 
     def destroyed(self):
@@ -639,7 +639,7 @@ class GLImageObject(GLObject):
           - A ``36*3 numpy.float32`` array containing the texture coordinates
             corresponding to each vertex
         """
-        opts   = self.displayOpts
+        opts   = self.opts
         v2dMat = opts.getTransform('voxel',   'display')
         d2vMat = opts.getTransform('display', 'voxel')
         v2tMat = opts.getTransform('voxel',   'texture')

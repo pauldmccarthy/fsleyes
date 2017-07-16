@@ -64,7 +64,7 @@ def updateShaderState(self):
     if not self.ready():
         return
 
-    opts   = self.displayOpts
+    opts   = self.opts
     shader = self.shader
 
     # The clipping range options are in the voxel value
@@ -123,7 +123,7 @@ def preDraw(self):
     """
     self.shader.load()
 
-    opts = self.displayOpts
+    opts = self.opts
 
     if isinstance(self, glvolume.GLVolume):
         if opts.clipImage is None:
@@ -136,8 +136,8 @@ def preDraw(self):
         self.shader.set('clipCoordXform', clipCoordXform)
 
 
-def draw(self, zpos, xform=None, bbox=None):
-    """Draws the specified slice from the specified image on the canvas.
+def draw2D(self, zpos, xform=None, bbox=None):
+    """Draws the specified 2D slice from the specified image on the canvas.
 
     :arg self:    The :class:`.GLVolume` object which is managing the image
                   to be drawn.
@@ -150,7 +150,7 @@ def draw(self, zpos, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
 
-    vertices, voxCoords, texCoords = self.generateVertices(zpos, xform, bbox)
+    vertices, voxCoords, texCoords = self.generateVertices2D(zpos, xform, bbox)
 
     self.shader.setAtt('vertex',   vertices)
     self.shader.setAtt('voxCoord', voxCoords)
@@ -194,7 +194,7 @@ def drawAll(self, zposes, xforms):
 
     for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
 
-        v, vc, tc = self.generateVertices(zpos, xform)
+        v, vc, tc = self.generateVertices2D(zpos, xform)
         vertices[ i * 6: i * 6 + 6, :] = v
         voxCoords[i * 6: i * 6 + 6, :] = vc
         texCoords[i * 6: i * 6 + 6, :] = tc
