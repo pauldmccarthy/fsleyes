@@ -4,8 +4,8 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`GLObject` class, which is a superclass for
-all 2D representations of objects in OpenGL. The following classes are
+"""This module provides the :class:`GLObject` class, which is a superclass
+for all FSLeyes OpenGL overlay types. The following classes are
 also defined in this module:
 
 .. autosummary::
@@ -67,28 +67,28 @@ def getGLObjectType(overlayType):
     return typeMap.get(overlayType, None)
 
 
-def createGLObject(overlay, display, xax, yax):
+def createGLObject(overlay, display, threedee=False):
     """Create :class:`GLObject` instance for the given overlay, as specified
     by the :attr:`.Display.overlayType` property.
 
-    :arg overlay: An overlay object (e.g. a :class:`.Image` instance).
+    :arg overlay:  An overlay object (e.g. a :class:`.Image` instance).
 
-    :arg display: A :class:`.Display` instance describing how the overlay
-                  should be displayed.
+    :arg display:  A :class:`.Display` instance describing how the overlay
+                    should be displayed.
 
-    :arg xax:     Initial display X axis
-
-    :arg yax:     Initial display Y axis
+    :arg threedee: If ``True``, the ``GLObject`` will be configured for
+                   3D rendering. Otherwise it will be configured for 2D
+                   slice-based rendering.
     """
     ctr = getGLObjectType(display.overlayType)
 
-    if ctr is not None: return ctr(overlay, display, xax, yax)
+    if ctr is not None: return ctr(overlay, display, threedee)
     else:               return None
 
 
 class GLObject(notifier.Notifier):
-    """The :class:`GLObject` class is a base class for all 2D OpenGL
-    objects displayed in *FSLeyes*.
+    """The :class:`GLObject` class is a base class for all OpenGL objects
+    displayed in *FSLeyes*.
 
 
     **Instance attributes**
@@ -97,7 +97,13 @@ class GLObject(notifier.Notifier):
     The following attributes will always be available on ``GLObject``
     instances:
 
-      - ``name``: A unique name for this ``GLObject`` instance.
+      - ``name``:     A unique name for this ``GLObject`` instance.
+
+      - ``threedee``: A boolean flag indicating whether this ``GLObject``
+                      is configured for 2D or 3D rendering.
+
+    If the ``GLObject`` is created for 2D slice-based rendering, the following
+    attributes will also be present:
 
       - ``xax``:  Index of the display coordinate system axis that
                   corresponds to the horizontal screen axis.
@@ -108,6 +114,27 @@ class GLObject(notifier.Notifier):
       - ``zax``:  Index of the display coordinate system axis that
                   corresponds to the depth screen axis.
 
+
+    **Usage**
+
+
+    Once you have created a ``GLObject``:
+
+
+     1. If the ``GLObject`` was created for 2D rendering, you must call the
+        :meth:`setAxes` method after creation, and before doing anything else.
+
+     2. Do not use the ``GLObject`` until its :meth:`ready` method returns
+        ``True``.
+
+     3. In order to render the ``GLObject`` to a canvas, call (in order) the
+        :meth:`preDraw`, :meth:`draw2D` (or :meth:`draw3D`), and
+        :meth:`postDraw`, methods. Multple calls to
+        :meth:`draw2D`/:meth:`draw3D` may occur between calls to
+        :meth:`preDraw` and :meth:`postDraw`.
+
+     4. Once you are finished with the ``GLObject``, call its :meth:`destroy`
+        method.
 
     **Update listeners**
 
@@ -128,7 +155,7 @@ class GLObject(notifier.Notifier):
      - Call :meth:`__init__`. A ``GLObject.__init__`` sub-class method must
        have the following signature::
 
-           def __init__(self, overlay, display, xax, yax)
+           def __init__(self, overlay, display, threedee)
 
 
      - Call :meth:`notify` whenever its OpenGL representation changes.
@@ -144,7 +171,8 @@ class GLObject(notifier.Notifier):
           destroy
           destroyed
           preDraw
-          draw
+          draw2D
+          draw3D
           postDraw
 
     Alternately, a sub-class could derive from one of the following classes,
@@ -158,26 +186,30 @@ class GLObject(notifier.Notifier):
     """
 
 
-    def __init__(self, xax, yax):
+    def __init__(self, threedee):
         """Create a :class:`GLObject`.  The constructor adds one attribute
         to this instance, ``name``, which is simply a unique name for this
-        instance, and gives values to the ``xax``, ``yax``, and ``zax``
-        attributes.
+        instance.
+
+        If ``threedee is True``, ``xax``, ``yax``, and ``zax`` attributes are
+        also added. You must call the :meth:`setAxes` method after creation
+        to configure these attributes
 
         Subclass implementations must call this method, and should also
         perform any necessary OpenGL initialisation, such as creating
         textures.
 
-        :arg xax: Initial display X axis
-        :arg yax: Initial display Y axis
+        :arg threedee: Whether this ``GLObject`` is to be used for 2D or 3D
+                       rendering.
         """
 
-        # Give this instance a name, and set
-        # initial values for the display axes
-        self.name = '{}_{}'.format(type(self).__name__, id(self))
-        self.xax  = xax
-        self.yax  = yax
-        self.zax  = 3 - xax - yax
+        self.__name     = '{}_{}'.format(type(self).__name__, id(self))
+        self.__threedee = threedee
+
+        if threedee:
+            self.__xax  = 0
+            self.__yax  = 1
+            self.__zax  = 2
 
         log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
 
@@ -186,6 +218,44 @@ class GLObject(notifier.Notifier):
         """Prints a log message."""
         if log:
             log.debug('{}.del ({})'.format(type(self).__name__, id(self)))
+
+
+    @property
+    def name(self):
+        """A unique name for this ``GLObject``. """
+        return self.__name
+
+
+    @property
+    def xax(self):
+        """Property which specifies the Y (horizontal) axis, if this
+        ``GLObject`` is configured for 2D rendering.
+        """
+        return self.__xax
+
+    @property
+    def yax(self):
+        """Property which specifies the Y (vertical) axis, if this ``GLObject``
+        is configured for 2D rendering.
+        """
+        return self.__yax
+
+
+    @property
+    def zax(self):
+        """Property which specifies the Z (depth) axis, if this ``GLObject``
+        is configured for 2D rendering.
+        """
+        return self.__zax
+
+
+    @property
+    def threedee(self):
+        """Property which is ``True`` if this ``GLObject`` was configured
+        for 3D rendering, or ``False`` if it was configured for 2D slice
+        rendering.
+        """
+        return self.__threedee
 
 
     def ready(self):
@@ -215,7 +285,9 @@ class GLObject(notifier.Notifier):
     def getDataResolution(self, xax, yax):
         """This method must calculate and return a sequence of three values,
         which defines a suitable pixel resolution, along the display coordinate
-        system ``(x, y, z)`` axes, for rendering this ``GLObject`` to screen.
+        system ``(x, y, z)`` axes, for rendering a 2D slice of this
+        ``GLObject`` to screen.
+
 
         This method should be implemented by sub-classes. If not implemented,
         a default resolution is used. The returned resolution *might* be used
@@ -224,6 +296,7 @@ class GLObject(notifier.Notifier):
         :class:`.GLObjectRenderTexture` is used - see the
         :class:`.SliceCanvas` documentation for more details.
 
+
         :arg xax: Axis to be used as the horizontal screen axis.
         :arg yax: Axis to be used as the vertical screen axis.
         """
@@ -231,21 +304,22 @@ class GLObject(notifier.Notifier):
 
 
     def setAxes(self, xax, yax):
-        """This method is called when the display orientation for this
-        :class:`GLObject` changes. It sets :attr:`xax`, :attr:`yax`,
-        and :attr:`zax` attributes on this ``GLObject`` instance.
+        """This method must be called after creation of ``GLObject`` instances
+        which have been configured for 2D rendering. It may also be called at
+        later times when the display orientation for this :class:`GLObject`
+        changes. It updates :attr:`xax`, :attr:`yax`, and :attr:`zax`
+        properties on this ``GLObject`` instance.
 
-        Sub-classes may override this method, but should still call this
-        implementation, or should set the ``xax``, ``yax``, and ``zax``
-        attributes themselves.
+        Sub-classes may override this method, but must still call this
+        implementation.
         """
-        self.xax = xax
-        self.yax = yax
-        self.zax = 3 - xax - yax
+        self.__xax = xax
+        self.__yax = yax
+        self.__zax = 3 - xax - yax
 
 
     def destroy(self):
-        """This method is called when this :class:`GLObject` is no longer
+        """This method must be called when this :class:`GLObject` is no longer
         needed.
 
         It should perform any necessary cleaning up, such as deleting texture
@@ -255,7 +329,7 @@ class GLObject(notifier.Notifier):
 
 
     def destroyed(self):
-        """This method is called to test whether a call has been made to
+        """This method may be called to test whether a call has been made to
         :meth:`destroy`.
 
         It should return ``True`` if this ``GLObject`` has been destroyed,
@@ -268,16 +342,33 @@ class GLObject(notifier.Notifier):
         """This method is called at the start of a draw routine.
 
         It should perform any initialisation which is required before one or
-        more calls to the :meth:`draw` method are made, such as binding and
-        configuring textures.
+        more calls to the :meth:`draw2D`/:meth:`draw3D` methods are made, such
+        as binding and configuring textures.
         """
         raise NotImplementedError()
 
 
-    def draw(self, zpos, xform=None, bbox=None):
-        """This method should draw a view of this ``GLObject`` - a 2D slice
-        at the given Z location, which specifies the position along the screen
-        depth axis.
+    def draw2D(self, zpos, xform=None, bbox=None):
+        """This method is called on ``GLObject`` instances which are
+        configured for 2D rendering. It should draw a view of this
+        ``GLObject`` - a 2D slice at the given Z location, which specifies
+        the position along the screen depth axis.
+
+        :arg xform: If provided, it must be applied to the model view
+                    transformation before drawing.
+
+        :arg bbox:  If provided, defines the bounding box, in the display
+                    coordinate system, which is to be displayed. Can be used
+                    as a performance hint (i.e. to limit the number of things
+                    that are rendered).
+        """
+        raise NotImplementedError()
+
+
+    def draw3D(self, xform=None, bbox=None):
+        """This method is called on ``GLObject`` instances which are
+        configured for 3D rendering. It should draw a 3D view of this
+        ``GLObject``.
 
         :arg xform: If provided, it must be applied to the model view
                     transformation before drawing.
@@ -291,10 +382,12 @@ class GLObject(notifier.Notifier):
 
 
     def drawAll(self, zposes, xforms):
-        """This method should do the same as multiple calls to the
-        :meth:`draw` method, one for each of the Z positions and
-        transformation matrices contained in the ``zposes`` and
-        ``xforms`` arrays.
+        """This is a convenience method for 2D lightboxD canvases, where
+        multple 2D slices at different depths are drawn alongside each other.
+
+        This method should do the same as multiple calls to the :meth:`draw2D`
+        method, one for each of the Z positions and transformation matrices
+        contained in the ``zposes`` and ``xforms`` arrays.
 
         In some circumstances (hint: the :class:`.LightBoxCanvas`), better
         performance may be achieved in combining multiple renders, rather
@@ -305,12 +398,12 @@ class GLObject(notifier.Notifier):
         by combining the draws.
         """
         for (zpos, xform) in zip(zposes, xforms):
-            self.draw(zpos, xform)
+            self.draw2D(zpos, xform)
 
 
     def postDraw(self):
-        """This method is called after the :meth:`draw` method has been called
-        one or more times.
+        """This method is called after the :meth:`draw2D`/:meth:`draw3D`
+        methods have been called one or more times.
 
         It should perform any necessary cleaning up, such as unbinding
         textures.
@@ -321,17 +414,17 @@ class GLObject(notifier.Notifier):
 class GLSimpleObject(GLObject):
     """The ``GLSimpleObject`` class is a convenience superclass for simple
     rendering tasks (probably fixed-function) which require no setup or
-    initialisation/management of GL memory or state. All subclasses need to
-    do is implement the :meth:`GLObject.draw` method. The :mod:`.annotations`
-    module uses the ``GLSimpleObject`` class.
+    initialisation/management of GL memory or state. All subclasses need to do
+    is implement the :meth:`GLObject.draw2D` and :meth:`GLObject.draw3D`
+    methods. The :mod:`.annotations` module uses the ``GLSimpleObject`` class.
 
     Subclasses should not assume that any of the other methods will ever
     be called.
     """
 
-    def __init__(self, xax, yax):
+    def __init__(self, threedee):
         """Create a ``GLSimpleObject``. """
-        GLObject.__init__(self, xax, yax)
+        GLObject.__init__(self, threedee)
         self.__destroyed = False
 
 
@@ -348,7 +441,6 @@ class GLSimpleObject(GLObject):
     def destroyed(self):
         """Overrides :meth:`GLObject.destroy`. Returns ``True`` if
         :meth:`destroy` hs been called, ``False`` otherwise.
-
         """
         return self.__destroyed
 
@@ -365,37 +457,53 @@ class GLSimpleObject(GLObject):
 
 class GLImageObject(GLObject):
     """The ``GLImageObject`` class is the base class for all GL representations
-    of :class:`.Nifti` instances.
+    of :class:`.Nifti` instances. It contains some convenience methods for
+    drawing volumetric image data.
     """
 
-    def __init__(self, image, display, xax, yax):
+    def __init__(self, image, display, threedee):
         """Create a ``GLImageObject``.
 
         This constructor adds the following attributes to this instance:
 
-        =============== =======================================================
-        ``image``       A reference to the :class:`.Nifti` overlay being
-                        displayed.
-        ``display``     A reference to the :class:`.Display` instance
-                        associated with the ``image``.
-        ``displayOpts`` A reference to the :class:`.DisplayOpts` instance,
-                        containing overlay type-specific display options. This
-                        is assumed to be a sub-class of :class:`.NiftiOpts`.
-        =============== =======================================================
+        =========== =======================================================
+        ``image``   A reference to the :class:`.Nifti` overlay being
+                    displayed.
+        ``display`` A reference to the :class:`.Display` instance
+                    associated with the ``image``.
+        ``opts``    A reference to the :class:`.DisplayOpts` instance,
+                    containing overlay type-specific display options. This
+                    is assumed to be a sub-class of :class:`.NiftiOpts`.
+        =========== =======================================================
 
-        :arg image:   The :class:`.Nifti` instance
+        :arg image:    The :class:`.Nifti` instance
 
-        :arg display: An associated :class:`.Display` instance.
+        :arg display:  An associated :class:`.Display` instance.
 
-        :arg xax:     Initial display X axis
-
-        :arg yax:     Initial display Y axis
+        :arg threedee: 2D or 3D rendering
         """
 
-        GLObject.__init__(self, xax, yax)
-        self.image       = image
-        self.display     = display
-        self.displayOpts = display.getDisplayOpts()
+        GLObject.__init__(self, threedee)
+        self.__image   = image
+        self.__display = display
+        self.__opts    = display.getDisplayOpts()
+
+
+    @property
+    def image(self):
+        """The :class:`.Nifti` being rendered by this ``GLImageObject``. """
+        return self.__image
+
+
+    @property
+    def display(self):
+        """The :class:`.Display` instance associated with the image. """
+        return self.__display
+
+    @property
+    def opts(self):
+        """The :class:`.DisplayOpts` instance associated with the image. """
+        return self.__opts
 
 
     def destroy(self):
@@ -403,9 +511,9 @@ class GLImageObject(GLObject):
         implementation. It clears references to the :class:`.Image`,
         :class:`.Display`, and :class:`.DisplayOpts` instances.
         """
-        self.image       = None
-        self.display     = None
-        self.displayOpts = None
+        self.__image       = None
+        self.__display     = None
+        self.__displayOpts = None
 
 
     def destroyed(self):
@@ -419,19 +527,19 @@ class GLImageObject(GLObject):
         """Returns the bounds of the :class:`.Image` (see the
         :meth:`.DisplayOpts.bounds` property).
         """
-        return (self.displayOpts.bounds.getLo(),
-                self.displayOpts.bounds.getHi())
+        return (self.opts.bounds.getLo(),
+                self.opts.bounds.getHi())
 
 
     def getDataResolution(self, xax, yax):
         """Returns a suitable screen resolution for rendering this
-        ``GLImageObject``.
+        ``GLImageObject`` in 2D.
         """
 
         import nibabel as nib
 
         image = self.image
-        opts  = self.displayOpts
+        opts  = self.opts
 
         # Figure out a good display resolution
         # along each voxel dimension
@@ -452,7 +560,7 @@ class GLImageObject(GLObject):
         return res
 
 
-    def generateVertices(self, zpos, xform=None, bbox=None):
+    def generateVertices2D(self, zpos, xform=None, bbox=None):
         """Generates vertex coordinates for a 2D slice of the :class:`.Image`,
         through the given ``zpos``, with the optional ``xform`` and ``bbox``
         applied to the coordinates.
@@ -461,6 +569,7 @@ class GLImageObject(GLObject):
         to render a slice through a 3D texture. It is used by the
         :mod:`.gl14.glvolume_funcs` and :mod:`.gl21.glvolume_funcs` (and other)
         modules.
+
 
         A tuple of three values is returned, containing:
 
@@ -471,9 +580,13 @@ class GLImageObject(GLObject):
 
           - A ``6*3 numpy.float32`` array containing the texture coordinates
             corresponding to each vertex
+
+
+        This method will raise an :exc:`AttributeError` if called on a
+        ``GLImageObject`` configured for 3D rendering.
         """
 
-        opts   = self.displayOpts
+        opts   = self.opts
         v2dMat = opts.getTransform('voxel',   'display')
         d2vMat = opts.getTransform('display', 'voxel')
         v2tMat = opts.getTransform('voxel',   'texture')
@@ -496,8 +609,7 @@ class GLImageObject(GLObject):
         # bias when the display Z position is
         # on a voxel boundary.
         if not hasattr(opts, 'interpolation') or opts.interpolation == 'none':
-            voxCoords = opts.roundVoxels(voxCoords,
-                                         daxes=[self.zax])
+            voxCoords = opts.roundVoxels(voxCoords, daxes=[self.zax])
 
         texCoords = transform.transform(voxCoords, v2tMat)
 
@@ -538,8 +650,8 @@ class GLImageObject(GLObject):
         return vertices, voxCoords, texCoords
 
 
-    def generateVoxelCoordinates(self, zpos, bbox=None, space='voxel'):
-        """Generates a grid of voxel coordinates along the
+    def generateVoxelCoordinates2D(self, zpos, bbox=None, space='voxel'):
+        """Generates a 2D grid of voxel coordinates along the
         XY display coordinate system plane, at the given ``zpos``.
 
         :arg zpos:  Position along the display coordinate system Z axis.
@@ -554,6 +666,9 @@ class GLImageObject(GLObject):
         :returns: A ``numpy.float32`` array of shape ``(N, 3)``, containing
                   the coordinates for ``N`` voxels.
 
+        This method will raise an :exc:`AttributeError` if called on a
+        ``GLImageObject`` configured for 3D rendering.
+
         See the :func:`.calculateSamplePoints` function.
         """
 
@@ -561,7 +676,7 @@ class GLImageObject(GLObject):
             raise ValueError('Unknown value for space ("{}")'.format(space))
 
         image      = self.image
-        opts       = self.displayOpts
+        opts       = self.opts
         v2dMat     = opts.getTransform('voxel',   'display')
         d2vMat     = opts.getTransform('display', 'voxel')
 
