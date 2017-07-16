@@ -87,6 +87,15 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     """
 
 
+    discardClipped = props.Boolean(default=False)
+    """Flag which controls clipping. When the mesh is coloured according to
+    some data (the :attr:`vertexData` property), vertices with a data value
+    outside of the clipping range are either discarded (not drawn), or
+    they are still drawn, but not according to the data, rather with the
+    flat :attr:`colour`.
+    """
+
+
     vertexData = props.Choice((None, ))
     """May be populated with the names of files which contain data associated
     with each vertex in the mesh, that can be used to colour the mesh. When

@@ -443,6 +443,7 @@ _DISPLAY_PROPS = td.TypeDict({
                         'interpolateCmaps',
                         'invert',
                         'invertClipping',
+                        'discardClipped',
                         'linkLowRanges',
                         'linkHighRanges',
                         'displayRange',
@@ -716,6 +717,9 @@ _DISPLAY_WIDGETS = td.TypeDict({
                 strings.choices['ColourMapOpts.displayRange.max']],
         dependencies=['vertexData', 'outline'],
         enabledWhen=lambda opts, vd, o: (vd is not None) and o),
+    'MeshOpts.discardClipped' : props.Widget(
+        'discardClipped',
+        **meshOptsColourKwargs),
 
     # TensorOpts
     'TensorOpts.lighting'         : props.Widget('lighting'),

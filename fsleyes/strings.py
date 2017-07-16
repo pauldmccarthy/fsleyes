@@ -915,6 +915,7 @@ properties = TypeDict({
     'MeshOpts.vertexDataIndex' : 'Vertex data index',
     'MeshOpts.showName'        : 'Show model name',
     'MeshOpts.lut'             : 'Lookup table',
+    'MeshOpts.discardClipped'  : 'Hide clipped areas',
 
     'LabelOpts.lut'          : 'Look-up table',
     'LabelOpts.outline'      : 'Show outline only',

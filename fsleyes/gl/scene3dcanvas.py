@@ -252,7 +252,6 @@ class Scene3DCanvas(props.HasProperties):
         with glroutines.enabled((gl.GL_DEPTH_TEST)):
 
             if self.wireFrame:
-                print('Wireframe')
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
             else:
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)

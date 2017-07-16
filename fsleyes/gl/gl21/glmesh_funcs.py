@@ -59,13 +59,15 @@ def updateShaderState(self):
     else:
         cmapXform = self.cmapTexture.getCoordinateTransform()
 
-    self.shader.set('cmap',          0)
-    self.shader.set('negCmap',       1)
-    self.shader.set('useNegCmap',    useNegCmap)
-    self.shader.set('cmapXform',     cmapXform)
-    self.shader.set('invertClip',    opts.invertClipping)
-    self.shader.set('clipLow',       self.opts.clippingRange.xlo)
-    self.shader.set('clipHigh',      self.opts.clippingRange.xhi)
+    self.shader.set('cmap',           0)
+    self.shader.set('negCmap',        1)
+    self.shader.set('useNegCmap',     useNegCmap)
+    self.shader.set('cmapXform',      cmapXform)
+    self.shader.set('flatColour',     opts.getConstantColour())
+    self.shader.set('invertClip',     opts.invertClipping)
+    self.shader.set('discardClipped', opts.discardClipped)
+    self.shader.set('clipLow',        self.opts.clippingRange.xlo)
+    self.shader.set('clipHigh',       self.opts.clippingRange.xhi)
 
     self.shader.unload()
 

@@ -265,6 +265,10 @@ properties = TypeDict({
     'MeshOpts.lut' :
     'The lookup table to use when colouring the mesh with a lookup table '
     'instead of with the colour maps.',
+    'MeshOpts.discardClipped' :
+    'When the mesh is coloured according to some data, this setting allows '
+    'you to choose between hiding the areas with data outside of the clipping '
+    'range, or colouring those areas with a constant colour.',
 
     'TensorOpts.lighting'         : 'If enabled, a simple lighting model is '
                                     'used to highlight the tensor '
