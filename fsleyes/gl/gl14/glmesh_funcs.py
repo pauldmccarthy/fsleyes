@@ -64,13 +64,18 @@ def updateShaderState(self):
     else:
         cmapXform = self.cmapTexture.getCoordinateTransform()
 
-    settings = [-1 if useNegCmap          else 1,
-                -1 if opts.invertClipping else 1,
-                opts.clippingRange.xlo,
-                opts.clippingRange.xhi]
+    settings   = [-1 if     useNegCmap          else 1,
+                  -1 if     opts.invertClipping else 1,
+                  -1 if not opts.discardClipped else 1,
+                  0]
 
-    self.shader.setFragParam('settings',  settings)
-    self.shader.setFragParam('cmapXform', cmapXform)
+    clipping   = [opts.clippingRange.xlo, opts.clippingRange.xhi, 0, 0]
+    flatColour = opts.getConstantColour()
+
+    self.shader.setFragParam('settings',    settings)
+    self.shader.setFragParam('clipping',    clipping)
+    self.shader.setFragParam('flatColour',  flatColour)
+    self.shader.setFragParam('cmapXform',   cmapXform)
 
     self.shader.unload()
 
