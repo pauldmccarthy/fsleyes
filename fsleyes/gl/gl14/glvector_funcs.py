@@ -34,7 +34,7 @@ def compileShaders(self, vertShader):
     if self.shader is not None:
         self.shader.destroy()
 
-    opts                = self.displayOpts
+    opts                = self.opts
     useVolumeFragShader = opts.colourImage is not None
 
     if useVolumeFragShader: fragShader = 'glvolume'
@@ -67,7 +67,7 @@ def updateShaderState(self):
     shader.
     """
 
-    opts                = self.displayOpts
+    opts                = self.opts
     useVolumeFragShader = opts.colourImage is not None
     shape               = list(self.vectorImage.shape[:3])
     modLow,  modHigh    = self.getModulateRange()

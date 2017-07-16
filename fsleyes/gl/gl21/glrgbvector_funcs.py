@@ -16,9 +16,9 @@ instances.
 
 Rendering of a ``GLRGBVector`` is very similar to that of a
 :class:`.GLVolume`, with the exception that a different fragment shader
-(``glvector``) may be used. Therefore, the ``preDraw``, ``draw``, ``drawAll``
-and ``postDraw`` functions defined in the :mod:`.gl21.glvolume_funcs` are
-re-used by this module.
+(``glvector``) may be used. Therefore, the ``preDraw``, ``draw2D``,
+``draw3D``, ``drawAll`` and ``postDraw`` functions defined in the
+:mod:`.gl21.glvolume_funcs` are re-used by this module.
 """
 
 
@@ -59,7 +59,7 @@ def updateShaderState(self):
     if not self.ready():
         return
 
-    opts      = self.displayOpts
+    opts      = self.opts
     useSpline = opts.interpolation == 'spline'
 
     self.shader.load()
@@ -71,5 +71,6 @@ def updateShaderState(self):
 
 preDraw  = glvolume_funcs.preDraw
 draw2D   = glvolume_funcs.draw2D
+draw3D   = glvolume_funcs.draw3D
 drawAll  = glvolume_funcs.drawAll
 postDraw = glvolume_funcs.postDraw

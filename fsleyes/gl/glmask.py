@@ -20,8 +20,8 @@ log = logging.getLogger(__name__)
 
 
 class GLMask(glvolume.GLVolume):
-    """The ``GLMask`` class encapsulates logic to render 2D slices of a
-    :class:`.Image` instance as a binary mask in OpenGL.
+    """The ``GLMask`` class encapsulates logic to render an :class:`.Image`
+    instance as a binary mask in OpenGL.
 
     When created, a ``GLMask`` instance assumes that the provided
     :class:`.Image` instance has a :attr:`.Display.overlayType` of ``mask``,
@@ -43,7 +43,7 @@ class GLMask(glvolume.GLVolume):
         """
 
         display = self.display
-        opts    = self.displayOpts
+        opts    = self.opts
         name    = self.name
 
         display.addListener('alpha',         name, self.__updateColourTextures)
@@ -70,7 +70,7 @@ class GLMask(glvolume.GLVolume):
         """
 
         display = self.display
-        opts    = self.displayOpts
+        opts    = self.opts
         name    = self.name
 
         display.removeListener(          'alpha',         name)
@@ -89,8 +89,8 @@ class GLMask(glvolume.GLVolume):
     def testUnsynced(self):
         """Overrides :meth:`.GLVolume.testUnsynced`.
         """
-        return (self.displayOpts.getParent() is None or
-                not self.displayOpts.isSyncedToParent('volume'))
+        return (self.opts.getParent() is None or
+                not self.opts.isSyncedToParent('volume'))
 
 
     def refreshColourTextures(self, *a):
@@ -105,7 +105,7 @@ class GLMask(glvolume.GLVolume):
         """
 
         display = self.display
-        opts    = self.displayOpts
+        opts    = self.opts
         alpha   = display.alpha / 100.0
         colour  = opts.colour
         dmin    = opts.threshold[0]
@@ -138,7 +138,7 @@ class GLMask(glvolume.GLVolume):
     def __updateImageTexture(self, *a):
         """Called when the image texture needs updating. """
 
-        opts       = self.displayOpts
+        opts       = self.opts
         volume     = opts.volume
 
         self.imageTexture.set(volume=volume)

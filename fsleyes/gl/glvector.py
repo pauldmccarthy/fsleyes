@@ -84,7 +84,7 @@ class GLVectorBase(globject.GLImageObject):
     """
 
 
-    def __init__(self, overlay, display, xax, yax, init=None, preinit=None):
+    def __init__(self, overlay, display, threedee, init=None, preinit=None):
         """Create a ``GLVectorBase`` object bound to the given overlay and
         display.
 
@@ -102,9 +102,7 @@ class GLVectorBase(globject.GLImageObject):
         :arg display:        A :class:`.Display` object which describes how the
                              overlay is to be displayed.
 
-        :arg xax:            Initial display X axis
-
-        :arg yax:            Initial display Y axis
+        :arg threedee:       2D or 3D rendering.
 
         :arg init:           An optional function to be called when all of the
                              :class:`.ImageTexture` instances associated with
@@ -116,7 +114,7 @@ class GLVectorBase(globject.GLImageObject):
                              :class:`GLVector`.
         """
 
-        globject.GLImageObject.__init__(self, overlay, display, xax, yax)
+        globject.GLImageObject.__init__(self, overlay, display, threedee)
 
         name = self.name
 
@@ -135,7 +133,7 @@ class GLVectorBase(globject.GLImageObject):
 
         # Make sure we are registered with the
         # auxillary images if any of them are set.
-        opts = self.displayOpts
+        opts = self.opts
 
         if opts.colourImage   is not None: self.registerAuxImage('colour')
         if opts.modulateImage is not None: self.registerAuxImage('modulate')
@@ -217,7 +215,7 @@ class GLVectorBase(globject.GLImageObject):
         """
 
         display = self.display
-        opts    = self.displayOpts
+        opts    = self.opts
         name    = self.name
 
         display.addListener('alpha',         name, self.__cmapPropChanged)
@@ -245,7 +243,7 @@ class GLVectorBase(globject.GLImageObject):
         """
 
         display = self.display
-        opts    = self.displayOpts
+        opts    = self.opts
         name    = self.name
 
         display.removeListener('alpha',         name)
@@ -318,8 +316,8 @@ class GLVectorBase(globject.GLImageObject):
         optsAttr  = '{}Opts'   .format(which)
         texAttr   = '{}Texture'.format(which)
 
-        image = getattr(self.displayOpts, imageAttr)
-        tex   = getattr(self,             texAttr)
+        image = getattr(self.opts, imageAttr)
+        tex   = getattr(self,      texAttr)
 
         if image is None or image == 'none':
             image = None
@@ -330,7 +328,7 @@ class GLVectorBase(globject.GLImageObject):
         if image is None:
             return
 
-        opts = self.displayOpts.displayCtx.getOpts(image)
+        opts = self.opts.displayCtx.getOpts(image)
 
         setattr(self, optsAttr, opts)
 
@@ -442,7 +440,7 @@ class GLVectorBase(globject.GLImageObject):
         """
 
         display = self.display
-        opts    = self.displayOpts
+        opts    = self.opts
 
         if self.colourImage is not None:
             dmin, dmax = self.colourImage.dataRange
@@ -475,7 +473,7 @@ class GLVectorBase(globject.GLImageObject):
             brightness and contrast settings.
         """
         display = self.display
-        opts    = self.displayOpts
+        opts    = self.opts
         bri     = display.brightness / 100.0
         con     = display.contrast   / 100.0
         alpha   = display.alpha      / 100.0
@@ -514,7 +512,7 @@ class GLVectorBase(globject.GLImageObject):
         values directly to it.
         """
 
-        opts = self.displayOpts
+        opts = self.opts
 
         clipLow, clipHigh = opts.clippingRange
         xform             = self.clipTexture.invVoxValXform
@@ -536,7 +534,7 @@ class GLVectorBase(globject.GLImageObject):
         directly to it.
         """
 
-        opts = self.displayOpts
+        opts = self.opts
 
         modLow, modHigh = opts.modulateRange
         xform           = self.modulateTexture.invVoxValXform
@@ -556,7 +554,7 @@ class GLVectorBase(globject.GLImageObject):
         to transform texture coordinates from the vector image to the specified
         auxillary image (``'clip'``, ``'modulate'`` or ``'colour'``).
         """
-        opts     = self.displayOpts
+        opts     = self.opts
         auxImage = getattr(self, '{}Image'.format(which), None)
         auxOpts  = getattr(self, '{}Opts' .format(which), None)
 
