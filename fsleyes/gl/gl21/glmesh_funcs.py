@@ -72,7 +72,7 @@ def updateShaderState(self):
     self.shader.unload()
 
 
-def drawColouredOutline(self, vertices, vdata, indices=None, glType=None):
+def drawWithShaders(self, vertices, vdata, indices=None, glType=None):
     """Called when :attr:`.MeshOpts.outline` is ``True``, and
     :attr:`.MeshOpts.vertexData` is not ``None``. Loads and runs the
     shader program.

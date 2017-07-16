@@ -23,11 +23,14 @@ import fsleyes.gl.textures as textures
 
 class GLMesh(globject.GLObject):
     """The ``GLMesh`` class is a :class:`.GLObject` which encapsulates the
-    logic required to render 2D slices of a :class:`.TriangleMesh` overlay.
-    The ``GLMesh`` class assumes that the :class:`.Display` instance
-    associated with the ``TriangleMesh`` overlay holds a reference to a
-    :class:`.MeshOpts` instance, which contains ``GLMesh`` specific
-    display settings.
+    logic required to draw 2D slices, and 3D renderings, of a
+    :class:`.TriangleMesh` overlay.  The ``GLMesh`` class assumes that the
+    :class:`.Display` instance associated with the ``TriangleMesh`` overlay
+    holds a reference to a :class:`.MeshOpts` instance, which contains
+    ``GLMesh`` specific display settings.
+
+
+    **2D rendering**
 
 
     A ``GLMesh`` is rendered in one of two different ways, depending upon
@@ -74,29 +77,38 @@ class GLMesh(globject.GLObject):
     modules - :mod:`.gl14.glmesh_funcs`, and :mod:`.gl21.glmesh_funcs`. These
     version specific modules must provide the following functions:
 
+
     ======================= =================================
     ``compileShaders``      Compiles vertex/fragment shaders.
     ``destroy``             Performs any necessary clean up.
     ``updateShaderState``   Updates vertex/fragment shaders.
-    ``drawColouredOutline`` Draws mesh outline using shaders.
+    ``drawWithShader``      Draws mesh outline using shaders.
     ======================= =================================
+
+    **3D rendering**
+
+
+    3D mesh rendering is much simpler than 2D rendering. The mesh is simply
+    rendered to the canvas. If ``MeshOpts.vertexData`` is ``None``, the mesh
+    is coloured with the current ``MeshOpts.colour``. Otherwise it is coloured
+    by the vertex data according to the current :class:`.ColourMapOpts`
+    settings. In the latter case, the same shader programs as for the 2D
+    vertex data rendering (described above) are used.
     """
 
 
-    def __init__(self, overlay, display, xax, yax):
+    def __init__(self, overlay, display, threedee):
         """Create a ``GLMesh``.
 
-        :arg overlay: A :class:`.TriangleMesh` overlay.
+        :arg overlay:  A :class:`.TriangleMesh` overlay.
 
-        :arg display: A :class:`.Display` instance defining how the
-                      ``overlay`` is to be displayed.
+        :arg display:  A :class:`.Display` instance defining how the
+                       ``overlay`` is to be displayed.
 
-        :arg xax:     Initial display X axis
-
-        :arg yax:     Initial display Y axis
+        :arg threedee: 2D or 3D rendering.
         """
 
-        globject.GLObject.__init__(self, xax, yax)
+        globject.GLObject.__init__(self, threedee)
 
         self.shader  = None
         self.overlay = overlay
@@ -305,8 +317,8 @@ class GLMesh(globject.GLObject):
             self.renderTexture.setSize(width, height)
 
 
-    def draw(self, zpos, xform=None, bbox=None):
-        """Overrids :meth:`.GLObject.draw`. Draws a 2D slice of the
+    def draw2D(self, zpos, xform=None, bbox=None):
+        """Overrids :meth:`.GLObject.draw2D`. Draws a 2D slice of the
         :class:`.TriangleMesh`, at the specified Z location.
         """
 
@@ -330,7 +342,7 @@ class GLMesh(globject.GLObject):
             return
 
         if is2D:
-            self.draw2D(xform, bbox)
+            self.draw2DMesh(xform, bbox)
 
         elif opts.outline:
             self.drawOutline(zpos, xform, bbox)
@@ -350,7 +362,8 @@ class GLMesh(globject.GLObject):
 
 
     def draw3D(self, xform=None, bbox=None):
-        """
+        """Overrides :meth:`.GLObject.draw3D`. Draws a 3D rendering of the
+        mesh.
         """
         opts      = self.opts
         verts     = self.vertices
@@ -373,7 +386,7 @@ class GLMesh(globject.GLObject):
                                   idxs)
         else:
 
-            fslgl.glmesh_funcs.drawColouredOutline(
+            fslgl.glmesh_funcs.drawWithShaders(
                 self,
                 verts,
                 vdata,
@@ -382,14 +395,13 @@ class GLMesh(globject.GLObject):
 
 
     def drawOutline(self, zpos, xform=None, bbox=None):
-        """Called by :meth:`draw` when :attr:`.MeshOpts.outline` is ``True``.
-        Calculates the intersection of the mesh with the viewing plane,
-        and renders it as a set of ``GL_LINES``. If
-        :attr:`.MeshOpts.vertexData` is ``None``, the draw is performed
-        using immediate mode OpenGL.
+        """Called by :meth:`draw2D` when :attr:`.MeshOpts.outline` is ``True``.
+        Calculates the intersection of the mesh with the viewing plane, and
+        renders it as a set of ``GL_LINES``. If :attr:`.MeshOpts.vertexData`
+        is ``None``, the draw is performed using immediate mode OpenGL.
 
-        Otherwise, the :func:`.gl14.glmesh_funcs.drawColouredOutline` or
-        :func:`.gl21.glmesh_funcs.drawColouredOutline` function is used, which
+        Otherwise, the :func:`.gl14.glmesh_funcs.drawWithShaders` or
+        :func:`.gl21.glmesh_funcs.drawWithShaders` function is used, which
         performs shader-based rendering.
         """
 
@@ -425,14 +437,15 @@ class GLMesh(globject.GLObject):
 
         # Coloured from vertex data
         else:
-            fslgl.glmesh_funcs.drawColouredOutline(self, vertices, vdata)
+            fslgl.glmesh_funcs.drawWithShaders(self, vertices, vdata)
 
         gl.glPopMatrix()
 
 
-    def draw2D(self, xform=None, bbox=None):
-        """Called by :meth:`draw` for :class:`.TriangleMesh` overlays
-        which are actually 2D (with a flat third dimension).
+    def draw2DMesh(self, xform=None, bbox=None):
+        """Not to be confused with :meth:`draw2D`.  Called by :meth:`draw2D`
+        for :class:`.TriangleMesh` overlays which are actually 2D (with a flat
+        third dimension).
         """
 
         opts      = self.opts
@@ -464,7 +477,7 @@ class GLMesh(globject.GLObject):
         # Coloured from vertex data
         else:
             vdata = vdata[:, opts.vertexDataIndex]
-            fslgl.glmesh_funcs.drawColouredOutline(
+            fslgl.glmesh_funcs.drawWithShaders(
                 self, vertices, vdata, faces, gl.GL_TRIANGLES)
 
         # Reset the polygon mode back to fill
@@ -596,7 +609,7 @@ class GLMesh(globject.GLObject):
 
 
     def calculateViewport(self, lo, hi, bbox=None):
-        """Called by :meth:`draw`. Calculates an appropriate viewport (the
+        """Called by :meth:`draw2D`. Calculates an appropriate viewport (the
         horizontal/vertical minimums/maximums in display coordinates) given
         the ``lo`` and ``hi`` ``GLMesh`` display bounds, and a display
         ``bbox``.
