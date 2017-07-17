@@ -311,16 +311,14 @@ class GLMesh(globject.GLObject):
             self.renderTexture.setSize(width, height)
 
 
-    def draw2D(self, zpos, xform=None, bbox=None):
+    def draw2D(self, zpos, axes, xform=None, bbox=None):
         """Overrids :meth:`.GLObject.draw2D`. Draws a 2D slice of the
         :class:`.TriangleMesh`, at the specified Z location.
         """
 
-        opts    = self.opts
-        xax     = self.xax
-        yax     = self.yax
-        zax     = self.zax
-        lo,  hi = self.getDisplayBounds()
+        opts          = self.opts
+        lo,  hi       = self.getDisplayBounds()
+        xax, yax, zax = axes
 
         # Mesh is 2D, and is
         # perpendicular to
@@ -339,18 +337,17 @@ class GLMesh(globject.GLObject):
             self.draw2DMesh(xform, bbox)
 
         elif opts.outline:
-            self.drawOutline(zpos, xform, bbox)
+            self.drawOutline(zpos, axes, xform, bbox)
 
         else:
-            lo, hi = self.calculateViewport(lo, hi, bbox)
+            lo, hi = self.calculateViewport(lo, hi, axes, bbox)
             xmin   = lo[xax]
             xmax   = hi[xax]
             ymin   = lo[yax]
             ymax   = hi[yax]
             tex    = self.renderTexture
 
-            if is2D: self.renderCrossSection2D(    lo, hi, tex)
-            else:    self.renderCrossSection(zpos, lo, hi, tex)
+            self.renderCrossSection(zpos, axes, lo, hi, tex)
 
             tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
 
@@ -388,7 +385,7 @@ class GLMesh(globject.GLObject):
                 glType=gl.GL_TRIANGLES)
 
 
-    def drawOutline(self, zpos, xform=None, bbox=None):
+    def drawOutline(self, zpos, axes, xform=None, bbox=None):
         """Called by :meth:`draw2D` when :attr:`.MeshOpts.outline` is ``True``.
         Calculates the intersection of the mesh with the viewing plane, and
         renders it as a set of ``GL_LINES``. If :attr:`.MeshOpts.vertexData`
@@ -406,7 +403,7 @@ class GLMesh(globject.GLObject):
             xform = np.eye(4)
 
         vertices, faces, dists, vertXform = self.calculateIntersection(
-            zpos, bbox)
+            zpos, axes, bbox)
 
         if vertXform is not None:
             xform = transform.concat(xform, vertXform)
@@ -479,20 +476,21 @@ class GLMesh(globject.GLObject):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
 
-    def renderCrossSection(self, zpos, lo, hi, dest):
+    def renderCrossSection(self, zpos, axes, lo, hi, dest):
         """Renders a filled cross-section of the mesh to an off-screen
         :class:`.RenderTexture`.
 
         :arg zpos: Position along the z axis
+        :arg axes: Tuple containing ``(x, y, z)`` axis indices.
         :arg lo:   Tuple containing the low bounds on each axis.
         :arg hi:   Tuple containing the high bounds on each axis.
         :arg dest: The :class:`.RenderTexture` to render to.
         """
 
         opts     = self.opts
-        xax      = self.xax
-        yax      = self.yax
-        zax      = self.zax
+        xax      = axes[0]
+        yax      = axes[1]
+        zax      = axes[2]
         xmin     = lo[xax]
         ymin     = lo[yax]
         xmax     = hi[xax]
@@ -602,15 +600,15 @@ class GLMesh(globject.GLObject):
         pass
 
 
-    def calculateViewport(self, lo, hi, bbox=None):
+    def calculateViewport(self, lo, hi, axes, bbox=None):
         """Called by :meth:`draw2D`. Calculates an appropriate viewport (the
         horizontal/vertical minimums/maximums in display coordinates) given
         the ``lo`` and ``hi`` ``GLMesh`` display bounds, and a display
         ``bbox``.
         """
 
-        xax = self.xax
-        yax = self.yax
+        xax = axes[0]
+        yax = axes[1]
 
         if bbox is not None and (lo[xax] < bbox[xax][0] or
                                  hi[xax] < bbox[xax][1] or
@@ -647,13 +645,15 @@ class GLMesh(globject.GLObject):
         return lo, hi
 
 
-    def calculateIntersection(self, zpos, bbox=None):
+    def calculateIntersection(self, zpos, axes, bbox=None):
         """Uses the :func:`.trimesh.mesh_plane` and
         :func:`.trimesh.points_to_barycentric` functions to calculate the
         intersection of the mesh with the viewing plane at the given ``zpos``.
 
         :arg zpos:  Z axis coordinate at which the intersection is to be
                     calculated
+
+        :arg axes:  Tuple containing the ``(x, y, z)`` axis indices.
 
         :arg bbox:  A tuple containing a ``([xlo, ylo, zlo], [xhi, yhi, zhi])``
                     bounding box to which the calculation can be restricted.
@@ -676,7 +676,7 @@ class GLMesh(globject.GLObject):
         """
 
         overlay     = self.overlay
-        zax         = self.zax
+        zax         = axes[2]
         opts        = self.opts
         origin      = [0] * 3
         normal      = [0] * 3
