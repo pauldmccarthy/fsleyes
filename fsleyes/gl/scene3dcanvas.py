@@ -264,6 +264,13 @@ class Scene3DCanvas(props.HasProperties):
                     continue
 
                 globj.preDraw()
+
+                pos = self.__displayCtx.location.xyz
+
+                if self.showXSlice: globj.draw2D(pos[0], axes=(0, 1, 2))
+                if self.showYSlice: globj.draw2D(pos[1], axes=(1, 0, 2))
+                if self.showZSlice: globj.draw2D(pos[2], axes=(2, 0, 1))
+
                 globj.draw3D()
                 globj.postDraw()
 

@@ -1350,6 +1350,7 @@ class SliceCanvas(props.HasProperties):
         overlays, globjs = self._getGLObjects()
 
         bbox = None
+        axes = (self.xax, self.yax, self.zax)
 
         # Set the viewport to match the current
         # display bounds and canvas size
@@ -1383,7 +1384,7 @@ class SliceCanvas(props.HasProperties):
                               self.zax, display.name))
 
                 globj.preDraw()
-                globj.draw2D(self.pos.z, bbox=bbox)
+                globj.draw2D(self.pos.z, axes, bbox=bbox)
                 globj.postDraw()
 
             # Off-screen rendering - each overlay is
@@ -1415,7 +1416,7 @@ class SliceCanvas(props.HasProperties):
 
                 with glroutines.disabled(gl.GL_BLEND):
                     globj.preDraw()
-                    globj.draw2D(self.pos.z)
+                    globj.draw2D(self.pos.z, axes)
                     globj.postDraw()
 
                 rt.unbindAsRenderTarget()

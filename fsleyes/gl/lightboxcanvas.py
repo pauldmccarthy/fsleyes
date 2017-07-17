@@ -826,6 +826,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if not self._setGLContext():
             return
 
+        axes = (self.zax, self.yax, self.zax)
+
         overlays, globjs = self._getGLObjects()
 
         # See comment in SliceCanvas._draw
@@ -899,7 +901,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             else:
 
                 globj.preDraw()
-                globj.drawAll(zposes, xforms)
+                globj.drawAll(axes, zposes, xforms)
                 globj.postDraw()
 
         if self.renderMode == 'offscreen':

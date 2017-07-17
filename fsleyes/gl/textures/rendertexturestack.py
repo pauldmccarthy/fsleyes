@@ -263,6 +263,7 @@ class RenderTextureStack(object):
         zpos  = self.__indexToZpos(idx)
         xax   = self.__xax
         yax   = self.__yax
+        axes  = (self.__xax, self.__yax, self.__zax)
 
         if not globj.ready():
             return
@@ -296,7 +297,7 @@ class RenderTextureStack(object):
 
         with glroutines.disabled(gl.GL_BLEND):
             globj.preDraw()
-            globj.draw2D(zpos)
+            globj.draw2D(zpos, axes)
             globj.postDraw()
 
         tex.unbindAsRenderTarget()

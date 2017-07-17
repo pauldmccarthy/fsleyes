@@ -115,39 +115,21 @@ class GLObject(notifier.Notifier):
                         is configured for 2D or 3D rendering.
 
 
-    If the ``GLObject`` is created for 2D slice-based rendering, the following
-    attributes will also be present:
-
-
-      - ``xax``:  Index of the display coordinate system axis that
-                  corresponds to the horizontal screen axis.
-
-      - ``yax``:  Index of the display coordinate system axis that
-                  corresponds to the vertical screen axis.
-
-      - ``zax``:  Index of the display coordinate system axis that
-                  corresponds to the depth screen axis.
-
-
     **Usage**
 
 
     Once you have created a ``GLObject``:
 
-
-     1. If the ``GLObject`` was created for 2D rendering, you must call the
-        :meth:`setAxes` method after creation, and before doing anything else.
-
-     2. Do not use the ``GLObject`` until its :meth:`ready` method returns
+     1. Do not use the ``GLObject`` until its :meth:`ready` method returns
         ``True``.
 
-     3. In order to render the ``GLObject`` to a canvas, call (in order) the
+     2. In order to render the ``GLObject`` to a canvas, call (in order) the
         :meth:`preDraw`, :meth:`draw2D` (or :meth:`draw3D`), and
         :meth:`postDraw`, methods. Multple calls to
         :meth:`draw2D`/:meth:`draw3D` may occur between calls to
         :meth:`preDraw` and :meth:`postDraw`.
 
-     4. Once you are finished with the ``GLObject``, call its :meth:`destroy`
+     3. Once you are finished with the ``GLObject``, call its :meth:`destroy`
         method.
 
 
@@ -173,7 +155,6 @@ class GLObject(notifier.Notifier):
 
            def __init__(self, overlay, displayCtx, threedee)
 
-
      - Call :meth:`notify` whenever its OpenGL representation changes.
 
      - Override the following methods:
@@ -191,6 +172,9 @@ class GLObject(notifier.Notifier):
           draw3D
           postDraw
 
+     - Note that a ``GLObject`` which has been created for 3D rendering *must
+       also be able to render in 2D*, but not vice-versa.
+
     Alternately, a sub-class could derive from one of the following classes,
     instead of deriving directly from the ``GLObject`` class:
 
@@ -206,10 +190,6 @@ class GLObject(notifier.Notifier):
         """Create a :class:`GLObject`.  The constructor adds one attribute
         to this instance, ``name``, which is simply a unique name for this
         instance.
-
-        If ``threedee is True``, ``xax``, ``yax``, and ``zax`` attributes are
-        also added. You must call the :meth:`setAxes` method after creation
-        to configure these attributes
 
         Subclass implementations must call this method, and should also
         perform any necessary OpenGL initialisation, such as creating
@@ -236,11 +216,6 @@ class GLObject(notifier.Notifier):
             self.__display    = displayCtx.getDisplay(overlay)
             self.__opts       = self.__display.getDisplayOpts()
             self.__displayCtx = displayCtx
-
-        if not threedee:
-            self.__xax  = 0
-            self.__yax  = 1
-            self.__zax  = 2
 
         log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
 
@@ -285,29 +260,6 @@ class GLObject(notifier.Notifier):
         ``GLObject`` is a part of.
         """
         return self.__displayCtx
-
-
-    @property
-    def xax(self):
-        """Property which specifies the Y (horizontal) axis, if this
-        ``GLObject`` is configured for 2D rendering.
-        """
-        return self.__xax
-
-    @property
-    def yax(self):
-        """Property which specifies the Y (vertical) axis, if this ``GLObject``
-        is configured for 2D rendering.
-        """
-        return self.__yax
-
-
-    @property
-    def zax(self):
-        """Property which specifies the Z (depth) axis, if this ``GLObject``
-        is configured for 2D rendering.
-        """
-        return self.__zax
 
 
     @property
@@ -364,29 +316,6 @@ class GLObject(notifier.Notifier):
         return None
 
 
-    def setAxes(self, xax, yax):
-        """This method must be called after creation of ``GLObject`` instances
-        which have been configured for 2D rendering. It may also be called at
-        later times when the display orientation for this :class:`GLObject`
-        changes. It updates :attr:`xax`, :attr:`yax`, and :attr:`zax`
-        properties on this ``GLObject`` instance.
-
-
-        Sub-classes may override this method, but must still call this
-        implementation.
-
-
-        An :exc:`AttributeError` will be raised if this method is called on
-        a ``GLObject`` that has been configured for 3D rendering.
-        """
-        if self.__threedee:
-            raise AttributeError('setAxes called on a 3D '
-                                 '{}'.format(type(self).__name__))
-        self.__xax = xax
-        self.__yax = yax
-        self.__zax = 3 - xax - yax
-
-
     def destroy(self):
         """This method must be called when this :class:`GLObject` is no longer
         needed.
@@ -423,11 +352,18 @@ class GLObject(notifier.Notifier):
         raise NotImplementedError()
 
 
-    def draw2D(self, zpos, xform=None, bbox=None):
+    def draw2D(self, zpos, axes, xform=None, bbox=None):
         """This method is called on ``GLObject`` instances which are
         configured for 2D rendering. It should draw a view of this
         ``GLObject`` - a 2D slice at the given Z location, which specifies
         the position along the screen depth axis.
+
+        :arg zpos:  Position along Z axis to draw.
+
+        :arg axes:  Tuple containing the ``(x, y, z)`` axes in the
+                    display coordinate system The ``x`` and ``y`` axes
+                    correspond to the horizontal and vertical display axes
+                    respectively, and the ``z`` to the depth.
 
         :arg xform: If provided, it must be applied to the model view
                     transformation before drawing.
@@ -456,13 +392,13 @@ class GLObject(notifier.Notifier):
         raise NotImplementedError()
 
 
-    def drawAll(self, zposes, xforms):
+    def drawAll(self, axes, zposes, xforms):
         """This is a convenience method for 2D lightboxD canvases, where
         multple 2D slices at different depths are drawn alongside each other.
 
         This method should do the same as multiple calls to the :meth:`draw2D`
         method, one for each of the Z positions and transformation matrices
-        contained in the ``zposes`` and ``xforms`` arrays.
+        contained in the ``zposes`` and ``xforms`` arrays (``axes`` is fixed).
 
         In some circumstances (hint: the :class:`.LightBoxCanvas`), better
         performance may be achieved in combining multiple renders, rather
@@ -473,7 +409,7 @@ class GLObject(notifier.Notifier):
         by combining the draws.
         """
         for (zpos, xform) in zip(zposes, xforms):
-            self.draw2D(zpos, xform)
+            self.draw2D(zpos, axes, xform)
 
 
     def postDraw(self):
@@ -604,10 +540,9 @@ class GLImageObject(GLObject):
 
     def generateVertices2D(self,
                            zpos,
+                           axes,
                            xform=None,
-                           bbox=None,
-                           xax=None,
-                           yax=None):
+                           bbox=None):
         """Generates vertex coordinates for a 2D slice of the :class:`.Image`,
         through the given ``zpos``, with the optional ``xform`` and ``bbox``
         applied to the coordinates.
@@ -628,22 +563,13 @@ class GLImageObject(GLObject):
 
           - A ``6*3 numpy.float32`` array containing the texture coordinates
             corresponding to each vertex
-
-
-        This method will raise an :exc:`AttributeError` if called on a
-        ``GLImageObject`` configured for 3D rendering, unless both the ``xax``
-        and ``yax`` arguments are provided..
         """
 
-        opts   = self.opts
-        v2dMat = opts.getTransform('voxel',   'display')
-        d2vMat = opts.getTransform('display', 'voxel')
-        v2tMat = opts.getTransform('voxel',   'texture')
-
-        if xax is None: xax = self.xax
-        if yax is None: yax = self.yax
-
-        zax = 3 - xax - yax
+        opts           = self.opts
+        v2dMat         = opts.getTransform('voxel',   'display')
+        d2vMat         = opts.getTransform('display', 'voxel')
+        v2tMat         = opts.getTransform('voxel',   'texture')
+        xax,  yax, zax = axes
 
         vertices, voxCoords = glroutines.slice2D(
             self.image.shape[:3],
@@ -707,14 +633,15 @@ class GLImageObject(GLObject):
     def generateVoxelCoordinates2D(
             self,
             zpos,
+            axes,
             bbox=None,
-            space='voxel',
-            xax=None,
-            yax=None):
+            space='voxel'):
         """Generates a 2D grid of voxel coordinates along the
         XY display coordinate system plane, at the given ``zpos``.
 
         :arg zpos:  Position along the display coordinate system Z axis.
+
+        :arg axes:  Axis indices.
 
         :arg bbox:  Limiting bounding box.
 
@@ -723,16 +650,8 @@ class GLImageObject(GLObject):
                     of the display coordinate system. Otherwise, the
                     returned coordinates are integer voxel coordinates.
 
-        :arg xax:   Override the x axis previously set via :meth:`setAxes`.
-
-        :arg yax:   Override the y axis previously set via :meth:`setAxes`.
-
         :returns: A ``numpy.float32`` array of shape ``(N, 3)``, containing
                   the coordinates for ``N`` voxels.
-
-        This method will raise an :exc:`AttributeError` if called on a
-        ``GLImageObject`` configured for 3D rendering, unless both the ``xax``
-        and ``yax`` arguments are provided.
 
         See the :func:`.pointGrid` function.
         """
@@ -740,13 +659,11 @@ class GLImageObject(GLObject):
         if space not in ('voxel', 'display'):
             raise ValueError('Unknown value for space ("{}")'.format(space))
 
-        image      = self.image
-        opts       = self.opts
-        v2dMat     = opts.getTransform('voxel',   'display')
-        d2vMat     = opts.getTransform('display', 'voxel')
-
-        if xax is None: xax = self.xax
-        if yax is None: yax = self.yax
+        image         = self.image
+        opts          = self.opts
+        v2dMat        = opts.getTransform('voxel',   'display')
+        d2vMat        = opts.getTransform('display', 'voxel')
+        xax, yax, zax = axes
 
         zax = 3 - xax - yax
 

@@ -609,22 +609,22 @@ class GLVolume(globject.GLImageObject):
         fslgl.glvolume_funcs.preDraw(self)
 
 
-    def draw2D(self, zpos, xform=None, bbox=None):
+    def draw2D(self, *args, **kwargs):
         """Calls the version dependent ``draw2D`` function. """
 
-        fslgl.glvolume_funcs.draw2D(self, zpos, xform, bbox)
+        fslgl.glvolume_funcs.draw2D(self, *args, **kwargs)
 
 
-    def draw3D(self, xform=None, bbox=None):
+    def draw3D(self, *args, **kwargs):
         """Calls the version dependent ``draw3D`` function. """
 
-        fslgl.glvolume_funcs.draw3D(self, xform, bbox)
+        fslgl.glvolume_funcs.draw3D(self, *args, **kwargs)
 
 
-    def drawAll(self, zposes, xforms):
+    def drawAll(self, *args, **kwargs):
         """Calls the version dependent ``drawAll`` function. """
 
-        fslgl.glvolume_funcs.drawAll(self, zposes, xforms)
+        fslgl.glvolume_funcs.drawAll(self, *args, **kwargs)
 
 
     def postDraw(self):
