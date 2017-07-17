@@ -90,6 +90,14 @@ uniform float texZero;
  */
 uniform bool invertClip;
 
+
+/*
+ * Camera direction, normalised to unit length. FSLeyes
+ * uses orthographic projection, so this is the same for
+ * all fragments.
+ */
+uniform vec3 cameraDir;
+
 /*
  * Image voxel coordinates.
  */
@@ -110,20 +118,35 @@ varying vec3 fragClipTexCoord;
 #pragma include glvolume_common.glsl
 
 
+int niters = 100;
+
+
 void main(void) {
 
-    vec4 colour;
+    vec3 texCoord     = fragTexCoord;
+    vec3 clipTexCoord = fragClipTexCoord;
+    vec4 colour       = vec4(0, 0, 0, 0);
+    vec4 finalColour  = vec4(0, 0, 0, 0);
 
-    /*
-     * Skip voxels that are out of the image bounds
-     */
-    if (!test_in_bounds(fragVoxCoord, imageShape)) {
-        discard;
+    bool miss;
+
+    vec3 rayStep = cameraDir / niters;
+
+    for (int i = 0; i < niters; i++) {
+
+      miss = sample_volume(texCoord, clipTexCoord, colour);
+
+      texCoord     += rayStep;
+      clipTexCoord += rayStep;
+
+      if (!miss)
+        continue;
+
+      finalColour = finalColour + (1 - finalColour.a) * colour;
+
+      if (finalColour.a >= 0.95)
+        break;
     }
 
-    if (!sample_volume(fragTexCoord, fragClipTexCoord, colour)) {
-        discard;
-    }
-
-    gl_FragColor = colour;
+    gl_FragColor = finalColour;
 }

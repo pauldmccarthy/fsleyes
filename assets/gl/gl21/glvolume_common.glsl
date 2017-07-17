@@ -90,7 +90,5 @@ bool sample_volume(vec3 texCoord, vec3 clipTexCoord, out vec4 finalColour) {
   if (negCmap) finalColour = texture1D(negColourTexture, normVoxValue.x);
   else         finalColour = texture1D(colourTexture,    normVoxValue.x);
 
-  finalColour = finalColour;
-
   return true;
 }

@@ -184,9 +184,21 @@ def draw3D(self, xform=None, bbox=None):
 
     vertices, voxCoords, texCoords = self.generateVertices3D(xform, bbox)
 
-    self.shader.setAtt('vertex',   vertices)
-    self.shader.setAtt('voxCoord', voxCoords)
-    self.shader.setAtt('texCoord', texCoords)
+    eye    = [0, 0, -1]
+    target = [0, 0,  0]
+
+    mvmat  = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX).T
+    mvmat  = transform.invert(mvmat)
+    eye    = transform.transform(eye,    mvmat)
+    target = transform.transform(target, mvmat)
+
+    cdir = eye - target
+    cdir = cdir / np.sqrt(np.dot(cdir, cdir))
+
+    self.shader.set(   'cameraDir', cdir)
+    self.shader.setAtt('vertex',    vertices)
+    self.shader.setAtt('voxCoord',  voxCoords)
+    self.shader.setAtt('texCoord',  texCoords)
 
     self.shader.loadAtts()
 
