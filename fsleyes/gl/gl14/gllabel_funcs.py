@@ -71,7 +71,7 @@ def updateShaderState(self):
                    np.array(self.image.shape[:3], dtype=np.float32)
     invNumLabels = 1.0 / (opts.lut.max() + 1)
 
-    if opts.transform == 'affine':
+    if self.threedee or opts.transform == 'affine':
         minOffset = offsets.min()
         offsets   = np.array([minOffset] * 3)
     else:
@@ -93,5 +93,6 @@ def updateShaderState(self):
 
 preDraw  = glvolume_funcs.preDraw
 draw2D   = glvolume_funcs.draw2D
+draw3D   = glvolume_funcs.draw3D
 drawAll  = glvolume_funcs.drawAll
 postDraw = glvolume_funcs.postDraw

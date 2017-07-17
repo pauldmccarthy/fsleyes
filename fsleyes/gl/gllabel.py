@@ -43,16 +43,15 @@ class GLLabel(globject.GLImageObject):
     """
 
 
-    def __init__(self, image, display, xax, yax):
+    def __init__(self, image, displayCtx, threedee):
         """Create a ``GLLabel``.
 
-        :arg image:   The :class:`.Image` instance.
-        :arg display: The associated :class:`.Display` instance.
-        :arg xax:     Initial display X axis
-        :arg yax:     Initial display Y axis
+        :arg image:      The :class:`.Image` instance.
+        :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+        :arg threedee:   2D or 3D rendering
         """
 
-        globject.GLImageObject.__init__(self, image, display, xax, yax)
+        globject.GLImageObject.__init__(self, image, displayCtx, threedee)
 
         lutTexName        = '{}_lut'.format(self.name)
         self.lutTexture   = textures.LookupTableTexture(lutTexName)
@@ -252,9 +251,14 @@ class GLLabel(globject.GLImageObject):
         fslgl.gllabel_funcs.preDraw(self)
 
 
-    def draw(self, zpos, xform=None, bbox=None):
-        """Calls the version-dependent ``draw`` function. """
-        fslgl.gllabel_funcs.draw(self, zpos, xform, bbox)
+    def draw2D(self, zpos, xform=None, bbox=None):
+        """Calls the version-dependent ``draw2D`` function. """
+        fslgl.gllabel_funcs.draw2D(self, zpos, xform, bbox)
+
+
+    def draw3D(self, xform=None, bbox=None):
+        """Calls the version-dependent ``draw3D`` function. """
+        fslgl.gllabel_funcs.draw3D(self, xform, bbox)
 
 
     def drawAll(self, zpos, xform=None):
