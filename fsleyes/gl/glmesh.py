@@ -85,6 +85,7 @@ class GLMesh(globject.GLObject):
     ``drawWithShader``      Draws mesh outline using shaders.
     ======================= =================================
 
+
     **3D rendering**
 
 
@@ -97,23 +98,17 @@ class GLMesh(globject.GLObject):
     """
 
 
-    def __init__(self, overlay, display, threedee):
+    def __init__(self, overlay, displayCtx, threedee):
         """Create a ``GLMesh``.
 
-        :arg overlay:  A :class:`.TriangleMesh` overlay.
-
-        :arg display:  A :class:`.Display` instance defining how the
-                       ``overlay`` is to be displayed.
-
-        :arg threedee: 2D or 3D rendering.
+        :arg overlay:    A :class:`.TriangleMesh` overlay.
+        :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+        :arg threedee:   2D or 3D rendering.
         """
 
-        globject.GLObject.__init__(self, threedee)
+        globject.GLObject.__init__(self, overlay, displayCtx, threedee)
 
         self.shader  = None
-        self.overlay = overlay
-        self.display = display
-        self.opts    = display.getDisplayOpts()
 
         # We use a render texture when
         # rendering model cross sections.
@@ -160,14 +155,13 @@ class GLMesh(globject.GLObject):
         self.removeListeners()
         self.deregisterLut()
 
+        globject.GLObject.destroy(self)
+
         self.lut            = None
         self.renderTexture  = None
         self.cmapTexture    = None
         self.negCmapTexture = None
         self.lutTexture     = None
-        self.overlay        = None
-        self.display        = None
-        self.opts           = None
 
 
     def ready(self):

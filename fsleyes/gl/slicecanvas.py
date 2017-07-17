@@ -789,7 +789,7 @@ class SliceCanvas(props.HasProperties):
                 self._glObjects.pop(overlay)
                 return
 
-            globj = globject.createGLObject(overlay, display, False)
+            globj = globject.createGLObject(overlay, self.displayCtx, False)
             globj.setAxes(self.xax, self.yax)
 
             if globj is not None:

@@ -169,8 +169,7 @@ def draw3D(self, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
 
-    # Dodgy
-    pos = self.opts.displayCtx.location.xyz
+    pos = self.displayCtx.location.xyz
 
     draw2D(self, pos[0], xform, bbox, xax=1, yax=2)
     draw2D(self, pos[1], xform, bbox, xax=0, yax=2)

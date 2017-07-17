@@ -137,7 +137,7 @@ def preDraw(self):
     self.shader.load()
 
 
-def draw2D(self, zpos, xform=None, bbox=None):
+def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
     """Draws the line vectors at a plane at the specified Z location.
     Voxel coordinates are passed to the vertex shader, which calculates
     the corresponding line vertex locations.
@@ -147,7 +147,7 @@ def draw2D(self, zpos, xform=None, bbox=None):
     shader = self.shader
     v2dMat = opts.getTransform('voxel', 'display')
 
-    voxels  = self.generateVoxelCoordinates2D(zpos, bbox)
+    voxels  = self.generateVoxelCoordinates2D(zpos, bbox, xax=xax, yax=yax)
     voxels  = np.repeat(voxels, 2, 0)
     indices = np.arange(voxels.shape[0], dtype=np.uint32)
 
@@ -168,26 +168,11 @@ def draw2D(self, zpos, xform=None, bbox=None):
 def draw3D(self, xform, bbox):
     """Draws the line vectors in 3D space. """
 
-    opts   = self.opts
-    shader = self.shader
-    v2dMat = opts.getTransform('voxel', 'display')
+    pos = self.displayCtx.location.xyz
 
-    voxels  = self.generateVoxelCoordinates3D(bbox)
-    voxels  = np.repeat(voxels, 2, 0)
-    indices = np.arange(voxels.shape[0], dtype=np.uint32)
-
-    if xform is None: xform = v2dMat
-    else:             xform = transform.concat(xform, v2dMat)
-
-    shader.set(   'voxToDisplayMat', xform)
-    shader.setAtt('vertexID',        indices)
-    shader.setAtt('voxel',           voxels)
-    shader.loadAtts()
-
-    gl.glLineWidth(opts.lineWidth)
-    gl.glDrawArrays(gl.GL_LINES, 0, voxels.size // 3)
-
-    shader.unloadAtts()
+    draw2D(self, pos[0], xform, bbox, xax=1, yax=2)
+    draw2D(self, pos[1], xform, bbox, xax=0, yax=2)
+    draw2D(self, pos[2], xform, bbox, xax=0, yax=1)
 
 
 def drawAll(self, zposes, xforms):

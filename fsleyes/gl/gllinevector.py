@@ -52,12 +52,12 @@ class GLLineVector(glvector.GLVector):
     """
 
 
-    def __init__(self, image, display, threedee):
+    def __init__(self, image, displayCtx, threedee):
         """Create a ``GLLineVector`` instance.
 
-        :arg image:    An :class:`.Image` or :class:`.DTIFitTensor` instance.
-        :arg display:  The associated :class:`.Display` instance.
-        :arg threedee: 2D or 3D rendering.
+        :arg image:      An :class:`.Image` or :class:`.DTIFitTensor` instance.
+        :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+        :arg threedee:   2D or 3D rendering.
         """
 
         # If the overlay is a DTIFitTensor, use the
@@ -68,7 +68,7 @@ class GLLineVector(glvector.GLVector):
 
         glvector.GLVector.__init__(self,
                                    image,
-                                   display,
+                                   displayCtx,
                                    threedee,
                                    vectorImage=vecImage,
                                    init=lambda: fslgl.gllinevector_funcs.init(
@@ -296,7 +296,7 @@ class GLLineVertices(object):
         self.__hash   = self.calculateHash(glvec)
 
 
-    def getVertices2D(self, zpos, glvec, bbox=None):
+    def getVertices2D(self, zpos, glvec, bbox=None, xax=None, yax=None):
         """Extracts and returns a slice of line vertices, and the associated
         voxel coordinates, which are in a plane located at the given Z
         position (in display coordinates).
@@ -309,7 +309,8 @@ class GLLineVertices(object):
         shape = image.shape[:3]
 
         vertices  = self.vertices
-        voxCoords = glvec.generateVoxelCoordinates2D(zpos, bbox)
+        voxCoords = glvec.generateVoxelCoordinates2D(
+            zpos, bbox, xax=xax, yax=yax)
 
         # Turn the voxel coordinates into
         # indices suitable for looking up

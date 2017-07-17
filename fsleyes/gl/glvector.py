@@ -84,7 +84,7 @@ class GLVectorBase(globject.GLImageObject):
     """
 
 
-    def __init__(self, overlay, display, threedee, init=None, preinit=None):
+    def __init__(self, overlay, displayCtx, threedee, init=None, preinit=None):
         """Create a ``GLVectorBase`` object bound to the given overlay and
         display.
 
@@ -99,8 +99,8 @@ class GLVectorBase(globject.GLImageObject):
 
         :arg overlay:        A :class:`.Nifti` object.
 
-        :arg display:        A :class:`.Display` object which describes how the
-                             overlay is to be displayed.
+        :arg displayCtx:     A :class:`.DisplayContext` object which describes
+                             how the overlay is to be displayed.
 
         :arg threedee:       2D or 3D rendering.
 
@@ -114,7 +114,7 @@ class GLVectorBase(globject.GLImageObject):
                              :class:`GLVector`.
         """
 
-        globject.GLImageObject.__init__(self, overlay, display, threedee)
+        globject.GLImageObject.__init__(self, overlay, displayCtx, threedee)
 
         name = self.name
 
@@ -692,7 +692,6 @@ class GLVector(GLVectorBase):
                              data range, return a suitably adjusted adjust data
                              range.
         """
-
 
         def defaultPrefilter(d):
             return d

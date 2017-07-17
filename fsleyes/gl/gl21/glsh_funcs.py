@@ -54,7 +54,7 @@ def compileShaders(self):
     if self.shader is not None:
         self.shader.destroy()
 
-    opts                     = self.displayOpts
+    opts                     = self.opts
     self.useVolumeFragShader = opts.colourImage is not None
 
     if self.useVolumeFragShader:
@@ -75,7 +75,7 @@ def updateShaderState(self):
 
     shader  = self.shader
     image   = self.image
-    opts    = self.displayOpts
+    opts    = self.opts
 
     if shader is None:
         return
@@ -174,7 +174,7 @@ def preDraw(self):
     # normal vectors - T(I(MV matrix))
     # We transpose mvMat because OpenGL is column-major
     mvMat        = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)[:3, :3].T
-    v2dMat       = self.displayOpts.getTransform('voxel', 'display')[:3, :3]
+    v2dMat       = self.opts.getTransform('voxel', 'display')[:3, :3]
 
     normalMatrix = transform.concat(mvMat, v2dMat)
     normalMatrix = npla.inv(normalMatrix).T
@@ -187,17 +187,20 @@ def preDraw(self):
     gl.glCullFace(gl.GL_BACK)
 
 
-def draw(self, zpos, xform=None, bbox=None):
-    """Called by :meth:`.GLSH.draw`. Draws the scene. """
+def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
+    """Called by :meth:`.GLSH.draw2D`. Draws the scene. """
 
-    opts   = self.displayOpts
+    opts   = self.opts
     shader = self.shader
     v2dMat = opts.getTransform('voxel',   'display')
 
     if xform is None: xform = v2dMat
     else:             xform = transform.concat(v2dMat, xform)
 
-    voxels              = self.generateVoxelCoordinates2D(zpos, bbox)
+    voxels              = self.generateVoxelCoordinates2D(zpos,
+                                                          bbox,
+                                                          xax=xax,
+                                                          yax=yax)
     voxels, radTexShape = self.updateRadTexture(voxels)
 
     if len(voxels) == 0:
@@ -215,6 +218,14 @@ def draw(self, zpos, xform=None, bbox=None):
 
     arbdi.glDrawElementsInstancedARB(
         gl.GL_TRIANGLES, self.nVertices, gl.GL_UNSIGNED_INT, None, len(voxels))
+
+
+def draw3D(self, xform=None, bbox=None):
+    pos = self.displayCtx.location.xyz
+
+    draw2D(self, pos[0], xform, bbox, xax=1, yax=2)
+    draw2D(self, pos[1], xform, bbox, xax=0, yax=2)
+    draw2D(self, pos[2], xform, bbox, xax=0, yax=1)
 
 
 def postDraw(self):

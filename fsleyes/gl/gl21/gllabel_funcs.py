@@ -56,7 +56,7 @@ def updateShaderState(self):
     if not self.ready():
         return
 
-    opts   = self.displayOpts
+    opts   = self.opts
     shader = self.shader
 
     imageShape      = np.array(self.image.shape[:3])

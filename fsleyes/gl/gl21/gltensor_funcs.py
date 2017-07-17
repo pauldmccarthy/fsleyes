@@ -73,7 +73,7 @@ def updateShaderState(self):
 
     image  = self.image
     shader = self.shader
-    opts   = self.displayOpts
+    opts   = self.opts
 
     shader.load()
 
@@ -156,7 +156,7 @@ def preDraw(self):
 
     # We transpose mvMat because OpenGL is column-major
     mvMat        = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)[:3, :3].T
-    v2dMat       = self.displayOpts.getTransform('voxel', 'display')[:3, :3]
+    v2dMat       = self.opts.getTransform('voxel', 'display')[:3, :3]
 
     normalMatrix = transform.concat(mvMat, v2dMat)
     normalMatrix = npla.inv(normalMatrix).T
@@ -169,19 +169,19 @@ def preDraw(self):
     gl.glCullFace(gl.GL_BACK)
 
 
-def draw(self, zpos, xform=None, bbox=None):
+def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
     """Generates voxel coordinates for each tensor to be drawn, does some
     final shader state configuration, and draws the tensors.
     """
 
-    opts   = self.displayOpts
+    opts   = self.opts
     shader = self.shader
     v2dMat = opts.getTransform('voxel',   'display')
 
     if xform is None: xform = v2dMat
     else:             xform = transform.concat(v2dMat, xform)
 
-    voxels  = self.generateVoxelCoordinates2D(zpos, bbox)
+    voxels  = self.generateVoxelCoordinates2D(zpos, bbox, xax=xax, yax=yax)
     nVoxels = len(voxels)
 
     # Set divisor to 1, so we use one set of
@@ -192,6 +192,15 @@ def draw(self, zpos, xform=None, bbox=None):
 
     arbdi.glDrawElementsInstancedARB(
         gl.GL_QUADS, self.nVertices, gl.GL_UNSIGNED_INT, None, nVoxels)
+
+
+def draw3D(self, xform=None, bbox=None):
+
+    pos = self.displayCtx.location.xyz
+
+    draw2D(self, pos[0], xform, bbox, xax=1, yax=2)
+    draw2D(self, pos[1], xform, bbox, xax=0, yax=2)
+    draw2D(self, pos[2], xform, bbox, xax=0, yax=1)
 
 
 def postDraw(self):

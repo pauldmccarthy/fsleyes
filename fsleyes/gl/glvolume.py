@@ -153,19 +153,19 @@ class GLVolume(globject.GLImageObject):
     """
 
 
-    def __init__(self, image, display, threedee):
+    def __init__(self, image, displayCtx, threedee):
         """Create a ``GLVolume`` object.
 
-        :arg image:    An :class:`.Image` object.
+        :arg image:       An :class:`.Image` object.
 
-        :arg display:  A :class:`.Display` object which describes how the image
-                       is to be displayed.
+        :arg displayCtx:  The :class:`.DisplayContext` object managing the
+                          scene.
 
-        :arg threedee: Set up for 2D or 3D rendering.
+        :arg threedee:    Set up for 2D or 3D rendering.
 
         """
 
-        globject.GLImageObject.__init__(self, image, display, threedee)
+        globject.GLImageObject.__init__(self, image, displayCtx, threedee)
 
         # Add listeners to this image so the view can be
         # updated when its display properties are changed
@@ -250,6 +250,8 @@ class GLVolume(globject.GLImageObject):
         self.negColourTexture = None
 
         fslgl.glvolume_funcs  .destroy(self)
+        globject.GLImageObject.destroy(self)
+
         globject.GLImageObject.destroy(self)
 
 

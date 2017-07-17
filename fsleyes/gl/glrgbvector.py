@@ -63,12 +63,12 @@ class GLRGBVector(glvector.GLVector):
     """
 
 
-    def __init__(self, image, display, threedee):
+    def __init__(self, image, displayCtx, threedee):
         """Create a ``GLRGBVector``.
 
-        :arg image:    An :class:`.Image` or :class:`.DTIFitTensor` instance.
-        :arg display:  The associated :class:`.Display` instance.
-        :arg threedee: 2D or 3D rendering
+        :arg image:      An :class:`.Image` or :class:`.DTIFitTensor` instance.
+        :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+        :arg threedee:   2D or 3D rendering
         """
 
         # If the overlay is a DTIFitTensor, use the
@@ -84,7 +84,7 @@ class GLRGBVector(glvector.GLVector):
 
         glvector.GLVector.__init__(self,
                                    image,
-                                   display,
+                                   displayCtx,
                                    threedee,
                                    prefilter=prefilter,
                                    prefilterRange=prefilterRange,

@@ -62,7 +62,7 @@ class GLLabel(globject.GLImageObject):
         # by the gllabel_funcs module
         self.shader       = None
 
-        self.__lut = self.displayOpts.lut
+        self.__lut = self.opts.lut
 
         self.addListeners()
         self.registerLut()
@@ -129,7 +129,7 @@ class GLLabel(globject.GLImageObject):
         """
 
         display = self.display
-        opts    = self.displayOpts
+        opts    = self.opts
         name    = self.name
 
         display.addListener('alpha',        name, self.__colourPropChanged)
@@ -155,7 +155,7 @@ class GLLabel(globject.GLImageObject):
         """
 
         display = self.display
-        opts    = self.displayOpts
+        opts    = self.opts
         name    = self.name
 
         display.removeListener('alpha',        name)
@@ -184,7 +184,7 @@ class GLLabel(globject.GLImageObject):
         :class:`.Image` data, is up to date.
         """
 
-        opts     = self.displayOpts
+        opts     = self.opts
         texName  = '{}_{}' .format(type(self).__name__, id(self.image))
 
         unsynced = (opts.getParent() is None or
@@ -218,7 +218,7 @@ class GLLabel(globject.GLImageObject):
         """
 
         display = self.display
-        opts    = self.displayOpts
+        opts    = self.opts
 
         self.lutTexture.set(alpha=display.alpha           / 100.0,
                             brightness=display.brightness / 100.0,
@@ -229,7 +229,7 @@ class GLLabel(globject.GLImageObject):
     def registerLut(self):
         """Registers a listener on the current :class:`.LookupTable` instance.
         """
-        opts = self.displayOpts
+        opts = self.opts
 
         if self.__lut is not None:
             for topic in ['label', 'added', 'removed']:
@@ -293,7 +293,7 @@ class GLLabel(globject.GLImageObject):
         """Called when the :attr:`.NiftiOpts.volume` property changes. Updates
         the ``imageTexture`` and calls :meth:`updateShaderState`.
         """
-        opts = self.displayOpts
+        opts = self.opts
 
         self.imageTexture.set(volume=opts.volume)
         self.updateShaderState(alwaysNotify=True)

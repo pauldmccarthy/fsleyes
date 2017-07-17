@@ -153,7 +153,7 @@ def preDraw(self):
     self.shader.load()
 
 
-def draw2D(self, zpos, xform=None, bbox=None):
+def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
     """Draws the line vertices corresponding to a 2D plane located
     at the specified Z location.
     """
@@ -161,7 +161,9 @@ def draw2D(self, zpos, xform=None, bbox=None):
     opts                = self.opts
     vertices, voxCoords = self.lineVertices.getVertices2D(zpos,
                                                           self,
-                                                          bbox=bbox)
+                                                          bbox=bbox,
+                                                          xax=xax,
+                                                          yax=yax)
 
     if vertices.size == 0:
         return
@@ -186,7 +188,12 @@ def draw2D(self, zpos, xform=None, bbox=None):
 
 
 def draw3D(self, xform, bbox):
-    pass
+
+    pos = self.displayCtx.location.xyz
+
+    draw2D(self, pos[0], xform, bbox, xax=1, yax=2)
+    draw2D(self, pos[1], xform, bbox, xax=0, yax=2)
+    draw2D(self, pos[2], xform, bbox, xax=0, yax=1)
 
 
 def drawAll(self, zposes, xforms):

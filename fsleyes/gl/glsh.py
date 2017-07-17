@@ -86,7 +86,7 @@ class GLSH(glvector.GLVectorBase):
     """
 
 
-    def __init__(self, image, display, xax, yax):
+    def __init__(self, image, displayCtx, threedee):
         """Create a ``GLSH`` object.
 
 
@@ -95,10 +95,9 @@ class GLSH(glvector.GLVectorBase):
         instances, and sets up shaders.
 
 
-        :arg image:   The :class:`.Image` instance
-        :arg display: The associated :class:`.Display` instance.
-        :arg xax:     Horizontal display axis
-        :arg yax:     Vertical display axis
+        :arg image:      The :class:`.Image` instance
+        :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+        :arg threedee:   Set up for 2D or 3D rendering.
         """
 
         self.shader     = None
@@ -118,9 +117,8 @@ class GLSH(glvector.GLVectorBase):
         glvector.GLVectorBase.__init__(
             self,
             image,
-            display,
-            xax,
-            yax,
+            displayCtx,
+            threedee,
             preinit=self.compileShaders,
             init=self.__shStateChanged)
 
@@ -152,7 +150,7 @@ class GLSH(glvector.GLVectorBase):
 
         glvector.GLVectorBase.addListeners(self)
 
-        opts = self.displayOpts
+        opts = self.opts
         name = self.name
 
         opts.addListener('shResolution' ,   name, self.__shStateChanged,
@@ -173,7 +171,7 @@ class GLSH(glvector.GLVectorBase):
 
         glvector.GLVectorBase.removeListeners(self)
 
-        opts = self.displayOpts
+        opts = self.opts
         name = self.name
 
         opts.removeListener('shResolution',    name)
@@ -210,9 +208,9 @@ class GLSH(glvector.GLVectorBase):
         attribute called ``__shParams``.
         """
 
-        opts = self.displayOpts
+        opts = self.opts
 
-        self.__shParams = self.displayOpts.getSHParameters()
+        self.__shParams = opts.getSHParameters()
         self.vertices   = opts.getVertices()
         self.indices    = opts.getIndices()
         self.nVertices  = len(self.indices)
@@ -285,7 +283,7 @@ class GLSH(glvector.GLVectorBase):
         ...     ...            ...
         ======  =============  =====
         """
-        opts      = self.displayOpts
+        opts      = self.opts
         maxOrder  = opts.maxOrder
         dispOrder = opts.shOrder
         shType    = opts.shType
@@ -325,7 +323,7 @@ class GLSH(glvector.GLVectorBase):
           - The adjusted shape of the radius texture.
         """
 
-        opts = self.displayOpts
+        opts = self.opts
 
         # Remove out-of-bounds voxels
         shape   = self.image.shape[:3]
@@ -447,10 +445,16 @@ class GLSH(glvector.GLVectorBase):
         fslgl.glsh_funcs.preDraw(self)
 
 
-    def draw(self, zpos, xform=None, bbox=None):
+    def draw2D(self, zpos, xform=None, bbox=None):
         """Overrides :meth:`.GLObject.draw`. Calls :func:`.glsh_funcs.draw`.
         """
-        fslgl.glsh_funcs.draw(self, zpos, xform, bbox)
+        fslgl.glsh_funcs.draw2D(self, zpos, xform, bbox)
+
+
+    def draw3D(self, xform=None, bbox=None):
+        """Overrides :meth:`.GLObject.draw`. Calls :func:`.glsh_funcs.draw`.
+        """
+        fslgl.glsh_funcs.draw3D(self, xform, bbox)
 
 
     def postDraw(self):

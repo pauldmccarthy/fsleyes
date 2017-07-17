@@ -67,22 +67,23 @@ def getGLObjectType(overlayType):
     return typeMap.get(overlayType, None)
 
 
-def createGLObject(overlay, display, threedee=False):
+def createGLObject(overlay, displayCtx, threedee=False):
     """Create :class:`GLObject` instance for the given overlay, as specified
     by the :attr:`.Display.overlayType` property.
 
-    :arg overlay:  An overlay object (e.g. a :class:`.Image` instance).
+    :arg overlay:    An overlay object (e.g. a :class:`.Image` instance).
 
-    :arg display:  A :class:`.Display` instance describing how the overlay
-                    should be displayed.
+    :arg displayCtx: The :class:`.DisplayContext` managing the scene.
 
-    :arg threedee: If ``True``, the ``GLObject`` will be configured for
-                   3D rendering. Otherwise it will be configured for 2D
-                   slice-based rendering.
+    :arg threedee:   If ``True``, the ``GLObject`` will be configured for
+                     3D rendering. Otherwise it will be configured for 2D
+                     slice-based rendering.
     """
-    ctr = getGLObjectType(display.overlayType)
 
-    if ctr is not None: return ctr(overlay, display, threedee)
+    display = displayCtx.getDisplay(overlay)
+    ctr     = getGLObjectType(display.overlayType)
+
+    if ctr is not None: return ctr(overlay, displayCtx, threedee)
     else:               return None
 
 
@@ -97,13 +98,26 @@ class GLObject(notifier.Notifier):
     The following attributes will always be available on ``GLObject``
     instances:
 
-      - ``name``:     A unique name for this ``GLObject`` instance.
+      - ``name``:       A unique name for this ``GLObject`` instance.
 
-      - ``threedee``: A boolean flag indicating whether this ``GLObject``
-                      is configured for 2D or 3D rendering.
+      - ``overlay``:    The overlay to be displayed.
+
+      - ``display``:    The :class:`.Display` instance describing the
+                        overlay display properties.
+
+      - ``opts``:       The :class:`.DisplayOpts` instance describing the
+                        overlay-type specific display properties.
+
+      - ``displayCtx``: The :class:`.DisplayContext` managing the scene
+                        that this ``GLObject`` is a part of.
+
+      - ``threedee``:   A boolean flag indicating whether this ``GLObject``
+                        is configured for 2D or 3D rendering.
+
 
     If the ``GLObject`` is created for 2D slice-based rendering, the following
     attributes will also be present:
+
 
       - ``xax``:  Index of the display coordinate system axis that
                   corresponds to the horizontal screen axis.
@@ -136,15 +150,16 @@ class GLObject(notifier.Notifier):
      4. Once you are finished with the ``GLObject``, call its :meth:`destroy`
         method.
 
+
     **Update listeners**
 
 
-    Entities which are interested in changes to a ``GLObject`` representation
-    may register as *update listeners*, via the :meth:`.Notifier.register`
-    method. Whenever the state of a ``GLObject`` changes, all update listeners
-    will be called. It is the resposibility of sub-class implementations to
-    call the :meth:`.Notifier.notify` method to facilitate this notification
-    process.
+    A ``GLObject`` instance will notify registered listeners when its state
+    changes and it needs to be re-drawn.  Entities which are interested in
+    changes to a ``GLObject`` instance may register as *update listeners*, via
+    the :meth:`.Notifier.register` method. It is the resposibility of
+    sub-classes of ``GLObject`` to call the :meth:`.Notifier.notify` method to
+    facilitate this notification process.
 
 
     **Sub-class resposibilities***
@@ -153,9 +168,10 @@ class GLObject(notifier.Notifier):
     Sub-class implementations must do the following:
 
      - Call :meth:`__init__`. A ``GLObject.__init__`` sub-class method must
-       have the following signature::
+       have the following signature, and must pass all arguments through to
+       ``GLObject.__init__``::
 
-           def __init__(self, overlay, display, threedee)
+           def __init__(self, overlay, displayCtx, threedee)
 
 
      - Call :meth:`notify` whenever its OpenGL representation changes.
@@ -186,7 +202,7 @@ class GLObject(notifier.Notifier):
     """
 
 
-    def __init__(self, threedee):
+    def __init__(self, overlay, displayCtx, threedee):
         """Create a :class:`GLObject`.  The constructor adds one attribute
         to this instance, ``name``, which is simply a unique name for this
         instance.
@@ -199,12 +215,27 @@ class GLObject(notifier.Notifier):
         perform any necessary OpenGL initialisation, such as creating
         textures.
 
-        :arg threedee: Whether this ``GLObject`` is to be used for 2D or 3D
-                       rendering.
+        :arg overlay:    The overlay
+
+        :arg displayCtx: The ``DisplayContext`` managing the scene
+
+        :arg threedee:   Whether this ``GLObject`` is to be used for 2D or 3D
+                         rendering.
         """
 
-        self.__name     = '{}_{}'.format(type(self).__name__, id(self))
-        self.__threedee = threedee
+        self.__name       = '{}_{}'.format(type(self).__name__, id(self))
+        self.__threedee   = threedee
+        self.__overlay    = overlay
+        self.__display    = None
+        self.__opts       = None
+        self.__displayCtx = None
+
+        # GLSimpleObject passes in None for
+        # both the overlay and the displayCtx.
+        if overlay is not None and displayCtx is not None:
+            self.__display    = displayCtx.getDisplay(overlay)
+            self.__opts       = self.__display.getDisplayOpts()
+            self.__displayCtx = displayCtx
 
         if not threedee:
             self.__xax  = 0
@@ -224,6 +255,36 @@ class GLObject(notifier.Notifier):
     def name(self):
         """A unique name for this ``GLObject``. """
         return self.__name
+
+
+    @property
+    def overlay(self):
+        """The overlay being drawn by this ``GLObject``."""
+        return self.__overlay
+
+
+    @property
+    def display(self):
+        """The :class:`.Display` instance containing overlay display
+        properties.
+        """
+        return self.__display
+
+
+    @property
+    def opts(self):
+        """The :class:`.DisplayOpts` instance containing overlay
+        (type-specific) display properties.
+        """
+        return self.__opts
+
+
+    @property
+    def displayCtx(self):
+        """The :class:`.DisplayContext` dsecribing thef scene that this
+        ``GLObject`` is a part of.
+        """
+        return self.__displayCtx
 
 
     @property
@@ -332,8 +393,14 @@ class GLObject(notifier.Notifier):
 
         It should perform any necessary cleaning up, such as deleting texture
         objects.
+
+        .. note:: Sub-classes which override this method must call this
+                  implementation.
         """
-        raise NotImplementedError()
+        self.__overlay    = None
+        self.__display    = None
+        self.__opts       = None
+        self.__displayCtx = None
 
 
     def destroyed(self):
@@ -421,18 +488,25 @@ class GLObject(notifier.Notifier):
 
 class GLSimpleObject(GLObject):
     """The ``GLSimpleObject`` class is a convenience superclass for simple
-    rendering tasks (probably fixed-function) which require no setup or
-    initialisation/management of GL memory or state. All subclasses need to do
-    is implement the :meth:`GLObject.draw2D` and :meth:`GLObject.draw3D`
-    methods. The :mod:`.annotations` module uses the ``GLSimpleObject`` class.
+    rendering tasks (probably fixed-function) which are not associated with a
+    specific overlay, and require no setup or initialisation/management of GL
+    memory or state.
+
+    All subclasses need to do is implement the :meth:`GLObject.draw2D` and
+    :meth:`GLObject.draw3D` methods. The :mod:`.annotations` module uses the
+    ``GLSimpleObject`` class.
 
     Subclasses should not assume that any of the other methods will ever
     be called.
+
+    .. note:: The :attr:`GLObject.overlay`, :attr:`GLObject.display`,
+    :attr:`GLObject.opts` and :attr:`GLObject.displayCtx` properties of
+    a ``GLSimpleObject`` are all set to ``None``.
     """
 
     def __init__(self, threedee):
         """Create a ``GLSimpleObject``. """
-        GLObject.__init__(self, threedee)
+        GLObject.__init__(self, None, None, threedee)
         self.__destroyed = False
 
 
@@ -443,6 +517,7 @@ class GLSimpleObject(GLObject):
 
     def destroy( self):
         """Overrides :meth:`GLObject.destroy`. Does nothing. """
+        GLObject.destroy(self)
         self.__destroyed = True
 
 
@@ -469,59 +544,18 @@ class GLImageObject(GLObject):
     drawing volumetric image data.
     """
 
-    def __init__(self, image, display, threedee):
-        """Create a ``GLImageObject``.
+    def __init__(self, overlay, displayCtx, threedee):
+        """Create a ``GLImageObject`` """
 
-        This constructor adds the following attributes to this instance:
-
-        =========== =======================================================
-        ``image``   A reference to the :class:`.Nifti` overlay being
-                    displayed.
-        ``display`` A reference to the :class:`.Display` instance
-                    associated with the ``image``.
-        ``opts``    A reference to the :class:`.DisplayOpts` instance,
-                    containing overlay type-specific display options. This
-                    is assumed to be a sub-class of :class:`.NiftiOpts`.
-        =========== =======================================================
-
-        :arg image:    The :class:`.Nifti` instance
-
-        :arg display:  An associated :class:`.Display` instance.
-
-        :arg threedee: 2D or 3D rendering
-        """
-
-        GLObject.__init__(self, threedee)
-        self.__image   = image
-        self.__display = display
-        self.__opts    = display.getDisplayOpts()
+        GLObject.__init__(self, overlay, displayCtx, threedee)
 
 
     @property
     def image(self):
-        """The :class:`.Nifti` being rendered by this ``GLImageObject``. """
-        return self.__image
-
-
-    @property
-    def display(self):
-        """The :class:`.Display` instance associated with the image. """
-        return self.__display
-
-    @property
-    def opts(self):
-        """The :class:`.DisplayOpts` instance associated with the image. """
-        return self.__opts
-
-
-    def destroy(self):
-        """If this method is overridden, it should be called by the subclass
-        implementation. It clears references to the :class:`.Image`,
-        :class:`.Display`, and :class:`.DisplayOpts` instances.
+        """The :class:`.Nifti` being rendered by this ``GLImageObject``. This
+        is equivalent to :meth:`.GLObject.overlay`.
         """
-        self.__image   = None
-        self.__display = None
-        self.__opts    = None
+        return self.overlay
 
 
     def destroyed(self):
@@ -577,6 +611,7 @@ class GLImageObject(GLObject):
         """Generates vertex coordinates for a 2D slice of the :class:`.Image`,
         through the given ``zpos``, with the optional ``xform`` and ``bbox``
         applied to the coordinates.
+
 
         This is a convenience method for generating vertices which can be used
         to render a slice through a 3D texture. It is used by the
@@ -711,7 +746,7 @@ class GLImageObject(GLObject):
         d2vMat     = opts.getTransform('display', 'voxel')
 
         if xax is None: xax = self.xax
-        if yax is None: xax = self.yax
+        if yax is None: yax = self.yax
 
         zax = 3 - xax - yax
 

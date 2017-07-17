@@ -101,11 +101,7 @@ class Scene3DCanvas(props.HasProperties):
             if overlay in self.__glObjects:
                 continue
 
-            if not isinstance(overlay, (fslmesh.TriangleMesh, fslimage.Image)):
-                continue
-
-            display = self.__displayCtx.getDisplay(overlay)
-            globj   = globject.createGLObject(overlay, display, True)
+            globj = globject.createGLObject(overlay, self.__displayCtx, True)
 
             globj.register(self.__name, self.Refresh)
             self.__glObjects[overlay] = globj
