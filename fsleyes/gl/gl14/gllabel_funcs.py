@@ -71,11 +71,8 @@ def updateShaderState(self):
                    np.array(self.image.shape[:3], dtype=np.float32)
     invNumLabels = 1.0 / (opts.lut.max() + 1)
 
-    if self.threedee or opts.transform == 'affine':
-        minOffset = offsets.min()
-        offsets   = np.array([minOffset] * 3)
-    else:
-        offsets[self.zax] = -1
+    minOffset = offsets.min()
+    offsets   = np.array([minOffset] * 3)
 
     if opts.outline: offsets = [1] + list(offsets)
     else:            offsets = [0] + list(offsets)

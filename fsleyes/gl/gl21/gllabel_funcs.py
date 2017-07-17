@@ -63,11 +63,8 @@ def updateShaderState(self):
     vvx             = self.imageTexture.voxValXform
     outlineOffsets  = opts.outlineWidth / imageShape
 
-    if self.threedee or opts.transform == 'affine':
-        minOffset = outlineOffsets.min()
-        outlineOffsets = np.array([minOffset] * 3)
-    else:
-        outlineOffsets[self.zax] = -1
+    minOffset      = outlineOffsets.min()
+    outlineOffsets = np.array([minOffset] * 3)
 
     shader.load()
 

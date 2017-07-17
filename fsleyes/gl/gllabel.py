@@ -170,14 +170,6 @@ class GLLabel(globject.GLImageObject):
             opts.removeSyncChangeListener('volume', name)
 
 
-    def setAxes(self, xax, yax):
-        """Overrides :meth:`.GLImageObject.setAxes`. Updates the shader
-        program state.
-        """
-        globject.GLImageObject.setAxes(self, xax, yax)
-        self.updateShaderState()
-
-
     def refreshImageTexture(self):
         """Makes sure that the :class:`.ImageTexture`, used to store the
         :class:`.Image` data, is up to date.
@@ -251,19 +243,19 @@ class GLLabel(globject.GLImageObject):
         fslgl.gllabel_funcs.preDraw(self)
 
 
-    def draw2D(self, zpos, xform=None, bbox=None):
+    def draw2D(self, *args, **kwargs):
         """Calls the version-dependent ``draw2D`` function. """
-        fslgl.gllabel_funcs.draw2D(self, zpos, xform, bbox)
+        fslgl.gllabel_funcs.draw2D(self, *args, **kwargs)
 
 
-    def draw3D(self, xform=None, bbox=None):
+    def draw3D(self, *args, **kwargs):
         """Calls the version-dependent ``draw3D`` function. """
-        fslgl.gllabel_funcs.draw3D(self, xform, bbox)
+        fslgl.gllabel_funcs.draw3D(self, *args, **kwargs)
 
 
-    def drawAll(self, zpos, xform=None):
+    def drawAll(self, *args, **kwargs):
         """Calls the version-dependent ``drawAll`` function. """
-        fslgl.gllabel_funcs.drawAll(self, zpos, xform)
+        fslgl.gllabel_funcs.drawAll(self, *args, **kwargs)
 
 
     def postDraw(self):
