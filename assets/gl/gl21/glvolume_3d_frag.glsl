@@ -1,5 +1,5 @@
 /*
- * OpenGL fragment shader used for rendering 2D slices of GLVolume instances.
+ * OpenGL fragment shader used for rendering GLVolume instances in 3D.
  *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
@@ -106,12 +106,6 @@ varying vec3 fragTexCoord;
  */
 varying vec3 fragClipTexCoord;
 
-/*
- * Multiplicative factor to apply to the colour - can
- * be used for vertex-based lighting.
- */
-varying vec4 fragColourFactor;
-
 
 #pragma include glvolume_common.glsl
 
@@ -131,14 +125,5 @@ void main(void) {
         discard;
     }
 
-    gl_FragColor = colour * fragColourFactor;
-
-    /*
-     * Set the fragment depth on a per-voxel basis
-     * so that items at adjacent voxels (e.g.
-     * tensors) overlap, rather than intersect.
-     */
-    gl_FragDepth = fragVoxCoord.x / imageShape.x *
-                   fragVoxCoord.y / imageShape.y *
-                   fragVoxCoord.z / imageShape.z;
+    gl_FragColor = colour;
 }

@@ -50,8 +50,11 @@ def compileShaders(self):
     if self.shader is not None:
         self.shader.destroy()
 
+    if self.threedee: frag = 'glvolume_3d'
+    else:             frag = 'glvolume'
+
     vertSrc = shaders.getVertexShader(  'glvolume')
-    fragSrc = shaders.getFragmentShader('glvolume')
+    fragSrc = shaders.getFragmentShader(frag)
 
     self.shader = shaders.GLSLShader(vertSrc, fragSrc)
 
@@ -179,7 +182,15 @@ def draw3D(self, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
 
-    pass
+    vertices, voxCoords, texCoords = self.generateVertices3D(xform, bbox)
+
+    self.shader.setAtt('vertex',   vertices)
+    self.shader.setAtt('voxCoord', voxCoords)
+    self.shader.setAtt('texCoord', texCoords)
+
+    self.shader.loadAtts()
+
+    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
 
 
 def drawAll(self, axes, zposes, xforms):
