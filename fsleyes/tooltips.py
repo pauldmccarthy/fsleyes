@@ -269,6 +269,12 @@ properties = TypeDict({
     'When the mesh is coloured according to some data, this setting allows '
     'you to choose between hiding the areas with data outside of the clipping '
     'range, or colouring those areas with a constant colour.',
+    'MeshOpts.wireframe' :
+    'When selected, the mesh is shown as a wireframe, rather than being '
+    'filled.',
+    'MeshOpts.lighting' :
+    'When selected, a lighting effect is applied to the mesh.',
+
 
     'TensorOpts.lighting'         : 'If enabled, a simple lighting model is '
                                     'used to highlight the tensor '

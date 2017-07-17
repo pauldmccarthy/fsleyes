@@ -918,6 +918,8 @@ properties = TypeDict({
     'MeshOpts.showName'        : 'Show model name',
     'MeshOpts.lut'             : 'Lookup table',
     'MeshOpts.discardClipped'  : 'Hide clipped areas',
+    'MeshOpts.wireframe'       : 'Show as wireframe',
+    'MeshOpts.lighting'        : 'Enable lighting',
 
     'LabelOpts.lut'          : 'Look-up table',
     'LabelOpts.outline'      : 'Show outline only',

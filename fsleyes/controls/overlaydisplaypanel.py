@@ -447,7 +447,9 @@ _DISPLAY_PROPS = td.TypeDict({
                         'linkLowRanges',
                         'linkHighRanges',
                         'displayRange',
-                        'clippingRange'],
+                        'clippingRange',
+                        'wireframe',
+                        'lighting'],
     'TensorOpts'     : ['lighting',
                         'orientFlip',
                         'tensorResolution',
@@ -720,6 +722,8 @@ _DISPLAY_WIDGETS = td.TypeDict({
     'MeshOpts.discardClipped' : props.Widget(
         'discardClipped',
         **meshOptsColourKwargs),
+    'MeshOpts.wireframe'     :  props.Widget('wireframe'),
+    'MeshOpts.lighting'      :  props.Widget('lighting'),
 
     # TensorOpts
     'TensorOpts.lighting'         : props.Widget('lighting'),

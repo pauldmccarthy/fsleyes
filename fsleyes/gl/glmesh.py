@@ -200,6 +200,8 @@ class GLMesh(globject.GLObject):
         opts   .addListener('colour',           name, shader,      weak=False)
         opts   .addListener('outline',          name, refresh,     weak=False)
         opts   .addListener('outlineWidth',     name, refresh,     weak=False)
+        opts   .addListener('wireframe',        name, refresh,     weak=False)
+        opts   .addListener('lighting',         name, refresh,     weak=False)
         opts   .addListener('vertexData',       name, refresh,     weak=False)
         opts   .addListener('vertexDataIndex',  name, refresh,     weak=False)
         opts   .addListener('clippingRange',    name, shader,      weak=False)
@@ -228,6 +230,8 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('colour',           self.name)
         self.opts   .removeListener('outline',          self.name)
         self.opts   .removeListener('outlineWidth',     self.name)
+        self.opts   .removeListener('wireframe',        self.name)
+        self.opts   .removeListener('lighting',         self.name)
         self.opts   .removeListener('vertexData',       self.name)
         self.opts   .removeListener('vertexDataIndex',  self.name)
         self.opts   .removeListener('clippingRange',    self.name)
@@ -362,6 +366,13 @@ class GLMesh(globject.GLObject):
         normals   = np.array(self.overlay.vnormals, dtype=np.float32)
         vdata     = opts.getVertexData()
         useShader = vdata is not None
+
+
+        if opts.wireframe:
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+            gl.glLineWidth(2)
+        else:
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
         if not useShader:
             with glroutines.enabled((gl.GL_VERTEX_ARRAY, gl.GL_NORMAL_ARRAY)):
