@@ -17,8 +17,6 @@ import OpenGL.GL as gl
 
 import fsleyes_props as props
 
-import fsl.data.mesh       as fslmesh
-import fsl.data.image      as fslimage
 import fsl.utils.transform as transform
 
 import fsleyes.gl.routines as glroutines
@@ -37,7 +35,9 @@ class Scene3DCanvas(props.HasProperties):
     bgColour      = copy.copy(canvasopts.Scene3DCanvasOpts.bgColour)
     showLegend    = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
     zoom          = copy.copy(canvasopts.Scene3DCanvasOpts.zoom)
-    wireFrame     = copy.copy(canvasopts.Scene3DCanvasOpts.wireFrame)
+    showXSlice    = copy.copy(canvasopts.Scene3DCanvasOpts.showXSlice)
+    showYSlice    = copy.copy(canvasopts.Scene3DCanvasOpts.showYSlice)
+    showZSlice    = copy.copy(canvasopts.Scene3DCanvasOpts.showZSlice)
     offset        = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
     rotation      = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
 
@@ -65,7 +65,9 @@ class Scene3DCanvas(props.HasProperties):
         self.addListener('bgColour',     self.__name, self.Refresh)
         self.addListener('showLegend',   self.__name, self.Refresh)
         self.addListener('zoom',         self.__name, self.Refresh)
-        self.addListener('wireFrame',    self.__name, self.Refresh)
+        self.addListener('showXSlice',   self.__name, self.Refresh)
+        self.addListener('showYSlice',   self.__name, self.Refresh)
+        self.addListener('showZSlice',   self.__name, self.Refresh)
         self.addListener('offset',       self.__name, self.Refresh)
         self.addListener('rotation',     self.__name, self.Refresh)
 
@@ -246,10 +248,6 @@ class Scene3DCanvas(props.HasProperties):
 
         with glroutines.enabled((gl.GL_DEPTH_TEST)):
 
-            if self.wireFrame:
-                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
-            else:
-                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
             for ovl in self.__overlayList:
 

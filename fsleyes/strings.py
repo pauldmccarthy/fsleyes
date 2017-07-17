@@ -783,7 +783,9 @@ properties = TypeDict({
     'OrthoOpts.yzoom'       : 'Y zoom',
     'OrthoOpts.zzoom'       : 'Z zoom',
 
-    'Scene3DOpts.wireFrame'  : 'Wire frame',
+    'Scene3DOpts.showXSlice' : 'Show 2D X slice',
+    'Scene3DOpts.showYSlice' : 'Show 2D Y slice',
+    'Scene3DOpts.showZSlice' : 'Show 2D Z slice',
     'Scene3DOpts.showLegend' : 'Show orientation',
 
     'PlotPanel.legend'     : 'Show legend',
