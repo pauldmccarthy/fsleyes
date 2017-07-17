@@ -137,7 +137,7 @@ def preDraw(self):
     self.shader.load()
 
 
-def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
+def draw2D(self, zpos, axes, xform=None, bbox=None):
     """Draws the line vectors at a plane at the specified Z location.
     Voxel coordinates are passed to the vertex shader, which calculates
     the corresponding line vertex locations.
@@ -147,7 +147,7 @@ def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
     shader = self.shader
     v2dMat = opts.getTransform('voxel', 'display')
 
-    voxels  = self.generateVoxelCoordinates2D(zpos, bbox, xax=xax, yax=yax)
+    voxels  = self.generateVoxelCoordinates2D(zpos, axes, bbox=bbox)
     voxels  = np.repeat(voxels, 2, 0)
     indices = np.arange(voxels.shape[0], dtype=np.uint32)
 
@@ -165,21 +165,16 @@ def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
     shader.unloadAtts()
 
 
-def draw3D(self, xform, bbox):
+def draw3D(self, xform=None, bbox=None):
     """Draws the line vectors in 3D space. """
-
-    pos = self.displayCtx.location.xyz
-
-    draw2D(self, pos[0], xform, bbox, xax=1, yax=2)
-    draw2D(self, pos[1], xform, bbox, xax=0, yax=2)
-    draw2D(self, pos[2], xform, bbox, xax=0, yax=1)
+    pass
 
 
-def drawAll(self, zposes, xforms):
+def drawAll(self, axes, zposes, xforms):
     """Draws the line vectors at every slice specified by the Z locations. """
 
     for zpos, xform in zip(zposes, xforms):
-        self.draw2D(zpos, xform)
+        self.draw2D(zpos, axes, xform)
 
 
 def postDraw(self):

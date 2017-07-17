@@ -254,18 +254,18 @@ class GLTensor(glvector.GLVector):
         fslgl.gltensor_funcs.preDraw(self)
 
 
-    def draw2D(self, zpos, xform=None, bbox=None):
+    def draw2D(self, *args, **kwargs):
         """Overrides :meth:`.GLVector.draw2D`. Calls the
         :func:`.gl21.gltensor_funcs.draw2D` function.
         """
-        fslgl.gltensor_funcs.draw2D(self, zpos, xform, bbox)
+        fslgl.gltensor_funcs.draw2D(self, *args, **kwargs)
 
 
-    def draw3D(self, xform=None, bbox=None):
+    def draw3D(self, *args, **kwargs):
         """Overrides :meth:`.GLVector.draw3D`. Calls the
         :func:`.gl21.gltensor_funcs.draw3D` function.
         """
-        fslgl.gltensor_funcs.draw3D(self, xform, bbox)
+        fslgl.gltensor_funcs.draw3D(self, *args, **kwargs)
 
 
     def postDraw(self):

@@ -169,7 +169,7 @@ def preDraw(self):
     gl.glCullFace(gl.GL_BACK)
 
 
-def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
+def draw2D(self, zpos, axes, xform=None, bbox=None):
     """Generates voxel coordinates for each tensor to be drawn, does some
     final shader state configuration, and draws the tensors.
     """
@@ -181,7 +181,7 @@ def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
     if xform is None: xform = v2dMat
     else:             xform = transform.concat(v2dMat, xform)
 
-    voxels  = self.generateVoxelCoordinates2D(zpos, bbox, xax=xax, yax=yax)
+    voxels  = self.generateVoxelCoordinates2D(zpos, axes, bbox)
     nVoxels = len(voxels)
 
     # Set divisor to 1, so we use one set of
@@ -195,12 +195,7 @@ def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
 
 
 def draw3D(self, xform=None, bbox=None):
-
-    pos = self.displayCtx.location.xyz
-
-    draw2D(self, pos[0], xform, bbox, xax=1, yax=2)
-    draw2D(self, pos[1], xform, bbox, xax=0, yax=2)
-    draw2D(self, pos[2], xform, bbox, xax=0, yax=1)
+    pass
 
 
 def postDraw(self):

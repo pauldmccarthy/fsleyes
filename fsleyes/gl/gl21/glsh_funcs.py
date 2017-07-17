@@ -187,7 +187,7 @@ def preDraw(self):
     gl.glCullFace(gl.GL_BACK)
 
 
-def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
+def draw2D(self, zpos, axes, xform=None, bbox=None):
     """Called by :meth:`.GLSH.draw2D`. Draws the scene. """
 
     opts   = self.opts
@@ -197,10 +197,7 @@ def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
     if xform is None: xform = v2dMat
     else:             xform = transform.concat(v2dMat, xform)
 
-    voxels              = self.generateVoxelCoordinates2D(zpos,
-                                                          bbox,
-                                                          xax=xax,
-                                                          yax=yax)
+    voxels              = self.generateVoxelCoordinates2D(zpos, axes, bbox)
     voxels, radTexShape = self.updateRadTexture(voxels)
 
     if len(voxels) == 0:
@@ -221,11 +218,7 @@ def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
 
 
 def draw3D(self, xform=None, bbox=None):
-    pos = self.displayCtx.location.xyz
-
-    draw2D(self, pos[0], xform, bbox, xax=1, yax=2)
-    draw2D(self, pos[1], xform, bbox, xax=0, yax=2)
-    draw2D(self, pos[2], xform, bbox, xax=0, yax=1)
+    pass
 
 
 def postDraw(self):

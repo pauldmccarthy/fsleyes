@@ -123,25 +123,25 @@ class GLLineVector(glvector.GLVector):
         fslgl.gllinevector_funcs.preDraw(self)
 
 
-    def draw2D(self, zpos, xform=None, bbox=None):
+    def draw2D(self, *args, **kwargs):
         """Overrides :meth:`.GLObject.draw2D`. Calls the OpenGL
         version-specific ``draw2D`` function.
         """
-        fslgl.gllinevector_funcs.draw2D(self, zpos, xform, bbox)
+        fslgl.gllinevector_funcs.draw2D(self, *args, **kwargs)
 
 
-    def draw3D(self, xform=None, bbox=None):
+    def draw3D(self, *args, **kwargs):
         """Overrides :meth:`.GLObject.draw3D`. Calls the OpenGL
         version-specific ``draw3D`` function.
         """
-        fslgl.gllinevector_funcs.draw3D(self, xform, bbox)
+        fslgl.gllinevector_funcs.draw3D(self, *args, **kwargs)
 
 
-    def drawAll(self, zposes, xforms):
+    def drawAll(self, *args, **kwargs):
         """Overrides :meth:`.GLObject.drawAll`. Calls the OpenGL
         version-specific ``drawAll`` function.
         """
-        fslgl.gllinevector_funcs.drawAll(self, zposes, xforms)
+        fslgl.gllinevector_funcs.drawAll(self, *args, **kwargs)
 
 
     def postDraw(self):
@@ -296,7 +296,7 @@ class GLLineVertices(object):
         self.__hash   = self.calculateHash(glvec)
 
 
-    def getVertices2D(self, zpos, glvec, bbox=None, xax=None, yax=None):
+    def getVertices2D(self, glvec, zpos, axes, bbox=None):
         """Extracts and returns a slice of line vertices, and the associated
         voxel coordinates, which are in a plane located at the given Z
         position (in display coordinates).
@@ -305,12 +305,12 @@ class GLLineVertices(object):
         called.
         """
 
-        image = glvec.image
-        shape = image.shape[:3]
+        image    = glvec.image
+        shape    = image.shape[:3]
+        xax, yax = axes[:2]
 
         vertices  = self.vertices
-        voxCoords = glvec.generateVoxelCoordinates2D(
-            zpos, bbox, xax=xax, yax=yax)
+        voxCoords = glvec.generateVoxelCoordinates2D(zpos, axes, bbox)
 
         # Turn the voxel coordinates into
         # indices suitable for looking up

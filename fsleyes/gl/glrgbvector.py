@@ -170,25 +170,25 @@ class GLRGBVector(glvector.GLVector):
         fslgl.glrgbvector_funcs.preDraw(self)
 
 
-    def draw2D(self, zpos, xform=None, bbox=None):
+    def draw2D(self, *args, **kwargs):
         """Overrides :meth:`.GLVector.draw2D`. Calls the OpenGL
         version-specific ``draw2D`` function.
         """
-        fslgl.glrgbvector_funcs.draw2D(self, zpos, xform, bbox)
+        fslgl.glrgbvector_funcs.draw2D(self, *args, **kwargs)
 
 
-    def draw3D(self, xform=None, bbox=None):
+    def draw3D(self, *args, **kwargs):
         """Overrides :meth:`.GLVector.draw3D`. Calls the OpenGL
         version-specific ``draw3D`` function.
         """
-        fslgl.glrgbvector_funcs.draw3D(self, xform, bbox)
+        fslgl.glrgbvector_funcs.draw3D(self, *args, **kwargs)
 
 
-    def drawAll(self, zposes, xforms):
+    def drawAll(self, *args, **kwargs):
         """Overrides :meth:`.GLVector.drawAll`. Calls the OpenGL
         version-specific ``drawAll`` function.
         """
-        fslgl.glrgbvector_funcs.drawAll(self, zposes, xforms)
+        fslgl.glrgbvector_funcs.drawAll(self, *args, **kwargs)
 
 
     def postDraw(self):

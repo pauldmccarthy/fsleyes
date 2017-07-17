@@ -445,16 +445,16 @@ class GLSH(glvector.GLVectorBase):
         fslgl.glsh_funcs.preDraw(self)
 
 
-    def draw2D(self, zpos, xform=None, bbox=None):
+    def draw2D(self, *args, **kwargs):
         """Overrides :meth:`.GLObject.draw`. Calls :func:`.glsh_funcs.draw`.
         """
-        fslgl.glsh_funcs.draw2D(self, zpos, xform, bbox)
+        fslgl.glsh_funcs.draw2D(self, *args, **kwargs)
 
 
-    def draw3D(self, xform=None, bbox=None):
+    def draw3D(self, *args, **kwargs):
         """Overrides :meth:`.GLObject.draw`. Calls :func:`.glsh_funcs.draw`.
         """
-        fslgl.glsh_funcs.draw3D(self, xform, bbox)
+        fslgl.glsh_funcs.draw3D(self, *args, **kwargs)
 
 
     def postDraw(self):

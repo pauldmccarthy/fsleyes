@@ -153,17 +153,16 @@ def preDraw(self):
     self.shader.load()
 
 
-def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
+def draw2D(self, zpos, axes, xform=None, bbox=None):
     """Draws the line vertices corresponding to a 2D plane located
     at the specified Z location.
     """
 
     opts                = self.opts
-    vertices, voxCoords = self.lineVertices.getVertices2D(zpos,
-                                                          self,
-                                                          bbox=bbox,
-                                                          xax=xax,
-                                                          yax=yax)
+    vertices, voxCoords = self.lineVertices.getVertices2D(self,
+                                                          zpos,
+                                                          axes,
+                                                          bbox=bbox)
 
     if vertices.size == 0:
         return
@@ -187,19 +186,14 @@ def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
     gl.glPopMatrix()
 
 
-def draw3D(self, xform, bbox):
-
-    pos = self.displayCtx.location.xyz
-
-    draw2D(self, pos[0], xform, bbox, xax=1, yax=2)
-    draw2D(self, pos[1], xform, bbox, xax=0, yax=2)
-    draw2D(self, pos[2], xform, bbox, xax=0, yax=1)
+def draw3D(self, xform=None, bbox=None):
+    pass
 
 
-def drawAll(self, zposes, xforms):
+def drawAll(self, axes, zposes, xforms):
     """Draws line vertices corresponding to each Z location. """
     for zpos, xform in zip(zposes, xforms):
-        draw2D(self, zpos, xform)
+        draw2D(self, zpos, axes, xform)
 
 
 def postDraw(self):
