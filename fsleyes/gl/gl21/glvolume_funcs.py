@@ -136,7 +136,7 @@ def preDraw(self):
         self.shader.set('clipCoordXform', clipCoordXform)
 
 
-def draw2D(self, zpos, xform=None, bbox=None):
+def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
     """Draws the specified 2D slice from the specified image on the canvas.
 
     :arg self:    The :class:`.GLVolume` object which is managing the image
@@ -150,7 +150,12 @@ def draw2D(self, zpos, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
 
-    vertices, voxCoords, texCoords = self.generateVertices2D(zpos, xform, bbox)
+    vertices, voxCoords, texCoords = self.generateVertices2D(
+        zpos,
+        xform,
+        bbox=bbox,
+        xax=xax,
+        yax=yax)
 
     self.shader.setAtt('vertex',   vertices)
     self.shader.setAtt('voxCoord', voxCoords)
@@ -173,15 +178,12 @@ def draw3D(self, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
 
-    vertices, voxCoords, texCoords = self.generateVertices3D(xform, bbox)
+    # This is dodgy
+    pos = self.opts.displayCtx.location.xyz
 
-    self.shader.setAtt('vertex',   vertices)
-    self.shader.setAtt('voxCoord', voxCoords)
-    self.shader.setAtt('texCoord', texCoords)
-
-    self.shader.loadAtts()
-
-    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
+    draw2D(self, pos[0], xform, bbox, xax=1, yax=2)
+    draw2D(self, pos[1], xform, bbox, xax=0, yax=2)
+    draw2D(self, pos[2], xform, bbox, xax=0, yax=1)
 
 
 def drawAll(self, zposes, xforms):

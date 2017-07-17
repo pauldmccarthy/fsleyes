@@ -568,7 +568,12 @@ class GLImageObject(GLObject):
         return res
 
 
-    def generateVertices2D(self, zpos, xform=None, bbox=None):
+    def generateVertices2D(self,
+                           zpos,
+                           xform=None,
+                           bbox=None,
+                           xax=None,
+                           yax=None):
         """Generates vertex coordinates for a 2D slice of the :class:`.Image`,
         through the given ``zpos``, with the optional ``xform`` and ``bbox``
         applied to the coordinates.
@@ -591,7 +596,8 @@ class GLImageObject(GLObject):
 
 
         This method will raise an :exc:`AttributeError` if called on a
-        ``GLImageObject`` configured for 3D rendering.
+        ``GLImageObject`` configured for 3D rendering, unless both the ``xax``
+        and ``yax`` arguments are provided..
         """
 
         opts   = self.opts
@@ -599,10 +605,15 @@ class GLImageObject(GLObject):
         d2vMat = opts.getTransform('display', 'voxel')
         v2tMat = opts.getTransform('voxel',   'texture')
 
+        if xax is None: xax = self.xax
+        if yax is None: yax = self.yax
+
+        zax = 3 - xax - yax
+
         vertices, voxCoords = glroutines.slice2D(
             self.image.shape[:3],
-            self.xax,
-            self.yax,
+            xax,
+            yax,
             zpos,
             v2dMat,
             d2vMat,
@@ -617,7 +628,7 @@ class GLImageObject(GLObject):
         # bias when the display Z position is
         # on a voxel boundary.
         if not hasattr(opts, 'interpolation') or opts.interpolation == 'none':
-            voxCoords = opts.roundVoxels(voxCoords, daxes=[self.zax])
+            voxCoords = opts.roundVoxels(voxCoords, daxes=[zax])
 
         texCoords = transform.transform(voxCoords, v2tMat)
 
@@ -658,7 +669,13 @@ class GLImageObject(GLObject):
         return vertices, voxCoords, texCoords
 
 
-    def generateVoxelCoordinates2D(self, zpos, bbox=None, space='voxel'):
+    def generateVoxelCoordinates2D(
+            self,
+            zpos,
+            bbox=None,
+            space='voxel',
+            xax=None,
+            yax=None):
         """Generates a 2D grid of voxel coordinates along the
         XY display coordinate system plane, at the given ``zpos``.
 
@@ -671,11 +688,16 @@ class GLImageObject(GLObject):
                     of the display coordinate system. Otherwise, the
                     returned coordinates are integer voxel coordinates.
 
+        :arg xax:   Override the x axis previously set via :meth:`setAxes`.
+
+        :arg yax:   Override the y axis previously set via :meth:`setAxes`.
+
         :returns: A ``numpy.float32`` array of shape ``(N, 3)``, containing
                   the coordinates for ``N`` voxels.
 
         This method will raise an :exc:`AttributeError` if called on a
-        ``GLImageObject`` configured for 3D rendering.
+        ``GLImageObject`` configured for 3D rendering, unless both the ``xax``
+        and ``yax`` arguments are provided.
 
         See the :func:`.pointGrid` function.
         """
@@ -688,6 +710,11 @@ class GLImageObject(GLObject):
         v2dMat     = opts.getTransform('voxel',   'display')
         d2vMat     = opts.getTransform('display', 'voxel')
 
+        if xax is None: xax = self.xax
+        if yax is None: xax = self.yax
+
+        zax = 3 - xax - yax
+
         if opts.transform == 'id':
             resolution = [1, 1, 1]
         elif opts.transform in ('pixdim', 'pixdim-flip'):
@@ -699,16 +726,16 @@ class GLImageObject(GLObject):
             image.shape,
             resolution,
             v2dMat,
-            self.xax,
-            self.yax,
+            xax,
+            yax,
             bbox=bbox)[0]
 
-        voxels[:, self.zax] = zpos
+        voxels[:, zax] = zpos
 
         if space == 'voxel':
             voxels = transform.transform(voxels, d2vMat)
             voxels = opts.roundVoxels(voxels,
-                                      daxes=[self.zax],
+                                      daxes=[zax],
                                       roundOther=False)
 
         return voxels

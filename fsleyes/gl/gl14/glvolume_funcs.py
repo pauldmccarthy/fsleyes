@@ -136,10 +136,15 @@ def preDraw(self):
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
 
 
-def draw2D(self, zpos, xform=None, bbox=None):
+def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
     """Draws a 2D slice of the image at the given Z location. """
 
-    vertices, voxCoords, texCoords = self.generateVertices2D(zpos, xform, bbox)
+    vertices, voxCoords, texCoords = self.generateVertices2D(
+        zpos,
+        xform,
+        bbox=bbox,
+        xax=xax,
+        yax=yax)
 
     vertices = np.array(vertices, dtype=np.float32).ravel('C')
 
@@ -164,19 +169,12 @@ def draw3D(self, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
 
-    vertices, voxCoords, texCoords = self.generateVertices3D(xform, bbox)
+    # Dodgy
+    pos = self.opts.displayCtx.location.xyz
 
-    vertices = np.array(vertices, dtype=np.float32).ravel('C')
-
-    gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-
-    # Voxel coordinates are calculated
-    # in the vertex program
-    self.shader.setAttr('texCoord', texCoords)
-
-    self.shader.loadAtts()
-
-    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
+    draw2D(self, pos[0], xform, bbox, xax=1, yax=2)
+    draw2D(self, pos[1], xform, bbox, xax=0, yax=2)
+    draw2D(self, pos[2], xform, bbox, xax=0, yax=1)
 
 
 def drawAll(self, zposes, xforms):
