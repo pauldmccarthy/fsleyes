@@ -663,10 +663,6 @@ class SliceCanvas(props.HasProperties):
 
         self._annotations.setAxes(self.xax, self.yax)
 
-        for ovl, globj in list(self._glObjects.items()):
-            if globj:
-                globj.setAxes(self.xax, self.yax)
-
         self._overlayBoundsChanged()
 
         # Reset the canvas position as, because the
@@ -790,7 +786,6 @@ class SliceCanvas(props.HasProperties):
                 return
 
             globj = globject.createGLObject(overlay, self.displayCtx, False)
-            globj.setAxes(self.xax, self.yax)
 
             if globj is not None:
                 globj.register(self.name, self.__onGLObjectUpdate)

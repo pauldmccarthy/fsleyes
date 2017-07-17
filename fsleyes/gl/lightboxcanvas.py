@@ -826,7 +826,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if not self._setGLContext():
             return
 
-        axes = (self.zax, self.yax, self.zax)
+        axes = (self.xax, self.yax, self.zax)
 
         overlays, globjs = self._getGLObjects()
 

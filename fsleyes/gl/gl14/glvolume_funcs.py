@@ -136,15 +136,14 @@ def preDraw(self):
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
 
 
-def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
+def draw2D(self, zpos, axes, xform=None, bbox=None):
     """Draws a 2D slice of the image at the given Z location. """
 
     vertices, voxCoords, texCoords = self.generateVertices2D(
         zpos,
-        xform,
-        bbox=bbox,
-        xax=xax,
-        yax=yax)
+        axes,
+        xform=xform,
+        bbox=bbox)
 
     vertices = np.array(vertices, dtype=np.float32).ravel('C')
 
@@ -168,15 +167,10 @@ def draw3D(self, xform=None, bbox=None):
 
     :arg bbox:    An optional bounding box.
     """
-
-    pos = self.displayCtx.location.xyz
-
-    draw2D(self, pos[0], xform, bbox, xax=1, yax=2)
-    draw2D(self, pos[1], xform, bbox, xax=0, yax=2)
-    draw2D(self, pos[2], xform, bbox, xax=0, yax=1)
+    pass
 
 
-def drawAll(self, zposes, xforms):
+def drawAll(self, axes, zposes, xforms):
     """Draws mutltiple slices of the given image at the given Z position,
     applying the corresponding transformation to each of the slices.
     """
@@ -188,7 +182,7 @@ def drawAll(self, zposes, xforms):
 
     for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
 
-        v, vc, tc = self.generateVertices2D(zpos, xform)
+        v, vc, tc = self.generateVertices2D(zpos, axes, xform)
 
         vertices[ i * 6: i * 6 + 6, :] = v
         texCoords[i * 6: i * 6 + 6, :] = tc

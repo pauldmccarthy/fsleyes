@@ -136,13 +136,15 @@ def preDraw(self):
         self.shader.set('clipCoordXform', clipCoordXform)
 
 
-def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
+def draw2D(self, zpos, axes, xform=None, bbox=None):
     """Draws the specified 2D slice from the specified image on the canvas.
 
     :arg self:    The :class:`.GLVolume` object which is managing the image
                   to be drawn.
 
     :arg zpos:    World Z position of slice to be drawn.
+
+    :arg axes:    x, y, z axis indices.
 
     :arg xform:   A 4*4 transformation matrix to be applied to the vertex
                   data.
@@ -152,10 +154,9 @@ def draw2D(self, zpos, xform=None, bbox=None, xax=None, yax=None):
 
     vertices, voxCoords, texCoords = self.generateVertices2D(
         zpos,
-        xform,
-        bbox=bbox,
-        xax=xax,
-        yax=yax)
+        axes,
+        xform=xform,
+        bbox=bbox)
 
     self.shader.setAtt('vertex',   vertices)
     self.shader.setAtt('voxCoord', voxCoords)
@@ -178,14 +179,10 @@ def draw3D(self, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
 
-    pos = self.displayCtx.location.xyz
-
-    draw2D(self, pos[0], xform, bbox, xax=1, yax=2)
-    draw2D(self, pos[1], xform, bbox, xax=0, yax=2)
-    draw2D(self, pos[2], xform, bbox, xax=0, yax=1)
+    pass
 
 
-def drawAll(self, zposes, xforms):
+def drawAll(self, axes, zposes, xforms):
     """Draws all of the specified slices. """
 
     nslices   = len(zposes)
@@ -195,7 +192,7 @@ def drawAll(self, zposes, xforms):
 
     for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
 
-        v, vc, tc = self.generateVertices2D(zpos, xform)
+        v, vc, tc = self.generateVertices2D(zpos, axes, xform)
         vertices[ i * 6: i * 6 + 6, :] = v
         voxCoords[i * 6: i * 6 + 6, :] = vc
         texCoords[i * 6: i * 6 + 6, :] = tc

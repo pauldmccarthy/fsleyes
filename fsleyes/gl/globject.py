@@ -665,7 +665,6 @@ class GLImageObject(GLObject):
         d2vMat        = opts.getTransform('display', 'voxel')
         xax, yax, zax = axes
 
-        zax = 3 - xax - yax
 
         if opts.transform == 'id':
             resolution = [1, 1, 1]
