@@ -323,6 +323,11 @@ class GLVolume(globject.GLImageObject):
         opts    .addListener('overrideDataRange', name,
                              self._overrideDataRangeChanged)
 
+        # 3D-only options
+        if self.threedee:
+            opts.addListener('dithering',  name, self._ditheringChanged)
+            opts.addListener('stepLength', name, self._stepLengthChanged)
+
         # GLVolume instances need to keep track of whether
         # the volume property of their corresponding
         # VolumeOpts instance is synced to other VolumeOpts
@@ -375,6 +380,10 @@ class GLVolume(globject.GLImageObject):
         opts    .removeListener(          'displayXform',            name)
         opts    .removeListener(          'enableOverrideDataRange', name)
         opts    .removeListener(          'overrideDataRange',       name)
+
+        if self.threedee:
+            opts.removeListener('dithering',  name)
+            opts.removeListener('stepLength', name)
 
         if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume', name)
@@ -767,6 +776,16 @@ class GLVolume(globject.GLImageObject):
     def _displayXformChanged(self, *a):
         """Called when the :attr:`.NiftiOpts.displayXform` property changes.
         """
+        self.notify()
+
+
+    def _ditheringChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.dithering` property changes. """
+        self.notify()
+
+
+    def _stepLengthChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.stepLength` property changes. """
         self.notify()
 
 

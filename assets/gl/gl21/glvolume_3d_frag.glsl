@@ -7,6 +7,7 @@
 
 #pragma include spline_interp.glsl
 #pragma include test_in_bounds.glsl
+#pragma include rand.glsl
 
 /*
  * image data texture, used for colouring.
@@ -94,9 +95,26 @@ uniform bool invertClip;
 /*
  * Camera direction, normalised to unit length. FSLeyes
  * uses orthographic projection, so this is the same for
- * all fragments.
+ * all fragments. Must have a length of 1.0.
  */
 uniform vec3 cameraDir;
+
+/*
+ * A vector, in the same direction as cameraDir, specifying
+ * the maximum amount to dither the starting position by.
+ */
+uniform vec3 ditherDir;
+
+/*
+ * How far through the texture coordinate space to step
+ * on each iteration of the ray-casting loop. Must be
+ * between 0.0 and 1.0. Passing in 0.0 will cause an
+ * infinite loop, and passing in 1.0 will cause the
+ * loop to skip over the entire texture on the first
+ * iteration, so be sensible.
+ */
+uniform float stepLength;
+
 
 /*
  * Image voxel coordinates.
@@ -126,8 +144,25 @@ void main(void) {
 
     bool sampled;
 
-    vec3 rayStep = 0.005 * cameraDir;
+    /*
+     * Dither by applying a random offset
+     * to the starting position. The
+     * ditherDir vector must be in the
+     * same direction as the cameraDir,
+     * otherwise the loop below will
+     * occasionally break on the first
+     * iteration.
+     */
+    vec3 dither = ditherDir * rand(gl_FragCoord.x, gl_FragCoord.y);
 
+    /*
+     * How far to move along the camera
+     * direction on each iteraction.
+     * This is in 3D texture coordinates.
+     */
+    vec3 rayStep = stepLength * cameraDir;
+
+    texCoord = texCoord + dither;
     do {
 
       sampled = sample_volume(texCoord, clipTexCoord, colour);
@@ -135,14 +170,13 @@ void main(void) {
       texCoord     += rayStep;
       clipTexCoord += rayStep;
 
-
       if (!sampled)
         continue;
 
-      finalColour = finalColour + (1 - finalColour.a) * colour;
-      finalColour = finalColour + (1 - finalColour.a) * colour;
+      finalColour.rgb = mix(finalColour.rgb, colour.rgb, finalColour.a);
+      finalColour.a   = mix(0.5 * colour.a,  1.0,        finalColour.a);
 
-    } while (finalColour.a < 0.95 && textest(texCoord));
+    } while ((finalColour.a < 0.95) && textest(texCoord));
 
     gl_FragColor = finalColour;
 }

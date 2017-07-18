@@ -111,6 +111,9 @@ def updateShaderState(self):
     changed |= shader.set('img2CmapXform',    img2CmapXform)
     changed |= shader.set('clipImageShape',   clipImageShape)
 
+    if self.threedee:
+        changed |= shader.set('stepLength', opts.stepLength)
+
     changed |= shader.set('imageTexture',     0)
     changed |= shader.set('colourTexture',    1)
     changed |= shader.set('negColourTexture', 2)
@@ -183,6 +186,7 @@ def draw3D(self, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
 
+    opts = self.opts
     vertices, voxCoords, texCoords = self.generateVertices3D(xform, bbox)
 
     eye    = [0, 0, -1]
@@ -197,12 +201,15 @@ def draw3D(self, xform=None, bbox=None):
     cdir = cdir / np.sqrt(np.dot(cdir, cdir))
 
     self.shader.set(   'cameraDir', cdir)
+    self.shader.set(   'ditherDir', cdir * opts.dithering)
+
     self.shader.setAtt('vertex',    vertices)
     self.shader.setAtt('voxCoord',  voxCoords)
     self.shader.setAtt('texCoord',  texCoords)
 
     self.shader.loadAtts()
 
+    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
     with glroutines.enabled(gl.GL_CULL_FACE):
         gl.glCullFace(gl.GL_BACK)
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)

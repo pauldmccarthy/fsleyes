@@ -29,3 +29,8 @@ bool textest(vec3 coords) {
   return (!(any(greaterThan(coords, __textest_ones)) ||
             any(lessThan(   coords, __textest_zeros))));
 }
+
+bool textest(vec3 coords, float tol) {
+  return (!(any(greaterThan(coords-tol, __textest_ones)) ||
+            any(lessThan(   coords+tol, __textest_zeros))));
+}

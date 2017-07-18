@@ -771,6 +771,31 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
     """
 
 
+    # The remaining options are
+    # only used in 3D rendering.
+
+
+    dithering = props.Real(minval=0,
+                           maxval=0.1,
+                           default=0.01,
+                           clamped=True)
+    """Only used in 3D rendering. Specifies the amount of randomness to
+    introduce in the rendering procedure to achieve a dithering (addition of
+    random noise) effect. This is necessary to remove some aliasing effects
+    inherent in the rendering process.
+    """
+
+
+    stepLength = props.Real(minval=0.001,
+                            maxval=0.01,
+                            default=0.005,
+                            clamped=True)
+    """Only used in 3D rendering. Specifies the distance between samples when
+    the image is rendered. The value is proportional to the size of the image,
+    normalised to the range ``[0, 1]``.
+    """
+
+
     def __init__(self,
                  overlay,
                  display,
