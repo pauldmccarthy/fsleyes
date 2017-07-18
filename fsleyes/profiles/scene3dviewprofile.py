@@ -70,7 +70,7 @@ class Scene3DViewProfile(profiles.Profile):
         y1 = -1 + 2 * (y1 / float(h)) * fac * np.pi
 
         xrot = x1 - x0
-        yrot = y0 - y1
+        yrot = y1 - y0
 
         rot = transform.axisAnglesToRotMat(yrot, 0, xrot)
 

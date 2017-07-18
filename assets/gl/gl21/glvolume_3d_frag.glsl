@@ -117,10 +117,6 @@ varying vec3 fragClipTexCoord;
 
 #pragma include glvolume_common.glsl
 
-
-int niters = 100;
-
-
 void main(void) {
 
     vec3 texCoord     = fragTexCoord;
@@ -128,25 +124,25 @@ void main(void) {
     vec4 colour       = vec4(0, 0, 0, 0);
     vec4 finalColour  = vec4(0, 0, 0, 0);
 
-    bool miss;
+    bool sampled;
 
-    vec3 rayStep = cameraDir / niters;
+    vec3 rayStep = 0.005 * cameraDir;
 
-    for (int i = 0; i < niters; i++) {
+    do {
 
-      miss = sample_volume(texCoord, clipTexCoord, colour);
+      sampled = sample_volume(texCoord, clipTexCoord, colour);
 
       texCoord     += rayStep;
       clipTexCoord += rayStep;
 
-      if (!miss)
+
+      if (!sampled)
         continue;
 
       finalColour = finalColour + (1 - finalColour.a) * colour;
+      finalColour = finalColour + (1 - finalColour.a) * colour;
 
-      if (finalColour.a >= 0.95)
-        break;
-    }
+    } while (finalColour.a < 0.95 && textest(texCoord));
 
     gl_FragColor = finalColour;
 }

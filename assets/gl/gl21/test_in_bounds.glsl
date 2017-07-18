@@ -16,3 +16,16 @@ bool test_in_bounds(vec3 coords, vec3 shape) {
 
     return true;
 }
+
+
+vec3 __textest_ones  = vec3(1, 1, 1);
+vec3 __textest_zeros = vec3(0, 0, 0);
+
+/*
+ * Tests whether the given texture coordinates are outside the
+ * texture coordinate range.
+ */
+bool textest(vec3 coords) {
+  return (!(any(greaterThan(coords, __textest_ones)) ||
+            any(lessThan(   coords, __textest_zeros))));
+}
