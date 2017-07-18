@@ -84,6 +84,8 @@ def updateShaderState(self):
     clipHigh   = opts.clippingRange[1] * clipXform[0, 0] + clipXform[0, 3]
     texZero    = 0.0                   * imgXform[ 0, 0] + imgXform[ 0, 3]
     imageShape = self.image.shape[:3]
+    imageDims  = self.getDisplayBounds()
+    imageDims  = [hi - lo for hi, lo in zip(imageDims[1], imageDims[0])]
 
     if imageIsClip: clipImageShape = imageShape
     else:           clipImageShape = opts.clipImage.shape[:3]
@@ -113,6 +115,7 @@ def updateShaderState(self):
 
     if self.threedee:
         changed |= shader.set('stepLength', opts.stepLength)
+        changed |= shader.set('imageDims',  imageDims)
 
     changed |= shader.set('imageTexture',     0)
     changed |= shader.set('colourTexture',    1)

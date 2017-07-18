@@ -93,6 +93,13 @@ uniform bool invertClip;
 
 
 /*
+ * The field-of-view of the image - the length
+ * of each dimension in the display coordinate
+ * system.
+ */
+uniform vec3 imageDims;
+
+/*
  * Camera direction, normalised to unit length. FSLeyes
  * uses orthographic projection, so this is the same for
  * all fragments. Must have a length of 1.0.
@@ -159,8 +166,14 @@ void main(void) {
      * How far to move along the camera
      * direction on each iteraction.
      * This is in 3D texture coordinates.
+     *
+     * The ray direction needs to be
+     * adjusted by the volume FOV,
+     * otherwise planes which are not
+     * parallel to the camera plane get
+     * sheared.
      */
-    vec3 rayStep = stepLength * cameraDir;
+    vec3 rayStep = stepLength * normalize(cameraDir / imageDims);
 
     texCoord = texCoord + dither;
     do {

@@ -786,7 +786,7 @@ class GLVolume(globject.GLImageObject):
 
     def _stepLengthChanged(self, *a):
         """Called when the :attr:`.VolumeOpts.stepLength` property changes. """
-        self.notify()
+        self.updateShaderState(alwaysNotify=True)
 
 
     def _imageSyncChanged(self, *a):
