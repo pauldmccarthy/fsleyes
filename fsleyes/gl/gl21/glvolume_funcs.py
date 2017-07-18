@@ -18,6 +18,7 @@ import numpy               as np
 import OpenGL.GL           as gl
 
 import fsl.utils.transform as transform
+import fsleyes.gl.routines as glroutines
 import fsleyes.gl.shaders  as shaders
 import fsleyes.gl.glvolume as glvolume
 
@@ -202,7 +203,9 @@ def draw3D(self, xform=None, bbox=None):
 
     self.shader.loadAtts()
 
-    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
+    with glroutines.enabled(gl.GL_CULL_FACE):
+        gl.glCullFace(gl.GL_BACK)
+        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
 
 
 def drawAll(self, axes, zposes, xforms):

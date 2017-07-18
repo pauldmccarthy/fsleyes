@@ -1101,12 +1101,12 @@ def boundingBox(dataShape,
     if geometry == 'triangles':
         vertices = np.zeros((36, 3), dtype=np.float32)
 
-        vertices[ 0, :] = (xlo, ylo, zlo)
+        vertices[ 0, :] = (xlo, yhi, zlo)
         vertices[ 1, :] = (xhi, ylo, zlo)
-        vertices[ 2, :] = (xlo, yhi, zlo)
+        vertices[ 2, :] = (xlo, ylo, zlo)
         vertices[ 3, :] = (xlo, yhi, zlo)
-        vertices[ 4, :] = (xhi, ylo, zlo)
-        vertices[ 5, :] = (xhi, yhi, zlo)
+        vertices[ 4, :] = (xhi, yhi, zlo)
+        vertices[ 5, :] = (xhi, ylo, zlo)
 
         vertices[ 6, :] = (xlo, ylo, zhi)
         vertices[ 7, :] = (xhi, ylo, zhi)
@@ -1129,12 +1129,19 @@ def boundingBox(dataShape,
         vertices[22, :] = (xhi, yhi, zlo)
         vertices[23, :] = (xhi, yhi, zhi)
 
-        vertices[24, :] = (xlo, ylo, zlo)
+        vertices[18, :] = (xlo, yhi, zhi)
+        vertices[19, :] = (xhi, yhi, zlo)
+        vertices[20, :] = (xlo, yhi, zlo)
+        vertices[21, :] = (xlo, yhi, zhi)
+        vertices[22, :] = (xhi, yhi, zhi)
+        vertices[23, :] = (xhi, yhi, zlo)
+
+        vertices[24, :] = (xlo, ylo, zhi)
         vertices[25, :] = (xlo, yhi, zlo)
-        vertices[26, :] = (xlo, ylo, zhi)
+        vertices[26, :] = (xlo, ylo, zlo)
         vertices[27, :] = (xlo, ylo, zhi)
-        vertices[28, :] = (xlo, yhi, zlo)
-        vertices[29, :] = (xlo, yhi, zhi)
+        vertices[28, :] = (xlo, yhi, zhi)
+        vertices[29, :] = (xlo, yhi, zlo)
 
         vertices[30, :] = (xhi, ylo, zlo)
         vertices[31, :] = (xhi, yhi, zlo)

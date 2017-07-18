@@ -779,7 +779,7 @@ BUILT_IN_PERSPECTIVES = collections.OrderedDict((
      textwrap.dedent("""
                      Scene3DPanel
                      layout2|name=Scene3DPanel 1;caption=3D View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=22;besth=3;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=24|
-                     ;syncOverlayOrder=True,syncOverlayDisplay=True,syncLocation=True;showColourBar=False,showLegend=True,cursorColour=#00ff00ff,colourBarLocation=top,showCursor=True,colourBarLabelSide=top-left,bgColour=#000000ff
+                     ;syncOverlayOrder=True,syncOverlayDisplay=True,syncLocation=True;showColourBar=False,showLegend=True,cursorColour=#00ff00ff,colourBarLocation=top,showCursor=True,colourBarLabelSide=top-left,bgColour=#cdcdffff
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
                      """)),
 

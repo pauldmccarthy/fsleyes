@@ -197,7 +197,7 @@ class Scene3DCanvas(props.HasProperties):
 
         # And finally the camera.
         eye     = list(centre)
-        eye[1] -= 1
+        eye[1] += 1
         up      = [0, 0, 1]
         camera  = glroutines.lookAt(eye, centre, up)
 
