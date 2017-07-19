@@ -114,7 +114,6 @@ def updateShaderState(self):
     changed |= shader.set('clipImageShape',   clipImageShape)
 
     if self.threedee:
-        changed |= shader.set('stepLength', opts.stepLength)
         changed |= shader.set('imageDims',  imageDims)
 
     changed |= shader.set('imageTexture',     0)
@@ -200,10 +199,21 @@ def draw3D(self, xform=None, bbox=None):
     eye    = transform.transform(eye,    mvmat)
     target = transform.transform(target, mvmat)
 
-    cdir = eye - target
-    cdir = cdir / np.sqrt(np.dot(cdir, cdir))
+    def norm(vec):
+        return vec / np.sqrt(np.dot(vec, vec))
 
-    self.shader.set(   'cameraDir', cdir)
+    # Direction that the 'camera' is
+    # pointing, normalised to unit length.
+    cdir = eye - target
+
+    # Length of one step along the camera
+    # direction in a single iteration of
+    # the ray-cast loop. We have to normalise
+    # this by the image FOV.
+    stepLength = 1.0 / opts.numSteps
+    rayStep    = stepLength * norm(cdir / self._gl21_imageDims)
+
+    self.shader.set(   'rayStep',   rayStep)
     self.shader.set(   'ditherDir', cdir * opts.dithering)
 
     self.shader.setAtt('vertex',    vertices)

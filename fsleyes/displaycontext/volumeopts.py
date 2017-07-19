@@ -786,13 +786,13 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
     """
 
 
-    stepLength = props.Real(minval=0.001,
-                            maxval=0.01,
-                            default=0.005,
-                            clamped=True)
-    """Only used in 3D rendering. Specifies the distance between samples when
-    the image is rendered. The value is proportional to the size of the image,
-    normalised to the range ``[0, 1]``.
+    numSteps = props.Int(minval=50,
+                         maxval=1000,
+                         default=200,
+                         clamped=True)
+    """Only used in 3D rendering. Specifies the maximum number of samples to
+    acquire in the rendering of each pixel of the 3D scene. This corresponds
+    to the number of iterations of the ray-casting loop.
     """
 
 

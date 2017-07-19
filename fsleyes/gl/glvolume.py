@@ -326,7 +326,7 @@ class GLVolume(globject.GLImageObject):
         # 3D-only options
         if self.threedee:
             opts.addListener('dithering',  name, self._ditheringChanged)
-            opts.addListener('stepLength', name, self._stepLengthChanged)
+            opts.addListener('numSteps',   name, self._numStepsChanged)
 
         # GLVolume instances need to keep track of whether
         # the volume property of their corresponding
@@ -382,8 +382,8 @@ class GLVolume(globject.GLImageObject):
         opts    .removeListener(          'overrideDataRange',       name)
 
         if self.threedee:
-            opts.removeListener('dithering',  name)
-            opts.removeListener('stepLength', name)
+            opts.removeListener('dithering', name)
+            opts.removeListener('numSteps',  name)
 
         if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume', name)
@@ -784,9 +784,9 @@ class GLVolume(globject.GLImageObject):
         self.notify()
 
 
-    def _stepLengthChanged(self, *a):
-        """Called when the :attr:`.VolumeOpts.stepLength` property changes. """
-        self.updateShaderState(alwaysNotify=True)
+    def _numStepsChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.numSteps` property changes. """
+        self.notify()
 
 
     def _imageSyncChanged(self, *a):

@@ -295,6 +295,15 @@ class GLObject(notifier.Notifier):
                                   'implemented by GLObject subclasses')
 
 
+    def getBoundsLengths(self):
+        """Convenience method which returns a tuple containing the
+        ``(x, y, z)``  lengths of the bounding box which contains the
+        ``GLObject``.
+        """
+        los, his = self.getDisplayBounds()
+        return tuple([hi - lo for lo, hi in zip(los, his)])
+
+
     def getDataResolution(self, xax, yax):
         """This method must calculate and return a sequence of three values,
         which defines a suitable pixel resolution, along the display coordinate

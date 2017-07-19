@@ -1,11 +1,10 @@
 /*
- * This file contains the sample_volume function, shared by the different glvolume
- * fragment shaders.
+ * This file contains the sample_volume function, shared by the different
+ * glvolume fragment shaders.
  *
  * The sample_volume function looks up a specific voxel value, and applies
- * clipping and colouring.
- * It returns false if the fragment should be discard, otherwise it returns true.
- *
+ * clipping and colouring.  It returns false if the fragment should be
+ * discarded, otherwise it returns true.
  *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */

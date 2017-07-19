@@ -408,7 +408,7 @@ _DISPLAY_PROPS = td.TypeDict({
                         'clipImage',
                         'enableOverrideDataRange',
                         'dithering',
-                        'stepLength' ],
+                        'numSteps'],
     'MaskOpts'       : ['volume',
                         'colour',
                         'invert',
@@ -554,8 +554,7 @@ _DISPLAY_WIDGETS = td.TypeDict({
         dependencies=['enableOverrideDataRange'],
         enabledWhen=lambda vo, en: en),
     'VolumeOpts.dithering' : props.Widget('dithering', showLimits=False),
-    'VolumeOpts.stepLength' : props.Widget('stepLength', showLimits=False),
-
+    'VolumeOpts.numSteps'  : props.Widget('numSteps',  showLimits=False),
 
     # MaskOpts
     'MaskOpts.volume'     : props.Widget(
