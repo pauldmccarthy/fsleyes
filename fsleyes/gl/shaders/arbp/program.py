@@ -109,7 +109,7 @@ class ARBPShader(object):
     GLSL shader programs.
     """
 
-    def __init__(self, vertSrc, fragSrc, textureMap=None):
+    def __init__(self, vertSrc, fragSrc, textureMap=None, constants=None):
         """Create an ``ARBPShader``.
 
         :arg vertSrc:    Vertex program source.
@@ -118,6 +118,10 @@ class ARBPShader(object):
 
         :arg textureMap: A dictionary of ``{name : int}`` mappings, specifying
                          the texture unit assignments.
+
+        :arg constants:  A dictionary of ``{name : values}`` mappings,
+                         specifying any constant parameters required by the
+                         programs.
         """
 
         decs = parse.parseARBP(vertSrc, fragSrc)
@@ -139,6 +143,7 @@ class ARBPShader(object):
         self.fragParamLens = fLens
         self.textures      = decs['texture']
         self.attrs         = decs['attr']
+        self.constants     = {k : constants[k] for k in decs['constant']}
 
         poses = self.__generatePositions(textureMap)
         vpPoses, fpPoses, texPoses, attrPoses = poses
@@ -154,6 +159,7 @@ class ARBPShader(object):
                                           self.vertParamLens,
                                           self.fragParamPositions,
                                           self.fragParamLens,
+                                          self.constants,
                                           self.texturePositions,
                                           self.attrPositions)
 
