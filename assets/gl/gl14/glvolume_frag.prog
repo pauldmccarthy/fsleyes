@@ -63,7 +63,6 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-TEMP  voxCoord;
 TEMP  voxClipLo;
 TEMP  voxClipHi;
 TEMP  voxValue;
@@ -76,10 +75,9 @@ TEMP  negVoxValue;
 TEMP  negClipValue;
 TEMP  clipValueNoClip;
 
-TEMP tb_texcoord;
-TEMP tb_origval;
-TEMP tb_borderval;
-TEMP tb_result;
+
+{{ arb_include('texture_border.prog') }}
+{{ arb_include('test_in_bounds.prog') }}
 
 
 PARAM imageShape     = {{ param_imageShape   }};
@@ -87,11 +85,15 @@ PARAM clipping       = {{ param_clipping     }};
 PARAM negCmap        = {{ param_negCmap      }};
 PARAM voxValXform[4] = {{ param4_voxValXform }};
 
-# retrieve the voxel coordinates
-MOV voxCoord, {{ varying_voxCoord }};
-
-# bail if they are are out of bounds
-#pragma include test_in_bounds.prog
+# bail if they are are out of bounds.
+# We use nanTest here out of convenience
+{{
+arb_call('test_in_bounds.prog',
+         voxCoord='{{ varying_voxCoord }}',
+         imageShape='imageShape',
+         out_result='nanTest')
+}}
+KIL nanTest.x;
 
 # look up image voxel value
 # and clipping value from 3D
@@ -121,13 +123,14 @@ SUB clipValueNoClip.x, clipValueNoClip.x, clipping.x;
 MUL clipValueNoClip.x, clipValueNoClip.x, 0.5;
 ADD clipValueNoClip.x, clipValueNoClip.x, clipping.x;
 
-# Clobber the clip value
-MOV tb_texcoord,  {{ varying_clipTexCoord }};
-MOV tb_origval.x,   clipValue.x;
-MOV tb_borderval.x, clipValueNoClip.x;
-#pragma include texture_border.prog
-
-MOV clipValue.x, tb_result.x;
+# Clobber the clip value if necessary
+{{
+arb_call('texture_border.prog',
+         texcoord='{{ varying_clipTexCoord }}',
+         origval='clipValue.x',
+         borderval='clipValueNoClip.x',
+         out_result='clipValue.x')
+}}
 
 # If the image texture is the clip
 # texture, overwrite the clip value

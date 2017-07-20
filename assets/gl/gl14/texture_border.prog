@@ -1,35 +1,35 @@
 # This routine replaces the value from a texture lookup if the texture
-# coordinates were out of bounds (less than 0 or greater than 1). 
-# 
+# coordinates were out of bounds (less than 0 or greater than 1).
+#
 # Inputs:
-#   - tb_texcoord  - 3D texture coordinates
-#   - tb_origval   - Value that was retrieved from the texture lookup.
-#   - tb_borderval - Value to use if the coordinates are out of bounds.
-# 
+#   texcoord  - 3D texture coordinates
+#   origval   - Value that was retrieved from the texture lookup.
+#   borderval - Value to use if the coordinates are out of bounds.
+#
 # Result:
-#   - tb_result    - tb_origval if the texture coords are in bounds,
-#                    or tb_borderval if they're out of bounds.
+#   result    - origval if the texture coords are in bounds,
+#               or borderval if they're out of bounds.
 
 
 # Take a copy of origval - after this,
 # tb_origval is used as a temp variable
 # to store the texture coordinates.
-MOV tb_result.x, tb_origval.x;
-MOV tb_origval,  tb_texcoord;
+MOV {{ out_result }}.x, {{ origval }}.x;
+MOV {{ origval }},  {{ texcoord }};
 
 # Clobber the texture value if the tex
 # coords on any dimension are less than 0
-SUB tb_origval, tb_origval, {0.0000001, 0.0000001, 0.0000001, 0};
+SUB {{ origval }}, {{ origval }}, {0.0000001, 0.0000001, 0.0000001, 0};
 
-CMP tb_result.x, tb_origval.x, tb_borderval.x, tb_result.x;
-CMP tb_result.x, tb_origval.y, tb_borderval.x, tb_result.x;
-CMP tb_result.x, tb_origval.z, tb_borderval.x, tb_result.x;
+CMP {{ out_result }}.x, {{ origval }}.x, {{ borderval }}.x, {{ out_result }}.x;
+CMP {{ out_result }}.x, {{ origval }}.y, {{ borderval }}.x, {{ out_result }}.x;
+CMP {{ out_result }}.x, {{ origval }}.z, {{ borderval }}.x, {{ out_result }}.x;
 
 # Or if the tex coords on any
 # dimension are greater than 1
-MOV tb_origval, 1;
-SUB tb_origval, tb_origval, tb_texcoord;
+MOV {{ origval }}, 1;
+SUB {{ origval }}, {{ origval }}, {{ texcoord }};
 
-CMP tb_result.x, tb_origval.x, tb_borderval.x, tb_result.x;
-CMP tb_result.x, tb_origval.y, tb_borderval.x, tb_result.x;
-CMP tb_result.x, tb_origval.z, tb_borderval.x, tb_result.x;
+CMP {{ out_result }}.x, {{ origval }}.x, {{ borderval }}.x, {{ out_result }}.x;
+CMP {{ out_result }}.x, {{ origval }}.y, {{ borderval }}.x, {{ out_result }}.x;
+CMP {{ out_result }}.x, {{ origval }}.z, {{ borderval }}.x, {{ out_result }}.x;
