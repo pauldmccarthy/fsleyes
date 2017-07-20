@@ -19,6 +19,7 @@ import OpenGL.GL           as gl
 
 import fsl.utils.transform as transform
 import fsleyes.gl.shaders  as shaders
+import fsleyes.gl.routines as glroutines
 import fsleyes.gl.glvolume as glvolume
 
 
@@ -48,8 +49,11 @@ def compileShaders(self):
     if self.shader is not None:
         self.shader.destroy()
 
+    if self.threedee: frag = 'glvolume_3d'
+    else:             frag = 'glvolume'
+
     vertSrc  = shaders.getVertexShader(  'glvolume')
-    fragSrc  = shaders.getFragmentShader('glvolume')
+    fragSrc  = shaders.getFragmentShader(frag)
     textures = {
         'imageTexture'     : 0,
         'colourTexture'    : 1,
@@ -57,10 +61,16 @@ def compileShaders(self):
         'clipTexture'      : 3
     }
 
+    if self.threedee:
+        constants = {'numSteps' : self.opts.numSteps}
+    else:
+        constants = {}
+
     self.shader = shaders.ARBPShader(vertSrc,
                                      fragSrc,
                                      shaders.getShaderDir(),
-                                     textures)
+                                     textures,
+                                     constants)
 
 
 def updateShaderState(self):
@@ -170,7 +180,22 @@ def draw3D(self, xform=None, bbox=None):
 
     :arg bbox:    An optional bounding box.
     """
-    pass
+    vertices, voxCoords, texCoords = self.generateVertices3D(xform, bbox)
+    rayStep, ditherDir             = self.calculate3DSettings()
+
+    self.shader.setFragParam('rayStep',   list(rayStep)   + [0])
+    self.shader.setFragParam('ditherDir', list(ditherDir) + [0])
+
+    self.shader.setAttr('texCoord', texCoords)
+
+    self.shader.loadAtts()
+
+    gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+
+    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+    with glroutines.enabled(gl.GL_CULL_FACE):
+        gl.glCullFace(gl.GL_BACK)
+        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
 
 
 def drawAll(self, axes, zposes, xforms):
