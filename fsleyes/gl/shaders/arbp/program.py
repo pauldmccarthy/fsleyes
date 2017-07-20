@@ -110,19 +110,34 @@ class ARBPShader(object):
     GLSL shader programs.
     """
 
-    def __init__(self, vertSrc, fragSrc, textureMap=None, constants=None):
+    def __init__(self,
+                 vertSrc,
+                 fragSrc,
+                 includePath,
+                 textureMap=None,
+                 constants=None,
+                 clean=True):
         """Create an ``ARBPShader``.
 
-        :arg vertSrc:    Vertex program source.
+        :arg vertSrc:     Vertex program source.
 
-        :arg fragSrc:    Fragment program source.
+        :arg fragSrc:     Fragment program source.
 
-        :arg textureMap: A dictionary of ``{name : int}`` mappings, specifying
-                         the texture unit assignments.
+        :arg textureMap:  A dictionary of ``{name : int}`` mappings, specifying
+                          the texture unit assignments.
 
-        :arg constants:  A dictionary of ``{name : values}`` mappings,
-                         specifying any constant parameters required by the
-                         programs.
+        :arg constants:   A dictionary of ``{name : values}`` mappings,
+                          specifying any constant parameters required by the
+                          programs.
+
+        :arg includePath: Path to a directory which contains any additional
+                          files that may be included in the given source
+                          files.
+
+        :arg clean:       If ``True`` (the default), the vertex and fragment
+                          program source is 'cleaned' before compilation - all
+                          comments, empty lines, and unncessary spaces are
+                          removed before compilation.
         """
 
         decs = parse.parseARBP(vertSrc, fragSrc)
@@ -138,6 +153,8 @@ class ARBPShader(object):
         vLens = {name : length for name, length in zip(vParams, vLens)}
         fLens = {name : length for name, length in zip(fParams, fLens)}
 
+        self.clean         = True
+        self.includePath   = includePath
         self.vertParams    = vParams
         self.vertParamLens = vLens
         self.fragParams    = fParams
@@ -162,7 +179,8 @@ class ARBPShader(object):
                                           self.fragParamLens,
                                           self.constants,
                                           self.texturePositions,
-                                          self.attrPositions)
+                                          self.attrPositions,
+                                          includePath)
 
         vp, fp = self.__compile(vertSrc, fragSrc)
 
@@ -358,9 +376,12 @@ class ARBPShader(object):
 
 
     def __cleanSource(self, src):
-        """Strips out comments and blank lines from the given
-        string.
+        """Strips out comments and blank lines from the given string, unless
+        ``clean is False`` (as passed into :meth:`__init__`).
         """
+
+        if not self.clean:
+            return src
 
         # strip out comments and blank lines
         lines = src.split('\n')

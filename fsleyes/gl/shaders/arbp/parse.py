@@ -16,9 +16,10 @@ coordinates and do not have to be hard coded in the source.
           at all.
 
 
-Instead, place holder tokens can be used in the source code. These tokens may
-be parsed (using ``jinja2``) by the :func:`parseARBP` function. Values can
-then be assigned to the place holders using the :func:`fillARBP` function.
+Instead, place holder expressions can be used in the source code. These
+expressions may be parsed (using ``jinja2``) by the :func:`parseARBP`
+function. Values can then be assigned to the place holders using the
+:func:`fillARBP` function.
 
 
 An example
@@ -191,13 +192,13 @@ assign explicit values to each of the items::
     # code and run your program!
 
 
-Template tokens
----------------
+Template expressions
+--------------------
 
 
-The following items may be specified as template tokens. As depicted in
-the example above, a token is specified in the following manner (with the
-exception of constant values, which are described below)::
+The following items may be specified as template expressions. As depicted in
+the example above, an expression is specified in the following manner (with
+the exception of constant values, which are described below)::
 
     {{ tokenPrefix_itemName }}
 
@@ -205,14 +206,14 @@ exception of constant values, which are described below)::
 Prefixes for each item type are as follows:
 
 
- ===================== ============
- Item                  Token prefix
- ===================== ============
+ ===================== =================
+ Item                  Expression prefix
+ ===================== =================
  *Parameters*:         ``param``
  *Vertex attributes*   ``attr``
  *Textures*            ``texture``
  *Varying attributes*  ``varying``
- ===================== ============
+ ===================== =================
 
 
 Parameters
@@ -270,7 +271,7 @@ bound must be hard coded::
     TEX voxelValue, texCoord, texture[0], 3D;
 
 
-This can be avoided by using texture tokens::
+This can be avoided by using texture expressions::
 
     TEX voxelValue, texCoord, {{ texture_imageTexture }}, 3D;
 
@@ -327,11 +328,11 @@ Constants
 =========
 
 
-All tokens in the source which do not fit into any of the above categories are
-treated as "constant" values. These can be used to specify any values which
-will not change across multiple executions of the program. As a silly example,
-let's say you want to apply a fixed offset to some texture coordinates. You
-could do this::
+All expressions in the source which do not fit into any of the above
+categories are treated as "constant" values. These can be used to specify any
+values which will not change across multiple executions of the program. As a
+silly example, let's say you want to apply a fixed offset to some texture
+coordinates. You could do this::
 
     !!ARBfp1.0
     # ...
@@ -378,21 +379,166 @@ For example, to unroll a ``for`` loop, you could do this::
 
 When generating the source, simply add a constant value called ``num_iters``,
 specifying the desired number of iterations.
+
+
+Including other files
+=====================
+
+
+By using this module, you are able to split your application logic across
+multiple files and emulate function calls between them. As an example, let's
+say that we want to test whether some texture coordinates are valid::
+
+
+    !!ARBfp1.0
+
+    TEMP textest;
+
+    # do some stuff
+    # ...
+
+    # Check that the texture coordinates are in bounds
+    MOV texCoord, {{ varying_texCoord }};
+
+    # Test whether any coordinates are < 0.
+    # Set textest.x to:
+    #   - -1 if any coordinates are < 0
+    #   - +1 if they are all >= 0
+    CMP textest, texCoord, -1, 1;
+    MIN textest.x, textest.x, textest.y;
+    MIN textest.x, textest.x, textest.z;
+
+    # Test whether any coordinates are < 0.
+    # Set textest.y to:
+    #   - -1 if any coordinates are > 1
+    #   - +1 if they are all <= 1
+    MUL textest.yzw, texCoord,     -1;
+    SLT textest.yzw, textest.yzww, -1;
+    MAD textest.yzw, textest.yzww   2, -1;
+    MUL textest.yzw, textest.yzww, -1;
+    MIN textest.y, textest.y, textest.z;
+    MIN textest.y, textest.y, textest.w;
+
+    # Set textest.x to:
+    #   - -1 if any component of texCoord is < 0 or > 1
+    #   - +1 otherwise
+    MIN textest.x, textest.x, textest.y;
+
+    # Kill the fragment if the texture
+    # coordinates are out of bounds
+    KIL textest.x;
+
+    # Othewrwise, carry on
+    # processing the fragment.
+    # ...
+
+
+This may be a common operation which we would like to re-use in other fragment
+programs. We can do this by using expressions in place of the inputs and
+outputs of the routine. First, create a new file called, for example,
+``textest.prog``, containing the texture coordinate test routine::
+
+    #
+    # textest.prog - test whether texture coordinates are in bounds.
+    #
+    # Inputs:
+    #   - texCoord    - texture coordinates to test
+    # Outputs:
+    #   - out_textest - The x component will be +1 if the texture coordinates
+    #                   are in bounds, -1 otherwise.
+
+    # Test whether any coordinates are < 0.
+    # Set textest.x to:
+    #   - -1 if any coordinates are < 0
+    #   - +1 if they are all >= 0
+    CMP {{ out_textest }}, {{ texCoord }} , -1, 1;
+    MIN {{ out_textest }}.x, {{ out_textest }}.x, {{ out_textest }}.y;
+    MIN {{ out_textest }}.x, {{ out_textest }}.x, {{ out_textest }}.z;
+
+    # Test whether any coordinates are < 0.
+    # Set textest.y to:
+    #   - -1 if any coordinates are > 1
+    #   - +1 if they are all <= 1
+    MUL {{ out_textest }}.yzw, {{ texCoord    }},      -1;
+    SLT {{ out_textest }}.yzw, {{ out_textest }}.yzww, -1;
+    MAD {{ out_textest }}.yzw, {{ out_textest }}.yzww   2, -1;
+    MUL {{ out_textest }}.yzw, {{ out_textest }}.yzww, -1;
+    MIN {{ out_textest }}.y,   {{ out_textest }}.y,    {{ out_textest }}.z;
+    MIN {{ out_textest }}.y,   {{ out_textest }}.y,    {{ out_textest }}.w;
+
+    # Set textest.x to:
+    #   - -1 if any component of texCoord is < 0 or > 1
+    #   - +1 otherwise
+    MIN {{ out_textest ]}.x, {{ out_textest }}.x, {{ out_textest }}.y;
+
+
+You can then use this routine in any fragment program like so::
+
+    !!ARBfp1.0
+
+    # Make the textest routine
+    # available to this program. This
+    # (and other includes) must occur
+    # at the top of your program.
+    {{ arb_include('textest.prog') }}
+
+    TEMP textest;
+
+    # do some stuff
+    # ...
+
+    MOV texCoord, {{ varying_texCoord }};
+
+    # Check that the texture coordinates are in bounds
+    {{ arb_call('textest.prog',
+                texCoord='{{ varying_texCoord }}',
+                out_result='textest') }}
+
+    # Kill the fragment if the texture
+    # coordinates are out of bounds
+    KIL textest.x;
+
+    # Othewrwise, carry on
+    # processing the fragment.
+    # ...
+
+The only requirement in the expression names that you use are that the
+routine's output variables must start with ``'out_'``.
+
+
+The ``arb_include`` function requires you to pass the name of the routine file
+that you wish to use - this must be specified relative to the ``includePath``
+argument to the :func:`parseARBP` function.
+
+
+The ``arb_call`` function requires:
+
+  - The name of the routine file (must be identical to that passed to
+    ``arb_include``)
+
+  - Mappings between the variables in your code, and the routine's input and
+    output parameters. These must all be passed as named (keyword) arguments.
 """
 
 
+import os.path     as op
 import itertools   as it
 import                re
+import                random
+import                string
 
 import jinja2      as j2
 import jinja2.meta as j2meta
 
 
-JINJA_BUILTIN_CONSTANTS = ['range']
-"""List of constant variables which are provided by ``jinja2``. As of
-``jinja2`` version 2.9.6, the ``jinja2.meta.find_undeclared_variables``
-function will return these functions, so our :func:`_findDeclaredVariables``
-has to filter them out, and it uses this list to do so.
+TEMPLATE_BUILTIN_CONSTANTS = ['range', 'arb_call', 'arb_include']
+"""List of constant variables which may occur in source files, and which are
+provided by ``jinja2``, or provided by this module.
+
+As of ``jinja2`` version 2.9.6, the ``jinja2.meta.find_undeclared_variables``
+function will return built-in functions such as ``range``, so our
+:func:`_findDeclaredVariables`` has to filter them out, and it uses this list
+to do so.
 """
 
 
@@ -409,7 +555,7 @@ def parseARBP(vertSrc, fragSrc):
     vParams, vTextures, vAttrs, vVaryings, vConstants = vvars
     fParams, fTextures, fAttrs, fVaryings, fConstants = fvars
 
-    constants = set(list(vConstants) + list(fConstants))
+    constants = list(set(list(vConstants) + list(fConstants)))
 
     return {'vertParam' : vParams,
             'fragParam' : fParams,
@@ -427,7 +573,8 @@ def fillARBP(vertSrc,
              fragParamLens,
              constants,
              textures,
-             attrs):
+             attrs,
+             includePath):
     """Fills in the given ARB assembly code, replacing all template tokens
     with the values specified by the various arguments.
 
@@ -462,6 +609,9 @@ def fillARBP(vertSrc,
     :arg attrs:         Dictionary of `{name : textureUnit}`` mappings,
                         specifying the texture unit to use for each vertex
                         attribute.
+
+    :arg includePath:   Path to a directory which contains any additional
+                        files that may be included in the given source files.
     """
 
     vertVars = _findDeclaredVariables(vertSrc)
@@ -505,9 +655,6 @@ def fillARBP(vertSrc,
         vertVaryings['varying_{}'.format(name)] = _varying(num, True)
         fragVaryings['varying_{}'.format(name)] = _varying(num, False)
 
-    vertTemplate  = j2.Template(vertSrc)
-    fragTemplate  = j2.Template(fragSrc)
-
     vertVars = dict(it.chain(vertParams  .items(),
                              textures    .items(),
                              attrs       .items(),
@@ -518,10 +665,124 @@ def fillARBP(vertSrc,
                              fragVaryings.items(),
                              constants   .items()))
 
-    vertSrc = vertTemplate.render(**vertVars)
-    fragSrc = fragTemplate.render(**fragVars)
+    vertSrc = _render(vertSrc, vertVars, includePath)
+    fragSrc = _render(fragSrc, fragVars, includePath)
 
     return vertSrc, fragSrc
+
+
+def _render(src, env, includePath):
+    """Called by :func:parseARBP`. Renders the given source template using the
+    given environment, managing the logic for ``arb_include`` and ``arb_call``
+    expressions.
+    """
+
+    # 'includes' is a dict containing mappings
+    # for each included routine file. For each
+    # file, the value is a tuple containing:
+    #
+    #   - The source code
+    #   - A dictionary of {input_key  : unique_name} mappings
+    #   - A dictionary of {output_key : unique_name} mappings
+    includes     = {}
+    usedVarNames = set()
+
+    # Generate a random name to
+    # use as a TEMP variable
+    def randomName(prefix):
+
+        def _rn():
+            suffix = [random.choice(string.ascii_letters) for i in range(5)]
+            return '{}_{}'.format(prefix, ''.join(suffix))
+
+        name = _rn()
+        while name in usedVarNames:
+            name = _rn()
+
+        usedVarNames.add(name)
+
+        return name
+
+    # arb_include routine
+    def arb_include(filename):
+
+        # 1. Loads in the included source file
+        # 2. Generates unique names for input/output parameters
+        # 3. Adds the source code, and the input/output mappings,
+        #    to the includes dictionary
+        # 4. Generates and returns TEMP declarations for ins/outs
+
+        fileid   = op.splitext(filename)[0]
+        filename = op.join(includePath, filename)
+
+        with open(filename, 'rt') as f:
+            source = f.read()
+
+        env      = j2.Environment()
+        ast      = env.parse(source)
+        params   = j2meta.find_undeclared_variables(ast)
+
+        inputs      = {}
+        outputs     = {}
+        sourceLines = ['# include {}'.format(fileid)]
+
+        for param in params:
+
+            name = randomName('{}_{}'.format(fileid, param))
+            if param.startswith('out_'): outputs[param] = name
+            else:                        inputs[ param] = name
+
+            sourceLines.append('TEMP {};'.format(name))
+
+        includes[op.basename(filename)] = source, inputs, outputs
+
+        return '\n'.join(sourceLines)
+
+    # arb_call routine
+    def arb_call(filename, **args):
+
+        # 1. Looks up the called filename in the includes dictionary
+        # 2. Generates code:
+        #    a. MOV inputs to function input temps
+        #    b. Render file source
+        #    c. MOV function outputs to requested output
+        # 3. Return generated code
+
+        source, inputs, outputs = includes[filename]
+
+        sourceLines = ['# call {}'.format(filename)]
+
+        callTemplate = j2.Template(source)
+
+        source = callTemplate.render(**inputs, **outputs)
+
+        for inkey, invarname in inputs.items():
+            sourceLines.append('MOV {}, {};'.format(invarname, args[inkey]))
+
+        sourceLines.extend(source.split('\n'))
+
+        for outkey, outvarname in outputs.items():
+            sourceLines.append('MOV {}, {};'.format(args[outkey], outvarname))
+
+        return '\n'.join(sourceLines)
+
+    template = j2.Template(src)
+
+    env = dict(env)
+    env['arb_include'] = arb_include
+    env['arb_call']    = arb_call
+
+    # We need to do two passes of the
+    # source code, because arb_call
+    # arguments may contain un-rendered
+    # expressions (e.g. the
+    # '{{ varying_texCoord }}' in the
+    # documentation example).
+    for i in range(2):
+        template = j2.Template(src)
+        src      = template.render(**env)
+
+    return src
 
 
 def _findDeclaredVariables(source):
@@ -574,7 +835,7 @@ def _findDeclaredVariables(source):
         else:
             constants.append(v)
 
-    constants = [c for c in constants if c not in JINJA_BUILTIN_CONSTANTS]
+    constants = [c for c in constants if c not in TEMPLATE_BUILTIN_CONSTANTS]
 
     return [sorted(v) for v in [params, textures, attrs, varyings, constants]]
 

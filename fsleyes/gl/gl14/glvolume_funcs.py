@@ -57,7 +57,10 @@ def compileShaders(self):
         'clipTexture'      : 3
     }
 
-    self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)
+    self.shader = shaders.ARBPShader(vertSrc,
+                                     fragSrc,
+                                     shaders.getShaderDir(),
+                                     textures)
 
 
 def updateShaderState(self):
