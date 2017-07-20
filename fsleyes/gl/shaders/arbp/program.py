@@ -12,6 +12,7 @@ and ``ARB_fragment_program`` extensions.
 
 from __future__ import division
 
+import re
 import logging
 
 import numpy                          as np
@@ -234,6 +235,10 @@ class ARBPShader(object):
         value = np.array(value, dtype=np.float32).ravel('F')
         nrows = len(value) // 4
 
+        if nrows == 0:
+            raise ValueError('Value for {} looks invalid: '
+                             '{}'.format(name, value))
+
         log.debug('Setting vertex parameter {} = {}'.format(name, value))
 
         for i in range(nrows):
@@ -255,6 +260,10 @@ class ARBPShader(object):
         pos   = self.fragParamPositions[name]
         value = np.array(value, dtype=np.float32).ravel('F')
         nrows = len(value) // 4
+
+        if nrows == 0:
+            raise ValueError('Value for {} looks invalid: '
+                             '{}'.format(name, value))
 
         log.debug('Setting fragment parameter {} = {}'.format(name, value))
 
@@ -348,6 +357,24 @@ class ARBPShader(object):
         return vpPoses, fpPoses, texPoses, attrPoses
 
 
+    def __cleanSource(self, src):
+        """Strips out comments and blank lines from the given
+        string.
+        """
+
+        # strip out comments and blank lines
+        lines = src.split('\n')
+        lines = [l.strip() for l in lines]
+        lines = [l         for l in lines if l    != '']
+        lines = [l         for l in lines if l[0] != '#']
+        src  = '\n'.join(lines)
+
+        # Squeeze duplicate spaces
+        src = re.sub(' +', ' ', src)
+
+        return src
+
+
     def __compile(self, vertSrc, fragSrc):
         """Called by :meth:`__init__`. Compiles the vertex and fragment
         programs and returns references to the compiled programs.
@@ -357,13 +384,16 @@ class ARBPShader(object):
         gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB)
         gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
 
-        fragProg = arbfp.glGenProgramsARB(1)
-        vertProg = arbvp.glGenProgramsARB(1)
-
-        # Make sure the source is plain
-        # ASCII - not unicode
+        # Clear out unnecessary stuff from
+        # the source, and make sure it is
+        # plain ASCII - not unicode.
+        vertSrc = self.__cleanSource(vertSrc)
+        fragSrc = self.__cleanSource(fragSrc)
         vertSrc = vertSrc.encode('ascii')
         fragSrc = fragSrc.encode('ascii')
+
+        fragProg = arbfp.glGenProgramsARB(1)
+        vertProg = arbvp.glGenProgramsARB(1)
 
         # vertex program
         try:

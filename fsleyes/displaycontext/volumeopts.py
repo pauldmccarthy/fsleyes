@@ -788,7 +788,7 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
 
     numSteps = props.Int(minval=50,
                          maxval=1000,
-                         default=200,
+                         default=50,
                          clamped=True)
     """Only used in 3D rendering. Specifies the maximum number of samples to
     acquire in the rendering of each pixel of the 3D scene. This corresponds

@@ -84,8 +84,6 @@ def updateShaderState(self):
     clipHigh   = opts.clippingRange[1] * clipXform[0, 0] + clipXform[0, 3]
     texZero    = 0.0                   * imgXform[ 0, 0] + imgXform[ 0, 3]
     imageShape = self.image.shape[:3]
-    imageDims  = self.getDisplayBounds()
-    imageDims  = [hi - lo for hi, lo in zip(imageDims[1], imageDims[0])]
 
     if imageIsClip: clipImageShape = imageShape
     else:           clipImageShape = opts.clipImage.shape[:3]
@@ -112,9 +110,6 @@ def updateShaderState(self):
     changed |= shader.set('imageIsClip',      imageIsClip)
     changed |= shader.set('img2CmapXform',    img2CmapXform)
     changed |= shader.set('clipImageShape',   clipImageShape)
-
-    if self.threedee:
-        changed |= shader.set('imageDims',  imageDims)
 
     changed |= shader.set('imageTexture',     0)
     changed |= shader.set('colourTexture',    1)
@@ -188,33 +183,11 @@ def draw3D(self, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
 
-    opts = self.opts
     vertices, voxCoords, texCoords = self.generateVertices3D(xform, bbox)
-
-    eye    = [0, 0, -1]
-    target = [0, 0,  0]
-
-    mvmat  = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX).T
-    mvmat  = transform.invert(mvmat)
-    eye    = transform.transform(eye,    mvmat)
-    target = transform.transform(target, mvmat)
-
-    def norm(vec):
-        return vec / np.sqrt(np.dot(vec, vec))
-
-    # Direction that the 'camera' is
-    # pointing, normalised to unit length.
-    cdir = eye - target
-
-    # Length of one step along the camera
-    # direction in a single iteration of
-    # the ray-cast loop. We have to normalise
-    # this by the image FOV.
-    stepLength = 1.0 / opts.numSteps
-    rayStep    = stepLength * norm(cdir / self._gl21_imageDims)
+    rayStep, ditherDir             = self.calculate3DSettings()
 
     self.shader.set(   'rayStep',   rayStep)
-    self.shader.set(   'ditherDir', cdir * opts.dithering)
+    self.shader.set(   'ditherDir', ditherDir)
 
     self.shader.setAtt('vertex',    vertices)
     self.shader.setAtt('voxCoord',  voxCoords)

@@ -12,13 +12,15 @@ encapsulates the data and logic required to render 2D slice of an
 
 import logging
 
-import OpenGL.GL        as gl
+import numpy               as np
+import OpenGL.GL           as gl
 
-import fsl.utils.async  as async
-import fsleyes.gl       as fslgl
-from . import              textures
-from . import              globject
-from . import resources as glresources
+import fsl.utils.async     as async
+import fsl.utils.transform as transform
+import fsleyes.gl          as fslgl
+from . import                 textures
+from . import                 globject
+from . import resources    as glresources
 
 
 log = logging.getLogger(__name__)
@@ -651,6 +653,69 @@ class GLVolume(globject.GLImageObject):
         fslgl.glvolume_funcs.postDraw(self)
 
 
+    def calculate3DSettings(self):
+        """Calculates various parameters required for 3D rendering. Returns a
+        tuple containing:
+
+          - A vector defining the amount by which to move along a ray in a
+            single iteration of the ray-casting algorithm. This can be added
+            directly to the volume texture coordinates.
+
+          - A vector defining the maximum distance by which to randomly adjust
+            the start location of each ray, to induce a dithering effect in
+            the rendered scene.
+        """
+
+        # TODO Why not give GLObjects a ref to
+        #      the rendering canvas, so you can
+        #      retrieve the mvmat from it,
+        #      instead of via a GL call?
+
+        # In GL, the camera position
+        # is initially pointing in
+        # the -z direction.
+        opts   = self.opts
+        eye    = [0, 0, -1]
+        target = [0, 0,  0]
+
+        # We take this initial camera
+        # configuration, and transform
+        # it by the inverse modelview
+        # matrix
+        mvmat  = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX).T
+        mvmat  = transform.invert(mvmat)
+        eye    = transform.transform(eye,    mvmat)
+        target = transform.transform(target, mvmat)
+
+        def norm(vec):
+            return vec / np.sqrt(np.dot(vec, vec))
+
+        # Direction that the 'camera' is
+        # pointing, normalied to unit length
+        cdir = norm(eye - target)
+
+        # Calculate the length of one step
+        # alongd the camera direction in a
+        # single iteration of the ray-cast
+        # loop. We have to normalise this
+        # by the image FOV.
+        imageDims  = self.getBoundsLengths()
+        stepLength = 1.0 / opts.numSteps
+        rayStep    = stepLength * norm(cdir / imageDims)
+
+        # Maximum amount by which to dither
+        # the scene. This is done by applying
+        # a random offset to the starting
+        # point of each ray - we pass the
+        # shader a vector in the camera direction,
+        # so all it needs to do is scale the
+        # vector by a random amount, and add the
+        # vector to the starting point.
+        ditherDir = cdir * opts.dithering
+
+        return rayStep, ditherDir
+
+
     def _alphaChanged(self, *a):
         """Called when the :attr:`.Display.alpha` property changes. """
         self.refreshColourTextures()
@@ -786,7 +851,13 @@ class GLVolume(globject.GLImageObject):
 
     def _numStepsChanged(self, *a):
         """Called when the :attr:`.VolumeOpts.numSteps` property changes. """
-        self.notify()
+
+        # TODO Is this dodgy? I'm not sure
+        if fslgl.GL_VERSION == '1.4':
+            fslgl.glvolume_funcs.compileShaders(self)
+            self.updateShaderState(alwaysNotify=True)
+        else:
+            self.notify()
 
 
     def _imageSyncChanged(self, *a):

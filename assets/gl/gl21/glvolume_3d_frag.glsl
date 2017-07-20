@@ -91,16 +91,8 @@ uniform float texZero;
  */
 uniform bool invertClip;
 
-
 /*
- * The field-of-view of the image - the length
- * of each dimension in the display coordinate
- * system.
- */
-uniform vec3 imageDims;
-
-/*
- * A vector, in the same direction as cameraDir, specifying
+ * A vector, in the same direction as the camera, specifying
  * the maximum amount to dither the starting position by.
  */
 uniform vec3 ditherDir;
@@ -142,6 +134,7 @@ varying vec3 fragClipTexCoord;
 
 #pragma include glvolume_common.glsl
 
+
 void main(void) {
 
     vec3 texCoord     = fragTexCoord;
@@ -181,8 +174,8 @@ void main(void) {
         continue;
 
       /* Mix this voxel colour into the final colour */
-      finalColour.rgb = mix(finalColour.rgb, colour.rgb, finalColour.a);
-      finalColour.a   = mix(0.5 * colour.a,  1.0,        finalColour.a);
+      finalColour.rgb  = mix(colour.rgb, finalColour.rgb, finalColour.a);
+      finalColour.a   += colour.a;
 
     } while ((finalColour.a < 0.95) && textest(texCoord));
 
