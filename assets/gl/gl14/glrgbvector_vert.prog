@@ -1,37 +1,33 @@
 !!ARBvp1.0
 #
-# Vertex program for rendering GLRGBVector instances. 
+# Vertex program for rendering GLRGBVector instances.
 #
 # Performs a standard transformation of the vertex coordinates, and
 # passes the corresponding voxel and texture coordinates through to the
 # fragment program.
 #
 # Input parameters:
-#    imageShape       - image shape
 #    clipCoordXform   - Matrix which transforms image texture coordinates
 #                       into clip image texture coordinates.
 #    colourCoordXform - Matrix which transforms image texture coordinates
 #                       into colour image texture coordinates.
 #    modCoordXform -    Matrix which transforms image texture coordinates
 #                       into modulation image texture coordinates.
-# 
+#
 # Input attributes:
 #    texCoord - Vector image texture coordinates
 #
 # Outputs:
-#    voxCoord     - Voxel coordinates
 #    texCoord     - Colour image texture coordinates
 #    vecTexCoord  - Vector image texture coordinates
 #    clipTexCoord - Clip image texture coordinates
 #    modTexCoord  - Modulate image texture coordinates
 #
 
-PARAM imageShape          = {{ param_imageShape        }};
 PARAM clipCoordXform[4]   = {{ param4_clipCoordXform   }};
 PARAM colourCoordXform[4] = {{ param4_colourCoordXform }};
 PARAM modCoordXform[4]    = {{ param4_modCoordXform    }};
 
-TEMP voxCoord;
 TEMP vecTexCoord;
 TEMP colourTexCoord;
 TEMP clipTexCoord;
@@ -48,10 +44,6 @@ DP4 result.position.w, state.matrix.mvp.row[3], vertex.position;
 # sure the 4th component is 1.
 MOV vecTexCoord, {{ attr_texCoord }};
 MOV vecTexCoord.w, 1;
-
-# Transform the texture coordinates
-# into voxel coordinates.
-MUL voxCoord, vecTexCoord, imageShape;
 
 # Transform the image texture coordinates
 # into clip/colour/modulate image texture
@@ -71,7 +63,6 @@ DP4 modTexCoord.w,    modCoordXform[3],    vecTexCoord;
 
 # Pass texture and voxel coordinates
 # through to the fragment program.
-MOV {{ varying_voxCoord     }}, voxCoord;
 MOV {{ varying_vecTexCoord  }}, vecTexCoord;
 MOV {{ varying_texCoord     }}, colourTexCoord;
 MOV {{ varying_clipTexCoord }}, clipTexCoord;

@@ -26,11 +26,10 @@
 #
 # Input parameters:
 #
-#   voxValXform - Matrix which transforms voxel values into the range
-#                 [0, 1], for use as a colour map texture coordinate
-#
-#   imageShape  - Image shape - number of voxels along the xyz
-#                 dimensions in the image
+#   voxValXform - Vector with x component defining a scale, and y
+#                 component defining an offset, with which image texture
+#                 values can be transformed into the range [0, 1], for use
+#                 as a colour map texture coordinate.
 #
 #   clipping    - Vector containing clipping values - voxels with a
 #                 value below the low threshold (x), or above the
@@ -97,12 +96,11 @@ TEMP  negVoxValue;
 TEMP  negClipValue;
 TEMP  clipValueNoClip;
 
-PARAM imageShape     = {{ param_imageShape   }};
-PARAM clipping       = {{ param_clipping     }};
-PARAM negCmap        = {{ param_negCmap      }};
-PARAM voxValXform[4] = {{ param4_voxValXform }};
-PARAM rayStep        = {{ param_rayStep      }};
-PARAM ditherDir      = {{ param_ditherDir    }};
+PARAM clipping    = {{ param_clipping    }};
+PARAM negCmap     = {{ param_negCmap     }};
+PARAM voxValXform = {{ param_voxValXform }};
+PARAM rayStep     = {{ param_rayStep     }};
+PARAM ditherDir   = {{ param_ditherDir   }};
 
 # Initialise colour buffers  and
 # generate a random number
@@ -162,10 +160,10 @@ ADD clipValueNoClip.x, clipValueNoClip.x, clipping.x;
 # Clobber the clip value if necessary
 {{
 arb_call('texture_border.prog',
-         texcoord='{{ varying_clipTexCoord }}',
-         origval='clipValue.x',
-         borderval='clipValueNoClip.x',
-         out_result='clipValue.x')
+         texCoord='{{ varying_clipTexCoord }}',
+         origval='clipValue',
+         borderval='clipValueNoClip',
+         out_result='clipValue')
 }}
 
 # If the image texture is the clip
@@ -244,7 +242,7 @@ CMP voxClipLo.x, voxClipLo.x, 1, -1;
 
 # Scale voxel value according
 # to the current display range
-MAD voxValue, voxValue, voxValXform[0].x, voxValXform[3].x;
+MAD voxValue, voxValue, voxValXform.x, voxValXform.y;
 
 # look up the appropriate colour
 # in the 1D colour map texture

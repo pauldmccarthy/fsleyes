@@ -4,9 +4,9 @@
 # the vector orientation is represented by a combination of RGB colours.
 #
 # This fragment program does the following:
-# 
+#
 #  - Retrieves the voxel coordinates corresponding to the fragment
-# 
+#
 #  - Uses those voxel coordinates to look up the corresponding xyz
 #    directions value in the 3D RGB image texture.
 #
@@ -18,17 +18,15 @@
 #
 # Input parameters:
 #
-#   voxValXform - Transformation matrix which transforms the vector
-#                 image voxel values from their texture value
-#                 to the original data range.
+#   voxValXform - Vector with x component defining a scale, and y
+#                 component defining an offset, with which image texture
+#                 values can be transformed into the range [0, 1], for use
+#                 as a colour map texture coordinate.
 #
 #   cmapXform   - Transformation matrix which transforms the vector
 #                 image voxel values from their data values
 #                 to a value which can be used as texture coordinates
 #                 for the colour map textures.
-#
-#   imageShape  - Image shape - number of voxels along the xyz
-#                 dimensions in the image
 #
 #   clipping    - Clipping thresholds. The (x) component contains
 #                 the low clipping threshold, and the (y) component
@@ -59,16 +57,17 @@
 #   clipTexture     - 3D texture containing clipping values.
 #
 # Input varyings:
-# 
+#
 #   vecTexCoord  - Vector image texture coordinates
 #   clipTexCoord - Clipping image texture coordinates
 #   modTexCoord  - Modulate image texture coordinates
-#   voxCoord     - Fragment voxel coordinates 
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-TEMP  voxCoord;
+{{ arb_include('textest.prog') }}
+{{ arb_include('texture_border.prog') }}
+
 TEMP  clipValue;
 TEMP  modValue;
 TEMP  voxValue;
@@ -77,27 +76,26 @@ TEMP  clipResult;
 TEMP  clipValueNoClip;
 TEMP  modValueNoMod;
 
-TEMP  tb_texcoord;
-TEMP  tb_origval;
-TEMP  tb_borderval;
-TEMP  tb_result;
+PARAM voxValXform  = {{ param_voxValXform     }};
+PARAM cmapXform[4] = {{ param4_cmapXform      }};
+PARAM clipping     = {{ param_clipping        }};
+PARAM mod          = {{ param_mod             }};
+PARAM xColour      = {{ param_xColour         }};
+PARAM yColour      = {{ param_yColour         }};
+PARAM zColour      = {{ param_zColour         }};
+PARAM colourXform  = {{ param_colourXform     }};
 
-PARAM voxValXform[4] = {{ param4_voxValXform    }};
-PARAM cmapXform[4]   = {{ param4_cmapXform      }};
-PARAM imageShape     = {{ param_imageShape      }};
-PARAM clipping       = {{ param_clipping        }};
-PARAM mod            = {{ param_mod             }};
-PARAM xColour        = {{ param_xColour         }};
-PARAM yColour        = {{ param_yColour         }};
-PARAM zColour        = {{ param_zColour         }};
-PARAM colourXform    = {{ param_colourXform     }};
 
-# retrieve the voxel coordinates 
-MOV voxCoord, {{ varying_voxCoord }};
+# Bail if the textureq coordinate
+# is out of the image space.
+# We use voxValue out of convenience
+{{
+arb_call('textest.prog',
+         texCoord='{{ varying_vecTexCoord }}',
+         out_result='voxValue')
+}}
 
-# Bail if the voxel coordinate
-# is out of the image space
-#pragma include test_in_bounds.prog
+KIL voxValue.x;
 
 # look up vector, modulation, and clipping
 # values from the three 3D textures.
@@ -115,26 +113,30 @@ SUB clipValueNoClip.x, clipValueNoClip.x, clipping.x;
 MUL clipValueNoClip.x, clipValueNoClip.x, 0.5;
 ADD clipValueNoClip.x, clipValueNoClip.x, clipping.x;
 
-# modValueNoMod contains (modHigh - 2 * modLow) - 
+# modValueNoMod contains (modHigh - 2 * modLow) -
 # this cancels out the modValue scaling at the
 # bottom, so it results in a mod value of 1.
 MOV modValueNoMod.x, mod.x;
 MUL modValueNoMod.x, modValueNoMod.x, -2;
 ADD modValueNoMod.x, modValueNoMod.x, mod.y;
 
-# Clobber clipValue
-MOV tb_texcoord,  {{ varying_clipTexCoord }};
-MOV tb_origval.x,   clipValue.x;
-MOV tb_borderval.x, clipValueNoClip.x;
-#pragma include texture_border.prog
-MOV clipValue.x, tb_result.x;
+# Clobber clip value
+{{
+arb_call('texture_border.prog',
+         texCoord='{{ varying_clipTexCoord }}',
+         origval='clipValue',
+         borderval='clipValueNoClip',
+         out_result='clipValue')
+}}
 
 # Clobber modValue
-MOV tb_texcoord,  {{ varying_modTexCoord }};
-MOV tb_origval.x,   modValue.x;
-MOV tb_borderval.x, modValueNoMod.x;
-#pragma include texture_border.prog
-MOV modValue.x, tb_result.x;
+{{
+arb_call('texture_border.prog',
+         texCoord='{{ varying_modTexCoord }}',
+         origval='modValue',
+         borderval='modValueNoMod',
+         out_result='modValue')
+}}
 
 # If the clipping value is
 # <= the low clipping range,
@@ -153,10 +155,10 @@ MUL clipResult, clipResult, -1.0;
 KIL clipResult.x;
 KIL clipResult.y;
 
-# Transform vector values from their normalised 
+# Transform vector values from their normalised
 # texture range to their original data range,
 # and take the absolue value
-MAD voxValue, voxValue, voxValXform[0].x, voxValXform[3].x;
+MAD voxValue, voxValue, voxValXform.x, voxValXform.y;
 ABS voxValue, voxValue;
 
 # Cumulatively combine the rgb
@@ -166,7 +168,7 @@ MAD fragColour, voxValue.x, xColour, fragColour;
 MAD fragColour, voxValue.y, yColour, fragColour;
 MAD fragColour, voxValue.z, zColour, fragColour;
 
-# Copy the alpha value - we don't 
+# Copy the alpha value - we don't
 # want it to be modulated. Using
 # voxValue as a temp variable
 MOV voxValue.a, fragColour.a;
@@ -174,7 +176,7 @@ MOV voxValue.a, fragColour.a;
 # Apply the bri/con scale and offset
 MAD fragColour, fragColour, colourXform.x, colourXform.y;
 
-# Scale the modulation value, modulate 
+# Scale the modulation value, modulate
 # the colour, and restore the alpha value.
 ADD modValue.x, modValue.x, mod.x;
 MUL modValue.x, modValue.x, mod.z;
@@ -185,4 +187,3 @@ MOV fragColour.a, voxValue.a;
 MOV result.color, fragColour;
 
 END
-

@@ -3,10 +3,8 @@
 # Vertex program for rendering GLLineVector instances.
 #
 # Input parameters:
-# 
+#
 #    invImageShape    - (first three components) inverse of image shape
-#    voxelOffsets     - (first three components) Offset to apply to transformed
-#                       voxel coordinates before flooring to integers.
 #    clipCoordXform   - Matrix which transforms image texture coordinates
 #                       into clip image texture coordinates.
 #    colourCoordXform - Matrix which transforms image texture coordinates
@@ -18,7 +16,7 @@
 #    voxCoord  - Vector voxel coordinates
 #
 # Outputs:
-#    voxCoord     - Voxel coordinates
+#    texCoord     - Colour texture image coordinate
 #    vecTexCoord  - Vector image texture coordinates
 #    clipTexCoord - Clip image texture coordinates
 #    modTexCoord  - Modulate image texture coordinates
@@ -34,7 +32,6 @@ TEMP clipTexCoord;
 TEMP modTexCoord;
 
 PARAM invImageShape       = {{ param_invImageShape     }};
-PARAM voxelOffsets        = {{ param_voxelOffsets      }};
 PARAM clipCoordXform[4]   = {{ param4_clipCoordXform   }};
 PARAM colourCoordXform[4] = {{ param4_colourCoordXform }};
 PARAM modCoordXform[4]    = {{ param4_modCoordXform    }};
@@ -77,7 +74,6 @@ DP4 modTexCoord.w,    modCoordXform[3],    vecTexCoord;
 
 # Pass texture and voxel coordinates
 # through to the fragment program.
-MOV {{ varying_voxCoord     }}, voxCoord;
 MOV {{ varying_vecTexCoord  }}, vecTexCoord;
 MOV {{ varying_texCoord     }}, colourTexCoord;
 MOV {{ varying_clipTexCoord }}, clipTexCoord;

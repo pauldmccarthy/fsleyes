@@ -58,11 +58,8 @@ def updateShaderState(self):
     if not self.ready():
         return
 
-    shape = list(self.vectorImage.shape[:3])
-
     self.shader.load()
     glvector_funcs.updateShaderState(self)
-    self.shader.setVertParam('imageShape', shape + [0])
     self.shader.unload()
 
     return True
