@@ -14,18 +14,17 @@
 
 # Test whether any voxel coordinates are
 # greater than the image shape (- 0.49),
-MOV {{ out_result }}.yzw, {{ imageShape }};
-SUB {{ out_result }}.yzw, {{ out_result }}.yyzw, {{ voxCoord }};
-ADD {{ out_result }}.yzw, {{ out_result }}.yyzw, 0.49;
+SUB {{ out_result }}, {{ imageShape }}, {{ voxCoord }};
+ADD {{ out_result }}, {{ out_result }}, 0.49;
 
-# x will be < 0 if any coordinates failed
+# We store the result in w for the time being.
+# w will be < 0 if any coordinates failed
 # the test, >= 0 if they all passed
-MIN {{ out_result }}.x, {{ out_result }}.y, {{ out_result }}.z;
-MIN {{ out_result }}.x, {{ out_result }}.x, {{ out_result }}.w;
+MIN {{ out_result }}.w, {{ out_result }}.x, {{ out_result }}.y;
+MIN {{ out_result }}.w, {{ out_result }}.w, {{ out_result }}.z;
 
 # Test the lower bounds
-MOV {{ out_result }}.yzw, {{ voxCoord   }};
-ADD {{ out_result }}.yzw, {{ out_result }}.yyzw, 0.51;
+ADD {{ out_result }}.xyz, {{ voxCoord }}, 0.51;
 
 # x will be < 0 if any of the voxel
 # coordinates are less than -0.51
