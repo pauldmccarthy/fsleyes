@@ -168,7 +168,10 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
 
     self.shader.loadAtts()
 
-    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
+    with glroutines.enabled(gl.GL_CULL_FACE):
+        gl.glPolygonMode(gl.GL_FRONT, gl.GL_FILL)
+        gl.glCullFace(gl.GL_BACK)
+        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
 
 def draw3D(self, xform=None, bbox=None):

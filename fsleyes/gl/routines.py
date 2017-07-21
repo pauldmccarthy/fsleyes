@@ -1042,11 +1042,11 @@ def slice2D(dataShape,
         vertices = np.zeros((6, 3), dtype=np.float32)
 
         vertices[ 0, [xax, yax]] = [xmin, ymin]
-        vertices[ 1, [xax, yax]] = [xmin, ymax]
-        vertices[ 2, [xax, yax]] = [xmax, ymin]
+        vertices[ 1, [xax, yax]] = [xmax, ymin]
+        vertices[ 2, [xax, yax]] = [xmin, ymax]
         vertices[ 3, [xax, yax]] = [xmax, ymin]
-        vertices[ 4, [xax, yax]] = [xmin, ymax]
-        vertices[ 5, [xax, yax]] = [xmax, ymax]
+        vertices[ 4, [xax, yax]] = [xmax, ymax]
+        vertices[ 5, [xax, yax]] = [xmin, ymax]
 
     elif geometry == 'square':
         vertices = np.zeros((4, 3), dtype=np.float32)
