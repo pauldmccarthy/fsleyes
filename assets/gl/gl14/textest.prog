@@ -24,7 +24,7 @@ MIN {{ out_result }}.w,   {{ out_result }}.w, {{ out_result }}.z;
 # > 1 test: {{ out_result }}.x will be:
 #   - -1 if >  1
 #   - +1 if <= 1
-SUB {{ out_result }}.xyz, 1, {{ texcoord   }};
+SUB {{ out_result }}.xyz, 1, {{ texCoord   }};
 CMP {{ out_result }}.xyz,    {{ out_result }}, -1, 1;
 MIN {{ out_result }}.x, {{ out_result }}.x, {{ out_result }}.y;
 MIN {{ out_result }}.x, {{ out_result }}.x, {{ out_result }}.z;

@@ -25,9 +25,6 @@
 #   voxValXform - Matrix which transforms voxel values into the range
 #                 [0, 1], for use as a colour map texture coordinate
 #
-#   imageShape  - Image shape - number of voxels along the xyz
-#                 dimensions in the image
-#
 #   clipping    - Vector containing clipping values - voxels with a
 #                 value below the low threshold (x), or above the
 #                 high threshold (y) will not be shown. The (z)
@@ -50,7 +47,6 @@
 # Input varyings:
 #
 #   texCoord     - Fragment texture coordinates
-#   voxCoord     - Fragment voxel coordinates
 #   clipTexCoord - Clip image texture coordinates
 #
 # Input textures:
@@ -77,20 +73,20 @@ TEMP  clipValueNoClip;
 
 
 {{ arb_include('texture_border.prog') }}
-{{ arb_include('test_in_bounds.prog') }}
+{{ arb_include('textest.prog') }}
 
 
-PARAM imageShape     = {{ param_imageShape   }};
 PARAM clipping       = {{ param_clipping     }};
 PARAM negCmap        = {{ param_negCmap      }};
 PARAM voxValXform[4] = {{ param4_voxValXform }};
 
-# bail if they are are out of bounds.
-# We use nanTest here out of convenience
+
+# bail if texture coordinates are are
+# out of bounds. We use nanTest here
+# out of convenience.
 {{
-arb_call('test_in_bounds.prog',
-         voxCoord='{{ varying_voxCoord }}',
-         imageShape='imageShape',
+arb_call('textest.prog',
+         texCoord='{{ varying_texCoord }}',
          out_result='nanTest')
 }}
 KIL nanTest.x;
@@ -127,9 +123,9 @@ ADD clipValueNoClip.x, clipValueNoClip.x, clipping.x;
 {{
 arb_call('texture_border.prog',
          texcoord='{{ varying_clipTexCoord }}',
-         origval='clipValue.x',
-         borderval='clipValueNoClip.x',
-         out_result='clipValue.x')
+         origval='clipValue',
+         borderval='clipValueNoClip',
+         out_result='clipValue')
 }}
 
 # If the image texture is the clip

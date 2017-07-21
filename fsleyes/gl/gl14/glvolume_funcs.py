@@ -117,11 +117,10 @@ def updateShaderState(self):
     negCmap  = [useNegCmap, texZero, 0, 0]
 
     changed  = False
-    changed |= self.shader.setVertParam('imageShape',     shape)
-    changed |= self.shader.setFragParam('imageShape',     shape)
-    changed |= self.shader.setFragParam('voxValXform',    voxValXform)
-    changed |= self.shader.setFragParam('clipping',       clipping)
-    changed |= self.shader.setFragParam('negCmap',        negCmap)
+    changed |= self.shader.setVertParam('imageShape',  shape)
+    changed |= self.shader.setFragParam('voxValXform', voxValXform)
+    changed |= self.shader.setFragParam('clipping',    clipping)
+    changed |= self.shader.setFragParam('negCmap',     negCmap)
 
     self.shader.unload()
 
