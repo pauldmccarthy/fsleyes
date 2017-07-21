@@ -58,7 +58,10 @@ def compileShaders(self, vertShader):
             'vectorTexture'   : 4,
         }
 
-    self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)
+    self.shader = shaders.ARBPShader(vertSrc,
+                                     fragSrc,
+                                     shaders.getShaderDir(),
+                                     textures)
 
 
 def updateShaderState(self):

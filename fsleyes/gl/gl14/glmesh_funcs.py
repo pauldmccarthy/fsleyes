@@ -35,7 +35,10 @@ def compileShaders(self):
         'negCmap' : 1
     }
 
-    self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)
+    self.shader = shaders.ARBPShader(vertSrc,
+                                     fragSrc,
+                                     shaders.getShaderDir(),
+                                     textures)
 
 
 def destroy(self):

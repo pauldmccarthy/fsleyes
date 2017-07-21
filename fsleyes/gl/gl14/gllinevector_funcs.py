@@ -134,12 +134,10 @@ def updateShaderState(self):
 
     shape    = list(image.shape[:3])
     invShape = [1.0 / s for s in shape] + [0]
-    offset   = [0.5, 0.5, 0.5, 0.0]
 
     self.shader.load()
 
     self.shader.setVertParam('invImageShape', invShape)
-    self.shader.setVertParam('voxelOffsets',  offset)
 
     self.shader.unload()
 
@@ -180,6 +178,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
 
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
 
+    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
     gl.glLineWidth(opts.lineWidth)
     gl.glDrawArrays(gl.GL_LINES, 0, vertices.size // 3)
 
