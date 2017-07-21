@@ -518,6 +518,7 @@ The ``arb_call`` function requires:
 
   - Mappings between the variables in your code, and the routine's input and
     output parameters. These must all be passed as named (keyword) arguments.
+    You cannot use swizzle masks in these mappings.
 """
 
 
@@ -706,11 +707,14 @@ def _render(src, env, includePath):
     # arb_include routine
     def arb_include(filename):
 
-        # 1. Loads in the included source file
-        # 2. Generates unique names for input/output parameters
-        # 3. Adds the source code, and the input/output mappings,
-        #    to the includes dictionary
-        # 4. Generates and returns TEMP declarations for ins/outs
+        # This currently does nothing. It is
+        # here because I originally created
+        # TEMP variables for all routine
+        # inputs/outputs, but have stopped
+        # doing that. I'm keeping arb_include
+        # here for routines which may need to
+        # define temporary variables of their
+        # own.
 
         fileid   = op.splitext(filename)[0]
         filename = op.join(includePath, filename)
@@ -718,52 +722,24 @@ def _render(src, env, includePath):
         with open(filename, 'rt') as f:
             source = f.read()
 
-        env      = j2.Environment()
-        ast      = env.parse(source)
-        params   = j2meta.find_undeclared_variables(ast)
+        includes[op.basename(filename)] = source
 
-        inputs      = {}
-        outputs     = {}
-        sourceLines = ['# include {}'.format(fileid)]
-
-        for param in params:
-
-            name = randomName('{}_{}'.format(fileid, param))
-            if param.startswith('out_'): outputs[param] = name
-            else:                        inputs[ param] = name
-
-            sourceLines.append('TEMP {};'.format(name))
-
-        includes[op.basename(filename)] = source, inputs, outputs
-
-        return '\n'.join(sourceLines)
+        return '# include {}\n'.format(fileid)
 
     # arb_call routine
     def arb_call(filename, **args):
 
         # 1. Looks up the called filename in the includes dictionary
-        # 2. Generates code:
-        #    a. MOV inputs to function input temps
-        #    b. Render file source
-        #    c. MOV function outputs to requested output
+        # 2. Generates code - render file source with the probvided
+        #    argument mappings
         # 3. Return generated code
 
-        source, inputs, outputs = includes[filename]
-
-        sourceLines = ['# call {}'.format(filename)]
-
+        source       = includes[filename]
+        sourceLines  = ['# call {}'.format(filename)]
         callTemplate = j2.Template(source)
-
-        source = callTemplate.render(**inputs, **outputs)
-
-        for inkey, invarname in inputs.items():
-            sourceLines.append('MOV {}, {};'.format(invarname, args[inkey]))
+        source       = callTemplate.render(**args)
 
         sourceLines.extend(source.split('\n'))
-
-        for outkey, outvarname in outputs.items():
-            sourceLines.append('MOV {}, {};'.format(args[outkey], outvarname))
-
         return '\n'.join(sourceLines)
 
     template = j2.Template(src)
