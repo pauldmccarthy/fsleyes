@@ -653,6 +653,25 @@ class GLVolume(globject.GLImageObject):
         fslgl.glvolume_funcs.postDraw(self)
 
 
+    def calculateClipCoordTransform(self):
+        """Calculates a transformation matrix which will transform from the
+        image coordinate system into the :attr:`.VolumeOpts.clipImage`
+        coordinate system. If ``clipImage is None``, it will be an identity
+        transform.
+
+        This transform is used by shader programs to find the clip image
+        coordinates that correspond with specific image coordinates.
+        """
+        if self.opts.clipImage is None:
+            clipCoordXform = np.eye(4)
+        else:
+            clipCoordXform = transform.concat(
+                self.clipOpts.getTransform('display', 'texture'),
+                self.opts    .getTransform('texture', 'display'))
+
+        return clipCoordXform
+
+
     def calculate3DSettings(self):
         """Calculates various parameters required for 3D rendering. Returns a
         tuple containing:

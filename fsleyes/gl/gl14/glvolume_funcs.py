@@ -90,9 +90,10 @@ def updateShaderState(self):
     # transformation turns a raw voxel value
     # into a value between 0 and 1, suitable
     # for looking up an appropriate colour
-    # in the 1D colour map texture
+    # in the 1D colour map texture.
     voxValXform = transform.concat(self.colourTexture.getCoordinateTransform(),
                                    self.imageTexture.voxValXform)
+    voxValXform = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
 
     # The vertex and fragment programs
     # need to know the image shape
@@ -133,16 +134,8 @@ def preDraw(self):
     self.shader.load()
     self.shader.loadAtts()
 
-    opts = self.opts
-
     if isinstance(self, glvolume.GLVolume):
-        if opts.clipImage is None:
-            clipCoordXform = np.eye(4)
-        else:
-            clipCoordXform = transform.concat(
-                self.clipOpts.getTransform('display', 'texture'),
-                opts         .getTransform('texture', 'display'))
-
+        clipCoordXform = self.calculateClipCoordTransform()
         self.shader.setVertParam('clipCoordXform', clipCoordXform)
 
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)

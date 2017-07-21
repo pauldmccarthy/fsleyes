@@ -127,16 +127,8 @@ def preDraw(self):
     """
     self.shader.load()
 
-    opts = self.opts
-
     if isinstance(self, glvolume.GLVolume):
-        if opts.clipImage is None:
-            clipCoordXform = np.eye(4)
-        else:
-            clipCoordXform = transform.concat(
-                self.clipOpts.getTransform('display', 'texture'),
-                opts         .getTransform('texture', 'display'))
-
+        clipCoordXform = self.calculateClipCoordTransform()
         self.shader.set('clipCoordXform', clipCoordXform)
 
 

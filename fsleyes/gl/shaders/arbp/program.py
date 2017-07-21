@@ -250,10 +250,10 @@ class ARBPShader(object):
         """
 
         pos   = self.vertParamPositions[name]
-        value = np.array(value, dtype=np.float32).ravel('F')
+        value = np.array(value, dtype=np.float32).ravel('C')
         nrows = len(value) // 4
 
-        if nrows == 0:
+        if value.size < 4 or value.size % 4 != 0:
             raise ValueError('Value for {} looks invalid: '
                              '{}'.format(name, value))
 
@@ -276,10 +276,10 @@ class ARBPShader(object):
                   ``True`` if the value was changed, and ``False`` otherwise.
         """
         pos   = self.fragParamPositions[name]
-        value = np.array(value, dtype=np.float32).ravel('F')
+        value = np.array(value, dtype=np.float32).ravel('C')
         nrows = len(value) // 4
 
-        if nrows == 0:
+        if value.size < 4 or value.size % 4 != 0:
             raise ValueError('Value for {} looks invalid: '
                              '{}'.format(name, value))
 

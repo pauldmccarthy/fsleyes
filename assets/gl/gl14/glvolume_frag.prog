@@ -22,8 +22,10 @@
 #
 # Input parameters:
 #
-#   voxValXform - Matrix which transforms voxel values into the range
-#                 [0, 1], for use as a colour map texture coordinate
+#   voxValXform - Vector with x component defining a scale, and y
+#                 component defining an offset, with which image texture
+#                 values can be transformed into the range [0, 1], for use
+#                 as a colour map texture coordinate.
 #
 #   clipping    - Vector containing clipping values - voxels with a
 #                 value below the low threshold (x), or above the
@@ -76,9 +78,9 @@ TEMP  clipValueNoClip;
 {{ arb_include('textest.prog') }}
 
 
-PARAM clipping       = {{ param_clipping     }};
-PARAM negCmap        = {{ param_negCmap      }};
-PARAM voxValXform[4] = {{ param4_voxValXform }};
+PARAM clipping    = {{ param_clipping    }};
+PARAM negCmap     = {{ param_negCmap     }};
+PARAM voxValXform = {{ param_voxValXform }};
 
 
 # bail if texture coordinates are are
@@ -122,7 +124,7 @@ ADD clipValueNoClip.x, clipValueNoClip.x, clipping.x;
 # Clobber the clip value if necessary
 {{
 arb_call('texture_border.prog',
-         texcoord='{{ varying_clipTexCoord }}',
+         texCoord='{{ varying_clipTexCoord }}',
          origval='clipValue',
          borderval='clipValueNoClip',
          out_result='clipValue')
@@ -215,7 +217,7 @@ KIL voxClipLo.x;
 
 # Scale voxel value according
 # to the current display range
-MAD voxValue, voxValue, voxValXform[0].x, voxValXform[3].x;
+MAD voxValue, voxValue, voxValXform.x, voxValXform.y;
 
 # look up the appropriate colour
 # in the 1D colour map texture
