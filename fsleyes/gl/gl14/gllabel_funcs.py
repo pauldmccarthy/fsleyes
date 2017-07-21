@@ -69,6 +69,7 @@ def updateShaderState(self):
     self.shader.load()
 
     voxValXform  = self.imageTexture.voxValXform
+    voxValXform  = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
     shape        = list(self.image.shape[:3]) + [0]
     offsets      = opts.outlineWidth / \
                    np.array(self.image.shape[:3], dtype=np.float32)
@@ -81,7 +82,6 @@ def updateShaderState(self):
     else:            offsets = [0] + list(offsets)
 
     self.shader.setVertParam('imageShape',   shape)
-    self.shader.setFragParam('imageShape',   shape)
     self.shader.setFragParam('voxValXform',  voxValXform)
     self.shader.setFragParam('invNumLabels', [invNumLabels, 0, 0, 0])
     self.shader.setFragParam('outline',      offsets)

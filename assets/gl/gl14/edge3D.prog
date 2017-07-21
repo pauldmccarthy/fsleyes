@@ -1,7 +1,7 @@
 #
 # Fragment program routine which implements a simple edge detection algorithm
 # on texture unit 0. This only works for single-channel textures.
-# 
+#
 # Inputs:
 #   coord   - Texture coordinate to test
 #   val     - Value at texture coordinate
@@ -11,16 +11,16 @@
 # Outputs:
 #   isEdge  - Non-zero if the voxel lies on an edge.
 #
-# 
+#
 # This code is horrible. Something like this would be nice:
 #
 #     #pragma INPUTS  (coord, val, tol, offsets)
 #     #pragma OUTPUTS (isEdge)
-# 
+#
 # And some way to dynamically set the texture unit, e.g.:
 #
 #     TEX result, coord, texture[#pragma texUnit#], 3D;
-# 
+#
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
@@ -36,9 +36,15 @@ TEMP isEdge;
 MOV isEdgeBack,  0;
 MOV isEdgeFront, 0;
 
+
+{% for axis in range(3) %}
+
+{% set offset  = ['1, 0, 0, 0', '0, 1, 0, 0', '0, 0, 1, 0'][axis] %}
+{% set swizzle = 'xyz'[axis] %}
+
 # Test along the x axis
 MOV off, offsets;
-MUL off, off, {1, 0, 0, 0};
+MUL off, off, { {{ offset }} };
 
 # Sample a value behind the coordinate
 MOV tempCoord, coord;
@@ -57,57 +63,10 @@ ABS front.x, front.x;
 
 # Unsafe operation - will only work
 # for single channel textures
-SLT isEdgeBack.x,  tol.x, back.x;
-SLT isEdgeFront.x, tol.x, front.x; 
+SLT isEdgeBack. {{ swizzle }}, tol.x, back.x;
+SLT isEdgeFront.{{ swizzle }}, tol.x, front.x;
 
-
-
-# Test along the y axis
-MOV off, offsets;
-MUL off, off, {0, 1, 0, 0};
-
-# Sample a value behind the coordinate
-MOV tempCoord, coord;
-ADD tempCoord, tempCoord, off;
-TEX back.x, tempCoord, texture[0], 3D;
-
-# Sample a value in front of the coordinatea
-MOV tempCoord, coord;
-SUB tempCoord, tempCoord, off;
-TEX front.x, tempCoord, texture[0], 3D;
-
-SUB back.x,  back.x,  val.x;
-SUB front.x, front.x, val.x;
-ABS back.x,  back.x;
-ABS front.x, front.x;
-
-SLT isEdgeBack.y,  tol.x, back.x;
-SLT isEdgeFront.y, tol.x, front.x;
-
-
-
-# Test along the z axis
-MOV off, offsets;
-MUL off, off, {0, 0, 1, 0};
-
-# Sample a value behind the coordinate
-MOV tempCoord, coord;
-ADD tempCoord, tempCoord, off;
-TEX back.x, tempCoord, texture[0], 3D;
-
-# Sample a value in front of the coordinatea
-MOV tempCoord, coord;
-SUB tempCoord, tempCoord, off;
-TEX front.x, tempCoord, texture[0], 3D;
-
-SUB back.x,  back.x,  val.x;
-SUB front.x, front.x, val.x;
-ABS back.x,  back.x;
-ABS front.x, front.x;
-
-SLT isEdgeBack.z,  tol.x, back.x;
-SLT isEdgeFront.z, tol.x, front.x;
-
+{% endfor %}
 
 # Set isEdge to 1 whereever either
 # isEdgeBack or isEdgeFront are 1
