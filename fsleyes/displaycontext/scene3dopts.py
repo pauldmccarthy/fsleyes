@@ -44,10 +44,10 @@ class Scene3DOpts(sceneopts.SceneOpts):
         self.setConstraint('zoom',     'minval',  1)
         self.setConstraint('zoom',     'default', 75)
         self.setConstraint('zoom',     'maxval',  5000)
-        self.setConstraint('bgColour', 'default', (0.8, 0.8, 1.0, 1.0))
+        self.setConstraint('bgColour', 'default', (0.6, 0.6, 0.753, 1.0))
 
         self.zoom     = 75
-        self.bgColour = (0.8, 0.8, 1.0)
+        self.bgColour = (0.6, 0.6, 0.753)
 
 
     def _onPerformanceChange(self, *a):

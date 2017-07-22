@@ -213,8 +213,8 @@ class Scene3DCanvas(props.HasProperties):
 
 
     def __setViewport(self):
-        """Called by :meth:`_draw`. Configures the viewport and model-view
-        trasformatiobn matrix.
+        """Called by :meth:`_draw`. Configures the viewport and calculates
+        the model-view trasformation matrix.
 
         :returns: ``True`` if the viewport was successfully configured,
                   ``False`` otherwise.
@@ -236,7 +236,7 @@ class Scene3DCanvas(props.HasProperties):
         # can be used by canvasToWorld
         self.__xform = self.__genModelViewMatrix()
 
-        glroutines.show3D(width, height, blo, bhi, self.__xform)
+        glroutines.show3D(width, height, blo, bhi)
 
         return True
 
@@ -276,7 +276,7 @@ class Scene3DCanvas(props.HasProperties):
                 if self.showYSlice: globj.draw2D(pos[1], axes=(0, 2, 1))
                 if self.showZSlice: globj.draw2D(pos[2], axes=(0, 1, 2))
 
-                globj.draw3D()
+                globj.draw3D(xform=self.__xform)
                 globj.postDraw()
 
             if self.showCursor: self.__drawCursor()

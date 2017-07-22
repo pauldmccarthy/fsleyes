@@ -718,13 +718,10 @@ class GLVolume(globject.GLImageObject):
         cdir = norm(eye - target)
 
         # Calculate the length of one step
-        # alongd the camera direction in a
+        # along the camera direction in a
         # single iteration of the ray-cast
-        # loop. We have to normalise this
-        # by the image FOV.
-        imageDims  = self.getBoundsLengths()
-        stepLength = 1.0 / opts.numSteps
-        rayStep    = stepLength * norm(cdir / imageDims)
+        # loop.
+        rayStep = cdir / opts.numSteps
 
         # Maximum amount by which to dither
         # the scene. This is done by applying
