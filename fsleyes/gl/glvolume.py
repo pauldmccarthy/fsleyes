@@ -155,7 +155,7 @@ class GLVolume(globject.GLImageObject):
     """
 
 
-    def __init__(self, image, displayCtx, threedee):
+    def __init__(self, image, displayCtx, canvas, threedee):
         """Create a ``GLVolume`` object.
 
         :arg image:       An :class:`.Image` object.
@@ -163,11 +163,17 @@ class GLVolume(globject.GLImageObject):
         :arg displayCtx:  The :class:`.DisplayContext` object managing the
                           scene.
 
+        :arg canvas:      The canvas doing the drawing.
+
         :arg threedee:    Set up for 2D or 3D rendering.
 
         """
 
-        globject.GLImageObject.__init__(self, image, displayCtx, threedee)
+        globject.GLImageObject.__init__(self,
+                                        image,
+                                        displayCtx,
+                                        canvas,
+                                        threedee)
 
         # Add listeners to this image so the view can be
         # updated when its display properties are changed

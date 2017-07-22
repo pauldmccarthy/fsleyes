@@ -86,7 +86,7 @@ class GLSH(glvector.GLVectorBase):
     """
 
 
-    def __init__(self, image, displayCtx, threedee):
+    def __init__(self, image, displayCtx, canvas, threedee):
         """Create a ``GLSH`` object.
 
 
@@ -97,6 +97,7 @@ class GLSH(glvector.GLVectorBase):
 
         :arg image:      The :class:`.Image` instance
         :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+        :arg canvas:     The canvas doing the drawing.
         :arg threedee:   Set up for 2D or 3D rendering.
         """
 
@@ -118,6 +119,7 @@ class GLSH(glvector.GLVectorBase):
             self,
             image,
             displayCtx,
+            canvas,
             threedee,
             preinit=self.compileShaders,
             init=self.__shStateChanged)

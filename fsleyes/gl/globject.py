@@ -27,7 +27,8 @@ This module also provides a few functions, most importantly
 
 import logging
 
-import numpy as np
+import numpy        as np
+import OpenGL.GL    as gl
 
 import fsl.utils.transform as transform
 import fsl.utils.notifier  as notifier
@@ -67,13 +68,15 @@ def getGLObjectType(overlayType):
     return typeMap.get(overlayType, None)
 
 
-def createGLObject(overlay, displayCtx, threedee=False):
+def createGLObject(overlay, displayCtx, canvas, threedee=False):
     """Create :class:`GLObject` instance for the given overlay, as specified
     by the :attr:`.Display.overlayType` property.
 
     :arg overlay:    An overlay object (e.g. a :class:`.Image` instance).
 
     :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+
+    :arg canvas:     The canvas which will be displaying this ``GLObject``.
 
     :arg threedee:   If ``True``, the ``GLObject`` will be configured for
                      3D rendering. Otherwise it will be configured for 2D
@@ -83,7 +86,7 @@ def createGLObject(overlay, displayCtx, threedee=False):
     display = displayCtx.getDisplay(overlay)
     ctr     = getGLObjectType(display.overlayType)
 
-    if ctr is not None: return ctr(overlay, displayCtx, threedee)
+    if ctr is not None: return ctr(overlay, displayCtx, canvas, threedee)
     else:               return None
 
 
@@ -110,6 +113,11 @@ class GLObject(notifier.Notifier):
 
       - ``displayCtx``: The :class:`.DisplayContext` managing the scene
                         that this ``GLObject`` is a part of.
+
+      - ``canvas``:     The canvas which is displaying this ``GLObject``.
+                        Could be a :class:`.SliceCanvas`, a
+                        :class:`.LightBoxCanvas`, a :class:`.Scene3DCanvas`,
+                        or some future not-yet-created canvas.
 
       - ``threedee``:   A boolean flag indicating whether this ``GLObject``
                         is configured for 2D or 3D rendering.
@@ -153,7 +161,7 @@ class GLObject(notifier.Notifier):
        have the following signature, and must pass all arguments through to
        ``GLObject.__init__``::
 
-           def __init__(self, overlay, displayCtx, threedee)
+           def __init__(self, overlay, displayCtx, canvas, threedee)
 
      - Call :meth:`notify` whenever its OpenGL representation changes.
 
@@ -186,7 +194,7 @@ class GLObject(notifier.Notifier):
     """
 
 
-    def __init__(self, overlay, displayCtx, threedee):
+    def __init__(self, overlay, displayCtx, canvas, threedee):
         """Create a :class:`GLObject`.  The constructor adds one attribute
         to this instance, ``name``, which is simply a unique name for this
         instance.
@@ -199,6 +207,8 @@ class GLObject(notifier.Notifier):
 
         :arg displayCtx: The ``DisplayContext`` managing the scene
 
+        :arg canvas:     The canvas that is displaying this ``GLObject``.
+
         :arg threedee:   Whether this ``GLObject`` is to be used for 2D or 3D
                          rendering.
         """
@@ -206,6 +216,7 @@ class GLObject(notifier.Notifier):
         self.__name       = '{}_{}'.format(type(self).__name__, id(self))
         self.__threedee   = threedee
         self.__overlay    = overlay
+        self.__canvas     = canvas
         self.__display    = None
         self.__opts       = None
         self.__displayCtx = None
@@ -236,6 +247,12 @@ class GLObject(notifier.Notifier):
     def overlay(self):
         """The overlay being drawn by this ``GLObject``."""
         return self.__overlay
+
+
+    @property
+    def canvas(self):
+        """The canvas which is drawing this ``GLObject``."""
+        return self.__canvas
 
 
     @property
@@ -445,13 +462,15 @@ class GLSimpleObject(GLObject):
     be called.
 
     .. note:: The :attr:`GLObject.overlay`, :attr:`GLObject.display`,
-    :attr:`GLObject.opts` and :attr:`GLObject.displayCtx` properties of
-    a ``GLSimpleObject`` are all set to ``None``.
+    :attr:`GLObject.opts`, :attr:`GLObject.canvas` and
+    :attr:`GLObject.displayCtx` properties of a ``GLSimpleObject`` are all set
+    to ``None``.
     """
+
 
     def __init__(self, threedee):
         """Create a ``GLSimpleObject``. """
-        GLObject.__init__(self, None, None, threedee)
+        GLObject.__init__(self, None, None, None, threedee)
         self.__destroyed = False
 
 
@@ -489,10 +508,10 @@ class GLImageObject(GLObject):
     drawing volumetric image data.
     """
 
-    def __init__(self, overlay, displayCtx, threedee):
+    def __init__(self, overlay, displayCtx, canvas, threedee):
         """Create a ``GLImageObject`` """
 
-        GLObject.__init__(self, overlay, displayCtx, threedee)
+        GLObject.__init__(self, overlay, displayCtx, canvas, threedee)
 
 
     @property
@@ -545,6 +564,32 @@ class GLImageObject(GLObject):
         res = [shape[axes[0]], shape[axes[1]], shape[axes[2]]]
 
         return res
+
+
+    def cullWhichFace2D(self):
+        """Convenience method for 2D rendering. Images are drawn onto a 2D
+        plane which is parallel to the viewing plane. If the canvas that is
+        drawing this ``GLImageObject`` has adjusted the projection matrix
+        (e.g. via the :attr:`.SliceCanvas.invertX` or
+        :attr:`.SliceCanvas.invertY` properties), the front or back face of
+        this plane may be facing the iewing plane.
+
+        So if face-culling is desired, this method returns the face that
+        is facing away from the viewing plane, i.e. the face that can safely
+        be culled.
+
+
+        .. note:: This will raise an error if called on a ``GLImageObject``
+                  which is being drawn by anything other than a
+                  :class:`.SliceCanvas` or :class:`.LightBoxCanvas`.
+        """
+
+        numInverts = 0
+        if self.canvas.invertX: numInverts += 1
+        if self.canvas.invertY: numInverts += 1
+
+        if numInverts == 1: return gl.GL_FRONT
+        else:               return gl.GL_BACK
 
 
     def generateVertices2D(self,

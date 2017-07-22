@@ -785,7 +785,10 @@ class SliceCanvas(props.HasProperties):
                 self._glObjects.pop(overlay)
                 return
 
-            globj = globject.createGLObject(overlay, self.displayCtx, False)
+            globj = globject.createGLObject(overlay,
+                                            self.displayCtx,
+                                            self,
+                                            False)
 
             if globj is not None:
                 globj.register(self.name, self.__onGLObjectUpdate)

@@ -98,15 +98,16 @@ class GLMesh(globject.GLObject):
     """
 
 
-    def __init__(self, overlay, displayCtx, threedee):
+    def __init__(self, overlay, displayCtx, canvas, threedee):
         """Create a ``GLMesh``.
 
         :arg overlay:    A :class:`.TriangleMesh` overlay.
         :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+        :arg canvas:     The canvas drawing this ``GLMesh``.
         :arg threedee:   2D or 3D rendering.
         """
 
-        globject.GLObject.__init__(self, overlay, displayCtx, threedee)
+        globject.GLObject.__init__(self, overlay, displayCtx, canvas, threedee)
 
         self.shader  = None
 

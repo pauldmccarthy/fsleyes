@@ -43,15 +43,20 @@ class GLLabel(globject.GLImageObject):
     """
 
 
-    def __init__(self, image, displayCtx, threedee):
+    def __init__(self, image, displayCtx, canvas, threedee):
         """Create a ``GLLabel``.
 
         :arg image:      The :class:`.Image` instance.
         :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+        :arg canvas:     The canvas doing the drawing.
         :arg threedee:   2D or 3D rendering
         """
 
-        globject.GLImageObject.__init__(self, image, displayCtx, threedee)
+        globject.GLImageObject.__init__(self,
+                                        image,
+                                        displayCtx,
+                                        canvas,
+                                        threedee)
 
         lutTexName        = '{}_lut'.format(self.name)
         self.lutTexture   = textures.LookupTableTexture(lutTexName)

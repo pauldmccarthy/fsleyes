@@ -84,7 +84,13 @@ class GLVectorBase(globject.GLImageObject):
     """
 
 
-    def __init__(self, overlay, displayCtx, threedee, init=None, preinit=None):
+    def __init__(self,
+                 overlay,
+                 displayCtx,
+                 canvas,
+                 threedee,
+                 init=None,
+                 preinit=None):
         """Create a ``GLVectorBase`` object bound to the given overlay and
         display.
 
@@ -102,6 +108,8 @@ class GLVectorBase(globject.GLImageObject):
         :arg displayCtx:     A :class:`.DisplayContext` object which describes
                              how the overlay is to be displayed.
 
+        :arg canvas:         The canvas doing the drawing.
+
         :arg threedee:       2D or 3D rendering.
 
         :arg init:           An optional function to be called when all of the
@@ -114,7 +122,11 @@ class GLVectorBase(globject.GLImageObject):
                              :class:`GLVector`.
         """
 
-        globject.GLImageObject.__init__(self, overlay, displayCtx, threedee)
+        globject.GLImageObject.__init__(self,
+                                        overlay,
+                                        displayCtx,
+                                        canvas,
+                                        threedee)
 
         name = self.name
 

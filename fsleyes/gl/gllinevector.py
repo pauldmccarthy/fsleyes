@@ -52,11 +52,12 @@ class GLLineVector(glvector.GLVector):
     """
 
 
-    def __init__(self, image, displayCtx, threedee):
+    def __init__(self, image, displayCtx, canvas, threedee):
         """Create a ``GLLineVector`` instance.
 
         :arg image:      An :class:`.Image` or :class:`.DTIFitTensor` instance.
         :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+        :arg canvas:     The canvas doing the drawing.
         :arg threedee:   2D or 3D rendering.
         """
 
@@ -69,6 +70,7 @@ class GLLineVector(glvector.GLVector):
         glvector.GLVector.__init__(self,
                                    image,
                                    displayCtx,
+                                   canvas,
                                    threedee,
                                    vectorImage=vecImage,
                                    init=lambda: fslgl.gllinevector_funcs.init(

@@ -160,9 +160,11 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
 
     self.shader.loadAtts()
 
+    cullFace = self.cullWhichFace2D()
+
     with glroutines.enabled(gl.GL_CULL_FACE):
-        gl.glPolygonMode(gl.GL_FRONT, gl.GL_FILL)
-        gl.glCullFace(gl.GL_BACK)
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+        gl.glCullFace(cullFace)
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
 
