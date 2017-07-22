@@ -691,26 +691,24 @@ class GLVolume(globject.GLImageObject):
             the rendered scene.
         """
 
-        # TODO Why not give GLObjects a ref to
-        #      the rendering canvas, so you can
-        #      retrieve the mvmat from it,
-        #      instead of via a GL call?
-
         # In GL, the camera position
         # is initially pointing in
         # the -z direction.
         opts   = self.opts
         eye    = [0, 0, -1]
-        target = [0, 0,  0]
+        target = [0, 0,  1]
 
         # We take this initial camera
         # configuration, and transform
         # it by the inverse modelview
         # matrix
-        mvmat  = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX).T
-        mvmat  = transform.invert(mvmat)
-        eye    = transform.transform(eye,    mvmat)
-        target = transform.transform(target, mvmat)
+        mvmat  = self.canvas.getViewMatrix()
+        t2dmat = self.opts.getTransform('texture', 'display')
+        xform  = transform.concat(mvmat, t2dmat)
+        xform  = transform.invert(xform)
+
+        eye    = transform.transform(eye,    xform, vector=True)
+        target = transform.transform(target, xform, vector=True)
 
         def norm(vec):
             return vec / np.sqrt(np.dot(vec, vec))

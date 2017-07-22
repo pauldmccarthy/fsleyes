@@ -47,7 +47,7 @@ class Scene3DCanvas(props.HasProperties):
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
         self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
-        self.__xform       = None
+        self.__xform       = np.eye(4)
 
 
         self.__glObjects   = {}
@@ -79,6 +79,10 @@ class Scene3DCanvas(props.HasProperties):
 
     def _initGL(self):
         self.__overlayListChanged()
+
+
+    def getViewMatrix(self):
+        return np.array(self.__xform)
 
 
     def __overlayListChanged(self, *a):
@@ -113,7 +117,7 @@ class Scene3DCanvas(props.HasProperties):
 
 
     def __displayBoundsChanged(self, *a):
-        pass
+        self.Refresh()
 
 
     def canvasToWorld(self, xpos, ypos):
@@ -275,8 +279,8 @@ class Scene3DCanvas(props.HasProperties):
                 globj.draw3D()
                 globj.postDraw()
 
-            if self.showCursor:
-                self.__drawCursor()
+            if self.showCursor: self.__drawCursor()
+            if self.showLegend: self.__drawLegend()
 
 
     def __drawCursor(self):
@@ -284,7 +288,6 @@ class Scene3DCanvas(props.HasProperties):
         b   = self.__displayCtx.bounds
         pos = self.pos
 
-        gl.glLineWidth(1)
 
         points = [
             (pos.x, pos.y, b.zlo),
@@ -295,42 +298,48 @@ class Scene3DCanvas(props.HasProperties):
             (b.xhi, pos.y, pos.z),
         ]
 
+        gl.glLineWidth(1)
         gl.glColor3f(*self.cursorColour[:3])
         gl.glBegin(gl.GL_LINES)
         for p in points:
             gl.glVertex3f(*p)
         gl.glEnd()
-        return
 
-        # this code draws a bounding box
-        # b = self.__displayCtx.bounds
-        # gl.glLineWidth(1)
-        # gl.glColor3f(0, 1, 0)
-        # gl.glBegin(gl.GL_LINES)
-        # gl.glVertex3f(b.xlo, b.ylo, b.zlo)
-        # gl.glVertex3f(b.xlo, b.ylo, b.zhi)
-        # gl.glVertex3f(b.xlo, b.yhi, b.zlo)
-        # gl.glVertex3f(b.xlo, b.yhi, b.zhi)
-        # gl.glVertex3f(b.xhi, b.ylo, b.zlo)
-        # gl.glVertex3f(b.xhi, b.ylo, b.zhi)
-        # gl.glVertex3f(b.xhi, b.yhi, b.zlo)
-        # gl.glVertex3f(b.xhi, b.yhi, b.zhi)
 
-        # gl.glVertex3f(b.xlo, b.ylo, b.zlo)
-        # gl.glVertex3f(b.xlo, b.yhi, b.zlo)
-        # gl.glVertex3f(b.xhi, b.ylo, b.zlo)
-        # gl.glVertex3f(b.xhi, b.yhi, b.zlo)
-        # gl.glVertex3f(b.xlo, b.ylo, b.zhi)
-        # gl.glVertex3f(b.xlo, b.yhi, b.zhi)
-        # gl.glVertex3f(b.xhi, b.ylo, b.zhi)
-        # gl.glVertex3f(b.xhi, b.yhi, b.zhi)
+    def __drawBoundingBox(self):
+        b = self.__displayCtx.bounds
+        gl.glLineWidth(2)
+        gl.glColor3f(0.5, 0, 0)
+        gl.glBegin(gl.GL_LINES)
+        gl.glVertex3f(b.xlo, b.ylo, b.zlo)
+        gl.glVertex3f(b.xlo, b.ylo, b.zhi)
+        gl.glVertex3f(b.xlo, b.yhi, b.zlo)
+        gl.glVertex3f(b.xlo, b.yhi, b.zhi)
+        gl.glVertex3f(b.xhi, b.ylo, b.zlo)
+        gl.glVertex3f(b.xhi, b.ylo, b.zhi)
+        gl.glVertex3f(b.xhi, b.yhi, b.zlo)
+        gl.glVertex3f(b.xhi, b.yhi, b.zhi)
 
-        # gl.glVertex3f(b.xlo, b.ylo, b.zlo)
-        # gl.glVertex3f(b.xhi, b.ylo, b.zlo)
-        # gl.glVertex3f(b.xlo, b.ylo, b.zhi)
-        # gl.glVertex3f(b.xhi, b.ylo, b.zhi)
-        # gl.glVertex3f(b.xlo, b.yhi, b.zlo)
-        # gl.glVertex3f(b.xhi, b.yhi, b.zlo)
-        # gl.glVertex3f(b.xlo, b.yhi, b.zhi)
-        # gl.glVertex3f(b.xhi, b.yhi, b.zhi)
-        # gl.glEnd()
+        gl.glVertex3f(b.xlo, b.ylo, b.zlo)
+        gl.glVertex3f(b.xlo, b.yhi, b.zlo)
+        gl.glVertex3f(b.xhi, b.ylo, b.zlo)
+        gl.glVertex3f(b.xhi, b.yhi, b.zlo)
+        gl.glVertex3f(b.xlo, b.ylo, b.zhi)
+        gl.glVertex3f(b.xlo, b.yhi, b.zhi)
+        gl.glVertex3f(b.xhi, b.ylo, b.zhi)
+        gl.glVertex3f(b.xhi, b.yhi, b.zhi)
+
+        gl.glVertex3f(b.xlo, b.ylo, b.zlo)
+        gl.glVertex3f(b.xhi, b.ylo, b.zlo)
+        gl.glVertex3f(b.xlo, b.ylo, b.zhi)
+        gl.glVertex3f(b.xhi, b.ylo, b.zhi)
+        gl.glVertex3f(b.xlo, b.yhi, b.zlo)
+        gl.glVertex3f(b.xhi, b.yhi, b.zlo)
+        gl.glVertex3f(b.xlo, b.yhi, b.zhi)
+        gl.glVertex3f(b.xhi, b.yhi, b.zhi)
+        gl.glEnd()
+
+
+    def __drawLegend(self):
+        """
+        """
