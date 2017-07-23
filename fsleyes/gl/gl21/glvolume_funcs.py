@@ -193,6 +193,7 @@ def draw3D(self, xform=None, bbox=None):
 
     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
     with glroutines.enabled(gl.GL_CULL_FACE):
+        gl.glFrontFace(gl.GL_CCW)
         gl.glCullFace(gl.GL_BACK)
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
 

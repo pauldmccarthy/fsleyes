@@ -254,8 +254,10 @@ class Scene3DCanvas(props.HasProperties):
 
         glroutines.clear(self.bgColour)
 
-        with glroutines.enabled((gl.GL_DEPTH_TEST)):
+        if len(self.__overlayList) == 0:
+            return
 
+        with glroutines.enabled((gl.GL_DEPTH_TEST)):
 
             for ovl in self.__overlayList:
 
@@ -283,7 +285,6 @@ class Scene3DCanvas(props.HasProperties):
             self.__drawBoundingBox()
             if self.showCursor: self.__drawCursor()
             if self.showLegend: self.__drawLegend()
-
 
 
     def __drawCursor(self):
@@ -358,57 +359,88 @@ class Scene3DCanvas(props.HasProperties):
 
 
     def __drawLegend(self):
+        """Draws a legend in the bottom left corner of the screen, showing
+        anatomical orientation.
         """
-        """
-        vertices = np.zeros((6, 3), dtype=np.float32)
-
-        vertices[0, :] = [0, 0, 0]
-        vertices[1, :] = [1, 0, 0]
-        vertices[2, :] = [0, 0, 0]
-        vertices[3, :] = [0, 1, 0]
-        vertices[4, :] = [0, 0, 0]
-        vertices[5, :] = [0, 0, 1]
 
         b          = self.__displayCtx.bounds
         w, h       = self._getSize()
-        xlen, ylen = b.xlen, b.ylen
+        xlen, ylen = glroutines.adjust(b.xlen, b.ylen, w, h)
 
-        xlen, ylen = glroutines.adjust(xlen, ylen, w, h)
+        # A line for each axis
+        vertices       = np.zeros((6, 3), dtype=np.float32)
+        vertices[0, :] = [-1,  0,  0]
+        vertices[1, :] = [ 1,  0,  0]
+        vertices[2, :] = [ 0, -1,  0]
+        vertices[3, :] = [ 0,  1,  0]
+        vertices[4, :] = [ 0,  0, -1]
+        vertices[5, :] = [ 0,  0,  1]
 
-        scale      = [max((b.xlen, b.ylen)) / 20.0] * 3
-        offset     = [-0.5 * xlen + 1.5 * scale[0],
-                      -0.5 * ylen + 1.5 * scale[0],
-                      0]
+        # Each axis line is scaled to
+        # 60 pixels, and the legend is
+        # offset from the bottom-left
+        # corner by twice this amount.
+        scale      = [xlen * 30.0 / w] * 3
+        offset     = [-0.5 * xlen + 2.0 * scale[0],
+                      -0.5 * ylen + 2.0 * scale[1],
+                       0]
 
-        rotation = transform.decompose(self.__xform)[2]
-        xform    = transform.compose(scale, offset, rotation)
-        vertices = transform.transform(vertices, xform)
+        # Apply the current camera
+        # angle and rotation settings
+        # to the legend vertices. Offset
+        # anatomical labels off each
+        # axis line by a small amount.
+        rotation   = transform.decompose(self.__xform)[2]
+        xform      = transform.compose(scale, offset, rotation)
+        labelPoses = transform.transform(vertices * 1.2, xform)
+        vertices   = transform.transform(vertices,       xform)
 
+        # Draw the legend lines
         gl.glDisable(gl.GL_DEPTH_TEST)
+        gl.glColor3f(*self.cursorColour[:3])
         gl.glLineWidth(2)
         gl.glBegin(gl.GL_LINES)
-        gl.glColor3f(1, 0, 0)
         gl.glVertex3f(*vertices[0])
         gl.glVertex3f(*vertices[1])
-        gl.glColor3f(0, 1, 0)
         gl.glVertex3f(*vertices[2])
         gl.glVertex3f(*vertices[3])
-        gl.glColor3f(0, 0, 1)
         gl.glVertex3f(*vertices[4])
         gl.glVertex3f(*vertices[5])
         gl.glEnd()
 
 
+        # Figure out the anatomical
+        # labels for each axis.
+        overlay = self.__displayCtx.getSelectedOverlay()
+        opts    = self.__displayCtx.getOpts(overlay)
+        labels  = opts.getLabels()[0]
+
+        # getLabels returns (xlo, ylo, zlo, xhi, yhi, zhi) -
+        # - rearrange them to (xlo, xhi, ylo, yhi, zlo, zhi)
+        labels = [labels[0],
+                  labels[3],
+                  labels[1],
+                  labels[4],
+                  labels[2],
+                  labels[5]]
+
         canvas = np.array([w, h])
         view   = np.array([xlen, ylen])
 
-        xx, xy = canvas * (vertices[1, :2] + 0.5 * view) / view
-        yx, yy = canvas * (vertices[3, :2] + 0.5 * view) / view
-        zx, zy = canvas * (vertices[5, :2] + 0.5 * view) / view
+        # Draw each label
+        for i in range(6):
 
-        gl.glColor3f(1, 0, 0)
-        glroutines.text2D('X', (xx, xy), 10, (w, h))
-        gl.glColor3f(0, 1, 0)
-        glroutines.text2D('Y', (yx, yy), 10, (w, h))
-        gl.glColor3f(0, 0, 1)
-        glroutines.text2D('Z', (zx, zy), 10, (w, h))
+            # Calculate pixel x/y
+            # location for this label
+            xx, xy = canvas * (labelPoses[i, :2] + 0.5 * view) / view
+
+            # Calculate the size of the label
+            # in pixels, so we can centre the
+            # label
+            tw, th = glroutines.text2D(labels[i], (xx, xy), 10, (w, h),
+                                       calcSize=True)
+
+            # Draw the text
+            xx -= 0.5 * tw
+            xy -= 0.5 * th
+            glroutines.text2D(labels[i], (xx, xy), 10, (w, h))
