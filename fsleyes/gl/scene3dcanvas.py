@@ -209,7 +209,8 @@ class Scene3DCanvas(props.HasProperties):
         camera  = glroutines.lookAt(eye, centre, up)
 
         # Order is very important!
-        return transform.concat(offset, scale, camera, rotate)
+        xform = transform.concat(offset, scale, camera, rotate)
+        return np.array(xform, dtype=np.float32)
 
 
     def __setViewport(self):

@@ -59,7 +59,6 @@
 # Input varyings:
 #
 #   texCoord     - Fragment texture coordinates
-#   voxCoord     - Fragment voxel coordinates
 #   clipTexCoord - Clip image texture coordinates
 #
 # Input textures:
@@ -75,7 +74,6 @@
 {{ arb_include('textest.prog')        }}
 {{ arb_include('texture_border.prog') }}
 
-TEMP  voxCoord;
 TEMP  texCoord;
 TEMP  dither;
 TEMP  textest;

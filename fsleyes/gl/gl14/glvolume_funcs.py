@@ -184,6 +184,8 @@ def draw3D(self, xform=None, bbox=None):
 
     self.shader.loadAtts()
 
+    vertices = np.array(vertices, dtype=np.float32).ravel('C')
+
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
 
     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
