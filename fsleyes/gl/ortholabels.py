@@ -13,7 +13,6 @@ off-screen rendering (see :mod:`.render`).
 
 
 import fsl.data.constants as constants
-import fsleyes.strings    as strings
 
 
 class OrthoLabels(object):
@@ -204,24 +203,12 @@ class OrthoLabels(object):
         annotations on each :class:`.SliceCanvas`.
         """
 
-        displayCtx  = self.__displayCtx
-        overlayList = self.__overlayList
-        sopts       = self.__orthoOpts
-        overlay     = displayCtx.getSelectedOverlay()
-        ref         = displayCtx.getReferenceImage(overlay)
+        displayCtx = self.__displayCtx
+        sopts      = self.__orthoOpts
+        overlay    = displayCtx.getSelectedOverlay()
 
         canvases = self.__canvases
         annots   = self.__annots
-
-        # This method is called immediately
-        # on property changes, so there is
-        # the danger that it will be called
-        # when an overlay gets removed from
-        # the list, but before the rest of
-        # FSLeyes has had a chance to catch
-        # up with the fact.
-        if ref is not None and ref not in overlayList:
-            ref = None
 
         for cannots in annots:
             for text in cannots.values():
@@ -230,10 +217,13 @@ class OrthoLabels(object):
         if not sopts.showLabels or overlay is None:
             return
 
+        opts = displayCtx.getOpts(overlay)
+
         # Calculate all of the xyz
         # labels for this overlay
-        labels, orients, vertOrient  = self.__getLabels(ref)
+        labels, orients              = opts.getLabels()
         xlo, ylo, zlo, xhi, yhi, zhi = labels
+        vertOrient                   = len(xlo) > 1
 
         fontSize = sopts.labelSize
         bgColour = tuple(sopts.bgColour)
@@ -293,65 +283,3 @@ class OrthoLabels(object):
             if vertOrient:
                 cannots['left'] .angle = 90
                 cannots['right'].angle = 90
-
-
-    def __getLabels(self, refImage):
-        """Generates some orientation labels to use for the given reference
-        image (assumed to be a :class:`.Nifti` overlay, or ``None``).
-
-        Returns a tuple containing:
-
-          - The ``(xlo, ylo, zlo, xhi, yhi, zhi)`` bounds
-          - The ``(xorient, yorient, zorient)`` orientations (see
-            :meth:`.Image.getOrientation`)
-          - A boolean flag which indicates whether the label should be oriented
-            vertically (``True``), or horizontally (``False``).
-        """
-
-        if refImage is None:
-            return ('??????', [constants.ORIENT_UNKNOWN] * 3, False)
-
-        opts = self.__displayCtx.getOpts(refImage)
-
-        vertOrient = False
-        xorient    = None
-        yorient    = None
-        zorient    = None
-
-        # If we are displaying in voxels/scaled voxels,
-        # and this image is not the current display
-        # image, then we do not show anatomical
-        # orientation labels, as there's no guarantee
-        # that all of the loaded overlays are in the
-        # same orientation, and it can get confusing.
-        if opts.transform in ('id', 'pixdim', 'pixdim-flip') and \
-           self.__displayCtx.displaySpace != refImage:
-            xlo        = 'Xmin'
-            xhi        = 'Xmax'
-            ylo        = 'Ymin'
-            yhi        = 'Ymax'
-            zlo        = 'Zmin'
-            zhi        = 'Zmax'
-            vertOrient = True
-
-        # Otherwise we assume that all images
-        # are aligned to each other, so we
-        # estimate the current image's orientation
-        # in the display coordinate system
-        else:
-
-            xform      = opts.getTransform('display', 'world')
-            xorient    = refImage.getOrientation(0, xform)
-            yorient    = refImage.getOrientation(1, xform)
-            zorient    = refImage.getOrientation(2, xform)
-
-            xlo        = strings.anatomy['Nifti', 'lowshort',  xorient]
-            ylo        = strings.anatomy['Nifti', 'lowshort',  yorient]
-            zlo        = strings.anatomy['Nifti', 'lowshort',  zorient]
-            xhi        = strings.anatomy['Nifti', 'highshort', xorient]
-            yhi        = strings.anatomy['Nifti', 'highshort', yorient]
-            zhi        = strings.anatomy['Nifti', 'highshort', zorient]
-
-        return ((xlo, ylo, zlo, xhi, yhi, zhi),
-                (xorient, yorient, zorient),
-                vertOrient)
