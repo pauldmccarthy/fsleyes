@@ -689,6 +689,9 @@ class GLVolume(globject.GLImageObject):
           - A vector defining the maximum distance by which to randomly adjust
             the start location of each ray, to induce a dithering effect in
             the rendered scene.
+
+          - A transformation matrix which transforms from image texture
+            coordinates into the display coordinate system.
         """
 
         # In GL, the camera position
@@ -705,10 +708,10 @@ class GLVolume(globject.GLImageObject):
         mvmat  = self.canvas.getViewMatrix()
         t2dmat = self.opts.getTransform('texture', 'display')
         xform  = transform.concat(mvmat, t2dmat)
-        xform  = transform.invert(xform)
+        ixform = transform.invert(xform)
 
-        eye    = transform.transform(eye,    xform, vector=True)
-        target = transform.transform(target, xform, vector=True)
+        eye    = transform.transform(eye,    ixform, vector=True)
+        target = transform.transform(target, ixform, vector=True)
 
         def norm(vec):
             return vec / np.sqrt(np.dot(vec, vec))
@@ -733,7 +736,17 @@ class GLVolume(globject.GLImageObject):
         # vector to the starting point.
         ditherDir = cdir * opts.dithering
 
-        return rayStep, ditherDir
+        # A transformation matrix which can
+        # transform image texture coordinates
+        # into the corresponding screen
+        # (normalised device) coordinates.
+        # This allows the fragment shader to
+        # convert an image texture coordinate
+        # into a relative depth value.
+        proj  = gl.glGetFloat(gl.GL_PROJECTION_MATRIX).T
+        xform = transform.concat(proj, xform)
+
+        return rayStep, ditherDir, xform
 
 
     def _alphaChanged(self, *a):

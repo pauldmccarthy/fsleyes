@@ -284,7 +284,8 @@ class Scene3DCanvas(props.HasProperties):
 
             self.__drawBoundingBox()
             if self.showCursor: self.__drawCursor()
-            if self.showLegend: self.__drawLegend()
+        if self.showLegend:
+            self.__drawLegend()
 
 
     def __drawCursor(self):

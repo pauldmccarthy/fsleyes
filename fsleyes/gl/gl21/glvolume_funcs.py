@@ -180,14 +180,14 @@ def draw3D(self, xform=None, bbox=None):
     """
 
     vertices, voxCoords, texCoords = self.generateVertices3D(xform, bbox)
-    rayStep, ditherDir             = self.calculate3DSettings()
+    rayStep, ditherDir, xform      = self.calculate3DSettings()
 
-    self.shader.set(   'rayStep',   rayStep)
-    self.shader.set(   'ditherDir', ditherDir)
-
-    self.shader.setAtt('vertex',    vertices)
-    self.shader.setAtt('voxCoord',  voxCoords)
-    self.shader.setAtt('texCoord',  texCoords)
+    self.shader.set(   'tex2ScreenXform', xform)
+    self.shader.set(   'rayStep',         rayStep)
+    self.shader.set(   'ditherDir',       ditherDir)
+    self.shader.setAtt('vertex',          vertices)
+    self.shader.setAtt('voxCoord',        voxCoords)
+    self.shader.setAtt('texCoord',        texCoords)
 
     self.shader.loadAtts()
 

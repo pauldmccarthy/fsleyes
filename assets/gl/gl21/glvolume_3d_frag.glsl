@@ -97,6 +97,7 @@ uniform bool invertClip;
  */
 uniform vec3 ditherDir;
 
+
 /*
  * A vector which defines how far to move in one iteration
  * of the ray-cast loop. This is added directly to the
@@ -113,6 +114,14 @@ uniform vec3 ditherDir;
  * plane will get sheared.
  */
 uniform vec3 rayStep;
+
+
+/*
+ * A transformation matrix which transforms from image texture
+ * coordinates into screen coordinates. Required to calculate
+ * the final depth value for each fragment.
+ */
+uniform mat4 tex2ScreenXform;
 
 
 /*
@@ -142,6 +151,7 @@ void main(void) {
     vec4 colour       = vec4(0, 0, 0, 0);
     vec4 finalColour  = vec4(0, 0, 0, 0);
 
+    vec4 depth;
     bool sampled;
 
     /*
@@ -179,5 +189,8 @@ void main(void) {
 
     } while ((finalColour.a < 0.95) && textest(texCoord));
 
+    depth = tex2ScreenXform * vec4(texCoord, 1.0);
+
     gl_FragColor = finalColour;
+    gl_FragDepth = ((depth.z / depth.w) + 1.0) * 0.5;
 }
