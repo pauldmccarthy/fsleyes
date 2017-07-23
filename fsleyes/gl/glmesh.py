@@ -368,6 +368,10 @@ class GLMesh(globject.GLObject):
         vdata     = opts.getVertexData()
         useShader = vdata is not None
 
+        if xform is not None:
+            gl.glMatrixMode(gl.GL_MODELVIEW)
+            gl.glPushMatrix()
+            gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
 
         if opts.wireframe:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
@@ -395,6 +399,9 @@ class GLMesh(globject.GLObject):
                 vdata,
                 indices=idxs,
                 glType=gl.GL_TRIANGLES)
+
+        if xform is not None:
+            gl.glPopMatrix()
 
 
     def drawOutline(self, zpos, axes, xform=None, bbox=None):
