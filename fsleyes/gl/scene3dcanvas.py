@@ -280,8 +280,10 @@ class Scene3DCanvas(props.HasProperties):
                 globj.draw3D(xform=self.__xform)
                 globj.postDraw()
 
+            self.__drawBoundingBox()
             if self.showCursor: self.__drawCursor()
             if self.showLegend: self.__drawLegend()
+
 
 
     def __drawCursor(self):
@@ -289,18 +291,20 @@ class Scene3DCanvas(props.HasProperties):
         b   = self.__displayCtx.bounds
         pos = self.pos
 
-
-        points = [
-            (pos.x, pos.y, b.zlo),
-            (pos.x, pos.y, b.zhi),
-            (pos.x, b.ylo, pos.z),
-            (pos.x, b.yhi, pos.z),
-            (b.xlo, pos.y, pos.z),
-            (b.xhi, pos.y, pos.z),
-        ]
-
+        points = np.array([
+            [pos.x, pos.y, b.zlo],
+            [pos.x, pos.y, b.zhi],
+            [pos.x, b.ylo, pos.z],
+            [pos.x, b.yhi, pos.z],
+            [b.xlo, pos.y, pos.z],
+            [b.xhi, pos.y, pos.z],
+        ], dtype=np.float32)
+        points = transform.transform(points, self.__xform)
         gl.glLineWidth(1)
-        gl.glColor3f(*self.cursorColour[:3])
+
+        r, g, b = self.cursorColour[:3]
+
+        gl.glColor4f(r, g, b, 1)
         gl.glBegin(gl.GL_LINES)
         for p in points:
             gl.glVertex3f(*p)
@@ -309,38 +313,102 @@ class Scene3DCanvas(props.HasProperties):
 
     def __drawBoundingBox(self):
         b = self.__displayCtx.bounds
+        xlo, xhi = b.x
+        ylo, yhi = b.y
+        zlo, zhi = b.z
+        xlo += 0.1
+        xhi -= 0.1
+        vertices = np.array([
+            [xlo, ylo, zlo],
+            [xlo, ylo, zhi],
+            [xlo, yhi, zlo],
+            [xlo, yhi, zhi],
+            [xhi, ylo, zlo],
+            [xhi, ylo, zhi],
+            [xhi, yhi, zlo],
+            [xhi, yhi, zhi],
+
+            [xlo, ylo, zlo],
+            [xlo, yhi, zlo],
+            [xhi, ylo, zlo],
+            [xhi, yhi, zlo],
+            [xlo, ylo, zhi],
+            [xlo, yhi, zhi],
+            [xhi, ylo, zhi],
+            [xhi, yhi, zhi],
+
+            [xlo, ylo, zlo],
+            [xhi, ylo, zlo],
+            [xlo, ylo, zhi],
+            [xhi, ylo, zhi],
+            [xlo, yhi, zlo],
+            [xhi, yhi, zlo],
+            [xlo, yhi, zhi],
+            [xhi, yhi, zhi],
+        ])
+        vertices = transform.transform(vertices, self.__xform)
+
+
         gl.glLineWidth(2)
         gl.glColor3f(0.5, 0, 0)
         gl.glBegin(gl.GL_LINES)
-        gl.glVertex3f(b.xlo, b.ylo, b.zlo)
-        gl.glVertex3f(b.xlo, b.ylo, b.zhi)
-        gl.glVertex3f(b.xlo, b.yhi, b.zlo)
-        gl.glVertex3f(b.xlo, b.yhi, b.zhi)
-        gl.glVertex3f(b.xhi, b.ylo, b.zlo)
-        gl.glVertex3f(b.xhi, b.ylo, b.zhi)
-        gl.glVertex3f(b.xhi, b.yhi, b.zlo)
-        gl.glVertex3f(b.xhi, b.yhi, b.zhi)
-
-        gl.glVertex3f(b.xlo, b.ylo, b.zlo)
-        gl.glVertex3f(b.xlo, b.yhi, b.zlo)
-        gl.glVertex3f(b.xhi, b.ylo, b.zlo)
-        gl.glVertex3f(b.xhi, b.yhi, b.zlo)
-        gl.glVertex3f(b.xlo, b.ylo, b.zhi)
-        gl.glVertex3f(b.xlo, b.yhi, b.zhi)
-        gl.glVertex3f(b.xhi, b.ylo, b.zhi)
-        gl.glVertex3f(b.xhi, b.yhi, b.zhi)
-
-        gl.glVertex3f(b.xlo, b.ylo, b.zlo)
-        gl.glVertex3f(b.xhi, b.ylo, b.zlo)
-        gl.glVertex3f(b.xlo, b.ylo, b.zhi)
-        gl.glVertex3f(b.xhi, b.ylo, b.zhi)
-        gl.glVertex3f(b.xlo, b.yhi, b.zlo)
-        gl.glVertex3f(b.xhi, b.yhi, b.zlo)
-        gl.glVertex3f(b.xlo, b.yhi, b.zhi)
-        gl.glVertex3f(b.xhi, b.yhi, b.zhi)
+        for v in vertices:
+            gl.glVertex3f(*v)
         gl.glEnd()
 
 
     def __drawLegend(self):
         """
         """
+        vertices = np.zeros((6, 3), dtype=np.float32)
+
+        vertices[0, :] = [0, 0, 0]
+        vertices[1, :] = [1, 0, 0]
+        vertices[2, :] = [0, 0, 0]
+        vertices[3, :] = [0, 1, 0]
+        vertices[4, :] = [0, 0, 0]
+        vertices[5, :] = [0, 0, 1]
+
+        b          = self.__displayCtx.bounds
+        w, h       = self._getSize()
+        xlen, ylen = b.xlen, b.ylen
+
+        xlen, ylen = glroutines.adjust(xlen, ylen, w, h)
+
+        scale      = [max((b.xlen, b.ylen)) / 20.0] * 3
+        offset     = [-0.5 * xlen + 1.5 * scale[0],
+                      -0.5 * ylen + 1.5 * scale[0],
+                      0]
+
+        rotation = transform.decompose(self.__xform)[2]
+        xform    = transform.compose(scale, offset, rotation)
+        vertices = transform.transform(vertices, xform)
+
+        gl.glDisable(gl.GL_DEPTH_TEST)
+        gl.glLineWidth(2)
+        gl.glBegin(gl.GL_LINES)
+        gl.glColor3f(1, 0, 0)
+        gl.glVertex3f(*vertices[0])
+        gl.glVertex3f(*vertices[1])
+        gl.glColor3f(0, 1, 0)
+        gl.glVertex3f(*vertices[2])
+        gl.glVertex3f(*vertices[3])
+        gl.glColor3f(0, 0, 1)
+        gl.glVertex3f(*vertices[4])
+        gl.glVertex3f(*vertices[5])
+        gl.glEnd()
+
+
+        canvas = np.array([w, h])
+        view   = np.array([xlen, ylen])
+
+        xx, xy = canvas * (vertices[1, :2] + 0.5 * view) / view
+        yx, yy = canvas * (vertices[3, :2] + 0.5 * view) / view
+        zx, zy = canvas * (vertices[5, :2] + 0.5 * view) / view
+
+        gl.glColor3f(1, 0, 0)
+        glroutines.text2D('X', (xx, xy), 10, (w, h))
+        gl.glColor3f(0, 1, 0)
+        glroutines.text2D('Y', (yx, yy), 10, (w, h))
+        gl.glColor3f(0, 0, 1)
+        glroutines.text2D('Z', (zx, zy), 10, (w, h))
