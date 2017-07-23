@@ -1093,6 +1093,17 @@ def boundingBox(dataShape,
         xlo, ylo, zlo = xlo - 0.5, ylo - 0.5, zlo - 0.5
         xhi, yhi, zhi = xhi - 0.5, yhi - 0.5, zhi - 0.5
 
+    # If the voxel -> display transformation
+    # matrix contains negative scales, we need
+    # to invert the voxel coordinate ranges to
+    # ensure a correct triangle winding order
+    # (so that back faces can be culled).
+    scales = transform.decompose(voxToDisplayMat)[0]
+
+    if scales[0] < 0: xlo, xhi = xhi, xlo
+    if scales[1] < 0: ylo, yhi = yhi, ylo
+    if scales[2] < 0: zlo, zhi = zhi, zlo
+
     if geometry == 'triangles':
         voxCoords = np.zeros((36, 3), dtype=np.float32)
 

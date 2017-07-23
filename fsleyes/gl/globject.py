@@ -566,7 +566,7 @@ class GLImageObject(GLObject):
         return res
 
 
-    def cullWhichFace2D(self):
+    def frontFace(self):
         """Convenience method for 2D rendering. Images are drawn onto a 2D
         plane which is parallel to the viewing plane. If the canvas that is
         drawing this ``GLImageObject`` has adjusted the projection matrix
@@ -578,18 +578,22 @@ class GLImageObject(GLObject):
         is facing away from the viewing plane, i.e. the face that can safely
         be culled.
 
-
         .. note:: This will raise an error if called on a ``GLImageObject``
                   which is being drawn by anything other than a
                   :class:`.SliceCanvas` or :class:`.LightBoxCanvas`.
         """
 
+        front = gl.GL_CCW
+        back  = gl.GL_CW
+
         numInverts = 0
         if self.canvas.invertX: numInverts += 1
         if self.canvas.invertY: numInverts += 1
 
-        if numInverts == 1: return gl.GL_FRONT
-        else:               return gl.GL_BACK
+        if numInverts == 1:
+            front, back = back, front
+
+        return front
 
 
     def generateVertices2D(self,
