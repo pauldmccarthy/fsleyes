@@ -176,10 +176,11 @@ def draw3D(self, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
     vertices, voxCoords, texCoords = self.generateVertices3D(xform, bbox)
-    rayStep, ditherDir             = self.calculate3DSettings()
+    rayStep, ditherDir, xform      = self.calculate3DSettings()
 
-    self.shader.setFragParam('rayStep',   list(rayStep)   + [0])
-    self.shader.setFragParam('ditherDir', list(ditherDir) + [0])
+    self.shader.setFragParam('rayStep',         list(rayStep)   + [0])
+    self.shader.setFragParam('ditherDir',       list(ditherDir) + [0])
+    self.shader.setFragParam('tex2ScreenXform', xform)
 
     self.shader.setAttr('texCoord', texCoords)
 

@@ -22,39 +22,43 @@
 #
 #
 # Constants:
-#   numSteps    - Number of ray-casting iterations
+#   numSteps        - Number of ray-casting iterations
 #
 # Input parameters:
 #
-#   voxValXform - Vector with x component defining a scale, and y
-#                 component defining an offset, with which image texture
-#                 values can be transformed into the range [0, 1], for use
-#                 as a colour map texture coordinate.
+#   voxValXform     - Vector with x component defining a scale, and y
+#                     component defining an offset, with which image texture
+#                     values can be transformed into the range [0, 1], for use
+#                     as a colour map texture coordinate.
 #
-#   clipping    - Vector containing clipping values - voxels with a
-#                 value below the low threshold (x), or above the
-#                 high threshold (y) will not be shown. The (z)
-#                 component determines the clipping direction - pass
-#                 in -1 for the above behaviour, or +1 to invert
-#                 this behaviour (i.e. to clip values that are within
-#                 the range). The (w) component is a boolen flag which
-#                 indicates whether the image texture is to be used
-#                 as the clip texture. Clipping values are assumed to
-#                 be normalised to the image texture value range.
+#   clipping        - Vector containing clipping values - voxels with a
+#                     value below the low threshold (x), or above the
+#                     high threshold (y) will not be shown. The (z)
+#                     component determines the clipping direction - pass
+#                     in -1 for the above behaviour, or +1 to invert
+#                     this behaviour (i.e. to clip values that are within
+#                     the range). The (w) component is a boolen flag which
+#                     indicates whether the image texture is to be used
+#                     as the clip texture. Clipping values are assumed to
+#                     be normalised to the image texture value range.
 #
-#   negCmap     - Negative colour map control. The (x) component
-#                 is a boolean flag controlling whether the negative
-#                 colour map is used. The (y) component is the display
-#                 range centre (the value above which the regular
-#                 colour map is used, and below which the negative
-#                 colour map is used), as a voxel value, normalised to
-#                 the image texture value range.
+#   negCmap         - Negative colour map control. The (x) component
+#                     is a boolean flag controlling whether the negative
+#                     colour map is used. The (y) component is the display
+#                     range centre (the value above which the regular
+#                     colour map is used, and below which the negative
+#                     colour map is used), as a voxel value, normalised to
+#                     the image texture value range.
 #
-#   rayStep     - A vector defining how far to move through the
-#                 volume texture space on each ray-casting iteration.
+#   rayStep         - A vector defining how far to move through the
+#                     volume texture space on each ray-casting iteration.
 #
-#   ditherDir   - A vector, in the same direction as the camera,
-#                 specifying the maximum amount to dither by.
+#   ditherDir        - A vector, in the same direction as the camera,
+#                     specifying the maximum amount to dither by.
+#
+#   tex2ScreenXform - A transformation matrix which transforms image
+#                     texture coordinates into normalised device
+#                     coordinates.
 #
 # Input varyings:
 #
@@ -77,6 +81,8 @@
 TEMP  texCoord;
 TEMP  dither;
 TEMP  textest;
+TEMP  depth;
+TEMP  lastSampledTexCoord;
 
 TEMP  clipTexCoord;
 TEMP  colour;
@@ -94,11 +100,12 @@ TEMP  negVoxValue;
 TEMP  negClipValue;
 TEMP  clipValueNoClip;
 
-PARAM clipping    = {{ param_clipping    }};
-PARAM negCmap     = {{ param_negCmap     }};
-PARAM voxValXform = {{ param_voxValXform }};
-PARAM rayStep     = {{ param_rayStep     }};
-PARAM ditherDir   = {{ param_ditherDir   }};
+PARAM clipping           = {{ param_clipping         }};
+PARAM negCmap            = {{ param_negCmap          }};
+PARAM voxValXform        = {{ param_voxValXform      }};
+PARAM rayStep            = {{ param_rayStep          }};
+PARAM ditherDir          = {{ param_ditherDir        }};
+PARAM tex2ScreenXform[4] = {{ param4_tex2ScreenXform }};
 
 # Initialise colour buffers  and
 # generate a random number
@@ -118,7 +125,7 @@ FRC dither.x, dither.x;
 MUL dither, ditherDir, dither.x;
 ADD texCoord,     {{ varying_texCoord }},     dither;
 ADD clipTexCoord, {{ varying_clipTexCoord }}, dither;
-
+MOV lastSampledTexCoord, texCoord;
 
 # Start the ray-casting loop
 {% for i in range(numSteps) %}
@@ -283,7 +290,8 @@ MIN voxClipLo.x, voxClipLo.x, nanTest.x;
 MIN voxClipLo.x, voxClipLo.x, textest.x;
 MIN voxClipLo.x, voxClipLo.x, textest.y;
 
-CMP finalColour, voxClipLo.x, finalColour, tempColour;
+CMP finalColour,         voxClipLo.x, finalColour,         tempColour;
+CMP lastSampledTexCoord, voxClipLo.x, lastSampledTexCoord, texCoord;
 
 # Shift the ray position
 ADD texCoord,     texCoord,     rayStep;
@@ -291,6 +299,18 @@ ADD clipTexCoord, clipTexCoord, rayStep;
 
 {% endfor %}
 
+
+# Calculate the final texture depth value
+MOV lastSampledTexCoord.w, 1;
+DP4 depth.x, tex2ScreenXform[0], lastSampledTexCoord;
+DP4 depth.y, tex2ScreenXform[1], lastSampledTexCoord;
+DP4 depth.z, tex2ScreenXform[2], lastSampledTexCoord;
+
+# NOTE: This code does not support
+# perspective projection
+MAD depth.z, depth.z, 0.5, 0.5;
+
 MOV result.color, finalColour;
+MOV result.depth, depth.z;
 
 END
