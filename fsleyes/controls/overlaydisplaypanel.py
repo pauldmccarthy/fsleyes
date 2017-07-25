@@ -13,16 +13,11 @@ import logging
 import functools
 import collections
 
-import wx
-
 import fsleyes_props                  as props
 
 import fsleyes.strings                as strings
 import fsleyes.tooltips               as fsltooltips
 import fsleyes.panel                  as fslpanel
-import fsleyes.actions.loadcolourmap  as loadcmap
-import fsleyes.actions.loadvertexdata as loadvdata
-import fsleyes.displaycontext         as displayctx
 
 from . import overlaydisplaywidgets   as odwidgets
 
@@ -229,7 +224,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
         widgetList = self.getWidgetList()
 
-        widgetList.ClearGroup( groupName)
+        widgetList.ClearGroup(groupName)
 
         if groupName == '3d':
             dispProps = odwidgets.get3DPropertyList(target)
@@ -238,56 +233,33 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
             dispProps = odwidgets.getPropertyList(target)
             dispSpecs = odwidgets.getWidgetSpecs( target)
 
-        dispSpecs = [dispSpecs[p] for p in dispProps]
+        labels   = [strings.properties.get((target, p), p)
+                    for p in dispProps]
+        tooltips = [fsltooltips.properties.get((target, p), None)
+                    for p in dispProps]
 
-        labels   = [strings.properties.get((target, p.key), p.key)
-                    for p in dispSpecs]
-        tooltips = [fsltooltips.properties.get((target, p.key), None)
-                    for p in dispSpecs]
+        allWidgets    = []
+        allContainers = []
 
-        widgets         = []
-        returnedWidgets = []
+        for p in dispProps:
 
-        for s in dispSpecs:
+            s = dispSpecs[p]
 
-            widget   = props.buildGUI(widgetList, target, s)
-            toReturn = [widget]
+            if callable(s):
+                container, widgets = s(
+                    target,
+                    widgetList,
+                    self,
+                    self.getOverlayList(),
+                    self.getDisplayContext())
+            else:
+                container = props.buildGUI(widgetList, target, s)
+                widgets   = [container]
 
-            # Build a panel for the ColourMapOpts
-            # colour map controls.
-            if isinstance(target, displayctx.ColourMapOpts):
-                if s.key == 'cmap':
-                    cmapWidget    = widget
-                    widget, extra = self.__buildColourMapWidget(
-                        target, cmapWidget)
-                    toReturn = [cmapWidget] + list(extra)
+            allWidgets   .extend(widgets)
+            allContainers.append(container)
 
-            # Special case for VolumeOpts props
-            if isinstance(target, displayctx.VolumeOpts):
-                if s.key == 'enableOverrideDataRange':
-                    enableWidget  = widget
-                    widget, extra = self.__buildOverrideDataRangeWidget(
-                        target, enableWidget)
-                    toReturn = [enableWidget] + list(extra)
-
-            # More special cases for MeshOpts
-            elif isinstance(target, displayctx.MeshOpts):
-                if s.key == 'vertexData':
-                    vdataWidget   = widget
-                    widget, extra = self.__buildVertexDataWidget(
-                        target, vdataWidget)
-                    toReturn = [vdataWidget] + list(extra)
-
-                if s.key == 'lut':
-                    lutWidget   = widget
-                    widget, extra = self.__buildMeshOptsLutWidget(
-                        target, lutWidget)
-                    toReturn = [lutWidget] + list(extra)
-
-            returnedWidgets.extend(toReturn)
-            widgets        .append(widget)
-
-        for label, tooltip, widget in zip(labels, tooltips, widgets):
+        for label, tooltip, widget in zip(labels, tooltips, allContainers):
             widgetList.AddWidget(
                 widget,
                 label,
@@ -296,107 +268,4 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
         self.Layout()
 
-        return returnedWidgets
-
-
-    def __buildColourMapWidget(self, target, cmapWidget):
-        """Builds a panel which contains widgets for controlling the
-        :attr:`.VolumeOpts.cmap`, :attr:`.VolumeOpts.negativeCmap`, and
-        :attr:`.VolumeOpts.useNegativeCmap`.
-
-        :returns: A ``wx.Sizer`` containing all of the widgets, and a list
-                  containing the extra widgets that were added.
-        """
-
-        widgets = self.getWidgetList()
-
-        # Button to load a new
-        # colour map from file
-        loadAction = loadcmap.LoadColourMapAction(self._overlayList,
-                                                  self._displayCtx)
-
-        loadButton = wx.Button(widgets)
-        loadButton.SetLabel(strings.labels[self, 'loadCmap'])
-
-        loadAction.bindToWidget(self, wx.EVT_BUTTON, loadButton)
-
-        # Negative colour map widget
-        negCmap    = odwidgets.getWidgetSpecs(target)['negativeCmap']
-        useNegCmap = odwidgets.getWidgetSpecs(target)['useNegativeCmap']
-
-        negCmap    = props.buildGUI(widgets, target, negCmap)
-        useNegCmap = props.buildGUI(widgets, target, useNegCmap)
-
-        useNegCmap.SetLabel(strings.properties[target, 'useNegativeCmap'])
-
-        sizer = wx.FlexGridSizer(2, 2, 0, 0)
-        sizer.AddGrowableCol(0)
-
-        sizer.Add(cmapWidget, flag=wx.EXPAND)
-        sizer.Add(loadButton, flag=wx.EXPAND)
-        sizer.Add(negCmap,    flag=wx.EXPAND)
-        sizer.Add(useNegCmap, flag=wx.EXPAND)
-
-        return sizer, [negCmap, useNegCmap]
-
-
-    def __buildVertexDataWidget(self, target, vdataWidget):
-        """Builds a panel which contains a widget for controlling the
-        :attr:`.MeshOpts.vertexData` property, and also has a button
-        which opens a file dialog, allowing the user to select other
-        data.
-        """
-        widgets = self.getWidgetList()
-
-        loadAction = loadvdata.LoadVertexDataAction(self._overlayList,
-                                                    self._displayCtx)
-        loadButton = wx.Button(widgets)
-        loadButton.SetLabel(strings.labels[self, 'loadVertexData'])
-
-        loadAction.bindToWidget(self, wx.EVT_BUTTON, loadButton)
-
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-
-        sizer.Add(vdataWidget, flag=wx.EXPAND, proportion=1)
-        sizer.Add(loadButton,  flag=wx.EXPAND)
-
-        return sizer, []
-
-
-    def __buildMeshOptsLutWidget(self, target, lutWidget):
-        """Builds a panel which contains the provided :attr:`.MeshOpts.lut`
-        widget, and also a widget for :attr:`.MeshOpts.useLut`.
-        """
-        widgets = self.getWidgetList()
-
-        # enable lut widget
-        enableWidget = odwidgets.getWidgetSpecs(target)['useLut']
-        enableWidget = props.buildGUI(widgets, target, enableWidget)
-
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-
-        sizer.Add(enableWidget,  flag=wx.EXPAND)
-        sizer.Add(lutWidget, flag=wx.EXPAND, proportion=1)
-
-        return sizer, [enableWidget]
-
-
-    def __buildOverrideDataRangeWidget(self, target, enableWidget):
-        """Builds a panel which contains widgets for enabling and adjusting
-        the :attr:`.VolumeOpts.overrideDataRange`.
-
-        :returns: a ``wx.Sizer`` containing all of the widgets.
-        """
-
-        widgets = self.getWidgetList()
-
-        # Override data range widget
-        ovrRange = odwidgets.getWidgetSpecs(target)['overrideDataRange']
-        ovrRange = props.buildGUI(widgets, target, ovrRange)
-
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-
-        sizer.Add(enableWidget, flag=wx.EXPAND)
-        sizer.Add(ovrRange,     flag=wx.EXPAND, proportion=1)
-
-        return sizer, [ovrRange]
+        return allWidgets

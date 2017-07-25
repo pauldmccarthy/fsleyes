@@ -7,19 +7,25 @@
 """This module is used by the :class:`.OverlayDisplayPanel`. It contains
 definitions of all the settings that are displayed on the
 ``OverlayDisplayPanel`` for each overlay type.
+
+It also contains functions which create customised widgets, for scenarios
+where a widget does not directly map to a :class:`.Display` or
+:class:`.DisplayOpts` property.
 """
-
-
 
 
 import os.path as op
 import            sys
 import            functools
 
+import            wx
+
 import fsleyes_props                  as props
 import fsleyes_widgets.utils.typedict as td
 import fsleyes.strings                as strings
 import fsleyes.colourmaps             as fslcm
+import fsleyes.actions.loadcolourmap  as loadcmap
+import fsleyes.actions.loadvertexdata as loadvdata
 
 
 _PROPERTIES      = td.TypeDict()
@@ -76,15 +82,12 @@ def _merge_dicts(d1, d2):
 
 def _getThing(target, prefix, thingDict):
 
-    thing = thingDict.get(target, None, allhits=True)
+    if thingDict.get(target, None, exact=True) is None:
 
-    if thing is not None:
-        return thing
+        keys, funcs = _getInitFuncs(prefix, target)
 
-    keys, funcs = _getInitFuncs(prefix, target)
-
-    for key, func in zip(keys, funcs):
-        thingDict[key] = func()
+        for key, func in zip(keys, funcs):
+            thingDict[key] = func()
 
     return thingDict.get(target, None, allhits=True)
 
@@ -128,7 +131,7 @@ def _initPropertyList_Display():
 def _initPropertyList_VolumeOpts():
     return ['volume',
             'interpolation',
-            'cmap',
+            'custom_cmap',
             'cmapResolution',
             'interpolateCmaps',
             'invert',
@@ -138,7 +141,7 @@ def _initPropertyList_VolumeOpts():
             'displayRange',
             'clippingRange',
             'clipImage',
-            'enableOverrideDataRange']
+            'custom_overrideDataRange']
 
 
 def _init3DPropertyList_VolumeOpts():
@@ -158,7 +161,7 @@ def _initPropertyList_VectorOpts():
     return ['colourImage',
             'modulateImage',
             'clipImage',
-            'cmap',
+            'custom_cmap',
             'clippingRange',
             'modulateRange',
             'xColour',
@@ -195,10 +198,10 @@ def _initPropertyList_MeshOpts():
             'outline',
             'outlineWidth',
             'colour',
-            'vertexData',
+            'custom_vertexData',
             'vertexDataIndex',
-            'lut',
-            'cmap',
+            'custom_lut',
+            'custom_cmap',
             'cmapResolution',
             'interpolateCmaps',
             'invert',
@@ -207,9 +210,20 @@ def _initPropertyList_MeshOpts():
             'linkLowRanges',
             'linkHighRanges',
             'displayRange',
-            'clippingRange',
-            'wireframe',
+            'clippingRange']
+
+
+def _init3DPropertyList_MeshOpts():
+    return ['wireframe',
             'lighting']
+
+
+def _initPropertyList_GiftiOpts():
+    return []
+
+
+def _init3DPropertyList_GiftiOpts():
+    return []
 
 
 def _initPropertyList_LabelOpts():
@@ -244,7 +258,9 @@ def _initWidgetSpec_Display():
 
 def _initWidgetSpec_ColourMapOpts():
     return {
-        'cmap'           : props.Widget(
+        'custom_cmap'              : _ColourMapOpts_ColourMapWidget,
+        'custom_overrideDataRange' : _VolumeOpts_OverrideDataRangeWidget,
+        'cmap'              : props.Widget(
             'cmap',
             labels=fslcm.getColourMapLabel),
         'useNegativeCmap' : props.Widget('useNegativeCmap'),
@@ -295,6 +311,7 @@ def _initWidgetSpec_VolumeOpts():
         'clipImage'      : props.Widget(
             'clipImage',
             labels=imageName),
+        'custom_overrideDataRange' : _VolumeOpts_OverrideDataRangeWidget,
         'enableOverrideDataRange'  : props.Widget(
             'enableOverrideDataRange'),
         'overrideDataRange' : props.Widget(
@@ -305,6 +322,7 @@ def _initWidgetSpec_VolumeOpts():
             dependencies=['enableOverrideDataRange'],
             enabledWhen=lambda vo, en: en),
     }
+
 
 def _init3DWidgetSpec_VolumeOpts():
 
@@ -532,6 +550,7 @@ def _initWidgetSpec_MeshOpts():
             labels=strings.choices['MeshOpts.coordSpace'],
             dependencies=['refImage']),
         'colour'       : props.Widget('colour'),
+        'custom_vertexData' : _MeshOpts_VertexDataWidget,
         'vertexData'   : props.Widget(
             'vertexData',
             labels=vertexDataName),
@@ -544,6 +563,7 @@ def _initWidgetSpec_MeshOpts():
             'useLut',
             dependencies=['outline'],
             enabledWhen=lambda opts, o: o),
+        'custom_lut' : _MeshOpts_LutWidget,
         'lut'    : props.Widget(
             'lut',
             labels=lambda l: l.name,
@@ -603,6 +623,142 @@ def _initWidgetSpec_MeshOpts():
         'discardClipped' : props.Widget(
             'discardClipped',
             **colourKwargs),
-        'wireframe'     :  props.Widget('wireframe'),
-        'lighting'      :  props.Widget('lighting'),
     }
+
+
+def _init3DWidgetSpec_MeshOpts():
+    return {
+        'wireframe' :  props.Widget('wireframe'),
+        'lighting'  :  props.Widget('lighting'),
+    }
+
+
+def _initWidgetSpec_GiftiOpts():
+    return {}
+def _init3DWidgetSpec_GiftiOpts():
+    return {}
+
+
+def _ColourMapOpts_ColourMapWidget(
+        target,
+        parent,
+        panel,
+        overlayList,
+        displayCtx):
+    """Builds a panel which contains widgets for controlling the
+    :attr:`.ColourMapOpts.cmap`, :attr:`.ColourMapOpts.negativeCmap`, and
+    :attr:`.ColourMapOpts.useNegativeCmap`.
+
+    :returns: A ``wx.Sizer`` containing all of the widgets, and a list
+              containing the extra widgets that were added.
+    """
+
+    # Button to load a new
+    # colour map from file
+    loadAction = loadcmap.LoadColourMapAction(overlayList, displayCtx)
+
+    loadButton = wx.Button(parent)
+    loadButton.SetLabel(strings.labels[panel, 'loadCmap'])
+
+    loadAction.bindToWidget(panel, wx.EVT_BUTTON, loadButton)
+
+    cmap       = getWidgetSpecs(target)['cmap']
+    negCmap    = getWidgetSpecs(target)['negativeCmap']
+    useNegCmap = getWidgetSpecs(target)['useNegativeCmap']
+
+    cmap       = props.buildGUI(parent, target, cmap)
+    negCmap    = props.buildGUI(parent, target, negCmap)
+    useNegCmap = props.buildGUI(parent, target, useNegCmap)
+
+    useNegCmap.SetLabel(strings.properties[target, 'useNegativeCmap'])
+
+    sizer = wx.FlexGridSizer(2, 2, 0, 0)
+    sizer.AddGrowableCol(0)
+
+    sizer.Add(cmap,       flag=wx.EXPAND)
+    sizer.Add(loadButton, flag=wx.EXPAND)
+    sizer.Add(negCmap,    flag=wx.EXPAND)
+    sizer.Add(useNegCmap, flag=wx.EXPAND)
+
+    return sizer, [cmap, negCmap, useNegCmap]
+
+
+def _VolumeOpts_OverrideDataRangeWidget(
+        target,
+        parent,
+        panel,
+        overlayList,
+        displayCtx):
+    """Builds a panel which contains widgets for enabling and adjusting
+    the :attr:`.VolumeOpts.overrideDataRange`.
+
+    :returns: a ``wx.Sizer`` containing all of the widgets.
+    """
+
+    # Override data range widget
+    enable   = getWidgetSpecs(target)['enableOverrideDataRange']
+    ovrRange = getWidgetSpecs(target)['overrideDataRange']
+
+    enable   = props.buildGUI(parent, target, enable)
+    ovrRange = props.buildGUI(parent, target, ovrRange)
+
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+    sizer.Add(enable,   flag=wx.EXPAND)
+    sizer.Add(ovrRange, flag=wx.EXPAND, proportion=1)
+
+    return sizer, [enable, ovrRange]
+
+
+def _MeshOpts_VertexDataWidget(
+        target,
+        parent,
+        panel,
+        overlayList,
+        displayCtx):
+    """Builds a panel which contains a widget for controlling the
+    :attr:`.MeshOpts.vertexData` property, and also has a button
+    which opens a file dialog, allowing the user to select other
+    data.
+    """
+
+    loadAction = loadvdata.LoadVertexDataAction(overlayList, displayCtx)
+    loadButton = wx.Button(parent)
+    loadButton.SetLabel(strings.labels[panel, 'loadVertexData'])
+
+    loadAction.bindToWidget(panel, wx.EVT_BUTTON, loadButton)
+
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+    vdata = getWidgetSpecs(target)['vertexData']
+    vdata = props.buildGUI(parent, target, vdata)
+
+    sizer.Add(vdata,     flag=wx.EXPAND, proportion=1)
+    sizer.Add(loadButton, flag=wx.EXPAND)
+
+    return sizer, [vdata]
+
+
+def _MeshOpts_LutWidget(
+        target,
+        parent,
+        panel,
+        overlayList,
+        displayCtx):
+    """Builds a panel which contains the provided :attr:`.MeshOpts.lut`
+    widget, and also a widget for :attr:`.MeshOpts.useLut`.
+    """
+
+    # enable lut widget
+    lut    = getWidgetSpecs(target)['lut']
+    enable = getWidgetSpecs(target)['useLut']
+
+    lut    = props.buildGUI(parent, target, lut)
+    enable = props.buildGUI(parent, target, enable)
+
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+    sizer.Add(enable, flag=wx.EXPAND)
+    sizer.Add(lut,    flag=wx.EXPAND, proportion=1)
+
+    return sizer, [enable, lut]

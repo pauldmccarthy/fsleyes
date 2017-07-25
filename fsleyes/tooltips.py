@@ -90,6 +90,7 @@ properties = TypeDict({
     'This option is useful for displaying statistic images.',
 
     'ColourMapOpts.cmap'            : 'The colour map to use.',
+    'ColourMapOpts.custom_cmap'     : 'The colour map to use.',
 
     'ColourMapOpts.negativeCmap' :
     'The colour map to use for negative values.',
@@ -120,6 +121,11 @@ properties = TypeDict({
     'range that is driven by outliers.',
 
     'VolumeOpts.overrideDataRange' :
+    'Override the actual data range of an image with a user-specified '
+    'one. This is useful for images which have a very large data '
+    'range that is driven by outliers.',
+
+    'VolumeOpts.custom_overrideDataRange' :
     'Override the actual data range of an image with a user-specified '
     'one. This is useful for images which have a very large data '
     'range that is driven by outliers.',
@@ -254,6 +260,10 @@ properties = TypeDict({
     'Choose a file which contains data for each vertex - you can colour the '
     'mesh outline according to the values in the file. This only applies '
     'when the mesh outline, and not its cross-section is displayed.',
+    'MeshOpts.custom_vertexData'   :
+    'Choose a file which contains data for each vertex - you can colour the '
+    'mesh outline according to the values in the file. This only applies '
+    'when the mesh outline, and not its cross-section is displayed.',
     'MeshOpts.vertexDataIndex' :
     'If you have loaded vertex data with multiple data points for each '
     'vertex, this control allows you to control the data point that is '
@@ -263,6 +273,9 @@ properties = TypeDict({
     'colour the mesh according to its vertex data. This is useful for '
     'discrete label data',
     'MeshOpts.lut' :
+    'The lookup table to use when colouring the mesh with a lookup table '
+    'instead of with the colour maps.',
+    'MeshOpts.custom_lut' :
     'The lookup table to use when colouring the mesh with a lookup table '
     'instead of with the colour maps.',
     'MeshOpts.discardClipped' :
