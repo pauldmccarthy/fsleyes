@@ -116,6 +116,7 @@ import fsleyes_props        as props
 import fsleyes.colourmaps   as fslcm
 from . import display       as fsldisplay
 from . import colourmapopts as cmapopts
+from . import volume3dopts  as vol3dopts
 
 
 log = logging.getLogger(__name__)
@@ -747,7 +748,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         return self.transformCoords(coords, 'world', 'display')
 
 
-class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
+class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
     """The ``VolumeOpts`` class defines options for displaying :class:`.Image`
     instances as regular 3D volumes.
     """
@@ -768,31 +769,6 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
     """How the value shown at a real world location is derived from the
     corresponding data value(s). ``none`` is equivalent to nearest neighbour
     interpolation.
-    """
-
-
-    # The remaining options are
-    # only used in 3D rendering.
-
-
-    dithering = props.Real(minval=0,
-                           maxval=0.1,
-                           default=0.01,
-                           clamped=True)
-    """Only used in 3D rendering. Specifies the amount of randomness to
-    introduce in the rendering procedure to achieve a dithering (addition of
-    random noise) effect. This is necessary to remove some aliasing effects
-    inherent in the rendering process.
-    """
-
-
-    numSteps = props.Int(minval=50,
-                         maxval=1000,
-                         default=50,
-                         clamped=True)
-    """Only used in 3D rendering. Specifies the maximum number of samples to
-    acquire in the rendering of each pixel of the 3D scene. This corresponds
-    to the number of iterations of the ray-casting loop.
     """
 
 
@@ -840,7 +816,8 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
                            overlayList,
                            displayCtx,
                            **kwargs)
-        cmapopts.ColourMapOpts.__init__(self)
+        cmapopts .ColourMapOpts.__init__(self)
+        vol3dopts.Volume3DOpts .__init__(self)
 
         # Both parent and child VolumeOpts instances
         # listen for Image dataRange changes. The data
@@ -912,8 +889,9 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
             self       .removeListener('enableOverrideDataRange', self.name)
             self       .removeListener('overrideDataRange',       self.name)
 
-        cmapopts.ColourMapOpts.destroy(self)
-        NiftiOpts             .destroy(self)
+        cmapopts .ColourMapOpts.destroy(self)
+        vol3dopts.Volume3DOpts .destroy(self)
+        NiftiOpts              .destroy(self)
 
 
     def getDataRange(self):

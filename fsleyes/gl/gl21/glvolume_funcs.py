@@ -116,6 +116,20 @@ def updateShaderState(self):
     changed |= shader.set('negColourTexture', 2)
     changed |= shader.set('clipTexture',      3)
 
+    if self.threedee:
+
+        clipPlanes = np.zeros((opts.numClipPlanes, 4), dtype=np.float32)
+        d2tmat     = opts.getTransform('display', 'texture')
+
+        for i in range(opts.numClipPlanes):
+            origin, normal   = opts.get3DClipPlane(i)
+            origin           = transform.transform(origin, d2tmat)
+            normal           = transform.transform(normal, d2tmat, vector=True)
+            clipPlanes[i, :] = glroutines.planeEquation2(origin, normal)
+
+        changed |= shader.set('numClipPlanes', opts.numClipPlanes)
+        changed |= shader.set('clipPlanes',    clipPlanes, opts.numClipPlanes)
+
     shader.unload()
 
     return changed

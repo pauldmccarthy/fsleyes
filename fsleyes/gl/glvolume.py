@@ -333,8 +333,12 @@ class GLVolume(globject.GLImageObject):
 
         # 3D-only options
         if self.threedee:
-            opts.addListener('dithering',  name, self._ditheringChanged)
-            opts.addListener('numSteps',   name, self._numStepsChanged)
+            opts.addListener('dithering',       name, self._ditheringChanged)
+            opts.addListener('numSteps',        name, self._numStepsChanged)
+            opts.addListener('numClipPlanes',   name, self._clipping3DChanged)
+            opts.addListener('clipPosition',    name, self._clipping3DChanged)
+            opts.addListener('clipAzimuth',     name, self._clipping3DChanged)
+            opts.addListener('clipInclination', name, self._clipping3DChanged)
 
         # GLVolume instances need to keep track of whether
         # the volume property of their corresponding
@@ -878,12 +882,14 @@ class GLVolume(globject.GLImageObject):
 
 
     def _ditheringChanged(self, *a):
-        """Called when the :attr:`.VolumeOpts.dithering` property changes. """
+        """Called when the :attr:`.Volume3DOpts.dithering` property changes.
+        """
         self.notify()
 
 
     def _numStepsChanged(self, *a):
-        """Called when the :attr:`.VolumeOpts.numSteps` property changes. """
+        """Called when the :attr:`.Volume3DOpts.numSteps` property changes.
+        """
 
         # TODO Is this dodgy? I'm not sure
         if fslgl.GL_VERSION == '1.4':
@@ -891,6 +897,14 @@ class GLVolume(globject.GLImageObject):
             self.updateShaderState(alwaysNotify=True)
         else:
             self.notify()
+
+
+    def _clipping3DChanged(self, *a):
+        """Called when any of the :attr:`.Volume3DOpts.numClipPlanes`,
+        :attr:`.Volume3DOpts.clipPosition`, :attr:`.Volume3DOpts.clipAzimuth`,
+        or :attr:`.Volume3DOpts.clipInclination` properties change.
+        """
+        self.updateShaderState(alwaysNotify=True)
 
 
     def _imageSyncChanged(self, *a):

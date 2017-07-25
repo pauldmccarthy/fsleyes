@@ -1313,7 +1313,7 @@ def planeEquation(xyz1, xyz2, xyz3):
     """Calculates the equation of a plane which contains each
     of the given points.
 
-    Returns a tuple containing four values, the coefficients of the
+    Returns a ``numpy`` array containing four values, the coefficients of the
     equation:
 
     :math:`a\\times x + b\\times y + c \\times z = d`
@@ -1337,6 +1337,25 @@ def planeEquation(xyz1, xyz2, xyz3):
               (x3 * ((y1 * z2) - (y2 * z1))))
 
     return eq
+
+
+def planeEquation2(origin, normal):
+    """Calculates the equation of a plane equation from a normal vector
+    and a single point on the plane.
+
+    Returns a ``numpy`` array containing four values, the coefficients of the
+    equation:
+
+    See also :func:`planeEquation`.
+    """
+
+    normal     = transform.normalise(normal)
+    ax, by, cz = np.array(origin) * normal
+    d          = -np.sum((ax, by, cz))
+
+    ax, by, cz = transform.normalise((ax, by, cz))
+
+    return np.array([ax, by, cz, d])
 
 
 def unitSphere(res):

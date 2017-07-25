@@ -99,13 +99,25 @@ uniform vec3 ditherDir;
 
 
 /*
+ * Number of active clip planes. Regions which are clipped
+ * by *all* active clip planes are not drawn.
+ */
+uniform int numClipPlanes;
+
+/*
+ * The clip planes, specified as plane equations in the image
+ * texture coordinate system.
+ */
+uniform vec4 clipPlanes[10];
+
+/*
  * A vector which defines how far to move in one iteration
  * of the ray-cast loop. This is added directly to the
  * image texture coordinates, so must be between 0.0 and
  * 1.0, and must have the same direction as the camera
  * vector the camera vector
  *
- *Passing in 0.0 will cause an infinite loop, and
+ * Passing in 0.0 will cause an infinite loop, and
  * passing in 1.0 will cause the loop to skip over the
  * entire texture on the first iteration, so be sensible.
  *
@@ -153,6 +165,7 @@ void main(void) {
 
     vec4 depth;
     bool sampled;
+    int  cpi;
 
     /*
      * Dither by applying a random offset
@@ -163,8 +176,9 @@ void main(void) {
      * occasionally break on the first
      * iteration.
      */
-    vec3 dither = ditherDir * rand(gl_FragCoord.x, gl_FragCoord.y);
-    texCoord    = texCoord + dither;
+    vec3 dither  = ditherDir * rand(gl_FragCoord.x, gl_FragCoord.y);
+    texCoord     = texCoord     - rayStep + dither;
+    clipTexCoord = clipTexCoord - rayStep + dither;
 
     /*
      * Keep going until we have enough
@@ -172,12 +186,31 @@ void main(void) {
      */
     do {
 
-      /* Get the colour for this voxel location */
-      sampled = sample_volume(texCoord, clipTexCoord, colour);
-
       /* Shift the ray along */
       texCoord     += rayStep;
       clipTexCoord += rayStep;
+
+      /*
+       * We clip out the intersection
+       * of all clipping planes. If this
+       * position is on the correct side
+       * of any clipping plane, we don't
+       * do any clipping.
+       */
+      for (cpi = 0; cpi < numClipPlanes; cpi++)
+        if (dot(clipPlanes[cpi].xyz, texCoord) + clipPlanes[cpi].w >= 0)
+          break;
+
+      /*
+       * If it is on the wrong side of *all*
+       * clipping planes, keep casting.
+       */
+      if (numClipPlanes > 0 && cpi == numClipPlanes)
+        continue;
+
+
+      /* Get the colour for this voxel location */
+      sampled = sample_volume(texCoord, clipTexCoord, colour);
 
       /* Voxel was clipped or was NaN */
       if (!sampled)
