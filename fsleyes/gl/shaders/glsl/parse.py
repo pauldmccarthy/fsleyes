@@ -159,7 +159,12 @@ def getDeclarations(code):
                           'qualifier: {}'.format(tokens.storage))
                 continue
 
-            decs[tokens.storage].append((tokens.name, tokens.type))
+            size = tokens.size.strip()
+
+            if size == '':  size = 1
+            else:           size = int(size)
+
+            decs[tokens.storage].append((tokens.name, tokens.type, size))
 
     return decs
 
@@ -194,8 +199,8 @@ def main():
 
     for d, v in decs.items():
         print('\n--{}--\n'.format(d.upper()))
-        for t, n in v:
-            print('{}: {}'.format(t, n))
+        for t, n, s in v:
+            print('{}: {} [{}]'.format(t, n, s))
 
 
 if __name__ == '__main__':
