@@ -9,22 +9,22 @@ control* panel which allows the user to change overlay display settings.
 """
 
 
-import            logging
-import            functools
-import os.path as op
+import logging
+import functools
+import collections
 
 import wx
 
 import fsleyes_props                  as props
-import fsleyes_widgets.utils.typedict as td
 
 import fsleyes.strings                as strings
 import fsleyes.tooltips               as fsltooltips
 import fsleyes.panel                  as fslpanel
-import fsleyes.colourmaps             as fslcm
 import fsleyes.actions.loadcolourmap  as loadcmap
 import fsleyes.actions.loadvertexdata as loadvdata
 import fsleyes.displaycontext         as displayctx
+
+from . import overlaydisplaywidgets   as odwidgets
 
 
 log = logging.getLogger(__name__)
@@ -83,10 +83,10 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
                                  self._name,
                                  self.__selectedOverlayChanged)
 
-        self.__dispWidgets = None
-        self.__optsWidgets = None
-
+        self.__viewPanel      = parent
+        self.__widgets        = None
         self.__currentOverlay = None
+
         self.__selectedOverlayChanged()
 
 
@@ -106,9 +106,9 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
             display.removeListener('overlayType', self._name)
 
+        self.__viewPanel      = None
+        self.__widgets        = None
         self.__currentOverlay = None
-        self.__dispWidgets    = None
-        self.__optsWidgets    = None
 
         fslpanel.FSLeyesPanel.destroy(self)
 
@@ -119,13 +119,16 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         ``OverlayDisplayPanel`` so that the display settings for the newly
         selected overlay are shown.
         """
+        from fsleyes.views.scene3dpanel import Scene3DPanel
 
+        vp          = self.__viewPanel
         overlay     = self._displayCtx.getSelectedOverlay()
         lastOverlay = self.__currentOverlay
         widgetList  = self.getWidgetList()
 
         if overlay is None:
             self.__currentOverlay = None
+            self.__widgets        = None
             widgetList.Clear()
             self.Layout()
             return
@@ -134,6 +137,25 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
             return
 
         self.__currentOverlay = overlay
+        self.__widgets        = collections.OrderedDict()
+
+        display = self._displayCtx.getDisplay(overlay)
+        opts    = display.getDisplayOpts()
+
+        if isinstance(vp, Scene3DPanel):
+            groups  = ['display', 'opts', '3d']
+            targets = [ display,   opts,   opts]
+            labels  = [strings.labels[self, display],
+                       strings.labels[self, opts],
+                       strings.labels[self, '3d']]
+
+        else:
+            groups  = ['display', 'opts']
+            targets = [ display,   opts]
+            labels  = [strings.labels[self, display],
+                       strings.labels[self, opts]]
+
+        keepExpanded = {g : True for g in groups}
 
         if lastOverlay is not None and \
            lastOverlay in self._overlayList:
@@ -142,29 +164,29 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
             lastDisplay.removeListener('overlayType', self._name)
 
         if lastOverlay is not None:
-            displayExpanded = widgetList.IsExpanded('display')
-            optsExpanded    = widgetList.IsExpanded('opts')
-        else:
-            displayExpanded = True
-            optsExpanded    = True
-
-        display = self._displayCtx.getDisplay(overlay)
-        opts    = display.getDisplayOpts()
+            for g in groups:
+                keepExpanded[g] = widgetList.IsExpanded(g)
 
         display.addListener('overlayType', self._name, self.__ovlTypeChanged)
 
         widgetList.Clear()
-        widgetList.AddGroup('display', strings.labels[self, display])
-        widgetList.AddGroup('opts',    strings.labels[self, opts])
 
-        self.__dispWidgets = self.__updateWidgets(display, 'display')
-        self.__optsWidgets = self.__updateWidgets(opts,    'opts')
+        for g, l, t in zip(groups, labels, targets):
 
-        widgetList.Expand('display', displayExpanded)
-        widgetList.Expand('opts',    optsExpanded)
+            widgetList.AddGroup(g, l)
+            self.__widgets[g] = self.__updateWidgets(t, g)
+            widgetList.Expand(g, keepExpanded[g])
 
-        self.setNavOrder(self.__dispWidgets + self.__optsWidgets)
+        self.setNavOrder()
         self.Layout()
+
+
+    def setNavOrder(self):
+
+        allWidgets = self.__widgets.items()
+        allWidgets = functools.reduce(lambda a, b: a + b, allWidgets)
+
+        fslpanel.FSLeyesSettingsPanel.setNavOrder(self, allWidgets)
 
 
     def __ovlTypeChanged(self, *a):
@@ -174,10 +196,17 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         overlay.
         """
 
-        opts = self._displayCtx.getOpts(self.__currentOverlay)
-        self.__optsWidgets = self.__updateWidgets(opts, 'opts')
+        opts       = self._displayCtx.getOpts(self.__currentOverlay)
+        widgetList = self.getWidgetList()
 
-        self.setNavOrder(self.__dispWidgets + self.__optsWidgets)
+        self.__widgets[opts] = self.__updateWidgets(opts, 'opts')
+
+        widgetList.RenameGroup('opts', strings.labels[self, opts])
+
+        if '3d' in self.__widgets:
+            self.__widgets['3d'] = self.__updateWidgets(opts, '3d')
+
+        self.setNavOrder()
         self.Layout()
 
 
@@ -194,7 +223,6 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
                         to :class:`.Display` or :class:`.DisplayOpts`
                         properties.
 
-
         :returns:       A list containing all of the new widgets that
                         were created.
         """
@@ -202,29 +230,33 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         widgetList = self.getWidgetList()
 
         widgetList.ClearGroup( groupName)
-        widgetList.RenameGroup(groupName, strings.labels[self, target])
 
-        dispProps = _DISPLAY_PROPS.get(target, [], allhits=True)
-        dispProps = functools.reduce(lambda a, b: a + b, dispProps)
-        dispProps = [_DISPLAY_WIDGETS[target, dp] for dp in dispProps]
+        if groupName == '3d':
+            dispProps = odwidgets.get3DPropertyList(target)
+            dispSpecs = odwidgets.get3DWidgetSpecs( target)
+        else:
+            dispProps = odwidgets.getPropertyList(target)
+            dispSpecs = odwidgets.getWidgetSpecs( target)
+
+        dispSpecs = [dispSpecs[p] for p in dispProps]
 
         labels   = [strings.properties.get((target, p.key), p.key)
-                    for p in dispProps]
+                    for p in dispSpecs]
         tooltips = [fsltooltips.properties.get((target, p.key), None)
-                    for p in dispProps]
+                    for p in dispSpecs]
 
         widgets         = []
         returnedWidgets = []
 
-        for p in dispProps:
+        for s in dispSpecs:
 
-            widget   = props.buildGUI(widgetList, target, p)
+            widget   = props.buildGUI(widgetList, target, s)
             toReturn = [widget]
 
             # Build a panel for the ColourMapOpts
             # colour map controls.
             if isinstance(target, displayctx.ColourMapOpts):
-                if p.key == 'cmap':
+                if s.key == 'cmap':
                     cmapWidget    = widget
                     widget, extra = self.__buildColourMapWidget(
                         target, cmapWidget)
@@ -232,7 +264,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
             # Special case for VolumeOpts props
             if isinstance(target, displayctx.VolumeOpts):
-                if p.key == 'enableOverrideDataRange':
+                if s.key == 'enableOverrideDataRange':
                     enableWidget  = widget
                     widget, extra = self.__buildOverrideDataRangeWidget(
                         target, enableWidget)
@@ -240,13 +272,13 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
             # More special cases for MeshOpts
             elif isinstance(target, displayctx.MeshOpts):
-                if p.key == 'vertexData':
+                if s.key == 'vertexData':
                     vdataWidget   = widget
                     widget, extra = self.__buildVertexDataWidget(
                         target, vdataWidget)
                     toReturn = [vdataWidget] + list(extra)
 
-                if p.key == 'lut':
+                if s.key == 'lut':
                     lutWidget   = widget
                     widget, extra = self.__buildMeshOptsLutWidget(
                         target, lutWidget)
@@ -289,8 +321,8 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         loadAction.bindToWidget(self, wx.EVT_BUTTON, loadButton)
 
         # Negative colour map widget
-        negCmap    = _DISPLAY_WIDGETS[target, 'negativeCmap']
-        useNegCmap = _DISPLAY_WIDGETS[target, 'useNegativeCmap']
+        negCmap    = odwidgets.getWidgetSpecs(target)['negativeCmap']
+        useNegCmap = odwidgets.getWidgetSpecs(target)['useNegativeCmap']
 
         negCmap    = props.buildGUI(widgets, target, negCmap)
         useNegCmap = props.buildGUI(widgets, target, useNegCmap)
@@ -338,7 +370,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         widgets = self.getWidgetList()
 
         # enable lut widget
-        enableWidget = _DISPLAY_WIDGETS[target, 'useLut']
+        enableWidget = odwidgets.getWidgetSpecs(target)['useLut']
         enableWidget = props.buildGUI(widgets, target, enableWidget)
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -359,454 +391,12 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         widgets = self.getWidgetList()
 
         # Override data range widget
-        overrideRange = _DISPLAY_WIDGETS[target, 'overrideDataRange']
-        overrideRange = props.buildGUI(widgets, target, overrideRange)
+        ovrRange = odwidgets.getWidgetSpecs(target)['overrideDataRange']
+        ovrRange = props.buildGUI(widgets, target, ovrRange)
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        sizer.Add(enableWidget,  flag=wx.EXPAND)
-        sizer.Add(overrideRange, flag=wx.EXPAND, proportion=1)
+        sizer.Add(enableWidget, flag=wx.EXPAND)
+        sizer.Add(ovrRange,     flag=wx.EXPAND, proportion=1)
 
-        return sizer, [overrideRange]
-
-
-def _imageName(img):
-    """Used to generate choice labels for the :attr`.VectorOpts.modulateImage`,
-    :attr`.VectorOpts.clipImage`, :attr`.VectorOpts.colourImage` and
-    :attr:`.MeshOpts.refImage` properties.
-    """
-    if img is None: return 'None'
-    else:           return img.name
-
-
-def _meshVertexDataName(vdata):
-    """Used to generate choice labels for the :attr`.MeshOpts.vertexData`
-    property.
-    """
-    if vdata is None: return 'None'
-    else:             return op.basename(vdata)
-
-
-_DISPLAY_PROPS = td.TypeDict({
-    'Display'        : ['name',
-                        'overlayType',
-                        'enabled',
-                        'alpha',
-                        'brightness',
-                        'contrast'],
-    'VolumeOpts'     : ['volume',
-                        'interpolation',
-                        'cmap',
-                        'cmapResolution',
-                        'interpolateCmaps',
-                        'invert',
-                        'invertClipping',
-                        'linkLowRanges',
-                        'linkHighRanges',
-                        'displayRange',
-                        'clippingRange',
-                        'clipImage',
-                        'enableOverrideDataRange',
-                        'dithering',
-                        'numSteps'],
-    'MaskOpts'       : ['volume',
-                        'colour',
-                        'invert',
-                        'threshold'],
-    'VectorOpts'     : ['colourImage',
-                        'modulateImage',
-                        'clipImage',
-                        'cmap',
-                        'clippingRange',
-                        'modulateRange',
-                        'xColour',
-                        'yColour',
-                        'zColour',
-                        'suppressX',
-                        'suppressY',
-                        'suppressZ',
-                        'suppressMode'],
-    'RGBVectorOpts'  : ['interpolation'],
-    'LineVectorOpts' : ['directed',
-                        'unitLength',
-                        'orientFlip',
-                        'lineWidth',
-                        'lengthScale'],
-    'MeshOpts'       : ['refImage',
-                        'coordSpace',
-                        'outline',
-                        'outlineWidth',
-                        'colour',
-                        'vertexData',
-                        'vertexDataIndex',
-                        'lut',
-                        'cmap',
-                        'cmapResolution',
-                        'interpolateCmaps',
-                        'invert',
-                        'invertClipping',
-                        'discardClipped',
-                        'linkLowRanges',
-                        'linkHighRanges',
-                        'displayRange',
-                        'clippingRange',
-                        'wireframe',
-                        'lighting'],
-    'TensorOpts'     : ['lighting',
-                        'orientFlip',
-                        'tensorResolution',
-                        'tensorScale'],
-    'LabelOpts'      : ['lut',
-                        'outline',
-                        'outlineWidth',
-                        'volume'],
-    'SHOpts'         : ['shResolution',
-                        'shOrder',
-                        'orientFlip',
-                        'lighting',
-                        'size',
-                        'radiusThreshold',
-                        'colourMode']
-})
-"""This dictionary contains lists of all the properties which are to be
-displayed on an ``OverlayDisplayPanel``.
-"""
-
-
-def meshOptsColourEnabledWhen(opts, vdata, outline, useLut):
-    """Use to enable/disable :class:`.MeshOpts` colour properties.
-    """
-    return outline and (vdata is not None) and (not useLut)
-
-
-meshOptsColourKwargs = {
-    'dependencies' : ['vertexData', 'outline', 'useLut'],
-    'enabledWhen'  : meshOptsColourEnabledWhen
-}
-"""Passed to the widget definitions for various :class:`.MeshOpts`
-properties.
-"""
-
-
-_DISPLAY_WIDGETS = td.TypeDict({
-
-    # Display
-    'Display.name'        : props.Widget('name'),
-    'Display.overlayType' : props.Widget(
-        'overlayType',
-        labels=strings.choices['Display.overlayType']),
-    'Display.enabled'     : props.Widget('enabled'),
-    'Display.alpha'       : props.Widget('alpha',      showLimits=False),
-    'Display.brightness'  : props.Widget('brightness', showLimits=False),
-    'Display.contrast'    : props.Widget('contrast',   showLimits=False),
-
-    'ColourMapOpts.cmap'           : props.Widget(
-        'cmap',
-        labels=fslcm.getColourMapLabel),
-
-    'ColourMapOpts.useNegativeCmap' : props.Widget('useNegativeCmap'),
-    'ColourMapOpts.negativeCmap'    : props.Widget(
-        'negativeCmap',
-        labels=fslcm.getColourMapLabel,
-        dependencies=['useNegativeCmap'],
-        enabledWhen=lambda i, unc : unc),
-    'ColourMapOpts.cmapResolution'  : props.Widget(
-        'cmapResolution',
-        slider=True,
-        spin=True,
-        showLimits=False),
-    'ColourMapOpts.interpolateCmaps' : props.Widget('interpolateCmaps'),
-    'ColourMapOpts.invert'           : props.Widget('invert'),
-    'ColourMapOpts.invertClipping'   : props.Widget('invertClipping'),
-    'ColourMapOpts.linkLowRanges'    : props.Widget('linkLowRanges'),
-    'ColourMapOpts.linkHighRanges' : props.Widget(  'linkHighRanges'),
-    'ColourMapOpts.displayRange'   : props.Widget(
-        'displayRange',
-        showLimits=False,
-        slider=True,
-        labels=[strings.choices['ColourMapOpts.displayRange.min'],
-                strings.choices['ColourMapOpts.displayRange.max']]),
-    'ColourMapOpts.clippingRange'  : props.Widget(
-        'clippingRange',
-        showLimits=False,
-        slider=True,
-        labels=[strings.choices['ColourMapOpts.displayRange.min'],
-                strings.choices['ColourMapOpts.displayRange.max']]),
-
-    # VolumeOpts
-    'VolumeOpts.volume'         : props.Widget(
-        'volume',
-        showLimits=False,
-        enabledWhen=lambda o: o.overlay.is4DImage()),
-    'VolumeOpts.interpolation'  : props.Widget(
-        'interpolation',
-        labels=strings.choices['VolumeOpts.interpolation']),
-    'VolumeOpts.clipImage'      : props.Widget(
-        'clipImage',
-        labels=_imageName),
-    'VolumeOpts.enableOverrideDataRange'  : props.Widget(
-        'enableOverrideDataRange'),
-    'VolumeOpts.overrideDataRange' : props.Widget(
-        'overrideDataRange',
-        showLimits=False,
-        spin=True,
-        slider=False,
-        dependencies=['enableOverrideDataRange'],
-        enabledWhen=lambda vo, en: en),
-    'VolumeOpts.dithering' : props.Widget('dithering', showLimits=False),
-    'VolumeOpts.numSteps'  : props.Widget('numSteps',  showLimits=False),
-
-    # MaskOpts
-    'MaskOpts.volume'     : props.Widget(
-        'volume',
-        showLimits=False,
-        enabledWhen=lambda o: o.overlay.is4DImage()),
-    'MaskOpts.colour'     : props.Widget('colour'),
-    'MaskOpts.invert'     : props.Widget('invert'),
-    'MaskOpts.threshold'  : props.Widget('threshold', showLimits=False),
-
-    # VectorOpts (shared by all
-    # the VectorOpts sub-classes)
-    'VectorOpts.colourImage'   : props.Widget(
-        'colourImage',
-        labels=_imageName),
-    'VectorOpts.modulateImage' : props.Widget(
-        'modulateImage',
-        labels=_imageName,
-        dependencies=['colourImage'],
-        enabledWhen=lambda o, ci: ci is None),
-    'VectorOpts.clipImage'     : props.Widget('clipImage', labels=_imageName),
-    'VectorOpts.cmap'          : props.Widget(
-        'cmap',
-        labels=fslcm.getColourMapLabel,
-        dependencies=['colourImage'],
-        enabledWhen=lambda o, ci: ci is not None),
-    'VectorOpts.clippingRange' : props.Widget(
-        'clippingRange',
-        showLimits=False,
-        slider=True,
-        labels=[strings.choices['VectorOpts.clippingRange.min'],
-                strings.choices['VectorOpts.clippingRange.max']],
-        dependencies=['clipImage'],
-        enabledWhen=lambda o, ci: ci is not None),
-    'VectorOpts.modulateRange' : props.Widget(
-        'modulateRange',
-        showLimits=False,
-        slider=True,
-        labels=[strings.choices['VectorOpts.modulateRange.min'],
-                strings.choices['VectorOpts.modulateRange.max']],
-        dependencies=['colourImage', 'modulateImage'],
-        enabledWhen=lambda o, ci, mi: ci is None and mi is not None),
-    'VectorOpts.xColour'       : props.Widget(
-        'xColour',
-        dependencies=['colourImage'],
-        enabledWhen=lambda o, ci: ci is None),
-    'VectorOpts.yColour'       : props.Widget(
-        'yColour',
-        dependencies=['colourImage'],
-        enabledWhen=lambda o, ci: ci is None),
-    'VectorOpts.zColour'       : props.Widget(
-        'zColour',
-        dependencies=['colourImage'],
-        enabledWhen=lambda o, ci: ci is None),
-    'VectorOpts.suppressX'     : props.Widget(
-        'suppressX',
-        dependencies=['colourImage'],
-        enabledWhen=lambda o, ci: ci is None),
-    'VectorOpts.suppressY'     : props.Widget(
-        'suppressY',
-        dependencies=['colourImage'],
-        enabledWhen=lambda o, ci: ci is None),
-    'VectorOpts.suppressZ'     : props.Widget(
-        'suppressZ',
-        dependencies=['colourImage'],
-        enabledWhen=lambda o, ci: ci is None),
-    'VectorOpts.suppressMode'  : props.Widget(
-        'suppressMode',
-        dependencies=['colourImage'],
-        labels=strings.choices['VectorOpts.suppressMode'],
-        enabledWhen=lambda o, ci: ci is None),
-
-    # RGBVectorOpts
-    'RGBVectorOpts.interpolation' : props.Widget(
-        'interpolation',
-        labels=strings.choices['VolumeOpts.interpolation']),
-
-    # LineVectorOpts
-    'LineVectorOpts.directed'    : props.Widget('directed'),
-    'LineVectorOpts.unitLength'  : props.Widget('unitLength'),
-    'LineVectorOpts.orientFlip'  : props.Widget('orientFlip'),
-    'LineVectorOpts.lineWidth'   : props.Widget('lineWidth',
-                                                showLimits=False),
-    'LineVectorOpts.lengthScale' : props.Widget('lengthScale',
-                                                showLimits=False),
-
-    # MeshOpts
-    'MeshOpts.outline'      : props.Widget('outline'),
-    'MeshOpts.outlineWidth' : props.Widget(
-        'outlineWidth',
-        showLimits=False,
-        dependencies=['outline'],
-        enabledWhen=lambda o, outline: outline),
-    'MeshOpts.refImage'     : props.Widget('refImage', labels=_imageName),
-    'MeshOpts.coordSpace'   : props.Widget(
-        'coordSpace',
-        enabledWhen=lambda o, ri: ri != 'none',
-        labels=strings.choices['MeshOpts.coordSpace'],
-        dependencies=['refImage']),
-    'MeshOpts.colour'       : props.Widget('colour'),
-    'MeshOpts.vertexData'   : props.Widget(
-        'vertexData',
-        labels=_meshVertexDataName),
-    'MeshOpts.vertexDataIndex' : props.Widget(
-        'vertexDataIndex',
-        showLimits=False,
-        dependencies=['vertexData'],
-        enabledWhen=lambda o, vd: vd is not None),
-    'MeshOpts.useLut' : props.Widget(
-        'useLut',
-        dependencies=['outline'],
-        enabledWhen=lambda opts, o: o),
-    'MeshOpts.lut'    : props.Widget(
-        'lut',
-        labels=lambda l: l.name,
-        dependencies=['outline'],
-        enabledWhen=lambda opts, o: o),
-
-    # We override the ColourMapOpts definitions
-    # above, for custom enabledWhen behaviour.
-    'MeshOpts.cmap'           : props.Widget(
-        'cmap',
-        labels=fslcm.getColourMapLabel,
-        **meshOptsColourKwargs),
-
-    'MeshOpts.useNegativeCmap' : props.Widget(
-        'useNegativeCmap',
-        **meshOptsColourKwargs),
-    'MeshOpts.negativeCmap'    : props.Widget(
-        'negativeCmap',
-        labels=fslcm.getColourMapLabel,
-        **meshOptsColourKwargs),
-    'MeshOpts.cmapResolution'  : props.Widget(
-        'cmapResolution',
-        slider=True,
-        spin=True,
-        showLimits=False,
-        **meshOptsColourKwargs),
-    'MeshOpts.interpolateCmaps' : props.Widget(
-        'interpolateCmaps',
-        **meshOptsColourKwargs),
-    'MeshOpts.invert'           : props.Widget(
-        'invert',
-        **meshOptsColourKwargs),
-    'MeshOpts.invertClipping'   : props.Widget(
-        'invertClipping',
-        **meshOptsColourKwargs),
-    'MeshOpts.linkLowRanges'    : props.Widget(
-        'linkLowRanges',
-        **meshOptsColourKwargs),
-    'MeshOpts.linkHighRanges' : props.Widget(
-        'linkHighRanges',
-        **meshOptsColourKwargs),
-    'MeshOpts.displayRange'   : props.Widget(
-        'displayRange',
-        showLimits=False,
-        slider=True,
-        labels=[strings.choices['ColourMapOpts.displayRange.min'],
-                strings.choices['ColourMapOpts.displayRange.max']],
-        **meshOptsColourKwargs),
-    'MeshOpts.clippingRange'  : props.Widget(
-        'clippingRange',
-        showLimits=False,
-        slider=True,
-        labels=[strings.choices['ColourMapOpts.displayRange.min'],
-                strings.choices['ColourMapOpts.displayRange.max']],
-        dependencies=['vertexData', 'outline'],
-        enabledWhen=lambda opts, vd, o: (vd is not None) and o),
-    'MeshOpts.discardClipped' : props.Widget(
-        'discardClipped',
-        **meshOptsColourKwargs),
-    'MeshOpts.wireframe'     :  props.Widget('wireframe'),
-    'MeshOpts.lighting'      :  props.Widget('lighting'),
-
-    # TensorOpts
-    'TensorOpts.lighting'         : props.Widget('lighting'),
-    'TensorOpts.orientFlip'       : props.Widget('orientFlip'),
-    'TensorOpts.tensorResolution' : props.Widget(
-        'tensorResolution',
-        showLimits=False,
-        spin=False,
-        labels=[strings.choices['TensorOpts.tensorResolution.min'],
-                strings.choices['TensorOpts.tensorResolution.max']]),
-    'TensorOpts.tensorScale'      : props.Widget(
-        'tensorScale',
-        showLimits=False,
-        spin=False),
-
-    # LabelOpts
-    'LabelOpts.lut'          : props.Widget('lut', labels=lambda l: l.name),
-    'LabelOpts.outline'      : props.Widget('outline'),
-    'LabelOpts.outlineWidth' : props.Widget('outlineWidth', showLimits=False),
-    'LabelOpts.volume'       : props.Widget(
-        'volume',
-        showLimits=False,
-        enabledWhen=lambda o: o.overlay.is4DImage()),
-
-    # SHOpts
-    'SHOpts.shResolution'    : props.Widget(
-        'shResolution',
-        spin=False,
-        showLimits=False),
-    'SHOpts.shOrder'    : props.Widget('shOrder'),
-    'SHOpts.orientFlip' : props.Widget('orientFlip'),
-    'SHOpts.lighting'   : props.Widget('lighting'),
-    'SHOpts.size'       : props.Widget(
-        'size',
-        spin=False,
-        showLimits=False),
-    'SHOpts.radiusThreshold' : props.Widget(
-        'radiusThreshold',
-        spin=False,
-        showLimits=False),
-    'SHOpts.colourMode'      : props.Widget(
-        'colourMode',
-        labels=strings.choices['SHOpts.colourMode'],
-        dependencies=['colourImage'],
-        enabledWhen=lambda o, ci: ci is None),
-    'SHOpts.cmap' : props.Widget(
-        'cmap',
-        labels=fslcm.getColourMapLabel,
-        dependencies=['colourImage', 'colourMode'],
-        enabledWhen=lambda o, ci, cm: ci is not None or cm == 'radius'),
-    'SHOpts.xColour'         : props.Widget(
-        'xColour',
-        dependencies=['colourImage', 'colourMode'],
-        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),
-    'SHOpts.yColour'         : props.Widget(
-        'yColour',
-        dependencies=['colourImage', 'colourMode'],
-        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),
-    'SHOpts.zColour'         : props.Widget(
-        'zColour',
-        dependencies=['colourImage', 'colourMode'],
-        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),
-    'SHOpts.suppressX'         : props.Widget(
-        'suppressX',
-        dependencies=['colourImage', 'colourMode'],
-        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),
-    'SHOpts.suppressY'         : props.Widget(
-        'suppressY',
-        dependencies=['colourImage', 'colourMode'],
-        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),
-    'SHOpts.suppressZ'         : props.Widget(
-        'suppressZ',
-        dependencies=['colourImage', 'colourMode'],
-        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),
-    'SHOpts.suppressMode'         : props.Widget(
-        'suppressMode',
-        dependencies=['colourImage', 'colourMode'],
-        enabledWhen=lambda o, ci, cm: ci is None and cm == 'direction'),
-})
-"""This dictionary contains specifications for all controls that are shown on
-an ``OverlayDisplayPanel``.
-"""
+        return sizer, [ovrRange]

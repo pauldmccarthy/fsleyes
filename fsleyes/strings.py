@@ -612,6 +612,8 @@ labels = TypeDict({
     'OverlayDisplayPanel.TensorOpts'     : 'Diffusion tensor settings',
     'OverlayDisplayPanel.SHOpts'         : 'Diffusion SH settings',
 
+    'OverlayDisplayPanel.3d'             : '3D display settings',
+
     'OverlayDisplayPanel.loadCmap'       : 'Load colour map',
     'OverlayDisplayPanel.loadVertexData' : 'Load data',
 
@@ -880,6 +882,13 @@ properties = TypeDict({
     'VolumeOpts.interpolation'           : 'Interpolation',
     'VolumeOpts.enableOverrideDataRange' : 'Override image data range',
     'VolumeOpts.overrideDataRange'       : 'Override image data range',
+
+    'VolumeOpts.dithering'               : 'Dithering',
+    'VolumeOpts.numSteps'                : 'Number of samples',
+    'VolumeOpts.numClipPlanes'           : 'Number of clipping planes',
+    'VolumeOpts.clipPosition'            : 'Clip position (%)',
+    'VolumeOpts.clipInclination'         : 'Clip Z angle',
+    'VolumeOpts.clipAzimuth'             : 'Clip rotation',
 
     'MaskOpts.colour'         : 'Colour',
     'MaskOpts.invert'         : 'Invert',

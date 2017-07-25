@@ -96,8 +96,6 @@ class Volume3DOpts(object):
         azimuth = self.clipAzimuth[    planeIdx]
         incline = self.clipInclination[planeIdx]
 
-        print('{}: {} / {} / {}'.format(planeIdx, pos, azimuth, incline))
-
         b       = self.bounds
         pos     = pos             / 100.0
         azimuth = azimuth * np.pi / 180.0

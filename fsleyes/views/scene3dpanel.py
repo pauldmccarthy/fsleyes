@@ -63,6 +63,8 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
     def destroy(self):
 
         self.__canvas.destroy()
+        self.__canvas = None
+        canvaspanel.CanvasPanel.destroy(self)
 
 
 
