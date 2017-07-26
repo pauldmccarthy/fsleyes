@@ -180,8 +180,8 @@ class GLObject(notifier.Notifier):
           draw3D
           postDraw
 
-     - Note that a ``GLObject`` which has been created for 3D rendering *must
-       also be able to render in 2D*, but not vice-versa.
+     - Note that a ``GLObject`` which has been created for 2D rendering
+       will not be able to render in 2D, nor vice-versa.
 
     Alternately, a sub-class could derive from one of the following classes,
     instead of deriving directly from the ``GLObject`` class:

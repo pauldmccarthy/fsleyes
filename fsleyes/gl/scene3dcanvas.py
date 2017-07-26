@@ -35,9 +35,6 @@ class Scene3DCanvas(props.HasProperties):
     bgColour      = copy.copy(canvasopts.Scene3DCanvasOpts.bgColour)
     showLegend    = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
     zoom          = copy.copy(canvasopts.Scene3DCanvasOpts.zoom)
-    showXSlice    = copy.copy(canvasopts.Scene3DCanvasOpts.showXSlice)
-    showYSlice    = copy.copy(canvasopts.Scene3DCanvasOpts.showYSlice)
-    showZSlice    = copy.copy(canvasopts.Scene3DCanvasOpts.showZSlice)
     offset        = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
     rotation      = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
 
@@ -65,9 +62,6 @@ class Scene3DCanvas(props.HasProperties):
         self.addListener('bgColour',     self.__name, self.Refresh)
         self.addListener('showLegend',   self.__name, self.Refresh)
         self.addListener('zoom',         self.__name, self.Refresh)
-        self.addListener('showXSlice',   self.__name, self.Refresh)
-        self.addListener('showYSlice',   self.__name, self.Refresh)
-        self.addListener('showZSlice',   self.__name, self.Refresh)
         self.addListener('offset',       self.__name, self.Refresh)
         self.addListener('rotation',     self.__name, self.Refresh)
 
@@ -272,12 +266,6 @@ class Scene3DCanvas(props.HasProperties):
                     continue
 
                 globj.preDraw()
-
-                pos = self.__displayCtx.location.xyz
-
-                if self.showXSlice: globj.draw2D(pos[0], axes=(1, 2, 0))
-                if self.showYSlice: globj.draw2D(pos[1], axes=(0, 2, 1))
-                if self.showZSlice: globj.draw2D(pos[2], axes=(0, 1, 2))
 
                 globj.draw3D(xform=self.__xform)
                 globj.postDraw()

@@ -180,18 +180,6 @@ class Scene3DCanvasOpts(props.HasProperties):
     zoom         = copy.copy(SliceCanvasOpts.zoom)
 
 
-    showXSlice = props.Boolean(default=True)
-    """If ``True``, a 2D plane at the current x location will be shown. """
-
-
-    showYSlice = props.Boolean(default=True)
-    """If ``True``, a 2D plane at the current y location will be shown. """
-
-
-    showZSlice = props.Boolean(default=True)
-    """If ``True``, a 2D plane at the current z location will be shown. """
-
-
     showLegend = props.Boolean(default=True)
     """If ``True``, an orientation guide will be shown on the canvas. """
 

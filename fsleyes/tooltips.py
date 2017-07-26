@@ -379,13 +379,6 @@ properties = TypeDict({
     'LightBoxOpts.highlightSlice' : 'If checked, a box will be drawn around '
                                     'the currently selected slice.',
 
-    'Scene3DOpts.showXSlice' :
-    'When selected, a 2D slice on the X plane will be shown.',
-    'Scene3DOpts.showYSlice' :
-    'When selected, a 2D slice on the Y plane will be shown.',
-    'Scene3DOpts.showZSlice' :
-    'When selected, a 2D slice on the Z plane will be shown.',
-
     'Scene3DOpts.showLegend' :
     'When selected, a legend will be displayed in the bottom right, showing '
     'orientation information.',

@@ -135,9 +135,6 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
             props.Widget('highlightSlice'),
             props.Widget('showGridLines')]
         scene3dOptsProps = [
-            props.Widget('showXSlice'),
-            props.Widget('showYSlice'),
-            props.Widget('showZSlice'),
             props.Widget('zoom', showLimits=False),
             props.Widget('showLegend'),
         ]
