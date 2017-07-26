@@ -1489,3 +1489,21 @@ def unitCircle(res, triangles=False):
         verts  = np.concatenate((origin, verts))
 
     return verts
+
+
+def polygonIndices(nverts):
+    """Generate triangle indices for simple 2D polygons. Given vertices
+    describing a monotone polygon on a 2D plane, generates an index list
+    into the vertices which can be used to draw the vertices as triangles.
+    """
+
+    ntris   = nverts - 2
+    nidxs   = ntris  * 3
+    indices = np.zeros(nidxs, dtype=np.uint32)
+
+    indices[1]    = 1
+    indices[2:-1] = np.repeat(np.arange(2, nverts - 1), 3)
+    indices[-1]   = nverts - 1
+    indices[::3]  = 0
+
+    return indices

@@ -42,8 +42,14 @@ class Volume3DOpts(object):
     """
 
 
-    numClipPlanes = props.Int(minval=0, maxval=10, default=1, clamped=True)
+    numClipPlanes = props.Int(minval=0, maxval=10, default=0, clamped=True)
     """Number of active clip planes. """
+
+
+    showClipPlanes = props.Boolean(default=False)
+    """If ``True``, wirframes depicting the active clipping planes will
+    be drawn.
+    """
 
 
     clipPosition = props.List(

@@ -194,9 +194,9 @@ def draw3D(self, xform=None, bbox=None):
     """
 
     vertices, voxCoords, texCoords = self.generateVertices3D(xform, bbox)
-    rayStep, ditherDir, xform      = self.calculate3DSettings()
+    rayStep, ditherDir, texform    = self.calculate3DSettings()
 
-    self.shader.set(   'tex2ScreenXform', xform)
+    self.shader.set(   'tex2ScreenXform', texform)
     self.shader.set(   'rayStep',         rayStep)
     self.shader.set(   'ditherDir',       ditherDir)
     self.shader.setAtt('vertex',          vertices)

@@ -130,6 +130,29 @@ properties = TypeDict({
     'one. This is useful for images which have a very large data '
     'range that is driven by outliers.',
 
+    'Volume3DOpts.dithering' :
+    'How much the image sampling position should be randomly adjusted for '
+    'each pixel. ' ,
+
+    'Volume3DOpts.numSteps' :
+    'The maximum number of times that the image is sampled for each pixel.',
+
+    'Volume3DOpts.numClipPlanes' :
+    'Number of active clipping planes. Areas of the image which are in the '
+    'region intersected by all clipping planes will not be shown.',
+
+    'Volume3DOpts.showClipPlanes' :
+    'When enabled, each active clipping plane is shown.',
+
+    'Volume3DOpts.clipPosition' :
+    'Clip plane position, as a percentage of the image length.',
+
+    'Volume3DOpts.clipInclination' :
+    'Amount by which to rotate the clip plane about the X axis.',
+
+    'Volume3DOpts.clipAzimuth' :
+    'Amount by which to rotate the clip plane about the Z axis.',
+
     'MaskOpts.colour'    : 'The colour of this mask image.',
     'MaskOpts.invert'    : 'Invert the mask threshold range, so that values '
                            'outside of the range are shown, and values '

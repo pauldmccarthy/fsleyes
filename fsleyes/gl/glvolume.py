@@ -17,7 +17,10 @@ import OpenGL.GL           as gl
 
 import fsl.utils.async     as async
 import fsl.utils.transform as transform
+import fsleyes.colourmaps  as fslcmaps
 import fsleyes.gl          as fslgl
+import fsleyes.gl.trimesh  as trimesh
+import fsleyes.gl.routines as glroutines
 from . import                 textures
 from . import                 globject
 from . import resources    as glresources
@@ -213,6 +216,11 @@ class GLVolume(globject.GLImageObject):
         # See that method for details.
         self.__alwaysNotify = False
 
+        # In 3D mode, when Volume3DOpts.showClipPlanes
+        # is on, we create a unique random colour for
+        # each displayed clipping plane.
+        self.__clipPlaneColours = {}
+
         # If the VolumeOpts instance has
         # inherited a clipImage value,
         # make sure we're registered with it.
@@ -335,6 +343,8 @@ class GLVolume(globject.GLImageObject):
         if self.threedee:
             opts.addListener('dithering',       name, self._ditheringChanged)
             opts.addListener('numSteps',        name, self._numStepsChanged)
+            opts.addListener('showClipPlanes',  name,
+                             self._showClipPlanesChanged)
             opts.addListener('numClipPlanes',   name, self._clipping3DChanged)
             opts.addListener('clipPosition',    name, self._clipping3DChanged)
             opts.addListener('clipAzimuth',     name, self._clipping3DChanged)
@@ -394,8 +404,13 @@ class GLVolume(globject.GLImageObject):
         opts    .removeListener(          'overrideDataRange',       name)
 
         if self.threedee:
-            opts.removeListener('dithering', name)
-            opts.removeListener('numSteps',  name)
+            opts.removeListener('dithering',       name)
+            opts.removeListener('numSteps',        name)
+            opts.removeListener('numClipPlanes',   name)
+            opts.removeListener('showClipPlanes',  name)
+            opts.removeListener('clipPosition',    name)
+            opts.removeListener('clipAzimuth',     name)
+            opts.removeListener('clipInclination', name)
 
         if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume', name)
@@ -753,6 +768,86 @@ class GLVolume(globject.GLImageObject):
         return rayStep, ditherDir, xform
 
 
+    def __clipPlaneVertices(self,
+                            planeIdx,
+                            clippedVertices,
+                            clippedIndices,
+                            xform):
+        """Generates vertices for the clipping plane specified by ``planeIdx``
+        (an index into the ``Volume3DOpts.clip*`` lists).
+
+        See the :meth:`drawClipPlanes` method.
+        """
+
+        origin, normal = self.opts.get3DClipPlane(planeIdx)
+
+        origin = transform.transform(      origin, xform)
+        normal = transform.transformNormal(normal, xform)
+
+        lines = trimesh.mesh_plane(
+            clippedVertices,
+            clippedIndices.reshape(-1, 3),
+            plane_normal=normal,
+            plane_origin=origin)
+
+        # Assuming that the returned
+        # lines are sorted
+        vertices = np.array(lines.reshape(-1, 3), dtype=np.float32)
+
+        if vertices.shape[0] < 3:
+            return np.zeros((0, 3)), np.zeros((0,))
+
+        indices = glroutines.polygonIndices(vertices.shape[0])
+
+        return vertices, indices
+
+
+    def drawClipPlanes(self, clippedVertices, clippedIndices, xform=None):
+        """Draws the active clipping planes, as specified by the
+        :class:`VolumeOpts` clipping properties.
+
+        :arg clippedVertices: The vertices which are being clipped (assumed
+                              to be the image bounding box)
+
+        :arg clippedIndices:  Indies into the ``clippedVertices``
+
+        :arg xform:           Transformation from the image coordinate
+                              system to the current display coordinate system
+                              (already applied to the ``clippedVerties``).
+        """
+
+        if not self.opts.showClipPlanes:
+            return
+
+        for i in range(self.opts.numClipPlanes):
+
+            verts, idxs = self.__clipPlaneVertices(i,
+                                                   clippedVertices,
+                                                   clippedIndices,
+                                                   xform)
+
+            if len(idxs) == 0:
+                continue
+
+            # A consistent colour for
+            # each clipping plane
+            rgb = self.__clipPlaneColours.get(i, None)
+            if rgb is None:
+                rgb = fslcmaps.randomBrightColour()[:3]
+                self.__clipPlaneColours[i] = rgb
+
+            r, g, b = rgb
+
+            with glroutines.enabled(gl.GL_VERTEX_ARRAY):
+
+                gl.glColor4f(r, g, b, 0.3)
+                gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts.ravel('C'))
+                gl.glDrawElements(gl.GL_TRIANGLES,
+                                  len(idxs),
+                                  gl.GL_UNSIGNED_INT,
+                                  idxs)
+
+
     def _alphaChanged(self, *a):
         """Called when the :attr:`.Display.alpha` property changes. """
         self.refreshColourTextures()
@@ -903,6 +998,13 @@ class GLVolume(globject.GLImageObject):
         """Called when any of the :attr:`.Volume3DOpts.numClipPlanes`,
         :attr:`.Volume3DOpts.clipPosition`, :attr:`.Volume3DOpts.clipAzimuth`,
         or :attr:`.Volume3DOpts.clipInclination` properties change.
+        """
+        self.updateShaderState(alwaysNotify=True)
+
+
+    def _showClipPlanesChanged(self, *a):
+        """Called when the :attr:`.Volume3DOpts.showClipPlanes` property
+        changes.
         """
         self.updateShaderState(alwaysNotify=True)
 
