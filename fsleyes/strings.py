@@ -617,6 +617,8 @@ labels = TypeDict({
     'OverlayDisplayPanel.loadCmap'       : 'Load colour map',
     'OverlayDisplayPanel.loadVertexData' : 'Load data',
 
+    'OverlayDisplayPanel.clipPlane#'     : 'Clip plane #{}',
+
     'CanvasSettingsPanel.scene'    : 'Scene settings',
     'CanvasSettingsPanel.ortho'    : 'Ortho view settings',
     'CanvasSettingsPanel.lightbox' : 'Lightbox settings',

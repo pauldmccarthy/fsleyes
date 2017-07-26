@@ -169,7 +169,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         for g, l, t in zip(groups, labels, targets):
 
             widgetList.AddGroup(g, l)
-            self.__widgets[g] = self.__updateWidgets(t, g)
+            self.__widgets[g] = self.updateWidgets(t, g)
             widgetList.Expand(g, keepExpanded[g])
 
         self.setNavOrder()
@@ -194,18 +194,18 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         opts       = self._displayCtx.getOpts(self.__currentOverlay)
         widgetList = self.getWidgetList()
 
-        self.__widgets[opts] = self.__updateWidgets(opts, 'opts')
+        self.__widgets[opts] = self.updateWidgets(opts, 'opts')
 
         widgetList.RenameGroup('opts', strings.labels[self, opts])
 
         if '3d' in self.__widgets:
-            self.__widgets['3d'] = self.__updateWidgets(opts, '3d')
+            self.__widgets['3d'] = self.updateWidgets(opts, '3d')
 
         self.setNavOrder()
         self.Layout()
 
 
-    def __updateWidgets(self, target, groupName):
+    def updateWidgets(self, target, groupName):
         """Called by the :meth:`__selectedOverlayChanged` and
         :meth:`__ovlTypeChanged` methods. Re-creates the controls on this
         ``OverlayDisplayPanel`` for the specified group.
@@ -214,9 +214,9 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
                         which contains the properties that controls are to be
                         created for.
 
-        :arg groupName: Either ``'display'`` or ``'opts'``, corresponding
-                        to :class:`.Display` or :class:`.DisplayOpts`
-                        properties.
+        :arg groupName: Either ``'display'`` or ``'opts'``/``'3d'``,
+                        corresponding to :class:`.Display` or
+                        :class:`.DisplayOpts` properties.
 
         :returns:       A list containing all of the new widgets that
                         were created.
@@ -233,33 +233,60 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
             dispProps = odwidgets.getPropertyList(target)
             dispSpecs = odwidgets.getWidgetSpecs( target)
 
-        labels   = [strings.properties.get((target, p), p)
-                    for p in dispProps]
-        tooltips = [fsltooltips.properties.get((target, p), None)
-                    for p in dispProps]
-
+        allLabels     = []
+        allTooltips   = []
         allWidgets    = []
         allContainers = []
 
         for p in dispProps:
 
-            s = dispSpecs[p]
+            spec  = dispSpecs[p]
 
-            if callable(s):
-                container, widgets = s(
+            specs    = [spec]
+            labels   = [strings    .properties.get((target, p), None)]
+            tooltips = [fsltooltips.properties.get((target, p), None)]
+
+            if callable(spec):
+
+                # Will either return a contsiner
+                # widget/sizer and a list of widgets
+                # for setting the navigation order,
+                # or will return a list of specs
+                # (with an irrelevant second parameter)
+                container, widgets = spec(
                     target,
                     widgetList,
                     self,
                     self.getOverlayList(),
                     self.getDisplayContext())
-            else:
-                container = props.buildGUI(widgetList, target, s)
-                widgets   = [container]
 
-            allWidgets   .extend(widgets)
-            allContainers.append(container)
+                if isinstance(container, collections.Sequence):
+                    specs    = container
+                    keys     = [s.key for s in specs]
+                    labels   = [strings.properties.get((target, k), None)
+                                for k in keys]
+                    tooltips = [fsltooltips.properties.get((target, k), None)
+                                for k in keys]
 
-        for label, tooltip, widget in zip(labels, tooltips, allContainers):
+                else:
+                    allContainers.append(container)
+                    allWidgets   .extend(widgets)
+                    specs = []
+
+            for s in specs:
+                widget = props.buildGUI(widgetList, target, s)
+
+                allWidgets   .append(widget)
+                allContainers.append(widget)
+
+            allLabels  .extend(labels)
+            allTooltips.extend(tooltips)
+
+        for widget, label, tooltip in zip(allContainers,
+                                          allLabels,
+                                          allTooltips):
+            if label is None:
+                label = ''
             widgetList.AddWidget(
                 widget,
                 label,

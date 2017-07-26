@@ -11,27 +11,44 @@ definitions of all the settings that are displayed on the
 It also contains functions which create customised widgets, for scenarios
 where a widget does not directly map to a :class:`.Display` or
 :class:`.DisplayOpts` property.
+
+
+``_initPropertyList_[DisplayOptsType]``
+``_init3DPropertyList_[DisplayOptsType]``
+``_initWidgetSpec_[DisplayOptsType]``
+``_init3DWidgetSpec_[DisplayOptsType]``
 """
 
 
 import os.path as op
 import            sys
+import            copy
 import            functools
 
 import            wx
 
-import fsleyes_props                  as props
-import fsleyes_widgets.utils.typedict as td
-import fsleyes.strings                as strings
-import fsleyes.colourmaps             as fslcm
-import fsleyes.actions.loadcolourmap  as loadcmap
-import fsleyes.actions.loadvertexdata as loadvdata
+import fsl.utils.async                    as async
+from   fsl.utils.platform import platform as fslplatform
+import fsleyes_props                      as props
+import fsleyes_widgets.utils.typedict     as td
+import fsleyes.strings                    as strings
+import fsleyes.colourmaps                 as fslcm
+import fsleyes.actions.loadcolourmap      as loadcmap
+import fsleyes.actions.loadvertexdata     as loadvdata
 
 
 _PROPERTIES      = td.TypeDict()
 _3D_PROPERTIES   = td.TypeDict()
 _WIDGET_SPECS    = td.TypeDict()
 _3D_WIDGET_SPECS = td.TypeDict()
+
+
+
+
+def _merge_dicts(d1, d2):
+    d3 = d1.copy()
+    d3.update(d2)
+    return d3
 
 
 def getPropertyList(target):
@@ -72,12 +89,6 @@ def get3DWidgetSpecs(target):
         return {}
 
     return functools.reduce(_merge_dicts, sdicts)
-
-
-def _merge_dicts(d1, d2):
-    d3 = d1.copy()
-    d3.update(d2)
-    return d3
 
 
 def _getThing(target, prefix, thingDict):
@@ -147,7 +158,7 @@ def _initPropertyList_VolumeOpts():
 def _init3DPropertyList_VolumeOpts():
     return ['dithering',
             'numSteps',
-            'numClipPlanes']
+            'custom_clipPlanes']
 
 
 def _initPropertyList_MaskOpts():
@@ -327,9 +338,20 @@ def _initWidgetSpec_VolumeOpts():
 def _init3DWidgetSpec_VolumeOpts():
 
     return {
-        'dithering'     : props.Widget('dithering',     showLimits=False),
-        'numSteps'      : props.Widget('numSteps',      showLimits=False),
-        'numClipPlanes' : props.Widget('numClipPlanes', showLimits=False),
+        'dithering'         : props.Widget('dithering',
+                                           showLimits=False),
+        'numSteps'          : props.Widget('numSteps',
+                                           showLimits=False),
+        'numClipPlanes'     : props.Widget('numClipPlanes',
+                                           slider=False,
+                                           showLimits=False),
+        'clipPosition'      : props.Widget('clipPosition',
+                                           showLimits=False),
+        'clipAzimuth'       : props.Widget('clipAzimuth',
+                                           showLimits=False),
+        'clipInclination'   : props.Widget('clipInclination',
+                                           showLimits=False),
+        'custom_clipPlanes' : _VolumeOpts_3DClipPlanes,
     }
 
 
@@ -708,6 +730,68 @@ def _VolumeOpts_OverrideDataRangeWidget(
     sizer.Add(ovrRange, flag=wx.EXPAND, proportion=1)
 
     return sizer, [enable, ovrRange]
+
+
+def _VolumeOpts_3DClipPlanes(
+        target,
+        parent,
+        panel,
+        overlayList,
+        displayCtx):
+    """Generates widget specifications for the ``VolumeOpts`` 3D settings.
+    A different number of widgets are shown depending on the value of the
+    :attr:`.VolumeOpts.numClipPlanes` setting.
+    """
+
+    # Whenever numClipPlanes changes, we
+    # need to refresh the clip plane widgets.
+    # Easiest way to do this is to tell the
+    # OverlayDisplayPanel to re-create the 3D
+    # settings section.
+    #
+    # TODO what is the lifespan of this listener?
+    def numClipPlanesChanged(*a):
+        if fslplatform.isWidgetAlive(panel) and \
+           fslplatform.isWidgetAlive(parent):
+            async.idle(panel.updateWidgets, target, '3d')
+
+    name = '{}_{}_VolumeOpts_3DClipPlanes'.format(
+        target.name, id(panel))
+
+    target.addListener('numClipPlanes',
+                       name,
+                       numClipPlanesChanged,
+                       overwrite=True,
+                       weak=False)
+
+    numPlaneSpec = get3DWidgetSpecs(target)['numClipPlanes']
+    position     = get3DWidgetSpecs(target)['clipPosition']
+    azimuth      = get3DWidgetSpecs(target)['clipAzimuth']
+    inclination  = get3DWidgetSpecs(target)['clipInclination']
+
+    numPlanes = target.numClipPlanes
+
+    if numPlanes == 0:
+        return [numPlaneSpec], None
+
+    positions    = [copy.deepcopy(position)    for i in range(numPlanes)]
+    azimuths     = [copy.deepcopy(azimuth)     for i in range(numPlanes)]
+    inclinations = [copy.deepcopy(inclination) for i in range(numPlanes)]
+
+    specs = [numPlaneSpec]
+
+    for i in range(numPlanes):
+
+        positions[i]   .index = i
+        azimuths[i]    .index = i
+        inclinations[i].index = i
+
+        label = strings.labels[panel, 'clipPlane#'].format(i + 1)
+        label = props.Label(label=label)
+
+        specs.extend((label, positions[i], azimuths[i], inclinations[i]))
+
+    return specs, None
 
 
 def _MeshOpts_VertexDataWidget(
