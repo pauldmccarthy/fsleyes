@@ -1351,11 +1351,12 @@ def planeEquation2(origin, normal):
 
     normal     = transform.normalise(normal)
     ax, by, cz = np.array(origin) * normal
-    d          = -np.sum((ax, by, cz))
 
-    ax, by, cz = transform.normalise((ax, by, cz))
+    eqn     = np.zeros(4, dtype=np.float64)
+    eqn[:3] = normal
+    eqn[ 3] = -np.sum((ax, by, cz))
 
-    return np.array([ax, by, cz, d])
+    return eqn
 
 
 def unitSphere(res):

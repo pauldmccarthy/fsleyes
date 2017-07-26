@@ -124,7 +124,7 @@ def updateShaderState(self):
         for i in range(opts.numClipPlanes):
             origin, normal   = opts.get3DClipPlane(i)
             origin           = transform.transform(origin, d2tmat)
-            normal           = transform.transform(normal, d2tmat, vector=True)
+            normal           = transform.transformNormal(normal, d2tmat)
             clipPlanes[i, :] = glroutines.planeEquation2(origin, normal)
 
         changed |= shader.set('numClipPlanes', opts.numClipPlanes)

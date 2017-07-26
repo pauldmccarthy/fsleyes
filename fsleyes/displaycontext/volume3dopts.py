@@ -59,8 +59,8 @@ class Volume3DOpts(object):
         props.Real(minval=-180, maxval=180, clamped=True),
         minlen=10,
         maxlen=10)
-    """Rotation of the clip plane about the Z axis, in the display coordinate
-    system.
+    """Rotation (degrees) of the clip plane about the Z axis, in the display
+    coordinate system.
     """
 
 
@@ -68,8 +68,8 @@ class Volume3DOpts(object):
         props.Real(minval=-180, maxval=180, clamped=True),
         minlen=10,
         maxlen=10)
-    """Rotation of the clip plane about the Y axis in the display coordinate
-    system.
+    """Rotation (degrees) of the clip plane about the Y axis in the display
+    coordinate system.
     """
 
 
@@ -80,6 +80,14 @@ class Volume3DOpts(object):
         self.clipPosition[:]    = 10 * [50]
         self.clipAzimuth[:]     = 10 * [0]
         self.clipInclination[:] = 10 * [0]
+
+        # Give convenient initial values for
+        # the first three clipping planes
+        self.clipInclination[1] = 90
+        self.clipAzimuth[    1] = 0
+        self.clipInclination[2] = 90
+        self.clipAzimuth[    2] = 90
+
 
 
     def destroy(self):
@@ -101,37 +109,21 @@ class Volume3DOpts(object):
         azimuth = azimuth * np.pi / 180.0
         incline = incline * np.pi / 180.0
 
-
         xmid = b.xlo + 0.5 * b.xlen
         ymid = b.ylo + 0.5 * b.ylen
         zmid = b.zlo + 0.5 * b.zlen
 
         centre = [xmid, ymid, zmid]
+        normal = [0, 0, -1]
 
-        if   planeIdx == 1: normal = [ 0, -1,  0]
-        elif planeIdx == 2: normal = [-1,  0,  0]
-        else:               normal = [ 0,  0, -1]
-        if   planeIdx == 1: origin = [xmid, b.ylo + pos * b.ylen, zmid]
-        elif planeIdx == 2: origin = [b.xlo + pos * b.xlen, ymid, zmid]
-        else:               origin = [xmid, ymid, b.zlo + pos * b.zlen]
-
-        rot1 = transform.axisAnglesToRotMat(incline, 0, 0)
-        rot2 = transform.axisAnglesToRotMat(0, 0, azimuth)
-
+        rot1     = transform.axisAnglesToRotMat(incline, 0, 0)
+        rot2     = transform.axisAnglesToRotMat(0, 0, azimuth)
         rotation = transform.concat(rot2, rot1)
 
-        xform   = transform.compose([1, 1, 1],
-                                    [0, 0, 0],
-                                    rotation,
-                                    origin)
+        normal = transform.transformNormal(normal, rotation)
+        normal = transform.normalise(normal)
 
-        oxform = transform.compose([1, 1, 1],
-                                    [0, 0, 0],
-                                    rotation,
-                                    centre)
-
-        origin  = transform.transform(origin, oxform)
-        normal  = transform.transform(normal, xform, vector=True)
-        normal  = normal / np.sqrt(np.dot(normal, normal))
+        offset = (pos - 0.5) * max((b.xlen, b.ylen, b.zlen))
+        origin = centre + normal * offset
 
         return origin, normal
