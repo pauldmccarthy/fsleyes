@@ -15,8 +15,8 @@ defined in this module:
    GLSimpleObject
 
 
-See also the :class:`.GLImageObject`, which contains some extra methods for
-displaying :class:`.Image` overlays.
+See also the :class:`.GLImageObject`, which is the base class for all ``GLObject``
+ sub-types that display :class:`.Nifti` overlays.
 
 
 This module also provides a few functions, most importantly
@@ -140,6 +140,10 @@ class GLObject(notifier.Notifier):
         method.
 
 
+    Note that a ``GLObject`` which has been created for 2D rendering
+    is not expected be able to render in 3D, nor vice-versa.
+
+
     **Update listeners**
 
 
@@ -178,9 +182,6 @@ class GLObject(notifier.Notifier):
           draw2D
           draw3D
           postDraw
-
-     - Note that a ``GLObject`` which has been created for 2D rendering
-       will not be able to render in 2D, nor vice-versa.
 
     Alternately, a sub-class could derive from one of the following classes,
     instead of deriving directly from the ``GLObject`` class:
@@ -459,7 +460,7 @@ class GLSimpleObject(GLObject):
     """The ``GLSimpleObject`` class is a convenience superclass for simple
     rendering tasks (probably fixed-function) which are not associated with a
     specific overlay, and require no setup or initialisation/management of GL
-    memory or state.
+    memory or state. It is used by the :mod:`.annotations` module.
 
     All subclasses need to do is implement the :meth:`GLObject.draw2D` and
     :meth:`GLObject.draw3D` methods. The :mod:`.annotations` module uses the

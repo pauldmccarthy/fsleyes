@@ -122,7 +122,7 @@ def updateShaderState(self):
         d2tmat     = opts.getTransform('display', 'texture')
 
         for i in range(opts.numClipPlanes):
-            origin, normal   = opts.get3DClipPlane(i)
+            origin, normal   = self.get3DClipPlane(i)
             origin           = transform.transform(origin, d2tmat)
             normal           = transform.transformNormal(normal, d2tmat)
             clipPlanes[i, :] = glroutines.planeEquation2(origin, normal)
@@ -194,7 +194,7 @@ def draw3D(self, xform=None, bbox=None):
     """
 
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
-    rayStep, ditherDir, texform    = self.calculate3DSettings()
+    rayStep, ditherDir, texform    = self.calculateRayCastSettings()
 
     if xform is not None:
         vertices = transform.transform(vertices, xform)
@@ -245,3 +245,6 @@ def postDraw(self, xform=None, bbox=None):
     """
     self.shader.unloadAtts()
     self.shader.unload()
+
+    if self.threedee:
+        self.drawClipPlanes(xform=xform)

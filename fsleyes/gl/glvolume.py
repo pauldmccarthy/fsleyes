@@ -17,10 +17,7 @@ import OpenGL.GL           as gl
 
 import fsl.utils.async     as async
 import fsl.utils.transform as transform
-import fsleyes.colourmaps  as fslcmaps
 import fsleyes.gl          as fslgl
-import fsleyes.gl.trimesh  as trimesh
-import fsleyes.gl.routines as glroutines
 from . import                 textures
 from . import                 glimageobject
 from . import resources    as glresources
@@ -110,7 +107,10 @@ class GLVolume(glimageobject.GLImageObject):
     **3D rendering**
 
 
-    TODO
+    In 3D, images are rendered using a ray-casting approach. The image
+    bounding box is drawn as a cuboid. Then for each pixel, a ray is cast
+    from the 'camera' through the image texture. The resulting colour
+    is generated from sampling points along the ray.
 
 
     **Textures**
@@ -215,11 +215,6 @@ class GLVolume(glimageobject.GLImageObject):
         # method gets called when needed.
         # See that method for details.
         self.__alwaysNotify = False
-
-        # In 3D mode, when Volume3DOpts.showClipPlanes
-        # is on, we create a unique random colour for
-        # each displayed clipping plane.
-        self.__clipPlaneColours = {}
 
         # If the VolumeOpts instance has
         # inherited a clipImage value,
@@ -693,124 +688,6 @@ class GLVolume(glimageobject.GLImageObject):
                 self.opts    .getTransform('texture', 'display'))
 
         return clipCoordXform
-
-
-    def calculate3DSettings(self):
-        """Calculates various parameters required for 3D rendering. Returns a
-        tuple containing:
-
-          - A vector defining the amount by which to move along a ray in a
-            single iteration of the ray-casting algorithm. This can be added
-            directly to the volume texture coordinates.
-
-          - A vector defining the maximum distance by which to randomly adjust
-            the start location of each ray, to induce a dithering effect in
-            the rendered scene.
-
-          - A transformation matrix which transforms from image texture
-            coordinates into the display coordinate system.
-        """
-
-        # In GL, the camera position
-        # is initially pointing in
-        # the -z direction.
-        opts   = self.opts
-        eye    = [0, 0, -1]
-        target = [0, 0,  1]
-
-        # We take this initial camera
-        # configuration, and transform
-        # it by the inverse modelview
-        # matrix
-        mvmat  = self.canvas.getViewMatrix()
-        t2dmat = self.opts.getTransform('texture', 'display')
-        xform  = transform.concat(mvmat, t2dmat)
-        ixform = transform.invert(xform)
-
-        eye    = transform.transform(eye,    ixform, vector=True)
-        target = transform.transform(target, ixform, vector=True)
-
-        def norm(vec):
-            return vec / np.sqrt(np.dot(vec, vec))
-
-        # Direction that the 'camera' is
-        # pointing, normalied to unit length
-        cdir = norm(eye - target)
-
-        # Calculate the length of one step
-        # along the camera direction in a
-        # single iteration of the ray-cast
-        # loop.
-        rayStep = cdir / opts.numSteps
-
-        # Maximum amount by which to dither
-        # the scene. This is done by applying
-        # a random offset to the starting
-        # point of each ray - we pass the
-        # shader a vector in the camera direction,
-        # so all it needs to do is scale the
-        # vector by a random amount, and add the
-        # vector to the starting point.
-        ditherDir = cdir * opts.dithering
-
-        # A transformation matrix which can
-        # transform image texture coordinates
-        # into the corresponding screen
-        # (normalised device) coordinates.
-        # This allows the fragment shader to
-        # convert an image texture coordinate
-        # into a relative depth value.
-        proj  = gl.glGetFloat(gl.GL_PROJECTION_MATRIX).T
-        xform = transform.concat(proj, xform)
-
-        return rayStep, ditherDir, xform
-
-
-
-    def drawClipPlanes(self, clippedVertices, clippedIndices, xform=None):
-        """Draws the active clipping planes, as specified by the
-        :class:`VolumeOpts` clipping properties.
-
-        :arg clippedVertices: The vertices which are being clipped (assumed
-                              to be the image bounding box)
-
-        :arg clippedIndices:  Indies into the ``clippedVertices``
-
-        :arg xform:           Transformation from the image coordinate
-                              system to the current display coordinate system
-                              (already applied to the ``clippedVerties``).
-        """
-
-        if not self.opts.showClipPlanes:
-            return
-
-        for i in range(self.opts.numClipPlanes):
-
-            verts, idxs = self.__clipPlaneVertices(i,
-                                                   clippedVertices,
-                                                   clippedIndices,
-                                                   xform)
-
-            if len(idxs) == 0:
-                continue
-
-            # A consistent colour for
-            # each clipping plane
-            rgb = self.__clipPlaneColours.get(i, None)
-            if rgb is None:
-                rgb = fslcmaps.randomBrightColour()[:3]
-                self.__clipPlaneColours[i] = rgb
-
-            r, g, b = rgb
-
-            with glroutines.enabled(gl.GL_VERTEX_ARRAY):
-
-                gl.glColor4f(r, g, b, 0.3)
-                gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts.ravel('C'))
-                gl.glDrawElements(gl.GL_TRIANGLES,
-                                  len(idxs),
-                                  gl.GL_UNSIGNED_INT,
-                                  idxs)
 
 
     def _alphaChanged(self, *a):
