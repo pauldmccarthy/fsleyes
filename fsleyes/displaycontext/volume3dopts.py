@@ -10,10 +10,7 @@ for ray-cast based rendering of :class:`.Image` overlays.
 """
 
 
-import numpy as np
-
-import fsl.utils.transform as transform
-import fsleyes_props       as props
+import fsleyes_props as props
 
 
 class Volume3DOpts(object):
@@ -95,41 +92,7 @@ class Volume3DOpts(object):
         self.clipAzimuth[    2] = 90
 
 
-
     def destroy(self):
         """
         """
         pass
-
-
-    def get3DClipPlane(self, planeIdx):
-        """
-        """
-
-        pos     = self.clipPosition[   planeIdx]
-        azimuth = self.clipAzimuth[    planeIdx]
-        incline = self.clipInclination[planeIdx]
-
-        b       = self.bounds
-        pos     = pos             / 100.0
-        azimuth = azimuth * np.pi / 180.0
-        incline = incline * np.pi / 180.0
-
-        xmid = b.xlo + 0.5 * b.xlen
-        ymid = b.ylo + 0.5 * b.ylen
-        zmid = b.zlo + 0.5 * b.zlen
-
-        centre = [xmid, ymid, zmid]
-        normal = [0, 0, -1]
-
-        rot1     = transform.axisAnglesToRotMat(incline, 0, 0)
-        rot2     = transform.axisAnglesToRotMat(0, 0, azimuth)
-        rotation = transform.concat(rot2, rot1)
-
-        normal = transform.transformNormal(normal, rotation)
-        normal = transform.normalise(normal)
-
-        offset = (pos - 0.5) * max((b.xlen, b.ylen, b.zlen))
-        origin = centre + normal * offset
-
-        return origin, normal

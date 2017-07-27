@@ -144,10 +144,10 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
     """Draws a 2D slice of the image at the given Z location. """
 
     vertices, voxCoords, texCoords = self.generateVertices2D(
-        zpos,
-        axes,
-        xform=xform,
-        bbox=bbox)
+        zpos, axes, bbox=bbox)
+
+    if xform is not None:
+        vertices = transform.transform(vertices, xform)
 
     vertices = np.array(vertices, dtype=np.float32).ravel('C')
 
@@ -175,8 +175,11 @@ def draw3D(self, xform=None, bbox=None):
 
     :arg bbox:    An optional bounding box.
     """
-    vertices, voxCoords, texCoords = self.generateVertices3D(xform, bbox)
+    vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
     rayStep, ditherDir, xform      = self.calculate3DSettings()
+
+    if xform is not None:
+        vertices = transform.transform(vertices, xform)
 
     self.shader.setFragParam('rayStep',         list(rayStep)   + [0])
     self.shader.setFragParam('ditherDir',       list(ditherDir) + [0])
@@ -209,9 +212,9 @@ def drawAll(self, axes, zposes, xforms):
 
     for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
 
-        v, vc, tc = self.generateVertices2D(zpos, axes, xform)
+        v, vc, tc = self.generateVertices2D(zpos, axes)
 
-        vertices[ i * 6: i * 6 + 6, :] = v
+        vertices[ i * 6: i * 6 + 6, :] = transform.transform(v, xform)
         texCoords[i * 6: i * 6 + 6, :] = tc
 
     vertices = vertices.ravel('C')

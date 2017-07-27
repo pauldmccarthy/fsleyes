@@ -114,14 +114,10 @@ class GLImageObject(globject.GLObject):
         return front
 
 
-    def generateVertices2D(self,
-                           zpos,
-                           axes,
-                           xform=None,
-                           bbox=None):
+    def generateVertices2D(self, zpos, axes, bbox=None):
         """Generates vertex coordinates for a 2D slice of the :class:`.Image`,
-        through the given ``zpos``, with the optional ``xform`` and ``bbox``
-        applied to the coordinates.
+        through the given ``zpos``, with the optional ``bbox`` applied to the
+        coordinates.
 
 
         This is a convenience method for generating vertices which can be used
@@ -156,9 +152,6 @@ class GLImageObject(globject.GLObject):
             d2vMat,
             bbox=bbox)
 
-        if xform is not None:
-            vertices = transform.transform(vertices, xform)
-
         # If not interpolating, centre the
         # voxel coordinates on the Z/depth
         # axis. We do this to avoid rounding
@@ -172,10 +165,10 @@ class GLImageObject(globject.GLObject):
         return vertices, voxCoords, texCoords
 
 
-    def generateVertices3D(self, xform=None, bbox=None):
+    def generateVertices3D(self, bbox=None):
         """Generates vertex coordinates defining the 3D bounding box of the
-        :class:`.Image`, with the optional ``xform`` and ``bbox`` applied to
-        the coordinates. See the :func:`.routines.boundingBox` function.
+        :class:`.Image`, with the optional ``bbox`` applied to the
+        coordinates. See the :func:`.routines.boundingBox` function.
 
         A tuple of three values is returned, containing:
 
@@ -197,9 +190,6 @@ class GLImageObject(globject.GLObject):
             v2dMat,
             d2vMat,
             bbox=bbox)
-
-        if xform is not None:
-            vertices = transform.transform(vertices, xform)
 
         texCoords = transform.transform(voxCoords, v2tMat)
 
@@ -299,3 +289,72 @@ class GLImageObject(globject.GLObject):
             # voxels = opts.roundVoxels(voxels)
 
         return voxels
+
+
+    @memoize.memoize
+    def get3DClipPlane(self, planeIdx):
+        """Returns the clip plane at the given ``planeIdx`` as an origin and
+        normal vector.
+        """
+
+        pos     = self.clipPosition[   planeIdx]
+        azimuth = self.clipAzimuth[    planeIdx]
+        incline = self.clipInclination[planeIdx]
+
+        b       = self.bounds
+        pos     = pos             / 100.0
+        azimuth = azimuth * np.pi / 180.0
+        incline = incline * np.pi / 180.0
+
+        xmid = b.xlo + 0.5 * b.xlen
+        ymid = b.ylo + 0.5 * b.ylen
+        zmid = b.zlo + 0.5 * b.zlen
+
+        centre = [xmid, ymid, zmid]
+        normal = [0, 0, -1]
+
+        rot1     = transform.axisAnglesToRotMat(incline, 0, 0)
+        rot2     = transform.axisAnglesToRotMat(0, 0, azimuth)
+        rotation = transform.concat(rot2, rot1)
+
+        normal = transform.transformNormal(normal, rotation)
+        normal = transform.normalise(normal)
+
+        offset = (pos - 0.5) * max((b.xlen, b.ylen, b.zlen))
+        origin = centre + normal * offset
+
+        return origin, normal
+
+
+    def clipPlaneVertices(self,
+                          planeIdx,
+                          clippedVertices,
+                          clippedIndices,
+                          xform):
+        """Generates vertices for the clipping plane specified by ``planeIdx``
+        (an index into the ``Volume3DOpts.clip*`` lists).
+
+        See the :meth:`drawClipPlanes` method.
+        """
+
+        origin, normal = self.opts.get3DClipPlane(planeIdx)
+
+        origin = transform.transform(      origin, xform)
+        normal = transform.transformNormal(normal, xform)
+
+        lines = trimesh.mesh_plane(
+            clippedVertices,
+            clippedIndices.reshape(-1, 3),
+            plane_normal=normal,
+            plane_origin=origin)
+
+        # Assuming that the returned
+        # lines are sorted
+        vertices = np.array(lines.reshape(-1, 3), dtype=np.float32)
+
+        if vertices.shape[0] < 3:
+            return np.zeros((0, 3)), np.zeros((0,))
+
+        indices = glroutines.polygonIndices(vertices.shape[0])
+
+        return vertices, indices

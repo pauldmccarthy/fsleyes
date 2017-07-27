@@ -163,10 +163,10 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
     """
 
     vertices, voxCoords, texCoords = self.generateVertices2D(
-        zpos,
-        axes,
-        xform=xform,
-        bbox=bbox)
+        zpos, axes, bbox=bbox)
+
+    if xform is not None:
+        vertices = transform.transform(vertices)
 
     self.shader.setAtt('vertex',   vertices)
     self.shader.setAtt('voxCoord', voxCoords)
@@ -193,8 +193,11 @@ def draw3D(self, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
 
-    vertices, voxCoords, texCoords = self.generateVertices3D(xform, bbox)
+    vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
     rayStep, ditherDir, texform    = self.calculate3DSettings()
+
+    if xform is not None:
+        vertices = transform.transform(vertices, xform)
 
     self.shader.set(   'tex2ScreenXform', texform)
     self.shader.set(   'rayStep',         rayStep)
@@ -222,8 +225,8 @@ def drawAll(self, axes, zposes, xforms):
 
     for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
 
-        v, vc, tc = self.generateVertices2D(zpos, axes, xform)
-        vertices[ i * 6: i * 6 + 6, :] = v
+        v, vc, tc = self.generateVertices2D(zpos, axes)
+        vertices[ i * 6: i * 6 + 6, :] = transform.transform(v, xform)
         voxCoords[i * 6: i * 6 + 6, :] = vc
         texCoords[i * 6: i * 6 + 6, :] = tc
 

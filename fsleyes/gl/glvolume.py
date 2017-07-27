@@ -766,39 +766,6 @@ class GLVolume(glimageobject.GLImageObject):
         return rayStep, ditherDir, xform
 
 
-    def __clipPlaneVertices(self,
-                            planeIdx,
-                            clippedVertices,
-                            clippedIndices,
-                            xform):
-        """Generates vertices for the clipping plane specified by ``planeIdx``
-        (an index into the ``Volume3DOpts.clip*`` lists).
-
-        See the :meth:`drawClipPlanes` method.
-        """
-
-        origin, normal = self.opts.get3DClipPlane(planeIdx)
-
-        origin = transform.transform(      origin, xform)
-        normal = transform.transformNormal(normal, xform)
-
-        lines = trimesh.mesh_plane(
-            clippedVertices,
-            clippedIndices.reshape(-1, 3),
-            plane_normal=normal,
-            plane_origin=origin)
-
-        # Assuming that the returned
-        # lines are sorted
-        vertices = np.array(lines.reshape(-1, 3), dtype=np.float32)
-
-        if vertices.shape[0] < 3:
-            return np.zeros((0, 3)), np.zeros((0,))
-
-        indices = glroutines.polygonIndices(vertices.shape[0])
-
-        return vertices, indices
-
 
     def drawClipPlanes(self, clippedVertices, clippedIndices, xform=None):
         """Draws the active clipping planes, as specified by the
