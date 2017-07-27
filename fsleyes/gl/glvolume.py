@@ -22,14 +22,14 @@ import fsleyes.gl          as fslgl
 import fsleyes.gl.trimesh  as trimesh
 import fsleyes.gl.routines as glroutines
 from . import                 textures
-from . import                 globject
+from . import                 glimageobject
 from . import resources    as glresources
 
 
 log = logging.getLogger(__name__)
 
 
-class GLVolume(globject.GLImageObject):
+class GLVolume(glimageobject.GLImageObject):
     """The ``GLVolume`` class is a :class:`.GLImageObject` which encapsulates
     the data and logic required to render  :class:`.Image` overlays in 2D and
     3D.
@@ -172,11 +172,11 @@ class GLVolume(globject.GLImageObject):
 
         """
 
-        globject.GLImageObject.__init__(self,
-                                        image,
-                                        displayCtx,
-                                        canvas,
-                                        threedee)
+        glimageobject.GLImageObject.__init__(self,
+                                             image,
+                                             displayCtx,
+                                             canvas,
+                                             threedee)
 
         # Add listeners to this image so the view can be
         # updated when its display properties are changed
@@ -265,10 +265,8 @@ class GLVolume(globject.GLImageObject):
         self.colourTexture    = None
         self.negColourTexture = None
 
-        fslgl.glvolume_funcs  .destroy(self)
-        globject.GLImageObject.destroy(self)
-
-        globject.GLImageObject.destroy(self)
+        fslgl.glvolume_funcs       .destroy(self)
+        glimageobject.GLImageObject.destroy(self)
 
 
     def ready(self):

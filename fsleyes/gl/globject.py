@@ -6,14 +6,18 @@
 #
 """This module provides the :class:`GLObject` class, which is a superclass
 for all FSLeyes OpenGL overlay types. The following classes are
-also defined in this module:
+defined in this module:
 
 .. autosummary::
    :nosignatures:
 
    GLObject
    GLSimpleObject
-   GLImageObject
+
+
+See also the :class:`.GLImageObject`, which contains some extra methods for
+displaying :class:`.Image` overlays.
+
 
 This module also provides a few functions, most importantly
 :func:`createGLObject`:
@@ -27,12 +31,7 @@ This module also provides a few functions, most importantly
 
 import logging
 
-import numpy        as np
-import OpenGL.GL    as gl
-
-import fsl.utils.transform as transform
-import fsl.utils.notifier  as notifier
-from . import routines     as glroutines
+import fsl.utils.notifier as notifier
 
 
 log = logging.getLogger(__name__)
@@ -190,7 +189,7 @@ class GLObject(notifier.Notifier):
        :nosignatures:
 
        GLSimpleObject
-       GLImageObject
+       .GLImageObject
     """
 
 
@@ -500,279 +499,3 @@ class GLSimpleObject(GLObject):
     def postDraw(self):
         """Overrides :meth:`GLObject.postDraw`. Does nothing. """
         pass
-
-
-class GLImageObject(GLObject):
-    """The ``GLImageObject`` class is the base class for all GL representations
-    of :class:`.Nifti` instances. It contains some convenience methods for
-    drawing volumetric image data.
-    """
-
-    def __init__(self, overlay, displayCtx, canvas, threedee):
-        """Create a ``GLImageObject`` """
-
-        GLObject.__init__(self, overlay, displayCtx, canvas, threedee)
-
-
-    @property
-    def image(self):
-        """The :class:`.Nifti` being rendered by this ``GLImageObject``. This
-        is equivalent to :meth:`.GLObject.overlay`.
-        """
-        return self.overlay
-
-
-    def destroyed(self):
-        """Returns ``True`` if :meth:`destroy` has been called, ``False``
-        otherwise.
-        """
-        return self.image is None
-
-
-    def getDisplayBounds(self):
-        """Returns the bounds of the :class:`.Image` (see the
-        :meth:`.DisplayOpts.bounds` property).
-        """
-        return (self.opts.bounds.getLo(),
-                self.opts.bounds.getHi())
-
-
-    def getDataResolution(self, xax, yax):
-        """Returns a suitable screen resolution for rendering this
-        ``GLImageObject`` in 2D.
-        """
-
-        import nibabel as nib
-
-        image = self.image
-        opts  = self.opts
-
-        # Figure out a good display resolution
-        # along each voxel dimension
-        shape = np.array(image.shape[:3])
-
-        # Figure out an approximate
-        # correspondence between the
-        # voxel axes and the display
-        # coordinate system axes.
-        xform = opts.getTransform('id', 'display')
-        axes  = nib.orientations.aff2axcodes(
-            xform, ((0, 0), (1, 1), (2, 2)))
-
-        # Re-order the voxel resolutions
-        # in the display space
-        res = [shape[axes[0]], shape[axes[1]], shape[axes[2]]]
-
-        return res
-
-
-    def frontFace(self):
-        """Convenience method for 2D rendering. Images are drawn onto a 2D
-        plane which is parallel to the viewing plane. If the canvas that is
-        drawing this ``GLImageObject`` has adjusted the projection matrix
-        (e.g. via the :attr:`.SliceCanvas.invertX` or
-        :attr:`.SliceCanvas.invertY` properties), the front or back face of
-        this plane may be facing the iewing plane.
-
-        So if face-culling is desired, this method returns the face that
-        is facing away from the viewing plane, i.e. the face that can safely
-        be culled.
-
-        .. note:: This will raise an error if called on a ``GLImageObject``
-                  which is being drawn by anything other than a
-                  :class:`.SliceCanvas` or :class:`.LightBoxCanvas`.
-        """
-
-        front = gl.GL_CCW
-        back  = gl.GL_CW
-
-        numInverts = 0
-        if self.canvas.invertX: numInverts += 1
-        if self.canvas.invertY: numInverts += 1
-
-        if numInverts == 1:
-            front, back = back, front
-
-        return front
-
-
-    def generateVertices2D(self,
-                           zpos,
-                           axes,
-                           xform=None,
-                           bbox=None):
-        """Generates vertex coordinates for a 2D slice of the :class:`.Image`,
-        through the given ``zpos``, with the optional ``xform`` and ``bbox``
-        applied to the coordinates.
-
-
-        This is a convenience method for generating vertices which can be used
-        to render a slice through a 3D texture. It is used by the
-        :mod:`.gl14.glvolume_funcs` and :mod:`.gl21.glvolume_funcs` (and other)
-        modules.
-
-
-        A tuple of three values is returned, containing:
-
-          - A ``6*3 numpy.float32`` array containing the vertex coordinates
-
-          - A ``6*3 numpy.float32`` array containing the voxel coordinates
-            corresponding to each vertex
-
-          - A ``6*3 numpy.float32`` array containing the texture coordinates
-            corresponding to each vertex
-        """
-
-        opts           = self.opts
-        v2dMat         = opts.getTransform('voxel',   'display')
-        d2vMat         = opts.getTransform('display', 'voxel')
-        v2tMat         = opts.getTransform('voxel',   'texture')
-        xax,  yax, zax = axes
-
-        vertices, voxCoords = glroutines.slice2D(
-            self.image.shape[:3],
-            xax,
-            yax,
-            zpos,
-            v2dMat,
-            d2vMat,
-            bbox=bbox)
-
-        if xform is not None:
-            vertices = transform.transform(vertices, xform)
-
-        # If not interpolating, centre the
-        # voxel coordinates on the Z/depth
-        # axis. We do this to avoid rounding
-        # bias when the display Z position is
-        # on a voxel boundary.
-        if not hasattr(opts, 'interpolation') or opts.interpolation == 'none':
-            voxCoords = opts.roundVoxels(voxCoords, daxes=[zax])
-
-        texCoords = transform.transform(voxCoords, v2tMat)
-
-        return vertices, voxCoords, texCoords
-
-
-    def generateVertices3D(self, xform=None, bbox=None):
-        """Generates vertex coordinates defining the 3D bounding box of the
-        :class:`.Image`, with the optional ``xform`` and ``bbox`` applied to
-        the coordinates. See the :func:`.routines.boundingBox` function.
-
-        A tuple of three values is returned, containing:
-
-          - A ``36*3 numpy.float32`` array containing the vertex coordinates
-
-          - A ``36*3 numpy.float32`` array containing the voxel coordinates
-            corresponding to each vertex
-
-          - A ``36*3 numpy.float32`` array containing the texture coordinates
-            corresponding to each vertex
-        """
-        opts   = self.opts
-        v2dMat = opts.getTransform('voxel',   'display')
-        d2vMat = opts.getTransform('display', 'voxel')
-        v2tMat = opts.getTransform('voxel',   'texture')
-
-        vertices, voxCoords = glroutines.boundingBox(
-            self.image.shape[:3],
-            v2dMat,
-            d2vMat,
-            bbox=bbox)
-
-        if xform is not None:
-            vertices = transform.transform(vertices, xform)
-
-        texCoords = transform.transform(voxCoords, v2tMat)
-
-        return vertices, voxCoords, texCoords
-
-
-    def generateVoxelCoordinates2D(
-            self,
-            zpos,
-            axes,
-            bbox=None,
-            space='voxel'):
-        """Generates a 2D grid of voxel coordinates along the
-        XY display coordinate system plane, at the given ``zpos``.
-
-        :arg zpos:  Position along the display coordinate system Z axis.
-
-        :arg axes:  Axis indices.
-
-        :arg bbox:  Limiting bounding box.
-
-        :arg space: Either ``'voxel'`` (the default) or ``'display'``.
-                    If the latter, the returned coordinates are in terms
-                    of the display coordinate system. Otherwise, the
-                    returned coordinates are integer voxel coordinates.
-
-        :returns: A ``numpy.float32`` array of shape ``(N, 3)``, containing
-                  the coordinates for ``N`` voxels.
-
-        See the :func:`.pointGrid` function.
-        """
-
-        if space not in ('voxel', 'display'):
-            raise ValueError('Unknown value for space ("{}")'.format(space))
-
-        image         = self.image
-        opts          = self.opts
-        v2dMat        = opts.getTransform('voxel',   'display')
-        d2vMat        = opts.getTransform('display', 'voxel')
-        xax, yax, zax = axes
-
-
-        if opts.transform == 'id':
-            resolution = [1, 1, 1]
-        elif opts.transform in ('pixdim', 'pixdim-flip'):
-            resolution = image.pixdim[:3]
-        else:
-            resolution = [min(image.pixdim[:3])] * 3
-
-        voxels = glroutines.pointGrid(
-            image.shape,
-            resolution,
-            v2dMat,
-            xax,
-            yax,
-            bbox=bbox)[0]
-
-        voxels[:, zax] = zpos
-
-        if space == 'voxel':
-            voxels = transform.transform(voxels, d2vMat)
-            voxels = opts.roundVoxels(voxels,
-                                      daxes=[zax],
-                                      roundOther=False)
-
-        return voxels
-
-
-    def generateVoxelCoordinates3D(self, bbox, space='voxel'):
-        """
-
-
-        See the :func:`.pointGrid3D` function.
-
-        note: Not implemented properly yet.
-        """
-
-        if space not in ('voxel', 'display'):
-            raise ValueError('Unknown value for space ("{}")'.format(space))
-
-
-        image      = self.image
-        opts       = self.opts
-        v2dMat     = opts.getTransform('voxel',   'display')
-        d2vMat     = opts.getTransform('display', 'voxel')
-
-        voxels = glroutines.pointGrid3D(image.shape[:3])
-
-        if space == 'voxel':
-            pass
-            # voxels = transform.transform(voxels, d2vMat)
-            # voxels = opts.roundVoxels(voxels)
-
-        return voxels

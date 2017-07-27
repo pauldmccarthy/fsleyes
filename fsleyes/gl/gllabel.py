@@ -14,11 +14,11 @@ import OpenGL.GL        as gl
 import fsleyes.gl       as fslgl
 import fsl.utils.async  as async
 from . import resources as glresources
-from . import              globject
+from . import              glimageobject
 from . import              textures
 
 
-class GLLabel(globject.GLImageObject):
+class GLLabel(glimageobject.GLImageObject):
     """The ``GLLabel`` class is a :class:`.GLImageObject` which encapsulates
     the logic required to render an :class:`.Image` overlay as a label image.
     Within the image, each contiguous region with the same label value is
@@ -52,11 +52,11 @@ class GLLabel(globject.GLImageObject):
         :arg threedee:   2D or 3D rendering
         """
 
-        globject.GLImageObject.__init__(self,
-                                        image,
-                                        displayCtx,
-                                        canvas,
-                                        threedee)
+        glimageobject.GLImageObject.__init__(self,
+                                             image,
+                                             displayCtx,
+                                             canvas,
+                                             threedee)
 
         lutTexName        = '{}_lut'.format(self.name)
         self.lutTexture   = textures.LookupTableTexture(lutTexName)
@@ -91,7 +91,7 @@ class GLLabel(globject.GLImageObject):
 
         self.removeListeners()
         fslgl.gllabel_funcs.destroy(self)
-        globject.GLImageObject.destroy(self)
+        glimageobject.GLImageObject.destroy(self)
 
 
     def ready(self):

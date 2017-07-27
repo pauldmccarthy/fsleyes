@@ -21,10 +21,10 @@ import fsl.utils.transform as transform
 import fsleyes.colourmaps  as fslcm
 from . import resources    as glresources
 from . import                 textures
-from . import                 globject
+from . import                 glimageobject
 
 
-class GLVectorBase(globject.GLImageObject):
+class GLVectorBase(glimageobject.GLImageObject):
     """The :class:`GLVectorBase` class encapsulates the logic for rendering
     :class:`.Nifti` overlay types which represent directional data (and which
     are described by a :class:`.VectorOpts` instance).  The ``GLVectorBase``
@@ -122,11 +122,11 @@ class GLVectorBase(globject.GLImageObject):
                              :class:`GLVector`.
         """
 
-        globject.GLImageObject.__init__(self,
-                                        overlay,
-                                        displayCtx,
-                                        canvas,
-                                        threedee)
+        glimageobject.GLImageObject.__init__(self,
+                                             overlay,
+                                             displayCtx,
+                                             canvas,
+                                             threedee)
 
         name = self.name
 
@@ -198,7 +198,7 @@ class GLVectorBase(globject.GLImageObject):
         self.clipOpts        = None
         self.colourOpts      = None
 
-        globject.GLImageObject.destroy(self)
+        glimageobject.GLImageObject.destroy(self)
 
 
     def ready(self):
