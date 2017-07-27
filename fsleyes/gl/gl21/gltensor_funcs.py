@@ -143,7 +143,7 @@ def updateShaderState(self):
     return changed
 
 
-def preDraw(self):
+def preDraw(self, xform=None, bbox=None):
     """Must be called before :func:`draw`. Loads the shader programs, and
     does some shader state configuration.
     """
@@ -198,7 +198,7 @@ def draw3D(self, xform=None, bbox=None):
     pass
 
 
-def postDraw(self):
+def postDraw(self, xform=None, bbox=None):
     """Unloads the shader program. """
 
     self.shader.unloadAtts()

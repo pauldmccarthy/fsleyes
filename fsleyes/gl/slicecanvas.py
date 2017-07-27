@@ -1381,9 +1381,9 @@ class SliceCanvas(props.HasProperties):
                           'directly to canvas'.format(
                               self.zax, display.name))
 
-                globj.preDraw()
+                globj.preDraw(bbox=bbox)
                 globj.draw2D(self.pos.z, axes, bbox=bbox)
-                globj.postDraw()
+                globj.postDraw(bbox=bbox)
 
             # Off-screen rendering - each overlay is
             # rendered to an off-screen texture -

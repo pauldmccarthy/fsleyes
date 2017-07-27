@@ -301,7 +301,7 @@ class GLMesh(globject.GLObject):
                 self.opts.bounds.getHi())
 
 
-    def preDraw(self):
+    def preDraw(self, xform=None, bbox=None):
         """Overrides :meth:`.GLObject.preDraw`. Sets the size of the backing
         :class:`.RenderTexture` instance based on the current viewport size.
         """
@@ -614,7 +614,7 @@ class GLMesh(globject.GLObject):
         dest.restoreViewport()
 
 
-    def postDraw(self):
+    def postDraw(self, xform=None, bbox=None):
         """Overrides :meth:`.GLObject.postDraw`. This method does nothing. """
         pass
 

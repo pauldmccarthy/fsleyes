@@ -116,13 +116,13 @@ class GLLineVector(glvector.GLVector):
         return fslgl.gllinevector_funcs.updateShaderState(self)
 
 
-    def preDraw(self):
+    def preDraw(self, xform=None, bbox=None):
         """Overrides :meth:`.GLVector.preDraw`. Calls the base class
         implementation, and then calls the OpenGL version-specific ``preDraw``
         function.
         """
-        glvector.GLVector.preDraw(self)
-        fslgl.gllinevector_funcs.preDraw(self)
+        glvector.GLVector.preDraw(self, xform, bbox)
+        fslgl.gllinevector_funcs.preDraw(self, xform, bbox)
 
 
     def draw2D(self, *args, **kwargs):
@@ -146,13 +146,13 @@ class GLLineVector(glvector.GLVector):
         fslgl.gllinevector_funcs.drawAll(self, *args, **kwargs)
 
 
-    def postDraw(self):
+    def postDraw(self, xform=None, bbox=None):
         """Overrides :meth:`.GLVector.postDraw`. Calls the base class
         implementation, and then calls the OpenGL version-specific ``postDraw``
         function.
         """
-        glvector.GLVector.postDraw(self)
-        fslgl.gllinevector_funcs.postDraw(self)
+        glvector.GLVector.postDraw(self, xform, bbox)
+        fslgl.gllinevector_funcs.postDraw(self, xform, bbox)
 
 
 class GLLineVertices(object):

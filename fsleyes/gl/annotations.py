@@ -355,11 +355,11 @@ class AnnotationObject(globject.GLSimpleObject):
         return (self.creation + self.expiry) < now
 
 
-    def preDraw(self):
+    def preDraw(self, *args, **kwargs):
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
 
 
-    def postDraw(self):
+    def postDraw(self, *args, **kwargs):
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
 
 

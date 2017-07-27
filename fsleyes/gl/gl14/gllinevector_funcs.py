@@ -144,7 +144,7 @@ def updateShaderState(self):
     return True
 
 
-def preDraw(self):
+def preDraw(self, xform=None, bbox=None):
     """Initialises the GL state ready for drawing the :class:`.GLLineVector`.
     """
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
@@ -195,7 +195,7 @@ def drawAll(self, axes, zposes, xforms):
         draw2D(self, zpos, axes, xform)
 
 
-def postDraw(self):
+def postDraw(self, xform=None, bbox=None):
     """Clears the GL state after drawing the :class:`.GLLineVector`. """
     self.shader.unload()
     gl.glDisableClientState(gl.GL_VERTEX_ARRAY)

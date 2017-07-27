@@ -127,7 +127,7 @@ def updateShaderState(self):
     return changed
 
 
-def preDraw(self):
+def preDraw(self, xform=None, bbox=None):
     """Prepares to draw a slice from the given :class:`.GLVolume` instance. """
 
     self.shader.load()
@@ -229,7 +229,7 @@ def drawAll(self, axes, zposes, xforms):
                       indices)
 
 
-def postDraw(self):
+def postDraw(self, xform=None, bbox=None):
     """Cleans up the GL state after drawing from the given :class:`.GLVolume`
     instance.
     """

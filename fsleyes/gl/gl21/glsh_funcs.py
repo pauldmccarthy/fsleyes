@@ -162,7 +162,7 @@ def updateShaderState(self):
     return changed
 
 
-def preDraw(self):
+def preDraw(self, xform=None, bbox=None):
     """Called by :meth:`.GLSH.preDraw`. Loads the shader program, and updates
     some shader attributes.
     """
@@ -221,7 +221,7 @@ def draw3D(self, xform=None, bbox=None):
     pass
 
 
-def postDraw(self):
+def postDraw(self, xform=None, bbox=None):
     """Called by :meth:`.GLSH.draw`. Cleans up the shader program and GL
     state.
     """

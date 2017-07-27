@@ -130,7 +130,7 @@ def updateShaderState(self):
     return changed
 
 
-def preDraw(self):
+def preDraw(self, xform=None, bbox=None):
     """Prepares the GL state for drawing. This amounts to loading the
     vertex/fragment shader programs.
     """
@@ -177,6 +177,6 @@ def drawAll(self, axes, zposes, xforms):
         self.draw2D(zpos, axes, xform)
 
 
-def postDraw(self):
+def postDraw(self, xform=None, bbox=None):
     """Clears the GL state after drawing. """
     self.shader.unload()

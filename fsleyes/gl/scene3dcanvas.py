@@ -265,10 +265,9 @@ class Scene3DCanvas(props.HasProperties):
                 if not display.enabled:
                     continue
 
-                globj.preDraw()
-
-                globj.draw3D(xform=self.__xform)
-                globj.postDraw()
+                globj.preDraw( xform=self.__xform)
+                globj.draw3D(  xform=self.__xform)
+                globj.postDraw(xform=self.__xform)
 
             self.__drawBoundingBox()
             if self.showCursor: self.__drawCursor()
