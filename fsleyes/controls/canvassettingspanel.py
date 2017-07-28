@@ -137,6 +137,8 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         scene3dOptsProps = [
             props.Widget('zoom', showLimits=False),
             props.Widget('showLegend'),
+            props.Widget('occlusion'),
+            props.Widget('fadeOut', showLimits=False),
         ]
 
         import fsleyes.views.orthopanel    as orthopanel

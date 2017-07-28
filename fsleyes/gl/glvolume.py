@@ -298,6 +298,7 @@ class GLVolume(glimageobject.GLImageObject):
         display properties are changed.
         """
 
+        canvas  = self.canvas
         display = self.display
         opts    = self.opts
         name    = self.name
@@ -334,8 +335,11 @@ class GLVolume(glimageobject.GLImageObject):
 
         # 3D-only options
         if self.threedee:
+
+            canvas.addListener('fadeOut',       name, self._fadeOutChanged)
             opts.addListener('dithering',       name, self._ditheringChanged)
             opts.addListener('numSteps',        name, self._numStepsChanged)
+            opts.addListener('blendFactor',     name, self._blendFactorChanged)
             opts.addListener('showClipPlanes',  name,
                              self._showClipPlanesChanged)
             opts.addListener('numClipPlanes',   name, self._clipping3DChanged)
@@ -692,8 +696,12 @@ class GLVolume(glimageobject.GLImageObject):
 
     def _alphaChanged(self, *a):
         """Called when the :attr:`.Display.alpha` property changes. """
+
         self.refreshColourTextures()
-        self.notify()
+        if self.threedee:
+            self.updateShaderState(alwaysNotify=True)
+        else:
+            self.notify()
 
 
     def _displayRangeChanged(self, *a):
@@ -824,6 +832,12 @@ class GLVolume(glimageobject.GLImageObject):
         self.notify()
 
 
+    def _fadeOutChanged(self, *a):
+        """Called when the :attr:`.Scene3DCanvas.fadeOut` property changes.
+        """
+        self.updateShaderState(alwaysNotify=True)
+
+
     def _numStepsChanged(self, *a):
         """Called when the :attr:`.Volume3DOpts.numSteps` property changes.
         """
@@ -845,6 +859,13 @@ class GLVolume(glimageobject.GLImageObject):
 
 
     def _showClipPlanesChanged(self, *a):
+        """Called when the :attr:`.Volume3DOpts.showClipPlanes` property
+        changes.
+        """
+        self.updateShaderState(alwaysNotify=True)
+
+
+    def _blendFactorChanged(self, *a):
         """Called when the :attr:`.Volume3DOpts.showClipPlanes` property
         changes.
         """

@@ -184,11 +184,24 @@ class Scene3DCanvasOpts(props.HasProperties):
     """If ``True``, an orientation guide will be shown on the canvas. """
 
 
+    occlusion = props.Boolean(default=False)
+    """If ``True``, objects closer to the camera will occlude objects
+    further away. Toggles ``gl.DEPTH_TEST``.
+    """
+
+
+    fadeOut = props.Real(minval=0, maxval=5.0, default=0.5, clamped=True)
+    """A constant value which controls how much parts of the scene which are
+    further away from the view fade out.
+    """
+
+
     offset = props.Point(ndims=2)
     """An offset, in pixels, from the centre of the
     :attr:`.DisplayContext.bounds`. The defines the centre-of-view for the
     ``Scene3DCanvas``.
     """
+
 
     rotation = props.Array(
         dtype=np.float64,

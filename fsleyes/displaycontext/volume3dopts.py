@@ -29,6 +29,12 @@ class Volume3DOpts(object):
     """
 
 
+    blendFactor = props.Real(minval=0.01, maxval=1, default=1)
+    """Controls how much each sampled point on each ray contributes to the
+    final colour.
+    """
+
+
     numSteps = props.Real(minval=25, maxval=500, default=75, clamped=True)
     """Only used in 3D rendering. Specifies the maximum number of samples to
     acquire in the rendering of each pixel of the 3D scene. This corresponds

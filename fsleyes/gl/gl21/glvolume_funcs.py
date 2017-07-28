@@ -68,8 +68,10 @@ def updateShaderState(self):
     if not self.ready():
         return
 
-    opts   = self.opts
-    shader = self.shader
+    opts    = self.opts
+    display = self.display
+    canvas  = self.canvas
+    shader  = self.shader
 
     # The clipping range options are in the voxel value
     # range, but the shader needs them to be in image
@@ -118,8 +120,9 @@ def updateShaderState(self):
 
     if self.threedee:
 
-        clipPlanes = np.zeros((opts.numClipPlanes, 4), dtype=np.float32)
-        d2tmat     = opts.getTransform('display', 'texture')
+        blendFactor = 1 - (1 - opts.blendFactor) ** 0.25
+        clipPlanes  = np.zeros((opts.numClipPlanes, 4), dtype=np.float32)
+        d2tmat      = opts.getTransform('display', 'texture')
 
         for i in range(opts.numClipPlanes):
             origin, normal   = self.get3DClipPlane(i)
@@ -129,6 +132,9 @@ def updateShaderState(self):
 
         changed |= shader.set('numClipPlanes', opts.numClipPlanes)
         changed |= shader.set('clipPlanes',    clipPlanes, opts.numClipPlanes)
+        changed |= shader.set('blendFactor',   blendFactor)
+        changed |= shader.set('alpha',         display.alpha / 100.0)
+        changed |= shader.set('fadeOut',       canvas.fadeOut)
 
     shader.unload()
 

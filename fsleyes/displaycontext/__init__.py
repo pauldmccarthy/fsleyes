@@ -74,6 +74,7 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
 
    ~fsleyes.displaycontext.volumeopts.NiftiOpts
    ~fsleyes.displaycontext.volumeopts.VolumeOpts
+   ~fsleyes.displaycontext.volumeopts.Volume3DOpts
    ~fsleyes.displaycontext.maskopts.MaskOpts
    ~fsleyes.displaycontext.vectoropts.VectorOpts
    ~fsleyes.displaycontext.vectoropts.RGBVectorOpts
@@ -154,6 +155,7 @@ from .scene3dopts    import Scene3DOpts
 from .colourmapopts  import ColourMapOpts
 from .volumeopts     import NiftiOpts
 from .volumeopts     import VolumeOpts
+from .volume3dopts   import Volume3DOpts
 from .maskopts       import MaskOpts
 from .vectoropts     import VectorOpts
 from .vectoropts     import RGBVectorOpts

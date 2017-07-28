@@ -27,8 +27,11 @@ class Scene3DOpts(sceneopts.SceneOpts):
 
 
     showLegend = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
+    occlusion  = copy.copy(canvasopts.Scene3DCanvasOpts.occlusion)
+    fadeOut    = copy.copy(canvasopts.Scene3DCanvasOpts.fadeOut)
     offset     = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
     rotation   = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
+
 
 
     def __init__(self, *args, **kwargs):

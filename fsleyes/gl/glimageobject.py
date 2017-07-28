@@ -449,7 +449,12 @@ class GLImageObject(globject.GLObject):
         # convert an image texture coordinate
         # into a relative depth value.
         proj  = gl.glGetFloat(gl.GL_PROJECTION_MATRIX).T
-        xform = transform.concat(proj, xform)
+
+        # Adjust the projection so that the final depth
+        # value will map the display bounds to -1, +1
+        zscale  = 20000.0 / self.displayCtx.bounds.zlen
+        zscale  = transform.scaleOffsetXform([1, 1, zscale], 0)
+        xform   = transform.concat(zscale, proj, xform)
 
         return rayStep, ditherDir, xform
 

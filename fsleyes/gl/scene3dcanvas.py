@@ -34,6 +34,8 @@ class Scene3DCanvas(props.HasProperties):
     cursorColour  = copy.copy(canvasopts.Scene3DCanvasOpts.cursorColour)
     bgColour      = copy.copy(canvasopts.Scene3DCanvasOpts.bgColour)
     showLegend    = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
+    occlusion     = copy.copy(canvasopts.Scene3DCanvasOpts.occlusion)
+    fadeOut       = copy.copy(canvasopts.Scene3DCanvasOpts.fadeOut)
     zoom          = copy.copy(canvasopts.Scene3DCanvasOpts.zoom)
     offset        = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
     rotation      = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
@@ -61,6 +63,8 @@ class Scene3DCanvas(props.HasProperties):
         self.addListener('cursorColour', self.__name, self.Refresh)
         self.addListener('bgColour',     self.__name, self.Refresh)
         self.addListener('showLegend',   self.__name, self.Refresh)
+        self.addListener('occlusion',    self.__name, self.Refresh)
+        self.addListener('fadeOut',      self.__name, self.Refresh)
         self.addListener('zoom',         self.__name, self.Refresh)
         self.addListener('offset',       self.__name, self.Refresh)
         self.addListener('rotation',     self.__name, self.Refresh)
@@ -251,7 +255,12 @@ class Scene3DCanvas(props.HasProperties):
         if len(self.__overlayList) == 0:
             return
 
-        with glroutines.enabled((gl.GL_DEPTH_TEST)):
+        if self.occlusion: enable = [gl.GL_DEPTH_TEST]
+        else:              enable = []
+
+        with glroutines.enabled(enable):
+
+            if self.showCursor: self.__drawCursor()
 
             for ovl in self.__overlayList:
 
@@ -270,7 +279,7 @@ class Scene3DCanvas(props.HasProperties):
                 globj.postDraw(xform=self.__xform)
 
             self.__drawBoundingBox()
-            if self.showCursor: self.__drawCursor()
+
         if self.showLegend:
             self.__drawLegend()
 

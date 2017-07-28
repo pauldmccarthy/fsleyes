@@ -44,6 +44,8 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         self.__canvas.bindProps('cursorColour', sceneOpts)
         self.__canvas.bindProps('bgColour',     sceneOpts)
         self.__canvas.bindProps('showLegend',   sceneOpts)
+        self.__canvas.bindProps('occlusion',    sceneOpts)
+        self.__canvas.bindProps('fadeOut',      sceneOpts)
         self.__canvas.bindProps('zoom',         sceneOpts)
         self.__canvas.bindProps('offset',       sceneOpts)
         self.__canvas.bindProps('rotation',     sceneOpts)

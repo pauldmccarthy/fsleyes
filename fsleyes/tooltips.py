@@ -405,6 +405,13 @@ properties = TypeDict({
     'Scene3DOpts.showLegend' :
     'When selected, a legend will be displayed in the bottom right, showing '
     'orientation information.',
+    'Scene3DOpts.occlusion' :
+    'When selected, objects in the scene which are behind another object will '
+    'not be shown.',
+    'Scene3DOpts.fadeOut' :
+    'This setting controls how much parts of the scene which are further away '
+    'from the camera fade out. It is useful when you are displaying multiple '
+    'overlapping overlays.',
 
     'Scene3DOpts.zoom' :
     'Zoom level - distance from the camera to the model space.',

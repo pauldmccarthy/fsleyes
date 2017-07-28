@@ -129,6 +129,27 @@ uniform vec3 rayStep;
 
 
 /*
+ * A constant value between 0 and 1 which controls how
+ * much each sampled point contributes to the final colour.
+ */
+uniform float blendFactor;
+
+
+/*
+ * A constant value between (approx) 0 and 5, which controls
+ * how much the fragment should fade out with respect to
+ * its depth.
+ */
+uniform float fadeOut;
+
+
+/*
+ * Final transparency that the fragment should have.
+ */
+uniform float alpha;
+
+
+/*
  * A transformation matrix which transforms from image texture
  * coordinates into screen coordinates. Required to calculate
  * the final depth value for each fragment.
@@ -196,16 +217,19 @@ void main(void) {
        * of any clipping plane, we don't
        * do any clipping.
        */
-      for (clipIdx = 0; clipIdx < numClipPlanes; clipIdx++)
-        if (dot(clipPlanes[clipIdx].xyz, texCoord) + clipPlanes[clipIdx].w >= 0)
+      for (clipIdx = 0; clipIdx < numClipPlanes; clipIdx++) {
+        if (dot(clipPlanes[clipIdx].xyz, texCoord) + clipPlanes[clipIdx].w >= 0) {
           break;
+        }
+      }
 
       /*
        * If it is on the wrong side of *all*
        * clipping planes, keep casting.
        */
-      if (numClipPlanes > 0 && clipIdx == numClipPlanes)
+      if (numClipPlanes > 0 && clipIdx == numClipPlanes) {
         continue;
+      }
 
       /*
        * Only mix the colour in if the
@@ -214,9 +238,8 @@ void main(void) {
        */
       if (sample_volume(texCoord, clipTexCoord, colour)) {
 
-        /* Mix this voxel colour into the final colour */
-        finalColour.rgb  = mix(colour.rgb, finalColour.rgb, finalColour.a);
-        finalColour.a   += colour.a;
+        finalColour.rgb += (1 - finalColour.a) * blendFactor * colour.rgb;
+        finalColour.a   += (1 - finalColour.a) * blendFactor;
         nsamples        += 1;
 
         /*
@@ -229,11 +252,13 @@ void main(void) {
       }
     } while ((finalColour.a < 0.95) && textest(texCoord));
 
-    if (nsamples == 0)
-      discard;
+    if (nsamples > 0) {
 
+      finalColour.a = alpha;
+      gl_FragDepth  = ((depth.z / depth.w) + 1.0) * 0.5;
+      gl_FragColor  = finalColour * vec4(1 - fadeOut * pow(gl_FragDepth, 4));
+    }
     else {
-      gl_FragColor = finalColour;
-      gl_FragDepth = ((depth.z / depth.w) + 1.0) * 0.5;
+      discard;
     }
 }
