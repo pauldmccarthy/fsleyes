@@ -29,10 +29,7 @@ class Volume3DOpts(object):
     """
 
 
-    numSteps = props.Int(minval=50,
-                         maxval=1000,
-                         default=50,
-                         clamped=True)
+    numSteps = props.Real(minval=25, maxval=500, default=75, clamped=True)
     """Only used in 3D rendering. Specifies the maximum number of samples to
     acquire in the rendering of each pixel of the 3D scene. This corresponds
     to the number of iterations of the ray-casting loop.

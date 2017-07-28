@@ -160,12 +160,11 @@ void main(void) {
 
     vec3 texCoord     = fragTexCoord;
     vec3 clipTexCoord = fragClipTexCoord;
-    vec4 colour       = vec4(0, 0, 0, 0);
-    vec4 finalColour  = vec4(0, 0, 0, 0);
-
-    vec4 depth;
-    bool sampled;
-    int  cpi;
+    vec4 colour       = vec4(0);
+    vec4 finalColour  = vec4(0);
+    vec4 depth        = vec4(0);
+    int  nsamples     = 0;
+    int  clipIdx;
 
     /*
      * Dither by applying a random offset
@@ -197,33 +196,44 @@ void main(void) {
        * of any clipping plane, we don't
        * do any clipping.
        */
-      for (cpi = 0; cpi < numClipPlanes; cpi++)
-        if (dot(clipPlanes[cpi].xyz, texCoord) + clipPlanes[cpi].w >= 0)
+      for (clipIdx = 0; clipIdx < numClipPlanes; clipIdx++)
+        if (dot(clipPlanes[clipIdx].xyz, texCoord) + clipPlanes[clipIdx].w >= 0)
           break;
 
       /*
        * If it is on the wrong side of *all*
        * clipping planes, keep casting.
        */
-      if (numClipPlanes > 0 && cpi == numClipPlanes)
+      if (numClipPlanes > 0 && clipIdx == numClipPlanes)
         continue;
 
+      /*
+       * Only mix the colour in if the
+       * voxel was not clipped and was
+       * not NaN.
+       */
+      if (sample_volume(texCoord, clipTexCoord, colour)) {
 
-      /* Get the colour for this voxel location */
-      sampled = sample_volume(texCoord, clipTexCoord, colour);
+        /* Mix this voxel colour into the final colour */
+        finalColour.rgb  = mix(colour.rgb, finalColour.rgb, finalColour.a);
+        finalColour.a   += colour.a;
+        nsamples        += 1;
 
-      /* Voxel was clipped or was NaN */
-      if (!sampled)
-        continue;
-
-      /* Mix this voxel colour into the final colour */
-      finalColour.rgb  = mix(colour.rgb, finalColour.rgb, finalColour.a);
-      finalColour.a   += colour.a;
-
+        /*
+         * If this is the first sample on the ray,
+         * set the fragment depth to its location
+         */
+        if (nsamples == 1) {
+          depth = tex2ScreenXform * vec4(texCoord, 1.0);
+        }
+      }
     } while ((finalColour.a < 0.95) && textest(texCoord));
 
-    depth = tex2ScreenXform * vec4(texCoord, 1.0);
+    if (nsamples == 0)
+      discard;
 
-    gl_FragColor = finalColour;
-    gl_FragDepth = ((depth.z / depth.w) + 1.0) * 0.5;
+    else {
+      gl_FragColor = finalColour;
+      gl_FragDepth = ((depth.z / depth.w) + 1.0) * 0.5;
+    }
 }
