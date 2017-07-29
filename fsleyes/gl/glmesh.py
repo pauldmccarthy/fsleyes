@@ -82,7 +82,7 @@ class GLMesh(globject.GLObject):
     ``compileShaders``      Compiles vertex/fragment shaders.
     ``destroy``             Performs any necessary clean up.
     ``updateShaderState``   Updates vertex/fragment shaders.
-    ``drawWithShader``      Draws mesh outline using shaders.
+    ``drawWithShaders``     Draws mesh outline using shaders.
     ======================= =================================
 
 
@@ -109,7 +109,9 @@ class GLMesh(globject.GLObject):
 
         globject.GLObject.__init__(self, overlay, displayCtx, canvas, threedee)
 
-        self.shader  = None
+        self.flatShader   = None
+        self.dataShader   = None
+        self.activeShader = None
 
         # We use a render texture when
         # rendering model cross sections.
@@ -306,14 +308,23 @@ class GLMesh(globject.GLObject):
         :class:`.RenderTexture` instance based on the current viewport size.
         """
 
-        size   = gl.glGetIntegerv(gl.GL_VIEWPORT)
-        width  = size[2]
-        height = size[3]
+        opts       = self.opts
+        useShader  = self.threedee or \
+                     (opts.outline and opts.vertexData is not None)
+        useTexture = (not self.threedee) and (not opts.outline)
 
-        # We only need to resize the texture when
-        # the viewport size/quality changes.
-        if self.renderTexture.getSize() != (width, height):
-            self.renderTexture.setSize(width, height)
+        if useShader:
+            fslgl.glmesh_funcs.preDraw(self, xform, bbox)
+
+        if useTexture:
+            size   = gl.glGetIntegerv(gl.GL_VIEWPORT)
+            width  = size[2]
+            height = size[3]
+
+            # We only need to resize the texture when
+            # the viewport size/quality changes.
+            if self.renderTexture.getSize() != (width, height):
+                self.renderTexture.setSize(width, height)
 
 
     def draw2D(self, zpos, axes, xform=None, bbox=None):
@@ -395,10 +406,10 @@ class GLMesh(globject.GLObject):
 
             fslgl.glmesh_funcs.drawWithShaders(
                 self,
+                gl.GL_TRIANGLES,
                 verts,
-                vdata,
                 indices=idxs,
-                glType=gl.GL_TRIANGLES)
+                vdata=vdata)
 
         if xform is not None:
             gl.glPopMatrix()
@@ -447,7 +458,11 @@ class GLMesh(globject.GLObject):
 
         # Coloured from vertex data
         else:
-            fslgl.glmesh_funcs.drawWithShaders(self, vertices, vdata)
+            fslgl.glmesh_funcs.drawWithShaders(
+                self,
+                gl.GL_LINES,
+                vertices,
+                vdata=vdata)
 
         gl.glPopMatrix()
 
@@ -488,7 +503,11 @@ class GLMesh(globject.GLObject):
         else:
             vdata = vdata[:, opts.vertexDataIndex]
             fslgl.glmesh_funcs.drawWithShaders(
-                self, vertices, vdata, faces, gl.GL_TRIANGLES)
+                self,
+                gl.GL_TRIANGLES,
+                vertices,
+                indices=faces,
+                vdata=vdata)
 
         # Reset the polygon mode back to fill
         if opts.outline:
@@ -546,6 +565,7 @@ class GLMesh(globject.GLObject):
         gl.glEnable(gl.GL_CLIP_PLANE0)
         gl.glEnable(gl.GL_CULL_FACE)
         gl.glEnable(gl.GL_STENCIL_TEST)
+        gl.glFrontFace(gl.GL_CCW)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
         gl.glClipPlane(gl.GL_CLIP_PLANE0, planeEq)
@@ -616,7 +636,13 @@ class GLMesh(globject.GLObject):
 
     def postDraw(self, xform=None, bbox=None):
         """Overrides :meth:`.GLObject.postDraw`. This method does nothing. """
-        pass
+
+        opts      = self.opts
+        useShader = self.threedee or \
+                    (opts.outline and opts.vertexData is not None)
+
+        if useShader:
+            fslgl.glmesh_funcs.postDraw(self, xform, bbox)
 
 
     def calculateViewport(self, lo, hi, axes, bbox=None):

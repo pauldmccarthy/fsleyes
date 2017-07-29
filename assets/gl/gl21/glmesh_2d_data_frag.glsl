@@ -1,5 +1,6 @@
 /*
- * Fragment shader used for drawing GLMesh outlines.
+ * Fragment shader used for drawing GLMeshes when the vertices are
+ * coloured according to some data.
  *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
@@ -34,7 +35,6 @@ uniform bool      discardClipped;
 
 /* Colour to use when discardClipped is false, and a fragment is clipped. */
 uniform vec4      flatColour;
-
 
 /* Vertex data value */
 varying float     fragVertexData;
