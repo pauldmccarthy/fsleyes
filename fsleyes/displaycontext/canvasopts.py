@@ -190,7 +190,7 @@ class Scene3DCanvasOpts(props.HasProperties):
     """
 
 
-    fadeOut = props.Real(minval=0, maxval=5.0, default=0.5, clamped=True)
+    fadeOut = props.Real(minval=0, maxval=1.0, default=0.25, clamped=True)
     """A constant value which controls how much parts of the scene which are
     further away from the view fade out.
     """

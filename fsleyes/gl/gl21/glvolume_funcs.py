@@ -120,7 +120,7 @@ def updateShaderState(self):
 
     if self.threedee:
 
-        blendFactor = 1 - (1 - opts.blendFactor) ** 0.25
+        blendFactor = opts.blendFactor ** 2
         clipPlanes  = np.zeros((opts.numClipPlanes, 4), dtype=np.float32)
         d2tmat      = opts.getTransform('display', 'texture')
 
@@ -133,6 +133,7 @@ def updateShaderState(self):
         changed |= shader.set('numClipPlanes', opts.numClipPlanes)
         changed |= shader.set('clipPlanes',    clipPlanes, opts.numClipPlanes)
         changed |= shader.set('blendFactor',   blendFactor)
+        changed |= shader.set('stepLength',    1.0 / opts.numSteps)
         changed |= shader.set('alpha',         display.alpha / 100.0)
         changed |= shader.set('fadeOut',       canvas.fadeOut)
 

@@ -19,7 +19,7 @@ class Volume3DOpts(object):
 
 
     dithering = props.Real(minval=0,
-                           maxval=0.1,
+                           maxval=0.05,
                            default=0.01,
                            clamped=True)
     """Only used in 3D rendering. Specifies the amount of randomness to
@@ -29,7 +29,7 @@ class Volume3DOpts(object):
     """
 
 
-    blendFactor = props.Real(minval=0.01, maxval=1, default=1)
+    blendFactor = props.Real(minval=0.001, maxval=1, default=0.8)
     """Controls how much each sampled point on each ray contributes to the
     final colour.
     """
