@@ -176,7 +176,7 @@ def draw3D(self, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
-    rayStep, ditherDir, xform      = self.calculateRayCastSettings()
+    rayStep, ditherDir, xform      = self.calculateRayCastSettings(xform)
 
     if xform is not None:
         vertices = transform.transform(vertices, xform)

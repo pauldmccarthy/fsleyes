@@ -258,6 +258,14 @@ class Scene3DCanvas(props.HasProperties):
         if self.occlusion: enable = [gl.GL_DEPTH_TEST]
         else:              enable = []
 
+        # If occlusion is on, we offset the
+        # depth of each overlay so that, where
+        # a depth collision occurs, overlays
+        # which are higher in the list will get
+        # drawn above lower ones.
+        depthOffset = transform.scaleOffsetXform(1, [0, 0, 0.1])
+        xform       = self.__xform
+
         with glroutines.enabled(enable):
 
             if self.showCursor: self.__drawCursor()
@@ -274,9 +282,12 @@ class Scene3DCanvas(props.HasProperties):
                 if not display.enabled:
                     continue
 
-                globj.preDraw( xform=self.__xform)
-                globj.draw3D(  xform=self.__xform)
-                globj.postDraw(xform=self.__xform)
+                if self.occlusion:
+                    xform = transform.concat(depthOffset, xform)
+
+                globj.preDraw( xform=xform)
+                globj.draw3D(  xform=xform)
+                globj.postDraw(xform=xform)
 
             self.__drawBoundingBox()
 

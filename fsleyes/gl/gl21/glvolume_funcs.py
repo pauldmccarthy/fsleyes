@@ -200,7 +200,7 @@ def draw3D(self, xform=None, bbox=None):
     """
 
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
-    rayStep, ditherDir, texform    = self.calculateRayCastSettings()
+    rayStep, ditherDir, texform    = self.calculateRayCastSettings(xform)
 
     if xform is not None:
         vertices = transform.transform(vertices, xform)

@@ -380,9 +380,16 @@ class GLImageObject(globject.GLObject):
         return voxels
 
 
-    def calculateRayCastSettings(self):
+    def calculateRayCastSettings(self, xform=None):
         """Calculates various parameters required for 3D ray-cast rendering
-        (see the :class:`.GLVolume` class). Returns a tuple containing:
+        (see the :class:`.GLVolume` class).
+
+
+        :arg xform: Transformation matrix which is applied to the scene
+                    (i.e. the view matrix with camera configuration).
+
+
+        Returns a tuple containing:
 
           - A vector defining the amount by which to move along a ray in a
             single iteration of the ray-casting algorithm. This can be added
@@ -397,10 +404,11 @@ class GLImageObject(globject.GLObject):
 
         .. note:: This method will raise an error if called on a
                   ``GLImageObject`` which is managing an overlay that is not
-                  associated with a :class:`.Volume3DOpts` instance. It will
-                  also raise an error if called on a ``GLImageObject`` that is
-                  not being drawn by a :class:`.Scene3DCanvas`.
+                  associated with a :class:`.Volume3DOpts` instance.
         """
+
+        if xform is None:
+            xform = np.eye(4)
 
         # In GL, the camera position
         # is initially pointing in
@@ -413,9 +421,8 @@ class GLImageObject(globject.GLObject):
         # configuration, and transform
         # it by the inverse modelview
         # matrix
-        mvmat  = self.canvas.getViewMatrix()
         t2dmat = opts.getTransform('texture', 'display')
-        xform  = transform.concat(mvmat, t2dmat)
+        xform  = transform.concat(xform, t2dmat)
         ixform = transform.invert(xform)
 
         eye    = transform.transform(eye,    ixform, vector=True)
