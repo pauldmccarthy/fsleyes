@@ -71,8 +71,13 @@ def updateShaderState(self):
 
     opts       = self.opts
     canvas     = self.canvas
+    lightPos   = None
     flatColour = opts.getConstantColour()
     useNegCmap = (not opts.useLut) and opts.useNegativeCmap
+
+    if self.threedee:
+        lightPos  = np.array(canvas.lightPos)
+        lightPos *= (canvas.zoom / 100.0)
 
     if opts.useLut:
         delta     = 1.0 / (opts.lut.max() + 1)
@@ -91,11 +96,13 @@ def updateShaderState(self):
     dshader.set('clipLow',        opts.clippingRange.xlo)
     dshader.set('clipHigh',       opts.clippingRange.xhi)
 
+    if self.threedee:
+        dshader.set('lighting', canvas.light)
+        dshader.set('lightPos', lightPos)
+
     dshader.unload()
 
     if self.threedee:
-        lightPos  = np.array(canvas.lightPos)
-        lightPos *= (canvas.zoom / 100.0)
         fshader.load()
         fshader.set('lighting', canvas.light)
         fshader.set('lightPos', lightPos)

@@ -352,10 +352,16 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         display = self.display
 
+        # Only apply bricon if there is no vertex data assigned
+        if self.vertexData is None:
+            brightness = display.brightness / 100.0
+            contrast   = display.contrast   / 100.0
+        else:
+            brightness = 0.5
+            contrast   = 0.5
+
         colour = list(fslcmaps.applyBricon(
-            self.colour[:3],
-            display.brightness / 100.0,
-            display.contrast   / 100.0))
+            self.colour[:3], brightness, contrast))
 
         colour.append(display.alpha / 100.0)
 

@@ -576,19 +576,16 @@ class GLMesh(globject.GLObject):
         # intersection of the mesh with the clipping
         # plane.
         gl.glStencilFunc(gl.GL_ALWAYS, 0, 0)
-
-        # If the mesh coordinate transformation
-        # has a positive determinant, we need to
-        # render the back faces first, otherwise
-        # the cross-section mask will not be
-        # created correctly. Something to do with
-        # the vertex unwinding order, I guess.
         direction = [gl.GL_INCR, gl.GL_DECR]
 
+        # If the mesh coordinate transformation
+        # has a negative determinant, it means
+        # the back faces will be facing the camera,
+        # so we need to render the back faces first.
         if npla.det(opts.getCoordSpaceTransform()) > 0:
-            faceOrder = [gl.GL_BACK,  gl.GL_FRONT]
-        else:
             faceOrder = [gl.GL_FRONT, gl.GL_BACK]
+        else:
+            faceOrder = [gl.GL_BACK,  gl.GL_FRONT]
 
         for face, direction in zip(faceOrder, direction):
 
