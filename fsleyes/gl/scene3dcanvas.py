@@ -105,6 +105,29 @@ class Scene3DCanvas(props.HasProperties):
         return self.__glObjects.get(overlay, None)
 
 
+    def getGLObjects(self):
+
+        from fsl.data.mesh  import TriangleMesh
+        from fsl.data.image import Image
+
+        overlays  = self.__displayCtx.getOrderedOverlays()
+
+        surfs = [o for o in overlays if isinstance(o, TriangleMesh)]
+        vols  = [o for o in overlays if isinstance(o, Image)]
+        other = [o for o in overlays if o not in surfs and o not in vols]
+
+        overlays = []
+        globjs   = []
+        for ovl in surfs + vols + other:
+            globj = self.getGLObject(ovl)
+
+            if globj is not None:
+                overlays.append(ovl)
+                globjs  .append(globj)
+
+        return overlays, globjs
+
+
     def canvasToWorld(self, xpos, ypos):
         """Transform the given x/y canvas coordinates into the display
         coordinate system.
@@ -320,17 +343,16 @@ class Scene3DCanvas(props.HasProperties):
         depthOffset = transform.scaleOffsetXform(1, [0, 0, 0.1])
         xform       = self.__viewMat
 
+        overlays, globjs = self.getGLObjects()
+
         with glroutines.enabled(enable):
 
             if self.showCursor: self.__drawCursor()
 
-            for ovl in self.__overlayList:
+            for ovl, globj in zip(overlays, globjs):
 
-                globj   = self.__glObjects.get(ovl, None)
                 display = self.__displayCtx.getDisplay(ovl)
 
-                if globj is None:
-                    continue
                 if not globj.ready():
                     continue
                 if not display.enabled:
