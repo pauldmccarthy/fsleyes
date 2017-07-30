@@ -184,7 +184,7 @@ class Scene3DCanvasOpts(props.HasProperties):
     """If ``True``, an orientation guide will be shown on the canvas. """
 
 
-    occlusion = props.Boolean(default=False)
+    occlusion = props.Boolean(default=True)
     """If ``True``, objects closer to the camera will occlude objects
     further away. Toggles ``gl.DEPTH_TEST``.
     """
@@ -194,6 +194,15 @@ class Scene3DCanvasOpts(props.HasProperties):
     """A constant value which controls how much parts of the scene which are
     further away from the view fade out.
     """
+
+    light = props.Boolean(default=True)
+    """If ``True``, a lighting effect is applied to compatible overlays
+    in the scene.
+    """
+
+
+    lightPos = props.Point(ndims=3)
+    """Light position in the display coordinate system. """
 
 
     offset = props.Point(ndims=2)

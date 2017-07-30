@@ -788,6 +788,8 @@ properties = TypeDict({
     'OrthoOpts.zzoom'       : 'Z zoom',
 
     'Scene3DOpts.showLegend' : 'Show orientation',
+    'Scene3DOpts.light'      : 'Lighting',
+    'Scene3DOpts.lightPos'   : 'Light position',
     'Scene3DOpts.occlusion'  : 'Hide far objects',
     'Scene3DOpts.fadeOut'    : 'Fade out',
 

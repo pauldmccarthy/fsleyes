@@ -197,55 +197,6 @@ def show2D(xax, yax, width, height, lo, hi, flipx=False, flipy=False):
         gl.glRotatef(270, 1, 0, 0)
 
 
-def show3D(width, height, lo, hi, xform=None):
-    """Sets up a 3D orthographic projection. The
-
-        - The horizontal axis is scaled to::
-
-              [-(hi[0] - lo[0]) / 2, (hi[0] - lo[0]) / 2]
-
-        - The vertical axis is scaled to::
-
-              [-(hi[1] - lo[1]) / 2, (hi[1] - lo[1]) / 2]
-
-    with the aspect ratio taken into account.
-
-    Use the ``xform`` if you want a different orientation.
-
-    :arg width:  Canvas width in pixels
-    :arg height: Canvas height in pixels
-    :arg lo:     Sequence of three values, the low ``[x, y, z]`` display
-                 bounds
-    :arg hi:     Sequence of three values, the high ``[x, y, z]`` display
-                 bounds
-    :arg xform:  If provided, is set as the the ``GL_MODELVIEW`` matrix.
-    """
-
-    gl.glViewport(0, 0, width, height)
-    gl.glMatrixMode(gl.GL_PROJECTION)
-    gl.glLoadIdentity()
-
-    xmin, ymin = lo[:2]
-    xmax, ymax = hi[:2]
-    xlen       = xmax - xmin
-    ylen       = ymax - ymin
-    wrat       = float(width) / height
-
-    if   wrat > 1: xlen *= wrat
-    elif wrat < 1: ylen /= wrat
-
-    xhalf = xlen / 2.0
-    yhalf = ylen / 2.0
-
-    gl.glOrtho(-xhalf, xhalf, -yhalf, yhalf,  -10000, 10000)
-
-    gl.glMatrixMode(gl.GL_MODELVIEW)
-    gl.glLoadIdentity()
-
-    if xform is not None:
-        gl.glMultMatrixd(xform.ravel('F'))
-
-
 def lookAt(eye, centre, up):
     """Replacement for ``gluLookAt`. Creates a transformation matrix which
     transforms the display coordinate system such that a camera at position
@@ -278,6 +229,62 @@ def lookAt(eye, centre, up):
     proj = transform.concat(proj, eye)
 
     return proj
+
+
+def ortho(lo, hi, aspectRatio, zoom):
+    """Generates an orthographic projection matrix. The display coordinate
+    system origin ``(0, 0, 0)`` is mapped to the centre of the clipping space.
+
+      - The horizontal axis is scaled to::
+          [-(hi[0] - lo[0]) / 2, (hi[0] - lo[0]) / 2]
+
+      - The vertical axis is scaled to::
+          [-(hi[1] - lo[1]) / 2, (hi[1] - lo[1]) / 2]
+
+    :arg lo:          Low ``(x, y, z)`` bounds.
+    :arg hi:          High ``(x, y, z)`` bounds.
+    :arg aspectRatio: Viewport aspect ratio (width / height)
+    :arg zoom:        Zoom factor. Required to determine suitable near and far
+                      clipping plane locations.
+    """
+
+    lo = np.array(lo, copy=False)
+    hi = np.array(hi, copy=False)
+
+    xmin, ymin = lo[:2]
+    xmax, ymax = hi[:2]
+
+    zmin = min(lo)
+    zmax = max(hi)
+
+    xlen = xmax - xmin
+    ylen = ymax - ymin
+    zlen = zmax - zmin
+    zlen = np.sqrt(np.sum((hi - lo) ** 2)) * zoom
+
+    if   aspectRatio > 1: xlen *= aspectRatio
+    elif aspectRatio < 1: ylen /= aspectRatio
+
+    xhalf = xlen / 2.0
+    yhalf = ylen / 2.0
+
+    xmax =  xhalf
+    xmin = -xhalf
+    ymax =  yhalf
+    ymin = -yhalf
+    zmin = -zlen
+    zmax = +zlen
+
+    projmat = np.eye(4, dtype=np.float32)
+
+    projmat[0, 0] =  2 / (xmax - xmin)
+    projmat[1, 1] =  2 / (ymax - ymin)
+    projmat[2, 2] = -2 / (zmax - zmin)
+    projmat[0, 3] = -(xmax + xmin) / (xmax - xmin)
+    projmat[1, 3] = -(ymax + ymin) / (ymax - ymin)
+    projmat[2, 3] = -(zmax + zmin) / (zmax - zmin)
+
+    return projmat
 
 
 def preserveAspectRatio(width, height, xmin, xmax, ymin, ymax, grow=True):

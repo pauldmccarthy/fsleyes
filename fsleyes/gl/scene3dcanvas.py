@@ -36,6 +36,8 @@ class Scene3DCanvas(props.HasProperties):
     showLegend    = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
     occlusion     = copy.copy(canvasopts.Scene3DCanvasOpts.occlusion)
     fadeOut       = copy.copy(canvasopts.Scene3DCanvasOpts.fadeOut)
+    light         = copy.copy(canvasopts.Scene3DCanvasOpts.light)
+    lightPos      = copy.copy(canvasopts.Scene3DCanvasOpts.lightPos)
     zoom          = copy.copy(canvasopts.Scene3DCanvasOpts.zoom)
     offset        = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
     rotation      = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
@@ -46,8 +48,8 @@ class Scene3DCanvas(props.HasProperties):
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
         self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
-        self.__xform       = np.eye(4)
-
+        self.__viewMat     = np.eye(4)
+        self.__projMat     = np.eye(4)
 
         self.__glObjects   = {}
 
@@ -75,47 +77,32 @@ class Scene3DCanvas(props.HasProperties):
         self.__displayCtx .removeListener('bounds',   self.__name)
 
 
-    def _initGL(self):
-        self.__overlayListChanged()
-
-
     def getViewMatrix(self):
-        return np.array(self.__xform)
+        return self.__viewMat
 
 
-    def __overlayListChanged(self, *a):
-
-        # Destroy any GL objects for overlays
-        # which are no longer in the list
-        for ovl, globj in list(self.__glObjects.items()):
-            if ovl not in self.__overlayList:
-                self.__glObjects.pop(ovl)
-                if globj:
-                    globj.deregister(self.__name)
-                    globj.destroy()
-
-        # Create a GL object for any new overlays,
-        # and attach a listener to their display
-        # properties so we know when to refresh
-        # the canvas.
-        for overlay in self.__overlayList:
-
-            # A GLObject already exists
-            # for this overlay
-            if overlay in self.__glObjects:
-                continue
-
-            globj = globject.createGLObject(overlay,
-                                            self.__displayCtx,
-                                            self,
-                                            True)
-
-            globj.register(self.__name, self.Refresh)
-            self.__glObjects[overlay] = globj
+    def getViewScale(self):
+        return self.__viewScale
 
 
-    def __displayBoundsChanged(self, *a):
-        self.Refresh()
+    def getViewOffset(self):
+        return self.__viewOffset
+
+
+    def getViewRotation(self):
+        return self.__viewRotate
+
+
+    def getViewCamera(self):
+        return self.__viewCamera
+
+
+    def getProjectionMatrix(self):
+        return self.__projMat
+
+
+    def getGLObject(self, overlay):
+        return self.__glObjects.get(overlay, None)
 
 
     def canvasToWorld(self, xpos, ypos):
@@ -149,13 +136,66 @@ class Scene3DCanvas(props.HasProperties):
         # z=-1 because the camera is offset by 1
         # on the depth axis (see __setViewport).
         pos   = np.array([xpos, ypos, -1])
-        xform = transform.invert(self.__xform)
+        xform = transform.invert(self.__viewMat)
         pos   = transform.transform(pos, xform)
 
         return pos
 
 
-    def __genModelViewMatrix(self):
+    def _initGL(self):
+        self.__overlayListChanged()
+
+
+    def __overlayListChanged(self, *a):
+        """
+        """
+
+        # Destroy any GL objects for overlays
+        # which are no longer in the list
+        for ovl, globj in list(self.__glObjects.items()):
+            if ovl not in self.__overlayList:
+                self.__glObjects.pop(ovl)
+                if globj:
+                    globj.deregister(self.__name)
+                    globj.destroy()
+
+        # Create a GL object for any new overlays,
+        # and attach a listener to their display
+        # properties so we know when to refresh
+        # the canvas.
+        for overlay in self.__overlayList:
+
+            # A GLObject already exists
+            # for this overlay
+            if overlay in self.__glObjects:
+                continue
+
+            globj = globject.createGLObject(overlay,
+                                            self.__displayCtx,
+                                            self,
+                                            True)
+
+            globj.register(self.__name, self.Refresh)
+            self.__glObjects[overlay] = globj
+
+
+    def __getGLObjects(self):
+        pass
+
+
+    def __displayBoundsChanged(self, *a):
+
+        b        = self.__displayCtx.bounds
+        centre = np.array([b.xlo + 0.5 * (b.xhi - b.xlo),
+                           b.ylo + 0.5 * (b.yhi - b.ylo),
+                           b.zlo + 0.5 * (b.zhi - b.zlo)])
+
+        self.lightPos = centre + [b.xlen, b.ylen, 0]
+
+        self.Refresh()
+
+
+    def __genViewMatrix(self):
         """Generate and return a transformation matrix to be used as the
         model-view matrix. This includes applying the current :attr:`zoom`,
         :attr:`rotation` and :attr:`offset` settings, and configuring
@@ -208,7 +248,13 @@ class Scene3DCanvas(props.HasProperties):
 
         # Order is very important!
         xform = transform.concat(offset, scale, camera, rotate)
-        return np.array(xform, dtype=np.float32)
+        np.array(xform, dtype=np.float32)
+
+        self.__viewOffset = offset
+        self.__viewScale  = scale
+        self.__viewRotate = rotate
+        self.__viewCamera = camera
+        self.__viewMat    = xform
 
 
     def __setViewport(self):
@@ -231,11 +277,19 @@ class Scene3DCanvas(props.HasProperties):
         if np.any(np.isclose(blo, bhi)):
             return False
 
-        # We save the transform so it
-        # can be used by canvasToWorld
-        self.__xform = self.__genModelViewMatrix()
+        # Generate the view atrix
+        self.__genViewMatrix()
 
-        glroutines.show3D(width, height, blo, bhi)
+        aratio = width / float(height)
+        zoom   = self.zoom / 100.0
+        self.__projMat = glroutines.ortho(blo, bhi, aratio, zoom)
+
+        gl.glViewport(0, 0, width, height)
+        gl.glMatrixMode(gl.GL_PROJECTION)
+        gl.glLoadMatrixf(self.__projMat.ravel('F'))
+
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glLoadIdentity()
 
         return True
 
@@ -264,7 +318,7 @@ class Scene3DCanvas(props.HasProperties):
         # which are higher in the list will get
         # drawn above lower ones.
         depthOffset = transform.scaleOffsetXform(1, [0, 0, 0.1])
-        xform       = self.__xform
+        xform       = self.__viewMat
 
         with glroutines.enabled(enable):
 
@@ -291,6 +345,7 @@ class Scene3DCanvas(props.HasProperties):
 
             self.__drawBoundingBox()
 
+        self.__drawLight()
         if self.showLegend:
             self.__drawLegend()
 
@@ -308,7 +363,7 @@ class Scene3DCanvas(props.HasProperties):
             [b.xlo, pos.y, pos.z],
             [b.xhi, pos.y, pos.z],
         ], dtype=np.float32)
-        points = transform.transform(points, self.__xform)
+        points = transform.transform(points, self.__viewMat)
         gl.glLineWidth(1)
 
         r, g, b = self.cursorColour[:3]
@@ -317,6 +372,31 @@ class Scene3DCanvas(props.HasProperties):
         gl.glBegin(gl.GL_LINES)
         for p in points:
             gl.glVertex3f(*p)
+        gl.glEnd()
+
+
+    def __drawLight(self):
+
+        lightPos  = np.array(self.lightPos)
+        lightPos *= (self.zoom / 100.0)
+
+        gl.glColor4f(1, 1, 1, 1)
+        gl.glPointSize(10)
+        gl.glBegin(gl.GL_POINTS)
+        gl.glVertex3f(*lightPos)
+        gl.glEnd()
+
+        b = self.__displayCtx.bounds
+        centre = np.array([b.xlo + 0.5 * (b.xhi - b.xlo),
+                           b.ylo + 0.5 * (b.yhi - b.ylo),
+                           b.zlo + 0.5 * (b.zhi - b.zlo)])
+
+        centre = transform.transform(centre, self.__viewMat)
+
+        gl.glColor4f(1, 0, 1, 1)
+        gl.glBegin(gl.GL_LINES)
+        gl.glVertex3f(*lightPos)
+        gl.glVertex3f(*centre)
         gl.glEnd()
 
 
@@ -355,7 +435,7 @@ class Scene3DCanvas(props.HasProperties):
             [xlo, yhi, zhi],
             [xhi, yhi, zhi],
         ])
-        vertices = transform.transform(vertices, self.__xform)
+        vertices = transform.transform(vertices, self.__viewMat)
 
 
         gl.glLineWidth(2)
@@ -398,7 +478,7 @@ class Scene3DCanvas(props.HasProperties):
         # to the legend vertices. Offset
         # anatomical labels off each
         # axis line by a small amount.
-        rotation   = transform.decompose(self.__xform)[2]
+        rotation   = transform.decompose(self.__viewMat)[2]
         xform      = transform.compose(scale, offset, rotation)
         labelPoses = transform.transform(vertices * 1.2, xform)
         vertices   = transform.transform(vertices,       xform)

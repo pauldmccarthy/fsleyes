@@ -180,6 +180,7 @@ class GLMesh(globject.GLObject):
 
         name    = self.name
         display = self.display
+        canvas  = self.canvas
         opts    = self.opts
 
         def shader(*a):
@@ -204,7 +205,6 @@ class GLMesh(globject.GLObject):
         opts   .addListener('outline',          name, refresh,     weak=False)
         opts   .addListener('outlineWidth',     name, refresh,     weak=False)
         opts   .addListener('wireframe',        name, refresh,     weak=False)
-        opts   .addListener('lighting',         name, refresh,     weak=False)
         opts   .addListener('vertexData',       name, refresh,     weak=False)
         opts   .addListener('vertexDataIndex',  name, refresh,     weak=False)
         opts   .addListener('clippingRange',    name, shader,      weak=False)
@@ -220,6 +220,11 @@ class GLMesh(globject.GLObject):
         opts   .addListener('useLut',           name, shader,      weak=False)
         opts   .addListener('lut',              name, registerLut, weak=False)
         display.addListener('alpha',            name, refreshCmap, weak=False)
+
+        if self.threedee:
+            canvas.addListener('light',    name, shader, weak=False)
+            canvas.addListener('lightPos', name, shader, weak=False)
+
         # We don't need to listen for
         # brightness or contrast, because
         # they are linked to displayRange.
@@ -234,7 +239,6 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('outline',          self.name)
         self.opts   .removeListener('outlineWidth',     self.name)
         self.opts   .removeListener('wireframe',        self.name)
-        self.opts   .removeListener('lighting',         self.name)
         self.opts   .removeListener('vertexData',       self.name)
         self.opts   .removeListener('vertexDataIndex',  self.name)
         self.opts   .removeListener('clippingRange',    self.name)
@@ -250,6 +254,11 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('useLut',           self.name)
         self.opts   .removeListener('lut',              self.name)
         self.display.removeListener('alpha',            self.name)
+
+        if self.threedee:
+            self.canvas.removeListener('light',    self.name)
+            self.canvas.removeListener('lightPos', self.name)
+
 
 
     def registerLut(self):
@@ -377,12 +386,6 @@ class GLMesh(globject.GLObject):
         idxs      = self.indices
         normals   = np.array(self.overlay.vnormals, dtype=np.float32)
         vdata     = opts.getVertexData()
-        useShader = vdata is not None
-
-        if xform is not None:
-            gl.glMatrixMode(gl.GL_MODELVIEW)
-            gl.glPushMatrix()
-            gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
 
         if opts.wireframe:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
@@ -390,24 +393,18 @@ class GLMesh(globject.GLObject):
         else:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
-        if not useShader:
-            with glroutines.enabled((gl.GL_VERTEX_ARRAY, gl.GL_NORMAL_ARRAY)):
+        if xform is not None:
+            gl.glMatrixMode(gl.GL_MODELVIEW)
+            gl.glPushMatrix()
+            gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
 
-                gl.glNormalPointer(gl.GL_FLOAT, 0, normals.ravel('C'))
-
-                gl.glColor(*opts.getConstantColour())
-                gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts  .ravel('C'))
-
-                gl.glDrawElements(gl.GL_TRIANGLES,
-                                  len(idxs),
-                                  gl.GL_UNSIGNED_INT,
-                                  idxs)
-        else:
-
+        with glroutines.enabled((gl.GL_CULL_FACE)):
+            gl.glCullFace(gl.GL_BACK)
             fslgl.glmesh_funcs.drawWithShaders(
                 self,
                 gl.GL_TRIANGLES,
                 verts,
+                normals=normals,
                 indices=idxs,
                 vdata=vdata)
 

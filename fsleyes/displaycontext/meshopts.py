@@ -178,9 +178,6 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     """3D only. If ``True``, the mesh is rendered as a wireframe. """
 
 
-    lighting  = props.Boolean(default=False)
-    """3D only. If ``True``, a lighting effect is applied to the mesh. """
-
 
     def __init__(self, overlay, *args, **kwargs):
         """Create a ``MeshOpts`` instance. All arguments are passed through

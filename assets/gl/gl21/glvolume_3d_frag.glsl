@@ -263,7 +263,7 @@ void main(void) {
     if (nsamples > 0) {
 
       finalColour.a = alpha;
-      gl_FragDepth  = ((depth.z / depth.w) + 1.0) * 0.5;
+      gl_FragDepth  = depth.z;
       gl_FragColor  = finalColour * vec4(1 - fadeOut * gl_FragDepth);
     }
     else {

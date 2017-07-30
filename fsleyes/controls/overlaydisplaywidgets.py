@@ -226,8 +226,7 @@ def _initPropertyList_MeshOpts():
 
 
 def _init3DPropertyList_MeshOpts():
-    return ['wireframe',
-            'lighting']
+    return ['wireframe']
 
 
 def _initPropertyList_GiftiOpts():
@@ -654,8 +653,7 @@ def _initWidgetSpec_MeshOpts():
 
 def _init3DWidgetSpec_MeshOpts():
     return {
-        'wireframe' :  props.Widget('wireframe'),
-        'lighting'  :  props.Widget('lighting'),
+        'wireframe' : props.Widget('wireframe'),
     }
 
 

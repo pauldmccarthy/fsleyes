@@ -13,6 +13,7 @@ shader programs.
 """
 
 
+import numpy     as np
 import OpenGL.GL as gl
 
 import fsl.utils.transform as transform
@@ -29,15 +30,22 @@ def compileShaders(self):
 
     self.activeShader = None
 
-    if not self.threedee:
+    if self.threedee:
+
+        flatVertSrc = shaders.getVertexShader(  'glmesh_3d_flat')
+        flatFragSrc = shaders.getFragmentShader('glmesh_3d_flat')
+        dataVertSrc = shaders.getVertexShader(  'glmesh_3d_data')
+        dataFragSrc = shaders.getFragmentShader('glmesh_3d_data')
+
+        self.flatShader = shaders.GLSLShader(flatVertSrc, flatFragSrc)
+        self.dataShader = shaders.GLSLShader(dataVertSrc, dataFragSrc)
+
+    else:
 
         vertSrc = shaders.getVertexShader(  'glmesh_2d_data')
         fragSrc = shaders.getFragmentShader('glmesh_2d_data')
 
         self.dataShader = shaders.GLSLShader(vertSrc, fragSrc)
-
-    else:
-        print('todo')
 
 
 def destroy(self):
@@ -62,6 +70,7 @@ def updateShaderState(self):
     fshader = self.flatShader
 
     opts       = self.opts
+    canvas     = self.canvas
     flatColour = opts.getConstantColour()
     useNegCmap = (not opts.useLut) and opts.useNegativeCmap
 
@@ -84,8 +93,14 @@ def updateShaderState(self):
 
     dshader.unload()
 
-    if fshader is not None:
-        pass
+    if self.threedee:
+        lightPos  = np.array(canvas.lightPos)
+        lightPos *= (canvas.zoom / 100.0)
+        fshader.load()
+        fshader.set('lighting', canvas.light)
+        fshader.set('lightPos', lightPos)
+        fshader.set('colour',   flatColour)
+        fshader.unload()
 
 
 def preDraw(self, xform=None, bbox=None):
@@ -145,6 +160,7 @@ def drawWithShaders(self,
                           indices.shape[0],
                           gl.GL_UNSIGNED_INT,
                           indices.ravel('C'))
+
 
 def postDraw(self, xform=None, bbox=None):
 

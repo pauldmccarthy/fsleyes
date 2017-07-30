@@ -405,6 +405,10 @@ properties = TypeDict({
     'Scene3DOpts.showLegend' :
     'When selected, a legend will be displayed in the bottom right, showing '
     'orientation information.',
+    'Scene3DOpts.light'      :
+    'Enable a simple lighting effect.',
+    'Scene3DOpts.lightPos' :
+    'Position of the light in the display coordinate system.',
     'Scene3DOpts.occlusion' :
     'When selected, objects in the scene which are behind another object will '
     'not be shown.',

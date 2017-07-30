@@ -168,6 +168,7 @@ def loadOverlays(paths,
     """
 
     import fsl.data.image as fslimage
+    import fsl.data.mesh  as fslmesh
 
     # The default load function updates
     # the dialog window created above
@@ -198,8 +199,10 @@ def loadOverlays(paths,
             path, dtype.__name__))
 
         try:
-            if issubclass(dtype, fslimage.Image):
+            if   issubclass(dtype, fslimage.Image):
                 overlay = loadImage(dtype, path, inmem=inmem)
+            elif issubclass(dtype, fslmesh.TriangleMesh):
+                overlay = dtype(path, fixWinding=True)
             else:
                 overlay = dtype(path)
 

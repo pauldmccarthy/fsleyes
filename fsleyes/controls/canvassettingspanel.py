@@ -137,6 +137,7 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         scene3dOptsProps = [
             props.Widget('zoom', showLimits=False),
             props.Widget('showLegend'),
+            props.Widget('light'),
             props.Widget('occlusion'),
             props.Widget('fadeOut', showLimits=False),
         ]
