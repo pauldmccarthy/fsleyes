@@ -332,9 +332,6 @@ class Scene3DCanvas(props.HasProperties):
         if len(self.__overlayList) == 0:
             return
 
-        if self.occlusion: enable = [gl.GL_DEPTH_TEST]
-        else:              enable = []
-
         # If occlusion is on, we offset the
         # depth of each overlay so that, where
         # a depth collision occurs, overlays
@@ -345,27 +342,28 @@ class Scene3DCanvas(props.HasProperties):
 
         overlays, globjs = self.getGLObjects()
 
-        with glroutines.enabled(enable):
+        if self.showCursor: self.__drawCursor()
 
-            if self.showCursor: self.__drawCursor()
+        for ovl, globj in zip(overlays, globjs):
 
-            for ovl, globj in zip(overlays, globjs):
+            if not self.occlusion:
+                gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
 
-                display = self.__displayCtx.getDisplay(ovl)
+            display = self.__displayCtx.getDisplay(ovl)
 
-                if not globj.ready():
-                    continue
-                if not display.enabled:
-                    continue
+            if not globj.ready():
+                continue
+            if not display.enabled:
+                continue
 
-                if self.occlusion:
-                    xform = transform.concat(depthOffset, xform)
+            if self.occlusion:
+                xform = transform.concat(depthOffset, xform)
 
-                globj.preDraw( xform=xform)
-                globj.draw3D(  xform=xform)
-                globj.postDraw(xform=xform)
+            globj.preDraw( xform=xform)
+            globj.draw3D(  xform=xform)
+            globj.postDraw(xform=xform)
 
-            self.__drawBoundingBox()
+        self.__drawBoundingBox()
 
         self.__drawLight()
         if self.showLegend:

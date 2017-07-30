@@ -157,11 +157,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
     # in the vertex program
     self.shader.setAttr('texCoord', texCoords)
 
-    with glroutines.enabled(gl.GL_CULL_FACE):
-        gl.glPolygonMode(gl.GL_FRONT, gl.GL_FILL)
-        gl.glCullFace(gl.GL_BACK)
-        gl.glFrontFace(self.frontFace())
-        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
+    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
 
 def draw3D(self, xform=None, bbox=None):
@@ -192,12 +188,7 @@ def draw3D(self, xform=None, bbox=None):
     vertices = np.array(vertices, dtype=np.float32).ravel('C')
 
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-
-    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
-    with glroutines.enabled(gl.GL_CULL_FACE):
-        gl.glFrontFace(gl.GL_CCW)
-        gl.glCullFace(gl.GL_BACK)
-        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
+    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
 
 
 def drawAll(self, axes, zposes, xforms):

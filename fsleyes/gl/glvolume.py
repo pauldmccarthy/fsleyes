@@ -18,6 +18,7 @@ import OpenGL.GL           as gl
 import fsl.utils.async     as async
 import fsl.utils.transform as transform
 import fsleyes.gl          as fslgl
+import fsleyes.gl.routines as glroutines
 from . import                 textures
 from . import                 glimageobject
 from . import resources    as glresources
@@ -645,13 +646,21 @@ class GLVolume(glimageobject.GLImageObject):
     def draw2D(self, *args, **kwargs):
         """Calls the version dependent ``draw2D`` function. """
 
-        fslgl.glvolume_funcs.draw2D(self, *args, **kwargs)
+        with glroutines.enabled((gl.GL_CULL_FACE)):
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+            gl.glCullFace(gl.GL_BACK)
+            gl.glFrontFace(self.frontFace())
+            fslgl.glvolume_funcs.draw2D(self, *args, **kwargs)
 
 
     def draw3D(self, *args, **kwargs):
         """Calls the version dependent ``draw3D`` function. """
 
-        fslgl.glvolume_funcs.draw3D(self, *args, **kwargs)
+        with glroutines.enabled((gl.GL_DEPTH_TEST, gl.GL_CULL_FACE)):
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+            gl.glFrontFace(gl.GL_CCW)
+            gl.glCullFace(gl.GL_BACK)
+            fslgl.glvolume_funcs.draw3D(self, *args, **kwargs)
 
 
     def drawAll(self, *args, **kwargs):

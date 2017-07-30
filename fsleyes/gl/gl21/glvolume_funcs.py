@@ -181,11 +181,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
 
     self.shader.loadAtts()
 
-    with glroutines.enabled(gl.GL_CULL_FACE):
-        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
-        gl.glCullFace(gl.GL_BACK)
-        gl.glFrontFace(self.frontFace())
-        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
+    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
 
 def draw3D(self, xform=None, bbox=None):
@@ -215,11 +211,7 @@ def draw3D(self, xform=None, bbox=None):
 
     self.shader.loadAtts()
 
-    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
-    with glroutines.enabled(gl.GL_CULL_FACE):
-        gl.glFrontFace(gl.GL_CCW)
-        gl.glCullFace(gl.GL_BACK)
-        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
+    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
 
 
 def drawAll(self, axes, zposes, xforms):

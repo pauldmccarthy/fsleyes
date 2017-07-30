@@ -398,7 +398,7 @@ class GLMesh(globject.GLObject):
             gl.glPushMatrix()
             gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
 
-        with glroutines.enabled((gl.GL_CULL_FACE)):
+        with glroutines.enabled((gl.GL_DEPTH_TEST, gl.GL_CULL_FACE)):
             gl.glCullFace(gl.GL_BACK)
             fslgl.glmesh_funcs.drawWithShaders(
                 self,
