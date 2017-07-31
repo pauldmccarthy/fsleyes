@@ -207,19 +207,11 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         self.__vertexDataRange = None
 
         nounbind = kwargs.get('nounbind', [])
-        nounbind.extend(['refImage', 'coordSpace', 'transform'])
+        nounbind.extend(['refImage', 'coordSpace', 'transform', 'vertexData'])
         kwargs['nounbind'] = nounbind
 
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
-
-        # TODO Only child instances should
-        #      listen. Alternately, vertexData
-        #      should be in nounbind.
-        self.addListener('vertexData',
-                         self.name,
-                         self.__vertexDataChanged,
-                         immediate=True)
 
         # A number of callback functions are used to
         # keep the refImage, coordSpace and transform
@@ -258,6 +250,19 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
             self.__overlayListChanged()
             self.__updateBounds()
+
+        # Parent instance doesn't need to
+        # worry about loading vertex data
+        else:
+            self.addListener('vertexData',
+                             self.name,
+                             self.__vertexDataChanged,
+                             immediate=True)
+
+        # If we have inherited values from a
+        # parent instance, make sure the vertex
+        # data (if set) is initialised
+        self.__vertexDataChanged()
 
         # If a reference image has not
         # been set on the parent MeshOpts
@@ -651,6 +656,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         try:
             if self.vertexData is not None:
+                log.debug('Loading vertex data: {}'.format(self.vertexData))
                 vdata      = self.overlay.getVertexData(self.vertexData)
                 vdataRange = np.nanmin(vdata), np.nanmax(vdata)
 

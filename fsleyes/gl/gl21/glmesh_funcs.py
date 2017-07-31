@@ -134,9 +134,8 @@ def drawWithShaders(self,
                     indices=None,
                     normals=None,
                     vdata=None):
-    """Called when :attr:`.MeshOpts.outline` is ``True``, and
-    :attr:`.MeshOpts.vertexData` is not ``None``. Loads and runs the
-    shader program.
+    """Called when :attr:`.MeshOpts.vertexData` is not ``None``. Loads and
+    runs the shader program.
 
     :arg glType:   The OpenGL primitive type. If not provided, ``GL_LINES``
                    is assumed.

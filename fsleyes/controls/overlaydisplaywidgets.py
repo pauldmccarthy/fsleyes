@@ -553,21 +553,24 @@ def _initWidgetSpec_MeshOpts():
         if vdata is None: return 'None'
         else:             return op.basename(vdata)
 
-    def colourEnabledWhen(opts, vdata, outline, useLut):
-        return outline and (vdata is not None) and (not useLut)
+    def colourEnabledWhen(opts, vdata, useLut):
+        return (vdata is not None) and (not useLut)
 
     colourKwargs = {
-        'dependencies' : ['vertexData', 'outline', 'useLut'],
+        'dependencies' : ['vertexData', 'useLut'],
         'enabledWhen'  : colourEnabledWhen
     }
 
     return {
-        'outline'      : props.Widget('outline'),
+        'outline'      : props.Widget(
+            'outline',
+            dependencies=['vertexData'],
+            enabledWhen=lambda o, v: v is None),
         'outlineWidth' : props.Widget(
             'outlineWidth',
             showLimits=False,
-            dependencies=['outline'],
-            enabledWhen=lambda o, outline: outline),
+            dependencies=['outline', 'vertexData'],
+            enabledWhen=lambda op, o, v: o or v is not None),
         'refImage'     : props.Widget('refImage', labels=imageName),
         'coordSpace'   : props.Widget(
             'coordSpace',

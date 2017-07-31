@@ -318,9 +318,8 @@ class GLMesh(globject.GLObject):
         """
 
         opts       = self.opts
-        useShader  = self.threedee or \
-                     (opts.outline and opts.vertexData is not None)
-        useTexture = (not self.threedee) and (not opts.outline)
+        useShader  = self.threedee or (opts.vertexData is not None)
+        useTexture = not (self.threedee or opts.outline or useShader)
 
         if useShader:
             fslgl.glmesh_funcs.preDraw(self, xform, bbox)
@@ -345,6 +344,12 @@ class GLMesh(globject.GLObject):
         lo,  hi       = self.getDisplayBounds()
         xax, yax, zax = axes
 
+        # If vertexData is set, we ignore
+        # the outline setting - meshes can
+        # only be coloured by vertexData
+        # in outline mode
+        outline = opts.outline or opts.vertexData is not None
+
         # Mesh is 2D, and is
         # perpendicular to
         # the viewing plane
@@ -361,7 +366,7 @@ class GLMesh(globject.GLObject):
         if is2D:
             self.draw2DMesh(xform, bbox)
 
-        elif opts.outline:
+        elif outline:
             self.drawOutline(zpos, axes, xform, bbox)
 
         else:
@@ -506,10 +511,6 @@ class GLMesh(globject.GLObject):
                 indices=faces,
                 vdata=vdata)
 
-        # Reset the polygon mode back to fill
-        if opts.outline:
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
-
 
     def renderCrossSection(self, zpos, axes, lo, hi, dest):
         """Renders a filled cross-section of the mesh to an off-screen
@@ -632,8 +633,7 @@ class GLMesh(globject.GLObject):
         """Overrides :meth:`.GLObject.postDraw`. This method does nothing. """
 
         opts      = self.opts
-        useShader = self.threedee or \
-                    (opts.outline and opts.vertexData is not None)
+        useShader = self.threedee or (opts.vertexData is not None)
 
         if useShader:
             fslgl.glmesh_funcs.postDraw(self, xform, bbox)
