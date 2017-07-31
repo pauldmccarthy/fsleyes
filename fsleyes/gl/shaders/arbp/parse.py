@@ -487,9 +487,10 @@ You can then use this routine in any fragment program like so::
     # do some stuff
     # ...
 
-    MOV texCoord, {{ varying_texCoord }};
-
-    # Check that the texture coordinates are in bounds
+    # Check that {{ varying_texCoord }} is in
+    # bounds (see below for information about
+    # the use of the template expression in
+    # this comment).
     {{ arb_call('textest.prog',
                 texCoord='{{ varying_texCoord }}',
                 out_result='textest') }}
@@ -502,8 +503,25 @@ You can then use this routine in any fragment program like so::
     # processing the fragment.
     # ...
 
-The only requirement in the expression names that you use are that the
-routine's output variables must start with ``'out_'``.
+There are two requirements that must be met:
+
+  - In the expression names that you use, that the routine's output variables
+    must start with ``'out_'``.
+
+  - If, as in the example above, you use a template expression as an argument
+    in the ``arb_call`` function, you must make sure that that expression
+    is used elsewhere in the file, as otherwise it will not be detected by
+    the parser. This can easily be accomplished simply by using the expression
+    somewhere in a comment, as in the example above.
+
+  - The only expression types that you cannot pass direcrly into a routine
+    are Parameters with a length greater than 1 (e.g. matrix parameters). For
+    example, this will result in a compiler error::
+
+       {{ arb_call('my_routine.prog', xform='{{ param4_xform }}') }}
+
+    In this case, you will need to declare the parameter as a ``PARAM`` or
+    copy it to a ``TEMP`` variable before passing it to the routine.
 
 
 The ``arb_include`` function requires you to pass the name of the routine file
