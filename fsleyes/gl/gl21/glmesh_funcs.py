@@ -96,11 +96,8 @@ def draw(self,
          indices=None,
          normals=None,
          vdata=None):
-    """Called when :attr:`.MeshOpts.vertexData` is not ``None``. Loads and
-    runs the shader program.
-
-    This function is called when rendering 2D intersection lines, or full
-    3D triangle meshes.
+    """Called for 3D meshes, and when :attr:`.MeshOpts.vertexData` is not
+    ``None``. Loads and runs the shader program.
 
     :arg glType:   The OpenGL primitive type.
 

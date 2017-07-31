@@ -15,120 +15,133 @@ programs.
 
 import OpenGL.GL as gl
 
-import fsl.utils.transform as transform
 import fsleyes.gl.shaders  as shaders
+import fsleyes.gl.routines as glroutines
 
 
 def compileShaders(self):
     """Loads the ``glmesh`` vertex and fragment shader program source,
-    and creates an :class:`.ARBPShader` instance.
+    and creates :class:`.ARBPShader` instance(s).
     """
-
-    if self.shader is not None:
-        self.shader.destroy()
-
-    vertSrc = shaders.getVertexShader(  'glmesh')
-    fragSrc = shaders.getFragmentShader('glmesh')
 
     textures = {
         'cmap'    : 0,
         'negCmap' : 1
     }
 
-    self.shader = shaders.ARBPShader(vertSrc,
-                                     fragSrc,
-                                     shaders.getShaderDir(),
-                                     textures)
+    shaderDir = shaders.getShaderDir()
+
+    if self.threedee:
+
+        flatVertSrc = shaders.getVertexShader(  'glmesh_3d_flat')
+        flatFragSrc = shaders.getFragmentShader('glmesh_3d_flat')
+        dataVertSrc = shaders.getVertexShader(  'glmesh_3d_data')
+        dataFragSrc = shaders.getFragmentShader('glmesh_3d_data')
+
+        self.flatShader = shaders.ARBPShader(flatVertSrc,
+                                             flatFragSrc,
+                                             shaderDir)
+        self.dataShader = shaders.ARBPShader(dataVertSrc,
+                                             dataFragSrc,
+                                             shaderDir,
+                                             textures)
+
+    else:
+
+        vertSrc = shaders.getVertexShader(  'glmesh_2d_data')
+        fragSrc = shaders.getFragmentShader('glmesh_2d_data')
+
+        self.dataShader = shaders.ARBPShader(vertSrc, fragSrc, shaderDir)
 
 
-def destroy(self):
-    """Deletes the vertex/fragment shader programs that were compiled by
-    :func:`compileShaders`.
-    """
-    if self.shader is not None:
-        self.shader.destroy()
-
-    self.shader = None
-
-
-def updateShaderState(self):
+def updateShaderState(self, **kwargs):
     """Updates the state of the vertex/fragment shaders according to the
     current :class:`.MeshOpts` configuration. This involves setting the
     parameter values used by the shaders.
     """
-    self.shader.load()
+    opts    = self.opts
+    canvas  = self.canvas
+    dshader = self.dataShader
+    fshader = self.flatShader
 
-    opts       = self.opts
-    useNegCmap = (not opts.useLut) and opts.useNegativeCmap
-
-    if opts.useLut:
-        delta     = 1.0 / (opts.lut.max() + 1)
-        cmapXform = transform.scaleOffsetXform(delta, 0.5 * delta)
-    else:
-        cmapXform = self.cmapTexture.getCoordinateTransform()
-
-    settings   = [-1 if     useNegCmap          else 1,
-                  -1 if     opts.invertClipping else 1,
-                  -1 if not opts.discardClipped else 1,
+    settings   = [-1 if     kwargs['useNegCmap'] else 1,
+                  -1 if     opts.invertClipping  else 1,
+                  -1 if not opts.discardClipped  else 1,
                   0]
 
     clipping   = [opts.clippingRange.xlo, opts.clippingRange.xhi, 0, 0]
-    flatColour = opts.getConstantColour()
 
-    self.shader.setFragParam('settings',    settings)
-    self.shader.setFragParam('clipping',    clipping)
-    self.shader.setFragParam('flatColour',  flatColour)
-    self.shader.setFragParam('cmapXform',   cmapXform)
+    dshader.load()
 
-    self.shader.unload()
+    dshader.setFragParam('settings',    settings)
+    dshader.setFragParam('clipping',    clipping)
+    dshader.setFragParam('flatColour',  kwargs['flatColour'])
+    dshader.setFragParam('cmapXform',   kwargs['cmapXform'])
+
+    dshader.unload()
 
 
-def drawWithShaders(self, vertices, vdata, indices=None, glType=None):
-    """Called when :attr:`.MeshOpts.outline` is ``True``, and
-    :attr:`.MeshOpts.vertexData` is not ``None``. Loads and runs the
-    shader program.
-
-    :arg vertices: ``(n, 3)`` array containing the line vertices to draw.
-    :arg vdata:    ``(n, )`` array containing data for each vertex.
-    :arg indices:  Indices into the ``vertices`` array. If not provided,
-                   ``glDrawArrays`` is used.
-    :arg glType:   The OpenGL primitive type. If not provided, ``GL_LINES``
-                   is assumed.
+def preDraw(self, xform=None, bbox=None):
+    """Must be called before :func:`draw`. Loads the appropriate shader
+    program.
     """
 
-    if glType is None:
-        glType = gl.GL_LINES
+    flat = self.opts.vertexData is None
 
-    self.shader.load()
+    if flat: shader = self.flatShader
+    else:    shader = self.dataShader
 
-    self.shader.setAttr('vertexData', vdata.reshape(-1, 1))
+    self.activeShader = shader
+    shader.load()
 
-    self.shader.loadAtts()
 
-    if self.opts.useLut:
-        self.lutTexture.bindTexture(gl.GL_TEXTURE0)
-    else:
-        self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
-        self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
+def draw(self,
+         glType,
+         vertices,
+         indices=None,
+         normals=None,
+         vdata=None):
+    """Called for 3D meshes, and :attr:`.MeshOpts.vertexData` is not
+    ``None``. Loads and runs the shader program.
 
-    gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-    gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
 
-    if indices is None:
-        gl.glDrawArrays(glType, 0, vertices.shape[0])
-    else:
-        gl.glDrawElements(glType,
-                          indices.shape[0],
-                          gl.GL_UNSIGNED_INT,
-                          indices.ravel('C'))
+    :arg glType:   The OpenGL primitive type.
 
-    gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+    :arg vertices: ``(n, 3)`` array containing the line vertices to draw.
 
-    self.shader.unloadAtts()
-    self.shader.unload()
+    :arg indices:  Indices into the ``vertices`` array. If not provided,
+                   ``glDrawArrays`` is used.
 
-    if self.opts.useLut:
-        self.lutTexture.unbindTexture()
-    else:
-        self.cmapTexture   .unbindTexture()
-        self.negCmapTexture.unbindTexture()
+    :arg normals:  Vertex normals.
+
+    :arg vdata:    ``(n, )`` array containing data for each vertex.
+    """
+
+    shader = self.activeShader
+
+    if normals is not None: shader.setAttr('normal',     normals)
+    if vdata   is not None: shader.setAttr('vertexData', vdata.reshape(-1, 1))
+
+    shader.loadAtts()
+
+    with glroutines.enabled((gl.GL_VERTEX_ARRAY)):
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
+
+        if indices is None:
+            gl.glDrawArrays(glType, 0, vertices.shape[0])
+        else:
+            gl.glDrawElements(glType,
+                              indices.shape[0],
+                              gl.GL_UNSIGNED_INT,
+                              indices.ravel('C'))
+
+
+def postDraw(self, xform=None, bbox=None):
+    """Must be called after :func:`draw`. Unloads shaders, and unbinds
+    textures.
+    """
+
+    shader = self.activeShader
+    shader.unloadAtts()
+    shader.unload()
+    self.activeShader = None
