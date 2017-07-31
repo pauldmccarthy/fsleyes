@@ -13,22 +13,15 @@ shader programs.
 """
 
 
-import numpy     as np
 import OpenGL.GL as gl
 
-import fsl.utils.transform as transform
-import fsleyes.gl.shaders  as shaders
+import fsleyes.gl.shaders as shaders
 
 
 def compileShaders(self):
-    """Loads the ``glmesh`` vertex/fragment shader source and creates a
-    :class:`.GLSLShader` instance.
+    """Loads the ``glmesh`` vertex/fragment shader source and creates
+    :class:`.GLSLShader` instance(s).
     """
-
-    if self.flatShader is not None: self.flatShader.destroy()
-    if self.dataShader is not None: self.dataShader.destroy()
-
-    self.activeShader = None
 
     if self.threedee:
 
@@ -48,49 +41,22 @@ def compileShaders(self):
         self.dataShader = shaders.GLSLShader(vertSrc, fragSrc)
 
 
-def destroy(self):
-    """Deletes the vertex/fragment shaders that were compiled by
-    :func:`compileShaders`.
-    """
-
-    if self.flatShader is not None: self.flatShader.destroy()
-    if self.dataShader is not None: self.dataShader.destroy()
-
-    self.dataShader   = None
-    self.flatShader   = None
-    self.activeShader = None
-
-
-def updateShaderState(self):
+def updateShaderState(self, **kwargs):
     """Updates the shader program according to the current :class:`.MeshOpts``
     configuration.
     """
 
+    opts    = self.opts
+    canvas  = self.canvas
     dshader = self.dataShader
     fshader = self.flatShader
-
-    opts       = self.opts
-    canvas     = self.canvas
-    lightPos   = None
-    flatColour = opts.getConstantColour()
-    useNegCmap = (not opts.useLut) and opts.useNegativeCmap
-
-    if self.threedee:
-        lightPos  = np.array(canvas.lightPos)
-        lightPos *= (canvas.zoom / 100.0)
-
-    if opts.useLut:
-        delta     = 1.0 / (opts.lut.max() + 1)
-        cmapXform = transform.scaleOffsetXform(delta, 0.5 * delta)
-    else:
-        cmapXform = self.cmapTexture.getCoordinateTransform()
 
     dshader.load()
     dshader.set('cmap',           0)
     dshader.set('negCmap',        1)
-    dshader.set('useNegCmap',     useNegCmap)
-    dshader.set('cmapXform',      cmapXform)
-    dshader.set('flatColour',     flatColour)
+    dshader.set('useNegCmap',     kwargs['useNegCmap'])
+    dshader.set('cmapXform',      kwargs['cmapXform'])
+    dshader.set('flatColour',     kwargs['flatColour'])
     dshader.set('invertClip',     opts.invertClipping)
     dshader.set('discardClipped', opts.discardClipped)
     dshader.set('clipLow',        opts.clippingRange.xlo)
@@ -98,19 +64,22 @@ def updateShaderState(self):
 
     if self.threedee:
         dshader.set('lighting', canvas.light)
-        dshader.set('lightPos', lightPos)
+        dshader.set('lightPos', kwargs['lightPos'])
 
     dshader.unload()
 
     if self.threedee:
         fshader.load()
         fshader.set('lighting', canvas.light)
-        fshader.set('lightPos', lightPos)
-        fshader.set('colour',   flatColour)
+        fshader.set('lightPos', kwargs['lightPos'])
+        fshader.set('colour',   kwargs['flatColour'])
         fshader.unload()
 
 
 def preDraw(self, xform=None, bbox=None):
+    """Must be called before :func:`draw`. Loads the appropriate shader
+    program.
+    """
 
     flat = self.opts.vertexData is None
 
@@ -120,25 +89,20 @@ def preDraw(self, xform=None, bbox=None):
     self.activeShader = shader
     shader.load()
 
-    if not flat:
-        if self.opts.useLut:
-            self.lutTexture.bindTexture(gl.GL_TEXTURE0)
-        else:
-            self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
-            self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
 
-
-def drawWithShaders(self,
-                    glType,
-                    vertices,
-                    indices=None,
-                    normals=None,
-                    vdata=None):
+def draw(self,
+         glType,
+         vertices,
+         indices=None,
+         normals=None,
+         vdata=None):
     """Called when :attr:`.MeshOpts.vertexData` is not ``None``. Loads and
     runs the shader program.
 
-    :arg glType:   The OpenGL primitive type. If not provided, ``GL_LINES``
-                   is assumed.
+    This function is called when rendering 2D intersection lines, or full
+    3D triangle meshes.
+
+    :arg glType:   The OpenGL primitive type.
 
     :arg vertices: ``(n, 3)`` array containing the line vertices to draw.
 
@@ -169,15 +133,11 @@ def drawWithShaders(self,
 
 
 def postDraw(self, xform=None, bbox=None):
+    """Must be called after :func:`draw`. Unloads shaders, and unbinds
+    textures.
+    """
 
     shader = self.activeShader
-
     shader.unloadAtts()
     shader.unload()
-
-    if self.opts.vertexData is not None:
-        if self.opts.useLut:
-            self.lutTexture.unbindTexture()
-        else:
-            self.cmapTexture   .unbindTexture()
-            self.negCmapTexture.unbindTexture()
+    self.activeShader = None

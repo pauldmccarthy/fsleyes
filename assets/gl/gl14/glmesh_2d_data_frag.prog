@@ -1,6 +1,6 @@
 !!ARBfp1.0
 #
-# Fragment program used for rendering GLMesh instances.
+# Fragment program used for rendering GLMesh instances in 2D.
 #
 # Input parameters:
 #
