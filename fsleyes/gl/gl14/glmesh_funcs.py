@@ -15,6 +15,8 @@ programs.
 
 import OpenGL.GL as gl
 
+import fsl.utils.transform as transform
+
 import fsleyes.gl.shaders  as shaders
 import fsleyes.gl.routines as glroutines
 
@@ -80,6 +82,11 @@ def updateShaderState(self, **kwargs):
 
     dshader.unload()
 
+    if self.threedee:
+        fshader.load()
+        fshader.setFragParam('colour', kwargs['flatColour'])
+        fshader.unload()
+
 
 def preDraw(self, xform=None, bbox=None):
     """Must be called before :func:`draw`. Loads the appropriate shader
@@ -121,6 +128,15 @@ def draw(self,
 
     if normals is not None: shader.setAttr('normal',     normals)
     if vdata   is not None: shader.setAttr('vertexData', vdata.reshape(-1, 1))
+
+    if normals is not None:
+
+        # NOTE You are assuming here that the canvas
+        #      view matrix is the GL model view matrix.
+        normalMatrix = self.canvas.getViewMatrix()
+        normalMatrix = transform.invert(normalMatrix).T
+
+        shader.setVertParam('normalMatrix', normalMatrix)
 
     shader.loadAtts()
 

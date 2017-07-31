@@ -1,0 +1,22 @@
+!!ARBfp1.0
+#
+# Fragment program used for rendering GLMesh instances in 3D.
+#
+# See the glmesh_data_common.prog routine for documentation on all of the
+# inputs.
+#
+# Input parameters:
+
+#   - {{ param_colour }}
+#
+# Input varyings:
+#   - {{ varying_normal }}
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+
+{{ arb_include('glmesh_data_common.prog') }}
+
+MOV result.color, {{ param_colour }};
+
+END
