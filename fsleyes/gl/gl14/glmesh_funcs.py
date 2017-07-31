@@ -73,6 +73,14 @@ def updateShaderState(self, **kwargs):
 
     clipping   = [opts.clippingRange.xlo, opts.clippingRange.xhi, 0, 0]
 
+    if self.threedee:
+
+        lighting = list(kwargs['lightPos'])
+
+        if canvas.light: lighting += [ 1]
+        else:            lighting += [-1]
+
+
     dshader.load()
 
     dshader.setFragParam('settings',    settings)
@@ -80,11 +88,16 @@ def updateShaderState(self, **kwargs):
     dshader.setFragParam('flatColour',  kwargs['flatColour'])
     dshader.setFragParam('cmapXform',   kwargs['cmapXform'])
 
+    if self.threedee:
+        fshader.setFragParam('lighting', lighting)
+
     dshader.unload()
 
     if self.threedee:
         fshader.load()
-        fshader.setFragParam('colour', kwargs['flatColour'])
+        fshader.setFragParam('lighting', lighting)
+        fshader.setFragParam('colour',   kwargs['flatColour'])
+
         fshader.unload()
 
 

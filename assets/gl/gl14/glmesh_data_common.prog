@@ -106,7 +106,7 @@ KIL clip.y;
 
 # Transform the vertex data
 # into cmap coordinates
-MAD vertexData, vertexData, {{ cmapXform }}[0].x, {{ cmapXform }}[3].x;
+MAD vertexData, vertexData, {{ cmapXform }}[0].x, {{ cmapXform }}[0].w;
 
 # Retrieve the normal/negative colours.
 TEX colour,    vertexData, {{ cmap    }}, 1D;
