@@ -126,19 +126,6 @@ def disabled(capabilities):
         yield
 
 
-def adjust(x, y, w, h):
-    """Adjust the given ``x`` and ``y`` values by the aspect ratio
-    defined by the given ``w`` and ``h`` values.
-    """
-
-    ratio = w / float(h)
-
-    if   ratio > 1: x *= ratio
-    elif ratio < 1: y /= ratio
-
-    return x, y
-
-
 def show2D(xax, yax, width, height, lo, hi, flipx=False, flipy=False):
     """Configures the OpenGL viewport for 2D othorgraphic display.
 
@@ -231,7 +218,7 @@ def lookAt(eye, centre, up):
     return proj
 
 
-def ortho(lo, hi, aspectRatio, zoom):
+def ortho(lo, hi, width, height, zoom):
     """Generates an orthographic projection matrix. The display coordinate
     system origin ``(0, 0, 0)`` is mapped to the centre of the clipping space.
 
@@ -243,7 +230,8 @@ def ortho(lo, hi, aspectRatio, zoom):
 
     :arg lo:          Low ``(x, y, z)`` bounds.
     :arg hi:          High ``(x, y, z)`` bounds.
-    :arg aspectRatio: Viewport aspect ratio (width / height)
+    :arg width:       Canvas width in pixels
+    :arg height:      Canvas height in pixels
     :arg zoom:        Zoom factor. Required to determine suitable near and far
                       clipping plane locations.
     """
@@ -253,17 +241,14 @@ def ortho(lo, hi, aspectRatio, zoom):
 
     xmin, ymin = lo[:2]
     xmax, ymax = hi[:2]
+    zmin, zmax = min(lo), max(hi)
 
-    zmin = min(lo)
-    zmax = max(hi)
+    xmin, xmax, ymin, ymax = preserveAspectRatio(
+        width, height, xmin, xmax, ymin, ymax)
 
     xlen = xmax - xmin
     ylen = ymax - ymin
-    zlen = zmax - zmin
     zlen = np.sqrt(np.sum((hi - lo) ** 2)) * zoom
-
-    if   aspectRatio > 1: xlen *= aspectRatio
-    elif aspectRatio < 1: ylen /= aspectRatio
 
     xhalf = xlen / 2.0
     yhalf = ylen / 2.0
@@ -275,8 +260,7 @@ def ortho(lo, hi, aspectRatio, zoom):
     zmin = -zlen
     zmax = +zlen
 
-    projmat = np.eye(4, dtype=np.float32)
-
+    projmat       = np.eye(4, dtype=np.float32)
     projmat[0, 0] =  2 / (xmax - xmin)
     projmat[1, 1] =  2 / (ymax - ymin)
     projmat[2, 2] = -2 / (zmax - zmin)
@@ -285,6 +269,15 @@ def ortho(lo, hi, aspectRatio, zoom):
     projmat[2, 3] = -(zmax + zmin) / (zmax - zmin)
 
     return projmat
+
+
+def adjust(x, y, w, h):
+    """Adjust the given ``x`` and ``y`` values by the aspect ratio
+    defined by the given ``w`` and ``h`` values.
+    """
+
+    xmin, xmax, ymin, ymax = preserveAspectRatio(w, h, 0, x, 0, y)
+    return (xmax - xmin), (ymax - ymin)
 
 
 def preserveAspectRatio(width, height, xmin, xmax, ymin, ymax, grow=True):

@@ -289,28 +289,21 @@ class Scene3DCanvas(props.HasProperties):
         """
 
         width, height = self._getSize()
+        b             = self.__displayCtx.bounds
+        blo           = [b.xlo, b.ylo, b.zlo]
+        bhi           = [b.xhi, b.yhi, b.zhi]
+        zoom          = self.zoom / 100.0
 
-        if width == 0 or height == 0:
-            return False
+        if width == 0 or height == 0:    return False
+        if np.any(np.isclose(blo, bhi)): return False
 
-        b   = self.__displayCtx.bounds
-        blo = [b.xlo, b.ylo, b.zlo]
-        bhi = [b.xhi, b.yhi, b.zhi]
-
-        if np.any(np.isclose(blo, bhi)):
-            return False
-
-        # Generate the view atrix
+        # Generate the view and projection matrices
         self.__genViewMatrix()
-
-        aratio = width / float(height)
-        zoom   = self.zoom / 100.0
-        self.__projMat = glroutines.ortho(blo, bhi, aratio, zoom)
+        self.__projMat = glroutines.ortho(blo, bhi, width, height, zoom)
 
         gl.glViewport(0, 0, width, height)
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadMatrixf(self.__projMat.ravel('F'))
-
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
 
