@@ -64,6 +64,8 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
 
+        from fsleyes.views.scene3dpanel import Scene3DPanel
+
         fslpanel.FSLeyesSettingsPanel.__init__(self,
                                                parent,
                                                overlayList,
@@ -78,6 +80,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
                                  self._name,
                                  self.__selectedOverlayChanged)
 
+        self.__threedee       = isinstance(parent, Scene3DPanel)
         self.__viewPanel      = parent
         self.__widgets        = None
         self.__currentOverlay = None
@@ -114,9 +117,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         ``OverlayDisplayPanel`` so that the display settings for the newly
         selected overlay are shown.
         """
-        from fsleyes.views.scene3dpanel import Scene3DPanel
 
-        vp          = self.__viewPanel
         overlay     = self._displayCtx.getSelectedOverlay()
         lastOverlay = self.__currentOverlay
         widgetList  = self.getWidgetList()
@@ -137,7 +138,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         display = self._displayCtx.getDisplay(overlay)
         opts    = display.getDisplayOpts()
 
-        if isinstance(vp, Scene3DPanel):
+        if self.__threedee:
             groups  = ['display', 'opts', '3d']
             targets = [ display,   opts,   opts]
             labels  = [strings.labels[self, display],
@@ -230,8 +231,8 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
             dispProps = odwidgets.get3DPropertyList(target)
             dispSpecs = odwidgets.get3DWidgetSpecs( target)
         else:
-            dispProps = odwidgets.getPropertyList(target)
-            dispSpecs = odwidgets.getWidgetSpecs( target)
+            dispProps = odwidgets.getPropertyList(target, self.__threedee)
+            dispSpecs = odwidgets.getWidgetSpecs( target, self.__threedee)
 
         allLabels     = []
         allTooltips   = []
@@ -258,7 +259,8 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
                     widgetList,
                     self,
                     self.getOverlayList(),
-                    self.getDisplayContext())
+                    self.getDisplayContext(),
+                    self.__threedee)
 
                 if isinstance(container, collections.Sequence):
                     specs    = container
