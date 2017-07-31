@@ -294,14 +294,40 @@ class GLMesh(globject.GLObject):
         overlay  = self.overlay
         vertices = overlay.vertices
         indices  = overlay.indices
+        normals  = self.overlay.vnormals
         xform    = self.opts.getCoordSpaceTransform()
 
         if not np.all(np.isclose(xform, np.eye(4))):
             vertices = transform.transform(vertices, xform)
 
+            if self.threedee:
+                nmat    = transform.invert(xform).T
+                normals = transform.transform(normals, nmat, vector=True)
+
         self.vertices = np.array(vertices,          dtype=np.float32)
         self.indices  = np.array(indices.flatten(), dtype=np.uint32)
+
+        if self.threedee:
+            self.normals = np.array(normals, dtype=np.float32)
+
         self.notify()
+
+
+    def backFace(self):
+        """Returns the face of the mesh triangles which can be safelly culled,
+        either ``GL_BACK`` or ``GL_FRONT``. This will differ depending on the
+        mesh-to-display transformation matrix.
+        """
+
+        if not self.threedee:
+            return gl.GL_BACK
+
+        # We are assuming that the MVP matrix
+        # does not have any negative scales.
+        xform = self.opts.getCoordSpaceTransform()
+
+        if npla.det(xform) > 0: return gl.GL_BACK
+        else:                   return gl.GL_FRONT
 
 
     def getDisplayBounds(self):
@@ -389,7 +415,7 @@ class GLMesh(globject.GLObject):
         opts      = self.opts
         verts     = self.vertices
         idxs      = self.indices
-        normals   = np.array(self.overlay.vnormals, dtype=np.float32)
+        normals   = self.normals
         vdata     = opts.getVertexData()
 
         if opts.wireframe:
@@ -404,7 +430,8 @@ class GLMesh(globject.GLObject):
             gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
 
         with glroutines.enabled((gl.GL_DEPTH_TEST, gl.GL_CULL_FACE)):
-            gl.glCullFace(gl.GL_BACK)
+            gl.glFrontFace(gl.GL_CCW)
+            gl.glCullFace(self.backFace())
             fslgl.glmesh_funcs.drawWithShaders(
                 self,
                 gl.GL_TRIANGLES,
