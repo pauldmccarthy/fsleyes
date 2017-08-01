@@ -76,7 +76,7 @@ def updateShaderState(self, **kwargs):
         fshader.unload()
 
 
-def preDraw(self, xform=None, bbox=None):
+def preDraw(self):
     """Must be called before :func:`draw`. Loads the appropriate shader
     program.
     """
@@ -129,7 +129,7 @@ def draw(self,
                           indices.ravel('C'))
 
 
-def postDraw(self, xform=None, bbox=None):
+def postDraw(self):
     """Must be called after :func:`draw`. Unloads shaders, and unbinds
     textures.
     """

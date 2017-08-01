@@ -1,5 +1,5 @@
 /*
- * Vertex shader used for drawing GLMeshes when the vertices
+ * Vertex shader used for drawing 2D GLMesh cross sections when the vertices
  * are coloured coloured by some data.
  *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>

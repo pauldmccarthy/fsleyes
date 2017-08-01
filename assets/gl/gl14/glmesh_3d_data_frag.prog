@@ -7,20 +7,26 @@
 #
 # Input parameters:
 #
-#   - {{ param_settings }}
-#   - {{ param_clipping }}
-#   - {{ param_flatColour }}
-#   - {{ param4_cmapXform }}
-#   - {{ param_lighting }}
+#   {{ param_settings }}
+#   {{ param_clipping }}
+#   {{ param_flatColour }}
+#   {{ param4_cmapXform }}
+#
+#   {{ param_lighting }}   - The xyz components contain the light position
+#                            in display coordinates. The w component contains a
+#                            1 if lighting should be applied, or a -1 if
+#                            lighting should not be applied.
 #
 # Input textures:
 #   - {{ texture_cmap }}
 #   - {{ texture_negCmap }}
 #
 # Input varyings:
-#   - {{ varying_vertexData }}
-#   - {{ varying_vertex }}
-#   - {{ varying_normal }}
+# Input varyings:
+#   - {{ varying_vertexData }} - Vertex data value
+#   - {{ varying_vertex }}     - Vertex position in display coordinates
+#   - {{ varying_normal }}     - Vertex normal
+
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -51,7 +57,6 @@ TEMP litColour;
             colour='unlitColour',
             out_colour='litColour')
 }}
-
 
 CMP result.color, {{ param_lighting }}.w, unlitColour, litColour;
 

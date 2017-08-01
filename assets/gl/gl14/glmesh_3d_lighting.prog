@@ -1,13 +1,13 @@
 # Simple Phong lighting model used by 3D GLMesh fragment programs.
 #
 # Inputs:
-#   - {{ vertex }}
-#   - {{ normal }}
-#   - {{ lightPos }}
-#   - {{ colour }}
+#   {{ vertex     }} - Vertex position in display coordinates
+#   {{ normal     }} - Vertex normal
+#   {{ lightPos   }} - Light position in display coordinates
+#   {{ colour     }} - Colour
 #
 # Outputs:
-#   - {{ out_colour }}
+#   {{ out_colour }} - Colour with lighting applied
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #

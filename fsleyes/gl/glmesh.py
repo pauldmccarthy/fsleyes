@@ -88,13 +88,29 @@ class GLMesh(globject.GLObject):
     following functions:
 
 
-    ======================= =======================================
-    ``compileShaders``      Compiles vertex/fragment shaders.
-    ``updateShaderState``   Updates vertex/fragment shaders.
-    ``preDraw``             Prepare for drawing (e.g. load shaders)
-    ``draw``                Draws mesh using shaders.
-    ``postDraw``            Clean up after drawing
-    ======================= =======================================
+     - ``compileShaders(GLMesh)``: Compiles vertex/fragment shaders.
+
+     - ``updateShaderState(GLMesh, **kwargs)``: Updates vertex/fragment
+       shaders. Should expect the following keyword arguments:
+
+        - ``useNegCmap``: Boolean which is ``True`` if a negative colour map
+           should be used
+
+        - ``cmapXform``:   Transformation matrix which transforms from vertex
+                           data into colour map texture coordinates.
+
+        - ``flatColour``:  Colour to use for fragments which are outside
+                           of the clipping range.
+
+        - ``lightPos``     Light position in display coordinates.
+
+
+     - ``preDraw(GLMesh)``: Prepare for drawing (e.g. load shaders)
+
+     - ``draw(GLMesh, glType, vertices, indices=None, normals=None,
+         vdata=None)``: Draws mesh using shaders.
+
+     - ``postDraw(GLMesh)``: Clean up after drawing
 
 
     **3D rendering**
@@ -105,6 +121,7 @@ class GLMesh(globject.GLObject):
     Whether the 3D mesh is coloured with a flat colour, or according to vertex
     data, shader programs are used which colour the mesh, and also apply a
     simple lighting effect.
+
     """
 
 
@@ -369,7 +386,7 @@ class GLMesh(globject.GLObject):
         useTexture = not (self.threedee or opts.outline or useShader)
 
         if useShader:
-            fslgl.glmesh_funcs.preDraw(self, xform, bbox)
+            fslgl.glmesh_funcs.preDraw(self)
 
             if not flat:
                 if self.opts.useLut:
@@ -482,7 +499,7 @@ class GLMesh(globject.GLObject):
         useShader = self.threedee or (opts.vertexData is not None)
 
         if useShader:
-            fslgl.glmesh_funcs.postDraw(self, xform, bbox)
+            fslgl.glmesh_funcs.postDraw(self)
 
             if self.opts.vertexData is not None:
                 if self.opts.useLut:

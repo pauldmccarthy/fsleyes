@@ -5,17 +5,17 @@
 #
 # Input parameters:
 #
-#    normalMatrix - Matrix to transform normal vectors into
-#                   display coordinates.
+#    {{ param4_normalMatrix }} - Matrix to transform normal vectors into
+#                                display coordinates.
 #
 # Input attributes:
-#    vertexData - Data associated with the current vertex
-#    normal     - Vertex normal vector
+#    {{ attr_vertexData }} - Data associated with the current vertex
+#    {{ attr_normal }}     - Vertex normal vector
 #
 # Outputs:
-#    vertexData - As above, passed through to fragment shader.
-#    vertex     - The vertex position in view coordinates.
-#    normal     - As above, passed through to fragment shader.
+#    {{ varying_vertexData }} - As above, passed through to fragment shader.
+#    {{ varying_vertex }}     - The vertex position in display coordinates.
+#    {{ varying_normal }}     - As above, passed through to fragment shader.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #

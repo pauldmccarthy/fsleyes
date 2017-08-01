@@ -1,18 +1,20 @@
 !!ARBfp1.0
 #
-# Fragment program used for rendering GLMesh instances in 3D.
-#
-# See the glmesh_data_common.prog routine for documentation on all of the
-# inputs.
+# Fragment program used for rendering GLMesh instances in 3D, in a flat colour.
 #
 # Input parameters:
 #
-#   - {{ param_colour }}
-#   - {{ param_lighting }}
+#   {{ param_colour   }}   - The mesh colour
+#
+#   {{ param_lighting }}   - The xyz components contain the light position
+#                            in display coordinates. The w component contains a
+#                            1 if lighting should be applied, or a -1 if
+#                            lighting should not be applied.
+#
 #
 # Input varyings:
-#   - {{ varying_vertex }}
-#   - {{ varying_normal }}
+#   - {{ varying_vertex }} - Vertex position in display coordinates
+#   - {{ varying_normal }} - Vertex normal
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #

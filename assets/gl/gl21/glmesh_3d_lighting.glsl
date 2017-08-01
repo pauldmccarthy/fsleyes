@@ -1,6 +1,8 @@
 /*
  * This file provides the mesh_lighting function, which implements a simple
  * Phong lighting model used by the GLMesh 3D fragment shaders.
+ *
+ * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
 vec3 mesh_lighting(vec3 vertex, vec3 normal, vec3 lightPos, vec3 colour) {
 
