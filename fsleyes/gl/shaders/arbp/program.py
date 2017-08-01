@@ -163,6 +163,10 @@ class ARBPShader(object):
         self.attrs         = decs['attr']
         self.constants     = {k : constants[k] for k in decs['constant']}
 
+        # See the setAtt method for
+        # information about this dict
+        self.__attCache = {}
+
         poses = self.__generatePositions(textureMap)
         vpPoses, fpPoses, texPoses, attrPoses = poses
 
@@ -235,6 +239,8 @@ class ARBPShader(object):
             gl.glClientActiveTexture(texUnit)
             gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
 
+        self.__attCache = {}
+
 
     @memoize.Instanceify(memoize.skipUnchanged)
     def setVertParam(self, name, value):
@@ -301,12 +307,19 @@ class ARBPShader(object):
         """
         texUnit = self.__getAttrTexUnit(name)
         size    = value.shape[1]
-        value   = np.array(value, dtype=np.float32)
+        value   = np.array(value, dtype=np.float32, copy=False)
 
-        log.debug('Setting vertex attribute {} = [{} * {}]'.format(
-            name, value.shape[0], size))
+        log.debug('Setting vertex attribute {} [{}] = [{} * {}]'.format(
+            name, texUnit, value.shape[0], size))
 
+        # We must save a ref to the value so
+        # that it doesn't get GC'd by python
+        # before actually being used by GL.
+        # This took me an entire day to
+        # figure out. The cache gets cleared
+        # on every call to unloadAtts.
         value = value.ravel('C')
+        self.__attCache[name] = value
 
         gl.glClientActiveTexture(texUnit)
         gl.glTexCoordPointer(size, gl.GL_FLOAT, 0, value)

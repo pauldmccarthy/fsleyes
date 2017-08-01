@@ -219,6 +219,11 @@ class GLMesh(globject.GLObject):
             self.updateShaderState()
             self.notify()
 
+        def vertices(*a):
+            self.updateVertices()
+            self.updateShaderState()
+            self.notify()
+
         def refreshCmap(*a):
             self.refreshCmapTextures(notify=False)
             self.updateShaderState()
@@ -232,7 +237,7 @@ class GLMesh(globject.GLObject):
         def refresh(*a):
             self.notify()
 
-        opts   .addListener('bounds',           name, self.updateVertices)
+        opts   .addListener('bounds',           name, vertices,    weak=False)
         opts   .addListener('colour',           name, shader,      weak=False)
         opts   .addListener('outline',          name, refresh,     weak=False)
         opts   .addListener('outlineWidth',     name, refresh,     weak=False)
@@ -343,8 +348,6 @@ class GLMesh(globject.GLObject):
         if self.threedee:
             self.normals = np.array(normals, dtype=np.float32)
 
-        self.notify()
-
 
     def backFace(self):
         """Returns the face of the mesh triangles which can be safelly culled,
@@ -357,8 +360,10 @@ class GLMesh(globject.GLObject):
         if not self.threedee:
             return gl.GL_BACK
 
-        # We are assuming that the MVP matrix
-        # does not have any negative scales.
+        # Only looking at the mesh -> display
+        # transform, thus we are assuming that
+        # the MVP matrix does not have any
+        # negative scales.
         xform = self.opts.getCoordSpaceTransform()
 
         if npla.det(xform) > 0: return gl.GL_BACK

@@ -121,7 +121,15 @@ class Scene3DCanvas(props.HasProperties):
         for ovl in surfs + vols + other:
             globj = self.getGLObject(ovl)
 
-            if globj is not None:
+            if globj is None:
+                globj = globject.createGLObject(ovl,
+                                                self.__displayCtx,
+                                                self,
+                                                True)
+                globj.register(self.__name, self.Refresh)
+                self.__glObjects[ovl] = globj
+
+            else:
                 overlays.append(ovl)
                 globjs  .append(globj)
 
@@ -167,6 +175,7 @@ class Scene3DCanvas(props.HasProperties):
 
     def _initGL(self):
         self.__overlayListChanged()
+        self.__displayBoundsChanged()
 
 
     def __overlayListChanged(self, *a):
@@ -181,29 +190,6 @@ class Scene3DCanvas(props.HasProperties):
                 if globj:
                     globj.deregister(self.__name)
                     globj.destroy()
-
-        # Create a GL object for any new overlays,
-        # and attach a listener to their display
-        # properties so we know when to refresh
-        # the canvas.
-        for overlay in self.__overlayList:
-
-            # A GLObject already exists
-            # for this overlay
-            if overlay in self.__glObjects:
-                continue
-
-            globj = globject.createGLObject(overlay,
-                                            self.__displayCtx,
-                                            self,
-                                            True)
-
-            globj.register(self.__name, self.Refresh)
-            self.__glObjects[overlay] = globj
-
-
-    def __getGLObjects(self):
-        pass
 
 
     def __displayBoundsChanged(self, *a):
