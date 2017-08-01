@@ -53,7 +53,12 @@ DP3_SAT diffuse.x, {{ normal }}, lightDir;
 # Specular component, clamped to [0, 1]
 DP3     specular.x, angle, viewDir;
 MAX     specular.x, specular.x, 0.0;
-POW_SAT specular.x, specular.x, 64;
+
+# I get weird compile errors on
+# some platforms when i try to
+# pass a constant to POW or POW_SAT.
+MOV     specular.y, 64.0;
+POW_SAT specular.x, specular.x, specular.y;
 
 # Combine the final colour
 ADD {{ out_colour }}.rgb,    ambient.x,        diffuse.x;
