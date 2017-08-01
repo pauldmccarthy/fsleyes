@@ -89,7 +89,7 @@ def updateShaderState(self, **kwargs):
     dshader.setFragParam('cmapXform',   kwargs['cmapXform'])
 
     if self.threedee:
-        fshader.setFragParam('lighting', lighting)
+        dshader.setFragParam('lighting', lighting)
 
     dshader.unload()
 
@@ -97,7 +97,6 @@ def updateShaderState(self, **kwargs):
         fshader.load()
         fshader.setFragParam('lighting', lighting)
         fshader.setFragParam('colour',   kwargs['flatColour'])
-
         fshader.unload()
 
 
