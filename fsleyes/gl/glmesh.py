@@ -349,16 +349,16 @@ class GLMesh(globject.GLObject):
             self.normals = np.array(normals, dtype=np.float32)
 
 
-    def backFace(self):
-        """Returns the face of the mesh triangles which can be safelly culled,
-        either ``GL_BACK`` or ``GL_FRONT``. This will differ depending on the
-        mesh-to-display transformation matrix.
+    def frontFace(self):
+        """Returns the face of the mesh triangles which which will be facing
+        outwards, either ``GL_CCW`` or ``GL_CW``. This will differ depending
+        on the mesh-to-display transformation matrix.
 
         This method is only used in 3D rendering.
         """
 
         if not self.threedee:
-            return gl.GL_BACK
+            return gl.GL_CCW
 
         # Only looking at the mesh -> display
         # transform, thus we are assuming that
@@ -366,8 +366,8 @@ class GLMesh(globject.GLObject):
         # negative scales.
         xform = self.opts.getCoordSpaceTransform()
 
-        if npla.det(xform) > 0: return gl.GL_BACK
-        else:                   return gl.GL_FRONT
+        if npla.det(xform) > 0: return gl.GL_CCW
+        else:                   return gl.GL_CW
 
 
     def getDisplayBounds(self):
@@ -466,7 +466,10 @@ class GLMesh(globject.GLObject):
         verts     = self.vertices
         idxs      = self.indices
         normals   = self.normals
+        blo, bhi  = self.getDisplayBounds()
         vdata     = opts.getVertexData()
+
+        is2D = np.isclose(bhi[2], blo[2])
 
         if opts.wireframe:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
@@ -479,9 +482,14 @@ class GLMesh(globject.GLObject):
             gl.glPushMatrix()
             gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
 
-        with glroutines.enabled((gl.GL_DEPTH_TEST, gl.GL_CULL_FACE)):
-            gl.glFrontFace(gl.GL_CCW)
-            gl.glCullFace(self.backFace())
+        if is2D: enable = (gl.GL_DEPTH_TEST)
+        else:    enable = (gl.GL_DEPTH_TEST, gl.GL_CULL_FACE)
+
+        gl.glDisable(gl.GL_CULL_FACE)
+        with glroutines.enabled(enable):
+            gl.glFrontFace(self.frontFace())
+            if not is2D:
+                gl.glCullFace(gl.GL_BACK)
             fslgl.glmesh_funcs.draw(
                 self,
                 gl.GL_TRIANGLES,

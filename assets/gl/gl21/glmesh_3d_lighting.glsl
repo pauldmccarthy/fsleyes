@@ -8,6 +8,9 @@ vec3 mesh_lighting(vec3 vertex, vec3 normal, vec3 lightPos, vec3 colour) {
 
   vec3 result;
 
+  if (!gl_FrontFacing)
+    normal = -normal;
+
   vec3 lightDir = normalize(lightPos - vertex);
   vec3 viewDir  = normalize(-vertex);
   vec3 angle    = normalize(reflect(lightDir, normal));

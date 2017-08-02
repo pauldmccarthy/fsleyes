@@ -280,8 +280,14 @@ class Scene3DCanvas(props.HasProperties):
         bhi           = [b.xhi, b.yhi, b.zhi]
         zoom          = self.zoom / 100.0
 
-        if width == 0 or height == 0:    return False
-        if np.any(np.isclose(blo, bhi)): return False
+        if width == 0 or height == 0:
+            return False
+
+        # We allow one dimension to be
+        # flat, so we can display 2D
+        # meshes (e.g. flattened surfaces)
+        if np.sum(np.isclose(blo, bhi)) > 1:
+            return False
 
         # Generate the view and projection matrices
         self.__genViewMatrix()
@@ -308,7 +314,9 @@ class Scene3DCanvas(props.HasProperties):
 
         glroutines.clear(self.bgColour)
 
-        if len(self.__overlayList) == 0:
+        overlays, globjs = self.getGLObjects()
+
+        if len(overlays) == 0:
             return
 
         # If occlusion is on, we offset the
@@ -318,8 +326,6 @@ class Scene3DCanvas(props.HasProperties):
         # drawn above lower ones.
         depthOffset = transform.scaleOffsetXform(1, [0, 0, 0.1])
         xform       = self.__viewMat
-
-        overlays, globjs = self.getGLObjects()
 
         if self.showCursor: self.__drawCursor()
 
