@@ -50,31 +50,30 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-
-TEMP _voxValue;
-TEMP _clipValue;
-TEMP _clipValueNoClip;
-TEMP _useNegCmap;
-TEMP _negVoxValue;
-TEMP _negClipValue;
-TEMP _voxClipLo;
-TEMP _voxClipHi;
-TEMP _posColour;
-TEMP _negColour;
+{{ arb_temp('voxValue') }}
+{{ arb_temp('clipValue') }}
+{{ arb_temp('clipValueNoClip') }}
+{{ arb_temp('useNegCmap') }}
+{{ arb_temp('negVoxValue') }}
+{{ arb_temp('negClipValue') }}
+{{ arb_temp('voxClipLo') }}
+{{ arb_temp('voxClipHi') }}
+{{ arb_temp('posColour') }}
+{{ arb_temp('negColour') }}
 
 
 # look up image voxel value
 # and clipping value from 3D
 # image/clipping textures
-TEX _voxValue.x,  {{ texCoord }},     {{ imageTexture }}, 3D;
-TEX _clipValue.x, {{ clipTexCoord }}, {{ clipTexture  }}, 3D;
+TEX {{ voxValue  }}.x, {{ texCoord }},     {{ imageTexture }}, 3D;
+TEX {{ clipValue }}.x, {{ clipTexCoord }}, {{ clipTexture  }}, 3D;
 
 # Discard this fragment if the voxel
 # value is nan - there is no nan test,
 # or equality test, so we test whether
 # (value >= value) || (value < value)
-SGE {{ out_kill }}.y,   _voxValue.x,       _voxValue.x;
-SLT {{ out_kill }}.z,   _voxValue.x,       _voxValue.x;
+SGE {{ out_kill }}.y, {{ voxValue }}.x,  {{ voxValue }}.x;
+SLT {{ out_kill }}.z, {{ voxValue }}.x,  {{ voxValue }}.x;
 ADD {{ out_kill }}.x, {{ out_kill }}.y,  {{ out_kill }}.z;
 SUB {{ out_kill }}.x, {{ out_kill }}.x,     0.5;
 
@@ -89,25 +88,25 @@ KIL {{ out_kill }}.x;
 # will cause no clipping to occur).
 
 # clipValueNoClip contains clipLo + 0.5 * (clipHi - clipLo)
-MOV _clipValueNoClip.x, {{ clipping }}.y;
-SUB _clipValueNoClip.x,   _clipValueNoClip.x, {{ clipping }}.x;
-MUL _clipValueNoClip.x,   _clipValueNoClip.x,    0.5;
-ADD _clipValueNoClip.x,   _clipValueNoClip.x, {{ clipping }}.x;
+MOV {{ clipValueNoClip }}.x, {{ clipping }}.y;
+SUB {{ clipValueNoClip }}.x, {{ clipValueNoClip }}.x, {{ clipping }}.x;
+MUL {{ clipValueNoClip }}.x, {{ clipValueNoClip }}.x,    0.5;
+ADD {{ clipValueNoClip }}.x, {{ clipValueNoClip }}.x, {{ clipping }}.x;
 
 
 # Clobber the clip value if necessary
 {{
 arb_call('texture_border.prog',
          texCoord='{{ clipTexCoord }}',
-         origval='_clipValue',
-         borderval='_clipValueNoClip',
-         out_result='_clipValue')
+         origval='{{ clipValue }}',
+         borderval='{{ clipValueNoClip }}',
+         out_result='{{ clipValue }}')
 }}
 
 # If the image texture is the clip
 # texture, overwrite the clip value
 # we just looked up.
-CMP _clipValue.x, {{ clipping }}.w, _clipValue.x, _voxValue.x;
+CMP {{ clipValue }}.x, {{ clipping }}.w, {{ clipValue }}.x, {{ voxValue }}.x;
 
 # Figure out which colour map
 # should be used for this fragment.
@@ -116,58 +115,58 @@ CMP _clipValue.x, {{ clipping }}.w, _clipValue.x, _voxValue.x;
 #
 # if the voxel value is less than
 # texZero (the display range centre),
-SLT _useNegCmap.x, _voxValue.x, {{ negCmap }}.y;
+SLT {{ useNegCmap }}.x, {{ voxValue }}.x, {{ negCmap }}.y;
 
 # and the negative colour map is active.
 # The useNegCmap vector will be negative
 # if both of these conditions are true,
 # positive otherwise.
-MUL _useNegCmap.x, _useNegCmap.x, {{ negCmap }}.x;
-SUB _useNegCmap.x, _useNegCmap.x, 0.5;
-MUL _useNegCmap.x, _useNegCmap.x, -1;
+MUL {{ useNegCmap }}.x, {{ useNegCmap }}.x, {{ negCmap }}.x;
+SUB {{ useNegCmap }}.x, {{ useNegCmap }}.x,    0.5;
+MUL {{ useNegCmap }}.x, {{ useNegCmap }}.x,   -1;
 
 # If using the negative colour map,
 # we need to flip the voxel value about
 # the display range centre.
 
 # Calculate the inverted voxel value
-ADD _negVoxValue.x, {{ negCmap }}.y,  {{ negCmap }}.y;
-SUB _negVoxValue.x,   _negVoxValue.x,   _voxValue.x;
+ADD {{ negVoxValue }}.x, {{ negCmap     }}.y, {{ negCmap  }}.y;
+SUB {{ negVoxValue }}.x, {{ negVoxValue }}.x, {{ voxValue }}.x;
 
 # And do the same for the clip value -
 # this is necessary if the image texture
 # is the clipping texture.
-ADD _negClipValue.x, {{ negCmap }}.y,   {{ negCmap }}.y;
-SUB _negClipValue.x,   _negClipValue.x,   _clipValue.x;
+ADD {{ negClipValue }}.x, {{ negCmap      }}.y, {{ negCmap   }}.y;
+SUB {{ negClipValue }}.x, {{ negClipValue }}.x, {{ clipValue }}.x;
 
 # If we're using the negative colour
 # map, replace the original voxel
 # value with the inverted one.
-CMP _voxValue.x, _useNegCmap.x, _negVoxValue.x, _voxValue.x;
+CMP {{ voxValue }}.x, {{ useNegCmap }}.x, {{ negVoxValue }}.x, {{ voxValue }}.x;
 
 # And do the same to the clip value if
 # the image texture is the clip texture.
-CMP _negClipValue.x, _useNegCmap.x, _negClipValue.x, _clipValue.x;
-CMP _clipValue.x, {{ clipping }}.w, _clipValue.x, _negClipValue.x;
+CMP {{ negClipValue }}.x, {{ useNegCmap }}.x, {{ negClipValue }}.x, {{ clipValue    }}.x;
+CMP {{ clipValue    }}.x, {{ clipping   }}.w, {{ clipValue    }}.x, {{ negClipValue }}.x;
 
 # Test the low clipping range
-SUB _voxClipLo.x, _clipValue.x, {{ clipping }}.x;
+SUB {{ voxClipLo }}.x, {{ clipValue }}.x, {{ clipping }}.x;
 
 # And the high clipping range
-SUB _voxClipHi.x, _clipValue.x, {{ clipping }}.y;
+SUB {{ voxClipHi }}.x, {{ clipValue }}.x, {{ clipping }}.y;
 
 # Multiply the low/high results - after
 # this, voxClipLo will be positive if
 # the value is outside of the clipping
 # range, or negative if the value is
 # within the clipping range
-MUL _voxClipLo.x, _voxClipLo.x, _voxClipHi.x;
+MUL {{ voxClipLo }}.x, {{ voxClipLo }}.x, {{ voxClipHi }}.x;
 
 # Multiply by the clipping.z setting -
 # this will invert the sign if normal
 # (as opposed to inverted) clipping is
 # active.
-MUL _voxClipLo.x, _voxClipLo.x, {{ clipping }}.z;
+MUL {{ voxClipLo }}.x, {{ voxClipLo }}.x, {{ clipping }}.z;
 
 # We need to clip voxels if the value is
 # less than or equal to the low clipping
@@ -179,30 +178,30 @@ MUL _voxClipLo.x, _voxClipLo.x, {{ clipping }}.z;
 # So these three instructions manipulate
 # voxClipLo such that values which are
 # less than or equal to 0 are set to -1.
-MUL _voxClipLo.x, _voxClipLo.x, -1.0;
-SGE _voxClipLo.x, _voxClipLo.x,  0.0;
-MUL _voxClipLo.x, _voxClipLo.x, -1.0;
+MUL {{ voxClipLo }}.x, {{ voxClipLo }}.x, -1.0;
+SGE {{ voxClipLo }}.x, {{ voxClipLo }}.x,  0.0;
+MUL {{ voxClipLo }}.x, {{ voxClipLo }}.x, -1.0;
 
 # If the voxel value is outside
 # the clipping range (or inside,
 # if clipping is inverted), don't
 # draw it
-MIN {{ out_kill }}.x, {{ out_kill }}.x, _voxClipLo.x;
+MIN {{ out_kill }}.x, {{ out_kill }}.x, {{ voxClipLo }}.x;
 
 {% if kill_fragments_early %}
-KIL _voxClipLo.x;
+KIL {{ voxClipLo }}.x;
 {% endif %}
 
 # Scale voxel value according
 # to the current display range
-MAD _voxValue, _voxValue, {{ voxValXform }}.x, {{ voxValXform }}.y;
+MAD {{ voxValue }}, {{ voxValue }}, {{ voxValXform }}.x, {{ voxValXform }}.y;
 
 # look up the appropriate colour
 # in the 1D colour map texture
-TEX _posColour, _voxValue.x, {{ colourTexture    }}, 1D;
-TEX _negColour, _voxValue.x, {{ negColourTexture }}, 1D;
+TEX {{ posColour }}, {{ voxValue }}.x, {{ colourTexture    }}, 1D;
+TEX {{ negColour }}, {{ voxValue }}.x, {{ negColourTexture }}, 1D;
 
 # useNegCmap is negative if the
 # negative colour map should be
 # used, positive otherwise.
-CMP {{ out_colour }}, _useNegCmap.x, _negColour, _posColour;
+CMP {{ out_colour }}, {{ useNegCmap }}.x, {{ negColour }}, {{ posColour }};
