@@ -145,10 +145,11 @@ class ARBPShader(object):
         vParams = decs['vertParam']
         fParams = decs['fragParam']
 
-        if len(vParams) > 0: vParams, vLens = zip(*vParams)
-        else:                vParams, vLens = [], []
-        if len(fParams) > 0: fParams, fLens = zip(*fParams)
-        else:                fParams, fLens = [], []
+        if constants is None: constants      = {}
+        if len(vParams) > 0:  vParams, vLens = zip(*vParams)
+        else:                 vParams, vLens = [], []
+        if len(fParams) > 0:  fParams, fLens = zip(*fParams)
+        else:                 fParams, fLens = [], []
 
         vLens = {name : length for name, length in zip(vParams, vLens)}
         fLens = {name : length for name, length in zip(fParams, fLens)}
@@ -161,7 +162,7 @@ class ARBPShader(object):
         self.fragParamLens = fLens
         self.textures      = decs['texture']
         self.attrs         = decs['attr']
-        self.constants     = {k : constants[k] for k in decs['constant']}
+        self.constants     = dict(constants)
 
         # See the setAtt method for
         # information about this dict

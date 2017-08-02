@@ -546,8 +546,10 @@ import                re
 import                random
 import                string
 
+import                six
 import jinja2      as j2
 import jinja2.meta as j2meta
+
 
 
 TEMPLATE_BUILTIN_CONSTANTS = ['range', 'arb_call', 'arb_include']
@@ -744,20 +746,54 @@ def _render(src, env, includePath):
 
         return '# include {}\n'.format(fileid)
 
-    # arb_call routine
+    # arb_call routine. Files which are arb_called
+    # may arb_call other files, although I haven't
+    # tested this extensively. On a nested call,
+    # I store the arguments passed to the outer
+    # call, so that the values of expressions which
+    # are used in the outer, and passed through to
+    # the inner, will be resolved correctly.
+    outerCallArgs   = [None]
+    passThroughExpr = re.compile('^ *{{ *(.*) *}} *$')
+
     def arb_call(filename, **args):
 
-        # 1. Looks up the called filename in the includes dictionary
-        # 2. Generates code - render file source with the probvided
+        # 1. Resolve any arguments which need to be passed through
+        #    from an outer arb_call
+        # 2. Looks up the called filename in the includes dictionary
+        # 3. Generates code - render file source with the probvided
         #    argument mappings
         # 3. Return generated code
+
+        args    = dict(args)
+
+        callEnv = dict(env)
+        callEnv.update(args)
+
+        # If this is a nested call, look at its
+        # arguments to see if any have expressions
+        # as their values. For these calls, replace
+        # the value with the corresponding value
+        # from the outer call.
+        if outerCallArgs[0] is not None:
+            for k, v in callEnv.items():
+                if not isinstance(v, six.string_types):
+                    continue
+                match = passThroughExpr.fullmatch(v)
+                if match:
+                    match      = match.group(1).strip()
+                    callEnv[k] = outerCallArgs[0][match]
 
         source       = includes[filename]
         sourceLines  = ['# call {}'.format(filename)]
         callTemplate = j2.Template(source)
-        source       = callTemplate.render(**args)
+
+        outerCallArgs[0] = args
+        source           = callTemplate.render(**callEnv)
+        outerCallArgs[0] = None
 
         sourceLines.extend(source.split('\n'))
+
         return '\n'.join(sourceLines)
 
     template = j2.Template(src)
