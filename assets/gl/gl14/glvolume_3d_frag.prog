@@ -16,8 +16,10 @@
 #   {{ param_ditherDir }} - A vector, in the same direction as the camera,
 #      specifying the maximum amount to dither by.
 #
-#   {{ param4_tex2ScreenXform }} - A transformation matrix which transforms
-#      image texture coordinates into normalised device coordinates.
+#   {{ param_tex2ScreenXform }} - A transformation matrix which transforms
+#      image texture coordinates into normalised device coordinates. Only
+#      the row which generates the Z-coordinate should be passed in.
+#
 #
 #   {{ param_settings }} - Contains other parametres controlling the
 #      ray-casting:
@@ -50,9 +52,9 @@
 
 
 
-TEMP  dither;
 TEMP  textest;
 TEMP  depth;
+TEMP  skipTest;
 
 TEMP  texCoord;
 TEMP  clipTexCoord;
@@ -60,15 +62,6 @@ TEMP  colour;
 TEMP  tempColour;
 TEMP  finalColour;
 TEMP  nsamples;
-
-TEMP  skipTest;
-
-PARAM clipping           = {{ param_clipping         }};
-PARAM negCmap            = {{ param_negCmap          }};
-PARAM voxValXform        = {{ param_voxValXform      }};
-PARAM rayStep            = {{ param_rayStep          }};
-PARAM ditherDir          = {{ param_ditherDir        }};
-PARAM tex2ScreenXform[4] = {{ param4_tex2ScreenXform }};
 
 
 # Initialise colour buffers  and
@@ -79,19 +72,21 @@ MOV finalColour, 0;
 MOV nsamples,    0;
 MOV depth,       0;
 MOV texCoord.w,  1;
-MOV dither.x, fragment.position.x;
-MOV dither.y, fragment.position.y;
-MUL dither.x, dither.x, 12.9898;
-MUL dither.y, dither.y, 78.233;
-ADD dither.x, dither.x, dither.y;
-SIN dither.x, dither.x;
-MUL dither.x, dither.x, 43758.5453;
-FRC dither.x, dither.x;
+
+# Using skipTest as a temp var
+MOV skipTest.x, fragment.position.x;
+MOV skipTest.y, fragment.position.y;
+MUL skipTest.x, skipTest.x, 12.9898;
+MUL skipTest.y, skipTest.y, 78.233;
+ADD skipTest.x, skipTest.x, skipTest.y;
+SIN skipTest.x, skipTest.x;
+MUL skipTest.x, skipTest.x, 43758.5453;
+FRC skipTest.x, skipTest.x;
 
 # Initialise texture coordinates
-MUL dither, ditherDir, dither.x;
-ADD texCoord,     {{ varying_texCoord }},     dither;
-ADD clipTexCoord, {{ varying_clipTexCoord }}, dither;
+MUL skipTest,     {{ param_ditherDir      }}, skipTest.x;
+ADD texCoord,     {{ varying_texCoord     }}, skipTest;
+ADD clipTexCoord, {{ varying_clipTexCoord }}, skipTest;
 
 
 # Start the ray-casting loop
@@ -153,7 +148,7 @@ CMP nsamples.x,  skipTest.x, nsamples.x,  nsamples.y;
 # To do this, we have to test
 # whether skipTest.x > 0, and
 # nsamples == 1
-DP4 depth.z, tex2ScreenXform[2], texCoord;
+DP4 depth.z, {{ param_tex2ScreenXform }}, texCoord;
 SLT depth.y, nsamples.x, 2;
 MUL depth.y, depth.y, nsamples.x;
 SUB depth.y, depth.y, 0.5;
@@ -162,9 +157,9 @@ CMP depth.x, depth.y, depth.x, depth.z;
 
 # Check whether final colour alpha
 # is already high enough:
-SLT textest.y,  finalColour.a, 0.95;
-SUB textest.y,  textest.y,     0.5;
-MIN skipTest.x, skipTest.x, textest.y;
+SLT skipTest.y, finalColour.a, 0.95;
+SUB skipTest.y, skipTest.y,    0.5;
+MIN skipTest.x, skipTest.x,    skipTest.y;
 
 # Only update the accumulated colour
 # buffer if:
@@ -178,8 +173,8 @@ MIN skipTest.x, skipTest.x, textest.y;
 CMP finalColour, skipTest.x, finalColour, tempColour;
 
 # Shift the ray position
-ADD texCoord,     texCoord,     rayStep;
-ADD clipTexCoord, clipTexCoord, rayStep;
+ADD texCoord,     texCoord,     {{ param_rayStep }};
+ADD clipTexCoord, clipTexCoord, {{ param_rayStep }};
 
 {% endfor %}
 

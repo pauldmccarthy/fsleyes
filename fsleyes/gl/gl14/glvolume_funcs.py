@@ -186,7 +186,7 @@ def draw3D(self, xform=None, bbox=None):
 
     self.shader.setFragParam('rayStep',         list(rayStep)   + [0])
     self.shader.setFragParam('ditherDir',       list(ditherDir) + [0])
-    self.shader.setFragParam('tex2ScreenXform', texform)
+    self.shader.setFragParam('tex2ScreenXform', texform[2, :])
 
     self.shader.setAtt('texCoord', texCoords)
 
