@@ -19,6 +19,13 @@
 #   {{ param_tex2ScreenXform }} - A transformation matrix which transforms
 #      image texture coordinates into normalised device coordinates.
 #
+#   {{ param_settings }} - Contains other parametres controlling the
+#      ray-casting:
+#        x: How much each sampled point contributes to the final colour.
+#        y: Length of the rayStep vector
+#        z: How much the fragment should fade out w.r.t. its depth
+#        w: Final transparency that the fragment should have
+#
 # Input varyings:
 #   {{ varying_texCoord }}
 #   {{ varying_clipTexCoord }}
@@ -53,6 +60,7 @@ TEMP  clipTexCoord;
 TEMP  colour;
 TEMP  tempColour;
 TEMP  finalColour;
+TEMP  nsamples;
 
 TEMP  skipTest;
 
@@ -69,6 +77,7 @@ PARAM tex2ScreenXform[4] = {{ param4_tex2ScreenXform }};
 # between 0 and 1 for dithering.
 MOV colour,      0;
 MOV finalColour, 0;
+MOV nsamples,    0;
 MOV dither.x, fragment.position.x;
 MOV dither.y, fragment.position.y;
 MUL dither.x, dither.x, 12.9898;
@@ -108,16 +117,33 @@ arb_call('glvolume_common.prog',
 }}
 
 
-# Mix this colour with the accumulated
-# colour into a temp variable.
-LRP tempColour.rgb, finalColour.a, finalColour.rgbb, colour.rgbb;
-ADD tempColour.a, finalColour.a, colour.a;
+# Calculate the blending
+# factor for this sample
+MUL colour.a, nsamples.x, {{ param_settings }}.y;
+SUB colour.a, 1,             colour.a;
+MUL colour.a, colour.a,   {{ param_settings }}.x;
+
+# Blend the sample into the
+# accumulatedcolour, storing
+# the result in a temp variable
+SUB tempColour,     1,          finalColour.a;
+MUL tempColour.rgb, tempColour, colour;
+MUL tempColour.rgb, tempColour, colour.a;
+ADD tempColour.rgb, tempColour, finalColour;
+
+MUL tempColour.a,   tempColour.a,   colour.a;
+ADD tempColour.a,   tempColour.a,   finalColour.a;
 
 
 # Check whether the
 # texcoords are in bounds
 {{ arb_call('textest.prog', texCoord='texCoord', out_result='textest') }}
 MIN skipTest.x, skipTest.x, textest.x;
+
+# Update the sample count if
+# all tests have passed so far
+ADD nsamples.y,  nsamples.x, 1;
+CMP nsamples.x,  skipTest.x, nsamples.x,  nsamples.y;
 
 
 # Check whether final colour alpha
@@ -128,25 +154,27 @@ MIN skipTest.x, skipTest.x, textest.y;
 
 # Only update the accumulated colour
 # buffer if:
-#   - if the voxel value was not nan
+#   - the voxel value was not nan
 #   - the voxel value was not clipped
 #   - the ray position was inside the volume
 #   - the accumulated colour has not yet
 #     reached the alpha threshold
 # All of these conditions have been
 # accumulated into skipTest.x
-#
-
 CMP finalColour, skipTest.x, finalColour, tempColour;
 
 # Shift the ray position
 ADD texCoord,     texCoord,     rayStep;
 ADD clipTexCoord, clipTexCoord, rayStep;
 
-
 {% endfor %}
 
+# If no samples were
+# taken, kill the fragment.
+SUB nsamples.x, nsamples.x,  0.5;
+KIL nsamples.x;
 
+MOV finalColour.a, {{ param_settings }}.w;
 MOV result.color, finalColour;
 
 END

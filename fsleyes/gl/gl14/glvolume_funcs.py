@@ -62,7 +62,7 @@ def compileShaders(self):
     }
 
 
-    if self.threedee: constants = {'numSteps' : numSteps}
+    if self.threedee: constants = {'numSteps' : self.opts.numSteps}
     else:             constants = {}
 
     constants['kill_fragments_early'] = not self.threedee
@@ -80,7 +80,10 @@ def updateShaderState(self):
     if not self.ready():
         return
 
-    opts = self.opts
+    opts    = self.opts
+    display = self.display
+    canvas  = self.canvas
+
 
     # enable the vertex and fragment programs
     self.shader.load()
@@ -114,6 +117,12 @@ def updateShaderState(self):
     clipHi  = opts.clippingRange[1] * clipXform[0, 0] + clipXform[0, 3]
     texZero = 0.0                   * imgXform[ 0, 0] + imgXform[ 0, 3]
 
+    settings = [
+        (1 - opts.blendFactor) ** 2,
+        1.0 / opts.numSteps,
+        canvas.fadeOut,
+        display.alpha / 100.0]
+
     shape    = shape + [0]
     clipping = [clipLo, clipHi, invClip, imageIsClip]
     negCmap  = [useNegCmap, texZero, 0, 0]
@@ -122,6 +131,7 @@ def updateShaderState(self):
     changed |= self.shader.setFragParam('voxValXform', voxValXform)
     changed |= self.shader.setFragParam('clipping',    clipping)
     changed |= self.shader.setFragParam('negCmap',     negCmap)
+    changed |= self.shader.setFragParam('settings',    settings)
 
     self.shader.unload()
 

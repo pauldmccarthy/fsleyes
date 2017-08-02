@@ -127,7 +127,7 @@ uniform vec3 rayStep;
 /*
  * Length of the rayStep vector.
  */
-uniform int stepLength;
+uniform float stepLength;
 
 
 
