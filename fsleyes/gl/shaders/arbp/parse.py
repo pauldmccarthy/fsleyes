@@ -705,8 +705,11 @@ def _render(src, env, includePath):
     #   - The source code
     #   - A dictionary of {input_key  : unique_name} mappings
     #   - A dictionary of {output_key : unique_name} mappings
-    includes     = {}
-    usedVarNames = set()
+    includes      = {}
+    routineFile   = [None]
+    tempVars      = [None]
+    renderedCalls = {}
+    usedVarNames  = set()
 
     # Generate a random name to
     # use as a TEMP variable
@@ -724,17 +727,15 @@ def _render(src, env, includePath):
 
         return name
 
+    def arb_temp(var):
+        tempVars[0][var] = randomName(var)
+        return ''
+
+    def dummy_template_func(*args, **kwargs):
+        return ''
+
     # arb_include routine
     def arb_include(filename):
-
-        # This currently does nothing. It is
-        # here because I originally created
-        # TEMP variables for all routine
-        # inputs/outputs, but have stopped
-        # doing that. I'm keeping arb_include
-        # here for routines which may need to
-        # define temporary variables of their
-        # own.
 
         fileid   = op.splitext(filename)[0]
         filename = op.join(includePath, filename)
@@ -742,33 +743,60 @@ def _render(src, env, includePath):
         with open(filename, 'rt') as f:
             source = f.read()
 
-        includes[op.basename(filename)] = source
+        tempVars[   0] = {}
+        routineFile[0] = fileid
 
-        return '# include {}\n'.format(fileid)
+        def dummy_arb_call(*a, **kwa):
+            pass
 
-    # arb_call routine. Files which are arb_called
-    # may arb_call other files, although I haven't
-    # tested this extensively. On a nested call,
-    # I store the arguments passed to the outer
-    # call, so that the values of expressions which
-    # are used in the outer, and passed through to
+        includeTemplate = j2.Template(source, undefined=j2.DebugUndefined)
+        includeTemplate.render(arb_temp=arb_temp, arb_call=dummy_template_func)
+
+        includes[op.basename(filename)] = (source, tempVars[0])
+
+        outputLines = []
+        for k, v in tempVars[0].items():
+            outputLines.append('TEMP {};'.format(v))
+
+        tempVars[   0] = None
+        routineFile[0] = None
+
+        return '\n'.join(outputLines)
+
+    # arb_call routine.
+
+    # Files which are arb_called may arb_call other
+    # files, although I haven't tested this extensively.
+    # On a nested call, I store the arguments passed to
+    # the outer call, and the temporaries defined in the
+    # outer call, so that the values of expressions
+    # which are used in the outer, and passed through to
     # the inner, will be resolved correctly.
     outerCallArgs   = [None]
     passThroughExpr = re.compile('^ *{{ *(.*) *}} *$')
 
     def arb_call(filename, **args):
 
-        # 1. Resolve any arguments which need to be passed through
+        rckey = tuple([filename] + list(args.items()))
+
+        # Already rendered this file?
+        if rckey in renderedCalls:
+            return renderedCalls[rckey]
+
+        # 1. Looks up the called filename in the includes dictionary
+        # 2. Resolve any arguments which need to be passed through
         #    from an outer arb_call
-        # 2. Looks up the called filename in the includes dictionary
         # 3. Generates code - render file source with the probvided
         #    argument mappings
         # 3. Return generated code
 
-        args    = dict(args)
+        source, temps = includes[filename]
 
+        args    = dict(args)
         callEnv = dict(env)
+
         callEnv.update(args)
+        callEnv.update(temps)
 
         # If this is a nested call, look at its
         # arguments to see if any have expressions
@@ -776,31 +804,35 @@ def _render(src, env, includePath):
         # the value with the corresponding value
         # from the outer call.
         if outerCallArgs[0] is not None:
-            for k, v in callEnv.items():
+            oce = outerCallArgs[0]
+            for k, v in args.items():
                 if not isinstance(v, six.string_types):
                     continue
                 match = passThroughExpr.fullmatch(v)
                 if match:
-                    match      = match.group(1).strip()
-                    callEnv[k] = outerCallArgs[0][match]
+                    callEnv[k] = oce[match.group(1).strip()]
 
-        source       = includes[filename]
-        sourceLines  = ['# call {}'.format(filename)]
-        callTemplate = j2.Template(source)
+        sourceLines   = ['# call {}'.format(filename)]
+        callTemplate  = j2.Template(source)
 
-        outerCallArgs[0] = args
+        oce = dict(args)
+        oce.update(temps)
+
+        outerCallArgs[0] = oce
         source           = callTemplate.render(**callEnv)
         outerCallArgs[0] = None
 
         sourceLines.extend(source.split('\n'))
+        source = '\n'.join(sourceLines)
 
-        return '\n'.join(sourceLines)
+        renderedCalls[rckey] = source
 
-    template = j2.Template(src)
+        return source
 
     env = dict(env)
     env['arb_include'] = arb_include
     env['arb_call']    = arb_call
+    env['arb_temp']    = dummy_template_func
 
     # We need to do two passes of the
     # source code, because arb_call
