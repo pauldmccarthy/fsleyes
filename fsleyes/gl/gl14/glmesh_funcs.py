@@ -138,8 +138,8 @@ def draw(self,
 
     shader = self.activeShader
 
-    if normals is not None: shader.setAttr('normal',     normals)
-    if vdata   is not None: shader.setAttr('vertexData', vdata.reshape(-1, 1))
+    if normals is not None: shader.setAtt('normal',     normals)
+    if vdata   is not None: shader.setAtt('vertexData', vdata.reshape(-1, 1))
 
     if normals is not None:
 

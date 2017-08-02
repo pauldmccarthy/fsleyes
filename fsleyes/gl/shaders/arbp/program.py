@@ -57,7 +57,7 @@ class ARBPShader(object):
        destroy
        setVertParam
        setFragParam
-       setAttr
+       setAtt
 
     Typcical usage of an ``ARBPShader`` will look something like the
     following::
@@ -87,7 +87,7 @@ class ARBPShader(object):
         # Create and set vertex attributes
         vertices, normals = createVertices()
 
-        program.setAttr('normals', normals)
+        program.setAtt('normals', normals)
 
         # Draw the scene
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
@@ -298,7 +298,7 @@ class ARBPShader(object):
                 row[0], row[1], row[2], row[3])
 
 
-    def setAttr(self, name, value):
+    def setAtt(self, name, value):
         """Sets the value of the specified vertex attribute. Each vertex
         attribute is mapped to a texture coordinate. It is assumed that
         the given value is a ``numpy`` array of shape ``(n, l)``, where

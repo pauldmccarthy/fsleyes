@@ -155,7 +155,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
 
     # Voxel coordinates are calculated
     # in the vertex program
-    self.shader.setAttr('texCoord', texCoords)
+    self.shader.setAtt('texCoord', texCoords)
 
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
@@ -172,16 +172,16 @@ def draw3D(self, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
-    rayStep, ditherDir, xform      = self.calculateRayCastSettings(xform)
+    rayStep, ditherDir, texform    = self.calculateRayCastSettings(xform)
 
     if xform is not None:
         vertices = transform.transform(vertices, xform)
 
     self.shader.setFragParam('rayStep',         list(rayStep)   + [0])
     self.shader.setFragParam('ditherDir',       list(ditherDir) + [0])
-    self.shader.setFragParam('tex2ScreenXform', xform)
+    self.shader.setFragParam('tex2ScreenXform', texform)
 
-    self.shader.setAttr('texCoord', texCoords)
+    self.shader.setAtt('texCoord', texCoords)
 
     self.shader.loadAtts()
 
@@ -212,7 +212,7 @@ def drawAll(self, axes, zposes, xforms):
 
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
 
-    self.shader.setAttr('texCoord', texCoords)
+    self.shader.setAtt('texCoord', texCoords)
 
     gl.glDrawElements(gl.GL_TRIANGLES,
                       nslices * 6,

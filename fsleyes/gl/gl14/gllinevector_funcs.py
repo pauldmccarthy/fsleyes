@@ -165,7 +165,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
     if vertices.size == 0:
         return
 
-    self.shader.setAttr('voxCoord', voxCoords)
+    self.shader.setAtt('voxCoord', voxCoords)
     self.shader.loadAtts()
 
     v2d = opts.getTransform('voxel', 'display')
