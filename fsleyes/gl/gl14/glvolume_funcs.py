@@ -19,7 +19,6 @@ import OpenGL.GL           as gl
 
 import fsl.utils.transform as transform
 import fsleyes.gl.shaders  as shaders
-import fsleyes.gl.routines as glroutines
 import fsleyes.gl.glvolume as glvolume
 
 
@@ -99,10 +98,6 @@ def updateShaderState(self):
                                    self.imageTexture.voxValXform)
     voxValXform = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
 
-    # The vertex and fragment programs
-    # need to know the image shape
-    shape = list(self.image.shape[:3])
-
     # And the clipping range, normalised
     # to the image texture value range
     invClip     = 1 if opts.invertClipping    else -1
@@ -117,13 +112,6 @@ def updateShaderState(self):
     clipHi  = opts.clippingRange[1] * clipXform[0, 0] + clipXform[0, 3]
     texZero = 0.0                   * imgXform[ 0, 0] + imgXform[ 0, 3]
 
-    settings = [
-        (1 - opts.blendFactor) ** 2,
-        1.0 / opts.numSteps,
-        canvas.fadeOut,
-        display.alpha / 100.0]
-
-    shape    = shape + [0]
     clipping = [clipLo, clipHi, invClip, imageIsClip]
     negCmap  = [useNegCmap, texZero, 0, 0]
 
@@ -131,7 +119,15 @@ def updateShaderState(self):
     changed |= self.shader.setFragParam('voxValXform', voxValXform)
     changed |= self.shader.setFragParam('clipping',    clipping)
     changed |= self.shader.setFragParam('negCmap',     negCmap)
-    changed |= self.shader.setFragParam('settings',    settings)
+
+    if self.threedee:
+        settings = [
+            (1 - opts.blendFactor) ** 2,
+            1.0 / opts.numSteps,
+            canvas.fadeOut,
+            display.alpha / 100.0]
+
+        changed |= self.shader.setFragParam('settings',    settings)
 
     self.shader.unload()
 

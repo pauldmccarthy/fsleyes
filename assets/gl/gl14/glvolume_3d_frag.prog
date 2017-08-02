@@ -16,7 +16,7 @@
 #   {{ param_ditherDir }} - A vector, in the same direction as the camera,
 #      specifying the maximum amount to dither by.
 #
-#   {{ param_tex2ScreenXform }} - A transformation matrix which transforms
+#   {{ param4_tex2ScreenXform }} - A transformation matrix which transforms
 #      image texture coordinates into normalised device coordinates.
 #
 #   {{ param_settings }} - Contains other parametres controlling the
@@ -53,7 +53,6 @@
 TEMP  dither;
 TEMP  textest;
 TEMP  depth;
-TEMP  lastSampledTexCoord;
 
 TEMP  texCoord;
 TEMP  clipTexCoord;
@@ -78,6 +77,8 @@ PARAM tex2ScreenXform[4] = {{ param4_tex2ScreenXform }};
 MOV colour,      0;
 MOV finalColour, 0;
 MOV nsamples,    0;
+MOV depth,       0;
+MOV texCoord.w,  1;
 MOV dither.x, fragment.position.x;
 MOV dither.y, fragment.position.y;
 MUL dither.x, dither.x, 12.9898;
@@ -91,8 +92,6 @@ FRC dither.x, dither.x;
 MUL dither, ditherDir, dither.x;
 ADD texCoord,     {{ varying_texCoord }},     dither;
 ADD clipTexCoord, {{ varying_clipTexCoord }}, dither;
-MOV lastSampledTexCoord, texCoord;
-
 
 
 # Start the ray-casting loop
@@ -145,6 +144,21 @@ MIN skipTest.x, skipTest.x, textest.x;
 ADD nsamples.y,  nsamples.x, 1;
 CMP nsamples.x,  skipTest.x, nsamples.x,  nsamples.y;
 
+# Calculate the screen depth of
+# the current ray position.If we
+# have just taken our first sample,
+# save the depth, as we will use
+# it for the final fragment depth.
+#
+# To do this, we have to test
+# whether skipTest.x > 0, and
+# nsamples == 1
+DP4 depth.z, tex2ScreenXform[2], texCoord;
+SLT depth.y, nsamples.x, 2;
+MUL depth.y, depth.y, nsamples.x;
+SUB depth.y, depth.y, 0.5;
+MIN depth.y, depth.y, skipTest.x;
+CMP depth.x, depth.y, depth.x, depth.z;
 
 # Check whether final colour alpha
 # is already high enough:
@@ -175,6 +189,7 @@ SUB nsamples.x, nsamples.x,  0.5;
 KIL nsamples.x;
 
 MOV finalColour.a, {{ param_settings }}.w;
-MOV result.color, finalColour;
+MOV result.color,     finalColour;
+MOV result.depth,     depth.x;
 
 END
