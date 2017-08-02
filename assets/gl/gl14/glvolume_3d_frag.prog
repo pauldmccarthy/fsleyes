@@ -2,103 +2,59 @@
 #
 # Fragment program used for rendering GLVolume instances in 3D.
 #
-# This fragment program does the following:
-#
-#
-#  1. Retrieves the display space/voxel coordinates corresponding to the
-#     fragment.
-#
-#  2. Kills the fragment if it is out of the voxel bounds.
-#
-#  3. Uses those voxel coordinates to look up the corresponding voxel
-#     value in the 3D image and clipping textures.
-#
-#  5. Kills the fragment if the value is out of the clipping range.
-#
-#  6. Uses the voxel value to look up the corresponding colour in the
-#     1D colour map texture.
-#
-#  7. Sets the fragment colour accordingly.
-#
-#
-# Constants:
-#   numSteps        - Number of ray-casting iterations
+# See the glvolume_common.prog routine for most of the logic.
 #
 # Input parameters:
 #
-#   voxValXform     - Vector with x component defining a scale, and y
-#                     component defining an offset, with which image texture
-#                     values can be transformed into the range [0, 1], for use
-#                     as a colour map texture coordinate.
+#   {{ param_voxValXform }}
+#   {{ param_clipping }}
+#   {{ param_negCmap }}
 #
-#   clipping        - Vector containing clipping values - voxels with a
-#                     value below the low threshold (x), or above the
-#                     high threshold (y) will not be shown. The (z)
-#                     component determines the clipping direction - pass
-#                     in -1 for the above behaviour, or +1 to invert
-#                     this behaviour (i.e. to clip values that are within
-#                     the range). The (w) component is a boolen flag which
-#                     indicates whether the image texture is to be used
-#                     as the clip texture. Clipping values are assumed to
-#                     be normalised to the image texture value range.
+#   {{ param_rayStep }} - A vector defining how far to move through the volume
+#      texture space on each ray-casting iteration.
 #
-#   negCmap         - Negative colour map control. The (x) component
-#                     is a boolean flag controlling whether the negative
-#                     colour map is used. The (y) component is the display
-#                     range centre (the value above which the regular
-#                     colour map is used, and below which the negative
-#                     colour map is used), as a voxel value, normalised to
-#                     the image texture value range.
+#   {{ param_ditherDir }} - A vector, in the same direction as the camera,
+#      specifying the maximum amount to dither by.
 #
-#   rayStep         - A vector defining how far to move through the
-#                     volume texture space on each ray-casting iteration.
-#
-#   ditherDir        - A vector, in the same direction as the camera,
-#                     specifying the maximum amount to dither by.
-#
-#   tex2ScreenXform - A transformation matrix which transforms image
-#                     texture coordinates into normalised device
-#                     coordinates.
+#   {{ param_tex2ScreenXform }} - A transformation matrix which transforms
+#      image texture coordinates into normalised device coordinates.
 #
 # Input varyings:
-#
-#   texCoord     - Fragment texture coordinates
-#   clipTexCoord - Clip image texture coordinates
+#   {{ varying_texCoord }}
+#   {{ varying_clipTexCoord }}
 #
 # Input textures:
+#   {{ texture_imageTexture }}
+#   {{ texture_clipTexture }}
+#   {{ texture_colourTexture }}
+#   {{ texture_negColourTexture }}
 #
-#   imageTexture     - 3D texture containing the image
-#   clipTexture      - 3D texture containing clipping image
-#   colourTexture    - 1D texture containing colour map
-#   negColourTexture - 1D texture containing negative colour map
 #
+# Constants:
+#   numSteps             - Number of ray-casting iterations
+#   kill_fragments_early - must be set to False
+##
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-{{ arb_include('textest.prog')        }}
-{{ arb_include('texture_border.prog') }}
+{{ arb_include('textest.prog')         }}
+{{ arb_include('texture_border.prog')  }}
+{{ arb_include('glvolume_common.prog') }}
 
-TEMP  texCoord;
+
+
 TEMP  dither;
 TEMP  textest;
 TEMP  depth;
 TEMP  lastSampledTexCoord;
 
+TEMP  texCoord;
 TEMP  clipTexCoord;
 TEMP  colour;
 TEMP  tempColour;
 TEMP  finalColour;
-TEMP  voxClipLo;
-TEMP  voxClipHi;
-TEMP  voxValue;
-TEMP  nanTest;
-TEMP  clipValue;
-TEMP  posColour;
-TEMP  negColour;
-TEMP  useNegCmap;
-TEMP  negVoxValue;
-TEMP  negClipValue;
-TEMP  clipValueNoClip;
+
+TEMP  skipTest;
 
 PARAM clipping           = {{ param_clipping         }};
 PARAM negCmap            = {{ param_negCmap          }};
@@ -106,6 +62,7 @@ PARAM voxValXform        = {{ param_voxValXform      }};
 PARAM rayStep            = {{ param_rayStep          }};
 PARAM ditherDir          = {{ param_ditherDir        }};
 PARAM tex2ScreenXform[4] = {{ param4_tex2ScreenXform }};
+
 
 # Initialise colour buffers  and
 # generate a random number
@@ -127,137 +84,28 @@ ADD texCoord,     {{ varying_texCoord }},     dither;
 ADD clipTexCoord, {{ varying_clipTexCoord }}, dither;
 MOV lastSampledTexCoord, texCoord;
 
+
+
 # Start the ray-casting loop
 {% for i in range(numSteps) %}
 
 
-
-
-# look up image voxel value
-# and clipping value from 3D
-# image/clipping textures
-TEX voxValue.x,  texCoord,     {{ texture_imageTexture }}, 3D;
-TEX clipValue.x, clipTexCoord, {{ texture_clipTexture  }}, 3D;
-
-# Set nanTest.x to <0 if the voxel
-# value is nan, >0 otherwise. There
-# is no nan test, or equality test,
-# so we test whether
-# (value >= value) || (value < value).
-# If this is false, the value is nan.
-SGE nanTest.y, voxValue.x, voxValue.x;
-SLT nanTest.z, voxValue.x, voxValue.x;
-ADD nanTest.x, nanTest.y,  nanTest.z;
-SUB nanTest.x, nanTest.x, 0.5;
-
-# If the clipping texture coords
-# are out of bounds, disable
-# clipping (by clobbering the
-# clip value with something that
-# will cause no clipping to occur).
-
-# clipValueNoClip contains clipLo + 0.5 * (clipHi - clipLo)
-MOV clipValueNoClip.x, clipping.y;
-SUB clipValueNoClip.x, clipValueNoClip.x, clipping.x;
-MUL clipValueNoClip.x, clipValueNoClip.x, 0.5;
-ADD clipValueNoClip.x, clipValueNoClip.x, clipping.x;
-
-# Clobber the clip value if necessary
+# Look up the colour to
+# use for this fragment
 {{
-arb_call('texture_border.prog',
-         texCoord='{{ varying_clipTexCoord }}',
-         origval='clipValue',
-         borderval='clipValueNoClip',
-         out_result='clipValue')
+arb_call('glvolume_common.prog',
+         texCoord='texCoord',
+         clipTexCoord='clipTexCoord',
+         clipping='{{ param_clipping }}',
+         negCmap='{{ param_negCmap }}',
+         voxValXform='{{ param_voxValXform }}',
+         imageTexture='{{ texture_imageTexture }}',
+         clipTexture='{{ texture_clipTexture }}',
+         colourTexture='{{ texture_colourTexture }}',
+         negColourTexture='{{ texture_negColourTexture }}',
+         out_kill='skipTest',
+         out_colour='colour')
 }}
-
-# If the image texture is the clip
-# texture, overwrite the clip value
-# we just looked up.
-CMP clipValue.x, clipping.w, clipValue.x, voxValue.x;
-
-# Figure out which colour map
-# should be used for this fragment.
-#
-# We use the negative colour map ...
-#
-# if the voxel value is less than
-# texZero (the display range centre),
-SLT useNegCmap.x, voxValue.x, negCmap.y;
-
-# and the negative colour map is active.
-# The useNegCmap vector will be negative
-# if both of these conditions are true,
-# positive otherwise.
-MUL useNegCmap.x, useNegCmap.x, negCmap.x;
-SUB useNegCmap.x, useNegCmap.x, 0.5;
-MUL useNegCmap.x, useNegCmap.x, -1;
-
-# If using the negative colour map,
-# we need to flip the voxel value about
-# the display range centre.
-
-# Calculate the inverted voxel value
-ADD negVoxValue.x, negCmap.y,     negCmap.y;
-SUB negVoxValue.x, negVoxValue.x, voxValue.x;
-
-# And do the same for the clip value -
-# this is necessary if the image texture
-# is the clipping texture.
-ADD negClipValue.x, negCmap.y,      negCmap.y;
-SUB negClipValue.x, negClipValue.x, clipValue.x;
-
-# If we're using the negative colour
-# map, replace the original voxel
-# value with the inverted one.
-CMP voxValue.x, useNegCmap.x, negVoxValue.x, voxValue.x;
-
-# And do the same to the clip value if
-# the image texture is the clip texture.
-CMP negClipValue.x, useNegCmap.x, negClipValue.x, clipValue.x;
-CMP clipValue.x, clipping.w, clipValue.x, negClipValue.x;
-
-# Test the low clipping range
-SUB voxClipLo.x, clipValue.x, clipping.x;
-
-# And the high clipping range
-SUB voxClipHi.x, clipValue.x, clipping.y;
-
-# Multiply the low/high results - after
-# this, voxClipLo will be positive if
-# the value is outside of the clipping
-# range, or negative if the value is
-# within the clipping range
-MUL voxClipLo.x, voxClipLo.x, voxClipHi.x;
-
-# Multiply by the clipping.z setting -
-# this will invert the sign if normal
-# (as opposed to inverted) clipping is
-# active.
-MUL voxClipLo.x, voxClipLo.x, clipping.z;
-
-# Currently, voxClipLo.x is greater than 0
-# if the voxel should not be clipped, or
-# less than or equal to 0 if the voxel
-# should be clipped. Here we adjust  its
-# value so that it is 1 if the voxel
-# should not be clipped, -1 if it should.
-MUL voxClipLo.x, voxClipLo.x, -1;
-CMP voxClipLo.x, voxClipLo.x, 1, -1;
-
-# Scale voxel value according
-# to the current display range
-MAD voxValue, voxValue, voxValXform.x, voxValXform.y;
-
-# look up the appropriate colour
-# in the 1D colour map texture
-TEX posColour, voxValue.x, {{ texture_colourTexture    }}, 1D;
-TEX negColour, voxValue.x, {{ texture_negColourTexture }}, 1D;
-
-# useNegCmap is negative if the
-# negative colour map should be
-# used, positive otherwise.
-CMP colour, useNegCmap.x, negColour, posColour;
 
 
 # Mix this colour with the accumulated
@@ -265,52 +113,40 @@ CMP colour, useNegCmap.x, negColour, posColour;
 LRP tempColour.rgb, finalColour.a, finalColour.rgbb, colour.rgbb;
 ADD tempColour.a, finalColour.a, colour.a;
 
+
 # Check whether the
 # texcoords are in bounds
-{{
-arb_call('textest.prog',
-         texCoord='texCoord',
-         out_result='textest')
-}}
+{{ arb_call('textest.prog', texCoord='texCoord', out_result='textest') }}
+MIN skipTest.x, skipTest.x, textest.x;
 
 
 # Check whether final colour alpha
 # is already high enough:
-SLT textest.y, finalColour.a, 0.95;
-SUB textest.y, textest.y,     0.5;
+SLT textest.y,  finalColour.a, 0.95;
+SUB textest.y,  textest.y,     0.5;
+MIN skipTest.x, skipTest.x, textest.y;
 
 # Only update the accumulated colour
-# buffer if the colour if the voxel
-# value was not nan and was not
-# clipped and was inside the volume.
-# nanTest.x, voxClipLo.x, and textest.x
-# will be will be set to <0 if the voxel
-# was nan/clipped/out, >0 otherwise.
-MIN voxClipLo.x, voxClipLo.x, nanTest.x;
-MIN voxClipLo.x, voxClipLo.x, textest.x;
-MIN voxClipLo.x, voxClipLo.x, textest.y;
+# buffer if:
+#   - if the voxel value was not nan
+#   - the voxel value was not clipped
+#   - the ray position was inside the volume
+#   - the accumulated colour has not yet
+#     reached the alpha threshold
+# All of these conditions have been
+# accumulated into skipTest.x
+#
 
-CMP finalColour,         voxClipLo.x, finalColour,         tempColour;
-CMP lastSampledTexCoord, voxClipLo.x, lastSampledTexCoord, texCoord;
+CMP finalColour, skipTest.x, finalColour, tempColour;
 
 # Shift the ray position
 ADD texCoord,     texCoord,     rayStep;
 ADD clipTexCoord, clipTexCoord, rayStep;
 
+
 {% endfor %}
 
 
-# Calculate the final texture depth value
-MOV lastSampledTexCoord.w, 1;
-DP4 depth.x, tex2ScreenXform[0], lastSampledTexCoord;
-DP4 depth.y, tex2ScreenXform[1], lastSampledTexCoord;
-DP4 depth.z, tex2ScreenXform[2], lastSampledTexCoord;
-
-# NOTE: This code does not support
-# perspective projection
-MAD depth.z, depth.z, 0.5, 0.5;
-
 MOV result.color, finalColour;
-MOV result.depth, depth.z;
 
 END

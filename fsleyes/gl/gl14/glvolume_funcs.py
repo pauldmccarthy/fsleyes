@@ -61,10 +61,11 @@ def compileShaders(self):
         'clipTexture'      : 3
     }
 
-    if self.threedee:
-        constants = {'numSteps' : self.opts.numSteps}
-    else:
-        constants = {}
+
+    if self.threedee: constants = {'numSteps' : numSteps}
+    else:             constants = {}
+
+    constants['kill_fragments_early'] = not self.threedee
 
     self.shader = shaders.ARBPShader(vertSrc,
                                      fragSrc,
