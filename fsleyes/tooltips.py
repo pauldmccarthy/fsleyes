@@ -137,6 +137,11 @@ properties = TypeDict({
     'Volume3DOpts.numSteps' :
     'The maximum number of times that the image is sampled for each pixel.',
 
+    'Volume3DOpts.blendFactor' :
+    'This setting controls the sampling depth - a higher value will result '
+    'in the final volume colour being blended from samples which are deeper '
+    'in the volume.',
+
     'Volume3DOpts.numClipPlanes' :
     'Number of active clipping planes. Areas of the image which are in the '
     'region intersected by all clipping planes will not be shown.',
@@ -410,8 +415,8 @@ properties = TypeDict({
     'Scene3DOpts.lightPos' :
     'Position of the light in the display coordinate system.',
     'Scene3DOpts.occlusion' :
-    'When selected, objects in the scene which are behind another object will '
-    'not be shown.',
+    'When selected, volumes in the scene which are behind another volume will '
+    'not be shown. ',
     'Scene3DOpts.fadeOut' :
     'This setting controls how much parts of the scene which are further away '
     'from the camera fade out. It is useful when you are displaying multiple '

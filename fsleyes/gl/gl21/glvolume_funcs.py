@@ -120,7 +120,7 @@ def updateShaderState(self):
 
     if self.threedee:
 
-        blendFactor = opts.blendFactor ** 2
+        blendFactor = (1 - opts.blendFactor) ** 2
         clipPlanes  = np.zeros((opts.numClipPlanes, 4), dtype=np.float32)
         d2tmat      = opts.getTransform('display', 'texture')
 

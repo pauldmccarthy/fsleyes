@@ -790,7 +790,7 @@ properties = TypeDict({
     'Scene3DOpts.showLegend' : 'Show orientation',
     'Scene3DOpts.light'      : 'Lighting',
     'Scene3DOpts.lightPos'   : 'Light position',
-    'Scene3DOpts.occlusion'  : 'Hide far objects',
+    'Scene3DOpts.occlusion'  : 'Volume occlusion',
     'Scene3DOpts.fadeOut'    : 'Fade out',
 
     'PlotPanel.legend'     : 'Show legend',
@@ -890,6 +890,7 @@ properties = TypeDict({
 
     'Volume3DOpts.dithering'               : 'Dithering',
     'Volume3DOpts.numSteps'                : 'Number of samples',
+    'Volume3DOpts.blendFactor'             : 'Blending',
     'Volume3DOpts.numClipPlanes'           : 'Number of clipping planes',
     'Volume3DOpts.showClipPlanes'          : 'Show clipping planes',
     'Volume3DOpts.clipPosition'            : 'Clip position (%)',
