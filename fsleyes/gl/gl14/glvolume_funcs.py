@@ -12,6 +12,10 @@ programs.
 """
 
 
+import os.path as op
+import matplotlib.image as mplimg
+
+
 import logging
 
 import numpy               as np
@@ -32,12 +36,14 @@ def init(self):
 
     self.shader = None
 
+    self.innerSteps = 1
+
     compileShaders(   self)
     updateShaderState(self)
 
     if self.threedee:
-        self.renderTexture1 = textures.RenderTexture(self.name, gl.GL_NEAREST, gl.GL_FLOAT)
-        self.renderTexture2 = textures.RenderTexture(self.name, gl.GL_NEAREST, gl.GL_FLOAT)
+        self.renderTexture1 = textures.RenderTexture(self.name, gl.GL_LINEAR, gl.GL_FLOAT)
+        self.renderTexture2 = textures.RenderTexture(self.name, gl.GL_LINEAR, gl.GL_FLOAT)
 
 
 def destroy(self):
@@ -73,8 +79,6 @@ def compileShaders(self):
     }
 
     constants = {'kill_fragments_early' : not self.threedee}
-
-    self.innerSteps = 4
 
     if self.threedee:
         constants['numSteps'] = self.innerSteps
@@ -161,13 +165,14 @@ def preDraw(self, xform=None, bbox=None):
     if self.threedee:
         w, h = self.canvas._getSize()
 
+        w = int(np.ceil(w / 4.0))
+        h = int(np.ceil(h / 4.0))
+
         for rt in [self.renderTexture1, self.renderTexture2]:
             if rt.getSize() != (w, h):
                 rt.setSize(w, h)
 
         self.shader.setFragParam('screenSize', [1.0 / w, 1.0 / h, 0, 0])
-
-    gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
 
 
 def draw2D(self, zpos, axes, xform=None, bbox=None):
@@ -181,13 +186,13 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
 
     vertices = np.array(vertices, dtype=np.float32).ravel('C')
 
-    gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-
     # Voxel coordinates are calculated
     # in the vertex program
     self.shader.setAtt('texCoord', texCoords)
 
-    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
+    with glroutines.enabled((gl.GL_VERTEX_ARRAY)):
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
 
 def draw3D(self, xform=None, bbox=None):
@@ -210,43 +215,57 @@ def draw3D(self, xform=None, bbox=None):
     src  = self.renderTexture1
     dest = self.renderTexture2
 
-    self.shader.setFragParam('ditherDir', list(ditherDir) + [0])
-    self.shader.setFragParam('tex2ScreenXform', texform[2, :])
-    self.shader.loadAtts()
-
     src.bindAsRenderTarget()
-    glroutines.clear((0, 0, 0, 0))
+    gl.glClearColor(0, 0, 0, 0)
+    gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
     src.unbindAsRenderTarget()
     dest.bindAsRenderTarget()
-    glroutines.clear((0, 0, 0, 0))
+    gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
     dest.unbindAsRenderTarget()
 
-    self.shader.setAtt('texCoord', texCoords)
+    vertices  = np.array(vertices, dtype=np.float32).ravel('C')
 
-    vertices = np.array(vertices, dtype=np.float32).ravel('C')
+    # gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+    self.shader.setAtt(      'texCoord',        texCoords)
+    self.shader.setFragParam('ditherDir',       list(ditherDir) + [0])
+    self.shader.setFragParam('tex2ScreenXform', texform[2, :])
 
     outerLoop = int(np.ceil(self.opts.numSteps / self.innerSteps))
 
-    print('Ping pong {} times'.format(outerLoop))
+    with glroutines.enabled((gl.GL_VERTEX_ARRAY)), \
+         glroutines.disabled((gl.GL_BLEND, gl.GL_DEPTH_TEST)):
+    # if True:
 
-    for i in range(outerLoop):
+        for i in range(outerLoop):
 
-        src.bindTexture(gl.GL_TEXTURE4)
-        dest.bindAsRenderTarget()
+            self.shader.setFragParam('rayStep',
+                                     list(rayStep) + [i * self.innerSteps])
 
-        self.shader.setFragParam('rayStep',
-                                 list(rayStep) + [i * self.innerSteps])
+            dest.bindAsRenderTarget()
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
 
-        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
+            src.bindTexture(gl.GL_TEXTURE4)
 
-        dest.unbindAsRenderTarget()
-        src.unbindTexture()
+            gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
 
-        dest, src = src, dest
+            src.unbindTexture()
+            dest.unbindAsRenderTarget()
+
+            dest, src = src, dest
+
+            if getattr(self, 'save_bmps', False):
+                path = op.expanduser('~/output/{:02d}.png'.format(i))
+
+                dbmp  = dest.getData()
+                dbmp  = np.array(dbmp * 255, dtype=np.uint8)
+                sbmp  = src.getData()
+                sbmp  = np.array(sbmp * 255, dtype=np.uint8)
+
+                mplimg.imsave(path, np.vstack((sbmp, dbmp)))
 
 
-    gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
     self.shader.unloadAtts()
     self.shader.unload()
 
@@ -262,7 +281,6 @@ def draw3D(self, xform=None, bbox=None):
     verts   = transform.transform(verts, invproj)
 
     src.draw(verts)
-
 
 
 def drawAll(self, axes, zposes, xforms):

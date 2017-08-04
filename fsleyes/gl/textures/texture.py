@@ -215,6 +215,8 @@ class Texture2D(Texture):
         self.__interp    = interp
 
         # TODO validate dtype
+        if dtype is None:
+            dtype = gl.GL_UNSIGNED_BYTE
         self.__dtype     = dtype
 
 
@@ -296,13 +298,16 @@ class Texture2D(Texture):
             gl.GL_TEXTURE_2D,
             0,
             gl.GL_RGBA,
-            gl.GL_UNSIGNED_BYTE,
+            self.__dtype,
             None)
 
         if not bound:
             self.unbindTexture()
 
-        data = np.fromstring(data, dtype=np.uint8)
+        if   self.__dtype == gl.GL_UNSIGNED_BYTE: ndtype = np.uint8
+        elif self.__dtype == gl.GL_FLOAT:         ndtype = np.float32
+
+        data = np.fromstring(data, dtype=ndtype)
         data = data.reshape((self.__height, self.__width, 4))
         data = np.flipud(data)
 
@@ -427,8 +432,6 @@ class Texture2D(Texture):
 
         vertices  = vertices .ravel('C')
         texCoords = texCoords.ravel('C')
-
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
 
         self.bindTexture(gl.GL_TEXTURE0)
 
