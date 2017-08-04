@@ -58,13 +58,10 @@ class RenderTexture(texture.Texture2D):
     methods.
     """
 
-    def __init__(self, name, interp=gl.GL_NEAREST):
-        """Create a ``RenderTexture``.
+    def __init__(self, *args, **kwargs):
+        """Create a ``RenderTexture``. All argumenst are passed through
+        to the :meth:`.Texture2D.__init__` method.
 
-        :arg name:   A unique name for this ``RenderTexture``.
-
-        :arg interp: Texture interpolation - either ``GL_NEAREST`` (the
-                     default) or ``GL_LINEAR``.
 
         .. note:: A rendering target must have been set for the GL context
                   before a frame buffer can be created ... in other words,
@@ -72,7 +69,7 @@ class RenderTexture(texture.Texture2D):
                   ``RenderTexture``.
         """
 
-        texture.Texture2D.__init__(self, name, interp)
+        texture.Texture2D.__init__(self, *args, **kwargs)
 
         self.__frameBuffer  = glfbo.glGenFramebuffersEXT(1)
         self.__renderBuffer = glfbo.glGenRenderbuffersEXT(1)

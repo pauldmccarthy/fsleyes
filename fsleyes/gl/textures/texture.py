@@ -195,7 +195,7 @@ class Texture2D(Texture):
         sub-class of ``Texture2D``).
     """
 
-    def __init__(self, name, interp=gl.GL_NEAREST):
+    def __init__(self, name, interp=gl.GL_NEAREST, dtype=None):
         """Create a ``Texture2D`` instance.
 
         :arg name:   Unique name for this ``Texture2D``.
@@ -213,6 +213,9 @@ class Texture2D(Texture):
         self.__oldHeight = None
         self.__border    = None
         self.__interp    = interp
+
+        # TODO validate dtype
+        self.__dtype     = dtype
 
 
     def setInterpolation(self, interp):
@@ -269,6 +272,8 @@ class Texture2D(Texture):
         from data shape, which is assumed to be 4*width*height.
         """
 
+        # TODO dtype
+
         self.__setSize(data.shape[1], data.shape[2])
         self.__data = data
 
@@ -284,6 +289,8 @@ class Texture2D(Texture):
 
         if not bound:
             self.bindTexture()
+
+        # TODO dtype
 
         data = gl.glGetTexImage(
             gl.GL_TEXTURE_2D,
@@ -354,6 +361,8 @@ class Texture2D(Texture):
             self.__width,
             self.__height))
 
+        dtype = self.__dtype
+
         # If the width and height have not changed,
         # then we don't need to re-define the texture.
         if self.__width  == self.__oldWidth  and \
@@ -369,7 +378,7 @@ class Texture2D(Texture):
                                    self.__width,
                                    self.__height,
                                    gl.GL_RGBA,
-                                   gl.GL_UNSIGNED_BYTE,
+                                   dtype,
                                    data)
 
         # If the width and/or height have
@@ -383,7 +392,7 @@ class Texture2D(Texture):
                             self.__height,
                             0,
                             gl.GL_RGBA,
-                            gl.GL_UNSIGNED_BYTE,
+                            dtype,
                             data)
         self.unbindTexture()
 
