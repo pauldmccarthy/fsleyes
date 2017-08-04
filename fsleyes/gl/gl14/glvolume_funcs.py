@@ -19,7 +19,9 @@ import OpenGL.GL           as gl
 
 import fsl.utils.transform as transform
 import fsleyes.gl.shaders  as shaders
+import fsleyes.gl.routines as glroutines
 import fsleyes.gl.glvolume as glvolume
+import fsleyes.gl.textures as textures
 
 
 log = logging.getLogger(__name__)
@@ -33,6 +35,10 @@ def init(self):
     compileShaders(   self)
     updateShaderState(self)
 
+    if self.threedee:
+        self.renderTexture1 = textures.RenderTexture(self.name, gl.GL_NEAREST, gl.GL_FLOAT)
+        self.renderTexture2 = textures.RenderTexture(self.name, gl.GL_NEAREST, gl.GL_FLOAT)
+
 
 def destroy(self):
     """Deletes handles to the vertex/fragment programs."""
@@ -40,6 +46,12 @@ def destroy(self):
     if self.shader is not None:
         self.shader.destroy()
         self.shader = None
+
+    if self.threedee:
+        self.renderTexture1.destroy()
+        self.renderTexture2.destroy()
+        self.renderTexture1 = None
+        self.renderTexture2 = None
 
 
 def compileShaders(self):
@@ -60,11 +72,13 @@ def compileShaders(self):
         'clipTexture'      : 3
     }
 
+    constants = {'kill_fragments_early' : not self.threedee}
 
-    if self.threedee: constants = {'numSteps' : self.opts.numSteps}
-    else:             constants = {}
+    self.innerSteps = 4
 
-    constants['kill_fragments_early'] = not self.threedee
+    if self.threedee:
+        constants['numSteps'] = self.innerSteps
+        textures['startingTexture'] =  4
 
     self.shader = shaders.ARBPShader(vertSrc,
                                      fragSrc,
@@ -144,6 +158,15 @@ def preDraw(self, xform=None, bbox=None):
         clipCoordXform = self.calculateClipCoordTransform()
         self.shader.setVertParam('clipCoordXform', clipCoordXform)
 
+    if self.threedee:
+        w, h = self.canvas._getSize()
+
+        for rt in [self.renderTexture1, self.renderTexture2]:
+            if rt.getSize() != (w, h):
+                rt.setSize(w, h)
+
+        self.shader.setFragParam('screenSize', [1.0 / w, 1.0 / h, 0, 0])
+
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
 
 
@@ -184,18 +207,62 @@ def draw3D(self, xform=None, bbox=None):
     if xform is not None:
         vertices = transform.transform(vertices, xform)
 
-    self.shader.setFragParam('rayStep',         list(rayStep)   + [0])
-    self.shader.setFragParam('ditherDir',       list(ditherDir) + [0])
+    src  = self.renderTexture1
+    dest = self.renderTexture2
+
+    self.shader.setFragParam('ditherDir', list(ditherDir) + [0])
     self.shader.setFragParam('tex2ScreenXform', texform[2, :])
+    self.shader.loadAtts()
+
+    src.bindAsRenderTarget()
+    glroutines.clear((0, 0, 0, 0))
+    src.unbindAsRenderTarget()
+    dest.bindAsRenderTarget()
+    glroutines.clear((0, 0, 0, 0))
+    dest.unbindAsRenderTarget()
 
     self.shader.setAtt('texCoord', texCoords)
 
-    self.shader.loadAtts()
-
     vertices = np.array(vertices, dtype=np.float32).ravel('C')
-
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
+
+    outerLoop = int(np.ceil(self.opts.numSteps / self.innerSteps))
+
+    print('Ping pong {} times'.format(outerLoop))
+
+    for i in range(outerLoop):
+
+        src.bindTexture(gl.GL_TEXTURE4)
+        dest.bindAsRenderTarget()
+
+        self.shader.setFragParam('rayStep',
+                                 list(rayStep) + [i * self.innerSteps])
+
+        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
+
+        dest.unbindAsRenderTarget()
+        src.unbindTexture()
+
+        dest, src = src, dest
+
+
+    gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+    self.shader.unloadAtts()
+    self.shader.unload()
+
+    gl.glDisable(gl.GL_CULL_FACE)
+    verts = np.array([[-1, -1, 0],
+                      [-1,  1, 0],
+                      [ 1, -1, 0],
+                      [ 1, -1, 0],
+                      [-1,  1, 0],
+                      [ 1,  1, 0]], dtype=np.float32)
+
+    invproj = transform.invert(self.canvas.getProjectionMatrix())
+    verts   = transform.transform(verts, invproj)
+
+    src.draw(verts)
+
 
 
 def drawAll(self, axes, zposes, xforms):
@@ -231,6 +298,9 @@ def postDraw(self, xform=None, bbox=None):
     """Cleans up the GL state after drawing from the given :class:`.GLVolume`
     instance.
     """
-    gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-    self.shader.unloadAtts()
-    self.shader.unload()
+    # gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+    # self.shader.unloadAtts()
+    # self.shader.unload()
+
+    if self.threedee:
+        self.drawClipPlanes()

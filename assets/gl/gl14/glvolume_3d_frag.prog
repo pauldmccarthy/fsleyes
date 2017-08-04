@@ -1,4 +1,5 @@
 !!ARBfp1.0
+OPTION ARB_precision_hint_nicest;
 #
 # Fragment program used for rendering GLVolume instances in 3D.
 #
@@ -10,8 +11,12 @@
 #   {{ param_clipping }}
 #   {{ param_negCmap }}
 #
+#   {{ param_screenSize }}
+#
 #   {{ param_rayStep }} - A vector defining how far to move through the volume
 #      texture space on each ray-casting iteration.
+#
+#      Component w is the starting iteration
 #
 #   {{ param_ditherDir }} - A vector, in the same direction as the camera,
 #      specifying the maximum amount to dither by.
@@ -33,6 +38,7 @@
 #   {{ varying_clipTexCoord }}
 #
 # Input textures:
+#   {{ texture_startingTexture }}
 #   {{ texture_imageTexture }}
 #   {{ texture_clipTexture }}
 #   {{ texture_colourTexture }}
@@ -51,42 +57,50 @@
 {{ arb_include('glvolume_common.prog') }}
 
 
-
-TEMP  textest;
 TEMP  depth;
 TEMP  skipTest;
+TEMP  startingColour;
+TEMP  tempVar;
 
 TEMP  texCoord;
 TEMP  clipTexCoord;
 TEMP  colour;
 TEMP  tempColour;
 TEMP  finalColour;
-TEMP  nsamples;
 
 
-# Initialise colour buffers  and
-# generate a random number
+# Initialise texture coordinates.
+MAD texCoord.xyz,     {{ param_rayStep }}.w, {{ param_rayStep }}, {{ varying_texCoord     }};
+MAD clipTexCoord.xyz, {{ param_rayStep }}.w, {{ param_rayStep }}, {{ varying_clipTexCoord }};
+
+
+# Generate a random number
 # between 0 and 1 for dithering.
-MOV colour,      0;
-MOV finalColour, 0;
-MOV nsamples,    0;
+MOV tempVar.x, fragment.position.x;
+MOV tempVar.y, fragment.position.y;
+MUL tempVar.x, tempVar.x, 12.9898;
+MUL tempVar.y, tempVar.y, 78.233;
+ADD tempVar.x, tempVar.x, tempVar.y;
+SIN tempVar.x, tempVar.x;
+MUL tempVar.x, tempVar.x, 43758.5453;
+FRC tempVar.x, tempVar.x;
+
+
+# Add dither to the starting location
+MUL tempVar,       {{ param_ditherDir }}, tempVar.x;
+ADD texCoord.xyz,     texCoord,           tempVar;
+ADD clipTexCoord.xyz, clipTexCoord,       tempVar;
+
+
+# Retrieve the starting colour
+MUL tempVar.xy,     fragment.position, {{ param_screenSize        }};
+TEX startingColour, tempVar,           {{ texture_startingTexture }}, 2D;
+
+
 MOV depth,       0;
 MOV texCoord.w,  1;
-
-# Using skipTest as a temp var
-MOV skipTest.x, fragment.position.x;
-MOV skipTest.y, fragment.position.y;
-MUL skipTest.x, skipTest.x, 12.9898;
-MUL skipTest.y, skipTest.y, 78.233;
-ADD skipTest.x, skipTest.x, skipTest.y;
-SIN skipTest.x, skipTest.x;
-MUL skipTest.x, skipTest.x, 43758.5453;
-FRC skipTest.x, skipTest.x;
-
-# Initialise texture coordinates
-MUL skipTest,     {{ param_ditherDir      }}, skipTest.x;
-ADD texCoord,     {{ varying_texCoord     }}, skipTest;
-ADD clipTexCoord, {{ varying_clipTexCoord }}, skipTest;
+MOV skipTest,    1;
+MOV finalColour, startingColour;
 
 
 # Start the ray-casting loop
@@ -111,55 +125,33 @@ arb_call('glvolume_common.prog',
 }}
 
 
-# Calculate the blending
-# factor for this sample
-MUL colour.a, nsamples.x, {{ param_settings }}.y;
-SUB colour.a, 1,             colour.a;
-MUL colour.a, colour.a,   {{ param_settings }}.x;
-
-# Blend the sample into the
-# accumulatedcolour, storing
-# the result in a temp variable
-SUB tempColour,     1,          finalColour.a;
-MUL tempColour.rgb, tempColour, colour;
-MUL tempColour.rgb, tempColour, colour.a;
-ADD tempColour.rgb, tempColour, finalColour;
-
-MUL tempColour.a,   tempColour.a,   colour.a;
-ADD tempColour.a,   tempColour.a,   finalColour.a;
-
 
 # Check whether the
 # texcoords are in bounds
-{{ arb_call('textest.prog', texCoord='texCoord', out_result='textest') }}
-MIN skipTest.x, skipTest.x, textest.x;
+{{ arb_call('textest.prog', texCoord='texCoord', out_result='tempVar') }}
+MIN skipTest.x, skipTest.x, tempVar.x;
 
-# Update the sample count if
-# all tests have passed so far
-ADD nsamples.y,  nsamples.x, 1;
-CMP nsamples.x,  skipTest.x, nsamples.x,  nsamples.y;
 
-# Calculate the screen depth of
-# the current ray position.If we
-# have just taken our first sample,
-# save the depth, as we will use
-# it for the final fragment depth.
-#
-# To do this, we have to test
-# whether skipTest.x > 0, and
-# nsamples == 1
-DP4 depth.z, {{ param_tex2ScreenXform }}, texCoord;
-SLT depth.y, nsamples.x, 2;
-MUL depth.y, depth.y, nsamples.x;
-SUB depth.y, depth.y, 0.5;
-MIN depth.y, depth.y, skipTest.x;
-CMP depth.x, depth.y, depth.x, depth.z;
 
-# Check whether final colour alpha
-# is already high enough:
-SLT skipTest.y, finalColour.a, 0.95;
-SUB skipTest.y, skipTest.y,    0.5;
-MIN skipTest.x, skipTest.x,    skipTest.y;
+# Check whether the accumulated
+# colour alpha is already high enough
+SLT tempVar.x,  finalColour.a, 0.95;
+SUB tempVar.x,  tempVar.x,     0.5;
+MIN skipTest.x, skipTest.x,    tempVar.x;
+
+
+
+# Blend the sample into the
+# accumulated colour, storing
+# the result in tempColour
+
+# tempVar.x contains (1 - finalColour.a) * blendFactor
+SUB tempVar.x, 1,               finalColour.a;
+MUL tempVar.x, tempVar.x,    {{ param_settings }}.x;
+
+MAD tempColour.rgb, tempVar.x,   colour, finalColour;
+ADD tempColour.a,   tempVar.x,           finalColour.a;
+
 
 # Only update the accumulated colour
 # buffer if:
@@ -172,19 +164,29 @@ MIN skipTest.x, skipTest.x,    skipTest.y;
 # accumulated into skipTest.x
 CMP finalColour, skipTest.x, finalColour, tempColour;
 
+
+
 # Shift the ray position
-ADD texCoord,     texCoord,     {{ param_rayStep }};
-ADD clipTexCoord, clipTexCoord, {{ param_rayStep }};
+ADD texCoord.xyz,     texCoord,     {{ param_rayStep }};
+ADD clipTexCoord.xyz, clipTexCoord, {{ param_rayStep }};
+
+
 
 {% endfor %}
 
-# If no samples were
-# taken, kill the fragment.
-SUB nsamples.x, nsamples.x,  0.5;
-KIL nsamples.x;
 
-MOV finalColour.a, {{ param_settings }}.w;
-MOV result.color,     finalColour;
-MOV result.depth,     depth.x;
+
+# If startingColour.a == 0 and
+#    finalColour.a    == 0,
+# kill the fragment.
+
+ADD tempVar.x, startingColour.a, finalColour.a;
+MUL tempVar.x, tempVar.x, -1;
+CMP tempVar.x, tempVar.x,  1, -1;
+KIL tempVar.x;
+
+
+MOV result.color, finalColour;
+
 
 END
