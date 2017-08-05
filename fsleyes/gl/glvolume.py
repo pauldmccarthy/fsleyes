@@ -210,12 +210,11 @@ class GLVolume(glimageobject.GLImageObject):
         self.negColourTexture = textures.ColourMapTexture(
             '{}_neg'.format(self.texName))
 
-
         if self.threedee:
             self.renderTexture1 = textures.RenderTexture(
-                self.name, gl.GL_LINEAR, gl.GL_FLOAT)
+                self.name, gl.GL_LINEAR, rttype='cd')
             self.renderTexture2 = textures.RenderTexture(
-                self.name, gl.GL_LINEAR, gl.GL_FLOAT)
+                self.name, gl.GL_LINEAR, rttype='cd')
 
         # This attribute is used by the
         # updateShaderState method to

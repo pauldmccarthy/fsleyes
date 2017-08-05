@@ -157,8 +157,9 @@ class RenderTextureStack(object):
         self.__destroyTextures()
 
         for i in range(numTextures):
-            self.__textures.append(
-                rendertexture.RenderTexture('{}_{}'.format(self.name, i)))
+            rt = rendertexture.RenderTexture(
+                '{}_{}'.format(self.name, i), rttype='c')
+            self.__textures.append(rt)
 
         self.onGLObjectUpdate()
 

@@ -273,6 +273,13 @@ class Texture2D(Texture):
 
     @classmethod
     def getDataTypeParams(cls, dtype):
+        """Returns a tuple containing information about the given sized
+        internal GL texture data format:
+          - The base GL internal format
+          - The GL external data format
+          - The equivalent ``numpy`` data type
+          - The number of channels
+        """
 
         if dtype == gl.GL_RGBA8:
             intFmt = gl.GL_RGBA
@@ -468,7 +475,16 @@ class Texture2D(Texture):
         self.unbindTexture()
 
 
-    def drawOnBounds(self, zpos, xmin, xmax, ymin, ymax, xax, yax, xform=None):
+    def drawOnBounds(self,
+                     zpos,
+                     xmin,
+                     xmax,
+                     ymin,
+                     ymax,
+                     xax,
+                     yax,
+                     *args,
+                     **kwargs):
         """Draws the contents of this ``Texture2D`` to a rectangle.  This is a
         convenience method which creates a set of vertices, and passes them to
         the :meth:`draw` method.
@@ -483,7 +499,8 @@ class Texture2D(Texture):
                     axis.
         :arg yax:   Display space axis which maps to the vertical screen
                     axis.
-        :arg xform: Transformation matrix to apply to the vertices.
+
+        All other arguments are passed to the :meth:`draw` method.
         """
 
         zax              = 3 - xax - yax
@@ -497,4 +514,4 @@ class Texture2D(Texture):
         vertices[ 4, [xax, yax]] = [xmin, ymax]
         vertices[ 5, [xax, yax]] = [xmax, ymax]
 
-        self.draw(vertices, xform)
+        self.draw(vertices, *args, **kwargs)
