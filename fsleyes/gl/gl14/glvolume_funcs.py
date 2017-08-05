@@ -229,6 +229,8 @@ def draw3D(self, xform=None, bbox=None):
 
     vertices  = np.array(vertices, dtype=np.float32).ravel('C')
 
+    w, h = src.getSize()
+    gl.glViewport(0, 0, w, h)
 
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
     self.shader.setAtt(      'texCoord',        texCoords)
@@ -259,17 +261,6 @@ def draw3D(self, xform=None, bbox=None):
 
             dest, src = src, dest
 
-            if getattr(self, 'save_bmps', False):
-                path = op.expanduser('~/output/{:02d}.png'.format(i))
-
-                dbmp  = dest.getData()
-                dbmp  = np.array(dbmp * 255, dtype=np.uint8)
-                sbmp  = src.getData()
-                sbmp  = np.array(sbmp * 255, dtype=np.uint8)
-
-                mplimg.imsave(path, np.vstack((sbmp, dbmp)))
-
-
     self.shader.unloadAtts()
     self.shader.unload()
 
@@ -281,8 +272,11 @@ def draw3D(self, xform=None, bbox=None):
                       [-1,  1, 0],
                       [ 1,  1, 0]], dtype=np.float32)
 
-    invproj = transform.invert(self.canvas.getProjectionMatrix())
+    invproj = transform.invert(proj)
     verts   = transform.transform(verts, invproj)
+
+    w, h = self.canvas.GetSize()
+    gl.glViewport(0, 0, w, h)
 
     src.draw(verts)
 

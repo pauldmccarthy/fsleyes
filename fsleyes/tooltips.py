@@ -142,6 +142,11 @@ properties = TypeDict({
     'in the final volume colour being blended from samples which are deeper '
     'in the volume.',
 
+    'Volume3DOpts.resolution' :
+    'This setting controls the quality (resolution) at which the volume is '
+    'shown on screen. Higher values look better, but lower values will be '
+    'drawn more quickly.',
+
     'Volume3DOpts.numClipPlanes' :
     'Number of active clipping planes. Areas of the image which are in the '
     'region intersected by all clipping planes will not be shown.',

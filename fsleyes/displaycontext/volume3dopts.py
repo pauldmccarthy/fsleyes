@@ -62,7 +62,7 @@ class Volume3DOpts(object):
     """
 
 
-    resolution = props.Choice((25, 33, 50, 100), default=100)
+    resolution = props.Int(minval=10, maxval=100, default=100, clamped=True)
     """Only used in low performance environments. Specifies the resolution
     of the off-screen buffer to which the volume is rendered, as a percentage
     of the screen resolution.

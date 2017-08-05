@@ -865,7 +865,8 @@ class GLVolume(glimageobject.GLImageObject):
 
 
     def _resolutionChanged(self, *a):
-        """Called when the :attr:`.Volume3DOpts.resolution` property changes.
+        """Called when the :attr:`.Volume3DOpts.resolution` property
+        changes.
         """
         self.notify()
 
