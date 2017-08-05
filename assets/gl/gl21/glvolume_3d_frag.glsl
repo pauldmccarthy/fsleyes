@@ -241,13 +241,8 @@ void main(void) {
        */
       if (sample_volume(texCoord, clipTexCoord, colour)) {
 
-        /*
-         * Weight the final colour
-         * towards earlier samples
-         */
-        colour.a         = blendFactor * (1 - nsamples * stepLength);
-        finalColour.rgb += (1 - finalColour.a) * colour.a * colour.rgb;
-        finalColour.a   += (1 - finalColour.a) * colour.a;
+        finalColour.rgb += (1 - finalColour.a) * blendFactor * colour.rgb;
+        finalColour.a   += (1 - finalColour.a) * blendFactor;
         nsamples        += 1;
 
         /*
