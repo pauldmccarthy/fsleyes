@@ -36,14 +36,14 @@ def init(self):
 
     self.shader = None
 
-    self.innerSteps = 1
-
     compileShaders(   self)
     updateShaderState(self)
 
     if self.threedee:
-        self.renderTexture1 = textures.RenderTexture(self.name, gl.GL_LINEAR, gl.GL_FLOAT)
-        self.renderTexture2 = textures.RenderTexture(self.name, gl.GL_LINEAR, gl.GL_FLOAT)
+        self.renderTexture1 = textures.RenderTexture(
+            self.name, gl.GL_LINEAR, gl.GL_FLOAT)
+        self.renderTexture2 = textures.RenderTexture(
+            self.name, gl.GL_LINEAR, gl.GL_FLOAT)
 
 
 def destroy(self):
@@ -81,8 +81,8 @@ def compileShaders(self):
     constants = {'kill_fragments_early' : not self.threedee}
 
     if self.threedee:
-        constants['numSteps'] = self.innerSteps
-        textures['startingTexture'] =  4
+        constants['numSteps']        = self.opts.numInnerSteps
+        textures[ 'startingTexture'] =  4
 
     self.shader = shaders.ARBPShader(vertSrc,
                                      fragSrc,
@@ -141,7 +141,7 @@ def updateShaderState(self):
     if self.threedee:
         settings = [
             (1 - opts.blendFactor) ** 2,
-            1.0 / opts.numSteps,
+            1.0 / opts.getNumSteps(),
             canvas.fadeOut,
             display.alpha / 100.0]
 
@@ -164,9 +164,10 @@ def preDraw(self, xform=None, bbox=None):
 
     if self.threedee:
 
-        w = int(np.ceil(w / 4.0))
-        h = int(np.ceil(h / 4.0))
         w, h = self.canvas.GetSize()
+        res  = self.opts.resolution / 100.0
+        w    = int(np.ceil(w * res))
+        h    = int(np.ceil(h * res))
 
         for rt in [self.renderTexture1, self.renderTexture2]:
             if rt.getSize() != (w, h):
@@ -206,8 +207,11 @@ def draw3D(self, xform=None, bbox=None):
 
     :arg bbox:    An optional bounding box.
     """
+    opts = self.opts
+    proj = self.canvas.getProjectionMatrix()
+
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
-    rayStep, ditherDir, texform    = self.calculateRayCastSettings(xform)
+    rayStep, ditherDir, texform    = opts.calculateRayCastSettings(xform, proj)
 
     if xform is not None:
         vertices = transform.transform(vertices, xform)
@@ -225,23 +229,23 @@ def draw3D(self, xform=None, bbox=None):
 
     vertices  = np.array(vertices, dtype=np.float32).ravel('C')
 
-    # gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
 
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
     self.shader.setAtt(      'texCoord',        texCoords)
     self.shader.setFragParam('ditherDir',       list(ditherDir) + [0])
     self.shader.setFragParam('tex2ScreenXform', texform[2, :])
 
-    outerLoop = int(np.ceil(self.opts.numSteps / self.innerSteps))
+    outerLoop = self.opts.getNumOuterSteps()
 
     with glroutines.enabled((gl.GL_VERTEX_ARRAY)), \
          glroutines.disabled((gl.GL_BLEND, gl.GL_DEPTH_TEST)):
-    # if True:
 
         for i in range(outerLoop):
 
+            inner =  i * self.opts.numInnerSteps
+
             self.shader.setFragParam('rayStep',
-                                     list(rayStep) + [i * self.innerSteps])
+                                     list(rayStep) + [inner])
 
             dest.bindAsRenderTarget()
             gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)

@@ -325,7 +325,8 @@ class Scene3DCanvas(props.HasProperties):
         # which are higher in the list will get
         # drawn above lower ones.
         depthOffset = transform.scaleOffsetXform(1, [0, 0, 0.1])
-        xform       = self.__viewMat
+        depthOffset = np.array(depthOffset,    dtype=np.float32, copy=False)
+        xform       = np.array(self.__viewMat, dtype=np.float32, copy=False)
 
         if self.showCursor: self.__drawCursor()
 

@@ -44,7 +44,6 @@ class GLImageObject(globject.GLObject):
 
          generateVertices3D
          generateVoxelCoordinates3D
-         calculateRayCastSettings
          get3DClipPlane
          clipPlaneVertices
          drawClipPlanes
@@ -380,133 +379,12 @@ class GLImageObject(globject.GLObject):
         return voxels
 
 
-    def calculateRayCastSettings(self, xform=None):
-        """Calculates various parameters required for 3D ray-cast rendering
-        (see the :class:`.GLVolume` class).
-
-
-        :arg xform: Transformation matrix which is applied to the scene
-                    (i.e. the view matrix with camera configuration).
-
-
-        Returns a tuple containing:
-
-          - A vector defining the amount by which to move along a ray in a
-            single iteration of the ray-casting algorithm. This can be added
-            directly to the volume texture coordinates.
-
-          - A vector defining the maximum distance by which to randomly adjust
-            the start location of each ray, to induce a dithering effect in
-            the rendered scene.
-
-          - A transformation matrix which transforms from image texture
-            coordinates into the display coordinate system.
-
-        .. note:: This method will raise an error if called on a
-                  ``GLImageObject`` which is managing an overlay that is not
-                  associated with a :class:`.Volume3DOpts` instance.
-        """
-
-        if xform is None:
-            xform = np.eye(4)
-
-        # In GL, the camera position
-        # is initially pointing in
-        # the -z direction.
-        opts   = self.opts
-        eye    = [0, 0, -1]
-        target = [0, 0,  1]
-
-        # We take this initial camera
-        # configuration, and transform
-        # it by the inverse modelview
-        # matrix
-        t2dmat = opts.getTransform('texture', 'display')
-        xform  = transform.concat(xform, t2dmat)
-        ixform = transform.invert(xform)
-
-        eye    = transform.transform(eye,    ixform, vector=True)
-        target = transform.transform(target, ixform, vector=True)
-
-        # Direction that the 'camera' is
-        # pointing, normalied to unit length
-        cdir = transform.normalise(eye - target)
-
-        # Calculate the length of one step
-        # along the camera direction in a
-        # single iteration of the ray-cast
-        # loop.
-        rayStep = cdir / opts.numSteps
-
-        # Maximum amount by which to dither
-        # the scene. This is done by applying
-        # a random offset to the starting
-        # point of each ray - we pass the
-        # shader a vector in the camera direction,
-        # so all it needs to do is scale the
-        # vector by a random amount, and add the
-        # vector to the starting point.
-        ditherDir = cdir * opts.dithering
-
-        # A transformation matrix which can
-        # transform image texture coordinates
-        # into the corresponding screen
-        # (normalised device) coordinates.
-        # This allows the fragment shader to
-        # convert an image texture coordinate
-        # into a relative depth value.
-        #
-        # The projection matrix puts depth into
-        # [-1, 1], but we want it in [0, 1]
-        proj   = self.canvas.getProjectionMatrix()
-        zscale = transform.scaleOffsetXform([1, 1, 0.5], [0, 0, 0.5])
-        xform  = transform.concat(zscale, proj, xform)
-
-        return rayStep, ditherDir, xform
-
-
     @memoize.Instanceify(memoize.memoize)
-    def get3DClipPlane(self, planeIdx):
-        """A convenience method for use with overlays being displayed
-        in terms of a :class:`.Volume3DOpts` instance.
-
-        This method calculates a point-vector description of the specified
-        clipping plane. ``planeIdx`` is an index into the
-        :attr:`.Volume3DOpts.clipPosition`, :attr:`.Volume3DOpts.clipAzimuth`,
-        and :attr:`.Volume3DOpts.clipInclination`, properties.
-
-        Returns the clip plane at the given ``planeIdx`` as an origin and
-        normal vector, in the display coordinate system..
+    def get3DClipPlane(self, *args, **kwargs):
+        """Memoized wrapper around the :meth:`.Volume3DOpts.get3DClipPlane`
+        method.
         """
-
-        opts    = self.opts
-        pos     = opts.clipPosition[   planeIdx]
-        azimuth = opts.clipAzimuth[    planeIdx]
-        incline = opts.clipInclination[planeIdx]
-
-        b       = opts.bounds
-        pos     = pos             / 100.0
-        azimuth = azimuth * np.pi / 180.0
-        incline = incline * np.pi / 180.0
-
-        xmid = b.xlo + 0.5 * b.xlen
-        ymid = b.ylo + 0.5 * b.ylen
-        zmid = b.zlo + 0.5 * b.zlen
-
-        centre = [xmid, ymid, zmid]
-        normal = [0, 0, -1]
-
-        rot1     = transform.axisAnglesToRotMat(incline, 0, 0)
-        rot2     = transform.axisAnglesToRotMat(0, 0, azimuth)
-        rotation = transform.concat(rot2, rot1)
-
-        normal = transform.transformNormal(normal, rotation)
-        normal = transform.normalise(normal)
-
-        offset = (pos - 0.5) * max((b.xlen, b.ylen, b.zlen))
-        origin = centre + normal * offset
-
-        return origin, normal
+        return self.opts.get3DClipPlane(*args, **kwargs)
 
 
     @memoize.Instanceify(memoize.memoize)
@@ -517,7 +395,7 @@ class GLImageObject(globject.GLObject):
         Generates vertices for the clipping plane specified by ``planeIdx``
         (an index into the ``Volume3DOpts.clip*`` lists).
 
-        Returns a ``(N, 3)`` ``numpy`` array containing thevertices, and
+        Returns a ``(N, 3)`` ``numpy`` array containing the vertices, and
         a 1D ``numpy`` array containing vertex indices.
 
         See the :meth:`get3DClipPlane` and :meth:`drawClipPlanes` methods.
@@ -568,11 +446,13 @@ class GLImageObject(globject.GLObject):
 
             verts, idxs = self.clipPlaneVertices(i, bbox)
 
+            if len(idxs) == 0:
+                continue
+
             if xform is not None:
                 verts = transform.transform(verts, xform)
 
-            if len(idxs) == 0:
-                continue
+            verts = np.array(verts.ravel('C'), dtype=np.float32, copy=False)
 
             # A consistent colour for
             # each clipping plane
@@ -586,7 +466,7 @@ class GLImageObject(globject.GLObject):
             with glroutines.enabled(gl.GL_VERTEX_ARRAY):
 
                 gl.glColor4f(r, g, b, 0.3)
-                gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts.ravel('C'))
+                gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
                 gl.glDrawElements(gl.GL_TRIANGLES,
                                   len(idxs),
                                   gl.GL_UNSIGNED_INT,

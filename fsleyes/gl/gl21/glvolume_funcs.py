@@ -133,7 +133,7 @@ def updateShaderState(self):
         changed |= shader.set('numClipPlanes', opts.numClipPlanes)
         changed |= shader.set('clipPlanes',    clipPlanes, opts.numClipPlanes)
         changed |= shader.set('blendFactor',   blendFactor)
-        changed |= shader.set('stepLength',    1.0 / opts.numSteps)
+        changed |= shader.set('stepLength',    1.0 / opts.getNumSteps())
         changed |= shader.set('alpha',         display.alpha / 100.0)
         changed |= shader.set('fadeOut',       canvas.fadeOut)
 
@@ -196,8 +196,10 @@ def draw3D(self, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
 
+    opts = self.opts
+    proj = self.canvas.getProjectionMatrix()
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
-    rayStep, ditherDir, texform    = self.calculateRayCastSettings(xform)
+    rayStep, ditherDir, texform    = opts.calculateRayCastSettings(xform, proj)
 
     if xform is not None:
         vertices = transform.transform(vertices, xform)

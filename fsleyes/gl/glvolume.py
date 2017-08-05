@@ -340,6 +340,9 @@ class GLVolume(glimageobject.GLImageObject):
             canvas.addListener('fadeOut',       name, self._fadeOutChanged)
             opts.addListener('dithering',       name, self._ditheringChanged)
             opts.addListener('numSteps',        name, self._numStepsChanged)
+            opts.addListener('numInnerSteps',   name,
+                             self._numInnerStepsChanged)
+            opts.addListener('resolution',   name,    self._resolutionChanged)
             opts.addListener('blendFactor',     name, self._blendFactorChanged)
             opts.addListener('showClipPlanes',  name,
                              self._showClipPlanesChanged)
@@ -850,13 +853,21 @@ class GLVolume(glimageobject.GLImageObject):
     def _numStepsChanged(self, *a):
         """Called when the :attr:`.Volume3DOpts.numSteps` property changes.
         """
+        self.notify()
 
-        # TODO Is this dodgy? I'm not sure
-        if fslgl.GL_VERSION == '1.4':
-            fslgl.glvolume_funcs.compileShaders(self)
-            self.updateShaderState(alwaysNotify=True)
-        else:
-            self.notify()
+
+    def _numInnerStepsChanged(self, *a):
+        """Called when the :attr:`.Volume3DOpts.numInnerSteps` property
+        changes.
+        """
+        self.compileShaders()
+        self.updateShaderState(alwaysNotify=True)
+
+
+    def _resolutionChanged(self, *a):
+        """Called when the :attr:`.Volume3DOpts.resolution` property changes.
+        """
+        self.notify()
 
 
     def _clipping3DChanged(self, *a):
