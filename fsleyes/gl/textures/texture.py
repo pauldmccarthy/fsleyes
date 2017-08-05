@@ -200,10 +200,21 @@ class Texture2D(Texture):
 
         :arg name:   Unique name for this ``Texture2D``.
 
-        :arg interp: Initial interpolation - ``GL_NEAREST`` or ``GL_LINEAR``.
-                     This can be changed later on via the
+        :arg interp: Initial interpolation - ``GL_NEAREST`` (the default)
+                     or ``GL_LINEAR``. This can be changed later on via the
                      :meth:`setInterpolation` method.
+
+        :arg dtype:  Sized internal GL data format to use for the texture.
+                     Currently only ``gl.GL_RGBA8`` (the default) and
+                     ``gl.GL_DEPTH_COMPONENT24`` are supported.
         """
+
+        if dtype is None:
+            dtype = gl.GL_RGBA8
+
+        if dtype not in (gl.GL_RGBA8, gl.GL_DEPTH_COMPONENT24):
+            raise ValueError('Invalid dtype: {}'.format(dtype))
+
         Texture.__init__(self, name, 2)
 
         self.__data      = None
@@ -213,10 +224,6 @@ class Texture2D(Texture):
         self.__oldHeight = None
         self.__border    = None
         self.__interp    = interp
-
-        # TODO validate dtype
-        if dtype is None:
-            dtype = gl.GL_UNSIGNED_BYTE
         self.__dtype     = dtype
 
 
@@ -264,6 +271,24 @@ class Texture2D(Texture):
         self.__height    = height
 
 
+    @classmethod
+    def getDataTypeParams(cls, dtype):
+
+        if dtype == gl.GL_RGBA8:
+            intFmt = gl.GL_RGBA
+            extFmt = gl.GL_UNSIGNED_BYTE
+            ndtype = np.uint8
+            size   = 4
+
+        elif dtype == gl.GL_DEPTH_COMPONENT24:
+            intFmt = gl.GL_DEPTH_COMPONENT
+            extFmt = gl.GL_UNSIGNED_INT
+            ndtype = np.uint32
+            size   = 1
+
+        return intFmt, extFmt, ndtype, size
+
+
     def getSize(self):
         """Return the current ``(width, height)`` of this ``Texture2D``. """
         return self.__width, self.__height
@@ -273,8 +298,6 @@ class Texture2D(Texture):
         """Sets the data for this texture - the width and height are determined
         from data shape, which is assumed to be 4*width*height.
         """
-
-        # TODO dtype
 
         self.__setSize(data.shape[1], data.shape[2])
         self.__data = data
@@ -292,23 +315,15 @@ class Texture2D(Texture):
         if not bound:
             self.bindTexture()
 
-        # TODO dtype
+        intFmt, extFmt, ndtype, size = self.getDataTypeParams(self.__dtype)
 
-        data = gl.glGetTexImage(
-            gl.GL_TEXTURE_2D,
-            0,
-            gl.GL_RGBA,
-            self.__dtype,
-            None)
+        data = gl.glGetTexImage(gl.GL_TEXTURE_2D, 0, intFmt, extFmt, None)
 
         if not bound:
             self.unbindTexture()
 
-        if   self.__dtype == gl.GL_UNSIGNED_BYTE: ndtype = np.uint8
-        elif self.__dtype == gl.GL_FLOAT:         ndtype = np.float32
-
         data = np.fromstring(data, dtype=ndtype)
-        data = data.reshape((self.__height, self.__width, 4))
+        data = data.reshape((self.__height, self.__width, size))
         data = np.flipud(data)
 
         return data
@@ -326,10 +341,13 @@ class Texture2D(Texture):
             raise ValueError('Invalid size: {}'.format((self.__width,
                                                         self.__height)))
 
+        dtype                  = self.__dtype
+        intFmt, extFmt, ndtype = self.getDataTypeParams(dtype)[:3]
+
         data = self.__data
 
         if data is not None:
-            data = data.ravel('F')
+            data = np.array(data.ravel('F'), dtype=ndtype, copy=False)
 
         self.bindTexture()
         gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
@@ -366,8 +384,6 @@ class Texture2D(Texture):
             self.__width,
             self.__height))
 
-        dtype = self.__dtype
-
         # If the width and height have not changed,
         # then we don't need to re-define the texture.
         if self.__width  == self.__oldWidth  and \
@@ -382,8 +398,8 @@ class Texture2D(Texture):
                                    0,
                                    self.__width,
                                    self.__height,
-                                   gl.GL_RGBA,
-                                   dtype,
+                                   intFmt,
+                                   extFmt,
                                    data)
 
         # If the width and/or height have
@@ -392,12 +408,12 @@ class Texture2D(Texture):
         else:
             gl.glTexImage2D(gl.GL_TEXTURE_2D,
                             0,
-                            gl.GL_RGBA8,
+                            dtype,
                             self.__width,
                             self.__height,
                             0,
-                            gl.GL_RGBA,
-                            dtype,
+                            intFmt,
+                            extFmt,
                             data)
         self.unbindTexture()
 
