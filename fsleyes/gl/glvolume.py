@@ -210,6 +210,13 @@ class GLVolume(glimageobject.GLImageObject):
         self.negColourTexture = textures.ColourMapTexture(
             '{}_neg'.format(self.texName))
 
+
+        if self.threedee:
+            self.renderTexture1 = textures.RenderTexture(
+                self.name, gl.GL_LINEAR, gl.GL_FLOAT)
+            self.renderTexture2 = textures.RenderTexture(
+                self.name, gl.GL_LINEAR, gl.GL_FLOAT)
+
         # This attribute is used by the
         # updateShaderState method to
         # make sure that the Notifier.notify()
@@ -260,6 +267,12 @@ class GLVolume(glimageobject.GLImageObject):
         self.clipTexture      = None
         self.colourTexture    = None
         self.negColourTexture = None
+
+        if self.threedee:
+            self.renderTexture1.destroy()
+            self.renderTexture2.destroy()
+            self.renderTexture1 = None
+            self.renderTexture2 = None
 
         fslgl.glvolume_funcs       .destroy(self)
         glimageobject.GLImageObject.destroy(self)
@@ -659,11 +672,51 @@ class GLVolume(glimageobject.GLImageObject):
     def draw3D(self, *args, **kwargs):
         """Calls the version dependent ``draw3D`` function. """
 
+        opts = self.opts
+        w, h = self.canvas.GetSize()
+        res  = self.opts.resolution / 100.0
+        w    = int(np.ceil(w * res))
+        h    = int(np.ceil(h * res))
+
+        # Initialise and resize
+        # the offscreen textures
+        for rt in [self.renderTexture1, self.renderTexture2]:
+            if rt.getSize() != (w, h):
+                rt.setSize(w, h)
+
+            rt.bindAsRenderTarget()
+            gl.glClearColor(0, 0, 0, 0)
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
+            rt.unbindAsRenderTarget()
+
+        if opts.resolution != 100:
+            gl.glViewport(0, 0, w, h)
+
+        # Do the render
         with glroutines.enabled((gl.GL_DEPTH_TEST, gl.GL_CULL_FACE)):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             gl.glFrontFace(gl.GL_CCW)
             gl.glCullFace(gl.GL_BACK)
             fslgl.glvolume_funcs.draw3D(self, *args, **kwargs)
+
+        # renderTexture1 should now
+        # contain the final result -
+        # draw it to the screen.
+        verts = np.array([[-1, -1, 0],
+                          [-1,  1, 0],
+                          [ 1, -1, 0],
+                          [ 1, -1, 0],
+                          [-1,  1, 0],
+                          [ 1,  1, 0]], dtype=np.float32)
+
+        invproj = transform.invert(self.canvas.getProjectionMatrix())
+        verts   = transform.transform(verts, invproj)
+
+        if opts.resolution != 100:
+            w, h = self.canvas.GetSize()
+            gl.glViewport(0, 0, w, h)
+
+        self.renderTexture1.draw(verts)
 
 
     def drawAll(self, *args, **kwargs):

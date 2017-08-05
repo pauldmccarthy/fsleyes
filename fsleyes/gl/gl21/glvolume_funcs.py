@@ -196,10 +196,11 @@ def draw3D(self, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
 
-    opts = self.opts
-    proj = self.canvas.getProjectionMatrix()
+    opts                           = self.opts
+    tex                            = self.renderTexture1
+    proj                           = self.canvas.getProjectionMatrix()
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
-    rayStep, ditherDir, texform    = opts.calculateRayCastSettings(xform, proj)
+    rayStep , ditherDir, texform   = opts.calculateRayCastSettings(xform, proj)
 
     if xform is not None:
         vertices = transform.transform(vertices, xform)
@@ -213,7 +214,12 @@ def draw3D(self, xform=None, bbox=None):
 
     self.shader.loadAtts()
 
+    tex.bindAsRenderTarget()
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
+    tex.unbindAsRenderTarget()
+
+    self.shader.unloadAtts()
+    self.shader.unload()
 
 
 def drawAll(self, axes, zposes, xforms):
