@@ -117,7 +117,7 @@ class ColourBarCanvas(props.HasProperties):
         if not self._setGLContext():
             return
 
-        w, h = self._getSize()
+        w, h = self.GetSize()
 
         if w < 50 or h < 50:
             return
@@ -182,7 +182,7 @@ class ColourBarCanvas(props.HasProperties):
         if not self._setGLContext():
             return
 
-        width, height = self._getSize()
+        width, height = self.GetSize()
 
         # viewport
         gl.glViewport(0, 0, width, height)

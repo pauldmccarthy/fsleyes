@@ -108,7 +108,7 @@ class Annotations(object):
         """Returns a tuple containing the ``(width, height)``, in pixels, of
         the ``SliceCanvas`` that owns this ``Annotations`` object.
         """
-        return self.__canvas._getSize()
+        return self.__canvas.GetSize()
 
 
     def line(self, *args, **kwargs):

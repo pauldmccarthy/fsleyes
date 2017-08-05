@@ -142,7 +142,7 @@ class Scene3DCanvas(props.HasProperties):
         """
 
         b             = self.__displayCtx.bounds
-        width, height = self._getSize()
+        width, height = self.GetSize()
 
         # The first step is to invert the mouse
         # coordinates w.r.t. the viewport.
@@ -212,7 +212,7 @@ class Scene3DCanvas(props.HasProperties):
         """
 
         b      = self.__displayCtx.bounds
-        w, h   = self._getSize()
+        w, h   = self.GetSize()
         centre = [b.xlo + 0.5 * b.xlen,
                   b.ylo + 0.5 * b.ylen,
                   b.zlo + 0.5 * b.zlen]
@@ -274,7 +274,7 @@ class Scene3DCanvas(props.HasProperties):
                   ``False`` otherwise.
         """
 
-        width, height = self._getSize()
+        width, height = self.GetSize()
         b             = self.__displayCtx.bounds
         blo           = [b.xlo, b.ylo, b.zlo]
         bhi           = [b.xhi, b.yhi, b.zhi]
@@ -457,7 +457,7 @@ class Scene3DCanvas(props.HasProperties):
         """
 
         b          = self.__displayCtx.bounds
-        w, h       = self._getSize()
+        w, h       = self.GetSize()
         xlen, ylen = glroutines.adjust(b.xlen, b.ylen, w, h)
 
         # A line for each axis

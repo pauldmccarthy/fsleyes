@@ -782,11 +782,6 @@ class OffScreenCanvasTarget(object):
                 id(self)))
 
 
-    def _getSize(self):
-        """Returns a tuple containing the canvas width and height."""
-        return self.__width, self.__height
-
-
     def _setGLContext(self):
         """Configures the GL context to render to this canvas. """
         getGLContext().setTarget(self)
@@ -801,6 +796,11 @@ class OffScreenCanvasTarget(object):
     def getAnnotations(self):
         """Must be provided by subclasses."""
         raise NotImplementedError()
+
+
+    def GetSize(self):
+        """Returns a tuple containing the canvas width and height."""
+        return self.__width, self.__height
 
 
     def Refresh(self, *a):
@@ -1041,11 +1041,6 @@ class WXGLCanvasTarget(object):
             wx.CallAfter(doInit)
 
 
-    def _getSize(self):
-        """Returns the current canvas size. """
-        return self.GetClientSize().Get()
-
-
     def _setGLContext(self):
         """Configures the GL context for drawing to this canvas.
 
@@ -1059,6 +1054,11 @@ class WXGLCanvasTarget(object):
 
         self.__context.setTarget(self)
         return True
+
+
+    def GetSize(self):
+        """Returns the current canvas size. """
+        return self.GetClientSize().Get()
 
 
     def Refresh(self, *a):
@@ -1108,7 +1108,7 @@ class WXGLCanvasTarget(object):
 
         self._setGLContext()
 
-        width, height = self._getSize()
+        width, height = self.GetSize()
 
         # Make sure we're reading
         # from the front buffer

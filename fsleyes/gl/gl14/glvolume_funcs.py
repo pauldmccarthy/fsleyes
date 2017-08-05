@@ -163,10 +163,10 @@ def preDraw(self, xform=None, bbox=None):
         self.shader.setVertParam('clipCoordXform', clipCoordXform)
 
     if self.threedee:
-        w, h = self.canvas._getSize()
 
         w = int(np.ceil(w / 4.0))
         h = int(np.ceil(h / 4.0))
+        w, h = self.canvas.GetSize()
 
         for rt in [self.renderTexture1, self.renderTexture2]:
             if rt.getSize() != (w, h):

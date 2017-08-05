@@ -288,7 +288,7 @@ class SliceCanvas(props.HasProperties):
 
         realWidth                 = self.displayBounds.xlen
         realHeight                = self.displayBounds.ylen
-        canvasWidth, canvasHeight = [float(s) for s in self._getSize()]
+        canvasWidth, canvasHeight = [float(s) for s in self.GetSize()]
 
         if invertX: xpos = canvasWidth  - xpos
         if invertY: ypos = canvasHeight - ypos
@@ -1077,7 +1077,7 @@ class SliceCanvas(props.HasProperties):
         # we need to preserve them with
         # respect to the current display
         # location.
-        width, height                      = self._getSize()
+        width, height                      = self.GetSize()
         oldxmin, oldxmax, oldymin, oldymax = self.displayBounds[:]
 
         log.debug('{}: Required display bounds: '
@@ -1154,7 +1154,7 @@ class SliceCanvas(props.HasProperties):
         ymax = self.displayBounds.yhi
         zmin = self.displayCtx.bounds.getLo(zax)
         zmax = self.displayCtx.bounds.getHi(zax)
-        size = self._getSize()
+        size = self.GetSize()
 
         if invertX is None: invertX = self.invertX
         if invertY is None: invertY = self.invertY
@@ -1308,7 +1308,7 @@ class SliceCanvas(props.HasProperties):
         """
 
         log.debug('Combining off-screen render textures, and rendering '
-                  'to canvas (size {})'.format(self._getSize()))
+                  'to canvas (size {})'.format(self.GetSize()))
 
         for overlay in self.displayCtx.getOrderedOverlays():
 
@@ -1338,7 +1338,7 @@ class SliceCanvas(props.HasProperties):
         if self.destroyed():
             return
 
-        width, height = self._getSize()
+        width, height = self.GetSize()
         if width == 0 or height == 0:
             return
 

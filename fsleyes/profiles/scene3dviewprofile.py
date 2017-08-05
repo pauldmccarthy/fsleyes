@@ -55,7 +55,7 @@ class Scene3DViewProfile(profiles.Profile):
         if self.__rotateMousePos is None:
             return
 
-        w, h = canvas._getSize()
+        w, h = canvas.GetSize()
 
         x0, y0 = self.__rotateMousePos
         x1, y1 = mousePos
