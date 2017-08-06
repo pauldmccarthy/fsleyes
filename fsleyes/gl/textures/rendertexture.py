@@ -160,15 +160,15 @@ class RenderTexture(texture.Texture2D):
 
         self.__shader = None
 
+        vertSrc   = shaders.getVertexShader(  'rendertexture')
+        fragSrc   = shaders.getFragmentShader('rendertexture')
+        shaderDir = shaders.getShaderDir()
+
         if float(fslplatform.glVersion) < 2.1:
-            print('TODO')
-            # ARB
-            pass
+            self.__shader = shaders.ARBPShader(vertSrc, fragSrc, shaderDir)
 
         else:
-            self.__shader = shaders.GLSLShader(
-                shaders.getVertexShader(  'rendertexture'),
-                shaders.getFragmentShader('rendertexture'))
+            self.__shader = shaders.GLSLShader(vertSrc, fragSrc)
 
             self.__shader.load()
             self.__shader.set('colourTexture', 0)
