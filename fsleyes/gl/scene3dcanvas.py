@@ -332,9 +332,6 @@ class Scene3DCanvas(props.HasProperties):
 
         for ovl, globj in zip(overlays, globjs):
 
-            if not self.occlusion:
-                gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
-
             display = self.__displayCtx.getDisplay(ovl)
 
             if not globj.ready():
@@ -344,6 +341,8 @@ class Scene3DCanvas(props.HasProperties):
 
             if self.occlusion:
                 xform = transform.concat(depthOffset, xform)
+            else:
+                gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
 
             globj.preDraw( xform=xform)
             globj.draw3D(  xform=xform)

@@ -427,11 +427,11 @@ class Texture2D(Texture):
 
     def draw(self, vertices, xform=None):
         """Draw the contents of this ``Texture2D`` to a region specified by
-        the given vertices.
+        the given vertices. The texture is bound to texture unit 0.
 
         :arg vertices: A ``numpy`` array of shape ``6 * 3`` specifying the
                        region, made up of two triangles, to which this
-                       ``Texture2D`` should be rendered.
+                       ``Texture2D`` should be drawn.
 
         :arg xform:    A transformation to be applied to the vertices.
         """

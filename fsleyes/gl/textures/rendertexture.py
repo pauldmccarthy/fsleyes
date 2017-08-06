@@ -17,12 +17,14 @@ other situations throughout FSLeyes. See also the
 
 import logging
 
-import OpenGL.GL                        as gl
-import OpenGL.raw.GL._types             as gltypes
-import OpenGL.GL.EXT.framebuffer_object as glfbo
+import OpenGL.GL                         as gl
+import OpenGL.raw.GL._types              as gltypes
+import OpenGL.GL.EXT.framebuffer_object  as glfbo
 
-import fsleyes.gl.routines as glroutines
-from . import                 texture
+from  fsl.utils.platform import platform as fslplatform
+import fsleyes.gl.routines               as glroutines
+import fsleyes.gl.shaders                as shaders
+from . import                               texture
 
 
 log = logging.getLogger(__name__)
@@ -87,6 +89,7 @@ class RenderTexture(texture.Texture2D):
     flag to either the :meth:`draw` or :meth:`drawOnBounds` methods.
     """
 
+
     def __init__(self, *args, **kwargs):
         """Create a ``RenderTexture``. All argumenst are passed through
         to the :meth:`.Texture2D.__init__` method.
@@ -136,7 +139,41 @@ class RenderTexture(texture.Texture2D):
                 '{}_depth'.format(self.getTextureName()),
                 dtype=gl.GL_DEPTH_COMPONENT24)
 
+            # We also need a shader program in
+            # case the creator is intending to
+            # use the depth information in draws.
+            self.__initShader()
+
         log.debug('Created fbo {} [{}]'.format(self.__frameBuffer, rttype))
+
+
+    def __initShader(self):
+        """Called by :meth:`__init__` if this ``RenderTexture`` was
+        configured to use a colour and depth texture. Compiles
+        vertex/fragment shader programs which pass the colour and depth
+        values through.
+
+        These shaders are used if the :meth:`draw` or
+        :meth:`.Texture2D.drawOnBounds` methods are used with the
+        ``useDepth=True`` argument.
+        """
+
+        self.__shader = None
+
+        if float(fslplatform.glVersion) < 2.1:
+            print('TODO')
+            # ARB
+            pass
+
+        else:
+            self.__shader = shaders.GLSLShader(
+                shaders.getVertexShader(  'rendertexture'),
+                shaders.getFragmentShader('rendertexture'))
+
+            self.__shader.load()
+            self.__shader.set('colourTexture', 0)
+            self.__shader.set('depthTexture',  1)
+            self.__shader.unload()
 
 
     def destroy(self):
@@ -380,13 +417,20 @@ class RenderTexture(texture.Texture2D):
 
 
     def draw(self, *args, **kwargs):
-        """
+        """Overrides :meth:`.Texture2D.draw`. Calls that method, optionally
+        using the information in the depth texture.
+
 
         :arg useDepth: Must be passed as a keyword argument. Defaults to
                        ``False``. If ``True``, and this ``RenderTexture``
                        was configured to use a depth texture, the texture
                        is rendered with depth information using a fragment
                        program
+
+
+        A ``RuntimeError`` will be raised if ``useDepth is True``, but this
+        ``RenderTexture`` was not configured appropriately (the ``'cd'``
+        setting in :meth:`__init__`).
         """
 
         useDepth = kwargs.pop('useDepth', False)
@@ -395,7 +439,15 @@ class RenderTexture(texture.Texture2D):
             raise RuntimeError('useDepth is True but I don\'t '
                                'have a depth texture!')
 
+        if useDepth:
+            self.__depthTexture.bindTexture(gl.GL_TEXTURE1)
+            self.__shader.load()
+
         texture.Texture2D.draw(self, *args, **kwargs)
+
+        if useDepth:
+            self.__shader.unload()
+            self.__depthTexture.unbindTexture()
 
 
 class GLObjectRenderTexture(RenderTexture):

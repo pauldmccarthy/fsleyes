@@ -715,7 +715,8 @@ class GLVolume(glimageobject.GLImageObject):
             w, h = self.canvas.GetSize()
             gl.glViewport(0, 0, w, h)
 
-        self.renderTexture1.draw(verts)
+        with glroutines.enabled((gl.GL_DEPTH_TEST)):
+            self.renderTexture1.draw(verts, useDepth=True)
 
 
     def drawAll(self, *args, **kwargs):
