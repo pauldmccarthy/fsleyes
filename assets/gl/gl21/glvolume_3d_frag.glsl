@@ -139,14 +139,6 @@ uniform float blendFactor;
 
 
 /*
- * A constant value between (approx) 0 and 5, which controls
- * how much the fragment should fade out with respect to
- * its depth.
- */
-uniform float fadeOut;
-
-
-/*
  * Final transparency that the fragment should have.
  */
 uniform float alpha;
@@ -259,7 +251,7 @@ void main(void) {
 
       finalColour.a = alpha;
       gl_FragDepth  = depth.z;
-      gl_FragColor  = finalColour * vec4(1 - fadeOut * gl_FragDepth);
+      gl_FragColor  = finalColour;
     }
     else {
       discard;

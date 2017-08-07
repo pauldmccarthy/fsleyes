@@ -139,7 +139,6 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
             props.Widget('showLegend'),
             props.Widget('light'),
             props.Widget('occlusion'),
-            props.Widget('fadeOut', showLimits=False),
         ]
 
         import fsleyes.views.orthopanel    as orthopanel

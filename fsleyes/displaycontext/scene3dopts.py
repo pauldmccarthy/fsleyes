@@ -28,7 +28,6 @@ class Scene3DOpts(sceneopts.SceneOpts):
 
     showLegend = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
     occlusion  = copy.copy(canvasopts.Scene3DCanvasOpts.occlusion)
-    fadeOut    = copy.copy(canvasopts.Scene3DCanvasOpts.fadeOut)
     light      = copy.copy(canvasopts.Scene3DCanvasOpts.light)
     lightPos   = copy.copy(canvasopts.Scene3DCanvasOpts.lightPos)
     offset     = copy.copy(canvasopts.Scene3DCanvasOpts.offset)

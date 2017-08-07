@@ -133,15 +133,6 @@ def updateShaderState(self):
     changed |= self.shader.setFragParam('clipping',    clipping)
     changed |= self.shader.setFragParam('negCmap',     negCmap)
 
-    if self.threedee:
-        settings = [
-            (1 - opts.blendFactor) ** 2,
-            1.0 / opts.getNumSteps(),
-            canvas.fadeOut,
-            display.alpha / 100.0]
-
-        changed |= self.shader.setFragParam('settings',    settings)
-
     self.shader.unload()
 
     return changed
@@ -189,8 +180,14 @@ def draw3D(self, xform=None, bbox=None):
 
     :arg bbox:    An optional bounding box.
     """
-    opts = self.opts
-    proj = self.canvas.getProjectionMatrix()
+    opts    = self.opts
+    canvas  = self.canvas
+    display = self.display
+    shader  = self.shader
+    proj    = canvas.getProjectionMatrix()
+    src     = self.renderTexture1
+    dest    = self.renderTexture2
+    w, h    = src.getSize()
 
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
     rayStep, ditherDir, texform    = opts.calculateRayCastSettings(xform, proj)
@@ -200,44 +197,54 @@ def draw3D(self, xform=None, bbox=None):
 
     vertices = np.array(vertices, dtype=np.float32).ravel('C')
 
-    src  = self.renderTexture1
-    dest = self.renderTexture2
-    w, h = src.getSize()
+    outerLoop  = opts.getNumOuterSteps()
+    screenSize = [1.0 / w, 1.0 / h, 0, 0]
+    ditherDir  = list(ditherDir) + [0]
+    rayStep    = list(rayStep)   + [0]
+    texform    = texform[2, :]
+    settings   = [
+        (1 - opts.blendFactor) ** 2,
+        0,
+        0,
+        display.alpha / 100.0]
 
     gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
 
-    self.shader.setAtt(      'texCoord',        texCoords)
-    self.shader.setFragParam('ditherDir',       list(ditherDir) + [0])
-    self.shader.setFragParam('screenSize', [1.0 / w, 1.0 / h, 0, 0])
-    self.shader.setFragParam('tex2ScreenXform', texform[2, :])
-
-    outerLoop = self.opts.getNumOuterSteps()
+    shader.setAtt(      'texCoord',        texCoords)
+    shader.setFragParam('rayStep',         rayStep)
+    shader.setFragParam('ditherDir',       ditherDir)
+    shader.setFragParam('screenSize',      screenSize)
+    shader.setFragParam('tex2ScreenXform', texform)
 
     with glroutines.enabled((gl.GL_VERTEX_ARRAY)), \
          glroutines.disabled((gl.GL_BLEND)):
 
         for i in range(outerLoop):
 
-            inner =  i * self.opts.numInnerSteps
+            settings    = list(settings)
+            dtex        = src.getDepthTexture()
+            settings[1] = i * opts.numInnerSteps
 
-            self.shader.setFragParam('rayStep', list(rayStep) + [inner])
+            if i == outerLoop - 1: settings[2] =  1
+            else:                  settings[2] = -1
+
+            shader.setFragParam('settings', settings)
 
             dest.bindAsRenderTarget()
+            src .bindTexture(gl.GL_TEXTURE4)
+            dtex.bindTexture(gl.GL_TEXTURE5)
+
             gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
-
-            src.bindTexture(gl.GL_TEXTURE4)
-            src.getDepthTexture().bindTexture(gl.GL_TEXTURE5)
-
             gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
 
-            src.unbindTexture()
-            src.getDepthTexture().unbindTexture()
+            src .unbindTexture()
+            dtex.unbindTexture()
             dest.unbindAsRenderTarget()
 
             dest, src = src, dest
 
-    self.shader.unloadAtts()
-    self.shader.unload()
+    shader.unloadAtts()
+    shader.unload()
 
     self.renderTexture1 = src
     self.renderTexture2 = dest

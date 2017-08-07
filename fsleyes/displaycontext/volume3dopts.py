@@ -54,7 +54,7 @@ class Volume3DOpts(object):
     """
 
 
-    numInnerSteps = props.Choice((1, 2, 5, 10, 20, 30, 40, 50), default=20)
+    numInnerSteps = props.Choice((1, 2, 5, 10, 20, 30, 40, 50), default=5)
     """Only used in low performance environments. Specifies the number of
     ray-casting steps to execute in a single iteration on the GPU, as part
     of an outer loop which is running on the CPU. See the :class:`.GLVolume`

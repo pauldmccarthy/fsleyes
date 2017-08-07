@@ -135,7 +135,6 @@ def updateShaderState(self):
         changed |= shader.set('blendFactor',   blendFactor)
         changed |= shader.set('stepLength',    1.0 / opts.getNumSteps())
         changed |= shader.set('alpha',         display.alpha / 100.0)
-        changed |= shader.set('fadeOut',       canvas.fadeOut)
 
     shader.unload()
 

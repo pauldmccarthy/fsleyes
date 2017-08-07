@@ -791,7 +791,6 @@ properties = TypeDict({
     'Scene3DOpts.light'      : 'Lighting',
     'Scene3DOpts.lightPos'   : 'Light position',
     'Scene3DOpts.occlusion'  : 'Volume occlusion',
-    'Scene3DOpts.fadeOut'    : 'Fade out',
 
     'PlotPanel.legend'     : 'Show legend',
     'PlotPanel.ticks'      : 'Show ticks',

@@ -349,7 +349,6 @@ class GLVolume(glimageobject.GLImageObject):
         # 3D-only options
         if self.threedee:
 
-            canvas.addListener('fadeOut',       name, self._fadeOutChanged)
             opts.addListener('dithering',       name, self._ditheringChanged)
             opts.addListener('numSteps',        name, self._numStepsChanged)
             opts.addListener('numInnerSteps',   name,
@@ -899,12 +898,6 @@ class GLVolume(glimageobject.GLImageObject):
         """Called when the :attr:`.Volume3DOpts.dithering` property changes.
         """
         self.notify()
-
-
-    def _fadeOutChanged(self, *a):
-        """Called when the :attr:`.Scene3DCanvas.fadeOut` property changes.
-        """
-        self.updateShaderState(alwaysNotify=True)
 
 
     def _numStepsChanged(self, *a):

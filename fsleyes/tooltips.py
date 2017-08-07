@@ -422,10 +422,6 @@ properties = TypeDict({
     'Scene3DOpts.occlusion' :
     'When selected, volumes in the scene which are behind another volume will '
     'not be shown. ',
-    'Scene3DOpts.fadeOut' :
-    'This setting controls how much parts of the scene which are further away '
-    'from the camera fade out. It is useful when you are displaying multiple '
-    'overlapping overlays.',
 
     'Scene3DOpts.zoom' :
     'Zoom level - distance from the camera to the model space.',
